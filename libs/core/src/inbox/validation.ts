@@ -17,6 +17,7 @@ import type { AgentName } from './connection';
 import { invalidInput } from './inbox-error-factories';
 
 const MIME_TYPE_MIN_CHARS = 3;
+const UPLOAD_MAX_BYTES = Math.max(...Object.values(MEDIA_MAX_BYTES));
 const LIST_ROW_DESCRIPTION_MAX_CHARS = 72;
 const HTTPS_PROTOCOL = 'https:';
 const WHITESPACE_PATTERN = /\s+/g;
@@ -96,6 +97,7 @@ export function assertVoiceNote(input: { kind: MediaMessageKind; voice: boolean 
 
 export function assertUploadDeclaration(input: { mimeType: string; sizeBytes: number }): void {
   if (!(input.sizeBytes >= 1)) throw invalidInput({ message: 'size_bytes: must be at least 1' });
+  if (input.sizeBytes > UPLOAD_MAX_BYTES) throw invalidInput({ message: `size_bytes: must be at most ${UPLOAD_MAX_BYTES} bytes` });
   if (input.mimeType.length < MIME_TYPE_MIN_CHARS)
     throw invalidInput({ message: `mime_type: must be at least ${MIME_TYPE_MIN_CHARS} characters` });
   if (input.mimeType.length > MIME_TYPE_MAX_CHARS)
