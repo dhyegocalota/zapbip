@@ -110,6 +110,7 @@ export function createInMemoryWakeSecretBox(): WakeSecretBox {
 export function createInMemoryWakeRepository(): WakeRepository {
   const wakes = new Map<AgentName, StoredWake>();
   const jobs = new Map<AgentName, WakeJob>();
+  const restores = new Map<AgentName, StoredWake>();
   const effectiveDueAt = (job: WakeJob): number => (job.leaseUntil === null ? job.dueAt : Math.max(job.dueAt, job.leaseUntil));
 
   return {
@@ -146,17 +147,14 @@ export function createInMemoryWakeRepository(): WakeRepository {
       return dueTimes.length === 0 ? null : Math.min(...dueTimes);
     },
     findLocalRestore: async ({ agent }) => {
-      void agent;
-      throw new Error('findLocalRestore is not implemented');
+      const previous = restores.get(agent);
+      return previous === undefined ? null : { ...previous };
     },
     saveLocalRestore: async ({ agent, previous }) => {
-      void agent;
-      void previous;
-      throw new Error('saveLocalRestore is not implemented');
+      restores.set(agent, { ...previous });
     },
     deleteLocalRestore: async ({ agent }) => {
-      void agent;
-      throw new Error('deleteLocalRestore is not implemented');
+      restores.delete(agent);
     },
   };
 }
