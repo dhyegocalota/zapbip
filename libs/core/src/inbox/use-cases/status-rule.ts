@@ -12,6 +12,7 @@ const STATUS_RANK: Record<DeliveryState, number | null> = {
   [DeliveryState.Read]: 3,
 };
 
+const SETTLED_STATES: DeliveryState[] = [DeliveryState.Delivered, DeliveryState.Read];
 const UNCHANGED = { next: null, logged: false };
 
 export function applyStatusRule(input: { current: DeliveryState; incoming: ApplyStatusInput['status'] }): {
@@ -21,8 +22,7 @@ export function applyStatusRule(input: { current: DeliveryState; incoming: Apply
   const { current, incoming } = input;
   const currentRank = STATUS_RANK[current];
   if (incoming === DeliveryState.Failed && current === DeliveryState.Sent) return { next: DeliveryState.Failed, logged: false };
-  if (incoming === DeliveryState.Failed)
-    return { next: null, logged: currentRank !== null && currentRank > STATUS_RANK[DeliveryState.Sent] };
+  if (incoming === DeliveryState.Failed) return { next: null, logged: SETTLED_STATES.includes(current) };
   if (current === DeliveryState.Failed) return { next: incoming, logged: false };
   const incomingRank = STATUS_RANK[incoming];
   const isHigherRank = currentRank !== null && incomingRank !== null && incomingRank > currentRank;
