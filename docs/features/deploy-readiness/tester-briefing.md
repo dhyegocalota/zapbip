@@ -156,3 +156,10 @@ Pins (green on arrival): `env-example.test.ts`, `root-scripts.test.ts` (`19d03f1
 - B10 (E2E owner flow and `smoke-development`) is not written: the dev stack has no `/webhooks/whatsapp` route (whatsapp-cloud-channel) and no `novo agente` flow (accounts-and-keys, whose install reply carries an install link rather than the MCP URL, so `mcpSecretOf` will need the `/i/<code>` step). Needed at that merge: smoke check 2 expects `Object.values(McpToolName)`, which becomes eleven when `set_wake` joins the enum.
 - The `wrangler ... --json` output shapes for `versions list`, `time-travel info` and `secret list --format json` are read from wrangler's source, not from a live account.
 - `SignatureHeader` is declared in `signed-webhook.ts`; whatsapp-cloud-channel declares `WEBHOOK_SIGNATURE_HEADER` in its adapter. Merge by importing one.
+
+### Lane B update (owner and coordinator orders, 2026-11-06)
+
+- Preflight refuses Worker and docs deploys while any `COMPANY` field (libs/types, defined here with `COMPANY_FACT_UNSET`) is the sentinel; right after the official number check. Red `693c0c1`, green in the next commit. Tests name each field and assert no command ran.
+- Docs preflight also runs `npm view @zapbip/openclaw-plugin@<version> version` after `zapbip@<version>`; the first unresolved package is named. Red/green in the two commits after. The `openclawPluginVersion` input has no caller yet (no docs deploy entry exists); the PyPI package `zapbip-platform` 0.1.0 is a runbook owner step only, the preflight does not check PyPI.
+- Runbook owner steps to add in lane D's files: fill the Logic Bit company facts; publish `@zapbip/openclaw-plugin` 0.1.0 to npm; publish `zapbip-platform` 0.1.0 to PyPI.
+- `INSTALL_PAGE_PATH_PREFIX` exists on no branch, so the install-route readiness check stays a text match on `/i/:installCode`.
