@@ -5,6 +5,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 const PACKAGE_DIRECTORY = new URL('../../', import.meta.url);
 const SDK_SPECIFIER = 'openclaw/plugin-sdk';
 const BUILD_TIMEOUT_MS = 60_000;
+const REQUIRE_SHIM = 'const require = createRequire(import.meta.url);';
 
 let bundle = '';
 
@@ -18,6 +19,12 @@ describe('bundle', () => {
     const sdkLines = bundle.split('\n').filter((line) => line.includes(SDK_SPECIFIER));
     expect(sdkLines.length).toBeGreaterThan(0);
     expect(sdkLines.every((line) => line.startsWith('import '))).toBe(true);
+  });
+
+  it('defines require before the bundled CommonJS code can ask for a Node module', () => {
+    const shimIndex = bundle.indexOf(REQUIRE_SHIM);
+    expect(shimIndex).toBeGreaterThanOrEqual(0);
+    expect(shimIndex).toBeLessThan(bundle.indexOf('__require("http")'));
   });
 
   it('carries no secret literal', () => {
