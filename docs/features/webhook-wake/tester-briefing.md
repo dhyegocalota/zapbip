@@ -117,3 +117,53 @@ pnpm -F @zapbip/core test:unit
 ### Gaps
 
 - The `local`, `scheduled` and `standby` "wake mode not available yet" cases are not tested: `WakeMode` has only `None` and `Webhook`, so the tool layer (L3) owns that error.
+
+## Lane L2 (Durable Object and adapters)
+
+### What changed
+
+- `apps/api/src/adapters/wake/`: `aes-gcm-wake-secret-box.ts` (WebCrypto AES-256-GCM, `version || iv || ciphertext`, AAD from the caller), `fetch-wake-transport.ts` (pinned headers from `PINNED_WAKE_PROVIDER_RULES`, HMAC for `generic`, `redirect: "manual"`, `AbortSignal.timeout`, own status-to-outcome table), `wake-observer.ts` (one console JSON line per event; one Analytics Engine point per attempt event), `webhook-agent-waker.ts`, `dispatching-agent-waker.ts`.
+- `apps/api/src/adapters/sqlite/sqlite-wake-repository.ts`: raw SQL over `agent_wake` (`UPDATE` of the wake columns only) and the new `wake_jobs` table. `createSqliteWakeRepository` now takes `{storage, clock}` (the Step 0 stub took `{storage}`): `updated_at` must be clock time.
+- `apps/api/src/account-inbox/`: `migrations/v2.sql` (+ index line), `wake-dependencies.ts` (builds secret box, repository, observer; throws naming `WAKE_SECRET_KEY` or `WAKE_METRICS`), `constants.ts` (`OWNER_LOCALE_STORAGE_KEY`), `account-inbox.ts` (wake provider on the alarm, `createWakeTransport`, `setWake`, owner locale stored on `receiveOwnerMessage`, dispatching waker). `publicHost` is `new URL(PUBLIC_ORIGIN).hostname`; `setWake` calls `touchAgent` first.
+- `apps/api/src/contract/account-inbox-rpc.ts`: `AccountInboxRpc extends WakeRpc`, `DevAccountInboxRpc extends DevWakeRpc`. `apps/api/src/dev/dev-account-inbox.ts`: scripted transport, `devScriptWake`, `devReadWakeRequests`, `devRunDueWakes`.
+- Tests: `test/unit/{aes-gcm-wake-secret-box,fetch-wake-transport,wake-observer}.test.ts`, `test/integration/webhook-wake-{delivery,secrets,observability,revocation}.test.ts`, `test/support/wake-session.ts` (new helper file). `test/integration/account-inbox.test.ts` (slice 1) follows the registry: WI-118 compares against the registry, WI-120 uses synthetic versions 3 and 4.
+
+### How to run
+
+```bash
+pnpm -F @zapbip/api test:unit
+pnpm -F @zapbip/api test:integration
+pnpm typecheck
+```
+
+### Red then green
+
+- `17f985a` (red, adapters): `Tests 44 failed (44)`, `createAesGcmWakeSecretBox / createFetchWakeTransport / createCloudflareWakeObserver is not implemented`; the absent-dataset case printed `expected [Function] to throw error including 'WAKE_METRICS' but got 'createCloudflareWakeObserver is not i…'`. Green `0e9446a` (63 unit tests).
+- `ba8483a` (red, Durable Object): `Tests 34 failed (34)`, `setWake is not implemented` (the stub in that commit), `createSqliteWakeRepository is not implemented`, and `createWakeDependencies is not implemented`. Green `f96f2d8` (184 integration tests in 16 files).
+- Both red commits were corrected inside their green commits where the test was wrong: the timeout case aborted before the listener existed; the owner messages had no route until they were addressed `@alpha`.
+
+### Decisions for the next lane and the tester
+
+- `findNextDueAt` returns `min` over jobs of `max(dueAt, leaseUntil)`; `listDueJobs` returns every job with `dueAt <= now`, leased or not; `clearWake` clears the target, sets `none` and `active`, keeps `last_delivered_at`, deletes the job (all as the double does; pinned in `webhook-wake-revocation.test.ts`).
+- The transport's table: 2xx delivered; 408, 425, 429 and 5xx except 501 retry; everything else, redirects included, refused; a thrown error, a timeout or an abort is a retry with no status. `Retry-After` is read on 429 and 503 only, integer seconds.
+- `saveWake` throws when the `agent_wake` row is missing (no insert from this slice, A27).
+- The owner locale read by the alarm is cast from storage so that a missing value reaches `runDueWakes` and fails inside the per-job catch (A21, as L1's test does); there is no default.
+- The wake dependencies are the instance property `wake`; integration tests swap `secretBox`, `observer` and `transport` through it (`replaceWakeDependencies`).
+- Owner messages route to a wake agent only when addressed (`@alpha text`), or when the agent wrote last; and a message wakes only when the agent has no unread (new batch). The tests respect both.
+
+### Hypotheses for the tester
+
+- The first request goes out when the clock has advanced 3 000 ms after the owner message and not at 2 000 ms.
+- A job leased in the future is not attempted; after the lease it is.
+- `sealed_target` shows neither the token nor the URL path; moved to another agent, opened under another key, or stored with `key_version` 2, it is refused and the owner gets exactly one notice.
+- A missing `WAKE_SECRET_KEY` (absent or 31 bytes) or `WAKE_METRICS` stops the construction of the wake dependencies, naming the binding.
+- The alarm never throws on a throwing transport, and the log lines carry no token, URL path, owner text or header value.
+- Migration `v2` applies when `v3` is already applied, once.
+- The production bundle contains no `createScriptedWakeTransport` (only `dev-account-inbox.ts` imports `@zapbip/core/wake-testing`).
+
+### Gaps
+
+- The status class `timeout` of the test plan is not produced: the `WakeLogEvent` and the attempt result carry no reason for a null status, so a timeout, a network error and an unopenable target all log as `network`. A fix needs a port change (a new Step 0 commit).
+- Not tested at the Durable Object level: the in-flight follow-up (the scripted transport cannot hold a response; core pins it), the live `ask` waiter at the alarm (core pins it), and the object restart between lease and retry (the scripted transport lives in memory and restarts empty).
+- `recordRevocation` is slice 3's (A31); only `clearWake` is tested, through the repository.
+- The own-host case runs with the test `PUBLIC_ORIGIN` (`http://localhost:8787`), whose host is also a blocked name, so it cannot tell the derived host from the blocked list; a variable origin needs a binding override this lane does not have.
