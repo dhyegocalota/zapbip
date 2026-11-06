@@ -27,6 +27,7 @@ import type { OwnerInboundContent, OwnerInboundMessage, ReceiveOwnerMessageInput
 type ChoiceContent = Extract<OwnerInboundContent, { kind: MessageKind.Choice }>;
 type PlainContent = Exclude<OwnerInboundContent, ChoiceContent>;
 type MediaContent = Extract<OwnerInboundContent, { mediaId: string }>;
+type RouteTarget = { messageIds: string[]; agent: AgentName };
 type PendingAnswer = { questionId: string; optionIndex: number | null; text: string };
 type OwnerPrompt = { listedAgents: AgentName[]; announcesNoAgents: boolean };
 type Placement = {
@@ -110,18 +111,23 @@ async function wakeAgent(
   });
 }
 
-async function assignHeldMessages(input: Arrival & { optionId: string }): Promise<ReceiveResult | null> {
-  const { dependencies, optionId } = input;
-  const { repository } = dependencies;
-  const route = parseRouteOptionId({ optionId });
+async function findRouteTarget(input: { dependencies: CoreDependencies; optionId: string }): Promise<RouteTarget | null> {
+  const { repository } = input.dependencies;
+  const route = parseRouteOptionId({ optionId: input.optionId });
   if (route === null) return null;
   const [held, agents] = await Promise.all([repository.listHeld(), repository.listAgents()]);
   const isLive = held.some((message) => message.messageId === route.messageId) && agents.some((record) => record.agent === route.agent);
   if (!isLive) return null;
-  const unreadBefore = await repository.countUnread({ agent: route.agent });
-  await repository.assignAgent({ messageIds: held.map((message) => message.messageId), agent: route.agent });
-  await wakeAgent({ ...input, agent: route.agent, unreadBefore, answeredQuestionId: null, shouldTellOwner: true });
-  return { messageId: null, agent: route.agent, duplicate: false };
+  return { messageIds: held.map((message) => message.messageId), agent: route.agent };
+}
+
+async function applyRouteTarget(input: Arrival & { target: RouteTarget }): Promise<ReceiveResult> {
+  const { repository } = input.dependencies;
+  const { messageIds, agent } = input.target;
+  const unreadBefore = await repository.countUnread({ agent });
+  await repository.assignAgent({ messageIds, agent });
+  await wakeAgent({ ...input, agent, unreadBefore, answeredQuestionId: null, shouldTellOwner: true });
+  return { messageId: null, agent, duplicate: false };
 }
 
 async function findTappedOption(input: { dependencies: CoreDependencies; optionId: string }): Promise<TappedOption | null> {
@@ -244,32 +250,22 @@ async function openWindowAndFlush(input: { dependencies: CoreDependencies; at: n
   await flushQueue({ dependencies: input.dependencies });
 }
 
-export async function receiveOwnerMessage(input: ReceiveOwnerMessageInput): Promise<ReceiveResult> {
-  const { dependencies, ownerLocale, channelMessageId, ownerMessage } = input;
+function placeOwnerContent(input: Arrival & { content: OwnerInboundContent }): Promise<Placement> {
+  const { content } = input;
+  if (content.kind === MessageKind.Choice) return placeChoice({ ...input, choice: content });
+  return placeContent({ ...input, content: toMessageContent(content) });
+}
+
+async function storePlacement(input: Arrival & { content: OwnerInboundContent; placement: Placement }): Promise<string> {
+  const { dependencies, ownerMessage, content, placement } = input;
   const { repository, clock, ids } = dependencies;
-  const { content } = ownerMessage;
-  const arrival: Arrival = { dependencies, ownerLocale, ownerMessage };
-  if (isMediaContent(content)) assertVoiceNote({ kind: content.kind, voice: content.voice });
-  const isNewMessage = await repository.recordChannelReceipt({ wamid: channelMessageId, receivedAt: clock.now() });
-  if (!isNewMessage) return DUPLICATE_RESULT;
-  if (content.kind !== MessageKind.Reaction) await openWindowAndFlush({ dependencies, at: ownerMessage.at });
-  const isNoticeQuickReply = content.kind === MessageKind.Choice && content.optionId === NOTICE_QUICK_REPLY_ID;
-  if (isNoticeQuickReply) return { messageId: null, agent: null, duplicate: false };
-  const assigned = content.kind === MessageKind.Choice ? await assignHeldMessages({ ...arrival, optionId: content.optionId }) : null;
-  if (assigned !== null) return assigned;
-  if (isMediaContent(content)) await storeOwnerMedia({ dependencies, content });
-  const placement =
-    content.kind === MessageKind.Choice
-      ? await placeChoice({ ...arrival, choice: content })
-      : await placeContent({ ...arrival, content: toMessageContent(content) });
-  const { agent } = placement.decision;
   const messageId = ids.next({ prefix: IdPrefix.Message });
-  const unreadBefore = agent === null ? 0 : await repository.countUnread({ agent });
+  if (isMediaContent(content)) await storeOwnerMedia({ dependencies, content });
   await repository.insertMessage({
     message: {
       messageId,
       direction: MessageDirection.FromOwner,
-      agent,
+      agent: placement.decision.agent,
       at: ownerMessage.at,
       replyToMessageId: placement.replyToMessageId,
       delivery: null,
@@ -277,20 +273,42 @@ export async function receiveOwnerMessage(input: ReceiveOwnerMessageInput): Prom
       ...placement.content,
     },
   });
-  if (placement.answer !== null) {
-    const { questionId, optionIndex, text } = placement.answer;
-    await repository.saveAnswer({ questionId, answer: { optionIndex, text, answerMessageId: messageId, answeredAt: clock.now() } });
-  }
-  if (agent === null) await promptOwner({ ...arrival, heldMessageId: messageId, prompt: placement.prompt });
-  if (agent !== null) {
-    const shouldTellOwner = content.kind !== MessageKind.Reaction;
-    await wakeAgent({
-      ...arrival,
-      agent,
-      unreadBefore,
-      answeredQuestionId: placement.answer === null ? null : placement.answer.questionId,
-      shouldTellOwner,
-    });
-  }
-  return { messageId, agent, duplicate: false };
+  if (placement.answer === null) return messageId;
+  const { questionId, optionIndex, text } = placement.answer;
+  await repository.saveAnswer({ questionId, answer: { optionIndex, text, answerMessageId: messageId, answeredAt: clock.now() } });
+  return messageId;
+}
+
+async function deliverPlacement(
+  input: Arrival & { placement: Placement; messageId: string; unreadBefore: number; shouldTellOwner: boolean },
+): Promise<void> {
+  const { placement, messageId, unreadBefore, shouldTellOwner } = input;
+  const { agent } = placement.decision;
+  if (agent === null) return promptOwner({ ...input, heldMessageId: messageId, prompt: placement.prompt });
+  const answeredQuestionId = placement.answer === null ? null : placement.answer.questionId;
+  return wakeAgent({ ...input, agent, unreadBefore, answeredQuestionId, shouldTellOwner });
+}
+
+export async function receiveOwnerMessage(input: ReceiveOwnerMessageInput): Promise<ReceiveResult> {
+  const { dependencies, ownerLocale, channelMessageId, ownerMessage } = input;
+  const { repository, clock } = dependencies;
+  const { content } = ownerMessage;
+  const arrival: Arrival = { dependencies, ownerLocale, ownerMessage };
+  if (isMediaContent(content)) assertVoiceNote({ kind: content.kind, voice: content.voice });
+  const isNoticeQuickReply = content.kind === MessageKind.Choice && content.optionId === NOTICE_QUICK_REPLY_ID;
+  const routeTarget =
+    content.kind === MessageKind.Choice && !isNoticeQuickReply ? await findRouteTarget({ dependencies, optionId: content.optionId }) : null;
+  const isPlaced = !isNoticeQuickReply && routeTarget === null;
+  const placement = isPlaced ? await placeOwnerContent({ ...arrival, content }) : null;
+  const placedAgent = placement === null ? null : placement.decision.agent;
+  const unreadBefore = placedAgent === null ? 0 : await repository.countUnread({ agent: placedAgent });
+  const isNewMessage = await repository.recordChannelReceipt({ wamid: channelMessageId, receivedAt: clock.now() });
+  if (!isNewMessage) return DUPLICATE_RESULT;
+  const messageId = placement === null ? null : await storePlacement({ ...arrival, content, placement });
+  if (content.kind !== MessageKind.Reaction) await openWindowAndFlush({ dependencies, at: ownerMessage.at });
+  if (routeTarget !== null) return applyRouteTarget({ ...arrival, target: routeTarget });
+  if (placement === null || messageId === null) return { messageId: null, agent: null, duplicate: false };
+  const shouldTellOwner = content.kind !== MessageKind.Reaction;
+  await deliverPlacement({ ...arrival, placement, messageId, unreadBefore, shouldTellOwner });
+  return { messageId, agent: placement.decision.agent, duplicate: false };
 }

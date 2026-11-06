@@ -3,6 +3,7 @@ import {
   DeliveryState,
   InboxCopyKey,
   InboxErrorCode,
+  InboxStatus,
   MediaOrigin,
   MessageKind,
   OwnerLocale,
@@ -26,6 +27,7 @@ import {
   registerAgents,
   START_AT,
 } from '../testing/fixtures';
+import { checkInbox } from './check-inbox';
 import { sendText } from './send-text';
 import { waitForReply } from './wait-for-reply';
 
@@ -468,5 +470,57 @@ describe('receiveOwnerMessage media and receipts', () => {
     );
     expect(error).toEqual({ code: InboxErrorCode.InvalidInput, message: 'voice: only audio can be a voice note' });
     expect(await environment.repository.findMedia({ mediaId: 'wamid.1' })).toBeNull();
+  });
+});
+
+describe('receiveOwnerMessage retries and concurrency', () => {
+  test('two simultaneous owner messages flush the queue once', async () => {
+    const environment = await createEnvironment();
+    await closeWindow({ environment });
+    await send({ environment, text: 'queued' });
+    await Promise.all([receiveText({ environment, text: '@alpha one' }), receiveText({ environment, text: '@alpha two' })]);
+    expect(sessionTexts({ environment }).filter((text) => text === 'queued')).toHaveLength(1);
+  });
+
+  test('a failure before the message is stored lets the retry store it', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha'] });
+    const listOpenQuestions = environment.repository.listOpenQuestions.bind(environment.repository);
+    environment.repository.listOpenQuestions = async () => {
+      environment.repository.listOpenQuestions = listOpenQuestions;
+      throw new Error('storage unavailable');
+    };
+    const content = { kind: MessageKind.Text, text: '@alpha hi' } as const;
+    await expect(receive({ environment, content, channelMessageId: 'wamid.retry' })).rejects.toThrow('storage unavailable');
+    const retry = await receive({ environment, content, channelMessageId: 'wamid.retry' });
+    expect(retry).toMatchObject({ agent: 'alpha', duplicate: false });
+    expect(await environment.repository.countUnread({ agent: 'alpha' })).toBe(1);
+  });
+
+  test('pin: a failure after the message is stored makes the retry a duplicate and keeps the message unread', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha'] });
+    environment.sender.failSessionCalls({ callNumbers: [1] });
+    const content = { kind: MessageKind.Text, text: '@alpha hi' } as const;
+    await expect(receive({ environment, content, channelMessageId: 'wamid.retry' })).rejects.toThrow();
+    const retry = await receive({ environment, content, channelMessageId: 'wamid.retry' });
+    expect(retry.duplicate).toBe(true);
+    expect(await environment.repository.countUnread({ agent: 'alpha' })).toBe(1);
+  });
+
+  test('a message held before the first agent reaches that agent on its first contact', async () => {
+    const environment = await createEnvironment();
+    await receiveText({ environment, text: 'anyone?' });
+    const inbox = await checkInbox({ dependencies: environment.dependencies, connection: connectionOf({ agent: 'alpha' }) });
+    expect(inbox).toMatchObject({ status: InboxStatus.New, messages: [{ text: 'anyone?' }] });
+    expect(await environment.repository.listHeld()).toEqual([]);
+  });
+
+  test('a second agent does not take the held messages of the routing list', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha'] });
+    await receiveText({ environment, text: 'first' });
+    await registerAgents({ environment, agents: ['beta'] });
+    expect(await environment.repository.listHeld()).toHaveLength(1);
   });
 });
