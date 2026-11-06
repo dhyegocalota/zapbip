@@ -1,5 +1,6 @@
 import type { AgentWaker } from '@zapbip/core';
+import { WakeOutcome } from '@zapbip/types';
 
 export function createNoneWaker(): AgentWaker {
-  throw new Error('createNoneWaker is not implemented');
+  return { notify: async () => WakeOutcome.Unreached };
 }
