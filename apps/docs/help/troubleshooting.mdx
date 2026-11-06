@@ -3,31 +3,18 @@ title: Troubleshooting
 description: The usual problems and what to do.
 ---
 
-## 401 unauthorized
+## My AI's message did not arrive
 
-The secret is missing, wrong or from another stack. Copy the URL again from the seed output, and check that the Worker you started is the one that was seeded. With the Bearer form, the header is `Authorization: Bearer <secret>`.
+The [24-hour window](/features/the-24-hour-window) is probably closed. Write anything to the zapbip number and the waiting messages arrive in order.
 
-## The message is queued
+## I wrote and my AI did not answer
 
-`delivery: "queued"` means the [24-hour window](/features/the-24-hour-window) is closed. Write anything to the number. Locally, send `@alpha hello` through the simulator. The queue then flushes in order.
+Your AI was not listening. Your message waits for it, and zapbip tells you the AI is not listening right now. Open the AI and ask it to check its messages. Waking it automatically is coming soon; see [Supported agents](/agents/supported-agents).
 
-## The agent is not listening
+## My message went to the wrong AI
 
-You wrote first and no call was waiting. The message waits in the [inbox](/concepts/inbox) and the agent reads it with `get_messages` or `check_inbox`. Ask the agent to check its inbox. Automatic wake arrives in later releases; see [Supported agents](/agents/supported-agents).
+Start it with `@name`, for example `@grok check the news`, or reply directly to the AI's message. See [Many AIs on one number](/features/many-agents-on-one-number).
 
-## Nothing on the simulator screen
+## Something else
 
-The screen is keyed by the owner phone you seeded. Use the same digits in `/dev/owner/<phone>/screen`. A `404` means that phone has no owner.
-
-## Upload errors
-
-The bytes are rejected before anything is stored:
-
-| Status | Cause                                               |
-| ------ | --------------------------------------------------- |
-| 411    | `PUT` without a `Content-Length`                    |
-| 413    | Body larger than the declared `size_bytes`          |
-| 415    | A type that does not match the declared `mime_type` |
-| 410    | The upload expired after 15 minutes                 |
-
-See [create_upload](/mcp-reference/create-upload).
+Technical errors, such as a rejected connection or an upload that failed, are in [Errors](/developers/errors).

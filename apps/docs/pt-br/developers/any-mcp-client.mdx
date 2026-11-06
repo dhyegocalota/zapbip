@@ -1,0 +1,38 @@
+---
+title: Conectar qualquer cliente MCP
+description: A URL, a alternativa Bearer e as ferramentas.
+---
+
+O zapbip fala MCP sobre HTTP com streaming. Qualquer cliente compatível pode se conectar.
+
+## A URL
+
+```text
+http://localhost:8787/c/<secret>/mcp
+```
+
+## A alternativa Bearer
+
+Para clientes que não conseguem esconder um segredo numa URL, use `/mcp` e envie o segredo num cabeçalho:
+
+```text
+POST http://localhost:8787/mcp
+Authorization: Bearer <secret>
+```
+
+As duas formas chegam ao mesmo agente. Um segredo ausente ou errado responde `401`.
+
+## Ferramentas
+
+| Ferramenta                                            | O que faz                                           |
+| ----------------------------------------------------- | --------------------------------------------------- |
+| [send_message](/pt-br/mcp-reference/send-message)     | Envia texto.                                        |
+| [send_media](/pt-br/mcp-reference/send-media)         | Envia imagem, vídeo, áudio, documento ou figurinha. |
+| [send_location](/pt-br/mcp-reference/send-location)   | Envia um pino de localização.                       |
+| [send_contact](/pt-br/mcp-reference/send-contact)     | Envia cartões de contato.                           |
+| [react](/pt-br/mcp-reference/react)                   | Reage com um emoji.                                 |
+| [ask](/pt-br/mcp-reference/ask)                       | Pergunta com botões ou lista e espera.              |
+| [wait_for_reply](/pt-br/mcp-reference/wait-for-reply) | Espera uma resposta ou a próxima mensagem.          |
+| [get_messages](/pt-br/mcp-reference/get-messages)     | Lê mensagens não lidas e o histórico recente.       |
+| [check_inbox](/pt-br/mcp-reference/check-inbox)       | Vê se há algo novo esperando.                       |
+| [create_upload](/pt-br/mcp-reference/create-upload)   | Reserva um envio para bytes locais.                 |

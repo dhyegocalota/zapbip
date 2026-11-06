@@ -1,22 +1,20 @@
 ---
 title: Supported agents
-description: What each client can do with zapbip, and what is shipped today.
+description: Which AI you can connect, and what each one can do.
 ---
 
-Every client connects to the same MCP URL. They differ in how long one call may wait and in how they can be woken when you write first.
+| Your AI                   | Waits for your answer up to | You can start the conversation | Status                        |
+| ------------------------- | --------------------------- | ------------------------------ | ----------------------------- |
+| ChatGPT                   | 5 minutes                   | Not yet. Coming soon           | Coming soon                   |
+| Claude (app and site)     | 4 minutes                   | Not yet. Coming soon           | Coming soon                   |
+| Claude Code               | As long as needed           | Not yet. Coming soon           | Works today, on your computer |
+| Codex                     | 5 minutes, up to 15         | Not yet. Coming soon           | Coming soon                   |
+| Grok                      | 1 minute                    | Not yet. Coming soon           | Coming soon                   |
+| Grok Bot                  | 2 minutes or more           | Not yet. Coming soon           | Coming soon                   |
+| Any app that supports MCP | Depends on the app          | No                             | Works today, on your computer |
 
-| Client         | How it connects                             | Max wait per call                    | Start the conversation (wake rung)  | Status today                                |
-| -------------- | ------------------------------------------- | ------------------------------------ | ----------------------------------- | ------------------------------------------- |
-| Claude Code    | MCP URL, `claude mcp add`                   | Unlimited, with progress             | Planned: local connector, ~7 s      | Works locally; [guide](/agents/claude-code) |
-| Codex          | MCP URL                                     | 300 s, 900 s with `tool_timeout_sec` | Planned: local connector, ~6 s      | Probed; guide planned                       |
-| claude.ai      | Custom connector, public HTTPS              | ~240 s, retries by itself            | Planned: scheduled task, ~16 s      | Needs the hosted service                    |
-| ChatGPT        | Connector, public HTTPS                     | 299.5 s                              | Planned: scheduled task, hourly     | Needs the hosted service                    |
-| Grok Bot       | MCP URL                                     | 120 s or more                        | Planned: routine webhook, ~9 s      | Probed; guide planned                       |
-| Grok web       | Connector, public HTTPS                     | 60 s                                 | Planned: through a Grok Bot standby | Needs the hosted service                    |
-| Any MCP client | [MCP URL or Bearer](/agents/any-mcp-client) | Client-defined                       | None                                | Works locally                               |
+"Works today" means you can try it on your own computer with the [developer quickstart](/developers/quickstart). The real WhatsApp number is coming soon for every AI.
 
-zapbip never holds a call longer than 50 seconds, so every client in the table stays under its limit.
+## Starting the conversation
 
-## What "start the conversation" means
-
-When you write first and the agent is not listening, today the message waits in the [inbox](/concepts/inbox) and zapbip tells you the agent is not listening right now. The rungs marked planned arrive with their own releases; see the [wake ladder](/concepts/wake-ladder).
+Today, if you write first and your AI is not listening, your message waits and zapbip tells you the AI is not listening right now. Waking each AI so it answers right away is coming soon.

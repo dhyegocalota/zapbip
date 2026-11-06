@@ -1,99 +1,100 @@
 ---
 title: Overview
-description: Your own AI agents, in your own WhatsApp.
+description: Your AI, in your WhatsApp.
 ---
 
 ## Why zapbip exists
 
-Your AI agents work for you in a terminal or a chat tab. When they need a decision, or finish a long task, you are not there, so they wait or they guess.
+You use AI to research, plan and build. But when it needs a decision, or finishes something that took a while, you are not looking at the screen. So it waits, or it guesses.
 
-You already live on WhatsApp. zapbip puts your own agents there: they message you, ask with buttons, wait for your answer, and you can message them first.
+You already live on WhatsApp. zapbip puts your AI there: it messages you, asks with buttons, waits for your answer, and you can message it first.
 
 ## What it looks like
 
 <CardGroup cols={2}>
-  <Card title="Deploy approval" icon="rocket">
+  <Card title="Research finished" icon="file-pdf">
     ```text
-    claude-code  Posso subir a v2.3 para produção?
-                 [ Sim ]  [ Não ]
-    you          (toca em Sim)
-    claude-code  Deploy feito ✅ 2m14s
+    ChatGPT  Your research on e-bikes is
+             ready. Here is the summary.
+             [summary.pdf]
+    you      Thanks, perfect.
     ```
   </Card>
-  <Card title="Long task finished" icon="flag-checkered">
+  <Card title="A decision on your trip" icon="plane">
     ```text
-    codex  Migração terminou: 1.204 linhas, 0 erros. Quer o relatório?
-    you    manda
-    codex  relatório.pdf
+    Claude   Which hotel for Lisbon?
+             [ Alfama ] [ Baixa ] [ Belém ]
+    you      (taps Baixa)
+    Claude   Booking Baixa for 3 nights.
     ```
   </Card>
-  <Card title="You start the conversation" icon="message">
+  <Card title="Remind me, check in" icon="bell">
     ```text
-    you    @codex qual o status do PR 42?
-    codex  Aprovado, falta o CI.
+    you      Remind me to renew my
+             passport on Friday.
+    Grok     Done. I will check in on
+             Friday morning.
     ```
 
-    Coming soon: waking an agent that is not listening needs a later release.
+    Coming soon: your AI starting the conversation on its own.
 
   </Card>
-  <Card title="A decision with a list" icon="list">
+  <Card title="Approve a deploy" icon="rocket">
     ```text
-    claude  Qual plano de viagem?
-            [ Lista ]  Praia / Serra / Cidade / Ficar em casa
-    you     (escolhe Serra)
-    claude  Reservando a Serra.
+    Claude Code  Can I deploy v2.3 to production?
+                 [ Yes ] [ No ]
+    you          (taps Yes)
+    Claude Code  Deployed ✅ 2m14s
     ```
   </Card>
   <Card title="Photos both ways" icon="image">
     ```text
-    claude-code  [captura do erro]  Falhou aqui
-    you          [foto do quadro branco]
-    claude-code  Entendi o fluxo, ajustando.
+    Claude   [photo of the error] Failed here
+    you      [photo of the whiteboard]
+    Claude   Got the flow, fixing it.
     ```
   </Card>
-  <Card title="Many agents, one number" icon="users">
+  <Card title="Many AIs, one number" icon="users">
     ```text
-    claude-code  Testes passaram.
-    grok         Achei 3 fontes.
-    you          (responde citando grok)  Quais?
+    Claude   Tests passed.
+    Grok     Found 3 sources.
+    you      (replies to Grok)  Which ones?
     ```
   </Card>
 </CardGroup>
 
 <Note>
-  Shown as they will look on WhatsApp. Today a development simulator stands in for your phone and the real number arrives in a later
-  release.
+  Shown as they will look on WhatsApp. The real WhatsApp number is coming soon. Today you can try everything on your computer with the
+  [developer quickstart](/developers/quickstart).
 </Note>
 
 ## How it works
 
 ```mermaid
 flowchart LR
-  A["Your agents<br/>Claude Code, Codex, claude.ai,<br/>ChatGPT, Grok"] -->|MCP| Z["zapbip<br/>an inbox per agent<br/>the 24 h window<br/>routing"]
-  Z -->|official Cloud API| W["WhatsApp<br/>number"]
-  W --> P["Your phone"]
-  P -->|your answer| W
-  W --> Z
-  Z -.->|wakes the agent| A
+  A["Your AI<br/>ChatGPT, Claude, Grok,<br/>Codex"] -->|connected once| Z["zapbip<br/>one inbox per AI<br/>the 24 h window<br/>routing"]
+  Z -->|official WhatsApp number| P["Your phone"]
+  P -->|your answer| Z
+  Z -.->|wakes your AI| A
 ```
 
-1. **Connect an agent.** One URL, one secret per agent.
-2. **It messages you.** Text, media, or a question with buttons.
-3. **You answer or start.** Reply on WhatsApp, or write first and zapbip routes it to the right agent.
+1. **Connect your AI** once, by pasting a prompt.
+2. **It messages you** with text, files, or a question with buttons.
+3. **You answer, or write first**, and zapbip delivers it to the right AI.
 
 ## Who it is for
 
-Developers who run their own agents and want one place, their phone, to hear from all of them. It talks only to you, never to third parties.
+Anyone who uses AI: ChatGPT, Claude, Grok, Codex and more. You need nothing but WhatsApp. zapbip talks only to you, never to third parties.
 
 ## What you can do
 
 - [Send messages and media](/features/send-messages-and-media)
 - [Ask with buttons and lists](/features/ask-with-buttons-and-lists)
-- [Run many agents on one number](/features/many-agents-on-one-number)
+- [Use many AIs on one number](/features/many-agents-on-one-number)
 - [Understand the 24-hour window](/features/the-24-hour-window)
 
-See which clients work in [Supported agents](/agents/supported-agents).
+See which AIs work in [Supported agents](/agents/supported-agents).
 
-<Card title="Quickstart" icon="rocket" href="/get-started/quickstart">
-  Run zapbip locally and get your first message in about five minutes.
+<Card title="How to start" icon="rocket" href="/get-started/how-to-start">
+  Four steps from your WhatsApp to your first message. Coming soon.
 </Card>

@@ -1,0 +1,29 @@
+---
+title: Erros
+description: Erros técnicos e o que significam.
+---
+
+## 401 unauthorized
+
+O segredo está ausente, errado ou é de outra instância. Copie a URL de novo da saída do seed e confira se o Worker que você iniciou é o mesmo que foi populado. Na forma Bearer, o cabeçalho é `Authorization: Bearer <secret>`.
+
+## Nada na tela do simulador
+
+A tela é indexada pelo telefone do dono que você cadastrou. Use os mesmos dígitos em `/dev/owner/<phone>/screen`. Um `404` quer dizer que esse telefone não tem dono.
+
+## A mensagem ficou na fila
+
+`delivery: "queued"` quer dizer que a [janela de 24 horas](/pt-br/features/the-24-hour-window) está fechada. Localmente, envie `@alpha hello` pelo simulador e a fila é descarregada em ordem.
+
+## Erros de envio de arquivo
+
+Os bytes são recusados antes de qualquer armazenamento:
+
+| Status | Causa                                    |
+| ------ | ---------------------------------------- |
+| 411    | `PUT` sem `Content-Length`               |
+| 413    | Corpo maior que o `size_bytes` declarado |
+| 415    | Tipo diferente do `mime_type` declarado  |
+| 410    | O envio expirou após 15 minutos          |
+
+Veja [create_upload](/pt-br/mcp-reference/create-upload).

@@ -1,28 +1,28 @@
 ---
-title: Many agents on one number
-description: How your reply finds the agent it is for.
+title: Many AIs on one number
+description: How your reply finds the AI it is for.
 ---
 
-Every agent writes from the same WhatsApp number. The first rule that matches decides where your message goes.
+All your AIs write from the same WhatsApp number. zapbip decides where your message goes, in this order:
 
-| You do                                      | It goes to                           |
-| ------------------------------------------- | ------------------------------------ |
-| Tap a button or list option                 | The agent that asked                 |
-| Reply to a message, or react to it          | The agent that sent that message     |
-| Write `@beta check the logs`                | `beta`, with `@beta ` removed        |
-| Answer while one agent has an open question | That agent                           |
-| Write after only `alpha` spoke              | `alpha`, the last agent that wrote   |
-| Write when nothing matches                  | A list of recent agents to pick from |
+| You do                                  | It goes to                        |
+| --------------------------------------- | --------------------------------- |
+| Tap a button or a list option           | The AI that asked                 |
+| Reply to a message, or react to it      | The AI that sent that message     |
+| Write `@grok check the news`            | Grok, without the `@grok `        |
+| Answer while one AI has a question open | That AI                           |
+| Write after only Claude spoke           | Claude, the last AI that wrote    |
+| Write when nothing matches              | A list of recent AIs to pick from |
 
 ## Example
 
 ```text
-alpha   Tests are green.
-beta    Can I rebase main?   [ Yes ] [ No ]
+Claude   Tests passed.
+Grok     Can I rebase main?   [ Yes ] [ No ]
 
-you     @alpha thanks            -> alpha
-you     (taps Yes)               -> beta
-you     ok                       -> a list: alpha, beta
+you      @claude thanks         -> Claude
+you      (taps Yes)             -> Grok
+you      ok                     -> a list: Claude, Grok
 ```
 
-Agent names have up to 20 characters: lowercase letters, digits and hyphens. The full order is in [Routing](/concepts/routing).
+Names have up to 20 characters: lowercase letters, digits and hyphens.
