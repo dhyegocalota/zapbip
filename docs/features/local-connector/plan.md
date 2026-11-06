@@ -542,7 +542,7 @@ Versions were checked with `npm view` on 2026-11-06. The Worker side uses packag
 ## Z. Prove and ship
 
 - [ ] **Tester briefing:** a developer wrote `docs/features/local-connector/tester-briefing.md`, with every red run's printed failure text.
-- [ ] **Tester run:** a fresh `tester` sub-agent executed `test-plan.md` and ticked every box with evidence, except the owner-run section.
+- [x] **Tester run:** a fresh `tester` sub-agent executed `test-plan.md` and ticked every box with evidence, except the owner-run section. (evidence: docs/features/local-connector/test-plan.md; cf219d3 delta-head.md, d-conn-unit.log 262/262, d-conn-e2e.log 9/9)
 - [ ] **Reviewer:** a fresh `reviewer` sub-agent returned a verdict; refutation of the three riskiest claims is recorded in `test-plan.md`.
 - [ ] **/check-ui:** not applicable (no UI).
 - [ ] **/open-pr:** gates passed, learnings sweep stated, PR opened.
