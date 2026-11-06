@@ -155,6 +155,15 @@ describe('SQLite inbox repository', () => {
     expect(result.openAfter).toEqual([]);
   });
 
+  it('lists open questions newest first', async () => {
+    const ids = await inRepository(async (repository) => {
+      await repository.insertQuestion({ question: buildQuestion({ questionId: 'qst_old', askedAt: BASE_TIME }) });
+      await repository.insertQuestion({ question: buildQuestion({ questionId: 'qst_new', askedAt: BASE_TIME + 1 }) });
+      return (await repository.listOpenQuestions()).map((question) => question.questionId);
+    });
+    expect(ids).toEqual(['qst_new', 'qst_old']);
+  });
+
   it('finds no question for an unknown id', async () => {
     expect(await inRepository((repository) => repository.findQuestion({ questionId: 'qst_none' }))).toBeNull();
   });
@@ -166,11 +175,12 @@ describe('SQLite inbox repository', () => {
       return {
         otherAgent: await repository.findRecentQuestion({ agent: 'beta', normalizedKey: 'k', askedAfter: BASE_TIME - 1 }),
         otherKey: await repository.findRecentQuestion({ agent: 'alpha', normalizedKey: 'other', askedAfter: BASE_TIME - 1 }),
+        atBoundary: await repository.findRecentQuestion({ agent: 'alpha', normalizedKey: 'k', askedAfter: BASE_TIME }),
         tooLate: await repository.findRecentQuestion({ agent: 'alpha', normalizedKey: 'k', askedAfter: BASE_TIME + 1 }),
         match: await repository.findRecentQuestion({ agent: 'alpha', normalizedKey: 'k', askedAfter: BASE_TIME - 1 }),
       };
     });
-    expect(result).toEqual({ otherAgent: null, otherKey: null, tooLate: null, match: question });
+    expect(result).toEqual({ otherAgent: null, otherKey: null, atBoundary: question, tooLate: null, match: question });
   });
 
   it('records a channel receipt once', async () => {
@@ -229,7 +239,7 @@ describe('SQLite inbox repository', () => {
       await repository.deleteMedia({ mediaIds: ['med_1'] });
       return { received, deleted: await repository.findMedia({ mediaId: 'med_1' }) };
     });
-    expect(result.received).toEqual({ ...media, receivedAt: BASE_TIME, retentionUntil: BASE_TIME + MEDIA_RETENTION_MS });
+    expect(result.received).toEqual({ ...media, expiresAt: null, receivedAt: BASE_TIME, retentionUntil: BASE_TIME + MEDIA_RETENTION_MS });
     expect(result.deleted).toBeNull();
   });
 

@@ -233,7 +233,7 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
 
     async findRecentQuestion({ agent, normalizedKey, askedAfter }) {
       const row = first<QuestionRow>(
-        SELECT_QUESTIONS + 'WHERE agent = ? AND normalized_key = ? AND asked_at > ? ORDER BY asked_at DESC, rowid DESC LIMIT 1',
+        SELECT_QUESTIONS + 'WHERE agent = ? AND normalized_key = ? AND asked_at >= ? ORDER BY asked_at DESC, rowid DESC LIMIT 1',
         agent,
         normalizedKey,
         askedAfter,
@@ -242,7 +242,7 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
     },
 
     async listOpenQuestions() {
-      return rows<QuestionRow>(SELECT_QUESTIONS + 'WHERE answer IS NULL ORDER BY asked_at, rowid').map(toQuestion);
+      return rows<QuestionRow>(SELECT_QUESTIONS + 'WHERE answer IS NULL ORDER BY asked_at DESC, rowid DESC').map(toQuestion);
     },
 
     async saveAnswer({ questionId, answer }: { questionId: string; answer: QuestionAnswer }) {
@@ -318,7 +318,12 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
     },
 
     async markMediaReceived({ mediaId, receivedAt, retentionUntil }) {
-      run('UPDATE media SET received_at = ?, retention_until = ? WHERE media_id = ?', receivedAt, retentionUntil, mediaId);
+      run(
+        'UPDATE media SET received_at = ?, retention_until = ?, expires_at = NULL WHERE media_id = ?',
+        receivedAt,
+        retentionUntil,
+        mediaId,
+      );
     },
 
     async listExpiredMediaIds({ now }) {

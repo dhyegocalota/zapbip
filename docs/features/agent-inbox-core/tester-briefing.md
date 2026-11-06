@@ -171,6 +171,6 @@ Counts at the last run: unit 18 passed, integration 59 passed.
 - `markRead` stamps `read_at` with SQLite wall time (the repository port has no clock), not the development clock.
 - `armAlarm` compares due times in clock time with a real-time alarm; after `advanceClock` the real alarm is later than the clock deadline. Tests use `runDurableObjectAlarm`.
 - An `ask` that holds and is evicted before it returns does not re-arm the alarm until the next call; the queued prompt's expiry waits for the next write.
-- `findLastAgentWrite` uses `at >= since`; `findRecentQuestion` uses `askedAfter < askedAt`.
+- `findLastAgentWrite` uses `at >= since`; `findRecentQuestion` is inclusive on `askedAfter` and `listOpenQuestions` is newest first, as in the in-memory repository.
 - The fake sender reads the prompt text of a `choice` message from the `questions` row, so `ask` must insert the question before `session`.
 - The history of `eb984a0` carries a fixture string that gitleaks flags; `.gitleaks.toml` allowlists it anchored.
