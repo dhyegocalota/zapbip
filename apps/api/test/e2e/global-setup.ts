@@ -7,6 +7,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { promisify } from 'node:util';
+import { WAKE_SECRET_KEY_BYTES } from '@zapbip/core';
 import { SECOND_MS } from '@zapbip/types';
 import type { TestProject } from 'vitest/node';
 import { z } from 'zod';
@@ -97,6 +98,8 @@ export default async function setup(project: TestProject): Promise<() => Promise
       `UPLOAD_LINK_SIGNING_KEY:${randomBytes(SIGNING_KEY_BYTES).toString('hex')}`,
       '--var',
       `PUBLIC_ORIGIN:${origin}`,
+      '--var',
+      `WAKE_SECRET_KEY:${randomBytes(WAKE_SECRET_KEY_BYTES).toString('base64')}`,
     ],
     { stdio: ['ignore', 'pipe', 'pipe'], detached: true },
   );
