@@ -13,6 +13,7 @@ from websockets.exceptions import ConnectionClosed, WebSocketException
 from .constants import (
     ABNORMAL_CLOSE_CODE,
     CLEAN_EXIT_CODE,
+    CONNECTOR_FRAME_MAX_BYTES,
     CONNECTOR_PING_TEXT,
     FAILURE_EXIT_CODE,
     HEARTBEAT_INTERVAL_MS,
@@ -22,6 +23,7 @@ from .constants import (
     RECONNECT_BASE_MS,
     RECONNECT_MAX_MS,
     REPLACED_CLOSE_CODE,
+    REVOKED_CLOSE_CODE,
     UPGRADE_REQUIRED_STATUS,
     ConnectorFrameType,
     ConnectorLogEvent,
@@ -189,7 +191,7 @@ async def hold_socket(
     active: ActiveConnection,
 ) -> SocketEnd:
     try:
-        connection = await connect(socket_link, ping_interval=None)
+        connection = await connect(socket_link, ping_interval=None, max_size=CONNECTOR_FRAME_MAX_BYTES)
     except (OSError, WebSocketException, TimeoutError) as error:
         log_connector_event(event=ConnectorLogEvent.CONNECTOR_CLOSED, error=type(error).__name__)
         return SocketEnd(code=ABNORMAL_CLOSE_CODE, was_opened=False)
@@ -214,15 +216,14 @@ async def hold_socket(
     return SocketEnd(code=code, was_opened=True)
 
 
-async def run_connector_socket(
+async def refusal_exit_code(
     *,
     socket_link: str,
     stop: asyncio.Event,
-    hand_off: Callable[..., Awaitable[None]],
-    timing: ConnectorTiming = DEFAULT_CONNECTOR_TIMING,
-    probe_status: Callable[..., Awaitable[int]] = probe_connector_status,
-    wait: Callable[..., Awaitable[None]] = wait_or_stop,
-) -> int:
+    timing: ConnectorTiming,
+    probe_status: Callable[..., Awaitable[int]],
+    wait: Callable[..., Awaitable[None]],
+) -> int | None:
     status = await probe_until_answered(
         probe_link=probe_link_of(socket_link=socket_link),
         stop=stop,
@@ -232,15 +233,38 @@ async def run_connector_socket(
     )
     if status is None:
         return CLEAN_EXIT_CODE
-    if status != UPGRADE_REQUIRED_STATUS:
-        log_connector_event(event=ConnectorLogEvent.CONNECTOR_CLOSED, status=status)
-        return FAILURE_EXIT_CODE
+    if status == UPGRADE_REQUIRED_STATUS:
+        return None
+    log_connector_event(event=ConnectorLogEvent.CONNECTOR_CLOSED, status=status)
+    return FAILURE_EXIT_CODE
+
+
+async def run_connector_socket(
+    *,
+    socket_link: str,
+    stop: asyncio.Event,
+    hand_off: Callable[..., Awaitable[None]],
+    timing: ConnectorTiming = DEFAULT_CONNECTOR_TIMING,
+    probe_status: Callable[..., Awaitable[int]] = probe_connector_status,
+    wait: Callable[..., Awaitable[None]] = wait_or_stop,
+) -> int:
+    first_refusal = await refusal_exit_code(
+        socket_link=socket_link, stop=stop, timing=timing, probe_status=probe_status, wait=wait
+    )
+    if first_refusal is not None:
+        return first_refusal
     active = ActiveConnection()
     delivery = MessageDelivery(hand_off=hand_off, send_done=lambda *, message_id: send_done(active=active, message_id=message_id))
     worker = asyncio.create_task(delivery.run())
     try:
         return await reconnect_until_stopped(
-            socket_link=socket_link, stop=stop, timing=timing, delivery=delivery, active=active, wait=wait
+            socket_link=socket_link,
+            stop=stop,
+            timing=timing,
+            delivery=delivery,
+            active=active,
+            probe_status=probe_status,
+            wait=wait,
         )
     finally:
         worker.cancel()
@@ -254,6 +278,7 @@ async def reconnect_until_stopped(
     timing: ConnectorTiming,
     delivery: MessageDelivery,
     active: ActiveConnection,
+    probe_status: Callable[..., Awaitable[int]],
     wait: Callable[..., Awaitable[None]],
 ) -> int:
     attempt = 0
@@ -261,6 +286,8 @@ async def reconnect_until_stopped(
         end = await hold_socket(socket_link=socket_link, stop=stop, timing=timing, delivery=delivery, active=active)
         if end.code == REPLACED_CLOSE_CODE:
             return CLEAN_EXIT_CODE
+        if end.code == REVOKED_CLOSE_CODE:
+            return FAILURE_EXIT_CODE
         if stop.is_set():
             break
         failed_attempts = 0 if end.was_opened else attempt
@@ -268,4 +295,11 @@ async def reconnect_until_stopped(
         log_connector_event(event=ConnectorLogEvent.CONNECTOR_RECONNECTING, attempt=failed_attempts, delayMs=delay_ms)
         await wait(delay_ms=delay_ms, stop=stop)
         attempt = failed_attempts + 1
+        if end.was_opened:
+            continue
+        retry_refusal = await refusal_exit_code(
+            socket_link=socket_link, stop=stop, timing=timing, probe_status=probe_status, wait=wait
+        )
+        if retry_refusal is not None:
+            return retry_refusal
     return CLEAN_EXIT_CODE

@@ -1,4 +1,4 @@
-import { ConnectorFrameType, FrameRejectionReason } from '@zapbip/types';
+import { CONNECTOR_FRAME_MAX_BYTES, ConnectorFrameType, FrameRejectionReason } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { parseServerFrame } from '../../src/frames';
 
@@ -14,7 +14,7 @@ describe('parseServerFrame', () => {
     expect(parse({ body: { type } })).toEqual({ ok: false, reason: FrameRejectionReason.UnknownType });
   });
 
-  it('rejects a raw __proto__ type in the JSON text as an unknown type', () => {
+  it('rejects a raw __proto__ key in the JSON text as an unknown type', () => {
     const text = '{"type":"__proto__"}';
     expect(parseServerFrame({ text, byteLength: text.length, isBinary: false })).toEqual({
       ok: false,
@@ -25,5 +25,13 @@ describe('parseServerFrame', () => {
   it('accepts a hello frame', () => {
     const body = { type: ConnectorFrameType.Hello, agent: 'ana', previousWakeMode: 'none' };
     expect(parse({ body })).toEqual({ ok: true, frame: body });
+  });
+
+  it('rejects a frame over the limit', () => {
+    const text = '{"type":"messages"}';
+    expect(parseServerFrame({ text, byteLength: CONNECTOR_FRAME_MAX_BYTES + 1, isBinary: false })).toEqual({
+      ok: false,
+      reason: FrameRejectionReason.FrameTooLarge,
+    });
   });
 });
