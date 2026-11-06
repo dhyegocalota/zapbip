@@ -1,54 +1,64 @@
+import { existsSync } from 'node:fs';
 import { describe, expect, test } from 'vitest';
 import { readRepositoryFile, repositoryPath } from './repository-files';
-import { existsSync } from 'node:fs';
 
-const DOCS_CONFIG_FILE = 'apps/docs/docs.json';
-const CONCEPTS_GROUP = 'Concepts';
+const DOCS_ROOT = 'apps/docs';
+const DOCS_CONFIG_FILE = `${DOCS_ROOT}/docs.json`;
+const DEFAULT_LANGUAGE = 'en';
+const TRANSLATED_LANGUAGE = 'pt-BR';
+const TRANSLATED_DIRECTORY = 'pt-br';
 const CHANNEL_PAGE = 'concepts/whatsapp-channel';
 const NOTICES_PAGE = 'concepts/owner-notices';
 const PAGE_EXTENSION = '.mdx';
 
-const CHANNEL_LIMITS = [
-  '4,096 characters',
-  '1,024 characters',
-  '3 buttons',
-  '20 characters',
-  '10 rows',
-  '24 characters',
-  '72 characters',
-  '5 MB',
-  '16 MB',
-  '100 MB',
-  '100 KB',
-  '30 days',
-  '24 hours',
-];
-const NOTICE_TERMS = ['zapbip_agent_notice', 'zapbip_agent_question', 'Abrir', 'Open', 'Responder', 'Reply', 'before the real content'];
+const CHANNEL_LIMITS = ['4,096', '1,024', '3', '20', '10', '24', '72', '5 MB', '16 MB', '100 MB', '100 KB', '30', '24'];
+const NOTICE_TERMS = ['zapbip_agent_notice', 'zapbip_agent_question', 'Abrir', 'Open', 'Responder', 'Reply'];
+const NOTICE_SENTENCE_BY_LANGUAGE: Record<string, string> = {
+  [DEFAULT_LANGUAGE]: 'before the real content',
+  [TRANSLATED_LANGUAGE]: 'antes do conteúdo de verdade',
+};
 
-type DocsConfig = { navigation: { groups: { group: string; pages: string[] }[] } };
+type NavigationNode = string | { group: string; pages: NavigationNode[] };
+type LanguageNavigation = { language: string; groups: { group: string; pages: NavigationNode[] }[] };
 
-function pageSource(page: string): string {
-  return readRepositoryFile(`apps/docs/${page}${PAGE_EXTENSION}`);
+function pagesOf(nodes: NavigationNode[]): string[] {
+  return nodes.flatMap((node) => (typeof node === 'string' ? [node] : pagesOf(node.pages)));
 }
 
-function conceptPages(): string[] {
-  const config: DocsConfig = JSON.parse(readRepositoryFile(DOCS_CONFIG_FILE));
-  const conceptsGroup = config.navigation.groups.find((group) => group.group === CONCEPTS_GROUP);
-  if (!conceptsGroup) throw new Error(`${DOCS_CONFIG_FILE} has no ${CONCEPTS_GROUP} group`);
-  return conceptsGroup.pages;
+function navigationPages(language: string): string[] {
+  const languages: LanguageNavigation[] = JSON.parse(readRepositoryFile(DOCS_CONFIG_FILE)).navigation.languages;
+  const navigation = languages.find((entry) => entry.language === language);
+  if (!navigation) throw new Error(`${DOCS_CONFIG_FILE} has no ${language} navigation`);
+  return pagesOf(navigation.groups.flatMap((group) => group.pages));
 }
+
+function pagePath({ language, page }: { language: string; page: string }): string {
+  return language === DEFAULT_LANGUAGE ? page : `${TRANSLATED_DIRECTORY}/${page}`;
+}
+
+function pageSource({ language, page }: { language: string; page: string }): string {
+  return readRepositoryFile(`${DOCS_ROOT}/${pagePath({ language, page })}${PAGE_EXTENSION}`);
+}
+
+const cases = [DEFAULT_LANGUAGE, TRANSLATED_LANGUAGE].flatMap((language) =>
+  [CHANNEL_PAGE, NOTICES_PAGE].map((page) => ({ language, page })),
+);
 
 describe('whatsapp channel docs', () => {
-  test.each([CHANNEL_PAGE, NOTICES_PAGE])('%s exists and is in the concepts navigation', (page) => {
-    expect(existsSync(repositoryPath(`apps/docs/${page}${PAGE_EXTENSION}`))).toBe(true);
-    expect(conceptPages()).toContain(page);
+  test.each(cases)('$page exists and is in the $language navigation', ({ language, page }) => {
+    const path = pagePath({ language, page });
+    expect(existsSync(repositoryPath(`${DOCS_ROOT}/${path}${PAGE_EXTENSION}`))).toBe(true);
+    expect(navigationPages(language)).toContain(path);
   });
 
-  test.each(CHANNEL_LIMITS)('the channel page states %s', (limit) => {
-    expect(pageSource(CHANNEL_PAGE)).toContain(limit);
+  test.each([DEFAULT_LANGUAGE, TRANSLATED_LANGUAGE])('the %s channel page states every limit', (language) => {
+    const source = pageSource({ language, page: CHANNEL_PAGE });
+    expect(CHANNEL_LIMITS.filter((limit) => !source.includes(limit))).toEqual([]);
   });
 
-  test.each(NOTICE_TERMS)('the notices page states %s', (term) => {
-    expect(pageSource(NOTICES_PAGE)).toContain(term);
+  test.each([DEFAULT_LANGUAGE, TRANSLATED_LANGUAGE])('the %s notices page names both templates and the quick replies', (language) => {
+    const source = pageSource({ language, page: NOTICES_PAGE });
+    expect(NOTICE_TERMS.filter((term) => !source.includes(term))).toEqual([]);
+    expect(source).toContain(NOTICE_SENTENCE_BY_LANGUAGE[language]);
   });
 });
