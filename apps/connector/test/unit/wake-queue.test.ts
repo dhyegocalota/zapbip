@@ -24,6 +24,7 @@ function ownerMessage(input: { messageId: string }): Message {
     replyToMessageId: null,
     delivery: null,
     readByAgent: false,
+    forwarded: false,
     kind: MessageKind.Text,
     text: 'oi',
   };

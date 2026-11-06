@@ -15,6 +15,7 @@ function textMessage(input: { messageId: string; agent: string; direction: Messa
     replyToMessageId: null,
     delivery: null,
     readByAgent: false,
+    forwarded: false,
     kind: MessageKind.Text,
     text: 'hello',
   };

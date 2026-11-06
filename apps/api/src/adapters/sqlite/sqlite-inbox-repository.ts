@@ -56,7 +56,7 @@ const MARK_READ_STATEMENT = 'UPDATE inbox_messages SET read_at = ? WHERE read_at
 const WINDOW_ROW_ID = 1;
 
 function toMessage(row: MessageRow): Message {
-  const content: MessageContent = JSON.parse(row.payload);
+  const content: MessageContent & { forwarded: boolean } = JSON.parse(row.payload);
   return {
     messageId: row.id,
     direction: row.direction,

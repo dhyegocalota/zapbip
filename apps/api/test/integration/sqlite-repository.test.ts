@@ -314,6 +314,7 @@ describe('SQLite inbox repository', () => {
       direction: MessageDirection.FromOwner,
       agent: null,
       readByAgent: true,
+      forwarded: false,
     });
     const result = await inRepository(async (repository) => {
       await Promise.all([held, routedNowhere].map((message) => repository.insertMessage({ message })));

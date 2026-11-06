@@ -44,6 +44,7 @@ export type MessageEnvelope = {
   replyToMessageId: string | null;
   delivery: DeliveryState | null;
   readByAgent: boolean;
+  forwarded: boolean;
 };
 
 export type Message = MessageEnvelope & MessageContent;

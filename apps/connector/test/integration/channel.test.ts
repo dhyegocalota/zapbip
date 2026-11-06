@@ -106,7 +106,7 @@ describe('zapbip channel', () => {
     pushOwnerMessage({ messageId: 'msg_1', text: OWNER_TEXT });
     await server.waitForFrames({ type: ConnectorFrameType.Done, count: 1 });
 
-    expect(notifications).toEqual([{ content: OWNER_TEXT, meta: { sender: 'owner', verified: 'true' } }]);
+    expect(notifications).toEqual([{ content: OWNER_TEXT, meta: { sender: 'owner', verified: 'true', forwarded: 'false' } }]);
     expect(server.framesOfType({ type: ConnectorFrameType.Done }).map((entry) => entry.frame.messageId)).toEqual(['msg_1']);
   });
 

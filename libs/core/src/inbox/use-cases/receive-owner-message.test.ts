@@ -104,8 +104,16 @@ describe('receiveOwnerMessage routing', () => {
     expect(await environment.repository.findMessage({ messageId: result.messageId! })).toMatchObject({
       agent: 'alpha',
       readByAgent: false,
+      forwarded: false,
       text: 'oi',
     });
+  });
+
+  test('a forwarded message is stored with the forwarded flag', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha'] });
+    const result = await receive({ environment, content: { kind: MessageKind.Text, text: '@alpha oi' }, forwarded: true });
+    expect(await environment.repository.findMessage({ messageId: result.messageId! })).toMatchObject({ forwarded: true });
   });
 
   test('CU-136 a tap on an open question answers it with the option title', async () => {

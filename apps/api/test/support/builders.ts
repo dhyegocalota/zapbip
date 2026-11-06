@@ -11,6 +11,7 @@ export function buildEnvelope(input: Partial<MessageEnvelope> & { messageId: str
     replyToMessageId: null,
     delivery: DeliveryState.Sent,
     readByAgent: false,
+    forwarded: false,
     ...input,
   };
 }

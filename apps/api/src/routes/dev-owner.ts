@@ -18,7 +18,11 @@ import { ERROR_STATUS, HttpStatus } from './http-status';
 type OwnerIdentity = { accountId: string; ownerLocale: OwnerLocale };
 
 const nullableString = z.string().nullable().default(null);
-const commonShape = { wamid: z.string().default(() => `wamid.${crypto.randomUUID()}`), reply_to: nullableString };
+const commonShape = {
+  wamid: z.string().default(() => `wamid.${crypto.randomUUID()}`),
+  reply_to: nullableString,
+  forwarded: z.boolean().default(false),
+};
 
 const textSchema = z.object({ kind: z.literal(MessageKind.Text), text: z.string(), ...commonShape });
 const mediaSchema = z.object({
@@ -173,7 +177,12 @@ devOwnerRoutes.post(`${DEV_OWNER_PATH_PREFIX}/messages`, async (context) => {
   const outcome = await inbox.receiveOwnerMessage({
     ownerLocale,
     channelMessageId: body.wamid,
-    ownerMessage: { at: clock.now() + clockOffsetMs, replyToMessageId: body.reply_to, content: buildContent(body) },
+    ownerMessage: {
+      at: clock.now() + clockOffsetMs,
+      replyToMessageId: body.reply_to,
+      forwarded: body.forwarded,
+      content: buildContent(body),
+    },
   });
   if (!outcome.ok) return context.json({ error: outcome.errorCode, message: outcome.message }, ERROR_STATUS[outcome.errorCode]);
   const { messageId, agent, duplicate } = outcome.value;

@@ -230,4 +230,14 @@ describe('connector socket', () => {
     expect(remaining.messages[0]?.messageId).not.toBe(first.messages[0]?.messageId);
     session.socket.close();
   });
+
+  test('a forwarded owner message reaches the connector flagged as forwarded', async () => {
+    const account = await registeredAccount();
+    const session = await openConnector({ secret: account.secret });
+    await session.nextFrame();
+    await receiveOwnerText({ stub: accountInboxStub({ accountId: account.accountId }), text: `@${AGENT} ${OWNER_TEXT}`, forwarded: true });
+    const frame = (await session.nextFrame()) as MessagesFrame;
+    expect(frame.messages.map((message) => message.forwarded)).toEqual([true]);
+    session.socket.close();
+  });
 });

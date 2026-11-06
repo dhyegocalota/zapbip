@@ -72,7 +72,12 @@ export function receiveEnglishText(input: { stub: DurableObjectStub<AccountInbox
   return input.stub.receiveOwnerMessage({
     ownerLocale: OwnerLocale.EnglishUs,
     channelMessageId: input.channelMessageId,
-    ownerMessage: { at: Date.now(), replyToMessageId: null, content: { kind: MessageKind.Text, text: mentionText({ text: input.text }) } },
+    ownerMessage: {
+      at: Date.now(),
+      replyToMessageId: null,
+      forwarded: false,
+      content: { kind: MessageKind.Text, text: mentionText({ text: input.text }) },
+    },
   });
 }
 
