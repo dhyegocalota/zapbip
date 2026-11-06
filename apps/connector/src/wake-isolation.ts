@@ -1,3 +1,4 @@
+import type { Stats } from 'node:fs';
 import { lstat, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { homedir, tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
@@ -22,7 +23,8 @@ export async function removeStaleWakeDirectories(input: { nowMs?: number } = {})
   await Promise.all(
     names.map(async (name) => {
       const directory = join(temporaryDirectory, name);
-      const status = await lstat(directory);
+      const status = await statusOrNull({ directory });
+      if (status === null) return;
       const isStaleOwnDirectory =
         status.isDirectory() && status.uid === process.getuid?.() && nowMs - status.mtimeMs > STALE_WAKE_DIRECTORY_AGE_MS;
       if (isStaleOwnDirectory) await rm(directory, { recursive: true, force: true });
@@ -57,12 +59,24 @@ async function prepareClaudeIsolation(input: WakeIsolationInput): Promise<WakeIs
   };
 }
 
+function isMissingEntry(input: { error: unknown }): boolean {
+  return input.error instanceof Error && 'code' in input.error && input.error.code === MISSING_ENTRY_CODE;
+}
+
+async function statusOrNull(input: { directory: string }): Promise<Stats | null> {
+  try {
+    return await lstat(input.directory);
+  } catch (error) {
+    if (isMissingEntry({ error })) return null;
+    throw error;
+  }
+}
+
 async function readTextOrEmpty(input: { file: string }): Promise<string> {
   try {
     return await readFile(input.file, 'utf8');
   } catch (error) {
-    const isMissing = error instanceof Error && 'code' in error && error.code === MISSING_ENTRY_CODE;
-    if (isMissing) return '';
+    if (isMissingEntry({ error })) return '';
     throw error;
   }
 }

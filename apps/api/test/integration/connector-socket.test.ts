@@ -132,7 +132,7 @@ describe('connector socket', () => {
     session.socket.close();
   });
 
-  test('a second connect closes the first with the replaced code', async () => {
+  test('box 217: a second connect closes the first with the replaced code and leaves one socket for the agent', async () => {
     const account = await registeredAccount();
     const first = await openConnector({ secret: account.secret });
     await first.nextFrame();
