@@ -99,3 +99,60 @@ Pins: the first four wrangler-config cases, PB-4.
 
 - `ratelimits` and `analytics_engine_datasets` parity is not asserted; neither key exists yet.
 - The deploy command and runbooks must not use `--env production` (plan A7 and the production-bundle line were stale).
+
+## Lane B: deploy, smoke and helpers (steps B1 to B9; B10 blocked)
+
+### What changed and where
+
+- `apps/api/src/operations/deploy-preflight.ts`: `runWorkerPreflight` (ordered steps: environment and terminal, official number, git, gate, config placeholders, production readiness, secrets, migrations, smoke inputs; the first refusal is returned) and `runDocsPreflight` (official number, then `npm view zapbip@<version>`). Shell and npm lookups go through an injected `DeployShell`, so tests never touch the network.
+- `apps/api/src/operations/{smoke-inputs,smoke-checks,signed-webhook,terminal-shell,worker-facts,simulator-client,fake-graph-harness}.ts`.
+- `apps/api/scripts/deploy.ts` (`runDeploy`, `readDeployBlock`) and `apps/api/scripts/smoke.ts` (`runSmoke`); both run `main` only under `import.meta.main`.
+- `libs/types/src/constants.ts`: `OFFICIAL_NUMBER_UNSET`, `OFFICIAL_WHATSAPP_NUMBER` (the sentinel), `ZAPBIP_NPM_VERSION = '0.1.0'`; `apps/api/src/contract/constants.ts`: `WHATSAPP_WEBHOOK_PATH`. Same names and values as the slices that own them, defined here because they are not on this branch.
+- Test helpers: `test/unit/fake-deploy-shell.ts`, `test/unit/fake-smoke-stack.ts`. Extra test files beyond the plan: `worker-facts`, `smoke-entry`, `simulator-client`, `fake-graph-harness`.
+
+### How to run
+
+```
+cd apps/api && pnpm exec vitest run --config vitest.unit.config.mts
+node --import tsx apps/api/scripts/deploy.ts --environment development   # refuses, runs no command
+```
+
+### Red today, green after (failure text of the red runs)
+
+| Test file | Red text | Green |
+|---|---|---|
+| `smoke-inputs.test.ts` | `expected [Function] to throw error including 'SMOKE_BASE_URL' but got 'readSmokeInputs is not implemented'` | `5b87746` |
+| `deploy-preflight.test.ts` | `Error: runWorkerPreflight is not implemented` / `runDocsPreflight is not implemented` | `e0d373d` |
+| `worker-facts.test.ts` | `Error: inspectWorkerSource is not implemented` | `4daed72` |
+| `terminal-shell.test.ts` | `Error: createTerminalShell is not implemented` | `af85cbb` |
+| `signed-webhook.test.ts` | `Error: buildSignedWebhookPost is not implemented` | `461f7c6` |
+| `smoke-checks.test.ts` | `Error: runSmokeChecks is not implemented` | `02aa9b3` |
+| `deploy-entry.test.ts` | `Error: runDeploy is not implemented` / `readDeployBlock is not implemented` | `b71cd55` |
+| `smoke-entry.test.ts` | `Error: runSmoke is not implemented` | `94ca0b7` |
+| `simulator-client.test.ts`, `fake-graph-harness.test.ts` | `postOwnerText` / `startFakeGraph is not implemented` | `c4ecf97` |
+
+Pins (green on arrival): `env-example.test.ts`, `root-scripts.test.ts` (`19d03f1`). Unit suite: 18 files, 178 tests green; `pnpm typecheck` green.
+
+### Decisions and deviations (tester: attack these)
+
+1. Production is never given `--env`: `wranglerCommand` omits the flag for production. The root scripts' `--environment production` is read only by `parseDeployEnvironment`.
+2. `OFFICIAL_WHATSAPP_NUMBER === OFFICIAL_NUMBER_UNSET` refuses every deploy (Worker and docs), right after the environment check and before any command.
+3. Coordinator addition: production is refused unless the source exports `scheduled` (regex on `src/index.ts`), `wrangler` has a cron trigger in the top-level block, and a `src` file contains `/i/:installCode`. Staging is not held to it. This is a source-text check, not a bundle inspection; a route declared through a constant would be missed.
+4. `--first-deploy` also exists on `deploy.ts` (not in the plan): without it the preflight smoke-input step would refuse the first deploy because `SMOKE_CONNECTION_SECRET` is still a placeholder. It is forwarded to `smoke.ts`, which skips checks 2 and 5 and prints how to create the smoke connection and re-run.
+5. `runDeploy` takes `block`, `workerFacts`, `officialWhatsAppNumber`, `firstDeploy` and `log` besides the planned parameters, so tests need no files.
+6. Smoke needs `WHATSAPP_VERIFY_TOKEN` (check 3) and `WHATSAPP_PHONE_NUMBER_ID` (check 5; a wrong id makes the Worker answer 200 and store nothing) from `.env`; both are already in `.env.example`.
+7. Check 3 prints one line; its status is the right-token response (`PASS 200`), and a wrong token must be refused with 401 or 403. The test plan's "PASS 403 webhook verify" row is covered as the wrong-token half of that one line.
+8. Step 9 reads `wrangler versions list --json` and takes the LAST entry: wrangler sorts versions oldest first (cli.js `versionsListHandler`), so the plan's "first entry" would be the oldest. D1 bookmark comes from `d1 time-travel info <db> --json`. The rollback commands printed on smoke failure are `wrangler rollback <version>` and `wrangler d1 time-travel restore <db> --bookmark=<id>`; the script never runs them.
+9. The terminal shell's unit test fakes the spawn boundary; the "no `shell: true`" property rests on the default adapter `spawnPiped`, which passes only `stdio`.
+
+### Hypotheses for the tester
+
+- `node --import tsx apps/api/scripts/smoke.ts --environment staging` with an empty environment prints every missing input name and sends no request.
+- A production preflight with HEAD one commit ahead of `origin/main` is refused at git, after `git fetch origin main`.
+- No output line of `smoke.ts` ever contains `META_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN` or the connection secret, even when every request fails.
+
+### Gaps
+
+- B10 (E2E owner flow and `smoke-development`) is not written: the dev stack has no `/webhooks/whatsapp` route (whatsapp-cloud-channel) and no `novo agente` flow (accounts-and-keys, whose install reply carries an install link rather than the MCP URL, so `mcpSecretOf` will need the `/i/<code>` step). Needed at that merge: smoke check 2 expects `Object.values(McpToolName)`, which becomes eleven when `set_wake` joins the enum.
+- The `wrangler ... --json` output shapes for `versions list`, `time-travel info` and `secret list --format json` are read from wrangler's source, not from a live account.
+- `SignatureHeader` is declared in `signed-webhook.ts`; whatsapp-cloud-channel declares `WEBHOOK_SIGNATURE_HEADER` in its adapter. Merge by importing one.
