@@ -404,7 +404,7 @@ describe('runConnection', () => {
     it('pings every interval and stays connected while pongs arrive', async () => {
       useFakeTimers();
       startConnector();
-      await server.waitForConnections({ count: 1 });
+      await waitForLog({ event: ConnectorLogEvent.ConnectorConnected });
       await vi.advanceTimersByTimeAsync(HEARTBEAT_INTERVAL_MS);
       await server.waitForFrames({ type: ConnectorFrameType.Ping, count: 1 });
       await vi.advanceTimersByTimeAsync(HEARTBEAT_INTERVAL_MS);
@@ -419,7 +419,7 @@ describe('runConnection', () => {
       await restartServer({ autoPong: false });
       useFakeTimers();
       startConnector();
-      await server.waitForConnections({ count: 1 });
+      await waitForLog({ event: ConnectorLogEvent.ConnectorConnected });
       await vi.advanceTimersByTimeAsync(HEARTBEAT_INTERVAL_MS);
       await server.waitForFrames({ type: ConnectorFrameType.Ping, count: 1 });
       await vi.advanceTimersByTimeAsync(HEARTBEAT_TIMEOUT_MS);
@@ -501,7 +501,9 @@ describe('runConnection', () => {
       expect(await running).toBe(EXIT_CODE_SIGNAL);
 
       abortController = new AbortController();
-      await connectAndSend({ messageIds: ['msg_1'] });
+      startConnector();
+      await server.waitForConnections({ count: 2 });
+      sendMessages({ messageIds: ['msg_1'] });
       await server.waitForFrames({ type: ConnectorFrameType.Done, count: 2 });
 
       expect(await fakeClients.readRuns()).toHaveLength(2);

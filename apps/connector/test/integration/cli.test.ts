@@ -163,12 +163,12 @@ describe('zapbip connect', () => {
     await server.waitForConnections({ count: 1 });
     server.sendFrame({ frame: messagesFrame({ messages: [ownerTextMessage({ messageId: 'msg_1', text: 'Oi' })] }) });
     await first.waitForEvent({ event: ConnectorLogEvent.WakeStarted });
+    await vi.waitFor(async () => expect(await fakeClients.readRuns()).toHaveLength(1));
     first.child.kill('SIGTERM');
 
     expect(await first.exited).toBe(EXIT_CODE_CLEAN);
     expect(server.framesOfType({ type: ConnectorFrameType.Done })).toHaveLength(0);
-    const runsAfterStop = await fakeClients.readRuns();
-    expect(runsAfterStop.map((run) => run.signal)).toEqual(['SIGTERM']);
+    await vi.waitFor(async () => expect((await fakeClients.readRuns()).map((run) => run.signal)).toEqual(['SIGTERM']));
 
     const second = startCli({});
     await server.waitForConnections({ count: 2 });
