@@ -1,4 +1,4 @@
-import { access, mkdir, mkdtemp, readFile, rm, stat, utimes, writeFile } from 'node:fs/promises';
+import { access, lutimes, mkdir, mkdtemp, readFile, rm, stat, symlink, utimes, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { CONNECTOR_KILL_GRACE_MS, CONNECTOR_WAKE_TIMEOUT_MS, ConnectorClient } from '@zapbip/types';
@@ -124,9 +124,46 @@ describe('Codex isolation', () => {
     expect((await prepare()).isolationArguments).toEqual(['-c', 'mcp_servers.fleet.enabled=false']);
   });
 
-  test('disables the servers of the managed config', async () => {
-    await writeFile(join(codexHome, 'managed_config.toml'), '[mcp_servers.policy]\ncommand = "p"\n');
-    expect((await prepare()).isolationArguments).toEqual(['-c', 'mcp_servers.policy.enabled=false']);
+  test.each([
+    ['the CODEX_HOME managed config', () => join(codexHome, 'managed_config.toml')],
+    ['the system managed config', () => join(systemConfigDirectory, 'managed_config.toml')],
+  ])('refuses the wake when %s declares a server other than zapbip', async (_name, fileOf) => {
+    await writeFile(fileOf(), '[mcp_servers.policy]\ncommand = "p"\n');
+    await expect(prepare()).rejects.toBeInstanceOf(WakeIsolationRefusedError);
+  });
+
+  test('refuses the wake when a managed config declares a server inside a profile', async () => {
+    await writeFile(join(systemConfigDirectory, 'managed_config.toml'), '[profiles.work.mcp_servers.policy]\ncommand = "p"\n');
+    await expect(prepare()).rejects.toBeInstanceOf(WakeIsolationRefusedError);
+  });
+
+  test('accepts a managed config that declares no server', async () => {
+    await writeFile(join(systemConfigDirectory, 'managed_config.toml'), 'approval_policy = "never"\n');
+    expect((await prepare()).isolationArguments).toEqual([]);
+  });
+
+  test.each([
+    ['a project config', () => join(workingDirectory, '.codex', 'config.toml')],
+    ['the system config', () => join(systemConfigDirectory, 'config.toml')],
+    ['a managed config', () => join(codexHome, 'managed_config.toml')],
+  ])('refuses the wake when zapbip is defined in %s', async (_name, fileOf) => {
+    await writeFile(fileOf(), '[mcp_servers.zapbip]\nurl = "https://elsewhere.example/mcp"\n');
+    await expect(prepare()).rejects.toBeInstanceOf(WakeIsolationRefusedError);
+  });
+
+  test('refuses the wake when zapbip is redefined inside a profile of the CODEX_HOME config', async () => {
+    await writeFile(join(codexHome, 'config.toml'), '[profiles.work.mcp_servers.zapbip]\nurl = "https://elsewhere.example/mcp"\n');
+    await expect(prepare()).rejects.toBeInstanceOf(WakeIsolationRefusedError);
+  });
+
+  test('refuses the wake when zapbip in the CODEX_HOME config is not a URL server', async () => {
+    await writeFile(join(codexHome, 'config.toml'), '[mcp_servers.zapbip]\ncommand = "node"\n');
+    await expect(prepare()).rejects.toBeInstanceOf(WakeIsolationRefusedError);
+  });
+
+  test('accepts zapbip as a URL server in the CODEX_HOME config', async () => {
+    await writeFile(join(codexHome, 'config.toml'), '[mcp_servers.zapbip]\nurl = "https://zapbip.example/c/s/mcp"\n');
+    expect((await prepare()).isolationArguments).toEqual([]);
   });
 
   test('refuses the wake when a layer in a parent folder is not valid TOML', async () => {
@@ -221,6 +258,23 @@ describe('removeStaleWakeDirectories', () => {
     );
     await Promise.all([removeStaleWakeDirectories(), removeStaleWakeDirectories()]);
     await Promise.all(leftovers.map((leftover) => expect(access(leftover)).rejects.toThrow()));
+  });
+
+  test('never removes a wake folder owned by another user', async () => {
+    const foreign = await makeWakeDirectory({ name: 'zapbip-wake-foreign', ageMs: STALE_AGE_MS + 60_000 });
+    const ownerId = (await stat(foreign)).uid;
+    await removeStaleWakeDirectories({ userId: ownerId + 1 });
+    await expect(access(foreign)).resolves.toBeUndefined();
+  });
+
+  test('never follows or removes a symlink named like a wake folder', async () => {
+    const target = await makeWakeDirectory({ name: 'precious', ageMs: STALE_AGE_MS + 60_000 });
+    const link = join(rootDirectory, 'zapbip-wake-link');
+    await symlink(target, link);
+    await lutimes(link, 1, 1);
+    await removeStaleWakeDirectories();
+    await expect(access(link)).resolves.toBeUndefined();
+    await expect(access(join(target, 'mcp.json'))).resolves.toBeUndefined();
   });
 
   test('keeps a wake folder a running wake may still use', async () => {

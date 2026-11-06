@@ -123,7 +123,7 @@ describe('runWake', () => {
 
   it('disables every other MCP server the owner configured for Codex and keeps zapbip', async () => {
     const codexConfig =
-      '[mcp_servers.zapbip]\ncommand = "x"\n\n[mcp_servers.deploy]\ncommand = "y"\n\n[mcp_servers.mail-box.env]\nA = "1"\n';
+      '[mcp_servers.zapbip]\nurl = "https://zapbip.example/c/secret-abc/mcp"\n\n[mcp_servers.deploy]\ncommand = "y"\n\n[mcp_servers.mail-box.env]\nA = "1"\n';
     await mkdir(fakeClients.codexHome, { recursive: true });
     await writeFile(join(fakeClients.codexHome, 'config.toml'), codexConfig);
     await wake({ client: ConnectorClient.Codex });

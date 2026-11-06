@@ -19,6 +19,8 @@ const CODEX_SAFETY_ARGUMENTS = [
   'mcp_servers.zapbip.default_tools_approval_mode="approve"',
   '-c',
   'mcp_servers.zapbip.enabled_tools=["send_message"]',
+  '-c',
+  'web_search="disabled"',
 ];
 
 describe('CLIENT_BINARY_NAME', () => {

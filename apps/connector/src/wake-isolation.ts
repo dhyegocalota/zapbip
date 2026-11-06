@@ -16,7 +16,7 @@ export class WakeIsolationRefusedError extends Error {}
 export type WakeIsolation = { isolationArguments: string[]; cleanup: () => Promise<void> };
 export type WakeIsolationInput = { connectionLink: string; workingDirectory: string; codexHome?: string; systemConfigDirectory?: string };
 
-export async function removeStaleWakeDirectories(input: { nowMs?: number } = {}): Promise<void> {
+export async function removeStaleWakeDirectories(input: { nowMs?: number; userId?: number } = {}): Promise<void> {
   const { nowMs = Date.now() } = input;
   const temporaryDirectory = tmpdir();
   const names = (await readdir(temporaryDirectory)).filter((name) => name.startsWith(WAKE_DIRECTORY_PREFIX));
