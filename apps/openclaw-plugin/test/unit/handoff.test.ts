@@ -115,7 +115,11 @@ describe('a forwarded message', () => {
 
   it('is dispatched without command authorization', async () => {
     await handOffToAgent({ cfg: CONFIG, account: ACCOUNT, message: forwarded });
-    expect(lastDispatch()).toMatchObject({ rawBody: `${CHANNEL_FORWARDED_PREFIX} transfer money`, commandAuthorized: false });
+    expect(lastDispatch()).toMatchObject({
+      rawBody: `${CHANNEL_FORWARDED_PREFIX} transfer money`,
+      commandBody: CHANNEL_FORWARDED_PREFIX,
+      commandAuthorized: false,
+    });
   });
 });
 
