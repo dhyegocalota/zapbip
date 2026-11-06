@@ -45,9 +45,12 @@ const CODEX_SYSTEM_CONFIG_DIRECTORY = '/etc/codex';
 const STALE_WAKE_DIRECTORY_AGE_MS = CONNECTOR_WAKE_TIMEOUT_MS + CONNECTOR_KILL_GRACE_MS;
 const UNPARSEABLE_CONFIG_REASON = 'a Codex configuration file is not valid TOML';
 const MANAGED_KEY_REASON = 'a managed Codex configuration sets a key outside the allowlist, and managed layers outrank the wake isolation';
-const PROFILE_OVERRIDE_REASON = 'a Codex profile sets a key the wake isolation cannot override';
+const PROFILE_OVERRIDE_REASON = 'a Codex profile sets a key outside the allowlist';
+const LEGACY_WEB_SEARCH_REASON = 'a Codex configuration sets a legacy web search switch the wake isolation cannot override';
 const MANAGED_ALLOWED_KEYS = ['model', 'model_reasoning_effort', 'model_reasoning_summary', 'file_opener', 'hide_agent_reasoning'];
-const PROFILE_FORBIDDEN_KEYS = ['sandbox_mode', 'approval_policy', 'tools', 'features'];
+const PROFILE_ALLOWED_KEYS = [...MANAGED_ALLOWED_KEYS, 'web_search', 'mcp_servers'];
+const WEB_SEARCH_KEY_FRAGMENT = 'web_search';
+const LEGACY_TOOLS_WEB_SEARCH_KEY = 'tools_web_search';
 const ZAPBIP_REDEFINED_REASON = 'the zapbip MCP server is defined outside the Codex home configuration or is not a URL server';
 const UNIDENTIFIABLE_SERVER_REASON = 'a Codex MCP server in the configuration cannot be identified';
 const BARE_KEY_PATTERN = /^[A-Za-z0-9_-]+$/;
@@ -138,8 +141,16 @@ function assertManagedAllowlist(input: { config: TomlTable }): void {
 }
 
 function assertProfileCanBeIsolated(input: { table: TomlTable }): void {
-  const hasForbiddenKey = PROFILE_FORBIDDEN_KEYS.some((key) => key in input.table);
-  if (hasForbiddenKey) refuse({ reason: PROFILE_OVERRIDE_REASON });
+  const hasUnlistedKey = Object.keys(input.table).some((key) => !PROFILE_ALLOWED_KEYS.includes(key));
+  if (hasUnlistedKey) refuse({ reason: PROFILE_OVERRIDE_REASON });
+}
+
+function assertNoLegacyWebSearch(input: { config: TomlTable }): void {
+  const { features, tools } = input.config;
+  const hasFeatureSwitch = isTable(features) && Object.keys(features).some((key) => key.includes(WEB_SEARCH_KEY_FRAGMENT));
+  const hasToolSwitch = isTable(tools) && WEB_SEARCH_KEY_FRAGMENT in tools;
+  const hasLegacyKey = LEGACY_TOOLS_WEB_SEARCH_KEY in input.config;
+  if (hasFeatureSwitch || hasToolSwitch || hasLegacyKey) refuse({ reason: LEGACY_WEB_SEARCH_REASON });
 }
 
 function keyOf(input: { name: string }): string {
@@ -192,6 +203,7 @@ async function findingsOfConfigFile(input: { configFile: ConfigFile }): Promise<
   const { file, layer } = input.configFile;
   const config = parseConfig({ text: await readTextOrEmpty({ file }) });
   if (layer === CodexConfigLayer.Managed) assertManagedAllowlist({ config });
+  assertNoLegacyWebSearch({ config });
   const profiles = profileTablesOf({ config });
   profiles.forEach(([, table]) => assertProfileCanBeIsolated({ table }));
   const references = [
