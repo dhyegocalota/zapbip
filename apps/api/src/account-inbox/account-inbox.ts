@@ -2,6 +2,7 @@ import { DurableObject } from 'cloudflare:workers';
 import * as inbox from '@zapbip/core';
 import type {
   AccountDependencies,
+  ConnectionIdentity,
   AskInput,
   AskResult,
   CheckInboxInput,
@@ -23,7 +24,7 @@ import type {
   WaitForReplyInput,
   WaitForReplyResult,
 } from '@zapbip/core';
-import { AccountState, ChannelErrorKind } from '@zapbip/types';
+import { ChannelErrorKind, InboxErrorCode } from '@zapbip/types';
 import { D1AccountDirectory } from '../adapters/d1/d1-account-directory';
 import { D1ChannelRestrictions } from '../adapters/d1/d1-channel-restrictions';
 import { D1ConnectionRegistry } from '../adapters/d1/d1-connection-registry';
@@ -46,15 +47,16 @@ import type { Bindings } from '../contract/env';
 import { LogEvent, type LogFields } from '../contract/log';
 import { logEvent } from '../log';
 import { AccountTombstoned } from './account-tombstoned';
-import { revokeAgentState } from './agent-revocation';
+import { logFieldsOfAccountResult } from './account-log';
+import { reviveAgentName, revokeAgentState } from './agent-revocation';
 import { nextAlarmAt } from './alarm-time';
-import { ALARM_MIN_DELAY_MS, AlarmErrorCode, TOMBSTONE_STORAGE_KEY } from './constants';
+import { isAccountActive, isConnectionAdmitted } from './connection-admission';
+import { ALARM_MIN_DELAY_MS, AlarmErrorCode, CONNECTION_NOT_ACTIVE_MESSAGE, TOMBSTONE_STORAGE_KEY } from './constants';
 import { createSqliteDeletionRequests } from './deletion-requests';
 import { createSqliteFirstMessageClaim } from './first-message-claim';
+import { redactInstallCodes } from './install-code-redaction';
 import { ACCOUNT_INBOX_MIGRATIONS } from './migrations';
 import { runMigrations } from './run-migrations';
-
-const RECORD_STATE_STATEMENT = 'INSERT INTO account_facts (id, state) VALUES (1, ?) ON CONFLICT (id) DO UPDATE SET state = excluded.state';
 
 type ReceiveAccountMessageRequest = Parameters<AccountOwnerRpc['receiveAccountMessage']>[0];
 type ReceiveOwnerMessageRequest = Parameters<AccountInboxRpc['receiveOwnerMessage']>[0];
@@ -186,16 +188,29 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
 
   async alarm(): Promise<void> {
     if (this.isTombstoned) return;
+    const isActive = await isAccountActive({ database: this.env.CONNECTIONS, accountId: this.accountId });
+    if (!isActive) return this.ctx.storage.deleteAlarm();
     const now = this.clock.now();
     await this.dueTimeProviders.reduce((previous, provider) => previous.then(() => this.runProvider({ provider, now })), Promise.resolve());
     await this.armAlarm();
   }
 
-  private async outcome<Value>(input: { run: () => Promise<Value>; describe?: (value: Value) => LogFields }): Promise<CallOutcome<Value>> {
+  private async outcome<Value>(input: {
+    run: () => Promise<Value>;
+    describe?: (value: Value) => LogFields | LogFields[];
+    connection?: ConnectionIdentity;
+  }): Promise<CallOutcome<Value>> {
     this.assertLive();
+    if (input.connection !== undefined) {
+      const isAdmitted = await isConnectionAdmitted({ database: this.env.CONNECTIONS, connection: input.connection });
+      if (!isAdmitted) {
+        this.dependencies.waiters.cancelAgent({ agent: input.connection.agent });
+        return { ok: false, errorCode: InboxErrorCode.NotFound, message: CONNECTION_NOT_ACTIVE_MESSAGE };
+      }
+    }
     try {
       const value = await input.run();
-      if (input.describe !== undefined) this.log(input.describe(value));
+      if (input.describe !== undefined) [input.describe(value)].flat().forEach((fields) => this.log(fields));
       return { ok: true, value };
     } catch (error) {
       if (!(error instanceof inbox.InboxError)) throw error;
@@ -207,53 +222,55 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     }
   }
 
-  private sendOutcome(input: { run: () => Promise<SendResult>; agent: string }): Promise<CallOutcome<SendResult>> {
+  private sendOutcome(input: { run: () => Promise<SendResult>; connection: ConnectionIdentity }): Promise<CallOutcome<SendResult>> {
+    const { connection } = input;
     return this.outcome({
+      connection,
       run: input.run,
-      describe: (value) => ({ event: LogEvent.Send, agent: input.agent, messageId: value.messageId }),
+      describe: (value) => ({ event: LogEvent.Send, agent: connection.agent, messageId: value.messageId }),
     });
   }
 
   sendText(input: AgentRequest<SendTextInput>): Promise<CallOutcome<SendResult>> {
-    return this.sendOutcome({ run: () => inbox.sendText({ ...input, dependencies: this.dependencies }), agent: input.connection.agent });
+    return this.sendOutcome({ run: () => inbox.sendText({ ...input, dependencies: this.dependencies }), connection: input.connection });
   }
 
   sendMedia(input: AgentRequest<SendMediaInput>): Promise<CallOutcome<SendResult>> {
-    return this.sendOutcome({ run: () => inbox.sendMedia({ ...input, dependencies: this.dependencies }), agent: input.connection.agent });
+    return this.sendOutcome({ run: () => inbox.sendMedia({ ...input, dependencies: this.dependencies }), connection: input.connection });
   }
 
   sendLocation(input: AgentRequest<SendLocationInput>): Promise<CallOutcome<SendResult>> {
     return this.sendOutcome({
       run: () => inbox.sendLocation({ ...input, dependencies: this.dependencies }),
-      agent: input.connection.agent,
+      connection: input.connection,
     });
   }
 
   sendContacts(input: AgentRequest<SendContactsInput>): Promise<CallOutcome<SendResult>> {
     return this.sendOutcome({
       run: () => inbox.sendContacts({ ...input, dependencies: this.dependencies }),
-      agent: input.connection.agent,
+      connection: input.connection,
     });
   }
 
   react(input: AgentRequest<ReactInput>): Promise<CallOutcome<SendResult>> {
-    return this.sendOutcome({ run: () => inbox.react({ ...input, dependencies: this.dependencies }), agent: input.connection.agent });
+    return this.sendOutcome({ run: () => inbox.react({ ...input, dependencies: this.dependencies }), connection: input.connection });
   }
 
   ask(input: AgentRequest<AskInput>): Promise<CallOutcome<AskResult>> {
-    return this.outcome({ run: () => inbox.ask({ ...input, dependencies: this.dependencies }) });
+    return this.outcome({ run: () => inbox.ask({ ...input, dependencies: this.dependencies }), connection: input.connection });
   }
 
   waitForReply(input: AgentRequest<WaitForReplyInput>): Promise<CallOutcome<WaitForReplyResult>> {
-    return this.outcome({ run: () => inbox.waitForReply({ ...input, dependencies: this.dependencies }) });
+    return this.outcome({ run: () => inbox.waitForReply({ ...input, dependencies: this.dependencies }), connection: input.connection });
   }
 
   getMessages(input: AgentRequest<GetMessagesInput>): Promise<CallOutcome<GetMessagesResult>> {
-    return this.outcome({ run: () => inbox.getMessages({ ...input, dependencies: this.dependencies }) });
+    return this.outcome({ run: () => inbox.getMessages({ ...input, dependencies: this.dependencies }), connection: input.connection });
   }
 
   checkInbox(input: AgentRequest<CheckInboxInput>): Promise<CallOutcome<CheckInboxResult>> {
-    return this.outcome({ run: () => inbox.checkInbox({ ...input, dependencies: this.dependencies }) });
+    return this.outcome({ run: () => inbox.checkInbox({ ...input, dependencies: this.dependencies }), connection: input.connection });
   }
 
   createUpload(input: AgentRequest<CreateUploadInput>): Promise<CallOutcome<CreateUploadResult>> {
@@ -286,8 +303,15 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
 
   receiveAccountMessage(input: ReceiveAccountMessageRequest): Promise<CallOutcome<inbox.ReceiveAccountMessageResult>> {
     return this.outcome({
-      run: () => inbox.receiveAccountMessage({ ...input, dependencies: this.accountDependencies }),
-      describe: (value) => ({ event: value.duplicate ? LogEvent.OwnerMessageDuplicate : LogEvent.OwnerMessage }),
+      run: async () => {
+        const result = await inbox.receiveAccountMessage({ ...input, dependencies: this.accountDependencies });
+        redactInstallCodes({ storage: this.ctx.storage });
+        return result;
+      },
+      describe: (value) => [
+        { event: value.duplicate ? LogEvent.OwnerMessageDuplicate : LogEvent.OwnerMessage },
+        ...logFieldsOfAccountResult({ result: value, accountId: input.account.accountId, locale: input.account.locale }),
+      ],
     });
   }
 
@@ -298,7 +322,8 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
   }
 
   async recordCreation(input: { agent: string }): Promise<void> {
-    throw new Error(`recordCreation is not implemented for ${input.agent}`);
+    this.assertLive();
+    reviveAgentName({ storage: this.ctx.storage, agent: input.agent });
   }
 
   async cancelWaiters(input: { agent: string }): Promise<void> {
@@ -306,14 +331,10 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     this.dependencies.waiters.cancelAgent(input);
   }
 
-  async setState(input: { state: AccountState }): Promise<void> {
-    this.assertLive();
-    if (input.state !== AccountState.Active) throw new Error('setState accepts only the return to active');
-    this.ctx.storage.sql.exec(RECORD_STATE_STATEMENT, input.state);
-  }
-
   async purge(): Promise<void> {
+    const wasLive = !this.isTombstoned;
     this.isTombstoned = true;
+    if (wasLive) this.dependencies.waiters.cancelAll();
     await this.ctx.storage.deleteAlarm();
     await this.ctx.storage.deleteAll();
     await this.ctx.storage.put(TOMBSTONE_STORAGE_KEY, true);

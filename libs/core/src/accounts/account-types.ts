@@ -72,6 +72,7 @@ export type AccountCommandResult = {
   replies: AccountReply[];
   compensation: AccountCompensation | null;
   deletionConfirmed: boolean;
+  connectionId: string | null;
 };
 
 export type IssuedSecret = { secret: string; digest: string };

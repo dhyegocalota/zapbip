@@ -37,6 +37,7 @@ export async function createAgentConnection(input: CreateAgentConnectionInput): 
     const parameters = { [AccountReplyParameter.Limit]: String(AGENTS_PER_ACCOUNT_LIMIT) };
     return buildResult({ replies: [buildTextReply({ intent: AccountReplyIntent.LimitReached, locale, parameters })] });
   }
+  await dependencies.revocations.recordCreation({ accountId, agent });
   const reply = buildInstallPromptReply({ ...input, intent: AccountReplyIntent.Created, agent, installCode });
   const compensation = {
     connectionId: connection.connectionId,

@@ -35,11 +35,6 @@ export type FinishDeletingAccountsInput = {
   inboxPurgeFor: (input: { accountId: string }) => AccountInboxPurge;
 };
 
-export type ResumeSuspendedAccountInput = {
-  dependencies: AccountLifecycleDependencies;
-  accountId: string;
-};
-
 export type ReceiveAccountMessageInput = {
   dependencies: AccountDependencies;
   account: OwnerAccountContext;

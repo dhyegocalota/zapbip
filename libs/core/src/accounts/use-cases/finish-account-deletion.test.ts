@@ -6,7 +6,6 @@ import { addAgent, BRAZIL_WA_ID } from '../testing/fixtures';
 import { finishAccountDeletion } from './finish-account-deletion';
 import { finishDeletingAccounts } from './finish-deleting-accounts';
 import { openOwnerAccount } from './open-owner-account';
-import { resumeSuspendedAccount } from './resume-suspended-account';
 
 async function setup() {
   const environment = createInMemoryAccountDependencies();
@@ -138,27 +137,4 @@ describe('finishDeletingAccounts', () => {
     expect(await environment.directory.findByWaId({ waId: active.waId })).not.toBeNull();
     expect(await environment.directory.findByWaId({ waId: BRAZIL_WA_ID })).toBeNull();
   });
-});
-
-describe('resumeSuspendedAccount', () => {
-  test('a suspended account becomes active', async () => {
-    const { environment } = await setup();
-    const suspended = await environment.openAccount({
-      waId: '5521988887777',
-      accountId: 'account_suspended',
-      state: AccountState.Suspended,
-    });
-    expect(await resumeSuspendedAccount({ dependencies: environment.lifecycle, accountId: suspended.accountId })).toBe(true);
-    expect((await environment.directory.findByWaId({ waId: suspended.waId }))!.state).toBe(AccountState.Active);
-  });
-
-  test.each([AccountState.Active, AccountState.Waitlisted, AccountState.Deleting])(
-    'a %s account is refused and unchanged',
-    async (state) => {
-      const { environment } = await setup();
-      const account = await environment.openAccount({ waId: '5521988887777', accountId: 'account_other', state });
-      expect(await resumeSuspendedAccount({ dependencies: environment.lifecycle, accountId: account.accountId })).toBe(false);
-      expect((await environment.directory.findByWaId({ waId: account.waId }))!.state).toBe(state);
-    },
-  );
 });

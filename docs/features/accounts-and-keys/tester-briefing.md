@@ -73,7 +73,7 @@ pnpm --filter @zapbip/docs exec mint broken-links
 
 ## Known gaps
 
-- <what the developer knows is missing or untested>
+- Slice-wide gaps are listed in each lane section above; the integration section at the end of this file is the current list.
 
 ## Lane L1a (grammar and copy)
 
@@ -207,3 +207,19 @@ Hypotheses to attack:
 Known gaps: the Durable Object's own log lines are not captured by `logs-redaction.test.ts` (they run outside the test isolate); the E2E cannot follow the install link because `GET /i/<code>` belongs to install-skills; a first message that is media on an active account is dropped with the `Unknown` reply and not stored, but nothing is downloaded for it; the daily trigger of the deletion sweep and of `clearExpiredInstallSecrets` waits for deploy-readiness's `runScheduled`; outbound keys use `<accountId>:<agent>` because `ConnectionIdentity` carries no connection id; the production `WHATSAPP_GRAPH_BASE_URL` is `https://graph.facebook.com` here and deploy-readiness may own it; the real Rate Limiting binding ran only inside Miniflare.
 
 Docs: `features/whatsapp-commands`, `features/manage-your-agents` and `help/delete-your-account` exist in English and, mirrored, in `pt-br/`. They describe the install as two lines that the AI reads online; no page mentions the simulator or any fake channel.
+
+## Security fix batch (2026-11-06)
+
+Process notes: the L1b red commit `ead6495` printed errors that were not the assertion the plan names (it failed on missing renderer symbols), so it proves the stub, not the behaviour; no history was rewritten. Several red commits are titled `pin` because their tests were green on arrival; the tester must not count a pin as red-first.
+
+Commits: `49f9f25` (red, pins), then the green commit of this batch.
+
+Changed: S1 the deletion confirmation moves the account to `deleting` in D1 before the redelivery-sensitive receipt (`receive-account-message.ts`); S2 `operations/scheduled.ts`, the `scheduled` export of both entries, a daily cron (`17 3 * * *`) in `wrangler.jsonc` top level and `env.development`, and an expired install code nulls its sealed secret on resolve; S4 `account-inbox/connection-admission.ts` checks the connection and the account state in D1 at the start of every agent RPC and at every alarm, and `purge()` cancels all waiters; S6 the `account_daily_cap` alert has a test; S7 `account-inbox/account-log.ts` logs `command_received` and the connection events with ids and kinds only; V2 revoke closes the agent's open questions and routing ignores revoked agents, creating the name again forgets the old history; V6 `menu` answers in the account locale; V7 the `setState` RPC, `account_facts.state` and `resumeSuspendedAccount` are deleted; V8 option ids of rows come from `rowId` on the option, so `option-id.ts` no longer imports the accounts module; V9 the outbound guard key is `agentKey`; an unreadable sealed value resolves as unknown and logs `install_code_unreadable`; stored outbound replies keep the install link with the code masked.
+
+Hypotheses to attack:
+1. Hypothesis: a redelivered `apagar conta definitivamente` after any failure still ends in a deleted account. Break it by: failing the directory, the purge and the media delete in turn, then redelivering the same wamid.
+2. Hypothesis: a revoked, suspended or deleting account gets no agent RPC and no alarm-driven send. Break it by: changing the state in D1 between two calls of a held `ask`.
+3. Hypothesis: no stored message keeps a clear `zb_inst_` code. Break it by: create, rotate and a failed rotate send, then dump `inbox_messages`.
+4. Hypothesis: the cron runs both jobs and either failing does not hide the other. Break it by: a deleting account whose media delete throws, with an expired code in the same run (both jobs run, and the first failure is rethrown after both).
+
+Known gaps: `ConnectionIdentity` has no connection id, so admission and the outbound key use account and agent name; the cron trigger runs only on deployed Workers, the tests call the handler directly; D1 and R2 emptiness after deletion is asserted in integration, not in the E2E, because the E2E process cannot read the local stores; the daily trigger shares the handler deploy-readiness extends.

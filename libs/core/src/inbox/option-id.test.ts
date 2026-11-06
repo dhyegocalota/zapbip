@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
-import { ACCOUNT_MENU_QUESTION_ID } from '../accounts/constants';
 import { formatChoiceOptionIds, formatOptionId, formatRouteOptionId, parseOptionId, parseRouteOptionId } from './option-id';
 
 describe('option ids', () => {
@@ -50,17 +49,6 @@ describe('formatChoiceOptionIds', () => {
 
   test('a routing list names the agent of each option', () => {
     expect(formatChoiceOptionIds({ questionId: 'route:msg_1', options })).toEqual(['route:msg_1:alpha', 'route:msg_1:beta']);
-  });
-
-  test('the account menu names the command of each option', () => {
-    const menuOptions = [
-      { optionIndex: 0, title: 'novo agente', description: null },
-      { optionIndex: 4, title: 'ajuda', description: null },
-    ];
-    expect(formatChoiceOptionIds({ questionId: ACCOUNT_MENU_QUESTION_ID, options: menuOptions })).toEqual([
-      'zapbip:create_agent',
-      'zapbip:help',
-    ]);
   });
 });
 

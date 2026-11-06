@@ -22,7 +22,7 @@ A shared public number also needs controls the single-owner core does not have: 
 6. Abuse controls on the shared number: a blocklist, a per-phone rate limit, a daily cap on new accounts, and a per-connection outbound limit.
 7. Owner-initiated account deletion for LGPD, which removes the Durable Object, the media and the D1 rows.
 8. The development connection script of `agent-inbox-core` is deleted. The owner simulator creates connections in development.
-9. Docs pages `guides/commands`, `guides/agents-and-links` and `guides/account-deletion` in `apps/docs` ([ADR 0010](../../adr/0010-public-docs-on-mintlify.md)), in the navigation of agent-inbox-core → Docs.
+9. Docs pages `features/whatsapp-commands`, `features/manage-your-agents` and `help/delete-your-account` in `apps/docs`, each with its `pt-br/` twin ([ADR 0010](../../adr/0010-public-docs-on-mintlify.md)), in the navigation of agent-inbox-core → Docs.
 
 ## Non-goals
 

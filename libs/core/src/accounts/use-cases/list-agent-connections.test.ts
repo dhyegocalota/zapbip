@@ -1,6 +1,6 @@
 import { AccountReplyIntent, AccountReplyParameter } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
-import { EMPTY_CLIENT_MARK } from '../constants';
+import { UNKNOWN_CLIENT_LABEL } from '../account-copy';
 import { addAgent, createAccountFixture, intentsOf, ownerInputOf } from '../testing/fixtures';
 import { listAgentConnections } from './list-agent-connections';
 
@@ -37,6 +37,6 @@ describe('listAgentConnections', () => {
     const result = await listAgentConnections(ownerInputOf(fixture));
     const [firstLine, secondLine] = result.replies[0]!.parameters[AccountReplyParameter.Agents]!.split('\n');
     expect(firstLine).toContain('claude-code');
-    expect(secondLine).toContain(`, ${EMPTY_CLIENT_MARK})`);
+    expect(secondLine).toContain(`, ${UNKNOWN_CLIENT_LABEL[fixture.account.locale]})`);
   });
 });

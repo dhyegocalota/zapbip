@@ -193,22 +193,10 @@ describe('AccountInbox revocation', () => {
   });
 });
 
-describe('AccountInbox setState', () => {
-  it('accepts the return to active', async () => {
-    await expect(stubOf().setState({ state: AccountState.Active })).resolves.toBeUndefined();
-  });
-
-  it.each([AccountState.Suspended, AccountState.Deleting, AccountState.Waitlisted])('refuses %s', async (state) => {
-    await expect(runInDurableObject(stubOf(), (instance: AccountInbox) => instance.setState({ state }))).rejects.toThrow();
-  });
-});
-
 describe('AccountInbox receiveAccountMessage', () => {
   const OWNER_PHONE = '5511900000009';
   const PUBLIC_ORIGIN = 'https://zapbip.test';
-
   beforeEach(async () => {
-    await applyDirectoryMigration();
     await seedOwnerIdentity({ accountId: ACCOUNT, phone: OWNER_PHONE, ownerLocale: OwnerLocale.PortugueseBrazil });
   });
 
@@ -297,3 +285,5 @@ describe('AccountInbox receiveAccountMessage', () => {
     ).rejects.toThrow('AccountTombstoned');
   });
 });
+
+beforeEach(applyDirectoryMigration);

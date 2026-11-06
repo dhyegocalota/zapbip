@@ -93,14 +93,14 @@ Runner: `pnpm --filter @zapbip/core test:unit` (Vitest 5.0.5). No ports. Time is
 
 ### Install prompt parts (`install-prompt-parts.test.ts`)
 
-- [ ] `splitInstallPrompt` — input: a prompt of 100 characters and `maxChars` 4 096; expected: one part, equal to the prompt with the label `1/1` line.
-- [ ] `splitInstallPrompt` — input: a prompt of exactly 4 096 characters with the label budget removed; expected: the parts each fit `WHATSAPP_TEXT_MAX_CHARS`.
-- [ ] `splitInstallPrompt` — input: a prompt of 9 000 characters of mixed text; expected: three parts, each `i/3` label on its own line, each at most 4 096 characters, and removing the label lines and joining in order returns the exact prompt.
-- [ ] `splitInstallPrompt` — input: a prompt whose link line would straddle the 4 096 limit; expected: the link line is intact in one part; the part with it is at most `WHATSAPP_TEXT_MAX_CHARS - PART_LABEL_BUDGET_CHARS` text characters.
-- [ ] `splitInstallPrompt` — input: a link line longer than the label-reduced budget; expected: throws naming the link line (never split).
-- [ ] `splitInstallPrompt` — input: a line exactly at the budget; expected: one part for it (edge: boundary inclusive).
-- [ ] `splitInstallPrompt` — input: the longest agent name (`AGENT_NAME_MAX_CHARS` characters) in the create prompt; expected: every part of the rendered prompt is at most 4 096 characters.
-- [ ] `splitInstallPrompt` — input: an empty prompt string; expected: an error with the message naming the empty prompt (not a single empty part).
+- [ ] ~~`splitInstallPrompt` — input: a prompt of 100 characters and `maxChars` 4 096; expected: one part, equal to the prompt with the label `1/1` line.~~ superseded by the delta (2026-11-06): the install prompt parts and the generic renderer were removed in favour of the install code.
+- [ ] ~~`splitInstallPrompt` — input: a prompt of exactly 4 096 characters with the label budget removed; expected: the parts each fit `WHATSAPP_TEXT_MAX_CHARS`.~~ superseded by the delta (2026-11-06): the install prompt parts and the generic renderer were removed in favour of the install code.
+- [ ] ~~`splitInstallPrompt` — input: a prompt of 9 000 characters of mixed text; expected: three parts, each `i/3` label on its own line, each at most 4 096 characters, and removing the label lines and joining in order returns the exact prompt.~~ superseded by the delta (2026-11-06): the install prompt parts and the generic renderer were removed in favour of the install code.
+- [ ] ~~`splitInstallPrompt` — input: a prompt whose link line would straddle the 4 096 limit; expected: the link line is intact in one part; the part with it is at most `WHATSAPP_TEXT_MAX_CHARS - PART_LABEL_BUDGET_CHARS` text characters.~~ superseded by the delta (2026-11-06): the install prompt parts and the generic renderer were removed in favour of the install code.
+- [ ] ~~`splitInstallPrompt` — input: a link line longer than the label-reduced budget; expected: throws naming the link line (never split).~~ superseded by the delta (2026-11-06): the install prompt parts and the generic renderer were removed in favour of the install code.
+- [ ] ~~`splitInstallPrompt` — input: a line exactly at the budget; expected: one part for it (edge: boundary inclusive).~~ superseded by the delta (2026-11-06): the install prompt parts and the generic renderer were removed in favour of the install code.
+- [ ] ~~`splitInstallPrompt` — input: the longest agent name (`AGENT_NAME_MAX_CHARS` characters) in the create prompt; expected: every part of the rendered prompt is at most 4 096 characters.~~ superseded by the delta (2026-11-06): the install prompt parts and the generic renderer were removed in favour of the install code.
+- [ ] ~~`splitInstallPrompt` — input: an empty prompt string; expected: an error with the message naming the empty prompt (not a single empty part).~~ superseded by the delta (2026-11-06): the install prompt parts and the generic renderer were removed in favour of the install code.
 
 ### Copy (`account-copy.test.ts`)
 
@@ -259,8 +259,8 @@ Runner: `pnpm --filter @zapbip/api test:unit` (Vitest 4.1.12 in `apps/api`).
 - [ ] Durable Object does not read the flag (item 16) — input: a Durable Object instance constructed with `WAITLIST_ENABLED` `'yes'`; expected: construction succeeds and `receiveOwnerMessage` works from the state the Worker passed in.
 - [ ] `wrangler-limits` — input: `apps/api/wrangler.jsonc` parsed; expected: the `OWNER_RATE_LIMITER` `simple.limit` equals `OWNER_MESSAGES_PER_MINUTE` (20), `OUTBOUND_RATE_LIMITER` equals `OUTBOUND_MESSAGES_PER_MINUTE` (30), both `simple.period` equal `RATE_LIMIT_PERIOD_MS / ONE_SECOND_MS` (60).
 - [ ] `wrangler-limits` — input: the `vars.WAITLIST_ENABLED` of each environment; expected: production `"true"`; staging and top-level development `"false"`.
-- [ ] `generic-install-prompt` — input: `agent: claude`, a link, `locale: en-US`, `standbyAgent: null`; expected: the text contains the link once, the password warning, and no `null` text.
-- [ ] `generic-install-prompt` — input: `standbyAgent` not null; expected: throws (slice 5 supplies it, this slice never passes one).
+- [ ] ~~`generic-install-prompt` — input: `agent: claude`, a link, `locale: en-US`, `standbyAgent: null`; expected: the text contains the link once, the password warning, and no `null` text.~~ superseded by the delta (2026-11-06): the install prompt parts and the generic renderer were removed in favour of the install code.
+- [ ] ~~`generic-install-prompt` — input: `standbyAgent` not null; expected: throws (slice 5 supplies it, this slice never passes one).~~ superseded by the delta (2026-11-06): the install prompt parts and the generic renderer were removed in favour of the install code.
 - [ ] `logEvent` — input: an event with `fields: {accountId}` only; expected: one structured line with the event name and the id, no other keys.
 - [ ] `logEvent` — input: a field whose value is a `zb_conn_` string; expected: type error at compile time (the `LogFields` type has no such key); the runtime value is not written (checked by the redaction integration test).
 
@@ -413,8 +413,8 @@ Runner: `pnpm --filter @zapbip/api test:integration`. The WhatsApp channel is th
 ### Logs and redaction (`logs-redaction.test.ts`)
 
 - [ ] Logs over the whole walk — input: the captured `console` output of: create, `agentes`, `girar`, a rotate send failure, `revogar`, a blocked phone, a rate-limited phone, deletion; expected: no captured line contains `zb_conn_`, a 64-character hex string, the owner phone digits, an agent name, or the text `novo agente`.
-- [ ] MCP route log — input: a request to `/c/<secret>/mcp`; expected: the logged route is `/c/:secret/mcp`; the secret does not appear.
-- [ ] `connection.auth_failed` — input: an unknown secret; expected: one log line with the event name and no secret.
+- [ ] MCP route log — input: a request to `/c/<secret>/mcp`; expected: no log line carries the route or the secret.
+- [ ] `auth_rejected` — input: an unknown secret; expected: one log line with the event name and no secret.
 
 ## E2E
 
@@ -430,11 +430,11 @@ Runner: `pnpm --filter @zapbip/api test:e2e` with `ZAPBIP_E2E=1` (starts `wrangl
 
 Runner: `pnpm --filter @zapbip/docs exec mint broken-links`.
 
-- [ ] `guides/commands` — input: the navigation entry and the page file; expected: the page is linked and resolves; no broken link.
-- [ ] `guides/agents-and-links` — input: the same check; expected: no broken link.
-- [ ] `guides/account-deletion` — input: the same check; expected: no broken link.
-- [ ] `guides/commands` content — input: the page text; expected: the page lists every command word of `COMMAND_WORDS` in both languages and the `@<agent> girar a imagem` escape example (item 17) (checked by a docs test that reads `command-words.ts`).
-- [ ] `guides/account-deletion` content — input: the page text; expected: it contains the exact phrases `apagar conta definitivamente` and `delete account permanently`, and the statement that Meta keeps the WhatsApp history.
+- [ ] `features/whatsapp-commands` — input: the navigation entry and the page file; expected: the page is linked and resolves; no broken link.
+- [ ] `features/manage-your-agents` — input: the same check; expected: no broken link.
+- [ ] `help/delete-your-account` — input: the same check; expected: no broken link.
+- [ ] `features/whatsapp-commands` content — input: the page text; expected: the page lists every command word of `COMMAND_WORDS` in both languages and the `@<agent> girar a imagem` escape example (item 17) (checked by a docs test that reads `command-words.ts`).
+- [ ] `help/delete-your-account` content — input: the page text; expected: it contains the exact phrases `apagar conta definitivamente` and `delete account permanently`, and the statement that Meta keeps the WhatsApp history.
 
 ## Security checks
 
@@ -457,14 +457,14 @@ Runner: `pnpm --filter @zapbip/docs exec mint broken-links`.
 
 The docs are the only browser surface in this slice; the owner's conversation is the simulator's JSON screen.
 
-- [ ] Happy path, docs: `mint dev` serves `guides/commands`; steps: open the page, check the command table, follow the link to `guides/agents-and-links`, then to `guides/account-deletion`; expected: each page renders, no 404, the navigation shows the three pages under the guides group.
-- [ ] Desktop width: `guides/commands` at 1 280 wide; expected: the table is readable, no horizontal page scroll; screenshot at `<path>`.
-- [ ] Narrow width: `guides/commands` at 375 wide; expected: the table scrolls inside its container, the page has no horizontal page scroll, 16 px side gutter; screenshot at `<path>`.
-- [ ] Narrow width: `guides/account-deletion` at 375 wide; expected: the phrases are readable and not clipped; screenshot at `<path>`.
+- [ ] Happy path, docs: `mint dev` serves `features/whatsapp-commands`; steps: open the page, check the command table, follow the link to `features/manage-your-agents`, then to `help/delete-your-account`; expected: each page renders, no 404, the navigation shows the three pages under the guides group.
+- [ ] Desktop width: `features/whatsapp-commands` at 1 280 wide; expected: the table is readable, no horizontal page scroll; screenshot at `<path>`.
+- [ ] Narrow width: `features/whatsapp-commands` at 375 wide; expected: the table scrolls inside its container, the page has no horizontal page scroll, 16 px side gutter; screenshot at `<path>`.
+- [ ] Narrow width: `help/delete-your-account` at 375 wide; expected: the phrases are readable and not clipped; screenshot at `<path>`.
 - [ ] Console and network clean: zero console errors and zero failed requests while walking the three pages; expected: no exceptions.
 - [ ] Simulator walk, recorded: the walk of the E2E pt-BR case as JSON screens saved at `<path>`; expected: the screens show the install prompt parts in order and the `Listed` and `Revoked` replies.
-- [ ] Browser Back mid-flow: on `guides/agents-and-links`, Back after following a link; expected: the previous page, no error.
-- [ ] Reload mid-flow: reload `guides/account-deletion`; expected: the same page, the same content.
+- [ ] Browser Back mid-flow: on `features/manage-your-agents`, Back after following a link; expected: the previous page, no error.
+- [ ] Reload mid-flow: reload `help/delete-your-account`; expected: the same page, the same content.
 
 ## Edge cases found during execution
 

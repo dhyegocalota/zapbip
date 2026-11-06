@@ -18,7 +18,8 @@ export function buildResult(input: {
   replies: AccountReply[];
   compensation?: AccountCompensation | null;
   deletionConfirmed?: boolean;
+  connectionId?: string | null;
 }): AccountCommandResult {
-  const { replies, compensation = null, deletionConfirmed = false } = input;
-  return { replies, compensation, deletionConfirmed };
+  const { replies, compensation = null, deletionConfirmed = false, connectionId = null } = input;
+  return { replies, compensation, deletionConfirmed, connectionId: compensation === null ? connectionId : compensation.connectionId };
 }

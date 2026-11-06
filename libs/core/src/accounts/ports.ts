@@ -62,7 +62,7 @@ export interface SenderGuard {
 }
 
 export interface OutboundGuard {
-  admit(input: { accountId: string; connectionId: string }): Promise<SenderVerdict>;
+  admit(input: { accountId: string; agentKey: string }): Promise<SenderVerdict>;
 }
 
 export interface ConnectionRevocations {

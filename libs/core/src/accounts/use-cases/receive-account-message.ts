@@ -1,4 +1,13 @@
-import { AccountReplyIntent, AccountStateOutcome, ChannelInboundKind, IdPrefix, MessageKind, ReplyKind } from '@zapbip/types';
+import {
+  AccountReplyIntent,
+  AccountState,
+  AccountStateOutcome,
+  ChannelInboundKind,
+  CommandKind,
+  IdPrefix,
+  MessageKind,
+  ReplyKind,
+} from '@zapbip/types';
 import { openWindow } from '../../inbox/use-cases/open-window';
 import { deliverToOwner } from '../../inbox/use-cases/deliver-to-owner';
 import { receiveChannelMessage } from '../../inbox/use-cases/receive-channel-message';
@@ -10,10 +19,11 @@ import { parseAccountCommand } from '../command';
 import { ACCOUNT_MENU_QUESTION_ID } from '../constants';
 import { evaluateAccountState } from '../state-gate';
 import { applyOwnerCommand } from './apply-owner-command';
+import { isDeletionRequestLive } from './confirm-account-deletion';
 import { buildResult, buildTextReply } from './account-reply';
 import type { ReceiveAccountMessageInput, ReceiveAccountMessageResult } from './types';
 
-type AnswerInput = ReceiveAccountMessageInput & { prepare: () => Promise<AccountCommandResult> };
+type AnswerInput = ReceiveAccountMessageInput & { prepare: () => Promise<AccountCommandResult>; commandKind: CommandKind | null };
 
 const NOT_CONFIRMED = false;
 
@@ -57,7 +67,7 @@ function toContents(input: { reply: AccountReply }): MessageContent[] {
   const text = renderAccountReply({ reply });
   const textContents: MessageContent[] = [{ kind: MessageKind.Text, text }];
   if (reply.kind !== ReplyKind.List) return textContents;
-  const options = reply.menuRows.map((row, optionIndex) => ({ optionIndex, title: row.title, description: null }));
+  const options = reply.menuRows.map((row, optionIndex) => ({ optionIndex, title: row.title, description: null, rowId: row.id }));
   return [...textContents, { kind: MessageKind.Choice, questionId: ACCOUNT_MENU_QUESTION_ID, options, selected: null }];
 }
 
@@ -141,8 +151,8 @@ async function answerLocally(input: AnswerInput): Promise<ReceiveAccountMessageR
     agent: null,
     duplicate: false,
     deletionConfirmed: result.deletionConfirmed,
-    commandKind: null,
-    connectionId: null,
+    commandKind: input.commandKind,
+    connectionId: result.connectionId,
   };
 }
 
@@ -152,13 +162,26 @@ async function handleReply(
   const { intent, account } = input;
   if (intent === null) throw new Error('the state gate replied without an intent');
   const reply = buildTextReply({ intent, locale: account.locale });
-  return answerLocally({ ...input, prepare: async () => buildResult({ replies: [reply] }) });
+  return answerLocally({ ...input, commandKind: null, prepare: async () => buildResult({ replies: [reply] }) });
+}
+
+async function beginConfirmedDeletion(input: ReceiveAccountMessageInput & { command: AccountCommand }): Promise<void> {
+  const { dependencies, account, command } = input;
+  if (command.kind !== CommandKind.ConfirmDeletion) return;
+  const isRequestLive = await isDeletionRequestLive({ dependencies });
+  if (!isRequestLive) return;
+  await dependencies.accounts.setState({ accountId: account.accountId, state: AccountState.Deleting });
 }
 
 async function handleProceed(input: ReceiveAccountMessageInput & { command: AccountCommand | null }): Promise<ReceiveAccountMessageResult> {
   const { dependencies, account, channelMessageId, entry, publicOrigin, command } = input;
   if (command !== null) {
-    return answerLocally({ ...input, prepare: () => applyOwnerCommand({ dependencies, account, publicOrigin, command }) });
+    await beginConfirmedDeletion({ ...input, command });
+    return answerLocally({
+      ...input,
+      commandKind: command.kind,
+      prepare: () => applyOwnerCommand({ dependencies, account, publicOrigin, command }),
+    });
   }
   const result: ReceiveResult = await receiveChannelMessage({ dependencies, ownerLocale: account.locale, channelMessageId, entry });
   return { ...result, deletionConfirmed: NOT_CONFIRMED, commandKind: null, connectionId: null };

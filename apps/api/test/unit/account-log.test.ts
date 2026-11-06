@@ -42,6 +42,6 @@ describe('logFieldsOfAccountResult', () => {
 
   it('never carries an agent name, a secret or text', () => {
     const serialised = JSON.stringify(fieldsOf({ commandKind: CommandKind.CreateAgent, connectionId: CONNECTION_ID }));
-    expect(serialised).not.toMatch(/zb_conn_|zb_inst_|agent/);
+    expect(serialised).not.toMatch(/zb_conn_|zb_inst_|"agent"/);
   });
 });

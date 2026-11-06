@@ -125,6 +125,11 @@ export function renderAccountReply(input: { reply: AccountReply }): string {
   });
 }
 
+export const UNKNOWN_CLIENT_LABEL: Record<OwnerLocale, string> = {
+  [OwnerLocale.PortugueseBrazil]: 'cliente desconhecido',
+  [OwnerLocale.EnglishUs]: 'unknown client',
+};
+
 export function buildMenuRows(input: { locale: OwnerLocale }): MenuRow[] {
   return MENU_COMMAND_KINDS.map((kind) => {
     const titles = MENU_ROW_TITLES[kind];

@@ -7,7 +7,7 @@ export async function assertOutboundAdmitted(input: { context: ToolContext }): P
   const { connection, outboundGuard } = input.context;
   const verdict = await outboundGuard.admit({
     accountId: connection.accountId,
-    connectionId: `${connection.accountId}:${connection.agent}`,
+    agentKey: `${connection.accountId}:${connection.agent}`,
   });
   if (verdict === SenderVerdict.Admitted) return;
   throw new InboxError({ code: ChannelErrorKind.RateLimited, message: OUTBOUND_RATE_LIMITED_MESSAGE });

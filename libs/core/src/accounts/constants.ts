@@ -11,7 +11,6 @@ export const NEW_ACCOUNTS_WINDOW_MS = DAY_MS;
 export const DELETION_CONFIRM_TTL_MS = 10 * MINUTE_MS;
 export const CONNECTION_LINK_PATH_PREFIX = '/c/';
 export const CONNECTION_LINK_PATH_SUFFIX = '/mcp';
-export const EMPTY_CLIENT_MARK = '-';
 export const NO_INSTALL_CODE: InstallCodeColumns = {
   installCodeDigest: null,
   installCodeSealedSecret: null,

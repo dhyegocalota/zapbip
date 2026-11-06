@@ -21,6 +21,7 @@ export enum LogEvent {
   SenderRateLimited = 'sender_rate_limited',
   AccountDailyCap = 'account_daily_cap',
   AccountDeleted = 'account_deleted',
+  InstallCodeUnreadable = 'install_code_unreadable',
 }
 
 export type LogFields = {

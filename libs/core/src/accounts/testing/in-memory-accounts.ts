@@ -245,7 +245,9 @@ function createRevocations(): RecordingRevocations {
     cancelled,
     created,
     wakeConfigured,
-    recordCreation: async () => undefined,
+    recordCreation: async ({ agent }) => {
+      created.push(agent);
+    },
     recordRevocation: async ({ agent }) => {
       revoked.push(agent);
       wakeConfigured.delete(agent);

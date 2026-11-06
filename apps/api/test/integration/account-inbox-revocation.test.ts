@@ -1,7 +1,8 @@
 import { OwnerLocale } from '@zapbip/types';
 import { reset, runInDurableObject } from 'cloudflare:test';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { openWindow, receiveOwnerText } from '../support/inbox-session';
+import { applyDirectoryMigration } from '../support/seed';
 import { accountInboxStub, connectionOf } from '../support/workers-env';
 
 const ACCOUNT = 'acc_revocation';
@@ -81,3 +82,5 @@ describe('a revoked agent stops being a routing target', () => {
     expect(inbox.ok && inbox.value.messages).toEqual([]);
   });
 });
+
+beforeEach(applyDirectoryMigration);

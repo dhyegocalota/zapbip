@@ -1,7 +1,7 @@
 import { RECEIPT_RETENTION_MS, type ChannelStatusDetail, type CoreDependencies } from '@zapbip/core';
 import { ChannelInboundKind, DeliveryState, MediaOrigin, MessageDirection, MessageKind, OwnerLocale } from '@zapbip/types';
 import { evictDurableObject, reset, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { AccountInbox } from '../../src/account-inbox/account-inbox';
 import { SENDING_STALE_MS } from '../../src/adapters/whatsapp/whatsapp-constants';
 import type { Bindings } from '../../src/contract/env';
@@ -9,6 +9,7 @@ import { DevAccountInbox } from '../../src/dev/dev-account-inbox';
 import { withRepository } from '../support/account-inbox';
 import { BASE_TIME, buildTextMessage } from '../support/builders';
 import { advanceClock } from '../support/inbox-session';
+import { applyDirectoryMigration } from '../support/seed';
 import { accountInboxStub, connectionOf, testEnv, whatsappTestEnv } from '../support/workers-env';
 
 const ACCOUNT_ID = 'acc_channel';
@@ -472,3 +473,5 @@ describe('AccountInbox channel messages', () => {
     expect(outcome).toMatchObject({ ok: true, value: { duplicate: false } });
   });
 });
+
+beforeEach(applyDirectoryMigration);

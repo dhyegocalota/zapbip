@@ -1,10 +1,11 @@
 import { AccountState, MessageKind, OwnerLocale } from '@zapbip/types';
 import { evictDurableObject, reset, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { AccountInbox } from '../../src/account-inbox/account-inbox';
 import { createSqliteDeletionRequests } from '../../src/account-inbox/deletion-requests';
 import { TOMBSTONE_STORAGE_KEY } from '../../src/account-inbox/constants';
 import { openWindow } from '../support/inbox-session';
+import { applyDirectoryMigration } from '../support/seed';
 import { accountInboxStub, connectionOf } from '../support/workers-env';
 
 const ACCOUNT = 'acc_purge';
@@ -102,7 +103,6 @@ describe('AccountInbox after purge', () => {
         }),
       (instance) => instance.recordRevocation({ agent: 'alpha' }),
       (instance) => instance.cancelWaiters({ agent: 'alpha' }),
-      (instance) => instance.setState({ state: AccountState.Active }),
       (instance) => instance.sendText({ connection, text: 'oi', replyToMessageId: null }),
     ];
     for (const write of writes) await expect(runInDurableObject(stubOf(), write)).rejects.toThrow(TOMBSTONED_MESSAGE);
@@ -115,3 +115,5 @@ describe('AccountInbox after purge', () => {
     expect(await listKeys()).toEqual([TOMBSTONE_STORAGE_KEY]);
   });
 });
+
+beforeEach(applyDirectoryMigration);
