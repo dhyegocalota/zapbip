@@ -17,7 +17,7 @@ export const uploadRoutes = new Hono<{ Bindings: Bindings }>();
 uploadRoutes.put('/u/:account_id/:upload_id', async (context) => {
   const accountId = context.req.param('account_id');
   const uploadId = context.req.param('upload_id');
-  const signedQuery = readSignedQuery({ expiry: context.req.query('exp'), signature: context.req.query('sig') });
+  const signedQuery = readSignedQuery({ expiries: context.req.queries('exp'), signatures: context.req.queries('sig') });
   const clock = createPlatformClock();
   const isSignatureValid =
     signedQuery !== null &&

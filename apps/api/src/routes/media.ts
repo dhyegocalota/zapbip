@@ -1,3 +1,4 @@
+import { normalizeMimeType, SVG_MIME_TYPE } from '@zapbip/core';
 import { LinkPurpose } from '@zapbip/types';
 import { Hono } from 'hono';
 import { createPlatformClock } from '../adapters/platform/clock';
@@ -17,7 +18,7 @@ export const mediaRoutes = new Hono<{ Bindings: Bindings }>();
 mediaRoutes.get('/m/:account_id/:media_id', async (context) => {
   const accountId = context.req.param('account_id');
   const mediaId = context.req.param('media_id');
-  const signedQuery = readSignedQuery({ expiry: context.req.query('exp'), signature: context.req.query('sig') });
+  const signedQuery = readSignedQuery({ expiries: context.req.queries('exp'), signatures: context.req.queries('sig') });
   const clock = createPlatformClock();
   const isSignatureValid =
     signedQuery !== null &&
@@ -36,7 +37,7 @@ mediaRoutes.get('/m/:account_id/:media_id', async (context) => {
   const media = await mediaStore.open({ accountId, mediaId });
   if (!media) return context.json({ error: 'not_found' }, HttpStatus.NotFound);
   logEvent({ event: LogEvent.MediaRead, accountId });
-  const isInline = INLINE_MEDIA_TYPE_PATTERN.test(media.mimeType);
+  const isInline = INLINE_MEDIA_TYPE_PATTERN.test(media.mimeType) && normalizeMimeType({ value: media.mimeType }) !== SVG_MIME_TYPE;
   const headers = { ...HARDENING_HEADERS, 'Content-Type': media.mimeType };
   return new Response(media.body, {
     status: HttpStatus.Ok,
