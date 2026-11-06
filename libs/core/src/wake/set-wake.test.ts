@@ -4,7 +4,6 @@ import { ACCOUNT_ID, connectionOf } from '../inbox/testing/fixtures';
 import { captureInboxError } from '../inbox/testing/capture-inbox-error';
 import { setWake } from './set-wake';
 import { WAKE_SEALED_KEY_VERSION } from './constants';
-import { scheduleWake } from './schedule-wake';
 import { CLAUDE_URL, createWakeEnvironment, GROK_URL, PINNED_TOKEN, PUBLIC_HOST, setWebhook } from './testing/wake-fixtures';
 
 const AGENT = 'claude-code';
@@ -102,8 +101,10 @@ describe('setWake', () => {
   test('none clears the target and deletes the pending job', async () => {
     const wakeEnvironment = await createWakeEnvironment();
     await setWebhook({ wakeEnvironment, agent: AGENT });
-    await scheduleWake({ ...wakeEnvironment.context, agent: AGENT });
-    expect(await wakeEnvironment.wake.repository.findJob({ agent: AGENT })).toMatchObject({ dueAt: expect.any(Number) });
+    await wakeEnvironment.wake.repository.saveJob({
+      job: { agent: AGENT, dueAt: 1, attempt: 0, leaseUntil: null, rewake: false, lastOutcome: null },
+    });
+    expect(await wakeEnvironment.wake.repository.findJob({ agent: AGENT })).not.toBeNull();
     const result = await setWake({
       ...wakeEnvironment.context,
       connection: connectionOf({ agent: AGENT }),

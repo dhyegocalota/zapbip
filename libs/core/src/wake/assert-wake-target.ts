@@ -12,7 +12,7 @@ import {
 import { PINNED_WAKE_PROVIDER_RULES, type PinnedWakeProvider, type PinnedWakeProviderRule } from './wake-provider';
 import type { WakeTarget } from './wake-setting';
 
-enum WakeTargetField {
+export enum WakeTargetField {
   Url = 'url',
   Token = 'token',
 }
@@ -27,18 +27,18 @@ const FRAGMENT_MARK = '#';
 
 export type AssertWakeTargetInput = { url: string; token: string; publicHost: string };
 
-function invalidField(input: { field: WakeTargetField }) {
+export function invalidWakeField(input: { field: WakeTargetField }) {
   return invalidInput({ message: `invalid ${input.field}` });
 }
 
 function parseWakeUrl(input: { url: string }): URL {
   const { url } = input;
   const hasValidShape = url.length > 0 && url.length <= WAKE_URL_MAX_CHARS && !WHITESPACE_PATTERN.test(url) && !url.includes(FRAGMENT_MARK);
-  if (!hasValidShape || !URL.canParse(url)) throw invalidField({ field: WakeTargetField.Url });
+  if (!hasValidShape || !URL.canParse(url)) throw invalidWakeField({ field: WakeTargetField.Url });
   const parsed = new URL(url);
   const hasUserinfo = parsed.username !== '' || parsed.password !== '';
   const isPlainHttps = parsed.protocol === HTTPS_PROTOCOL && parsed.port === '' && !hasUserinfo;
-  if (!isPlainHttps) throw invalidField({ field: WakeTargetField.Url });
+  if (!isPlainHttps) throw invalidWakeField({ field: WakeTargetField.Url });
   return parsed;
 }
 
@@ -54,13 +54,13 @@ function assertGenericHost(input: { hostname: string; publicHost: string }): voi
   const isBlockedName = WAKE_BLOCKED_HOSTS.includes(hostname) || WAKE_BLOCKED_HOST_SUFFIXES.some((suffix) => hostname.endsWith(suffix));
   const isPublicName = HOST_PATTERN.test(hostname) && !IPV4_PATTERN.test(hostname);
   const isOwnHost = hostname === publicHost.toLowerCase();
-  if (!isPublicName || isBlockedName || isOwnHost) throw invalidField({ field: WakeTargetField.Url });
+  if (!isPublicName || isBlockedName || isOwnHost) throw invalidWakeField({ field: WakeTargetField.Url });
 }
 
 function assertToken(input: { token: string; minChars: number }): void {
   const { token, minChars } = input;
   const hasValidLength = token.length >= minChars && token.length <= WAKE_TOKEN_MAX_CHARS;
-  if (!hasValidLength || !WAKE_TOKEN_PATTERN.test(token)) throw invalidField({ field: WakeTargetField.Token });
+  if (!hasValidLength || !WAKE_TOKEN_PATTERN.test(token)) throw invalidWakeField({ field: WakeTargetField.Token });
 }
 
 export function assertWakeTarget(input: AssertWakeTargetInput): WakeTarget {
@@ -72,7 +72,7 @@ export function assertWakeTarget(input: AssertWakeTargetInput): WakeTarget {
     assertToken({ token, minChars: WAKE_GENERIC_TOKEN_MIN_CHARS });
     return { provider: WakeProvider.GenericWebhook, url, token };
   }
-  if (!pinned.rule.pathPattern.test(parsed.pathname)) throw invalidField({ field: WakeTargetField.Url });
+  if (!pinned.rule.pathPattern.test(parsed.pathname)) throw invalidWakeField({ field: WakeTargetField.Url });
   assertToken({ token, minChars: WAKE_TOKEN_MIN_CHARS });
   return { provider: pinned.provider, url, token };
 }
