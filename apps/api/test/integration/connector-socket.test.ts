@@ -285,12 +285,11 @@ describe('connector socket', () => {
     await ownerMessage({ account });
     await session.nextFrame();
     await holdLiveWaiter({ account });
-    const pong = new Promise<string>((resolve) => session.socket.addEventListener('message', (event) => resolve(String(event.data))));
     session.socket.send(JSON.stringify({ type: ConnectorFrameType.Done, messageId: first.messages[0]?.messageId }));
+    await vi.waitFor(async () => expect(await unreadCountOf({ account })).toBe(1));
     session.socket.send(CONNECTOR_PING_TEXT);
-    expect(await pong).toBe(CONNECTOR_PONG_TEXT);
+    expect(await session.nextFrame()).toEqual({ type: ConnectorFrameType.Pong });
     expect(session.receivedCount()).toBe(0);
-    expect(await unreadCountOf({ account })).toBe(1);
     session.socket.close();
   });
 
