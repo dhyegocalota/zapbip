@@ -4,7 +4,7 @@ import { mediaStoreOf } from '../adapters/r2/r2-media-store';
 import type { Bindings } from '../contract/env';
 import { LogEvent } from '../contract/log';
 import { logEvent } from '../log';
-import { verifyLink } from '../signing';
+import { readSignedQuery, verifyLink } from '../signing';
 import { LinkPurpose } from '@zapbip/types';
 import { accountInboxOf } from './account-inbox-stub';
 import { ERROR_STATUS, HttpStatus } from './http-status';
@@ -20,19 +20,17 @@ function mediaTypeOf(input: { header: string }): string {
 uploadRoutes.put('/u/:account_id/:upload_id', async (context) => {
   const accountId = context.req.param('account_id');
   const uploadId = context.req.param('upload_id');
-  const expiresAt = Number(context.req.query('exp'));
-  const signature = context.req.query('sig');
-  const hasSignedQuery = signature !== undefined && Number.isSafeInteger(expiresAt);
+  const signedQuery = readSignedQuery({ expiry: context.req.query('exp'), signature: context.req.query('sig') });
   const clock = createPlatformClock();
   const isSignatureValid =
-    hasSignedQuery &&
+    signedQuery !== null &&
     (await verifyLink({
       key: context.env.UPLOAD_LINK_SIGNING_KEY,
       accountId,
       mediaId: uploadId,
       purpose: LinkPurpose.Upload,
-      expiresAt,
-      signature,
+      expiresAt: signedQuery.expiresAt,
+      signature: signedQuery.signature,
       now: clock.now(),
     }));
   if (!isSignatureValid) return context.json({ error: 'forbidden' }, HttpStatus.Forbidden);

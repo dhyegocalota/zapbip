@@ -5,7 +5,7 @@ import { mediaStoreOf } from '../adapters/r2/r2-media-store';
 import type { Bindings } from '../contract/env';
 import { LogEvent } from '../contract/log';
 import { logEvent } from '../log';
-import { verifyLink } from '../signing';
+import { readSignedQuery, verifyLink } from '../signing';
 import { HttpStatus } from './http-status';
 
 const INLINE_MEDIA_TYPE_PATTERN = /^(image|video|audio)\//;
@@ -17,19 +17,17 @@ export const mediaRoutes = new Hono<{ Bindings: Bindings }>();
 mediaRoutes.get('/m/:account_id/:media_id', async (context) => {
   const accountId = context.req.param('account_id');
   const mediaId = context.req.param('media_id');
-  const expiresAt = Number(context.req.query('exp'));
-  const signature = context.req.query('sig');
+  const signedQuery = readSignedQuery({ expiry: context.req.query('exp'), signature: context.req.query('sig') });
   const clock = createPlatformClock();
-  const hasSignedQuery = signature !== undefined && Number.isSafeInteger(expiresAt);
   const isSignatureValid =
-    hasSignedQuery &&
+    signedQuery !== null &&
     (await verifyLink({
       key: context.env.MEDIA_LINK_SIGNING_KEY,
       accountId,
       mediaId,
       purpose: LinkPurpose.Read,
-      expiresAt,
-      signature,
+      expiresAt: signedQuery.expiresAt,
+      signature: signedQuery.signature,
       now: clock.now(),
     }));
   if (!isSignatureValid) return context.json({ error: 'forbidden' }, HttpStatus.Forbidden);
