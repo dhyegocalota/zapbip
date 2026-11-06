@@ -117,7 +117,7 @@ ZAPBIP_CLAUDE_E2E=1 pnpm --filter @zapbip/api test:e2e
 | `production-entry.test.ts` | pin 8be18b9: WI-117 and WI-122 green at once | the other cases need L3 and L4a |
 | `production-bundle.e2e.test.ts` PB-2 | red 26f1a96: `expected [ "/dev/owner/", "advanceClock", …(1) ] to deeply equal []` | the entry-split commit: `createApp` takes `extraRoutes`; PB-2 and PB-3 pass. |
 
-State when this was written: L2, L3 (D1 directory, repository) and L4a were merged. The Durable Object and `adapters/platform/clock.ts` were still stubs, so 76 of 121 integration cases failed with `createPlatformClock is not implemented`, `sendText is not implemented` and `createUpload is not implemented`. The E2E suite was not run: it needs L3's `scripts/dev-seed.ts`.
+Earlier state: L2, L3 (D1 directory, repository) and L4a were merged. The Durable Object and `adapters/platform/clock.ts` were still stubs, so 76 of 121 integration cases failed with `createPlatformClock is not implemented`, `sendText is not implemented` and `createUpload is not implemented`. The E2E suite was not run: it needs L3's `scripts/dev-seed.ts`.
 
 ### Hypotheses to attack
 
@@ -159,6 +159,16 @@ State when this was written: L2, L3 (D1 directory, repository) and L4a were merg
 - Receipt is recorded before routing: an error after it makes a channel retry a duplicate.
 - A concurrent flush from two simultaneous owner messages may send a queued message twice.
 - `listUnread` plus `markRead` is serialised per repository object inside `takeUnread` (a module-level `WeakMap`), so it assumes one repository object per Durable Object instance.
+
+### Update after the L2, L3 and entry-split merges
+
+- Integration: all four L4b files pass (upload-route 14, media-route 7, dev-owner 16, production-entry 4). The 13 remaining integration failures are in L4a's `mcp-tools` and `mcp-inline-images`.
+- E2E: 21 passed, 1 failed, 6 skipped (CC cases, opt-in). PB-1 to PB-3 pass.
+- **E2E-19 and E2E-20 fail with 502 on the first owner text that needs the routing list.** Cause (from reading the code): core sends the list as a `Choice` whose `questionId` is `route:<message_id>` (`formatRoutingListQuestionId`) and inserts no row in `questions`; the fake sender's `describeSession` does `SELECT text FROM questions WHERE question_id = ? ... .one()`, which throws, so delivery fails. The fix belongs to the L3 fake sender (render the routing prompt copy when no question row exists) or to L2 (store a question row).
+- **SEC-7 finding:** `wrangler dev` prints every request path, so the connection secret in `/c/<secret>/mcp` appears in its output. The E2E check is scoped to the Worker's own JSON log lines, which carry no secret. The plan's claim "no connection secret string in the wrangler output" is false for `wrangler dev`.
+- Screen entries: `text` is the agent header plus the message (`O agente alpha tem uma mensagem para você: ola`), `options` are button titles, and media entries show a preview, not a link. The E2E taps by reading option ids from `get_messages`.
+- CC-4 and CC-5 are written but have not been run: they cost model prompts and need the owner's go-ahead.
+- S5.10 stays open until E2E-19 and E2E-20 pass.
 
 ## Lane l5
 
