@@ -1,0 +1,38 @@
+---
+title: Connect any MCP client
+description: The URL, the Bearer alternative and the tools.
+---
+
+zapbip speaks MCP over streamable HTTP. Any client that supports it can connect.
+
+## The URL
+
+```text
+http://localhost:8787/c/<secret>/mcp
+```
+
+## The Bearer alternative
+
+For clients that cannot hide a secret in a URL, use `/mcp` and send the secret as a header:
+
+```text
+POST http://localhost:8787/mcp
+Authorization: Bearer <secret>
+```
+
+Both forms reach the same agent. A missing or wrong secret answers `401`.
+
+## Tools
+
+| Tool                                            | What it does                                      |
+| ----------------------------------------------- | ------------------------------------------------- |
+| [send_message](/mcp-reference/send-message)     | Send text.                                        |
+| [send_media](/mcp-reference/send-media)         | Send an image, video, audio, document or sticker. |
+| [send_location](/mcp-reference/send-location)   | Send a location pin.                              |
+| [send_contact](/mcp-reference/send-contact)     | Send contact cards.                               |
+| [react](/mcp-reference/react)                   | React with an emoji.                              |
+| [ask](/mcp-reference/ask)                       | Ask with buttons or a list and wait.              |
+| [wait_for_reply](/mcp-reference/wait-for-reply) | Wait for an answer or the next message.           |
+| [get_messages](/mcp-reference/get-messages)     | Read unread messages and recent history.          |
+| [check_inbox](/mcp-reference/check-inbox)       | See whether something new is waiting.             |
+| [create_upload](/mcp-reference/create-upload)   | Reserve an upload for local bytes.                |

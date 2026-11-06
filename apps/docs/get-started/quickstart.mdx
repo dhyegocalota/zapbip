@@ -1,0 +1,89 @@
+---
+title: Quickstart
+description: Run zapbip locally, connect Claude Code and exchange a first message.
+---
+
+<Note>
+  Today zapbip runs on your machine with a fake WhatsApp: a development simulator stands in for your phone. The hosted signup, where you
+  send a message to the zapbip number, arrives in a later release.
+</Note>
+
+You need Node 24, pnpm and [Claude Code](https://claude.com/claude-code).
+
+<Steps>
+  <Step title="Install and configure">
+    From the repository root:
+
+    ```bash
+    pnpm install
+    printf 'MEDIA_LINK_SIGNING_KEY=%s\nUPLOAD_LINK_SIGNING_KEY=%s\n' "$(openssl rand -hex 32)" "$(openssl rand -hex 32)" > apps/api/.dev.vars
+    pnpm --filter @zapbip/api exec wrangler d1 migrations apply CONNECTIONS --local
+    ```
+
+  </Step>
+  <Step title="Seed an owner and two agents">
+    ```bash
+    pnpm --silent --filter @zapbip/api dev:seed --phone 5511999990000 --agents alpha,beta
+    ```
+
+    It prints one line per agent, `alpha <secret>` and `beta <secret>`. The secret is shown once. Seeding the same phone twice fails.
+
+  </Step>
+  <Step title="Start the Worker">
+    ```bash
+    pnpm --filter @zapbip/api dev
+    curl http://localhost:8787/health
+    ```
+
+    The health call answers `{"ok":true}`.
+
+  </Step>
+  <Step title="Connect Claude Code">
+    ```bash
+    claude mcp add --transport http alpha http://localhost:8787/c/<alpha-secret>/mcp
+    ```
+
+    More in [Connect Claude Code](/agents/claude-code).
+
+  </Step>
+  <Step title="Open the window">
+    The simulator is your phone. WhatsApp lets zapbip write freely only after you write, so start with a message to `alpha`:
+
+    ```bash
+    curl -X POST http://localhost:8787/dev/owner/5511999990000/messages \
+      -H 'Content-Type: application/json' \
+      -d '{"kind":"text","text":"@alpha hello"}'
+    ```
+
+  </Step>
+  <Step title="Send a message from the agent">
+    In Claude Code, run `claude` and write:
+
+    ```text
+    Use the alpha MCP server to send me "zapbip works" and ask me "Deploy v2?" with the options Yes and No.
+    ```
+
+  </Step>
+  <Step title="See it on the phone screen">
+    ```bash
+    curl http://localhost:8787/dev/owner/5511999990000/screen
+    ```
+
+    The entries hold `zapbip works` and the question with its options.
+
+  </Step>
+  <Step title="Answer">
+    ```bash
+    curl -X POST http://localhost:8787/dev/owner/5511999990000/messages \
+      -H 'Content-Type: application/json' \
+      -d '{"kind":"text","text":"Yes"}'
+    ```
+
+    The waiting call in Claude Code returns your answer.
+
+  </Step>
+</Steps>
+
+## Coming next
+
+The hosted service, where you message the zapbip number and get your own agent URL on WhatsApp, is not available yet. Until then, everything above is the way in.
