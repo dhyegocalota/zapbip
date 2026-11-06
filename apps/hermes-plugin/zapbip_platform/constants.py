@@ -64,3 +64,4 @@ class ConnectorLogEvent(Enum):
     MESSAGES_RECEIVED = "messages_received"
     DONE_SENT = "done_sent"
     FRAME_REJECTED = "frame_rejected"
+SEEN_MESSAGE_LIMIT = 1_024
