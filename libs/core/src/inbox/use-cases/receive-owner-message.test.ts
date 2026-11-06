@@ -27,6 +27,7 @@ import {
   registerAgents,
   START_AT,
 } from '../testing/fixtures';
+import { ask } from './ask';
 import { checkInbox } from './check-inbox';
 import { sendText } from './send-text';
 import { waitForReply } from './wait-for-reply';
@@ -414,6 +415,37 @@ describe('receiveOwnerMessage waking', () => {
     await receiveText({ environment, text: '@alpha one' });
     expect(environment.waker.notifications).toEqual([]);
     expect((await holding).status).toBe(ReplyStatus.Message);
+  });
+});
+
+describe('receiveOwnerMessage waking an agent that holds an ask', () => {
+  test('owner media reaching an agent that only waits for an answer wakes it and tells the owner', async () => {
+    const environment = await createEnvironment();
+    const asking = ask({
+      dependencies: environment.dependencies,
+      connection: connectionOf({ agent: 'alpha' }),
+      text: 'Deploy?',
+      options: ['Sim', 'Não'],
+      optionDescriptions: [],
+      timeoutMs: 5 * SECOND_MS,
+    });
+    await environment.clock.advance({ ms: 0 });
+    await receive({
+      environment,
+      content: {
+        kind: MessageKind.Image,
+        voice: false,
+        mediaId: 'wamid.media',
+        mimeType: 'image/jpeg',
+        sizeBytes: 1000,
+        filename: null,
+        caption: null,
+      },
+    });
+    expect(environment.waker.notifications).toEqual([{ agent: 'alpha', reason: AgentWakeReason.MessageWaiting }]);
+    expect(sessionTexts({ environment })).toEqual([notListeningText({ agent: 'alpha' })]);
+    await environment.clock.advance({ ms: 5 * SECOND_MS });
+    await asking;
   });
 });
 

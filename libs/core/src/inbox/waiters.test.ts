@@ -28,13 +28,12 @@ describe('createReplyWaiters', () => {
     expect(waiters.hasLiveWaiter({ agent: 'alpha' })).toBe(false);
   });
 
-  test('CU-86 a pending question is a live waiter until resolved', async () => {
+  test('CU-86 a pending question is not a live waiter, and resolving it settles the wait', async () => {
     const { waiters } = createWaiters();
     const waiting = waiters.awaitQuestionAnswer({ agent: 'alpha', questionId: 'qst_1', timeoutMs: 5000 });
-    expect(waiters.hasLiveWaiter({ agent: 'alpha' })).toBe(true);
+    expect(waiters.hasLiveWaiter({ agent: 'alpha' })).toBe(false);
     waiters.resolveQuestionAnswer({ questionId: 'qst_1' });
     await waiting;
-    expect(waiters.hasLiveWaiter({ agent: 'alpha' })).toBe(false);
   });
 
   test('CU-87 resolving a question nobody awaits does nothing', () => {
@@ -55,7 +54,6 @@ describe('createReplyWaiters', () => {
     const { waiters } = createWaiters();
     const waiting = waiters.awaitQuestionAnswer({ agent: 'alpha', questionId: 'qst_1', timeoutMs: 5000 });
     waiters.resolveAgentMessage({ agent: 'alpha' });
-    expect(waiters.hasLiveWaiter({ agent: 'alpha' })).toBe(true);
     waiters.resolveQuestionAnswer({ questionId: 'qst_1' });
     await waiting;
   });
