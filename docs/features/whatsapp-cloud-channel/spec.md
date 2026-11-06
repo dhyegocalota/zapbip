@@ -123,12 +123,17 @@ Outbound failure with `131047` goes back into the core as a channel fact: `Accou
 | `interactive` `button_reply` | `choice` `{option_id, title}` | yes | rule 1 |
 | `interactive` `list_reply` | `choice` `{option_id, title, description?}`; ids starting `zapbip:` are rule 0 (accounts-and-keys) | yes | rule 1 |
 | `button` (template quick reply) | no agent message; the notice's `context.id` is the notice's `wamid` | yes | none: it only opens the window and flushes the queue |
-| any kind with `context.id` | `reply_to` set from `context.id` | as the kind | rule 2 |
+| any kind with `context.id` | `reply_to` set from `context.id`; `context` may carry no `id` | as the kind | rule 2 |
+| any kind with `context.forwarded` or `context.frequently_forwarded` | `forwarded: forwarded \| frequently_forwarded` on the stored message, `none` otherwise; `frequently_forwarded` wins when both are set | as the kind | as the kind |
 | `unsupported` | not delivered to agents | yes | none; the owner gets one session text, copy `unsupportedKind` |
 
 The window opens at the message's own `timestamp` (Unix seconds, converted to milliseconds at the edge). Reactions do not open the window; a `131047` on a later send corrects any mistaken opening.
 
-Owner messages keep the core's `sender: "owner", verified: true` on every kind.
+Owner messages keep the core's `sender: "owner"`, and `verified: true` on every kind except a forwarded one: a forwarded message is content the owner relayed, not their own words, so it carries `verified: false` and the `forwarded` kind on the wire (owner delegated 2026-11-06).
+
+An entry whose `timestamp` is older than `RECEIPT_RETENTION_MS` is acknowledged with `200`, not processed and logged as `inbound.stale`: its receipt may already be pruned, so a captured replay could not be told from a new message. A message whose receipt already exists is acknowledged with `200` before any media is downloaded, so a redelivery never touches a stored object.
+
+The media download origin of the development stack is passed to the webhook route and the Graph client by the development entry only; the production entry passes none and never reads `WHATSAPP_MEDIA_DOWNLOAD_ORIGIN`.
 
 ### Outbound mapping
 
@@ -239,7 +244,7 @@ Ranks: `sent` 1, `delivered` 2, `read` 3. `failed` is handled by the rule row, n
 | Send returns `130429`, `80007`, `4` or `131056` (throughput or rate) | `delivery: "failed"`; the tool returns an error saying the channel is busy; no automatic retry |
 | Send returns `131048` or `368` (number restricted or WABA disabled) | `delivery: "failed"`; log `channel.restricted` at error level (the operator alert); sends stop for 24 hours (`RESTRICTION_TTL_MS`), then the restriction row is ignored; an operator may delete it earlier |
 | Send returns `131026` (delivery failed for the recipient) | `delivery: "failed"`, error names the kind |
-| Send returns `131009` (invalid reaction target) | the tool returns an error naming `reaction.message_id` |
+| Send returns `131009` (invalid reaction target) | on a reaction send the tool returns an error naming `reaction.message_id`; on any other send the error is the unexpected-error kind and never mentions a reaction |
 | Send returns `131053` (media upload not accepted) or `131051` | the tool returns an error naming the kind and the MIME type |
 | Template rejected by Meta (not approved, parameter count or value wrong) | `delivery: "failed"`; log `channel.template_rejected` with the template name and language |
 | Graph request times out or returns a 5xx | `delivery: "failed"` with reason `timeout`; the message may still have been delivered, and a later status webhook overrides it under the status rule |

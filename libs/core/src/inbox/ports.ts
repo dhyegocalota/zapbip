@@ -51,6 +51,7 @@ export interface InboxRepository {
   recordChannelReceipt(input: { wamid: string; receivedAt: number }): Promise<boolean>;
   linkChannelReceipt(input: { wamid: string; messageId: string }): Promise<void>;
   findChannelReceiptMessageId(input: { wamid: string }): Promise<string | null>;
+  hasChannelReceipt(input: { wamid: string }): Promise<boolean>;
   deleteExpiredReceipts(input: { receivedBefore: number }): Promise<void>;
   deleteQuestionsAskedBefore(input: { askedBefore: number }): Promise<void>;
   findWindow(): Promise<OwnerWindow>;
@@ -63,8 +64,8 @@ export interface InboxRepository {
   insertMedia(input: { media: StoredMedia }): Promise<void>;
   findMedia(input: { mediaId: string }): Promise<StoredMedia | null>;
   claimUpload(input: { mediaId: string; claimedAt: number; staleBefore: number }): Promise<boolean>;
-  releaseUpload(input: { mediaId: string }): Promise<void>;
-  markMediaReceived(input: { mediaId: string; receivedAt: number; retentionUntil: number }): Promise<void>;
+  releaseUpload(input: { mediaId: string; claimedAt: number }): Promise<void>;
+  markMediaReceived(input: { mediaId: string; claimedAt: number; receivedAt: number; retentionUntil: number }): Promise<boolean>;
   listExpiredMediaIds(input: { now: number }): Promise<string[]>;
   deleteMedia(input: { mediaIds: string[] }): Promise<void>;
   findNextExpiry(): Promise<number | null>;

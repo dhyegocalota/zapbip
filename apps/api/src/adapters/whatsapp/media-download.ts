@@ -1,8 +1,10 @@
-import { ChannelError, type MediaStore } from '@zapbip/core';
+import type { MediaStore } from '@zapbip/core';
 import { ChannelErrorKind } from '@zapbip/types';
 import { z } from 'zod';
-import type { GraphClient } from './graph-client';
+import { mapGraphErrorToChannelError } from './channel-error-mapping';
+import { GraphRequestError, type GraphClient } from './graph-client';
 import type { MediaDownloadRequest } from './inbound-parser';
+import { HttpStatus } from '../../routes/http-status';
 import { isAllowedMediaUrl } from './media-url-policy';
 import { WhatsAppErrorCode } from './whatsapp-enums';
 
@@ -24,19 +26,24 @@ type LengthGuard = { isViolated: boolean };
 const NOT_STORED: MediaDownloadResult = { stored: false };
 const DIGEST_ALGORITHM = 'SHA-256';
 const DIGEST_ENCODING = 'base64';
-const STATUS_NOT_FOUND = 404;
-const STATUS_REDIRECT_MINIMUM = 300;
-const STATUS_REDIRECT_MAXIMUM = 400;
 const metadataSchema = z.object({ url: z.string(), file_size: z.number() });
 
 async function fetchMetadata(input: { graph: GraphClient; channelMediaId: string }): Promise<z.infer<typeof metadataSchema> | null> {
   try {
     return metadataSchema.parse(await input.graph.get({ path: `/${input.channelMediaId}` }));
   } catch (error) {
-    if (!(error instanceof ChannelError)) throw error;
-    if (error.errorCode === WhatsAppErrorCode.InboundMediaTooLarge) return null;
-    if (error.code === ChannelErrorKind.Timeout) throw new RetriableMediaError(error.message, { cause: error });
-    throw error;
+    if (!(error instanceof GraphRequestError)) throw error;
+    const channelError = mapGraphErrorToChannelError({
+      status: error.status,
+      errorCode: error.errorCode,
+      errorTitle: error.errorTitle,
+      message: error.message,
+      isTemplateSend: false,
+      isReactionSend: false,
+    });
+    if (channelError.errorCode === WhatsAppErrorCode.InboundMediaTooLarge) return null;
+    if (channelError.code === ChannelErrorKind.Timeout) throw new RetriableMediaError(channelError.message, { cause: error });
+    throw channelError;
   }
 }
 
@@ -100,9 +107,9 @@ async function attemptDownload(input: DownloadInput & { attempts: number }): Pro
   if (metadata.file_size > input.maxBytes) return NOT_STORED;
   const response = await requestBody({ graph: input.graph, url: metadata.url });
   const canRefresh = input.attempts > 1;
-  if (response.status === STATUS_NOT_FOUND && canRefresh) return attemptDownload({ ...input, attempts: input.attempts - 1 });
-  if (response.status === STATUS_NOT_FOUND) return NOT_STORED;
-  const isRedirect = response.status >= STATUS_REDIRECT_MINIMUM && response.status < STATUS_REDIRECT_MAXIMUM;
+  if (response.status === HttpStatus.NotFound && canRefresh) return attemptDownload({ ...input, attempts: input.attempts - 1 });
+  if (response.status === HttpStatus.NotFound) return NOT_STORED;
+  const isRedirect = response.status >= HttpStatus.MultipleChoices && response.status < HttpStatus.BadRequest;
   if (isRedirect) return NOT_STORED;
   if (!response.ok || response.body === null) throw new RetriableMediaError(`media download answered ${response.status}`);
   return storeBody({ ...input, body: response.body, sizeBytes: metadata.file_size });

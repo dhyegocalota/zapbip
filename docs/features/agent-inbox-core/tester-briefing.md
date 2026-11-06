@@ -396,3 +396,35 @@ The plan expected the red run to fail at the first tool call with `<use case> is
 ### Known gaps
 
 - A PUT whose Worker dies between claim and write is now free after one minute, not after `UPLOAD_TTL_MS`; no test kills a Worker mid-write.
+
+## Fix round 3 (feat/agent-inbox-core-fix3)
+
+### What changed
+
+- Upload claims are fenced: `claimUpload` returns its `claimedAt`; `completeUpload` and `releaseUpload` are conditional on it (`WHERE claimed_at = ?`), so a replaced writer can neither complete nor release. `UPLOAD_CLAIM_TTL_MS` equals `UPLOAD_TTL_MS`, so no takeover happens before the upload expires (CU-174, CU-175, WI-144).
+- The upload MIME type is stored normalized (`createUpload`), written to R2 as given by the store, and served normalized by the media route; a control character in a raw declaration is `invalid_input` for uploads and for `send_media` (CU-176, CU-177, WI-142, WI-143).
+- A client abort answers `400 upload_incomplete`; an R2 failure answers 5xx. The upload route tells them apart by a source stream that ended short or errored (WI-137, WI-141).
+- The wake resolves the question waiter only when an answer was stored (`placement.answer`), so a photo quoting a question prompt wakes the ordinary wait (CU-178).
+- One `DEVELOPMENT_ENVIRONMENT` constant in `apps/api/src/contract/constants.ts`; docs no longer say every AI is "listed as coming soon"; the spec drops the contradicting "Rule 5 beats an open list" bullet; the test plan has rows for every round-2 and round-3 behaviour and the colliding titles are renumbered (WI-137 to WI-145).
+
+### Red today, green after
+
+| Test | Red commit | Failure text |
+|---|---|---|
+| CU-174 to CU-177 | 8657338 | `expected 60000 to be greater than or equal to 900000`; `expected an InboxError, nothing was thrown`; `expected { mediaId: 'med_1', ...(7) } to match object { mimeType: 'application/pdf' }` |
+| CU-178 photo quoting a prompt | 3030839 | `Test timed out in 5000ms` |
+
+Green when they landed (pins, or written with the implementation in a0b8c5f): WI-140 (pin), WI-141, WI-142, WI-143, WI-144; the WI-137 body now reaches the route as a short stream, which the old byte count also caught; the CU-178 stale-tap test replaces a `vi.spyOn` assertion with the waiter result (pin).
+
+### Hypotheses to attack
+
+1. Two PUTs racing on one upload: one `201`, the other `409`, and the R2 bytes are the winner's.
+2. A slow writer past `UPLOAD_TTL_MS` finds the upload expired (`410`) and never marks it received.
+3. `Image/PNG; charset=x` declared and sent: R2 `contentType` and the GET `Content-Type` are `image/png`.
+4. `image/png\n;x` as `mime_type` in `create_upload` or `send_media` answers `invalid_input`.
+5. An owner photo quoting a question prompt reaches an agent sitting in a plain `wait_for_reply`.
+
+### Known gaps
+
+- A Worker that dies between claim and write leaves the claim until the upload expires (15 minutes); the agent can create a new upload.
+- R2 holds the bytes of a writer that lost the fence only if a takeover were possible; with the TTL equal to the upload life none is.

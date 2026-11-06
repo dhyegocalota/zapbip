@@ -1,4 +1,12 @@
-import { ChannelErrorKind, ChannelInboundKind, DeliveryState, MessageDirection, MessageKind, OwnerLocale } from '@zapbip/types';
+import {
+  ChannelErrorKind,
+  ChannelInboundKind,
+  DeliveryState,
+  MessageDirection,
+  MessageKind,
+  OwnerLocale,
+  ForwardedKind,
+} from '@zapbip/types';
 import { ChannelError } from '../errors';
 import type { Message } from '../message';
 import type { ChannelInboundEntry, ReceiveResult } from '../use-cases/types';
@@ -16,14 +24,16 @@ export function ownerTextEntry(input: {
   environment: InMemoryEnvironment;
   text: string;
   replyToChannelMessageId?: string | null;
+  forwarded?: ForwardedKind;
   noticeText?: string | null;
 }): ChannelInboundEntry {
-  const { environment, text, replyToChannelMessageId = null, noticeText = null } = input;
+  const { environment, text, replyToChannelMessageId = null, forwarded = ForwardedKind.None, noticeText = null } = input;
   return {
     kind: ChannelInboundKind.Owner,
     at: environment.clock.now(),
     content: { kind: MessageKind.Text, text },
     replyToChannelMessageId,
+    forwarded,
     noticeText,
   };
 }
@@ -51,6 +61,7 @@ export async function insertQueued(input: { environment: InMemoryEnvironment; te
     replyToMessageId: null,
     delivery: DeliveryState.Queued,
     readByAgent: true,
+    forwarded: ForwardedKind.None,
     kind: MessageKind.Text,
     text,
   }));

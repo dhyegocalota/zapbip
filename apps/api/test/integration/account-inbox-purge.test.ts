@@ -1,4 +1,4 @@
-import { AccountState, MessageKind, OwnerLocale } from '@zapbip/types';
+import { AccountState, ForwardedKind, MessageKind, OwnerLocale } from '@zapbip/types';
 import { evictDurableObject, reset, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { AccountInbox } from '../../src/account-inbox/account-inbox';
@@ -99,7 +99,12 @@ describe('AccountInbox after purge', () => {
         instance.receiveOwnerMessage({
           ownerLocale: OwnerLocale.PortugueseBrazil,
           channelMessageId: 'wamid.after',
-          ownerMessage: { at: Date.now(), replyToMessageId: null, content: { kind: MessageKind.Text, text: 'oi' } },
+          ownerMessage: {
+            at: Date.now(),
+            replyToMessageId: null,
+            forwarded: ForwardedKind.None,
+            content: { kind: MessageKind.Text, text: 'oi' },
+          },
         }),
       (instance) => instance.recordRevocation({ agent: 'alpha' }),
       (instance) => instance.cancelWaiters({ agent: 'alpha' }),

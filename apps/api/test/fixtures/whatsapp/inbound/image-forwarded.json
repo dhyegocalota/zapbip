@@ -1,0 +1,15 @@
+{
+  "from": "5511900000001",
+  "id": "wamid.IMGFORWARDED",
+  "timestamp": "1762430400",
+  "type": "image",
+  "image": {
+    "id": "900000000000001",
+    "mime_type": "image/jpeg",
+    "sha256": "aW1hZ2Utc2hhMjU2",
+    "caption": "Foto"
+  },
+  "context": {
+    "forwarded": true
+  }
+}

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { isAllowedMediaUrl } from './media-url-policy';
-import { GRAPH_API_VERSION, GRAPH_REQUEST_TIMEOUT_MS } from './whatsapp-constants';
+import { GRAPH_API_VERSION, GRAPH_MEDIA_BODY_DEADLINE_MS, GRAPH_REQUEST_TIMEOUT_MS } from './whatsapp-constants';
 
 export const GRAPH_NO_RESPONSE_STATUS = 0;
 
@@ -55,27 +55,50 @@ export function createGraphClient(input: {
   const { baseUrl, accessToken, developmentMediaOrigin, fetcher } = input;
   const authorization = `Bearer ${accessToken}`;
 
-  async function perform(request: { url: string; init: RequestInit }): Promise<Response> {
+  function noResponseError(input: { cause: unknown }): GraphRequestError {
+    return new GraphRequestError({
+      status: GRAPH_NO_RESPONSE_STATUS,
+      errorCode: null,
+      errorTitle: null,
+      message: `Graph request got no response: ${input.cause}`,
+    });
+  }
+
+  function disarmingBody(input: { response: Response; disarm: () => void }): Response {
+    const { response, disarm } = input;
+    if (response.body === null) {
+      disarm();
+      return response;
+    }
+    const body = response.body.pipeThrough(new TransformStream<Uint8Array, Uint8Array>({ flush: disarm }));
+    return new Response(body, { status: response.status, statusText: response.statusText, headers: response.headers });
+  }
+
+  async function perform(request: { url: string; init: RequestInit; bodyDeadlineMs: number }): Promise<Response> {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), GRAPH_REQUEST_TIMEOUT_MS);
+    let timer = setTimeout(() => controller.abort(), GRAPH_REQUEST_TIMEOUT_MS);
+    const disarm = (): void => clearTimeout(timer);
     try {
-      return await fetcher(request.url, { ...request.init, signal: controller.signal });
+      const response = await fetcher(request.url, { ...request.init, signal: controller.signal });
+      disarm();
+      timer = setTimeout(() => controller.abort(), request.bodyDeadlineMs);
+      return disarmingBody({ response, disarm });
     } catch (error) {
-      throw new GraphRequestError({
-        status: GRAPH_NO_RESPONSE_STATUS,
-        errorCode: null,
-        errorTitle: null,
-        message: `Graph request got no response: ${error}`,
-      });
-    } finally {
-      clearTimeout(timer);
+      disarm();
+      throw noResponseError({ cause: error });
     }
   }
 
   async function requestJson(request: { path: string; init: RequestInit }): Promise<unknown> {
-    const response = await perform({ url: `${baseUrl}/${GRAPH_API_VERSION}${request.path}`, init: request.init });
+    const response = await perform({
+      url: `${baseUrl}/${GRAPH_API_VERSION}${request.path}`,
+      init: request.init,
+      bodyDeadlineMs: GRAPH_REQUEST_TIMEOUT_MS,
+    });
     if (!response.ok) throw await failureOf({ response });
-    return response.json();
+    return response.json().catch((error: unknown) => {
+      throw noResponseError({ cause: error });
+    });
   }
 
   return {
@@ -92,7 +115,11 @@ export function createGraphClient(input: {
 
     async download({ url }) {
       assertDownloadUrl({ url, developmentMediaOrigin });
-      return perform({ url, init: { method: 'GET', headers: { authorization }, redirect: 'manual' } });
+      return perform({
+        url,
+        init: { method: 'GET', headers: { authorization }, redirect: 'manual' },
+        bodyDeadlineMs: GRAPH_MEDIA_BODY_DEADLINE_MS,
+      });
     },
   };
 }

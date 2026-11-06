@@ -30,7 +30,9 @@ async function storePlacement(input: Arrival & { channelMessageId: string; place
   const { content } = ownerMessage;
   const messageId = ids.next({ prefix: IdPrefix.Message });
   if (isStoredMedia(content)) await repository.insertMedia({ media: buildOwnerMedia({ content, receivedAt: clock.now() }) });
-  await repository.insertMessage({ message: buildPlacedMessage({ messageId, at: ownerMessage.at, placement }) });
+  await repository.insertMessage({
+    message: buildPlacedMessage({ messageId, at: ownerMessage.at, forwarded: ownerMessage.forwarded, placement }),
+  });
   await repository.saveChannelMessageId({ messageId, channelMessageId });
   const answer = buildPlacedAnswer({ placement, messageId, answeredAt: clock.now() });
   if (answer !== null) await repository.saveAnswer(answer);

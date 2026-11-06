@@ -1,4 +1,4 @@
-import { DeliveryState, MediaOrigin, MessageDirection, MessageKind, OwnerLocale } from '@zapbip/types';
+import { DeliveryState, MediaOrigin, MessageDirection, MessageKind, OwnerLocale, ForwardedKind } from '@zapbip/types';
 import { MEDIA_RETENTION_MS, QUEUE_RETENTION_MS, type RoutingList, type StoredMedia } from '@zapbip/core';
 import { afterEach, describe, expect, it } from 'vitest';
 import { reset } from 'cloudflare:test';
@@ -247,7 +247,7 @@ describe('SQLite inbox repository', () => {
     expect(result).toEqual({ first: true, second: false, afterReset: true });
   });
 
-  it('claims an upload exactly once until it is released, received or stale', async () => {
+  it('WI-126 claims an upload exactly once until it is released, received or stale', async () => {
     const claim = { mediaId: 'med_1', claimedAt: BASE_TIME, staleBefore: BASE_TIME - 1 };
     const result = await inRepository(async (repository) => {
       await repository.insertMedia({ media: buildMedia({ mediaId: 'med_1', expiresAt: BASE_TIME + 5 }) });
@@ -255,12 +255,33 @@ describe('SQLite inbox repository', () => {
       const second = await repository.claimUpload(claim);
       const whileFresh = await repository.claimUpload({ ...claim, claimedAt: BASE_TIME + 1 });
       const whenStale = await repository.claimUpload({ ...claim, claimedAt: BASE_TIME + 2, staleBefore: BASE_TIME });
-      await repository.releaseUpload({ mediaId: 'med_1' });
+      await repository.releaseUpload({ mediaId: 'med_1', claimedAt: BASE_TIME + 2 });
       const afterRelease = await repository.claimUpload(claim);
-      await repository.markMediaReceived({ mediaId: 'med_1', receivedAt: BASE_TIME, retentionUntil: BASE_TIME + MEDIA_RETENTION_MS });
+      await repository.markMediaReceived({
+        mediaId: 'med_1',
+        claimedAt: BASE_TIME,
+        receivedAt: BASE_TIME,
+        retentionUntil: BASE_TIME + MEDIA_RETENTION_MS,
+      });
       return { first, second, whileFresh, whenStale, afterRelease, afterReceived: await repository.claimUpload(claim) };
     });
     expect(result).toEqual({ first: true, second: false, whileFresh: false, whenStale: true, afterRelease: true, afterReceived: false });
+  });
+
+  it('WI-144 fences an upload by its claim time: a replaced writer can neither complete nor release', async () => {
+    const received = { receivedAt: BASE_TIME + 10, retentionUntil: BASE_TIME + 10 + MEDIA_RETENTION_MS };
+    const result = await inRepository(async (repository) => {
+      await repository.insertMedia({ media: buildMedia({ mediaId: 'med_1', expiresAt: BASE_TIME + 100 }) });
+      await repository.claimUpload({ mediaId: 'med_1', claimedAt: BASE_TIME, staleBefore: BASE_TIME - 1 });
+      await repository.claimUpload({ mediaId: 'med_1', claimedAt: BASE_TIME + 5, staleBefore: BASE_TIME });
+      await repository.releaseUpload({ mediaId: 'med_1', claimedAt: BASE_TIME });
+      const stillHeld = !(await repository.claimUpload({ mediaId: 'med_1', claimedAt: BASE_TIME + 6, staleBefore: BASE_TIME }));
+      const staleCompletion = await repository.markMediaReceived({ mediaId: 'med_1', claimedAt: BASE_TIME, ...received });
+      const afterStale = await repository.findMedia({ mediaId: 'med_1' });
+      const currentCompletion = await repository.markMediaReceived({ mediaId: 'med_1', claimedAt: BASE_TIME + 5, ...received });
+      return { stillHeld, staleCompletion, receivedAfterStale: afterStale?.receivedAt, currentCompletion };
+    });
+    expect(result).toEqual({ stillHeld: true, staleCompletion: false, receivedAfterStale: null, currentCompletion: true });
   });
 
   it('claims the routing list expiry once per opening time', async () => {
@@ -284,7 +305,13 @@ describe('SQLite inbox repository', () => {
     const media = buildMedia({ mediaId: 'med_1', expiresAt: BASE_TIME + 5 });
     const result = await inRepository(async (repository) => {
       await repository.insertMedia({ media });
-      await repository.markMediaReceived({ mediaId: 'med_1', receivedAt: BASE_TIME, retentionUntil: BASE_TIME + MEDIA_RETENTION_MS });
+      await repository.claimUpload({ mediaId: 'med_1', claimedAt: BASE_TIME, staleBefore: BASE_TIME - 1 });
+      await repository.markMediaReceived({
+        mediaId: 'med_1',
+        claimedAt: BASE_TIME,
+        receivedAt: BASE_TIME,
+        retentionUntil: BASE_TIME + MEDIA_RETENTION_MS,
+      });
       const received = await repository.findMedia({ mediaId: 'med_1' });
       await repository.deleteMedia({ mediaIds: ['med_1'] });
       return { received, deleted: await repository.findMedia({ mediaId: 'med_1' }) };
@@ -347,6 +374,7 @@ describe('SQLite inbox repository', () => {
       direction: MessageDirection.FromOwner,
       agent: null,
       readByAgent: true,
+      forwarded: ForwardedKind.None,
     });
     const result = await inRepository(async (repository) => {
       await Promise.all([held, routedNowhere].map((message) => repository.insertMessage({ message })));

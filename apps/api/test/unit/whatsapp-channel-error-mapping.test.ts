@@ -6,13 +6,20 @@ import { GRAPH_NO_RESPONSE_STATUS } from '../../src/adapters/whatsapp/graph-clie
 
 const SUBJECT = 'text';
 
-function map(input: { status?: number; errorCode: number | null; isTemplateSend?: boolean; message?: string }): ChannelError {
+function map(input: {
+  status?: number;
+  errorCode: number | null;
+  isTemplateSend?: boolean;
+  isReactionSend?: boolean;
+  message?: string;
+}): ChannelError {
   return mapGraphErrorToChannelError({
     status: input.status === undefined ? 400 : input.status,
     errorCode: input.errorCode,
     errorTitle: null,
     message: input.message === undefined ? SUBJECT : input.message,
     isTemplateSend: input.isTemplateSend === undefined ? false : input.isTemplateSend,
+    isReactionSend: input.isReactionSend === undefined ? false : input.isReactionSend,
   });
 }
 
@@ -27,7 +34,6 @@ const SESSION_ROWS: [number, ChannelErrorKind][] = [
   [133010, ChannelErrorKind.Restricted],
   [131026, ChannelErrorKind.DeliveryFailed],
   [131021, ChannelErrorKind.DeliveryFailed],
-  [131009, ChannelErrorKind.ReactionRejected],
   [131053, ChannelErrorKind.MediaRejected],
   [131051, ChannelErrorKind.MediaRejected],
   [190, ChannelErrorKind.Auth],
@@ -40,6 +46,19 @@ describe('mapGraphErrorToChannelError', () => {
     expect(error).toBeInstanceOf(ChannelError);
     expect(error.code).toBe(kind);
     expect(error.errorCode).toBe(errorCode);
+  });
+
+  it('AU-97 maps code 131009 on a reaction send to a rejected reaction', () => {
+    const error = map({ errorCode: 131_009, isReactionSend: true });
+    expect(error.code).toBe(ChannelErrorKind.ReactionRejected);
+    expect(error.message).toContain('reaction');
+  });
+
+  it('maps code 131009 on a send that is not a reaction to an unknown error that never mentions a reaction', () => {
+    const error = map({ errorCode: 131_009, message: 'image' });
+    expect(error.code).toBe(ChannelErrorKind.Unknown);
+    expect(error.message).not.toContain('reaction');
+    expect(error.errorCode).toBe(131_009);
   });
 
   it('AU-98 tells the agent the channel is busy', () => {

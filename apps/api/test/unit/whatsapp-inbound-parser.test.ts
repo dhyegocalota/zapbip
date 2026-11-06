@@ -1,8 +1,8 @@
 import { createHash } from 'node:crypto';
-import { ChannelInboundKind, IdPrefix, MessageKind } from '@zapbip/types';
+import { ChannelInboundKind, ForwardedKind, IdPrefix, MessageKind } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { parseWebhookNotification, type ParsedChange, type ParsedEntry } from '../../src/adapters/whatsapp/inbound-parser';
-import { OperatorLogReason } from '../../src/adapters/whatsapp/whatsapp-enums';
+import { OperatorLogReason, ParsedEntryKind } from '../../src/adapters/whatsapp/whatsapp-enums';
 import audioFixture from '../fixtures/whatsapp/inbound/audio.json';
 import audioVoiceFixture from '../fixtures/whatsapp/inbound/audio-voice.json';
 import buttonFixture from '../fixtures/whatsapp/inbound/button.json';
@@ -10,6 +10,7 @@ import buttonReplyFixture from '../fixtures/whatsapp/inbound/button-reply.json';
 import contactsFixture from '../fixtures/whatsapp/inbound/contacts.json';
 import documentFixture from '../fixtures/whatsapp/inbound/document.json';
 import imageFixture from '../fixtures/whatsapp/inbound/image.json';
+import imageForwardedFixture from '../fixtures/whatsapp/inbound/image-forwarded.json';
 import listReplyFixture from '../fixtures/whatsapp/inbound/list-reply.json';
 import locationFixture from '../fixtures/whatsapp/inbound/location.json';
 import orderFixture from '../fixtures/whatsapp/inbound/order.json';
@@ -17,6 +18,8 @@ import reactionFixture from '../fixtures/whatsapp/inbound/reaction.json';
 import reactionRemovalFixture from '../fixtures/whatsapp/inbound/reaction-removal.json';
 import stickerFixture from '../fixtures/whatsapp/inbound/sticker.json';
 import textFixture from '../fixtures/whatsapp/inbound/text.json';
+import textForwardedFixture from '../fixtures/whatsapp/inbound/text-forwarded.json';
+import textFrequentlyForwardedFixture from '../fixtures/whatsapp/inbound/text-frequently-forwarded.json';
 import textReplyFixture from '../fixtures/whatsapp/inbound/text-reply.json';
 import unsupportedFixture from '../fixtures/whatsapp/inbound/unsupported.json';
 import videoFixture from '../fixtures/whatsapp/inbound/video.json';
@@ -40,7 +43,7 @@ async function entriesOf(input: { messages: object[] }): Promise<ParsedEntry[]> 
 
 async function inboundOf(input: { message: object }) {
   const [entry] = await entriesOf({ messages: [input.message] });
-  if (entry === undefined || entry.kind !== 'inbound') throw new Error('message was not parsed as inbound');
+  if (entry === undefined || entry.kind !== ParsedEntryKind.Inbound) throw new Error('message was not parsed as inbound');
   return entry;
 }
 
@@ -52,7 +55,7 @@ describe('parseWebhookNotification', () => {
   it('AU-19 parses a text', async () => {
     const parsed = await inboundOf({ message: textFixture });
     expect(parsed).toEqual({
-      kind: 'inbound',
+      kind: ParsedEntryKind.Inbound,
       channelMessageId: 'wamid.TEXT',
       fromWaId: OWNER_WA_ID,
       at: AT_MS,
@@ -62,6 +65,7 @@ describe('parseWebhookNotification', () => {
         at: AT_MS,
         content: { kind: MessageKind.Text, text: 'Oi' },
         replyToChannelMessageId: null,
+        forwarded: ForwardedKind.None,
       },
     });
   });
@@ -73,6 +77,7 @@ describe('parseWebhookNotification', () => {
       at: AT_MS,
       content: { kind: MessageKind.Image, voice: false, filename: null, caption: 'Foto' },
       replyToChannelMessageId: null,
+      forwarded: ForwardedKind.None,
     });
     expect(parsed.media).toEqual({
       mediaId: mediaIdOf({ channelMessageId: 'wamid.IMAGE' }),
@@ -167,6 +172,48 @@ describe('parseWebhookNotification', () => {
     expect(parsed.entry).toEqual({ kind: ChannelInboundKind.Unsupported, at: AT_MS, unsupportedType: 'poll' });
   });
 
+  it('parses a forwarded text, which carries context without an id', async () => {
+    const parsed = await inboundOf({ message: textForwardedFixture });
+    expect(parsed.entry).toMatchObject({
+      content: { kind: MessageKind.Text, text: 'Oi' },
+      replyToChannelMessageId: null,
+      forwarded: ForwardedKind.Forwarded,
+    });
+  });
+
+  it('parses a frequently forwarded text', async () => {
+    const parsed = await inboundOf({ message: textFrequentlyForwardedFixture });
+    expect(parsed.entry).toMatchObject({ replyToChannelMessageId: null, forwarded: ForwardedKind.FrequentlyForwarded });
+  });
+
+  it('prefers frequently forwarded when both flags are set', async () => {
+    const parsed = await inboundOf({ message: { ...textFixture, context: { forwarded: true, frequently_forwarded: true } } });
+    expect(parsed.entry).toMatchObject({ forwarded: ForwardedKind.FrequentlyForwarded });
+  });
+
+  it('parses a forwarded image with its download request', async () => {
+    const parsed = await inboundOf({ message: imageForwardedFixture });
+    expect(parsed.entry).toMatchObject({ content: { kind: MessageKind.Image }, forwarded: ForwardedKind.Forwarded });
+    expect(parsed.media).toMatchObject({ channelMediaId: '900000000000001' });
+  });
+
+  it('keeps the reply target and no forwarding on a plain reply', async () => {
+    const parsed = await inboundOf({ message: textReplyFixture });
+    expect(parsed.entry).toMatchObject({ replyToChannelMessageId: 'wamid.X', forwarded: ForwardedKind.None });
+  });
+
+  it('pin: parses a reaction with an empty emoji as a removal', async () => {
+    const parsed = await inboundOf({ message: { ...reactionFixture, reaction: { message_id: 'wamid.TARGET', emoji: '' } } });
+    expect(parsed.entry).toMatchObject({ content: { kind: MessageKind.Reaction, targetMessageId: 'wamid.TARGET', emoji: null } });
+  });
+
+  it('parses an unsupported message without a type as unsupported with no type', async () => {
+    const { unsupported, ...withoutDetail } = unsupportedFixture;
+    void unsupported;
+    const parsed = await inboundOf({ message: withoutDetail });
+    expect(parsed.entry).toEqual({ kind: ChannelInboundKind.Unsupported, at: AT_MS, unsupportedType: null });
+  });
+
   it('AU-30b carries context.id as the reply target', async () => {
     const parsed = await inboundOf({ message: textReplyFixture });
     expect(parsed.entry).toMatchObject({ replyToChannelMessageId: 'wamid.X' });
@@ -200,13 +247,13 @@ describe('parseWebhookNotification', () => {
     void from;
     const entries = await entriesOf({ messages: [withoutSender, { ...textFixture, id: 'wamid.GOOD' }] });
     expect(entries).toHaveLength(2);
-    expect(entries[0]).toEqual({ kind: 'rejected', reason: OperatorLogReason.MissingSender });
-    expect(entries[1]).toMatchObject({ kind: 'inbound', channelMessageId: 'wamid.GOOD' });
+    expect(entries[0]).toEqual({ kind: ParsedEntryKind.Rejected, reason: OperatorLogReason.MissingSender });
+    expect(entries[1]).toMatchObject({ kind: ParsedEntryKind.Inbound, channelMessageId: 'wamid.GOOD' });
   });
 
   it('rejects a message whose from is not a phone number', async () => {
     const entries = await entriesOf({ messages: [{ ...textFixture, from: 'not-a-number' }] });
-    expect(entries).toEqual([{ kind: 'rejected', reason: OperatorLogReason.InvalidSender }]);
+    expect(entries).toEqual([{ kind: ParsedEntryKind.Rejected, reason: OperatorLogReason.InvalidSender }]);
   });
 
   it('AU-35 rejects a message with an invalid timestamp and parses the text beside it', async () => {
@@ -216,15 +263,15 @@ describe('parseWebhookNotification', () => {
         { ...textFixture, id: 'wamid.GOOD' },
       ],
     });
-    expect(entries[0]).toEqual({ kind: 'rejected', reason: OperatorLogReason.MalformedEntry });
-    expect(entries[1]).toMatchObject({ kind: 'inbound', channelMessageId: 'wamid.GOOD' });
+    expect(entries[0]).toEqual({ kind: ParsedEntryKind.Rejected, reason: OperatorLogReason.MalformedEntry });
+    expect(entries[1]).toMatchObject({ kind: ParsedEntryKind.Inbound, channelMessageId: 'wamid.GOOD' });
   });
 
   it('rejects a message without a timestamp', async () => {
     const { timestamp, ...withoutTimestamp } = textFixture;
     void timestamp;
     const entries = await entriesOf({ messages: [withoutTimestamp] });
-    expect(entries).toEqual([{ kind: 'rejected', reason: OperatorLogReason.MalformedEntry }]);
+    expect(entries).toEqual([{ kind: ParsedEntryKind.Rejected, reason: OperatorLogReason.MalformedEntry }]);
   });
 
   it('rejects a text whose payload is malformed and keeps the rest of the batch', async () => {
@@ -234,8 +281,8 @@ describe('parseWebhookNotification', () => {
         { ...textFixture, id: 'wamid.GOOD' },
       ],
     });
-    expect(entries[0]).toEqual({ kind: 'rejected', reason: OperatorLogReason.MalformedEntry });
-    expect(entries[1]).toMatchObject({ kind: 'inbound', channelMessageId: 'wamid.GOOD' });
+    expect(entries[0]).toEqual({ kind: ParsedEntryKind.Rejected, reason: OperatorLogReason.MalformedEntry });
+    expect(entries[1]).toMatchObject({ kind: ParsedEntryKind.Inbound, channelMessageId: 'wamid.GOOD' });
   });
 
   it('AU-33 reports a change with another field without parsing its messages', async () => {
@@ -256,7 +303,7 @@ describe('parseWebhookNotification', () => {
       }),
     });
     expect(changes.map((change) => change.phoneNumberId)).toEqual([FOREIGN_PHONE_NUMBER_ID, OUR_PHONE_NUMBER_ID]);
-    expect(changes[1]?.entries[0]).toMatchObject({ kind: 'inbound', channelMessageId: 'wamid.OURS' });
+    expect(changes[1]?.entries[0]).toMatchObject({ kind: ParsedEntryKind.Inbound, channelMessageId: 'wamid.OURS' });
   });
 
   it('parses statuses beside messages in the same change', async () => {

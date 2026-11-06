@@ -240,3 +240,9 @@ export enum AccountReplyParameter {
   Agents = 'agents',
   InstallPrompt = 'install_prompt',
 }
+
+export enum ForwardedKind {
+  None = 'none',
+  Forwarded = 'forwarded',
+  FrequentlyForwarded = 'frequently_forwarded',
+}

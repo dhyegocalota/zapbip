@@ -2,7 +2,7 @@ import { env, exports } from 'cloudflare:workers';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import type { OwnerInboundContent } from '@zapbip/core';
-import { MessageKind, OwnerLocale } from '@zapbip/types';
+import { ForwardedKind, MessageKind, OwnerLocale } from '@zapbip/types';
 import { McpToolName } from '../../src/contract/tool-definitions';
 import type { DevAccountInboxRpc } from '../../src/contract/account-inbox-rpc';
 import { generateConnectionSecret } from '../../src/adapters/platform/connection-secret';
@@ -58,7 +58,7 @@ export async function ownerWrites(input: { accountId: string; channelMessageId: 
   const outcome = await accountInbox({ accountId: input.accountId }).receiveOwnerMessage({
     ownerLocale: OwnerLocale.PortugueseBrazil,
     channelMessageId: input.channelMessageId,
-    ownerMessage: { at: Date.now(), replyToMessageId: null, content: input.content },
+    ownerMessage: { at: Date.now(), replyToMessageId: null, forwarded: ForwardedKind.None, content: input.content },
   });
   if (!outcome.ok || outcome.value.messageId === null) throw new Error('owner message was not stored');
   return outcome.value.messageId;
@@ -76,7 +76,10 @@ export async function storeOwnerImage(input: { accountId: string; mediaId: strin
 
 export async function receiveUpload(input: { accountId: string; uploadId: string; sizeBytes: number; mimeType: string }): Promise<void> {
   await storeOwnerImage({ accountId: input.accountId, mediaId: input.uploadId, sizeBytes: input.sizeBytes, mimeType: input.mimeType });
-  await accountInbox({ accountId: input.accountId }).completeUpload({ mediaId: input.uploadId });
+  const inbox = accountInbox({ accountId: input.accountId });
+  const claim = await inbox.claimUpload({ mediaId: input.uploadId });
+  if (!claim.ok) throw new Error(claim.message);
+  await inbox.completeUpload({ mediaId: input.uploadId, claimedAt: claim.value.claimedAt });
 }
 
 export async function openWindow(input: { client: Client; accountId: string }): Promise<void> {

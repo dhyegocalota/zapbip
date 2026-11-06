@@ -1,4 +1,5 @@
 export * from './constants';
+export * from './claim-constants';
 export * from './connection';
 export * from './message';
 export * from './question';
@@ -40,3 +41,4 @@ export * from './use-cases/close-window';
 export * from './use-cases/apply-status';
 export * from './use-cases/status-rule';
 export * from './use-cases/claim-queued';
+export * from './use-cases/has-channel-receipt';

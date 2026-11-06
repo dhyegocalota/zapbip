@@ -7,6 +7,7 @@ import { join } from 'node:path';
 import { promisify } from 'node:util';
 import type { TestProject } from 'vitest/node';
 import { z } from 'zod';
+import { DEVELOPMENT_ENVIRONMENT } from '../../src/contract/constants';
 import { freePort, HEALTH_TIMEOUT_MS, LOOPBACK_HOST, waitForHealth } from './support/stack-process';
 
 const runCommand = promisify(execFile);
@@ -14,7 +15,6 @@ const SEED_PHONE = '5511999990000';
 const SEED_AGENTS = ['alpha', 'beta'];
 const SIGNING_KEY_BYTES = 32;
 const DATABASE_BINDING = 'CONNECTIONS';
-const DEVELOPMENT_ENVIRONMENT = 'development';
 const LOG_FILE_NAME = 'wrangler-dev.log';
 
 const seedOutputSchema = z.object({ connections: z.array(z.object({ agent: z.string(), secret: z.string() })) });

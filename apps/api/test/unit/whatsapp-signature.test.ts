@@ -44,6 +44,13 @@ describe('verifyWebhookSignature', () => {
     expect(await verifyBody({ signedText: BODY_TEXT, transformHeader: () => null })).toBe(false);
   });
 
+  it('pin: rejects a valid digest behind another algorithm prefix', async () => {
+    const otherPrefix = 'sha512=';
+    expect(
+      await verifyBody({ signedText: BODY_TEXT, transformHeader: (header) => header.replace(WEBHOOK_SIGNATURE_PREFIX, otherPrefix) }),
+    ).toBe(false);
+  });
+
   it('AU-4 rejects the right hex without the prefix', async () => {
     expect(await verifyBody({ signedText: BODY_TEXT, transformHeader: (header) => header.replace(WEBHOOK_SIGNATURE_PREFIX, '') })).toBe(
       false,

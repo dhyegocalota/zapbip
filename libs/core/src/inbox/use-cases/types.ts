@@ -1,5 +1,14 @@
 import type { AgentName, ConnectionIdentity } from '../connection';
-import type { ChannelInboundKind, DeliveryState, InboxStatus, MediaSourceKind, MessageKind, OwnerLocale, ReplyStatus } from '@zapbip/types';
+import type {
+  ChannelInboundKind,
+  DeliveryState,
+  ForwardedKind,
+  InboxStatus,
+  MediaSourceKind,
+  MessageKind,
+  OwnerLocale,
+  ReplyStatus,
+} from '@zapbip/types';
 import type { ContactCard, MediaSource, Message, MessageContent, QuestionOption } from '../message';
 import type { MediaMessageKind } from '../constants';
 import type { ChannelStatusDetail, StoredMedia } from '../inbox-records';
@@ -65,12 +74,13 @@ export type OwnerInboundContent =
     }
   | { kind: MessageKind.Location; latitude: number; longitude: number; name: string | null; address: string | null }
   | { kind: MessageKind.Contacts; contacts: ContactCard[] }
-  | { kind: MessageKind.Reaction; targetMessageId: string; emoji: string | null }
+  | { kind: MessageKind.Reaction; targetMessageId: string | null; emoji: string | null }
   | { kind: MessageKind.Choice; optionId: string; optionTitle: string; optionDescription: string | null };
 
 export type OwnerInboundMessage = {
   at: number;
   replyToMessageId: string | null;
+  forwarded: ForwardedKind;
   content: OwnerInboundContent;
 };
 
@@ -83,9 +93,10 @@ export type ReceiveOwnerMessageInput = {
 export type ReceiveResult = { messageId: string | null; agent: AgentName | null; duplicate: boolean };
 
 export type DescribeUploadInput = { dependencies: CoreDependencies; mediaId: string };
-export type CompleteUploadInput = { dependencies: CoreDependencies; mediaId: string };
+export type CompleteUploadInput = { dependencies: CoreDependencies; mediaId: string; claimedAt: number };
 export type ClaimUploadInput = { dependencies: CoreDependencies; mediaId: string };
-export type ReleaseUploadInput = { dependencies: CoreDependencies; mediaId: string };
+export type ReleaseUploadInput = { dependencies: CoreDependencies; mediaId: string; claimedAt: number };
+export type UploadClaim = StoredMedia & { claimedAt: number };
 export type SweepExpiredInput = { dependencies: CoreDependencies };
 export type SweepExpiredResult = { nextDueAt: number | null };
 
@@ -112,6 +123,7 @@ export type ChannelInboundEntry =
       at: number;
       content: OwnerInboundContent | UnavailableOwnerMedia;
       replyToChannelMessageId: string | null;
+      forwarded: ForwardedKind;
       noticeText: string | null;
     }
   | { kind: ChannelInboundKind.WindowOnly; at: number }
@@ -133,4 +145,5 @@ export type ApplyStatusInput = {
   status: DeliveryState.Sent | DeliveryState.Delivered | DeliveryState.Read | DeliveryState.Failed;
   detail: ChannelStatusDetail;
 };
-export type ApplyStatusResult = { applied: boolean };
+export type ApplyStatusResult = { applied: boolean; found: boolean };
+export type HasChannelReceiptInput = { dependencies: CoreDependencies; channelMessageId: string };

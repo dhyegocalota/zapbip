@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createGraphClient, GRAPH_NO_RESPONSE_STATUS, GraphRequestError } from '../../src/adapters/whatsapp/graph-client';
-import { GRAPH_REQUEST_TIMEOUT_MS } from '../../src/adapters/whatsapp/whatsapp-constants';
+import { GRAPH_MEDIA_BODY_DEADLINE_MS, GRAPH_REQUEST_TIMEOUT_MS } from '../../src/adapters/whatsapp/whatsapp-constants';
 
 const BASE_URL = 'http://127.0.0.1:4011';
 const ACCESS_TOKEN = 'test-access-token';
@@ -156,5 +156,55 @@ describe('graph client download', () => {
     const response = await clientOf({ fetcher }).download({ url: 'https://lookaside.fbsbx.com/x' });
     expect(response.status).toBe(302);
     expect(calls).toHaveLength(1);
+  });
+});
+
+describe('graph client body deadline', () => {
+  const FIRST_CHUNK = new TextEncoder().encode('first');
+
+  function stalledBodyFetcher(): { fetcher: typeof fetch; signals: AbortSignal[] } {
+    const signals: AbortSignal[] = [];
+    const fetcher = vi.fn((_url: string | URL | Request, init?: RequestInit) => {
+      const signal = init?.signal as AbortSignal;
+      signals.push(signal);
+      const body = new ReadableStream<Uint8Array>({
+        start(controller) {
+          controller.enqueue(FIRST_CHUNK);
+          signal.addEventListener('abort', () => controller.error(new Error('aborted')));
+        },
+      });
+      return Promise.resolve(new Response(body, { status: 200 }));
+    }) as unknown as typeof fetch;
+    return { fetcher, signals };
+  }
+
+  it('keeps the abort armed past the request timeout while a download body is still arriving', async () => {
+    const { fetcher, signals } = stalledBodyFetcher();
+    const response = await clientOf({ fetcher }).download({ url: 'https://lookaside.fbsbx.com/x' });
+    await vi.advanceTimersByTimeAsync(GRAPH_REQUEST_TIMEOUT_MS + 1);
+    expect(signals[0]!.aborted).toBe(false);
+    await response.body?.cancel();
+  });
+
+  it('aborts a download body that stalls past the body deadline', async () => {
+    const { fetcher } = stalledBodyFetcher();
+    const response = await clientOf({ fetcher }).download({ url: 'https://lookaside.fbsbx.com/x' });
+    const reading = expect(response.arrayBuffer()).rejects.toThrow('aborted');
+    await vi.advanceTimersByTimeAsync(GRAPH_MEDIA_BODY_DEADLINE_MS);
+    await reading;
+  });
+
+  it('rejects with the no-response status when a JSON body stalls past the request timeout', async () => {
+    const { fetcher } = stalledBodyFetcher();
+    const reading = expect(clientOf({ fetcher }).get({ path: '/media_1' })).rejects.toMatchObject({ status: GRAPH_NO_RESPONSE_STATUS });
+    await vi.advanceTimersByTimeAsync(GRAPH_REQUEST_TIMEOUT_MS);
+    await reading;
+  });
+
+  it('pin: lets a download body that finishes in time be read after the deadline passes', async () => {
+    const { fetcher } = recordingFetcher({ respond: () => new Response('bytes') });
+    const response = await clientOf({ fetcher }).download({ url: 'https://lookaside.fbsbx.com/x' });
+    expect(await response.text()).toBe('bytes');
+    await vi.advanceTimersByTimeAsync(GRAPH_MEDIA_BODY_DEADLINE_MS);
   });
 });

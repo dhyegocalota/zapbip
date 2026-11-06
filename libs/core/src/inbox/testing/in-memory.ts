@@ -72,10 +72,10 @@ function createInMemoryRepository(): InMemoryRepository {
   const receipts = new Map<string, number>();
   const receiptMessageIds = new Map<string, string>();
   const media = new Map<string, StoredMedia>();
-  const uploadClaims = new Map<string, number>();
   const channelMessageIds = new Map<string, string>();
   const statusDetails = new Map<string, ChannelStatusDetail>();
   const claimedAt = new Map<string, number>();
+  const uploadClaims = new Map<string, number>();
   let messages: Message[] = [];
   let questions: Question[] = [];
   let window: OwnerWindow = { lastOwnerMessageAt: null, noticeSentForClosedWindow: false, closedAt: null };
@@ -140,6 +140,7 @@ function createInMemoryRepository(): InMemoryRepository {
     linkChannelReceipt: async ({ wamid, messageId }) => {
       receiptMessageIds.set(wamid, messageId);
     },
+    hasChannelReceipt: async ({ wamid }) => receipts.has(wamid),
     findChannelReceiptMessageId: async ({ wamid }) => receiptMessageIds.get(wamid) ?? null,
     deleteExpiredReceipts: async ({ receivedBefore }) => {
       [...receipts]
@@ -229,14 +230,16 @@ function createInMemoryRepository(): InMemoryRepository {
       if (isClaimable) uploadClaims.set(mediaId, claimedAt);
       return isClaimable;
     },
-    releaseUpload: async ({ mediaId }) => {
-      uploadClaims.delete(mediaId);
+    releaseUpload: async ({ mediaId, claimedAt }) => {
+      if (uploadClaims.get(mediaId) === claimedAt) uploadClaims.delete(mediaId);
     },
-    markMediaReceived: async ({ mediaId, receivedAt, retentionUntil }) => {
+    markMediaReceived: async ({ mediaId, claimedAt, receivedAt, retentionUntil }) => {
       const stored = media.get(mediaId);
-      if (stored === undefined) return;
+      const isHeld = stored !== undefined && uploadClaims.get(mediaId) === claimedAt;
+      if (!isHeld) return false;
       uploadClaims.delete(mediaId);
       media.set(mediaId, { ...stored, receivedAt, retentionUntil, expiresAt: null });
+      return true;
     },
     listExpiredMediaIds: async ({ now }) =>
       [...media.values()]

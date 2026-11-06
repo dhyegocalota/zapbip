@@ -1,9 +1,9 @@
 import { unstable_readConfig as readWranglerConfig } from 'wrangler';
 import { describe, expect, it } from 'vitest';
+import { DEVELOPMENT_ENVIRONMENT } from '../../src/contract/constants';
 
 const WRANGLER_CONFIG_PATH = 'wrangler.jsonc';
 const PRODUCTION_DATABASE_ID_PLACEHOLDER = 'REPLACE_WITH_PRODUCTION_D1_DATABASE_ID';
-const DEVELOPMENT_ENVIRONMENT = 'development';
 const LOCAL_DATABASE_ID = 'zapbip-connections-local';
 const PRODUCTION_GRAPH_BASE_URL = 'https://graph.facebook.com';
 
@@ -31,7 +31,7 @@ describe('wrangler config', () => {
     expect(vars.WHATSAPP_MEDIA_DOWNLOAD_ORIGIN).toBe(vars.WHATSAPP_GRAPH_BASE_URL);
   });
 
-  it('the production D1 database id is a placeholder that deploy preflight must replace', () => {
+  it('the production D1 database id is a placeholder that must be replaced before a deploy', () => {
     expect(databaseIdsOf({})).toEqual([PRODUCTION_DATABASE_ID_PLACEHOLDER]);
   });
 

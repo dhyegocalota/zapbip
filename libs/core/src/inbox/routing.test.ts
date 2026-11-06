@@ -1,4 +1,4 @@
-import { DeliveryState, MessageDirection, MessageKind, RoutingRule } from '@zapbip/types';
+import { DeliveryState, MessageDirection, MessageKind, RoutingRule, ForwardedKind } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import type { Message } from './message';
 import type { Question } from './question';
@@ -15,6 +15,7 @@ function agentMessage(input: { messageId: string; agent: string | null }): Messa
     replyToMessageId: null,
     delivery: DeliveryState.Sent,
     readByAgent: true,
+    forwarded: ForwardedKind.None,
     kind: MessageKind.Text,
     text: 'hello',
   };

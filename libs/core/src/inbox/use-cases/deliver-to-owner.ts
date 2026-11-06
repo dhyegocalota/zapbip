@@ -1,4 +1,4 @@
-import { DeliveryState, MessageDirection, type OwnerLocale } from '@zapbip/types';
+import { DeliveryState, ForwardedKind, MessageDirection, type OwnerLocale } from '@zapbip/types';
 import type { Message } from '../message';
 import type { CoreDependencies } from '../ports';
 import { isOwnerWindowOpen } from '../window';
@@ -45,6 +45,7 @@ export async function deliverToOwner(input: DeliverToOwnerInput): Promise<Delive
     replyToMessageId,
     delivery: DeliveryState.Queued,
     readByAgent: true,
+    forwarded: ForwardedKind.None,
     ...content,
   };
   await repository.insertMessage({ message });

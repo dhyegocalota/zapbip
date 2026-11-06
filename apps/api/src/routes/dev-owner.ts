@@ -1,4 +1,4 @@
-import { ChannelInboundKind, MessageKind, type OwnerLocale } from '@zapbip/types';
+import { ChannelInboundKind, ForwardedKind, MessageKind, type OwnerLocale } from '@zapbip/types';
 import { assertMediaFits, InboxError, invalidInput, notFound, type ChannelInboundEntry, type OwnerInboundContent } from '@zapbip/core';
 import { Hono } from 'hono';
 import { z } from 'zod';
@@ -141,7 +141,7 @@ async function channelIdOrGiven(input: { inbox: DevAccountInboxRpc; messageId: s
 async function resolveChannelReferences(input: { inbox: DevAccountInboxRpc; body: OwnerMessageBody; content: OwnerInboundContent }) {
   const { inbox, body, content } = input;
   const replyToChannelMessageId = body.reply_to === null ? null : await channelIdOrGiven({ inbox, messageId: body.reply_to });
-  if (content.kind !== MessageKind.Reaction) return { replyToChannelMessageId, content };
+  if (content.kind !== MessageKind.Reaction || content.targetMessageId === null) return { replyToChannelMessageId, content };
   return {
     replyToChannelMessageId,
     content: { ...content, targetMessageId: await channelIdOrGiven({ inbox, messageId: content.targetMessageId }) },
@@ -171,7 +171,14 @@ async function buildOwnerEntry(input: {
   const buildContent = CONTENT_BUILDERS[body.kind] as (body: OwnerMessageBody) => OwnerInboundContent;
   const { replyToChannelMessageId, content } = await resolveChannelReferences({ inbox, body, content: buildContent(body) });
   const clockOffsetMs = await inbox.advanceClock({ advanceMs: 0 });
-  return { kind: ChannelInboundKind.Owner, at: clock.now() + clockOffsetMs, content, replyToChannelMessageId, noticeText: null };
+  return {
+    kind: ChannelInboundKind.Owner,
+    at: clock.now() + clockOffsetMs,
+    content,
+    replyToChannelMessageId,
+    forwarded: ForwardedKind.None,
+    noticeText: null,
+  };
 }
 
 devOwnerRoutes.post(`${DEV_OWNER_PATH_PREFIX}/messages`, async (context) => {

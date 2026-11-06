@@ -3,6 +3,7 @@ import { ChannelErrorKind, InboxErrorCode } from '@zapbip/types';
 export enum HttpStatus {
   Ok = 200,
   Created = 201,
+  MultipleChoices = 300,
   BadRequest = 400,
   Unauthorized = 401,
   Forbidden = 403,

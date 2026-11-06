@@ -1,9 +1,8 @@
-import { RECEIPT_RETENTION_MS, type ChannelStatusDetail, type CoreDependencies } from '@zapbip/core';
-import { ChannelInboundKind, DeliveryState, MediaOrigin, MessageDirection, MessageKind, OwnerLocale } from '@zapbip/types';
+import { RECEIPT_RETENTION_MS, SENDING_STALE_MS, type ChannelStatusDetail, type CoreDependencies } from '@zapbip/core';
+import { ChannelInboundKind, DeliveryState, ForwardedKind, MediaOrigin, MessageDirection, MessageKind, OwnerLocale } from '@zapbip/types';
 import { evictDurableObject, reset, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { AccountInbox } from '../../src/account-inbox/account-inbox';
-import { SENDING_STALE_MS } from '../../src/adapters/whatsapp/whatsapp-constants';
 import type { Bindings } from '../../src/contract/env';
 import { DevAccountInbox } from '../../src/dev/dev-account-inbox';
 import { withRepository } from '../support/account-inbox';
@@ -36,6 +35,7 @@ function ownerTextEntry(input: { text: string; at: number }) {
     at: input.at,
     content: { kind: MessageKind.Text as const, text: input.text },
     replyToChannelMessageId: null,
+    forwarded: ForwardedKind.None,
     noticeText: null,
   };
 }
@@ -329,7 +329,7 @@ describe('SQLite repository channel methods', () => {
   });
 });
 
-describe('DO schema v4', () => {
+describe('DO schema v5', () => {
   it('adds the channel columns, the closed time and the unique channel id', async () => {
     const schema = await runInDurableObject(accountInboxStub({ accountId: ACCOUNT_ID }), (_instance, state) => ({
       messageColumns: state.storage.sql
@@ -349,12 +349,13 @@ describe('DO schema v4', () => {
       expect.arrayContaining(['channel_message_id', 'error_code', 'error_title', 'pricing_category', 'billable', 'claimed_at']),
     );
     expect(schema.windowColumns).toContain('closed_at');
-    expect(schema.versions).toEqual([1, 4, 6]);
+    expect(schema.messageColumns).toContain('forwarded');
+    expect(schema.versions).toEqual([1, 4, 5, 6]);
   });
 });
 
 describe('AccountInbox channel messages', () => {
-  it('WI-8 commits an inbound message and reports a duplicate on the second delivery', async () => {
+  it('WI-8 WI-9 commits an inbound message and reports a duplicate on the second delivery', async () => {
     await registerAlpha();
     const first = await receiveText({ channelMessageId: CHANNEL_MESSAGE_ID });
     const second = await receiveText({ channelMessageId: CHANNEL_MESSAGE_ID });
@@ -365,7 +366,7 @@ describe('AccountInbox channel messages', () => {
     expect(await countReceipts()).toBe(1);
   });
 
-  it('WI-9 leaves nothing behind when a throw happens before the commit, and the retry stores once', async () => {
+  it('WI-10 leaves nothing behind when a throw happens before the commit, and the retry stores once', async () => {
     await registerAlpha();
     await injectDependency({
       change: (dependencies) => {
@@ -386,7 +387,7 @@ describe('AccountInbox channel messages', () => {
     expect(await countOwnerMessages()).toBe(1);
   });
 
-  it('WI-10 keeps the message when a throw happens after the commit, and the retry returns duplicate', async () => {
+  it('WI-11 keeps the message when a throw happens after the commit, and the retry returns duplicate', async () => {
     await registerAlpha();
     await injectDependency({
       change: (dependencies) => {
@@ -403,7 +404,7 @@ describe('AccountInbox channel messages', () => {
     expect(await countOwnerMessages()).toBe(1);
   });
 
-  it('WI-11 keeps the receipt across a restart of the object', async () => {
+  it('WI-12 keeps the receipt across a restart of the object', async () => {
     await registerAlpha();
     await receiveText({ channelMessageId: CHANNEL_MESSAGE_ID });
     await evictDurableObject(accountInboxStub({ accountId: ACCOUNT_ID }));
@@ -412,7 +413,7 @@ describe('AccountInbox channel messages', () => {
     expect(await countOwnerMessages()).toBe(1);
   });
 
-  it('WI-12 prunes receipts past their retention on the alarm', async () => {
+  it('WI-13 prunes receipts past their retention on the alarm', async () => {
     await registerAlpha();
     await receiveText({ channelMessageId: CHANNEL_MESSAGE_ID });
     const stub = accountInboxStub({ accountId: ACCOUNT_ID });
@@ -421,7 +422,7 @@ describe('AccountInbox channel messages', () => {
     expect(await countReceipts()).toBe(0);
   });
 
-  it('WI-13 returns a stale sending claim to the queue on the alarm', async () => {
+  it('WI-14 returns a stale sending claim to the queue on the alarm', async () => {
     const stub = accountInboxStub({ accountId: ACCOUNT_ID });
     await registerAlpha();
     await runInDurableObject(stub, async (instance) => {
@@ -439,29 +440,29 @@ describe('AccountInbox channel messages', () => {
     expect(delivery.delivery).toBe(DeliveryState.Queued);
   });
 
-  it('WI-14 picks the Cloud API sender in the development class when the access token is set', async () => {
+  it('WI-17a picks the Cloud API sender in the development class when the access token is set', async () => {
     const sender = (await selectSender({ instanceClass: DevAccountInbox, env: whatsappTestEnv })) as Record<string, unknown>;
     expect(typeof sender.session).toBe('function');
     expect(typeof sender.template).toBe('function');
     expect(sender.listScreenEntries).toBeUndefined();
   });
 
-  it('WI-14 picks the fake sender in the development class when the access token is absent', async () => {
+  it('WI-17b picks the fake sender in the development class when the access token is absent', async () => {
     const sender = (await selectSender({ instanceClass: DevAccountInbox, env: withoutAccessToken() })) as Record<string, unknown>;
     expect(typeof sender.listScreenEntries).toBe('function');
   });
 
-  it('WI-15 refuses to build a sender in the production class when the access token is absent', async () => {
+  it('WI-17c refuses to build a sender in the production class when the access token is absent', async () => {
     await expect(selectSender({ instanceClass: AccountInbox, env: withoutAccessToken() })).rejects.toThrow(ACCESS_TOKEN_VARIABLE);
   });
 
-  it('WI-15 builds the Cloud API sender in the production class when the variables are set', async () => {
+  it('pin: builds the Cloud API sender in the production class when the variables are set', async () => {
     const sender = (await selectSender({ instanceClass: AccountInbox, env: whatsappTestEnv })) as Record<string, unknown>;
     expect(typeof sender.session).toBe('function');
     expect(sender.listScreenEntries).toBeUndefined();
   });
 
-  it('WI-16 keeps two accounts apart on the same channel id', async () => {
+  it('keeps two accounts apart on the same channel id', async () => {
     await registerAlpha();
     await receiveText({ channelMessageId: CHANNEL_MESSAGE_ID });
     const other = accountInboxStub({ accountId: 'acc_other' });
@@ -471,6 +472,42 @@ describe('AccountInbox channel messages', () => {
       entry: ownerTextEntry({ text: 'hi', at: Date.now() }),
     });
     expect(outcome).toMatchObject({ ok: true, value: { duplicate: false } });
+  });
+
+  it('WI-16 reports an unknown channel id as not found and writes nothing', async () => {
+    await registerAlpha();
+    const outcome = await accountInboxStub({ accountId: ACCOUNT_ID }).applyChannelStatus({
+      channelMessageId: 'wamid.NEVERSENT',
+      status: DeliveryState.Delivered,
+      detail: EMPTY_DETAIL,
+    });
+    expect(outcome).toEqual({ ok: true, value: { applied: false, found: false } });
+    expect(await countReceipts()).toBe(0);
+  });
+
+  it('WI-17 fails with the missing-name error when the object is created without a name', async () => {
+    const nameless = { ctx: { id: {} } };
+    const { initialize } = AccountInbox.prototype as unknown as { initialize: () => Promise<void> };
+    await expect(initialize.call(nameless)).rejects.toThrow('AccountInbox id has no name');
+  });
+
+  it('reports whether a channel id already has a receipt', async () => {
+    await registerAlpha();
+    const stub = accountInboxStub({ accountId: ACCOUNT_ID });
+    expect(await stub.hasChannelReceipt({ channelMessageId: CHANNEL_MESSAGE_ID })).toEqual({ ok: true, value: false });
+    await receiveText({ channelMessageId: CHANNEL_MESSAGE_ID });
+    expect(await stub.hasChannelReceipt({ channelMessageId: CHANNEL_MESSAGE_ID })).toEqual({ ok: true, value: true });
+  });
+
+  it('stores the forwarded kind of an owner message and returns it', async () => {
+    await registerAlpha();
+    const request = textRequestOf({ channelMessageId: CHANNEL_MESSAGE_ID });
+    await accountInboxStub({ accountId: ACCOUNT_ID }).receiveChannelMessage({
+      ...request,
+      entry: { ...request.entry, forwarded: ForwardedKind.FrequentlyForwarded },
+    });
+    const stored = await inRepository((repository) => repository.findMessageByChannelMessageId({ channelMessageId: CHANNEL_MESSAGE_ID }));
+    expect(stored).toMatchObject({ forwarded: ForwardedKind.FrequentlyForwarded });
   });
 });
 

@@ -1,4 +1,12 @@
-import { AccountState, ChannelInboundKind, IdPrefix, MessageKind, OwnerLocale, type AccountReplyIntent } from '@zapbip/types';
+import {
+  AccountState,
+  ChannelInboundKind,
+  ForwardedKind,
+  IdPrefix,
+  MessageKind,
+  OwnerLocale,
+  type AccountReplyIntent,
+} from '@zapbip/types';
 import type { AgentName } from '../../inbox/connection';
 import type { OwnerInboundContent } from '../../inbox/use-cases/types';
 import type { AccountCommandResult, OwnerAccountContext } from '../account-types';
@@ -49,6 +57,7 @@ export function receiveAccount(
       at: environment.clock.now(),
       content,
       replyToChannelMessageId: replyToMessageId,
+      forwarded: ForwardedKind.None,
       noticeText: null,
     },
     publicOrigin: PUBLIC_ORIGIN,

@@ -1,4 +1,4 @@
-import type { DeliveryState, MediaSourceKind, MessageDirection, MessageKind } from '@zapbip/types';
+import type { DeliveryState, ForwardedKind, MediaSourceKind, MessageDirection, MessageKind } from '@zapbip/types';
 import type { AgentName } from './connection';
 
 export type ContactCard = {
@@ -35,7 +35,7 @@ export type MessageContent =
   | ({ kind: MessageKind.Sticker } & MediaFields)
   | { kind: MessageKind.Location; latitude: number; longitude: number; name: string | null; address: string | null }
   | { kind: MessageKind.Contacts; contacts: ContactCard[] }
-  | { kind: MessageKind.Reaction; targetMessageId: string; emoji: string | null }
+  | { kind: MessageKind.Reaction; targetMessageId: string | null; emoji: string | null }
   | { kind: MessageKind.Choice; questionId: string; options: QuestionOption[]; selected: QuestionOption | null };
 
 export type MessageEnvelope = {
@@ -46,6 +46,7 @@ export type MessageEnvelope = {
   replyToMessageId: string | null;
   delivery: DeliveryState | null;
   readByAgent: boolean;
+  forwarded: ForwardedKind;
 };
 
 export type Message = MessageEnvelope & MessageContent;

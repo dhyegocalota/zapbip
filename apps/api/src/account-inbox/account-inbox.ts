@@ -121,7 +121,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       graph: createGraphClient({
         baseUrl: whatsapp.graphBaseUrl,
         accessToken: whatsapp.accessToken,
-        developmentMediaOrigin: whatsapp.developmentMediaOrigin,
+        developmentMediaOrigin: null,
         fetcher: fetch,
       }),
       findOwnerByAccountId: ({ accountId }) => findOwnerByAccountId({ database, accountId }),
@@ -289,15 +289,15 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     return this.outcome({ run: () => inbox.describeUpload({ ...input, dependencies: this.dependencies }) });
   }
 
-  claimUpload(input: { mediaId: string }): Promise<CallOutcome<StoredMedia>> {
+  claimUpload(input: { mediaId: string }): Promise<CallOutcome<inbox.UploadClaim>> {
     return this.outcome({ run: () => inbox.claimUpload({ ...input, dependencies: this.dependencies }) });
   }
 
-  releaseUpload(input: { mediaId: string }): Promise<CallOutcome<void>> {
+  releaseUpload(input: { mediaId: string; claimedAt: number }): Promise<CallOutcome<void>> {
     return this.outcome({ run: () => inbox.releaseUpload({ ...input, dependencies: this.dependencies }) });
   }
 
-  completeUpload(input: { mediaId: string }): Promise<CallOutcome<StoredMedia>> {
+  completeUpload(input: { mediaId: string; claimedAt: number }): Promise<CallOutcome<StoredMedia>> {
     return this.outcome({ run: () => inbox.completeUpload({ ...input, dependencies: this.dependencies }) });
   }
 
@@ -352,6 +352,10 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       run: () => inbox.receiveChannelMessage({ ...input, dependencies: this.dependencies }),
       describe: (value) => ({ event: value.duplicate ? LogEvent.OwnerMessageDuplicate : LogEvent.OwnerMessage }),
     });
+  }
+
+  hasChannelReceipt(input: { channelMessageId: string }): Promise<CallOutcome<boolean>> {
+    return this.outcome({ run: () => inbox.hasChannelReceipt({ ...input, dependencies: this.dependencies }) });
   }
 
   applyChannelStatus(input: AgentRequest<inbox.ApplyStatusInput>): Promise<CallOutcome<inbox.ApplyStatusResult>> {
