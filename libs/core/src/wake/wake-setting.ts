@@ -101,6 +101,7 @@ function assertNothing(): void {}
 
 const WAKE_SETTING_CHECKS: Record<WakeMode, (input: WakeSettingCheck) => void> = {
   [WakeMode.None]: assertNothing,
+  [WakeMode.Local]: assertNothing,
   [WakeMode.Webhook]: assertNothing,
   [WakeMode.Scheduled]: assertScheduled,
   [WakeMode.Standby]: assertStandby,

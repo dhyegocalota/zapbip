@@ -114,6 +114,19 @@ describe('receiveOwnerMessage routing', () => {
     });
   });
 
+  test('a forwarded message is stored with the forwarded flag', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha'] });
+    const result = await receive({
+      environment,
+      content: { kind: MessageKind.Text, text: '@alpha oi' },
+      forwarded: ForwardedKind.Forwarded,
+    });
+    expect(await environment.repository.findMessage({ messageId: result.messageId! })).toMatchObject({
+      forwarded: ForwardedKind.Forwarded,
+    });
+  });
+
   test('CU-67 CU-136 a tap on an open question answers it with the option title', async () => {
     const environment = await createEnvironment();
     const question = await askAndAbandon({ environment });

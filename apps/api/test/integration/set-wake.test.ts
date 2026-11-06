@@ -5,6 +5,7 @@ import { env } from 'cloudflare:workers';
 import { reset, runInDurableObject } from 'cloudflare:test';
 import { McpToolName, TOOL_DEFINITIONS } from '../../src/contract/tool-definitions';
 import { applyDirectoryMigration } from '../support/seed';
+import { openConnector } from '../support/connector-session';
 import { accountInboxStub } from '../support/workers-env';
 import { callTool, connectClient, seedConnectionWithSecret, type ToolResult } from './mcp-fixtures';
 
@@ -18,11 +19,10 @@ const INSECURE_URL = `http://${GENERIC_HOST}/wake`;
 const PINNED_TOKEN = 'p'.repeat(16);
 const GENERIC_TOKEN = 'g'.repeat(32);
 const SHORT_TOKEN = 's'.repeat(15);
-const UNAVAILABLE_MODE_MESSAGE = 'wake mode not available yet';
-const UNAVAILABLE_MODES = ['local'];
 
 describe('set_wake over MCP', () => {
   let client: Client;
+  let secret: string;
   let secretDigest: string;
 
   function setWake(input: { mode: string; url?: string | null; token?: string | null }): Promise<ToolResult> {
@@ -42,8 +42,9 @@ describe('set_wake over MCP', () => {
   beforeEach(async () => {
     await applyDirectoryMigration();
     const connection = await seedConnectionWithSecret({ accountId: ACCOUNT_ID, agent: AGENT });
+    secret = connection.secret;
     secretDigest = connection.secretDigest;
-    client = await connectClient({ secret: connection.secret });
+    client = await connectClient({ secret });
   });
 
   it('lists set_wake with the other registered tools', async () => {
@@ -96,12 +97,6 @@ describe('set_wake over MCP', () => {
     expect(errorText(result)).toContain('url');
   });
 
-  it.each(UNAVAILABLE_MODES)('answers that the %s mode is not available yet', async (mode) => {
-    const result = await setWake({ mode });
-    expect(result.isError).toBe(true);
-    expect(errorText(result)).toBe(UNAVAILABLE_MODE_MESSAGE);
-  });
-
   it('clears a saved webhook', async () => {
     await setWake({ mode: WakeMode.Webhook, url: GROK_URL, token: PINNED_TOKEN });
     const result = await setWake({ mode: WakeMode.None });
@@ -111,6 +106,29 @@ describe('set_wake over MCP', () => {
       effective_rung: WakeRung.Inbox,
       provider: null,
     });
+  });
+
+  it('saves the local mode and reports the inbox rung while no connector is attached', async () => {
+    const result = await setWake({ mode: WakeMode.Local });
+    expect(result.structuredContent).toEqual({
+      status: SetWakeStatus.Saved,
+      wake_mode: WakeMode.Local,
+      effective_rung: WakeRung.Inbox,
+      provider: null,
+    });
+  });
+
+  it('reports the local rung while a connector is attached', async () => {
+    const session = await openConnector({ secret });
+    await session.nextFrame();
+    const result = await setWake({ mode: WakeMode.Local });
+    expect(result.structuredContent).toEqual({
+      status: SetWakeStatus.Saved,
+      wake_mode: WakeMode.Local,
+      effective_rung: WakeRung.Local,
+      provider: null,
+    });
+    session.socket.close();
   });
 
   it('box 170: answers a call with a revoked secret like send_message and stores no wake', async () => {

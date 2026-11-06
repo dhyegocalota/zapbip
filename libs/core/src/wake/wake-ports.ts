@@ -34,6 +34,9 @@ export interface WakeRepository {
   recordPoll(input: { agent: AgentName; polledAt: number; ownerLocale: OwnerLocale }): Promise<void>;
   listScheduledWakes(): Promise<ScheduledWake[]>;
   markStaleNotified(input: { agent: AgentName }): Promise<void>;
+  findLocalRestore(input: { agent: AgentName }): Promise<StoredWake | null>;
+  saveLocalRestore(input: { agent: AgentName; previous: StoredWake }): Promise<void>;
+  deleteLocalRestore(input: { agent: AgentName }): Promise<void>;
   findLastRequestedAt(input: { agent: AgentName }): Promise<number | null>;
   saveLastRequestedAt(input: { agent: AgentName; at: number }): Promise<void>;
 }

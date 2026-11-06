@@ -135,6 +135,7 @@ export function createInMemoryWakeRepository(input: { clock: Clock }): WakeRepos
   const wakes = new Map<AgentName, StoredWake>();
   const pollStates = new Map<AgentName, PollState>();
   const jobs = new Map<AgentName, WakeJob>();
+  const restores = new Map<AgentName, StoredWake>();
   const lastRequests = new Map<AgentName, number>();
   const effectiveDueAt = (job: WakeJob): number => (job.leaseUntil === null ? job.dueAt : Math.max(job.dueAt, job.leaseUntil));
 
@@ -199,6 +200,16 @@ export function createInMemoryWakeRepository(input: { clock: Clock }): WakeRepos
       const pollState = pollStates.get(agent);
       if (pollState === undefined) throw new Error(`no poll state for ${agent}`);
       pollStates.set(agent, { ...pollState, pollerStaleNotified: true });
+    },
+    findLocalRestore: async ({ agent }) => {
+      const previous = restores.get(agent);
+      return previous === undefined ? null : { ...previous };
+    },
+    saveLocalRestore: async ({ agent, previous }) => {
+      restores.set(agent, { ...previous });
+    },
+    deleteLocalRestore: async ({ agent }) => {
+      restores.delete(agent);
     },
     findLastRequestedAt: async ({ agent }) => {
       const at = lastRequests.get(agent);

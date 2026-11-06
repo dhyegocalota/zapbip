@@ -25,6 +25,7 @@ export function receiveOwnerContent(input: {
   content: OwnerInboundContent;
   channelMessageId?: string;
   replyToMessageId?: string | null;
+  forwarded?: ForwardedKind;
 }) {
   return input.stub.receiveOwnerMessage({
     ownerLocale: OwnerLocale.PortugueseBrazil,
@@ -32,17 +33,23 @@ export function receiveOwnerContent(input: {
     ownerMessage: {
       at: Date.now(),
       replyToMessageId: input.replyToMessageId === undefined ? null : input.replyToMessageId,
-      forwarded: ForwardedKind.None,
+      forwarded: input.forwarded === undefined ? ForwardedKind.None : input.forwarded,
       content: input.content,
     },
   });
 }
 
-export function receiveOwnerText(input: { stub: DurableObjectStub<AccountInbox>; text: string; channelMessageId?: string }) {
+export function receiveOwnerText(input: {
+  stub: DurableObjectStub<AccountInbox>;
+  text: string;
+  channelMessageId?: string;
+  forwarded?: ForwardedKind;
+}) {
   return receiveOwnerContent({
     stub: input.stub,
     content: { kind: MessageKind.Text, text: input.text },
     channelMessageId: input.channelMessageId,
+    forwarded: input.forwarded,
   });
 }
 

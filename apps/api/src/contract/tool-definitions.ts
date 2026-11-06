@@ -15,7 +15,7 @@ import {
   sendMediaInputShape,
   sendMessageInputShape,
   setWakeOutputShape,
-  setWakeToolInputSchema,
+  setWakeInputSchema,
   waitForReplyInputShape,
 } from './mcp-schemas';
 
@@ -92,8 +92,8 @@ export const TOOL_DEFINITIONS: Record<McpToolName, ToolDefinition> = {
   },
   [McpToolName.SetWake]: {
     description:
-      'Set how this agent is woken when the owner writes: a webhook url and token, scheduled with interval_minutes (1 to 1440) when this agent polls check_inbox on a schedule, standby with standby_agent (another agent of the same account that answers for this one) when it cannot be woken, or none to clear it.',
-    inputShape: setWakeToolInputSchema,
+      'Set how this agent is woken when the owner writes: a webhook url and token, scheduled with interval_minutes (1 to 1440) when this agent polls check_inbox on a schedule, standby with standby_agent (another agent of the same account that answers for this one) when it cannot be woken, local when the zapbip connector runs on the computer of the owner, or none to clear it.',
+    inputShape: setWakeInputSchema,
     outputShape: setWakeOutputShape,
   },
 };

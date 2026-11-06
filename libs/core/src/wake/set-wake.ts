@@ -81,8 +81,19 @@ async function saveStandby(input: SetWakeInput): Promise<SetWakeResult> {
   return saveWithoutTarget({ ...input, fields: { intervalMinutes: null, standbyAgent: setting.standbyAgent }, standby });
 }
 
+async function saveLocal(input: SetWakeInput): Promise<SetWakeResult> {
+  const { wake, connection } = input;
+  const current = await wake.repository.findWake({ agent: connection.agent });
+  if (current === null) throw new Error(`no wake setting for ${connection.agent}`);
+  await wake.repository.saveWake({ wake: { ...current, mode: WakeMode.Local, intervalMinutes: null, standbyAgent: null } });
+  await wake.repository.deleteLocalRestore({ agent: connection.agent });
+  await wake.repository.deleteJob({ agent: connection.agent });
+  return { status: SetWakeStatus.Saved, wakeMode: WakeMode.Local, effectiveRung: WakeRung.Local, provider: null };
+}
+
 const WAKE_SETTERS: Record<WakeMode, (input: SetWakeInput) => Promise<SetWakeResult>> = {
   [WakeMode.None]: clearWebhook,
+  [WakeMode.Local]: saveLocal,
   [WakeMode.Webhook]: saveWebhook,
   [WakeMode.Scheduled]: saveScheduled,
   [WakeMode.Standby]: saveStandby,

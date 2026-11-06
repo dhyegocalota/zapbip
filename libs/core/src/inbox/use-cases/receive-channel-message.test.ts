@@ -91,6 +91,7 @@ describe('receiveChannelMessage', () => {
           throw new Error('wake failed');
         },
         hasFailedWake: async () => false,
+        pushesEveryMessage: async () => false,
       },
     };
     await expect(receiveChannel({ environment, channelMessageId: WAMID, entry, dependencies: failing })).rejects.toThrow('wake failed');

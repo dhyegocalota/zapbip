@@ -189,3 +189,29 @@ Red commit `12637d8`: 16 of 21 cases of `scheduled-wake-storage.test.ts` failed 
 - The never-polled text is `Ainda não olhou a caixa.` (test plan and spec aligned).
 - Interval 1 reads `a cada minuto` / `every minute` through the new `WakeCopyKey.CadenceMinute` (added to `libs/types/src/enums.ts`).
 - Files outside the lane's list that were touched: `libs/core/src/inbox/use-cases/wake-agent.ts` (needed to carry `messageId`) and `libs/types/src/enums.ts` (the `CadenceMinute` member) and `libs/core/src/wake/testing/wake-fixtures.ts` (one line: the in-memory wake repository needs the fake clock).
+
+## Integration merge (2026-11-06)
+
+Merged into `feat/scheduled-wake`, in this order: `feat/scheduled-wake-l3`, `feat/webhook-wake` (`cda883d`), `feat/agent-inbox-core`, `feat/accounts-and-keys` (`f3a6e94`), `feat/local-connector` (`0ae86a9`).
+
+### What changed in the merge
+
+- Every wake mode is available: `WakeMode` and `WakeRung` hold `none`, `local`, `webhook`, `scheduled` and `standby`. `UnavailableWakeMode` and the `wake mode not available yet` answer are gone; `setWakeInputSchema` is the tool input.
+- The dispatcher takes a waker per `WakeRung` and asks the waker of the effective rung for `notify`, `hasFailedWake` and `pushesEveryMessage`. The inbox, scheduled and standby wakers answer `false` to the last two.
+- `clearWake` also clears `interval_minutes` and `standby_agent`; `none` goes through `clearWake`; `local` clears both fields as well.
+- `AccountInbox` registers the expiry, routing-list, wake and poller due-time providers; the owner locale is remembered on the owner, channel and account entry points.
+- DO schema versions are 1 to 6. The `forwarded` column moved from `v5.sql` into `v4.sql` (the cloud channel's migration) so `v5.sql` stays the local connector's `local_restore` column, as the reservation table says.
+- `forwarded` is `ForwardedKind` everywhere. The connector wire format keeps the whole `Message`, so the connector reads `message.forwarded === ForwardedKind.None` as verified; its notice and listen line keep the boolean `forwarded`. The dev route keeps a boolean `forwarded` and maps it to `ForwardedKind`.
+- `HttpStatus` lives in `@zapbip/types` (with `SwitchingProtocols` and `UpgradeRequired`); `apps/api/src/contract/http-status.ts` re-exports it.
+- `recordRevocation` also closes the agent's connector sockets with `REVOKED_CLOSE_CODE`; `revokeAgentState` deletes the agent's `wake_jobs` rows in its own transaction.
+- No new cron: scheduled wake runs on Durable Object alarms; the Worker keeps the single `*/30 * * * *` trigger of accounts-and-keys.
+
+### Tests added or changed
+
+- `standby-revocation.test.ts`: the local one-method type is gone (`stub.recordRevocation` is the real RPC); five new cases drive the owner commands through the webhook entry: `revogar grok-bot` (reply and wake row gone), no copy after the revoke and the primary keeps the message with the owner told, a revoked name refused as a new standby, `girar grok-bot` keeps the standby row and the hand-off, the revoked secret answers `401` with the unauthorized body.
+- `connector-socket.test.ts`: revoking an agent closes its connector with the revoked code and removes its wake row.
+- `latestMcpPath` moved from `mcp-rotation.test.ts` to `owner-inbound-fixtures.ts`.
+
+### Gaps
+
+- Not run by the developer: the E2E suites and the Playwright walks.

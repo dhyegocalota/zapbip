@@ -20,3 +20,4 @@ export const COMPANY = {
 } as const;
 export const BYTES_PER_MEGABYTE = 1_000_000;
 export const DEFAULT_LOCALE = OwnerLocale.PortugueseBrazil;
+export const ZAPBIP_NPM_VERSION = '0.1.0';

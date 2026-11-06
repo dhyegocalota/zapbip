@@ -42,5 +42,6 @@ export function createScheduledAgentWaker(input: { dependencies: CoreDependencie
       return WakeOutcome.Woken;
     },
     hasFailedWake: async () => false,
+    pushesEveryMessage: async () => false,
   };
 }

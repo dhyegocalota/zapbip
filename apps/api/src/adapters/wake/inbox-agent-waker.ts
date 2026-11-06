@@ -12,5 +12,6 @@ export function createInboxAgentWaker(input: { dependencies: CoreDependencies; w
       return WakeOutcome.Unreached;
     },
     hasFailedWake: async () => false,
+    pushesEveryMessage: async () => false,
   };
 }

@@ -127,6 +127,50 @@ describe('setWake', () => {
     });
     expect(await wakeEnvironment.wake.repository.findJob({ agent: AGENT })).toBeNull();
   });
+
+  describe('local mode', () => {
+    function setLocal(input: { wakeEnvironment: Awaited<ReturnType<typeof createWakeEnvironment>> }) {
+      return setWake({
+        ...input.wakeEnvironment.context,
+        connection: connectionOf({ agent: AGENT }),
+        setting: { mode: WakeMode.Local, url: null, token: null, intervalMinutes: null, standbyAgent: null },
+        publicHost: PUBLIC_HOST,
+      });
+    }
+
+    test('saves the local mode and answers with the local rung', async () => {
+      const wakeEnvironment = await createWakeEnvironment();
+      await setWebhook({ wakeEnvironment, agent: AGENT });
+      const result = await setLocal({ wakeEnvironment });
+      expect(result).toEqual({ status: SetWakeStatus.Saved, wakeMode: WakeMode.Local, effectiveRung: WakeRung.Local, provider: null });
+      expect(await wakeEnvironment.wake.repository.findWake({ agent: AGENT })).toMatchObject({ mode: WakeMode.Local });
+    });
+
+    test('deletes the pending webhook job', async () => {
+      const wakeEnvironment = await createWakeEnvironment();
+      await setWebhook({ wakeEnvironment, agent: AGENT });
+      await wakeEnvironment.wake.repository.saveJob({
+        job: { agent: AGENT, dueAt: 1, attempt: 0, leaseUntil: null, rewake: false, lastOutcome: null },
+      });
+      await setLocal({ wakeEnvironment });
+      expect(await wakeEnvironment.wake.repository.findJob({ agent: AGENT })).toBeNull();
+    });
+
+    test('makes the local mode the baseline by dropping a stored restore record', async () => {
+      const wakeEnvironment = await createWakeEnvironment();
+      await setWebhook({ wakeEnvironment, agent: AGENT });
+      const previous = await wakeEnvironment.wake.repository.findWake({ agent: AGENT });
+      if (previous === null) throw new Error('expected a stored wake');
+      await wakeEnvironment.wake.repository.saveLocalRestore({ agent: AGENT, previous });
+      await setLocal({ wakeEnvironment });
+      expect(await wakeEnvironment.wake.repository.findLocalRestore({ agent: AGENT })).toBeNull();
+    });
+
+    test('rejects an agent with no stored wake', async () => {
+      const wakeEnvironment = await createWakeEnvironment();
+      await expect(setLocal({ wakeEnvironment })).rejects.toThrow('no wake setting for claude-code');
+    });
+  });
 });
 
 function setScheduled(input: { wakeEnvironment: WakeEnvironment; agent: string; intervalMinutes: number; ownerLocale?: OwnerLocale }) {

@@ -28,4 +28,5 @@ One row per folder, in the order the features ship; a row that turns `Shipped <d
 | [`whatsapp-cloud-channel`](whatsapp-cloud-channel/) | The real Meta WhatsApp Cloud API adapter: signed inbound webhook, session and template sends for every kind, media to R2 and window facts | Building |
 | [`accounts-and-keys`](accounts-and-keys/) | Account creation over WhatsApp, the command grammar in pt-BR and en, connection create, list, revoke and rotate, waitlist, abuse controls and account deletion | Building |
 | [`webhook-wake`](webhook-wake/) | The webhook wake rung: `set_wake`, Grok Bot and claude.ai routine webhooks, a generic signed webhook, coalescing, retries and encrypted targets | Building |
+| [`local-connector`](local-connector/) | `npx zapbip connect`: a hibernatable WebSocket per connection and a local Claude Code or Codex session resumed for each owner message | Building |
 | [`scheduled-wake`](scheduled-wake/) | Scheduled pollers and the standby: every `check_inbox` recorded, the expected-delay note, one stale notice per episode, a standby copy of the owner message and an indexed unread count | Building |

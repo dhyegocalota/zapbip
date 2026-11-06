@@ -90,6 +90,8 @@ describe('in-memory repository', () => {
         delivery,
         readByAgent: true,
         forwarded: ForwardedKind.None,
+        handedTo: null,
+        originMessageId: null,
         kind: MessageKind.Text,
         text: messageId,
       };

@@ -24,6 +24,7 @@ export enum LogEvent {
   AccountDailyCap = 'account_daily_cap',
   AccountDeleted = 'account_deleted',
   InstallCodeUnreadable = 'install_code_unreadable',
+  FrameRejected = 'frame_rejected',
 }
 
 export type LogFields = {

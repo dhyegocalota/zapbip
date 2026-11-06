@@ -20,7 +20,11 @@ import { ERROR_STATUS } from './http-status';
 type OwnerIdentity = { accountId: string; ownerLocale: OwnerLocale };
 
 const nullableString = z.string().nullable().default(null);
-const commonShape = { wamid: z.string().default(() => `wamid.${crypto.randomUUID()}`), reply_to: nullableString };
+const commonShape = {
+  wamid: z.string().default(() => `wamid.${crypto.randomUUID()}`),
+  reply_to: nullableString,
+  forwarded: z.boolean().default(false),
+};
 
 const textSchema = z.object({ kind: z.literal(MessageKind.Text), text: z.string(), ...commonShape });
 const mediaSchema = z.object({
@@ -192,7 +196,7 @@ async function buildOwnerEntry(input: {
     at: clock.now() + clockOffsetMs,
     content,
     replyToChannelMessageId,
-    forwarded: ForwardedKind.None,
+    forwarded: body.forwarded ? ForwardedKind.Forwarded : ForwardedKind.None,
     noticeText: null,
   };
 }

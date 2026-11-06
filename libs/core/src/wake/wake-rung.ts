@@ -18,6 +18,7 @@ function standbyRungFor(input: RungInput): WakeRung {
 
 const RUNG_RULES: Record<WakeMode, (input: RungInput) => WakeRung> = {
   [WakeMode.None]: () => WakeRung.Inbox,
+  [WakeMode.Local]: () => WakeRung.Local,
   [WakeMode.Webhook]: () => WakeRung.Webhook,
   [WakeMode.Scheduled]: scheduledRungFor,
   [WakeMode.Standby]: standbyRungFor,

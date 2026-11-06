@@ -40,5 +40,7 @@ A `Proposed` ADR moves to `Accepted` by editing its status line and date. Any ot
 | [0017](0017-connection-secrets-are-shown-once-and-stored-as-digests.md) | Connection secrets are shown once and stored as digests | Accepted | 2026-11-06 |
 | [0018](0018-webhook-wake-carries-no-message-content.md) | A webhook wake carries no message content | Accepted | 2026-11-06 |
 | [0019](0019-outbound-wake-targets-pinned-providers-and-guarded-generic-hosts.md) | Outbound wake targets: pinned provider hosts and guarded generic hosts | Accepted | 2026-11-06 |
+| [0022](0022-a-hibernatable-websocket-for-the-local-connector.md) | A hibernatable WebSocket for the local connector | Accepted | 2026-11-06 |
+| [0023](0023-the-local-session-is-the-newest-one-in-the-working-directory.md) | The local session is the newest one in the working directory | Accepted | 2026-11-06 |
 | [0024](0024-a-standby-gets-a-copy-of-the-owner-message.md) | A standby gets a copy of the owner's message, never its primary's inbox | Accepted | 2026-11-06 |
 | [0025](0025-a-stale-poller-degrades-the-effective-rung.md) | Pollers are recorded per connection, and a stale poller degrades the effective rung | Accepted | 2026-11-06 |

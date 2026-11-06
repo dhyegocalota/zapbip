@@ -256,6 +256,10 @@ describe('migration v2', () => {
           .map((row) => row.version),
       };
     });
-    expect(applied).toEqual({ first: [2], second: [], versions: [1, 2, LATER_MIGRATION_VERSION] });
+    expect(applied).toEqual({
+      first: [2],
+      second: [],
+      versions: [...ACCOUNT_INBOX_MIGRATIONS.map((migration) => migration.version), LATER_MIGRATION_VERSION],
+    });
   });
 });

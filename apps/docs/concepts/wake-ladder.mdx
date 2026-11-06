@@ -3,16 +3,23 @@ title: 'Wake ladder'
 description: 'How zapbip reaches an AI that is not listening when you write.'
 ---
 
+import { Chat } from '/snippets/chat.jsx';
+
 When you write on WhatsApp, your AI may be closed, busy or simply not waiting for you. zapbip then reaches it through the highest rung its connection supports, and falls to the next one when a rung is not available:
 
-| Rung       | What happens                                                                                |
-| ---------- | ------------------------------------------------------------------------------------------- |
-| Webhook    | zapbip calls a link that starts the AI. See the [webhook wake guide](/guides/webhook-wake). |
-| Scheduled  | The AI checks its inbox on a timer, so it can listen with no time limit.                    |
-| Standby    | Another AI of yours receives a copy of your message and answers instead.                    |
-| Inbox only | The message waits and zapbip tells you the AI is not listening right now.                   |
+| Rung       | What happens                                                                                                                                          |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Local      | zapbip pushes your message to the [connector](/developers/local-connector) running on your computer, which resumes your Claude Code or Codex session. |
+| Webhook    | zapbip calls a link that starts the AI. See the [webhook wake guide](/guides/webhook-wake).                                                           |
+| Scheduled  | The AI checks its inbox on a timer, so it can listen with no time limit.                                                                              |
+| Standby    | Another AI of yours receives a copy of your message and answers instead.                                                                              |
+| Inbox only | The message waits and zapbip tells you the AI is not listening right now.                                                                             |
 
 In every rung your message is kept in the [inbox](/concepts/inbox) until an AI reads it. Nothing is lost.
+
+## Local: your own computer
+
+The connector keeps one open line to zapbip while it runs. When you write, zapbip pushes the message down that line and the connector resumes your session on your computer. When the last line closes, zapbip puts back whatever wake you had before. Start it with `npx zapbip@0.1.0 connect`, or ask your AI to call [set_wake](/mcp-reference/set-wake) with `mode: local`.
 
 ## Scheduled: listening with no time limit
 
@@ -22,16 +29,20 @@ You choose how often, from every 1 minute to every 1440 minutes (a day). ChatGPT
 
 When you write, zapbip tells you roughly when to expect the answer:
 
-```text
-you      Can you summarize the report?
-zapbip   Claude checks its inbox every hour. Last check: 20 min ago.
-```
+<Chat
+  contact="zapbip"
+  messages={[
+    { you: true, text: 'Can you summarize the report?' },
+    { notice: true, text: 'Claude checks its inbox every hour. Last check: 20 min ago.' },
+  ]}
+/>
 
 If the timer stops running, zapbip says so once, after twice the interval passes without a check, and your messages keep waiting:
 
-```text
-zapbip   Claude has not checked the inbox for 2 h. Your messages wait until it is back.
-```
+<Chat
+  contact="zapbip"
+  messages={[{ notice: true, text: 'Claude has not checked the inbox for 2 h. Your messages wait until it is back.' }]}
+/>
 
 The next check ends the warning without another message.
 
@@ -39,10 +50,13 @@ The next check ends the warning without another message.
 
 Some AIs, such as Grok on the web, cannot be started at all. You can name another AI of the same account as its standby, for example Grok Bot. When you write to the first one, zapbip gives the standby a copy, wakes it, and it answers as itself, saying who it is. The first AI sees the message as handled by the standby.
 
-```text
-you      @grok what is on my calendar?
-Grok Bot (standby for Grok) Today you have two meetings: 10:00 and 15:30.
-```
+<Chat
+  contact="zapbip"
+  messages={[
+    { you: true, text: '@grok what is on my calendar?' },
+    { name: 'Grok Bot (standby for Grok)', text: 'Today you have two meetings: 10:00 and 15:30.' },
+  ]}
+/>
 
 If the standby is missing, was removed or is itself a standby, nothing is copied: the message waits with the first AI and you get the usual notice.
 

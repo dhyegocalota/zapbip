@@ -22,6 +22,8 @@ async function storeOutbound(input: { environment: Environment; delivery: Delive
       delivery,
       readByAgent: true,
       forwarded: ForwardedKind.None,
+      handedTo: null,
+      originMessageId: null,
       kind: MessageKind.Text,
       text: 'hello',
     },

@@ -3,16 +3,23 @@ title: 'Escada de despertar'
 description: 'Como o zapbip alcança uma IA que não está ouvindo quando você escreve.'
 ---
 
+import { Chat } from '/snippets/chat.jsx';
+
 Quando você escreve no WhatsApp, sua IA pode estar fechada, ocupada ou só não estar esperando por você. O zapbip então a alcança pelo degrau mais alto que a conexão dela suporta e desce para o próximo quando um degrau não está disponível:
 
-| Degrau     | O que acontece                                                                                              |
-| ---------- | ----------------------------------------------------------------------------------------------------------- |
-| Webhook    | O zapbip chama um link que inicia a IA. Veja o [guia de despertar por webhook](/pt-br/guides/webhook-wake). |
-| Agendado   | A IA olha a caixa de entrada num intervalo, então pode ouvir sem limite de tempo.                           |
-| Reserva    | Outra IA sua recebe uma cópia da sua mensagem e responde no lugar.                                          |
-| Só a caixa | A mensagem espera e o zapbip avisa que a IA não está ouvindo agora.                                         |
+| Degrau     | O que acontece                                                                                                                                                  |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Local      | O zapbip empurra sua mensagem para o [conector](/pt-br/developers/local-connector) rodando no seu computador, que retoma sua sessão do Claude Code ou do Codex. |
+| Webhook    | O zapbip chama um link que inicia a IA. Veja o [guia de despertar por webhook](/pt-br/guides/webhook-wake).                                                     |
+| Agendado   | A IA olha a caixa de entrada num intervalo, então pode ouvir sem limite de tempo.                                                                               |
+| Reserva    | Outra IA sua recebe uma cópia da sua mensagem e responde no lugar.                                                                                              |
+| Só a caixa | A mensagem espera e o zapbip avisa que a IA não está ouvindo agora.                                                                                             |
 
 Em todos os degraus sua mensagem fica guardada na [caixa de entrada](/pt-br/concepts/inbox) até uma IA ler. Nada se perde.
+
+## Local: seu próprio computador
+
+O conector mantém uma linha aberta com o zapbip enquanto roda. Quando você escreve, o zapbip empurra a mensagem por essa linha e o conector retoma sua sessão no seu computador. Quando a última linha fecha, o zapbip devolve o despertar que você tinha antes. Inicie com `npx zapbip@0.1.0 connect`, ou peça à sua IA para chamar [set_wake](/pt-br/mcp-reference/set-wake) com `mode: local`.
 
 ## Agendado: ouvir sem limite de tempo
 
@@ -22,16 +29,20 @@ Você escolhe a frequência, de a cada 1 minuto até a cada 1440 minutos (um dia
 
 Quando você escreve, o zapbip diz mais ou menos quando esperar a resposta:
 
-```text
-você     Consegue resumir o relatório?
-zapbip   O Claude olha a caixa de entrada de hora em hora. Última olhada: há 20 min.
-```
+<Chat
+  contact="zapbip"
+  messages={[
+    { you: true, text: 'Consegue resumir o relatório?' },
+    { notice: true, text: 'O Claude olha a caixa de entrada de hora em hora. Última olhada: há 20 min.' },
+  ]}
+/>
 
 Se a tarefa para de rodar, o zapbip avisa uma vez, depois que passa o dobro do intervalo sem nenhuma olhada, e suas mensagens continuam esperando:
 
-```text
-zapbip   O Claude não olha a caixa de entrada há 2 h. Suas mensagens esperam até ele voltar.
-```
+<Chat
+  contact="zapbip"
+  messages={[{ notice: true, text: 'O Claude não olha a caixa de entrada há 2 h. Suas mensagens esperam até ele voltar.' }]}
+/>
 
 A próxima olhada encerra o aviso sem outra mensagem.
 
@@ -39,10 +50,13 @@ A próxima olhada encerra o aviso sem outra mensagem.
 
 Algumas IAs, como o Grok na web, não podem ser iniciadas de jeito nenhum. Você pode indicar outra IA da mesma conta como reserva dela, por exemplo o Grok Bot. Quando você escreve para a primeira, o zapbip entrega uma cópia à reserva, a desperta, e ela responde como ela mesma, dizendo quem é. A primeira IA vê a mensagem como tratada pela reserva.
 
-```text
-você     @grok o que tenho na agenda?
-Grok Bot (reserva do Grok) Hoje você tem duas reuniões: 10:00 e 15:30.
-```
+<Chat
+  contact="zapbip"
+  messages={[
+    { you: true, text: '@grok o que tenho na agenda?' },
+    { name: 'Grok Bot (reserva do Grok)', text: 'Hoje você tem duas reuniões: 10:00 e 15:30.' },
+  ]}
+/>
 
 Se a reserva não existe, foi removida ou é ela mesma uma reserva, nada é copiado: a mensagem espera com a primeira IA e você recebe o aviso de sempre.
 

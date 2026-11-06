@@ -1,1 +1,1 @@
-ALTER TABLE inbox_messages ADD COLUMN forwarded TEXT NOT NULL DEFAULT 'none';
+ALTER TABLE agent_wake ADD COLUMN local_restore TEXT;
