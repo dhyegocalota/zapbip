@@ -132,7 +132,7 @@ describe('deploy entry', () => {
     const { exitCode, output } = await deploy({ shell });
     expect(exitCode).toBe(1);
     expect(output).toContain(`${WRANGLER} rollback version-new --env staging`);
-    expect(output).toContain(`${WRANGLER} d1 time-travel restore zapbip-staging --bookmark=bookmark-1 --env staging`);
+    expect(output).toContain(`${WRANGLER} d1 time-travel restore zapbip-staging --env staging --bookmark=bookmark-1`);
     expect(shell.commands.some((command) => command.includes('rollback') || command.includes('restore'))).toBe(false);
   });
 
