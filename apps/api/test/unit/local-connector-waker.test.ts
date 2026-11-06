@@ -7,6 +7,8 @@ import {
   FrameRejectionReason,
   MessageDirection,
   MessageKind,
+  HEARTBEAT_INTERVAL_MS,
+  HEARTBEAT_TIMEOUT_MS,
   REPLACED_CLOSE_CODE,
   WakeOutcome,
 } from '@zapbip/types';
@@ -21,7 +23,7 @@ import {
 } from '../../src/account-inbox/connector-sockets';
 import { createLocalConnectorWaker } from '../../src/adapters/wake/local-connector-waker';
 
-type FakeSocket = WebSocket & { sent: string[]; closedWith: number[] };
+type FakeSocket = WebSocket & { sent: string[]; closedWith: number[]; autoResponseAt: Date | null };
 type AcceptedSocket = { socket: WebSocket; tags: string[] };
 type FakeState = { context: DurableObjectState; accepted: AcceptedSocket[] };
 
@@ -29,6 +31,7 @@ function createFakeSocket(): FakeSocket {
   const socket = {
     sent: [] as string[],
     closedWith: [] as number[],
+    autoResponseAt: null as Date | null,
     send: (data: string) => void socket.sent.push(data),
     close: (code: number) => void socket.closedWith.push(code),
   };
@@ -42,6 +45,7 @@ function createFakeStateWithAccepted(input: { socketsByAgent: Record<string, Fak
       Object.entries(input.socketsByAgent)
         .filter(([agent]) => agent === tag)
         .flatMap(([, sockets]) => sockets),
+    getWebSocketAutoResponseTimestamp: (socket: FakeSocket) => socket.autoResponseAt,
     getTags: (socket: WebSocket) =>
       Object.entries(input.socketsByAgent)
         .filter(([, sockets]) => sockets.includes(socket as FakeSocket))
@@ -99,6 +103,24 @@ function notifyAna(input: { waker: ReturnType<typeof createLocalConnectorWaker> 
 }
 
 describe('local connector waker', () => {
+  test('a socket whose ping answer is older than one heartbeat cycle is half open and falls back to the restore path', async () => {
+    const socket = createFakeSocket();
+    socket.autoResponseAt = new Date(Date.now() - HEARTBEAT_INTERVAL_MS - HEARTBEAT_TIMEOUT_MS - 1);
+    const restoreAndNotify = vi.fn(async () => RESTORED_OUTCOME);
+    const { waker } = await createWakerFixture({ socketsByAgent: { ana: [socket] }, unreadCount: 1, restoreAndNotify });
+    expect(await notifyAna({ waker })).toBe(RESTORED_OUTCOME);
+    expect(restoreAndNotify).toHaveBeenCalledTimes(1);
+    expect(socket.sent).toEqual([]);
+  });
+
+  test('a socket that answered a ping within one heartbeat cycle is live', async () => {
+    const socket = createFakeSocket();
+    socket.autoResponseAt = new Date(Date.now() - HEARTBEAT_INTERVAL_MS);
+    const { waker } = await createWakerFixture({ socketsByAgent: { ana: [socket] }, unreadCount: 1 });
+    expect(await notifyAna({ waker })).toBe(WakeOutcome.Woken);
+    expect(socket.sent).toHaveLength(1);
+  });
+
   test('with no socket the waker is unreached and sends no frame', async () => {
     const { waker } = await createWakerFixture({ socketsByAgent: {}, unreadCount: 2 });
     expect(await notifyAna({ waker })).toBe(WakeOutcome.Unreached);

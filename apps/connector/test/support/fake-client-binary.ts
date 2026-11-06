@@ -16,6 +16,7 @@ export type FakeClientBehavior = {
   refuseAll?: boolean;
   refuseSession?: string;
   hang?: boolean;
+  ignoreSigterm?: boolean;
   runMs?: number;
   holdUntilFile?: string;
   rolloutSessionId?: string;
@@ -72,6 +73,7 @@ const BEHAVIOR_VARIABLES: Record<keyof FakeClientBehavior, (value: never) => [st
   refuseAll: (value: boolean) => ['FAKE_CLIENT_REFUSE_ALL', value ? '1' : '0'],
   refuseSession: (value: string) => ['FAKE_CLIENT_REFUSE_SESSION', value],
   hang: (value: boolean) => ['FAKE_CLIENT_HANG', value ? '1' : '0'],
+  ignoreSigterm: (value: boolean) => ['FAKE_CLIENT_IGNORE_SIGTERM', value ? '1' : '0'],
   runMs: (value: number) => ['FAKE_CLIENT_RUN_MS', String(value)],
   holdUntilFile: (value: string) => ['FAKE_CLIENT_HOLD_FILE', value],
   rolloutSessionId: (value: string) => ['FAKE_CLIENT_ROLLOUT_SESSION_ID', value],

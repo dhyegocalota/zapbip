@@ -443,6 +443,7 @@ describe('runConnection', () => {
       expect(loggedFieldsOf({ event: ConnectorLogEvent.ConnectorReconnecting })).toEqual({ attempt: 0, delayMs: RECONNECT_BASE_MS });
       timers.advance({ ms: RECONNECT_BASE_MS });
       await server.waitForConnections({ count: 2 });
+      expect(loggedEventsOf({ event: ConnectorLogEvent.ConnectorClosed })).toHaveLength(1);
     });
   });
 

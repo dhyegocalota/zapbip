@@ -57,6 +57,7 @@ export const RECONNECT_JITTER_RATIO = 0.5;
 export const RECONNECT_STABLE_MS = 30 * SECOND_MS;
 export const SECRET_REVOKED_MESSAGE = 'the connection secret was revoked or is unknown; create a new connection and run the command again';
 export const CONNECTOR_WAKE_TIMEOUT_MS = 15 * MINUTE_MS;
+export const CONNECTOR_KILL_GRACE_MS = 5 * SECOND_MS;
 export const REPLACED_CLOSE_CODE = 4001;
 export const REVOKED_CLOSE_CODE = 4003;
 export const CONNECTOR_PATH_SUFFIX = '/connector';

@@ -2,7 +2,14 @@ import { createServer, type Server } from 'node:http';
 import { access, mkdir, writeFile } from 'node:fs/promises';
 import type { AddressInfo } from 'node:net';
 import { join } from 'node:path';
-import { CONNECTOR_WAKE_TIMEOUT_MS, ConnectorClient, ConnectorSessionSource, ConnectorWakeOutcome, WAKE_ALLOWED_TOOL } from '@zapbip/types';
+import {
+  CONNECTOR_KILL_GRACE_MS,
+  CONNECTOR_WAKE_TIMEOUT_MS,
+  ConnectorClient,
+  ConnectorSessionSource,
+  ConnectorWakeOutcome,
+  WAKE_ALLOWED_TOOL,
+} from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { runWake } from '../../src/wake-runner';
 import { createFakeClients, runAt, type FakeClients } from '../support/fake-client-binary';
@@ -183,6 +190,18 @@ describe('runWake', () => {
     const runs = await fakeClients.readRuns();
     expect(result.outcome).toBe(ConnectorWakeOutcome.Failed);
     expect(runAt({ runs, index: 0 }).signal).toBe('SIGTERM');
+  });
+
+  it('kills with SIGKILL a child that ignores SIGTERM once the grace period passes and reports failed', async () => {
+    fakeClients.apply({ behavior: { hang: true, ignoreSigterm: true } });
+    vi.useFakeTimers({ toFake: [...FAKE_TIMER_NAMES] });
+    const waking = wake({ client: ConnectorClient.ClaudeCode });
+    await vi.waitFor(async () => expect(await fakeClients.readRuns()).toHaveLength(1));
+    await vi.advanceTimersByTimeAsync(CONNECTOR_WAKE_TIMEOUT_MS);
+    await vi.waitFor(async () => expect(await fakeClients.readRuns()).toHaveLength(1));
+    await vi.advanceTimersByTimeAsync(CONNECTOR_KILL_GRACE_MS);
+
+    expect(await waking).toEqual({ outcome: ConnectorWakeOutcome.Failed, exitCode: null });
   });
 
   it('never prints the output of the child', async () => {
