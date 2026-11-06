@@ -93,7 +93,7 @@ async function wakeAgent(
 ): Promise<void> {
   const { dependencies, ownerLocale, agent, unreadBefore, answeredQuestionId, shouldTellOwner } = input;
   const { waiters, waker, ids } = dependencies;
-  const hasLiveWaiter = waiters.hasLiveWaiter({ agent });
+  const hasLiveWaiter = waiters.hasLiveWaiter({ agent, questionId: answeredQuestionId });
   if (answeredQuestionId === null) waiters.resolveAgentMessage({ agent });
   if (answeredQuestionId !== null) waiters.resolveQuestionAnswer({ questionId: answeredQuestionId });
   const isNewBatch = unreadBefore === 0;

@@ -78,7 +78,7 @@ export interface ReplyWaiters {
   awaitAgentMessage(input: { agent: AgentName; timeoutMs: number }): Promise<void>;
   resolveQuestionAnswer(input: { questionId: string }): void;
   resolveAgentMessage(input: { agent: AgentName }): void;
-  hasLiveWaiter(input: { agent: AgentName }): boolean;
+  hasLiveWaiter(input: { agent: AgentName; questionId: string | null }): boolean;
 }
 
 export type CoreDependencies = {
