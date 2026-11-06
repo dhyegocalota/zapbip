@@ -148,7 +148,6 @@ A routing list is pending for `ROUTING_LIST_TTL_MS` (10 minutes). Its message id
 
 - **While it is pending**, a new message that matches none of rules 1 to 4 joins the held batch and sends no new list. The owner gets one reminder per batch, a reply to the list ("Pick the agent in the list above"). A message that matches a rule from 1 to 4 is routed and never held.
 - **On expiry** the alarm runs it as a due-time provider. If an agent wrote within the window (rule 5), the held batch is delivered to it in order. Otherwise the list is sent once more. After a second expiry the batch stays unread for the last agent seen.
-- **Rule 5 beats an open list.** A message that matches rule 5 (an agent wrote within the window) goes straight to that agent even while a list is open; quoted and explicit routing win over the held batch (owner delegated 2026-11-06).
 - **An expiry assignment tells the owner which agent got the batch** ("You did not pick an agent, so your message went to beta"); the "not listening" notice is only for an agent the owner picked. A resend that fails to send keeps the list's resend flag and moves its due time forward, so the alarm never fires in a loop. An unknown-agent tap resends the list but keeps its opening time, reminder and resend flag.
 - **A tap** on a list whose batch was already routed is answered with "That list was already used." A tap naming an unknown agent while the batch is still held sends the current list again.
 

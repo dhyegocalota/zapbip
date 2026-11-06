@@ -168,14 +168,16 @@ function createInMemoryRepository(): InboxRepository {
       if (isClaimable) uploadClaims.set(mediaId, claimedAt);
       return isClaimable;
     },
-    releaseUpload: async ({ mediaId }) => {
-      uploadClaims.delete(mediaId);
+    releaseUpload: async ({ mediaId, claimedAt }) => {
+      if (uploadClaims.get(mediaId) === claimedAt) uploadClaims.delete(mediaId);
     },
-    markMediaReceived: async ({ mediaId, receivedAt, retentionUntil }) => {
+    markMediaReceived: async ({ mediaId, claimedAt, receivedAt, retentionUntil }) => {
       const stored = media.get(mediaId);
-      if (stored === undefined) return;
+      const isHeld = stored !== undefined && uploadClaims.get(mediaId) === claimedAt;
+      if (!isHeld) return false;
       uploadClaims.delete(mediaId);
       media.set(mediaId, { ...stored, receivedAt, retentionUntil, expiresAt: null });
+      return true;
     },
     listExpiredMediaIds: async ({ now }) =>
       [...media.values()]

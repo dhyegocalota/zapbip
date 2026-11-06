@@ -37,8 +37,9 @@ mediaRoutes.get('/m/:account_id/:media_id', async (context) => {
   const media = await mediaStore.open({ accountId, mediaId });
   if (!media) return context.json({ error: 'not_found' }, HttpStatus.NotFound);
   logEvent({ event: LogEvent.MediaRead, accountId });
-  const isInline = INLINE_MEDIA_TYPE_PATTERN.test(media.mimeType) && normalizeMimeType({ value: media.mimeType }) !== SVG_MIME_TYPE;
-  const headers = { ...HARDENING_HEADERS, 'Content-Type': media.mimeType };
+  const mimeType = normalizeMimeType({ value: media.mimeType });
+  const isInline = INLINE_MEDIA_TYPE_PATTERN.test(mimeType) && mimeType !== SVG_MIME_TYPE;
+  const headers = { ...HARDENING_HEADERS, 'Content-Type': mimeType };
   return new Response(media.body, {
     status: HttpStatus.Ok,
     headers: isInline ? headers : { ...headers, 'Content-Disposition': ATTACHMENT_DISPOSITION },
