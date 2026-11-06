@@ -159,3 +159,27 @@ Hypotheses to attack:
 5. Hypothesis: `deleteAll` empties the prefix and spares `acc10` when purging `acc1`.
 
 Known gaps: the operator script was run only against a fake `pnpm` over `node:sqlite`, never `wrangler d1 execute` (owner-run). Real Rate Limiting bindings were not exercised; the guards are tested with a counting fake.
+
+## Delta D0 to D9 (install link, install code store)
+
+Commits: `6037cdb` (docs: spec, plan, test plan, ADR 0017 amendment), `ead6495` (red), `fc7f1ce` (core green), `3932a06` (api green). D8 is not done: it edits S4 files that are not on this branch.
+
+Changed: `libs/core/src/accounts/{account-types,ports,constants,account-copy,connection-link}.ts`, `use-cases/{create,rotate}-agent-connection.ts`, `use-cases/{install-prompt-reply,seal-install-code,list-agent-connections,receive-account-message}.ts`, `testing/in-memory-accounts.ts`; `libs/types/src/{enums,constants}.ts` (`InstallCodeStatus`, the install code constants); `apps/api/migrations/0002_accounts_and_keys.sql` (rewritten in place, not deployed); `apps/api/src/adapters/{d1/d1-connection-registry,d1/d1-install-code-directory,platform/install-code-vault,platform/hash}.ts`; `apps/api/src/accounts/deletion-sweep.ts`; `apps/docs/guides/{commands,agents-and-links}.mdx`. Removed: `install-prompt-parts`, the `InstallPromptRenderer` port, `adapters/prompt/*`.
+
+Run: `pnpm --filter @zapbip/core test:unit`, `pnpm --filter @zapbip/api test:unit`, `pnpm --filter @zapbip/api test:integration`.
+
+Port names: the port is `InstallCodeDirectory` with `resolve({installCode, now})` and `recordFirstCall({connectionId, calledAt})`, and `InstallCodeVault` with `issue`, `seal`, `open`, exactly as the spec table says and as install-skills reads them. `resolve` returns `Ready` (link, locale, agent, accountId, connectionId), `Expired` or `Used` (locale), or `Unknown` (locale null). The MCP route must call `recordFirstCall` after the first successful call (install-skills); nothing in this slice calls it. The daily trigger that calls `clearExpiredInstallSecrets({environment, now})` is not wired (S4).
+
+Red then green: `ead6495` printed `renderInstallLines is not implemented`, `Cannot read properties of undefined (reading 'installCode')`, `InstallCodeVault.issue is not implemented`, `table connections has no column named install_code_digest`, and `expected 'a1 (1970-01-11)' to contain 'claude-code'`; counts in the commit body. Green: core 477 passed, api unit 56 passed, api integration 251 passed.
+
+Deviations: the directory is `d1-install-code-directory.ts`, not an addition to `d1-connection-directory.ts` (one purpose per file). `resolve` filters on the account being `active`, like the MCP lookup. The empty client mark is `-`.
+
+Hypotheses to attack:
+1. Hypothesis: no WhatsApp text, log line or D1 column ever holds a `zb_conn_` secret or a clear `zb_inst_` code. Break it by: create, rotate, a failed send and revoke, then dump D1 and the screen.
+2. Hypothesis: a sealed secret opens only with its own code. Break it by: one-character codes, truncated or tampered sealed values, another connection's code.
+3. Hypothesis: a failed rotate send restores the old code, the old sealed secret and the old expiry. Break it by: rotate a used connection, fail the send, resolve the old code (expect `Used`) and the new code (expect `Unknown`).
+4. Hypothesis: a rotation makes the new code `Ready` even after the old one was used. Break it by: use the first code, rotate, resolve the second.
+5. Hypothesis: `recordFirstCall` on one connection never touches another. Break it by: two accounts, one call.
+6. Hypothesis: the sweep never clears a live code. Break it by: expiry one millisecond ahead of `now`.
+
+Known gaps: no test calls the install page (install-skills); the E2E walk and the `zb_inst_` log redaction entry wait for S4; the HKDF salt is empty because the code carries 128 random bits.

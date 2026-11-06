@@ -19,7 +19,20 @@ const UNKNOWN_STATE = 'banned' as AccountState;
 const EXPECTED_COLUMNS: Record<string, string[]> = {
   accounts: ['id', 'state', 'created_at'],
   owner_identities: ['wa_id', 'account_id', 'from_user_id', 'locale', 'created_at'],
-  connections: ['id', 'account_id', 'agent', 'secret_digest', 'client_name', 'created_at', 'rotated_at', 'revoked_at'],
+  connections: [
+    'id',
+    'account_id',
+    'agent',
+    'secret_digest',
+    'client_name',
+    'install_code_digest',
+    'install_code_sealed_secret',
+    'install_code_expires_at',
+    'first_call_at',
+    'created_at',
+    'rotated_at',
+    'revoked_at',
+  ],
   message_index: ['wamid', 'account_id', 'created_at'],
   blocked_phones: ['wa_id', 'reason', 'created_at'],
 };
@@ -73,6 +86,16 @@ describe('migration 0002 schema', () => {
   it('pin refuses two rows with the same digest', async () => {
     await seedConnection({ accountId: 'acc_1', agent: 'alpha', secret: SECRET });
     await expect(seedConnection({ accountId: 'acc_1', agent: 'beta', secret: SECRET })).rejects.toThrow(/UNIQUE/);
+  });
+
+  it('refuses two rows with the same install code digest', async () => {
+    const statement =
+      'INSERT INTO connections (id, account_id, agent, secret_digest, install_code_digest, created_at) VALUES (?, ?, ?, ?, ?, ?)';
+    await seedAccount({ accountId: 'acc_1' });
+    await testEnv.CONNECTIONS.prepare(statement).bind('con_1', 'acc_1', 'alpha', 'digest_one', 'install_digest', SEED_CREATED_AT).run();
+    await expect(
+      testEnv.CONNECTIONS.prepare(statement).bind('con_2', 'acc_1', 'beta', 'digest_two', 'install_digest', SEED_CREATED_AT).run(),
+    ).rejects.toThrow(/UNIQUE/);
   });
 
   it('pin refuses a connection whose account does not exist', async () => {

@@ -4,7 +4,7 @@
 **Tier:** 🔴
 **Owner approval:** approved 2026-11-06 (owner delegated)
 **ADRs:** [0015](../../adr/0015-commands-are-bare-words-routed-before-agents.md), [0016](../../adr/0016-accounts-start-on-the-first-message-and-wait-on-a-list.md), [0017](../../adr/0017-connection-secrets-are-shown-once-and-stored-as-digests.md)
-**Not changing:** the core's routing rules 1 to 6, the 24-hour window, the ten MCP tools and the message kinds of `agent-inbox-core`; the signed webhook and the Meta adapter of `whatsapp-cloud-channel`; the install prompt content of `install-skills`; the MCP route and its Bearer header. This slice adds one routing rule in front of the core's rules and replaces the development connection script.
+**Not changing:** the core's routing rules 1 to 6, the 24-hour window, the ten MCP tools and the message kinds of `agent-inbox-core`; the signed webhook and the Meta adapter of `whatsapp-cloud-channel`; the install page content of `install-skills`; the MCP route and its Bearer header. This slice adds one routing rule in front of the core's rules and replaces the development connection script.
 
 ## Problem
 
@@ -16,7 +16,7 @@ A shared public number also needs controls the single-owner core does not have: 
 
 1. Accounts are created by the owner's first message, in state `waitlisted` or `active` as set by the `WAITLIST_ENABLED` variable ([ADR 0016](../../adr/0016-accounts-start-on-the-first-message-and-wait-on-a-list.md)).
 2. Commands in pt-BR and en are recognised before routing and answered by zapbip ([ADR 0015](../../adr/0015-commands-are-bare-words-routed-before-agents.md)).
-3. The connection lifecycle: create (the install prompt carries the secret URL), list, revoke and rotate, one secret per connection ([ADR 0006](../../adr/0006-one-secret-per-connection-in-the-mcp-url.md)).
+3. The connection lifecycle: create (the WhatsApp reply carries the install link, never the secret), list, revoke and rotate, one secret per connection ([ADR 0006](../../adr/0006-one-secret-per-connection-in-the-mcp-url.md)).
 4. Secrets are `zb_conn_` followed by 32 random bytes, stored as SHA-256 digests, compared in constant time and never logged ([ADR 0017](../../adr/0017-connection-secrets-are-shown-once-and-stored-as-digests.md)).
 5. The D1 schema and its first migration after `agent-inbox-core`.
 6. Abuse controls on the shared number: a blocklist, a per-phone rate limit, a daily cap on new accounts, and a per-connection outbound limit.
@@ -27,7 +27,7 @@ A shared public number also needs controls the single-owner core does not have: 
 ## Non-goals
 
 - Webhook signature checks and the Meta adapter. These belong to `whatsapp-cloud-channel`; this slice trusts the `from` number only because that slice verifies the signature.
-- The install prompt per client and the choice of client at creation. These belong to `install-skills`. This slice ships a generic renderer behind a hook.
+- The install page per client and the choice of client at creation. These belong to `install-skills`. This slice's reply carries only the install link, so creation asks for no client.
 - Wake rungs, wake URLs and tokens. These belong to `webhook-wake`, `local-connector` and `scheduled-wake`. Connections are created in wake mode `none`; no wake settings are set in this slice.
 - Changing the owner's phone number or recovering a lost phone. A new phone starts a new account.
 - A web dashboard, OAuth, billing, plans beyond the waitlist, per-agent permissions.
@@ -72,7 +72,7 @@ Rules:
 - **Limit.** Active connections per account are capped by `AGENTS_PER_ACCOUNT_LIMIT` (8). Revoked connections do not count.
 - **Names are unique among active connections.** A revoked name can be created again, as a new connection.
 - **Menu.** `ajuda` replies with text and an interactive list. Its rows have ids `zapbip:<command>`. `agentes` and `apagar conta` run at once. The rows for `novo agente`, `revogar` and `girar` reply with their usage line, because they need a name.
-- **Secret display.** The secret URL appears only in the create reply and the rotate reply, and in no other message or log.
+- **Secret display.** The secret appears in no WhatsApp message and in no log. The create and rotate replies carry the install link only; the install page turns it into the connection URL for 30 minutes (ADR 0020).
 
 Replies (intents; the copy lives in `libs/core/src/accounts/account-copy.ts`, with `pt_BR` and `en_US` entries, agent-inbox-core → Language):
 
@@ -80,7 +80,7 @@ Replies (intents; the copy lives in `libs/core/src/accounts/account-copy.ts`, wi
 |---|---|
 | waitlisted | the account is on the waitlist; send `ajuda` when access opens |
 | suspended | the account is suspended |
-| created | the agent name and the install prompt (in parts, see Install prompt hook), followed by the warning that the link is a password and how to rotate it |
+| created | the agent name and the one or two install lines (see Install prompt hook), followed by the warning that the install link works once and how to rotate it |
 | invalid or reserved name | the reason, and the rule |
 | name taken | the name already exists |
 | limit reached | the limit, and `revogar <nome>` as the way out |
@@ -121,14 +121,14 @@ Duplicate deliveries of the same inbound WhatsApp message id are ignored by the 
 
 | Action | Command | D1 write | Reply |
 |---|---|---|---|
-| create | `novo agente <nome>` | conditional insert of the digest | install prompt with the URL |
+| create | `novo agente <nome>` | conditional insert of the secret digest, the install code digest and the sealed secret | install lines with the install link |
 | list | `agentes` | select active rows of the account | names and dates |
 | revoke | `revogar <nome>` | set `revoked_at` | confirmation |
-| rotate | `girar <nome>` | compare-and-set of `secret_digest` and `rotated_at` | new install prompt |
+| rotate | `girar <nome>` | compare-and-set of `secret_digest`, `rotated_at` and the install code columns | new install lines with the new install link |
 
-Creation order: generate the secret, insert its digest, send the prompt. If the send fails, the just-inserted row is revoked again (compensation), the secret never left the process, and the owner gets a retry message when the reply can be sent.
+Creation order: generate the secret and the install code, insert the digests and the sealed secret, send the reply. If the send fails, the just-inserted row is revoked again (compensation), the secret never left the process, and the owner gets a retry message when the reply can be sent.
 
-Rotation order: compare-and-set the digest from the old to the new, send the prompt. If the send fails, compare-and-set back from the new digest to the old. The owner never ends up with a rotated link they did not receive.
+Rotation order: compare-and-set the digest and the install code columns from the old to the new, send the reply. If the send fails, compare-and-set back from the new digest to the old. The owner never ends up with a rotated link they did not receive.
 
 Revoke and rotate take effect at once and cannot be undone. The explicit agent name is their confirmation. Deletion has its own phrase, below.
 
@@ -140,17 +140,20 @@ Concurrency:
 
 ### Secrets and digests
 
-- **Issue.** `zb_conn_` followed by base64url (no padding) of 32 bytes from `RandomSource`, which is 43 characters. The secret is returned once and never stored.
+- **Issue.** `zb_conn_` followed by base64url (no padding) of 32 bytes from `RandomSource`, which is 43 characters. The secret is returned once and never stored in plain text. The install code (`zb_inst_` followed by base64url of 16 random bytes, 128 bits) is the only other secret: its digest is stored, and the connection secret is stored sealed under a key derived from the code, for 30 minutes at most, cleared on the first MCP call or by the daily sweep (ADR 0020).
 - **Digest.** SHA-256 hex of the full secret string, prefix included. Stored in `connections.secret_digest`.
 - **Resolve.** A value without the `zb_conn_` prefix returns `401` without a D1 read. Otherwise the digest is looked up in D1 and joined with `accounts`. The candidate's stored digest is then compared with the computed digest by constant-time compare, `crypto.subtle.timingSafeEqual` in the adapter. A mismatch, a missing row, a revoked connection or an account that is not `active` returns `401` with the same body in every case.
 - **Owner number.** The owner's `wa_id` (the digits of the phone, from Meta's `from`) is stored in plain text in `owner_identities` and `blocked_phones`, as [ADR 0012](../../adr/0012-owner-identity-by-wa-id-on-the-shared-number.md) requires, because the channel must send replies to it. Access is limited to the Worker and the operator, and LGPD deletion removes the row.
-- **Logs.** Logs carry event names, ids and kinds. They never carry secrets, digests, phones, agent names or message text. The request path is logged as its route template (`/c/:secret/mcp`), never the raw path, because the secret is in the path.
+- **Logs.** Logs carry event names, ids and kinds. They never carry secrets, digests, phones, agent names or message text. The request path is logged as its route template (`/c/:secret/mcp`, `/i/:installCode`), never the raw path, because the secret and the install code are in the path.
 
 ### Install prompt hook
 
-`InstallPromptRenderer.render({agent, mcpUrl, locale, standbyAgent})` returns the text of the create and rotate replies. This slice registers a generic renderer. `install-skills` replaces it with the one prompt that holds every client's section (ADR 0020), so creation asks the owner for no client. `standbyAgent` is `null` until `install-skills` supplies it.
+The reply to `novo agente` and `girar` is one or two lines in the owner's locale, each in its own `*-copy.ts` entry, with the install link `PUBLIC_ORIGIN + /i/ + installCode`:
 
-The prompt goes out in parts of at most `WHATSAPP_TEXT_MAX_CHARS` (4 096), in order, each a session message: a `1/n` label on its own line, then a slice of the prompt. The slices rejoin to the exact prompt. A test asserts that every part fits with the longest agent name.
+- pt_BR: "Conecte-se ao meu WhatsApp pelo zapbip: leia {install_link} e siga as instruções." then "Este link vale 30 minutos e funciona uma vez. Não o compartilhe."
+- en_US: "Connect yourself to my WhatsApp with zapbip: read {install_link} and follow the instructions." then "This link works once for 30 minutes. Do not share it."
+
+The lines are copy, not a port: no `InstallPromptRenderer`, no generic renderer and no `splitInstallPrompt`. The `/i/` page and the client sections belong to `install-skills` (ADR 0020), which reads the install code through `InstallCodeDirectory`. The lines carry no secret. A test asserts that both locales produce exactly two lines, each under `WHATSAPP_TEXT_MAX_CHARS`, with the link and without `zb_conn_`.
 
 ### Data model
 
@@ -185,6 +188,10 @@ CREATE TABLE connections (
   agent TEXT NOT NULL,
   secret_digest TEXT NOT NULL UNIQUE,
   client_name TEXT,
+  install_code_digest TEXT UNIQUE,
+  install_code_sealed_secret TEXT,
+  install_code_expires_at INTEGER,
+  first_call_at INTEGER,
   created_at INTEGER NOT NULL,
   rotated_at INTEGER,
   revoked_at INTEGER
@@ -202,6 +209,8 @@ CREATE TABLE blocked_phones (
 - Timestamps are epoch milliseconds.
 - The rebuild drops development rows only. Nothing is deployed before `0001` applies, so no production data needs keeping; from the first deploy on, migrations are forward-only (`deploy-readiness`).
 - `connections.client_name` is written by the MCP route from the first `initialize` (install-skills); it is null until then.
+- `connections.install_code_*` hold the install code digest, the connection secret sealed under the code, and the code's expiry. Create and rotate write them; revoke and the first MCP call clear the sealed secret; the daily sweep clears it after expiry (ADR 0020).
+- `connections.first_call_at` is written once, by the MCP route, on the connection's first successful MCP call (install-skills).
 - `owner_identities` is read by whatsapp-cloud-channel (ADR 0012); `from_user_id` stays null until Meta provides it.
 - The deletion batch removes `owner_identities` and `connections` before `accounts`, because the foreign keys have no cascade.
 - Per-account state (messages, wake settings, polls) lives in the Durable Object. This slice's D1 tables are the directory and the blocklist.
@@ -219,7 +228,8 @@ Ports in `libs/core`. Signatures are indicative; the plan fixes them and every m
 | `RandomSource` | new | random bytes for ids and secrets | `crypto.getRandomValues` |
 | `SenderGuard` | new | `admit({waId, now})` returns `SenderVerdict` (`admitted`, `blocked`, `rate_limited`) | Rate Limiting binding and the D1 blocklist |
 | `OutboundGuard` | new | `admit({connectionId})` | Rate Limiting binding |
-| `InstallPromptRenderer` | new | `render({agent, mcpUrl, locale})` | generic renderer |
+| `InstallCodeVault` | new | `issue()` returns `{installCode, digest}`; `seal({installCode, secret})` and `open({installCode, sealed})` | WebCrypto: SHA-256, HKDF-SHA-256, AES-256-GCM |
+| `InstallCodeDirectory` | new | `resolve({installCode, now})` returns `InstallCodeStatus` with the connection link on `Ready`; `recordFirstCall({connectionId, calledAt})` | D1 |
 | `MediaStore` | extended | `deletePrefix({prefix})` for deletion | R2 |
 | `AccountInbox` (DO) | extended | `purge()` that clears SQLite storage and alarms | Durable Object |
 
@@ -272,7 +282,7 @@ The owner is told that Meta keeps the WhatsApp history on its side, and that Clo
 
 ### Development
 
-The development connection script of `agent-inbox-core` is deleted in this slice. Connections are created in development through the owner simulator: send `novo agente <nome>` through `POST /dev/c/:secret/owner/messages` and read the reply on `GET /dev/c/:secret/owner/screen`, and the install prompt appears there. The simulator's owner phone is a fixed fake number in development configuration. Tests of `agent-inbox-core` that used the script switch to the simulator's helper.
+The development connection script of `agent-inbox-core` is deleted in this slice. Connections are created in development through the owner simulator: send `novo agente <nome>` through `POST /dev/c/:secret/owner/messages` and read the reply on `GET /dev/c/:secret/owner/screen`, and the install lines appear there. The simulator's owner phone is a fixed fake number in development configuration. Tests of `agent-inbox-core` that used the script switch to the simulator's helper.
 
 ### Logging
 
@@ -302,11 +312,11 @@ Events: `account.created`, `account.state_changed`, `command.received` (kind and
 - The Durable Object id derives from the account id, so one account's inbox cannot be reached with another's id.
 - The secret never appears in a log, a D1 row, a Durable Object row or a test fixture file.
 - Revocation, rotation and suspension take effect on the next request, because resolution reads D1 on every call and nothing is cached.
-- WhatsApp shows the secret in chat history and in lock-screen previews. The prompt says it is a password, and the rotate command is the remedy.
+- WhatsApp shows the install link in chat history and in lock-screen previews. The link works once for 30 minutes, and the rotate command is the remedy.
 
 ### Risks
 
-- The secret travels through Meta and sits in the owner's chat history.
+- The install link travels through Meta and sits in the owner's chat history. The connection secret does not.
 - Meta and Cloudflare keep copies after deletion for their own retention periods.
 - Command words such as `ajuda` can collide with an owner's own messages. Exact matching and the `@<agent>` escape limit the damage.
 - The rate limit is approximate per Cloudflare location.
@@ -341,18 +351,20 @@ Events: `account.created`, `account.state_changed`, `command.received` (kind and
 | In which language are replies sent? | account setting · keyword language | the language of the keyword used; `DEFAULT_LOCALE` pt-BR for new accounts | 2026-11-06 |
 | Can the owner change phone? | yes · no | no; a new phone is a new account | 2026-11-06 |
 | Where is the routing order written? | one place per slice · one table | one table in Routing change; agent-inbox-core keeps rules 1 to 6 | owner delegated 2026-11-06 |
-| Can the install prompt exceed one WhatsApp message? | shorten it · send parts | parts of at most `WHATSAPP_TEXT_MAX_CHARS`, in order | owner delegated 2026-11-06 |
+| Can the install prompt exceed one WhatsApp message? | shorten it · send parts | no parts: one or two lines; the long text is the install page of `install-skills`; `splitInstallPrompt` is removed (owner order 2026-11-06) | owner delegated 2026-11-06 |
 | Which owner-directory lookup is the port? | adapter · core port | core port `AccountDirectory`, promoted from the adapter of whatsapp-cloud-channel | owner delegated 2026-11-06 |
 | Owner locale | a keyword's language · account property | account property set at creation: `pt_BR` for `55` numbers, `en_US` otherwise; commands do not change it (the keyword's language is used for that command's reply) | owner delegated 2026-11-06 |
 | Shared time constants | per slice · `libs/types` | `SECOND_MS`, `MINUTE_MS`, `DAY_MS` from `libs/types` | owner delegated 2026-11-06 |
-| Connection link field | `mcpUrl` · `connectionLink` | `connectionLink`; the install prompt renderer is async: `render({accountId, agent, connectionLink, locale})` | owner delegated 2026-11-06 |
+| Connection link field | `mcpUrl` · `connectionLink` | `connectionLink`, built per request from the secret; the WhatsApp reply carries the install link instead | owner delegated 2026-11-06 |
 | R2 media key | `media/<mediaId>` · per account | `accounts/<accountId>/media/<mediaId>`, so deletion is one prefix delete | owner delegated 2026-11-06 |
 | Build order | sequential · parallel | built in parallel with `whatsapp-cloud-channel`, from `main` once `agent-inbox-core` is merged | owner delegated 2026-11-06 |
 | Revoke and rotate | both revoke · rotate keeps the wake setting | revoke calls `recordRevocation` (clears wake state, cancels waiters, marks revoked); rotate calls `cancelWaiters` only | owner delegated 2026-11-06 |
 | Deletion request | phrase only · stored request with a 10-minute window | `deletion_requested_at` in the account object; the phrase works only inside 10 minutes; `confirm_deletion` is allowed in `waitlisted` and `active` | owner delegated 2026-11-06 |
-| Failed multi-part reply | ignore · compensate | the reply parts are sent in order; on a failed part the compensation runs (revoke, or compare-and-set back) and the owner gets `SendFailed` | owner delegated 2026-11-06 |
+| Failed reply send | ignore · compensate | the reply is one message; on a failed send the compensation runs (revoke, or compare-and-set back) and the owner gets `SendFailed` | owner delegated 2026-11-06 |
 | Waitlist flag check | at module load · per request in the Worker | per request in the Worker's fetch path; the Durable Object does not read it | owner delegated 2026-11-06 |
 | First message detection | in-memory flag · durable | the account object's `first_message_id`, stored with the reply | owner delegated 2026-11-06 |
+| Who stores the install code? | `install-skills` · `accounts-and-keys` | `accounts-and-keys`: the code is minted, rotated and revoked with the connection, and its columns are in this slice's migration `0002`; `install-skills` reads it through `InstallCodeDirectory` | owner delegated 2026-11-06 |
+| Is the connection secret stored? | never · sealed for the code's life | sealed under a key derived from the install code, for 30 minutes at most, cleared on the first MCP call or by the daily sweep (ADR 0020, an amendment of ADR 0017) | owner delegated 2026-11-06 |
 | Free agent names in commands | reserved syntax · free name with the `@<agent>` escape | free name; `@<agent> girar a imagem` is the escape (rule 3); recorded in ADR 0015 and the commands guide | owner delegated 2026-11-06 |
 
 ## Test strategy summary
@@ -368,7 +380,8 @@ Events: `account.created`, `account.state_changed`, `command.received` (kind and
   - the rotate and create compensations;
   - the deletion steps and their idempotent resume;
   - every copy key exists in `pt_BR` and `en_US`;
-  - the install prompt parts fit `WHATSAPP_TEXT_MAX_CHARS` and rejoin to the exact prompt.
+  - the install lines are two lines in both locales, carry the install link and never `zb_conn_`;
+  - the install code: 128 bits, stored as a digest only; the sealed secret opens only with the code; cleared on the first MCP call and by the sweep.
 - **`apps/api` adapter unit:**
   - secret format: prefix, 43 characters, base64url alphabet;
   - digest determinism;
@@ -384,7 +397,7 @@ Events: `account.created`, `account.state_changed`, `command.received` (kind and
   - blocklist, phone rate limit and daily cap each drop silently;
   - deletion removes the Durable Object storage, the R2 prefix and the D1 rows, and resumes after a forced failure;
   - a Durable Object restart keeps state;
-  - logs captured during the whole flow contain no secret, digest, phone or agent name;
+  - logs captured during the whole flow contain no secret, digest, install code, phone or agent name;
   - a D1 table dump contains no `zb_conn_` value; the owner's `wa_id` appears only in `owner_identities` and `blocked_phones`.
-- **E2E:** the owner simulator in both locales walks create, a real MCP call with the printed link, rotate (old link `401`), revoke (`401`), and deletion (D1 empty). The walk is recorded with Playwright MCP at 1 280 and 375 wide for the PR.
+- **E2E:** the owner simulator in both locales walks create, the install link (the page shows the connection URL), a real MCP call with that URL, the second use of the install link (`410`), rotate (old link `401`), revoke (`401`), and deletion (D1 empty). The walk is recorded with Playwright MCP at 1 280 and 375 wide for the PR.
 - **Docs:** `mint broken-links` is green for the three new pages.

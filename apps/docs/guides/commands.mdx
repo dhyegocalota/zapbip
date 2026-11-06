@@ -5,15 +5,15 @@ description: 'What the owner can type to the zapbip number.'
 
 The owner manages agents by messaging the zapbip number. A command is matched exactly, in Portuguese or English, after the text is trimmed, its inner spaces are collapsed and it is lowercased. The language of the keyword is the language of the reply.
 
-| Command          | Portuguese                     | English                      | Effect                                                         |
-| ---------------- | ------------------------------ | ---------------------------- | -------------------------------------------------------------- |
-| Create an agent  | `novo agente <nome>`           | `new agent <name>`           | Creates a connection and replies with the install prompt.      |
-| List agents      | `agentes`                      | `agents`                     | Names and creation dates of the active agents. Never a secret. |
-| Revoke an agent  | `revogar <nome>`               | `revoke <name>`              | Revokes the connection now. Its link stops working.            |
-| Rotate a link    | `girar <nome>`                 | `rotate <name>`              | Replaces the secret now and replies with a new install prompt. |
-| Help and menu    | `ajuda` or `menu`              | `help` or `menu`             | Text and an interactive list of the commands.                  |
-| Request deletion | `apagar conta`                 | `delete account`             | States the consequences and the phrase to confirm.             |
-| Confirm deletion | `apagar conta definitivamente` | `delete account permanently` | Deletes the account.                                           |
+| Command          | Portuguese                     | English                      | Effect                                                          |
+| ---------------- | ------------------------------ | ---------------------------- | --------------------------------------------------------------- |
+| Create an agent  | `novo agente <nome>`           | `new agent <name>`           | Creates a connection and replies with an install link.          |
+| List agents      | `agentes`                      | `agents`                     | Name, creation date and client of each active agent. No secret. |
+| Revoke an agent  | `revogar <nome>`               | `revoke <name>`              | Revokes the connection now. Its link stops working.             |
+| Rotate a link    | `girar <nome>`                 | `rotate <name>`              | Replaces the secret now and replies with a new install link.    |
+| Help and menu    | `ajuda` or `menu`              | `help` or `menu`             | Text and an interactive list of the commands.                   |
+| Request deletion | `apagar conta`                 | `delete account`             | States the consequences and the phrase to confirm.              |
+| Confirm deletion | `apagar conta definitivamente` | `delete account permanently` | Deletes the account.                                            |
 
 Trailing punctuation does not match. `agentes?` is a message for an agent, not a command.
 

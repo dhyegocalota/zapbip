@@ -26,8 +26,8 @@ import { D1AccountDirectory } from '../adapters/d1/d1-account-directory';
 import { D1ConnectionRegistry } from '../adapters/d1/d1-connection-registry';
 import { createFakeWhatsAppSender, type FakeWhatsAppSender } from '../adapters/fake/fake-whatsapp-sender';
 import { createConnectionSecrets } from '../adapters/platform/connection-secrets';
+import { createInstallCodeVault } from '../adapters/platform/install-code-vault';
 import { createIdGenerator } from '../adapters/platform/ids';
-import { createGenericInstallPromptRenderer } from '../adapters/prompt/generic-install-prompt';
 import { loadDurableClock, type DurableClock } from '../adapters/platform/clock';
 import { createR2MediaStore } from '../adapters/r2/r2-media-store';
 import { createSqliteInboxRepository } from '../adapters/sqlite/sqlite-inbox-repository';
@@ -94,7 +94,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       accounts: new D1AccountDirectory({ database: this.env.CONNECTIONS }),
       connections: new D1ConnectionRegistry({ database: this.env.CONNECTIONS }),
       connectionSecrets: createConnectionSecrets(),
-      installPromptRenderer: createGenericInstallPromptRenderer(),
+      installCodeVault: createInstallCodeVault(),
       revocations: {
         recordRevocation: ({ agent }) => this.recordRevocation({ agent }),
         cancelWaiters: ({ agent }) => this.cancelWaiters({ agent }),

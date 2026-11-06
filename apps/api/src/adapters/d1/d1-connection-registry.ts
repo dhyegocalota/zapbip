@@ -1,15 +1,21 @@
-import type { AgentName, ConnectionRecord, ConnectionRegistry } from '@zapbip/core';
+import type { AgentName, ConnectionRecord, ConnectionRegistry, InstallCodeColumns, NewConnection } from '@zapbip/core';
 import { RegisterOutcome } from '@zapbip/types';
 
-const SELECT_CONNECTION = `SELECT id AS connectionId, account_id AS accountId, agent, secret_digest AS secretDigest, created_at AS createdAt
+const SELECT_CONNECTION = `SELECT id AS connectionId, account_id AS accountId, agent, secret_digest AS secretDigest, client_name AS clientName,
+  install_code_digest AS installCodeDigest, install_code_sealed_secret AS installCodeSealedSecret,
+  install_code_expires_at AS installCodeExpiresAt, first_call_at AS firstCallAt, created_at AS createdAt
   FROM connections`;
 const FIND_ACTIVE_BY_AGENT_STATEMENT = SELECT_CONNECTION + ' WHERE account_id = ? AND agent = ? AND revoked_at IS NULL';
 const LIST_ACTIVE_STATEMENT = SELECT_CONNECTION + ' WHERE account_id = ? AND revoked_at IS NULL ORDER BY created_at, id';
-const REGISTER_STATEMENT = `INSERT INTO connections (id, account_id, agent, secret_digest, created_at)
-  SELECT ?, ?, ?, ?, ?
+const REGISTER_STATEMENT = `INSERT INTO connections
+  (id, account_id, agent, secret_digest, install_code_digest, install_code_sealed_secret, install_code_expires_at, created_at)
+  SELECT ?, ?, ?, ?, ?, ?, ?, ?
   WHERE (SELECT COUNT(*) FROM connections WHERE account_id = ? AND revoked_at IS NULL) < ?`;
-const REVOKE_STATEMENT = 'UPDATE connections SET revoked_at = ? WHERE account_id = ? AND agent = ? AND revoked_at IS NULL';
-const ROTATE_STATEMENT = `UPDATE connections SET secret_digest = ?, rotated_at = ?
+const REVOKE_STATEMENT = `UPDATE connections
+  SET revoked_at = ?, install_code_digest = NULL, install_code_sealed_secret = NULL, install_code_expires_at = NULL
+  WHERE account_id = ? AND agent = ? AND revoked_at IS NULL`;
+const ROTATE_STATEMENT = `UPDATE connections
+  SET secret_digest = ?, install_code_digest = ?, install_code_sealed_secret = ?, install_code_expires_at = ?, first_call_at = NULL, rotated_at = ?
   WHERE account_id = ? AND agent = ? AND secret_digest = ? AND revoked_at IS NULL`;
 const SINGLE_CHANGE = 1;
 
@@ -20,7 +26,7 @@ export class D1ConnectionRegistry implements ConnectionRegistry {
     this.database = input.database;
   }
 
-  async register(input: { connection: ConnectionRecord; activeLimit: number }): Promise<RegisterOutcome> {
+  async register(input: { connection: NewConnection; activeLimit: number }): Promise<RegisterOutcome> {
     const { connection } = input;
     const result = await this.database
       .prepare(REGISTER_STATEMENT)
@@ -29,6 +35,9 @@ export class D1ConnectionRegistry implements ConnectionRegistry {
         connection.accountId,
         connection.agent,
         connection.secretDigest,
+        connection.installCodeDigest,
+        connection.installCodeSealedSecret,
+        connection.installCodeExpiresAt,
         connection.createdAt,
         connection.accountId,
         input.activeLimit,
@@ -58,10 +67,26 @@ export class D1ConnectionRegistry implements ConnectionRegistry {
     return result.meta.changes === SINGLE_CHANGE;
   }
 
-  async rotate(input: { accountId: string; agent: AgentName; fromDigest: string; toDigest: string; rotatedAt: number }): Promise<boolean> {
+  async rotate(input: {
+    accountId: string;
+    agent: AgentName;
+    fromDigest: string;
+    toDigest: string;
+    installCode: InstallCodeColumns;
+    rotatedAt: number;
+  }): Promise<boolean> {
     const result = await this.database
       .prepare(ROTATE_STATEMENT)
-      .bind(input.toDigest, input.rotatedAt, input.accountId, input.agent, input.fromDigest)
+      .bind(
+        input.toDigest,
+        input.installCode.installCodeDigest,
+        input.installCode.installCodeSealedSecret,
+        input.installCode.installCodeExpiresAt,
+        input.rotatedAt,
+        input.accountId,
+        input.agent,
+        input.fromDigest,
+      )
       .run();
     return result.meta.changes === SINGLE_CHANGE;
   }

@@ -4,6 +4,7 @@ import type {
   AccountState,
   AccountStateOutcome,
   CommandKind,
+  InstallCodeStatus,
   OwnerLocale,
   ReplyKind,
 } from '@zapbip/types';
@@ -18,13 +19,23 @@ export type AccountRecord = {
 
 export type AccountLookup = { account: AccountRecord; created: boolean };
 
-export type ConnectionRecord = {
+export type InstallCodeColumns = {
+  installCodeDigest: string | null;
+  installCodeSealedSecret: string | null;
+  installCodeExpiresAt: number | null;
+};
+
+export type ConnectionRecord = InstallCodeColumns & {
   connectionId: string;
   accountId: string;
   agent: AgentName;
   secretDigest: string;
+  clientName: string | null;
+  firstCallAt: number | null;
   createdAt: number;
 };
+
+export type NewConnection = Omit<ConnectionRecord, 'clientName' | 'firstCallAt'>;
 
 export type OwnerAccountContext = {
   accountId: string;
@@ -54,6 +65,7 @@ export type AccountCompensation = {
   agent: AgentName;
   oldDigest: string | null;
   newDigest: string;
+  oldInstallCode: InstallCodeColumns;
 };
 
 export type AccountCommandResult = {
@@ -63,6 +75,20 @@ export type AccountCommandResult = {
 };
 
 export type IssuedSecret = { secret: string; digest: string };
+
+export type IssuedInstallCode = { installCode: string; digest: string };
+
+export type InstallCodeResolution =
+  | {
+      status: InstallCodeStatus.Ready;
+      connectionLink: string;
+      locale: OwnerLocale;
+      agent: AgentName;
+      accountId: string;
+      connectionId: string;
+    }
+  | { status: InstallCodeStatus.Expired | InstallCodeStatus.Used; locale: OwnerLocale }
+  | { status: InstallCodeStatus.Unknown; locale: null };
 
 export type CommandInput = {
   text: string | null;

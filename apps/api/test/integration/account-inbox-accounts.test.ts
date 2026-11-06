@@ -225,12 +225,14 @@ describe('AccountInbox receiveAccountMessage', () => {
     return readScreen({ stub: stubOf() }).then((entries) => entries.map((entry) => entry.text));
   }
 
-  it('creates a connection and sends the install prompt', async () => {
+  it('creates a connection and sends the install link without the secret', async () => {
     const outcome = await receive({ text: 'novo agente alpha', channelMessageId: 'wamid.create' });
     expect(outcome).toMatchObject({ ok: true, value: { duplicate: false, deletionConfirmed: false } });
     const connections = await new D1ConnectionRegistry({ database: testEnv.CONNECTIONS }).listActive({ accountId: ACCOUNT });
     expect(connections.map((connection) => connection.agent)).toEqual(['alpha']);
-    expect((await screenTexts()).join('\n')).toContain(`${PUBLIC_ORIGIN}/c/zb_conn_`);
+    const sent = (await screenTexts()).join('\n');
+    expect(sent).toContain(`${PUBLIC_ORIGIN}/i/zb_inst_`);
+    expect(sent).not.toContain('zb_conn_');
   });
 
   it('answers a retried delivery as a duplicate without sending again', async () => {

@@ -19,9 +19,9 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
   },
   [AccountReplyIntent.Created]: {
     [OwnerLocale.PortugueseBrazil]:
-      'Agente {agent_name} criado. Cole as instruções abaixo no seu agente:\n\n{install_prompt}\n\nO link é uma senha: quem o tiver controla este agente. Se vazar, envie "girar {agent_name}".',
+      'Agente {agent_name} criado. Cole no seu agente:\n\n{install_prompt}\n\nSe o link expirar ou for usado, envie "girar {agent_name}".',
     [OwnerLocale.EnglishUs]:
-      'Agent {agent_name} created. Paste the instructions below into your agent:\n\n{install_prompt}\n\nThe link is a password: anyone who has it controls this agent. If it leaks, send "rotate {agent_name}".',
+      'Agent {agent_name} created. Paste this into your agent:\n\n{install_prompt}\n\nIf the link expires or was used, send "rotate {agent_name}".',
   },
   [AccountReplyIntent.InvalidName]: {
     [OwnerLocale.PortugueseBrazil]: 'Nome inválido. Use de 1 a 20 letras minúsculas, números ou hífens, começando por letra ou número.',
@@ -49,9 +49,9 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
   },
   [AccountReplyIntent.Rotated]: {
     [OwnerLocale.PortugueseBrazil]:
-      'Link do agente {agent_name} trocado. O link antigo deixou de funcionar. Cole as novas instruções no seu agente:\n\n{install_prompt}\n\nO link é uma senha: quem o tiver controla este agente.',
+      'Link do agente {agent_name} trocado. O link antigo deixou de funcionar. Cole no seu agente:\n\n{install_prompt}\n\nSe o link expirar ou for usado, envie "girar {agent_name}".',
     [OwnerLocale.EnglishUs]:
-      'Link of agent {agent_name} replaced. The old link no longer works. Paste the new instructions into your agent:\n\n{install_prompt}\n\nThe link is a password: anyone who has it controls this agent.',
+      'Link of agent {agent_name} replaced. The old link no longer works. Paste this into your agent:\n\n{install_prompt}\n\nIf the link expires or was used, send "rotate {agent_name}".',
   },
   [AccountReplyIntent.Listed]: {
     [OwnerLocale.PortugueseBrazil]: 'Seus agentes:\n{agents}',
@@ -93,6 +93,15 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
   },
 };
 
+const INSTALL_LINK_TOKEN = '{install_link}';
+
+const INSTALL_LINES: LocalizedText = {
+  [OwnerLocale.PortugueseBrazil]:
+    'Conecte-se ao meu WhatsApp pelo zapbip: leia {install_link} e siga as instruções.\nEste link vale 30 minutos e funciona uma vez. Não o compartilhe.',
+  [OwnerLocale.EnglishUs]:
+    'Connect yourself to my WhatsApp with zapbip: read {install_link} and follow the instructions.\nThis link works once for 30 minutes. Do not share it.',
+};
+
 const MENU_ROW_TITLES: Partial<Record<CommandKind, LocalizedText>> = {
   [CommandKind.CreateAgent]: { [OwnerLocale.PortugueseBrazil]: 'Novo agente', [OwnerLocale.EnglishUs]: 'New agent' },
   [CommandKind.ListAgents]: { [OwnerLocale.PortugueseBrazil]: 'Meus agentes', [OwnerLocale.EnglishUs]: 'My agents' },
@@ -126,4 +135,8 @@ export function buildMenuRows(input: { locale: OwnerLocale }): MenuRow[] {
 
 export function buildMenuButtonText(input: { locale: OwnerLocale }): string {
   return MENU_BUTTON_TEXT[input.locale];
+}
+
+export function renderInstallLines(input: { installLink: string; locale: OwnerLocale }): string {
+  return INSTALL_LINES[input.locale].replace(INSTALL_LINK_TOKEN, () => input.installLink);
 }
