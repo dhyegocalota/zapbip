@@ -1,9 +1,9 @@
-import { MessageDirection } from '@zapbip/types';
-import { NOTICE_RETRY_MS } from '../constants';
+import { MessageDirection, type OwnerLocale } from '@zapbip/types';
 import type { Message } from '../message';
 import type { CoreDependencies } from '../ports';
 import { sendNotice } from './send-notice';
 
+type PendingRetry = { ownerLocale: OwnerLocale; dueAt: number };
 type NoticeSubject = { message: Message; agent: string };
 
 async function findNoticeSubject(input: { dependencies: CoreDependencies }): Promise<NoticeSubject | null> {
@@ -13,20 +13,29 @@ async function findNoticeSubject(input: { dependencies: CoreDependencies }): Pro
   return { message, agent: message.agent };
 }
 
+async function findPendingRetry(input: { dependencies: CoreDependencies }): Promise<PendingRetry | null> {
+  const { noticeRetryLocale, noticeRetryAt, noticeSentForClosedWindow } = await input.dependencies.repository.findWindow();
+  const hasNoPendingRetry = noticeRetryLocale === null || noticeRetryAt === null || noticeSentForClosedWindow;
+  if (hasNoPendingRetry) return null;
+  return { ownerLocale: noticeRetryLocale, dueAt: noticeRetryAt };
+}
+
 export async function findNoticeRetryDueAt(input: { dependencies: CoreDependencies }): Promise<number | null> {
   const { dependencies } = input;
-  const window = await dependencies.repository.findWindow();
-  if (window.noticeRetryLocale === null || window.noticeSentForClosedWindow) return null;
+  const pendingRetry = await findPendingRetry({ dependencies });
+  if (pendingRetry === null) return null;
   const subject = await findNoticeSubject({ dependencies });
   if (subject === null) return null;
-  return dependencies.clock.now() + NOTICE_RETRY_MS;
+  return pendingRetry.dueAt;
 }
 
 export async function retryNotice(input: { dependencies: CoreDependencies }): Promise<void> {
   const { dependencies } = input;
-  const window = await dependencies.repository.findWindow();
-  if (window.noticeRetryLocale === null || window.noticeSentForClosedWindow) return;
+  const pendingRetry = await findPendingRetry({ dependencies });
+  if (pendingRetry === null) return;
+  const isNotDueYet = dependencies.clock.now() < pendingRetry.dueAt;
+  if (isNotDueYet) return;
   const subject = await findNoticeSubject({ dependencies });
   if (subject === null) return;
-  await sendNotice({ dependencies, ownerLocale: window.noticeRetryLocale, agent: subject.agent, content: subject.message });
+  await sendNotice({ dependencies, ownerLocale: pendingRetry.ownerLocale, agent: subject.agent, content: subject.message });
 }

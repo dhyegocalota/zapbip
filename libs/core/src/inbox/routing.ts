@@ -69,8 +69,9 @@ function resolveRecentAgent(input: RoutingInput): RoutingDecision | null {
 }
 
 function resolveSingleAgent(input: RoutingInput): RoutingDecision | null {
-  const [onlyAgent] = input.agents;
-  if (onlyAgent === undefined || input.agents.length > 1) return null;
+  const [onlyAgent, ...otherAgents] = input.agents;
+  const isSingleAgent = onlyAgent !== undefined && otherAgents.length === 0;
+  if (!isSingleAgent) return null;
   return decide({ rule: RoutingRule.SingleAgent, agent: onlyAgent.agent, answersQuestionId: null, textForAgent: input.text });
 }
 

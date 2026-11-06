@@ -1,4 +1,5 @@
 import { MessageKind, TemplateKind, type OwnerLocale } from '@zapbip/types';
+import { NOTICE_RETRY_BACKOFF_FACTOR, NOTICE_RETRY_MAX_MS, NOTICE_RETRY_MS } from '../constants';
 import { NoticeFailedError } from '../errors';
 import { buildNoticePreview } from '../inbox-copy';
 import type { AgentName } from '../connection';
@@ -16,9 +17,26 @@ async function noticePreview(input: { dependencies: CoreDependencies; content: M
 }
 
 async function releaseNotice(input: { dependencies: CoreDependencies; ownerLocale: OwnerLocale }): Promise<void> {
+  const { repository, clock } = input.dependencies;
+  const window = await repository.findWindow();
+  const retryDelayMs = Math.min(NOTICE_RETRY_MS * NOTICE_RETRY_BACKOFF_FACTOR ** window.noticeRetryAttempt, NOTICE_RETRY_MAX_MS);
+  await repository.saveWindow({
+    window: {
+      ...window,
+      noticeSentForClosedWindow: false,
+      noticeRetryLocale: input.ownerLocale,
+      noticeRetryAt: clock.now() + retryDelayMs,
+      noticeRetryAttempt: window.noticeRetryAttempt + 1,
+    },
+  });
+}
+
+async function resetNoticeAttempts(input: { dependencies: CoreDependencies }): Promise<void> {
   const { repository } = input.dependencies;
   const window = await repository.findWindow();
-  await repository.saveWindow({ window: { ...window, noticeSentForClosedWindow: false, noticeRetryLocale: input.ownerLocale } });
+  const hasAttempts = window.noticeRetryAttempt > 0;
+  if (!hasAttempts) return;
+  await repository.saveWindow({ window: { ...window, noticeRetryAttempt: 0 } });
 }
 
 export async function sendNotice(input: SendNoticeInput): Promise<void> {
@@ -33,4 +51,5 @@ export async function sendNotice(input: SendNoticeInput): Promise<void> {
     await releaseNotice({ dependencies, ownerLocale });
     throw new NoticeFailedError({ templateKind });
   }
+  await resetNoticeAttempts({ dependencies });
 }
