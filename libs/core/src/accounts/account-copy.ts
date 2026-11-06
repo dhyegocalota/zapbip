@@ -1,4 +1,4 @@
-import { AccountReplyIntent, CommandKind, OwnerLocale } from '@zapbip/types';
+import { AccountReplyIntent, COMPANY, CommandKind, OwnerLocale } from '@zapbip/types';
 import { invalidInput } from '../inbox/inbox-error-factories';
 import type { AccountReply, MenuRow } from './account-types';
 import { formatMenuRowId } from './command';
@@ -10,8 +10,8 @@ const COPY_TOKEN_PATTERN = /\{(\w+)\}/g;
 const PARAGRAPH_BREAK = '\n\n';
 
 export const COMPANY_LINE: LocalizedText = {
-  [OwnerLocale.PortugueseBrazil]: 'zapbip é um produto da Logic Bit',
-  [OwnerLocale.EnglishUs]: 'zapbip is a product of Logic Bit',
+  [OwnerLocale.PortugueseBrazil]: `zapbip é um produto da ${COMPANY.tradeName}`,
+  [OwnerLocale.EnglishUs]: `zapbip is a product of ${COMPANY.tradeName}`,
 };
 
 const COMPANY_LINE_INTENTS: ReadonlySet<AccountReplyIntent> = new Set([
