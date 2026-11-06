@@ -78,6 +78,10 @@ const ORDER_BY_ARRIVAL = 'ORDER BY at, rowid';
 const MARK_READ_STATEMENT = 'UPDATE inbox_messages SET read_at = ? WHERE read_at IS NULL AND id IN (SELECT value FROM json_each(?))';
 const HAND_OFF_STATEMENT =
   'UPDATE inbox_messages SET read_at = ?, handed_to = ? WHERE id = ? AND agent = ? AND direction = ? AND read_at IS NULL';
+const REGISTER_AGENT_STATEMENT =
+  'INSERT INTO agents (agent, last_seen_at) SELECT ?, ? WHERE NOT EXISTS (SELECT 1 FROM revoked_agents WHERE agent = ?) ON CONFLICT (agent) DO UPDATE SET last_seen_at = excluded.last_seen_at';
+const REGISTER_AGENT_WAKE_STATEMENT =
+  'INSERT OR IGNORE INTO agent_wake (agent, mode, last_polled_at, updated_at) SELECT ?, ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM revoked_agents WHERE agent = ?)';
 const WINDOW_ROW_ID = 1;
 const INSERT_MESSAGE_STATEMENT =
   'INSERT INTO inbox_messages (id, agent, direction, kind, payload, reply_to, delivery, read_at, channel_message_id, forwarded, at, handed_to, origin_message_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
@@ -209,18 +213,8 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
   return {
     async registerAgent({ agent, seenAt }) {
       input.storage.transactionSync(() => {
-        run(
-          'INSERT INTO agents (agent, last_seen_at) VALUES (?, ?) ON CONFLICT (agent) DO UPDATE SET last_seen_at = excluded.last_seen_at',
-          agent,
-          seenAt,
-        );
-        run(
-          'INSERT OR IGNORE INTO agent_wake (agent, mode, last_polled_at, updated_at) VALUES (?, ?, ?, ?)',
-          agent,
-          WakeMode.None,
-          seenAt,
-          seenAt,
-        );
+        run(REGISTER_AGENT_STATEMENT, agent, seenAt, agent);
+        run(REGISTER_AGENT_WAKE_STATEMENT, agent, WakeMode.None, seenAt, seenAt, agent);
       });
     },
 

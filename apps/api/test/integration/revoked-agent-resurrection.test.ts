@@ -1,5 +1,5 @@
 import type { AgentName } from '@zapbip/core';
-import { HttpStatus, InboxStatus, WakeMode } from '@zapbip/types';
+import { HttpStatus, InboxErrorCode, InboxStatus, WakeMode } from '@zapbip/types';
 import { reset, runInDurableObject } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { DevAccountInbox } from '../../src/dev/dev-account-inbox';
@@ -83,7 +83,10 @@ describe('a revoked agent is not resurrected by an in-flight call', () => {
 
   it('leaves no row when a check_inbox that was admitted lands after the revocation', async () => {
     await stub.recordRevocation({ agent: STANDBY });
-    expectOk(await stub.checkInbox({ connection: connectionFor({ agent: STANDBY }) }));
+    expect(await stub.checkInbox({ connection: connectionFor({ agent: STANDBY }) })).toMatchObject({
+      ok: false,
+      errorCode: InboxErrorCode.NotFound,
+    });
     expect(await rowCounts({ agent: STANDBY })).toEqual({ agents: 0, wakes: 0 });
   });
 

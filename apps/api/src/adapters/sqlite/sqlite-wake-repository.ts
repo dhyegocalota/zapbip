@@ -1,4 +1,5 @@
-import type { Clock, PollState, ScheduledWake, StoredWake, WakeJob, WakeRepository } from '@zapbip/core';
+import { notFound, type Clock, type PollState, type ScheduledWake, type StoredWake, type WakeJob, type WakeRepository } from '@zapbip/core';
+import { CONNECTION_NOT_ACTIVE_MESSAGE } from '../../account-inbox/constants';
 import { WakeMode, WakeStatus, type OwnerLocale, type WakeAttemptOutcome, type WakeProvider } from '@zapbip/types';
 
 type WakeRow = {
@@ -34,7 +35,7 @@ type JobRow = {
 const WAKE_COLUMNS =
   'agent, mode, provider, host, sealed_target, key_version, status, last_delivered_at, interval_minutes, standby_agent, owner_locale';
 const POLL_COLUMNS = 'last_polled_at, has_polled, poller_stale_notified, last_stale_notice_at';
-const SELECT_WAKE = 'SELECT ' + WAKE_COLUMNS + ' FROM agent_wake WHERE agent = ?';
+const SELECT_WAKE = 'SELECT ' + WAKE_COLUMNS + ' FROM agent_wake WHERE agent = ? AND agent NOT IN (SELECT agent FROM revoked_agents)';
 const SELECT_POLL_STATE = 'SELECT ' + POLL_COLUMNS + ' FROM agent_wake WHERE agent = ?';
 const SELECT_SCHEDULED_WAKES = 'SELECT ' + WAKE_COLUMNS + ', ' + POLL_COLUMNS + ' FROM agent_wake WHERE mode = ? ORDER BY agent';
 const SAVE_WAKE_STATEMENT =
@@ -161,7 +162,7 @@ export function createSqliteWakeRepository(input: { storage: DurableObjectStorag
 
     async recordPoll({ agent, polledAt, ownerLocale }) {
       const cursor = sql.exec(RECORD_POLL_STATEMENT, polledAt, ownerLocale, agent);
-      if (cursor.rowsWritten === 0) throw new Error(`no agent_wake row for ${agent}`);
+      if (cursor.rowsWritten === 0) throw notFound({ message: CONNECTION_NOT_ACTIVE_MESSAGE });
     },
 
     async listScheduledWakes() {

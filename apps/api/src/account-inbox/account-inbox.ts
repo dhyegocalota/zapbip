@@ -481,6 +481,8 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     this.assertLive();
     const agent = new URL(request.url).searchParams.get(CONNECTOR_AGENT_PARAMETER);
     if (agent === null) return new Response(null, { status: HttpStatus.BadRequest });
+    const isAdmitted = await isConnectionAdmitted({ database: this.env.CONNECTIONS, connection: { accountId: this.accountId, agent } });
+    if (!isAdmitted) return new Response(null, { status: HttpStatus.Unauthorized });
     await inbox.touchAgent({ dependencies: this.dependencies, agent });
     const attached = await inbox.attachLocalConnector({
       dependencies: this.dependencies,
