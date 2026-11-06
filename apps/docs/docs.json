@@ -5,6 +5,17 @@
   "colors": {
     "primary": "#128C7E"
   },
+  "footer": {
+    "links": [
+      {
+        "header": "Logic Bit",
+        "items": [
+          { "label": "zapbip is a product of Logic Bit", "href": "/help/about" },
+          { "label": "zapbip é um produto da Logic Bit", "href": "/pt-br/help/about" }
+        ]
+      }
+    ]
+  },
   "navigation": {
     "languages": [
       {
@@ -30,7 +41,7 @@
           },
           {
             "group": "Help",
-            "pages": ["help/troubleshooting", "help/faq"]
+            "pages": ["help/troubleshooting", "help/faq", "help/about"]
           },
           {
             "group": "For developers",
@@ -90,7 +101,7 @@
           },
           {
             "group": "Ajuda",
-            "pages": ["pt-br/help/troubleshooting", "pt-br/help/faq"]
+            "pages": ["pt-br/help/troubleshooting", "pt-br/help/faq", "pt-br/help/about"]
           },
           {
             "group": "Para desenvolvedores",
