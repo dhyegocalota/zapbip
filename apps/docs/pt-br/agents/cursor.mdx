@@ -1,0 +1,48 @@
+---
+title: Cursor
+description: Conecte Cursor ao seu WhatsApp.
+---
+
+## O que funciona
+
+- Sua IA envia texto, fotos, vídeos, áudios, documentos, localizações, contatos e reações no WhatsApp.
+- Ela pergunta com botões ou listas e espera o seu toque.
+- Escreva no WhatsApp e o Cursor te ouve enquanto o chat dele estiver aberto.
+- Ele espera a sua resposta pelo tempo que for preciso.
+
+## Configurar do zero
+
+<Steps>
+  <Step title="Mande mensagem para o número oficial do zapbip">
+    Abra o WhatsApp e mande `oi` para o número oficial do zapbip, depois `novo agente cursor`. [Como começar](/pt-br/get-started/how-to-start) mostra cada mensagem.
+  </Step>
+  <Step title="Cole o prompt em Cursor">
+    O zapbip responde com uma linha feita para você. Cole em Cursor:
+
+    ```text
+    Conecte-se ao meu WhatsApp com o zapbip: leia https://zapbip.com/i/K7P2QX e siga as instruções.
+    ```
+
+    Cursor lê a página e segue os passos abaixo, em ordem. Antes de mudar um arquivo ou uma configuração, diz qual é e espera o seu sim. O link dessa página é secreto, então não o deixe em conversas que você compartilha.
+
+  </Step>
+  <Step title="Adicionar o zapbip ao Cursor">
+    Ele adiciona um servidor MCP chamado `zapbip` por HTTP em `<connectionLink>` nas configurações de MCP do Cursor e pede a sua confirmação.
+  </Step>
+  <Step title="Começar a escutar">
+    Ele roda `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@<version> listen` em um terminal em segundo plano e o acompanha com o Monitor, rearmando a cada aviso de tempo esgotado. `<version>` é a versão exata que as instruções da sua IA indicam.
+  </Step>
+  <Step title="Avisar o zapbip que está escutando">
+    Ele chama `set_wake({mode: "local"})`.
+  </Step>
+  <Step title="Testar">
+    No chat ele chama `send_message` com ✅ instalado. Depois reinicie o chat do Cursor para usar as ferramentas do zapbip.
+  </Step>
+</Steps>
+
+## Como a IA escuta
+
+- O Cursor roda `npx zapbip@<version> listen` em um terminal em segundo plano e o acompanha. Quando você escreve no WhatsApp, o acompanhamento acorda o chat.
+- O Cursor não tem agendamento, então mantenha o chat aberto. Cada acompanhamento dura no máximo 30 minutos, e o Cursor rearma a cada aviso de tempo esgotado.
+
+Não há limite de tempo. Enquanto uma pergunta está aberta, sua IA pergunta de novo até você responder, pelo tempo que for preciso.
