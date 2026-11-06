@@ -1,4 +1,4 @@
-import type { ZodRawShape } from 'zod';
+import type { ZodRawShape, ZodType } from 'zod';
 import {
   askInputShape,
   checkInboxInputShape,
@@ -15,9 +15,9 @@ import {
   sendMediaInputShape,
   sendMessageInputShape,
   setWakeOutputShape,
+  setWakeToolInputSchema,
   waitForReplyInputShape,
 } from './mcp-schemas';
-import { setWakeToolInputShape } from '../mcp/set-wake';
 
 export enum McpToolName {
   SendMessage = 'send_message',
@@ -35,7 +35,7 @@ export enum McpToolName {
 
 export type ToolDefinition = {
   description: string;
-  inputShape: ZodRawShape;
+  inputShape: ZodRawShape | ZodType;
   outputShape: ZodRawShape;
 };
 
@@ -91,8 +91,9 @@ export const TOOL_DEFINITIONS: Record<McpToolName, ToolDefinition> = {
     outputShape: createUploadOutputShape,
   },
   [McpToolName.SetWake]: {
-    description: 'Set how this agent is woken when the owner writes: a webhook url and token, or none to clear it.',
-    inputShape: setWakeToolInputShape,
+    description:
+      'Set how this agent is woken when the owner writes: a webhook url and token, scheduled with interval_minutes (1 to 1440) when this agent polls check_inbox on a schedule, standby with standby_agent (another agent of the same account that answers for this one) when it cannot be woken, or none to clear it.',
+    inputShape: setWakeToolInputSchema,
     outputShape: setWakeOutputShape,
   },
 };

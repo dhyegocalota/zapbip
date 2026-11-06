@@ -47,6 +47,16 @@ Step 0 adds no test. Every stub is reached by a red test in the lane named in `p
 - Slice 4's L2 (Durable Object wiring, `sqlite-wake-repository.ts` body) is not pushed yet. `sqlite-wake-repository.ts` still throws as a whole on this branch, so L1 adds its methods when that lands.
 - The `libs/core` and `apps/api` READMEs say "the webhook wake of a sleeping agent"; they are updated with the lane that makes scheduled and standby real (L2 and L3), not in Step 0.
 
+
+## Lane L4 (MCP)
+
+### What changed
+
+- `apps/api/src/contract/mcp-schemas.ts`: `UnavailableWakeMode` (now only `Local`), `setWakeToolInputShape` and `setWakeToolInputSchema = z.strictObject(setWakeToolInputShape)` (R13), next to `setWakeInputShape`.
+- `apps/api/src/mcp/set-wake.ts`: imports them from the contract; the handler is unchanged otherwise (it already maps `interval_minutes` and `standby_agent`).
+- `apps/api/src/contract/tool-definitions.ts`: `ToolDefinition.inputShape` is `ZodRawShape | ZodType`; `set_wake` registers the strict schema; the description names `scheduled`, `interval_minutes` and `standby_agent`.
+- `apps/api/src/mcp/server.ts` (not in L4's list, needed by the widened type): `(toolArguments: unknown)` annotation, since the union stops the SDK from inferring the callback argument.
+- Test: `apps/api/test/integration/mcp-scheduled-wake.test.ts`.
 ## Lane L1 (storage)
 
 ### What changed
@@ -58,21 +68,22 @@ Step 0 adds no test. Every stub is reached by a red test in the lane named in `p
 ### How to run
 
 ```bash
-pnpm --filter @zapbip/api test:integration
+cd apps/api && pnpm test:integration mcp-scheduled-wake set-wake mcp-tools
 ```
 
-### Red today, green after
+### Red then green
 
-Red commit `12637d8`: 16 of 21 cases of `scheduled-wake-storage.test.ts` failed (`no such column: has_polled`, `expected [] to deeply equal [ 3 ]`, `<name> is not implemented`). Green at `699c8b8`. Pins on arrival: unique message id, zero count, read rows ignored, atomic rollback of the handoff, and the three schema checks that already held.
+Red commit 85144f6: 13 failed, 5 passed. First failures: scheduled/standby `set_wake` return no `structuredContent` (the call reaches `saveScheduled is not implemented` / `saveStandby is not implemented`); `{mode: "none", account_id: "x"}` has `isError` undefined (the SDK strips the key from a raw shape); validation cases print the stub text instead of the field name. Pins: set_wake none, set_wake webhook, interval as a string, check_inbox empty, check_inbox new.
+
+After 055dbf5: 11 failed, 51 passed across `mcp-scheduled-wake`, `set-wake`, `mcp-tools`. Green now: unknown field, agent field. Still red, waiting on L2's `assertWakeSetting` and the `saveScheduled`/`saveStandby` bodies (S2.3): scheduled/standby saved results, both interval bounds, interval 0 and 1441, fractional interval, caller as standby, malformed standby name, standby of another account, standby in standby mode.
 
 ### Hypotheses to attack
 
-1. A webhook row that polls keeps its mode and target (`recordPoll` touches only the poll columns and `owner_locale`).
-2. `saveWake` keeps a recorded `owner_locale` when the saved wake carries none (`COALESCE(?, owner_locale)`); a non-null locale overwrites it.
-3. `insertHandoff` marks only the primary's unread row whose id is `copy.originMessageId`; a copy without `originMessageId` throws.
-4. An object at v1 only, or v1 and v3 without v2, upgrades with its rows intact.
+1. `set_wake` rejects any key outside `mode, url, token, interval_minutes, standby_agent` with a tool error naming the key, and saves nothing.
+2. Other tools still accept their inputs unchanged (only `set_wake` became a strict object).
+3. A tool error for the other-account standby never contains the other account id.
 
-### Known gaps
+### Gaps
 
 - `account-inbox.test.ts` (`WI-120`, `WI-121`) and `webhook-wake-secrets.test.ts` (`migration v2`) use `3` as a synthetic "later" migration version; with the real `v3` they fail (`expected [ 4 ] to deeply equal [ 3, 4 ]`, `expected [] to deeply equal [ 3 ]`, `UNIQUE constraint failed: schema_versions.version`). Not L1 files: the lead must move their synthetic versions past `ACCOUNT_INBOX_MIGRATIONS` (for example derive them from the last registered version).
 - accounts-and-keys describes its own DO schema `v6`; the lead renumbers `v3.sql` when merging it, since runner order is by version.
@@ -115,6 +126,9 @@ Red commit `5ca8f5a`: 20 of 20 cases failed, every one with `Error: saveSchedule
 - `standby-revocation.test.ts` stays red until slice 3 merges. The integrator writes the owner-command cases (`revogar`, `girar`, the revoked secret answering 401) at that merge and swaps the local `recordRevocation` type for `AccountOwnerRpc`.
 - Not covered anywhere in L3: the answer to a question and a routing-list assignment never carry `messageId` (belongs to the `receive-owner-message.test.ts` cases of L2).
 
+
+- The `UnavailableWakeMode` and tool-shape move follows the webhook-wake fix batch's target layout; the `invalidInput` factory is not on this branch, so the handler still builds `InboxError` directly. The merge with that batch needs a look at `set-wake.ts`.
+- `standby-revocation.test.ts` is L3 and not touched here.
 ## Lane L2: core rules and use cases
 
 ### What changed
@@ -152,3 +166,22 @@ Red commit `5ca8f5a`: 20 of 20 cases failed, every one with `Error: saveSchedule
 - The copy cadence for 1 minute reads `a cada 1 minutos`; the Step 0 `CadenceMinutes` string has no singular.
 - Files outside the lane's list that were touched: `libs/core/src/inbox/use-cases/wake-agent.ts` (needed to carry `messageId`) and `libs/core/src/wake/testing/wake-fixtures.ts` (one line: the in-memory wake repository needs the fake clock).
 - `ask` and `waitForReply` "records no poll" cases of B2 are not written: neither calls `pollInbox` or `recordPoll`.
+
+pnpm --filter @zapbip/api test:integration
+```
+
+### Red today, green after
+
+Red commit `12637d8`: 16 of 21 cases of `scheduled-wake-storage.test.ts` failed (`no such column: has_polled`, `expected [] to deeply equal [ 3 ]`, `<name> is not implemented`). Green at `699c8b8`. Pins on arrival: unique message id, zero count, read rows ignored, atomic rollback of the handoff, and the three schema checks that already held.
+
+### Hypotheses to attack
+
+1. A webhook row that polls keeps its mode and target (`recordPoll` touches only the poll columns and `owner_locale`).
+2. `saveWake` keeps a recorded `owner_locale` when the saved wake carries none (`COALESCE(?, owner_locale)`); a non-null locale overwrites it.
+3. `insertHandoff` marks only the primary's unread row whose id is `copy.originMessageId`; a copy without `originMessageId` throws.
+4. An object at v1 only, or v1 and v3 without v2, upgrades with its rows intact.
+
+### Known gaps
+
+- `account-inbox.test.ts` (`WI-120`, `WI-121`) and `webhook-wake-secrets.test.ts` (`migration v2`) use `3` as a synthetic "later" migration version; with the real `v3` they fail (`expected [ 4 ] to deeply equal [ 3, 4 ]`, `expected [] to deeply equal [ 3 ]`, `UNIQUE constraint failed: schema_versions.version`). Not L1 files: the lead must move their synthetic versions past `ACCOUNT_INBOX_MIGRATIONS` (for example derive them from the last registered version).
+- accounts-and-keys describes its own DO schema `v6`; the lead renumbers `v3.sql` when merging it, since runner order is by version.
