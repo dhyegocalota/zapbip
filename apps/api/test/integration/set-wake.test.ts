@@ -17,7 +17,7 @@ const PINNED_TOKEN = 'p'.repeat(16);
 const GENERIC_TOKEN = 'g'.repeat(32);
 const SHORT_TOKEN = 's'.repeat(15);
 const UNAVAILABLE_MODE_MESSAGE = 'wake mode not available yet';
-const UNAVAILABLE_MODES = ['local', 'scheduled', 'standby'];
+const UNAVAILABLE_MODES = ['local'];
 
 describe('set_wake over MCP', () => {
   let client: Client;
