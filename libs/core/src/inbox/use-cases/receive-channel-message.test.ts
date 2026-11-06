@@ -40,11 +40,11 @@ describe('receiveChannelMessage', () => {
   test('CU-17 a repeated wamid stores nothing, resolves no waiter and wakes nobody', async () => {
     const environment = await environmentWithAlpha();
     const entry = ownerTextEntry({ environment, text: '@alpha oi' });
-    await receiveChannel({ environment, channelMessageId: WAMID, entry });
+    const first = await receiveChannel({ environment, channelMessageId: WAMID, entry });
     const notificationsBefore = environment.waker.notifications.length;
     const sessionsBefore = environment.sender.sessions.length;
     const second = await receiveChannel({ environment, channelMessageId: WAMID, entry });
-    expect(second).toEqual({ messageId: null, agent: null, duplicate: true });
+    expect(second).toEqual({ messageId: first.messageId, agent: 'alpha', duplicate: true });
     expect(await environment.repository.countUnread({ agent: 'alpha' })).toBe(1);
     expect(environment.waker.notifications).toHaveLength(notificationsBefore);
     expect(environment.sender.sessions).toHaveLength(sessionsBefore);
@@ -101,6 +101,17 @@ describe('receiveChannelMessage', () => {
     expect(environment.sender.sessions).toMatchObject([{ text: 'held' }]);
     expect(await environment.repository.countUnread({ agent: 'alpha' })).toBe(0);
     expect(await environment.repository.listHeld()).toEqual([]);
+  });
+
+  test('a repeated entry that stored no message is a duplicate with no ids', async () => {
+    const environment = await environmentWithAlpha();
+    const entry: ChannelInboundEntry = { kind: ChannelInboundKind.WindowOnly, at: environment.clock.now() };
+    await receiveChannel({ environment, channelMessageId: WAMID, entry });
+    expect(await receiveChannel({ environment, channelMessageId: WAMID, entry })).toEqual({
+      messageId: null,
+      agent: null,
+      duplicate: true,
+    });
   });
 
   test('a repeated window-only entry is a duplicate', async () => {
