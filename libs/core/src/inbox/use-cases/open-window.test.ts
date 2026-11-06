@@ -36,6 +36,9 @@ describe('openWindow', () => {
       lastOwnerMessageAt: environment.clock.now(),
       noticeSentForClosedWindow: false,
       closedAt: null,
+      noticeRetryLocale: null,
+      noticeRetryAt: null,
+      noticeRetryAttempt: 0,
     });
   });
 
