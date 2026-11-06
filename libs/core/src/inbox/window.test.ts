@@ -6,7 +6,7 @@ import { isOwnerWindowOpen } from './window';
 const LAST_OWNER_MESSAGE_AT = 1_000_000;
 
 function windowAt(lastOwnerMessageAt: number | null) {
-  return { lastOwnerMessageAt, noticeSentForClosedWindow: false, noticeRetryLocale: null };
+  return { lastOwnerMessageAt, noticeSentForClosedWindow: false, noticeRetryLocale: null, noticeRetryAt: null, noticeRetryAttempt: 0 };
 }
 
 describe('isOwnerWindowOpen', () => {

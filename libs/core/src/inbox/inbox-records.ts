@@ -10,6 +10,8 @@ export type OwnerWindow = {
   lastOwnerMessageAt: number | null;
   noticeSentForClosedWindow: boolean;
   noticeRetryLocale: OwnerLocale | null;
+  noticeRetryAt: number | null;
+  noticeRetryAttempt: number;
 };
 
 export type RoutingList = {
