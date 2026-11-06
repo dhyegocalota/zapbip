@@ -153,6 +153,17 @@ export const setWakeInputShape = {
   standby_agent: nullableString,
 };
 
+export enum UnavailableWakeMode {
+  Local = 'local',
+}
+
+export const setWakeToolInputShape = {
+  ...setWakeInputShape,
+  mode: z.enum([...Object.values(WakeMode), UnavailableWakeMode.Local]),
+};
+
+export const setWakeToolInputSchema = z.strictObject(setWakeToolInputShape);
+
 export const setWakeOutputShape = {
   status: z.enum(SetWakeStatus),
   wake_mode: z.enum(WakeMode),
