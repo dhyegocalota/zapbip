@@ -225,7 +225,7 @@ pnpm --filter @zapbip/api typecheck
 pnpm --silent --filter @zapbip/api dev:seed --phone 5511999990000 --agents alpha,beta --json --persist-to <dir>
 ```
 
-Seed needs `wrangler d1 migrations apply CONNECTIONS --local --persist-to <dir>` first. Without `--silent`, pnpm prints a banner line before the JSON.
+Seed needs `wrangler d1 migrations apply CONNECTIONS --env development --local --persist-to <dir>` first. Without `--silent`, pnpm prints a banner line before the JSON.
 
 ### Red today, green after
 

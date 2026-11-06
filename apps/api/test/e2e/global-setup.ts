@@ -64,7 +64,18 @@ export default async function setup(project: TestProject): Promise<() => Promise
   const origin = `http://${LOOPBACK_HOST}:${port}`;
   const persistArguments = ['--persist-to', persistDirectory];
 
-  await runCommand('pnpm', ['exec', 'wrangler', 'd1', 'migrations', 'apply', DATABASE_BINDING, '--local', ...persistArguments]);
+  await runCommand('pnpm', [
+    'exec',
+    'wrangler',
+    'd1',
+    'migrations',
+    'apply',
+    DATABASE_BINDING,
+    '--env',
+    'development',
+    '--local',
+    ...persistArguments,
+  ]);
   const seeded = await runCommand('pnpm', [
     'exec',
     'tsx',
