@@ -103,9 +103,11 @@ export async function startStack(input: { agents: string[] }): Promise<Stack> {
   const origin = `https://${LOOPBACK_HOST}:${port}`;
   const persistArguments = ['--persist-to', persistDirectory];
 
-  await runCommand('pnpm', ['exec', 'wrangler', 'd1', 'migrations', 'apply', DATABASE_BINDING, '--local', ...persistArguments], {
-    cwd: API_DIRECTORY,
-  });
+  await runCommand(
+    'pnpm',
+    ['exec', 'wrangler', 'd1', 'migrations', 'apply', DATABASE_BINDING, '--env', 'development', '--local', ...persistArguments],
+    { cwd: API_DIRECTORY },
+  );
   const secrets = await seedConnections({ agents: input.agents, persistArguments });
   const server = spawn(
     'pnpm',
