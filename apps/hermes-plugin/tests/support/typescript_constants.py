@@ -18,6 +18,7 @@ NUMBER_PATTERN = re.compile(r"^[\d_]+$")
 EXPRESSION_PATTERN = re.compile(r"^[\w\s*+()]+$")
 IDENTIFIER_PATTERN = re.compile(r"[A-Z][A-Z_]+")
 OPERATORS = {ast.Mult: operator.mul, ast.Add: operator.add}
+NUMERIC_MEMBER_PATTERN = re.compile(r"(\w+) = (\d+)")
 TEXT_BY_KIND_PATTERN = re.compile(r"\[MessageKind\.(\w+)\]: '([^']*)'")
 
 
@@ -25,6 +26,12 @@ def enum_members_of(*, source: Path, name: str) -> dict[str, str]:
     body = re.search(ENUM_PATTERN.format(name=name), source.read_text(), re.DOTALL)
     assert body is not None, f"enum {name} not found in {source}"
     return dict(MEMBER_PATTERN.findall(body.group(1)))
+
+
+def numeric_enum_member_of(*, source: Path, enum_name: str, member: str) -> int:
+    body = re.search(ENUM_PATTERN.format(name=enum_name), source.read_text(), re.DOTALL)
+    assert body is not None, f"enum {enum_name} not found in {source}"
+    return int(dict(NUMERIC_MEMBER_PATTERN.findall(body.group(1)))[member])
 
 
 def constant_of(*, source: Path, name: str) -> int | str:

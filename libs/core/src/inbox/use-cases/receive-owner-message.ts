@@ -228,7 +228,9 @@ async function promptOwner(input: Arrival & { heldMessageId: string; prompt: Own
 }
 
 async function openWindowAndFlush(input: { dependencies: CoreDependencies; at: number }): Promise<void> {
-  await input.dependencies.repository.saveWindow({ window: { lastOwnerMessageAt: input.at, noticeSentForClosedWindow: false } });
+  await input.dependencies.repository.saveWindow({
+    window: { lastOwnerMessageAt: input.at, noticeSentForClosedWindow: false, noticeRetryLocale: null },
+  });
   await flushQueue({ dependencies: input.dependencies });
 }
 

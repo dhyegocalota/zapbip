@@ -75,7 +75,7 @@ describe('routeOwnerMessage', () => {
 
   test('CU-70 rule 2 skips a quoted held message', () => {
     const decision = routeOwnerMessage(
-      routingInput({ referencedMessage: agentMessage({ messageId: 'msg_1', agent: null }), agents: agentRecords('beta') }),
+      routingInput({ referencedMessage: agentMessage({ messageId: 'msg_1', agent: null }), agents: agentRecords('alpha', 'beta') }),
     );
     expect(decision.rule).not.toBe(RoutingRule.QuotedOrReaction);
     expect(decision).toMatchObject({ rule: RoutingRule.AskOwner, agent: null, sendsRoutingList: true });
@@ -87,12 +87,12 @@ describe('routeOwnerMessage', () => {
   });
 
   test('CU-72 rule 3 skips an unknown mention', () => {
-    const decision = routeOwnerMessage(routingInput({ text: '@ghost oi', agents: agentRecords('alpha') }));
+    const decision = routeOwnerMessage(routingInput({ text: '@ghost oi', agents: agentRecords('alpha', 'beta') }));
     expect(decision.rule).toBe(RoutingRule.AskOwner);
   });
 
   test('CU-73 rule 3 needs the trailing space', () => {
-    const decision = routeOwnerMessage(routingInput({ text: '@beta', agents: agentRecords('beta') }));
+    const decision = routeOwnerMessage(routingInput({ text: '@beta', agents: agentRecords('alpha', 'beta') }));
     expect(decision.rule).toBe(RoutingRule.AskOwner);
   });
 
@@ -159,6 +159,11 @@ describe('routeOwnerMessage', () => {
   test('CU-79 rule 5 recent agent', () => {
     const decision = routeOwnerMessage(routingInput({ lastAgentWrite: 'gamma' }));
     expect(decision).toMatchObject({ rule: RoutingRule.RecentAgent, agent: 'gamma' });
+  });
+
+  test('CU-190 rule 5 with exactly one agent routes to it and sends no list', () => {
+    const decision = routeOwnerMessage(routingInput({ agents: agentRecords('alpha') }));
+    expect(decision).toMatchObject({ rule: RoutingRule.SingleAgent, agent: 'alpha', textForAgent: 'oi', sendsRoutingList: false });
   });
 
   test('CU-80 rule 6 with agents and no open list', () => {

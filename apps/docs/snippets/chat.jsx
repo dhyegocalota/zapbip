@@ -1,4 +1,4 @@
-export const Chat = ({ messages, contact }) => {
+export const Chat = ({ messages, contact = 'zapbip' }) => {
   const teal = '#128C7E';
   const ink = '#111B21';
   const wallpaper = '#ECE5DD';
@@ -10,10 +10,10 @@ export const Chat = ({ messages, contact }) => {
   const thumbnailFrom = '#CFE9E4';
   const thumbnailTo = '#9FD3C7';
   const shadow = '0 1px 0.5px rgba(11, 20, 26, 0.13)';
-  const contactName = contact ? contact : 'zapbip';
 
   const renderTail = (message) => (
     <span
+      aria-hidden="true"
       style={{
         position: 'absolute',
         top: 0,
@@ -28,8 +28,11 @@ export const Chat = ({ messages, contact }) => {
 
   const renderHeader = () => (
     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', background: teal, color: white }}>
-      <span style={{ fontSize: '16px', lineHeight: 1 }}>‹</span>
+      <span aria-hidden="true" style={{ fontSize: '16px', lineHeight: 1 }}>
+        ‹
+      </span>
       <span
+        aria-hidden="true"
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -42,10 +45,10 @@ export const Chat = ({ messages, contact }) => {
           fontWeight: 700,
         }}
       >
-        {contactName.charAt(0).toLowerCase()}
+        {contact.charAt(0).toLowerCase()}
       </span>
       <span style={{ display: 'flex', flexDirection: 'column' }}>
-        <span style={{ fontWeight: 600, fontSize: '15px', lineHeight: 1.2 }}>{contactName}</span>
+        <span style={{ fontWeight: 600, fontSize: '15px', lineHeight: 1.2 }}>{contact}</span>
         <span style={{ fontSize: '11px', opacity: 0.8 }}>online</span>
       </span>
     </div>
@@ -68,6 +71,7 @@ export const Chat = ({ messages, contact }) => {
     >
       {media.kind === 'video' ? (
         <span
+          aria-hidden="true"
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -82,7 +86,7 @@ export const Chat = ({ messages, contact }) => {
           ▶
         </span>
       ) : (
-        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+        <svg aria-hidden="true" width="48" height="48" viewBox="0 0 48 48" fill="none">
           <circle cx="34" cy="14" r="5" fill={white} />
           <path d="M4 40 17 20l9 12 6-8 12 16z" fill={white} opacity="0.85" />
         </svg>
@@ -96,6 +100,7 @@ export const Chat = ({ messages, contact }) => {
   const renderAudio = (media) => (
     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: '200px', marginBottom: '2px' }}>
       <span
+        aria-hidden="true"
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -129,7 +134,7 @@ export const Chat = ({ messages, contact }) => {
         background: wallpaper,
       }}
     >
-      <svg width="28" height="34" viewBox="0 0 28 34" fill="none">
+      <svg aria-hidden="true" width="28" height="34" viewBox="0 0 28 34" fill="none">
         <path d="M2 0h16l10 10v22a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2z" fill={teal} />
         <path d="M18 0l10 10H20a2 2 0 0 1-2-2z" fill={white} opacity="0.5" />
       </svg>
@@ -140,6 +145,7 @@ export const Chat = ({ messages, contact }) => {
   const renderLocation = (media) => (
     <div style={{ marginBottom: '4px', minWidth: '220px' }}>
       <div
+        aria-hidden="true"
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -160,6 +166,7 @@ export const Chat = ({ messages, contact }) => {
     <div style={{ marginBottom: '4px', minWidth: '200px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         <span
+          aria-hidden="true"
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -192,6 +199,7 @@ export const Chat = ({ messages, contact }) => {
 
   const renderSticker = () => (
     <div
+      aria-hidden="true"
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -218,6 +226,11 @@ export const Chat = ({ messages, contact }) => {
     sticker: renderSticker,
   };
 
+  const renderMedia = (media) => {
+    if (!Object.hasOwn(mediaRenderers, media.kind)) return renderDocument(media);
+    return mediaRenderers[media.kind](media);
+  };
+
   const renderQuote = (quote) => (
     <div
       style={{
@@ -237,7 +250,11 @@ export const Chat = ({ messages, contact }) => {
   const renderFooter = (message) => (
     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '3px', fontSize: '11px', color: mutedInk, lineHeight: 1 }}>
       {message.time ? <span>{message.time}</span> : null}
-      {message.you ? <span style={{ color: message.unread ? mutedInk : readTick, fontWeight: 700 }}>✓✓</span> : null}
+      {message.you ? (
+        <span aria-hidden="true" style={{ color: message.unread ? mutedInk : readTick, fontWeight: 700 }}>
+          ✓✓
+        </span>
+      ) : null}
     </div>
   );
 
@@ -275,7 +292,7 @@ export const Chat = ({ messages, contact }) => {
           textAlign: 'center',
         }}
       >
-        ☰ {list.title}
+        <span aria-hidden="true">☰</span> {list.title}
       </span>
       <div style={{ borderRadius: '8px', background: white, boxShadow: shadow, overflow: 'hidden' }}>
         {list.rows.map((row, position) => (
@@ -290,7 +307,10 @@ export const Chat = ({ messages, contact }) => {
             }}
           >
             <span>{row}</span>
-            <span style={{ width: '14px', height: '14px', borderRadius: '50%', border: `2px solid ${mutedInk}`, opacity: 0.5 }} />
+            <span
+              aria-hidden="true"
+              style={{ width: '14px', height: '14px', borderRadius: '50%', border: `2px solid ${mutedInk}`, opacity: 0.5 }}
+            />
           </div>
         ))}
       </div>
@@ -351,7 +371,7 @@ export const Chat = ({ messages, contact }) => {
           {startsRun ? renderTail(message) : null}
           {message.name ? <div style={{ fontSize: '12px', fontWeight: 600, color: teal }}>{message.name}</div> : null}
           {message.quote ? renderQuote(message.quote) : null}
-          {message.media ? mediaRenderers[message.media.kind](message.media) : null}
+          {message.media ? renderMedia(message.media) : null}
           {message.text ? <div>{message.text}</div> : null}
           {renderFooter(message)}
         </div>
@@ -379,6 +399,8 @@ export const Chat = ({ messages, contact }) => {
 
   return (
     <div
+      role="group"
+      aria-label={`WhatsApp: ${contact}`}
       style={{
         width: '100%',
         maxWidth: '360px',

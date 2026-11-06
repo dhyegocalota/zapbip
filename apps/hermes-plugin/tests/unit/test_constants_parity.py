@@ -12,6 +12,7 @@ from typescript_constants import (
     constant_of,
     enum_members_of,
     no_text_by_kind,
+    numeric_enum_member_of,
 )
 
 from zapbip_platform import constants
@@ -30,8 +31,6 @@ CONNECTOR_CONSTANT_NAMES = [
     "RECONNECT_BASE_MS",
     "RECONNECT_MAX_MS",
     "REPLACED_CLOSE_CODE",
-    "UPGRADE_REQUIRED_STATUS",
-    "UNAUTHORIZED_STATUS",
     "CONNECTOR_FRAME_MAX_BYTES",
     "CONNECTOR_PATH_SUFFIX",
     "MCP_PATH_SUFFIX",
@@ -45,6 +44,14 @@ def values_of(*, enum: type[Enum]) -> set[str]:
 @pytest.mark.parametrize("name", CONNECTOR_CONSTANT_NAMES)
 def test_connector_constants_equal_the_shared_ones(name: str) -> None:
     assert getattr(constants, name) == constant_of(source=CONNECTOR_SOURCE, name=name)
+
+
+@pytest.mark.parametrize(
+    ("name", "member"),
+    [("UPGRADE_REQUIRED_STATUS", "UpgradeRequired"), ("UNAUTHORIZED_STATUS", "Unauthorized")],
+)
+def test_http_statuses_equal_the_shared_ones(name: str, member: str) -> None:
+    assert getattr(constants, name) == numeric_enum_member_of(source=ENUMS_SOURCE, enum_name="HttpStatus", member=member)
 
 
 def test_ping_and_pong_texts_equal_the_shared_ones() -> None:

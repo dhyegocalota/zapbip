@@ -6,9 +6,9 @@ import {
   CONNECTOR_PATH_SUFFIX,
   CONNECTOR_PONG_TEXT,
   ConnectorFrameType,
+  HttpStatus,
   MessageDirection,
   MessageKind,
-  UPGRADE_REQUIRED_STATUS,
   WakeMode,
 } from '@zapbip/types';
 import { WebSocketServer, type WebSocket } from 'ws';
@@ -70,7 +70,7 @@ export function framePaddedToBytes(input: { byteLength: number }): string {
 }
 
 export async function startFakeConnector(input: FakeConnectorOptions = {}): Promise<FakeConnector> {
-  const { probeStatus = UPGRADE_REQUIRED_STATUS, failedProbes = 0, autoPong = true, greet = true } = input;
+  const { probeStatus = HttpStatus.UpgradeRequired, failedProbes = 0, autoPong = true, greet = true } = input;
   const sockets: WebSocket[] = [];
   const frames: ReceivedFrame[] = [];
   let waiters: Waiter[] = [];

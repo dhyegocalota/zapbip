@@ -6,10 +6,10 @@ import {
   ConnectorLogEvent,
   HEARTBEAT_INTERVAL_MS,
   HEARTBEAT_TIMEOUT_MS,
+  HttpStatus,
   RECONNECT_BASE_MS,
   RECONNECT_MAX_MS,
   REPLACED_CLOSE_CODE,
-  UPGRADE_REQUIRED_STATUS,
 } from '@zapbip/types';
 import { ABNORMAL_CLOSE_CODE, CLEAN_EXIT_CODE, FAILURE_EXIT_CODE } from './constants';
 import { parseServerFrame } from './frames';
@@ -162,7 +162,7 @@ export async function runConnectorSocket({
 
   const probeStatus = await resolveProbeStatus();
   if (signal.aborted) return CLEAN_EXIT_CODE;
-  if (probeStatus !== UPGRADE_REQUIRED_STATUS) {
+  if (probeStatus !== HttpStatus.UpgradeRequired) {
     log({ event: ConnectorLogEvent.ConnectorClosed, fields: { status: probeStatus } });
     return FAILURE_EXIT_CODE;
   }

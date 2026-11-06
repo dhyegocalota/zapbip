@@ -3,7 +3,6 @@ import { DOCS_ROOT, documentFiles, readRepositoryFile } from './repository-files
 
 const CHAT_IMPORT = "import { Chat } from '/snippets/chat.jsx';";
 const CHAT_USAGE = '<Chat';
-const CHAT_COMPONENT_FILE = 'snippets/chat.jsx';
 const LINE_SEPARATOR = '\n';
 const SPEAKER_LABELS = [
   'Owner',
@@ -29,7 +28,7 @@ const SPEAKER_LABELS = [
 const LABEL_ALTERNATIVES = SPEAKER_LABELS.map((label) => label.replace(' ', '\\s')).join('|');
 const SPEAKER_LINE_PATTERN = new RegExp(`^\\s*(>\\s*)?(\\*{1,2})?(${LABEL_ALTERNATIVES})(\\*{1,2})?(:|\\s{2,}\\S)`, 'i');
 
-const pages = documentFiles('').filter((path) => path !== CHAT_COMPONENT_FILE);
+const pages = documentFiles('');
 
 function speakerLines(page: string): string[] {
   return readRepositoryFile(`${DOCS_ROOT}/${page}`)

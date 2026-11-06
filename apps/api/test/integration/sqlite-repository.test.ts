@@ -228,12 +228,26 @@ describe('SQLite inbox repository', () => {
   it('starts with a closed window and saves a new one', async () => {
     const result = await inRepository(async (repository) => {
       const initial = await repository.findWindow();
-      await repository.saveWindow({ window: { lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: true } });
+      await repository.saveWindow({ window: { lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: true, noticeRetryLocale: null } });
       return { initial, saved: await repository.findWindow() };
     });
     expect(result).toEqual({
-      initial: { lastOwnerMessageAt: null, noticeSentForClosedWindow: false },
-      saved: { lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: true },
+      initial: { lastOwnerMessageAt: null, noticeSentForClosedWindow: false, noticeRetryLocale: null },
+      saved: { lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: true, noticeRetryLocale: null },
+    });
+  });
+
+  it('keeps the locale of a notice that failed with the window', async () => {
+    const saved = await inRepository(async (repository) => {
+      await repository.saveWindow({
+        window: { lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: false, noticeRetryLocale: OwnerLocale.PortugueseBrazil },
+      });
+      return repository.findWindow();
+    });
+    expect(saved).toEqual({
+      lastOwnerMessageAt: BASE_TIME,
+      noticeSentForClosedWindow: false,
+      noticeRetryLocale: OwnerLocale.PortugueseBrazil,
     });
   });
 
@@ -241,7 +255,7 @@ describe('SQLite inbox repository', () => {
     const result = await inRepository(async (repository) => {
       const first = await repository.claimNotice();
       const second = await repository.claimNotice();
-      await repository.saveWindow({ window: { lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: false } });
+      await repository.saveWindow({ window: { lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: false, noticeRetryLocale: null } });
       return { first, second, afterReset: await repository.claimNotice() };
     });
     expect(result).toEqual({ first: true, second: false, afterReset: true });
@@ -398,7 +412,7 @@ describe('SQLite inbox repository', () => {
     const result = await inRepository(async (repository) => {
       const initial = await repository.findRoutingList();
       await repository.saveRoutingList({ routingList });
-      await repository.saveWindow({ window: { lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: false } });
+      await repository.saveWindow({ window: { lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: false, noticeRetryLocale: null } });
       const saved = await repository.findRoutingList();
       await repository.saveRoutingList({ routingList: { ...routingList, reminded: true } });
       const reminded = await repository.findRoutingList();
@@ -428,17 +442,19 @@ describe('SQLite inbox repository', () => {
       reminded: true,
     };
     const result = await inRepository(async (repository) => {
-      await repository.saveWindow({ window: { lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: false } });
+      await repository.saveWindow({ window: { lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: false, noticeRetryLocale: null } });
       await repository.saveRoutingList({ routingList: list });
       await repository.claimNotice();
-      await repository.saveWindow({ window: { lastOwnerMessageAt: BASE_TIME + 5, noticeSentForClosedWindow: true } });
+      await repository.saveWindow({
+        window: { lastOwnerMessageAt: BASE_TIME + 5, noticeSentForClosedWindow: true, noticeRetryLocale: null },
+      });
       const afterWindow = await repository.findRoutingList();
       const window = await repository.findWindow();
       await repository.clearRoutingList();
       return { afterWindow, window, windowAfterClear: await repository.findWindow(), cleared: await repository.findRoutingList() };
     });
     expect(result.afterWindow).toEqual(list);
-    expect(result.window).toEqual({ lastOwnerMessageAt: BASE_TIME + 5, noticeSentForClosedWindow: true });
+    expect(result.window).toEqual({ lastOwnerMessageAt: BASE_TIME + 5, noticeSentForClosedWindow: true, noticeRetryLocale: null });
     expect(result.windowAfterClear).toEqual(result.window);
     expect(result.cleared).toBeNull();
   });
