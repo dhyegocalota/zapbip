@@ -269,6 +269,15 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
       );
     },
 
+    async linkChannelReceipt({ wamid, messageId }) {
+      run('UPDATE channel_receipts SET message_id = ? WHERE wamid = ?', messageId, wamid);
+    },
+
+    async findChannelReceiptMessageId({ wamid }) {
+      const row = first<{ message_id: string | null }>('SELECT message_id FROM channel_receipts WHERE wamid = ?', wamid);
+      return row === null ? null : row.message_id;
+    },
+
     async deleteExpiredReceipts({ receivedBefore }) {
       run('DELETE FROM channel_receipts WHERE received_at < ?', receivedBefore);
     },

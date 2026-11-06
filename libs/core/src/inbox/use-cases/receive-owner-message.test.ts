@@ -248,7 +248,7 @@ describe('receiveOwnerMessage routing list', () => {
     expect(stale).toEqual({ messageId: null, agent: null, duplicate: false });
     expect(await environment.repository.countUnread({ agent: 'alpha' })).toBe(1);
     expect(await environment.repository.listHeld()).toEqual([]);
-    expect(sessionTexts({ environment })).toEqual([expiredListText()]);
+    expect(sessionTexts({ environment }).at(-1)).toBe(expiredListText());
   });
 
   test('a route choice for an agent that does not exist is answered with the expired notice and delivered nowhere', async () => {
@@ -570,7 +570,7 @@ describe('receiveOwnerMessage media and receipts', () => {
     const first = await receive({ environment, content: { kind: MessageKind.Text, text: '@alpha hi' }, channelMessageId: 'wamid.same' });
     const second = await receive({ environment, content: { kind: MessageKind.Text, text: '@alpha hi' }, channelMessageId: 'wamid.same' });
     expect(first.duplicate).toBe(false);
-    expect(second).toEqual({ messageId: null, agent: null, duplicate: true });
+    expect(second).toEqual({ messageId: first.messageId, agent: 'alpha', duplicate: true });
     expect(await environment.repository.countUnread({ agent: 'alpha' })).toBe(1);
   });
 

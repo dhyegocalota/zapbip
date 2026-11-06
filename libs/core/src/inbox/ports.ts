@@ -41,6 +41,8 @@ export interface InboxRepository {
   listOpenQuestions(): Promise<Question[]>;
   saveAnswer(input: { questionId: string; answer: QuestionAnswer }): Promise<void>;
   recordChannelReceipt(input: { wamid: string; receivedAt: number }): Promise<boolean>;
+  linkChannelReceipt(input: { wamid: string; messageId: string }): Promise<void>;
+  findChannelReceiptMessageId(input: { wamid: string }): Promise<string | null>;
   deleteExpiredReceipts(input: { receivedBefore: number }): Promise<void>;
   deleteQuestionsAskedBefore(input: { askedBefore: number }): Promise<void>;
   findWindow(): Promise<OwnerWindow>;

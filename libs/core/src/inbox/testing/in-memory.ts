@@ -59,6 +59,7 @@ export type InMemoryEnvironment = {
 function createInMemoryRepository(): InboxRepository {
   const agents = new Map<AgentName, AgentRecord>();
   const receipts = new Map<string, number>();
+  const receiptMessageIds = new Map<string, string>();
   const media = new Map<string, StoredMedia>();
   let messages: Message[] = [];
   let questions: Question[] = [];
@@ -121,8 +122,17 @@ function createInMemoryRepository(): InboxRepository {
       receipts.set(wamid, receivedAt);
       return true;
     },
+    linkChannelReceipt: async ({ wamid, messageId }) => {
+      receiptMessageIds.set(wamid, messageId);
+    },
+    findChannelReceiptMessageId: async ({ wamid }) => receiptMessageIds.get(wamid) ?? null,
     deleteExpiredReceipts: async ({ receivedBefore }) => {
-      [...receipts].filter(([, receivedAt]) => receivedAt < receivedBefore).forEach(([wamid]) => receipts.delete(wamid));
+      [...receipts]
+        .filter(([, receivedAt]) => receivedAt < receivedBefore)
+        .forEach(([wamid]) => {
+          receipts.delete(wamid);
+          receiptMessageIds.delete(wamid);
+        });
     },
     deleteQuestionsAskedBefore: async ({ askedBefore }) => {
       questions = questions.filter((question) => question.askedAt >= askedBefore);
