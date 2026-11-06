@@ -77,3 +77,57 @@ pnpm --filter @zapbip/docs exec mint broken-links
 ### Known gaps
 
 - The shape test checks substrings, not that a number sits beside the right kind.
+
+## Lane W3 (storage and Durable Object)
+
+### What changed
+
+- `apps/api/migrations/0004_whatsapp_channel.sql`: `channel_restrictions (phone_number_id PRIMARY KEY, error_code, restricted_at)`.
+- `apps/api/src/account-inbox/migrations/{v4.sql,index.ts}`: DO schema `v4` (six `inbox_messages` columns, a unique index on `channel_message_id`, `owner_window.closed_at`), registered beside `v1` in the set-based runner.
+- `apps/api/src/adapters/d1/d1-owner-directory.ts`: `findOwnerByAccountId`; both finders throw naming the stored locale when it is not an `OwnerLocale` member.
+- `apps/api/src/adapters/d1/d1-channel-restrictions.ts`: `D1ChannelRestrictions` (bound parameters, upsert, TTL read). The constructor takes `phoneNumberId` as well as `database`, because the table is keyed by it and `findActive` / `record` carry no id.
+- `apps/api/src/adapters/platform/hash.ts`: `sha256Hex`, `sha256Base64`; `hashConnectionSecret` reuses `sha256Hex`.
+- `apps/api/src/adapters/sqlite/sqlite-inbox-repository.ts`: the seven channel methods and `closedAt`; `commitChannelInbound` is one `transactionSync`. `findNextExpiry` also covers stale `Sending` claims, folded into the queue term because Durable Object SQLite allows at most five compound terms.
+- `apps/api/src/account-inbox/account-inbox.ts`: protected `createSender` (production: Cloud API sender, a missing variable throws naming it), the two channel RPC bodies, `sender` typed `MessageSender`; `apps/api/src/dev/dev-account-inbox.ts` overrides `createSender` (Cloud API when `WHATSAPP_ACCESS_TOKEN` is set, else the fake).
+- `apps/api/src/mcp/wire.ts` and `contract/mcp-schemas.ts`: `media_status` (`"unavailable"` or `null`) on every message wire.
+- `apps/api/test/support/seed.ts`: `applyDirectoryMigration` runs `0001` and `0004`.
+
+### How to run
+
+```bash
+pnpm install --frozen-lockfile
+pnpm typecheck
+pnpm --filter @zapbip/api test:unit
+pnpm --filter @zapbip/api test:integration
+```
+
+### Red today, green after
+
+| Test | Red (commit 4c41f71) printed | Green after |
+|------|------------------------------|-------------|
+| `hash-digests.test.ts` | `sha256Hex is not implemented`, `sha256Base64 is not implemented` | 34860c8 |
+| `mcp-wire.test.ts` | `expected { ... } to match object { media_status: ... }` | 07780a1 |
+| `d1-channel-restrictions.test.ts` | `D1ChannelRestrictions.findActive is not implemented` | 34860c8 |
+| `d1-owner-directory-channel.test.ts` | `findOwnerByAccountId is not implemented`; the locale cases resolved instead of rejecting | 34860c8 |
+| `d1-message-index-channel.test.ts` | pin: green when it landed | n/a |
+| `account-inbox-channel.test.ts` repository cases and `DO schema v4` | `commitChannelInbound`, `saveChannelMessageId`, `saveChannelStatusDetail`, `claimQueuedMessages is not implemented`; v4 columns missing | 34860c8 |
+| `account-inbox-channel.test.ts` WI-8 to WI-16 | `receiveChannelMessage is not implemented` | 07780a1 plus lane W1 (core bodies) and lane W2 (`readWhatsAppEnvironment`, `createGraphClient`, `createCloudApiMessageSender`) |
+
+### Needed from outside this lane
+
+- `apps/api/vitest.integration.config.mts` binds `WHATSAPP_ACCESS_TOKEN`. With W3 merged, `DevAccountInbox` picks the Cloud API sender when that variable is set, so every slice 1 integration test that reads the simulator screen (`account-inbox`, `dev-owner`, `mcp-tools`, `sqlite-repository`, `upload-route`, `mcp-inline-images`) fails. With the binding removed, 192 of 192 pass once W1 and W2 are merged. The file is W0's: remove the `WHATSAPP_ACCESS_TOKEN` line, and let tests that need the Cloud API sender select it as `account-inbox-channel.test.ts` does (`Object.create(instance, {env})`).
+- `apps/api/test/integration/account-inbox.test.ts` WI-118 now expects `[1, 4]` (the new migration changes that slice 1 assertion; edited in 34860c8).
+- `contract/mcp-schemas.ts` (not on W3's list) gained `media_status`; without it `wire.ts` cannot type the field.
+
+### Hypotheses to attack
+
+1. Hypothesis: a retry after a throw before the commit stores once, after the commit returns `duplicate: true`. Break it by: throw inside `commitChannelInbound`, then inside the waker; count `channel_receipts` and owner messages.
+2. Hypothesis: `claimQueuedMessages` never hands the same message to two callers. Break it by: two concurrent `flush` calls against one queue.
+3. Hypothesis: a stale restriction is ignored exactly at the TTL. Break it by: `findActive` at `restricted_at + RESTRICTION_TTL_MS - 1` and `+ RESTRICTION_TTL_MS`.
+4. Hypothesis: the production bundle carries no fake sender. Break it by: grep the production bundle for `createFakeWhatsAppSender`.
+5. Hypothesis: `migrations/0004` applies cleanly on a database that already has `0001`. Break it by: `wrangler d1 migrations apply` against a copy.
+
+### Known gaps
+
+- WI-8 to WI-16 cannot go green until W1's and W2's bodies are merged here; verified in a throwaway merge of both local branches (see the report).
+- The Cloud API sender path is exercised only through the selection tests; real sends belong to W2's `whatsapp-outbound.test.ts`.
