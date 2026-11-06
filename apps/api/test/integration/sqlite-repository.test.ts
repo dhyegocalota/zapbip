@@ -410,7 +410,7 @@ describe('SQLite inbox repository', () => {
       return { afterWindow, window, windowAfterClear: await repository.findWindow(), cleared: await repository.findRoutingList() };
     });
     expect(result.afterWindow).toEqual(list);
-    expect(result.window).toEqual({ lastOwnerMessageAt: BASE_TIME + 5, noticeSentForClosedWindow: true });
+    expect(result.window).toEqual({ lastOwnerMessageAt: BASE_TIME + 5, noticeSentForClosedWindow: true, closedAt: null });
     expect(result.windowAfterClear).toEqual(result.window);
     expect(result.cleared).toBeNull();
   });
