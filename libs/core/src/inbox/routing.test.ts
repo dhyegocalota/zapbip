@@ -148,6 +148,13 @@ describe('routeOwnerMessage', () => {
     expect(decision).toMatchObject({ agent: 'alpha', answersQuestionId: 'qst_1', textForAgent: 'sim' });
   });
 
+  test('rule 5 is suspended while a routing list is open', () => {
+    const decision = routeOwnerMessage(
+      routingInput({ lastAgentWrite: 'gamma', agents: agentRecords('gamma', 'delta'), routingListOpen: true }),
+    );
+    expect(decision).toMatchObject({ rule: RoutingRule.AskOwner, agent: null, sendsRoutingList: false });
+  });
+
   test('CU-79 rule 5 recent agent', () => {
     const decision = routeOwnerMessage(routingInput({ lastAgentWrite: 'gamma' }));
     expect(decision).toMatchObject({ rule: RoutingRule.RecentAgent, agent: 'gamma' });

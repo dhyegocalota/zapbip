@@ -77,3 +77,54 @@ pnpm --filter @zapbip/docs exec mint broken-links
 ### Known gaps
 
 - The shape test checks substrings, not that a number sits beside the right kind.
+
+## Lane W1 (core)
+
+### What changed
+
+- `libs/core/src/inbox/use-cases/{status-rule,close-window,open-window,apply-status,claim-queued,receive-channel-message,flush-queue,deliver-to-owner,sweep-expired}.ts` — bodies. `window.ts` honours `closedAt`.
+- New helper modules beside them: `owner-placement.ts` (placement, plan, builders), `owner-arrival.ts` (wake, route, prompt, `finishArrival`), `session-delivery.ts` (one session attempt, classified; sent and failure records), `notice-owner.ts` (the closed-window notice). `receive-owner-message.ts` now builds on them; slice 1's tests are unchanged and green.
+- `libs/core/src/inbox/claim-constants.ts` (new) — `FLUSH_CLAIM_LIMIT` and `SENDING_STALE_MS`. The core cannot import the copies in `apps/api/.../whatsapp-constants.ts`, and `constants.ts` is not this lane's, so the core owns these two names. The `apps/api` copies are redundant and can import them once `index.ts` exports the file.
+- `libs/core/src/inbox/testing/in-memory.ts` — the channel port bodies, `findStatusDetail` and `findClaimedAt` read helpers, and a recording sender that keeps `sessionRequests`, takes an `error` for `failSessionCalls` and `failTemplateCalls`, and gates sessions. `testing/channel-fixtures.ts` is new test support.
+- Behaviour: one `transaction` is the in-memory `commitChannelInbound` (receipt, message, answer, media record and window). A duplicate returns the original `messageId` and `agent` (looked up by channel id). `deliverToOwner` with an open window goes through `flushQueue` (slice 1's serializer, so a send cannot overtake the queue) and reads the outcome. Every flush claims its messages as `Sending` first, sends one by one, records `Failed` per message with Meta's `errorCode`, and stops at the first `WindowClosed` (rest back to `Queued`, `closeWindow`, one notice).
+- The merge of `origin/feat/agent-inbox-core` (rule 6, queue order, `hasLiveWaiter`, original id on duplicate, `RoutingListExpired`) is reconciled in 25e7e1b. `apps/docs/docs.json` was a conflict in a file this lane does not own: it took slice 1's bilingual structure and added `concepts/whatsapp-channel` and `concepts/owner-notices` to the English Concepts group. The Portuguese twins slice 1's docs test requires do not exist; W5 or the lead owns that.
+
+### How to run
+
+```bash
+pnpm install --frozen-lockfile
+pnpm --filter @zapbip/core test:unit
+pnpm typecheck
+```
+
+### Red today, green after
+
+| Test | Red before the change because | Green after because |
+|------|--------------------------------|---------------------|
+| `status-rule.test.ts` (16) | `d359dc6`: `applyStatusRule is not implemented` (14), `mergeChannelStatusDetail is not implemented` (2) | `1d9d18e` |
+| `window.test.ts` CU-13 | `d359dc6`: `expected true to be false` | `1d9d18e` |
+| `in-memory.test.ts` channel ports (8) | `60d128b`: `commitChannelInbound`, `claimQueuedMessages`, `saveChannelMessageId`, `saveChannelStatusDetail` `is not implemented` | `2c2c4a2` |
+| `receive-channel-message`, `open-window`, `claim-queued`, `close-window`, `apply-status` tests | `9ade281`: `receiveChannelMessage` (16), `openWindow` (10), `applyStatus` (8), `claimQueued` (4), `closeWindow` (3) `is not implemented` | `737f60a` |
+| `deliver-to-owner-channel.test.ts` CU-32, 34, 36, 37, 42 | `9ade281`: sender errors all became `delivery_failed`, no channel ids reached the sender, e.g. `expected null to be 'wamid.session.1'` | `737f60a` |
+| `sweep-expired.test.ts` CU-38b and the due-time case | `9ade281`: stale claims never released | `737f60a` |
+| `receive-channel-message.test.ts` CU-17 | `93821ec`: `expected { messageId: null, agent: null, duplicate: true } to deeply equal { messageId: 'msg_1', agent: 'alpha', duplicate: true }` | `5fe44ee` |
+| `status-rule` impl typecheck | n/a | `94375a2` fixed a TS2531 in `1d9d18e` |
+
+Pins: the window-only repeat case in `receive-channel-message.test.ts` was green on landing (`93821ec`). Four setup mistakes in my own red tests (CU-31, CU-35, CU-37, CU-23: a `Queued` start for a status sequence, sender call numbers consumed by owner-side replies) were corrected in `737f60a`.
+
+### Hypotheses to attack
+
+1. Hypothesis: two concurrent flushes never send one message twice, and a new session send never overtakes a running flush. Break it by: CU-24c with the gate, plus a third `deliverToOwner` started while the gate is closed; read `sessionRequests` order.
+2. Hypothesis: a throw before `commitChannelInbound` leaves nothing and the retry stores once; a throw after it leaves one message and the retry is `duplicate: true` with the original ids. Break it by: make the repository or waker throw at each await of `receiveChannelMessage`.
+3. Hypothesis: the status rule table of the spec holds for every pair, including `Sending` and `Expired` as current states (the rule answers "no change"). Break it by: feeding `Sending` then `Sent` through `applyStatus` while a flush is mid-send.
+4. Hypothesis: `WindowClosed` during a flush leaves every unsent message `Queued`, the window closed at `clock.now()`, and exactly one template call, even when the first queued message has `agent: null`. Break it by: a queue whose first message is a routing list.
+5. Hypothesis: an unknown reaction target keeps the channel id as `targetMessageId` and routing then finds no referenced message. Break it by: CU-44 variants with a channel id equal to a core message id.
+
+### Known gaps
+
+- `applyStatus` cannot log `status.failed.ignored`: the core has no logger, and `ApplyStatusResult` is `{applied}` only (contract). `applyStatusRule` still returns `logged`; W3 or W4 cannot see it. A later contract change could carry it.
+- `claimQueued` takes only `dependencies` (contract), so CU-25 claims `FLUSH_CLAIM_LIMIT` of `FLUSH_CLAIM_LIMIT` + 3 instead of `limit: 2`.
+- A status that arrives while a message is `Sending` (wamid saved, `Sent` not yet written) is ignored by the rule, and `recordSent` then writes `Sent` over nothing. The window is one await wide and only the Graph path can reach it.
+- A notice that fails inside a flush is swallowed after the notice is released, so the next flush retries; the message that triggered a `deliverToOwner` flush gets the failure, a flush started by `openWindow` or `receiveChannelMessage` does not report it.
+- The SQLite adapter (W3) must mirror the in-memory bodies: `commitChannelInbound` stores `channelMessageId` on the message so `findMessageByChannelMessageId` finds it; `claimQueuedMessages` orders like `listQueued`; `findNextExpiry` includes `claimed_at + SENDING_STALE_MS`; `saveChannelMessageId` keeps the first write. Until then the API integration tests that send through the SQLite repository stop at its W0b stubs.
+- `receiveOwnerMessage` (the simulator path) now calls `saveChannelMessageId` so a reaction to an owner message has a channel id to target.

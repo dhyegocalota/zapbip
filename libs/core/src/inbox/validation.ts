@@ -76,7 +76,7 @@ export function parseEmoji(input: { emoji: string }): string | null {
 
 export function assertHttpsLink(input: { value: string }): void {
   const isHttps = URL.canParse(input.value) && new URL(input.value).protocol === HTTPS_PROTOCOL;
-  if (!isHttps) throw invalidInput({ message: 'link: must be an https URL' });
+  if (!isHttps) throw invalidInput({ message: 'url: must be an https URL' });
 }
 
 export function assertMediaFits(input: { kind: MediaMessageKind; mimeType: string | null; sizeBytes: number | null }): void {
