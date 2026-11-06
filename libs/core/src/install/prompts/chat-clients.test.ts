@@ -86,3 +86,9 @@ describe.each([
     },
   );
 });
+
+describe('Hermes allowlist', () => {
+  test.each([OwnerLocale.PortugueseBrazil, OwnerLocale.EnglishUs])('sets the owner as an allowed user in %s', (sectionLocale) => {
+    expect(renderHermesSection(sectionInput({ locale: sectionLocale }))).toContain('ZAPBIP_ALLOWED_USERS=owner');
+  });
+});

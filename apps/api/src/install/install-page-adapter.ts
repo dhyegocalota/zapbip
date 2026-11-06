@@ -2,12 +2,10 @@ import type { ConnectionRecord, StandbyCandidate } from '@zapbip/core';
 import { D1ConnectionRegistry } from '../adapters/d1/d1-connection-registry';
 import { D1InstallCodeDirectory } from '../adapters/d1/d1-install-code-directory';
 import { createInstallCodeVault } from '../adapters/platform/install-code-vault';
-import type { AccountInboxRpc } from '../contract/account-inbox-rpc';
+import type { WakeModeEntry } from '../contract/account-inbox-rpc';
 import type { Bindings } from '../contract/env';
 import { accountInboxOf } from '../routes/account-inbox-stub';
-import type { InstallPageRouteDependencies, WakeModeEntry } from '../routes/install-page';
-
-type WakeModesInbox = AccountInboxRpc & { listWakeModes(): Promise<WakeModeEntry[]> };
+import type { InstallPageRouteDependencies } from '../routes/install-page';
 
 export function createInstallCodeDirectory(input: { environment: Bindings }): D1InstallCodeDirectory {
   return new D1InstallCodeDirectory({
@@ -30,7 +28,7 @@ export function createInstallPageDependencies(input: { environment: Bindings }):
   return {
     installCodeDirectory: createInstallCodeDirectory({ environment }),
     connectionRegistry: new D1ConnectionRegistry({ database: environment.CONNECTIONS }),
-    readWakeModes: ({ accountId }) => accountInboxOf<WakeModesInbox>({ bindings: environment, accountId }).listWakeModes(),
+    readWakeModes: ({ accountId }) => accountInboxOf({ bindings: environment, accountId }).listWakeModes(),
     limiter: environment.INSTALL_PAGE_LIMITER,
   };
 }

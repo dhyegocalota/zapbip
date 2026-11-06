@@ -15,7 +15,8 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createConnectionSecrets } from '../../src/adapters/platform/connection-secrets';
 import { CONNECTION_SECRET_PREFIX } from '../../src/contract/constants';
-import { createInstallPageRoute, type WakeModeEntry } from '../../src/routes/install-page';
+import type { WakeModeEntry } from '../../src/contract/account-inbox-rpc';
+import { createInstallPageRoute } from '../../src/routes/install-page';
 import { createFakeRateLimiter } from '../support/fake-rate-limiter';
 import { connectionRegistry, installCodeDirectory, issueInstallCodeColumns, registerWithInstallCode } from '../support/install-codes';
 import { applyDirectoryMigration, seedOwnerIdentity } from '../support/seed';
@@ -254,6 +255,32 @@ describe('install page security', () => {
   it('answers 400 when the client address is missing', async () => {
     const response = await buildRoute({}).request(`${INSTALL_PAGE_PATH_PREFIX}${randomInstallCode()}`);
     expect(response.status).toBe(400);
+  });
+});
+
+describe('install page brute force', () => {
+  it('IS-S1 answers 404 for a malformed code without any lookup', async () => {
+    const directory = installCodeDirectory();
+    const resolve = vi.spyOn(directory, 'resolve');
+    const route = buildRoute({ directory });
+    const responses = await Promise.all(
+      ['zb_inst_short', 'nope', `${INSTALL_CODE_PREFIX}${'a'.repeat(80)}`, 'zb_inst_%20%20%20%20%20%20%20%20%20%20%20%20'].map(
+        (installCode) => getPage({ route, installCode }),
+      ),
+    );
+    expect(responses.map((response) => response.status)).toEqual([404, 404, 404, 404]);
+    expect(resolve).not.toHaveBeenCalled();
+  });
+
+  it('IS-S1 limits many random codes by client address and never resolves the limited ones', async () => {
+    const directory = installCodeDirectory();
+    const resolve = vi.spyOn(directory, 'resolve');
+    const route = buildRoute({ directory, limiter: createFakeRateLimiter({ limit: INSTALL_PAGE_REQUESTS_PER_MINUTE }) });
+    const attempts = INSTALL_PAGE_REQUESTS_PER_MINUTE * 3;
+    const responses = await Promise.all(Array.from({ length: attempts }, () => getPage({ route, installCode: randomInstallCode() })));
+    const limitedCount = responses.filter((response) => response.status === 429).length;
+    expect(limitedCount).toBe(attempts - INSTALL_PAGE_REQUESTS_PER_MINUTE);
+    expect(resolve).toHaveBeenCalledTimes(INSTALL_PAGE_REQUESTS_PER_MINUTE);
   });
 });
 

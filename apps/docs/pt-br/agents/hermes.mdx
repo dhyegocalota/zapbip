@@ -30,7 +30,7 @@ description: Conecte Hermes ao seu WhatsApp.
     Ele adiciona um servidor MCP chamado `zapbip` em `<connectionLink>`, com `url` e `headers`, em `mcp_servers` no `config.yaml`.
   </Step>
   <Step title="Instalar o plugin de plataforma">
-    A melhor opção: ele instala e ativa o plugin de plataforma do zapbip e chama `set_wake({mode: "local"})`.
+    A melhor opção: ele instala e ativa o plugin de plataforma do zapbip com `ZAPBIP_ALLOWED_USERS=owner` definido, porque o Hermes recusa suas mensagens sem isso, e chama `set_wake({mode: "local"})`.
   </Step>
   <Step title="Ou manter um acompanhamento em segundo plano">
     Ele roda `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@<version> listen` com `terminal(background=true, watch_patterns=…)`. Ou cria um job de `cronjob_manage` a cada minuto que chama `check_inbox`. Depois chama `set_wake({mode: "scheduled", interval_minutes: 1})`. Um acompanhamento que consulta custa chamadas ao modelo, e o Hermes avisa você disso. `<version>` é a versão exata que as instruções da sua IA indicam.

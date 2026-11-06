@@ -1,4 +1,5 @@
 import {
+  INSTALL_PAGE_COPY,
   pickStandbyAgent,
   RATE_LIMIT_PERIOD_MS,
   renderInstallPage,
@@ -6,14 +7,13 @@ import {
   type InstallCodeDirectory,
   type InstallCodeResolution,
 } from '@zapbip/core';
-import { INSTALL_PAGE_PATH_PREFIX, InstallCodeStatus, SECOND_MS, type WakeMode } from '@zapbip/types';
+import { INSTALL_PAGE_PATH_PREFIX, InstallCodeStatus, SECOND_MS } from '@zapbip/types';
+import { INSTALL_CODE_PREFIX, INSTALL_CODE_RANDOM_BYTES } from '@zapbip/types';
 import { Hono, type Context } from 'hono';
 import { createPlatformClock } from '../adapters/platform/clock';
 import { joinStandbyCandidates } from '../install/install-page-adapter';
+import type { WakeModeEntry } from '../contract/account-inbox-rpc';
 import { HttpStatus } from './http-status';
-import { INSTALL_PAGE_GONE_TEXT } from './install-page-copy';
-
-export type WakeModeEntry = { agent: string; wakeMode: WakeMode };
 
 export type RateLimiter = {
   limit(input: { key: string }): Promise<{ success: boolean }>;
@@ -26,6 +26,10 @@ export type InstallPageRouteDependencies = {
   limiter: RateLimiter;
 };
 
+const BASE64_BITS_PER_CHARACTER = 6;
+const BITS_PER_BYTE = 8;
+const INSTALL_CODE_BODY_LENGTH = Math.ceil((INSTALL_CODE_RANDOM_BYTES * BITS_PER_BYTE) / BASE64_BITS_PER_CHARACTER);
+const INSTALL_CODE_PATTERN = new RegExp(`^${INSTALL_CODE_PREFIX}[A-Za-z0-9_-]{${INSTALL_CODE_BODY_LENGTH}}$`);
 const CLIENT_ADDRESS_HEADER = 'cf-connecting-ip';
 const INSTALL_CODE_PARAMETER = 'installCode';
 const MARKDOWN_CONTENT_TYPE = 'text/markdown; charset=utf-8';
@@ -76,10 +80,11 @@ export function createInstallPageRoute(input: InstallPageRouteDependencies): Hon
     }
     const installCode = context.req.param(INSTALL_CODE_PARAMETER);
     if (installCode === undefined) return plainResponse({ body: NOT_FOUND_TEXT, status: HttpStatus.NotFound });
+    if (!INSTALL_CODE_PATTERN.test(installCode)) return plainResponse({ body: NOT_FOUND_TEXT, status: HttpStatus.NotFound });
     const resolution = await input.installCodeDirectory.resolve({ installCode, now: createPlatformClock().now() });
     if (resolution.status === InstallCodeStatus.Unknown) return plainResponse({ body: NOT_FOUND_TEXT, status: HttpStatus.NotFound });
     if (resolution.status !== InstallCodeStatus.Ready) {
-      return plainResponse({ body: INSTALL_PAGE_GONE_TEXT[resolution.locale], status: HttpStatus.Gone });
+      return plainResponse({ body: INSTALL_PAGE_COPY[resolution.locale].expired, status: HttpStatus.Gone });
     }
     return renderReady(resolution);
   }

@@ -13,7 +13,7 @@ Contract only, no behaviour change. `InstallClient` (ten clients), `WakeMode` an
 - `apps/api/src/mcp/client-name.ts`: `readInitializeClientName` (zod `safeParse` inside a `try` around the JSON parse), `recordConnectionActivity` (POST only; first-call write when `firstCallAt` is `null`; name write when `clientName` is `null` and `Content-Length` is present and at most `INITIALIZE_BODY_MAX_BYTES`; both handed to `schedule`) and `createConnectionRecorders` (`UPDATE connections SET client_name = ? WHERE id = ? AND client_name IS NULL`).
 - `apps/api/src/routes/mcp.ts`: after `resolveConnection`, loads the connection record with `findActiveByAgent` and calls `recordConnectionActivity` with `executionCtx.waitUntil`.
 - `apps/api/src/mcp/server.ts`: `instructions: AGENT_RULES` and the `zapbip-rules` prompt.
-- `apps/api/src/routes/install-page.ts` (+ `install-page-copy.ts`): `GET /i/:installCode`. Order: client address (`cf-connecting-ip`, `400` when missing), limiter (`429` + `Retry-After: 60`), `InstallCodeDirectory.resolve`, then `404` (Unknown), `410` localized (Expired, Used) or the Markdown page (Ready). Every response carries `Cache-Control: no-store` and `X-Robots-Tag: noindex`.
+- `apps/api/src/routes/install-page.ts`: `GET /i/:installCode`. Order: client address (`cf-connecting-ip`, `400` when missing), limiter (`429` + `Retry-After: 60`), `InstallCodeDirectory.resolve`, then `404` (Unknown), `410` localized (Expired, Used) or the Markdown page (Ready). Every response carries `Cache-Control: no-store` and `X-Robots-Tag: noindex`.
 - `apps/api/src/install/install-page-adapter.ts`: `joinStandbyCandidates`, `createInstallCodeDirectory` and `createInstallPageDependencies`; `app.ts` mounts the route at `/i/*`, building the dependencies per request.
 - `INSTALL_PAGE_LIMITER` binding (`wrangler.jsonc`, both environments, namespace `1004`, 30 per 60 s), `Bindings`, `HttpStatus.TooManyRequests`, `wrangler-limits.test.ts` ties it to `INSTALL_PAGE_REQUESTS_PER_MINUTE`.
 - `index.ts` and `index.dev.ts` pass the `ExecutionContext` to `app.fetch`; `production-entry.test.ts` passes `createExecutionContext()`.
@@ -48,10 +48,10 @@ Cases that stay red until L1 merges (they reach `renderInstallPage` or `pickStan
 ### Known gaps
 
 - `webhook-wake` is not in this branch: `listWakeModes` does not exist on `AccountInbox`, `AccountInboxRpc` or `WakeRepository` yet. `createInstallPageDependencies` calls `accountInboxOf<AccountInboxRpc & { listWakeModes }>(…).listWakeModes()`, so a `Ready` page served by the mounted app fails until the webhook-wake merge adds that method (a `SELECT agent, mode FROM agent_wake` returning `{agent, wakeMode}[]`). The route cases pass a fake `readWakeModes`, so the gated tests do not see it. The merge of `origin/feat/webhook-wake` into this lane conflicts in 12 files (`account-inbox.ts`, `constants.ts`, migrations, `env.ts`, `log.ts`, e2e `global-setup.ts`, `account-inbox.test.ts`, both README indexes, `receive-owner-message.ts`, `libs/core/src/index.ts`, `libs/types/src/enums.ts`), so it was aborted and left to the lead.
-- The `410` text is a route-local copy (`apps/api/src/routes/install-page-copy.ts`) because the core `INSTALL_PAGE_COPY` is still a stub of unknown shape; dedupe against L1's copy when it lands.
+- The `410` text comes from the core `INSTALL_PAGE_COPY[locale].expired` (deduped at integration; the route-local copy is gone).
 - `readWakeModes` takes `{ accountId }` (the S0 stub took no argument, but the account is only known after the lookup).
 - IS-S3 and IS-S4 (the store holds no plaintext, the seal opens only with the code) and IS-S1 are `accounts-and-keys` tests and were not rewritten here. IS-S5 asserts only that nothing is logged by the route.
-- A request without `cf-connecting-ip` gets `400`; Cloudflare sets the header in production; that `wrangler dev` sets it is unverified (OR script).
+- A request without `cf-connecting-ip` gets `400`; `wrangler dev --env development` was checked locally on 2026-11-06 and sets the header (a plain curl got 404, not 400), so local needs no special case (owner delegated 2026-11-06).
 - `firstCallAt` is written on the first POST that resolves a connection, whatever the tool or its outcome, per assumption A6.
 
 ## What changed
@@ -117,7 +117,7 @@ pnpm --filter @zapbip/core test:unit
 
 - `WakeMode.Local` is not in `libs/types` (not mine). `pickStandbyAgent` excludes `None`, `Scheduled` and `Standby`, so a `local` value passes; the tests cast `'local' as WakeMode`. Add `Local` when local-connector's enum lands.
 - `ZAPBIP_NPM_VERSION = '0.1.0'` sits in `prompts/connector-commands.ts` because `libs/types` is not mine and `apps/connector/package.json` has no version; move it to `libs/types/src/constants.ts` and bump it to the published version.
-- The Claude Code channel command is the briefed one and unverified (OR-11); Hermes and OpenClaw commands carry `(verify)`.
+- The Claude Code channel command is confirmed (POC and the local-connector E2E walk, 2026-11-06); Hermes and OpenClaw commands carry `(verify)`.
 - The plan text says eight section tests and 14 snapshots; the lane writes 5 section test files for ten clients and 22 snapshots (A12).
 
 ## Lane L3 (docs, parity, owner-run script)
@@ -155,3 +155,13 @@ Known gaps:
 - The guides state the Claude Code channel launch command from the cross-slice decisions; the section may not mention it (not in the action pattern).
 - `install-guides.test.ts` imports `../../../libs/types/src/enums` by relative path because `tools/repository-shape/package.json` has no `@zapbip/types` dependency and L3 does not own it.
 - `claude-code.sh` was run only through `bash -n` and `--check-redaction`; the live run needs `claude`, `wrangler dev` and the owner. It stops `pnpm` but may leave a `workerd` child to exit with its parent.
+
+## Integration (install-skills integrator)
+
+- Merged l1, l2, l3 with `--no-ff`; the tester-briefing conflict was resolved as a union.
+- `listWakeModes` did not exist on `feat/webhook-wake`; it is implemented on the `AccountInbox` DO as a typed RPC (`AccountInboxRpc.listWakeModes`, `WakeModeEntry` in `apps/api/src/contract/account-inbox-rpc.ts`), reading `agent_wake` (`SELECT agent, mode`). Test through the mounted app: `apps/api/test/integration/install-page-wake-modes.test.ts` (red commit: `Error: listWakeModes is not implemented`, page answers 500).
+- Cross-slice note: at the webhook-wake merge, `listWakeModes` must read through its wake repository port (the `agent_wake` table there); expect a conflict in `account-inbox.ts` and `account-inbox-rpc.ts`.
+- The route validates the install code pattern after the rate limit and before any D1 read (malformed gives 404, no lookup); brute-force tests `IS-S1` in `install-page.test.ts`.
+- The Hermes section sets `ZAPBIP_ALLOWED_USERS=owner` for the platform plugin (request from the hermes-openclaw lane), in the copy, both snapshots, both guides and `chat-clients.test.ts`.
+- `ZAPBIP_NPM_VERSION` and `WakeMode.Local` stay local to this slice; they move to `libs/types` at the local-connector merge.
+- 410 text now comes from `INSTALL_PAGE_COPY[locale].expired`; `tools/repository-shape` depends on `@zapbip/types`.

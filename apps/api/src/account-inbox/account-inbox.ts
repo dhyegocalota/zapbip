@@ -21,7 +21,7 @@ import type {
   WaitForReplyInput,
   WaitForReplyResult,
 } from '@zapbip/core';
-import { AccountState, ChannelErrorKind } from '@zapbip/types';
+import { AccountState, ChannelErrorKind, type WakeMode } from '@zapbip/types';
 import { D1AccountDirectory } from '../adapters/d1/d1-account-directory';
 import { D1ConnectionRegistry } from '../adapters/d1/d1-connection-registry';
 import { createFakeWhatsAppSender, type FakeWhatsAppSender } from '../adapters/fake/fake-whatsapp-sender';
@@ -32,7 +32,7 @@ import { loadDurableClock, type DurableClock } from '../adapters/platform/clock'
 import { mediaStoreOf } from '../adapters/r2/r2-media-store';
 import { createSqliteInboxRepository } from '../adapters/sqlite/sqlite-inbox-repository';
 import { createNoneWaker } from '../adapters/wake/none-waker';
-import type { AccountInboxRpc, AgentRequest, CallOutcome } from '../contract/account-inbox-rpc';
+import type { AccountInboxRpc, AgentRequest, CallOutcome, WakeModeEntry } from '../contract/account-inbox-rpc';
 import type { AccountOwnerRpc } from '../contract/account-owner-rpc';
 import type { DueTimeProvider } from '../contract/due-time-provider';
 import type { Bindings } from '../contract/env';
@@ -46,7 +46,10 @@ import { createSqliteFirstMessageClaim } from './first-message-claim';
 import { ACCOUNT_INBOX_MIGRATIONS } from './migrations';
 import { runMigrations } from './run-migrations';
 
+const SELECT_WAKE_MODES_STATEMENT = 'SELECT agent, mode FROM agent_wake';
 const RECORD_STATE_STATEMENT = 'INSERT INTO account_facts (id, state) VALUES (1, ?) ON CONFLICT (id) DO UPDATE SET state = excluded.state';
+
+type WakeModeRow = { agent: string; mode: WakeMode };
 
 type ReceiveAccountMessageRequest = Parameters<AccountOwnerRpc['receiveAccountMessage']>[0];
 type ReceiveOwnerMessageRequest = Parameters<AccountInboxRpc['receiveOwnerMessage']>[0];
@@ -274,6 +277,14 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
   async cancelWaiters(input: { agent: string }): Promise<void> {
     this.assertLive();
     this.dependencies.waiters.cancelAgent(input);
+  }
+
+  async listWakeModes(): Promise<WakeModeEntry[]> {
+    this.assertLive();
+    return this.ctx.storage.sql
+      .exec<WakeModeRow>(SELECT_WAKE_MODES_STATEMENT)
+      .toArray()
+      .map((row) => ({ agent: row.agent, wakeMode: row.mode }));
   }
 
   async setState(input: { state: AccountState }): Promise<void> {

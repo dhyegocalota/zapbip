@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { InstallClient, OwnerLocale } from '../../../libs/types/src/enums';
+import { InstallClient, OwnerLocale } from '@zapbip/types';
 import { readRepositoryFile } from './repository-files';
 
 const DOCS_CONFIG = 'apps/docs/docs.json';

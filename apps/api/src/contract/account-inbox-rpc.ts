@@ -20,9 +20,11 @@ import type {
   CoreDependencies,
   StoredMedia,
 } from '@zapbip/core';
-import type { InboxErrorCode, ChannelErrorKind, OwnerLocale, TemplateKind } from '@zapbip/types';
+import type { InboxErrorCode, ChannelErrorKind, OwnerLocale, TemplateKind, WakeMode } from '@zapbip/types';
 
 export type CallOutcome<Value> = { ok: true; value: Value } | { ok: false; errorCode: InboxErrorCode | ChannelErrorKind; message: string };
+
+export type WakeModeEntry = { agent: string; wakeMode: WakeMode };
 
 export type AgentRequest<Input extends { dependencies: CoreDependencies }> = Omit<Input, 'dependencies'>;
 
@@ -54,6 +56,7 @@ export interface AccountInboxRpc {
     channelMessageId: string;
     ownerMessage: OwnerInboundMessage;
   }): Promise<CallOutcome<{ messageId: string | null; agent: string | null; duplicate: boolean }>>;
+  listWakeModes(): Promise<WakeModeEntry[]>;
 }
 
 export interface DevAccountInboxRpc extends AccountInboxRpc {
