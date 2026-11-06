@@ -102,3 +102,12 @@ export function replaceWakeDependencies(input: { stub: DurableObjectStub<Account
     Object.assign((instance as unknown as { wake: WakeDependencies }).wake, input.patch);
   });
 }
+
+export function readLastRequestedAt(input: { stub: DurableObjectStub<AccountInbox>; agent?: AgentName }): Promise<number> {
+  const agent = input.agent === undefined ? WAKE_AGENT : input.agent;
+  return runInDurableObject(input.stub, async (instance) => {
+    const lastRequestedAt = await (instance as unknown as { wake: WakeDependencies }).wake.repository.findLastRequestedAt({ agent });
+    if (lastRequestedAt === null) throw new Error('no wake was requested');
+    return lastRequestedAt;
+  });
+}

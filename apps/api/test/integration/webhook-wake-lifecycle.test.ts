@@ -12,6 +12,7 @@ import {
   enableGrokWake,
   expectOk,
   mentionText,
+  readLastRequestedAt,
   readRequests,
   readWakeJobs,
   replaceWakeDependencies,
@@ -93,7 +94,7 @@ describe('webhook wake lifecycle', () => {
     await running;
     const [followUp] = await readWakeJobs({ stub });
     expect(followUp).toMatchObject({ attempt: 0, rewake: 0, lease_until: null });
-    expect(followUp!.due_at - sentAt[0]!).toBeGreaterThanOrEqual(MIN_INTERVAL_MS);
+    expect(followUp!.due_at - (await readLastRequestedAt({ stub }))).toBeGreaterThanOrEqual(MIN_INTERVAL_MS);
     await alarmAfter({ advanceMs: MIN_INTERVAL_MS });
     expect(sentAt).toHaveLength(2);
   });
