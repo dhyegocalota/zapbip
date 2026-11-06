@@ -1,6 +1,6 @@
 import { DeliveryState, OwnerLocale, TemplateKind } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
-import { NOTICE_RETRY_MS } from '../constants';
+import { NOTICE_FAILED_MESSAGE, NOTICE_RETRY_BACKOFF_FACTOR, NOTICE_RETRY_MAX_MS, NOTICE_RETRY_MS } from '../constants';
 import { captureInboxError } from '../testing/capture-inbox-error';
 import { closeWindow, connectionOf, createEnvironment, openWindow } from '../testing/fixtures';
 import type { InMemoryEnvironment } from '../testing/in-memory';
@@ -43,20 +43,59 @@ describe('retryNotice', () => {
     expect(await findNoticeRetryDueAt({ dependencies: environment.dependencies })).toBeNull();
   });
 
-  test('CU-94e a persistent failure makes one attempt and one new due time per interval', async () => {
+  test('CU-94e a persistent failure doubles the spacing of each attempt', async () => {
     const environment = await createEnvironment();
     await sendWithFailingNotice({ environment, failingCalls: [1, 2, 3, 4] });
-    const attempts = [1, 2, 3];
-    await attempts.reduce(async (previous) => {
+    const spacings = [1, 2, 3].map((attempt) => NOTICE_RETRY_MS * NOTICE_RETRY_BACKOFF_FACTOR ** (attempt - 1));
+    await spacings.reduce(async (previous, spacing) => {
       await previous;
-      await environment.clock.advance({ ms: NOTICE_RETRY_MS });
+      expect(await findNoticeRetryDueAt({ dependencies: environment.dependencies })).toBe(environment.clock.now() + spacing);
+      await environment.clock.advance({ ms: spacing });
       const error = await captureInboxError(() => retryNotice({ dependencies: environment.dependencies }));
-      expect(error.message).toBe('delivery failed for notice');
-      expect(await findNoticeRetryDueAt({ dependencies: environment.dependencies })).toBe(environment.clock.now() + NOTICE_RETRY_MS);
+      expect(error.message).toBe(NOTICE_FAILED_MESSAGE);
     }, Promise.resolve());
-    expect(environment.sender.templates).toHaveLength(1 + attempts.length);
+    expect(environment.sender.templates).toHaveLength(1 + spacings.length);
     const history = await environment.repository.listAgentHistory({ agent: 'alpha', limit: 5 });
     expect(history.map((message) => message.delivery)).toEqual([DeliveryState.Queued]);
+  });
+
+  test('CU-94h the spacing never grows past the cap', async () => {
+    const environment = await createEnvironment();
+    const attempts = Array.from({ length: 12 }, (_unused, index) => index + 1);
+    await sendWithFailingNotice({ environment, failingCalls: [0, ...attempts].map((attempt) => attempt + 1) });
+    await attempts.reduce(async (previous) => {
+      await previous;
+      const dueAt = await findNoticeRetryDueAt({ dependencies: environment.dependencies });
+      if (dueAt === null) throw new Error('expected a retry due time');
+      await environment.clock.advance({ ms: dueAt - environment.clock.now() });
+      await captureInboxError(() => retryNotice({ dependencies: environment.dependencies }));
+    }, Promise.resolve());
+    expect(await findNoticeRetryDueAt({ dependencies: environment.dependencies })).toBe(environment.clock.now() + NOTICE_RETRY_MAX_MS);
+  });
+
+  test('CU-94i a retry before the due time sends nothing and keeps the due time', async () => {
+    const environment = await createEnvironment();
+    await sendWithFailingNotice({ environment, failingCalls: [1] });
+    const dueAt = await findNoticeRetryDueAt({ dependencies: environment.dependencies });
+    await environment.clock.advance({ ms: NOTICE_RETRY_MS - 1 });
+    await retryNotice({ dependencies: environment.dependencies });
+    expect(environment.sender.templates).toHaveLength(1);
+    expect(await findNoticeRetryDueAt({ dependencies: environment.dependencies })).toBe(dueAt);
+  });
+
+  test('CU-94j a successful retry resets the attempts and the due time', async () => {
+    const environment = await createEnvironment();
+    await sendWithFailingNotice({ environment, failingCalls: [1, 2] });
+    await environment.clock.advance({ ms: NOTICE_RETRY_MS });
+    await captureInboxError(() => retryNotice({ dependencies: environment.dependencies }));
+    await environment.clock.advance({ ms: NOTICE_RETRY_MS * NOTICE_RETRY_BACKOFF_FACTOR });
+    await retryNotice({ dependencies: environment.dependencies });
+    expect(await environment.repository.findWindow()).toMatchObject({
+      noticeSentForClosedWindow: true,
+      noticeRetryLocale: null,
+      noticeRetryAt: null,
+      noticeRetryAttempt: 0,
+    });
   });
 
   test('CU-94f the owner opening the window cancels the retry', async () => {

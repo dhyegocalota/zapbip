@@ -50,6 +50,8 @@ CREATE TABLE owner_window (
   last_owner_message_at INTEGER,
   notice_sent_for_closed_window INTEGER NOT NULL,
   notice_retry_locale TEXT,
+  notice_retry_at INTEGER,
+  notice_retry_attempt INTEGER NOT NULL DEFAULT 0,
   routing_list_prompt_message_id TEXT,
   routing_list_opened_at INTEGER,
   routing_list_locale TEXT,
