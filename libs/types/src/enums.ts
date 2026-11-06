@@ -70,6 +70,7 @@ export enum WakeCopyKey {
   StaleNotice = 'stale_notice',
   CadenceHourly = 'cadence_hourly',
   CadenceHours = 'cadence_hours',
+  CadenceMinute = 'cadence_minute',
   CadenceMinutes = 'cadence_minutes',
   ElapsedMinutes = 'elapsed_minutes',
   ElapsedHours = 'elapsed_hours',

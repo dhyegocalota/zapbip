@@ -156,7 +156,7 @@ Red commit `5ca8f5a`: 20 of 20 cases failed, every one with `Error: saveSchedule
 
 1. An interval of 1 and 1440 is accepted; 0, 1441, 90.5, -60 and null are refused naming `interval_minutes`. Try the MCP schema's `number` with `NaN` and `Infinity`.
 2. A revoked or unknown standby is refused with the same text (`not connected to this account`).
-3. A poll through `pollInbox` clears `pollerStaleNotified`; `getMessages`, `ask` and `waitForReply` never record a poll (`ask` and `waitForReply` have no test of their own; they do not call `pollInbox`).
+3. A poll through `pollInbox` clears `pollerStaleNotified`; `getMessages`, `ask` and `waitForReply` never record a poll (pins in `poll-inbox.test.ts`).
 4. `messageId` reaches `notify` only when the owner message is not an answer and not a held-message assignment.
 5. `setWake` for `scheduled` deletes a pending webhook job.
 
@@ -185,3 +185,7 @@ Red commit `12637d8`: 16 of 21 cases of `scheduled-wake-storage.test.ts` failed 
 
 - `account-inbox.test.ts` (`WI-120`, `WI-121`) and `webhook-wake-secrets.test.ts` (`migration v2`) use `3` as a synthetic "later" migration version; with the real `v3` they fail (`expected [ 4 ] to deeply equal [ 3, 4 ]`, `expected [] to deeply equal [ 3 ]`, `UNIQUE constraint failed: schema_versions.version`). Not L1 files: the lead must move their synthetic versions past `ACCOUNT_INBOX_MIGRATIONS` (for example derive them from the last registered version).
 - accounts-and-keys describes its own DO schema `v6`; the lead renumbers `v3.sql` when merging it, since runner order is by version.
+
+- The never-polled text is `Ainda não olhou a caixa.` (test plan and spec aligned).
+- Interval 1 reads `a cada minuto` / `every minute` through the new `WakeCopyKey.CadenceMinute` (added to `libs/types/src/enums.ts`).
+- Files outside the lane's list that were touched: `libs/core/src/inbox/use-cases/wake-agent.ts` (needed to carry `messageId`) and `libs/types/src/enums.ts` (the `CadenceMinute` member) and `libs/core/src/wake/testing/wake-fixtures.ts` (one line: the in-memory wake repository needs the fake clock).

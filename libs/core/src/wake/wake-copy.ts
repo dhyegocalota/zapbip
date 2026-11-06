@@ -4,6 +4,7 @@ import { fillCopyTokens } from '../inbox/inbox-copy';
 import { invalidInput } from '../inbox/inbox-error-factories';
 
 const MINUTES_PER_HOUR = HOUR_MS / MINUTE_MS;
+const SINGLE_MINUTE = MINUTE_MS / MINUTE_MS;
 
 export const WAKE_COPY: Record<WakeCopyKey, Record<OwnerLocale, string>> = {
   [WakeCopyKey.WakeFailed]: {
@@ -26,6 +27,10 @@ export const WAKE_COPY: Record<WakeCopyKey, Record<OwnerLocale, string>> = {
   [WakeCopyKey.CadenceHours]: {
     [OwnerLocale.PortugueseBrazil]: 'a cada {count} horas',
     [OwnerLocale.EnglishUs]: 'every {count} hours',
+  },
+  [WakeCopyKey.CadenceMinute]: {
+    [OwnerLocale.PortugueseBrazil]: 'a cada minuto',
+    [OwnerLocale.EnglishUs]: 'every minute',
   },
   [WakeCopyKey.CadenceMinutes]: {
     [OwnerLocale.PortugueseBrazil]: 'a cada {count} minutos',
@@ -62,6 +67,7 @@ function cadenceCopy(input: { locale: OwnerLocale; intervalMinutes: number }): s
     const count = String(intervalMinutes / MINUTES_PER_HOUR);
     return renderWakeCopy({ key: WakeCopyKey.CadenceHours, locale, values: { count } });
   }
+  if (intervalMinutes === SINGLE_MINUTE) return renderWakeCopy({ key: WakeCopyKey.CadenceMinute, locale, values: {} });
   return renderWakeCopy({ key: WakeCopyKey.CadenceMinutes, locale, values: { count: String(intervalMinutes) } });
 }
 

@@ -1,5 +1,7 @@
-import { InboxStatus, MINUTE_MS, OwnerLocale } from '@zapbip/types';
+import { InboxStatus, MINUTE_MS, OwnerLocale, SECOND_MS } from '@zapbip/types';
 import { describe, expect, test, vi } from 'vitest';
+import { ask } from '../inbox/use-cases/ask';
+import { waitForReply } from '../inbox/use-cases/wait-for-reply';
 import { getMessages } from '../inbox/use-cases/get-messages';
 import { connectionOf, receiveText, registerAgents } from '../inbox/testing/fixtures';
 import { pollInbox } from './poll-inbox';
@@ -71,6 +73,36 @@ describe('pollInbox', () => {
     const wakeEnvironment = await createWakeEnvironment();
     const recordPoll = vi.spyOn(wakeEnvironment.wake.repository, 'recordPoll');
     await getMessages({ ...wakeEnvironment.context, connection: connectionOf({ agent: AGENT }), limit: 5 });
+    expect(recordPoll).not.toHaveBeenCalled();
+  });
+
+  test('pin: ask records no poll', async () => {
+    const wakeEnvironment = await createWakeEnvironment();
+    const recordPoll = vi.spyOn(wakeEnvironment.wake.repository, 'recordPoll');
+    const asking = ask({
+      ...wakeEnvironment.context,
+      connection: connectionOf({ agent: AGENT }),
+      text: 'Deploy?',
+      options: ['Sim', 'Não'],
+      optionDescriptions: [],
+      timeoutMs: SECOND_MS,
+    });
+    await wakeEnvironment.environment.clock.advance({ ms: SECOND_MS });
+    await asking;
+    expect(recordPoll).not.toHaveBeenCalled();
+  });
+
+  test('pin: waitForReply records no poll', async () => {
+    const wakeEnvironment = await createWakeEnvironment();
+    const recordPoll = vi.spyOn(wakeEnvironment.wake.repository, 'recordPoll');
+    const waiting = waitForReply({
+      ...wakeEnvironment.context,
+      connection: connectionOf({ agent: AGENT }),
+      questionId: null,
+      timeoutMs: SECOND_MS,
+    });
+    await wakeEnvironment.environment.clock.advance({ ms: SECOND_MS });
+    await waiting;
     expect(recordPoll).not.toHaveBeenCalled();
   });
 });

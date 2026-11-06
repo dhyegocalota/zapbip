@@ -19,6 +19,15 @@ describe('expectedDelayNoteCopy', () => {
   });
 
   test.each([
+    [OwnerLocale.PortugueseBrazil, 1, 'a cada minuto'],
+    [OwnerLocale.PortugueseBrazil, 2, 'a cada 2 minutos'],
+    [OwnerLocale.EnglishUs, 1, 'every minute'],
+    [OwnerLocale.EnglishUs, 2, 'every 2 minutes'],
+  ])('%s with an interval of %i minutes reads %s', (locale, intervalMinutes, cadence) => {
+    expect(note({ intervalMinutes, elapsedSinceLastPollMs: MINUTE_MS, locale })).toContain(cadence);
+  });
+
+  test.each([
     [120, 'a cada 2 horas'],
     [90, 'a cada 90 minutos'],
   ])('an interval of %i minutes reads %s', (intervalMinutes, cadence) => {
