@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "zapbip-api",
-  "main": "src/index.dev.ts",
+  "main": "src/index.ts",
   "compatibility_date": "2026-08-15",
   "compatibility_flags": ["nodejs_compat"],
   "durable_objects": {
@@ -12,22 +12,22 @@
     {
       "binding": "CONNECTIONS",
       "database_name": "zapbip-connections",
-      "database_id": "zapbip-connections-local",
+      "database_id": "REPLACE_WITH_PRODUCTION_D1_DATABASE_ID",
       "migrations_dir": "migrations",
     },
   ],
   "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "zapbip-media" }],
   "rules": [{ "type": "Text", "globs": ["**/*.sql"], "fallthrough": true }],
-  "vars": { "PUBLIC_ORIGIN": "http://localhost:8787", "WAITLIST_ENABLED": "false" },
+  "vars": { "PUBLIC_ORIGIN": "https://mcp.zapbip.com", "WAITLIST_ENABLED": "true" },
   "ratelimits": [
     { "name": "OWNER_RATE_LIMITER", "namespace_id": "1001", "simple": { "limit": 20, "period": 60 } },
     { "name": "OUTBOUND_RATE_LIMITER", "namespace_id": "1002", "simple": { "limit": 30, "period": 60 } },
     { "name": "ACCOUNT_OUTBOUND_RATE_LIMITER", "namespace_id": "1003", "simple": { "limit": 120, "period": 60 } },
   ],
   "env": {
-    "production": {
-      "main": "src/index.ts",
-      "vars": { "PUBLIC_ORIGIN": "http://localhost:8787", "WAITLIST_ENABLED": "true" },
+    "development": {
+      "main": "src/index.dev.ts",
+      "vars": { "PUBLIC_ORIGIN": "http://localhost:8787", "WAITLIST_ENABLED": "false" },
       "ratelimits": [
         { "name": "OWNER_RATE_LIMITER", "namespace_id": "1001", "simple": { "limit": 20, "period": 60 } },
         { "name": "OUTBOUND_RATE_LIMITER", "namespace_id": "1002", "simple": { "limit": 30, "period": 60 } },

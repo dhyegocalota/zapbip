@@ -2,7 +2,8 @@
   "name": "@zapbip/docs",
   "private": true,
   "type": "module",
-  "devDependencies": {
-    "mint": "4.2.1207"
+  "scripts": {
+    "dev": "pnpm dlx mint@4.2.1207 dev",
+    "broken-links": "pnpm dlx mint@4.2.1207 broken-links"
   }
 }

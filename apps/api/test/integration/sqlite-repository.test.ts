@@ -1,5 +1,5 @@
-import { DeliveryState, MediaOrigin, MessageDirection, MessageKind } from '@zapbip/types';
-import { MEDIA_RETENTION_MS, QUEUE_RETENTION_MS, type StoredMedia } from '@zapbip/core';
+import { DeliveryState, MediaOrigin, MessageDirection, MessageKind, OwnerLocale } from '@zapbip/types';
+import { MEDIA_RETENTION_MS, QUEUE_RETENTION_MS, type RoutingList, type StoredMedia } from '@zapbip/core';
 import { afterEach, describe, expect, it } from 'vitest';
 import { reset } from 'cloudflare:test';
 import { withRepository } from '../support/account-inbox';
@@ -247,6 +247,19 @@ describe('SQLite inbox repository', () => {
     expect(result).toEqual({ first: true, second: false, afterReset: true });
   });
 
+  it('claims an upload exactly once until it is released or received', async () => {
+    const result = await inRepository(async (repository) => {
+      await repository.insertMedia({ media: buildMedia({ mediaId: 'med_1', expiresAt: BASE_TIME + 5 }) });
+      const first = await repository.claimUpload({ mediaId: 'med_1' });
+      const second = await repository.claimUpload({ mediaId: 'med_1' });
+      await repository.releaseUpload({ mediaId: 'med_1' });
+      const afterRelease = await repository.claimUpload({ mediaId: 'med_1' });
+      await repository.markMediaReceived({ mediaId: 'med_1', receivedAt: BASE_TIME, retentionUntil: BASE_TIME + MEDIA_RETENTION_MS });
+      return { first, second, afterRelease, afterReceived: await repository.claimUpload({ mediaId: 'med_1' }) };
+    });
+    expect(result).toEqual({ first: true, second: false, afterRelease: true, afterReceived: false });
+  });
+
   it('stores media, marks it received and deletes it', async () => {
     const media = buildMedia({ mediaId: 'med_1', expiresAt: BASE_TIME + 5 });
     const result = await inRepository(async (repository) => {
@@ -305,5 +318,56 @@ describe('SQLite inbox repository', () => {
       return repository.findNextExpiry();
     });
     expect(next).toBeNull();
+  });
+
+  it('keeps a message stored as read out of the held list', async () => {
+    const held = buildTextMessage({ messageId: 'msg_held', direction: MessageDirection.FromOwner, agent: null });
+    const routedNowhere = buildTextMessage({
+      messageId: 'msg_nowhere',
+      direction: MessageDirection.FromOwner,
+      agent: null,
+      readByAgent: true,
+    });
+    const result = await inRepository(async (repository) => {
+      await Promise.all([held, routedNowhere].map((message) => repository.insertMessage({ message })));
+      return {
+        heldIds: (await repository.listHeld()).map((message) => message.messageId),
+        stored: await repository.findMessage({ messageId: 'msg_nowhere' }),
+      };
+    });
+    expect(result.heldIds).toEqual(['msg_held']);
+    expect(result.stored?.readByAgent).toBe(true);
+  });
+
+  it('keeps the open routing list in the owner window row', async () => {
+    const routingList: RoutingList = {
+      promptMessageId: 'msg_list',
+      openedAt: BASE_TIME,
+      locale: OwnerLocale.PortugueseBrazil,
+      resent: true,
+      reminded: false,
+    };
+    const result = await inRepository(async (repository) => {
+      const initial = await repository.findRoutingList();
+      await repository.saveRoutingList({ routingList });
+      await repository.saveWindow({ window: { lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: false } });
+      const saved = await repository.findRoutingList();
+      await repository.saveRoutingList({ routingList: { ...routingList, reminded: true } });
+      const reminded = await repository.findRoutingList();
+      await repository.clearRoutingList();
+      return { initial, saved, reminded, cleared: await repository.findRoutingList() };
+    });
+    expect(result).toEqual({ initial: null, saved: routingList, reminded: { ...routingList, reminded: true }, cleared: null });
+  });
+
+  it('links a channel receipt to its message and forgets it with the receipt', async () => {
+    const result = await inRepository(async (repository) => {
+      await repository.recordChannelReceipt({ wamid: 'wamid.1', receivedAt: BASE_TIME });
+      await repository.linkChannelReceipt({ wamid: 'wamid.1', messageId: 'msg_1' });
+      const linked = await repository.findChannelReceiptMessageId({ wamid: 'wamid.1' });
+      await repository.deleteExpiredReceipts({ receivedBefore: BASE_TIME + 1 });
+      return { linked, afterDelete: await repository.findChannelReceiptMessageId({ wamid: 'wamid.1' }) };
+    });
+    expect(result).toEqual({ linked: 'msg_1', afterDelete: null });
   });
 });

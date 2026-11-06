@@ -1,0 +1,32 @@
+---
+title: 'Exclusão da conta'
+description: 'Como o dono apaga a conta e o que isso remove.'
+---
+
+O dono pode apagar a conta a qualquer momento, pelo WhatsApp. A exclusão exige duas mensagens, para que uma mensagem por engano não a dispare.
+
+## As duas etapas
+
+1. Mande `apagar conta` (ou `delete account`). O zapbip responde com as consequências e a frase exata para confirmar.
+2. Mande a frase `apagar conta definitivamente` (ou `delete account permanently`) em até 10 minutos. Depois dessa janela a frase é recusada e nada é apagado; mande `apagar conta` de novo para recomeçar.
+
+## O que é removido
+
+- A caixa de entrada da conta, com cada mensagem, pergunta e resposta pendente.
+- Cada conexão de agente. Os links deles deixam de funcionar na hora.
+- A mídia guardada para a conta.
+- O seu número de telefone e o registro da conta.
+
+Se uma etapa falhar, a conta fica no estado de exclusão. A sua próxima mensagem, ou o operador, executa as etapas restantes. Cada etapa pode ser repetida com segurança.
+
+## O que não é removido
+
+- A Meta guarda o histórico do WhatsApp do lado dela. O zapbip não consegue apagá-lo. Apague o chat no WhatsApp se quiser tirá-lo do seu celular.
+- A Cloudflare mantém cópias pontuais do banco de dados e da caixa de entrada pelo período de retenção dela.
+- Se o operador bloqueou o seu número, o bloqueio continua.
+
+## Uma conta nova depois da exclusão
+
+Uma mensagem do mesmo telefone após a exclusão cria uma conta nova, como em qualquer primeira mensagem. Ela começa na lista de espera quando o acesso é limitado, e não tem agentes nem histórico.
+
+Veja [agentes e links](/pt-br/features/agents-and-links) para revogar um único agente sem apagar a conta.

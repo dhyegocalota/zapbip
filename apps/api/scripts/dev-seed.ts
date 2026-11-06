@@ -9,6 +9,7 @@ import { assertOwnerAbsent, buildDirectorySeed, findOwnerStatement } from './bui
 const DATABASE_BINDING = 'CONNECTIONS';
 const SEED_FILE_NAME = 'seed.sql';
 const AGENT_SEPARATOR = ',';
+const DEVELOPMENT_ENVIRONMENT = 'development';
 
 type WranglerRows = { results: { total: number }[] }[];
 
@@ -16,7 +17,19 @@ function runWrangler(input: { arguments: string[]; persistTo: string | undefined
   const persistArguments = input.persistTo === undefined ? [] : ['--persist-to', input.persistTo];
   return execFileSync(
     'pnpm',
-    ['exec', 'wrangler', 'd1', 'execute', DATABASE_BINDING, '--local', ...persistArguments, '--json', ...input.arguments],
+    [
+      'exec',
+      'wrangler',
+      'd1',
+      'execute',
+      DATABASE_BINDING,
+      '--env',
+      DEVELOPMENT_ENVIRONMENT,
+      '--local',
+      ...persistArguments,
+      '--json',
+      ...input.arguments,
+    ],
     {
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'inherit'],

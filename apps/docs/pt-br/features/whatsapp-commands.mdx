@@ -1,0 +1,35 @@
+---
+title: 'Comandos do WhatsApp'
+description: 'O que o dono pode digitar para o número do zapbip.'
+---
+
+O dono gerencia as IAs mandando mensagem para o número do zapbip. Um comando é reconhecido exatamente, em português ou em inglês, depois que o texto é aparado, os espaços internos são reduzidos a um e tudo vira minúsculas. O idioma da palavra-chave é o idioma da resposta.
+
+| Comando           | Português                      | Inglês                       | Efeito                                                          |
+| ----------------- | ------------------------------ | ---------------------------- | --------------------------------------------------------------- |
+| Criar um agente   | `novo agente <nome>`           | `new agent <name>`           | Cria uma conexão e responde com um link de instalação.          |
+| Listar agentes    | `agentes`                      | `agents`                     | Nome, data de criação e cliente de cada agente ativo. Sem segredo. |
+| Revogar um agente | `revogar <nome>`               | `revoke <name>`              | Revoga a conexão agora. O link dela deixa de funcionar.         |
+| Girar um link     | `girar <nome>`                 | `rotate <name>`              | Troca o segredo agora e responde com um novo link de instalação. |
+| Ajuda e menu      | `ajuda` ou `menu`              | `help` ou `menu`             | Texto e uma lista interativa com os comandos.                   |
+| Pedir a exclusão  | `apagar conta`                 | `delete account`             | Explica as consequências e a frase para confirmar.              |
+| Confirmar exclusão | `apagar conta definitivamente` | `delete account permanently` | Apaga a conta.                                                  |
+
+Pontuação final não casa. `agentes?` é uma mensagem para um agente, não um comando.
+
+## O menu
+
+`ajuda` responde com os comandos em texto e em uma lista interativa. As linhas de `agentes` e `apagar conta` executam na hora. As linhas de `novo agente`, `revogar` e `girar` respondem com a linha de uso, porque precisam de um nome.
+
+## Palavras reservadas
+
+A primeira palavra de cada comando é reservada: `novo`, `new`, `agentes`, `agents`, `revogar`, `revoke`, `girar`, `rotate`, `ajuda`, `help`, `menu`, `apagar` e `delete`. Um agente não pode usar nenhuma delas como nome.
+
+## Mandar uma palavra de comando para um agente
+
+Uma mensagem que é exatamente uma palavra de comando é sempre um comando. Para mandar as mesmas palavras a um agente, comece a mensagem com `@<agente> `. O prefixo é removido e o resto vai para esse agente. Por exemplo, `@claude-code ajuda` chega ao agente `claude-code` em vez de abrir o menu. Veja [roteamento](/pt-br/concepts/routing).
+
+## Próximos passos
+
+- [Agentes e links](/pt-br/features/agents-and-links) explica criar, listar, revogar e girar.
+- [Exclusão da conta](/pt-br/help/account-deletion) explica a exclusão em duas etapas.

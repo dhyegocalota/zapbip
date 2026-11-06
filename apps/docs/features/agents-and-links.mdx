@@ -9,7 +9,7 @@ Each agent has its own connection, and each connection has one secret. The secre
 
 Send `novo agente <nome>` (or `new agent <name>`). zapbip replies with two lines you paste into that agent. The name is normalised: accents are removed, it is lowercased and every run of other characters becomes one hyphen, so `Claude Code` becomes `claude-code`. The reply shows the normalised name. A name has up to 20 characters, letters, digits and hyphens, and starts with a letter or digit.
 
-A name cannot be a [reserved word](/guides/commands#reserved-words) and must be unique among your active agents. A revoked name can be created again as a new connection. `novo agente` without a name replies with the usage line.
+A name cannot be a [reserved word](/features/whatsapp-commands#reserved-words) and must be unique among your active agents. A revoked name can be created again as a new connection. `novo agente` without a name replies with the usage line.
 
 The second line says the install link works once for 30 minutes. Paste the two lines into your agent; the agent reads the instructions at the link and connects itself.
 
@@ -37,4 +37,4 @@ Send `girar <nome>` (or `rotate <name>`). zapbip replaces the secret at once and
 
 An account has at most 8 active agents. Revoked agents do not count. At the limit, zapbip says so and points to `revogar <nome>` as the way out.
 
-See [commands](/guides/commands) for every command word, including the `@<agent>` escape for words meant for an agent.
+See [commands](/features/whatsapp-commands) for every command word, including the `@<agent>` escape for words meant for an agent.

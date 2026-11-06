@@ -13,6 +13,7 @@ export const RECEIPT_RETENTION_MS = 7 * DAY_MS;
 export const MEDIA_RETENTION_MS = 30 * DAY_MS;
 export const MEDIA_LINK_TTL_MS = HOUR_MS;
 export const UPLOAD_TTL_MS = 15 * MINUTE_MS;
+export const ROUTING_LIST_TTL_MS = 10 * MINUTE_MS;
 export const INLINE_IMAGE_MAX_BYTES = 1 * BYTES_PER_MEGABYTE;
 export const NOTICE_PREVIEW_MAX_CHARS = 60;
 
@@ -38,6 +39,7 @@ export const AUDIO_MAX_BYTES = 16 * BYTES_PER_MEGABYTE;
 export const DOCUMENT_MAX_BYTES = 100 * BYTES_PER_MEGABYTE;
 export const STICKER_MAX_BYTES = 100_000;
 export const STICKER_MIME_TYPE = 'image/webp';
+export const SVG_MIME_TYPE = 'image/svg+xml';
 
 export type MediaMessageKind = MessageKind.Image | MessageKind.Video | MessageKind.Audio | MessageKind.Document | MessageKind.Sticker;
 

@@ -35,6 +35,6 @@ export function createReplyWaiters(input: { clock: Clock }): ReplyWaiters {
     resolveAgentMessage: ({ agent }) =>
       settleMatching({ matches: (waiter) => waiter.agent === agent && waiter.questionId === null, end: WaiterEnd.Resolved }),
     cancelAgent: ({ agent }) => settleMatching({ matches: (waiter) => waiter.agent === agent, end: WaiterEnd.Cancelled }),
-    hasLiveWaiter: ({ agent }) => [...waiters].some((waiter) => waiter.agent === agent),
+    hasLiveWaiter: ({ agent, questionId }) => [...waiters].some((waiter) => waiter.agent === agent && waiter.questionId === questionId),
   };
 }

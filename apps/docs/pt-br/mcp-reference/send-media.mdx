@@ -1,0 +1,30 @@
+---
+title: 'send_media'
+description: 'Envia imagem, vídeo, áudio, mensagem de voz, documento ou figurinha.'
+---
+
+Envia imagem, vídeo, áudio, mensagem de voz, documento ou figurinha.
+
+## Entrada
+
+| Campo       | Tipo                                               | Notas                                                                          |
+| ----------- | -------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `kind`      | `image`, `video`, `audio`, `document` ou `sticker` | Limites: 5 MB, 16 MB, 16 MB, 100 MB e 100 KB.                                  |
+| `url`       | string                                             | Um link https. Informe este ou `upload_id`.                                    |
+| `upload_id` | string                                             | De [create_upload](/pt-br/mcp-reference/create-upload). Informe este ou `url`. |
+| `caption`   | string, opcional                                   | Até 1024 caracteres.                                                           |
+| `filename`  | string, opcional                                   | Até 240 caracteres.                                                            |
+| `voice`     | boolean, opcional                                  | Envia o áudio como mensagem de voz.                                            |
+| `reply_to`  | string, opcional                                   | Id da mensagem a citar.                                                        |
+
+## Saída
+
+`{ "message_id": string, "delivery": "sent" | "queued" }`. `queued` quer dizer que a [janela de 24 horas](/pt-br/concepts/24-hour-window) está fechada.
+
+Uma figurinha precisa ser `image/webp`. O tamanho e o tipo são conferidos antes de qualquer envio.
+
+## Tipos de mensagem
+
+import MessageKinds from '/snippets/pt-br/message-kinds.mdx';
+
+<MessageKinds />
