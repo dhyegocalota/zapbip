@@ -152,3 +152,9 @@ export enum InboxErrorCode {
   UploadExpired = 'upload_expired',
   UploadUnavailable = 'upload_unavailable',
 }
+
+export enum ForwardedKind {
+  None = 'none',
+  Forwarded = 'forwarded',
+  FrequentlyForwarded = 'frequently_forwarded',
+}
