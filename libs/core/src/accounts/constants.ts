@@ -12,3 +12,4 @@ export const PART_LABEL_BUDGET_CHARS = 16;
 export const COMMAND_LIST_ID_PREFIX = 'zapbip:';
 export const LIST_BUTTON_TEXT_MAX_CHARS = 20;
 export const BRAZIL_COUNTRY_CODE = '55';
+export const ACCOUNT_MENU_QUESTION_ID = `${COMMAND_LIST_ID_PREFIX}menu`;

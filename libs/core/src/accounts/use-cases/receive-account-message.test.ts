@@ -1,0 +1,310 @@
+import {
+  AccountReplyIntent,
+  AccountReplyParameter,
+  AccountState,
+  MessageDirection,
+  MessageKind,
+  OwnerLocale,
+  ReplyKind,
+  MINUTE_MS,
+} from '@zapbip/types';
+import { describe, expect, test } from 'vitest';
+import { DELETION_CONFIRM_TTL_MS, ACCOUNT_MENU_QUESTION_ID } from '../constants';
+import { renderAccountReply } from '../account-copy';
+import { askAndAbandon } from '../../inbox/testing/fixtures';
+import { sendText } from '../../inbox/use-cases/send-text';
+import { touchAgent } from '../../inbox/use-cases/touch-agent';
+import {
+  addAgent,
+  createAccountFixture,
+  receiveAccount,
+  receiveAccountText,
+  receiveListTap,
+  sessionTexts,
+  UNITED_STATES_WA_ID,
+  type AccountFixture,
+} from '../testing/fixtures';
+
+function copyOf(input: {
+  intent: AccountReplyIntent;
+  locale?: OwnerLocale;
+  parameters?: Partial<Record<AccountReplyParameter, string>>;
+}): string {
+  const { intent, locale = OwnerLocale.PortugueseBrazil, parameters = {} } = input;
+  return renderAccountReply({ reply: { intent, kind: ReplyKind.Text, locale, parameters, menuRows: [] } });
+}
+
+async function storedOwnerMessages(input: AccountFixture) {
+  const held = await input.environment.repository.listHeld();
+  const history = await input.environment.repository.listAgentHistory({ agent: 'claude', limit: 50 });
+  return [...held, ...history].filter((message) => message.direction === MessageDirection.FromOwner);
+}
+
+async function agentWrites(input: AccountFixture & { agent: string }) {
+  await touchAgent({ dependencies: input.environment.dependencies, agent: input.agent });
+  return sendText({
+    dependencies: input.environment.dependencies,
+    connection: { accountId: input.account.accountId, agent: input.agent, ownerLocale: OwnerLocale.PortugueseBrazil },
+    text: 'done',
+    replyToMessageId: null,
+  });
+}
+
+describe('receiveAccountMessage rule 0', () => {
+  test('agentes answers with the empty list and leaves an open question alone', async () => {
+    const fixture = await createAccountFixture();
+    const question = await askAndAbandon({ environment: fixture.environment });
+    const result = await receiveAccountText({ ...fixture, text: 'agentes' });
+    expect(result.messageId).toBeNull();
+    expect(sessionTexts(fixture).at(-1)).toBe(copyOf({ intent: AccountReplyIntent.EmptyList }));
+    expect((await fixture.environment.repository.findQuestion({ questionId: question.questionId }))!.answer).toBeNull();
+  });
+
+  test('a command does not change the last agent that wrote', async () => {
+    const fixture = await createAccountFixture();
+    await agentWrites({ ...fixture, agent: 'alpha' });
+    await receiveAccountText({ ...fixture, text: 'agentes' });
+    const result = await receiveAccountText({ ...fixture, text: 'oi' });
+    expect(result.agent).toBe('alpha');
+  });
+
+  test('a command word quoting an agent message is routed to that agent', async () => {
+    const fixture = await createAccountFixture();
+    const sent = await agentWrites({ ...fixture, agent: 'alpha' });
+    const result = await receiveAccountText({ ...fixture, text: 'agentes', replyToMessageId: sent.messageId });
+    expect(result.messageId).not.toBeNull();
+    expect(result.agent).toBe('alpha');
+  });
+
+  test('a list tap on the list row runs the command', async () => {
+    const fixture = await createAccountFixture();
+    const result = await receiveListTap({ ...fixture, optionId: 'zapbip:list_agents' });
+    expect(result.messageId).toBeNull();
+    expect(sessionTexts(fixture)).toEqual([copyOf({ intent: AccountReplyIntent.EmptyList })]);
+  });
+
+  test('a button answer to a question is not a command', async () => {
+    const fixture = await createAccountFixture();
+    const question = await askAndAbandon({ environment: fixture.environment });
+    const result = await receiveListTap({ ...fixture, optionId: `${question.questionId}:0` });
+    expect(result.agent).toBe(question.agent);
+  });
+
+  test('an unknown zapbip id replies unknown', async () => {
+    const fixture = await createAccountFixture();
+    const result = await receiveListTap({ ...fixture, optionId: 'zapbip:bogus' });
+    expect(result.messageId).toBeNull();
+    expect(sessionTexts(fixture)).toEqual([copyOf({ intent: AccountReplyIntent.Unknown })]);
+  });
+
+  test('the confirm deletion id is not a command', async () => {
+    const fixture = await createAccountFixture();
+    const result = await receiveListTap({ ...fixture, optionId: 'zapbip:confirm_deletion' });
+    expect(result.deletionConfirmed).toBe(false);
+    expect(sessionTexts(fixture)).toEqual([copyOf({ intent: AccountReplyIntent.Unknown })]);
+  });
+
+  test('a menu list tap replies in the account locale', async () => {
+    const fixture = await createAccountFixture({ locale: OwnerLocale.EnglishUs, waId: UNITED_STATES_WA_ID });
+    await receiveListTap({ ...fixture, optionId: 'zapbip:create_agent' });
+    expect(sessionTexts(fixture)).toEqual([
+      copyOf({
+        intent: AccountReplyIntent.Usage,
+        locale: OwnerLocale.EnglishUs,
+        parameters: { [AccountReplyParameter.Usage]: 'new agent <name>' },
+      }),
+    ]);
+  });
+
+  test('help sends the text and then the interactive list', async () => {
+    const fixture = await createAccountFixture();
+    await receiveAccountText({ ...fixture, text: 'ajuda' });
+    const [text, list] = fixture.environment.sender.sessions;
+    expect(text!.kind).toBe(MessageKind.Text);
+    if (list!.kind !== MessageKind.Choice) throw new Error('expected a list');
+    expect(list!.questionId).toBe(ACCOUNT_MENU_QUESTION_ID);
+    expect(list!.options).toHaveLength(6);
+  });
+
+  test('the same delivery twice sends nothing new', async () => {
+    const fixture = await createAccountFixture();
+    await receiveAccount({ ...fixture, content: { kind: MessageKind.Text, text: 'agentes' }, channelMessageId: 'wamid.same' });
+    const second = await receiveAccount({
+      ...fixture,
+      content: { kind: MessageKind.Text, text: 'agentes' },
+      channelMessageId: 'wamid.same',
+    });
+    expect(second.duplicate).toBe(true);
+    expect(fixture.environment.sender.sessions).toHaveLength(1);
+  });
+
+  test('girar a imagem is read as a rotate and is not routed', async () => {
+    const fixture = await createAccountFixture();
+    const result = await receiveAccountText({ ...fixture, text: 'girar a imagem' });
+    expect(result.messageId).toBeNull();
+    expect(sessionTexts(fixture)).toEqual([copyOf({ intent: AccountReplyIntent.NotFound })]);
+  });
+
+  test('the mention form routes the words to the agent', async () => {
+    const fixture = await createAccountFixture();
+    await touchAgent({ dependencies: fixture.environment.dependencies, agent: 'claude' });
+    const result = await receiveAccountText({ ...fixture, text: '@claude girar a imagem' });
+    expect(result.agent).toBe('claude');
+    expect((await storedOwnerMessages(fixture)).map((message) => (message.kind === MessageKind.Text ? message.text : null))).toEqual([
+      'girar a imagem',
+    ]);
+  });
+
+  test('a keyword in English answers in English although the account is pt_BR', async () => {
+    const fixture = await createAccountFixture();
+    await receiveAccountText({ ...fixture, text: 'revoke' });
+    expect(sessionTexts(fixture)[0]).toContain('revoke <name>');
+  });
+});
+
+describe('receiveAccountMessage account states', () => {
+  test('a waitlisted account gets the waitlist reply and nothing is stored', async () => {
+    const fixture = await createAccountFixture({ state: AccountState.Waitlisted });
+    const result = await receiveAccountText({ ...fixture, text: 'oi' });
+    expect(result.messageId).toBeNull();
+    expect(sessionTexts(fixture)).toEqual([copyOf({ intent: AccountReplyIntent.Waitlisted })]);
+    expect(await storedOwnerMessages(fixture)).toEqual([]);
+  });
+
+  test('a suspended account gets the suspended reply on every message', async () => {
+    const fixture = await createAccountFixture({ state: AccountState.Suspended });
+    await receiveAccountText({ ...fixture, text: 'oi' });
+    await receiveAccountText({ ...fixture, text: 'ajuda' });
+    expect(sessionTexts(fixture)).toEqual([
+      copyOf({ intent: AccountReplyIntent.Suspended }),
+      copyOf({ intent: AccountReplyIntent.Suspended }),
+    ]);
+  });
+
+  test('a deleting account sends nothing', async () => {
+    const fixture = await createAccountFixture({ state: AccountState.Deleting });
+    const result = await receiveAccountText({ ...fixture, text: 'oi' });
+    expect(result.duplicate).toBe(false);
+    expect(fixture.environment.sender.sessions).toEqual([]);
+  });
+
+  test('a first non-text message of an active account gets unknown and is not stored', async () => {
+    const fixture = await createAccountFixture();
+    const content = { kind: MessageKind.Location as const, latitude: 1, longitude: 2, name: null, address: null };
+    const result = await receiveAccount({ ...fixture, content, channelMessageId: 'wamid.first' });
+    expect(result.messageId).toBeNull();
+    expect(sessionTexts(fixture)).toEqual([copyOf({ intent: AccountReplyIntent.Unknown })]);
+    expect(await storedOwnerMessages(fixture)).toEqual([]);
+  });
+
+  test('a second non-text message is routed and stored', async () => {
+    const fixture = await createAccountFixture();
+    await touchAgent({ dependencies: fixture.environment.dependencies, agent: 'claude' });
+    const content = { kind: MessageKind.Location as const, latitude: 1, longitude: 2, name: null, address: null };
+    await receiveAccount({ ...fixture, content });
+    const second = await receiveAccount({ ...fixture, content });
+    expect(second.messageId).not.toBeNull();
+  });
+
+  test('plain text with no agents holds the message (rule 6)', async () => {
+    const fixture = await createAccountFixture();
+    const first = await receiveAccountText({ ...fixture, text: 'oi' });
+    expect(first.messageId).not.toBeNull();
+    expect(first.agent).toBeNull();
+  });
+});
+
+describe('receiveAccountMessage deletion', () => {
+  test('confirming without a request replies expired', async () => {
+    const fixture = await createAccountFixture();
+    const result = await receiveAccountText({ ...fixture, text: 'apagar conta definitivamente' });
+    expect(result.deletionConfirmed).toBe(false);
+    expect(sessionTexts(fixture)).toEqual([copyOf({ intent: AccountReplyIntent.DeletionExpired })]);
+  });
+
+  test('confirming exactly at the time to live is accepted', async () => {
+    const fixture = await createAccountFixture();
+    await receiveAccountText({ ...fixture, text: 'apagar conta' });
+    await fixture.environment.clock.advance({ ms: DELETION_CONFIRM_TTL_MS });
+    const result = await receiveAccountText({ ...fixture, text: 'apagar conta definitivamente' });
+    expect(result.deletionConfirmed).toBe(true);
+    expect(sessionTexts(fixture).at(-1)).toBe(copyOf({ intent: AccountReplyIntent.DeletionDone }));
+  });
+
+  test('confirming one millisecond late is refused and clears the request', async () => {
+    const fixture = await createAccountFixture();
+    await receiveAccountText({ ...fixture, text: 'apagar conta' });
+    await fixture.environment.clock.advance({ ms: DELETION_CONFIRM_TTL_MS + 1 });
+    const result = await receiveAccountText({ ...fixture, text: 'apagar conta definitivamente' });
+    expect(result.deletionConfirmed).toBe(false);
+    expect(sessionTexts(fixture).at(-1)).toBe(copyOf({ intent: AccountReplyIntent.DeletionExpired }));
+    expect(await fixture.environment.dependencies.deletionRequests.find()).toBeNull();
+  });
+
+  test('a waitlisted account may confirm its deletion', async () => {
+    const fixture = await createAccountFixture({ state: AccountState.Waitlisted });
+    await receiveAccountText({ ...fixture, text: 'apagar conta' });
+    await fixture.environment.clock.advance({ ms: MINUTE_MS });
+    const result = await receiveAccountText({ ...fixture, text: 'apagar conta definitivamente' });
+    expect(result.deletionConfirmed).toBe(true);
+  });
+
+  test('a suspended account cannot confirm its deletion', async () => {
+    const fixture = await createAccountFixture({ state: AccountState.Suspended });
+    const result = await receiveAccountText({ ...fixture, text: 'apagar conta definitivamente' });
+    expect(result.deletionConfirmed).toBe(false);
+    expect(sessionTexts(fixture)).toEqual([copyOf({ intent: AccountReplyIntent.Suspended })]);
+  });
+});
+
+const LONG_LINE = 'x'.repeat(1_500);
+
+function withLongPrompt(input: AccountFixture): AccountFixture {
+  const renderer = {
+    render: async (rendering: { connectionLink: string }) => [LONG_LINE, LONG_LINE, LONG_LINE, rendering.connectionLink].join('\n'),
+  };
+  return {
+    ...input,
+    environment: { ...input.environment, dependencies: { ...input.environment.dependencies, installPromptRenderer: renderer } },
+  };
+}
+
+describe('receiveAccountMessage compensation', () => {
+  test('a failed part 2 of a create revokes the new link and tells the owner', async () => {
+    const fixture = withLongPrompt(await createAccountFixture());
+    fixture.environment.sender.failSessionCalls({ callNumbers: [2] });
+    const result = await receiveAccountText({ ...fixture, text: 'novo agente claude' });
+    const [issued] = fixture.environment.secrets.issued;
+    expect(result.duplicate).toBe(false);
+    expect(await fixture.environment.connectionDirectory.resolveSecretDigest({ secretDigest: issued!.digest })).toBeNull();
+    expect(await fixture.environment.registry.listActive({ accountId: fixture.account.accountId })).toEqual([]);
+    expect(sessionTexts(fixture)).toHaveLength(2);
+    expect(sessionTexts(fixture).at(-1)).toBe(copyOf({ intent: AccountReplyIntent.SendFailed }));
+  });
+
+  test('a failed part 2 of a rotate restores the old link and keeps the waiters', async () => {
+    const fixture = withLongPrompt(await createAccountFixture());
+    const oldDigest = await addAgent({ ...fixture, agent: 'claude' });
+    fixture.environment.sender.failSessionCalls({ callNumbers: [2] });
+    await receiveAccountText({ ...fixture, text: 'girar claude' });
+    const [, rotated] = fixture.environment.secrets.issued;
+    expect(await fixture.environment.connectionDirectory.resolveSecretDigest({ secretDigest: oldDigest })).not.toBeNull();
+    expect(await fixture.environment.connectionDirectory.resolveSecretDigest({ secretDigest: rotated!.digest })).toBeNull();
+    expect(fixture.environment.revocations.cancelled).toEqual([]);
+  });
+
+  test('a delivered rotate cancels the waiters of that agent only', async () => {
+    const fixture = await createAccountFixture();
+    await addAgent({ ...fixture, agent: 'claude' });
+    await receiveAccountText({ ...fixture, text: 'girar claude' });
+    expect(fixture.environment.revocations.cancelled).toEqual(['claude']);
+    expect(fixture.environment.revocations.revoked).toEqual([]);
+  });
+
+  test('a delivered create sends the link once, in parts', async () => {
+    const fixture = withLongPrompt(await createAccountFixture());
+    const result = await receiveAccountText({ ...fixture, text: 'novo agente claude' });
+    expect(result.messageId).toBeNull();
+    expect(sessionTexts(fixture)).toHaveLength(2);
+  });
+});
