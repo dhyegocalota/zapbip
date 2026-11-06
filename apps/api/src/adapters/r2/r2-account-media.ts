@@ -1,5 +1,9 @@
 import type { AccountMediaPurge } from '@zapbip/core';
 
+const ACCOUNT_KEY_PREFIX = 'accounts';
+const KEY_SEPARATOR = '/';
+const LIST_PAGE_SIZE = 1_000;
+
 export class R2AccountMedia implements AccountMediaPurge {
   private readonly bucket: R2Bucket;
 
@@ -8,8 +12,10 @@ export class R2AccountMedia implements AccountMediaPurge {
   }
 
   async deleteAll(input: { accountId: string }): Promise<void> {
-    void input;
-    void this.bucket;
-    throw new Error('R2AccountMedia.deleteAll is not implemented');
+    const prefix = [ACCOUNT_KEY_PREFIX, input.accountId, ''].join(KEY_SEPARATOR);
+    const page = await this.bucket.list({ prefix, limit: LIST_PAGE_SIZE });
+    if (page.objects.length === 0) return;
+    await this.bucket.delete(page.objects.map((object) => object.key));
+    return this.deleteAll(input);
   }
 }

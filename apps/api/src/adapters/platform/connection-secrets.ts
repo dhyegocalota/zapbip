@@ -1,9 +1,12 @@
 import type { ConnectionSecrets, IssuedSecret } from '@zapbip/core';
+import { generateConnectionSecret } from './connection-secret';
+import { hashConnectionSecret } from './hash';
 
 export function createConnectionSecrets(): ConnectionSecrets {
   return {
     async issue(): Promise<IssuedSecret> {
-      throw new Error('ConnectionSecrets.issue is not implemented');
+      const secret = generateConnectionSecret();
+      return { secret, digest: await hashConnectionSecret({ secret }) };
     },
   };
 }

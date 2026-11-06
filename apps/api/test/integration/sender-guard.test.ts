@@ -12,7 +12,7 @@ const WA_ID = '5511900000000';
 const OTHER_WA_ID = '5511900000001';
 const ACCOUNT_ID = 'acc_1';
 const ADMITTED_BEFORE_BLOCK = 5;
-const CONNECTIONS_PER_ACCOUNT = 4;
+const SATURATING_CONNECTIONS = ACCOUNT_OUTBOUND_MESSAGES_PER_MINUTE / OUTBOUND_MESSAGES_PER_MINUTE;
 
 function senderGuard(input: { limit: number }) {
   const limiter = createFakeRateLimiter(input);
@@ -90,17 +90,15 @@ describe('outbound guard', () => {
 
   it('limits the account at its own total across connections and admits another account', async () => {
     const guard = outboundGuard();
-    const connectionIds = Array.from({ length: CONNECTIONS_PER_ACCOUNT }, (_, index) => `con_${index}`);
-    const perConnection = ACCOUNT_OUTBOUND_MESSAGES_PER_MINUTE / (CONNECTIONS_PER_ACCOUNT - 1);
+    const connectionIds = Array.from({ length: SATURATING_CONNECTIONS + 1 }, (_, index) => `con_${index}`);
+    const perConnection = ACCOUNT_OUTBOUND_MESSAGES_PER_MINUTE / SATURATING_CONNECTIONS;
     const admitted = await Promise.all(
       connectionIds
-        .slice(0, CONNECTIONS_PER_ACCOUNT - 1)
+        .slice(0, SATURATING_CONNECTIONS)
         .map((connectionId) => admitMany({ count: perConnection, admit: () => guard.admit({ accountId: ACCOUNT_ID, connectionId }) })),
     );
     expect(admitted.flat().every((verdict) => verdict === SenderVerdict.Admitted)).toBe(true);
-    expect(await guard.admit({ accountId: ACCOUNT_ID, connectionId: `con_${CONNECTIONS_PER_ACCOUNT - 1}` })).toBe(
-      SenderVerdict.RateLimited,
-    );
+    expect(await guard.admit({ accountId: ACCOUNT_ID, connectionId: `con_${SATURATING_CONNECTIONS}` })).toBe(SenderVerdict.RateLimited);
     expect(await guard.admit({ accountId: 'acc_2', connectionId: 'con_other' })).toBe(SenderVerdict.Admitted);
   });
 });
