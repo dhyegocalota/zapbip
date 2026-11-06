@@ -10,7 +10,7 @@ Test areas, for parallel tester sub-agents: **A** core rules (pure), **B** waker
 
 ## The failing test first
 
-- [ ] `libs/core/src/wake/wake-rung.test.ts::table` — input: each row of the rung table; expected: each row fails with `wakeRungFor is not implemented` before S2.2.
+- [ ] `libs/core/src/wake/wake-rung.test.ts::table` — input: each row of the rung table; expected: the `scheduled` (fresh and stale) and `standby` (valid, missing, standby-mode) rows fail with `wakeRungFor is not implemented` before S2.2; the `webhook` and `none` rows are pins (Step 0 keeps slice 4's behaviour for them).
 - [ ] `apps/api/test/integration/mcp-scheduled-wake.test.ts::scheduled set_wake` — input: `tools/call set_wake` with `{mode: "scheduled", interval_minutes: 60}`; expected: a tool error whose text contains `saveScheduled is not implemented` before S4.2 (plan R11).
 - [ ] `apps/api/test/integration/scheduled-wake-storage.test.ts::findWake round trip` — input: a stored scheduled row with interval 60; expected: `findWake` throws `not implemented` before S1.2. (R7: the round trip reads `findWake` for the mode-owned fields and `findPollState` for the poll fields; the red text is the first of the two stubs the test reaches.)
 - [ ] Confirmed it fails for the right reason: each red run's first failure is the named stub, not a compile error. The printed text goes into `tester-briefing.md`.
