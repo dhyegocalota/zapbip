@@ -1,0 +1,67 @@
+#!/usr/bin/env node
+import { appendFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { basename, join } from 'node:path';
+
+const clientName = basename(process.argv[1]);
+const clientArguments = process.argv.slice(2);
+const isResume = clientArguments.includes('resume');
+const ACTIVE_WRITER_TEXT = 'Error: thread already has an active writer for this session';
+const HOLD_POLL_MS = 10;
+const SIGTERM_EXIT_CODE = 143;
+
+function record(entry) {
+  const line = JSON.stringify({ pid: process.pid, clientName, argv: clientArguments, cwd: process.cwd(), at: Date.now(), ...entry });
+  appendFileSync(process.env.FAKE_CLIENT_RECORD, `${line}\n`);
+}
+
+function finish(exitCode) {
+  record({ event: 'ended', exitCode, signal: null });
+  process.exit(exitCode);
+}
+
+function writeRollout() {
+  const sessionId = process.env.FAKE_CLIENT_ROLLOUT_SESSION_ID;
+  if (!sessionId || isResume) return;
+  const directory = join(process.env.CODEX_HOME, 'sessions', '2026', '11', '06');
+  mkdirSync(directory, { recursive: true });
+  const firstLine = JSON.stringify({ type: 'session_meta', payload: { id: sessionId, cwd: process.cwd() } });
+  writeFileSync(join(directory, `rollout-2026-11-06T10-00-00-${sessionId}.jsonl`), `${firstLine}\n`);
+}
+
+function isRefused() {
+  const refusedSession = process.env.FAKE_CLIENT_REFUSE_SESSION;
+  const refusesThisResume = isResume && refusedSession && clientArguments.includes(refusedSession);
+  const refusesEveryResume = isResume && process.env.FAKE_CLIENT_REFUSE_RESUME === '1';
+  return process.env.FAKE_CLIENT_REFUSE_ALL === '1' || refusesEveryResume || refusesThisResume;
+}
+
+function complete() {
+  writeRollout();
+  finish(Number(process.env.FAKE_CLIENT_EXIT_CODE || 0));
+}
+
+function waitForRelease(releaseFile) {
+  if (existsSync(releaseFile)) return complete();
+  setTimeout(() => waitForRelease(releaseFile), HOLD_POLL_MS);
+}
+
+function main() {
+  record({ event: 'started' });
+  process.on('SIGTERM', () => {
+    record({ event: 'ended', exitCode: null, signal: 'SIGTERM' });
+    process.exit(SIGTERM_EXIT_CODE);
+  });
+  if (process.env.FAKE_CLIENT_OUTPUT) {
+    process.stdout.write(process.env.FAKE_CLIENT_OUTPUT);
+    process.stderr.write(process.env.FAKE_CLIENT_OUTPUT);
+  }
+  if (isRefused()) {
+    process.stderr.write(ACTIVE_WRITER_TEXT);
+    return finish(1);
+  }
+  if (process.env.FAKE_CLIENT_HANG === '1') return setInterval(() => {}, 1 << 30);
+  if (process.env.FAKE_CLIENT_HOLD_FILE) return waitForRelease(process.env.FAKE_CLIENT_HOLD_FILE);
+  setTimeout(complete, Number(process.env.FAKE_CLIENT_RUN_MS || 0));
+}
+
+main();
