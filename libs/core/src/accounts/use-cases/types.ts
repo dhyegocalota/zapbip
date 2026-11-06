@@ -9,13 +9,13 @@ export type OwnerAccountInput = {
   publicOrigin: string;
 };
 
-export type ApplyOwnerCommandInput = OwnerAccountInput & { command: AccountCommand };
+export type ApplyOwnerCommandInput = OwnerAccountInput & { command: AccountCommand; isRequestLive: boolean };
 export type CreateAgentConnectionInput = OwnerAccountInput & { rawName: string };
 export type RevokeAgentConnectionInput = OwnerAccountInput & { rawName: string };
 export type RotateAgentConnectionInput = OwnerAccountInput & { rawName: string };
 export type ListAgentConnectionsInput = OwnerAccountInput;
 export type RequestAccountDeletionInput = OwnerAccountInput;
-export type ConfirmAccountDeletionInput = OwnerAccountInput;
+export type ConfirmAccountDeletionInput = OwnerAccountInput & { isRequestLive: boolean };
 
 export type OpenOwnerAccountInput = {
   dependencies: AccountLifecycleDependencies;

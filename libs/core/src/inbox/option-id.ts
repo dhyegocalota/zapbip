@@ -39,11 +39,9 @@ export function formatRoutingListQuestionId(input: { messageId: string }): strin
 export function formatChoiceOptionIds(input: { questionId: string; options: QuestionOption[] }): string[] {
   const isRoutingList = input.questionId.startsWith(ROUTE_QUESTION_ID_PREFIX);
   const messageId = input.questionId.slice(ROUTE_QUESTION_ID_PREFIX.length);
-  return input.options.map((option) =>
-    option.rowId === undefined
-      ? isRoutingList
-        ? formatRouteOptionId({ messageId, agent: option.title })
-        : formatOptionId({ questionId: input.questionId, optionIndex: option.optionIndex })
-      : option.rowId,
-  );
+  return input.options.map((option) => {
+    if (option.rowId !== undefined) return option.rowId;
+    if (isRoutingList) return formatRouteOptionId({ messageId, agent: option.title });
+    return formatOptionId({ questionId: input.questionId, optionIndex: option.optionIndex });
+  });
 }

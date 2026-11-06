@@ -19,7 +19,7 @@ describe('requestAccountDeletion', () => {
 describe('confirmAccountDeletion', () => {
   test('without a request it replies expired', async () => {
     const fixture = await createAccountFixture();
-    const result = await confirmAccountDeletion(ownerInputOf(fixture));
+    const result = await confirmAccountDeletion({ ...ownerInputOf(fixture), isRequestLive: false });
     expect(intentsOf({ result })).toEqual([AccountReplyIntent.DeletionExpired]);
     expect(result.deletionConfirmed).toBe(false);
   });
@@ -28,7 +28,7 @@ describe('confirmAccountDeletion', () => {
     const fixture = await createAccountFixture();
     await requestAccountDeletion(ownerInputOf(fixture));
     await fixture.environment.clock.advance({ ms: DELETION_CONFIRM_TTL_MS });
-    const result = await confirmAccountDeletion(ownerInputOf(fixture));
+    const result = await confirmAccountDeletion({ ...ownerInputOf(fixture), isRequestLive: true });
     expect(intentsOf({ result })).toEqual([AccountReplyIntent.DeletionDone]);
     expect(result.deletionConfirmed).toBe(true);
   });
@@ -37,7 +37,7 @@ describe('confirmAccountDeletion', () => {
     const fixture = await createAccountFixture();
     await requestAccountDeletion(ownerInputOf(fixture));
     await fixture.environment.clock.advance({ ms: DELETION_CONFIRM_TTL_MS + 1 });
-    const result = await confirmAccountDeletion(ownerInputOf(fixture));
+    const result = await confirmAccountDeletion({ ...ownerInputOf(fixture), isRequestLive: false });
     expect(intentsOf({ result })).toEqual([AccountReplyIntent.DeletionExpired]);
     expect(result.deletionConfirmed).toBe(false);
     expect(await fixture.environment.dependencies.deletionRequests.find()).toBeNull();

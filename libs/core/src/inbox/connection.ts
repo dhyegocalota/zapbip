@@ -9,5 +9,6 @@ export type ConnectionIdentity = {
 };
 
 export function connectionKeyOf(input: { connection: ConnectionIdentity }): string {
-  throw new Error('connectionKeyOf is not implemented');
+  const { accountId, agent } = input.connection;
+  return `${accountId}:${agent}`;
 }

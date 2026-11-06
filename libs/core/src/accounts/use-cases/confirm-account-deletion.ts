@@ -11,9 +11,8 @@ export async function isDeletionRequestLive(input: Pick<ConfirmAccountDeletionIn
 }
 
 export async function confirmAccountDeletion(input: ConfirmAccountDeletionInput): Promise<AccountCommandResult> {
-  const { dependencies, account } = input;
+  const { dependencies, account, isRequestLive } = input;
   const { locale } = account;
-  const isRequestLive = await isDeletionRequestLive({ dependencies });
   if (isRequestLive) {
     return buildResult({ replies: [buildTextReply({ intent: AccountReplyIntent.DeletionDone, locale })], deletionConfirmed: true });
   }

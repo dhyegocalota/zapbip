@@ -276,6 +276,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
 
   createUpload(input: AgentRequest<CreateUploadInput>): Promise<CallOutcome<CreateUploadResult>> {
     return this.outcome({
+      connection: input.connection,
       run: () => inbox.createUpload({ ...input, dependencies: this.dependencies }),
       describe: (value) => ({
         event: LogEvent.Upload,

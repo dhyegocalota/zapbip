@@ -4,6 +4,7 @@ import {
   AccountStateOutcome,
   ChannelInboundKind,
   CommandKind,
+  DeliveryState,
   ForwardedKind,
   IdPrefix,
   MessageKind,
@@ -75,22 +76,35 @@ function toContents(input: { reply: AccountReply }): MessageContent[] {
   return [...textContents, { kind: MessageKind.Choice, questionId: ACCOUNT_MENU_QUESTION_ID, options, selected: null }];
 }
 
-async function sendContents(input: ReceiveAccountMessageInput & { contents: MessageContent[] }): Promise<void> {
-  const { dependencies, account, contents } = input;
+async function sendContents(input: ReceiveAccountMessageInput & { contents: MessageContent[]; messageIds: string[] }): Promise<void> {
+  const { dependencies, account, contents, messageIds } = input;
   await contents.reduce(
-    (previous, content) =>
+    (previous, content, index) =>
       previous.then(async () => {
         await deliverToOwner({
           dependencies,
           ownerLocale: account.locale,
           agent: null,
-          messageId: dependencies.ids.next({ prefix: IdPrefix.Message }),
+          messageId: messageIds[index]!,
           content,
           replyToMessageId: null,
         });
       }),
     Promise.resolve(),
   );
+}
+
+function newMessageIds(input: ReceiveAccountMessageInput & { contents: MessageContent[] }): string[] {
+  return input.contents.map(() => input.dependencies.ids.next({ prefix: IdPrefix.Message }));
+}
+
+async function redactSentMessages(input: ReceiveAccountMessageInput & { messageIds: string[] }): Promise<void> {
+  const { dependencies, messageIds } = input;
+  const messages = await Promise.all(messageIds.map((messageId) => dependencies.repository.findMessage({ messageId })));
+  const sentMessageIds = messages.flatMap((message) =>
+    message !== null && message.delivery === DeliveryState.Sent ? [message.messageId] : [],
+  );
+  await dependencies.installLinkRedaction.redact({ messageIds: sentMessageIds });
 }
 
 async function compensate(input: ReceiveAccountMessageInput & { result: AccountCommandResult }): Promise<void> {
@@ -116,7 +130,8 @@ async function compensate(input: ReceiveAccountMessageInput & { result: AccountC
 async function tellSendFailed(input: ReceiveAccountMessageInput): Promise<void> {
   const reply = buildTextReply({ intent: AccountReplyIntent.SendFailed, locale: input.account.locale });
   try {
-    await sendContents({ ...input, contents: toContents({ reply }) });
+    const contents = toContents({ reply });
+    await sendContents({ ...input, contents, messageIds: newMessageIds({ ...input, contents }) });
   } catch {
     return;
   }
@@ -132,12 +147,15 @@ async function settleRotation(input: ReceiveAccountMessageInput & { result: Acco
 
 async function sendReplies(input: ReceiveAccountMessageInput & { result: AccountCommandResult }): Promise<void> {
   const contents = input.result.replies.flatMap((reply) => toContents({ reply }));
+  const messageIds = newMessageIds({ ...input, contents });
   try {
-    await sendContents({ ...input, contents });
+    await sendContents({ ...input, contents, messageIds });
   } catch {
     await compensate(input);
     await tellSendFailed(input);
     return;
+  } finally {
+    await redactSentMessages({ ...input, messageIds });
   }
   await settleRotation(input);
 }
@@ -169,10 +187,14 @@ async function handleReply(
   return answerLocally({ ...input, commandKind: null, prepare: async () => buildResult({ replies: [reply] }) });
 }
 
-async function beginConfirmedDeletion(input: ReceiveAccountMessageInput & { command: AccountCommand }): Promise<void> {
-  const { dependencies, account, command } = input;
-  if (command.kind !== CommandKind.ConfirmDeletion) return;
-  const isRequestLive = await isDeletionRequestLive({ dependencies });
+async function readRequestLiveness(input: ReceiveAccountMessageInput & { command: AccountCommand }): Promise<boolean> {
+  const { dependencies, command } = input;
+  if (command.kind !== CommandKind.ConfirmDeletion) return false;
+  return isDeletionRequestLive({ dependencies });
+}
+
+async function beginConfirmedDeletion(input: ReceiveAccountMessageInput & { isRequestLive: boolean }): Promise<void> {
+  const { dependencies, account, isRequestLive } = input;
   if (!isRequestLive) return;
   await dependencies.accounts.setState({ accountId: account.accountId, state: AccountState.Deleting });
 }
@@ -180,11 +202,12 @@ async function beginConfirmedDeletion(input: ReceiveAccountMessageInput & { comm
 async function handleProceed(input: ReceiveAccountMessageInput & { command: AccountCommand | null }): Promise<ReceiveAccountMessageResult> {
   const { dependencies, account, channelMessageId, entry, publicOrigin, command } = input;
   if (command !== null) {
-    await beginConfirmedDeletion({ ...input, command });
+    const isRequestLive = await readRequestLiveness({ ...input, command });
+    await beginConfirmedDeletion({ ...input, isRequestLive });
     return answerLocally({
       ...input,
       commandKind: command.kind,
-      prepare: () => applyOwnerCommand({ dependencies, account, publicOrigin, command }),
+      prepare: () => applyOwnerCommand({ dependencies, account, publicOrigin, command, isRequestLive }),
     });
   }
   const result: ReceiveResult = await receiveChannelMessage({ dependencies, ownerLocale: account.locale, channelMessageId, entry });

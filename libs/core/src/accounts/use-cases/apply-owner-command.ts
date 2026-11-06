@@ -9,7 +9,7 @@ import { revokeAgentConnection } from './revoke-agent-connection';
 import { rotateAgentConnection } from './rotate-agent-connection';
 import type { ApplyOwnerCommandInput, OwnerAccountInput } from './types';
 
-type CommandHandler = (input: OwnerAccountInput & { command: AccountCommand }) => Promise<AccountCommandResult>;
+type CommandHandler = (input: OwnerAccountInput & { command: AccountCommand; isRequestLive: boolean }) => Promise<AccountCommandResult>;
 
 const MISSING_NAME = '';
 

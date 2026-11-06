@@ -11,7 +11,7 @@ function commandOf(input: { kind: CommandKind; rawName?: string | null; locale?:
 
 async function apply(input: { command: AccountCommand }) {
   const fixture = await createAccountFixture();
-  const result = await applyOwnerCommand({ ...ownerInputOf(fixture), command: input.command });
+  const result = await applyOwnerCommand({ ...ownerInputOf(fixture), command: input.command, isRequestLive: false });
   return { fixture, result };
 }
 
