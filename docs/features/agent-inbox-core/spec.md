@@ -171,7 +171,7 @@ HTTP routes on the Worker:
 | Route | Purpose |
 |---|---|
 | `POST\|GET\|DELETE /c/:secret/mcp` and `/mcp` with Bearer | MCP Streamable HTTP |
-| `PUT /c/:secret/u/:upload_id?exp=&sig=` | upload bytes for a `create_upload`; the secret locates the account |
+| `PUT /u/:account_id/:upload_id?exp=&sig=` | upload bytes for a `create_upload`; the account id is in the path and the HMAC covers purpose, account id, upload id and expiry |
 | `GET /m/:account_id/:media_id?exp=&sig=` | signed media link; the HMAC covers purpose, account id, media id and expiry |
 | `POST /dev/owner/:phone/messages`, `GET /dev/owner/:phone/screen`, `POST /dev/owner/:phone/clock` | owner simulator, keyed by the owner's phone as WhatsApp keys it. Mounted only by the development entry `src/index.dev.ts`; absent from the production build. |
 
@@ -297,7 +297,7 @@ The E2E gate that [ADR 0005](../../adr/0005-the-local-gate-runs-what-the-diff-ca
 | Media keys and the message index | — | media is stored at `accounts/<account_id>/media/<media_id>`; `message_index` maps a media id (an inbound `wamid` or an upload id) to its account, the media path carries the account id and the HMAC covers it (A23); the index serves reply routing, not the media route | owner delegated 2026-11-06 |
 | Repository and ownership of this spec | — | the lead owns `docs/features/**`, the ADRs, the indexes and the status flips; each lane writes its own section of `tester-briefing.md` | owner delegated 2026-11-06 |
 | ADR amendments | — | ADR 0008 names eight ports; ADR 0006 looks secrets up by digest (no constant-time comparison across rows) | owner delegated 2026-11-06 |
-| Upload and media routes | `PUT /u/:id?token=` · under the secret, media by unguessable id | upload `PUT /c/:secret/u/:upload_id?exp=&sig=` (the secret locates the account); media `GET /m/:account_id/:media_id?exp=&sig=` carries no secret; the account id is in the path and the HMAC covers it | owner delegated 2026-11-06 |
+| Upload and media routes | `PUT /u/:id?token=` · under the secret, media by unguessable id | upload `PUT /u/:account_id/:upload_id?exp=&sig=` (the connection secret never appears in a tool result; the account id is in the path and the HMAC covers it); media `GET /m/:account_id/:media_id?exp=&sig=` carries no secret; the account id is in the path and the HMAC covers it | owner delegated 2026-11-06 |
 | Production entry | — | `src/index.ts` never imports the simulator; `src/index.dev.ts` is the only entry that mounts it, and it is the top-level development block that `wrangler dev` runs | owner delegated 2026-11-06 |
 | Idempotent `ask` | unanswered only · open or answered within a retry window | a repeat matches a question of the same agent, normalized text and options asked within 4 min (`ASK_RETRY_WINDOW_MS`, the claude.ai retry cap), open or answered; a matched retry holds like a fresh `ask` | owner delegated 2026-11-06 |
 | Owner text that answers | — | text routed to an agent with an open question answers that agent's newest open question; a tap on an answered or expired question is routed as a message with `reply_to`; a tap on an unknown question is routed as text | owner delegated 2026-11-06 |

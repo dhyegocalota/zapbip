@@ -1,7 +1,7 @@
 import { LinkPurpose } from '@zapbip/types';
 import { MEDIA_LINK_TTL_MS, UPLOAD_TTL_MS } from '@zapbip/core';
 import type { ToolContext } from './types';
-import { CONNECTION_PATH_PREFIX, MEDIA_PATH_PREFIX, UPLOAD_PATH_SEGMENT } from './constants';
+import { MEDIA_PATH_PREFIX, UPLOAD_PATH_PREFIX } from './constants';
 
 export async function buildMediaLink(input: { context: ToolContext; mediaId: string }): Promise<string> {
   const { context, mediaId } = input;
@@ -22,5 +22,5 @@ export async function buildUploadLink(input: { context: ToolContext; uploadId: s
     purpose: LinkPurpose.Upload,
     ttlMs: UPLOAD_TTL_MS,
   });
-  return `${context.origin}${CONNECTION_PATH_PREFIX}/${context.secret}/${UPLOAD_PATH_SEGMENT}/${uploadId}?${query}`;
+  return `${context.origin}${UPLOAD_PATH_PREFIX}/${context.connection.accountId}/${uploadId}?${query}`;
 }

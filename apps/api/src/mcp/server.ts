@@ -40,7 +40,6 @@ export function createConnectionServer(input: { resolved: ResolvedConnection; en
   const accountInbox = environment.ACCOUNT_INBOX.get(environment.ACCOUNT_INBOX.idFromName(resolved.connection.accountId));
   const context: ToolContext = {
     connection: resolved.connection,
-    secret: resolved.secret,
     origin: environment.PUBLIC_ORIGIN,
     accountInbox: accountInbox as unknown as AccountInboxRpc,
     mediaStore: createR2MediaStore({

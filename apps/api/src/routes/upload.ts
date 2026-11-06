@@ -1,13 +1,11 @@
 import { Hono } from 'hono';
 import { createPlatformClock } from '../adapters/platform/clock';
 import { createR2MediaStore } from '../adapters/r2/r2-media-store';
-import { UNAUTHORIZED_BODY } from '../contract/constants';
 import type { Bindings } from '../contract/env';
 import { LogEvent } from '../contract/log';
 import { logEvent } from '../log';
 import { verifyLink } from '../signing';
 import { LinkPurpose } from '@zapbip/types';
-import { resolveConnection } from '../mcp/resolve-connection';
 import { accountInboxOf } from './account-inbox-stub';
 import { ERROR_STATUS, HttpStatus } from './http-status';
 
@@ -19,13 +17,8 @@ function mediaTypeOf(input: { header: string }): string {
   return input.header.replace(MEDIA_TYPE_PARAMETERS_PATTERN, '').trim().toLowerCase();
 }
 
-uploadRoutes.put('/c/:secret/u/:upload_id', async (context) => {
-  const resolved = await resolveConnection({ database: context.env.CONNECTIONS, secret: context.req.param('secret') });
-  if (!resolved) {
-    logEvent({ event: LogEvent.AuthRejected });
-    return context.json(UNAUTHORIZED_BODY, HttpStatus.Unauthorized);
-  }
-  const { connection } = resolved;
+uploadRoutes.put('/u/:account_id/:upload_id', async (context) => {
+  const accountId = context.req.param('account_id');
   const uploadId = context.req.param('upload_id');
   const expiresAt = Number(context.req.query('exp'));
   const signature = context.req.query('sig');
@@ -35,7 +28,7 @@ uploadRoutes.put('/c/:secret/u/:upload_id', async (context) => {
     hasSignedQuery &&
     (await verifyLink({
       key: context.env.UPLOAD_LINK_SIGNING_KEY,
-      accountId: connection.accountId,
+      accountId,
       mediaId: uploadId,
       purpose: LinkPurpose.Upload,
       expiresAt,
@@ -44,7 +37,7 @@ uploadRoutes.put('/c/:secret/u/:upload_id', async (context) => {
     }));
   if (!isSignatureValid) return context.json({ error: 'forbidden' }, HttpStatus.Forbidden);
 
-  const inbox = accountInboxOf({ bindings: context.env, accountId: connection.accountId });
+  const inbox = accountInboxOf({ bindings: context.env, accountId });
   const description = await inbox.describeUpload({ mediaId: uploadId });
   if (!description.ok)
     return context.json({ error: description.errorCode, message: description.message }, ERROR_STATUS[description.errorCode]);
@@ -71,7 +64,7 @@ uploadRoutes.put('/c/:secret/u/:upload_id', async (context) => {
     clock,
   });
   await mediaStore.put({
-    accountId: connection.accountId,
+    accountId,
     mediaId: uploadId,
     body,
     sizeBytes: declaredLength,
@@ -79,6 +72,6 @@ uploadRoutes.put('/c/:secret/u/:upload_id', async (context) => {
   });
   const completion = await inbox.completeUpload({ mediaId: uploadId });
   if (!completion.ok) return context.json({ error: completion.errorCode, message: completion.message }, ERROR_STATUS[completion.errorCode]);
-  logEvent({ event: LogEvent.Upload, accountId: connection.accountId, sizeBytes: declaredLength });
+  logEvent({ event: LogEvent.Upload, accountId, sizeBytes: declaredLength });
   return context.json({ upload_id: uploadId }, HttpStatus.Created);
 });
