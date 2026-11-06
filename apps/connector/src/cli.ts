@@ -1,10 +1,10 @@
 import { existsSync, realpathSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { createInterface } from 'node:readline/promises';
 import { fileURLToPath } from 'node:url';
 import { CONNECTION_URL_VARIABLE, ConnectorClient, UUID_PATTERN } from '@zapbip/types';
 import { runChannel } from './channel';
 import { deriveConnectorLinks, runConnection } from './connect';
+import { readHiddenLine } from './hidden-prompt';
 import { runListen } from './listen';
 
 export type ConnectArguments = {
@@ -76,9 +76,7 @@ export function parseConnectArguments(input: { argv: string[] }): ConnectArgumen
 async function readConnectionLink(): Promise<string> {
   const fromEnvironment = process.env[CONNECTION_URL_VARIABLE];
   if (fromEnvironment !== undefined && fromEnvironment !== '') return fromEnvironment;
-  const prompt = createInterface({ input: process.stdin, output: process.stderr });
-  const answer = await prompt.question(CONNECTION_PROMPT);
-  prompt.close();
+  const answer = await readHiddenLine({ stdin: process.stdin, output: process.stderr, prompt: CONNECTION_PROMPT });
   return answer.trim();
 }
 
