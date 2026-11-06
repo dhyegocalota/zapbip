@@ -35,7 +35,7 @@ Step 0 has no tests: it is signatures and stubs. The first red tests are the L1 
 ### Hypotheses to attack
 
 1. Hypothesis: every stub throws exactly `<name> is not implemented` and nothing else in the repository calls one yet. Break it by: grepping `libs/core/src/wake` and `apps/api/src/adapters` for stubs and for call sites in production code.
-2. Hypothesis: the production bundle carries no wake test double. Break it by: `wrangler deploy --dry-run --env production` and grep for `createScriptedWakeTransport` (nothing imports `@zapbip/core/wake-testing` in Step 0, so it should be absent).
+2. Hypothesis: the production bundle carries no wake test double. Break it by: `wrangler deploy --dry-run` and grep for `createScriptedWakeTransport` (nothing imports `@zapbip/core/wake-testing` in Step 0, so it should be absent).
 3. Hypothesis: `@zapbip/core` still resolves for every existing import after the `exports` field. Break it by: `pnpm verify` (integration and e2e import it).
 
 ### Known gaps
@@ -139,7 +139,6 @@ Status: green after the L2 merge (`90b73a5`): 11 of 11 pass.
 - A revoked secret gets the same unauthorised response as any tool (not re-tested here; slice 1 behaviour).
 
 **Gaps.** The "`mode: none` after a webhook yields zero scripted requests" case belongs to the delivery tests of L2. The revoked-secret case of the test plan is not covered by `set-wake.test.ts`.
-=======
 ## Lane L2 (Durable Object and adapters)
 
 ### What changed

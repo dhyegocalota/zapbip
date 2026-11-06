@@ -74,7 +74,7 @@ export type SetWakeResult = {
 
 export type ScheduleWakeInput = WakeContext & { agent: AgentName };
 
-export type RunDueWakesInput = WakeContext & { ownerLocale: OwnerLocale; publicHost: string };
+export type RunDueWakesInput = WakeContext & { ownerLocale: OwnerLocale | null; publicHost: string };
 export type RunDueWakesResult = { nextDueAt: number | null };
 
 export type ScriptedWakeResponse = {

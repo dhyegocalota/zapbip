@@ -307,10 +307,11 @@ describe('runDueWakes refusals and the owner notice', () => {
     const wakeEnvironment = await armed();
     enqueue({ wakeEnvironment, responses: [respond({ statusCode: UNAUTHORIZED })] });
     await wakeEnvironment.environment.clock.advance({ ms: WAKE_DEBOUNCE_MS });
-    await runDueWakes({ ...wakeEnvironment.context, ownerLocale: undefined as unknown as OwnerLocale, publicHost: PUBLIC_HOST });
+    await runDueWakes({ ...wakeEnvironment.context, ownerLocale: null, publicHost: PUBLIC_HOST });
     expect(wakeEnvironment.transport.requests).toHaveLength(1);
     expect(await findJob({ wakeEnvironment })).toBeNull();
     expect(sentTexts({ wakeEnvironment })).toEqual([]);
+    expect(wakeEnvironment.observer.events.map((event) => event.name)).not.toContain(WakeLogEventName.NoticeFailed);
     expect(await findWake({ wakeEnvironment })).toMatchObject({ status: WakeStatus.Failing });
   });
 

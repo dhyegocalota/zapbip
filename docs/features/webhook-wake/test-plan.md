@@ -218,7 +218,7 @@ Constants are the ones in `libs/core/src/wake/constants.ts`. "t0" is the fake cl
 - [ ] Scripted `503` once, then `200` — steps: owner message; advance the clock 3 000, run; advance 5 000, run — expected: two recorded requests; the second is delivered.
 - [ ] Scripted `401` — steps: owner message; advance 3 000; run — expected: one wake notice on the simulator screen with the `wakeFailed` copy in the owner's locale; wake status failing.
 - [ ] Default gate run with no environment variable set — expected: the E2E suite runs against `wrangler dev` and reports every case; no case is skipped.
-- [ ] Wake bundle, `apps/api/test/e2e/wake-bundle.e2e.test.ts`: `wrangler deploy --dry-run --env production` bundle — expected: contains none of `devScriptWake`, `devReadWakeRequests`, `devRunDueWakes`, `ScriptedWakeTransport`, `wake/script`, `wake/requests`, `wake/run`; the development bundle (`index.dev.ts`) contains all of them. [security]
+- [ ] Wake bundle, `apps/api/test/e2e/wake-bundle.e2e.test.ts`: `wrangler deploy --dry-run` bundle — expected: contains none of `devScriptWake`, `devReadWakeRequests`, `devRunDueWakes`, `ScriptedWakeTransport`, `wake/script`, `wake/requests`, `wake/run`; the development bundle (`index.dev.ts`) contains all of them. [security]
 - [ ] Production `DevAccountInbox` absence at runtime: `POST /dev/owner/<phone>/wake/run` on the production entry — expected: `404`. [security]
 
 ## Owner-run (outside the gate; the owner runs them with their own accounts, times recorded in the PR)

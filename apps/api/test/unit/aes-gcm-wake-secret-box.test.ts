@@ -85,11 +85,13 @@ describe('createAesGcmWakeSecretBox', () => {
     ).toBeNull();
   });
 
-  it('throws naming the key when it has 31 bytes', () => {
-    expect(() => createAesGcmWakeSecretBox({ base64Key: keyOf({ bytes: SHORT_KEY_BYTES }) })).toThrow(KEY_NAME);
+  it('builds with a 31 byte key and rejects sealing naming the key', async () => {
+    const box = createAesGcmWakeSecretBox({ base64Key: keyOf({ bytes: SHORT_KEY_BYTES }) });
+    await expect(box.seal({ plain: PLAIN, associatedData: ASSOCIATED_DATA })).rejects.toThrow(KEY_NAME);
   });
 
-  it('throws naming the key when it is absent', () => {
-    expect(() => createAesGcmWakeSecretBox({ base64Key: undefined as unknown as string })).toThrow(KEY_NAME);
+  it('builds without a key and rejects opening naming the key', async () => {
+    const box = createAesGcmWakeSecretBox({ base64Key: undefined as unknown as string });
+    await expect(box.open({ sealed: 'x', associatedData: ASSOCIATED_DATA })).rejects.toThrow(KEY_NAME);
   });
 });
