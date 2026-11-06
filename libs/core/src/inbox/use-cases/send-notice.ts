@@ -41,6 +41,9 @@ async function resetNoticeAttempts(input: { dependencies: CoreDependencies }): P
 
 export async function sendNotice(input: SendNoticeInput): Promise<void> {
   const { dependencies, ownerLocale, agent, content } = input;
+  const { noticeRetryAt } = await dependencies.repository.findWindow();
+  const isInBackoff = noticeRetryAt !== null && noticeRetryAt > dependencies.clock.now();
+  if (isInBackoff) return;
   const isNoticeOwner = await dependencies.repository.claimNotice();
   if (!isNoticeOwner) return;
   const preview = await noticePreview({ dependencies, content, locale: ownerLocale });

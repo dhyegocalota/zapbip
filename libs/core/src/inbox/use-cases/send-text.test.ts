@@ -99,8 +99,9 @@ describe('sendText', () => {
       noticeSentForClosedWindow: false,
       noticeRetryLocale: OwnerLocale.EnglishUs,
     });
-    await send({ environment, text: 'two' });
-    expect(environment.sender.templates).toHaveLength(2);
+    const second = await send({ environment, text: 'two' });
+    expect(second.delivery).toBe(DeliveryState.Queued);
+    expect(environment.sender.templates).toHaveLength(1);
   });
 
   test('CU-94b concurrent sends with the notice failing once fail only the claim owner and keep both queued', async () => {
@@ -117,7 +118,7 @@ describe('sendText', () => {
     expect(loser.delivery).toBe(DeliveryState.Queued);
     expect(environment.sender.templates).toHaveLength(1);
     await send({ environment, text: 'three' });
-    expect(environment.sender.templates).toHaveLength(2);
+    expect(environment.sender.templates).toHaveLength(1);
     const history = await environment.repository.listAgentHistory({ agent: 'alpha', limit: 5 });
     expect(history.map((message) => message.delivery)).toEqual([DeliveryState.Queued, DeliveryState.Queued, DeliveryState.Queued]);
   });

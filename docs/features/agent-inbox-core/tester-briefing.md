@@ -467,14 +467,14 @@ Pins: the two other `track-client-failure` cases, WI-140 and WI-141 edits.
 
 ### What changed
 
-- A failed owner notice: the send that owns the claim raises `the owner notice failed; your message is queued and will be delivered` (`NoticeFailedError`), the message stays queued, `owner_notice_failed` is logged (kind and account), and the `AccountInbox` alarm retries every `NOTICE_RETRY_MS` (5 minutes) through a third due-time provider (`retryNotice`, `findNoticeRetryDueAt`). The failed notice's locale is kept in `owner_window.notice_retry_locale` (v1 edited, not deployed). Concurrent losers stay queued without error.
+- A failed owner notice: the send that owns the claim raises `the owner notice failed; your message is queued until the owner next writes` (`NoticeFailedError`), the message stays queued, `owner_notice_failed` is logged (kind and account), and the `AccountInbox` alarm retries every `NOTICE_RETRY_MS` (5 minutes) through a third due-time provider (`retryNotice`, `findNoticeRetryDueAt`). The failed notice's locale is kept in `owner_window.notice_retry_locale` (v1 edited, not deployed). Concurrent losers stay queued without error.
 - Routing rule 5 falls back to the only agent: with exactly one agent an unaddressed owner message reaches it and no list is sent (`RoutingRule.SingleAgent`).
 - Docs: the `<Chat>` notice bubbles quote the real copy; `chat.jsx` has a destructured default, a generic file card for unknown media kinds, `aria-hidden` on decorative glyphs and SVGs and a labelled group role.
 - Tests: company docs read `COMPANY` from `@zapbip/types`; the no-op filter in `docs-conversations.test.ts` is gone; `' Application/PDF'` joins CU-179.
 
 ### Red today, green after
 
-- 58bdf8e (red): core `retry-notice.test.ts` "findNoticeRetryDueAt is not implemented" and send-text "expected an InboxError, nothing was thrown"; API WI-147 "expected { ok: true ... } to deeply equal { ok: false ... }", WI-148 "expected [] to deeply equal [ 'notice' ]", WI-149 "expected vi.fn() to be called 4 times, but got 1 times". WI-133 is a pin. Green at 3454b87.
+- 58bdf8e (red): core `retry-notice.test.ts` "findNoticeRetryDueAt is not implemented" and send-text "expected an InboxError, nothing was thrown"; API WI-147 "expected { ok: true ... } to deeply equal { ok: false ... }", WI-148 "expected [] to deeply equal [ 'notice' ]", WI-149 "expected vi.fn() to be called 4 times, but got 1 times". WI-150 is a pin. Green at 3454b87.
 - CU-94b red text `delivery failed for text` at 63c09ee (the test then kept both sends queued); it is rewritten at 58bdf8e so that only the claim owner fails.
 - c890efc (red): CU-190 routing and receive tests. Green at a2501d3 (WI-151 covers the Durable Object).
 - 245e482 (red): `docs-notices.test.ts` and `docs-chat-component.test.ts`, 10 failed.
@@ -496,8 +496,9 @@ Pins: the two other `track-client-failure` cases, WI-140 and WI-141 edits.
 
 - The retry time is stored: `owner_window.notice_retry_at` and `notice_retry_attempt` (v1 edited, not deployed). `retryNotice` returns while the clock is before `notice_retry_at`, so an alarm woken early by an expiry sends nothing.
 - Backoff: `NOTICE_RETRY_MS` doubles per failed attempt (`NOTICE_RETRY_BACKOFF_FACTOR`) up to `NOTICE_RETRY_MAX_MS` (6 h); reset on a successful notice or when the owner message reopens the window. `claimNotice` clears the retry locale and due time and keeps the attempt count.
-- The tool error says `the owner notice failed; your message is queued and will be delivered` (same code `delivery_failed`).
+- The tool error says `the owner notice failed; your message is queued until the owner next writes` (same code `delivery_failed`).
 - Account-inbox WI-130..135 are renumbered WI-147..152; WI-153 (early wake) and WI-154 (claim clears the retry) are new. The test plan has a row for CU-94b..j, CU-190, CU-191 and WI-147..154.
 - `docs-notices.test.ts` matches the bubbles only against `NoticeBody`, `QuestionNoticeBody` and `AgentNotListening` (the troubleshooting bubble is a notice-style bubble of that copy).
 - Red: CU-94e, CU-94h, CU-94i, the two send-text cases (error text), WI-147 (error text), WI-153 and WI-154 at a53ec9d. Pins: CU-94j, WI-149.
 - Hypotheses: a failing sender is retried at 5, 10, 20, 40, 80, 160, 320 minutes then every 6 hours; an expiry waking the alarm sends no template; agents that read the error do not resend.
+- Fix round 8: a send while `notice_retry_at` is in the future returns queued without claiming the notice (only the alarm retries); WI-150 and the send-text case prove it (red at the previous commit).
