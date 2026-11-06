@@ -275,3 +275,47 @@ pnpm --filter @zapbip/api exec vitest run --config vitest.integration.config.mts
 - Resolved at integration: `HttpStatus` has `InternalServerError` and `ServiceUnavailable`; the route answers `HttpStatus.ServiceUnavailable` and `WEBHOOK_BATCH_UNINDEXED_STATUS` is gone.
 - The `Content-Type` of the `GET` answer is set for the refusal too.
 - Test plan AU-62 reads as a metadata `404`; implemented per A25 (download URL `404` re-requests metadata once).
+
+## Lane W6 (proof)
+
+### What changed
+
+- `apps/api/test/integration/whatsapp-webhook.test.ts`: WI-33 (the Durable Object commit fails once: `500`, no receipt, the retry stores one message) and WI-34 (the R2 put fails on an image: `500`, nothing stored, the retry stores one image). WI-34 posts through `createApp(...).fetch` with `whatsappTestEnv`, because the integration bindings carry no access token and the Graph is replaced with a `fetch` spy that serves the metadata and the bytes.
+- `apps/api/test/integration/whatsapp-send-tools.test.ts` (new): the MCP tools `send_message` and `react` through the real Durable Object, with the Cloud API sender built by `AccountInbox.createSender` against the fake Graph on `4012`. WI-58 (text, wamid mapped to the account), WI-59 (`131047` queues, one notice template, no second notice), WI-60 (`131009` on a reaction: the tool error names `reaction.message_id`, the reaction is `Failed`), WI-62 (`130429`: busy, `Failed`, one request), WI-66 (`500`: timeout text, `Failed`, one request).
+- `apps/api/vitest.e2e-whatsapp.config.mts`, `apps/api/test/e2e/whatsapp-support/{constants,global-setup,webhook}.ts`, `apps/api/test/e2e/whatsapp-channel.e2e.test.ts` (new): R31. The setup starts the fake Graph on `4011` and its own `wrangler dev` with the four WhatsApp variables and `WHATSAPP_GRAPH_BASE_URL`. `apps/api/package.json` `test:e2e` runs the slice 1 config and then this one.
+- `apps/api/test/e2e/whatsapp-bundle.e2e.test.ts` (new): the production dry-run bundle.
+
+### How to run
+
+```bash
+pnpm --filter @zapbip/api exec vitest run --config vitest.integration.config.mts test/integration/whatsapp-webhook.test.ts test/integration/whatsapp-send-tools.test.ts
+pnpm --filter @zapbip/api exec vitest run --config vitest.e2e-whatsapp.config.mts
+pnpm --filter @zapbip/api exec vitest run --config vitest.e2e.config.mts test/e2e/whatsapp-bundle.e2e.test.ts
+```
+
+Port `4011` must be free.
+
+### Red today, green after
+
+Every test of this lane is a pin: W3 and W4 are merged, so none was red on landing (`68d71d4`, `623d78e`, `e293138`). The drafts failed only on harness mistakes before they were committed:
+
+| Draft | Failure printed | Cause |
+|-------|-----------------|-------|
+| WI-33, WI-34 | `expected [] to deeply equal [ 'Oi' ]`; `WHATSAPP_ACCESS_TOKEN is not set` | the history read registered the agent; the route bindings have no token |
+| WI-58 | two `message_index` rows | opening the window sent the "agent is not listening" notice through the Cloud API sender |
+| E2E-1 | `status: 'empty'` | an owner text routes only to an agent that wrote recently |
+
+### Hypotheses to attack
+
+1. Hypothesis: a Durable Object failure while committing returns `500` and leaves no receipt, so Meta's retry stores once. Break it by failing the commit after the receipt insert.
+2. Hypothesis: an R2 failure returns `500` with no message stored. Break it with a failure on the second image of a batch.
+3. Hypothesis: no Graph error is retried by the sender (`130429`, `500`). Count the fake's requests for the same message.
+4. Hypothesis: production sends only through the Cloud API sender. Break it by adding `WHATSAPP_GRAPH_BASE_URL` to `env.production` with the fake address, or by importing `fake-whatsapp-sender` from `index.ts`.
+5. Hypothesis: the E2E wamids are deterministic (`wamid.fake.<n>` counts the sends the fake answered). Break it by adding a send to an earlier E2E case.
+
+### Known gaps
+
+- E2E-2 is not the plan's voice note with a stored `url`: the fake Graph is `http` and the media hosts must be `https` (`fbsbx.com`, `fbcdn.net`, `whatsapp.net`), so a download cannot reach the fake. The E2E posts a voice note whose metadata points to a foreign host and asserts the agent sees it unavailable and the owner gets the `mediaUnavailable` notice. A stored voice note needs a test seam in the product (a download base URL), which belongs to W4.
+- `global-setup.ts` repeats slice 1's `freePort`, `waitForHealth` and teardown (R31 keeps `stack.ts` and `global-setup.ts` untouched); a later cleanup can export them from slice 1.
+- WI-35 to WI-43 and the indexed status cases WI-52 to WI-55 and WI-57 are still not written (W4's gaps).
+- The WhatsApp E2E reuses slice 1's `stack.ts` helpers through the same `stack` provided key.

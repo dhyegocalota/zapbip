@@ -730,10 +730,10 @@ Failure modes for W0 are in the table below. W0 has no backout: fix forward in a
 
 ### Lane W6 (proof, after every merge and after deploy-readiness's production block)
 
-- [ ] **W6.1 red: E2E.** Write `apps/api/test/e2e/whatsapp-channel.e2e.test.ts` and `apps/api/test/e2e/whatsapp-support/`: start the fake Graph on `4011`, start `wrangler dev` with the `--var` secrets and `WHATSAPP_GRAPH_BASE_URL` pointing at the fake, post signed webhooks. Expected failure: the first signed webhook does not return `200` before W3 and W4 are wired. Commit as `test(api): pin the channel end to end`.
-- [ ] **W6.2 green: E2E.** Fix only the harness; a product bug goes back to its lane. Commit as `test(api): run the channel end to end`.
-- [ ] **W6.3 red: production bundle.** Write `apps/api/test/e2e/whatsapp-bundle.e2e.test.ts` beside slice 1's bundle test, using the same dry-run helper pattern: `wrangler deploy --dry-run --env production --outdir <scratch>` succeeds; the bundle has no `127.0.0.1:4011`, no fixture marker and no `fake-whatsapp-sender` import; with `WHATSAPP_GRAPH_BASE_URL` missing the channel throws naming it. Commit as `test(api): pin the production bundle`.
-- [ ] **W6.4 green.** Only if W6.3 needed a harness change: implement it and commit as `test(api): prove the production bundle carries no fake`. Otherwise strike this box with the reason.
+- [x] **W6.1 red: E2E.** Write `apps/api/test/e2e/whatsapp-channel.e2e.test.ts` and `apps/api/test/e2e/whatsapp-support/`: start the fake Graph on `4011`, start `wrangler dev` with the `--var` secrets and `WHATSAPP_GRAPH_BASE_URL` pointing at the fake, post signed webhooks. Expected failure: the first signed webhook does not return `200` before W3 and W4 are wired. Commit as `test(api): pin the channel end to end`. (`623d78e`; pin: W3 and W4 are merged, so no red run was committed. The Durable Object failure and send cases WI-33, WI-34, WI-58, WI-59, WI-60, WI-62 and WI-66 landed in `68d71d4`)
+- [x] **W6.2 green: E2E.** Fix only the harness; a product bug goes back to its lane. Commit as `test(api): run the channel end to end`. (done inside `623d78e`: the harness fixes happened before the first commit)
+- [x] **W6.3 red: production bundle.** Write `apps/api/test/e2e/whatsapp-bundle.e2e.test.ts` beside slice 1's bundle test, using the same dry-run helper pattern: `wrangler deploy --dry-run --env production --outdir <scratch>` succeeds; the bundle has no `127.0.0.1:4011`, no fixture marker and no `fake-whatsapp-sender` import; with `WHATSAPP_GRAPH_BASE_URL` missing the channel throws naming it. Commit as `test(api): pin the production bundle`. (`e293138`, pin)
+- [x] ~~**W6.4 green.** Only if W6.3 needed a harness change: implement it and commit as `test(api): prove the production bundle carries no fake`. Otherwise strike this box with the reason.~~ (struck: W6.3 was green on landing, no harness change was needed)
 
 ## Failure modes
 
