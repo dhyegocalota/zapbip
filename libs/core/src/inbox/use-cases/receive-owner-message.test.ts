@@ -67,6 +67,10 @@ function sessionTexts(input: { environment: Environment }): string[] {
   return input.environment.sender.sessions.flatMap((message) => (message.kind === MessageKind.Text ? [message.text] : []));
 }
 
+function expiredListText(): string {
+  return renderCopy({ key: InboxCopyKey.RoutingListExpired, locale: OwnerLocale.EnglishUs, values: {} });
+}
+
 function routingLists(input: { environment: Environment }): Message[] {
   return input.environment.sender.sessions.filter((message) => message.kind === MessageKind.Choice);
 }
@@ -233,28 +237,47 @@ describe('receiveOwnerMessage routing list', () => {
     expect(await holding).toMatchObject({ status: ReplyStatus.Message, messages: [{ text: 'first' }, { text: 'second' }] });
   });
 
-  test('CU-140 a stale route choice assigns nothing and is routed as text', async () => {
+  test('CU-140 a route choice for a batch already resolved assigns nothing and is answered with the expired notice', async () => {
     const environment = await createEnvironment();
     await registerAgents({ environment, agents: ['alpha', 'beta'] });
     await receiveText({ environment, text: 'first' });
     const [list] = routingLists({ environment });
     const optionId = routeOptionId({ list: list!, agent: 'alpha' });
     await tap({ environment, optionId, optionTitle: 'alpha' });
-    expect(await environment.repository.countUnread({ agent: 'alpha' })).toBe(1);
     const stale = await tap({ environment, optionId, optionTitle: 'beta' });
-    expect(stale.agent).toBeNull();
+    expect(stale).toEqual({ messageId: null, agent: null, duplicate: false });
     expect(await environment.repository.countUnread({ agent: 'alpha' })).toBe(1);
-    expect((await environment.repository.listHeld()).map((message) => (message.kind === MessageKind.Text ? message.text : null))).toEqual([
-      'beta',
-    ]);
+    expect(await environment.repository.listHeld()).toEqual([]);
+    expect(sessionTexts({ environment })).toEqual([expiredListText()]);
   });
 
-  test('a route choice for an agent that does not exist assigns nothing', async () => {
+  test('a route choice for an agent that does not exist is answered with the expired notice and delivered nowhere', async () => {
     const environment = await createEnvironment();
     await registerAgents({ environment, agents: ['alpha'] });
     const held = await receiveText({ environment, text: 'first' });
-    await tap({ environment, optionId: formatRouteOptionId({ messageId: held.messageId!, agent: 'ghost' }), optionTitle: 'ghost' });
+    const result = await tap({
+      environment,
+      optionId: formatRouteOptionId({ messageId: held.messageId!, agent: 'ghost' }),
+      optionTitle: 'ghost',
+    });
+    expect(result).toEqual({ messageId: null, agent: null, duplicate: false });
     expect(await environment.repository.countUnread({ agent: 'ghost' })).toBe(0);
+    expect(await environment.repository.listHeld()).toHaveLength(1);
+    expect(sessionTexts({ environment })).toEqual([expiredListText()]);
+  });
+
+  test('while a routing list is open a recent agent does not receive new unmatched texts ahead of the held ones', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha', 'beta'] });
+    await receiveText({ environment, text: 'hello' });
+    const [list] = routingLists({ environment });
+    await send({ environment, agent: 'alpha', text: 'working on it' });
+    const held = await receiveText({ environment, text: 'x' });
+    expect(held.agent).toBeNull();
+    expect(await environment.repository.countUnread({ agent: 'alpha' })).toBe(0);
+    await tap({ environment, optionId: routeOptionId({ list: list!, agent: 'alpha' }), optionTitle: 'alpha' });
+    const inbox = await checkInbox({ dependencies: environment.dependencies, connection: connectionOf({ agent: 'alpha' }) });
+    expect(inbox.messages.map((message) => (message.kind === MessageKind.Text ? message.text : null))).toEqual(['hello', 'x']);
   });
 
   test('CU-141 a second unmatched message joins the held ones without a new list', async () => {
@@ -530,6 +553,15 @@ describe('receiveOwnerMessage media and receipts', () => {
       receivedAt: now,
       retentionUntil: now + MEDIA_RETENTION_MS,
     });
+  });
+
+  test('a repeated channel message returns the original message id', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha'] });
+    const content = { kind: MessageKind.Text, text: '@alpha hi' } as const;
+    const original = await receive({ environment, content, channelMessageId: 'wamid.same' });
+    const repeated = await receive({ environment, content, channelMessageId: 'wamid.same' });
+    expect(repeated).toEqual({ messageId: original.messageId, agent: 'alpha', duplicate: true });
   });
 
   test('CU-150 a repeated channel message is ignored', async () => {
