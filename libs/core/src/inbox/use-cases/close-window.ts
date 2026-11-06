@@ -1,6 +1,7 @@
 import type { CloseWindowInput } from './types';
 
-export function closeWindow(input: CloseWindowInput): Promise<void> {
-  void input;
-  throw new Error('closeWindow is not implemented');
+export async function closeWindow(input: CloseWindowInput): Promise<void> {
+  const { repository } = input.dependencies;
+  const window = await repository.findWindow();
+  await repository.saveWindow({ window: { ...window, closedAt: input.at } });
 }
