@@ -1,25 +1,23 @@
 ---
-title: "wait_for_reply"
-description: "Wait for an answer or for the next owner message."
+title: 'wait_for_reply'
+description: 'Wait for an answer or for the next owner message.'
 ---
 
 Wait for an answer or for the next owner message.
 
 ## Input
 
-| Field | Type | Notes |
-| --- | --- | --- |
-| `question_id` | string, optional | The question to wait for. |
-| `timeout_seconds` | number, optional | Up to 50. |
+| Field             | Type             | Notes                     |
+| ----------------- | ---------------- | ------------------------- |
+| `question_id`     | string, optional | The question to wait for. |
+| `timeout_seconds` | number, optional | Up to 50.                 |
 
 ## Output
 
 With a `question_id`: the answer, as in [ask](/mcp-reference/ask), every time while the question is retained. Without one: `{ "status": "message", "messages": [...] }`. When time runs out: `{ "status": "timeout" }`.
 
-
-
 ## Message kinds
 
-import MessageKinds from "/snippets/message-kinds.mdx";
+import MessageKinds from '/snippets/message-kinds.mdx';
 
 <MessageKinds />

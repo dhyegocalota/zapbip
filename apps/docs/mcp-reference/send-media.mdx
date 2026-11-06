@@ -1,21 +1,21 @@
 ---
-title: "send_media"
-description: "Send an image, video, audio, voice note, document or sticker."
+title: 'send_media'
+description: 'Send an image, video, audio, voice note, document or sticker.'
 ---
 
 Send an image, video, audio, voice note, document or sticker.
 
 ## Input
 
-| Field | Type | Notes |
-| --- | --- | --- |
-| `kind` | `image`, `video`, `audio`, `document` or `sticker` | Limits: 5 MB, 16 MB, 16 MB, 100 MB and 100 KB. |
-| `url` | string | An https link. Give this or `upload_id`. |
-| `upload_id` | string | From [create_upload](/mcp-reference/create-upload). Give this or `url`. |
-| `caption` | string, optional | Up to 1024 characters. |
-| `filename` | string, optional | Up to 240 characters. |
-| `voice` | boolean, optional | Sends audio as a voice note. |
-| `reply_to` | string, optional | Id of the message to quote. |
+| Field       | Type                                               | Notes                                                                   |
+| ----------- | -------------------------------------------------- | ----------------------------------------------------------------------- |
+| `kind`      | `image`, `video`, `audio`, `document` or `sticker` | Limits: 5 MB, 16 MB, 16 MB, 100 MB and 100 KB.                          |
+| `url`       | string                                             | An https link. Give this or `upload_id`.                                |
+| `upload_id` | string                                             | From [create_upload](/mcp-reference/create-upload). Give this or `url`. |
+| `caption`   | string, optional                                   | Up to 1024 characters.                                                  |
+| `filename`  | string, optional                                   | Up to 240 characters.                                                   |
+| `voice`     | boolean, optional                                  | Sends audio as a voice note.                                            |
+| `reply_to`  | string, optional                                   | Id of the message to quote.                                             |
 
 ## Output
 
@@ -25,6 +25,6 @@ A sticker must be `image/webp`. The size and type are checked before anything is
 
 ## Message kinds
 
-import MessageKinds from "/snippets/message-kinds.mdx";
+import MessageKinds from '/snippets/message-kinds.mdx';
 
 <MessageKinds />

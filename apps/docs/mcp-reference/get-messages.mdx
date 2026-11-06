@@ -1,24 +1,22 @@
 ---
-title: "get_messages"
-description: "Read the unread owner messages and the recent history."
+title: 'get_messages'
+description: 'Read the unread owner messages and the recent history.'
 ---
 
 Read the unread owner messages and the recent history.
 
 ## Input
 
-| Field | Type | Notes |
-| --- | --- | --- |
+| Field   | Type             | Notes                |
+| ------- | ---------------- | -------------------- |
 | `limit` | number, optional | Size of the history. |
 
 ## Output
 
 The unread owner messages, which become read, plus the last 20 exchanged messages.
 
-
-
 ## Message kinds
 
-import MessageKinds from "/snippets/message-kinds.mdx";
+import MessageKinds from '/snippets/message-kinds.mdx';
 
 <MessageKinds />

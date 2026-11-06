@@ -1,17 +1,17 @@
 ---
-title: "ask"
-description: "Ask the owner a question with buttons or a list and wait for the answer."
+title: 'ask'
+description: 'Ask the owner a question with buttons or a list and wait for the answer.'
 ---
 
 Ask the owner a question with buttons or a list and wait for the answer.
 
 ## Input
 
-| Field | Type | Notes |
-| --- | --- | --- |
-| `question` | string | Up to 1024 characters. |
-| `options` | array of 1 to 10 | Up to 3 options render as buttons (title up to 20 characters), 4 to 10 as a list (row up to 24). |
-| `timeout_seconds` | number, optional | Up to 50. |
+| Field             | Type             | Notes                                                                                            |
+| ----------------- | ---------------- | ------------------------------------------------------------------------------------------------ |
+| `question`        | string           | Up to 1024 characters.                                                                           |
+| `options`         | array of 1 to 10 | Up to 3 options render as buttons (title up to 20 characters), 4 to 10 as a list (row up to 24). |
+| `timeout_seconds` | number, optional | Up to 50.                                                                                        |
 
 ## Output
 
@@ -21,6 +21,6 @@ Repeating the same question within 4 minutes returns the same question and sends
 
 ## Message kinds
 
-import MessageKinds from "/snippets/message-kinds.mdx";
+import MessageKinds from '/snippets/message-kinds.mdx';
 
 <MessageKinds />

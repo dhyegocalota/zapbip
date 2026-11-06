@@ -1,25 +1,23 @@
 ---
-title: "react"
-description: "React to a message with an emoji."
+title: 'react'
+description: 'React to a message with an emoji.'
 ---
 
 React to a message with an emoji.
 
 ## Input
 
-| Field | Type | Notes |
-| --- | --- | --- |
-| `message_id` | string | The message to react to. |
-| `emoji` | string | One emoji. An empty string removes the reaction. |
+| Field        | Type   | Notes                                            |
+| ------------ | ------ | ------------------------------------------------ |
+| `message_id` | string | The message to react to.                         |
+| `emoji`      | string | One emoji. An empty string removes the reaction. |
 
 ## Output
 
 `{ "message_id": string, "delivery": "sent" | "queued" }`. `queued` means the [24-hour window](/concepts/24-hour-window) is closed.
 
-
-
 ## Message kinds
 
-import MessageKinds from "/snippets/message-kinds.mdx";
+import MessageKinds from '/snippets/message-kinds.mdx';
 
 <MessageKinds />
