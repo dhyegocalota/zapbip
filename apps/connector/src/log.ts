@@ -1,6 +1,14 @@
-import type { ConnectorLogEvent } from '@zapbip/types';
+import { ConnectorLogStream, type ConnectorLogEvent } from '@zapbip/types';
 
-export function logConnectorEvent(input: { event: ConnectorLogEvent; fields: Record<string, string | number | boolean | null> }): void {
-  const line = { ...input.fields, at: new Date().toISOString(), event: input.event };
-  process.stdout.write(`${JSON.stringify(line)}\n`);
+export type ConnectorLogFields = Record<string, string | number | boolean | null>;
+export type ConnectorLogger = (input: { event: ConnectorLogEvent; fields: ConnectorLogFields }) => void;
+
+function createConnectorLogger(input: { stream: ConnectorLogStream }): ConnectorLogger {
+  return ({ event, fields }) => {
+    const line = { ...fields, at: new Date().toISOString(), event };
+    process[input.stream].write(`${JSON.stringify(line)}\n`);
+  };
 }
+
+export const logConnectorEvent = createConnectorLogger({ stream: ConnectorLogStream.Stdout });
+export const logConnectorEventToStderr = createConnectorLogger({ stream: ConnectorLogStream.Stderr });

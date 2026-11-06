@@ -1,17 +1,23 @@
 import type { Message } from '@zapbip/core';
-import type { MessageKind } from '@zapbip/types';
+import { CHANNEL_NOTIFICATION_METHOD, CHANNEL_SENDER, type MessageKind } from '@zapbip/types';
+import { escapeChannelText, ownerMessageText } from './owner-prompt';
 
 export type OwnerNotice = { messageId: string; kind: MessageKind; sender: string; verified: boolean; text: string };
 export type ChannelNotification = { method: string; params: { content: string; meta: Record<string, string> } };
 
-export function buildOwnerNotice(_input: { message: Message }): OwnerNotice {
-  throw new Error('buildOwnerNotice is not implemented');
+export function buildOwnerNotice(input: { message: Message }): OwnerNotice {
+  const { message } = input;
+  return { messageId: message.messageId, kind: message.kind, sender: CHANNEL_SENDER, verified: true, text: ownerMessageText({ message }) };
 }
 
-export function formatListenLine(_input: { message: Message }): string {
-  throw new Error('formatListenLine is not implemented');
+export function formatListenLine(input: { message: Message }): string {
+  return `${JSON.stringify(buildOwnerNotice(input))}\n`;
 }
 
-export function buildChannelNotification(_input: { message: Message }): ChannelNotification {
-  throw new Error('buildChannelNotification is not implemented');
+export function buildChannelNotification(input: { message: Message }): ChannelNotification {
+  const { text } = buildOwnerNotice(input);
+  return {
+    method: CHANNEL_NOTIFICATION_METHOD,
+    params: { content: escapeChannelText({ text }), meta: { sender: CHANNEL_SENDER, verified: String(true) } },
+  };
 }

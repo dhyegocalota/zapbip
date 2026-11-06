@@ -63,6 +63,31 @@ Only one thing: send a message back to you. It cannot use other tools, and Codex
 
 If the Codex app already has the conversation open, Codex refuses to resume it. The connector then starts one new session in the same folder, which starts without the earlier conversation, and uses it from then on.
 
+## Keep an open session listening
+
+`connect` wakes a session that is closed. For a session you have open right now, Claude Code can hear you at once, with no wake and no waiting. There are two ways, and the first is the better one.
+
+The channel is the first choice. It is a small program that Claude Code starts itself, in the same way it starts any other tool. It puts each message you write on WhatsApp straight into the open session, as a message from you, marked as verified. Set `ZAPBIP_CONNECTION_URL` in the environment Claude Code runs in, and Claude Code starts it with:
+
+```bash
+npx zapbip channel
+```
+
+The channel cannot ask you for the link, so it only reads it from `ZAPBIP_CONNECTION_URL`. It does not take arguments.
+
+The listener is the backup. It prints one line for every message you write, and Claude Code watches those lines with its Monitor tool. Each line wakes the open session, and nothing is spent while you are silent:
+
+```bash
+export ZAPBIP_CONNECTION_URL='https://<host>/c/<secret>/mcp'
+npx zapbip listen
+```
+
+Each line is JSON with the message id, its kind, `"sender":"owner"`, `"verified":true` and the text. A Monitor watch lasts up to 30 minutes, so the AI starts the watch again each time one ends. Other agents that can keep a background command running and react to its output, such as OpenClaw and Hermes, can use `npx zapbip listen` the same way.
+
+Both programs stay open and reconnect by themselves, like `connect`. Both mark a message as handled only after they pass it on, so a message is never lost and never shown twice. Their logs go to the error output and never carry your messages or your link.
+
+So the three ways fit together: the channel for an open session, `listen` as its backup, and `connect` for a closed one.
+
 ## One connector per connection
 
 If you start a second connector for the same connection, the first one stops. Run it on one computer at a time.

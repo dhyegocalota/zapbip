@@ -18,9 +18,9 @@ import {
   REPLACED_CLOSE_CODE,
   UPGRADE_REQUIRED_STATUS,
 } from '@zapbip/types';
-import { logConnectorEvent } from './log';
+import { logConnectorEvent, type ConnectorLogFields, type ConnectorLogger } from './log';
 import { findNewestSessionId } from './session-lookup';
-import { createWakeQueue } from './wake-queue';
+import { createWakeQueue, type WakeQueue } from './wake-queue';
 import { runWake } from './wake-runner';
 
 export type ServerFrameParse = { ok: true; frame: ServerFrame } | { ok: false; reason: FrameRejectionReason };
@@ -116,21 +116,20 @@ function waitOrAbort(input: { delayMs: number; signal: AbortSignal }): Promise<v
   });
 }
 
-export async function runConnection(input: {
+export async function runSocketSession(input: {
   socketLink: string;
-  client: ConnectorClient;
-  workingDirectory: string;
-  pinnedSessionId: string | null;
   signal: AbortSignal;
+  log: ConnectorLogger;
+  connectedFields: ConnectorLogFields;
+  createQueue: (input: { sendDone: (input: { messageId: string }) => void }) => WakeQueue;
 }): Promise<number> {
-  const { socketLink, client, workingDirectory, pinnedSessionId, signal } = input;
+  const { socketLink, signal, log, connectedFields, createQueue } = input;
   const probeStatus = await probeStatusOf({ socketLink });
   if (probeStatus !== UPGRADE_REQUIRED_STATUS) {
-    logConnectorEvent({ event: ConnectorLogEvent.ConnectorClosed, fields: { status: probeStatus } });
+    log({ event: ConnectorLogEvent.ConnectorClosed, fields: { status: probeStatus } });
     return FAILURE_EXIT_CODE;
   }
 
-  const wakeAbortController = new AbortController();
   let currentSocket: WebSocket | null = null;
   let agentName: string | null = null;
 
@@ -138,50 +137,23 @@ export async function runConnection(input: {
     if (currentSocket === null || currentSocket.readyState !== WebSocket.OPEN) return;
     const frame: DoneFrame = { type: ConnectorFrameType.Done, messageId: doneInput.messageId };
     currentSocket.send(JSON.stringify(frame));
-    logConnectorEvent({ event: ConnectorLogEvent.DoneSent, fields: { messageId: doneInput.messageId } });
+    log({ event: ConnectorLogEvent.DoneSent, fields: { messageId: doneInput.messageId } });
   }
 
-  async function resolveSession(): Promise<{ sessionSource: ConnectorSessionSource; sessionId: string | null }> {
-    if (pinnedSessionId !== null) return { sessionSource: ConnectorSessionSource.Pinned, sessionId: pinnedSessionId };
-    const sessionId = await findNewestSessionId({
-      client,
-      workingDirectory,
-      claudeConfigDirectory: process.env.CLAUDE_CONFIG_DIR,
-      codexHome: process.env.CODEX_HOME,
-    });
-    return { sessionSource: ConnectorSessionSource.Newest, sessionId };
-  }
-
-  const wakeQueue = createWakeQueue({
-    sendDone,
-    runWake: async ({ message }) => {
-      const startedAt = Date.now();
-      const { sessionSource, sessionId } = await resolveSession();
-      logConnectorEvent({
-        event: ConnectorLogEvent.WakeStarted,
-        fields: { messageId: message.messageId, kind: message.kind, sessionKind: sessionSource },
-      });
-      const result = await runWake({ client, sessionSource, sessionId, message, workingDirectory, signal: wakeAbortController.signal });
-      logConnectorEvent({
-        event: ConnectorLogEvent.WakeFinished,
-        fields: { messageId: message.messageId, outcome: result.outcome, exitCode: result.exitCode, elapsedMs: Date.now() - startedAt },
-      });
-      if (result.outcome === ConnectorWakeOutcome.NoSession) throw new Error('no session to wake');
-    },
-  });
+  const wakeQueue = createQueue({ sendDone });
 
   const frameHandlers: Record<ConnectorFrameType.Hello | ConnectorFrameType.Messages, (input: { frame: ServerFrame }) => void> = {
     [ConnectorFrameType.Hello]: ({ frame }) => {
       const hello = frame as HelloFrame;
       agentName = hello.agent;
-      logConnectorEvent({
+      log({
         event: ConnectorLogEvent.ConnectorConnected,
-        fields: { agent: hello.agent, client, previousWakeMode: hello.previousWakeMode },
+        fields: { agent: hello.agent, ...connectedFields, previousWakeMode: hello.previousWakeMode },
       });
     },
     [ConnectorFrameType.Messages]: ({ frame }) => {
       const { messages } = frame as MessagesFrame;
-      logConnectorEvent({ event: ConnectorLogEvent.MessagesReceived, fields: { count: messages.length } });
+      log({ event: ConnectorLogEvent.MessagesReceived, fields: { count: messages.length } });
       messages.forEach((message) => wakeQueue.enqueue({ message }));
     },
   };
@@ -191,7 +163,7 @@ export async function runConnection(input: {
     const text = isBinary ? '' : (dataInput.data as string);
     if (text === CONNECTOR_PONG_TEXT) return;
     const parsed = parseServerFrame({ text, byteLength: Buffer.byteLength(text), isBinary });
-    if (!parsed.ok) return logConnectorEvent({ event: ConnectorLogEvent.FrameRejected, fields: { reason: parsed.reason } });
+    if (!parsed.ok) return log({ event: ConnectorLogEvent.FrameRejected, fields: { reason: parsed.reason } });
     frameHandlers[parsed.frame.type as ConnectorFrameType.Hello | ConnectorFrameType.Messages]({ frame: parsed.frame });
   }
 
@@ -218,7 +190,7 @@ export async function runConnection(input: {
         heartbeatTimer = setInterval(() => {
           socket.send(CONNECTOR_PING_TEXT);
           timeoutTimer = setTimeout(() => {
-            logConnectorEvent({ event: ConnectorLogEvent.ConnectorClosed, fields: { code: ABNORMAL_CLOSE_CODE } });
+            log({ event: ConnectorLogEvent.ConnectorClosed, fields: { code: ABNORMAL_CLOSE_CODE } });
             end(ABNORMAL_CLOSE_CODE);
             socket.close();
           }, HEARTBEAT_TIMEOUT_MS);
@@ -230,8 +202,8 @@ export async function runConnection(input: {
       });
       socket.addEventListener('close', (event) => {
         const isReplacement = event.code === REPLACED_CLOSE_CODE;
-        if (isReplacement) logConnectorEvent({ event: ConnectorLogEvent.ConnectorReplaced, fields: { agent: agentName } });
-        if (!isReplacement) logConnectorEvent({ event: ConnectorLogEvent.ConnectorClosed, fields: { code: event.code } });
+        if (isReplacement) log({ event: ConnectorLogEvent.ConnectorReplaced, fields: { agent: agentName } });
+        if (!isReplacement) log({ event: ConnectorLogEvent.ConnectorClosed, fields: { code: event.code } });
         end(event.code);
       });
     });
@@ -241,7 +213,6 @@ export async function runConnection(input: {
     'abort',
     () => {
       currentSocket?.close();
-      wakeAbortController.abort();
     },
     { once: true },
   );
@@ -253,9 +224,54 @@ export async function runConnection(input: {
     if (signal.aborted) break;
     const failedAttempts = end.wasOpened ? 0 : attempt;
     const delayMs = reconnectDelayMs({ attempt: failedAttempts });
-    logConnectorEvent({ event: ConnectorLogEvent.ConnectorReconnecting, fields: { attempt: failedAttempts, delayMs } });
+    log({ event: ConnectorLogEvent.ConnectorReconnecting, fields: { attempt: failedAttempts, delayMs } });
     await waitOrAbort({ delayMs, signal });
     attempt = failedAttempts + 1;
   }
   return CLEAN_EXIT_CODE;
+}
+
+export async function runConnection(input: {
+  socketLink: string;
+  client: ConnectorClient;
+  workingDirectory: string;
+  pinnedSessionId: string | null;
+  signal: AbortSignal;
+}): Promise<number> {
+  const { socketLink, client, workingDirectory, pinnedSessionId, signal } = input;
+  const wakeAbortController = new AbortController();
+  signal.addEventListener('abort', () => wakeAbortController.abort(), { once: true });
+
+  async function resolveSession(): Promise<{ sessionSource: ConnectorSessionSource; sessionId: string | null }> {
+    if (pinnedSessionId !== null) return { sessionSource: ConnectorSessionSource.Pinned, sessionId: pinnedSessionId };
+    const sessionId = await findNewestSessionId({
+      client,
+      workingDirectory,
+      claudeConfigDirectory: process.env.CLAUDE_CONFIG_DIR,
+      codexHome: process.env.CODEX_HOME,
+    });
+    return { sessionSource: ConnectorSessionSource.Newest, sessionId };
+  }
+
+  function createQueue(queueInput: { sendDone: (input: { messageId: string }) => void }): WakeQueue {
+    return createWakeQueue({
+      sendDone: queueInput.sendDone,
+      runWake: async ({ message }) => {
+        const startedAt = Date.now();
+        const { sessionSource, sessionId } = await resolveSession();
+        logConnectorEvent({
+          event: ConnectorLogEvent.WakeStarted,
+          fields: { messageId: message.messageId, kind: message.kind, sessionKind: sessionSource },
+        });
+        const result = await runWake({ client, sessionSource, sessionId, message, workingDirectory, signal: wakeAbortController.signal });
+        logConnectorEvent({
+          event: ConnectorLogEvent.WakeFinished,
+          fields: { messageId: message.messageId, outcome: result.outcome, exitCode: result.exitCode, elapsedMs: Date.now() - startedAt },
+        });
+        if (result.outcome === ConnectorWakeOutcome.NoSession) throw new Error('no session to wake');
+      },
+    });
+  }
+
+  return runSocketSession({ socketLink, signal, log: logConnectorEvent, connectedFields: { client }, createQueue });
 }

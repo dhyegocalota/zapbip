@@ -63,6 +63,31 @@ Só uma coisa: te mandar uma mensagem de volta. Ela não pode usar outras ferram
 
 Se o app do Codex já estiver com a conversa aberta, o Codex recusa retomá-la. O conector então abre uma única sessão nova na mesma pasta, que começa sem a conversa anterior, e passa a usá-la.
 
+## Mantenha uma sessão aberta ouvindo
+
+O `connect` acorda uma sessão que está fechada. Para uma sessão que você tem aberta agora, o Claude Code pode te ouvir na hora, sem acordar e sem esperar. Há duas formas, e a primeira é a melhor.
+
+O canal é a primeira escolha. É um programa pequeno que o próprio Claude Code inicia, do mesmo jeito que inicia qualquer outra ferramenta. Ele coloca cada mensagem que você escreve no WhatsApp direto na sessão aberta, como uma mensagem sua, marcada como verificada. Defina `ZAPBIP_CONNECTION_URL` no ambiente em que o Claude Code roda, e o Claude Code o inicia com:
+
+```bash
+npx zapbip channel
+```
+
+O canal não consegue te perguntar o link, então só o lê de `ZAPBIP_CONNECTION_URL`. Ele não aceita argumentos.
+
+O ouvinte é o plano B. Ele imprime uma linha para cada mensagem que você escreve, e o Claude Code vigia essas linhas com a ferramenta Monitor. Cada linha acorda a sessão aberta, e nada é gasto enquanto você está em silêncio:
+
+```bash
+export ZAPBIP_CONNECTION_URL='https://<host>/c/<secret>/mcp'
+npx zapbip listen
+```
+
+Cada linha é um JSON com o id da mensagem, o tipo, `"sender":"owner"`, `"verified":true` e o texto. Uma vigia do Monitor dura até 30 minutos, então a IA a inicia de novo a cada vez que uma termina. Outros agentes que conseguem manter um comando rodando em segundo plano e reagir à saída dele, como o OpenClaw e o Hermes, podem usar `npx zapbip listen` do mesmo jeito.
+
+Os dois programas ficam abertos e reconectam sozinhos, como o `connect`. Os dois só marcam uma mensagem como tratada depois de repassá-la, então uma mensagem nunca se perde e nunca aparece duas vezes. Os logs deles vão para a saída de erro e nunca trazem suas mensagens nem seu link.
+
+Então as três formas se completam: o canal para uma sessão aberta, o `listen` como reserva dele e o `connect` para uma sessão fechada.
+
 ## Um conector por conexão
 
 Se você iniciar um segundo conector para a mesma conexão, o primeiro para. Rode em um computador por vez.
