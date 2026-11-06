@@ -514,7 +514,7 @@ Every box is empty when authored. A developer ticks its own box. A wrong step is
 ### Z. Prove and ship
 
 - [ ] **Tester briefing:** each developer wrote its section of `docs/features/webhook-wake/tester-briefing.md`.
-- [ ] **Tester run:** a fresh `tester` sub-agent executed `test-plan.md`, area by area, ticking every box with evidence.
+- [x] **Tester run:** a fresh `tester` sub-agent executed `test-plan.md`, area by area, ticking every box with evidence. Evidence: `b46d30c`, `test-results/webhook-wake/final-head.md`.
 - [ ] **Reviewer:** a fresh `reviewer` returned a verdict; refutation of the three riskiest claims is recorded in `test-plan.md`.
 - [ ] **Security reviewer:** a fresh `security-reviewer` returned `Security verdict`.
 - [ ] **Owner-run section:** the live checks are run by the owner; measured times are recorded in the PR.
@@ -554,7 +554,7 @@ Every box is empty when authored. A developer ticks its own box. A wrong step is
 ## Z. Prove and ship
 
 - [ ] **Tester briefing:** each developer wrote its section of `docs/features/webhook-wake/tester-briefing.md`.
-- [ ] **Tester run:** a fresh `tester` executed `test-plan.md` and ticked every box with evidence.
+- [x] **Tester run:** a fresh `tester` executed `test-plan.md` and ticked every box with evidence. Evidence: `b46d30c`, `test-results/webhook-wake/final-head.md`.
 - [ ] **Reviewer:** a fresh `reviewer` returned a verdict; refutation of the three riskiest claims is recorded in `test-plan.md`.
 - [ ] **Security reviewer:** a fresh `security-reviewer` returned `Security verdict`.
 - [ ] **Owner-run section:** the live checks are run by the owner; measured times recorded in the PR.
