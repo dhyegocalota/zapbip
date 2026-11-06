@@ -1,5 +1,5 @@
 import { AGENT_NAME_PATTERN, InboxError } from '@zapbip/core';
-import { DEFAULT_LOCALE, InboxErrorCode } from '@zapbip/types';
+import { AccountState, DEFAULT_LOCALE, InboxErrorCode } from '@zapbip/types';
 import { generateConnectionSecret } from '../src/adapters/platform/connection-secret';
 import { hashConnectionSecret } from '../src/adapters/platform/hash';
 import { OWNER_PHONE_PATTERN } from '../src/contract/constants';
@@ -15,8 +15,16 @@ function literal(input: { value: string | number }): string {
   return "'" + input.value.replaceAll("'", "''") + "'";
 }
 
-function insertStatement(input: { table: string; values: (string | number)[] }): string {
-  return 'INSERT INTO ' + input.table + ' VALUES (' + input.values.map((value) => literal({ value })).join(', ') + ')';
+function insertStatement(input: { table: string; columns: string[]; values: (string | number)[] }): string {
+  return (
+    'INSERT INTO ' +
+    input.table +
+    ' (' +
+    input.columns.join(', ') +
+    ') VALUES (' +
+    input.values.map((value) => literal({ value })).join(', ') +
+    ')'
+  );
 }
 
 function assertSeedInput(input: { phone: string; agents: string[] }): void {
@@ -43,6 +51,7 @@ export async function buildDirectorySeed(input: { phone: string; agents: string[
     connections.map(async ({ agent, secret }) =>
       insertStatement({
         table: 'connections',
+        columns: ['id', 'account_id', 'agent', 'secret_digest', 'created_at'],
         values: [
           'con_' + crypto.randomUUID().replaceAll('-', ''),
           accountId,
@@ -56,7 +65,11 @@ export async function buildDirectorySeed(input: { phone: string; agents: string[
   return {
     connections,
     statements: [
-      insertStatement({ table: 'accounts', values: [accountId, input.createdAt] }),
+      insertStatement({
+        table: 'accounts',
+        columns: ['id', 'state', 'created_at'],
+        values: [accountId, AccountState.Active, input.createdAt],
+      }),
       'INSERT INTO owner_identities (wa_id, account_id, from_user_id, locale, created_at) VALUES (' +
         [literal({ value: input.phone }), literal({ value: accountId }), 'NULL', literal({ value: DEFAULT_LOCALE }), input.createdAt].join(
           ', ',
