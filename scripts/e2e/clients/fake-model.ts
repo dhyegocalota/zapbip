@@ -1,5 +1,5 @@
 import { createServer, type IncomingMessage, type Server } from 'node:http';
-import { ANY_HOST } from './constants';
+import { containerReachableHost } from './container-host';
 import { freePort } from './free-port';
 
 const MODELS_PATH_SUFFIX = '/models';
@@ -127,7 +127,8 @@ export async function startFakeModel(): Promise<FakeModel> {
     }
     response.writeHead(HTTP_OK, JSON_HEADERS).end(completion({ content, model }));
   });
-  await new Promise<void>((resolve) => server.listen(port, ANY_HOST, resolve));
+  const bindHost = await containerReachableHost();
+  await new Promise<void>((resolve) => server.listen(port, bindHost, resolve));
   return {
     port,
     requests,

@@ -93,8 +93,12 @@ export async function buildImage(input: {
   contextDirectory: string;
   dockerfile: string;
   platform: string | null;
+  buildArguments: Record<string, string>;
 }): Promise<void> {
-  await runCommand(DOCKER, ['build', '-t', input.tag, '-f', input.dockerfile, ...platformArguments(input), input.contextDirectory], {
-    maxBuffer: LOG_BUFFER_BYTES,
-  });
+  const buildArguments = Object.entries(input.buildArguments).flatMap(([name, value]) => ['--build-arg', `${name}=${value}`]);
+  await runCommand(
+    DOCKER,
+    ['build', '-t', input.tag, '-f', input.dockerfile, ...platformArguments(input), ...buildArguments, input.contextDirectory],
+    { maxBuffer: LOG_BUFFER_BYTES },
+  );
 }

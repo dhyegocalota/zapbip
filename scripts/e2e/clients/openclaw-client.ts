@@ -37,7 +37,7 @@ export async function buildOpenClawImage(input: { directory: string }): Promise<
   const contextDirectory = join(input.directory, 'openclaw-context');
   await mkdir(contextDirectory, { recursive: true });
   await copyFile(join(input.directory, archiveName), join(contextDirectory, PLUGIN_ARCHIVE_FILE));
-  await buildImage({ tag: OPENCLAW_IMAGE_TAG, contextDirectory, dockerfile: DOCKERFILE, platform: null });
+  await buildImage({ tag: OPENCLAW_IMAGE_TAG, contextDirectory, dockerfile: DOCKERFILE, platform: null, buildArguments: {} });
 }
 
 function configOf(input: { connectionLink: string; fakeModelPort: number }) {

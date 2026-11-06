@@ -5,7 +5,8 @@ import { createServer as createHttpsServer } from 'node:https';
 import { connect } from 'node:net';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
-import { ANY_HOST, CONTAINER_HOST, LOOPBACK_HOST } from './constants';
+import { CONTAINER_HOST, LOOPBACK_HOST } from './constants';
+import { containerReachableHost } from './container-host';
 import { freePort } from './free-port';
 
 const runCommand = promisify(execFile);
@@ -68,7 +69,8 @@ export async function startTlsFront(input: { targetPort: number; directory: stri
     clientSocket.on('close', () => upstream.destroy());
     upstream.on('close', () => clientSocket.destroy());
   });
-  await new Promise<void>((resolve) => server.listen(port, ANY_HOST, resolve));
+  const bindHost = await containerReachableHost();
+  await new Promise<void>((resolve) => server.listen(port, bindHost, resolve));
   return {
     port,
     certificateFile,

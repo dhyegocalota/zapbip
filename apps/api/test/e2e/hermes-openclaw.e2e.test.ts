@@ -26,7 +26,7 @@ import {
   stopContainer,
 } from '../../../../scripts/e2e/clients/container';
 import { type FakeModel, replyTo, startFakeModel } from '../../../../scripts/e2e/clients/fake-model';
-import { startHermesClient } from '../../../../scripts/e2e/clients/hermes-client';
+import { buildHermesImage, startHermesClient } from '../../../../scripts/e2e/clients/hermes-client';
 import { buildOpenClawImage, startOpenClawClient } from '../../../../scripts/e2e/clients/openclaw-client';
 import { startTlsFront, type TlsFront } from '../../../../scripts/e2e/clients/tls-front';
 import type { ScreenEntry } from '../../src/contract/account-inbox-rpc';
@@ -291,6 +291,7 @@ describe.skipIf(!isEnabled)('hermes and openclaw plugins against the development
     fakeModel = await startFakeModel();
     tlsFront = await startTlsFront({ targetPort: Number(new URL(isolatedStack.context.origin).port), directory: workDirectory });
     await buildOpenClawImage({ directory: workDirectory });
+    await buildHermesImage({ directory: workDirectory });
   }, SETUP_TIMEOUT_MS);
 
   afterEach(async () => {
@@ -306,7 +307,7 @@ describe.skipIf(!isEnabled)('hermes and openclaw plugins against the development
   });
 
   test(
-    'Hermes install layout: the plugins directory alone makes the platform load and connect',
+    'Hermes install layout: pip install of the package alone makes the platform load and connect',
     async () => {
       const client = await startUnattachedHermes({ accountIndex: 0 });
       await awaitLog({ container: client.container, pattern: HERMES_PLATFORM_CONNECTED_LINE, timeoutMs: HERMES_BOOT_TIMEOUT_MS });
