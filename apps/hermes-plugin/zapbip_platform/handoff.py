@@ -2,9 +2,7 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any
 
-from zapbip_platform.constants import CHANNEL_HANDOFF_NO_TEXT_BY_KIND, MessageKind
-
-MILLISECONDS_PER_SECOND = 1_000
+from zapbip_platform.constants import CHANNEL_HANDOFF_NO_TEXT_BY_KIND, MILLISECONDS_PER_SECOND, MessageKind
 
 Message = dict[str, Any]
 

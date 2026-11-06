@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 from types import TracebackType
@@ -17,12 +18,24 @@ PING_TEXT = '{"type":"ping"}'
 PONG_TEXT = '{"type":"pong"}'
 UPGRADE_HEADER = "Upgrade"
 
+LOGGER_NAME = "zapbip_platform"
+
 OnOpen = Callable[[ServerConnection, int], Awaitable[None]]
 OnFrame = Callable[[ServerConnection, str], Awaitable[None]]
 
 
 async def send_hello(connection: ServerConnection, index: int) -> None:
     await connection.send(hello_text())
+
+
+class LogCollector(logging.Handler):
+    def __init__(self, *, connector: "FakeConnector") -> None:
+        super().__init__(level=logging.INFO)
+        self._connector = connector
+
+    def emit(self, record: logging.LogRecord) -> None:
+        self._connector.logs.append(record.getMessage())
+        self._connector.wake()
 
 
 class FakeConnector:
@@ -39,6 +52,8 @@ class FakeConnector:
         self.probe_count = 0
         self.open_count = 0
         self.timeline: list[str] = []
+        self.logs: list[str] = []
+        self._log_collector = LogCollector(connector=self)
         self.connections: list[ServerConnection] = []
         self._on_open = on_open
         self._on_frame = on_frame
@@ -55,12 +70,15 @@ class FakeConnector:
             self._handle, LOCAL_HOST, 0, process_request=self._process_request, ping_interval=None
         )
         port = self._server.sockets[0].getsockname()[1]
+        logging.getLogger(LOGGER_NAME).addHandler(self._log_collector)
+        logging.getLogger(LOGGER_NAME).setLevel(logging.INFO)
         self.socket_link = f"ws://{LOCAL_HOST}:{port}/c/secret/connector"
         return self
 
     async def __aexit__(
         self, error_type: type[BaseException] | None, error: BaseException | None, traceback: TracebackType | None
     ) -> None:
+        logging.getLogger(LOGGER_NAME).removeHandler(self._log_collector)
         assert self._server is not None
         self._server.close()
         await self._server.wait_closed()
@@ -68,6 +86,12 @@ class FakeConnector:
     @property
     def received_frames(self) -> list[str]:
         return [entry for entry in self.timeline if entry.startswith("{")]
+
+    def wake(self) -> None:
+        self._changed.set()
+
+    def logged(self, *, event: str) -> bool:
+        return any(f'"event": "{event}"' in line for line in self.logs)
 
     def record(self, *, entry: str) -> None:
         self.timeline.append(entry)

@@ -1,6 +1,5 @@
 import asyncio
 import json
-import logging
 from collections.abc import Awaitable, Callable, Coroutine
 from typing import Any
 
@@ -139,12 +138,10 @@ def test_done_follows_each_handoff() -> None:
                 assert connector.received_frames == []
                 handed_off.gates["msg_1"].set()
                 await connector.until(condition=lambda: len(connector.received_frames) == 2)
-            assert connector.timeline == [
-                "handoff:msg_1",
-                done_text(message_id="msg_1"),
-                "handoff:msg_2",
-                done_text(message_id="msg_2"),
-            ]
+            assert connector.received_frames == [done_text(message_id="msg_1"), done_text(message_id="msg_2")]
+            assert handed_off.sent_dones_at_start["msg_1"] == []
+            assert len(handed_off.sent_dones_at_start["msg_2"]) == 1
+            assert "msg_1" in handed_off.sent_dones_at_start["msg_2"][0]
 
     run(scenario())
 
@@ -252,7 +249,7 @@ def test_any_frame_is_proof_of_life() -> None:
     run(scenario())
 
 
-def test_replaced_4001_stops_without_retry(caplog: pytest.LogCaptureFixture) -> None:
+def test_replaced_4001_stops_without_retry() -> None:
     async def on_open(connection: ServerConnection, index: int) -> None:
         await send_hello(connection, index)
         await connection.close(code=REPLACED_CLOSE_CODE)
@@ -264,10 +261,9 @@ def test_replaced_4001_stops_without_retry(caplog: pytest.LogCaptureFixture) -> 
                 exit_code = await running.task
             assert exit_code == CLEAN_EXIT_CODE
             assert connector.open_count == 1
+            assert connector.logged(event="connector_replaced")
 
-    with caplog.at_level(logging.INFO):
-        run(scenario())
-    assert "connector_replaced" in caplog.text
+    run(scenario())
 
 
 def test_abnormal_close_reconnects_and_rereads() -> None:
@@ -319,7 +315,7 @@ def test_successful_open_resets_attempts() -> None:
     run(scenario())
 
 
-def test_stop_during_backoff_returns_promptly(caplog: pytest.LogCaptureFixture) -> None:
+def test_stop_during_backoff_returns_promptly() -> None:
     async def scenario() -> None:
         async with FakeConnector() as connector:
             handed_off = HandedOff(connector=connector)
@@ -327,18 +323,17 @@ def test_stop_during_backoff_returns_promptly(caplog: pytest.LogCaptureFixture) 
             async with running_socket(connector=connector, hand_off=handed_off.hand_off, timing=timing) as running:
                 await connector.until(condition=lambda: connector.open_count == 1)
                 connector.drop_connections()
-                await connector.until(condition=lambda: "connector_reconnecting" in caplog.text)
+                await connector.until(condition=lambda: connector.logged(event="connector_reconnecting"))
                 started_at = asyncio.get_running_loop().time()
                 running.stop.set()
                 await running.task
                 assert asyncio.get_running_loop().time() - started_at < PROMPT_SECONDS
             assert connector.open_count == 1
 
-    with caplog.at_level(logging.INFO):
-        run(scenario())
+    run(scenario())
 
 
-def test_hello_wake_mode_is_logged_not_applied(caplog: pytest.LogCaptureFixture) -> None:
+def test_hello_wake_mode_is_logged_not_applied() -> None:
     async def on_open(connection: ServerConnection, index: int) -> None:
         await connection.send(hello_text(previous_wake_mode="scheduled"))
 
@@ -346,12 +341,11 @@ def test_hello_wake_mode_is_logged_not_applied(caplog: pytest.LogCaptureFixture)
         async with FakeConnector(on_open=on_open) as connector:
             handed_off = HandedOff(connector=connector)
             async with running_socket(connector=connector, hand_off=handed_off.hand_off):
-                await connector.until(condition=lambda: "connector_connected" in caplog.text)
+                await connector.until(condition=lambda: connector.logged(event="connector_connected"))
             assert connector.received_frames == []
+            assert any("scheduled" in line for line in connector.logs)
 
-    with caplog.at_level(logging.INFO):
-        run(scenario())
-    assert "scheduled" in caplog.text
+    run(scenario())
 
 
 def test_close_after_hello_reconnects_without_handoff() -> None:

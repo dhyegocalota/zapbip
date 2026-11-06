@@ -13,6 +13,12 @@ MCP_PATH_SUFFIX = "/mcp"
 CONNECTOR_PING_TEXT = '{"type":"ping"}'
 CONNECTOR_PONG_TEXT = '{"type":"pong"}'
 CHANNEL_PLUGIN_SELF_TEST_TEXT = "✅ instalado"
+SEEN_MESSAGE_LIMIT = 1_024
+ABNORMAL_CLOSE_CODE = 1006
+NORMAL_CLOSE_CODE = 1000
+FAILURE_EXIT_CODE = 1
+CLEAN_EXIT_CODE = 0
+MILLISECONDS_PER_SECOND = 1_000
 
 CHANNEL_HANDOFF_NO_TEXT_BY_KIND: dict[str, str] = {
     "text": "The owner sent a message with no text.",
@@ -64,4 +70,8 @@ class ConnectorLogEvent(Enum):
     MESSAGES_RECEIVED = "messages_received"
     DONE_SENT = "done_sent"
     FRAME_REJECTED = "frame_rejected"
-SEEN_MESSAGE_LIMIT = 1_024
+
+
+class PluginLogEvent(Enum):
+    PROBE_FAILED = "probe_failed"
+    HANDOFF_FAILED = "handoff_failed"

@@ -17,12 +17,16 @@ class HandedOff:
         self.message_ids: list[str] = []
         self.failing_ids: set[str] = set()
         self.gates: dict[str, asyncio.Event] = {}
+        self.sent_dones_at_start: dict[str, list[str]] = {}
         self._connector = connector
 
     async def hand_off(self, *, message: dict[str, Any]) -> None:
         message_id = str(message["messageId"])
         self.message_ids.append(message_id)
         self._connector.record(entry=f"handoff:{message_id}")
+        self.sent_dones_at_start[message_id] = [
+            line for line in self._connector.logs if '"event": "done_sent"' in line
+        ]
         gate = self.gates.get(message_id)
         if gate is not None:
             await gate.wait()
