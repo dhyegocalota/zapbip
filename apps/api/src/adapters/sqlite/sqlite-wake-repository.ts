@@ -1,5 +1,5 @@
-import type { Clock, StoredWake, WakeJob, WakeRepository } from '@zapbip/core';
-import { WakeMode, WakeStatus, type WakeAttemptOutcome, type WakeProvider } from '@zapbip/types';
+import type { Clock, PollState, ScheduledWake, StoredWake, WakeJob, WakeRepository } from '@zapbip/core';
+import { WakeMode, WakeStatus, type OwnerLocale, type WakeAttemptOutcome, type WakeProvider } from '@zapbip/types';
 
 type WakeRow = {
   agent: string;
@@ -10,6 +10,15 @@ type WakeRow = {
   key_version: number | null;
   status: WakeStatus;
   last_delivered_at: number | null;
+  interval_minutes: number | null;
+  standby_agent: string | null;
+  owner_locale: OwnerLocale | null;
+};
+
+type PollRow = WakeRow & {
+  last_polled_at: number;
+  has_polled: number;
+  poller_stale_notified: number;
 };
 
 type JobRow = {
@@ -21,10 +30,17 @@ type JobRow = {
   last_outcome: WakeAttemptOutcome | null;
 };
 
-const SELECT_WAKE =
-  'SELECT agent, mode, provider, host, sealed_target, key_version, status, last_delivered_at FROM agent_wake WHERE agent = ?';
+const WAKE_COLUMNS =
+  'agent, mode, provider, host, sealed_target, key_version, status, last_delivered_at, interval_minutes, standby_agent, owner_locale';
+const POLL_COLUMNS = 'last_polled_at, has_polled, poller_stale_notified';
+const SELECT_WAKE = `SELECT ${WAKE_COLUMNS} FROM agent_wake WHERE agent = ?`;
+const SELECT_POLL_STATE = `SELECT ${POLL_COLUMNS} FROM agent_wake WHERE agent = ?`;
+const SELECT_SCHEDULED_WAKES = `SELECT ${WAKE_COLUMNS}, ${POLL_COLUMNS} FROM agent_wake WHERE mode = ? ORDER BY agent`;
 const SAVE_WAKE_STATEMENT =
-  'UPDATE agent_wake SET mode = ?, provider = ?, host = ?, sealed_target = ?, key_version = ?, status = ?, last_delivered_at = ?, updated_at = ? WHERE agent = ?';
+  'UPDATE agent_wake SET mode = ?, provider = ?, host = ?, sealed_target = ?, key_version = ?, status = ?, last_delivered_at = ?, interval_minutes = ?, standby_agent = ?, owner_locale = COALESCE(?, owner_locale), updated_at = ? WHERE agent = ?';
+const RECORD_POLL_STATEMENT =
+  'UPDATE agent_wake SET last_polled_at = ?, has_polled = 1, owner_locale = ?, poller_stale_notified = 0 WHERE agent = ?';
+const MARK_STALE_NOTIFIED_STATEMENT = 'UPDATE agent_wake SET poller_stale_notified = 1 WHERE agent = ?';
 const CLEAR_WAKE_STATEMENT =
   'UPDATE agent_wake SET mode = ?, provider = NULL, host = NULL, sealed_target = NULL, key_version = NULL, status = ?, updated_at = ? WHERE agent = ?';
 const SELECT_JOB = 'SELECT agent, due_at, attempt, lease_until, rewake, last_outcome FROM wake_jobs ';
@@ -34,6 +50,10 @@ const SELECT_NEXT_DUE_AT =
   'SELECT MIN(CASE WHEN lease_until IS NULL THEN due_at ELSE MAX(due_at, lease_until) END) AS next_due_at FROM wake_jobs';
 
 function toStoredWake(row: WakeRow): StoredWake {
+  if (row.mode === WakeMode.Scheduled && row.interval_minutes === null)
+    throw new Error(`scheduled wake of ${row.agent} has no interval_minutes`);
+  if (row.mode === WakeMode.Scheduled && row.owner_locale === null) throw new Error(`scheduled wake of ${row.agent} has no owner_locale`);
+  if (row.mode === WakeMode.Standby && row.standby_agent === null) throw new Error(`standby wake of ${row.agent} has no standby_agent`);
   const { provider, host, sealed_target: sealedTarget, key_version: keyVersion } = row;
   const isTargetStored = provider !== null && host !== null && sealedTarget !== null && keyVersion !== null;
   return {
@@ -42,9 +62,17 @@ function toStoredWake(row: WakeRow): StoredWake {
     target: isTargetStored ? { provider, host, sealedTarget, keyVersion } : null,
     status: row.status,
     lastDeliveredAt: row.last_delivered_at,
-    intervalMinutes: null,
-    standbyAgent: null,
-    ownerLocale: null,
+    intervalMinutes: row.interval_minutes,
+    standbyAgent: row.standby_agent,
+    ownerLocale: row.owner_locale,
+  };
+}
+
+function toPollState(row: PollRow): PollState {
+  return {
+    lastPolledAt: row.last_polled_at,
+    hasPolled: row.has_polled === 1,
+    pollerStaleNotified: row.poller_stale_notified === 1,
   };
 }
 
@@ -83,6 +111,9 @@ export function createSqliteWakeRepository(input: { storage: DurableObjectStorag
         target === null ? null : target.keyVersion,
         wake.status,
         wake.lastDeliveredAt,
+        wake.intervalMinutes,
+        wake.standbyAgent,
+        wake.ownerLocale,
         input.clock.now(),
         wake.agent,
       );
@@ -119,24 +150,25 @@ export function createSqliteWakeRepository(input: { storage: DurableObjectStorag
     },
 
     async findPollState({ agent }) {
-      void agent;
-      throw new Error('findPollState is not implemented');
+      const [row] = rows<PollRow>(SELECT_POLL_STATE, agent);
+      return row === undefined ? null : toPollState(row);
     },
 
     async recordPoll({ agent, polledAt, ownerLocale }) {
-      void agent;
-      void polledAt;
-      void ownerLocale;
-      throw new Error('recordPoll is not implemented');
+      const cursor = sql.exec(RECORD_POLL_STATEMENT, polledAt, ownerLocale, agent);
+      if (cursor.rowsWritten === 0) throw new Error(`no agent_wake row for ${agent}`);
     },
 
     async listScheduledWakes() {
-      throw new Error('listScheduledWakes is not implemented');
+      return rows<PollRow>(SELECT_SCHEDULED_WAKES, WakeMode.Scheduled).map((row): ScheduledWake => ({
+        ...toStoredWake(row),
+        ...toPollState(row),
+      }));
     },
 
     async markStaleNotified({ agent }) {
-      void agent;
-      throw new Error('markStaleNotified is not implemented');
+      const cursor = sql.exec(MARK_STALE_NOTIFIED_STATEMENT, agent);
+      if (cursor.rowsWritten === 0) throw new Error(`no agent_wake row for ${agent}`);
     },
   };
 }
