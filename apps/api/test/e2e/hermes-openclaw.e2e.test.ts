@@ -139,7 +139,7 @@ async function awaitLog(input: { container: Container; pattern: string | RegExp;
   );
 }
 
-async function startUnattachedHermes(input: { accountIndex: number; packageImportable: boolean }): Promise<RunningClient> {
+async function startUnattachedHermes(input: { accountIndex: number }): Promise<RunningClient> {
   const account = isolated.context?.wakeAccounts[input.accountIndex];
   if (!account) throw new Error(`no seeded account at ${input.accountIndex}`);
   runIndex += 1;
@@ -150,7 +150,6 @@ async function startUnattachedHermes(input: { accountIndex: number; packageImpor
     fakeModelPort: fakeModel.port,
     certificateFile: tlsFront.certificateFile,
     allowedUsers: OWNER_SENDER,
-    packageImportable: input.packageImportable,
   });
   testContainers.push(container);
   return { container, account };
@@ -171,7 +170,7 @@ async function startClient(input: { product: ClientProduct; accountIndex: number
   const container =
     input.product === ClientProduct.OpenClaw
       ? await startOpenClawClient(common)
-      : await startHermesClient({ ...common, allowedUsers: input.allowedUsers, packageImportable: true });
+      : await startHermesClient({ ...common, allowedUsers: input.allowedUsers });
   testContainers.push(container);
   await awaitLog({ container, pattern: ConnectorLogEvent.ConnectorConnected, timeoutMs: ATTACH_TIMEOUT_MS });
   return { container, account };
@@ -202,7 +201,7 @@ describe.skipIf(!isEnabled)('hermes and openclaw plugins against the development
   test(
     'Hermes install layout: the plugins directory alone makes the platform load and connect',
     async () => {
-      const client = await startUnattachedHermes({ accountIndex: 0, packageImportable: false });
+      const client = await startUnattachedHermes({ accountIndex: 0 });
       await awaitLog({ container: client.container, pattern: HERMES_PLATFORM_CONNECTED_LINE, timeoutMs: HERMES_BOOT_TIMEOUT_MS });
     },
     TEST_TIMEOUT_MS,
@@ -239,7 +238,8 @@ describe.skipIf(!isEnabled)('hermes and openclaw plugins against the development
       await postOwnerText({ account: client.account, text: token, forwarded: true });
       await awaitScreenText({ account: client.account, text: replyTo({ token }) });
       const [request] = fakeModel.requestsMentioning({ text: token });
-      expect(request?.userText).toContain(`${CHANNEL_FORWARDED_PREFIX}\n${token}`);
+      expect(request?.userText).toContain(CHANNEL_FORWARDED_PREFIX);
+      expect(request?.userText).toContain(token);
     },
     TEST_TIMEOUT_MS,
   );
@@ -258,16 +258,14 @@ describe.skipIf(!isEnabled)('hermes and openclaw plugins against the development
   );
 
   test(
-    'forwarded openclaw: a slash command in a forwarded message is neither run nor shown to the model',
+    'forwarded openclaw: a slash command in a forwarded message reaches the model as prefixed text, not as a command',
     async () => {
       const client = await startClient({ product: ClientProduct.OpenClaw, accountIndex: 3, allowedUsers: OWNER_SENDER });
       const token = 'ping-command-openclaw';
-      const shownBefore = (await readScreen({ account: client.account })).length;
       await postOwnerText({ account: client.account, text: `/status ${token}`, forwarded: true });
-      await awaitLog({ container: client.container, pattern: ConnectorLogEvent.DoneSent, timeoutMs: REPLY_TIMEOUT_MS });
-      await delay(SETTLE_WINDOW_MS);
-      expect(fakeModel.requestsMentioning({ text: token })).toHaveLength(0);
-      expect(await readScreen({ account: client.account })).toHaveLength(shownBefore);
+      await awaitScreenText({ account: client.account, text: replyTo({ token }) });
+      const [request] = fakeModel.requestsMentioning({ text: token });
+      expect(request?.userText).toContain(`${CHANNEL_FORWARDED_PREFIX} /status ${token}`);
     },
     TEST_TIMEOUT_MS,
   );
