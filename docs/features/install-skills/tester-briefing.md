@@ -165,3 +165,10 @@ Known gaps:
 - The Hermes section sets `ZAPBIP_ALLOWED_USERS=owner` for the platform plugin (request from the hermes-openclaw lane), in the copy, both snapshots, both guides and `chat-clients.test.ts`.
 - `ZAPBIP_NPM_VERSION` and `WakeMode.Local` stay local to this slice; they move to `libs/types` at the local-connector merge.
 - 410 text now comes from `INSTALL_PAGE_COPY[locale].expired`; `tools/repository-shape` depends on `@zapbip/types`.
+
+## Docs and real-install fixes
+
+- `tools/install-e2e/claude-code.sh` applies `wrangler d1 migrations apply CONNECTIONS --local --env development` before `dev:seed`, no longer hides seed errors, and exits non-zero with `the migrations failed` or `the seed failed`. Tests in `install-e2e.test.ts`.
+- Decision (owner delegated 2026-11-06): the page keeps user scope as the Claude Code default because the spec fixes it. Only the script's prompt adds an instruction to install at project scope and write the skill under `.claude/skills/zapbip/SKILL.md` in the throwaway project, so the owner's `~/.claude.json` and `~/.claude/skills` are untouched; the existing login is reused and never changed.
+- The pt-br "Grok on the web" title and body now say "Grok na web".
+- The live run waits for the merge after accounts-and-keys (see the plan).

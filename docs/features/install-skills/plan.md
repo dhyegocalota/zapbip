@@ -346,3 +346,7 @@ Failure modes: see table.
 - [ ] **/check-ui:** the page at phone and desktop width, and the ten guides, with screenshots and a video.
 - [ ] **Owner-run:** OR-1 to OR-8 in `test-plan.md`, outside the gate, output recorded for the PR.
 - [ ] **/open-pr:** gates passed, learnings sweep stated, PR opened.
+
+## Live install run (owner delegated 2026-11-06)
+
+The live `tools/install-e2e/claude-code.sh` run happens at the install-skills merge into `main`, after accounts-and-keys is on `main`: this branch lacks the `novo agente` flow the script drives. The script applies the D1 migrations before seeding, shows seed errors, and installs at project scope in a throwaway directory so the owner's Claude configuration is never written.
