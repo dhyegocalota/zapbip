@@ -248,8 +248,8 @@ Per-account data lives in the `AccountInbox` Durable Object's SQLite. D1 holds o
   - Connect: `connect/local-connector` (local-connector)
   - Install: `install/claude-code`, `install/codex`, `install/grok-bot`, `install/claude-ai`, `install/chatgpt`, `install/grok-web` (install-skills)
   - MCP reference, one page per tool with the message-kind table: `mcp-reference/send-message`, `send-media`, `send-location`, `send-contact`, `react`, `ask`, `wait-for-reply`, `get-messages`, `check-inbox`, `create-upload` (this slice) and `set-wake` (webhook-wake)
-- **Gate:** `mint broken-links` joins `pnpm verify` for `apps/docs/**`.
-- **Preview:** the site runs locally with `mint dev`.
+- **Gate:** `pnpm dlx mint@4.2.1207 broken-links` joins `pnpm verify` for `apps/docs/**`.
+- **Preview:** the site runs locally with `pnpm --filter @zapbip/docs dev`.
 
 ### Gates this feature adds
 
@@ -298,7 +298,7 @@ The E2E gate that [ADR 0005](../../adr/0005-the-local-gate-runs-what-the-diff-ca
 | Repository and ownership of this spec | — | the lead owns `docs/features/**`, the ADRs, the indexes and the status flips; each lane writes its own section of `tester-briefing.md` | owner delegated 2026-11-06 |
 | ADR amendments | — | ADR 0008 names eight ports; ADR 0006 looks secrets up by digest (no constant-time comparison across rows) | owner delegated 2026-11-06 |
 | Upload and media routes | `PUT /u/:id?token=` · under the secret, media by unguessable id | upload `PUT /u/:account_id/:upload_id?exp=&sig=` (the connection secret never appears in a tool result; the account id is in the path and the HMAC covers it); media `GET /m/:account_id/:media_id?exp=&sig=` carries no secret; the account id is in the path and the HMAC covers it | owner delegated 2026-11-06 |
-| Production entry | — | `src/index.ts` never imports the simulator; `src/index.dev.ts` is the only entry that mounts it, and it is the top-level development block that `wrangler dev` runs | owner delegated 2026-11-06 |
+| Production entry | — | `src/index.ts` never imports the simulator; `src/index.dev.ts` is the only entry that mounts it, and it is the `env.development` block that `wrangler dev --env development` runs | owner delegated 2026-11-06 |
 | Idempotent `ask` | unanswered only · open or answered within a retry window | a repeat matches a question of the same agent, normalized text and options asked within 4 min (`ASK_RETRY_WINDOW_MS`, the claude.ai retry cap), open or answered; a matched retry holds like a fresh `ask` | owner delegated 2026-11-06 |
 | Owner text that answers | — | text routed to an agent with an open question answers that agent's newest open question; a tap on an answered or expired question is routed as a message with `reply_to`; a tap on an unknown question is routed as text | owner delegated 2026-11-06 |
 | Owner media, location, contacts | answer · route only | they route by rules 2, 4, 5 and 6 and never answer a question | owner delegated 2026-11-06 |
@@ -321,7 +321,7 @@ The E2E gate that [ADR 0005](../../adr/0005-the-local-gate-runs-what-the-diff-ca
 | Secret lookup naming | — | `ConnectionDirectory.resolveSecretDigest({secretDigest})`; column `connections.secret_digest` (`0001_core`) | owner delegated 2026-11-06 |
 | Base URL binding | `PUBLIC_BASE_URL` · `PUBLIC_ORIGIN` | `PUBLIC_ORIGIN` only; every link is built from it | owner delegated 2026-11-06 |
 | Health route | — | `/health` returns `{ok: true}`; later slices add fields to the same body | owner delegated 2026-11-06 |
-| Wrangler environments | — | the top-level block is development (`wrangler dev`); `env.production` repeats every binding and is written in slice 1 because the production-bundle test uses `--env production`; `deploy-readiness` adds `env.staging` | owner delegated 2026-11-06 |
+| Wrangler environments | — | the top-level block is production (`src/index.ts`, `PUBLIC_ORIGIN` `https://mcp.zapbip.com`); `env.development` (`src/index.dev.ts`, localhost origin) repeats every binding and every `wrangler dev` passes `--env development`; the production-bundle test checks the top-level block; `deploy-readiness` adds `env.staging` | owner delegated 2026-11-06 |
 | Development-only methods | in the base class · in a development subclass | `readScreen` and `advanceClock` exist only on `DevAccountInbox`, which the development entry exports as `AccountInbox`; a test proves the production bundle lacks them | owner delegated 2026-11-06 |
 | Object migrations | — | the runner records the set of applied versions and applies each missing one in ascending order; reserved versions v1 to v7 | owner delegated 2026-11-06 |
 | Expiry | — | per-object alarms; no cron in slice 1 | owner delegated 2026-11-06 |
