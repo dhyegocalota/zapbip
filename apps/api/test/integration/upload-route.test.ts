@@ -265,4 +265,26 @@ describe('upload route', () => {
     const retry = await putUpload(validPut({ fixture }));
     expect(retry.status).toBe(STATUS_CREATED);
   });
+
+  test.each([
+    { name: 'a repeated signature with the valid one first', build: (query: string) => `${query}&sig=garbage` },
+    { name: 'a repeated signature with the valid one last', build: (query: string) => `sig=garbage&${query}` },
+    { name: 'a repeated expiry', build: (query: string) => `${query}&exp=1` },
+  ])('WI-127 a link with $name answers 403 and stores nothing', async ({ build }) => {
+    const fixture = await newFixture();
+    const query = await signedQuery({
+      key: env.UPLOAD_LINK_SIGNING_KEY,
+      accountId: fixture.account.accountId,
+      mediaId: fixture.uploadId,
+      purpose: LinkPurpose.Upload,
+      expiresAt: freshExpiry(),
+    });
+    const response = await SELF.fetch(`${ORIGIN}/u/${fixture.account.accountId}/${fixture.uploadId}?${build(queryOf(query))}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': PDF_TYPE, 'Content-Length': String(UPLOAD_BYTES.byteLength) },
+      body: UPLOAD_BYTES,
+    });
+    expect(response.status).toBe(STATUS_FORBIDDEN);
+    expect(await storedObject({ fixture })).toBeNull();
+  });
 });
