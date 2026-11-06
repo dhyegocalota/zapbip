@@ -123,7 +123,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
           [WakeRung.Local]: createLocalConnectorWaker({
             context: this.ctx,
             repository: inboxOnlyDependencies.repository,
-            restoreAndNotify: async () => WakeOutcome.Unreached,
+            restoreAndNotify: (request) => this.restoreAndNotify(request),
           }),
           [WakeRung.Webhook]: createWebhookAgentWaker({ dependencies: inboxOnlyDependencies, wake: this.wake }),
         },
@@ -133,6 +133,14 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     this.ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair(CONNECTOR_PING_TEXT, CONNECTOR_PONG_TEXT));
     this.dueTimeProviders.push(this.createExpiryProvider(), this.createWakeProvider());
     await this.armAlarm();
+  }
+
+  private async restoreAndNotify(request: Parameters<inbox.AgentWaker['notify']>[0]): Promise<WakeOutcome> {
+    const { agent } = request;
+    const restore = await this.wake.repository.findLocalRestore({ agent });
+    if (restore === null) return WakeOutcome.Unreached;
+    await inbox.detachLocalConnector({ dependencies: this.dependencies, wake: this.wake, agent, remainingSockets: 0 });
+    return this.dependencies.waker.notify(request);
   }
 
   private createExpiryProvider(): DueTimeProvider {
@@ -325,6 +333,8 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     const parsed = parseDoneFrame({ data });
     if (!parsed.ok) return this.log({ event: LogEvent.FrameRejected, agent, errorCode: parsed.reason });
     await inbox.acknowledgeDelivery({ dependencies: this.dependencies, agent, messageId: parsed.frame.messageId });
+    const remaining = await this.dependencies.repository.listUnread({ agent, limit: CONNECTOR_INBOX_LIMIT });
+    sendMessagesToAgent({ context: this.ctx, agent, messages: remaining });
   }
 
   async webSocketClose(socket: WebSocket): Promise<void> {

@@ -23,7 +23,8 @@ export async function attachLocalConnector(input: AttachLocalConnectorInput): Pr
   const current = await wake.repository.findWake({ agent });
   if (current === null) throw new Error(`no wake setting for ${agent}`);
   const restore = await wake.repository.findLocalRestore({ agent });
-  if (restore === null) await wake.repository.saveLocalRestore({ agent, previous: current });
+  const isRestoreStale = restore !== null && current.mode !== WakeMode.Local;
+  if (restore === null || isRestoreStale) await wake.repository.saveLocalRestore({ agent, previous: current });
   await wake.repository.saveWake({ wake: { ...current, mode: WakeMode.Local } });
   const unread = await dependencies.repository.listUnread({ agent, limit });
   return { previousWakeMode: current.mode, unread };
