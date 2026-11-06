@@ -1,6 +1,10 @@
-import type { WakeMode, WakeRung } from '@zapbip/types';
+import { WakeMode, WakeRung } from '@zapbip/types';
+
+const RUNG_BY_MODE: Record<WakeMode, WakeRung> = {
+  [WakeMode.None]: WakeRung.Inbox,
+  [WakeMode.Webhook]: WakeRung.Webhook,
+};
 
 export function wakeRungFor(input: { mode: WakeMode }): WakeRung {
-  void input;
-  throw new Error('wakeRungFor is not implemented');
+  return RUNG_BY_MODE[input.mode];
 }
