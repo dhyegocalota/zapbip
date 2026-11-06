@@ -7,9 +7,11 @@ const POST_METHOD = 'POST';
 const CONTENT_LENGTH_HEADER = 'content-length';
 const RECORD_CLIENT_NAME_STATEMENT = 'UPDATE connections SET client_name = ? WHERE id = ? AND client_name IS NULL';
 
+const CLIENT_NAME_PATTERN = new RegExp(`^[\\x20-\\x7E]{1,${CLIENT_NAME_MAX_CHARS}}$`);
+
 const initializeSchema = z.object({
   method: z.literal(INITIALIZE_METHOD),
-  params: z.object({ clientInfo: z.object({ name: z.string().min(1).max(CLIENT_NAME_MAX_CHARS) }) }),
+  params: z.object({ clientInfo: z.object({ name: z.string().regex(CLIENT_NAME_PATTERN) }) }),
 });
 
 export type ConnectionRecorders = {

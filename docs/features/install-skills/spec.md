@@ -65,7 +65,9 @@ The pt_BR text has the same shape: "Conecte-se ao meu WhatsApp pelo zapbip: leia
 | unknown code, or replaced by a later rotate | `404`, plain text, no detail |
 | over the rate limit | `429`, plain text, `Retry-After` |
 
-Every response carries `Cache-Control: no-store` and `X-Robots-Tag: noindex`. The `410` and `404` bodies never reveal whether a code existed.
+Every response carries `Cache-Control: no-store` and `X-Robots-Tag: noindex`, including `404` for any other method or path under `/i/` and `500` for an internal error. A `404` for an unknown code and a `410` for an expired or used one are distinguishable on purpose: the codes carry 128 bits of randomness, so the difference cannot be exploited to find a live code, and neither body names the code. The rate limit keys an IPv6 client by its /64 prefix.
+
+The page names the package only as `npx zapbip@<version>` with `<version>` taken from `ZAPBIP_NPM_VERSION`, the single source. The Worker must not go live before the owner publishes that exact version to npm; the deploy-readiness preflight enforces it.
 
 The page, in order:
 

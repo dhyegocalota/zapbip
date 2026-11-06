@@ -13,6 +13,7 @@ import { Hono, type Context } from 'hono';
 import { createPlatformClock } from '../adapters/platform/clock';
 import { joinStandbyCandidates } from '../install/install-page-adapter';
 import type { WakeModeEntry } from '../contract/account-inbox-rpc';
+import { clientRateKey } from './client-rate-key';
 import { HttpStatus } from './http-status';
 
 export type RateLimiter = {
@@ -36,6 +37,7 @@ const MARKDOWN_CONTENT_TYPE = 'text/markdown; charset=utf-8';
 const PLAIN_CONTENT_TYPE = 'text/plain; charset=utf-8';
 const NOT_FOUND_TEXT = 'not found';
 const BAD_REQUEST_TEXT = 'bad request';
+const SERVER_ERROR_TEXT = 'server error';
 const RATE_LIMITED_TEXT = 'too many requests';
 const RETRY_AFTER_SECONDS = RATE_LIMIT_PERIOD_MS / SECOND_MS;
 const PRIVATE_HEADERS = { 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' };
@@ -70,7 +72,7 @@ export function createInstallPageRoute(input: InstallPageRouteDependencies): Hon
   async function serve(context: Context): Promise<Response> {
     const clientAddress = context.req.header(CLIENT_ADDRESS_HEADER);
     if (clientAddress === undefined) return plainResponse({ body: BAD_REQUEST_TEXT, status: HttpStatus.BadRequest });
-    const { success } = await input.limiter.limit({ key: clientAddress });
+    const { success } = await input.limiter.limit({ key: clientRateKey({ address: clientAddress }) });
     if (!success) {
       return plainResponse({
         body: RATE_LIMITED_TEXT,
@@ -90,5 +92,7 @@ export function createInstallPageRoute(input: InstallPageRouteDependencies): Hon
   }
 
   route.get(`${INSTALL_PAGE_PATH_PREFIX}:${INSTALL_CODE_PARAMETER}`, serve);
+  route.notFound(() => plainResponse({ body: NOT_FOUND_TEXT, status: HttpStatus.NotFound }));
+  route.onError(() => plainResponse({ body: SERVER_ERROR_TEXT, status: HttpStatus.InternalServerError }));
   return route;
 }

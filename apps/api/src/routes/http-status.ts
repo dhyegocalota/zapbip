@@ -13,6 +13,7 @@ export enum HttpStatus {
   PayloadTooLarge = 413,
   UnsupportedMediaType = 415,
   TooManyRequests = 429,
+  InternalServerError = 500,
   BadGateway = 502,
 }
 
