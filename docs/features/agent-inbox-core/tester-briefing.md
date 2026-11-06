@@ -462,3 +462,32 @@ Pins: the two other `track-client-failure` cases, WI-140 and WI-141 edits.
 - The footer is one global `docs.json` block showing both languages; Mintlify has no per-language footer text here.
 - No official-number snippet exists yet, so the docs say "the zapbip number".
 
+
+## Fix round 6 (feat/agent-inbox-core-fix6)
+
+### What changed
+
+- A failed owner notice: the send that owns the claim raises `delivery failed for notice` (`NoticeFailedError`), the message stays queued, `owner_notice_failed` is logged (kind and account), and the `AccountInbox` alarm retries every `NOTICE_RETRY_MS` (5 minutes) through a third due-time provider (`retryNotice`, `findNoticeRetryDueAt`). The failed notice's locale is kept in `owner_window.notice_retry_locale` (v1 edited, not deployed). Concurrent losers stay queued without error.
+- Routing rule 5 falls back to the only agent: with exactly one agent an unaddressed owner message reaches it and no list is sent (`RoutingRule.SingleAgent`).
+- Docs: the `<Chat>` notice bubbles quote the real copy; `chat.jsx` has a destructured default, a generic file card for unknown media kinds, `aria-hidden` on decorative glyphs and SVGs and a labelled group role.
+- Tests: company docs read `COMPANY` from `@zapbip/types`; the no-op filter in `docs-conversations.test.ts` is gone; `' Application/PDF'` joins CU-179.
+
+### Red today, green after
+
+- 58bdf8e (red): core `retry-notice.test.ts` "findNoticeRetryDueAt is not implemented" and send-text "expected an InboxError, nothing was thrown"; API WI-130 "expected { ok: true ... } to deeply equal { ok: false ... }", WI-131 "expected [] to deeply equal [ 'notice' ]", WI-132 "expected vi.fn() to be called 4 times, but got 1 times". WI-133 is a pin. Green at 3454b87.
+- CU-94b red text `delivery failed for text` at 63c09ee (the test then kept both sends queued); it is rewritten at 58bdf8e so that only the claim owner fails.
+- c890efc (red): CU-190 routing and receive tests. Green at a2501d3 (WI-134 covers the Durable Object).
+- 245e482 (red): `docs-notices.test.ts` and `docs-chat-component.test.ts`, 10 failed.
+- Pins: company docs test, CU-179 `' Application/PDF'`.
+
+### Hypotheses to attack
+
+1. With the notice failing, `send_text` returns an error naming the notice, the message is `queued`, and the next flush still delivers it.
+2. A persistent failure retries once per five minutes and never in a loop; an armed alarm never moves later.
+3. A fresh account with one agent: `oi` reaches the agent through `check_inbox` or `wait_for_reply` and no list appears; with two agents the list still appears.
+4. Every notice bubble in the docs reads like the simulator's notice.
+
+### Known gaps
+
+- Messages held while the account had zero agents stay held when the first agent appears; only later messages use the single-agent rule.
+- Retries can also run when another provider wakes the alarm early.
