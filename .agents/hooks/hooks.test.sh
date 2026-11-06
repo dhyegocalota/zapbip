@@ -67,7 +67,7 @@ expect_exit "git add -A is blocked" 2 guard-git-add-all.sh "$(bash_call 'git add
 expect_exit "git add . is blocked" 2 guard-git-add-all.sh "$(bash_call 'git add .')"
 expect_exit "git add --all is blocked" 2 guard-git-add-all.sh "$(bash_call 'git add --all && git commit')"
 expect_exit "the no-verify flag is blocked" 2 guard-git-add-all.sh "$(bash_call 'git commit --no-verify -m x')"
-blocked_add_forms=('git add ./' 'git add -- .' 'git add -f .' 'git add src .' 'git add *' 'git add \".\"' 'git add .;' 'git add . && git status' 'git -C . add .' 'git add -u' 'git add --update' 'git add -Av' 'git add ..')
+blocked_add_forms=('git add :/' 'git add -- :/' 'git add :(top)' 'git add :(top).' 'git add ./' 'git add -- .' 'git add -f .' 'git add src .' 'git add *' 'git add \".\"' 'git add .;' 'git add . && git status' 'git -C . add .' 'git add -u' 'git add --update' 'git add -Av' 'git add ..')
 for form in "${blocked_add_forms[@]}"; do
   expect_exit "claude: $form is blocked" 2 guard-git-add-all.sh "$(bash_call "$form")"
   expect_exit "codex: $form is blocked" 2 guard-git-add-all.sh "$(codex_bash_call "$form")"
@@ -77,11 +77,12 @@ for form in "${blocked_commit_forms[@]}"; do
   expect_exit "claude: $form is blocked" 2 guard-git-add-all.sh "$(bash_call "$form")"
   expect_exit "codex: $form is blocked" 2 guard-git-add-all.sh "$(codex_bash_call "$form")"
 done
-allowed_forms=('git add src/a.ts docs/x.md' 'git add .gitignore' 'git add -p src/a.ts' 'git commit -m \"fix: handle . and * and -n in names\"' 'git commit -am x' 'git commit -mn x')
+allowed_forms=('git commit -a -m x' 'git add :/src' 'git add src/a.ts docs/x.md' 'git add .gitignore' 'git add -p src/a.ts' 'git commit -m \"fix: handle . and * and -n in names\"' 'git commit -am x' 'git commit -mn x')
 for form in "${allowed_forms[@]}"; do
   expect_exit "claude: $form is allowed" 0 guard-git-add-all.sh "$(bash_call "$form")"
   expect_exit "codex: $form is allowed" 0 guard-git-add-all.sh "$(codex_bash_call "$form")"
 done
+expect_exit "known limit: a shell expansion that prints a dot is not resolved" 0 guard-git-add-all.sh "$(bash_call 'git add $(echo .)')"
 expect_exit "git add by name is allowed" 0 guard-git-add-all.sh "$(bash_call 'git add README.md .agents/hooks')"
 expect_exit "git add of a dotfile is allowed" 0 guard-git-add-all.sh "$(bash_call 'git add .gitignore')"
 
