@@ -99,8 +99,9 @@ describe('sendText', () => {
       noticeSentForClosedWindow: false,
       noticeRetryLocale: OwnerLocale.EnglishUs,
     });
-    await send({ environment, text: 'two' });
-    expect(environment.sender.templates).toHaveLength(2);
+    const second = await send({ environment, text: 'two' });
+    expect(second.delivery).toBe(DeliveryState.Queued);
+    expect(environment.sender.templates).toHaveLength(1);
   });
 
   test('CU-94b concurrent sends with the notice failing once fail only the claim owner and keep both queued', async () => {
