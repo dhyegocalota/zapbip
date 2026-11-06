@@ -117,4 +117,3 @@ pnpm -F @zapbip/core test:unit
 ### Gaps
 
 - The `local`, `scheduled` and `standby` "wake mode not available yet" cases are not tested: `WakeMode` has only `None` and `Webhook`, so the tool layer (L3) owns that error.
-- `libs/core` unit run shows two empty files from slice 1 (`inbox/aiters.test.ts`, `inbox/use-cases/ait-for-reply.test.ts`) failing with "No test suite found"; they are not mine.
