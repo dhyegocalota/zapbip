@@ -1,5 +1,5 @@
 import { formatOptionId, QUEUE_RETENTION_MS, UPLOAD_TTL_MS, WINDOW_MS } from '@zapbip/core';
-import { DeliveryState, InboxErrorCode, MediaSourceKind, MessageKind, ReplyStatus, TemplateKind } from '@zapbip/types';
+import { DeliveryState, InboxErrorCode, MediaSourceKind, MessageKind, HOUR_MS, ReplyStatus, TemplateKind } from '@zapbip/types';
 import { abortAllDurableObjects, evictDurableObject, reset, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 import { ACCOUNT_INBOX_MIGRATIONS } from '../../src/account-inbox/migrations';
@@ -285,7 +285,7 @@ describe('AccountInbox alarm', () => {
       },
     });
     await registerDueTimeProvider({ stub, provider: { nextDueAt: async () => secondDueAt, runDue: async () => secondRuns() } });
-    await runInDurableObject(stub, (_instance, state) => state.storage.setAlarm(Date.now()));
+    await runInDurableObject(stub, (_instance, state) => state.storage.setAlarm(Date.now() + HOUR_MS));
     await runDurableObjectAlarm(stub);
     const armed = await runInDurableObject(stub, (_instance, state) => state.storage.getAlarm());
     expect(secondRuns).toHaveBeenCalledTimes(1);
