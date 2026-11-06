@@ -36,7 +36,7 @@
             "pages": [
               "developers/any-mcp-client",
               "developers/errors",
-               "guides/webhook-wake",
+              "guides/webhook-wake",
               {
                 "group": "Concepts",
                 "pages": ["concepts/inbox", "concepts/questions", "concepts/24-hour-window", "concepts/routing", "concepts/wake-ladder"]
@@ -53,7 +53,8 @@
                   "mcp-reference/wait-for-reply",
                   "mcp-reference/get-messages",
                   "mcp-reference/check-inbox",
-                  "mcp-reference/create-upload"
+                  "mcp-reference/create-upload",
+                  "mcp-reference/set-wake"
                 ]
               }
             ]

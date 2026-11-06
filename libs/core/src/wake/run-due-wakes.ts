@@ -174,7 +174,7 @@ async function attemptJob(input: JobRun): Promise<void> {
   const { agent } = job;
   const stored = await wake.repository.findWake({ agent });
   const unreadCount = await dependencies.repository.countUnread({ agent });
-  const hasLiveWaiter = dependencies.waiters.hasLiveWaiter({ agent });
+  const hasLiveWaiter = dependencies.waiters.hasLiveWaiter({ agent, questionId: null });
   if (!isWebhookWake(stored)) return dropJob({ ...input, stored });
   const isUnneeded = unreadCount === 0 || hasLiveWaiter;
   if (isUnneeded) return dropJob({ ...input, stored });
