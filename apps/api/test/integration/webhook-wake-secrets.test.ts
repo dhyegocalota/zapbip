@@ -1,5 +1,5 @@
 import { WAKE_SECRET_KEY_BYTES, type WakeTransport } from '@zapbip/core';
-import { WakeAttemptOutcome, WakeStatus } from '@zapbip/types';
+import { InboxErrorCode, WakeAttemptOutcome, WakeMode, WakeStatus } from '@zapbip/types';
 import { reset, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
 import type { DevAccountInbox } from '../../src/dev/dev-account-inbox';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -25,7 +25,7 @@ import {
   replaceWakeDependencies,
   wakeStub,
 } from '../support/wake-session';
-import { testEnv } from '../support/workers-env';
+import { connectionOf, testEnv } from '../support/workers-env';
 
 const BASE64 = 'base64';
 const KEY_NAME = 'WAKE_SECRET_KEY';
@@ -107,6 +107,17 @@ describe('sealed wake storage', () => {
     await rewriteRow({ set: 'key_version', value: UNSUPPORTED_KEY_VERSION });
     await wakeAfterOwnerMessage();
     await expectRefusedWithOneNotice();
+  });
+});
+
+describe('wake target guard', () => {
+  it('rejects a target on the host of the public origin without echoing it', async () => {
+    const ownHost = new URL(testEnv.PUBLIC_ORIGIN).hostname;
+    const outcome = await stub.setWake({
+      connection: connectionOf({ accountId: WAKE_ACCOUNT, agent: WAKE_AGENT }),
+      setting: { mode: WakeMode.Webhook, url: `https://${ownHost}/hook`, token: GROK_TOKEN },
+    });
+    expect(outcome).toEqual({ ok: false, errorCode: InboxErrorCode.InvalidInput, message: 'invalid url' });
   });
 });
 
