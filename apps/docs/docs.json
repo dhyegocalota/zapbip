@@ -8,7 +8,15 @@
       { "group": "Get started", "pages": ["index"] },
       {
         "group": "Concepts",
-        "pages": ["concepts/inbox", "concepts/questions", "concepts/24-hour-window", "concepts/routing", "concepts/wake-ladder"]
+        "pages": [
+          "concepts/inbox",
+          "concepts/questions",
+          "concepts/24-hour-window",
+          "concepts/routing",
+          "concepts/wake-ladder",
+          "concepts/whatsapp-channel",
+          "concepts/owner-notices"
+        ]
       },
       {
         "group": "MCP reference",

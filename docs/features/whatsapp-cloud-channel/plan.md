@@ -725,8 +725,8 @@ Failure modes for W0 are in the table below. W0 has no backout: fix forward in a
 
 ### Lane W5 (docs)
 
-- [ ] **W5.1 red: docs shape.** Write `tools/repository-shape/src/whatsapp-docs.test.ts`: both pages exist, are listed in the agent-inbox-core navigation group, and contain every limit of the spec's inbound and outbound tables and the 24 h restriction rule. Expected failure: the pages are missing. Commit as `test(shape): expect the channel and notice pages`.
-- [ ] **W5.2 green: docs.** Write `concepts/whatsapp-channel.mdx` and `concepts/owner-notices.mdx`; list them in `docs.json`; run `mint broken-links`. Commit as `docs(api): document the WhatsApp channel and the owner notices`.
+- [x] **W5.1 red: docs shape.** Write `tools/repository-shape/src/whatsapp-docs.test.ts`: both pages exist, are listed in the agent-inbox-core navigation group, and contain every limit of the spec's inbound and outbound tables and the 24 h restriction rule. Expected failure: the pages are missing. Commit as `test(shape): expect the channel and notice pages`. (`c74ef84`)
+- [x] **W5.2 green: docs.** Write `concepts/whatsapp-channel.mdx` and `concepts/owner-notices.mdx`; list them in `docs.json`; run `mint broken-links`. Commit as `docs(api): document the WhatsApp channel and the owner notices`. (`7cdf859`)
 
 ### Lane W6 (proof, after every merge and after deploy-readiness's production block)
 

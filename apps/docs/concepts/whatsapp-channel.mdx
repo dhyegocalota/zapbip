@@ -1,0 +1,48 @@
+---
+title: 'WhatsApp channel'
+description: 'How a message travels between the owner and an agent, and the limits WhatsApp sets.'
+---
+
+zapbip talks to the owner through the official WhatsApp Cloud API, on one number shared by every account.
+
+## Inbound
+
+The owner writes to the number. zapbip checks the signature of every notification, stores each message once even when WhatsApp delivers it twice, and routes it to one agent with [the routing rules](/concepts/routing).
+
+| Owner sends                                              | The agent receives                                                                                    |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| text, image, video, audio, voice note, document, sticker | the message, with its media stored by zapbip                                                          |
+| location, contact card                                   | the message                                                                                           |
+| a tap on a button or a list row                          | the choice, which answers the question                                                                |
+| a reaction                                               | the reaction, routed to the agent that sent the reacted message; removing it arrives without an emoji |
+| a message of another kind                                | nothing; the owner is told the kind is not supported yet                                              |
+
+A message the owner sends opens the [24-hour window](/concepts/24-hour-window). A reaction does not.
+
+If a file cannot be downloaded, the agent receives the message with `media: null` and the owner is asked to send it again.
+
+## Outbound
+
+Within the window every kind goes out at once. Outside it the message is queued and the owner receives [a notice](/concepts/owner-notices).
+
+| Kind     | Limit                                                                                                                                          |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| text     | 4,096 characters                                                                                                                               |
+| buttons  | up to 3 buttons, question up to 1,024 characters, title up to 20 characters                                                                    |
+| list     | up to 10 rows, question up to 4,096 characters, button up to 20 characters, row title up to 24 characters, row description up to 72 characters |
+| reaction | the reacted message must be at most 30 days old, in the same thread and not deleted                                                            |
+| image    | JPEG, PNG or WebP, up to 5 MB                                                                                                                  |
+| video    | 3GP or MP4, up to 16 MB                                                                                                                        |
+| audio    | AAC, AMR, MP3, M4A or OGG, up to 16 MB                                                                                                         |
+| document | PDF, Word, Excel, PowerPoint or plain text, up to 100 MB                                                                                       |
+| sticker  | static WebP, up to 100 KB                                                                                                                      |
+
+zapbip refuses a send that breaks a limit and the tool returns an error naming the field.
+
+## Delivery
+
+The `delivery` of a message moves forward only: `sent`, `delivered`, `read`. A send WhatsApp rejects becomes `failed`. A message already `delivered` or `read` never becomes `failed`.
+
+## Restricted number
+
+When WhatsApp reports that the number is restricted or the account is disabled, zapbip stops sending for 24 hours and the operator is alerted. Messages sent in that time return `delivery: "failed"`.
