@@ -1,7 +1,8 @@
-import { ChannelError, type MediaStore } from '@zapbip/core';
+import type { MediaStore } from '@zapbip/core';
 import { ChannelErrorKind } from '@zapbip/types';
 import { z } from 'zod';
-import type { GraphClient } from './graph-client';
+import { mapGraphErrorToChannelError } from './channel-error-mapping';
+import { GraphRequestError, type GraphClient } from './graph-client';
 import type { MediaDownloadRequest } from './inbound-parser';
 import { isAllowedMediaUrl } from './media-url-policy';
 import { WhatsAppErrorCode } from './whatsapp-enums';
@@ -33,10 +34,17 @@ async function fetchMetadata(input: { graph: GraphClient; channelMediaId: string
   try {
     return metadataSchema.parse(await input.graph.get({ path: `/${input.channelMediaId}` }));
   } catch (error) {
-    if (!(error instanceof ChannelError)) throw error;
-    if (error.errorCode === WhatsAppErrorCode.InboundMediaTooLarge) return null;
-    if (error.code === ChannelErrorKind.Timeout) throw new RetriableMediaError(error.message, { cause: error });
-    throw error;
+    if (!(error instanceof GraphRequestError)) throw error;
+    const channelError = mapGraphErrorToChannelError({
+      status: error.status,
+      errorCode: error.errorCode,
+      errorTitle: error.errorTitle,
+      message: error.message,
+      isTemplateSend: false,
+    });
+    if (channelError.errorCode === WhatsAppErrorCode.InboundMediaTooLarge) return null;
+    if (channelError.code === ChannelErrorKind.Timeout) throw new RetriableMediaError(channelError.message, { cause: error });
+    throw channelError;
   }
 }
 
