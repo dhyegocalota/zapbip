@@ -3,6 +3,7 @@ import {
   QUESTION_RETENTION_MS,
   RECEIPT_RETENTION_MS,
   type AgentRecord,
+  type Clock,
   type InboxRepository,
   type Message,
   type MessageContent,
@@ -95,7 +96,7 @@ function toMedia(row: MediaRow): StoredMedia {
   };
 }
 
-export function createSqliteInboxRepository(input: { storage: DurableObjectStorage }): InboxRepository {
+export function createSqliteInboxRepository(input: { storage: DurableObjectStorage; clock: Clock }): InboxRepository {
   const { sql } = input.storage;
 
   function rows<Row extends Record<string, SqlStorageValue>>(statement: string, ...bindings: unknown[]): Row[] {

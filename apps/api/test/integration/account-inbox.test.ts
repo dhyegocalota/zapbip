@@ -4,6 +4,7 @@ import { abortAllDurableObjects, evictDurableObject, reset, runDurableObjectAlar
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 import { ACCOUNT_INBOX_MIGRATIONS } from '../../src/account-inbox/migrations';
 import { runMigrations, type Migration } from '../../src/account-inbox/run-migrations';
+import { createPlatformClock } from '../../src/adapters/platform/clock';
 import { createSqliteInboxRepository } from '../../src/adapters/sqlite/sqlite-inbox-repository';
 import type { CallOutcome } from '../../src/contract/account-inbox-rpc';
 import { LogEvent } from '../../src/contract/log';
@@ -213,7 +214,7 @@ describe('AccountInbox alarm', () => {
     );
     const { armed, next } = await runInDurableObject(stub, async (_instance, state) => ({
       armed: await state.storage.getAlarm(),
-      next: await createSqliteInboxRepository({ storage: state.storage }).findNextExpiry(),
+      next: await createSqliteInboxRepository({ storage: state.storage, clock: createPlatformClock() }).findNextExpiry(),
     }));
     expect(armed).not.toBeNull();
     expect(armed).toBe(next);
@@ -256,6 +257,29 @@ describe('AccountInbox alarm', () => {
     const armed = await runInDurableObject(stub, (_instance, state) => state.storage.getAlarm());
     expect(secondRuns).toHaveBeenCalledTimes(1);
     expect(armed).toBe(firstDueAt);
+  });
+});
+
+describe('AccountInbox alarm and clock', () => {
+  it('arms the alarm at the clock deadline after the clock advances', async () => {
+    const stub = stubOf({ accountId: FIRST_ACCOUNT });
+    await sendAlphaText({ accountId: FIRST_ACCOUNT, text: 'oi' });
+    const offsetMs = await advanceClock({ stub, advanceMs: WINDOW_MS });
+    const { armed, next } = await runInDurableObject(stub, async (_instance, state) => ({
+      armed: await state.storage.getAlarm(),
+      next: await createSqliteInboxRepository({ storage: state.storage, clock: createPlatformClock() }).findNextExpiry(),
+    }));
+    if (next === null) throw new Error('nothing expires');
+    expect(armed).toBe(next - offsetMs);
+  });
+
+  it('re-arms the alarm when the object is constructed again', async () => {
+    const stub = stubOf({ accountId: FIRST_ACCOUNT });
+    await sendAlphaText({ accountId: FIRST_ACCOUNT, text: 'oi' });
+    await runInDurableObject(stub, (_instance, state) => state.storage.deleteAlarm());
+    await evictDurableObject(stub);
+    const armed = await runInDurableObject(stub, (_instance, state) => state.storage.getAlarm());
+    expect(armed).not.toBeNull();
   });
 });
 

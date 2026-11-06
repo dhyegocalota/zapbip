@@ -59,7 +59,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     this.sender = createFakeWhatsAppSender({ storage: this.ctx.storage, clock: this.clock });
     this.dependencies = {
       accountId,
-      repository: createSqliteInboxRepository({ storage: this.ctx.storage }),
+      repository: createSqliteInboxRepository({ storage: this.ctx.storage, clock: this.clock }),
       sender: this.sender,
       mediaStore: createR2MediaStore({
         bucket: this.env.MEDIA,
