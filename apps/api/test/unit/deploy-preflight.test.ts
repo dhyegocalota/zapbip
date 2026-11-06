@@ -142,6 +142,24 @@ describe('worker preflight', () => {
     expect(refusal?.message).toContain('@zapbip/openclaw-plugin@0.1.0');
   });
 
+  it('says npm could not be reached, not that the package is missing, when the failure is a network error', async () => {
+    const networkError = JSON.stringify({ error: { code: 'ENOTFOUND', summary: 'request to https://registry.npmjs.org failed' } });
+    const shell = fakeShell({ replies: { 'maintainers --json': { exitCode: 1, stdout: networkError } } });
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell }));
+    expect(refusal?.step).toBe(PreflightStep.NpmVersion);
+    expect(refusal?.message).toContain('could not reach npm');
+    expect(refusal?.message).toContain('ENOTFOUND');
+    expect(refusal?.message).not.toContain('does not resolve');
+  });
+
+  it('says the package does not resolve when npm answers E404', async () => {
+    const notFound = JSON.stringify({ error: { code: 'E404', summary: 'not found' } });
+    const shell = fakeShell({ replies: { 'maintainers --json': { exitCode: 1, stdout: notFound } } });
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell }));
+    expect(refusal?.message).toContain('does not resolve');
+    expect(refusal?.message).not.toContain('could not reach npm');
+  });
+
   it('refuses production when the owner npm user has a co-maintainer', async () => {
     const maintainers = JSON.stringify([`${NPM_PUBLISHER} <o@example.com>`, 'second-person <s@example.com>']);
     const shell = fakeShell({ replies: { 'maintainers --json': { exitCode: 0, stdout: maintainers } } });

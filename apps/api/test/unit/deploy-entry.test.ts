@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { readDeployBlock, runDeploy, type DeployPrompt } from '../../scripts/deploy';
 import { PLACEHOLDER_VALUE_PREFIX } from '../../src/operations/constants';
@@ -14,10 +15,18 @@ import {
 } from './fake-deploy-shell';
 
 const CONFIRMATION = 'production';
-const VERSIONS_JSON = JSON.stringify([{ id: 'version-old' }, { id: 'version-new' }]);
+const DEPLOYMENT_STATUS_JSON = readFileSync('test/fixtures/deployments-status.json', 'utf8');
+const CURRENT_VERSION_ID = '0c8a4f7e-91d2-4b6a-8e35-2f1d7a6b9c40';
+const SPLIT_DEPLOYMENT_JSON = JSON.stringify({
+  versions: [
+    { version_id: 'candidate', percentage: 10 },
+    { version_id: 'stable', percentage: 90 },
+  ],
+});
+const EMPTY_DEPLOYMENT_JSON = JSON.stringify({ versions: [] });
 const BOOKMARK_JSON = JSON.stringify({ bookmark: 'bookmark-1' });
 const REPLIES = {
-  'versions list': { exitCode: 0, stdout: VERSIONS_JSON },
+  'deployments status': { exitCode: 0, stdout: DEPLOYMENT_STATUS_JSON },
   'time-travel info': { exitCode: 0, stdout: BOOKMARK_JSON },
 };
 const WRANGLER = 'pnpm --filter @zapbip/api exec wrangler';
@@ -76,7 +85,7 @@ describe('deploy entry', () => {
       'migrations list',
       'pnpm verify',
       '--dry-run',
-      'versions list',
+      'deployments status',
       'time-travel info',
       'wrangler deploy --env staging',
       'smoke.ts',
@@ -117,7 +126,7 @@ describe('deploy entry', () => {
 
   it('prints the current version and the database bookmark before deploying', async () => {
     const { output } = await deploy({});
-    expect(output).toContain('version-new');
+    expect(output).toContain(CURRENT_VERSION_ID);
     expect(output).toContain('bookmark-1');
   });
 
@@ -143,16 +152,18 @@ describe('deploy entry', () => {
     const shell = fakeShell({ replies: { ...REPLIES, 'smoke.ts': { exitCode: 1, stdout: '' } } });
     const { exitCode, output } = await deploy({ shell });
     expect(exitCode).toBe(1);
-    expect(output).toContain(`${WRANGLER} rollback version-new --env staging`);
+    expect(output).toContain(`${WRANGLER} rollback ${CURRENT_VERSION_ID} --env staging`);
     expect(output).toContain(`${WRANGLER} d1 time-travel restore zapbip-staging --env staging --bookmark=bookmark-1`);
     expect(shell.commands.some((command) => command.includes('rollback') || command.includes('restore'))).toBe(false);
   });
 
   it.each([
-    ['an empty version list', JSON.stringify([])],
-    ['a version list that is not JSON', 'not json'],
+    ['a deployment without versions', EMPTY_DEPLOYMENT_JSON],
+    ['a deployment answer that is not JSON', 'not json'],
   ])('says there is no previous version for %s, and prints it again when the smoke test fails', async (_name, stdout) => {
-    const shell = fakeShell({ replies: { ...REPLIES, 'versions list': { exitCode: 0, stdout }, 'smoke.ts': { exitCode: 1, stdout: '' } } });
+    const shell = fakeShell({
+      replies: { ...REPLIES, 'deployments status': { exitCode: 0, stdout }, 'smoke.ts': { exitCode: 1, stdout: '' } },
+    });
     const { exitCode, output } = await deploy({ shell });
     expect(exitCode).toBe(1);
     expect(output).toContain('no previous Worker version');
@@ -165,6 +176,19 @@ describe('deploy entry', () => {
     const { exitCode, output } = await deploy({ shell });
     expect(exitCode).toBe(0);
     expect(output).toContain('bookmark unavailable');
+  });
+
+  it('takes the version carrying most of the traffic as the rollback point', async () => {
+    const shell = fakeShell({ replies: { ...REPLIES, 'deployments status': { exitCode: 0, stdout: SPLIT_DEPLOYMENT_JSON } } });
+    const { output } = await deploy({ shell });
+    expect(output).toContain('stable');
+    expect(output).not.toContain('candidate');
+  });
+
+  it('reads the current deployment, not the version list', async () => {
+    const { shell } = await deploy({});
+    expect(shell.commands).toContain(`${WRANGLER} deployments status --env staging --json`);
+    expect(shell.commands.some((command) => command.includes('versions list'))).toBe(false);
   });
 
   it('passes the first deploy flag to the smoke test', async () => {
