@@ -1,5 +1,6 @@
 import {
   AgentWakeReason,
+  DeliveryState,
   IdPrefix,
   InboxCopyKey,
   MediaOrigin,
@@ -36,6 +37,7 @@ type Placement = {
   decision: RoutingDecision;
   answer: PendingAnswer | null;
   prompt: OwnerPrompt;
+  isRoutedNowhere: boolean;
 };
 type TappedOption = { question: Question; selected: Question['options'][number] };
 type Arrival = { dependencies: CoreDependencies; ownerLocale: OwnerLocale; ownerMessage: OwnerInboundMessage };
@@ -157,6 +159,7 @@ function placeTap(input: { tapped: TappedOption }): Placement {
       decision,
       answer: null,
       prompt: NO_PROMPT,
+      isRoutedNowhere: false,
     };
   return {
     content: { kind: MessageKind.Choice, questionId: question.questionId, options: question.options, selected },
@@ -164,6 +167,7 @@ function placeTap(input: { tapped: TappedOption }): Placement {
     decision,
     answer: { questionId: question.questionId, optionIndex: selected.optionIndex, text: selected.title },
     prompt: NO_PROMPT,
+    isRoutedNowhere: false,
   };
 }
 
@@ -178,6 +182,14 @@ async function findReference(
   return { message, question };
 }
 
+async function isRoutingListPending(input: { dependencies: CoreDependencies; held: Message[] }): Promise<boolean> {
+  const { repository } = input.dependencies;
+  const prompts = await Promise.all(
+    input.held.map((message) => repository.findChoicePrompt({ questionId: formatRoutingListQuestionId({ messageId: message.messageId }) })),
+  );
+  return prompts.some((prompt) => prompt !== null && prompt.delivery !== DeliveryState.Failed);
+}
+
 async function placeContent(input: Arrival & { content: MessageContent }): Promise<Placement> {
   const { dependencies, ownerMessage, content } = input;
   const { repository } = dependencies;
@@ -188,7 +200,7 @@ async function placeContent(input: Arrival & { content: MessageContent }): Promi
     repository.findLastAgentWrite({ since: ownerMessage.at - WINDOW_MS }),
     repository.listHeld(),
   ]);
-  const routingListOpen = held.length > 0;
+  const routingListOpen = await isRoutingListPending({ dependencies, held });
   const decision = routeOwnerMessage({
     text: textOf(content),
     referencedMessage: reference.message,
@@ -207,13 +219,14 @@ async function placeContent(input: Arrival & { content: MessageContent }): Promi
           .slice(0, QUESTION_MAX_OPTIONS)
           .map((record) => record.agent)
       : [];
-  const announcesNoAgents = decision.rule === RoutingRule.AskOwner && agents.length === 0 && !routingListOpen && shouldTellOwner;
+  const announcesNoAgents = decision.rule === RoutingRule.AskOwner && agents.length === 0 && held.length === 0 && shouldTellOwner;
   return {
     content: routedContent,
     replyToMessageId: ownerMessage.replyToMessageId,
     decision,
     answer: pendingAnswerOf({ content: routedContent, answersQuestionId: decision.answersQuestionId }),
     prompt: { listedAgents, announcesNoAgents },
+    isRoutedNowhere: content.kind === MessageKind.Reaction && decision.agent === null,
   };
 }
 
@@ -269,7 +282,7 @@ async function storePlacement(input: Arrival & { content: OwnerInboundContent; p
       at: ownerMessage.at,
       replyToMessageId: placement.replyToMessageId,
       delivery: null,
-      readByAgent: false,
+      readByAgent: placement.isRoutedNowhere,
       ...placement.content,
     },
   });
