@@ -116,6 +116,23 @@ describe('assertWakeTarget host forms', () => {
     },
   );
 
+  test.each(['https://zapbip.example:8787', 'https://zapbip.example/some/path', 'HTTPS://ZAPBIP.EXAMPLE'])(
+    'the own host given as the origin %s is refused',
+    async (publicHost) => {
+      expect(await rejection({ url: 'https://a.b.zapbip.example/hook', token: LONG_TOKEN, publicHost })).toEqual({
+        code: InboxErrorCode.InvalidInput,
+        message: 'invalid url',
+      });
+    },
+  );
+
+  test.each(['https://notzapbip.example/x', 'https://zapbip.example.evil.com/x', 'https://myzapbip.com/x'])(
+    '%s only resembles a blocked host and is accepted',
+    (url) => {
+      expect(guard({ url, token: LONG_TOKEN }).provider).toBe(WakeProvider.GenericWebhook);
+    },
+  );
+
   test.each([
     'https://evil-api2.cursor.sh/x',
     'https://x.api2.cursor.sh/x',
