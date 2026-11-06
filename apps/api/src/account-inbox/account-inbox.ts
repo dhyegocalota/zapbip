@@ -41,9 +41,10 @@ import { runMigrations } from './run-migrations';
 
 const RECORD_STATE_STATEMENT = 'INSERT INTO account_facts (id, state) VALUES (1, ?) ON CONFLICT (id) DO UPDATE SET state = excluded.state';
 
+type ReceiveAccountMessageRequest = Parameters<AccountOwnerRpc['receiveAccountMessage']>[0];
 type ReceiveOwnerMessageRequest = Parameters<AccountInboxRpc['receiveOwnerMessage']>[0];
 
-export class AccountInbox extends DurableObject<Bindings> implements AccountInboxRpc, Omit<AccountOwnerRpc, 'receiveAccountMessage'> {
+export class AccountInbox extends DurableObject<Bindings> implements AccountInboxRpc, AccountOwnerRpc {
   protected sender!: FakeWhatsAppSender;
   protected clock!: DurableClock;
   protected readonly dueTimeProviders: DueTimeProvider[] = [];
@@ -217,6 +218,11 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
 
   completeUpload(input: { mediaId: string }): Promise<CallOutcome<StoredMedia>> {
     return this.outcome({ run: () => inbox.completeUpload({ ...input, dependencies: this.dependencies }) });
+  }
+
+  receiveAccountMessage(input: ReceiveAccountMessageRequest): Promise<CallOutcome<inbox.ReceiveAccountMessageResult>> {
+    void input;
+    throw new Error('receiveAccountMessage is not implemented');
   }
 
   async recordRevocation(input: { agent: string }): Promise<void> {

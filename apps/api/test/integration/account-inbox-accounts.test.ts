@@ -1,12 +1,15 @@
-import { ReplyStatus, AccountState } from '@zapbip/types';
+import { AccountState, MessageKind, OwnerLocale, ReplyStatus } from '@zapbip/types';
 import { reset, runInDurableObject } from 'cloudflare:test';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AccountInbox } from '../../src/account-inbox/account-inbox';
 import { createSqliteDeletionRequests } from '../../src/account-inbox/deletion-requests';
 import { createSqliteFirstMessageClaim } from '../../src/account-inbox/first-message-claim';
 import { ACCOUNT_INBOX_MIGRATIONS } from '../../src/account-inbox/migrations';
 import { runMigrations } from '../../src/account-inbox/run-migrations';
-import { accountInboxStub, connectionOf } from '../support/workers-env';
+import { D1ConnectionRegistry } from '../../src/adapters/d1/d1-connection-registry';
+import { readScreen } from '../support/inbox-session';
+import { applyDirectoryMigration, seedOwnerIdentity } from '../support/seed';
+import { accountInboxStub, connectionOf, testEnv } from '../support/workers-env';
 
 const ACCOUNT = 'acc_accounts';
 const HELD_TIMEOUT_MS = 20_000;
@@ -197,5 +200,72 @@ describe('AccountInbox setState', () => {
 
   it.each([AccountState.Suspended, AccountState.Deleting, AccountState.Waitlisted])('refuses %s', async (state) => {
     await expect(runInDurableObject(stubOf(), (instance: AccountInbox) => instance.setState({ state }))).rejects.toThrow();
+  });
+});
+
+describe('AccountInbox receiveAccountMessage', () => {
+  const OWNER_PHONE = '5511900000009';
+  const PUBLIC_ORIGIN = 'https://zapbip.test';
+
+  beforeEach(async () => {
+    await applyDirectoryMigration();
+    await seedOwnerIdentity({ accountId: ACCOUNT, phone: OWNER_PHONE, ownerLocale: OwnerLocale.PortugueseBrazil });
+  });
+
+  function receive(input: { text: string; channelMessageId: string }) {
+    return stubOf().receiveAccountMessage({
+      account: { accountId: ACCOUNT, waId: OWNER_PHONE, state: AccountState.Active, locale: OwnerLocale.PortugueseBrazil },
+      channelMessageId: input.channelMessageId,
+      ownerMessage: { at: Date.now(), replyToMessageId: null, content: { kind: MessageKind.Text, text: input.text } },
+      publicOrigin: PUBLIC_ORIGIN,
+    });
+  }
+
+  function screenTexts(): Promise<string[]> {
+    return readScreen({ stub: stubOf() }).then((entries) => entries.map((entry) => entry.text));
+  }
+
+  it('creates a connection and sends the install prompt', async () => {
+    const outcome = await receive({ text: 'novo agente alpha', channelMessageId: 'wamid.create' });
+    expect(outcome).toMatchObject({ ok: true, value: { duplicate: false, deletionConfirmed: false } });
+    const connections = await new D1ConnectionRegistry({ database: testEnv.CONNECTIONS }).listActive({ accountId: ACCOUNT });
+    expect(connections.map((connection) => connection.agent)).toEqual(['alpha']);
+    expect((await screenTexts()).join('\n')).toContain(`${PUBLIC_ORIGIN}/c/zb_conn_`);
+  });
+
+  it('answers a retried delivery as a duplicate without sending again', async () => {
+    await receive({ text: 'novo agente alpha', channelMessageId: 'wamid.retry' });
+    const sentBefore = (await screenTexts()).length;
+    const retried = await receive({ text: 'novo agente alpha', channelMessageId: 'wamid.retry' });
+    expect(retried).toMatchObject({ ok: true, value: { duplicate: true } });
+    expect((await screenTexts()).length).toBe(sentBefore);
+  });
+
+  it('records the revocation on the object when an agent is revoked', async () => {
+    await receive({ text: 'novo agente alpha', channelMessageId: 'wamid.one' });
+    await receive({ text: 'revogar alpha', channelMessageId: 'wamid.two' });
+    expect(await listRevokedAgents()).toEqual(['alpha']);
+  });
+
+  it('stores the deletion request and reports the confirmation', async () => {
+    await receive({ text: 'apagar conta', channelMessageId: 'wamid.ask' });
+    const requestedAt = await inStorage((storage) => createSqliteDeletionRequests({ storage }).find());
+    expect(requestedAt).not.toBeNull();
+    const confirmed = await receive({ text: 'apagar conta definitivamente', channelMessageId: 'wamid.confirm' });
+    expect(confirmed).toMatchObject({ ok: true, value: { deletionConfirmed: true } });
+  });
+
+  it('refuses the message after a purge', async () => {
+    await stubOf().purge();
+    await expect(
+      runInDurableObject(stubOf(), (instance: AccountInbox) =>
+        instance.receiveAccountMessage({
+          account: { accountId: ACCOUNT, waId: OWNER_PHONE, state: AccountState.Active, locale: OwnerLocale.PortugueseBrazil },
+          channelMessageId: 'wamid.after',
+          ownerMessage: { at: Date.now(), replyToMessageId: null, content: { kind: MessageKind.Text, text: 'oi' } },
+          publicOrigin: PUBLIC_ORIGIN,
+        }),
+      ),
+    ).rejects.toThrow('AccountTombstoned');
   });
 });
