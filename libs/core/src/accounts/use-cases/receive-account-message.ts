@@ -17,8 +17,22 @@ type AnswerInput = ReceiveAccountMessageInput & { prepare: () => Promise<Account
 
 const NOT_CONFIRMED = false;
 
-const DUPLICATE_RESULT: ReceiveAccountMessageResult = { messageId: null, agent: null, duplicate: true, deletionConfirmed: false };
-const DROPPED_RESULT: ReceiveAccountMessageResult = { messageId: null, agent: null, duplicate: false, deletionConfirmed: false };
+const DUPLICATE_RESULT: ReceiveAccountMessageResult = {
+  messageId: null,
+  agent: null,
+  duplicate: true,
+  deletionConfirmed: false,
+  commandKind: null,
+  connectionId: null,
+};
+const DROPPED_RESULT: ReceiveAccountMessageResult = {
+  messageId: null,
+  agent: null,
+  duplicate: false,
+  deletionConfirmed: false,
+  commandKind: null,
+  connectionId: null,
+};
 
 function toCommandInput(input: { entry: ChannelInboundEntry }): CommandInput {
   const { entry } = input;
@@ -122,7 +136,14 @@ async function answerLocally(input: AnswerInput): Promise<ReceiveAccountMessageR
   await openWindow({ dependencies, ownerLocale: account.locale, at: entry.at });
   const result = await prepare();
   await sendReplies({ ...input, result });
-  return { messageId: null, agent: null, duplicate: false, deletionConfirmed: result.deletionConfirmed };
+  return {
+    messageId: null,
+    agent: null,
+    duplicate: false,
+    deletionConfirmed: result.deletionConfirmed,
+    commandKind: null,
+    connectionId: null,
+  };
 }
 
 async function handleReply(
@@ -140,7 +161,7 @@ async function handleProceed(input: ReceiveAccountMessageInput & { command: Acco
     return answerLocally({ ...input, prepare: () => applyOwnerCommand({ dependencies, account, publicOrigin, command }) });
   }
   const result: ReceiveResult = await receiveChannelMessage({ dependencies, ownerLocale: account.locale, channelMessageId, entry });
-  return { ...result, deletionConfirmed: NOT_CONFIRMED };
+  return { ...result, deletionConfirmed: NOT_CONFIRMED, commandKind: null, connectionId: null };
 }
 
 export async function receiveAccountMessage(input: ReceiveAccountMessageInput): Promise<ReceiveAccountMessageResult> {

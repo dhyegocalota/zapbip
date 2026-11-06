@@ -1,0 +1,81 @@
+import { AccountState } from '@zapbip/types';
+import { reset, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { applyDirectoryMigration, seedConnection } from '../support/seed';
+import { accountInboxStub, connectionOf, testEnv } from '../support/workers-env';
+
+const ACCOUNT = 'acc_admission';
+const AGENT = 'alpha';
+const SECRET = `zb_conn_${'K'.repeat(43)}`;
+const NEW_SECRET = `zb_conn_${'L'.repeat(43)}`;
+const REVOKED_AT = 1;
+
+function stubOf() {
+  return accountInboxStub({ accountId: ACCOUNT });
+}
+
+function sendFromAgent() {
+  return stubOf().sendText({ connection: connectionOf({ accountId: ACCOUNT, agent: AGENT }), text: 'oi', replyToMessageId: null });
+}
+
+async function setState(input: { state: AccountState }): Promise<void> {
+  await testEnv.CONNECTIONS.prepare('UPDATE accounts SET state = ? WHERE id = ?').bind(input.state, ACCOUNT).run();
+}
+
+async function revokeAgent(): Promise<void> {
+  await testEnv.CONNECTIONS.prepare('UPDATE connections SET revoked_at = ? WHERE account_id = ? AND agent = ?')
+    .bind(REVOKED_AT, ACCOUNT, AGENT)
+    .run();
+}
+
+beforeEach(async () => {
+  await applyDirectoryMigration();
+  await seedConnection({ accountId: ACCOUNT, agent: AGENT, secret: SECRET });
+});
+afterEach(reset);
+
+describe('Durable Object agent admission', () => {
+  it('serves an active connection', async () => {
+    expect((await sendFromAgent()).ok).toBe(true);
+  });
+
+  it('refuses a revoked connection on the next call', async () => {
+    await sendFromAgent();
+    await revokeAgent();
+    expect((await sendFromAgent()).ok).toBe(false);
+  });
+
+  it('serves a name that was revoked and created again', async () => {
+    await revokeAgent();
+    await seedConnection({ accountId: ACCOUNT, agent: AGENT, secret: NEW_SECRET });
+    expect((await sendFromAgent()).ok).toBe(true);
+  });
+
+  it.each([AccountState.Suspended, AccountState.Deleting, AccountState.Waitlisted])(
+    'refuses every call while the account is %s',
+    async (state) => {
+      await setState({ state });
+      expect((await sendFromAgent()).ok).toBe(false);
+      const read = await stubOf().checkInbox({ connection: connectionOf({ accountId: ACCOUNT, agent: AGENT }) });
+      expect(read.ok).toBe(false);
+    },
+  );
+
+  it('ends a waiter of the agent when its next call is refused', async () => {
+    const connection = connectionOf({ accountId: ACCOUNT, agent: AGENT });
+    const held = stubOf().waitForReply({ connection, questionId: null, timeoutMs: 20_000 });
+    await revokeAgent();
+    await sendFromAgent();
+    const settled = await Promise.race([held.then(() => 'settled'), new Promise((resolve) => setTimeout(() => resolve('hung'), 3_000))]);
+    expect(settled).toBe('settled');
+  });
+
+  it('stops the alarm of an account that is no longer active', async () => {
+    const connection = connectionOf({ accountId: ACCOUNT, agent: AGENT });
+    await stubOf().ask({ connection, text: 'Deploy?', options: ['Sim', 'Nao'], optionDescriptions: [null, null], timeoutMs: 10 });
+    expect(await runInDurableObject(stubOf(), (_instance, state) => state.storage.getAlarm())).not.toBeNull();
+    await setState({ state: AccountState.Suspended });
+    await runDurableObjectAlarm(stubOf());
+    expect(await runInDurableObject(stubOf(), (_instance, state) => state.storage.getAlarm())).toBeNull();
+  });
+});

@@ -61,6 +61,24 @@ describe('owner inbound orchestrator', () => {
     expect(await countAccounts()).toBe(NEW_ACCOUNTS_PER_DAY_LIMIT);
   });
 
+  it('logs the daily cap alert once, without the phone', async () => {
+    const lines: string[] = [];
+    vi.spyOn(console, 'log').mockImplementation((...parts: unknown[]) => void lines.push(parts.join(' ')));
+    const statements = Array.from({ length: NEW_ACCOUNTS_PER_DAY_LIMIT }, (_, index) =>
+      testEnv.CONNECTIONS.prepare('INSERT INTO accounts (id, state, created_at) VALUES (?, ?, ?)').bind(
+        `acc_alert_${index}`,
+        AccountState.Active,
+        Date.now(),
+      ),
+    );
+    await testEnv.CONNECTIONS.batch(statements);
+    await deliver({ bindings: bindingsWith({ waitlistEnabled: false }), text: 'oi' });
+    const alerts = lines.filter((line) => line.includes('account_daily_cap'));
+    expect(alerts).toHaveLength(1);
+    expect(alerts[0]).not.toContain(WA_ID);
+    vi.restoreAllMocks();
+  });
+
   it('creates a waitlisted account on a first message while the waitlist is on', async () => {
     await deliver({ bindings: bindingsWith({ waitlistEnabled: true }), text: 'oi' });
     const [account] = await findAccounts({ waId: WA_ID });

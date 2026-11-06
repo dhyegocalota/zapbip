@@ -10,6 +10,7 @@ export interface AccountOwnerRpc {
     publicOrigin: string;
   }): Promise<CallOutcome<ReceiveAccountMessageResult>>;
   recordRevocation(input: { agent: AgentName }): Promise<void>;
+  recordCreation(input: { agent: AgentName }): Promise<void>;
   cancelWaiters(input: { agent: AgentName }): Promise<void>;
   purge(): Promise<void>;
   setState(input: { state: AccountState }): Promise<void>;

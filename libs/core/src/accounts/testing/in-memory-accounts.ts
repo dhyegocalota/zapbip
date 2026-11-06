@@ -42,6 +42,7 @@ export type RecordingSecrets = ConnectionSecrets & { issued: IssuedSecret[] };
 export type RecordingRevocations = ConnectionRevocations & {
   revoked: AgentName[];
   cancelled: AgentName[];
+  created: AgentName[];
   wakeConfigured: Set<AgentName>;
 };
 export type InMemoryAccountMedia = AccountMediaPurge & {
@@ -237,11 +238,14 @@ function createInstallCodeDirectory(input: { store: AccountStore; vault: Install
 function createRevocations(): RecordingRevocations {
   const revoked: AgentName[] = [];
   const cancelled: AgentName[] = [];
+  const created: AgentName[] = [];
   const wakeConfigured = new Set<AgentName>();
   return {
     revoked,
     cancelled,
+    created,
     wakeConfigured,
+    recordCreation: async () => undefined,
     recordRevocation: async ({ agent }) => {
       revoked.push(agent);
       wakeConfigured.delete(agent);

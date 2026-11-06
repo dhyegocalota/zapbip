@@ -1,3 +1,4 @@
+import type { CommandKind } from '@zapbip/types';
 import type { ChannelInboundEntry, ReceiveResult } from '../../inbox/use-cases/types';
 import type { AccountCommand, OwnerAccountContext } from '../account-types';
 import type { AccountDependencies, AccountInboxPurge, AccountLifecycleDependencies } from '../ports';
@@ -47,4 +48,8 @@ export type ReceiveAccountMessageInput = {
   publicOrigin: string;
 };
 
-export type ReceiveAccountMessageResult = ReceiveResult & { deletionConfirmed: boolean };
+export type ReceiveAccountMessageResult = ReceiveResult & {
+  deletionConfirmed: boolean;
+  commandKind: CommandKind | null;
+  connectionId: string | null;
+};

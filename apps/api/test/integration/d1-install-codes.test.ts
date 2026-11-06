@@ -44,6 +44,14 @@ beforeEach(async () => {
 });
 afterEach(reset);
 
+describe('D1 install code directory expiry', () => {
+  it('nulls the sealed secret as soon as a resolve finds the code expired', async () => {
+    const { connection, installCode } = await registerWithInstallCode({ accountId: ACCOUNT_ID, agent: 'claude', expiresAt: NOW });
+    expect((await installCodeDirectory().resolve({ installCode, now: NOW })).status).toBe(InstallCodeStatus.Expired);
+    expect((await readCallColumns({ connectionId: connection.connectionId }))?.install_code_sealed_secret).toBeNull();
+  });
+});
+
 describe('D1 install code directory resolve', () => {
   it('is ready with the connection link built from the opened secret, the agent and the account locale', async () => {
     const { connection, installCode, secret } = await registerWithInstallCode({ accountId: ACCOUNT_ID, agent: 'claude' });

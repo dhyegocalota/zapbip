@@ -48,6 +48,20 @@ describe('AccountInbox purge', () => {
     expect(tableCount).toBe(0);
   });
 
+  it('ends every waiter that is still held', async () => {
+    const connection = connectionOf({ accountId: ACCOUNT, agent: 'alpha' });
+    const held = stubOf().waitForReply({ connection, questionId: null, timeoutMs: 20_000 });
+    await stubOf().purge();
+    const settled = await Promise.race([
+      held.then(
+        () => 'settled',
+        () => 'settled',
+      ),
+      new Promise((resolve) => setTimeout(() => resolve('hung'), 3_000)),
+    ]);
+    expect(settled).toBe('settled');
+  });
+
   it('is idempotent', async () => {
     await populate();
     await stubOf().purge();

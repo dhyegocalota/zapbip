@@ -55,7 +55,7 @@ export function receiveAccount(
   });
 }
 
-export function receiveAccountText(input: AccountFixture & { text: string; replyToMessageId?: string | null }) {
+export function receiveAccountText(input: AccountFixture & { text: string; replyToMessageId?: string | null; channelMessageId?: string }) {
   return receiveAccount({ ...input, content: { kind: MessageKind.Text, text: input.text } });
 }
 

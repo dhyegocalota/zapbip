@@ -241,6 +241,20 @@ describe('AccountInbox receiveAccountMessage', () => {
     expect(sent).not.toContain('zb_conn_');
   });
 
+  it('keeps no clear install code in the stored message log', async () => {
+    await receive({ text: 'novo agente alpha', channelMessageId: 'wamid.mask' });
+    expect((await screenTexts()).join('\n')).toMatch(/\/i\/zb_inst_[A-Za-z0-9_-]{22}/);
+    const stored = await inStorage((storage) =>
+      storage.sql
+        .exec<{ payload: string }>('SELECT payload FROM inbox_messages')
+        .toArray()
+        .map((row) => row.payload)
+        .join('\n'),
+    );
+    expect(stored).toContain('/i/zb_inst_');
+    expect(stored).not.toMatch(/zb_inst_[A-Za-z0-9_-]{22}/);
+  });
+
   it('answers a retried delivery as a duplicate without sending again', async () => {
     await receive({ text: 'novo agente alpha', channelMessageId: 'wamid.retry' });
     const sentBefore = (await screenTexts()).length;

@@ -101,6 +101,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       installCodeVault: createInstallCodeVault(),
       revocations: {
         recordRevocation: ({ agent }) => this.recordRevocation({ agent }),
+        recordCreation: ({ agent }) => this.recordCreation({ agent }),
         cancelWaiters: ({ agent }) => this.cancelWaiters({ agent }),
       },
       firstMessage: createSqliteFirstMessageClaim({ storage: this.ctx.storage }),
@@ -294,6 +295,10 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     this.assertLive();
     revokeAgentState({ storage: this.ctx.storage, agent: input.agent, revokedAt: this.clock.now() });
     this.dependencies.waiters.cancelAgent(input);
+  }
+
+  async recordCreation(input: { agent: string }): Promise<void> {
+    throw new Error(`recordCreation is not implemented for ${input.agent}`);
   }
 
   async cancelWaiters(input: { agent: string }): Promise<void> {
