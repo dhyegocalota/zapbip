@@ -80,3 +80,49 @@ Pins (green when they landed): `test_constants_parity.py` (0e3fabc), and in `tes
 - A refused probe ends the socket task and marks the adapter disconnected, but nothing tells the owner; the gateway log carries `connector_closed` with the status.
 - The install must set `ZAPBIP_ALLOWED_USERS=owner` (the user id the plugin gives every message), or Hermes' allowlist refuses the owner; that is `install-skills`' text.
 - No test starts the real gateway; the Docker E2E belongs to V.
+
+## Lane O: OpenClaw plugin
+
+### What changed
+
+All under `apps/openclaw-plugin`: `src/{connector-socket,frames,handoff-queue,handoff,send-message,connection-link,channel,log,constants}.ts`, `index.ts`, `openclaw.plugin.json`, tests in `test/unit/` and fakes in `test/support/{fake-connector,fake-mcp-route}.ts`. The `OpenClawConfig` import path (`openclaw/plugin-sdk/config-contracts`) is verified against the installed `openclaw@2026.10.10` (typecheck passes, the type is exported there).
+
+### How to run
+
+`pnpm --filter @zapbip/openclaw-plugin typecheck` and `pnpm --filter @zapbip/openclaw-plugin test:unit` (the bundle test runs `build` itself).
+
+### Red then green (failure text the red runs printed)
+
+- `connector-socket.test.ts` (3f073d9): `Error: runConnectorSocket is not implemented`, `Error: reconnectDelayMs is not implemented`; green 175225c.
+- `handoff.test.ts`, `send-message.test.ts` (2a5c3f5): `Error: handoffTextOf is not implemented`, `handOffToAgent`, `sendOwnerText` likewise; green 0c20cc7.
+- message id of the send (0519b34): `AssertionError: expected undefined to be 'wamid.fake-1'`; green 0b38a72.
+- `channel.test.ts`, `connection-link.test.ts` (1e86ced): `Error: createZapbipPlugin is not implemented`, `deriveSocketLink is not implemented`; green 5972267.
+- `bundle.test.ts`: pin (green when it landed).
+
+### Deviations and decisions
+
+- `sendOwnerText` returns `Promise<string | null>` (the tool's `message_id`, `null` when the text is empty), not `void`: the SDK's `attachedResults.sendText` requires a `messageId`.
+- Handoff failures log `wake_finished` with outcome `failed` and the message id only (no `ConnectorLogEvent` exists for it and `libs/types` is C0's).
+- `SEEN_MESSAGE_LIMIT` (1 024) is plugin-local in `src/constants.ts`; a shared constant would be a C0 change.
+- A 4001 replacement resolves `0` (plan), unlike `zapbip listen`. `startAccount` throws on any non-zero exit (refused probe), so the host sees the failure.
+- The manifest puts `connectionLink` in `channelConfigs.zapbip.schema` (which validates `channels.zapbip`), the top-level `configSchema` stays empty.
+- Step 21 struck: lane H owns the Python-to-TypeScript parity test.
+- Timing and waiting are injectable (`wait`, `heartbeatIntervalMs`, `heartbeatTimeoutMs`, `log`) with the shared constants as defaults.
+
+### Needs from C0 (not done by lane O)
+
+`apps/openclaw-plugin/package.json` has no `openclaw` block (`extensions: ["./dist/index.js"]`, `channel: {id: "zapbip", label, blurb}`, `compat`), no `version`, and is `private: true`; `openclaw plugins install` needs the block and publish needs the rest.
+
+### Hypotheses to attack
+
+1. The plugin sends `done` only after `dispatchInboundDirectDm` resolves; killing the process between the two re-delivers the message after reconnect. Break it by: killing mid-handoff against a real connector.
+2. No secret, link or owner text reaches stderr on any path (probe refusal, rejected handoff, dispatch error, rejected frame). Break it by: grepping a long run with a recognisable secret.
+3. A second plugin on one connection stops the first without retry (close 4001, exit 0).
+4. `commandAuthorized` and `inboundAccessAuthorized` are true only for the owner's direct message built in `handOffToAgent`.
+5. The real OpenClaw gateway accepts the bundle (`dist/index.js`) and the manifest, and `startAccount` rejecting on a non-zero exit does not cause a restart storm. Unverified: only the SDK helpers were exercised for real; the gateway was not.
+
+### Known gaps
+
+- No run inside a real OpenClaw gateway or with a model (E and V3 cover it).
+- Probe is made once at start; after the first success a revoked secret surfaces as reconnect close codes, not a probe.
+- Reconnect after a close does not re-probe (same as `zapbip listen`).
