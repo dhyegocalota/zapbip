@@ -88,7 +88,7 @@ def test_message_kinds_equal_the_shared_ones() -> None:
 
 
 def test_no_text_handoff_sentences_equal_the_shared_ones() -> None:
-    assert CHANNEL_HANDOFF_NO_TEXT_BY_KIND == no_text_by_kind()
+    assert {kind.value: text for kind, text in CHANNEL_HANDOFF_NO_TEXT_BY_KIND.items()} == no_text_by_kind()
 
 
 def test_self_test_text_equals_the_shared_one() -> None:
