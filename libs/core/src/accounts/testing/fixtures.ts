@@ -10,15 +10,19 @@ export const PUBLIC_ORIGIN = 'https://zapbip.test';
 export const BRAZIL_WA_ID = '5511999990000';
 export const UNITED_STATES_WA_ID = '14155550100';
 
+const FIRST_CHANNEL_MESSAGE_ID = 'wamid.fixture.first';
+
 let channelMessageCounter = 0;
 
 export type AccountFixture = { environment: InMemoryAccountEnvironment; account: OwnerAccountContext };
 
 export async function createAccountFixture(
-  input: { state?: AccountState; locale?: OwnerLocale; waId?: string } = {},
+  input: { state?: AccountState; locale?: OwnerLocale; waId?: string; claimsFirstMessage?: boolean } = {},
 ): Promise<AccountFixture> {
   const environment = createInMemoryAccountDependencies();
-  const account = await environment.openAccount(input);
+  const { claimsFirstMessage = true, ...accountOptions } = input;
+  const account = await environment.openAccount(accountOptions);
+  if (claimsFirstMessage) await environment.dependencies.firstMessage.claim({ channelMessageId: FIRST_CHANNEL_MESSAGE_ID });
   await environment.repository.saveWindow({ window: { lastOwnerMessageAt: environment.clock.now(), noticeSentForClosedWindow: false } });
   return { environment, account };
 }

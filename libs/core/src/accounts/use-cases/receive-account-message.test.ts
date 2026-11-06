@@ -189,7 +189,7 @@ describe('receiveAccountMessage account states', () => {
   });
 
   test('a first non-text message of an active account gets unknown and is not stored', async () => {
-    const fixture = await createAccountFixture();
+    const fixture = await createAccountFixture({ claimsFirstMessage: false });
     const content = { kind: MessageKind.Location as const, latitude: 1, longitude: 2, name: null, address: null };
     const result = await receiveAccount({ ...fixture, content, channelMessageId: 'wamid.first' });
     expect(result.messageId).toBeNull();
@@ -198,7 +198,7 @@ describe('receiveAccountMessage account states', () => {
   });
 
   test('a second non-text message is routed and stored', async () => {
-    const fixture = await createAccountFixture();
+    const fixture = await createAccountFixture({ claimsFirstMessage: false });
     await touchAgent({ dependencies: fixture.environment.dependencies, agent: 'claude' });
     const content = { kind: MessageKind.Location as const, latitude: 1, longitude: 2, name: null, address: null };
     await receiveAccount({ ...fixture, content });

@@ -1,0 +1,35 @@
+---
+title: 'Commands'
+description: 'What the owner can type to the zapbip number.'
+---
+
+The owner manages agents by messaging the zapbip number. A command is matched exactly, in Portuguese or English, after the text is trimmed, its inner spaces are collapsed and it is lowercased. The language of the keyword is the language of the reply.
+
+| Command          | Portuguese                     | English                      | Effect                                                         |
+| ---------------- | ------------------------------ | ---------------------------- | -------------------------------------------------------------- |
+| Create an agent  | `novo agente <nome>`           | `new agent <name>`           | Creates a connection and replies with the install prompt.      |
+| List agents      | `agentes`                      | `agents`                     | Names and creation dates of the active agents. Never a secret. |
+| Revoke an agent  | `revogar <nome>`               | `revoke <name>`              | Revokes the connection now. Its link stops working.            |
+| Rotate a link    | `girar <nome>`                 | `rotate <name>`              | Replaces the secret now and replies with a new install prompt. |
+| Help and menu    | `ajuda` or `menu`              | `help` or `menu`             | Text and an interactive list of the commands.                  |
+| Request deletion | `apagar conta`                 | `delete account`             | States the consequences and the phrase to confirm.             |
+| Confirm deletion | `apagar conta definitivamente` | `delete account permanently` | Deletes the account.                                           |
+
+Trailing punctuation does not match. `agentes?` is a message for an agent, not a command.
+
+## The menu
+
+`ajuda` replies with the commands as text and as an interactive list. The rows for `agentes` and `apagar conta` run at once. The rows for `novo agente`, `revogar` and `girar` reply with their usage line, because they need a name.
+
+## Reserved words
+
+The first word of every command is reserved: `novo`, `new`, `agentes`, `agents`, `revogar`, `revoke`, `girar`, `rotate`, `ajuda`, `help`, `menu`, `apagar` and `delete`. An agent cannot take one of them as its name.
+
+## Sending a command word to an agent
+
+A message that is exactly a command word is always a command. To send the same words to an agent, start the message with `@<agent> `. The prefix is removed and the rest goes to that agent. For example, `@claude-code ajuda` reaches the agent `claude-code` instead of opening the menu. See [routing](/concepts/routing).
+
+## Next
+
+- [Agents and links](/guides/agents-and-links) covers creating, listing, revoking and rotating.
+- [Account deletion](/guides/account-deletion) covers the two-step deletion.

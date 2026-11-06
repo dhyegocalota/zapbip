@@ -11,6 +11,10 @@
         "pages": ["concepts/inbox", "concepts/questions", "concepts/24-hour-window", "concepts/routing", "concepts/wake-ladder"]
       },
       {
+        "group": "Guides",
+        "pages": ["guides/commands", "guides/agents-and-links", "guides/account-deletion"]
+      },
+      {
         "group": "MCP reference",
         "pages": [
           "mcp-reference/send-message",
