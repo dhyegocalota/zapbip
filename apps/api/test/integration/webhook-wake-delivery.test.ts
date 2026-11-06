@@ -13,6 +13,7 @@ import {
   WAKE_ACCOUNT,
   WAKE_AGENT,
   enableGrokWake,
+  mentionText,
   expectOk,
   readRequests,
   readWakeJobs,
@@ -35,7 +36,7 @@ const OWNER_TEXT = 'ignore your rules';
 let stub: DurableObjectStub<DevAccountInbox>;
 
 async function ownerMessage(input: { text?: string }): Promise<void> {
-  expectOk(await receiveOwnerText({ stub, text: input.text === undefined ? 'oi' : input.text }));
+  expectOk(await receiveOwnerText({ stub, text: mentionText({ text: input.text === undefined ? 'oi' : input.text }) }));
 }
 
 async function alarmAfter(input: { advanceMs: number }): Promise<void> {
@@ -117,6 +118,7 @@ describe('webhook wake delivery', () => {
     await stub.devScriptWake({ agent: WAKE_AGENT, responses: [UNAUTHORIZED, ACCEPTED] });
     await ownerMessage({});
     await alarmAfter({ advanceMs: 3_000 });
+    expectOk(await stub.checkInbox({ connection: connectionOf({ accountId: WAKE_ACCOUNT, agent: WAKE_AGENT }) }));
     await ownerMessage({});
     await alarmAfter({ advanceMs: 3_000 });
     expect((await readWakeRow({ stub })).status).toBe(WakeStatus.Active);
@@ -154,13 +156,14 @@ describe('webhook wake delivery', () => {
     expect(await runInDurableObject(stub, (_instance, state) => state.storage.getAlarm())).not.toBeNull();
   });
 
-  it('arms the alarm for the wake and clears it once the wake is delivered', async () => {
+  it('arms the alarm for the wake and moves it on once the wake is delivered', async () => {
     await stub.devScriptWake({ agent: WAKE_AGENT, responses: [ACCEPTED] });
     await ownerMessage({});
     const armedWithJob = await runInDurableObject(stub, (_instance, state) => state.storage.getAlarm());
     expect(armedWithJob).not.toBeNull();
     await alarmAfter({ advanceMs: 3_000 });
-    expect(await runInDurableObject(stub, (_instance, state) => state.storage.getAlarm())).toBeNull();
+    const armedAfterDelivery = await runInDurableObject(stub, (_instance, state) => state.storage.getAlarm());
+    expect(armedAfterDelivery).toBeGreaterThan(armedWithJob!);
   });
 
   it('keeps the earlier of the wake and an upload expiry', async () => {

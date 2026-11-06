@@ -64,11 +64,15 @@ export async function enableGrokWake(input: {
   );
 }
 
+export function mentionText(input: { text: string }): string {
+  return `@${WAKE_AGENT} ${input.text}`;
+}
+
 export function receiveEnglishText(input: { stub: DurableObjectStub<AccountInbox>; text: string; channelMessageId: string }) {
   return input.stub.receiveOwnerMessage({
     ownerLocale: OwnerLocale.EnglishUs,
     channelMessageId: input.channelMessageId,
-    ownerMessage: { at: Date.now(), replyToMessageId: null, content: { kind: MessageKind.Text, text: input.text } },
+    ownerMessage: { at: Date.now(), replyToMessageId: null, content: { kind: MessageKind.Text, text: mentionText({ text: input.text }) } },
   });
 }
 

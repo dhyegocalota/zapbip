@@ -17,6 +17,7 @@ import {
   WAKE_ACCOUNT,
   WAKE_AGENT,
   enableGrokWake,
+  mentionText,
   expectOk,
   readRequests,
   readWakeNotices,
@@ -47,7 +48,7 @@ function wakeDependenciesWith(input: { env: Partial<typeof testEnv> }) {
 
 async function wakeAfterOwnerMessage(): Promise<void> {
   await stub.devScriptWake({ agent: WAKE_AGENT, responses: [ACCEPTED] });
-  expectOk(await receiveOwnerText({ stub, text: 'oi' }));
+  expectOk(await receiveOwnerText({ stub, text: mentionText({ text: 'oi' }) }));
   await advanceClock({ stub, advanceMs: DEBOUNCE_ADVANCE_MS });
   await runDurableObjectAlarm(stub);
 }

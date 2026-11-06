@@ -10,6 +10,7 @@ import {
   DEBOUNCE_ADVANCE_MS,
   WAKE_AGENT,
   enableGrokWake,
+  mentionText,
   expectOk,
   readRequests,
   readWakeJobs,
@@ -40,7 +41,7 @@ beforeEach(() => {
 describe('clearWake', () => {
   beforeEach(async () => {
     await enableGrokWake({ stub });
-    expectOk(await receiveOwnerText({ stub, text: 'oi' }));
+    expectOk(await receiveOwnerText({ stub, text: mentionText({ text: 'oi' }) }));
   });
 
   it('clears the target, the failure and the pending job', async () => {
@@ -54,7 +55,7 @@ describe('clearWake', () => {
   it('sends no request for a later owner message', async () => {
     await stub.devScriptWake({ agent: WAKE_AGENT, responses: [ACCEPTED] });
     await withWakeRepository({ run: (repository) => repository.clearWake({ agent: WAKE_AGENT }) });
-    expectOk(await receiveOwnerText({ stub, text: 'de novo' }));
+    expectOk(await receiveOwnerText({ stub, text: mentionText({ text: 'de novo' }) }));
     await advanceClock({ stub, advanceMs: DEBOUNCE_ADVANCE_MS });
     await runDurableObjectAlarm(stub);
     expect(await readRequests({ stub })).toEqual([]);

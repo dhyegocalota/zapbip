@@ -10,6 +10,7 @@ import {
   UNAVAILABLE,
   WAKE_AGENT,
   enableGrokWake,
+  mentionText,
   expectOk,
   replaceWakeDependencies,
   wakeStub,
@@ -31,7 +32,7 @@ function observeWith(input: { writeDataPoint: (point: AnalyticsEngineDataPoint) 
 
 async function runThreeRetriesAndDelivery(): Promise<void> {
   await stub.devScriptWake({ agent: WAKE_AGENT, responses: [UNAVAILABLE, UNAVAILABLE, UNAVAILABLE, ACCEPTED] });
-  expectOk(await receiveOwnerText({ stub, text: OWNER_TEXT }));
+  expectOk(await receiveOwnerText({ stub, text: mentionText({ text: OWNER_TEXT }) }));
   for (const advanceMs of RETRY_ADVANCES_MS) {
     await advanceClock({ stub, advanceMs });
     await runDurableObjectAlarm(stub);
@@ -85,7 +86,7 @@ describe('webhook wake observability', () => {
         },
       },
     });
-    expectOk(await receiveOwnerText({ stub, text: 'oi' }));
+    expectOk(await receiveOwnerText({ stub, text: mentionText({ text: 'oi' }) }));
     await advanceClock({ stub, advanceMs: 3_000 });
     await runDurableObjectAlarm(stub);
     const lines = [...logSpy.mock.calls, ...errorSpy.mock.calls].flat().map(String);
