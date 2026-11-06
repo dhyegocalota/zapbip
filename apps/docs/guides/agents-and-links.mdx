@@ -7,7 +7,7 @@ Each agent has its own connection, and each connection has one link. The link is
 
 ## Create
 
-Send `novo agente <nome>` (or `new agent <name>`). zapbip replies with the install prompt for that agent. The name is normalised: accents are removed, it is lowercased and every run of other characters becomes one hyphen, so `Claude Code` becomes `claude-code`. The reply shows the normalised name. A name has up to 32 characters, letters, digits and hyphens, and starts with a letter or digit.
+Send `novo agente <nome>` (or `new agent <name>`). zapbip replies with the install prompt for that agent. The name is normalised: accents are removed, it is lowercased and every run of other characters becomes one hyphen, so `Claude Code` becomes `claude-code`. The reply shows the normalised name. A name has up to 20 characters, letters, digits and hyphens, and starts with a letter or digit.
 
 A name cannot be a [reserved word](/guides/commands#reserved-words) and must be unique among your active agents. A revoked name can be created again as a new connection. `novo agente` without a name replies with the usage line.
 

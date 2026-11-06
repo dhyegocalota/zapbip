@@ -72,4 +72,3 @@ pnpm --filter @zapbip/docs exec mint broken-links
 ### Known gaps
 
 - `apps/docs/docs.json` is not in L5; until the lead adds `guides/commands`, `guides/agents-and-links` and `guides/account-deletion`, the pages are reachable by link only.
-- `apps/docs/concepts/routing.mdx` (slice 1, not owned) says names have up to 20 characters; this slice's pattern allows 32, and the pages say 32. Routing should also mention the `@<agent>` escape.
