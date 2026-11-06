@@ -1,6 +1,6 @@
 import { ChannelErrorKind, DeliveryState, InboxErrorCode, MessageKind, TemplateKind, OwnerLocale } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
-import { WINDOW_MS } from '../constants';
+import { NOTICE_FAILED_MESSAGE, WINDOW_MS } from '../constants';
 import { captureInboxError } from '../testing/capture-inbox-error';
 import { closeWindow, connectionOf, createEnvironment, receiveText } from '../testing/fixtures';
 import { sendText } from './send-text';
@@ -87,31 +87,38 @@ describe('sendText', () => {
     expect(history.map((message) => message.delivery)).toEqual([DeliveryState.Failed]);
   });
 
-  test('a failed notice releases the claim and the next send tries again', async () => {
+  test('a failed notice raises a delivery failure naming the notice, keeps the message queued and releases the claim', async () => {
     const environment = await createEnvironment();
     await closeWindow({ environment });
     environment.sender.failTemplateCalls({ callNumbers: [1] });
-    const first = await send({ environment, text: 'one' });
-    expect(first.delivery).toBe(DeliveryState.Queued);
-    expect((await environment.repository.findWindow()).noticeSentForClosedWindow).toBe(false);
-    await send({ environment, text: 'two' });
-    expect(environment.sender.templates).toHaveLength(2);
+    const error = await captureInboxError(() => send({ environment, text: 'one' }));
+    expect(error).toEqual({ code: ChannelErrorKind.DeliveryFailed, message: NOTICE_FAILED_MESSAGE });
+    const history = await environment.repository.listAgentHistory({ agent: 'alpha', limit: 5 });
+    expect(history.map((message) => message.delivery)).toEqual([DeliveryState.Queued]);
+    expect(await environment.repository.findWindow()).toMatchObject({
+      noticeSentForClosedWindow: false,
+      noticeRetryLocale: OwnerLocale.EnglishUs,
+    });
+    const second = await send({ environment, text: 'two' });
+    expect(second.delivery).toBe(DeliveryState.Queued);
+    expect(environment.sender.templates).toHaveLength(1);
   });
 
-  test('CU-94b concurrent sends with the notice failing once keep both queued and the next send retries the notice', async () => {
+  test('CU-94b concurrent sends with the notice failing once fail only the claim owner and keep both queued', async () => {
     const environment = await createEnvironment();
     await closeWindow({ environment });
     environment.sender.holdTemplates();
     environment.sender.failTemplateCalls({ callNumbers: [1] });
-    const first = send({ environment, text: 'one' });
+    const first = captureInboxError(() => send({ environment, text: 'one' }));
     const second = send({ environment, text: 'two' });
     await environment.clock.advance({ ms: 0 });
     environment.sender.releaseTemplates();
-    const results = await Promise.all([first, second]);
-    expect(results.map((result) => result.delivery)).toEqual([DeliveryState.Queued, DeliveryState.Queued]);
+    const [error, loser] = await Promise.all([first, second]);
+    expect(error).toEqual({ code: ChannelErrorKind.DeliveryFailed, message: NOTICE_FAILED_MESSAGE });
+    expect(loser.delivery).toBe(DeliveryState.Queued);
     expect(environment.sender.templates).toHaveLength(1);
     await send({ environment, text: 'three' });
-    expect(environment.sender.templates).toHaveLength(2);
+    expect(environment.sender.templates).toHaveLength(1);
     const history = await environment.repository.listAgentHistory({ agent: 'alpha', limit: 5 });
     expect(history.map((message) => message.delivery)).toEqual([DeliveryState.Queued, DeliveryState.Queued, DeliveryState.Queued]);
   });

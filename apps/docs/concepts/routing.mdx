@@ -9,7 +9,7 @@ Several agents share one number, so each owner message is routed to one agent. T
 2. A quoted reply or a reaction goes to the agent that sent the quoted or reacted message. A reaction to a question message answers that question with the emoji.
 3. A text starting with `@agent ` goes to that agent, with the prefix removed.
 4. Exactly one agent with an open question receives it. With several open questions, the newest wins.
-5. Otherwise the last agent that wrote to the owner within the window.
+5. Otherwise the last agent that wrote to the owner within the window, or the only agent when the account has just one.
 6. Otherwise zapbip sends the owner a list of the 10 most recently seen agents and holds the message until the owner picks one. With no agents at all, the owner gets one notice and the message is held.
 
 ## When the owner does not pick

@@ -20,12 +20,12 @@ Messages from your AI arrive at once.
 
 ## Window closed
 
-You get one notice saying your AIs have messages waiting. Write anything and they arrive, in order. Messages older than 7 days expire.
+You get one notice naming the AI and a short preview of its message. Write anything and they arrive, in order. Messages older than 7 days expire.
 
 <Chat
   messages={[
     { you: true, text: 'Tell me when the nightly job finishes.', time: 'Yesterday 22:10' },
-    { notice: true, text: '1 message is waiting from Claude Code. Reply with anything to receive it.', time: '23:31' },
+    { notice: true, text: 'The agent claude-code has a message for you: Nightly job finished ✅', time: '23:31' },
     { you: true, text: 'ok', time: '08:05' },
     { name: 'Claude Code', text: 'Nightly job finished ✅', time: '08:05' },
   ]}

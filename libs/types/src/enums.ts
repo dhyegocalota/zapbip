@@ -165,6 +165,7 @@ export enum RoutingRule {
   AgentMention = 'agent_mention',
   OpenQuestion = 'open_question',
   RecentAgent = 'recent_agent',
+  SingleAgent = 'single_agent',
   AskOwner = 'ask_owner',
 }
 
