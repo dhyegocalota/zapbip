@@ -1,9 +1,9 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
-import { MessageKind } from '@zapbip/types';
+import { MessageDirection, MessageKind } from '@zapbip/types';
 import { inject } from 'vitest';
 import type { ScreenEntry } from '../../src/contract/account-inbox-rpc';
-import type { McpToolName } from '../../src/contract/tool-definitions';
+import { McpToolName } from '../../src/contract/tool-definitions';
 
 const CLIENT_NAME = 'zapbip-e2e';
 const CLIENT_VERSION = '0.0.0';
@@ -66,4 +66,34 @@ export async function advanceClock(input: { advanceMs: number }): Promise<void> 
     headers: JSON_HEADERS,
     body: JSON.stringify({ advance_ms: input.advanceMs }),
   });
+}
+
+type WireOption = { option_id: string; title: string };
+type WireMessage = {
+  kind: MessageKind;
+  direction: MessageDirection;
+  choice: { question_id: string; options: WireOption[] } | null;
+  url: string | null;
+};
+
+export async function historyOf(input: { client: Client }): Promise<WireMessage[]> {
+  const result = await callTool({ client: input.client, name: McpToolName.GetMessages, arguments: {} });
+  if (!result.structured) throw new Error(`get_messages answered without structured content: ${result.text}`);
+  return result.structured.history as WireMessage[];
+}
+
+export async function lastQuestion(input: { client: Client }): Promise<WireMessage['choice']> {
+  const questions = (await historyOf({ client: input.client })).filter(
+    (message) => message.kind === MessageKind.Choice && message.direction === MessageDirection.ToOwner,
+  );
+  const latest = questions.at(-1);
+  if (!latest) return null;
+  return latest.choice;
+}
+
+export async function tapLastQuestion(input: { client: Client; optionIndex: number }): Promise<void> {
+  const question = await lastQuestion({ client: input.client });
+  const option = question?.options[input.optionIndex];
+  if (!option) throw new Error('no option to tap');
+  await postOwner({ body: { kind: MessageKind.Choice, option_id: option.option_id, title: option.title } });
 }

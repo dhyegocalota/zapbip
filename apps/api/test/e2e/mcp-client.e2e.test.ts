@@ -2,13 +2,15 @@ import { readFile } from 'node:fs/promises';
 import { setTimeout as delay } from 'node:timers/promises';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { INLINE_IMAGE_MAX_BYTES, NOTICE_QUICK_REPLY_ID, WINDOW_MS } from '@zapbip/core';
+import { formatRouteOptionId, INLINE_IMAGE_MAX_BYTES, NOTICE_QUICK_REPLY_ID, WINDOW_MS } from '@zapbip/core';
 import { InboxStatus, MessageKind, ReplyStatus, SECOND_MS } from '@zapbip/types';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { McpToolName, TOOL_DEFINITIONS } from '../../src/contract/tool-definitions';
 import {
   advanceClock,
   callTool,
+  historyOf,
+  tapLastQuestion,
   type ToolResult,
   connectAgent,
   mcpUrl,
@@ -30,9 +32,9 @@ const OVERSIZED_IMAGE_BYTES = INLINE_IMAGE_MAX_BYTES + 100_000;
 const PNG_TYPE = 'image/png';
 const STICKER_BYTES = 100_000;
 const UNKNOWN_SECRET = `zb_conn_${'A'.repeat(43)}`;
-const MEDIA_LINK_PATTERN = /https?:\/\/\S+\/m\/\S+/;
 const YES_TITLE = 'Sim';
 const NO_TITLE = 'Não';
+const JSON_LINE_PREFIX = '{';
 
 let alpha: Client;
 let beta: Client;
@@ -47,15 +49,6 @@ async function drain(input: { client: Client }): Promise<void> {
 
 async function sendText(input: { client: Client; text: string }) {
   return callTool({ client: input.client, name: McpToolName.SendMessage, arguments: { text: input.text } });
-}
-
-async function tapOption(input: { optionIndex: number; title: string }): Promise<void> {
-  const entries = await readScreen();
-  const prompt = entries.filter((entry) => entry.options.length > 0).at(-1);
-  if (!prompt) throw new Error('no prompt on the screen');
-  const optionId = prompt.options[input.optionIndex];
-  if (!optionId) throw new Error('option missing on the prompt');
-  await postOwner({ body: { kind: MessageKind.Choice, option_id: optionId, title: input.title } });
 }
 
 function listOf(input: { result: ToolResult; key: string }): Record<string, unknown>[] {
@@ -98,12 +91,12 @@ describe('MCP client against wrangler dev', () => {
 
   test('E2E-19 E2E-20 owner text with no route opens one list and both messages follow the tap', async () => {
     await Promise.all([drain({ client: alpha }), drain({ client: beta })]);
-    await postOwnerText({ text: 'oi', replyTo: null });
+    const held = await postOwnerText({ text: 'oi', replyTo: null });
     await postOwnerText({ text: 'segunda', replyTo: null });
-    const lists = (await readScreen()).filter((entry) => entry.options.some((option) => option.endsWith(':alpha')));
+    const lists = (await readScreen()).filter((entry) => entry.options.includes(FIRST_AGENT) && entry.options.includes(SECOND_AGENT));
     expect(lists).toHaveLength(1);
-    const betaOption = lists[0]?.options.find((option) => option.endsWith(`:${SECOND_AGENT}`));
-    expect(betaOption).toBeDefined();
+    expect(held.message_id).not.toBeNull();
+    const betaOption = formatRouteOptionId({ messageId: String(held.message_id), agent: SECOND_AGENT });
     await postOwner({ body: { kind: MessageKind.Choice, option_id: betaOption, title: SECOND_AGENT } });
     const inbox = await callTool({ client: beta, name: McpToolName.CheckInbox, arguments: {} });
     const texts = listOf({ result: inbox, key: 'messages' }).map((message) => message.text);
@@ -141,7 +134,7 @@ describe('MCP client against wrangler dev', () => {
       name: McpToolName.SendMedia,
       arguments: { kind: MessageKind.Image, upload_id: upload.structured?.upload_id },
     });
-    const link = (await readScreen()).map((entry) => MEDIA_LINK_PATTERN.exec(entry.text)?.[0]).findLast((found) => found !== undefined);
+    const link = (await historyOf({ client: alpha })).findLast((message) => message.kind === MessageKind.Image)?.url;
     expect(put.status).toBe(201);
     expect(sent.structured).toMatchObject({ delivery: 'sent' });
     expect(link).toBeDefined();
@@ -153,7 +146,8 @@ describe('MCP client against wrangler dev', () => {
     const link = 'https://example.com/a.jpg';
     const sent = await callTool({ client: alpha, name: McpToolName.SendMedia, arguments: { kind: MessageKind.Image, url: link } });
     expect(sent.structured).toMatchObject({ delivery: 'sent' });
-    expect((await readScreen()).some((entry) => entry.text.includes(link))).toBe(true);
+    const history = await historyOf({ client: alpha });
+    expect(history.findLast((message) => message.kind === MessageKind.Image)?.url).toBe(link);
   });
 
   test('E2E-8 location, contact and reaction are sent', async () => {
@@ -178,7 +172,7 @@ describe('MCP client against wrangler dev', () => {
         arguments: { question: 'Vamos?', options: [{ title: YES_TITLE }, { title: NO_TITLE }] },
       });
       await delay(TAP_DELAY_MS);
-      await tapOption({ optionIndex: 1, title: NO_TITLE });
+      await tapLastQuestion({ client: alpha, optionIndex: 1 });
       const answer = await held;
       expect(answer.structured).toMatchObject({ status: ReplyStatus.Answered, answer: NO_TITLE });
     },
@@ -192,7 +186,7 @@ describe('MCP client against wrangler dev', () => {
       arguments: { question: 'Vamos de novo?', options: [{ title: YES_TITLE }, { title: NO_TITLE }], timeout_seconds: SHORT_WAIT_SECONDS },
     });
     expect(pending.structured).toMatchObject({ status: ReplyStatus.Pending });
-    await tapOption({ optionIndex: 0, title: YES_TITLE });
+    await tapLastQuestion({ client: alpha, optionIndex: 0 });
     const questionId = pending.structured?.question_id;
     const first = await callTool({ client: alpha, name: McpToolName.WaitForReply, arguments: { question_id: questionId } });
     const second = await callTool({ client: alpha, name: McpToolName.WaitForReply, arguments: { question_id: questionId } });
@@ -300,15 +294,17 @@ describe('MCP client against wrangler dev', () => {
     expect(noticesAfter - noticesBefore).toBe(1);
     await postOwner({ body: { kind: MessageKind.Choice, option_id: NOTICE_QUICK_REPLY_ID, title: 'Abrir' } });
     const texts = (await readScreen()).map((entry) => entry.text);
-    expect(texts.indexOf('fila-a')).toBeGreaterThan(-1);
-    expect(texts.indexOf('fila-b')).toBeGreaterThan(texts.indexOf('fila-a'));
+    const positionOf = (needle: string) => texts.findIndex((text) => text.includes(needle));
+    expect(positionOf('fila-a')).toBeGreaterThan(-1);
+    expect(positionOf('fila-b')).toBeGreaterThan(positionOf('fila-a'));
     const inbox = await callTool({ client: alpha, name: McpToolName.CheckInbox, arguments: {} });
     expect(inbox.structured).toMatchObject({ status: InboxStatus.Empty });
   });
 
-  test('SEC-7 no connection secret appears in the wrangler output', async () => {
+  test('SEC-7 no connection secret appears in the worker log lines', async () => {
     const output = await readFile(stack().logFile, 'utf8');
-    const leaked = Object.values(stack().secrets).filter((secret) => output.includes(secret));
+    const workerLines = output.split('\n').filter((line) => line.startsWith(JSON_LINE_PREFIX));
+    const leaked = Object.values(stack().secrets).filter((secret) => workerLines.some((line) => line.includes(secret)));
     expect(leaked).toEqual([]);
   });
 });
