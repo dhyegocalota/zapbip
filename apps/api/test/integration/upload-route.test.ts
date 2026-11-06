@@ -238,4 +238,31 @@ describe('upload route', () => {
     expect(response.status).toBe(STATUS_FORBIDDEN);
     expect(await storedObject({ fixture })).toBeNull();
   });
+
+  test('WI-126 an aborted client stream answers 400, releases the claim and stores nothing', async () => {
+    const fixture = await newFixture();
+    const abortedBody = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(UPLOAD_BYTES.slice(0, 1));
+        controller.error(new Error('client aborted'));
+      },
+    });
+    const query = await signedQuery({
+      key: env.UPLOAD_LINK_SIGNING_KEY,
+      accountId: fixture.account.accountId,
+      mediaId: fixture.uploadId,
+      purpose: LinkPurpose.Upload,
+      expiresAt: freshExpiry(),
+    });
+    const response = await SELF.fetch(`${ORIGIN}/u/${fixture.account.accountId}/${fixture.uploadId}?${queryOf(query)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': PDF_TYPE, 'Content-Length': String(UPLOAD_BYTES.byteLength) },
+      body: abortedBody,
+      duplex: 'half',
+    } as RequestInit);
+    expect(response.status).toBe(STATUS_BAD_REQUEST);
+    expect(await storedObject({ fixture })).toBeNull();
+    const retry = await putUpload(validPut({ fixture }));
+    expect(retry.status).toBe(STATUS_CREATED);
+  });
 });
