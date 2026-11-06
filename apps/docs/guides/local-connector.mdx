@@ -51,11 +51,11 @@ By default the connector uses the newest session in the folder. If you have the 
 npx zapbip connect --client claude-code --session <session-id>
 ```
 
-| Option | What it does |
-| --- | --- |
-| `--client` | `claude-code` or `codex`. Required. |
-| `--cwd` | The folder to work in. The default is the folder you ran the command in. |
-| `--session` | A session id to always resume, instead of the newest one. |
+| Option      | What it does                                                             |
+| ----------- | ------------------------------------------------------------------------ |
+| `--client`  | `claude-code` or `codex`. Required.                                      |
+| `--cwd`     | The folder to work in. The default is the folder you ran the command in. |
+| `--session` | A session id to always resume, instead of the newest one.                |
 
 ## What the AI can do when woken
 
@@ -75,9 +75,9 @@ Each line is JSON with a time and an event, such as `wake_started` and `wake_fin
 
 ## When something does not work
 
-| You see | What it means |
-| --- | --- |
-| The connector exits at once | The link is unknown or revoked. Ask for a new one. |
+| You see                     | What it means                                                                                                                             |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| The connector exits at once | The link is unknown or revoked. Ask for a new one.                                                                                        |
 | Your message gets no answer | There is no session in the folder yet, or `claude` or `codex` is not installed where the connector runs. Open the AI once in that folder. |
-| It keeps reconnecting | Your network is down. It retries with growing waits, up to 30 seconds, and picks up where it left off. |
-| It stopped by itself | You started another connector for the same connection. |
+| It keeps reconnecting       | Your network is down. It retries with growing waits, up to 30 seconds, and picks up where it left off.                                    |
+| It stopped by itself        | You started another connector for the same connection.                                                                                    |

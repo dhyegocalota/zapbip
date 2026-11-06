@@ -51,11 +51,11 @@ Por padrão o conector usa a sessão mais recente da pasta. Se a mesma pasta est
 npx zapbip connect --client claude-code --session <session-id>
 ```
 
-| Opção | O que faz |
-| --- | --- |
-| `--client` | `claude-code` ou `codex`. Obrigatória. |
-| `--cwd` | A pasta de trabalho. O padrão é a pasta em que você rodou o comando. |
-| `--session` | Um id de sessão para sempre retomar, em vez da mais recente. |
+| Opção       | O que faz                                                            |
+| ----------- | -------------------------------------------------------------------- |
+| `--client`  | `claude-code` ou `codex`. Obrigatória.                               |
+| `--cwd`     | A pasta de trabalho. O padrão é a pasta em que você rodou o comando. |
+| `--session` | Um id de sessão para sempre retomar, em vez da mais recente.         |
 
 ## O que a IA pode fazer quando é acordada
 
@@ -75,9 +75,9 @@ Cada linha é um JSON com a hora e um evento, como `wake_started` e `wake_finish
 
 ## Quando algo não funciona
 
-| O que você vê | O que significa |
-| --- | --- |
-| O conector sai na hora | O link é desconhecido ou foi revogado. Peça um novo. |
+| O que você vê                  | O que significa                                                                                                              |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| O conector sai na hora         | O link é desconhecido ou foi revogado. Peça um novo.                                                                         |
 | Sua mensagem fica sem resposta | Ainda não há sessão na pasta, ou `claude` ou `codex` não está instalado onde o conector roda. Abra a IA uma vez nessa pasta. |
-| Ele reconecta sem parar | Sua rede caiu. Ele tenta de novo com esperas crescentes, até 30 segundos, e continua de onde parou. |
-| Ele parou sozinho | Você iniciou outro conector para a mesma conexão. |
+| Ele reconecta sem parar        | Sua rede caiu. Ele tenta de novo com esperas crescentes, até 30 segundos, e continua de onde parou.                          |
+| Ele parou sozinho              | Você iniciou outro conector para a mesma conexão.                                                                            |
