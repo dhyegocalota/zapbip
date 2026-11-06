@@ -3,6 +3,7 @@ import {
   AccountReplyParameter,
   AccountState,
   CommandKind,
+  ForwardedKind,
   MessageDirection,
   MessageKind,
   OwnerLocale,
@@ -374,5 +375,39 @@ describe('receiveAccountMessage connection creation', () => {
     const fixture = await createAccountFixture();
     await receiveAccountText({ ...fixture, text: 'novo agente alpha' });
     expect(fixture.environment.revocations.created).toEqual(['alpha']);
+  });
+});
+
+describe('receiveAccountMessage forwarded messages', () => {
+  test.each([ForwardedKind.Forwarded, ForwardedKind.FrequentlyForwarded])(
+    'a %s account command is plain text, never a command',
+    async (forwarded) => {
+      const fixture = await createAccountFixture();
+      await addAgent({ ...fixture, agent: 'alpha' });
+      const result = await receiveAccount({ ...fixture, forwarded, content: { kind: MessageKind.Text, text: 'revogar alpha' } });
+      expect(result.commandKind).toBeNull();
+      expect(result.deletionConfirmed).toBe(false);
+      const connections = await fixture.environment.registry.listActive({ accountId: fixture.account.accountId });
+      expect(connections.map((connection) => connection.agent)).toEqual(['alpha']);
+    },
+  );
+
+  test('a forwarded deletion confirmation does not delete the account', async () => {
+    const fixture = await createAccountFixture();
+    await receiveAccountText({ ...fixture, text: 'apagar conta' });
+    const result = await receiveAccount({
+      ...fixture,
+      forwarded: ForwardedKind.Forwarded,
+      content: { kind: MessageKind.Text, text: 'apagar conta definitivamente' },
+    });
+    expect(result.deletionConfirmed).toBe(false);
+    const record = await fixture.environment.directory.findByWaId({ waId: fixture.account.waId });
+    expect(record?.state).toBe(AccountState.Active);
+  });
+
+  test('a typed command still works', async () => {
+    const fixture = await createAccountFixture();
+    const result = await receiveAccountText({ ...fixture, text: 'novo agente beta' });
+    expect(result.commandKind).toBe(CommandKind.CreateAgent);
   });
 });

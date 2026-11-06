@@ -44,10 +44,22 @@ export function ownerInputOf(input: AccountFixture): OwnerAccountInput {
 }
 
 export function receiveAccount(
-  input: AccountFixture & { content: OwnerInboundContent; replyToMessageId?: string | null; channelMessageId?: string },
+  input: AccountFixture & {
+    content: OwnerInboundContent;
+    replyToMessageId?: string | null;
+    channelMessageId?: string;
+    forwarded?: ForwardedKind;
+  },
 ): Promise<ReceiveAccountMessageResult> {
   channelMessageCounter += 1;
-  const { environment, account, content, replyToMessageId = null, channelMessageId = `wamid.account.${channelMessageCounter}` } = input;
+  const {
+    environment,
+    account,
+    content,
+    replyToMessageId = null,
+    channelMessageId = `wamid.account.${channelMessageCounter}`,
+    forwarded = ForwardedKind.None,
+  } = input;
   return receiveAccountMessage({
     dependencies: environment.dependencies,
     account,
@@ -57,7 +69,7 @@ export function receiveAccount(
       at: environment.clock.now(),
       content,
       replyToChannelMessageId: replyToMessageId,
-      forwarded: ForwardedKind.None,
+      forwarded,
       noticeText: null,
     },
     publicOrigin: PUBLIC_ORIGIN,
