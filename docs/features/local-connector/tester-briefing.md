@@ -277,3 +277,12 @@ Gaps: LN6 is resolved from the POC: `claude --dangerously-load-development-chann
 - Link prompt: the terminal echo is off. Red `5 fail`.
 - Local rung: every owner message is pushed while a socket is live, the remaining unread after each `done`, and a dead socket restores the previous setting and wakes through it. Red `7 fail`.
 - Revocation: `closeAgentSockets({agent})` closes the sockets with `REVOKED_CLOSE_CODE`; slice 3 calls it when revoking.
+
+### Wake isolation and review round (owner delegated 2026-11-06)
+
+- Claude Code wake: `--strict-mcp-config --mcp-config=<0600 file with only zapbip> --setting-sources=` joins `--permission-mode dontAsk --tools= --allowedTools=...`; the file lives in a private temporary directory and is removed after the child exits (Failed or not). `--setting-sources=` (empty) was checked against the installed CLI 2.1.319. Hypothesis: the woken child cannot list or call any other MCP tool. Exact argv in `test/unit/wake-commands.test.ts` and `test/integration/wake-runner.test.ts`; a second fake MCP server (`FAKE_CLIENT_USER_MCP_SERVERS`) must receive zero requests. Red `44 fail`: `prepareClaudeIsolation is not implemented`.
+- Codex wake: every `[mcp_servers.<name>]` table or dotted `mcp_servers.<name>.` key in `$CODEX_HOME/config.toml` and `<cwd>/.codex/config.toml`, except zapbip, gets `-c mcp_servers.<name>.enabled=false`. Gap: inline `mcp_servers = { ... }` tables and profiles are not read; the `-c` flag was not run against a real Codex CLI (not installed here).
+- Frames: a message needs a boolean `forwarded` and a known `kind`; only `forwarded === false` is verified. Red `9 fail`; the string `'false'` row is a pin.
+- Wake timeout: SIGTERM, then SIGKILL after `CONNECTOR_KILL_GRACE_MS`. A heartbeat timeout logs one `connector_closed`. A socket whose last auto-response is older than one heartbeat cycle is not live (a socket that never answered a ping is still treated as live).
+- E2E additions in `test/e2e/connect.e2e.test.ts`: Codex wake, a message sent while the connector is down (woken once), two messages in a row (in order). The fake clients now read the zapbip server from `--mcp-config` (Codex: `FAKE_CLIENT_ZAPBIP_URL`) and call MCP only when `FAKE_CLIENT_CALLS_MCP=1`.
+- `apps/connector/package.json` is no longer `private`; the packaging test pins it.
