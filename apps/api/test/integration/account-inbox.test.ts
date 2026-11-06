@@ -262,6 +262,18 @@ describe('AccountInbox alarm', () => {
     expect((await readScreen({ stub })).flatMap((entry) => entry.options)).toEqual([]);
   });
 
+  it('WI-135 messages held with no agents reach the first agent that connects, once and in order', async () => {
+    const stub = stubOf({ accountId: FIRST_ACCOUNT });
+    const connection = connectionOf({ accountId: FIRST_ACCOUNT, agent: 'alpha' });
+    await openWindow({ stub });
+    expectOk(await receiveOwnerText({ stub, text: 'um' }));
+    expectOk(await receiveOwnerText({ stub, text: 'dois' }));
+    const first = expectOk(await stub.checkInbox({ connection }));
+    expect(first.messages).toMatchObject([{ text: 'um' }, { text: 'dois' }]);
+    const second = expectOk(await stub.checkInbox({ connection }));
+    expect(second.messages).toEqual([]);
+  });
+
   it('WI-129 does not postpone a due expiry while the agent keeps calling tools', async () => {
     const stub = stubOf({ accountId: FIRST_ACCOUNT });
     const connection = connectionOf({ accountId: FIRST_ACCOUNT, agent: 'alpha' });

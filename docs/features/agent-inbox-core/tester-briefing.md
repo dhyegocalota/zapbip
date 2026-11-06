@@ -489,5 +489,5 @@ Pins: the two other `track-client-failure` cases, WI-140 and WI-141 edits.
 
 ### Known gaps
 
-- Messages held while the account had zero agents stay held when the first agent appears; only later messages use the single-agent rule.
-- Retries can also run when another provider wakes the alarm early.
+- Messages held while the account had zero agents are released to the first agent that registers (`touchAgent` already did this; pins CU-191 and WI-135 prove it, nothing was changed).
+- A notice retry can run when another provider wakes the alarm early; it is benign because the retry time guards it.
