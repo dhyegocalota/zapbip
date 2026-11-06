@@ -21,6 +21,7 @@ const FAKE_CONNECTION_PATH = `/c/${FAKE_SECRET}`;
 export type FakeConnectorOptions = {
   probeStatus?: number;
   failedProbes?: number;
+  failedUpgrades?: number;
   autoPong?: boolean;
   greet?: boolean;
 };
@@ -39,6 +40,7 @@ export type FakeConnector = {
   sendText: (input: { text: string }) => void;
   closeConnections: (input: { code: number }) => void;
   dropConnections: () => void;
+  setProbeStatus: (input: { status: number }) => void;
   stop: () => Promise<void>;
 };
 
@@ -70,7 +72,15 @@ export function framePaddedToBytes(input: { byteLength: number }): string {
 }
 
 export async function startFakeConnector(input: FakeConnectorOptions = {}): Promise<FakeConnector> {
-  const { probeStatus = HttpStatus.UpgradeRequired, failedProbes = 0, autoPong = true, greet = true } = input;
+  const {
+    probeStatus: initialProbeStatus = HttpStatus.UpgradeRequired,
+    failedProbes = 0,
+    failedUpgrades = 0,
+    autoPong = true,
+    greet = true,
+  } = input;
+  let probeStatus = initialProbeStatus;
+  let upgrades = 0;
   const sockets: WebSocket[] = [];
   const frames: ReceivedFrame[] = [];
   let waiters: Waiter[] = [];
@@ -119,6 +129,8 @@ export async function startFakeConnector(input: FakeConnectorOptions = {}): Prom
   }
 
   httpServer.on('upgrade', (request, rawSocket: Duplex, head) => {
+    upgrades += 1;
+    if (upgrades <= failedUpgrades) return rawSocket.destroy();
     socketServer.handleUpgrade(request, rawSocket, head, attach);
   });
 
@@ -137,6 +149,9 @@ export async function startFakeConnector(input: FakeConnectorOptions = {}): Prom
     sendText: ({ text }) => liveSockets().forEach((socket) => socket.send(text)),
     closeConnections: ({ code }) => liveSockets().forEach((socket) => socket.close(code)),
     dropConnections: () => liveSockets().forEach((socket) => socket.terminate()),
+    setProbeStatus: ({ status }) => {
+      probeStatus = status;
+    },
     stop: async () => {
       sockets.forEach((socket) => socket.terminate());
       socketServer.close();

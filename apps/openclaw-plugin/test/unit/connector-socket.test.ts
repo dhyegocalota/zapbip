@@ -7,6 +7,7 @@ import {
   RECONNECT_BASE_MS,
   RECONNECT_MAX_MS,
   REPLACED_CLOSE_CODE,
+  REVOKED_CLOSE_CODE,
   SEEN_MESSAGE_LIMIT,
 } from '@zapbip/types';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -27,6 +28,7 @@ const FAST_HEARTBEAT_TIMEOUT_MS = 25;
 const PROMPT_RETURN_MS = 100;
 const IDLE_HEARTBEAT_MS = 60_000;
 const BATCH_SIZE = 100;
+const MESSAGE_TOO_BIG_CLOSE_CODE = 1009;
 const OWNER_SECRET_TEXT = 'segredo-do-dono';
 
 type LoggedEvent = { event: ConnectorLogEvent; fields: ConnectorLogFields };
@@ -281,6 +283,48 @@ describe('close and reconnect', () => {
     expect(plugin.events.map((entry) => entry.event)).toContain(ConnectorLogEvent.ConnectorReplaced);
   });
 
+  it('stops with exit 1 and no retry when the connection is revoked with 4003', async () => {
+    const connector = await startConnector();
+    const plugin = startPlugin({ connector });
+    await connector.waitForConnections({ count: 1 });
+    connector.closeConnections({ code: REVOKED_CLOSE_CODE });
+    await expect(plugin.result).resolves.toBe(1);
+    expect(connector.connectionCount()).toBe(1);
+    expect(connector.probeCount()).toBe(1);
+    expect(plugin.events).toContainEqual({ event: ConnectorLogEvent.ConnectorClosed, fields: { code: REVOKED_CLOSE_CODE } });
+  });
+
+  it('probes again after an attempt that never opened and connects when the probe answers 426', async () => {
+    const connector = await startConnector({ failedUpgrades: 1 });
+    startPlugin({ connector });
+    await connector.waitForConnections({ count: 1 });
+    expect(connector.probeCount()).toBe(2);
+  });
+
+  it('stops with exit 1 when the probe after an attempt that never opened answers 401', async () => {
+    const connector = await startConnector({ failedUpgrades: 1 });
+    const plugin = startPlugin({
+      connector,
+      wait: () => {
+        connector.setProbeStatus({ status: 401 });
+        return Promise.resolve();
+      },
+    });
+    await expect(plugin.result).resolves.toBe(1);
+    expect(connector.probeCount()).toBe(2);
+    expect(connector.connectionCount()).toBe(0);
+    expect(plugin.events).toContainEqual({ event: ConnectorLogEvent.ConnectorClosed, fields: { status: 401 } });
+  });
+
+  it('does not probe again after an attempt that opened', async () => {
+    const connector = await startConnector();
+    startPlugin({ connector });
+    await connector.waitForConnections({ count: 1 });
+    connector.dropConnections();
+    await connector.waitForConnections({ count: 2 });
+    expect(connector.probeCount()).toBe(1);
+  });
+
   it('waits the base delay and reads the unread messages again after an abnormal close', async () => {
     const connector = await startConnector();
     const plugin = startPlugin({ connector });
@@ -382,18 +426,13 @@ describe('frame rules', () => {
     },
   );
 
-  it('drops a frame one byte over the limit and keeps the socket', async () => {
+  it('closes the socket with 1009 on a frame one byte over the limit and reconnects', async () => {
     const connector = await startConnector();
     const plugin = startPlugin({ connector });
     await connector.waitForConnections({ count: 1 });
     connector.sendText({ text: framePaddedToBytes({ byteLength: CONNECTOR_FRAME_MAX_BYTES + 1 }) });
-    await vi.waitFor(() =>
-      expect(plugin.events).toContainEqual({
-        event: ConnectorLogEvent.FrameRejected,
-        fields: { reason: FrameRejectionReason.FrameTooLarge },
-      }),
-    );
-    expect(connector.connectionCount()).toBe(1);
+    await connector.waitForConnections({ count: 2 });
+    expect(plugin.events).toContainEqual({ event: ConnectorLogEvent.ConnectorClosed, fields: { code: MESSAGE_TOO_BIG_CLOSE_CODE } });
   });
 
   it('accepts a frame of exactly the limit', async () => {
