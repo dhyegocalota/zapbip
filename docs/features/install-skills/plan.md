@@ -269,10 +269,10 @@ Every box is empty when authored. A sub-agent ticks its own box. A wrong step is
 
 ### Step S0 (L0): contract
 
-- [ ] **S0.1 Types and rules.** Append the enums and constants, write `agent-rules.ts`, exactly as in **Contract**.
-- [ ] **S0.2 Core signatures.** Write the `libs/core/src/install/**` stubs and copy stubs exactly as in **Contract**.
-- [ ] **S0.3 API stubs.** Write `client-name.ts` and `routes/install-page.ts` stubs. Typecheck.
-- [ ] **S0.4 Gate.** `pnpm typecheck` green; `pnpm --filter @zapbip/core test:unit` unchanged in outcome. Commit as `feat(core): add the install page contract`.
+- [x] **S0.1 (959cdd4) Types and rules.** Append the enums and constants, write `agent-rules.ts`, exactly as in **Contract**.
+- [x] **S0.2 (959cdd4) Core signatures.** Write the `libs/core/src/install/**` stubs and copy stubs exactly as in **Contract**.
+- [x] **S0.3 (959cdd4) API stubs.** Write `client-name.ts` and `routes/install-page.ts` stubs. Typecheck.
+- [x] **S0.4 (959cdd4) Gate.** `pnpm typecheck` green; `pnpm --filter @zapbip/core test:unit` unchanged in outcome. Commit as `feat(core): add the install page contract`.
 
 ### Step L1 (core page)
 
