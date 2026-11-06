@@ -259,7 +259,7 @@ describe('AccountInbox receiveAccountMessage', () => {
     expect(await listRevokedAgents()).toEqual(['alpha']);
   });
 
-  it('AK-9 ends the held wait of a revoked agent before the revoke reply is sent', async () => {
+  it('[row 214] AK-9 ends the held wait of a revoked agent before the revoke reply is sent', async () => {
     await receive({ text: 'novo agente alpha', channelMessageId: 'wamid.held-revoke-create' });
     const { holding } = await holdWait({ agent: 'alpha' });
     const hadLiveWaiter = await recordWaiterAtNextSessionSend({ accountId: ACCOUNT, agent: 'alpha' });
@@ -268,7 +268,7 @@ describe('AccountInbox receiveAccountMessage', () => {
     expect(await holding).toEqual({ ok: true, value: { status: ReplyStatus.Timeout } });
   });
 
-  it('AK-10 ends the held ask of a rotated agent as pending after the rotate reply is sent and does not revoke it', async () => {
+  it('[row 224] AK-10 ends the held ask of a rotated agent as pending after the rotate reply is sent and does not revoke it', async () => {
     await receive({ text: 'novo agente alpha', channelMessageId: 'wamid.held-rotate-create' });
     const holding = stubOf().ask({
       connection: connectionOf({ accountId: ACCOUNT, agent: 'alpha' }),

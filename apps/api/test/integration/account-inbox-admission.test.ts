@@ -58,12 +58,12 @@ describe('Durable Object agent admission', () => {
     expect((await createUploadFromAgent()).ok).toBe(true);
   });
 
-  it('createUpload refuses a revoked agent', async () => {
+  it('[row 488] createUpload refuses a revoked agent', async () => {
     await revokeAgent();
     expect((await createUploadFromAgent()).ok).toBe(false);
   });
 
-  it.each([AccountState.Suspended, AccountState.Deleting, AccountState.Waitlisted])('createUpload refuses a %s account', async (state) => {
+  it.each([AccountState.Suspended, AccountState.Deleting, AccountState.Waitlisted])('[row 488] createUpload refuses a %s account', async (state) => {
     await setState({ state });
     expect((await createUploadFromAgent()).ok).toBe(false);
   });
@@ -93,7 +93,7 @@ describe('Durable Object agent admission', () => {
     expect(settled).toBe('settled');
   });
 
-  it('stops the alarm of an account that is no longer active', async () => {
+  it('[row 480] stops the alarm of an account that is no longer active', async () => {
     const connection = connectionOf({ accountId: ACCOUNT, agent: AGENT });
     await stubOf().ask({ connection, text: 'Deploy?', options: ['Sim', 'Nao'], optionDescriptions: [null, null], timeoutMs: 10 });
     expect(await runInDurableObject(stubOf(), (_instance, state) => state.storage.getAlarm())).not.toBeNull();

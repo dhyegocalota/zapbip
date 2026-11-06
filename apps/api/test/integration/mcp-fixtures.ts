@@ -30,9 +30,10 @@ export function postMcp(input: { path: string; bearer?: string }): Promise<Respo
   );
 }
 
-export async function connectClient(input: { secret: string }): Promise<Client> {
+export async function connectClient(input: { secret: string; search?: string }): Promise<Client> {
   const client = new Client({ name: 'mcp-test', version: '0.0.0' });
-  const transport = new StreamableHTTPClientTransport(new URL(`${ORIGIN}/c/${input.secret}/mcp`), {
+  const search = input.search === undefined ? '' : input.search;
+  const transport = new StreamableHTTPClientTransport(new URL(`${ORIGIN}/c/${input.secret}/mcp${search}`), {
     fetch: (request, init) => exports.default.fetch(new Request(request, init)),
   });
   await client.connect(transport);

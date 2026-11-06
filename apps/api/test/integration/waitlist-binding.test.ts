@@ -24,7 +24,7 @@ afterEach(async () => {
 describe('a bad WAITLIST_ENABLED binding', () => {
   beforeEach(applyDirectoryMigration);
 
-  it('AK-7 fails the owner simulator request naming the flag and keeps /health up', async () => {
+  it('[row 259] AK-7 fails the owner simulator request naming the flag and keeps /health up', async () => {
     const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const health = await developmentEntry.fetch(new Request(`${ORIGIN}/health`), badBindings);
     expect(health.status).toBe(STATUS_OK);
@@ -40,7 +40,7 @@ describe('a bad WAITLIST_ENABLED binding', () => {
     expect(errors.mock.calls.flat().map(String).join(' ')).toContain('WAITLIST_ENABLED');
   });
 
-  it('AK-8 lets an account object built with the bad flag keep receiving owner messages', async () => {
+  it('[row 260] AK-8 lets an account object built with the bad flag keep receiving owner messages', async () => {
     const outcome = await runInDurableObject(accountInboxStub({ accountId: ACCOUNT_ID }), async (_instance, state) => {
       const inbox = new DevAccountInbox(state, badBindings);
       await vi.waitFor(() => expect((inbox as unknown as { dependencies?: object }).dependencies).toBeDefined());

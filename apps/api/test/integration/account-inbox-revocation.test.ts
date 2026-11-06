@@ -72,7 +72,7 @@ describe('a revoked agent stops being a routing target', () => {
     expect(options.map((row) => row.payload).join('')).not.toContain(OLD_AGENT);
   });
 
-  it('forgets the revoked name and its old history when the name is created again', async () => {
+  it('[row 478][row 479] forgets the revoked name and its old history when the name is created again', async () => {
     await agentSpoke();
     await sql(ANSWERED_QUESTION_STATEMENT, OLD_AGENT);
     await stubOf().recordRevocation({ agent: OLD_AGENT });

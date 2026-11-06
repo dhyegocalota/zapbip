@@ -35,7 +35,7 @@ afterEach(() => {
 });
 
 describe('webhook route from a phone without an account', () => {
-  it('AK-1 opens an active account, stores no owner message and logs the creation without the phone', async () => {
+  it('[row 385] AK-1 opens an active account, stores no owner message and logs the creation without the phone', async () => {
     const lines: string[] = [];
     vi.spyOn(console, 'log').mockImplementation((...parts: unknown[]) => void lines.push(parts.join(' ')));
     const response = await postFromUnknownPhone();

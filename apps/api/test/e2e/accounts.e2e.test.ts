@@ -74,9 +74,9 @@ function installLinkIn(input: { texts: string[] }): string {
 }
 
 describe.each([
-  { name: 'pt-BR', locale: PORTUGUESE },
-  { name: 'en-US', locale: ENGLISH },
-])('accounts walk in $name', ({ locale }) => {
+  { name: 'pt-BR', row: 424, locale: PORTUGUESE },
+  { name: 'en-US', row: 425, locale: ENGLISH },
+])('[row $row] accounts walk in $name', ({ locale }) => {
   test('create, rotate, revoke and delete over the simulator', async () => {
     const phone = newPhone({ prefix: locale.prefix });
     await say({ phone, text: 'hi' });
@@ -147,7 +147,7 @@ async function probeMcp(input: { secret: string }): Promise<{ status: number; bo
 }
 
 describe('accounts walk against real connections', () => {
-  test('a secret is refused with the bytes of an unknown one after rotate, revoke and deletion', async () => {
+  test('[row 424][row 425] a secret is refused with the bytes of an unknown one after rotate, revoke and deletion', async () => {
     const phone = stack().secondPhone;
     const unknown = await probeMcp({ secret: UNKNOWN_SECRET });
     expect((await probeMcp({ secret: secondSecretOf({ agent: 'rotator' }) })).status).toBe(200);
@@ -163,7 +163,7 @@ describe('accounts walk against real connections', () => {
     expect((await fetch(`${stack().origin}/dev/owner/${phone}/screen`)).status).toBe(NOT_FOUND);
   });
 
-  test('the language of a plain reply follows the account, whatever command words were typed', async () => {
+  test('[row 426] the language of a plain reply follows the account, whatever command words were typed', async () => {
     const phone = newPhone({ prefix: ENGLISH.prefix });
     await say({ phone, text: 'hi' });
     await say({ phone, text: PORTUGUESE.list });

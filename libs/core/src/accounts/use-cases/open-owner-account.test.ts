@@ -63,18 +63,18 @@ describe('openOwnerAccount', () => {
     expect([first?.created, second?.created]).toEqual([true, false]);
   });
 
-  test('the daily cap refuses a new number', async () => {
+  test('[row 181] the daily cap refuses a new number', async () => {
     const environment = await seedAccounts({ count: NEW_ACCOUNTS_PER_DAY_LIMIT, createdAt: NOW - 1 });
     expect(await open({ environment, waId: BRAZIL_WA_ID })).toBeNull();
     expect(environment.registry.countAccounts()).toBe(NEW_ACCOUNTS_PER_DAY_LIMIT);
   });
 
-  test('accounts older than the window do not count', async () => {
+  test('[row 182] accounts older than the window do not count', async () => {
     const environment = await seedAccounts({ count: NEW_ACCOUNTS_PER_DAY_LIMIT, createdAt: NOW - DAY_MS - 1 });
     expect(await open({ environment, waId: BRAZIL_WA_ID })).not.toBeNull();
   });
 
-  test('one below the cap still creates', async () => {
+  test('[row 183] one below the cap still creates', async () => {
     const environment = await seedAccounts({ count: NEW_ACCOUNTS_PER_DAY_LIMIT - 1, createdAt: NOW - 1 });
     expect(await open({ environment, waId: BRAZIL_WA_ID })).not.toBeNull();
   });

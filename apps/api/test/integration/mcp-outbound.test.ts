@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { McpToolName } from '../../src/contract/tool-definitions';
 import { generateConnectionSecret } from '../../src/adapters/platform/connection-secret';
 import { applyDirectoryMigration, seedConnection } from '../support/seed';
-import { callTool, connectClient, seedConnectionWithSecret, type ToolResult } from './mcp-fixtures';
+import { accountInbox, callTool, connectClient, seedConnectionWithSecret, type ToolResult } from './mcp-fixtures';
 
 const RATE_LIMITED_CODE = 'rate_limited';
 
@@ -23,16 +23,23 @@ describe('MCP outbound limit', () => {
 
   afterEach(reset);
 
-  it('admits the thirtieth send_message of a minute and refuses the next with rate_limited', async () => {
+  it('[row 409] admits thirty send_message calls in one minute and every one reaches the owner', async () => {
     const first = await seedConnectionWithSecret({ accountId: 'acc_out', agent: 'alpha' });
+    const results = await sendMany({ secret: first.secret, count: OUTBOUND_MESSAGES_PER_MINUTE });
+    expect(results.every((result) => result.isError !== true)).toBe(true);
+    expect(await accountInbox({ accountId: 'acc_out' }).readScreen()).toHaveLength(OUTBOUND_MESSAGES_PER_MINUTE);
+  });
+
+  it('[row 410] refuses the thirty-first send_message of a minute with rate_limited and sends nothing', async () => {
+    const first = await seedConnectionWithSecret({ accountId: 'acc_out4', agent: 'alpha' });
     const results = await sendMany({ secret: first.secret, count: OUTBOUND_MESSAGES_PER_MINUTE + 1 });
-    expect(results.slice(0, OUTBOUND_MESSAGES_PER_MINUTE).every((result) => result.isError !== true)).toBe(true);
     const refused = results[OUTBOUND_MESSAGES_PER_MINUTE];
     expect(refused?.isError).toBe(true);
     expect(refused?.content[0]?.text).toContain(RATE_LIMITED_CODE);
+    expect(await accountInbox({ accountId: 'acc_out4' }).readScreen()).toHaveLength(OUTBOUND_MESSAGES_PER_MINUTE);
   });
 
-  it('counts per connection, so a second connection of the account still sends', async () => {
+  it('[row 411] counts per connection, so a second connection of the account still sends', async () => {
     const first = await seedConnectionWithSecret({ accountId: 'acc_out2', agent: 'alpha' });
     const secondSecret = generateConnectionSecret();
     await seedConnection({ accountId: 'acc_out2', agent: 'beta', secret: secondSecret });

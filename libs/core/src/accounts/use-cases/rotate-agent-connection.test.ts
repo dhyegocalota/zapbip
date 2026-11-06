@@ -4,7 +4,7 @@ import { addAgent, createAccountFixture, intentsOf, ownerInputOf, PUBLIC_ORIGIN 
 import { rotateAgentConnection } from './rotate-agent-connection';
 
 describe('rotateAgentConnection', () => {
-  test('replaces the digest at once and replies with the new install link only', async () => {
+  test('[row 218] replaces the digest at once and replies with the new install link only', async () => {
     const fixture = await createAccountFixture();
     const oldDigest = await addAgent({ ...fixture, agent: 'claude' });
     const result = await rotateAgentConnection({ ...ownerInputOf(fixture), rawName: 'claude' });
