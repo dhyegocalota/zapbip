@@ -75,6 +75,7 @@ export const CONNECTION_URL_VARIABLE = 'ZAPBIP_CONNECTION_URL';
 export const CODEX_ZAPBIP_SERVER_NAME = 'zapbip';
 export const CLAUDE_MCP_SERVER_TYPE = 'http';
 export const CODEX_ALLOWED_TOOL_NAME = 'send_message';
+export const CODEX_WEB_SEARCH_DISABLED_CONFIGURATION = 'web_search="disabled"';
 export const CODEX_APPROVAL_MODE = 'approve';
 export const CODEX_ACTIVE_WRITER_MESSAGE = 'thread already has an active writer';
 export const WAKE_INSTRUCTION = 'Reply to the owner with send_message, briefly, as one WhatsApp message.';

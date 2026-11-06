@@ -5,6 +5,7 @@ import { dirname, join, resolve } from 'node:path';
 import { parse } from 'smol-toml';
 import {
   CLAUDE_MCP_SERVER_TYPE,
+  CODEX_WEB_SEARCH_DISABLED_CONFIGURATION,
   CODEX_ZAPBIP_SERVER_NAME,
   CONNECTOR_KILL_GRACE_MS,
   CONNECTOR_WAKE_TIMEOUT_MS,
@@ -43,7 +44,10 @@ const CODEX_MANAGED_CONFIG_FILE_NAME = 'managed_config.toml';
 const CODEX_SYSTEM_CONFIG_DIRECTORY = '/etc/codex';
 const STALE_WAKE_DIRECTORY_AGE_MS = CONNECTOR_WAKE_TIMEOUT_MS + CONNECTOR_KILL_GRACE_MS;
 const UNPARSEABLE_CONFIG_REASON = 'a Codex configuration file is not valid TOML';
-const MANAGED_SERVER_REASON = 'a managed Codex configuration declares an MCP server, which outranks the wake isolation';
+const MANAGED_KEY_REASON = 'a managed Codex configuration sets a key outside the allowlist, and managed layers outrank the wake isolation';
+const PROFILE_OVERRIDE_REASON = 'a Codex profile sets a key the wake isolation cannot override';
+const MANAGED_ALLOWED_KEYS = ['model', 'model_reasoning_effort', 'model_reasoning_summary', 'file_opener', 'hide_agent_reasoning'];
+const PROFILE_FORBIDDEN_KEYS = ['sandbox_mode', 'approval_policy', 'tools', 'features'];
 const ZAPBIP_REDEFINED_REASON = 'the zapbip MCP server is defined outside the Codex home configuration or is not a URL server';
 const UNIDENTIFIABLE_SERVER_REASON = 'a Codex MCP server in the configuration cannot be identified';
 const BARE_KEY_PATTERN = /^[A-Za-z0-9_-]+$/;
@@ -126,10 +130,16 @@ function profileTablesOf(input: { config: TomlTable }): [string, TomlTable][] {
   return Object.entries(profiles).map(([name, profile]) => [name, tableOrRefuse({ value: profile })]);
 }
 
-function serverReferencesOf(input: { text: string }): ServerReference[] {
-  const config = parseConfig(input);
-  const profileReferences = profileTablesOf({ config }).flatMap(([profile, table]) => serversOf({ table, profile }));
-  return [...serversOf({ table: config, profile: null }), ...profileReferences];
+type ConfigFindings = { references: ServerReference[]; profileNames: string[] };
+
+function assertManagedAllowlist(input: { config: TomlTable }): void {
+  const hasUnlistedKey = Object.keys(input.config).some((key) => !MANAGED_ALLOWED_KEYS.includes(key));
+  if (hasUnlistedKey) refuse({ reason: MANAGED_KEY_REASON });
+}
+
+function assertProfileCanBeIsolated(input: { table: TomlTable }): void {
+  const hasForbiddenKey = PROFILE_FORBIDDEN_KEYS.some((key) => key in input.table);
+  if (hasForbiddenKey) refuse({ reason: PROFILE_OVERRIDE_REASON });
 }
 
 function keyOf(input: { name: string }): string {
@@ -172,20 +182,28 @@ function isUrlServer(input: { definition: TomlTable }): boolean {
 function assertLayerRules(input: { layer: CodexConfigLayer; references: ServerReference[] }): void {
   const { layer, references } = input;
   const zapbipReferences = references.filter((reference) => reference.name === CODEX_ZAPBIP_SERVER_NAME);
-  const otherReferences = references.filter((reference) => reference.name !== CODEX_ZAPBIP_SERVER_NAME);
-  const isManagedWithServers = layer === CodexConfigLayer.Managed && otherReferences.length > 0;
   const isZapbipOutsideHome = layer !== CodexConfigLayer.Home && zapbipReferences.length > 0;
   const isHomeZapbipUnsound = zapbipReferences.some((reference) => reference.profile !== null || !isUrlServer(reference));
-  if (isManagedWithServers) refuse({ reason: MANAGED_SERVER_REASON });
   if (isZapbipOutsideHome) refuse({ reason: ZAPBIP_REDEFINED_REASON });
   if (isHomeZapbipUnsound) refuse({ reason: ZAPBIP_REDEFINED_REASON });
 }
 
-async function referencesOfConfigFile(input: { configFile: ConfigFile }): Promise<ServerReference[]> {
-  const text = await readTextOrEmpty({ file: input.configFile.file });
-  const references = serverReferencesOf({ text });
-  assertLayerRules({ layer: input.configFile.layer, references });
-  return references;
+async function findingsOfConfigFile(input: { configFile: ConfigFile }): Promise<ConfigFindings> {
+  const { file, layer } = input.configFile;
+  const config = parseConfig({ text: await readTextOrEmpty({ file }) });
+  if (layer === CodexConfigLayer.Managed) assertManagedAllowlist({ config });
+  const profiles = profileTablesOf({ config });
+  profiles.forEach(([, table]) => assertProfileCanBeIsolated({ table }));
+  const references = [
+    ...serversOf({ table: config, profile: null }),
+    ...profiles.flatMap(([profile, table]) => serversOf({ table, profile })),
+  ];
+  assertLayerRules({ layer, references });
+  return { references, profileNames: profiles.map(([name]) => name) };
+}
+
+function disabledWebSearchArguments(input: { profile: string }): string[] {
+  return ['-c', `profiles.${keyOf({ name: input.profile })}.${CODEX_WEB_SEARCH_DISABLED_CONFIGURATION}`];
 }
 
 async function prepareCodexIsolation(input: WakeIsolationInput): Promise<WakeIsolation> {
@@ -195,14 +213,16 @@ async function prepareCodexIsolation(input: WakeIsolationInput): Promise<WakeIso
     systemConfigDirectory = CODEX_SYSTEM_CONFIG_DIRECTORY,
   } = input;
   const configFiles = codexConfigFilesOf({ workingDirectory, codexHome, systemConfigDirectory });
-  const referencesPerFile = await Promise.all(configFiles.map((configFile) => referencesOfConfigFile({ configFile })));
-  const references = referencesPerFile.flat();
+  const findings = await Promise.all(configFiles.map((configFile) => findingsOfConfigFile({ configFile })));
+  const references = findings.flatMap((finding) => finding.references);
+  const profileNames = [...new Set(findings.flatMap((finding) => finding.profileNames))];
   const isZapbipAtTopLevel = (reference: ServerReference) => reference.profile === null && reference.name === CODEX_ZAPBIP_SERVER_NAME;
   const disabledArguments = references
     .filter((reference) => !isZapbipAtTopLevel(reference))
     .map((reference) => disabledServerArguments({ reference }));
   const uniqueArguments = [...new Map(disabledArguments.map((pair) => [pair[1], pair])).values()];
-  return { isolationArguments: uniqueArguments.flat(), cleanup: async () => undefined };
+  const webSearchArguments = profileNames.map((profile) => disabledWebSearchArguments({ profile }));
+  return { isolationArguments: [...uniqueArguments, ...webSearchArguments].flat(), cleanup: async () => undefined };
 }
 
 export const WAKE_ISOLATION_PREPARERS: Record<ConnectorClient, (input: WakeIsolationInput) => Promise<WakeIsolation>> = {

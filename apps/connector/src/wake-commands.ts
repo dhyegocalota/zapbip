@@ -1,6 +1,7 @@
 import {
   CODEX_ALLOWED_TOOL_NAME,
   CODEX_APPROVAL_MODE,
+  CODEX_WEB_SEARCH_DISABLED_CONFIGURATION,
   CODEX_ACTIVE_WRITER_MESSAGE,
   CODEX_ZAPBIP_SERVER_NAME,
   CLAUDE_PERMISSION_MODE,
@@ -12,7 +13,6 @@ import {
 
 type ResumeArgumentBuilder = (input: { sessionId: string; isolationArguments: string[] }) => string[];
 
-const CODEX_WEB_SEARCH_DISABLED_CONFIGURATION = 'web_search="disabled"';
 const CODEX_SERVER_CONFIGURATION_PREFIX = `mcp_servers.${CODEX_ZAPBIP_SERVER_NAME}`;
 const CLAUDE_SAFETY_ARGUMENTS = ['--permission-mode', CLAUDE_PERMISSION_MODE, '--tools='];
 const CODEX_SAFETY_ARGUMENTS = [
