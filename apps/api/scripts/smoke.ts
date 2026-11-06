@@ -1,0 +1,62 @@
+import { randomUUID } from 'node:crypto';
+import { setTimeout as delay } from 'node:timers/promises';
+import { parseArgs } from 'node:util';
+import { SECOND_MS } from '@zapbip/types';
+import { parseDeployEnvironment, type DeployEnvironment } from '../src/operations/deploy-environment';
+import { formatSmokeResult, runSmokeChecks, type SmokeFetch } from '../src/operations/smoke-checks';
+import { readSmokeInputs, SmokeInput } from '../src/operations/smoke-inputs';
+
+export type SmokeEntry = {
+  environment: DeployEnvironment;
+  firstDeploy: boolean;
+  environmentVariables: Record<string, string | undefined>;
+  smokeFetch: SmokeFetch;
+  wait: (input: { ms: number }) => Promise<void>;
+  log: (line: string) => void;
+};
+
+function firstDeployInstructions(input: { environment: DeployEnvironment }): string[] {
+  return [
+    'First deploy: checks 2 (mcp initialize) and 5 (fake inbound) were skipped because they need the smoke connection.',
+    `Create it: from the phone you will put in ${SmokeInput.OwnerPhone}, send "novo agente smoke" to the zapbip official number (development: through the owner simulator).`,
+    `Put the connection secret of the MCP URL in ${SmokeInput.ConnectionSecret} and that phone in ${SmokeInput.OwnerPhone} in .env.`,
+    `Run it again: pnpm smoke:${input.environment}`,
+  ];
+}
+
+export async function runSmoke(input: SmokeEntry): Promise<number> {
+  const { environment, firstDeploy, environmentVariables, smokeFetch, wait, log } = input;
+  const inputs = readSmokeInputs({ environment, firstDeploy, environmentVariables });
+  const results = await runSmokeChecks({
+    environment,
+    firstDeploy,
+    inputs,
+    smokeFetch,
+    wait,
+    randomToken: randomUUID,
+    nowSeconds: () => Math.floor(Date.now() / SECOND_MS),
+  });
+  results.forEach((result) => log(formatSmokeResult({ result })));
+  if (firstDeploy) firstDeployInstructions({ environment }).forEach(log);
+  return results.every((result) => result.passed) ? 0 : 1;
+}
+
+async function main(): Promise<void> {
+  const { values } = parseArgs({ options: { environment: { type: 'string' }, 'first-deploy': { type: 'boolean' } } });
+  const exitCode = await runSmoke({
+    environment: parseDeployEnvironment({ value: values.environment }),
+    firstDeploy: values['first-deploy'] === true,
+    environmentVariables: process.env,
+    smokeFetch: fetch,
+    wait: ({ ms }) => delay(ms),
+    log: console.log,
+  });
+  process.exit(exitCode);
+}
+
+if (import.meta.main) {
+  main().catch((error: unknown) => {
+    console.error(error instanceof Error ? error.message : error);
+    process.exit(1);
+  });
+}

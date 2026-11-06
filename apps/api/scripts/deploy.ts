@@ -1,0 +1,165 @@
+import { join } from 'node:path';
+import { createInterface } from 'node:readline/promises';
+import { parseArgs } from 'node:util';
+import { experimental_readRawConfig as readRawWranglerConfig } from 'wrangler';
+import { OFFICIAL_WHATSAPP_NUMBER } from '@zapbip/types';
+import { z } from 'zod';
+import { DeployEnvironment, parseDeployEnvironment } from '../src/operations/deploy-environment';
+import {
+  databaseNameOf,
+  type DeployBlock,
+  type DeployShell,
+  type EnvironmentVariables,
+  runWorkerPreflight,
+  type ShellCommand,
+  type WorkerFacts,
+  wranglerCommand,
+} from '../src/operations/deploy-preflight';
+import { createTerminalShell } from '../src/operations/terminal-shell';
+import { inspectWorkerSource } from '../src/operations/worker-facts';
+
+const WRANGLER_CONFIG_PATH = join(import.meta.dirname, '../wrangler.jsonc');
+const SOURCE_ROOT = join(import.meta.dirname, '../src');
+const SMOKE_SCRIPT_PATH = 'apps/api/scripts/smoke.ts';
+const CONFIRMATION_ANSWER = DeployEnvironment.Production;
+const CONFIRMATION_QUESTION = `Type ${CONFIRMATION_ANSWER} to deploy to ${DeployEnvironment.Production}: `;
+
+export type DeployPrompt = { ask(input: { question: string }): Promise<string> };
+
+export type DeployRun = {
+  environment: DeployEnvironment;
+  firstDeploy: boolean;
+  block: DeployBlock;
+  workerFacts: WorkerFacts;
+  shell: DeployShell;
+  prompt: DeployPrompt;
+  isInteractive: boolean;
+  environmentVariables: EnvironmentVariables;
+  officialWhatsAppNumber: string;
+  log: (line: string) => void;
+};
+
+type RollbackPoints = { versionId: string | null; bookmark: string | null };
+
+const versionListSchema = z.array(z.object({ id: z.string() }));
+const bookmarkSchema = z.object({ bookmark: z.string() });
+
+function commandLine(input: { command: ShellCommand }): string {
+  return [input.command.file, ...input.command.args].join(' ');
+}
+
+export function readDeployBlock(input: { environment: DeployEnvironment }): DeployBlock {
+  const { env, ...topLevel } = readRawWranglerConfig({ config: WRANGLER_CONFIG_PATH }).rawConfig;
+  if (input.environment === DeployEnvironment.Production) return Object.fromEntries(Object.entries(topLevel));
+  const block = env?.[input.environment];
+  if (!block) throw new Error(`wrangler.jsonc has no ${input.environment} block`);
+  return Object.fromEntries(Object.entries(block));
+}
+
+async function readRollbackPoints(input: {
+  environment: DeployEnvironment;
+  shell: DeployShell;
+  block: DeployBlock;
+}): Promise<RollbackPoints> {
+  const { environment, shell, block } = input;
+  const versions = await shell.run(wranglerCommand({ environment, args: ['versions', 'list'], flags: ['--json'] }));
+  const history = await shell.run(
+    wranglerCommand({ environment, args: ['d1', 'time-travel', 'info', databaseNameOf({ block })], flags: ['--json'] }),
+  );
+  const newestVersion = versions.exitCode === 0 ? versionListSchema.parse(JSON.parse(versions.stdout)).at(-1) : undefined;
+  return {
+    versionId: newestVersion ? newestVersion.id : null,
+    bookmark: history.exitCode === 0 ? bookmarkSchema.parse(JSON.parse(history.stdout)).bookmark : null,
+  };
+}
+
+function rollbackCommandLines(input: { environment: DeployEnvironment; block: DeployBlock; points: RollbackPoints }): string[] {
+  const { environment, block, points } = input;
+  const versionLine = points.versionId
+    ? [commandLine({ command: wranglerCommand({ environment, args: ['rollback', points.versionId] }) })]
+    : [];
+  const bookmarkLine = points.bookmark
+    ? [
+        commandLine({
+          command: wranglerCommand({
+            environment,
+            args: ['d1', 'time-travel', 'restore', databaseNameOf({ block })],
+            flags: [`--bookmark=${points.bookmark}`],
+          }),
+        }),
+      ]
+    : [];
+  return [...versionLine, ...bookmarkLine];
+}
+
+async function isDeployConfirmed(input: { environment: DeployEnvironment; prompt: DeployPrompt }): Promise<boolean> {
+  if (input.environment !== DeployEnvironment.Production) return true;
+  return (await input.prompt.ask({ question: CONFIRMATION_QUESTION })) === CONFIRMATION_ANSWER;
+}
+
+function smokeCommand(input: { environment: DeployEnvironment; firstDeploy: boolean }): ShellCommand {
+  const firstDeployFlag = input.firstDeploy ? ['--first-deploy'] : [];
+  return {
+    file: 'node',
+    args: ['--env-file=.env', '--import', 'tsx', SMOKE_SCRIPT_PATH, '--environment', input.environment, ...firstDeployFlag],
+  };
+}
+
+export async function runDeploy(input: DeployRun): Promise<number> {
+  const { environment, firstDeploy, block, shell, prompt, log } = input;
+  const refusal = await runWorkerPreflight(input);
+  if (refusal) {
+    log(`refused at ${refusal.step}: ${refusal.message}`);
+    return 1;
+  }
+  const dryRun = await shell.run(wranglerCommand({ environment, args: ['deploy'], flags: ['--dry-run'] }));
+  if (dryRun.exitCode !== 0) {
+    log('the dry run failed; nothing was deployed');
+    return 1;
+  }
+  const points = await readRollbackPoints({ environment, shell, block });
+  log(`rollback points: version ${points.versionId}, database bookmark ${points.bookmark}`);
+  if (!(await isDeployConfirmed({ environment, prompt }))) {
+    log('the deploy was not confirmed; nothing was deployed');
+    return 1;
+  }
+  const deployed = await shell.run(wranglerCommand({ environment, args: ['deploy'] }));
+  if (deployed.exitCode !== 0) {
+    log('the deploy failed');
+    return 1;
+  }
+  const smoke = await shell.run(smokeCommand({ environment, firstDeploy }));
+  if (smoke.exitCode === 0) return 0;
+  log('the smoke test failed; to roll back, run:');
+  rollbackCommandLines({ environment, block, points }).forEach(log);
+  return 1;
+}
+
+async function main(): Promise<void> {
+  const { values } = parseArgs({ options: { environment: { type: 'string' }, 'first-deploy': { type: 'boolean' } } });
+  const environment = parseDeployEnvironment({ value: values.environment });
+  const lineReader = createInterface({ input: process.stdin, output: process.stdout });
+  try {
+    process.exitCode = await runDeploy({
+      environment,
+      firstDeploy: values['first-deploy'] === true,
+      block: readDeployBlock({ environment }),
+      workerFacts: await inspectWorkerSource({ sourceRoot: SOURCE_ROOT }),
+      shell: createTerminalShell({}),
+      prompt: { ask: ({ question }) => lineReader.question(question) },
+      isInteractive: process.stdin.isTTY === true,
+      environmentVariables: process.env,
+      officialWhatsAppNumber: OFFICIAL_WHATSAPP_NUMBER,
+      log: console.log,
+    });
+  } finally {
+    lineReader.close();
+  }
+}
+
+if (import.meta.main) {
+  main().catch((error: unknown) => {
+    console.error(error instanceof Error ? error.message : error);
+    process.exit(1);
+  });
+}
