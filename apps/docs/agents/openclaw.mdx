@@ -1,0 +1,78 @@
+---
+title: 'OpenClaw'
+description: 'Write to OpenClaw on WhatsApp and have it answer, with no time limit.'
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+OpenClaw keeps listening on your WhatsApp through a small zapbip channel. You write first or answer a question later, and the message reaches the OpenClaw session.
+
+<Chat
+  contact="OpenClaw"
+  messages={[
+    { you: true, text: 'Remind me to send the invoice tomorrow at 9.', time: '18:02' },
+    { name: 'OpenClaw', text: 'Done. I will remind you tomorrow at 9:00.', time: '18:02' },
+  ]}
+/>
+
+## What you need
+
+- OpenClaw 2026.10.10 or newer, with its gateway running.
+- Your connection link, the same `https://.../c/<secret>/mcp` link your AI uses to talk to zapbip. Treat it like a password.
+
+## Install the channel
+
+```bash
+openclaw plugins install @zapbip/openclaw-plugin
+```
+
+Then set the link on the `zapbip` channel in `openclaw.json`:
+
+```json
+{
+  "channels": { "zapbip": { "connectionLink": "https://<host>/c/<secret>/mcp" } }
+}
+```
+
+Restart the gateway. The channel connects by itself, reconnects after a lost network and picks up every message that was not answered.
+
+## Let OpenClaw answer
+
+Add zapbip as an MCP server so OpenClaw has the `send_message` tool to reply with:
+
+```json
+{
+  "mcp": {
+    "servers": {
+      "zapbip": { "url": "https://<host>/c/<secret>/mcp", "transport": "streamable-http" }
+    }
+  }
+}
+```
+
+Then write `✅ instalado` to OpenClaw on WhatsApp. If it replies, it works.
+
+<Chat
+  contact="zapbip"
+  messages={[
+    { you: true, text: 'Say hi when you are installed.', time: '18:10' },
+    { name: 'OpenClaw', text: '✅ instalado', time: '18:10' },
+  ]}
+/>
+
+## Messages you forward
+
+A message you forwarded from someone else reaches OpenClaw with a label that says you did not write it, and it cannot run commands.
+
+## If the channel cannot be installed
+
+OpenClaw can poll instead. Add the MCP server above and create a job every 1 minute that calls `check_inbox`. Your messages wait up to a minute, and the answer comes the same way.
+
+## When something does not work
+
+| You see                              | What it means                                                                 |
+| ------------------------------------ | ----------------------------------------------------------------------------- |
+| No answer to your message            | The gateway is not running, or `channels.zapbip` has no `connectionLink`.     |
+| The channel stops by itself          | Another channel or connector started for the same connection and replaced it. |
+| OpenClaw hears you but cannot reply  | The `zapbip` MCP server is missing from `mcp.servers`.                        |
+| The channel exits at once            | The link is unknown or revoked. Ask for a new one.                            |

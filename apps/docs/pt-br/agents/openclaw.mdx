@@ -1,0 +1,78 @@
+---
+title: 'OpenClaw'
+description: 'Escreva para o OpenClaw no WhatsApp e ele responde, sem limite de tempo.'
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+O OpenClaw fica ouvindo seu WhatsApp por um pequeno canal do zapbip. Você escreve primeiro ou responde uma pergunta depois, e a mensagem chega na sessão do OpenClaw.
+
+<Chat
+  contact="OpenClaw"
+  messages={[
+    { you: true, text: 'Me lembre de enviar a fatura amanhã às 9.', time: '18:02' },
+    { name: 'OpenClaw', text: 'Feito. Vou te lembrar amanhã às 9:00.', time: '18:02' },
+  ]}
+/>
+
+## O que você precisa
+
+- O OpenClaw 2026.10.10 ou mais novo, com o gateway rodando.
+- Seu link de conexão, o mesmo link `https://.../c/<secret>/mcp` que sua IA usa para falar com o zapbip. Trate-o como uma senha.
+
+## Instale o canal
+
+```bash
+openclaw plugins install @zapbip/openclaw-plugin
+```
+
+Depois defina o link no canal `zapbip` do `openclaw.json`:
+
+```json
+{
+  "channels": { "zapbip": { "connectionLink": "https://<host>/c/<secret>/mcp" } }
+}
+```
+
+Reinicie o gateway. O canal conecta sozinho, reconecta depois de uma queda de rede e pega toda mensagem que ficou sem resposta.
+
+## Deixe o OpenClaw responder
+
+Adicione o zapbip como servidor MCP para o OpenClaw ter a ferramenta `send_message` e responder:
+
+```json
+{
+  "mcp": {
+    "servers": {
+      "zapbip": { "url": "https://<host>/c/<secret>/mcp", "transport": "streamable-http" }
+    }
+  }
+}
+```
+
+Depois escreva `✅ instalado` para o OpenClaw no WhatsApp. Se ele responder, está funcionando.
+
+<Chat
+  contact="zapbip"
+  messages={[
+    { you: true, text: 'Diga oi quando estiver instalado.', time: '18:10' },
+    { name: 'OpenClaw', text: '✅ instalado', time: '18:10' },
+  ]}
+/>
+
+## Mensagens encaminhadas
+
+Uma mensagem que você encaminhou de outra pessoa chega ao OpenClaw com um aviso de que não foi você quem escreveu, e ela não consegue executar comandos.
+
+## Se o canal não puder ser instalado
+
+O OpenClaw pode consultar a caixa de entrada. Adicione o servidor MCP acima e crie uma tarefa a cada 1 minuto que chama `check_inbox`. Suas mensagens esperam até um minuto, e a resposta volta do mesmo jeito.
+
+## Quando algo não funciona
+
+| O que você vê                       | O que significa                                                                  |
+| ----------------------------------- | -------------------------------------------------------------------------------- |
+| Nenhuma resposta à sua mensagem     | O gateway não está rodando, ou `channels.zapbip` não tem `connectionLink`.       |
+| O canal para sozinho                | Outro canal ou conector começou para a mesma conexão e o substituiu.             |
+| O OpenClaw ouve, mas não responde   | O servidor MCP `zapbip` não está em `mcp.servers`.                               |
+| O canal sai na hora                 | O link é desconhecido ou foi revogado. Peça um novo.                             |

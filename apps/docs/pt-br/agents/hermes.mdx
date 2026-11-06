@@ -1,0 +1,77 @@
+---
+title: 'Hermes'
+description: 'Escreva para o Hermes no WhatsApp e ele responde, sem limite de tempo.'
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+O Hermes fica ouvindo seu WhatsApp por um pequeno plugin do zapbip. Você escreve primeiro ou responde uma pergunta depois, e a mensagem chega na sessão do Hermes.
+
+<Chat
+  contact="Hermes"
+  messages={[
+    { you: true, text: 'Resuma o que mudou no repositório hoje.', time: '18:02' },
+    { name: 'Hermes', text: 'Três commits: uma correção na cobrança, um teste novo e uma atualização da documentação.', time: '18:03' },
+  ]}
+/>
+
+## O que você precisa
+
+- O Hermes com o gateway rodando.
+- Seu link de conexão, o mesmo link `https://.../c/<secret>/mcp` que sua IA usa para falar com o zapbip. Trate-o como uma senha.
+
+## Instale o plugin
+
+Coloque a pasta do plugin `zapbip-platform` em `~/.hermes/plugins/zapbip-platform` e ative-o em `~/.hermes/config.yaml`:
+
+```yaml
+plugins:
+  enabled:
+    - zapbip-platform
+```
+
+Defina o link e quem pode falar com o Hermes no ambiente em que o gateway roda, nunca em um arquivo que você compartilha:
+
+```bash
+export ZAPBIP_CONNECTION_LINK='https://<host>/c/<secret>/mcp'
+export ZAPBIP_ALLOWED_USERS=owner
+```
+
+Reinicie o gateway. O plugin conecta sozinho, reconecta depois de uma queda de rede e pega toda mensagem que ficou sem resposta.
+
+## Deixe o Hermes responder
+
+Adicione o zapbip como servidor MCP para o Hermes ter a ferramenta `send_message` e responder:
+
+```yaml
+mcp_servers:
+  zapbip:
+    url: 'https://<host>/c/<secret>/mcp'
+```
+
+Depois escreva `✅ instalado` para o Hermes no WhatsApp. Se ele responder, está funcionando.
+
+<Chat
+  contact="zapbip"
+  messages={[
+    { you: true, text: 'Diga oi quando estiver instalado.', time: '18:10' },
+    { name: 'Hermes', text: '✅ instalado', time: '18:10' },
+  ]}
+/>
+
+## Mensagens encaminhadas
+
+Uma mensagem que você encaminhou de outra pessoa chega ao Hermes com um aviso de que não foi você quem escreveu, então ele não a trata como uma instrução sua.
+
+## Se o plugin não puder ser instalado
+
+O Hermes pode consultar a caixa de entrada. Adicione o servidor MCP acima e crie uma tarefa a cada 1 minuto que chama `check_inbox`. Suas mensagens esperam até um minuto, e a resposta volta do mesmo jeito.
+
+## Quando algo não funciona
+
+| O que você vê                    | O que significa                                                                  |
+| -------------------------------- | -------------------------------------------------------------------------------- |
+| Nenhuma resposta à sua mensagem  | O gateway não está rodando, ou o plugin não está em `plugins.enabled`.           |
+| O plugin para sozinho            | Outro plugin ou conector começou para a mesma conexão e o substituiu.            |
+| O Hermes ouve, mas não responde  | O servidor MCP `zapbip` não está no `config.yaml`.                               |
+| O plugin sai na hora             | O link é desconhecido ou foi revogado. Peça um novo.                             |
