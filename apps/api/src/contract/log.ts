@@ -10,6 +10,7 @@ export enum LogEvent {
   MediaRead = 'media_read',
   Sweep = 'sweep',
   ClockAdvanced = 'clock_advanced',
+  FrameRejected = 'frame_rejected',
 }
 
 export type LogFields = {

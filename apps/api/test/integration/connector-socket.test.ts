@@ -30,6 +30,13 @@ function unreadCountOf(input: { account: SeededAccount }): Promise<number> {
   );
 }
 
+function socketCountOf(input: { account: SeededAccount }): Promise<number> {
+  return runInDurableObject(
+    accountInboxStub({ accountId: input.account.accountId }),
+    (_instance, state) => state.getWebSockets(AGENT).length,
+  );
+}
+
 function newAccount(): Promise<SeededAccount> {
   return seedAccount({ agent: AGENT });
 }
@@ -151,7 +158,7 @@ describe('connector socket', () => {
     await ownerMessage({ account });
     await first.nextFrame();
     first.socket.close();
-    await first.closeCode();
+    await vi.waitFor(async () => expect(await socketCountOf({ account })).toBe(0));
     const second = await openConnector({ secret: account.secret });
     expect(await second.nextFrame()).toMatchObject({ type: ConnectorFrameType.Hello });
     const frame = (await second.nextFrame()) as MessagesFrame;

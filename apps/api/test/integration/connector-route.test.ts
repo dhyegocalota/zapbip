@@ -50,7 +50,7 @@ describe('connector route', () => {
 
   test('answers 404 for a method with no route', async () => {
     const account = await seedAccount({ agent: 'ana' });
-    const response = await SELF.fetch(connectorUrl({ secret: account.secret }), { method: 'POST', headers: UPGRADE_HEADERS });
+    const response = await SELF.fetch(connectorUrl({ secret: account.secret }), { method: 'POST' });
     expect(response.status).toBe(STATUS_NOT_FOUND);
   });
 

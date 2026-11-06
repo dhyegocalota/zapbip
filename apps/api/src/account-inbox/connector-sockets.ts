@@ -17,6 +17,10 @@ function parseJson(input: { text: string }): unknown {
   }
 }
 
+function isOpenOrConnecting(socket: WebSocket): boolean {
+  return socket.readyState !== WebSocket.CLOSING && socket.readyState !== WebSocket.CLOSED;
+}
+
 export function acceptConnectorSocket(input: { context: DurableObjectState; agent: AgentName }): WebSocket {
   const { context, agent } = input;
   context.getWebSockets(agent).forEach((previous) => previous.close(REPLACED_CLOSE_CODE));
@@ -26,7 +30,7 @@ export function acceptConnectorSocket(input: { context: DurableObjectState; agen
 }
 
 export function sendFrameToAgent(input: { context: DurableObjectState; agent: AgentName; frame: ServerFrame }): number {
-  const sockets = input.context.getWebSockets(input.agent);
+  const sockets = input.context.getWebSockets(input.agent).filter(isOpenOrConnecting);
   const text = JSON.stringify(input.frame);
   sockets.forEach((socket) => socket.send(text));
   return sockets.length;

@@ -12,6 +12,7 @@ export enum HttpStatus {
   LengthRequired = 411,
   PayloadTooLarge = 413,
   UnsupportedMediaType = 415,
+  UpgradeRequired = 426,
   BadGateway = 502,
 }
 

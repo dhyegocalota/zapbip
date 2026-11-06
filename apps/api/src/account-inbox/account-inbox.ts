@@ -22,7 +22,15 @@ import type {
   WakeDependencies,
   WakeTransport,
 } from '@zapbip/core';
-import { ChannelErrorKind, WakeRung, type OwnerLocale } from '@zapbip/types';
+import {
+  CONNECTOR_INBOX_LIMIT,
+  CONNECTOR_PING_TEXT,
+  CONNECTOR_PONG_TEXT,
+  ChannelErrorKind,
+  ConnectorFrameType,
+  WakeRung,
+  type OwnerLocale,
+} from '@zapbip/types';
 import { createFakeWhatsAppSender, type FakeWhatsAppSender } from '../adapters/fake/fake-whatsapp-sender';
 import { createIdGenerator } from '../adapters/platform/ids';
 import { loadDurableClock, type DurableClock } from '../adapters/platform/clock';
@@ -38,7 +46,15 @@ import type { DueTimeProvider } from '../contract/due-time-provider';
 import type { Bindings } from '../contract/env';
 import { LogEvent, type LogFields } from '../contract/log';
 import { logEvent } from '../log';
-import { ALARM_MIN_DELAY_MS, AlarmErrorCode, OWNER_LOCALE_STORAGE_KEY } from './constants';
+import { HttpStatus } from '../routes/http-status';
+import { acceptConnectorSocket, connectorAgentOf, parseDoneFrame, remainingSocketCount, sendFrameToAgent } from './connector-sockets';
+import {
+  ALARM_MIN_DELAY_MS,
+  AlarmErrorCode,
+  CONNECTOR_AGENT_PARAMETER,
+  OWNER_LOCALE_STORAGE_KEY,
+  SWITCHING_PROTOCOLS_STATUS,
+} from './constants';
 import { ACCOUNT_INBOX_MIGRATIONS } from './migrations';
 import { runMigrations } from './run-migrations';
 import { createWakeDependencies } from './wake-dependencies';
@@ -97,6 +113,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
         repository: this.wake.repository,
       }),
     };
+    this.ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair(CONNECTOR_PING_TEXT, CONNECTOR_PONG_TEXT));
     this.dueTimeProviders.push(this.createExpiryProvider(), this.createWakeProvider());
     await this.armAlarm();
   }
@@ -257,6 +274,38 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
         });
       },
     });
+  }
+
+  async fetch(request: Request): Promise<Response> {
+    const agent = new URL(request.url).searchParams.get(CONNECTOR_AGENT_PARAMETER);
+    if (agent === null) return new Response(null, { status: HttpStatus.BadRequest });
+    await inbox.touchAgent({ dependencies: this.dependencies, agent });
+    const attached = await inbox.attachLocalConnector({
+      dependencies: this.dependencies,
+      wake: this.wake,
+      agent,
+      limit: CONNECTOR_INBOX_LIMIT,
+    });
+    const client = acceptConnectorSocket({ context: this.ctx, agent });
+    const hello = { type: ConnectorFrameType.Hello, agent, previousWakeMode: attached.previousWakeMode } as const;
+    sendFrameToAgent({ context: this.ctx, agent, frame: hello });
+    if (attached.unread.length > 0) {
+      sendFrameToAgent({ context: this.ctx, agent, frame: { type: ConnectorFrameType.Messages, messages: attached.unread } });
+    }
+    return new Response(null, { status: SWITCHING_PROTOCOLS_STATUS, webSocket: client });
+  }
+
+  async webSocketMessage(socket: WebSocket, data: string | ArrayBuffer): Promise<void> {
+    const agent = connectorAgentOf({ context: this.ctx, socket });
+    const parsed = parseDoneFrame({ data });
+    if (!parsed.ok) return this.log({ event: LogEvent.FrameRejected, agent, errorCode: parsed.reason });
+    await inbox.acknowledgeDelivery({ dependencies: this.dependencies, agent, messageId: parsed.frame.messageId });
+  }
+
+  async webSocketClose(socket: WebSocket): Promise<void> {
+    const agent = connectorAgentOf({ context: this.ctx, socket });
+    const remainingSockets = remainingSocketCount({ context: this.ctx, agent, closing: socket });
+    await inbox.detachLocalConnector({ dependencies: this.dependencies, wake: this.wake, agent, remainingSockets });
   }
 
   receiveOwnerMessage(input: ReceiveOwnerMessageRequest): Promise<CallOutcome<inbox.ReceiveResult>> {
