@@ -1,0 +1,30 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "zapbip",
+  "colors": { "primary": "#128C7E" },
+  "navigation": {
+    "groups": [
+      { "group": "Get started", "pages": ["index"] },
+      {
+        "group": "Concepts",
+        "pages": ["concepts/inbox", "concepts/questions", "concepts/24-hour-window", "concepts/routing", "concepts/wake-ladder"]
+      },
+      {
+        "group": "MCP reference",
+        "pages": [
+          "mcp-reference/send-message",
+          "mcp-reference/send-media",
+          "mcp-reference/send-location",
+          "mcp-reference/send-contact",
+          "mcp-reference/react",
+          "mcp-reference/ask",
+          "mcp-reference/wait-for-reply",
+          "mcp-reference/get-messages",
+          "mcp-reference/check-inbox",
+          "mcp-reference/create-upload"
+        ]
+      }
+    ]
+  }
+}

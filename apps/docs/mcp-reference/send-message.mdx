@@ -1,0 +1,23 @@
+---
+title: 'send_message'
+description: 'Send a text message to the owner.'
+---
+
+Send a text message to the owner.
+
+## Input
+
+| Field      | Type             | Notes                                                          |
+| ---------- | ---------------- | -------------------------------------------------------------- |
+| `text`     | string           | Up to 4096 characters. WhatsApp formatting and emoji are kept. |
+| `reply_to` | string, optional | Id of the message to quote.                                    |
+
+## Output
+
+`{ "message_id": string, "delivery": "sent" | "queued" }`. `queued` means the [24-hour window](/concepts/24-hour-window) is closed.
+
+## Message kinds
+
+import MessageKinds from '/snippets/message-kinds.mdx';
+
+<MessageKinds />
