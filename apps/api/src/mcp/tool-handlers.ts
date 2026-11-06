@@ -19,6 +19,7 @@ import {
   sendLocationInputShape,
   sendMediaInputShape,
   sendMessageInputShape,
+  setWakeInputShape,
   waitForReplyInputShape,
 } from '../contract/mcp-schemas';
 import { McpToolName } from '../contract/tool-definitions';
@@ -177,6 +178,10 @@ const createUpload: ToolHandler<typeof createUploadInputShape> = async ({ contex
   };
 };
 
+const setWake: ToolHandler<typeof setWakeInputShape> = async () => {
+  throw new Error('set_wake is not implemented');
+};
+
 export const TOOL_HANDLERS = {
   [McpToolName.SendMessage]: sendMessage,
   [McpToolName.SendMedia]: sendMedia,
@@ -188,4 +193,5 @@ export const TOOL_HANDLERS = {
   [McpToolName.GetMessages]: getMessages,
   [McpToolName.CheckInbox]: checkInbox,
   [McpToolName.CreateUpload]: createUpload,
+  [McpToolName.SetWake]: setWake,
 } satisfies Record<McpToolName, unknown>;
