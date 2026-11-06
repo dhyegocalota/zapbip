@@ -52,9 +52,10 @@ describe('install code vault', () => {
 
   it('refuses to open a tampered sealed value', async () => {
     const { vault, installCode, sealed } = await sealedFixture();
-    const lastIndex = sealed.length - 1;
-    const replacement = sealed[lastIndex] === 'A' ? 'B' : 'A';
-    await expect(vault.open({ installCode, sealed: `${sealed.slice(0, lastIndex)}${replacement}` })).rejects.toThrow();
+    const middleIndex = Math.floor(sealed.length / 2);
+    const replacement = sealed[middleIndex] === 'A' ? 'B' : 'A';
+    const tampered = `${sealed.slice(0, middleIndex)}${replacement}${sealed.slice(middleIndex + 1)}`;
+    await expect(vault.open({ installCode, sealed: tampered })).rejects.toThrow();
   });
 
   it('seals the same secret under the same code to different values', async () => {
