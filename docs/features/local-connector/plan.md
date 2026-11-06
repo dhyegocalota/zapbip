@@ -482,15 +482,15 @@ Versions were checked with `npm view` on 2026-11-06. The Worker side uses packag
 
 - [x] **S0.0 plan refresh against the code** (evidence: 7759eb8). Diffed against `feat/agent-inbox-core` and `origin/feat/webhook-wake`; corrections are in **Plan refresh (S0.0)**. Commit `docs(local-connector): refresh the plan against slice 1's code`.
 - [x] **S0.1 contract (L0a): enums, constants, frames, stubs.** Write the L0a files of the contract: `libs/types/src/connector.ts`, `WakeMode.Local` and `WakeRung.Local`, the frame types, the `acknowledgeDelivery` stub, the stubs of `connector-sockets.ts` and `local-connector-waker.ts`, the `apps/connector` package skeleton (`"private": true`, `"bin": {"zapbip": "dist/cli.js"}`, `"files": ["dist"]`, `"engines": {"node": ">=24"}`, the devDependencies from **Dependencies**, and the scripts below) and every connector stub. Scripts: `"build": "esbuild src/cli.ts --bundle --platform=node --format=esm --target=node24 --outfile=dist/cli.js --banner:js=\"#!/usr/bin/env node\""`, `"typecheck": "tsc --noEmit"`, `"pretest:e2e": "pnpm run build"`, `"pretest:packaging": "pnpm run build"`, `"test:unit": "vitest run --passWithNoTests --config vitest.config.mts"`, `"test:e2e": "vitest run --passWithNoTests --config vitest.e2e.config.mts"`, `"test:packaging": "vitest run --passWithNoTests --config vitest.packaging.config.mts"`. Write `apps/connector/README.md` with purpose only. Add the frame row and the answers rows to the spec. Run `pnpm install`. Commit `feat(types): declare the connector contract`. Proof: `pnpm typecheck` green; `pnpm verify` green at 8c082bf (evidence: 8c082bf).
-- [ ] **S0.2 wake-side contract (L0b), after the webhook-wake merge.** The three `WakeRepository` methods, the stubs in `createInMemoryWakeRepository` and `createSqliteWakeRepository`, `libs/core/src/wake/local-connector.ts`, the export line, `WakeRung.Local` in `WakerByRung`. Commit `feat(wake): declare the local connector wake contract`. Proof: `pnpm typecheck` green. Not done in Step 0 of this branch because `feat/webhook-wake` is not merged.
+- [x] **S0.2 wake-side contract (L0b), after the webhook-wake merge.** The three `WakeRepository` methods, the stubs in `createInMemoryWakeRepository` and `createSqliteWakeRepository`, `libs/core/src/wake/local-connector.ts`, the export line, `WakeRung.Local` in `WakerByRung`. Commit `feat(wake): declare the local connector wake contract`. Proof: `pnpm typecheck` green. Not done in Step 0 of this branch because `feat/webhook-wake` is not merged. (evidence: 731eab8)
 - [ ] **S0.3 contract review.** A `reviewer` sub-agent checks the contract against the spec's frame table and against the core additions table above. Result recorded in `tester-briefing.md`.
 
 ### Step L4 (core)
 
 - [x] **S4.1 red: acknowledge (L4a)** (evidence: 0bcd490). `libs/core/src/inbox/use-cases/acknowledge-delivery.test.ts` against `createInMemoryDependencies`. Commit `test(core): pin acknowledgeDelivery`.
-- [ ] **S4.2 red: local connector wake setting.** `libs/core/src/wake/local-connector.test.ts` against `createInMemoryWakeRepository()` (L4b, after the merge). Commit `test(core): pin the local connector wake setting`.
+- [x] **S4.2 red: local connector wake setting.** `libs/core/src/wake/local-connector.test.ts` against `createInMemoryWakeRepository()` (L4b, after the merge). Commit `test(core): pin the local connector wake setting`. (evidence: 5918203)
 - [x] **S4.3 green: acknowledge** (evidence: 2b39869). Implement: `findMessage`; return when it is `null`, its `agent` is not the input agent or its `direction` is not `MessageDirection.FromOwner`; `markRead({messageIds: [messageId]})`. Commit `feat(core): acknowledge delivery of an owner message`.
-- [ ] **S4.4 green: wake setting.** Implement `attachLocalConnector`, `detachLocalConnector` and the in-memory bodies of the three restore methods. Commit `feat(core): set the local wake while a connector is attached`.
+- [x] **S4.4 green: wake setting.** Implement `attachLocalConnector`, `detachLocalConnector` and the in-memory bodies of the three restore methods. Commit `feat(core): set the local wake while a connector is attached`. (evidence: 2eec54c)
 
 ### Step L1 (connector pure modules)
 
@@ -516,12 +516,12 @@ Versions were checked with `npm view` on 2026-11-06. The Worker side uses packag
 
 ### Step L3 (Worker and Durable Object)
 
-- [ ] **S3.1 red: route.** `apps/api/test/integration/connector-route.test.ts`. Commit `test(api): pin the connector route`.
-- [ ] **S3.2 red: socket.** `apps/api/test/integration/connector-socket.test.ts`, including binary frames and the close-restore case of A3. Commit `test(api): pin the connector socket`.
-- [ ] **S3.3 red: waker and wake setting.** L3a half done: red `ee87f26`. `apps/api/test/unit/local-connector-waker.test.ts` (L3a, now) and `apps/api/test/integration/connector-wake-setting.test.ts` (L3b, the three restore methods on SQLite). Commit `test(api): pin the local waker and the restore record`.
-- [ ] **S3.4 green: restore record.** The v5 migration and the bodies of the three methods in `apps/api/src/adapters/sqlite/sqlite-wake-repository.ts`. Commit `feat(api): store the wake setting to restore`.
-- [ ] **S3.5 green: sockets and waker.** L3a half done: `8127931` (also adds `parseDoneFrame` to `connector-sockets.ts` for L3b's `webSocketMessage`). Commit `feat(api): push owner messages to connector sockets`.
-- [ ] **S3.6 green: object and route.** `fetch` (upgrade and attach), `webSocketMessage` (`done` only), `webSocketClose` (`detachLocalConnector` with `remainingSocketCount`), `WakeRung.Local` in `dispatching-agent-waker.ts`, `routes/connector.ts`, the `app.ts` line. Commit `feat(api): accept the local connector socket`.
+- [x] **S3.1 red: route.** `apps/api/test/integration/connector-route.test.ts`. Commit `test(api): pin the connector route`. (evidence: 7c4d868)
+- [x] **S3.2 red: socket.** `apps/api/test/integration/connector-socket.test.ts`, including binary frames and the close-restore case of A3. Commit `test(api): pin the connector socket`. (evidence: 7c4d868)
+- [x] **S3.3 red: waker and wake setting.** L3a half done: red `ee87f26`. `apps/api/test/unit/local-connector-waker.test.ts` (L3a, now) and `apps/api/test/integration/connector-wake-setting.test.ts` (L3b, the three restore methods on SQLite). Commit `test(api): pin the local waker and the restore record`. (evidence: 7c4d868)
+- [x] **S3.4 green: restore record.** The v5 migration and the bodies of the three methods in `apps/api/src/adapters/sqlite/sqlite-wake-repository.ts`. Commit `feat(api): store the wake setting to restore`. (evidence: ec5de3c)
+- [x] **S3.5 green: sockets and waker.** L3a half done: `8127931` (also adds `parseDoneFrame` to `connector-sockets.ts` for L3b's `webSocketMessage`). Commit `feat(api): push owner messages to connector sockets`. (evidence: 631353a)
+- [x] **S3.6 green: object and route.** `fetch` (upgrade and attach), `webSocketMessage` (`done` only), `webSocketClose` (`detachLocalConnector` with `remainingSocketCount`), `WakeRung.Local` in `dispatching-agent-waker.ts`, `routes/connector.ts`, the `app.ts` line. Commit `feat(api): accept the local connector socket`. (evidence: 631353a)
 
 ### Step L5 (docs)
 

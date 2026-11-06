@@ -167,3 +167,56 @@ pnpm --filter @zapbip/docs exec mint broken-links
 - A `401` on the upgrade itself (after a `426` probe) is not distinguishable with Node's WebSocket and is handled as an ordinary close with backoff.
 - The Codex rollout layout in the fake (`sessions/YYYY/MM/DD/rollout-*.jsonl`, first line `session_meta`) is copied from L1's lookup, not from a real install.
 - Real `claude` and `codex` are never run.
+
+## Lanes L0b, L4b, L3b (server side, after the webhook-wake merge)
+
+### What changed
+
+- Merge of `origin/feat/webhook-wake` (`8bd2622`). Conflicts kept both sides: `enums.ts` (every member), `docs.json` (the English tree gained `guides/webhook-wake` and `mcp-reference/set-wake`; the pt-BR tree has neither page), the ADR and feature indexes. Reconciliations the merge forced:
+  - `hasLiveWaiter` takes `questionId` on this branch, so `run-due-wakes.ts` passes `null`;
+  - `WakeMode.Local` makes `set-wake.ts` and `wake-rung.ts` records incomplete: the setter for `Local` throws `InvalidInput` with `WAKE_MODE_UNAVAILABLE_MESSAGE` (now in `libs/core/src/wake/constants.ts`), and `wakeRungFor` maps `Local` to `Local`;
+  - the MCP tool `set_wake` still answers "wake mode not available yet" for `local` (the handler excludes it; `UnavailableWakeMode.Local` was removed because `WakeMode.Local` now exists);
+  - `WakerByRung` is `Record<WakeRung, AgentWaker>` and `account-inbox.ts` registers `createLocalConnectorWaker`.
+- L0b (`731eab8`): `findLocalRestore`, `saveLocalRestore`, `deleteLocalRestore` on `WakeRepository`; `libs/core/src/wake/local-connector.ts`.
+- L4b (`5918203` red, `2eec54c` green): `attachLocalConnector` and `detachLocalConnector`, and the in-memory restore methods in `libs/core/src/wake/testing/wake-doubles.ts`.
+- L3b (`7c4d868` red, `ec5de3c` and `631353a` green): schema v5 (`agent_wake.local_restore`), the SQLite restore methods, `apps/api/src/routes/connector.ts`, and in `account-inbox.ts` the `fetch` upgrade, `webSocketMessage`, `webSocketClose` and the ping/pong auto-response.
+
+### Decisions the lane made
+
+- The upgrade calls `touchAgent` before `attachLocalConnector`, as `setWake` does. A connector can attach before the agent ever called a tool, and without the call there is no `agent_wake` row. The test-plan row "attach for an agent with no wake row rejects, no socket accepted" is therefore only reachable in core (`local-connector.test.ts`), not through the socket.
+- The `messages` frame after `hello` is skipped when nothing is unread.
+- A malformed, binary, oversized or unknown frame logs `LogEvent.FrameRejected` with the reason as `errorCode`, and the socket stays open.
+- A `POST` with `Upgrade` still reaches the route in the Workers runtime, so the wrong-method case sends no `Upgrade` header.
+
+### Files needed but not owned (changed, small)
+
+- `apps/api/src/account-inbox/connector-sockets.ts` (L3a): `sendFrameToAgent` skips sockets in `CLOSING` or `CLOSED`. Without it, a replacement threw `Can't call WebSocket send() after close()` because a replaced socket stays in `getWebSockets` until its close event.
+- `apps/api/src/contract/log.ts`: `LogEvent.FrameRejected`.
+- `apps/api/src/mcp/set-wake.ts`, `libs/core/src/wake/{set-wake,wake-rung,constants,run-due-wakes}.ts`: the merge reconciliations above.
+
+### How to run
+
+`pnpm --filter @zapbip/core test:unit`, then `pnpm --filter @zapbip/api test:integration` (the three `connector-*.test.ts` files use the real `WebSocketPair` through `SELF.fetch`). `pnpm verify all`.
+
+### Red then green
+
+| Test | Red before | Green after |
+|------|------------|-------------|
+| `libs/core/src/wake/local-connector.test.ts` (`5918203`) | `attachLocalConnector is not implemented`, `detachLocalConnector is not implemented`; 10 failed, 1 passed (the `wakeRungFor` case is a pin) | `2eec54c` |
+| `apps/api/test/integration/connector-{route,socket,wake-setting}.test.ts` (`7c4d868`) | `expected 404 to be 101` (also 426, 401), `connector upgrade answered 404`, `saveLocalRestore is not implemented`; 27 failed, 1 passed | `ec5de3c` (restore), `631353a` (route and object) |
+
+`leaves the message unread when no connector is attached` is a pin: it passes before any server code, because nothing acknowledges a message without a connector.
+
+### Hypotheses to attack
+
+1. The agent comes only from the secret. Break it by: `?agent=` in the URL, a secret of another agent of the same account.
+2. The last close restores the exact previous record, including a sealed webhook target, and a user change made while attached survives. Break it by: `set_wake` webhook and `none` while attached, then closing.
+3. Replacing a connector does not restore the wake mode. Break it by: connect, connect again, and read `agent_wake` between the old socket's close and the new socket's close.
+4. A hibernated object still acknowledges and restores. Break it by: letting the object evict (idle) before sending `done` or closing; the tests do not evict the object.
+5. `set_wake` with `mode: local` still answers "wake mode not available yet" and calls no RPC.
+
+### Known gaps
+
+- Object eviction between attach and close is not exercised.
+- `webSocketError` is not implemented; a socket that errors without a close event does not restore the wake mode.
+- The pt-BR docs have no `webhook-wake` or `set-wake` pages, so the two language trees differ.
