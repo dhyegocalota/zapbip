@@ -77,19 +77,20 @@ alarm:   earliest of {queue expiry (ADR 0011), scheduled deadline}
 ```ts
 type WakeSetting =
   | { mode: WakeMode.None }
-  | { mode: WakeMode.Local }
+  | { mode: WakeMode.Local } /* ~~declared here~~ slice 6 declares and saves it (plan R3) */
   | { mode: WakeMode.Webhook /* fields defined by webhook-wake, slice 4 */ }
   | { mode: WakeMode.Scheduled; interval_minutes: number }
   | { mode: WakeMode.Standby; standby_agent: string };
 ```
 
-- `WakeMode` (stored) and `WakeRung` (effective) are enums in `libs/types`. Slice 1 and slice 4 declare their values; this slice adds only `Scheduled` and `Standby`, after checking they are not already there. `WakeMode`: `Local`, `Webhook`, `Scheduled`, `Standby`, `None`, with wire values `local`, `webhook`, `scheduled`, `standby`, `none`. `WakeRung`: `Local`, `Webhook`, `Scheduled`, `Standby`, `Inbox`. Mode `None` gives rung `Inbox`.
+- `WakeMode` (stored) and `WakeRung` (effective) are enums in `libs/types`. Slice 1 and slice 4 declare their values; this slice adds only `Scheduled` and `Standby`, after checking they are not already there. `WakeMode` on this branch: `None`, `Webhook`, plus this slice's `Scheduled` and `Standby` (wire values `scheduled`, `standby`); slice 6 adds `Local`. `WakeRung`: `Inbox`, `Webhook`, plus `Scheduled` and `Standby` (and `Local` from slice 6). Mode `None` gives rung `Inbox`.
 - `set_wake` acts on the calling connection only. The input never names an account or an agent, and unknown fields are rejected. Slice 4 registers the tool; this slice adds the `scheduled` and `standby` variants and the validation. The `local` variant is saved by the connector attach (local-connector).
 - Output: `{status: "saved", wake_mode, effective_rung}`.
 - Validation (in core, with the message naming the field and the limit):
   - `interval_minutes` is an integer from `SCHEDULED_MIN_INTERVAL_MINUTES` (60) to `SCHEDULED_MAX_INTERVAL_MINUTES` (1440);
-  - `standby_agent` matches the agent name pattern, names a connection of the same account, is not the caller, and is not itself in standby mode.
-- Storage: wake state lives in `WakeRepository` (webhook-wake, Durable Object SQLite), not in D1. The alarm and routing run inside the Durable Object. `interval_minutes`, `standby_agent` and `poller_stale_notified` are `agent_wake` columns added by DO schema `v3`, The v3 additions to `agent_wake` are `interval_minutes`, `standby_agent`, `poller_stale_notified`, `has_polled`, `owner_locale` and `revoked_at`; to `inbox_messages`, `handed_to` and `origin_message_id`. Variant columns are nullable in SQLite; the core maps them to the union, and a null is never read as a default.
+  - `standby_agent` matches the agent name pattern, names a connection of the same account (a revoked or unknown name gets the same refusal), is not the caller, and is not itself in standby mode;
+  - fields of another mode must be absent (plan R12).
+- Storage: wake state lives in `WakeRepository` (webhook-wake, Durable Object SQLite), not in D1. The alarm and routing run inside the Durable Object. `interval_minutes`, `standby_agent` and `poller_stale_notified` are `agent_wake` columns added by DO schema `v3`. The v3 additions to `agent_wake` are `interval_minutes`, `standby_agent`, `poller_stale_notified`, `has_polled` and `owner_locale` (~~`revoked_at`~~: slice 3 deletes the row of a revoked connection, plan R4); to `inbox_messages`, `handed_to` and `origin_message_id`. The migration is a hand-written `v3.sql` (plan R1). Variant columns are nullable in SQLite; the core maps them to the union, and a null is never read as a default.
 
 **Poll record.** Each connection has a required `last_polled_at`, set when the connection is created and on every `check_inbox`. `set_wake` does not reset it, so a schedule that never started goes stale from the creation of the connection.
 
@@ -111,11 +112,11 @@ type WakeSetting =
 
 - `setWake({connection, setting})` (webhook-wake's use case, extended in place): validates, saves, re-arms the alarm, returns the effective rung.
 - `WakeRepository.recordPoll({agent, polledAt, ownerLocale})`: writes `last_polled_at`, `has_polled` and `owner_locale`, clears `poller_stale_notified`; called by `checkInbox`.
-- `checkInbox({connection, now})`: records the poll, counts unread through the index, and reads bodies only when the count is above zero.
+- `pollInbox({connection, …})`: registers the agent, records the poll, counts unread through the index, and reads bodies only when the count is above zero (plan R9).
 - `evaluatePollers({dependencies})`: run by the alarm. It sends one stale notice per stale episode and returns the next deadline.
 - `StandbyAgentWaker.notify` (rung `standby`): runs the handoff (copy, primary's copy marked read with `handed_to`, standby woken on 0 → 1).
 
-**Ports.** `WakeRepository` (webhook-wake) gains `recordPoll`, `recordRevocation`, `listScheduledWakes` and `markStaleNotified`; `saveWake` already carries the scheduled fields. The scheduled fields extend webhook-wake's `StoredWake`, which already carries `provider`, `host` (inside `target`) and `status`; no second wake record type exists. `InboxRepository` gains `insertHandoff` only; `countUnread` already exists in slice 1. `AgentWaker.notify` gains `messageId` (set for a plain delivery) and `firstUnread` (true when the agent's unread count was 0 before the owner message was stored, read before the insert), and `AgentWakeReason` (slice 1's enum name) gains `StandbyFor`. The standby's wake carries no pointer: the standby reads its copy through `check_inbox`. Wakers per rung: `ScheduledAgentWaker` (expected-delay note), `InboxAgentWaker` (a stale scheduled connection gets the note, then the inbox notice), `StandbyAgentWaker` (handoff). No new port is needed.
+**Ports.** `WakeRepository` (webhook-wake) gains `findPollState`, `recordPoll`, `listScheduledWakes` and `markStaleNotified` (~~`recordRevocation`~~, plan R4); `saveWake` writes the new mode-owned fields (`interval_minutes`, `standby_agent`, `owner_locale`) and never a poll column. `StoredWake` (webhook-wake's record) gains those three fields; the poll fields are a `PollState` (plan R7). `InboxRepository` gains `insertHandoff` only; `countUnread` already exists in slice 1. `AgentWaker.notify` gains `messageId` (set for a plain delivery; ~~`firstUnread`~~: `receiveOwnerMessage` already calls `notify` only on a 0 to 1 arrival, plan R5), and `AgentWakeReason` (slice 1's enum name) gains `StandbyFor`. The standby's wake carries no pointer: the standby reads its copy through `check_inbox`. Wakers per rung: `ScheduledAgentWaker` (expected-delay note), `InboxAgentWaker` (a stale scheduled connection gets the note, then the inbox notice), `StandbyAgentWaker` (handoff). No new port is needed.
 
 **`check_inbox` index.** A partial index on `inbox_messages`, added as DO schema `v3` (agent-inbox-core → Storage and migrations):
 
@@ -134,13 +135,13 @@ The count query must repeat the literal `read_at IS NULL` so the planner uses it
 | `STALE_POLL_INTERVAL_MULTIPLE` | 2 |
 | `SAFETY_NET_CRON` | `0 * * * *` |
 
-**Copy.** Owner-facing text is in `libs/core/src/wake/wake-copy.ts`, with `pt_BR` and `en_US` entries keyed by `OwnerLocale` (`libs/types`, slice 1). The locale is the connection's `ownerLocale`, which comes from the account property that accounts-and-keys sets at creation; no slice stores a second copy except `agent_wake.owner_locale`, written from that identity. The standby pointer and the scheduled task prompt are agent-facing and English.
+**Copy.** Owner-facing text is in `libs/core/src/wake/wake-copy.ts`, with `pt_BR` and `en_US` entries keyed by `OwnerLocale` (`libs/types`, slice 1). The locale is the connection's `ownerLocale`, which comes from the account property that accounts-and-keys sets at creation; no slice stores a second copy except `agent_wake.owner_locale`, written from that identity on `set_wake` and on every poll. The copy table is `WAKE_COPY` keyed by `WakeCopyKey` and `OwnerLocale`, rendered through the shared token fill (plan R10). The standby pointer and the scheduled task prompt are agent-facing and English.
 
 - Expected-delay note: the cadence reads "de hora em hora" for 60 minutes, "a cada N horas" for multiples of 60, and "a cada N minutos" otherwise. The last poll reads "há N min" below an hour and "há N h" from an hour (rounded down), or "ainda não olhou a caixa" for a connection that has never polled. (`en_US`: "every hour", "every N hours", "every N minutes"; "N min ago", "N h ago", "has not checked the inbox yet".)
 - Stale notice: names the agent, the elapsed time since the last poll, and says the messages wait in the box until the agent returns.
 - The standby's first reply names itself. That instruction belongs to the install prompt (`install-skills`), not to the wake signal.
 
-**Docs.** `apps/docs/concepts/wake-ladder.mdx` (the skeleton comes from slice 1). It explains the five rungs, which clients reach which rung, the expected-delay note, the stale notice, and the standby. `mint broken-links` must pass.
+**Docs.** `apps/docs/concepts/wake-ladder.mdx` and its twin `apps/docs/pt-br/concepts/wake-ladder.mdx`, and the `scheduled` and `standby` variants on the `set-wake` reference page in both languages (plan R15). The wake-ladder pages speak to anyone who uses AI: what a person sees when an agent is slow, silent or replaced by a standby, with examples written natively per language; the field table stays on the reference page. They never mention the simulator or a fake WhatsApp. `mint broken-links` and the twin test must pass.
 
 **Owner notices.** Every notice of this slice (the expected-delay note, the stale notice) goes through the core's outbound path (ADR 0011): when the window is closed it queues like any other message.
 
@@ -158,7 +159,8 @@ The task prompt for scheduled polls is one rule: call `check_inbox`; if the resu
 |---|---|
 | A scheduled client stops polling | After 2 × interval, one stale notice. The effective rung becomes `inbox`, so messages wait. The next `check_inbox` ends the episode silently. |
 | The owner writes to a stale scheduled connection | The expected-delay note goes out (it shows the last poll, for example "há 3 h") and the core's inbox notice applies. |
-| The standby is missing, revoked, or itself in standby mode | No copy is made. The message stays unread with the primary, the effective rung is `inbox`, and the owner gets the inbox notice. |
+| The standby is missing, revoked (its `agent_wake` row is gone), or itself in standby mode | No copy is made. The message stays unread with the primary, the effective rung is `inbox`, and the owner gets the inbox notice. |
+| The owner message reaches a standby-mode primary without a single message id (an answer to a question, or held messages assigned by a routing-list tap) | No copy is made and the waker returns `Unreached`: the message stays with the primary and the owner gets the inbox notice (plan R6). |
 | The standby's own wake fails | The copy stays in the standby's inbox and is read on its next poll. The owner gets the inbox notice. |
 | The primary also answers after a handoff | Its copy is already read, so `check_inbox` does not return it. Its `get_messages` history shows `handed_to`, and the install prompt tells it to skip such messages (ADR 0024). |
 | Durable Object evicted with an alarm pending | The alarm is re-armed from the stored deadlines when the object starts again. |
