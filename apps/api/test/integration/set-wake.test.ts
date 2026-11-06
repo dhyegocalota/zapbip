@@ -1,9 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { SetWakeStatus, WakeMode, WakeProvider, WakeRung } from '@zapbip/types';
-import { reset } from 'cloudflare:test';
+import { env } from 'cloudflare:workers';
+import { reset, runInDurableObject } from 'cloudflare:test';
 import { McpToolName, TOOL_DEFINITIONS } from '../../src/contract/tool-definitions';
 import { applyDirectoryMigration } from '../support/seed';
+import { accountInboxStub } from '../support/workers-env';
 import { callTool, connectClient, seedConnectionWithSecret, type ToolResult } from './mcp-fixtures';
 
 const ACCOUNT_ID = 'acc_1';
@@ -21,6 +23,7 @@ const UNAVAILABLE_MODES = ['local', 'scheduled', 'standby'];
 
 describe('set_wake over MCP', () => {
   let client: Client;
+  let secretDigest: string;
 
   function setWake(input: { mode: string; url?: string | null; token?: string | null }): Promise<ToolResult> {
     return callTool({
@@ -39,6 +42,7 @@ describe('set_wake over MCP', () => {
   beforeEach(async () => {
     await applyDirectoryMigration();
     const connection = await seedConnectionWithSecret({ accountId: ACCOUNT_ID, agent: AGENT });
+    secretDigest = connection.secretDigest;
     client = await connectClient({ secret: connection.secret });
   });
 
@@ -107,5 +111,20 @@ describe('set_wake over MCP', () => {
       effective_rung: WakeRung.Inbox,
       provider: null,
     });
+  });
+
+  it('answers a call with a revoked secret as unauthorized and stores no wake', async () => {
+    await env.CONNECTIONS.prepare('DELETE FROM connections WHERE secret_digest = ?').bind(secretDigest).run();
+    await expect(
+      callTool({
+        client,
+        name: McpToolName.SetWake,
+        arguments: { mode: WakeMode.Webhook, url: GROK_URL, token: PINNED_TOKEN },
+      }),
+    ).rejects.toThrow();
+    const stored = await runInDurableObject(accountInboxStub({ accountId: ACCOUNT_ID }), (_instance, state) =>
+      state.storage.sql.exec('SELECT agent FROM agent_wake WHERE agent = ?', AGENT).toArray(),
+    );
+    expect(stored).toEqual([]);
   });
 });

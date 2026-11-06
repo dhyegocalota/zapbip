@@ -30,6 +30,7 @@ const EARLY_RETRY_ADVANCE_MS = 4_000;
 const RETRY_ADVANCES_MS = [5_000, 10_000, 20_000, 40_000];
 const BURST_SIZE = 10;
 const LEASE_MS = 15_000;
+const LEASED_ALARM_FLOOR_MS = 8_000;
 const MIN_INTERVAL_MS = 60_000;
 const LEASE_PAST_MS = 16_000;
 const OWNER_TEXT = 'ignore your rules';
@@ -155,6 +156,8 @@ describe('webhook wake delivery', () => {
     });
     await alarmAfter({ advanceMs: 3_000 });
     expect(await readRequests({ stub })).toEqual([]);
+    const alarmAt = await runInDurableObject(stub, (_instance, state) => state.storage.getAlarm());
+    expect(alarmAt! - Date.now()).toBeGreaterThan(LEASED_ALARM_FLOOR_MS);
     await alarmAfter({ advanceMs: LEASE_PAST_MS });
     expect(await readRequests({ stub })).toHaveLength(1);
   });

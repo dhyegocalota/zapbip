@@ -251,8 +251,21 @@ Pins (green on arrival): burst of 200 messages, 50 agents, no secret in observer
 - An object without `WAKE_SECRET_KEY` still serves `send_message`; `set_wake` with a webhook names the key.
 - `127.0.0.1.nip.io` and `localtest.me` are accepted (name-based guard, ADR 0019).
 
+### Mutation proofs (break the code, see red, restore)
+
+| Mutation | Red tests |
+|---|---|
+| `findNextDueAt` ignores the lease end | `leaves a leased job alone until the lease passes` (it now also asserts the alarm waits for the lease end) |
+| `wakeAssociatedData` drops the agent | `refuses the sealed target of another agent copied into this agent row` |
+| the secret box validates the key at construction | the four `wake dependencies` cases: 31 byte key, no key, `set_wake` without a key, `send_message` from a keyless object |
+| `runMigrations` skips gaps and does not sort | `WI-120`, `WI-121`, `migration v2 applies once when a later version is already applied` (it also broke the rest of the suite, so the proof is coarse) |
+
+### Timeout class
+
+The transport sets `timedOut` when the request fails with `TimeoutError` or `AbortError` (`isWakeTimeout`); the core does the same for a thrown scripted error. The observer maps `timedOut` to the `timeout` class and a missing status otherwise to `network`. The latency heuristic is gone.
+
 ### Gaps
 
-- Not written: the revoked-secret `set_wake` case, an object restart between lease and retry, an in-flight delayed 200 follow-up, a live `ask` waiter at the alarm (integration), and the strengthened "leaves a leased job alone" test (finding J).
+- New integration tests in `webhook-wake-lifecycle.test.ts` (restart while leased, message during a delayed 200, live `wait_for_reply` waiter at the alarm) and `set-wake.test.ts` (revoked secret) were written after the code they cover, so they are pins.
 - The any-waiter query is recorded under "Later" in the spec.
 - The per-agent cap changes the follow-up delay from 3 s to the cap; `WAKE_FOLLOW_UP_MS` was not kept.
