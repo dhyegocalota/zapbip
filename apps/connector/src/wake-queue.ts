@@ -1,6 +1,6 @@
 import type { Message } from '@zapbip/core';
 
-export type WakeQueue = { enqueue: (input: { message: Message }) => void };
+export type WakeQueue = { enqueue: (input: { message: Message }) => void; stop: () => void };
 
 export function createWakeQueue(input: {
   runWake: (input: { message: Message }) => Promise<void>;
@@ -32,5 +32,9 @@ export function createWakeQueue(input: {
     tail = tail.then(() => wake(enqueueInput));
   }
 
-  return { enqueue };
+  function stop(): void {
+    throw new Error('stop is not implemented');
+  }
+
+  return { enqueue, stop };
 }
