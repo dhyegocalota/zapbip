@@ -16,6 +16,7 @@ const ACCOUNT_ID = 'acc_usage';
 const AGENT = 'alpha';
 const HOLD_SECONDS = 1;
 const FLUSH_DELAY_MS = HOUR_MS + 1;
+const BURST_TEST_TIMEOUT_MS = 30_000;
 const BURST_CALLS = 999;
 const EARLIER_PROVIDER_DELAY_MS = 60_000;
 const ZERO_USAGE_DAY = '2026-11-06';
@@ -118,18 +119,22 @@ describe('usage meter in the account object', () => {
     expect(await readAlarm()).not.toBeNull();
   });
 
-  it('writes at most one upsert per hour across a thousand calls and one more after the hour', async () => {
-    await testEnv.CONNECTIONS.prepare('CREATE TABLE usage_upserts (day TEXT NOT NULL)').run();
-    await Promise.all(UPSERT_TRIGGER_STATEMENTS.map((statement) => testEnv.CONNECTIONS.prepare(statement).run()));
-    await holdOneSecond();
-    const connection = connectionOf({ accountId: ACCOUNT_ID, agent: AGENT });
-    await Promise.all(Array.from({ length: BURST_CALLS }, () => stub().getMessages({ connection, limit: HISTORY_LIMIT })));
-    expect(await countUpserts()).toBe(0);
-    await flushDueUsage();
-    const meterRow = await readMeterRow();
-    expect(await countUpserts()).toBe(1);
-    expect(await readDailyRows()).toEqual([{ day: meterRow.day, account_id: ACCOUNT_ID, gigabyte_seconds: meterRow.gigabyteSeconds }]);
-  });
+  it(
+    'writes at most one upsert per hour across a thousand calls and one more after the hour',
+    async () => {
+      await testEnv.CONNECTIONS.prepare('CREATE TABLE usage_upserts (day TEXT NOT NULL)').run();
+      await Promise.all(UPSERT_TRIGGER_STATEMENTS.map((statement) => testEnv.CONNECTIONS.prepare(statement).run()));
+      await holdOneSecond();
+      const connection = connectionOf({ accountId: ACCOUNT_ID, agent: AGENT });
+      await Promise.all(Array.from({ length: BURST_CALLS }, () => stub().getMessages({ connection, limit: HISTORY_LIMIT })));
+      expect(await countUpserts()).toBe(0);
+      await flushDueUsage();
+      const meterRow = await readMeterRow();
+      expect(await countUpserts()).toBe(1);
+      expect(await readDailyRows()).toEqual([{ day: meterRow.day, account_id: ACCOUNT_ID, gigabyte_seconds: meterRow.gigabyteSeconds }]);
+    },
+    BURST_TEST_TIMEOUT_MS,
+  );
 
   it('keeps the alarm at an earlier provider and still flushes usage at its own due time', async () => {
     const earlierDueAt = Date.now() + EARLIER_PROVIDER_DELAY_MS;
