@@ -212,6 +212,17 @@ describe('runDueWakes retries', () => {
     });
   });
 
+  test.each([
+    ['without Retry-After on 429', 429, null],
+    ['without Retry-After on 503', 503, null],
+    ['with a Retry-After shorter than the base backoff', 429, SECOND_MS],
+  ])('%s waits the base backoff', async (_name, statusCode, retryAfterMs) => {
+    const wakeEnvironment = await armed();
+    enqueue({ wakeEnvironment, responses: [respond({ statusCode, retryAfterMs: retryAfterMs === null ? undefined : retryAfterMs })] });
+    await fireAfter({ wakeEnvironment, delayMs: WAKE_DEBOUNCE_MS });
+    expect(await findJob({ wakeEnvironment })).toMatchObject({ dueAt: wakeEnvironment.environment.clock.now() + WAKE_BACKOFF_BASE_MS });
+  });
+
   test.each([408, 425, 429, 500, 502, 503, 599])('status %i keeps the job for another attempt', async (statusCode) => {
     const wakeEnvironment = await armed();
     enqueue({ wakeEnvironment, responses: [respond({ statusCode })] });
@@ -347,6 +358,35 @@ describe('runDueWakes refusals and the owner notice', () => {
     expect(await findJob({ wakeEnvironment })).toBeNull();
     expect(await findWake({ wakeEnvironment })).toMatchObject({ status: WakeStatus.Failing });
     expect(sentTexts({ wakeEnvironment })).toEqual([failedCopy({ locale: OWNER_LOCALE })]);
+  });
+});
+
+describe('runDueWakes when the job itself keeps throwing', () => {
+  async function throwFiveTimes(input: { ownerLocale: OwnerLocale | null }) {
+    const wakeEnvironment = await armed();
+    wakeEnvironment.environment.dependencies.repository.countUnread = async () => {
+      throw new Error('storage unavailable');
+    };
+    await [3, 5, 10, 20, 40].reduce<Promise<void>>(async (previous, seconds) => {
+      await previous;
+      await wakeEnvironment.environment.clock.advance({ ms: seconds * SECOND_MS });
+      await runDueWakes({ ...wakeEnvironment.context, ownerLocale: input.ownerLocale, publicHost: PUBLIC_HOST });
+    }, Promise.resolve());
+    return wakeEnvironment;
+  }
+
+  test('five throws give up with status failing and one notice', async () => {
+    const wakeEnvironment = await throwFiveTimes({ ownerLocale: OWNER_LOCALE });
+    expect(await findJob({ wakeEnvironment })).toBeNull();
+    expect(await findWake({ wakeEnvironment })).toMatchObject({ status: WakeStatus.Failing });
+    expect(sentTexts({ wakeEnvironment })).toEqual([failedCopy({ locale: OWNER_LOCALE })]);
+  });
+
+  test('five throws without an owner locale still give up with status failing', async () => {
+    const wakeEnvironment = await throwFiveTimes({ ownerLocale: null });
+    expect(await findJob({ wakeEnvironment })).toBeNull();
+    expect(await findWake({ wakeEnvironment })).toMatchObject({ status: WakeStatus.Failing });
+    expect(sentTexts({ wakeEnvironment })).toEqual([]);
   });
 });
 

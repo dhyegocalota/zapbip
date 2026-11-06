@@ -105,6 +105,32 @@ describe('assertWakeTarget tokens', () => {
   });
 });
 
+describe('assertWakeTarget host forms', () => {
+  test.each(['zapbip.example', 'https://zapbip.example', 'https://zapbip.example/'])(
+    'the own host given as %s is refused',
+    async (publicHost) => {
+      expect(await rejection({ url: 'https://zapbip.example/hook', token: LONG_TOKEN, publicHost })).toEqual({
+        code: InboxErrorCode.InvalidInput,
+        message: 'invalid url',
+      });
+    },
+  );
+
+  test.each(['https://evil-api2.cursor.sh/x', 'https://x.api2.cursor.sh/x', 'https://x.api.anthropic.com/x'])(
+    '%s is a generic target and never a pinned provider',
+    (url) => {
+      expect(guard({ url, token: LONG_TOKEN }).provider).toBe(WakeProvider.GenericWebhook);
+    },
+  );
+
+  test('app.localhost is refused', async () => {
+    expect(await rejection({ url: 'https://app.localhost/x', token: LONG_TOKEN })).toEqual({
+      code: InboxErrorCode.InvalidInput,
+      message: 'invalid url',
+    });
+  });
+});
+
 describe('assertWakeTarget urls', () => {
   const invalidUrls: Record<string, string> = {
     'plain http': 'http://hooks.example.com/x',
@@ -133,6 +159,7 @@ describe('assertWakeTarget urls', () => {
     'an arpa name': 'https://1.in-addr.arpa/x',
     'a wildcard localhost': 'https://*.localhost/x',
     'a single-label host': 'https://metadata/',
+    'localhost.localdomain': 'https://localhost.localdomain/x',
     'the product apex': 'https://zapbip.com/x',
     'a product subdomain': 'https://hooks.zapbip.com/x',
     'a workers.dev host': 'https://wake.account.workers.dev/x',
