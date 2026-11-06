@@ -1,7 +1,9 @@
 import { env } from 'cloudflare:workers';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { CONNECTION_SECRET_PREFIX, UNAUTHORIZED_BODY } from '../../src/contract/constants';
-import { applyCoreSchema, postMcp, seedConnection, type SeededConnection } from './mcp-fixtures';
+import { postMcp, seedConnectionWithSecret, type SeededConnection } from './mcp-fixtures';
+import { applyDirectoryMigration } from '../support/seed';
+import { reset } from 'cloudflare:test';
 
 const UNKNOWN_SECRET = `${CONNECTION_SECRET_PREFIX}${'A'.repeat(43)}`;
 const MALFORMED_SECRET = `${CONNECTION_SECRET_PREFIX}short`;
@@ -10,9 +12,11 @@ const UNAUTHORIZED_TEXT = JSON.stringify(UNAUTHORIZED_BODY);
 describe('MCP secret and Bearer resolution', () => {
   let connection: SeededConnection;
 
+  afterEach(reset);
+
   beforeEach(async () => {
-    await applyCoreSchema();
-    connection = await seedConnection({ accountId: 'acc_1', agent: 'alpha' });
+    await applyDirectoryMigration();
+    connection = await seedConnectionWithSecret({ accountId: 'acc_1', agent: 'alpha' });
   });
 
   it('rejects an unknown secret on the path', async () => {

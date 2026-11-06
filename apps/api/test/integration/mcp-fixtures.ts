@@ -5,8 +5,7 @@ import type { OwnerInboundContent } from '@zapbip/core';
 import { MessageKind, OwnerLocale } from '@zapbip/types';
 import type { DevAccountInboxRpc } from '../../src/contract/account-inbox-rpc';
 import { generateConnectionSecret } from '../../src/adapters/platform/connection-secret';
-import { hashConnectionSecret } from '../../src/adapters/platform/hash';
-import coreMigration from '../../migrations/0001_core.sql?raw';
+import { applyDirectoryMigration, seedConnection, seedOwnerIdentity } from '../support/seed';
 
 const ORIGIN = 'http://localhost:8787';
 const OWNER_PHONE = '5511999990000';
@@ -16,27 +15,10 @@ export const TOOLS_LIST_BODY = JSON.stringify({ jsonrpc: '2.0', id: 1, method: '
 
 export type SeededConnection = { accountId: string; agent: string; secret: string; secretDigest: string };
 
-export async function applyCoreSchema(): Promise<void> {
-  const statements = coreMigration.split(';').filter((statement) => statement.trim().length > 0);
-  await env.CONNECTIONS.batch(statements.map((statement) => env.CONNECTIONS.prepare(statement)));
-}
-
-export async function seedConnection(input: { accountId: string; agent: string }): Promise<SeededConnection> {
+export async function seedConnectionWithSecret(input: { accountId: string; agent: string }): Promise<SeededConnection> {
   const secret = generateConnectionSecret();
-  const secretDigest = await hashConnectionSecret({ secret });
-  await env.CONNECTIONS.batch([
-    env.CONNECTIONS.prepare('INSERT OR IGNORE INTO accounts (id, created_at) VALUES (?, ?)').bind(input.accountId, 0),
-    env.CONNECTIONS.prepare(
-      'INSERT OR IGNORE INTO owner_identities (wa_id, account_id, from_user_id, locale, created_at) VALUES (?, ?, ?, ?, ?)',
-    ).bind(OWNER_PHONE, input.accountId, OWNER_PHONE, OwnerLocale.PortugueseBrazil, 0),
-    env.CONNECTIONS.prepare('INSERT INTO connections (id, account_id, agent, secret_digest, created_at) VALUES (?, ?, ?, ?, ?)').bind(
-      `conn_${input.agent}`,
-      input.accountId,
-      input.agent,
-      secretDigest,
-      0,
-    ),
-  ]);
+  await seedOwnerIdentity({ accountId: input.accountId, phone: OWNER_PHONE, ownerLocale: OwnerLocale.PortugueseBrazil });
+  const secretDigest = await seedConnection({ accountId: input.accountId, agent: input.agent, secret });
   return { accountId: input.accountId, agent: input.agent, secret, secretDigest };
 }
 

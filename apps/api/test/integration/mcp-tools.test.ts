@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { HISTORY_LIMIT, ASK_MAX_WAIT_SECONDS } from '@zapbip/core';
 import { DeliveryState, InboxStatus, MessageKind, ReplyStatus } from '@zapbip/types';
@@ -6,15 +6,16 @@ import { McpToolName, TOOL_DEFINITIONS } from '../../src/contract/tool-definitio
 import { messageWireSchema } from '../../src/contract/mcp-schemas';
 import {
   accountInbox,
-  applyCoreSchema,
   callTool,
   connectClient,
   ownerText,
   ownerWrites,
   receiveUpload,
-  seedConnection,
+  seedConnectionWithSecret,
   type ToolResult,
 } from './mcp-fixtures';
+import { applyDirectoryMigration } from '../support/seed';
+import { reset } from 'cloudflare:test';
 
 const ACCOUNT_ID = 'acc_1';
 const AGENT = 'alpha';
@@ -55,9 +56,11 @@ describe('MCP tools', () => {
     return uploadId;
   }
 
+  afterEach(reset);
+
   beforeEach(async () => {
-    await applyCoreSchema();
-    const connection = await seedConnection({ accountId: ACCOUNT_ID, agent: AGENT });
+    await applyDirectoryMigration();
+    const connection = await seedConnectionWithSecret({ accountId: ACCOUNT_ID, agent: AGENT });
     client = await connectClient({ secret: connection.secret });
   });
 

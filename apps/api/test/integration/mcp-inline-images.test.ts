@@ -1,10 +1,12 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { INLINE_IMAGE_MAX_BYTES } from '@zapbip/core';
 import { MessageKind } from '@zapbip/types';
 import { INLINE_IMAGE_CONTENT_TYPE } from '../../src/contract/constants';
 import { McpToolName } from '../../src/contract/tool-definitions';
-import { applyCoreSchema, callTool, connectClient, ownerWrites, seedConnection, storeOwnerImage, type ToolResult } from './mcp-fixtures';
+import { callTool, connectClient, ownerWrites, seedConnectionWithSecret, storeOwnerImage, type ToolResult } from './mcp-fixtures';
+import { applyDirectoryMigration } from '../support/seed';
+import { reset } from 'cloudflare:test';
 
 const ACCOUNT_ID = 'acc_1';
 const IMAGE_MIME_TYPE = 'image/jpeg';
@@ -35,9 +37,11 @@ describe('MCP inline images', () => {
     return (result.structuredContent?.unread as { url: string | null }[])[0]?.url;
   }
 
+  afterEach(reset);
+
   beforeEach(async () => {
-    await applyCoreSchema();
-    const connection = await seedConnection({ accountId: ACCOUNT_ID, agent: 'alpha' });
+    await applyDirectoryMigration();
+    const connection = await seedConnectionWithSecret({ accountId: ACCOUNT_ID, agent: 'alpha' });
     client = await connectClient({ secret: connection.secret });
   });
 
