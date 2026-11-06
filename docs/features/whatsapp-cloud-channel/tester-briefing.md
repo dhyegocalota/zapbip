@@ -361,3 +361,40 @@ Pins (green on landing): WI-35 to WI-43 (`d93dc2f`), WI-52, WI-53, WI-55, WI-57 
 - WI-35 asserts the stored object's size equals the bytes, not a recorded `Content-Length` header: the R2 binding is real in the pool and exposes no request header; `FixedLengthStream` in `r2-media-store.ts` is what fixes the length.
 - The fake Graph replies JSON only, so E2E-2 serves a JSON string and the stored bytes include its quotes.
 - Production's `WHATSAPP_GRAPH_BASE_URL` is now `https://graph.facebook.com`; the deploy slice owns the secrets and the final value.
+
+## Fix batch (developer, after the review and the first test round)
+
+### What changed
+
+- `media-download.ts` maps `GraphRequestError` to a channel error before branching, so 131052 is unavailable and a server error or no response is retriable in production.
+- `routes/whatsapp.ts` is `createWhatsappRoutes({ developmentMediaOrigin })`: a stale entry (older than `RECEIPT_RETENTION_MS`) answers `200` and logs `inbound.stale`; a committed message (`hasChannelReceipt` on the account object) answers `200` before any download and logs `inbound.duplicate`; a young status for a message the account has not saved answers `503`.
+- `index.dev.ts` is the only reader of `WHATSAPP_MEDIA_DOWNLOAD_ORIGIN` (`dev/read-development-media-origin.ts`).
+- Forwarded: parser, `ForwardedKind`, DO schema `v5` column `forwarded`, wire field `forwarded`, `verified: false` when forwarded.
+- `graph-client.ts` keeps the abort armed until the body is consumed (`GRAPH_MEDIA_BODY_DEADLINE_MS` for downloads).
+- `channel-error-mapping.ts` takes `isReactionSend`; 131009 on any other send is the unexpected-error kind.
+- A reaction on a wamid nobody has is stored with `targetMessageId: null`.
+- Docs: list questions are 1,024 characters; unavailable media is `media_id: null` with `media_status: "unavailable"`.
+
+### Red today, green after
+
+| Test | Red | Green |
+|------|-----|-------|
+| media download through the real Graph client (4 cases) | `23f714e`: rejects with `GraphRequestError` instead of `{ stored: false }` / `RetriableMediaError` | `b2bdb3e` |
+| env and development origin (3) | `7dc5600`: `readDevelopmentMediaOrigin is not implemented`, `toEqual` on the old shape | `94c4caa` |
+| parser forwarded, graph-client body deadline, unsupported without a type (10) | `455480a`: forwarded messages parse as rejected; stalled bodies time out at 5 s | `5e87016`, `fef0cd2` |
+| forwarded storage and wire, stale, redelivery, receipt, status 503, schema v5 (14 integration, 5 core) | `41d8ddb` | the fix-batch implementation commit |
+| 131009 kind, reaction target null, nosniff (3) | `382df1d` | the same commit |
+
+Pins (green on landing, labelled `pin` in their titles or commits): WI-17, WI-44 to WI-49, the R2 batch cases, WI-29/30/31 assertions, the just-inside-retention entry, the signature variants, the 22 lookalike urls, W4 (`sha512=`), W5 (empty emoji), the development origin cases of `94c4caa`. Commits `3785271` and `7f0481f` mix pins with fixes; no history rewrite.
+
+### Hypotheses to attack
+
+1. A replay of a captured delivery after seven days never answers `500` and never rewrites a stored object.
+2. A forwarded message never reaches an agent as `verified: true`.
+3. The production bundle never contains `WHATSAPP_MEDIA_DOWNLOAD_ORIGIN`.
+4. A stalled download body is aborted at the body deadline.
+
+### Known gaps
+
+- A forwarded `reaction` or `interactive` message carries the flag only when Meta sends `context.forwarded`; no fixture exists for those.
+- The body deadline of a download is 2 minutes for up to 100 MB; a slower link than 6.7 MB/s on a large file is retried by Meta, not completed.

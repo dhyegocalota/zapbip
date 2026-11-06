@@ -19,7 +19,7 @@ The owner writes to the number. zapbip checks the signature of every notificatio
 
 A message the owner sends opens the [24-hour window](/concepts/24-hour-window). A reaction does not.
 
-If a file cannot be downloaded, the agent receives the message with `media: null` and the owner is asked to send it again.
+If a file cannot be downloaded, the agent receives the message with `media_id: null` and `media_status: "unavailable"`, and the owner is asked to send it again.
 
 ## Outbound
 
@@ -29,7 +29,7 @@ Within the window every kind goes out at once. Outside it the message is queued 
 | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | text     | 4,096 characters                                                                                                                               |
 | buttons  | up to 3 buttons, question up to 1,024 characters, title up to 20 characters                                                                    |
-| list     | up to 10 rows, question up to 4,096 characters, button up to 20 characters, row title up to 24 characters, row description up to 72 characters |
+| list     | up to 10 rows, question up to 1,024 characters, button up to 20 characters, row title up to 24 characters, row description up to 72 characters |
 | reaction | the reacted message must be at most 30 days old, in the same thread and not deleted                                                            |
 | image    | JPEG, PNG or WebP, up to 5 MB                                                                                                                  |
 | video    | 3GP or MP4, up to 16 MB                                                                                                                        |

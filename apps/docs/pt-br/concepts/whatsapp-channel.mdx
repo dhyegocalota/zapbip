@@ -19,7 +19,7 @@ O dono escreve para o número. O zapbip confere a assinatura de cada aviso, guar
 
 Uma mensagem do dono abre a [janela de 24 horas](/pt-br/concepts/24-hour-window). Uma reação não abre.
 
-Se um arquivo não puder ser baixado, a IA recebe a mensagem com `media: null` e o dono é convidado a enviar de novo.
+Se um arquivo não puder ser baixado, a IA recebe a mensagem com `media_id: null` e `media_status: "unavailable"`, e o dono é convidado a enviar de novo.
 
 ## Mensagens que saem
 
@@ -29,7 +29,7 @@ Com a janela aberta, todos os tipos saem na hora. Com a janela fechada, a mensag
 | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | texto     | 4,096 caracteres                                                                                                                                        |
 | botões    | até 3 botões, pergunta de até 1,024 caracteres, título de até 20 caracteres                                                                             |
-| lista     | até 10 itens, pergunta de até 4,096 caracteres, botão de até 20 caracteres, título do item de até 24 caracteres, descrição do item de até 72 caracteres |
+| lista     | até 10 itens, pergunta de até 1,024 caracteres, botão de até 20 caracteres, título do item de até 24 caracteres, descrição do item de até 72 caracteres |
 | reação    | a mensagem reagida deve ter no máximo 30 dias, estar na mesma conversa e não ter sido apagada                                                           |
 | imagem    | JPEG, PNG ou WebP, até 5 MB                                                                                                                             |
 | vídeo     | 3GP ou MP4, até 16 MB                                                                                                                                   |
