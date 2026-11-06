@@ -17,7 +17,7 @@ A shared public number also needs controls the single-owner core does not have: 
 1. Accounts are created by the owner's first message, in state `waitlisted` or `active` as set by the `WAITLIST_ENABLED` variable ([ADR 0016](../../adr/0016-accounts-start-on-the-first-message-and-wait-on-a-list.md)).
 2. Commands in pt-BR and en are recognised before routing and answered by zapbip ([ADR 0015](../../adr/0015-commands-are-bare-words-routed-before-agents.md)).
 3. The connection lifecycle: create (the WhatsApp reply carries the install link, never the secret), list, revoke and rotate, one secret per connection ([ADR 0006](../../adr/0006-one-secret-per-connection-in-the-mcp-url.md)).
-4. Secrets are `zb_conn_` followed by 32 random bytes, stored as SHA-256 digests, compared in constant time and never logged ([ADR 0017](../../adr/0017-connection-secrets-are-shown-once-and-stored-as-digests.md)).
+4. Secrets are `zb_conn_` followed by 32 random bytes, stored as SHA-256 digests, looked up by indexed equality on the digest and never logged ([ADR 0017](../../adr/0017-connection-secrets-are-shown-once-and-stored-as-digests.md)).
 5. The D1 schema and its first migration after `agent-inbox-core`.
 6. Abuse controls on the shared number: a blocklist, a per-phone rate limit, a daily cap on new accounts, and a per-connection outbound limit.
 7. Owner-initiated account deletion for LGPD, which removes the Durable Object, the media and the D1 rows.
@@ -65,8 +65,8 @@ Text is normalised before matching: trimmed, inner whitespace collapsed, lowerca
 
 Rules:
 
-- **Language of replies.** The keyword used decides the language of the reply. The owner's `locale` in `owner_identities` is set to that language by the last command and is used for replies that are not commands, such as the rule 6 question. `DEFAULT_LOCALE` is pt-BR and applies to a new owner.
-- **Agent names.** A name is normalised: decomposed (NFD), combining marks removed, lowercased, every run of characters outside `a-z0-9` replaced by one `-`, leading and trailing `-` trimmed. `Claude Code` becomes `claude-code`. The result must match the core's pattern `^[a-z0-9][a-z0-9-]{0,31}$`. The reply echoes the normalised name.
+- **Language of replies.** The keyword used decides the language of the reply. The owner's `locale` in `owner_identities` is an account property set at creation (`pt_BR` for `55` numbers, `en_US` otherwise) and commands do not change it; it is used for replies that are not commands, such as the rule 6 question and the `menu` reply.
+- **Agent names.** A name is normalised: decomposed (NFD), combining marks removed, lowercased, every run of characters outside `a-z0-9` replaced by one `-`, leading and trailing `-` trimmed. `Claude Code` becomes `claude-code`. The result must match the core's pattern `^[a-z0-9][a-z0-9-]{0,19}$` (at most 20 characters). The reply echoes the normalised name.
 - **Reserved names.** The first word of every command in both locales is reserved (`novo`, `new`, `agentes`, `agents`, `revogar`, `revoke`, `girar`, `rotate`, `ajuda`, `help`, `menu`, `apagar`, `delete`). An agent cannot take one.
 - **Missing name.** `novo agente` or `revogar` without a name replies with the usage line.
 - **Limit.** Active connections per account are capped by `AGENTS_PER_ACCOUNT_LIMIT` (8). Revoked connections do not count.
@@ -142,9 +142,11 @@ Concurrency:
 
 - **Issue.** `zb_conn_` followed by base64url (no padding) of 32 bytes from `RandomSource`, which is 43 characters. The secret is returned once and never stored in plain text. The install code (`zb_inst_` followed by base64url of 16 random bytes, 128 bits) is the only other secret: its digest is stored, and the connection secret is stored sealed under a key derived from the code, for 30 minutes at most, cleared on the first MCP call or by the daily sweep (ADR 0020).
 - **Digest.** SHA-256 hex of the full secret string, prefix included. Stored in `connections.secret_digest`.
-- **Resolve.** A value without the `zb_conn_` prefix returns `401` without a D1 read. Otherwise the digest is looked up in D1 and joined with `accounts`. The candidate's stored digest is then compared with the computed digest by constant-time compare, `crypto.subtle.timingSafeEqual` in the adapter. A mismatch, a missing row, a revoked connection or an account that is not `active` returns `401` with the same body in every case.
+- **Resolve.** A value without the `zb_conn_` prefix returns `401` without a D1 read. Otherwise the digest is looked up in D1 and joined with `accounts`. The lookup is an indexed equality on the digest of the presented value; the presented value cannot steer which row is compared, and no application code compares secrets, so there is no timing comparison to make constant (owner delegated 2026-11-06, fixing the spec instead of adding `timingSafeEqual`). A mismatch, a missing row, a revoked connection or an account that is not `active` returns `401` with the same body in every case.
 - **Owner number.** The owner's `wa_id` (the digits of the phone, from Meta's `from`) is stored in plain text in `owner_identities` and `blocked_phones`, as [ADR 0012](../../adr/0012-owner-identity-by-wa-id-on-the-shared-number.md) requires, because the channel must send replies to it. Access is limited to the Worker and the operator, and LGPD deletion removes the row.
 - **Logs.** Logs carry event names, ids and kinds. They never carry secrets, digests, phones, agent names or message text. The request path is logged as its route template (`/c/:secret/mcp`, `/i/:installCode`), never the raw path, because the secret and the install code are in the path.
+
+- **Signed links outlive revoke and rotate.** Signed media and upload links (`/m/…`, `/u/…`) are valid until their own TTL after the connection that asked for them is revoked or rotated, because they carry no connection secret and are bound only to the account, the object and the expiry. Accepted (owner delegated 2026-11-06); the TTL is the bound.
 
 ### Install prompt hook
 
@@ -269,14 +271,14 @@ The blocklist is manual. Automatic blocking after repeated limit trips is out of
 
 ### Account deletion (LGPD)
 
-1. `apagar conta` replies with the consequences and the phrase `apagar conta definitivamente`. The phrase is the confirmation; no pending state is stored.
+1. `apagar conta` replies with the consequences and the phrase `apagar conta definitivamente`. The phrase is the confirmation, and it works only inside 10 minutes of the request, which is stored as `deletion_requested_at` in the account object.
 2. The phrase sends the confirmation reply first, while the window is open.
 3. D1 sets the account to `deleting`. Connections stop resolving at once.
 4. The Durable Object's `purge()` clears its SQLite storage and alarms.
 5. `MediaStore.deletePrefix` removes `accounts/<account_id>/`, listing in pages of 1 000.
 6. A D1 batch deletes the account's `owner_identities` and `connections`, then the `accounts` row.
 
-Every step is idempotent. A failure leaves the account in `deleting`; the owner's next message, or the operator's `resume`, runs the remaining steps. A message from the same phone after deletion creates a new account on the waitlist, as in any first message.
+Every step is idempotent. A failure leaves the account in `deleting`; the owner's next message, or the daily sweep, runs the remaining steps; the operator's `resume` only returns a `suspended` account to `active`. A message from the same phone after deletion creates a new account on the waitlist, as in any first message.
 
 The owner is told that Meta keeps the WhatsApp history on its side, and that Cloudflare's point-in-time copies of D1 and the Durable Object persist for their own retention period. Deletion does not touch the blocklist.
 
@@ -301,7 +303,7 @@ Events: `account.created`, `account.state_changed`, `command.received` (kind and
 | Limit reached | the reply gives the limit; nothing changes |
 | Two creates race for one name or the last slot | the unique index and the conditional insert decide; the loser gets the reply for its case |
 | Two first messages race for one `wa_id` | `ON CONFLICT DO NOTHING` and a read; one account results |
-| Deletion interrupted | the account stays `deleting`; the next owner message or the operator's `resume` finishes it |
+| Deletion interrupted | the account stays `deleting`; the next owner message or the daily sweep finishes it |
 | Value without the `zb_conn_` prefix | `401` with no D1 read |
 | First message is a photo or other media | the account is created and gets the same reply; the content is not stored |
 | Owner message to a suspended account | one suspension reply; nothing is routed |
@@ -385,7 +387,7 @@ Events: `account.created`, `account.state_changed`, `command.received` (kind and
 - **`apps/api` adapter unit:**
   - secret format: prefix, 43 characters, base64url alphabet;
   - digest determinism;
-  - the constant-time compare is the one used in resolution;
+  - resolution is an indexed equality on the digest, with no application-code compare;
   - the period is converted from milliseconds to seconds at the binding.
 - **`apps/api` integration (`@cloudflare/vitest-pool-workers`, D1, R2 and Durable Objects):**
   - migration `0002` applies on an empty database and the partial unique index holds;

@@ -439,7 +439,7 @@ Runner: `pnpm --filter @zapbip/docs exec mint broken-links`.
 ## Security checks
 
 - [ ] Secret format — input: 10 000 issued secrets; expected: each matches `CONNECTION_SECRET_PATTERN`; no duplicates.
-- [ ] Pattern before D1 — input: `resolveSecretDigest` called from the MCP route with the value `zb_conn_short` (fails `CONNECTION_SECRET_PATTERN`); expected: `null`, and the D1 binding call count is 0 (A3, decision 14; no `timingSafeEqual` is used).
+- [ ] Pattern before D1 — input: `resolveSecretDigest` called from the MCP route with the value `zb_conn_short` (fails `CONNECTION_SECRET_PATTERN`); expected: `null`, and the D1 binding call count is 0 (A3; the spec explains why no timing comparison exists).
 - [ ] Equality lookup — input: a well-formed secret whose digest has no row; expected: `null`, one D1 read, no application-code compare of secrets.
 - [ ] No route takes an account id from the request — input: a request to `/c/<secret>/mcp` with an `accountId` query parameter of another account; expected: the call acts only on the secret's account (the parameter is ignored and not read).
 - [ ] Durable Object id — input: the account id `acc1` and the DO id `idFromName('acc1')`; expected: a different account id yields a different DO id, and a request for `acc2` never reads `acc1`'s storage (isolation integration case).

@@ -12,7 +12,7 @@ A connection's secret is the only credential its agent holds. The owner needs th
 ## Decision
 
 1. A secret is `zb_conn_` followed by 32 random bytes in base64url. It is returned once, in the create reply and the rotate reply, and never stored.
-2. Its SHA-256 digest is stored. Resolution looks up the digest and compares the stored digest with the computed one in constant time.
+2. Its SHA-256 digest is stored. Resolution is an indexed equality lookup on the digest; the presented value cannot steer which row is compared, so no application code compares secrets and no constant-time compare is needed.
 3. The owner's number stays in plain text as `wa_id` in `owner_identities`, as [ADR 0012](0012-owner-identity-by-wa-id-on-the-shared-number.md) requires. Only the secrets are digested.
 4. Rotation replaces the digest; revocation sets `revoked_at`. Both take effect on the next request.
 
