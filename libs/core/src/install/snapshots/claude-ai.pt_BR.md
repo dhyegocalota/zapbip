@@ -6,5 +6,5 @@
 4. If the owner stops here, call `set_wake({mode: "none"})`. Tell the owner: "Sem o gatilho, este chat só vê mensagens novas quando você o abrir." Then go to the last step.
 5. Otherwise call `set_wake({mode: "webhook", url: <the fire URL>, token: <the token>})`. On an error stop and report the error text.
 6. Tell the owner: "Crie também uma tarefa por hora que chama check_inbox, como rede de segurança."
-7. Tell the owner: "O webhook da rotina acorda o claude.ai em cerca de 16 segundos; a tarefa agendada de segurança roda no mínimo a cada 60 minutos, limite da plataforma."
+7. Tell the owner: "O webhook da rotina acorda o claude.ai em cerca de 16 segundos; a tarefa agendada de segurança roda no máximo uma vez a cada 60 minutos, limite da plataforma."
 8. In this chat, call send_message with the text "✅ instalado".

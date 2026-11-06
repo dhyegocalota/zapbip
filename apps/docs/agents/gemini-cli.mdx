@@ -20,7 +20,7 @@ description: Connect Gemini CLI to your WhatsApp.
     zapbip answers with one line made for you. Paste it into Gemini CLI:
 
     ```text
-    Connect yourself to my WhatsApp with zapbip: read https://zapbip.com/i/K7P2QX and follow the instructions.
+    Connect yourself to my WhatsApp with zapbip: read https://zapbip.com/i/zb_inst_K7P2QXm9aTfLw3VbN8cYhE and follow the instructions.
     ```
 
     Gemini CLI reads the page and follows the steps below, in order. Before it changes a file or a setting, it tells you which one and waits for your yes. The link in that page is secret, so keep it out of chats you share.
@@ -32,11 +32,8 @@ description: Connect Gemini CLI to your WhatsApp.
   <Step title="Start listening">
     It runs `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@<version> listen` in a background terminal and keeps that terminal running, with no time limit. Whenever a new line appears there, it calls `check_inbox` and answers. `<version>` is the exact version your AI's instructions name.
   </Step>
-  <Step title="Tell zapbip it is listening">
-    It calls `set_wake({mode: "local"})`.
-  </Step>
   <Step title="Test it">
-    In a fresh process it runs `gemini -p "Use zapbip to send ✅ installed to my WhatsApp"`. A `send_message` with ✅ installed reaches your WhatsApp. If the command fails, it stops and shows the last 20 lines. Then restart Gemini CLI.
+    In a fresh process it runs `gemini --yolo -p "Use zapbip to send ✅ installed to my WhatsApp"`. A `send_message` with ✅ installed reaches your WhatsApp. If the command fails, it stops and shows the last 20 lines. Then restart Gemini CLI.
   </Step>
 </Steps>
 

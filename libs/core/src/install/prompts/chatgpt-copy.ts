@@ -9,15 +9,15 @@ type ChatGptText = {
 const CHATGPT_TEXT: Record<OwnerLocale, ChatGptText> = {
   [OwnerLocale.PortugueseBrazil]: {
     addApp: (connectionLink) =>
-      `Ative o developer mode nas configurações do ChatGPT e adicione um app pela URL ${connectionLink} com "No authentication".`,
+      `Ative o developer mode nas configurações do ChatGPT e adicione um app pela URL ${connectionLink} com \`No authentication\`.`,
     createTask:
-      'Em um chat só para isso, crie uma tarefa por hora com "Run on this computer" que chama check_inbox, e escolha "Always allow" uma vez por ferramenta.',
+      'Em um chat só para isso, crie uma tarefa por hora com Executar neste computador (`Run on this computer`) que chama check_inbox, e escolha Sempre permitir (`Always allow`) uma vez por ferramenta.',
   },
   [OwnerLocale.EnglishUs]: {
     addApp: (connectionLink) =>
-      `Enable developer mode in the ChatGPT settings and add an app by the URL ${connectionLink} with "No authentication".`,
+      `Enable developer mode in the ChatGPT settings and add an app by the URL ${connectionLink} with \`No authentication\`.`,
     createTask:
-      'In one dedicated chat, create an hourly task with "Run on this computer" that calls check_inbox, and choose "Always allow" once per tool.',
+      'In one dedicated chat, create an hourly task with `Run on this computer` that calls check_inbox, and choose `Always allow` once per tool.',
   },
 };
 
@@ -27,6 +27,7 @@ export const CHATGPT_COPY = localizeCopy({
     formatSection({
       client: InstallClient.ChatGpt,
       locale: section.locale,
+      standbyAgent: section.standbyAgent,
       steps: [
         tellOwnerAndWait(text.addApp(section.connectionLink)),
         tellOwnerAndWait(text.createTask),

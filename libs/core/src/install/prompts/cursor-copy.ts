@@ -2,17 +2,17 @@ import { InstallClient, OwnerLocale } from '@zapbip/types';
 import { chatSelfTest, formatSection, localizeCopy, terminalListenStep, tellOwner, tellOwnerAndWait } from './section-format';
 
 type CursorText = {
-  confirmServer: string;
+  confirmChange: string;
   restart: string;
 };
 
 const CURSOR_TEXT: Record<OwnerLocale, CursorText> = {
   [OwnerLocale.PortugueseBrazil]: {
-    confirmServer: 'Adicionei o servidor zapbip nas configurações de MCP do Cursor. Confirme a adição quando o Cursor pedir.',
+    confirmChange: 'Vou adicionar o servidor zapbip às configurações de MCP do Cursor. Posso?',
     restart: 'Reinicie o chat do Cursor para usar o zapbip.',
   },
   [OwnerLocale.EnglishUs]: {
-    confirmServer: 'I added the zapbip server to the Cursor MCP settings. Confirm it when Cursor asks.',
+    confirmChange: 'I will add the zapbip server to the Cursor MCP settings. May I?',
     restart: 'Restart the Cursor chat to use zapbip.',
   },
 };
@@ -23,10 +23,11 @@ export const CURSOR_COPY = localizeCopy({
     formatSection({
       client: InstallClient.Cursor,
       locale: section.locale,
+      standbyAgent: section.standbyAgent,
       steps: [
-        `Add an MCP server named zapbip over HTTP at ${section.connectionLink} in the Cursor MCP settings. ${tellOwnerAndWait(text.confirmServer)}`,
+        `${tellOwnerAndWait(text.confirmChange)} If the owner does not say yes, stop.`,
+        `Add an MCP server named zapbip over HTTP at ${section.connectionLink} in the Cursor MCP settings.`,
         terminalListenStep(section),
-        'Call `set_wake({mode: "local"})`.',
         tellOwner(text.restart),
         chatSelfTest(section.locale),
       ],

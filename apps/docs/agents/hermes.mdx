@@ -20,7 +20,7 @@ description: Connect Hermes to your WhatsApp.
     zapbip answers with one line made for you. Paste it into Hermes:
 
     ```text
-    Connect yourself to my WhatsApp with zapbip: read https://zapbip.com/i/K7P2QX and follow the instructions.
+    Connect yourself to my WhatsApp with zapbip: read https://zapbip.com/i/zb_inst_K7P2QXm9aTfLw3VbN8cYhE and follow the instructions.
     ```
 
     Hermes reads the page and follows the steps below, in order. Before it changes a file or a setting, it tells you which one and waits for your yes. The link in that page is secret, so keep it out of chats you share.
@@ -30,7 +30,7 @@ description: Connect Hermes to your WhatsApp.
     It adds an MCP server named `zapbip` at `<connectionLink>`, with its `url` and `headers`, under `mcp_servers` in `config.yaml`.
   </Step>
   <Step title="Install the platform plugin">
-    The better option: it installs and enables the zapbip platform plugin with `ZAPBIP_ALLOWED_USERS=owner` set, because Hermes otherwise refuses your messages, then calls `set_wake({mode: "local"})`.
+    The better option: it installs the zapbip platform plugin into `~/.hermes/plugins/zapbip`, adds it to `plugins.enabled` and sets `ZAPBIP_CONNECTION_LINK` and `ZAPBIP_ALLOWED_USERS=owner`, because Hermes otherwise refuses your messages, then calls `set_wake({mode: "local"})`.
   </Step>
   <Step title="Or keep a background watcher">
     Only if the plugin cannot be installed, and never together with it, it creates a `cronjob_manage` job every minute that calls `check_inbox`. It then calls `set_wake({mode: "scheduled", interval_minutes: 1})`. A watcher that polls costs model calls, and Hermes tells you so.

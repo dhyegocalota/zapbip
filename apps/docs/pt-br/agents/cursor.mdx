@@ -20,20 +20,17 @@ description: Conecte Cursor ao seu WhatsApp.
     O zapbip responde com uma linha feita para você. Cole em Cursor:
 
     ```text
-    Conecte-se ao meu WhatsApp com o zapbip: leia https://zapbip.com/i/K7P2QX e siga as instruções.
+    Conecte-se ao meu WhatsApp com o zapbip: leia https://zapbip.com/i/zb_inst_K7P2QXm9aTfLw3VbN8cYhE e siga as instruções.
     ```
 
     Cursor lê a página e segue os passos abaixo, em ordem. Antes de mudar um arquivo ou uma configuração, diz qual é e espera o seu sim. O link dessa página é secreto, então não o deixe em conversas que você compartilha.
 
   </Step>
   <Step title="Adicionar o zapbip ao Cursor">
-    Ele adiciona um servidor MCP chamado `zapbip` por HTTP em `<connectionLink>` nas configurações de MCP do Cursor e pede a sua confirmação.
+    Ele pergunta antes e espera o seu sim. Depois adiciona um servidor MCP chamado `zapbip` por HTTP em `<connectionLink>` nas configurações de MCP do Cursor.
   </Step>
   <Step title="Começar a escutar">
     Ele roda `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@<version> listen` em um terminal em segundo plano e mantém esse terminal rodando, sem limite de tempo. Sempre que uma linha nova aparece ali, chama `check_inbox` e responde. `<version>` é a versão exata que as instruções da sua IA indicam.
-  </Step>
-  <Step title="Avisar o zapbip que está escutando">
-    Ele chama `set_wake({mode: "local"})`.
   </Step>
   <Step title="Testar">
     No chat ele chama `send_message` com ✅ instalado. Depois reinicie o chat do Cursor para usar as ferramentas do zapbip.
@@ -43,6 +40,6 @@ description: Conecte Cursor ao seu WhatsApp.
 ## Como a IA escuta
 
 - O Cursor roda `npx zapbip@<version> listen` em um terminal em segundo plano e o mantém rodando. Quando você escreve no WhatsApp, a linha nova acorda o chat.
-- O Cursor não tem agendamento, então mantenha o chat aberto. Cada acompanhamento dura no máximo 30 minutos, e o Cursor rearma a cada aviso de tempo esgotado.
+- O Cursor não tem agendamento, então mantenha o terminal rodando. Ele não tem limite de tempo.
 
 Não há limite de tempo. Enquanto uma pergunta está aberta, sua IA pergunta de novo até você responder, pelo tempo que for preciso.

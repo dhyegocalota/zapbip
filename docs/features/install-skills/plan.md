@@ -350,3 +350,7 @@ Failure modes: see table.
 ## Live install run (owner delegated 2026-11-06)
 
 The live `tools/install-e2e/claude-code.sh` run happens at the install-skills merge into `main`, after accounts-and-keys is on `main`: this branch lacks the `novo agente` flow the script drives. The script applies the D1 migrations before seeding, shows seed errors, and installs at project scope in a throwaway directory so the owner's Claude configuration is never written.
+
+## Deferred to the merge pass (owner delegated 2026-11-06)
+
+F6 and F7 wait for accounts-and-keys, local-connector, webhook-wake and scheduled-wake to land on `main`: enums (`WakeMode.Local`, scheduled and standby modes), sibling merges, `COMPANY` and `ZAPBIP_NPM_VERSION` read from `libs/types`, and `listWakeModes` reading through the wake repository (`agent_wake` status). Each is a merge-time conflict resolution with its own test, not work to start on this branch.

@@ -79,7 +79,7 @@ describe('install sections', () => {
     test('sets only the wake modes of its own product', () => {
       const allowed = ALLOWED_WAKE_MODES[client];
       expect(wakeModesOf(text).every((mode) => allowed.includes(mode))).toBe(true);
-      expect(wakeModesOf(text).length).toBeGreaterThan(0);
+      expect(wakeModesOf(text).length > 0).toBe(allowed.length > 0);
     });
 
     test('writes the connection secret only inside the connection link', () => {

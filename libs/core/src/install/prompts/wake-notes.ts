@@ -38,7 +38,7 @@ export const WAKE_NOTES: Record<InstallClient, Record<OwnerLocale, string>> = {
   },
   [InstallClient.ClaudeAi]: {
     [OwnerLocale.PortugueseBrazil]:
-      'O webhook da rotina acorda o claude.ai em cerca de 16 segundos; a tarefa agendada de segurança roda no mínimo a cada 60 minutos, limite da plataforma.',
+      'O webhook da rotina acorda o claude.ai em cerca de 16 segundos; a tarefa agendada de segurança roda no máximo uma vez a cada 60 minutos, limite da plataforma.',
     [OwnerLocale.EnglishUs]:
       'The routine webhook wakes claude.ai in about 16 seconds; the safety-net scheduled task runs at most once every 60 minutes, a platform minimum.',
   },
@@ -51,3 +51,13 @@ export const WAKE_NOTES: Record<InstallClient, Record<OwnerLocale, string>> = {
     [OwnerLocale.EnglishUs]: 'Grok on the web cannot be woken from outside: the chosen standby agent answers for it within seconds.',
   },
 };
+
+const GROK_WEB_WITHOUT_STANDBY_NOTE: Record<OwnerLocale, string> = {
+  [OwnerLocale.PortugueseBrazil]: 'Sem um agente de prontidão, o Grok na web só vê mensagens novas quando você abre o chat dele.',
+  [OwnerLocale.EnglishUs]: 'Without a standby agent, Grok on the web sees new messages only when you open the chat.',
+};
+
+export function wakeNoteOf(input: { client: InstallClient; locale: OwnerLocale; standbyAgent: string | null }): string {
+  if (input.client === InstallClient.GrokWeb && input.standbyAgent === null) return GROK_WEB_WITHOUT_STANDBY_NOTE[input.locale];
+  return WAKE_NOTES[input.client][input.locale];
+}

@@ -21,16 +21,16 @@ const GEMINI_CLI_TEXT: Record<OwnerLocale, GeminiCliText> = {
 export const GEMINI_CLI_COPY = localizeCopy({
   texts: GEMINI_CLI_TEXT,
   build: ({ section, text }) => {
-    const selfTest = `gemini -p "Call send_message with the text '${INSTALL_SELF_TEST_TEXT[section.locale]}'"`;
+    const selfTest = `gemini --yolo -p "Call send_message with the text '${INSTALL_SELF_TEST_TEXT[section.locale]}'"`;
     return formatSection({
       client: InstallClient.GeminiCli,
       locale: section.locale,
+      standbyAgent: section.standbyAgent,
       steps: [
         `${tellOwnerAndWait(text.confirmChange)} If the owner does not say yes, stop.`,
-        'Run `gemini mcp list`. If it lists zapbip, run `gemini mcp remove --scope user zapbip` (verify).',
+        'Run `gemini mcp list`. If it lists zapbip, run `gemini mcp remove --scope user zapbip`.',
         `Run \`gemini mcp add --transport http --scope user zapbip ${section.connectionLink}\`.`,
         terminalListenStep(section),
-        'Call `set_wake({mode: "local"})`.',
         tellOwner(text.restart),
         `In a fresh process run \`${selfTest}\`. On a non-zero exit stop and show the last ${FAILURE_OUTPUT_LINES} lines of its output.`,
       ],

@@ -26,6 +26,7 @@ export const GROK_WEB_COPY = localizeCopy({
     formatSection({
       client: InstallClient.GrokWeb,
       locale: section.locale,
+      standbyAgent: section.standbyAgent,
       steps: [tellOwnerAndWait(text.pasteConnector(section.connectionLink)), setWakeStep(section), chatSelfTest(section.locale)],
     }),
 });

@@ -31,6 +31,7 @@ export const CLAUDE_AI_COPY = localizeCopy({
     formatSection({
       client: InstallClient.ClaudeAi,
       locale: section.locale,
+      standbyAgent: section.standbyAgent,
       steps: [
         tellOwnerAndWait(text.pasteConnector(section.connectionLink)),
         tellOwnerAndWait(text.pasteTrigger),

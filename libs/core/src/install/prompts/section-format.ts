@@ -1,17 +1,17 @@
 import { INSTALL_SELF_TEST_TEXT, OwnerLocale, type InstallClient } from '@zapbip/types';
 import { INSTALL_PRODUCTS } from '../install-products';
 import { listenCommand } from './connector-commands';
-import { WAKE_NOTES } from './wake-notes';
+import { wakeNoteOf } from './wake-notes';
 import type { InstallSectionInput } from './install-section';
 
 const MONITOR_WATCH_MAXIMUM_MINUTES = 30;
 
 export type LocalizedSectionBuilder<Text> = (input: { section: InstallSectionInput; text: Text }) => string;
 
-export function formatSection(input: { client: InstallClient; locale: OwnerLocale; steps: string[] }): string {
+export function formatSection(input: { client: InstallClient; locale: OwnerLocale; standbyAgent: string | null; steps: string[] }): string {
   const product = INSTALL_PRODUCTS[input.client];
   const stopCheck = `If you are not ${product.description}, stop and run no other step of this section.`;
-  const wakeStep = tellOwner(WAKE_NOTES[input.client][input.locale]);
+  const wakeStep = tellOwner(wakeNoteOf(input));
   const selfTestStep = input.steps.slice(-1);
   const numberedSteps = [stopCheck, ...input.steps.slice(0, -1), wakeStep, ...selfTestStep].map((step, index) => `${index + 1}. ${step}`);
   return [`## ${product.name}`, '', ...numberedSteps].join('\n');

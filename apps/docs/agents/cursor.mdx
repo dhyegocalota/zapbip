@@ -20,20 +20,17 @@ description: Connect Cursor to your WhatsApp.
     zapbip answers with one line made for you. Paste it into Cursor:
 
     ```text
-    Connect yourself to my WhatsApp with zapbip: read https://zapbip.com/i/K7P2QX and follow the instructions.
+    Connect yourself to my WhatsApp with zapbip: read https://zapbip.com/i/zb_inst_K7P2QXm9aTfLw3VbN8cYhE and follow the instructions.
     ```
 
     Cursor reads the page and follows the steps below, in order. Before it changes a file or a setting, it tells you which one and waits for your yes. The link in that page is secret, so keep it out of chats you share.
 
   </Step>
   <Step title="Add zapbip to Cursor">
-    It adds an MCP server named `zapbip` over HTTP at `<connectionLink>` in Cursor's MCP settings, and asks you to confirm.
+    It asks you first and waits for your yes. Then it adds an MCP server named `zapbip` over HTTP at `<connectionLink>` in Cursor's MCP settings.
   </Step>
   <Step title="Start listening">
     It runs `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@<version> listen` in a background terminal and keeps that terminal running, with no time limit. Whenever a new line appears there, it calls `check_inbox` and answers. `<version>` is the exact version your AI's instructions name.
-  </Step>
-  <Step title="Tell zapbip it is listening">
-    It calls `set_wake({mode: "local"})`.
   </Step>
   <Step title="Test it">
     In the chat it calls `send_message` with ✅ installed. Then restart the Cursor chat to use the zapbip tools.
@@ -43,6 +40,6 @@ description: Connect Cursor to your WhatsApp.
 ## How your AI listens
 
 - Cursor runs `npx zapbip@<version> listen` in a background terminal and keeps it running. When you write on WhatsApp, the new line wakes the chat.
-- Cursor has no scheduled option, so keep the chat open. A watch lasts at most 30 minutes, and Cursor re-arms it on each timeout notice.
+- Cursor has no scheduled option, so keep the terminal running. It has no time limit.
 
 There is no time limit. While a question is open, your AI asks again until you answer, for as long as it takes.

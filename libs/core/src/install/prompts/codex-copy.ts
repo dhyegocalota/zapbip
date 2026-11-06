@@ -33,11 +33,11 @@ export const CODEX_COPY = localizeCopy({
     return formatSection({
       client: InstallClient.Codex,
       locale: section.locale,
+      standbyAgent: section.standbyAgent,
       steps: [
         `${tellOwnerAndWait(text.confirmChange)} If the owner does not say yes, stop.`,
         `Remove any existing [mcp_servers.zapbip] table from ${CONFIG_PATH}, then append this table, so the file never holds a second one:\n\n\`\`\`toml\n${configTable}\n\`\`\``,
         `In the background run \`${connectCommand({ connectionLink: section.connectionLink, client: InstallClient.Codex })}\`. It keeps listening and resumes the session with \`codex exec resume\`.`,
-        'Call `set_wake({mode: "local"})`.',
         tellOwner(text.restart),
         `In a fresh process run \`${selfTest}\`. On a non-zero exit stop and show the last ${FAILURE_OUTPUT_LINES} lines of its output.`,
       ],

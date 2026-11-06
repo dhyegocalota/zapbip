@@ -185,3 +185,13 @@ Known gaps:
 - C7: the plan says ten `prompts/*.test.ts` files; the route is `createInstallPageRoute`.
 - `install-page-attack.test.ts` pins the worker and security tester's attacks (adapted from `worker-attack.test.ts.txt`; observation-only cases dropped, the 400 and rate limit cases kept).
 - `r2-account-media.test.ts` "deletes every object" has a 60 s timeout; at the merge, take accounts-and-keys' fix if it already landed.
+
+## Reviewer findings F1 to F5, F9 to F13, F15, F16
+
+- F1: the Claude Code section registers `zapbip-channel` (local stdio, `npx zapbip@<ZAPBIP_NPM_VERSION> channel`) next to the HTTP `zapbip` server and launches with `server:zapbip-channel`; one listener runs at a time (channel while the session is open, `connect` for a stopped one, `listen` plus Monitor only without channels).
+- F2: the Claude Code, Codex, Cursor and Gemini CLI sections no longer call `set_wake({mode: "local"})`; the attach sets it, so the self-test is reached. Hermes and OpenClaw keep the call on the plugin path.
+- F3: `wakeNoteOf` gives Grok on the web its own note when there is no standby agent.
+- F4: Hermes and OpenClaw no longer carry `(verify)`. Confirmed steps only: Hermes plugin folder `~/.hermes/plugins/zapbip` (package `zapbip-platform`), `plugins.enabled`, `ZAPBIP_CONNECTION_LINK` and `ZAPBIP_ALLOWED_USERS=owner`; OpenClaw `openclaw plugins install @zapbip/openclaw-plugin` and `channels.zapbip.connectionLink`. The plugin install commands themselves are still owner-run on the real products (hermes-openclaw spec); the fallback jobs follow the spec table.
+- F5: `RESOLVE_SECRET_DIGEST_STATEMENT` also returns the connection id, client name and first call time, passed through `ResolvedConnection.activity`; the MCP hot path does one D1 read (`mcp-hot-path.test.ts`).
+- F9 to F13: ChatGPT labels in backticks with the Portuguese label beside the English one; pt-br claude.ai "no máximo uma vez a cada 60 minutos"; Cursor asks before adding the server; the Gemini CLI self-test uses `gemini --yolo -p` (`gemini` is not installed here, so the flag is from its documentation); doc example links have the real shape `/i/zb_inst_<22 characters>`; AGENTS.md names `tools/install-e2e`.
+- Security review: client names must be one printable ASCII line, the `agentes` reply strips `* _ ~` and backticks, `/i/` edges answer private 404 and 500, the rate key uses the IPv6 /64 prefix, and the spec states the package version must be published before the Worker goes live.

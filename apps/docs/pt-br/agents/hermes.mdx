@@ -20,7 +20,7 @@ description: Conecte Hermes ao seu WhatsApp.
     O zapbip responde com uma linha feita para você. Cole em Hermes:
 
     ```text
-    Conecte-se ao meu WhatsApp com o zapbip: leia https://zapbip.com/i/K7P2QX e siga as instruções.
+    Conecte-se ao meu WhatsApp com o zapbip: leia https://zapbip.com/i/zb_inst_K7P2QXm9aTfLw3VbN8cYhE e siga as instruções.
     ```
 
     Hermes lê a página e segue os passos abaixo, em ordem. Antes de mudar um arquivo ou uma configuração, diz qual é e espera o seu sim. O link dessa página é secreto, então não o deixe em conversas que você compartilha.
@@ -30,7 +30,7 @@ description: Conecte Hermes ao seu WhatsApp.
     Ele adiciona um servidor MCP chamado `zapbip` em `<connectionLink>`, com `url` e `headers`, em `mcp_servers` no `config.yaml`.
   </Step>
   <Step title="Instalar o plugin de plataforma">
-    A melhor opção: ele instala e ativa o plugin de plataforma do zapbip com `ZAPBIP_ALLOWED_USERS=owner` definido, porque o Hermes recusa suas mensagens sem isso, e chama `set_wake({mode: "local"})`.
+    A melhor opção: ele instala o plugin de plataforma do zapbip em `~/.hermes/plugins/zapbip`, o adiciona a `plugins.enabled` e define `ZAPBIP_CONNECTION_LINK` e `ZAPBIP_ALLOWED_USERS=owner`, porque o Hermes recusa suas mensagens sem isso, e chama `set_wake({mode: "local"})`.
   </Step>
   <Step title="Ou manter um acompanhamento em segundo plano">
     Só se o plugin não puder ser instalado, e nunca junto com ele, cria um job de `cronjob_manage` a cada minuto que chama `check_inbox`. Depois chama `set_wake({mode: "scheduled", interval_minutes: 1})`. Um acompanhamento que consulta custa chamadas ao modelo, e o Hermes avisa você disso.

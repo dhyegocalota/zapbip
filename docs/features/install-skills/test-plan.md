@@ -159,3 +159,8 @@ What is not tested and why.
 - Whether claude.ai and ChatGPT inject server `instructions` into the model: unmeasured (ADR 0021); the page's rules section is the second channel.
 - The `npx zapbip` package: local-connector. A missing package fails at the owner's step, which the section tells the AI to report.
 - Grok Bot's refusal to add an MCP server without confirmation: product behaviour, covered by OR-4.
+
+## Notes from the integration pass (owner delegated 2026-11-06)
+
+- Commit e9673b9 (`install-copy.test.ts`, the C1 to C6 cases) is red only at the import (`Cannot find module './wake-notes'`), not at each assertion; the tester judges red-first for those cases by the assertions in the fixing commit.
+- C6 (the Codex 900 s timeout, the ChatGPT 60 minute interval, the 1 minute heartbeat) is a `pin`: the constants already held when the test landed.

@@ -11,7 +11,6 @@ tool_timeout_sec = 900
 default_tools_approval_mode = "approve"
 ```
 4. In the background run `ZAPBIP_CONNECTION_URL=https://x.example/c/zb_conn_FAKE/mcp npx zapbip@0.1.0 connect --client codex`. It keeps listening and resumes the session with `codex exec resume`.
-5. Call `set_wake({mode: "local"})`.
-6. Tell the owner: "Reinicie o Codex para usar o zapbip."
-7. Tell the owner: "O conector retoma a sessão do Codex a cada mensagem, em cerca de 6 segundos, sem limite de tempo."
-8. In a fresh process run `codex exec -c 'mcp_servers.zapbip.default_tools_approval_mode="approve"' "Call send_message with the text '✅ instalado'"`. On a non-zero exit stop and show the last 20 lines of its output.
+5. Tell the owner: "Reinicie o Codex para usar o zapbip."
+6. Tell the owner: "O conector retoma a sessão do Codex a cada mensagem, em cerca de 6 segundos, sem limite de tempo."
+7. In a fresh process run `codex exec -c 'mcp_servers.zapbip.default_tools_approval_mode="approve"' "Call send_message with the text '✅ instalado'"`. On a non-zero exit stop and show the last 20 lines of its output.
