@@ -44,27 +44,32 @@ No red test in Step 0: every behaviour is a stub that throws `<name> is not impl
 - `AccountOwnerRpc` has no implementation until L3; `ReplyWaiters.cancelAgent` does not exist until L3 adds it.
 - Likely merge conflicts for the lead: `apps/api/src/adapters/d1/d1-account-directory.ts` (slice 2 plans the same path), `apps/api/src/contract/{env,log}.ts` and `wrangler.jsonc` (additive hunks), `libs/core/src/index.ts` (one line).
 
-## What changed
+## Step L5 (docs)
 
-- <file or module> — <one line>
+### What changed
 
-## How to run
+- `apps/docs/guides/commands.mdx`: the command table in both languages, the menu, reserved words and the `@<agent>` escape for command words.
+- `apps/docs/guides/agents-and-links.mdx`: create, list, revoke, rotate, the password warning, WhatsApp previews, the eight-agent limit.
+- `apps/docs/guides/account-deletion.mdx`: the two steps, the 10-minute window, what is and is not removed, a new account after deletion.
+
+### How to run
 
 ```bash
-<commands to start the stack and open the feature>
+pnpm --filter @zapbip/docs exec mint broken-links
 ```
 
-## Red today, green after
+### Red today, green after
 
 | Test | Red before the change because | Green after because |
 |------|--------------------------------|---------------------|
-| `<path>::<name>` |  |  |
+| `mint broken-links` at `7f2866b` | `found 2 broken links in 1 files`: `/guides/agents-and-links`, `/guides/account-deletion` from `guides/commands.mdx` | the three pages exist at `5ca28f1` (`success no broken links found`) |
 
-## Hypotheses to attack
+### Hypotheses to attack
 
-Every "it works" is a hypothesis the tester tries to break.
+1. Hypothesis: every command word, the 8-agent limit, the 10-minute window and the `@<agent>` escape in the pages match the shipped behaviour. Break it by: comparing each page against `command-words.ts`, `constants.ts` and the simulator replies.
+2. Hypothesis: the pages render in `mint dev` once the lead adds them to `docs.json`. Break it by: opening each page and following each link.
 
-1. Hypothesis: <claim>. Break it by: <suggested attack>.
+### Known gaps
 
 ## Known gaps
 
@@ -109,3 +114,4 @@ Decisions to attack:
 Hypotheses: a quoted command word goes to the quoted agent; `girar a imagem` is a rotate of `a-imagem` (`NotFound`), `@claude girar a imagem` routes; a deleting account gets no reply; the 10-minute deletion window is inclusive; two concurrent opens of one number yield one account.
 
 Gaps: no test for `ask` held across a rotate (Durable Object level); `pnpm verify` result is in the lead's report.
+- `apps/docs/docs.json` is not in L5; until the lead adds `guides/commands`, `guides/agents-and-links` and `guides/account-deletion`, the pages are reachable by link only.
