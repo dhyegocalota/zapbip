@@ -248,6 +248,17 @@ describe('poll state', () => {
     expect(result.afterSave).toMatchObject({ last_polled_at: POLLED_AT, has_polled: 1 });
   });
 
+  it('keeps the recorded locale when a save carries none', async () => {
+    const row = await inRepositories({
+      run: async ({ wake, storage }) => {
+        await wake.recordPoll({ agent: SCHEDULED_AGENT, polledAt: POLLED_AT, ownerLocale: OwnerLocale.EnglishUs });
+        await wake.saveWake({ wake: storedWake({ agent: SCHEDULED_AGENT }) });
+        return readAgentWakeRow({ storage, agent: SCHEDULED_AGENT });
+      },
+    });
+    expect(row).toMatchObject({ owner_locale: OwnerLocale.EnglishUs });
+  });
+
   it('throws without creating a row when the agent has none', async () => {
     const recording = inRepositories({
       run: async ({ wake, storage }) => {

@@ -68,7 +68,7 @@ Red commit `12637d8`: 16 of 21 cases of `scheduled-wake-storage.test.ts` failed 
 ### Hypotheses to attack
 
 1. A webhook row that polls keeps its mode and target (`recordPoll` touches only the poll columns and `owner_locale`).
-2. `saveWake` of a webhook or none setting writes `owner_locale` as given, so a webhook save with a null locale clears the locale a poll recorded; the next scheduled save or poll restores it.
+2. `saveWake` keeps a recorded `owner_locale` when the saved wake carries none (`COALESCE(?, owner_locale)`); a non-null locale overwrites it.
 3. `insertHandoff` marks only the primary's unread row whose id is `copy.originMessageId`; a copy without `originMessageId` throws.
 4. An object at v1 only, or v1 and v3 without v2, upgrades with its rows intact.
 
