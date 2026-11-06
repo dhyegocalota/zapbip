@@ -34,6 +34,33 @@ expect_exit "codex: .env update is blocked" 2 guard-secrets.sh "$(codex_patch Up
 expect_exit "codex: .env add is blocked" 2 guard-secrets.sh "$(codex_patch Add apps/server/.env.production)"
 expect_exit "codex: .env.example update is allowed" 0 guard-secrets.sh "$(codex_patch Update .env.example)"
 expect_exit "codex: ordinary patch is allowed" 0 guard-secrets.sh "$(codex_patch Update apps/web/src/main.tsx)"
+notebook_edit() { printf '{"tool_name":"NotebookEdit","tool_input":{"notebook_path":"%s"}}' "$1"; }
+expect_exit "claude: a notebook edit of .env is blocked" 2 guard-secrets.sh "$(notebook_edit /repo/.env)"
+expect_exit "claude: an ordinary notebook edit is allowed" 0 guard-secrets.sh "$(notebook_edit /repo/analysis.ipynb)"
+blocked_env_writes=('echo X=1 > .env' 'echo X=1 >> apps/server/.env.local' 'echo X=1 >.env.production' 'printf x | tee .env' 'tee -a apps/web/.env.staging < input' 'cp .env.example .env' 'mv draft .env.test' 'sed -i s/a/b/ .env' 'sed -i.bak s/a/b/ apps/server/.env.local' 'echo X=1 > \".env\"')
+for form in "${blocked_env_writes[@]}"; do
+  expect_exit "claude: $form is blocked" 2 guard-secrets.sh "$(bash_call "$form")"
+  expect_exit "codex: $form is blocked" 2 guard-secrets.sh "$(codex_bash_call "$form")"
+done
+allowed_env_commands=('echo X=1 > .env.example' 'cp .env.example /tmp/copy' 'cat .env.example' 'sed -i s/a/b/ .env.example' 'echo x > notes.txt' 'git commit -m \"document the variable\"')
+for form in "${allowed_env_commands[@]}"; do
+  expect_exit "claude: $form is allowed" 0 guard-secrets.sh "$(bash_call "$form")"
+  expect_exit "codex: $form is allowed" 0 guard-secrets.sh "$(codex_bash_call "$form")"
+done
+settings_file="$here/../../.claude/settings.json"
+codex_hooks_file="$here/../../.codex/hooks.json"
+expect_jq() {
+  local name=$1 file=$2 filter=$3
+  [[ "$(jq -r "$filter" "$file")" == true ]] && return
+  echo "FAIL $name"
+  failures=$((failures + 1))
+}
+expect_jq "settings: guard-secrets watches MultiEdit and NotebookEdit" "$settings_file" '[.hooks.PreToolUse[] | select(any(.hooks[]; .command | endswith("guard-secrets.sh"))) | .matcher] | any(test("MultiEdit") and test("NotebookEdit"))'
+expect_jq "settings: guard-secrets watches Bash" "$settings_file" '[.hooks.PreToolUse[] | select(.matcher == "Bash") | .hooks[].command] | any(endswith("guard-secrets.sh"))'
+expect_jq "codex: guard-secrets watches Bash" "$codex_hooks_file" '[.hooks.PreToolUse[] | select(.matcher == "^Bash$") | .hooks[].command] | any(endswith("guard-secrets.sh"))'
+for rule in 'Edit(./**/.env)' 'Edit(./**/.env.local)' 'Write(./**/.env)' 'Write(./**/.env.production)' 'Read(./**/.env.*.local)' 'Read(~/.ssh/**)'; do
+  expect_jq "settings: deny lists $rule" "$settings_file" ".permissions.deny | index(\"$rule\") != null"
+done
 expect_exit "empty input is allowed" 0 guard-secrets.sh '{}'
 
 expect_exit "git add -A is blocked" 2 guard-git-add-all.sh "$(bash_call 'git add -A')"
