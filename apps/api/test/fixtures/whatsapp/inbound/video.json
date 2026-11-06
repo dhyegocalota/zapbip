@@ -1,0 +1,11 @@
+{
+  "from": "5511900000001",
+  "id": "wamid.VIDEO",
+  "timestamp": "1762430400",
+  "type": "video",
+  "video": {
+    "id": "900000000000002",
+    "mime_type": "video/mp4",
+    "sha256": "dmlkZW8="
+  }
+}

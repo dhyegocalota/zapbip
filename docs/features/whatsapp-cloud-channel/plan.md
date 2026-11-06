@@ -716,12 +716,12 @@ Failure modes for W0 are in the table below. W0 has no backout: fix forward in a
 
 ### Lane W4 (inbound)
 
-- [ ] **W4.1 red: signature, challenge, parsers.** Write the unit tests of the test plan's inbound sections, including multibyte signature fixtures, per-change phone numbers, unknown types as `Unsupported`, missing `from` as rejected, ignored fields, and status timestamps. Expected failure: `<name> is not implemented`. Commit as `test(api): pin the webhook signature, challenge and parsers`.
-- [ ] **W4.2 green: signature, challenge, parsers.** Implement them (A16, A26, A27). Commit as `feat(api): implement the webhook signature, challenge and parsers`.
-- [ ] **W4.3 red: media download.** Write `whatsapp-media-download.test.ts` (streamed digest, deletion on mismatch, `404` refresh, `5xx` and timeout raised, `redirect: 'manual'`, the host cases, the declared size, the stream longer than declared). Commit as `test(api): pin the inbound media download`.
-- [ ] **W4.4 green: media download.** Implement A14, A15, A24, A25. Commit as `feat(api): implement the inbound media download`.
-- [ ] **W4.5 red: route.** Write `whatsapp-webhook.test.ts` and `whatsapp-status.test.ts` (test plan WI-17 to WI-34, the batch cases, the chunked 3 MB body, DO failure `500`, R2 failure `500`, the unindexed status `503` and `200`). Expected failure: the stub route error. Commit as `test(api): pin the webhook route over HTTP`.
-- [ ] **W4.6 green: route.** Implement `routes/whatsapp.ts`: `GET` challenge; `POST`: size read with a limit (`413`, chunked included), signature (`401`), JSON (`400`), per change (`phone_number_id`, `field`), per message (directory, media, DO call), per status (index, `503` or `200`), DO failure `500`. Commit as `feat(api): implement the webhook route`.
+- [x] **W4.1 red: signature, challenge, parsers.** Write the unit tests of the test plan's inbound sections, including multibyte signature fixtures, per-change phone numbers, unknown types as `Unsupported`, missing `from` as rejected, ignored fields, and status timestamps. Expected failure: `<name> is not implemented`. Commit as `test(api): pin the webhook signature, challenge and parsers`. (`3785271`)
+- [x] **W4.2 green: signature, challenge, parsers.** Implement them (A16, A26, A27). Commit as `feat(api): implement the webhook signature, challenge and parsers`. (`04d7efe`)
+- [x] **W4.3 red: media download.** Write `whatsapp-media-download.test.ts` (streamed digest, deletion on mismatch, `404` refresh, `5xx` and timeout raised, `redirect: 'manual'`, the host cases, the declared size, the stream longer than declared). Commit as `test(api): pin the inbound media download`. (`eba15a7`)
+- [x] **W4.4 green: media download.** Implement A14, A15, A24, A25. Commit as `feat(api): implement the inbound media download`. (`62aefb4`)
+- [x] **W4.5 red: route.** Write `whatsapp-webhook.test.ts` and `whatsapp-status.test.ts` (test plan WI-17 to WI-34, the batch cases, the chunked 3 MB body, DO failure `500`, R2 failure `500`, the unindexed status `503` and `200`). Expected failure: the stub route error. Commit as `test(api): pin the webhook route over HTTP`. (`33c454f`)
+- [x] **W4.6 green: route.** Implement `routes/whatsapp.ts`: `GET` challenge; `POST`: size read with a limit (`413`, chunked included), signature (`401`), JSON (`400`), per change (`phone_number_id`, `field`), per message (directory, media, DO call), per status (index, `503` or `200`), DO failure `500`. Commit as `feat(api): implement the webhook route`. (`4372271`)
 
 ### Lane W5 (docs)
 
