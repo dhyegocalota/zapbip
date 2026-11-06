@@ -19,13 +19,13 @@ Test areas, for parallel tester sub-agents: **A** core rules (pure), **B** waker
 
 ### A1 Wake setting validation (`wake-setting.test.ts`)
 
-- [ ] `assertWakeSetting` — input: scheduled, `intervalMinutes: 59`; expected: throws `InboxError` `InvalidInput` whose message contains `interval_minutes` and `60`.
+- [ ] `assertWakeSetting` — input: scheduled, `intervalMinutes: 0`; expected: throws `InboxError` `InvalidInput` whose message contains `interval_minutes` and `1`.
+- [ ] `assertWakeSetting` — input: scheduled, `intervalMinutes: 1`; expected: returns (Hermes and OpenClaw poll every minute).
 - [ ] `assertWakeSetting` — input: scheduled, `intervalMinutes: 60`; expected: returns.
 - [ ] `assertWakeSetting` — input: scheduled, `intervalMinutes: 1440`; expected: returns.
 - [ ] `assertWakeSetting` — input: scheduled, `intervalMinutes: 1441`; expected: throws `InvalidInput` naming `interval_minutes` and `1440`.
 - [ ] `assertWakeSetting` — input: scheduled, `intervalMinutes: 90.5`; expected: throws `InvalidInput` naming `interval_minutes` and `whole number`.
 - [ ] Edge: negative interval — input: scheduled, `intervalMinutes: -60`; expected: throws `InvalidInput` naming `interval_minutes`.
-- [ ] Edge: zero interval — input: scheduled, `intervalMinutes: 0`; expected: throws `InvalidInput` naming `interval_minutes`.
 - [ ] Edge: scheduled with `intervalMinutes: null`; expected: throws `InvalidInput` naming `interval_minutes` (the mode requires it; null is never read as a default).
 - [ ] ~~`assertWakeSetting` — input: standby `grok-bot`, a stored standby record in mode `webhook`, not revoked; expected: returns.~~ `assertWakeSetting` — input: standby `grok-bot`, a stored standby record in mode `webhook`; expected: returns. (R4: revocation is absence)
 - [ ] `assertWakeSetting` — input: standby, `standbyAgent` equal to the caller `grok-web`; expected: throws `InvalidInput` naming `standby_agent` and `itself`.
@@ -88,7 +88,7 @@ Test areas, for parallel tester sub-agents: **A** core rules (pure), **B** waker
 
 ### A6 Constants (`constants.test.ts`; pin: the values are declared at Step 0, so these pass on arrival)
 
-- [ ] `SCHEDULED_MIN_INTERVAL_MINUTES` — input: the constant; expected: `60`.
+- [ ] `SCHEDULED_MIN_INTERVAL_MINUTES` — input: the constant; expected: `1`.
 - [ ] `SCHEDULED_MAX_INTERVAL_MINUTES` — input: the constant; expected: `1440`.
 - [ ] `STALE_POLL_INTERVAL_MULTIPLE` — input: the constant; expected: `2`.
 - [ ] `SAFETY_NET_CRON` — input: the constant; expected: `0 * * * *`.
@@ -98,7 +98,7 @@ Test areas, for parallel tester sub-agents: **A** core rules (pure), **B** waker
 ### B1 `setWake` (`set-wake.test.ts`)
 
 - [ ] `setWake` scheduled — input: caller `chatgpt`, setting scheduled 60, identity `ownerLocale` pt-BR; expected: `{status: 'saved', wakeMode: 'scheduled', effectiveRung: 'scheduled', provider: null}`; saved row has `ownerLocale` pt-BR.
-- [ ] `setWake` scheduled 59 — input: as above with 59; expected: `InvalidInput`; `saveWake` called zero times.
+- [ ] `setWake` scheduled 0 — input: as above with 0; expected: `InvalidInput`; `saveWake` called zero times.
 - [ ] `setWake` keeps the poll — input: `lastPolledAt` = T, `setWake` scheduled 60 at T + 30 min; expected: stored `lastPolledAt` still T.
 - [ ] `setWake` standby — input: caller `grok-web`, standby `grok-bot` present in mode `webhook`; expected: `{wakeMode: 'standby', effectiveRung: 'standby'}`.
 - [ ] `setWake` standby missing — input: standby name not in the repository; expected: `InvalidInput`, nothing saved.
@@ -225,7 +225,7 @@ Test areas, for parallel tester sub-agents: **A** core rules (pure), **B** waker
 - [ ] `set_wake` standby — input: `{mode: "standby", standby_agent: "grok-bot"}` (same account, webhook); expected: `{status: "saved", wake_mode: "standby", effective_rung: "standby"}`.
 - [ ] Pin: `set_wake` none — input: `{mode: "none"}`; expected: `effective_rung: "inbox"` (passes on arrival).
 - [ ] Pin: `set_wake` webhook still works — input: slice 4's webhook input; expected: slice 4's result unchanged (passes on arrival).
-- [ ] Interval 59 — input: `{mode: "scheduled", interval_minutes: 59}`; expected: tool error naming `interval_minutes` and `60`; nothing saved.
+- [ ] Interval 0 — input: `{mode: "scheduled", interval_minutes: 0}`; expected: tool error naming `interval_minutes` and `1`; nothing saved.
 - [ ] Interval 1441 — input: `{mode: "scheduled", interval_minutes: 1441}`; expected: tool error naming `interval_minutes` and `1440`.
 - [ ] Interval as a string — input: `interval_minutes: "60"`; expected: tool error naming `interval_minutes`.
 - [ ] Interval 60.5 — input: `interval_minutes: 60.5`; expected: tool error naming `interval_minutes`.
@@ -251,7 +251,7 @@ Test areas, for parallel tester sub-agents: **A** core rules (pure), **B** waker
 - [ ] `mint broken-links` — input: docs package after S6.2; expected: exit 0.
 - [ ] No fake WhatsApp, no jargon on the main path (R15) — input: both wake-ladder pages and both `set-wake` reference pages; expected: no `simulator`, `fake` or `dev route`; the main path of the wake-ladder pages names no tool field.
 - [ ] Twin test — input: the shape gate with the new pages; expected: every new page has its `pt-br` twin and the test is green.
-- [ ] `set-wake` reference — input: both reference pages; expected: the `scheduled` and `standby` variants with `interval_minutes` 60 to 1440 and `standby_agent`.
+- [ ] `set-wake` reference — input: both reference pages; expected: the `scheduled` and `standby` variants with `interval_minutes` 1 to 1440 (60 minimum noted for ChatGPT and claude.ai) and `standby_agent`.
 - [ ] ~~Rung table — input: `apps/docs/concepts/wake-ladder.mdx`; expected: contains `scheduled`, `standby`, `inbox` in the rung table.~~ Rung table — input: `apps/docs/concepts/wake-ladder.mdx` and `apps/docs/pt-br/concepts/wake-ladder.mdx`; expected: both exist, both name the five rungs in plain words (no field names on the main path).
 - [ ] ~~Both note forms — input: the page; expected: contains `de hora em hora` and `every hour`.~~ Both note forms — input: the English page and the pt-br page; expected: the English page contains `every hour` and no Portuguese example; the pt-br page contains `de hora em hora` and no English example.
 - [ ] ~~One-hop rule — input: the page; expected: contains `one hop` or `um salto`.~~ One-hop rule — input: each page; expected: the English page contains `one hop`, the pt-br page contains `um salto`.

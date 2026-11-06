@@ -18,7 +18,7 @@
 
 - Every decision row of the spec's "Open questions → answers" table dated `owner delegated 2026-11-06` is binding.
 - Shared constants come from `libs/types`: `MINUTE_MS`, `HOUR_MS`, `DAY_MS`. No local copy.
-- Interval bounds: `SCHEDULED_MIN_INTERVAL_MINUTES` = `HOUR_MS / MINUTE_MS`, `SCHEDULED_MAX_INTERVAL_MINUTES` = `DAY_MS / MINUTE_MS`. Stale multiple: `STALE_POLL_INTERVAL_MULTIPLE` = 2. Safety-net cron: `SAFETY_NET_CRON` = `0 * * * *`.
+- Interval bounds: `SCHEDULED_MIN_INTERVAL_MINUTES` = `MINUTE_MS / MINUTE_MS` (1; was `HOUR_MS / MINUTE_MS`, owner delegated 2026-11-06), `SCHEDULED_MAX_INTERVAL_MINUTES` = `DAY_MS / MINUTE_MS`. Stale multiple: `STALE_POLL_INTERVAL_MULTIPLE` = 2. Safety-net cron: `SAFETY_NET_CRON` = `0 * * * *`.
 - Repo rules (`AGENTS.md`): no comments except `// NB ADR NNNN:` pointers; flat `if`s; no `else`; no `??` defaults; enums over string literals; named parameters for any function with more than one parameter; no `.js` extension; no acronym in an identifier.
 - Owner locale is never defaulted in code: it is the connection identity's `ownerLocale` (slice 1), which comes from the account property set by accounts-and-keys.
 - Stub bodies in Step 0 are exactly `void input;` followed by `throw new Error('<name> is not implemented');`.
@@ -117,9 +117,9 @@ Each member is appended to the existing enum. `SECOND_MS`, `MINUTE_MS`, `HOUR_MS
 ### `libs/core/src/wake/constants.ts` (additions)
 
 ```ts
-import { DAY_MS, HOUR_MS, MINUTE_MS } from '@zapbip/types';
+import { DAY_MS, MINUTE_MS } from '@zapbip/types';
 
-export const SCHEDULED_MIN_INTERVAL_MINUTES = HOUR_MS / MINUTE_MS;
+export const SCHEDULED_MIN_INTERVAL_MINUTES = MINUTE_MS / MINUTE_MS;
 export const SCHEDULED_MAX_INTERVAL_MINUTES = DAY_MS / MINUTE_MS;
 export const STALE_POLL_INTERVAL_MULTIPLE = 2;
 export const SAFETY_NET_CRON = '0 * * * *';

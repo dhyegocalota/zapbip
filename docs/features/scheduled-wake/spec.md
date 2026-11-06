@@ -87,7 +87,7 @@ type WakeSetting =
 - `set_wake` acts on the calling connection only. The input never names an account or an agent, and unknown fields are rejected. Slice 4 registers the tool; this slice adds the `scheduled` and `standby` variants and the validation. The `local` variant is saved by the connector attach (local-connector).
 - Output: `{status: "saved", wake_mode, effective_rung}`.
 - Validation (in core, with the message naming the field and the limit):
-  - `interval_minutes` is an integer from `SCHEDULED_MIN_INTERVAL_MINUTES` (60) to `SCHEDULED_MAX_INTERVAL_MINUTES` (1440);
+  - `interval_minutes` is an integer from `SCHEDULED_MIN_INTERVAL_MINUTES` (~~60~~ 1) to `SCHEDULED_MAX_INTERVAL_MINUTES` (1440);
   - `standby_agent` matches the agent name pattern, names a connection of the same account (a revoked or unknown name gets the same refusal), is not the caller, and is not itself in standby mode;
   - fields of another mode must be absent (plan R12).
 - Storage: wake state lives in `WakeRepository` (webhook-wake, Durable Object SQLite), not in D1. The alarm and routing run inside the Durable Object. `interval_minutes`, `standby_agent` and `poller_stale_notified` are `agent_wake` columns added by DO schema `v3`. The v3 additions to `agent_wake` are `interval_minutes`, `standby_agent`, `poller_stale_notified`, `has_polled` and `owner_locale` (~~`revoked_at`~~: slice 3 deletes the row of a revoked connection, plan R4); to `inbox_messages`, `handed_to` and `origin_message_id`. The migration is a hand-written `v3.sql` (plan R1). Variant columns are nullable in SQLite; the core maps them to the union, and a null is never read as a default.
@@ -130,7 +130,7 @@ The count query must repeat the literal `read_at IS NULL` so the planner uses it
 
 | Constant | Value |
 |---|---|
-| `SCHEDULED_MIN_INTERVAL_MINUTES` | 60 |
+| `SCHEDULED_MIN_INTERVAL_MINUTES` | ~~60~~ 1 |
 | `SCHEDULED_MAX_INTERVAL_MINUTES` | 1440 |
 | `STALE_POLL_INTERVAL_MULTIPLE` | 2 |
 | `SAFETY_NET_CRON` | `0 * * * *` |
@@ -164,7 +164,7 @@ The task prompt for scheduled polls is one rule: call `check_inbox`; if the resu
 | The standby's own wake fails | The copy stays in the standby's inbox and is read on its next poll. The owner gets the inbox notice. |
 | The primary also answers after a handoff | Its copy is already read, so `check_inbox` does not return it. Its `get_messages` history shows `handed_to`, and the install prompt tells it to skip such messages (ADR 0024). |
 | Durable Object evicted with an alarm pending | The alarm is re-armed from the stored deadlines when the object starts again. |
-| Interval set below 60 or above 1440, or a standby that fails the rules | `set_wake` returns a tool error naming the field and the limit; nothing is saved. |
+| Interval set below 1 or above 1440, or a standby that fails the rules | `set_wake` returns a tool error naming the field and the limit; nothing is saved. |
 | The client's real cadence is slower than its declared interval | A false stale notice. Mitigation: the install sets the cadence the owner's picker actually saved; the owner can run `set_wake` again. |
 
 ### Risks
@@ -184,7 +184,7 @@ The task prompt for scheduled polls is one rule: call `check_inbox`; if the resu
 | What counts as a poll? | `check_inbox` only · every MCP call | `check_inbox` only; `get_messages`, `ask` and `wait_for_reply` do not count | owner delegated 2026-11-06 |
 | When is a poller stale? | 1× · 2× · 3× the interval | 2× the interval, from the last poll or from creation | owner delegated 2026-11-06 |
 | How often does the owner get a stale notice? | every check · once per episode | once per stale episode; the next poll ends it silently | owner delegated 2026-11-06 |
-| Interval bounds | any · 60 to 1440 min | 60 to 1440 minutes (the platform minimum is 1 h) | owner delegated 2026-11-06 |
+| Interval bounds | any · 60 to 1440 min · 1 to 1440 min | ~~60 to 1440 minutes (the platform minimum is 1 h)~~ 1 to 1440 minutes: Hermes and OpenClaw poll every minute; the 60-minute minimum belongs to ChatGPT and claude.ai, and the install and docs for those two say so | owner delegated 2026-11-06 |
 | When does a standby take over? | on any failure · only when the mode is `standby` | only when the mode is `standby`; a failing webhook or local rung does not fall over to it | owner delegated 2026-11-06 |
 | What does the standby receive? | pointer only · copy · move · shared inbox | a copy in its own inbox with its own message id and `origin_message_id` = the owner message id; ids stay unique; the primary's copy is marked read (ADR 0024) | owner delegated 2026-11-06 |
 | Can a standby be a standby? | yes · no | no; one hop only | owner delegated 2026-11-06 |
@@ -201,7 +201,7 @@ The task prompt for scheduled polls is one rule: call `check_inbox`; if the resu
 ## Test strategy summary
 
 - **`libs/core` unit (Vitest, fake clock, in-memory ports):**
-  - every `WakeSetting` variant, with each limit: 59, 60, 1440, 1441, a non-integer, a missing or self standby, a standby in standby mode, a standby of another account;
+  - every `WakeSetting` variant, with each limit: 0, 1, 1440, 1441, a non-integer, a missing or self standby, a standby in standby mode, a standby of another account;
   - the staleness boundary: just below 2 × interval is not stale, exactly 2 × is stale; never-polled counts from creation;
   - `checkInbox` records a poll on empty and on new; `get_messages`, `ask` and `wait_for_reply` record none;
   - one stale notice per episode, a poll clears it, a second stale episode notifies again;
