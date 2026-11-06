@@ -227,7 +227,8 @@ Ranks: `sent` 1, `delivered` 2, `read` 3. `failed` is handled by the rule row, n
 |---|---|
 | `GET` with a wrong `hub.verify_token` or `hub.mode` | `403`, no body |
 | `POST` without `X-Hub-Signature-256`, or with a digest that does not match the raw body | `401`, same body for every reason; nothing parsed or stored |
-| `POST` body over 3 MB | `413` |
+| `POST` body over 3 MB, signed or not | `413`, answered before the signature check (intended: the cap is public in the documentation); the cap is applied to the streamed bytes, so a `Content-Length` of `abc` or `-1` is accepted |
+| Entry `timestamp` more than `MAX_FUTURE_SKEW_MS` in the future | `200`, log `inbound.future`, not processed |
 | Signed body that is not JSON | `400` |
 | `phone_number_id` is not this number | `200`, log `inbound.foreign_number`, nothing stored |
 | Inbound with no `from`, or a `from` with no `owner_identities` row | `200`, log `inbound.unmapped` with no phone number; nothing sent back. From accounts-and-keys on, a first message from an unknown `from` creates the account instead (ADR 0016) |
@@ -277,6 +278,7 @@ Constants (named in `apps/api/src/adapters/whatsapp/whatsapp-constants.ts` or `l
 | `GRAPH_API_VERSION` | `v24.0` | adapter |
 | `GRAPH_REQUEST_TIMEOUT_MS` | 10 000 | adapter |
 | `WEBHOOK_MAX_BYTES` | 3 MB | adapter |
+| `MAX_FUTURE_SKEW_MS` | 5 minutes | adapter |
 | `RECEIPT_RETENTION_MS` | 7 days | core, agent-inbox-core |
 | `MEDIA_DOWNLOAD_ATTEMPTS` | 2 | adapter |
 | `MEDIA_MAX_BYTES_INBOUND` | 100 MB | adapter |
@@ -369,6 +371,9 @@ No account id is ever in these paths.
 | Owner locale source | D1 directory · account property | an account property set by accounts-and-keys, carried by `ConnectionIdentity` for agent calls and read from the directory row for webhook calls, passed to the use cases as `ownerLocale` and to `template({locale})` (A1, plan refresh R5) | owner delegated 2026-11-06 |
 | Flush failure after the commit | roll back the message · keep it | the message is kept; the queue flushes on the next owner message or the alarm (A31) | owner delegated 2026-11-06 |
 
+| Entry timestamped in the future | process · reject | acknowledged `200`, logged `inbound.future`, not processed when more than `MAX_FUTURE_SKEW_MS` (5 minutes) ahead; the development entry allows `DEVELOPMENT_MAX_FUTURE_SKEW_MS` (2 days) because its simulated clock advances a day at a time | owner delegated 2026-11-06 |
+| `Content-Length` of `abc` or `-1` | reject · accept | accepted; the streaming cap applies | owner delegated 2026-11-06 |
+| Unsigned body above the cap | `401` · `413` | `413` before the signature check | owner delegated 2026-11-06 |
 | Plan refresh decisions R1 to R30 | silent · listed | every difference between the plan and slice 1's code, with its decision, is the table "Plan refresh (W-1.1)" in `plan.md`; the notable ones: `ChannelError extends InboxError`, `commitChannelInbound` beside the public `recordChannelReceipt`, slice 1's owner finder and message index reused, no development-sender registry, the fake Graph is an HTTP server | owner delegated 2026-11-06 |
 
 ## Test strategy summary

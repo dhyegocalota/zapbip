@@ -3,6 +3,7 @@ import { ChannelInboundKind, DeliveryState, ForwardedKind, MediaOrigin, MessageD
 import { evictDurableObject, reset, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { AccountInbox } from '../../src/account-inbox/account-inbox';
+import { ACCOUNT_INBOX_MIGRATIONS } from '../../src/account-inbox/migrations';
 import type { Bindings } from '../../src/contract/env';
 import { DevAccountInbox } from '../../src/dev/dev-account-inbox';
 import { withRepository } from '../support/account-inbox';
@@ -329,7 +330,7 @@ describe('SQLite repository channel methods', () => {
   });
 });
 
-describe('DO schema v5', () => {
+describe('DO schema v4', () => {
   it('adds the channel columns, the closed time and the unique channel id', async () => {
     const schema = await runInDurableObject(accountInboxStub({ accountId: ACCOUNT_ID }), (_instance, state) => ({
       messageColumns: state.storage.sql
@@ -350,7 +351,7 @@ describe('DO schema v5', () => {
     );
     expect(schema.windowColumns).toContain('closed_at');
     expect(schema.messageColumns).toContain('forwarded');
-    expect(schema.versions).toEqual([1, 4, 5, 6]);
+    expect(schema.versions).toEqual(ACCOUNT_INBOX_MIGRATIONS.map((migration) => migration.version));
   });
 });
 
@@ -472,6 +473,32 @@ describe('AccountInbox channel messages', () => {
       entry: ownerTextEntry({ text: 'hi', at: Date.now() }),
     });
     expect(outcome).toMatchObject({ ok: true, value: { duplicate: false } });
+  });
+
+  it('WI-15 applies a status to a message the account sent and never writes a null over its stored detail', async () => {
+    await registerAlpha();
+    await inRepository(async (repository) => {
+      await repository.insertMessage({ message: buildTextMessage({ messageId: 'msg_1', delivery: DeliveryState.Sent }) });
+      await repository.saveChannelMessageId({ messageId: 'msg_1', channelMessageId: OUTBOUND_CHANNEL_MESSAGE_ID });
+    });
+    const stub = accountInboxStub({ accountId: ACCOUNT_ID });
+    const detail = { errorCode: null, errorTitle: null, pricingCategory: PRICING_CATEGORY, billable: true };
+    const delivered = await stub.applyChannelStatus({
+      channelMessageId: OUTBOUND_CHANNEL_MESSAGE_ID,
+      status: DeliveryState.Delivered,
+      detail,
+    });
+    const read = await stub.applyChannelStatus({
+      channelMessageId: OUTBOUND_CHANNEL_MESSAGE_ID,
+      status: DeliveryState.Read,
+      detail: EMPTY_DETAIL,
+    });
+    const stored = await countRows({
+      statement: `SELECT COUNT(*) AS total FROM inbox_messages WHERE id = 'msg_1' AND delivery = '${DeliveryState.Read}' AND pricing_category = '${PRICING_CATEGORY}' AND billable = 1`,
+    });
+    expect(delivered).toMatchObject({ ok: true, value: { applied: true } });
+    expect(read).toMatchObject({ ok: true, value: { applied: true } });
+    expect(stored).toBe(1);
   });
 
   it('WI-16 reports an unknown channel id as not found and writes nothing', async () => {

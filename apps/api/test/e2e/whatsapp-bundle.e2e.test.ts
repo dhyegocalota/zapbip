@@ -15,6 +15,7 @@ const FAKE_GRAPH_ADDRESS = '127.0.0.1:4011';
 const FIXTURE_MARKER = 'fixture-marker-whatsapp';
 const FAKE_SENDER_MARKERS = ['fake-whatsapp-sender', 'createFakeWhatsAppSender', 'DevAccountInbox'];
 const DEVELOPMENT_MEDIA_ORIGIN_MARKER = 'WHATSAPP_MEDIA_DOWNLOAD_ORIGIN';
+const DEVELOPMENT_SKEW_MARKER = 'DEVELOPMENT_MAX_FUTURE_SKEW_MS';
 const CLOUD_API_SENDER_MARKERS = ['createCloudApiMessageSender', 'zapbip_agent_notice'];
 const GRAPH_BASE_URL_VARIABLE = 'WHATSAPP_GRAPH_BASE_URL';
 
@@ -36,16 +37,20 @@ describe('production bundle of the WhatsApp channel', () => {
     'PB-1 PB-2 PB-3 the production bundle sends through the Cloud API sender and carries no fake',
     async () => {
       const bundle = await productionBundle();
-      const present = [FAKE_GRAPH_ADDRESS, FIXTURE_MARKER, DEVELOPMENT_MEDIA_ORIGIN_MARKER, ...FAKE_SENDER_MARKERS].filter((marker) =>
-        bundle.includes(marker),
-      );
+      const present = [
+        FAKE_GRAPH_ADDRESS,
+        FIXTURE_MARKER,
+        DEVELOPMENT_MEDIA_ORIGIN_MARKER,
+        DEVELOPMENT_SKEW_MARKER,
+        ...FAKE_SENDER_MARKERS,
+      ].filter((marker) => bundle.includes(marker));
       const missing = [GRAPH_BASE_URL_VARIABLE, ...CLOUD_API_SENDER_MARKERS].filter((marker) => !bundle.includes(marker));
       expect({ present, missing }).toEqual({ present: [], missing: [] });
     },
     BUNDLE_TIMEOUT_MS,
   );
 
-  test('the channel throws naming WHATSAPP_GRAPH_BASE_URL when production leaves it unset', () => {
+  test('PB-4 the channel throws naming WHATSAPP_GRAPH_BASE_URL when production leaves it unset', () => {
     const environment = {
       META_APP_SECRET: APP_SECRET,
       WHATSAPP_VERIFY_TOKEN: VERIFY_TOKEN,

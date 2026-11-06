@@ -45,6 +45,7 @@ type RequestContext = {
   bindings: Bindings;
   environment: WebhookEnvironment;
   developmentMediaOrigin: string | null;
+  maxFutureSkewMs: number;
 };
 
 const HUB_MODE_PARAMETER = 'hub.mode';
@@ -176,6 +177,11 @@ async function processEntry(input: { context: RequestContext; parsed: ParsedEntr
     logOperatorEvent({ event: OperatorEvent.InboundStale, fields: { [OperatorLogField.ChannelMessageId]: parsed.channelMessageId } });
     return;
   }
+  const isFuture = parsed.at - createPlatformClock().now() > context.maxFutureSkewMs;
+  if (isFuture) {
+    logOperatorEvent({ event: OperatorEvent.InboundFuture, fields: { [OperatorLogField.ChannelMessageId]: parsed.channelMessageId } });
+    return;
+  }
   await receiveOwnerInbound({
     bindings: context.bindings,
     waId: parsed.fromWaId,
@@ -235,7 +241,10 @@ async function processChange(input: { context: RequestContext; change: ParsedCha
   return runInSequence({ items: change.statuses, run: (status) => processStatus({ context, status }) });
 }
 
-export function createWhatsappRoutes(input: { developmentMediaOrigin: string | null }): Hono<{ Bindings: Bindings }> {
+export function createWhatsappRoutes(input: {
+  developmentMediaOrigin: string | null;
+  maxFutureSkewMs: number;
+}): Hono<{ Bindings: Bindings }> {
   const whatsappRoutes = new Hono<{ Bindings: Bindings }>();
 
   whatsappRoutes.get(WHATSAPP_WEBHOOK_PATH, async (context) => {
@@ -277,6 +286,7 @@ export function createWhatsappRoutes(input: { developmentMediaOrigin: string | n
       bindings: context.env,
       environment,
       developmentMediaOrigin: input.developmentMediaOrigin,
+      maxFutureSkewMs: input.maxFutureSkewMs,
     };
     const retryFlags = await runInSequence({ items: changes, run: (change) => processChange({ context: requestContext, change }) });
     const shouldRetry = retryFlags.flat().some(Boolean);

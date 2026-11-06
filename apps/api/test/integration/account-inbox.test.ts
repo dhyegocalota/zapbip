@@ -374,7 +374,7 @@ describe('AccountInbox migrations', () => {
         .toArray()
         .map((row) => row.name),
     }));
-    expect(versions).toEqual([1, 4, 5, 6]);
+    expect(versions).toEqual(ACCOUNT_INBOX_MIGRATIONS.map((migration) => migration.version));
     expect(tables).toEqual(
       expect.arrayContaining([
         'inbox_messages',
