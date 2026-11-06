@@ -4,7 +4,7 @@ import { SMOKE_POLL_ATTEMPTS, SMOKE_POLL_INTERVAL_MS } from '../../src/operation
 import { DeployEnvironment } from '../../src/operations/deploy-environment';
 import { formatSmokeResult, runSmokeChecks } from '../../src/operations/smoke-checks';
 import { SIGNATURE_HEADER } from '../../src/operations/signed-webhook';
-import { SmokeCheck } from '../../src/operations/smoke-inputs';
+import { SmokeCheck, SmokeInput, type SmokeInputs } from '../../src/operations/smoke-inputs';
 import {
   APP_SECRET,
   CONNECTION_SECRET,
@@ -21,14 +21,20 @@ import {
   ZERO_SIGNATURE,
 } from './fake-smoke-stack';
 
-async function run(input: { behavior?: Behavior; environment?: DeployEnvironment; firstDeploy?: boolean; tokenPrefix?: string }) {
-  const { behavior = {}, environment = DeployEnvironment.Staging, firstDeploy = false, tokenPrefix } = input;
+async function run(input: {
+  behavior?: Behavior;
+  environment?: DeployEnvironment;
+  firstDeploy?: boolean;
+  tokenPrefix?: string;
+  inputs?: SmokeInputs;
+}) {
+  const { behavior = {}, environment = DeployEnvironment.Staging, firstDeploy = false, tokenPrefix, inputs = INPUTS } = input;
   const stack = fakeStack(behavior);
   const waits: number[] = [];
   const results = await runSmokeChecks({
     environment,
     firstDeploy,
-    inputs: INPUTS,
+    inputs,
     smokeFetch: stack.smokeFetch,
     wait: async ({ ms }) => {
       waits.push(ms);
@@ -160,6 +166,17 @@ describe('smoke checks', () => {
     const { lines } = await run({ behavior: { throwOnFetch: true } });
     expect(lines.every((line) => line.startsWith('FAIL 000 '))).toBe(true);
     expect(lines.join('\n')).not.toContain(CONNECTION_SECRET);
+  });
+
+  it('names the failure kind of a failed request, not its message', async () => {
+    const { lines } = await run({ behavior: { throwOnFetch: true } });
+    expect(lines[0]).toBe('FAIL 000 health (request failed: ECONNREFUSED)');
+  });
+
+  it('trims a trailing slash from the base url', async () => {
+    const inputs = { ...INPUTS, [SmokeInput.BaseUrl]: `${INPUTS[SmokeInput.BaseUrl]}/` };
+    const { lines } = await run({ inputs });
+    expect(lines[0]).toBe('PASS 200 health');
   });
 
   it('prints no secret in any line', async () => {
