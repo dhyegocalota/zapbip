@@ -7,6 +7,7 @@ import {
   InboxCopyKey,
   OwnerLocale,
   REPLACED_CLOSE_CODE,
+  REVOKED_CLOSE_CODE,
   WakeMode,
 } from '@zapbip/types';
 import { runInDurableObject } from 'cloudflare:test';
@@ -253,5 +254,26 @@ describe('connector socket', () => {
     const screen = await readScreen({ stub });
     expect(screen.filter((entry) => entry.text === notice)).toHaveLength(1);
     expect(await unreadCountOf({ account })).toBe(2);
+  });
+
+  test('closing the sockets of an agent closes its connector with the revoked code and leaves other agents alone', async () => {
+    const account = await registeredAccount();
+    const session = await openConnector({ secret: account.secret });
+    await session.nextFrame();
+    await accountInboxStub({ accountId: account.accountId }).closeAgentSockets({ agent: AGENT });
+
+    expect(await session.closeCode()).toBe(REVOKED_CLOSE_CODE);
+    await vi.waitFor(async () => expect(await socketCountOf({ account })).toBe(0));
+  });
+
+  test('closing the sockets of another agent keeps this connector open', async () => {
+    const account = await registeredAccount();
+    const session = await openConnector({ secret: account.secret });
+    await session.nextFrame();
+    await accountInboxStub({ accountId: account.accountId }).closeAgentSockets({ agent: 'bruno' });
+    await ownerMessage({ account });
+
+    expect(((await session.nextFrame()) as MessagesFrame).type).toBe(ConnectorFrameType.Messages);
+    session.socket.close();
   });
 });

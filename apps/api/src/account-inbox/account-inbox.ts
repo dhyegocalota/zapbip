@@ -337,6 +337,11 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     await inbox.detachLocalConnector({ dependencies: this.dependencies, wake: this.wake, agent, remainingSockets });
   }
 
+  async closeAgentSockets(input: { agent: string }): Promise<void> {
+    void input;
+    throw new Error('closeAgentSockets is not implemented');
+  }
+
   async webSocketError(socket: WebSocket): Promise<void> {
     await this.webSocketClose(socket);
   }
