@@ -1,0 +1,151 @@
+import { InboxErrorCode, WakeProvider } from '@zapbip/types';
+import { describe, expect, test } from 'vitest';
+import { captureInboxError } from '../inbox/testing/capture-inbox-error';
+import { assertWakeTarget } from './assert-wake-target';
+import { WAKE_TOKEN_MAX_CHARS, WAKE_URL_MAX_CHARS } from './constants';
+
+const PUBLIC_HOST = 'zapbip.example';
+const SHORT_TOKEN = 'a'.repeat(16);
+const LONG_TOKEN = 'b'.repeat(32);
+const GROK_URL = 'https://api2.cursor.sh/automations/webhook/abcdefgh12';
+const CLAUDE_URL = 'https://api.anthropic.com/v1/claude_code/routines/trig_01abc/fire';
+const GENERIC_URL = 'https://hooks.example.com/zapbip';
+
+function guard(input: { url: string; token: string; publicHost?: string }) {
+  const { url, token, publicHost = PUBLIC_HOST } = input;
+  return assertWakeTarget({ url, token, publicHost });
+}
+
+async function rejection(input: { url: string; token: string; publicHost?: string }) {
+  return captureInboxError(() => guard(input));
+}
+
+function paddedUrl(input: { length: number }): string {
+  const prefix = 'https://hooks.example.com/';
+  return `${prefix}${'a'.repeat(input.length - prefix.length)}`;
+}
+
+describe('assertWakeTarget providers', () => {
+  test('a Grok routine URL selects grok_routine and keeps the URL', () => {
+    expect(guard({ url: GROK_URL, token: SHORT_TOKEN })).toEqual({ provider: WakeProvider.GrokRoutine, url: GROK_URL, token: SHORT_TOKEN });
+  });
+
+  test('a Claude routine URL selects claude_routine', () => {
+    expect(guard({ url: CLAUDE_URL, token: SHORT_TOKEN }).provider).toBe(WakeProvider.ClaudeRoutine);
+  });
+
+  test('another host selects generic', () => {
+    expect(guard({ url: GENERIC_URL, token: LONG_TOKEN }).provider).toBe(WakeProvider.GenericWebhook);
+  });
+
+  test('a Grok host with a short routine id is refused naming url without echoing it', async () => {
+    const url = 'https://api2.cursor.sh/automations/webhook/short';
+    const error = await rejection({ url, token: SHORT_TOKEN });
+    expect(error).toEqual({ code: InboxErrorCode.InvalidInput, message: 'invalid url' });
+  });
+
+  test('the Anthropic host with the internal path never falls back to generic', async () => {
+    const error = await rejection({ url: 'https://api.anthropic.com/v1/code/triggers/trig_1/run', token: LONG_TOKEN });
+    expect(error).toEqual({ code: InboxErrorCode.InvalidInput, message: 'invalid url' });
+  });
+
+  test('look-alike hosts of a pinned provider are generic and need the long token', async () => {
+    const lookAlike = 'https://api2.cursor.sh.evil.example/automations/webhook/abcdefgh12';
+    expect(await rejection({ url: lookAlike, token: SHORT_TOKEN })).toEqual({
+      code: InboxErrorCode.InvalidInput,
+      message: 'invalid token',
+    });
+    expect(guard({ url: lookAlike, token: LONG_TOKEN }).provider).toBe(WakeProvider.GenericWebhook);
+    const anthropicLookAlike = 'https://api.anthropic.com.evil.example/v1/claude_code/routines/trig_01abc/fire';
+    expect(await rejection({ url: anthropicLookAlike, token: SHORT_TOKEN })).toEqual({
+      code: InboxErrorCode.InvalidInput,
+      message: 'invalid token',
+    });
+    expect(guard({ url: anthropicLookAlike, token: LONG_TOKEN }).provider).toBe(WakeProvider.GenericWebhook);
+  });
+
+  test('a trailing dot on the pinned host is refused naming url', async () => {
+    const error = await rejection({ url: 'https://api2.cursor.sh./automations/webhook/abcdefgh12', token: SHORT_TOKEN });
+    expect(error).toEqual({ code: InboxErrorCode.InvalidInput, message: 'invalid url' });
+  });
+
+  test('a mixed-case host is accepted', () => {
+    expect(guard({ url: 'https://HOOKS.Example.com/x', token: LONG_TOKEN }).provider).toBe(WakeProvider.GenericWebhook);
+  });
+
+  test('only the exact own host is blocked, not its subdomains', async () => {
+    expect(await rejection({ url: 'https://zapbip.example/hook', token: LONG_TOKEN })).toEqual({
+      code: InboxErrorCode.InvalidInput,
+      message: 'invalid url',
+    });
+    expect(guard({ url: 'https://sub.zapbip.example/hook', token: LONG_TOKEN }).provider).toBe(WakeProvider.GenericWebhook);
+  });
+});
+
+describe('assertWakeTarget tokens', () => {
+  const invalidTokens: Record<string, { url: string; token: string }> = {
+    'a generic token of 31 characters': { url: GENERIC_URL, token: 'c'.repeat(31) },
+    'a pinned token of 15 characters': { url: GROK_URL, token: 'd'.repeat(15) },
+    'a pinned token of 513 characters': { url: GROK_URL, token: 'e'.repeat(WAKE_TOKEN_MAX_CHARS + 1) },
+    'a token with a space': { url: GROK_URL, token: 'abc def ghijklmnop' },
+    'a token with a non-ASCII letter': { url: GROK_URL, token: 'abcdefghijklmnoé' },
+    'an empty token': { url: GENERIC_URL, token: '' },
+  };
+
+  test.each(Object.entries(invalidTokens))('%s is refused naming token', async (_name, target) => {
+    expect(await rejection(target)).toEqual({ code: InboxErrorCode.InvalidInput, message: 'invalid token' });
+  });
+
+  test('pinned tokens of 16 and of 512 characters are accepted', () => {
+    expect(guard({ url: GROK_URL, token: 'f'.repeat(16) }).provider).toBe(WakeProvider.GrokRoutine);
+    expect(guard({ url: GROK_URL, token: 'f'.repeat(WAKE_TOKEN_MAX_CHARS) }).provider).toBe(WakeProvider.GrokRoutine);
+  });
+});
+
+describe('assertWakeTarget urls', () => {
+  const invalidUrls: Record<string, string> = {
+    'plain http': 'http://hooks.example.com/x',
+    userinfo: 'https://user:pass@hooks.example.com/x',
+    'a custom port': 'https://hooks.example.com:8443/x',
+    'a bare fragment mark': 'https://hooks.example.com/x#',
+    'a fragment': 'https://hooks.example.com/x#frag',
+    'a url over the limit': paddedUrl({ length: WAKE_URL_MAX_CHARS + 1 }),
+    'leading whitespace': '  https://hooks.example.com/x',
+    'an empty url': '',
+    'a private IPv4': 'https://10.0.0.5/x',
+    'a loopback IPv4': 'https://127.0.0.1/x',
+    'the metadata IPv4': 'https://169.254.169.254/x',
+    'a decimal IPv4': 'https://2130706433/x',
+    'a shortened IPv4': 'https://127.1/x',
+    'a hex IPv4': 'https://0x7f.1/x',
+    'an IPv6 literal': 'https://[::1]/x',
+    'a mapped IPv6 literal': 'https://[::ffff:127.0.0.1]/x',
+    localhost: 'https://localhost/x',
+    'upper-case localhost': 'https://LOCALHOST/x',
+    'localhost with a trailing dot': 'https://localhost./x',
+    'a local name': 'https://printer.local/x',
+    'an internal name': 'https://db.internal/x',
+    'an internal name with a trailing dot': 'https://db.internal./x',
+    'a lan name': 'https://nas.lan/x',
+    'an arpa name': 'https://1.in-addr.arpa/x',
+    'a wildcard localhost': 'https://*.localhost/x',
+    'a single-label host': 'https://metadata/',
+  };
+
+  test.each(Object.entries(invalidUrls))('%s is refused naming url', async (_name, url) => {
+    expect(await rejection({ url, token: LONG_TOKEN })).toEqual({ code: InboxErrorCode.InvalidInput, message: 'invalid url' });
+  });
+
+  test('port 443 is accepted', () => {
+    expect(guard({ url: 'https://hooks.example.com:443/x', token: LONG_TOKEN }).provider).toBe(WakeProvider.GenericWebhook);
+  });
+
+  test('a url of exactly the limit is accepted', () => {
+    expect(guard({ url: paddedUrl({ length: WAKE_URL_MAX_CHARS }), token: LONG_TOKEN }).provider).toBe(WakeProvider.GenericWebhook);
+  });
+
+  test('the error never carries the url or its userinfo', async () => {
+    const error = await rejection({ url: 'https://user:pass@hooks.example.com/x', token: LONG_TOKEN });
+    expect(error.message).not.toMatch(/user|pass|hooks/);
+  });
+});
