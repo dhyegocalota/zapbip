@@ -17,9 +17,10 @@ export const WAKE_SIGNATURE_TOLERANCE_S = 300;
 export const WAKE_SEALED_KEY_VERSION = 1;
 export const WAKE_SECRET_KEY_BYTES = 32;
 export const WAKE_IV_BYTES = 12;
-export const WAKE_BLOCKED_HOSTS: readonly string[] = ['localhost', 'localhost.localdomain', 'zapbip.com'];
+export const WAKE_BLOCKED_HOSTS: readonly string[] = ['localhost', 'zapbip.com', 'workers.dev'];
 export const WAKE_BLOCKED_HOST_SUFFIXES: readonly string[] = [
   '.localhost',
+  '.localdomain',
   '.local',
   '.internal',
   '.lan',
