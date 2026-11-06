@@ -38,6 +38,7 @@ INVALID_LINK_MESSAGE = f"{CONNECTION_LINK_ENV} must be an https link ending in {
 PLATFORM_HINT = "You are chatting with the owner through zapbip (WhatsApp). Plain text only."
 PLATFORM_EMOJI = "💬"
 
+
 class MessageKind(Enum):
     TEXT = "text"
     IMAGE = "image"
