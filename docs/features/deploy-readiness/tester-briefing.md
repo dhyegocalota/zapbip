@@ -58,7 +58,7 @@ Commits: `99caf63` (red, wrangler-config), `5f0cbe9` (wrangler.jsonc), `b3279ef`
 
 ### What changed
 
-- `apps/api/wrangler.jsonc` — top level is production; `env.development` and `env.staging` repeat every binding; plain JSON (no comments, no trailing commas).
+- `apps/api/wrangler.jsonc` — top level is production; `env.development` and `env.staging` repeat every binding; JSONC formatted by the repository Prettier.
 - `apps/api/test/unit/wrangler-config.test.ts` — 18 cases: block values, key-set parity per binding class, vars parity, migrations, crons, placeholders.
 - `apps/api/test/integration/health.test.ts`, `production-entry.test.ts` (WI-117 now `{ ok: true, environment: 'production' }`; the helper passes `ENVIRONMENT: production`).
 - `apps/api/test/e2e/production-bundle.e2e.test.ts` — PB-4, the staging dry-run bundle (pin).
@@ -89,9 +89,13 @@ Pins: the first four wrangler-config cases, PB-4.
 2. `--env production` is refused by wrangler ("No environment found in configuration with name production"). Any script that passes it (the deploy command, the runbooks) is wrong; production deploys with no `--env`.
 3. Every binding class is identical across the three blocks. Break it by deleting `rules` from one block.
 
+### Update (coordinator decisions 2026-11-06)
+
+- Health green landed in `3637a4c`: `parseDeployEnvironment` implemented (lane C now owns `deploy-environment.ts`), `/health` answers `{ ok: true, environment }`, an unknown `ENVIRONMENT` is a 500.
+- `wrangler.jsonc` is formatted by the repository Prettier (trailing commas allowed). `wrangler-config.test.ts` reads it with wrangler's `experimental_readRawConfig`. Lane B's preflight must read it the same way (import that function) and never `JSON.parse` it.
+- The first deploy-environment red text: `Error: parseDeployEnvironment is not implemented`.
+
 ### Gaps
 
-- C3 green (health line in `apps/api/src/app.ts`) is blocked: `parseDeployEnvironment` is still the Step 0 stub and no lane's file map owns its body.
-- Prettier adds trailing commas to `.jsonc`; the file is plain JSON for the preflight's `JSON.parse`. It needs a `.prettierrc` override (`apps/api/wrangler.jsonc`, `trailingComma: none`) or the `format` gate fails.
 - `ratelimits` and `analytics_engine_datasets` parity is not asserted; neither key exists yet.
 - The deploy command and runbooks must not use `--env production` (plan A7 and the production-bundle line were stale).
