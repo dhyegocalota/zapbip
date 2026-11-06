@@ -35,4 +35,10 @@ describe('createUpload', () => {
     const error = await captureInboxError(() => create({ environment, mimeType: 'application/pdf', sizeBytes: 0 }));
     expect(error).toEqual({ code: InboxErrorCode.InvalidInput, message: 'size_bytes: must be at least 1' });
   });
+
+  test('CU-176 stores the normalized media type', async () => {
+    const environment = await createEnvironment();
+    const result = await create({ environment, mimeType: ' Application/PDF ; charset=binary', sizeBytes: 1000 });
+    expect(await environment.repository.findMedia({ mediaId: result.uploadId })).toMatchObject({ mimeType: 'application/pdf' });
+  });
 });

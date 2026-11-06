@@ -223,6 +223,14 @@ Runner: `pnpm --filter @zapbip/core test:unit` (Vitest 5.0.5). Ports are the in-
 - [ ] CU-168 expiry edge cases — input: a row with nothing held; a rule 5 write older than `WINDOW_MS` at the expiry; expected: the row is cleared with no list; the resend is queued (`resent: true`) and the list is sent again.
 - [ ] CU-169 media types are normalised — input: image `image/SVG+XML`, `image/svg+xml;x=1`; sticker `IMAGE/WEBP; q=1`; video `VIDEO/MP4`; expected: both SVG images rejected as `mime_type: image must not be image/svg+xml`; the sticker and video accepted.
 - [ ] CU-170 `claimUpload` and `releaseUpload` — input: a pending upload claimed twice; released and claimed again; completed; expired; expected: `upload_id: upload already in progress` on the second claim; the third succeeds; `upload already received` and `upload expired` as for `describeUpload`; `completeUpload` works on a claimed upload.
+- [ ] CU-171 expiry assignment copy — input: the alarm assigns a held batch to `beta` by rule 5; expected: the owner text names `beta` ("You did not pick an agent, so your message went to beta") and is not the "not listening" notice.
+- [ ] CU-172 a failed resend keeps the list moving — input: the expiry resend fails to send; expected: the resend flag is kept, the due time moves forward, and the next expiry assigns the batch.
+- [ ] CU-173 a claimed expiry — input: two expiries running at once on the same list; expected: one resend is sent.
+- [ ] CU-174 the claim cannot be taken over — input: `UPLOAD_CLAIM_TTL_MS >= UPLOAD_TTL_MS`; a claimed upload, the clock advanced `UPLOAD_TTL_MS`, `claimUpload`; expected: `upload_expired`, never a second claim.
+- [ ] CU-175 claim fencing — input: writer A claims and releases, the clock advances 1 ms, writer B claims; A completes with its token, then releases with its token; expected: `upload_unavailable` for A's completion, B's claim still held after A's release, B completes.
+- [ ] CU-176 the upload media type is stored normalized — input: `createUpload` with ` Application/PDF ; charset=binary`; expected: the media row holds `application/pdf`.
+- [ ] CU-177 control characters in a media type — input: `image/png\n;x`, `image/png\0`, `image/png;\rx`, `image/png;\tx`, `image/png;x\u007f` to `assertMediaFits` and `assertUploadDeclaration`; expected: `invalid_input`, `mime_type: must not contain control characters`.
+- [ ] CU-178 a photo quoting a question prompt — input: an open question, the agent in an ordinary `wait_for_reply`, the owner sends a photo quoting the prompt; expected: the wait returns the photo (`ReplyStatus.Message`), no wake notification, no "not listening" text. A stale tap on an answered question leaves the waiter of another question waiting (pin).
 - [ ] CU-159 every message kind round-trips — input: one message of each of the ten kinds (text, image, video, audio with voice, document, sticker, location, contacts, reaction, choice); expected: the in-memory repository returns an equal object for each.
 
 ## Worker integration
@@ -335,6 +343,23 @@ Runner: `pnpm --filter @zapbip/api test:integration` (Vitest 4.1.12, pool-worker
 - [ ] WI-83 another account's upload through my account path — input: an upload of `acc_2` PUT on `/u/acc_1/<id>`; expected: `403`.
 - [ ] WI-127 `Content-Length` that is not an integer — input: `abc`, `0x0c`, `12abc`, `1.2e1`, `-12`; expected: `400`, no R2 object.
 - [ ] WI-128 two concurrent PUTs — input: two PUTs with different bodies of the declared size, sent together; expected: one `201` and one `409`; the R2 object holds the winner's bytes.
+- [ ] WI-129 the alarm is not postponed — input: a due expiry, the agent keeps calling tools; expected: the alarm stays at the due time and fires.
+- [ ] WI-130 concurrent PUTs (attack) — input: two PUTs at once with different bodies; expected: one `201`, the rest `409`, the stored bytes are the winner's.
+- [ ] WI-131 a PUT after the winner — input: a third PUT after completion; expected: `409` and the object untouched.
+- [ ] WI-132 length attacks — input: `Content-Length` values other than the declared size, and a zero-size PUT; expected: no object stored unless the length is the declared size; `400` for zero.
+- [ ] WI-133 window writes keep the routing list — input: `saveWindow` then `saveRoutingList`, both orders; expected: each write keeps the other's columns.
+- [ ] WI-134 clearing the routing list — input: `clearRoutingList` after `resent` and `reminded`, and with no list; expected: the row is reset; a no-op without a list.
+- [ ] WI-135 saving the routing list twice — input: two saves, one with `openedAt` zero; expected: the second replaces the first; zero round-trips.
+- [ ] WI-136 account isolation of routing lists — input: two accounts each with a list; expected: each reads its own.
+- [ ] WI-137 an aborted client stream — input: a PUT whose body errors after one byte; expected: `400`, the claim released, no object; a retry answers `201`.
+- [ ] WI-138 repeated signature or expiry on an upload link — input: `sig` or `exp` given twice, either order; expected: `403`, no object.
+- [ ] WI-139 repeated signature or expiry on a media link — input: as WI-138 on a media link; expected: `403`.
+- [ ] WI-140 pin: a slow writer past the upload deadline — input: a PUT held open, the clock advanced past `UPLOAD_TTL_MS`, a second PUT, then the first body released; expected: both answer `410` and the upload is never recorded as received.
+- [ ] WI-141 an R2 failure mid-stream — input: `MEDIA.put` rejects once; expected: a 5xx (not `400`), the claim released, no object; a retry answers `201`.
+- [ ] WI-142 the object is stored under the normalized type — input: an upload declared `Image/PNG; charset=binary`; expected: the R2 `contentType` is `image/png`.
+- [ ] WI-143 media is served with the normalized type — input: an object stored with `IMAGE/PNG; charset=binary`; expected: `Content-Type: image/png`.
+- [ ] WI-144 repository claim fencing — input: claim at `T`, takeover at `T+5`; complete and release with the `T` token; expected: complete returns `false` and records nothing, release leaves the claim; the `T+5` token completes.
+- [ ] WI-145 svg and non-inline types are attachments — input: media of `image/svg+xml`, `IMAGE/SVG+XML; charset=utf-8`, `text/html`, `application/pdf`; expected: `Content-Disposition: attachment`, `nosniff` and `sandbox` on every response.
 - [ ] WI-84 signature made with the media key — input: a PUT signed with `MEDIA_LINK_SIGNING_KEY`; expected: `403` (the keys are not interchangeable).
 
 ### Signed media links (`media-route.test.ts`)
