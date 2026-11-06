@@ -442,12 +442,13 @@ describe('runConnection', () => {
 
   describe('reconnect pre-flight', () => {
     it('exits 1 with a clear message when the secret was revoked while disconnected', async () => {
-      useFakeTimers();
-      const exiting = startConnector();
+      const timers = createManualTimers();
+      const exiting = startConnector({ timers });
       await waitForLog({ event: ConnectorLogEvent.ConnectorConnected });
       server.setProbeStatus({ status: UNAUTHORIZED_STATUS });
       server.dropConnections();
-      await reconnectAfterDrop();
+      await waitForLog({ event: ConnectorLogEvent.ConnectorReconnecting });
+      timers.advance({ ms: RECONNECT_BASE_MS });
 
       expect(await exiting).toBe(EXIT_CODE_REFUSED);
       expect(server.connectionCount()).toBe(1);

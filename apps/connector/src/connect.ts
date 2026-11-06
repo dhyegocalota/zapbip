@@ -14,8 +14,11 @@ import {
   HEARTBEAT_TIMEOUT_MS,
   MCP_PATH_SUFFIX,
   RECONNECT_BASE_MS,
+  RECONNECT_JITTER_RATIO,
   RECONNECT_MAX_MS,
   REPLACED_CLOSE_CODE,
+  SECRET_REVOKED_MESSAGE,
+  UNAUTHORIZED_STATUS,
   UPGRADE_REQUIRED_STATUS,
 } from '@zapbip/types';
 import { logConnectorEvent, type ConnectorLogFields, type ConnectorLogger } from './log';
@@ -55,7 +58,8 @@ export function deriveConnectorLinks(input: { connectionLink: string }): { probe
 
 export function reconnectDelayMs(input: { attempt: number; random: () => number }): number {
   if (input.attempt < 0) throw new Error('the reconnect attempt cannot be negative');
-  return Math.min(RECONNECT_MAX_MS, RECONNECT_BASE_MS * 2 ** input.attempt);
+  const delayMs = RECONNECT_BASE_MS * 2 ** input.attempt;
+  return Math.min(RECONNECT_MAX_MS, delayMs + Math.floor(input.random() * delayMs * RECONNECT_JITTER_RATIO));
 }
 
 export async function probeConnectorLink(input: { probeLink: string }): Promise<number> {
@@ -239,6 +243,12 @@ export async function runSocketSession(input: {
     const delayMs = reconnectDelayMs({ attempt: failedAttempts, random });
     log({ event: ConnectorLogEvent.ConnectorReconnecting, fields: { attempt: failedAttempts, delayMs } });
     await waitOrAbort({ delayMs, signal, timers });
+    if (signal.aborted) break;
+    const reconnectProbeStatus = await probeStatusOf({ socketLink });
+    if (reconnectProbeStatus === UNAUTHORIZED_STATUS) {
+      log({ event: ConnectorLogEvent.ConnectorClosed, fields: { status: UNAUTHORIZED_STATUS, message: SECRET_REVOKED_MESSAGE } });
+      return FAILURE_EXIT_CODE;
+    }
     attempt = failedAttempts + 1;
   }
   return CLEAN_EXIT_CODE;
