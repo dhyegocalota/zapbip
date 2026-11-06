@@ -4,7 +4,13 @@ export enum DeployEnvironment {
   Production = 'production',
 }
 
+const DEPLOY_ENVIRONMENTS: string[] = Object.values(DeployEnvironment);
+
+function isDeployEnvironment(value: string | undefined): value is DeployEnvironment {
+  return value !== undefined && DEPLOY_ENVIRONMENTS.includes(value);
+}
+
 export function parseDeployEnvironment(input: { value: string | undefined }): DeployEnvironment {
-  void input;
-  throw new Error('parseDeployEnvironment is not implemented');
+  if (!isDeployEnvironment(input.value)) throw new Error('ENVIRONMENT is not a deploy environment');
+  return input.value;
 }
