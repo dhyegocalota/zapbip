@@ -272,8 +272,8 @@ The blocklist is manual. Automatic blocking after repeated limit trips is out of
 ### Account deletion (LGPD)
 
 1. `apagar conta` replies with the consequences and the phrase `apagar conta definitivamente`. The phrase is the confirmation, and it works only inside 10 minutes of the request, which is stored as `deletion_requested_at` in the account object.
-2. The phrase sends the confirmation reply first, while the window is open.
-3. D1 sets the account to `deleting`. Connections stop resolving at once.
+2. D1 sets the account to `deleting`, while the window is open. Connections stop resolving at once. A failure here sends nothing, and the redelivery confirms again.
+3. The confirmation reply is sent.
 4. The Durable Object's `purge()` clears its SQLite storage and alarms.
 5. `MediaStore.deletePrefix` removes `accounts/<account_id>/`, listing in pages of 1 000.
 6. A D1 batch deletes the account's `owner_identities` and `connections`, then the `accounts` row.

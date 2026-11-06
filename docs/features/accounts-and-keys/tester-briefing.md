@@ -256,3 +256,26 @@ Changed:
 Hypotheses: a `girar`/`novo agente` reply never leaves a clear `zb_inst_` code in `inbox_messages` once sent; an unopened install code's sealed secret is null within 30 minutes after expiry; a forwarded `revogar x` never revokes.
 
 Known gap: a reply that stays queued and is sent later by the flush is not masked afterwards; its code expires after 30 minutes and the cron clears the sealed secret.
+
+## Round 6 (every box assertable at HEAD, owner delegated 2026-11-06)
+
+Rows were reworded to the decided behaviour and every remaining box has a test titled with its line, `[row N]` (grep `[row 181]` for line 181). Plan boxes struck: 31 (the walk landed as a pin), 493 and 578 (not this slice), the install prompt parts rows (bullets).
+
+New tests:
+
+| Rows | Test |
+|---|---|
+| 116 | `account-copy.test.ts` every usage text within 4 096 characters |
+| 235 | `finish-account-deletion.test.ts` the next message follows the waitlist flag, both values |
+| 291 | `d1-accounts.test.ts` red first: `setState` logs `account_state_changed` |
+| 349 to 356 | `operator-script.test.ts` the operator commands and their refusals |
+| 445, 446 | `mcp-account-isolation.test.ts` |
+| 375, 383, 384, 494, 495, 498 | `owner-inbound.test.ts` blocked sender with no Durable Object call, state `deleting` when the confirmation is sent, first image of an active and of a waitlisted phone, deletion retried after a directory failure |
+| 403, 404, 497, 500, 508, 544 | `mcp-rotation.test.ts` the new link answers `check_inbox`, a second failed rotate restores the install code, the message after a rotate is answered |
+| 409 to 411 | `mcp-outbound.test.ts` thirty sends reach the screen, the thirty-first sends nothing |
+| 417, 418 | `mcp-auth.test.ts` no log line carries the route or the secret; `auth_rejected` once |
+| 434 to 438 | `tools/repository-shape/src/account-docs.test.ts` |
+| 506, 507 | `d1-accounts.test.ts`, `d1-connections-lifecycle.test.ts` the adversarial attacks |
+
+Pins (green on arrival): everything above except 291 (red first).
+Spec: the deletion steps now read state first, then the reply, which is what the code does.
