@@ -474,7 +474,7 @@ What is not tested and why.
 - Client abort propagation: not observable locally (spike, ADR 0009). The tests assume an abort is invisible and cover recovery through `question_id`.
 - Real 24-hour window: closed-window paths use the development clock offset (A18), not a real day.
 - Claude Code session (CC-1 to CC-6): opt-in, not run in CI, and run only after the owner's go-ahead, because it calls the model.
-- `database_id` in `wrangler.jsonc` is a local identifier; deploy-readiness replaces it with the id of the created D1 database.
+- The top-level `database_id` in `wrangler.jsonc` is the placeholder `REPLACE_WITH_PRODUCTION_D1_DATABASE_ID` (asserted by `wrangler-config.test.ts`); deploy preflight must replace it with the id of the created D1 database. The development environment keeps the local identifier.
 - PB-1 may be `not run` if `wrangler deploy --dry-run` needs a Cloudflare login.
 - Concurrency beyond a handful of waiters per account: covered by CU-88 and WI-23, not by load.
 - The Mintlify site is not published (ADR 0010). DOC-3 and DOC-4 check the local `mint dev` only.

@@ -12,7 +12,7 @@
     {
       "binding": "CONNECTIONS",
       "database_name": "zapbip-connections",
-      "database_id": "zapbip-connections-local",
+      "database_id": "REPLACE_WITH_PRODUCTION_D1_DATABASE_ID",
       "migrations_dir": "migrations",
     },
   ],
