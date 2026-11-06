@@ -1,7 +1,7 @@
 import { formatOptionId, QUEUE_RETENTION_MS, UPLOAD_TTL_MS, WINDOW_MS } from '@zapbip/core';
 import { DeliveryState, InboxErrorCode, MediaSourceKind, MessageKind, ReplyStatus, TemplateKind } from '@zapbip/types';
 import { abortAllDurableObjects, evictDurableObject, reset, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 import { ACCOUNT_INBOX_MIGRATIONS } from '../../src/account-inbox/migrations';
 import { runMigrations, type Migration } from '../../src/account-inbox/run-migrations';
 import { createSqliteInboxRepository } from '../../src/adapters/sqlite/sqlite-inbox-repository';
@@ -327,7 +327,6 @@ describe('AccountInbox migrations', () => {
     );
     const unsortedApplied = await runInDurableObject(stubOf({ accountId: SECOND_ACCOUNT }), async (_instance, state) => {
       state.storage.sql.exec('DELETE FROM schema_versions');
-      state.storage.sql.exec('DROP TABLE one');
       return runMigrations({
         storage: state.storage,
         migrations: [
@@ -342,8 +341,10 @@ describe('AccountInbox migrations', () => {
 });
 
 describe('AccountInbox logs', () => {
+  let logSpy: MockInstance<typeof console.log>;
+
   beforeEach(() => {
-    vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
   });
 
   it('WI-26 never logs text, captions, file names or secrets', async () => {
@@ -361,7 +362,7 @@ describe('AccountInbox logs', () => {
       filename: LOG_SECRET_FILENAME,
       replyToMessageId: null,
     });
-    const lines = vi.mocked(console.log).mock.calls.map((call) => String(call[0]));
+    const lines = logSpy.mock.calls.map((call) => String(call[0]));
     const events = lines.map((line) => JSON.parse(line).event);
     expect(lines.length).toBeGreaterThan(0);
     expect(events.every((event) => Object.values(LogEvent).includes(event))).toBe(true);
