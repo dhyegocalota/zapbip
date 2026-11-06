@@ -12,7 +12,7 @@ Hermes and OpenClaw are supported agents, so the owner must message them from Wh
 
 ## Goals
 
-1. An install section for Hermes and one for OpenClaw in the `install-skills` page, in both locales, each with its own stop check and self-test.
+1. An install page for Hermes (`agents/hermes`) and one for OpenClaw (`agents/openclaw`), in both locales, each with its own install commands, listening explanation, troubleshooting table and self-test.
 2. Rung 1 (local) through the zapbip channel plugin of each product: a persistent connection to the zapbip connector that hands owner messages to the agent. Rung 3 (scheduled) as the fallback: a job every minute that calls `check_inbox`.
 3. The listen rule of every client: while `ask` or `wait_for_reply` returns pending, the agent calls again until answered.
 
@@ -75,7 +75,7 @@ Every client keeps waiting through the tool: `ask` and `wait_for_reply` return `
 
 | Question | Options | Owner's answer | Date |
 |---|---|---|---|
-| Are Hermes and OpenClaw in scope now? | later feature · now | now: install sections in the `install-skills` page; this spec for what is beyond it | owner order 2026-11-06 |
+| Are Hermes and OpenClaw in scope now? | later feature · now | now: the pages `agents/hermes` and `agents/openclaw` (en and pt-br); this spec for what is beyond them | owner order 2026-11-06 |
 | Default rung | poll every minute · channel plugin | the channel plugin first (rung 1), the every-minute job as fallback (rung 3). The owner's order names the plugin where the product has one; the research confirms both products have one | owner delegated 2026-11-06 |
 | Write a zapbip channel plugin? | yes · no | yes, one plugin per product, in the product's own plugin system; no change to the product's core | owner delegated 2026-11-06 (reverses the first draft of this spec) |
 | Minimum poll interval | 1 minute · longer | 1 minute, subject to `(verify)` for each product | owner delegated 2026-11-06 |
@@ -103,7 +103,7 @@ Every client keeps waiting through the tool: `ask` and `wait_for_reply` return `
 ## Test strategy summary
 
 - Plugins: unit tests against a fake connector socket, per product; the plugin sends `done` only after the agent accepts a handoff (decision D3 in `plan.md`; `zapbip listen` stays a notifier that never sends `done`).
-- Install page: the sections are snapshot-tested per locale (`install-skills` IS-U19 and IS-U26), name only their own product, and end with the self-test.
+- Install pages: `tools/repository-shape` `docs-agent-install` asserts the verified install commands, the configuration keys, the self-test text and the lost-reply event per locale; `mint broken-links` checks the links.
 - Scheduled fallback: `set_wake({mode: "scheduled", interval_minutes: 1})` accepted once scheduled-wake merges.
 - Owner-run: one real install per product with a real model, recorded in the PR; outside `pnpm verify`.
 
