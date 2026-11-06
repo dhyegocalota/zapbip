@@ -47,7 +47,6 @@ Step 0 adds no test. Every stub is reached by a red test in the lane named in `p
 - Slice 4's L2 (Durable Object wiring, `sqlite-wake-repository.ts` body) is not pushed yet. `sqlite-wake-repository.ts` still throws as a whole on this branch, so L1 adds its methods when that lands.
 - The `libs/core` and `apps/api` READMEs say "the webhook wake of a sleeping agent"; they are updated with the lane that makes scheduled and standby real (L2 and L3), not in Step 0.
 
-<<<<<<< HEAD
 ## Lane L1 (storage)
 
 ### What changed
@@ -96,7 +95,7 @@ pnpm --filter @zapbip/api test:integration -- scheduled-wake-alarm standby-hando
 
 ### Red today, green after
 
-Red commit `5ca8f5a`: 20 of 20 cases failed, every one with `Error: saveScheduled is not implemented` or `Error: saveStandby is not implemented` (lane L0 stubs of `set_wake`, which L2 replaces). The implementation commit is `d02a7c8`. The `scheduled-wake-alarm` and `standby-handoff` cases go green once L2's use cases (`setWake`, `pollInbox`, `evaluatePollers`, `nextPollerDeadline`, `wakeRungFor`, `ownerMessageIdOf`, `receiveOwnerMessage` passing `messageId`, `send-content` resolving `ownerMessageIdOf`) are merged.
+Red commit `5ca8f5a`: 20 of 20 cases failed, every one with `Error: saveScheduled is not implemented` or `Error: saveStandby is not implemented` (lane L0 stubs of `set_wake`, which L2 replaces). The implementation commit is `d02a7c8`. After merging L1 and L2 the 9 `scheduled-wake-alarm` cases and the 8 `standby-handoff` cases are green, and the 3 `standby-revocation` cases fail with `The RPC receiver does not implement "recordRevocation"` (slice 3). They went green because L2's use cases (`setWake`, `pollInbox`, `evaluatePollers`, `nextPollerDeadline`, `wakeRungFor`, `ownerMessageIdOf`, `receiveOwnerMessage` passing `messageId`, `send-content` resolving `ownerMessageIdOf`) are merged.
 
 `standby-revocation.test.ts` is waiting on slice 3 (accounts-and-keys): it calls `recordRevocation({agent})` on the account object through a local one-method type, which exists only after `origin/feat/accounts-and-keys` is merged. Its command-driven cases (`revogar grok-bot`, `girar grok-bot`, the revoked secret answering `401`) need that slice's owner commands and the directory and are not written here.
 
@@ -114,7 +113,7 @@ Red commit `5ca8f5a`: 20 of 20 cases failed, every one with `Error: saveSchedule
 - "Alarm order" (expiry sweep before stale notices) is not asserted as behaviour: with the window closed the stale notice is queued and invisible, and with it open nothing expires. It rests on the provider order in `account-inbox.ts`.
 - Not written because they are unit-level or belong to another lane: B3 to B6 waker unit cases (no spy-based test of the wakers in `apps/api` since the plan assigns L3 only the three integration files), "Every owner kind hands off with its content", and "Answer is not handed off".
 - `standby-revocation.test.ts` does not drive the owner command path (needs slice 3).
-=======
+
 ## Lane L2: core rules and use cases
 
 ### What changed
@@ -152,4 +151,3 @@ Red commit `5ca8f5a`: 20 of 20 cases failed, every one with `Error: saveSchedule
 - The copy cadence for 1 minute reads `a cada 1 minutos`; the Step 0 `CadenceMinutes` string has no singular.
 - Files outside the lane's list that were touched: `libs/core/src/inbox/use-cases/wake-agent.ts` (needed to carry `messageId`) and `libs/core/src/wake/testing/wake-fixtures.ts` (one line: the in-memory wake repository needs the fake clock).
 - `ask` and `waitForReply` "records no poll" cases of B2 are not written: neither calls `pollInbox` or `recordPoll`.
->>>>>>> origin/feat/scheduled-wake-l2
