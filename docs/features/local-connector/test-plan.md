@@ -25,7 +25,7 @@ Test areas, each run by its own tester sub-agent in parallel: **Unit (core)**, *
 - [ ] `attachLocalConnector` on a fresh agent — input: agent `ana` with `WakeMode.None` and two unread owner messages `msg_1`, `msg_2`, `limit: 50`; expected: `previousWakeMode` is `WakeMode.None`, `unread` is `[msg_1, msg_2]` in that order, stored mode is `WakeMode.Local`.
 - [ ] `attachLocalConnector` respects the limit — input: three unread owner messages, `limit: 2`; expected: `unread` has the two oldest, length `2`.
 - [ ] `attachLocalConnector` returns the previous mode on re-attach — input: agent already `WakeMode.Local`; expected: `previousWakeMode` is `WakeMode.Local`, stored mode unchanged.
-- [ ] `attachLocalConnector` for an agent with no wake row — input: agent `ghost` with no stored wake (`findWake` returns `null`); expected: rejects with an error naming the missing wake setting; no mode is saved.
+- [ ] `attachLocalConnector` for an agent with no wake row (core only; the socket path calls `touchAgent` first, so this state is unreachable through the socket) — input: agent `ghost` with no stored wake (`findWake` returns `null`); expected: rejects with an error naming the missing wake setting; no mode is saved.
 - [ ] `detachLocalConnector` with sockets remaining — input: `remainingSockets: 1`, mode `local`, restore record stored; expected: no write, restore record kept.
 - [ ] `detachLocalConnector` restores — input: `remainingSockets: 0`, mode `local`, restore record `webhook`; expected: `saveWake` called with the `webhook` record, restore record deleted.
 - [ ] `detachLocalConnector` keeps a user change — input: `remainingSockets: 0`, mode `webhook`, restore record stored; expected: no `saveWake`, restore record deleted.
@@ -183,7 +183,7 @@ Test areas, each run by its own tester sub-agent in parallel: **Unit (core)**, *
 
 ### Wake setting and restore (`apps/api/test/integration/connector-wake-setting.test.ts`)
 
-- [ ] Wake setting read for a missing row — input: attach for an agent with no stored wake row; expected: the attach rejects with an error naming the missing wake setting, no socket is accepted.
+- [ ] Attach registers an agent with no wake row (the socket path calls `touchAgent` before `attachLocalConnector`) — input: attach for an agent that never called a tool; expected: the socket is accepted and the stored mode becomes `local`. The missing-row rejection is covered in core only.
 - [ ] Restore record save and read — input: `saveLocalRestore({agent: 'ana', previous})` then `findLocalRestore`; expected: the same record; after `deleteLocalRestore`, `findLocalRestore` returns `null`.
 - [ ] Close of the last socket restores the previous setting — input: stored wake `webhook` for `ana`, attach (mode becomes `local`), close the only socket; expected: `findWake` returns the `webhook` record again, `findLocalRestore` returns `null`.
 - [ ] Close of one of two sockets keeps the local setting — input: two sockets for `ana`, close one; expected: mode stays `local`, restore record still stored.

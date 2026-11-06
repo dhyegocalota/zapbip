@@ -25,7 +25,7 @@ O provedor é escolhido pelo host da URL, nunca por um campo.
 
 ## Saída
 
-`{ "status": "saved", "wake_mode": string, "effective_rung": string, "provider": string | null }`. `provider` vem preenchido só para `webhook`. A URL, o token e o host nunca são devolvidos.
+`{ "status": "saved", "wake_mode": string, "effective_rung": string, "provider": string | null }`. `provider` vem preenchido só para `webhook`. `effective_rung` é `inbox` para `local` enquanto nenhum conector está conectado, porque a mensagem então espera na caixa de entrada. A URL, o token e o host nunca são devolvidos.
 
 ## Erros
 

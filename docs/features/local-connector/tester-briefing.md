@@ -217,8 +217,6 @@ pnpm --filter @zapbip/docs exec mint broken-links
 
 ### Known gaps
 
-- Object eviction between attach and close is not exercised.
-- `webSocketError` is not implemented; a socket that errors without a close event does not restore the wake mode.
 
 ### Lane listen (LN1 to LN8): `npx zapbip listen` and `npx zapbip channel`
 
@@ -241,3 +239,11 @@ Hypotheses:
 6. `channel` exits when Claude Code closes its end. Break it by: closing stdin while the socket is mid-reconnect.
 
 Gaps: LN6 is resolved from the POC: `claude --dangerously-load-development-channels server:zapbip`, where `zapbip` is the server's key in `.mcp.json` (documented in the connector guide, both languages). The channel was exercised only by an SDK client, never by Claude Code. The `done` for a message arrives only if the socket is open at that moment; otherwise the next redelivery prints nothing and acknowledges.
+
+### Gap closure (set_wake local, socket error, eviction, heartbeat)
+
+- `set_wake` with `mode: local` saves the local mode, drops a stored restore record (the choice becomes the baseline) and reports `effective_rung: inbox` while no connector socket is live, `local` otherwise. `scheduled` and `standby` still answer "wake mode not available yet". The red commit "pin set_wake local" printed `wake mode not available yet` (core) and `expected undefined to deeply equal { status: 'saved', ... }` (MCP).
+- `webSocketError` runs the close path (detach and restore). Red printed `webSocketError is not implemented`.
+- Object restart (`state.abort`) is a pin: the restore record and the unread messages live in storage, so the reconnect gets `hello` with `previousWakeMode: local` and the unread message once.
+- The connector heartbeat takes injectable timers (`apps/connector/src/timers.ts`); the old flake was the test advancing past the pong timeout before the pong was read.
+- Hypothesis to attack: `set_wake local` while attached, then closing the socket, keeps `local`.
