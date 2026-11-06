@@ -485,9 +485,11 @@ describe('receiveOwnerMessage waking', () => {
   test('CU-145 the waker is told once per unread batch and the owner learns the agent is not listening', async () => {
     const environment = await createEnvironment();
     await registerAgents({ environment, agents: ['alpha'] });
-    await receiveText({ environment, text: '@alpha one' });
+    const first = await receiveText({ environment, text: '@alpha one' });
     await receiveText({ environment, text: '@alpha two' });
-    expect(environment.waker.notifications).toEqual([{ agent: 'alpha', reason: AgentWakeReason.MessageWaiting }]);
+    expect(environment.waker.notifications).toEqual([
+      { agent: 'alpha', reason: AgentWakeReason.MessageWaiting, messageId: first.messageId },
+    ]);
     expect(sessionTexts({ environment })).toEqual([notListeningText({ agent: 'alpha' })]);
   });
 
@@ -563,7 +565,7 @@ describe('receiveOwnerMessage waking an agent that holds an ask', () => {
       timeoutMs: 5 * SECOND_MS,
     });
     await environment.clock.advance({ ms: 0 });
-    await receive({
+    const received = await receive({
       environment,
       content: {
         kind: MessageKind.Image,
@@ -575,7 +577,9 @@ describe('receiveOwnerMessage waking an agent that holds an ask', () => {
         caption: null,
       },
     });
-    expect(environment.waker.notifications).toEqual([{ agent: 'alpha', reason: AgentWakeReason.MessageWaiting }]);
+    expect(environment.waker.notifications).toEqual([
+      { agent: 'alpha', reason: AgentWakeReason.MessageWaiting, messageId: received.messageId },
+    ]);
     expect(sessionTexts({ environment })).toEqual([notListeningText({ agent: 'alpha' })]);
     await environment.clock.advance({ ms: 5 * SECOND_MS });
     await asking;
