@@ -31,10 +31,14 @@ export async function verifyLink(input: LinkClaims & { key: string; signature: s
 }
 
 export function readSignedQuery(input: {
-  expiry: string | undefined;
-  signature: string | undefined;
+  expiries: string[] | undefined;
+  signatures: string[] | undefined;
 }): { expiresAt: number; signature: string } | null {
-  const { expiry, signature } = input;
+  const { expiries, signatures } = input;
+  if (expiries === undefined || signatures === undefined) return null;
+  if (expiries.length !== 1 || signatures.length !== 1) return null;
+  const [expiry] = expiries;
+  const [signature] = signatures;
   if (expiry === undefined || signature === undefined) return null;
   if (!CANONICAL_EXPIRY_PATTERN.test(expiry)) return null;
   const expiresAt = Number(expiry);

@@ -33,6 +33,7 @@ import type { DueTimeProvider } from '../contract/due-time-provider';
 import type { Bindings } from '../contract/env';
 import { LogEvent, type LogFields } from '../contract/log';
 import { logEvent } from '../log';
+import { nextAlarmAt } from './alarm-time';
 import { ALARM_MIN_DELAY_MS, AlarmErrorCode } from './constants';
 import { ACCOUNT_INBOX_MIGRATIONS } from './migrations';
 import { runMigrations } from './run-migrations';
@@ -142,7 +143,9 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     const pendingDueTimes = dueTimes.filter((dueAt): dueAt is number => dueAt !== null);
     if (pendingDueTimes.length === 0) return this.ctx.storage.deleteAlarm();
     const earliestDueAt = Math.min(...pendingDueTimes);
-    return this.ctx.storage.setAlarm(Math.max(this.clock.toRealTime({ clockTime: earliestDueAt }), Date.now() + ALARM_MIN_DELAY_MS));
+    const armedAt = await this.ctx.storage.getAlarm();
+    const dueAt = this.clock.toRealTime({ clockTime: earliestDueAt });
+    return this.ctx.storage.setAlarm(nextAlarmAt({ dueAt, armedAt, now: Date.now(), minDelayMs: ALARM_MIN_DELAY_MS }));
   }
 
   async alarm(): Promise<void> {
@@ -233,15 +236,15 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     return this.outcome({ run: () => inbox.describeUpload({ ...input, dependencies: this.dependencies }) });
   }
 
-  claimUpload(input: { mediaId: string }): Promise<CallOutcome<StoredMedia>> {
+  claimUpload(input: { mediaId: string }): Promise<CallOutcome<inbox.UploadClaim>> {
     return this.outcome({ run: () => inbox.claimUpload({ ...input, dependencies: this.dependencies }) });
   }
 
-  releaseUpload(input: { mediaId: string }): Promise<CallOutcome<void>> {
+  releaseUpload(input: { mediaId: string; claimedAt: number }): Promise<CallOutcome<void>> {
     return this.outcome({ run: () => inbox.releaseUpload({ ...input, dependencies: this.dependencies }) });
   }
 
-  completeUpload(input: { mediaId: string }): Promise<CallOutcome<StoredMedia>> {
+  completeUpload(input: { mediaId: string; claimedAt: number }): Promise<CallOutcome<StoredMedia>> {
     return this.outcome({ run: () => inbox.completeUpload({ ...input, dependencies: this.dependencies }) });
   }
 

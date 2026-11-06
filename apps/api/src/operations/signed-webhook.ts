@@ -25,6 +25,11 @@ export type SignedWebhookInput = {
 
 export type SignedWebhookPost = { body: string; headers: Record<string, string> };
 
+export function signWebhookBody(input: { appSecret: string; body: string }): string {
+  const digest = createHmac(SIGNATURE_ALGORITHM, input.appSecret).update(input.body).digest('hex');
+  return `${SIGNATURE_PREFIX}${digest}`;
+}
+
 export function buildSignedWebhookPost(input: SignedWebhookInput): SignedWebhookPost {
   const body = JSON.stringify({
     object: WEBHOOK_OBJECT,
@@ -53,6 +58,8 @@ export function buildSignedWebhookPost(input: SignedWebhookInput): SignedWebhook
       },
     ],
   });
-  const digest = createHmac(SIGNATURE_ALGORITHM, input.appSecret).update(body).digest('hex');
-  return { body, headers: { 'Content-Type': JSON_CONTENT_TYPE, [SIGNATURE_HEADER]: `${SIGNATURE_PREFIX}${digest}` } };
+  return {
+    body,
+    headers: { 'Content-Type': JSON_CONTENT_TYPE, [SIGNATURE_HEADER]: signWebhookBody({ appSecret: input.appSecret, body }) },
+  };
 }

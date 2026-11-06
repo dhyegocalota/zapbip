@@ -1,5 +1,7 @@
 # zapbip
 
+zapbip is a product of Logic Bit.
+
 A personal WhatsApp channel for AI agents: your own agents (Claude Code, Codex, any MCP client) message you on WhatsApp through one official Cloud API number, ask questions with buttons and wait for your answer. One API key and one MCP server.
 
 Early stage: the repository holds the engineering harness only; product code arrives feature by feature under [docs/features](docs/features/).

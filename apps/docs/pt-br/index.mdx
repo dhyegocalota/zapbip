@@ -15,51 +15,60 @@ Você já vive no WhatsApp. O zapbip coloca sua IA lá: ela te manda mensagem, p
 
 <CardGroup cols={2}>
   <Card title="Pesquisa pronta" icon="file-pdf">
-    <Chat messages={[
-      { name: 'ChatGPT', text: 'Sua pesquisa sobre bikes elétricas ficou pronta. Resumo em anexo. 📎 resumo.pdf' },
-      { you: true, text: 'Valeu, perfeito.' },
-    ]} />
+    <Chat
+      messages={[
+        { name: 'ChatGPT', text: 'Sua pesquisa sobre bikes elétricas ficou pronta. Resumo em anexo. 📎 resumo.pdf' },
+        { you: true, text: 'Valeu, perfeito.' },
+      ]}
+    />
   </Card>
   <Card title="Uma decisão na viagem" icon="plane">
-    <Chat messages={[
-      { name: 'Claude', text: 'Qual hotel em Lisboa?', options: ['Alfama', 'Baixa', 'Belém'] },
-      { you: true, text: 'Baixa' },
-      { name: 'Claude', text: 'Reservando Baixa por 3 noites.' },
-    ]} />
+    <Chat
+      messages={[
+        { name: 'Claude', text: 'Qual hotel em Lisboa?', options: ['Alfama', 'Baixa', 'Belém'] },
+        { you: true, text: 'Baixa' },
+        { name: 'Claude', text: 'Reservando Baixa por 3 noites.' },
+      ]}
+    />
   </Card>
   <Card title="Me lembra, dá um oi" icon="bell">
-    <Chat messages={[
-      { you: true, text: 'Me lembra de renovar o passaporte na sexta.' },
-      { name: 'Grok', text: 'Combinado. Te aviso na sexta de manhã.' },
-    ]} />
-
-    Em breve: sua IA puxando a conversa sozinha.
-
+    <Chat
+      messages={[
+        { you: true, text: 'Me lembra de renovar o passaporte na sexta.' },
+        { name: 'Grok', text: 'Combinado. Te aviso na sexta de manhã.' },
+      ]}
+    />
   </Card>
   <Card title="Aprovar um deploy" icon="rocket">
-    <Chat messages={[
-      { name: 'Claude Code', text: 'Posso subir a v2.3 para produção?', options: ['Sim', 'Não'] },
-      { you: true, text: 'Sim' },
-      { name: 'Claude Code', text: 'Deploy feito ✅ 2m14s' },
-    ]} />
+    <Chat
+      messages={[
+        { name: 'Claude Code', text: 'Posso subir a v2.3 para produção?', options: ['Sim', 'Não'] },
+        { you: true, text: 'Sim' },
+        { name: 'Claude Code', text: 'Deploy feito ✅ 2m14s' },
+      ]}
+    />
   </Card>
   <Card title="Fotos nos dois sentidos" icon="image">
-    <Chat messages={[
-      { name: 'Claude', text: '📷 Falhou aqui' },
-      { you: true, text: '📷 O quadro branco' },
-      { name: 'Claude', text: 'Entendi o fluxo, ajustando.' },
-    ]} />
+    <Chat
+      messages={[
+        { name: 'Claude', text: '📷 Falhou aqui' },
+        { you: true, text: '📷 O quadro branco' },
+        { name: 'Claude', text: 'Entendi o fluxo, ajustando.' },
+      ]}
+    />
   </Card>
   <Card title="Várias IAs, um número" icon="users">
-    <Chat messages={[
-      { name: 'Claude', text: 'Testes passaram.' },
-      { name: 'Grok', text: 'Achei 3 fontes.' },
-      { you: true, text: 'Quais? (resposta ao Grok)' },
-    ]} />
+    <Chat
+      messages={[
+        { name: 'Claude', text: 'Testes passaram.' },
+        { name: 'Grok', text: 'Achei 3 fontes.' },
+        { you: true, text: 'Quais? (resposta ao Grok)' },
+      ]}
+    />
   </Card>
 </CardGroup>
 
-<Note>Mostrado como vai aparecer no WhatsApp. O número do zapbip chega em breve.</Note>
+<Note>Mostrado como aparece no WhatsApp.</Note>
 
 ## Como funciona
 
@@ -89,5 +98,5 @@ Para qualquer pessoa que usa IA: ChatGPT, Claude, Grok, Codex e outras. Você s�
 Veja quais IAs funcionam em [IAs compatíveis](/pt-br/agents/supported-agents).
 
 <Card title="Como começar" icon="rocket" href="/pt-br/get-started/how-to-start">
-  Quatro passos do seu WhatsApp até a primeira mensagem. Em breve.
+  Cinco passos do seu WhatsApp até a primeira mensagem.
 </Card>

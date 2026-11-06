@@ -2,8 +2,8 @@ import { readFile } from 'node:fs/promises';
 import { setTimeout as delay } from 'node:timers/promises';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { formatRouteOptionId, INLINE_IMAGE_MAX_BYTES, NOTICE_QUICK_REPLY_ID, WINDOW_MS } from '@zapbip/core';
-import { InboxStatus, MessageKind, ReplyStatus, SECOND_MS } from '@zapbip/types';
+import { formatRouteOptionId, INLINE_IMAGE_MAX_BYTES, NOTICE_QUICK_REPLY_ID, renderCopy, STICKER_MAX_BYTES, WINDOW_MS } from '@zapbip/core';
+import { InboxCopyKey, InboxStatus, MessageKind, OwnerLocale, ReplyStatus, SECOND_MS } from '@zapbip/types';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { McpToolName, TOOL_DEFINITIONS } from '../../src/contract/tool-definitions';
 import {
@@ -30,7 +30,8 @@ const HELD_CALL_TIMEOUT_MS = 55 * SECOND_MS;
 const SMALL_IMAGE_BYTES = 100_000;
 const OVERSIZED_IMAGE_BYTES = INLINE_IMAGE_MAX_BYTES + 100_000;
 const PNG_TYPE = 'image/png';
-const STICKER_BYTES = 100_000;
+const STICKER_BYTES = STICKER_MAX_BYTES;
+const UPLOAD_BYTES = 2048;
 const UNKNOWN_SECRET = `zb_conn_${'A'.repeat(43)}`;
 const YES_TITLE = 'Sim';
 const NO_TITLE = 'Não';
@@ -49,6 +50,26 @@ async function drain(input: { client: Client }): Promise<void> {
 
 async function sendText(input: { client: Client; text: string }) {
   return callTool({ client: input.client, name: McpToolName.SendMessage, arguments: { text: input.text } });
+}
+
+async function uploadAndSend(input: { mimeType: string; sizeBytes: number; kindArguments: Record<string, unknown> }): Promise<ToolResult> {
+  const bytes = Buffer.alloc(input.sizeBytes, 1);
+  const upload = await callTool({
+    client: alpha,
+    name: McpToolName.CreateUpload,
+    arguments: { filename: 'file.bin', mime_type: input.mimeType, size_bytes: bytes.byteLength },
+  });
+  const put = await fetch(String(upload.structured?.upload_url), {
+    method: 'PUT',
+    headers: { 'Content-Type': input.mimeType, 'Content-Length': String(bytes.byteLength) },
+    body: bytes,
+  });
+  expect(put.status).toBe(201);
+  return callTool({
+    client: alpha,
+    name: McpToolName.SendMedia,
+    arguments: { ...input.kindArguments, upload_id: upload.structured?.upload_id },
+  });
 }
 
 function listOf(input: { result: ToolResult; key: string }): Record<string, unknown>[] {
@@ -93,6 +114,12 @@ describe('MCP client against wrangler dev', () => {
     await Promise.all([drain({ client: alpha }), drain({ client: beta })]);
     const held = await postOwnerText({ text: 'oi', replyTo: null });
     await postOwnerText({ text: 'segunda', replyTo: null });
+    const reminderText = renderCopy({ key: InboxCopyKey.RoutingListReminder, locale: OwnerLocale.PortugueseBrazil, values: {} });
+    const remindersAfterSecond = (await readScreen()).filter((entry) => entry.text === reminderText);
+    await postOwnerText({ text: 'terceira', replyTo: null });
+    const remindersAfterThird = (await readScreen()).filter((entry) => entry.text === reminderText);
+    expect(remindersAfterSecond).toHaveLength(1);
+    expect(remindersAfterThird).toHaveLength(1);
     const lists = (await readScreen()).filter((entry) => entry.options.includes(FIRST_AGENT) && entry.options.includes(SECOND_AGENT));
     expect(lists).toHaveLength(1);
     expect(held.message_id).not.toBeNull();
@@ -100,7 +127,7 @@ describe('MCP client against wrangler dev', () => {
     await postOwner({ body: { kind: MessageKind.Choice, option_id: betaOption, title: SECOND_AGENT } });
     const inbox = await callTool({ client: beta, name: McpToolName.CheckInbox, arguments: {} });
     const texts = listOf({ result: inbox, key: 'messages' }).map((message) => message.text);
-    expect(texts).toEqual(['oi', 'segunda']);
+    expect(texts).toEqual(['oi', 'segunda', 'terceira']);
   });
 
   test('E2E-2 E2E-3 E2E-4 text with emoji, at the limit and over it', async () => {
@@ -152,15 +179,31 @@ describe('MCP client against wrangler dev', () => {
   });
 
   test.each([
-    { label: 'video', arguments: { kind: MessageKind.Video }, placeholder: '[vídeo]' },
-    { label: 'voice note', arguments: { kind: MessageKind.Audio, voice: true }, placeholder: '[mensagem de voz]' },
-    { label: 'document', arguments: { kind: MessageKind.Document }, placeholder: '[documento]' },
-    { label: 'sticker', arguments: { kind: MessageKind.Sticker }, placeholder: '[figurinha]' },
-  ])('E2E-7 an outbound $label reaches the screen with its placeholder and link', async ({ arguments: kindArguments, placeholder }) => {
-    const link = `https://example.com/${placeholder.length}.bin`;
-    const sent = await callTool({ client: alpha, name: McpToolName.SendMedia, arguments: { ...kindArguments, url: link } });
-    expect(sent.structured).toMatchObject({ delivery: 'sent' });
-    expect((await readScreen()).at(-1)?.text).toBe(`${placeholder} ${link}`);
+    { label: 'video', mimeType: 'video/mp4', arguments: { kind: MessageKind.Video }, placeholder: '[vídeo]' },
+    { label: 'voice note', mimeType: 'audio/ogg', arguments: { kind: MessageKind.Audio, voice: true }, placeholder: '[mensagem de voz]' },
+    { label: 'document', mimeType: 'application/pdf', arguments: { kind: MessageKind.Document }, placeholder: '[documento]' },
+    { label: 'sticker', mimeType: 'image/webp', arguments: { kind: MessageKind.Sticker }, placeholder: '[figurinha]' },
+  ])(
+    'E2E-7 an uploaded $label reaches the screen with its placeholder and link',
+    async ({ mimeType, arguments: kindArguments, placeholder }) => {
+      const sizeBytes = kindArguments.kind === MessageKind.Sticker ? STICKER_BYTES : UPLOAD_BYTES;
+      const sent = await uploadAndSend({ mimeType, sizeBytes, kindArguments });
+      const link = (await historyOf({ client: alpha })).findLast((message) => message.kind === kindArguments.kind)?.url;
+      expect(sent.structured).toMatchObject({ delivery: 'sent' });
+      expect(link).toBeDefined();
+      expect((await readScreen()).at(-1)?.text.split('?')[0]).toBe(`${placeholder} ${String(link).split('?')[0]}`);
+    },
+  );
+
+  test('E2E-7 a sticker of 100,001 bytes is refused and nothing reaches the screen', async () => {
+    const screenBefore = await readScreen();
+    const sent = await uploadAndSend({
+      mimeType: 'image/webp',
+      sizeBytes: STICKER_BYTES + 1,
+      kindArguments: { kind: MessageKind.Sticker },
+    });
+    expect(sent.isError).toBe(true);
+    expect(await readScreen()).toHaveLength(screenBefore.length);
   });
 
   test('E2E-8 location, contact and reaction are sent', async () => {

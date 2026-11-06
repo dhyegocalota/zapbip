@@ -86,6 +86,20 @@ expect_exit "known limit: a shell expansion that prints a dot is not resolved" 0
 expect_exit "git add by name is allowed" 0 guard-git-add-all.sh "$(bash_call 'git add README.md .agents/hooks')"
 expect_exit "git add of a dotfile is allowed" 0 guard-git-add-all.sh "$(bash_call 'git add .gitignore')"
 
+blocked_deploy_forms=('pnpm --filter @zapbip/api exec wrangler deploy --env staging' 'wrangler deploy' 'npx wrangler versions deploy abc' 'pnpm --filter @zapbip/api exec wrangler rollback abc --env staging' 'wrangler d1 migrations apply zapbip-staging --env staging --remote' 'wrangler d1 time-travel restore db --bookmark b --remote' 'wrangler secret put META_APP_SECRET --env staging' 'openssl rand -base64 32 | pnpm --filter @zapbip/api exec wrangler secret put WAKE_SECRET_KEY' 'pnpm deploy:staging' 'pnpm deploy:production --first-deploy' 'pnpm migrate:production' 'cd apps/api && wrangler deploy')
+for form in "${blocked_deploy_forms[@]}"; do
+  expect_exit "claude: $form is blocked" 2 guard-deploy.sh "$(bash_call "$form")"
+  expect_exit "codex: $form is blocked" 2 guard-deploy.sh "$(codex_bash_call "$form")"
+done
+allowed_deploy_forms=('wrangler deploy --dry-run' 'pnpm --filter @zapbip/api exec wrangler deploy --env staging --dry-run' 'wrangler d1 migrations apply zapbip-staging --env staging --local' 'pnpm migrate:development' 'pnpm smoke:staging' 'pnpm exec vitest run' 'wrangler secret list --env staging' 'git commit -m \"document wrangler deploy\"')
+for form in "${allowed_deploy_forms[@]}"; do
+  expect_exit "claude: $form is allowed" 0 guard-deploy.sh "$(bash_call "$form")"
+  expect_exit "codex: $form is allowed" 0 guard-deploy.sh "$(codex_bash_call "$form")"
+done
+expect_stderr "deploy guard: the message names the owner and the dry run" 'owner.*dry-run' guard-deploy.sh "$(bash_call 'wrangler deploy')"
+expect_jq "settings: guard-deploy watches Bash" "$settings_file" '[.hooks.PreToolUse[] | select(.matcher == "Bash") | .hooks[].command] | any(contains("guard-deploy.sh"))'
+expect_jq "codex: guard-deploy watches Bash" "$codex_hooks_file" '[.hooks.PreToolUse[] | select(.matcher == "^Bash$") | .hooks[].command] | any(contains("guard-deploy.sh"))'
+
 expect_exit "verify records: a command naming .git/verify is blocked" 2 guard-verify-records.sh "$(bash_call 'echo x > .git/verify/abc')"
 expect_exit "verify records: rm of .git/verify is blocked" 2 guard-verify-records.sh "$(bash_call 'rm -rf .git/verify')"
 expect_exit "verify records: cp into .git/verify is blocked" 2 guard-verify-records.sh "$(bash_call 'cp a .git/verify/b')"

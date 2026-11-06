@@ -67,7 +67,7 @@ CREATE TABLE media (
   expires_at INTEGER,
   received_at INTEGER,
   retention_until INTEGER,
-  uploading INTEGER NOT NULL DEFAULT 0
+  claimed_at INTEGER
 );
 
 CREATE TABLE screen_entries (

@@ -1,7 +1,8 @@
 import { experimental_readRawConfig as readRawWranglerConfig, unstable_readConfig as readWranglerConfig } from 'wrangler';
 import { describe, expect, it } from 'vitest';
-import { BUDGET_CHECK_CRON, MEDIA_RETENTION_CRON, PLACEHOLDER_VALUE_PREFIX } from '../../src/operations/constants';
+import { PLACEHOLDER_VALUE_PREFIX, SCHEDULED_CRON } from '../../src/operations/constants';
 import { DeployEnvironment } from '../../src/operations/deploy-environment';
+import { DEVELOPMENT_ENVIRONMENT } from '../../src/contract/constants';
 
 const WRANGLER_CONFIG_PATH = 'wrangler.jsonc';
 const PRODUCTION_DATABASE_ID_PLACEHOLDER = 'REPLACE_WITH_PRODUCTION_D1_DATABASE_ID';
@@ -62,7 +63,7 @@ describe('wrangler config', () => {
     expect(vars.PUBLIC_ORIGIN).toMatch(/^https:\/\//);
   });
 
-  it('the production D1 database id is a placeholder that deploy preflight must replace', () => {
+  it('the production D1 database id is a placeholder that must be replaced before a deploy', () => {
     expect(databaseIdsOf({})).toEqual([PRODUCTION_DATABASE_ID_PLACEHOLDER]);
   });
 
@@ -126,10 +127,8 @@ describe('wrangler config', () => {
     expect(blockEntries.map(([, block]) => block.migrations)).toEqual([EXPECTED_MIGRATIONS, EXPECTED_MIGRATIONS, EXPECTED_MIGRATIONS]);
   });
 
-  it('declares exactly the budget and retention crons in every block', () => {
-    expect(blockEntries.map(([, block]) => block.triggers.crons)).toEqual(
-      Array(blockEntries.length).fill([BUDGET_CHECK_CRON, MEDIA_RETENTION_CRON]),
-    );
+  it('declares exactly one cron per block, the shared scheduled tick', () => {
+    expect(blockEntries.map(([, block]) => block.triggers.crons)).toEqual(Array(blockEntries.length).fill([SCHEDULED_CRON]));
   });
 
   it('marks every deployed database id and no bucket name with the placeholder prefix', () => {

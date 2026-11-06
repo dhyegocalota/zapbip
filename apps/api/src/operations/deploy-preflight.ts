@@ -14,6 +14,8 @@ const WRANGLER_PREFIX = ['--filter', '@zapbip/api', 'exec', 'wrangler'];
 const MAIN_BRANCH = 'main';
 const ORIGIN_REMOTE = 'origin';
 const ORIGIN_MAIN = `${ORIGIN_REMOTE}/${MAIN_BRANCH}`;
+const NPM_NOT_FOUND_CODE = 'E404';
+const NO_NPM_ANSWER = 'no answer';
 const NO_PENDING_MIGRATIONS = 'No migrations to apply';
 const NPM_PACKAGE_NAME = 'zapbip';
 export const NPM_PUBLISHER_VARIABLE = 'ZAPBIP_NPM_PUBLISHER';
@@ -55,6 +57,7 @@ export type WorkerPreflightInput = {
   officialWhatsAppNumber: string;
   company: CompanyFacts;
   npmVersion: string;
+  openclawPluginVersion: string;
 };
 
 export type DocsPreflightInput = {
@@ -69,7 +72,14 @@ export type DocsPreflightInput = {
 type PreflightCheck<Input> = { step: PreflightStep; refusalOf: (input: Input) => Promise<string | null> };
 
 const databaseBlockSchema = z.object({ d1_databases: z.tuple([z.object({ database_name: z.string() })], z.unknown()) });
-const maintainerListSchema = z.array(z.string());
+const npmPersonSchema = z.union([z.string(), z.object({ name: z.string() })]);
+const npmPeopleSchema = z.union([npmPersonSchema, z.array(npmPersonSchema)]);
+
+function npmNamesOf(input: { people: z.infer<typeof npmPeopleSchema> }): string[] {
+  const people = Array.isArray(input.people) ? input.people : [input.people];
+  return people.map((person) => (typeof person === 'string' ? (person.split(' <')[0] as string) : person.name));
+}
+const npmFailureSchema = z.object({ error: z.object({ code: z.string() }) });
 const secretListSchema = z.array(z.object({ name: z.string() }));
 const cronBlockSchema = z.object({ triggers: z.object({ crons: z.array(z.string()) }) });
 
@@ -121,15 +131,30 @@ async function refuseUnsetCompanyFacts(input: { company: CompanyFacts }): Promis
   return `COMPANY facts are still ${COMPANY_FACT_UNSET}: ${unset.join(', ')}; fill the Logic Bit company facts in libs/types before deploying`;
 }
 
+function npmFailureReason(input: { packageSpec: string; stdout: string }): string {
+  const failure = npmFailureSchema.safeParse(parseJsonOrNull({ text: input.stdout }));
+  const code = failure.success ? failure.data.error.code : NO_NPM_ANSWER;
+  if (code === NPM_NOT_FOUND_CODE) return `${input.packageSpec} does not resolve on npm; publish it first`;
+  return `could not reach npm to read ${input.packageSpec} (${code}); check your network and run it again`;
+}
+
 async function untrustedReasonOf(input: { shell: DeployShell; packageSpec: string; publisher: string }): Promise<string | null> {
   const { shell, packageSpec, publisher } = input;
-  const result = await shell.run({ file: NPM, args: ['view', packageSpec, 'maintainers', '--json'] });
-  if (result.exitCode !== 0) return `${packageSpec} does not resolve on npm; publish it first`;
-  const maintainers = maintainerListSchema.safeParse(parseJsonOrNull({ text: result.stdout }));
+  const maintainerAnswer = await shell.run({ file: NPM, args: ['view', packageSpec, 'maintainers', '--json'] });
+  if (maintainerAnswer.exitCode !== 0) return npmFailureReason({ packageSpec, stdout: maintainerAnswer.stdout });
+  const maintainers = npmPeopleSchema.safeParse(parseJsonOrNull({ text: maintainerAnswer.stdout }));
   if (!maintainers.success) return `could not read the maintainers of ${packageSpec} as JSON`;
-  const names = maintainers.data.map((maintainer) => maintainer.split(' <')[0]);
-  if (names.includes(publisher)) return null;
-  return `${packageSpec} is not maintained by the npm user ${publisher}`;
+  const names = npmNamesOf({ people: maintainers.data });
+  const hasOnlyPublisher = names.length > 0 && names.every((name) => name === publisher);
+  if (!hasOnlyPublisher)
+    return `${packageSpec} must be maintained only by the npm user ${publisher}; its maintainers are ${names.join(', ')}`;
+  const publisherAnswer = await shell.run({ file: NPM, args: ['view', packageSpec, '_npmUser', '--json'] });
+  if (publisherAnswer.exitCode !== 0) return `could not read who published ${packageSpec}`;
+  const publishedBy = npmPeopleSchema.safeParse(parseJsonOrNull({ text: publisherAnswer.stdout }));
+  if (!publishedBy.success) return `could not read who published ${packageSpec} as JSON`;
+  const publishers = npmNamesOf({ people: publishedBy.data });
+  if (publishers.length === 1 && publishers[0] === publisher) return null;
+  return `${packageSpec} was published by ${publishers.join(', ')}, not by the npm user ${publisher}`;
 }
 
 async function firstUntrusted(input: { shell: DeployShell; packageSpecs: string[]; publisher: string }): Promise<string | null> {
@@ -152,13 +177,16 @@ async function refuseUntrustedPackages(input: {
   return firstUntrusted({ shell: input.shell, packageSpecs: input.packageSpecs, publisher });
 }
 
+function publishedPackageSpecsOf(input: { npmVersion: string; openclawPluginVersion: string }): string[] {
+  return [`${NPM_PACKAGE_NAME}@${input.npmVersion}`, `${OPENCLAW_PLUGIN_PACKAGE}@${input.openclawPluginVersion}`];
+}
+
 async function refuseUntrustedWorkerPackage(input: WorkerPreflightInput): Promise<string | null> {
-  return refuseUntrustedPackages({ ...input, packageSpecs: [`${NPM_PACKAGE_NAME}@${input.npmVersion}`] });
+  return refuseUntrustedPackages({ ...input, packageSpecs: publishedPackageSpecsOf(input) });
 }
 
 async function refuseUntrustedDocsPackages(input: DocsPreflightInput): Promise<string | null> {
-  const packageSpecs = [`${NPM_PACKAGE_NAME}@${input.npmVersion}`, `${OPENCLAW_PLUGIN_PACKAGE}@${input.openclawPluginVersion}`];
-  return refuseUntrustedPackages({ ...input, packageSpecs });
+  return refuseUntrustedPackages({ ...input, packageSpecs: publishedPackageSpecsOf(input) });
 }
 
 async function refuseUncleanGit(input: WorkerPreflightInput): Promise<string | null> {

@@ -1,27 +1,20 @@
-import { readdir, readFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { INSTALL_PAGE_PATH_PREFIX } from '@zapbip/types';
 import type { WorkerFacts } from './deploy-preflight';
 
-export const INSTALL_ROUTE_PATH = '/i/:installCode';
+export const INSTALL_ROUTE_PATH = `${INSTALL_PAGE_PATH_PREFIX}:installCode`;
 export const WORKER_ENTRY_FILE = 'index.ts';
 
-const APP_FILE = 'app.ts';
-const ROUTES_FOLDER = 'routes';
 const SCHEDULED_EXPORT_PATTERN = /\bscheduled\s*[:(]/;
-const SOURCE_EXTENSION = '.ts';
+const GET_METHOD = 'GET';
 
-export async function inspectWorkerSource(input: { sourceRoot: string }): Promise<WorkerFacts> {
-  const { sourceRoot } = input;
-  const entry = await readFile(join(sourceRoot, WORKER_ENTRY_FILE), 'utf8');
-  const routeFiles = (await readdir(join(sourceRoot, ROUTES_FOLDER), { recursive: true })).filter((file) =>
-    file.endsWith(SOURCE_EXTENSION),
-  );
-  const routeSources = await Promise.all([
-    readFile(join(sourceRoot, APP_FILE), 'utf8'),
-    ...routeFiles.map((file) => readFile(join(sourceRoot, ROUTES_FOLDER, file), 'utf8')),
-  ]);
+export type WorkerApp = { routes: readonly { method: string; path: string }[] };
+
+export async function inspectWorker(input: { sourceRoot: string; app: WorkerApp }): Promise<WorkerFacts> {
+  const entry = await readFile(join(input.sourceRoot, WORKER_ENTRY_FILE), 'utf8');
   return {
     exportsScheduled: SCHEDULED_EXPORT_PATTERN.test(entry),
-    mountsInstallRoute: routeSources.some((source) => source.includes(INSTALL_ROUTE_PATH)),
+    mountsInstallRoute: input.app.routes.some((route) => route.method === GET_METHOD && route.path.startsWith(INSTALL_PAGE_PATH_PREFIX)),
   };
 }

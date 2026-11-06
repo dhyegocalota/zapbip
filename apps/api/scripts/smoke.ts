@@ -2,14 +2,20 @@ import { randomUUID } from 'node:crypto';
 import { setTimeout as delay } from 'node:timers/promises';
 import { parseArgs } from 'node:util';
 import { SECOND_MS } from '@zapbip/types';
+import { z } from 'zod';
+import { readDeployBlock } from './deploy';
 import { parseDeployEnvironment, type DeployEnvironment } from '../src/operations/deploy-environment';
 import { formatSmokeResult, runSmokeChecks, type SmokeFetch } from '../src/operations/smoke-checks';
 import { readSmokeInputs, SmokeInput } from '../src/operations/smoke-inputs';
+import { assertSmokeTarget } from '../src/operations/smoke-target';
+
+const originBlockSchema = z.object({ vars: z.object({ PUBLIC_ORIGIN: z.string() }) });
 
 export type SmokeEntry = {
   environment: DeployEnvironment;
   firstDeploy: boolean;
   environmentVariables: Record<string, string | undefined>;
+  publicOrigin: string;
   smokeFetch: SmokeFetch;
   wait: (input: { ms: number }) => Promise<void>;
   log: (line: string) => void;
@@ -25,8 +31,9 @@ function firstDeployInstructions(input: { environment: DeployEnvironment }): str
 }
 
 export async function runSmoke(input: SmokeEntry): Promise<number> {
-  const { environment, firstDeploy, environmentVariables, smokeFetch, wait, log } = input;
+  const { environment, firstDeploy, environmentVariables, publicOrigin, smokeFetch, wait, log } = input;
   const inputs = readSmokeInputs({ environment, firstDeploy, environmentVariables });
+  assertSmokeTarget({ environment, baseUrl: inputs[SmokeInput.BaseUrl] as string, publicOrigin });
   const results = await runSmokeChecks({
     environment,
     firstDeploy,
@@ -43,10 +50,12 @@ export async function runSmoke(input: SmokeEntry): Promise<number> {
 
 async function main(): Promise<void> {
   const { values } = parseArgs({ options: { environment: { type: 'string' }, 'first-deploy': { type: 'boolean' } } });
+  const environment = parseDeployEnvironment({ value: values.environment });
   const exitCode = await runSmoke({
-    environment: parseDeployEnvironment({ value: values.environment }),
+    environment,
     firstDeploy: values['first-deploy'] === true,
     environmentVariables: process.env,
+    publicOrigin: originBlockSchema.parse(readDeployBlock({ environment })).vars.PUBLIC_ORIGIN,
     smokeFetch: fetch,
     wait: ({ ms }) => delay(ms),
     log: console.log,

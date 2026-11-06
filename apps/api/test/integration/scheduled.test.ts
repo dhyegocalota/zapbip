@@ -1,10 +1,12 @@
 import { MEDIA_RETENTION_MS } from '@zapbip/core';
+import { DAY_MS, HOUR_MS } from '@zapbip/types';
 import { reset } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import usageMigrationSql from '../../migrations/0003_usage.sql?raw';
 import { D1UsageRepository } from '../../src/adapters/d1/d1-usage-repository';
 import { LogEvent } from '../../src/contract/log';
-import { BUDGET_CHECK_CRON, MEDIA_RETENTION_CRON } from '../../src/operations/constants';
+import { MEDIA_RETENTION_HOUR, SCHEDULED_CRON } from '../../src/operations/constants';
+import { runMediaRetention } from '../../src/operations/media-retention';
 import { runScheduled } from '../../src/operations/scheduled';
 import { testEnv } from '../support/workers-env';
 
@@ -26,6 +28,11 @@ async function storeMediaObject(): Promise<number> {
   return stored.uploaded.getTime();
 }
 
+function retentionTickAfter(input: { instant: number }): number {
+  const nextDayStart = Math.floor(input.instant / DAY_MS) * DAY_MS + DAY_MS;
+  return nextDayStart + MEDIA_RETENTION_HOUR * HOUR_MS;
+}
+
 beforeEach(async () => {
   await testEnv.CONNECTIONS.prepare(usageMigrationSql).run();
 });
@@ -38,25 +45,25 @@ describe('scheduled jobs against seeded data', () => {
   it('logs budget.warning and rejects when the day total reaches the threshold', async () => {
     const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
     await seedUsage({ totals: [6_000, 4_400] });
-    await expect(runScheduled({ cron: BUDGET_CHECK_CRON, now: NOW, env: testEnv })).rejects.toThrow(TODAY);
+    await expect(runScheduled({ cron: SCHEDULED_CRON, now: NOW, env: testEnv })).rejects.toThrow(TODAY);
     const logged = logSpy.mock.calls.map(([line]) => JSON.parse(String(line)));
     expect(logged).toContainEqual({ event: LogEvent.BudgetWarning, day: TODAY, gigabyteSeconds: 10_400 });
   });
 
   it('resolves when the day total is under the threshold', async () => {
     await seedUsage({ totals: [6_000, 4_000] });
-    await expect(runScheduled({ cron: BUDGET_CHECK_CRON, now: NOW, env: testEnv })).resolves.toBeUndefined();
+    await expect(runScheduled({ cron: SCHEDULED_CRON, now: NOW, env: testEnv })).resolves.toBeUndefined();
   });
 
   it('deletes a media object once the retention has passed', async () => {
     const uploadedAt = await storeMediaObject();
-    await runScheduled({ cron: MEDIA_RETENTION_CRON, now: uploadedAt + MEDIA_RETENTION_MS + 1, env: testEnv });
+    await runScheduled({ cron: SCHEDULED_CRON, now: retentionTickAfter({ instant: uploadedAt + MEDIA_RETENTION_MS }), env: testEnv });
     expect(await testEnv.MEDIA.head(MEDIA_KEY)).toBeNull();
   });
 
   it('keeps a media object that is exactly at the retention', async () => {
     const uploadedAt = await storeMediaObject();
-    await runScheduled({ cron: MEDIA_RETENTION_CRON, now: uploadedAt + MEDIA_RETENTION_MS, env: testEnv });
+    await runMediaRetention({ bucket: testEnv.MEDIA, now: uploadedAt + MEDIA_RETENTION_MS });
     expect(await testEnv.MEDIA.head(MEDIA_KEY)).not.toBeNull();
   });
 });

@@ -1,4 +1,4 @@
-import { COMPANY, type CompanyFacts, OFFICIAL_WHATSAPP_NUMBER, ZAPBIP_NPM_VERSION } from '@zapbip/types';
+import { COMPANY, type CompanyFacts, OFFICIAL_WHATSAPP_NUMBER, OPENCLAW_PLUGIN_NPM_VERSION, ZAPBIP_NPM_VERSION } from '@zapbip/types';
 import { type DeployShell, type EnvironmentVariables, runDocsPreflight } from '../src/operations/deploy-preflight';
 import { createTerminalShell } from '../src/operations/terminal-shell';
 
@@ -30,7 +30,7 @@ if (import.meta.main) {
     officialWhatsAppNumber: OFFICIAL_WHATSAPP_NUMBER,
     company: COMPANY,
     npmVersion: ZAPBIP_NPM_VERSION,
-    openclawPluginVersion: ZAPBIP_NPM_VERSION,
+    openclawPluginVersion: OPENCLAW_PLUGIN_NPM_VERSION,
     log: console.log,
   })
     .then((exitCode) => process.exit(exitCode))

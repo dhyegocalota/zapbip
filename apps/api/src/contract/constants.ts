@@ -1,8 +1,11 @@
+import { DeployEnvironment } from '../operations/deploy-environment';
+
 export const CONNECTION_SECRET_PREFIX = 'zb_conn_';
 export const CONNECTION_SECRET_BYTES = 32;
 export const CONNECTION_SECRET_PATTERN = /^zb_conn_[A-Za-z0-9_-]{43}$/;
 export const MCP_SERVER_NAME = 'zapbip';
 export const MCP_SERVER_VERSION = '0.1.0';
+export const DEVELOPMENT_ENVIRONMENT = DeployEnvironment.Development;
 export const HEALTH_PATH = '/health';
 export const UNAUTHORIZED_BODY = { error: 'unauthorized' } as const;
 export const CLOCK_OFFSET_STORAGE_KEY = 'clock_offset_ms';
