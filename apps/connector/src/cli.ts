@@ -136,7 +136,7 @@ async function main(): Promise<number> {
   }
   const command = Object.values(CliCommand).find((candidate) => candidate === commandName);
   if (command === undefined) {
-    process.stderr.write(`${USAGE}\n`);
+    process.stderr.write(`${HELP_TEXT}\n`);
     return FAILURE_EXIT_CODE;
   }
   try {

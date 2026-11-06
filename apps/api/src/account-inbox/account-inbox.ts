@@ -59,7 +59,14 @@ import {
   sendFrameToAgent,
   sendMessagesToAgent,
 } from './connector-sockets';
-import { ALARM_MIN_DELAY_MS, AlarmErrorCode, CONNECTOR_AGENT_PARAMETER, OWNER_LOCALE_STORAGE_KEY } from './constants';
+import {
+  ALARM_MIN_DELAY_MS,
+  AlarmErrorCode,
+  CONNECTOR_AGENT_PARAMETER,
+  NORMAL_CLOSE_CODE,
+  OWNER_LOCALE_STORAGE_KEY,
+  UNREPLYABLE_CLOSE_CODES,
+} from './constants';
 import { ACCOUNT_INBOX_MIGRATIONS } from './migrations';
 import { runMigrations } from './run-migrations';
 import { createWakeDependencies } from './wake-dependencies';
@@ -332,10 +339,16 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     sendMessagesToAgent({ context: this.ctx, agent, messages: remaining });
   }
 
-  async webSocketClose(socket: WebSocket): Promise<void> {
+  private async detachSocket(socket: WebSocket): Promise<void> {
     const agent = connectorAgentOf({ context: this.ctx, socket });
     const remainingSockets = remainingSocketCount({ context: this.ctx, agent, closing: socket });
     await inbox.detachLocalConnector({ dependencies: this.dependencies, wake: this.wake, agent, remainingSockets });
+  }
+
+  async webSocketClose(socket: WebSocket, code: number, reason: string): Promise<void> {
+    await this.detachSocket(socket);
+    const replyCode = UNREPLYABLE_CLOSE_CODES.includes(code) ? NORMAL_CLOSE_CODE : code;
+    if (socket.readyState !== WebSocket.CLOSED) socket.close(replyCode, reason);
   }
 
   async closeAgentSockets(input: { agent: string }): Promise<void> {
@@ -343,7 +356,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
   }
 
   async webSocketError(socket: WebSocket): Promise<void> {
-    await this.webSocketClose(socket);
+    await this.detachSocket(socket);
   }
 
   receiveOwnerMessage(input: ReceiveOwnerMessageRequest): Promise<CallOutcome<inbox.ReceiveResult>> {

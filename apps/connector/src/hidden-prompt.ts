@@ -10,10 +10,12 @@ const ENTER_CHARACTERS = ['\r', '\n'];
 const BACKSPACE_CHARACTERS = ['\u007f', '\b'];
 const INTERRUPT_CHARACTER = '\u0003';
 const NEWLINE = '\n';
+const CONNECTION_LINK_REQUIRED_MESSAGE = 'a connection link is required: set ZAPBIP_CONNECTION_URL or type it at the prompt';
 
 async function readPlainLine(input: HiddenPromptInput): Promise<string> {
   const lineReader = createInterface({ input: input.stdin, output: input.output });
-  const answer = await lineReader.question(input.prompt);
+  const closed = new Promise<never>((_, reject) => lineReader.once('close', () => reject(new Error(CONNECTION_LINK_REQUIRED_MESSAGE))));
+  const answer = await Promise.race([lineReader.question(input.prompt), closed]);
   lineReader.close();
   return answer;
 }
