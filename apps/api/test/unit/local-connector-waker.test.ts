@@ -1,14 +1,17 @@
+import type { Message } from '@zapbip/core';
 import {
-  WakeOutcome,
   AgentWakeReason,
   CONNECTOR_FRAME_MAX_BYTES,
   CONNECTOR_INBOX_LIMIT,
   ConnectorFrameType,
   FrameRejectionReason,
+  MessageDirection,
+  MessageKind,
   REPLACED_CLOSE_CODE,
+  WakeOutcome,
 } from '@zapbip/types';
 import { describe, expect, test, vi } from 'vitest';
-import { createEnvironment, receiveText, registerAgents } from '../../../../libs/core/src/inbox/testing/fixtures';
+import { createEnvironment } from '../../../../libs/core/src/inbox/testing/fixtures';
 import { acceptConnectorSocket, connectorAgentOf, parseDoneFrame, remainingSocketCount } from '../../src/account-inbox/connector-sockets';
 import { createLocalConnectorWaker } from '../../src/adapters/wake/local-connector-waker';
 
@@ -46,12 +49,24 @@ function createFakeState(input: { socketsByAgent: Record<string, FakeSocket[]> }
   return createFakeStateWithAccepted(input).context;
 }
 
+function ownerMessage(input: { index: number }): Message {
+  return {
+    messageId: `msg_${input.index}`,
+    direction: MessageDirection.FromOwner,
+    agent: 'ana',
+    at: input.index,
+    replyToMessageId: null,
+    delivery: null,
+    readByAgent: false,
+    kind: MessageKind.Text,
+    text: `message ${input.index}`,
+  };
+}
+
 async function createWakerFixture(input: { socketsByAgent: Record<string, FakeSocket[]>; unreadCount: number }) {
   const environment = await createEnvironment();
-  await registerAgents({ environment, agents: ['ana'] });
-  await Array.from({ length: input.unreadCount }).reduce(
-    (previous: Promise<unknown>, _, index) => previous.then(() => receiveText({ environment, text: `message ${index}` })),
-    Promise.resolve(),
+  await Promise.all(
+    Array.from({ length: input.unreadCount }, (_, index) => environment.repository.insertMessage({ message: ownerMessage({ index }) })),
   );
   const waker = createLocalConnectorWaker({
     context: createFakeState({ socketsByAgent: input.socketsByAgent }),
