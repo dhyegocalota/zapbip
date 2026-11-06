@@ -1,4 +1,49 @@
-import type { ChannelError } from '@zapbip/core';
+import { ChannelError } from '@zapbip/core';
+import { ChannelErrorKind } from '@zapbip/types';
+import { GRAPH_NO_RESPONSE_STATUS } from './graph-client';
+import { GRAPH_SERVER_ERROR_STATUS, GRAPH_UNAUTHORIZED_STATUS } from './whatsapp-constants';
+import { WhatsAppErrorCode } from './whatsapp-enums';
+
+const KIND_BY_ERROR_CODE = new Map<number, ChannelErrorKind>([
+  [WhatsAppErrorCode.WindowClosed, ChannelErrorKind.WindowClosed],
+  [WhatsAppErrorCode.RateLimitedThroughput, ChannelErrorKind.RateLimited],
+  [WhatsAppErrorCode.RateLimitedTier, ChannelErrorKind.RateLimited],
+  [WhatsAppErrorCode.RateLimitedApp, ChannelErrorKind.RateLimited],
+  [WhatsAppErrorCode.RateLimitedUser, ChannelErrorKind.RateLimited],
+  [WhatsAppErrorCode.NumberRestricted, ChannelErrorKind.Restricted],
+  [WhatsAppErrorCode.AccountDisabled, ChannelErrorKind.Restricted],
+  [WhatsAppErrorCode.PhoneNumberNotRegistered, ChannelErrorKind.Restricted],
+  [WhatsAppErrorCode.DeliveryFailed, ChannelErrorKind.DeliveryFailed],
+  [WhatsAppErrorCode.RecipientIsSender, ChannelErrorKind.DeliveryFailed],
+  [WhatsAppErrorCode.ReactionTargetInvalid, ChannelErrorKind.ReactionRejected],
+  [WhatsAppErrorCode.MediaUploadNotAccepted, ChannelErrorKind.MediaRejected],
+  [WhatsAppErrorCode.UnsupportedType, ChannelErrorKind.MediaRejected],
+  [WhatsAppErrorCode.AuthOAuth, ChannelErrorKind.Auth],
+]);
+
+const ERROR_TEXT_BY_KIND: Record<ChannelErrorKind, string> = {
+  [ChannelErrorKind.WindowClosed]: 'the 24-hour customer-service window is closed',
+  [ChannelErrorKind.RateLimited]: 'the WhatsApp channel is busy, try again shortly',
+  [ChannelErrorKind.Restricted]: 'the WhatsApp number is restricted by Meta',
+  [ChannelErrorKind.DeliveryFailed]: 'delivery failed',
+  [ChannelErrorKind.ReactionRejected]: 'the reaction was rejected',
+  [ChannelErrorKind.MediaRejected]: 'the media was rejected',
+  [ChannelErrorKind.TemplateRejected]: 'the template was rejected',
+  [ChannelErrorKind.Timeout]: 'the WhatsApp channel did not answer in time',
+  [ChannelErrorKind.Auth]: 'the WhatsApp credentials were refused',
+  [ChannelErrorKind.Unknown]: 'the WhatsApp channel returned an unexpected error',
+};
+
+function resolveKind(input: { status: number; errorCode: number | null; isTemplateSend: boolean }): ChannelErrorKind {
+  const { status, errorCode, isTemplateSend } = input;
+  const tabledKind = errorCode === null ? undefined : KIND_BY_ERROR_CODE.get(errorCode);
+  if (tabledKind !== undefined) return tabledKind;
+  if (status === GRAPH_UNAUTHORIZED_STATUS) return ChannelErrorKind.Auth;
+  const isTimeout = status === GRAPH_NO_RESPONSE_STATUS || status >= GRAPH_SERVER_ERROR_STATUS;
+  if (isTimeout) return ChannelErrorKind.Timeout;
+  if (isTemplateSend) return ChannelErrorKind.TemplateRejected;
+  return ChannelErrorKind.Unknown;
+}
 
 export function mapGraphErrorToChannelError(input: {
   status: number;
@@ -7,6 +52,6 @@ export function mapGraphErrorToChannelError(input: {
   message: string;
   isTemplateSend: boolean;
 }): ChannelError {
-  void input;
-  throw new Error('mapGraphErrorToChannelError is not implemented');
+  const kind = resolveKind(input);
+  return new ChannelError({ kind, message: `${ERROR_TEXT_BY_KIND[kind]} (${input.message})`, errorCode: input.errorCode });
 }
