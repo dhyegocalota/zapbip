@@ -203,4 +203,31 @@ describe('connector socket', () => {
     );
     session.socket.close();
   });
+
+  test('pushes a second owner message while the first is still unacknowledged', async () => {
+    const account = await registeredAccount();
+    const session = await openConnector({ secret: account.secret });
+    await session.nextFrame();
+    await ownerMessage({ account });
+    await session.nextFrame();
+    await ownerMessage({ account });
+    const frame = (await session.nextFrame()) as MessagesFrame;
+    expect(frame.messages).toHaveLength(2);
+    session.socket.close();
+  });
+
+  test('pushes the remaining unread messages after a done', async () => {
+    const account = await registeredAccount();
+    const session = await openConnector({ secret: account.secret });
+    await session.nextFrame();
+    await ownerMessage({ account });
+    const first = (await session.nextFrame()) as MessagesFrame;
+    await ownerMessage({ account });
+    await session.nextFrame();
+    session.socket.send(JSON.stringify({ type: ConnectorFrameType.Done, messageId: first.messages[0]?.messageId }));
+    const remaining = (await session.nextFrame()) as MessagesFrame;
+    expect(remaining.messages).toHaveLength(1);
+    expect(remaining.messages[0]?.messageId).not.toBe(first.messages[0]?.messageId);
+    session.socket.close();
+  });
 });

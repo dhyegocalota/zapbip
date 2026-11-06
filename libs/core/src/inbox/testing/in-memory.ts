@@ -239,6 +239,7 @@ function createRecordingWaker(): RecordingWaker {
       failedAgents.add(agent);
     },
     hasFailedWake: async ({ agent }) => failedAgents.has(agent),
+    pushesEveryMessage: async () => false,
     replyWith: (input) => {
       outcome = input.outcome;
     },

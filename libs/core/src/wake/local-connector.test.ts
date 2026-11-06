@@ -2,7 +2,7 @@ import { WakeMode, WakeRung, WakeStatus } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { attachLocalConnector, detachLocalConnector } from './local-connector';
 import type { StoredWake } from './wake-setting';
-import { addUnreadOwnerMessage, createWakeEnvironment, setWebhook, type WakeEnvironment } from './testing/wake-fixtures';
+import { addUnreadOwnerMessage, CLAUDE_URL, createWakeEnvironment, setWebhook, type WakeEnvironment } from './testing/wake-fixtures';
 import { wakeRungFor } from './wake-rung';
 
 const AGENT = 'ana';
@@ -85,6 +85,20 @@ describe('attachLocalConnector', () => {
     await expect(attach({ wakeEnvironment })).rejects.toThrow('no wake setting for ana');
     expect(await wakeEnvironment.wake.repository.findWake({ agent: AGENT })).toBeNull();
     expect(await wakeEnvironment.wake.repository.findLocalRestore({ agent: AGENT })).toBeNull();
+  });
+});
+
+describe('attachLocalConnector after the user changed the setting', () => {
+  test('remembers the newer setting instead of the stale restore record', async () => {
+    const wakeEnvironment = await createWakeEnvironment();
+    await setWebhook({ wakeEnvironment, agent: AGENT });
+    await attach({ wakeEnvironment });
+    await setWebhook({ wakeEnvironment, agent: AGENT, url: CLAUDE_URL });
+    const newer = await wakeEnvironment.wake.repository.findWake({ agent: AGENT });
+    await attach({ wakeEnvironment });
+    expect(await wakeEnvironment.wake.repository.findLocalRestore({ agent: AGENT })).toEqual(newer);
+    await detach({ wakeEnvironment, remainingSockets: 0 });
+    expect(await wakeEnvironment.wake.repository.findWake({ agent: AGENT })).toEqual(newer);
   });
 });
 

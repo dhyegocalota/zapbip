@@ -1,4 +1,4 @@
-import type { Message } from '@zapbip/core';
+import type { AgentWaker, Message } from '@zapbip/core';
 import {
   AgentWakeReason,
   CONNECTOR_FRAME_MAX_BYTES,
@@ -71,7 +71,14 @@ function ownerMessage(input: { index: number; text?: string }): Message {
   };
 }
 
-async function createWakerFixture(input: { socketsByAgent: Record<string, FakeSocket[]>; unreadCount: number; text?: string }) {
+const RESTORED_OUTCOME = WakeOutcome.Woken;
+
+async function createWakerFixture(input: {
+  socketsByAgent: Record<string, FakeSocket[]>;
+  unreadCount: number;
+  text?: string;
+  restoreAndNotify?: AgentWaker['notify'];
+}) {
   const environment = await createEnvironment();
   await Promise.all(
     Array.from({ length: input.unreadCount }, (_, index) =>
@@ -81,6 +88,7 @@ async function createWakerFixture(input: { socketsByAgent: Record<string, FakeSo
   const waker = createLocalConnectorWaker({
     context: createFakeState({ socketsByAgent: input.socketsByAgent }),
     repository: environment.repository,
+    restoreAndNotify: input.restoreAndNotify === undefined ? async () => WakeOutcome.Unreached : input.restoreAndNotify,
   });
   return { waker, environment };
 }
@@ -131,6 +139,29 @@ describe('local connector waker', () => {
     const { waker } = await createWakerFixture({ socketsByAgent: { ana: [socket] }, unreadCount: CONNECTOR_INBOX_LIMIT + 10 });
     await notifyAna({ waker });
     expect(JSON.parse(socket.sent.join()).messages).toHaveLength(CONNECTOR_INBOX_LIMIT);
+  });
+});
+
+describe('local waker without a live socket', () => {
+  test('hands the wake to the restore path and returns its outcome', async () => {
+    const restoreAndNotify = vi.fn(async () => RESTORED_OUTCOME);
+    const { waker } = await createWakerFixture({ socketsByAgent: {}, unreadCount: 1, restoreAndNotify });
+    expect(await notifyAna({ waker })).toBe(RESTORED_OUTCOME);
+    expect(restoreAndNotify).toHaveBeenCalledWith({ agent: 'ana', reason: AgentWakeReason.MessageWaiting });
+  });
+
+  test('does not touch the restore path while a socket is live', async () => {
+    const restoreAndNotify = vi.fn(async () => RESTORED_OUTCOME);
+    const { waker } = await createWakerFixture({ socketsByAgent: { ana: [createFakeSocket()] }, unreadCount: 1, restoreAndNotify });
+    await notifyAna({ waker });
+    expect(restoreAndNotify).not.toHaveBeenCalled();
+  });
+
+  test('pushes every message only while a socket is live', async () => {
+    const withSocket = await createWakerFixture({ socketsByAgent: { ana: [createFakeSocket()] }, unreadCount: 0 });
+    const withoutSocket = await createWakerFixture({ socketsByAgent: {}, unreadCount: 0 });
+    expect(await withSocket.waker.pushesEveryMessage({ agent: 'ana' })).toBe(true);
+    expect(await withoutSocket.waker.pushesEveryMessage({ agent: 'ana' })).toBe(false);
   });
 });
 

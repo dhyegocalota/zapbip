@@ -4,6 +4,7 @@ import { runInDurableObject } from 'cloudflare:test';
 import { describe, expect, test, vi } from 'vitest';
 import type { AccountInbox } from '../../src/account-inbox/account-inbox';
 import { openConnector } from '../support/connector-session';
+import { receiveOwnerText } from '../support/inbox-session';
 import { expectOk } from '../support/wake-session';
 import { accountInboxStub } from '../support/workers-env';
 import { inboxOf, seedAccount, type SeededAccount } from './route-fixtures';
@@ -11,6 +12,7 @@ import { inboxOf, seedAccount, type SeededAccount } from './route-fixtures';
 const AGENT = 'ana';
 const GROK_URL = 'https://api2.cursor.sh/automations/webhook/abcdefgh12';
 const GROK_TOKEN = 'p'.repeat(16);
+const OTHER_TOKEN = 'q'.repeat(16);
 
 type WakeHolder = { wake: { repository: WakeRepository } };
 
@@ -33,12 +35,13 @@ async function registeredAccount(): Promise<SeededAccount> {
   return account;
 }
 
-async function enableWebhook(input: { account: SeededAccount }): Promise<StoredWake> {
+async function enableWebhook(input: { account: SeededAccount; token?: string }): Promise<StoredWake> {
   const { account } = input;
+  const token = input.token === undefined ? GROK_TOKEN : input.token;
   expectOk(
     await inboxOf({ accountId: account.accountId }).setWake({
       connection: account.connection,
-      setting: { mode: WakeMode.Webhook, url: GROK_URL, token: GROK_TOKEN },
+      setting: { mode: WakeMode.Webhook, url: GROK_URL, token },
     }),
   );
   const stored = await findWake({ account });
@@ -167,5 +170,32 @@ describe('wake setting while a connector is attached', () => {
     expect(await findWake({ account })).toEqual(previous);
     expect(await findRestore({ account })).toBeNull();
     session.socket.close();
+  });
+
+  test('a half-open replacement keeps the setting the user chose in between', async () => {
+    const account = await registeredAccount();
+    await enableWebhook({ account });
+    const first = await attached({ account });
+    const newer = await enableWebhook({ account, token: OTHER_TOKEN });
+    const second = await attached({ account });
+    await first.closeCode();
+    second.socket.close();
+    await vi.waitFor(async () => expect(await findWake({ account })).toEqual(newer));
+  });
+
+  test('an owner message with no live socket restores the previous setting and wakes through it', async () => {
+    const account = await registeredAccount();
+    const previous = await enableWebhook({ account });
+    const session = await attached({ account });
+    await expect(
+      runInDurableObject(accountInboxStub({ accountId: account.accountId }), (_instance, state) => state.abort('evicted')),
+    ).rejects.toThrow('evicted');
+    await session.closeCode();
+    const stub = accountInboxStub({ accountId: account.accountId });
+    await receiveOwnerText({ stub, text: `@${AGENT} oi` });
+    expect(await findWake({ account })).toEqual(previous);
+    expect(await findRestore({ account })).toBeNull();
+    const jobs = await runInDurableObject(stub, (_instance, state) => state.storage.sql.exec('SELECT agent FROM wake_jobs').toArray());
+    expect(jobs).toHaveLength(1);
   });
 });

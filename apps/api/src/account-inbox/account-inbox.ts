@@ -29,6 +29,7 @@ import {
   ChannelErrorKind,
   ConnectorFrameType,
   WakeMode,
+  WakeOutcome,
   WakeRung,
   type OwnerLocale,
 } from '@zapbip/types';
@@ -119,7 +120,11 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       waker: createDispatchingAgentWaker({
         wakers: {
           [WakeRung.Inbox]: createNoneWaker(),
-          [WakeRung.Local]: createLocalConnectorWaker({ context: this.ctx, repository: inboxOnlyDependencies.repository }),
+          [WakeRung.Local]: createLocalConnectorWaker({
+            context: this.ctx,
+            repository: inboxOnlyDependencies.repository,
+            restoreAndNotify: async () => WakeOutcome.Unreached,
+          }),
           [WakeRung.Webhook]: createWebhookAgentWaker({ dependencies: inboxOnlyDependencies, wake: this.wake }),
         },
         repository: this.wake.repository,

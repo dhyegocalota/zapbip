@@ -2,7 +2,11 @@ import type { AgentWaker, InboxRepository } from '@zapbip/core';
 import { CONNECTOR_INBOX_LIMIT, WakeOutcome } from '@zapbip/types';
 import { sendMessagesToAgent } from '../../account-inbox/connector-sockets';
 
-export function createLocalConnectorWaker(input: { context: DurableObjectState; repository: InboxRepository }): AgentWaker {
+export function createLocalConnectorWaker(input: {
+  context: DurableObjectState;
+  repository: InboxRepository;
+  restoreAndNotify: AgentWaker['notify'];
+}): AgentWaker {
   const { context, repository } = input;
   return {
     notify: async ({ agent }) => {
@@ -13,5 +17,6 @@ export function createLocalConnectorWaker(input: { context: DurableObjectState; 
       return isFullyDelivered ? WakeOutcome.Woken : WakeOutcome.Unreached;
     },
     hasFailedWake: async () => false,
+    pushesEveryMessage: async () => false,
   };
 }
