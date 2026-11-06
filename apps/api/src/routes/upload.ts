@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { createPlatformClock } from '../adapters/platform/clock';
-import { createR2MediaStore } from '../adapters/r2/r2-media-store';
+import { mediaStoreOf } from '../adapters/r2/r2-media-store';
 import type { Bindings } from '../contract/env';
 import { LogEvent } from '../contract/log';
 import { logEvent } from '../log';
@@ -57,12 +57,7 @@ uploadRoutes.put('/u/:account_id/:upload_id', async (context) => {
   const body = context.req.raw.body;
   if (!body) return context.json({ error: 'length_mismatch' }, HttpStatus.BadRequest);
 
-  const mediaStore = createR2MediaStore({
-    bucket: context.env.MEDIA,
-    mediaLinkSigningKey: context.env.MEDIA_LINK_SIGNING_KEY,
-    uploadLinkSigningKey: context.env.UPLOAD_LINK_SIGNING_KEY,
-    clock,
-  });
+  const mediaStore = mediaStoreOf({ bindings: context.env, clock });
   await mediaStore.put({
     accountId,
     mediaId: uploadId,

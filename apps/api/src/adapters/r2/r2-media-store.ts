@@ -1,5 +1,6 @@
 import type { Clock, MediaStore } from '@zapbip/core';
 import { LinkPurpose } from '@zapbip/types';
+import type { Bindings } from '../../contract/env';
 import { signLink } from '../../signing';
 
 const MEDIA_KEY_PREFIX = 'accounts';
@@ -46,4 +47,16 @@ export function createR2MediaStore(input: {
       await input.bucket.delete(mediaIds.map((mediaId) => objectKey({ accountId, mediaId })));
     },
   };
+}
+
+export function mediaStoreOf(input: {
+  bindings: Pick<Bindings, 'MEDIA' | 'MEDIA_LINK_SIGNING_KEY' | 'UPLOAD_LINK_SIGNING_KEY'>;
+  clock: Clock;
+}): MediaStore {
+  return createR2MediaStore({
+    bucket: input.bindings.MEDIA,
+    mediaLinkSigningKey: input.bindings.MEDIA_LINK_SIGNING_KEY,
+    uploadLinkSigningKey: input.bindings.UPLOAD_LINK_SIGNING_KEY,
+    clock: input.clock,
+  });
 }
