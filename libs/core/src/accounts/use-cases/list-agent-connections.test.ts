@@ -39,4 +39,16 @@ describe('listAgentConnections', () => {
     expect(firstLine).toContain('claude-code');
     expect(secondLine).toContain(`, ${EMPTY_CLIENT_MARK})`);
   });
+
+  test('IS-S6 strips WhatsApp formatting characters from a client name', async () => {
+    const fixture = await createAccountFixture();
+    await addAgent({ ...fixture, agent: 'a1' });
+    await fixture.environment.registry.setClientName({
+      accountId: fixture.account.accountId,
+      agent: 'a1',
+      clientName: '*Cl_au~de* `Code`',
+    });
+    const result = await listAgentConnections(ownerInputOf(fixture));
+    expect(result.replies[0]!.parameters[AccountReplyParameter.Agents]).toContain(', Claude Code)');
+  });
 });

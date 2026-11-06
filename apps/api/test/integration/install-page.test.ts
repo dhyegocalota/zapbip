@@ -13,6 +13,7 @@ import {
   WakeMode,
 } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { D1InstallCodeDirectory } from '../../src/adapters/d1/d1-install-code-directory';
 import { createConnectionSecrets } from '../../src/adapters/platform/connection-secrets';
 import { CONNECTION_SECRET_PREFIX } from '../../src/contract/constants';
 import type { WakeModeEntry } from '../../src/contract/account-inbox-rpc';
@@ -281,6 +282,49 @@ describe('install page brute force', () => {
     const limitedCount = responses.filter((response) => response.status === 429).length;
     expect(limitedCount).toBe(attempts - INSTALL_PAGE_REQUESTS_PER_MINUTE);
     expect(resolve).toHaveBeenCalledTimes(INSTALL_PAGE_REQUESTS_PER_MINUTE);
+  });
+});
+
+describe('install page edges', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  const PRIVATE_HEADERS = { 'cache-control': 'no-store', 'x-robots-tag': 'noindex' };
+
+  function expectPrivate(response: Response): void {
+    Object.entries(PRIVATE_HEADERS).forEach(([name, value]) => expect(response.headers.get(name)).toBe(value));
+  }
+
+  it.each([
+    { title: 'POST /i/<code>', path: `${INSTALL_PAGE_PATH_PREFIX}${randomInstallCode()}`, method: 'POST', status: 404 },
+    { title: 'GET /i/', path: INSTALL_PAGE_PATH_PREFIX, method: 'GET', status: 404 },
+    { title: 'GET /i/a/b', path: `${INSTALL_PAGE_PATH_PREFIX}a/b`, method: 'GET', status: 404 },
+  ])('IS-S2 answers $title with no-store and noindex', async ({ path, method, status }) => {
+    const response = await exports.default.fetch(
+      new Request(`${ORIGIN}${path}`, { method, headers: { [CLIENT_ADDRESS_HEADER]: CLIENT_ADDRESS } }),
+    );
+    expect(response.status).toBe(status);
+    expectPrivate(response);
+  });
+
+  it('IS-S2 answers a directory error with no-store, noindex and no detail', async () => {
+    vi.spyOn(D1InstallCodeDirectory.prototype, 'resolve').mockRejectedValue(new Error('D1_ERROR secret detail'));
+    const response = await exports.default.fetch(
+      new Request(`${ORIGIN}${INSTALL_PAGE_PATH_PREFIX}${randomInstallCode()}`, { headers: { [CLIENT_ADDRESS_HEADER]: CLIENT_ADDRESS } }),
+    );
+    expect(response.status).toBe(500);
+    expectPrivate(response);
+    expect(await response.text()).not.toContain('secret detail');
+  });
+
+  it('IS-S1 keys an IPv6 client by its /64 prefix', async () => {
+    const limiter = createFakeRateLimiter({ limit: INSTALL_PAGE_REQUESTS_PER_MINUTE });
+    const route = buildRoute({ limiter });
+    const code = randomInstallCode();
+    await getPage({ route, installCode: code, address: '2001:db8:1:2:aaaa:bbbb:cccc:dddd' });
+    await getPage({ route, installCode: code, address: '2001:db8:1:2:1111:2222:3333:4444' });
+    await getPage({ route, installCode: code, address: '2001:db8:1:3::1' });
+    expect(limiter.calls[0]).toBe(limiter.calls[1]);
+    expect(limiter.calls[2]).not.toBe(limiter.calls[0]);
   });
 });
 

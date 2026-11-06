@@ -1,6 +1,7 @@
 import { INSTALL_SELF_TEST_TEXT, OwnerLocale } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { AGENT_RULES } from '../agent-rules';
+import { ZAPBIP_NPM_VERSION } from './prompts/connector-commands';
 import { INSTALL_PAGE_COPY } from './install-page-copy';
 import { INSTALL_PRODUCTS } from './install-products';
 import { renderInstallPage, type InstallPageInput } from './render-install-page';
@@ -28,6 +29,12 @@ describe('renderInstallPage', () => {
       expect(positions.every((position) => position > -1)).toBe(true);
       expect([...positions].sort((left, right) => left - right)).toEqual(positions);
       headings.forEach((heading) => expect(page.split('\n').filter((line) => line === heading)).toHaveLength(1));
+    });
+
+    test('IS-S7 names the package version only through ZAPBIP_NPM_VERSION', () => {
+      const versions = [...page.matchAll(/zapbip@(\S+)/g)].map((match) => match[1]);
+      expect(versions.length).toBeGreaterThan(0);
+      versions.forEach((version) => expect(version).toBe(ZAPBIP_NPM_VERSION));
     });
 
     test('carries the agent rules verbatim', () => {
