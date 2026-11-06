@@ -42,6 +42,12 @@ async function fetchMetadata(input: { graph: GraphClient; channelMediaId: string
       isReactionSend: false,
     });
     if (channelError.errorCode === WhatsAppErrorCode.InboundMediaTooLarge) return null;
+    const isPermanentRejection =
+      error.status >= HttpStatus.BadRequest &&
+      error.status < HttpStatus.InternalServerError &&
+      channelError.code !== ChannelErrorKind.Auth &&
+      channelError.code !== ChannelErrorKind.RateLimited;
+    if (isPermanentRejection) return null;
     if (channelError.code === ChannelErrorKind.Timeout) throw new RetriableMediaError(channelError.message, { cause: error });
     throw channelError;
   }
