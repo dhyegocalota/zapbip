@@ -3,11 +3,10 @@ import type { DevAccountInboxRpc, ScreenEntry } from '../contract/account-inbox-
 
 export class DevAccountInbox extends AccountInbox implements Pick<DevAccountInboxRpc, 'readScreen' | 'advanceClock'> {
   readScreen(): Promise<ScreenEntry[]> {
-    throw new Error('readScreen is not implemented');
+    return this.sender.listScreenEntries();
   }
 
   advanceClock(input: { advanceMs: number }): Promise<number> {
-    void input;
-    throw new Error('advanceClock is not implemented');
+    return this.clock.advance(input);
   }
 }

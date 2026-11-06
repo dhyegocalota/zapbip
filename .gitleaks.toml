@@ -8,4 +8,5 @@ description = "The exact placeholder strings the repository ships on purpose, ea
 regexes = [
   '''^zapbip-test-secret-with-at-least-32-characters$''',
   '''^3b7d80fc9a4468769bc3a4505f06222a777b80a0732c9dcd3e03df05e876e37c$''',
+  '''^arquivo-789\.pdf$''',
 ]
