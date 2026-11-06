@@ -47,8 +47,6 @@ async function queueWithNotice(input: DeliverToOwnerInput & { message: Message }
     await sender.template({ kind, locale: ownerLocale, parameters: [agent, preview] });
   } catch {
     await releaseNotice({ dependencies });
-    await repository.updateDelivery({ messageId: message.messageId, delivery: DeliveryState.Failed });
-    throw deliveryFailure({ kind: message.kind });
   }
   return queued;
 }

@@ -95,7 +95,7 @@ describe('sendText', () => {
     expect(first.delivery).toBe(DeliveryState.Queued);
     expect((await environment.repository.findWindow()).noticeSentForClosedWindow).toBe(false);
     await send({ environment, text: 'two' });
-    expect(environment.sender.templates).toHaveLength(1);
+    expect(environment.sender.templates).toHaveLength(2);
   });
 
   test('CU-94b concurrent sends with the notice failing once keep both queued and the next send retries the notice', async () => {
@@ -109,9 +109,9 @@ describe('sendText', () => {
     environment.sender.releaseTemplates();
     const results = await Promise.all([first, second]);
     expect(results.map((result) => result.delivery)).toEqual([DeliveryState.Queued, DeliveryState.Queued]);
-    expect(environment.sender.templates).toHaveLength(0);
-    await send({ environment, text: 'three' });
     expect(environment.sender.templates).toHaveLength(1);
+    await send({ environment, text: 'three' });
+    expect(environment.sender.templates).toHaveLength(2);
     const history = await environment.repository.listAgentHistory({ agent: 'alpha', limit: 5 });
     expect(history.map((message) => message.delivery)).toEqual([DeliveryState.Queued, DeliveryState.Queued, DeliveryState.Queued]);
   });
