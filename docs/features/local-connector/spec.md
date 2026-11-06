@@ -4,7 +4,7 @@
 **Tier:** 🔴
 **Owner approval:** approved 2026-11-06 (owner delegated)
 **ADRs:** [0006](../../adr/0006-one-secret-per-connection-in-the-mcp-url.md), [0007](../../adr/0007-a-durable-inbox-and-a-wake-ladder.md), [0009](../../adr/0009-cloudflare-workers-with-one-durable-object-per-account.md), [0022](../../adr/0022-a-hibernatable-websocket-for-the-local-connector.md), [0023](../../adr/0023-the-local-session-is-the-newest-one-in-the-working-directory.md)
-**Not changing:** the ten MCP tools and their contract; the WhatsApp adapters; the connection directory schema in D1 (the wake mode lives in the Durable Object); the install prompts of `install-skills`. Nothing outside `apps/connector`, `libs/types`, the connector route and Durable Object code in `apps/api`, `apps/docs`, `scripts/verify-gates.tsv`, the repository-shape root list and the indexes.
+**Not changing:** the ten MCP tools and their contract, except that `set_wake` now accepts `mode: local`; the WhatsApp adapters; the connection directory schema in D1 (the wake mode lives in the Durable Object); the install prompts of `install-skills`. Nothing outside `apps/connector`, `libs/types`, the connector route and Durable Object code in `apps/api`, `apps/docs`, `scripts/verify-gates.tsv`, the repository-shape root list and the indexes.
 
 ## Problem
 
@@ -52,7 +52,7 @@ apps/api/src/account-inbox  connector sockets (hibernation API), LocalConnectorW
 apps/docs/connect           local-connector.mdx
 ```
 
-The package has no runtime dependencies: it uses Node 24's global `fetch`, global `WebSocket`, `node:child_process` and `node:readline`. esbuild inlines `libs/types` into `dist/cli.js`. Type-only imports from `libs/core` are erased.
+`package.json` lists no runtime dependencies: the connector uses Node 24's global `fetch`, global `WebSocket`, `node:child_process` and `node:readline`. esbuild inlines `libs/types` and the MCP SDK (used only by `channel`, a development dependency) into `dist/cli.js`. Type-only imports from `libs/core` are erased.
 
 ### Command
 
@@ -233,9 +233,11 @@ Never logged: message text, captions, file names, the connection URL or its secr
 - **Commands.** No `shell: true`. No argv or path comes from server data. Only the owner's text reaches the child process, and only as one argument inside the channel block.
 - **Restricted tools.** Claude Code allows `mcp__zapbip__send_message` only. Codex's zapbip server exposes `send_message` only, with its approval mode set.
 - **Sandbox.** Codex runs read-only.
-- **Owner text.** The block marks sender `owner` and `verified="true"`. Escaping prevents a breakout. Claude refuses instructions from unverified senders (POC finding).
+- **Owner text.** The block marks sender `owner` and `verified="true"` only for messages the owner wrote. A message WhatsApp marks as forwarded (or frequently forwarded) arrives with `verified="false"` and a `forwarded="true"` label, and the channel instructions grant it no authority. Escaping (`&`, `<`, `>`) prevents a breakout. Claude refuses instructions from unverified senders (POC finding).
+- **Least privilege.** The resumed Claude Code session runs in `dontAsk` permission mode with every built-in tool off (`--tools=`) and only `send_message` allowed; the owner prompt goes to the child on standard input; the child never sees `ZAPBIP_CONNECTION_URL`.
+- **Revocation.** Revoking a connection must close every socket the agent holds: the object exposes `closeAgentSockets({agent})`, which closes them with `REVOKED_CLOSE_CODE`. Slice 3's revoke flow calls it when the slices merge (a cross-slice task); until then a revoked connector is stopped by the 401 of its next reconnect pre-flight.
 - **Secret.** Read from the environment or a prompt. Never logged, never in argv. The connector keeps it in memory only.
-- **Supply chain.** No runtime dependencies. The bundle is built in CI and checked with `npm pack --dry-run` in the gate.
+- **Supply chain.** `package.json` lists no runtime dependencies. The bundle is built in the gate and checked with `npm pack --dry-run`. Docs and skills pin `npx zapbip@<exact version>`, the `version` in `apps/connector/package.json`. Publishing that version to npm is an owner step of `deploy-readiness`; the package stays `private` until then.
 - **Local files.** Session lookup reads file names and modification times. Codex rollouts are read only for their first line.
 
 ### Background running (documented, not installed)
@@ -266,7 +268,10 @@ No command writes either file. A reboot restarts the connector; a reconnect re-r
 | Wake persistence | new port methods on the inbox repository · slice 4's `WakeRepository` | `WakeRepository`; three restore methods, a `local_restore` column on `agent_wake` in Durable Object schema `v5`; the last close restores the previous setting unless the owner changed it meanwhile | owner delegated 2026-11-06 |
 | Done scope | any message · owner messages of the same agent | only an owner message of the same agent is marked read | owner delegated 2026-11-06 |
 | Connector pre-flight | open the socket directly · a plain HTTPS request first | `GET` the link without `Upgrade`: 401 exits 1, 426 continues, anything else exits 1 | owner delegated 2026-11-06 |
-| Package location | `apps/connector` · `libs/connector` | `apps/connector`, bundled with esbuild, zero runtime dependencies | owner delegated 2026-11-06 |
+| `set_wake` with `mode: local` | rejected as unavailable · accepted | accepted: it saves the local mode, drops any stored restore record (the choice becomes the baseline) and reports `effective_rung: inbox` while no connector socket is live, `local` otherwise | owner delegated 2026-11-06 |
+| Forwarded messages | verified like the rest · unverified with a label | `verified="false"` and a forwarded label, carried from the inbound message flag through the inbox | owner delegated 2026-11-06 |
+| Push scope of the local rung | first message of a batch · every owner message | every owner message while a socket is live, and the remaining unread after each `done`; the connector queue dedupes by id | owner delegated 2026-11-06 |
+| Package location | `apps/connector` · `libs/connector` | `apps/connector`, bundled with esbuild, no runtime dependencies in `package.json` | owner delegated 2026-11-06 |
 
 ## Test strategy summary
 
@@ -292,5 +297,5 @@ No command writes either file. A reboot restarts the connector; a reconnect re-r
   - `done` marks the message read;
   - the auto-response answers `ping` without a message event reaching the object.
 - **E2E:** the real `npx zapbip connect` against `wrangler dev` with the owner simulator, one real Claude Code session and one Codex session, each waking and replying through `send_message`. Recorded for the PR.
-- **Docs:** `mint broken-links` green for `apps/docs/connect/local-connector.mdx`.
+- **Docs:** `mint broken-links` green for `apps/docs/developers/local-connector.mdx`.
 - **Packaging:** `npm pack --dry-run` lists only `dist/`, the README and the package metadata.

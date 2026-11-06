@@ -247,7 +247,7 @@ Harness: `apps/connector/test/e2e/support/stack.ts` (fixed by the plan, file map
 - [ ] No runtime dependencies — input: `package.json`; expected: `dependencies` is absent or `{}`.
 - [ ] `private` stays `true` — input: `package.json`; expected: `"private": true` (publish is `deploy-readiness`).
 - [ ] Edge: the bundle contains no test code — input: grep of `dist/cli.js` for `vitest` and `fake-event-server`; expected: no match.
-- [ ] `mint broken-links` — input: `apps/docs` with `connect/local-connector.mdx` and `connect/background-running.mdx`; expected: no broken links.
+- [ ] `mint broken-links` — input: `apps/docs` with `developers/local-connector.mdx` and `developers/background-running.mdx`; expected: no broken links.
 - [ ] The docs page states no secret — input: grep of the two `.mdx` files for the sample secret string used in tests; expected: no match, the page uses a placeholder.
 - [ ] Repository shape — input: `pnpm --filter @zapbip/repository-shape test:unit`; expected: green, `apps/connector/README.md` present and purpose-only.
 - [ ] The README is purpose only — input: `apps/connector/README.md`; expected: no command, no flag name, no path other than the package's own folder.

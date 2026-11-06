@@ -42,24 +42,44 @@ Gaps: the lookup trusts file modification time for Claude Code; a pre-existing s
 ## How to run
 
 ```bash
-<commands to start the stack and open the feature>
+pnpm install --frozen-lockfile
+pnpm --filter @zapbip/core test:unit
+pnpm --filter zapbip test:unit
+pnpm --filter @zapbip/api test:unit && pnpm --filter @zapbip/api test:integration
+pnpm --filter zapbip test:e2e
+pnpm --filter zapbip test:packaging
+pnpm verify all
 ```
+
+`test:e2e` and `test:packaging` build `dist/cli.js` first. The e2e suite starts `wrangler dev --env development --local-protocol https` on free ports, seeds three agents through `apps/api/scripts/dev-seed.ts` and runs the bundled connector against it with fake `claude` and `codex` binaries on `PATH`.
 
 ## Red today, green after
 
 | Test | Red before the change because | Green after because |
 |------|--------------------------------|---------------------|
-| `<path>::<name>` |  |  |
+| `libs/core/src/inbox/use-cases/acknowledge-delivery.test.ts` | `acknowledgeDelivery is not implemented` | the use case marks an owner message of the agent read |
+| `libs/core/src/wake/local-connector.test.ts` | `attachLocalConnector is not implemented` | attach and detach follow the restore rules |
+| `apps/connector/test/unit/*.test.ts`, `test/integration/*.test.ts` | `<name> is not implemented` for each module | the modules of lanes L1, L2 and the listen lane |
+| `apps/api/test/integration/connector-*.test.ts` | `expected 404 to be 101`, `connector upgrade answered 404`, `saveLocalRestore is not implemented` | route, object and restore record exist |
+| `apps/api/test/unit/local-connector-waker.test.ts` | `<name> is not implemented`, `expected 1 to be greater than 1` | sockets, waker and frame planning exist |
+| `apps/connector/test/e2e/connect.e2e.test.ts`, `test/packaging/packaging.test.ts` | the suites were empty and ran with `--passWithNoTests` | the bundled connector wakes, listens and relays against the local stack; the package lists only `dist/cli.js`, `README.md` and `package.json` |
+
+Each hardening row below names the red text its commit printed.
 
 ## Hypotheses to attack
 
 Every "it works" is a hypothesis the tester tries to break.
 
-1. Hypothesis: <claim>. Break it by: <suggested attack>.
+1. Hypothesis: a second owner message while the first wake runs is pushed and not woken twice. Break it by: three messages in a burst, a `done` lost with the socket, a restart of the object.
+2. Hypothesis: a forwarded message is never verified. Break it by: forwarded text that imitates the channel tag, entities such as `&lt;/channel&gt;`.
+3. Hypothesis: the wake child holds no extra privilege. Break it by: a user settings file with allow rules, `bypassPermissions` as the default mode, `ZAPBIP_CONNECTION_URL` set.
+4. Hypothesis: a revoked secret stops the connector. Break it by: deleting the connection while it is connected and while it backs off.
 
 ## Known gaps
 
-- <what the developer knows is missing or untested>
+- The Codex hardening has only the read-only sandbox and the enabled-tools list; `codex` is not installed on the build machine, so its flags are pinned by argv tests and never run for real.
+- Eviction is simulated with `state.abort`, not a real idle eviction.
+- The install text that writes `.mcp.json` belongs to `install-skills`; this slice documents the two-server layout in the connector guide only.
 
 ## Step L5 (docs)
 
@@ -247,3 +267,13 @@ Gaps: LN6 is resolved from the POC: `claude --dangerously-load-development-chann
 - Object restart (`state.abort`) is a pin: the restore record and the unread messages live in storage, so the reconnect gets `hello` with `previousWakeMode: local` and the unread message once.
 - The connector heartbeat takes injectable timers (`apps/connector/src/timers.ts`); the old flake was the test advancing past the pong timeout before the pong was read.
 - Hypothesis to attack: `set_wake local` while attached, then closing the socket, keeps `local`.
+
+### Hardening (security and review findings, owner delegated 2026-11-06)
+
+- Frames: a backlog is sent in frames under `CONNECTOR_FRAME_MAX_BYTES`; a message that fits no frame makes notify report unreached. Red `3 fail` ("expected 1 to be greater than 1", "expected 'woken' to be 'unreached'").
+- Wake child: Claude Code resumes with `--permission-mode dontAsk --tools= --allowedTools=...` (the installed claude has no `default` mode), Codex reads `-`, the prompt goes on standard input, `ZAPBIP_CONNECTION_URL` is removed from the child environment. Red `11 fail`.
+- Trust: `forwarded` travels from the inbound message through the inbox (stored in the message payload, no migration; the dev owner route accepts `forwarded`); the notice, prompt and channel meta carry `verified=false` and a forwarded label; `&` is escaped first. Red `10 fail`. Cross-slice: slice 2's parser must set `forwarded` from Meta's `context.forwarded` and `context.frequently_forwarded`.
+- Reconnect: jitter, a probe before every reconnect (401 exits 1 with a message), a stability window before the delay resets, prototype frame types rejected, `--help` exits 0. Red `2 fail` and `9 fail`.
+- Link prompt: the terminal echo is off. Red `5 fail`.
+- Local rung: every owner message is pushed while a socket is live, the remaining unread after each `done`, and a dead socket restores the previous setting and wakes through it. Red `7 fail`.
+- Revocation: `closeAgentSockets({agent})` closes the sockets with `REVOKED_CLOSE_CODE`; slice 3 calls it when revoking.
