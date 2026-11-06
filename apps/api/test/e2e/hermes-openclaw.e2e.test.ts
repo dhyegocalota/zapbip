@@ -1,15 +1,18 @@
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import {
   CHANNEL_FORWARDED_PREFIX,
+  CHANNEL_HANDOFF_NO_TEXT_BY_KIND,
   CONNECTOR_PATH_SUFFIX,
   ConnectorFrameType,
   ConnectorLogEvent,
   MessageKind,
+  ReplyStatus,
   SECOND_MS,
+  WakeMode,
 } from '@zapbip/types';
 import { setTimeout as delay } from 'node:timers/promises';
 import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
@@ -62,7 +65,8 @@ enum ClientProduct {
 
 type RunningClient = { container: Container; account: WakeAccount };
 type SocketMessage = { messageId: string; text: string };
-type ConnectorFrame = { type: ConnectorFrameType; messages: SocketMessage[] };
+type ConnectorFrame =
+  { type: ConnectorFrameType.Hello; previousWakeMode: string } | { type: ConnectorFrameType.Messages; messages: SocketMessage[] };
 
 let workDirectory: string;
 let isolatedStack: IsolatedStack;
@@ -137,6 +141,109 @@ async function awaitLog(input: { container: Container; pattern: string | RegExp;
     },
     { timeout: input.timeoutMs, interval: POLL_INTERVAL_MS },
   );
+}
+
+const WEBHOOK_URL = 'https://api2.cursor.sh/automations/webhook/abcdefgh12';
+const WEBHOOK_TOKEN = 'grok-token-sixteen-chars';
+const POLL_TICK_MS = 2 * SECOND_MS;
+const REPLACED_CLOSE_CODE_VALUE = 4001;
+const ASK_TIMEOUT_SECONDS = 2;
+const ASK_WAIT_SECONDS = 30;
+const DETACH_SETTLE_MS = 2 * SECOND_MS;
+const PNG_BASE64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/q842iQAAAABJRU5ErkJggg==';
+const PNG_TYPE = 'image/png';
+const PLUGIN_SOURCE_DIRECTORIES = [
+  join(import.meta.dirname, '..', '..', '..', 'openclaw-plugin', 'src'),
+  join(import.meta.dirname, '..', '..', '..', 'hermes-plugin', 'zapbip_platform'),
+];
+const LISTEN_COMMAND_PATTERN = /zapbip listen|['"]listen['"]/;
+
+type AttachedSocket = { frames: ConnectorFrame[]; socket: WebSocket; closeCodes: number[] };
+
+function attachSocket(input: { account: WakeAccount }): AttachedSocket {
+  const frames: ConnectorFrame[] = [];
+  const closeCodes: number[] = [];
+  const socket = new WebSocket(`${isolated.context?.origin.replace('http', 'ws')}/c/${input.account.secret}${CONNECTOR_PATH_SUFFIX}`);
+  socket.addEventListener('message', (event) => frames.push(JSON.parse(String(event.data)) as ConnectorFrame));
+  socket.addEventListener('close', (event) => closeCodes.push(event.code));
+  return { frames, socket, closeCodes };
+}
+
+function pushedMessages(input: { attached: AttachedSocket }): SocketMessage[] {
+  return input.attached.frames.flatMap((frame) => (frame.type === ConnectorFrameType.Messages ? frame.messages : []));
+}
+
+function helloOf(input: { attached: AttachedSocket }): Promise<{ previousWakeMode: string }> {
+  return vi.waitFor(
+    () => {
+      const found = input.attached.frames.find((frame) => frame.type === ConnectorFrameType.Hello);
+      if (!found) throw new Error('no hello frame yet');
+      return found;
+    },
+    { timeout: ATTACH_TIMEOUT_MS, interval: POLL_INTERVAL_MS },
+  );
+}
+
+function messageFrameWith(input: { attached: AttachedSocket; text: string }): Promise<SocketMessage> {
+  return vi.waitFor(
+    () => {
+      const found = pushedMessages(input).find((message) => message.text === input.text);
+      if (!found) throw new Error(`no messages frame with ${input.text} yet`);
+      return found;
+    },
+    { timeout: REPLY_TIMEOUT_MS, interval: POLL_INTERVAL_MS },
+  );
+}
+
+async function setWebhookWake(input: { account: WakeAccount }): Promise<void> {
+  const agent = await connectAccountAgent({ account: input.account });
+  await callTool({
+    client: agent,
+    name: McpToolName.SetWake,
+    arguments: { mode: WakeMode.Webhook, url: WEBHOOK_URL, token: WEBHOOK_TOKEN },
+  });
+  await agent.close();
+  await fetch(ownerUrl({ account: input.account, path: `/agents/${input.account.agent}/wake/script` }), {
+    method: 'POST',
+    headers: JSON_HEADERS,
+    body: JSON.stringify({ responses: [{ statusCode: 200, errorName: null, retryAfterMs: null }] }),
+  });
+}
+
+async function clearWake(input: { account: WakeAccount }): Promise<void> {
+  const agent = await connectAccountAgent({ account: input.account });
+  await callTool({ client: agent, name: McpToolName.SetWake, arguments: { mode: WakeMode.None, url: null, token: null } });
+  await agent.close();
+}
+
+async function modelReplyTo(input: { text: string }): Promise<string> {
+  const response = await fetch(`http://127.0.0.1:${fakeModel.port}/v1/chat/completions`, {
+    method: 'POST',
+    headers: JSON_HEADERS,
+    body: JSON.stringify({ model: 'fake-model', stream: false, messages: [{ role: 'user', content: input.text }] }),
+  });
+  const body = (await response.json()) as { choices: { message: { content: string } }[] };
+  const [choice] = body.choices;
+  if (!choice) throw new Error('the fake model answered without a choice');
+  return choice.message.content;
+}
+
+async function pollInboxFor(input: { account: WakeAccount; text: string }): Promise<void> {
+  const agent = await connectAccountAgent({ account: input.account });
+  await vi.waitFor(
+    async () => {
+      const inbox = await callTool({ client: agent, name: McpToolName.CheckInbox, arguments: {} });
+      const messages = (inbox.structured?.messages ?? []) as SocketMessage[];
+      if (!messages.some((message) => message.text === input.text)) throw new Error(`check_inbox does not show ${input.text} yet`);
+    },
+    { timeout: REPLY_TIMEOUT_MS, interval: POLL_TICK_MS },
+  );
+  await callTool({ client: agent, name: McpToolName.SendMessage, arguments: { text: await modelReplyTo({ text: input.text }) } });
+  await agent.close();
+}
+
+async function textsOnScreen(input: { account: WakeAccount }): Promise<string[]> {
+  return (await readScreen(input)).map((entry) => entry.text);
 }
 
 async function startUnattachedHermes(input: { accountIndex: number }): Promise<RunningClient> {
@@ -315,37 +422,202 @@ describe.skipIf(!isEnabled)('hermes and openclaw plugins against the development
   );
 
   test(
-    'X1 socket contract: an attached plugin socket receives the owner message and a done frame clears it',
+    'X1 and X2 socket contract: an attached plugin socket receives the owner message and a done frame clears it',
     async () => {
-      const account = isolated.context?.wakeAccounts[0];
-      if (!account) throw new Error('no seeded account at 0');
-      const frames: ConnectorFrame[] = [];
-      const socket = new WebSocket(`${isolated.context?.origin.replace('http', 'ws')}/c/${account.secret}${CONNECTOR_PATH_SUFFIX}`);
-      socket.addEventListener('message', (event) => frames.push(JSON.parse(String(event.data)) as ConnectorFrame));
-      await vi.waitFor(() => expect(frames.some((frame) => frame.type === ConnectorFrameType.Hello)).toBe(true), {
-        timeout: ATTACH_TIMEOUT_MS,
-        interval: POLL_INTERVAL_MS,
-      });
+      const account = isolated.context?.wakeAccounts[3];
+      if (!account) throw new Error('no seeded account at 3');
+      const attached = attachSocket({ account });
+      await helloOf({ attached });
       await postOwnerText({ account, text: 'ping-x1', forwarded: false });
-      const messagesFrame = await vi.waitFor(
-        () => {
-          const found = frames.find((frame) => frame.type === ConnectorFrameType.Messages);
-          if (!found) throw new Error('no messages frame yet');
-          return found;
+      const message = await messageFrameWith({ attached, text: 'ping-x1' });
+      attached.socket.send(JSON.stringify({ type: ConnectorFrameType.Done, messageId: message.messageId }));
+      const agent = await connectAccountAgent({ account });
+      await vi.waitFor(
+        async () => {
+          const inbox = await callTool({ client: agent, name: McpToolName.CheckInbox, arguments: {} });
+          expect(inbox.text).not.toContain('ping-x1');
         },
         { timeout: REPLY_TIMEOUT_MS, interval: POLL_INTERVAL_MS },
       );
-      const [message] = messagesFrame.messages;
-      expect(message?.text).toBe('ping-x1');
-      socket.send(JSON.stringify({ type: ConnectorFrameType.Done, messageId: message?.messageId }));
-      const agent = await connectAccountAgent({ account });
-      const inbox = await callTool({ client: agent, name: McpToolName.CheckInbox, arguments: {} });
-      expect(inbox.text).not.toContain('ping-x1');
-      socket.close();
+      attached.socket.close();
       await agent.close();
     },
     TEST_TIMEOUT_MS,
   );
+
+  test(
+    'E5 fallback with the plugin down: a poll of check_inbox finds the message and the reply reaches the owner',
+    async () => {
+      const account = isolated.context?.wakeAccounts[0];
+      if (!account) throw new Error('no seeded account at 0');
+      await postOwnerText({ account, text: 'ping-e5', forwarded: false });
+      await pollInboxFor({ account, text: 'ping-e5' });
+      await awaitScreenText({ account, text: replyTo({ token: 'ping-e5' }) });
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  test(
+    'E6 fallback restored after reattach: the restarted plugin takes the next message, not a poll',
+    async () => {
+      const client = await startClient({ product: ClientProduct.OpenClaw, accountIndex: 0, allowedUsers: OWNER_SENDER });
+      await postOwnerText({ account: client.account, text: 'ping-e6', forwarded: false });
+      await awaitScreenText({ account: client.account, text: replyTo({ token: 'ping-e6' }) });
+      await awaitLog({ container: client.container, pattern: ConnectorLogEvent.MessagesReceived, timeoutMs: REPLY_TIMEOUT_MS });
+      expect(fakeModel.requestsMentioning({ text: 'ping-e6' }).length).toBeGreaterThan(0);
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  test(
+    'E9 media without caption: the agent receives the no-text sentence for an image and replies once',
+    async () => {
+      const client = await startClient({ product: ClientProduct.OpenClaw, accountIndex: 1, allowedUsers: OWNER_SENDER });
+      await postOwnerText({ account: client.account, text: 'ping-e9', forwarded: false });
+      await awaitScreenText({ account: client.account, text: replyTo({ token: 'ping-e9' }) });
+      const repliesBefore = (await textsOnScreen({ account: client.account })).length;
+      await postOwner({
+        account: client.account,
+        body: { kind: MessageKind.Image, mime_type: PNG_TYPE, data_base64: PNG_BASE64, caption: null, reply_to: null, forwarded: false },
+      });
+      const sentence = CHANNEL_HANDOFF_NO_TEXT_BY_KIND[MessageKind.Image];
+      await vi.waitFor(() => expect(fakeModel.requestsMentioning({ text: sentence }).length).toBeGreaterThan(0), {
+        timeout: REPLY_TIMEOUT_MS,
+        interval: POLL_INTERVAL_MS,
+      });
+      await delay(SETTLE_WINDOW_MS);
+      expect((await textsOnScreen({ account: client.account })).length).toBe(repliesBefore + 1);
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  test(
+    'E10 choice reply: tapping a button of an ask that already timed out hands the selected title to the agent once',
+    async () => {
+      const client = await startClient({ product: ClientProduct.OpenClaw, accountIndex: 2, allowedUsers: OWNER_SENDER });
+      await postOwnerText({ account: client.account, text: 'ping-e10', forwarded: false });
+      await awaitScreenText({ account: client.account, text: replyTo({ token: 'ping-e10' }) });
+      const agent = await connectAccountAgent({ account: client.account });
+      const asked = await callTool({
+        client: agent,
+        name: McpToolName.Ask,
+        arguments: {
+          question: 'which one',
+          options: [
+            { title: 'ping-e10-yes', description: null },
+            { title: 'ping-e10-no', description: null },
+          ],
+          timeout_seconds: ASK_TIMEOUT_SECONDS,
+        },
+      });
+      expect(asked.structured?.status).toBe(ReplyStatus.Pending);
+      const history = await callTool({ client: agent, name: McpToolName.GetMessages, arguments: {} });
+      const question = (
+        history.structured?.history as { kind: MessageKind; choice: { options: { option_id: string; title: string }[] } | null }[]
+      )
+        .filter((message) => message.kind === MessageKind.Choice && message.choice !== null)
+        .at(-1);
+      const option = question?.choice?.options[0];
+      if (!option) throw new Error('no option to tap');
+      await postOwner({
+        account: client.account,
+        body: {
+          kind: MessageKind.Choice,
+          option_id: option.option_id,
+          title: option.title,
+          description: null,
+          reply_to: null,
+          forwarded: false,
+        },
+      });
+      await awaitScreenText({ account: client.account, text: replyTo({ token: 'ping-e10-yes' }) });
+      await delay(SETTLE_WINDOW_MS);
+      expect(fakeModel.requestsMentioning({ text: 'ping-e10-yes' })).toHaveLength(1);
+      await agent.close();
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  test(
+    'X3 a live waiter takes the answer and the attached plugin socket is pushed the same message too',
+    async () => {
+      const account = isolated.context?.wakeAccounts[4];
+      if (!account) throw new Error('no seeded account at 4');
+      await postOwnerText({ account, text: 'ping-x3-open', forwarded: false });
+      const attached = attachSocket({ account });
+      await helloOf({ attached });
+      const agent = await connectAccountAgent({ account });
+      const asking = callTool({
+        client: agent,
+        name: McpToolName.WaitForReply,
+        arguments: { question_id: null, timeout_seconds: ASK_WAIT_SECONDS },
+      });
+      await delay(SETTLE_WINDOW_MS / 2);
+      await postOwnerText({ account, text: 'ping-x3', forwarded: false });
+      const answered = await asking;
+      expect(answered.text).toContain('ping-x3');
+      await delay(SETTLE_WINDOW_MS / 2);
+      const pushedTexts = pushedMessages({ attached }).map((message) => message.text);
+      expect(pushedTexts).toContain('ping-x3');
+      attached.socket.close();
+      await agent.close();
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  test(
+    'X4 and X5 a stored webhook mode is recorded on attach and restored, not left at local, on detach',
+    async () => {
+      const account = isolated.context?.wakeAccounts[4];
+      if (!account) throw new Error('no seeded account at 4');
+      await setWebhookWake({ account });
+      const attached = attachSocket({ account });
+      const hello = await helloOf({ attached });
+      expect(hello.previousWakeMode).toBe(WakeMode.Webhook);
+      await postOwnerText({ account, text: 'ping-x4', forwarded: false });
+      await messageFrameWith({ attached, text: 'ping-x4' });
+      attached.socket.close();
+      await vi.waitFor(() => expect(attached.closeCodes).toHaveLength(1), { timeout: ATTACH_TIMEOUT_MS, interval: POLL_INTERVAL_MS });
+      await delay(DETACH_SETTLE_MS);
+      const reattached = attachSocket({ account });
+      expect((await helloOf({ attached: reattached })).previousWakeMode).toBe(WakeMode.Webhook);
+      reattached.socket.close();
+      await delay(DETACH_SETTLE_MS);
+      await clearWake({ account });
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  test(
+    'X6 a second plugin on the same connection closes the first with 4001 and receives the unread messages',
+    async () => {
+      const account = isolated.context?.wakeAccounts[4];
+      if (!account) throw new Error('no seeded account at 4');
+      const first = attachSocket({ account });
+      await helloOf({ attached: first });
+      const second = attachSocket({ account });
+      await helloOf({ attached: second });
+      await vi.waitFor(() => expect(first.closeCodes).toEqual([REPLACED_CLOSE_CODE_VALUE]), {
+        timeout: ATTACH_TIMEOUT_MS,
+        interval: POLL_INTERVAL_MS,
+      });
+      await postOwnerText({ account, text: 'ping-x6', forwarded: false });
+      await messageFrameWith({ attached: second, text: 'ping-x6' });
+      second.socket.close();
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  test('X7 neither plugin starts a zapbip listen process on the connection it holds', async () => {
+    const sources = await Promise.all(
+      PLUGIN_SOURCE_DIRECTORIES.map(async (directory) =>
+        Promise.all(
+          (await readdir(directory)).filter((name) => /\.(ts|py)$/.test(name)).map((name) => readFile(join(directory, name), 'utf8')),
+        ),
+      ),
+    );
+    sources.flat().forEach((source) => expect(source).not.toMatch(LISTEN_COMMAND_PATTERN));
+  });
 
   test.each([ClientProduct.OpenClaw, ClientProduct.Hermes])(
     'E11%s clean shutdown: SIGTERM ends the container with exit code 0 within the limit',
