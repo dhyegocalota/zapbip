@@ -281,9 +281,9 @@ describe('poll state', () => {
         return wake.listScheduledWakes();
       },
     });
-    expect(wakes.map((entry) => entry.agent)).toEqual([OTHER_SCHEDULED_AGENT, SCHEDULED_AGENT]);
-    expect(wakes[1]).toMatchObject({ lastPolledAt: POLLED_AT, hasPolled: true, pollerStaleNotified: false, intervalMinutes: 60 });
-    expect(wakes[0]).toMatchObject({ lastPolledAt: BASE_TIME, hasPolled: false });
+    expect(wakes.map((entry) => entry.agent)).toEqual([SCHEDULED_AGENT, OTHER_SCHEDULED_AGENT]);
+    expect(wakes[0]).toMatchObject({ lastPolledAt: POLLED_AT, hasPolled: true, pollerStaleNotified: false, intervalMinutes: 60 });
+    expect(wakes[1]).toMatchObject({ lastPolledAt: BASE_TIME, hasPolled: false });
   });
 
   it('lists nothing for an agent whose wake row was deleted', async () => {
