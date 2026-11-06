@@ -9,10 +9,7 @@
     "links": [
       {
         "header": "Logic Bit",
-        "items": [
-          { "label": "zapbip is a product of Logic Bit", "href": "/help/about" },
-          { "label": "zapbip é um produto da Logic Bit", "href": "/pt-br/help/about" }
-        ]
+        "items": [{ "label": "zapbip · Logic Bit", "href": "/help/about" }]
       }
     ]
   },

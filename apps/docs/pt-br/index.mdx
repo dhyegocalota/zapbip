@@ -17,7 +17,11 @@ Você já vive no WhatsApp. O zapbip coloca sua IA lá: ela te manda mensagem, p
   <Card title="Pesquisa pronta" icon="file-pdf">
     <Chat
       messages={[
-        { name: 'ChatGPT', text: 'Sua pesquisa sobre bikes elétricas ficou pronta. Resumo em anexo. 📎 resumo.pdf' },
+        {
+          name: 'ChatGPT',
+          text: 'Sua pesquisa sobre bikes elétricas ficou pronta. Resumo em anexo.',
+          media: { kind: 'document', label: 'resumo.pdf' },
+        },
         { you: true, text: 'Valeu, perfeito.' },
       ]}
     />
@@ -51,8 +55,8 @@ Você já vive no WhatsApp. O zapbip coloca sua IA lá: ela te manda mensagem, p
   <Card title="Fotos nos dois sentidos" icon="image">
     <Chat
       messages={[
-        { name: 'Claude', text: '📷 Falhou aqui' },
-        { you: true, text: '📷 O quadro branco' },
+        { name: 'Claude', media: { kind: 'image' }, text: 'Falhou aqui' },
+        { you: true, media: { kind: 'image' }, text: 'O quadro branco' },
         { name: 'Claude', text: 'Entendi o fluxo, ajustando.' },
       ]}
     />
@@ -62,7 +66,7 @@ Você já vive no WhatsApp. O zapbip coloca sua IA lá: ela te manda mensagem, p
       messages={[
         { name: 'Claude', text: 'Testes passaram.' },
         { name: 'Grok', text: 'Achei 3 fontes.' },
-        { you: true, text: 'Quais? (resposta ao Grok)' },
+        { you: true, quote: { name: 'Grok', text: 'Achei 3 fontes.' }, text: 'Quais?' },
       ]}
     />
   </Card>

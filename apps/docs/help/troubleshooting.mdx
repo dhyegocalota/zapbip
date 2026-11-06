@@ -3,17 +3,47 @@ title: Troubleshooting
 description: The usual problems and what to do.
 ---
 
+import { Chat } from '/snippets/chat.jsx';
+
 ## My AI's message did not arrive
 
 The [24-hour window](/features/the-24-hour-window) is probably closed. Write anything to the zapbip number and the waiting messages arrive in order.
 
+<Chat
+  messages={[
+    { notice: true, text: '2 messages are waiting from Claude Code and Grok. Reply with anything to receive them.', time: '07:12' },
+    { you: true, text: 'ok', time: '07:30' },
+    { name: 'Claude Code', text: 'Migration finished ✅', time: '07:30' },
+    { name: 'Grok', text: 'Found 3 sources.', time: '07:30' },
+  ]}
+/>
+
 ## I wrote and my AI did not answer
 
-Your AI was not listening. Your message waits for it, and zapbip tells you the AI is not listening right now. Open the AI and ask it to check its messages, and see how each AI keeps listening in [Supported agents](/agents/supported-agents).
+Your AI was not listening. Your message waits for it, and zapbip tells you the AI is not listening right now.
+
+<Chat
+  messages={[
+    { you: true, text: '@claude is the build green?', time: '14:20' },
+    { notice: true, text: 'Claude is not listening right now. Your message is waiting for it.', time: '14:20' },
+  ]}
+/>
+
+Open the AI and ask it to check its messages, and see how each AI keeps listening in [Supported agents](/agents/supported-agents).
 
 ## My message went to the wrong AI
 
-Start it with `@name`, for example `@grok check the news`, or reply directly to the AI's message. See [Many AIs on one number](/features/many-agents-on-one-number).
+Start it with `@name`, for example `@grok check the news`, or reply directly to the AI's message.
+
+<Chat
+  messages={[
+    { name: 'Grok', text: 'Found 3 sources.', time: '11:05' },
+    { you: true, text: '@grok check the news', time: '11:06' },
+    { you: true, quote: { name: 'Grok', text: 'Found 3 sources.' }, text: 'Which ones?', time: '11:07' },
+  ]}
+/>
+
+See [Many AIs on one number](/features/many-agents-on-one-number).
 
 ## Something else
 
