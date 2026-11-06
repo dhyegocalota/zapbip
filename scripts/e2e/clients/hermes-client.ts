@@ -7,11 +7,7 @@ const PLUGIN_DIRECTORY = join(import.meta.dirname, '..', '..', '..', 'apps', 'he
 const HERMES_IMAGE = 'nousresearch/hermes-agent:v0.22.7';
 const HERMES_PLATFORM = 'linux/amd64';
 const PLUGIN_NAME = 'zapbip-platform';
-const PACKAGE_NAME = 'zapbip_platform';
 const DATA_PATH = '/opt/data';
-const PACKAGE_ROOT_PATH = '/opt/zapbip';
-const SITE_PACKAGES_PATH = '/opt/hermes/.venv/lib/python3.14/site-packages';
-const PATH_FILE_NAME = 'zapbip.pth';
 const CERTIFICATE_MOUNT_PATH = '/etc/zapbip-front.pem';
 const CONNECTION_LINK_VARIABLE = 'ZAPBIP_CONNECTION_LINK';
 const ALLOWED_USERS_VARIABLE = 'ZAPBIP_ALLOWED_USERS';
@@ -25,7 +21,6 @@ export type HermesClientInput = {
   directory: string;
   connectionLink: string;
   allowedUsers: string;
-  packageImportable: boolean;
   fakeModelPort: number;
   certificateFile: string;
 };
@@ -45,23 +40,13 @@ function configOf(input: { fakeModelPort: number }): string {
   ].join('\n');
 }
 
-function packageMounts(input: { packageImportable: boolean; pluginDirectory: string; pathFile: string }): string[] {
-  if (!input.packageImportable) return [];
-  return [
-    `${input.pluginDirectory}:${PACKAGE_ROOT_PATH}/${PACKAGE_NAME}:ro`,
-    `${input.pathFile}:${SITE_PACKAGES_PATH}/${PATH_FILE_NAME}:ro`,
-  ];
-}
-
 export async function startHermesClient(input: HermesClientInput): Promise<Container> {
   const homeDirectory = join(input.directory, `${input.name}-home`);
   const pluginDirectory = join(homeDirectory, PLUGIN_NAME);
   const configFile = join(homeDirectory, 'config.yaml');
-  const pathFile = join(homeDirectory, PATH_FILE_NAME);
   await mkdir(homeDirectory, { recursive: true });
   await cp(PLUGIN_DIRECTORY, pluginDirectory, { recursive: true, filter: (source) => !source.includes('__pycache__') });
   await writeFile(configFile, configOf(input));
-  await writeFile(pathFile, `${PACKAGE_ROOT_PATH}\n`);
   return startContainer({
     name: input.name,
     image: HERMES_IMAGE,
@@ -76,7 +61,6 @@ export async function startHermesClient(input: HermesClientInput): Promise<Conta
       `${configFile}:${DATA_PATH}/config.yaml`,
       `${pluginDirectory}:${DATA_PATH}/plugins/${PLUGIN_NAME}`,
       `${input.certificateFile}:${CERTIFICATE_MOUNT_PATH}:ro`,
-      ...packageMounts({ packageImportable: input.packageImportable, pluginDirectory, pathFile }),
     ],
     command: ['gateway', 'run'],
     entrypoint: null,

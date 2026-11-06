@@ -1,8 +1,8 @@
 import os
 from typing import Any
 
-from zapbip_platform.adapter import ZapbipAdapter
-from zapbip_platform.constants import (
+from .adapter import ZapbipAdapter
+from .constants import (
     ALLOWED_USERS_ENV,
     CONNECTION_LINK_ENV,
     PLATFORM_EMOJI,

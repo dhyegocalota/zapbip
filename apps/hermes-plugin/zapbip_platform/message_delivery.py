@@ -3,8 +3,8 @@ from collections import OrderedDict
 from collections.abc import Awaitable, Callable
 from typing import Any
 
-from zapbip_platform.constants import SEEN_MESSAGE_LIMIT, PluginLogEvent
-from zapbip_platform.log import log_connector_event
+from .constants import SEEN_MESSAGE_LIMIT, PluginLogEvent
+from .log import log_connector_event
 
 Message = dict[str, Any]
 
