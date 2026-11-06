@@ -115,3 +115,27 @@ Hypotheses: a quoted command word goes to the quoted agent; `girar a imagem` is 
 
 Gaps: no test for `ask` held across a rotate (Durable Object level); `pnpm verify` result is in the lead's report.
 - `apps/docs/docs.json` is not in L5; until the lead adds `guides/commands`, `guides/agents-and-links` and `guides/account-deletion`, the pages are reachable by link only.
+## Lane L2 (storage, guards, secrets, operator script)
+
+Commits: `9c20ba4` (fix: dev seed on the 0002 schema), `bd42b6d` (red), `ba3aabc` (green).
+
+Changed: `apps/api/src/adapters/{d1/d1-account-directory,d1/d1-connection-registry,d1/d1-connection-directory,guard/sender-guard,guard/outbound-guard,platform/connection-secrets,prompt/generic-install-prompt,prompt/generic-install-prompt-copy,r2/r2-account-media}.ts`, `apps/api/scripts/operator-account.sh`, test support `fake-rate-limiter.ts`, `fake-pnpm.mjs`, `seed.ts`.
+
+Run: `pnpm --filter @zapbip/api test:unit` and `test:integration`.
+
+Red then green: the red run printed `<Class.method> is not implemented` for `D1AccountDirectory` (findOrCreateByWaId, findByWaId, remove), `D1ConnectionRegistry` (register, findActiveByAgent, revoke, rotate), `SenderGuard.admit`, `OutboundGuard.admit`, `R2AccountMedia.deleteAll`; 42 integration and 18 unit failures. The `resolveSecretDigest` cases failed on the missing revoked and account-state filters. Pins (green on arrival): `migration-0002.test.ts`, `wrangler-limits.test.ts`, the malformed-secret case, the digest-prefix case, the operator wa_id refusals.
+
+Deviations:
+- Dev seed kept (A2 deferred to L4): `global-setup.ts` seeds through `dev-seed.ts`; only its SQL was updated to 0002.
+- `operator-account.sh suspend` applies to `active` only, so a waitlisted phone cannot reach `active` through suspend then resume. A refused transition exits 1 with the reason on stderr.
+- The pattern-before-D1 step lives in `resolve-connection.ts`; the directory takes a digest.
+- The `standbyAgent` generic-install-prompt cases are not covered: the Step 0 renderer takes no `standbyAgent`. They move to install-skills.
+
+Hypotheses to attack:
+1. Hypothesis: twenty concurrent first messages from one phone yield one account. Break it by: higher concurrency against the real D1 batch.
+2. Hypothesis: the daily cap never orphans an owner identity. Break it by: cap reached, then the same phone twice.
+3. Hypothesis: `register` never exceeds the limit. Break it by: concurrent creates across several accounts.
+4. Hypothesis: the operator script cannot run SQL from a non-digit `wa_id`. Break it by: newlines, unicode digits, leading and trailing spaces.
+5. Hypothesis: `deleteAll` empties the prefix and spares `acc10` when purging `acc1`.
+
+Known gaps: the operator script was run only against a fake `pnpm` over `node:sqlite`, never `wrangler d1 execute` (owner-run). Real Rate Limiting bindings were not exercised; the guards are tested with a counting fake.
