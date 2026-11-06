@@ -14,10 +14,10 @@ import {
   sendLocationInputShape,
   sendMediaInputShape,
   sendMessageInputShape,
-  setWakeInputShape,
   setWakeOutputShape,
   waitForReplyInputShape,
 } from './mcp-schemas';
+import { setWakeToolInputShape } from '../mcp/set-wake';
 
 export enum McpToolName {
   SendMessage = 'send_message',
@@ -92,7 +92,7 @@ export const TOOL_DEFINITIONS: Record<McpToolName, ToolDefinition> = {
   },
   [McpToolName.SetWake]: {
     description: 'Set how this agent is woken when the owner writes: a webhook url and token, or none to clear it.',
-    inputShape: setWakeInputShape,
+    inputShape: setWakeToolInputShape,
     outputShape: setWakeOutputShape,
   },
 };

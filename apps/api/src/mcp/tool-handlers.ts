@@ -19,10 +19,10 @@ import {
   sendLocationInputShape,
   sendMediaInputShape,
   sendMessageInputShape,
-  setWakeInputShape,
   waitForReplyInputShape,
 } from '../contract/mcp-schemas';
 import { McpToolName } from '../contract/tool-definitions';
+import { setWake } from './set-wake';
 import { readInlineImages } from './inline-images';
 import { buildUploadLink } from './links';
 import { unwrapOutcome } from './tool-error';
@@ -176,10 +176,6 @@ const createUpload: ToolHandler<typeof createUploadInputShape> = async ({ contex
     },
     images: [],
   };
-};
-
-const setWake: ToolHandler<typeof setWakeInputShape> = async () => {
-  throw new Error('set_wake is not implemented');
 };
 
 export const TOOL_HANDLERS = {
