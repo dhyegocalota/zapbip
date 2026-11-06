@@ -38,9 +38,9 @@ export function parseServerFrame(input: { text: string; byteLength: number; isBi
   if (input.byteLength > CONNECTOR_FRAME_MAX_BYTES) return { ok: false, reason: FrameRejectionReason.FrameTooLarge };
   const body = asRecord({ value: parseJson({ text: input.text }) });
   if (body === null) return { ok: false, reason: FrameRejectionReason.Malformed };
-  const parseFrame = FRAME_PARSERS[String(body.type)];
-  if (parseFrame === undefined) return { ok: false, reason: FrameRejectionReason.UnknownType };
-  const frame = parseFrame({ body });
+  const frameType = String(body.type);
+  if (!Object.hasOwn(FRAME_PARSERS, frameType)) return { ok: false, reason: FrameRejectionReason.UnknownType };
+  const frame = (FRAME_PARSERS[frameType] as FrameParsers[string])({ body });
   if (frame === null) return { ok: false, reason: FrameRejectionReason.Malformed };
   return { ok: true, frame };
 }
