@@ -34,6 +34,7 @@ const CURRENT_KEY_VERSION = 1;
 const UNSUPPORTED_KEY_VERSION = 2;
 const SHORT_KEY_BYTES = 31;
 const THIRD_MIGRATION_VERSION = 3;
+const LOCAL_RESTORE_MIGRATION_VERSION = 5;
 const GROK_PATH = '/automations/webhook/abc12345';
 const OTHER_AGENT = 'beta';
 
@@ -157,6 +158,6 @@ describe('migration v2', () => {
           .map((row) => row.version),
       };
     });
-    expect(applied).toEqual({ first: [2], second: [], versions: [1, 2, 3] });
+    expect(applied).toEqual({ first: [2], second: [], versions: [1, 2, THIRD_MIGRATION_VERSION, LOCAL_RESTORE_MIGRATION_VERSION] });
   });
 });
