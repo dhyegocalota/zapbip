@@ -364,8 +364,8 @@ Failure modes: see table.
 
 ### Step L4 (MCP)
 
-- [ ] **S4.1 red: tools over HTTP.** Write `mcp-scheduled-wake.test.ts` (the test plan's **E. MCP over HTTP**). Expected failure: the `scheduled` call alone hits `saveScheduled is not implemented` (R11; the tool error text names it), and a case with an unknown field proves R13. The `webhook` and `none` cases pass on arrival and are labelled `pin`. Commit as `test(api): pin set_wake for scheduled and standby`.
-- [ ] **S4.2 green: tool.** Extend `set_wake` in place: the extended zod shape registered as `z.strictObject` (R13), remove `Scheduled` and `Standby` from `UnavailableWakeMode` (R14), map `interval_minutes` and `standby_agent` to the camelCase input, update the tool description. Commit as `feat(api): accept scheduled and standby in set_wake`.
+- [x] **S4.1 red: tools over HTTP.** Write `mcp-scheduled-wake.test.ts` (the test plan's **E. MCP over HTTP**). Expected failure: the `scheduled` call alone hits `saveScheduled is not implemented` (R11; the tool error text names it), and a case with an unknown field proves R13. The `webhook` and `none` cases pass on arrival and are labelled `pin`. Commit as `test(api): pin set_wake for scheduled and standby`. Evidence: 85144f6.
+- [x] **S4.2 green: tool.** Extend `set_wake` in place: the extended zod shape registered as `z.strictObject` (R13), remove `Scheduled` and `Standby` from `UnavailableWakeMode` (R14), map `interval_minutes` and `standby_agent` to the camelCase input, update the tool description. Commit as `feat(api): accept scheduled and standby in set_wake`. Evidence: 055dbf5 (the saved-result and validation cases stay red until L2 and the slice's saveScheduled/saveStandby land).
 
 Failure modes: see table.
 

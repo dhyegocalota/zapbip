@@ -46,3 +46,36 @@ Step 0 adds no test. Every stub is reached by a red test in the lane named in `p
 - Merging `origin/feat/webhook-wake-l3` breaks `typecheck` until `apps/api/src/mcp/set-wake.ts` passes `intervalMinutes` and `standbyAgent` to `setWake` and drops `Scheduled` and `Standby` from `UnavailableWakeMode` (plan R14). The merge commit carries that fix; S4.2 finishes it.
 - Slice 4's L2 (Durable Object wiring, `sqlite-wake-repository.ts` body) is not pushed yet. `sqlite-wake-repository.ts` still throws as a whole on this branch, so L1 adds its methods when that lands.
 - The `libs/core` and `apps/api` READMEs say "the webhook wake of a sleeping agent"; they are updated with the lane that makes scheduled and standby real (L2 and L3), not in Step 0.
+
+## Lane L4 (MCP)
+
+### What changed
+
+- `apps/api/src/contract/mcp-schemas.ts`: `UnavailableWakeMode` (now only `Local`), `setWakeToolInputShape` and `setWakeToolInputSchema = z.strictObject(setWakeToolInputShape)` (R13), next to `setWakeInputShape`.
+- `apps/api/src/mcp/set-wake.ts`: imports them from the contract; the handler is unchanged otherwise (it already maps `interval_minutes` and `standby_agent`).
+- `apps/api/src/contract/tool-definitions.ts`: `ToolDefinition.inputShape` is `ZodRawShape | ZodType`; `set_wake` registers the strict schema; the description names `scheduled`, `interval_minutes` and `standby_agent`.
+- `apps/api/src/mcp/server.ts` (not in L4's list, needed by the widened type): `(toolArguments: unknown)` annotation, since the union stops the SDK from inferring the callback argument.
+- Test: `apps/api/test/integration/mcp-scheduled-wake.test.ts`.
+
+### How to run
+
+```bash
+cd apps/api && pnpm test:integration mcp-scheduled-wake set-wake mcp-tools
+```
+
+### Red then green
+
+Red commit 85144f6: 13 failed, 5 passed. First failures: scheduled/standby `set_wake` return no `structuredContent` (the call reaches `saveScheduled is not implemented` / `saveStandby is not implemented`); `{mode: "none", account_id: "x"}` has `isError` undefined (the SDK strips the key from a raw shape); validation cases print the stub text instead of the field name. Pins: set_wake none, set_wake webhook, interval as a string, check_inbox empty, check_inbox new.
+
+After 055dbf5: 11 failed, 51 passed across `mcp-scheduled-wake`, `set-wake`, `mcp-tools`. Green now: unknown field, agent field. Still red, waiting on L2's `assertWakeSetting` and the `saveScheduled`/`saveStandby` bodies (S2.3): scheduled/standby saved results, both interval bounds, interval 0 and 1441, fractional interval, caller as standby, malformed standby name, standby of another account, standby in standby mode.
+
+### Hypotheses to attack
+
+1. `set_wake` rejects any key outside `mode, url, token, interval_minutes, standby_agent` with a tool error naming the key, and saves nothing.
+2. Other tools still accept their inputs unchanged (only `set_wake` became a strict object).
+3. A tool error for the other-account standby never contains the other account id.
+
+### Gaps
+
+- The `UnavailableWakeMode` and tool-shape move follows the webhook-wake fix batch's target layout; the `invalidInput` factory is not on this branch, so the handler still builds `InboxError` directly. The merge with that batch needs a look at `set-wake.ts`.
+- `standby-revocation.test.ts` is L3 and not touched here.
