@@ -28,6 +28,7 @@ import {
   CONNECTOR_PONG_TEXT,
   ChannelErrorKind,
   ConnectorFrameType,
+  REVOKED_CLOSE_CODE,
   WakeMode,
   WakeOutcome,
   WakeRung,
@@ -338,8 +339,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
   }
 
   async closeAgentSockets(input: { agent: string }): Promise<void> {
-    void input;
-    throw new Error('closeAgentSockets is not implemented');
+    this.ctx.getWebSockets(input.agent).forEach((socket) => socket.close(REVOKED_CLOSE_CODE));
   }
 
   async webSocketError(socket: WebSocket): Promise<void> {
