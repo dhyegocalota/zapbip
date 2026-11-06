@@ -390,6 +390,13 @@ run_verify all
 expect_equal "all exits 0" "$status" 0
 expect_match "all runs the libraries and the server again in Kolkata" "$(calls)" 'pnpm --filter @zapbip/server --filter @zapbip/core --filter @zapbip/types test:unit TZ=Asia/Kolkata'
 
+new_repository
+change AGENTS.md
+ln -s AGENTS.md "$repository/CLAUDE.md"
+run_verify
+expect_match "format checks a changed file" "$(calls)" 'prettier --check --ignore-unknown AGENTS.md'
+expect_no_match "format skips a symbolic link" "$(calls)" 'CLAUDE.md'
+
 rm -rf "$scratch"
 
 [[ "$failures" == 0 ]] && echo "verify: all checks passed" && exit 0
