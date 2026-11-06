@@ -13,6 +13,7 @@ import {
   HEARTBEAT_INTERVAL_MS,
   HEARTBEAT_TIMEOUT_MS,
   MCP_PATH_SUFFIX,
+  MessageKind,
   RECONNECT_BASE_MS,
   RECONNECT_JITTER_RATIO,
   RECONNECT_MAX_MS,
@@ -68,6 +69,14 @@ export async function probeConnectorLink(input: { probeLink: string }): Promise<
   return response.status;
 }
 
+const MESSAGE_KINDS: string[] = Object.values(MessageKind);
+
+function isTrustedMessage(input: { value: unknown }): boolean {
+  const message = asRecord(input);
+  if (message === null) return false;
+  return typeof message.messageId === 'string' && typeof message.forwarded === 'boolean' && MESSAGE_KINDS.includes(String(message.kind));
+}
+
 const FRAME_PARSERS: FrameParsers = {
   [ConnectorFrameType.Hello]: ({ body }) => {
     if (typeof body.agent !== 'string' || typeof body.previousWakeMode !== 'string') return null;
@@ -75,9 +84,8 @@ const FRAME_PARSERS: FrameParsers = {
   },
   [ConnectorFrameType.Messages]: ({ body }) => {
     const { messages } = body;
-    const hasMessageIds =
-      Array.isArray(messages) && messages.every((message) => typeof asRecord({ value: message })?.messageId === 'string');
-    if (!hasMessageIds) return null;
+    const hasTrustedFields = Array.isArray(messages) && messages.every((message) => isTrustedMessage({ value: message }));
+    if (!hasTrustedFields) return null;
     return body as unknown as MessagesFrame;
   },
 };
