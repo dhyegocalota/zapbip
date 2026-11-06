@@ -1137,6 +1137,8 @@ Every method body is `void input; throw new Error('<name> is not implemented');`
 - `apps/api/src/index.ts` (production): `export default { fetch: (request, env) => createApp({ includeSimulator: false }).fetch(request, env) }` and `export { AccountInbox }` from the base module, which has no development methods (A26).
 - `apps/api/src/index.dev.ts` (development, the top-level `main`): the same shape with `includeSimulator: true`, and `export { DevAccountInbox as AccountInbox }` from `src/dev/dev-account-inbox.ts`, which adds `readScreen` and `advanceClock` to the base class.
 
+- **Deviation (owner delegated 2026-11-06):** `createApp` takes `{ extraRoutes: Hono[] }` instead of `{ includeSimulator: boolean }`, and only `index.dev.ts` imports `routes/dev-owner`. With the boolean, `app.ts` imported the simulator statically and the production bundle carried `/dev/owner/`, `advanceClock` and `readScreen` (PB-2 red).
+
 ### `apps/api/wrangler.jsonc` (exact)
 
 ```jsonc

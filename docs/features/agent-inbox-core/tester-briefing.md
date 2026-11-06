@@ -107,7 +107,7 @@ ZAPBIP_CLAUDE_E2E=1 pnpm --filter @zapbip/api test:e2e
 | `media-route.test.ts` (7) | red 73a344d: `createPlatformClock is not implemented`, `signLink is not implemented` | 090041c, once L3's clock, R2 store and signing land |
 | `dev-owner.test.ts` (16 cases) | red 7194fe5: `hashConnectionSecret is not implemented`; WI-106 and WI-107 passed (pins, an unmounted route is already a 404) | dc6fac4, once L3's Durable Object lands |
 | `production-entry.test.ts` | pin 8be18b9: WI-117 and WI-122 green at once | the other cases need L3 and L4a |
-| `production-bundle.e2e.test.ts` PB-2 | red 26f1a96: `expected [ "/dev/owner/", "advanceClock", …(1) ] to deeply equal []` | needs a change to `app.ts` (below). PB-3 passes. |
+| `production-bundle.e2e.test.ts` PB-2 | red 26f1a96: `expected [ "/dev/owner/", "advanceClock", …(1) ] to deeply equal []` | the entry-split commit: `createApp` takes `extraRoutes`; PB-2 and PB-3 pass. |
 
 State when this was written: L2, L3 (D1 directory, repository) and L4a were merged. The Durable Object and `adapters/platform/clock.ts` were still stubs, so 76 of 121 integration cases failed with `createPlatformClock is not implemented`, `sendText is not implemented` and `createUpload is not implemented`. The E2E suite was not run: it needs L3's `scripts/dev-seed.ts`.
 
@@ -122,7 +122,7 @@ State when this was written: L2, L3 (D1 directory, repository) and L4a were merg
 
 ### Known gaps
 
-- **Blocker, `src/app.ts`:** `createApp` imports `routes/dev-owner` statically, so the production bundle contains the simulator (PB-2 is red). The change: `createApp` takes the simulator routes as a parameter, and only `index.dev.ts` imports `routes/dev-owner`.
+- **Fixed in the entry-split commit (was a blocker):** `src/app.ts`: `createApp` imports `routes/dev-owner` statically, so the production bundle contains the simulator (PB-2 is red). The change: `createApp` takes the simulator routes as a parameter, and only `index.dev.ts` imports `routes/dev-owner`.
 - The E2E assertions about the screen text of media (a link matching `/m/`) and about `ScreenEntry.options` holding option ids are guesses about L3's fake sender. Check them when it lands.
 - `global-setup.ts` expects the dev seed to print `{"connections":[{"agent","secret"}]}`.
 - A rejected owner media type (WI-108) leaves its bytes in R2: the simulator stores them before core validates.

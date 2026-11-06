@@ -16,7 +16,6 @@ import { accountInboxOf } from './account-inbox-stub';
 import { ERROR_STATUS, HttpStatus } from './http-status';
 
 type OwnerIdentity = { accountId: string; ownerLocale: OwnerLocale };
-type DevOwnerEnvironment = { Bindings: Bindings; Variables: { owner: OwnerIdentity } };
 
 const nullableString = z.string().nullable().default(null);
 const commonShape = { wamid: z.string().default(() => `wamid.${crypto.randomUUID()}`), reply_to: nullableString };
@@ -112,19 +111,19 @@ function invalidInput(input: { message: string }) {
   return { error: InboxErrorCode.InvalidInput, message: input.message };
 }
 
-export const devOwnerRoutes = new Hono<DevOwnerEnvironment>();
+const notFound = { error: InboxErrorCode.NotFound };
 
-devOwnerRoutes.use(`${DEV_OWNER_PATH_PREFIX}/*`, async (context, next) => {
-  const phone = context.req.param('phone');
-  const isPhone = OWNER_PHONE_PATTERN.test(phone);
-  const owner = isPhone ? await findOwnerByPhone({ database: context.env.CONNECTIONS, phone }) : null;
-  if (!owner) return context.json({ error: InboxErrorCode.NotFound }, HttpStatus.NotFound);
-  context.set('owner', owner);
-  await next();
-});
+export const devOwnerRoutes = new Hono<{ Bindings: Bindings }>();
+
+function findOwner(input: { bindings: Bindings; phone: string }): Promise<OwnerIdentity | null> {
+  if (!OWNER_PHONE_PATTERN.test(input.phone)) return Promise.resolve(null);
+  return findOwnerByPhone({ database: input.bindings.CONNECTIONS, phone: input.phone });
+}
 
 devOwnerRoutes.post(`${DEV_OWNER_PATH_PREFIX}/messages`, async (context) => {
-  const { accountId, ownerLocale } = context.get('owner');
+  const owner = await findOwner({ bindings: context.env, phone: context.req.param('phone') });
+  if (!owner) return context.json(notFound, HttpStatus.NotFound);
+  const { accountId, ownerLocale } = owner;
   const parsed = ownerMessageSchema.safeParse(await context.req.json().catch(() => null));
   if (!parsed.success) return context.json(invalidInput({ message: z.prettifyError(parsed.error) }), HttpStatus.BadRequest);
   const body = parsed.data;
@@ -153,13 +152,17 @@ devOwnerRoutes.post(`${DEV_OWNER_PATH_PREFIX}/messages`, async (context) => {
 });
 
 devOwnerRoutes.get(`${DEV_OWNER_PATH_PREFIX}/screen`, async (context) => {
-  const { accountId } = context.get('owner');
+  const owner = await findOwner({ bindings: context.env, phone: context.req.param('phone') });
+  if (!owner) return context.json(notFound, HttpStatus.NotFound);
+  const { accountId } = owner;
   const entries = await accountInboxOf<DevAccountInboxRpc>({ bindings: context.env, accountId }).readScreen();
   return context.json({ entries }, HttpStatus.Ok);
 });
 
 devOwnerRoutes.post(`${DEV_OWNER_PATH_PREFIX}/clock`, async (context) => {
-  const { accountId } = context.get('owner');
+  const owner = await findOwner({ bindings: context.env, phone: context.req.param('phone') });
+  if (!owner) return context.json(notFound, HttpStatus.NotFound);
+  const { accountId } = owner;
   const parsed = clockSchema.safeParse(await context.req.json().catch(() => null));
   if (!parsed.success) return context.json(invalidInput({ message: z.prettifyError(parsed.error) }), HttpStatus.BadRequest);
   const offsetMs = await accountInboxOf<DevAccountInboxRpc>({ bindings: context.env, accountId }).advanceClock({
