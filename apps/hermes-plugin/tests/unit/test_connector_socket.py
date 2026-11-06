@@ -188,8 +188,20 @@ def test_duplicate_after_done_is_skipped() -> None:
             async with running_socket(connector=connector, hand_off=handed_off.hand_off):
                 await connector.until(condition=lambda: len(connector.received_frames) == 1)
                 await connector.broadcast(text=messages_of("msg_1", "msg_2"))
-                await connector.until(condition=lambda: len(connector.received_frames) == 2)
+                await connector.until(condition=lambda: len(connector.received_frames) == 3)
             assert handed_off.message_ids == ["msg_1", "msg_2"]
+
+
+def test_redelivery_after_done_is_acknowledged_again() -> None:
+    async def scenario() -> None:
+        async with FakeConnector(on_open=on_open_sending(messages_of("msg_1"))) as connector:
+            handed_off = HandedOff(connector=connector)
+            async with running_socket(connector=connector, hand_off=handed_off.hand_off):
+                await connector.until(condition=lambda: len(connector.received_frames) == 1)
+                await connector.broadcast(text=messages_of("msg_1"))
+                await connector.until(condition=lambda: len(connector.received_frames) == 2)
+            assert handed_off.message_ids == ["msg_1"]
+            assert connector.received_frames == [done_text(message_id="msg_1")] * 2
 
     run(scenario())
 
