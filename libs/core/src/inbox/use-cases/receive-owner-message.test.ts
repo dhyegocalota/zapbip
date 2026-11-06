@@ -11,7 +11,7 @@ import {
   SECOND_MS,
   WakeOutcome,
 } from '@zapbip/types';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { MEDIA_RETENTION_MS, NOTICE_QUICK_REPLY_ID, QUEUE_RETENTION_MS, ROUTING_LIST_TTL_MS, WINDOW_MS } from '../constants';
 import { renderCopy } from '../inbox-copy';
 import type { Message } from '../message';
@@ -672,6 +672,32 @@ describe('receiveOwnerMessage routing list state', () => {
       resent: false,
       reminded: false,
     });
+  });
+
+  test('an unknown-agent tap resends the list keeping the timer, the reminder and the resend flag', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha', 'beta'] });
+    const held = await receiveText({ environment, text: 'first' });
+    await receiveText({ environment, text: 'second' });
+    const before = (await environment.repository.findRoutingList())!;
+    await environment.clock.advance({ ms: SECOND_MS });
+    await tap({ environment, optionId: formatRouteOptionId({ messageId: held.messageId!, agent: 'ghost' }), optionTitle: 'ghost' });
+    await receiveText({ environment, text: 'third' });
+    expect(await environment.repository.findRoutingList()).toMatchObject({
+      openedAt: before.openedAt,
+      resent: before.resent,
+      reminded: true,
+    });
+    expect(sessionTexts({ environment })).toEqual([reminderText()]);
+  });
+
+  test('a stale tap resolves no question waiter', async () => {
+    const environment = await createEnvironment();
+    const question = await askAndAbandon({ environment });
+    await tap({ environment, optionId: formatOptionId({ questionId: question.questionId, optionIndex: 0 }), optionTitle: 'Sim' });
+    const resolveQuestionAnswer = vi.spyOn(environment.dependencies.waiters, 'resolveQuestionAnswer');
+    await tap({ environment, optionId: formatOptionId({ questionId: question.questionId, optionIndex: 1 }), optionTitle: 'Não' });
+    expect(resolveQuestionAnswer).not.toHaveBeenCalled();
   });
 
   test('a list that failed to send leaves no row', async () => {
