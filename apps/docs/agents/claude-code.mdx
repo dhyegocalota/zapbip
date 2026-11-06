@@ -24,6 +24,7 @@ description: Connect Claude Code to your WhatsApp.
     ```
 
     Claude Code reads the page and follows the steps below, in order. Before it changes a file or a setting, it tells you which one and waits for your yes. The link in that page is secret, so keep it out of chats you share.
+
   </Step>
   <Step title="Add zapbip to Claude Code">
     If an older `zapbip` entry exists, Claude Code removes it with `claude mcp remove --scope user zapbip`. Then it runs `claude mcp add --transport http --scope user zapbip <connectionLink>`.

@@ -24,6 +24,7 @@ description: Conecte Codex ao seu WhatsApp.
     ```
 
     Codex lê a página e segue os passos abaixo, em ordem. Antes de mudar um arquivo ou uma configuração, diz qual é e espera o seu sim. O link dessa página é secreto, então não o deixe em conversas que você compartilha.
+
   </Step>
   <Step title="Adicionar o zapbip ao Codex">
     Depois do seu sim, ele troca a tabela `[mcp_servers.zapbip]` em `~/.codex/config.toml` por `url = "<connectionLink>"`, `tool_timeout_sec = 900` e `default_tools_approval_mode = "approve"`. O modo de aprovação deixa as ferramentas do zapbip rodarem sem pedir a cada vez, e o Codex avisa você disso.
