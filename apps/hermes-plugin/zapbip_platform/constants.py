@@ -75,3 +75,4 @@ class ConnectorLogEvent(Enum):
 class PluginLogEvent(Enum):
     PROBE_FAILED = "probe_failed"
     HANDOFF_FAILED = "handoff_failed"
+CONNECTION_LINK_ENV = "ZAPBIP_CONNECTION_LINK"
