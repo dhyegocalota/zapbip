@@ -108,14 +108,14 @@ def test_an_outbound_send_never_logs_the_link(caplog: pytest.LogCaptureFixture, 
     assert OWNER_TEXT not in scanned
 
 
-def test_an_oversize_frame_is_rejected_without_its_body(caplog: pytest.LogCaptureFixture, capsys: pytest.CaptureFixture[str]) -> None:
+def test_an_oversize_frame_closes_the_socket_without_its_body(caplog: pytest.LogCaptureFixture, capsys: pytest.CaptureFixture[str]) -> None:
     oversize = messages_text(messages=[text_message(message_id="msg_1", text="z" * OVERSIZE_BYTES)])
 
     async def scenario() -> HandedOff:
         async with FakeConnector(on_open=on_open_sending(oversize)) as connector:
             handed_off = HandedOff(connector=connector)
             async with running_socket(connector=connector, hand_off=handed_off.hand_off):
-                await connector.until(condition=lambda: connector.logged(event="frame_rejected"))
+                await connector.until(condition=lambda: connector.logged(event="connector_closed"))
             return handed_off
 
     with caplog.at_level(logging.DEBUG):
@@ -123,7 +123,6 @@ def test_an_oversize_frame_is_rejected_without_its_body(caplog: pytest.LogCaptur
 
     scanned = logged_text(caplog=caplog, capsys=capsys)
     assert handed_off.message_ids == []
-    assert "frame_too_large" in scanned
     assert "zzzz" not in scanned
 
 

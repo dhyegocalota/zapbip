@@ -11,11 +11,17 @@ from socket_harness import FAST_TIMING, HandedOff, running_socket
 from websockets.asyncio.server import ServerConnection
 
 from zapbip_platform.connector_socket import ConnectorTiming, reconnect_delay_ms
-from zapbip_platform.constants import REPLACED_CLOSE_CODE, SEEN_MESSAGE_LIMIT
+from zapbip_platform.constants import (
+    CONNECTOR_FRAME_MAX_BYTES,
+    REPLACED_CLOSE_CODE,
+    REVOKED_CLOSE_CODE,
+    SEEN_MESSAGE_LIMIT,
+)
 
 FAILURE_EXIT_CODE = 1
 CLEAN_EXIT_CODE = 0
 PROMPT_SECONDS = 0.1
+EXIT_TIMEOUT_SECONDS = 2.0
 HEARTBEAT_INTERVAL_MS = 50
 FRAME_CHUNK_SIZE = 200
 
@@ -47,6 +53,17 @@ class WaitRecorder:
 
     async def wait(self, *, delay_ms: int, stop: asyncio.Event) -> None:
         self.delays_ms.append(delay_ms)
+
+
+class ProbeSwitchingWaitRecorder(WaitRecorder):
+    def __init__(self, *, connector: FakeConnector, probe_status: int) -> None:
+        super().__init__()
+        self._connector = connector
+        self._probe_status = probe_status
+
+    async def wait(self, *, delay_ms: int, stop: asyncio.Event) -> None:
+        await super().wait(delay_ms=delay_ms, stop=stop)
+        self._connector.probe_status = self._probe_status
 
 
 def test_probe_426_proceeds() -> None:
@@ -274,6 +291,79 @@ def test_replaced_4001_stops_without_retry() -> None:
             assert exit_code == CLEAN_EXIT_CODE
             assert connector.open_count == 1
             assert connector.logged(event="connector_replaced")
+
+    run(scenario())
+
+
+def test_revoked_4003_stops_with_failure_and_no_retry() -> None:
+    async def on_open(connection: ServerConnection, index: int) -> None:
+        await send_hello(connection, index)
+        await connection.close(code=REVOKED_CLOSE_CODE)
+
+    async def scenario() -> None:
+        async with FakeConnector(on_open=on_open) as connector:
+            handed_off = HandedOff(connector=connector)
+            async with running_socket(connector=connector, hand_off=handed_off.hand_off) as running:
+                exit_code = await asyncio.wait_for(running.task, timeout=EXIT_TIMEOUT_SECONDS)
+            assert exit_code == FAILURE_EXIT_CODE
+            assert connector.open_count == 1
+            assert connector.probe_count == 1
+            assert connector.logged(event="connector_closed")
+
+    run(scenario())
+
+
+def test_an_attempt_that_never_opened_probes_again_and_connects_on_426() -> None:
+    async def scenario() -> None:
+        async with FakeConnector(refused_upgrades=1) as connector:
+            handed_off = HandedOff(connector=connector)
+            async with running_socket(connector=connector, hand_off=handed_off.hand_off):
+                await connector.until(condition=lambda: connector.open_count == 1)
+            assert connector.probe_count == 2
+
+    run(scenario())
+
+
+def test_an_attempt_that_never_opened_stops_with_failure_when_the_probe_answers_401() -> None:
+    async def scenario() -> None:
+        async with FakeConnector(refused_upgrades=1) as connector:
+            recorder = ProbeSwitchingWaitRecorder(connector=connector, probe_status=401)
+            handed_off = HandedOff(connector=connector)
+            async with running_socket(connector=connector, hand_off=handed_off.hand_off, wait=recorder.wait) as running:
+                exit_code = await asyncio.wait_for(running.task, timeout=EXIT_TIMEOUT_SECONDS)
+            assert exit_code == FAILURE_EXIT_CODE
+            assert connector.probe_count == 2
+            assert connector.open_count == 0
+
+    run(scenario())
+
+
+def test_an_attempt_that_opened_does_not_probe_again() -> None:
+    async def scenario() -> None:
+        async with FakeConnector() as connector:
+            handed_off = HandedOff(connector=connector)
+            async with running_socket(connector=connector, hand_off=handed_off.hand_off):
+                await connector.until(condition=lambda: connector.open_count == 1)
+                connector.drop_connections()
+                await connector.until(condition=lambda: connector.open_count == 2)
+            assert connector.probe_count == 1
+
+    run(scenario())
+
+
+def test_a_frame_over_the_limit_closes_the_socket_and_reconnects() -> None:
+    async def on_open(connection: ServerConnection, index: int) -> None:
+        await send_hello(connection, index)
+        if index == 0:
+            await connection.send("x" * (CONNECTOR_FRAME_MAX_BYTES + 1))
+
+    async def scenario() -> None:
+        async with FakeConnector(on_open=on_open) as connector:
+            handed_off = HandedOff(connector=connector)
+            async with running_socket(connector=connector, hand_off=handed_off.hand_off):
+                await connector.until(condition=lambda: connector.open_count == 2)
+            assert connector.logged(event="connector_closed")
+            assert not connector.logged(event="frame_rejected")
 
     run(scenario())
 
