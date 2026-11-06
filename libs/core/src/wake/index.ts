@@ -8,5 +8,6 @@ export * from './wake-copy';
 export * from './assert-wake-target';
 export * from './sign-wake-request';
 export * from './set-wake';
+export * from './local-connector';
 export * from './schedule-wake';
 export * from './run-due-wakes';

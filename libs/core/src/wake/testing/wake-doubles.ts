@@ -145,6 +145,19 @@ export function createInMemoryWakeRepository(): WakeRepository {
       const dueTimes = [...jobs.values()].map(effectiveDueAt);
       return dueTimes.length === 0 ? null : Math.min(...dueTimes);
     },
+    findLocalRestore: async ({ agent }) => {
+      void agent;
+      throw new Error('findLocalRestore is not implemented');
+    },
+    saveLocalRestore: async ({ agent, previous }) => {
+      void agent;
+      void previous;
+      throw new Error('saveLocalRestore is not implemented');
+    },
+    deleteLocalRestore: async ({ agent }) => {
+      void agent;
+      throw new Error('deleteLocalRestore is not implemented');
+    },
   };
 }
 

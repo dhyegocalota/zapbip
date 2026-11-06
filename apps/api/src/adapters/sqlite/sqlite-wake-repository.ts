@@ -114,5 +114,21 @@ export function createSqliteWakeRepository(input: { storage: DurableObjectStorag
       const [row] = rows<{ next_due_at: number | null }>(SELECT_NEXT_DUE_AT);
       return row === undefined ? null : row.next_due_at;
     },
+
+    async findLocalRestore({ agent }) {
+      void agent;
+      throw new Error('findLocalRestore is not implemented');
+    },
+
+    async saveLocalRestore({ agent, previous }) {
+      void agent;
+      void previous;
+      throw new Error('saveLocalRestore is not implemented');
+    },
+
+    async deleteLocalRestore({ agent }) {
+      void agent;
+      throw new Error('deleteLocalRestore is not implemented');
+    },
   };
 }
