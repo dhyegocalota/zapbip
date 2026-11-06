@@ -166,11 +166,12 @@ Counts at the last run: unit 18 passed, integration 59 passed.
 4. Hypothesis: an account only reads its own object. Break it by: two connections with different `accountId` against one object name.
 5. Hypothesis: the seed refuses a repeated phone and writes nothing. Break it by: running it twice with different agents.
 
+### Fixed after the first merge
+
+- `markRead` stamps `read_at` from the injected clock; the alarm is armed at the clock deadline minus the development offset and re-armed after `advanceClock`; the object re-arms in its constructor. Tests: `stamps a read message with the injected clock`, `arms the alarm at the clock deadline after the clock advances`, `re-arms the alarm when the object is constructed again` (red text in the commit body).
+
 ### Known gaps
 
-- `markRead` stamps `read_at` with SQLite wall time (the repository port has no clock), not the development clock.
-- `armAlarm` compares due times in clock time with a real-time alarm; after `advanceClock` the real alarm is later than the clock deadline. Tests use `runDurableObjectAlarm`.
-- An `ask` that holds and is evicted before it returns does not re-arm the alarm until the next call; the queued prompt's expiry waits for the next write.
 - `findLastAgentWrite` uses `at >= since`; `findRecentQuestion` is inclusive on `askedAfter` and `listOpenQuestions` is newest first, as in the in-memory repository.
 - The fake sender reads the prompt text of a `choice` message from the `questions` row, so `ask` must insert the question before `session`.
 - The history of `eb984a0` carries a fixture string that gitleaks flags; `.gitleaks.toml` allowlists it anchored.
