@@ -116,7 +116,7 @@ function requestOf(input: { bytes?: Uint8Array } = {}): MediaDownloadRequest {
   };
 }
 
-function download(input: { metadata: Metadata[]; downloads: Download[]; request?: MediaDownloadRequest }) {
+function download(input: { metadata: Metadata[]; downloads: Download[]; request?: MediaDownloadRequest; developmentMediaOrigin?: string }) {
   const graphDouble = fakeGraph(input);
   const storeDouble = memoryStore();
   const result = downloadInboundMedia({
@@ -125,6 +125,7 @@ function download(input: { metadata: Metadata[]; downloads: Download[]; request?
     accountId: ACCOUNT_ID,
     request: input.request === undefined ? requestOf() : input.request,
     maxBytes: MEDIA_MAX_BYTES_INBOUND,
+    developmentMediaOrigin: input.developmentMediaOrigin === undefined ? null : input.developmentMediaOrigin,
     attempts: MEDIA_DOWNLOAD_ATTEMPTS,
   });
   return { result, ...graphDouble, ...storeDouble };
@@ -235,6 +236,19 @@ describe('downloadInboundMedia', () => {
     },
   );
 
+  it('requests the configured development origin over http and refuses it when none is configured', async () => {
+    const url = 'http://127.0.0.1:4011/media/image';
+    const refused = download({ metadata: [metadataOf({ url })], downloads: [] });
+    expect(await refused.result).toEqual({ stored: false });
+    const allowed = download({
+      metadata: [metadataOf({ url })],
+      downloads: [bodyResponse()],
+      developmentMediaOrigin: 'http://127.0.0.1:4011',
+    });
+    expect(await allowed.result).toEqual({ stored: true, sizeBytes: BODY.byteLength });
+    expect(allowed.downloadedUrls).toEqual([url]);
+  });
+
   it('AU-71 refuses a declared size over the limit without downloading', async () => {
     const run = download({ metadata: [metadataOf({ fileSize: OVER_LIMIT_BYTES })], downloads: [] });
     expect(await run.result).toEqual({ stored: false });
@@ -266,6 +280,7 @@ describe('downloadInboundMedia', () => {
       accountId: ACCOUNT_ID,
       request: requestOf(),
       maxBytes: MEDIA_MAX_BYTES_INBOUND,
+      developmentMediaOrigin: null,
       attempts: MEDIA_DOWNLOAD_ATTEMPTS,
     });
     await expect(result).rejects.toThrow('r2 down');

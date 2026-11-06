@@ -14,10 +14,18 @@ export type WhatsAppEnvironment = WebhookEnvironment & {
 
 type WhatsAppBindingName = Extract<keyof Bindings, 'META_APP_SECRET' | `WHATSAPP_${string}`>;
 
+const DEVELOPMENT_MEDIA_ORIGIN_BINDING = 'WHATSAPP_MEDIA_DOWNLOAD_ORIGIN';
+
 function requireBinding(input: { env: Bindings; name: WhatsAppBindingName }): string {
   const value = input.env[input.name];
   if (value !== undefined && value.length > 0) return value;
   throw new Error(`${input.name} is not set`);
+}
+
+function readDevelopmentMediaOrigin(input: { env: Bindings }): string | null {
+  const value = input.env[DEVELOPMENT_MEDIA_ORIGIN_BINDING];
+  if (value === undefined || value.length === 0) return null;
+  return value;
 }
 
 export function readWebhookEnvironment(input: { env: Bindings }): WebhookEnvironment {
@@ -35,6 +43,6 @@ export function readWhatsAppEnvironment(input: { env: Bindings }): WhatsAppEnvir
     ...readWebhookEnvironment({ env }),
     graphBaseUrl: requireBinding({ env, name: 'WHATSAPP_GRAPH_BASE_URL' }),
     accessToken: requireBinding({ env, name: 'WHATSAPP_ACCESS_TOKEN' }),
-    developmentMediaOrigin: null,
+    developmentMediaOrigin: readDevelopmentMediaOrigin({ env }),
   };
 }

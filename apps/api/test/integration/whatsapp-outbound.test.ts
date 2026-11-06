@@ -54,7 +54,12 @@ let errorSpy: MockInstance<typeof console.error>;
 function senderFor(input: { accountId: string }) {
   return createCloudApiMessageSender({
     accountId: input.accountId,
-    graph: createGraphClient({ baseUrl: whatsapp.graphBaseUrl, accessToken: whatsapp.accessToken, fetcher: fetch }),
+    graph: createGraphClient({
+      baseUrl: whatsapp.graphBaseUrl,
+      accessToken: whatsapp.accessToken,
+      developmentMediaOrigin: whatsapp.developmentMediaOrigin,
+      fetcher: fetch,
+    }),
     findOwnerByAccountId: (lookup) => findOwnerByAccountId({ database: testEnv.CONNECTIONS, accountId: lookup.accountId }),
     messageIndex: new D1MessageIndex({ database: testEnv.CONNECTIONS }),
     restrictions: new D1ChannelRestrictions({ database: testEnv.CONNECTIONS, phoneNumberId: whatsapp.phoneNumberId }),

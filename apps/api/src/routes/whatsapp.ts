@@ -118,11 +118,17 @@ async function channelEntryOf(input: {
   });
   const whatsapp = readWhatsAppEnvironment({ env: context.bindings });
   const download = await downloadInboundMedia({
-    graph: createGraphClient({ baseUrl: whatsapp.graphBaseUrl, accessToken: whatsapp.accessToken, fetcher: fetch }),
+    graph: createGraphClient({
+      baseUrl: whatsapp.graphBaseUrl,
+      accessToken: whatsapp.accessToken,
+      developmentMediaOrigin: whatsapp.developmentMediaOrigin,
+      fetcher: fetch,
+    }),
     mediaStore,
     accountId,
     request: media,
     maxBytes: MEDIA_MAX_BYTES_INBOUND,
+    developmentMediaOrigin: whatsapp.developmentMediaOrigin,
     attempts: MEDIA_DOWNLOAD_ATTEMPTS,
   });
   if (!download.stored) {
