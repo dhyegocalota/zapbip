@@ -4,13 +4,29 @@ Every checkbox states the input and the exact expected outcome. A ticked box car
 
 Test areas, each run by its own tester sub-agent: **Core unit: grammar**, **Core unit: state and use cases**, **Apps unit**, **Worker integration: D1** (the Durable Object purge sits here too), **Worker integration: inbound and MCP**, **E2E**, **Docs links**, **Security checks**, **Prove it for real**.
 
+## Plan refresh (S0.0), 2026-11-06
+
+Names below that differ from the boxes, settled against slice 1's code (`plan.md` → Plan refresh has the reasons). The boxes keep their inputs and outcomes; only the names move.
+
+| Box text | Read as |
+|---|---|
+| ~~`libs/core/src/use-cases/*`~~, ~~`libs/core/src/testing/in-memory.ts`~~ | `libs/core/src/accounts/use-cases/*`; `libs/core/src/accounts/testing/in-memory-accounts.ts` (`createInMemoryAccountDependencies`) |
+| ~~`deleteAccount`~~ | `finishAccountDeletion` (the request and confirm cases are `requestAccountDeletion`, `confirmAccountDeletion`) |
+| ~~`mediaStore.deletePrefix`~~, ~~`R2MediaStore`~~ deletion | `accountMedia.deleteAll({accountId})`, adapter `R2AccountMedia` |
+| ~~`RandomSource`~~ cases | Dropped: the generator is slice 1's `generateConnectionSecret`, already tested by its `connection-secret.test.ts` |
+| ~~`receive-owner-message.test.ts`~~ (rule 0 and compensation) | `receive-account-message.test.ts`; slice 1's `receive-owner-message.test.ts` is only the pinned dedupe case |
+| ~~`createInMemoryDependencies`~~ | `createInMemoryAccountDependencies` |
+| ~~`isFirstMessage` stored with the reply~~ | `FirstMessageClaim.claim`, the first-message cases read the same outcomes |
+| ~~`scheduled-sweep.test.ts`~~, ~~`r2-delete-prefix.test.ts`~~, ~~`account-inbox.test.ts`~~ | `deletion-sweep.test.ts`, `r2-account-media.test.ts`, `account-inbox-accounts.test.ts` |
+| ~~`drizzle-kit check`~~ | Dropped: no Drizzle schema; the migration cases apply `0001` then `0002` |
+
 ## The failing test first
 
 - [ ] S1a.1 red `libs/core/src/accounts/{command,agent-name,install-prompt-parts,account-copy}.test.ts` — input: the Core unit: grammar cases below; expected: each fails with `<name> is not implemented`.
-- [ ] S1b.1 red `libs/core/src/accounts/state-gate.test.ts`, `libs/core/src/use-cases/apply-owner-command.test.ts` and the rule 0 cases of `receive-owner-message.test.ts` — input: the cases below; expected: each fails with `evaluateAccountState is not implemented` or `applyOwnerCommand is not implemented`.
-- [ ] S1b.2 red `libs/core/src/use-cases/{create-agent-connection,list-agent-connections,revoke-agent-connection,rotate-agent-connection,delete-account,open-owner-account}.test.ts` — input: the cases below; expected: each fails with its use-case stub message or `createInMemoryDependencies is not implemented`.
+- [ ] S1b.1 red `libs/core/src/accounts/state-gate.test.ts`, `libs/core/src/accounts/use-cases/apply-owner-command.test.ts` and the rule 0 cases of `libs/core/src/accounts/use-cases/receive-account-message.test.ts` — input: the cases below; expected: each fails with `evaluateAccountState is not implemented` or `applyOwnerCommand is not implemented`.
+- [ ] S1b.2 red `libs/core/src/accounts/use-cases/{create-agent-connection,list-agent-connections,revoke-agent-connection,rotate-agent-connection,request-account-deletion,confirm-account-deletion,finish-account-deletion,open-owner-account}.test.ts` — input: the cases below; expected: each fails with its use-case stub message or `createInMemoryAccountDependencies is not implemented`.
 - [ ] S2.1 red `apps/api/test/integration/{migration-0002,d1-accounts,d1-connections-lifecycle}.test.ts` — input: the D1 cases below; expected: each fails with `<method> is not implemented`, and the migration case fails on its assertion, not on a SQL syntax error.
-- [ ] S2.2 red `apps/api/test/unit/{connection-secrets,generic-install-prompt,wrangler-limits}.test.ts` and `apps/api/test/integration/{sender-guard,r2-delete-prefix,account-inbox-purge}.test.ts` — input: the cases below; expected: each fails with its stub message.
+- [ ] S2.2 red `apps/api/test/unit/{connection-secrets,generic-install-prompt,wrangler-limits}.test.ts` and `apps/api/test/integration/{sender-guard,r2-account-media,account-inbox-purge}.test.ts` — input: the cases below; expected: each fails with its stub message.
 - [ ] S3.1 red `apps/api/test/integration/{owner-inbound,simulator-accounts,mcp-account-states,mcp-outbound,logs-redaction,waitlist-enabled}.test.ts` — input: the cases below; expected: each fails with `not implemented` or with a response other than the expected status.
 - [ ] S3.3 red `apps/api/test/e2e/accounts.e2e.test.ts` — input: the first `novo agente` of the walk; expected: fails at the first create, not at `wrangler dev` startup.
 - [ ] S5.1 red `apps/docs` — input: `mint broken-links` with the three guide pages linked and absent; expected: one broken link per missing page.
@@ -100,7 +116,7 @@ Runner: `pnpm --filter @zapbip/core test:unit` (Vitest 5.0.5). No ports. Time is
 
 ## Core unit: state and use cases
 
-Runner: `pnpm --filter @zapbip/core test:unit`. In-memory ports from `libs/core/src/testing/in-memory.ts`; fake clock; fake digests (`fake:<secret>`) and a fake `ConnectionSecrets` that returns the secrets in a queue.
+Runner: `pnpm --filter @zapbip/core test:unit`. In-memory ports from `libs/core/src/accounts/testing/in-memory-accounts.ts` (over slice 1's `libs/core/src/inbox/testing/in-memory.ts`); fake clock; fake digests (`fake:<secret>`) and a fake `ConnectionSecrets` that returns the secrets in a queue.
 
 ### State gate (`state-gate.test.ts`)
 
@@ -209,30 +225,30 @@ Runner: `pnpm --filter @zapbip/core test:unit`.
 
 ### Deletion (`delete-account.test.ts`)
 
-- [ ] `deleteAccount` — input: account with two agents, two media objects under `accounts/<id>/`, and an inbox; expected: the calls happen in the order accounts state `deleting`, inbox `purge`, media `deletePrefix`, remove; afterward the in-memory repositories hold no row for the account.
+- [ ] `deleteAccount` — input: account with two agents, two media objects under `accounts/<id>/`, and an inbox; expected: the calls happen in the order accounts state `deleting`, inbox `purge`, media `deleteAll`, remove; afterward the in-memory repositories hold no row for the account.
 - [ ] `deleteAccount` — input: `inboxPurge.purge` throws once; expected: the call throws; account state remains `deleting`; a second `deleteAccount` call completes every step; the end state equals the single-run end state.
-- [ ] `deleteAccount` — input: `mediaStore.deletePrefix` throws once; expected: as above (`deleting` remains; the next call finishes).
+- [ ] `deleteAccount` — input: `accountMedia.deleteAll` throws once; expected: as above (`deleting` remains; the next call finishes).
 - [ ] `deleteAccount` — input: called twice in a row on a completed deletion; expected: the second call returns without error and sends nothing.
 - [ ] `deleteAccount` — input: an account with no agents and no media; expected: the account row is removed and the owner identity row is removed.
 - [ ] `deleteAccount` — input: another account's connections and media; expected: unchanged (account isolation in the in-memory adapters).
 - [ ] `deleteAccount` — input: deletion completes; a new owner message from the same `waId`; expected: `openOwnerAccount` creates a new account (`created: true`) in the waitlist or active state as the flag says.
 
-### In-memory adapters (`testing/in-memory.ts`)
+### In-memory adapters (`accounts/testing/in-memory-accounts.ts`)
 
-- [ ] `createInMemoryDependencies` — input: no arguments; expected: a `CoreDependencies` whose `accounts`, `connections` and `connectionSecrets` report the same results as the Worker D1 adapters for the cases above (the mirror `describe` block of the Worker integration tests calls the same case names).
+- [ ] `createInMemoryAccountDependencies` — input: no arguments; expected: an `AccountDependencies` whose `accounts`, `connections` and `connectionSecrets` report the same results as the Worker D1 adapters for the cases above (the mirror `describe` block of the Worker integration tests calls the same case names).
 
 ## Apps unit
 
 Runner: `pnpm --filter @zapbip/api test:unit` (Vitest 4.1.12 in `apps/api`).
 
-- [ ] `issue()` — input: the `ConnectionSecrets` adapter with a fixed fake `RandomSource`; expected: `secret` matches `CONNECTION_SECRET_PATTERN`, `secret` has the `zb_conn_` prefix and exactly 43 base64url characters after it.
-- [ ] `issue()` — input: the real `RandomSource`, 1 000 issues; expected: 1 000 distinct secrets, all matching `CONNECTION_SECRET_PATTERN`.
+- [ ] `issue()` — input: the `ConnectionSecrets` adapter; expected: `secret` matches `CONNECTION_SECRET_PATTERN`, `secret` has the `zb_conn_` prefix and exactly 43 base64url characters after it.
+- [ ] `issue()` — input: 1 000 issues; expected: 1 000 distinct secrets, all matching `CONNECTION_SECRET_PATTERN`.
 - [ ] `issue()` — input: the base64url alphabet check on 1 000 secrets; expected: no `+`, `/` or `=` character.
 - [ ] `issue()` — input: `digest` of an issued secret; expected: 64 lowercase hexadecimal characters equal to `hashConnectionSecret({secret})`.
 - [ ] `hashConnectionSecret` — input: the same secret twice; expected: identical digests (determinism).
 - [ ] `hashConnectionSecret` — input: the same secret without the `zb_conn_` prefix; expected: a different digest (the prefix is part of the hashed string).
-- [ ] `RandomSource.bytes` — input: `length: 32`; expected: a `Uint8Array` of length 32 from `crypto.getRandomValues`.
-- [ ] `RandomSource.bytes` — input: `length: 0`; expected: an empty `Uint8Array` (edge).
+- ~~`RandomSource.bytes` — input: `length: 32`; expected: a `Uint8Array` of length 32.~~ Struck: the `RandomSource` port is dropped (plan.md → Plan refresh).
+- ~~`RandomSource.bytes` — input: `length: 0`; expected: an empty `Uint8Array` (edge).~~ Struck: same reason.
 - [ ] `isWaitlistEnabled` (`apps/api/src/config/waitlist-enabled.ts`) — input: `'true'`; expected: `true`.
 - [ ] `isWaitlistEnabled` — input: `'false'`; expected: `false`.
 - [ ] `isWaitlistEnabled` — input: `undefined`; expected: throws naming `WAITLIST_ENABLED`.
@@ -260,7 +276,7 @@ Runner: `pnpm --filter @zapbip/api test:integration` (`@cloudflare/vitest-pool-w
 - [ ] Migration `0002` — input: a revoked row and an active row with the same `(account_id, agent)`; expected: both inserts succeed (the partial index ignores revoked rows).
 - [ ] Migration `0002` — input: two rows with the same `secret_digest`; expected: the second insert fails on the UNIQUE constraint.
 - [ ] Migration `0002` — input: a `connections` row whose `account_id` names no `accounts` row; expected: the insert fails on the foreign key.
-- [ ] Migration `0002` — input: `drizzle-kit check` on `schema.ts`; expected: no drift reported.
+- ~~Migration `0002` — input: `drizzle-kit check` on `schema.ts`; expected: no drift reported.~~ Struck: no Drizzle schema in slice 1. Replaced by: Migration `0002` — input: `0001` with one `message_index` row applied, then `0002`; expected: the migration applies without a foreign key error, and `message_index`, `accounts`, `owner_identities`, `connections` and `blocked_phones` exist with the spec's columns.
 
 ### Accounts directory (`d1-accounts.test.ts`)
 
@@ -311,12 +327,12 @@ Runner: `pnpm --filter @zapbip/api test:integration` (`@cloudflare/vitest-pool-w
 - [ ] `OutboundGuard.admit` — input: 30 calls for one `connectionId` in a minute, then one more; expected: 30 `Admitted`, then `RateLimited`; a different `connectionId` of the same account is `Admitted` while the account total is under 120.
 - [ ] `OutboundGuard.admit` — input: 120 admitted calls across three connections of one account in a minute, then one more on a fourth connection; expected: the 121st is `RateLimited` (per-account limit, A16, decision 15); another account is `Admitted`.
 
-### R2 media prefix (`r2-delete-prefix.test.ts`)
+### R2 media prefix (`r2-account-media.test.ts`)
 
-- [ ] `deletePrefix` — input: 2 500 objects under `accounts/acc1/` and 3 under `accounts/acc2/`; expected: after the call, zero objects under `accounts/acc1/`, three under `accounts/acc2/`.
-- [ ] `deletePrefix` — input: an empty prefix; expected: no object deleted, no error.
-- [ ] `deletePrefix` — input: called twice; expected: the second call deletes nothing and does not throw.
-- [ ] `deletePrefix` — input: the prefix `accounts/acc1` without the trailing `/`; expected: the call is rejected with an error (the prefix must end with `/`), so `acc10` objects are never removed.
+- [ ] `deleteAll` — input: `accountId: acc1`, 2 500 objects under `accounts/acc1/` and 3 under `accounts/acc2/`; expected: after the call, zero objects under `accounts/acc1/`, three under `accounts/acc2/`.
+- [ ] `deleteAll` — input: an account with no objects; expected: no object deleted, no error.
+- [ ] `deleteAll` — input: called twice; expected: the second call deletes nothing and does not throw.
+- [ ] `deleteAll` — input: `accountId: acc1` while `accounts/acc10/media/x` exists; expected: the `acc10` object remains (the adapter appends the trailing `/`).
 - [ ] `put` and `get` — input: a media put by the account's `R2MediaStore(accountId: acc1)`; expected: the key is `accounts/acc1/media/<mediaId>` (cross-slice R2 key).
 
 ### Durable Object purge (`account-inbox-purge.test.ts`)
@@ -338,7 +354,7 @@ Runner: `pnpm --filter @zapbip/api test:integration` (`@cloudflare/vitest-pool-w
 - [ ] `operator-account.sh delete 5511900000000` — input: an `active` account; expected: state `deleting`; no R2 or Durable Object call is made by the script (the daily sweep finishes it).
 - [ ] `operator-account.sh block` and `suspend` in the runbook order — input: an abusive phone; expected: `blocked_phones` row first, then `suspended`; `unblock` and `resume` reverse both.
 
-### Daily sweep (`scheduled-sweep.test.ts`)
+### Daily sweep (`deletion-sweep.test.ts`)
 
 - [ ] `finishDeletingAccounts` — input: two `deleting` accounts and one `suspended` account; expected: both `deleting` accounts finished (no rows in D1, R2 prefixes empty, storage holds only the tombstone); the `suspended` account is untouched.
 - [ ] `finishDeletingAccounts` — input: a `deleting` account whose purge failed last run; expected: the sweep finishes it, the account is absent afterwards.
