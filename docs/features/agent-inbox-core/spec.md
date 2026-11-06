@@ -61,8 +61,8 @@ libs/types               enums and constants shared by the libs and the apps
 apps/api                 Cloudflare Worker
   src/routes             Hono routes: MCP, media links, uploads, dev simulator
   src/mcp                tool definitions mapping MCP calls to core use cases
-  src/account-inbox      the Durable Object: SQLite repository, waiters, alarms
-  src/adapters           grouped by platform: d1 (D1ConnectionDirectory), r2 (R2MediaStore), fake (FakeWhatsAppSender), wake (NoneWaker)
+  src/account-inbox      the Durable Object: waiters, alarm, due-time providers and a custom set-based migration runner (`schema_versions`; drizzle's migrator is not used)
+  src/adapters           grouped by kind: d1 (D1ConnectionDirectory), r2 (R2MediaStore), fake (FakeWhatsAppSender), wake (NoneWaker), platform (clock, ids, hash, connection secret), sqlite (the repository)
 apps/docs                Mintlify site (docs.json + MDX)
 ```
 
@@ -235,9 +235,9 @@ Per-account data lives in the `AccountInbox` Durable Object's SQLite. D1 holds o
   - `v1` (this slice): `inbox_messages (id, agent, direction, kind, payload, reply_to, delivery, read_at, at)`, `questions`, `channel_receipts (wamid PRIMARY KEY, received_at)`, `agent_wake (agent PRIMARY KEY, mode, last_polled_at, updated_at)`, the window and the queue.
   - `v2` (`webhook-wake`): `agent_wake` gains `provider`, `host`, `sealed_target`, `key_version`, `status`, `last_delivered_at`; table `wake_jobs`.
   - `v3` (`scheduled-wake`): `agent_wake` gains `interval_minutes`, `standby_agent`, `poller_stale_notified`; `inbox_messages` gains `handed_to`; index `inbox_messages_unread`.
-- Creating a connection writes its `agent_wake` row (mode `None`, `last_polled_at` set to now) in the same call that creates the agent's inbox.
+- The `agent_wake` row (mode `None`, `last_polled_at` set to now) is written on the agent's first contact, in the same call that registers the agent in its inbox.
 - One alarm per object. `alarm()` catches every error, runs the due work of the expiry sweep, wake jobs and poller checks in that order, and re-arms the alarm to the earliest deadline any of them reports.
-- `sweepExpired({now})` expires media, questions and queued messages. The alarm runs it, and the hourly cron calls it for each account (`deploy-readiness`).
+- `sweepExpired({now})` expires media, questions and queued messages. The alarm runs it; no cron runs in slice 1.
 
 ### Docs (Mintlify, `apps/docs`)
 
@@ -255,7 +255,7 @@ Per-account data lives in the `AccountInbox` Durable Object's SQLite. D1 holds o
 
 `scripts/verify-gates.tsv` gets rules for:
 
-- `libs/types/**`: unit, typecheck;
+- `libs/types/**`: unit, typecheck, and the `apps/api` Workers integration and E2E gates (A21), because an enum reaches the Worker;
 - `libs/core/**`: unit, typecheck, and the `apps/api` Workers integration and E2E gates, because a core rule reaches the Worker;
 - `apps/api/**`: unit, Workers integration, typecheck, E2E (E2E runs by default; only the Claude Code cases are opt-in, through `ZAPBIP_CLAUDE_E2E=1`);
 - `apps/docs/**`: docs links.
@@ -294,7 +294,7 @@ The E2E gate that [ADR 0005](../../adr/0005-the-local-gate-runs-what-the-diff-ca
 | Buttons and lists | two kinds · one kind `choice` | one kind, `choice`, in both directions (the spec's kind table has one row); a prompt has `selected` null | owner delegated 2026-11-06 |
 | Owner locale | — | `OwnerLocale` (`pt_BR`, `en_US`) is declared by slice 1 in `libs/types` and carried on the connection identity; the additions file's row 5 adds no values | owner delegated 2026-11-06 |
 | Where media and agents live in the object | not in the v1 list · in the object | the v1 schema adds an `agents` table (routing rule 6 needs last-seen times) and a `media` table (upload deadlines and retention); agent wake rows are created on first contact, not by the connection write | owner delegated 2026-11-06 |
-| Media keys and the message index | — | media is stored at `accounts/<account_id>/media/<media_id>`; `message_index` maps a media id (an inbound `wamid` or an upload id) to its account, so the media route needs no account in the URL | owner delegated 2026-11-06 |
+| Media keys and the message index | — | media is stored at `accounts/<account_id>/media/<media_id>`; `message_index` maps a media id (an inbound `wamid` or an upload id) to its account, the media path carries the account id and the HMAC covers it (A23); the index serves reply routing, not the media route | owner delegated 2026-11-06 |
 | Repository and ownership of this spec | — | the lead owns `docs/features/**`, the ADRs, the indexes and the status flips; each lane writes its own section of `tester-briefing.md` | owner delegated 2026-11-06 |
 | ADR amendments | — | ADR 0008 names eight ports; ADR 0006 looks secrets up by digest (no constant-time comparison across rows) | owner delegated 2026-11-06 |
 | Upload and media routes | `PUT /u/:id?token=` · under the secret, media by unguessable id | upload `PUT /c/:secret/u/:upload_id?exp=&sig=` (the secret locates the account); media `GET /m/:account_id/:media_id?exp=&sig=` carries no secret; the account id is in the path and the HMAC covers it | owner delegated 2026-11-06 |
@@ -326,6 +326,7 @@ The E2E gate that [ADR 0005](../../adr/0005-the-local-gate-runs-what-the-diff-ca
 | Object migrations | — | the runner records the set of applied versions and applies each missing one in ascending order; reserved versions v1 to v7 | owner delegated 2026-11-06 |
 | Expiry | — | per-object alarms; no cron in slice 1 | owner delegated 2026-11-06 |
 | Wake reason name | `WakeReason` · `AgentWakeReason` | `AgentWakeReason`, slice 1's merged name, is kept; later slices adapt | owner delegated 2026-11-06 |
+| Seed runner | node script · `tsx` | the seed is a pure function that returns SQL; `dev:seed` runs it through `wrangler d1 execute --local --persist-to <dir>` under `tsx` 4.23.15, a root devDependency | owner delegated 2026-11-06 |
 | Shared time constants | — | `SECOND_MS`, `MINUTE_MS`, `HOUR_MS` and `DAY_MS` live in `libs/types`; core constants import them | owner delegated 2026-11-06 |
 | Owner locale source | — | slice 1 reads `owner_identities.locale` through the connection identity; `accounts-and-keys` later sets it at account creation | owner delegated 2026-11-06 |
 

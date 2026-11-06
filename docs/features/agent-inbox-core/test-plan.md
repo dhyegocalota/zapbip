@@ -139,7 +139,7 @@ Runner: `pnpm --filter @zapbip/core test:unit` (Vitest 5.0.5). Ports are the in-
 
 ### Copy (`inbox-copy.test.ts`)
 
-- [ ] CU-89 every key in both locales — input: each `InboxCopyKey` and each `OwnerLocale`; expected: a non-empty string for each pair.
+- [ ] CU-89 (pin: green when it lands, because the copy table is complete in Step 0) every key in both locales — input: each `InboxCopyKey` and each `OwnerLocale`; expected: a non-empty string for each pair.
 - [ ] CU-90 `renderCopy` fills a token — input: `AgentNotListening`, `pt_BR`, `{agent: "alpha"}`; expected: `"O agente alpha não está ouvindo agora. Sua mensagem espera no inbox."`.
 - [ ] CU-91 `renderCopy` with a missing token — input: `AgentNotListening`, `en_US`, `{}`; expected: `invalid_input`, message `copy: missing value for agent`.
 - [ ] CU-92 `renderCopy` in English — input: `NoticeQuickReply`, `en_US`; expected: `"Open"`.
@@ -147,7 +147,7 @@ Runner: `pnpm --filter @zapbip/core test:unit` (Vitest 5.0.5). Ports are the in-
 ### Use cases (`libs/core/src/inbox/use-cases/*.test.ts`, in-memory dependencies, window open unless stated)
 
 - [ ] CU-93 `sendText` inside the window — input: `"oi"`, agent `alpha`; expected: `delivery` `sent`; the sender's `session` called once with a `text` message; the stored message `delivery` `sent`.
-- [ ] CU-94 two concurrent sends outside the window produce one notice — input: window closed, two `sendText` started together, the template sender delayed; expected: `template` called exactly once; both messages `queued`; `noticeSentForClosedWindow` saved as `true` before the template call completes. (Review finding 15.)
+- [ ] CU-94 two concurrent sends outside the window produce one notice — input: window closed, two `sendText` started together, the template sender delayed; expected: `template` called exactly once; both messages `queued`; `noticeSentForClosedWindow` saved as `true` before the template call completes, through the atomic `InboxRepository.claimNotice()`: of two concurrent callers exactly one gets `true`. (Review finding 15.)
 - [ ] CU-95 `sendText` outside the window — input: last owner message `WINDOW_MS` ago; expected: `queued`; `session` not called; one `template` call of kind `notice`, locale of the connection, parameters `[alpha, <preview>]`.
 - [ ] CU-96 second queued message in the same closed window — input: two sends while closed; expected: exactly one `template` call in total.
 - [ ] CU-97 a new closed window sends a new notice — input: owner message, window closes, two sends; expected: one `template` after the owner message closes the window again.
@@ -248,6 +248,7 @@ Runner: `pnpm --filter @zapbip/api test:integration` (Vitest 4.1.12, pool-worker
 - [ ] WI-23 `ask` holds and returns pending — input: `ask` with `timeoutMs` 1000, no answer, via RPC; expected: `{ok: true, value: {status: pending, questionId}}` after about 1 s.
 - [ ] WI-24 RPC keeps the error code — input: `sendText` with an unknown reply target; expected: `{ok: false, errorCode: "not_found", message: "reply_to: message not found"}`.
 - [ ] WI-25 DO eviction mid-wait — input: `ask` held with timeout 10 s; the instance is dropped while it waits (`runInDurableObject` restart); then the owner's tap is stored through a new instance, and the client retries `waitForReply(questionId)`; expected: the held call returns an error rather than an answer; the retry returns `answered` with the tapped option. (Review finding 14.)
+- [ ] WI-123 a throwing due-time provider leaves the alarm armed — input: two registered `DueTimeProvider`s, the first throws in `runDue`; `runDurableObjectAlarm`; expected: the second provider ran, `ctx.storage.getAlarm()` is not null and equals the earliest `nextDueAt()` of the providers that still have work. (Owner: S3.5.)
 - [ ] WI-26 logs carry no text — input: a session with owner text `segredo-123` and caption `legenda-456`; expected: no captured log line contains either string, and every line is JSON with an `event` field.
 
 ### MCP auth (`mcp-auth.test.ts`)
@@ -255,14 +256,14 @@ Runner: `pnpm --filter @zapbip/api test:integration` (Vitest 4.1.12, pool-worker
 - [ ] WI-27 unknown secret on the path — input: `/c/zb_conn_` plus 43 characters not seeded; expected: `401` with body `UNAUTHORIZED_BODY`.
 - [ ] WI-28 deleted connection — input: a seeded connection row deleted; expected: `401`, body byte-equal to WI-27.
 - [ ] WI-29 malformed secret — input: `/c/zb_conn_short/mcp`; expected: `401`, same body; the directory is not queried (counted).
-- [ ] WI-30 Bearer on `/mcp` — input: valid Bearer; expected: `200`, `tools/list` returns ten tools.
+- [ ] WI-30 Bearer on `/mcp` — input: valid Bearer; expected: `200`, `tools/list` returns exactly the names in `Object.keys(TOOL_DEFINITIONS)`.
 - [ ] WI-31 `/mcp` without a header — input: no `Authorization`; expected: `401`, same body.
 - [ ] WI-32 `/mcp` with a wrong Bearer — input: an unknown Bearer; expected: `401`, same body.
 - [ ] WI-33 path secret wins over Bearer — input: valid path secret with a wrong Bearer on `/c/<secret>/mcp`; expected: `200`.
 
 ### MCP tools (`mcp-tools.test.ts`)
 
-- [ ] WI-34 `tools/list` names the ten tools — input: `tools/list`; expected: exactly `send_message`, `send_media`, `send_location`, `send_contact`, `react`, `ask`, `wait_for_reply`, `get_messages`, `check_inbox`, `create_upload`.
+- [ ] WI-34 `tools/list` names the registered tools — input: `tools/list`; expected: exactly the values of `McpToolName`, in the order of `Object.keys(TOOL_DEFINITIONS)`; no count is asserted.
 - [ ] WI-35 `send_message` — input: `{text: "oi"}`; expected: `message_id` non-empty, `delivery` `sent`; the screen shows `oi`.
 - [ ] WI-36 `send_message` over the limit — input: 4097 characters; expected: tool error naming `text`, message `text: must be at most 4096 characters`.
 - [ ] WI-37 `send_message` unknown reply target — input: `reply_to` `msg_missing`; expected: `reply_to: message not found`.
@@ -355,27 +356,29 @@ Runner: `pnpm --filter @zapbip/api test:integration` (Vitest 4.1.12, pool-worker
 - [ ] WI-109 simulator absent on `index.ts` — input: `POST /dev/owner/<phone>/messages` on the production entry; expected: `404`.
 - [ ] WI-110 screen absent on `index.ts` — input: `GET /dev/owner/<phone>/screen`; expected: `404`.
 - [ ] WI-111 clock absent on `index.ts` — input: `POST /dev/owner/<phone>/clock`; expected: `404`.
-- [ ] WI-112 MCP works on `index.ts` — input: `tools/list` on `/c/<secret>/mcp`; expected: `200`, ten tools.
+- [ ] WI-112 MCP works on `index.ts` — input: `tools/list` on `/c/<secret>/mcp`; expected: `200`, the tools of `Object.keys(TOOL_DEFINITIONS)`.
 
 ### Dev seed (`dev-seed.test.ts`)
 
-- [ ] WI-113 seed creates the account — input: `--phone 5511999990000 --agents claude-code,codex --json`; expected: one `accounts` row, one `owner_identities` row with `pt_BR`, two `connections` rows with distinct digests, output JSON with two URLs.
+The seed logic is a pure function that returns SQL; the tests run that SQL through D1. The script runs it with `wrangler d1 execute --local --persist-to <dir>` under `tsx`.
+
+- [ ] WI-113 seed creates the account — input: `--phone 5511999990000 --agents claude-code,codex --json --persist-to <dir>`; expected: one `accounts` row, one `owner_identities` row with `pt_BR`, two `connections` rows with distinct digests, output JSON with two URLs.
 - [ ] WI-114 seed rejects a repeated phone — input: the same command again; expected: `invalid_input`, nothing written.
 - [ ] WI-115 seed rejects an agent name over 20 characters — input: a 21-character agent; expected: `invalid_input` naming `agents[0]`, nothing written.
 
-- [ ] WI-116 swapped account id in a media path — input: a link signed for `acc_1` requested at `/m/acc_2/<media id>` with the same `exp` and `sig`; expected: `403`; the same link at `/m/acc_1/...` returns `200`.
-- [ ] WI-117 `GET /health` — input: `GET /health`; expected: `200` with body `{"ok": true}`.
-- [ ] WI-118 migration runner on a fresh object — input: a new object; expected: `schema_versions` contains `1` and the `v1` tables exist.
-- [ ] WI-119 migration runner is idempotent — input: a second run on the object of WI-118; expected: no version applied, no error, `schema_versions` unchanged.
-- [ ] WI-120 migration runner applies missing versions in ascending order — input: registry `{1, 2, 3}` with `{1}` applied; expected: versions 2 then 3 applied, in that order (recorded by a spy).
-- [ ] WI-121 migration runner fills gaps — input: registry `{1, 3}` with `{1}` applied, and a second registry `{2, 1}` with nothing applied; expected: the first applies only 3; the second applies 1 then 2.
-- [ ] WI-122 base class has no development methods — input: the base `AccountInbox` exported by `index.ts`; expected: `readScreen` and `advanceClock` are absent from its prototype; `DevAccountInbox` has both.
+- [ ] WI-116 (owner: S5.3) swapped account id in a media path — input: a link signed for `acc_1` requested at `/m/acc_2/<media id>` with the same `exp` and `sig`; expected: `403`; the same link at `/m/acc_1/...` returns `200`.
+- [ ] WI-117 (owner: S5.7) `GET /health` — input: `GET /health`; expected: `200` with body `{"ok": true}`.
+- [ ] WI-118 (owner: S3.5) migration runner on a fresh object — input: a new object; expected: `schema_versions` contains `1` and the `v1` tables exist.
+- [ ] WI-119 (owner: S3.5) migration runner is idempotent — input: a second run on the object of WI-118; expected: no version applied, no error, `schema_versions` unchanged.
+- [ ] WI-120 (owner: S3.5) migration runner applies missing versions in ascending order — input: registry `{1, 2, 3}` with `{1}` applied; expected: versions 2 then 3 applied, in that order (recorded by a spy).
+- [ ] WI-121 (owner: S3.5) migration runner fills gaps — input: registry `{1, 3}` with `{1}` applied, and a second registry `{2, 1}` with nothing applied; expected: the first applies only 3; the second applies 1 then 2.
+- [ ] WI-122 (owner: S5.7) base class has no development methods — input: the base `AccountInbox` exported by `index.ts`; expected: `readScreen` and `advanceClock` are absent from its prototype; `DevAccountInbox` has both.
 
 ## E2E MCP client
 
 Runner: `pnpm --filter @zapbip/api test:e2e`, default in the `e2e` gate. `globalSetup` picks a free port, applies `0001_core` to local D1, seeds the phone `5511999990000` with `alpha` and `beta` through `scripts/dev-seed.ts --json`, starts `wrangler dev` (the top-level development block) with the two link keys as `--var`, and polls `GET /health` for at most 30 s. The client is `@modelcontextprotocol/sdk` `Client` over `StreamableHTTPClientTransport`. The owner is the simulator over HTTP.
 
-- [ ] E2E-1 `tools/list` — input: client connects to `/c/<alpha secret>/mcp`; expected: ten tools with input and output schemas.
+- [ ] E2E-1 `tools/list` — input: client connects to `/c/<alpha secret>/mcp`; expected: the tools of `Object.keys(TOOL_DEFINITIONS)`, each with the input and output schema of its definition.
 - [ ] E2E-2 text with emoji — input: `send_message` `"olá 👋"`; expected: `delivery` `sent`; the screen shows `olá 👋`.
 - [ ] E2E-3 text at the limit — input: 4096 characters; expected: `delivery` `sent`.
 - [ ] E2E-4 text over the limit — input: 4097 characters; expected: tool error naming `text`; screen unchanged.
@@ -397,7 +400,7 @@ Runner: `pnpm --filter @zapbip/api test:e2e`, default in the `e2e` gate. `global
 - [ ] E2E-20 second unmatched message joins the list — input: after E2E-19's list is open and unanswered, owner text `"segunda"`; expected: no second list on the screen; after the tap on `beta`, both `oi` and `segunda` reach `beta`.
 - [ ] E2E-21 closed window and flush — input: the simulator advances the clock by `WINDOW_MS`; `alpha` sends `"a"` and `"b"`; the owner taps the notice's quick reply; expected: one notice on the screen; `"a"` and `"b"` sent in that order after the tap; no message reached `alpha`'s inbox from the tap.
 - [ ] E2E-22 unknown secret — input: a digest that was never seeded; expected: the transport reports `401`; no tools listed.
-- [ ] E2E-23 Bearer header — input: `/mcp` with the Bearer; expected: the same ten tools as E2E-1.
+- [ ] E2E-23 Bearer header — input: `/mcp` with the Bearer; expected: the same tools as E2E-1.
 
 ## E2E Claude Code session (opt-in)
 
@@ -415,7 +418,7 @@ Runner: `ZAPBIP_CLAUDE_E2E=1 pnpm --filter @zapbip/api test:e2e`. Each case call
 Runner: `pnpm --filter @zapbip/docs exec mint broken-links` (gate `docs`).
 
 - [ ] DOC-1 broken links — input: `apps/docs`; expected: exit `0`, no broken link.
-- [ ] DOC-2 navigation matches files — input: every page of `docs.json`; expected: each exists as an `.mdx` file; each of the ten tools has `mcp-reference/<tool>.mdx`; no path is duplicated.
+- [ ] DOC-2 navigation matches files — input: every page of `docs.json`; expected: each exists as an `.mdx` file; each tool of `Object.keys(TOOL_DEFINITIONS)` has `mcp-reference/<tool>.mdx` (underscores become hyphens); no path is duplicated.
 - [ ] DOC-3 `mint dev` serves the site — input: `mint dev`; expected: `GET /` returns `200`; the Introduction renders.
 - [ ] DOC-4 pages render without console errors — input: Introduction, `concepts/routing` and `mcp-reference/send-message` in Playwright MCP at 1280 and 375 widths; expected: no console errors; no horizontal scroll at 375 (recorded by `/check-ui`).
 
@@ -448,7 +451,7 @@ Runner: `pnpm --filter @zapbip/api test:e2e` (`production-bundle.e2e.test.ts`), 
 - [ ] PB-1 dry-run bundle builds — input: `wrangler deploy --dry-run --env production --outdir <scratch>`, where `env.production.main` is `src/index.ts`; expected: exit `0`, one bundle written. If the installed wrangler needs a login for dry-run, the box is recorded `not run` in coverage honesty, and PB-2 uses the bundler output of the same entry.
 - [ ] PB-2 bundle has no development surface — input: the bundle from PB-1; expected: no `/dev/owner/` string, no `owner-simulator` identifier, no `advanceClock` and no `readScreen`.
 - [ ] PB-3 development bundle has the development surface — input: `wrangler deploy --dry-run --outdir <scratch>` on the top-level block, whose `main` is `src/index.dev.ts`; expected: `/dev/owner/`, `advanceClock` and `readScreen` present, so PB-2 is not vacuous.
-- [ ] PB-4 wrangler config shape — input: `wrangler.jsonc` parsed; expected: the top-level `main` is `src/index.dev.ts`; `env.production.main` is `src/index.ts`; `env.production` repeats `ACCOUNT_INBOX`, `CONNECTIONS` and `MEDIA`; neither `MEDIA_LINK_SIGNING_KEY` nor `UPLOAD_LINK_SIGNING_KEY` appears in the file.
+- [ ] PB-4 wrangler config shape — input: `wrangler.jsonc` parsed; expected: the top-level `main` is `src/index.dev.ts`; `env.production.main` is `src/index.ts`; `env.production` repeats `ACCOUNT_INBOX`, `CONNECTIONS`, `MEDIA`, `vars.PUBLIC_ORIGIN` and `migrations` (tag `v1`, `AccountInbox` in `new_sqlite_classes`); neither `MEDIA_LINK_SIGNING_KEY` nor `UPLOAD_LINK_SIGNING_KEY` appears in the file.
 
 ## Edge cases found during execution
 
