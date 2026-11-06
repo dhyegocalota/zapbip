@@ -53,7 +53,13 @@ export type WorkerPreflightInput = {
   company: CompanyFacts;
 };
 
-export type DocsPreflightInput = { shell: DeployShell; officialWhatsAppNumber: string; company: CompanyFacts; npmVersion: string };
+export type DocsPreflightInput = {
+  shell: DeployShell;
+  officialWhatsAppNumber: string;
+  company: CompanyFacts;
+  npmVersion: string;
+  openclawPluginVersion: string;
+};
 
 type PreflightCheck<Input> = { step: PreflightStep; refusalOf: (input: Input) => Promise<string | null> };
 

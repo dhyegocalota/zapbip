@@ -240,6 +240,7 @@ describe('docs preflight', () => {
       officialWhatsAppNumber: OFFICIAL_NUMBER_UNSET,
       company: COMPLETE_COMPANY,
       npmVersion: NPM_VERSION,
+      openclawPluginVersion: NPM_VERSION,
     });
     expect(refusal?.step).toBe(PreflightStep.OfficialNumber);
     expect(shell.commands).toEqual([]);
@@ -248,7 +249,13 @@ describe('docs preflight', () => {
   it('refuses the docs deploy while a company fact is unset, before any command', async () => {
     const shell = fakeShell({});
     const company = { ...COMPLETE_COMPANY, cnpj: COMPANY_FACT_UNSET };
-    const refusal = await runDocsPreflight({ shell, officialWhatsAppNumber: OFFICIAL_NUMBER, company, npmVersion: NPM_VERSION });
+    const refusal = await runDocsPreflight({
+      shell,
+      officialWhatsAppNumber: OFFICIAL_NUMBER,
+      company,
+      npmVersion: NPM_VERSION,
+      openclawPluginVersion: NPM_VERSION,
+    });
     expect(refusal?.step).toBe(PreflightStep.CompanyFacts);
     expect(refusal?.message).toContain('cnpj');
     expect(shell.commands).toEqual([]);
@@ -261,16 +268,37 @@ describe('docs preflight', () => {
       officialWhatsAppNumber: OFFICIAL_NUMBER,
       company: COMPLETE_COMPANY,
       npmVersion: NPM_VERSION,
+      openclawPluginVersion: NPM_VERSION,
     });
     expect(refusal?.step).toBe(PreflightStep.NpmVersion);
     expect(refusal?.message).toContain(`zapbip@${NPM_VERSION}`);
     expect(shell.commands).toEqual([`npm view zapbip@${NPM_VERSION} version`]);
   });
 
+  it('refuses until the OpenClaw plugin version resolves on npm, naming it', async () => {
+    const shell = fakeShell({ replies: { '@zapbip/openclaw-plugin': { exitCode: 1, stdout: '' } } });
+    const refusal = await runDocsPreflight({
+      shell,
+      officialWhatsAppNumber: OFFICIAL_NUMBER,
+      company: COMPLETE_COMPANY,
+      npmVersion: NPM_VERSION,
+      openclawPluginVersion: NPM_VERSION,
+    });
+    expect(refusal?.step).toBe(PreflightStep.NpmVersion);
+    expect(refusal?.message).toContain(`@zapbip/openclaw-plugin@${NPM_VERSION}`);
+    expect(shell.commands).toEqual([`npm view zapbip@${NPM_VERSION} version`, `npm view @zapbip/openclaw-plugin@${NPM_VERSION} version`]);
+  });
+
   it('passes when the number is set and the version resolves', async () => {
     const shell = fakeShell({});
     expect(
-      await runDocsPreflight({ shell, officialWhatsAppNumber: OFFICIAL_NUMBER, company: COMPLETE_COMPANY, npmVersion: NPM_VERSION }),
+      await runDocsPreflight({
+        shell,
+        officialWhatsAppNumber: OFFICIAL_NUMBER,
+        company: COMPLETE_COMPANY,
+        npmVersion: NPM_VERSION,
+        openclawPluginVersion: NPM_VERSION,
+      }),
     ).toBeNull();
   });
 });
