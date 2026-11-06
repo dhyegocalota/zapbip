@@ -213,3 +213,10 @@ Pins (green on arrival): `env-example.test.ts`, `root-scripts.test.ts` (`19d03f1
   - Meta and Mintlify UI labels are from memory and unverified; the runbooks tell the owner to follow the dashboard where it differs. Whether Mintlify starts in the browser language and builds from `apps/docs` is unverified.
   - No privacy policy page exists in `apps/docs`; Meta's Live mode needs a public URL (meta-setup step 10).
   - `root scripts migrate:production` / `deploy:production` still pass `--env production` on this branch; lanes B and C must drop it.
+
+### Lane B update (owner and coordinator orders, 2026-11-06)
+
+- Preflight refuses Worker and docs deploys while any `COMPANY` field (libs/types, defined here with `COMPANY_FACT_UNSET`) is the sentinel; right after the official number check. Red `693c0c1`, green in the next commit. Tests name each field and assert no command ran.
+- Docs preflight also runs `npm view @zapbip/openclaw-plugin@<version> version` after `zapbip@<version>`; the first unresolved package is named. Red/green in the two commits after. The `openclawPluginVersion` input has no caller yet (no docs deploy entry exists); the PyPI package `zapbip-platform` 0.1.0 is a runbook owner step only, the preflight does not check PyPI.
+- Runbook owner steps to add in lane D's files: fill the Logic Bit company facts; publish `@zapbip/openclaw-plugin` 0.1.0 to npm; publish `zapbip-platform` 0.1.0 to PyPI.
+- `INSTALL_PAGE_PATH_PREFIX` exists on no branch, so the install-route readiness check stays a text match on `/i/:installCode`.

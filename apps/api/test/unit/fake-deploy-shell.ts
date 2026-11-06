@@ -1,3 +1,4 @@
+import type { CompanyFacts } from '@zapbip/types';
 import { DeployEnvironment } from '../../src/operations/deploy-environment';
 import type { DeployBlock, WorkerFacts, DeployShell, EnvironmentVariables, ShellResult } from '../../src/operations/deploy-preflight';
 import { SmokeInput } from '../../src/operations/smoke-inputs';
@@ -57,3 +58,12 @@ export function blockOf(input: { environment: DeployEnvironment; databaseId?: st
 }
 
 export const READY_WORKER_FACTS: WorkerFacts = { exportsScheduled: true, mountsInstallRoute: true };
+
+export const COMPLETE_COMPANY: CompanyFacts = {
+  legalName: 'Logic Bit Tecnologia Ltda',
+  tradeName: 'Logic Bit',
+  cnpj: '00.000.000/0001-00',
+  address: 'Rua Exemplo 1, Sao Paulo',
+  website: 'https://logicbit.example',
+  contactEmail: 'contact@logicbit.example',
+};

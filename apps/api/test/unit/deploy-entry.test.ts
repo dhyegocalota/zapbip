@@ -2,7 +2,15 @@ import { describe, expect, it } from 'vitest';
 import { readDeployBlock, runDeploy, type DeployPrompt } from '../../scripts/deploy';
 import { PLACEHOLDER_VALUE_PREFIX } from '../../src/operations/constants';
 import { DeployEnvironment } from '../../src/operations/deploy-environment';
-import { blockOf, COMPLETE_VARIABLES, type FakeShell, fakeShell, OFFICIAL_NUMBER, READY_WORKER_FACTS } from './fake-deploy-shell';
+import {
+  blockOf,
+  COMPLETE_COMPANY,
+  COMPLETE_VARIABLES,
+  type FakeShell,
+  fakeShell,
+  OFFICIAL_NUMBER,
+  READY_WORKER_FACTS,
+} from './fake-deploy-shell';
 
 const CONFIRMATION = 'production';
 const VERSIONS_JSON = JSON.stringify([{ id: 'version-old' }, { id: 'version-new' }]);
@@ -50,6 +58,7 @@ async function deploy(input: {
     isInteractive,
     environmentVariables: COMPLETE_VARIABLES,
     officialWhatsAppNumber: OFFICIAL_NUMBER,
+    company: COMPLETE_COMPANY,
     log: (line) => lines.push(line),
   });
   return { exitCode, shell, prompt, output: lines.join('\n') };

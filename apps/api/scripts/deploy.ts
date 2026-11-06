@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { parseArgs } from 'node:util';
 import { experimental_readRawConfig as readRawWranglerConfig } from 'wrangler';
-import { OFFICIAL_WHATSAPP_NUMBER } from '@zapbip/types';
+import { COMPANY, type CompanyFacts, OFFICIAL_WHATSAPP_NUMBER } from '@zapbip/types';
 import { z } from 'zod';
 import { DeployEnvironment, parseDeployEnvironment } from '../src/operations/deploy-environment';
 import {
@@ -36,6 +36,7 @@ export type DeployRun = {
   isInteractive: boolean;
   environmentVariables: EnvironmentVariables;
   officialWhatsAppNumber: string;
+  company: CompanyFacts;
   log: (line: string) => void;
 };
 
@@ -150,6 +151,7 @@ async function main(): Promise<void> {
       isInteractive: process.stdin.isTTY === true,
       environmentVariables: process.env,
       officialWhatsAppNumber: OFFICIAL_WHATSAPP_NUMBER,
+      company: COMPANY,
       log: console.log,
     });
   } finally {

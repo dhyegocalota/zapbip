@@ -1,4 +1,4 @@
-import { OFFICIAL_NUMBER_UNSET } from '@zapbip/types';
+import { COMPANY_FACT_UNSET, type CompanyFacts, OFFICIAL_NUMBER_UNSET } from '@zapbip/types';
 import { z } from 'zod';
 import { PLACEHOLDER_VALUE_PREFIX } from './constants';
 import { DeployEnvironment } from './deploy-environment';
@@ -15,6 +15,7 @@ const ORIGIN_REMOTE = 'origin';
 const ORIGIN_MAIN = `${ORIGIN_REMOTE}/${MAIN_BRANCH}`;
 const NO_PENDING_MIGRATIONS = 'No migrations to apply';
 const NPM_PACKAGE_NAME = 'zapbip';
+const OPENCLAW_PLUGIN_PACKAGE = '@zapbip/openclaw-plugin';
 const DEPLOYABLE_ENVIRONMENTS = [DeployEnvironment.Staging, DeployEnvironment.Production];
 
 export type ShellCommand = { file: string; args: string[]; stdin?: string };
@@ -26,6 +27,7 @@ export type EnvironmentVariables = Record<string, string | undefined>;
 export enum PreflightStep {
   Environment = 'environment',
   OfficialNumber = 'official number',
+  CompanyFacts = 'company facts',
   NpmVersion = 'npm version',
   Git = 'git',
   Gate = 'gate',
@@ -49,9 +51,16 @@ export type WorkerPreflightInput = {
   isInteractive: boolean;
   environmentVariables: EnvironmentVariables;
   officialWhatsAppNumber: string;
+  company: CompanyFacts;
 };
 
-export type DocsPreflightInput = { shell: DeployShell; officialWhatsAppNumber: string; npmVersion: string };
+export type DocsPreflightInput = {
+  shell: DeployShell;
+  officialWhatsAppNumber: string;
+  company: CompanyFacts;
+  npmVersion: string;
+  openclawPluginVersion: string;
+};
 
 type PreflightCheck<Input> = { step: PreflightStep; refusalOf: (input: Input) => Promise<string | null> };
 
@@ -99,11 +108,27 @@ async function refuseUnsetOfficialNumber(input: { officialWhatsAppNumber: string
   return `OFFICIAL_WHATSAPP_NUMBER is still ${OFFICIAL_NUMBER_UNSET}; set the official number in libs/types before deploying`;
 }
 
+async function refuseUnsetCompanyFacts(input: { company: CompanyFacts }): Promise<string | null> {
+  const unset = Object.entries(input.company)
+    .filter(([, value]) => value === COMPANY_FACT_UNSET)
+    .map(([field]) => field);
+  if (unset.length === 0) return null;
+  return `COMPANY facts are still ${COMPANY_FACT_UNSET}: ${unset.join(', ')}; fill the Logic Bit company facts in libs/types before deploying`;
+}
+
+async function firstUnpublished(input: { shell: DeployShell; packages: string[] }): Promise<string | null> {
+  const [current, ...remaining] = input.packages;
+  if (!current) return null;
+  const result = await input.shell.run({ file: NPM, args: ['view', current, 'version'] });
+  if (result.exitCode !== 0) return current;
+  return firstUnpublished({ shell: input.shell, packages: remaining });
+}
+
 async function refuseUnpublishedPackage(input: DocsPreflightInput): Promise<string | null> {
-  const packageVersion = `${NPM_PACKAGE_NAME}@${input.npmVersion}`;
-  const result = await input.shell.run({ file: NPM, args: ['view', packageVersion, 'version'] });
-  if (result.exitCode === 0) return null;
-  return `${packageVersion} does not resolve on npm; publish it before deploying the docs`;
+  const packages = [`${NPM_PACKAGE_NAME}@${input.npmVersion}`, `${OPENCLAW_PLUGIN_PACKAGE}@${input.openclawPluginVersion}`];
+  const unpublished = await firstUnpublished({ shell: input.shell, packages });
+  if (unpublished === null) return null;
+  return `${unpublished} does not resolve on npm; publish it before deploying the docs`;
 }
 
 async function refuseUncleanGit(input: WorkerPreflightInput): Promise<string | null> {
@@ -175,6 +200,7 @@ async function refuseMissingSmokeInputs(input: WorkerPreflightInput): Promise<st
 const WORKER_CHECKS: PreflightCheck<WorkerPreflightInput>[] = [
   { step: PreflightStep.Environment, refusalOf: refuseUnlessDeployable },
   { step: PreflightStep.OfficialNumber, refusalOf: refuseUnsetOfficialNumber },
+  { step: PreflightStep.CompanyFacts, refusalOf: refuseUnsetCompanyFacts },
   { step: PreflightStep.Git, refusalOf: refuseUncleanGit },
   { step: PreflightStep.Gate, refusalOf: refuseFailedGate },
   { step: PreflightStep.Config, refusalOf: refuseLeftoverPlaceholder },
@@ -186,6 +212,7 @@ const WORKER_CHECKS: PreflightCheck<WorkerPreflightInput>[] = [
 
 const DOCS_CHECKS: PreflightCheck<DocsPreflightInput>[] = [
   { step: PreflightStep.OfficialNumber, refusalOf: refuseUnsetOfficialNumber },
+  { step: PreflightStep.CompanyFacts, refusalOf: refuseUnsetCompanyFacts },
   { step: PreflightStep.NpmVersion, refusalOf: refuseUnpublishedPackage },
 ];
 

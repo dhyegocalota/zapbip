@@ -1,4 +1,5 @@
-import { OFFICIAL_NUMBER_UNSET } from '@zapbip/types';
+import { COMPANY_FACT_UNSET, OFFICIAL_NUMBER_UNSET } from '@zapbip/types';
+import type { CompanyFacts } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { PLACEHOLDER_VALUE_PREFIX } from '../../src/operations/constants';
 import { DeployEnvironment } from '../../src/operations/deploy-environment';
@@ -14,6 +15,7 @@ import { SmokeInput } from '../../src/operations/smoke-inputs';
 import { WorkerSecret } from '../../src/operations/worker-secret';
 import {
   blockOf,
+  COMPLETE_COMPANY,
   COMPLETE_VARIABLES,
   type FakeShell,
   fakeShell,
@@ -30,12 +32,13 @@ function workerInput(input: {
   firstDeploy?: boolean;
   environmentVariables?: EnvironmentVariables;
   officialWhatsAppNumber?: string;
+  company?: CompanyFacts;
   workerFacts?: WorkerFacts;
 }) {
   const { environment = DeployEnvironment.Staging, isInteractive = true, firstDeploy = false } = input;
   const { shell = fakeShell({}), environmentVariables = COMPLETE_VARIABLES, officialWhatsAppNumber = OFFICIAL_NUMBER } = input;
-  const { block = blockOf({ environment }), workerFacts = READY_WORKER_FACTS } = input;
-  return { environment, firstDeploy, block, workerFacts, shell, isInteractive, environmentVariables, officialWhatsAppNumber };
+  const { block = blockOf({ environment }), workerFacts = READY_WORKER_FACTS, company = COMPLETE_COMPANY } = input;
+  return { environment, firstDeploy, block, workerFacts, shell, isInteractive, environmentVariables, officialWhatsAppNumber, company };
 }
 
 describe('worker preflight', () => {
@@ -66,6 +69,18 @@ describe('worker preflight', () => {
     expect(refusal?.message).toContain('OFFICIAL_WHATSAPP_NUMBER');
     expect(shell.commands).toEqual([]);
   });
+
+  it.each(['legalName', 'cnpj', 'address', 'website', 'contactEmail'])(
+    'refuses the worker deploy while company %s is unset, before any command',
+    async (field) => {
+      const shell = fakeShell({});
+      const company = { ...COMPLETE_COMPANY, [field]: COMPANY_FACT_UNSET };
+      const refusal = await runWorkerPreflight(workerInput({ shell, company }));
+      expect(refusal?.step).toBe(PreflightStep.CompanyFacts);
+      expect(refusal?.message).toContain(field);
+      expect(shell.commands).toEqual([]);
+    },
+  );
 
   it('refuses production from a branch other than main', async () => {
     const shell = fakeShell({ replies: { 'git rev-parse --abbrev-ref HEAD': { exitCode: 0, stdout: 'feat/x\n' } } });
@@ -220,21 +235,70 @@ describe('worker preflight', () => {
 describe('docs preflight', () => {
   it('refuses while the official number is the unset sentinel, before any command', async () => {
     const shell = fakeShell({});
-    const refusal = await runDocsPreflight({ shell, officialWhatsAppNumber: OFFICIAL_NUMBER_UNSET, npmVersion: NPM_VERSION });
+    const refusal = await runDocsPreflight({
+      shell,
+      officialWhatsAppNumber: OFFICIAL_NUMBER_UNSET,
+      company: COMPLETE_COMPANY,
+      npmVersion: NPM_VERSION,
+      openclawPluginVersion: NPM_VERSION,
+    });
     expect(refusal?.step).toBe(PreflightStep.OfficialNumber);
+    expect(shell.commands).toEqual([]);
+  });
+
+  it('refuses the docs deploy while a company fact is unset, before any command', async () => {
+    const shell = fakeShell({});
+    const company = { ...COMPLETE_COMPANY, cnpj: COMPANY_FACT_UNSET };
+    const refusal = await runDocsPreflight({
+      shell,
+      officialWhatsAppNumber: OFFICIAL_NUMBER,
+      company,
+      npmVersion: NPM_VERSION,
+      openclawPluginVersion: NPM_VERSION,
+    });
+    expect(refusal?.step).toBe(PreflightStep.CompanyFacts);
+    expect(refusal?.message).toContain('cnpj');
     expect(shell.commands).toEqual([]);
   });
 
   it('refuses until npm view resolves the pinned version, naming it', async () => {
     const shell = fakeShell({ replies: { 'npm view': { exitCode: 1, stdout: '' } } });
-    const refusal = await runDocsPreflight({ shell, officialWhatsAppNumber: OFFICIAL_NUMBER, npmVersion: NPM_VERSION });
+    const refusal = await runDocsPreflight({
+      shell,
+      officialWhatsAppNumber: OFFICIAL_NUMBER,
+      company: COMPLETE_COMPANY,
+      npmVersion: NPM_VERSION,
+      openclawPluginVersion: NPM_VERSION,
+    });
     expect(refusal?.step).toBe(PreflightStep.NpmVersion);
     expect(refusal?.message).toContain(`zapbip@${NPM_VERSION}`);
     expect(shell.commands).toEqual([`npm view zapbip@${NPM_VERSION} version`]);
   });
 
+  it('refuses until the OpenClaw plugin version resolves on npm, naming it', async () => {
+    const shell = fakeShell({ replies: { '@zapbip/openclaw-plugin': { exitCode: 1, stdout: '' } } });
+    const refusal = await runDocsPreflight({
+      shell,
+      officialWhatsAppNumber: OFFICIAL_NUMBER,
+      company: COMPLETE_COMPANY,
+      npmVersion: NPM_VERSION,
+      openclawPluginVersion: NPM_VERSION,
+    });
+    expect(refusal?.step).toBe(PreflightStep.NpmVersion);
+    expect(refusal?.message).toContain(`@zapbip/openclaw-plugin@${NPM_VERSION}`);
+    expect(shell.commands).toEqual([`npm view zapbip@${NPM_VERSION} version`, `npm view @zapbip/openclaw-plugin@${NPM_VERSION} version`]);
+  });
+
   it('passes when the number is set and the version resolves', async () => {
     const shell = fakeShell({});
-    expect(await runDocsPreflight({ shell, officialWhatsAppNumber: OFFICIAL_NUMBER, npmVersion: NPM_VERSION })).toBeNull();
+    expect(
+      await runDocsPreflight({
+        shell,
+        officialWhatsAppNumber: OFFICIAL_NUMBER,
+        company: COMPLETE_COMPANY,
+        npmVersion: NPM_VERSION,
+        openclawPluginVersion: NPM_VERSION,
+      }),
+    ).toBeNull();
   });
 });
