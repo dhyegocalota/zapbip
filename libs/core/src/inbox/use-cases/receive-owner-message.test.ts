@@ -88,6 +88,18 @@ function routeOptionId(input: { list: Message; agent: string }): string {
 }
 
 describe('receiveOwnerMessage routing', () => {
+  test('CU-190 with exactly one agent an unaddressed text reaches it and no list is sent', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha'] });
+    const holding = waiting({ environment, agent: 'alpha' });
+    await environment.clock.advance({ ms: 0 });
+    const result = await receiveText({ environment, text: 'oi' });
+    expect(result).toMatchObject({ agent: 'alpha', duplicate: false });
+    expect(await holding).toMatchObject({ status: ReplyStatus.Message, messages: [{ text: 'oi' }] });
+    expect(routingLists({ environment })).toEqual([]);
+    expect(await environment.repository.listHeld()).toEqual([]);
+  });
+
   test('CU-132 a text with the window closed opens it and wakes the waiting agent', async () => {
     const environment = await createEnvironment();
     await registerAgents({ environment, agents: ['alpha'] });
@@ -259,7 +271,7 @@ describe('receiveOwnerMessage routing list', () => {
 
   test('CU-163 a route choice naming an unknown agent while the batch is held sends the current list again', async () => {
     const environment = await createEnvironment();
-    await registerAgents({ environment, agents: ['alpha'] });
+    await registerAgents({ environment, agents: ['alpha', 'beta'] });
     const held = await receiveText({ environment, text: 'first' });
     const result = await tap({
       environment,
@@ -656,9 +668,9 @@ describe('receiveOwnerMessage retries and concurrency', () => {
 
   test('a second agent does not take the held messages of the routing list', async () => {
     const environment = await createEnvironment();
-    await registerAgents({ environment, agents: ['alpha'] });
+    await registerAgents({ environment, agents: ['alpha', 'beta'] });
     await receiveText({ environment, text: 'first' });
-    await registerAgents({ environment, agents: ['beta'] });
+    await registerAgents({ environment, agents: ['gamma'] });
     expect(await environment.repository.listHeld()).toHaveLength(1);
   });
 });
