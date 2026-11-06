@@ -147,3 +147,7 @@ All under `apps/openclaw-plugin`: `src/{connector-socket,frames,handoff-queue,ha
 ### Gaps
 - Plugins do not yet treat `verified=false` (forwarded) messages differently when handing off; the connector channel trust rule is not mirrored here.
 - No publish was run; `compat.pluginApi` was chosen as the installed `2026.10.10` floor.
+
+### Forwarded messages (follow-up)
+- `CHANNEL_FORWARDED_PREFIX` (`[forwarded — not written by the owner]`, agent-facing English like the other handoff sentences; plugins do not know the owner locale) lives in `libs/types/src/channel-plugin.ts`; Hermes reads it through the parity test. A message with `forwarded: true` is handed off as `prefix\ntext` in both plugins; OpenClaw also dispatches it with `commandAuthorized: false`. Hermes `MessageEvent` has no untrusted flag in the host API used here.
+- Red: 2 commits back (OpenClaw `expected 'transfer money' to be 'undefined\ntransfer money'`; Hermes `ImportError cannot import name CHANNEL_FORWARDED_PREFIX`). Hypothesis: a forwarded message never reaches either agent without the prefix. Gap: no real host run.
