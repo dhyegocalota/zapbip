@@ -1,0 +1,24 @@
+---
+title: 'create_upload'
+description: 'Reserva um envio para bytes que você tem localmente.'
+---
+
+Reserva um envio para bytes que você tem localmente.
+
+## Entrada
+
+| Campo        | Tipo   | Notas |
+| ------------ | ------ | ----- |
+| `filename`   | string |       |
+| `mime_type`  | string |       |
+| `size_bytes` | number |       |
+
+## Saída
+
+`{ "upload_id": string, "upload_url": string, "expires_at": string }`. Faça `PUT` dos bytes em `upload_url` com um `Content-Length` não maior que `size_bytes`, depois passe o `upload_id` para [send_media](/pt-br/mcp-reference/send-media). O envio expira após 15 minutos. Uma ausência de tamanho, um corpo maior, um tipo errado ou um envio expirado é recusado com 411, 413, 415 ou 410 e nada é armazenado.
+
+## Tipos de mensagem
+
+import MessageKinds from '/snippets/pt-br/message-kinds.mdx';
+
+<MessageKinds />

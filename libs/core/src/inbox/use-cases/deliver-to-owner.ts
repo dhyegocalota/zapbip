@@ -4,6 +4,7 @@ import { buildNoticePreview } from '../inbox-copy';
 import type { Message, MessageContent } from '../message';
 import type { CoreDependencies } from '../ports';
 import { isOwnerWindowOpen } from '../window';
+import { flushQueue } from './flush-queue';
 import type { DeliverToOwnerInput, DeliverToOwnerResult } from './types';
 
 function deliveryFailure(input: { kind: MessageKind }): InboxError {
@@ -19,15 +20,11 @@ async function noticePreview(input: { dependencies: CoreDependencies; content: M
 }
 
 async function sendSession(input: { dependencies: CoreDependencies; message: Message }): Promise<DeliverToOwnerResult> {
-  const { repository, sender } = input.dependencies;
-  const { message } = input;
-  try {
-    await sender.session({ message });
-  } catch {
-    await repository.updateDelivery({ messageId: message.messageId, delivery: DeliveryState.Failed });
-    throw deliveryFailure({ kind: message.kind });
-  }
-  await repository.updateDelivery({ messageId: message.messageId, delivery: DeliveryState.Sent });
+  const { dependencies, message } = input;
+  await flushQueue({ dependencies });
+  const current = await dependencies.repository.findMessage({ messageId: message.messageId });
+  const isSent = current !== null && current.delivery === DeliveryState.Sent;
+  if (!isSent) throw deliveryFailure({ kind: message.kind });
   return { delivery: DeliveryState.Sent };
 }
 

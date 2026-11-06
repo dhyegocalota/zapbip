@@ -1,0 +1,25 @@
+---
+title: Erros
+description: Erros técnicos e o que significam.
+---
+
+## 401 unauthorized
+
+O segredo está ausente, errado ou foi revogado. Copie a URL de conexão de novo pelo número do zapbip, ou peça um novo agente. Na forma Bearer, o cabeçalho é `Authorization: Bearer <secret>`.
+
+## A mensagem ficou na fila
+
+`delivery: "queued"` quer dizer que a [janela de 24 horas](/pt-br/features/the-24-hour-window) está fechada. A mensagem espera e chega, em ordem, assim que você escrever para o número do zapbip.
+
+## Erros de envio de arquivo
+
+Os bytes são recusados antes de qualquer armazenamento:
+
+| Status | Causa                                    |
+| ------ | ---------------------------------------- |
+| 411    | `PUT` sem `Content-Length`               |
+| 413    | Corpo maior que o `size_bytes` declarado |
+| 415    | Tipo diferente do `mime_type` declarado  |
+| 410    | O envio expirou após 15 minutos          |
+
+Veja [create_upload](/pt-br/mcp-reference/create-upload).

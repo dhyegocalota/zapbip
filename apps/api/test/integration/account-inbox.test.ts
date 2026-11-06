@@ -105,7 +105,7 @@ describe('AccountInbox owner messages', () => {
         storage.sql.exec<{ total: number }>("SELECT COUNT(*) AS total FROM inbox_messages WHERE direction = 'from_owner'").one().total,
     });
     expect(first.duplicate).toBe(false);
-    expect(second).toEqual({ messageId: null, agent: null, duplicate: true });
+    expect(second).toEqual({ messageId: first.messageId, agent: first.agent, duplicate: true });
     expect(ownerMessageCount).toBe(1);
   });
 
@@ -124,6 +124,26 @@ describe('AccountInbox owner messages', () => {
     expect(screen[1]?.text).toBe('Deploy?');
     expect(screen[0]?.messageId).toBe(text.messageId);
     expect(screen[2]?.messageId).toBeNull();
+  });
+
+  it('renders an outbound link media on the screen as its placeholder and link', async () => {
+    const stub = stubOf({ accountId: FIRST_ACCOUNT });
+    const connection = connectionOf({ accountId: FIRST_ACCOUNT, agent: 'alpha' });
+    const link = 'https://example.com/a.jpg';
+    await openWindow({ stub });
+    expectOk(
+      await stub.sendMedia({
+        connection,
+        mediaKind: MessageKind.Image,
+        voice: false,
+        source: { kind: MediaSourceKind.Link, link },
+        caption: null,
+        filename: null,
+        replyToMessageId: null,
+      }),
+    );
+    const screen = await readScreen({ stub });
+    expect(screen.at(-1)?.text).toBe(`[imagem] ${link}`);
   });
 
   it('renders the routing list for an unrouted owner text', async () => {

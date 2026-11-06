@@ -1,0 +1,20 @@
+---
+title: 'check_inbox'
+description: 'Confere a caixa de entrada sem esperar.'
+---
+
+Confere a caixa de entrada sem esperar.
+
+## Entrada
+
+Nenhum campo.
+
+## Saída
+
+`{ "status": "empty" }` na hora, ou `{ "status": "new", "messages": [...] }`; as mensagens devolvidas passam a lidas. Pensado para tarefas agendadas, então responde barato.
+
+## Tipos de mensagem
+
+import MessageKinds from '/snippets/pt-br/message-kinds.mdx';
+
+<MessageKinds />

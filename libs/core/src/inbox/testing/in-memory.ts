@@ -3,6 +3,7 @@ import {
   DeliveryState,
   IdPrefix,
   MessageDirection,
+  MessageKind,
   WakeOutcome,
   type AgentWakeReason,
   type OwnerLocale,
@@ -31,6 +32,8 @@ export type RecordingSender = MessageSender & {
   failTemplateCalls(input: { callNumbers: number[] }): void;
   holdTemplates(): void;
   releaseTemplates(): void;
+  holdSessions(): void;
+  releaseSessions(): void;
 };
 
 export type RecordingWaker = AgentWaker & {
@@ -56,6 +59,7 @@ export type InMemoryEnvironment = {
 function createInMemoryRepository(): InboxRepository {
   const agents = new Map<AgentName, AgentRecord>();
   const receipts = new Map<string, number>();
+  const receiptMessageIds = new Map<string, string>();
   const media = new Map<string, StoredMedia>();
   let messages: Message[] = [];
   let questions: Question[] = [];
@@ -87,7 +91,13 @@ function createInMemoryRepository(): InboxRepository {
     listUnread: async ({ agent, limit }) => unreadOf(agent).slice(0, limit),
     countUnread: async ({ agent }) => unreadOf(agent).length,
     markRead: async ({ messageIds }) => replaceMessages({ messageIds, change: (message) => ({ ...message, readByAgent: true }) }),
-    listHeld: async () => messages.filter((message) => message.direction === MessageDirection.FromOwner && message.agent === null),
+    listHeld: async () =>
+      messages.filter((message) => message.direction === MessageDirection.FromOwner && message.agent === null && !message.readByAgent),
+    findChoicePrompt: async ({ questionId }) =>
+      messages.find(
+        (message) =>
+          message.direction === MessageDirection.ToOwner && message.kind === MessageKind.Choice && message.questionId === questionId,
+      ) ?? null,
     assignAgent: async ({ messageIds, agent }) => replaceMessages({ messageIds, change: (message) => ({ ...message, agent }) }),
     listQueued: async () => messages.filter((message) => message.delivery === DeliveryState.Queued),
     findLastAgentWrite: async ({ since }) => {
@@ -112,8 +122,17 @@ function createInMemoryRepository(): InboxRepository {
       receipts.set(wamid, receivedAt);
       return true;
     },
+    linkChannelReceipt: async ({ wamid, messageId }) => {
+      receiptMessageIds.set(wamid, messageId);
+    },
+    findChannelReceiptMessageId: async ({ wamid }) => receiptMessageIds.get(wamid) ?? null,
     deleteExpiredReceipts: async ({ receivedBefore }) => {
-      [...receipts].filter(([, receivedAt]) => receivedAt < receivedBefore).forEach(([wamid]) => receipts.delete(wamid));
+      [...receipts]
+        .filter(([, receivedAt]) => receivedAt < receivedBefore)
+        .forEach(([wamid]) => {
+          receipts.delete(wamid);
+          receiptMessageIds.delete(wamid);
+        });
     },
     deleteQuestionsAskedBefore: async ({ askedBefore }) => {
       questions = questions.filter((question) => question.askedAt >= askedBefore);
@@ -167,6 +186,8 @@ function createRecordingSender(): RecordingSender {
   let failingTemplateCalls: number[] = [];
   let templateGate: Promise<void> | null = null;
   let openTemplateGate: () => void = () => undefined;
+  let sessionGate: Promise<void> | null = null;
+  let openSessionGate: () => void = () => undefined;
 
   return {
     sessions,
@@ -183,8 +204,15 @@ function createRecordingSender(): RecordingSender {
       });
     },
     releaseTemplates: () => openTemplateGate(),
+    holdSessions: () => {
+      sessionGate = new Promise((resolve) => {
+        openSessionGate = resolve;
+      });
+    },
+    releaseSessions: () => openSessionGate(),
     session: async ({ message }) => {
       sessionCalls += 1;
+      await sessionGate;
       if (failingSessionCalls.includes(sessionCalls)) throw new Error('session failed');
       sessions.push(message);
       return { channelMessageId: `wamid.session.${sessionCalls}` };

@@ -26,7 +26,7 @@ import { ChannelErrorKind, WakeRung, type OwnerLocale } from '@zapbip/types';
 import { createFakeWhatsAppSender, type FakeWhatsAppSender } from '../adapters/fake/fake-whatsapp-sender';
 import { createIdGenerator } from '../adapters/platform/ids';
 import { loadDurableClock, type DurableClock } from '../adapters/platform/clock';
-import { createR2MediaStore } from '../adapters/r2/r2-media-store';
+import { mediaStoreOf } from '../adapters/r2/r2-media-store';
 import { createSqliteInboxRepository } from '../adapters/sqlite/sqlite-inbox-repository';
 import { createDispatchingAgentWaker } from '../adapters/wake/dispatching-agent-waker';
 import { createFetchWakeTransport } from '../adapters/wake/fetch-wake-transport';
@@ -37,7 +37,7 @@ import type { DueTimeProvider } from '../contract/due-time-provider';
 import type { Bindings } from '../contract/env';
 import { LogEvent, type LogFields } from '../contract/log';
 import { logEvent } from '../log';
-import { ALARM_MIN_DELAY_MS, ALARM_PROVIDER_FAILED, OWNER_LOCALE_STORAGE_KEY } from './constants';
+import { ALARM_MIN_DELAY_MS, AlarmErrorCode, OWNER_LOCALE_STORAGE_KEY } from './constants';
 import { ACCOUNT_INBOX_MIGRATIONS } from './migrations';
 import { runMigrations } from './run-migrations';
 import { createWakeDependencies } from './wake-dependencies';
@@ -63,7 +63,14 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     runMigrations({ storage: this.ctx.storage, migrations: ACCOUNT_INBOX_MIGRATIONS });
     this.accountId = accountId;
     this.clock = await loadDurableClock({ storage: this.ctx.storage, onAdvanced: () => this.armAlarm() });
-    this.sender = createFakeWhatsAppSender({ storage: this.ctx.storage, clock: this.clock });
+    const mediaStore = mediaStoreOf({ bindings: this.env, clock: this.clock });
+    this.sender = createFakeWhatsAppSender({
+      storage: this.ctx.storage,
+      clock: this.clock,
+      mediaStore,
+      accountId,
+      origin: this.env.PUBLIC_ORIGIN,
+    });
     this.wake = createWakeDependencies({
       env: this.env,
       storage: this.ctx.storage,
@@ -74,12 +81,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       accountId,
       repository: createSqliteInboxRepository({ storage: this.ctx.storage, clock: this.clock }),
       sender: this.sender,
-      mediaStore: createR2MediaStore({
-        bucket: this.env.MEDIA,
-        mediaLinkSigningKey: this.env.MEDIA_LINK_SIGNING_KEY,
-        uploadLinkSigningKey: this.env.UPLOAD_LINK_SIGNING_KEY,
-        clock: this.clock,
-      }),
+      mediaStore,
       waker: createNoneWaker(),
       clock: this.clock,
       ids: createIdGenerator(),
@@ -133,7 +135,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     try {
       await input.provider.runDue({ now: input.now });
     } catch {
-      this.log({ event: LogEvent.Sweep, errorCode: ALARM_PROVIDER_FAILED });
+      this.log({ event: LogEvent.Sweep, errorCode: AlarmErrorCode.ProviderFailed });
     }
   }
 

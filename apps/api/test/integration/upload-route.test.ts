@@ -2,7 +2,6 @@ import { env, SELF } from 'cloudflare:test';
 import { UPLOAD_TTL_MS } from '@zapbip/core';
 import { LinkPurpose } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
-import { UNAUTHORIZED_BODY } from '../../src/contract/constants';
 import { freshExpiry, inboxOf, ORIGIN, queryOf, seedAccount, signedQuery, type SeededAccount } from './route-fixtures';
 
 const PDF_TYPE = 'application/pdf';
@@ -10,10 +9,8 @@ const PNG_TYPE = 'image/png';
 const VIDEO_TYPE = 'video/mp4';
 const UPLOAD_BYTES = new TextEncoder().encode('upload-bytes');
 const UNKNOWN_UPLOAD_ID = 'med_unknown';
-const UNKNOWN_SECRET = `zb_conn_${'A'.repeat(43)}`;
 const STATUS_CREATED = 201;
 const STATUS_BAD_REQUEST = 400;
-const STATUS_UNAUTHORIZED = 401;
 const STATUS_FORBIDDEN = 403;
 const STATUS_NOT_FOUND = 404;
 const STATUS_CONFLICT = 409;
@@ -37,7 +34,7 @@ async function createUpload(input: { account: SeededAccount; mimeType: string })
 
 type PutRequest = {
   fixture: UploadFixture;
-  secret: string;
+  pathAccountId: string;
   key: string;
   expiresAt: number;
   uploadId: string;
@@ -48,7 +45,7 @@ type PutRequest = {
 function validPut(input: { fixture: UploadFixture }): PutRequest {
   return {
     fixture: input.fixture,
-    secret: input.fixture.account.secret,
+    pathAccountId: input.fixture.account.accountId,
     key: env.UPLOAD_LINK_SIGNING_KEY,
     expiresAt: freshExpiry(),
     uploadId: input.fixture.uploadId,
@@ -65,7 +62,7 @@ async function putUpload(input: PutRequest): Promise<Response> {
     purpose: LinkPurpose.Upload,
     expiresAt: input.expiresAt,
   });
-  return SELF.fetch(`${ORIGIN}/c/${input.secret}/u/${input.uploadId}?${queryOf(query)}`, {
+  return SELF.fetch(`${ORIGIN}/u/${input.pathAccountId}/${input.uploadId}?${queryOf(query)}`, {
     method: 'PUT',
     headers: input.headers,
     body: input.body,
@@ -106,7 +103,7 @@ describe('upload route', () => {
     });
     const flipped = query.signature.startsWith('0') ? `1${query.signature.slice(1)}` : `0${query.signature.slice(1)}`;
     const response = await SELF.fetch(
-      `${ORIGIN}/c/${fixture.account.secret}/u/${fixture.uploadId}?${queryOf({ ...query, signature: flipped })}`,
+      `${ORIGIN}/u/${fixture.account.accountId}/${fixture.uploadId}?${queryOf({ ...query, signature: flipped })}`,
       { method: 'PUT', headers: { 'Content-Type': PDF_TYPE, 'Content-Length': String(UPLOAD_BYTES.byteLength) }, body: UPLOAD_BYTES },
     );
     expect(response.status).toBe(STATUS_FORBIDDEN);
@@ -157,7 +154,7 @@ describe('upload route', () => {
         controller.close();
       },
     });
-    const response = await SELF.fetch(`${ORIGIN}/c/${fixture.account.secret}/u/${fixture.uploadId}?${queryOf(query)}`, {
+    const response = await SELF.fetch(`${ORIGIN}/u/${fixture.account.accountId}/${fixture.uploadId}?${queryOf(query)}`, {
       method: 'PUT',
       headers: { 'Content-Type': PDF_TYPE },
       body: chunkedBody,
@@ -200,18 +197,18 @@ describe('upload route', () => {
     expect(response.status).toBe(STATUS_CREATED);
   });
 
-  test('WI-82 an unknown secret answers 401 with the unauthorized body', async () => {
+  test('WI-82 a path without a connection secret carries none of it', async () => {
     const fixture = await newFixture();
-    const response = await putUpload({ ...validPut({ fixture }), secret: UNKNOWN_SECRET });
-    expect(response.status).toBe(STATUS_UNAUTHORIZED);
-    expect(await response.json()).toEqual(UNAUTHORIZED_BODY);
+    const response = await putUpload(validPut({ fixture }));
+    expect(response.status).toBe(STATUS_CREATED);
+    expect(response.url).not.toContain(fixture.account.secret);
   });
 
-  test('WI-83 another account upload through my secret answers 404', async () => {
+  test('WI-83 another account in the path answers 403 and stores nothing', async () => {
     const owner = await newFixture();
     const intruder = await seedAccount({ agent: 'alpha' });
-    const response = await putUpload(validPut({ fixture: { account: intruder, uploadId: owner.uploadId } }));
-    expect(response.status).toBe(STATUS_NOT_FOUND);
+    const response = await putUpload({ ...validPut({ fixture: owner }), pathAccountId: intruder.accountId });
+    expect(response.status).toBe(STATUS_FORBIDDEN);
     expect(await storedObject({ fixture: owner })).toBeNull();
   });
 
