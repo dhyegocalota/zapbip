@@ -43,6 +43,11 @@ gh_install() {
   install_with gh "https://github.com/cli/cli#installation"
 }
 
+python_install() {
+  [[ "$manager" == brew ]] && { echo "brew install python@3.13"; return; }
+  echo "https://www.python.org/downloads/ (3.11 to 3.13)"
+}
+
 fix_for() {
   case "$1" in
     node) echo "nvm install (reads .nvmrc), or https://nodejs.org/en/download" ;;
@@ -53,6 +58,7 @@ fix_for() {
     chromium) chromium_install ;;
     skills) echo "ln -sfn ../.agents/skills .claude/skills" ;;
     gitleaks) install_with gitleaks "https://github.com/gitleaks/gitleaks#installing" ;;
+    python) python_install ;;
     ffmpeg) install_with ffmpeg "https://ffmpeg.org/download.html" ;;
   esac
 }
@@ -66,6 +72,7 @@ lost_for() {
     skills) echo "every Claude Code skill (ADR 0001)" ;;
     gitleaks) echo "the secret scan; pnpm verify fails without it" ;;
     ffmpeg) echo "the recorder's mp4 and gif; a PR that touches UI cannot ship" ;;
+    python) echo "the Hermes plugin's typecheck and tests; pnpm verify fails in apps/hermes-plugin" ;;
   esac
 }
 
@@ -85,6 +92,7 @@ check_chromium() { ls -d "$(browsers_dir)"/chromium-* >/dev/null 2>&1; }
 check_skills() { [[ "$(cd "$root/.claude/skills" 2>/dev/null && pwd -P)" == "$(cd "$root/.agents/skills" && pwd -P)" ]]; }
 check_gitleaks() { have gitleaks; }
 check_ffmpeg() { have ffmpeg; }
+check_python() { have python3 && run python3 -c 'import sys, mypy, pytest; sys.exit(not (3, 11) <= sys.version_info[:2] <= (3, 13))' >/dev/null 2>&1; }
 
 fix_name_for() {
   [[ "$1" == gh ]] && have gh && { echo gh-auth; return; }
@@ -119,6 +127,7 @@ report jq required
 report gh required
 report chromium required
 report skills required
+report python required
 report gitleaks optional
 report ffmpeg optional
 echo "doctor: $missing_required missing required, $missing_optional missing optional"
