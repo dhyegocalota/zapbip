@@ -31,7 +31,7 @@ A deploy needs a Cloudflare login and touches production secrets, and the migrat
 
 ## Evidence
 
-- The autonomy rules of 2026-11-06: agents never deploy, and production deploys are the owner's.
+- The autonomy rules of 2026-11-06: agents never deploy, and production deploys are the owner's. The `guard-deploy.sh` PreToolUse hook enforces it for Claude Code and Codex: it blocks `wrangler deploy`, `versions deploy`, `rollback`, `secret put`, any `d1 ... --remote` and the `pnpm deploy:*` and `migrate:staging|production` scripts, and allows a `--dry-run`.
 - [ADR 0005](0005-the-local-gate-runs-what-the-diff-can-break.md): hosted CI is not proof.
 
 ## Revisit when
