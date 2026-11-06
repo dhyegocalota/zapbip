@@ -22,6 +22,7 @@
     "smoke:development": "node --env-file=.env --import tsx apps/api/scripts/smoke.ts --environment development",
     "smoke:staging": "node --env-file=.env --import tsx apps/api/scripts/smoke.ts --environment staging",
     "smoke:production": "node --env-file=.env --import tsx apps/api/scripts/smoke.ts --environment production",
+    "docs:preflight": "node --env-file=.env --import tsx apps/api/scripts/docs-preflight.ts",
     "verify": "bash scripts/verify.sh"
   },
   "devDependencies": {

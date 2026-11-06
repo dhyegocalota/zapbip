@@ -56,7 +56,7 @@ export function fakeStack(input: Behavior) {
   let deliveredText = '';
   let inboxPolls = 0;
   const smokeFetch: SmokeFetch = async (target, init) => {
-    if (throwOnFetch) throw new Error(`connect failed for ${String(target)}`);
+    if (throwOnFetch) throw new TypeError(`fetch failed for ${String(target)}`, { cause: { code: 'ECONNREFUSED' } });
     const url = new URL(String(target));
     const method = init?.method ?? 'GET';
     const body = typeof init?.body === 'string' ? init.body : '';

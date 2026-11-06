@@ -13,6 +13,8 @@ const WRONG_VERIFY_TOKEN = 'zapbip-smoke-wrong-token';
 const ZERO_SIGNATURE = `sha256=${'0'.repeat(64)}`;
 const EMPTY_JSON_BODY = '{}';
 const REQUEST_FAILED_STATUS = 0;
+const UNKNOWN_FAILURE_KIND = 'unknown error';
+const TRAILING_SLASHES = /\/+$/;
 const STATUS_DIGITS = 3;
 const MCP_PROTOCOL_VERSION = '2025-06-18';
 const MCP_CLIENT_NAME = 'zapbip-smoke';
@@ -41,6 +43,7 @@ enum SmokeVerdict {
   Fail = 'FAIL',
 }
 
+const causeSchema = z.object({ code: z.string() });
 const healthSchema = z.object({ ok: z.literal(true), environment: z.string() });
 const toolListSchema = z.object({ result: z.object({ tools: z.array(z.object({ name: z.string() })) }) });
 const inboxSchema = z.object({
@@ -66,7 +69,8 @@ function inputOf(input: { run: SmokeRun; name: SmokeInput }): string {
 }
 
 function urlOf(input: { run: SmokeRun; path: string }): string {
-  return `${inputOf({ run: input.run, name: SmokeInput.BaseUrl })}${input.path}`;
+  const baseUrl = inputOf({ run: input.run, name: SmokeInput.BaseUrl }).replace(TRAILING_SLASHES, '');
+  return `${baseUrl}${input.path}`;
 }
 
 function verifyUrlOf(input: { run: SmokeRun; token: string; challenge: string }): string {
@@ -172,11 +176,19 @@ const CHECKS: Record<SmokeCheck, (run: SmokeRun) => Promise<Outcome>> = {
   [SmokeCheck.FakeInbound]: checkFakeInbound,
 };
 
+function failureKindOf(input: { error: unknown }): string {
+  const cause = causeSchema.safeParse(input.error instanceof Error ? input.error.cause : undefined);
+  if (cause.success) return cause.data.code;
+  if (input.error instanceof Error) return input.error.name;
+  return UNKNOWN_FAILURE_KIND;
+}
+
 async function runCheck(input: { run: SmokeRun; check: SmokeCheck }): Promise<SmokeResult> {
   try {
     return { check: input.check, ...(await CHECKS[input.check](input.run)) };
-  } catch {
-    return { check: input.check, ...fail({ status: REQUEST_FAILED_STATUS, detail: 'the request failed' }) };
+  } catch (error: unknown) {
+    const detail = `request failed: ${failureKindOf({ error })}`;
+    return { check: input.check, ...fail({ status: REQUEST_FAILED_STATUS, detail }) };
   }
 }
 

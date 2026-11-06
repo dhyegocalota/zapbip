@@ -15,12 +15,14 @@ import {
   type WorkerFacts,
   wranglerCommand,
 } from '../src/operations/deploy-preflight';
+import { parseJsonOrNull } from '../src/operations/json-text';
 import { createTerminalShell } from '../src/operations/terminal-shell';
 import { inspectWorkerSource } from '../src/operations/worker-facts';
 
 const WRANGLER_CONFIG_PATH = join(import.meta.dirname, '../wrangler.jsonc');
 const SOURCE_ROOT = join(import.meta.dirname, '../src');
 const SMOKE_SCRIPT_PATH = 'apps/api/scripts/smoke.ts';
+const NO_PREVIOUS_VERSION = 'no previous Worker version: to roll back, redeploy the prior commit';
 const CONFIRMATION_ANSWER = DeployEnvironment.Production;
 const CONFIRMATION_QUESTION = `Type ${CONFIRMATION_ANSWER} to deploy to ${DeployEnvironment.Production}: `;
 
@@ -68,18 +70,27 @@ async function readRollbackPoints(input: {
   const history = await shell.run(
     wranglerCommand({ environment, args: ['d1', 'time-travel', 'info', databaseNameOf({ block })], flags: ['--json'] }),
   );
-  const newestVersion = versions.exitCode === 0 ? versionListSchema.parse(JSON.parse(versions.stdout)).at(-1) : undefined;
+  const versionList = versionListSchema.safeParse(parseJsonOrNull({ text: versions.stdout }));
+  const bookmark = bookmarkSchema.safeParse(parseJsonOrNull({ text: history.stdout }));
+  const newestVersion = versionList.success ? versionList.data.at(-1) : undefined;
   return {
-    versionId: newestVersion ? newestVersion.id : null,
-    bookmark: history.exitCode === 0 ? bookmarkSchema.parse(JSON.parse(history.stdout)).bookmark : null,
+    versionId: versions.exitCode === 0 && newestVersion ? newestVersion.id : null,
+    bookmark: history.exitCode === 0 && bookmark.success ? bookmark.data.bookmark : null,
   };
+}
+
+function rollbackPointsLine(input: { points: RollbackPoints }): string {
+  const { versionId, bookmark } = input.points;
+  const versionText = versionId ? `Worker version ${versionId}` : NO_PREVIOUS_VERSION;
+  const bookmarkText = bookmark ? `database bookmark ${bookmark}` : 'database bookmark unavailable';
+  return `rollback points: ${versionText}; ${bookmarkText}`;
 }
 
 function rollbackCommandLines(input: { environment: DeployEnvironment; block: DeployBlock; points: RollbackPoints }): string[] {
   const { environment, block, points } = input;
   const versionLine = points.versionId
     ? [commandLine({ command: wranglerCommand({ environment, args: ['rollback', points.versionId] }) })]
-    : [];
+    : [NO_PREVIOUS_VERSION];
   const bookmarkLine = points.bookmark
     ? [
         commandLine({
@@ -120,7 +131,7 @@ export async function runDeploy(input: DeployRun): Promise<number> {
     return 1;
   }
   const points = await readRollbackPoints({ environment, shell, block });
-  log(`rollback points: version ${points.versionId}, database bookmark ${points.bookmark}`);
+  log(rollbackPointsLine({ points }));
   if (!(await isDeployConfirmed({ environment, prompt }))) {
     log('the deploy was not confirmed; nothing was deployed');
     return 1;

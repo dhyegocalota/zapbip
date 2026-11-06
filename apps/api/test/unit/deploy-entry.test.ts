@@ -71,9 +71,9 @@ describe('deploy entry', () => {
     const { exitCode, shell } = await deploy({});
     const fragments = [
       'git status',
-      'pnpm verify',
       'secret list',
       'migrations list',
+      'pnpm verify',
       '--dry-run',
       'versions list',
       'time-travel info',
@@ -145,6 +145,25 @@ describe('deploy entry', () => {
     expect(output).toContain(`${WRANGLER} rollback version-new --env staging`);
     expect(output).toContain(`${WRANGLER} d1 time-travel restore zapbip-staging --env staging --bookmark=bookmark-1`);
     expect(shell.commands.some((command) => command.includes('rollback') || command.includes('restore'))).toBe(false);
+  });
+
+  it.each([
+    ['an empty version list', JSON.stringify([])],
+    ['a version list that is not JSON', 'not json'],
+  ])('says there is no previous version for %s, and prints it again when the smoke test fails', async (_name, stdout) => {
+    const shell = fakeShell({ replies: { ...REPLIES, 'versions list': { exitCode: 0, stdout }, 'smoke.ts': { exitCode: 1, stdout: '' } } });
+    const { exitCode, output } = await deploy({ shell });
+    expect(exitCode).toBe(1);
+    expect(output).toContain('no previous Worker version');
+    expect(output).toContain('redeploy the prior commit');
+    expect(output).not.toContain('null');
+  });
+
+  it('survives a time-travel answer that is not JSON', async () => {
+    const shell = fakeShell({ replies: { ...REPLIES, 'time-travel info': { exitCode: 0, stdout: 'not json' } } });
+    const { exitCode, output } = await deploy({ shell });
+    expect(exitCode).toBe(0);
+    expect(output).toContain('bookmark unavailable');
   });
 
   it('passes the first deploy flag to the smoke test', async () => {

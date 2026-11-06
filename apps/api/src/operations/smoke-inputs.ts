@@ -1,5 +1,5 @@
-import { PLACEHOLDER_VALUE_PREFIX } from './constants';
 import { DeployEnvironment } from './deploy-environment';
+import { isPlaceholderValue } from './placeholder';
 
 export enum SmokeInput {
   BaseUrl = 'SMOKE_BASE_URL',
@@ -52,7 +52,7 @@ function requiredSmokeInputs(input: SmokeScope): SmokeInput[] {
 }
 
 function isUsable(value: string | undefined): value is string {
-  return value !== undefined && value !== '' && !value.startsWith(PLACEHOLDER_VALUE_PREFIX);
+  return value !== undefined && value !== '' && !isPlaceholderValue({ value });
 }
 
 export function missingSmokeInputs(input: SmokeVariables): SmokeInput[] {
