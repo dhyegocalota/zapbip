@@ -1,12 +1,22 @@
 import { OUTBOUND_MESSAGES_PER_MINUTE } from '@zapbip/core';
-import { reset } from 'cloudflare:test';
+import { reset, runInDurableObject } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { McpToolName } from '../../src/contract/tool-definitions';
 import { generateConnectionSecret } from '../../src/adapters/platform/connection-secret';
 import { applyDirectoryMigration, seedConnection } from '../support/seed';
-import { accountInbox, callTool, connectClient, seedConnectionWithSecret, type ToolResult } from './mcp-fixtures';
+import { accountInboxStub } from '../support/workers-env';
+import { callTool, connectClient, seedConnectionWithSecret, type ToolResult } from './mcp-fixtures';
 
 const RATE_LIMITED_CODE = 'rate_limited';
+const COUNT_OWNER_BOUND_STATEMENT = "SELECT COUNT(*) AS total FROM inbox_messages WHERE direction = 'to_owner'";
+
+async function ownerBoundCount(input: { accountId: string }): Promise<number> {
+  const [row] = await runInDurableObject(accountInboxStub(input), (_instance, state) =>
+    state.storage.sql.exec<{ total: number }>(COUNT_OWNER_BOUND_STATEMENT).toArray(),
+  );
+  if (row === undefined) throw new Error('count missing');
+  return row.total;
+}
 
 async function sendMany(input: { secret: string; count: number }): Promise<ToolResult[]> {
   const client = await connectClient({ secret: input.secret });
@@ -27,7 +37,7 @@ describe('MCP outbound limit', () => {
     const first = await seedConnectionWithSecret({ accountId: 'acc_out', agent: 'alpha' });
     const results = await sendMany({ secret: first.secret, count: OUTBOUND_MESSAGES_PER_MINUTE });
     expect(results.every((result) => result.isError !== true)).toBe(true);
-    expect(await accountInbox({ accountId: 'acc_out' }).readScreen()).toHaveLength(OUTBOUND_MESSAGES_PER_MINUTE);
+    expect(await ownerBoundCount({ accountId: 'acc_out' })).toBe(OUTBOUND_MESSAGES_PER_MINUTE);
   });
 
   it('[row 410] refuses the thirty-first send_message of a minute with rate_limited and sends nothing', async () => {
@@ -36,7 +46,7 @@ describe('MCP outbound limit', () => {
     const refused = results[OUTBOUND_MESSAGES_PER_MINUTE];
     expect(refused?.isError).toBe(true);
     expect(refused?.content[0]?.text).toContain(RATE_LIMITED_CODE);
-    expect(await accountInbox({ accountId: 'acc_out4' }).readScreen()).toHaveLength(OUTBOUND_MESSAGES_PER_MINUTE);
+    expect(await ownerBoundCount({ accountId: 'acc_out4' })).toBe(OUTBOUND_MESSAGES_PER_MINUTE);
   });
 
   it('[row 411] counts per connection, so a second connection of the account still sends', async () => {

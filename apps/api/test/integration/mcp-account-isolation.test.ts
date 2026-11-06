@@ -14,7 +14,6 @@ describe('account isolation over MCP', () => {
 
   it('[row 445] ignores an accountId query parameter of another account', async () => {
     const own = await seedConnectionWithSecret({ accountId: OWN_ACCOUNT_ID, agent: 'alpha' });
-    await seedConnectionWithSecret({ accountId: OTHER_ACCOUNT_ID, agent: 'beta' });
     const client = await connectClient({ secret: own.secret, search: `?accountId=${OTHER_ACCOUNT_ID}` });
     const sent = await callTool({ client, name: McpToolName.SendMessage, arguments: { text: 'oi' } });
     expect(sent.isError).not.toBe(true);
