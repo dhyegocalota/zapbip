@@ -204,6 +204,11 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     return this.outcome({ run: () => inbox.completeUpload({ ...input, dependencies: this.dependencies }) });
   }
 
+  setWake(input: Parameters<AccountInboxRpc['setWake']>[0]): Promise<CallOutcome<inbox.SetWakeResult>> {
+    void input;
+    throw new Error('setWake is not implemented');
+  }
+
   receiveOwnerMessage(input: ReceiveOwnerMessageRequest): Promise<CallOutcome<inbox.ReceiveResult>> {
     return this.outcome({
       run: () => inbox.receiveOwnerMessage({ ...input, dependencies: this.dependencies }),
