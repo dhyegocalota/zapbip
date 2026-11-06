@@ -39,15 +39,7 @@ async function saveWebhook(input: SetWakeInput): Promise<SetWakeResult> {
 
 async function clearWebhook(input: SetWakeInput): Promise<SetWakeResult> {
   const { wake, connection } = input;
-  const storedWake: StoredWake = {
-    agent: connection.agent,
-    mode: WakeMode.None,
-    target: null,
-    status: WakeStatus.Active,
-    lastDeliveredAt: await lastDeliveredAtOf({ setWake: input }),
-  };
-  await wake.repository.saveWake({ wake: storedWake });
-  await wake.repository.deleteJob({ agent: connection.agent });
+  await wake.repository.clearWake({ agent: connection.agent });
   return { status: SetWakeStatus.Saved, wakeMode: WakeMode.None, effectiveRung: wakeRungFor({ mode: WakeMode.None }), provider: null };
 }
 

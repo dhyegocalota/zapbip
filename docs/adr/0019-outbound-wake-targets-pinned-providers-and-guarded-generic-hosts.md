@@ -33,7 +33,8 @@ The owner's use cases need two kinds of target: two named provider endpoints, an
 ## Consequences
 
 - Provider endpoints are constants in `libs/core`. A new provider is a new constant, a new pinned pattern and a test, not a setting.
-- The guard is name-based and runs at `set_wake` and again at delivery. It blocks `zapbip.com`, `*.workers.dev`, the own host and its subdomains. A name that resolves to a private or loopback address, such as `127.0.0.1.nip.io` or `localtest.me`, is accepted: the DNS-rebinding residual risk. Workers egress does not reach the account's private network, so the residual risk is bounded to public machines.
+- The guard is name-based and runs at `set_wake` and again at delivery. It blocks `zapbip.com`, `workers.dev` and `*.workers.dev`, `*.localdomain`, the own host and its subdomains. A name that resolves to a private or loopback address, such as `127.0.0.1.nip.io` or `localtest.me`, is accepted: the DNS-rebinding residual risk. Workers egress does not reach the account's private network, so the residual risk is bounded to public machines.
+- The 60 s cap is per agent, so an account with many agents can send about one request per agent per minute to one host: bounded, and each request needs an owner message. A per-account-per-host cap is a later option.
 - Generic targets are the residual SSRF surface. Its limits are the name guard, no redirects, no secret transmitted and the signed body (which carries no content).
 - Pinned paths follow the providers' public contracts. A provider path change breaks the wake until a constant changes; the `/fire` contract is in beta and may change behind a new dated header.
 

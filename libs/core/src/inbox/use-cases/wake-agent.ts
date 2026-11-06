@@ -18,8 +18,8 @@ export async function wakeAgent(input: {
   const hasLiveWaiter = waiters.hasLiveWaiter({ agent, questionId: answeredQuestionId });
   if (answeredQuestionId === null) waiters.resolveAgentMessage({ agent });
   if (answeredQuestionId !== null) waiters.resolveQuestionAnswer({ questionId: answeredQuestionId });
-  const isNewBatch = unreadBefore === 0;
   if (hasLiveWaiter) return;
+  const isNewBatch = unreadBefore === 0;
   const needsWake = isNewBatch || (await waker.pushesEveryMessage({ agent })) || (await waker.hasFailedWake({ agent }));
   if (!needsWake) return;
   const outcome = await waker.notify({ agent, reason: AgentWakeReason.MessageWaiting });

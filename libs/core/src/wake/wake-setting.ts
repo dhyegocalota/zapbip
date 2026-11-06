@@ -1,4 +1,4 @@
-import type { WakeAttemptOutcome, WakeMode, WakeProvider, WakeStatus } from '@zapbip/types';
+import { WakeMode, type WakeAttemptOutcome, type WakeProvider, type WakeStatus } from '@zapbip/types';
 import type { AgentName } from '../inbox/connection';
 
 export type WakeSettingInput = { mode: WakeMode; url: string | null; token: string | null };
@@ -23,3 +23,9 @@ export type WakeJob = {
   rewake: boolean;
   lastOutcome: WakeAttemptOutcome | null;
 };
+
+export type WebhookWake = StoredWake & { target: StoredWakeTarget };
+
+export function isWebhookWake(stored: StoredWake | null): stored is WebhookWake {
+  return stored !== null && stored.mode === WakeMode.Webhook && stored.target !== null;
+}
