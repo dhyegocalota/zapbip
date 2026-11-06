@@ -215,3 +215,44 @@ Merged into `feat/scheduled-wake`, in this order: `feat/scheduled-wake-l3`, `fea
 ### Gaps
 
 - Not run by the developer: the E2E suites and the Playwright walks.
+
+## Fix round (security, reviewer, core+worker tester, E2E and docs tester)
+
+Owner delegated 2026-11-06. Red-first commits carry the failure text in their bodies.
+
+### Relabel (R9)
+
+`24923bd`, `43da3db`, `12637d8`, `5ca8f5a`, `85144f6` and `a2a717c` are red-first commits, not pins: their stubs throw `<name> is not implemented` and the named cases fail on them. The pins inside them are only the cases the rows above and the commit bodies call pins (`constants.test.ts`, WakeMode values, `none` mode, `getMessages` records no poll, the `webhook` and `none` MCP cases).
+
+### Merge note (R3)
+
+The closed-window notice of `deliver-to-owner.ts` is resolved at the main merge by taking agent-inbox-core fix6 (the claim owner gets `DeliveryFailed`, the message stays queued, the alarm retries the notice). This branch's interim resolution is replaced, not merged.
+
+### Fixes
+
+| Id | What | Test | Red or pin |
+|----|------|------|------------|
+| S1 | `registerAgent` skips names in `revoked_agents`; `findWake` excludes them; `AccountInbox.fetch` runs `isConnectionAdmitted` before `touchAgent` and answers 401; `recordPoll` of a revoked agent answers `not_found` | `revoked-agent-resurrection.test.ts` | red (`expected { agents: 1, wakes: 1 } to deeply equal { agents: +0, wakes: +0 }`, `expected 101 to be 401`) |
+| S2, R6 | `revokeAgentState` returns primaries of the revoked standby to `none` with no standby name and reopens hand-offs whose copy is unread | `revoked-agent-resurrection.test.ts` | red |
+| S4 | per-agent floor `STALE_NOTICE_MIN_GAP_MS` (one hour) between stale notices, stored in `agent_wake.last_stale_notice_at` (v3); a one-minute poller alternating poll and silence gets at most 20 notices in 20 hours. Expected-delay notes are owner-driven (one per batch) and left unfloored | `evaluate-pollers.test.ts` flood case | red (`expected 600 to be less than or equal to 20`) |
+| R1 | the standby waker pushes every message | `standby-agent-waker.test.ts`, `standby-handoff.test.ts` (two cases) | red |
+| R2 | expected-delay note failures are logged as `wake.notice_failed`; `notify` still returns `Woken` | `scheduled-agent-waker.test.ts` (DeliveryFailed, plain Error, missing state) | red |
+| R4 | stale notice marked after delivery, failures isolated and logged per wake | `evaluate-pollers.test.ts` | red |
+| R5, S3 | `set_wake` refuses foreign fields for none, local and webhook; the standby name must match the agent-name pattern | `wake-setting.test.ts`, `set-wake.test.ts` | red |
+| R7 | a scheduled standby woken with `StandbyFor` sends the expected-delay note (owner delegated: the owner should know the delay) | `scheduled-agent-waker.test.ts` | red |
+| R8 | cadence copy compares with `SCHEDULED_MIN_INTERVAL_MINUTES` | existing `wake-copy.test.ts` | refactor |
+| T1 | E2E `scheduled-wake.e2e.test.ts` (SW-1 to SW-5, the five F boxes) | `pnpm --filter @zapbip/api test:e2e` | green on arrival (pin) |
+| T2, T3 | one-hop sentence in both ladder and both reference pages; the Local ladder section has no tool field, the reference page has a Local section | `scheduled-wake-docs.test.ts` | red against the previous docs |
+| T4 | a scheduled wake without an owner locale logs `wake.notice_skipped` and is marked notified | `evaluate-pollers.test.ts` | red |
+| Core+worker tester gap | `recordRevocation` deletes the pending webhook job | `webhook-wake-revocation.test.ts::recordRevocation` | pin, red by mutation (deleting `CLEAR_WAKE_JOB_STATEMENT` fails it) |
+
+### Hypotheses to attack
+
+1. A stale scheduled agent's follow-up that arrives within an hour of a previous stale notice produces no second notice, and the deadline moves to the end of the hour.
+2. A failing `deliverToOwner` of a stale notice retries on the next alarm, so a permanently failing channel retries every alarm minimum delay.
+3. A revoked primary's own hand-offs stay: only the standby side is released.
+
+### Gaps
+
+- `set_wake` of `mode: none` with the MCP schema still accepts the foreign keys at the wire (they are nullable); the refusal comes from the core rule, covered by `set-wake.test.ts`.
+- The English-locale E2E account is set by updating `owner_identities.locale` after seeding.
