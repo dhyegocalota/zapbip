@@ -26,3 +26,10 @@ export async function verifyLink(input: LinkClaims & { key: string; signature: s
   const signatureBytes = decodeBase64Url({ value: input.signature });
   return crypto.subtle.verify(HMAC_ALGORITHM.name, signingKey, signatureBytes, new TextEncoder().encode(canonicalLinkString(input)));
 }
+
+export function readSignedQuery(input: {
+  expiry: string | undefined;
+  signature: string | undefined;
+}): { expiresAt: number; signature: string } | null {
+  throw new Error('readSignedQuery is not implemented');
+}

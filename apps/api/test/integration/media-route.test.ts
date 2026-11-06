@@ -121,4 +121,41 @@ describe('media route', () => {
     expect(forged.status).toBe(STATUS_FORBIDDEN);
     expect(original.status).toBe(STATUS_OK);
   });
+
+  test.each([
+    { label: 'a leading zero', exp: (expiresAt: number) => `0${expiresAt}` },
+    { label: 'a plus sign', exp: (expiresAt: number) => `+${expiresAt}` },
+    { label: 'surrounding spaces', exp: (expiresAt: number) => `%20${expiresAt}%20` },
+  ])('a non-canonical expiry with $label answers 403', async ({ exp }) => {
+    const fixture = await storeMedia();
+    const query = await signedQuery({
+      key: env.MEDIA_LINK_SIGNING_KEY,
+      accountId: fixture.accountId,
+      mediaId: fixture.mediaId,
+      purpose: LinkPurpose.Read,
+      expiresAt: freshExpiry(),
+    });
+    const response = await SELF.fetch(
+      `${ORIGIN}/m/${fixture.accountId}/${fixture.mediaId}?exp=${exp(query.expiresAt)}&sig=${query.signature}`,
+    );
+    expect(response.status).toBe(STATUS_FORBIDDEN);
+  });
+
+  test.each([
+    { label: 'padded', alter: (signature: string) => `${signature}=` },
+    { label: 'standard base64', alter: (signature: string) => Buffer.from(signature, 'base64url').toString('base64') },
+  ])('a $label signature answers 403', async ({ alter }) => {
+    const fixture = await storeMedia();
+    const query = await signedQuery({
+      key: env.MEDIA_LINK_SIGNING_KEY,
+      accountId: fixture.accountId,
+      mediaId: fixture.mediaId,
+      purpose: LinkPurpose.Read,
+      expiresAt: freshExpiry(),
+    });
+    const response = await SELF.fetch(
+      `${ORIGIN}/m/${fixture.accountId}/${fixture.mediaId}?${queryOf({ ...query, signature: encodeURIComponent(alter(query.signature)) })}`,
+    );
+    expect(response.status).toBe(STATUS_FORBIDDEN);
+  });
 });

@@ -1,6 +1,6 @@
 import { LinkPurpose } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
-import { signLink, verifyLink } from '../../src/signing';
+import { readSignedQuery, signLink, verifyLink } from '../../src/signing';
 
 const ISSUED_AT = 1_000;
 const EXPIRES_AT = 5_000;
@@ -52,5 +52,48 @@ describe('signing', () => {
 
   it('rejects a signature that is not base64url without throwing', async () => {
     expect(await verifyWith({ signature: '!!!!' })).toBe(false);
+  });
+
+  it('rejects a last character that decodes to the same bytes', async () => {
+    const signature = await signLink(baseLink);
+    const lastCharacter = signature.at(-1) as string;
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+    const sameBytesCharacter = [...alphabet].find(
+      (character) =>
+        character !== lastCharacter && Math.floor(alphabet.indexOf(character) / 4) === Math.floor(alphabet.indexOf(lastCharacter) / 4),
+    );
+    expect(await verifyWith({ signature: `${signature.slice(0, -1)}${sameBytesCharacter}` })).toBe(false);
+  });
+
+  it('rejects a padded signature', async () => {
+    const signature = await signLink(baseLink);
+    expect(await verifyWith({ signature: `${signature}=` })).toBe(false);
+  });
+
+  it('rejects a standard base64 signature', async () => {
+    const signature = await signLink(baseLink);
+    const standard = Buffer.from(signature, 'base64url').toString('base64');
+    expect(await verifyWith({ signature: standard })).toBe(false);
+  });
+
+  it('does not let a newline in an id move bytes between fields', async () => {
+    const signature = await signLink({ ...baseLink, accountId: 'acc_1', mediaId: 'med_1' });
+    const shifted = await verifyLink({ ...baseLink, accountId: 'acc_1\nmed_1', mediaId: '', signature, now: ISSUED_AT });
+    expect(shifted).toBe(false);
+  });
+});
+
+describe('readSignedQuery', () => {
+  it('reads a canonical expiry and signature', () => {
+    expect(readSignedQuery({ expiry: '5000', signature: 'abc' })).toEqual({ expiresAt: 5000, signature: 'abc' });
+  });
+
+  it.each(['0', '05', '+5', '-5', ' 5', '5 ', '5.0', '1e3', '', 'abc'])('rejects the expiry %j', (expiry) => {
+    expect(readSignedQuery({ expiry, signature: 'abc' })).toBeNull();
+  });
+
+  it('rejects a missing expiry or signature', () => {
+    expect(readSignedQuery({ expiry: undefined, signature: 'abc' })).toBeNull();
+    expect(readSignedQuery({ expiry: '5000', signature: undefined })).toBeNull();
   });
 });
