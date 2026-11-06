@@ -18,6 +18,15 @@ function sendFromAgent() {
   return stubOf().sendText({ connection: connectionOf({ accountId: ACCOUNT, agent: AGENT }), text: 'oi', replyToMessageId: null });
 }
 
+function createUploadFromAgent() {
+  return stubOf().createUpload({
+    connection: connectionOf({ accountId: ACCOUNT, agent: AGENT }),
+    filename: 'a.pdf',
+    mimeType: 'application/pdf',
+    sizeBytes: 3,
+  });
+}
+
 async function setState(input: { state: AccountState }): Promise<void> {
   await testEnv.CONNECTIONS.prepare('UPDATE accounts SET state = ? WHERE id = ?').bind(input.state, ACCOUNT).run();
 }
@@ -43,6 +52,20 @@ describe('Durable Object agent admission', () => {
     await sendFromAgent();
     await revokeAgent();
     expect((await sendFromAgent()).ok).toBe(false);
+  });
+
+  it('createUpload serves an active connection', async () => {
+    expect((await createUploadFromAgent()).ok).toBe(true);
+  });
+
+  it('createUpload refuses a revoked agent', async () => {
+    await revokeAgent();
+    expect((await createUploadFromAgent()).ok).toBe(false);
+  });
+
+  it.each([AccountState.Suspended, AccountState.Deleting, AccountState.Waitlisted])('createUpload refuses a %s account', async (state) => {
+    await setState({ state });
+    expect((await createUploadFromAgent()).ok).toBe(false);
   });
 
   it('serves a name that was revoked and created again', async () => {

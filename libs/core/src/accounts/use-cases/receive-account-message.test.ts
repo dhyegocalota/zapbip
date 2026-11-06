@@ -2,6 +2,7 @@ import {
   AccountReplyIntent,
   AccountReplyParameter,
   AccountState,
+  ChannelErrorKind,
   CommandKind,
   ForwardedKind,
   MessageDirection,
@@ -13,7 +14,9 @@ import {
 import { describe, expect, test, vi } from 'vitest';
 import { DELETION_CONFIRM_TTL_MS, ACCOUNT_MENU_QUESTION_ID } from '../constants';
 import { renderAccountReply } from '../account-copy';
+import { channelError } from '../../inbox/testing/channel-fixtures';
 import { askAndAbandon } from '../../inbox/testing/fixtures';
+import { openWindow } from '../../inbox/use-cases/open-window';
 import { sendText } from '../../inbox/use-cases/send-text';
 import { touchAgent } from '../../inbox/use-cases/touch-agent';
 import {
@@ -276,6 +279,24 @@ describe('receiveAccountMessage deletion', () => {
     expect(sessionTexts(fixture).at(-1)).toBe(copyOf({ intent: AccountReplyIntent.DeletionDone }));
   });
 
+  test('a request that expires while the state change runs is still confirmed', async () => {
+    const fixture = await createAccountFixture();
+    await receiveAccountText({ ...fixture, text: 'apagar conta' });
+    await fixture.environment.clock.advance({ ms: DELETION_CONFIRM_TTL_MS });
+    const { dependencies, clock } = fixture.environment;
+    const accounts = dependencies.accounts;
+    const setState = vi.fn(async (input: Parameters<typeof accounts.setState>[0]) => {
+      await clock.advance({ ms: 1 });
+      return accounts.setState(input);
+    });
+    dependencies.accounts = { ...accounts, setState };
+    const result = await receiveAccountText({ ...fixture, text: 'apagar conta definitivamente' });
+    const record = await fixture.environment.directory.findByWaId({ waId: fixture.account.waId });
+    expect(record?.state).toBe(AccountState.Deleting);
+    expect(result.deletionConfirmed).toBe(true);
+    expect(sessionTexts(fixture).at(-1)).toBe(copyOf({ intent: AccountReplyIntent.DeletionDone }));
+  });
+
   test('a suspended account cannot confirm its deletion', async () => {
     const fixture = await createAccountFixture({ state: AccountState.Suspended });
     const result = await receiveAccountText({ ...fixture, text: 'apagar conta definitivamente' });
@@ -423,5 +444,40 @@ describe('receiveAccountMessage forwarded messages', () => {
     const fixture = await createAccountFixture();
     const result = await receiveAccountText({ ...fixture, text: 'novo agente beta' });
     expect(result.commandKind).toBe(CommandKind.CreateAgent);
+  });
+});
+
+describe('receiveAccountMessage install link redaction', () => {
+  function sentMessageIds(input: AccountFixture): string[] {
+    return input.environment.sender.sessions.map((message) => message.messageId);
+  }
+
+  test('masks by id the replies that reached sent', async () => {
+    const fixture = await createAccountFixture();
+    await receiveAccountText({ ...fixture, text: 'novo agente claude' });
+    expect(fixture.environment.installLinkRedaction.redacted).toEqual(sentMessageIds(fixture));
+    expect(fixture.environment.installLinkRedaction.redacted).toHaveLength(1);
+  });
+
+  test('keeps a queued reply unmasked and carrying the real link until it is sent', async () => {
+    const fixture = await createAccountFixture();
+    fixture.environment.sender.failSessionCalls({ callNumbers: [1], error: channelError({ kind: ChannelErrorKind.WindowClosed }) });
+    await receiveAccountText({ ...fixture, text: 'novo agente claude' });
+    expect(fixture.environment.installLinkRedaction.redacted).toEqual([]);
+    await openWindow({
+      dependencies: fixture.environment.dependencies,
+      ownerLocale: fixture.account.locale,
+      at: fixture.environment.clock.now(),
+    });
+    const [installCode] = fixture.environment.installCodeVault.issued;
+    expect(sessionTexts(fixture)[0]).toContain(`${PUBLIC_ORIGIN}/i/${installCode!.installCode}`);
+  });
+
+  test('masks the replies already sent when a later send throws', async () => {
+    const fixture = await createAccountFixture();
+    fixture.environment.sender.failSessionCalls({ callNumbers: [2] });
+    await receiveAccountText({ ...fixture, text: 'ajuda' });
+    const [firstSentMessageId] = sentMessageIds(fixture);
+    expect(fixture.environment.installLinkRedaction.redacted).toEqual([firstSentMessageId]);
   });
 });

@@ -89,6 +89,10 @@ export interface DeletionRequests {
   clear(): Promise<void>;
 }
 
+export interface InstallLinkRedaction {
+  redact(input: { messageIds: string[] }): Promise<void>;
+}
+
 export type AccountDependencies = CoreDependencies & {
   accounts: AccountDirectory;
   connections: ConnectionRegistry;
@@ -97,6 +101,7 @@ export type AccountDependencies = CoreDependencies & {
   revocations: ConnectionRevocations;
   firstMessage: FirstMessageClaim;
   deletionRequests: DeletionRequests;
+  installLinkRedaction: InstallLinkRedaction;
 };
 
 export type AccountLifecycleDependencies = {

@@ -108,6 +108,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       },
       firstMessage: createSqliteFirstMessageClaim({ storage: this.ctx.storage }),
       deletionRequests: createSqliteDeletionRequests({ storage: this.ctx.storage }),
+      installLinkRedaction: { redact: async ({ messageIds }) => redactInstallCodes({ storage: this.ctx.storage, messageIds }) },
     };
     this.dueTimeProviders.push(this.createExpiryProvider(), this.createRoutingListProvider());
     await this.armAlarm();
@@ -303,11 +304,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
 
   receiveAccountMessage(input: ReceiveAccountMessageRequest): Promise<CallOutcome<inbox.ReceiveAccountMessageResult>> {
     return this.outcome({
-      run: async () => {
-        const result = await inbox.receiveAccountMessage({ ...input, dependencies: this.accountDependencies });
-        redactInstallCodes({ storage: this.ctx.storage });
-        return result;
-      },
+      run: () => inbox.receiveAccountMessage({ ...input, dependencies: this.accountDependencies }),
       describe: (value) => [
         { event: value.duplicate ? LogEvent.OwnerMessageDuplicate : LogEvent.OwnerMessage },
         ...logFieldsOfAccountResult({ result: value, accountId: input.account.accountId, locale: input.account.locale }),

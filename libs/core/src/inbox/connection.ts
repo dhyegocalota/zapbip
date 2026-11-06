@@ -7,3 +7,7 @@ export type ConnectionIdentity = {
   agent: AgentName;
   ownerLocale: OwnerLocale;
 };
+
+export function connectionKeyOf(input: { connection: ConnectionIdentity }): string {
+  throw new Error('connectionKeyOf is not implemented');
+}

@@ -7,6 +7,8 @@ import { accountInboxStub, connectionOf } from '../support/workers-env';
 
 const ACCOUNT = 'acc_revocation';
 const OLD_AGENT = 'alpha';
+const ANSWERED_QUESTION_STATEMENT = `INSERT INTO questions (question_id, agent, text, options, normalized_key, prompt_message_id, asked_at, answer)
+  VALUES ('que_answered', ?, 'Deploy?', '[]', 'deploy', 'msg_prompt', 1, '{}')`;
 
 function stubOf() {
   return accountInboxStub({ accountId: ACCOUNT });
@@ -72,9 +74,11 @@ describe('a revoked agent stops being a routing target', () => {
 
   it('forgets the revoked name and its old history when the name is created again', async () => {
     await agentSpoke();
+    await sql(ANSWERED_QUESTION_STATEMENT, OLD_AGENT);
     await stubOf().recordRevocation({ agent: OLD_AGENT });
     await stubOf().recordCreation({ agent: OLD_AGENT });
     expect(await sql('SELECT agent FROM revoked_agents')).toEqual([]);
+    expect(await sql('SELECT question_id FROM questions WHERE agent = ?', OLD_AGENT)).toEqual([]);
     expect(await sql('SELECT id FROM inbox_messages WHERE agent = ?', OLD_AGENT)).toEqual([]);
     const inbox = await stubOf().checkInbox({
       connection: { accountId: ACCOUNT, agent: OLD_AGENT, ownerLocale: OwnerLocale.PortugueseBrazil },
