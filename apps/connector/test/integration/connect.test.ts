@@ -1,4 +1,4 @@
-import { access, mkdir, writeFile } from 'node:fs/promises';
+import { access, mkdir, utimes, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import {
   CONNECTOR_FRAME_MAX_BYTES,
@@ -260,6 +260,18 @@ describe('runConnection', () => {
       sendMessages({ messageIds: ['msg_2'] });
       await server.waitForFrames({ type: ConnectorFrameType.Done, count: 1 });
       expect(doneMessageIds()).toEqual(['msg_2']);
+    });
+
+    it('removes leftover wake folders when it starts', async () => {
+      const leftover = join(fakeClients.rootDirectory, 'zapbip-wake-leftover');
+      await mkdir(leftover, { recursive: true });
+      const longAgoSeconds = 1;
+      await utimes(leftover, longAgoSeconds, longAgoSeconds);
+      vi.stubEnv('TMPDIR', fakeClients.rootDirectory);
+      startConnector();
+      await server.waitForConnections({ count: 1 });
+
+      await expect(access(leftover)).rejects.toThrow();
     });
 
     it('refuses to wake Codex over an unparseable config, logs it and sends no done', async () => {

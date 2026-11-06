@@ -7,7 +7,11 @@ import { CLAUDE_MCP_SERVER_TYPE, CODEX_ZAPBIP_SERVER_NAME, ConnectorClient } fro
 export class WakeIsolationRefusedError extends Error {}
 
 export type WakeIsolation = { isolationArguments: string[]; cleanup: () => Promise<void> };
-export type WakeIsolationInput = { connectionLink: string; workingDirectory: string; codexHome?: string };
+export type WakeIsolationInput = { connectionLink: string; workingDirectory: string; codexHome?: string; systemConfigDirectory?: string };
+
+export async function removeStaleWakeDirectories(input: { nowMs?: number } = {}): Promise<void> {
+  throw new Error('removeStaleWakeDirectories is not implemented');
+}
 
 const CLAUDE_STRICT_MCP_ARGUMENT = '--strict-mcp-config';
 const CLAUDE_MCP_CONFIG_ARGUMENT = '--mcp-config=';
