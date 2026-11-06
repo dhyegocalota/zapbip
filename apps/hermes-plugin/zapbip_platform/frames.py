@@ -3,7 +3,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from .constants import CONNECTOR_FRAME_MAX_BYTES, ConnectorFrameType, FrameRejectionReason
+from .constants import CONNECTOR_FRAME_MAX_BYTES, ConnectorFrameType, FrameRejectionReason, MessageKind
 
 FrameBody = dict[str, Any]
 
@@ -19,11 +19,21 @@ def is_valid_hello(*, body: FrameBody) -> bool:
     return isinstance(body.get("agent"), str) and isinstance(body.get("previousWakeMode"), str)
 
 
+MESSAGE_KINDS = {kind.value for kind in MessageKind}
+
+
+def is_known_message(*, message: Any) -> bool:
+    return (
+        isinstance(message, dict)
+        and isinstance(message.get("messageId"), str)
+        and isinstance(message.get("kind"), str)
+        and message["kind"] in MESSAGE_KINDS
+    )
+
+
 def is_valid_messages(*, body: FrameBody) -> bool:
     messages = body.get("messages")
-    return isinstance(messages, list) and all(
-        isinstance(message, dict) and isinstance(message.get("messageId"), str) for message in messages
-    )
+    return isinstance(messages, list) and all(is_known_message(message=message) for message in messages)
 
 
 def is_valid_pong(*, body: FrameBody) -> bool:

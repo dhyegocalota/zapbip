@@ -1,5 +1,5 @@
 import type { HelloFrame, MessagesFrame, ServerFrame } from '@zapbip/core';
-import { CONNECTOR_FRAME_MAX_BYTES, ConnectorFrameType, FrameRejectionReason } from '@zapbip/types';
+import { CONNECTOR_FRAME_MAX_BYTES, ConnectorFrameType, FrameRejectionReason, MessageKind } from '@zapbip/types';
 
 export type ServerFrameParse = { ok: true; frame: ServerFrame } | { ok: false; reason: FrameRejectionReason };
 
@@ -19,6 +19,13 @@ function parseJson(input: { text: string }): unknown {
   }
 }
 
+const MESSAGE_KINDS: string[] = Object.values(MessageKind);
+
+function isKnownMessage(input: { message: unknown }): boolean {
+  const record = asRecord({ value: input.message });
+  return typeof record?.messageId === 'string' && typeof record.kind === 'string' && MESSAGE_KINDS.includes(record.kind);
+}
+
 const FRAME_PARSERS: FrameParsers = {
   [ConnectorFrameType.Hello]: ({ body }) => {
     if (typeof body.agent !== 'string' || typeof body.previousWakeMode !== 'string') return null;
@@ -26,9 +33,8 @@ const FRAME_PARSERS: FrameParsers = {
   },
   [ConnectorFrameType.Messages]: ({ body }) => {
     const { messages } = body;
-    const hasMessageIds =
-      Array.isArray(messages) && messages.every((message) => typeof asRecord({ value: message })?.messageId === 'string');
-    if (!hasMessageIds) return null;
+    const hasKnownMessages = Array.isArray(messages) && messages.every((message) => isKnownMessage({ message }));
+    if (!hasKnownMessages) return null;
     return body as unknown as MessagesFrame;
   },
 };
