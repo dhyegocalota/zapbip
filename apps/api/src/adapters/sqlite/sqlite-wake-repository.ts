@@ -42,6 +42,9 @@ function toStoredWake(row: WakeRow): StoredWake {
     target: isTargetStored ? { provider, host, sealedTarget, keyVersion } : null,
     status: row.status,
     lastDeliveredAt: row.last_delivered_at,
+    intervalMinutes: null,
+    standbyAgent: null,
+    ownerLocale: null,
   };
 }
 
@@ -113,6 +116,27 @@ export function createSqliteWakeRepository(input: { storage: DurableObjectStorag
     async findNextDueAt() {
       const [row] = rows<{ next_due_at: number | null }>(SELECT_NEXT_DUE_AT);
       return row === undefined ? null : row.next_due_at;
+    },
+
+    async findPollState({ agent }) {
+      void agent;
+      throw new Error('findPollState is not implemented');
+    },
+
+    async recordPoll({ agent, polledAt, ownerLocale }) {
+      void agent;
+      void polledAt;
+      void ownerLocale;
+      throw new Error('recordPoll is not implemented');
+    },
+
+    async listScheduledWakes() {
+      throw new Error('listScheduledWakes is not implemented');
+    },
+
+    async markStaleNotified({ agent }) {
+      void agent;
+      throw new Error('markStaleNotified is not implemented');
     },
   };
 }

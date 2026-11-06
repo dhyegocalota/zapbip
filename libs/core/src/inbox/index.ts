@@ -5,6 +5,7 @@ export * from './question';
 export * from './inbox-records';
 export * from './ports';
 export * from './errors';
+export * from './inbox-error-factories';
 export * from './validation';
 export * from './option-id';
 export * from './question-key';

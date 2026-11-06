@@ -2,20 +2,13 @@ import { DeliveryState } from '@zapbip/types';
 import { QUEUE_RETENTION_MS } from '../constants';
 import type { Message } from '../message';
 import type { CoreDependencies } from '../ports';
+import { createSerializer } from './serialize';
 
 export function isQueuedMessageExpired(input: { message: Message; now: number }): boolean {
   return input.message.at + QUEUE_RETENTION_MS <= input.now;
 }
 
-const claims = new WeakMap<object, Set<string>>();
-
-function claimedIdsOf(input: { key: object }): Set<string> {
-  const existing = claims.get(input.key);
-  if (existing !== undefined) return existing;
-  const created = new Set<string>();
-  claims.set(input.key, created);
-  return created;
-}
+const serialize = createSerializer();
 
 async function flushMessage(input: { dependencies: CoreDependencies; message: Message }): Promise<void> {
   const { repository, sender, clock } = input.dependencies;
@@ -35,15 +28,15 @@ async function flushMessage(input: { dependencies: CoreDependencies; message: Me
   await repository.updateDelivery({ messageId: message.messageId, delivery: DeliveryState.Sent });
 }
 
-export async function flushQueue(input: { dependencies: CoreDependencies }): Promise<void> {
+async function flushAll(input: { dependencies: CoreDependencies }): Promise<void> {
+  const queued = await input.dependencies.repository.listQueued();
+  await queued.reduce(
+    (previous, message) => previous.then(() => flushMessage({ dependencies: input.dependencies, message })),
+    Promise.resolve(),
+  );
+}
+
+export function flushQueue(input: { dependencies: CoreDependencies }): Promise<void> {
   const { dependencies } = input;
-  const queued = await dependencies.repository.listQueued();
-  const claimed = claimedIdsOf({ key: dependencies.repository });
-  const mine = queued.filter((message) => !claimed.has(message.messageId));
-  mine.forEach((message) => claimed.add(message.messageId));
-  try {
-    await mine.reduce((previous, message) => previous.then(() => flushMessage({ dependencies, message })), Promise.resolve());
-  } finally {
-    mine.forEach((message) => claimed.delete(message.messageId));
-  }
+  return serialize({ key: dependencies.repository, task: () => flushAll({ dependencies }) });
 }

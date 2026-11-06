@@ -15,7 +15,7 @@ const WAKE_MODE_UNAVAILABLE_MESSAGE = 'wake mode not available yet';
 
 export const setWakeToolInputShape = {
   ...setWakeInputShape,
-  mode: z.enum([...Object.values(WakeMode), ...Object.values(UnavailableWakeMode)]),
+  mode: z.enum([...Object.values(WakeMode), UnavailableWakeMode.Local]),
 };
 
 function isAvailableWakeMode(mode: WakeMode | UnavailableWakeMode): mode is WakeMode {
@@ -27,9 +27,12 @@ export async function setWake(input: {
   arguments: z.infer<z.ZodObject<typeof setWakeToolInputShape>>;
 }): Promise<ToolSuccess> {
   const { context, arguments: toolArguments } = input;
-  const { mode, url, token } = toolArguments;
+  const { mode, url, token, interval_minutes: intervalMinutes, standby_agent: standbyAgent } = toolArguments;
   if (!isAvailableWakeMode(mode)) throw new InboxError({ code: InboxErrorCode.InvalidInput, message: WAKE_MODE_UNAVAILABLE_MESSAGE });
-  const outcome = await context.accountInbox.setWake({ connection: context.connection, setting: { mode, url, token } });
+  const outcome = await context.accountInbox.setWake({
+    connection: context.connection,
+    setting: { mode, url, token, intervalMinutes, standbyAgent },
+  });
   const saved = unwrapOutcome({ outcome });
   return {
     structured: { status: saved.status, wake_mode: saved.wakeMode, effective_rung: saved.effectiveRung, provider: saved.provider },

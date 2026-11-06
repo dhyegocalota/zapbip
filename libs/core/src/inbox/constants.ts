@@ -38,6 +38,7 @@ export const AUDIO_MAX_BYTES = 16 * BYTES_PER_MEGABYTE;
 export const DOCUMENT_MAX_BYTES = 100 * BYTES_PER_MEGABYTE;
 export const STICKER_MAX_BYTES = 100_000;
 export const STICKER_MIME_TYPE = 'image/webp';
+export const SVG_MIME_TYPE = 'image/svg+xml';
 
 export type MediaMessageKind = MessageKind.Image | MessageKind.Video | MessageKind.Audio | MessageKind.Document | MessageKind.Sticker;
 
