@@ -167,3 +167,25 @@ pnpm typecheck
 - Not tested at the Durable Object level: the in-flight follow-up (the scripted transport cannot hold a response; core pins it), the live `ask` waiter at the alarm (core pins it), and the object restart between lease and retry (the scripted transport lives in memory and restarts empty).
 - `recordRevocation` is slice 3's (A31); only `clearWake` is tested, through the repository.
 - The own-host case runs with the test `PUBLIC_ORIGIN` (`http://localhost:8787`), whose host is also a blocked name, so it cannot tell the derived host from the blocked list; a variable origin needs a binding override this lane does not have.
+
+## Lane L3 (MCP `set_wake`)
+
+Status: red and implementation committed; green waits for `origin/feat/webhook-wake-l2` (the `setWake` RPC). Until it is merged, `pnpm typecheck` names `setWake` missing on `AccountInboxRpc` in `apps/api/src/mcp/set-wake.ts`.
+
+**What changed.** `McpToolName.SetWake` and its `TOOL_DEFINITIONS` entry (`apps/api/src/contract/tool-definitions.ts`); the handler in `apps/api/src/mcp/set-wake.ts` and its line in `tool-handlers.ts`; `apps/api/test/integration/set-wake.test.ts`. The tool input shape widens `WakeMode` with `UnavailableWakeMode` (`local`, `scheduled`, `standby`) so the handler answers `wake mode not available yet` (plan A18) instead of the SDK's input validation error.
+
+**Run.** `cd apps/api && pnpm exec vitest run --config vitest.integration.config.mts test/integration/set-wake.test.ts`.
+
+| Test | Red today | Green after |
+|---|---|---|
+| `lists set_wake with the other registered tools` | pin (green on arrival) | same |
+| saves Grok, Claude, generic; invalid url, short token, missing url; clear | red commit `aaed4db`: `set_wake is not implemented` (stub); error cases fail on `expected 'set_wake is not implemented' to contain 'url'` | `7eb923a` plus the L2 merge |
+| `answers that the <mode> mode is not available yet` (3 cases) | `expected 'MCP error -32602: Input validation er…' to be 'wake mode not available yet'` | `7eb923a` (needs no RPC) |
+
+**Hypotheses for the tester.**
+- The result carries `status`, `wake_mode`, `effective_rung`, `provider` and never the url, token or generic host.
+- Errors name `url` or `token` and never echo the value (the text comes from the core `InboxError`).
+- `local`, `scheduled`, `standby` return exactly `wake mode not available yet` and call no RPC.
+- A revoked secret gets the same unauthorised response as any tool (not re-tested here; slice 1 behaviour).
+
+**Gaps.** The "`mode: none` after a webhook yields zero scripted requests" case belongs to the delivery tests of L2. The revoked-secret case of the test plan is not covered by `set-wake.test.ts`.
