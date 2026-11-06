@@ -380,20 +380,24 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
       return row === null ? null : toMedia(row);
     },
 
-    async claimUpload({ mediaId }) {
+    async claimUpload({ mediaId, claimedAt, staleBefore }) {
       return (
-        rows('UPDATE media SET uploading = 1 WHERE media_id = ? AND uploading = 0 AND received_at IS NULL RETURNING media_id', mediaId)
-          .length === 1
+        rows(
+          'UPDATE media SET claimed_at = ? WHERE media_id = ? AND received_at IS NULL AND (claimed_at IS NULL OR claimed_at <= ?) RETURNING media_id',
+          claimedAt,
+          mediaId,
+          staleBefore,
+        ).length === 1
       );
     },
 
     async releaseUpload({ mediaId }) {
-      run('UPDATE media SET uploading = 0 WHERE media_id = ?', mediaId);
+      run('UPDATE media SET claimed_at = NULL WHERE media_id = ?', mediaId);
     },
 
     async markMediaReceived({ mediaId, receivedAt, retentionUntil }) {
       run(
-        'UPDATE media SET received_at = ?, retention_until = ?, expires_at = NULL, uploading = 0 WHERE media_id = ?',
+        'UPDATE media SET received_at = ?, retention_until = ?, expires_at = NULL, claimed_at = NULL WHERE media_id = ?',
         receivedAt,
         retentionUntil,
         mediaId,

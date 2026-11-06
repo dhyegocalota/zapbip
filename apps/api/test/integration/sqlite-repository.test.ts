@@ -247,17 +247,37 @@ describe('SQLite inbox repository', () => {
     expect(result).toEqual({ first: true, second: false, afterReset: true });
   });
 
-  it('claims an upload exactly once until it is released or received', async () => {
+  it('claims an upload exactly once until it is released, received or stale', async () => {
+    const claim = { mediaId: 'med_1', claimedAt: BASE_TIME, staleBefore: BASE_TIME - 1 };
     const result = await inRepository(async (repository) => {
       await repository.insertMedia({ media: buildMedia({ mediaId: 'med_1', expiresAt: BASE_TIME + 5 }) });
-      const first = await repository.claimUpload({ mediaId: 'med_1' });
-      const second = await repository.claimUpload({ mediaId: 'med_1' });
+      const first = await repository.claimUpload(claim);
+      const second = await repository.claimUpload(claim);
+      const whileFresh = await repository.claimUpload({ ...claim, claimedAt: BASE_TIME + 1 });
+      const whenStale = await repository.claimUpload({ ...claim, claimedAt: BASE_TIME + 2, staleBefore: BASE_TIME });
       await repository.releaseUpload({ mediaId: 'med_1' });
-      const afterRelease = await repository.claimUpload({ mediaId: 'med_1' });
+      const afterRelease = await repository.claimUpload(claim);
       await repository.markMediaReceived({ mediaId: 'med_1', receivedAt: BASE_TIME, retentionUntil: BASE_TIME + MEDIA_RETENTION_MS });
-      return { first, second, afterRelease, afterReceived: await repository.claimUpload({ mediaId: 'med_1' }) };
+      return { first, second, whileFresh, whenStale, afterRelease, afterReceived: await repository.claimUpload(claim) };
     });
-    expect(result).toEqual({ first: true, second: false, afterRelease: true, afterReceived: false });
+    expect(result).toEqual({ first: true, second: false, whileFresh: false, whenStale: true, afterRelease: true, afterReceived: false });
+  });
+
+  it('claims the routing list expiry once per opening time', async () => {
+    const routingList: RoutingList = {
+      promptMessageId: 'msg_1',
+      openedAt: BASE_TIME,
+      locale: OwnerLocale.EnglishUs,
+      resent: false,
+      reminded: false,
+    };
+    const result = await inRepository(async (repository) => {
+      await repository.saveRoutingList({ routingList });
+      const first = await repository.claimRoutingListExpiry({ openedAt: BASE_TIME, claimedAt: BASE_TIME + 10 });
+      const second = await repository.claimRoutingListExpiry({ openedAt: BASE_TIME, claimedAt: BASE_TIME + 10 });
+      return { first, second, claimed: await repository.findRoutingList() };
+    });
+    expect(result).toEqual({ first: true, second: false, claimed: { ...routingList, openedAt: BASE_TIME + 10, resent: true } });
   });
 
   it('stores media, marks it received and deletes it', async () => {
