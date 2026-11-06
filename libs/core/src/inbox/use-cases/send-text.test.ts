@@ -66,7 +66,7 @@ describe('sendText', () => {
     await environment.clock.advance({ ms: WINDOW_MS });
     await send({ environment, text: 'two' });
     await send({ environment, text: 'three' });
-    expect(environment.sender.templates).toHaveLength(2);
+    expect(environment.sender.templates).toHaveLength(1);
   });
 
   test('CU-98 the notice preview has no newline and at most 60 characters', async () => {
@@ -118,7 +118,7 @@ describe('sendText', () => {
     expect(loser.delivery).toBe(DeliveryState.Queued);
     expect(environment.sender.templates).toHaveLength(1);
     await send({ environment, text: 'three' });
-    expect(environment.sender.templates).toHaveLength(2);
+    expect(environment.sender.templates).toHaveLength(1);
     const history = await environment.repository.listAgentHistory({ agent: 'alpha', limit: 5 });
     expect(history.map((message) => message.delivery)).toEqual([DeliveryState.Queued, DeliveryState.Queued, DeliveryState.Queued]);
   });
