@@ -1,6 +1,7 @@
 import { SECOND_MS } from '@zapbip/types';
 
 export const WAKE_DEBOUNCE_MS = 3 * SECOND_MS;
+export const WAKE_MIN_INTERVAL_MS = 60 * SECOND_MS;
 export const WAKE_FOLLOW_UP_MS = 30 * SECOND_MS;
 export const WAKE_REQUEST_TIMEOUT_MS = 10 * SECOND_MS;
 export const WAKE_LEASE_MS = 15 * SECOND_MS;

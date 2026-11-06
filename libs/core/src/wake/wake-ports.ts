@@ -29,6 +29,8 @@ export interface WakeRepository {
   deleteJob(input: { agent: AgentName }): Promise<void>;
   listDueJobs(input: { now: number }): Promise<WakeJob[]>;
   findNextDueAt(): Promise<number | null>;
+  findLastRequestedAt(input: { agent: AgentName }): Promise<number | null>;
+  saveLastRequestedAt(input: { agent: AgentName; at: number }): Promise<void>;
 }
 
 export type WakeLogEvent = {
@@ -72,7 +74,7 @@ export type SetWakeResult = {
 
 export type ScheduleWakeInput = WakeContext & { agent: AgentName };
 
-export type RunDueWakesInput = WakeContext & { ownerLocale: OwnerLocale };
+export type RunDueWakesInput = WakeContext & { ownerLocale: OwnerLocale; publicHost: string };
 export type RunDueWakesResult = { nextDueAt: number | null };
 
 export type ScriptedWakeResponse = {

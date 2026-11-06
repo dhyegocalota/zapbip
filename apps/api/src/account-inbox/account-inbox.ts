@@ -124,7 +124,12 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
 
   protected async runDueWakes(): Promise<void> {
     const storedOwnerLocale = (await this.ctx.storage.get<OwnerLocale>(OWNER_LOCALE_STORAGE_KEY)) as OwnerLocale;
-    await inbox.runDueWakes({ dependencies: this.dependencies, wake: this.wake, ownerLocale: storedOwnerLocale });
+    await inbox.runDueWakes({
+      dependencies: this.dependencies,
+      wake: this.wake,
+      ownerLocale: storedOwnerLocale,
+      publicHost: new URL(this.env.PUBLIC_ORIGIN).hostname,
+    });
   }
 
   private log(fields: LogFields): void {

@@ -130,6 +130,11 @@ describe('assertWakeTarget urls', () => {
     'an arpa name': 'https://1.in-addr.arpa/x',
     'a wildcard localhost': 'https://*.localhost/x',
     'a single-label host': 'https://metadata/',
+    'the product apex': 'https://zapbip.com/x',
+    'a product subdomain': 'https://hooks.zapbip.com/x',
+    'a workers.dev host': 'https://wake.account.workers.dev/x',
+    'the own host': `https://${PUBLIC_HOST}/x`,
+    'an own host subdomain': `https://hooks.${PUBLIC_HOST}/x`,
   };
 
   test.each(Object.entries(invalidUrls))('%s is refused naming url', async (_name, url) => {

@@ -16,11 +16,13 @@ import {
   WAKE_FOLLOW_UP_MS,
   WAKE_LEASE_MS,
   WAKE_MAX_ATTEMPTS,
+  WAKE_MIN_INTERVAL_MS,
   WAKE_SIGNAL_BODY,
 } from './constants';
 import { runDueWakes } from './run-due-wakes';
 import { scheduleWake } from './schedule-wake';
-import { addUnreadOwnerMessage, createWakeEnvironment, setWebhook, type WakeEnvironment } from './testing/wake-fixtures';
+import { addUnreadOwnerMessage, createWakeEnvironment, PUBLIC_HOST, setWebhook, type WakeEnvironment } from './testing/wake-fixtures';
+import { wakeAssociatedData } from './wake-associated-data';
 import { WAKE_COPY } from './wake-copy';
 import type { ScriptedWakeResponse } from './wake-ports';
 import type { WakeJob } from './wake-setting';
@@ -53,7 +55,7 @@ async function armed(input: { agents?: string[] } = {}): Promise<WakeEnvironment
 
 function run(input: { wakeEnvironment: WakeEnvironment; ownerLocale?: OwnerLocale }) {
   const { wakeEnvironment, ownerLocale = OWNER_LOCALE } = input;
-  return runDueWakes({ ...wakeEnvironment.context, ownerLocale });
+  return runDueWakes({ ...wakeEnvironment.context, ownerLocale, publicHost: PUBLIC_HOST });
 }
 
 async function fireAfter(input: { wakeEnvironment: WakeEnvironment; delayMs: number }) {
@@ -287,7 +289,7 @@ describe('runDueWakes refusals and the owner notice', () => {
     enqueue({ wakeEnvironment, responses: [respond({ statusCode: UNAUTHORIZED }), respond({ statusCode: UNAUTHORIZED })] });
     await fireAfter({ wakeEnvironment, delayMs: WAKE_DEBOUNCE_MS });
     await scheduleWake({ ...wakeEnvironment.context, agent: AGENT });
-    await fireAfter({ wakeEnvironment, delayMs: WAKE_DEBOUNCE_MS });
+    await fireAfter({ wakeEnvironment, delayMs: WAKE_MIN_INTERVAL_MS });
     expect(wakeEnvironment.transport.requests).toHaveLength(2);
     expect(sentTexts({ wakeEnvironment })).toHaveLength(1);
   });
@@ -297,7 +299,7 @@ describe('runDueWakes refusals and the owner notice', () => {
     enqueue({ wakeEnvironment, responses: [respond({ statusCode: UNAUTHORIZED }), respond({ statusCode: OK })] });
     await fireAfter({ wakeEnvironment, delayMs: WAKE_DEBOUNCE_MS });
     await scheduleWake({ ...wakeEnvironment.context, agent: AGENT });
-    await fireAfter({ wakeEnvironment, delayMs: WAKE_DEBOUNCE_MS });
+    await fireAfter({ wakeEnvironment, delayMs: WAKE_MIN_INTERVAL_MS });
     expect(await findWake({ wakeEnvironment })).toMatchObject({ status: WakeStatus.Active });
     expect(sentTexts({ wakeEnvironment })).toHaveLength(1);
   });
@@ -306,7 +308,7 @@ describe('runDueWakes refusals and the owner notice', () => {
     const wakeEnvironment = await armed();
     enqueue({ wakeEnvironment, responses: [respond({ statusCode: UNAUTHORIZED })] });
     await wakeEnvironment.environment.clock.advance({ ms: WAKE_DEBOUNCE_MS });
-    await runDueWakes({ ...wakeEnvironment.context, ownerLocale: undefined as unknown as OwnerLocale });
+    await runDueWakes({ ...wakeEnvironment.context, ownerLocale: undefined as unknown as OwnerLocale, publicHost: PUBLIC_HOST });
     expect(wakeEnvironment.transport.requests).toHaveLength(1);
     expect(await findJob({ wakeEnvironment })).toBeNull();
     expect(sentTexts({ wakeEnvironment })).toEqual([]);
@@ -345,6 +347,51 @@ describe('runDueWakes refusals and the owner notice', () => {
     expect(await findJob({ wakeEnvironment })).toBeNull();
     expect(await findWake({ wakeEnvironment })).toMatchObject({ status: WakeStatus.Failing });
     expect(sentTexts({ wakeEnvironment })).toEqual([failedCopy({ locale: OWNER_LOCALE })]);
+  });
+});
+
+describe('runDueWakes target guard and settling', () => {
+  async function sealTarget(input: { wakeEnvironment: WakeEnvironment; url: string }): Promise<void> {
+    const { wakeEnvironment, url } = input;
+    const stored = await findWake({ wakeEnvironment });
+    if (stored === null || stored.target === null) throw new Error('expected a stored target');
+    const sealedTarget = await wakeEnvironment.wake.secretBox.seal({
+      plain: JSON.stringify({ url, token: 'p'.repeat(32) }),
+      associatedData: wakeAssociatedData({
+        accountId: wakeEnvironment.environment.dependencies.accountId,
+        agent: AGENT,
+        ownerLocale: OWNER_LOCALE,
+      }),
+    });
+    await wakeEnvironment.wake.repository.saveWake({ wake: { ...stored, target: { ...stored.target, sealedTarget } } });
+  }
+
+  test.each(['https://localhost/x', 'https://hooks.zapbip.com/x', 'https://wake.account.workers.dev/x', `https://${PUBLIC_HOST}/x`])(
+    'a stored target %s is refused at delivery before any request',
+    async (url) => {
+      const wakeEnvironment = await armed();
+      await sealTarget({ wakeEnvironment, url });
+      await fireAfter({ wakeEnvironment, delayMs: WAKE_DEBOUNCE_MS });
+      expect(wakeEnvironment.transport.requests).toEqual([]);
+      expect(await findJob({ wakeEnvironment })).toBeNull();
+      expect(await findWake({ wakeEnvironment })).toMatchObject({ status: WakeStatus.Failing });
+      expect(sentTexts({ wakeEnvironment })).toEqual([failedCopy({ locale: OWNER_LOCALE })]);
+    },
+  );
+
+  test('a wake cleared while the request is in flight is neither rewritten nor announced', async () => {
+    const wakeEnvironment = await armed();
+    enqueue({ wakeEnvironment, responses: [respond({ statusCode: UNAUTHORIZED })] });
+    const { transport, wake } = wakeEnvironment;
+    const send = transport.send.bind(transport);
+    transport.send = async (request) => {
+      await wake.repository.clearWake({ agent: AGENT });
+      return send(request);
+    };
+    await fireAfter({ wakeEnvironment, delayMs: WAKE_DEBOUNCE_MS });
+    expect(await findWake({ wakeEnvironment })).toMatchObject({ mode: WakeMode.None, target: null, status: WakeStatus.Active });
+    expect(await findJob({ wakeEnvironment })).toBeNull();
+    expect(sentTexts({ wakeEnvironment })).toEqual([]);
   });
 });
 
