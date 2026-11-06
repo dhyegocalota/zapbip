@@ -23,6 +23,7 @@ expect_stderr() {
 
 claude_edit() { printf '{"tool_name":"Edit","tool_input":{"file_path":"%s"}}' "$1"; }
 codex_patch() { printf '{"tool_name":"apply_patch","tool_input":{"command":"*** Begin Patch\\n*** %s File: %s\\n@@\\n+x\\n*** End Patch"}}' "$1" "$2"; }
+codex_bash_call() { printf '{"tool_name":"Bash","tool_input":{"command":"%s"},"hook_event_name":"PreToolUse"}' "$1"; }
 bash_call() { printf '{"tool_name":"Bash","tool_input":{"command":"%s"}}' "$1"; }
 
 expect_exit "claude: .env edit is blocked" 2 guard-secrets.sh "$(claude_edit /repo/.env)"
@@ -39,6 +40,21 @@ expect_exit "git add -A is blocked" 2 guard-git-add-all.sh "$(bash_call 'git add
 expect_exit "git add . is blocked" 2 guard-git-add-all.sh "$(bash_call 'git add .')"
 expect_exit "git add --all is blocked" 2 guard-git-add-all.sh "$(bash_call 'git add --all && git commit')"
 expect_exit "the no-verify flag is blocked" 2 guard-git-add-all.sh "$(bash_call 'git commit --no-verify -m x')"
+blocked_add_forms=('git add ./' 'git add -- .' 'git add -f .' 'git add src .' 'git add *' 'git add \".\"' 'git add .;' 'git add . && git status' 'git -C . add .' 'git add -u' 'git add --update' 'git add -Av' 'git add ..')
+for form in "${blocked_add_forms[@]}"; do
+  expect_exit "claude: $form is blocked" 2 guard-git-add-all.sh "$(bash_call "$form")"
+  expect_exit "codex: $form is blocked" 2 guard-git-add-all.sh "$(codex_bash_call "$form")"
+done
+blocked_commit_forms=('git commit -n -m x' 'git commit -nm x' 'git commit -an -m x' 'git -C . commit -n')
+for form in "${blocked_commit_forms[@]}"; do
+  expect_exit "claude: $form is blocked" 2 guard-git-add-all.sh "$(bash_call "$form")"
+  expect_exit "codex: $form is blocked" 2 guard-git-add-all.sh "$(codex_bash_call "$form")"
+done
+allowed_forms=('git add src/a.ts docs/x.md' 'git add .gitignore' 'git add -p src/a.ts' 'git commit -m \"fix: handle . and * and -n in names\"' 'git commit -am x' 'git commit -mn x')
+for form in "${allowed_forms[@]}"; do
+  expect_exit "claude: $form is allowed" 0 guard-git-add-all.sh "$(bash_call "$form")"
+  expect_exit "codex: $form is allowed" 0 guard-git-add-all.sh "$(codex_bash_call "$form")"
+done
 expect_exit "git add by name is allowed" 0 guard-git-add-all.sh "$(bash_call 'git add README.md .agents/hooks')"
 expect_exit "git add of a dotfile is allowed" 0 guard-git-add-all.sh "$(bash_call 'git add .gitignore')"
 
