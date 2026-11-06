@@ -34,8 +34,10 @@ describe('renderInstallPage', () => {
       expect(page).toContain(AGENT_RULES);
     });
 
-    test('ends with the self-test line', () => {
-      expect(lastNonEmptyLine(page)).toContain(INSTALL_SELF_TEST_TEXT[locale]);
+    test('ends with the company footer, after the self-test line', () => {
+      expect(lastNonEmptyLine(page)).toBe(INSTALL_PAGE_COPY[locale].footer);
+      expect(lastNonEmptyLine(page)).toContain('Logic Bit');
+      expect(page.lastIndexOf(INSTALL_SELF_TEST_TEXT[locale])).toBeLessThan(page.lastIndexOf(INSTALL_PAGE_COPY[locale].footer));
     });
 
     test('carries the localized unsupported-product stop line naming zapbip', () => {
