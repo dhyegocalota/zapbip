@@ -3,7 +3,9 @@ import { resolve } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { fileURLToPath } from 'node:url';
 import { ConnectorClient, UUID_PATTERN } from '@zapbip/types';
+import { runChannel } from './channel';
 import { deriveConnectorLinks, runConnection } from './connect';
+import { runListen } from './listen';
 
 export type ConnectArguments = {
   client: ConnectorClient;
@@ -13,6 +15,8 @@ export type ConnectArguments = {
 
 enum CliCommand {
   Connect = 'connect',
+  Listen = 'listen',
+  Channel = 'channel',
 }
 
 enum CliFlag {
@@ -86,8 +90,30 @@ async function connectCommand(input: { argv: string[] }): Promise<number> {
   return runConnection({ socketLink, client, workingDirectory, pinnedSessionId, signal: abortController.signal });
 }
 
+function assertNoArguments(input: { argv: string[] }): void {
+  if (input.argv.length > 0) throw new Error(USAGE);
+}
+
+async function listenCommand(input: { argv: string[] }): Promise<number> {
+  assertNoArguments(input);
+  const { socketLink } = deriveConnectorLinks({ connectionLink: await readConnectionLink() });
+  const abortController = new AbortController();
+  SHUTDOWN_SIGNALS.forEach((signalName) => process.once(signalName, () => abortController.abort()));
+  return runListen({ socketLink, write: ({ line }) => process.stdout.write(line), signal: abortController.signal });
+}
+
+async function channelCommand(input: { argv: string[] }): Promise<number> {
+  assertNoArguments(input);
+  const { socketLink } = deriveConnectorLinks({ connectionLink: await readConnectionLink() });
+  const abortController = new AbortController();
+  SHUTDOWN_SIGNALS.forEach((signalName) => process.once(signalName, () => abortController.abort()));
+  return runChannel({ socketLink, signal: abortController.signal });
+}
+
 const COMMAND_HANDLERS: Record<CliCommand, CliCommandHandler> = {
   [CliCommand.Connect]: connectCommand,
+  [CliCommand.Listen]: listenCommand,
+  [CliCommand.Channel]: channelCommand,
 };
 
 async function main(): Promise<number> {
