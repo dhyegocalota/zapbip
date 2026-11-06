@@ -29,18 +29,30 @@ describe('deriveConnectorLinks', () => {
 });
 
 describe('reconnectDelayMs', () => {
+  const noJitter = () => 0;
+  const fullJitter = () => 0.999;
+
   it.each([
     [0, 1_000],
     [1, 2_000],
     [2, 4_000],
     [5, RECONNECT_MAX_MS],
     [6, RECONNECT_MAX_MS],
-  ])('attempt %i waits %i ms', (attempt, expected) => {
-    expect(reconnectDelayMs({ attempt })).toBe(expected);
+  ])('attempt %i waits %i ms without jitter', (attempt, expected) => {
+    expect(reconnectDelayMs({ attempt, random: noJitter })).toBe(expected);
+  });
+
+  it('adds up to half of the delay as jitter', () => {
+    expect(reconnectDelayMs({ attempt: 0, random: fullJitter })).toBe(1_499);
+    expect(reconnectDelayMs({ attempt: 1, random: () => 0.5 })).toBe(2_500);
+  });
+
+  it('never exceeds the maximum, jitter included', () => {
+    expect(reconnectDelayMs({ attempt: 9, random: fullJitter })).toBe(RECONNECT_MAX_MS);
   });
 
   it('refuses a negative attempt', () => {
-    expect(() => reconnectDelayMs({ attempt: -1 })).toThrow();
+    expect(() => reconnectDelayMs({ attempt: -1, random: noJitter })).toThrow();
   });
 });
 

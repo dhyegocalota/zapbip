@@ -104,6 +104,7 @@ describe('runConnection', () => {
       pinnedSessionId,
       signal: abortController.signal,
       timers,
+      random: () => 0,
     });
     return running;
   }
@@ -435,6 +436,35 @@ describe('runConnection', () => {
 
       expect(loggedFieldsOf({ event: ConnectorLogEvent.ConnectorReconnecting })).toEqual({ attempt: 0, delayMs: RECONNECT_BASE_MS });
       timers.advance({ ms: RECONNECT_BASE_MS });
+      await server.waitForConnections({ count: 2 });
+    });
+  });
+
+  describe('reconnect pre-flight', () => {
+    it('exits 1 with a clear message when the secret was revoked while disconnected', async () => {
+      useFakeTimers();
+      const exiting = startConnector();
+      await waitForLog({ event: ConnectorLogEvent.ConnectorConnected });
+      server.setProbeStatus({ status: UNAUTHORIZED_STATUS });
+      server.dropConnections();
+      await reconnectAfterDrop();
+
+      expect(await exiting).toBe(EXIT_CODE_REFUSED);
+      expect(server.connectionCount()).toBe(1);
+      expect(loggedEventsOf({ event: ConnectorLogEvent.ConnectorClosed }).at(-1)?.fields).toMatchObject({
+        status: UNAUTHORIZED_STATUS,
+        message: expect.stringContaining('revoked'),
+      });
+      expect(JSON.stringify(logRecorder.events)).not.toContain(FAKE_SECRET);
+    });
+
+    it('keeps reconnecting when the probe fails for any other reason', async () => {
+      useFakeTimers();
+      startConnector();
+      await waitForLog({ event: ConnectorLogEvent.ConnectorConnected });
+      server.setProbeStatus({ status: PREFLIGHT_SERVER_ERROR_STATUS });
+      server.dropConnections();
+      await reconnectAfterDrop();
       await server.waitForConnections({ count: 2 });
     });
   });

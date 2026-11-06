@@ -53,7 +53,7 @@ export function deriveConnectorLinks(input: { connectionLink: string }): { probe
   return { probeLink, socketLink: parsed.toString() };
 }
 
-export function reconnectDelayMs(input: { attempt: number }): number {
+export function reconnectDelayMs(input: { attempt: number; random: () => number }): number {
   if (input.attempt < 0) throw new Error('the reconnect attempt cannot be negative');
   return Math.min(RECONNECT_MAX_MS, RECONNECT_BASE_MS * 2 ** input.attempt);
 }
@@ -124,8 +124,9 @@ export async function runSocketSession(input: {
   connectedFields: ConnectorLogFields;
   createQueue: (input: { sendDone: (input: { messageId: string }) => void }) => WakeQueue;
   timers?: ConnectorTimers;
+  random?: () => number;
 }): Promise<number> {
-  const { socketLink, signal, log, connectedFields, createQueue, timers = REAL_TIMERS } = input;
+  const { socketLink, signal, log, connectedFields, createQueue, timers = REAL_TIMERS, random = Math.random } = input;
   const probeStatus = await probeStatusOf({ socketLink });
   if (probeStatus !== UPGRADE_REQUIRED_STATUS) {
     log({ event: ConnectorLogEvent.ConnectorClosed, fields: { status: probeStatus } });
@@ -235,7 +236,7 @@ export async function runSocketSession(input: {
     if (end.code === REPLACED_CLOSE_CODE) return FAILURE_EXIT_CODE;
     if (signal.aborted) break;
     const failedAttempts = end.wasOpened ? 0 : attempt;
-    const delayMs = reconnectDelayMs({ attempt: failedAttempts });
+    const delayMs = reconnectDelayMs({ attempt: failedAttempts, random });
     log({ event: ConnectorLogEvent.ConnectorReconnecting, fields: { attempt: failedAttempts, delayMs } });
     await waitOrAbort({ delayMs, signal, timers });
     attempt = failedAttempts + 1;
@@ -250,8 +251,9 @@ export async function runConnection(input: {
   pinnedSessionId: string | null;
   signal: AbortSignal;
   timers?: ConnectorTimers;
+  random?: () => number;
 }): Promise<number> {
-  const { socketLink, client, workingDirectory, pinnedSessionId, signal, timers } = input;
+  const { socketLink, client, workingDirectory, pinnedSessionId, signal, timers, random } = input;
   const wakeAbortController = new AbortController();
   signal.addEventListener('abort', () => wakeAbortController.abort(), { once: true });
 
@@ -286,5 +288,5 @@ export async function runConnection(input: {
     });
   }
 
-  return runSocketSession({ socketLink, signal, log: logConnectorEvent, connectedFields: { client }, createQueue, timers });
+  return runSocketSession({ socketLink, signal, log: logConnectorEvent, connectedFields: { client }, createQueue, timers, random });
 }
