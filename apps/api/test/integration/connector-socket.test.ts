@@ -6,6 +6,7 @@ import {
   ConnectorFrameType,
   InboxCopyKey,
   OwnerLocale,
+  ReplyStatus,
   REPLACED_CLOSE_CODE,
   REVOKED_CLOSE_CODE,
   WakeMode,
@@ -24,6 +25,7 @@ const OWNER_TEXT = 'oi';
 const NORMAL_CLOSE_CODE = 1000;
 const LARGE_MESSAGE_CHARACTERS = 4_000;
 const OTHER_AGENT_MESSAGE_ID = 'msg_other';
+const WAITER_TIMEOUT_MS = 30_000;
 
 function ownerMessage(input: { account: SeededAccount }) {
   return receiveOwnerText({ stub: accountInboxStub({ accountId: input.account.accountId }), text: `@${AGENT} ${OWNER_TEXT}` });
@@ -40,6 +42,13 @@ function socketCountOf(input: { account: SeededAccount }): Promise<number> {
     accountInboxStub({ accountId: input.account.accountId }),
     (_instance, state) => state.getWebSockets(AGENT).length,
   );
+}
+
+function holdLiveWaiter(input: { account: SeededAccount }): Promise<void> {
+  return runInDurableObject(accountInboxStub({ accountId: input.account.accountId }), async (instance) => {
+    const { waiters } = (instance as unknown as { dependencies: CoreDependencies }).dependencies;
+    void waiters.awaitAgentMessage({ agent: AGENT, timeoutMs: WAITER_TIMEOUT_MS });
+  });
 }
 
 function newAccount(): Promise<SeededAccount> {
@@ -245,6 +254,42 @@ describe('connector socket', () => {
     await ownerMessage({ account });
     const third = (await session.nextFrame()) as MessagesFrame;
     expect(third.messages.length).toBeGreaterThan(0);
+    session.socket.close();
+  });
+
+  test('a live wait_for_reply waiter gets the owner message and the socket is not pushed it', async () => {
+    const account = await registeredAccount();
+    const session = await openConnector({ secret: account.secret });
+    await session.nextFrame();
+    const waiting = inboxOf({ accountId: account.accountId }).waitForReply({
+      connection: account.connection,
+      questionId: null,
+      timeoutMs: WAITER_TIMEOUT_MS,
+    });
+    await ownerMessage({ account });
+    const reply = await waiting;
+    expect(reply.ok && reply.value.status).toBe(ReplyStatus.Message);
+    await ownerMessage({ account });
+    const frame = (await session.nextFrame()) as MessagesFrame;
+    expect(frame.messages).toHaveLength(1);
+    expect(session.receivedCount()).toBe(0);
+    session.socket.close();
+  });
+
+  test('a live waiter keeps the remaining unread messages from being re-pushed after a done', async () => {
+    const account = await registeredAccount();
+    const session = await openConnector({ secret: account.secret });
+    await session.nextFrame();
+    await ownerMessage({ account });
+    const first = (await session.nextFrame()) as MessagesFrame;
+    await ownerMessage({ account });
+    await session.nextFrame();
+    await holdLiveWaiter({ account });
+    session.socket.send(JSON.stringify({ type: ConnectorFrameType.Done, messageId: first.messages[0]?.messageId }));
+    await vi.waitFor(async () => expect(await unreadCountOf({ account })).toBe(1));
+    session.socket.send(CONNECTOR_PING_TEXT);
+    expect(await session.nextFrame()).toEqual({ type: ConnectorFrameType.Pong });
+    expect(session.receivedCount()).toBe(0);
     session.socket.close();
   });
 
