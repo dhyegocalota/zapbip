@@ -219,6 +219,13 @@ describe('connector sockets', () => {
     expect(remainingSocketCount({ context, agent: 'ana', closing: closing })).toBe(1);
   });
 
+  test('the remaining count leaves out sockets that are already closing', () => {
+    const closing = createFakeSocket();
+    const replaced = Object.assign(createFakeSocket(), { readyState: WebSocket.CLOSING });
+    const context = createFakeState({ socketsByAgent: { ana: [closing, replaced] } });
+    expect(remainingSocketCount({ context, agent: 'ana', closing })).toBe(0);
+  });
+
   test('the remaining count is zero when the closing socket is the only one', () => {
     const closing = createFakeSocket();
     const context = createFakeState({ socketsByAgent: { ana: [closing] } });
