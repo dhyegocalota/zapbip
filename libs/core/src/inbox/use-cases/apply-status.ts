@@ -9,5 +9,5 @@ export async function applyStatus(input: ApplyStatusInput): Promise<ApplyStatusR
   const { next, logged } = applyStatusRule({ current: message.delivery, incoming: status });
   if (!logged) await repository.saveChannelStatusDetail({ messageId: message.messageId, detail });
   if (next !== null) await repository.updateDelivery({ messageId: message.messageId, delivery: next });
-  return { applied: true };
+  return { applied: !logged };
 }
