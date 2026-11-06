@@ -530,7 +530,7 @@ Every box is empty when authored. A developer ticks its own box. A wrong step is
 | W1.2 (guard) | a pinned host accepts the POC path, or a decimal or IPv4 literal passes | `assert-wake-target.test.ts` cases go green unexpectedly | revert W1.2; W1.1 red stays |
 | W1.4 (`set_wake`) | the token or URL is returned in the result or an error | `set-wake.test.ts` finds the token in `JSON.stringify(result)` | revert W1.4 |
 | W1.6 (coalescing) | a steady stream postpones the wake forever | `schedule-wake.test.ts` shows `dueAt` moving | keep the first `dueAt` |
-| W1.8 (retries) | attempt five sends again, or the backoff is not doubling | `run-due-wakes.test.ts` counts requests at +3, +8, +18, +38, +78 s | revert W1.8 |
+| W1.8 (retries) | attempt five sends again, or the backoff is not doubling | `run-due-wakes.test.ts` asserts the due time after each failure: delays of 5, 10, 20 and 40 s, then give up | revert W1.8 |
 | W1.8 (fallback) | the owner notice repeats on every failed job | two notices in `run-due-wakes.test.ts` while `failing` | apply the active-to-failing rule (A6) |
 | W1.8 (throwing repository) | a storage error escapes `runDueWakes` | the unit test rejects | catch per job (A9) |
 | W2.2 (transport) | `Retry-After` honoured on `500`, or the bearer sent to a generic host | `fetch-wake-transport.test.ts` headers case fails | revert W2.2 |
