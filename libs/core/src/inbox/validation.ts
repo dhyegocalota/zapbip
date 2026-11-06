@@ -51,3 +51,8 @@ export function parseOptionDescriptions(input: { descriptions: (string | null)[]
   void input;
   throw new Error('parseOptionDescriptions is not implemented');
 }
+
+export function assertVoiceNote(input: { kind: MediaMessageKind; voice: boolean }): void {
+  void input;
+  throw new Error('assertVoiceNote is not implemented');
+}
