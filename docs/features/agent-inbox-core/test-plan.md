@@ -374,7 +374,7 @@ Runner: `pnpm --filter @zapbip/api test:integration` (Vitest 4.1.12, pool-worker
 - [ ] WI-147 a failing notice — input: the `template` sender rejects on the first send outside the window; expected: the tool returns `NOTICE_FAILED_MESSAGE` with `delivery_failed`, `owner_notice_failed` is logged with kind and account, the message stays `queued`, nothing is on the screen.
 - [ ] WI-148 the alarm sends the notice after recovery — input: the sender recovers and `NOTICE_RETRY_MS` passes; expected: the alarm runs and the screen shows one `notice` template.
 - [ ] WI-149 a persistent failure backs off — input: the sender always rejects; the clock advances `NOTICE_RETRY_MS` doubled per attempt and the alarm runs three times; expected: four `template` calls, the alarm is armed after each run.
-- [ ] WI-150 a second failing send does not move the armed retry later — input: two sends fail in a row; expected: the alarm after the second equals the alarm after the first.
+- [ ] WI-150 a send during the backoff makes no template call — input: a failed notice, then a second send before `notice_retry_at`; expected: the second tool call succeeds as queued, one `template` call in total, the armed alarm unchanged.
 - [ ] WI-151 one agent receives an unaddressed owner message — input: one agent, `oi` from the owner; expected: `checkInbox` returns `oi` and no list option is on the screen.
 - [ ] WI-152 held messages reach the first agent — input: two owner texts with no agents, then the first agent connects; expected: it gets both once and in order; the next call is empty.
 - [ ] WI-153 an early alarm wake sends nothing — input: a failed notice, then the alarm runs at once; expected: one `template` call in total.
