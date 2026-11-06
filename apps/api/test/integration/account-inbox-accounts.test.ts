@@ -16,7 +16,7 @@ const HELD_TIMEOUT_MS = 20_000;
 const REQUESTED_AT = 1_800_000_000_000;
 const SCHEMA_VERSION_SIX = 6;
 
-type Internals = { dependencies: { waiters: { hasLiveWaiter(input: { agent: string }): boolean } } };
+type Internals = { dependencies: { waiters: { hasAgentWaiter(input: { agent: string }): boolean } } };
 
 function stubOf() {
   return accountInboxStub({ accountId: ACCOUNT });
@@ -32,7 +32,7 @@ function seedAgentWake(input: { agent: string }) {
 
 function hasLiveWaiter(input: { agent: string }): Promise<boolean> {
   return runInDurableObject(stubOf(), (instance: AccountInbox) =>
-    (instance as unknown as Internals).dependencies.waiters.hasLiveWaiter(input),
+    (instance as unknown as Internals).dependencies.waiters.hasAgentWaiter(input),
   );
 }
 

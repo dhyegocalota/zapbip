@@ -1,0 +1,26 @@
+---
+title: 'send_location'
+description: 'Envia um pino de localização ao dono.'
+---
+
+Envia um pino de localização ao dono.
+
+## Entrada
+
+| Campo       | Tipo             | Notas                   |
+| ----------- | ---------------- | ----------------------- |
+| `latitude`  | number           |                         |
+| `longitude` | number           |                         |
+| `name`      | string, opcional |                         |
+| `address`   | string, opcional |                         |
+| `reply_to`  | string, opcional | Id da mensagem a citar. |
+
+## Saída
+
+`{ "message_id": string, "delivery": "sent" | "queued" }`. `queued` quer dizer que a [janela de 24 horas](/pt-br/concepts/24-hour-window) está fechada.
+
+## Tipos de mensagem
+
+import MessageKinds from '/snippets/pt-br/message-kinds.mdx';
+
+<MessageKinds />

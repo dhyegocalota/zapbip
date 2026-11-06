@@ -175,17 +175,17 @@ describe('assertHttpsLink', () => {
 
   test('CU-28 http', async () => {
     const error = await captureInboxError(() => assertHttpsLink({ value: 'http://example.com/a.pdf' }));
-    expect(error).toEqual(invalidInput('link: must be an https URL'));
+    expect(error).toEqual(invalidInput('url: must be an https URL'));
   });
 
   test('CU-29 other scheme', async () => {
     const error = await captureInboxError(() => assertHttpsLink({ value: 'ftp://example.com/a.pdf' }));
-    expect(error).toEqual(invalidInput('link: must be an https URL'));
+    expect(error).toEqual(invalidInput('url: must be an https URL'));
   });
 
   test('not a URL', async () => {
     const error = await captureInboxError(() => assertHttpsLink({ value: 'example' }));
-    expect(error).toEqual(invalidInput('link: must be an https URL'));
+    expect(error).toEqual(invalidInput('url: must be an https URL'));
   });
 });
 
@@ -202,6 +202,24 @@ describe('assertMediaFits', () => {
   test('CU-32 image with a video type', async () => {
     const error = await captureInboxError(() => assertMediaFits({ kind: MessageKind.Image, mimeType: 'video/mp4', sizeBytes: 1000 }));
     expect(error).toEqual(invalidInput('mime_type: image must be an image/* type'));
+  });
+
+  test('image with an svg type', async () => {
+    const error = await captureInboxError(() => assertMediaFits({ kind: MessageKind.Image, mimeType: 'image/svg+xml', sizeBytes: 1000 }));
+    expect(error).toEqual(invalidInput('mime_type: image must not be image/svg+xml'));
+  });
+
+  test.each(['image/SVG+XML', 'image/svg+xml;x=1', ' Image/Svg+Xml ; charset=utf-8'])('image with the svg type %s', async (mimeType) => {
+    const error = await captureInboxError(() => assertMediaFits({ kind: MessageKind.Image, mimeType, sizeBytes: 1000 }));
+    expect(error).toEqual(invalidInput('mime_type: image must not be image/svg+xml'));
+  });
+
+  test('a sticker type is compared without case or parameters', () => {
+    expect(() => assertMediaFits({ kind: MessageKind.Sticker, mimeType: 'IMAGE/WEBP; q=1', sizeBytes: 1000 })).not.toThrow();
+  });
+
+  test('a media prefix is compared without case', () => {
+    expect(() => assertMediaFits({ kind: MessageKind.Video, mimeType: 'VIDEO/MP4', sizeBytes: 1000 })).not.toThrow();
   });
 
   test('CU-33 audio with a video type', async () => {

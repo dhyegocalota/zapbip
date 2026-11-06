@@ -29,7 +29,7 @@ import { createConnectionSecrets } from '../adapters/platform/connection-secrets
 import { createInstallCodeVault } from '../adapters/platform/install-code-vault';
 import { createIdGenerator } from '../adapters/platform/ids';
 import { loadDurableClock, type DurableClock } from '../adapters/platform/clock';
-import { createR2MediaStore } from '../adapters/r2/r2-media-store';
+import { mediaStoreOf } from '../adapters/r2/r2-media-store';
 import { createSqliteInboxRepository } from '../adapters/sqlite/sqlite-inbox-repository';
 import { createNoneWaker } from '../adapters/wake/none-waker';
 import type { AccountInboxRpc, AgentRequest, CallOutcome } from '../contract/account-inbox-rpc';
@@ -40,7 +40,7 @@ import { LogEvent, type LogFields } from '../contract/log';
 import { logEvent } from '../log';
 import { AccountTombstoned } from './account-tombstoned';
 import { revokeAgentState } from './agent-revocation';
-import { ALARM_MIN_DELAY_MS, ALARM_PROVIDER_FAILED, TOMBSTONE_STORAGE_KEY } from './constants';
+import { ALARM_MIN_DELAY_MS, AlarmErrorCode, TOMBSTONE_STORAGE_KEY } from './constants';
 import { createSqliteDeletionRequests } from './deletion-requests';
 import { createSqliteFirstMessageClaim } from './first-message-claim';
 import { ACCOUNT_INBOX_MIGRATIONS } from './migrations';
@@ -73,17 +73,19 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     runMigrations({ storage: this.ctx.storage, migrations: ACCOUNT_INBOX_MIGRATIONS });
     this.accountId = accountId;
     this.clock = await loadDurableClock({ storage: this.ctx.storage, onAdvanced: () => this.armAlarm() });
-    this.sender = createFakeWhatsAppSender({ storage: this.ctx.storage, clock: this.clock });
+    const mediaStore = mediaStoreOf({ bindings: this.env, clock: this.clock });
+    this.sender = createFakeWhatsAppSender({
+      storage: this.ctx.storage,
+      clock: this.clock,
+      mediaStore,
+      accountId,
+      origin: this.env.PUBLIC_ORIGIN,
+    });
     this.dependencies = {
       accountId,
       repository: createSqliteInboxRepository({ storage: this.ctx.storage, clock: this.clock }),
       sender: this.sender,
-      mediaStore: createR2MediaStore({
-        bucket: this.env.MEDIA,
-        mediaLinkSigningKey: this.env.MEDIA_LINK_SIGNING_KEY,
-        uploadLinkSigningKey: this.env.UPLOAD_LINK_SIGNING_KEY,
-        clock: this.clock,
-      }),
+      mediaStore,
       waker: createNoneWaker(),
       clock: this.clock,
       ids: createIdGenerator(),
@@ -102,7 +104,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       firstMessage: createSqliteFirstMessageClaim({ storage: this.ctx.storage }),
       deletionRequests: createSqliteDeletionRequests({ storage: this.ctx.storage }),
     };
-    this.dueTimeProviders.push(this.createExpiryProvider());
+    this.dueTimeProviders.push(this.createExpiryProvider(), this.createRoutingListProvider());
     await this.armAlarm();
   }
 
@@ -116,6 +118,13 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     };
   }
 
+  private createRoutingListProvider(): DueTimeProvider {
+    return {
+      nextDueAt: () => inbox.findRoutingListDueAt({ dependencies: this.dependencies }),
+      runDue: () => inbox.expireRoutingList({ dependencies: this.dependencies }),
+    };
+  }
+
   private log(fields: LogFields): void {
     logEvent({ accountId: this.accountId, ...fields });
   }
@@ -124,7 +133,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     try {
       await input.provider.runDue({ now: input.now });
     } catch {
-      this.log({ event: LogEvent.Sweep, errorCode: ALARM_PROVIDER_FAILED });
+      this.log({ event: LogEvent.Sweep, errorCode: AlarmErrorCode.ProviderFailed });
     }
   }
 
@@ -235,6 +244,14 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
 
   describeUpload(input: { mediaId: string }): Promise<CallOutcome<StoredMedia>> {
     return this.outcome({ run: () => inbox.describeUpload({ ...input, dependencies: this.dependencies }) });
+  }
+
+  claimUpload(input: { mediaId: string }): Promise<CallOutcome<StoredMedia>> {
+    return this.outcome({ run: () => inbox.claimUpload({ ...input, dependencies: this.dependencies }) });
+  }
+
+  releaseUpload(input: { mediaId: string }): Promise<CallOutcome<void>> {
+    return this.outcome({ run: () => inbox.releaseUpload({ ...input, dependencies: this.dependencies }) });
   }
 
   completeUpload(input: { mediaId: string }): Promise<CallOutcome<StoredMedia>> {

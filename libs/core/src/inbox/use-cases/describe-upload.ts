@@ -4,7 +4,7 @@ import type { StoredMedia } from '../inbox-records';
 import { notFound } from '../inbox-error-factories';
 import type { DescribeUploadInput } from './types';
 
-function uploadError(input: { code: InboxErrorCode; reason: string }): InboxError {
+export function uploadError(input: { code: InboxErrorCode; reason: string }): InboxError {
   return new InboxError({ code: input.code, message: `upload_id: ${input.reason}` });
 }
 

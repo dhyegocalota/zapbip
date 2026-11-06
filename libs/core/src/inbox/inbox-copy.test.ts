@@ -72,3 +72,23 @@ describe('buildNoticePreview', () => {
     );
   });
 });
+
+describe('routing list copy', () => {
+  test('a used list is answered in both locales', () => {
+    expect(renderCopy({ key: InboxCopyKey.RoutingListExpired, locale: OwnerLocale.PortugueseBrazil, values: {} })).toBe(
+      'Essa lista já foi usada.',
+    );
+    expect(renderCopy({ key: InboxCopyKey.RoutingListExpired, locale: OwnerLocale.EnglishUs, values: {} })).toBe(
+      'That list was already used.',
+    );
+  });
+
+  test('pin: the reminder points at the list above in both locales', () => {
+    expect(renderCopy({ key: InboxCopyKey.RoutingListReminder, locale: OwnerLocale.PortugueseBrazil, values: {} })).toBe(
+      'Escolha o agente na lista acima',
+    );
+    expect(renderCopy({ key: InboxCopyKey.RoutingListReminder, locale: OwnerLocale.EnglishUs, values: {} })).toBe(
+      'Pick the agent in the list above',
+    );
+  });
+});

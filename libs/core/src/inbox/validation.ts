@@ -10,6 +10,7 @@ import {
   MIME_TYPE_MAX_CHARS,
   QUESTION_MAX_OPTIONS,
   STICKER_MIME_TYPE,
+  SVG_MIME_TYPE,
   WAIT_TIMEOUT_MIN_SECONDS,
   type MediaMessageKind,
 } from './constants';
@@ -21,6 +22,7 @@ const UPLOAD_MAX_BYTES = Math.max(...Object.values(MEDIA_MAX_BYTES));
 const LIST_ROW_DESCRIPTION_MAX_CHARS = 72;
 const HTTPS_PROTOCOL = 'https:';
 const WHITESPACE_PATTERN = /\s+/g;
+const MIME_TYPE_PARAMETERS_PATTERN = /;.*$/;
 const EMOJI_PATTERN = /\p{Extended_Pictographic}|\p{Regional_Indicator}|⃣/u;
 const VOWEL_PATTERN = /^[aeiou]/;
 const graphemeSegmenter = new Intl.Segmenter();
@@ -32,6 +34,10 @@ function countCodePoints(input: { value: string }): number {
 export function parseAgentName(input: { value: string }): AgentName {
   if (!AGENT_NAME_PATTERN.test(input.value)) throw invalidInput({ message: `agent: must match ${AGENT_NAME_PATTERN.source}` });
   return input.value;
+}
+
+export function normalizeMimeType(input: { value: string }): string {
+  return input.value.replace(MIME_TYPE_PARAMETERS_PATTERN, '').trim().toLowerCase();
 }
 
 export function normalizeText(input: { value: string }): string {
@@ -76,17 +82,20 @@ export function parseEmoji(input: { emoji: string }): string | null {
 
 export function assertHttpsLink(input: { value: string }): void {
   const isHttps = URL.canParse(input.value) && new URL(input.value).protocol === HTTPS_PROTOCOL;
-  if (!isHttps) throw invalidInput({ message: 'link: must be an https URL' });
+  if (!isHttps) throw invalidInput({ message: 'url: must be an https URL' });
 }
 
 export function assertMediaFits(input: { kind: MediaMessageKind; mimeType: string | null; sizeBytes: number | null }): void {
   const maxBytes = MEDIA_MAX_BYTES[input.kind];
   const mimePrefix = MEDIA_MIME_PREFIX[input.kind];
+  const mimeType = input.mimeType === null ? null : normalizeMimeType({ value: input.mimeType });
   const exceedsSize = input.sizeBytes !== null && input.sizeBytes > maxBytes;
   if (exceedsSize) throw invalidInput({ message: `size_bytes: ${input.kind} must be at most ${maxBytes} bytes` });
-  const isWrongSticker = input.kind === MessageKind.Sticker && input.mimeType !== null && input.mimeType !== STICKER_MIME_TYPE;
+  const isWrongSticker = input.kind === MessageKind.Sticker && mimeType !== null && mimeType !== STICKER_MIME_TYPE;
   if (isWrongSticker) throw invalidInput({ message: `mime_type: ${input.kind} must be ${STICKER_MIME_TYPE}` });
-  const isWrongPrefix = mimePrefix !== null && input.mimeType !== null && !input.mimeType.startsWith(mimePrefix);
+  const isSvgImage = input.kind === MessageKind.Image && mimeType === SVG_MIME_TYPE;
+  if (isSvgImage) throw invalidInput({ message: `mime_type: ${input.kind} must not be ${SVG_MIME_TYPE}` });
+  const isWrongPrefix = mimePrefix !== null && mimeType !== null && !mimeType.startsWith(mimePrefix);
   const article = VOWEL_PATTERN.test(input.kind) ? 'an' : 'a';
   if (isWrongPrefix) throw invalidInput({ message: `mime_type: ${input.kind} must be ${article} ${mimePrefix}* type` });
 }

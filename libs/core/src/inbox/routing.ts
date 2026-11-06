@@ -64,7 +64,7 @@ function resolveOpenQuestion(input: RoutingInput): RoutingDecision | null {
 }
 
 function resolveRecentAgent(input: RoutingInput): RoutingDecision | null {
-  if (input.lastAgentWrite === null) return null;
+  if (input.lastAgentWrite === null || input.routingListOpen) return null;
   return decide({ rule: RoutingRule.RecentAgent, agent: input.lastAgentWrite, answersQuestionId: null, textForAgent: input.text });
 }
 

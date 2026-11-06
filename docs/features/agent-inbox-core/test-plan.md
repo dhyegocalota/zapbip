@@ -193,8 +193,8 @@ Runner: `pnpm --filter @zapbip/core test:unit` (Vitest 5.0.5). Ports are the in-
 - [ ] CU-137 stale tap on an answered question (Review Focus 2) — input: a second tap on `qst_1` after it was answered; expected: no second answer; the message routed to `alpha` as a `text`-like message with `replyToMessageId` equal to the prompt message id.
 - [ ] CU-138 tap on an unknown question — input: option id `qst_missing:0`, title `"Sim"`; expected: no error; routed by rules 3 to 6 with the title as text.
 - [ ] CU-139 route choice assigns every held message — input: two held messages and a list; owner taps `route:<first>:beta`; expected: both held messages get agent `beta`; `beta`'s waiter resolved; the list is no longer open.
-- [ ] CU-140 stale route choice — input: `route:<message>:alpha` after that message was already assigned; expected: no re-assignment; routed by rules 3 to 6 with the option title as text.
-- [ ] CU-141 a second unmatched message joins the held ones (A22) — input: one held message with the list open, then another unmatched text; expected: no new list `template` or `session`; the second message is held with agent `null`.
+- [ ] CU-140 stale route choice — input: `route:<message>:alpha` after that message was already assigned; expected: no re-assignment; the owner gets `RoutingListExpired` ("Essa lista já foi usada." / "That list was already used.") and nothing is stored for the tap.
+- [ ] CU-141 a second unmatched message joins the held ones (A22) — input: one held message with the list open, then another unmatched text; expected: no new list and no `template`; the second message is held with agent `null`; the owner gets one reminder text.
 - [ ] CU-142 routing list is the ten most recent agents — input: twelve agents with distinct `lastSeenAt`; expected: the list has ten options, most recent first, ids `route:<first held id>:<agent>`.
 - [ ] CU-143 no agents — input: owner text, zero agents; expected: no list; one text message to the owner with `NoAgents` copy in the connection's locale; the message held with agent `null`.
 - [ ] CU-144 notice quick reply only opens and flushes (decision) — input: a closed window with a queued message for `alpha`, then a choice tap with optionId `NOTICE_QUICK_REPLY_ID`; expected: window open, queued message `sent`; no message stored for `alpha`; `ReceiveResult.messageId` `null`; `alpha`'s unread count unchanged.
@@ -212,6 +212,17 @@ Runner: `pnpm --filter @zapbip/core test:unit` (Vitest 5.0.5). Ports are the in-
 - [ ] CU-156 `react` to an owner message — input: target `msg_1`, emoji `"👍"`; expected: stored reaction, `delivery` `sent`.
 - [ ] CU-157 `react` removal — input: emoji `null`; expected: stored reaction with `emoji` `null`.
 - [ ] CU-158 `react` unknown target — input: `msg_missing`; expected: `not_found`, message `message_id: message not found`.
+- [ ] CU-160 routing list row — input: the first unmatched text with two agents; expected: `findRoutingList` returns the list message id, the opening time, the locale, `resent` false, `reminded` false; a list that failed to send leaves no row; a route choice clears it.
+- [ ] CU-161 one reminder per batch — input: three unmatched texts with the list open; expected: one text `RoutingListReminder` replying to the list, in the locale of the message that triggered it; none for a reaction; three held messages.
+- [ ] CU-162 a matched message is never held — input: with the list open, `@beta hi`; expected: routed to `beta`, no reminder, the held batch unchanged.
+- [ ] CU-163 unknown agent while held — input: `route:<held>:ghost` with the batch held; expected: the current list is sent again (a second `Choice`), the row points at it, no `RoutingListExpired` text, nothing assigned.
+- [ ] CU-164 `findRoutingListDueAt` — input: no list; then a list opened at `T`; expected: `null`; then `T + ROUTING_LIST_TTL_MS`.
+- [ ] CU-165 expiry with a rule 5 agent — input: a held batch of two, `alpha` writes, the clock advances `ROUTING_LIST_TTL_MS`, `expireRoutingList`; expected: both messages unread for `alpha` in order, its waiter resolved, the row cleared, no new list.
+- [ ] CU-166 first expiry without a rule 5 agent — input: as CU-165 with no agent write; expected: the list is sent once more for the first held message, `resent` true, the opening time reset, the batch still held. Before the TTL nothing happens.
+- [ ] CU-167 second expiry — input: CU-166 then another TTL; expected: the batch is assigned, unread, to the agent seen last; the row cleared; no third list. If an agent wrote after the resend, it takes the batch instead.
+- [ ] CU-168 expiry edge cases — input: a row with nothing held; a rule 5 write older than `WINDOW_MS` at the expiry; expected: the row is cleared with no list; the list is sent again.
+- [ ] CU-169 media types are normalised — input: image `image/SVG+XML`, `image/svg+xml;x=1`; sticker `IMAGE/WEBP; q=1`; video `VIDEO/MP4`; expected: both SVG images rejected as `mime_type: image must not be image/svg+xml`; the sticker and video accepted.
+- [ ] CU-170 `claimUpload` and `releaseUpload` — input: a pending upload claimed twice; released and claimed again; completed; expired; expected: `upload_id: upload already in progress` on the second claim; the third succeeds; `upload already received` and `upload expired` as for `describeUpload`; `completeUpload` works on a claimed upload.
 - [ ] CU-159 every message kind round-trips — input: one message of each of the ten kinds (text, image, video, audio with voice, document, sticker, location, contacts, reaction, choice); expected: the in-memory repository returns an equal object for each.
 
 ## Worker integration
@@ -249,6 +260,9 @@ Runner: `pnpm --filter @zapbip/api test:integration` (Vitest 4.1.12, pool-worker
 - [ ] WI-24 RPC keeps the error code — input: `sendText` with an unknown reply target; expected: `{ok: false, errorCode: "not_found", message: "reply_to: message not found"}`.
 - [ ] WI-25 DO eviction mid-wait — input: `ask` held with timeout 10 s; the instance is dropped while it waits (`runInDurableObject` restart); then the owner's tap is stored through a new instance, and the client retries `waitForReply(questionId)`; expected: the held call returns an error rather than an answer; the retry returns `answered` with the tapped option. (Review finding 14.)
 - [ ] WI-123 a throwing due-time provider leaves the alarm armed — input: two registered `DueTimeProvider`s, the first throws in `runDue`; `runDurableObjectAlarm`; expected: the second provider ran, `ctx.storage.getAlarm()` is not null and equals the earliest `nextDueAt()` of the providers that still have work. (Owner: S3.5.)
+- [ ] WI-124 the open routing list is read from the `owner_window` row — input: `saveRoutingList`, then `saveWindow`, then `findRoutingList`; expected: the list survives the window write; after `clearRoutingList` the result is `null`. `EXPLAIN QUERY PLAN` of the lookup, run by hand, is a primary-key search of `owner_window`, not a scan of `inbox_messages`.
+- [ ] WI-125 the alarm runs the routing list expiry — input: a list opened at `T`, the clock advanced by `ROUTING_LIST_TTL_MS`, `runDurableObjectAlarm`; expected: the list is on the screen a second time; the alarm armed for the new expiry.
+- [ ] WI-126 an upload is claimed once — input: a pending upload, `claimUpload` twice, `releaseUpload`, `claimUpload`, `markMediaReceived`, `claimUpload`; expected: `true`, `false`, `true`, `false`.
 - [ ] WI-26 logs carry no text — input: a session with owner text `segredo-123` and caption `legenda-456`; expected: no captured log line contains either string, and every line is JSON with an `event` field.
 
 ### MCP auth (`mcp-auth.test.ts`)
@@ -319,6 +333,8 @@ Runner: `pnpm --filter @zapbip/api test:integration` (Vitest 4.1.12, pool-worker
 - [ ] WI-81 type parameters and case — input: declared `image/png`, sent as `IMAGE/PNG; charset=binary`; expected: `201`.
 - [ ] WI-82 unknown secret on the upload path — input: `/c/<unknown>/u/<id>` with a valid signature for the id; expected: `401`, body `UNAUTHORIZED_BODY`.
 - [ ] WI-83 another account's upload through my secret — input: an upload of `acc_2` PUT through `acc_1`'s secret; expected: `404`.
+- [ ] WI-127 `Content-Length` that is not an integer — input: `abc`, `0x0c`, `12abc`, `1.2e1`, `-12`; expected: `400`, no R2 object.
+- [ ] WI-128 two concurrent PUTs — input: two PUTs with different bodies of the declared size, sent together; expected: one `201` and one `409`; the R2 object holds the winner's bytes.
 - [ ] WI-84 signature made with the media key — input: a PUT signed with `MEDIA_LINK_SIGNING_KEY`; expected: `403` (the keys are not interchangeable).
 
 ### Signed media links (`media-route.test.ts`)
@@ -397,7 +413,7 @@ Runner: `pnpm --filter @zapbip/api test:e2e`, default in the `e2e` gate. `global
 - [ ] E2E-17 quoted reply routes to its agent — input: simulator text with `reply_to` set to a `beta` message; expected: `beta`'s `check_inbox` returns it; `alpha` sees nothing.
 - [ ] E2E-18 routing to the open question's agent — input: `alpha` with an open `ask`, owner text `"sim"` with no mention; expected: `alpha`'s `ask` answers `sim`; `beta` sees nothing.
 - [ ] E2E-19 routing list and assignment — input: no open questions, owner text `"oi"`; expected: the screen shows the list with `alpha` and `beta` (ids `route:<id>:alpha`, `route:<id>:beta`); the simulator taps `beta`; `beta`'s `wait_for_reply` returns `"oi"`.
-- [ ] E2E-20 second unmatched message joins the list — input: after E2E-19's list is open and unanswered, owner text `"segunda"`; expected: no second list on the screen; after the tap on `beta`, both `oi` and `segunda` reach `beta`.
+- [ ] E2E-20 second unmatched message joins the list — input: after E2E-19's list is open and unanswered, owner text `"segunda"`; expected: no second list on the screen, one reminder text; after the tap on `beta`, both `oi` and `segunda` reach `beta`.
 - [ ] E2E-21 closed window and flush — input: the simulator advances the clock by `WINDOW_MS`; `alpha` sends `"a"` and `"b"`; the owner taps the notice's quick reply; expected: one notice on the screen; `"a"` and `"b"` sent in that order after the tap; no message reached `alpha`'s inbox from the tap.
 - [ ] E2E-22 unknown secret — input: a digest that was never seeded; expected: the transport reports `401`; no tools listed.
 - [ ] E2E-23 Bearer header — input: `/mcp` with the Bearer; expected: the same tools as E2E-1.
@@ -474,7 +490,7 @@ What is not tested and why.
 - Client abort propagation: not observable locally (spike, ADR 0009). The tests assume an abort is invisible and cover recovery through `question_id`.
 - Real 24-hour window: closed-window paths use the development clock offset (A18), not a real day.
 - Claude Code session (CC-1 to CC-6): opt-in, not run in CI, and run only after the owner's go-ahead, because it calls the model.
-- `database_id` in `wrangler.jsonc` is a local identifier; deploy-readiness replaces it with the id of the created D1 database.
+- The top-level `database_id` in `wrangler.jsonc` is the placeholder `REPLACE_WITH_PRODUCTION_D1_DATABASE_ID` (asserted by `wrangler-config.test.ts`); deploy preflight must replace it with the id of the created D1 database. The development environment keeps the local identifier.
 - PB-1 may be `not run` if `wrangler deploy --dry-run` needs a Cloudflare login.
 - Concurrency beyond a handful of waiters per account: covered by CU-88 and WI-23, not by load.
 - The Mintlify site is not published (ADR 0010). DOC-3 and DOC-4 check the local `mint dev` only.
