@@ -1,12 +1,13 @@
 import { createHash } from 'node:crypto';
-import { ChannelError, type MediaStore } from '@zapbip/core';
+import type { MediaStore } from '@zapbip/core';
 import { ChannelErrorKind, MessageKind } from '@zapbip/types';
-import { beforeAll, describe, expect, it } from 'vitest';
-import type { GraphClient } from '../../src/adapters/whatsapp/graph-client';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { createGraphClient, type GraphClient } from '../../src/adapters/whatsapp/graph-client';
 import type { MediaDownloadRequest } from '../../src/adapters/whatsapp/inbound-parser';
 import { downloadInboundMedia, RetriableMediaError } from '../../src/adapters/whatsapp/media-download';
-import { MEDIA_DOWNLOAD_ATTEMPTS, MEDIA_MAX_BYTES_INBOUND } from '../../src/adapters/whatsapp/whatsapp-constants';
+import { GRAPH_API_VERSION, MEDIA_DOWNLOAD_ATTEMPTS, MEDIA_MAX_BYTES_INBOUND } from '../../src/adapters/whatsapp/whatsapp-constants';
 import { WhatsAppErrorCode } from '../../src/adapters/whatsapp/whatsapp-enums';
+import { FakeGraph, startFakeGraph } from '../support/fake-graph';
 
 const ACCOUNT_ID = 'acc_a';
 const MEDIA_ID = 'med_abc';
@@ -16,6 +17,11 @@ const STATUS_NOT_FOUND = 404;
 const STATUS_FOUND = 302;
 const STATUS_SERVER_ERROR = 500;
 const OVER_LIMIT_BYTES = MEDIA_MAX_BYTES_INBOUND + 1;
+const CHANNEL_MEDIA_ID = '900000000000001';
+const FAKE_GRAPH_PORT_ANY = 0;
+const STATUS_BAD_REQUEST = 400;
+const STATUS_UNAUTHORIZED = 401;
+const ACCESS_TOKEN = 'test-access-token';
 
 class TestDigestStream extends WritableStream<Uint8Array> {
   readonly digest: Promise<ArrayBuffer>;
@@ -196,18 +202,6 @@ describe('downloadInboundMedia', () => {
     await expect(run.result).rejects.toBeInstanceOf(RetriableMediaError);
   });
 
-  it('throws a retriable error when the metadata request times out', async () => {
-    const timeout = new ChannelError({ kind: ChannelErrorKind.Timeout, message: 'timeout', errorCode: null });
-    const run = download({ metadata: [timeout], downloads: [] });
-    await expect(run.result).rejects.toBeInstanceOf(RetriableMediaError);
-  });
-
-  it('rethrows any other metadata error', async () => {
-    const auth = new ChannelError({ kind: ChannelErrorKind.Auth, message: 'auth', errorCode: WhatsAppErrorCode.AuthOAuth });
-    const run = download({ metadata: [auth], downloads: [] });
-    await expect(run.result).rejects.toBe(auth);
-  });
-
   it('AU-66 treats a redirect as unavailable and requests nothing else', async () => {
     const redirect = new Response(null, { status: STATUS_FOUND, headers: { location: 'https://evil.example.com/x' } });
     const run = download({ metadata: [metadataOf({})], downloads: [redirect] });
@@ -256,16 +250,6 @@ describe('downloadInboundMedia', () => {
     expect(run.objects.size).toBe(0);
   });
 
-  it('AU-72 treats Meta error 131052 on the metadata as unavailable', async () => {
-    const tooLarge = new ChannelError({
-      kind: ChannelErrorKind.Unknown,
-      message: 'too large',
-      errorCode: WhatsAppErrorCode.InboundMediaTooLarge,
-    });
-    const run = download({ metadata: [tooLarge], downloads: [] });
-    expect(await run.result).toEqual({ stored: false });
-  });
-
   it('propagates a store failure that is not a length violation', async () => {
     const graphDouble = fakeGraph({ metadata: [metadataOf({})], downloads: [bodyResponse()] });
     const failingStore: MediaStore = {
@@ -284,5 +268,73 @@ describe('downloadInboundMedia', () => {
       attempts: MEDIA_DOWNLOAD_ATTEMPTS,
     });
     await expect(result).rejects.toThrow('r2 down');
+  });
+});
+
+describe('downloadInboundMedia through the real Graph client', () => {
+  let stopFakeGraph: () => Promise<void>;
+  let fakeGraph: FakeGraph;
+  let baseUrl: string;
+
+  beforeAll(async () => {
+    const started = await startFakeGraph({ port: FAKE_GRAPH_PORT_ANY });
+    stopFakeGraph = started.stop;
+    baseUrl = `http://127.0.0.1:${started.port}`;
+    fakeGraph = new FakeGraph({ baseUrl });
+  });
+
+  afterAll(() => stopFakeGraph());
+
+  function downloadThroughRealClient() {
+    const storeDouble = memoryStore();
+    const result = downloadInboundMedia({
+      graph: createGraphClient({ baseUrl, accessToken: ACCESS_TOKEN, developmentMediaOrigin: null, fetcher: fetch }),
+      mediaStore: storeDouble.mediaStore,
+      accountId: ACCOUNT_ID,
+      request: requestOf(),
+      maxBytes: MEDIA_MAX_BYTES_INBOUND,
+      developmentMediaOrigin: null,
+      attempts: MEDIA_DOWNLOAD_ATTEMPTS,
+    });
+    return { result, ...storeDouble };
+  }
+
+  function metadataFailure(input: { status: number; code: number }) {
+    return fakeGraph.respondWith({
+      method: 'GET',
+      path: `/${GRAPH_API_VERSION}/${CHANNEL_MEDIA_ID}`,
+      status: input.status,
+      body: { error: { code: input.code, message: 'scripted failure' } },
+    });
+  }
+
+  it('AU-72 treats Meta error 131052 on the metadata as unavailable', async () => {
+    await metadataFailure({ status: STATUS_BAD_REQUEST, code: WhatsAppErrorCode.InboundMediaTooLarge });
+    const run = downloadThroughRealClient();
+    expect(await run.result).toEqual({ stored: false });
+    expect(run.objects.size).toBe(0);
+  });
+
+  it('throws a retriable error when the metadata request answers with a server error', async () => {
+    await metadataFailure({ status: STATUS_SERVER_ERROR, code: 1 });
+    await expect(downloadThroughRealClient().result).rejects.toBeInstanceOf(RetriableMediaError);
+  });
+
+  it('throws a retriable error when the metadata request gets no response', async () => {
+    const run = downloadInboundMedia({
+      graph: createGraphClient({ baseUrl: 'http://127.0.0.1:1', accessToken: ACCESS_TOKEN, developmentMediaOrigin: null, fetcher: fetch }),
+      mediaStore: memoryStore().mediaStore,
+      accountId: ACCOUNT_ID,
+      request: requestOf(),
+      maxBytes: MEDIA_MAX_BYTES_INBOUND,
+      developmentMediaOrigin: null,
+      attempts: MEDIA_DOWNLOAD_ATTEMPTS,
+    });
+    await expect(run).rejects.toBeInstanceOf(RetriableMediaError);
+  });
+
+  it('rethrows an authentication failure as a channel error', async () => {
+    await metadataFailure({ status: STATUS_UNAUTHORIZED, code: WhatsAppErrorCode.AuthOAuth });
+    await expect(downloadThroughRealClient().result).rejects.toMatchObject({ code: ChannelErrorKind.Auth });
   });
 });
