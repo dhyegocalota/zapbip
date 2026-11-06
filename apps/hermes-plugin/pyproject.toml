@@ -1,11 +1,30 @@
+[build-system]
+requires = ["setuptools==80.9.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "zapbip-platform"
 version = "0.1.0"
-requires-python = ">=3.11,<3.14"
+description = "The zapbip platform adapter for Hermes"
+requires-python = ">=3.11,<3.15"
+dependencies = ["httpx==0.28.1", "websockets==15.0.1"]
+
+[project.optional-dependencies]
+dev = ["pytest==9.2.0", "mypy==2.4.1", "pytest-timeout==2.4.0"]
+
+[project.entry-points."hermes_agent.plugins"]
+zapbip-platform = "zapbip_platform"
+
+[tool.setuptools]
+packages = ["zapbip_platform"]
+
+[tool.setuptools.package-data]
+zapbip_platform = ["plugin.yaml"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests/unit"]
+timeout = 10
 
 [tool.mypy]
 strict = true

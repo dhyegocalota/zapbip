@@ -43,9 +43,11 @@ gh_install() {
   install_with gh "https://github.com/cli/cli#installation"
 }
 
+readonly PYTHON_REQUIREMENTS_INSTALL="python3 -m pip install --require-hashes -r apps/hermes-plugin/requirements-dev.txt"
+
 python_install() {
-  [[ "$manager" == brew ]] && { echo "brew install python@3.13"; return; }
-  echo "https://www.python.org/downloads/ (3.11 to 3.13)"
+  [[ "$manager" == brew ]] && { echo "brew install python@3.13 && $PYTHON_REQUIREMENTS_INSTALL"; return; }
+  echo "https://www.python.org/downloads/ (3.11 to 3.13), then $PYTHON_REQUIREMENTS_INSTALL"
 }
 
 fix_for() {
