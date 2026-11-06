@@ -51,6 +51,7 @@ vi.mock('../../src/log', () => ({
   },
 }));
 
+const CONNECTION_LINK = 'https://zapbip.example/c/abc123/mcp';
 const PINNED_SESSION_ID = '0b1f6c2e-5d7a-4c3b-9e8f-1a2b3c4d5e6f';
 const NEWEST_SESSION_ID = '7c9e6679-7425-40de-944b-e07fc1f90ae7';
 const FAKE_TIMER_NAMES = ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'] as const;
@@ -99,6 +100,7 @@ describe('runConnection', () => {
   ): Promise<number> {
     const { pinnedSessionId = PINNED_SESSION_ID, client = ConnectorClient.ClaudeCode, socketLink = server.socketLink, timers } = input;
     running = runConnection({
+      connectionLink: CONNECTION_LINK,
       socketLink,
       client,
       workingDirectory: fakeClients.workingDirectory,

@@ -8,6 +8,7 @@ import {
   ConnectorWakeOutcome,
 } from '@zapbip/types';
 import { buildOwnerPrompt } from './owner-prompt';
+import { WAKE_ISOLATION_PREPARERS } from './wake-isolation';
 import { buildCodexNewSessionArguments, CLIENT_BINARY_NAME, isActiveWriterRefusal, RESUME_ARGUMENT_BUILDERS } from './wake-commands';
 
 type ChildResult = { exitCode: number | null; stderrText: string };
@@ -61,24 +62,52 @@ function outcomeOf(input: { result: ChildResult; successOutcome: ConnectorWakeOu
 
 export async function runWake(input: {
   client: ConnectorClient;
+  connectionLink: string;
   sessionSource: ConnectorSessionSource;
   sessionId: string | null;
   message: Message;
   workingDirectory: string;
   signal?: AbortSignal;
 }): Promise<WakeResult> {
-  const { client, sessionId, message, workingDirectory, signal } = input;
+  const { client, connectionLink, sessionId, message, workingDirectory, signal } = input;
   if (sessionId === null) return { outcome: ConnectorWakeOutcome.NoSession, exitCode: null };
   const prompt = buildOwnerPrompt({ message });
+  const { isolationArguments, cleanup } = await WAKE_ISOLATION_PREPARERS[client]({
+    connectionLink,
+    workingDirectory,
+    codexHome: process.env.CODEX_HOME,
+  });
+  try {
+    return await wakeWithin({ client, sessionId, prompt, isolationArguments, workingDirectory, signal });
+  } finally {
+    await cleanup();
+  }
+}
+
+async function wakeWithin(input: {
+  client: ConnectorClient;
+  sessionId: string;
+  prompt: string;
+  isolationArguments: string[];
+  workingDirectory: string;
+  signal?: AbortSignal;
+}): Promise<WakeResult> {
+  const { client, sessionId, prompt, isolationArguments, workingDirectory, signal } = input;
   const resumed = await runChild({
     client,
-    clientArguments: RESUME_ARGUMENT_BUILDERS[client]({ sessionId }),
+    clientArguments: RESUME_ARGUMENT_BUILDERS[client]({ sessionId, isolationArguments }),
     prompt,
     workingDirectory,
     signal,
   });
   const isActiveWriterOnCodex = client === ConnectorClient.Codex && isActiveWriterRefusal({ stderrText: resumed.stderrText });
   if (!isActiveWriterOnCodex) return outcomeOf({ result: resumed, successOutcome: ConnectorWakeOutcome.Answered });
-  const fallback = await runChild({ client, clientArguments: buildCodexNewSessionArguments(), prompt, workingDirectory, signal });
+  const fallback = await runChild({
+    client,
+    clientArguments: buildCodexNewSessionArguments({ isolationArguments }),
+    prompt,
+    workingDirectory,
+    signal,
+  });
   return outcomeOf({ result: fallback, successOutcome: ConnectorWakeOutcome.FallbackNewThread });
 }

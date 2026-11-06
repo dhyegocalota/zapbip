@@ -272,6 +272,7 @@ export async function runSocketSession(input: {
 }
 
 export async function runConnection(input: {
+  connectionLink: string;
   socketLink: string;
   client: ConnectorClient;
   workingDirectory: string;
@@ -280,7 +281,7 @@ export async function runConnection(input: {
   timers?: ConnectorTimers;
   random?: () => number;
 }): Promise<number> {
-  const { socketLink, client, workingDirectory, pinnedSessionId, signal, timers, random } = input;
+  const { connectionLink, socketLink, client, workingDirectory, pinnedSessionId, signal, timers, random } = input;
   const wakeAbortController = new AbortController();
   signal.addEventListener('abort', () => wakeAbortController.abort(), { once: true });
 
@@ -305,7 +306,15 @@ export async function runConnection(input: {
           event: ConnectorLogEvent.WakeStarted,
           fields: { messageId: message.messageId, kind: message.kind, sessionKind: sessionSource },
         });
-        const result = await runWake({ client, sessionSource, sessionId, message, workingDirectory, signal: wakeAbortController.signal });
+        const result = await runWake({
+          client,
+          connectionLink,
+          sessionSource,
+          sessionId,
+          message,
+          workingDirectory,
+          signal: wakeAbortController.signal,
+        });
         logConnectorEvent({
           event: ConnectorLogEvent.WakeFinished,
           fields: { messageId: message.messageId, outcome: result.outcome, exitCode: result.exitCode, elapsedMs: Date.now() - startedAt },

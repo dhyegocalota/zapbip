@@ -28,6 +28,7 @@ export type FakeClientRun = {
   cwd: string;
   stdin: string;
   hadConnectionUrl: boolean;
+  mcpConfig: { text: string; mode: number } | null;
   startedAt: number;
   endedAt: number | null;
   exitCode: number | null;
@@ -41,6 +42,7 @@ type RecordLine = {
   cwd: string;
   stdin?: string;
   hadConnectionUrl?: boolean;
+  mcpConfig?: { text: string; mode: number } | null;
   at: number;
   event: 'started' | 'ended';
   exitCode?: number | null;
@@ -91,6 +93,7 @@ function mergeRuns(input: { lines: RecordLine[] }): FakeClientRun[] {
       cwd: line.cwd,
       stdin: line.stdin === undefined ? '' : line.stdin,
       hadConnectionUrl: line.hadConnectionUrl === true,
+      mcpConfig: line.mcpConfig === undefined ? null : line.mcpConfig,
       startedAt: line.at,
       endedAt: ended === undefined ? null : ended.at,
       exitCode: ended === undefined || ended.exitCode === undefined ? null : ended.exitCode,

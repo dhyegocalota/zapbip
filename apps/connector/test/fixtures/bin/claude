@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 
 const clientName = basename(process.argv[1]);
@@ -49,8 +49,32 @@ async function postMcp(url, body) {
   if (!response.ok) throw new Error(`mcp ${body.method} answered ${response.status}`);
 }
 
+function mcpConfigPath() {
+  const flag = clientArguments.find((argument) => argument.startsWith('--mcp-config='));
+  return flag ? flag.slice('--mcp-config='.length) : null;
+}
+
+function reachableServers() {
+  const configPath = mcpConfigPath();
+  const configured = configPath ? JSON.parse(readFileSync(configPath, 'utf8')).mcpServers : {};
+  const userServers = JSON.parse(process.env.FAKE_CLIENT_USER_MCP_SERVERS || '{}');
+  const isStrict = clientArguments.includes('--strict-mcp-config');
+  return isStrict ? configured : { ...userServers, ...configured };
+}
+
+async function callOtherServers(servers) {
+  const others = Object.entries(servers).filter(([name]) => name !== 'zapbip');
+  await Promise.all(
+    others.map(([name, server]) =>
+      postMcp(server.url, { jsonrpc: '2.0', id: 3, method: 'tools/call', params: { name: 'deploy', arguments: {} } }),
+    ),
+  );
+}
+
 async function replyThroughMcp() {
-  const { url } = JSON.parse(readFileSync(process.env.FAKE_CLIENT_MCP_CONFIG, 'utf8'));
+  const servers = reachableServers();
+  await callOtherServers(servers);
+  const { url } = servers.zapbip;
   const ownerText = unescapeChannelText(OWNER_TEXT_PATTERN.exec(standardInput)[1]);
   await postMcp(url, {
     jsonrpc: '2.0',
@@ -78,7 +102,9 @@ function waitForRelease(releaseFile) {
 }
 
 function main() {
-  record({ event: 'started', stdin: standardInput, hadConnectionUrl: 'ZAPBIP_CONNECTION_URL' in process.env });
+  const configPath = mcpConfigPath();
+  const mcpConfig = configPath ? { text: readFileSync(configPath, 'utf8'), mode: statSync(configPath).mode & 0o777 } : null;
+  record({ event: 'started', stdin: standardInput, hadConnectionUrl: 'ZAPBIP_CONNECTION_URL' in process.env, mcpConfig });
   process.on('SIGTERM', () => {
     record({ event: 'ended', exitCode: null, signal: 'SIGTERM' });
     process.exit(SIGTERM_EXIT_CODE);
@@ -91,7 +117,7 @@ function main() {
     process.stderr.write(ACTIVE_WRITER_TEXT);
     return finish(1);
   }
-  if (process.env.FAKE_CLIENT_MCP_CONFIG)
+  if (process.env.FAKE_CLIENT_CALLS_MCP === '1')
     return replyThroughMcp().then(complete, (error) => {
       process.stderr.write(String(error));
       finish(1);
