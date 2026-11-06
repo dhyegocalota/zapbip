@@ -30,10 +30,10 @@ description: Connect Claude Code to your WhatsApp.
     If an older `zapbip` entry exists, Claude Code removes it with `claude mcp remove --scope user zapbip`. Then it runs `claude mcp add --transport http --scope user zapbip <connectionLink>`.
   </Step>
   <Step title="Save the zapbip skill">
-    After your yes, it writes `~/.claude/skills/zapbip/SKILL.md`, so every session knows how to use WhatsApp.
+    After your yes, it writes `~/.claude/skills/zapbip/SKILL.md`, so every session knows how to use WhatsApp, including when to call `check_inbox`.
   </Step>
   <Step title="Start the connector">
-    It runs `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@<version> connect --client claude-code` in the background. The connector wakes your session when you write while Claude Code is idle or closed. `<version>` is the exact version your AI's instructions name.
+    It runs `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@<version> connect --client claude-code` in the background. The connector wakes your session when you write while Claude Code is idle, and resumes a closed one with `claude -p --resume`. `<version>` is the exact version your AI's instructions name.
   </Step>
   <Step title="Start listening">
     It runs `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@<version> listen` in the background and watches it with Monitor, re-arming it on each timeout notice.

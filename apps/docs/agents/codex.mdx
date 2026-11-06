@@ -30,7 +30,7 @@ description: Connect Codex to your WhatsApp.
     After your yes, it replaces the `[mcp_servers.zapbip]` table in `~/.codex/config.toml` with `url = "<connectionLink>"`, `tool_timeout_sec = 900` and `default_tools_approval_mode = "approve"`. Approval mode lets zapbip tools run without asking you each time, and Codex tells you so.
   </Step>
   <Step title="Start the connector">
-    It runs `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@<version> connect --client codex` in the background. `<version>` is the exact version your AI's instructions name.
+    It runs `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@<version> connect --client codex` in the background. It keeps listening and resumes your session with `codex exec resume`. `<version>` is the exact version your AI's instructions name.
   </Step>
   <Step title="Tell zapbip it is listening">
     It calls `set_wake({mode: "local"})`.

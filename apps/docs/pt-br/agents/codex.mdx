@@ -30,7 +30,7 @@ description: Conecte Codex ao seu WhatsApp.
     Depois do seu sim, ele troca a tabela `[mcp_servers.zapbip]` em `~/.codex/config.toml` por `url = "<connectionLink>"`, `tool_timeout_sec = 900` e `default_tools_approval_mode = "approve"`. O modo de aprovação deixa as ferramentas do zapbip rodarem sem pedir a cada vez, e o Codex avisa você disso.
   </Step>
   <Step title="Iniciar o conector">
-    Ele roda `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@<version> connect --client codex` em segundo plano. `<version>` é a versão exata que as instruções da sua IA indicam.
+    Ele roda `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@<version> connect --client codex` em segundo plano. Ele continua escutando e retoma a sua sessão com `codex exec resume`. `<version>` é a versão exata que as instruções da sua IA indicam.
   </Step>
   <Step title="Avisar o zapbip que está escutando">
     Ele chama `set_wake({mode: "local"})`.
