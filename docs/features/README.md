@@ -26,3 +26,4 @@ One row per folder, in the order the features ship; a row that turns `Shipped <d
 |---------|----------|--------|
 | [`agent-inbox-core`](agent-inbox-core/) | The core, the durable inbox per account, the MCP contract, the 24-hour window, routing and media, against a fake WhatsApp | Building |
 | [`local-connector`](local-connector/) | `npx zapbip connect`: a hibernatable WebSocket per connection and a local Claude Code or Codex session resumed for each owner message | Building |
+| [`hermes-openclaw`](hermes-openclaw/) | Channel plugins for Hermes and OpenClaw that keep the agent listening over the connector socket, with a scheduled fallback | Building |
