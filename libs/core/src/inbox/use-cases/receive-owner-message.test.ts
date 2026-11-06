@@ -343,6 +343,37 @@ describe('receiveOwnerMessage window and queue', () => {
     expect(environment.sender.templates).toHaveLength(1);
   });
 
+  test('a session send during the flush waits behind the queue', async () => {
+    const environment = await createEnvironment();
+    await closeWindow({ environment });
+    await send({ environment, text: 'one' });
+    await send({ environment, text: 'two' });
+    environment.sender.holdSessions();
+    const flushing = receiveText({ environment, text: '@alpha ok' });
+    await environment.clock.advance({ ms: 0 });
+    const sending = send({ environment, text: 'three' });
+    await environment.clock.advance({ ms: 0 });
+    environment.sender.releaseSessions();
+    await Promise.all([flushing, sending]);
+    expect(sessionTexts({ environment }).slice(0, 3)).toEqual(['one', 'two', 'three']);
+  });
+
+  test('a second owner message during the flush sends every queued message once and in order', async () => {
+    const environment = await createEnvironment();
+    await closeWindow({ environment });
+    await send({ environment, text: 'one' });
+    await send({ environment, text: 'two' });
+    environment.sender.holdSessions();
+    const first = receiveText({ environment, text: '@alpha a' });
+    await environment.clock.advance({ ms: 0 });
+    const second = receiveText({ environment, text: '@alpha b' });
+    await environment.clock.advance({ ms: 0 });
+    environment.sender.releaseSessions();
+    await Promise.all([first, second]);
+    expect(sessionTexts({ environment }).slice(0, 2)).toEqual(['one', 'two']);
+    expect(sessionTexts({ environment }).filter((text) => text === 'one' || text === 'two')).toHaveLength(2);
+  });
+
   test('CU-134 a queued message past its retention expires instead of being sent', async () => {
     const environment = await createEnvironment();
     await closeWindow({ environment });

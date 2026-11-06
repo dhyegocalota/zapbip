@@ -31,6 +31,8 @@ export type RecordingSender = MessageSender & {
   failTemplateCalls(input: { callNumbers: number[] }): void;
   holdTemplates(): void;
   releaseTemplates(): void;
+  holdSessions(): void;
+  releaseSessions(): void;
 };
 
 export type RecordingWaker = AgentWaker & {
@@ -167,6 +169,8 @@ function createRecordingSender(): RecordingSender {
   let failingTemplateCalls: number[] = [];
   let templateGate: Promise<void> | null = null;
   let openTemplateGate: () => void = () => undefined;
+  let sessionGate: Promise<void> | null = null;
+  let openSessionGate: () => void = () => undefined;
 
   return {
     sessions,
@@ -183,8 +187,15 @@ function createRecordingSender(): RecordingSender {
       });
     },
     releaseTemplates: () => openTemplateGate(),
+    holdSessions: () => {
+      sessionGate = new Promise((resolve) => {
+        openSessionGate = resolve;
+      });
+    },
+    releaseSessions: () => openSessionGate(),
     session: async ({ message }) => {
       sessionCalls += 1;
+      await sessionGate;
       if (failingSessionCalls.includes(sessionCalls)) throw new Error('session failed');
       sessions.push(message);
       return { channelMessageId: `wamid.session.${sessionCalls}` };
