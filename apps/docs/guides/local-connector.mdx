@@ -75,6 +75,14 @@ npx zapbip channel
 
 The channel cannot ask you for the link, so it only reads it from `ZAPBIP_CONNECTION_URL`. It does not take arguments.
 
+Declare it in the `.mcp.json` of the folder where you work, under the key `zapbip`, with the command `npx` and the arguments `zapbip channel`. Then start Claude Code with:
+
+```bash
+claude --dangerously-load-development-channels server:zapbip
+```
+
+`zapbip` is the key you gave the server in `.mcp.json`. The startup line shows `Channels (experimental)`. Claude Code asks you to accept the development channel and the project MCP server; accept both.
+
 The listener is the backup. It prints one line for every message you write, and Claude Code watches those lines with its Monitor tool. Each line wakes the open session, and nothing is spent while you are silent:
 
 ```bash

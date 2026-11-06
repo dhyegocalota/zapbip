@@ -240,4 +240,4 @@ Hypotheses:
 5. `listen` stays alive for any number of short sessions (the OpenClaw `stream` job). Break it by: many drops in a row.
 6. `channel` exits when Claude Code closes its end. Break it by: closing stdin while the socket is mid-reconnect.
 
-Gaps: LN6 (launch flag and server-name rule for a Claude Code channel) is not confirmed against the channel reference; the docs name no flag. The channel was exercised only by an SDK client, never by Claude Code. The `done` for a message arrives only if the socket is open at that moment; otherwise the next redelivery prints nothing and acknowledges.
+Gaps: LN6 is resolved from the POC: `claude --dangerously-load-development-channels server:zapbip`, where `zapbip` is the server's key in `.mcp.json` (documented in the connector guide, both languages). The channel was exercised only by an SDK client, never by Claude Code. The `done` for a message arrives only if the socket is open at that moment; otherwise the next redelivery prints nothing and acknowledges.

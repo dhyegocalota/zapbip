@@ -75,6 +75,14 @@ npx zapbip channel
 
 O canal não consegue te perguntar o link, então só o lê de `ZAPBIP_CONNECTION_URL`. Ele não aceita argumentos.
 
+Declare-o no `.mcp.json` da pasta em que você trabalha, com a chave `zapbip`, o comando `npx` e os argumentos `zapbip channel`. Depois inicie o Claude Code com:
+
+```bash
+claude --dangerously-load-development-channels server:zapbip
+```
+
+`zapbip` é a chave que você deu ao servidor no `.mcp.json`. A linha de inicialização mostra `Channels (experimental)`. O Claude Code pede para você aceitar o canal de desenvolvimento e o servidor MCP do projeto; aceite os dois.
+
 O ouvinte é o plano B. Ele imprime uma linha para cada mensagem que você escreve, e o Claude Code vigia essas linhas com a ferramenta Monitor. Cada linha acorda a sessão aberta, e nada é gasto enquanto você está em silêncio:
 
 ```bash
