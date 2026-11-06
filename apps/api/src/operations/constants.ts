@@ -1,5 +1,8 @@
 import { SECOND_MS } from '@zapbip/types';
 
+export const SCHEDULED_CRON = '*/30 * * * *';
+export const BUDGET_CHECK_MINUTE = 0;
+export const MEDIA_RETENTION_HOUR = 3;
 export const BUDGET_CHECK_CRON = '0 * * * *';
 export const MEDIA_RETENTION_CRON = '5 0 * * *';
 
