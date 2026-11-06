@@ -22,7 +22,9 @@ const ROOT_ENTRIES = [
   'CLAUDE.md',
   'GEMINI.md',
   'README.md',
+  'apps',
   'docs',
+  'libs',
   'package.json',
   'pnpm-lock.yaml',
   'pnpm-workspace.yaml',
@@ -30,6 +32,7 @@ const ROOT_ENTRIES = [
   'tools',
   'tsconfig.base.json',
 ];
+const FEATURE_PACKAGES = ['libs/types', 'libs/core', 'apps/api', 'apps/docs'];
 const NESTED_PATH_PATTERN = /\/.*$/;
 const TEMPORARY_SEGMENT_PATTERN =
   /(^|\/)(spikes?|poc|prototypes?|experiments?|scratch|scratchpad|playground|sandbox|tmp|temp|wip|backups?)(\/|$)/i;
@@ -97,6 +100,10 @@ describe('delivery documents', () => {
 
   test('every workspace package has a README', () => {
     expect(workspacePackages().filter((path) => !existsSync(repositoryPath(posix.join(path, README_FILE))))).toEqual([]);
+  });
+
+  test.each(FEATURE_PACKAGES)('the %s package has a README', (path) => {
+    expect(existsSync(repositoryPath(posix.join(path, README_FILE)))).toBe(true);
   });
 
   test('the root holds only the entries the layout names', () => {

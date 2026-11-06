@@ -1,0 +1,26 @@
+---
+title: 'send_location'
+description: 'Send a location pin to the owner.'
+---
+
+Send a location pin to the owner.
+
+## Input
+
+| Field       | Type             | Notes                       |
+| ----------- | ---------------- | --------------------------- |
+| `latitude`  | number           |                             |
+| `longitude` | number           |                             |
+| `name`      | string, optional |                             |
+| `address`   | string, optional |                             |
+| `reply_to`  | string, optional | Id of the message to quote. |
+
+## Output
+
+`{ "message_id": string, "delivery": "sent" | "queued" }`. `queued` means the [24-hour window](/concepts/24-hour-window) is closed.
+
+## Message kinds
+
+import MessageKinds from '/snippets/message-kinds.mdx';
+
+<MessageKinds />

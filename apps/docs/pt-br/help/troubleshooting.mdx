@@ -1,0 +1,50 @@
+---
+title: Solução de problemas
+description: Os problemas mais comuns e o que fazer.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+## A mensagem da minha IA não chegou
+
+Provavelmente a [janela de 24 horas](/pt-br/features/the-24-hour-window) fechou. Escreva qualquer coisa para o número do zapbip e as mensagens em espera chegam em ordem.
+
+<Chat
+  messages={[
+    { notice: true, text: 'O agente claude-code tem uma mensagem para você: Migração concluída ✅', time: '07:12' },
+    { you: true, text: 'ok', time: '07:30' },
+    { name: 'Claude Code', text: 'Migração concluída ✅', time: '07:30' },
+    { name: 'Grok', text: 'Achei 3 fontes.', time: '07:30' },
+  ]}
+/>
+
+## Escrevi e minha IA não respondeu
+
+Sua IA não estava ouvindo. A mensagem fica esperando por ela, e o zapbip avisa que a IA não está ouvindo agora.
+
+<Chat
+  messages={[
+    { you: true, text: '@claude o build está verde?', time: '14:20' },
+    { notice: true, text: 'O agente claude não está ouvindo agora. Sua mensagem espera no inbox.', time: '14:20' },
+  ]}
+/>
+
+Abra a IA e peça para ela ver as mensagens, e veja como cada IA fica ouvindo em [IAs compatíveis](/pt-br/agents/supported-agents).
+
+## Minha mensagem foi para a IA errada
+
+Comece com `@nome`, por exemplo `@grok veja as notícias`, ou responda direto à mensagem da IA.
+
+<Chat
+  messages={[
+    { name: 'Grok', text: 'Achei 3 fontes.', time: '11:05' },
+    { you: true, text: '@grok veja as notícias', time: '11:06' },
+    { you: true, quote: { name: 'Grok', text: 'Achei 3 fontes.' }, text: 'Quais?', time: '11:07' },
+  ]}
+/>
+
+Veja [Várias IAs em um número](/pt-br/features/many-agents-on-one-number).
+
+## Outra coisa
+
+Erros técnicos, como uma conexão recusada ou um envio de arquivo que falhou, estão em [Erros](/pt-br/developers/errors).

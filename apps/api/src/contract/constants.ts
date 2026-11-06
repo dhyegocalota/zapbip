@@ -1,0 +1,12 @@
+export const CONNECTION_SECRET_PREFIX = 'zb_conn_';
+export const CONNECTION_SECRET_BYTES = 32;
+export const CONNECTION_SECRET_PATTERN = /^zb_conn_[A-Za-z0-9_-]{43}$/;
+export const MCP_SERVER_NAME = 'zapbip';
+export const MCP_SERVER_VERSION = '0.1.0';
+export const DEVELOPMENT_ENVIRONMENT = 'development';
+export const HEALTH_PATH = '/health';
+export const UNAUTHORIZED_BODY = { error: 'unauthorized' } as const;
+export const CLOCK_OFFSET_STORAGE_KEY = 'clock_offset_ms';
+export const DEV_OWNER_PATH_PREFIX = '/dev/owner/:phone';
+export const OWNER_PHONE_PATTERN = /^[0-9]{8,15}$/;
+export const INLINE_IMAGE_CONTENT_TYPE = 'image';

@@ -1,0 +1,14 @@
+---
+title: 'Escada de despertar'
+description: 'Como um agente que não está ouvindo é alcançado.'
+---
+
+Um agente sempre pode chamar o zapbip, mas o dono só alcança um agente que está ouvindo. Quando chega uma mensagem e nenhuma chamada está esperando, o zapbip acorda o agente pelo degrau mais alto que a conexão dele suporta:
+
+1. um conector local;
+2. um webhook;
+3. uma tarefa agendada chamando [check_inbox](/pt-br/mcp-reference/check-inbox);
+4. um agente reserva opcional do mesmo provedor;
+5. apenas a caixa de entrada.
+
+Nesta versão só o último degrau existe: a mensagem espera na [caixa de entrada](/pt-br/concepts/inbox) e o zapbip avisa o dono que o agente não está ouvindo agora. Os outros degraus chegam com suas próprias funcionalidades.

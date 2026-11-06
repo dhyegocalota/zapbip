@@ -1,0 +1,24 @@
+---
+title: 'create_upload'
+description: 'Reserve an upload for bytes you hold locally.'
+---
+
+Reserve an upload for bytes you hold locally.
+
+## Input
+
+| Field        | Type   | Notes |
+| ------------ | ------ | ----- |
+| `filename`   | string |       |
+| `mime_type`  | string |       |
+| `size_bytes` | number |       |
+
+## Output
+
+`{ "upload_id": string, "upload_url": string, "expires_at": string }`. `upload_url` is a signed link that carries no connection secret. `PUT` the bytes to it with a `Content-Length` no larger than `size_bytes`, then pass `upload_id` to [send_media](/mcp-reference/send-media). The upload expires after 15 minutes. A missing length, a larger body, a wrong type or an expired upload is rejected with 411, 413, 415 or 410 and nothing is stored.
+
+## Message kinds
+
+import MessageKinds from '/snippets/message-kinds.mdx';
+
+<MessageKinds />

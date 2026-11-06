@@ -9,11 +9,15 @@ Domain facts live in `.claude/rules/*.md`. Claude Code loads them by the `paths:
 
 A personal WhatsApp channel for AI agents. A developer connects their own agents (Claude Code, Codex and any MCP client) to their own phone through one official WhatsApp Cloud API number shared by every account: one API key, one MCP server, working in five minutes. Agents send messages, ask questions with buttons or lists and wait for the reply; outside the 24-hour customer-service window they reach the owner through an approved utility template. Several agents share one number, and a reply is routed back to the agent it answers. Only the official Cloud API is used; the owner talks only to their own agents, never to third parties.
 
-No product code exists yet. Each part arrives as a feature under `docs/features/`, starting with the `brainstorming` skill.
+The product core lives in `libs/core` (the inbox, routing and delivery rules) and `apps/api` (the Cloudflare Worker, its MCP server and the per-account Durable Object). Each further part arrives as a feature under `docs/features/`, starting with the `brainstorming` skill.
 
 ## Layout
 
 ```
+apps/api                the Cloudflare Worker: MCP server, Durable Object per account, D1 directory, R2 media, fake WhatsApp channel
+apps/docs               the Mintlify documentation site
+libs/core               the inbox rules as plain TypeScript behind ports
+libs/types              shared enums and constants, no logic
 tools/repository-shape  tests about the repository itself: README links, root entries, workflows, feature statuses, indexes, scenarios, agent surfaces
 docs/adr                architecture decision records
 docs/learnings          dated traps, with what inspired them and when they were revisited
@@ -25,13 +29,13 @@ docs/scenarios          agentic walks of the product core, one file per flow, ru
 scripts                 the local gate and its tests
 ```
 
-Applications go under `apps/`, shared libraries under `libs/`; the first feature that adds one adds its line here and its root entry to `delivery-docs.test.ts`.
+Applications go under `apps/`, shared libraries under `libs/`; a feature that adds one adds its line here and, for a new root entry, its entry to `delivery-docs.test.ts`.
 
 Every workspace package has a `README.md` that states purpose only: no commands, configuration, file paths or symbols, because prose is not compiled. Update a README in the same change as the code it describes ([HARNESS → Build](.claude/HARNESS.md#4-build)).
 
 ## Language
 
-Everything in the repo is in English: code, identifiers, comments-free code, docs, ADRs, learnings, commits, PR titles and bodies. Conversation with the owner may be in Portuguese; files never are.
+Everything in the repo is in English: code, identifiers, comments-free code, docs, ADRs, learnings, commits, PR titles and bodies. Conversation with the owner may be in Portuguese; files never are. The one exception is owner-facing product copy: it lives in `*-copy.ts` modules, in `pt_BR` and `en_US`; repo prose and identifiers stay English.
 
 ## Code conventions
 
@@ -40,7 +44,7 @@ Everything in the repo is in English: code, identifiers, comments-free code, doc
 - A compound condition gets a name (`isServedReply`, `isOnEditingSurface`) before the `if` that uses it.
 - A name says what the variable holds: a promise is a `…Connection` or `…Promise`, never a `client`.
 - One handler per request kind, dispatched from a record keyed by the kind, instead of one function with interleaved `if`s.
-- Recurring mechanics have one shared helper. Search before adding a local copy; a new one goes under `libs/` or the owning feature, and its name joins this line.
+- Recurring mechanics have one shared helper. Search before adding a local copy; a new one goes under `libs/` or the owning feature, and its name joins this line: `accountInboxOf`, `resolveConnection`, `renderCopy`, `mediaStoreOf`.
 - Durations cross boundaries in milliseconds and convert at the edge (a `Retry-After` header, a label).
 - Copy strings never sit inline in JSX; they live in a `*-copy.ts` file or `libs/types`.
 - Never `?? defaultValue` to mask a missing value. Model absence explicitly: throw, return early or make the field required upstream.

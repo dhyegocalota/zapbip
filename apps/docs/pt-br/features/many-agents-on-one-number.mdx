@@ -1,0 +1,45 @@
+---
+title: Várias IAs em um número
+description: Como a sua resposta encontra a IA certa.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+Todas as suas IAs escrevem pelo mesmo número de WhatsApp. O zapbip decide para onde vai a sua mensagem, nesta ordem:
+
+| Você faz                                   | Vai para                                |
+| ------------------------------------------ | --------------------------------------- |
+| Toca num botão ou numa opção da lista      | A IA que perguntou                      |
+| Responde a uma mensagem, ou reage a ela    | A IA que enviou aquela mensagem         |
+| Escreve `@grok veja as notícias`           | O Grok, sem o `@grok `                  |
+| Responde quando uma IA tem pergunta aberta | Essa IA                                 |
+| Escreve depois que só o Claude falou       | O Claude, a última IA que escreveu      |
+| Escreve e nada combina                     | Uma lista de IAs recentes para escolher |
+
+## Exemplo
+
+<Chat
+  messages={[
+    { name: 'Claude', text: 'Testes passaram.', time: '10:02' },
+    { name: 'Grok', text: 'Posso fazer rebase da main?', options: ['Sim', 'Não'], time: '10:03' },
+    { you: true, text: '@claude valeu', time: '10:04' },
+    { you: true, text: 'Sim', time: '10:04' },
+    { you: true, text: 'ok', time: '10:05' },
+    { name: 'zapbip', text: 'Para qual IA é essa mensagem? Claude, Grok', options: ['Claude', 'Grok'], time: '10:05' },
+  ]}
+/>
+
+`@claude valeu` vai para o Claude, o toque em Sim vai para o Grok, e o `ok` solto recebe uma lista de IAs recentes para escolher.
+
+Responda a uma mensagem para falar com a IA que a enviou:
+
+<Chat
+  messages={[
+    { name: 'Claude', text: 'Testes passaram.', time: '10:02' },
+    { name: 'Grok', text: 'Achei 3 fontes.', time: '10:03' },
+    { you: true, quote: { name: 'Grok', text: 'Achei 3 fontes.' }, text: 'Quais?', time: '10:04' },
+    { name: 'Grok', text: 'Dois artigos e um relatório. Mandando os links.', time: '10:04' },
+  ]}
+/>
+
+Os nomes têm até 20 caracteres: letras minúsculas, dígitos e hífens.

@@ -14,9 +14,10 @@ stub_path="$repository/node_modules/.bin:$stub_bin:$linked_bin:/usr/bin:/bin"
 
 DEFAULT_NODE_VERSION=v24.7.0
 OTHER_NODE_VERSION=v25.0.0
-ALL_GATES="doctor format secrets typecheck audit unit"
+ALL_GATES="doctor format secrets typecheck audit unit integration e2e docs"
 DOCS_GATES="doctor format secrets audit shape"
-ALL_PACKAGES="@zapbip/core @zapbip/server @zapbip/types @zapbip/web"
+ALL_PACKAGES="@zapbip/api @zapbip/core @zapbip/server @zapbip/types @zapbip/web"
+API_GATES="doctor format secrets typecheck audit shape unit integration e2e"
 
 expect_match() {
   local name=$1 output=$2 pattern=$3
@@ -90,6 +91,8 @@ new_repository() {
   mkdir -p "$repository/scripts" "$repository/.agents/hooks" "$repository/.agents/skills/x" "$repository/.github/scripts" "$repository/.github/workflows" "$repository/docs"
   cp "$source_root/scripts/verify.sh" "$source_root/scripts/verify-gates.tsv" "$repository/scripts/"
   write_package apps/web @zapbip/web '{"@zapbip/core":"workspace:*","@zapbip/types":"workspace:*"}'
+  write_package apps/api @zapbip/api '{"@zapbip/core":"workspace:*","@zapbip/types":"workspace:*"}'
+  write_package apps/docs @zapbip/docs '{}'
   write_package apps/server @zapbip/server '{"@zapbip/core":"workspace:*","@zapbip/types":"workspace:*"}'
   write_package libs/core @zapbip/core '{"@zapbip/types":"workspace:*"}'
   write_package libs/types @zapbip/types '{}'
@@ -152,6 +155,25 @@ expect_line "a server file" "$output" gates "doctor format secrets typecheck aud
 
 classify libs/types/src/x.ts
 expect_line "a types file" "$output" packages "$ALL_PACKAGES"
+expect_line "a types file" "$output" gates "$API_GATES"
+
+classify libs/core/src/x.ts
+expect_line "a core file" "$output" class product
+expect_line "a core file" "$output" gates "$API_GATES"
+
+classify apps/api/src/x.ts
+expect_line "an api file" "$output" class product
+expect_line "an api file" "$output" gates "$API_GATES"
+expect_line "an api file" "$output" packages @zapbip/api
+
+classify apps/docs/docs.json
+expect_line "a docs site file" "$output" class docs
+expect_line "a docs site file" "$output" gates "doctor format secrets audit shape docs"
+expect_line "a docs site file" "$output" packages -
+
+classify apps/api/README.md
+expect_line "the api README" "$output" class docs
+expect_line "the api README" "$output" gates "$DOCS_GATES"
 
 classify .agents/skills/x/SKILL.md
 expect_line "a skill" "$output" class tooling
@@ -388,6 +410,21 @@ run_verify
 expect_equal "a server change exits 0" "$status" 0
 expect_match "a server change runs the server again in Kolkata" "$(calls)" 'pnpm --filter @zapbip/server test:unit TZ=Asia/Kolkata'
 expect_match "a server change announces the time zone run" "$output" 'verify: unit in Asia/Kolkata'
+
+new_repository
+commit_change libs/core/src/x.ts
+run_verify
+expect_equal "a core change exits 0" "$status" 0
+expect_match "a core change runs the api integration suite" "$(calls)" 'pnpm --filter @zapbip/api test:integration'
+expect_match "a core change runs the api end to end suite" "$(calls)" 'pnpm --filter @zapbip/api test:e2e'
+expect_no_match "a core change skips the docs links" "$(calls)" 'mint'
+
+new_repository
+commit_change apps/docs/docs.json
+run_verify
+expect_equal "a docs site change exits 0" "$status" 0
+expect_match "a docs site change checks the links" "$(calls)" 'pnpm --filter @zapbip/docs run broken-links'
+expect_no_match "a docs site change skips the api suites" "$(calls)" 'test:integration|test:e2e'
 
 new_repository
 commit_change apps/web/vite.config.ts

@@ -1,0 +1,24 @@
+---
+title: 'Routing'
+description: 'How an owner message finds its agent.'
+---
+
+Several agents share one number, so each owner message is routed to one agent. The first matching rule wins.
+
+1. A button or list reply goes to the agent that asked the question in the option id.
+2. A quoted reply or a reaction goes to the agent that sent the quoted or reacted message. A reaction to a question message answers that question with the emoji.
+3. A text starting with `@agent ` goes to that agent, with the prefix removed.
+4. Exactly one agent with an open question receives it. With several open questions, the newest wins.
+5. Otherwise the last agent that wrote to the owner within the window, or the only agent when the account has just one.
+6. Otherwise zapbip sends the owner a list of the 10 most recently seen agents and holds the message until the owner picks one. With no agents at all, the owner gets one notice and the message is held.
+
+## When the owner does not pick
+
+The list waits for 10 minutes.
+
+- While it waits, a new message that matches none of rules 1 to 4 joins the held messages. The owner gets one reminder per batch: "Pick the agent in the list above". A message that matches rules 1 to 4 is routed at once and never held.
+- If the list expires and an agent wrote to the owner within the window, the held messages go to that agent, in order.
+- Otherwise the list is sent once more. After a second expiry the messages stay unread for the agent seen last.
+- A tap on a list that was already used is answered with "That list was already used."
+
+Agent names have up to 20 characters: lowercase letters, digits and hyphens.

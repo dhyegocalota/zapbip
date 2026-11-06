@@ -1,0 +1,42 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "zapbip-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-15",
+  "compatibility_flags": ["nodejs_compat"],
+  "durable_objects": {
+    "bindings": [{ "name": "ACCOUNT_INBOX", "class_name": "AccountInbox" }],
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["AccountInbox"] }],
+  "d1_databases": [
+    {
+      "binding": "CONNECTIONS",
+      "database_name": "zapbip-connections",
+      "database_id": "REPLACE_WITH_PRODUCTION_D1_DATABASE_ID",
+      "migrations_dir": "migrations",
+    },
+  ],
+  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "zapbip-media" }],
+  "rules": [{ "type": "Text", "globs": ["**/*.sql"], "fallthrough": true }],
+  "vars": { "PUBLIC_ORIGIN": "https://mcp.zapbip.com" },
+  "env": {
+    "development": {
+      "main": "src/index.dev.ts",
+      "vars": { "PUBLIC_ORIGIN": "http://localhost:8787" },
+      "migrations": [{ "tag": "v1", "new_sqlite_classes": ["AccountInbox"] }],
+      "durable_objects": {
+        "bindings": [{ "name": "ACCOUNT_INBOX", "class_name": "AccountInbox" }],
+      },
+      "d1_databases": [
+        {
+          "binding": "CONNECTIONS",
+          "database_name": "zapbip-connections",
+          "database_id": "zapbip-connections-local",
+          "migrations_dir": "migrations",
+        },
+      ],
+      "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "zapbip-media" }],
+      "rules": [{ "type": "Text", "globs": ["**/*.sql"], "fallthrough": true }],
+    },
+  },
+}

@@ -1,0 +1,42 @@
+---
+title: Perguntar com botões e listas
+description: Deixe sua IA perguntar e esperar o seu toque.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+## O que você pede para a sua IA
+
+<Chat messages={[{ you: true, text: 'Antes de reservar, me pergunte qual hotel eu prefiro e espere minha resposta.', time: '09:14' }]} />
+
+## O que aparece no seu celular
+
+Até 3 opções viram botões.
+
+<Chat
+  messages={[
+    { name: 'Claude', text: 'Qual hotel em Lisboa?', options: ['Alfama', 'Baixa', 'Belém'], time: '09:15' },
+    { you: true, text: 'Baixa', time: '09:16' },
+    { name: 'Claude', text: 'Reservando o Baixa por 3 noites.', time: '09:16' },
+  ]}
+/>
+
+De 4 a 10 opções viram uma lista.
+
+<Chat
+  messages={[
+    {
+      name: 'Claude',
+      text: 'Em qual bairro devo procurar?',
+      list: { title: 'Escolha um', rows: ['Alfama', 'Baixa', 'Belém', 'Chiado', 'Príncipe Real'] },
+      time: '09:17',
+    },
+    { you: true, text: 'Chiado', time: '09:17' },
+  ]}
+/>
+
+Toque numa opção ou simplesmente digite a resposta.
+
+## Se você demorar
+
+Sua IA espera um tempo e continua esperando. Sua resposta nunca se perde, mesmo que chegue depois.

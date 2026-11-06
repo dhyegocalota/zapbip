@@ -1,0 +1,106 @@
+---
+title: Visão geral
+description: Sua IA, no seu WhatsApp.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+## Por que o zapbip existe
+
+Você usa IA para pesquisar, planejar e construir. Mas quando ela precisa de uma decisão, ou termina algo que demorou, você não está olhando a tela. Aí ela espera, ou chuta.
+
+Você já vive no WhatsApp. O zapbip coloca sua IA lá: ela te manda mensagem, pergunta com botões, espera sua resposta, e você também pode falar com ela primeiro.
+
+## Como fica
+
+<CardGroup cols={2}>
+  <Card title="Pesquisa pronta" icon="file-pdf">
+    <Chat
+      messages={[
+        {
+          name: 'ChatGPT',
+          text: 'Sua pesquisa sobre bikes elétricas ficou pronta. Resumo em anexo.',
+          media: { kind: 'document', label: 'resumo.pdf' },
+        },
+        { you: true, text: 'Valeu, perfeito.' },
+      ]}
+    />
+  </Card>
+  <Card title="Uma decisão na viagem" icon="plane">
+    <Chat
+      messages={[
+        { name: 'Claude', text: 'Qual hotel em Lisboa?', options: ['Alfama', 'Baixa', 'Belém'] },
+        { you: true, text: 'Baixa' },
+        { name: 'Claude', text: 'Reservando Baixa por 3 noites.' },
+      ]}
+    />
+  </Card>
+  <Card title="Me lembra, dá um oi" icon="bell">
+    <Chat
+      messages={[
+        { you: true, text: 'Me lembra de renovar o passaporte na sexta.' },
+        { name: 'Grok', text: 'Combinado. Te aviso na sexta de manhã.' },
+      ]}
+    />
+  </Card>
+  <Card title="Aprovar um deploy" icon="rocket">
+    <Chat
+      messages={[
+        { name: 'Claude Code', text: 'Posso subir a v2.3 para produção?', options: ['Sim', 'Não'] },
+        { you: true, text: 'Sim' },
+        { name: 'Claude Code', text: 'Deploy feito ✅ 2m14s' },
+      ]}
+    />
+  </Card>
+  <Card title="Fotos nos dois sentidos" icon="image">
+    <Chat
+      messages={[
+        { name: 'Claude', media: { kind: 'image' }, text: 'Falhou aqui' },
+        { you: true, media: { kind: 'image' }, text: 'O quadro branco' },
+        { name: 'Claude', text: 'Entendi o fluxo, ajustando.' },
+      ]}
+    />
+  </Card>
+  <Card title="Várias IAs, um número" icon="users">
+    <Chat
+      messages={[
+        { name: 'Claude', text: 'Testes passaram.' },
+        { name: 'Grok', text: 'Achei 3 fontes.' },
+        { you: true, quote: { name: 'Grok', text: 'Achei 3 fontes.' }, text: 'Quais?' },
+      ]}
+    />
+  </Card>
+</CardGroup>
+
+<Note>Mostrado como aparece no WhatsApp.</Note>
+
+## Como funciona
+
+<Frame>
+  <img
+    src="/images/how-it-works-pt-br.svg"
+    alt="Sua IA se conecta ao zapbip, que envia as mensagens pelo número oficial do WhatsApp até o seu celular. Sua resposta volta e acorda a sua IA."
+    style={{ maxWidth: '420px', width: '100%', margin: '0 auto' }}
+  />
+</Frame>
+
+1. **Conecte sua IA** uma vez, colando uma linha.
+2. **Ela te manda mensagem** com texto, arquivos ou uma pergunta com botões.
+3. **Você responde, ou fala primeiro**, e o zapbip entrega para a IA certa.
+
+## Para quem é
+
+Para qualquer pessoa que usa IA: ChatGPT, Claude, Grok, Codex e outras. Você só precisa do WhatsApp. O zapbip fala só com você, nunca com terceiros.
+
+## O que você pode fazer
+
+- [Enviar mensagens e mídia](/pt-br/features/send-messages-and-media)
+- [Perguntar com botões e listas](/pt-br/features/ask-with-buttons-and-lists)
+- [Usar várias IAs em um número](/pt-br/features/many-agents-on-one-number)
+- [Entender a janela de 24 horas](/pt-br/features/the-24-hour-window)
+
+Veja quais IAs funcionam em [IAs compatíveis](/pt-br/agents/supported-agents).
+
+<Card title="Como começar" icon="rocket" href="/pt-br/get-started/how-to-start">
+  Cinco passos do seu WhatsApp até a primeira mensagem.
+</Card>

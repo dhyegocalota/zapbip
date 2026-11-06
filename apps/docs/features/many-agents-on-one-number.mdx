@@ -1,0 +1,45 @@
+---
+title: Many AIs on one number
+description: How your reply finds the AI it is for.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+All your AIs write from the same WhatsApp number. zapbip decides where your message goes, in this order:
+
+| You do                                  | It goes to                        |
+| --------------------------------------- | --------------------------------- |
+| Tap a button or a list option           | The AI that asked                 |
+| Reply to a message, or react to it      | The AI that sent that message     |
+| Write `@grok check the news`            | Grok, without the `@grok `        |
+| Answer while one AI has a question open | That AI                           |
+| Write after only Claude spoke           | Claude, the last AI that wrote    |
+| Write when nothing matches              | A list of recent AIs to pick from |
+
+## Example
+
+<Chat
+  messages={[
+    { name: 'Claude', text: 'Tests passed.', time: '10:02' },
+    { name: 'Grok', text: 'Can I rebase main?', options: ['Yes', 'No'], time: '10:03' },
+    { you: true, text: '@claude thanks', time: '10:04' },
+    { you: true, text: 'Yes', time: '10:04' },
+    { you: true, text: 'ok', time: '10:05' },
+    { name: 'zapbip', text: 'Which AI is this for? Claude, Grok', options: ['Claude', 'Grok'], time: '10:05' },
+  ]}
+/>
+
+`@claude thanks` goes to Claude, the tap on Yes goes to Grok, and the plain `ok` gets a list of recent AIs to pick from.
+
+Reply to a message to talk to the AI that sent it:
+
+<Chat
+  messages={[
+    { name: 'Claude', text: 'Tests passed.', time: '10:02' },
+    { name: 'Grok', text: 'Found 3 sources.', time: '10:03' },
+    { you: true, quote: { name: 'Grok', text: 'Found 3 sources.' }, text: 'Which ones?', time: '10:04' },
+    { name: 'Grok', text: 'Two papers and one report. Sending the links.', time: '10:04' },
+  ]}
+/>
+
+Names have up to 20 characters: lowercase letters, digits and hyphens.
