@@ -12,7 +12,7 @@ The docs live in `apps/docs` and publish when `main` changes. The site names the
 
 2. **Publish the npm package.** Check that the package version in `apps/connector/package.json` is the exact version the docs and skills pin as `npx zapbip@<version>`. Create an npm account at `https://www.npmjs.com/signup` with two-factor authentication and run `npm login`. Remove `"private": true` from that `package.json` in a pull request, merge it, then from the merged `main` run `pnpm --filter zapbip build`, `npm pack --dry-run` inside `apps/connector` and finally `npm publish --access public` inside `apps/connector`. Enter the one-time code when npm asks.
 
-   Expect: `npm pack --dry-run` lists only `dist/cli.js`, `README.md` and `package.json`, and `npm view zapbip@<version> version` prints the version.
+   Expect: `npm pack --dry-run` lists only `dist/cli.js`, `README.md` and `package.json`, and `npm view zapbip@<version> maintainers --json` lists your npm user. Publish with two-factor authentication on the account and with provenance (`npm publish --access public --provenance` from a trusted CI run, or without `--provenance` only if you publish by hand and accept that). Then write your exact npm user name as `ZAPBIP_NPM_PUBLISHER` in your own environment file: the production deploy and the docs deploy refuse until the package resolves and lists that user as a maintainer.
 
    If it fails: a `403` or a name conflict means the name `zapbip` is taken; stop, because every page and skill pins it. An `EOTP` error means the one-time code expired; run the publish again. A published version cannot be replaced; fix forward with a new version and update the pinned version in the docs and skills.
 
@@ -24,7 +24,7 @@ The docs live in `apps/docs` and publish when `main` changes. The site names the
 
 4. **Publish the OpenClaw plugin.** Log in with `npm login` as a member of the `@zapbip` scope (create the scope at `https://www.npmjs.com/org/create` if it does not exist). Check that `apps/openclaw-plugin/package.json` is version `0.1.0` with the name `@zapbip/openclaw-plugin`, build it, run `npm pack --dry-run` inside `apps/openclaw-plugin` and then `npm publish --access public` there. Enter the one-time code when npm asks.
 
-   Expect: `npm view @zapbip/openclaw-plugin@0.1.0 version` prints `0.1.0`.
+   Expect: `npm view @zapbip/openclaw-plugin@0.1.0 maintainers --json` lists your npm user, the same one as `ZAPBIP_NPM_PUBLISHER`.
 
    If it fails: a 403 means your npm user is not in the `@zapbip` scope; add it in the npm organisation settings. The docs deploy refuses until this command resolves.
 
