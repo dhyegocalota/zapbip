@@ -5,6 +5,7 @@ import {
   WAKE_RETRY_AFTER_STATUSES,
   WAKE_SIGNATURE_HEADER,
   WAKE_SIGNATURE_PREFIX,
+  isWakeTimeout,
   WAKE_TIMESTAMP_HEADER,
   signWakeRequest,
   type PinnedWakeProvider,
@@ -26,7 +27,6 @@ const NOT_IMPLEMENTED_STATUS = 501;
 const RETRYABLE_STATUSES: readonly number[] = [408, 425, 429];
 const RETRY_AFTER_HEADER = 'retry-after';
 const RETRY_AFTER_PATTERN = /^\d+$/;
-const NOT_REACHED_RESULT: WakeAttemptResult = { outcome: WakeAttemptOutcome.Retry, statusCode: null, retryAfterMs: null };
 
 function isSuccess(input: { statusCode: number }): boolean {
   return input.statusCode >= SUCCESS_STATUS_FLOOR && input.statusCode <= SUCCESS_STATUS_CEILING;
@@ -48,7 +48,8 @@ function retryAfterMsOf(input: { response: Response }): number | null {
   const { response } = input;
   const header = response.headers.get(RETRY_AFTER_HEADER);
   const isHonoured = header !== null && WAKE_RETRY_AFTER_STATUSES.includes(response.status) && RETRY_AFTER_PATTERN.test(header);
-  return isHonoured ? Number(header) * SECOND_MS : null;
+  const seconds = isHonoured ? Number(header) : 0;
+  return seconds > 0 ? seconds * SECOND_MS : null;
 }
 
 async function hmacHex(input: { key: string; text: string }): Promise<string> {
@@ -62,7 +63,7 @@ function pinnedHeaders(input: { provider: PinnedWakeProvider }): HeaderBuilder {
   return async ({ target }) => PINNED_WAKE_PROVIDER_RULES[input.provider].buildHeaders({ token: target.token });
 }
 
-const signedHeaders: HeaderBuilder = async ({ target, body, nowMs }) => {
+async function signedHeaders({ target, body, nowMs }: WakeAttemptRequest): Promise<Record<string, string>> {
   const timestampSeconds = Math.floor(nowMs / SECOND_MS);
   const signature = await hmacHex({ key: target.token, text: signWakeRequest({ timestampSeconds, body }) });
   return {
@@ -70,7 +71,7 @@ const signedHeaders: HeaderBuilder = async ({ target, body, nowMs }) => {
     [WAKE_TIMESTAMP_HEADER]: String(timestampSeconds),
     [WAKE_SIGNATURE_HEADER]: `${WAKE_SIGNATURE_PREFIX}${signature}`,
   };
-};
+}
 
 const HEADER_BUILDERS: Record<WakeProvider, HeaderBuilder> = {
   [WakeProvider.GrokRoutine]: pinnedHeaders({ provider: WakeProvider.GrokRoutine }),
@@ -98,9 +99,10 @@ export function createFetchWakeTransport(): WakeTransport {
           outcome: outcomeOf({ statusCode: response.status }),
           statusCode: response.status,
           retryAfterMs: retryAfterMsOf({ response }),
+          timedOut: false,
         };
-      } catch {
-        return NOT_REACHED_RESULT;
+      } catch (error) {
+        return { outcome: WakeAttemptOutcome.Retry, statusCode: null, retryAfterMs: null, timedOut: isWakeTimeout({ error }) };
       }
     },
   };

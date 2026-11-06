@@ -109,3 +109,9 @@ const WAKE_SETTING_CHECKS: Record<WakeMode, (input: WakeSettingCheck) => void> =
 export function assertWakeSetting(input: WakeSettingCheck): void {
   WAKE_SETTING_CHECKS[input.setting.mode](input);
 }
+
+export type WebhookWake = StoredWake & { target: StoredWakeTarget };
+
+export function isWebhookWake(stored: StoredWake | null): stored is WebhookWake {
+  return stored !== null && stored.mode === WakeMode.Webhook && stored.target !== null;
+}

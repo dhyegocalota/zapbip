@@ -9,8 +9,8 @@ const SINGLE_MINUTE = MINUTE_MS / MINUTE_MS;
 export const WAKE_COPY: Record<WakeCopyKey, Record<OwnerLocale, string>> = {
   [WakeCopyKey.WakeFailed]: {
     [OwnerLocale.PortugueseBrazil]:
-      'Não consegui acordar seu agente. Sua mensagem espera no inbox; peça a ele para rodar set_wake de novo.',
-    [OwnerLocale.EnglishUs]: 'I could not wake your agent. Your message waits in the inbox; ask it to run set_wake again.',
+      'Não consegui acordar o agente {agent}. Sua mensagem espera no inbox; peça a ele para rodar set_wake de novo.',
+    [OwnerLocale.EnglishUs]: 'I could not wake the agent {agent}. Your message waits in the inbox; ask it to run set_wake again.',
   },
   [WakeCopyKey.ExpectedDelayNote]: {
     [OwnerLocale.PortugueseBrazil]: 'O agente {agent} olha a caixa {cadence}. {lastPoll} Sua mensagem espera lá até a próxima olhada.',
@@ -56,8 +56,8 @@ function renderWakeCopy(input: { key: WakeCopyKey; locale: OwnerLocale; values: 
   return fillCopyTokens({ text, values: input.values });
 }
 
-export function wakeFailedCopy(input: { locale: OwnerLocale }): string {
-  return renderWakeCopy({ key: WakeCopyKey.WakeFailed, locale: input.locale, values: {} });
+export function wakeFailedCopy(input: { locale: OwnerLocale; agent: AgentName }): string {
+  return renderWakeCopy({ key: WakeCopyKey.WakeFailed, locale: input.locale, values: { agent: input.agent } });
 }
 
 function cadenceCopy(input: { locale: OwnerLocale; intervalMinutes: number }): string {

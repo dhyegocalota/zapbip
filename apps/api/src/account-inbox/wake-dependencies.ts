@@ -6,15 +6,16 @@ import type { Bindings } from '../contract/env';
 
 export function createWakeDependencies(input: {
   env: Bindings;
+  accountId: string;
   storage: DurableObjectStorage;
   clock: Clock;
   transport: WakeTransport;
 }): WakeDependencies {
-  const { env, storage, clock, transport } = input;
+  const { env, accountId, storage, clock, transport } = input;
   return {
     transport,
     secretBox: createAesGcmWakeSecretBox({ base64Key: env.WAKE_SECRET_KEY }),
     repository: createSqliteWakeRepository({ storage, clock }),
-    observer: createCloudflareWakeObserver({ dataset: env.WAKE_METRICS }),
+    observer: createCloudflareWakeObserver({ dataset: env.WAKE_METRICS, accountId }),
   };
 }

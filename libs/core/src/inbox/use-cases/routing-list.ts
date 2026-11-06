@@ -21,22 +21,30 @@ export async function openRoutingList(input: {
   ownerLocale: OwnerLocale;
   heldMessageId: string;
   agents: AgentName[];
-  resent: boolean;
+  previous: RoutingList | null;
 }): Promise<void> {
-  const { dependencies, ownerLocale, heldMessageId, agents, resent } = input;
+  const { dependencies, ownerLocale, heldMessageId, agents, previous } = input;
+  const { repository, clock } = dependencies;
   const promptMessageId = dependencies.ids.next({ prefix: IdPrefix.Message });
   const options = agents.map((agent, optionIndex) => ({ optionIndex, title: agent, description: null }));
-  await deliverToOwner({
-    dependencies,
-    ownerLocale,
-    agent: null,
-    messageId: promptMessageId,
-    content: { kind: MessageKind.Choice, questionId: formatRoutingListQuestionId({ messageId: heldMessageId }), options, selected: null },
-    replyToMessageId: null,
+  const timing = previous === null ? { openedAt: clock.now(), resent: false, reminded: false } : previous;
+  await repository.saveRoutingList({
+    routingList: { promptMessageId, openedAt: timing.openedAt, locale: ownerLocale, resent: timing.resent, reminded: timing.reminded },
   });
-  await dependencies.repository.saveRoutingList({
-    routingList: { promptMessageId, openedAt: dependencies.clock.now(), locale: ownerLocale, resent, reminded: false },
-  });
+  try {
+    await deliverToOwner({
+      dependencies,
+      ownerLocale,
+      agent: null,
+      messageId: promptMessageId,
+      content: { kind: MessageKind.Choice, questionId: formatRoutingListQuestionId({ messageId: heldMessageId }), options, selected: null },
+      replyToMessageId: null,
+    });
+  } catch (error) {
+    if (previous === null) await repository.clearRoutingList();
+    if (previous !== null) await repository.saveRoutingList({ routingList: previous });
+    throw error;
+  }
 }
 
 export async function remindOwner(input: {
@@ -62,11 +70,12 @@ export async function assignHeldMessages(input: {
   ownerLocale: OwnerLocale;
   messageIds: string[];
   agent: AgentName;
+  isExpiry: boolean;
 }): Promise<void> {
-  const { dependencies, ownerLocale, messageIds, agent } = input;
+  const { dependencies, ownerLocale, messageIds, agent, isExpiry } = input;
   const { repository } = dependencies;
   const unreadBefore = await repository.countUnread({ agent });
   await repository.assignAgent({ messageIds, agent });
   await repository.clearRoutingList();
-  await wakeAgent({ dependencies, ownerLocale, agent, unreadBefore, answeredQuestionId: null, shouldTellOwner: true });
+  await wakeAgent({ dependencies, ownerLocale, agent, unreadBefore, answeredQuestionId: null, shouldTellOwner: true, isExpiry });
 }

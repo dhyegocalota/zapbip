@@ -9,6 +9,7 @@ export type WakeAttemptResult = {
   outcome: WakeAttemptOutcome;
   statusCode: number | null;
   retryAfterMs: number | null;
+  timedOut: boolean;
 };
 
 export interface WakeTransport {
@@ -33,6 +34,8 @@ export interface WakeRepository {
   recordPoll(input: { agent: AgentName; polledAt: number; ownerLocale: OwnerLocale }): Promise<void>;
   listScheduledWakes(): Promise<ScheduledWake[]>;
   markStaleNotified(input: { agent: AgentName }): Promise<void>;
+  findLastRequestedAt(input: { agent: AgentName }): Promise<number | null>;
+  saveLastRequestedAt(input: { agent: AgentName; at: number }): Promise<void>;
 }
 
 export type WakeLogEvent = {
@@ -43,6 +46,7 @@ export type WakeLogEvent = {
   statusCode: number | null;
   latencyMs: number | null;
   outcome: WakeAttemptOutcome | null;
+  timedOut: boolean;
 };
 
 export interface WakeObserver {
@@ -76,7 +80,7 @@ export type SetWakeResult = {
 
 export type ScheduleWakeInput = WakeContext & { agent: AgentName };
 
-export type RunDueWakesInput = WakeContext & { ownerLocale: OwnerLocale };
+export type RunDueWakesInput = WakeContext & { ownerLocale: OwnerLocale | null; publicHost: string };
 export type RunDueWakesResult = { nextDueAt: number | null };
 
 export type ScriptedWakeResponse = {

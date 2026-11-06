@@ -88,6 +88,7 @@ export function createScriptedWakeTransport(): ScriptedWakeTransport {
         outcome: outcomeOf({ statusCode: response.statusCode }),
         statusCode: response.statusCode,
         retryAfterMs: response.retryAfterMs,
+        timedOut: false,
       };
     },
   };
@@ -134,6 +135,7 @@ export function createInMemoryWakeRepository(input: { clock: Clock }): WakeRepos
   const wakes = new Map<AgentName, StoredWake>();
   const pollStates = new Map<AgentName, PollState>();
   const jobs = new Map<AgentName, WakeJob>();
+  const lastRequests = new Map<AgentName, number>();
   const effectiveDueAt = (job: WakeJob): number => (job.leaseUntil === null ? job.dueAt : Math.max(job.dueAt, job.leaseUntil));
 
   return {
@@ -150,7 +152,14 @@ export function createInMemoryWakeRepository(input: { clock: Clock }): WakeRepos
       const wake = wakes.get(agent);
       jobs.delete(agent);
       if (wake === undefined) return;
-      wakes.set(agent, { ...wake, mode: WakeMode.None, target: null, status: WakeStatus.Active });
+      wakes.set(agent, {
+        ...wake,
+        mode: WakeMode.None,
+        target: null,
+        intervalMinutes: null,
+        standbyAgent: null,
+        status: WakeStatus.Active,
+      });
     },
     findJob: async ({ agent }) => {
       const job = jobs.get(agent);
@@ -190,6 +199,13 @@ export function createInMemoryWakeRepository(input: { clock: Clock }): WakeRepos
       const pollState = pollStates.get(agent);
       if (pollState === undefined) throw new Error(`no poll state for ${agent}`);
       pollStates.set(agent, { ...pollState, pollerStaleNotified: true });
+    },
+    findLastRequestedAt: async ({ agent }) => {
+      const at = lastRequests.get(agent);
+      return at === undefined ? null : at;
+    },
+    saveLastRequestedAt: async ({ agent, at }) => {
+      lastRequests.set(agent, at);
     },
   };
 }

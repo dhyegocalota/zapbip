@@ -11,5 +11,6 @@ export function createInboxAgentWaker(input: { dependencies: CoreDependencies; w
       if (isStaleScheduled) await sendExpectedDelayNote({ dependencies, wake, agent });
       return WakeOutcome.Unreached;
     },
+    hasFailedWake: async () => false,
   };
 }

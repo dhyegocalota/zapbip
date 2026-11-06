@@ -41,5 +41,6 @@ export function createScheduledAgentWaker(input: { dependencies: CoreDependencie
       await sendExpectedDelayNote({ dependencies, wake, agent });
       return WakeOutcome.Woken;
     },
+    hasFailedWake: async () => false,
   };
 }

@@ -42,10 +42,11 @@ const RECORD_POLL_STATEMENT =
   'UPDATE agent_wake SET last_polled_at = ?, has_polled = 1, owner_locale = ?, poller_stale_notified = 0 WHERE agent = ?';
 const MARK_STALE_NOTIFIED_STATEMENT = 'UPDATE agent_wake SET poller_stale_notified = 1 WHERE agent = ?';
 const CLEAR_WAKE_STATEMENT =
-  'UPDATE agent_wake SET mode = ?, provider = NULL, host = NULL, sealed_target = NULL, key_version = NULL, status = ?, updated_at = ? WHERE agent = ?';
+  'UPDATE agent_wake SET mode = ?, provider = NULL, host = NULL, sealed_target = NULL, key_version = NULL, interval_minutes = NULL, standby_agent = NULL, status = ?, updated_at = ? WHERE agent = ?';
 const SELECT_JOB = 'SELECT agent, due_at, attempt, lease_until, rewake, last_outcome FROM wake_jobs ';
 const SAVE_JOB_STATEMENT =
   'INSERT INTO wake_jobs (agent, due_at, attempt, lease_until, rewake, last_outcome) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT (agent) DO UPDATE SET due_at = excluded.due_at, attempt = excluded.attempt, lease_until = excluded.lease_until, rewake = excluded.rewake, last_outcome = excluded.last_outcome';
+const LAST_REQUESTED_AT_KEY_PREFIX = 'wake_last_requested_at:';
 const SELECT_NEXT_DUE_AT =
   'SELECT MIN(CASE WHEN lease_until IS NULL THEN due_at ELSE MAX(due_at, lease_until) END) AS next_due_at FROM wake_jobs';
 
@@ -169,6 +170,15 @@ export function createSqliteWakeRepository(input: { storage: DurableObjectStorag
     async markStaleNotified({ agent }) {
       const cursor = sql.exec(MARK_STALE_NOTIFIED_STATEMENT, agent);
       if (cursor.rowsWritten === 0) throw new Error(`no agent_wake row for ${agent}`);
+    },
+
+    async findLastRequestedAt({ agent }) {
+      const at = input.storage.kv.get<number>(`${LAST_REQUESTED_AT_KEY_PREFIX}${agent}`);
+      return at === undefined ? null : at;
+    },
+
+    async saveLastRequestedAt({ agent, at }) {
+      input.storage.kv.put(`${LAST_REQUESTED_AT_KEY_PREFIX}${agent}`, at);
     },
   };
 }

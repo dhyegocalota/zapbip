@@ -1,4 +1,4 @@
-import { SetWakeStatus, WakeMode, WakeStatus } from '@zapbip/types';
+import { SetWakeStatus, WakeMode, WakeRung, WakeStatus } from '@zapbip/types';
 import { assertWakeTarget, invalidWakeField, WakeTargetField } from './assert-wake-target';
 import { WAKE_SEALED_KEY_VERSION } from './constants';
 import type { SetWakeInput, SetWakeResult } from './wake-ports';
@@ -42,24 +42,8 @@ async function saveWebhook(input: SetWakeInput): Promise<SetWakeResult> {
 
 async function clearWebhook(input: SetWakeInput): Promise<SetWakeResult> {
   const { wake, connection } = input;
-  const storedWake: StoredWake = {
-    agent: connection.agent,
-    mode: WakeMode.None,
-    target: null,
-    status: WakeStatus.Active,
-    lastDeliveredAt: await lastDeliveredAtOf({ setWake: input }),
-    intervalMinutes: null,
-    standbyAgent: null,
-    ownerLocale: connection.ownerLocale,
-  };
-  await wake.repository.saveWake({ wake: storedWake });
-  await wake.repository.deleteJob({ agent: connection.agent });
-  return {
-    status: SetWakeStatus.Saved,
-    wakeMode: WakeMode.None,
-    effectiveRung: wakeRungFor({ wake: storedWake, pollState: null, standby: null, now: input.dependencies.clock.now() }),
-    provider: null,
-  };
+  await wake.repository.clearWake({ agent: connection.agent });
+  return { status: SetWakeStatus.Saved, wakeMode: WakeMode.None, effectiveRung: WakeRung.Inbox, provider: null };
 }
 
 async function saveWithoutTarget(

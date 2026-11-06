@@ -14,5 +14,11 @@ export function createDispatchingAgentWaker(input: { wakers: WakerByRung; reposi
         stored.mode === WakeMode.Standby && stored.standbyAgent !== null ? await repository.findWake({ agent: stored.standbyAgent }) : null;
       return wakers[wakeRungFor({ wake: stored, pollState, standby, now: clock.now() })].notify(request);
     },
+    hasFailedWake: async (request) => {
+      const stored = await repository.findWake({ agent: request.agent });
+      const isWebhook = stored !== null && stored.mode === WakeMode.Webhook;
+      if (!isWebhook) return false;
+      return wakers[WakeRung.Webhook].hasFailedWake(request);
+    },
   };
 }

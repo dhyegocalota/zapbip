@@ -32,7 +32,7 @@
 - **A21 Locale.** The owner's locale is the account property `ownerLocale` (slice 3). `ConnectionIdentity` and `receiveOwnerMessage` carry it. The Durable Object stores the last value it received in its storage key `owner_locale`. The alarm reads that key and passes it to `runDueWakes`. At W0.0: slice 1's `DueTimeProvider.runDue({now})` carries no locale, so the wake provider's `runDue` reads `owner_locale` from storage itself. A missing value throws inside the per-job catch, so the job retries. There is no default locale.
 - **A22 Wire body.** Every target, `ClaudeRoutine` included, receives `WAKE_SIGNAL_BODY`. Risk recorded in the spec: `/fire` may reject the unknown `event` field.
 - **A23 Due-time providers.** ~~The Durable Object re-arms its alarm after every write path to the earliest of all registered due-time providers (slice 1 mechanism, `(contract: confirm at build)`).~~ (confirmed, with a floor) The Durable Object re-arms its alarm in `outcome()`'s `finally` through `armAlarm()` to the earliest `nextDueAt()` of `dueTimeProviders`, and `alarm()` calls `runDue({now})` on each provider in order. Confirmed at W0.0. `armAlarm` never schedules sooner than `ALARM_MIN_DELAY_MS` (5 s) from the real time, so the 3 s debounce is a floor on the wake time, not the delay: the real alarm fires 5 s after the owner message at the earliest. Tests call `runDurableObjectAlarm`, which ignores the stored time. Recorded as a finding for the spec. This slice registers one provider: `WakeRepository.findNextDueAt`. It never arms the alarm itself.
-- **A24 Public host.** `publicHost` is `new URL(PUBLIC_ORIGIN).hostname`, computed in the Durable Object. `PUBLIC_BASE_URL` is not used.
+- **A24 Public host.** `publicHost` is `new URL(PUBLIC_ORIGIN).hostname`, computed in the Durable Object. The guard also accepts an origin and reduces it to its hostname, so passing the origin cannot disable the own-host check. `PUBLIC_BASE_URL` is not used.
 - **A25 Shared enums and constants.** All wake enums are in `libs/types/src/enums.ts`. Time constants use `SECOND_MS` from `libs/types/src/constants.ts`. No local `ONE_SECOND_MS`.
 - **A27 Shared `agent_wake` row.** Slice 1 owns `agent_wake (agent, mode, last_polled_at, updated_at)`. This slice adds wake columns in schema `v2`; `scheduled-wake` adds its columns in `v3` and `local-connector` writes `mode` too. `WakeRepository.saveWake` is an `UPDATE` of the wake columns only (the row exists because `touchAgent` ran `INSERT OR IGNORE INTO agent_wake (agent, mode, last_polled_at, updated_at)` with `WakeMode.None`, and `setWake` calls `touchAgent` first; `last_polled_at` is `NOT NULL`, so an insert from this slice would have to invent a value). `saveWake` writes only the wake columns (`mode`, `provider`, `host`, `sealed_target`, `key_version`, `status`, `last_delivered_at`, `updated_at`) and never `last_polled_at`, so a parallel poll write cannot be overwritten by a wake write, and the reverse holds for `recordPoll` in `scheduled-wake`. A test pins this (test plan, integration group).
 - **A28 Migration order.** The DO migration runner (slice 1) records the set of applied versions and applies every missing one in ascending order, so `v2` (this slice) applies whether or not `v3` or `v5` is present first. No migration edits a version already deployed.
@@ -496,7 +496,7 @@ Every box is empty when authored. A developer ticks its own box. A wrong step is
 
 ### Lane L3: MCP `set_wake`
 
-- [ ] **W3.1 red: tool.** Write `set-wake.test.ts`. The tool count is taken from the registry constant, not a literal. Expected failure: `set_wake` is missing from `tools/list`. Commit as `test(api): pin set_wake over MCP`.
+- [x] **W3.1 red: tool.** (aaed4db) Write `set-wake.test.ts`. The tool count is taken from the registry constant, not a literal. Expected failure: `set_wake` is missing from `tools/list`. Commit as `test(api): pin set_wake over MCP`.
 - [x] **W3.2 green: tool.** (7eb923a, green after the L2 merge 90b73a5) Implement `set-wake.ts`; register it; map `wake_mode` and `effective_rung`. Errors carry the `InboxError` message and no input values. Commit as `feat(api): expose set_wake`.
 
 ### Lane L4: docs
@@ -514,7 +514,7 @@ Every box is empty when authored. A developer ticks its own box. A wrong step is
 ### Z. Prove and ship
 
 - [ ] **Tester briefing:** each developer wrote its section of `docs/features/webhook-wake/tester-briefing.md`.
-- [ ] **Tester run:** a fresh `tester` sub-agent executed `test-plan.md`, area by area, ticking every box with evidence.
+- [x] **Tester run:** a fresh `tester` sub-agent executed `test-plan.md`, area by area, ticking every box with evidence. Evidence: `b46d30c`, `test-results/webhook-wake/final-head.md`.
 - [ ] **Reviewer:** a fresh `reviewer` returned a verdict; refutation of the three riskiest claims is recorded in `test-plan.md`.
 - [ ] **Security reviewer:** a fresh `security-reviewer` returned `Security verdict`.
 - [ ] **Owner-run section:** the live checks are run by the owner; measured times are recorded in the PR.
@@ -530,7 +530,7 @@ Every box is empty when authored. A developer ticks its own box. A wrong step is
 | W1.2 (guard) | a pinned host accepts the POC path, or a decimal or IPv4 literal passes | `assert-wake-target.test.ts` cases go green unexpectedly | revert W1.2; W1.1 red stays |
 | W1.4 (`set_wake`) | the token or URL is returned in the result or an error | `set-wake.test.ts` finds the token in `JSON.stringify(result)` | revert W1.4 |
 | W1.6 (coalescing) | a steady stream postpones the wake forever | `schedule-wake.test.ts` shows `dueAt` moving | keep the first `dueAt` |
-| W1.8 (retries) | attempt five sends again, or the backoff is not doubling | `run-due-wakes.test.ts` counts requests at +3, +8, +18, +38, +78 s | revert W1.8 |
+| W1.8 (retries) | attempt five sends again, or the backoff is not doubling | `run-due-wakes.test.ts` asserts the due time after each failure: delays of 5, 10, 20 and 40 s, then give up | revert W1.8 |
 | W1.8 (fallback) | the owner notice repeats on every failed job | two notices in `run-due-wakes.test.ts` while `failing` | apply the active-to-failing rule (A6) |
 | W1.8 (throwing repository) | a storage error escapes `runDueWakes` | the unit test rejects | catch per job (A9) |
 | W2.2 (transport) | `Retry-After` honoured on `500`, or the bearer sent to a generic host | `fetch-wake-transport.test.ts` headers case fails | revert W2.2 |
@@ -554,7 +554,7 @@ Every box is empty when authored. A developer ticks its own box. A wrong step is
 ## Z. Prove and ship
 
 - [ ] **Tester briefing:** each developer wrote its section of `docs/features/webhook-wake/tester-briefing.md`.
-- [ ] **Tester run:** a fresh `tester` executed `test-plan.md` and ticked every box with evidence.
+- [x] **Tester run:** a fresh `tester` executed `test-plan.md` and ticked every box with evidence. Evidence: `b46d30c`, `test-results/webhook-wake/final-head.md`.
 - [ ] **Reviewer:** a fresh `reviewer` returned a verdict; refutation of the three riskiest claims is recorded in `test-plan.md`.
 - [ ] **Security reviewer:** a fresh `security-reviewer` returned `Security verdict`.
 - [ ] **Owner-run section:** the live checks are run by the owner; measured times recorded in the PR.

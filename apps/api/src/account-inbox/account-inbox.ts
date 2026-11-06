@@ -40,6 +40,7 @@ import type { DueTimeProvider } from '../contract/due-time-provider';
 import type { Bindings } from '../contract/env';
 import { LogEvent, type LogFields } from '../contract/log';
 import { logEvent } from '../log';
+import { nextAlarmAt } from './alarm-time';
 import { ALARM_MIN_DELAY_MS, AlarmErrorCode, OWNER_LOCALE_STORAGE_KEY } from './constants';
 import { ACCOUNT_INBOX_MIGRATIONS } from './migrations';
 import { runMigrations } from './run-migrations';
@@ -76,6 +77,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     });
     this.wake = createWakeDependencies({
       env: this.env,
+      accountId,
       storage: this.ctx.storage,
       clock: this.clock,
       transport: this.createWakeTransport(),
@@ -141,8 +143,13 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
   }
 
   protected async runDueWakes(): Promise<void> {
-    const storedOwnerLocale = (await this.ctx.storage.get<OwnerLocale>(OWNER_LOCALE_STORAGE_KEY)) as OwnerLocale;
-    await inbox.runDueWakes({ dependencies: this.dependencies, wake: this.wake, ownerLocale: storedOwnerLocale });
+    const storedOwnerLocale = await this.ctx.storage.get<OwnerLocale>(OWNER_LOCALE_STORAGE_KEY);
+    await inbox.runDueWakes({
+      dependencies: this.dependencies,
+      wake: this.wake,
+      ownerLocale: storedOwnerLocale === undefined ? null : storedOwnerLocale,
+      publicHost: new URL(this.env.PUBLIC_ORIGIN).hostname,
+    });
   }
 
   private createRoutingListProvider(): DueTimeProvider {
@@ -177,7 +184,9 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     const pendingDueTimes = dueTimes.filter((dueAt): dueAt is number => dueAt !== null);
     if (pendingDueTimes.length === 0) return this.ctx.storage.deleteAlarm();
     const earliestDueAt = Math.min(...pendingDueTimes);
-    return this.ctx.storage.setAlarm(Math.max(this.clock.toRealTime({ clockTime: earliestDueAt }), Date.now() + ALARM_MIN_DELAY_MS));
+    const armedAt = await this.ctx.storage.getAlarm();
+    const dueAt = this.clock.toRealTime({ clockTime: earliestDueAt });
+    return this.ctx.storage.setAlarm(nextAlarmAt({ dueAt, armedAt, now: Date.now(), minDelayMs: ALARM_MIN_DELAY_MS }));
   }
 
   async alarm(): Promise<void> {
@@ -266,15 +275,15 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     return this.outcome({ run: () => inbox.describeUpload({ ...input, dependencies: this.dependencies }) });
   }
 
-  claimUpload(input: { mediaId: string }): Promise<CallOutcome<StoredMedia>> {
+  claimUpload(input: { mediaId: string }): Promise<CallOutcome<inbox.UploadClaim>> {
     return this.outcome({ run: () => inbox.claimUpload({ ...input, dependencies: this.dependencies }) });
   }
 
-  releaseUpload(input: { mediaId: string }): Promise<CallOutcome<void>> {
+  releaseUpload(input: { mediaId: string; claimedAt: number }): Promise<CallOutcome<void>> {
     return this.outcome({ run: () => inbox.releaseUpload({ ...input, dependencies: this.dependencies }) });
   }
 
-  completeUpload(input: { mediaId: string }): Promise<CallOutcome<StoredMedia>> {
+  completeUpload(input: { mediaId: string; claimedAt: number }): Promise<CallOutcome<StoredMedia>> {
     return this.outcome({ run: () => inbox.completeUpload({ ...input, dependencies: this.dependencies }) });
   }
 

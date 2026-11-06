@@ -35,7 +35,7 @@ Step 0 has no tests: it is signatures and stubs. The first red tests are the L1 
 ### Hypotheses to attack
 
 1. Hypothesis: every stub throws exactly `<name> is not implemented` and nothing else in the repository calls one yet. Break it by: grepping `libs/core/src/wake` and `apps/api/src/adapters` for stubs and for call sites in production code.
-2. Hypothesis: the production bundle carries no wake test double. Break it by: `wrangler deploy --dry-run --env production` and grep for `createScriptedWakeTransport` (nothing imports `@zapbip/core/wake-testing` in Step 0, so it should be absent).
+2. Hypothesis: the production bundle carries no wake test double. Break it by: `wrangler deploy --dry-run` and grep for `createScriptedWakeTransport` (nothing imports `@zapbip/core/wake-testing` in Step 0, so it should be absent).
 3. Hypothesis: `@zapbip/core` still resolves for every existing import after the `exports` field. Break it by: `pnpm verify` (integration and e2e import it).
 
 ### Known gaps
@@ -139,7 +139,6 @@ Status: green after the L2 merge (`90b73a5`): 11 of 11 pass.
 - A revoked secret gets the same unauthorised response as any tool (not re-tested here; slice 1 behaviour).
 
 **Gaps.** The "`mode: none` after a webhook yields zero scripted requests" case belongs to the delivery tests of L2. The revoked-secret case of the test plan is not covered by `set-wake.test.ts`.
-=======
 ## Lane L2 (Durable Object and adapters)
 
 ### What changed
@@ -215,3 +214,115 @@ pnpm typecheck
 - The test-plan case "`POST /dev/owner/<phone>/wake/run` on the production entry answers 404" is covered by the bundle test (the route is absent), not by a request against a production entry.
 - `wake/script` has no body-size limit; it is a development route.
 - The e2e walk for `ask` with a live waiter at the alarm is not written; core pins it.
+
+## Fix batch
+
+### What changed
+
+- `libs/core/src/wake/run-due-wakes.ts`: the wake is settled (status `failing`, job finished) before the owner notice; a failing notice is observed as `wake.notice_failed` and never re-sends the wake; the gave-up path after repeated throws also sets `failing` and notifies; a wake cleared or replaced while its request is in flight is not settled; a retry clears `rewake`; the target guard runs again at delivery (`publicHost` is now part of `RunDueWakesInput`); `ownerLocale` may be `null` (no notice, status still `failing`); `Retry-After` is floored at the base backoff.
+- `libs/core/src/wake/wake-due-at.ts` and `WakeRepository.findLastRequestedAt/saveLastRequestedAt`: at most one wake request per agent per `WAKE_MIN_INTERVAL_MS` (60 s, in `libs/core/src/wake/constants.ts` with the other wake constants); the value is kept in the object key-value storage, so there is no migration (v3 stays reserved for `scheduled-wake`).
+- `AgentWaker.hasFailedWake`: a message that lands on unread messages wakes again when the agent's wake is `failing`.
+- `assert-wake-target.ts` and `constants.ts`: blocks `zapbip.com`, `*.zapbip.com`, `*.workers.dev`, `localhost.localdomain`, the own host and its subdomains; `publicHost` accepts a host or an origin.
+- `wake-copy.ts`: the notice names the agent (`{agent}`).
+- `apps/api`: `wake-observer.ts` logs through `logEvent` with the account id and produces the `timeout` status class; the secret box imports its key lazily (a missing key fails only seal and open); `UnavailableWakeMode` and `setWakeToolInputShape` live in `contract/mcp-schemas.ts`; `account-inbox.ts` no longer casts the stored owner locale.
+- Tests: migration versions in `account-inbox.test.ts` (WI-120, WI-121) and `webhook-wake-secrets.test.ts` derive from the registry maximum; pins for the attack specs in `libs/core/src/wake/wake-flood.test.ts`.
+
+### Red then green
+
+| Test | Red text | Green |
+|---|---|---|
+| a refused wake is sent exactly once when the notice cannot be delivered | more than one request | settle-first fix |
+| a retry clears the rewake mark | `rewake` true | settle-first fix |
+| names the agent in every locale | copy without the agent | copy fix |
+| an agent whose wake failed is told again | 1 notification, expected 2 | `hasFailedWake` |
+| a stored target is refused at delivery (4 hosts) | 1 request sent | delivery guard |
+| a wake cleared while the request is in flight is neither rewritten nor announced | wake rewritten to `failing` | re-read before settling |
+| an agent that never reads gets at most one request per minute | more than 11 requests | per-agent cap |
+| unit: builds with a 31 byte key / without a key | threw at construction | lazy import |
+| unit: `timeout` class, account id and event in the line | `network`; no `accountId` | observer rewrite |
+| the own host given as an origin is refused; `localhost.localdomain`; short `Retry-After` | accepted; waited 1 s | host and delay fixes |
+
+Pins (green on arrival): burst of 200 messages, 50 agents, no secret in observer events, five throws give up with status `failing`, pinned-host look-alikes stay generic, the constants literals.
+
+### Hypotheses for the tester
+
+- An agent that never reads receives at most 11 requests in 10 minutes of a message every 4 s.
+- A 401 with a failing notice sends exactly one request.
+- An object without `WAKE_SECRET_KEY` still serves `send_message`; `set_wake` with a webhook names the key.
+- `127.0.0.1.nip.io` and `localtest.me` are accepted (name-based guard, ADR 0019).
+
+### Mutation proofs (break the code, see red, restore)
+
+| Mutation | Red tests |
+|---|---|
+| `findNextDueAt` ignores the lease end | `leaves a leased job alone until the lease passes` (it now also asserts the alarm waits for the lease end) |
+| `wakeAssociatedData` drops the agent | `refuses the sealed target of another agent copied into this agent row` |
+| the secret box validates the key at construction | the four `wake dependencies` cases: 31 byte key, no key, `set_wake` without a key, `send_message` from a keyless object |
+| `runMigrations` skips gaps and does not sort | `WI-120`, `WI-121`, `migration v2 applies once when a later version is already applied` (it also broke the rest of the suite, so the proof is coarse) |
+
+### Timeout class
+
+The transport sets `timedOut` when the request fails with `TimeoutError` or `AbortError` (`isWakeTimeout`); the core does the same for a thrown scripted error. The observer maps `timedOut` to the `timeout` class and a missing status otherwise to `network`. The latency heuristic is gone.
+
+### Gaps
+
+- New integration tests in `webhook-wake-lifecycle.test.ts` (restart while leased, message during a delayed 200, live `wait_for_reply` waiter at the alarm) and `set-wake.test.ts` (revoked secret) were written after the code they cover, so they are pins.
+- The any-waiter query is recorded under "Later" in the spec.
+- The per-agent cap changes the follow-up delay from 3 s to the cap; `WAKE_FOLLOW_UP_MS` was not kept.
+
+## Fix batch 2 (reviewer minors and retester findings)
+
+### Red then green
+
+| Change | Red | Green |
+|---|---|---|
+| `workers.dev` apex and `*.localdomain` refused | `80940b1`: `expected an InboxError, nothing was thrown` (2 rows) | `e344d14` |
+| a missing `WAKE_METRICS` loses only the metrics | `d6e68b6`: `Error: WAKE_METRICS binding is missing` (1 unit, 2 integration) | `ed88557` |
+| failed retry gap (`WAKE_FAILED_RETRY_MS`, 10 min), finite `Retry-After`, no second send after a throw after a 2xx, rewake kept by `recordFailure`, `wake.notice_skipped`, clear through `clearWake` | `fbed2ec`: `dueAt NaN`, 65 requests against a limit of 15, `length 2` against 1, `rewake false`, no `wake.notice_skipped` | `9f9be00` |
+| `owner_locale_missing` is gone from the alarm; core reports the skipped notice | `550938a`: `expected [ Array(1) ] to deeply equal []` | `819fd18` |
+
+### Pins (green on arrival)
+
+- `fa1ebbf` (pin): the lifecycle integration cases and the stronger lease test.
+- `581b516` (pin): the e2e wake notice names the agent.
+- `21c2690`: the follow-up interval is asserted against the stored request time (the 1 ms race is gone).
+- `fbed2ec`: five throws on an already failing wake send no second notice; the notice waits for the settled wake (both kill the retester's surviving mutants S1 and S2).
+- `64573a6` (pin): recovery after a refusal, a replaced target in flight, a sealed target copied to another agent, own-host origin forms.
+
+### Hypotheses for the tester
+
+- A never-reading agent whose endpoint always answers 503, with a message every 4 s for 30 min, gets at most 15 requests and one notice.
+- After a wake gave up, the next request is at least 10 min after the last one; a `2xx` returns the wake to `active` and the 60 s cap.
+- A `Retry-After` of NaN or Infinity waits the base backoff.
+- With the owner locale missing, a refused wake logs `wake.notice_skipped` once and a delivered wake logs nothing about the locale; `owner_locale_missing` is never logged.
+- An object started without `WAKE_METRICS` logs `wake_metrics_missing` once, still serves `send_message` and still wakes.
+
+### Gaps
+
+- A throw after a `2xx` finishes the job like a delivery: a message that arrived in flight gets its follow-up wake under the 60 s cap.
+- The 60 s cap is per agent; ADR 0019 records the per-account-per-host cap as a later option.
+
+## Round 3: open boxes of the test plan
+
+**What changed.** Tests only, plus the plan text. Rows that disagreed with the decided spec or code were reworded (owner delegated 2026-11-06): own subdomain refused, lazy key (the object builds, sealing or opening names `WAKE_SECRET_KEY`), `WAKE_METRICS` non-fatal, `PUBLIC_ORIGIN` as the only input of the guard, the three unavailable modes refused at the tool layer, "no wake case is skipped" scoped to the wake specs, locale-missing settles the wake as `failing` without a notice. `origin/feat/agent-inbox-core` (core rounds 2 and 3) is merged.
+
+**Tests named by box id** (the title starts with `box <line of the test plan>`):
+
+| Box | Test | State |
+|---|---|---|
+| 101 | `run-due-wakes.test.ts` ten bursts across two agents | new, green on arrival (pin) |
+| 120 | `wake-copy.test.ts` every text says the message waits in the inbox | new, green on arrival (pin) |
+| 170 | `set-wake.test.ts` revoked secret rejected like `send_message` | existing test, stronger assertion |
+| 179, 183, 184 | `webhook-wake-lifecycle.test.ts` live waiter, delayed `200`, restart under a lease | existing, renamed |
+| 184 | `webhook-wake-delivery.test.ts` leased job | existing, renamed |
+| 186 | `webhook-wake-delivery.test.ts` upload expiry before the wake | new, green on arrival (pin) |
+| 188 | `webhook-wake-delivery.test.ts` locale missing | existing, renamed |
+| 261 | `webhook-wake-lifecycle.test.ts` refusal, restart, second refusal, delivery | new, green on arrival (pin) |
+
+**Hypotheses for the tester.**
+
+- Boxes 243 and 249 to 253 pass at HEAD in a full run of core, integration and the wake e2e specs.
+- Boxes 12 to 15 hold at the red commits named in the rows (17f985a, ba8483a, aaed4db); the e2e lane is a pin and has no red run.
+- After a refusal, an object restart and a second refusal the owner has exactly one notice, and a delivery returns the wake to `active`.
+
+**Gaps.** Boxes 226 to 230 are owner-run and stay under "Owner-run". Boxes 234 to 236 are the docs checks a tester runs.

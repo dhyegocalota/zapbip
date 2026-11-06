@@ -25,5 +25,6 @@ export function createStandbyAgentWaker(input: { dependencies: CoreDependencies;
       if (unreadBefore > 0) return WakeOutcome.Woken;
       return dependencies.waker.notify({ agent: standbyAgent, reason: AgentWakeReason.StandbyFor });
     },
+    hasFailedWake: async () => false,
   };
 }

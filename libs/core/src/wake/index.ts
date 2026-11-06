@@ -13,3 +13,4 @@ export * from './run-due-wakes';
 export * from './poller';
 export * from './poll-inbox';
 export * from './evaluate-pollers';
+export * from './wake-timeout';
