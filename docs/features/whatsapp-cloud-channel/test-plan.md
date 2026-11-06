@@ -209,6 +209,7 @@ Runner: `pnpm --filter @zapbip/api test:unit` (Vitest 4.1.12, node). Fixtures ar
 - [ ] AU-110 input `""` with fallback `uma mensagem` — expected: `"uma mensagem"`; the fallback is the caller's copy, never a literal in the adapter.
 - [ ] AU-111 input of 61 ASCII characters — expected: the first 60 characters.
 - [ ] AU-112 input `"ação 👋 ok"` — expected: no lone surrogate in the result; length at most 60 UTF-16 units.
+- [ ] AU-117 every registered template body (both templates, both languages) — expected: `assertTemplateBodyHasFixedWords` does not throw.
 - [ ] AU-113 `assertTemplateBodyHasFixedWords` input `'{{1}} tem uma pergunta'` — expected: throws (parameter at the start).
 - [ ] AU-114 `assertTemplateBodyHasFixedWords` input `'Ola {{1}}'` — expected: throws (parameter at the end).
 - [ ] AU-115 `assertTemplateBodyHasFixedWords` input `'Você tem {{1}} para ler'` — expected: accepted.

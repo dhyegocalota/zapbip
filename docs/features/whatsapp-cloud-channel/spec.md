@@ -175,19 +175,19 @@ The owner's language is the account's `locale`, an account property set by `acco
 
 | Language | Body (submit exactly) | Parameters | Quick reply (submit exactly) |
 |---|---|---|---|
-| pt_BR | `Você tem uma mensagem de {{1}}: {{2}}. Toque em Abrir para ler.` | `{{1}}` agent name, sample `Agente de teste`; `{{2}}` preview, sample `Mensagem de exemplo`, at most 60 characters, no line break | `Abrir` |
-| en_US | `You have a message from {{1}}: {{2}}. Tap Open to read it.` | `{{1}}` agent name, sample `Test agent`; `{{2}}` preview, sample `Example message`, at most 60 characters, no line break | `Open` |
+| pt_BR | `Mensagem de {{1}}: {{2}} — toque em Abrir para ler.` | `{{1}}` agent name, sample `Agente de teste`; `{{2}}` preview, sample `Mensagem de exemplo`, at most 60 characters, no line break | `Abrir` |
+| en_US | `Message from {{1}}: {{2}} — tap Open to read it.` | `{{1}}` agent name, sample `Test agent`; `{{2}}` preview, sample `Example message`, at most 60 characters, no line break | `Open` |
 
 **`zapbip_agent_question`**
 
 | Language | Body (submit exactly) | Parameters | Quick reply (submit exactly) |
 |---|---|---|---|
-| pt_BR | `{{1}} tem uma pergunta para você: {{2}}. Toque em Responder para ver as opções.` | `{{1}}` agent name, sample `Agente de teste`; `{{2}}` question preview, sample `Pergunta de exemplo`, at most 60 characters, no line break | `Responder` |
-| en_US | `{{1}} has a question for you: {{2}}. Tap Reply to see the options.` | `{{1}}` agent name, sample `Test agent`; `{{2}}` question preview, sample `Example question`, at most 60 characters, no line break | `Reply` |
+| pt_BR | `Pergunta de {{1}}: {{2}} — toque em Responder para ver as opções.` | `{{1}}` agent name, sample `Agente de teste`; `{{2}}` question preview, sample `Pergunta de exemplo`, at most 60 characters, no line break | `Responder` |
+| en_US | `Question from {{1}}: {{2}} — tap Reply to see the options.` | `{{1}}` agent name, sample `Test agent`; `{{2}}` question preview, sample `Example question`, at most 60 characters, no line break | `Reply` |
 
 Rules that the adapter enforces:
 
-- the body always has fixed words before and after the parameters, so no parameter starts or ends the body;
+- the body always has fixed words before and after the parameters, so no parameter starts or ends the body (Meta's review rejects such a body; a unit test runs `assertTemplateBodyHasFixedWords` over every registered body, so a new text that breaks it fails the build);
 - a parameter is cut at `NOTICE_PREVIEW_MAX_CHARS` (60, a core constant), has line breaks and tabs replaced by spaces, and has runs of spaces collapsed. These sanitising rules are a conservative local choice; the fetched Meta pages did not state the parameter rules;
 - the quick reply tap is the only action a notice offers.
 

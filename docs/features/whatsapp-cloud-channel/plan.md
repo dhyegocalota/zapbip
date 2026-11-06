@@ -490,12 +490,12 @@ export const WHATSAPP_COPY: Record<OwnerLocale, Record<OwnerCopyKey, string>> = 
 ```ts
 export const WHATSAPP_TEMPLATE_BODIES: Record<WhatsAppTemplateName, Record<WhatsAppLanguageCode, string>> = {
   [WhatsAppTemplateName.AgentNotice]: {
-    [WhatsAppLanguageCode.PortugueseBrazil]: 'Você tem uma mensagem de {{1}}: {{2}}. Toque em Abrir para ler.',
-    [WhatsAppLanguageCode.EnglishUs]: 'You have a message from {{1}}: {{2}}. Tap Open to read it.',
+    [WhatsAppLanguageCode.PortugueseBrazil]: 'Mensagem de {{1}}: {{2}} — toque em Abrir para ler.',
+    [WhatsAppLanguageCode.EnglishUs]: 'Message from {{1}}: {{2}} — tap Open to read it.',
   },
   [WhatsAppTemplateName.AgentQuestion]: {
-    [WhatsAppLanguageCode.PortugueseBrazil]: '{{1}} tem uma pergunta para você: {{2}}. Toque em Responder para ver as opções.',
-    [WhatsAppLanguageCode.EnglishUs]: '{{1}} has a question for you: {{2}}. Tap Reply to see the options.',
+    [WhatsAppLanguageCode.PortugueseBrazil]: 'Pergunta de {{1}}: {{2}} — toque em Responder para ver as opções.',
+    [WhatsAppLanguageCode.EnglishUs]: 'Question from {{1}}: {{2}} — tap Reply to see the options.',
   },
 };
 export const WHATSAPP_TEMPLATE_QUICK_REPLIES: Record<WhatsAppTemplateName, Record<WhatsAppLanguageCode, string>> = {
