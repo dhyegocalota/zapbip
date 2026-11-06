@@ -1,4 +1,4 @@
-import { AccountState, IdPrefix, MessageKind, OwnerLocale, type AccountReplyIntent } from '@zapbip/types';
+import { AccountState, ChannelInboundKind, IdPrefix, MessageKind, OwnerLocale, type AccountReplyIntent } from '@zapbip/types';
 import type { AgentName } from '../../inbox/connection';
 import type { OwnerInboundContent } from '../../inbox/use-cases/types';
 import type { AccountCommandResult, OwnerAccountContext } from '../account-types';
@@ -44,7 +44,13 @@ export function receiveAccount(
     dependencies: environment.dependencies,
     account,
     channelMessageId,
-    ownerMessage: { at: environment.clock.now(), replyToMessageId, content },
+    entry: {
+      kind: ChannelInboundKind.Owner,
+      at: environment.clock.now(),
+      content,
+      replyToChannelMessageId: replyToMessageId,
+      noticeText: null,
+    },
     publicOrigin: PUBLIC_ORIGIN,
   });
 }

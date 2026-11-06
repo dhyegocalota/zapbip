@@ -1,4 +1,4 @@
-import type { OwnerInboundMessage, ReceiveResult } from '../../inbox/use-cases/types';
+import type { ChannelInboundEntry, ReceiveResult } from '../../inbox/use-cases/types';
 import type { AccountCommand, OwnerAccountContext } from '../account-types';
 import type { AccountDependencies, AccountInboxPurge, AccountLifecycleDependencies } from '../ports';
 
@@ -43,7 +43,7 @@ export type ReceiveAccountMessageInput = {
   dependencies: AccountDependencies;
   account: OwnerAccountContext;
   channelMessageId: string;
-  ownerMessage: OwnerInboundMessage;
+  entry: ChannelInboundEntry;
   publicOrigin: string;
 };
 

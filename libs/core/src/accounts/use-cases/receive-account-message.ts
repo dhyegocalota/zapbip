@@ -1,8 +1,8 @@
-import { AccountReplyIntent, AccountStateOutcome, IdPrefix, MessageKind, ReplyKind } from '@zapbip/types';
+import { AccountReplyIntent, AccountStateOutcome, ChannelInboundKind, IdPrefix, MessageKind, ReplyKind } from '@zapbip/types';
 import { openWindow } from '../../inbox/use-cases/open-window';
 import { deliverToOwner } from '../../inbox/use-cases/deliver-to-owner';
-import { receiveOwnerMessage } from '../../inbox/use-cases/receive-owner-message';
-import type { OwnerInboundMessage, ReceiveResult } from '../../inbox/use-cases/types';
+import { receiveChannelMessage } from '../../inbox/use-cases/receive-channel-message';
+import type { ChannelInboundEntry, ReceiveResult } from '../../inbox/use-cases/types';
 import type { MessageContent } from '../../inbox/message';
 import { renderAccountReply } from '../account-copy';
 import type { AccountCommand, AccountCommandResult, AccountReply, CommandInput } from '../account-types';
@@ -20,12 +20,14 @@ const NOT_CONFIRMED = false;
 const DUPLICATE_RESULT: ReceiveAccountMessageResult = { messageId: null, agent: null, duplicate: true, deletionConfirmed: false };
 const DROPPED_RESULT: ReceiveAccountMessageResult = { messageId: null, agent: null, duplicate: false, deletionConfirmed: false };
 
-function toCommandInput(input: { ownerMessage: OwnerInboundMessage }): CommandInput {
-  const { content, replyToMessageId } = input.ownerMessage;
+function toCommandInput(input: { entry: ChannelInboundEntry }): CommandInput {
+  const { entry } = input;
+  if (entry.kind !== ChannelInboundKind.Owner) return { text: null, listReplyId: null, isQuoting: false };
+  const { content, replyToChannelMessageId } = entry;
   return {
     text: content.kind === MessageKind.Text ? content.text : null,
     listReplyId: content.kind === MessageKind.Choice ? content.optionId : null,
-    isQuoting: replyToMessageId !== null,
+    isQuoting: replyToChannelMessageId !== null,
   };
 }
 
@@ -113,11 +115,11 @@ async function sendReplies(input: ReceiveAccountMessageInput & { result: Account
 }
 
 async function answerLocally(input: AnswerInput): Promise<ReceiveAccountMessageResult> {
-  const { dependencies, channelMessageId, ownerMessage, prepare, account } = input;
+  const { dependencies, channelMessageId, entry, prepare, account } = input;
   const { repository, clock } = dependencies;
   const isNewMessage = await repository.recordChannelReceipt({ wamid: channelMessageId, receivedAt: clock.now() });
   if (!isNewMessage) return DUPLICATE_RESULT;
-  await openWindow({ dependencies, ownerLocale: account.locale, at: ownerMessage.at });
+  await openWindow({ dependencies, ownerLocale: account.locale, at: entry.at });
   const result = await prepare();
   await sendReplies({ ...input, result });
   return { messageId: null, agent: null, duplicate: false, deletionConfirmed: result.deletionConfirmed };
@@ -133,23 +135,23 @@ async function handleReply(
 }
 
 async function handleProceed(input: ReceiveAccountMessageInput & { command: AccountCommand | null }): Promise<ReceiveAccountMessageResult> {
-  const { dependencies, account, channelMessageId, ownerMessage, publicOrigin, command } = input;
+  const { dependencies, account, channelMessageId, entry, publicOrigin, command } = input;
   if (command !== null) {
     return answerLocally({ ...input, prepare: () => applyOwnerCommand({ dependencies, account, publicOrigin, command }) });
   }
-  const result: ReceiveResult = await receiveOwnerMessage({ dependencies, ownerLocale: account.locale, channelMessageId, ownerMessage });
+  const result: ReceiveResult = await receiveChannelMessage({ dependencies, ownerLocale: account.locale, channelMessageId, entry });
   return { ...result, deletionConfirmed: NOT_CONFIRMED };
 }
 
 export async function receiveAccountMessage(input: ReceiveAccountMessageInput): Promise<ReceiveAccountMessageResult> {
-  const { dependencies, account, channelMessageId, ownerMessage } = input;
+  const { dependencies, account, channelMessageId, entry } = input;
   const isFirstMessage = await dependencies.firstMessage.claim({ channelMessageId });
   const command = parseCommand(input);
   const verdict = evaluateAccountState({
     state: account.state,
     command,
     isFirstMessage,
-    isText: ownerMessage.content.kind === MessageKind.Text,
+    isText: entry.kind === ChannelInboundKind.Owner && entry.content.kind === MessageKind.Text,
   });
   if (verdict.outcome === AccountStateOutcome.Drop) return DROPPED_RESULT;
   if (verdict.outcome === AccountStateOutcome.Reply) return handleReply({ ...input, intent: verdict.intent });

@@ -1,4 +1,4 @@
-import { AccountState, MessageKind, OwnerLocale, ReplyStatus } from '@zapbip/types';
+import { AccountState, ChannelInboundKind, MessageKind, OwnerLocale, ReplyStatus } from '@zapbip/types';
 import { reset, runInDurableObject } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AccountInbox } from '../../src/account-inbox/account-inbox';
@@ -216,7 +216,13 @@ describe('AccountInbox receiveAccountMessage', () => {
     return stubOf().receiveAccountMessage({
       account: { accountId: ACCOUNT, waId: OWNER_PHONE, state: AccountState.Active, locale: OwnerLocale.PortugueseBrazil },
       channelMessageId: input.channelMessageId,
-      ownerMessage: { at: Date.now(), replyToMessageId: null, content: { kind: MessageKind.Text, text: input.text } },
+      entry: {
+        kind: ChannelInboundKind.Owner,
+        at: Date.now(),
+        replyToChannelMessageId: null,
+        content: { kind: MessageKind.Text, text: input.text },
+        noticeText: null,
+      },
       publicOrigin: PUBLIC_ORIGIN,
     });
   }
@@ -264,7 +270,13 @@ describe('AccountInbox receiveAccountMessage', () => {
         instance.receiveAccountMessage({
           account: { accountId: ACCOUNT, waId: OWNER_PHONE, state: AccountState.Active, locale: OwnerLocale.PortugueseBrazil },
           channelMessageId: 'wamid.after',
-          ownerMessage: { at: Date.now(), replyToMessageId: null, content: { kind: MessageKind.Text, text: 'oi' } },
+          entry: {
+            kind: ChannelInboundKind.Owner,
+            at: Date.now(),
+            replyToChannelMessageId: null,
+            content: { kind: MessageKind.Text, text: 'oi' },
+            noticeText: null,
+          },
           publicOrigin: PUBLIC_ORIGIN,
         }),
       ),
