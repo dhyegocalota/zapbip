@@ -130,7 +130,7 @@ describe('webhook wake against wrangler dev', () => {
     await enableWake({ account, responses: [UNAUTHORIZED] });
     await ownerSays({ account, text: OWNER_BODY });
     await advanceThenRun({ account, advanceMs: WAKE_DEBOUNCE_MS });
-    const notice = WAKE_COPY[WakeCopyKey.WakeFailed][DEFAULT_LOCALE];
+    const notice = WAKE_COPY[WakeCopyKey.WakeFailed][DEFAULT_LOCALE].replace('{agent}', account.agent);
     expect((await screenOf({ account })).filter((entry) => entry.text === notice)).toHaveLength(1);
     expect(await recordedRequests({ account })).toHaveLength(1);
   });
