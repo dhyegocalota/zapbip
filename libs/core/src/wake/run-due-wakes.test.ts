@@ -298,7 +298,7 @@ describe('runDueWakes refusals and the owner notice', () => {
     const wakeEnvironment = await armed();
     enqueue({ wakeEnvironment, responses: [respond({ statusCode: UNAUTHORIZED })] });
     await wakeEnvironment.environment.clock.advance({ ms: WAKE_DEBOUNCE_MS });
-    await run({ wakeEnvironment, ownerLocale: undefined as unknown as OwnerLocale });
+    await runDueWakes({ ...wakeEnvironment.context, ownerLocale: undefined as unknown as OwnerLocale });
     expect(await findJob({ wakeEnvironment })).toMatchObject({ lastOutcome: WakeAttemptOutcome.Retry });
     expect(sentTexts({ wakeEnvironment })).toEqual([]);
     expect(await findWake({ wakeEnvironment })).toMatchObject({ status: WakeStatus.Active });
