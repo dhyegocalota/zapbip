@@ -3,7 +3,7 @@ source "$(dirname "$0")/touched-files.sh"
 readonly GIT_PREFIX_PATTERN='git([[:space:]]+(-C[[:space:]]+[^[:space:]]+|-c[[:space:]]+[^[:space:]]+|--[[:alnum:]-]+(=[^[:space:]]+)?))*[[:space:]]+'
 readonly ADD_PATTERN="${GIT_PREFIX_PATTERN}add([[:space:]][^;&|]*)?"
 readonly COMMIT_PATTERN="${GIT_PREFIX_PATTERN}commit([[:space:]][^;&|]*)?"
-readonly STAGE_EVERYTHING_PATTERN='^(-[[:alpha:]]*[Au][[:alpha:]]*|--all|--update|\.{1,2}/*|\*+)$'
+readonly STAGE_EVERYTHING_PATTERN='^(-[[:alpha:]]*[Au][[:alpha:]]*|--all|--update|\.{1,2}/*|:(/|\(top\)\.?/*)|\*+)$'
 readonly SKIP_HOOKS_FLAG_PATTERN='^-[^mFCct-]*n'
 readonly QUOTED_TEXT_PATTERN="\"[^\"]*\"|'[^']*'"
 
