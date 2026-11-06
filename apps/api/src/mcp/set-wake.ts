@@ -1,0 +1,35 @@
+import { InboxError, WAKE_MODE_UNAVAILABLE_MESSAGE } from '@zapbip/core';
+import { InboxErrorCode, WakeMode } from '@zapbip/types';
+import { z } from 'zod';
+import { setWakeInputShape } from '../contract/mcp-schemas';
+import { unwrapOutcome } from './tool-error';
+import type { ToolContext, ToolSuccess } from './types';
+
+export enum UnavailableWakeMode {
+  Scheduled = 'scheduled',
+  Standby = 'standby',
+}
+
+export const setWakeToolInputShape = {
+  ...setWakeInputShape,
+  mode: z.enum([...Object.values(WakeMode), ...Object.values(UnavailableWakeMode)]),
+};
+
+function isAvailableWakeMode(mode: WakeMode | UnavailableWakeMode): mode is WakeMode {
+  return mode !== WakeMode.Local && Object.values<string>(WakeMode).includes(mode);
+}
+
+export async function setWake(input: {
+  context: ToolContext;
+  arguments: z.infer<z.ZodObject<typeof setWakeToolInputShape>>;
+}): Promise<ToolSuccess> {
+  const { context, arguments: toolArguments } = input;
+  const { mode, url, token } = toolArguments;
+  if (!isAvailableWakeMode(mode)) throw new InboxError({ code: InboxErrorCode.InvalidInput, message: WAKE_MODE_UNAVAILABLE_MESSAGE });
+  const outcome = await context.accountInbox.setWake({ connection: context.connection, setting: { mode, url, token } });
+  const saved = unwrapOutcome({ outcome });
+  return {
+    structured: { status: saved.status, wake_mode: saved.wakeMode, effective_rung: saved.effectiveRung, provider: saved.provider },
+    images: [],
+  };
+}
