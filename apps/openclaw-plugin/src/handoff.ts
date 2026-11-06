@@ -62,7 +62,9 @@ export async function handOffToAgent(input: { cfg: OpenClawConfig; account: Zapb
     originatingTo: CHANNEL_SENDER,
     deliver: async (payload) => {
       if (!payload.text) return;
-      await sendOwnerText({ mcpLink: account.connectionLink, text: payload.text });
+      await sendOwnerText({ mcpLink: account.connectionLink, text: payload.text }).catch(() =>
+        logConnectorEvent({ event: ConnectorLogEvent.PluginReplyFailed, fields: { messageId: message.messageId } }),
+      );
     },
     onRecordError: logFailure,
     onDispatchError: logFailure,
