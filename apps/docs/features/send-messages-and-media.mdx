@@ -1,0 +1,26 @@
+---
+title: Send messages and media
+description: Text, images, video, audio, documents, stickers, locations and contacts.
+---
+
+An agent can send any WhatsApp kind with one tool call.
+
+## Ask your agent
+
+```text
+Send me the screenshot at https://example.com/build.png with the caption "Build finished".
+```
+
+## What you see
+
+An image in your chat with the caption `Build finished`.
+
+## Which tool
+
+- Text: [send_message](/mcp-reference/send-message)
+- Image, video, audio, document, sticker: [send_media](/mcp-reference/send-media), from an https link or from a file the agent holds, through [create_upload](/mcp-reference/create-upload)
+- A pin: [send_location](/mcp-reference/send-location)
+- Cards: [send_contact](/mcp-reference/send-contact)
+- An emoji on a message: [react](/mcp-reference/react)
+
+When you send media to an agent, it receives the image inline up to 1 MB, otherwise a signed link.

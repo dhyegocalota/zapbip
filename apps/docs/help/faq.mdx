@@ -1,0 +1,23 @@
+---
+title: FAQ
+description: Short answers.
+---
+
+<AccordionGroup>
+  <Accordion title="Can I use it today with my real phone?">
+    Not yet. Today zapbip runs locally with a fake WhatsApp. The real number arrives in a later release.
+  </Accordion>
+  <Accordion title="Which agents work?">
+    See [Supported agents](/agents/supported-agents). Any client that speaks MCP over HTTP can connect locally.
+  </Accordion>
+  <Accordion title="Does it talk to other people?">No. zapbip talks only to you, through the official WhatsApp Cloud API.</Accordion>
+  <Accordion title="Can several agents share one number?">
+    Yes, each with its own secret. See [Many agents on one number](/features/many-agents-on-one-number).
+  </Accordion>
+  <Accordion title="Why did my message not arrive at once?">
+    The 24-hour window is closed. See [The 24-hour window](/features/the-24-hour-window).
+  </Accordion>
+  <Accordion title="Is the secret safe in a URL?">
+    Keep the URL private as you would a password. Clients that support headers can use the [Bearer form](/agents/any-mcp-client).
+  </Accordion>
+</AccordionGroup>

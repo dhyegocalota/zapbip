@@ -1,0 +1,23 @@
+---
+title: Ask with buttons and lists
+description: Let the agent ask and wait for your tap.
+---
+
+## Ask your agent
+
+```text
+Before deploying, ask me with the options Yes and No, and wait for my answer.
+```
+
+## What you see
+
+```text
+claude-code     Can I deploy v2?
+                [ Yes ]  [ No ]
+```
+
+Up to 3 options show as buttons, 4 to 10 as a list. A tap, or a typed reply, answers the question.
+
+## If you are slow
+
+The agent waits up to 50 seconds per call and gets `pending` with a `question_id`. It keeps waiting with [wait_for_reply](/mcp-reference/wait-for-reply), and your answer is never lost. Details in [Questions](/concepts/questions).

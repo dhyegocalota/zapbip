@@ -1,0 +1,34 @@
+---
+title: The 24-hour window
+description: Why a message may wait, and what you get on your phone.
+---
+
+WhatsApp lets zapbip write freely only within 24 hours of your last message. zapbip closes its window 10 minutes early.
+
+## Open
+
+Messages arrive at once. The tool answers `delivery: "sent"`.
+
+## Closed
+
+The tool answers `delivery: "queued"`. You receive one notice that agents are waiting, and the messages arrive in order as soon as you write anything. Queued messages older than 7 days expire.
+
+## Ask your agent
+
+```text
+Send me "nightly job finished".
+```
+
+If you have not written for a day, you see one notice instead. Reply with anything and the message follows.
+
+## Try it locally
+
+Move the simulator clock forward a day:
+
+```bash
+curl -X POST http://localhost:8787/dev/owner/5511999990000/clock \
+  -H 'Content-Type: application/json' \
+  -d '{"advance_ms":86400000}'
+```
+
+More in [24-hour window](/concepts/24-hour-window).
