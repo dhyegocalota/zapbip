@@ -1,5 +1,6 @@
 import { HOUR_MS, WakeMode } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
+import { STALE_NOTICE_MAX_GAP_MS } from './constants';
 import { isPollerStale, pollerDeadline } from './poller';
 import { scheduledWakeOf } from './testing/wake-doubles';
 
@@ -43,5 +44,10 @@ describe('pollerDeadline', () => {
 
   test('is null for a standby wake', () => {
     expect(pollerDeadline({ wake: scheduledWakeOf({ agent: AGENT, mode: WakeMode.Standby }) })).toBeNull();
+  });
+
+  test.each([6, 7, 20])('A2 caps the gap between notices at the maximum after %i failures', (staleNoticeFailures) => {
+    const wake = scheduledWakeOf({ agent: AGENT, intervalMinutes: 60, lastPolledAt: NOW, lastStaleNoticeAt: NOW, staleNoticeFailures });
+    expect(pollerDeadline({ wake })).toBe(NOW + STALE_NOTICE_MAX_GAP_MS);
   });
 });
