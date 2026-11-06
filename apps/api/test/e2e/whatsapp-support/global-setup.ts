@@ -88,6 +88,8 @@ export default async function setup(project: TestProject): Promise<() => Promise
     origin,
     phone: OWNER_PHONE,
     secrets: Object.fromEntries(connections.map((connection) => [connection.agent, connection.secret])),
+    secondPhone: OWNER_PHONE,
+    secondSecrets: {},
     logFile,
   };
   project.provide('stack', context);

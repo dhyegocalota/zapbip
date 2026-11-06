@@ -127,3 +127,50 @@ describe('accounts limits and locale', () => {
     expect((await screenOf({ phone: american })).join('\n')).toMatch(/agent/i);
   });
 });
+
+const UNKNOWN_SECRET = `zb_conn_${'A'.repeat(43)}`;
+const UNAUTHORIZED = 401;
+
+function secondSecretOf(input: { agent: string }): string {
+  const secret = stack().secondSecrets[input.agent];
+  if (secret === undefined) throw new Error(`no seeded secret for ${input.agent}`);
+  return secret;
+}
+
+async function probeMcp(input: { secret: string }): Promise<{ status: number; body: string }> {
+  const response = await fetch(`${stack().origin}/c/${input.secret}/mcp`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json, text/event-stream' },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list' }),
+  });
+  return { status: response.status, body: await response.text() };
+}
+
+describe('accounts walk against real connections', () => {
+  test('a secret is refused with the bytes of an unknown one after rotate, revoke and deletion', async () => {
+    const phone = stack().secondPhone;
+    const unknown = await probeMcp({ secret: UNKNOWN_SECRET });
+    expect((await probeMcp({ secret: secondSecretOf({ agent: 'rotator' }) })).status).toBe(200);
+    await say({ phone, text: PORTUGUESE.rotate('rotator') });
+    expect(await probeMcp({ secret: secondSecretOf({ agent: 'rotator' }) })).toEqual(unknown);
+    await say({ phone, text: PORTUGUESE.revoke('revoked') });
+    expect(await probeMcp({ secret: secondSecretOf({ agent: 'revoked' }) })).toEqual(unknown);
+    expect((await probeMcp({ secret: secondSecretOf({ agent: 'doomed' }) })).status).toBe(200);
+    await say({ phone, text: PORTUGUESE.requestDeletion });
+    await say({ phone, text: PORTUGUESE.confirmDeletion });
+    expect(await probeMcp({ secret: secondSecretOf({ agent: 'doomed' }) })).toEqual(unknown);
+    expect(unknown.status).toBe(UNAUTHORIZED);
+    expect((await fetch(`${stack().origin}/dev/owner/${phone}/screen`)).status).toBe(NOT_FOUND);
+  });
+
+  test('the language of a plain reply follows the account, whatever command words were typed', async () => {
+    const phone = newPhone({ prefix: ENGLISH.prefix });
+    await say({ phone, text: 'hi' });
+    await say({ phone, text: PORTUGUESE.list });
+    await say({ phone, text: 'ajuda' });
+    const before = (await screenOf({ phone })).length;
+    await say({ phone, text: 'bom dia' });
+    const reply = (await screenOf({ phone })).slice(before).join('\n');
+    expect(reply).not.toMatch(/Nenhum agente|mensagem/i);
+  });
+});

@@ -118,3 +118,25 @@ describe('buildMenuRows', () => {
     expect(buildMenuRows({ locale: OwnerLocale.EnglishUs }).map((row) => row.id)).not.toContain(`zapbip:${CommandKind.ConfirmDeletion}`);
   });
 });
+
+describe('company line', () => {
+  const WITH_COMPANY_LINE = [AccountReplyIntent.Waitlisted, AccountReplyIntent.Unknown, AccountReplyIntent.Menu];
+  const WITHOUT_COMPANY_LINE = [AccountReplyIntent.EmptyList, AccountReplyIntent.DeletionDone, AccountReplyIntent.Suspended];
+
+  function render(input: { intent: AccountReplyIntent; locale: OwnerLocale }): string {
+    return renderAccountReply({ reply: { ...input, kind: ReplyKind.Text, parameters: {}, menuRows: [] } });
+  }
+
+  test.each(WITH_COMPANY_LINE)('ends the %s reply with the company line in both locales', (intent) => {
+    expect(render({ intent, locale: OwnerLocale.PortugueseBrazil }).endsWith('zapbip é um produto da Logic Bit')).toBe(true);
+    expect(render({ intent, locale: OwnerLocale.EnglishUs }).endsWith('zapbip is a product of Logic Bit')).toBe(true);
+  });
+
+  test.each(WITHOUT_COMPANY_LINE)('leaves the %s reply without it', (intent) => {
+    expect(render({ intent, locale: OwnerLocale.EnglishUs })).not.toContain('Logic Bit');
+  });
+
+  test('never prints a company fact sentinel', () => {
+    expect(render({ intent: AccountReplyIntent.Menu, locale: OwnerLocale.EnglishUs })).not.toContain('UNSET');
+  });
+});

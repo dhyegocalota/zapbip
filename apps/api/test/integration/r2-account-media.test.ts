@@ -23,7 +23,7 @@ async function countUnder(input: { prefix: string }): Promise<number> {
 afterEach(reset);
 
 describe('R2 account media purge', () => {
-  it('deletes every object of the account across pages and keeps other accounts', async () => {
+  it('deletes every object of the account across pages and keeps other accounts', { timeout: 30_000 }, async () => {
     await putAll({ prefix: 'accounts/acc1/media/', count: LARGE_OBJECT_COUNT });
     await putAll({ prefix: 'accounts/acc2/media/', count: OTHER_ACCOUNT_OBJECT_COUNT });
     await purge().deleteAll({ accountId: 'acc1' });

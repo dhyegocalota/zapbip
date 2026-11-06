@@ -310,6 +310,20 @@ describe('receiveAccountMessage compensation', () => {
     expect(fixture.environment.revocations.cancelled).toEqual([]);
   });
 
+  test('a failed rotate of an agent created through the command restores its real install code columns', async () => {
+    const fixture = await createAccountFixture();
+    await receiveAccountText({ ...fixture, text: 'novo agente claude' });
+    const { accountId } = fixture.account;
+    const before = await fixture.environment.registry.findActiveByAgent({ accountId, agent: 'claude' });
+    expect(before?.installCodeDigest).not.toBeNull();
+    expect(before?.installCodeSealedSecret).not.toBeNull();
+    expect(before?.installCodeExpiresAt).not.toBeNull();
+    fixture.environment.sender.failSessionCalls({ callNumbers: [2] });
+    await receiveAccountText({ ...fixture, text: 'girar claude' });
+    const after = await fixture.environment.registry.findActiveByAgent({ accountId, agent: 'claude' });
+    expect(after).toEqual(before);
+  });
+
   test('a delivered rotate cancels the waiters of that agent only', async () => {
     const fixture = await createAccountFixture();
     await addAgent({ ...fixture, agent: 'claude' });

@@ -13,6 +13,8 @@ import { freePort, HEALTH_TIMEOUT_MS, LOOPBACK_HOST, waitForHealth } from './sup
 const runCommand = promisify(execFile);
 const SEED_PHONE = '5511999990000';
 const SEED_AGENTS = ['alpha', 'beta'];
+const SECOND_SEED_PHONE = '5511999990001';
+const SECOND_SEED_AGENTS = ['rotator', 'revoked', 'doomed'];
 const SIGNING_KEY_BYTES = 32;
 const DATABASE_BINDING = 'CONNECTIONS';
 const LOG_FILE_NAME = 'wrangler-dev.log';
@@ -23,6 +25,8 @@ export type StackContext = {
   origin: string;
   phone: string;
   secrets: Record<string, string>;
+  secondPhone: string;
+  secondSecrets: Record<string, string>;
   logFile: string;
 };
 
@@ -62,6 +66,18 @@ export default async function setup(project: TestProject): Promise<() => Promise
     ...persistArguments,
   ]);
   const { connections } = seedOutputSchema.parse(JSON.parse(seeded.stdout));
+  const secondSeeded = await runCommand('pnpm', [
+    'exec',
+    'tsx',
+    'scripts/dev-seed.ts',
+    '--phone',
+    SECOND_SEED_PHONE,
+    '--agents',
+    SECOND_SEED_AGENTS.join(','),
+    '--json',
+    ...persistArguments,
+  ]);
+  const second = seedOutputSchema.parse(JSON.parse(secondSeeded.stdout));
 
   const server = spawn(
     'pnpm',
@@ -95,6 +111,8 @@ export default async function setup(project: TestProject): Promise<() => Promise
     origin,
     phone: SEED_PHONE,
     secrets: Object.fromEntries(connections.map((connection) => [connection.agent, connection.secret])),
+    secondPhone: SECOND_SEED_PHONE,
+    secondSecrets: Object.fromEntries(second.connections.map((connection) => [connection.agent, connection.secret])),
     logFile,
   });
 

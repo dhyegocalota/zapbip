@@ -4,6 +4,7 @@ import {
   AccountStateOutcome,
   ChannelInboundKind,
   CommandKind,
+  ForwardedKind,
   IdPrefix,
   MessageKind,
   ReplyKind,
@@ -56,6 +57,9 @@ function toCommandInput(input: { entry: ChannelInboundEntry }): CommandInput {
 }
 
 function parseCommand(input: ReceiveAccountMessageInput): AccountCommand | null {
+  const { entry } = input;
+  const isForwarded = entry.kind === ChannelInboundKind.Owner && entry.forwarded !== ForwardedKind.None;
+  if (isForwarded) return null;
   const commandInput = toCommandInput(input);
   const command = parseAccountCommand(commandInput);
   if (command === null || commandInput.listReplyId === null) return command;

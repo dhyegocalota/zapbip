@@ -1,5 +1,5 @@
 import { NEW_ACCOUNTS_PER_DAY_LIMIT } from '@zapbip/core';
-import { AccountState, ChannelInboundKind, MessageKind } from '@zapbip/types';
+import { AccountState, ChannelInboundKind, ForwardedKind, MessageKind } from '@zapbip/types';
 import { reset } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { receiveOwnerInbound } from '../../src/inbound/owner-inbound';
@@ -152,6 +152,7 @@ describe('owner inbound orchestrator', () => {
         caption: null,
       },
       replyToChannelMessageId: null,
+      forwarded: ForwardedKind.None,
       noticeText: null,
     });
     await receiveOwnerInbound({ bindings, waId: WA_ID, channelMessageId: nextWamid(), entryOf });
