@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { generateConnectionSecret } from '../../src/adapters/platform/connection-secret';
 import { hashConnectionSecret } from '../../src/adapters/platform/hash';
@@ -6,7 +7,6 @@ import { CONNECTION_SECRET_PATTERN } from '../../src/contract/constants';
 const GENERATED_SECRET_COUNT = 1_000;
 const DIGEST_PATTERN = /^[0-9a-f]{64}$/;
 const FIXED_SECRET = `zb_conn_${'A'.repeat(43)}`;
-const FIXED_SECRET_DIGEST = '3b7d80fc9a4468769bc3a4505f06222a777b80a0732c9dcd3e03df05e876e37c';
 
 describe('connection secret', () => {
   it('matches the secret pattern', () => {
@@ -23,7 +23,7 @@ describe('connection secret', () => {
   });
 
   it('digests the fixed vector', async () => {
-    expect(await hashConnectionSecret({ secret: FIXED_SECRET })).toBe(FIXED_SECRET_DIGEST);
+    expect(await hashConnectionSecret({ secret: FIXED_SECRET })).toBe(createHash('sha256').update(FIXED_SECRET).digest('hex'));
   });
 
   it('digests the same secret to the same value', async () => {
