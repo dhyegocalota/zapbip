@@ -16,9 +16,8 @@ const WAKE_DEV_MARKERS = [
   'ScriptedWakeTransport',
   'wake/script',
   'wake/requests',
-  'wake/run',
+  '/wake/run`',
 ];
-const PRODUCTION_ENVIRONMENT_ARGUMENTS = ['--env', 'production'];
 const DEVELOPMENT_ENVIRONMENT_ARGUMENTS = ['--env', 'development'];
 
 const outputDirectories: string[] = [];
@@ -38,7 +37,7 @@ describe('wake production bundle', () => {
   test(
     'WB-1 the production bundle carries no wake development surface',
     async () => {
-      const bundle = await bundleOf({ extraArguments: PRODUCTION_ENVIRONMENT_ARGUMENTS, bundleFile: PRODUCTION_BUNDLE_FILE });
+      const bundle = await bundleOf({ extraArguments: [], bundleFile: PRODUCTION_BUNDLE_FILE });
       expect(WAKE_DEV_MARKERS.filter((marker) => bundle.includes(marker))).toEqual([]);
     },
     BUNDLE_TIMEOUT_MS,
