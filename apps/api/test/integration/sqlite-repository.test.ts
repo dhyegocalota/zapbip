@@ -83,6 +83,23 @@ describe('SQLite inbox repository', () => {
     expect(result).toEqual({ unread: ['msg_1', 'msg_2'], countBefore: 3, countAfter: 2, readByAgent: true });
   });
 
+  it('stamps a read message with the injected clock', async () => {
+    const readAt = BASE_TIME + 500;
+    const clock = { now: () => readAt, schedule: () => ({ cancel: () => undefined }) };
+    const stored = await withRepository({
+      accountId: ACCOUNT_ID,
+      clock,
+      run: async (repository, storage) => {
+        await repository.insertMessage({
+          message: buildTextMessage({ messageId: 'msg_1', direction: MessageDirection.FromOwner, delivery: null }),
+        });
+        await repository.markRead({ messageIds: ['msg_1'] });
+        return storage.sql.exec<{ read_at: number }>('SELECT read_at FROM inbox_messages').one().read_at;
+      },
+    });
+    expect(stored).toBe(readAt);
+  });
+
   it('lists held owner messages and assigns them to an agent', async () => {
     const held = buildTextMessage({ messageId: 'msg_held', direction: MessageDirection.FromOwner, delivery: null, agent: null });
     const result = await inRepository(async (repository) => {

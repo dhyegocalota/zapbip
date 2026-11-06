@@ -3,6 +3,7 @@ import {
   QUESTION_RETENTION_MS,
   RECEIPT_RETENTION_MS,
   type AgentRecord,
+  type Clock,
   type InboxRepository,
   type Message,
   type MessageContent,
@@ -51,8 +52,7 @@ const SELECT_MESSAGES = 'SELECT id, agent, direction, kind, payload, reply_to, d
 const SELECT_QUESTIONS = 'SELECT question_id, agent, text, options, normalized_key, prompt_message_id, asked_at, answer FROM questions ';
 const SELECT_MEDIA = 'SELECT media_id, origin, mime_type, size_bytes, filename, expires_at, received_at, retention_until FROM media ';
 const ORDER_BY_ARRIVAL = 'ORDER BY at, rowid';
-const MARK_READ_STATEMENT =
-  "UPDATE inbox_messages SET read_at = CAST(unixepoch('subsec') * 1000 AS INTEGER) WHERE read_at IS NULL AND id IN (SELECT value FROM json_each(?))";
+const MARK_READ_STATEMENT = 'UPDATE inbox_messages SET read_at = ? WHERE read_at IS NULL AND id IN (SELECT value FROM json_each(?))';
 const WINDOW_ROW_ID = 1;
 
 function toMessage(row: MessageRow): Message {
@@ -95,7 +95,7 @@ function toMedia(row: MediaRow): StoredMedia {
   };
 }
 
-export function createSqliteInboxRepository(input: { storage: DurableObjectStorage }): InboxRepository {
+export function createSqliteInboxRepository(input: { storage: DurableObjectStorage; clock: Clock }): InboxRepository {
   const { sql } = input.storage;
 
   function rows<Row extends Record<string, SqlStorageValue>>(statement: string, ...bindings: unknown[]): Row[] {
@@ -188,7 +188,7 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
     },
 
     async markRead({ messageIds }) {
-      run(MARK_READ_STATEMENT, JSON.stringify(messageIds));
+      run(MARK_READ_STATEMENT, input.clock.now(), JSON.stringify(messageIds));
     },
 
     async listHeld() {

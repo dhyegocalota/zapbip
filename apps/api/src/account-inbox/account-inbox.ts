@@ -55,11 +55,11 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     if (accountId === undefined) throw new Error('AccountInbox id has no name');
     runMigrations({ storage: this.ctx.storage, migrations: ACCOUNT_INBOX_MIGRATIONS });
     this.accountId = accountId;
-    this.clock = await loadDurableClock({ storage: this.ctx.storage });
+    this.clock = await loadDurableClock({ storage: this.ctx.storage, onAdvanced: () => this.armAlarm() });
     this.sender = createFakeWhatsAppSender({ storage: this.ctx.storage, clock: this.clock });
     this.dependencies = {
       accountId,
-      repository: createSqliteInboxRepository({ storage: this.ctx.storage }),
+      repository: createSqliteInboxRepository({ storage: this.ctx.storage, clock: this.clock }),
       sender: this.sender,
       mediaStore: createR2MediaStore({
         bucket: this.env.MEDIA,
@@ -73,6 +73,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       waiters: inbox.createReplyWaiters({ clock: this.clock }),
     };
     this.dueTimeProviders.push(this.createExpiryProvider());
+    await this.armAlarm();
   }
 
   private createExpiryProvider(): DueTimeProvider {
@@ -110,7 +111,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     const pendingDueTimes = dueTimes.filter((dueAt): dueAt is number => dueAt !== null);
     if (pendingDueTimes.length === 0) return this.ctx.storage.deleteAlarm();
     const earliestDueAt = Math.min(...pendingDueTimes);
-    return this.ctx.storage.setAlarm(Math.max(earliestDueAt, Date.now() + ALARM_MIN_DELAY_MS));
+    return this.ctx.storage.setAlarm(Math.max(this.clock.toRealTime({ clockTime: earliestDueAt }), Date.now() + ALARM_MIN_DELAY_MS));
   }
 
   async alarm(): Promise<void> {
