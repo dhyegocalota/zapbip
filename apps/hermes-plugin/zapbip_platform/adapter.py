@@ -4,9 +4,9 @@ import os
 from collections.abc import Callable, Coroutine
 from typing import Any
 
-from gateway.config import Platform, PlatformConfig  # type: ignore[import-not-found]
-from gateway.platforms.base import BasePlatformAdapter, SendResult  # type: ignore[import-not-found]
-from gateway.platforms.event import MessageEvent, MessageType  # type: ignore[import-not-found]
+from gateway.config import Platform, PlatformConfig
+from gateway.platforms.base import BasePlatformAdapter, SendResult
+from gateway.platforms.event import MessageEvent, MessageType
 
 from zapbip_platform.connection_link import socket_link_of
 from zapbip_platform.connector_socket import run_connector_socket
@@ -24,7 +24,7 @@ def connection_link_from_environment() -> str:
     return connection_link
 
 
-class ZapbipAdapter(BasePlatformAdapter):  # type: ignore[misc]
+class ZapbipAdapter(BasePlatformAdapter):
     def __init__(
         self,
         config: PlatformConfig,

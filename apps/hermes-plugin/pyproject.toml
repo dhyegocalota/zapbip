@@ -9,3 +9,11 @@ testpaths = ["tests/unit"]
 
 [tool.mypy]
 strict = true
+
+[[tool.mypy.overrides]]
+module = ["gateway", "gateway.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "zapbip_platform.adapter"
+disallow_subclassing_any = false

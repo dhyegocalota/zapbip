@@ -75,9 +75,8 @@ Pins (green when they landed): `test_constants_parity.py` (0e3fabc), and in `tes
 
 ### Known gaps
 
-- `adapter.py` carries `# type: ignore[import-not-found]` and `[misc]` pragmas because `gateway.*` is absent under `mypy`. A `[[tool.mypy.overrides]]` for `gateway.*` in `pyproject.toml` (C0's file) would remove them; asked of the lead.
-- A message handed off whose `done` was written to a dead socket is skipped on the next reconnect (it sits in the seen set) and is never acknowledged until the server forgets it. Plan Step 10 does not re-send `done` for a seen id; not added.
+- Lane V must verify that `env_enablement_fn` returning `{"configured": True}` auto-enables the platform in a real Hermes gateway (unverified).
+- A redelivered message that was already acknowledged is not handed off again and gets `done` again (commits for this are after 2cbfdf5).
 - A refused probe ends the socket task and marks the adapter disconnected, but nothing tells the owner; the gateway log carries `connector_closed` with the status.
 - The install must set `ZAPBIP_ALLOWED_USERS=owner` (the user id the plugin gives every message), or Hermes' allowlist refuses the owner; that is `install-skills`' text.
-- `env_enablement_fn` returns `{"configured": True}`; whether Hermes needs other seeded keys to auto-enable the platform is unverified against the real gateway.
 - No test starts the real gateway; the Docker E2E belongs to V.
