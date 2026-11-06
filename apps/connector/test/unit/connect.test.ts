@@ -56,6 +56,12 @@ describe('reconnectDelayMs', () => {
   });
 });
 
+describe('parseServerFrame with prototype keys', () => {
+  it.each(['constructor', '__proto__', 'toString', 'hasOwnProperty'])('rejects a frame typed %s as unknown instead of crashing', (type) => {
+    expect(parseText({ text: JSON.stringify({ type }) })).toEqual({ ok: false, reason: FrameRejectionReason.UnknownType });
+  });
+});
+
 describe('parseServerFrame', () => {
   it('accepts a messages frame', () => {
     const message = ownerTextMessage({ messageId: 'msg_1', text: 'Oi' });

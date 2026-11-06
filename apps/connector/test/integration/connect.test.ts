@@ -10,6 +10,7 @@ import {
   HEARTBEAT_INTERVAL_MS,
   HEARTBEAT_TIMEOUT_MS,
   RECONNECT_BASE_MS,
+  RECONNECT_STABLE_MS,
   REPLACED_CLOSE_CODE,
   UNAUTHORIZED_STATUS,
   WAKE_ALLOWED_TOOL,
@@ -437,6 +438,46 @@ describe('runConnection', () => {
       expect(loggedFieldsOf({ event: ConnectorLogEvent.ConnectorReconnecting })).toEqual({ attempt: 0, delayMs: RECONNECT_BASE_MS });
       timers.advance({ ms: RECONNECT_BASE_MS });
       await server.waitForConnections({ count: 2 });
+    });
+  });
+
+  describe('reconnect backoff', () => {
+    function reconnectingFields(): LoggedEvent['fields'][] {
+      return loggedEventsOf({ event: ConnectorLogEvent.ConnectorReconnecting }).map((entry) => entry.fields);
+    }
+
+    it('keeps growing the delay while the server accepts and closes at once', async () => {
+      const timers = createManualTimers();
+      startConnector({ timers });
+      await waitForLog({ event: ConnectorLogEvent.ConnectorConnected });
+      server.closeConnections({ code: 1000 });
+      await waitForLog({ event: ConnectorLogEvent.ConnectorReconnecting });
+      timers.advance({ ms: RECONNECT_BASE_MS });
+      await server.waitForConnections({ count: 2 });
+      await waitForLog({ event: ConnectorLogEvent.ConnectorConnected, count: 2 });
+      server.closeConnections({ code: 1000 });
+      await waitForLog({ event: ConnectorLogEvent.ConnectorReconnecting, count: 2 });
+
+      expect(reconnectingFields()).toEqual([
+        { attempt: 0, delayMs: RECONNECT_BASE_MS },
+        { attempt: 1, delayMs: 2 * RECONNECT_BASE_MS },
+      ]);
+    });
+
+    it('starts again from the base delay after a connection that stayed open past the stability window', async () => {
+      const timers = createManualTimers();
+      startConnector({ timers });
+      await waitForLog({ event: ConnectorLogEvent.ConnectorConnected });
+      server.closeConnections({ code: 1000 });
+      await waitForLog({ event: ConnectorLogEvent.ConnectorReconnecting });
+      timers.advance({ ms: RECONNECT_BASE_MS });
+      await server.waitForConnections({ count: 2 });
+      await waitForLog({ event: ConnectorLogEvent.ConnectorConnected, count: 2 });
+      timers.advance({ ms: RECONNECT_STABLE_MS });
+      server.closeConnections({ code: 1000 });
+      await waitForLog({ event: ConnectorLogEvent.ConnectorReconnecting, count: 2 });
+
+      expect(reconnectingFields().at(-1)).toEqual({ attempt: 0, delayMs: RECONNECT_BASE_MS });
     });
   });
 

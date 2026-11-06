@@ -177,6 +177,16 @@ describe('zapbip connect', () => {
     expect(await fakeClients.readRuns()).toHaveLength(2);
     expect(second.child.exitCode).toBeNull();
   });
+
+  it.each([['--help'], ['connect', '--help'], ['listen', '--help'], ['channel', '--help']])(
+    'prints the usage of every command and exits 0 for %s',
+    (...helpArguments) => {
+      const output = execFileSync(process.execPath, [bundleFile, ...helpArguments], { encoding: 'utf8' });
+      expect(output).toContain('connect');
+      expect(output).toContain('listen');
+      expect(output).toContain('channel');
+    },
+  );
 });
 
 void vi;
