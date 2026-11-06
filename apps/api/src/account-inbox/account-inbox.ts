@@ -115,7 +115,12 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     const database = this.env.CONNECTIONS;
     return createCloudApiMessageSender({
       accountId: this.accountId,
-      graph: createGraphClient({ baseUrl: whatsapp.graphBaseUrl, accessToken: whatsapp.accessToken, fetcher: fetch }),
+      graph: createGraphClient({
+        baseUrl: whatsapp.graphBaseUrl,
+        accessToken: whatsapp.accessToken,
+        developmentMediaOrigin: whatsapp.developmentMediaOrigin,
+        fetcher: fetch,
+      }),
       findOwnerByAccountId: ({ accountId }) => findOwnerByAccountId({ database, accountId }),
       messageIndex: new D1MessageIndex({ database }),
       restrictions: new D1ChannelRestrictions({ database, phoneNumberId: whatsapp.phoneNumberId }),

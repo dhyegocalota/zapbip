@@ -21,8 +21,9 @@ function recordingFetcher(input: { respond: () => Response }): { fetcher: typeof
   return { fetcher, calls };
 }
 
-function clientOf(input: { fetcher: typeof fetch }) {
-  return createGraphClient({ baseUrl: BASE_URL, accessToken: ACCESS_TOKEN, fetcher: input.fetcher });
+function clientOf(input: { fetcher: typeof fetch; developmentMediaOrigin?: string | null }) {
+  const { developmentMediaOrigin = null } = input;
+  return createGraphClient({ baseUrl: BASE_URL, accessToken: ACCESS_TOKEN, developmentMediaOrigin, fetcher: input.fetcher });
 }
 
 beforeEach(() => {
@@ -101,6 +102,17 @@ describe('graph client post and get', () => {
 });
 
 describe('graph client download', () => {
+  it('downloads from the configured development origin and refuses it when none is configured', async () => {
+    const { fetcher, calls } = recordingFetcher({ respond: () => new Response('bytes') });
+    const url = `${BASE_URL}/media/image`;
+    await clientOf({ fetcher })
+      .download({ url })
+      .catch(() => undefined);
+    expect(calls).toHaveLength(0);
+    await clientOf({ fetcher, developmentMediaOrigin: BASE_URL }).download({ url });
+    expect(calls.map((call) => call.url)).toEqual([url]);
+  });
+
   it('AU-112 refuses a host outside the allowlist without calling the fetcher', async () => {
     const { fetcher, calls } = recordingFetcher({ respond: () => new Response('x') });
     await expect(clientOf({ fetcher }).download({ url: 'https://evil.example.com/x' })).rejects.toThrow('evil.example.com');

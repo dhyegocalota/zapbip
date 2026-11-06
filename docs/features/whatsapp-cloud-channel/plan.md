@@ -96,7 +96,7 @@ The W-1.1 refresh above resolved every `(contract: confirm at build)` mark; a st
 - ~~**A17 Durable Object account identity.** `AccountInbox` reads its account from `ctx.id.name`; a missing name throws.~~ (refresh: R16)
 - **A17 Durable Object account identity.** `AccountInbox` reads its account from `ctx.id.name`; slice 1's `initialize()` already throws `AccountInbox id has no name` when it is missing. This slice adds nothing.
 - **A18 Logs.** `logOperatorEvent({event, fields})` takes fields keyed by the enum `OperatorLogField` (`ErrorCode`, `TemplateName`, `LanguageCode`, `Reason`, `MessageKind`, `UnsupportedType`, `ChannelMessageId`). Never a phone number, a message body or a token.
-- **A19 Base URL.** `WHATSAPP_GRAPH_BASE_URL` is a top-level (development) var with `http://127.0.0.1:4011`. `deploy-readiness` adds `env.staging` and `env.production` with the Graph host. A missing value throws. ~~`(contract: confirm at build)`~~ resolved: the base `wrangler.jsonc` has a top-level `vars` block and a fully repeated `env.production`.
+- **A19 Base URL.** `WHATSAPP_GRAPH_BASE_URL` is a var of `env.development` with `http://127.0.0.1:4011` (the top-level block is production and holds `https://graph.facebook.com`; gap lane G4). `deploy-readiness` adds `env.staging` and `env.production` with the Graph host. A missing value throws. ~~`(contract: confirm at build)`~~ resolved: the base `wrangler.jsonc` has a top-level `vars` block and a fully repeated `env.production`.
 - ~~**A20 Schema.** This slice ships D1 migration `0004_whatsapp_channel.sql` (`channel_restrictions (phone_number_id PRIMARY KEY, error_code, restricted_at)`) and DO schema `v4`: `inbox_messages.channel_message_id` (UNIQUE, nullable), `error_code`, `error_title`, `pricing_category`, `billable`, `claimed_at`; `window.closed_at`. It reuses `0001_core`'s `owner_identities` and `message_index (wamid, account_id, created_at)` unchanged, and DO `v1`'s `channel_receipts`. Nothing in `0001` or `v1` is edited. `(contract: confirm at build)`.~~ (refresh: R18)
 - **A20 Schema.** This slice ships D1 migration `0004_whatsapp_channel.sql` (`channel_restrictions (phone_number_id PRIMARY KEY, error_code, restricted_at)`) and DO schema `v4` (`src/account-inbox/migrations/v4.sql`, registered in `migrations/index.ts`): `ALTER TABLE inbox_messages ADD COLUMN` for `channel_message_id`, `error_code`, `error_title`, `pricing_category`, `billable`, `claimed_at`; `CREATE UNIQUE INDEX` on `channel_message_id`; `ALTER TABLE owner_window ADD COLUMN closed_at`. It reuses `0001_core`'s `owner_identities` and `message_index (wamid, account_id, created_at)` unchanged, and DO `v1`'s `channel_receipts`. Nothing in `0001` or `v1` is edited.
 - **A21 Core contract additions.** Listed in the section **Core contract additions**. The orchestrator merges them into `core-contract-additions.md`.
@@ -730,10 +730,19 @@ Failure modes for W0 are in the table below. W0 has no backout: fix forward in a
 
 ### Lane W6 (proof, after every merge and after deploy-readiness's production block)
 
-- [ ] **W6.1 red: E2E.** Write `apps/api/test/e2e/whatsapp-channel.e2e.test.ts` and `apps/api/test/e2e/whatsapp-support/`: start the fake Graph on `4011`, start `wrangler dev` with the `--var` secrets and `WHATSAPP_GRAPH_BASE_URL` pointing at the fake, post signed webhooks. Expected failure: the first signed webhook does not return `200` before W3 and W4 are wired. Commit as `test(api): pin the channel end to end`.
-- [ ] **W6.2 green: E2E.** Fix only the harness; a product bug goes back to its lane. Commit as `test(api): run the channel end to end`.
-- [ ] **W6.3 red: production bundle.** Write `apps/api/test/e2e/whatsapp-bundle.e2e.test.ts` beside slice 1's bundle test, using the same dry-run helper pattern: `wrangler deploy --dry-run --env production --outdir <scratch>` succeeds; the bundle has no `127.0.0.1:4011`, no fixture marker and no `fake-whatsapp-sender` import; with `WHATSAPP_GRAPH_BASE_URL` missing the channel throws naming it. Commit as `test(api): pin the production bundle`.
-- [ ] **W6.4 green.** Only if W6.3 needed a harness change: implement it and commit as `test(api): prove the production bundle carries no fake`. Otherwise strike this box with the reason.
+- [x] **W6.1 red: E2E.** Write `apps/api/test/e2e/whatsapp-channel.e2e.test.ts` and `apps/api/test/e2e/whatsapp-support/`: start the fake Graph on `4011`, start `wrangler dev` with the `--var` secrets and `WHATSAPP_GRAPH_BASE_URL` pointing at the fake, post signed webhooks. Expected failure: the first signed webhook does not return `200` before W3 and W4 are wired. Commit as `test(api): pin the channel end to end`. (`623d78e`; pin: W3 and W4 are merged, so no red run was committed. The Durable Object failure and send cases WI-33, WI-34, WI-58, WI-59, WI-60, WI-62 and WI-66 landed in `68d71d4`)
+- [x] **W6.2 green: E2E.** Fix only the harness; a product bug goes back to its lane. Commit as `test(api): run the channel end to end`. (done inside `623d78e`: the harness fixes happened before the first commit)
+- [x] **W6.3 red: production bundle.** Write `apps/api/test/e2e/whatsapp-bundle.e2e.test.ts` beside slice 1's bundle test, using the same dry-run helper pattern: `wrangler deploy --dry-run --env production --outdir <scratch>` succeeds; the bundle has no `127.0.0.1:4011`, no fixture marker and no `fake-whatsapp-sender` import; with `WHATSAPP_GRAPH_BASE_URL` missing the channel throws naming it. Commit as `test(api): pin the production bundle`. (`e293138`, pin)
+- [x] ~~**W6.4 green.** Only if W6.3 needed a harness change: implement it and commit as `test(api): prove the production bundle carries no fake`. Otherwise strike this box with the reason.~~ (struck: W6.3 was green on landing, no harness change was needed)
+
+## G. Gap lane (added after W6, reported to the lead)
+
+- [x] **G1 merge.** Merge `feat/whatsapp-cloud-channel-w6` and `feat/agent-inbox-core` (routing list moved into `owner-placement` and `owner-arrival`; `env.production` became the top-level block and `env.development` the local one). (`a041617`)
+- [x] **G2 tests WI-35 to WI-43.** Inbound media over HTTP against a `fetch` spy for the Graph. All pins. (`d93dc2f`)
+- [x] **G3 tests WI-52 to WI-55 and WI-57.** Statuses against a sent message with a channel id. WI-54 was red: `applyStatus` reported `applied: true` for a failure after a settled state, so the route never logged `status.failed.ignored`. Red `f5b827b`, fix `619aafb`.
+- [x] **G4 download seam.** `WHATSAPP_MEDIA_DOWNLOAD_ORIGIN` (development only) joins the https Meta hosts in one policy, `media-url-policy.ts`; production declares no such variable and points `WHATSAPP_GRAPH_BASE_URL` at `https://graph.facebook.com`. Red `8dc2e68`, green `6a5e306`.
+- [x] **G5 E2E-2 stored voice note.** (`6fe1818`, pin: the seam was already in)
+- [x] **G6 dedupe.** `freePort` and `waitForHealth` live once in `apps/api/test/e2e/support/stack-process.ts`. (`daafcad`)
 
 ## Failure modes
 
@@ -756,7 +765,8 @@ Failure modes for W0 are in the table below. W0 has no backout: fix forward in a
 | W4.4 | Bytes remain in R2 after a mismatch | `whatsapp-media-download.test.ts` mismatch case: the key still exists | Add the delete on mismatch (A24) |
 | W4.6 | A media `5xx` returns `200` | `whatsapp-webhook.test.ts` media `5xx` case: status `200` | Return `500` (A25) |
 | W4.6 | Unindexed status returns `200` while young | `whatsapp-status.test.ts` young unknown `wamid`: status `200` | Return `503` below the 10 min window (A27) |
-| W6.3 | The development URL reaches production | `whatsapp-bundle.e2e.test.ts` grep finds `127.0.0.1:4011` | Remove the var from the non-development block |
+| W6.3 | The development URL reaches production | `whatsapp-bundle.e2e.test.ts` grep finds `127.0.0.1:4011`, or `wrangler-config.test.ts` finds `WHATSAPP_MEDIA_DOWNLOAD_ORIGIN` in the top-level block | Remove the var from the top-level block |
+| G4 | A production host list accepts a non-Meta origin | `whatsapp-media-url-policy.test.ts` refuses nothing for a lookalike host | Revert `6a5e306`; the https suffix rule is the only production path |
 
 **Steps with no backout:** W0.1 (fix forward only), W-1.1 (a documentation commit, revert it).
 

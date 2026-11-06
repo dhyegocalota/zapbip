@@ -1,9 +1,9 @@
 import { z } from 'zod';
-import { GRAPH_API_VERSION, GRAPH_REQUEST_TIMEOUT_MS, WHATSAPP_MEDIA_HOST_SUFFIXES } from './whatsapp-constants';
+import { isAllowedMediaUrl } from './media-url-policy';
+import { GRAPH_API_VERSION, GRAPH_REQUEST_TIMEOUT_MS } from './whatsapp-constants';
 
 export const GRAPH_NO_RESPONSE_STATUS = 0;
 
-const DOWNLOAD_PROTOCOL = 'https:';
 const JSON_CONTENT_TYPE = 'application/json';
 
 const graphErrorSchema = z.object({
@@ -29,15 +29,10 @@ export type GraphClient = {
   download(input: { url: string }): Promise<Response>;
 };
 
-function isAllowedMediaHost(input: { hostname: string }): boolean {
-  return WHATSAPP_MEDIA_HOST_SUFFIXES.some((suffix) => input.hostname === suffix || input.hostname.endsWith(`.${suffix}`));
-}
-
-function assertDownloadUrl(input: { url: string }): void {
-  if (!URL.canParse(input.url)) throw new Error('media download refused: the url is not valid');
-  const { protocol, hostname } = new URL(input.url);
-  if (protocol === DOWNLOAD_PROTOCOL && isAllowedMediaHost({ hostname })) return;
-  throw new Error(`media download refused for host ${hostname}`);
+function assertDownloadUrl(input: { url: string; developmentMediaOrigin: string | null }): void {
+  if (isAllowedMediaUrl(input)) return;
+  const host = URL.canParse(input.url) ? new URL(input.url).hostname : 'invalid url';
+  throw new Error(`media download refused for host ${host}`);
 }
 
 async function failureOf(input: { response: Response }): Promise<GraphRequestError> {
@@ -51,8 +46,13 @@ async function failureOf(input: { response: Response }): Promise<GraphRequestErr
   });
 }
 
-export function createGraphClient(input: { baseUrl: string; accessToken: string; fetcher: typeof fetch }): GraphClient {
-  const { baseUrl, accessToken, fetcher } = input;
+export function createGraphClient(input: {
+  baseUrl: string;
+  accessToken: string;
+  developmentMediaOrigin: string | null;
+  fetcher: typeof fetch;
+}): GraphClient {
+  const { baseUrl, accessToken, developmentMediaOrigin, fetcher } = input;
   const authorization = `Bearer ${accessToken}`;
 
   async function perform(request: { url: string; init: RequestInit }): Promise<Response> {
@@ -91,7 +91,7 @@ export function createGraphClient(input: { baseUrl: string; accessToken: string;
     },
 
     async download({ url }) {
-      assertDownloadUrl({ url });
+      assertDownloadUrl({ url, developmentMediaOrigin });
       return perform({ url, init: { method: 'GET', headers: { authorization }, redirect: 'manual' } });
     },
   };

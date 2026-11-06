@@ -1,16 +1,20 @@
-import { ChannelError, MEDIA_LINK_TTL_MS } from '@zapbip/core';
-import { ChannelErrorKind, MediaSourceKind, MessageKind, OwnerLocale, TemplateKind } from '@zapbip/types';
-import { reset } from 'cloudflare:test';
+import type { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { ChannelError, MEDIA_LINK_TTL_MS, type CoreDependencies } from '@zapbip/core';
+import { ChannelErrorKind, DeliveryState, MediaSourceKind, MessageKind, OwnerLocale, TemplateKind } from '@zapbip/types';
+import { reset, runInDurableObject } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
+import { AccountInbox } from '../../src/account-inbox/account-inbox';
 import { D1ChannelRestrictions } from '../../src/adapters/d1/d1-channel-restrictions';
 import { D1MessageIndex } from '../../src/adapters/d1/d1-message-index';
 import { findOwnerByAccountId } from '../../src/adapters/d1/d1-owner-directory';
 import { createPlatformClock } from '../../src/adapters/platform/clock';
+import { generateConnectionSecret } from '../../src/adapters/platform/connection-secret';
 import { createR2MediaStore } from '../../src/adapters/r2/r2-media-store';
 import { createCloudApiMessageSender } from '../../src/adapters/whatsapp/cloud-api-message-sender';
 import { createGraphClient } from '../../src/adapters/whatsapp/graph-client';
 import { readWhatsAppEnvironment } from '../../src/adapters/whatsapp/read-whatsapp-env';
 import { RESTRICTION_TTL_MS } from '../../src/adapters/whatsapp/whatsapp-constants';
+import { McpToolName } from '../../src/contract/tool-definitions';
 import buttonsFixture from '../fixtures/whatsapp/outbound/buttons.json';
 import listFixture from '../fixtures/whatsapp/outbound/list.json';
 import templateEnglishFixture from '../fixtures/whatsapp/outbound/template-notice-en_US.json';
@@ -18,8 +22,9 @@ import templatePortugueseFixture from '../fixtures/whatsapp/outbound/template-no
 import textFixture from '../fixtures/whatsapp/outbound/text.json';
 import { buildEnvelope, buildQuestion, buildTextMessage } from '../support/builders';
 import { FakeGraph } from '../support/fake-graph';
-import { applyDirectoryMigration, seedOwnerIdentity } from '../support/seed';
-import { testEnv, whatsappTestEnv } from '../support/workers-env';
+import { applyDirectoryMigration, seedConnection, seedOwnerIdentity } from '../support/seed';
+import { accountInboxStub, testEnv, whatsappTestEnv } from '../support/workers-env';
+import { callTool, connectClient, ownerText, ownerWrites, type ToolResult } from './mcp-fixtures';
 
 const FIRST_ACCOUNT = 'acc_a';
 const SECOND_ACCOUNT = 'acc_b';
@@ -27,6 +32,18 @@ const FIRST_OWNER_WA_ID = '5511900000001';
 const SECOND_OWNER_WA_ID = '5511900000002';
 const PUBLIC_ORIGIN = 'https://api.test';
 const MESSAGES_PATH = '/v24.0/1000000000000001/messages';
+const TOOL_AGENT = 'Agente de teste';
+const NOTICE_TEXT = 'Mensagem de exemplo';
+const SESSION_TEXT = 'Olá';
+const WINDOW_CLOSED_CODE = 131_047;
+const REACTION_TARGET_INVALID_CODE = 131_009;
+const RATE_LIMITED_CODE = 130_429;
+const SERVER_ERROR_STATUS = 500;
+const BAD_REQUEST_STATUS = 400;
+const REACTION_TARGET_FIELD = 'reaction.message_id';
+const BUSY_TEXT = 'busy';
+const TIMEOUT_TEXT = 'did not answer in time';
+const TEMPLATE_MESSAGE_TYPE = 'template';
 
 const whatsapp = readWhatsAppEnvironment({ env: whatsappTestEnv });
 const fakeGraph = new FakeGraph({ baseUrl: whatsapp.graphBaseUrl });
@@ -37,7 +54,12 @@ let errorSpy: MockInstance<typeof console.error>;
 function senderFor(input: { accountId: string }) {
   return createCloudApiMessageSender({
     accountId: input.accountId,
-    graph: createGraphClient({ baseUrl: whatsapp.graphBaseUrl, accessToken: whatsapp.accessToken, fetcher: fetch }),
+    graph: createGraphClient({
+      baseUrl: whatsapp.graphBaseUrl,
+      accessToken: whatsapp.accessToken,
+      developmentMediaOrigin: whatsapp.developmentMediaOrigin,
+      fetcher: fetch,
+    }),
     findOwnerByAccountId: (lookup) => findOwnerByAccountId({ database: testEnv.CONNECTIONS, accountId: lookup.accountId }),
     messageIndex: new D1MessageIndex({ database: testEnv.CONNECTIONS }),
     restrictions: new D1ChannelRestrictions({ database: testEnv.CONNECTIONS, phoneNumberId: whatsapp.phoneNumberId }),
@@ -272,5 +294,95 @@ describe('Cloud API sender against the fake Graph', () => {
       { to: FIRST_OWNER_WA_ID, text: { body: 'um' } },
       { to: SECOND_OWNER_WA_ID, text: { body: 'dois' } },
     ]);
+  });
+});
+
+type SenderSelection = { createSender: (input: { mediaStore: CoreDependencies['mediaStore'] }) => CoreDependencies['sender'] };
+type HistoryEntry = { kind: MessageKind; text: string | null; delivery: DeliveryState | null };
+
+function installCloudApiSender(): Promise<void> {
+  return runInDurableObject(accountInboxStub({ accountId: FIRST_ACCOUNT }), (instance) => {
+    const internals = instance as unknown as { dependencies: CoreDependencies };
+    const withCloudApiEnvironment = Object.create(instance, { env: { value: whatsappTestEnv } }) as SenderSelection;
+    const createSender = (AccountInbox.prototype as unknown as SenderSelection).createSender;
+    internals.dependencies.sender = createSender.call(withCloudApiEnvironment, { mediaStore: internals.dependencies.mediaStore });
+  });
+}
+
+describe('send tools over the Cloud API sender', () => {
+  let client: Client;
+  let openingMessageId: string;
+
+  function call(input: { name: McpToolName; arguments: Record<string, unknown> }): Promise<ToolResult> {
+    return callTool({ client, name: input.name, arguments: input.arguments });
+  }
+
+  async function historyOf(): Promise<HistoryEntry[]> {
+    const result = await call({ name: McpToolName.GetMessages, arguments: {} });
+    return [...(result.structuredContent?.unread as HistoryEntry[]), ...(result.structuredContent?.history as HistoryEntry[])];
+  }
+
+  beforeEach(async () => {
+    const secret = generateConnectionSecret();
+    await seedConnection({ accountId: FIRST_ACCOUNT, agent: TOOL_AGENT, secret });
+    client = await connectClient({ secret });
+    await historyOf();
+    openingMessageId = await ownerWrites({
+      accountId: FIRST_ACCOUNT,
+      channelMessageId: 'wamid.open-window',
+      content: ownerText({ text: 'oi' }),
+    });
+    await installCloudApiSender();
+    await fakeGraph.reset();
+  });
+
+  it('WI-58 sends the text through send_message, stores the returned wamid and maps it to the account', async () => {
+    const result = await call({ name: McpToolName.SendMessage, arguments: { text: SESSION_TEXT } });
+    expect(result.structuredContent).toMatchObject({ delivery: DeliveryState.Sent });
+    expect(await sentBodies()).toEqual([textFixture]);
+    const rows = await testEnv.CONNECTIONS.prepare('SELECT wamid, account_id FROM message_index').all<{
+      wamid: string;
+      account_id: string;
+    }>();
+    expect(rows.results).toEqual([{ wamid: expect.stringMatching(/^wamid\.fake\./), account_id: FIRST_ACCOUNT }]);
+  });
+
+  it('WI-59 queues the message when Graph reports a closed window, and sends one notice only', async () => {
+    await refuseNextSend({ status: BAD_REQUEST_STATUS, errorCode: WINDOW_CLOSED_CODE });
+    const first = await call({ name: McpToolName.SendMessage, arguments: { text: NOTICE_TEXT } });
+    const second = await call({ name: McpToolName.SendMessage, arguments: { text: NOTICE_TEXT } });
+    expect([first.structuredContent, second.structuredContent]).toMatchObject([
+      { delivery: DeliveryState.Queued },
+      { delivery: DeliveryState.Queued },
+    ]);
+    const templates = (await sentBodies()).filter((body) => (body as { type: string }).type === TEMPLATE_MESSAGE_TYPE);
+    expect(templates).toEqual([templatePortugueseFixture]);
+    expect((await historyOf()).filter((entry) => entry.delivery === DeliveryState.Queued)).toHaveLength(2);
+  });
+
+  it('WI-60 fails a rejected reaction, names reaction.message_id and marks the reaction failed', async () => {
+    await refuseNextSend({ status: BAD_REQUEST_STATUS, errorCode: REACTION_TARGET_INVALID_CODE });
+    const result = await call({ name: McpToolName.React, arguments: { message_id: openingMessageId, emoji: '👍' } });
+    expect(result.isError).toBe(true);
+    expect(result.content[0]?.text).toContain(REACTION_TARGET_FIELD);
+    expect((await historyOf()).find((entry) => entry.kind === MessageKind.Reaction)?.delivery).toBe(DeliveryState.Failed);
+  });
+
+  it('WI-62 fails a rate limited send as busy, marks it failed and makes no second request', async () => {
+    await refuseNextSend({ status: BAD_REQUEST_STATUS, errorCode: RATE_LIMITED_CODE });
+    const result = await call({ name: McpToolName.SendMessage, arguments: { text: SESSION_TEXT } });
+    expect(result.isError).toBe(true);
+    expect(result.content[0]?.text).toContain(BUSY_TEXT);
+    expect(await sentBodies()).toHaveLength(1);
+    expect((await historyOf()).find((entry) => entry.text === SESSION_TEXT)?.delivery).toBe(DeliveryState.Failed);
+  });
+
+  it('WI-66 fails a Graph server error as a timeout, marks it failed and makes no second request', async () => {
+    await refuseNextSend({ status: SERVER_ERROR_STATUS, errorCode: 0 });
+    const result = await call({ name: McpToolName.SendMessage, arguments: { text: SESSION_TEXT } });
+    expect(result.isError).toBe(true);
+    expect(result.content[0]?.text).toContain(TIMEOUT_TEXT);
+    expect(await sentBodies()).toHaveLength(1);
+    expect((await historyOf()).find((entry) => entry.text === SESSION_TEXT)?.delivery).toBe(DeliveryState.Failed);
   });
 });

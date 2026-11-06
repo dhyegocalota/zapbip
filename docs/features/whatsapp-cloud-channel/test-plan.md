@@ -320,15 +320,15 @@ These run through `SELF.fetch` against the real route and the Durable Object. Th
 - [ ] WI-32 input: a change with `field` `account_alerts` — expected: `200`; `notification.ignored_field` logged; nothing stored.
 - [ ] WI-33 input: the DO commit fails with an injected error on the first attempt, then Meta retries — expected: first `500`; no receipt; the retry returns `200` and stores one message.
 - [ ] WI-34 input: the R2 put fails on an image (fault) — expected: `500`; no message stored; the retry stores one message.
-- [ ] WI-35 input: signed image with caption `Foto`, bytes matching `sha256` — expected: `200`; the message is an image with caption `Foto` and `mediaId` `med_…`; the object is at `accounts/acc_a/media/<mediaId>` with a fixed `Content-Length` recorded by the fake.
-- [ ] WI-36 input: the same image with bytes whose digest differs — expected: `200`; stored as Unavailable; the owner gets the `mediaUnavailable` copy in their locale; the object is absent.
-- [ ] WI-37 input: the download URL returns `404` once, the metadata refresh succeeds, the second download matches — expected: `200`; stored with media.
-- [ ] WI-38 input: the download URL returns `404` twice — expected: `200`; Unavailable; no `500`.
-- [ ] WI-39 input: the download URL returns `500` — expected: `500`; nothing stored; a retry after the fake recovers stores once.
-- [ ] WI-40 input: the download never answers within `GRAPH_REQUEST_TIMEOUT_MS` — expected: `500`; nothing stored.
-- [ ] WI-41 input: the download returns `302` to a foreign host — expected: `200`; Unavailable; the fake records no request to the foreign host.
-- [ ] WI-42 input: metadata `url` `https://lookaside.fbsbx.com@evil.com/x` — expected: `200`; Unavailable; no request to `evil.com`.
-- [ ] WI-43 input: metadata `url` `https://evil.com/.fbsbx.com/x` — expected: `200`; Unavailable; no request to `evil.com`.
+- [x] WI-35 input: signed image with caption `Foto`, bytes matching `sha256` — expected: `200`; the message is an image with caption `Foto` and `mediaId` `med_…`; the object is at `accounts/acc_a/media/<mediaId>` with a fixed `Content-Length` recorded by the fake. (developer: d93dc2f)
+- [x] WI-36 input: the same image with bytes whose digest differs — expected: `200`; stored as Unavailable; the owner gets the `mediaUnavailable` copy in their locale; the object is absent. (developer: d93dc2f)
+- [x] WI-37 input: the download URL returns `404` once, the metadata refresh succeeds, the second download matches — expected: `200`; stored with media. (developer: d93dc2f)
+- [x] WI-38 input: the download URL returns `404` twice — expected: `200`; Unavailable; no `500`. (developer: d93dc2f)
+- [x] WI-39 input: the download URL returns `500` — expected: `500`; nothing stored; a retry after the fake recovers stores once. (developer: d93dc2f)
+- [x] WI-40 input: the download never answers within `GRAPH_REQUEST_TIMEOUT_MS` — expected: `500`; nothing stored. (developer: d93dc2f)
+- [x] WI-41 input: the download returns `302` to a foreign host — expected: `200`; Unavailable; the fake records no request to the foreign host. (developer: d93dc2f)
+- [x] WI-42 input: metadata `url` `https://lookaside.fbsbx.com@evil.com/x` — expected: `200`; Unavailable; no request to `evil.com`. (developer: d93dc2f)
+- [x] WI-43 input: metadata `url` `https://evil.com/.fbsbx.com/x` — expected: `200`; Unavailable; no request to `evil.com`. (developer: d93dc2f)
 - [ ] WI-44 input: a voice note (`audio` with `voice: true`) — expected: `200`; media kind `voice`.
 - [ ] WI-45 input: a reaction `👍` on an agent message `M` while the window is closed — expected: `200`; routed to `M`'s agent; the window stays closed.
 - [ ] WI-46 input: a quick-reply `button` tap with `context.id` the wamid of a sent template, with one queued message — expected: `200`; no message stored; the window opens; the queued message is sent once.
@@ -340,12 +340,12 @@ These run through `SELF.fetch` against the real route and the Durable Object. Th
 
 - [ ] WI-50 input: a status for an unknown `wamid` whose `timestamp` is now — expected: `503`; nothing stored; Meta can retry.
 - [ ] WI-51 input: a status for an unknown `wamid` whose `timestamp` is 11 minutes old — expected: `200`; `status.unindexed` logged; nothing stored.
-- [ ] WI-52 input: a `read` status for `wamid.S` sent by `acc_a` — expected: `200`; delivery `Read`.
-- [ ] WI-53 input: `delivered`, `read`, `delivered` for `wamid.S` — expected: final delivery `Read`.
-- [ ] WI-54 input: `failed` after `read` for `wamid.S` — expected: `200`; delivery stays `Read`; `status.failed.ignored` logged.
-- [ ] WI-55 input: `failed` with error 131026 and title `Message undeliverable` after `sent` — expected: delivery `Failed`; `error_code` 131026 and `error_title` stored.
+- [x] WI-52 input: a `read` status for `wamid.S` sent by `acc_a` — expected: `200`; delivery `Read`. (developer: f5b827b)
+- [x] WI-53 input: `delivered`, `read`, `delivered` for `wamid.S` — expected: final delivery `Read`. (developer: f5b827b)
+- [x] WI-54 input: `failed` after `read` for `wamid.S` — expected: `200`; delivery stays `Read`; `status.failed.ignored` logged. (developer: f5b827b, fix 619aafb)
+- [x] WI-55 input: `failed` with error 131026 and title `Message undeliverable` after `sent` — expected: delivery `Failed`; `error_code` 131026 and `error_title` stored. (developer: f5b827b)
 - [ ] WI-56 input: a `played` status — expected: `200`; `status.ignored` logged; delivery unchanged.
-- [ ] WI-57 input: a `delivered` status with pricing `service`, billable false — expected: `pricing_category` and `billable` stored; a later `read` with no pricing keeps them.
+- [x] WI-57 input: a `delivered` status with pricing `service`, billable false — expected: `pricing_category` and `billable` stored; a later `read` with no pricing keeps them. (developer: f5b827b)
 
 ### Outbound (`whatsapp-outbound.test.ts`)
 
@@ -375,7 +375,7 @@ These run through `SELF.fetch` against the real route and the Durable Object. Th
 Runner: `ZAPBIP_E2E=1 pnpm --filter @zapbip/api test:e2e`. The global setup starts the fake Graph on `127.0.0.1:4011` and `wrangler dev` (the development entry, top-level block) with `--var META_APP_SECRET:test-app-secret --var WHATSAPP_VERIFY_TOKEN:test-verify-token --var WHATSAPP_ACCESS_TOKEN:test-access-token --var WHATSAPP_PHONE_NUMBER_ID:1000000000000001`. The E2E posts signed webhooks and talks to the MCP endpoint of a connection.
 
 - [ ] E2E-1 steps: post a signed owner text from `5511900000001`; expected: the MCP `check_inbox` of the connection returns that text with `sender` `owner` and `verified` true.
-- [ ] E2E-2 steps: post a signed voice note; expected: `check_inbox` returns a media item with `media_kind` `voice` and a `url` that `GET`s the bytes with `200`.
+- [x] E2E-2 steps: post a signed voice note; expected: `check_inbox` returns a media item with `media_kind` `voice` and a `url` that `GET`s the bytes with `200`. (developer: 6fe1818)
 - [ ] E2E-3 steps: post a signed reaction on the agent's last message; expected: the agent receives the reaction and its `emoji`.
 - [ ] E2E-4 steps: post a signed list reply `q_1:1` for an open list question; expected: `wait_for_reply` returns the answer with option index 1.
 - [ ] E2E-5 steps: the agent calls `ask` with four options (list); expected: the fake Graph's log holds one request whose body equals `outbound/list.json` with the question's id.
@@ -413,7 +413,7 @@ Recorded for the PR with the simulator screen walk (`check-ui`) on the developme
 
 ## Production build
 
-- [ ] PB-1 `wrangler deploy --dry-run --env production --outdir <scratch dir>` — expected: exit code 0 once `deploy-readiness` has merged `env.production`; the bundle contains no `127.0.0.1:4011`.
+- [ ] PB-1 `wrangler deploy --dry-run --outdir <scratch dir>` (the top-level block is production since slice 1's last merge) — expected: exit code 0; the bundle contains no `127.0.0.1:4011`.
 - [ ] PB-2 the same bundle — expected: no fixture marker `fixture-marker-whatsapp`.
 - ~~[ ] PB-3 the same bundle — expected: no call site of `registerDevelopmentSender`; no import of `development-sender`.~~ (refresh: R15)
 - [ ] PB-3 the same bundle — expected: no import of `fake-whatsapp-sender`, no `DevAccountInbox` and no `createSender` override.
