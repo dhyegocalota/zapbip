@@ -301,3 +301,28 @@ The transport sets `timedOut` when the request fails with `TimeoutError` or `Abo
 
 - A throw after a `2xx` finishes the job like a delivery: a message that arrived in flight gets its follow-up wake under the 60 s cap.
 - The 60 s cap is per agent; ADR 0019 records the per-account-per-host cap as a later option.
+
+## Round 3: open boxes of the test plan
+
+**What changed.** Tests only, plus the plan text. Rows that disagreed with the decided spec or code were reworded (owner delegated 2026-11-06): own subdomain refused, lazy key (the object builds, sealing or opening names `WAKE_SECRET_KEY`), `WAKE_METRICS` non-fatal, `PUBLIC_ORIGIN` as the only input of the guard, the three unavailable modes refused at the tool layer, "no wake case is skipped" scoped to the wake specs, locale-missing settles the wake as `failing` without a notice. `origin/feat/agent-inbox-core` (core rounds 2 and 3) is merged.
+
+**Tests named by box id** (the title starts with `box <line of the test plan>`):
+
+| Box | Test | State |
+|---|---|---|
+| 101 | `run-due-wakes.test.ts` ten bursts across two agents | new, green on arrival (pin) |
+| 120 | `wake-copy.test.ts` every text says the message waits in the inbox | new, green on arrival (pin) |
+| 170 | `set-wake.test.ts` revoked secret rejected like `send_message` | existing test, stronger assertion |
+| 179, 183, 184 | `webhook-wake-lifecycle.test.ts` live waiter, delayed `200`, restart under a lease | existing, renamed |
+| 184 | `webhook-wake-delivery.test.ts` leased job | existing, renamed |
+| 186 | `webhook-wake-delivery.test.ts` upload expiry before the wake | new, green on arrival (pin) |
+| 188 | `webhook-wake-delivery.test.ts` locale missing | existing, renamed |
+| 261 | `webhook-wake-lifecycle.test.ts` refusal, restart, second refusal, delivery | new, green on arrival (pin) |
+
+**Hypotheses for the tester.**
+
+- Boxes 243 and 249 to 253 pass at HEAD in a full run of core, integration and the wake e2e specs.
+- Boxes 12 to 15 hold at the red commits named in the rows (17f985a, ba8483a, aaed4db); the e2e lane is a pin and has no red run.
+- After a refusal, an object restart and a second refusal the owner has exactly one notice, and a delivery returns the wake to `active`.
+
+**Gaps.** Boxes 226 to 230 are owner-run and stay under "Owner-run". Boxes 234 to 236 are the docs checks a tester runs.

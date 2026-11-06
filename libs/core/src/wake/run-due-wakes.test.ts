@@ -190,6 +190,31 @@ describe('runDueWakes delivery', () => {
   });
 });
 
+describe('runDueWakes bursts', () => {
+  const BURST_COUNT = 10;
+  const BURST_AGENTS = ['alpha', 'beta'];
+
+  async function burst(input: { wakeEnvironment: WakeEnvironment }): Promise<void> {
+    const { wakeEnvironment } = input;
+    await Promise.all(BURST_AGENTS.map((agent) => addUnreadOwnerMessage({ wakeEnvironment, agent })));
+    await Promise.all(BURST_AGENTS.map((agent) => scheduleWake({ ...wakeEnvironment.context, agent })));
+    BURST_AGENTS.forEach((agent) => enqueue({ wakeEnvironment, agent, responses: [respond({ statusCode: OK })] }));
+    await fireAfter({ wakeEnvironment, delayMs: WAKE_MIN_INTERVAL_MS });
+  }
+
+  test('box 101: ten bursts of owner text across two agents send only the constant body', async () => {
+    const wakeEnvironment = await createWakeEnvironment();
+    await Promise.all(BURST_AGENTS.map((agent) => setWebhook({ wakeEnvironment, agent })));
+    await Array.from({ length: BURST_COUNT }).reduce<Promise<void>>(async (previous) => {
+      await previous;
+      await burst({ wakeEnvironment });
+    }, Promise.resolve());
+    const { requests } = wakeEnvironment.transport;
+    expect(requests).toHaveLength(BURST_COUNT * BURST_AGENTS.length);
+    expect(new Set(requests.map((request) => request.body))).toEqual(new Set([WAKE_SIGNAL_BODY]));
+  });
+});
+
 describe('runDueWakes retries', () => {
   test('backs off 5, 10, 20 and 40 seconds and gives up on the fifth failure with one owner notice', async () => {
     const wakeEnvironment = await armed();

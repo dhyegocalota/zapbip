@@ -139,15 +139,22 @@ describe('set_wake over MCP', () => {
     session.socket.close();
   });
 
-  it('answers a call with a revoked secret as unauthorized and stores no wake', async () => {
+  it('box 170: answers a call with a revoked secret like send_message and stores no wake', async () => {
     await env.CONNECTIONS.prepare('DELETE FROM connections WHERE secret_digest = ?').bind(secretDigest).run();
-    await expect(
-      callTool({
-        client,
-        name: McpToolName.SetWake,
-        arguments: { mode: WakeMode.Webhook, url: GROK_URL, token: PINNED_TOKEN },
-      }),
-    ).rejects.toThrow();
+    const sendMessageRejection = await callTool({ client, name: McpToolName.SendMessage, arguments: { text: 'oi' } }).then(
+      () => null,
+      (error: Error) => error.message,
+    );
+    const setWakeRejection = await callTool({
+      client,
+      name: McpToolName.SetWake,
+      arguments: { mode: WakeMode.Webhook, url: GROK_URL, token: PINNED_TOKEN },
+    }).then(
+      () => null,
+      (error: Error) => error.message,
+    );
+    expect(sendMessageRejection).not.toBeNull();
+    expect(setWakeRejection).toBe(sendMessageRejection);
     const stored = await runInDurableObject(accountInboxStub({ accountId: ACCOUNT_ID }), (_instance, state) =>
       state.storage.sql.exec('SELECT agent FROM agent_wake WHERE agent = ?', AGENT).toArray(),
     );
