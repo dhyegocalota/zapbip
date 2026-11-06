@@ -7,6 +7,7 @@ from typescript_constants import (
     CONNECTOR_SOURCE,
     ENUMS_SOURCE,
     INBOX_CONSTANTS_SOURCE,
+    SHARED_CONSTANTS_SOURCE,
     TOOL_DEFINITIONS_SOURCE,
     constant_of,
     enum_members_of,
@@ -20,6 +21,7 @@ from zapbip_platform.constants import (
     ConnectorLogEvent,
     FrameRejectionReason,
     MessageKind,
+    PluginLogEvent,
 )
 
 CONNECTOR_CONSTANT_NAMES = [
@@ -97,3 +99,13 @@ def test_send_message_tool_name_equals_the_api_tool_name() -> None:
     tool_names = enum_members_of(source=TOOL_DEFINITIONS_SOURCE, name="McpToolName")
 
     assert constants.SEND_MESSAGE_TOOL_NAME == tool_names["SendMessage"]
+
+
+def test_seen_message_limit_equals_the_shared_one() -> None:
+    assert constants.SEEN_MESSAGE_LIMIT == constant_of(source=SHARED_CONSTANTS_SOURCE, name="SEEN_MESSAGE_LIMIT")
+
+
+def test_handoff_failed_event_equals_the_shared_one() -> None:
+    shared = enum_members_of(source=CONNECTOR_SOURCE, name="ConnectorLogEvent")["PluginHandoffFailed"]
+
+    assert PluginLogEvent.HANDOFF_FAILED.value == shared
