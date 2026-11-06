@@ -9,14 +9,14 @@ Constants are the ones in `libs/core/src/wake/constants.ts`. "t0" is the fake cl
 - [ ] `libs/core/src/wake/assert-wake-target.test.ts` and `sign-wake-request.test.ts` — input: the cases of the Core unit group; expected: every case fails with `assertWakeTarget is not implemented` or `signWakeRequest is not implemented`.
 - [ ] `libs/core/src/wake/set-wake.test.ts` — input: `mode: webhook` with a valid Grok URL; expected: fails with `setWake is not implemented`.
 - [ ] `libs/core/src/wake/schedule-wake.test.ts` and `run-due-wakes.test.ts` — input: the coalescing and due-wake cases; expected: fail with `scheduleWake is not implemented` and `runDueWakes is not implemented`.
-- [ ] `apps/api/test/unit/fetch-wake-transport.test.ts` — input: a stubbed `fetch` answering `200`; expected: fails with `FetchWakeTransport.send is not implemented`.
+- [ ] `apps/api/test/unit/fetch-wake-transport.test.ts` — input: a stubbed `fetch` answering `200`; expected: fails with `createFetchWakeTransport is not implemented` (W0.0: adapters are factories, plan A30).
 - [ ] `apps/api/test/integration/webhook-wake-delivery.test.ts` — input: one owner message and the first alarm; expected: fails with `setWake is not implemented` before any request is recorded.
 - [ ] `apps/api/test/integration/set-wake.test.ts` — input: `tools/list`; expected: `set_wake` is absent from the registry-constant list.
 - [ ] `apps/api/test/e2e/webhook-wake.e2e.test.ts` — input: one owner message to a scripted Grok connection; expected: recorded request count 0 where 1 is expected.
 - [ ] Confirmed each red run fails for the right reason: the failure text the red run actually printed is recorded in `tester-briefing.md` for each lane, not the expected text.
 - [ ] Commit order checked in `git log`: each `test(...)` red commit precedes its `feat(...)` green commit on the same lane.
 
-## Core unit (`libs/core`, Vitest, fake clock, `ScriptedWakeTransport` and in-memory doubles from `@zapbip/core/testing`)
+## Core unit (`libs/core`, Vitest, fake clock, `createScriptedWakeTransport` and the in-memory doubles from `@zapbip/core/wake-testing`; W0.0: factories, plan A11 and A30)
 
 ### Target guard (`assert-wake-target.test.ts`)
 
@@ -95,7 +95,7 @@ Constants are the ones in `libs/core/src/wake/constants.ts`. "t0" is the fake cl
 - [ ] Delivery after `failing` — expected: status `active`; no notice sent (A6).
 - [ ] Owner message arrives while the request is in flight, the attempt is delivered — expected: exactly one follow-up job at settle time + 3 000; no third job after it.
 - [ ] Owner message arrives in flight, the attempt is `Refused` — expected: one follow-up job at settle time + 3 000, and the fallback notice was sent once (A6).
-- [ ] Throwing repository at unit level: `InMemoryWakeRepository.saveJob` throws once during the run — expected: `runDueWakes` resolves; the job row keeps `lastOutcome: Retry`; `nextDueAt` is not null.
+- [ ] Throwing repository at unit level: the `createInMemoryWakeRepository` double's `saveJob` throws once during the run — expected: `runDueWakes` resolves; the job row keeps `lastOutcome: Retry`; `nextDueAt` is not null.
 - [ ] `ownerLocale` missing from the run input (undefined cast in the test) — expected: the job throws inside its own catch, is kept with `lastOutcome: Retry`, and no copy is written in any locale. [security]
 - [ ] Three jobs of which one is leased — expected: `nextDueAt` = the minimum of the remaining `dueAt`s and the lease end of the leased job.
 - [ ] Ten bursts of owner text across two agents — expected: every recorded request body equals `WAKE_SIGNAL_BODY` exactly. [security]
@@ -186,8 +186,8 @@ Constants are the ones in `libs/core/src/wake/constants.ts`. "t0" is the fake cl
 - [ ] Due-time provider: a wake job due at t0 + 3 000 and an upload expiring at t0 + 1 000 (slice 1) — input: both written, then read `getAlarm`; expected: `t0 + 1 000`; after the upload expires and the alarm runs, `getAlarm` = t0 + 3 000.
 - [ ] Locale: owner message with `ownerLocale: en_US`, scripted `401`, `runDurableObjectAlarm` — expected: one notice on the screen in English (the `wakeFailed` English text).
 - [ ] Locale missing: the storage key `owner_locale` deleted before the alarm — expected: the job is kept with `lastOutcome: retry`; no notice in any locale; no default is used. [security]
-- [ ] Revocation: `recordRevocation({agent})` after `set_wake` with a Grok target and a pending job — expected: `findWake` gives `mode: none`, `target: null`, `status: active`; the job row is gone; a later owner message sends zero requests. [security]
-- [ ] Revocation of an agent with no wake — expected: `recordRevocation` returns ok; nothing else changes.
+- [ ] Revocation (W0.0, plan A31: slice 3 owns the RPC, so the test calls `clearWake` through `runInDurableObject`; a pin through `recordRevocation` is added when `accounts-and-keys` merges): `clearWake({agent})` after `set_wake` with a Grok target and a pending job — expected: `findWake` gives `mode: none`, `target: null`, `status: active`; the job row is gone; a later owner message sends zero requests. [security]
+- [ ] Revocation of an agent with no wake — expected: `clearWake` resolves; nothing else changes.
 - [ ] Save after poll: `last_polled_at` written by a poll at T1, then `set_wake` at T2 > T1 — expected: `agent_wake.last_polled_at` still T1; `updated_at` = T2. [security]
 - [ ] Migration order: the object has `v3` applied and `v1` applied, then starts with `v2` pending — expected: `v2` applies; the applied set is `{v1, v2, v3}`; `v2` runs once on restart. No edit to `v1`.
 - [ ] `publicHost` derived from `PUBLIC_ORIGIN`: `PUBLIC_ORIGIN = http://localhost:8787` and a `set_wake` URL on `localhost` — expected: `invalid url` naming `url` (own host and blocked name). `PUBLIC_ORIGIN = https://zapbip.example` and a URL on `zapbip.example` — expected: rejected naming `url`. `PUBLIC_BASE_URL` set to another host has no effect — expected: the guard still uses `PUBLIC_ORIGIN`. [security]
@@ -256,5 +256,5 @@ What is not tested and why.
 - Silent non-read after a delivered wake — no test, no action by design (spec risk). The owner waits with no notice.
 - Real DNS and private-address routing for generic hosts — not testable in workerd; ADR 0019 accepts the residual generic-host surface. Risk: a public host the owner names is still reached.
 - Analytics Engine delivery itself — the datapoint is checked through a spy, not through the platform's dataset. Risk: the dataset binding name is wrong in a deployed environment; deploy-readiness checks it.
-- The production bundle is proven free of the scripted transport and the dev RPCs by the wake bundle test (A10, A11). Not covered: a future slice that imports `@zapbip/core/testing` into production code; the bundle test catches it on the next run.
+- The production bundle is proven free of the scripted transport and the dev RPCs by the wake bundle test (A10, A11). Not covered: a future slice that imports `@zapbip/core/wake-testing` into production code; the bundle test catches it on the next run.
 - Owner-run time measurements vary with network and provider load; the test records the measured value, it does not assert a bound.
