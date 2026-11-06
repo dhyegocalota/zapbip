@@ -69,3 +69,22 @@ Every "it works" is a hypothesis the tester tries to break.
 ## Known gaps
 
 - <what the developer knows is missing or untested>
+
+## Lane L1a (grammar and copy)
+
+Changed: `libs/core/src/accounts/{command,agent-name,install-prompt-parts,account-copy}.ts` and their colocated tests. Run: `pnpm --filter @zapbip/core test:unit`.
+
+Red `ffe19b2` (127 failed, 12 passed; the 12 are `command-words.test.ts`; no pins): `<name> is not implemented` for each function, and `expected [Function] to throw error matching /link line/ | /line/ | /empty/ but got '... is not implemented'`. Green `d742d49`.
+
+Decisions to attack:
+
+1. `parseAccountCommand` returns `DEFAULT_LOCALE` for menu list replies (an id carries no language); L1b should use the account locale for those.
+2. Menu ids are `zapbip:` plus the `CommandKind` value (A12), e.g. `zapbip:list_agents`; the test-plan line saying `zapbip:agents` is outdated.
+3. Added `formatMenuRowId` (`command.ts`) and `buildMenuButtonText({locale})` (`account-copy.ts`, "Comandos" / "Commands") for L4's list send.
+4. `Created` and `Rotated` copy embeds the install prompt between intro and warning; L1b calls `splitInstallPrompt` on the rendered text.
+5. `splitInstallPrompt` treats a line containing `http://` or `https://` as the link line; any line over 4080 characters throws ("link line" or "line"). Parts are `i/n` + newline + slice and rejoin exactly.
+6. `renderAccountReply` has its own token fill (throws `copy: missing parameter <name>`) because `renderCopy` is tied to `InboxCopyKey`.
+
+Hypotheses: a quoting message is never a command; trailing punctuation never matches; reserved names are the first word of every command word; names of 20 characters pass and 21 return `null`.
+
+Gap: `pnpm verify` e2e is red from `dev-seed.ts` against migration 0002 (L2 is fixing it).
