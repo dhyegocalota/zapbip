@@ -28,6 +28,19 @@ CHANNEL_HANDOFF_NO_TEXT_BY_KIND: dict[str, str] = {
 }
 
 
+class MessageKind(Enum):
+    TEXT = "text"
+    IMAGE = "image"
+    VIDEO = "video"
+    AUDIO = "audio"
+    DOCUMENT = "document"
+    STICKER = "sticker"
+    LOCATION = "location"
+    CONTACTS = "contacts"
+    REACTION = "reaction"
+    CHOICE = "choice"
+
+
 class ConnectorFrameType(Enum):
     HELLO = "hello"
     MESSAGES = "messages"
