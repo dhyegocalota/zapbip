@@ -27,6 +27,8 @@ const SAVE_WAKE_STATEMENT =
   'UPDATE agent_wake SET mode = ?, provider = ?, host = ?, sealed_target = ?, key_version = ?, status = ?, last_delivered_at = ?, updated_at = ? WHERE agent = ?';
 const CLEAR_WAKE_STATEMENT =
   'UPDATE agent_wake SET mode = ?, provider = NULL, host = NULL, sealed_target = NULL, key_version = NULL, status = ?, updated_at = ? WHERE agent = ?';
+const SELECT_LOCAL_RESTORE = 'SELECT local_restore FROM agent_wake WHERE agent = ?';
+const SAVE_LOCAL_RESTORE_STATEMENT = 'UPDATE agent_wake SET local_restore = ? WHERE agent = ?';
 const SELECT_JOB = 'SELECT agent, due_at, attempt, lease_until, rewake, last_outcome FROM wake_jobs ';
 const SAVE_JOB_STATEMENT =
   'INSERT INTO wake_jobs (agent, due_at, attempt, lease_until, rewake, last_outcome) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT (agent) DO UPDATE SET due_at = excluded.due_at, attempt = excluded.attempt, lease_until = excluded.lease_until, rewake = excluded.rewake, last_outcome = excluded.last_outcome';
@@ -116,19 +118,18 @@ export function createSqliteWakeRepository(input: { storage: DurableObjectStorag
     },
 
     async findLocalRestore({ agent }) {
-      void agent;
-      throw new Error('findLocalRestore is not implemented');
+      const [row] = rows<{ local_restore: string | null }>(SELECT_LOCAL_RESTORE, agent);
+      if (row === undefined || row.local_restore === null) return null;
+      return JSON.parse(row.local_restore) as StoredWake;
     },
 
     async saveLocalRestore({ agent, previous }) {
-      void agent;
-      void previous;
-      throw new Error('saveLocalRestore is not implemented');
+      const cursor = sql.exec(SAVE_LOCAL_RESTORE_STATEMENT, JSON.stringify(previous), agent);
+      if (cursor.rowsWritten === 0) throw new Error(`no agent_wake row for ${agent}`);
     },
 
     async deleteLocalRestore({ agent }) {
-      void agent;
-      throw new Error('deleteLocalRestore is not implemented');
+      sql.exec(SAVE_LOCAL_RESTORE_STATEMENT, null, agent);
     },
   };
 }
