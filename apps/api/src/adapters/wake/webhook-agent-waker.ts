@@ -1,6 +1,5 @@
-import type { AgentWaker, CoreDependencies, WakeDependencies } from '@zapbip/core';
+import { scheduleWake, type AgentWaker, type CoreDependencies, type WakeDependencies } from '@zapbip/core';
 
 export function createWebhookAgentWaker(input: { dependencies: CoreDependencies; wake: WakeDependencies }): AgentWaker {
-  void input;
-  throw new Error('createWebhookAgentWaker is not implemented');
+  return { notify: ({ agent }) => scheduleWake({ dependencies: input.dependencies, wake: input.wake, agent }) };
 }
