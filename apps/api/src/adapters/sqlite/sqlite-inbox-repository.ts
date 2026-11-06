@@ -323,7 +323,7 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
     async claimNotice() {
       return (
         rows(
-          'UPDATE owner_window SET notice_sent_for_closed_window = 1 WHERE id = ? AND notice_sent_for_closed_window = 0 RETURNING id',
+          'UPDATE owner_window SET notice_sent_for_closed_window = 1, notice_retry_locale = NULL, notice_retry_at = NULL WHERE id = ? AND notice_sent_for_closed_window = 0 RETURNING id',
           WINDOW_ROW_ID,
         ).length === 1
       );
