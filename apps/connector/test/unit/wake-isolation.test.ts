@@ -215,6 +215,14 @@ describe('removeStaleWakeDirectories', () => {
     await expect(access(leftover)).rejects.toThrow();
   });
 
+  test('survives another connector removing the same folders at the same time', async () => {
+    const leftovers = await Promise.all(
+      Array.from({ length: 30 }, (_, index) => makeWakeDirectory({ name: `zapbip-wake-race-${index}`, ageMs: STALE_AGE_MS + 60_000 })),
+    );
+    await Promise.all([removeStaleWakeDirectories(), removeStaleWakeDirectories()]);
+    await Promise.all(leftovers.map((leftover) => expect(access(leftover)).rejects.toThrow()));
+  });
+
   test('keeps a wake folder a running wake may still use', async () => {
     const running = await makeWakeDirectory({ name: 'zapbip-wake-running', ageMs: 1_000 });
     await removeStaleWakeDirectories();
