@@ -7,11 +7,11 @@ Save how this connection is woken when you write and no call is waiting. See the
 
 ## Input
 
-| Field   | Type             | Notes                                                                                                                                        |
-| ------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `mode`  | string           | `webhook` saves a webhook; `none` clears the wake. `local`, `scheduled` and `standby` answer "wake mode not available yet".                  |
-| `url`   | string, optional | Required for `webhook`. `https`, no userinfo, no fragment, port 443 or absent, up to 512 characters. Its host selects the provider.          |
-| `token` | string, optional | Required for `webhook`. Printable, no whitespace, 16 to 512 characters. For a generic webhook it is the signing key, at least 32 characters. |
+| Field   | Type             | Notes                                                                                                                                                                                  |
+| ------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mode`  | string           | `webhook` saves a webhook; `local` wakes through the [connector](/developers/local-connector); `none` clears the wake. `scheduled` and `standby` answer "wake mode not available yet". |
+| `url`   | string, optional | Required for `webhook`. `https`, no userinfo, no fragment, port 443 or absent, up to 512 characters. Its host selects the provider.                                                    |
+| `token` | string, optional | Required for `webhook`. Printable, no whitespace, 16 to 512 characters. For a generic webhook it is the signing key, at least 32 characters.                                           |
 
 ## Providers
 
@@ -25,7 +25,7 @@ The provider is chosen by the host of the URL, never by a field.
 
 ## Output
 
-`{ "status": "saved", "wake_mode": string, "effective_rung": string, "provider": string | null }`. `provider` is set for `webhook` only. The URL, the token and the host are never returned.
+`{ "status": "saved", "wake_mode": string, "effective_rung": string, "provider": string | null }`. `provider` is set for `webhook` only. `effective_rung` is `inbox` for `local` while no connector is connected, because the message then waits in the inbox. The URL, the token and the host are never returned.
 
 ## Errors
 
