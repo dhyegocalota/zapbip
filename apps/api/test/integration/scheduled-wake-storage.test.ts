@@ -16,6 +16,7 @@ const MIGRATION_ACCOUNT_ID = 'acc_scheduled_migration';
 const SCHEDULED_AGENT = 'chatgpt';
 const OTHER_SCHEDULED_AGENT = 'claude-ai';
 const WEBHOOK_AGENT = 'grok-bot';
+const GONE_AGENT = 'gone-agent';
 const STANDBY_AGENT = 'grok-web';
 const SCHEDULED_INTERVAL_MINUTES = 60;
 const POLLED_AT = BASE_TIME + 5_000;
@@ -297,6 +298,15 @@ describe('poll state', () => {
     });
     expect(failed.twice).toMatchObject({ lastStaleNoticeAt: NOTICED_AT, staleNoticeFailures: 2, pollerStaleNotified: false });
     expect(failed.afterPoll).toMatchObject({ staleNoticeFailures: 0 });
+  });
+
+  it('does nothing when the wake row is gone', async () => {
+    await inRepositories({
+      run: async ({ wake }) => {
+        await wake.markStaleNotified({ agent: GONE_AGENT, noticedAt: NOTICED_AT });
+        await wake.recordStaleNoticeFailure({ agent: GONE_AGENT, failedAt: NOTICED_AT });
+      },
+    });
   });
 
   it('keeps the stale mark after the object restarts', async () => {

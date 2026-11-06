@@ -77,7 +77,10 @@ afterEach(reset);
 describe('a revoked agent is not resurrected by an in-flight call', () => {
   it('leaves no agent row and no wake row when a call that was admitted lands after the revocation', async () => {
     await stub.recordRevocation({ agent: STANDBY });
-    expectOk(await stub.sendText({ connection: connectionFor({ agent: STANDBY }), text: OWNER_TEXT, replyToMessageId: null }));
+    expect(await stub.sendText({ connection: connectionFor({ agent: STANDBY }), text: OWNER_TEXT, replyToMessageId: null })).toMatchObject({
+      ok: false,
+      errorCode: InboxErrorCode.NotFound,
+    });
     expect(await rowCounts({ agent: STANDBY })).toEqual({ agents: 0, wakes: 0 });
   });
 
@@ -142,6 +145,19 @@ describe('revoking a standby releases what the primary handed off', () => {
     const inbox = expectOk(await stub.checkInbox({ connection: connectionFor({ agent: PRIMARY }) }));
     expect(inbox.status).toBe(InboxStatus.New);
     expect(inbox.messages).toHaveLength(1);
+  });
+
+  it('deletes the unread standby copies of the revoked agent', async () => {
+    expectOk(await receiveOwnerText({ stub, text: `@${PRIMARY} ${OWNER_TEXT}` }));
+    await stub.recordRevocation({ agent: STANDBY });
+    expect(await copyCount({ agent: STANDBY })).toBe(0);
+  });
+
+  it('refuses a get_messages admitted by the directory before the revocation reached the object', async () => {
+    expectOk(await receiveOwnerText({ stub, text: `@${PRIMARY} ${OWNER_TEXT}` }));
+    await stub.recordRevocation({ agent: STANDBY });
+    const outcome = await stub.getMessages({ connection: connectionFor({ agent: STANDBY }), limit: 10 });
+    expect(outcome).toMatchObject({ ok: false, errorCode: InboxErrorCode.NotFound });
   });
 
   it('keeps a hand-off whose copy the standby already read', async () => {

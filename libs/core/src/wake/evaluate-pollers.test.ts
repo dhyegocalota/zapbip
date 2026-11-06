@@ -127,6 +127,27 @@ describe('evaluatePollers failures', () => {
     expect(await wakeEnvironment.wake.repository.findPollState({ agent: 'chatgpt' })).toMatchObject({ pollerStaleNotified: true });
   });
 
+  test('a wake revoked while its notice is delivered neither throws nor stops the others', async () => {
+    const wakeEnvironment = await createWakeEnvironment();
+    await schedule({ wakeEnvironment, agent: 'hermes' });
+    await wakeEnvironment.environment.clock.advance({ ms: 3 * HOUR_MS });
+    const revokedWake = scheduledWakeOf({ agent: 'chatgpt', lastPolledAt: 0 });
+    const hermesWake = await wakeEnvironment.wake.repository.listScheduledWakes();
+    vi.spyOn(wakeEnvironment.wake.repository, 'listScheduledWakes').mockResolvedValue([revokedWake, ...hermesWake]);
+    await evaluatePollers(wakeEnvironment.context);
+    expect(sessionTexts({ wakeEnvironment })).toHaveLength(2);
+    expect(wakeEnvironment.observer.events).toEqual([]);
+  });
+
+  test('a programming error is not logged as a failed notice', async () => {
+    const wakeEnvironment = await createWakeEnvironment();
+    await schedule({ wakeEnvironment, agent: 'chatgpt' });
+    await wakeEnvironment.environment.clock.advance({ ms: 3 * HOUR_MS });
+    vi.spyOn(wakeEnvironment.wake.repository, 'markStaleNotified').mockRejectedValue(new TypeError('broken'));
+    await expect(evaluatePollers(wakeEnvironment.context)).rejects.toThrow('broken');
+    expect(wakeEnvironment.observer.events).toEqual([]);
+  });
+
   test('one failing wake does not stop the notices of the others', async () => {
     const wakeEnvironment = await createWakeEnvironment();
     await schedule({ wakeEnvironment, agent: 'chatgpt' });
