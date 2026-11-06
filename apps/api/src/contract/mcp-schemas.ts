@@ -1,6 +1,15 @@
 import { z } from 'zod';
 import { ASK_MAX_WAIT_SECONDS, HISTORY_LIMIT } from '@zapbip/core';
-import { DeliveryState, InboxStatus, MessageKind, MessageDirection, MessageSender, OwnerLocale, ReplyStatus } from '@zapbip/types';
+import {
+  DeliveryState,
+  InboxStatus,
+  MediaSourceKind,
+  MessageKind,
+  MessageDirection,
+  MessageSender,
+  OwnerLocale,
+  ReplyStatus,
+} from '@zapbip/types';
 
 const nullableString = z.string().nullable().default(null);
 
@@ -81,6 +90,7 @@ export const messageWireSchema = z.object({
   kind: z.enum(MessageKind),
   text: z.string().nullable(),
   media_id: z.string().nullable(),
+  media_status: z.literal(MediaSourceKind.Unavailable).nullable(),
   url: z.string().nullable(),
   mime_type: z.string().nullable(),
   size_bytes: z.number().nullable(),

@@ -9,7 +9,6 @@ export default defineConfig({
         bindings: {
           MEDIA_LINK_SIGNING_KEY: 'test-media-key',
           UPLOAD_LINK_SIGNING_KEY: 'test-upload-key',
-          WHATSAPP_ACCESS_TOKEN: 'test-access-token',
           META_APP_SECRET: 'test-app-secret',
           WHATSAPP_VERIFY_TOKEN: 'test-verify-token',
           WHATSAPP_PHONE_NUMBER_ID: '1000000000000001',
