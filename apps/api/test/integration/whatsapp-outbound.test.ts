@@ -1,7 +1,7 @@
 import { ChannelError, MEDIA_LINK_TTL_MS } from '@zapbip/core';
 import { ChannelErrorKind, MediaSourceKind, MessageKind, OwnerLocale, TemplateKind } from '@zapbip/types';
 import { reset } from 'cloudflare:test';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 import { D1ChannelRestrictions } from '../../src/adapters/d1/d1-channel-restrictions';
 import { D1MessageIndex } from '../../src/adapters/d1/d1-message-index';
 import { findOwnerByAccountId } from '../../src/adapters/d1/d1-owner-directory';
@@ -31,6 +31,8 @@ const MESSAGES_PATH = '/v24.0/1000000000000001/messages';
 const whatsapp = readWhatsAppEnvironment({ env: testEnv });
 const fakeGraph = new FakeGraph({ baseUrl: whatsapp.graphBaseUrl });
 const clock = createPlatformClock();
+
+let errorSpy: MockInstance<typeof console.error>;
 
 function senderFor(input: { accountId: string }) {
   return createCloudApiMessageSender({
@@ -84,7 +86,7 @@ async function refuseNextSend(input: { status: number; errorCode: number }): Pro
 }
 
 beforeEach(async () => {
-  vi.spyOn(console, 'error').mockImplementation(() => undefined);
+  errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
   await applyDirectoryMigration();
   await seedOwnerIdentity({ accountId: FIRST_ACCOUNT, phone: FIRST_OWNER_WA_ID, ownerLocale: OwnerLocale.PortugueseBrazil });
   await fakeGraph.reset();
@@ -162,10 +164,7 @@ describe('Cloud API sender against the fake Graph', () => {
     await refuseNextSend({ status: 401, errorCode: 190 });
     const error = await failureOf({ run: () => senderFor({ accountId: FIRST_ACCOUNT }).session(textInput({ text: 'Olá' })) });
     expect(error.code).toBe(ChannelErrorKind.Auth);
-    const logged = vi
-      .mocked(console.error)
-      .mock.calls.map(([line]) => String(line))
-      .join('\n');
+    const logged = errorSpy.mock.calls.map(([line]) => String(line)).join('\n');
     expect(logged).toContain('channel.auth');
     expect(logged).not.toContain(whatsapp.accessToken);
   });
@@ -190,12 +189,7 @@ describe('Cloud API sender against the fake Graph', () => {
         }),
     });
     expect(error.code).toBe(ChannelErrorKind.TemplateRejected);
-    expect(
-      vi
-        .mocked(console.error)
-        .mock.calls.map(([line]) => String(line))
-        .join('\n'),
-    ).toContain('channel.template_rejected');
+    expect(errorSpy.mock.calls.map(([line]) => String(line)).join('\n')).toContain('channel.template_rejected');
   });
 
   it('sends a three-option question as reply buttons', async () => {

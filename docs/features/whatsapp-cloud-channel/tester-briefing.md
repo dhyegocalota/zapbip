@@ -104,7 +104,7 @@ The integration file needs W3's bodies and the fake Graph listening on port 4012
 | `whatsapp-copy.test.ts`, `whatsapp-templates.test.ts` | pin: green on arrival (fb03bb2) | |
 | `whatsapp-outbound-builders`, `-outbound-limits`, `-template-sanitiser`, `-channel-error-mapping` (7f0481f) | 87 failed: `buildSessionPayload is not implemented`, `buildTemplatePayload is not implemented`, `assert* is not implemented`, `sanitiseTemplateParameter is not implemented`, `mapGraphErrorToChannelError is not implemented` | 6c1bef0: 96 passed |
 | `whatsapp-graph-client`, `-read-whatsapp-env`, `-operator-log`, `-cloud-api-message-sender`, `-fake-graph` (1e7aebf) | `createGraphClient is not implemented`, `readWhatsAppEnvironment is not implemented`, `logOperatorEvent is not implemented`, `createCloudApiMessageSender is not implemented`, `startFakeGraph is not implemented` | dc62dba and 4aeace4: 14 unit files, 168 passed |
-| `whatsapp-outbound.test.ts` (integration) | the file fails to load: `readWhatsAppEnvironment is not implemented` (no tests collected) | needs W3 and the Graph global setup |
+| `whatsapp-outbound.test.ts` (integration) | the file fails to load: `readWhatsAppEnvironment is not implemented` (no tests collected) | needs W3 and the Graph global setup; run in a throwaway merge of W3 with `startFakeGraph({port: 4012})` as a global setup: 14 passed |
 
 ### Hypotheses to attack
 
