@@ -234,3 +234,19 @@ Pins (green on arrival): `env-example.test.ts`, `root-scripts.test.ts` (`19d03f1
 - D4 and D7: official number, company facts and the npm maintainer check apply to production and docs only; staging needs placeholders and secrets. Order is now environment, production gates, placeholders, readiness, smoke inputs, git, secrets, migrations, gate, dry run. Red `6b7d43a`, green `47c69ba`.
 - D5, D6, D8, D9 and the missing steps (payment method, number PIN, PyPI commands, buying the domain, the first secret put creating the Worker): runbooks and README order rewritten; the go-live order in `runbooks.test.ts` updated; three new runbook tests are pins.
 - D10, E1, E2, E3, E5, E6: smoke output names the failure kind (`ECONNREFUSED`) and never the URL or message; lowercase and hyphenated placeholders are refused; non-JSON wrangler output is refused or reported clearly; an empty version list says "no previous Worker version"; a trailing slash is trimmed from `SMOKE_BASE_URL`; a failed `git fetch` is refused. Red `6b7d43a` and the smoke and rollback red commits; green `47c69ba`, the smoke fix and `66d89f1`.
+
+### Lane B: security and reviewer fixes (2026-11-06)
+
+Correction: the earlier briefing rows `45d02ab` (npm maintainers) and `6b7d43a` (staging scope, cheap-first order) are red commits, not pins, whatever their titles say.
+
+- Child environment scrubbed of every `WorkerSecret` and smoke input name (`ee4f36c` red, `29acc7e` green). The smoke script reads the owner's environment file itself.
+- The npm check needs the owner as the only maintainer and the publisher (`_npmUser`) of `zapbip` and `@zapbip/openclaw-plugin`, on the production Worker and on the docs preflight (`c9d50c5` red; green in `efe75ee`). A network failure is reported as such (`098b69b` red). The shape of `npm view --json` errors (`{ "error": { "code" } }` on stdout) is assumed from npm's behaviour, not run against the registry.
+- The example environment file lists only what the scripts read; four secrets are piped into `wrangler secret put` in the runbook.
+- Smoke: https and `PUBLIC_ORIGIN` host guard, stop on a failed health check, placeholder-signature probe in check 4.
+- One cron per block, `*/30 * * * *`, with a job-record dispatch by tick time (`ec20030` red, `bdca5a2` green). `controller.scheduledTime` is the tick. At the accounts-and-keys merge its dispatch absorbs these two jobs.
+- The install route is read from `createApp(...).routes` through `INSTALL_PAGE_PATH_PREFIX` (`fa9f1f2` red, `c742f81` green). The `scheduled` export is still a text match on `src/index.ts`, because that file imports the Durable Object runtime and cannot be loaded in Node.
+- The rollback point comes from `wrangler deployments status --json` (the version with most traffic), pinned by `apps/api/test/fixtures/deployments-status.json`, a shape read from wrangler 4.158 source and not recorded from a live account (`098b69b` red, `efe75ee` green).
+- `guard-deploy.sh` blocks deploys, `versions deploy`, `rollback`, `secret put`, any `d1 ... --remote` and the `deploy:*` and `migrate:staging|production` scripts for Claude Code and Codex; `--dry-run` passes; text inside quotes is ignored (`970d0a2` red, `b1ea6a8` green). Known limit: an unquoted `echo wrangler deploy` is blocked.
+- `OPENCLAW_PLUGIN_NPM_VERSION` (libs/types) is tested against `apps/openclaw-plugin/package.json` when that file exists.
+- agent-inbox-core is merged: `COMPANY` is core's, typed `CompanyFacts`; `DEVELOPMENT_ENVIRONMENT` derives from `DeployEnvironment`.
+- Docs: README step 1 prepares the machine; spec and test-plan list every refusal and the nine scripts; `verify-gates.tsv` sends `wrangler.jsonc` through e2e.

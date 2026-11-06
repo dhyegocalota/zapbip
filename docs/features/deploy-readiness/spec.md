@@ -117,20 +117,26 @@ The smoke connection is created by the owner on each environment: from WhatsApp 
 
 ### Deploy command and preflight
 
-Root scripts: `deploy:staging` and `deploy:production` run `apps/api/scripts/deploy.ts --environment <environment>`. The script stops at the first failed step and prints what to do next:
+Root scripts: `deploy:staging` and `deploy:production` run `apps/api/scripts/deploy.ts --environment <environment>` (`--first-deploy` for the first deploy of an environment), and `docs:preflight` runs `apps/api/scripts/docs-preflight.ts`. The deploy script stops at the first refusal and prints what to do next. Cheap refusals come first and the full gate last. Staging needs only its placeholders, secrets and migrations; the official number, the company facts and npm are production and docs gates (owner delegated 2026-11-06):
 
 1. The environment must be `staging` or `production`, and the terminal must be interactive.
-2. Git: production requires branch `main`, a clean tree, and `HEAD` equal to `origin/main` after a fetch. Staging requires a clean tree.
-3. Gate: `pnpm verify all` for production, `pnpm verify` for staging.
-4. Config: the environment's block has no placeholder database or bucket ID.
-5. Secrets: `pnpm exec wrangler secret list --env <environment> --format json` names every `WorkerSecret`. Missing names are listed.
-6. Migrations: `pnpm exec wrangler d1 migrations list <database> --env <environment> --remote` reports nothing to apply. A pending migration stops the deploy and prints `pnpm migrate:<environment>`.
-7. Smoke inputs: the `.env` values the smoke test needs are set. They are checked here, so a missing one stops the deploy before it starts, not after.
-8. Dry run: `pnpm exec wrangler deploy --env <environment> --dry-run`.
-9. Rollback points: prints the current Worker version (`wrangler versions list --env <environment>`, first entry) and the D1 bookmark (`wrangler d1 time-travel info <database> --env <environment>`).
-10. Confirmation: production asks the owner to type `production`. Any other answer stops the deploy.
-11. `pnpm exec wrangler deploy --env <environment>`.
-12. Smoke test for that environment. A failure prints the rollback commands and exits non-zero. The script does not roll back on its own; the owner decides.
+2. Production only: `OFFICIAL_WHATSAPP_NUMBER` is not `OFFICIAL_NUMBER_UNSET`.
+3. Production only: no field of `COMPANY` is `COMPANY_FACT_UNSET`.
+4. Production only: `zapbip@<ZAPBIP_NPM_VERSION>` and `@zapbip/openclaw-plugin@<OPENCLAW_PLUGIN_NPM_VERSION>` resolve with `npm view <package> maintainers --json` and `npm view <package> _npmUser --json`, and the npm user in `ZAPBIP_NPM_PUBLISHER` is the only maintainer and the publisher of both. A network failure says npm could not be reached; only an `E404` says the package does not resolve.
+5. Config: the environment's block has no `REPLACE_WITH_` placeholder anywhere, in any letter case.
+6. Production only, readiness: the Worker exports `scheduled`, the block has a cron trigger and the built app mounts a `GET` route under `INSTALL_PAGE_PATH_PREFIX`.
+7. Smoke inputs: the values the smoke test needs are set in the owner's environment file. With `--first-deploy` the connection inputs are not needed.
+8. Git: a clean tree; production also requires branch `main` and `HEAD` equal to `origin/main` after a fetch. A failed fetch is a refusal.
+9. Secrets: `wrangler secret list --env <environment> --format json` names every `WorkerSecret`. Output that is not JSON is a refusal.
+10. Migrations: `wrangler d1 migrations list <database> --env <environment> --remote` reports nothing to apply.
+11. Gate: `pnpm verify all` for production, `pnpm verify` for staging.
+12. Dry run: `wrangler deploy --env <environment> --dry-run`.
+13. Rollback points: the current Worker version is the version with most traffic in `wrangler deployments status --json`, and the D1 bookmark comes from `wrangler d1 time-travel info <database> --json`. When there is no deployment, the output says there is no previous Worker version and a rollback means redeploying the prior commit.
+14. Confirmation: production asks the owner to type `production`. Any other answer stops the deploy.
+15. `wrangler deploy --env <environment>`; production passes no `--env`.
+16. Smoke test for that environment, with `--first-deploy` forwarded. A failure prints the rollback commands and exits non-zero. The script does not roll back on its own; the owner decides.
+
+Every child process of the script runs with an environment scrubbed of the seven `WorkerSecret` names and the smoke inputs; the smoke script reads the owner's environment file itself. `docs:preflight` refuses while the official number or a company fact is unset, or while either npm package fails the check of step 4; the docs deploy is the merge to `main`, which Mintlify publishes, so the owner runs it before enabling the site.
 
 Migrations run first, always, through `migrate:<environment>` (`pnpm exec wrangler d1 migrations apply <database> --env <environment> --remote`; `--local` for development). Migrations are forward-only and must work with the Worker version still running, so the expand-then-contract rule applies: a column is added in one deploy and its old use removed in a later one. A deploy that fails after its migration leaves the previous Worker serving the new schema.
 
@@ -153,6 +159,11 @@ Design choices in the smoke test:
 - The owner's message opens the 24-hour window, so the reply the owner gets back is a session message and bills nothing.
 - The script refuses check 5 for `production` in code, not by convention. Production runs checks 1 to 4, which change no state.
 - Missing inputs are errors, never defaults.
+- The smoke script refuses a base URL that is not `https` (development excepted) or whose host is not the `PUBLIC_ORIGIN` host of the block, before any request carries the connection secret.
+- A failed health check stops the run: no later request is sent.
+- Check 4 also posts a body signed with the placeholder app secret of the example environment file and expects a refusal, so a placeholder `META_APP_SECRET` in production is caught.
+- On `--first-deploy` checks 2 and 5 are skipped and the script prints how to create the smoke connection and run it again.
+- A failed request prints its kind (for example `ECONNREFUSED`), never its URL or message.
 
 The smoke connections are owner-created. Their messages stay in staging history; nothing else is cleaned up.
 

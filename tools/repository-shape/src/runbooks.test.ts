@@ -15,6 +15,7 @@ const FIRST_STEP_NUMBER = 1;
 const ANCHOR_SEPARATOR = '#';
 const PUBLISH_STEP_TITLE = 'Publish the docs';
 const GO_LIVE_ORDER = [
+  'Prepare your machine',
   'Cloudflare setup',
   'DNS',
   'Meta setup',

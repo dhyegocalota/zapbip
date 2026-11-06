@@ -7,7 +7,7 @@ Every checkbox states the input and the exact expected outcome. A ticked box car
 - [ ] `apps/api/test/unit/wrangler-config.test.ts::pins the three wrangler environments` — input: `apps/api/wrangler.jsonc` as slice 1 leaves it; expected: fails because there is no `env.staging` key.
 - [ ] `apps/api/test/unit/deploy-preflight.test.ts::refuses each step with its message` — input: one fake shell per step, failing that step; expected: the first failing step's message is returned and no later step runs.
 - [ ] `apps/api/test/unit/usage-meter.test.ts::gigabyte seconds for a duration` — input: `durationMs: 2000`; expected: `0.25`.
-- [ ] `apps/api/test/unit/scheduled.test.ts::cron to job mapping` — input: `BUDGET_CHECK_CRON`; expected: budget check runs and retention does not.
+- [ ] `apps/api/test/unit/scheduled.test.ts::cron to job mapping` — input: `SCHEDULED_CRON` at 12:00 UTC; expected: budget check runs and retention does not.
 - [ ] `apps/api/test/integration/health.test.ts::names the configured environment` — input: `ENVIRONMENT: 'staging'`; expected: `200` and body `{ "ok": true, "environment": "staging" }`.
 - [ ] Each failure is the missing feature, not a broken test: `tester-briefing.md` records the first failing assertion of each red run.
 
@@ -39,7 +39,7 @@ Source: `apps/api/test/unit/env-example.test.ts`, `root-scripts.test.ts`.
 ~~- [ ] `.env.example` values — input: every value; expected: each starts with `replace-with-`, none empty.~~
 - [ ] `.env.example` values — input: every value; expected: each starts with `REPLACE_WITH_`, none empty.
 - [ ] `.gitignore` — input: root `.gitignore`; expected: lists `.dev.vars` and `.env`; `.env.example` is not ignored.
-- [ ] Root scripts — input: root `package.json`; expected: the eight scripts of the contract are present.
+- [ ] Root scripts — input: root `package.json`; expected: the nine scripts are present: the eight of the contract and `docs:preflight`.
 - [ ] Database names — input: the `d1 migrations apply <database>` names in `migrate:*` and each block's `database_name`; expected: equal per environment.
 - [ ] Environment flags — input: each `deploy:*` and `smoke:*` script; expected: the `--environment` value equals the script suffix.
 - [ ] `tsx` pin — input: root `devDependencies.tsx`; expected: exactly `4.23.15`.
@@ -118,6 +118,28 @@ Source: `smoke-checks.test.ts`, `smoke-inputs.test.ts`, `signed-webhook.test.ts`
 - [ ] Missing `META_APP_SECRET` with check 5 — input: unset; expected: error naming it; no default secret is used.
 - [ ] Terminal shell arguments — input: `secret put META_APP_SECRET --env staging`; expected: arguments equal `['wrangler', 'secret', 'put', 'META_APP_SECRET', '--env', 'staging']`, no `shell: true`.
 - [ ] Terminal shell stdin — input: the same call with a value; expected: the value is written to the child's stdin and is absent from the arguments.
+
+## Preflight additions (owner and review orders, 2026-11-06)
+
+Source: `deploy-preflight.test.ts`, `deploy-entry.test.ts`, `docs-preflight-entry.test.ts`, `worker-facts.test.ts`, `terminal-shell.test.ts`.
+
+- [ ] Official number, production only: input: `OFFICIAL_NUMBER_UNSET`; expected: production refused before any command, staging passes.
+- [ ] Company facts, production only: input: each of `legalName`, `cnpj`, `address`, `website`, `contactEmail` set to `COMPANY_FACT_UNSET`; expected: production refused naming the field, no command; staging passes.
+- [ ] npm maintainers, both packages: input: a co-maintainer, a foreign `_npmUser`, an unreadable answer, a missing `ZAPBIP_NPM_PUBLISHER`; expected: production and `docs:preflight` refused, each message naming the package or the variable.
+- [ ] npm network failure: input: `npm view` exits non-zero with `ENOTFOUND`; expected: the message says npm could not be reached; with `E404` it says the package does not resolve.
+- [ ] Readiness: input: no `scheduled` export, no cron trigger, no `GET` route under `INSTALL_PAGE_PATH_PREFIX` on the built app; expected: production refused naming each; staging passes.
+- [ ] Cheap first: input: a placeholder or a missing smoke input; expected: refused with no command run, before the gate.
+- [ ] Case-insensitive placeholders: input: `replace-with-x` in the block and in a smoke input; expected: refused.
+- [ ] Unreadable wrangler output: input: `secret list` prints `not json`; expected: refused at secrets mentioning JSON; `deployments status` or `time-travel info` unreadable: the deploy continues and says the rollback point is unavailable.
+- [ ] `--first-deploy`: input: placeholder `SMOKE_CONNECTION_SECRET`, no `SMOKE_OWNER_PHONE`; expected: the deploy passes preflight, the smoke command carries `--first-deploy`, checks 2 and 5 are skipped and the follow-up lines are printed.
+- [ ] Child environment: input: an environment holding every `WorkerSecret` and smoke input name; expected: the spawned child sees none of them and keeps the rest, including `ZAPBIP_NPM_PUBLISHER`.
+- [ ] `docs:preflight`: input: the entry with an unset company fact, an unresolved package, and all resolved; expected: exit 1 naming the field, exit 1 naming the package, exit 0 with `the docs are ready to publish`.
+- [ ] Smoke target guard: input: `SMOKE_BASE_URL` with `http`, another host, a look-alike host, not a URL; expected: refused before any request.
+- [ ] Smoke stops on a failed health check: input: health answers `500`; expected: one line, no request to the connection path.
+- [ ] Placeholder signature: input: the Worker accepts a body signed with the placeholder app secret; expected: `FAIL` on check 4.
+- [ ] One cron per block: input: each block's `triggers.crons`; expected: exactly `["*/30 * * * *"]`; ticks: minute 0 runs the budget check, 03:00 UTC also the retention, minute 30 nothing, a failing job does not stop the other and its error is re-thrown.
+- [ ] Rollback point: input: a recorded `deployments status --json` fixture; expected: its single version is printed and used in the rollback command; with a split deployment the version with most traffic.
+- [ ] Deploy guard hook: input: `wrangler deploy`, `versions deploy`, `rollback`, `secret put`, `d1 ... --remote`, `pnpm deploy:*`, `pnpm migrate:production`; expected: blocked for Claude Code and Codex; a `--dry-run` passes (`hooks.test.sh`).
 
 ## Usage and jobs (unit and integration)
 
