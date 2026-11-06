@@ -217,3 +217,11 @@ State when this was written: L2's bodies were merged; L3 had pushed only its red
 - `expires_at` is rendered from the Durable Object's time while the upload link's `exp` comes from the Worker's real clock; they differ when the development clock offset is non-zero.
 - An owner image missing from R2 is returned as a link only, without an image block.
 - The WI-39 to WI-42 uploads are marked received by writing to R2 and calling `completeUpload`; the PUT route belongs to L4b.
+
+### Lane L4a update
+
+- 42 of 43 MCP cases pass against L2 and L3. WI-66 (`create_upload` with `size_bytes` 100000001) stays red: core's `assertUploadDeclaration` has no upper bound, so `create_upload` accepts it. The fix belongs in `libs/core` (L2), not in the MCP edge.
+- Tests open the 24 hour window first (a queued warm-up, an owner text, a read), because a closed window returns `queued`, not `sent`.
+- Core's wording for an unreceived upload is `upload_id: bytes not uploaded yet`; the test plan (WI-47) says `upload has not been received`. The test follows core.
+- The screen assertions (WI-35, WI-56) read history through `get_messages`, because `readScreen` is still a stub until L4b.
+- `ask` sends `optionDescriptions` empty when no option has a description.
