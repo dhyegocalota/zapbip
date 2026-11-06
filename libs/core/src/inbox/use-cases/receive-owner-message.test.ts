@@ -691,7 +691,7 @@ describe('receiveOwnerMessage routing list state', () => {
     expect(sessionTexts({ environment })).toEqual([reminderText()]);
   });
 
-  test('pin: a stale tap leaves the waiter of another question waiting', async () => {
+  test('CU-178 pin: a stale tap leaves the waiter of another question waiting', async () => {
     const environment = await createEnvironment();
     const answered = await askAndAbandon({ environment, text: 'First?' });
     await tap({ environment, optionId: formatOptionId({ questionId: answered.questionId, optionIndex: 0 }), optionTitle: 'Sim' });
@@ -708,7 +708,7 @@ describe('receiveOwnerMessage routing list state', () => {
     expect(await waitingForAnswer).toMatchObject({ status: ReplyStatus.Timeout });
   });
 
-  test('a photo quoting an open question prompt wakes the ordinary wait with the photo', async () => {
+  test('CU-178 a photo quoting an open question prompt wakes the ordinary wait with the photo', async () => {
     const environment = await createEnvironment();
     const question = await askAndAbandon({ environment });
     const holding = waiting({ environment, agent: 'alpha' });

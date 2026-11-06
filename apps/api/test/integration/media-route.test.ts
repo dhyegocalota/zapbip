@@ -44,7 +44,7 @@ async function getMedia(input: { path: StoredFixture; signed: StoredFixture; key
 const PDF_TYPE = 'application/pdf';
 
 describe('media route content type', () => {
-  test('serves the normalized media type', async () => {
+  test('WI-143 serves the normalized media type', async () => {
     const fixture = await storeMedia({ mimeType: 'IMAGE/PNG; charset=binary' });
     const response = await getMedia({ path: fixture, signed: fixture, key: env.MEDIA_LINK_SIGNING_KEY, expiresAt: freshExpiry() });
     expect(response.headers.get('content-type')).toBe(MEDIA_TYPE);
@@ -60,7 +60,7 @@ describe('media route', () => {
     { mimeType: 'text/html', disposition: 'attachment' },
     { mimeType: 'image/svg+xml', disposition: 'attachment' },
     { mimeType: 'IMAGE/SVG+XML; charset=utf-8', disposition: 'attachment' },
-  ])('a $mimeType response is hardened and its disposition is $disposition', async ({ mimeType, disposition }) => {
+  ])('WI-145 a $mimeType response is hardened and its disposition is $disposition', async ({ mimeType, disposition }) => {
     const fixture = await storeMedia({ mimeType });
     const response = await getMedia({ path: fixture, signed: fixture, key: env.MEDIA_LINK_SIGNING_KEY, expiresAt: freshExpiry() });
     expect(response.status).toBe(STATUS_OK);
@@ -173,7 +173,7 @@ describe('media route', () => {
     { name: 'a repeated signature with the valid one first', build: (query: string) => `${query}&sig=garbage` },
     { name: 'a repeated signature with the valid one last', build: (query: string) => `sig=garbage&${query}` },
     { name: 'a repeated expiry', build: (query: string) => `${query}&exp=1` },
-  ])('WI-127 a link with $name answers 403', async ({ build }) => {
+  ])('WI-139 a link with $name answers 403', async ({ build }) => {
     const fixture = await storeMedia();
     const query = await signedQuery({
       key: env.MEDIA_LINK_SIGNING_KEY,

@@ -247,7 +247,7 @@ describe('SQLite inbox repository', () => {
     expect(result).toEqual({ first: true, second: false, afterReset: true });
   });
 
-  it('claims an upload exactly once until it is released, received or stale', async () => {
+  it('WI-126 claims an upload exactly once until it is released, received or stale', async () => {
     const claim = { mediaId: 'med_1', claimedAt: BASE_TIME, staleBefore: BASE_TIME - 1 };
     const result = await inRepository(async (repository) => {
       await repository.insertMedia({ media: buildMedia({ mediaId: 'med_1', expiresAt: BASE_TIME + 5 }) });
@@ -268,7 +268,7 @@ describe('SQLite inbox repository', () => {
     expect(result).toEqual({ first: true, second: false, whileFresh: false, whenStale: true, afterRelease: true, afterReceived: false });
   });
 
-  it('fences an upload by its claim time: a replaced writer can neither complete nor release', async () => {
+  it('WI-144 fences an upload by its claim time: a replaced writer can neither complete nor release', async () => {
     const received = { receivedAt: BASE_TIME + 10, retentionUntil: BASE_TIME + 10 + MEDIA_RETENTION_MS };
     const result = await inRepository(async (repository) => {
       await repository.insertMedia({ media: buildMedia({ mediaId: 'med_1', expiresAt: BASE_TIME + 100 }) });

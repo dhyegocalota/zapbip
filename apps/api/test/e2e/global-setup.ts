@@ -10,7 +10,7 @@ import { promisify } from 'node:util';
 import { SECOND_MS } from '@zapbip/types';
 import type { TestProject } from 'vitest/node';
 import { z } from 'zod';
-import { HEALTH_PATH } from '../../src/contract/constants';
+import { DEVELOPMENT_ENVIRONMENT, HEALTH_PATH } from '../../src/contract/constants';
 
 const runCommand = promisify(execFile);
 const HEALTH_TIMEOUT_MS = 30 * SECOND_MS;
@@ -20,7 +20,6 @@ const SEED_AGENTS = ['alpha', 'beta'];
 const SIGNING_KEY_BYTES = 32;
 const LOOPBACK_HOST = '127.0.0.1';
 const DATABASE_BINDING = 'CONNECTIONS';
-const DEVELOPMENT_ENVIRONMENT = 'development';
 const LOG_FILE_NAME = 'wrangler-dev.log';
 
 const seedOutputSchema = z.object({ connections: z.array(z.object({ agent: z.string(), secret: z.string() })) });

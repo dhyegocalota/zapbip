@@ -43,11 +43,11 @@ describe('claimUpload', () => {
     expect(media.mediaId).toBe(uploadId);
   });
 
-  test('the claim TTL covers the whole life of an upload', () => {
+  test('CU-174 the claim TTL covers the whole life of an upload', () => {
     expect(UPLOAD_CLAIM_TTL_MS).toBeGreaterThanOrEqual(UPLOAD_TTL_MS);
   });
 
-  test('a claim cannot be taken over before the upload expires', async () => {
+  test('CU-174 a claim cannot be taken over before the upload expires', async () => {
     const { environment, uploadId } = await pendingUpload();
     await claimUpload({ dependencies: environment.dependencies, mediaId: uploadId });
     await environment.clock.advance({ ms: UPLOAD_TTL_MS });
@@ -70,7 +70,7 @@ describe('claimUpload', () => {
     expect(media.receivedAt).not.toBeNull();
   });
 
-  test('a writer whose claim was replaced cannot complete the upload', async () => {
+  test('CU-175 a writer whose claim was replaced cannot complete the upload', async () => {
     const { environment, uploadId } = await pendingUpload();
     const slowWriter = await claimUpload({ dependencies: environment.dependencies, mediaId: uploadId });
     await releaseUpload({ dependencies: environment.dependencies, mediaId: uploadId, claimedAt: slowWriter.claimedAt });
@@ -88,7 +88,7 @@ describe('claimUpload', () => {
     expect(completed.receivedAt).not.toBeNull();
   });
 
-  test('a writer whose claim was replaced cannot release the current claim', async () => {
+  test('CU-175 a writer whose claim was replaced cannot release the current claim', async () => {
     const { environment, uploadId } = await pendingUpload();
     const slowWriter = await claimUpload({ dependencies: environment.dependencies, mediaId: uploadId });
     await releaseUpload({ dependencies: environment.dependencies, mediaId: uploadId, claimedAt: slowWriter.claimedAt });

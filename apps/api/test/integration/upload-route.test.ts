@@ -218,7 +218,7 @@ describe('upload route', () => {
     expect(response.status).toBe(STATUS_CREATED);
   });
 
-  test('stores the object under the normalized declared type', async () => {
+  test('WI-142 stores the object under the normalized declared type', async () => {
     const fixture = await newFixture({ mimeType: 'Image/PNG; charset=binary' });
     const response = await putUpload({
       ...validPut({ fixture }),
@@ -228,7 +228,7 @@ describe('upload route', () => {
     expect((await storedObject({ fixture }))?.httpMetadata?.contentType).toBe(PNG_TYPE);
   });
 
-  test('pin: a slow writer past the upload deadline cannot complete the upload a second PUT found expired', async () => {
+  test('WI-140 pin: a slow writer past the upload deadline cannot complete the upload a second PUT found expired', async () => {
     const fixture = await newFixture();
     const inbox = inboxOf({ accountId: fixture.account.accountId });
     const release = { resume: () => {} };
@@ -287,7 +287,7 @@ describe('upload route', () => {
     expect(await storedObject({ fixture })).toBeNull();
   });
 
-  test('an R2 failure mid-stream answers 5xx, releases the claim and stores nothing', async () => {
+  test('WI-141 an R2 failure mid-stream answers 5xx, releases the claim and stores nothing', async () => {
     const fixture = await newFixture();
     const failingPut = vi.spyOn(env.MEDIA, 'put').mockRejectedValueOnce(new Error('r2 unavailable'));
     const response = await putUpload(validPut({ fixture }));
@@ -298,7 +298,7 @@ describe('upload route', () => {
     expect(retry.status).toBe(STATUS_CREATED);
   });
 
-  test('WI-126 an aborted client stream answers 400, releases the claim and stores nothing', async () => {
+  test('WI-137 an aborted client stream answers 400, releases the claim and stores nothing', async () => {
     const fixture = await newFixture();
     const abortedBody = new ReadableStream<Uint8Array>({
       start(controller) {
@@ -329,7 +329,7 @@ describe('upload route', () => {
     { name: 'a repeated signature with the valid one first', build: (query: string) => `${query}&sig=garbage` },
     { name: 'a repeated signature with the valid one last', build: (query: string) => `sig=garbage&${query}` },
     { name: 'a repeated expiry', build: (query: string) => `${query}&exp=1` },
-  ])('WI-127 a link with $name answers 403 and stores nothing', async ({ build }) => {
+  ])('WI-138 a link with $name answers 403 and stores nothing', async ({ build }) => {
     const fixture = await newFixture();
     const query = await signedQuery({
       key: env.UPLOAD_LINK_SIGNING_KEY,

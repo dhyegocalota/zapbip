@@ -162,7 +162,7 @@ describe('expireRoutingList', () => {
     expect(await environment.repository.listHeld()).toHaveLength(2);
   });
 
-  test('the owner is told which agent got a batch assigned by expiry, not that it is not listening', async () => {
+  test('CU-171 the owner is told which agent got a batch assigned by expiry, not that it is not listening', async () => {
     const { environment } = await heldBatch();
     await agentWrites({ environment, agent: 'alpha' });
     await expireAfterTtl({ environment });
@@ -172,7 +172,7 @@ describe('expireRoutingList', () => {
     );
   });
 
-  test('a resend that fails to send still moves the due time forward and the next expiry assigns the batch', async () => {
+  test('CU-172 a resend that fails to send still moves the due time forward and the next expiry assigns the batch', async () => {
     const { environment } = await heldBatch();
     environment.sender.failSessionCalls({ callNumbers: [3] });
     await environment.clock.advance({ ms: ROUTING_LIST_TTL_MS });
@@ -185,7 +185,7 @@ describe('expireRoutingList', () => {
     expect(routingLists({ environment })).toHaveLength(1);
   });
 
-  test('two expiries running at once send one resend', async () => {
+  test('CU-173 two expiries running at once send one resend', async () => {
     const { environment } = await heldBatch();
     await environment.clock.advance({ ms: ROUTING_LIST_TTL_MS });
     await Promise.all([

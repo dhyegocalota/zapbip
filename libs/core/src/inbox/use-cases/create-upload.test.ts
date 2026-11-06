@@ -36,7 +36,7 @@ describe('createUpload', () => {
     expect(error).toEqual({ code: InboxErrorCode.InvalidInput, message: 'size_bytes: must be at least 1' });
   });
 
-  test('stores the normalized media type', async () => {
+  test('CU-176 stores the normalized media type', async () => {
     const environment = await createEnvironment();
     const result = await create({ environment, mimeType: ' Application/PDF ; charset=binary', sizeBytes: 1000 });
     expect(await environment.repository.findMedia({ mediaId: result.uploadId })).toMatchObject({ mimeType: 'application/pdf' });
