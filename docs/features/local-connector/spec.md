@@ -1,0 +1,291 @@
+# Local connector
+
+**Status:** Building
+**Tier:** 🔴
+**Owner approval:** approved 2026-11-06 (owner delegated)
+**ADRs:** [0006](../../adr/0006-one-secret-per-connection-in-the-mcp-url.md), [0007](../../adr/0007-a-durable-inbox-and-a-wake-ladder.md), [0009](../../adr/0009-cloudflare-workers-with-one-durable-object-per-account.md), [0022](../../adr/0022-a-hibernatable-websocket-for-the-local-connector.md), [0023](../../adr/0023-the-local-session-is-the-newest-one-in-the-working-directory.md)
+**Not changing:** the ten MCP tools and their contract; the WhatsApp adapters; the connection directory schema in D1 (the wake mode lives in the Durable Object); the install prompts of `install-skills`. Nothing outside `apps/connector`, `libs/types`, the connector route and Durable Object code in `apps/api`, `apps/docs`, `scripts/verify-gates.tsv`, the repository-shape root list and the indexes.
+
+## Problem
+
+Claude Code and Codex sit on the owner's machine. A message from the owner should reach them while they are idle, not only when they poll. The first wake rung ([ADR 0007](../../adr/0007-a-durable-inbox-and-a-wake-ladder.md)) is a small program on the owner's machine: it keeps a channel to zapbip open, and for each owner message it resumes the local session with the message as the prompt. The POC measured ~7 s for Claude Code and ~6 s for Codex. This slice makes that program a product: the npm package `zapbip`, a server channel that holds up for days, and safe, testable wakes.
+
+## Goals
+
+1. An npm package `zapbip` with one command, `npx zapbip connect`, that keeps a connection's channel open and wakes a local session for each owner message.
+2. A server channel from the `AccountInbox` Durable Object to the connector: a hibernatable WebSocket ([ADR 0022](../../adr/0022-a-hibernatable-websocket-for-the-local-connector.md)), with heartbeat, reconnect and an inbox re-read on every connect.
+3. The connection registers the `local` wake mode when a connector attaches.
+4. Session binding: the newest local session in the working directory by default, or a pinned id ([ADR 0023](../../adr/0023-the-local-session-is-the-newest-one-in-the-working-directory.md)).
+5. One wake at a time per connection; further messages queue.
+6. Restricted tools in every wake: the agent can only send a message back.
+7. A fallback when the Codex app holds the thread.
+8. Logs that carry ids, kinds, outcomes and timings, never message text, the secret or the agent's output.
+9. Optional background running under launchd or systemd, documented and not installed by the package.
+10. A Mintlify page for the owner.
+
+## Non-goals
+
+- Installing the connector automatically, or installing a background service. Documented only.
+- Scheduled tasks, webhooks and the standby agent ([ADR 0007](../../adr/0007-a-durable-inbox-and-a-wake-ladder.md) rungs 2 to 4). They belong to `webhook-wake` and `scheduled-wake`.
+- Clients other than Claude Code and Codex. Desktop apps that hold a thread are handled only by the fallback.
+- Wake replies other than `send_message`. `ask`, `send_media` and the other tools wait for a later slice.
+- The install prompt that tells the owner to run the command. It belongs to `install-skills`.
+- Publishing the npm package. `deploy-readiness` owns the first publish and its provenance.
+
+## Design
+
+### Layout
+
+```
+apps/connector              npm package `zapbip`, bin `zapbip`, bundled with esbuild into dist/cli.js
+  README.md                 purpose only
+  src/cli.ts                arguments, environment, prompt for the URL, the `connect` command
+  src/connect.ts            socket loop: heartbeat, reconnect, frames, acknowledgement
+  src/wake-queue.ts         one wake at a time per connection, first in first out
+  src/wake-commands.ts      per-client argv builders and the active-writer fallback
+  src/session-lookup.ts     newest Claude Code or Codex session in a working directory
+  src/owner-prompt.ts       the channel block around the owner's text, with escaping
+  src/log.ts                JSON lines without message text
+libs/types                  enums and timing constants shared by the connector and the Worker
+apps/api/src/routes         GET /c/:secret/connector, the WebSocket upgrade
+apps/api/src/account-inbox  connector sockets (hibernation API), LocalConnectorWaker
+apps/docs/connect           local-connector.mdx
+```
+
+The package has no runtime dependencies: it uses Node 24's global `fetch`, global `WebSocket`, `node:child_process` and `node:readline`. esbuild inlines `libs/types` into `dist/cli.js`. Type-only imports from `libs/core` are erased.
+
+### Command
+
+```
+npx zapbip connect --client claude-code|codex [--cwd <directory>] [--session <uuid>]
+```
+
+- The connection's MCP URL (`https://<host>/c/<secret>/mcp`) is read from `ZAPBIP_CONNECTION_URL`, or asked on the terminal when the variable is absent. The connector opens its socket at the same host and secret under `/connector`. It is never a positional argument, because arguments show up in `ps` and in shell history.
+- `--cwd` defaults to the directory the command runs in and must exist.
+- `--session` pins one session and skips the lookup.
+- The command runs in the foreground, prints one JSON line per event, and exits on `SIGINT` or `SIGTERM`.
+
+### Enums and constants (`libs/types`)
+
+| Name | Values |
+|---|---|
+| `ConnectorClient` | `ClaudeCode = 'claude-code'`, `Codex = 'codex'` |
+| `WakeMode` | declared by agent-inbox-core; this slice saves `Local = 'local'` |
+| `ConnectorFrameType` | `Messages = 'messages'`, `Done = 'done'`, `Ping = 'ping'`, `Pong = 'pong'` |
+| `ConnectorWakeOutcome` | `Answered`, `Failed`, `NoSession`, `FallbackNewThread` |
+
+| Constant | Value |
+|---|---|
+| `HEARTBEAT_INTERVAL_MS` | 25 000 (below the idle limit of Cloudflare's proxy, to re-check) |
+| `HEARTBEAT_TIMEOUT_MS` | 10 000 |
+| `RECONNECT_BASE_MS` | 1 000 |
+| `RECONNECT_MAX_MS` | 30 000 |
+| `CONNECTOR_WAKE_TIMEOUT_MS` | 900 000 |
+| `REPLACED_CLOSE_CODE` | 4001 |
+| `WAKE_ALLOWED_TOOLS` | `mcp__zapbip__send_message` |
+| `CODEX_ZAPBIP_SERVER_NAME` | `zapbip` |
+| `CODEX_ACTIVE_WRITER_MESSAGE` | `thread already has an active writer` |
+| `WAKE_INSTRUCTION` | the English instruction after the owner block (see Wake prompt) |
+| `UUID_PATTERN` | the canonical UUID shape, for `--session` and for resolved ids |
+
+### Server side
+
+**Route.** `GET /c/:secret/connector` with `Upgrade: websocket`. The Worker resolves the secret through `ConnectionDirectory` as for MCP. An unknown or revoked secret gets the same `401` as MCP. A request without the upgrade header gets `426`.
+
+**Durable Object.** `AccountInbox` accepts the socket with the hibernation API:
+- `ctx.acceptWebSocket(socket, [agent])`, so the agent name is the socket's tag;
+- `ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair(PING frame, PONG frame))`, so heartbeat never wakes the object;
+- the attach saves the wake mode `Local` through `InboxRepository.saveWakeSetting` (agent-inbox-core);
+- the attach sends `messages` with every unread owner message for that agent, which is the inbox re-read.
+
+A new attach for an agent closes the previous socket of that tag with `REPLACED_CLOSE_CODE`. One connector runs per connection. A replaced connector exits and does not reconnect.
+
+**Waker.** `LocalConnectorWaker` implements `AgentWaker.notify({agent, reason})` and is registered for the `Local` rung. It reads the agent's unread owner messages and sends them as one `messages` frame to the agent's sockets. With no socket, it returns, and the message waits in the inbox. A live MCP waiter for that agent still wins, as the core routing rule says: the agent is already in a conversation.
+
+**Acknowledgement.** A `done` frame carries one `messageId`. The object calls the core use case `acknowledgeDelivery` (an addition of this slice, listed in `core-contract-additions.md`), which marks the message read. A message is re-sent until it is acknowledged or read through an MCP tool.
+
+### Frames
+
+| Direction | Frame | Shape |
+|---|---|---|
+| Worker → connector | `messages` | `{type, messages: Message[]}`, where `Message` is the core type of owner messages |
+| connector → Worker | `done` | `{type, messageId}` |
+| connector → Worker | `ping` | answered by the Durable Object with `pong`, no wake |
+
+All frames are JSON text. A frame that does not parse, or whose type is unknown, is dropped with a `frame_rejected` log event that carries no body.
+
+### Connector behaviour
+
+**Connect and heartbeat.**
+- The connector opens `wss://<host>/c/<secret>/connector`. Node's WebSocket cannot set headers, so the secret travels in the path, as [ADR 0006](../../adr/0006-one-secret-per-connection-in-the-mcp-url.md) already requires.
+- Every `HEARTBEAT_INTERVAL_MS` it sends `ping`. If no frame arrives within `HEARTBEAT_TIMEOUT_MS` of a ping, it closes and reconnects. Any inbound frame counts as proof of life.
+
+**Reconnect.** On any close other than `REPLACED_CLOSE_CODE` or the user's signal, the connector waits `min(RECONNECT_MAX_MS, RECONNECT_BASE_MS × 2^attempt)` and connects again. A successful open resets the attempt count. Each open triggers the inbox re-read, so owner messages sent while the connector was offline are woken on reconnect.
+
+**Frames in.** A `messages` frame enqueues each message whose id is not already queued or running. Ids seen again are skipped, so a re-read never wakes a message twice in one process.
+
+**Wake.** The wake queue runs one wake at a time, first in first out.
+1. Resolve the session: the pinned `--session`, else the newest session for `--cwd`. No session gives `NoSession`, no process starts, and the message stays unread.
+2. Build the argv for the client (see Wake commands) and spawn it with `child_process.spawn`, no shell, `stdio` piped and `cwd` set to `--cwd`.
+3. Wait for exit, or kill with `SIGTERM` after `CONNECTOR_WAKE_TIMEOUT_MS`.
+4. Send `done` for the message on any outcome that ran a process, including `Failed`, so a wake that fails is not retried forever. A crash of the connector before `done` leaves the message unread, and the next connect wakes it again. That is at-least-once delivery.
+
+**Shutdown.** On `SIGINT` or `SIGTERM` the connector closes the socket, sends `SIGTERM` to a running wake and exits. Unacknowledged messages come back on the next connect.
+
+### Wake commands
+
+The argv is built per client from a record keyed by `ConnectorClient`. Each builder takes named parameters `{sessionId, prompt}`.
+
+| Client | Command |
+|---|---|
+| `claude-code` | `claude -p --resume <sessionId> --allowedTools=mcp__zapbip__send_message <prompt>` |
+| `codex` | `codex exec --skip-git-repo-check -s read-only -c mcp_servers.zapbip.default_tools_approval_mode="approve" -c mcp_servers.zapbip.enabled_tools=["send_message"] resume <sessionId> <prompt>` |
+
+- **Claude Code.** `--allowedTools` is variadic, so the `=` form keeps it from swallowing the prompt. Only `send_message` is allowed; `-p` cannot ask, so any other tool is refused. The session's own MCP configuration is kept, so the agent can still send through zapbip.
+- **Codex.** The read-only sandbox blocks file writes; zapbip's MCP calls still run. `default_tools_approval_mode="approve"` stops Codex refusing an MCP tool in headless mode (POC). `enabled_tools` limits the server to `send_message`.
+- The prompt is always the last argument and always starts with `<`, so it can never be read as a flag.
+- The session id is checked against `UUID_PATTERN` before it reaches argv.
+
+### Session binding
+
+Resolution happens at each wake, so a session started after the connector began is picked up.
+
+| Client | Where the lookup reads | Newest means |
+|---|---|---|
+| `claude-code` | the project folder of `--cwd` under `CLAUDE_CONFIG_DIR` (default `~/.claude`) | the `*.jsonl` file with the latest modification time; its name without `.jsonl` is the id |
+| `codex` | rollout files under `CODEX_HOME` (default `~/.codex/sessions`) | the latest rollout whose first line, `session_meta`, records `cwd` equal to `--cwd` |
+
+- The config directories come from optional parameters with those defaults, not `??`.
+- Claude's project folder name is the working directory with every character that is not a letter or digit replaced by `-`. A fixture from a real install pins this rule in a test.
+- The Codex lookup reads the first line of each rollout, newest directories first, and stops at `SESSION_LOOKUP_LIMIT` files.
+
+### Codex active writer
+
+When the Codex app holds the thread, `codex exec resume` fails with `CODEX_ACTIVE_WRITER_MESSAGE` on stderr.
+
+- The connector runs `codex exec` once more as a new session in the same `--cwd`, with the same prompt, and logs `FallbackNewThread`.
+- The new session is then the newest rollout for that directory, so later wakes resume it.
+- It never loops: one fallback per wake.
+- The new thread starts without the earlier context. The wake allows only `send_message`, so the agent sees the owner's new message and nothing before it. Accepted for this slice.
+
+The check is on the message, not on the exit code, because the exit code of a refused resume is not documented.
+
+### Wake prompt
+
+```
+<channel source="zapbip" sender="owner" verified="true">{escaped owner text}</channel>
+{WAKE_INSTRUCTION}
+```
+
+- The owner text is escaped before it is placed in the block: `<` and `>` become `&lt;` and `&gt;`. A message containing `</channel>` therefore cannot close the block.
+- `WAKE_INSTRUCTION` tells the agent to reply with `send_message`, briefly, as a WhatsApp message.
+- Media messages carry their kind and caption only. A signed media link is passed as text; the connector never downloads it.
+- The prompt is English, because repo text is English; the agent answers the owner in the owner's language.
+
+### Logs
+
+JSON lines on stdout, always with `at` and `event`.
+
+| Event | Fields |
+|---|---|
+| `connector_connected` | `agent`, `client`, `previousWakeMode` |
+| `connector_reconnecting` | `attempt`, `delayMs` |
+| `connector_closed` | `code` |
+| `connector_replaced` | `agent` |
+| `messages_received` | `count` |
+| `wake_started` | `messageId`, `kind`, `sessionKind` |
+| `wake_finished` | `messageId`, `outcome`, `exitCode`, `elapsedMs` |
+| `done_sent` | `messageId` |
+| `frame_rejected` | `reason` |
+
+Never logged: message text, captions, file names, the connection URL or its secret, the owner's phone number, and the child process's stdout or stderr. `ConnectorWakeOutcome` carries the classification of a failure instead of its output.
+
+### Failure handling
+
+| Failure | Behaviour |
+|---|---|
+| Unknown or revoked secret | `401` on the upgrade; the connector logs `connector_closed` and exits with code 1 |
+| Socket drops | reconnect with backoff; inbox re-read on open |
+| No pong within the timeout | the socket is closed and the connector reconnects |
+| Another connector attaches | the older socket gets `4001` and exits |
+| `claude` or `codex` not on PATH | `wake_finished` with `Failed`, `done` sent; the owner gets nothing, which is the risk listed below |
+| No session for the directory | `NoSession`, no process, the message stays unread, retried on each wake or reconnect |
+| Wake exceeds `CONNECTOR_WAKE_TIMEOUT_MS` | `SIGTERM`, `Failed`, `done` sent |
+| Codex active writer | one fallback as a new session, `FallbackNewThread` |
+| Connector killed mid-wake | the message is re-sent on the next connect |
+| Malformed frame | dropped, `frame_rejected` |
+
+### Risks to verify before build
+
+- **Cloudflare billing.** The ADR 0022 claims (hibernated sockets bill no duration, auto-response pings are not billed as requests, WebSocket messages count at a reduced ratio) come from the documentation and are not measured. Re-check the pricing page and measure a day of idle connectors on staging.
+- **Heartbeat interval.** 25 s is chosen below the idle limit of Cloudflare's proxy for WebSockets. Confirm that limit.
+- **Codex keys.** `enabled_tools` is taken from the Codex config reference; confirm it on the pinned CLI version, and confirm that `-s` and `-c` are accepted before `resume` as in the POC.
+- **Claude Code refusals.** Confirm that `-p` refuses a tool outside `--allowedTools` without hanging, in a real run.
+- **Claude folder name.** Confirm the encoding rule against a real install (the fixture test pins it).
+- **Shared sessions.** A wake may append to a session open in another terminal. Documented; `--session` avoids it.
+- **Silent wakes.** With no session, or a failed wake, the owner receives no reply. A notice to the owner is a later slice.
+- **npm name.** Confirm that `zapbip` is free on npm before the first publish.
+- **Secret at rest.** The launchd and systemd files hold the secret. They are documented with mode `600`; Keychain storage is a later option.
+
+### Security
+
+- **Commands.** No `shell: true`. No argv or path comes from server data. Only the owner's text reaches the child process, and only as one argument inside the channel block.
+- **Restricted tools.** Claude Code allows `mcp__zapbip__send_message` only. Codex's zapbip server exposes `send_message` only, with its approval mode set.
+- **Sandbox.** Codex runs read-only.
+- **Owner text.** The block marks sender `owner` and `verified="true"`. Escaping prevents a breakout. Claude refuses instructions from unverified senders (POC finding).
+- **Secret.** Read from the environment or a prompt. Never logged, never in argv. The connector keeps it in memory only.
+- **Supply chain.** No runtime dependencies. The bundle is built in CI and checked with `npm pack --dry-run` in the gate.
+- **Local files.** Session lookup reads file names and modification times. Codex rollouts are read only for their first line.
+
+### Background running (documented, not installed)
+
+The docs page explains two optional services:
+- **macOS:** a LaunchAgent that runs `npx zapbip connect` with `ZAPBIP_CONNECTION_URL` in `EnvironmentVariables`; the plist is created with mode `600`, because it holds the secret.
+- **Linux:** a user systemd unit with `EnvironmentFile=` pointing to a file with mode `600`, and `Restart=always`.
+
+No command writes either file. A reboot restarts the connector; a reconnect re-reads the inbox.
+
+## Open questions → answers
+
+| Question | Options | Owner's answer | Date |
+|----------|---------|----------------|------|
+| Channel from the Durable Object to the connector | SSE · hibernatable WebSocket · long-poll | hibernatable WebSocket ([ADR 0022](../../adr/0022-a-hibernatable-websocket-for-the-local-connector.md)) | owner delegated 2026-11-06 |
+| Which local session to resume | newest in cwd · explicit flag only · hook records the id | newest in cwd, pinned with `--session` ([ADR 0023](../../adr/0023-the-local-session-is-the-newest-one-in-the-working-directory.md)) | owner delegated 2026-11-06 |
+| Connection URL input | argv · environment or prompt | environment `ZAPBIP_CONNECTION_URL`, else prompt | owner delegated 2026-11-06 |
+| Concurrency of wakes | parallel · one at a time, queued | one at a time per connection, first in first out | owner delegated 2026-11-06 |
+| Claude Code tools in a wake | all · `send_message` only | `send_message` only, via `--allowedTools=` | owner delegated 2026-11-06 |
+| Codex tools and sandbox in a wake | default · restricted | read-only sandbox, approval mode `approve`, `enabled_tools = ["send_message"]` | owner delegated 2026-11-06 |
+| Codex app holds the thread | fail · retry · new session once | one new session in the same directory; later wakes resume it | owner delegated 2026-11-06 |
+| Acknowledgement | at-most-once · at-least-once | `done` after the wake ends; unacknowledged messages re-sent on connect | owner delegated 2026-11-06 |
+| Background running | installer command · documented services | documented launchd and systemd, not installed | owner delegated 2026-11-06 |
+| Wake prompt language | Portuguese · English | English, because repo text is English | owner delegated 2026-11-06 |
+| Attach and wake mode | keep the previous mode · set `local` | attach sets `local` and logs the previous mode | owner delegated 2026-11-06 |
+| Wake replies beyond `send_message` | all tools · send only | send only, in this slice | owner delegated 2026-11-06 |
+| Package location | `apps/connector` · `libs/connector` | `apps/connector`, bundled with esbuild, zero runtime dependencies | owner delegated 2026-11-06 |
+
+## Test strategy summary
+
+- **Connector unit (Vitest, fake clock where timing matters):**
+  - `owner-prompt`: the channel block, escaping of `</channel>`, a text starting with `-` still starts with `<`;
+  - `wake-commands`: exact argv for both clients, the `=` form, the read-only sandbox, `enabled_tools`, the active-writer fallback;
+  - `session-lookup`: Claude folder encoding from a real-install fixture; newest by mtime; Codex by `session_meta.cwd`; no session;
+  - backoff sequence and reset on open;
+  - `log`: no secret, no message text, no stderr in any event;
+  - `wake-queue`: order and one at a time.
+- **Connector integration with a fake event server** (a local `ws` server in the test, speaking the frames above):
+  - the fake `claude` and `codex` binaries on `PATH` record argv and start/end times as JSON lines;
+  - one owner message: argv recorded, `done` received, the outcome is `Answered`;
+  - three messages sent at once: no two wakes overlap;
+  - heartbeat: the fake server withholds `pong`, and the connector reconnects within the timeout;
+  - **reconnect:** the fake server drops the socket while a wake runs; the connector reconnects, the server re-sends unacknowledged messages, and the wake runs again only for them, with each `done` received once per run;
+  - replacement: a second connector for the same agent makes the first exit with code 1 and no reconnect;
+  - the Codex fallback: the fake `codex` refuses `resume` with the active-writer message; the second run is `exec` in the same `--cwd`.
+- **Worker integration (`@cloudflare/vitest-pool-workers`, in `apps/api`):**
+  - the upgrade is accepted with a valid secret and returns `401` for an unknown one;
+  - the attach sets `wake_mode` to `local`;
+  - the attach re-sends unread messages;
+  - `done` marks the message read;
+  - the auto-response answers `ping` without a message event reaching the object.
+- **E2E:** the real `npx zapbip connect` against `wrangler dev` with the owner simulator, one real Claude Code session and one Codex session, each waking and replying through `send_message`. Recorded for the PR.
+- **Docs:** `mint broken-links` green for `apps/docs/connect/local-connector.mdx`.
+- **Packaging:** `npm pack --dry-run` lists only `dist/`, the README and the package metadata.
