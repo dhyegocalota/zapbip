@@ -12,3 +12,6 @@ playwright-report/
 .claude/scheduled_tasks.lock
 .codex/config.local.toml
 .DS_Store
+__pycache__/
+.pytest_cache/
+.mypy_cache/
