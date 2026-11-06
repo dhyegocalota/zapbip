@@ -59,7 +59,7 @@ npx zapbip@0.1.0 connect --client claude-code --session <session-id>
 
 ## What the AI can do when woken
 
-Only one thing: send a message back to you. It cannot use other tools, and Codex runs with a read-only sandbox. Your message reaches it as a message from you, marked as verified. A message you forwarded from someone else arrives marked as not verified, with a forwarded label, and the AI does not treat it as your instruction.
+Only one thing: send a message back to you. The connector gives the AI a private configuration that holds only zapbip, so tools from your other MCP servers are not available to it. Claude Code also runs without your settings files and with every built-in tool off, and Codex runs with a read-only sandbox and with the other MCP servers it finds in your Codex configuration files turned off. Your message reaches it as a message from you, marked as verified. A message you forwarded from someone else arrives marked as not verified, with a forwarded label, and the AI does not treat it as your instruction.
 
 If the Codex app already has the conversation open, Codex refuses to resume it. The connector then starts one new session in the same folder, which starts without the earlier conversation, and uses it from then on.
 
@@ -108,7 +108,7 @@ export ZAPBIP_CONNECTION_URL='https://<host>/c/<secret>/mcp'
 npx zapbip@0.1.0 listen
 ```
 
-Each line is JSON with the message id, its kind, `"sender":"owner"`, `"verified":true` and the text. A Monitor watch lasts up to 30 minutes, so the AI starts the watch again each time one ends. Other agents that can keep a background command running and react to its output, such as OpenClaw and Hermes, can use `npx zapbip@0.1.0 listen` the same way.
+Each line is JSON with the message id, its kind, `"sender":"owner"`, `"verified"` (`true` for your own message, `false` for a forwarded one), `"forwarded"` and the text. A Monitor watch lasts up to 30 minutes, so the AI starts the watch again each time one ends. Other agents that can keep a background command running and react to its output, such as OpenClaw and Hermes, can use `npx zapbip@0.1.0 listen` the same way.
 
 Both programs stay open and reconnect by themselves, like `connect`. Both mark a message as handled only after they pass it on, so a message is never lost and never shown twice. Their logs go to the error output and never carry your messages or your link.
 
