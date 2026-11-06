@@ -11,7 +11,7 @@ import { WAKE_SECRET_KEY_BYTES } from '@zapbip/core';
 import { SECOND_MS } from '@zapbip/types';
 import type { TestProject } from 'vitest/node';
 import { z } from 'zod';
-import { HEALTH_PATH } from '../../src/contract/constants';
+import { DEVELOPMENT_ENVIRONMENT, HEALTH_PATH } from '../../src/contract/constants';
 
 const runCommand = promisify(execFile);
 const HEALTH_TIMEOUT_MS = 30 * SECOND_MS;
@@ -91,7 +91,18 @@ export default async function setup(project: TestProject): Promise<() => Promise
   const origin = `http://${LOOPBACK_HOST}:${port}`;
   const persistArguments = ['--persist-to', persistDirectory];
 
-  await runCommand('pnpm', ['exec', 'wrangler', 'd1', 'migrations', 'apply', DATABASE_BINDING, '--local', ...persistArguments]);
+  await runCommand('pnpm', [
+    'exec',
+    'wrangler',
+    'd1',
+    'migrations',
+    'apply',
+    DATABASE_BINDING,
+    '--env',
+    DEVELOPMENT_ENVIRONMENT,
+    '--local',
+    ...persistArguments,
+  ]);
   const connections = await seedConnections({ phone: SEED_PHONE, agents: SEED_AGENTS, persistArguments });
   const wakeAccounts = await WAKE_ACCOUNT_PHONES.reduce<Promise<WakeAccount[]>>(
     async (seededBefore, phone) => [...(await seededBefore), await seedWakeAccount({ phone, persistArguments })],
@@ -105,7 +116,7 @@ export default async function setup(project: TestProject): Promise<() => Promise
       'wrangler',
       'dev',
       '--env',
-      'development',
+      DEVELOPMENT_ENVIRONMENT,
       '--ip',
       LOOPBACK_HOST,
       '--port',

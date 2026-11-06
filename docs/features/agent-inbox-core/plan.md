@@ -1184,7 +1184,7 @@ Every method body is `void input; throw new Error('<name> is not implemented');`
 }
 ```
 
-- `database_id` is a local identifier in this slice. Deploy-readiness replaces it with the id `wrangler d1 create` returns, and coverage honesty says so.
+- The top-level `database_id` is the placeholder `REPLACE_WITH_PRODUCTION_D1_DATABASE_ID` (final review fix); `wrangler deploy` rejects the placeholder until the owner replaces it with the id `wrangler d1 create` returns. The development environment keeps the local identifier.
 - `MEDIA_LINK_SIGNING_KEY` and `UPLOAD_LINK_SIGNING_KEY` are never in this file. Local development reads them from `apps/api/.dev.vars`, which `apps/api/.gitignore` excludes (`.dev.vars`, `.wrangler/`). Integration tests take them from `miniflare.bindings` in `vitest.integration.config.mts`. E2E passes them as `--var` to `wrangler dev`.
 - The top level is development (`wrangler dev`). `env.production` repeats every binding and is the block that deploys and that the production-bundle tests use with `--env production`. Slice 1 writes that one block because its production-bundle test needs it; `deploy-readiness` adds `env.staging` and sets the production origin.
 - The `Text` rule makes wrangler bundle `src/account-inbox/migrations/*.sql` as text for the Durable Object migrator.

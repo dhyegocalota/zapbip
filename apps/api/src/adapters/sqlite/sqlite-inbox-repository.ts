@@ -12,7 +12,7 @@ import {
   type QuestionAnswer,
   type StoredMedia,
 } from '@zapbip/core';
-import { DeliveryState, MessageDirection, MessageKind, WakeMode, type MediaOrigin } from '@zapbip/types';
+import { DeliveryState, MessageDirection, MessageKind, WakeMode, type MediaOrigin, type OwnerLocale } from '@zapbip/types';
 
 type MessageRow = {
   id: string;
@@ -37,6 +37,14 @@ type QuestionRow = {
   answer: string | null;
 };
 
+type RoutingListRow = {
+  routing_list_prompt_message_id: string | null;
+  routing_list_opened_at: number | null;
+  routing_list_locale: OwnerLocale | null;
+  routing_list_resent: number;
+  routing_list_reminded: number;
+};
+
 type MediaRow = {
   media_id: string;
   origin: MediaOrigin;
@@ -48,6 +56,8 @@ type MediaRow = {
   retention_until: number | null;
 };
 
+const SELECT_ROUTING_LIST =
+  'SELECT routing_list_prompt_message_id, routing_list_opened_at, routing_list_locale, routing_list_resent, routing_list_reminded FROM owner_window WHERE id = ?';
 const SELECT_MESSAGES = 'SELECT id, agent, direction, kind, payload, reply_to, delivery, read_at, at FROM inbox_messages ';
 const SELECT_QUESTIONS = 'SELECT question_id, agent, text, options, normalized_key, prompt_message_id, asked_at, answer FROM questions ';
 const SELECT_MEDIA = 'SELECT media_id, origin, mime_type, size_bytes, filename, expires_at, received_at, retention_until FROM media ';
@@ -195,16 +205,6 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
       return selectMessages('WHERE agent IS NULL AND direction = ? AND read_at IS NULL ' + ORDER_BY_ARRIVAL, MessageDirection.FromOwner);
     },
 
-    async findChoicePrompt({ questionId }) {
-      const [message] = selectMessages(
-        "WHERE direction = ? AND kind = ? AND json_extract(payload, '$.questionId') = ? " + ORDER_BY_ARRIVAL + ' LIMIT 1',
-        MessageDirection.ToOwner,
-        MessageKind.Choice,
-        questionId,
-      );
-      return message === undefined ? null : message;
-    },
-
     async assignAgent({ messageIds, agent }) {
       run('UPDATE inbox_messages SET agent = ? WHERE id IN (SELECT value FROM json_each(?))', agent, JSON.stringify(messageIds));
     },
@@ -317,6 +317,50 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
       );
     },
 
+    async findRoutingList() {
+      const row = first<RoutingListRow>(SELECT_ROUTING_LIST, WINDOW_ROW_ID);
+      if (row === null) throw new Error('owner_window row is missing');
+      if (row.routing_list_prompt_message_id === null) return null;
+      if (row.routing_list_opened_at === null || row.routing_list_locale === null) throw new Error('routing list row is incomplete');
+      return {
+        promptMessageId: row.routing_list_prompt_message_id,
+        openedAt: row.routing_list_opened_at,
+        locale: row.routing_list_locale,
+        resent: row.routing_list_resent === 1,
+        reminded: row.routing_list_reminded === 1,
+      };
+    },
+
+    async saveRoutingList({ routingList }) {
+      run(
+        'UPDATE owner_window SET routing_list_prompt_message_id = ?, routing_list_opened_at = ?, routing_list_locale = ?, routing_list_resent = ?, routing_list_reminded = ? WHERE id = ?',
+        routingList.promptMessageId,
+        routingList.openedAt,
+        routingList.locale,
+        routingList.resent ? 1 : 0,
+        routingList.reminded ? 1 : 0,
+        WINDOW_ROW_ID,
+      );
+    },
+
+    async clearRoutingList() {
+      run(
+        'UPDATE owner_window SET routing_list_prompt_message_id = NULL, routing_list_opened_at = NULL, routing_list_locale = NULL, routing_list_resent = 0, routing_list_reminded = 0 WHERE id = ?',
+        WINDOW_ROW_ID,
+      );
+    },
+
+    async claimRoutingListExpiry({ openedAt, claimedAt }) {
+      return (
+        rows(
+          'UPDATE owner_window SET routing_list_opened_at = ?, routing_list_resent = 1 WHERE id = ? AND routing_list_opened_at = ? RETURNING id',
+          claimedAt,
+          WINDOW_ROW_ID,
+          openedAt,
+        ).length === 1
+      );
+    },
+
     async insertMedia({ media }) {
       run(
         'INSERT INTO media (media_id, origin, mime_type, size_bytes, filename, expires_at, received_at, retention_until) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
@@ -336,12 +380,30 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
       return row === null ? null : toMedia(row);
     },
 
-    async markMediaReceived({ mediaId, receivedAt, retentionUntil }) {
-      run(
-        'UPDATE media SET received_at = ?, retention_until = ?, expires_at = NULL WHERE media_id = ?',
-        receivedAt,
-        retentionUntil,
-        mediaId,
+    async claimUpload({ mediaId, claimedAt, staleBefore }) {
+      return (
+        rows(
+          'UPDATE media SET claimed_at = ? WHERE media_id = ? AND received_at IS NULL AND (claimed_at IS NULL OR claimed_at <= ?) RETURNING media_id',
+          claimedAt,
+          mediaId,
+          staleBefore,
+        ).length === 1
+      );
+    },
+
+    async releaseUpload({ mediaId, claimedAt }) {
+      run('UPDATE media SET claimed_at = NULL WHERE media_id = ? AND claimed_at = ?', mediaId, claimedAt);
+    },
+
+    async markMediaReceived({ mediaId, claimedAt, receivedAt, retentionUntil }) {
+      return (
+        rows(
+          'UPDATE media SET received_at = ?, retention_until = ?, expires_at = NULL, claimed_at = NULL WHERE media_id = ? AND claimed_at = ? RETURNING media_id',
+          receivedAt,
+          retentionUntil,
+          mediaId,
+          claimedAt,
+        ).length === 1
       );
     },
 

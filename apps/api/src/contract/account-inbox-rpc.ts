@@ -19,6 +19,7 @@ import type {
   WaitForReplyResult,
   CoreDependencies,
   StoredMedia,
+  UploadClaim,
 } from '@zapbip/core';
 import type { DevWakeRpc, WakeRpc } from './wake-rpc';
 import type { InboxErrorCode, ChannelErrorKind, OwnerLocale, TemplateKind } from '@zapbip/types';
@@ -47,7 +48,9 @@ export interface AccountInboxRpc extends WakeRpc {
   checkInbox(input: AgentRequest<CheckInboxInput>): Promise<CallOutcome<CheckInboxResult>>;
   createUpload(input: AgentRequest<CreateUploadInput>): Promise<CallOutcome<CreateUploadResult>>;
   describeUpload(input: { mediaId: string }): Promise<CallOutcome<StoredMedia>>;
-  completeUpload(input: { mediaId: string }): Promise<CallOutcome<StoredMedia>>;
+  claimUpload(input: { mediaId: string }): Promise<CallOutcome<UploadClaim>>;
+  releaseUpload(input: { mediaId: string; claimedAt: number }): Promise<CallOutcome<void>>;
+  completeUpload(input: { mediaId: string; claimedAt: number }): Promise<CallOutcome<StoredMedia>>;
   receiveOwnerMessage(input: {
     ownerLocale: OwnerLocale;
     channelMessageId: string;

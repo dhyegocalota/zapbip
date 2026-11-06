@@ -225,7 +225,7 @@ pnpm --filter @zapbip/api typecheck
 pnpm --silent --filter @zapbip/api dev:seed --phone 5511999990000 --agents alpha,beta --json --persist-to <dir>
 ```
 
-Seed needs `wrangler d1 migrations apply CONNECTIONS --local --persist-to <dir>` first. Without `--silent`, pnpm prints a banner line before the JSON.
+Seed needs `wrangler d1 migrations apply CONNECTIONS --env development --local --persist-to <dir>` first. Without `--silent`, pnpm prints a banner line before the JSON.
 
 ### Red today, green after
 
@@ -307,3 +307,124 @@ State when this was written: L2's bodies were merged; L3 had pushed only its red
 - Core's wording for an unreceived upload is `upload_id: bytes not uploaded yet`; the test plan (WI-47) says `upload has not been received`. The test follows core.
 - The screen assertions (WI-35, WI-56) read history through `get_messages`, because `readScreen` is still a stub until L4b.
 - `ask` sends `optionDescriptions` empty when no option has a description.
+
+## Final review fixes (feat/agent-inbox-core-final)
+
+### What changed
+
+- **Routing list lifetime.** `ROUTING_LIST_TTL_MS` (10 minutes). The open list lives in the `owner_window` row (`routing_list_*` columns of `v1.sql`); `findChoicePrompt` and its `json_extract` scan are gone. New use cases `expireRoutingList` and `findRoutingListDueAt` back a second due-time provider of `AccountInbox`. Helpers moved to `use-cases/routing-list.ts` and `use-cases/wake-agent.ts`.
+- **Reminder.** A new unmatched message while the list is pending joins the held batch and gets one `RoutingListReminder` reply to the list.
+- **Copy.** `RoutingListExpired` now reads "Essa lista já foi usada." / "That list was already used."; a tap naming an unknown agent while the batch is held sends the current list again.
+- **Uploads.** `claimUpload` and `releaseUpload` (use cases, repository, RPC); the media row has an `uploading` flag; the route claims before `mediaStore.put` and releases on failure; the loser answers `409`.
+- **Media types.** `normalizeMimeType` (lowercase, parameters dropped) runs before every check, including the upload route.
+- **Content-Length.** A non-integer value answers `400` (`invalid_length`).
+- **Wrangler.** The test parses `wrangler.jsonc` with `unstable_readConfig`; the top-level `database_id` is `REPLACE_WITH_PRODUCTION_D1_DATABASE_ID`.
+
+### How to run
+
+`pnpm --filter @zapbip/core test:unit`, `pnpm --filter @zapbip/api test:unit`, `pnpm --filter @zapbip/api test:integration`, `pnpm --filter @zapbip/api test:e2e`, then `pnpm verify all`.
+
+### Red today, green after
+
+| Test | Red evidence | Green |
+|---|---|---|
+| `validation.test.ts` media type cases | `Error: expected an InboxError, nothing was thrown` | a1e31d3 |
+| `upload-route.test.ts` Content-Length cases | `expected 201 to be 400` | f00cde5 |
+| `upload-route.test.ts` concurrent PUTs | `expected 'bbbbbbbbbbbb' to be 'aaaaaaaaaaaa'` | 29615d6 |
+| `claim-upload.test.ts` | `Error: claimUpload is not implemented` | 29615d6 |
+| `wrangler-config.test.ts` placeholder | `expected [ 'zapbip-connections-local' ] to deeply equal [ Array(1) ]` (the other two cases are pins) | 934ded0 |
+| `receive-owner-message.test.ts`, `expire-routing-list.test.ts`, `inbox-copy.test.ts` | `expireRoutingList is not implemented`, missing row, missing reminder, old copy; pins: failed list leaves no row, route choice clears, reaction does not remind | routing list commit |
+
+### Hypotheses to attack
+
+1. A pending list never produces a second list, and the owner sees exactly one reminder per batch. Break it by: five unmatched texts, then a text in the other locale.
+2. After 10 minutes with no agent write, the list appears once more; after another 10 the batch is unread for the agent seen last and no third list appears.
+3. An agent that wrote inside the window takes the whole batch in order at the first expiry and its waiting `wait_for_reply` returns.
+4. The alarm, not a request, drives the expiry: `runDurableObjectAlarm` after `advanceClock` is enough.
+5. Two simultaneous PUTs: exactly one `201`, one `409`, the object holds the winner's bytes.
+6. `image/SVG+XML` and `image/svg+xml;x=1` are refused as images; `IMAGE/WEBP; q=1` is a valid sticker.
+7. `Content-Length: 12abc`, `0x0c`, `1.2e1` answer `400`.
+8. The lookup of the open list is a primary-key read: `EXPLAIN QUERY PLAN` gave `SEARCH owner_window USING INTEGER PRIMARY KEY (rowid=?)`; the claim gave `SEARCH media USING INDEX sqlite_autoindex_media_1 (media_id=?)`.
+
+### Known gaps
+
+- A resend after 24 hours of owner silence is queued, not sent (the window is closed).
+- A PUT whose Worker dies between the claim and the write leaves the upload claimed until its deadline (`UPLOAD_TTL_MS`); fix round 2 shortens this to `UPLOAD_CLAIM_TTL_MS`.
+- The failed-write release has no integration test: the in-memory and repository cases cover the release, the route path does not; WI-126 now covers it.
+
+## Fix round 2 (feat/agent-inbox-core-fix2)
+
+### What changed
+
+- Alarm: `nextAlarmAt` never moves an armed alarm later; the five-second minimum delay applies only to a fresh arm or an earlier due time. WI-129 and `alarm-time.test.ts`.
+- Routing list expiry is claimed (`claimRoutingListExpiry`) before anything is sent; a resend keeps `reminded`, `resent` and, for an unknown-agent tap, the opening time; the row is saved before the send and restored if the send throws.
+- The owner notice after an expiry assignment uses `AgentAssignedByExpiry`; only an explicit pick uses `AgentNotListening`.
+- Upload claim: `claimed_at` replaces `uploading`; a claim older than `UPLOAD_CLAIM_TTL_MS` is free; an aborted client stream answers `400 upload_incomplete` and releases the claim.
+- Signed links with a repeated `sig` or `exp` answer `403`; `image/svg+xml` is always served as an attachment; media types must be a `type/subtype` token.
+- E2E-20 reminder and E2E-7 uploads (video, voice, document, sticker, 100,001-byte sticker) are asserted.
+- WI-123 uses fixed far-future due times, no wall clock.
+
+### Red today, green after
+
+| Test | Red commit | Failure text |
+|---|---|---|
+| `alarm-time.test.ts`, WI-129 | 50be836 | `nextAlarmAt is not implemented`; `expected 1793978834025 to be 1793978833989` |
+| expiry copy, failed resend, concurrent expiry, kept list state | 7e4c055 | `The agent alpha is not listening righ…` where the new copy was expected; `expected 864601000 to be greater than 864602000`; `expected [...] to have a length of 2 but got 3`; the unknown-agent tap reset `openedAt` |
+| stale upload claim | 47cfc0a | `upload_id: upload already in progress` |
+| WI-126 aborted stream | b12b698 | `expected 500 to be 400` |
+| WI-127 repeated sig or exp, svg | 3ba790e | `expected 200 to be 403`, `expected 201 to be 403`, `expected null to be 'attachment'` |
+| media type grammar | 668e6b1 | `expected an InboxError, nothing was thrown` |
+
+Pins (green when they landed): a stale tap resolves no question waiter (7e4c055); the attack specs WI-130 to WI-136 (e9b79e9); the E2E-20 reminder and E2E-7 upload rows (4cd5b60).
+
+### Earlier tests that were never red-first (recorded, history not rewritten)
+
+WI-124 (`sqlite-repository.test.ts`), WI-125 (`account-inbox.test.ts`) and WI-126 of the previous round were green when they landed; they are pins.
+
+### S5.9 red commit f0426b3
+
+The plan expected the red run to fail at the first tool call with `<use case> is not implemented`. The real failure is at startup: `pnpm test:e2e` dies in `globalSetup` with `No migrations present at apps/api/migrations` from `wrangler d1 migrations apply`. The plan and the commit order disagree; history is not rewritten.
+
+### Hypotheses to attack
+
+1. An agent calling `check_inbox` every second after a list is ten minutes past due sees the resent list within the minimum delay.
+2. A failing resend never repeats every five seconds: the second expiry assigns the batch to the last agent seen and the owner reads the assigned-by-expiry notice.
+3. Two concurrent expiries send one resend.
+4. A PUT whose stream is cut answers `400`, leaves no object and a retry answers `201`; a claim left by a dead Worker is free after one minute.
+5. `?sig=a&sig=b` and `?exp=1&exp=2` answer `403` on `/u` and `/m`.
+
+### Known gaps
+
+- A PUT whose Worker dies between claim and write is now free after one minute, not after `UPLOAD_TTL_MS`; no test kills a Worker mid-write.
+
+## Fix round 3 (feat/agent-inbox-core-fix3)
+
+### What changed
+
+- Upload claims are fenced: `claimUpload` returns its `claimedAt`; `completeUpload` and `releaseUpload` are conditional on it (`WHERE claimed_at = ?`), so a replaced writer can neither complete nor release. `UPLOAD_CLAIM_TTL_MS` equals `UPLOAD_TTL_MS`, so no takeover happens before the upload expires (CU-174, CU-175, WI-144).
+- The upload MIME type is stored normalized (`createUpload`), written to R2 as given by the store, and served normalized by the media route; a control character in a raw declaration is `invalid_input` for uploads and for `send_media` (CU-176, CU-177, WI-142, WI-143).
+- A client abort answers `400 upload_incomplete`; an R2 failure answers 5xx. The upload route tells them apart by a source stream that ended short or errored (WI-137, WI-141).
+- The wake resolves the question waiter only when an answer was stored (`placement.answer`), so a photo quoting a question prompt wakes the ordinary wait (CU-178).
+- One `DEVELOPMENT_ENVIRONMENT` constant in `apps/api/src/contract/constants.ts`; docs no longer say every AI is "listed as coming soon"; the spec drops the contradicting "Rule 5 beats an open list" bullet; the test plan has rows for every round-2 and round-3 behaviour and the colliding titles are renumbered (WI-137 to WI-145).
+
+### Red today, green after
+
+| Test | Red commit | Failure text |
+|---|---|---|
+| CU-174 to CU-177 | 8657338 | `expected 60000 to be greater than or equal to 900000`; `expected an InboxError, nothing was thrown`; `expected { mediaId: 'med_1', ...(7) } to match object { mimeType: 'application/pdf' }` |
+| CU-178 photo quoting a prompt | 3030839 | `Test timed out in 5000ms` |
+
+Green when they landed (pins, or written with the implementation in a0b8c5f): WI-140 (pin), WI-141, WI-142, WI-143, WI-144; the WI-137 body now reaches the route as a short stream, which the old byte count also caught; the CU-178 stale-tap test replaces a `vi.spyOn` assertion with the waiter result (pin).
+
+### Hypotheses to attack
+
+1. Two PUTs racing on one upload: one `201`, the other `409`, and the R2 bytes are the winner's.
+2. A slow writer past `UPLOAD_TTL_MS` finds the upload expired (`410`) and never marks it received.
+3. `Image/PNG; charset=x` declared and sent: R2 `contentType` and the GET `Content-Type` are `image/png`.
+4. `image/png\n;x` as `mime_type` in `create_upload` or `send_media` answers `invalid_input`.
+5. An owner photo quoting a question prompt reaches an agent sitting in a plain `wait_for_reply`.
+
+### Known gaps
+
+- A Worker that dies between claim and write leaves the claim until the upload expires (15 minutes); the agent can create a new upload.
+- R2 holds the bytes of a writer that lost the fence only if a takeover were possible; with the TTL equal to the upload life none is.

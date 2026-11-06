@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 import { InboxError } from '@zapbip/core';
+import { DEVELOPMENT_ENVIRONMENT } from '../src/contract/constants';
 import { assertOwnerAbsent, buildDirectorySeed, findOwnerStatement } from './build-directory-seed';
 
 const DATABASE_BINDING = 'CONNECTIONS';
@@ -16,7 +17,19 @@ function runWrangler(input: { arguments: string[]; persistTo: string | undefined
   const persistArguments = input.persistTo === undefined ? [] : ['--persist-to', input.persistTo];
   return execFileSync(
     'pnpm',
-    ['exec', 'wrangler', 'd1', 'execute', DATABASE_BINDING, '--local', ...persistArguments, '--json', ...input.arguments],
+    [
+      'exec',
+      'wrangler',
+      'd1',
+      'execute',
+      DATABASE_BINDING,
+      '--env',
+      DEVELOPMENT_ENVIRONMENT,
+      '--local',
+      ...persistArguments,
+      '--json',
+      ...input.arguments,
+    ],
     {
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'inherit'],
