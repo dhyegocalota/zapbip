@@ -1,4 +1,13 @@
-import { ChannelErrorKind, ChannelInboundKind, MediaOrigin, MediaSourceKind, MessageKind, OwnerLocale, WakeOutcome } from '@zapbip/types';
+import {
+  ChannelErrorKind,
+  ChannelInboundKind,
+  MediaOrigin,
+  MediaSourceKind,
+  MessageKind,
+  OwnerLocale,
+  WakeOutcome,
+  ForwardedKind,
+} from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { formatRouteOptionId } from '../option-id';
 import { InboxError } from '../errors';
@@ -29,6 +38,7 @@ describe('receiveChannelMessage', () => {
     expect(await environment.repository.findMessage({ messageId: result.messageId! })).toMatchObject({
       agent: 'alpha',
       readByAgent: false,
+      forwarded: ForwardedKind.None,
       text: 'oi',
     });
     expect(await environment.repository.findMessageByChannelMessageId({ channelMessageId: WAMID })).toMatchObject({
@@ -136,6 +146,16 @@ describe('receiveChannelMessage', () => {
     expect(await environment.repository.countUnread({ agent: 'alpha' })).toBe(0);
   });
 
+  test.each([ForwardedKind.Forwarded, ForwardedKind.FrequentlyForwarded, ForwardedKind.None])(
+    'stores the forwarded kind %s of an owner message',
+    async (forwarded) => {
+      const environment = await environmentWithAlpha();
+      const entry = ownerTextEntry({ environment, text: '@alpha oi', forwarded });
+      const result = await receiveChannel({ environment, entry });
+      expect(await environment.repository.findMessage({ messageId: result.messageId! })).toMatchObject({ forwarded });
+    },
+  );
+
   test('CU-21 a reply to an agent message stores the core message id as its target', async () => {
     const environment = await environmentWithAlpha();
     const sent = await sendText({
@@ -174,6 +194,7 @@ describe('receiveChannelMessage', () => {
       at: environment.clock.now(),
       content: { kind: MessageKind.Image, voice: false, filename: null, caption: '@alpha look' },
       replyToChannelMessageId: null,
+      forwarded: ForwardedKind.None,
       noticeText: 'Y',
     };
     const result = await receiveChannel({ environment, entry });
@@ -183,6 +204,7 @@ describe('receiveChannelMessage', () => {
       mimeType: null,
       sizeBytes: null,
       readByAgent: false,
+      forwarded: ForwardedKind.None,
     });
     expect(environment.sender.sessions.slice(1)).toMatchObject([{ kind: MessageKind.Text, text: 'Y', agent: null }]);
   });
@@ -202,6 +224,7 @@ describe('receiveChannelMessage', () => {
         caption: null,
       },
       replyToChannelMessageId: null,
+      forwarded: ForwardedKind.None,
       noticeText: null,
     };
     const result = await receiveChannel({ environment, entry });
@@ -235,6 +258,7 @@ describe('receiveChannelMessage', () => {
       at: environment.clock.now(),
       content: { kind: MessageKind.Reaction, targetMessageId: 'wamid.unknown', emoji: '👍' },
       replyToChannelMessageId: null,
+      forwarded: ForwardedKind.None,
       noticeText: null,
     };
     await receiveChannel({ environment, entry });
@@ -257,6 +281,7 @@ describe('receiveChannelMessage', () => {
         optionDescription: null,
       },
       replyToChannelMessageId: null,
+      forwarded: ForwardedKind.None,
       noticeText: null,
     };
     const result = await receiveChannel({ environment, entry: tap });
@@ -287,6 +312,7 @@ describe('receiveChannelMessage', () => {
       at: environment.clock.now(),
       content: { kind: MessageKind.Reaction, targetMessageId, emoji: '👍' },
       replyToChannelMessageId: null,
+      forwarded: ForwardedKind.None,
       noticeText: null,
     });
     const onKnown = await receiveChannel({ environment, entry: reactionOn('wamid.X') });
@@ -305,6 +331,7 @@ describe('receiveChannelMessage', () => {
       at: environment.clock.now(),
       content: { kind: MessageKind.Image, voice: true, filename: null, caption: null },
       replyToChannelMessageId: null,
+      forwarded: ForwardedKind.None,
       noticeText: null,
     };
     await expect(receiveChannel({ environment, channelMessageId: WAMID, entry })).rejects.toBeInstanceOf(InboxError);

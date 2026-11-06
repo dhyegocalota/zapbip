@@ -92,7 +92,34 @@ function statusOf(input: { fixture: object; channelMessageId: string }): object 
   return { ...input.fixture, id: input.channelMessageId, timestamp: secondsAgo({ ageMs: 0 }) };
 }
 
+async function indexOnly(input: { account: SeededAccount; channelMessageId: string }): Promise<void> {
+  await new D1MessageIndex({ database: testEnv.CONNECTIONS }).record({
+    id: input.channelMessageId,
+    accountId: input.account.accountId,
+    at: Date.now(),
+  });
+}
+
 describe('webhook statuses', () => {
+  test('R6 answers 503 for a young status whose message the account has not saved yet, so Meta retries', async () => {
+    const channelMessageId = 'wamid.R6YOUNG';
+    const account = await seedAccount({ agent: 'alpha' });
+    await indexOnly({ account, channelMessageId });
+    const response = await postStatus({ status: statusOf({ fixture: readFixture, channelMessageId }) });
+    expect(response.status).toBe(HttpStatus.ServiceUnavailable);
+  });
+
+  test('R6 answers 200 and logs status.unindexed for an old status whose message the account never saved', async () => {
+    const spies = [vi.spyOn(console, 'log'), vi.spyOn(console, 'error'), vi.spyOn(console, 'warn')];
+    const channelMessageId = 'wamid.R6OLD';
+    const account = await seedAccount({ agent: 'alpha' });
+    await indexOnly({ account, channelMessageId });
+    const ageMs = UNINDEXED_STATUS_RETRY_WINDOW_MS + STALE_MARGIN_MS;
+    const response = await postStatus({ status: { ...readFixture, id: channelMessageId, timestamp: secondsAgo({ ageMs }) } });
+    expect(response.status).toBe(STATUS_OK);
+    expect(JSON.stringify(spies.flatMap((spy) => spy.mock.calls))).toContain(OperatorEvent.StatusUnindexed);
+  });
+
   test('WI-50 answers 503 for an unindexed wamid that is young, so Meta retries', async () => {
     const response = await postStatus({ status: { ...readFixture, id: 'wamid.YOUNG', timestamp: secondsAgo({ ageMs: 0 }) } });
     expect(response.status).toBe(HttpStatus.ServiceUnavailable);

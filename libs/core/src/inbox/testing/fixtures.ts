@@ -1,4 +1,4 @@
-import { DAY_MS, MessageKind, OwnerLocale, ReplyStatus, SECOND_MS } from '@zapbip/types';
+import { DAY_MS, ForwardedKind, MessageKind, OwnerLocale, ReplyStatus, SECOND_MS } from '@zapbip/types';
 import type { ConnectionIdentity } from '../connection';
 import { WINDOW_MS } from '../constants';
 import type { Question } from '../question';
@@ -80,7 +80,7 @@ export function receive(input: {
     dependencies: environment.dependencies,
     ownerLocale,
     channelMessageId,
-    ownerMessage: { at: environment.clock.now(), replyToMessageId, content },
+    ownerMessage: { at: environment.clock.now(), replyToMessageId, forwarded: ForwardedKind.None, content },
   });
 }
 

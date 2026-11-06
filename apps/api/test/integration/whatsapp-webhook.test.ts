@@ -1,15 +1,35 @@
 import { env, runInDurableObject, SELF } from 'cloudflare:test';
-import { HISTORY_LIMIT, type CoreDependencies } from '@zapbip/core';
-import { MediaSourceKind, MessageDirection, MessageKind, OwnerLocale, SECOND_MS } from '@zapbip/types';
+import { formatOptionId, HISTORY_LIMIT, isOwnerWindowOpen, RECEIPT_RETENTION_MS, type CoreDependencies } from '@zapbip/core';
+import {
+  DeliveryState,
+  ForwardedKind,
+  MediaSourceKind,
+  MessageDirection,
+  MessageKind,
+  MessageSender,
+  MINUTE_MS,
+  OwnerLocale,
+  SECOND_MS,
+} from '@zapbip/types';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { createApp } from '../../src/app';
 import { GRAPH_REQUEST_TIMEOUT_MS, WEBHOOK_MAX_BYTES, WEBHOOK_SIGNATURE_HEADER } from '../../src/adapters/whatsapp/whatsapp-constants';
 import { OwnerCopyKey, WHATSAPP_COPY } from '../../src/adapters/whatsapp/whatsapp-copy';
 import { OperatorEvent } from '../../src/adapters/whatsapp/whatsapp-enums';
 import { WHATSAPP_WEBHOOK_PATH } from '../../src/contract/constants';
+import { toWireMessage } from '../../src/mcp/wire';
 import imageFixture from '../fixtures/whatsapp/inbound/image.json';
 import orderFixture from '../fixtures/whatsapp/inbound/order.json';
+import audioVoiceFixture from '../fixtures/whatsapp/inbound/audio-voice.json';
+import buttonFixture from '../fixtures/whatsapp/inbound/button.json';
+import imageForwardedFixture from '../fixtures/whatsapp/inbound/image-forwarded.json';
+import listReplyFixture from '../fixtures/whatsapp/inbound/list-reply.json';
+import reactionFixture from '../fixtures/whatsapp/inbound/reaction.json';
 import textFixture from '../fixtures/whatsapp/inbound/text.json';
+import textForwardedFixture from '../fixtures/whatsapp/inbound/text-forwarded.json';
+import textFrequentlyForwardedFixture from '../fixtures/whatsapp/inbound/text-frequently-forwarded.json';
+import textReplyFixture from '../fixtures/whatsapp/inbound/text-reply.json';
+import unsupportedFixture from '../fixtures/whatsapp/inbound/unsupported.json';
 import {
   changeOf,
   FOREIGN_PHONE_NUMBER_ID,
@@ -19,6 +39,7 @@ import {
 } from '../fixtures/whatsapp/inbound/notification';
 import { signatureHeaderOf } from '../fixtures/whatsapp/inbound/signed-webhook';
 import { accountInboxStub, whatsappTestEnv } from '../support/workers-env';
+import { buildTextMessage } from '../support/builders';
 import { inboxOf, ORIGIN, seedAccount, type SeededAccount } from './route-fixtures';
 
 const STATUS_OK = 200;
@@ -43,6 +64,13 @@ const USERINFO_TRICK_URL = 'https://lookaside.fbsbx.com@evil.com/x';
 const PATH_TRICK_URL = 'https://evil.com/.fbsbx.com/x';
 const SECURE_PREFIX = 'https://';
 const MEDIA_KEY_PREFIX = 'accounts';
+const UNSUPPORTED_NOTICE = WHATSAPP_COPY[OwnerLocale.PortugueseBrazil][OwnerCopyKey.UnsupportedKind];
+const STALE_MARGIN_MS = MINUTE_MS;
+const VOICE_BYTES = new TextEncoder().encode('voice-bytes');
+const TOO_LARGE_CODE = 131_052;
+const STATUS_BAD_REQUEST_GRAPH = 400;
+const AGENT_CHANNEL_MESSAGE_ID = 'wamid.AGENT';
+const AGENT_MESSAGE_ID = 'msg_agent_1';
 
 type GraphCall = { url: string; authorization: string | null };
 type DownloadScript = (input: { attempt: number; signal: AbortSignal | null | undefined }) => Response | Promise<Response>;
@@ -56,7 +84,7 @@ function encode(input: { text: string }): Uint8Array {
 }
 
 function ownerText(input: { account: SeededAccount; id: string; text: string }): object {
-  return { ...textFixture, from: input.account.phone, id: input.id, text: { body: input.text } };
+  return { ...textFixture, from: input.account.phone, id: input.id, timestamp: nowInSeconds(), text: { body: input.text } };
 }
 
 async function postSigned(input: { text: string; signedText?: string }): Promise<Response> {
@@ -92,6 +120,34 @@ function ownerTextsOf(input: { history: Awaited<ReturnType<typeof historyOf>> })
   return input.history.flatMap((message) =>
     message.direction === MessageDirection.FromOwner && message.kind === MessageKind.Text ? [message.text] : [],
   );
+}
+
+function occurrencesOf(input: { text: string; event: OperatorEvent }): number {
+  return input.text.split(input.event).length - 1;
+}
+
+function windowOf(input: { account: SeededAccount }) {
+  return runInDurableObject(accountInboxStub({ accountId: input.account.accountId }), (instance) =>
+    (instance as unknown as { dependencies: CoreDependencies }).dependencies.repository.findWindow(),
+  );
+}
+
+async function seedAgentMessage(input: { account: SeededAccount; agent: string }): Promise<void> {
+  await runInDurableObject(accountInboxStub({ accountId: input.account.accountId }), async (instance) => {
+    const { repository } = (instance as unknown as { dependencies: CoreDependencies }).dependencies;
+    await repository.insertMessage({
+      message: buildTextMessage({ messageId: AGENT_MESSAGE_ID, agent: input.agent, delivery: DeliveryState.Sent }),
+    });
+    await repository.saveChannelMessageId({ messageId: AGENT_MESSAGE_ID, channelMessageId: AGENT_CHANNEL_MESSAGE_ID });
+  });
+}
+
+function secondsAgo(input: { ageMs: number }): string {
+  return String(Math.floor((Date.now() - input.ageMs) / SECOND_MS));
+}
+
+function fresh(input: { message: object; account: SeededAccount; id: string }): object {
+  return { ...input.message, from: input.account.phone, id: input.id, timestamp: nowInSeconds() };
 }
 
 function loggedText(input: { spies: ReturnType<typeof vi.spyOn>[] }): string {
@@ -188,7 +244,11 @@ describe('webhook inbound messages', () => {
       notification: notificationWith({ messages: [ownerText({ account, id: 'wamid.WI20', text: 'Oi' })] }),
     });
     expect(response.status).toBe(STATUS_OK);
-    expect(ownerTextsOf({ history: await historyOf({ account }) })).toEqual(['Oi']);
+    const history = await historyOf({ account });
+    expect(ownerTextsOf({ history })).toEqual(['Oi']);
+    const [stored] = history;
+    expect(toWireMessage({ message: stored!, link: null })).toMatchObject({ sender: MessageSender.Owner, verified: true, read: false });
+    expect(isOwnerWindowOpen({ window: await windowOf({ account }), now: Date.now() })).toBe(true);
   });
 
   test('WI-21 stores a delivered twice webhook once', async () => {
@@ -216,7 +276,7 @@ describe('webhook inbound messages', () => {
   test('WI-28 skips a sender with no owner row and logs it without a phone number', async () => {
     const spies = spyOnLogs();
     const response = await postNotification({
-      notification: notificationWith({ messages: [{ ...textFixture, from: UNKNOWN_PHONE, id: 'wamid.WI28' }] }),
+      notification: notificationWith({ messages: [{ ...textFixture, from: UNKNOWN_PHONE, id: 'wamid.WI28', timestamp: nowInSeconds() }] }),
     });
     expect(response.status).toBe(STATUS_OK);
     expect(loggedText({ spies })).toContain(OperatorEvent.InboundUnmapped);
@@ -227,13 +287,15 @@ describe('webhook inbound messages', () => {
     const account = await seedAccount({ agent: 'alpha' });
     const notification = notificationOf({
       changes: [
-        changeOf({ messages: [{ ...orderFixture, from: account.phone, id: 'wamid.WI29ORDER' }] }),
+        changeOf({ messages: [{ ...orderFixture, from: account.phone, id: 'wamid.WI29ORDER', timestamp: nowInSeconds() }] }),
         changeOf({ messages: [ownerText({ account, id: 'wamid.WI29TEXT', text: 'Oi' })] }),
       ],
     });
     const response = await postNotification({ notification });
     expect(response.status).toBe(STATUS_OK);
     expect(ownerTextsOf({ history: await historyOf({ account }) })).toEqual(['Oi']);
+    const screenTexts = await screenTextsOf({ account });
+    expect(screenTexts.filter((text) => text === UNSUPPORTED_NOTICE)).toHaveLength(1);
   });
 
   test('WI-30 keeps the text beside a message without from', async () => {
@@ -245,10 +307,11 @@ describe('webhook inbound messages', () => {
     const response = await postNotification({ notification });
     expect(response.status).toBe(STATUS_OK);
     expect(ownerTextsOf({ history: await historyOf({ account }) })).toEqual(['Oi']);
-    expect(loggedText({ spies })).toContain(OperatorEvent.InboundUnmapped);
+    expect(occurrencesOf({ text: loggedText({ spies }), event: OperatorEvent.InboundUnmapped })).toBe(1);
   });
 
   test('WI-31 stores the change of our number beside a foreign one', async () => {
+    const spies = spyOnLogs();
     const account = await seedAccount({ agent: 'alpha' });
     const notification = notificationOf({
       changes: [
@@ -259,6 +322,7 @@ describe('webhook inbound messages', () => {
     const response = await postNotification({ notification });
     expect(response.status).toBe(STATUS_OK);
     expect(ownerTextsOf({ history: await historyOf({ account }) })).toEqual(['Oi']);
+    expect(occurrencesOf({ text: loggedText({ spies }), event: OperatorEvent.InboundForeignNumber })).toBe(1);
   });
 
   test('WI-32 skips a change with another field', async () => {
@@ -289,14 +353,18 @@ function failFirstCommit(input: { account: SeededAccount }) {
   });
 }
 
-async function imageNotificationOf(input: { account: SeededAccount; id: string; sha256?: string }): Promise<object> {
+async function imageNotificationOf(input: {
+  account: SeededAccount;
+  id: string;
+  sha256?: string;
+  fixture?: typeof imageFixture;
+}): Promise<object> {
+  const { fixture = imageFixture } = input;
   const digest = await crypto.subtle.digest('SHA-256', IMAGE_BYTES);
   const matchingSha256 = btoa(String.fromCharCode(...new Uint8Array(digest)));
   const sha256 = input.sha256 === undefined ? matchingSha256 : input.sha256;
   return notificationWith({
-    messages: [
-      { ...imageFixture, from: input.account.phone, id: input.id, timestamp: nowInSeconds(), image: { ...imageFixture.image, sha256 } },
-    ],
+    messages: [{ ...fixture, from: input.account.phone, id: input.id, timestamp: nowInSeconds(), image: { ...fixture.image, sha256 } }],
   });
 }
 
@@ -308,13 +376,16 @@ function respondWithImage(): Response {
   return new Response(IMAGE_BYTES);
 }
 
-function serveMediaFromGraph(input: { metadataUrl?: string; download?: DownloadScript } = {}): GraphCall[] {
-  const { metadataUrl = IMAGE_DOWNLOAD_URL, download = respondWithImage } = input;
+function serveMediaFromGraph(
+  input: { metadataUrl?: string; download?: DownloadScript; metadataPath?: string; metadataSize?: number; metadata?: () => Response } = {},
+): GraphCall[] {
+  const { metadataUrl = IMAGE_DOWNLOAD_URL, download = respondWithImage, metadataPath = IMAGE_METADATA_PATH } = input;
+  const { metadataSize = IMAGE_BYTES.byteLength, metadata = () => Response.json({ url: metadataUrl, file_size: metadataSize }) } = input;
   const calls: GraphCall[] = [];
   const passthrough = globalThis.fetch.bind(globalThis);
   vi.spyOn(globalThis, 'fetch').mockImplementation(async (request, init) => {
     const url = String(request instanceof Request ? request.url : request);
-    if (url.endsWith(IMAGE_METADATA_PATH)) return Response.json({ url: metadataUrl, file_size: IMAGE_BYTES.byteLength });
+    if (url.endsWith(metadataPath)) return metadata();
     if (!url.startsWith(SECURE_PREFIX)) return passthrough(request, init);
     calls.push({ url, authorization: new Headers(init?.headers).get('authorization') });
     return download({ attempt: calls.length, signal: init?.signal });
@@ -538,5 +609,232 @@ describe('webhook development media origin', () => {
     expect(response.status).toBe(STATUS_OK);
     expect((await imageOf({ account })).source.kind).toBe(MediaSourceKind.Stored);
     expect(downloaded).toEqual([DEVELOPMENT_DOWNLOAD_URL]);
+  });
+});
+
+describe('webhook stale and replayed deliveries', () => {
+  test('answers 200, stores nothing and logs inbound.stale for an entry older than the receipt retention', async () => {
+    const spies = spyOnLogs();
+    const account = await seedAccount({ agent: 'alpha' });
+    const message = {
+      ...ownerText({ account, id: 'wamid.STALE', text: 'Velho' }),
+      timestamp: secondsAgo({ ageMs: RECEIPT_RETENTION_MS + STALE_MARGIN_MS }),
+    };
+    const response = await postNotification({ notification: notificationWith({ messages: [message] }) });
+    expect(response.status).toBe(STATUS_OK);
+    expect(ownerTextsOf({ history: await historyOf({ account }) })).toEqual([]);
+    expect(occurrencesOf({ text: loggedText({ spies }), event: OperatorEvent.InboundStale })).toBe(1);
+  });
+
+  test('pin: processes an entry just inside the receipt retention', async () => {
+    const account = await seedAccount({ agent: 'alpha' });
+    const message = {
+      ...ownerText({ account, id: 'wamid.EDGE', text: 'Quase' }),
+      timestamp: secondsAgo({ ageMs: RECEIPT_RETENTION_MS - STALE_MARGIN_MS }),
+    };
+    const response = await postNotification({ notification: notificationWith({ messages: [message] }) });
+    expect(response.status).toBe(STATUS_OK);
+    expect(ownerTextsOf({ history: await historyOf({ account }) })).toEqual(['Quase']);
+  });
+
+  test('answers 200 and keeps one message when a captured delivery of a stored message id is replayed after the retention', async () => {
+    spyOnLogs();
+    const account = await seedAccount({ agent: 'alpha' });
+    const original = ownerText({ account, id: 'wamid.REPLAY', text: 'Oi' });
+    await postNotification({ notification: notificationWith({ messages: [original] }) });
+    const replayed = { ...original, timestamp: secondsAgo({ ageMs: RECEIPT_RETENTION_MS + STALE_MARGIN_MS }) };
+    const response = await postNotification({ notification: notificationWith({ messages: [replayed] }) });
+    expect(response.status).toBe(STATUS_OK);
+    expect(ownerTextsOf({ history: await historyOf({ account }) })).toEqual(['Oi']);
+  });
+
+  test('answers 200 and keeps the stored object when a committed media message is replayed after the retention', async () => {
+    spyOnLogs();
+    const calls = serveMediaFromGraph();
+    const account = await seedAccount({ agent: 'alpha' });
+    const original = await imageNotificationOf({ account, id: 'wamid.REPLAYMEDIA' });
+    await postNotificationWithAccessToken({ notification: original });
+    const [message] = (original as { entry: { changes: { value: { messages: object[] } }[] }[] }).entry[0]!.changes[0]!.value.messages;
+    const replayed = notificationWith({
+      messages: [{ ...message, timestamp: secondsAgo({ ageMs: RECEIPT_RETENTION_MS + STALE_MARGIN_MS }) }],
+    });
+    const response = await postNotificationWithAccessToken({ notification: replayed });
+    expect(response.status).toBe(STATUS_OK);
+    expect(calls).toHaveLength(1);
+    expect(await storedKeysOf({ account })).toHaveLength(1);
+  });
+
+  test('downloads nothing and keeps the stored object when a committed media message is delivered again', async () => {
+    spyOnLogs();
+    const calls = serveMediaFromGraph();
+    const account = await seedAccount({ agent: 'alpha' });
+    const notification = await imageNotificationOf({ account, id: 'wamid.REDELIVER' });
+    await postNotificationWithAccessToken({ notification });
+    const [keyBefore] = await storedKeysOf({ account });
+    const bytesBefore = await (await env.MEDIA.get(keyBefore!))?.arrayBuffer();
+    serveMediaFromGraph({ download: () => new Response(new TextEncoder().encode('different-bytes')) });
+    const response = await postNotificationWithAccessToken({ notification });
+    expect(response.status).toBe(STATUS_OK);
+    expect(calls).toHaveLength(1);
+    expect(await storedKeysOf({ account })).toEqual([keyBefore]);
+    expect(await (await env.MEDIA.get(keyBefore!))?.arrayBuffer()).toEqual(bytesBefore);
+    expect(await countOwnerMessages({ account, kind: MessageKind.Image })).toBe(1);
+  });
+});
+
+describe('webhook Graph errors on inbound media', () => {
+  test('R2 stores the media as unavailable on a too-large Graph error and still stores the text after it in the same POST', async () => {
+    spyOnLogs();
+    serveMediaFromGraph({
+      metadata: () => Response.json({ error: { code: TOO_LARGE_CODE, message: 'too large' } }, { status: STATUS_BAD_REQUEST_GRAPH }),
+    });
+    const account = await seedAccount({ agent: 'alpha' });
+    const image = fresh({ message: imageFixture, account, id: 'wamid.TOOLARGE' });
+    const text = ownerText({ account, id: 'wamid.AFTERLARGE', text: 'Depois' });
+    const response = await postNotificationWithAccessToken({ notification: notificationWith({ messages: [image, text] }) });
+    expect(response.status).toBe(STATUS_OK);
+    expect((await imageOf({ account })).source.kind).toBe(MediaSourceKind.Unavailable);
+    expect(ownerTextsOf({ history: await historyOf({ account }) })).toEqual(['Depois']);
+    expect(await screenTextsOf({ account })).toContain(WHATSAPP_COPY[OwnerLocale.PortugueseBrazil][OwnerCopyKey.MediaUnavailable]);
+  });
+
+  test('R2 answers 500 when the metadata request answers with a server error, so Meta retries', async () => {
+    spyOnLogs();
+    serveMediaFromGraph({ metadata: () => new Response(null, { status: STATUS_SERVER_ERROR }) });
+    const account = await seedAccount({ agent: 'alpha' });
+    const response = await postNotificationWithAccessToken({ notification: await imageNotificationOf({ account, id: 'wamid.META500' }) });
+    expect(response.status).toBe(STATUS_SERVER_ERROR);
+    expect(await countOwnerMessages({ account, kind: MessageKind.Image })).toBe(0);
+  });
+});
+
+describe('webhook forwarded messages', () => {
+  test.each([
+    ['a forwarded text', textForwardedFixture, ForwardedKind.Forwarded],
+    ['a frequently forwarded text', textFrequentlyForwardedFixture, ForwardedKind.FrequentlyForwarded],
+  ])('stores %s with the forwarded kind and verified false', async (_name, fixture, forwarded) => {
+    const account = await seedAccount({ agent: 'alpha' });
+    const message = fresh({ message: fixture, account, id: `wamid.${forwarded}` });
+    const response = await postNotification({ notification: notificationWith({ messages: [message] }) });
+    expect(response.status).toBe(STATUS_OK);
+    const [stored] = await historyOf({ account });
+    expect(stored).toMatchObject({ forwarded, readByAgent: false });
+    expect(toWireMessage({ message: stored!, link: null })).toMatchObject({ sender: MessageSender.Owner, verified: false, forwarded });
+  });
+
+  test('stores a forwarded image with its media and the forwarded kind', async () => {
+    spyOnLogs();
+    serveMediaFromGraph();
+    const account = await seedAccount({ agent: 'alpha' });
+    const notification = await imageNotificationOf({ account, id: 'wamid.FWDIMAGE', fixture: imageForwardedFixture });
+    const response = await postNotificationWithAccessToken({ notification });
+    expect(response.status).toBe(STATUS_OK);
+    const image = await imageOf({ account });
+    expect(image.source.kind).toBe(MediaSourceKind.Stored);
+    expect(image.forwarded).toBe(ForwardedKind.Forwarded);
+  });
+
+  test('a plain text is stored with forwarded none and verified true', async () => {
+    const account = await seedAccount({ agent: 'alpha' });
+    await postNotification({ notification: notificationWith({ messages: [ownerText({ account, id: 'wamid.PLAIN', text: 'Oi' })] }) });
+    const [stored] = await historyOf({ account });
+    expect(toWireMessage({ message: stored!, link: null })).toMatchObject({ verified: true, forwarded: ForwardedKind.None });
+  });
+});
+
+describe('webhook inbound kinds', () => {
+  test('WI-44 stores a voice note as an audio message with voice true', async () => {
+    spyOnLogs();
+    const digest = await crypto.subtle.digest('SHA-256', VOICE_BYTES);
+    const sha256 = btoa(String.fromCharCode(...new Uint8Array(digest)));
+    serveMediaFromGraph({
+      metadataPath: `/${audioVoiceFixture.audio.id}`,
+      metadataSize: VOICE_BYTES.byteLength,
+      download: () => new Response(VOICE_BYTES),
+    });
+    const account = await seedAccount({ agent: 'alpha' });
+    const message = { ...fresh({ message: audioVoiceFixture, account, id: 'wamid.WI44' }), audio: { ...audioVoiceFixture.audio, sha256 } };
+    const response = await postNotificationWithAccessToken({ notification: notificationWith({ messages: [message] }) });
+    expect(response.status).toBe(STATUS_OK);
+    const [stored] = await historyOf({ account });
+    expect(stored).toMatchObject({ kind: MessageKind.Audio, voice: true, source: { kind: MediaSourceKind.Stored } });
+  });
+
+  test('WI-45 routes a reaction on an agent message to that agent and keeps the window closed', async () => {
+    const account = await seedAccount({ agent: 'alpha' });
+    await seedAgentMessage({ account, agent: 'alpha' });
+    const message = {
+      ...fresh({ message: reactionFixture, account, id: 'wamid.WI45' }),
+      reaction: { message_id: AGENT_CHANNEL_MESSAGE_ID, emoji: '👍' },
+    };
+    const response = await postNotification({ notification: notificationWith({ messages: [message] }) });
+    expect(response.status).toBe(STATUS_OK);
+    const reactions = (await historyOf({ account })).filter((stored) => stored.kind === MessageKind.Reaction);
+    expect(reactions).toMatchObject([{ agent: 'alpha', emoji: '👍', targetMessageId: AGENT_MESSAGE_ID }]);
+    expect(isOwnerWindowOpen({ window: await windowOf({ account }), now: Date.now() })).toBe(false);
+  });
+
+  test('WI-46 a quick-reply tap stores no message, opens the window and sends the queued message once', async () => {
+    const account = await seedAccount({ agent: 'alpha' });
+    const queued = await inboxOf({ accountId: account.accountId }).sendText({
+      connection: account.connection,
+      text: 'fila',
+      replyToMessageId: null,
+    });
+    expect(queued).toMatchObject({ ok: true, value: { delivery: DeliveryState.Queued } });
+    const response = await postNotification({
+      notification: notificationWith({ messages: [fresh({ message: buttonFixture, account, id: 'wamid.WI46' })] }),
+    });
+    expect(response.status).toBe(STATUS_OK);
+    expect(await countOwnerMessages({ account, kind: MessageKind.Text })).toBe(0);
+    expect(isOwnerWindowOpen({ window: await windowOf({ account }), now: Date.now() })).toBe(true);
+    expect((await screenTextsOf({ account })).filter((text) => text === 'fila')).toHaveLength(1);
+  });
+
+  test('WI-47 an unsupported poll opens the window and tells the owner once', async () => {
+    const account = await seedAccount({ agent: 'alpha' });
+    const response = await postNotification({
+      notification: notificationWith({ messages: [fresh({ message: unsupportedFixture, account, id: 'wamid.WI47' })] }),
+    });
+    expect(response.status).toBe(STATUS_OK);
+    expect(isOwnerWindowOpen({ window: await windowOf({ account }), now: Date.now() })).toBe(true);
+    expect((await screenTextsOf({ account })).filter((text) => text === UNSUPPORTED_NOTICE)).toHaveLength(1);
+    expect(await historyOf({ account })).toEqual([]);
+  });
+
+  test('WI-48 a text with the context id of an agent message replies to it and routes to its agent', async () => {
+    const account = await seedAccount({ agent: 'alpha' });
+    await seedAgentMessage({ account, agent: 'alpha' });
+    const message = {
+      ...fresh({ message: textReplyFixture, account, id: 'wamid.WI48' }),
+      context: { id: AGENT_CHANNEL_MESSAGE_ID },
+    };
+    const response = await postNotification({ notification: notificationWith({ messages: [message] }) });
+    expect(response.status).toBe(STATUS_OK);
+    const replies = (await historyOf({ account })).filter((stored) => stored.direction === MessageDirection.FromOwner);
+    expect(replies).toMatchObject([{ agent: 'alpha', replyToMessageId: AGENT_MESSAGE_ID }]);
+  });
+
+  test('WI-49 a list reply answers the open question with the chosen option index', async () => {
+    const account = await seedAccount({ agent: 'alpha' });
+    const asked = await inboxOf({ accountId: account.accountId }).ask({
+      connection: account.connection,
+      text: 'Qual?',
+      options: ['Um', 'Dois', 'Tres', 'Quatro'],
+      optionDescriptions: [null, null, null, null],
+      timeoutMs: 1,
+    });
+    if (!asked.ok || !('questionId' in asked.value)) throw new Error('the question is not pending');
+    const { questionId } = asked.value;
+    const message = {
+      ...fresh({ message: listReplyFixture, account, id: 'wamid.WI49' }),
+      interactive: { type: 'list_reply', list_reply: { id: formatOptionId({ questionId, optionIndex: 1 }), title: 'Dois' } },
+    };
+    const response = await postNotification({ notification: notificationWith({ messages: [message] }) });
+    expect(response.status).toBe(STATUS_OK);
+    const answer = await runInDurableObject(accountInboxStub({ accountId: account.accountId }), (instance) =>
+      (instance as unknown as { dependencies: CoreDependencies }).dependencies.repository.findQuestion({ questionId }),
+    );
+    expect(answer?.answer).toMatchObject({ optionIndex: 1, text: 'Dois' });
   });
 });

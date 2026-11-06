@@ -1,4 +1,4 @@
-import { DeliveryState, MessageDirection, MessageKind } from '@zapbip/types';
+import { DeliveryState, MessageDirection, MessageKind, ForwardedKind } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import type { ChannelStatusDetail } from '../inbox-records';
 import { createEnvironment } from '../testing/fixtures';
@@ -21,6 +21,7 @@ async function storeOutbound(input: { environment: Environment; delivery: Delive
       replyToMessageId: null,
       delivery,
       readByAgent: true,
+      forwarded: ForwardedKind.None,
       kind: MessageKind.Text,
       text: 'hello',
     },
@@ -80,7 +81,7 @@ describe('applyStatus', () => {
       channelMessageId: 'wamid.none',
       detail: { pricingCategory: 'service' },
     });
-    expect(result).toEqual({ applied: false });
+    expect(result).toEqual({ applied: false, found: false });
     expect(await deliveryOf({ environment, messageId })).toBe(DeliveryState.Sent);
     expect(environment.repository.findStatusDetail({ messageId })).toBeNull();
   });
@@ -133,6 +134,7 @@ describe('applyStatus', () => {
         replyToMessageId: null,
         delivery: null,
         readByAgent: false,
+        forwarded: ForwardedKind.None,
         kind: MessageKind.Text,
         text: 'hi',
       },

@@ -10,6 +10,7 @@ import {
   ReplyStatus,
   SECOND_MS,
   WakeOutcome,
+  ForwardedKind,
 } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { MEDIA_RETENTION_MS, NOTICE_QUICK_REPLY_ID, QUEUE_RETENTION_MS, ROUTING_LIST_TTL_MS, WINDOW_MS } from '../constants';
@@ -108,6 +109,7 @@ describe('receiveOwnerMessage routing', () => {
     expect(await environment.repository.findMessage({ messageId: result.messageId! })).toMatchObject({
       agent: 'alpha',
       readByAgent: false,
+      forwarded: ForwardedKind.None,
       text: 'oi',
     });
   });
