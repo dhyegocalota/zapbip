@@ -105,7 +105,7 @@ describe('AccountInbox owner messages', () => {
         storage.sql.exec<{ total: number }>("SELECT COUNT(*) AS total FROM inbox_messages WHERE direction = 'from_owner'").one().total,
     });
     expect(first.duplicate).toBe(false);
-    expect(second).toEqual({ messageId: null, agent: null, duplicate: true });
+    expect(second).toEqual({ messageId: first.messageId, agent: first.agent, duplicate: true });
     expect(ownerMessageCount).toBe(1);
   });
 
