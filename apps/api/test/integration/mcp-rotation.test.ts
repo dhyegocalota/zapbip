@@ -10,19 +10,15 @@ import { bindingsWith, deliver, findAccounts, screenTextsOf, WA_ID } from './own
 const AGENT_NAME = 'claude';
 const STATUS_OK = 200;
 const STATUS_UNAUTHORIZED = 401;
-const INSTALL_CODE_PATTERN = /\/i\/(zb_inst_[A-Za-z0-9_-]{22})/g;
-const SECRET_IN_LINK_PATTERN = /\/c\/([^/]+)\/mcp/;
+const INSTALL_CODE_PATTERN = /zb_inst_[A-Za-z0-9_-]{22}/g;
 
-async function latestSecret(input: { accountId: string }): Promise<string> {
+async function latestMcpPath(input: { accountId: string }): Promise<string> {
   const texts = await screenTextsOf({ accountId: input.accountId });
-  const codes = [...texts.join('\n').matchAll(INSTALL_CODE_PATTERN)];
-  const latest = codes.at(-1);
-  if (latest === undefined) throw new Error('no install code on the screen');
-  const resolution = await installCodeDirectory().resolve({ installCode: latest[1], now: Date.now() });
+  const installCode = texts.join('\n').match(INSTALL_CODE_PATTERN)?.at(-1);
+  if (installCode === undefined) throw new Error('no install code on the screen');
+  const resolution = await installCodeDirectory().resolve({ installCode, now: Date.now() });
   if (resolution.status !== InstallCodeStatus.Ready) throw new Error('the install code is not ready');
-  const secret = SECRET_IN_LINK_PATTERN.exec(resolution.connectionLink);
-  if (secret === null) throw new Error('the link has no secret');
-  return secret[1];
+  return new URL(resolution.connectionLink).pathname;
 }
 
 async function accountId(): Promise<string> {
@@ -41,20 +37,20 @@ describe('rotating a connection over WhatsApp', () => {
   afterEach(reset);
 
   it('AK-2 stops the old secret at once and opens the new one through MCP', async () => {
-    const oldSecret = await latestSecret({ accountId: await accountId() });
-    expect((await postMcp({ path: `/c/${oldSecret}/mcp` })).status).toBe(STATUS_OK);
+    const oldPath = await latestMcpPath({ accountId: await accountId() });
+    expect((await postMcp({ path: oldPath })).status).toBe(STATUS_OK);
     await deliver({ bindings, text: `girar ${AGENT_NAME}` });
-    const newSecret = await latestSecret({ accountId: await accountId() });
-    expect(newSecret).not.toBe(oldSecret);
-    expect((await postMcp({ path: `/c/${oldSecret}/mcp` })).status).toBe(STATUS_UNAUTHORIZED);
-    expect((await postMcp({ path: `/c/${newSecret}/mcp` })).status).toBe(STATUS_OK);
+    const newPath = await latestMcpPath({ accountId: await accountId() });
+    expect(newPath).not.toBe(oldPath);
+    expect((await postMcp({ path: oldPath })).status).toBe(STATUS_UNAUTHORIZED);
+    expect((await postMcp({ path: newPath })).status).toBe(STATUS_OK);
   });
 
-  it('AK-3 keeps the old secret working and refuses the new one when the rotate reply fails to send', async () => {
+  it('AK-3 keeps the old secret working when the rotate reply fails to send', async () => {
     const id = await accountId();
-    const oldSecret = await latestSecret({ accountId: id });
+    const oldPath = await latestMcpPath({ accountId: id });
     await failNextSessionSend({ accountId: id });
     await deliver({ bindings, text: `girar ${AGENT_NAME}` });
-    expect((await postMcp({ path: `/c/${oldSecret}/mcp` })).status).toBe(STATUS_OK);
+    expect((await postMcp({ path: oldPath })).status).toBe(STATUS_OK);
   });
 });

@@ -216,3 +216,23 @@ Hypotheses to attack:
 4. Hypothesis: the cron runs both jobs and either failing does not hide the other. Break it by: a deleting account whose media delete throws, with an expired code in the same run (both jobs run, and the first failure is rethrown after both).
 
 Known gaps: `ConnectionIdentity` has no connection id, so admission and the outbound key use account and agent name; the cron trigger runs only on deployed Workers, the tests call the handler directly; D1 and R2 emptiness after deletion is asserted in integration, not in the E2E, because the E2E process cannot read the local stores; the daily trigger shares the handler deploy-readiness extends.
+
+## Test gaps closed after the tester's first pass (pins)
+
+All green on arrival, so each is a pin, not a red-first box. Run: `pnpm --filter @zapbip/api test:integration` and `test:unit`.
+
+| Id | Test | Covers |
+|----|------|--------|
+| AK-1 | `accounts-webhook.test.ts` | an unknown phone on the real webhook route opens an active account, the first text is not stored, one `account_created` line without the phone or the text |
+| AK-2, AK-3 | `mcp-rotation.test.ts` | after `girar` the old secret is `401` and the new one `200` through MCP; when the rotate reply fails to send the old secret still works |
+| AK-4 | `owner-inbound.test.ts` | the 21st message logs `sender_rate_limited` once and never reaches the account object |
+| AK-5 | `deletion-sweep-idle.test.ts` | a sweep with no deleting account touches no object and no bucket |
+| AK-6 | `r2-media-store-key.test.ts` | put, get and delete use `accounts/<account id>/media/<media id>` |
+| AK-7, AK-8 | `waitlist-binding.test.ts` | a bad `WAITLIST_ENABLED` fails the simulator request naming the flag while `/health` stays `200`; an account object built with the bad flag keeps receiving owner messages |
+| AK-9, AK-10 | `account-inbox-accounts.test.ts` | a held `wait_for_reply` has no waiter by the time the revoke reply is sent; a held `ask` still has its waiter when the rotate reply is sent, then ends as `pending` and the agent is not revoked |
+| (unit) | `log-event.test.ts` | `logEvent` writes one JSON line with the event and the account id; `LogFields` has no key for a secret, a digest, a phone or a text |
+| (walk) | `logs-redaction.test.ts` | the whole-walk redaction now includes a failed rotate send |
+
+Helper: `test/support/session-send-probe.ts` (fails or observes the next session send inside the account object).
+
+Stale test-plan lines found while writing these: the bad-flag box says `/health` returns `500`, but `/health` never reads the flag; the rotated `ask` box says `Timeout`, but a cancelled `ask` returns `pending`; the box for the `connection.auth_failed` log names an event that does not exist (the code logs `auth_rejected`).

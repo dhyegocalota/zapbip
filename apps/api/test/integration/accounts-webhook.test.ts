@@ -41,9 +41,11 @@ describe('webhook route from a phone without an account', () => {
     const response = await postFromUnknownPhone();
     expect(response.status).toBe(STATUS_OK);
     const accounts = await findAccounts({ waId: UNKNOWN_PHONE });
+    const [account] = accounts;
+    if (account === undefined) throw new Error('account is missing');
     expect(accounts).toHaveLength(1);
-    expect(accounts[0].state).toBe(AccountState.Active);
-    const screen = await screenTextsOf({ accountId: accounts[0].accountId });
+    expect(account.state).toBe(AccountState.Active);
+    const screen = await screenTextsOf({ accountId: account.accountId });
     expect(screen.join('\n')).not.toContain(FIRST_TEXT);
     const output = lines.join('\n');
     expect(lines.filter((line) => line.includes(LogEvent.AccountCreated))).toHaveLength(1);

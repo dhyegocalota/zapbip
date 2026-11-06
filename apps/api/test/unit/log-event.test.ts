@@ -14,7 +14,7 @@ describe('logEvent', () => {
     const lines = vi.spyOn(console, 'log').mockImplementation(() => undefined);
     logEvent({ event: LogEvent.AccountCreated, accountId: ACCOUNT_ID });
     expect(lines).toHaveBeenCalledTimes(1);
-    expect(JSON.parse(String(lines.mock.calls[0][0]))).toEqual({ event: LogEvent.AccountCreated, accountId: ACCOUNT_ID });
+    expect(lines).toHaveBeenCalledWith(JSON.stringify({ event: LogEvent.AccountCreated, accountId: ACCOUNT_ID }));
   });
 
   it('has no field that can carry a secret, a digest, a phone or a text', () => {
