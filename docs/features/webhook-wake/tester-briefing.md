@@ -43,3 +43,32 @@ Step 0 has no tests: it is signatures and stubs. The first red tests are the L1 
 - `wrangler.jsonc` `env.production` has no `WAKE_METRICS`; `deploy-readiness` repeats it per environment (cross-slice table).
 - Finding for the spec: `armAlarm` floors every alarm at 5 s from the real time (`ALARM_MIN_DELAY_MS`), so a 3 s debounce wakes at 5 s at the earliest in production; tests call `runDurableObjectAlarm` directly.
 - `spec.md` still names `ManualClock` and `test-account-inbox.ts`; plan A12 and the refresh log hold the real names.
+
+## Lane L4 (docs)
+
+### What changed
+
+- `apps/docs/docs.json`: a `Guides` group with `guides/webhook-wake`, and `mcp-reference/set-wake` last in the MCP reference group.
+- `apps/docs/guides/webhook-wake.mdx` and `apps/docs/mcp-reference/set-wake.mdx`, placeholders only.
+
+### How to run
+
+```bash
+cd apps/docs && pnpm exec mint broken-links
+```
+
+### Red then green
+
+- `d75873f` (red): `found 2 broken links in 1 files`, `/guides/webhook-wake` and `/mcp-reference/set-wake` in `docs.json`.
+- `80d2123` (green): `success no broken links found`.
+
+### Hypotheses for the tester
+
+- Each page appears exactly once in the navigation.
+- No `trig_` id of 6 or more characters and no `automations/webhook/` id of 8 or more characters appears in `apps/docs`.
+- The verification snippet accepts a request signed within 300 s and rejects it after (needs a real signed request).
+
+### Gaps
+
+- The docs state the wake behaviour of the spec; if L1 to L3 change a constant or an error message, the pages need a matching edit.
+- The `/fire` body risk (spec, A22) is not mentioned in the docs.

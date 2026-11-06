@@ -501,8 +501,8 @@ Every box is empty when authored. A developer ticks its own box. A wrong step is
 
 ### Lane L4: docs
 
-- [ ] **W4.1 pin or red: navigation.** Add the two `docs.json` entries first and run `mint broken-links`. If the two pages do not exist when the lane starts, the expected failure is two missing pages and the commit is red (`docs(wake): link the webhook wake pages`). If they already exist, the check is green on arrival and the commit is labelled `pin` in its body and the tester briefing.
-- [ ] **W4.2 green: pages.** Write both pages with placeholders only (`<routine-id>`, `<trigger-id>`, `<token>`). Commit as `docs(wake): document the webhook wake`.
+- [x] **W4.1 pin or red: navigation.** (red, d75873f) Add the two `docs.json` entries first and run `mint broken-links`. If the two pages do not exist when the lane starts, the expected failure is two missing pages and the commit is red (`docs(wake): link the webhook wake pages`). If they already exist, the check is green on arrival and the commit is labelled `pin` in its body and the tester briefing.
+- [x] **W4.2 green: pages.** (80d2123) Write both pages with placeholders only (`<routine-id>`, `<trigger-id>`, `<token>`). Commit as `docs(wake): document the webhook wake`.
 
 ### Lane L5: dev routes, E2E and bundle
 
