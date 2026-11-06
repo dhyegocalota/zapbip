@@ -485,8 +485,17 @@ describe('AccountInbox channel messages', () => {
   });
 
   it('WI-17 fails with the missing-name error when the object is created without a name', async () => {
-    const nameless = testEnv.ACCOUNT_INBOX.get(testEnv.ACCOUNT_INBOX.newUniqueId());
-    await expect(nameless.hasChannelReceipt({ channelMessageId: CHANNEL_MESSAGE_ID })).rejects.toThrow('AccountInbox id has no name');
+    const initialisation: { promise: Promise<void> | null } = { promise: null };
+    const namelessState = {
+      id: { name: undefined },
+      blockConcurrencyWhile: (callback: () => Promise<void>) => {
+        initialisation.promise = callback();
+        initialisation.promise.catch(() => undefined);
+        return initialisation.promise;
+      },
+    } as unknown as DurableObjectState;
+    new AccountInbox(namelessState, testEnv);
+    await expect(initialisation.promise).rejects.toThrow('AccountInbox id has no name');
   });
 
   it('reports whether a channel id already has a receipt', async () => {

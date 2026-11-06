@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { OWNER_PHONE_PATTERN } from '../../contract/constants';
 import { sha256Hex } from '../platform/hash';
 import { unixSecondsSchema, type ParsedStatus, parseStatusItems } from './status-parser';
-import { OperatorLogReason, WhatsAppInteractiveType, WhatsAppMessageType } from './whatsapp-enums';
+import { OperatorLogReason, ParsedEntryKind, WhatsAppInteractiveType, WhatsAppMessageType } from './whatsapp-enums';
 
 export enum WebhookField {
   Messages = 'messages',
@@ -34,14 +34,14 @@ export type ParsedInboundEntry =
 
 export type ParsedEntry =
   | {
-      kind: 'inbound';
+      kind: ParsedEntryKind.Inbound;
       channelMessageId: string;
       fromWaId: string;
       at: number;
       entry: ParsedInboundEntry;
       media: MediaDownloadRequest | null;
     }
-  | { kind: 'rejected'; reason: OperatorLogReason };
+  | { kind: ParsedEntryKind.Rejected; reason: OperatorLogReason };
 
 export type ParsedChange = {
   phoneNumberId: string | null;
@@ -221,7 +221,7 @@ function replyTargetOf(input: { context: MessageContext }): string | null {
 }
 
 function rejected(input: { reason: OperatorLogReason }): ParsedEntry {
-  return { kind: 'rejected', reason: input.reason };
+  return { kind: ParsedEntryKind.Rejected, reason: input.reason };
 }
 
 async function parseEntry(input: { rawMessage: unknown }): Promise<ParsedEntry> {
@@ -246,7 +246,7 @@ async function parseEntry(input: { rawMessage: unknown }): Promise<ParsedEntry> 
     const parsed = isKnownType
       ? await MESSAGE_HANDLERS[type as WhatsAppMessageType]({ parts })
       : unsupportedContent({ parts, unsupportedType: type });
-    return { kind: 'inbound', channelMessageId: id, fromWaId: from, at: timestamp, ...parsed };
+    return { kind: ParsedEntryKind.Inbound, channelMessageId: id, fromWaId: from, at: timestamp, ...parsed };
   } catch (error) {
     if (!(error instanceof z.ZodError)) throw error;
     return rejected({ reason: OperatorLogReason.MalformedEntry });

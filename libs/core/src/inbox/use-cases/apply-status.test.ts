@@ -50,14 +50,14 @@ describe('applyStatus', () => {
   test('CU-27 a read status updates the message', async () => {
     const environment = await createEnvironment();
     const messageId = await storeOutbound({ environment, delivery: DeliveryState.Sent });
-    expect(await apply({ environment, status: DeliveryState.Read })).toEqual({ applied: true });
+    expect(await apply({ environment, status: DeliveryState.Read })).toEqual({ applied: true, found: true });
     expect(await deliveryOf({ environment, messageId })).toBe(DeliveryState.Read);
   });
 
   test('CU-28 a lower status after a higher one is applied as a no-op', async () => {
     const environment = await createEnvironment();
     const messageId = await storeOutbound({ environment, delivery: DeliveryState.Read });
-    expect(await apply({ environment, status: DeliveryState.Delivered })).toEqual({ applied: true });
+    expect(await apply({ environment, status: DeliveryState.Delivered })).toEqual({ applied: true, found: true });
     expect(await deliveryOf({ environment, messageId })).toBe(DeliveryState.Read);
   });
 
@@ -100,6 +100,7 @@ describe('applyStatus', () => {
     await storeOutbound({ environment, delivery: DeliveryState.Read });
     expect(await apply({ environment, status: DeliveryState.Failed, detail: { errorCode: 1, errorTitle: 'late' } })).toEqual({
       applied: false,
+      found: true,
     });
   });
 
@@ -140,6 +141,6 @@ describe('applyStatus', () => {
       },
     });
     await environment.repository.saveChannelMessageId({ messageId: 'msg_in', channelMessageId: WAMID });
-    expect(await apply({ environment, status: DeliveryState.Read })).toEqual({ applied: false });
+    expect(await apply({ environment, status: DeliveryState.Read })).toEqual({ applied: false, found: true });
   });
 });

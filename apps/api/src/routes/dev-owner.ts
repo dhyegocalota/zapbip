@@ -1,4 +1,4 @@
-import { MessageKind, type OwnerLocale } from '@zapbip/types';
+import { ForwardedKind, MessageKind, type OwnerLocale } from '@zapbip/types';
 import { assertMediaFits, InboxError, invalidInput, notFound, type OwnerInboundContent } from '@zapbip/core';
 import { Hono } from 'hono';
 import { z } from 'zod';
@@ -158,7 +158,12 @@ devOwnerRoutes.post(`${DEV_OWNER_PATH_PREFIX}/messages`, async (context) => {
   const outcome = await inbox.receiveOwnerMessage({
     ownerLocale,
     channelMessageId: body.wamid,
-    ownerMessage: { at: clock.now() + clockOffsetMs, replyToMessageId: body.reply_to, content: buildContent(body) },
+    ownerMessage: {
+      at: clock.now() + clockOffsetMs,
+      replyToMessageId: body.reply_to,
+      forwarded: ForwardedKind.None,
+      content: buildContent(body),
+    },
   });
   if (!outcome.ok) return context.json({ error: outcome.errorCode, message: outcome.message }, ERROR_STATUS[outcome.errorCode]);
   const { messageId, agent, duplicate } = outcome.value;

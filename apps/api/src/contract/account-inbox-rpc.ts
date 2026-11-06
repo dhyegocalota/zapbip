@@ -58,6 +58,7 @@ export interface AccountInboxRpc {
     ownerMessage: OwnerInboundMessage;
   }): Promise<CallOutcome<{ messageId: string | null; agent: string | null; duplicate: boolean }>>;
   receiveChannelMessage(input: AgentRequest<ReceiveChannelInput>): Promise<CallOutcome<ReceiveResult>>;
+  hasChannelReceipt(input: { channelMessageId: string }): Promise<CallOutcome<boolean>>;
   applyChannelStatus(input: AgentRequest<ApplyStatusInput>): Promise<CallOutcome<ApplyStatusResult>>;
 }
 

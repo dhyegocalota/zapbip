@@ -126,6 +126,16 @@ function occurrencesOf(input: { text: string; event: OperatorEvent }): number {
   return input.text.split(input.event).length - 1;
 }
 
+async function storedByChannelId(input: { account: SeededAccount; channelMessageId: string }) {
+  const stored = await runInDurableObject(accountInboxStub({ accountId: input.account.accountId }), (instance) =>
+    (instance as unknown as { dependencies: CoreDependencies }).dependencies.repository.findMessageByChannelMessageId({
+      channelMessageId: input.channelMessageId,
+    }),
+  );
+  if (stored === null) throw new Error('the message is not stored');
+  return stored;
+}
+
 function windowOf(input: { account: SeededAccount }) {
   return runInDurableObject(accountInboxStub({ accountId: input.account.accountId }), (instance) =>
     (instance as unknown as { dependencies: CoreDependencies }).dependencies.repository.findWindow(),
@@ -273,10 +283,9 @@ describe('webhook inbound messages', () => {
       notification: notificationWith({ messages: [ownerText({ account, id: 'wamid.WI20', text: 'Oi' })] }),
     });
     expect(response.status).toBe(STATUS_OK);
-    const history = await historyOf({ account });
-    expect(ownerTextsOf({ history })).toEqual(['Oi']);
-    const [stored] = history;
-    expect(toWireMessage({ message: stored!, link: null })).toMatchObject({ sender: MessageSender.Owner, verified: true, read: false });
+    const stored = await storedByChannelId({ account, channelMessageId: 'wamid.WI20' });
+    expect(toWireMessage({ message: stored, link: null })).toMatchObject({ sender: MessageSender.Owner, verified: true, read: false });
+    expect(ownerTextsOf({ history: await historyOf({ account }) })).toEqual(['Oi']);
     expect(isOwnerWindowOpen({ window: await windowOf({ account }), now: Date.now() })).toBe(true);
   });
 
@@ -562,7 +571,14 @@ describe('webhook inbound media', () => {
     serveMediaFromGraph({ download: neverAnswer });
     const account = await seedAccount({ agent: 'alpha' });
     const pending = postNotificationWithAccessToken({ notification: await imageNotificationOf({ account, id: 'wamid.WI40' }) });
-    await vi.advanceTimersByTimeAsync(GRAPH_REQUEST_TIMEOUT_MS);
+    const settled = { isDone: false };
+    void pending.finally(() => {
+      settled.isDone = true;
+    });
+    await vi.waitFor(async () => {
+      await vi.advanceTimersByTimeAsync(GRAPH_REQUEST_TIMEOUT_MS);
+      expect(settled.isDone).toBe(true);
+    });
     const response = await pending;
     vi.useRealTimers();
     expect(response.status).toBe(STATUS_SERVER_ERROR);
@@ -743,12 +759,17 @@ describe('webhook forwarded messages', () => {
     ['a frequently forwarded text', textFrequentlyForwardedFixture, ForwardedKind.FrequentlyForwarded],
   ])('stores %s with the forwarded kind and verified false', async (_name, fixture, forwarded) => {
     const account = await seedAccount({ agent: 'alpha' });
-    const message = fresh({ message: fixture, account, id: `wamid.${forwarded}` });
+    const id = `wamid.${forwarded}`;
+    const message = fresh({ message: fixture, account, id });
     const response = await postNotification({ notification: notificationWith({ messages: [message] }) });
     expect(response.status).toBe(STATUS_OK);
-    const [stored] = await historyOf({ account });
-    expect(stored).toMatchObject({ forwarded, readByAgent: false });
-    expect(toWireMessage({ message: stored!, link: null })).toMatchObject({ sender: MessageSender.Owner, verified: false, forwarded });
+    const stored = await storedByChannelId({ account, channelMessageId: id });
+    expect(toWireMessage({ message: stored, link: null })).toMatchObject({
+      sender: MessageSender.Owner,
+      verified: false,
+      read: false,
+      forwarded,
+    });
   });
 
   test('stores a forwarded image with its media and the forwarded kind', async () => {
@@ -766,8 +787,8 @@ describe('webhook forwarded messages', () => {
   test('a plain text is stored with forwarded none and verified true', async () => {
     const account = await seedAccount({ agent: 'alpha' });
     await postNotification({ notification: notificationWith({ messages: [ownerText({ account, id: 'wamid.PLAIN', text: 'Oi' })] }) });
-    const [stored] = await historyOf({ account });
-    expect(toWireMessage({ message: stored!, link: null })).toMatchObject({ verified: true, forwarded: ForwardedKind.None });
+    const stored = await storedByChannelId({ account, channelMessageId: 'wamid.PLAIN' });
+    expect(toWireMessage({ message: stored, link: null })).toMatchObject({ verified: true, forwarded: ForwardedKind.None });
   });
 });
 
@@ -846,12 +867,13 @@ describe('webhook inbound kinds', () => {
 
   test('WI-49 a list reply answers the open question with the chosen option index', async () => {
     const account = await seedAccount({ agent: 'alpha' });
+    await postNotification({ notification: notificationWith({ messages: [ownerText({ account, id: 'wamid.WI49OPEN', text: 'Oi' })] }) });
     const asked = await inboxOf({ accountId: account.accountId }).ask({
       connection: account.connection,
       text: 'Qual?',
       options: ['Um', 'Dois', 'Tres', 'Quatro'],
       optionDescriptions: [null, null, null, null],
-      timeoutMs: 1,
+      timeoutMs: 50,
     });
     if (!asked.ok || !('questionId' in asked.value)) throw new Error('the question is not pending');
     const { questionId } = asked.value;

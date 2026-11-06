@@ -40,3 +40,4 @@ export * from './use-cases/close-window';
 export * from './use-cases/apply-status';
 export * from './use-cases/status-rule';
 export * from './use-cases/claim-queued';
+export * from './use-cases/has-channel-receipt';

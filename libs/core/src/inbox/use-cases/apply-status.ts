@@ -5,9 +5,10 @@ export async function applyStatus(input: ApplyStatusInput): Promise<ApplyStatusR
   const { dependencies, channelMessageId, status, detail } = input;
   const { repository } = dependencies;
   const message = await repository.findMessageByChannelMessageId({ channelMessageId });
-  if (message === null || message.delivery === null) return { applied: false };
+  if (message === null) return { applied: false, found: false };
+  if (message.delivery === null) return { applied: false, found: true };
   const { next, logged } = applyStatusRule({ current: message.delivery, incoming: status });
   if (!logged) await repository.saveChannelStatusDetail({ messageId: message.messageId, detail });
   if (next !== null) await repository.updateDelivery({ messageId: message.messageId, delivery: next });
-  return { applied: !logged };
+  return { applied: !logged, found: true };
 }

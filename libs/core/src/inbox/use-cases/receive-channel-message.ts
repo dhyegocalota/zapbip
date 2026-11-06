@@ -26,11 +26,10 @@ const WINDOW_ONLY_RESULT: ReceiveResult = { messageId: null, agent: null, duplic
 
 async function resolveReactionTarget(input: { context: ChannelContext; content: ArrivalContent }): Promise<ArrivalContent> {
   const { content } = input;
-  if (content.kind !== MessageKind.Reaction) return content;
+  if (content.kind !== MessageKind.Reaction || content.targetMessageId === null) return content;
   const { repository } = input.context.dependencies;
   const target = await repository.findMessageByChannelMessageId({ channelMessageId: content.targetMessageId });
-  if (target === null) return content;
-  return { ...content, targetMessageId: target.messageId };
+  return { ...content, targetMessageId: target === null ? null : target.messageId };
 }
 
 async function resolveOwnerMessage(input: { context: ChannelContext; entry: OwnerEntry }): Promise<ArrivalMessage> {
@@ -41,7 +40,7 @@ async function resolveOwnerMessage(input: { context: ChannelContext; entry: Owne
       ? null
       : await repository.findMessageByChannelMessageId({ channelMessageId: entry.replyToChannelMessageId });
   const content = await resolveReactionTarget({ context, content: entry.content });
-  return { at: entry.at, replyToMessageId: repliedTo === null ? null : repliedTo.messageId, content };
+  return { at: entry.at, replyToMessageId: repliedTo === null ? null : repliedTo.messageId, forwarded: entry.forwarded, content };
 }
 
 async function duplicateResultOf(input: { context: ChannelContext }): Promise<ReceiveResult> {
@@ -110,7 +109,7 @@ async function receiveOwner(input: { context: ChannelContext; entry: OwnerEntry 
   const isNewMessage = await repository.commitChannelInbound({
     channelMessageId,
     receivedAt,
-    message: placed === null ? null : buildPlacedMessage({ ...placed, at: ownerMessage.at }),
+    message: placed === null ? null : buildPlacedMessage({ ...placed, at: ownerMessage.at, forwarded: ownerMessage.forwarded }),
     answer: placed === null ? null : buildPlacedAnswer({ ...placed, answeredAt: receivedAt }),
     media: placed !== null && isStoredMedia(content) ? buildOwnerMedia({ content, receivedAt }) : null,
     window: isReaction ? currentWindow : openedWindow({ window: currentWindow, at: ownerMessage.at }),

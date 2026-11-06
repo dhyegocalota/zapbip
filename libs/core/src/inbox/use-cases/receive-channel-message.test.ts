@@ -338,7 +338,7 @@ describe('receiveChannelMessage', () => {
       targetMessageId: first.messageId,
       agent: 'alpha',
     });
-    expect(await environment.repository.findMessage({ messageId: onUnknown.messageId! })).toMatchObject({ targetMessageId: 'wamid.none' });
+    expect(await environment.repository.findMessage({ messageId: onUnknown.messageId! })).toMatchObject({ targetMessageId: null });
   });
 
   test('a voice flag on a non-audio media entry is refused before anything is stored', async () => {

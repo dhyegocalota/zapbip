@@ -1,4 +1,4 @@
-import type { ChannelInboundEntry, OwnerInboundContent, UnavailableOwnerMedia } from '@zapbip/core';
+import { RECEIPT_RETENTION_MS, type ChannelInboundEntry, type OwnerInboundContent, type UnavailableOwnerMedia } from '@zapbip/core';
 import { ChannelInboundKind, DeliveryState, type OwnerLocale } from '@zapbip/types';
 import { Hono } from 'hono';
 import { z } from 'zod';
@@ -28,8 +28,14 @@ import {
   WEBHOOK_MAX_BYTES,
   WEBHOOK_SIGNATURE_HEADER,
 } from '../adapters/whatsapp/whatsapp-constants';
-import { OperatorEvent, OperatorLogField } from '../adapters/whatsapp/whatsapp-enums';
-import { UNAUTHORIZED_BODY, WHATSAPP_WEBHOOK_PATH } from '../contract/constants';
+import { OperatorEvent, OperatorLogField, ParsedEntryKind } from '../adapters/whatsapp/whatsapp-enums';
+import {
+  INVALID_JSON_BODY,
+  INVALID_NOTIFICATION_BODY,
+  PAYLOAD_TOO_LARGE_BODY,
+  UNAUTHORIZED_BODY,
+  WHATSAPP_WEBHOOK_PATH,
+} from '../contract/constants';
 import type { CallOutcome } from '../contract/account-inbox-rpc';
 import type { Bindings } from '../contract/env';
 import { accountInboxOf } from './account-inbox-stub';
@@ -45,6 +51,8 @@ const HUB_MODE_PARAMETER = 'hub.mode';
 const HUB_TOKEN_PARAMETER = 'hub.verify_token';
 const HUB_CHALLENGE_PARAMETER = 'hub.challenge';
 const PLAIN_TEXT_CONTENT_TYPE = 'text/plain';
+const CONTENT_TYPE_OPTIONS_HEADER = 'X-Content-Type-Options';
+const NO_SNIFF = 'nosniff';
 
 function runInSequence<Item, Result>(input: { items: Item[]; run: (item: Item) => Promise<Result> }): Promise<Result[]> {
   return input.items.reduce<Promise<Result[]>>(async (previous, item) => [...(await previous), await input.run(item)], Promise.resolve([]));
@@ -97,7 +105,7 @@ async function channelEntryOf(input: {
   context: RequestContext;
   accountId: string;
   ownerLocale: OwnerLocale;
-  parsed: Extract<ParsedEntry, { kind: 'inbound' }>;
+  parsed: Extract<ParsedEntry, { kind: ParsedEntryKind.Inbound }>;
 }): Promise<ChannelInboundEntry> {
   const { context, accountId, ownerLocale, parsed } = input;
   const { entry, media } = parsed;
@@ -143,8 +151,13 @@ async function channelEntryOf(input: {
 
 async function processEntry(input: { context: RequestContext; parsed: ParsedEntry }): Promise<void> {
   const { context, parsed } = input;
-  if (parsed.kind === 'rejected') {
+  if (parsed.kind === ParsedEntryKind.Rejected) {
     logOperatorEvent({ event: OperatorEvent.InboundUnmapped, fields: { [OperatorLogField.Reason]: parsed.reason } });
+    return;
+  }
+  const isStale = createPlatformClock().now() - parsed.at > RECEIPT_RETENTION_MS;
+  if (isStale) {
+    logOperatorEvent({ event: OperatorEvent.InboundStale, fields: { [OperatorLogField.ChannelMessageId]: parsed.channelMessageId } });
     return;
   }
   const owner = await findOwnerByPhone({ database: context.bindings.CONNECTIONS, phone: parsed.fromWaId });
@@ -152,11 +165,25 @@ async function processEntry(input: { context: RequestContext; parsed: ParsedEntr
     logOperatorEvent({ event: OperatorEvent.InboundUnmapped, fields: { [OperatorLogField.ChannelMessageId]: parsed.channelMessageId } });
     return;
   }
-  const entry = await channelEntryOf({ context, accountId: owner.accountId, ownerLocale: owner.ownerLocale, parsed });
   const inbox = accountInboxOf({ bindings: context.bindings, accountId: owner.accountId });
+  const isCommitted = valueOf({ outcome: await inbox.hasChannelReceipt({ channelMessageId: parsed.channelMessageId }) });
+  if (isCommitted) {
+    logOperatorEvent({ event: OperatorEvent.InboundDuplicate, fields: { [OperatorLogField.ChannelMessageId]: parsed.channelMessageId } });
+    return;
+  }
+  const entry = await channelEntryOf({ context, accountId: owner.accountId, ownerLocale: owner.ownerLocale, parsed });
   valueOf({
     outcome: await inbox.receiveChannelMessage({ ownerLocale: owner.ownerLocale, channelMessageId: parsed.channelMessageId, entry }),
   });
+}
+
+function retryOrDropUnknownStatus(input: { status: ParsedStatus; isYoung: boolean }): boolean {
+  if (input.isYoung) return true;
+  logOperatorEvent({
+    event: OperatorEvent.StatusUnindexed,
+    fields: { [OperatorLogField.ChannelMessageId]: input.status.channelMessageId },
+  });
+  return false;
 }
 
 async function processStatus(input: { context: RequestContext; status: ParsedStatus }): Promise<boolean> {
@@ -165,17 +192,14 @@ async function processStatus(input: { context: RequestContext; status: ParsedSta
     logOperatorEvent({ event: OperatorEvent.StatusIgnored, fields: { [OperatorLogField.ChannelMessageId]: status.channelMessageId } });
     return false;
   }
+  const isYoung = createPlatformClock().now() - status.timestamp < UNINDEXED_STATUS_RETRY_WINDOW_MS;
   const indexed = await new D1MessageIndex({ database: context.bindings.CONNECTIONS }).find({ id: status.channelMessageId });
-  if (indexed === null) {
-    const isYoung = createPlatformClock().now() - status.timestamp < UNINDEXED_STATUS_RETRY_WINDOW_MS;
-    if (isYoung) return true;
-    logOperatorEvent({ event: OperatorEvent.StatusUnindexed, fields: { [OperatorLogField.ChannelMessageId]: status.channelMessageId } });
-    return false;
-  }
+  if (indexed === null) return retryOrDropUnknownStatus({ status, isYoung });
   const inbox = accountInboxOf({ bindings: context.bindings, accountId: indexed.accountId });
   const result = valueOf({
     outcome: await inbox.applyChannelStatus({ channelMessageId: status.channelMessageId, status: status.status, detail: status.detail }),
   });
+  if (!result.found) return retryOrDropUnknownStatus({ status, isYoung });
   const isFailedIgnored = !result.applied && status.status === DeliveryState.Failed;
   if (isFailedIgnored) {
     logOperatorEvent({
@@ -212,16 +236,19 @@ export function createWhatsappRoutes(input: { developmentMediaOrigin: string | n
       challenge: nullIfAbsent({ value: context.req.query(HUB_CHALLENGE_PARAMETER) }),
       expectedToken: environment.verifyToken,
     });
-    return new Response(answer.body, { status: answer.status, headers: { 'Content-Type': PLAIN_TEXT_CONTENT_TYPE } });
+    return new Response(answer.body, {
+      status: answer.status,
+      headers: { 'Content-Type': PLAIN_TEXT_CONTENT_TYPE, [CONTENT_TYPE_OPTIONS_HEADER]: NO_SNIFF },
+    });
   });
 
   whatsappRoutes.post(WHATSAPP_WEBHOOK_PATH, async (context) => {
     const declaredLength = context.req.header('content-length');
     if (declaredLength !== undefined && Number(declaredLength) > WEBHOOK_MAX_BYTES) {
-      return context.json({ error: 'payload_too_large' }, HttpStatus.PayloadTooLarge);
+      return context.json(PAYLOAD_TOO_LARGE_BODY, HttpStatus.PayloadTooLarge);
     }
     const rawBody = await readBodyWithLimit({ body: context.req.raw.body, maxBytes: WEBHOOK_MAX_BYTES });
-    if (rawBody === null) return context.json({ error: 'payload_too_large' }, HttpStatus.PayloadTooLarge);
+    if (rawBody === null) return context.json(PAYLOAD_TOO_LARGE_BODY, HttpStatus.PayloadTooLarge);
     const environment = readWebhookEnvironment({ env: context.env });
     const isSigned = await verifyWebhookSignature({
       appSecret: environment.appSecret,
@@ -230,12 +257,12 @@ export function createWhatsappRoutes(input: { developmentMediaOrigin: string | n
     });
     if (!isSigned) return context.json(UNAUTHORIZED_BODY, HttpStatus.Unauthorized);
     const parsedJson = parseJson({ text: new TextDecoder().decode(rawBody) });
-    if (!parsedJson.isValid) return context.json({ error: 'invalid_json' }, HttpStatus.BadRequest);
+    if (!parsedJson.isValid) return context.json(INVALID_JSON_BODY, HttpStatus.BadRequest);
     const changes = await parseWebhookNotification({ rawJson: parsedJson.value }).catch((error: unknown) => {
       if (error instanceof z.ZodError) return null;
       throw error;
     });
-    if (changes === null) return context.json({ error: 'invalid_notification' }, HttpStatus.BadRequest);
+    if (changes === null) return context.json(INVALID_NOTIFICATION_BODY, HttpStatus.BadRequest);
     const requestContext: RequestContext = {
       bindings: context.env,
       environment,

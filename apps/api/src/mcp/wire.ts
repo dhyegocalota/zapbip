@@ -1,5 +1,5 @@
 import { formatOptionId, type Message, type MediaFields, type MediaSource } from '@zapbip/core';
-import { MediaSourceKind, MessageDirection, MessageKind, MessageSender } from '@zapbip/types';
+import { ForwardedKind, MediaSourceKind, MessageDirection, MessageKind, MessageSender } from '@zapbip/types';
 import { resolveMediaLink } from './links';
 import type { MessageWire, ToolContext } from './types';
 
@@ -118,7 +118,8 @@ export function toWireMessage(input: { message: Message; link: string | null }):
     message_id: message.messageId,
     direction: message.direction,
     sender: isFromOwner ? MessageSender.Owner : MessageSender.Agent,
-    verified: isFromOwner,
+    verified: isFromOwner && message.forwarded === ForwardedKind.None,
+    forwarded: message.forwarded,
     agent: message.agent,
     at: toIsoTimestamp({ epochMs: message.at }),
     reply_to: message.replyToMessageId,

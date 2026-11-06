@@ -1,3 +1,8 @@
+export enum ParsedEntryKind {
+  Inbound = 'inbound',
+  Rejected = 'rejected',
+}
+
 export enum WebhookHubMode {
   Subscribe = 'subscribe',
 }
@@ -63,6 +68,8 @@ export enum OperatorEvent {
   InboundUnmapped = 'inbound.unmapped',
   InboundUnsupported = 'inbound.unsupported',
   InboundMediaUnavailable = 'inbound.media_unavailable',
+  InboundStale = 'inbound.stale',
+  InboundDuplicate = 'inbound.duplicate',
   NotificationIgnoredField = 'notification.ignored_field',
   StatusUnindexed = 'status.unindexed',
   StatusIgnored = 'status.ignored',

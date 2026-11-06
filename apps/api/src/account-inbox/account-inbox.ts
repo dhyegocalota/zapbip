@@ -257,6 +257,10 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     });
   }
 
+  hasChannelReceipt(input: { channelMessageId: string }): Promise<CallOutcome<boolean>> {
+    return this.outcome({ run: () => inbox.hasChannelReceipt({ ...input, dependencies: this.dependencies }) });
+  }
+
   applyChannelStatus(input: AgentRequest<inbox.ApplyStatusInput>): Promise<CallOutcome<inbox.ApplyStatusResult>> {
     return this.outcome({ run: () => inbox.applyStatus({ ...input, dependencies: this.dependencies }) });
   }

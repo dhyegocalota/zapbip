@@ -140,6 +140,7 @@ function createInMemoryRepository(): InMemoryRepository {
     linkChannelReceipt: async ({ wamid, messageId }) => {
       receiptMessageIds.set(wamid, messageId);
     },
+    hasChannelReceipt: async ({ wamid }) => receipts.has(wamid),
     findChannelReceiptMessageId: async ({ wamid }) => receiptMessageIds.get(wamid) ?? null,
     deleteExpiredReceipts: async ({ receivedBefore }) => {
       [...receipts]

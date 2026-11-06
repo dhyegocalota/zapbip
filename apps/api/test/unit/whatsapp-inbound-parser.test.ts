@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { ChannelInboundKind, ForwardedKind, IdPrefix, MessageKind } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { parseWebhookNotification, type ParsedChange, type ParsedEntry } from '../../src/adapters/whatsapp/inbound-parser';
-import { OperatorLogReason } from '../../src/adapters/whatsapp/whatsapp-enums';
+import { OperatorLogReason, ParsedEntryKind } from '../../src/adapters/whatsapp/whatsapp-enums';
 import audioFixture from '../fixtures/whatsapp/inbound/audio.json';
 import audioVoiceFixture from '../fixtures/whatsapp/inbound/audio-voice.json';
 import buttonFixture from '../fixtures/whatsapp/inbound/button.json';
@@ -43,7 +43,7 @@ async function entriesOf(input: { messages: object[] }): Promise<ParsedEntry[]> 
 
 async function inboundOf(input: { message: object }) {
   const [entry] = await entriesOf({ messages: [input.message] });
-  if (entry === undefined || entry.kind !== 'inbound') throw new Error('message was not parsed as inbound');
+  if (entry === undefined || entry.kind !== ParsedEntryKind.Inbound) throw new Error('message was not parsed as inbound');
   return entry;
 }
 
@@ -55,7 +55,7 @@ describe('parseWebhookNotification', () => {
   it('AU-19 parses a text', async () => {
     const parsed = await inboundOf({ message: textFixture });
     expect(parsed).toEqual({
-      kind: 'inbound',
+      kind: ParsedEntryKind.Inbound,
       channelMessageId: 'wamid.TEXT',
       fromWaId: OWNER_WA_ID,
       at: AT_MS,
@@ -247,13 +247,13 @@ describe('parseWebhookNotification', () => {
     void from;
     const entries = await entriesOf({ messages: [withoutSender, { ...textFixture, id: 'wamid.GOOD' }] });
     expect(entries).toHaveLength(2);
-    expect(entries[0]).toEqual({ kind: 'rejected', reason: OperatorLogReason.MissingSender });
-    expect(entries[1]).toMatchObject({ kind: 'inbound', channelMessageId: 'wamid.GOOD' });
+    expect(entries[0]).toEqual({ kind: ParsedEntryKind.Rejected, reason: OperatorLogReason.MissingSender });
+    expect(entries[1]).toMatchObject({ kind: ParsedEntryKind.Inbound, channelMessageId: 'wamid.GOOD' });
   });
 
   it('rejects a message whose from is not a phone number', async () => {
     const entries = await entriesOf({ messages: [{ ...textFixture, from: 'not-a-number' }] });
-    expect(entries).toEqual([{ kind: 'rejected', reason: OperatorLogReason.InvalidSender }]);
+    expect(entries).toEqual([{ kind: ParsedEntryKind.Rejected, reason: OperatorLogReason.InvalidSender }]);
   });
 
   it('AU-35 rejects a message with an invalid timestamp and parses the text beside it', async () => {
@@ -263,15 +263,15 @@ describe('parseWebhookNotification', () => {
         { ...textFixture, id: 'wamid.GOOD' },
       ],
     });
-    expect(entries[0]).toEqual({ kind: 'rejected', reason: OperatorLogReason.MalformedEntry });
-    expect(entries[1]).toMatchObject({ kind: 'inbound', channelMessageId: 'wamid.GOOD' });
+    expect(entries[0]).toEqual({ kind: ParsedEntryKind.Rejected, reason: OperatorLogReason.MalformedEntry });
+    expect(entries[1]).toMatchObject({ kind: ParsedEntryKind.Inbound, channelMessageId: 'wamid.GOOD' });
   });
 
   it('rejects a message without a timestamp', async () => {
     const { timestamp, ...withoutTimestamp } = textFixture;
     void timestamp;
     const entries = await entriesOf({ messages: [withoutTimestamp] });
-    expect(entries).toEqual([{ kind: 'rejected', reason: OperatorLogReason.MalformedEntry }]);
+    expect(entries).toEqual([{ kind: ParsedEntryKind.Rejected, reason: OperatorLogReason.MalformedEntry }]);
   });
 
   it('rejects a text whose payload is malformed and keeps the rest of the batch', async () => {
@@ -281,8 +281,8 @@ describe('parseWebhookNotification', () => {
         { ...textFixture, id: 'wamid.GOOD' },
       ],
     });
-    expect(entries[0]).toEqual({ kind: 'rejected', reason: OperatorLogReason.MalformedEntry });
-    expect(entries[1]).toMatchObject({ kind: 'inbound', channelMessageId: 'wamid.GOOD' });
+    expect(entries[0]).toEqual({ kind: ParsedEntryKind.Rejected, reason: OperatorLogReason.MalformedEntry });
+    expect(entries[1]).toMatchObject({ kind: ParsedEntryKind.Inbound, channelMessageId: 'wamid.GOOD' });
   });
 
   it('AU-33 reports a change with another field without parsing its messages', async () => {
@@ -303,7 +303,7 @@ describe('parseWebhookNotification', () => {
       }),
     });
     expect(changes.map((change) => change.phoneNumberId)).toEqual([FOREIGN_PHONE_NUMBER_ID, OUR_PHONE_NUMBER_ID]);
-    expect(changes[1]?.entries[0]).toMatchObject({ kind: 'inbound', channelMessageId: 'wamid.OURS' });
+    expect(changes[1]?.entries[0]).toMatchObject({ kind: ParsedEntryKind.Inbound, channelMessageId: 'wamid.OURS' });
   });
 
   it('parses statuses beside messages in the same change', async () => {

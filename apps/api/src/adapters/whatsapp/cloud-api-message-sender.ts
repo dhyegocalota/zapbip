@@ -79,8 +79,13 @@ export function createCloudApiMessageSender(input: {
     logOperatorEvent({ event, fields: { ...errorCodeFields, ...templateFields } });
   }
 
-  async function translate(failure: { error: unknown; subject: string; template: TemplateUsed | null }): Promise<unknown> {
-    const { error, subject, template } = failure;
+  async function translate(failure: {
+    error: unknown;
+    subject: string;
+    template: TemplateUsed | null;
+    isReactionSend: boolean;
+  }): Promise<unknown> {
+    const { error, subject, template, isReactionSend } = failure;
     if (!(error instanceof GraphRequestError)) return error;
     const channelError = mapGraphErrorToChannelError({
       status: error.status,
@@ -88,6 +93,7 @@ export function createCloudApiMessageSender(input: {
       errorTitle: error.errorTitle,
       message: subject,
       isTemplateSend: template !== null,
+      isReactionSend,
     });
     const { errorCode } = channelError;
     const isRestriction = errorCode !== null && RESTRICTING_ERROR_CODES.includes(errorCode);
@@ -96,9 +102,14 @@ export function createCloudApiMessageSender(input: {
     return channelError;
   }
 
-  async function send(request: { payload: Record<string, unknown>; subject: string; template: TemplateUsed | null }): Promise<SentMessage> {
+  async function send(request: {
+    payload: Record<string, unknown>;
+    subject: string;
+    template: TemplateUsed | null;
+    isReactionSend: boolean;
+  }): Promise<SentMessage> {
     const response = await graph.post({ path: messagesPath, body: request.payload }).catch(async (error: unknown) => {
-      throw await translate({ error, subject: request.subject, template: request.template });
+      throw await translate({ error, subject: request.subject, template: request.template, isReactionSend: request.isReactionSend });
     });
     const parsed = sendResponseSchema.safeParse(response);
     const [sent] = parsed.success ? parsed.data.messages : [];
@@ -122,7 +133,12 @@ export function createCloudApiMessageSender(input: {
         mediaStore: input.mediaStore,
         accountId,
       });
-      return send({ payload, subject: describeMessage({ message }), template: null });
+      return send({
+        payload,
+        subject: describeMessage({ message }),
+        template: null,
+        isReactionSend: message.kind === MessageKind.Reaction,
+      });
     },
 
     async template({ kind, locale, parameters }) {
@@ -130,7 +146,7 @@ export function createCloudApiMessageSender(input: {
       const owner = await requireOwner();
       const payload = buildTemplatePayload({ recipientWaId: owner.waId, kind, locale, parameters });
       const template = { name: TEMPLATE_NAME_BY_KIND[kind], language: OWNER_LOCALE_TO_LANGUAGE_CODE[locale] };
-      return send({ payload, subject: kind, template });
+      return send({ payload, subject: kind, template, isReactionSend: false });
     },
   };
 }

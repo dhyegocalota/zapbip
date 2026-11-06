@@ -2,6 +2,7 @@ import { normalizeMimeType } from '@zapbip/core';
 import { Hono } from 'hono';
 import { createPlatformClock } from '../adapters/platform/clock';
 import { mediaStoreOf } from '../adapters/r2/r2-media-store';
+import { PAYLOAD_TOO_LARGE_BODY } from '../contract/constants';
 import type { Bindings } from '../contract/env';
 import { LogEvent } from '../contract/log';
 import { logEvent } from '../log';
@@ -42,7 +43,7 @@ uploadRoutes.put('/u/:account_id/:upload_id', async (context) => {
   if (contentLengthHeader === undefined) return context.json({ error: 'length_required' }, HttpStatus.LengthRequired);
   if (!CONTENT_LENGTH_PATTERN.test(contentLengthHeader)) return context.json({ error: 'invalid_length' }, HttpStatus.BadRequest);
   const contentLength = Number(contentLengthHeader);
-  if (contentLength > declaredLength) return context.json({ error: 'payload_too_large' }, HttpStatus.PayloadTooLarge);
+  if (contentLength > declaredLength) return context.json(PAYLOAD_TOO_LARGE_BODY, HttpStatus.PayloadTooLarge);
   if (contentLength < declaredLength) return context.json({ error: 'length_mismatch' }, HttpStatus.BadRequest);
 
   const contentType = context.req.header('content-type');
