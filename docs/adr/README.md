@@ -32,3 +32,5 @@ A `Proposed` ADR moves to `Accepted` by editing its status line and date. Any ot
 | [0009](0009-cloudflare-workers-with-one-durable-object-per-account.md) | Cloudflare Workers with one Durable Object per account | Accepted | 2026-11-06 |
 | [0010](0010-public-docs-on-mintlify.md) | Public docs on Mintlify | Accepted | 2026-11-06 |
 | [0011](0011-the-24-hour-window-queues-and-sends-one-notice.md) | The 24-hour window queues messages and sends one notice | Accepted | 2026-11-06 |
+| [0026](0026-runbooks-live-in-the-repository-not-on-mintlify.md) | Runbooks live in the repository, not on Mintlify | Accepted | 2026-11-06 |
+| [0027](0027-deploys-run-from-the-owners-machine-not-from-ci.md) | Deploys run from the owner's machine, and CI does not deploy | Accepted | 2026-11-06 |
