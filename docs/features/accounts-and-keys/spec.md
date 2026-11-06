@@ -1,6 +1,6 @@
 # Accounts and keys
 
-**Status:** Approved
+**Status:** Building
 **Tier:** 🔴
 **Owner approval:** approved 2026-11-06 (owner delegated)
 **ADRs:** [0015](../../adr/0015-commands-are-bare-words-routed-before-agents.md), [0016](../../adr/0016-accounts-start-on-the-first-message-and-wait-on-a-list.md), [0017](../../adr/0017-connection-secrets-are-shown-once-and-stored-as-digests.md)
