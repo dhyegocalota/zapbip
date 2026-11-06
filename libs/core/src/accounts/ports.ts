@@ -62,6 +62,7 @@ export interface FirstMessageClaim {
 export interface DeletionRequests {
   save(input: { requestedAt: number }): Promise<void>;
   find(): Promise<number | null>;
+  clear(): Promise<void>;
 }
 
 export type AccountDependencies = CoreDependencies & {

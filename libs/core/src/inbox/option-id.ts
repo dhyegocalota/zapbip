@@ -1,3 +1,5 @@
+import { ACCOUNT_MENU_QUESTION_ID, COMMAND_LIST_ID_PREFIX } from '../accounts/constants';
+import { MENU_COMMAND_KINDS } from '../accounts/command-words';
 import { ROUTE_OPTION_PREFIX } from './constants';
 import type { AgentName } from './connection';
 import type { QuestionOption } from './message';
@@ -37,6 +39,8 @@ export function formatRoutingListQuestionId(input: { messageId: string }): strin
 }
 
 export function formatChoiceOptionIds(input: { questionId: string; options: QuestionOption[] }): string[] {
+  if (input.questionId === ACCOUNT_MENU_QUESTION_ID)
+    return input.options.map((option) => `${COMMAND_LIST_ID_PREFIX}${MENU_COMMAND_KINDS[option.optionIndex]}`);
   const isRoutingList = input.questionId.startsWith(ROUTE_QUESTION_ID_PREFIX);
   const messageId = input.questionId.slice(ROUTE_QUESTION_ID_PREFIX.length);
   return input.options.map((option) =>

@@ -88,3 +88,24 @@ Decisions to attack:
 Hypotheses: a quoting message is never a command; trailing punctuation never matches; reserved names are the first word of every command word; names of 20 characters pass and 21 return `null`.
 
 Gap: `pnpm verify` e2e is red from `dev-seed.ts` against migration 0002 (L2 is fixing it).
+
+## Lane L1b (state gate, rule 0, use cases)
+
+Changed: `libs/core/src/accounts/state-gate.ts`, `use-cases/*` (bodies plus new helpers `account-reply`, `usage-reply`, `install-prompt-reply`), `testing/{in-memory-accounts,fixtures}.ts`, colocated tests; additive: `libs/core/src/inbox/option-id.ts` (menu ids), `inbox/index.ts` (`flush-queue` export), `accounts/ports.ts` (`DeletionRequests.clear`), `accounts/constants.ts` (`ACCOUNT_MENU_QUESTION_ID`). Run: `pnpm --filter @zapbip/core test:unit` (the two empty files `aiters.test.ts` and `ait-for-reply.test.ts` of slice 1 report "No test suite"; not ours).
+
+Red: `8efa6a0` (option-id: expected `['zapbip:create_agent','zapbip:help']`), `4a24b87` (28 + 10 + 6 cases: `receiveAccountMessage` / `evaluateAccountState` / `applyOwnerCommand is not implemented`), `32524b8` (`<use case> is not implemented`). Green `385c585`, `f34aa84`, `16c512f`. No pins.
+
+For L3 (Durable Object): `DeletionRequests` is now `{ save({requestedAt}): Promise<void>; find(): Promise<number | null>; clear(): Promise<void> }`; `clear` is called when a confirmation arrives without a live request. `FirstMessageClaim.claim` is called before the state gate for every message, including deleting accounts. L3 also owns ending a held `wait_for_reply`/`ask` on `recordRevocation`/`cancelWaiters` (the core cannot, `ReplyWaiters` has no `cancelAgent`); the plan's revoke "held call resolves with Timeout" case therefore lives at the Durable Object level, not in core.
+
+Decisions to attack:
+
+1. `receiveAccountMessage` records the channel receipt itself for gate replies and commands, and leaves it to slice 1's `receiveOwnerMessage` for everything else (that use case records it too). A retry of a confirmed deletion returns `duplicate: true, deletionConfirmed: false`.
+2. A menu (`List` reply) is sent as the rendered text, then a `Choice` message with question id `zapbip:menu`; `formatChoiceOptionIds` turns its options into `zapbip:<command>`.
+3. `Created`/`Rotated` are one reply; the rendered text is split with `splitInstallPrompt` and sent in order. A failed part runs the compensation (create: revoke; rotate: compare-and-set back), then one best-effort `SendFailed`. A rotate calls `cancelWaiters` only after every part was delivered; a revoke calls `recordRevocation` inside the use case, before its reply.
+4. Menu list taps use the account locale; typed keywords use the keyword's language (`applyOwnerCommand` overrides the reply locale with the command's).
+5. `openOwnerAccount` returns the account only (the `created` flag of the lookup is not in its signature).
+6. Reply messages are stored as `ToOwner` messages with no agent, so they never change "last agent that wrote". The test plan's "`insertMessage` not called" for waitlisted text is asserted as "no owner message stored".
+
+Hypotheses: a quoted command word goes to the quoted agent; `girar a imagem` is a rotate of `a-imagem` (`NotFound`), `@claude girar a imagem` routes; a deleting account gets no reply; the 10-minute deletion window is inclusive; two concurrent opens of one number yield one account.
+
+Gaps: no test for `ask` held across a rotate (Durable Object level); `pnpm verify` result is in the lead's report.
