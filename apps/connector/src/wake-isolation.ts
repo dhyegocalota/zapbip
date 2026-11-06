@@ -1,8 +1,14 @@
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { lstat, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { homedir, tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { parse } from 'smol-toml';
-import { CLAUDE_MCP_SERVER_TYPE, CODEX_ZAPBIP_SERVER_NAME, ConnectorClient } from '@zapbip/types';
+import {
+  CLAUDE_MCP_SERVER_TYPE,
+  CODEX_ZAPBIP_SERVER_NAME,
+  CONNECTOR_KILL_GRACE_MS,
+  CONNECTOR_WAKE_TIMEOUT_MS,
+  ConnectorClient,
+} from '@zapbip/types';
 
 export class WakeIsolationRefusedError extends Error {}
 
@@ -10,7 +16,18 @@ export type WakeIsolation = { isolationArguments: string[]; cleanup: () => Promi
 export type WakeIsolationInput = { connectionLink: string; workingDirectory: string; codexHome?: string; systemConfigDirectory?: string };
 
 export async function removeStaleWakeDirectories(input: { nowMs?: number } = {}): Promise<void> {
-  throw new Error('removeStaleWakeDirectories is not implemented');
+  const { nowMs = Date.now() } = input;
+  const temporaryDirectory = tmpdir();
+  const names = (await readdir(temporaryDirectory)).filter((name) => name.startsWith(WAKE_DIRECTORY_PREFIX));
+  await Promise.all(
+    names.map(async (name) => {
+      const directory = join(temporaryDirectory, name);
+      const status = await lstat(directory);
+      const isStaleOwnDirectory =
+        status.isDirectory() && status.uid === process.getuid?.() && nowMs - status.mtimeMs > STALE_WAKE_DIRECTORY_AGE_MS;
+      if (isStaleOwnDirectory) await rm(directory, { recursive: true, force: true });
+    }),
+  );
 }
 
 const CLAUDE_STRICT_MCP_ARGUMENT = '--strict-mcp-config';
@@ -21,7 +38,9 @@ const MCP_CONFIG_FILE_NAME = 'mcp.json';
 const OWNER_ONLY_FILE_MODE = 0o600;
 const CODEX_CONFIG_FOLDER = '.codex';
 const CODEX_CONFIG_FILE_NAME = 'config.toml';
-const UNQUOTABLE_KEY_PATTERN = /["\\\u0000-\u001f]/;
+const CODEX_MANAGED_CONFIG_FILE_NAME = 'managed_config.toml';
+const CODEX_SYSTEM_CONFIG_DIRECTORY = '/etc/codex';
+const STALE_WAKE_DIRECTORY_AGE_MS = CONNECTOR_WAKE_TIMEOUT_MS + CONNECTOR_KILL_GRACE_MS;
 const UNPARSEABLE_CONFIG_REASON = 'a Codex configuration file is not valid TOML';
 const UNIDENTIFIABLE_SERVER_REASON = 'a Codex MCP server in the configuration cannot be identified';
 const BARE_KEY_PATTERN = /^[A-Za-z0-9_-]+$/;
@@ -95,9 +114,8 @@ function serverReferencesOf(input: { text: string }): ServerReference[] {
 }
 
 function keyOf(input: { name: string }): string {
-  if (BARE_KEY_PATTERN.test(input.name)) return input.name;
-  if (UNQUOTABLE_KEY_PATTERN.test(input.name)) return refuse({ reason: UNIDENTIFIABLE_SERVER_REASON });
-  return `"${input.name}"`;
+  if (!BARE_KEY_PATTERN.test(input.name)) return refuse({ reason: UNIDENTIFIABLE_SERVER_REASON });
+  return input.name;
 }
 
 function disabledServerArguments(input: { reference: ServerReference }): string[] {
@@ -107,9 +125,32 @@ function disabledServerArguments(input: { reference: ServerReference }): string[
   return ['-c', `${configKey}.enabled=false`];
 }
 
+function ancestorsOf(input: { directory: string }): string[] {
+  const parent = dirname(input.directory);
+  if (parent === input.directory) return [input.directory];
+  return [input.directory, ...ancestorsOf({ directory: parent })];
+}
+
+function codexConfigFilesOf(input: { workingDirectory: string; codexHome: string; systemConfigDirectory: string }): string[] {
+  const { workingDirectory, codexHome, systemConfigDirectory } = input;
+  const projectFiles = ancestorsOf({ directory: resolve(workingDirectory) }).map((directory) =>
+    join(directory, CODEX_CONFIG_FOLDER, CODEX_CONFIG_FILE_NAME),
+  );
+  const layerFiles = [
+    join(systemConfigDirectory, CODEX_CONFIG_FILE_NAME),
+    join(codexHome, CODEX_CONFIG_FILE_NAME),
+    join(codexHome, CODEX_MANAGED_CONFIG_FILE_NAME),
+  ];
+  return [...new Set([...layerFiles, ...projectFiles])];
+}
+
 async function prepareCodexIsolation(input: WakeIsolationInput): Promise<WakeIsolation> {
-  const { workingDirectory, codexHome = join(homedir(), CODEX_CONFIG_FOLDER) } = input;
-  const configFiles = [join(codexHome, CODEX_CONFIG_FILE_NAME), join(workingDirectory, CODEX_CONFIG_FOLDER, CODEX_CONFIG_FILE_NAME)];
+  const {
+    workingDirectory,
+    codexHome = join(homedir(), CODEX_CONFIG_FOLDER),
+    systemConfigDirectory = CODEX_SYSTEM_CONFIG_DIRECTORY,
+  } = input;
+  const configFiles = codexConfigFilesOf({ workingDirectory, codexHome, systemConfigDirectory });
   const texts = await Promise.all(configFiles.map((file) => readTextOrEmpty({ file })));
   const references = texts.flatMap((text) => serverReferencesOf({ text }));
   const isZapbipAtTopLevel = (reference: ServerReference) => reference.profile === null && reference.name === CODEX_ZAPBIP_SERVER_NAME;

@@ -26,6 +26,7 @@ import { logConnectorEvent, type ConnectorLogFields, type ConnectorLogger } from
 import { findNewestSessionId } from './session-lookup';
 import { REAL_TIMERS, type CancelTimer, type ConnectorTimers } from './timers';
 import { createWakeQueue, type WakeQueue } from './wake-queue';
+import { removeStaleWakeDirectories } from './wake-isolation';
 import { runWake } from './wake-runner';
 
 export type ServerFrameParse = { ok: true; frame: ServerFrame } | { ok: false; reason: FrameRejectionReason };
@@ -283,6 +284,7 @@ export async function runConnection(input: {
 }): Promise<number> {
   const { connectionLink, socketLink, client, workingDirectory, pinnedSessionId, signal, timers, random } = input;
   const wakeAbortController = new AbortController();
+  await removeStaleWakeDirectories();
   signal.addEventListener('abort', () => wakeAbortController.abort(), { once: true });
 
   async function resolveSession(): Promise<{ sessionSource: ConnectorSessionSource; sessionId: string | null }> {

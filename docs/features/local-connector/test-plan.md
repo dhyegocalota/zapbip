@@ -245,7 +245,7 @@ Harness: `apps/connector/test/e2e/support/stack.ts` (fixed by the plan, file map
 - [ ] The bundle runs from the tarball with no `node_modules` — input: `npm pack`, install the tarball into an empty temp directory with `--offline`, run `zapbip --help`; expected: exit code `0`, usage text printed.
 - [ ] The bundle has the shebang — input: `dist/cli.js` first line; expected: `#!/usr/bin/env node`.
 - [ ] No runtime dependencies — input: `package.json`; expected: `dependencies` is absent or `{}`.
-- [ ] `private` stays `true` — input: `package.json`; expected: `"private": true` (publish is `deploy-readiness`).
+- [ ] The package is publishable — input: `package.json`; expected: no `private` field (publish is `deploy-readiness`).
 - [ ] Edge: the bundle contains no test code — input: grep of `dist/cli.js` for `vitest` and `fake-event-server`; expected: no match.
 - [ ] `mint broken-links` — input: `apps/docs` with `developers/local-connector.mdx` and `developers/background-running.mdx`; expected: no broken links.
 - [ ] The docs page states no secret — input: grep of the two `.mdx` files for the sample secret string used in tests; expected: no match, the page uses a placeholder.
