@@ -65,6 +65,11 @@ const PREVIEW_KEYS: Record<PreviewedKind, InboxCopyKey> = {
   [MessageKind.Choice]: InboxCopyKey.PreviewChoice,
 };
 
+export function fillCopyTokens(input: { text: string; values: Record<string, string> }): string {
+  void input;
+  throw new Error('fillCopyTokens is not implemented');
+}
+
 export function renderCopy(input: { key: InboxCopyKey; locale: OwnerLocale; values: Record<string, string> }): string {
   return INBOX_COPY[input.key][input.locale].replace(COPY_TOKEN_PATTERN, (_token, name: string) => {
     const value = input.values[name];

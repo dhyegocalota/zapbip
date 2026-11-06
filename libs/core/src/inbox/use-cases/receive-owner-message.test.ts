@@ -511,6 +511,46 @@ describe('receiveOwnerMessage waking', () => {
   });
 });
 
+describe('receiveOwnerMessage handing the message id to the waker', () => {
+  test('a plain message passes its id', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha'] });
+    const received = await receiveText({ environment, text: '@alpha one' });
+    expect(environment.waker.notifications).toEqual([
+      { agent: 'alpha', reason: AgentWakeReason.MessageWaiting, messageId: received.messageId },
+    ]);
+  });
+
+  test('a second message in the same batch does not call the waker', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha'] });
+    await receiveText({ environment, text: '@alpha one' });
+    await receiveText({ environment, text: '@alpha two' });
+    expect(environment.waker.notifications).toHaveLength(1);
+  });
+
+  test('a choice that answers a question passes no id', async () => {
+    const environment = await createEnvironment();
+    const question = await askAndAbandon({ environment, agent: 'alpha' });
+    await tap({
+      environment,
+      optionId: formatOptionId({ questionId: question.questionId, optionIndex: 0 }),
+      optionTitle: 'Sim',
+    });
+    expect(environment.waker.notifications).toEqual([{ agent: 'alpha', reason: AgentWakeReason.MessageWaiting }]);
+    expect(environment.waker.notifications.map((notification) => notification.messageId)).toEqual([undefined]);
+  });
+
+  test('held messages assigned by a routing-list tap pass no id', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha', 'beta'] });
+    await receiveText({ environment, text: 'hello' });
+    const [list] = routingLists({ environment });
+    await tap({ environment, optionId: routeOptionId({ list: list!, agent: 'beta' }), optionTitle: 'beta' });
+    expect(environment.waker.notifications.map((notification) => notification.messageId)).toEqual([undefined]);
+  });
+});
+
 describe('receiveOwnerMessage waking an agent that holds an ask', () => {
   test('owner media reaching an agent that only waits for an answer wakes it and tells the owner', async () => {
     const environment = await createEnvironment();

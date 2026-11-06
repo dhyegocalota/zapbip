@@ -33,7 +33,7 @@ export async function createWakeEnvironment(): Promise<WakeEnvironment> {
   const wake: WakeDependencies = {
     transport,
     secretBox: createInMemoryWakeSecretBox(),
-    repository: createInMemoryWakeRepository(),
+    repository: createInMemoryWakeRepository({ clock: environment.clock }),
     observer,
   };
   return { environment, transport, observer, wake, context: { dependencies: environment.dependencies, wake } };
