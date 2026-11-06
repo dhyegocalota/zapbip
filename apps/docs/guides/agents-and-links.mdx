@@ -1,0 +1,40 @@
+---
+title: 'Agents and links'
+description: 'Create, list, revoke and rotate the connection of each agent.'
+---
+
+Each agent has its own connection, and each connection has one link. The link is the agent's credential for the zapbip MCP server.
+
+## Create
+
+Send `novo agente <nome>` (or `new agent <name>`). zapbip replies with the install prompt for that agent. The name is normalised: accents are removed, it is lowercased and every run of other characters becomes one hyphen, so `Claude Code` becomes `claude-code`. The reply shows the normalised name. A name has up to 32 characters, letters, digits and hyphens, and starts with a letter or digit.
+
+A name cannot be a [reserved word](/guides/commands#reserved-words) and must be unique among your active agents. A revoked name can be created again as a new connection. `novo agente` without a name replies with the usage line.
+
+The install prompt can be long, so it arrives in numbered parts (`1/n`, `2/n`, and so on). Paste them in order as one prompt.
+
+## The link is a password
+
+Anyone who has the link can act as that agent: send messages to you and read what you send. The link appears only in the create reply and the rotate reply, never in any other message. Do not share it, do not paste it into a public chat or a repository, and rotate it if it leaks.
+
+## What WhatsApp previews show
+
+WhatsApp may show a link preview under the reply. The preview is fetched from the address in the message, so treat the chat itself as private and keep it off screen shares. If you suspect a leak, rotate the link.
+
+## List
+
+Send `agentes` (or `agents`). zapbip replies with the name and creation date of every active agent, or says there are none yet. It never shows a link.
+
+## Revoke
+
+Send `revogar <nome>` (or `revoke <name>`). The connection is revoked at once and its link stops working. It cannot be undone; create the agent again to get a new link. The explicit name is the confirmation.
+
+## Rotate
+
+Send `girar <nome>` (or `rotate <name>`). zapbip replaces the secret at once and replies with a new install prompt. The old link stops working immediately, so update the agent with the new prompt. If the reply cannot be delivered, the old link is restored, so you never end up with a rotated link you did not receive.
+
+## The limit
+
+An account has at most 8 active agents. Revoked agents do not count. At the limit, zapbip says so and points to `revogar <nome>` as the way out.
+
+See [commands](/guides/commands) for every command word, including the `@<agent>` escape for words meant for an agent.
