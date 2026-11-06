@@ -55,6 +55,7 @@ import {
   parseDoneFrame,
   remainingSocketCount,
   sendFrameToAgent,
+  sendMessagesToAgent,
 } from './connector-sockets';
 import {
   ALARM_MIN_DELAY_MS,
@@ -303,9 +304,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     const client = acceptConnectorSocket({ context: this.ctx, agent });
     const hello = { type: ConnectorFrameType.Hello, agent, previousWakeMode: attached.previousWakeMode } as const;
     sendFrameToAgent({ context: this.ctx, agent, frame: hello });
-    if (attached.unread.length > 0) {
-      sendFrameToAgent({ context: this.ctx, agent, frame: { type: ConnectorFrameType.Messages, messages: attached.unread } });
-    }
+    sendMessagesToAgent({ context: this.ctx, agent, messages: attached.unread });
     return new Response(null, { status: SWITCHING_PROTOCOLS_STATUS, webSocket: client });
   }
 

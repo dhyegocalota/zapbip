@@ -18,6 +18,7 @@ type MessagesFrame = { type: ConnectorFrameType.Messages; messages: Message[] };
 
 const AGENT = 'ana';
 const OWNER_TEXT = 'oi';
+const LARGE_MESSAGE_CHARACTERS = 4_000;
 const OTHER_AGENT_MESSAGE_ID = 'msg_other';
 
 function ownerMessage(input: { account: SeededAccount }) {
@@ -181,5 +182,25 @@ describe('connector socket', () => {
     expect(frame.messages).toHaveLength(1);
     expect(second.receivedCount()).toBe(0);
     second.socket.close();
+  });
+
+  test('a backlog over the frame limit reaches the connector in frames that each fit', async () => {
+    const account = await registeredAccount();
+    const stub = accountInboxStub({ accountId: account.accountId });
+    const backlogSize = 20;
+    await Promise.all(
+      Array.from({ length: backlogSize }, (_, index) =>
+        receiveOwnerText({ stub, text: `@${AGENT} ${index} ${'x'.repeat(LARGE_MESSAGE_CHARACTERS)}` }),
+      ),
+    );
+    const session = await openConnector({ secret: account.secret });
+    await session.nextFrame();
+    const frames: MessagesFrame[] = [];
+    while (frames.flatMap((frame) => frame.messages).length < backlogSize) frames.push((await session.nextFrame()) as MessagesFrame);
+    expect(frames.length).toBeGreaterThan(1);
+    frames.forEach((frame) =>
+      expect(new TextEncoder().encode(JSON.stringify(frame)).byteLength).toBeLessThanOrEqual(CONNECTOR_FRAME_MAX_BYTES),
+    );
+    session.socket.close();
   });
 });

@@ -66,12 +66,32 @@ export function parseDoneFrame(input: { data: string | ArrayBuffer }): DoneFrame
 export type MessageFramePlan = { frames: Message[][]; oversized: Message[] };
 export type MessagesDelivery = { socketCount: number; oversizedCount: number };
 
+function frameBytesOf(input: { messages: Message[] }): number {
+  const frame: ServerFrame = { type: ConnectorFrameType.Messages, messages: input.messages };
+  return textEncoder.encode(JSON.stringify(frame)).byteLength;
+}
+
+function fitsInFrame(input: { messages: Message[] }): boolean {
+  return frameBytesOf(input) <= CONNECTOR_FRAME_MAX_BYTES;
+}
+
 export function planMessageFrames(input: { messages: Message[] }): MessageFramePlan {
-  void input;
-  throw new Error('planMessageFrames is not implemented');
+  const oversized = input.messages.filter((message) => !fitsInFrame({ messages: [message] }));
+  const frames = input.messages
+    .filter((message) => fitsInFrame({ messages: [message] }))
+    .reduce<Message[][]>((planned, message) => {
+      const current = planned.at(-1);
+      if (current === undefined || !fitsInFrame({ messages: [...current, message] })) return [...planned, [message]];
+      return [...planned.slice(0, -1), [...current, message]];
+    }, []);
+  return { frames, oversized };
 }
 
 export function sendMessagesToAgent(input: { context: DurableObjectState; agent: AgentName; messages: Message[] }): MessagesDelivery {
-  void input;
-  throw new Error('sendMessagesToAgent is not implemented');
+  const { context, agent, messages } = input;
+  const plan = planMessageFrames({ messages });
+  const socketCounts = plan.frames.map((framed) =>
+    sendFrameToAgent({ context, agent, frame: { type: ConnectorFrameType.Messages, messages: framed } }),
+  );
+  return { socketCount: Math.max(0, ...socketCounts), oversizedCount: plan.oversized.length };
 }
