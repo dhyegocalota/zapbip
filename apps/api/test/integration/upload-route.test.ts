@@ -1,7 +1,7 @@
 import { env, SELF } from 'cloudflare:test';
 import { UPLOAD_TTL_MS } from '@zapbip/core';
 import { LinkPurpose } from '@zapbip/types';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { freshExpiry, inboxOf, ORIGIN, queryOf, seedAccount, signedQuery, type SeededAccount } from './route-fixtures';
 
 const PDF_TYPE = 'application/pdf';
@@ -10,6 +10,7 @@ const VIDEO_TYPE = 'video/mp4';
 const UPLOAD_BYTES = new TextEncoder().encode('upload-bytes');
 const UNKNOWN_UPLOAD_ID = 'med_unknown';
 const STATUS_CREATED = 201;
+const STATUS_SERVER_ERROR = 500;
 const STATUS_BAD_REQUEST = 400;
 const STATUS_FORBIDDEN = 403;
 const STATUS_NOT_FOUND = 404;
@@ -227,7 +228,7 @@ describe('upload route', () => {
     expect((await storedObject({ fixture }))?.httpMetadata?.contentType).toBe(PNG_TYPE);
   });
 
-  test('a slow writer past the upload deadline cannot complete the upload a second PUT found expired', async () => {
+  test('pin: a slow writer past the upload deadline cannot complete the upload a second PUT found expired', async () => {
     const fixture = await newFixture();
     const inbox = inboxOf({ accountId: fixture.account.accountId });
     const release = { resume: () => {} };
@@ -284,6 +285,17 @@ describe('upload route', () => {
     const response = await putUpload({ ...validPut({ fixture }), key: env.MEDIA_LINK_SIGNING_KEY });
     expect(response.status).toBe(STATUS_FORBIDDEN);
     expect(await storedObject({ fixture })).toBeNull();
+  });
+
+  test('an R2 failure mid-stream answers 5xx, releases the claim and stores nothing', async () => {
+    const fixture = await newFixture();
+    const failingPut = vi.spyOn(env.MEDIA, 'put').mockRejectedValueOnce(new Error('r2 unavailable'));
+    const response = await putUpload(validPut({ fixture }));
+    failingPut.mockRestore();
+    expect(response.status).toBeGreaterThanOrEqual(STATUS_SERVER_ERROR);
+    expect(await storedObject({ fixture })).toBeNull();
+    const retry = await putUpload(validPut({ fixture }));
+    expect(retry.status).toBe(STATUS_CREATED);
   });
 
   test('WI-126 an aborted client stream answers 400, releases the claim and stores nothing', async () => {

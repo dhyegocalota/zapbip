@@ -79,7 +79,11 @@ describe('claimUpload', () => {
     const error = await captureInboxError(() =>
       completeUpload({ dependencies: environment.dependencies, mediaId: uploadId, claimedAt: slowWriter.claimedAt }),
     );
-    const completed = await completeUpload({ dependencies: environment.dependencies, mediaId: uploadId, claimedAt: currentWriter.claimedAt });
+    const completed = await completeUpload({
+      dependencies: environment.dependencies,
+      mediaId: uploadId,
+      claimedAt: currentWriter.claimedAt,
+    });
     expect(error.code).toBe(InboxErrorCode.UploadUnavailable);
     expect(completed.receivedAt).not.toBeNull();
   });

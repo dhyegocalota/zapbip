@@ -391,16 +391,19 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
       );
     },
 
-    async releaseUpload({ mediaId }) {
-      run('UPDATE media SET claimed_at = NULL WHERE media_id = ?', mediaId);
+    async releaseUpload({ mediaId, claimedAt }) {
+      run('UPDATE media SET claimed_at = NULL WHERE media_id = ? AND claimed_at = ?', mediaId, claimedAt);
     },
 
-    async markMediaReceived({ mediaId, receivedAt, retentionUntil }) {
-      run(
-        'UPDATE media SET received_at = ?, retention_until = ?, expires_at = NULL, claimed_at = NULL WHERE media_id = ?',
-        receivedAt,
-        retentionUntil,
-        mediaId,
+    async markMediaReceived({ mediaId, claimedAt, receivedAt, retentionUntil }) {
+      return (
+        rows(
+          'UPDATE media SET received_at = ?, retention_until = ?, expires_at = NULL, claimed_at = NULL WHERE media_id = ? AND claimed_at = ? RETURNING media_id',
+          receivedAt,
+          retentionUntil,
+          mediaId,
+          claimedAt,
+        ).length === 1
       );
     },
 

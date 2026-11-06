@@ -12,6 +12,30 @@ import { ERROR_STATUS, HttpStatus } from './http-status';
 
 const CONTENT_LENGTH_PATTERN = /^\d+$/;
 
+type TrackedBody = { stream: ReadableStream<Uint8Array>; clientFailure: { occurred: boolean } };
+
+function trackClientFailure(input: { body: ReadableStream<Uint8Array>; sizeBytes: number }): TrackedBody {
+  const reader = input.body.getReader();
+  const clientFailure = { occurred: false };
+  const received = { bytes: 0 };
+  const stream = new ReadableStream<Uint8Array>({
+    async pull(controller) {
+      try {
+        const chunk = await reader.read();
+        received.bytes += chunk.done ? 0 : chunk.value.byteLength;
+        clientFailure.occurred = chunk.done && received.bytes < input.sizeBytes;
+        if (chunk.done) return controller.close();
+        controller.enqueue(chunk.value);
+      } catch (error) {
+        clientFailure.occurred = true;
+        controller.error(error);
+      }
+    },
+    cancel: (reason) => reader.cancel(reason),
+  });
+  return { stream, clientFailure };
+}
+
 export const uploadRoutes = new Hono<{ Bindings: Bindings }>();
 
 uploadRoutes.put('/u/:account_id/:upload_id', async (context) => {
@@ -57,30 +81,22 @@ uploadRoutes.put('/u/:account_id/:upload_id', async (context) => {
   if (!claim.ok) return context.json({ error: claim.errorCode, message: claim.message }, ERROR_STATUS[claim.errorCode]);
 
   const mediaStore = mediaStoreOf({ bindings: context.env, clock });
-  const received = { bytes: 0 };
-  const countedBody = body.pipeThrough(
-    new TransformStream<Uint8Array, Uint8Array>({
-      transform(chunk, controller) {
-        received.bytes += chunk.byteLength;
-        controller.enqueue(chunk);
-      },
-    }),
-  );
+  const tracked = trackClientFailure({ body, sizeBytes: declaredLength });
   try {
     await mediaStore.put({
       accountId,
       mediaId: uploadId,
-      body: countedBody,
+      body: tracked.stream,
       sizeBytes: declaredLength,
       mimeType: description.value.mimeType,
     });
   } catch (error) {
-    await inbox.releaseUpload({ mediaId: uploadId });
-    const isClientAbort = received.bytes < declaredLength;
+    await inbox.releaseUpload({ mediaId: uploadId, claimedAt: claim.value.claimedAt });
+    const isClientAbort = tracked.clientFailure.occurred;
     if (isClientAbort) return context.json({ error: 'upload_incomplete' }, HttpStatus.BadRequest);
     throw error;
   }
-  const completion = await inbox.completeUpload({ mediaId: uploadId });
+  const completion = await inbox.completeUpload({ mediaId: uploadId, claimedAt: claim.value.claimedAt });
   if (!completion.ok) return context.json({ error: completion.errorCode, message: completion.message }, ERROR_STATUS[completion.errorCode]);
   logEvent({ event: LogEvent.Upload, accountId, sizeBytes: declaredLength });
   return context.json({ upload_id: uploadId }, HttpStatus.Created);

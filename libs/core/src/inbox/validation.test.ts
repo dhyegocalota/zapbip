@@ -217,21 +217,15 @@ describe('assertMediaFits', () => {
     },
   );
 
-  test.each([
-    'image/svg+xml,image/png',
-    'image/svg+xml\0',
-    'image/svg+xml\u200b',
-    'image/svg+xml\u00a0x',
-    'image',
-    'image/',
-    '/png',
-    'image/svg xml',
-  ])('a media type outside the type/subtype grammar %j is invalid input', async (mimeType) => {
-    const error = await captureInboxError(() => assertMediaFits({ kind: MessageKind.Image, mimeType, sizeBytes: 1000 }));
-    expect(error).toEqual(invalidInput('mime_type: must be a type/subtype token'));
-  });
+  test.each(['image/svg+xml,image/png', 'image/svg+xml\u200b', 'image/svg+xml\u00a0x', 'image', 'image/', '/png', 'image/svg xml'])(
+    'a media type outside the type/subtype grammar %j is invalid input',
+    async (mimeType) => {
+      const error = await captureInboxError(() => assertMediaFits({ kind: MessageKind.Image, mimeType, sizeBytes: 1000 }));
+      expect(error).toEqual(invalidInput('mime_type: must be a type/subtype token'));
+    },
+  );
 
-  test.each(['image/png\n;x', 'image/png;\rx', 'image/png;\tx', 'image/png;x\u007f'])(
+  test.each(['image/png\n;x', 'image/png\0', 'image/png;\rx', 'image/png;\tx', 'image/png;x\u007f'])(
     'a media type with a control character %j is invalid input',
     async (mimeType) => {
       const mediaError = await captureInboxError(() => assertMediaFits({ kind: MessageKind.Image, mimeType, sizeBytes: 1000 }));

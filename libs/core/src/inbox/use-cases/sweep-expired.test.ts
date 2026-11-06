@@ -1,8 +1,7 @@
 import { DeliveryState, MediaOrigin, SECOND_MS } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { MEDIA_RETENTION_MS, QUEUE_RETENTION_MS, QUESTION_RETENTION_MS, RECEIPT_RETENTION_MS, UPLOAD_TTL_MS } from '../constants';
-import { askAndAbandon, closeWindow, connectionOf, createEnvironment } from '../testing/fixtures';
-import { completeUpload } from './complete-upload';
+import { askAndAbandon, closeWindow, connectionOf, createEnvironment, receiveUpload } from '../testing/fixtures';
 import { createUpload } from './create-upload';
 import { sendText } from './send-text';
 import { sweepExpired } from './sweep-expired';
@@ -20,7 +19,7 @@ describe('sweepExpired', () => {
       mimeType: 'application/pdf',
       sizeBytes: 10,
     });
-    await completeUpload({ dependencies: environment.dependencies, mediaId: uploadId });
+    await receiveUpload({ environment, mediaId: uploadId });
     await mediaStore.put({
       accountId: environment.dependencies.accountId,
       mediaId: uploadId,
