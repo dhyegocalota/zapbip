@@ -5,6 +5,7 @@ import {
   WAKE_RETRY_AFTER_STATUSES,
   WAKE_SIGNATURE_HEADER,
   WAKE_SIGNATURE_PREFIX,
+  isWakeTimeout,
   WAKE_TIMESTAMP_HEADER,
   signWakeRequest,
   type PinnedWakeProvider,
@@ -26,7 +27,6 @@ const NOT_IMPLEMENTED_STATUS = 501;
 const RETRYABLE_STATUSES: readonly number[] = [408, 425, 429];
 const RETRY_AFTER_HEADER = 'retry-after';
 const RETRY_AFTER_PATTERN = /^\d+$/;
-const NOT_REACHED_RESULT: WakeAttemptResult = { outcome: WakeAttemptOutcome.Retry, statusCode: null, retryAfterMs: null, timedOut: false };
 
 function isSuccess(input: { statusCode: number }): boolean {
   return input.statusCode >= SUCCESS_STATUS_FLOOR && input.statusCode <= SUCCESS_STATUS_CEILING;
@@ -101,8 +101,8 @@ export function createFetchWakeTransport(): WakeTransport {
           retryAfterMs: retryAfterMsOf({ response }),
           timedOut: false,
         };
-      } catch {
-        return NOT_REACHED_RESULT;
+      } catch (error) {
+        return { outcome: WakeAttemptOutcome.Retry, statusCode: null, retryAfterMs: null, timedOut: isWakeTimeout({ error }) };
       }
     },
   };
