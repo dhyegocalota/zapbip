@@ -21,6 +21,7 @@ type MessagesFrame = { type: ConnectorFrameType.Messages; messages: Message[] };
 
 const AGENT = 'ana';
 const OWNER_TEXT = 'oi';
+const NORMAL_CLOSE_CODE = 1000;
 const LARGE_MESSAGE_CHARACTERS = 4_000;
 const OTHER_AGENT_MESSAGE_ID = 'msg_other';
 
@@ -220,6 +221,15 @@ describe('connector socket', () => {
     session.socket.close();
   });
 
+  test('answers a close frame from the client so the client sees its own code', async () => {
+    const account = await registeredAccount();
+    const session = await openConnector({ secret: account.secret });
+    await session.nextFrame();
+    session.socket.close(NORMAL_CLOSE_CODE);
+
+    expect(await session.closeCode()).toBe(NORMAL_CLOSE_CODE);
+  });
+
   test('pushes the remaining unread messages after a done', async () => {
     const account = await registeredAccount();
     const session = await openConnector({ secret: account.secret });
@@ -232,6 +242,9 @@ describe('connector socket', () => {
     const remaining = (await session.nextFrame()) as MessagesFrame;
     expect(remaining.messages).toHaveLength(1);
     expect(remaining.messages[0]?.messageId).not.toBe(first.messages[0]?.messageId);
+    await ownerMessage({ account });
+    const third = (await session.nextFrame()) as MessagesFrame;
+    expect(third.messages.length).toBeGreaterThan(0);
     session.socket.close();
   });
 

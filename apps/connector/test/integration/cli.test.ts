@@ -1,4 +1,4 @@
-import { execFileSync, spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
+import { execFileSync, spawn, spawnSync, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -139,6 +139,24 @@ describe('zapbip connect', () => {
     await server.waitForConnections({ count: 1 });
 
     expect(cliProcess.outputText()).not.toContain(FAKE_SECRET);
+  });
+
+  it('exits 1 with a message and no unsettled promise when there is no link and the standard input closes', async () => {
+    const cliProcess = startCli({ connectionUrl: null });
+    cliProcess.child.stdin.end();
+
+    expect(await cliProcess.exited).toBe(EXIT_CODE_USAGE);
+    expect(cliProcess.outputText()).toContain('connection link');
+    expect(cliProcess.outputText()).not.toContain('unsettled');
+    expect(server.connectionCount()).toBe(0);
+  });
+
+  it('prints the usage of every command and exits 1 when no command is given', () => {
+    const result = spawnSync(process.execPath, [bundleFile], { encoding: 'utf8' });
+
+    expect(result.status).toBe(EXIT_CODE_USAGE);
+    expect(result.stderr).toContain('listen');
+    expect(result.stderr).toContain('channel');
   });
 
   it('exits 1 with a usage error and no secret for an unknown client', async () => {
