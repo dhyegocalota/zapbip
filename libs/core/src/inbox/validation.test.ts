@@ -209,10 +209,13 @@ describe('assertMediaFits', () => {
     expect(error).toEqual(invalidInput('mime_type: image must not be image/svg+xml'));
   });
 
-  test.each(['image/SVG+XML', 'image/svg+xml;x=1', ' Image/Svg+Xml ; charset=utf-8'])('image with the svg type %s', async (mimeType) => {
-    const error = await captureInboxError(() => assertMediaFits({ kind: MessageKind.Image, mimeType, sizeBytes: 1000 }));
-    expect(error).toEqual(invalidInput('mime_type: image must not be image/svg+xml'));
-  });
+  test.each(['image/SVG+XML', 'image/svg+xml;x=1', ' Image/Svg+Xml ; charset=utf-8'])(
+    'CU-169 image with the svg type %s',
+    async (mimeType) => {
+      const error = await captureInboxError(() => assertMediaFits({ kind: MessageKind.Image, mimeType, sizeBytes: 1000 }));
+      expect(error).toEqual(invalidInput('mime_type: image must not be image/svg+xml'));
+    },
+  );
 
   test.each([
     'image/svg+xml,image/png',
@@ -233,11 +236,11 @@ describe('assertMediaFits', () => {
     expect(error).toEqual(invalidInput('mime_type: must be a type/subtype token'));
   });
 
-  test('a sticker type is compared without case or parameters', () => {
+  test('CU-169 a sticker type is compared without case or parameters', () => {
     expect(() => assertMediaFits({ kind: MessageKind.Sticker, mimeType: 'IMAGE/WEBP; q=1', sizeBytes: 1000 })).not.toThrow();
   });
 
-  test('a media prefix is compared without case', () => {
+  test('CU-169 a media prefix is compared without case', () => {
     expect(() => assertMediaFits({ kind: MessageKind.Video, mimeType: 'VIDEO/MP4', sizeBytes: 1000 })).not.toThrow();
   });
 

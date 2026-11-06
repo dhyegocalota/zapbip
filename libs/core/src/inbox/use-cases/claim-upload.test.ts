@@ -21,13 +21,13 @@ async function pendingUpload() {
 }
 
 describe('claimUpload', () => {
-  test('returns the pending upload', async () => {
+  test('CU-170 returns the pending upload', async () => {
     const { environment, uploadId } = await pendingUpload();
     const media = await claimUpload({ dependencies: environment.dependencies, mediaId: uploadId });
     expect(media).toMatchObject({ mediaId: uploadId, receivedAt: null });
   });
 
-  test('refuses a second claim while the first holds the upload', async () => {
+  test('CU-170 refuses a second claim while the first holds the upload', async () => {
     const { environment, uploadId } = await pendingUpload();
     await claimUpload({ dependencies: environment.dependencies, mediaId: uploadId });
     const error = await captureInboxError(() => claimUpload({ dependencies: environment.dependencies, mediaId: uploadId }));
@@ -35,7 +35,7 @@ describe('claimUpload', () => {
     expect(error.message).toBe('upload_id: upload already in progress');
   });
 
-  test('a released claim can be taken again', async () => {
+  test('CU-170 a released claim can be taken again', async () => {
     const { environment, uploadId } = await pendingUpload();
     await claimUpload({ dependencies: environment.dependencies, mediaId: uploadId });
     await releaseUpload({ dependencies: environment.dependencies, mediaId: uploadId });
@@ -59,21 +59,21 @@ describe('claimUpload', () => {
     expect(error.code).toBe(InboxErrorCode.UploadUnavailable);
   });
 
-  test('the claimed upload can still be completed', async () => {
+  test('CU-170 the claimed upload can still be completed', async () => {
     const { environment, uploadId } = await pendingUpload();
     await claimUpload({ dependencies: environment.dependencies, mediaId: uploadId });
     const media = await completeUpload({ dependencies: environment.dependencies, mediaId: uploadId });
     expect(media.receivedAt).not.toBeNull();
   });
 
-  test('refuses a received upload', async () => {
+  test('CU-170 refuses a received upload', async () => {
     const { environment, uploadId } = await pendingUpload();
     await completeUpload({ dependencies: environment.dependencies, mediaId: uploadId });
     const error = await captureInboxError(() => claimUpload({ dependencies: environment.dependencies, mediaId: uploadId }));
     expect(error.message).toBe('upload_id: upload already received');
   });
 
-  test('refuses an expired upload', async () => {
+  test('CU-170 refuses an expired upload', async () => {
     const { environment, uploadId } = await pendingUpload();
     await environment.clock.advance({ ms: UPLOAD_TTL_MS });
     const error = await captureInboxError(() => claimUpload({ dependencies: environment.dependencies, mediaId: uploadId }));

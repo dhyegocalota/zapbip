@@ -48,12 +48,12 @@ async function expireAfterTtl(input: { environment: Environment }): Promise<void
 }
 
 describe('findRoutingListDueAt', () => {
-  test('is null without a pending list', async () => {
+  test('CU-164 is null without a pending list', async () => {
     const environment = await createEnvironment();
     expect(await findRoutingListDueAt({ dependencies: environment.dependencies })).toBeNull();
   });
 
-  test('is the opening time plus the routing list TTL', async () => {
+  test('CU-164 is the opening time plus the routing list TTL', async () => {
     const { environment } = await heldBatch();
     const { openedAt } = (await environment.repository.findRoutingList())!;
     expect(await findRoutingListDueAt({ dependencies: environment.dependencies })).toBe(openedAt + ROUTING_LIST_TTL_MS);
@@ -61,7 +61,7 @@ describe('findRoutingListDueAt', () => {
 });
 
 describe('expireRoutingList', () => {
-  test('does nothing before the TTL', async () => {
+  test('CU-166 does nothing before the TTL', async () => {
     const { environment } = await heldBatch();
     const dueAt = await findRoutingListDueAt({ dependencies: environment.dependencies });
     await environment.clock.advance({ ms: dueAt! - environment.clock.now() - 1 });
@@ -70,7 +70,7 @@ describe('expireRoutingList', () => {
     expect(routingLists({ environment })).toHaveLength(1);
   });
 
-  test('delivers the held batch in order to the agent that wrote within the window and wakes its waiter', async () => {
+  test('CU-165 delivers the held batch in order to the agent that wrote within the window and wakes its waiter', async () => {
     const { environment } = await heldBatch();
     await agentWrites({ environment, agent: 'alpha' });
     const holding = waitForReply({
@@ -87,7 +87,7 @@ describe('expireRoutingList', () => {
     expect(routingLists({ environment })).toHaveLength(1);
   });
 
-  test('resends the list once when no agent wrote within the window', async () => {
+  test('CU-166 resends the list once when no agent wrote within the window', async () => {
     const { environment, firstMessageId } = await heldBatch();
     await expireAfterTtl({ environment });
     const lists = routingLists({ environment });
@@ -106,7 +106,7 @@ describe('expireRoutingList', () => {
     });
   });
 
-  test('after the second expiry the batch stays unread for the last agent seen', async () => {
+  test('CU-167 after the second expiry the batch stays unread for the last agent seen', async () => {
     const { environment } = await heldBatch();
     await environment.clock.advance({ ms: SECOND_MS });
     await registerAgents({ environment, agents: ['beta'] });
@@ -119,7 +119,7 @@ describe('expireRoutingList', () => {
     expect(await unreadTexts({ environment, agent: 'beta' })).toEqual(['first', 'second']);
   });
 
-  test('an agent that wrote after the resend takes the batch at the second expiry', async () => {
+  test('CU-167 an agent that wrote after the resend takes the batch at the second expiry', async () => {
     const { environment } = await heldBatch();
     await expireAfterTtl({ environment });
     await agentWrites({ environment, agent: 'alpha' });
@@ -136,7 +136,7 @@ describe('expireRoutingList', () => {
     expect(await environment.repository.findRoutingList()).toMatchObject({ locale: OwnerLocale.PortugueseBrazil });
   });
 
-  test('a list with nothing held is closed', async () => {
+  test('CU-168 a list with nothing held is closed', async () => {
     const environment = await createEnvironment();
     await registerAgents({ environment, agents: ['alpha'] });
     await environment.repository.saveRoutingList({
@@ -153,7 +153,7 @@ describe('expireRoutingList', () => {
     expect(routingLists({ environment })).toEqual([]);
   });
 
-  test('the window of rule 5 is counted back from the expiry', async () => {
+  test('CU-168 the window of rule 5 is counted back from the expiry', async () => {
     const { environment } = await heldBatch();
     await agentWrites({ environment, agent: 'alpha' });
     await environment.clock.advance({ ms: WINDOW_MS + 1 });
