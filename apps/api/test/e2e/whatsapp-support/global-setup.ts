@@ -60,6 +60,7 @@ export default async function setup(project: TestProject): Promise<() => Promise
     WHATSAPP_ACCESS_TOKEN: ACCESS_TOKEN,
     WHATSAPP_PHONE_NUMBER_ID: PHONE_NUMBER_ID,
     WHATSAPP_GRAPH_BASE_URL: `http://${LOOPBACK_HOST}:${FAKE_GRAPH_PORT}`,
+    WHATSAPP_MEDIA_DOWNLOAD_ORIGIN: `http://${LOOPBACK_HOST}:${FAKE_GRAPH_PORT}`,
   };
   const server = spawn(
     'pnpm',

@@ -13,7 +13,7 @@ import readStatusFixture from '../fixtures/whatsapp/status/read.json';
 import listFixture from '../fixtures/whatsapp/outbound/list.json';
 import templateFixture from '../fixtures/whatsapp/outbound/template-notice-pt_BR.json';
 import { advanceClock, callTool, connectAgent, type ToolResult } from './stack';
-import { GRAPH_MESSAGES_PATH, OWNER_PHONE, PHONE_NUMBER_ID } from './whatsapp-support/constants';
+import { FAKE_GRAPH_PORT, GRAPH_MESSAGES_PATH, OWNER_PHONE, PHONE_NUMBER_ID } from './whatsapp-support/constants';
 import { fakeGraph, lastSentWamid, postSignedMessage, postSignedWebhook, sentRequests } from './whatsapp-support/webhook';
 
 const AGENT = 'alpha';
@@ -26,6 +26,10 @@ const CLOSED_WINDOW_OFFSET_MS = WINDOW_MS + 1;
 const GRAPH_MEDIA_PATH = '/v24.0/900000000000004';
 const FOREIGN_MEDIA_URL = 'https://media.example.com/voice';
 const FAKE_FILE_SIZE_BYTES = 10;
+const FAKE_GRAPH_ORIGIN = `http://127.0.0.1:${FAKE_GRAPH_PORT}`;
+const VOICE_DOWNLOAD_PATH = '/media/voice';
+const VOICE_NOTE_CONTENT = 'voice-note-bytes';
+const DIGEST_ALGORITHM = 'SHA-256';
 const OWNER_EMOJI = '👍';
 const QUESTION_TEXT = 'Qual ambiente?';
 const ANSWER_INDEX = 1;
@@ -45,6 +49,7 @@ type WireMessage = {
   sender: string;
   verified: boolean;
   media_status: string | null;
+  url: string | null;
   delivery: DeliveryState | null;
   voice: boolean | null;
   choice: { question_id: string } | null;
@@ -108,6 +113,28 @@ describe('WhatsApp channel end to end', () => {
     ];
     expect(statuses).toEqual([STATUS_OK, STATUS_OK]);
     expect(messagesOf({ result: await checkInbox(), key: 'messages' }).map((message) => message.text)).toEqual(['Uma vez']);
+  });
+
+  test('E2E-2 a stored voice note reaches the agent with a url that serves its bytes', async () => {
+    const downloadedBytes = new TextEncoder().encode(JSON.stringify(VOICE_NOTE_CONTENT));
+    const digest = await crypto.subtle.digest(DIGEST_ALGORITHM, downloadedBytes);
+    const sha256 = btoa(String.fromCharCode(...new Uint8Array(digest)));
+    await fakeGraph.respondWith({
+      method: 'GET',
+      path: GRAPH_MEDIA_PATH,
+      status: STATUS_OK,
+      body: { url: `${FAKE_GRAPH_ORIGIN}${VOICE_DOWNLOAD_PATH}`, file_size: downloadedBytes.byteLength },
+    });
+    await fakeGraph.respondWith({ method: 'GET', path: VOICE_DOWNLOAD_PATH, status: STATUS_OK, body: VOICE_NOTE_CONTENT });
+    const voiceNote = { ...audioVoiceFixture, id: 'wamid.E2E2STORED', audio: { ...audioVoiceFixture.audio, sha256 } };
+    const response = await postSignedMessage({ message: voiceNote, offsetMs: NO_OFFSET_MS });
+    expect(response.status).toBe(STATUS_OK);
+    const [voice] = messagesOf({ result: await checkInbox(), key: 'messages' });
+    expect(voice).toMatchObject({ kind: MessageKind.Audio, voice: true, media_status: null });
+    if (voice?.url === null || voice?.url === undefined) throw new Error('the voice note has no url');
+    const served = await fetch(voice.url);
+    expect(served.status).toBe(STATUS_OK);
+    expect(new Uint8Array(await served.arrayBuffer())).toEqual(downloadedBytes);
   });
 
   test('E2E-2 a voice note whose media the channel refuses reaches the agent as unavailable and the owner is told', async () => {
