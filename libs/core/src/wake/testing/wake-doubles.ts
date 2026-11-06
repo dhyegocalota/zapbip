@@ -87,6 +87,7 @@ export function createScriptedWakeTransport(): ScriptedWakeTransport {
         outcome: outcomeOf({ statusCode: response.statusCode }),
         statusCode: response.statusCode,
         retryAfterMs: response.retryAfterMs,
+        timedOut: false,
       };
     },
   };

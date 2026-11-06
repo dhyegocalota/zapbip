@@ -22,6 +22,7 @@ export async function scheduleWake(input: ScheduleWakeInput): Promise<WakeOutcom
         statusCode: null,
         latencyMs: null,
         outcome: null,
+        timedOut: false,
       },
     });
     return WakeOutcome.Woken;

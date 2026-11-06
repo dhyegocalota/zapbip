@@ -39,7 +39,9 @@ const GROK_PATH = '/automations/webhook/abc12345';
 const OTHER_AGENT = 'beta';
 
 let stub: DurableObjectStub<DevAccountInbox>;
-const transport: WakeTransport = { send: async () => ({ outcome: WakeAttemptOutcome.Delivered, statusCode: 200, retryAfterMs: null }) };
+const transport: WakeTransport = {
+  send: async () => ({ outcome: WakeAttemptOutcome.Delivered, statusCode: 200, retryAfterMs: null, timedOut: false }),
+};
 
 function wakeDependenciesWith(input: { env: Partial<typeof testEnv> }) {
   return runInDurableObject(stub, (_instance, state) =>

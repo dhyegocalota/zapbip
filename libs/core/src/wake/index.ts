@@ -10,3 +10,4 @@ export * from './sign-wake-request';
 export * from './set-wake';
 export * from './schedule-wake';
 export * from './run-due-wakes';
+export * from './wake-timeout';

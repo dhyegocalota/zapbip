@@ -13,6 +13,7 @@ import {
 import { assertWakeTarget } from './assert-wake-target';
 import { wakeAssociatedData } from './wake-associated-data';
 import { nextWakeDueAt } from './wake-due-at';
+import { isWakeTimeout } from './wake-timeout';
 import { wakeFailedCopy } from './wake-copy';
 import type { RunDueWakesInput, RunDueWakesResult, WakeAttemptResult } from './wake-ports';
 import type { StoredWake, StoredWakeTarget, WakeJob, WakeTarget } from './wake-setting';
@@ -22,8 +23,7 @@ type WebhookWake = StoredWake & { target: StoredWakeTarget };
 type Attempt = JobRun & { stored: WebhookWake; attempt: number; startedAt: number; result: WakeAttemptResult };
 
 const BACKOFF_FACTOR = 2;
-const UNSENT_RESULT: WakeAttemptResult = { outcome: WakeAttemptOutcome.Refused, statusCode: null, retryAfterMs: null };
-const FAILED_SEND_RESULT: WakeAttemptResult = { outcome: WakeAttemptOutcome.Retry, statusCode: null, retryAfterMs: null };
+const UNSENT_RESULT: WakeAttemptResult = { outcome: WakeAttemptOutcome.Refused, statusCode: null, retryAfterMs: null, timedOut: false };
 
 function isLeased(input: { job: WakeJob; now: number }): boolean {
   return input.job.leaseUntil !== null && input.job.leaseUntil > input.now;
@@ -56,6 +56,7 @@ function observeAttempt(input: Attempt & { name: WakeLogEventName }): void {
       statusCode: result.statusCode,
       latencyMs: dependencies.clock.now() - startedAt,
       outcome: result.outcome,
+      timedOut: result.timedOut,
     },
   });
 }
@@ -87,8 +88,8 @@ async function sendWake(input: JobRun & { stored: WebhookWake }): Promise<WakeAt
   if (target === null) return UNSENT_RESULT;
   try {
     return await wake.transport.send({ agent: job.agent, target, body: WAKE_SIGNAL_BODY, nowMs: dependencies.clock.now() });
-  } catch {
-    return FAILED_SEND_RESULT;
+  } catch (error) {
+    return { outcome: WakeAttemptOutcome.Retry, statusCode: null, retryAfterMs: null, timedOut: isWakeTimeout({ error }) };
   }
 }
 
@@ -142,6 +143,7 @@ async function tellOwnerOnce(input: JobRun & { stored: StoredWake | null }): Pro
         statusCode: null,
         latencyMs: null,
         outcome: null,
+        timedOut: false,
       },
     });
   }
@@ -207,6 +209,7 @@ async function dropJob(input: JobRun & { stored: StoredWake | null }): Promise<v
       statusCode: null,
       latencyMs: null,
       outcome: null,
+      timedOut: false,
     },
   });
 }

@@ -1,4 +1,4 @@
-import { WAKE_REQUEST_TIMEOUT_MS, type WakeLogEvent } from '@zapbip/core';
+import type { WakeLogEvent } from '@zapbip/core';
 import { WakeAttemptOutcome, WakeLogEventName, WakeProvider } from '@zapbip/types';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createCloudflareWakeObserver } from '../../src/adapters/wake/wake-observer';
@@ -18,6 +18,7 @@ function eventOf(input: Partial<WakeLogEvent>): WakeLogEvent {
     statusCode: 200,
     latencyMs: LATENCY_MS,
     outcome: WakeAttemptOutcome.Delivered,
+    timedOut: false,
     ...input,
   };
 }
@@ -65,7 +66,15 @@ describe('createCloudflareWakeObserver', () => {
 
   it('writes no data point for an event that is not an attempt', () => {
     const { writeDataPoint, logSpy } = observe({
-      event: eventOf({ name: WakeLogEventName.Scheduled, provider: null, attempt: 0, statusCode: null, latencyMs: null, outcome: null }),
+      event: eventOf({
+        name: WakeLogEventName.Scheduled,
+        provider: null,
+        attempt: 0,
+        statusCode: null,
+        latencyMs: null,
+        outcome: null,
+        timedOut: false,
+      }),
     });
     expect(logSpy).toHaveBeenCalledTimes(1);
     expect(writeDataPoint).not.toHaveBeenCalled();
@@ -82,10 +91,10 @@ describe('createCloudflareWakeObserver', () => {
     { statusCode: 404, outcome: WakeAttemptOutcome.Refused, statusClass: '4xx' },
     { statusCode: 503, outcome: WakeAttemptOutcome.Retry, statusClass: '5xx' },
     { statusCode: null, outcome: WakeAttemptOutcome.Retry, statusClass: 'network' },
-    { statusCode: null, outcome: WakeAttemptOutcome.Retry, statusClass: 'timeout', latencyMs: WAKE_REQUEST_TIMEOUT_MS },
-  ])('classifies status $statusCode as $statusClass', ({ statusCode, outcome, statusClass, latencyMs }) => {
+    { statusCode: null, outcome: WakeAttemptOutcome.Retry, statusClass: 'timeout', timedOut: true },
+  ])('classifies status $statusCode as $statusClass', ({ statusCode, outcome, statusClass, timedOut }) => {
     const { writeDataPoint } = observe({
-      event: eventOf({ statusCode, outcome, latencyMs: latencyMs === undefined ? LATENCY_MS : latencyMs }),
+      event: eventOf({ statusCode, outcome, timedOut: timedOut === true }),
     });
     expect(writeDataPoint.mock.calls[0]![0].blobs[2]).toBe(statusClass);
   });

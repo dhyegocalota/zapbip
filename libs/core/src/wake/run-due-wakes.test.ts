@@ -254,6 +254,49 @@ describe('runDueWakes retries', () => {
   });
 });
 
+describe('runDueWakes backoff per failure kind', () => {
+  const TIMEOUT_ERROR: ScriptedWakeResponse = { statusCode: null, errorName: 'TimeoutError', retryAfterMs: null };
+  const NETWORK_ERROR: ScriptedWakeResponse = { statusCode: null, errorName: 'TypeError', retryAfterMs: null };
+  const BACKOFF_STEPS_MS = [5, 10, 20, 40].map((seconds) => seconds * SECOND_MS);
+
+  test.each([
+    ['500', respond({ statusCode: 500 }), BACKOFF_STEPS_MS],
+    ['network error', NETWORK_ERROR, BACKOFF_STEPS_MS],
+    ['timeout', TIMEOUT_ERROR, BACKOFF_STEPS_MS],
+    ['429 without Retry-After', respond({ statusCode: 429 }), BACKOFF_STEPS_MS],
+    ['503 without Retry-After', respond({ statusCode: 503 }), BACKOFF_STEPS_MS],
+    ['429 with Retry-After 7 s', respond({ statusCode: 429, retryAfterMs: 7 * SECOND_MS }), Array(4).fill(7 * SECOND_MS)],
+    ['503 with Retry-After 9 s', respond({ statusCode: 503, retryAfterMs: 9 * SECOND_MS }), Array(4).fill(9 * SECOND_MS)],
+  ])('%s is due again after the expected delay at every step', async (_name, response, expectedDelaysMs) => {
+    const wakeEnvironment = await armed();
+    enqueue({ wakeEnvironment, responses: Array.from({ length: 5 }, () => response) });
+    await fireAfter({ wakeEnvironment, delayMs: WAKE_DEBOUNCE_MS });
+    const dueDelays: number[] = [];
+    await expectedDelaysMs.reduce<Promise<void>>(async (previous, delayMs) => {
+      await previous;
+      const job = await findJob({ wakeEnvironment });
+      if (job === null) throw new Error('expected a retrying job');
+      dueDelays.push(job.dueAt - wakeEnvironment.environment.clock.now());
+      await fireAfter({ wakeEnvironment, delayMs });
+    }, Promise.resolve());
+    expect(dueDelays).toEqual(expectedDelaysMs);
+  });
+});
+
+describe('runDueWakes timeouts', () => {
+  test.each([
+    ['TimeoutError', true],
+    ['AbortError', true],
+    ['TypeError', false],
+  ])('a transport error %s is observed with timedOut %s', async (errorName, timedOut) => {
+    const wakeEnvironment = await armed();
+    enqueue({ wakeEnvironment, responses: [{ statusCode: null, errorName, retryAfterMs: null }] });
+    await fireAfter({ wakeEnvironment, delayMs: WAKE_DEBOUNCE_MS });
+    const retryEvent = wakeEnvironment.observer.events.find((event) => event.name === WakeLogEventName.Retry);
+    expect(retryEvent).toMatchObject({ statusCode: null, timedOut });
+  });
+});
+
 describe('runDueWakes refusals and the owner notice', () => {
   test.each([301, 302, 400, UNAUTHORIZED, 404, 501])('status %i is refused without retry and tells the owner once', async (statusCode) => {
     const wakeEnvironment = await armed();
@@ -491,7 +534,7 @@ describe('runDueWakes while a request is in flight', () => {
     transport.send = async () => {
       const job = await findJob({ wakeEnvironment });
       leaseUntil = job === null ? null : job.leaseUntil;
-      return { outcome: WakeAttemptOutcome.Delivered, statusCode: OK, retryAfterMs: null };
+      return { outcome: WakeAttemptOutcome.Delivered, statusCode: OK, retryAfterMs: null, timedOut: false };
     };
     await environment.clock.advance({ ms: WAKE_DEBOUNCE_MS });
     await run({ wakeEnvironment });

@@ -116,12 +116,16 @@ describe('assertWakeTarget host forms', () => {
     },
   );
 
-  test.each(['https://evil-api2.cursor.sh/x', 'https://x.api2.cursor.sh/x', 'https://x.api.anthropic.com/x'])(
-    '%s is a generic target and never a pinned provider',
-    (url) => {
-      expect(guard({ url, token: LONG_TOKEN }).provider).toBe(WakeProvider.GenericWebhook);
-    },
-  );
+  test.each([
+    'https://evil-api2.cursor.sh/x',
+    'https://x.api2.cursor.sh/x',
+    'https://x.api.anthropic.com/x',
+    'https://api2.cursor.sh.evil.example/x',
+    'https://api.anthropic.com.evil.example/x',
+    'https://xapi.anthropic.com/x',
+  ])('%s is a generic target and never a pinned provider', (url) => {
+    expect(guard({ url, token: LONG_TOKEN }).provider).toBe(WakeProvider.GenericWebhook);
+  });
 
   test('app.localhost is refused', async () => {
     expect(await rejection({ url: 'https://app.localhost/x', token: LONG_TOKEN })).toEqual({
