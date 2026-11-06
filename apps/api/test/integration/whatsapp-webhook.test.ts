@@ -1,9 +1,10 @@
 import { env, runInDurableObject, SELF } from 'cloudflare:test';
 import { HISTORY_LIMIT, type CoreDependencies } from '@zapbip/core';
-import { MessageDirection, MessageKind } from '@zapbip/types';
+import { MediaSourceKind, MessageDirection, MessageKind, OwnerLocale, SECOND_MS } from '@zapbip/types';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { createApp } from '../../src/app';
-import { WEBHOOK_MAX_BYTES, WEBHOOK_SIGNATURE_HEADER } from '../../src/adapters/whatsapp/whatsapp-constants';
+import { GRAPH_REQUEST_TIMEOUT_MS, WEBHOOK_MAX_BYTES, WEBHOOK_SIGNATURE_HEADER } from '../../src/adapters/whatsapp/whatsapp-constants';
+import { OwnerCopyKey, WHATSAPP_COPY } from '../../src/adapters/whatsapp/whatsapp-copy';
 import { OperatorEvent } from '../../src/adapters/whatsapp/whatsapp-enums';
 import { WHATSAPP_WEBHOOK_PATH } from '../../src/contract/constants';
 import imageFixture from '../fixtures/whatsapp/inbound/image.json';
@@ -25,6 +26,9 @@ const STATUS_BAD_REQUEST = 400;
 const STATUS_UNAUTHORIZED = 401;
 const STATUS_FORBIDDEN = 403;
 const STATUS_PAYLOAD_TOO_LARGE = 413;
+const STATUS_NOT_FOUND = 404;
+const STATUS_FOUND = 302;
+const STATUS_DOWNLOAD_FAILED = 500;
 const STATUS_SERVER_ERROR = 500;
 const WEBHOOK_URL = `${ORIGIN}${WHATSAPP_WEBHOOK_PATH}`;
 const CHUNK_BYTES = 64_000;
@@ -32,6 +36,16 @@ const UNKNOWN_PHONE = '5511900000099';
 const IMAGE_METADATA_PATH = `/${imageFixture.image.id}`;
 const IMAGE_DOWNLOAD_URL = 'https://media.fbsbx.com/image';
 const IMAGE_BYTES = new TextEncoder().encode('image-bytes');
+const WRONG_DIGEST = 'd3Jvbmc=';
+const FOREIGN_HOST = 'evil.example.com';
+const FOREIGN_DOWNLOAD_URL = `https://${FOREIGN_HOST}/image`;
+const USERINFO_TRICK_URL = 'https://lookaside.fbsbx.com@evil.com/x';
+const PATH_TRICK_URL = 'https://evil.com/.fbsbx.com/x';
+const SECURE_PREFIX = 'https://';
+const MEDIA_KEY_PREFIX = 'accounts';
+
+type GraphCall = { url: string; authorization: string | null };
+type DownloadScript = (input: { attempt: number; signal: AbortSignal | null | undefined }) => Response | Promise<Response>;
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -274,22 +288,64 @@ function failFirstCommit(input: { account: SeededAccount }) {
   });
 }
 
-async function imageNotificationOf(input: { account: SeededAccount; id: string }): Promise<object> {
+async function imageNotificationOf(input: { account: SeededAccount; id: string; sha256?: string }): Promise<object> {
   const digest = await crypto.subtle.digest('SHA-256', IMAGE_BYTES);
-  const sha256 = btoa(String.fromCharCode(...new Uint8Array(digest)));
+  const matchingSha256 = btoa(String.fromCharCode(...new Uint8Array(digest)));
+  const sha256 = input.sha256 === undefined ? matchingSha256 : input.sha256;
   return notificationWith({
-    messages: [{ ...imageFixture, from: input.account.phone, id: input.id, image: { ...imageFixture.image, sha256 } }],
+    messages: [
+      { ...imageFixture, from: input.account.phone, id: input.id, timestamp: nowInSeconds(), image: { ...imageFixture.image, sha256 } },
+    ],
   });
 }
 
-function serveImageFromGraph(): void {
+function nowInSeconds(): string {
+  return String(Math.floor(Date.now() / SECOND_MS));
+}
+
+function respondWithImage(): Response {
+  return new Response(IMAGE_BYTES);
+}
+
+function serveMediaFromGraph(input: { metadataUrl?: string; download?: DownloadScript } = {}): GraphCall[] {
+  const { metadataUrl = IMAGE_DOWNLOAD_URL, download = respondWithImage } = input;
+  const calls: GraphCall[] = [];
   const passthrough = globalThis.fetch.bind(globalThis);
   vi.spyOn(globalThis, 'fetch').mockImplementation(async (request, init) => {
     const url = String(request instanceof Request ? request.url : request);
-    if (url.endsWith(IMAGE_METADATA_PATH)) return Response.json({ url: IMAGE_DOWNLOAD_URL, file_size: IMAGE_BYTES.byteLength });
-    if (url === IMAGE_DOWNLOAD_URL) return new Response(IMAGE_BYTES);
-    return passthrough(request, init);
+    if (url.endsWith(IMAGE_METADATA_PATH)) return Response.json({ url: metadataUrl, file_size: IMAGE_BYTES.byteLength });
+    if (!url.startsWith(SECURE_PREFIX)) return passthrough(request, init);
+    calls.push({ url, authorization: new Headers(init?.headers).get('authorization') });
+    return download({ attempt: calls.length, signal: init?.signal });
   });
+  return calls;
+}
+
+function neverAnswer(input: { signal: AbortSignal | null | undefined }): Promise<Response> {
+  return new Promise((_resolve, reject) => {
+    input.signal?.addEventListener('abort', () => reject(new Error('aborted')));
+  });
+}
+
+function hostsOf(input: { calls: GraphCall[] }): string[] {
+  return input.calls.map((call) => new URL(call.url).hostname);
+}
+
+async function imageOf(input: { account: SeededAccount }) {
+  const history = await historyOf({ account: input.account });
+  const images = history.flatMap((message) => (message.kind === MessageKind.Image ? [message] : []));
+  expect(images).toHaveLength(1);
+  return images[0]!;
+}
+
+async function storedKeysOf(input: { account: SeededAccount }): Promise<string[]> {
+  const listed = await env.MEDIA.list({ prefix: `${MEDIA_KEY_PREFIX}/${input.account.accountId}/` });
+  return listed.objects.map((object) => object.key);
+}
+
+async function screenTextsOf(input: { account: SeededAccount }): Promise<string[]> {
+  const screen = await inboxOf({ accountId: input.account.accountId }).readScreen();
+  return screen.map((entry) => entry.text);
 }
 
 function countOwnerMessages(input: { account: SeededAccount; kind: MessageKind }): Promise<number> {
@@ -322,7 +378,7 @@ describe('webhook failures', () => {
 
   test('WI-34 answers 500 when the R2 put fails, and the retry stores one message', async () => {
     spyOnLogs();
-    serveImageFromGraph();
+    serveMediaFromGraph();
     const account = await seedAccount({ agent: 'alpha' });
     vi.spyOn(env.MEDIA, 'put').mockRejectedValueOnce(new Error('injected R2 failure'));
     const notification = await imageNotificationOf({ account, id: 'wamid.WI34' });
@@ -332,5 +388,109 @@ describe('webhook failures', () => {
     const retried = await postNotificationWithAccessToken({ notification });
     expect(retried.status).toBe(STATUS_OK);
     expect(await countOwnerMessages({ account, kind: MessageKind.Image })).toBe(1);
+  });
+});
+
+describe('webhook inbound media', () => {
+  test('WI-35 stores an image whose digest matches, at the account prefix, with its caption', async () => {
+    spyOnLogs();
+    serveMediaFromGraph();
+    const account = await seedAccount({ agent: 'alpha' });
+    const response = await postNotificationWithAccessToken({ notification: await imageNotificationOf({ account, id: 'wamid.WI35' }) });
+    expect(response.status).toBe(STATUS_OK);
+    const image = await imageOf({ account });
+    if (image.source.kind !== MediaSourceKind.Stored) throw new Error('the image is not stored');
+    const key = `${MEDIA_KEY_PREFIX}/${account.accountId}/media/${image.source.mediaId}`;
+    expect(image.caption).toBe('Foto');
+    expect(image.source.mediaId).toMatch(/^med_/);
+    expect(await storedKeysOf({ account })).toEqual([key]);
+    expect((await env.MEDIA.head(key))?.size).toBe(IMAGE_BYTES.byteLength);
+  });
+
+  test('WI-36 stores an image whose digest differs as unavailable, deletes the object and tells the owner', async () => {
+    spyOnLogs();
+    serveMediaFromGraph();
+    const account = await seedAccount({ agent: 'alpha' });
+    const notification = await imageNotificationOf({ account, id: 'wamid.WI36', sha256: WRONG_DIGEST });
+    const response = await postNotificationWithAccessToken({ notification });
+    expect(response.status).toBe(STATUS_OK);
+    expect((await imageOf({ account })).source.kind).toBe(MediaSourceKind.Unavailable);
+    expect(await storedKeysOf({ account })).toEqual([]);
+    expect(await screenTextsOf({ account })).toContain(WHATSAPP_COPY[OwnerLocale.PortugueseBrazil][OwnerCopyKey.MediaUnavailable]);
+  });
+
+  test('WI-37 refreshes the metadata after a 404 and stores the second download', async () => {
+    spyOnLogs();
+    const calls = serveMediaFromGraph({
+      download: ({ attempt }) => (attempt === 1 ? new Response(null, { status: STATUS_NOT_FOUND }) : respondWithImage()),
+    });
+    const account = await seedAccount({ agent: 'alpha' });
+    const response = await postNotificationWithAccessToken({ notification: await imageNotificationOf({ account, id: 'wamid.WI37' }) });
+    expect(response.status).toBe(STATUS_OK);
+    expect((await imageOf({ account })).source.kind).toBe(MediaSourceKind.Stored);
+    expect(calls).toHaveLength(2);
+  });
+
+  test('WI-38 stores the image as unavailable when the download answers 404 twice, without a 500', async () => {
+    spyOnLogs();
+    serveMediaFromGraph({ download: () => new Response(null, { status: STATUS_NOT_FOUND }) });
+    const account = await seedAccount({ agent: 'alpha' });
+    const response = await postNotificationWithAccessToken({ notification: await imageNotificationOf({ account, id: 'wamid.WI38' }) });
+    expect(response.status).toBe(STATUS_OK);
+    expect((await imageOf({ account })).source.kind).toBe(MediaSourceKind.Unavailable);
+  });
+
+  test('WI-39 answers 500 when the download fails and stores once after the fake recovers', async () => {
+    spyOnLogs();
+    let isHealthy = false;
+    serveMediaFromGraph({ download: () => (isHealthy ? respondWithImage() : new Response(null, { status: STATUS_DOWNLOAD_FAILED })) });
+    const account = await seedAccount({ agent: 'alpha' });
+    const notification = await imageNotificationOf({ account, id: 'wamid.WI39' });
+    const first = await postNotificationWithAccessToken({ notification });
+    expect(first.status).toBe(STATUS_SERVER_ERROR);
+    expect(await countOwnerMessages({ account, kind: MessageKind.Image })).toBe(0);
+    isHealthy = true;
+    const retried = await postNotificationWithAccessToken({ notification });
+    expect(retried.status).toBe(STATUS_OK);
+    expect(await countOwnerMessages({ account, kind: MessageKind.Image })).toBe(1);
+  });
+
+  test('WI-40 answers 500 when the download never answers within the request timeout', async () => {
+    spyOnLogs();
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    serveMediaFromGraph({ download: neverAnswer });
+    const account = await seedAccount({ agent: 'alpha' });
+    const pending = postNotificationWithAccessToken({ notification: await imageNotificationOf({ account, id: 'wamid.WI40' }) });
+    await vi.advanceTimersByTimeAsync(GRAPH_REQUEST_TIMEOUT_MS);
+    const response = await pending;
+    vi.useRealTimers();
+    expect(response.status).toBe(STATUS_SERVER_ERROR);
+    expect(await countOwnerMessages({ account, kind: MessageKind.Image })).toBe(0);
+  });
+
+  test('WI-41 stores the image as unavailable when the download redirects, and never follows to the foreign host', async () => {
+    spyOnLogs();
+    const calls = serveMediaFromGraph({
+      download: () => new Response(null, { status: STATUS_FOUND, headers: { location: FOREIGN_DOWNLOAD_URL } }),
+    });
+    const account = await seedAccount({ agent: 'alpha' });
+    const response = await postNotificationWithAccessToken({ notification: await imageNotificationOf({ account, id: 'wamid.WI41' }) });
+    expect(response.status).toBe(STATUS_OK);
+    expect((await imageOf({ account })).source.kind).toBe(MediaSourceKind.Unavailable);
+    expect(hostsOf({ calls })).not.toContain(FOREIGN_HOST);
+  });
+
+  test.each([
+    ['WI-42', USERINFO_TRICK_URL],
+    ['WI-43', PATH_TRICK_URL],
+  ])('%s stores the image as unavailable and sends no request to the lookalike host', async (caseName, metadataUrl) => {
+    spyOnLogs();
+    const calls = serveMediaFromGraph({ metadataUrl });
+    const account = await seedAccount({ agent: 'alpha' });
+    const notification = await imageNotificationOf({ account, id: `wamid.${caseName}` });
+    const response = await postNotificationWithAccessToken({ notification });
+    expect(response.status).toBe(STATUS_OK);
+    expect((await imageOf({ account })).source.kind).toBe(MediaSourceKind.Unavailable);
+    expect(calls).toEqual([]);
   });
 });
