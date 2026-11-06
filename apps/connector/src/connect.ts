@@ -18,7 +18,7 @@ export async function probeConnectorLink(input: { probeLink: string }): Promise<
   throw new Error('probeConnectorLink is not implemented');
 }
 
-export function parseServerFrame(input: { text: string; byteLength: number }): ServerFrameParse {
+export function parseServerFrame(input: { text: string; byteLength: number; isBinary: boolean }): ServerFrameParse {
   void input;
   throw new Error('parseServerFrame is not implemented');
 }
