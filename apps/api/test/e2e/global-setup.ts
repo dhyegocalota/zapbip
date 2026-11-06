@@ -66,9 +66,8 @@ async function seedConnections(input: { phone: string; agents: string[]; persist
   return seedOutputSchema.parse(JSON.parse(seeded.stdout)).connections;
 }
 
-async function seedWakeAccount(input: { phone: string; agent?: string; persistArguments: string[] }): Promise<WakeAccount> {
-  const agent = input.agent === undefined ? WAKE_AGENT : input.agent;
-  const [connection] = await seedConnections({ phone: input.phone, agents: [agent], persistArguments: input.persistArguments });
+async function seedWakeAccount(input: { phone: string; agent: string; persistArguments: string[] }): Promise<WakeAccount> {
+  const [connection] = await seedConnections({ phone: input.phone, agents: [input.agent], persistArguments: input.persistArguments });
   if (!connection) throw new Error(`no connection seeded for ${input.phone}`);
   return { phone: input.phone, agent: connection.agent, secret: connection.secret };
 }
@@ -110,7 +109,7 @@ export default async function setup(project: TestProject): Promise<() => Promise
   const connections = await seedConnections({ phone: SEED_PHONE, agents: SEED_AGENTS, persistArguments });
   const secondConnections = await seedConnections({ phone: SECOND_SEED_PHONE, agents: SECOND_SEED_AGENTS, persistArguments });
   const wakeAccounts = await WAKE_ACCOUNT_PHONES.reduce<Promise<WakeAccount[]>>(
-    async (seededBefore, phone) => [...(await seededBefore), await seedWakeAccount({ phone, persistArguments })],
+    async (seededBefore, phone) => [...(await seededBefore), await seedWakeAccount({ phone, agent: WAKE_AGENT, persistArguments })],
     Promise.resolve([]),
   );
   const scheduledAccounts = await SCHEDULED_ACCOUNT_PHONES.reduce<Promise<WakeAccount[]>>(

@@ -214,12 +214,12 @@ export function createInMemoryWakeRepository(input: { clock: Clock }): WakeRepos
         }),
     recordStaleNoticeFailure: async ({ agent, failedAt }) => {
       const pollState = pollStates.get(agent);
-      if (pollState === undefined) throw new Error(`no poll state for ${agent}`);
+      if (pollState === undefined) return;
       pollStates.set(agent, { ...pollState, lastStaleNoticeAt: failedAt, staleNoticeFailures: pollState.staleNoticeFailures + 1 });
     },
     markStaleNotified: async ({ agent, noticedAt }) => {
       const pollState = pollStates.get(agent);
-      if (pollState === undefined) throw new Error(`no poll state for ${agent}`);
+      if (pollState === undefined) return;
       pollStates.set(agent, { ...pollState, pollerStaleNotified: true, lastStaleNoticeAt: noticedAt, staleNoticeFailures: 0 });
     },
     findLocalRestore: async ({ agent }) => {

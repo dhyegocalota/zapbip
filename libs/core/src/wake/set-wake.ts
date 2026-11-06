@@ -11,13 +11,13 @@ async function lastDeliveredAtOf(input: { setWake: SetWakeInput }): Promise<numb
   return previous === null ? null : previous.lastDeliveredAt;
 }
 
-function assertNoStandby(input: SetWakeInput): void {
+function assertSettingWithoutStandby(input: SetWakeInput): void {
   assertWakeSetting({ setting: input.setting, caller: input.connection.agent, standby: null });
 }
 
 async function saveWebhook(input: SetWakeInput): Promise<SetWakeResult> {
   const { wake, connection, setting, publicHost } = input;
-  assertNoStandby(input);
+  assertSettingWithoutStandby(input);
   const { url, token } = setting;
   if (url === null) throw invalidWakeField({ field: WakeTargetField.Url });
   if (token === null) throw invalidWakeField({ field: WakeTargetField.Token });
@@ -47,7 +47,7 @@ async function saveWebhook(input: SetWakeInput): Promise<SetWakeResult> {
 
 async function clearWebhook(input: SetWakeInput): Promise<SetWakeResult> {
   const { wake, connection } = input;
-  assertNoStandby(input);
+  assertSettingWithoutStandby(input);
   await wake.repository.clearWake({ agent: connection.agent });
   return { status: SetWakeStatus.Saved, wakeMode: WakeMode.None, effectiveRung: WakeRung.Inbox, provider: null };
 }
@@ -89,7 +89,7 @@ async function saveStandby(input: SetWakeInput): Promise<SetWakeResult> {
 
 async function saveLocal(input: SetWakeInput): Promise<SetWakeResult> {
   const { wake, connection } = input;
-  assertNoStandby(input);
+  assertSettingWithoutStandby(input);
   const current = await wake.repository.findWake({ agent: connection.agent });
   if (current === null) throw new Error(`no wake setting for ${connection.agent}`);
   await wake.repository.saveWake({ wake: { ...current, mode: WakeMode.Local, intervalMinutes: null, standbyAgent: null } });

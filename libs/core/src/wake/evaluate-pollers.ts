@@ -1,6 +1,6 @@
-import { ChannelErrorKind, IdPrefix, MessageKind, WakeLogEventName } from '@zapbip/types';
-import { InboxError } from '../inbox/errors';
+import { IdPrefix, MessageKind, WakeLogEventName } from '@zapbip/types';
 import { deliverToOwner } from '../inbox/use-cases/deliver-to-owner';
+import { errorCodeOf } from './error-code-of';
 import { isStaleNoticeDue, pollerDeadline } from './poller';
 import { staleNoticeCopy } from './wake-copy';
 import type { WakeContext } from './wake-ports';
@@ -50,7 +50,7 @@ async function noticeStaleOnce(input: StaleWake): Promise<void> {
   try {
     await noticeStale(input);
   } catch (error) {
-    const errorCode = error instanceof InboxError ? error.code : ChannelErrorKind.Unknown;
+    const errorCode = errorCodeOf({ error });
     observeNotice({ ...input, name: WakeLogEventName.NoticeFailed, errorCode });
     await input.wake.repository.recordStaleNoticeFailure({ agent: input.scheduledWake.agent, failedAt: input.now });
   }

@@ -178,13 +178,11 @@ export function createSqliteWakeRepository(input: { storage: DurableObjectStorag
     },
 
     async recordStaleNoticeFailure({ agent, failedAt }) {
-      const cursor = sql.exec(RECORD_STALE_NOTICE_FAILURE_STATEMENT, failedAt, agent);
-      if (cursor.rowsWritten === 0) throw new Error(`no agent_wake row for ${agent}`);
+      sql.exec(RECORD_STALE_NOTICE_FAILURE_STATEMENT, failedAt, agent);
     },
 
     async markStaleNotified({ agent, noticedAt }) {
-      const cursor = sql.exec(MARK_STALE_NOTIFIED_STATEMENT, noticedAt, agent);
-      if (cursor.rowsWritten === 0) throw new Error(`no agent_wake row for ${agent}`);
+      sql.exec(MARK_STALE_NOTIFIED_STATEMENT, noticedAt, agent);
     },
 
     async findLocalRestore({ agent }) {

@@ -14,9 +14,20 @@ export function observeUnsent(input: {
   stored: StoredWake | null;
   agent: AgentName;
   attempt: number;
+  errorCode?: string;
 }): void {
-  const { observer, name, stored, agent, attempt } = input;
+  const { observer, name, stored, agent, attempt, errorCode } = input;
   observer.observe({
-    event: { name, provider: providerOf({ stored }), agent, attempt, statusCode: null, latencyMs: null, outcome: null, timedOut: false },
+    event: {
+      name,
+      provider: providerOf({ stored }),
+      agent,
+      attempt,
+      statusCode: null,
+      latencyMs: null,
+      outcome: null,
+      timedOut: false,
+      errorCode,
+    },
   });
 }

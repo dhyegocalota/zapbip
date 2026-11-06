@@ -70,7 +70,7 @@ import { LogEvent, type LogFields } from '../contract/log';
 import { logEvent } from '../log';
 import { AccountTombstoned } from './account-tombstoned';
 import { logFieldsOfAccountResult } from './account-log';
-import { reviveAgentName, revokeAgentState } from './agent-revocation';
+import { reviveAgentName, isAgentRevoked, revokeAgentState } from './agent-revocation';
 import { nextAlarmAt } from './alarm-time';
 import { isAccountActive, isConnectionAdmitted } from './connection-admission';
 import {
@@ -316,7 +316,9 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
   }): Promise<CallOutcome<Value>> {
     this.assertLive();
     if (input.connection !== undefined) {
-      const isAdmitted = await isConnectionAdmitted({ database: this.env.CONNECTIONS, connection: input.connection });
+      const isAdmittedByDirectory = await isConnectionAdmitted({ database: this.env.CONNECTIONS, connection: input.connection });
+      const isRevokedHere = isAgentRevoked({ storage: this.ctx.storage, agent: input.connection.agent });
+      const isAdmitted = isAdmittedByDirectory && !isRevokedHere;
       if (!isAdmitted) {
         this.dependencies.waiters.cancelAgent({ agent: input.connection.agent });
         return { ok: false, errorCode: InboxErrorCode.NotFound, message: CONNECTION_NOT_ACTIVE_MESSAGE };

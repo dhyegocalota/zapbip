@@ -8,6 +8,8 @@ const REOPEN_HANDOFFS_STATEMENT = `UPDATE inbox_messages SET read_at = NULL, han
   WHERE handed_to = ?1 AND EXISTS (
     SELECT 1 FROM inbox_messages AS copy WHERE copy.agent = ?1 AND copy.origin_message_id = inbox_messages.id AND copy.read_at IS NULL
   )`;
+const DROP_STANDBY_COPIES_STATEMENT = 'DELETE FROM inbox_messages WHERE agent = ? AND origin_message_id IS NOT NULL AND read_at IS NULL';
+const SELECT_REVOKED_STATEMENT = 'SELECT agent FROM revoked_agents WHERE agent = ?';
 const CLOSE_QUESTIONS_STATEMENT = 'DELETE FROM questions WHERE agent = ? AND answer IS NULL';
 const MARK_REVOKED_STATEMENT =
   'INSERT INTO revoked_agents (agent, revoked_at) VALUES (?, ?) ON CONFLICT (agent) DO UPDATE SET revoked_at = excluded.revoked_at';
@@ -19,12 +21,17 @@ const FORGET_AGENT_STATEMENT = 'DELETE FROM agents WHERE agent = ?';
 export function revokeAgentState(input: { storage: DurableObjectStorage; agent: string; revokedAt: number }): void {
   input.storage.transactionSync(() => {
     input.storage.sql.exec(REOPEN_HANDOFFS_STATEMENT, input.agent);
+    input.storage.sql.exec(DROP_STANDBY_COPIES_STATEMENT, input.agent);
     input.storage.sql.exec(RELEASE_STANDBY_STATEMENT, WakeMode.None, input.revokedAt, WakeMode.Standby, input.agent);
     input.storage.sql.exec(CLEAR_WAKE_STATEMENT, input.agent);
     input.storage.sql.exec(CLEAR_WAKE_JOB_STATEMENT, input.agent);
     input.storage.sql.exec(CLOSE_QUESTIONS_STATEMENT, input.agent);
     input.storage.sql.exec(MARK_REVOKED_STATEMENT, input.agent, input.revokedAt);
   });
+}
+
+export function isAgentRevoked(input: { storage: DurableObjectStorage; agent: string }): boolean {
+  return input.storage.sql.exec(SELECT_REVOKED_STATEMENT, input.agent).toArray().length > 0;
 }
 
 export function reviveAgentName(input: { storage: DurableObjectStorage; agent: string }): void {
