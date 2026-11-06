@@ -1,12 +1,4 @@
-import {
-  MediaOrigin,
-  MediaSourceKind,
-  MessageDirection,
-  MessageKind,
-  RoutingRule,
-  type ForwardedKind,
-  type OwnerLocale,
-} from '@zapbip/types';
+import { ForwardedKind, MediaOrigin, MediaSourceKind, MessageDirection, MessageKind, RoutingRule, type OwnerLocale } from '@zapbip/types';
 import { MEDIA_MAX_BYTES, MEDIA_RETENTION_MS, NOTICE_QUICK_REPLY_ID, WINDOW_MS } from '../constants';
 import type { AgentName } from '../connection';
 import type { RoutingList, StoredMedia } from '../inbox-records';
@@ -158,6 +150,7 @@ async function placeContent(input: Arrival & { content: MessageContent }): Promi
     repository.findRoutingList(),
   ]);
   const routingListOpen = routingList !== null;
+  const isOwnWords = ownerMessage.forwarded === ForwardedKind.None;
   const decision = routeOwnerMessage({
     text: textOf(content),
     referencedMessage: reference.message,
@@ -177,7 +170,7 @@ async function placeContent(input: Arrival & { content: MessageContent }): Promi
     content: routedContent,
     replyToMessageId: ownerMessage.replyToMessageId,
     decision,
-    answer: pendingAnswerOf({ content: routedContent, answersQuestionId: decision.answersQuestionId }),
+    answer: isOwnWords ? pendingAnswerOf({ content: routedContent, answersQuestionId: decision.answersQuestionId }) : null,
     prompt: { listedAgents, announcesNoAgents, reminderFor },
     isRoutedNowhere: content.kind === MessageKind.Reaction && decision.agent === null,
   };
