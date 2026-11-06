@@ -27,12 +27,15 @@ async function saveWebhook(input: SetWakeInput): Promise<SetWakeResult> {
     target: { provider: target.provider, host: new URL(url).hostname, sealedTarget, keyVersion: WAKE_SEALED_KEY_VERSION },
     status: WakeStatus.Active,
     lastDeliveredAt: await lastDeliveredAtOf({ setWake: input }),
+    intervalMinutes: null,
+    standbyAgent: null,
+    ownerLocale: connection.ownerLocale,
   };
   await wake.repository.saveWake({ wake: storedWake });
   return {
     status: SetWakeStatus.Saved,
     wakeMode: WakeMode.Webhook,
-    effectiveRung: wakeRungFor({ mode: WakeMode.Webhook }),
+    effectiveRung: wakeRungFor({ wake: storedWake, pollState: null, standby: null, now: input.dependencies.clock.now() }),
     provider: target.provider,
   };
 }
@@ -45,15 +48,35 @@ async function clearWebhook(input: SetWakeInput): Promise<SetWakeResult> {
     target: null,
     status: WakeStatus.Active,
     lastDeliveredAt: await lastDeliveredAtOf({ setWake: input }),
+    intervalMinutes: null,
+    standbyAgent: null,
+    ownerLocale: connection.ownerLocale,
   };
   await wake.repository.saveWake({ wake: storedWake });
   await wake.repository.deleteJob({ agent: connection.agent });
-  return { status: SetWakeStatus.Saved, wakeMode: WakeMode.None, effectiveRung: wakeRungFor({ mode: WakeMode.None }), provider: null };
+  return {
+    status: SetWakeStatus.Saved,
+    wakeMode: WakeMode.None,
+    effectiveRung: wakeRungFor({ wake: storedWake, pollState: null, standby: null, now: input.dependencies.clock.now() }),
+    provider: null,
+  };
+}
+
+async function saveScheduled(input: SetWakeInput): Promise<SetWakeResult> {
+  void input;
+  throw new Error('saveScheduled is not implemented');
+}
+
+async function saveStandby(input: SetWakeInput): Promise<SetWakeResult> {
+  void input;
+  throw new Error('saveStandby is not implemented');
 }
 
 const WAKE_SETTERS: Record<WakeMode, (input: SetWakeInput) => Promise<SetWakeResult>> = {
   [WakeMode.None]: clearWebhook,
   [WakeMode.Webhook]: saveWebhook,
+  [WakeMode.Scheduled]: saveScheduled,
+  [WakeMode.Standby]: saveStandby,
 };
 
 export function setWake(input: SetWakeInput): Promise<SetWakeResult> {

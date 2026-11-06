@@ -65,6 +65,8 @@ function toMessage(row: MessageRow): Message {
     replyToMessageId: row.reply_to,
     delivery: row.delivery,
     readByAgent: row.read_at !== null,
+    handedTo: null,
+    originMessageId: null,
     ...content,
   };
 }
@@ -353,6 +355,13 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
         RECEIPT_RETENTION_MS,
       );
       return row === null ? null : row.due;
+    },
+
+    async insertHandoff({ copy, primaryAgent, handedTo }) {
+      void copy;
+      void primaryAgent;
+      void handedTo;
+      throw new Error('insertHandoff is not implemented');
     },
   };
 }

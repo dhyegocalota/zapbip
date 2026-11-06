@@ -270,6 +270,8 @@ async function storePlacement(input: Arrival & { content: OwnerInboundContent; p
       replyToMessageId: placement.replyToMessageId,
       delivery: null,
       readByAgent: false,
+      handedTo: null,
+      originMessageId: null,
       ...placement.content,
     },
   });

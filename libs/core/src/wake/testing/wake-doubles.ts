@@ -145,6 +145,23 @@ export function createInMemoryWakeRepository(): WakeRepository {
       const dueTimes = [...jobs.values()].map(effectiveDueAt);
       return dueTimes.length === 0 ? null : Math.min(...dueTimes);
     },
+    findPollState: async ({ agent }) => {
+      void agent;
+      throw new Error('findPollState is not implemented');
+    },
+    recordPoll: async ({ agent, polledAt, ownerLocale }) => {
+      void agent;
+      void polledAt;
+      void ownerLocale;
+      throw new Error('recordPoll is not implemented');
+    },
+    listScheduledWakes: async () => {
+      throw new Error('listScheduledWakes is not implemented');
+    },
+    markStaleNotified: async ({ agent }) => {
+      void agent;
+      throw new Error('markStaleNotified is not implemented');
+    },
   };
 }
 

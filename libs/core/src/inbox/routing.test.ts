@@ -15,6 +15,8 @@ function agentMessage(input: { messageId: string; agent: string | null }): Messa
     replyToMessageId: null,
     delivery: DeliveryState.Sent,
     readByAgent: true,
+    handedTo: null,
+    originMessageId: null,
     kind: MessageKind.Text,
     text: 'hello',
   };

@@ -10,3 +10,6 @@ export * from './sign-wake-request';
 export * from './set-wake';
 export * from './schedule-wake';
 export * from './run-due-wakes';
+export * from './poller';
+export * from './poll-inbox';
+export * from './evaluate-pollers';

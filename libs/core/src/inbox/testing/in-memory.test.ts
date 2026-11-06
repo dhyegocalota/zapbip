@@ -42,6 +42,8 @@ describe('in-memory repository', () => {
           replyToMessageId: null,
           delivery: DeliveryState.Sent,
           readByAgent: true,
+          handedTo: null,
+          originMessageId: null,
           ...content,
         };
         await environment.repository.insertMessage({ message });

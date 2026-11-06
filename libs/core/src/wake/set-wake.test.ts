@@ -80,7 +80,7 @@ describe('setWake', () => {
       setWake({
         ...wakeEnvironment.context,
         connection: connectionOf({ agent: AGENT }),
-        setting: { mode: WakeMode.Webhook, ...fields },
+        setting: { mode: WakeMode.Webhook, intervalMinutes: null, standbyAgent: null, ...fields },
         publicHost: PUBLIC_HOST,
       }),
     );
@@ -108,7 +108,7 @@ describe('setWake', () => {
     const result = await setWake({
       ...wakeEnvironment.context,
       connection: connectionOf({ agent: AGENT }),
-      setting: { mode: WakeMode.None, url: null, token: null },
+      setting: { mode: WakeMode.None, url: null, token: null, intervalMinutes: null, standbyAgent: null },
       publicHost: PUBLIC_HOST,
     });
     expect(result).toEqual({ status: SetWakeStatus.Saved, wakeMode: WakeMode.None, effectiveRung: WakeRung.Inbox, provider: null });

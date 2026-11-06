@@ -1,7 +1,13 @@
-import type { WakeAttemptOutcome, WakeMode, WakeProvider, WakeStatus } from '@zapbip/types';
+import type { OwnerLocale, WakeAttemptOutcome, WakeMode, WakeProvider, WakeStatus } from '@zapbip/types';
 import type { AgentName } from '../inbox/connection';
 
-export type WakeSettingInput = { mode: WakeMode; url: string | null; token: string | null };
+export type WakeSettingInput = {
+  mode: WakeMode;
+  url: string | null;
+  token: string | null;
+  intervalMinutes: number | null;
+  standbyAgent: AgentName | null;
+};
 
 export type WakeTarget = { provider: WakeProvider; url: string; token: string };
 
@@ -13,7 +19,18 @@ export type StoredWake = {
   target: StoredWakeTarget | null;
   status: WakeStatus;
   lastDeliveredAt: number | null;
+  intervalMinutes: number | null;
+  standbyAgent: AgentName | null;
+  ownerLocale: OwnerLocale | null;
 };
+
+export type PollState = {
+  lastPolledAt: number;
+  hasPolled: boolean;
+  pollerStaleNotified: boolean;
+};
+
+export type ScheduledWake = StoredWake & PollState;
 
 export type WakeJob = {
   agent: AgentName;
@@ -23,3 +40,8 @@ export type WakeJob = {
   rewake: boolean;
   lastOutcome: WakeAttemptOutcome | null;
 };
+
+export function assertWakeSetting(input: { setting: WakeSettingInput; caller: AgentName; standby: StoredWake | null }): void {
+  void input;
+  throw new Error('assertWakeSetting is not implemented');
+}

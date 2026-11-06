@@ -15,6 +15,7 @@ import {
 } from '@zapbip/types';
 
 const nullableString = z.string().nullable().default(null);
+const nullableNumber = z.number().nullable().default(null);
 
 export const sendableMediaKind = z.enum([
   MessageKind.Image,
@@ -148,6 +149,8 @@ export const setWakeInputShape = {
   mode: z.enum(WakeMode),
   url: nullableString,
   token: nullableString,
+  interval_minutes: nullableNumber,
+  standby_agent: nullableString,
 };
 
 export const setWakeOutputShape = {

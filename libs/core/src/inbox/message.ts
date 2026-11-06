@@ -44,6 +44,13 @@ export type MessageEnvelope = {
   replyToMessageId: string | null;
   delivery: DeliveryState | null;
   readByAgent: boolean;
+  handedTo: AgentName | null;
+  originMessageId: string | null;
 };
 
 export type Message = MessageEnvelope & MessageContent;
+
+export function ownerMessageIdOf(input: { message: Message }): string {
+  void input;
+  throw new Error('ownerMessageIdOf is not implemented');
+}

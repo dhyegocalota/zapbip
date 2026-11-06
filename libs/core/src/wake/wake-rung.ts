@@ -1,10 +1,8 @@
 import { WakeMode, WakeRung } from '@zapbip/types';
+import type { PollState, StoredWake } from './wake-setting';
 
-const RUNG_BY_MODE: Record<WakeMode, WakeRung> = {
-  [WakeMode.None]: WakeRung.Inbox,
-  [WakeMode.Webhook]: WakeRung.Webhook,
-};
-
-export function wakeRungFor(input: { mode: WakeMode }): WakeRung {
-  return RUNG_BY_MODE[input.mode];
+export function wakeRungFor(input: { wake: StoredWake; pollState: PollState | null; standby: StoredWake | null; now: number }): WakeRung {
+  if (input.wake.mode === WakeMode.None) return WakeRung.Inbox;
+  if (input.wake.mode === WakeMode.Webhook) return WakeRung.Webhook;
+  throw new Error('wakeRungFor is not implemented');
 }

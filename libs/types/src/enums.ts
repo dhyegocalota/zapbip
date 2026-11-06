@@ -64,6 +64,14 @@ export enum InboxCopyKey {
 
 export enum WakeCopyKey {
   WakeFailed = 'wake_failed',
+  ExpectedDelayNote = 'expected_delay_note',
+  StaleNotice = 'stale_notice',
+  CadenceHourly = 'cadence_hourly',
+  CadenceHours = 'cadence_hours',
+  CadenceMinutes = 'cadence_minutes',
+  ElapsedMinutes = 'elapsed_minutes',
+  ElapsedHours = 'elapsed_hours',
+  NeverPolled = 'never_polled',
 }
 
 export enum OptionRender {
@@ -95,16 +103,21 @@ export enum WakeOutcome {
 
 export enum AgentWakeReason {
   MessageWaiting = 'message_waiting',
+  StandbyFor = 'standby_for',
 }
 
 export enum WakeMode {
   None = 'none',
   Webhook = 'webhook',
+  Scheduled = 'scheduled',
+  Standby = 'standby',
 }
 
 export enum WakeRung {
   Inbox = 'inbox',
   Webhook = 'webhook',
+  Scheduled = 'scheduled',
+  Standby = 'standby',
 }
 
 export enum WakeAttemptOutcome {

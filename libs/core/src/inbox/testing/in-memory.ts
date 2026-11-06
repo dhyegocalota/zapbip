@@ -146,6 +146,12 @@ function createInMemoryRepository(): InboxRepository {
     deleteMedia: async ({ mediaIds }) => {
       mediaIds.forEach((mediaId) => media.delete(mediaId));
     },
+    insertHandoff: async ({ copy, primaryAgent, handedTo }) => {
+      void copy;
+      void primaryAgent;
+      void handedTo;
+      throw new Error('insertHandoff is not implemented');
+    },
     findNextExpiry: async () => {
       const dueTimes = [
         ...[...media.values()].flatMap((stored) => [stored.expiresAt, stored.retentionUntil]),
