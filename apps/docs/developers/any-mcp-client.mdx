@@ -1,22 +1,24 @@
 ---
 title: Connect any MCP client
-description: The URL, the Bearer alternative and the tools.
+description: The connection URL, the Bearer alternative and the tools.
 ---
 
-zapbip speaks MCP over streamable HTTP. Any client that supports it can connect.
+zapbip speaks MCP over streamable HTTP. Any client that supports it can connect with the connection URL that zapbip gives your agent.
 
-## The URL
+## The connection URL
 
 ```text
-http://localhost:8787/c/<secret>/mcp
+https://<zapbip-host>/c/<secret>/mcp
 ```
+
+The secret in the URL is the connection. Keep it private.
 
 ## The Bearer alternative
 
 For clients that cannot hide a secret in a URL, use `/mcp` and send the secret as a header:
 
 ```text
-POST http://localhost:8787/mcp
+POST https://<zapbip-host>/mcp
 Authorization: Bearer <secret>
 ```
 

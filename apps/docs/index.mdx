@@ -3,6 +3,8 @@ title: Overview
 description: Your AI, in your WhatsApp.
 ---
 
+import { Chat } from '/snippets/chat.jsx';
+
 ## Why zapbip exists
 
 You use AI to research, plan and build. But when it needs a decision, or finishes something that took a while, you are not looking at the screen. So it waits, or it guesses.
@@ -13,72 +15,63 @@ You already live on WhatsApp. zapbip puts your AI there: it messages you, asks w
 
 <CardGroup cols={2}>
   <Card title="Research finished" icon="file-pdf">
-    ```text
-    ChatGPT  Your research on e-bikes is
-             ready. Here is the summary.
-             [summary.pdf]
-    you      Thanks, perfect.
-    ```
+    <Chat messages={[
+      { name: 'ChatGPT', text: 'Your research on e-bikes is ready. Summary attached. 📎 summary.pdf' },
+      { you: true, text: 'Thanks, perfect.' },
+    ]} />
   </Card>
   <Card title="A decision on your trip" icon="plane">
-    ```text
-    Claude   Which hotel for Lisbon?
-             [ Alfama ] [ Baixa ] [ Belém ]
-    you      (taps Baixa)
-    Claude   Booking Baixa for 3 nights.
-    ```
+    <Chat messages={[
+      { name: 'Claude', text: 'Which hotel for Lisbon?', options: ['Alfama', 'Baixa', 'Belém'] },
+      { you: true, text: 'Baixa' },
+      { name: 'Claude', text: 'Booking Baixa for 3 nights.' },
+    ]} />
   </Card>
   <Card title="Remind me, check in" icon="bell">
-    ```text
-    you      Remind me to renew my
-             passport on Friday.
-    Grok     Done. I will check in on
-             Friday morning.
-    ```
+    <Chat messages={[
+      { you: true, text: 'Remind me to renew my passport on Friday.' },
+      { name: 'Grok', text: 'Done. I will check in on Friday morning.' },
+    ]} />
 
     Coming soon: your AI starting the conversation on its own.
 
   </Card>
   <Card title="Approve a deploy" icon="rocket">
-    ```text
-    Claude Code  Can I deploy v2.3 to production?
-                 [ Yes ] [ No ]
-    you          (taps Yes)
-    Claude Code  Deployed ✅ 2m14s
-    ```
+    <Chat messages={[
+      { name: 'Claude Code', text: 'Can I deploy v2.3 to production?', options: ['Yes', 'No'] },
+      { you: true, text: 'Yes' },
+      { name: 'Claude Code', text: 'Deployed ✅ 2m14s' },
+    ]} />
   </Card>
   <Card title="Photos both ways" icon="image">
-    ```text
-    Claude   [photo of the error] Failed here
-    you      [photo of the whiteboard]
-    Claude   Got the flow, fixing it.
-    ```
+    <Chat messages={[
+      { name: 'Claude', text: '📷 Failed here' },
+      { you: true, text: '📷 The whiteboard' },
+      { name: 'Claude', text: 'Got the flow, fixing it.' },
+    ]} />
   </Card>
   <Card title="Many AIs, one number" icon="users">
-    ```text
-    Claude   Tests passed.
-    Grok     Found 3 sources.
-    you      (replies to Grok)  Which ones?
-    ```
+    <Chat messages={[
+      { name: 'Claude', text: 'Tests passed.' },
+      { name: 'Grok', text: 'Found 3 sources.' },
+      { you: true, text: 'Which ones? (reply to Grok)' },
+    ]} />
   </Card>
 </CardGroup>
 
-<Note>
-  Shown as they will look on WhatsApp. The real WhatsApp number is coming soon. Today you can try everything on your computer with the
-  [developer quickstart](/developers/quickstart).
-</Note>
+<Note>Shown as they will look on WhatsApp. The zapbip number is coming soon.</Note>
 
 ## How it works
 
-```mermaid
-flowchart LR
-  A["Your AI<br/>ChatGPT, Claude, Grok,<br/>Codex"] -->|connected once| Z["zapbip<br/>one inbox per AI<br/>the 24 h window<br/>routing"]
-  Z -->|official WhatsApp number| P["Your phone"]
-  P -->|your answer| Z
-  Z -.->|wakes your AI| A
-```
+<Frame>
+  <img
+    src="/images/how-it-works-en.svg"
+    alt="Your AI connects to zapbip, which sends its messages through the official WhatsApp number to your phone. Your answer travels back and wakes your AI."
+    style={{ maxWidth: '420px', width: '100%', margin: '0 auto' }}
+  />
+</Frame>
 
-1. **Connect your AI** once, by pasting a prompt.
+1. **Connect your AI** once, by pasting one line.
 2. **It messages you** with text, files, or a question with buttons.
 3. **You answer, or write first**, and zapbip delivers it to the right AI.
 

@@ -34,8 +34,6 @@
           {
             "group": "For developers",
             "pages": [
-              "developers/quickstart",
-              "developers/claude-code",
               "developers/any-mcp-client",
               "developers/errors",
               {
@@ -88,8 +86,6 @@
           {
             "group": "Para desenvolvedores",
             "pages": [
-              "pt-br/developers/quickstart",
-              "pt-br/developers/claude-code",
               "pt-br/developers/any-mcp-client",
               "pt-br/developers/errors",
               {

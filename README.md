@@ -8,4 +8,5 @@ Early stage: the repository holds the engineering harness only; product code arr
 
 - [AGENTS.md](AGENTS.md): what this is, the layout and the code conventions
 - [.claude/HARNESS.md](.claude/HARNESS.md): how work happens here, from agreement to merge
+- [docs/contributing/local-stack.md](docs/contributing/local-stack.md): run the stack locally with the test double for WhatsApp
 - [docs/adr](docs/adr/): decisions, [docs/learnings](docs/learnings/): traps

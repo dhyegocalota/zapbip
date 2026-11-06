@@ -5,15 +5,11 @@ description: Technical errors and what they mean.
 
 ## 401 unauthorized
 
-The secret is missing, wrong or from another stack. Copy the URL again from the seed output, and check that the Worker you started is the one that was seeded. With the Bearer form, the header is `Authorization: Bearer <secret>`.
-
-## Nothing on the simulator screen
-
-The screen is keyed by the owner phone you seeded. Use the same digits in `/dev/owner/<phone>/screen`. A `404` means that phone has no owner.
+The secret is missing, wrong or revoked. Copy the connection URL again from the zapbip number, or ask for a new agent. With the Bearer form, the header is `Authorization: Bearer <secret>`.
 
 ## The message is queued
 
-`delivery: "queued"` means the [24-hour window](/features/the-24-hour-window) is closed. Locally, send `@alpha hello` through the simulator and the queue flushes in order.
+`delivery: "queued"` means the [24-hour window](/features/the-24-hour-window) is closed. The message waits and arrives, in order, as soon as you write to the zapbip number.
 
 ## Upload errors
 
