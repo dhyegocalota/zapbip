@@ -1,8 +1,15 @@
-import { ChannelErrorKind, DeliveryState, MessageKind, OwnerLocale, TemplateKind } from '@zapbip/types';
+import { ChannelErrorKind, DeliveryState, MessageKind, OwnerLocale, TemplateKind, WakeOutcome } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { channelError } from '../testing/channel-fixtures';
 import { captureInboxError } from '../testing/capture-inbox-error';
-import { askAndAbandon, closeWindow as closeWindowFixture, connectionOf, createEnvironment, receiveText } from '../testing/fixtures';
+import {
+  askAndAbandon,
+  closeWindow as closeWindowFixture,
+  connectionOf,
+  createEnvironment,
+  receiveText,
+  registerAgents,
+} from '../testing/fixtures';
 import { react } from './react';
 import { sendText } from './send-text';
 
@@ -16,6 +23,15 @@ function send(input: { environment: Environment; text: string; replyToMessageId?
     text,
     replyToMessageId,
   });
+}
+
+async function ownerMessageIn(input: { environment: Environment }): Promise<string> {
+  const { environment } = input;
+  await registerAgents({ environment, agents: ['alpha'] });
+  environment.waker.replyWith({ outcome: WakeOutcome.Woken });
+  const { messageId } = await receiveText({ environment, text: '@alpha oi' });
+  if (messageId === null) throw new Error('expected a stored owner message');
+  return messageId;
 }
 
 async function historyOf(input: { environment: Environment }) {
@@ -67,7 +83,7 @@ describe('deliverToOwner with the channel', () => {
 
   test('CU-35 a rejected reaction names the field', async () => {
     const environment = await createEnvironment();
-    const { messageId: targetMessageId } = await receiveText({ environment, text: 'oi' });
+    const targetMessageId = await ownerMessageIn({ environment });
     environment.sender.failSessionCalls({
       callNumbers: [1],
       error: channelError({
@@ -80,7 +96,7 @@ describe('deliverToOwner with the channel', () => {
       react({
         dependencies: environment.dependencies,
         connection: connectionOf({ agent: 'alpha' }),
-        targetMessageId: targetMessageId!,
+        targetMessageId,
         emoji: '👍',
       }),
     );
@@ -99,14 +115,14 @@ describe('deliverToOwner with the channel', () => {
 
   test('CU-37 a reaction reaches the sender as the channel id of its target', async () => {
     const environment = await createEnvironment();
-    const { messageId } = await receiveText({ environment, text: 'oi' });
+    const messageId = await ownerMessageIn({ environment });
     await react({
       dependencies: environment.dependencies,
       connection: connectionOf({ agent: 'alpha' }),
-      targetMessageId: messageId!,
+      targetMessageId: messageId,
       emoji: '👍',
     });
-    const channelMessageId = await environment.repository.findChannelMessageId({ messageId: messageId! });
+    const channelMessageId = await environment.repository.findChannelMessageId({ messageId });
     expect(channelMessageId).not.toBeNull();
     expect(environment.sender.sessionRequests[0]).toMatchObject({ reactionTargetChannelMessageId: channelMessageId });
   });

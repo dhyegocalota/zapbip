@@ -1,5 +1,6 @@
-import { ChannelErrorKind, ChannelInboundKind, MediaOrigin, MediaSourceKind, MessageKind, OwnerLocale } from '@zapbip/types';
+import { ChannelErrorKind, ChannelInboundKind, MediaOrigin, MediaSourceKind, MessageKind, OwnerLocale, WakeOutcome } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
+import { formatRouteOptionId } from '../option-id';
 import { InboxError } from '../errors';
 import { channelError, insertQueued, ownerTextEntry, receiveChannel } from '../testing/channel-fixtures';
 import { askAndAbandon, closeWindow, connectionOf, createEnvironment, registerAgents } from '../testing/fixtures';
@@ -150,6 +151,13 @@ describe('receiveChannelMessage', () => {
 
   test('CU-23 media that could not be stored is kept as unavailable and the owner is told once', async () => {
     const environment = await environmentWithAlpha();
+    environment.waker.replyWith({ outcome: WakeOutcome.Woken });
+    await sendText({
+      dependencies: environment.dependencies,
+      connection: connectionOf({ agent: 'alpha' }),
+      text: 'q',
+      replyToMessageId: null,
+    });
     const entry: ChannelInboundEntry = {
       kind: ChannelInboundKind.Owner,
       at: environment.clock.now(),
@@ -165,7 +173,7 @@ describe('receiveChannelMessage', () => {
       sizeBytes: null,
       readByAgent: false,
     });
-    expect(environment.sender.sessions).toMatchObject([{ kind: MessageKind.Text, text: 'Y', agent: null }]);
+    expect(environment.sender.sessions.slice(1)).toMatchObject([{ kind: MessageKind.Text, text: 'Y', agent: null }]);
   });
 
   test('stored media is recorded with the message', async () => {
@@ -221,6 +229,29 @@ describe('receiveChannelMessage', () => {
     await receiveChannel({ environment, entry });
     expect(await environment.repository.findWindow()).toEqual(windowBefore);
     expect(environment.sender.sessionRequests).toEqual([]);
+  });
+
+  test('a tap on a route option assigns the held messages and wakes the agent', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha', 'beta'] });
+    const held = await receiveChannel({ environment, entry: ownerTextEntry({ environment, text: 'who?' }) });
+    expect(held.agent).toBeNull();
+    const tap: ChannelInboundEntry = {
+      kind: ChannelInboundKind.Owner,
+      at: environment.clock.now(),
+      content: {
+        kind: MessageKind.Choice,
+        optionId: formatRouteOptionId({ messageId: held.messageId!, agent: 'beta' }),
+        optionTitle: 'beta',
+        optionDescription: null,
+      },
+      replyToChannelMessageId: null,
+      noticeText: null,
+    };
+    const result = await receiveChannel({ environment, entry: tap });
+    expect(result).toEqual({ messageId: null, agent: 'beta', duplicate: false });
+    expect(await environment.repository.findMessage({ messageId: held.messageId! })).toMatchObject({ agent: 'beta' });
+    expect(environment.waker.notifications).toMatchObject([{ agent: 'beta' }]);
   });
 
   test('CU-44 reply and reaction targets are resolved from channel ids', async () => {

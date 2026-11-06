@@ -87,8 +87,7 @@ describe('applyStatus', () => {
 
   test('CU-31 sent, read, delivered, failed ends read', async () => {
     const environment = await createEnvironment();
-    const messageId = await storeOutbound({ environment, delivery: DeliveryState.Queued });
-    await apply({ environment, status: DeliveryState.Sent });
+    const messageId = await storeOutbound({ environment, delivery: DeliveryState.Sent });
     await apply({ environment, status: DeliveryState.Read });
     await apply({ environment, status: DeliveryState.Delivered });
     await apply({ environment, status: DeliveryState.Failed, detail: { errorCode: 1, errorTitle: 'late' } });

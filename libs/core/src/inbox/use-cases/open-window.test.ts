@@ -1,5 +1,6 @@
 import { ChannelErrorKind, DeliveryState, OwnerLocale, TemplateKind } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
+import { FLUSH_CLAIM_LIMIT } from '../claim-constants';
 import { QUEUE_RETENTION_MS } from '../constants';
 import { channelError, insertQueued } from '../testing/channel-fixtures';
 import { closeWindow as closeWindowFixture, createEnvironment } from '../testing/fixtures';
@@ -122,6 +123,16 @@ describe('openWindow', () => {
     await flushes;
     expect(environment.sender.sessionRequests).toHaveLength(3);
     expect(environment.sender.sessions.map((message) => (message.kind === 'text' ? message.text : null))).toEqual(['one', 'two', 'three']);
+  });
+
+  test('a queue longer than one claim is flushed to the end', async () => {
+    const environment = await createEnvironment();
+    await closeWindowFixture({ environment });
+    const texts = Array.from({ length: FLUSH_CLAIM_LIMIT + 3 }, (_unused, index) => `m${index}`);
+    await insertQueued({ environment, texts });
+    await open({ environment });
+    expect(environment.sender.sessionRequests).toHaveLength(texts.length);
+    expect(await environment.repository.listQueued()).toEqual([]);
   });
 
   test('CU-24d a queued message past its retention is expired, not sent', async () => {
