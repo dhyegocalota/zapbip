@@ -15,6 +15,7 @@ No product code exists yet. Each part arrives as a feature under `docs/features/
 
 ```
 apps/api                the Cloudflare Worker: MCP server, Durable Object per account, D1 directory, R2 media, fake WhatsApp channel
+apps/connector          the local connector: `npx zapbip connect` keeps a WebSocket open and resumes the owner's Claude Code or Codex session for each owner message
 apps/docs               the Mintlify documentation site
 libs/core               the inbox rules as plain TypeScript behind ports
 libs/types              shared enums and constants, no logic

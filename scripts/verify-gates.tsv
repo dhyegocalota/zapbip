@@ -17,6 +17,7 @@ apps/docs/*	docs	docs
 apps/api/*	product	typecheck unit integration e2e
 libs/core/*	product	typecheck unit integration e2e
 libs/types/*	product	typecheck unit integration e2e
+apps/connector/*	product	typecheck unit e2e
 apps/*	product	typecheck unit
 libs/*	product	typecheck unit
 .agents/*	tooling	hooks
