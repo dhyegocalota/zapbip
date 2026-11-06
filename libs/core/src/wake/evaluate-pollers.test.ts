@@ -1,4 +1,4 @@
-import { HOUR_MS, MINUTE_MS, MessageKind, OwnerLocale, WakeLogEventName, WakeMode } from '@zapbip/types';
+import { ChannelErrorKind, HOUR_MS, MINUTE_MS, MessageKind, OwnerLocale, WakeLogEventName, WakeMode } from '@zapbip/types';
 import { describe, expect, test, vi } from 'vitest';
 import { evaluatePollers, nextPollerDeadline } from './evaluate-pollers';
 import { staleNoticeCopy } from './wake-copy';
@@ -145,6 +145,34 @@ describe('evaluatePollers failures', () => {
     await expect(evaluatePollers(wakeEnvironment.context)).resolves.toEqual({ nextDueAt: null });
     expect(wakeEnvironment.observer.events).toMatchObject([{ name: WakeLogEventName.NoticeSkipped, agent: 'chatgpt' }]);
     expect(sessionTexts({ wakeEnvironment })).toEqual([]);
+  });
+});
+
+describe('evaluatePollers failing channel', () => {
+  const FAILING_CALLS = Array.from({ length: 5_000 }, (_, index) => index + 1);
+
+  async function failingDay() {
+    const wakeEnvironment = await createWakeEnvironment();
+    const { clock, sender } = wakeEnvironment.environment;
+    await schedule({ wakeEnvironment, agent: 'chatgpt', intervalMinutes: 1 });
+    sender.failSessionCalls({ callNumbers: FAILING_CALLS });
+    await Array.from({ length: (20 * HOUR_MS) / MINUTE_MS }).reduce<Promise<void>>(async (previous) => {
+      await previous;
+      await clock.advance({ ms: MINUTE_MS });
+      await evaluatePollers(wakeEnvironment.context);
+    }, Promise.resolve());
+    return wakeEnvironment.observer.events.filter((event) => event.name === WakeLogEventName.NoticeFailed);
+  }
+
+  test('a permanently failing delivery is retried with exponential backoff, a bounded number of times a day', async () => {
+    const failures = await failingDay();
+    expect(failures.length).toBeGreaterThanOrEqual(3);
+    expect(failures.length).toBeLessThanOrEqual(5);
+  });
+
+  test('the failure kind is logged', async () => {
+    const [failure] = await failingDay();
+    expect(failure).toMatchObject({ errorCode: ChannelErrorKind.DeliveryFailed });
   });
 });
 
