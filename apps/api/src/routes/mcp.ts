@@ -1,11 +1,15 @@
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
 import { Hono, type Context } from 'hono';
+import { D1ConnectionRegistry } from '../adapters/d1/d1-connection-registry';
+import { createPlatformClock } from '../adapters/platform/clock';
 import { UNAUTHORIZED_BODY } from '../contract/constants';
 import type { Bindings } from '../contract/env';
 import { LogEvent } from '../contract/log';
 import { logEvent } from '../log';
+import { createInstallCodeDirectory } from '../install/install-page-adapter';
+import { createConnectionRecorders, recordConnectionActivity } from '../mcp/client-name';
 import { BEARER_PREFIX, MCP_METHODS } from '../mcp/constants';
-import { resolveConnection } from './resolve-connection';
+import { resolveConnection, type ResolvedConnection } from './resolve-connection';
 import { createConnectionServer } from '../mcp/server';
 import { HttpStatus } from './http-status';
 
@@ -19,6 +23,24 @@ function readBearerSecret(context: McpContext): string | null {
   return authorization.slice(BEARER_PREFIX.length);
 }
 
+async function recordActivity(input: { context: McpContext; resolved: ResolvedConnection }): Promise<void> {
+  const { context, resolved } = input;
+  const { accountId, agent } = resolved.connection;
+  const connection = await new D1ConnectionRegistry({ database: context.env.CONNECTIONS }).findActiveByAgent({ accountId, agent });
+  if (connection === null) return;
+  const installCodeDirectory = createInstallCodeDirectory({ environment: context.env });
+  recordConnectionActivity({
+    request: context.req.raw,
+    connection,
+    recorders: createConnectionRecorders({
+      database: context.env.CONNECTIONS,
+      recordFirstCall: (callInput) => installCodeDirectory.recordFirstCall(callInput),
+    }),
+    calledAt: createPlatformClock().now(),
+    schedule: (work) => context.executionCtx.waitUntil(work),
+  });
+}
+
 async function serveMcp(input: { context: McpContext; secret: string | null }): Promise<Response> {
   const { context, secret } = input;
   const resolved = await resolveConnection({ database: context.env.CONNECTIONS, secret });
@@ -26,6 +48,7 @@ async function serveMcp(input: { context: McpContext; secret: string | null }): 
     logEvent({ event: LogEvent.AuthRejected });
     return context.json(UNAUTHORIZED_BODY, HttpStatus.Unauthorized);
   }
+  await recordActivity({ context, resolved });
   const server = createConnectionServer({ resolved, environment: context.env });
   const transport = new WebStandardStreamableHTTPServerTransport({ enableJsonResponse: true });
   await server.connect(transport);
