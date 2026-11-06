@@ -1,6 +1,7 @@
 import { COMPANY_FACT_UNSET, type CompanyFacts, OFFICIAL_NUMBER_UNSET } from '@zapbip/types';
 import { z } from 'zod';
 import { DeployEnvironment } from './deploy-environment';
+import { parseJsonOrNull } from './json-text';
 import { isPlaceholderValue } from './placeholder';
 import { missingSmokeInputs } from './smoke-inputs';
 import { WorkerSecret } from './worker-secret';
@@ -118,14 +119,6 @@ async function refuseUnsetCompanyFacts(input: { company: CompanyFacts }): Promis
     .map(([field]) => field);
   if (unset.length === 0) return null;
   return `COMPANY facts are still ${COMPANY_FACT_UNSET}: ${unset.join(', ')}; fill the Logic Bit company facts in libs/types before deploying`;
-}
-
-function parseJsonOrNull(input: { text: string }): unknown {
-  try {
-    return JSON.parse(input.text);
-  } catch {
-    return null;
-  }
 }
 
 async function untrustedReasonOf(input: { shell: DeployShell; packageSpec: string; publisher: string }): Promise<string | null> {
