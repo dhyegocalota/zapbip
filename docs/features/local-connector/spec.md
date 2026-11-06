@@ -107,7 +107,7 @@ npx zapbip connect --client claude-code|codex [--cwd <directory>] [--session <uu
 
 A new attach for an agent closes the previous socket of that tag with `REPLACED_CLOSE_CODE`. One connector runs per connection. A replaced connector exits and does not reconnect, after it finishes the wake it is running and without starting another. A process runs at most one wake at a time, so replacing a connector while a wake runs can wake the same message twice, once in each process; that is accepted as at-least-once delivery.
 
-**Waker.** `LocalConnectorWaker` implements `AgentWaker.notify({agent, reason})` and is registered for the `Local` rung. It reads the agent's unread owner messages and sends them as one `messages` frame to the agent's sockets. With no socket, it returns, and the message waits in the inbox. A live MCP waiter for that agent still wins, as the core routing rule says: the agent is already in a conversation.
+**Waker.** `LocalConnectorWaker` implements `AgentWaker.notify({agent, reason})` and is registered for the `Local` rung. It reads the agent's unread owner messages and sends them as one `messages` frame to the agent's sockets. With no socket, it returns, and the message waits in the inbox. A live MCP waiter for that agent still wins, as the core routing rule says: the agent is already in a conversation. A message delivered to a live waiter is never pushed to the connector, and the re-push after a `done` is skipped while a waiter is live.
 
 **Acknowledgement.** A `done` frame carries one `messageId`. The object calls the core use case `acknowledgeDelivery` (an addition of this slice, listed in `core-contract-additions.md`), which marks the message read. A message is re-sent until it is acknowledged or read through an MCP tool.
 

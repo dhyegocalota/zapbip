@@ -352,6 +352,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     const parsed = parseDoneFrame({ data });
     if (!parsed.ok) return this.log({ event: LogEvent.FrameRejected, agent, errorCode: parsed.reason });
     await inbox.acknowledgeDelivery({ dependencies: this.dependencies, agent, messageId: parsed.frame.messageId });
+    if (this.dependencies.waiters.hasLiveWaiter({ agent, questionId: null })) return;
     const remaining = await this.dependencies.repository.listUnread({ agent, limit: CONNECTOR_INBOX_LIMIT });
     sendMessagesToAgent({ context: this.ctx, agent, messages: remaining });
   }
