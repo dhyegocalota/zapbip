@@ -1,15 +1,10 @@
-import { INSTALL_CODE_PREFIX, INSTALL_CODE_TTL_MS, InstallCodeStatus, OwnerLocale } from '@zapbip/types';
+import { AccountState, INSTALL_CODE_PREFIX, INSTALL_CODE_TTL_MS, InstallCodeStatus, OwnerLocale } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { reset } from 'cloudflare:test';
 import { createConnectionSecrets } from '../../src/adapters/platform/connection-secrets';
 import { hashConnectionSecret } from '../../src/adapters/platform/hash';
 import { createInstallCodeVault } from '../../src/adapters/platform/install-code-vault';
-import {
-  connectionRegistry,
-  installCodeDirectory,
-  issueInstallCodeColumns,
-  registerWithInstallCode,
-} from '../support/install-codes';
+import { connectionRegistry, installCodeDirectory, issueInstallCodeColumns, registerWithInstallCode } from '../support/install-codes';
 import { applyDirectoryMigration, SEED_CREATED_AT, seedOwnerIdentity } from '../support/seed';
 import { testEnv } from '../support/workers-env';
 
@@ -79,6 +74,12 @@ describe('D1 install code directory resolve', () => {
   it('is unknown for a revoked connection', async () => {
     const { installCode } = await registerWithInstallCode({ accountId: ACCOUNT_ID, agent: 'claude' });
     await connectionRegistry().revoke({ accountId: ACCOUNT_ID, agent: 'claude', revokedAt: REVOKED_AT });
+    expect((await installCodeDirectory().resolve({ installCode, now: NOW })).status).toBe(InstallCodeStatus.Unknown);
+  });
+
+  it.each([AccountState.Suspended, AccountState.Deleting, AccountState.Waitlisted])('is unknown for a %s account', async (state) => {
+    const { installCode } = await registerWithInstallCode({ accountId: ACCOUNT_ID, agent: 'claude' });
+    await testEnv.CONNECTIONS.prepare('UPDATE accounts SET state = ? WHERE id = ?').bind(state, ACCOUNT_ID).run();
     expect((await installCodeDirectory().resolve({ installCode, now: NOW })).status).toBe(InstallCodeStatus.Unknown);
   });
 

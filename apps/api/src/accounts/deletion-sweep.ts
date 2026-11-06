@@ -4,6 +4,9 @@ import { createIdGenerator } from '../adapters/platform/ids';
 import { R2AccountMedia } from '../adapters/r2/r2-account-media';
 import type { Bindings } from '../contract/env';
 
+const CLEAR_EXPIRED_INSTALL_SECRETS_STATEMENT =
+  'UPDATE connections SET install_code_sealed_secret = NULL WHERE install_code_expires_at <= ?';
+
 export function sweepDeletingAccounts(input: { environment: Bindings }): Promise<void> {
   const { environment } = input;
   return finishDeletingAccounts({
@@ -18,6 +21,6 @@ export function sweepDeletingAccounts(input: { environment: Bindings }): Promise
   });
 }
 
-export async function clearExpiredInstallSecrets(_input: { environment: Bindings; now: number }): Promise<void> {
-  throw new Error('clearExpiredInstallSecrets is not implemented');
+export async function clearExpiredInstallSecrets(input: { environment: Bindings; now: number }): Promise<void> {
+  await input.environment.CONNECTIONS.prepare(CLEAR_EXPIRED_INSTALL_SECRETS_STATEMENT).bind(input.now).run();
 }

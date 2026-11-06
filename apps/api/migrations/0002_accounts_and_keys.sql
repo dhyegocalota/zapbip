@@ -25,6 +25,10 @@ CREATE TABLE connections (
   agent TEXT NOT NULL,
   secret_digest TEXT NOT NULL UNIQUE,
   client_name TEXT,
+  install_code_digest TEXT UNIQUE,
+  install_code_sealed_secret TEXT,
+  install_code_expires_at INTEGER,
+  first_call_at INTEGER,
   created_at INTEGER NOT NULL,
   rotated_at INTEGER,
   revoked_at INTEGER
