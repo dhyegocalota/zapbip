@@ -3,7 +3,7 @@ title: 'set_wake'
 description: 'Tell zapbip how to reach this agent when it is not listening.'
 ---
 
-Save how this connection is woken when the owner writes and no call is waiting. See the [webhook wake guide](/guides/webhook-wake) and the [wake ladder](/concepts/wake-ladder).
+Save how this connection is woken when you write and no call is waiting. See the [webhook wake guide](/guides/webhook-wake) and the [wake ladder](/concepts/wake-ladder).
 
 ## Input
 
@@ -29,4 +29,4 @@ The provider is chosen by the host of the URL, never by a field.
 
 ## Errors
 
-A tool error names the invalid field (`url`, `token` or `mode`) and never echoes its value. Nothing is stored and the previous wake stays. zapbip does not call the provider when saving: a wrong token shows on the first wake, as a notice to the owner.
+A tool error names the invalid field (`url`, `token` or `mode`) and never echoes its value. Nothing is stored and the previous wake stays. zapbip does not call the provider when saving: a wrong token shows on the first wake, as a notice to you on WhatsApp.

@@ -1,11 +1,13 @@
 ---
 title: 'Despertar por webhook'
-description: 'Acorde um agente que não está ouvindo com um webhook.'
+description: 'Faça o zapbip acordar sua IA quando você escreve e ela não está ouvindo.'
 ---
 
-Quando o dono escreve e nenhuma chamada está esperando, o zapbip pode chamar um webhook que inicia o agente. O agente então lê a mensagem com [check_inbox](/pt-br/mcp-reference/check-inbox) ou [get_messages](/pt-br/mcp-reference/get-messages) e responde. Configure com [set_wake](/pt-br/mcp-reference/set-wake).
+Você não precisa disto para usar o zapbip. É para o momento em que você escreve no WhatsApp e sua IA não está aberta: o zapbip pode chamar um link que a inicia, para ela ler sua mensagem e responder. A maioria dos apps de IA configura isso para você na instalação; esta página mostra o que acontece por trás e como configurar à mão.
 
-A requisição não leva texto do dono: o corpo é sempre `{"event":"inbox_has_messages"}`. Mensagens que chegam em rajada compartilham um único despertar, enviado poucos segundos depois da primeira.
+Sua IA então lê a mensagem com [check_inbox](/pt-br/mcp-reference/check-inbox) ou [get_messages](/pt-br/mcp-reference/get-messages) e responde. O link é salvo com [set_wake](/pt-br/mcp-reference/set-wake).
+
+A chamada não leva nada do seu texto: o corpo é sempre `{"event":"inbox_has_messages"}`. Mensagens que chegam em sequência compartilham um único despertar, enviado alguns segundos depois da primeira.
 
 ## Rotina do Grok Bot
 
@@ -29,7 +31,7 @@ O zapbip envia `Authorization: Bearer <token>` e os cabeçalhos beta da rotina.
 
 ## Seu próprio serviço
 
-Qualquer host `https` público serve. O token é a sua chave de assinatura, com pelo menos 32 caracteres, e nunca é enviado. Cada requisição leva `X-Zapbip-Timestamp` (segundos Unix) e `X-Zapbip-Signature`, `sha256=` seguido do HMAC-SHA256 em hexadecimal de `<timestamp>.<body>`. Rejeite um timestamp com mais de 300 segundos.
+Qualquer host `https` público funciona. O token é sua chave de assinatura, com pelo menos 32 caracteres, e nunca é enviado. Cada chamada leva `X-Zapbip-Timestamp` (segundos Unix) e `X-Zapbip-Signature`, que é `sha256=` seguido do HMAC-SHA256 em hexadecimal de `<timestamp>.<body>`. Rejeite um timestamp com mais de 300 segundos.
 
 ```js
 import { createHmac, timingSafeEqual } from 'node:crypto';
@@ -48,7 +50,7 @@ export function isValidWake({ timestamp, signature, body, token }) {
 
 ## Quando um despertar falha
 
-- `408`, `425`, `429`, `5xx`, um tempo esgotado ou um erro de rede são repetidos em até 5 tentativas, esperando 5, 10, 20 e 40 segundos e respeitando `Retry-After` em `429` e `503`, até 60 segundos.
-- Redirecionamentos e outras respostas `4xx` são recusados na hora e não repetidos.
-- Quando um despertar é recusado ou desiste, o dono recebe um aviso de que a mensagem espera na caixa de entrada, e a conexão fica `failing`. Chame [set_wake](/pt-br/mcp-reference/set-wake) de novo para corrigir o destino; o próximo despertar entregue volta a conexão para `active`.
-- Se o agente ler as mensagens antes de o despertar disparar, nenhuma requisição é enviada.
+- `408`, `425`, `429`, `5xx`, tempo esgotado ou erro de rede são tentados de novo, até 5 tentativas, esperando 5, 10, 20 e 40 segundos e respeitando `Retry-After` em `429` e `503`, até 60 segundos.
+- Redirecionamentos e outras respostas `4xx` são recusados na hora, sem nova tentativa.
+- Quando um despertar é recusado ou desiste, você recebe um aviso no WhatsApp de que a mensagem espera na caixa de entrada, e a conexão fica `failing`. Chame [set_wake](/pt-br/mcp-reference/set-wake) de novo para corrigir o destino; o próximo despertar entregue volta a conexão para `active`.
+- Se a IA ler as mensagens antes do despertar disparar, nenhuma chamada é feita.

@@ -506,10 +506,10 @@ Every box is empty when authored. A developer ticks its own box. A wrong step is
 
 ### Lane L5: dev routes, E2E and bundle
 
-- [ ] **W5.1 red: dev routes.** Write `dev-owner-wake.test.ts` (the three routes; `404` for an unknown phone and for another account's agent) and `wake-bundle.e2e.test.ts`. Expected failure: `404` where `204` is expected. Commit as `test(api): pin the wake dev routes and the wake bundle`.
-- [ ] **W5.2 green: dev routes.** Add the routes to `routes/dev-owner.ts`. Commit as `feat(api): add the wake dev routes`.
-- [ ] **W5.3 red: E2E.** Write `webhook-wake.e2e.test.ts`. It runs in the default gate. Expected failure: zero recorded requests where one is expected. Commit as `test(e2e): pin the webhook wake walk`.
-- [ ] **W5.4 green: E2E.** Make the walk pass. The walk moves time with `advance_ms` and runs `POST /dev/owner/:phone/wake/run`; no `sleep`. Commit as `test(e2e): run the webhook wake walk`.
+- [x] **W5.1 red: dev routes.** (a39a3b1; the bundle test was corrected in a follow-up commit) Write `dev-owner-wake.test.ts` (the three routes; `404` for an unknown phone and for another account's agent) and `wake-bundle.e2e.test.ts`. Expected failure: `404` where `204` is expected. Commit as `test(api): pin the wake dev routes and the wake bundle`.
+- [x] **W5.2 green: dev routes.** (0972935) Add the routes to `routes/dev-owner.ts`. Commit as `feat(api): add the wake dev routes`.
+- [x] **W5.3 red: E2E.** (e939240, a pin: see the tester briefing) Write `webhook-wake.e2e.test.ts`. It runs in the default gate. Expected failure: zero recorded requests where one is expected. Commit as `test(e2e): pin the webhook wake walk`.
+- [x] **W5.4 green: E2E.** (e939240) Make the walk pass. The walk moves time with `advance_ms` and runs `POST /dev/owner/:phone/wake/run`; no `sleep`. Commit as `test(e2e): run the webhook wake walk`.
 
 ### Z. Prove and ship
 
