@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createPlatformClock } from '../../src/adapters/platform/clock';
 import { createSqliteWakeRepository } from '../../src/adapters/sqlite/sqlite-wake-repository';
 import { advanceClock, receiveOwnerText } from '../support/inbox-session';
+import { applyDirectoryMigration } from '../support/seed';
 import {
   ACCEPTED,
   DEBOUNCE_ADVANCE_MS,
@@ -29,6 +30,8 @@ function withWakeRepository<Result>(input: { run: (repository: ReturnType<typeof
     input.run(createSqliteWakeRepository({ storage: state.storage, clock: createPlatformClock() })),
   );
 }
+
+beforeEach(applyDirectoryMigration);
 
 afterEach(async () => {
   await reset();

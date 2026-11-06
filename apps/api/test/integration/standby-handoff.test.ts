@@ -7,6 +7,7 @@ import { withRepository } from '../support/account-inbox';
 import { advanceClock, readScreen, receiveOwnerText } from '../support/inbox-session';
 import { ACCEPTED, DEBOUNCE_ADVANCE_MS, WAKE_ACCOUNT, enableGrokWake, expectOk, readRequests, wakeStub } from '../support/wake-session';
 import { connectionOf } from '../support/workers-env';
+import { applyDirectoryMigration } from '../support/seed';
 
 const PRIMARY: AgentName = 'grok-web';
 const STANDBY: AgentName = 'grok-bot';
@@ -59,6 +60,8 @@ async function alarmAfterDebounce(): Promise<void> {
   await advanceClock({ stub, advanceMs: DEBOUNCE_ADVANCE_MS });
   await runDurableObjectAlarm(stub);
 }
+
+beforeEach(applyDirectoryMigration);
 
 beforeEach(async () => {
   stub = wakeStub({});

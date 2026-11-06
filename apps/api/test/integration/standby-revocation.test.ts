@@ -55,6 +55,8 @@ function countRows(input: { agent: AgentName }): Promise<{ wakes: number; copies
   }));
 }
 
+beforeEach(applyDirectoryMigration);
+
 beforeEach(async () => {
   accountId = WAKE_ACCOUNT;
   stub = wakeStub({});
@@ -126,7 +128,6 @@ describe('revoking the standby by the owner command', () => {
   }
 
   beforeEach(async () => {
-    await applyDirectoryMigration();
     await deliver({ bindings, text: `novo agente ${PRIMARY}` });
     await deliver({ bindings, text: `novo agente ${STANDBY}` });
     accountId = await accountIdOfOwner();

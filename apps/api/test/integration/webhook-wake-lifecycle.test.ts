@@ -22,6 +22,7 @@ import {
   wakeStub,
 } from '../support/wake-session';
 import { connectionOf } from '../support/workers-env';
+import { applyDirectoryMigration } from '../support/seed';
 
 const FAILED_RETRY_MS = 600_000;
 const LEASE_MS = 15_000;
@@ -48,6 +49,8 @@ async function untilLeased(input: { polls: number }): Promise<void> {
   if (isLeased) return;
   await untilLeased({ polls: input.polls - 1 });
 }
+
+beforeEach(applyDirectoryMigration);
 
 beforeEach(async () => {
   stub = wakeStub({});

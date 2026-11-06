@@ -267,7 +267,7 @@ describe('connector socket', () => {
       forwarded: ForwardedKind.Forwarded,
     });
     const frame = (await session.nextFrame()) as MessagesFrame;
-    expect(frame.messages.map((message) => message.forwarded)).toEqual([true]);
+    expect(frame.messages.map((message) => message.forwarded)).toEqual([ForwardedKind.Forwarded]);
     session.socket.close();
   });
 

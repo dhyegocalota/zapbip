@@ -111,7 +111,10 @@ describe('schema v3', () => {
           .map((row) => row.has_polled),
       };
     });
-    expect(result).toEqual({ applied: [THIRD_VERSION], agents: 2, messages: 2, hasPolled: [0, 0] });
+    const laterVersions = ACCOUNT_INBOX_MIGRATIONS.filter((migration) => migration.version > SECOND_VERSION).map(
+      (migration) => migration.version,
+    );
+    expect(result).toEqual({ applied: laterVersions, agents: 2, messages: 2, hasPolled: [0, 0] });
   });
 
   it('applies v3 alone when v2 is missing', async () => {

@@ -3,6 +3,7 @@ import type { DevAccountInbox } from '../../src/dev/dev-account-inbox';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createCloudflareWakeObserver } from '../../src/adapters/wake/wake-observer';
 import { advanceClock, receiveOwnerText } from '../support/inbox-session';
+import { applyDirectoryMigration } from '../support/seed';
 import {
   ACCEPTED,
   GROK_TOKEN,
@@ -39,6 +40,8 @@ async function runThreeRetriesAndDelivery(): Promise<void> {
     await runDurableObjectAlarm(stub);
   }
 }
+
+beforeEach(applyDirectoryMigration);
 
 beforeEach(async () => {
   stub = wakeStub({});

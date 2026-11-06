@@ -38,6 +38,7 @@ import {
 } from '../support/wake-session';
 import { versionAfterLatest } from '../support/migration-versions';
 import { connectionOf, testEnv } from '../support/workers-env';
+import { applyDirectoryMigration } from '../support/seed';
 
 const BASE64 = 'base64';
 const KEY_NAME = 'WAKE_SECRET_KEY';
@@ -94,6 +95,8 @@ async function expectRefusedWithOneNotice(): Promise<void> {
   expect((await readWakeRow({ stub })).status).toBe(WakeStatus.Failing);
   expect(await readWakeNotices({ stub })).toBe(1);
 }
+
+beforeEach(applyDirectoryMigration);
 
 beforeEach(async () => {
   stub = wakeStub({});

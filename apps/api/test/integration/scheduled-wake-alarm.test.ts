@@ -13,6 +13,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { DurableClock } from '../../src/adapters/platform/clock';
 import { advanceClock, openWindow, readScreen, receiveOwnerText } from '../support/inbox-session';
 import { accountInboxStub, connectionOf } from '../support/workers-env';
+import { applyDirectoryMigration } from '../support/seed';
 
 const ACCOUNT = 'acc_scheduled';
 const POLLING_AGENT: AgentName = 'chatgpt';
@@ -95,6 +96,8 @@ async function alarmAfter(input: { advanceMs: number }): Promise<void> {
   await advanceClock({ stub: stub(), advanceMs: input.advanceMs });
   await runDurableObjectAlarm(stub());
 }
+
+beforeEach(applyDirectoryMigration);
 
 afterEach(async () => {
   await reset();

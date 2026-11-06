@@ -3,6 +3,7 @@ import { ChannelInboundKind, DeliveryState, ForwardedKind, MediaOrigin, MessageD
 import { evictDurableObject, reset, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { AccountInbox } from '../../src/account-inbox/account-inbox';
+import { ACCOUNT_INBOX_MIGRATIONS } from '../../src/account-inbox/migrations';
 import type { Bindings } from '../../src/contract/env';
 import { DevAccountInbox } from '../../src/dev/dev-account-inbox';
 import { withRepository } from '../support/account-inbox';
@@ -329,7 +330,7 @@ describe('SQLite repository channel methods', () => {
   });
 });
 
-describe('DO schema v5', () => {
+describe('DO schema v4', () => {
   it('adds the channel columns, the closed time and the unique channel id', async () => {
     const schema = await runInDurableObject(accountInboxStub({ accountId: ACCOUNT_ID }), (_instance, state) => ({
       messageColumns: state.storage.sql
@@ -350,7 +351,7 @@ describe('DO schema v5', () => {
     );
     expect(schema.windowColumns).toContain('closed_at');
     expect(schema.messageColumns).toContain('forwarded');
-    expect(schema.versions).toEqual([1, 4, 5, 6]);
+    expect(schema.versions).toEqual(ACCOUNT_INBOX_MIGRATIONS.map((migration) => migration.version));
   });
 });
 

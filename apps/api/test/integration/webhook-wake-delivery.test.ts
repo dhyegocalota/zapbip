@@ -24,6 +24,7 @@ import {
   wakeStub,
 } from '../support/wake-session';
 import { connectionOf } from '../support/workers-env';
+import { applyDirectoryMigration } from '../support/seed';
 
 const BEFORE_DEBOUNCE_MS = 2_000;
 const FIRST_RETRY_DELAY_MS = 5_000;
@@ -48,6 +49,8 @@ async function alarmAfter(input: { advanceMs: number }): Promise<void> {
   await advanceClock({ stub, advanceMs: input.advanceMs });
   await runDurableObjectAlarm(stub);
 }
+
+beforeEach(applyDirectoryMigration);
 
 beforeEach(async () => {
   stub = wakeStub({});
