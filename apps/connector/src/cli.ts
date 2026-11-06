@@ -31,6 +31,14 @@ const CHANNEL_LINK_MESSAGE = `the channel reads the connection link from ${CONNE
 const CONNECTION_PROMPT = 'Connection link: ';
 const USAGE = `usage: zapbip ${CliCommand.Connect} ${CliFlag.Client} ${Object.values(ConnectorClient).join('|')} [${CliFlag.WorkingDirectory} <directory>] [${CliFlag.Session} <uuid>]`;
 const FAILURE_EXIT_CODE = 1;
+const CLEAN_EXIT_CODE = 0;
+const HELP_FLAG = '--help';
+const HELP_TEXT = [
+  USAGE,
+  `       zapbip ${CliCommand.Listen}`,
+  `       zapbip ${CliCommand.Channel}`,
+  `${CONNECTION_URL_VARIABLE} holds the connection link; ${CliCommand.Connect} and ${CliCommand.Listen} ask for it when it is not set.`,
+].join('\n');
 const SHUTDOWN_SIGNALS = ['SIGINT', 'SIGTERM'] as const;
 
 function readFlags(input: { argv: string[] }): Map<string, string> {
@@ -121,6 +129,11 @@ const COMMAND_HANDLERS: Record<CliCommand, CliCommandHandler> = {
 
 async function main(): Promise<number> {
   const [commandName, ...argv] = process.argv.slice(2);
+  const isHelp = commandName === HELP_FLAG || argv.includes(HELP_FLAG);
+  if (isHelp) {
+    process.stdout.write(`${HELP_TEXT}\n`);
+    return CLEAN_EXIT_CODE;
+  }
   const command = Object.values(CliCommand).find((candidate) => candidate === commandName);
   if (command === undefined) {
     process.stderr.write(`${USAGE}\n`);

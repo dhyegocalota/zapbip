@@ -16,6 +16,7 @@ import {
   RECONNECT_BASE_MS,
   RECONNECT_JITTER_RATIO,
   RECONNECT_MAX_MS,
+  RECONNECT_STABLE_MS,
   REPLACED_CLOSE_CODE,
   SECRET_REVOKED_MESSAGE,
   UNAUTHORIZED_STATUS,
@@ -29,7 +30,7 @@ import { runWake } from './wake-runner';
 
 export type ServerFrameParse = { ok: true; frame: ServerFrame } | { ok: false; reason: FrameRejectionReason };
 
-type SocketEnd = { code: number; wasOpened: boolean };
+type SocketEnd = { code: number; wasStable: boolean };
 type FrameBody = Record<string, unknown>;
 type FrameParsers = Record<string, (input: { body: FrameBody }) => ServerFrame | null>;
 
@@ -86,8 +87,9 @@ export function parseServerFrame(input: { text: string; byteLength: number; isBi
   if (input.byteLength > CONNECTOR_FRAME_MAX_BYTES) return { ok: false, reason: FrameRejectionReason.FrameTooLarge };
   const body = asRecord({ value: parseJson({ text: input.text }) });
   if (body === null) return { ok: false, reason: FrameRejectionReason.Malformed };
-  const parseFrame = FRAME_PARSERS[String(body.type)];
-  if (parseFrame === undefined) return { ok: false, reason: FrameRejectionReason.UnknownType };
+  const frameType = String(body.type);
+  if (!Object.hasOwn(FRAME_PARSERS, frameType)) return { ok: false, reason: FrameRejectionReason.UnknownType };
+  const parseFrame = FRAME_PARSERS[frameType] as FrameParsers[string];
   const frame = parseFrame({ body });
   if (frame === null) return { ok: false, reason: FrameRejectionReason.Malformed };
   return { ok: true, frame };
@@ -178,7 +180,8 @@ export async function runSocketSession(input: {
     return new Promise((resolve) => {
       const socket = new WebSocket(socketLink);
       currentSocket = socket;
-      let wasOpened = false;
+      let wasStable = false;
+      let cancelStability: CancelTimer | null = null;
       let hasEnded = false;
       let cancelHeartbeat: CancelTimer | null = null;
       let cancelTimeout: CancelTimer | null = null;
@@ -189,12 +192,18 @@ export async function runSocketSession(input: {
         cancelHeartbeat?.();
         cancelTimeout?.();
         currentSocket = null;
-        resolve({ code, wasOpened });
+        cancelStability?.();
+        resolve({ code, wasStable });
       }
 
       function armHeartbeat(): void {
         if (cancelHeartbeat !== null) return;
-        wasOpened = true;
+        cancelStability = timers.after({
+          delayMs: RECONNECT_STABLE_MS,
+          run: () => {
+            wasStable = true;
+          },
+        });
         cancelHeartbeat = timers.every({
           delayMs: HEARTBEAT_INTERVAL_MS,
           run: () => {
@@ -239,7 +248,7 @@ export async function runSocketSession(input: {
     const end = await holdSocket();
     if (end.code === REPLACED_CLOSE_CODE) return FAILURE_EXIT_CODE;
     if (signal.aborted) break;
-    const failedAttempts = end.wasOpened ? 0 : attempt;
+    const failedAttempts = end.wasStable ? 0 : attempt;
     const delayMs = reconnectDelayMs({ attempt: failedAttempts, random });
     log({ event: ConnectorLogEvent.ConnectorReconnecting, fields: { attempt: failedAttempts, delayMs } });
     await waitOrAbort({ delayMs, signal, timers });
