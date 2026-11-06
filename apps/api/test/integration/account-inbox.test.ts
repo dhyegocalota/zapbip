@@ -24,7 +24,7 @@ const SHORT_ASK_TIMEOUT_MS = 1_000;
 const MEDIA_KEY_PREFIX = 'accounts';
 const LOG_SECRET_TEXT = 'segredo-123';
 const LOG_SECRET_CAPTION = 'legenda-456';
-const LOG_SECRET_FILENAME = 'arquivo-789.pdf';
+const LOG_SECRET_FILENAME = 'contract.pdf';
 
 function stubOf(input: { accountId: string }) {
   return accountInboxStub(input);
