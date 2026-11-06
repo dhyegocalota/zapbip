@@ -15,6 +15,7 @@ const ORIGIN_REMOTE = 'origin';
 const ORIGIN_MAIN = `${ORIGIN_REMOTE}/${MAIN_BRANCH}`;
 const NO_PENDING_MIGRATIONS = 'No migrations to apply';
 const NPM_PACKAGE_NAME = 'zapbip';
+const OPENCLAW_PLUGIN_PACKAGE = '@zapbip/openclaw-plugin';
 const DEPLOYABLE_ENVIRONMENTS = [DeployEnvironment.Staging, DeployEnvironment.Production];
 
 export type ShellCommand = { file: string; args: string[]; stdin?: string };
@@ -115,11 +116,19 @@ async function refuseUnsetCompanyFacts(input: { company: CompanyFacts }): Promis
   return `COMPANY facts are still ${COMPANY_FACT_UNSET}: ${unset.join(', ')}; fill the Logic Bit company facts in libs/types before deploying`;
 }
 
+async function firstUnpublished(input: { shell: DeployShell; packages: string[] }): Promise<string | null> {
+  const [current, ...remaining] = input.packages;
+  if (!current) return null;
+  const result = await input.shell.run({ file: NPM, args: ['view', current, 'version'] });
+  if (result.exitCode !== 0) return current;
+  return firstUnpublished({ shell: input.shell, packages: remaining });
+}
+
 async function refuseUnpublishedPackage(input: DocsPreflightInput): Promise<string | null> {
-  const packageVersion = `${NPM_PACKAGE_NAME}@${input.npmVersion}`;
-  const result = await input.shell.run({ file: NPM, args: ['view', packageVersion, 'version'] });
-  if (result.exitCode === 0) return null;
-  return `${packageVersion} does not resolve on npm; publish it before deploying the docs`;
+  const packages = [`${NPM_PACKAGE_NAME}@${input.npmVersion}`, `${OPENCLAW_PLUGIN_PACKAGE}@${input.openclawPluginVersion}`];
+  const unpublished = await firstUnpublished({ shell: input.shell, packages });
+  if (unpublished === null) return null;
+  return `${unpublished} does not resolve on npm; publish it before deploying the docs`;
 }
 
 async function refuseUncleanGit(input: WorkerPreflightInput): Promise<string | null> {
