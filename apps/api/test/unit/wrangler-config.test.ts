@@ -1,5 +1,4 @@
-import { readFileSync } from 'node:fs';
-import { unstable_readConfig as readWranglerConfig } from 'wrangler';
+import { experimental_readRawConfig as readRawWranglerConfig, unstable_readConfig as readWranglerConfig } from 'wrangler';
 import { describe, expect, it } from 'vitest';
 import { BUDGET_CHECK_CRON, MEDIA_RETENTION_CRON, PLACEHOLDER_VALUE_PREFIX } from '../../src/operations/constants';
 import { DeployEnvironment } from '../../src/operations/deploy-environment';
@@ -30,7 +29,7 @@ type WranglerBlock = {
 };
 type WranglerFile = WranglerBlock & { env: Record<DeployEnvironment.Development | DeployEnvironment.Staging, WranglerBlock> };
 
-const wranglerFile: WranglerFile = JSON.parse(readFileSync(WRANGLER_CONFIG_PATH, 'utf8'));
+const wranglerFile: WranglerFile = readRawWranglerConfig({ config: WRANGLER_CONFIG_PATH }).rawConfig as unknown as WranglerFile;
 const blocks: Record<DeployEnvironment, WranglerBlock> = {
   [DeployEnvironment.Production]: wranglerFile,
   [DeployEnvironment.Staging]: wranglerFile.env.staging,
@@ -54,7 +53,7 @@ const BINDING_KEYS: Record<string, (block: WranglerBlock) => string[]> = {
 };
 
 describe('wrangler config', () => {
-  it('the file is plain JSON with a staging and a development block', () => {
+  it('the file declares a staging and a development block', () => {
     expect(Object.keys(wranglerFile.env).sort()).toEqual([DeployEnvironment.Development, DeployEnvironment.Staging]);
   });
 

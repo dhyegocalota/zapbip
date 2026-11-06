@@ -14,8 +14,8 @@
       "binding": "CONNECTIONS",
       "database_name": "zapbip-production",
       "database_id": "REPLACE_WITH_PRODUCTION_D1_DATABASE_ID",
-      "migrations_dir": "migrations"
-    }
+      "migrations_dir": "migrations",
+    },
   ],
   "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "zapbip-media-production" }],
   "rules": [{ "type": "Text", "globs": ["**/*.sql"], "fallthrough": true }],
@@ -24,7 +24,7 @@
     "ENVIRONMENT": "production",
     "PUBLIC_ORIGIN": "https://mcp.zapbip.com",
     "WAITLIST_ENABLED": "true",
-    "WHATSAPP_GRAPH_BASE_URL": "https://graph.facebook.com"
+    "WHATSAPP_GRAPH_BASE_URL": "https://graph.facebook.com",
   },
   "triggers": { "crons": ["0 * * * *", "5 0 * * *"] },
   "env": {
@@ -38,8 +38,8 @@
           "binding": "CONNECTIONS",
           "database_name": "zapbip-development",
           "database_id": "zapbip-connections-local",
-          "migrations_dir": "migrations"
-        }
+          "migrations_dir": "migrations",
+        },
       ],
       "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "zapbip-media-development" }],
       "rules": [{ "type": "Text", "globs": ["**/*.sql"], "fallthrough": true }],
@@ -47,9 +47,9 @@
         "ENVIRONMENT": "development",
         "PUBLIC_ORIGIN": "http://localhost:8787",
         "WAITLIST_ENABLED": "false",
-        "WHATSAPP_GRAPH_BASE_URL": "http://127.0.0.1:8788"
+        "WHATSAPP_GRAPH_BASE_URL": "http://127.0.0.1:8788",
       },
-      "triggers": { "crons": ["0 * * * *", "5 0 * * *"] }
+      "triggers": { "crons": ["0 * * * *", "5 0 * * *"] },
     },
     "staging": {
       "name": "zapbip-api-staging",
@@ -61,8 +61,8 @@
           "binding": "CONNECTIONS",
           "database_name": "zapbip-staging",
           "database_id": "REPLACE_WITH_STAGING_D1_DATABASE_ID",
-          "migrations_dir": "migrations"
-        }
+          "migrations_dir": "migrations",
+        },
       ],
       "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "zapbip-media-staging" }],
       "rules": [{ "type": "Text", "globs": ["**/*.sql"], "fallthrough": true }],
@@ -71,9 +71,9 @@
         "ENVIRONMENT": "staging",
         "PUBLIC_ORIGIN": "https://mcp-staging.zapbip.com",
         "WAITLIST_ENABLED": "false",
-        "WHATSAPP_GRAPH_BASE_URL": "https://graph.facebook.com"
+        "WHATSAPP_GRAPH_BASE_URL": "https://graph.facebook.com",
       },
-      "triggers": { "crons": ["0 * * * *", "5 0 * * *"] }
-    }
-  }
+      "triggers": { "crons": ["0 * * * *", "5 0 * * *"] },
+    },
+  },
 }
