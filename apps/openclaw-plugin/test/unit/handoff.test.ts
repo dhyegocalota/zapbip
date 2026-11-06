@@ -3,6 +3,7 @@ import {
   CHANNEL_FORWARDED_PREFIX,
   CHANNEL_HANDOFF_NO_TEXT_BY_KIND,
   CHANNEL_SENDER,
+  ConnectorLogEvent,
   MessageDirection,
   MessageKind,
   MediaSourceKind,
@@ -185,6 +186,23 @@ describe('handOffToAgent', () => {
     await expect(
       handOffToAgent({ cfg: CONFIG, account: ACCOUNT, message: ownerTextMessage({ messageId: 'msg_1', text: 'oi' }) }),
     ).rejects.toThrow('dispatch failed');
+  });
+
+  it('logs a failed reply delivery as its own event, without the reply text, and does not reject', async () => {
+    const written: string[] = [];
+    const writeSpy = vi.spyOn(process.stderr, 'write').mockImplementation((chunk) => {
+      written.push(String(chunk));
+      return true;
+    });
+    vi.mocked(sendOwnerText).mockRejectedValueOnce(new Error('segredo-da-resposta'));
+    await handOffToAgent({ cfg: CONFIG, account: ACCOUNT, message: ownerTextMessage({ messageId: 'msg_1', text: 'oi' }) });
+    await expect(lastDispatch().deliver({ text: 'segredo-da-resposta' })).resolves.toBeUndefined();
+    writeSpy.mockRestore();
+    const logged = written.join('');
+    expect(logged).toContain(ConnectorLogEvent.PluginReplyFailed);
+    expect(logged).toContain('msg_1');
+    expect(logged).not.toContain(ConnectorLogEvent.PluginHandoffFailed);
+    expect(logged).not.toContain('segredo-da-resposta');
   });
 
   it('logs a dispatch error without the owner text and does not reject', async () => {
