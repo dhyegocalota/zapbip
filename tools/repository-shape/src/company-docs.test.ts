@@ -17,8 +17,8 @@ function companyFacts(): string[] {
   const sentinel = UNSET_SENTINEL_PATTERN.exec(source)?.[1];
   const block = COMPANY_BLOCK_PATTERN.exec(source)?.[1];
   if (!sentinel || !block) throw new Error('COMPANY is missing from libs/types');
-  return [...block.matchAll(COMPANY_ENTRY_PATTERN)].map(([, , literal]) =>
-    literal === 'COMPANY_FACT_UNSET' ? sentinel : literal.slice(1, -1),
+  return [...block.matchAll(COMPANY_ENTRY_PATTERN)].flatMap(([, , literal]) =>
+    literal === undefined ? [] : [literal === 'COMPANY_FACT_UNSET' ? sentinel : literal.slice(1, -1)],
   );
 }
 
