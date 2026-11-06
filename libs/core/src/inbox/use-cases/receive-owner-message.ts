@@ -1,5 +1,6 @@
 import {
   AgentWakeReason,
+  DeliveryState,
   IdPrefix,
   InboxCopyKey,
   MediaOrigin,
@@ -36,11 +37,11 @@ type Placement = {
   decision: RoutingDecision;
   answer: PendingAnswer | null;
   prompt: OwnerPrompt;
+  isRoutedNowhere: boolean;
 };
 type TappedOption = { question: Question; selected: Question['options'][number] };
 type Arrival = { dependencies: CoreDependencies; ownerLocale: OwnerLocale; ownerMessage: OwnerInboundMessage };
 
-const DUPLICATE_RESULT: ReceiveResult = { messageId: null, agent: null, duplicate: true };
 const NO_PROMPT: OwnerPrompt = { listedAgents: [], announcesNoAgents: false };
 
 function isMediaContent(content: OwnerInboundContent): content is MediaContent {
@@ -93,7 +94,7 @@ async function wakeAgent(
 ): Promise<void> {
   const { dependencies, ownerLocale, agent, unreadBefore, answeredQuestionId, shouldTellOwner } = input;
   const { waiters, waker, ids } = dependencies;
-  const hasLiveWaiter = waiters.hasLiveWaiter({ agent });
+  const hasLiveWaiter = waiters.hasLiveWaiter({ agent, questionId: answeredQuestionId });
   if (answeredQuestionId === null) waiters.resolveAgentMessage({ agent });
   if (answeredQuestionId !== null) waiters.resolveQuestionAnswer({ questionId: answeredQuestionId });
   const isNewBatch = unreadBefore === 0;
@@ -157,6 +158,7 @@ function placeTap(input: { tapped: TappedOption }): Placement {
       decision,
       answer: null,
       prompt: NO_PROMPT,
+      isRoutedNowhere: false,
     };
   return {
     content: { kind: MessageKind.Choice, questionId: question.questionId, options: question.options, selected },
@@ -164,6 +166,7 @@ function placeTap(input: { tapped: TappedOption }): Placement {
     decision,
     answer: { questionId: question.questionId, optionIndex: selected.optionIndex, text: selected.title },
     prompt: NO_PROMPT,
+    isRoutedNowhere: false,
   };
 }
 
@@ -178,6 +181,14 @@ async function findReference(
   return { message, question };
 }
 
+async function isRoutingListPending(input: { dependencies: CoreDependencies; held: Message[] }): Promise<boolean> {
+  const { repository } = input.dependencies;
+  const prompts = await Promise.all(
+    input.held.map((message) => repository.findChoicePrompt({ questionId: formatRoutingListQuestionId({ messageId: message.messageId }) })),
+  );
+  return prompts.some((prompt) => prompt !== null && prompt.delivery !== DeliveryState.Failed);
+}
+
 async function placeContent(input: Arrival & { content: MessageContent }): Promise<Placement> {
   const { dependencies, ownerMessage, content } = input;
   const { repository } = dependencies;
@@ -188,7 +199,7 @@ async function placeContent(input: Arrival & { content: MessageContent }): Promi
     repository.findLastAgentWrite({ since: ownerMessage.at - WINDOW_MS }),
     repository.listHeld(),
   ]);
-  const routingListOpen = held.length > 0;
+  const routingListOpen = await isRoutingListPending({ dependencies, held });
   const decision = routeOwnerMessage({
     text: textOf(content),
     referencedMessage: reference.message,
@@ -207,13 +218,14 @@ async function placeContent(input: Arrival & { content: MessageContent }): Promi
           .slice(0, QUESTION_MAX_OPTIONS)
           .map((record) => record.agent)
       : [];
-  const announcesNoAgents = decision.rule === RoutingRule.AskOwner && agents.length === 0 && !routingListOpen && shouldTellOwner;
+  const announcesNoAgents = decision.rule === RoutingRule.AskOwner && agents.length === 0 && held.length === 0 && shouldTellOwner;
   return {
     content: routedContent,
     replyToMessageId: ownerMessage.replyToMessageId,
     decision,
     answer: pendingAnswerOf({ content: routedContent, answersQuestionId: decision.answersQuestionId }),
     prompt: { listedAgents, announcesNoAgents },
+    isRoutedNowhere: content.kind === MessageKind.Reaction && decision.agent === null,
   };
 }
 
@@ -271,7 +283,7 @@ async function storePlacement(input: Arrival & { content: OwnerInboundContent; p
       at: ownerMessage.at,
       replyToMessageId: placement.replyToMessageId,
       delivery: null,
-      readByAgent: false,
+      readByAgent: placement.isRoutedNowhere,
       ...placement.content,
     },
   });
@@ -291,6 +303,29 @@ async function deliverPlacement(
   return wakeAgent({ ...input, agent, unreadBefore, answeredQuestionId, shouldTellOwner });
 }
 
+async function duplicateResultOf(input: { dependencies: CoreDependencies; wamid: string }): Promise<ReceiveResult> {
+  const { repository } = input.dependencies;
+  const messageId = await repository.findChannelReceiptMessageId({ wamid: input.wamid });
+  if (messageId === null) return { messageId: null, agent: null, duplicate: true };
+  const message = await repository.findMessage({ messageId });
+  if (message === null) return { messageId, agent: null, duplicate: true };
+  return { messageId, agent: message.agent, duplicate: true };
+}
+
+async function expireRoute(input: Arrival): Promise<ReceiveResult> {
+  const { dependencies, ownerLocale } = input;
+  const text = renderCopy({ key: InboxCopyKey.RoutingListExpired, locale: ownerLocale, values: {} });
+  await deliverToOwner({
+    dependencies,
+    ownerLocale,
+    agent: null,
+    messageId: dependencies.ids.next({ prefix: IdPrefix.Message }),
+    content: { kind: MessageKind.Text, text },
+    replyToMessageId: null,
+  });
+  return { messageId: null, agent: null, duplicate: false };
+}
+
 export async function receiveOwnerMessage(input: ReceiveOwnerMessageInput): Promise<ReceiveResult> {
   const { dependencies, ownerLocale, channelMessageId, ownerMessage } = input;
   const { repository, clock } = dependencies;
@@ -300,14 +335,18 @@ export async function receiveOwnerMessage(input: ReceiveOwnerMessageInput): Prom
   const isNoticeQuickReply = content.kind === MessageKind.Choice && content.optionId === NOTICE_QUICK_REPLY_ID;
   const routeTarget =
     content.kind === MessageKind.Choice && !isNoticeQuickReply ? await findRouteTarget({ dependencies, optionId: content.optionId }) : null;
-  const isPlaced = !isNoticeQuickReply && routeTarget === null;
+  const isRouteOption = content.kind === MessageKind.Choice && parseRouteOptionId({ optionId: content.optionId }) !== null;
+  const isStaleRoute = isRouteOption && routeTarget === null;
+  const isPlaced = !isNoticeQuickReply && !isRouteOption;
   const placement = isPlaced ? await placeOwnerContent({ ...arrival, content }) : null;
   const placedAgent = placement === null ? null : placement.decision.agent;
   const unreadBefore = placedAgent === null ? 0 : await repository.countUnread({ agent: placedAgent });
   const isNewMessage = await repository.recordChannelReceipt({ wamid: channelMessageId, receivedAt: clock.now() });
-  if (!isNewMessage) return DUPLICATE_RESULT;
+  if (!isNewMessage) return duplicateResultOf({ dependencies, wamid: channelMessageId });
   const messageId = placement === null ? null : await storePlacement({ ...arrival, content, placement });
+  if (messageId !== null) await repository.linkChannelReceipt({ wamid: channelMessageId, messageId });
   if (content.kind !== MessageKind.Reaction) await openWindowAndFlush({ dependencies, at: ownerMessage.at });
+  if (isStaleRoute) return expireRoute(arrival);
   if (routeTarget !== null) return applyRouteTarget({ ...arrival, target: routeTarget });
   if (placement === null || messageId === null) return { messageId: null, agent: null, duplicate: false };
   const shouldTellOwner = content.kind !== MessageKind.Reaction;
