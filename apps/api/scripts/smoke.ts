@@ -7,6 +7,7 @@ import { readDeployBlock } from './deploy';
 import { parseDeployEnvironment, type DeployEnvironment } from '../src/operations/deploy-environment';
 import { formatSmokeResult, runSmokeChecks, type SmokeFetch } from '../src/operations/smoke-checks';
 import { readSmokeInputs, SmokeInput } from '../src/operations/smoke-inputs';
+import { assertSmokeTarget } from '../src/operations/smoke-target';
 
 const originBlockSchema = z.object({ vars: z.object({ PUBLIC_ORIGIN: z.string() }) });
 
@@ -30,8 +31,9 @@ function firstDeployInstructions(input: { environment: DeployEnvironment }): str
 }
 
 export async function runSmoke(input: SmokeEntry): Promise<number> {
-  const { environment, firstDeploy, environmentVariables, smokeFetch, wait, log } = input;
+  const { environment, firstDeploy, environmentVariables, publicOrigin, smokeFetch, wait, log } = input;
   const inputs = readSmokeInputs({ environment, firstDeploy, environmentVariables });
+  assertSmokeTarget({ environment, baseUrl: inputs[SmokeInput.BaseUrl] as string, publicOrigin });
   const results = await runSmokeChecks({
     environment,
     firstDeploy,

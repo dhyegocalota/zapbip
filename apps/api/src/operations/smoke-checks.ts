@@ -3,13 +3,14 @@ import { z } from 'zod';
 import { WHATSAPP_WEBHOOK_PATH } from '../contract/constants';
 import { McpToolName } from '../contract/tool-definitions';
 import { HttpStatus } from '../routes/http-status';
-import { SMOKE_POLL_ATTEMPTS, SMOKE_POLL_INTERVAL_MS } from './constants';
-import { buildSignedWebhookPost, SIGNATURE_HEADER } from './signed-webhook';
+import { PLACEHOLDER_VALUE_PREFIX, SMOKE_POLL_ATTEMPTS, SMOKE_POLL_INTERVAL_MS } from './constants';
+import { buildSignedWebhookPost, SIGNATURE_HEADER, signWebhookBody } from './signed-webhook';
 import { SmokeCheck, SmokeInput, type SmokeInputs, type SmokeScope, smokeChecksFor } from './smoke-inputs';
 
 const HEALTH_PATH = '/health';
 const SMOKE_TEXT_PREFIX = '@smoke ';
 const WRONG_VERIFY_TOKEN = 'zapbip-smoke-wrong-token';
+const PLACEHOLDER_APP_SECRET = `${PLACEHOLDER_VALUE_PREFIX}META_APP_SECRET`;
 const ZERO_SIGNATURE = `sha256=${'0'.repeat(64)}`;
 const EMPTY_JSON_BODY = '{}';
 const REQUEST_FAILED_STATUS = 0;
@@ -130,6 +131,14 @@ async function checkSignatureRejected(run: SmokeRun): Promise<Outcome> {
     body: EMPTY_JSON_BODY,
   });
   if (!REFUSAL_STATUSES.includes(response.status)) return fail({ status: response.status, detail: 'a wrong signature was accepted' });
+  const placeholderSigned = await run.smokeFetch(urlOf({ run, path: WHATSAPP_WEBHOOK_PATH }), {
+    method: 'POST',
+    headers: { ...JSON_HEADERS, [SIGNATURE_HEADER]: signWebhookBody({ appSecret: PLACEHOLDER_APP_SECRET, body: EMPTY_JSON_BODY }) },
+    body: EMPTY_JSON_BODY,
+  });
+  if (!REFUSAL_STATUSES.includes(placeholderSigned.status)) {
+    return fail({ status: placeholderSigned.status, detail: 'a body signed with the placeholder app secret was accepted' });
+  }
   return pass({ status: response.status });
 }
 
@@ -192,11 +201,18 @@ async function runCheck(input: { run: SmokeRun; check: SmokeCheck }): Promise<Sm
   }
 }
 
+async function runInOrder(input: { run: SmokeRun; checks: SmokeCheck[]; results: SmokeResult[] }): Promise<SmokeResult[]> {
+  const { run, checks, results } = input;
+  const [check, ...remaining] = checks;
+  if (!check) return results;
+  const result = await runCheck({ run, check });
+  const isHealthFailure = check === SmokeCheck.Health && !result.passed;
+  if (isHealthFailure) return [...results, result];
+  return runInOrder({ run, checks: remaining, results: [...results, result] });
+}
+
 export function runSmokeChecks(input: SmokeRun): Promise<SmokeResult[]> {
-  return smokeChecksFor(input).reduce(
-    async (previous, check) => [...(await previous), await runCheck({ run: input, check })],
-    Promise.resolve<SmokeResult[]>([]),
-  );
+  return runInOrder({ run: input, checks: smokeChecksFor(input), results: [] });
 }
 
 export function formatSmokeResult(input: { result: SmokeResult }): string {

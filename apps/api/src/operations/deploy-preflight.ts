@@ -69,7 +69,13 @@ export type DocsPreflightInput = {
 type PreflightCheck<Input> = { step: PreflightStep; refusalOf: (input: Input) => Promise<string | null> };
 
 const databaseBlockSchema = z.object({ d1_databases: z.tuple([z.object({ database_name: z.string() })], z.unknown()) });
-const maintainerListSchema = z.array(z.string());
+const npmPersonSchema = z.union([z.string(), z.object({ name: z.string() })]);
+const npmPeopleSchema = z.union([npmPersonSchema, z.array(npmPersonSchema)]);
+
+function npmNamesOf(input: { people: z.infer<typeof npmPeopleSchema> }): string[] {
+  const people = Array.isArray(input.people) ? input.people : [input.people];
+  return people.map((person) => (typeof person === 'string' ? (person.split(' <')[0] as string) : person.name));
+}
 const secretListSchema = z.array(z.object({ name: z.string() }));
 const cronBlockSchema = z.object({ triggers: z.object({ crons: z.array(z.string()) }) });
 
@@ -123,13 +129,21 @@ async function refuseUnsetCompanyFacts(input: { company: CompanyFacts }): Promis
 
 async function untrustedReasonOf(input: { shell: DeployShell; packageSpec: string; publisher: string }): Promise<string | null> {
   const { shell, packageSpec, publisher } = input;
-  const result = await shell.run({ file: NPM, args: ['view', packageSpec, 'maintainers', '--json'] });
-  if (result.exitCode !== 0) return `${packageSpec} does not resolve on npm; publish it first`;
-  const maintainers = maintainerListSchema.safeParse(parseJsonOrNull({ text: result.stdout }));
+  const maintainerAnswer = await shell.run({ file: NPM, args: ['view', packageSpec, 'maintainers', '--json'] });
+  if (maintainerAnswer.exitCode !== 0) return `${packageSpec} does not resolve on npm; publish it first`;
+  const maintainers = npmPeopleSchema.safeParse(parseJsonOrNull({ text: maintainerAnswer.stdout }));
   if (!maintainers.success) return `could not read the maintainers of ${packageSpec} as JSON`;
-  const names = maintainers.data.map((maintainer) => maintainer.split(' <')[0]);
-  if (names.includes(publisher)) return null;
-  return `${packageSpec} is not maintained by the npm user ${publisher}`;
+  const names = npmNamesOf({ people: maintainers.data });
+  const hasOnlyPublisher = names.length > 0 && names.every((name) => name === publisher);
+  if (!hasOnlyPublisher)
+    return `${packageSpec} must be maintained only by the npm user ${publisher}; its maintainers are ${names.join(', ')}`;
+  const publisherAnswer = await shell.run({ file: NPM, args: ['view', packageSpec, '_npmUser', '--json'] });
+  if (publisherAnswer.exitCode !== 0) return `could not read who published ${packageSpec}`;
+  const publishedBy = npmPeopleSchema.safeParse(parseJsonOrNull({ text: publisherAnswer.stdout }));
+  if (!publishedBy.success) return `could not read who published ${packageSpec} as JSON`;
+  const publishers = npmNamesOf({ people: publishedBy.data });
+  if (publishers.length === 1 && publishers[0] === publisher) return null;
+  return `${packageSpec} was published by ${publishers.join(', ')}, not by the npm user ${publisher}`;
 }
 
 async function firstUntrusted(input: { shell: DeployShell; packageSpecs: string[]; publisher: string }): Promise<string | null> {

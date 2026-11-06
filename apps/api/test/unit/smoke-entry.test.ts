@@ -53,6 +53,7 @@ describe('smoke entry', () => {
     const { exitCode, lines } = await smoke({
       environment: DeployEnvironment.Production,
       environmentVariables,
+      publicOrigin: 'https://mcp.zapbip.com',
       behavior: { healthEnvironment: DeployEnvironment.Production },
     });
     expect(exitCode).toBe(0);
