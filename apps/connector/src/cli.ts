@@ -2,7 +2,7 @@ import { existsSync, realpathSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { fileURLToPath } from 'node:url';
-import { ConnectorClient, UUID_PATTERN } from '@zapbip/types';
+import { CONNECTION_URL_VARIABLE, ConnectorClient, UUID_PATTERN } from '@zapbip/types';
 import { runChannel } from './channel';
 import { deriveConnectorLinks, runConnection } from './connect';
 import { runListen } from './listen';
@@ -27,7 +27,6 @@ enum CliFlag {
 
 type CliCommandHandler = (input: { argv: string[] }) => Promise<number>;
 
-const CONNECTION_URL_VARIABLE = 'ZAPBIP_CONNECTION_URL';
 const CHANNEL_LINK_MESSAGE = `the channel reads the connection link from ${CONNECTION_URL_VARIABLE}`;
 const CONNECTION_PROMPT = 'Connection link: ';
 const USAGE = `usage: zapbip ${CliCommand.Connect} ${CliFlag.Client} ${Object.values(ConnectorClient).join('|')} [${CliFlag.WorkingDirectory} <directory>] [${CliFlag.Session} <uuid>]`;

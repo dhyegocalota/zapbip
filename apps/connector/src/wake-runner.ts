@@ -1,6 +1,12 @@
 import { spawn } from 'node:child_process';
 import type { Message } from '@zapbip/core';
-import { CONNECTOR_WAKE_TIMEOUT_MS, ConnectorClient, type ConnectorSessionSource, ConnectorWakeOutcome } from '@zapbip/types';
+import {
+  CONNECTION_URL_VARIABLE,
+  CONNECTOR_WAKE_TIMEOUT_MS,
+  ConnectorClient,
+  type ConnectorSessionSource,
+  ConnectorWakeOutcome,
+} from '@zapbip/types';
 import { buildOwnerPrompt } from './owner-prompt';
 import { buildCodexNewSessionArguments, CLIENT_BINARY_NAME, isActiveWriterRefusal, RESUME_ARGUMENT_BUILDERS } from './wake-commands';
 
@@ -9,15 +15,27 @@ export type WakeResult = { outcome: ConnectorWakeOutcome; exitCode: number | nul
 
 const CLEAN_EXIT_CODE = 0;
 
+function childEnvironment(): NodeJS.ProcessEnv {
+  return Object.fromEntries(Object.entries(process.env).filter(([name]) => name !== CONNECTION_URL_VARIABLE));
+}
+
 function runChild(input: {
   client: ConnectorClient;
   clientArguments: string[];
+  prompt: string;
   workingDirectory: string;
   signal?: AbortSignal;
 }): Promise<ChildResult> {
-  const { client, clientArguments, workingDirectory, signal } = input;
+  const { client, clientArguments, prompt, workingDirectory, signal } = input;
   return new Promise((resolve) => {
-    const child = spawn(CLIENT_BINARY_NAME[client], clientArguments, { cwd: workingDirectory, stdio: ['ignore', 'pipe', 'pipe'], signal });
+    const child = spawn(CLIENT_BINARY_NAME[client], clientArguments, {
+      cwd: workingDirectory,
+      env: childEnvironment(),
+      stdio: ['pipe', 'pipe', 'pipe'],
+      signal,
+    });
+    child.stdin.on('error', () => undefined);
+    child.stdin.end(prompt);
     let stderrText = '';
     child.stdout.resume();
     child.stderr.on('data', (chunk: Buffer) => {
@@ -54,12 +72,13 @@ export async function runWake(input: {
   const prompt = buildOwnerPrompt({ message });
   const resumed = await runChild({
     client,
-    clientArguments: RESUME_ARGUMENT_BUILDERS[client]({ sessionId, prompt }),
+    clientArguments: RESUME_ARGUMENT_BUILDERS[client]({ sessionId }),
+    prompt,
     workingDirectory,
     signal,
   });
   const isActiveWriterOnCodex = client === ConnectorClient.Codex && isActiveWriterRefusal({ stderrText: resumed.stderrText });
   if (!isActiveWriterOnCodex) return outcomeOf({ result: resumed, successOutcome: ConnectorWakeOutcome.Answered });
-  const fallback = await runChild({ client, clientArguments: buildCodexNewSessionArguments({ prompt }), workingDirectory, signal });
+  const fallback = await runChild({ client, clientArguments: buildCodexNewSessionArguments(), prompt, workingDirectory, signal });
   return outcomeOf({ result: fallback, successOutcome: ConnectorWakeOutcome.FallbackNewThread });
 }
