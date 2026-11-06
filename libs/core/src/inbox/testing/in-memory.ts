@@ -147,6 +147,11 @@ function createInMemoryRepository(): InboxRepository {
     saveRoutingList: async (input) => {
       routingList = { ...input.routingList };
     },
+    claimRoutingListExpiry: async ({ openedAt, claimedAt }) => {
+      if (routingList === null || routingList.openedAt !== openedAt) return false;
+      routingList = { ...routingList, openedAt: claimedAt, resent: true };
+      return true;
+    },
     clearRoutingList: async () => {
       routingList = null;
     },

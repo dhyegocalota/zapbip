@@ -50,6 +50,7 @@ export interface InboxRepository {
   findRoutingList(): Promise<RoutingList | null>;
   saveRoutingList(input: { routingList: RoutingList }): Promise<void>;
   clearRoutingList(): Promise<void>;
+  claimRoutingListExpiry(input: { openedAt: number; claimedAt: number }): Promise<boolean>;
   insertMedia(input: { media: StoredMedia }): Promise<void>;
   findMedia(input: { mediaId: string }): Promise<StoredMedia | null>;
   claimUpload(input: { mediaId: string }): Promise<boolean>;

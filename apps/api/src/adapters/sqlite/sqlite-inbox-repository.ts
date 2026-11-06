@@ -350,6 +350,17 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
       );
     },
 
+    async claimRoutingListExpiry({ openedAt, claimedAt }) {
+      return (
+        rows(
+          'UPDATE owner_window SET routing_list_opened_at = ?, routing_list_resent = 1 WHERE id = ? AND routing_list_opened_at = ? RETURNING id',
+          claimedAt,
+          WINDOW_ROW_ID,
+          openedAt,
+        ).length === 1
+      );
+    },
+
     async insertMedia({ media }) {
       run(
         'INSERT INTO media (media_id, origin, mime_type, size_bytes, filename, expires_at, received_at, retention_until) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
