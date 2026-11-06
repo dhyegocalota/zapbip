@@ -1,0 +1,55 @@
+---
+title: Claude Code
+description: Connect Claude Code to your WhatsApp.
+---
+
+## What works
+
+- Your AI sends you text, photos, videos, audio, documents, locations, contacts and reactions on WhatsApp.
+- It asks you with buttons or lists and waits for your tap.
+- Write on WhatsApp and Claude Code answers in about 7 seconds, even when the session is idle or closed.
+- It waits for your answer as long as it takes.
+
+## Set up from zero
+
+<Steps>
+  <Step title="Message the official zapbip number">
+    Open WhatsApp and send `hi` to the official zapbip number, then `new agent claude-code`. [How to start](/get-started/how-to-start) shows every message.
+  </Step>
+  <Step title="Paste the prompt into Claude Code">
+    zapbip answers with one line made for you. Paste it into Claude Code:
+
+    ```text
+    Connect yourself to my WhatsApp with zapbip: read https://zapbip.com/i/K7P2QX and follow the instructions.
+    ```
+
+    Claude Code reads the page and follows the steps below, in order. Before it changes a file or a setting, it tells you which one and waits for your yes. The link in that page is secret, so keep it out of chats you share.
+  </Step>
+  <Step title="Add zapbip to Claude Code">
+    If an older `zapbip` entry exists, Claude Code removes it with `claude mcp remove --scope user zapbip`. Then it runs `claude mcp add --transport http --scope user zapbip <connectionLink>`.
+  </Step>
+  <Step title="Save the zapbip skill">
+    After your yes, it writes `~/.claude/skills/zapbip/SKILL.md`, so every session knows how to use WhatsApp.
+  </Step>
+  <Step title="Start the connector">
+    It runs `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@<version> connect --client claude-code` in the background. The connector wakes your session when you write while Claude Code is idle or closed. `<version>` is the exact version your AI's instructions name.
+  </Step>
+  <Step title="Start listening">
+    It runs `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@<version> listen` in the background and watches it with Monitor, re-arming it on each timeout notice.
+  </Step>
+  <Step title="Tell zapbip it is listening">
+    It calls `set_wake({mode: "local"})`.
+  </Step>
+  <Step title="Test it">
+    In a fresh process it runs `claude -p "Use zapbip to send ✅ installed to my WhatsApp" --allowedTools=mcp__zapbip__send_message`. A `send_message` with ✅ installed reaches your WhatsApp. If the command fails, it stops and shows the last 20 lines. Then restart Claude Code to use the zapbip tools.
+  </Step>
+</Steps>
+
+## How your AI listens
+
+- Start Claude Code with `claude --dangerously-load-development-channels server:zapbip`. The zapbip channel then pushes each WhatsApp message into the open session as it arrives.
+- If the channel is not on, Claude Code keeps `npx zapbip@<version> listen` running and watches it with Monitor. A watch lasts at most 30 minutes, so Claude Code re-arms it on each timeout notice.
+- If the session is closed, the connector resumes it in about 7 seconds.
+- Idle costs no tokens. Each message costs one turn.
+
+There is no time limit. While a question is open, your AI asks again until you answer, for as long as it takes.

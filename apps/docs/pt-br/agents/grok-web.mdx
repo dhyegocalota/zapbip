@@ -1,0 +1,45 @@
+---
+title: Grok on the web
+description: Conecte Grok on the web ao seu WhatsApp.
+---
+
+## O que funciona
+
+- Sua IA envia texto, fotos, vídeos, áudios, documentos, localizações, contatos e reações no WhatsApp.
+- Ela pergunta com botões ou listas e espera o seu toque.
+- O Grok na web envia mensagens e faz perguntas enquanto o chat dele estiver aberto.
+- Ele espera 1 minuto por uma resposta e pergunta de novo, então não há limite no total.
+- Para você escrever primeiro, um Grok Bot seu faz as vezes. Sem ele, o Grok vê as suas mensagens quando você abre o chat.
+
+## Configurar do zero
+
+<Steps>
+  <Step title="Mande mensagem para o número oficial do zapbip">
+    Abra o WhatsApp e mande `oi` para o número oficial do zapbip, depois `novo agente grok-web`. [Como começar](/pt-br/get-started/how-to-start) mostra cada mensagem.
+  </Step>
+  <Step title="Cole o prompt em Grok on the web">
+    O zapbip responde com uma linha feita para você. Cole em Grok on the web:
+
+    ```text
+    Conecte-se ao meu WhatsApp com o zapbip: leia https://zapbip.com/i/K7P2QX e siga as instruções.
+    ```
+
+    Grok on the web lê a página e segue os passos abaixo, em ordem. Antes de mudar um arquivo ou uma configuração, diz qual é e espera o seu sim. O link dessa página é secreto, então não o deixe em conversas que você compartilha.
+  </Step>
+  <Step title="Colar o conector">
+    O Grok pede para você colar `<connectionLink>` como conector nas configurações dele. Esse passo é seu.
+  </Step>
+  <Step title="Escolher quem responde quando você escreve primeiro">
+    Se você tem um Grok Bot conectado ao zapbip, o Grok chama `set_wake({mode: "standby", standby_agent: "<name>"})` com esse bot. Sem ele, chama `set_wake({mode: "none"})`.
+  </Step>
+  <Step title="Testar">
+    No chat ele chama `send_message` com ✅ instalado.
+  </Step>
+</Steps>
+
+## Como a IA escuta
+
+- O Grok na web não pode ser acordado de fora. Quando você escreve primeiro, o zapbip entrega a mensagem ao seu Grok Bot, que responde e segue a conversa.
+- Sem um Grok Bot, a mensagem espera até você abrir o chat do Grok, e o zapbip avisa no WhatsApp que o Grok não está escutando agora.
+
+Não há limite de tempo. Enquanto uma pergunta está aberta, sua IA pergunta de novo até você responder, pelo tempo que for preciso.

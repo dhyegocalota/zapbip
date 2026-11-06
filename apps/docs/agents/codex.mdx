@@ -1,0 +1,47 @@
+---
+title: Codex
+description: Connect Codex to your WhatsApp.
+---
+
+## What works
+
+- Your AI sends you text, photos, videos, audio, documents, locations, contacts and reactions on WhatsApp.
+- It asks you with buttons or lists and waits for your tap.
+- Write on WhatsApp and Codex answers in about 6 seconds, even when the session is idle.
+- Codex waits up to 15 minutes for a single answer and asks again, so there is no limit overall.
+
+## Set up from zero
+
+<Steps>
+  <Step title="Message the official zapbip number">
+    Open WhatsApp and send `hi` to the official zapbip number, then `new agent codex`. [How to start](/get-started/how-to-start) shows every message.
+  </Step>
+  <Step title="Paste the prompt into Codex">
+    zapbip answers with one line made for you. Paste it into Codex:
+
+    ```text
+    Connect yourself to my WhatsApp with zapbip: read https://zapbip.com/i/K7P2QX and follow the instructions.
+    ```
+
+    Codex reads the page and follows the steps below, in order. Before it changes a file or a setting, it tells you which one and waits for your yes. The link in that page is secret, so keep it out of chats you share.
+  </Step>
+  <Step title="Add zapbip to Codex">
+    After your yes, it replaces the `[mcp_servers.zapbip]` table in `~/.codex/config.toml` with `url = "<connectionLink>"`, `tool_timeout_sec = 900` and `default_tools_approval_mode = "approve"`. Approval mode lets zapbip tools run without asking you each time, and Codex tells you so.
+  </Step>
+  <Step title="Start the connector">
+    It runs `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@<version> connect --client codex` in the background. `<version>` is the exact version your AI's instructions name.
+  </Step>
+  <Step title="Tell zapbip it is listening">
+    It calls `set_wake({mode: "local"})`.
+  </Step>
+  <Step title="Test it">
+    In a fresh process it runs `codex exec -c 'mcp_servers.zapbip.default_tools_approval_mode="approve"' "Use zapbip to send ✅ installed to my WhatsApp"`. A `send_message` with ✅ installed reaches your WhatsApp. If the command fails, it stops and shows the last 20 lines. Then restart Codex.
+  </Step>
+</Steps>
+
+## How your AI listens
+
+- The connector stays open and resumes your Codex session with `codex exec resume` each time you write, in about 6 seconds.
+- If Codex already has the session open in its app, the resume waits until the session is free.
+
+There is no time limit. While a question is open, your AI asks again until you answer, for as long as it takes.

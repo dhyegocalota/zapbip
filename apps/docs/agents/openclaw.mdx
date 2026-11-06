@@ -1,0 +1,47 @@
+---
+title: OpenClaw
+description: Connect OpenClaw to your WhatsApp.
+---
+
+## What works
+
+- Your AI sends you text, photos, videos, audio, documents, locations, contacts and reactions on WhatsApp.
+- It asks you with buttons or lists and waits for your tap.
+- Write on WhatsApp and OpenClaw hears you within about a minute.
+- It waits for your answer as long as it takes.
+
+## Set up from zero
+
+<Steps>
+  <Step title="Message the official zapbip number">
+    Open WhatsApp and send `hi` to the official zapbip number, then `new agent openclaw`. [How to start](/get-started/how-to-start) shows every message.
+  </Step>
+  <Step title="Paste the prompt into OpenClaw">
+    zapbip answers with one line made for you. Paste it into OpenClaw:
+
+    ```text
+    Connect yourself to my WhatsApp with zapbip: read https://zapbip.com/i/K7P2QX and follow the instructions.
+    ```
+
+    OpenClaw reads the page and follows the steps below, in order. Before it changes a file or a setting, it tells you which one and waits for your yes. The link in that page is secret, so keep it out of chats you share.
+  </Step>
+  <Step title="Add zapbip to OpenClaw">
+    It adds `mcp.servers.zapbip` with `transport: "streamable-http"`, the URL `<connectionLink>` and the Bearer header.
+  </Step>
+  <Step title="Install the channel plugin">
+    The better option: it installs and enables the zapbip channel plugin, then calls `set_wake({mode: "local"})`.
+  </Step>
+  <Step title="Or keep a background watcher">
+    It creates a `stream` job on `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@<version> listen` with its automations tool and keeps it running. Or it creates an `every 1m` job that calls `check_inbox`. It then calls `set_wake({mode: "scheduled", interval_minutes: 1})`. A watcher that polls costs model calls, and OpenClaw tells you so. `<version>` is the exact version your AI's instructions name.
+  </Step>
+  <Step title="Test it">
+    In the chat it calls `send_message` with ✅ installed.
+  </Step>
+</Steps>
+
+## How your AI listens
+
+- With the zapbip channel plugin, each WhatsApp message arrives in OpenClaw as it is sent.
+- Without it, a long-lived `stream` job watches `npx zapbip@<version> listen`, or a job every minute checks the inbox.
+
+There is no time limit. While a question is open, your AI asks again until you answer, for as long as it takes.

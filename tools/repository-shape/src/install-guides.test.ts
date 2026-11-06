@@ -6,7 +6,8 @@ const DOCS_CONFIG = 'apps/docs/docs.json';
 const SECTION_HEADING_PATTERN = /^## .+$/gm;
 const SECTIONS_PER_GUIDE = 3;
 const FRONTMATTER_PATTERN = /^---\ntitle: .+\ndescription: .+\n---\n/;
-const CONNECTION_LINK_PLACEHOLDER = '`<connectionLink>`';
+const CONNECTION_LINK_PLACEHOLDER = '<connectionLink>';
+const CODE_PATTERN = /```[\s\S]*?```|`[^`\n]*`/g;
 const UNPINNED_PACKAGE_PATTERN = /npx zapbip(?!@)/;
 const FORBIDDEN_WORDS = /fake|simulator|localhost|zb_conn_/i;
 
@@ -48,6 +49,7 @@ describe('install guides', () => {
   test.each(cases)('$path shows the connection link only as the placeholder', ({ path }) => {
     const guide = readRepositoryFile(path);
     expect(guide).toContain(CONNECTION_LINK_PLACEHOLDER);
+    expect(guide.replace(CODE_PATTERN, '')).not.toContain(CONNECTION_LINK_PLACEHOLDER);
     expect(guide).not.toMatch(FORBIDDEN_WORDS);
   });
 
