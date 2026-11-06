@@ -357,7 +357,7 @@ Failure modes: see table.
 
 ### Step L3 (wakers and Durable Object)
 
-- [ ] **S3.1 red: wakers, alarm, handoff.** Write `scheduled-wake-alarm.test.ts`, `standby-handoff.test.ts`, and `standby-revocation.test.ts` (this one needs accounts-and-keys merged). Expected failure: `not implemented`. Commit as `test(api): pin the scheduled and standby wakers, the alarm and the revoke flow`.
+- [x] **S3.1 red: wakers, alarm, handoff.** Write `scheduled-wake-alarm.test.ts`, `standby-handoff.test.ts`, and `standby-revocation.test.ts` (this one needs accounts-and-keys merged). Expected failure: `not implemented`. Commit as `test(api): pin the scheduled and standby wakers, the alarm and the revoke flow`. Evidence: `5ca8f5a` (20 red; `standby-revocation.test.ts` also needs slice 3's `recordRevocation`).
 - [ ] **S3.2 green: wakers and Durable Object.** Implement `ScheduledAgentWaker`, `InboxAgentWaker` (the note, then `Unreached`), `StandbyAgentWaker` (copy with a new id and `origin_message_id`, `insertHandoff`, `dependencies.waker.notify` with `StandbyFor` (no pointer) when the standby's count was 0, returns the standby's outcome; `Woken` without a call when the count was above 0; ~~throws when `messageId` is absent~~ returns `Unreached` without a copy, R6). Widen `WakerByRung` and `createDispatchingAgentWaker` (uses `wakeRungFor`). In `account-inbox.ts`: `checkInbox` through `pollInbox`; register the poller due-time provider (A13); ~~`recordRevocation`~~ (R4); assign `dependencies.waker` to the dispatcher. Commit as `feat(api): add the scheduled and standby wakers and run the poller checks in the alarm`.
 
 Failure modes: see table.

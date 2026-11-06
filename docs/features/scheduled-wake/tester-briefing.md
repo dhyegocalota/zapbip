@@ -76,3 +76,40 @@ Red commit `12637d8`: 16 of 21 cases of `scheduled-wake-storage.test.ts` failed 
 
 - `account-inbox.test.ts` (`WI-120`, `WI-121`) and `webhook-wake-secrets.test.ts` (`migration v2`) use `3` as a synthetic "later" migration version; with the real `v3` they fail (`expected [ 4 ] to deeply equal [ 3, 4 ]`, `expected [] to deeply equal [ 3 ]`, `UNIQUE constraint failed: schema_versions.version`). Not L1 files: the lead must move their synthetic versions past `ACCOUNT_INBOX_MIGRATIONS` (for example derive them from the last registered version).
 - accounts-and-keys describes its own DO schema `v6`; the lead renumbers `v3.sql` when merging it, since runner order is by version.
+
+## Lane L3 (wakers and Durable Object)
+
+### What changed
+
+- `apps/api/src/adapters/wake/scheduled-agent-waker.ts`: the expected-delay note (`sendExpectedDelayNote`, shared) and the `scheduled` rung waker; a `StandbyFor` wake sends no note.
+- `apps/api/src/adapters/wake/inbox-agent-waker.ts`: for a stored `scheduled` connection on the inbox rung (stale) it sends the note and returns `Unreached`, so core sends the inbox notice; every other connection returns `Unreached` with no note.
+- `apps/api/src/adapters/wake/standby-agent-waker.ts`: without `messageId` or without a standby name it returns `Unreached`; otherwise it writes the copy (new id, `originMessageId` = the owner message id, unread) through `insertHandoff`, wakes the standby with `StandbyFor` only when its unread count was 0 before the copy, and returns the standby's outcome (`Woken` when the count was above 0). An unknown `messageId` throws `NotFound`.
+- `apps/api/src/account-inbox/account-inbox.ts`: one `CoreDependencies` object whose `waker` is assigned to the dispatcher after the dispatcher exists (the wakers hold that object, so the standby waker notifies through the dispatcher); the four rungs are real wakers; `checkInbox` runs `pollInbox`; a poller due-time provider (`nextPollerDeadline`, `evaluatePollers`) is the last provider, so the expiry sweep runs before the stale notices. `setWake` already re-arms the alarm through `outcome()`.
+- `createDispatchingAgentWaker` and `WakerByRung` were already widened in Step 0 and are unchanged.
+
+### How to run
+
+```bash
+pnpm --filter @zapbip/api test:integration -- scheduled-wake-alarm standby-handoff standby-revocation
+```
+
+### Red today, green after
+
+Red commit `5ca8f5a`: 20 of 20 cases failed, every one with `Error: saveScheduled is not implemented` or `Error: saveStandby is not implemented` (lane L0 stubs of `set_wake`, which L2 replaces). The implementation commit is `d02a7c8`. The `scheduled-wake-alarm` and `standby-handoff` cases go green once L2's use cases (`setWake`, `pollInbox`, `evaluatePollers`, `nextPollerDeadline`, `wakeRungFor`, `ownerMessageIdOf`, `receiveOwnerMessage` passing `messageId`, `send-content` resolving `ownerMessageIdOf`) are merged.
+
+`standby-revocation.test.ts` is waiting on slice 3 (accounts-and-keys): it calls `recordRevocation({agent})` on the account object through a local one-method type, which exists only after `origin/feat/accounts-and-keys` is merged. Its command-driven cases (`revogar grok-bot`, `girar grok-bot`, the revoked secret answering `401`) need that slice's owner commands and the directory and are not written here.
+
+### Hypotheses to attack
+
+1. A scheduled connection whose poller stopped gets exactly one stale notice per episode; the next alarm sends none; a `check_inbox` ends the episode.
+2. The owner's first message to a fresh scheduled agent gets the cadence note and no inbox notice; to a stale one it gets the note and then the inbox notice, in that order.
+3. After a standby-mode primary receives a plain owner message, the primary's `check_inbox` is empty, its history shows `handed_to`, and the standby's `check_inbox` returns a copy with a new id and `origin_message_id`; `reply_to` with either id stores the owner message id.
+4. The standby is woken once with the constant signal while its unread count stays above 0; the primary is never woken.
+5. A standby that is itself in standby mode, or has no `agent_wake` row, receives no copy; the owner gets the inbox notice.
+6. The alarm is armed at `lastPolledAt + 2 * interval` after `set_wake` and after the object is evicted.
+
+### Known gaps
+
+- "Alarm order" (expiry sweep before stale notices) is not asserted as behaviour: with the window closed the stale notice is queued and invisible, and with it open nothing expires. It rests on the provider order in `account-inbox.ts`.
+- Not written because they are unit-level or belong to another lane: B3 to B6 waker unit cases (no spy-based test of the wakers in `apps/api` since the plan assigns L3 only the three integration files), "Every owner kind hands off with its content", and "Answer is not handed off".
+- `standby-revocation.test.ts` does not drive the owner command path (needs slice 3).
