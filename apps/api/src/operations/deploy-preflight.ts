@@ -101,6 +101,14 @@ async function refuseUnsetOfficialNumber(input: { officialWhatsAppNumber: string
   return `OFFICIAL_WHATSAPP_NUMBER is still ${OFFICIAL_NUMBER_UNSET}; set the official number in libs/types before deploying`;
 }
 
+async function refuseUnsetCompanyFacts(input: { company: CompanyFacts }): Promise<string | null> {
+  const unset = Object.entries(input.company)
+    .filter(([, value]) => value === COMPANY_FACT_UNSET)
+    .map(([field]) => field);
+  if (unset.length === 0) return null;
+  return `COMPANY facts are still ${COMPANY_FACT_UNSET}: ${unset.join(', ')}; fill the Logic Bit company facts in libs/types before deploying`;
+}
+
 async function refuseUnpublishedPackage(input: DocsPreflightInput): Promise<string | null> {
   const packageVersion = `${NPM_PACKAGE_NAME}@${input.npmVersion}`;
   const result = await input.shell.run({ file: NPM, args: ['view', packageVersion, 'version'] });
@@ -177,6 +185,7 @@ async function refuseMissingSmokeInputs(input: WorkerPreflightInput): Promise<st
 const WORKER_CHECKS: PreflightCheck<WorkerPreflightInput>[] = [
   { step: PreflightStep.Environment, refusalOf: refuseUnlessDeployable },
   { step: PreflightStep.OfficialNumber, refusalOf: refuseUnsetOfficialNumber },
+  { step: PreflightStep.CompanyFacts, refusalOf: refuseUnsetCompanyFacts },
   { step: PreflightStep.Git, refusalOf: refuseUncleanGit },
   { step: PreflightStep.Gate, refusalOf: refuseFailedGate },
   { step: PreflightStep.Config, refusalOf: refuseLeftoverPlaceholder },
@@ -188,6 +197,7 @@ const WORKER_CHECKS: PreflightCheck<WorkerPreflightInput>[] = [
 
 const DOCS_CHECKS: PreflightCheck<DocsPreflightInput>[] = [
   { step: PreflightStep.OfficialNumber, refusalOf: refuseUnsetOfficialNumber },
+  { step: PreflightStep.CompanyFacts, refusalOf: refuseUnsetCompanyFacts },
   { step: PreflightStep.NpmVersion, refusalOf: refuseUnpublishedPackage },
 ];
 
