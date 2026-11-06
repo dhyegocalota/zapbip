@@ -1,7 +1,7 @@
 import type { WakeLogEvent } from '@zapbip/core';
 import { WakeAttemptOutcome, WakeLogEventName, WakeProvider } from '@zapbip/types';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createCloudflareWakeObserver } from '../../src/adapters/wake/wake-observer';
+import { createCloudflareWakeObserver, WakeObserverErrorCode } from '../../src/adapters/wake/wake-observer';
 
 const TOKEN = 'token-with-sixteen-chars';
 const URL_PATH = '/automations/webhook/abc12345';
@@ -80,10 +80,14 @@ describe('createCloudflareWakeObserver', () => {
     expect(writeDataPoint).not.toHaveBeenCalled();
   });
 
-  it('throws naming the dataset when it is absent', () => {
-    expect(() => createCloudflareWakeObserver({ dataset: undefined as unknown as AnalyticsEngineDataset, accountId: ACCOUNT_ID })).toThrow(
-      'WAKE_METRICS',
-    );
+  it('logs the missing dataset once and still logs the events', () => {
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    const observer = createCloudflareWakeObserver({ dataset: undefined, accountId: ACCOUNT_ID });
+    observer.observe({ event: eventOf({}) });
+    observer.observe({ event: eventOf({}) });
+    const lines = logSpy.mock.calls.map(([line]) => JSON.parse(line as string) as Record<string, unknown>);
+    expect(lines.filter((line) => line.errorCode === WakeObserverErrorCode.MetricsMissing)).toHaveLength(1);
+    expect(lines.filter((line) => line.event === WakeLogEventName.Delivered)).toHaveLength(2);
   });
 
   it.each([

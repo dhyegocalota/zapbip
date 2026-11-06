@@ -1,5 +1,10 @@
 import type { WakeObserver } from '@zapbip/core';
+import { LogEvent } from '../../contract/log';
 import { logEvent } from '../../log';
+
+export enum WakeObserverErrorCode {
+  MetricsMissing = 'wake_metrics_missing',
+}
 
 const DATASET_NAME = 'WAKE_METRICS';
 const STATUS_CLASS_DIVISOR = 100;
@@ -14,7 +19,7 @@ function statusClassOf(input: { statusCode: number | null; timedOut: boolean }):
   return NO_RESPONSE_CLASS;
 }
 
-export function createCloudflareWakeObserver(input: { dataset: AnalyticsEngineDataset; accountId: string }): WakeObserver {
+export function createCloudflareWakeObserver(input: { dataset: AnalyticsEngineDataset | undefined; accountId: string }): WakeObserver {
   const { dataset, accountId } = input;
   if (dataset === undefined) throw new Error(`${DATASET_NAME} binding is missing`);
   return {
