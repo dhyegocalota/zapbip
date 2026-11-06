@@ -74,6 +74,8 @@ export interface MediaStore {
 
 export interface AgentWaker {
   notify(input: { agent: AgentName; reason: AgentWakeReason }): Promise<WakeOutcome>;
+  hasFailedWake(input: { agent: AgentName }): Promise<boolean>;
+  pushesEveryMessage(input: { agent: AgentName }): Promise<boolean>;
 }
 
 export interface ConnectionDirectory {

@@ -1,0 +1,56 @@
+---
+title: 'Webhook wake'
+description: 'Let zapbip start your AI when you write and it is not listening.'
+---
+
+You do not need this to use zapbip. It is for the moment you write on WhatsApp and your AI is not open: zapbip can call a link that starts it, so it reads your message and answers. Most AI apps set this up for you during install; this page shows what happens behind it and how to set it up by hand.
+
+Your AI then reads the message with [check_inbox](/mcp-reference/check-inbox) or [get_messages](/mcp-reference/get-messages) and answers. The link is saved with [set_wake](/mcp-reference/set-wake).
+
+The call carries none of your text: its body is always `{"event":"inbox_has_messages"}`. Messages that arrive in a burst share one wake, sent a few seconds after the first.
+
+## Grok Bot routine
+
+Create a routine with a webhook trigger, then save it:
+
+```json
+{ "mode": "webhook", "url": "https://api2.cursor.sh/automations/webhook/<routine-id>", "token": "<token>" }
+```
+
+zapbip sends `Authorization: Bearer <token>`.
+
+## claude.ai scheduled task
+
+Create a scheduled task with an API trigger, then save it:
+
+```json
+{ "mode": "webhook", "url": "https://api.anthropic.com/v1/claude_code/routines/<trigger-id>/fire", "token": "<token>" }
+```
+
+zapbip sends `Authorization: Bearer <token>` and the routine beta headers.
+
+## Your own service
+
+Any public `https` host works. The token is your signing key, at least 32 characters, and is never sent. Each request carries `X-Zapbip-Timestamp` (Unix seconds) and `X-Zapbip-Signature`, `sha256=` followed by the hex HMAC-SHA256 of `<timestamp>.<body>`. Reject a timestamp older than 300 seconds.
+
+```js
+import { createHmac, timingSafeEqual } from 'node:crypto';
+
+const TOLERANCE_SECONDS = 300;
+
+export function isValidWake({ timestamp, signature, body, token }) {
+  const ageSeconds = Math.abs(Date.now() / 1000 - Number(timestamp));
+  if (!(ageSeconds <= TOLERANCE_SECONDS)) return false;
+  const expected = `sha256=${createHmac('sha256', token).update(`${timestamp}.${body}`).digest('hex')}`;
+  const received = Buffer.from(signature);
+  const wanted = Buffer.from(expected);
+  return received.length === wanted.length && timingSafeEqual(received, wanted);
+}
+```
+
+## When a wake fails
+
+- `408`, `425`, `429`, `5xx`, a timeout or a network error is retried up to 5 attempts, waiting 5, 10, 20 and 40 seconds and honouring `Retry-After` on `429` and `503`, up to 60 seconds.
+- Redirects and other `4xx` answers are refused at once and not retried.
+- When a wake is refused or gives up, you get one notice on WhatsApp that the message waits in the inbox, and the connection is marked `failing`. Call [set_wake](/mcp-reference/set-wake) again to fix the target; the next delivered wake returns it to `active`.
+- If the agent reads the messages before the wake fires, no request is sent.

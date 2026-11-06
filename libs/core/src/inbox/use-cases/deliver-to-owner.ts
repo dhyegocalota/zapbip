@@ -64,6 +64,7 @@ export async function deliverToOwner(input: DeliverToOwnerInput): Promise<Delive
     replyToMessageId,
     delivery: DeliveryState.Queued,
     readByAgent: true,
+    forwarded: false,
     ...content,
   };
   await repository.insertMessage({ message });

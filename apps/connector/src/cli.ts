@@ -1,10 +1,10 @@
 import { existsSync, realpathSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { createInterface } from 'node:readline/promises';
 import { fileURLToPath } from 'node:url';
-import { ConnectorClient, UUID_PATTERN } from '@zapbip/types';
+import { CONNECTION_URL_VARIABLE, ConnectorClient, UUID_PATTERN } from '@zapbip/types';
 import { runChannel } from './channel';
 import { deriveConnectorLinks, runConnection } from './connect';
+import { readHiddenLine } from './hidden-prompt';
 import { runListen } from './listen';
 
 export type ConnectArguments = {
@@ -27,11 +27,18 @@ enum CliFlag {
 
 type CliCommandHandler = (input: { argv: string[] }) => Promise<number>;
 
-const CONNECTION_URL_VARIABLE = 'ZAPBIP_CONNECTION_URL';
 const CHANNEL_LINK_MESSAGE = `the channel reads the connection link from ${CONNECTION_URL_VARIABLE}`;
 const CONNECTION_PROMPT = 'Connection link: ';
 const USAGE = `usage: zapbip ${CliCommand.Connect} ${CliFlag.Client} ${Object.values(ConnectorClient).join('|')} [${CliFlag.WorkingDirectory} <directory>] [${CliFlag.Session} <uuid>]`;
 const FAILURE_EXIT_CODE = 1;
+const CLEAN_EXIT_CODE = 0;
+const HELP_FLAG = '--help';
+const HELP_TEXT = [
+  USAGE,
+  `       zapbip ${CliCommand.Listen}`,
+  `       zapbip ${CliCommand.Channel}`,
+  `${CONNECTION_URL_VARIABLE} holds the connection link; ${CliCommand.Connect} and ${CliCommand.Listen} ask for it when it is not set.`,
+].join('\n');
 const SHUTDOWN_SIGNALS = ['SIGINT', 'SIGTERM'] as const;
 
 function readFlags(input: { argv: string[] }): Map<string, string> {
@@ -77,9 +84,7 @@ export function parseConnectArguments(input: { argv: string[] }): ConnectArgumen
 async function readConnectionLink(): Promise<string> {
   const fromEnvironment = process.env[CONNECTION_URL_VARIABLE];
   if (fromEnvironment !== undefined && fromEnvironment !== '') return fromEnvironment;
-  const prompt = createInterface({ input: process.stdin, output: process.stderr });
-  const answer = await prompt.question(CONNECTION_PROMPT);
-  prompt.close();
+  const answer = await readHiddenLine({ stdin: process.stdin, output: process.stderr, prompt: CONNECTION_PROMPT });
   return answer.trim();
 }
 
@@ -124,9 +129,14 @@ const COMMAND_HANDLERS: Record<CliCommand, CliCommandHandler> = {
 
 async function main(): Promise<number> {
   const [commandName, ...argv] = process.argv.slice(2);
+  const isHelp = commandName === HELP_FLAG || argv.includes(HELP_FLAG);
+  if (isHelp) {
+    process.stdout.write(`${HELP_TEXT}\n`);
+    return CLEAN_EXIT_CODE;
+  }
   const command = Object.values(CliCommand).find((candidate) => candidate === commandName);
   if (command === undefined) {
-    process.stderr.write(`${USAGE}\n`);
+    process.stderr.write(`${HELP_TEXT}\n`);
     return FAILURE_EXIT_CODE;
   }
   try {

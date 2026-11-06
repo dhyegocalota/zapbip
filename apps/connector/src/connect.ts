@@ -14,18 +14,23 @@ import {
   HEARTBEAT_TIMEOUT_MS,
   MCP_PATH_SUFFIX,
   RECONNECT_BASE_MS,
+  RECONNECT_JITTER_RATIO,
   RECONNECT_MAX_MS,
+  RECONNECT_STABLE_MS,
   REPLACED_CLOSE_CODE,
+  SECRET_REVOKED_MESSAGE,
+  UNAUTHORIZED_STATUS,
   UPGRADE_REQUIRED_STATUS,
 } from '@zapbip/types';
 import { logConnectorEvent, type ConnectorLogFields, type ConnectorLogger } from './log';
 import { findNewestSessionId } from './session-lookup';
+import { REAL_TIMERS, type CancelTimer, type ConnectorTimers } from './timers';
 import { createWakeQueue, type WakeQueue } from './wake-queue';
 import { runWake } from './wake-runner';
 
 export type ServerFrameParse = { ok: true; frame: ServerFrame } | { ok: false; reason: FrameRejectionReason };
 
-type SocketEnd = { code: number; wasOpened: boolean };
+type SocketEnd = { code: number; wasStable: boolean };
 type FrameBody = Record<string, unknown>;
 type FrameParsers = Record<string, (input: { body: FrameBody }) => ServerFrame | null>;
 
@@ -52,9 +57,10 @@ export function deriveConnectorLinks(input: { connectionLink: string }): { probe
   return { probeLink, socketLink: parsed.toString() };
 }
 
-export function reconnectDelayMs(input: { attempt: number }): number {
+export function reconnectDelayMs(input: { attempt: number; random: () => number }): number {
   if (input.attempt < 0) throw new Error('the reconnect attempt cannot be negative');
-  return Math.min(RECONNECT_MAX_MS, RECONNECT_BASE_MS * 2 ** input.attempt);
+  const delayMs = RECONNECT_BASE_MS * 2 ** input.attempt;
+  return Math.min(RECONNECT_MAX_MS, delayMs + Math.floor(input.random() * delayMs * RECONNECT_JITTER_RATIO));
 }
 
 export async function probeConnectorLink(input: { probeLink: string }): Promise<number> {
@@ -81,8 +87,9 @@ export function parseServerFrame(input: { text: string; byteLength: number; isBi
   if (input.byteLength > CONNECTOR_FRAME_MAX_BYTES) return { ok: false, reason: FrameRejectionReason.FrameTooLarge };
   const body = asRecord({ value: parseJson({ text: input.text }) });
   if (body === null) return { ok: false, reason: FrameRejectionReason.Malformed };
-  const parseFrame = FRAME_PARSERS[String(body.type)];
-  if (parseFrame === undefined) return { ok: false, reason: FrameRejectionReason.UnknownType };
+  const frameType = String(body.type);
+  if (!Object.hasOwn(FRAME_PARSERS, frameType)) return { ok: false, reason: FrameRejectionReason.UnknownType };
+  const parseFrame = FRAME_PARSERS[frameType] as FrameParsers[string];
   const frame = parseFrame({ body });
   if (frame === null) return { ok: false, reason: FrameRejectionReason.Malformed };
   return { ok: true, frame };
@@ -102,13 +109,13 @@ function probeStatusOf(input: { socketLink: string }): Promise<number | null> {
   return probeConnectorLink({ probeLink: probeLink.toString() }).catch(() => null);
 }
 
-function waitOrAbort(input: { delayMs: number; signal: AbortSignal }): Promise<void> {
+function waitOrAbort(input: { delayMs: number; signal: AbortSignal; timers: ConnectorTimers }): Promise<void> {
   return new Promise((resolve) => {
-    const timer = setTimeout(resolve, input.delayMs);
+    const cancelTimer = input.timers.after({ run: resolve, delayMs: input.delayMs });
     input.signal.addEventListener(
       'abort',
       () => {
-        clearTimeout(timer);
+        cancelTimer();
         resolve();
       },
       { once: true },
@@ -122,8 +129,10 @@ export async function runSocketSession(input: {
   log: ConnectorLogger;
   connectedFields: ConnectorLogFields;
   createQueue: (input: { sendDone: (input: { messageId: string }) => void }) => WakeQueue;
+  timers?: ConnectorTimers;
+  random?: () => number;
 }): Promise<number> {
-  const { socketLink, signal, log, connectedFields, createQueue } = input;
+  const { socketLink, signal, log, connectedFields, createQueue, timers = REAL_TIMERS, random = Math.random } = input;
   const probeStatus = await probeStatusOf({ socketLink });
   if (probeStatus !== UPGRADE_REQUIRED_STATUS) {
     log({ event: ConnectorLogEvent.ConnectorClosed, fields: { status: probeStatus } });
@@ -171,33 +180,50 @@ export async function runSocketSession(input: {
     return new Promise((resolve) => {
       const socket = new WebSocket(socketLink);
       currentSocket = socket;
-      let wasOpened = false;
+      let wasStable = false;
+      let cancelStability: CancelTimer | null = null;
       let hasEnded = false;
-      let heartbeatTimer: ReturnType<typeof setInterval> | undefined;
-      let timeoutTimer: ReturnType<typeof setTimeout> | undefined;
+      let cancelHeartbeat: CancelTimer | null = null;
+      let cancelTimeout: CancelTimer | null = null;
 
       function end(code: number): void {
         if (hasEnded) return;
         hasEnded = true;
-        clearInterval(heartbeatTimer);
-        clearTimeout(timeoutTimer);
+        cancelHeartbeat?.();
+        cancelTimeout?.();
         currentSocket = null;
-        resolve({ code, wasOpened });
+        cancelStability?.();
+        resolve({ code, wasStable });
       }
 
-      socket.addEventListener('open', () => {
-        wasOpened = true;
-        heartbeatTimer = setInterval(() => {
-          socket.send(CONNECTOR_PING_TEXT);
-          timeoutTimer = setTimeout(() => {
-            log({ event: ConnectorLogEvent.ConnectorClosed, fields: { code: ABNORMAL_CLOSE_CODE } });
-            end(ABNORMAL_CLOSE_CODE);
-            socket.close();
-          }, HEARTBEAT_TIMEOUT_MS);
-        }, HEARTBEAT_INTERVAL_MS);
-      });
+      function armHeartbeat(): void {
+        if (cancelHeartbeat !== null) return;
+        cancelStability = timers.after({
+          delayMs: RECONNECT_STABLE_MS,
+          run: () => {
+            wasStable = true;
+          },
+        });
+        cancelHeartbeat = timers.every({
+          delayMs: HEARTBEAT_INTERVAL_MS,
+          run: () => {
+            socket.send(CONNECTOR_PING_TEXT);
+            cancelTimeout = timers.after({
+              delayMs: HEARTBEAT_TIMEOUT_MS,
+              run: () => {
+                log({ event: ConnectorLogEvent.ConnectorClosed, fields: { code: ABNORMAL_CLOSE_CODE } });
+                end(ABNORMAL_CLOSE_CODE);
+                socket.close();
+              },
+            });
+          },
+        });
+      }
+
+      socket.addEventListener('open', armHeartbeat);
       socket.addEventListener('message', (event) => {
-        clearTimeout(timeoutTimer);
+        armHeartbeat();
+        cancelTimeout?.();
         handleData({ data: event.data });
       });
       socket.addEventListener('close', (event) => {
@@ -222,10 +248,16 @@ export async function runSocketSession(input: {
     const end = await holdSocket();
     if (end.code === REPLACED_CLOSE_CODE) return FAILURE_EXIT_CODE;
     if (signal.aborted) break;
-    const failedAttempts = end.wasOpened ? 0 : attempt;
-    const delayMs = reconnectDelayMs({ attempt: failedAttempts });
+    const failedAttempts = end.wasStable ? 0 : attempt;
+    const delayMs = reconnectDelayMs({ attempt: failedAttempts, random });
     log({ event: ConnectorLogEvent.ConnectorReconnecting, fields: { attempt: failedAttempts, delayMs } });
-    await waitOrAbort({ delayMs, signal });
+    await waitOrAbort({ delayMs, signal, timers });
+    if (signal.aborted) break;
+    const reconnectProbeStatus = await probeStatusOf({ socketLink });
+    if (reconnectProbeStatus === UNAUTHORIZED_STATUS) {
+      log({ event: ConnectorLogEvent.ConnectorClosed, fields: { status: UNAUTHORIZED_STATUS, message: SECRET_REVOKED_MESSAGE } });
+      return FAILURE_EXIT_CODE;
+    }
     attempt = failedAttempts + 1;
   }
   return CLEAN_EXIT_CODE;
@@ -237,8 +269,10 @@ export async function runConnection(input: {
   workingDirectory: string;
   pinnedSessionId: string | null;
   signal: AbortSignal;
+  timers?: ConnectorTimers;
+  random?: () => number;
 }): Promise<number> {
-  const { socketLink, client, workingDirectory, pinnedSessionId, signal } = input;
+  const { socketLink, client, workingDirectory, pinnedSessionId, signal, timers, random } = input;
   const wakeAbortController = new AbortController();
   signal.addEventListener('abort', () => wakeAbortController.abort(), { once: true });
 
@@ -273,5 +307,5 @@ export async function runConnection(input: {
     });
   }
 
-  return runSocketSession({ socketLink, signal, log: logConnectorEvent, connectedFields: { client }, createQueue });
+  return runSocketSession({ socketLink, signal, log: logConnectorEvent, connectedFields: { client }, createQueue, timers, random });
 }

@@ -14,6 +14,7 @@ export async function runChannel(input: { socketLink: string; signal: AbortSigna
   );
   const closedController = new AbortController();
   server.onclose = () => closedController.abort();
+  process.stdin.once('end', () => closedController.abort());
   await server.connect(new StdioServerTransport());
   try {
     return await runSocketSession({

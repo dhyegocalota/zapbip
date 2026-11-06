@@ -41,6 +41,7 @@ export type FakeEventServer = {
   port: number;
   socketLink: string;
   connectionLink: string;
+  setProbeStatus: (input: { status: number }) => void;
   probeCount: () => number;
   upgradeCount: () => number;
   connectionCount: () => number;
@@ -69,6 +70,7 @@ export function ownerTextMessage(input: { messageId: string; text: string }): Me
     replyToMessageId: null,
     delivery: null,
     readByAgent: false,
+    forwarded: false,
     kind: MessageKind.Text,
     text: input.text,
   };
@@ -114,7 +116,14 @@ export async function createSelfSignedCertificate(): Promise<{ certificate: TlsC
 }
 
 export async function startFakeEventServer(input: FakeEventServerOptions = {}): Promise<FakeEventServer> {
-  const { probeStatus = UPGRADE_REQUIRED_STATUS, upgradeStatus = null, autoPong = true, greet = true, certificate = null } = input;
+  const {
+    probeStatus: initialProbeStatus = UPGRADE_REQUIRED_STATUS,
+    upgradeStatus = null,
+    autoPong = true,
+    greet = true,
+    certificate = null,
+  } = input;
+  let probeStatus = initialProbeStatus;
   const sockets: { socket: WebSocket; connectionIndex: number }[] = [];
   const frames: ReceivedFrame[] = [];
   let waiters: Waiter[] = [];
@@ -183,6 +192,9 @@ export async function startFakeEventServer(input: FakeEventServerOptions = {}): 
     port,
     socketLink: `${webSocketScheme}://${LOOPBACK_HOST}:${port}${FAKE_CONNECTION_PATH}`,
     connectionLink: `${httpScheme}://${LOOPBACK_HOST}:${port}/c/${FAKE_SECRET}/mcp`,
+    setProbeStatus: ({ status }) => {
+      probeStatus = status;
+    },
     probeCount: () => probes,
     upgradeCount: () => upgrades,
     connectionCount: () => connections,

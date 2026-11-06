@@ -1,9 +1,10 @@
 #!/usr/bin/env node
-import { appendFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 
 const clientName = basename(process.argv[1]);
 const clientArguments = process.argv.slice(2);
+const standardInput = readFileSync(0, 'utf8');
 const isResume = clientArguments.includes('resume');
 const ACTIVE_WRITER_TEXT = 'Error: thread already has an active writer for this session';
 const HOLD_POLL_MS = 10;
@@ -35,6 +36,37 @@ function isRefused() {
   return process.env.FAKE_CLIENT_REFUSE_ALL === '1' || refusesEveryResume || refusesThisResume;
 }
 
+const OWNER_TEXT_PATTERN = /^<channel[^>]*>([\s\S]*?)<\/channel>/;
+const MCP_HEADERS = { 'content-type': 'application/json', accept: 'application/json, text/event-stream' };
+
+function unescapeChannelText(text) {
+  return text.replaceAll('&lt;', '<').replaceAll('&gt;', '>').replaceAll('&amp;', '&');
+}
+
+async function postMcp(url, body) {
+  const response = await fetch(url, { method: 'POST', headers: MCP_HEADERS, body: JSON.stringify(body) });
+  record({ event: 'mcp', method: body.method, status: response.status });
+  if (!response.ok) throw new Error(`mcp ${body.method} answered ${response.status}`);
+}
+
+async function replyThroughMcp() {
+  const { url } = JSON.parse(readFileSync(process.env.FAKE_CLIENT_MCP_CONFIG, 'utf8'));
+  const ownerText = unescapeChannelText(OWNER_TEXT_PATTERN.exec(standardInput)[1]);
+  await postMcp(url, {
+    jsonrpc: '2.0',
+    id: 1,
+    method: 'initialize',
+    params: { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'fake', version: '0' } },
+  });
+  await postMcp(url, { jsonrpc: '2.0', method: 'notifications/initialized' });
+  await postMcp(url, {
+    jsonrpc: '2.0',
+    id: 2,
+    method: 'tools/call',
+    params: { name: 'send_message', arguments: { text: `FAKE-REPLY ${ownerText}`, reply_to: null } },
+  });
+}
+
 function complete() {
   writeRollout();
   finish(Number(process.env.FAKE_CLIENT_EXIT_CODE || 0));
@@ -46,7 +78,7 @@ function waitForRelease(releaseFile) {
 }
 
 function main() {
-  record({ event: 'started' });
+  record({ event: 'started', stdin: standardInput, hadConnectionUrl: 'ZAPBIP_CONNECTION_URL' in process.env });
   process.on('SIGTERM', () => {
     record({ event: 'ended', exitCode: null, signal: 'SIGTERM' });
     process.exit(SIGTERM_EXIT_CODE);
@@ -59,6 +91,11 @@ function main() {
     process.stderr.write(ACTIVE_WRITER_TEXT);
     return finish(1);
   }
+  if (process.env.FAKE_CLIENT_MCP_CONFIG)
+    return replyThroughMcp().then(complete, (error) => {
+      process.stderr.write(String(error));
+      finish(1);
+    });
   if (process.env.FAKE_CLIENT_HANG === '1') return setInterval(() => {}, 1 << 30);
   if (process.env.FAKE_CLIENT_HOLD_FILE) return waitForRelease(process.env.FAKE_CLIENT_HOLD_FILE);
   setTimeout(complete, Number(process.env.FAKE_CLIENT_RUN_MS || 0));

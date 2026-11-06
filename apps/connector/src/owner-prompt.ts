@@ -5,7 +5,8 @@ type MessageOfKind<Kind extends MessageKind> = Extract<Message, { kind: Kind }>;
 type MediaKind = MessageKind.Image | MessageKind.Video | MessageKind.Audio | MessageKind.Document | MessageKind.Sticker;
 type OwnerTextBuilders = { [Kind in MessageKind]: (input: { message: MessageOfKind<Kind> }) => string };
 
-const CHANNEL_OPENING = '<channel source="zapbip" sender="owner" verified="true">';
+const VERIFIED_OPENING = '<channel source="zapbip" sender="owner" verified="true">';
+const FORWARDED_OPENING = '<channel source="zapbip" sender="owner" verified="false" forwarded="true">';
 const CHANNEL_CLOSING = '</channel>';
 
 function kindLabel(input: { message: Message }): string {
@@ -38,7 +39,7 @@ const OWNER_TEXT_BUILDERS: OwnerTextBuilders = {
 };
 
 export function escapeChannelText(input: { text: string }): string {
-  return input.text.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+  return input.text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 }
 
 export function ownerMessageText(input: { message: Message }): string {
@@ -48,5 +49,6 @@ export function ownerMessageText(input: { message: Message }): string {
 
 export function buildOwnerPrompt(input: { message: Message }): string {
   const channelText = escapeChannelText({ text: ownerMessageText(input) });
-  return `${CHANNEL_OPENING}${channelText}${CHANNEL_CLOSING}\n${WAKE_INSTRUCTION}`;
+  const opening = input.message.forwarded ? FORWARDED_OPENING : VERIFIED_OPENING;
+  return `${opening}${channelText}${CHANNEL_CLOSING}\n${WAKE_INSTRUCTION}`;
 }

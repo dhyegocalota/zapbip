@@ -19,28 +19,64 @@ import type {
   StoredMedia,
   WaitForReplyInput,
   WaitForReplyResult,
+  WakeDependencies,
+  WakeTransport,
 } from '@zapbip/core';
-import { ChannelErrorKind } from '@zapbip/types';
+import {
+  CONNECTOR_INBOX_LIMIT,
+  CONNECTOR_PING_TEXT,
+  CONNECTOR_PONG_TEXT,
+  ChannelErrorKind,
+  ConnectorFrameType,
+  REVOKED_CLOSE_CODE,
+  WakeMode,
+  WakeOutcome,
+  WakeRung,
+  type OwnerLocale,
+} from '@zapbip/types';
 import { createFakeWhatsAppSender, type FakeWhatsAppSender } from '../adapters/fake/fake-whatsapp-sender';
 import { createIdGenerator } from '../adapters/platform/ids';
 import { loadDurableClock, type DurableClock } from '../adapters/platform/clock';
 import { mediaStoreOf } from '../adapters/r2/r2-media-store';
 import { createSqliteInboxRepository } from '../adapters/sqlite/sqlite-inbox-repository';
+import { createDispatchingAgentWaker } from '../adapters/wake/dispatching-agent-waker';
+import { createFetchWakeTransport } from '../adapters/wake/fetch-wake-transport';
+import { createLocalConnectorWaker } from '../adapters/wake/local-connector-waker';
 import { createNoneWaker } from '../adapters/wake/none-waker';
+import { createWebhookAgentWaker } from '../adapters/wake/webhook-agent-waker';
 import type { AccountInboxRpc, AgentRequest, CallOutcome } from '../contract/account-inbox-rpc';
 import type { DueTimeProvider } from '../contract/due-time-provider';
 import type { Bindings } from '../contract/env';
 import { LogEvent, type LogFields } from '../contract/log';
 import { logEvent } from '../log';
-import { ALARM_MIN_DELAY_MS, AlarmErrorCode } from './constants';
+import { HttpStatus } from '../routes/http-status';
+import {
+  acceptConnectorSocket,
+  connectorAgentOf,
+  hasLiveConnectorSocket,
+  parseDoneFrame,
+  remainingSocketCount,
+  sendFrameToAgent,
+  sendMessagesToAgent,
+} from './connector-sockets';
+import {
+  ALARM_MIN_DELAY_MS,
+  AlarmErrorCode,
+  CONNECTOR_AGENT_PARAMETER,
+  NORMAL_CLOSE_CODE,
+  OWNER_LOCALE_STORAGE_KEY,
+  UNREPLYABLE_CLOSE_CODES,
+} from './constants';
 import { ACCOUNT_INBOX_MIGRATIONS } from './migrations';
 import { runMigrations } from './run-migrations';
+import { createWakeDependencies } from './wake-dependencies';
 
 type ReceiveOwnerMessageRequest = Parameters<AccountInboxRpc['receiveOwnerMessage']>[0];
 
 export class AccountInbox extends DurableObject<Bindings> implements AccountInboxRpc {
   protected sender!: FakeWhatsAppSender;
   protected clock!: DurableClock;
+  protected wake!: WakeDependencies;
   protected readonly dueTimeProviders: DueTimeProvider[] = [];
   private accountId!: string;
   private dependencies!: CoreDependencies;
@@ -64,7 +100,14 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       accountId,
       origin: this.env.PUBLIC_ORIGIN,
     });
-    this.dependencies = {
+    this.wake = createWakeDependencies({
+      env: this.env,
+      accountId,
+      storage: this.ctx.storage,
+      clock: this.clock,
+      transport: this.createWakeTransport(),
+    });
+    const inboxOnlyDependencies: CoreDependencies = {
       accountId,
       repository: createSqliteInboxRepository({ storage: this.ctx.storage, clock: this.clock }),
       sender: this.sender,
@@ -74,8 +117,32 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       ids: createIdGenerator(),
       waiters: inbox.createReplyWaiters({ clock: this.clock }),
     };
-    this.dueTimeProviders.push(this.createExpiryProvider(), this.createRoutingListProvider());
+    this.dependencies = {
+      ...inboxOnlyDependencies,
+      waker: createDispatchingAgentWaker({
+        wakers: {
+          [WakeRung.Inbox]: createNoneWaker(),
+          [WakeRung.Local]: createLocalConnectorWaker({
+            context: this.ctx,
+            repository: inboxOnlyDependencies.repository,
+            restoreAndNotify: (request) => this.restoreAndNotify(request),
+          }),
+          [WakeRung.Webhook]: createWebhookAgentWaker({ dependencies: inboxOnlyDependencies, wake: this.wake }),
+        },
+        repository: this.wake.repository,
+      }),
+    };
+    this.ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair(CONNECTOR_PING_TEXT, CONNECTOR_PONG_TEXT));
+    this.dueTimeProviders.push(this.createExpiryProvider(), this.createRoutingListProvider(), this.createWakeProvider());
     await this.armAlarm();
+  }
+
+  private async restoreAndNotify(request: Parameters<inbox.AgentWaker['notify']>[0]): Promise<WakeOutcome> {
+    const { agent } = request;
+    const restore = await this.wake.repository.findLocalRestore({ agent });
+    if (restore === null) return WakeOutcome.Unreached;
+    await inbox.detachLocalConnector({ dependencies: this.dependencies, wake: this.wake, agent, remainingSockets: 0 });
+    return this.dependencies.waker.notify(request);
   }
 
   private createExpiryProvider(): DueTimeProvider {
@@ -93,6 +160,28 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       nextDueAt: () => inbox.findRoutingListDueAt({ dependencies: this.dependencies }),
       runDue: () => inbox.expireRoutingList({ dependencies: this.dependencies }),
     };
+  }
+
+  private createWakeProvider(): DueTimeProvider {
+    return {
+      nextDueAt: () => this.wake.repository.findNextDueAt(),
+      runDue: () => this.runDueWakes(),
+    };
+  }
+
+  protected createWakeTransport(): WakeTransport {
+    return createFetchWakeTransport();
+  }
+
+  protected async runDueWakes(): Promise<void> {
+    const storedOwnerLocale = await this.ctx.storage.get<OwnerLocale>(OWNER_LOCALE_STORAGE_KEY);
+    if (storedOwnerLocale === undefined) this.log({ event: LogEvent.ToolError, errorCode: AlarmErrorCode.OwnerLocaleMissing });
+    await inbox.runDueWakes({
+      dependencies: this.dependencies,
+      wake: this.wake,
+      ownerLocale: storedOwnerLocale === undefined ? null : storedOwnerLocale,
+      publicHost: new URL(this.env.PUBLIC_ORIGIN).hostname,
+    });
   }
 
   private log(fields: LogFields): void {
@@ -221,9 +310,76 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     return this.outcome({ run: () => inbox.completeUpload({ ...input, dependencies: this.dependencies }) });
   }
 
+  setWake(input: Parameters<AccountInboxRpc['setWake']>[0]): Promise<CallOutcome<inbox.SetWakeResult>> {
+    return this.outcome({
+      run: async () => {
+        const { agent } = input.connection;
+        await inbox.touchAgent({ dependencies: this.dependencies, agent });
+        const result = await inbox.setWake({
+          ...input,
+          dependencies: this.dependencies,
+          wake: this.wake,
+          publicHost: new URL(this.env.PUBLIC_ORIGIN).hostname,
+        });
+        const isLocalWithoutConnector = result.wakeMode === WakeMode.Local && !hasLiveConnectorSocket({ context: this.ctx, agent });
+        if (isLocalWithoutConnector) return { ...result, effectiveRung: WakeRung.Inbox };
+        return result;
+      },
+    });
+  }
+
+  async fetch(request: Request): Promise<Response> {
+    const agent = new URL(request.url).searchParams.get(CONNECTOR_AGENT_PARAMETER);
+    if (agent === null) return new Response(null, { status: HttpStatus.BadRequest });
+    await inbox.touchAgent({ dependencies: this.dependencies, agent });
+    const attached = await inbox.attachLocalConnector({
+      dependencies: this.dependencies,
+      wake: this.wake,
+      agent,
+      limit: CONNECTOR_INBOX_LIMIT,
+    });
+    const client = acceptConnectorSocket({ context: this.ctx, agent });
+    const hello = { type: ConnectorFrameType.Hello, agent, previousWakeMode: attached.previousWakeMode } as const;
+    sendFrameToAgent({ context: this.ctx, agent, frame: hello });
+    sendMessagesToAgent({ context: this.ctx, agent, messages: attached.unread });
+    return new Response(null, { status: HttpStatus.SwitchingProtocols, webSocket: client });
+  }
+
+  async webSocketMessage(socket: WebSocket, data: string | ArrayBuffer): Promise<void> {
+    const agent = connectorAgentOf({ context: this.ctx, socket });
+    const parsed = parseDoneFrame({ data });
+    if (!parsed.ok) return this.log({ event: LogEvent.FrameRejected, agent, errorCode: parsed.reason });
+    await inbox.acknowledgeDelivery({ dependencies: this.dependencies, agent, messageId: parsed.frame.messageId });
+    const remaining = await this.dependencies.repository.listUnread({ agent, limit: CONNECTOR_INBOX_LIMIT });
+    sendMessagesToAgent({ context: this.ctx, agent, messages: remaining });
+  }
+
+  private async detachSocket(socket: WebSocket): Promise<void> {
+    const agent = connectorAgentOf({ context: this.ctx, socket });
+    const remainingSockets = remainingSocketCount({ context: this.ctx, agent, closing: socket });
+    await inbox.detachLocalConnector({ dependencies: this.dependencies, wake: this.wake, agent, remainingSockets });
+  }
+
+  async webSocketClose(socket: WebSocket, code: number, reason: string): Promise<void> {
+    await this.detachSocket(socket);
+    const replyCode = UNREPLYABLE_CLOSE_CODES.includes(code) ? NORMAL_CLOSE_CODE : code;
+    if (socket.readyState !== WebSocket.CLOSED) socket.close(replyCode, reason);
+  }
+
+  async closeAgentSockets(input: { agent: string }): Promise<void> {
+    this.ctx.getWebSockets(input.agent).forEach((socket) => socket.close(REVOKED_CLOSE_CODE));
+  }
+
+  async webSocketError(socket: WebSocket): Promise<void> {
+    await this.detachSocket(socket);
+  }
+
   receiveOwnerMessage(input: ReceiveOwnerMessageRequest): Promise<CallOutcome<inbox.ReceiveResult>> {
     return this.outcome({
-      run: () => inbox.receiveOwnerMessage({ ...input, dependencies: this.dependencies }),
+      run: async () => {
+        await this.ctx.storage.put(OWNER_LOCALE_STORAGE_KEY, input.ownerLocale);
+        return inbox.receiveOwnerMessage({ ...input, dependencies: this.dependencies });
+      },
       describe: (value) => ({ event: value.duplicate ? LogEvent.OwnerMessageDuplicate : LogEvent.OwnerMessage }),
     });
   }

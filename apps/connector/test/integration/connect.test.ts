@@ -10,6 +10,7 @@ import {
   HEARTBEAT_INTERVAL_MS,
   HEARTBEAT_TIMEOUT_MS,
   RECONNECT_BASE_MS,
+  RECONNECT_STABLE_MS,
   REPLACED_CLOSE_CODE,
   UNAUTHORIZED_STATUS,
   WAKE_ALLOWED_TOOL,
@@ -17,6 +18,8 @@ import {
 } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { runConnection } from '../../src/connect';
+import type { ConnectorTimers } from '../../src/timers';
+import { createManualTimers } from '../support/manual-timers';
 import { createFakeClients, runAt, type FakeClients } from '../support/fake-client-binary';
 import {
   FAKE_AGENT,
@@ -91,14 +94,18 @@ describe('runConnection', () => {
     await startServer(input);
   }
 
-  function startConnector(input: { pinnedSessionId?: string | null; client?: ConnectorClient; socketLink?: string } = {}): Promise<number> {
-    const { pinnedSessionId = PINNED_SESSION_ID, client = ConnectorClient.ClaudeCode, socketLink = server.socketLink } = input;
+  function startConnector(
+    input: { pinnedSessionId?: string | null; client?: ConnectorClient; socketLink?: string; timers?: ConnectorTimers } = {},
+  ): Promise<number> {
+    const { pinnedSessionId = PINNED_SESSION_ID, client = ConnectorClient.ClaudeCode, socketLink = server.socketLink, timers } = input;
     running = runConnection({
       socketLink,
       client,
       workingDirectory: fakeClients.workingDirectory,
       pinnedSessionId,
       signal: abortController.signal,
+      timers,
+      random: () => 0,
     });
     return running;
   }
@@ -163,15 +170,16 @@ describe('runConnection', () => {
 
       const runs = await fakeClients.readRuns();
       expect(runs).toHaveLength(1);
-      expect(runAt({ runs, index: 0 }).argv.slice(0, 4)).toEqual([
+      expect(runAt({ runs, index: 0 }).argv).toEqual([
         '-p',
         '--resume',
         PINNED_SESSION_ID,
+        '--permission-mode',
+        'dontAsk',
+        '--tools=',
         `--allowedTools=${WAKE_ALLOWED_TOOL}`,
       ]);
-      expect(runAt({ runs, index: 0 }).argv.at(-1)).toMatch(
-        /^<channel source="zapbip" sender="owner" verified="true">text of msg_1<\/channel>/,
-      );
+      expect(runAt({ runs, index: 0 }).stdin).toMatch(/^<channel source="zapbip" sender="owner" verified="true">text of msg_1<\/channel>/);
       expect(doneMessageIds()).toEqual(['msg_1']);
       expect(loggedFieldsOf({ event: ConnectorLogEvent.WakeFinished })).toMatchObject({
         messageId: 'msg_1',
@@ -213,7 +221,7 @@ describe('runConnection', () => {
       await server.waitForFrames({ type: ConnectorFrameType.Done, count: 1 });
 
       const runs = await fakeClients.readRuns();
-      expect(runAt({ runs, index: 0 }).argv.at(-1)).toContain(`$(touch ${markerPath})`);
+      expect(runAt({ runs, index: 0 }).stdin).toContain(`$(touch ${markerPath})`);
       await expect(access(markerPath)).rejects.toThrow();
     });
   });
@@ -275,7 +283,7 @@ describe('runConnection', () => {
       await server.waitForFrames({ type: ConnectorFrameType.Done, count: 3 });
 
       const runs = await fakeClients.readRuns();
-      expect(runs.map((run) => run.argv.at(-1))).toEqual(
+      expect(runs.map((run) => run.stdin)).toEqual(
         ['msg_1', 'msg_2', 'msg_3'].map((messageId) => expect.stringContaining(`text of ${messageId}`)),
       );
       expect(runAt({ runs, index: 0 }).endedAt).toBeLessThanOrEqual(runAt({ runs, index: 1 }).startedAt);
@@ -402,12 +410,14 @@ describe('runConnection', () => {
 
   describe('heartbeat', () => {
     it('pings every interval and stays connected while pongs arrive', async () => {
-      useFakeTimers();
-      startConnector();
+      const timers = createManualTimers();
+      startConnector({ timers });
       await waitForLog({ event: ConnectorLogEvent.ConnectorConnected });
-      await vi.advanceTimersByTimeAsync(HEARTBEAT_INTERVAL_MS);
+      timers.advance({ ms: HEARTBEAT_INTERVAL_MS });
       await server.waitForFrames({ type: ConnectorFrameType.Ping, count: 1 });
-      await vi.advanceTimersByTimeAsync(HEARTBEAT_INTERVAL_MS);
+      sendMessages({ messageIds: [] });
+      await waitForLog({ event: ConnectorLogEvent.MessagesReceived });
+      timers.advance({ ms: HEARTBEAT_INTERVAL_MS });
       await server.waitForFrames({ type: ConnectorFrameType.Ping, count: 2 });
 
       expect(server.connectionCount()).toBe(1);
@@ -417,16 +427,86 @@ describe('runConnection', () => {
 
     it('closes and reconnects when no pong arrives within the timeout', async () => {
       await restartServer({ autoPong: false });
-      useFakeTimers();
-      startConnector();
+      const timers = createManualTimers();
+      startConnector({ timers });
       await waitForLog({ event: ConnectorLogEvent.ConnectorConnected });
-      await vi.advanceTimersByTimeAsync(HEARTBEAT_INTERVAL_MS);
+      timers.advance({ ms: HEARTBEAT_INTERVAL_MS });
       await server.waitForFrames({ type: ConnectorFrameType.Ping, count: 1 });
-      await vi.advanceTimersByTimeAsync(HEARTBEAT_TIMEOUT_MS);
+      timers.advance({ ms: HEARTBEAT_TIMEOUT_MS });
       await waitForLog({ event: ConnectorLogEvent.ConnectorReconnecting });
 
       expect(loggedFieldsOf({ event: ConnectorLogEvent.ConnectorReconnecting })).toEqual({ attempt: 0, delayMs: RECONNECT_BASE_MS });
-      await vi.advanceTimersByTimeAsync(RECONNECT_BASE_MS);
+      timers.advance({ ms: RECONNECT_BASE_MS });
+      await server.waitForConnections({ count: 2 });
+    });
+  });
+
+  describe('reconnect backoff', () => {
+    function reconnectingFields(): LoggedEvent['fields'][] {
+      return loggedEventsOf({ event: ConnectorLogEvent.ConnectorReconnecting }).map((entry) => entry.fields);
+    }
+
+    it('keeps growing the delay while the server accepts and closes at once', async () => {
+      const timers = createManualTimers();
+      startConnector({ timers });
+      await waitForLog({ event: ConnectorLogEvent.ConnectorConnected });
+      server.closeConnections({ code: 1000 });
+      await waitForLog({ event: ConnectorLogEvent.ConnectorReconnecting });
+      timers.advance({ ms: RECONNECT_BASE_MS });
+      await server.waitForConnections({ count: 2 });
+      await waitForLog({ event: ConnectorLogEvent.ConnectorConnected, count: 2 });
+      server.closeConnections({ code: 1000 });
+      await waitForLog({ event: ConnectorLogEvent.ConnectorReconnecting, count: 2 });
+
+      expect(reconnectingFields()).toEqual([
+        { attempt: 0, delayMs: RECONNECT_BASE_MS },
+        { attempt: 1, delayMs: 2 * RECONNECT_BASE_MS },
+      ]);
+    });
+
+    it('starts again from the base delay after a connection that stayed open past the stability window', async () => {
+      const timers = createManualTimers();
+      startConnector({ timers });
+      await waitForLog({ event: ConnectorLogEvent.ConnectorConnected });
+      server.closeConnections({ code: 1000 });
+      await waitForLog({ event: ConnectorLogEvent.ConnectorReconnecting });
+      timers.advance({ ms: RECONNECT_BASE_MS });
+      await server.waitForConnections({ count: 2 });
+      await waitForLog({ event: ConnectorLogEvent.ConnectorConnected, count: 2 });
+      timers.advance({ ms: RECONNECT_STABLE_MS });
+      server.closeConnections({ code: 1000 });
+      await waitForLog({ event: ConnectorLogEvent.ConnectorReconnecting, count: 2 });
+
+      expect(reconnectingFields().at(-1)).toEqual({ attempt: 0, delayMs: RECONNECT_BASE_MS });
+    });
+  });
+
+  describe('reconnect pre-flight', () => {
+    it('exits 1 with a clear message when the secret was revoked while disconnected', async () => {
+      const timers = createManualTimers();
+      const exiting = startConnector({ timers });
+      await waitForLog({ event: ConnectorLogEvent.ConnectorConnected });
+      server.setProbeStatus({ status: UNAUTHORIZED_STATUS });
+      server.dropConnections();
+      await waitForLog({ event: ConnectorLogEvent.ConnectorReconnecting });
+      timers.advance({ ms: RECONNECT_BASE_MS });
+
+      expect(await exiting).toBe(EXIT_CODE_REFUSED);
+      expect(server.connectionCount()).toBe(1);
+      expect(loggedEventsOf({ event: ConnectorLogEvent.ConnectorClosed }).at(-1)?.fields).toMatchObject({
+        status: UNAUTHORIZED_STATUS,
+        message: expect.stringContaining('revoked'),
+      });
+      expect(JSON.stringify(logRecorder.events)).not.toContain(FAKE_SECRET);
+    });
+
+    it('keeps reconnecting when the probe fails for any other reason', async () => {
+      useFakeTimers();
+      startConnector();
+      await waitForLog({ event: ConnectorLogEvent.ConnectorConnected });
+      server.setProbeStatus({ status: PREFLIGHT_SERVER_ERROR_STATUS });
+      server.dropConnections();
+      await reconnectAfterDrop();
       await server.waitForConnections({ count: 2 });
     });
   });

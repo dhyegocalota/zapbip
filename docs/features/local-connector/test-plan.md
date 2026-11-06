@@ -25,7 +25,7 @@ Test areas, each run by its own tester sub-agent in parallel: **Unit (core)**, *
 - [ ] `attachLocalConnector` on a fresh agent — input: agent `ana` with `WakeMode.None` and two unread owner messages `msg_1`, `msg_2`, `limit: 50`; expected: `previousWakeMode` is `WakeMode.None`, `unread` is `[msg_1, msg_2]` in that order, stored mode is `WakeMode.Local`.
 - [ ] `attachLocalConnector` respects the limit — input: three unread owner messages, `limit: 2`; expected: `unread` has the two oldest, length `2`.
 - [ ] `attachLocalConnector` returns the previous mode on re-attach — input: agent already `WakeMode.Local`; expected: `previousWakeMode` is `WakeMode.Local`, stored mode unchanged.
-- [ ] `attachLocalConnector` for an agent with no wake row — input: agent `ghost` with no stored wake (`findWake` returns `null`); expected: rejects with an error naming the missing wake setting; no mode is saved.
+- [ ] `attachLocalConnector` for an agent with no wake row (core only; the socket path calls `touchAgent` first, so this state is unreachable through the socket) — input: agent `ghost` with no stored wake (`findWake` returns `null`); expected: rejects with an error naming the missing wake setting; no mode is saved.
 - [ ] `detachLocalConnector` with sockets remaining — input: `remainingSockets: 1`, mode `local`, restore record stored; expected: no write, restore record kept.
 - [ ] `detachLocalConnector` restores — input: `remainingSockets: 0`, mode `local`, restore record `webhook`; expected: `saveWake` called with the `webhook` record, restore record deleted.
 - [ ] `detachLocalConnector` keeps a user change — input: `remainingSockets: 0`, mode `webhook`, restore record stored; expected: no `saveWake`, restore record deleted.
@@ -84,7 +84,7 @@ Test areas, each run by its own tester sub-agent in parallel: **Unit (core)**, *
 - [ ] One wake at a time — input: three enqueues with a `runWake` that resolves on a manual signal; expected: at most one `runWake` promise pending at any moment.
 - [ ] Duplicate id while queued is ignored — input: `msg_1` enqueued twice before it starts; expected: `runWake` called once for `msg_1`.
 - [ ] Duplicate id while running is ignored — input: `msg_1` enqueued again while its wake runs; expected: `runWake` not called a second time for `msg_1`.
-- [ ] A message can be queued again after it finished — input: `msg_1` enqueued after its wake resolved; expected: `runWake` runs again for `msg_1`.
+- [ ] A message queued again after it finished is not woken again — input: `msg_1` enqueued after its wake resolved; expected: `runWake` not called again, `done` sent.
 - [ ] Edge: a failing wake does not stop the queue — input: `runWake` rejects for `msg_1`, then `msg_2` is enqueued; expected: `msg_2` still runs.
 - [ ] Edge: an empty queue — input: no enqueue; expected: `runWake` never called.
 
@@ -183,7 +183,7 @@ Test areas, each run by its own tester sub-agent in parallel: **Unit (core)**, *
 
 ### Wake setting and restore (`apps/api/test/integration/connector-wake-setting.test.ts`)
 
-- [ ] Wake setting read for a missing row — input: attach for an agent with no stored wake row; expected: the attach rejects with an error naming the missing wake setting, no socket is accepted.
+- [ ] Attach registers an agent with no wake row (the socket path calls `touchAgent` before `attachLocalConnector`) — input: attach for an agent that never called a tool; expected: the socket is accepted and the stored mode becomes `local`. The missing-row rejection is covered in core only.
 - [ ] Restore record save and read — input: `saveLocalRestore({agent: 'ana', previous})` then `findLocalRestore`; expected: the same record; after `deleteLocalRestore`, `findLocalRestore` returns `null`.
 - [ ] Close of the last socket restores the previous setting — input: stored wake `webhook` for `ana`, attach (mode becomes `local`), close the only socket; expected: `findWake` returns the `webhook` record again, `findLocalRestore` returns `null`.
 - [ ] Close of one of two sockets keeps the local setting — input: two sockets for `ana`, close one; expected: mode stays `local`, restore record still stored.
@@ -247,7 +247,7 @@ Harness: `apps/connector/test/e2e/support/stack.ts` (fixed by the plan, file map
 - [ ] No runtime dependencies — input: `package.json`; expected: `dependencies` is absent or `{}`.
 - [ ] `private` stays `true` — input: `package.json`; expected: `"private": true` (publish is `deploy-readiness`).
 - [ ] Edge: the bundle contains no test code — input: grep of `dist/cli.js` for `vitest` and `fake-event-server`; expected: no match.
-- [ ] `mint broken-links` — input: `apps/docs` with `connect/local-connector.mdx` and `connect/background-running.mdx`; expected: no broken links.
+- [ ] `mint broken-links` — input: `apps/docs` with `developers/local-connector.mdx` and `developers/background-running.mdx`; expected: no broken links.
 - [ ] The docs page states no secret — input: grep of the two `.mdx` files for the sample secret string used in tests; expected: no match, the page uses a placeholder.
 - [ ] Repository shape — input: `pnpm --filter @zapbip/repository-shape test:unit`; expected: green, `apps/connector/README.md` present and purpose-only.
 - [ ] The README is purpose only — input: `apps/connector/README.md`; expected: no command, no flag name, no path other than the package's own folder.

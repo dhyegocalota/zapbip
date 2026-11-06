@@ -1,0 +1,28 @@
+import { WAKE_REQUEST_TIMEOUT_MS, type WakeObserver } from '@zapbip/core';
+import { logEvent } from '../../log';
+
+const DATASET_NAME = 'WAKE_METRICS';
+const STATUS_CLASS_DIVISOR = 100;
+const STATUS_CLASS_SUFFIX = 'xx';
+const NO_RESPONSE_CLASS = 'network';
+const TIMEOUT_CLASS = 'timeout';
+
+function statusClassOf(input: { statusCode: number | null; latencyMs: number }): string {
+  const { statusCode, latencyMs } = input;
+  if (statusCode !== null) return `${Math.floor(statusCode / STATUS_CLASS_DIVISOR)}${STATUS_CLASS_SUFFIX}`;
+  if (latencyMs >= WAKE_REQUEST_TIMEOUT_MS) return TIMEOUT_CLASS;
+  return NO_RESPONSE_CLASS;
+}
+
+export function createCloudflareWakeObserver(input: { dataset: AnalyticsEngineDataset; accountId: string }): WakeObserver {
+  const { dataset, accountId } = input;
+  if (dataset === undefined) throw new Error(`${DATASET_NAME} binding is missing`);
+  return {
+    observe: ({ event }) => {
+      const { name, provider, agent, attempt, statusCode, latencyMs, outcome } = event;
+      logEvent({ accountId, event: name, agent, provider, attempt, statusCode, latencyMs, outcome });
+      if (outcome === null || latencyMs === null) return;
+      dataset.writeDataPoint({ blobs: [provider, outcome, statusClassOf({ statusCode, latencyMs })], doubles: [attempt, latencyMs] });
+    },
+  };
+}

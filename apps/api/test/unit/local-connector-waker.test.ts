@@ -1,4 +1,4 @@
-import type { Message } from '@zapbip/core';
+import type { AgentWaker, Message } from '@zapbip/core';
 import {
   AgentWakeReason,
   CONNECTOR_FRAME_MAX_BYTES,
@@ -12,7 +12,13 @@ import {
 } from '@zapbip/types';
 import { describe, expect, test, vi } from 'vitest';
 import { createEnvironment } from '../../../../libs/core/src/inbox/testing/fixtures';
-import { acceptConnectorSocket, connectorAgentOf, parseDoneFrame, remainingSocketCount } from '../../src/account-inbox/connector-sockets';
+import {
+  acceptConnectorSocket,
+  connectorAgentOf,
+  parseDoneFrame,
+  planMessageFrames,
+  remainingSocketCount,
+} from '../../src/account-inbox/connector-sockets';
 import { createLocalConnectorWaker } from '../../src/adapters/wake/local-connector-waker';
 
 type FakeSocket = WebSocket & { sent: string[]; closedWith: number[] };
@@ -49,7 +55,9 @@ function createFakeState(input: { socketsByAgent: Record<string, FakeSocket[]> }
   return createFakeStateWithAccepted(input).context;
 }
 
-function ownerMessage(input: { index: number }): Message {
+const LARGE_TEXT_BYTES = 10_000;
+
+function ownerMessage(input: { index: number; text?: string }): Message {
   return {
     messageId: `msg_${input.index}`,
     direction: MessageDirection.FromOwner,
@@ -58,19 +66,30 @@ function ownerMessage(input: { index: number }): Message {
     replyToMessageId: null,
     delivery: null,
     readByAgent: false,
+    forwarded: false,
     kind: MessageKind.Text,
-    text: `message ${input.index}`,
+    text: input.text === undefined ? `message ${input.index}` : input.text,
   };
 }
 
-async function createWakerFixture(input: { socketsByAgent: Record<string, FakeSocket[]>; unreadCount: number }) {
+const RESTORED_OUTCOME = WakeOutcome.Woken;
+
+async function createWakerFixture(input: {
+  socketsByAgent: Record<string, FakeSocket[]>;
+  unreadCount: number;
+  text?: string;
+  restoreAndNotify?: AgentWaker['notify'];
+}) {
   const environment = await createEnvironment();
   await Promise.all(
-    Array.from({ length: input.unreadCount }, (_, index) => environment.repository.insertMessage({ message: ownerMessage({ index }) })),
+    Array.from({ length: input.unreadCount }, (_, index) =>
+      environment.repository.insertMessage({ message: ownerMessage({ index, text: input.text }) }),
+    ),
   );
   const waker = createLocalConnectorWaker({
     context: createFakeState({ socketsByAgent: input.socketsByAgent }),
     repository: environment.repository,
+    restoreAndNotify: input.restoreAndNotify === undefined ? async () => WakeOutcome.Unreached : input.restoreAndNotify,
   });
   return { waker, environment };
 }
@@ -124,6 +143,65 @@ describe('local connector waker', () => {
   });
 });
 
+describe('local waker without a live socket', () => {
+  test('hands the wake to the restore path and returns its outcome', async () => {
+    const restoreAndNotify = vi.fn(async () => RESTORED_OUTCOME);
+    const { waker } = await createWakerFixture({ socketsByAgent: {}, unreadCount: 1, restoreAndNotify });
+    expect(await notifyAna({ waker })).toBe(RESTORED_OUTCOME);
+    expect(restoreAndNotify).toHaveBeenCalledWith({ agent: 'ana', reason: AgentWakeReason.MessageWaiting });
+  });
+
+  test('does not touch the restore path while a socket is live', async () => {
+    const restoreAndNotify = vi.fn(async () => RESTORED_OUTCOME);
+    const { waker } = await createWakerFixture({ socketsByAgent: { ana: [createFakeSocket()] }, unreadCount: 1, restoreAndNotify });
+    await notifyAna({ waker });
+    expect(restoreAndNotify).not.toHaveBeenCalled();
+  });
+
+  test('pushes every message only while a socket is live', async () => {
+    const withSocket = await createWakerFixture({ socketsByAgent: { ana: [createFakeSocket()] }, unreadCount: 0 });
+    const withoutSocket = await createWakerFixture({ socketsByAgent: {}, unreadCount: 0 });
+    expect(await withSocket.waker.pushesEveryMessage({ agent: 'ana' })).toBe(true);
+    expect(await withoutSocket.waker.pushesEveryMessage({ agent: 'ana' })).toBe(false);
+  });
+});
+
+describe('large backlogs', () => {
+  const largeText = 'x'.repeat(LARGE_TEXT_BYTES);
+
+  test('a backlog over the frame limit is split into frames that each fit', async () => {
+    const socket = createFakeSocket();
+    const { waker } = await createWakerFixture({ socketsByAgent: { ana: [socket] }, unreadCount: 20, text: largeText });
+    expect(await notifyAna({ waker })).toBe(WakeOutcome.Woken);
+    const frames = socket.sent.map((text) => JSON.parse(text));
+    expect(socket.sent.length).toBeGreaterThan(1);
+    socket.sent.forEach((text) => expect(new TextEncoder().encode(text).byteLength).toBeLessThanOrEqual(CONNECTOR_FRAME_MAX_BYTES));
+    expect(frames.flatMap((frame) => frame.messages.map((message: Message) => message.messageId))).toHaveLength(20);
+  });
+
+  test('a single message that cannot fit in any frame is never reported as woken', async () => {
+    const socket = createFakeSocket();
+    const { waker } = await createWakerFixture({
+      socketsByAgent: { ana: [socket] },
+      unreadCount: 1,
+      text: 'x'.repeat(CONNECTOR_FRAME_MAX_BYTES),
+    });
+    expect(await notifyAna({ waker })).toBe(WakeOutcome.Unreached);
+    expect(socket.sent).toEqual([]);
+  });
+
+  test('the plan keeps the order and puts an oversized message aside', () => {
+    const messages = [
+      ownerMessage({ index: 1 }),
+      ownerMessage({ index: 2, text: 'x'.repeat(CONNECTOR_FRAME_MAX_BYTES) }),
+      ownerMessage({ index: 3 }),
+    ];
+    const plan = planMessageFrames({ messages });
+    expect(plan.oversized.map((message) => message.messageId)).toEqual(['msg_2']);
+    expect(plan.frames.flat().map((message) => message.messageId)).toEqual(['msg_1', 'msg_3']);
+  });
+});
+
 describe('connector sockets', () => {
   test('the agent of a socket is its tag', () => {
     const socket = createFakeSocket();
@@ -140,6 +218,13 @@ describe('connector sockets', () => {
     const closing = createFakeSocket();
     const context = createFakeState({ socketsByAgent: { ana: [closing, createFakeSocket()] } });
     expect(remainingSocketCount({ context, agent: 'ana', closing: closing })).toBe(1);
+  });
+
+  test('the remaining count leaves out sockets that are already closing', () => {
+    const closing = createFakeSocket();
+    const replaced = Object.assign(createFakeSocket(), { readyState: WebSocket.CLOSING });
+    const context = createFakeState({ socketsByAgent: { ana: [closing, replaced] } });
+    expect(remainingSocketCount({ context, agent: 'ana', closing })).toBe(0);
   });
 
   test('the remaining count is zero when the closing socket is the only one', () => {

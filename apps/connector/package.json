@@ -1,5 +1,6 @@
 {
   "name": "zapbip",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "bin": {
@@ -14,14 +15,11 @@
   "scripts": {
     "build": "esbuild src/cli.ts --bundle --platform=node --format=esm --target=node24 --outfile=dist/cli.js --banner:js=\"#!/usr/bin/env node\"",
     "typecheck": "tsc --noEmit",
-    "pretest:e2e": "pnpm run build",
-    "pretest:packaging": "pnpm run build",
-    "test:unit": "vitest run --passWithNoTests --config vitest.config.mts",
-    "test:e2e": "vitest run --passWithNoTests --config vitest.e2e.config.mts",
-    "test:packaging": "vitest run --passWithNoTests --config vitest.packaging.config.mts"
+    "test:unit": "vitest run --config vitest.config.mts",
+    "test:e2e": "pnpm run build && vitest run --config vitest.e2e.config.mts",
+    "test:packaging": "pnpm run build && vitest run --config vitest.packaging.config.mts"
   },
   "devDependencies": {
-    "@modelcontextprotocol/sdk": "1.32.2",
     "@modelcontextprotocol/sdk": "1.32.2",
     "@types/node": "24.19.2",
     "@types/ws": "8.18.2",

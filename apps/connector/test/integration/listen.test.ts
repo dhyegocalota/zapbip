@@ -91,7 +91,7 @@ describe('zapbip listen', () => {
     await server.waitForFrames({ type: ConnectorFrameType.Done, count: 1 });
 
     expect(printedLines({ listenProcess }).map((line) => JSON.parse(line))).toEqual([
-      { messageId: 'msg_1', kind: 'text', sender: 'owner', verified: true, text: OWNER_TEXT },
+      { messageId: 'msg_1', kind: 'text', sender: 'owner', verified: true, forwarded: false, text: OWNER_TEXT },
     ]);
     expect(server.framesOfType({ type: ConnectorFrameType.Done }).map((entry) => entry.frame.messageId)).toEqual(['msg_1']);
   });

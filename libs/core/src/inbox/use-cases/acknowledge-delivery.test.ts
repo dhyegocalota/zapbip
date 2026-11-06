@@ -15,6 +15,7 @@ function textMessage(input: { messageId: string; agent: string; direction: Messa
     replyToMessageId: null,
     delivery: null,
     readByAgent: false,
+    forwarded: false,
     kind: MessageKind.Text,
     text: 'hello',
   };
@@ -80,5 +81,14 @@ describe('acknowledgeDelivery', () => {
     });
     await acknowledgeDelivery({ dependencies: environment.dependencies, agent: 'ana', messageId: 'msg_5' });
     expect(await readFlagOf({ environment, messageId: 'msg_6' })).toBe(false);
+  });
+
+  test('an empty message id changes nothing and does not throw', async () => {
+    const environment = await createEnvironment();
+    await environment.repository.insertMessage({
+      message: textMessage({ messageId: 'msg_1', agent: 'ana', direction: MessageDirection.FromOwner }),
+    });
+    await expect(acknowledgeDelivery({ dependencies: environment.dependencies, agent: 'ana', messageId: '' })).resolves.toBeUndefined();
+    expect(await readFlagOf({ environment, messageId: 'msg_1' })).toBe(false);
   });
 });

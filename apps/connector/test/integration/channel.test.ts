@@ -106,7 +106,7 @@ describe('zapbip channel', () => {
     pushOwnerMessage({ messageId: 'msg_1', text: OWNER_TEXT });
     await server.waitForFrames({ type: ConnectorFrameType.Done, count: 1 });
 
-    expect(notifications).toEqual([{ content: OWNER_TEXT, meta: { sender: 'owner', verified: 'true' } }]);
+    expect(notifications).toEqual([{ content: OWNER_TEXT, meta: { sender: 'owner', verified: 'true', forwarded: 'false' } }]);
     expect(server.framesOfType({ type: ConnectorFrameType.Done }).map((entry) => entry.frame.messageId)).toEqual(['msg_1']);
   });
 
@@ -164,5 +164,17 @@ describe('zapbip channel', () => {
 
     expect(exitCode).toBe(EXIT_CODE_FAILURE);
     expect(server.connectionCount()).toBe(0);
+  });
+
+  it('exits 0 when the standard input of the channel closes', async () => {
+    const child = spawn(process.execPath, [bundleFile, CHANNEL_COMMAND], {
+      env: childEnvironment({ connectionUrl: server.connectionLink }),
+      stdio: 'pipe',
+    });
+    await server.waitForLiveConnections({ count: 1 });
+    const exited = new Promise<number | null>((resolve) => child.on('exit', (code) => resolve(code)));
+    child.stdin.end();
+
+    expect(await exited).toBe(0);
   });
 });
