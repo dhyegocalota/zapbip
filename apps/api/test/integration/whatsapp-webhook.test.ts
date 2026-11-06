@@ -170,12 +170,40 @@ describe('webhook verification', () => {
     expect(response.status).toBe(STATUS_OK);
     expect(await response.text()).toBe('777');
     expect(response.headers.get('content-type')).toContain('text/plain');
+    expect(response.headers.get('x-content-type-options')).toBe('nosniff');
   });
 
   test('WI-19 refuses a wrong verify token with an empty body', async () => {
     const response = await SELF.fetch(`${WEBHOOK_URL}?hub.mode=subscribe&hub.verify_token=wrong&hub.challenge=777`);
     expect(response.status).toBe(STATUS_FORBIDDEN);
     expect(await response.text()).toBe('');
+  });
+});
+
+describe('webhook signature variants', () => {
+  const ALGORITHM_PREFIX = 'sha256=';
+
+  test.each([
+    ['upper case hex', (hex: string) => `${ALGORITHM_PREFIX}${hex.toUpperCase()}`],
+    ['no prefix', (hex: string) => hex],
+    ['sha1 prefix', (hex: string) => `sha1=${hex.slice(0, 40)}`],
+    ['sha512 prefix', (hex: string) => `sha512=${hex}`],
+    ['digest too short', (hex: string) => `${ALGORITHM_PREFIX}${hex.slice(0, 62)}`],
+    ['digest too long', (hex: string) => `${ALGORITHM_PREFIX}${hex}00`],
+    ['all zero digest', () => `${ALGORITHM_PREFIX}${'0'.repeat(64)}`],
+    ['empty header', () => ''],
+  ])('pin: answers 401 with the same body for a signature with %s and stores nothing', async (_name, tamper) => {
+    const account = await seedAccount({ agent: 'alpha' });
+    const text = JSON.stringify(notificationWith({ messages: [ownerText({ account, id: 'wamid.SIGVARIANT', text: 'Oi' })] }));
+    const valid = await signatureHeaderOf({ appSecret: env.META_APP_SECRET as string, body: encode({ text }) });
+    const response = await SELF.fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { [WEBHOOK_SIGNATURE_HEADER]: tamper(valid.slice(ALGORITHM_PREFIX.length)) },
+      body: text,
+    });
+    expect(response.status).toBe(STATUS_UNAUTHORIZED);
+    expect(await response.json()).toEqual({ error: 'unauthorized' });
+    expect(ownerTextsOf({ history: await historyOf({ account }) })).toEqual([]);
   });
 });
 
@@ -220,7 +248,8 @@ describe('webhook request checks', () => {
         controller.enqueue(chunk);
       },
     });
-    const signature = await signatureHeaderOf({ appSecret: env.META_APP_SECRET as string, body: new Uint8Array(0) });
+    const signedBody = new Uint8Array(chunkCount * CHUNK_BYTES).fill(' '.charCodeAt(0));
+    const signature = await signatureHeaderOf({ appSecret: env.META_APP_SECRET as string, body: signedBody });
     const request = new Request(WEBHOOK_URL, {
       method: 'POST',
       headers: { [WEBHOOK_SIGNATURE_HEADER]: signature },

@@ -156,6 +156,23 @@ describe('receiveChannelMessage', () => {
     },
   );
 
+  test('a reaction on a message nobody has is stored with no target instead of the channel id', async () => {
+    const environment = await environmentWithAlpha();
+    const entry: ChannelInboundEntry = {
+      kind: ChannelInboundKind.Owner,
+      at: environment.clock.now(),
+      content: { kind: MessageKind.Reaction, targetMessageId: 'wamid.unknown', emoji: '👍' },
+      replyToChannelMessageId: null,
+      forwarded: ForwardedKind.None,
+      noticeText: null,
+    };
+    const result = await receiveChannel({ environment, entry });
+    expect(await environment.repository.findMessage({ messageId: result.messageId! })).toMatchObject({
+      kind: MessageKind.Reaction,
+      targetMessageId: null,
+    });
+  });
+
   test('CU-21 a reply to an agent message stores the core message id as its target', async () => {
     const environment = await environmentWithAlpha();
     const sent = await sendText({

@@ -35,4 +35,35 @@ describe('isAllowedMediaUrl', () => {
   it('refuses a string that is not a url', () => {
     expect(isAllowedMediaUrl({ url: 'not a url', developmentMediaOrigin: DEVELOPMENT_ORIGIN })).toBe(false);
   });
+
+  it.each([
+    'https://fbsbx.com.evil.com/x',
+    'https://evil.com#.fbsbx.com',
+    'https://evil.com?.fbsbx.com',
+    'https://evil.com\\@x.fbsbx.com/',
+    'https://user:pw@evil.com/',
+    'ftp://x.fbsbx.com/',
+    'file:///etc/passwd',
+    'https://127.0.0.1/x',
+    'https://[::1]/x',
+    'https://2130706433/x',
+    'https://localhost/x',
+    'https://x.fbsbx.com.evil.com/',
+    'https://xn--fbsbx-0wa.com/',
+    'javascript:alert(1)',
+    'data:text/plain,hi',
+    '//x.fbsbx.com/x',
+    'http://127.0.0.1:4011.evil.com/x',
+    'http://127.0.0.1:40110/x',
+    'https://127.0.0.1:4011/x',
+    'http://localhost:4011/x',
+    'http://[::ffff:127.0.0.1]:4011/x',
+  ])('pin: refuses the lookalike %s with and without a development origin', (url) => {
+    expect(isAllowedMediaUrl({ url, developmentMediaOrigin: null })).toBe(false);
+    expect(isAllowedMediaUrl({ url, developmentMediaOrigin: DEVELOPMENT_ORIGIN })).toBe(false);
+  });
+
+  it('pin: refuses the short loopback form 127.1 in production, where no development origin exists', () => {
+    expect(isAllowedMediaUrl({ url: 'http://127.1:4011/x', developmentMediaOrigin: null })).toBe(false);
+  });
 });
