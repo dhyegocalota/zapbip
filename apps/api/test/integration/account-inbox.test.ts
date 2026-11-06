@@ -22,6 +22,7 @@ const FIRST_ACCOUNT = 'acc_one';
 const SECOND_ACCOUNT = 'acc_two';
 const HELD_ASK_TIMEOUT_MS = 10_000;
 const SHORT_ASK_TIMEOUT_MS = 1_000;
+const STARVATION_POLL_COUNT = 5;
 const MEDIA_KEY_PREFIX = 'accounts';
 const LOG_SECRET_TEXT = 'segredo-123';
 const LOG_SECRET_CAPTION = 'legenda-456';
@@ -232,6 +233,26 @@ describe('AccountInbox alarm', () => {
     const screen = await readScreen({ stub });
     expect(screen.map((entry) => entry.options)).toEqual([['alpha'], ['alpha']]);
     expect(await runInDurableObject(stub, (_instance, state) => state.storage.getAlarm())).not.toBeNull();
+  });
+
+  it('WI-129 does not postpone a due expiry while the agent keeps calling tools', async () => {
+    const stub = stubOf({ accountId: FIRST_ACCOUNT });
+    const connection = connectionOf({ accountId: FIRST_ACCOUNT, agent: 'alpha' });
+    await stub.checkInbox({ connection });
+    await openWindow({ stub });
+    expectOk(await receiveOwnerText({ stub, text: 'oi' }));
+    await advanceClock({ stub, advanceMs: ROUTING_LIST_TTL_MS });
+    const armedAfterAdvance = await runInDurableObject(stub, (_instance, state) => state.storage.getAlarm());
+    if (armedAfterAdvance === null) throw new Error('alarm was not armed');
+    await Array.from({ length: STARVATION_POLL_COUNT }).reduce<Promise<void>>(
+      (previous) =>
+        previous.then(async () => {
+          await stub.checkInbox({ connection });
+        }),
+      Promise.resolve(),
+    );
+    const armedAfterPolls = await runInDurableObject(stub, (_instance, state) => state.storage.getAlarm());
+    expect(armedAfterPolls).toBe(armedAfterAdvance);
   });
 
   it('WI-17 expires a queued message past its retention', async () => {
