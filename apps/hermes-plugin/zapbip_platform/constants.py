@@ -10,6 +10,8 @@ UNAUTHORIZED_STATUS = 401
 CONNECTOR_FRAME_MAX_BYTES = 65_536
 CONNECTOR_PATH_SUFFIX = "/connector"
 MCP_PATH_SUFFIX = "/mcp"
+SECURE_LINK_SCHEME = "https"
+SECURE_SOCKET_SCHEME = "wss"
 CONNECTOR_PING_TEXT = '{"type":"ping"}'
 CONNECTOR_PONG_TEXT = '{"type":"pong"}'
 CHANNEL_PLUGIN_SELF_TEST_TEXT = "✅ instalado"
@@ -19,6 +21,20 @@ NORMAL_CLOSE_CODE = 1000
 FAILURE_EXIT_CODE = 1
 CLEAN_EXIT_CODE = 0
 MILLISECONDS_PER_SECOND = 1_000
+CONNECTION_LINK_ENV = "ZAPBIP_CONNECTION_LINK"
+ALLOWED_USERS_ENV = "ZAPBIP_ALLOWED_USERS"
+PLUGIN_NAME = "zapbip-platform"
+PLATFORM_NAME = "zapbip"
+PLUGIN_VERSION = "0.0.1"
+OWNER_CHAT_ID = "owner"
+OWNER_CHAT_TYPE = "dm"
+WHATSAPP_TEXT_MAX_CHARS = 4_096
+SEND_MESSAGE_TOOL_NAME = "send_message"
+MCP_PROTOCOL_VERSION = "2025-06-18"
+MCP_REQUEST_TIMEOUT_SECONDS = 15.0
+INVALID_LINK_MESSAGE = f"{CONNECTION_LINK_ENV} must be an https link ending in {MCP_PATH_SUFFIX}"
+PLATFORM_HINT = "You are chatting with the owner through zapbip (WhatsApp). Plain text only."
+PLATFORM_EMOJI = "💬"
 
 CHANNEL_HANDOFF_NO_TEXT_BY_KIND: dict[str, str] = {
     "text": "The owner sent a message with no text.",
@@ -75,4 +91,3 @@ class ConnectorLogEvent(Enum):
 class PluginLogEvent(Enum):
     PROBE_FAILED = "probe_failed"
     HANDOFF_FAILED = "handoff_failed"
-CONNECTION_LINK_ENV = "ZAPBIP_CONNECTION_LINK"

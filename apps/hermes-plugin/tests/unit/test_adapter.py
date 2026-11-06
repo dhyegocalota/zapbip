@@ -112,6 +112,20 @@ def test_disconnect_stops_the_socket_task() -> None:
     asyncio.run(scenario())
 
 
+def test_a_socket_that_ends_marks_the_adapter_disconnected() -> None:
+    async def refused_socket(*, socket_link: str, stop: asyncio.Event, hand_off: Any) -> int:
+        return 1
+
+    async def scenario() -> None:
+        adapter = ZapbipAdapter(PlatformConfig(), run_socket=refused_socket, send_text=TextRecorder().send_text)
+        await adapter.connect()
+        assert gateway_view_of(adapter=adapter)._running is True
+        await gateway_view_of(adapter=adapter)._socket_task
+        assert gateway_view_of(adapter=adapter)._running is False
+
+    asyncio.run(scenario())
+
+
 def test_a_missing_connection_link_is_refused(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv(CONNECTION_LINK_ENV)
 
