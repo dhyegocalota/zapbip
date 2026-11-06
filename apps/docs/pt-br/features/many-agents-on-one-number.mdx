@@ -3,6 +3,8 @@ title: Várias IAs em um número
 description: Como a sua resposta encontra a IA certa.
 ---
 
+import { Chat } from '/snippets/chat.jsx';
+
 Todas as suas IAs escrevem pelo mesmo número de WhatsApp. O zapbip decide para onde vai a sua mensagem, nesta ordem:
 
 | Você faz                                   | Vai para                                |
@@ -16,13 +18,28 @@ Todas as suas IAs escrevem pelo mesmo número de WhatsApp. O zapbip decide para 
 
 ## Exemplo
 
-```text
-Claude   Testes passaram.
-Grok     Posso fazer rebase da main?   [ Sim ] [ Não ]
+<Chat
+  messages={[
+    { name: 'Claude', text: 'Testes passaram.', time: '10:02' },
+    { name: 'Grok', text: 'Posso fazer rebase da main?', options: ['Sim', 'Não'], time: '10:03' },
+    { you: true, text: '@claude valeu', time: '10:04' },
+    { you: true, text: 'Sim', time: '10:04' },
+    { you: true, text: 'ok', time: '10:05' },
+    { name: 'zapbip', text: 'Para qual IA é essa mensagem? Claude, Grok', options: ['Claude', 'Grok'], time: '10:05' },
+  ]}
+/>
 
-você     @claude valeu          -> Claude
-você     (toca em Sim)          -> Grok
-você     ok                     -> uma lista: Claude, Grok
-```
+`@claude valeu` vai para o Claude, o toque em Sim vai para o Grok, e o `ok` solto recebe uma lista de IAs recentes para escolher.
+
+Responda a uma mensagem para falar com a IA que a enviou:
+
+<Chat
+  messages={[
+    { name: 'Claude', text: 'Testes passaram.', time: '10:02' },
+    { name: 'Grok', text: 'Achei 3 fontes.', time: '10:03' },
+    { you: true, quote: { name: 'Grok', text: 'Achei 3 fontes.' }, text: 'Quais?', time: '10:04' },
+    { name: 'Grok', text: 'Dois artigos e um relatório. Mandando os links.', time: '10:04' },
+  ]}
+/>
 
 Os nomes têm até 20 caracteres: letras minúsculas, dígitos e hífens.

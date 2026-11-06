@@ -5,7 +5,14 @@ import type { OpenWindowInput } from './types';
 export function openedWindow(input: { window: OwnerWindow; at: number }): OwnerWindow {
   const { window, at } = input;
   const lastOwnerMessageAt = window.lastOwnerMessageAt === null ? at : Math.max(window.lastOwnerMessageAt, at);
-  return { lastOwnerMessageAt, noticeSentForClosedWindow: false, closedAt: null };
+  return {
+    lastOwnerMessageAt,
+    noticeSentForClosedWindow: false,
+    closedAt: null,
+    noticeRetryLocale: null,
+    noticeRetryAt: null,
+    noticeRetryAttempt: 0,
+  };
 }
 
 export async function openWindow(input: OpenWindowInput): Promise<void> {

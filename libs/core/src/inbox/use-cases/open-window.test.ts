@@ -164,7 +164,16 @@ describe('openWindow', () => {
 
   test('the first owner message of a never-opened window sets it', async () => {
     const environment = await createEnvironment();
-    await environment.repository.saveWindow({ window: { lastOwnerMessageAt: null, noticeSentForClosedWindow: false, closedAt: null } });
+    await environment.repository.saveWindow({
+      window: {
+        lastOwnerMessageAt: null,
+        noticeSentForClosedWindow: false,
+        closedAt: null,
+        noticeRetryLocale: null,
+        noticeRetryAt: null,
+        noticeRetryAttempt: 0,
+      },
+    });
     await open({ environment, at: 123 });
     expect((await environment.repository.findWindow()).lastOwnerMessageAt).toBe(123);
   });

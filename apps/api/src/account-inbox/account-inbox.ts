@@ -59,6 +59,14 @@ import { ACCOUNT_INBOX_MIGRATIONS } from './migrations';
 import { runMigrations } from './run-migrations';
 
 type ReceiveAccountMessageRequest = Parameters<AccountOwnerRpc['receiveAccountMessage']>[0];
+
+function failureLog(input: { error: inbox.InboxError }): LogFields {
+  const { error } = input;
+  if (error instanceof inbox.NoticeFailedError) return { event: LogEvent.OwnerNoticeFailed, kind: error.templateKind };
+  const event = error.code === ChannelErrorKind.DeliveryFailed ? LogEvent.SendFailed : LogEvent.ToolError;
+  return { event, errorCode: error.code };
+}
+
 type ReceiveOwnerMessageRequest = Parameters<AccountInboxRpc['receiveOwnerMessage']>[0];
 
 export class AccountInbox extends DurableObject<Bindings> implements AccountInboxRpc, AccountOwnerRpc {
@@ -110,7 +118,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       deletionRequests: createSqliteDeletionRequests({ storage: this.ctx.storage }),
       installLinkRedaction: { redact: async ({ messageIds }) => redactInstallCodes({ storage: this.ctx.storage, messageIds }) },
     };
-    this.dueTimeProviders.push(this.createExpiryProvider(), this.createRoutingListProvider());
+    this.dueTimeProviders.push(this.createExpiryProvider(), this.createRoutingListProvider(), this.createNoticeRetryProvider());
     await this.armAlarm();
   }
 
@@ -149,6 +157,20 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     return {
       nextDueAt: () => inbox.findRoutingListDueAt({ dependencies: this.dependencies }),
       runDue: () => inbox.expireRoutingList({ dependencies: this.dependencies }),
+    };
+  }
+
+  private createNoticeRetryProvider(): DueTimeProvider {
+    return {
+      nextDueAt: () => inbox.findNoticeRetryDueAt({ dependencies: this.dependencies }),
+      runDue: async () => {
+        try {
+          await inbox.retryNotice({ dependencies: this.dependencies });
+        } catch (error) {
+          if (!(error instanceof inbox.NoticeFailedError)) throw error;
+          this.log(failureLog({ error }));
+        }
+      },
     };
   }
 
@@ -215,8 +237,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       return { ok: true, value };
     } catch (error) {
       if (!(error instanceof inbox.InboxError)) throw error;
-      const event = error.code === ChannelErrorKind.DeliveryFailed ? LogEvent.SendFailed : LogEvent.ToolError;
-      this.log({ event, errorCode: error.code });
+      this.log(failureLog({ error }));
       return { ok: false, errorCode: error.code, message: error.message };
     } finally {
       await this.armAlarm();

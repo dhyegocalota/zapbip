@@ -14,7 +14,7 @@ Agents write to the owner at any hour, often long after the owner last wrote. Ou
 1. **Window per account.** The core tracks `last_owner_message_at` per account (the owner's phone). The window is open until 24 h minus `WINDOW_SAFETY_MARGIN_MS` (10 min) after it.
 2. **Inside the window**, every message goes out as a session message.
 3. **Outside it**, messages queue in order with `delivery: "queued"`.
-4. **One notice per closed window.** The first queued message sends one utility template notice naming the agent and a short preview, with a quick reply that reopens the window. An `ask` sends the question template instead. Further messages only join the queue.
+4. **One notice per closed window.** The first queued message sends one utility template notice naming the agent and a short preview, with a quick reply that reopens the window. An `ask` sends the question template instead. Further messages only join the queue. When the notice send fails, the send that owns the claim raises a delivery failure naming the notice, the message stays queued, the claim is released and the alarm retries the notice every `NOTICE_RETRY_MS` (5 minutes) while owner-bound messages wait in a closed window with no notice sent.
 5. **Flush.** The owner's next message opens the window and flushes the queue in order. Questions are rendered with their real buttons or list.
 6. **Expiry.** Queued items expire after `QUEUE_RETENTION_MS`.
 

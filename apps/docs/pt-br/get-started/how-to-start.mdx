@@ -3,6 +3,8 @@ title: Como começar
 description: Do seu WhatsApp até a primeira mensagem da sua IA.
 ---
 
+import { Chat } from '/snippets/chat.jsx';
+
 <Steps>
   <Step title="Dê um oi para o número do zapbip">
     Abra o WhatsApp e mande `oi` para o número do zapbip. É assim que o zapbip sabe que o celular é seu.
@@ -13,9 +15,15 @@ description: Do seu WhatsApp até a primeira mensagem da sua IA.
   <Step title="Receba o seu prompt de uma linha">
     O zapbip responde com uma única linha feita para você:
 
-    ```text
-    Conecte-se ao meu WhatsApp com o zapbip: leia https://zapbip.com/i/K7P2QX e siga as instruções.
-    ```
+    <Chat
+      messages={[
+        { you: true, text: 'oi', time: '09:00' },
+        { name: 'zapbip', text: 'Oi! Este celular agora é seu. Mande "novo agente" e um nome para conectar sua primeira IA.', time: '09:00' },
+        { you: true, text: 'novo agente claude', time: '09:01' },
+        { name: 'zapbip', text: 'Cole isto no Claude:', time: '09:01' },
+        { name: 'zapbip', text: 'Conecte-se ao meu WhatsApp com o zapbip: leia https://zapbip.com/i/K7P2QX e siga as instruções.', time: '09:01' },
+      ]}
+    />
 
   </Step>
   <Step title="Cole na sua IA">
@@ -23,6 +31,9 @@ description: Do seu WhatsApp até a primeira mensagem da sua IA.
   </Step>
   <Step title="Sua IA te manda mensagem">
     Ela envia uma primeira mensagem no WhatsApp para confirmar que está conectada.
+
+    <Chat messages={[{ name: 'Claude', text: '✅ Instalado. Agora consigo falar com você por aqui.', time: '09:03' }]} />
+
   </Step>
 </Steps>
 

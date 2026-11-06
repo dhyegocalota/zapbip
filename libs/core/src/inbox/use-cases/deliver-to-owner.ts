@@ -2,34 +2,30 @@ import { DeliveryState, ForwardedKind, MessageDirection, type OwnerLocale } from
 import type { Message } from '../message';
 import type { CoreDependencies } from '../ports';
 import { isOwnerWindowOpen } from '../window';
-import { noticeOwner } from './notice-owner';
 import { flushQueue } from './flush-queue';
+import { sendNotice } from './send-notice';
 import { deliveryFailureOf, recordFailure } from './session-delivery';
 import type { DeliverToOwnerInput, DeliverToOwnerResult } from './types';
 
 type Delivery = { dependencies: CoreDependencies; ownerLocale: OwnerLocale; message: Message };
 
 async function queueWithNotice(input: Delivery): Promise<DeliverToOwnerResult> {
-  const { dependencies, message } = input;
-  try {
-    await noticeOwner(input);
-  } catch (error) {
-    await recordFailure({ dependencies, messageId: message.messageId, error });
-    throw deliveryFailureOf({ error, kind: message.kind });
-  }
-  return { delivery: DeliveryState.Queued };
+  const { dependencies, ownerLocale, message } = input;
+  const queued = { delivery: DeliveryState.Queued } as const;
+  if (message.agent === null) return queued;
+  await sendNotice({ dependencies, ownerLocale, agent: message.agent, content: message });
+  return queued;
 }
 
 async function sendSession(input: Delivery): Promise<DeliverToOwnerResult> {
   const { dependencies, ownerLocale, message } = input;
   const { messageId, kind } = message;
   const report = await flushQueue({ dependencies, ownerLocale });
+  if (report.noticeFailure !== null) throw deliveryFailureOf({ error: report.noticeFailure.error, kind });
   const current = await dependencies.repository.findMessage({ messageId });
   const delivery = current === null ? null : current.delivery;
-  if (delivery === DeliveryState.Sent) return { delivery };
-  const isHeldBackWithoutNotice = delivery === DeliveryState.Queued && report.noticeFailure === null;
-  if (isHeldBackWithoutNotice) return { delivery: DeliveryState.Queued };
-  const error = report.noticeFailure === null ? report.failures.get(messageId) : report.noticeFailure.error;
+  if (delivery === DeliveryState.Sent || delivery === DeliveryState.Queued) return { delivery };
+  const error = report.failures.get(messageId);
   await recordFailure({ dependencies, messageId, error });
   throw deliveryFailureOf({ error, kind });
 }

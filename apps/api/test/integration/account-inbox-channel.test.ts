@@ -108,7 +108,14 @@ afterEach(reset);
 describe('SQLite repository channel methods', () => {
   it('commits the receipt, the message and the window in one call and refuses a second call', async () => {
     const message = buildTextMessage({ messageId: 'msg_in_1', direction: MessageDirection.FromOwner, agent: 'alpha', delivery: null });
-    const window = { lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: false, closedAt: null };
+    const window = {
+      lastOwnerMessageAt: BASE_TIME,
+      noticeSentForClosedWindow: false,
+      closedAt: null,
+      noticeRetryLocale: null,
+      noticeRetryAt: null,
+      noticeRetryAttempt: 0,
+    };
     const input = { channelMessageId: CHANNEL_MESSAGE_ID, receivedAt: BASE_TIME, message, answer: null, media: null, window };
     const result = await inRepository(async (repository) => {
       const first = await repository.commitChannelInbound(input);
@@ -131,7 +138,14 @@ describe('SQLite repository channel methods', () => {
   });
 
   it('writes nothing for a window-only entry beyond the receipt and the window', async () => {
-    const window = { lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: false, closedAt: null };
+    const window = {
+      lastOwnerMessageAt: BASE_TIME,
+      noticeSentForClosedWindow: false,
+      closedAt: null,
+      noticeRetryLocale: null,
+      noticeRetryAt: null,
+      noticeRetryAttempt: 0,
+    };
     const result = await inRepository(async (repository, storage) => {
       const committed = await repository.commitChannelInbound({
         channelMessageId: CHANNEL_MESSAGE_ID,
@@ -152,7 +166,14 @@ describe('SQLite repository channel methods', () => {
 
   it('rolls the receipt, the message and the window back when the transaction throws', async () => {
     const existing = buildTextMessage({ messageId: 'msg_in_1', direction: MessageDirection.FromOwner, delivery: null });
-    const window = { lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: false, closedAt: null };
+    const window = {
+      lastOwnerMessageAt: BASE_TIME,
+      noticeSentForClosedWindow: false,
+      closedAt: null,
+      noticeRetryLocale: null,
+      noticeRetryAt: null,
+      noticeRetryAttempt: 0,
+    };
     const result = await inRepository(async (repository, storage) => {
       await repository.insertMessage({ message: existing });
       const failure = await repository
@@ -190,7 +211,14 @@ describe('SQLite repository channel methods', () => {
       receivedAt: BASE_TIME,
       retentionUntil: BASE_TIME + 1,
     };
-    const window = { lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: false, closedAt: null };
+    const window = {
+      lastOwnerMessageAt: BASE_TIME,
+      noticeSentForClosedWindow: false,
+      closedAt: null,
+      noticeRetryLocale: null,
+      noticeRetryAt: null,
+      noticeRetryAttempt: 0,
+    };
     const stored = await inRepository(async (repository) => {
       await repository.commitChannelInbound({
         channelMessageId: CHANNEL_MESSAGE_ID,
@@ -207,10 +235,26 @@ describe('SQLite repository channel methods', () => {
 
   it('round-trips the channel-closed time of the window', async () => {
     const window = await inRepository(async (repository) => {
-      await repository.saveWindow({ window: { lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: true, closedAt: BASE_TIME + 5 } });
+      await repository.saveWindow({
+        window: {
+          lastOwnerMessageAt: BASE_TIME,
+          noticeSentForClosedWindow: true,
+          closedAt: BASE_TIME + 5,
+          noticeRetryLocale: null,
+          noticeRetryAt: null,
+          noticeRetryAttempt: 0,
+        },
+      });
       return repository.findWindow();
     });
-    expect(window).toEqual({ lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: true, closedAt: BASE_TIME + 5 });
+    expect(window).toEqual({
+      lastOwnerMessageAt: BASE_TIME,
+      noticeSentForClosedWindow: true,
+      closedAt: BASE_TIME + 5,
+      noticeRetryLocale: null,
+      noticeRetryAt: null,
+      noticeRetryAttempt: 0,
+    });
   });
 
   it('saves the channel id of a message once and reads it both ways', async () => {

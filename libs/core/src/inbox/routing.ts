@@ -68,12 +68,25 @@ function resolveRecentAgent(input: RoutingInput): RoutingDecision | null {
   return decide({ rule: RoutingRule.RecentAgent, agent: input.lastAgentWrite, answersQuestionId: null, textForAgent: input.text });
 }
 
+function resolveSingleAgent(input: RoutingInput): RoutingDecision | null {
+  const [onlyAgent, ...otherAgents] = input.agents;
+  const isSingleAgent = onlyAgent !== undefined && otherAgents.length === 0;
+  if (!isSingleAgent) return null;
+  return decide({ rule: RoutingRule.SingleAgent, agent: onlyAgent.agent, answersQuestionId: null, textForAgent: input.text });
+}
+
 function resolveAskOwner(input: RoutingInput): RoutingDecision {
   const sendsRoutingList = !input.routingListOpen && input.agents.length > 0;
   return { rule: RoutingRule.AskOwner, agent: null, answersQuestionId: null, textForAgent: input.text, sendsRoutingList };
 }
 
-const RULE_RESOLVERS: RuleResolver[] = [resolveQuotedOrReaction, resolveAgentMention, resolveOpenQuestion, resolveRecentAgent];
+const RULE_RESOLVERS: RuleResolver[] = [
+  resolveQuotedOrReaction,
+  resolveAgentMention,
+  resolveOpenQuestion,
+  resolveRecentAgent,
+  resolveSingleAgent,
+];
 
 export function routeOwnerMessage(input: RoutingInput): RoutingDecision {
   const decision = RULE_RESOLVERS.map((resolver) => resolver(input)).find((candidate): candidate is RoutingDecision => candidate !== null);
