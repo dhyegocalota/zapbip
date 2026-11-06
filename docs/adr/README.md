@@ -32,3 +32,6 @@ A `Proposed` ADR moves to `Accepted` by editing its status line and date. Any ot
 | [0009](0009-cloudflare-workers-with-one-durable-object-per-account.md) | Cloudflare Workers with one Durable Object per account | Accepted | 2026-11-06 |
 | [0010](0010-public-docs-on-mintlify.md) | Public docs on Mintlify | Accepted | 2026-11-06 |
 | [0011](0011-the-24-hour-window-queues-and-sends-one-notice.md) | The 24-hour window queues messages and sends one notice | Accepted | 2026-11-06 |
+| [0012](0012-owner-identity-by-wa-id-on-the-shared-number.md) | The owner is identified by WhatsApp ID on the shared number | Accepted | 2026-11-06 |
+| [0013](0013-webhook-acknowledged-after-a-durable-commit-and-deduplicated-by-message-id.md) | Webhooks are acknowledged after a durable commit and deduplicated by message id | Accepted | 2026-11-06 |
+| [0014](0014-inbound-media-stored-in-r2-at-webhook-time.md) | Inbound media is stored in R2 when the webhook arrives | Accepted | 2026-11-06 |
