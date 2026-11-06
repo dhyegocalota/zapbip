@@ -164,6 +164,19 @@ describe('upload route', () => {
     expect(await storedObject({ fixture })).toBeNull();
   });
 
+  test.each(['abc', '0x0c', '12abc', '1.2e1', '-12', ' '])(
+    'a Content-Length of %j answers 400 and stores nothing',
+    async (contentLength) => {
+      const fixture = await newFixture();
+      const response = await putUpload({
+        ...validPut({ fixture }),
+        headers: { 'Content-Type': PDF_TYPE, 'Content-Length': contentLength },
+      });
+      expect(response.status).toBe(STATUS_BAD_REQUEST);
+      expect(await storedObject({ fixture })).toBeNull();
+    },
+  );
+
   test('WI-78 a body larger than declared answers 413 and stores nothing', async () => {
     const fixture = await newFixture();
     const response = await putUpload({ ...validPut({ fixture }), ...sizedBody({ length: UPLOAD_BYTES.byteLength + 1 }) });
