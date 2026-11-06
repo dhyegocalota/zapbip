@@ -1,6 +1,7 @@
+import { ZAPBIP_NPM_VERSION } from '@zapbip/types';
+
 export const CHANNEL_ID = 'zapbip';
 export const CHANNEL_LABEL = 'Zapbip';
-export const SEEN_MESSAGE_LIMIT = 1_024;
 export const CLEAN_EXIT_CODE = 0;
 export const FAILURE_EXIT_CODE = 1;
 export const ABNORMAL_CLOSE_CODE = 1006;
@@ -9,7 +10,7 @@ export const SEND_MESSAGE_TOOL_NAME = 'send_message';
 export const JSON_RPC_VERSION = '2.0';
 export const MCP_PROTOCOL_VERSION = '2025-06-18';
 export const MCP_CLIENT_NAME = 'zapbip-openclaw-plugin';
-export const MCP_CLIENT_VERSION = '0.0.1';
+export const MCP_CLIENT_VERSION = ZAPBIP_NPM_VERSION;
 export const MCP_ACCEPT_HEADER = 'application/json, text/event-stream';
 export const JSON_CONTENT_TYPE = 'application/json';
 export const CHANNEL_DESCRIPTION = 'Zapbip WhatsApp channel for the owner';

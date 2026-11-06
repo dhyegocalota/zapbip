@@ -1,6 +1,5 @@
 import type { Message } from '@zapbip/core';
-import { ConnectorLogEvent, ConnectorWakeOutcome } from '@zapbip/types';
-import { SEEN_MESSAGE_LIMIT } from './constants';
+import { ConnectorLogEvent, SEEN_MESSAGE_LIMIT } from '@zapbip/types';
 import type { ConnectorLogger } from './log';
 
 export type HandoffQueue = { enqueue: (input: { message: Message }) => void };
@@ -27,7 +26,7 @@ export function createHandoffQueue(input: {
     try {
       await handOff(runInput);
     } catch {
-      log({ event: ConnectorLogEvent.WakeFinished, fields: { messageId, outcome: ConnectorWakeOutcome.Failed } });
+      log({ event: ConnectorLogEvent.PluginHandoffFailed, fields: { messageId } });
       return;
     } finally {
       pendingIds.delete(messageId);

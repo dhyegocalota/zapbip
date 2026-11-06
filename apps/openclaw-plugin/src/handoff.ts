@@ -1,5 +1,5 @@
 import type { Message } from '@zapbip/core';
-import { CHANNEL_HANDOFF_NO_TEXT_BY_KIND, CHANNEL_SENDER, ConnectorLogEvent, ConnectorWakeOutcome, MessageKind } from '@zapbip/types';
+import { CHANNEL_HANDOFF_NO_TEXT_BY_KIND, CHANNEL_SENDER, ConnectorLogEvent, MessageKind } from '@zapbip/types';
 import { dispatchInboundDirectDm } from 'openclaw/plugin-sdk/channel-inbound';
 import type { OpenClawConfig } from 'openclaw/plugin-sdk/config-contracts';
 import type { ZapbipAccount } from './account';
@@ -25,8 +25,8 @@ export async function handOffToAgent(input: { cfg: OpenClawConfig; account: Zapb
   const { cfg, account, message } = input;
   const logFailure = () =>
     logConnectorEvent({
-      event: ConnectorLogEvent.WakeFinished,
-      fields: { messageId: message.messageId, outcome: ConnectorWakeOutcome.Failed },
+      event: ConnectorLogEvent.PluginHandoffFailed,
+      fields: { messageId: message.messageId },
     });
   await dispatchInboundDirectDm({
     cfg,

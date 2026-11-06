@@ -35,6 +35,7 @@ export enum ConnectorLogEvent {
   WakeFinished = 'wake_finished',
   DoneSent = 'done_sent',
   FrameRejected = 'frame_rejected',
+  PluginHandoffFailed = 'plugin_handoff_failed',
 }
 
 export enum ConnectorLogStream {

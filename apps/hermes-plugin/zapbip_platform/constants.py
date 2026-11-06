@@ -25,7 +25,7 @@ CONNECTION_LINK_ENV = "ZAPBIP_CONNECTION_LINK"
 ALLOWED_USERS_ENV = "ZAPBIP_ALLOWED_USERS"
 PLUGIN_NAME = "zapbip-platform"
 PLATFORM_NAME = "zapbip"
-PLUGIN_VERSION = "0.0.1"
+PLUGIN_VERSION = "0.1.0"
 OWNER_CHAT_ID = "owner"
 OWNER_CHAT_TYPE = "dm"
 WHATSAPP_TEXT_MAX_CHARS = 4_096
@@ -90,4 +90,4 @@ class ConnectorLogEvent(Enum):
 
 class PluginLogEvent(Enum):
     PROBE_FAILED = "probe_failed"
-    HANDOFF_FAILED = "handoff_failed"
+    HANDOFF_FAILED = "plugin_handoff_failed"

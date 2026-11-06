@@ -7,6 +7,7 @@ import {
   RECONNECT_BASE_MS,
   RECONNECT_MAX_MS,
   REPLACED_CLOSE_CODE,
+  SEEN_MESSAGE_LIMIT,
 } from '@zapbip/types';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { reconnectDelayMs, runConnectorSocket } from '../../src/connector-socket';
@@ -21,7 +22,6 @@ import {
   type FakeConnectorOptions,
 } from '../support/fake-connector';
 
-const SEEN_MESSAGE_LIMIT = 1_024;
 const FAST_HEARTBEAT_INTERVAL_MS = 40;
 const FAST_HEARTBEAT_TIMEOUT_MS = 25;
 const PROMPT_RETURN_MS = 100;
