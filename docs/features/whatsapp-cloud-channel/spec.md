@@ -4,7 +4,7 @@
 **Tier:** 🔴
 **Owner approval:** approved 2026-11-06 (owner delegated)
 **ADRs:** [0012](../../adr/0012-owner-identity-by-wa-id-on-the-shared-number.md), [0013](../../adr/0013-webhook-acknowledged-after-a-durable-commit-and-deduplicated-by-message-id.md), [0014](../../adr/0014-inbound-media-stored-in-r2-at-webhook-time.md); builds on [0006](../../adr/0006-one-secret-per-connection-in-the-mcp-url.md), [0007](../../adr/0007-a-durable-inbox-and-a-wake-ladder.md), [0008](../../adr/0008-a-pure-core-behind-ports.md), [0009](../../adr/0009-cloudflare-workers-with-one-durable-object-per-account.md), [0010](../../adr/0010-public-docs-on-mintlify.md), [0011](../../adr/0011-the-24-hour-window-queues-and-sends-one-notice.md)
-**Not changing:** the core's rules: routing, the 24-hour window arithmetic, `ask` idempotency, answers bound to `question_id`, validation limits, the queue and the one-notice rule. The core gains only the additions this slice lists in its plan (section Core contract additions, merged into `core-contract-additions.md` by the orchestrator): one additive fact input (a channel-reported closed window, see Interfaces), two outbound delivery states (`Delivered`, `Read`), the status use case, `openWindow`, `receiveChannelMessage`, the unavailable media source and receipt pruning in the sweep. Nothing outside `apps/api`, `libs/core` and `libs/types` (those additions only), `apps/docs`, the root gate list and the indexes changes.
+**Not changing:** the core's rules: routing, the 24-hour window arithmetic, `ask` idempotency, answers bound to `question_id`, validation limits, the queue and the one-notice rule. The core gains only the additions this slice lists in its plan (section Core contract additions, merged into `core-contract-additions.md` by the orchestrator): one additive fact input (a channel-reported closed window, see Interfaces), two outbound delivery states (`Delivered`, `Read`), the status use case, `openWindow`, `receiveChannelMessage`, the unavailable media source and the release of stale send claims in the sweep. Nothing outside `apps/api`, `libs/core` and `libs/types` (those additions only), `apps/docs`, the root gate list and the indexes changes.
 
 ## Problem
 
@@ -90,7 +90,7 @@ Mitigations in this spec: recipients are only verified owners (ADR 0012); the te
 owner's phone ─► WhatsApp ─► Meta ─POST /webhooks/whatsapp─► Worker
     1 verify X-Hub-Signature-256 over the raw body (≤ 3 MB)
     2 metadata.phone_number_id is ours? else 200, log, stop
-    3 messages[] → from → account_id via `AccountDirectory.findByWaId` (D1); no row → 200, log, stop
+    3 messages[] → from → account_id via `findOwnerByPhone` (D1, `d1-owner-directory.ts`); no row → 200, log, stop
     4 download media (media only) into R2, integrity-checked
     5 AccountInbox(account_id).receive(entries)   one SQLite transaction holds the receipt, the message and the window; flush, answer and wake run after it (ADR 0013):
          channel_receipts insert-or-ignore wamid → already seen? no-op
@@ -259,8 +259,8 @@ Ports stay as the core defines them. Additions in this slice are listed in the p
 | `OwnerLocale` | `libs/types` (enum; accounts-and-keys sets the account's locale, this slice reads it) | `PortugueseBrazil`, `EnglishUs` |
 | `GraphClient` | `apps/api/src/adapters/whatsapp/graph-client.ts` | `post({path, body})`, `get({path})`, `download({url})`; base URL, version and token from the environment; the base URL is a named parameter so tests point it at the fake |
 | `MediaStore` | core port, implemented by `R2MediaStore` | `put`, `get`, `signedLink`, `delete`; the webhook download uses `put` with a `Content-Length` |
-| `AccountDirectory` | `apps/api/src/adapters/d1/d1-account-directory.ts`, an adapter in this slice; accounts-and-keys promotes it to a core port | `findByWaId({waId})` returns `{accountId, locale}` or `null`; `findOwnerByAccountId({accountId})` returns `{waId, locale}` or `null` |
-| `MessageIndex` | `apps/api/src/adapters/d1/d1-message-index.ts`, adapter over slice 1's `message_index (wamid, account_id, created_at)` | `record({wamid, accountId})` and `findAccountId({wamid})` |
+| Owner directory | `apps/api/src/adapters/d1/d1-owner-directory.ts`, slice 1's finder plus one function in this slice; accounts-and-keys promotes it to a core port | `findOwnerByPhone({database, phone})` returns `{accountId, ownerLocale}` or `null`; `findOwnerByAccountId({database, accountId})` returns `{waId, ownerLocale}` or `null` (plan refresh R11) |
+| `D1MessageIndex` | `apps/api/src/adapters/d1/d1-message-index.ts`, slice 1's class over `message_index (wamid, account_id, created_at)`, used as it is | `record({id, accountId, at})` returns whether the row was new; `find({id})` returns `{accountId}` or `null` (plan refresh R11) |
 
 The account directory and the message index are D1 adapter lookups, so the core's ports stay as they are. The route, not the core, resolves the account before calling the `AccountInbox`.
 
@@ -321,7 +321,7 @@ No account id is ever in these paths.
 | Animated stickers outbound? | support · refuse | refuse; static stickers only, 100 KB | owner delegated 2026-11-06 |
 | Is the AI-providers policy a blocker? | block · build and flag | build and flag as a business risk for the owner to accept before production | owner delegated 2026-11-06 |
 | Where does the owner locale enum live? | `apps/api` · `libs/types` | `libs/types`; the account's locale is set by accounts-and-keys and read by this slice | owner delegated 2026-11-06 |
-| Which owner-directory lookup comes first? | core port now · adapter now | adapter now (`AccountDirectory.findByWaId`); accounts-and-keys promotes it to a core port | owner delegated 2026-11-06 |
+| Which owner-directory lookup comes first? | core port now · adapter now | adapter now (`findOwnerByPhone` and `findOwnerByAccountId` in `d1-owner-directory.ts`); accounts-and-keys promotes it to a core port | owner delegated 2026-11-06 |
 | Secret name for the Meta app secret | `WHATSAPP_APP_SECRET` · `META_APP_SECRET` | `META_APP_SECRET`, the name `deploy-readiness` uses | owner delegated 2026-11-06 |
 | Enum member names | UPPER_CASE · PascalCase | PascalCase members with lowercase wire values, across all slices | owner delegated 2026-11-06 |
 | Owner recipient and locale for outbound sends | Lookup in D1 · in the core port | Adapter resolves `wa_id` by `findOwnerByAccountId`; locale is the account's property, read through the directory; the core port carries no recipient | owner delegated 2026-11-06 |
@@ -359,13 +359,15 @@ No account id is ever in these paths.
 | Webhook changes for another number | fail · per change | one `phone_number_id` per change, checked for each change (A26) | owner delegated 2026-11-06 |
 | Status detail on update | overwrite with nulls · merge | only non-null values are written; `errorTitle` is stored (A28) | owner delegated 2026-11-06 |
 | Window timestamp for out-of-order owner messages | last write · `max` | `openWindow` stores `max(lastOwnerMessageAt, at)` (A3) | owner delegated 2026-11-06 |
-| Which sender does the development entry use? | fake always · Cloud API when configured | Cloud API when `WHATSAPP_ACCESS_TOKEN` is set, else the fake registered by the development entry; production never registers it (A29) | owner delegated 2026-11-06 |
-| Owner locale source | D1 directory · account property | an account property set by accounts-and-keys, read through the directory, passed as `template({locale})` (A1) | owner delegated 2026-11-06 |
+| Which sender does the development entry use? | fake always · Cloud API when configured | Cloud API when `WHATSAPP_ACCESS_TOKEN` is set, else the fake, chosen by `DevAccountInbox` overriding `createSender`; the production class builds the Cloud API sender only and never imports the fake (A29, plan refresh R15) | owner delegated 2026-11-06 |
+| Owner locale source | D1 directory · account property | an account property set by accounts-and-keys, carried by `ConnectionIdentity` for agent calls and read from the directory row for webhook calls, passed to the use cases as `ownerLocale` and to `template({locale})` (A1, plan refresh R5) | owner delegated 2026-11-06 |
 | Flush failure after the commit | roll back the message · keep it | the message is kept; the queue flushes on the next owner message or the alarm (A31) | owner delegated 2026-11-06 |
+
+| Plan refresh decisions R1 to R30 | silent · listed | every difference between the plan and slice 1's code, with its decision, is the table "Plan refresh (W-1.1)" in `plan.md`; the notable ones: `ChannelError extends InboxError`, `commitChannelInbound` beside the public `recordChannelReceipt`, slice 1's owner finder and message index reused, no development-sender registry, the fake Graph is an HTTP server | owner delegated 2026-11-06 |
 
 ## Test strategy summary
 
-Tests use a fake Graph API built from recorded fixtures: the JSON bodies of Meta's documented examples, kept in `apps/api/test/fixtures/whatsapp/` one file per kind and endpoint, with the request bodies the adapter must produce kept beside them. Test secrets are constants in the test setup (`test-app-secret`, `test-verify-token`, `test-access-token`); no real credential is read, and no test calls `graph.facebook.com`.
+Tests use a fake Graph API, an HTTP server, built from recorded fixtures: the JSON bodies of Meta's documented examples, kept in `apps/api/test/fixtures/whatsapp/` one file per kind and endpoint, with the request bodies the adapter must produce kept beside them. Test secrets are constants in the test setup (`test-app-secret`, `test-verify-token`, `test-access-token`); no real credential is read, and no test calls `graph.facebook.com`.
 
 - **Unit (Vitest, node):**
   - HMAC verification: valid, wrong digest, missing header, digest over a re-serialised body;

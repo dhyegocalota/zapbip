@@ -10,11 +10,11 @@ Notation: `CU-n` core unit, `AU-n` API unit, `WI-n` Worker integration, `E2E-n` 
 
 Each red commit is one of the commits in `plan.md` Steps W1.1, W1.3, W2.2, W2.4, W3.1, W3.3, W4.1, W4.3, W4.5, W5.1 and W6.1. The tester checks each red commit by `git log` and by running the named test on that commit in a throwaway worktree.
 
-- [ ] W1.1 red `libs/core/src/use-cases/status-rule.test.ts`, `libs/core/src/window.test.ts` — input: the Step W0 tree; expected: fails with `applyStatusRule is not implemented`; the closed-window case fails with `expected false, received true`.
-- [ ] W1.3 red `libs/core/src/use-cases/{receive-channel-message,open-window,claim-queued,close-window,apply-status,deliver-to-owner-channel,sweep-expired}.test.ts` — expected: each fails with `<use case> is not implemented`.
+- [ ] W1.1 red `libs/core/src/inbox/use-cases/status-rule.test.ts`, `libs/core/src/inbox/window.test.ts` — input: the Step W0 tree; expected: fails with `applyStatusRule is not implemented`; the closed-window case fails with `expected false, received true`.
+- [ ] W1.3 red `libs/core/src/inbox/use-cases/{receive-channel-message,open-window,claim-queued,close-window,apply-status,deliver-to-owner-channel,sweep-expired}.test.ts` — expected: each fails with `<use case> is not implemented`.
 - [ ] W2.2 red `apps/api/test/unit/whatsapp-{outbound-builders,outbound-limits,template-sanitiser,channel-error-mapping}.test.ts` — expected: each fails with `<name> is not implemented`.
 - [ ] W2.4 red `apps/api/test/unit/whatsapp-{graph-client,read-whatsapp-env,operator-log}.test.ts` — expected: each fails with `<name> is not implemented`.
-- [ ] W3.1 red `apps/api/test/integration/{d1-account-directory,d1-message-index,d1-channel-restrictions,account-inbox-channel}.test.ts` and `apps/api/test/unit/hash.test.ts` — expected: each fails with `<method> is not implemented`.
+- [ ] W3.1 red `apps/api/test/integration/{d1-owner-directory-channel,d1-message-index-channel,d1-channel-restrictions,account-inbox-channel}.test.ts` and `apps/api/test/unit/hash-digests.test.ts` — expected: each fails with `<method> is not implemented`.
 - [ ] W3.3 red `apps/api/test/integration/account-inbox-channel.test.ts` (DO cases) — expected: fails with `receiveChannelMessage is not implemented`.
 - [ ] W4.1 red `apps/api/test/unit/whatsapp-{signature,challenge,inbound-parser,status-parser}.test.ts` — expected: each fails with `<name> is not implemented`.
 - [ ] W4.3 red `apps/api/test/unit/whatsapp-media-download.test.ts` — expected: fails with `downloadInboundMedia is not implemented`.
@@ -26,7 +26,7 @@ Each red commit is one of the commits in `plan.md` Steps W1.1, W1.3, W2.2, W2.4,
 
 ## Core unit
 
-Runner: `pnpm --filter @zapbip/core test:unit` (Vitest 5.0.5). Ports are the in-memory adapters from `libs/core/src/testing/in-memory.ts`; time comes from the fake clock.
+Runner: `pnpm --filter @zapbip/core test:unit` (Vitest 5.0.5). Ports are the in-memory adapters from `libs/core/src/inbox/testing/in-memory.ts`; time comes from the fake clock.
 
 ### Status rule (`status-rule.test.ts`)
 
@@ -51,7 +51,7 @@ Runner: `pnpm --filter @zapbip/core test:unit` (Vitest 5.0.5). Ports are the in-
 - [ ] CU-41 `open-window.test.ts` — input: stored `lastOwnerMessageAt` T + 10 and `openWindow({at: T + 5})`; expected: `lastOwnerMessageAt` stays T + 10 (`max`).
 - [ ] Edge: `closedAt` set and `lastOwnerMessageAt` null; input `now` = 0; expected: `false`, no exception.
 
-### Channel use cases (`libs/core/src/use-cases/*.test.ts`)
+### Channel use cases (`libs/core/src/inbox/use-cases/*.test.ts`)
 
 - [ ] CU-16 `receive-channel-message.test.ts` — input: a new `wamid.A` with a text entry; expected: `{duplicate: false}`, the receipt exists, the message is stored with `readByAgent: false`, the window is open at the entry's `at`.
 - [ ] CU-17 `receive-channel-message.test.ts` — input: `wamid.A` again; expected: `{duplicate: true}`, message count unchanged, no waiter resolved, the waker is not called.
@@ -85,7 +85,9 @@ Runner: `pnpm --filter @zapbip/core test:unit` (Vitest 5.0.5). Ports are the in-
 - [ ] CU-39 `status-rule.test.ts` — input: `mergeChannelStatusDetail` with stored `{errorCode: 131026}` and incoming `{errorCode: null, pricingCategory: 'service'}`; expected: `errorCode` 131026, `pricingCategory` `service`.
 - [ ] CU-40 `apply-status.test.ts` — input: a stored failure detail `errorTitle` `T1`, then a `Failed` status with `errorTitle` null; expected: `errorTitle` stays `T1`.
 - [ ] CU-42 `receive-channel-message.test.ts` — input: an agent reaction whose target has no channel id; expected: refused by the core with an error naming `reaction.message_id`; the sender is not called.
-- [ ] CU-43 `deliver-to-owner-channel.test.ts` — input: a template notice with `CoreDependencies.ownerLocale` = `en_US`; expected: the sender's `template` receives `locale` `en_US`.
+- ~~[ ] CU-43 `deliver-to-owner-channel.test.ts` — input: a template notice with `CoreDependencies.ownerLocale` = `en_US`; expected: the sender's `template` receives `locale` `en_US`.~~ (refresh R5: the locale is an input field)
+- [ ] CU-43 `deliver-to-owner-channel.test.ts` — input: a template notice delivered with `ownerLocale` `en_US`; expected: the sender's `template` receives `locale` `en_US`.
+- [ ] CU-44 `receive-channel-message.test.ts` — input: an entry whose `replyToChannelMessageId` is `wamid.X` (stored as message `M`), then one whose reply id is unknown, then a reaction on `wamid.X` and a reaction on an unknown id; expected: `replyToMessageId` is `M` for the first and `null` for the second; the first reaction's `targetMessageId` is `M`, routed by rule 2; the second keeps the channel id string as `targetMessageId` and routing sees no referenced message (R25).
 
 ## API unit
 
@@ -250,22 +252,29 @@ Runner: `pnpm --filter @zapbip/api test:unit` (Vitest 4.1.12, node). Fixtures ar
 - [ ] Edge: the field keys are enum values — expected: a compile-time check (`expectTypeOf`) rejects a free-text key such as `'phone'`.
 
 ### Owner recipients and reply targets in the sender (`whatsapp-outbound.test.ts` is integration; the unit cases here use a fake directory)
-- [ ] AU-123 `createCloudApiMessageSender` with a directory that returns `null` for the account — expected: `session` throws `ChannelError` `DeliveryFailed` naming the owner, no Graph call.
+- [ ] AU-123 `createCloudApiMessageSender` with a `findOwnerByAccountId` that returns `null` for the account — expected: `session` throws `ChannelError` `DeliveryFailed` naming the owner, no Graph call.
 - [ ] AU-124 `template({kind: Notice, parameters})` with owner locale `en_US` — expected: the request body's `language.code` is `en_US`.
 
 ## Worker integration
 
-Runner: `pnpm --filter @zapbip/api test:integration` (`@cloudflare/vitest-pool-workers`, real workerd, D1, R2 and Durable Objects bound from `wrangler.jsonc`). Fake Graph is `fetchMock` in `apps/api/test/support/fake-graph.ts`. Each test seeds its own account with `seedConnection` and `seedOwnerIdentity` (new helper in W3), and `idFromName(accountId)`.
+Runner: `pnpm --filter @zapbip/api test:integration` (`@cloudflare/vitest-pool-workers`, real workerd, D1, R2 and Durable Objects bound from `wrangler.jsonc`). Fake Graph is the HTTP server of `apps/api/test/support/fake-graph.ts` on port `4012` (R30; `fetchMock` no longer exists in the pool). Each test seeds its own account with slice 1's `seedConnection` and `seedOwnerIdentity({accountId, phone, ownerLocale})` (`phone` is the `wa_id`), and `idFromName(accountId)`.
 
-### D1 and repository (`d1-account-directory.test.ts`, `d1-message-index.test.ts`, `d1-channel-restrictions.test.ts`)
+### D1 and repository (`d1-owner-directory-channel.test.ts`, `d1-message-index-channel.test.ts`, `d1-channel-restrictions.test.ts`)
 
-- [ ] WI-1 input: owner row `wa_id` `5511900000001`, `account_id` `acc_a`, locale `pt_BR`; `findByWaId({waId: '5511900000001'})` — expected: `{accountId: 'acc_a', locale: 'pt_BR'}` as `OwnerLocale.PortugueseBrazil`.
-- [ ] WI-2 input: `findByWaId({waId: '5511900000099'})` (no row) — expected: `null`.
-- [ ] WI-3 input: `findOwnerByAccountId({accountId: 'acc_a'})` — expected: `{waId: '5511900000001', locale: 'pt_BR'}`.
-- [ ] WI-4 input: an account whose stored `locale` value is not an `OwnerLocale` member (the test writes it through a raw statement on a scratch database); expected: reading it throws naming the value; no default is returned.
-- [ ] WI-5 input: `message_index.record({channelMessageId: 'wamid.1', accountId: 'acc_a'})` then the same with `acc_b`; `findAccountId('wamid.1')` — expected: `acc_a`; the second write changed nothing.
-- [ ] WI-6 input: `findAccountId({channelMessageId: 'wamid.unknown'})` — expected: `null`.
-- [ ] WI-7 input: `channelRestrictions.record({errorCode: 131048, restrictedAt: T})`, then `find()` — expected: `{errorCode: 131048}`; before any record, `find()` is `null`.
+- ~~[ ] WI-1 input: owner row `wa_id` `5511900000001`, `account_id` `acc_a`, locale `pt_BR`; `findByWaId({waId: '5511900000001'})` — expected: `{accountId: 'acc_a', locale: 'pt_BR'}` as `OwnerLocale.PortugueseBrazil`.~~ (refresh: R11: slice 1's finder)
+- [ ] WI-1 input: owner row `wa_id` `5511900000001`, `account_id` `acc_a`, locale `pt_BR`; `findOwnerByPhone({database, phone: '5511900000001'})` — expected: `{accountId: 'acc_a', ownerLocale: 'pt_BR'}` as `OwnerLocale.PortugueseBrazil`.
+- ~~[ ] WI-2 input: `findByWaId({waId: '5511900000099'})` (no row) — expected: `null`.~~ (refresh: R11)
+- [ ] WI-2 input: `findOwnerByPhone` for `5511900000099` (no row) — expected: `null`.
+- ~~[ ] WI-3 input: `findOwnerByAccountId({accountId: 'acc_a'})` — expected: `{waId: '5511900000001', locale: 'pt_BR'}`.~~ (refresh: R11)
+- [ ] WI-3 input: `findOwnerByAccountId({database, accountId: 'acc_a'})` — expected: `{waId: '5511900000001', ownerLocale: 'pt_BR'}`.
+- ~~[ ] WI-4 input: an account whose stored `locale` value is not an `OwnerLocale` member (the test writes it through a raw statement on a scratch database); expected: reading it throws naming the value; no default is returned.~~ (refresh: R11: both finders)
+- [ ] WI-4 input: an owner row whose stored `locale` is not an `OwnerLocale` member (written through a raw statement); expected: `findOwnerByPhone` and `findOwnerByAccountId` both throw naming the value; no default is returned.
+- ~~[ ] WI-5 input: `message_index.record({channelMessageId: 'wamid.1', accountId: 'acc_a'})` then the same with `acc_b`; `findAccountId('wamid.1')` — expected: `acc_a`; the second write changed nothing.~~ (refresh: R11: slice 1's class)
+- [ ] WI-5 input: `new D1MessageIndex({database}).record({id: 'wamid.1', accountId: 'acc_a', at: T})` then the same with `acc_b`; `find({id: 'wamid.1'})` — expected: the first returns `true`, the second `false`; `find` returns `{accountId: 'acc_a'}`.
+- ~~[ ] WI-6 input: `findAccountId({channelMessageId: 'wamid.unknown'})` — expected: `null`.~~ (refresh: R11)
+- [ ] WI-6 input: `find({id: 'wamid.unknown'})` — expected: `null`.
+- ~~[ ] WI-7 input: `channelRestrictions.record({errorCode: 131048, restrictedAt: T})`, then `find()` — expected: `{errorCode: 131048}`; before any record, `find()` is `null`.~~ (refresh: R12)
+- [ ] WI-7 input: `new D1ChannelRestrictions({database}).record({errorCode: 131048, restrictedAt: T})`, then `findActive({now: T})` — expected: `{errorCode: 131048}`; before any record, `findActive` is `null`; at `T + RESTRICTION_TTL_MS + 1` it is `null` again.
 
 ### Durable Object (`account-inbox-channel.test.ts`)
 
@@ -278,10 +287,14 @@ Runner: `pnpm --filter @zapbip/api test:integration` (`@cloudflare/vitest-pool-w
 - [ ] WI-14 input: a `Sending` row claimed at T, alarm at T + `SENDING_STALE_MS` + 1 — expected: the row is `Queued`.
 - [ ] WI-15 input: `applyChannelStatus` for a `wamid` the account sent — expected: delivery changes per the rule; the detail is stored, nulls not written over values.
 - [ ] WI-16 input: `applyChannelStatus` for a `wamid` the account never sent — expected: `{ok: true, value: {applied: false}}`, no write.
-- [ ] WI-17 input: the object created without a name — expected: the constructor throws `AccountInbox must be created with idFromName`.
-- [ ] WI-17a input: `WHATSAPP_ACCESS_TOKEN` set — expected: the Cloud API sender is selected.
-- [ ] WI-17b input: token absent and a fake registered by `registerDevelopmentSender` — expected: the fake is selected.
-- [ ] WI-17c input: token absent and no fake registered — expected: the send throws naming the missing variable; no fallback.
+- ~~[ ] WI-17 input: the object created without a name — expected: the constructor throws `AccountInbox must be created with idFromName`.~~ (refresh: R16)
+- [ ] WI-17 input: the object created without a name — expected: the constructor fails with slice 1's `AccountInbox id has no name`.
+- ~~[ ] WI-17a input: `WHATSAPP_ACCESS_TOKEN` set — expected: the Cloud API sender is selected.~~ (refresh: R15)
+- [ ] WI-17a input: `DevAccountInbox` with `WHATSAPP_ACCESS_TOKEN` set — expected: the Cloud API sender is selected.
+- ~~[ ] WI-17b input: token absent and a fake registered by `registerDevelopmentSender` — expected: the fake is selected.~~ (refresh: R15)
+- [ ] WI-17b input: `DevAccountInbox` with the token absent — expected: the fake sender is selected.
+- ~~[ ] WI-17c input: token absent and no fake registered — expected: the send throws naming the missing variable; no fallback.~~ (refresh: R15)
+- [ ] WI-17c input: the production `AccountInbox` with the token absent — expected: the send throws naming the missing variable; no fallback.
 
 ## Worker integration: webhook and outbound
 
@@ -401,7 +414,8 @@ Recorded for the PR with the simulator screen walk (`check-ui`) on the developme
 
 - [ ] PB-1 `wrangler deploy --dry-run --env production --outdir <scratch dir>` — expected: exit code 0 once `deploy-readiness` has merged `env.production`; the bundle contains no `127.0.0.1:4011`.
 - [ ] PB-2 the same bundle — expected: no fixture marker `fixture-marker-whatsapp`.
-- [ ] PB-3 the same bundle — expected: no call site of `registerDevelopmentSender`; no import of `development-sender`.
+- ~~[ ] PB-3 the same bundle — expected: no call site of `registerDevelopmentSender`; no import of `development-sender`.~~ (refresh: R15)
+- [ ] PB-3 the same bundle — expected: no import of `fake-whatsapp-sender`, no `DevAccountInbox` and no `createSender` override.
 - [ ] PB-4 the production entry with `WHATSAPP_GRAPH_BASE_URL` absent — expected: the first outbound send throws naming the variable.
 
 ## Owner-run (outside the gate)
