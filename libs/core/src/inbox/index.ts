@@ -1,6 +1,7 @@
 export * from './constants';
 export * from './connection';
 export * from './message';
+export * from './connector-frames';
 export * from './question';
 export * from './inbox-records';
 export * from './ports';
@@ -34,3 +35,4 @@ export * from './use-cases/expire-routing-list';
 export * from './use-cases/deliver-to-owner';
 export * from './use-cases/touch-agent';
 export * from './use-cases/flush-queue';
+export * from './use-cases/acknowledge-delivery';

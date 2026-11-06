@@ -14,6 +14,7 @@ readonly NO_GATES=-
 readonly SERVER_PACKAGE=@zapbip/server
 readonly SHAPE_PACKAGE=@zapbip/repository-shape
 readonly API_PACKAGE=@zapbip/api
+readonly CONNECTOR_PACKAGE=zapbip
 readonly DOCS_PACKAGE=@zapbip/docs
 readonly TIME_ZONE_PROBE=Asia/Kolkata
 readonly NO_RECORD_UNFETCHED="verify: no record: origin main could not be fetched"
@@ -173,8 +174,10 @@ gate_unit() {
 }
 
 gate_integration() { pnpm --filter "$API_PACKAGE" test:integration; }
-gate_e2e() { pnpm --filter "$API_PACKAGE" test:e2e; }
-gate_docs() { pnpm --filter "$DOCS_PACKAGE" run broken-links; }
+gate_e2e() {
+  pnpm --filter "$API_PACKAGE" test:e2e && pnpm --filter "$CONNECTOR_PACKAGE" test:e2e && pnpm --filter "$CONNECTOR_PACKAGE" test:packaging
+}
+gate_docs() { pnpm --filter "$DOCS_PACKAGE" exec mint broken-links; }
 
 write_record() {
   mkdir -p "$records_directory"

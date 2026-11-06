@@ -1,0 +1,35 @@
+{
+  "name": "zapbip",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "zapbip": "dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "esbuild src/cli.ts --bundle --platform=node --format=esm --target=node24 --outfile=dist/cli.js --banner:js=\"#!/usr/bin/env node\"",
+    "typecheck": "tsc --noEmit",
+    "pretest:e2e": "pnpm run build",
+    "pretest:packaging": "pnpm run build",
+    "test:unit": "vitest run --passWithNoTests --config vitest.config.mts",
+    "test:e2e": "vitest run --passWithNoTests --config vitest.e2e.config.mts",
+    "test:packaging": "vitest run --passWithNoTests --config vitest.packaging.config.mts"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "@types/node": "24.19.2",
+    "@types/ws": "8.18.2",
+    "@zapbip/core": "workspace:*",
+    "@zapbip/types": "workspace:*",
+    "esbuild": "0.28.2",
+    "vitest": "5.0.5",
+    "ws": "8.22.1",
+    "zod": "4.6.7"
+  }
+}

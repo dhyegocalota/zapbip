@@ -16,7 +16,7 @@
           },
           {
             "group": "Agents",
-            "pages": ["agents/supported-agents"]
+            "pages": ["agents/supported-agents", "guides/local-connector", "guides/background-running"]
           },
           {
             "group": "Features",
@@ -70,7 +70,7 @@
           },
           {
             "group": "IAs",
-            "pages": ["pt-br/agents/supported-agents"]
+            "pages": ["pt-br/agents/supported-agents", "pt-br/guides/local-connector", "pt-br/guides/background-running"]
           },
           {
             "group": "Funcionalidades",
