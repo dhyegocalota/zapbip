@@ -12,3 +12,4 @@ export const MCP_CLIENT_NAME = 'zapbip-openclaw-plugin';
 export const MCP_CLIENT_VERSION = '0.0.1';
 export const MCP_ACCEPT_HEADER = 'application/json, text/event-stream';
 export const JSON_CONTENT_TYPE = 'application/json';
+export const CHANNEL_DESCRIPTION = 'Zapbip WhatsApp channel for the owner';
