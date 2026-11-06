@@ -1,4 +1,4 @@
-import { OFFICIAL_NUMBER_UNSET } from '@zapbip/types';
+import { COMPANY_FACT_UNSET, type CompanyFacts, OFFICIAL_NUMBER_UNSET } from '@zapbip/types';
 import { z } from 'zod';
 import { PLACEHOLDER_VALUE_PREFIX } from './constants';
 import { DeployEnvironment } from './deploy-environment';
@@ -26,6 +26,7 @@ export type EnvironmentVariables = Record<string, string | undefined>;
 export enum PreflightStep {
   Environment = 'environment',
   OfficialNumber = 'official number',
+  CompanyFacts = 'company facts',
   NpmVersion = 'npm version',
   Git = 'git',
   Gate = 'gate',
@@ -49,9 +50,10 @@ export type WorkerPreflightInput = {
   isInteractive: boolean;
   environmentVariables: EnvironmentVariables;
   officialWhatsAppNumber: string;
+  company: CompanyFacts;
 };
 
-export type DocsPreflightInput = { shell: DeployShell; officialWhatsAppNumber: string; npmVersion: string };
+export type DocsPreflightInput = { shell: DeployShell; officialWhatsAppNumber: string; company: CompanyFacts; npmVersion: string };
 
 type PreflightCheck<Input> = { step: PreflightStep; refusalOf: (input: Input) => Promise<string | null> };
 
