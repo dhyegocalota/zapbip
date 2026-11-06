@@ -365,6 +365,23 @@ describe('frame rules', () => {
     expect(JSON.stringify(plugin.events)).not.toContain(OWNER_SECRET_TEXT);
   });
 
+  it.each(['__proto__', 'constructor', 'toString'])(
+    'drops the inherited property name %s as an unknown type and keeps the socket',
+    async (type) => {
+      const connector = await startConnector();
+      const plugin = startPlugin({ connector });
+      await connector.waitForConnections({ count: 1 });
+      connector.sendText({ text: JSON.stringify({ type }) });
+      await vi.waitFor(() =>
+        expect(plugin.events).toContainEqual({
+          event: ConnectorLogEvent.FrameRejected,
+          fields: { reason: FrameRejectionReason.UnknownType },
+        }),
+      );
+      expect(connector.connectionCount()).toBe(1);
+    },
+  );
+
   it('drops a frame one byte over the limit and keeps the socket', async () => {
     const connector = await startConnector();
     const plugin = startPlugin({ connector });
