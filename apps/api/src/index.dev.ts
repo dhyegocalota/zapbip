@@ -1,8 +1,10 @@
 import { createApp } from './app';
-import { DEVELOPMENT_MAX_FUTURE_SKEW_MS } from './adapters/whatsapp/whatsapp-constants';
+import { DAY_MS } from '@zapbip/types';
 import type { Bindings } from './contract/env';
 import { readDevelopmentMediaOrigin } from './dev/read-development-media-origin';
 import { devOwnerRoutes } from './routes/dev-owner';
+
+const DEVELOPMENT_MAX_FUTURE_SKEW_MS = 2 * DAY_MS;
 
 export { DevAccountInbox as AccountInbox } from './dev/dev-account-inbox';
 
