@@ -319,7 +319,7 @@ describe('AccountInbox migrations', () => {
         .toArray()
         .map((row) => row.name),
     }));
-    expect(versions).toEqual([1]);
+    expect(versions).toEqual(ACCOUNT_INBOX_MIGRATIONS.map((migration) => migration.version));
     expect(tables).toEqual(
       expect.arrayContaining([
         'inbox_messages',
@@ -344,14 +344,14 @@ describe('AccountInbox migrations', () => {
 
   it('WI-120 applies the missing versions in ascending order', async () => {
     const migrations: Migration[] = [
-      { version: 3, sql: 'CREATE TABLE three (id INTEGER)' },
+      { version: 4, sql: 'CREATE TABLE four (id INTEGER)' },
       ...ACCOUNT_INBOX_MIGRATIONS,
-      { version: 2, sql: 'CREATE TABLE two (id INTEGER)' },
+      { version: 3, sql: 'CREATE TABLE three (id INTEGER)' },
     ];
     const applied = await runInDurableObject(stubOf({ accountId: FIRST_ACCOUNT }), async (_instance, state) =>
       runMigrations({ storage: state.storage, migrations }),
     );
-    expect(applied).toEqual([2, 3]);
+    expect(applied).toEqual([3, 4]);
   });
 
   it('WI-121 fills a gap and orders an unsorted registry', async () => {

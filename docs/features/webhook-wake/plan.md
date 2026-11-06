@@ -489,15 +489,15 @@ Every box is empty when authored. A developer ticks its own box. A wrong step is
 
 ### Lane L2: Durable Object and adapters
 
-- [ ] **W2.1 red: adapters.** Write `aes-gcm-wake-secret-box.test.ts`, `fetch-wake-transport.test.ts` (global `fetch` stubbed) and `wake-observer.test.ts`. Expected failure: `... is not implemented`. Commit as `test(api): pin the wake adapters`.
-- [ ] **W2.2 green: adapters.** Implement the secret box (WebCrypto, A14), the transport (rules from `PINNED_WAKE_PROVIDER_RULES`, the generic signature, `redirect: "manual"`, `AbortSignal.timeout(WAKE_REQUEST_TIMEOUT_MS)`, the outcome table, A8, class-name-only errors), the observer. Commit as `feat(api): implement the wake adapters`.
-- [ ] **W2.3 red: Durable Object.** Write `webhook-wake-delivery.test.ts`, `webhook-wake-secrets.test.ts`, `webhook-wake-observability.test.ts`, `webhook-wake-revocation.test.ts`. Use `advanceClock` and `runDurableObjectAlarm`. Expected failure: `setWake is not implemented`. Commit as `test(api): pin the webhook wake on the Durable Object`.
-- [ ] **W2.4 green: Durable Object.** Migration to schema `v2`; `DurableObjectWakeRepository` (including `clearWake`); constructor wiring (secret box from `WAKE_SECRET_KEY`, `createWakeTransport()`, observer, repository); `WebhookAgentWaker`; `DispatchingAgentWaker`; the RPC bodies; registration of `findNextDueAt` as a due-time provider; `owner_locale` storage; `alarm()` (A9, A21); ~~`recordRevocation` clears the wake (A19)~~ (A31: slice 3 wires the call; this lane ships and tests `clearWake`). `DevAccountInbox` gains its three dev RPCs and `createWakeTransport`. Commit as `feat(api): run webhook wakes from the Durable Object alarm`.
+- [x] **W2.1 red: adapters.** Write `aes-gcm-wake-secret-box.test.ts`, `fetch-wake-transport.test.ts` (global `fetch` stubbed) and `wake-observer.test.ts`. Expected failure: `... is not implemented`. Commit as `test(api): pin the wake adapters`. Evidence: `17f985a`.
+- [x] **W2.2 green: adapters.** Implement the secret box (WebCrypto, A14), the transport (rules from `PINNED_WAKE_PROVIDER_RULES`, the generic signature, `redirect: "manual"`, `AbortSignal.timeout(WAKE_REQUEST_TIMEOUT_MS)`, the outcome table, A8, class-name-only errors), the observer. Commit as `feat(api): implement the wake adapters`. Evidence: `0e9446a`.
+- [x] **W2.3 red: Durable Object.** Write `webhook-wake-delivery.test.ts`, `webhook-wake-secrets.test.ts`, `webhook-wake-observability.test.ts`, `webhook-wake-revocation.test.ts`. Use `advanceClock` and `runDurableObjectAlarm`. Expected failure: `setWake is not implemented`. Commit as `test(api): pin the webhook wake on the Durable Object`. Evidence: `ba8483a`.
+- [x] **W2.4 green: Durable Object.** Migration to schema `v2`; `DurableObjectWakeRepository` (including `clearWake`); constructor wiring (secret box from `WAKE_SECRET_KEY`, `createWakeTransport()`, observer, repository); `WebhookAgentWaker`; `DispatchingAgentWaker`; the RPC bodies; registration of `findNextDueAt` as a due-time provider; `owner_locale` storage; `alarm()` (A9, A21); ~~`recordRevocation` clears the wake (A19)~~ (A31: slice 3 wires the call; this lane ships and tests `clearWake`). `DevAccountInbox` gains its three dev RPCs and `createWakeTransport`. Commit as `feat(api): run webhook wakes from the Durable Object alarm`. Evidence: `f96f2d8`.
 
 ### Lane L3: MCP `set_wake`
 
 - [ ] **W3.1 red: tool.** Write `set-wake.test.ts`. The tool count is taken from the registry constant, not a literal. Expected failure: `set_wake` is missing from `tools/list`. Commit as `test(api): pin set_wake over MCP`.
-- [ ] **W3.2 green: tool.** Implement `set-wake.ts`; register it; map `wake_mode` and `effective_rung`. Errors carry the `InboxError` message and no input values. Commit as `feat(api): expose set_wake`.
+- [x] **W3.2 green: tool.** (7eb923a, green after the L2 merge 90b73a5) Implement `set-wake.ts`; register it; map `wake_mode` and `effective_rung`. Errors carry the `InboxError` message and no input values. Commit as `feat(api): expose set_wake`.
 
 ### Lane L4: docs
 
