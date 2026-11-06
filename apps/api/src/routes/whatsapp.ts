@@ -2,7 +2,6 @@ import type { ChannelInboundEntry, OwnerInboundContent, UnavailableOwnerMedia } 
 import { ChannelInboundKind, DeliveryState, type OwnerLocale } from '@zapbip/types';
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { findOwnerByPhone } from '../adapters/d1/d1-owner-directory';
 import { D1MessageIndex } from '../adapters/d1/d1-message-index';
 import { createPlatformClock } from '../adapters/platform/clock';
 import { createR2MediaStore } from '../adapters/r2/r2-media-store';
@@ -32,6 +31,7 @@ import { OperatorEvent, OperatorLogField } from '../adapters/whatsapp/whatsapp-e
 import { UNAUTHORIZED_BODY, WHATSAPP_WEBHOOK_PATH } from '../contract/constants';
 import type { CallOutcome } from '../contract/account-inbox-rpc';
 import type { Bindings } from '../contract/env';
+import { receiveOwnerInbound } from '../inbound/owner-inbound';
 import { accountInboxOf } from './account-inbox-stub';
 import { HttpStatus } from './http-status';
 
@@ -98,9 +98,10 @@ async function channelEntryOf(input: {
   context: RequestContext;
   accountId: string;
   ownerLocale: OwnerLocale;
+  downloadsMedia: boolean;
   parsed: Extract<ParsedEntry, { kind: 'inbound' }>;
 }): Promise<ChannelInboundEntry> {
-  const { context, accountId, ownerLocale, parsed } = input;
+  const { context, accountId, ownerLocale, downloadsMedia, parsed } = input;
   const { entry, media } = parsed;
   const copy = WHATSAPP_COPY[ownerLocale];
   if (entry.kind === ChannelInboundKind.WindowOnly) return entry;
@@ -108,7 +109,7 @@ async function channelEntryOf(input: {
     logOperatorEvent({ event: OperatorEvent.InboundUnsupported, fields: { [OperatorLogField.UnsupportedType]: entry.unsupportedType } });
     return { kind: entry.kind, at: entry.at, noticeText: copy[OwnerCopyKey.UnsupportedKind] };
   }
-  if (media === null) return { ...entry, noticeText: null };
+  if (media === null || !downloadsMedia) return { ...entry, noticeText: null };
   if (!isUnavailableMedia(entry.content)) throw new Error('media entry has no media content');
   const mediaStore = createR2MediaStore({
     bucket: context.bindings.MEDIA,
@@ -142,15 +143,11 @@ async function processEntry(input: { context: RequestContext; parsed: ParsedEntr
     logOperatorEvent({ event: OperatorEvent.InboundUnmapped, fields: { [OperatorLogField.Reason]: parsed.reason } });
     return;
   }
-  const owner = await findOwnerByPhone({ database: context.bindings.CONNECTIONS, phone: parsed.fromWaId });
-  if (owner === null) {
-    logOperatorEvent({ event: OperatorEvent.InboundUnmapped, fields: { [OperatorLogField.ChannelMessageId]: parsed.channelMessageId } });
-    return;
-  }
-  const entry = await channelEntryOf({ context, accountId: owner.accountId, ownerLocale: owner.ownerLocale, parsed });
-  const inbox = accountInboxOf({ bindings: context.bindings, accountId: owner.accountId });
-  valueOf({
-    outcome: await inbox.receiveChannelMessage({ ownerLocale: owner.ownerLocale, channelMessageId: parsed.channelMessageId, entry }),
+  await receiveOwnerInbound({
+    bindings: context.bindings,
+    waId: parsed.fromWaId,
+    channelMessageId: parsed.channelMessageId,
+    entryOf: ({ accountId, ownerLocale, downloadsMedia }) => channelEntryOf({ context, accountId, ownerLocale, downloadsMedia, parsed }),
   });
 }
 

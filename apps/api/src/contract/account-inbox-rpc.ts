@@ -64,4 +64,5 @@ export interface AccountInboxRpc {
 export interface DevAccountInboxRpc extends AccountInboxRpc {
   readScreen(): Promise<ScreenEntry[]>;
   advanceClock(input: { advanceMs: number }): Promise<number>;
+  channelMessageIdOf(input: { messageId: string }): Promise<string | null>;
 }

@@ -177,6 +177,15 @@ const createUpload: ToolHandler<typeof createUploadInputShape> = async ({ contex
   };
 };
 
+export const OUTBOUND_TOOLS: ReadonlySet<McpToolName> = new Set([
+  McpToolName.SendMessage,
+  McpToolName.SendMedia,
+  McpToolName.SendLocation,
+  McpToolName.SendContact,
+  McpToolName.React,
+  McpToolName.Ask,
+]);
+
 export const TOOL_HANDLERS = {
   [McpToolName.SendMessage]: sendMessage,
   [McpToolName.SendMedia]: sendMedia,

@@ -24,9 +24,14 @@ async function seedAccounts(input: { count: number; createdAt: number }) {
   return environment;
 }
 
-function open(input: { environment: Awaited<ReturnType<typeof seedAccounts>>; waId: string; waitlistEnabled?: boolean }) {
+function openLookup(input: { environment: Awaited<ReturnType<typeof seedAccounts>>; waId: string; waitlistEnabled?: boolean }) {
   const { environment, waId, waitlistEnabled = false } = input;
   return openOwnerAccount({ dependencies: environment.lifecycle, waId, waitlistEnabled, createdAt: NOW });
+}
+
+async function open(input: { environment: Awaited<ReturnType<typeof seedAccounts>>; waId: string; waitlistEnabled?: boolean }) {
+  const lookup = await openLookup(input);
+  return lookup === null ? null : lookup.account;
 }
 
 describe('openOwnerAccount', () => {
@@ -49,6 +54,13 @@ describe('openOwnerAccount', () => {
     expect(second!.accountId).toBe(first!.accountId);
     expect(second!.state).toBe(AccountState.Active);
     expect(environment.registry.countAccounts()).toBe(1);
+  });
+
+  test('reports an account as created only on the first message of a number', async () => {
+    const environment = await seedAccounts({ count: 0, createdAt: NOW });
+    const first = await openLookup({ environment, waId: BRAZIL_WA_ID });
+    const second = await openLookup({ environment, waId: BRAZIL_WA_ID });
+    expect([first?.created, second?.created]).toEqual([true, false]);
   });
 
   test('the daily cap refuses a new number', async () => {

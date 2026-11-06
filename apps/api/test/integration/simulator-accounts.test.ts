@@ -44,7 +44,7 @@ describe('owner simulator on the production inbound path', () => {
     expect((await say({ phone, text: 'oi' })).status).toBe(STATUS_OK);
     expect((await say({ phone, text: 'novo agente claude' })).status).toBe(STATUS_OK);
     const texts = (await screenTexts({ phone })).join('\n');
-    expect(texts).toContain(`${ORIGIN}/i/zb_inst_`);
+    expect(texts).toContain(`${testEnv.PUBLIC_ORIGIN}/i/zb_inst_`);
     expect(texts).not.toContain('zb_conn_');
   });
 

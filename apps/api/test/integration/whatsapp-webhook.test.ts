@@ -5,6 +5,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import { WEBHOOK_MAX_BYTES, WEBHOOK_SIGNATURE_HEADER } from '../../src/adapters/whatsapp/whatsapp-constants';
 import { OperatorEvent } from '../../src/adapters/whatsapp/whatsapp-enums';
 import { WHATSAPP_WEBHOOK_PATH } from '../../src/contract/constants';
+import { LogEvent } from '../../src/contract/log';
 import orderFixture from '../fixtures/whatsapp/inbound/order.json';
 import textFixture from '../fixtures/whatsapp/inbound/text.json';
 import {
@@ -184,13 +185,13 @@ describe('webhook inbound messages', () => {
     expect(loggedText({ spies })).not.toContain(account.phone);
   });
 
-  test('WI-28 skips a sender with no owner row and logs it without a phone number', async () => {
+  test('WI-28 opens an account for a sender with no owner row and logs it without a phone number', async () => {
     const spies = spyOnLogs();
     const response = await postNotification({
       notification: notificationWith({ messages: [{ ...textFixture, from: UNKNOWN_PHONE, id: 'wamid.WI28' }] }),
     });
     expect(response.status).toBe(STATUS_OK);
-    expect(loggedText({ spies })).toContain(OperatorEvent.InboundUnmapped);
+    expect(loggedText({ spies })).toContain(LogEvent.AccountCreated);
     expect(loggedText({ spies })).not.toContain(UNKNOWN_PHONE);
   });
 

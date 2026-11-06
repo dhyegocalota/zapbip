@@ -116,7 +116,7 @@ describe('finishAccountDeletion', () => {
       waitlistEnabled: true,
       createdAt: 1,
     });
-    expect(reopened).toMatchObject({ waId: BRAZIL_WA_ID, state: AccountState.Waitlisted });
+    expect(reopened).toMatchObject({ account: { waId: BRAZIL_WA_ID, state: AccountState.Waitlisted }, created: true });
   });
 });
 
