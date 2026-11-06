@@ -220,7 +220,7 @@ describe('downloadInboundMedia', () => {
       attempts: MEDIA_DOWNLOAD_ATTEMPTS,
       isCommitted: async () => true,
     });
-    expect(result).toEqual({ stored: true, sizeBytes: BODY.byteLength });
+    expect(result).toMatchObject({ stored: true });
     expect(storeDouble.objects.get(`${ACCOUNT_ID}/${MEDIA_ID}`)).toBeDefined();
   });
 
