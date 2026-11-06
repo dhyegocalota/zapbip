@@ -1,5 +1,6 @@
 import json
 
+import pytest
 from frame_builders import hello_text, messages_text, text_message
 
 from zapbip_platform.constants import CONNECTOR_FRAME_MAX_BYTES, CONNECTOR_PONG_TEXT, FrameRejectionReason
@@ -56,6 +57,24 @@ def test_message_without_id() -> None:
     parsed = parse_server_frame(text=text, is_binary=False)
 
     assert not parsed.ok
+    assert parsed.reason == FrameRejectionReason.MALFORMED
+
+
+@pytest.mark.parametrize("kind", [None, "zzz", "constructor", 3, "__class__"])
+def test_message_with_an_unknown_kind_is_malformed(kind: object) -> None:
+    text = json.dumps({"type": "messages", "messages": [{"messageId": "msg_1", "kind": kind}]})
+
+    parsed = parse_server_frame(text=text, is_binary=False)
+
+    assert parsed.ok is False
+    assert parsed.reason == FrameRejectionReason.MALFORMED
+
+
+def test_message_without_a_kind_is_malformed() -> None:
+    text = json.dumps({"type": "messages", "messages": [{"messageId": "msg_1"}]})
+
+    parsed = parse_server_frame(text=text, is_binary=False)
+
     assert parsed.reason == FrameRejectionReason.MALFORMED
 
 

@@ -1,4 +1,4 @@
-import { CONNECTOR_FRAME_MAX_BYTES, ConnectorFrameType, FrameRejectionReason } from '@zapbip/types';
+import { CONNECTOR_FRAME_MAX_BYTES, ConnectorFrameType, FrameRejectionReason, MessageKind } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { parseServerFrame } from '../../src/frames';
 
@@ -33,5 +33,25 @@ describe('parseServerFrame', () => {
       ok: false,
       reason: FrameRejectionReason.FrameTooLarge,
     });
+  });
+
+  it.each([null, 3, undefined])('rejects a hello whose previousWakeMode is %s as malformed', (previousWakeMode) => {
+    expect(parse({ body: { type: ConnectorFrameType.Hello, agent: 'ana', previousWakeMode } })).toEqual({
+      ok: false,
+      reason: FrameRejectionReason.Malformed,
+    });
+  });
+
+  it.each([undefined, null, 'zzz', 'constructor', 3])('rejects a messages frame with the message kind %s as malformed', (kind) => {
+    const message = { messageId: 'msg_1', kind };
+    expect(parse({ body: { type: ConnectorFrameType.Messages, messages: [message] } })).toEqual({
+      ok: false,
+      reason: FrameRejectionReason.Malformed,
+    });
+  });
+
+  it('accepts a messages frame whose messages have known kinds', () => {
+    const body = { type: ConnectorFrameType.Messages, messages: [{ messageId: 'msg_1', kind: MessageKind.Text }] };
+    expect(parse({ body })).toEqual({ ok: true, frame: body });
   });
 });

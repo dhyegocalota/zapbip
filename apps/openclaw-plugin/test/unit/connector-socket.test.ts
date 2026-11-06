@@ -199,12 +199,14 @@ describe('handoff and done', () => {
     const connector = await startConnector();
     const pendingHandoff = deferred();
     const handOff = vi.fn(() => pendingHandoff.promise);
-    startPlugin({ connector, handOff });
+    const plugin = startPlugin({ connector, handOff });
     await connector.waitForConnections({ count: 1 });
     const frame = messagesFrame({ messages: [ownerTextMessage({ messageId: 'msg_1', text: 'um' })] });
     connector.sendFrame({ frame });
     await vi.waitFor(() => expect(handOff).toHaveBeenCalledTimes(1));
     connector.sendFrame({ frame });
+    connector.sendText({ text: JSON.stringify({ type: 'zzz' }) });
+    await vi.waitFor(() => expect(plugin.events.map((entry) => entry.event)).toContain(ConnectorLogEvent.FrameRejected));
     pendingHandoff.resolve();
     await connector.waitForFrames({ type: ConnectorFrameType.Done, count: 1 });
     expect(handOff).toHaveBeenCalledTimes(1);
