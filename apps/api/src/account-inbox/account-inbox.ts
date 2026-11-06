@@ -20,7 +20,7 @@ import type {
   WaitForReplyInput,
   WaitForReplyResult,
 } from '@zapbip/core';
-import { ChannelErrorKind, type AccountState } from '@zapbip/types';
+import { AccountState, ChannelErrorKind } from '@zapbip/types';
 import { createFakeWhatsAppSender, type FakeWhatsAppSender } from '../adapters/fake/fake-whatsapp-sender';
 import { createIdGenerator } from '../adapters/platform/ids';
 import { loadDurableClock, type DurableClock } from '../adapters/platform/clock';
@@ -28,22 +28,28 @@ import { createR2MediaStore } from '../adapters/r2/r2-media-store';
 import { createSqliteInboxRepository } from '../adapters/sqlite/sqlite-inbox-repository';
 import { createNoneWaker } from '../adapters/wake/none-waker';
 import type { AccountInboxRpc, AgentRequest, CallOutcome } from '../contract/account-inbox-rpc';
+import type { AccountOwnerRpc } from '../contract/account-owner-rpc';
 import type { DueTimeProvider } from '../contract/due-time-provider';
 import type { Bindings } from '../contract/env';
 import { LogEvent, type LogFields } from '../contract/log';
 import { logEvent } from '../log';
-import { ALARM_MIN_DELAY_MS, ALARM_PROVIDER_FAILED } from './constants';
+import { AccountTombstoned } from './account-tombstoned';
+import { revokeAgentState } from './agent-revocation';
+import { ALARM_MIN_DELAY_MS, ALARM_PROVIDER_FAILED, TOMBSTONE_STORAGE_KEY } from './constants';
 import { ACCOUNT_INBOX_MIGRATIONS } from './migrations';
 import { runMigrations } from './run-migrations';
 
+const RECORD_STATE_STATEMENT = 'INSERT INTO account_facts (id, state) VALUES (1, ?) ON CONFLICT (id) DO UPDATE SET state = excluded.state';
+
 type ReceiveOwnerMessageRequest = Parameters<AccountInboxRpc['receiveOwnerMessage']>[0];
 
-export class AccountInbox extends DurableObject<Bindings> implements AccountInboxRpc {
+export class AccountInbox extends DurableObject<Bindings> implements AccountInboxRpc, Omit<AccountOwnerRpc, 'receiveAccountMessage'> {
   protected sender!: FakeWhatsAppSender;
   protected clock!: DurableClock;
   protected readonly dueTimeProviders: DueTimeProvider[] = [];
   private accountId!: string;
   private dependencies!: CoreDependencies;
+  private isTombstoned = false;
 
   constructor(ctx: DurableObjectState, env: Bindings) {
     super(ctx, env);
@@ -53,6 +59,8 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
   private async initialize(): Promise<void> {
     const { name: accountId } = this.ctx.id;
     if (accountId === undefined) throw new Error('AccountInbox id has no name');
+    this.isTombstoned = (await this.ctx.storage.get(TOMBSTONE_STORAGE_KEY)) !== undefined;
+    if (this.isTombstoned) return;
     runMigrations({ storage: this.ctx.storage, migrations: ACCOUNT_INBOX_MIGRATIONS });
     this.accountId = accountId;
     this.clock = await loadDurableClock({ storage: this.ctx.storage, onAdvanced: () => this.armAlarm() });
@@ -106,7 +114,12 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     }
   }
 
+  private assertLive(): void {
+    if (this.isTombstoned) throw new AccountTombstoned();
+  }
+
   protected async armAlarm(): Promise<void> {
+    if (this.isTombstoned) return;
     const dueTimes = await Promise.all(this.dueTimeProviders.map((provider) => this.findNextDueAt({ provider })));
     const pendingDueTimes = dueTimes.filter((dueAt): dueAt is number => dueAt !== null);
     if (pendingDueTimes.length === 0) return this.ctx.storage.deleteAlarm();
@@ -115,12 +128,14 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
   }
 
   async alarm(): Promise<void> {
+    if (this.isTombstoned) return;
     const now = this.clock.now();
     await this.dueTimeProviders.reduce((previous, provider) => previous.then(() => this.runProvider({ provider, now })), Promise.resolve());
     await this.armAlarm();
   }
 
   private async outcome<Value>(input: { run: () => Promise<Value>; describe?: (value: Value) => LogFields }): Promise<CallOutcome<Value>> {
+    this.assertLive();
     try {
       const value = await input.run();
       if (input.describe !== undefined) this.log(input.describe(value));
@@ -204,23 +219,28 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     return this.outcome({ run: () => inbox.completeUpload({ ...input, dependencies: this.dependencies }) });
   }
 
-  recordRevocation(input: { agent: string }): Promise<void> {
-    void input;
-    throw new Error('recordRevocation is not implemented');
+  async recordRevocation(input: { agent: string }): Promise<void> {
+    this.assertLive();
+    revokeAgentState({ storage: this.ctx.storage, agent: input.agent, revokedAt: this.clock.now() });
+    this.dependencies.waiters.cancelAgent(input);
   }
 
-  cancelWaiters(input: { agent: string }): Promise<void> {
-    void input;
-    throw new Error('cancelWaiters is not implemented');
+  async cancelWaiters(input: { agent: string }): Promise<void> {
+    this.assertLive();
+    this.dependencies.waiters.cancelAgent(input);
   }
 
-  setState(input: { state: AccountState }): Promise<void> {
-    void input;
-    throw new Error('setState is not implemented');
+  async setState(input: { state: AccountState }): Promise<void> {
+    this.assertLive();
+    if (input.state !== AccountState.Active) throw new Error('setState accepts only the return to active');
+    this.ctx.storage.sql.exec(RECORD_STATE_STATEMENT, input.state);
   }
 
-  purge(): Promise<void> {
-    throw new Error('purge is not implemented');
+  async purge(): Promise<void> {
+    this.isTombstoned = true;
+    await this.ctx.storage.deleteAlarm();
+    await this.ctx.storage.deleteAll();
+    await this.ctx.storage.put(TOMBSTONE_STORAGE_KEY, true);
   }
 
   receiveOwnerMessage(input: ReceiveOwnerMessageRequest): Promise<CallOutcome<inbox.ReceiveResult>> {

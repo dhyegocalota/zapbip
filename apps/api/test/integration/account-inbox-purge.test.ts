@@ -1,9 +1,10 @@
-import { AccountState } from '@zapbip/types';
+import { AccountState, MessageKind, OwnerLocale } from '@zapbip/types';
 import { evictDurableObject, reset, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
 import { afterEach, describe, expect, it } from 'vitest';
+import type { AccountInbox } from '../../src/account-inbox/account-inbox';
 import { createSqliteDeletionRequests } from '../../src/account-inbox/deletion-requests';
 import { TOMBSTONE_STORAGE_KEY } from '../../src/account-inbox/constants';
-import { openWindow, receiveOwnerText } from '../support/inbox-session';
+import { openWindow } from '../support/inbox-session';
 import { accountInboxStub, connectionOf } from '../support/workers-env';
 
 const ACCOUNT = 'acc_purge';
@@ -77,14 +78,20 @@ describe('AccountInbox after purge', () => {
 
   it.each([false, true])('refuses every write (restart %s)', async (restart) => {
     await purgeThenRestart({ restart });
-    const refusals = [
-      receiveOwnerText({ stub: stubOf(), text: 'oi' }),
-      stubOf().recordRevocation({ agent: 'alpha' }),
-      stubOf().cancelWaiters({ agent: 'alpha' }),
-      stubOf().setState({ state: AccountState.Active }),
-      stubOf().sendText({ connection: connectionOf({ accountId: ACCOUNT, agent: 'alpha' }), text: 'oi', replyToMessageId: null }),
+    const connection = connectionOf({ accountId: ACCOUNT, agent: 'alpha' });
+    const writes: ((instance: AccountInbox) => Promise<unknown>)[] = [
+      (instance) =>
+        instance.receiveOwnerMessage({
+          ownerLocale: OwnerLocale.PortugueseBrazil,
+          channelMessageId: 'wamid.after',
+          ownerMessage: { at: Date.now(), replyToMessageId: null, content: { kind: MessageKind.Text, text: 'oi' } },
+        }),
+      (instance) => instance.recordRevocation({ agent: 'alpha' }),
+      (instance) => instance.cancelWaiters({ agent: 'alpha' }),
+      (instance) => instance.setState({ state: AccountState.Active }),
+      (instance) => instance.sendText({ connection, text: 'oi', replyToMessageId: null }),
     ];
-    await Promise.all(refusals.map((refusal) => expect(refusal).rejects.toThrow(TOMBSTONED_MESSAGE)));
+    for (const write of writes) await expect(runInDurableObject(stubOf(), write)).rejects.toThrow(TOMBSTONED_MESSAGE);
     expect(await listKeys()).toEqual([TOMBSTONE_STORAGE_KEY]);
   });
 

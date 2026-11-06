@@ -58,7 +58,7 @@ async function holdWait(input: { agent: string }) {
     timeoutMs: HELD_TIMEOUT_MS,
   });
   await vi.waitFor(async () => expect(await hasLiveWaiter(input)).toBe(true));
-  return holding;
+  return { holding };
 }
 
 afterEach(async () => {
@@ -152,7 +152,7 @@ describe('AccountInbox revocation', () => {
   });
 
   it('recordRevocation ends a live wait_for_reply at once with a timeout', async () => {
-    const holding = await holdWait({ agent: 'alpha' });
+    const { holding } = await holdWait({ agent: 'alpha' });
     const startedAt = Date.now();
     await stubOf().recordRevocation({ agent: 'alpha' });
     const outcome = await holding;
@@ -161,7 +161,7 @@ describe('AccountInbox revocation', () => {
   });
 
   it('recordRevocation leaves the wait of another agent alive', async () => {
-    const holding = await holdWait({ agent: 'beta' });
+    const { holding } = await holdWait({ agent: 'beta' });
     await stubOf().recordRevocation({ agent: 'alpha' });
     expect(await hasLiveWaiter({ agent: 'beta' })).toBe(true);
     await stubOf().cancelWaiters({ agent: 'beta' });
@@ -170,7 +170,7 @@ describe('AccountInbox revocation', () => {
 
   it('cancelWaiters ends a live wait at once and keeps the wake state and the revoked list', async () => {
     await seedAgentWake({ agent: 'alpha' });
-    const holding = await holdWait({ agent: 'alpha' });
+    const { holding } = await holdWait({ agent: 'alpha' });
     await stubOf().cancelWaiters({ agent: 'alpha' });
     expect(await holding).toEqual({ ok: true, value: { status: ReplyStatus.Timeout } });
     expect(await listWakeAgents()).toEqual(['alpha']);
@@ -184,6 +184,6 @@ describe('AccountInbox setState', () => {
   });
 
   it.each([AccountState.Suspended, AccountState.Deleting, AccountState.Waitlisted])('refuses %s', async (state) => {
-    await expect(stubOf().setState({ state })).rejects.toThrow();
+    await expect(runInDurableObject(stubOf(), (instance: AccountInbox) => instance.setState({ state }))).rejects.toThrow();
   });
 });
