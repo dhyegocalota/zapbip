@@ -773,7 +773,7 @@ Failure modes for W0 are in the table below. W0 has no backout: fix forward in a
 ## Z. Prove and ship
 
 - [ ] **Tester briefing:** a developer wrote `tester-briefing.md` (per lane).
-- [ ] **Tester run:** a fresh `tester` sub-agent per test-plan area executed `test-plan.md` and ticked every box with evidence.
+- [x] **Tester run:** a fresh `tester` sub-agent per test-plan area executed `test-plan.md` and ticked every box with evidence. — evidence: /private/tmp/claude-501/-Users-dhyegocalota-Projects-zapbip-zapbip/edbded58-c331-44d5-ac8d-6cac14247a14/scratchpad/test-results/whatsapp-cloud-channel/final-head.md (24a298e).
 - [ ] **Reviewer:** a fresh `reviewer` sub-agent returned a verdict; refutation of the three riskiest claims is recorded in `test-plan.md`.
 - [ ] **/check-ui:** the simulator screen walk on the development entry (owner text, voice note, quick-reply tap) recorded and uploaded.
 - [ ] **/open-pr:** gates passed, learnings sweep stated, PR opened. The owner-run items of `test-plan.md` are listed in the PR as open.
