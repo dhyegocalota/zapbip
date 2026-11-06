@@ -23,22 +23,29 @@ O OpenClaw fica ouvindo seu WhatsApp por um pequeno canal do zapbip. Você escre
 ## Instale o canal
 
 ```bash
-openclaw plugins install @zapbip/openclaw-plugin
+openclaw plugins install @zapbip/openclaw-plugin@0.1.0 --force --accept-capabilities
 ```
 
-Depois defina o link no canal `zapbip` do `openclaw.json`:
+Depois defina o link no canal `zapbip` e ative o plugin no `openclaw.json`:
 
 ```json
 {
-  "channels": { "zapbip": { "connectionLink": "https://<host>/c/<secret>/mcp" } }
+  "channels": { "zapbip": { "connectionLink": "https://<host>/c/<secret>/mcp" } },
+  "plugins": { "entries": { "zapbip": { "enabled": true } } }
 }
 ```
 
-Reinicie o gateway. O canal conecta sozinho, reconecta depois de uma queda de rede e pega toda mensagem que ficou sem resposta.
+Reinicie o gateway.
 
-## Deixe o OpenClaw responder
+## Como ele escuta
 
-Adicione o zapbip como servidor MCP para o OpenClaw ter a ferramenta `send_message` e responder:
+O canal mantém uma conexão aberta com o zapbip, sem limite de tempo. Se a rede cair, ele reconecta sozinho, esperando um pouco mais a cada tentativa que falha (1 segundo no começo, 30 segundos no máximo). As mensagens que você enviar nesse meio tempo esperam na sua caixa de entrada do zapbip, e o canal pega todas as que ficaram sem resposta assim que volta.
+
+## Como o OpenClaw responde
+
+As respostas do OpenClaw às suas mensagens voltam pelo próprio canal, sem configuração extra. Se o envio de uma resposta falhar, o canal escreve `plugin_reply_failed` no log do gateway e não tenta de novo, então essa resposta pode se perder.
+
+Adicione o zapbip como servidor MCP para o OpenClaw também puxar conversa com você, fazer uma pergunta com botões e esperar a resposta, e usar a consulta periódica abaixo:
 
 ```json
 {
@@ -50,12 +57,12 @@ Adicione o zapbip como servidor MCP para o OpenClaw ter a ferramenta `send_messa
 }
 ```
 
-Depois escreva `✅ instalado` para o OpenClaw no WhatsApp. Se ele responder, está funcionando.
+Depois peça ao OpenClaw no WhatsApp para enviar `✅ instalado`. Se essa mensagem chegar, está funcionando.
 
 <Chat
   contact="zapbip"
   messages={[
-    { you: true, text: 'Diga oi quando estiver instalado.', time: '18:10' },
+    { you: true, text: 'Envie ✅ instalado quando estiver instalado.', time: '18:10' },
     { name: 'OpenClaw', text: '✅ instalado', time: '18:10' },
   ]}
 />
@@ -70,9 +77,10 @@ O OpenClaw pode consultar a caixa de entrada. Adicione o servidor MCP acima e cr
 
 ## Quando algo não funciona
 
-| O que você vê                     | O que significa                                                            |
-| --------------------------------- | -------------------------------------------------------------------------- |
-| Nenhuma resposta à sua mensagem   | O gateway não está rodando, ou `channels.zapbip` não tem `connectionLink`. |
-| O canal para sozinho              | Outro canal ou conector começou para a mesma conexão e o substituiu.       |
-| O OpenClaw ouve, mas não responde | O servidor MCP `zapbip` não está em `mcp.servers`.                         |
-| O canal sai na hora               | O link é desconhecido ou foi revogado. Peça um novo.                       |
+| O que você vê                             | O que significa                                                                                                           |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Nenhuma resposta à sua mensagem           | O gateway não está rodando, `channels.zapbip` não tem `connectionLink`, ou `plugins.entries.zapbip.enabled` não é `true`. |
+| O canal para sozinho                      | Outro canal ou conector começou para a mesma conexão e o substituiu.                                                      |
+| O OpenClaw ouve, mas a resposta não chega | O log do gateway mostra `plugin_reply_failed`: o envio da resposta falhou e não é repetido. Escreva de novo.              |
+| O OpenClaw não puxa conversa nem pergunta | O servidor MCP `zapbip` não está em `mcp.servers`.                                                                        |
+| O canal para com erro                     | O link é desconhecido ou a conexão foi revogada. Peça um novo.                                                            |
