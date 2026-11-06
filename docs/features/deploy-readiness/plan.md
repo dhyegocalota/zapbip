@@ -431,8 +431,8 @@ Lanes never rebase: a rebase would rewrite the red-first hashes the test plan ci
 
 ### D (developer-D): runbooks
 
-- [ ] **D1 red: runbook shape.** `tools/repository-shape/src/runbooks.test.ts`: the index links every runbook; links resolve; each runbook has a purpose line, numbered steps and an `If it fails` line per step; `deploy.md` contains the immutable-migration rule. Commit as `test(shape): pin the runbook index`.
-- [ ] **D2 green: runbooks.** Write `docs/runbooks/README.md`, `cloudflare-setup.md`, `dns.md`, `meta-setup.md`, `deploy.md`, `mintlify-publish.md`. Commands match the root scripts. `deploy.md` states the immutable-migration rule: a migration that has reached a deployed environment is never edited; a fix is a new numbered migration. `mintlify-publish.md` lists two owner steps before a docs deploy: set `OFFICIAL_WHATSAPP_NUMBER` in place of `OFFICIAL_NUMBER_UNSET`, and publish the exact `zapbip@<version>` to npm. Commit as `docs(runbooks): write the owner's go-live runbooks`.
+- [x] **D1 red: runbook shape.** `tools/repository-shape/src/runbooks.test.ts`: the index links every runbook; links resolve; each runbook has a purpose line, numbered steps and an `If it fails` line per step; `deploy.md` contains the immutable-migration rule. Commit as `test(shape): pin the runbook index`. — evidence: 1465f0b
+- [x] **D2 green: runbooks.** Write `docs/runbooks/README.md`, `cloudflare-setup.md`, `dns.md`, `meta-setup.md`, `deploy.md`, `mintlify-publish.md`. Commands match the root scripts. `deploy.md` states the immutable-migration rule: a migration that has reached a deployed environment is never edited; a fix is a new numbered migration. `mintlify-publish.md` lists two owner steps before a docs deploy: set `OFFICIAL_WHATSAPP_NUMBER` in place of `OFFICIAL_NUMBER_UNSET`, and publish the exact `zapbip@<version>` to npm. Commit as `docs(runbooks): write the owner's go-live runbooks`. — evidence: 675abfa
 
 ## Signed Meta payload
 
