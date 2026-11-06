@@ -19,6 +19,7 @@ const ENVELOPE = {
   replyToMessageId: null,
   delivery: null,
   readByAgent: false,
+  forwarded: false,
 };
 const MEDIA_FIELDS = {
   source: { kind: MediaSourceKind.Link as const, link: 'https://example.test/a' },
