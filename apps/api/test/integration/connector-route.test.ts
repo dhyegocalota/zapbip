@@ -69,7 +69,7 @@ describe('connector route', () => {
 
     async function requestWithoutObject(input: { path: string; init: RequestInit }) {
       const { objectCalls, environment } = countedEnvironment();
-      const response = await createApp({ extraRoutes: [] }).request(input.path, input.init, environment);
+      const response = await createApp({ extraRoutes: [], developmentMediaOrigin: null }).request(input.path, input.init, environment);
       return { objectCalls, response };
     }
 
