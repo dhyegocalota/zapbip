@@ -5,6 +5,7 @@ import { readRepositoryFile, repositoryPath } from './repository-files';
 
 const DOCS_ROOT = 'apps/docs';
 const CONNECTOR_MANIFEST = 'apps/connector/package.json';
+const SHARED_CONSTANTS = 'libs/types/src/constants.ts';
 const PAGE_EXTENSION = '.mdx';
 const IGNORED_DIRECTORIES = ['node_modules'];
 const UNPINNED_COMMAND = /npx zapbip(?!@)/g;
@@ -20,12 +21,18 @@ function pageFiles(directory: string): string[] {
     });
 }
 
+const SHARED_VERSION_PATTERN = /export const ZAPBIP_NPM_VERSION = '([^']+)'/;
 const connectorVersion = JSON.parse(readRepositoryFile(CONNECTOR_MANIFEST)).version as string;
+const sharedVersion = SHARED_VERSION_PATTERN.exec(readRepositoryFile(SHARED_CONSTANTS))?.[1];
 const pages = pageFiles('').map((path) => ({ path, text: readRepositoryFile(posix.join(DOCS_ROOT, path)) }));
 
 describe('the pinned connector version in the docs', () => {
   test('the connector manifest declares a version', () => {
     expect(connectorVersion).toMatch(/^[0-9]+\.[0-9]+\.[0-9]+$/);
+  });
+
+  test('the shared constant equals the manifest version', () => {
+    expect(sharedVersion).toBe(connectorVersion);
   });
 
   test('no page runs the connector without a version', () => {

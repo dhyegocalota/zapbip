@@ -170,7 +170,7 @@ pnpm --filter @zapbip/docs exec mint broken-links
 
 | Test | Red before | Green after |
 |------|------------|-------------|
-| `test/unit/cli.test.ts`, `test/unit/connect.test.ts` (`588510d`) | `parseConnectArguments`, `deriveConnectorLinks`, `reconnectDelayMs`, `parseServerFrame is not implemented`; 20 failed, 8 passed (the 8 are throw-expected refusals, pins) | `be12109` |
+| `test/unit/cli.test.ts`, `test/unit/connect.test.ts` (`588510d`) | `parseConnectArguments`, `deriveConnectorLinks`, `reconnectDelayMs`, `parseServerFrame is not implemented`; at that commit `cli.test.ts` printed 4 failed and 5 passed, and `connect.test.ts` failed to import `../support/fake-event-server` (module not found, the support file arrived later). This is a flawed red: the failure reason is an import error. The history is not rewritten | `be12109` |
 | `test/integration/connect.test.ts`, `wake-runner.test.ts`, `cli.test.ts` (`b2fda48`) | `runConnection is not implemented`, `runWake is not implemented`, and 5 s timeouts waiting for a socket or a child run; 47 failed | `a5ee55d` (runner), `be12109` (loop, CLI) |
 
 ### Hypotheses to attack

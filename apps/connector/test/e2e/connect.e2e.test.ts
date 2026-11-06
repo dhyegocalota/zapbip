@@ -13,6 +13,8 @@ const SESSION_ID = '0b1f6c2e-5d7a-4c3b-9e8f-1a2b3c4d5e6f';
 const CONNECT_AGENT = 'ana';
 const LISTEN_AGENT = 'bia';
 const CHANNEL_AGENT = 'caio';
+const SIGNAL_AGENT = 'duda';
+const PROMPT_EXIT_MS = 2_000;
 const OWNER_TEXT = 'Oi';
 const FAKE_REPLY = `FAKE-REPLY ${OWNER_TEXT}`;
 const MCP_CONFIG_VARIABLE = 'FAKE_CLIENT_MCP_CONFIG';
@@ -69,7 +71,7 @@ describe('the bundled connector against the local stack', () => {
   }
 
   beforeAll(async () => {
-    stack = await startStack({ agents: [CONNECT_AGENT, LISTEN_AGENT, CHANNEL_AGENT] });
+    stack = await startStack({ agents: [CONNECT_AGENT, LISTEN_AGENT, CHANNEL_AGENT, SIGNAL_AGENT] });
   }, SUITE_TIMEOUT_MS);
 
   afterAll(async () => {
@@ -155,6 +157,24 @@ describe('the bundled connector against the local stack', () => {
 
       await vi.waitFor(() => expect(notifications).toHaveLength(1), { timeout: SUITE_TIMEOUT_MS });
       expect(notifications[0]).toEqual({ content: OWNER_TEXT, meta: { sender: 'owner', verified: 'true', forwarded: 'false' } });
+    },
+    SUITE_TIMEOUT_MS,
+  );
+
+  it.each(['SIGTERM', 'SIGINT'] as const)(
+    'connect exits 0 within two seconds on %s',
+    async (signal) => {
+      const connector = startCli({
+        agent: SIGNAL_AGENT,
+        arguments: ['connect', '--client', ConnectorClient.ClaudeCode, '--cwd', fakeClients.workingDirectory],
+      });
+      await connector.waitForEvent({ event: ConnectorLogEvent.ConnectorConnected });
+      const exited = new Promise<number | null>((resolve) => connector.child.on('exit', (code) => resolve(code)));
+      const signalledAt = Date.now();
+      connector.child.kill(signal);
+
+      expect(await exited).toBe(0);
+      expect(Date.now() - signalledAt).toBeLessThan(PROMPT_EXIT_MS);
     },
     SUITE_TIMEOUT_MS,
   );
