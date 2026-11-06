@@ -1,0 +1,29 @@
+scripts/verify*	product	all
+package.json	product	all
+pnpm-lock.yaml	product	all
+pnpm-workspace.yaml	product	all
+.nvmrc	product	all
+.npmrc	product	all
+tsconfig*.json	product	all
+.prettierrc*	product	all
+.prettierignore	product	all
+apps/*/package.json	product	all
+libs/*/package.json	product	all
+tools/*/package.json	product	all
+tools/repository-shape/*	product	typecheck
+apps/*/README.md	docs	-
+libs/*/README.md	docs	-
+apps/*	product	typecheck unit
+libs/*	product	typecheck unit
+.agents/*	tooling	hooks
+.claude/*	tooling	hooks
+.codex/*	tooling	hooks
+.mcp.json	tooling	hooks
+.github/*	tooling	-
+AGENTS.md	tooling	-
+CLAUDE.md	tooling	-
+GEMINI.md	tooling	-
+docs/scenarios/*	tooling	-
+docs/*.md	docs	-
+docs/media/*	docs	-
+*.md	docs	-

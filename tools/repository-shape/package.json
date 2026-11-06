@@ -1,0 +1,13 @@
+{
+  "name": "@zapbip/repository-shape",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test:unit": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "vitest": "5.0.5"
+  }
+}

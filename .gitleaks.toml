@@ -1,0 +1,10 @@
+title = "zapbip"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "The exact placeholder strings the repository ships on purpose, each anchored to the whole secret"
+regexes = [
+  '''^zapbip-test-secret-with-at-least-32-characters$''',
+]

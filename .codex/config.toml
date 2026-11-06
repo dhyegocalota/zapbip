@@ -1,0 +1,39 @@
+# Project-scoped Codex configuration. Loaded only for trusted projects.
+# Skills: .agents/skills (read natively). Instructions: AGENTS.md. Roles: .codex/agents/*.toml
+
+[features]
+multi_agent = true
+
+[agents.researcher]
+config_file = ".codex/agents/researcher.toml"
+[agents.developer]
+config_file = ".codex/agents/developer.toml"
+[agents.tester]
+config_file = ".codex/agents/tester.toml"
+[agents.reviewer]
+config_file = ".codex/agents/reviewer.toml"
+[agents.recorder]
+config_file = ".codex/agents/recorder.toml"
+[agents.security-reviewer]
+config_file = ".codex/agents/security-reviewer.toml"
+[agents.frontend-designer]
+config_file = ".codex/agents/frontend-designer.toml"
+
+[mcp_servers.playwright]
+command = "npx"
+args = ["-y", "@playwright/mcp@0.0.83", "--browser", "chromium", "--isolated"]
+tool_timeout_sec = 60
+
+[mcp_servers.playwright-second]
+command = "npx"
+args = ["-y", "@playwright/mcp@0.0.83", "--browser", "chromium", "--isolated"]
+tool_timeout_sec = 60
+
+[mcp_servers.playwright-third]
+command = "npx"
+args = ["-y", "@playwright/mcp@0.0.83", "--browser", "chromium", "--isolated"]
+tool_timeout_sec = 60
+
+[mcp_servers.context7]
+command = "npx"
+args = ["-y", "@upstash/context7-mcp@4.4.2"]
