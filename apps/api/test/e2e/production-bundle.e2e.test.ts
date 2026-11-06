@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { afterAll, describe, expect, test } from 'vitest';
+import { DEVELOPMENT_ENVIRONMENT } from '../../src/contract/constants';
 
 const runCommand = promisify(execFile);
 const PRODUCTION_BUNDLE_FILE = 'index.js';
@@ -12,7 +13,7 @@ const BUNDLE_TIMEOUT_MS = 120_000;
 const DEV_OWNER_ROUTE_PREFIX = '/dev/owner/';
 const SIMULATOR_IDENTIFIER = 'owner-simulator';
 const DEV_METHODS = ['advanceClock', 'readScreen'];
-const DEVELOPMENT_ENVIRONMENT_ARGUMENTS = ['--env', 'development'];
+const DEVELOPMENT_ENVIRONMENT_ARGUMENTS = ['--env', DEVELOPMENT_ENVIRONMENT];
 
 const outputDirectories: string[] = [];
 

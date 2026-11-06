@@ -3,20 +3,39 @@ title: Ask with buttons and lists
 description: Let your AI ask and wait for your tap.
 ---
 
-## What you type into your AI
+import { Chat } from '/snippets/chat.jsx';
 
-```text
-Before booking, ask me which hotel I prefer and wait for my answer.
-```
+## What you tell your AI
+
+<Chat messages={[{ you: true, text: 'Before booking, ask me which hotel I prefer and wait for my answer.', time: '09:14' }]} />
 
 ## What you see on your phone
 
-```text
-Claude   Which hotel for Lisbon?
-         [ Alfama ] [ Baixa ] [ Belém ]
-```
+Up to 3 options show as buttons.
 
-Up to 3 options show as buttons, 4 to 10 as a list. Tap one, or just type your answer.
+<Chat
+  messages={[
+    { name: 'Claude', text: 'Which hotel for Lisbon?', options: ['Alfama', 'Baixa', 'Belém'], time: '09:15' },
+    { you: true, text: 'Baixa', time: '09:16' },
+    { name: 'Claude', text: 'Booking Baixa for 3 nights.', time: '09:16' },
+  ]}
+/>
+
+4 to 10 options show as a list.
+
+<Chat
+  messages={[
+    {
+      name: 'Claude',
+      text: 'Which neighbourhood should I search in?',
+      list: { title: 'Choose one', rows: ['Alfama', 'Baixa', 'Belém', 'Chiado', 'Príncipe Real'] },
+      time: '09:17',
+    },
+    { you: true, text: 'Chiado', time: '09:17' },
+  ]}
+/>
+
+Tap one, or just type your answer.
 
 ## If you are slow
 
