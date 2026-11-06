@@ -1,7 +1,7 @@
 import { COMPANY_FACT_UNSET, type CompanyFacts, OFFICIAL_NUMBER_UNSET } from '@zapbip/types';
 import { z } from 'zod';
-import { PLACEHOLDER_VALUE_PREFIX } from './constants';
 import { DeployEnvironment } from './deploy-environment';
+import { isPlaceholderValue } from './placeholder';
 import { missingSmokeInputs } from './smoke-inputs';
 import { WorkerSecret } from './worker-secret';
 import { INSTALL_ROUTE_PATH } from './worker-facts';
@@ -94,7 +94,7 @@ async function gitOutput(input: { shell: DeployShell; args: string[] }): Promise
 
 function placeholderPathsOf(input: { value: unknown; path: string }): string[] {
   const { value, path } = input;
-  if (typeof value === 'string') return value.startsWith(PLACEHOLDER_VALUE_PREFIX) ? [path] : [];
+  if (typeof value === 'string') return isPlaceholderValue({ value }) ? [path] : [];
   if (Array.isArray(value)) return value.flatMap((item, index) => placeholderPathsOf({ value: item, path: `${path}.${index}` }));
   if (typeof value !== 'object' || value === null) return [];
   return Object.entries(value).flatMap(([key, item]) => placeholderPathsOf({ value: item, path: path === '' ? key : `${path}.${key}` }));
@@ -120,15 +120,22 @@ async function refuseUnsetCompanyFacts(input: { company: CompanyFacts }): Promis
   return `COMPANY facts are still ${COMPANY_FACT_UNSET}: ${unset.join(', ')}; fill the Logic Bit company facts in libs/types before deploying`;
 }
 
-function maintainerNamesOf(input: { stdout: string }): string[] {
-  return maintainerListSchema.parse(JSON.parse(input.stdout)).map((maintainer) => maintainer.split(' <')[0] as string);
+function parseJsonOrNull(input: { text: string }): unknown {
+  try {
+    return JSON.parse(input.text);
+  } catch {
+    return null;
+  }
 }
 
 async function untrustedReasonOf(input: { shell: DeployShell; packageSpec: string; publisher: string }): Promise<string | null> {
   const { shell, packageSpec, publisher } = input;
   const result = await shell.run({ file: NPM, args: ['view', packageSpec, 'maintainers', '--json'] });
   if (result.exitCode !== 0) return `${packageSpec} does not resolve on npm; publish it first`;
-  if (maintainerNamesOf({ stdout: result.stdout }).includes(publisher)) return null;
+  const maintainers = maintainerListSchema.safeParse(parseJsonOrNull({ text: result.stdout }));
+  if (!maintainers.success) return `could not read the maintainers of ${packageSpec} as JSON`;
+  const names = maintainers.data.map((maintainer) => maintainer.split(' <')[0]);
+  if (names.includes(publisher)) return null;
   return `${packageSpec} is not maintained by the npm user ${publisher}`;
 }
 
@@ -146,14 +153,13 @@ async function refuseUntrustedPackages(input: {
   packageSpecs: string[];
 }): Promise<string | null> {
   const publisher = input.environmentVariables[NPM_PUBLISHER_VARIABLE];
-  if (publisher === undefined || publisher === '' || publisher.startsWith(PLACEHOLDER_VALUE_PREFIX)) {
+  if (publisher === undefined || publisher === '' || isPlaceholderValue({ value: publisher })) {
     return `${NPM_PUBLISHER_VARIABLE} is not set; set it to the npm user that publishes the packages`;
   }
   return firstUntrusted({ shell: input.shell, packageSpecs: input.packageSpecs, publisher });
 }
 
 async function refuseUntrustedWorkerPackage(input: WorkerPreflightInput): Promise<string | null> {
-  if (input.environment !== DeployEnvironment.Production) return null;
   return refuseUntrustedPackages({ ...input, packageSpecs: [`${NPM_PACKAGE_NAME}@${input.npmVersion}`] });
 }
 
@@ -169,7 +175,8 @@ async function refuseUncleanGit(input: WorkerPreflightInput): Promise<string | n
   if (environment !== DeployEnvironment.Production) return null;
   const branch = await gitOutput({ shell, args: ['rev-parse', '--abbrev-ref', 'HEAD'] });
   if (branch !== MAIN_BRANCH) return `production deploys from ${MAIN_BRANCH}, not ${branch}`;
-  await gitOutput({ shell, args: ['fetch', ORIGIN_REMOTE, MAIN_BRANCH] });
+  const fetched = await shell.run({ file: GIT, args: ['fetch', ORIGIN_REMOTE, MAIN_BRANCH] });
+  if (fetched.exitCode !== 0) return `could not fetch ${ORIGIN_REMOTE} ${MAIN_BRANCH}; check your network and the remote`;
   const head = await gitOutput({ shell, args: ['rev-parse', 'HEAD'] });
   const originHead = await gitOutput({ shell, args: ['rev-parse', ORIGIN_MAIN] });
   if (head !== originHead) return `HEAD is not ${ORIGIN_MAIN}; pull or push so they match`;
@@ -207,7 +214,9 @@ async function refuseMissingSecrets(input: WorkerPreflightInput): Promise<string
   const command = wranglerCommand({ environment: input.environment, args: ['secret', 'list'], flags: ['--format', 'json'] });
   const result = await input.shell.run(command);
   if (result.exitCode !== 0) return 'could not list the Worker secrets';
-  const present = secretListSchema.parse(JSON.parse(result.stdout)).map((secret) => secret.name);
+  const secrets = secretListSchema.safeParse(parseJsonOrNull({ text: result.stdout }));
+  if (!secrets.success) return 'the Worker secret list is not JSON; update wrangler or check your login';
+  const present = secrets.data.map((secret) => secret.name);
   const missing = Object.values(WorkerSecret).filter((name) => !present.includes(name));
   if (missing.length === 0) return null;
   return `missing Worker secrets: ${missing.join(', ')}`;
@@ -228,18 +237,25 @@ async function refuseMissingSmokeInputs(input: WorkerPreflightInput): Promise<st
   return `set these in .env before deploying: ${missing.join(', ')}`;
 }
 
+function productionOnly(input: { refusalOf: (subject: WorkerPreflightInput) => Promise<string | null> }) {
+  return async (subject: WorkerPreflightInput): Promise<string | null> => {
+    if (subject.environment !== DeployEnvironment.Production) return null;
+    return input.refusalOf(subject);
+  };
+}
+
 const WORKER_CHECKS: PreflightCheck<WorkerPreflightInput>[] = [
   { step: PreflightStep.Environment, refusalOf: refuseUnlessDeployable },
-  { step: PreflightStep.OfficialNumber, refusalOf: refuseUnsetOfficialNumber },
-  { step: PreflightStep.CompanyFacts, refusalOf: refuseUnsetCompanyFacts },
-  { step: PreflightStep.NpmVersion, refusalOf: refuseUntrustedWorkerPackage },
-  { step: PreflightStep.Git, refusalOf: refuseUncleanGit },
-  { step: PreflightStep.Gate, refusalOf: refuseFailedGate },
+  { step: PreflightStep.OfficialNumber, refusalOf: productionOnly({ refusalOf: refuseUnsetOfficialNumber }) },
+  { step: PreflightStep.CompanyFacts, refusalOf: productionOnly({ refusalOf: refuseUnsetCompanyFacts }) },
+  { step: PreflightStep.NpmVersion, refusalOf: productionOnly({ refusalOf: refuseUntrustedWorkerPackage }) },
   { step: PreflightStep.Config, refusalOf: refuseLeftoverPlaceholder },
   { step: PreflightStep.Readiness, refusalOf: refuseUnreadyProduction },
+  { step: PreflightStep.SmokeInputs, refusalOf: refuseMissingSmokeInputs },
+  { step: PreflightStep.Git, refusalOf: refuseUncleanGit },
   { step: PreflightStep.Secrets, refusalOf: refuseMissingSecrets },
   { step: PreflightStep.Migrations, refusalOf: refusePendingMigrations },
-  { step: PreflightStep.SmokeInputs, refusalOf: refuseMissingSmokeInputs },
+  { step: PreflightStep.Gate, refusalOf: refuseFailedGate },
 ];
 
 const DOCS_CHECKS: PreflightCheck<DocsPreflightInput>[] = [
