@@ -4,26 +4,28 @@ title: 'set_wake'
 description: 'Diga ao zapbip como alcançar esta IA quando ela não está ouvindo.'
 ---
 
-Salva como esta conexão é acordada quando o dono escreve e nenhuma chamada está esperando. Veja o [guia de acordar por webhook](/pt-br/guides/webhook-wake) e a [escada de acordar](/pt-br/concepts/wake-ladder).
-=======
-description: 'Diz ao zapbip como alcançar este agente quando ele não está ouvindo.'
----
+# Salva como esta conexão é acordada quando o dono escreve e nenhuma chamada está esperando. Veja o [guia de acordar por webhook](/pt-br/guides/webhook-wake) e a [escada de acordar](/pt-br/concepts/wake-ladder).
+
+## description: 'Diz ao zapbip como alcançar este agente quando ele não está ouvindo.'
 
 Salva como esta conexão é acordada quando você escreve e nenhuma chamada está esperando. Veja o [guia de despertar por webhook](/pt-br/guides/webhook-wake) e a [escada de despertar](/pt-br/concepts/wake-ladder).
->>>>>>> origin/feat/webhook-wake
+
+> > > > > > > origin/feat/webhook-wake
 
 ## Entrada
 
-| Campo   | Tipo             | Notas                                                                                                                                                      |
-| ------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Campo | Tipo | Notas |
+| ----- | ---- | ----- |
+
 <<<<<<< HEAD
-| `mode`  | string           | `webhook` salva um webhook; `none` limpa o acordar. `local`, `scheduled` e `standby` respondem "wake mode not available yet".                              |
-| `url`   | string, opcional | Obrigatório para `webhook`. `https`, sem usuário, sem fragmento, porta 443 ou ausente, até 512 caracteres. O host seleciona o provedor.                    |
+| `mode` | string | `webhook` salva um webhook; `none` limpa o acordar. `local`, `scheduled` e `standby` respondem "wake mode not available yet". |
+| `url` | string, opcional | Obrigatório para `webhook`. `https`, sem usuário, sem fragmento, porta 443 ou ausente, até 512 caracteres. O host seleciona o provedor. |
 =======
-| `mode`  | string           | `webhook` salva um webhook; `none` limpa o despertar. `local`, `scheduled` e `standby` respondem "wake mode not available yet".                            |
-| `url`   | string, opcional | Obrigatório para `webhook`. `https`, sem usuário e senha, sem fragmento, porta 443 ou ausente, até 512 caracteres. O host escolhe o provedor.              |
->>>>>>> origin/feat/webhook-wake
-| `token` | string, opcional | Obrigatório para `webhook`. Imprimível, sem espaços, de 16 a 512 caracteres. Em um webhook genérico é a chave de assinatura, com pelo menos 32 caracteres. |
+| `mode` | string | `webhook` salva um webhook; `none` limpa o despertar. `local`, `scheduled` e `standby` respondem "wake mode not available yet". |
+| `url` | string, opcional | Obrigatório para `webhook`. `https`, sem usuário e senha, sem fragmento, porta 443 ou ausente, até 512 caracteres. O host escolhe o provedor. |
+
+> > > > > > > origin/feat/webhook-wake
+> > > > > > > | `token` | string, opcional | Obrigatório para `webhook`. Imprimível, sem espaços, de 16 a 512 caracteres. Em um webhook genérico é a chave de assinatura, com pelo menos 32 caracteres. |
 
 ## Provedores
 
@@ -42,11 +44,12 @@ O provedor é escolhido pelo host da URL, nunca por um campo.
 
 ## Erros
 
-Um erro da ferramenta nomeia o campo inválido (`url`, `token` ou `mode`) e nunca repete o valor. Nada é guardado e o acordar anterior continua. O zapbip não chama o provedor ao salvar: um token errado aparece no primeiro acordar, como um aviso ao dono.
-=======
+# Um erro da ferramenta nomeia o campo inválido (`url`, `token` ou `mode`) e nunca repete o valor. Nada é guardado e o acordar anterior continua. O zapbip não chama o provedor ao salvar: um token errado aparece no primeiro acordar, como um aviso ao dono.
+
 `{ "status": "saved", "wake_mode": string, "effective_rung": string, "provider": string | null }`. `provider` vem preenchido só para `webhook`. A URL, o token e o host nunca são devolvidos.
 
 ## Erros
 
 Um erro da ferramenta nomeia o campo inválido (`url`, `token` ou `mode`) e nunca repete o valor. Nada é salvo e o despertar anterior continua. O zapbip não chama o provedor ao salvar: um token errado aparece no primeiro despertar, como um aviso para você no WhatsApp.
->>>>>>> origin/feat/webhook-wake
+
+> > > > > > > origin/feat/webhook-wake
