@@ -8,6 +8,7 @@ import { ACCOUNT_INBOX_MIGRATIONS } from '../../src/account-inbox/migrations';
 import { runMigrations } from '../../src/account-inbox/run-migrations';
 import { D1ConnectionRegistry } from '../../src/adapters/d1/d1-connection-registry';
 import { readScreen } from '../support/inbox-session';
+import { recordWaiterAtNextSessionSend } from '../support/session-send-probe';
 import { applyDirectoryMigration, seedOwnerIdentity } from '../support/seed';
 import { accountInboxStub, connectionOf, testEnv } from '../support/workers-env';
 
@@ -256,6 +257,32 @@ describe('AccountInbox receiveAccountMessage', () => {
     await receive({ text: 'novo agente alpha', channelMessageId: 'wamid.one' });
     await receive({ text: 'revogar alpha', channelMessageId: 'wamid.two' });
     expect(await listRevokedAgents()).toEqual(['alpha']);
+  });
+
+  it('AK-9 ends the held wait of a revoked agent before the revoke reply is sent', async () => {
+    await receive({ text: 'novo agente alpha', channelMessageId: 'wamid.held-revoke-create' });
+    const { holding } = await holdWait({ agent: 'alpha' });
+    const hadLiveWaiter = await recordWaiterAtNextSessionSend({ accountId: ACCOUNT, agent: 'alpha' });
+    await receive({ text: 'revogar alpha', channelMessageId: 'wamid.held-revoke' });
+    expect(hadLiveWaiter()).toBe(false);
+    expect(await holding).toEqual({ ok: true, value: { status: ReplyStatus.Timeout } });
+  });
+
+  it('AK-10 ends the held ask of a rotated agent as pending after the rotate reply is sent and does not revoke it', async () => {
+    await receive({ text: 'novo agente alpha', channelMessageId: 'wamid.held-rotate-create' });
+    const holding = stubOf().ask({
+      connection: connectionOf({ accountId: ACCOUNT, agent: 'alpha' }),
+      text: 'Deploy?',
+      options: ['Sim'],
+      optionDescriptions: [null],
+      timeoutMs: HELD_TIMEOUT_MS,
+    });
+    await vi.waitFor(async () => expect(await hasLiveWaiter({ agent: 'alpha' })).toBe(true));
+    const hadLiveWaiter = await recordWaiterAtNextSessionSend({ accountId: ACCOUNT, agent: 'alpha' });
+    await receive({ text: 'girar alpha', channelMessageId: 'wamid.held-rotate' });
+    expect(hadLiveWaiter()).toBe(true);
+    expect(await holding).toMatchObject({ ok: true, value: { status: ReplyStatus.Pending } });
+    expect(await listRevokedAgents()).toEqual([]);
   });
 
   it('stores the deletion request and reports the confirmation', async () => {

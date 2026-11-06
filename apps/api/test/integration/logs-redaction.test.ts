@@ -2,7 +2,8 @@ import { reset } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { applyDirectoryMigration, SEED_CREATED_AT } from '../support/seed';
 import { testEnv } from '../support/workers-env';
-import { bindingsWith, deliver, WA_ID } from './owner-inbound-fixtures';
+import { failNextSessionSend } from '../support/session-send-probe';
+import { bindingsWith, deliver, findAccounts, WA_ID } from './owner-inbound-fixtures';
 
 const BLOCKED_PHONE = '5511900000077';
 const LIMITED_PHONE = '5511900000078';
@@ -28,6 +29,9 @@ describe('logs over the owner walk', () => {
     await deliver({ bindings, text: 'oi' });
     await deliver({ bindings, text: `novo agente ${AGENT_NAME}` });
     await deliver({ bindings, text: 'agentes' });
+    await deliver({ bindings, text: `girar ${AGENT_NAME}` });
+    const [account] = await findAccounts({ waId: WA_ID });
+    await failNextSessionSend({ accountId: account.accountId });
     await deliver({ bindings, text: `girar ${AGENT_NAME}` });
     await deliver({ bindings, text: `revogar ${AGENT_NAME}` });
     await deliver({ bindings, waId: BLOCKED_PHONE, text: 'oi' });

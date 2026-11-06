@@ -47,6 +47,26 @@ describe('owner inbound orchestrator', () => {
     expect((await screenTextsOf({ accountId })).length).toBe(sentBefore);
   });
 
+  it('AK-4 logs the rate limit once and never calls the account inbox for the dropped message', async () => {
+    const lines: string[] = [];
+    vi.spyOn(console, 'log').mockImplementation((...parts: unknown[]) => void lines.push(parts.join(' ')));
+    const inboxCalls: string[] = [];
+    const countingInbox = {
+      idFromName: (name: string) => testEnv.ACCOUNT_INBOX.idFromName(name),
+      get: (id: DurableObjectId) => {
+        inboxCalls.push(id.toString());
+        return testEnv.ACCOUNT_INBOX.get(id);
+      },
+    } as unknown as DurableObjectNamespace;
+    const bindings = { ...bindingsWith({ waitlistEnabled: false, ownerLimit: 1 }), ACCOUNT_INBOX: countingInbox } as typeof testEnv;
+    await deliver({ bindings, text: 'agentes' });
+    const callsBefore = inboxCalls.length;
+    await deliver({ bindings, text: 'agentes' });
+    expect(inboxCalls).toHaveLength(callsBefore);
+    expect(lines.filter((line) => line.includes('sender_rate_limited'))).toHaveLength(1);
+    vi.restoreAllMocks();
+  });
+
   it('drops a new phone silently once the daily cap of new accounts is reached', async () => {
     const statements = Array.from({ length: NEW_ACCOUNTS_PER_DAY_LIMIT }, (_, index) =>
       testEnv.CONNECTIONS.prepare('INSERT INTO accounts (id, state, created_at) VALUES (?, ?, ?)').bind(
