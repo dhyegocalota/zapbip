@@ -1,7 +1,17 @@
 import { clearExpiredInstallSecrets, sweepDeletingAccounts } from '../accounts/deletion-sweep';
 import type { Bindings } from '../contract/env';
 
-export async function runScheduled(input: { cron: string; now: number; env: Bindings }): Promise<void> {
+export type ScheduledJob = {
+  isDue: (input: { now: number }) => boolean;
+  run: (input: { env: Bindings; now: number }) => Promise<void>;
+};
+
+export async function runScheduled(input: {
+  cron: string;
+  now: number;
+  env: Bindings;
+  jobs?: Record<string, ScheduledJob>;
+}): Promise<void> {
   const { now, env } = input;
   const outcomes = await Promise.allSettled([
     clearExpiredInstallSecrets({ environment: env, now }),
