@@ -1,0 +1,83 @@
+---
+title: 'Let your AI hear you while you are away'
+description: 'Run one small program on your computer so Claude Code or Codex answers you on WhatsApp, even when you are not looking at it.'
+---
+
+Normally your AI only reads WhatsApp when it is already working. If you write to it while it sits idle, your message waits.
+
+The zapbip connector fixes that. It is a small program that stays open on your computer. When you write on WhatsApp, it wakes the AI session you were already using, hands it your message and lets it answer you. It takes about 7 seconds for Claude Code and 6 for Codex.
+
+It works with Claude Code and Codex. Your computer must be on and awake, and the connector must be running.
+
+## What you need
+
+- Claude Code or Codex, already connected to zapbip.
+- At least one earlier session in the folder you want the AI to work in.
+- Node 24 or newer.
+- Your connection link, the same `https://.../c/<secret>/mcp` link your AI uses to talk to zapbip. Treat it like a password.
+
+## Start it
+
+Open a terminal in the folder where you use your AI and run one of these:
+
+```bash
+export ZAPBIP_CONNECTION_URL='https://<host>/c/<secret>/mcp'
+npx zapbip connect --client claude-code
+```
+
+```bash
+export ZAPBIP_CONNECTION_URL='https://<host>/c/<secret>/mcp'
+npx zapbip connect --client codex
+```
+
+If you do not set `ZAPBIP_CONNECTION_URL`, the connector asks for the link. It never takes the link as an argument, because arguments show up in your shell history and in the process list.
+
+Leave the terminal open. The connector prints one line for every event and stops when you press `Ctrl+C`. To keep it running without a terminal, see [Run it in the background](/guides/background-running).
+
+## What happens when you write
+
+1. You write to your AI on WhatsApp.
+2. The connector receives your message and wakes the newest session in the folder.
+3. The AI reads your message and answers you on WhatsApp.
+4. If several messages arrive together, they are handled one at a time, in order.
+
+If you were offline or the connector was stopped, your messages are not lost. When it connects again, it picks up every message that was not answered.
+
+## Choose the session
+
+By default the connector uses the newest session in the folder. If you have the same folder open in another window, a wake can add to that conversation. To avoid it, pin a session:
+
+```bash
+npx zapbip connect --client claude-code --session <session-id>
+```
+
+| Option | What it does |
+| --- | --- |
+| `--client` | `claude-code` or `codex`. Required. |
+| `--cwd` | The folder to work in. The default is the folder you ran the command in. |
+| `--session` | A session id to always resume, instead of the newest one. |
+
+## What the AI can do when woken
+
+Only one thing: send a message back to you. It cannot use other tools, and Codex runs with a read-only sandbox. Your message reaches it as a message from you, marked as verified.
+
+If the Codex app already has the conversation open, Codex refuses to resume it. The connector then starts one new session in the same folder, which starts without the earlier conversation, and uses it from then on.
+
+## One connector per connection
+
+If you start a second connector for the same connection, the first one stops. Run it on one computer at a time.
+
+While a connector is attached, zapbip wakes your AI through it. When it closes, zapbip goes back to the setting you had before.
+
+## What it prints
+
+Each line is JSON with a time and an event, such as `wake_started` and `wake_finished`. The lines carry ids, kinds, outcomes and timings. They never carry your messages, the AI's replies or your connection link.
+
+## When something does not work
+
+| You see | What it means |
+| --- | --- |
+| The connector exits at once | The link is unknown or revoked. Ask for a new one. |
+| Your message gets no answer | There is no session in the folder yet, or `claude` or `codex` is not installed where the connector runs. Open the AI once in that folder. |
+| It keeps reconnecting | Your network is down. It retries with growing waits, up to 30 seconds, and picks up where it left off. |
+| It stopped by itself | You started another connector for the same connection. |
