@@ -117,7 +117,7 @@ describe('MCP tools', () => {
   it('rejects a plain http link', async () => {
     const result = await call({ name: McpToolName.SendMedia, arguments: { kind: MessageKind.Image, url: 'http://example.com/a.jpg' } });
     expect(result.isError).toBe(true);
-    expect(result.content[0]?.text).toBe('link: must be an https URL');
+    expect(result.content[0]?.text).toBe('url: must be an https URL');
   });
 
   it.each([
