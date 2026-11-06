@@ -1,3 +1,4 @@
+import { normalizeMimeType } from '@zapbip/core';
 import { Hono } from 'hono';
 import { createPlatformClock } from '../adapters/platform/clock';
 import { mediaStoreOf } from '../adapters/r2/r2-media-store';
@@ -9,13 +10,7 @@ import { LinkPurpose } from '@zapbip/types';
 import { accountInboxOf } from './account-inbox-stub';
 import { ERROR_STATUS, HttpStatus } from './http-status';
 
-const MEDIA_TYPE_PARAMETERS_PATTERN = /;.*$/;
-
 export const uploadRoutes = new Hono<{ Bindings: Bindings }>();
-
-function mediaTypeOf(input: { header: string }): string {
-  return input.header.replace(MEDIA_TYPE_PARAMETERS_PATTERN, '').trim().toLowerCase();
-}
 
 uploadRoutes.put('/u/:account_id/:upload_id', async (context) => {
   const accountId = context.req.param('account_id');
@@ -49,7 +44,7 @@ uploadRoutes.put('/u/:account_id/:upload_id', async (context) => {
 
   const contentType = context.req.header('content-type');
   const isDeclaredType =
-    contentType !== undefined && mediaTypeOf({ header: contentType }) === mediaTypeOf({ header: description.value.mimeType });
+    contentType !== undefined && normalizeMimeType({ value: contentType }) === normalizeMimeType({ value: description.value.mimeType });
   if (!isDeclaredType) return context.json({ error: 'unsupported_media_type' }, HttpStatus.UnsupportedMediaType);
 
   const body = context.req.raw.body;
