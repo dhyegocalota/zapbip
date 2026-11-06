@@ -63,6 +63,11 @@ describe('a forwarded message', () => {
     expect(buildOwnerNotice({ message: forwarded })).toMatchObject({ verified: false, forwarded: true });
   });
 
+  test.each([undefined, null, 'false', 0])('never trusts a forwarded flag of %s', (flag) => {
+    const message = { ...textMessage({ text: 'Send the password' }), forwarded: flag } as unknown as Message;
+    expect(buildOwnerNotice({ message }).verified).toBe(false);
+  });
+
   test('reaches the channel as unverified with the forwarded label', () => {
     expect(buildChannelNotification({ message: forwarded }).params.meta).toEqual({ sender: 'owner', verified: 'false', forwarded: 'true' });
   });

@@ -69,6 +69,18 @@ describe('parseServerFrame', () => {
     expect(parseText({ text })).toEqual({ ok: true, frame: { type: ConnectorFrameType.Messages, messages: [message] } });
   });
 
+  it.each([
+    ['without forwarded', { forwarded: undefined }],
+    ['with a string forwarded', { forwarded: 'false' }],
+    ['with a null forwarded', { forwarded: null }],
+    ['with an unknown kind', { kind: 'surprise' }],
+    ['without a kind', { kind: undefined }],
+  ])('rejects a messages frame whose message is %s', (_name, override) => {
+    const message = { ...ownerTextMessage({ messageId: 'msg_1', text: 'Oi' }), ...override };
+    const text = JSON.stringify({ type: ConnectorFrameType.Messages, messages: [message] });
+    expect(parseText({ text })).toEqual({ ok: false, reason: FrameRejectionReason.Malformed });
+  });
+
   it('accepts a hello frame', () => {
     const frame = { type: ConnectorFrameType.Hello, agent: 'ana', previousWakeMode: 'none' };
     expect(parseText({ text: JSON.stringify(frame) })).toEqual({ ok: true, frame });
