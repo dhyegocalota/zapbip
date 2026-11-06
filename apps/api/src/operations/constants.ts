@@ -1,0 +1,13 @@
+import { SECOND_MS } from '@zapbip/types';
+
+export const BUDGET_CHECK_CRON = '0 * * * *';
+export const MEDIA_RETENTION_CRON = '5 0 * * *';
+
+export const DURABLE_OBJECT_DAILY_GIGABYTE_SECONDS = 13_000;
+export const DURABLE_OBJECT_MEMORY_GIGABYTES = 0.125;
+export const DAILY_BUDGET_WARNING_RATIO = 0.8;
+
+export const PLACEHOLDER_VALUE_PREFIX = 'REPLACE_WITH_';
+
+export const SMOKE_POLL_ATTEMPTS = 10;
+export const SMOKE_POLL_INTERVAL_MS = 3 * SECOND_MS;
