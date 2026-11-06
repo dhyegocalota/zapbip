@@ -60,6 +60,7 @@ export async function startFakeGraph(input: { port: number }): Promise<{ port: n
   const { createServer } = await import('node:http');
   const recorded: RecordedRequest[] = [];
   const queued: FakeGraphResponse[] = [];
+  let sentCount = 0;
 
   function defaultSend(request: { body: unknown; response: ServerResponse }): void {
     const parsed = sendBodySchema.safeParse(request.body);
