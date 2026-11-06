@@ -1,11 +1,36 @@
-import { OwnerLocale } from '@zapbip/types';
-import type { InstallSectionInput } from './install-section';
+import { CHATGPT_POLL_INTERVAL_MINUTES, InstallClient, OwnerLocale } from '@zapbip/types';
+import { chatSelfTest, formatSection, localizeCopy, tellOwnerAndWait } from './section-format';
 
-export const CHATGPT_COPY: Record<OwnerLocale, (input: InstallSectionInput) => string> = {
-  [OwnerLocale.PortugueseBrazil]: () => {
-    throw new Error('CHATGPT_COPY is not implemented');
+type ChatGptText = {
+  addApp: (connectionLink: string) => string;
+  createTask: string;
+};
+
+const CHATGPT_TEXT: Record<OwnerLocale, ChatGptText> = {
+  [OwnerLocale.PortugueseBrazil]: {
+    addApp: (connectionLink) =>
+      `Ative o developer mode nas configurações do ChatGPT e adicione um app pela URL ${connectionLink} com "No authentication".`,
+    createTask:
+      'Em um chat só para isso, crie uma tarefa por hora com "Run on this computer" que chama check_inbox, e escolha "Always allow" uma vez por ferramenta.',
   },
-  [OwnerLocale.EnglishUs]: () => {
-    throw new Error('CHATGPT_COPY is not implemented');
+  [OwnerLocale.EnglishUs]: {
+    addApp: (connectionLink) =>
+      `Enable developer mode in the ChatGPT settings and add an app by the URL ${connectionLink} with "No authentication".`,
+    createTask:
+      'In one dedicated chat, create an hourly task with "Run on this computer" that calls check_inbox, and choose "Always allow" once per tool.',
   },
 };
+
+export const CHATGPT_COPY = localizeCopy({
+  texts: CHATGPT_TEXT,
+  build: ({ section, text }) =>
+    formatSection({
+      client: InstallClient.ChatGpt,
+      steps: [
+        tellOwnerAndWait(text.addApp(section.connectionLink)),
+        tellOwnerAndWait(text.createTask),
+        `Call \`set_wake({mode: "scheduled", interval_minutes: ${CHATGPT_POLL_INTERVAL_MINUTES}})\`.`,
+        chatSelfTest(section.locale),
+      ],
+    }),
+});

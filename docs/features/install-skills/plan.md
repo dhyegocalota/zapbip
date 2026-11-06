@@ -276,9 +276,9 @@ Every box is empty when authored. A sub-agent ticks its own box. A wrong step is
 
 ### Step L1 (core page)
 
-- [ ] **S1.1 red: rules, frame, sections, standby.** Write `libs/core/src/agent-rules.test.ts`, `render-install-page.test.ts`, `pick-standby-agent.test.ts`, the eight `prompts/*.test.ts` files with the test plan's Core unit cases that are not pins. Run `pnpm --filter @zapbip/core test:unit`. Expected printed failure for a section test: the copy stub's message, for example `Error: CODEX_COPY is not implemented`. Commit as `test(core): pin the install page sections`.
-- [ ] **S1.2 green: standby pick.** Implement `pick-standby-agent.ts` (A4) with `reduce` and a strict `>`. Commit as `feat(core): pick the standby agent`.
-- [ ] **S1.3 green: page, sections and copy.** Implement `install-page-copy.ts`, the ten copy modules, the ten section functions, `CLAUDE_CODE_SKILL_DESCRIPTION`, and `render-install-page.ts` (task, identify, rules, the eight sections in enum order via `Object.values(InstallClient).map(...)`). Each section's steps follow the **Client matrix** of the spec, one step per line, numbered, and end with the self-test. Write the 14 snapshot files with `vitest run -u` once; read each file; commit as `feat(core): render the install page`.
+- [x] **S1.1 (46a9448) red: rules, frame, sections, standby.** Write `libs/core/src/agent-rules.test.ts`, `render-install-page.test.ts`, `pick-standby-agent.test.ts`, the eight `prompts/*.test.ts` files with the test plan's Core unit cases that are not pins. Run `pnpm --filter @zapbip/core test:unit`. Expected printed failure for a section test: the copy stub's message, for example `Error: CODEX_COPY is not implemented`. Commit as `test(core): pin the install page sections`.
+- [x] **S1.2 (9ad1f1c) green: standby pick.** Implement `pick-standby-agent.ts` (A4) with `reduce` and a strict `>`. Commit as `feat(core): pick the standby agent`.
+- [x] **S1.3 (4375cb8) green: page, sections and copy.** Implement `install-page-copy.ts`, the ten copy modules, the ten section functions, `CLAUDE_CODE_SKILL_DESCRIPTION`, and `render-install-page.ts` (task, identify, rules, the eight sections in enum order via `Object.values(InstallClient).map(...)`). Each section's steps follow the **Client matrix** of the spec, one step per line, numbered, and end with the self-test. Write the 14 snapshot files with `vitest run -u` once; read each file; commit as `feat(core): render the install page`.
 
 Section steps (S1.3 writes them in copy):
 
