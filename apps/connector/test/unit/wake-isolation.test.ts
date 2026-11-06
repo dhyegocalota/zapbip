@@ -167,6 +167,38 @@ describe('Codex isolation', () => {
     await expect(prepare()).rejects.toBeInstanceOf(WakeIsolationRefusedError);
   });
 
+  test.each(['model_provider = "other"', 'unknown_future_key = 1', 'model_reasoning_effort = "high"\nservice_tier = "fast"'])(
+    'refuses the wake when a profile sets a key outside the allowlist: %s',
+    async (declaration) => {
+      await writeFile(join(codexHome, 'config.toml'), `[profiles.work]\n${declaration}\n`);
+      await expect(prepare()).rejects.toBeInstanceOf(WakeIsolationRefusedError);
+    },
+  );
+
+  test('accepts a profile that only sets harmless keys and web search', async () => {
+    await writeFile(join(codexHome, 'config.toml'), '[profiles.work]\nmodel = "x"\nweb_search = "live"\n');
+    expect((await prepare()).isolationArguments).toEqual(['-c', 'profiles.work.web_search="disabled"']);
+  });
+
+  test.each([
+    ['the CODEX_HOME config', () => join(codexHome, 'config.toml')],
+    ['a project config', () => join(workingDirectory, '.codex', 'config.toml')],
+    ['the system config', () => join(systemConfigDirectory, 'config.toml')],
+  ])('refuses the wake when %s sets a legacy web search switch', async (_name, fileOf) => {
+    await writeFile(fileOf(), '[features]\nweb_search_request = true\n');
+    await expect(prepare()).rejects.toBeInstanceOf(WakeIsolationRefusedError);
+  });
+
+  test.each([
+    '[tools]\nweb_search = true',
+    'tools_web_search = true',
+    '[features]\nweb_search_cached = true',
+    '[features]\nweb_search = false',
+  ])('refuses the wake when a layer sets a web search switch: %s', async (declaration) => {
+    await writeFile(join(codexHome, 'config.toml'), `${declaration}\n`);
+    await expect(prepare()).rejects.toBeInstanceOf(WakeIsolationRefusedError);
+  });
+
   test('disables web search inside every profile of every layer, once each', async () => {
     await writeFile(join(codexHome, 'config.toml'), '[profiles.work]\nmodel = "x"\nweb_search = "live"\n');
     await writeFile(join(workingDirectory, '.codex', 'config.toml'), '[profiles.work]\nmodel = "y"\n[profiles.night-shift]\nmodel = "z"\n');
