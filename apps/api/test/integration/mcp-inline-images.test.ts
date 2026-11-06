@@ -4,7 +4,15 @@ import { INLINE_IMAGE_MAX_BYTES } from '@zapbip/core';
 import { MessageKind } from '@zapbip/types';
 import { INLINE_IMAGE_CONTENT_TYPE } from '../../src/contract/constants';
 import { McpToolName } from '../../src/contract/tool-definitions';
-import { callTool, connectClient, ownerWrites, seedConnectionWithSecret, storeOwnerImage, type ToolResult } from './mcp-fixtures';
+import {
+  callTool,
+  connectClient,
+  openWindow,
+  ownerWrites,
+  seedConnectionWithSecret,
+  storeOwnerImage,
+  type ToolResult,
+} from './mcp-fixtures';
 import { applyDirectoryMigration } from '../support/seed';
 import { reset } from 'cloudflare:test';
 
@@ -15,8 +23,7 @@ describe('MCP inline images', () => {
   let client: Client;
 
   async function readOwnerImage(input: { mediaId: string; sizeBytes: number }): Promise<ToolResult> {
-    await callTool({ client, name: McpToolName.SendMessage, arguments: { text: 'hi' } });
-    await storeOwnerImage({ accountId: ACCOUNT_ID, mediaId: input.mediaId, sizeBytes: input.sizeBytes });
+    await storeOwnerImage({ accountId: ACCOUNT_ID, mediaId: input.mediaId, sizeBytes: input.sizeBytes, mimeType: IMAGE_MIME_TYPE });
     await ownerWrites({
       accountId: ACCOUNT_ID,
       channelMessageId: input.mediaId,
@@ -43,6 +50,7 @@ describe('MCP inline images', () => {
     await applyDirectoryMigration();
     const connection = await seedConnectionWithSecret({ accountId: ACCOUNT_ID, agent: 'alpha' });
     client = await connectClient({ secret: connection.secret });
+    await openWindow({ client, accountId: ACCOUNT_ID });
   });
 
   it('returns an image block and a link for an image at the inline limit', async () => {

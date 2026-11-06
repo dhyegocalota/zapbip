@@ -5,10 +5,10 @@ import { DeliveryState, InboxStatus, MessageKind, ReplyStatus } from '@zapbip/ty
 import { McpToolName, TOOL_DEFINITIONS } from '../../src/contract/tool-definitions';
 import { messageWireSchema } from '../../src/contract/mcp-schemas';
 import {
-  accountInbox,
   callTool,
   connectClient,
   ownerText,
+  openWindow,
   ownerWrites,
   receiveUpload,
   seedConnectionWithSecret,
@@ -52,7 +52,7 @@ describe('MCP tools', () => {
 
   async function uploadReceived(input: { filename: string; mimeType: string; sizeBytes: number }): Promise<string> {
     const uploadId = await createUpload(input);
-    await receiveUpload({ accountId: ACCOUNT_ID, uploadId, sizeBytes: input.sizeBytes });
+    await receiveUpload({ accountId: ACCOUNT_ID, uploadId, sizeBytes: input.sizeBytes, mimeType: input.mimeType });
     return uploadId;
   }
 
@@ -62,6 +62,7 @@ describe('MCP tools', () => {
     await applyDirectoryMigration();
     const connection = await seedConnectionWithSecret({ accountId: ACCOUNT_ID, agent: AGENT });
     client = await connectClient({ secret: connection.secret });
+    await openWindow({ client, accountId: ACCOUNT_ID });
   });
 
   it('lists exactly the registered tools in definition order', async () => {
@@ -73,8 +74,9 @@ describe('MCP tools', () => {
     const result = await sendText('oi');
     expect(result.structuredContent).toMatchObject({ delivery: DeliveryState.Sent });
     expect(result.structuredContent?.message_id).toBeTruthy();
-    const screen = await accountInbox({ accountId: ACCOUNT_ID }).readScreen();
-    expect(screen.map((entry) => entry.text)).toContain('oi');
+    const messagesResult = await call({ name: McpToolName.GetMessages, arguments: {} });
+    const history = messagesResult.structuredContent?.history as { text: string | null }[];
+    expect(history.map((message) => message.text)).toContain('oi');
   });
 
   it('rejects text over the limit naming the field', async () => {
@@ -106,10 +108,8 @@ describe('MCP tools', () => {
   });
 
   it('rejects a sticker over the limit naming size_bytes', async () => {
-    const result = await call({
-      name: McpToolName.CreateUpload,
-      arguments: { filename: 's.webp', mime_type: 'image/webp', size_bytes: STICKER_LIMIT_BYTES + 1 },
-    });
+    const uploadId = await uploadReceived({ filename: 's.webp', mimeType: 'image/webp', sizeBytes: STICKER_LIMIT_BYTES + 1 });
+    const result = await call({ name: McpToolName.SendMedia, arguments: { kind: MessageKind.Sticker, upload_id: uploadId } });
     expect(result.isError).toBe(true);
     expect(result.content[0]?.text).toContain('size_bytes');
   });
@@ -133,7 +133,7 @@ describe('MCP tools', () => {
     const uploadId = await createUpload({ filename: 'a.pdf', mimeType: 'application/pdf', sizeBytes: 1000 });
     const result = await call({ name: McpToolName.SendMedia, arguments: { kind: MessageKind.Document, upload_id: uploadId } });
     expect(result.isError).toBe(true);
-    expect(result.content[0]?.text).toBe('upload_id: upload has not been received');
+    expect(result.content[0]?.text).toBe('upload_id: bytes not uploaded yet');
   });
 
   it('rejects a kind that does not match the upload type', async () => {
@@ -224,8 +224,9 @@ describe('MCP tools', () => {
   it('returns the owner answer to a held ask', async () => {
     const asking = call({ name: McpToolName.Ask, arguments: { question: 'Qual?', options: [{ title: 'sim' }] } });
     await vi.waitFor(async () => {
-      const screen = await accountInbox({ accountId: ACCOUNT_ID }).readScreen();
-      expect(screen.map((entry) => entry.text)).toContain('Qual?');
+      const messagesResult = await call({ name: McpToolName.GetMessages, arguments: {} });
+      const history = messagesResult.structuredContent?.history as { kind: MessageKind }[];
+      expect(history.map((message) => message.kind)).toContain(MessageKind.Choice);
     });
     await ownerWrites({ accountId: ACCOUNT_ID, channelMessageId: 'wamid.answer', content: ownerText({ text: 'sim' }) });
     const result = await asking;

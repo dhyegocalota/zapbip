@@ -3,6 +3,7 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import type { OwnerInboundContent } from '@zapbip/core';
 import { MessageKind, OwnerLocale } from '@zapbip/types';
+import { McpToolName } from '../../src/contract/tool-definitions';
 import type { DevAccountInboxRpc } from '../../src/contract/account-inbox-rpc';
 import { generateConnectionSecret } from '../../src/adapters/platform/connection-secret';
 import { applyDirectoryMigration, seedConnection, seedOwnerIdentity } from '../support/seed';
@@ -67,11 +68,19 @@ export function ownerText(input: { text: string }): OwnerInboundContent {
   return { kind: MessageKind.Text, text: input.text };
 }
 
-export async function storeOwnerImage(input: { accountId: string; mediaId: string; sizeBytes: number }): Promise<void> {
-  await env.MEDIA.put(`accounts/${input.accountId}/media/${input.mediaId}`, new Uint8Array(input.sizeBytes));
+export async function storeOwnerImage(input: { accountId: string; mediaId: string; sizeBytes: number; mimeType: string }): Promise<void> {
+  await env.MEDIA.put(`accounts/${input.accountId}/media/${input.mediaId}`, new Uint8Array(input.sizeBytes), {
+    httpMetadata: { contentType: input.mimeType },
+  });
 }
 
-export async function receiveUpload(input: { accountId: string; uploadId: string; sizeBytes: number }): Promise<void> {
-  await storeOwnerImage({ accountId: input.accountId, mediaId: input.uploadId, sizeBytes: input.sizeBytes });
+export async function receiveUpload(input: { accountId: string; uploadId: string; sizeBytes: number; mimeType: string }): Promise<void> {
+  await storeOwnerImage({ accountId: input.accountId, mediaId: input.uploadId, sizeBytes: input.sizeBytes, mimeType: input.mimeType });
   await accountInbox({ accountId: input.accountId }).completeUpload({ mediaId: input.uploadId });
+}
+
+export async function openWindow(input: { client: Client; accountId: string }): Promise<void> {
+  await callTool({ client: input.client, name: McpToolName.SendMessage, arguments: { text: 'warm up' } });
+  await ownerWrites({ accountId: input.accountId, channelMessageId: 'wamid.open-window', content: ownerText({ text: 'open' }) });
+  await callTool({ client: input.client, name: McpToolName.GetMessages, arguments: {} });
 }

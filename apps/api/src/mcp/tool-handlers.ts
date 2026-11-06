@@ -121,7 +121,9 @@ const ask: ToolHandler<typeof askInputShape> = async ({ context, arguments: tool
     connection: context.connection,
     text: toolArguments.question,
     options: toolArguments.options.map((option) => option.title),
-    optionDescriptions: toolArguments.options.map((option) => option.description),
+    optionDescriptions: toolArguments.options.some((option) => option.description !== null)
+      ? toolArguments.options.map((option) => option.description)
+      : [],
     timeoutMs: parseTimeoutMs({ seconds: toolArguments.timeout_seconds }),
   });
   return replyResult({ context, result: unwrapOutcome({ outcome }) });
