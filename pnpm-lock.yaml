@@ -87,6 +87,9 @@ importers:
 
   tools/repository-shape:
     dependencies:
+      '@zapbip/core':
+        specifier: workspace:*
+        version: link:../../libs/core
       '@zapbip/types':
         specifier: workspace:*
         version: link:../../libs/types
