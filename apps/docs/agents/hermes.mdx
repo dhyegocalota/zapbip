@@ -44,9 +44,7 @@ Restart the gateway. The plugin connects by itself, reconnects after a lost netw
 Add zapbip as an MCP server so Hermes has the `send_message` tool to reply with:
 
 ```yaml
-mcp_servers:
-  zapbip:
-    url: 'https://<host>/c/<secret>/mcp'
+mcp_servers: { zapbip: { url: 'https://<host>/c/<secret>/mcp' } }
 ```
 
 Then write `✅ instalado` to Hermes on WhatsApp. If it replies, it works.
