@@ -18,7 +18,7 @@
     "deploy:production": "node --env-file=.env --import tsx apps/api/scripts/deploy.ts --environment production",
     "migrate:development": "pnpm --filter @zapbip/api exec wrangler d1 migrations apply zapbip-development --env development --local",
     "migrate:staging": "pnpm --filter @zapbip/api exec wrangler d1 migrations apply zapbip-staging --env staging --remote",
-    "migrate:production": "pnpm --filter @zapbip/api exec wrangler d1 migrations apply zapbip-production --env production --remote",
+    "migrate:production": "pnpm --filter @zapbip/api exec wrangler d1 migrations apply zapbip-production --remote",
     "smoke:development": "node --env-file=.env --import tsx apps/api/scripts/smoke.ts --environment development",
     "smoke:staging": "node --env-file=.env --import tsx apps/api/scripts/smoke.ts --environment staging",
     "smoke:production": "node --env-file=.env --import tsx apps/api/scripts/smoke.ts --environment production",

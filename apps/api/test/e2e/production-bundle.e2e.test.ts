@@ -13,6 +13,7 @@ const DEV_OWNER_ROUTE_PREFIX = '/dev/owner/';
 const SIMULATOR_IDENTIFIER = 'owner-simulator';
 const DEV_METHODS = ['advanceClock', 'readScreen'];
 const DEVELOPMENT_ENVIRONMENT_ARGUMENTS = ['--env', 'development'];
+const STAGING_ENVIRONMENT_ARGUMENTS = ['--env', 'staging'];
 
 const outputDirectories: string[] = [];
 
@@ -32,6 +33,16 @@ describe('production bundle', () => {
     'PB-1 PB-2 the top-level block is the production bundle and carries no development surface',
     async () => {
       const bundle = await bundleOf({ extraArguments: [], bundleFile: PRODUCTION_BUNDLE_FILE });
+      const present = [DEV_OWNER_ROUTE_PREFIX, SIMULATOR_IDENTIFIER, ...DEV_METHODS].filter((marker) => bundle.includes(marker));
+      expect(present).toEqual([]);
+    },
+    BUNDLE_TIMEOUT_MS,
+  );
+
+  test(
+    'PB-4 the staging block bundles without the development surface',
+    async () => {
+      const bundle = await bundleOf({ extraArguments: STAGING_ENVIRONMENT_ARGUMENTS, bundleFile: PRODUCTION_BUNDLE_FILE });
       const present = [DEV_OWNER_ROUTE_PREFIX, SIMULATOR_IDENTIFIER, ...DEV_METHODS].filter((marker) => bundle.includes(marker));
       expect(present).toEqual([]);
     },
