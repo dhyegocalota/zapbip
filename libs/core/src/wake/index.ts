@@ -15,3 +15,4 @@ export * from './poller';
 export * from './poll-inbox';
 export * from './evaluate-pollers';
 export * from './wake-timeout';
+export * from './observe-unsent';

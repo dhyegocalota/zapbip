@@ -1,12 +1,13 @@
 import {
   deliverToOwner,
   expectedDelayNoteCopy,
+  observeUnsent,
   type AgentName,
   type AgentWaker,
   type CoreDependencies,
   type WakeDependencies,
 } from '@zapbip/core';
-import { AgentWakeReason, IdPrefix, MessageKind, WakeOutcome } from '@zapbip/types';
+import { IdPrefix, MessageKind, WakeLogEventName, WakeOutcome } from '@zapbip/types';
 
 export async function sendExpectedDelayNote(input: {
   dependencies: CoreDependencies;
@@ -36,9 +37,13 @@ export async function sendExpectedDelayNote(input: {
 export function createScheduledAgentWaker(input: { dependencies: CoreDependencies; wake: WakeDependencies }): AgentWaker {
   const { dependencies, wake } = input;
   return {
-    notify: async ({ agent, reason }) => {
-      if (reason === AgentWakeReason.StandbyFor) return WakeOutcome.Woken;
-      await sendExpectedDelayNote({ dependencies, wake, agent });
+    notify: async ({ agent }) => {
+      try {
+        await sendExpectedDelayNote({ dependencies, wake, agent });
+      } catch {
+        const stored = await wake.repository.findWake({ agent });
+        observeUnsent({ observer: wake.observer, name: WakeLogEventName.NoticeFailed, stored, agent, attempt: 0 });
+      }
       return WakeOutcome.Woken;
     },
     hasFailedWake: async () => false,
