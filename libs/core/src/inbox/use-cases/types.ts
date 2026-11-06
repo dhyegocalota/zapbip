@@ -1,5 +1,5 @@
 import type { AgentName, ConnectionIdentity } from '../connection';
-import type { ChannelInboundKind, DeliveryState, InboxStatus, MessageKind, OwnerLocale, ReplyStatus } from '@zapbip/types';
+import type { ChannelInboundKind, DeliveryState, InboxStatus, MediaSourceKind, MessageKind, OwnerLocale, ReplyStatus } from '@zapbip/types';
 import type { ContactCard, MediaSource, Message, MessageContent, QuestionOption } from '../message';
 import type { MediaMessageKind } from '../constants';
 import type { ChannelStatusDetail, StoredMedia } from '../inbox-records';
@@ -19,7 +19,7 @@ export type SendTextInput = CallContext & { text: string; replyToMessageId: stri
 export type SendMediaInput = CallContext & {
   mediaKind: MediaMessageKind;
   voice: boolean;
-  source: MediaSource;
+  source: Exclude<MediaSource, { kind: MediaSourceKind.Unavailable }>;
   caption: string | null;
   filename: string | null;
   replyToMessageId: string | null;

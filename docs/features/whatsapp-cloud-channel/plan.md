@@ -68,6 +68,7 @@ Diffed on 2026-11-06 against two trees: the Step 0 contract on this branch's bas
 | R28 | `createApp({includeSimulator})` mounts the route | lane L4b changes it to `createApp({extraRoutes})` | the webhook route is mounted unconditionally in `createApp` with one added line; the merge with L4b's signature change is trivial |
 | R29 | `DigestStream`, `timingSafeEqual` and `FixedLengthStream` need confirming | `@cloudflare/workers-types` declares `DigestStream` and `timingSafeEqual`; `r2-media-store.ts` (lane) uses `FixedLengthStream` on `compatibility_date` `2026-08-15` | A16 and A24 confirmed |
 | R30 | Fake Graph is `fetchMock` in the integration pool | `@cloudflare/vitest-pool-workers` 0.23.0 no longer exports `fetchMock` (grep of its `dist` and `types` finds none) | the fake Graph is a real HTTP server (see the `fake-graph.ts` block); the integration binding points at it; no `fetchMock` anywhere |
+| R31 | W6 setup decision: slice 1's `vitest.e2e.config.mts` runs `test/e2e/global-setup.ts` (ephemeral port, seeded phone, `wrangler dev` without WhatsApp variables) for every `*.e2e.test.ts` | the channel E2E needs the fake Graph on 4011 and `wrangler dev` started with the `--var` secrets | W6 adds `vitest.e2e-whatsapp.config.mts` (include `test/e2e/whatsapp-channel.e2e.test.ts`, `globalSetup` `test/e2e/whatsapp-support/global-setup.ts`, which starts the fake Graph and its own `wrangler dev`) and the `test:e2e` script runs both configs one after the other. Slice 1's config only gains an `exclude` of that one file (done in W0b); `whatsapp-bundle.e2e.test.ts` needs no stack and stays under slice 1's config |
 
 ## Assumptions (decided, owner can override)
 
@@ -662,7 +663,7 @@ Ownership notes:
 - `apps/api/test/fixtures/whatsapp/` is split by lane: `inbound/` and `status/` belong to W4, `outbound/` to W2.
 - `apps/api/migrations/0004_whatsapp_channel.sql` is this slice's only new D1 migration; `0001_core` and DO `v1` are not edited (A20).
 - `env.staging` and `env.production` belong to `deploy-readiness`. W6.3 needs its production block merged.
-- W6 reads slice 1's `vitest.e2e.config.mts` and `global-setup.ts` at its start and wires its own setup beside them; that wiring is the only open item of the refresh.
+- W6 wires its own setup beside slice 1's (R31); no refresh item is open.
 
 ## Sequencing and merge order
 
@@ -687,7 +688,7 @@ Every box is empty when authored. A sub-agent ticks its own box. A wrong step is
 - [x] **W0.1 Contract and stubs.** Write every contract block above that touches a file present on this branch, with stub bodies `void input;` and `throw new Error('<name> is not implemented');`. This includes `fake-graph.ts`, the integration bindings and the development variable. ~~The in-memory and SQLite repository stubs, the updated fake sender, the seed helper signatures, `index.dev.ts` with `registerDevelopmentSender` and `development-sender.ts`~~ (refresh: those files exist only on slice 1's lane branches, or are dropped by R15; the first four move to W0b). Commit as `feat(core): add the WhatsApp channel contract`. Evidence: 659e505.
 - [x] **W0.2 Gate.** `pnpm typecheck` and `pnpm --filter @zapbip/repository-shape test:unit` green. ~~Commit as `chore(core): gate the channel contract`.~~ (refresh: the gate changes no file, so there is no commit.) Evidence: at 659e505 `pnpm typecheck` green in four packages, `pnpm --filter @zapbip/repository-shape test:unit` 54 passed, `pnpm test:unit` and `pnpm format:check` green; `pnpm verify` stops at its `secrets` gate, see the tester briefing.
 
-- [ ] **W0b.1 Contract after slice 1 merges.** Added by the refresh. Once the lead has merged slice 1's lanes, write the W0b block of the contract (in-memory, SQLite and fake-sender stubs, the `session` call sites, `ERROR_STATUS`, the seed signatures) and run `pnpm typecheck` and `pnpm verify`. Commit as `feat(core): extend slice 1's ports with the channel contract`.
+- [x] **W0b.1 Contract after slice 1 merges.** Added by the refresh. Once the lead has merged slice 1's lanes, write the W0b block of the contract (in-memory, SQLite and fake-sender stubs, the `session` call sites, `ERROR_STATUS`, the seed signatures) and run `pnpm typecheck` and `pnpm verify`. Evidence: the merge-and-W0b commit on this branch. Commit as `feat(core): extend slice 1's ports with the channel contract`.
 
 Failure modes for W0 are in the table below. W0 has no backout: fix forward in a new W0 commit that every lane merges.
 
