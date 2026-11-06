@@ -269,7 +269,7 @@ pnpm --filter @zapbip/api exec vitest run --config vitest.integration.config.mts
 ### Known gaps
 
 - Integration cases cannot be run green here: every route path reads `readWhatsAppEnvironment` and `logOperatorEvent` (W2 stubs), stored-message assertions need W1 and W3 bodies. Waiting on lanes W1, W2 and W3.
-- Not written, because they need hooks owned elsewhere: DO commit failure `500` (WI-33), R2 failure `500` (WI-34), media over HTTP (WI-35 to WI-43; the allowed hosts are real `https` hosts and the fake Graph is `http://127.0.0.1`, so the integration pool needs an outbound mock), and the indexed status cases (WI-52 to WI-55, WI-57), which need a sent message with a channel id. Review focus 4 is covered at unit level (`whatsapp-media-download.test.ts`).
+- Closed by the gap lane (section below): WI-35 to WI-43, WI-52 to WI-55 and WI-57 are written. Review focus 4 is also covered at unit level (`whatsapp-media-download.test.ts`).
 - Resolved at integration: `OperatorEvent.NotificationIgnoredField` is logged for a change with another field (WI-32).
 - Statuses that fail to parse are dropped without a log (`parseStatusItems` returns only parsed items); a malformed change is dropped the same way.
 - Resolved at integration: `HttpStatus` has `InternalServerError` and `ServiceUnavailable`; the route answers `HttpStatus.ServiceUnavailable` and `WEBHOOK_BATCH_UNINDEXED_STATUS` is gone.
@@ -310,12 +310,54 @@ Every test of this lane is a pin: W3 and W4 are merged, so none was red on landi
 1. Hypothesis: a Durable Object failure while committing returns `500` and leaves no receipt, so Meta's retry stores once. Break it by failing the commit after the receipt insert.
 2. Hypothesis: an R2 failure returns `500` with no message stored. Break it with a failure on the second image of a batch.
 3. Hypothesis: no Graph error is retried by the sender (`130429`, `500`). Count the fake's requests for the same message.
-4. Hypothesis: production sends only through the Cloud API sender. Break it by adding `WHATSAPP_GRAPH_BASE_URL` to `env.production` with the fake address, or by importing `fake-whatsapp-sender` from `index.ts`.
+4. Hypothesis: production sends only through the Cloud API sender. Break it by adding `WHATSAPP_GRAPH_BASE_URL` or `WHATSAPP_MEDIA_DOWNLOAD_ORIGIN` with the fake address to the top-level block of `wrangler.jsonc`, or by importing `fake-whatsapp-sender` from `index.ts`.
 5. Hypothesis: the E2E wamids are deterministic (`wamid.fake.<n>` counts the sends the fake answered). Break it by adding a send to an earlier E2E case.
 
 ### Known gaps
 
-- E2E-2 is not the plan's voice note with a stored `url`: the fake Graph is `http` and the media hosts must be `https` (`fbsbx.com`, `fbcdn.net`, `whatsapp.net`), so a download cannot reach the fake. The E2E posts a voice note whose metadata points to a foreign host and asserts the agent sees it unavailable and the owner gets the `mediaUnavailable` notice. A stored voice note needs a test seam in the product (a download base URL), which belongs to W4.
-- `global-setup.ts` repeats slice 1's `freePort`, `waitForHealth` and teardown (R31 keeps `stack.ts` and `global-setup.ts` untouched); a later cleanup can export them from slice 1.
-- WI-35 to WI-43 and the indexed status cases WI-52 to WI-55 and WI-57 are still not written (W4's gaps).
+- Closed by the gap lane (section below): E2E-2 asserts the stored voice note and the dedupe is done.
 - The WhatsApp E2E reuses slice 1's `stack.ts` helpers through the same `stack` provided key.
+
+## Gap lane (developer, after W6)
+
+Branch `feat/whatsapp-cloud-channel`. It merged `feat/whatsapp-cloud-channel-w6` (no conflicts) and `feat/agent-inbox-core` (`a041617`). Slice 1 moved the routing list into `owner-placement.ts` and `owner-arrival.ts` here, made `env.development` the local block and the top level production, gave `createFakeWhatsAppSender` the media store, and added `closed_at` to the repository test. `wrangler.jsonc` top level now holds production vars (`PUBLIC_ORIGIN`, `WHATSAPP_GRAPH_BASE_URL` `https://graph.facebook.com`); the development block holds the fake Graph address and the media origin. `whatsapp-bundle.e2e.test.ts` and the WhatsApp E2E setup follow the new names (no `--env production`; `--env development`).
+
+### What changed
+
+- `apps/api/test/integration/whatsapp-webhook.test.ts`: WI-35 to WI-43 (the Graph is a `fetch` spy that records every `https` call with its `Authorization`; WI-40 uses fake timers for `GRAPH_REQUEST_TIMEOUT_MS`; WI-36 reads the unavailable notice from the fake sender's screen, with an owner message timestamped now so the window is open).
+- `apps/api/test/integration/whatsapp-status.test.ts`: WI-52 to WI-55 and WI-57 against an outbound message seeded with a channel id and a `message_index` row.
+- `libs/core/src/inbox/use-cases/apply-status.ts`: `applied` is `false` for a failure that arrives after a settled state. Reason: the route logs `status.failed.ignored` from `applied: false`, and the log never fired.
+- `apps/api/src/adapters/whatsapp/media-url-policy.ts` (new), used by `graph-client.ts` and `media-download.ts`; `read-whatsapp-env.ts` reads the optional `WHATSAPP_MEDIA_DOWNLOAD_ORIGIN` as `developmentMediaOrigin` (`null` when unset or empty); `createGraphClient` and `downloadInboundMedia` take it.
+- `apps/api/test/e2e/support/stack-process.ts` (new): `freePort`, `waitForHealth`, `LOOPBACK_HOST`, `HEALTH_TIMEOUT_MS`, used by both global setups.
+- `apps/api/test/e2e/whatsapp-channel.e2e.test.ts`: E2E-2 stored voice note (the fake Graph serves the bytes at `/media/voice`; the bytes are the JSON encoding of a string because the fake replies JSON), beside the refused-host case.
+
+### How to run
+
+```bash
+pnpm --filter @zapbip/api exec vitest run --config vitest.integration.config.mts test/integration/whatsapp-webhook.test.ts test/integration/whatsapp-status.test.ts
+pnpm --filter @zapbip/api exec vitest run --config vitest.unit.config.mts
+ZAPBIP_E2E=1 pnpm --filter @zapbip/api exec vitest run --config vitest.e2e-whatsapp.config.mts
+pnpm --filter @zapbip/core exec vitest run
+```
+
+### Red today, green after
+
+| Test | Failure printed on the red commit | Red | Green |
+|------|-----------------------------------|-----|-------|
+| WI-54 and the core case "a failure that arrives after a settled state reports that it was not applied" | `expected '[]' to contain 'status.failed.ignored'`; `expected { applied: true } to deeply equal { applied: false }` | `f5b827b` | `619aafb` |
+| `whatsapp-media-url-policy.test.ts`, the environment, graph-client and wrangler cases | `isAllowedMediaUrl is not implemented`; `expected null to be 'http://127.0.0.1:4011'`; `expected undefined to be 'https://graph.facebook.com'` | `8dc2e68` | `6a5e306` |
+
+Pins (green on landing): WI-35 to WI-43 (`d93dc2f`), WI-52, WI-53, WI-55, WI-57 (`f5b827b`), E2E-2 stored (`6fe1818`). The graph-client and media-download unit cases for the development origin landed with `6a5e306` because their signature changed there.
+
+### Hypotheses to attack
+
+1. Hypothesis: production accepts a media URL only on `https` and a Meta suffix. Break it by setting `WHATSAPP_MEDIA_DOWNLOAD_ORIGIN` in the top-level vars and confirm `wrangler-config.test.ts` goes red; also try `http://127.0.0.1:4011@evil.com/x` with the variable set.
+2. Hypothesis: no `Authorization` header reaches a foreign host. Break it by making the download redirect (`302`) and by setting the metadata URL to the lookalikes in WI-42 and WI-43.
+3. Hypothesis: a failure after `read` is ignored and logged exactly once. Break it by posting `failed` twice.
+4. Hypothesis: a media `5xx` or timeout returns `500`, and the retry after recovery stores once (WI-39, WI-40).
+
+### Known gaps
+
+- WI-35 asserts the stored object's size equals the bytes, not a recorded `Content-Length` header: the R2 binding is real in the pool and exposes no request header; `FixedLengthStream` in `r2-media-store.ts` is what fixes the length.
+- The fake Graph replies JSON only, so E2E-2 serves a JSON string and the stored bytes include its quotes.
+- Production's `WHATSAPP_GRAPH_BASE_URL` is now `https://graph.facebook.com`; the deploy slice owns the secrets and the final value.
