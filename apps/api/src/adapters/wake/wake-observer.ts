@@ -6,7 +6,6 @@ export enum WakeObserverErrorCode {
   MetricsMissing = 'wake_metrics_missing',
 }
 
-const DATASET_NAME = 'WAKE_METRICS';
 const STATUS_CLASS_DIVISOR = 100;
 const STATUS_CLASS_SUFFIX = 'xx';
 const NO_RESPONSE_CLASS = 'network';
@@ -21,12 +20,12 @@ function statusClassOf(input: { statusCode: number | null; timedOut: boolean }):
 
 export function createCloudflareWakeObserver(input: { dataset: AnalyticsEngineDataset | undefined; accountId: string }): WakeObserver {
   const { dataset, accountId } = input;
-  if (dataset === undefined) throw new Error(`${DATASET_NAME} binding is missing`);
+  if (dataset === undefined) logEvent({ accountId, event: LogEvent.ToolError, errorCode: WakeObserverErrorCode.MetricsMissing });
   return {
     observe: ({ event }) => {
       const { name, provider, agent, attempt, statusCode, latencyMs, outcome, timedOut } = event;
       logEvent({ accountId, event: name, agent, provider, attempt, statusCode, latencyMs, outcome });
-      if (outcome === null || latencyMs === null) return;
+      if (dataset === undefined || outcome === null || latencyMs === null) return;
       dataset.writeDataPoint({ blobs: [provider, outcome, statusClassOf({ statusCode, timedOut })], doubles: [attempt, latencyMs] });
     },
   };
