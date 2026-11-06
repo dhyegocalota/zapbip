@@ -13,8 +13,8 @@ import {
   ConnectorFrameType,
   MessageDirection,
   MessageKind,
-  UPGRADE_REQUIRED_STATUS,
   WakeMode,
+  HttpStatus,
 } from '@zapbip/types';
 import { WebSocketServer, type WebSocket } from 'ws';
 
@@ -117,7 +117,7 @@ export async function createSelfSignedCertificate(): Promise<{ certificate: TlsC
 
 export async function startFakeEventServer(input: FakeEventServerOptions = {}): Promise<FakeEventServer> {
   const {
-    probeStatus: initialProbeStatus = UPGRADE_REQUIRED_STATUS,
+    probeStatus: initialProbeStatus = HttpStatus.UpgradeRequired,
     upgradeStatus = null,
     autoPong = true,
     greet = true,

@@ -20,8 +20,7 @@ import {
   RECONNECT_STABLE_MS,
   REPLACED_CLOSE_CODE,
   SECRET_REVOKED_MESSAGE,
-  UNAUTHORIZED_STATUS,
-  UPGRADE_REQUIRED_STATUS,
+  HttpStatus,
 } from '@zapbip/types';
 import { logConnectorEvent, type ConnectorLogFields, type ConnectorLogger } from './log';
 import { findNewestSessionId } from './session-lookup';
@@ -142,7 +141,7 @@ export async function runSocketSession(input: {
 }): Promise<number> {
   const { socketLink, signal, log, connectedFields, createQueue, timers = REAL_TIMERS, random = Math.random } = input;
   const probeStatus = await probeStatusOf({ socketLink });
-  if (probeStatus !== UPGRADE_REQUIRED_STATUS) {
+  if (probeStatus !== HttpStatus.UpgradeRequired) {
     log({ event: ConnectorLogEvent.ConnectorClosed, fields: { status: probeStatus } });
     return FAILURE_EXIT_CODE;
   }
@@ -262,8 +261,8 @@ export async function runSocketSession(input: {
     await waitOrAbort({ delayMs, signal, timers });
     if (signal.aborted) break;
     const reconnectProbeStatus = await probeStatusOf({ socketLink });
-    if (reconnectProbeStatus === UNAUTHORIZED_STATUS) {
-      log({ event: ConnectorLogEvent.ConnectorClosed, fields: { status: UNAUTHORIZED_STATUS, message: SECRET_REVOKED_MESSAGE } });
+    if (reconnectProbeStatus === HttpStatus.Unauthorized) {
+      log({ event: ConnectorLogEvent.ConnectorClosed, fields: { status: HttpStatus.Unauthorized, message: SECRET_REVOKED_MESSAGE } });
       return FAILURE_EXIT_CODE;
     }
     attempt = failedAttempts + 1;

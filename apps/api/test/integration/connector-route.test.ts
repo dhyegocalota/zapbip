@@ -1,5 +1,5 @@
 import { SELF } from 'cloudflare:test';
-import { ConnectorFrameType, UPGRADE_REQUIRED_STATUS } from '@zapbip/types';
+import { ConnectorFrameType, HttpStatus } from '@zapbip/types';
 import { describe, expect, test, vi } from 'vitest';
 import { createApp } from '../../src/app';
 import { UNAUTHORIZED_BODY } from '../../src/contract/constants';
@@ -27,7 +27,7 @@ describe('connector route', () => {
   test('answers 426 without the upgrade header', async () => {
     const account = await seedAccount({ agent: 'ana' });
     const response = await SELF.fetch(connectorUrl({ secret: account.secret }));
-    expect(response.status).toBe(UPGRADE_REQUIRED_STATUS);
+    expect(response.status).toBe(HttpStatus.UpgradeRequired);
     expect(response.webSocket).toBeNull();
   });
 

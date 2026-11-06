@@ -1,13 +1,7 @@
 import { spawn } from 'node:child_process';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
-import {
-  CHANNEL_CAPABILITY,
-  CHANNEL_NOTIFICATION_METHOD,
-  CHANNEL_SERVER_NAME,
-  ConnectorFrameType,
-  UNAUTHORIZED_STATUS,
-} from '@zapbip/types';
+import { CHANNEL_CAPABILITY, CHANNEL_NOTIFICATION_METHOD, CHANNEL_SERVER_NAME, ConnectorFrameType, HttpStatus } from '@zapbip/types';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { buildCliBundle, CONNECTION_URL_VARIABLE, DISABLE_TLS_VERIFICATION_ENVIRONMENT } from '../support/cli-bundle';
@@ -145,7 +139,7 @@ describe('zapbip channel', () => {
 
   it('exits 1 with no socket when the link is refused', async () => {
     await server.stop();
-    server = await startFakeEventServer({ certificate, probeStatus: UNAUTHORIZED_STATUS });
+    server = await startFakeEventServer({ certificate, probeStatus: HttpStatus.Unauthorized });
     const child = spawn(process.execPath, [bundleFile, CHANNEL_COMMAND], {
       env: childEnvironment({ connectionUrl: server.connectionLink }),
       stdio: 'pipe',

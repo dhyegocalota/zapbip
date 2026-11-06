@@ -12,9 +12,9 @@ import {
   RECONNECT_BASE_MS,
   RECONNECT_STABLE_MS,
   REPLACED_CLOSE_CODE,
-  UNAUTHORIZED_STATUS,
   WAKE_ALLOWED_TOOL,
   WakeMode,
+  HttpStatus,
 } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { runConnection } from '../../src/connect';
@@ -377,12 +377,12 @@ describe('runConnection', () => {
 
   describe('pre-flight', () => {
     it('exits 1 on a 401 without opening a socket and without logging the link', async () => {
-      await restartServer({ probeStatus: UNAUTHORIZED_STATUS });
+      await restartServer({ probeStatus: HttpStatus.Unauthorized });
       const exitCode = await startConnector();
 
       expect(exitCode).toBe(EXIT_CODE_REFUSED);
       expect(server.upgradeCount()).toBe(0);
-      expect(loggedFieldsOf({ event: ConnectorLogEvent.ConnectorClosed })).toMatchObject({ status: UNAUTHORIZED_STATUS });
+      expect(loggedFieldsOf({ event: ConnectorLogEvent.ConnectorClosed })).toMatchObject({ status: HttpStatus.Unauthorized });
       expect(JSON.stringify(logRecorder.events)).not.toContain(FAKE_SECRET);
     });
 
@@ -491,7 +491,7 @@ describe('runConnection', () => {
       const timers = createManualTimers();
       const exiting = startConnector({ timers });
       await waitForLog({ event: ConnectorLogEvent.ConnectorConnected });
-      server.setProbeStatus({ status: UNAUTHORIZED_STATUS });
+      server.setProbeStatus({ status: HttpStatus.Unauthorized });
       server.dropConnections();
       await waitForLog({ event: ConnectorLogEvent.ConnectorReconnecting });
       timers.advance({ ms: RECONNECT_BASE_MS });
@@ -499,7 +499,7 @@ describe('runConnection', () => {
       expect(await exiting).toBe(EXIT_CODE_REFUSED);
       expect(server.connectionCount()).toBe(1);
       expect(loggedEventsOf({ event: ConnectorLogEvent.ConnectorClosed }).at(-1)?.fields).toMatchObject({
-        status: UNAUTHORIZED_STATUS,
+        status: HttpStatus.Unauthorized,
         message: expect.stringContaining('revoked'),
       });
       expect(JSON.stringify(logRecorder.events)).not.toContain(FAKE_SECRET);

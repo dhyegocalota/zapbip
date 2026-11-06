@@ -1,4 +1,4 @@
-import { MINUTE_MS, SECOND_MS } from './constants';
+import { MINUTE_MS, SECOND_MS, ZAPBIP_NPM_VERSION } from './constants';
 
 export enum ConnectorClient {
   ClaudeCode = 'claude-code',
@@ -59,8 +59,6 @@ export const SECRET_REVOKED_MESSAGE = 'the connection secret was revoked or is u
 export const CONNECTOR_WAKE_TIMEOUT_MS = 15 * MINUTE_MS;
 export const REPLACED_CLOSE_CODE = 4001;
 export const REVOKED_CLOSE_CODE = 4003;
-export const UPGRADE_REQUIRED_STATUS = 426;
-export const UNAUTHORIZED_STATUS = 401;
 export const CONNECTOR_PATH_SUFFIX = '/connector';
 export const CONNECTOR_PING_TEXT = JSON.stringify({ type: ConnectorFrameType.Ping });
 export const CONNECTOR_PONG_TEXT = JSON.stringify({ type: ConnectorFrameType.Pong });
@@ -80,7 +78,7 @@ export const WAKE_INSTRUCTION = 'Reply to the owner with send_message, briefly, 
 export const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export const MCP_PATH_SUFFIX = '/mcp';
 export const CHANNEL_SERVER_NAME = 'zapbip';
-export const CHANNEL_SERVER_VERSION = '0.0.1';
+export const CHANNEL_SERVER_VERSION = ZAPBIP_NPM_VERSION;
 export const CHANNEL_CAPABILITY = 'claude/channel';
 export const CHANNEL_NOTIFICATION_METHOD = 'notifications/claude/channel';
 export const CHANNEL_SENDER = 'owner';
