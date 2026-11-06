@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
-    "dev:seed": "node scripts/dev-seed.ts",
+    "dev:seed": "tsx scripts/dev-seed.ts",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
     "test:unit": "vitest run --passWithNoTests --config vitest.unit.config.mts",
     "test:integration": "vitest run --passWithNoTests --config vitest.integration.config.mts",

@@ -22,6 +22,8 @@
   "env": {
     "production": {
       "main": "src/index.ts",
+      "vars": { "PUBLIC_ORIGIN": "http://localhost:8787" },
+      "migrations": [{ "tag": "v1", "new_sqlite_classes": ["AccountInbox"] }],
       "durable_objects": {
         "bindings": [{ "name": "ACCOUNT_INBOX", "class_name": "AccountInbox" }],
       },
