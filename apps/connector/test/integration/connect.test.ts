@@ -17,6 +17,8 @@ import {
 } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { runConnection } from '../../src/connect';
+import type { ConnectorTimers } from '../../src/timers';
+import { createManualTimers } from '../support/manual-timers';
 import { createFakeClients, runAt, type FakeClients } from '../support/fake-client-binary';
 import {
   FAKE_AGENT,
@@ -91,14 +93,17 @@ describe('runConnection', () => {
     await startServer(input);
   }
 
-  function startConnector(input: { pinnedSessionId?: string | null; client?: ConnectorClient; socketLink?: string } = {}): Promise<number> {
-    const { pinnedSessionId = PINNED_SESSION_ID, client = ConnectorClient.ClaudeCode, socketLink = server.socketLink } = input;
+  function startConnector(
+    input: { pinnedSessionId?: string | null; client?: ConnectorClient; socketLink?: string; timers?: ConnectorTimers } = {},
+  ): Promise<number> {
+    const { pinnedSessionId = PINNED_SESSION_ID, client = ConnectorClient.ClaudeCode, socketLink = server.socketLink, timers } = input;
     running = runConnection({
       socketLink,
       client,
       workingDirectory: fakeClients.workingDirectory,
       pinnedSessionId,
       signal: abortController.signal,
+      timers,
     });
     return running;
   }
@@ -402,12 +407,14 @@ describe('runConnection', () => {
 
   describe('heartbeat', () => {
     it('pings every interval and stays connected while pongs arrive', async () => {
-      useFakeTimers();
-      startConnector();
+      const timers = createManualTimers();
+      startConnector({ timers });
       await waitForLog({ event: ConnectorLogEvent.ConnectorConnected });
-      await vi.advanceTimersByTimeAsync(HEARTBEAT_INTERVAL_MS);
+      timers.advance({ ms: HEARTBEAT_INTERVAL_MS });
       await server.waitForFrames({ type: ConnectorFrameType.Ping, count: 1 });
-      await vi.advanceTimersByTimeAsync(HEARTBEAT_INTERVAL_MS);
+      sendMessages({ messageIds: [] });
+      await waitForLog({ event: ConnectorLogEvent.MessagesReceived });
+      timers.advance({ ms: HEARTBEAT_INTERVAL_MS });
       await server.waitForFrames({ type: ConnectorFrameType.Ping, count: 2 });
 
       expect(server.connectionCount()).toBe(1);
@@ -417,16 +424,16 @@ describe('runConnection', () => {
 
     it('closes and reconnects when no pong arrives within the timeout', async () => {
       await restartServer({ autoPong: false });
-      useFakeTimers();
-      startConnector();
+      const timers = createManualTimers();
+      startConnector({ timers });
       await waitForLog({ event: ConnectorLogEvent.ConnectorConnected });
-      await vi.advanceTimersByTimeAsync(HEARTBEAT_INTERVAL_MS);
+      timers.advance({ ms: HEARTBEAT_INTERVAL_MS });
       await server.waitForFrames({ type: ConnectorFrameType.Ping, count: 1 });
-      await vi.advanceTimersByTimeAsync(HEARTBEAT_TIMEOUT_MS);
+      timers.advance({ ms: HEARTBEAT_TIMEOUT_MS });
       await waitForLog({ event: ConnectorLogEvent.ConnectorReconnecting });
 
       expect(loggedFieldsOf({ event: ConnectorLogEvent.ConnectorReconnecting })).toEqual({ attempt: 0, delayMs: RECONNECT_BASE_MS });
-      await vi.advanceTimersByTimeAsync(RECONNECT_BASE_MS);
+      timers.advance({ ms: RECONNECT_BASE_MS });
       await server.waitForConnections({ count: 2 });
     });
   });
