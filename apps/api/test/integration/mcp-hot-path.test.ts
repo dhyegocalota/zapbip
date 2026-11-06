@@ -45,11 +45,12 @@ describe('MCP hot path', () => {
       agent: 'claude',
       expiresAt: Date.now() + INSTALL_CODE_TTL_MS,
     });
+    const body = initializeBody();
     const statements: string[] = [];
     const pending: Promise<unknown>[] = [];
     const response = await mcpRoutes.request(
       `/c/${secret}/mcp`,
-      { method: 'POST', headers: MCP_REQUEST_HEADERS, body: initializeBody() },
+      { method: 'POST', headers: { ...MCP_REQUEST_HEADERS, 'content-length': String(new TextEncoder().encode(body).byteLength) }, body },
       { ...testEnv, CONNECTIONS: countReads({ database: testEnv.CONNECTIONS, statements }) },
       { waitUntil: (work: Promise<unknown>) => pending.push(work), passThroughOnException: () => undefined } as unknown as ExecutionContext,
     );
