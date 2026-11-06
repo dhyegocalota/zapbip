@@ -61,6 +61,7 @@ async function deploy(input: {
     officialWhatsAppNumber: OFFICIAL_NUMBER,
     company: COMPLETE_COMPANY,
     npmVersion: NPM_VERSION,
+    openclawPluginVersion: NPM_VERSION,
     log: (line) => lines.push(line),
   });
   return { exitCode, shell, prompt, output: lines.join('\n') };

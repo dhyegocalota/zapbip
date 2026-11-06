@@ -55,6 +55,7 @@ export type WorkerPreflightInput = {
   officialWhatsAppNumber: string;
   company: CompanyFacts;
   npmVersion: string;
+  openclawPluginVersion: string;
 };
 
 export type DocsPreflightInput = {

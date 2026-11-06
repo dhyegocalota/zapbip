@@ -36,6 +36,7 @@ function workerInput(input: {
   officialWhatsAppNumber?: string;
   company?: CompanyFacts;
   npmVersion?: string;
+  openclawPluginVersion?: string;
   workerFacts?: WorkerFacts;
 }) {
   const { environment = DeployEnvironment.Staging, isInteractive = true, firstDeploy = false } = input;
@@ -45,6 +46,7 @@ function workerInput(input: {
     workerFacts = READY_WORKER_FACTS,
     company = COMPLETE_COMPANY,
     npmVersion = NPM_VERSION,
+    openclawPluginVersion = NPM_VERSION,
   } = input;
   return {
     environment,
@@ -57,6 +59,7 @@ function workerInput(input: {
     officialWhatsAppNumber,
     company,
     npmVersion,
+    openclawPluginVersion,
   };
 }
 
@@ -131,6 +134,13 @@ describe('worker preflight', () => {
       expect(shell.commands).toEqual([]);
     },
   );
+
+  it('refuses production until the OpenClaw plugin also resolves, with the owner as its only maintainer and publisher', async () => {
+    const shell = fakeShell({ replies: { '@zapbip/openclaw-plugin@0.1.0 maintainers --json': { exitCode: 1, stdout: '' } } });
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell }));
+    expect(refusal?.step).toBe(PreflightStep.NpmVersion);
+    expect(refusal?.message).toContain('@zapbip/openclaw-plugin@0.1.0');
+  });
 
   it('refuses production when the owner npm user has a co-maintainer', async () => {
     const maintainers = JSON.stringify([`${NPM_PUBLISHER} <o@example.com>`, 'second-person <s@example.com>']);
