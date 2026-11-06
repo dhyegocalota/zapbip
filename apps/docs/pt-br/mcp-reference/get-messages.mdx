@@ -1,0 +1,22 @@
+---
+title: 'get_messages'
+description: 'Lê as mensagens não lidas do dono e o histórico recente.'
+---
+
+Lê as mensagens não lidas do dono e o histórico recente.
+
+## Entrada
+
+| Campo   | Tipo             | Notas                 |
+| ------- | ---------------- | --------------------- |
+| `limit` | number, opcional | Tamanho do histórico. |
+
+## Saída
+
+As mensagens não lidas do dono, que passam a lidas, mais as últimas 20 mensagens trocadas.
+
+## Tipos de mensagem
+
+import MessageKinds from '/snippets/pt-br/message-kinds.mdx';
+
+<MessageKinds />

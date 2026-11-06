@@ -1,10 +1,20 @@
-import { InboxCopyKey, OwnerLocale } from '@zapbip/types';
+import { InboxCopyKey, MessageKind, OwnerLocale } from '@zapbip/types';
+import { NOTICE_PREVIEW_MAX_CHARS } from './constants';
+import { invalidInput } from './inbox-error-factories';
 import type { MessageContent } from './message';
 
 export const INBOX_COPY: Record<InboxCopyKey, Record<OwnerLocale, string>> = {
   [InboxCopyKey.RoutingPrompt]: {
     [OwnerLocale.PortugueseBrazil]: 'Para qual agente devo encaminhar sua mensagem?',
     [OwnerLocale.EnglishUs]: 'Which agent should I send your message to?',
+  },
+  [InboxCopyKey.RoutingListExpired]: {
+    [OwnerLocale.PortugueseBrazil]: 'Essa lista já foi usada.',
+    [OwnerLocale.EnglishUs]: 'That list was already used.',
+  },
+  [InboxCopyKey.RoutingListReminder]: {
+    [OwnerLocale.PortugueseBrazil]: 'Escolha o agente na lista acima',
+    [OwnerLocale.EnglishUs]: 'Pick the agent in the list above',
   },
   [InboxCopyKey.NoAgents]: {
     [OwnerLocale.PortugueseBrazil]: 'Nenhum agente conectado. Sua mensagem ficou guardada.',
@@ -38,14 +48,43 @@ export const INBOX_COPY: Record<InboxCopyKey, Record<OwnerLocale, string>> = {
   [InboxCopyKey.PreviewChoice]: { [OwnerLocale.PortugueseBrazil]: '[resposta]', [OwnerLocale.EnglishUs]: '[answer]' },
 };
 
-export function renderCopy(input: { key: InboxCopyKey; locale: OwnerLocale; values: Record<string, string> }): string;
+const COPY_TOKEN_PATTERN = /\{(\w+)\}/g;
+const WHITESPACE_PATTERN = /\s+/g;
+const TRUNCATION_MARK = '…';
+
+type PreviewedKind = Exclude<MessageKind, MessageKind.Text | MessageKind.Audio>;
+
+const PREVIEW_KEYS: Record<PreviewedKind, InboxCopyKey> = {
+  [MessageKind.Image]: InboxCopyKey.PreviewImage,
+  [MessageKind.Video]: InboxCopyKey.PreviewVideo,
+  [MessageKind.Document]: InboxCopyKey.PreviewDocument,
+  [MessageKind.Sticker]: InboxCopyKey.PreviewSticker,
+  [MessageKind.Location]: InboxCopyKey.PreviewLocation,
+  [MessageKind.Contacts]: InboxCopyKey.PreviewContacts,
+  [MessageKind.Reaction]: InboxCopyKey.PreviewReaction,
+  [MessageKind.Choice]: InboxCopyKey.PreviewChoice,
+};
 
 export function renderCopy(input: { key: InboxCopyKey; locale: OwnerLocale; values: Record<string, string> }): string {
-  void input;
-  throw new Error('renderCopy is not implemented');
+  return INBOX_COPY[input.key][input.locale].replace(COPY_TOKEN_PATTERN, (_token, name: string) => {
+    const value = input.values[name];
+    if (value === undefined) throw invalidInput({ message: `copy: missing value for ${name}` });
+    return value;
+  });
+}
+
+function truncatePreview(input: { text: string }): string {
+  const characters = [...input.text.replace(WHITESPACE_PATTERN, ' ').trim()];
+  if (characters.length <= NOTICE_PREVIEW_MAX_CHARS) return characters.join('');
+  return `${characters.slice(0, NOTICE_PREVIEW_MAX_CHARS - TRUNCATION_MARK.length).join('')}${TRUNCATION_MARK}`;
+}
+
+function previewKeyOf(input: { content: Exclude<MessageContent, { kind: MessageKind.Text }> }): InboxCopyKey {
+  if (input.content.kind === MessageKind.Audio) return input.content.voice ? InboxCopyKey.PreviewVoice : InboxCopyKey.PreviewAudio;
+  return PREVIEW_KEYS[input.content.kind];
 }
 
 export function buildNoticePreview(input: { content: MessageContent; locale: OwnerLocale }): string {
-  void input;
-  throw new Error('buildNoticePreview is not implemented');
+  if (input.content.kind === MessageKind.Text) return truncatePreview({ text: input.content.text });
+  return renderCopy({ key: previewKeyOf({ content: input.content }), locale: input.locale, values: {} });
 }

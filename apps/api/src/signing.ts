@@ -1,29 +1,43 @@
 import type { LinkPurpose } from '@zapbip/types';
+import { decodeBase64Url, encodeBase64Url } from './adapters/platform/encoding';
 
-export function canonicalLinkString(input: { accountId: string; mediaId: string; purpose: LinkPurpose; expiresAt: number }): string {
-  return [input.purpose, input.accountId, input.mediaId, String(input.expiresAt)].join('\n');
+const CANONICAL_EXPIRY_PATTERN = /^[1-9][0-9]*$/;
+const HMAC_ALGORITHM = { name: 'HMAC', hash: 'SHA-256' };
+
+type LinkClaims = { accountId: string; mediaId: string; purpose: LinkPurpose; expiresAt: number };
+
+export function canonicalLinkString(input: LinkClaims): string {
+  return JSON.stringify([input.purpose, input.accountId, input.mediaId, input.expiresAt]);
 }
 
-export function signLink(input: {
-  key: string;
-  accountId: string;
-  mediaId: string;
-  purpose: LinkPurpose;
-  expiresAt: number;
-}): Promise<string> {
-  void input;
-  throw new Error('signLink is not implemented');
+function importSigningKey(input: { key: string; usage: 'sign' | 'verify' }): Promise<CryptoKey> {
+  return crypto.subtle.importKey('raw', new TextEncoder().encode(input.key), HMAC_ALGORITHM, false, [input.usage]);
 }
 
-export function verifyLink(input: {
-  key: string;
-  accountId: string;
-  mediaId: string;
-  purpose: LinkPurpose;
-  expiresAt: number;
-  signature: string;
-  now: number;
-}): Promise<boolean> {
-  void input;
-  throw new Error('verifyLink is not implemented');
+export async function signLink(input: LinkClaims & { key: string }): Promise<string> {
+  const signingKey = await importSigningKey({ key: input.key, usage: 'sign' });
+  const signature = await crypto.subtle.sign(HMAC_ALGORITHM.name, signingKey, new TextEncoder().encode(canonicalLinkString(input)));
+  return encodeBase64Url({ bytes: new Uint8Array(signature) });
+}
+
+export async function verifyLink(input: LinkClaims & { key: string; signature: string; now: number }): Promise<boolean> {
+  const isExpired = input.now > input.expiresAt;
+  if (isExpired) return false;
+  const signingKey = await importSigningKey({ key: input.key, usage: 'verify' });
+  const signatureBytes = decodeBase64Url({ value: input.signature });
+  const isCanonicalEncoding = encodeBase64Url({ bytes: signatureBytes }) === input.signature;
+  if (!isCanonicalEncoding) return false;
+  return crypto.subtle.verify(HMAC_ALGORITHM.name, signingKey, signatureBytes, new TextEncoder().encode(canonicalLinkString(input)));
+}
+
+export function readSignedQuery(input: {
+  expiry: string | undefined;
+  signature: string | undefined;
+}): { expiresAt: number; signature: string } | null {
+  const { expiry, signature } = input;
+  if (expiry === undefined || signature === undefined) return null;
+  if (!CANONICAL_EXPIRY_PATTERN.test(expiry)) return null;
+  const expiresAt = Number(expiry);
+  if (!Number.isSafeInteger(expiresAt)) return null;
+  return { expiresAt, signature };
 }

@@ -2,7 +2,7 @@ import type { AgentWakeReason, IdPrefix, LinkPurpose, OwnerLocale, TemplateKind,
 import type { AgentName, ConnectionIdentity } from './connection';
 import type { Message } from './message';
 import type { Question, QuestionAnswer } from './question';
-import type { AgentRecord, OwnerWindow, StoredMedia } from './inbox-records';
+import type { AgentRecord, OwnerWindow, RoutingList, StoredMedia } from './inbox-records';
 
 export type MediaBody = ReadableStream<Uint8Array>;
 
@@ -40,13 +40,20 @@ export interface InboxRepository {
   listOpenQuestions(): Promise<Question[]>;
   saveAnswer(input: { questionId: string; answer: QuestionAnswer }): Promise<void>;
   recordChannelReceipt(input: { wamid: string; receivedAt: number }): Promise<boolean>;
+  linkChannelReceipt(input: { wamid: string; messageId: string }): Promise<void>;
+  findChannelReceiptMessageId(input: { wamid: string }): Promise<string | null>;
   deleteExpiredReceipts(input: { receivedBefore: number }): Promise<void>;
   deleteQuestionsAskedBefore(input: { askedBefore: number }): Promise<void>;
   findWindow(): Promise<OwnerWindow>;
   saveWindow(input: { window: OwnerWindow }): Promise<void>;
   claimNotice(): Promise<boolean>;
+  findRoutingList(): Promise<RoutingList | null>;
+  saveRoutingList(input: { routingList: RoutingList }): Promise<void>;
+  clearRoutingList(): Promise<void>;
   insertMedia(input: { media: StoredMedia }): Promise<void>;
   findMedia(input: { mediaId: string }): Promise<StoredMedia | null>;
+  claimUpload(input: { mediaId: string }): Promise<boolean>;
+  releaseUpload(input: { mediaId: string }): Promise<void>;
   markMediaReceived(input: { mediaId: string; receivedAt: number; retentionUntil: number }): Promise<void>;
   listExpiredMediaIds(input: { now: number }): Promise<string[]>;
   deleteMedia(input: { mediaIds: string[] }): Promise<void>;
@@ -78,7 +85,7 @@ export interface ReplyWaiters {
   awaitAgentMessage(input: { agent: AgentName; timeoutMs: number }): Promise<void>;
   resolveQuestionAnswer(input: { questionId: string }): void;
   resolveAgentMessage(input: { agent: AgentName }): void;
-  hasLiveWaiter(input: { agent: AgentName }): boolean;
+  hasLiveWaiter(input: { agent: AgentName; questionId: string | null }): boolean;
 }
 
 export type CoreDependencies = {
