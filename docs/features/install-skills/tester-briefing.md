@@ -6,6 +6,54 @@ Written by the developer sub-agent when its steps are done. The developer does n
 
 Contract only, no behaviour change. `InstallClient` (ten clients), `WakeMode` and `WakeRung` copied from scheduled-wake, install constants and `AGENT_RULES` are real; the install section renderers, `renderInstallPage`, `pickStandbyAgent`, `readInitializeClientName` and `createInstallPageRoute` throw `… is not implemented`. Nothing is tested yet.
 
+## Lane L2 (API) (0c65f4d red, 585b437, 3b7b292)
+
+### What changed
+
+- `apps/api/src/mcp/client-name.ts`: `readInitializeClientName` (zod `safeParse` inside a `try` around the JSON parse), `recordConnectionActivity` (POST only; first-call write when `firstCallAt` is `null`; name write when `clientName` is `null` and `Content-Length` is present and at most `INITIALIZE_BODY_MAX_BYTES`; both handed to `schedule`) and `createConnectionRecorders` (`UPDATE connections SET client_name = ? WHERE id = ? AND client_name IS NULL`).
+- `apps/api/src/routes/mcp.ts`: after `resolveConnection`, loads the connection record with `findActiveByAgent` and calls `recordConnectionActivity` with `executionCtx.waitUntil`.
+- `apps/api/src/mcp/server.ts`: `instructions: AGENT_RULES` and the `zapbip-rules` prompt.
+- `apps/api/src/routes/install-page.ts` (+ `install-page-copy.ts`): `GET /i/:installCode`. Order: client address (`cf-connecting-ip`, `400` when missing), limiter (`429` + `Retry-After: 60`), `InstallCodeDirectory.resolve`, then `404` (Unknown), `410` localized (Expired, Used) or the Markdown page (Ready). Every response carries `Cache-Control: no-store` and `X-Robots-Tag: noindex`.
+- `apps/api/src/install/install-page-adapter.ts`: `joinStandbyCandidates`, `createInstallCodeDirectory` and `createInstallPageDependencies`; `app.ts` mounts the route at `/i/*`, building the dependencies per request.
+- `INSTALL_PAGE_LIMITER` binding (`wrangler.jsonc`, both environments, namespace `1004`, 30 per 60 s), `Bindings`, `HttpStatus.TooManyRequests`, `wrangler-limits.test.ts` ties it to `INSTALL_PAGE_REQUESTS_PER_MINUTE`.
+- `index.ts` and `index.dev.ts` pass the `ExecutionContext` to `app.fetch`; `production-entry.test.ts` passes `createExecutionContext()`.
+
+### How to run
+
+```bash
+pnpm --filter @zapbip/api test:unit
+pnpm --filter @zapbip/api test:integration
+```
+
+### Red today, green after
+
+| Test | Red before the change because | Green after because |
+|------|--------------------------------|---------------------|
+| `test/unit/client-name.test.ts` (all) | `Error: readInitializeClientName is not implemented`, `recordConnectionActivity is not implemented` | 585b437 |
+| `test/unit/install-page-adapter.test.ts` (all) | `Error: joinStandbyCandidates is not implemented` | 585b437 |
+| `test/integration/mcp-install.test.ts` IS-W1 | `AssertionError: expected undefined to be 'Call check_inbox at the start of ever…'` | 585b437 |
+| `test/integration/mcp-install.test.ts` IS-W2, W4, W4b, W5, W6, W8 | prompt missing; `AssertionError: expected null to be 'Claude Code'`; `expected null not to be null` | 585b437 |
+| `test/integration/install-page.test.ts` (page route cases) | `Error: createInstallPageRoute is not implemented` | 3b7b292, and the cases that render the body need the core page (L1) |
+
+Cases that stay red until L1 merges (they reach `renderInstallPage` or `pickStandbyAgent`, still stubs): IS-W3 (both locales), IS-W5b, IS-W8 (both locales, the first `200`), IS-W9b, IS-W11 (both), IS-W12, IS-W14, IS-S2. With throwaway shims for the two stubs all 27 integration cases of the two files passed; the shims were reverted and not committed.
+
+### Hypotheses to attack
+
+1. Hypothesis: the page is `410` right after the first POST to the MCP route, not after the first page read. Break it by: `GET` the page twice, then one `initialize`, then `GET` again.
+2. Hypothesis: a second `initialize` never overwrites `clientName`, and `firstCallAt` is written once. Break it by: two `initialize` calls with different names, then read both columns.
+3. Hypothesis: a body over `INITIALIZE_BODY_MAX_BYTES`, a body without `Content-Length`, a batch, text that is not JSON or a name over `CLIENT_NAME_MAX_CHARS` never fails the MCP request and never writes a name. Break it by: chunked request without a length, 4 097 byte body, 129-character name.
+4. Hypothesis: a standby with quotes or a newline cannot break out of the `set_wake` line (L1 owns the escape; the route passes the name through untouched). Break it by: an agent named `a"); evil(`.
+5. Hypothesis: no log line carries the install code or the secret. Break it by: capture `console.log` over a `200`, `410`, `404` and `429`.
+
+### Known gaps
+
+- `webhook-wake` is not in this branch: `listWakeModes` does not exist on `AccountInbox`, `AccountInboxRpc` or `WakeRepository` yet. `createInstallPageDependencies` calls `accountInboxOf<AccountInboxRpc & { listWakeModes }>(…).listWakeModes()`, so a `Ready` page served by the mounted app fails until the webhook-wake merge adds that method (a `SELECT agent, mode FROM agent_wake` returning `{agent, wakeMode}[]`). The route cases pass a fake `readWakeModes`, so the gated tests do not see it. The merge of `origin/feat/webhook-wake` into this lane conflicts in 12 files (`account-inbox.ts`, `constants.ts`, migrations, `env.ts`, `log.ts`, e2e `global-setup.ts`, `account-inbox.test.ts`, both README indexes, `receive-owner-message.ts`, `libs/core/src/index.ts`, `libs/types/src/enums.ts`), so it was aborted and left to the lead.
+- The `410` text is a route-local copy (`apps/api/src/routes/install-page-copy.ts`) because the core `INSTALL_PAGE_COPY` is still a stub of unknown shape; dedupe against L1's copy when it lands.
+- `readWakeModes` takes `{ accountId }` (the S0 stub took no argument, but the account is only known after the lookup).
+- IS-S3 and IS-S4 (the store holds no plaintext, the seal opens only with the code) and IS-S1 are `accounts-and-keys` tests and were not rewritten here. IS-S5 asserts only that nothing is logged by the route.
+- A request without `cf-connecting-ip` gets `400`; Cloudflare sets the header in production; that `wrangler dev` sets it is unverified (OR script).
+- `firstCallAt` is written on the first POST that resolves a connection, whatever the tool or its outcome, per assumption A6.
+
 ## What changed
 
 - <file or module> — <one line>
