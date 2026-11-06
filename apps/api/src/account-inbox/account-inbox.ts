@@ -56,12 +56,19 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     runMigrations({ storage: this.ctx.storage, migrations: ACCOUNT_INBOX_MIGRATIONS });
     this.accountId = accountId;
     this.clock = await loadDurableClock({ storage: this.ctx.storage, onAdvanced: () => this.armAlarm() });
-    this.sender = createFakeWhatsAppSender({ storage: this.ctx.storage, clock: this.clock });
+    const mediaStore = mediaStoreOf({ bindings: this.env, clock: this.clock });
+    this.sender = createFakeWhatsAppSender({
+      storage: this.ctx.storage,
+      clock: this.clock,
+      mediaStore,
+      accountId,
+      origin: this.env.PUBLIC_ORIGIN,
+    });
     this.dependencies = {
       accountId,
       repository: createSqliteInboxRepository({ storage: this.ctx.storage, clock: this.clock }),
       sender: this.sender,
-      mediaStore: mediaStoreOf({ bindings: this.env, clock: this.clock }),
+      mediaStore,
       waker: createNoneWaker(),
       clock: this.clock,
       ids: createIdGenerator(),
