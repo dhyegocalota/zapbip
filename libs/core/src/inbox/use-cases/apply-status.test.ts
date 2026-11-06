@@ -94,6 +94,14 @@ describe('applyStatus', () => {
     expect(await deliveryOf({ environment, messageId })).toBe(DeliveryState.Read);
   });
 
+  test('a failure that arrives after a settled state reports that it was not applied', async () => {
+    const environment = await createEnvironment();
+    await storeOutbound({ environment, delivery: DeliveryState.Read });
+    expect(await apply({ environment, status: DeliveryState.Failed, detail: { errorCode: 1, errorTitle: 'late' } })).toEqual({
+      applied: false,
+    });
+  });
+
   test('a failure that is ignored leaves no error detail on the message', async () => {
     const environment = await createEnvironment();
     const messageId = await storeOutbound({ environment, delivery: DeliveryState.Delivered });
