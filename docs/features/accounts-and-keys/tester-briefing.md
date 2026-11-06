@@ -88,3 +88,24 @@ Decisions to attack:
 Hypotheses: a quoting message is never a command; trailing punctuation never matches; reserved names are the first word of every command word; names of 20 characters pass and 21 return `null`.
 
 Gap: `pnpm verify` e2e is red from `dev-seed.ts` against migration 0002 (L2 is fixing it).
+
+## Lane L3 (Durable Object, partial: independent parts)
+
+Changed: `apps/api/src/account-inbox/{account-inbox,agent-revocation,first-message-claim,deletion-requests,account-tombstoned,constants}.ts`, `migrations/{v6.sql,index.ts}`; `libs/core/src/inbox/{ports,waiters}.ts` and `use-cases/{wait-for-reply,hold-for-answer}.ts`; `libs/types/src/enums.ts` (`WaiterEnd`); `apps/api/test/integration/account-inbox.test.ts` (WI-118 now expects versions 1 and 6 and the two new tables). Run: `pnpm --filter @zapbip/core test:unit`, `pnpm --filter @zapbip/api test:integration`.
+
+Red `c4d269e` (core: 4 failures, `cancelAgent is not implemented`; Worker integration: 20 failed, 3 passed, with `purge is not implemented`, `setState is not implemented`, `createSqliteFirstMessageClaim is not implemented`, `createSqliteDeletionRequests is not implemented`, `expected [ 1 ] to include 6`; the three `setState` refusals passed for the wrong reason). Green `1ad9c6d`, `0b29795`.
+
+Hypotheses to attack:
+
+1. A live `wait_for_reply` or held question wait ends at once with `timeout` on `recordRevocation` and on `cancelWaiters`, and a message that arrives afterwards stays unread. Break it by: start a 20 s wait, revoke, time the return; also revoke while two agents wait.
+2. `recordRevocation` removes only that agent's `agent_wake` row and adds it to `revoked_agents`; `cancelWaiters` touches neither. Break it by: revoke an agent that never had a wake row; revoke twice.
+3. After `purge`, storage holds only the `tombstone` key and no alarm, also after the object restarts; every write method throws `AccountTombstoned`. Break it by: purge, evict, call each write; purge twice; run the alarm.
+4. `FirstMessageClaim.claim` is true for the first id and for a retry of it, false for any other; `DeletionRequests` keeps both facts in one row without clobbering each other.
+
+Gaps:
+
+- `receiveAccountMessage` on the object and `accounts/deletion-sweep.ts` (with `deletion-sweep.test.ts`) are not built: they need L2's `D1AccountDirectory` and `R2AccountMedia` and L1b's green use cases.
+- The tombstone refusals are tested through `runInDurableObject`; a refusal thrown across the RPC boundary is reported by the Workers test pool as an unhandled error.
+- `setState` persists the state but nothing reads it; the `revoked_agents` marker is not cleared when a name is created again (slice 7's standby selection decides).
+- `libs/core/src/inbox/aiters.test.ts` and `use-cases/ait-for-reply.test.ts` are empty tracked files from slice 1 ("No test suite found" fails `pnpm --filter @zapbip/core test:unit`); not mine, not touched.
+

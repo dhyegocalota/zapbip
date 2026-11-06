@@ -447,6 +447,9 @@ Failure modes for Step 0 are in the table below. Step 0 has no backout: a broken
 
 - [ ] **S3.1 red: Durable Object and sweep.** Write `account-inbox-accounts.test.ts`, `account-inbox-purge.test.ts` and `deletion-sweep.test.ts` (test plan **Durable Object** area). Extend `apps/api/test/support/builders.ts` (the builders the other lanes import). Expected: `not implemented`. Commit as `test(api): pin the account object, tombstone and sweep`.
 - [ ] **S3.2 green: Durable Object and sweep.** Implement the `account-inbox.ts` methods of `AccountOwnerRpc` (`receiveAccountMessage`; `DeletionRequests` and `FirstMessageClaim` over the DO schema v6 (A10); `recordRevocation` (wake state, waiters, revoked flag), `cancelWaiters` (waiters only), `setState` for suspended to active only), `purge()` (clear storage, delete alarm, write the tombstone key; later writes throw `AccountTombstoned`; purge is idempotent), dependency wiring from env and the object's own id as the account id, `ReplyWaiters.cancelAgent`, and `accounts/deletion-sweep.ts`. Commit as `feat(api): add the account object, tombstone and daily sweep`.
+  - Partial, lane L3 first push (owner delegated 2026-11-06): red `c4d269e`, green `1ad9c6d` (core `cancelAgent`, cancelled waits end at once) and `0b29795` (schema v6, `FirstMessageClaim`, `DeletionRequests`, `recordRevocation`, `cancelWaiters`, `setState`, `purge` with tombstone). Still open and left unticked: `receiveAccountMessage` on the object and `accounts/deletion-sweep.ts` with its test, which need L2's D1 adapters and L1b's green use cases.
+  - Decision (owner delegated 2026-11-06): `ReplyWaiters` awaits return `WaiterEnd` (`libs/types`), so `waitForReply` and `holdForAnswer` (core files, owned by L3 for this change) end a cancelled wait with `Timeout` and do not re-arm.
+  - Decision (owner delegated 2026-11-06): `setState` accepts only `active` and records it in `account_facts.state`; the object reads no state.
 
 ### Step L5 (docs)
 

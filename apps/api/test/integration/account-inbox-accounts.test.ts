@@ -126,6 +126,18 @@ describe('DeletionRequests', () => {
     expect(found).toEqual([REQUESTED_AT, REQUESTED_AT + 1]);
   });
 
+  it('clears the request and keeps the first message id', async () => {
+    const outcome = await inStorage(async (storage) => {
+      const requests = createSqliteDeletionRequests({ storage });
+      await createSqliteFirstMessageClaim({ storage }).claim({ channelMessageId: 'wamid.first' });
+      await requests.save({ requestedAt: REQUESTED_AT });
+      await requests.clear();
+      await requests.clear();
+      return [await requests.find(), await createSqliteFirstMessageClaim({ storage }).claim({ channelMessageId: 'wamid.first' })];
+    });
+    expect(outcome).toEqual([null, true]);
+  });
+
   it('keeps the request after the first message was claimed', async () => {
     const found = await inStorage(async (storage) => {
       await createSqliteFirstMessageClaim({ storage }).claim({ channelMessageId: 'wamid.first' });
