@@ -51,3 +51,56 @@ No Step 0 test is red: the contract is stubs that throw, and no test calls them 
 - The plan's Step 0 "meter wrapper as a pass-through" on `AccountInbox` is not in Step 0. Nothing needs it until lane A's test exists; it lands with A4.
 - `scripts/deploy.ts`, `smoke.ts`, `runbooks/` and the docs preflight do not exist yet (lanes B and D).
 - The spec's health check text (`status: "ok"`) conflicts with the decisions file (`ok: true`); the decisions file is followed.
+
+## Lane A (usage and jobs) — done
+
+Commits (red marked): `6930ad6` red usage-meter arithmetic, `358e082` arithmetic; `fff8c08` migration `0003_usage.sql`; `6d10114` red, `0cf7989` D1 repository; `1b5d79d` red, `c06ab52` meter in the object (v7, ledger, provider, RPC wrapper); `c22e6ef` pin usage security; `244cb3b` red, `9b72906` media retention; `cfcda2b` red, `043b2f3` budget check and dispatch; `bb99d7c` integration of the two crons.
+
+### What changed
+
+- `apps/api/src/account-inbox/usage-meter.ts` — arithmetic; `usageFlushDueAt` is `(lastFlushedAt or now) + HOUR_MS`.
+- `apps/api/src/account-inbox/migrations/v7.sql` and `index.ts` — table `usage_meter (day, gigabyte_seconds, flushed_gigabyte_seconds, recorded_at, last_flushed_at)`; registry is `[1, 7]`.
+- `apps/api/src/account-inbox/usage-ledger.ts` — SQLite record, list-unflushed and mark-flushed.
+- `apps/api/src/account-inbox/usage-provider.ts` — the due-time provider: flushes absolute day totals to D1 once due, marks them flushed only after `reportDay` resolved.
+- `apps/api/src/account-inbox/account-inbox.ts` — `outcome()` (the funnel of every RPC method) times the call and records it before re-arming the alarm; provider pushed in the constructor.
+- `apps/api/src/adapters/d1/d1-usage-repository.ts`, `apps/api/migrations/0003_usage.sql`.
+- `apps/api/src/adapters/r2/r2-media-listing.ts`, `apps/api/src/operations/{media-retention,budget-check,scheduled}.ts`.
+- `apps/api/src/contract/log.ts` — additive: `LogEvent.BudgetWarning = 'budget.warning'`, fields `day`, `gigabyteSeconds` (no lane owned this file).
+- `apps/api/test/integration/account-inbox.test.ts` (slice 1) — WI-118 expects `[1, 7]` and `usage_meter`; the alarm-deadline test deletes the `usage_meter` row first, because the usage flush (one hour) is now earlier than the 24 hour expiry.
+
+### How to run
+
+```bash
+cd apps/api
+pnpm exec vitest run --config vitest.unit.config.mts test/unit/usage-meter.test.ts test/unit/media-retention.test.ts test/unit/scheduled.test.ts
+pnpm exec vitest run --config vitest.integration.config.mts test/integration/usage-repository.test.ts test/integration/usage-in-object.test.ts test/integration/usage-security.test.ts test/integration/scheduled.test.ts
+```
+
+### Red today, green after
+
+| Test | Red text | Green because |
+|---|---|---|
+| `usage-meter.test.ts` (11) | `gigabyteSecondsForDuration is not implemented` | arithmetic bodies |
+| `usage-repository.test.ts` (5) | `D1UsageRepository.readDayTotal is not implemented` / `.reportDay is not implemented` | upsert and sum |
+| `usage-in-object.test.ts` (4) | `no such table: usage_meter: SQLITE_ERROR`; flush cases `expected false to be true` (no alarm armed) | v7, ledger, provider, wrapper |
+| `media-retention.test.ts` (4) | `runMediaRetention is not implemented` | listing and batched delete |
+| `scheduled.test.ts` unit (7) | `runScheduled is not implemented` | record-keyed dispatch and budget check |
+| `usage-security.test.ts` (3), `scheduled.test.ts` integration (4) | pins, green on landing | |
+
+### Hypotheses to attack
+
+1. A resolved RPC call adds its wall-clock duration to `usage_meter` and never writes to D1 from the request path. Break it by: counting `usage_daily` upserts across 1,000 calls inside one hour (test-plan U-HOUR); expect none before the alarm.
+2. The flush writes the absolute day total, so a repeated or retried flush is idempotent. Break it by: running the alarm twice with new calls in between.
+3. A failed D1 write keeps the due time, so the next alarm retries and the caller is unaffected. Break it by: dropping `usage_daily`, calling, advancing an hour, then restoring the table and running the alarm.
+4. A request with an unknown, revoked or malformed secret never reaches the object. Break it by: a secret that shares a prefix with a real one.
+5. Retention deletes only objects with `uploaded < now - MEDIA_RETENTION_MS`, across pages. Break it by: 2,001 objects, and a key deleted between list and delete.
+6. The budget check reads one D1 total and never lists accounts. Break it by: spying on `prepare`.
+
+### Known gaps
+
+- Calls with zero measured milliseconds record a zero row and are never flushed (workerd advances `Date.now()` only across I/O). Real cost of such calls is negligible by construction.
+- A D1 outage retries every 5 seconds (`ALARM_MIN_DELAY_MS`) until it recovers, per the test plan ("the due time is kept"). Not load-tested.
+- `usage_meter` rows of past days are kept (one row per day per account). No pruning step exists in the plan.
+- Retention deletes every object in the bucket past the cutoff and does not look at key shape; the bucket holds media only. It collects all listed objects in memory before deleting; a very large bucket is not tested.
+- U-HOUR (1,000 calls) and "Alarm arming registry" with a second earlier provider are not covered by an automated test of this lane; `usage-in-object.test.ts` covers the three plan cases plus the flush failure.
+- Order changed from the plan: A7 landed before A6/A8, and A6 shares its red/green commits with A8 because the budget cases run through `runScheduled`.
