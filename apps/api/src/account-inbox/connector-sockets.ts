@@ -28,11 +28,12 @@ function isOpenOrConnecting(socket: WebSocket): boolean {
   return socket.readyState !== WebSocket.CLOSING && socket.readyState !== WebSocket.CLOSED;
 }
 
-export function acceptConnectorSocket(input: { context: DurableObjectState; agent: AgentName }): WebSocket {
-  const { context, agent } = input;
+export function acceptConnectorSocket(input: { context: DurableObjectState; agent: AgentName; nowMs?: number }): WebSocket {
+  const { context, agent, nowMs = Date.now() } = input;
   context.getWebSockets(agent).forEach((previous) => previous.close(REPLACED_CLOSE_CODE));
   const { 0: client, 1: server } = new WebSocketPair();
   context.acceptWebSocket(server, [agent]);
+  server.serializeAttachment({ attachedAtMs: nowMs });
   return client;
 }
 
@@ -43,10 +44,20 @@ export function sendFrameToAgent(input: { context: DurableObjectState; agent: Ag
   return sockets.length;
 }
 
+function attachedAtMsOf(input: { socket: WebSocket }): number | null {
+  const attachment: unknown = input.socket.deserializeAttachment();
+  if (typeof attachment !== 'object' || attachment === null || !('attachedAtMs' in attachment)) return null;
+  const { attachedAtMs } = attachment;
+  return typeof attachedAtMs === 'number' ? attachedAtMs : null;
+}
+
 function isAnsweringPings(input: { context: DurableObjectState; socket: WebSocket; nowMs: number }): boolean {
-  const lastAnswer = input.context.getWebSocketAutoResponseTimestamp(input.socket);
-  if (lastAnswer === null) return true;
-  return input.nowMs - lastAnswer.getTime() <= HEARTBEAT_INTERVAL_MS + HEARTBEAT_TIMEOUT_MS;
+  const { context, socket, nowMs } = input;
+  const attachedAtMs = attachedAtMsOf({ socket });
+  if (attachedAtMs === null) return false;
+  const lastAnswer = context.getWebSocketAutoResponseTimestamp(socket);
+  const lastSignOfLifeMs = lastAnswer === null ? attachedAtMs : lastAnswer.getTime();
+  return nowMs - lastSignOfLifeMs <= HEARTBEAT_INTERVAL_MS + HEARTBEAT_TIMEOUT_MS;
 }
 
 export function hasLiveConnectorSocket(input: { context: DurableObjectState; agent: AgentName; nowMs?: number }): boolean {

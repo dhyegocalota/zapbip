@@ -9,7 +9,7 @@ import {
   ConnectorWakeOutcome,
 } from '@zapbip/types';
 import { buildOwnerPrompt } from './owner-prompt';
-import { WAKE_ISOLATION_PREPARERS } from './wake-isolation';
+import { WAKE_ISOLATION_PREPARERS, WakeIsolationRefusedError, type WakeIsolation } from './wake-isolation';
 import { buildCodexNewSessionArguments, CLIENT_BINARY_NAME, isActiveWriterRefusal, RESUME_ARGUMENT_BUILDERS } from './wake-commands';
 
 type ChildResult = { exitCode: number | null; stderrText: string };
@@ -69,6 +69,20 @@ function outcomeOf(input: { result: ChildResult; successOutcome: ConnectorWakeOu
   return { outcome: ConnectorWakeOutcome.Failed, exitCode: result.exitCode };
 }
 
+async function prepareIsolation(input: {
+  client: ConnectorClient;
+  connectionLink: string;
+  workingDirectory: string;
+}): Promise<WakeIsolation | null> {
+  const { client, connectionLink, workingDirectory } = input;
+  try {
+    return await WAKE_ISOLATION_PREPARERS[client]({ connectionLink, workingDirectory, codexHome: process.env.CODEX_HOME });
+  } catch (error) {
+    if (error instanceof WakeIsolationRefusedError) return null;
+    throw error;
+  }
+}
+
 export async function runWake(input: {
   client: ConnectorClient;
   connectionLink: string;
@@ -81,11 +95,9 @@ export async function runWake(input: {
   const { client, connectionLink, sessionId, message, workingDirectory, signal } = input;
   if (sessionId === null) return { outcome: ConnectorWakeOutcome.NoSession, exitCode: null };
   const prompt = buildOwnerPrompt({ message });
-  const { isolationArguments, cleanup } = await WAKE_ISOLATION_PREPARERS[client]({
-    connectionLink,
-    workingDirectory,
-    codexHome: process.env.CODEX_HOME,
-  });
+  const isolation = await prepareIsolation({ client, connectionLink, workingDirectory });
+  if (isolation === null) return { outcome: ConnectorWakeOutcome.RefusedIsolation, exitCode: null };
+  const { isolationArguments, cleanup } = isolation;
   try {
     return await wakeWithin({ client, sessionId, prompt, isolationArguments, workingDirectory, signal });
   } finally {

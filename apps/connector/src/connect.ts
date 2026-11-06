@@ -315,6 +315,10 @@ export async function runConnection(input: {
           workingDirectory,
           signal: wakeAbortController.signal,
         });
+        if (result.outcome === ConnectorWakeOutcome.RefusedIsolation) {
+          logConnectorEvent({ event: ConnectorLogEvent.WakeRefusedIsolation, fields: { messageId: message.messageId } });
+          throw new Error('wake refused: isolation');
+        }
         logConnectorEvent({
           event: ConnectorLogEvent.WakeFinished,
           fields: { messageId: message.messageId, outcome: result.outcome, exitCode: result.exitCode, elapsedMs: Date.now() - startedAt },

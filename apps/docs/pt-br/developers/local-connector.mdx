@@ -59,7 +59,7 @@ npx zapbip@0.1.0 connect --client claude-code --session <session-id>
 
 ## O que a IA pode fazer quando é acordada
 
-Só uma coisa: te mandar uma mensagem de volta. O conector entrega à IA uma configuração privada que contém só o zapbip, então as ferramentas dos seus outros servidores MCP não ficam disponíveis para ela. O Claude Code também roda sem os seus arquivos de configuração e com todas as ferramentas internas desligadas, e o Codex roda com um sandbox somente leitura e com os outros servidores MCP que encontra nos seus arquivos de configuração do Codex desligados. Sua mensagem chega como uma mensagem sua, marcada como verificada. Uma mensagem que você encaminhou de outra pessoa chega marcada como não verificada, com um rótulo de encaminhada, e a IA não a trata como uma instrução sua.
+Só uma coisa: te mandar uma mensagem de volta. O conector entrega à IA uma configuração privada que contém só o zapbip, então as ferramentas dos seus outros servidores MCP não ficam disponíveis para ela. O Claude Code também roda sem os seus arquivos de configuração e com todas as ferramentas internas desligadas, e o Codex roda com um sandbox somente leitura e com os outros servidores MCP que encontra nos seus arquivos de configuração do Codex desligados. Se não consegue ler um desses arquivos, não acorda o Codex e deixa a mensagem sem ler. Sua mensagem chega como uma mensagem sua, marcada como verificada. Uma mensagem que você encaminhou de outra pessoa chega marcada como não verificada, com um rótulo de encaminhada, e a IA não a trata como uma instrução sua.
 
 Se o app do Codex já estiver com a conversa aberta, o Codex recusa retomá-la. O conector então abre uma única sessão nova na mesma pasta, que começa sem a conversa anterior, e passa a usá-la.
 
