@@ -1,16 +1,13 @@
-import { existsSync, readdirSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { posix } from 'node:path';
 import { describe, expect, test } from 'vitest';
-import { readRepositoryFile, repositoryPath } from './repository-files';
+import { DOCS_ROOT, PAGE_EXTENSION, documentFiles, readRepositoryFile, repositoryPath } from './repository-files';
 
-const DOCS_ROOT = 'apps/docs';
 const DOCS_CONFIG = `${DOCS_ROOT}/docs.json`;
 const DEFAULT_LANGUAGE = 'en';
 const TRANSLATED_LANGUAGE = 'pt-BR';
 const TRANSLATED_DIRECTORY = 'pt-br';
-const PAGE_EXTENSION = '.mdx';
 const SNIPPETS_DIRECTORY = 'snippets';
-const PAGE_DIRECTORY_MARKERS = ['node_modules'];
 const GROUP_COUNT = 5;
 
 type NavigationNode = string | { group: string; pages: NavigationNode[] };
@@ -18,16 +15,6 @@ type LanguageNavigation = { language: string; groups: { group: string; pages: Na
 
 function pagesOf(nodes: NavigationNode[]): string[] {
   return nodes.flatMap((node) => (typeof node === 'string' ? [node] : pagesOf(node.pages)));
-}
-
-function documentFiles(directory: string): string[] {
-  return readdirSync(repositoryPath(posix.join(DOCS_ROOT, directory)), { withFileTypes: true })
-    .filter((entry) => !PAGE_DIRECTORY_MARKERS.includes(entry.name))
-    .flatMap((entry) => {
-      const path = posix.join(directory, entry.name);
-      if (entry.isDirectory()) return documentFiles(path);
-      return entry.name.endsWith(PAGE_EXTENSION) ? [path] : [];
-    });
 }
 
 function withoutTranslatedDirectory(path: string): string {

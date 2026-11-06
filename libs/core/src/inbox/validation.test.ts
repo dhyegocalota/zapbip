@@ -15,6 +15,8 @@ import {
 } from './validation';
 import { captureInboxError } from './testing/capture-inbox-error';
 
+const MIME_TYPE_CHARACTERS_MESSAGE = 'mime_type: must be printable ASCII without surrounding whitespace';
+
 function invalidInput(message: string) {
   return { code: InboxErrorCode.InvalidInput, message };
 }
@@ -209,7 +211,7 @@ describe('assertMediaFits', () => {
     expect(error).toEqual(invalidInput('mime_type: image must not be image/svg+xml'));
   });
 
-  test.each(['image/SVG+XML', 'image/svg+xml;x=1', ' Image/Svg+Xml ; charset=utf-8'])(
+  test.each(['image/SVG+XML', 'image/svg+xml;x=1', 'Image/Svg+Xml ; charset=utf-8'])(
     'CU-169 image with the svg type %s',
     async (mimeType) => {
       const error = await captureInboxError(() => assertMediaFits({ kind: MessageKind.Image, mimeType, sizeBytes: 1000 }));
@@ -217,7 +219,7 @@ describe('assertMediaFits', () => {
     },
   );
 
-  test.each(['image/svg+xml,image/png', 'image/svg+xml\u200b', 'image/svg+xml\u00a0x', 'image', 'image/', '/png', 'image/svg xml'])(
+  test.each(['image/svg+xml,image/png', 'image', 'image/', '/png', 'image/svg xml'])(
     'CU-169 a media type outside the type/subtype grammar %j is invalid input',
     async (mimeType) => {
       const error = await captureInboxError(() => assertMediaFits({ kind: MessageKind.Image, mimeType, sizeBytes: 1000 }));
@@ -230,10 +232,26 @@ describe('assertMediaFits', () => {
     async (mimeType) => {
       const mediaError = await captureInboxError(() => assertMediaFits({ kind: MessageKind.Image, mimeType, sizeBytes: 1000 }));
       const uploadError = await captureInboxError(() => assertUploadDeclaration({ mimeType, sizeBytes: 10 }));
-      expect(mediaError).toEqual(invalidInput('mime_type: must not contain control characters'));
-      expect(uploadError).toEqual(invalidInput('mime_type: must not contain control characters'));
+      expect(mediaError).toEqual(invalidInput(MIME_TYPE_CHARACTERS_MESSAGE));
+      expect(uploadError).toEqual(invalidInput(MIME_TYPE_CHARACTERS_MESSAGE));
     },
   );
+
+  test.each([
+    '\uFEFFimage/png',
+    'image/png\u00A0',
+    '\u00A0image/png',
+    'image/png\u2003',
+    '\u2003image/png',
+    '\timage/png',
+    ' image/png',
+    'image/png ',
+  ])('CU-179 a media type with %j outside printable ASCII or surrounding whitespace is invalid input', async (mimeType) => {
+    const mediaError = await captureInboxError(() => assertMediaFits({ kind: MessageKind.Image, mimeType, sizeBytes: 1000 }));
+    const uploadError = await captureInboxError(() => assertUploadDeclaration({ mimeType, sizeBytes: 10 }));
+    expect(mediaError).toEqual(invalidInput(MIME_TYPE_CHARACTERS_MESSAGE));
+    expect(uploadError).toEqual(invalidInput(MIME_TYPE_CHARACTERS_MESSAGE));
+  });
 
   test('an upload declaration outside the type/subtype grammar is invalid input', async () => {
     const error = await captureInboxError(() => assertUploadDeclaration({ mimeType: 'image/svg+xml,image/png', sizeBytes: 10 }));
