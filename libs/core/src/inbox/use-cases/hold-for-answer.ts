@@ -1,4 +1,4 @@
-import { ReplyStatus } from '@zapbip/types';
+import { ReplyStatus, WaiterEnd } from '@zapbip/types';
 import type { CoreDependencies } from '../ports';
 import type { Question } from '../question';
 import type { AnsweredReply } from './types';
@@ -20,6 +20,7 @@ export async function holdForAnswer(input: {
   const { dependencies, question, timeoutMs } = input;
   const alreadyAnswered = await readAnswer({ dependencies, questionId: question.questionId });
   if (alreadyAnswered !== null) return alreadyAnswered;
-  await dependencies.waiters.awaitQuestionAnswer({ agent: question.agent, questionId: question.questionId, timeoutMs });
+  const end = await dependencies.waiters.awaitQuestionAnswer({ agent: question.agent, questionId: question.questionId, timeoutMs });
+  if (end === WaiterEnd.Cancelled) return null;
   return readAnswer({ dependencies, questionId: question.questionId });
 }

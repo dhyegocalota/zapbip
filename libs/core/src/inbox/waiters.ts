@@ -34,9 +34,7 @@ export function createReplyWaiters(input: { clock: Clock }): ReplyWaiters {
       settleMatching({ matches: (waiter) => waiter.questionId === questionId, end: WaiterEnd.Resolved }),
     resolveAgentMessage: ({ agent }) =>
       settleMatching({ matches: (waiter) => waiter.agent === agent && waiter.questionId === null, end: WaiterEnd.Resolved }),
-    cancelAgent: () => {
-      throw new Error('cancelAgent is not implemented');
-    },
+    cancelAgent: ({ agent }) => settleMatching({ matches: (waiter) => waiter.agent === agent, end: WaiterEnd.Cancelled }),
     hasLiveWaiter: ({ agent }) => [...waiters].some((waiter) => waiter.agent === agent),
   };
 }
