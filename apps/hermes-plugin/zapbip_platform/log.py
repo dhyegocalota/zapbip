@@ -5,7 +5,7 @@ import re
 from .constants import ConnectorLogEvent, PluginLogEvent
 
 logger = logging.getLogger("zapbip_platform")
-REDACTED_LOGGER_NAMES = ("httpx", "websockets.client")
+REDACTED_LOGGER_NAMES = ("httpx", "httpx2", "websockets.client")
 SECRET_PATH_PATTERN = re.compile(r"/c/[^/\s\"']+/")
 REDACTED_PATH = "/c/redacted/"
 
