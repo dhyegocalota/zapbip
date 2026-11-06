@@ -1,4 +1,5 @@
 import { DeliveryState, ForwardedKind, MessageDirection, type OwnerLocale } from '@zapbip/types';
+import { ChannelError } from '../errors';
 import type { Message } from '../message';
 import type { CoreDependencies } from '../ports';
 import { isOwnerWindowOpen } from '../window';
@@ -14,8 +15,9 @@ async function queueWithNotice(input: Delivery): Promise<DeliverToOwnerResult> {
   try {
     await noticeOwner(input);
   } catch (error) {
+    if (!(error instanceof ChannelError)) return { delivery: DeliveryState.Queued };
     await recordFailure({ dependencies, messageId: message.messageId, error });
-    throw deliveryFailureOf({ error, kind: message.kind });
+    throw error;
   }
   return { delivery: DeliveryState.Queued };
 }
