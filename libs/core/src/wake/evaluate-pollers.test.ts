@@ -1,4 +1,4 @@
-import { HOUR_MS, MessageKind, OwnerLocale, WakeMode } from '@zapbip/types';
+import { HOUR_MS, MINUTE_MS, MessageKind, OwnerLocale, WakeLogEventName, WakeMode } from '@zapbip/types';
 import { describe, expect, test, vi } from 'vitest';
 import { evaluatePollers, nextPollerDeadline } from './evaluate-pollers';
 import { staleNoticeCopy } from './wake-copy';
@@ -109,6 +109,62 @@ describe('evaluatePollers', () => {
     await wakeEnvironment.environment.clock.advance({ ms: 10 * HOUR_MS });
     await evaluatePollers(wakeEnvironment.context);
     expect(sessionTexts({ wakeEnvironment })).toEqual([]);
+  });
+});
+
+describe('evaluatePollers failures', () => {
+  test('a failed delivery is logged, leaves the episode un-notified and the next pass sends the notice', async () => {
+    const wakeEnvironment = await createWakeEnvironment();
+    await schedule({ wakeEnvironment, agent: 'chatgpt' });
+    await wakeEnvironment.environment.clock.advance({ ms: 3 * HOUR_MS });
+    wakeEnvironment.environment.sender.failSessionCalls({ callNumbers: [1] });
+    await evaluatePollers(wakeEnvironment.context);
+    expect(wakeEnvironment.observer.events).toMatchObject([{ name: WakeLogEventName.NoticeFailed, agent: 'chatgpt' }]);
+    expect(await wakeEnvironment.wake.repository.findPollState({ agent: 'chatgpt' })).toMatchObject({ pollerStaleNotified: false });
+    await evaluatePollers(wakeEnvironment.context);
+    expect(sessionTexts({ wakeEnvironment })).toHaveLength(1);
+    expect(await wakeEnvironment.wake.repository.findPollState({ agent: 'chatgpt' })).toMatchObject({ pollerStaleNotified: true });
+  });
+
+  test('one failing wake does not stop the notices of the others', async () => {
+    const wakeEnvironment = await createWakeEnvironment();
+    await schedule({ wakeEnvironment, agent: 'chatgpt' });
+    await schedule({ wakeEnvironment, agent: 'hermes' });
+    await wakeEnvironment.environment.clock.advance({ ms: 3 * HOUR_MS });
+    wakeEnvironment.environment.sender.failSessionCalls({ callNumbers: [1] });
+    await evaluatePollers(wakeEnvironment.context);
+    expect(sessionTexts({ wakeEnvironment })).toEqual([
+      staleNoticeCopy({ locale: OwnerLocale.PortugueseBrazil, agent: 'hermes', elapsedSinceLastPollMs: 3 * HOUR_MS }),
+    ]);
+  });
+
+  test('a wake without an owner locale is logged as skipped and does not throw', async () => {
+    const wakeEnvironment = await createWakeEnvironment();
+    await wakeEnvironment.wake.repository.saveWake({ wake: scheduledWakeOf({ agent: 'chatgpt', ownerLocale: null }) });
+    await wakeEnvironment.environment.clock.advance({ ms: 3 * HOUR_MS });
+    await expect(evaluatePollers(wakeEnvironment.context)).resolves.toEqual({ nextDueAt: null });
+    expect(wakeEnvironment.observer.events).toMatchObject([{ name: WakeLogEventName.NoticeSkipped, agent: 'chatgpt' }]);
+    expect(sessionTexts({ wakeEnvironment })).toEqual([]);
+  });
+});
+
+describe('evaluatePollers flood limit', () => {
+  test('a one minute poller that alternates a poll and two silent minutes gets a bounded number of notices', async () => {
+    const wakeEnvironment = await createWakeEnvironment();
+    const { clock } = wakeEnvironment.environment;
+    const hours = 20;
+    await schedule({ wakeEnvironment, agent: 'chatgpt', intervalMinutes: 1 });
+    await Array.from({ length: (hours * HOUR_MS) / (2 * MINUTE_MS) }).reduce<Promise<void>>(async (previous) => {
+      await previous;
+      await wakeEnvironment.wake.repository.recordPoll({
+        agent: 'chatgpt',
+        polledAt: clock.now(),
+        ownerLocale: OwnerLocale.PortugueseBrazil,
+      });
+      await clock.advance({ ms: 2 * MINUTE_MS });
+      await evaluatePollers(wakeEnvironment.context);
+    }, Promise.resolve());
+    expect(sessionTexts({ wakeEnvironment }).length).toBeLessThanOrEqual(hours);
   });
 });
 
