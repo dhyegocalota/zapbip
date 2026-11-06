@@ -10,6 +10,7 @@ import {
   MIME_TYPE_MAX_CHARS,
   QUESTION_MAX_OPTIONS,
   STICKER_MIME_TYPE,
+  SVG_MIME_TYPE,
   WAIT_TIMEOUT_MIN_SECONDS,
   type MediaMessageKind,
 } from './constants';
@@ -86,6 +87,8 @@ export function assertMediaFits(input: { kind: MediaMessageKind; mimeType: strin
   if (exceedsSize) throw invalidInput({ message: `size_bytes: ${input.kind} must be at most ${maxBytes} bytes` });
   const isWrongSticker = input.kind === MessageKind.Sticker && input.mimeType !== null && input.mimeType !== STICKER_MIME_TYPE;
   if (isWrongSticker) throw invalidInput({ message: `mime_type: ${input.kind} must be ${STICKER_MIME_TYPE}` });
+  const isSvgImage = input.kind === MessageKind.Image && input.mimeType === SVG_MIME_TYPE;
+  if (isSvgImage) throw invalidInput({ message: `mime_type: ${input.kind} must not be ${SVG_MIME_TYPE}` });
   const isWrongPrefix = mimePrefix !== null && input.mimeType !== null && !input.mimeType.startsWith(mimePrefix);
   const article = VOWEL_PATTERN.test(input.kind) ? 'an' : 'a';
   if (isWrongPrefix) throw invalidInput({ message: `mime_type: ${input.kind} must be ${article} ${mimePrefix}* type` });
