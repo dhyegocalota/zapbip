@@ -66,6 +66,7 @@ Runner: `pnpm --filter @zapbip/core test:unit` (Vitest 5.0.5). No ports. Time is
 - [ ] `receiveOwnerMessage` — input: `@claude girar a imagem` with agent `claude` active; expected: rule 3 routes `girar a imagem` to `claude` with the prefix removed; no rotate happens (the escape, item 17).
 - [ ] `parseAccountCommand` — input: text `girar   Foo`; expected: `{kind: RotateAgent, rawName: 'Foo', locale: pt-BR}`.
 - [ ] `parseAccountCommand` — input: text `novo agente` quoted (`isQuoting: true`); expected: `null`.
+- [ ] `receiveAccountMessage` — input: text `revogar alpha` forwarded (`forwarded` and `frequently_forwarded`), from an active account with agent `alpha`; expected: not a command, `alpha` stays active, the message routes to an agent.
 - [ ] `parseAccountCommand` — input: text `agentes` quoted (`isQuoting: true`); expected: `null` (rule 2 routes it to the quoted agent).
 - [ ] `parseAccountCommand` — input: `text: null`, `listReplyId: 'zapbip:agents'`; expected: `{kind: ListAgents, rawName: null}`.
 - [ ] `parseAccountCommand` — input: `text: null`, `listReplyId: 'zapbip:help'`; expected: `{kind: Help}`.
@@ -220,7 +221,7 @@ Runner: `pnpm --filter @zapbip/core test:unit`.
 - [ ] `rotateAgentConnection` — input: two rotations of `claude` issued from the same old digest (lost race); expected: the second `rotate` returns `false`; reply `NotFound` or a retry message; the stored digest is the first rotation's digest.
 - [ ] `rotateAgentConnection` — input: `rotate` called after `revoke` in the same call sequence; expected: reply `NotFound`, digest unchanged.
 - [ ] `rotateAgentConnection` — input: `claude` active with its wake setting set; expected: `revocations.cancelWaiters({accountId, agent: 'claude'})` called exactly once after the new prompt is sent; `recordRevocation` not called; the wake setting is unchanged (A22).
-- [ ] `rotateAgentConnection` — input: `claude` active with a live `ask` held by `claude`; expected: the held call resolves with `ReplyStatus.Timeout` after the rotate reply is sent; the agent is not marked revoked.
+- [ ] `rotateAgentConnection` — input: `claude` active with a live `ask` held by `claude`; expected: the held `ask` resolves with `ReplyStatus.Pending` after the rotate reply is sent; the agent is not marked revoked.
 - [ ] `rotateAgentConnection` — input: the new prompt send fails; expected: `cancelWaiters` not called (the waiter is still live, because the rotation was undone).
 
 ### Deletion (`delete-account.test.ts`)
@@ -249,13 +250,13 @@ Runner: `pnpm --filter @zapbip/api test:unit` (Vitest 4.1.12 in `apps/api`).
 - [ ] `hashConnectionSecret` — input: the same secret without the `zb_conn_` prefix; expected: a different digest (the prefix is part of the hashed string).
 - ~~`RandomSource.bytes` — input: `length: 32`; expected: a `Uint8Array` of length 32.~~ Struck: the `RandomSource` port is dropped (plan.md → Plan refresh).
 - ~~`RandomSource.bytes` — input: `length: 0`; expected: an empty `Uint8Array` (edge).~~ Struck: same reason.
-- [ ] `isWaitlistEnabled` (`apps/api/src/config/waitlist-enabled.ts`) — input: `'true'`; expected: `true`.
-- [ ] `isWaitlistEnabled` — input: `'false'`; expected: `false`.
-- [ ] `isWaitlistEnabled` — input: `undefined`; expected: throws naming `WAITLIST_ENABLED`.
-- [ ] `isWaitlistEnabled` — input: `''`; expected: throws.
-- [ ] `isWaitlistEnabled` — input: `'yes'`; expected: throws.
-- [ ] `isWaitlistEnabled` — input: `'TRUE'`; expected: throws (exact values only).
-- [ ] Bad flag per request (item 16) — input: `WAITLIST_ENABLED` `'yes'` in the Worker bindings; expected: `GET /health` and `POST /dev/owner/<phone>/messages` both return `500` naming `WAITLIST_ENABLED`; module import succeeds (no module-scope read).
+- [ ] `readWaitlistEnabled` (`apps/api/src/config/waitlist-enabled.ts`) — input: `'true'`; expected: `true`.
+- [ ] `readWaitlistEnabled` — input: `'false'`; expected: `false`.
+- [ ] `readWaitlistEnabled` — input: `undefined`; expected: throws naming `WAITLIST_ENABLED`.
+- [ ] `readWaitlistEnabled` — input: `''`; expected: throws.
+- [ ] `readWaitlistEnabled` — input: `'yes'`; expected: throws.
+- [ ] `readWaitlistEnabled` — input: `'TRUE'`; expected: throws (exact values only).
+- [ ] Bad flag per request (item 16) — input: `WAITLIST_ENABLED` `'yes'` in the Worker bindings; expected: `GET /health` still returns `200` and `POST /dev/owner/<phone>/messages` returns `500` naming `WAITLIST_ENABLED`; module import succeeds (no module-scope read).
 - [ ] Durable Object does not read the flag (item 16) — input: a Durable Object instance constructed with `WAITLIST_ENABLED` `'yes'`; expected: construction succeeds and `receiveOwnerMessage` works from the state the Worker passed in.
 - [ ] `wrangler-limits` — input: `apps/api/wrangler.jsonc` parsed; expected: the `OWNER_RATE_LIMITER` `simple.limit` equals `OWNER_MESSAGES_PER_MINUTE` (20), `OUTBOUND_RATE_LIMITER` equals `OUTBOUND_MESSAGES_PER_MINUTE` (30), both `simple.period` equal `RATE_LIMIT_PERIOD_MS / ONE_SECOND_MS` (60).
 - [ ] `wrangler-limits` — input: the `vars.WAITLIST_ENABLED` of each environment; expected: production `"true"`; staging and top-level development `"false"`.
