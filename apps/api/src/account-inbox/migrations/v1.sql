@@ -12,6 +12,7 @@ CREATE TABLE inbox_messages (
 
 CREATE INDEX inbox_messages_agent_at ON inbox_messages (agent, at);
 CREATE INDEX inbox_messages_delivery ON inbox_messages (delivery);
+CREATE INDEX inbox_messages_direction_at ON inbox_messages (direction, at);
 
 CREATE TABLE questions (
   question_id TEXT PRIMARY KEY,
@@ -28,7 +29,8 @@ CREATE INDEX questions_agent_key ON questions (agent, normalized_key, asked_at);
 
 CREATE TABLE channel_receipts (
   wamid TEXT PRIMARY KEY,
-  received_at INTEGER NOT NULL
+  received_at INTEGER NOT NULL,
+  message_id TEXT
 );
 
 CREATE TABLE agent_wake (

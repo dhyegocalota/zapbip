@@ -1,0 +1,16 @@
+---
+title: 'Caixa de entrada'
+description: 'Onde as mensagens do dono esperam por um agente.'
+---
+
+Toda mensagem do dono cai primeiro numa caixa de entrada durável mantida para cada agente. Os agentes leem dela com [get_messages](/pt-br/mcp-reference/get-messages) e [check_inbox](/pt-br/mcp-reference/check-inbox), ou a recebem como resposta de uma chamada em espera.
+
+Toda mensagem do dono chega ao agente como `sender: "owner"` e `verified: true`, porque os clientes recusam instruções de um remetente não verificado.
+
+Uma mensagem do dono é roteada para um agente pelas [regras de roteamento](/pt-br/concepts/routing). Quando o agente não está ouvindo, a [escada de despertar](/pt-br/concepts/wake-ladder) decide como alcançá-lo, e a mensagem espera na caixa enquanto isso.
+
+## Tipos de mensagem
+
+import MessageKinds from '/snippets/pt-br/message-kinds.mdx';
+
+<MessageKinds />

@@ -3,6 +3,7 @@ import {
   DeliveryState,
   IdPrefix,
   MessageDirection,
+  MessageKind,
   WakeOutcome,
   type AgentWakeReason,
   type OwnerLocale,
@@ -69,6 +70,7 @@ export type InMemoryEnvironment = {
 function createInMemoryRepository(): InMemoryRepository {
   const agents = new Map<AgentName, AgentRecord>();
   const receipts = new Map<string, number>();
+  const receiptMessageIds = new Map<string, string>();
   const media = new Map<string, StoredMedia>();
   const channelMessageIds = new Map<string, string>();
   const statusDetails = new Map<string, ChannelStatusDetail>();
@@ -107,7 +109,13 @@ function createInMemoryRepository(): InMemoryRepository {
     listUnread: async ({ agent, limit }) => unreadOf(agent).slice(0, limit),
     countUnread: async ({ agent }) => unreadOf(agent).length,
     markRead: async ({ messageIds }) => replaceMessages({ messageIds, change: (message) => ({ ...message, readByAgent: true }) }),
-    listHeld: async () => messages.filter((message) => message.direction === MessageDirection.FromOwner && message.agent === null),
+    listHeld: async () =>
+      messages.filter((message) => message.direction === MessageDirection.FromOwner && message.agent === null && !message.readByAgent),
+    findChoicePrompt: async ({ questionId }) =>
+      messages.find(
+        (message) =>
+          message.direction === MessageDirection.ToOwner && message.kind === MessageKind.Choice && message.questionId === questionId,
+      ) ?? null,
     assignAgent: async ({ messageIds, agent }) => replaceMessages({ messageIds, change: (message) => ({ ...message, agent }) }),
     listQueued: async () => messages.filter((message) => message.delivery === DeliveryState.Queued),
     findLastAgentWrite: async ({ since }) => {
@@ -132,8 +140,17 @@ function createInMemoryRepository(): InMemoryRepository {
       receipts.set(wamid, receivedAt);
       return true;
     },
+    linkChannelReceipt: async ({ wamid, messageId }) => {
+      receiptMessageIds.set(wamid, messageId);
+    },
+    findChannelReceiptMessageId: async ({ wamid }) => receiptMessageIds.get(wamid) ?? null,
     deleteExpiredReceipts: async ({ receivedBefore }) => {
-      [...receipts].filter(([, receivedAt]) => receivedAt < receivedBefore).forEach(([wamid]) => receipts.delete(wamid));
+      [...receipts]
+        .filter(([, receivedAt]) => receivedAt < receivedBefore)
+        .forEach(([wamid]) => {
+          receipts.delete(wamid);
+          receiptMessageIds.delete(wamid);
+        });
     },
     commitChannelInbound: async ({ channelMessageId, receivedAt, message, answer, media: stored, window: nextWindow }) => {
       if (receipts.has(channelMessageId)) return false;
@@ -141,6 +158,7 @@ function createInMemoryRepository(): InMemoryRepository {
       if (message !== null) {
         messages = [...messages, message];
         channelMessageIds.set(message.messageId, channelMessageId);
+        receiptMessageIds.set(channelMessageId, message.messageId);
       }
       if (answer !== null)
         replaceQuestion({ questionId: answer.questionId, change: (question) => ({ ...question, answer: answer.answer }) });

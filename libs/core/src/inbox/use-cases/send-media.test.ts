@@ -52,7 +52,7 @@ describe('sendMedia', () => {
     const error = await captureInboxError(() =>
       send({ environment, source: { kind: MediaSourceKind.Link, link: 'http://example.com/a.jpg' } }),
     );
-    expect(error).toEqual({ code: InboxErrorCode.InvalidInput, message: 'link: must be an https URL' });
+    expect(error).toEqual({ code: InboxErrorCode.InvalidInput, message: 'url: must be an https URL' });
   });
 
   test('a voice flag on an image is rejected', async () => {

@@ -12,7 +12,7 @@ import {
   type QuestionAnswer,
   type StoredMedia,
 } from '@zapbip/core';
-import { DeliveryState, MessageDirection, WakeMode, type MediaOrigin, type MessageKind } from '@zapbip/types';
+import { DeliveryState, MessageDirection, MessageKind, WakeMode, type MediaOrigin } from '@zapbip/types';
 
 type MessageRow = {
   id: string;
@@ -141,9 +141,8 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
 
     async insertMessage({ message }) {
       const { messageId, direction, agent, at, replyToMessageId, delivery, readByAgent, ...content } = message;
-      void readByAgent;
       run(
-        'INSERT INTO inbox_messages (id, agent, direction, kind, payload, reply_to, delivery, read_at, at) VALUES (?, ?, ?, ?, ?, ?, ?, NULL, ?)',
+        'INSERT INTO inbox_messages (id, agent, direction, kind, payload, reply_to, delivery, read_at, at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
         messageId,
         agent,
         direction,
@@ -151,6 +150,7 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
         JSON.stringify(content),
         replyToMessageId,
         delivery,
+        readByAgent ? input.clock.now() : null,
         at,
       );
     },
@@ -192,7 +192,17 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
     },
 
     async listHeld() {
-      return selectMessages('WHERE agent IS NULL AND direction = ? ' + ORDER_BY_ARRIVAL, MessageDirection.FromOwner);
+      return selectMessages('WHERE agent IS NULL AND direction = ? AND read_at IS NULL ' + ORDER_BY_ARRIVAL, MessageDirection.FromOwner);
+    },
+
+    async findChoicePrompt({ questionId }) {
+      const [message] = selectMessages(
+        "WHERE direction = ? AND kind = ? AND json_extract(payload, '$.questionId') = ? " + ORDER_BY_ARRIVAL + ' LIMIT 1',
+        MessageDirection.ToOwner,
+        MessageKind.Choice,
+        questionId,
+      );
+      return message === undefined ? null : message;
     },
 
     async assignAgent({ messageIds, agent }) {
@@ -257,6 +267,15 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
           receivedAt,
         ).length === 1
       );
+    },
+
+    async linkChannelReceipt({ wamid, messageId }) {
+      run('UPDATE channel_receipts SET message_id = ? WHERE wamid = ?', messageId, wamid);
+    },
+
+    async findChannelReceiptMessageId({ wamid }) {
+      const row = first<{ message_id: string | null }>('SELECT message_id FROM channel_receipts WHERE wamid = ?', wamid);
+      return row === null ? null : row.message_id;
     },
 
     async deleteExpiredReceipts({ receivedBefore }) {

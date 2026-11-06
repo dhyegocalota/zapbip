@@ -1,0 +1,23 @@
+---
+title: 'send_contact'
+description: 'Envia cartões de contato ao dono.'
+---
+
+Envia cartões de contato ao dono.
+
+## Entrada
+
+| Campo      | Tipo             | Notas                                                                     |
+| ---------- | ---------------- | ------------------------------------------------------------------------- |
+| `contacts` | array, até 10    | Cada um com `name`, `phones` e, opcionalmente, `emails` e `organization`. |
+| `reply_to` | string, opcional | Id da mensagem a citar.                                                   |
+
+## Saída
+
+`{ "message_id": string, "delivery": "sent" | "queued" }`. `queued` quer dizer que a [janela de 24 horas](/pt-br/concepts/24-hour-window) está fechada.
+
+## Tipos de mensagem
+
+import MessageKinds from '/snippets/pt-br/message-kinds.mdx';
+
+<MessageKinds />

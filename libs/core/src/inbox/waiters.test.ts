@@ -25,16 +25,16 @@ describe('createReplyWaiters', () => {
     const waiting = waiters.awaitAgentMessage({ agent: 'alpha', timeoutMs: 5000 });
     await clock.advance({ ms: 5000 });
     await waiting;
-    expect(waiters.hasLiveWaiter({ agent: 'alpha' })).toBe(false);
+    expect(waiters.hasLiveWaiter({ agent: 'alpha', questionId: null })).toBe(false);
   });
 
-  test('CU-86 a pending question is a live waiter until resolved', async () => {
+  test('CU-86 a pending question is not a live waiter, and resolving it settles the wait', async () => {
     const { waiters } = createWaiters();
     const waiting = waiters.awaitQuestionAnswer({ agent: 'alpha', questionId: 'qst_1', timeoutMs: 5000 });
-    expect(waiters.hasLiveWaiter({ agent: 'alpha' })).toBe(true);
+    expect(waiters.hasLiveWaiter({ agent: 'alpha', questionId: null })).toBe(false);
+    expect(waiters.hasLiveWaiter({ agent: 'alpha', questionId: 'qst_1' })).toBe(true);
     waiters.resolveQuestionAnswer({ questionId: 'qst_1' });
     await waiting;
-    expect(waiters.hasLiveWaiter({ agent: 'alpha' })).toBe(false);
   });
 
   test('CU-87 resolving a question nobody awaits does nothing', () => {
@@ -48,14 +48,13 @@ describe('createReplyWaiters', () => {
     const second = waiters.awaitAgentMessage({ agent: 'alpha', timeoutMs: 5000 });
     waiters.resolveAgentMessage({ agent: 'alpha' });
     await Promise.all([first, second]);
-    expect(waiters.hasLiveWaiter({ agent: 'alpha' })).toBe(false);
+    expect(waiters.hasLiveWaiter({ agent: 'alpha', questionId: null })).toBe(false);
   });
 
   test('an agent message leaves a question waiter pending', async () => {
     const { waiters } = createWaiters();
     const waiting = waiters.awaitQuestionAnswer({ agent: 'alpha', questionId: 'qst_1', timeoutMs: 5000 });
     waiters.resolveAgentMessage({ agent: 'alpha' });
-    expect(waiters.hasLiveWaiter({ agent: 'alpha' })).toBe(true);
     waiters.resolveQuestionAnswer({ questionId: 'qst_1' });
     await waiting;
   });
@@ -64,6 +63,6 @@ describe('createReplyWaiters', () => {
     const { waiters } = createWaiters();
     void waiters.awaitAgentMessage({ agent: 'alpha', timeoutMs: 5000 });
     waiters.resolveAgentMessage({ agent: 'beta' });
-    expect(waiters.hasLiveWaiter({ agent: 'alpha' })).toBe(true);
+    expect(waiters.hasLiveWaiter({ agent: 'alpha', questionId: null })).toBe(true);
   });
 });

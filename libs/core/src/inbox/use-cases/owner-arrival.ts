@@ -11,7 +11,7 @@ async function wakeAgent(
 ): Promise<void> {
   const { dependencies, ownerLocale, agent, unreadBefore, answeredQuestionId, shouldTellOwner } = input;
   const { waiters, waker, ids } = dependencies;
-  const hasLiveWaiter = waiters.hasLiveWaiter({ agent });
+  const hasLiveWaiter = waiters.hasLiveWaiter({ agent, questionId: answeredQuestionId });
   if (answeredQuestionId === null) waiters.resolveAgentMessage({ agent });
   if (answeredQuestionId !== null) waiters.resolveQuestionAnswer({ questionId: answeredQuestionId });
   const isNewBatch = unreadBefore === 0;
@@ -27,6 +27,20 @@ async function wakeAgent(
     content: { kind: MessageKind.Text, text },
     replyToMessageId: null,
   });
+}
+
+async function expireRoute(input: Arrival): Promise<ReceiveResult> {
+  const { dependencies, ownerLocale } = input;
+  const text = renderCopy({ key: InboxCopyKey.RoutingListExpired, locale: ownerLocale, values: {} });
+  await deliverToOwner({
+    dependencies,
+    ownerLocale,
+    agent: null,
+    messageId: dependencies.ids.next({ prefix: IdPrefix.Message }),
+    content: { kind: MessageKind.Text, text },
+    replyToMessageId: null,
+  });
+  return { messageId: null, agent: null, duplicate: false };
 }
 
 async function applyRouteTarget(input: Arrival & { target: RouteTarget }): Promise<ReceiveResult> {
@@ -72,7 +86,8 @@ async function deliverPlacement(
 
 export async function finishArrival(input: Arrival & { plan: ArrivalPlan; messageId: string | null }): Promise<ReceiveResult> {
   const { plan, messageId, ownerMessage } = input;
-  const { routeTarget, placement, unreadBefore } = plan;
+  const { routeTarget, isStaleRoute, placement, unreadBefore } = plan;
+  if (isStaleRoute) return expireRoute(input);
   if (routeTarget !== null) return applyRouteTarget({ ...input, target: routeTarget });
   if (placement === null || messageId === null) return { messageId: null, agent: null, duplicate: false };
   const shouldTellOwner = ownerMessage.content.kind !== MessageKind.Reaction;

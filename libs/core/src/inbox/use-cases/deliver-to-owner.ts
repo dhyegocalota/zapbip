@@ -2,9 +2,9 @@ import { DeliveryState, MessageDirection, type OwnerLocale } from '@zapbip/types
 import type { Message } from '../message';
 import type { CoreDependencies } from '../ports';
 import { isOwnerWindowOpen } from '../window';
-import { closeWindow } from './close-window';
 import { noticeOwner } from './notice-owner';
-import { attemptSession, deliveryFailureOf, recordFailure, recordSent, SessionOutcome } from './session-delivery';
+import { flushQueue } from './flush-queue';
+import { deliveryFailureOf, recordFailure } from './session-delivery';
 import type { DeliverToOwnerInput, DeliverToOwnerResult } from './types';
 
 type Delivery = { dependencies: CoreDependencies; ownerLocale: OwnerLocale; message: Message };
@@ -21,18 +21,17 @@ async function queueWithNotice(input: Delivery): Promise<DeliverToOwnerResult> {
 }
 
 async function sendSession(input: Delivery): Promise<DeliverToOwnerResult> {
-  const { dependencies, message } = input;
-  const attempt = await attemptSession({ dependencies, message });
-  if (attempt.outcome === SessionOutcome.Sent) {
-    await recordSent({ dependencies, messageId: message.messageId, channelMessageId: attempt.channelMessageId });
-    return { delivery: DeliveryState.Sent };
-  }
-  if (attempt.outcome === SessionOutcome.WindowClosed) {
-    await closeWindow({ dependencies, at: dependencies.clock.now() });
-    return queueWithNotice(input);
-  }
-  await recordFailure({ dependencies, messageId: message.messageId, error: attempt.error });
-  throw deliveryFailureOf({ error: attempt.error, kind: message.kind });
+  const { dependencies, ownerLocale, message } = input;
+  const { messageId, kind } = message;
+  const report = await flushQueue({ dependencies, ownerLocale });
+  const current = await dependencies.repository.findMessage({ messageId });
+  const delivery = current === null ? null : current.delivery;
+  if (delivery === DeliveryState.Sent) return { delivery };
+  const isHeldBackWithoutNotice = delivery === DeliveryState.Queued && report.noticeFailure === null;
+  if (isHeldBackWithoutNotice) return { delivery: DeliveryState.Queued };
+  const error = report.noticeFailure === null ? report.failures.get(messageId) : report.noticeFailure.error;
+  await recordFailure({ dependencies, messageId, error });
+  throw deliveryFailureOf({ error, kind });
 }
 
 export async function deliverToOwner(input: DeliverToOwnerInput): Promise<DeliverToOwnerResult> {

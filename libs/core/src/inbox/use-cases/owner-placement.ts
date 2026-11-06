@@ -1,9 +1,9 @@
-import { MediaOrigin, MediaSourceKind, MessageDirection, MessageKind, RoutingRule, type OwnerLocale } from '@zapbip/types';
+import { DeliveryState, MediaOrigin, MediaSourceKind, MessageDirection, MessageKind, RoutingRule, type OwnerLocale } from '@zapbip/types';
 import { MEDIA_MAX_BYTES, MEDIA_RETENTION_MS, NOTICE_QUICK_REPLY_ID, QUESTION_MAX_OPTIONS, WINDOW_MS } from '../constants';
 import type { AgentName } from '../connection';
 import type { StoredMedia } from '../inbox-records';
 import type { MediaFields, Message, MessageContent } from '../message';
-import { parseOptionId, parseRouteOptionId } from '../option-id';
+import { formatRoutingListQuestionId, parseOptionId, parseRouteOptionId } from '../option-id';
 import type { CoreDependencies } from '../ports';
 import type { Question, QuestionAnswer } from '../question';
 import { routeOwnerMessage, type RoutingDecision } from '../routing';
@@ -22,9 +22,15 @@ export type Placement = {
   decision: RoutingDecision;
   answer: PendingAnswer | null;
   prompt: OwnerPrompt;
+  isRoutedNowhere: boolean;
 };
 export type Arrival = { dependencies: CoreDependencies; ownerLocale: OwnerLocale; ownerMessage: ArrivalMessage };
-export type ArrivalPlan = { routeTarget: RouteTarget | null; placement: Placement | null; unreadBefore: number };
+export type ArrivalPlan = {
+  routeTarget: RouteTarget | null;
+  isStaleRoute: boolean;
+  placement: Placement | null;
+  unreadBefore: number;
+};
 
 type ChoiceContent = Extract<OwnerInboundContent, { kind: MessageKind.Choice }>;
 type PlainContent = Exclude<ArrivalContent, ChoiceContent>;
@@ -106,6 +112,7 @@ function placeTap(input: { tapped: TappedOption }): Placement {
       decision,
       answer: null,
       prompt: NO_PROMPT,
+      isRoutedNowhere: false,
     };
   return {
     content: { kind: MessageKind.Choice, questionId: question.questionId, options: question.options, selected },
@@ -113,6 +120,7 @@ function placeTap(input: { tapped: TappedOption }): Placement {
     decision,
     answer: { questionId: question.questionId, optionIndex: selected.optionIndex, text: selected.title },
     prompt: NO_PROMPT,
+    isRoutedNowhere: false,
   };
 }
 
@@ -127,6 +135,14 @@ async function findReference(
   return { message, question };
 }
 
+async function isRoutingListPending(input: { dependencies: CoreDependencies; held: Message[] }): Promise<boolean> {
+  const { repository } = input.dependencies;
+  const prompts = await Promise.all(
+    input.held.map((message) => repository.findChoicePrompt({ questionId: formatRoutingListQuestionId({ messageId: message.messageId }) })),
+  );
+  return prompts.some((prompt) => prompt !== null && prompt.delivery !== DeliveryState.Failed);
+}
+
 async function placeContent(input: Arrival & { content: MessageContent }): Promise<Placement> {
   const { dependencies, ownerMessage, content } = input;
   const { repository } = dependencies;
@@ -137,7 +153,7 @@ async function placeContent(input: Arrival & { content: MessageContent }): Promi
     repository.findLastAgentWrite({ since: ownerMessage.at - WINDOW_MS }),
     repository.listHeld(),
   ]);
-  const routingListOpen = held.length > 0;
+  const routingListOpen = await isRoutingListPending({ dependencies, held });
   const decision = routeOwnerMessage({
     text: textOf(content),
     referencedMessage: reference.message,
@@ -156,13 +172,14 @@ async function placeContent(input: Arrival & { content: MessageContent }): Promi
           .slice(0, QUESTION_MAX_OPTIONS)
           .map((record) => record.agent)
       : [];
-  const announcesNoAgents = decision.rule === RoutingRule.AskOwner && agents.length === 0 && !routingListOpen && shouldTellOwner;
+  const announcesNoAgents = decision.rule === RoutingRule.AskOwner && agents.length === 0 && held.length === 0 && shouldTellOwner;
   return {
     content: routedContent,
     replyToMessageId: ownerMessage.replyToMessageId,
     decision,
     answer: pendingAnswerOf({ content: routedContent, answersQuestionId: decision.answersQuestionId }),
     prompt: { listedAgents, announcesNoAgents },
+    isRoutedNowhere: content.kind === MessageKind.Reaction && decision.agent === null,
   };
 }
 
@@ -184,11 +201,13 @@ export async function planArrival(input: Arrival): Promise<ArrivalPlan> {
   const isNoticeQuickReply = content.kind === MessageKind.Choice && content.optionId === NOTICE_QUICK_REPLY_ID;
   const routeTarget =
     content.kind === MessageKind.Choice && !isNoticeQuickReply ? await findRouteTarget({ dependencies, optionId: content.optionId }) : null;
-  const isPlaced = !isNoticeQuickReply && routeTarget === null;
+  const isRouteOption = content.kind === MessageKind.Choice && parseRouteOptionId({ optionId: content.optionId }) !== null;
+  const isStaleRoute = isRouteOption && routeTarget === null;
+  const isPlaced = !isNoticeQuickReply && !isRouteOption;
   const placement = isPlaced ? await placeOwnerContent({ ...input, content }) : null;
   const placedAgent = placement === null ? null : placement.decision.agent;
   const unreadBefore = placedAgent === null ? 0 : await dependencies.repository.countUnread({ agent: placedAgent });
-  return { routeTarget, placement, unreadBefore };
+  return { routeTarget, isStaleRoute, placement, unreadBefore };
 }
 
 export function buildPlacedMessage(input: { messageId: string; at: number; placement: Placement }): Message {
@@ -200,7 +219,7 @@ export function buildPlacedMessage(input: { messageId: string; at: number; place
     at,
     replyToMessageId: placement.replyToMessageId,
     delivery: null,
-    readByAgent: false,
+    readByAgent: placement.isRoutedNowhere,
     ...placement.content,
   };
 }
