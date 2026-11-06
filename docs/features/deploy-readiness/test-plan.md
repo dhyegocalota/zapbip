@@ -16,9 +16,11 @@ Every checkbox states the input and the exact expected outcome. A ticked box car
 Source: `apps/api/test/unit/wrangler-config.test.ts`, reads `apps/api/wrangler.jsonc` with `JSON.parse`.
 
 - [ ] Edge: the file parses — input: the committed `wrangler.jsonc`; expected: no exception (no comment, no trailing comma).
-- [ ] Top-level block — input: top-level object; expected: `main` is `src/index.dev.ts`, D1 `zapbip-development`, R2 `zapbip-media-development`, `vars.ENVIRONMENT` `development`, `vars.PUBLIC_ORIGIN` `http://localhost:8787`.
+~~- [ ] Top-level block — input: top-level object; expected: `main` is `src/index.dev.ts`, D1 `zapbip-development`, R2 `zapbip-media-development`, `vars.ENVIRONMENT` `development`, `vars.PUBLIC_ORIGIN` `http://localhost:8787`.~~
+- [ ] Top-level block (corrected at Step R: production) — input: top-level object; expected: `main` is `src/index.ts`, `name` `zapbip-api`, D1 `zapbip-production`, R2 `zapbip-media-production`, `vars.ENVIRONMENT` `production`, `vars.PUBLIC_ORIGIN` `https://mcp.zapbip.com`.
 - [ ] Staging block — input: `env.staging`; expected: `name` `zapbip-api-staging`, `main` `src/index.ts`, D1 `zapbip-staging`, R2 `zapbip-media-staging`, `vars.PUBLIC_ORIGIN` `https://mcp-staging.zapbip.com`, `vars.WAITLIST_ENABLED` `"false"`, `vars.WHATSAPP_GRAPH_BASE_URL` `https://graph.facebook.com`.
-- [ ] Production block — input: `env.production`; expected: `name` `zapbip-api`, D1 `zapbip-production`, R2 `zapbip-media-production`, `routes` `[{ "pattern": "mcp.zapbip.com", "custom_domain": true }]`, `vars.PUBLIC_ORIGIN` `https://mcp.zapbip.com`, `vars.WAITLIST_ENABLED` `"true"`.
+~~- [ ] Production block — input: `env.production`; expected: `name` `zapbip-api`, D1 `zapbip-production`, R2 `zapbip-media-production`, `routes` `[{ "pattern": "mcp.zapbip.com", "custom_domain": true }]`, `vars.PUBLIC_ORIGIN` `https://mcp.zapbip.com`, `vars.WAITLIST_ENABLED` `"true"`.~~
+- [ ] Production block — input: top-level object; expected: `routes` `[{ "pattern": "mcp.zapbip.com", "custom_domain": true }]`, `vars.PUBLIC_ORIGIN` `https://mcp.zapbip.com`, `vars.WAITLIST_ENABLED` `"true"`.
 - [ ] Parity of binding keys — input: the set of keys under `d1_databases`, `r2_buckets`, `durable_objects.bindings`, `ratelimits`, `analytics_engine_datasets`, `rules` in each block; expected: identical key sets across the three blocks, for every binding class that the top-level block declares.
 - [ ] Parity of vars — input: `vars` keys of each block; expected: identical key sets (`ENVIRONMENT`, `PUBLIC_ORIGIN`, `WAITLIST_ENABLED`, `WHATSAPP_GRAPH_BASE_URL`, plus any slice adds).
 - [ ] Forbidden var — input: any block's `vars`; expected: no key named `PUBLIC_BASE_URL`.
@@ -26,14 +28,16 @@ Source: `apps/api/test/unit/wrangler-config.test.ts`, reads `apps/api/wrangler.j
 - [ ] Crons — input: each block's `triggers.crons`; expected: `["0 * * * *", "5 0 * * *"]`, equal to `BUDGET_CHECK_CRON` and `MEDIA_RETENTION_CRON`.
 - [ ] No hourly fan-out — input: the cron list; expected: exactly two crons, and neither is a per-account job (no test imports `QUEUE_EXPIRY_CRON`).
 - [ ] Simulator mounting — input: `main` of each block; expected: the development block is `src/index.dev.ts`; the deployed blocks are `src/index.ts`, which never imports the simulator.
-- [ ] Placeholder IDs — input: `database_id` and `bucket_name` of staging and production; expected: each starts with `replace-with-`, and the test lists the four keys.
+~~- [ ] Placeholder IDs — input: `database_id` and `bucket_name` of staging and production; expected: each starts with `replace-with-`, and the test lists the four keys.~~
+- [ ] Placeholder IDs — input: `database_id` and `bucket_name` of staging and production; expected: each starts with `REPLACE_WITH_`, and the test lists the four keys.
 
 ## Environment and secrets (unit)
 
 Source: `apps/api/test/unit/env-example.test.ts`, `root-scripts.test.ts`.
 
 - [ ] `.env.example` names — input: the keys of the file; expected: exactly the seven `WorkerSecret` values plus `SMOKE_BASE_URL`, `SMOKE_CONNECTION_SECRET`, `SMOKE_OWNER_PHONE`.
-- [ ] `.env.example` values — input: every value; expected: each starts with `replace-with-`, none empty.
+~~- [ ] `.env.example` values — input: every value; expected: each starts with `replace-with-`, none empty.~~
+- [ ] `.env.example` values — input: every value; expected: each starts with `REPLACE_WITH_`, none empty.
 - [ ] `.gitignore` — input: root `.gitignore`; expected: lists `.dev.vars` and `.env`; `.env.example` is not ignored.
 - [ ] Root scripts — input: root `package.json`; expected: the eight scripts of the contract are present.
 - [ ] Database names — input: the `d1 migrations apply <database>` names in `migrate:*` and each block's `database_name`; expected: equal per environment.
@@ -53,8 +57,13 @@ Source: `deploy-preflight.test.ts`, `deploy-entry.test.ts`. A fake `DeployShell`
 - [ ] Step 2 staging dirty — input: staging, one changed file; expected: refused at step 2 with the dirty-tree message.
 - [ ] Step 3 gate production — input: gate fails; expected: refused at step 3; recorded command `pnpm verify all`.
 - [ ] Step 3 gate staging — input: gate passes; expected: recorded command `pnpm verify`.
-- [ ] Step 4 placeholder database — input: staging `database_id` `replace-with-d1-id`; expected: refused at step 4 naming `database_id`.
-- [ ] Step 4 placeholder bucket — input: production `bucket_name` `replace-with-bucket`; expected: refused naming `bucket_name`.
+~~- [ ] Step 4 placeholder database — input: staging `database_id` `replace-with-d1-id`; expected: refused at step 4 naming `database_id`.~~
+- [ ] Step 4 placeholder database — input: staging `database_id` `REPLACE_WITH_d1-id`; expected: refused at step 4 naming `database_id`.
+~~- [ ] Step 4 placeholder bucket — input: production `bucket_name` `replace-with-bucket`; expected: refused naming `bucket_name`.~~
+~~- [ ] Step 4 placeholder bucket — input: production `bucket_name` `REPLACE_WITH_bucket`; expected: refused naming `bucket_name`.
+- [ ] Docs official number — input: docs deploy with `OFFICIAL_WHATSAPP_NUMBER` `OFFICIAL_NUMBER_UNSET`; expected: refused before any command, naming the official number.
+- [ ] Docs npm version — input: fake shell where `npm view zapbip@<version>` exits non-zero; expected: refused naming the version; the docs deploy proceeds only when it resolves.~~
+- [ ] Step 4 placeholder bucket — input: production `bucket_name` `REPLACE_WITH_bucket`; expected: refused naming `bucket_name`.
 - [ ] Step 4 real IDs — input: a 36-character ID; expected: passes.
 - [ ] Step 5 missing secret — input: `secret list` JSON without `WAKE_SECRET_KEY`; expected: refused, message lists `WAKE_SECRET_KEY` only.
 - [ ] Step 5 all present — input: all seven names; expected: passes.
@@ -62,7 +71,8 @@ Source: `deploy-preflight.test.ts`, `deploy-entry.test.ts`. A fake `DeployShell`
 - [ ] Step 6 pending migration — input: `d1 migrations list` prints a pending `0003_usage.sql`; expected: refused, message contains `pnpm migrate:staging`; no `deploy` command recorded.
 - [ ] Step 6 none pending — input: `No migrations to apply!`; expected: passes.
 - [ ] Step 7 smoke input missing — input: `SMOKE_OWNER_PHONE` absent; expected: refused naming `SMOKE_OWNER_PHONE` before the dry run.
-- [ ] Step 7 smoke input placeholder — input: `SMOKE_CONNECTION_SECRET` `replace-with-x`; expected: refused naming `SMOKE_CONNECTION_SECRET`.
+~~- [ ] Step 7 smoke input placeholder — input: `SMOKE_CONNECTION_SECRET` `replace-with-x`; expected: refused naming `SMOKE_CONNECTION_SECRET`.~~
+- [ ] Step 7 smoke input placeholder — input: `SMOKE_CONNECTION_SECRET` `REPLACE_WITH_x`; expected: refused naming `SMOKE_CONNECTION_SECRET`.
 - [ ] Step 8 dry run first — input: all pass; expected: `wrangler deploy --env staging --dry-run` recorded before any real deploy.
 - [ ] Step 8 dry-run failure — input: dry run exits `1`; expected: refused at step 8; no deploy recorded.
 - [ ] Step 9 rollback points — input: all pass; expected: output contains the first entry of `wrangler versions list --env <environment>` and the `wrangler d1 time-travel info` line.
@@ -103,7 +113,8 @@ Source: `smoke-checks.test.ts`, `smoke-inputs.test.ts`, `signed-webhook.test.ts`
 - [ ] Exit code pass — input: all pass; expected: exit `0`.
 - [ ] Missing input — input: `SMOKE_BASE_URL` unset; expected: error naming it, no request sent.
 - [ ] Empty input — input: `SMOKE_OWNER_PHONE=""`; expected: error naming it.
-- [ ] Placeholder input — input: `SMOKE_CONNECTION_SECRET=replace-with-secret`; expected: error naming it.
+~~- [ ] Placeholder input — input: `SMOKE_CONNECTION_SECRET=replace-with-secret`; expected: error naming it.~~
+- [ ] Placeholder input — input: `SMOKE_CONNECTION_SECRET=REPLACE_WITH_secret`; expected: error naming it.
 - [ ] Missing `META_APP_SECRET` with check 5 — input: unset; expected: error naming it; no default secret is used.
 - [ ] Terminal shell arguments — input: `secret put META_APP_SECRET --env staging`; expected: arguments equal `['wrangler', 'secret', 'put', 'META_APP_SECRET', '--env', 'staging']`, no `shell: true`.
 - [ ] Terminal shell stdin — input: the same call with a value; expected: the value is written to the child's stdin and is absent from the arguments.
@@ -149,7 +160,8 @@ Source: `apps/api/test/integration/*.test.ts`, under `@cloudflare/vitest-pool-wo
 
 - [ ] `GET /health` on development — input: `ENVIRONMENT` from the development block; expected: `200` `{ "ok": true, "environment": "development" }`.
 - [ ] `GET /health` unknown environment — input: `ENVIRONMENT: 'preview'`; expected: Worker error (500); the body names no secret.
-- [ ] Simulator absent on staging — input: `createApp({ includeSimulator: false })` with `ENVIRONMENT: 'staging'`; expected: `GET /dev/owner/<phone>/screen` returns `404`.
+~~- [ ] Simulator absent on staging — input: `createApp({ includeSimulator: false })` with `ENVIRONMENT: 'staging'`; expected: `GET /dev/owner/<phone>/screen` returns `404`.~~
+- [ ] Simulator absent on staging — input: the default export of `src/index.ts` (the production entry) with `ENVIRONMENT: 'staging'` (corrected at Step R: `createApp` takes `extraRoutes`, not `includeSimulator`); expected: `GET /dev/owner/<phone>/screen` returns `404`.
 - [ ] Migrations applied — input: the pool applies `migrations/`; expected: `usage_daily` exists with `day`, `account_id`, `gigabyte_seconds`.
 - [ ] Scheduled export wired — input: `default.scheduled` with `cron: '0 * * * *'`; expected: resolves; with an unknown cron, rejects.
 - [ ] Budget against seeded data — input: seeded `usage_daily` rows for today totalling `10400`; expected: the hourly cron logs `budget.warning` and rejects.
@@ -170,9 +182,11 @@ Source: `apps/api/test/integration/*.test.ts`, under `@cloudflare/vitest-pool-wo
 - [ ] Production never receives a smoke inbound — input: `--environment production` with a fake fetch recording every POST; expected: zero POSTs whose body contains `@smoke`.
 - [ ] Missing smoke input stops before any request — input: `SMOKE_CONNECTION_SECRET` unset; expected: zero fake fetch calls.
 - [ ] Wrong signature refused — input: webhook POST with a signature of 64 zeros; expected: `401`; nothing stored.
-- [ ] Placeholder deploy target — input: staging with `replace-with-` database ID; expected: refused at step 4 before any command that touches the account.
+~~- [ ] Placeholder deploy target — input: staging with `replace-with-` database ID; expected: refused at step 4 before any command that touches the account.~~
+- [ ] Placeholder deploy target — input: staging with `REPLACE_WITH_` database ID; expected: refused at step 4 before any command that touches the account.
 - [ ] Usage meter never blocks — input: `reportDay` rejects; expected: `200` returned to the caller, failure logged.
-- [ ] Key name — input: `grep -rn MEDIA_LINK_SECRET apps/api`; expected: no match (after Step R1 applies).
+~~- [ ] Key name — input: `grep -rn MEDIA_LINK_SECRET apps/api`; expected: no match (after Step R1 applies).~~
+- [ ] Key name — input: `grep -rn MEDIA_LINK_SECRET apps/api`; expected: no match (R1 found no rename; the name is already `MEDIA_LINK_SIGNING_KEY`).
 - [ ] No env files written — input: a full unit and integration run; expected: `git status --porcelain` shows no new env or `.dev.vars` file.
 
 ## Runbooks (repository shape)

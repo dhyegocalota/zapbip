@@ -4,30 +4,34 @@
 
 **Goal:** Make zapbip deployable to `staging` and `production` on the Workers Free plan: a `wrangler.jsonc` whose deployed blocks repeat every binding, a deploy command that refuses unsafe runs, a smoke test, a per-account usage meter inside the Durable Object, an hourly budget check and a daily R2 retention cron, and the owner's runbooks.
 
-**Architecture:** `apps/api/wrangler.jsonc` keeps the top-level development block that `wrangler dev` reads and adds `env.staging` and `env.production`, each repeating every binding because wrangler does not inherit them. Pure preflight and smoke logic sits in `apps/api/src/operations/` behind named ports (`DeployShell`, `DeployPrompt`, `SmokeFetch`); the entry scripts only wire the real process, terminal and `fetch`. Usage is counted inside each account's Durable Object for resolved connections only and reported to D1 `usage_daily`. The hourly budget check sums that table; the daily retention cron lists R2 only. No cron fans out over accounts.
+**Architecture:** `apps/api/wrangler.jsonc` ~~keeps the top-level development block that `wrangler dev` reads and adds `env.staging` and `env.production`~~ keeps the top-level block as production, as slice 1 shipped it, and adds `env.development` for `wrangler dev` and `env.staging`; each block repeats every binding because wrangler does not inherit them (corrected at Step R). Pure preflight and smoke logic sits in `apps/api/src/operations/` behind named ports (`DeployShell`, `DeployPrompt`, `SmokeFetch`); the entry scripts only wire the real process, terminal and `fetch`. Usage is counted inside each account's Durable Object for resolved connections only and reported to D1 `usage_daily`. The hourly budget check sums that table; the daily retention cron lists R2 only. No cron fans out over accounts.
 
 **Tech Stack:** Node 24, TypeScript, pnpm workspaces, Vitest (`apps/api` 4.1.12, `@cloudflare/vitest-pool-workers` 0.23.0), wrangler 4.158.0, Hono 4.13.16, tsx 4.23.15 (new, runs the scripts), Cloudflare D1, R2, Durable Objects and Rate Limiting.
 
 **Spec:** `docs/features/deploy-readiness/spec.md`, as amended by `SCRATCH/feature-stash/cross-slice-decisions.md`. Where they differ, the decisions file wins. Owner decisions are recorded there under `owner delegated 2026-11-06`. ADRs 0026 and 0027 are copied into the repository by Step S0.5.
 
-**Precondition:** `agent-inbox-core`, `whatsapp-cloud-channel`, `accounts-and-keys` and `webhook-wake` are on `main`. Per the build order, this slice runs in parallel with those three and branches from `main` once core is merged; `scheduled-wake`, `local-connector` and `install-skills` may land later and add their own bindings through the parity rule.
+~~**Precondition:** `agent-inbox-core`, `whatsapp-cloud-channel`, `accounts-and-keys` and `webhook-wake` are on `main`. Per the build order, this slice runs in parallel with those three and branches from `main` once core is merged; `scheduled-wake`, `local-connector` and `install-skills` may land later and add their own bindings through the parity rule.~~
+**Precondition (corrected at Step R):** `agent-inbox-core` is on `origin/feat/agent-inbox-core`, not yet on `main`; this branch is based on it. `whatsapp-cloud-channel`, `accounts-and-keys` and `webhook-wake` are not on it. The parity test covers only the binding keys that exist; later slices extend it through the parity rule.
 
 ## Global Constraints
 
-- Blocks: the top-level block is development (`main: src/index.dev.ts`, `vars.ENVIRONMENT: development`). `env.staging` and `env.production` use `main: src/index.ts`. Every binding key of the top-level block is repeated in both deployed blocks: `d1_databases`, `r2_buckets`, `durable_objects`, `ratelimits`, `analytics_engine_datasets`, `rules` (only if main declares one), `vars`, `migrations`, `triggers`. Test C1 asserts this parity by key set.
+~~- Blocks: the top-level block is development (`main: src/index.dev.ts`, `vars.ENVIRONMENT: development`). `env.staging` and `env.production` use `main: src/index.ts`. Every binding key of the top-level block is repeated in both deployed blocks: `d1_databases`, `r2_buckets`, `durable_objects`, `ratelimits`, `analytics_engine_datasets`, `rules` (only if main declares one), `vars`, `migrations`, `triggers`. Test C1 asserts this parity by key set.~~
+- Blocks (corrected at Step R): the top-level block is production (`main: src/index.ts`, https `PUBLIC_ORIGIN`), as slice 1 shipped it and as the decisions file says. `env.development` uses `main: src/index.dev.ts`; `env.staging` uses `main: src/index.ts`. Every binding key is repeated in all three blocks, `rules` included, because `main` declares it.
 - Worker names, hosts, D1 and R2 names follow the spec's Environments table. The base URL var is `PUBLIC_ORIGIN` only. Values: development `http://localhost:8787`; staging `https://mcp-staging.zapbip.com`; production `https://mcp.zapbip.com`.
 - `vars` in every block: `ENVIRONMENT`, `PUBLIC_ORIGIN`, `WAITLIST_ENABLED` (`false`, `false`, `true` for development, staging, production) and `WHATSAPP_GRAPH_BASE_URL` (development: a placeholder local URL that the E2E harness overrides with `--var`; staging and production: `https://graph.facebook.com`).
-- `compatibility_date` `2026-11-01`; `compatibility_flags: ["nodejs_compat"]`; `observability.enabled: true`; `workers_dev: false`; `preview_urls: false`.
+~~- `compatibility_date` `2026-11-01`; `compatibility_flags: ["nodejs_compat"]`; `observability.enabled: true`; `workers_dev: false`; `preview_urls: false`.~~
+- `compatibility_date` `2026-08-15`, kept from slice 1 (corrected at Step R from `2026-11-01`); `compatibility_flags: ["nodejs_compat"]`; `observability.enabled: true`; `workers_dev: false`; `preview_urls: false`.
 - Wrangler Durable Object migrations: `[{ "tag": "v1", "new_sqlite_classes": ["AccountInbox"] }]` in every block. These wrangler tags are separate from the Durable Object SQL schema versions below.
 - `apps/api/wrangler.jsonc` is plain JSON: no comments, no trailing commas. The preflight reads it with `JSON.parse`.
 - Crons: `BUDGET_CHECK_CRON = '0 * * * *'` (hourly) and `MEDIA_RETENTION_CRON = '5 0 * * *'` (daily), in `apps/api/src/operations/constants.ts`. No cron fans out over accounts. Queue and question expiry are per-object Durable Object alarms from slice 1.
 - Time constants come from `libs/types` (`SECOND_MS`, `MINUTE_MS`, `HOUR_MS`, `DAY_MS`, slice 1). No local copy.
 - The webhook path is slice 2's exported constant `WHATSAPP_WEBHOOK_PATH` (`/webhooks/whatsapp`). This slice imports it and does not declare its own.
-- Secrets: exactly the seven `WorkerSecret` names: `META_APP_SECRET`, `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_VERIFY_TOKEN`, `MEDIA_LINK_SIGNING_KEY`, `UPLOAD_LINK_SIGNING_KEY`, `WAKE_SECRET_KEY`. `MEDIA_LINK_SIGNING_KEY` is the name in the spec and the decisions file; Step R1 confirms `main` uses it.
+- Secrets: exactly the seven `WorkerSecret` names: `META_APP_SECRET`, `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_VERIFY_TOKEN`, `MEDIA_LINK_SIGNING_KEY`, `UPLOAD_LINK_SIGNING_KEY`, `WAKE_SECRET_KEY`. `MEDIA_LINK_SIGNING_KEY` is the name in the spec and the decisions file; Step R1 confirmed this branch already uses it (`contract/env.ts`, `routes/media.ts`), so no rename is needed.
 - Migrations: names are read from `main` at Step R0. Reserved numbers: `0001` agent-inbox-core (`0001_core`), `0002` accounts-and-keys, `0003` deploy-readiness (usage), `0004` whatsapp-cloud-channel. A migration is immutable once it has reached a deployed environment; until then a slice may rebuild its own tables.
 - Durable Object SQL schema: this slice ships version `v7` (usage). The DO migration runner records the set of applied versions (slice 1).
 - R2 keys are `accounts/<accountId>/media/<mediaId>`; the signed media link is `/m/<accountId>/<mediaId>?exp=&sig=`.
-- Placeholder values and IDs start with `PLACEHOLDER_VALUE_PREFIX` (`replace-with-`). A placeholder counts as missing.
+~~- Placeholder values and IDs start with `PLACEHOLDER_VALUE_PREFIX` (`replace-with-`). A placeholder counts as missing.~~
+- Placeholder values and IDs start with `PLACEHOLDER_VALUE_PREFIX` (`REPLACE_WITH_`, corrected at Step R from `replace-with-`: slice 1's wrangler test pins `REPLACE_WITH_PRODUCTION_D1_DATABASE_ID`). A placeholder counts as missing.
 - Scripts run as `node --env-file=.env --import tsx <file>`. Node 24 cannot resolve the extensionless imports this repo uses; `tsx` is the loader.
 - Wrangler runs from `apps/api` as `pnpm --filter @zapbip/api exec wrangler …`.
 - Identifiers spell units out: `gigabyte`, never `gb`. D1 column `gigabyte_seconds`.
@@ -37,6 +41,8 @@
 - No `sleep` anywhere. Time in tests comes from injected `now`, `wait` and `fetch` parameters.
 - Agents never run `deploy`, `migrate` or `smoke` against a deployed environment, never write env files or `apps/api/.dev.vars`, and never set a secret. The E2E test passes its fake secrets to `wrangler dev` as `--var` flags.
 - Commits: Conventional Commits, en-US, `Co-Authored-By` trailer naming the model that wrote the commit. Never `git add -A`, `git add .`, `--no-verify`. Never commit on `main`.
+- **Health route (corrected at Step R).** `/health` is declared in `apps/api/src/app.ts` (`app.get(HEALTH_PATH, …)`); there is no `routes/health.ts`. Lane C edits that line and creates no route file.
+- **Docs and npm preflight (decisions 2026-11-06).** The deploy preflight also gates the docs deploy: it refuses while `OFFICIAL_WHATSAPP_NUMBER` is the sentinel `OFFICIAL_NUMBER_UNSET`, and it refuses until `npm view zapbip@<version>` resolves, where `<version>` is the exact version the docs and skills pin. Each value has one source; neither exists on this branch yet (`(contract: confirm at build)`). The runbook makes "publish zapbip@<version> to npm" an owner step. The preflight never publishes.
 - Shared files are edited additively, never recreated: `apps/api/src/contract/env.ts`, `apps/api/src/app.ts`, `apps/api/src/index.ts` (keeps `export { AccountInbox }`, adds `scheduled`), `apps/api/wrangler.jsonc`.
 - **Durable Object alarm arming (cross-slice).** Every write path re-arms the object's alarm to the earliest due time across all registered due-time providers: slice 1 expiry, slice 4 wake jobs, slice 7 stale-poll checks, and this slice's usage flush. This slice registers its provider and never arms the alarm on its own.
 
@@ -45,8 +51,36 @@
 Nothing in this plan's contract is trusted until the refresh has run. Step R0 is a diff of the plan against the merged files; each difference is corrected in this file before any lane starts.
 
 - [ ] **R0 Diff against main.** For each snippet in **Contract** and each path in **File map**, check the file on `main`: `apps/api/src/index.ts`, `app.ts`, `contract/env.ts`, `wrangler.jsonc`, the `/health` route, the `libs/types` exports (`SECOND_MS`, `MINUTE_MS`, `HOUR_MS`, `DAY_MS`), slice 2's `WHATSAPP_WEBHOOK_PATH`, the `ratelimits` bindings and their names (slice 3), the `analytics_engine_datasets` binding (slice 4), any `rules` key, the migration file names, the Durable Object SQL version list, the R2 key helper and the signed link path. Record each difference in `tester-briefing.md` and correct the snippet here.
-- [ ] **R1 Signing key.** `grep -rn MEDIA_LINK_SECRET apps/api` on `main`. If the name is still `MEDIA_LINK_SECRET`, Step S0.2 renames it to `MEDIA_LINK_SIGNING_KEY`. If `main` already uses the spec name, S0.2 is dropped.
+~~- [ ] **R1 Signing key.** `grep -rn MEDIA_LINK_SECRET apps/api` on `main`. If the name is still `MEDIA_LINK_SECRET`, Step S0.2 renames it to `MEDIA_LINK_SIGNING_KEY`. If `main` already uses the spec name, S0.2 is dropped.~~
+- [x] **R1 Signing key.** Done at Step R: `MEDIA_LINK_SIGNING_KEY` is already the name on this branch, so S0.2 is dropped.
 - [ ] **R2 Bindings.** Copy every binding key of `main`'s top-level `wrangler.jsonc` block into **Wrangler** below, so the parity test (C1) has the true key set. Slices 3 and 4 add `ratelimits` and `analytics_engine_datasets`.
+
+## Step R results (2026-11-06)
+
+Diff of this plan against `origin/feat/agent-inbox-core`, the base of this branch. Changed lines are struck through where they stand above; this table gives the reasons.
+
+| Item | Plan said | Branch has | Correction |
+|---|---|---|---|
+| Base | `main` | `origin/feat/agent-inbox-core` (slice 1 not on `main`) | branch from slice 1 |
+| Top-level block | development | production (`src/index.ts`, https origin) | production top-level; `env.development` for `wrangler dev` (decisions file) |
+| `compatibility_date` | `2026-11-01` | `2026-08-15` | keep `2026-08-15` |
+| Placeholder prefix | `replace-with-` | `REPLACE_WITH_PRODUCTION_D1_DATABASE_ID`, pinned by `wrangler-config.test.ts` | `REPLACE_WITH_` throughout |
+| Development D1 ID | `zapbip-development` | `zapbip-connections-local`, pinned | ID unchanged; `database_name` `zapbip-development` per spec |
+| R1 signing key | rename to `MEDIA_LINK_SIGNING_KEY` | already used in `contract/env.ts`, `routes/media.ts` and tests | S0.2 dropped |
+| `tsx` | new root devDependency | 4.23.15 already in root `devDependencies`, used by `dev:seed` | S0.1 merges scripts only |
+| Health | `routes/health.ts` | `app.get(HEALTH_PATH, …)` in `app.ts`; WI-117 asserts `toEqual({ ok: true })` | edit `app.ts`; update WI-117 |
+| App factory | `createApp({ includeSimulator })` | `createApp({ extraRoutes })`; dev passes `[devOwnerRoutes]` | use `extraRoutes` |
+| `Bindings` | all seven secrets typed now | slice 1 types its own bindings; WhatsApp and wake secrets have no reader yet | add only `ENVIRONMENT` |
+| Adapter paths | `adapters/d1-…`, `adapters/r2-…` | `adapters/d1/`, `adapters/r2/` | paths corrected |
+| DO migrations | v7 added | `account-inbox/migrations/index.ts` lists v1 only | add `v7.sql` to `ACCOUNT_INBOX_MIGRATIONS`; provider pushed in the constructor |
+| Gate rows | before `apps/*` | an `apps/api/*` row exists | above `apps/api/*` |
+| Placeholder bucket | checked | bucket names are fixed resource names | D1 ID is the placeholder; bucket names real from the start |
+| Official number and npm version | not in plan | no constant on the branch; docs not built yet | preflight refuses docs deploy (decisions 2026-11-06); constant location `(contract: confirm at build)` |
+
+Cross-slice checks (not this slice's code):
+
+- **accounts-and-keys (owner decision, coordinator 2026-11-06):** revoke must close the agent's connector sockets. Checked when accounts-and-keys meets local-connector; this slice does not own it.
+- **Spec conflict:** the spec's health check 1 expects `{ "status": "ok", "environment": … }`. The decisions file governs: `{ ok: true, environment }`. The owner-approved spec is left unedited and the owner decides.
 
 ## Assumptions (decided, owner can override)
 
@@ -55,9 +89,10 @@ Nothing in this plan's contract is trusted until the refresh has run. Step R0 is
 - **A3 Units.** `DURABLE_OBJECT_DAILY_GIGABYTE_SECONDS = 13_000`, `DURABLE_OBJECT_MEMORY_GIGABYTES = 0.125`, `gigabyteSecondsForDuration`, D1 column `gigabyte_seconds`. The spec's `gb` spelling breaks the no-acronym rule.
 - **A4 Time sources.** `SECOND_MS`, `MINUTE_MS`, `HOUR_MS`, `DAY_MS` from `libs/types`. Import path `@zapbip/types` (contract: confirm at build).
 - **A5 Script runner.** The root scripts run `node --env-file=.env --import tsx apps/api/scripts/<file>.ts`. `tsx` 4.23.15 is a root devDependency, published 2026-09-20.
-- **A6 Top-level block.** Development, as in Global Constraints. `wrangler dev` runs `src/index.dev.ts`.
+~~- **A6 Top-level block.** Development, as in Global Constraints. `wrangler dev` runs `src/index.dev.ts`.~~
+- **A6 Top-level block (corrected at Step R).** Production, as in Global Constraints. `wrangler dev --env development` runs `src/index.dev.ts`.
 - **A7 Bundle tests.** Agent-inbox-core's `production-bundle.e2e.test.ts` and slice 2's no-env dry run move to `--env production`, per the decisions file.
-- **A8 Placeholder IDs.** `database_id` and R2 `bucket_name` in the deployed blocks are `replace-with-…` until the owner pastes real values. Preflight step 4 refuses any placeholder.
+- **A8 Placeholder IDs.** ~~`database_id` and R2 `bucket_name` in the deployed blocks are `replace-with-…` until the owner pastes real values.~~ `database_id` in the deployed blocks is `REPLACE_WITH_…` until the owner pastes a real value. R2 bucket names are fixed resource names, so they are real from the start (corrected at Step R). Preflight step 4 refuses any placeholder.
 - **A9 Usage is accumulated in the Durable Object and flushed at most hourly.** Each account's `AccountInbox` times each RPC method it serves; only the Worker's resolved-connection path reaches that object, so unauthenticated requests are never counted. The object adds each duration to its day total in its own SQLite (v7). It flushes the absolute day total to D1 `usage_daily` at most once per hour per account, through the due-time provider of A21. The write is an upsert of the absolute total, so a repeated or late flush cannot double-count. A thousand calls in one hour cost at most one D1 write (test U-HOUR).
 - **A10 Budget check is hourly, reads D1 only, and tolerates up to one hour of lag.** It sums `usage_daily` for today in one query and needs no account list. The budget can lag real usage by up to one hour; at `DAILY_BUDGET_WARNING_RATIO` (0.8) it logs `budget.warning` and fails the run, so the owner is emailed.
 - **A21 Usage flush due time.** The flush registers a due-time provider with the object's registry. Its due time is `usageFlushDueAt({ lastFlushedAt, now })`: now when the account has never been flushed and has unflushed usage, otherwise `lastFlushedAt + HOUR_MS`. Nothing is flushed when nothing is unflushed.
@@ -70,17 +105,20 @@ Nothing in this plan's contract is trusted until the refresh has run. Step R0 is
 - **A17 Fake Graph.** The E2E harness starts the fake Graph server on a free port and passes its URL to `wrangler dev` as `--var WHATSAPP_GRAPH_BASE_URL:<url>`. The recorded fixtures live in `apps/api/test/fixtures/whatsapp/` (whatsapp-cloud-channel).
 - **A18 E2E default.** The `e2e` gate runs by default in `pnpm verify`. Only real-client cases (Claude Code, Codex, live provider calls) are opt-in and owner-run.
 - **A19 Dry run.** `wrangler deploy --dry-run` is assumed to need no login. If it needs one, the dry-run test is recorded `not run` in coverage honesty.
-- **A20 Health.** Slice 1's `/health` answers `{ ok: true }`. This slice adds `environment` to the same body. Slice 1's test stays green.
+~~- **A20 Health.** Slice 1's `/health` answers `{ ok: true }`. This slice adds `environment` to the same body. Slice 1's test stays green.~~
+- **A20 Health.** Slice 1's `/health` answers `{ ok: true }`. This slice adds `environment` to the same body. Slice 1's WI-117 assertion in `production-entry.test.ts` (`toEqual({ ok: true })`) is updated in lane C to `{ ok: true, environment: 'production' }`, because the body gains a key and `ok` stays `true` (corrected at Step R).
 
 ## Dependencies
 
 | Package | Version | Where | Why |
 |---|---|---|---|
 | `tsx` | 4.23.15 | root `devDependencies` (new) | runs `apps/api/scripts/*.ts` under Node 24 |
+| `tsx` | 4.23.15 | root `devDependencies` (already present; corrected at Step R, was marked new) | runs `apps/api/scripts/*.ts` under Node 24 |
 | `wrangler` | 4.158.0 | `apps/api` devDependencies (existing) | deploy, migrate, tail, dry run |
 | `hono` | 4.13.16 | `apps/api` dependencies (existing) | health route |
 
-`tsx` was checked with `npm view tsx@4.23.15 version`. No other dependency changes. Step S0.1 runs `pnpm install` once.
+~~`tsx` was checked with `npm view tsx@4.23.15 version`. No other dependency changes. Step S0.1 runs `pnpm install` once.~~
+`tsx` is already a root devDependency, so this slice adds no dependency. The lockfile must not change (`pnpm install --frozen-lockfile`). Corrected at Step R.
 
 ## Contract (Step 0, verbatim)
 
@@ -129,7 +167,7 @@ export const DURABLE_OBJECT_DAILY_GIGABYTE_SECONDS = 13_000;
 export const DURABLE_OBJECT_MEMORY_GIGABYTES = 0.125;
 export const DAILY_BUDGET_WARNING_RATIO = 0.8;
 
-export const PLACEHOLDER_VALUE_PREFIX = 'replace-with-';
+export const PLACEHOLDER_VALUE_PREFIX = 'REPLACE_WITH_';
 
 export const SMOKE_POLL_ATTEMPTS = 10;
 export const SMOKE_POLL_INTERVAL_MS = 3 * SECOND_MS;
@@ -190,7 +228,7 @@ export interface UsageRepository {
 }
 ```
 
-The D1 implementation is `apps/api/src/adapters/d1-usage-repository.ts` (Lane A).
+The D1 implementation is `apps/api/src/adapters/d1/d1-usage-repository.ts` (Lane A; corrected at Step R, D1 adapters live under `adapters/d1/`).
 
 ### `apps/api/src/contract/env.ts`
 
@@ -202,36 +240,32 @@ export type Bindings = {
   CONNECTIONS: D1Database;
   MEDIA: R2Bucket;
   ENVIRONMENT: string;
-  META_APP_SECRET: string;
-  WHATSAPP_ACCESS_TOKEN: string;
-  WHATSAPP_PHONE_NUMBER_ID: string;
-  WHATSAPP_VERIFY_TOKEN: string;
+  PUBLIC_ORIGIN: string;
   MEDIA_LINK_SIGNING_KEY: string;
   UPLOAD_LINK_SIGNING_KEY: string;
-  WAKE_SECRET_KEY: string;
 };
 ```
 
-Additive: names already declared by slices 1 to 4 are kept. Rate-limit and analytics bindings are typed in their own slices. `ENVIRONMENT` is the only non-secret this slice adds.
+Additive (corrected at Step R): this slice adds only `ENVIRONMENT` to the existing `Bindings`, and the block keeps `PUBLIC_ORIGIN`, `MEDIA_LINK_SIGNING_KEY` and `UPLOAD_LINK_SIGNING_KEY` as slice 1 declared them. The WhatsApp and wake secrets are typed by the slices that read them (slices 2 to 5), so no binding is typed before it is read. The seven `WorkerSecret` names remain the list preflight checks.
 
-### `apps/api/src/index.ts` (addition, keeps `export { AccountInbox }`)
+### `apps/api/src/index.ts` (addition, keeps `export { AccountInbox }`; `createApp` takes `extraRoutes`, as slice 1 wrote it)
 
 ```ts
 export default {
-  fetch: (request: Request, env: Bindings) => createApp({ includeSimulator: false }).fetch(request, env),
+  fetch: (request: Request, env: Bindings) => createApp({ extraRoutes: [] }).fetch(request, env),
   scheduled: async (controller: ScheduledController, env: Bindings): Promise<void> => {
     await runScheduled({ cron: controller.cron, env, now: Date.now() });
   },
 };
 ```
 
-`index.dev.ts` keeps `includeSimulator: true` and the same `scheduled` export.
+`index.dev.ts` keeps `createApp({ extraRoutes: [devOwnerRoutes] })` and gains the same `scheduled` export.
 
-### `apps/api/src/routes/health.ts` (addition)
+### `apps/api/src/app.ts` (health line; corrected at Step R, `routes/health.ts` does not exist)
 
 The body becomes `{ ok: true, environment }`, where `environment` is `parseDeployEnvironment({ value: env.ENVIRONMENT })`. Slice 1's assertions keep passing because `ok` stays `true`.
 
-### Root `package.json` scripts and devDependency
+### Root `package.json` scripts (devDependency unchanged: `tsx` is already present)
 
 ```json
 {
@@ -244,16 +278,15 @@ The body becomes `{ ok: true, environment }`, where `environment` is `parseDeplo
     "smoke:development": "node --env-file=.env --import tsx apps/api/scripts/smoke.ts --environment development",
     "smoke:staging": "node --env-file=.env --import tsx apps/api/scripts/smoke.ts --environment staging",
     "smoke:production": "node --env-file=.env --import tsx apps/api/scripts/smoke.ts --environment production"
-  },
-  "devDependencies": { "tsx": "4.23.15" }
+  }
 }
 ```
 
 ### Root env example and gitignore
 
-`.env.example` (root, new) lists the seven `WorkerSecret` names and the three smoke inputs `SMOKE_BASE_URL`, `SMOKE_CONNECTION_SECRET`, `SMOKE_OWNER_PHONE`, each with a `replace-with-…` value. `.gitignore` gains `.dev.vars`.
+`.env.example` (root, new) lists the seven `WorkerSecret` names and the three smoke inputs `SMOKE_BASE_URL`, `SMOKE_CONNECTION_SECRET`, `SMOKE_OWNER_PHONE`, each with a `REPLACE_WITH_…` value (corrected at Step R). `.gitignore` gains `.dev.vars`.
 
-### `scripts/verify-gates.tsv` (rows, before `apps/*`)
+### `scripts/verify-gates.tsv` (rows above `apps/api/*`; corrected at Step R, the existing `apps/api/*` row would otherwise cover the wrangler file)
 
 ```
 .env.example	product	unit
@@ -266,27 +299,56 @@ apps/api/wrangler.jsonc	product	typecheck unit integration
 
 ADRs 0026 and 0027 are copied from the spec's feature stash, with their rows in `docs/adr/README.md`.
 
-### Wrangler (shape per block; values confirmed at Step R2)
+### Wrangler (corrected at Step R; replaces the earlier development-first shape)
+
+The top-level block is production, as slice 1 shipped it. `env.development` runs `wrangler dev`. Every block repeats every binding key, because wrangler does not inherit them. `REPLACE_WITH_…` marks the one ID the owner pastes; R2 bucket names are fixed resource names.
 
 ```json
 {
-  "name": "zapbip-api-development",
-  "main": "src/index.dev.ts",
-  "compatibility_date": "2026-11-01",
+  "name": "zapbip-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-15",
   "compatibility_flags": ["nodejs_compat"],
   "observability": { "enabled": true },
   "workers_dev": false,
   "preview_urls": false,
-  "d1_databases": [{ "binding": "CONNECTIONS", "database_name": "zapbip-development", "database_id": "…", "migrations_dir": "migrations" }],
-  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "zapbip-media-development" }],
   "durable_objects": { "bindings": [{ "name": "ACCOUNT_INBOX", "class_name": "AccountInbox" }] },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["AccountInbox"] }],
-  "vars": { "ENVIRONMENT": "development", "PUBLIC_ORIGIN": "http://localhost:8787", "WAITLIST_ENABLED": "false", "WHATSAPP_GRAPH_BASE_URL": "http://127.0.0.1:8788" },
-  "triggers": { "crons": ["0 * * * *", "5 0 * * *"] }
+  "d1_databases": [{ "binding": "CONNECTIONS", "database_name": "zapbip-production", "database_id": "REPLACE_WITH_PRODUCTION_D1_DATABASE_ID", "migrations_dir": "migrations" }],
+  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "zapbip-media-production" }],
+  "rules": [{ "type": "Text", "globs": ["**/*.sql"], "fallthrough": true }],
+  "routes": [{ "pattern": "mcp.zapbip.com", "custom_domain": true }],
+  "vars": { "ENVIRONMENT": "production", "PUBLIC_ORIGIN": "https://mcp.zapbip.com", "WAITLIST_ENABLED": "true", "WHATSAPP_GRAPH_BASE_URL": "https://graph.facebook.com" },
+  "triggers": { "crons": ["0 * * * *", "5 0 * * *"] },
+  "env": {
+    "development": {
+      "name": "zapbip-api-development",
+      "main": "src/index.dev.ts",
+      "durable_objects": { "bindings": [{ "name": "ACCOUNT_INBOX", "class_name": "AccountInbox" }] },
+      "migrations": [{ "tag": "v1", "new_sqlite_classes": ["AccountInbox"] }],
+      "d1_databases": [{ "binding": "CONNECTIONS", "database_name": "zapbip-development", "database_id": "zapbip-connections-local", "migrations_dir": "migrations" }],
+      "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "zapbip-media-development" }],
+      "rules": [{ "type": "Text", "globs": ["**/*.sql"], "fallthrough": true }],
+      "vars": { "ENVIRONMENT": "development", "PUBLIC_ORIGIN": "http://localhost:8787", "WAITLIST_ENABLED": "false", "WHATSAPP_GRAPH_BASE_URL": "http://127.0.0.1:8788" },
+      "triggers": { "crons": ["0 * * * *", "5 0 * * *"] }
+    },
+    "staging": {
+      "name": "zapbip-api-staging",
+      "main": "src/index.ts",
+      "durable_objects": { "bindings": [{ "name": "ACCOUNT_INBOX", "class_name": "AccountInbox" }] },
+      "migrations": [{ "tag": "v1", "new_sqlite_classes": ["AccountInbox"] }],
+      "d1_databases": [{ "binding": "CONNECTIONS", "database_name": "zapbip-staging", "database_id": "REPLACE_WITH_STAGING_D1_DATABASE_ID", "migrations_dir": "migrations" }],
+      "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "zapbip-media-staging" }],
+      "rules": [{ "type": "Text", "globs": ["**/*.sql"], "fallthrough": true }],
+      "routes": [{ "pattern": "mcp-staging.zapbip.com", "custom_domain": true }],
+      "vars": { "ENVIRONMENT": "staging", "PUBLIC_ORIGIN": "https://mcp-staging.zapbip.com", "WAITLIST_ENABLED": "false", "WHATSAPP_GRAPH_BASE_URL": "https://graph.facebook.com" },
+      "triggers": { "crons": ["0 * * * *", "5 0 * * *"] }
+    }
+  }
 }
 ```
 
-`env.staging` and `env.production` repeat the same keys with their own names, IDs, `vars`, `main: src/index.ts`, and routes `mcp-staging.zapbip.com` and `mcp.zapbip.com` with `custom_domain: true`. The rate-limit (`ratelimits`) and analytics (`analytics_engine_datasets`) bindings from slices 3 and 4 are repeated in all three blocks. The `rules` key is repeated only if `main` declares one. The crons are the same in all three blocks.
+The `ratelimits` and `analytics_engine_datasets` keys from slices 3 and 4 are repeated in all three blocks when those slices land. The crons are the same in all three blocks. The development `database_id` stays `zapbip-connections-local`, which slice 1's wrangler test pins.
 
 ## File map (lanes)
 
@@ -294,9 +356,9 @@ Every path has exactly one owner. Step 0 owns the shared files; later edits to t
 
 | Lane | Developer | Owned paths |
 |---|---|---|
-| S0 Contract (serial) | `developer-0` | `apps/api/src/operations/{deploy-environment,worker-secret,constants,scheduled-job,scheduled,usage-repository}.ts` (signatures and stubs), `apps/api/src/account-inbox/usage-meter.ts` (stub), `apps/api/src/contract/env.ts` (additive), `apps/api/src/index.ts` and `index.dev.ts` (additive `scheduled`), root `package.json`, `pnpm-lock.yaml`, `.env.example`, `.gitignore`, `scripts/verify-gates.tsv`, `tools/repository-shape/src/delivery-docs.test.ts` (ROOT_ENTRIES), `docs/adr/0026-*.md`, `docs/adr/0027-*.md`, `docs/adr/README.md`, and the rename of Step R1 if it applies |
-| C Config and health | `developer-C` | `apps/api/wrangler.jsonc` (restructured to the parity shape), `apps/api/src/routes/health.ts` (body), `apps/api/test/unit/wrangler-config.test.ts`, `apps/api/test/integration/{health,deploy-dry-run}.test.ts`, `apps/api/test/e2e/production-bundle.e2e.test.ts` (`--env production` only) |
-| A Usage and jobs | `developer-A` | `apps/api/src/account-inbox/usage-meter.ts` (body), `apps/api/src/account-inbox/**` (RPC wrapper and v7 schema, additive), `apps/api/src/operations/{budget-check,media-retention,scheduled}.ts` (bodies), `apps/api/src/adapters/{d1-usage-repository,r2-media-listing}.ts`, `apps/api/migrations/0003_usage.sql`, `apps/api/test/unit/{usage-meter,scheduled,media-retention}.test.ts`, `apps/api/test/integration/{usage-repository,usage-in-object,usage-security,scheduled}.test.ts` |
+| S0 Contract (serial) | `developer-0` | `apps/api/src/operations/{deploy-environment,worker-secret,constants,scheduled-job,scheduled,usage-repository}.ts` (signatures and stubs), `apps/api/src/account-inbox/usage-meter.ts` (stub), `apps/api/src/contract/env.ts` (additive), `apps/api/src/index.ts` and `index.dev.ts` (additive `scheduled`), root `package.json`, `pnpm-lock.yaml`, `.env.example`, `.gitignore`, `scripts/verify-gates.tsv`, `tools/repository-shape/src/delivery-docs.test.ts` (ROOT_ENTRIES), `docs/adr/0026-*.md`, `docs/adr/0027-*.md`, `docs/adr/README.md`, (no R1 rename: the name is already in use) |
+| C Config and health | `developer-C` | `apps/api/wrangler.jsonc` (restructured to the parity shape), `apps/api/src/app.ts` (health line), `apps/api/test/unit/wrangler-config.test.ts`, `apps/api/test/integration/{health,deploy-dry-run}.test.ts`, `apps/api/test/integration/production-entry.test.ts` (WI-117 assertion), `apps/api/test/e2e/production-bundle.e2e.test.ts` (`--env production` only) |
+| A Usage and jobs | `developer-A` | `apps/api/src/account-inbox/usage-meter.ts` (body), `apps/api/src/account-inbox/**` (RPC wrapper and v7 schema, additive), `apps/api/src/operations/{budget-check,media-retention,scheduled}.ts` (bodies), `apps/api/src/adapters/d1/d1-usage-repository.ts`, `apps/api/src/adapters/r2/r2-media-listing.ts`, `apps/api/migrations/0003_usage.sql`, `apps/api/test/unit/{usage-meter,scheduled,media-retention}.test.ts`, `apps/api/test/integration/{usage-repository,usage-in-object,usage-security,scheduled}.test.ts` |
 | B Deploy, smoke and E2E | `developer-B` | `apps/api/scripts/{deploy,smoke}.ts`, `apps/api/src/operations/{deploy-preflight,terminal-shell,smoke-checks,smoke-inputs,simulator-client,signed-webhook,fake-graph-harness}.ts`, `apps/api/test/unit/{deploy-preflight,deploy-entry,smoke-checks,smoke-inputs,env-example,terminal-shell,root-scripts,signed-webhook}.test.ts`, `apps/api/test/e2e/{smoke-development,owner-flow}.e2e.test.ts` |
 | D Runbooks | `developer-D` | `docs/runbooks/**`, `tools/repository-shape/src/runbooks.test.ts` |
 
@@ -320,13 +382,16 @@ Lanes never rebase: a rebase would rewrite the red-first hashes the test plan ci
 ### Step R (plan refresh)
 
 - [ ] **R0 Diff against main.** Check each contract snippet and file-map path against `main` as listed in **Plan refresh against main**. Correct this file. Commit as `docs(deploy): refresh the plan against main`.
-- [ ] **R1 Signing key.** Decide whether S0.2 renames `MEDIA_LINK_SECRET`.
+~~- [ ] **R1 Signing key.** Decide whether S0.2 renames `MEDIA_LINK_SECRET`.~~
+- [x] **R1 Signing key.** Done at Step R: `MEDIA_LINK_SIGNING_KEY` is already the name on this branch, so S0.2 is dropped.
 - [ ] **R2 Bindings.** Write the complete binding key set of `main`'s top-level block into **Wrangler** in this file.
 
 ### S0 (developer-0): contract
 
-- [ ] **S0.1 Scaffold.** Add `tsx` 4.23.15 to the root `devDependencies` and merge the root scripts into `package.json`. Run `pnpm install` once; commit `pnpm-lock.yaml`. Commit as `chore(deps): add tsx for the deploy and smoke scripts`.
-- [ ] **S0.2 Rename (only if R1 says so).** Rename `MEDIA_LINK_SECRET` to `MEDIA_LINK_SIGNING_KEY` in every file that uses it. Commit as `refactor(api): name the media link key after its secret`.
+~~- [ ] **S0.1 Scaffold.** Add `tsx` 4.23.15 to the root `devDependencies` and merge the root scripts into `package.json`. Run `pnpm install` once; commit `pnpm-lock.yaml`. Commit as `chore(deps): add tsx for the deploy and smoke scripts`.~~
+- [ ] **S0.1 Scaffold (corrected at Step R).** Merge the root scripts into `package.json`. `tsx` 4.23.15 is already a root devDependency. Run `pnpm install --frozen-lockfile`; the lockfile must not change. Commit as `chore(api): add the deploy and smoke root scripts`.
+~~- [ ] **S0.2 Rename (only if R1 says so).** Rename `MEDIA_LINK_SECRET` to `MEDIA_LINK_SIGNING_KEY` in every file that uses it. Commit as `refactor(api): name the media link key after its secret`.~~
+- [x] **S0.2 Rename (dropped at Step R).** R1 found no rename to make.
 - [ ] **S0.3 Contract files.** Write each file in **Contract** verbatim, with stub bodies where the contract shows a throw. Add the `scheduled` export to `index.ts` and `index.dev.ts`, keeping `export { AccountInbox }`. Add the meter wrapper to `AccountInbox` as a pass-through. Run `pnpm typecheck` and slice 1's integration tests; they stay green. Commit as `feat(api): land the deploy-readiness contract`.
 - [ ] **S0.4 Env and gates.** Write the root env example, add `.dev.vars` to `.gitignore`, add the two gate rows, add `.env.example` to `ROOT_ENTRIES`. Run `pnpm test:verify` and the repository-shape unit tests. Commit as `chore(env): add the environment example and its gate rows`.
 - [ ] **S0.5 ADRs.** Copy ADRs 0026 and 0027 and their index rows. Run the document-index test. Commit as `docs(adr): record the runbook and deploy decisions`.
@@ -335,7 +400,7 @@ Lanes never rebase: a rebase would rewrite the red-first hashes the test plan ci
 
 - [ ] **C1 red: wrangler parity.** `apps/api/test/unit/wrangler-config.test.ts` reads `wrangler.jsonc` with `JSON.parse` and asserts the rules of the test plan's **Config** section, including key-set parity of every binding across the three blocks, the var keys, the crons, the routes and the names. Expected failure: one block and no `env` key. Commit as `test(api): pin the three wrangler environments`.
 - [ ] **C2 green: wrangler.** Restructure `apps/api/wrangler.jsonc` to the shape in **Wrangler**, repeating every key in the staging and production blocks, with `replace-with-…` placeholders for the deployed IDs. Commit as `feat(api): declare the development, staging and production blocks`.
-- [ ] **C3 red then green: health.** `apps/api/test/integration/health.test.ts`: `GET /health` returns `{ ok: true, environment }`; an unknown `ENVIRONMENT` returns a Worker error; slice 1's health assertions also run. Red first, then the body in `routes/health.ts`. Commit red and green separately.
+- [ ] **C3 red then green: health.** `apps/api/test/integration/health.test.ts`: `GET /health` returns `{ ok: true, environment }`; an unknown `ENVIRONMENT` returns a Worker error; slice 1's health assertions also run. Red first, then the body in `apps/api/src/app.ts` (the `/health` line; corrected at Step R, `routes/health.ts` does not exist). Lane C also updates the WI-117 assertion in `production-entry.test.ts` to `{ ok: true, environment: 'production' }`. Commit red and green separately.
 - [ ] **C4 bundle tests.** `apps/api/test/e2e/production-bundle.e2e.test.ts` and slice 2's no-env dry run run with `--env production`. Assertions stay. Commit as `test(api): bundle the production environment`.
 - [ ] **C5 red then green: dry run.** `apps/api/test/integration/deploy-dry-run.test.ts`: `wrangler deploy --dry-run --env staging` and `--env production` exit `0`; each bundle lacks `/dev/owner/`. Commit red and green separately.
 
@@ -344,7 +409,7 @@ Lanes never rebase: a rebase would rewrite the red-first hashes the test plan ci
 - [ ] **A1 red then green: arithmetic.** `apps/api/test/unit/usage-meter.test.ts`: the arithmetic rules of the test plan. Implement `gigabyteSecondsForDuration`, `isBudgetWarning` and `utcDay`. Commit red and green separately.
 - [ ] **A2 migration.** `apps/api/migrations/0003_usage.sql`: `CREATE TABLE usage_daily (day TEXT NOT NULL, account_id TEXT NOT NULL, gigabyte_seconds REAL NOT NULL, PRIMARY KEY (day, account_id));`. Commit as `feat(api): add the usage_daily migration`.
 - [ ] **A3 red then green: D1 repository.** `apps/api/test/integration/usage-repository.test.ts`: `reportDay` upserts the absolute total for `(day, accountId)`; `readDayTotal` sums every account for the day; an empty day returns `0`. Implement `d1-usage-repository.ts` with bound parameters only. Commit red and green separately.
-- [ ] **A4 red then green: meter in the object.** `apps/api/test/integration/usage-in-object.test.ts`: a resolved MCP call through `SELF.fetch` adds its duration to the object's day total in SQLite and arms the alarm at `usageFlushDueAt`; the first flush after the due time writes the absolute total to `usage_daily`; a second call inside the hour writes nothing. Add the v7 schema (additive), the RPC wrapper that times each method, and the due-time provider registered with the object's alarm registry. Commit red and green separately.
+- [ ] **A4 red then green: meter in the object.** `apps/api/test/integration/usage-in-object.test.ts`: a resolved MCP call through `SELF.fetch` adds its duration to the object's day total in SQLite and arms the alarm at `usageFlushDueAt`; the first flush after the due time writes the absolute total to `usage_daily`; a second call inside the hour writes nothing. Add the v7 schema (additive; `apps/api/src/account-inbox/migrations/v7.sql`, listed in `ACCOUNT_INBOX_MIGRATIONS`), the RPC wrapper that times each method, and the due-time provider pushed onto `dueTimeProviders` in the `AccountInbox` constructor (`apps/api/src/account-inbox/account-inbox.ts`; corrected at Step R). Commit red and green separately.
 - [ ] **A5 red then green: security.** `apps/api/test/integration/usage-security.test.ts` (the Security section of the test plan): requests with an unknown, revoked or malformed secret leave `usage_daily` and the object's counter unchanged. Commit red and green separately.
 - [ ] **A6 red then green: budget check.** `budget-check.ts` reads `readDayTotal`, logs `budget.warning` with the day and the total at or above the threshold, and throws so the run fails. Red in `scheduled.test.ts`. Commit red and green separately.
 - [ ] **A7 red then green: media retention.** `apps/api/test/unit/media-retention.test.ts`: a fake bucket that pages (1,001 objects, page size 1,000). `media-retention.ts` lists through `r2-media-listing.ts`, recursing on `cursor`, and deletes objects uploaded before `now - MEDIA_RETENTION_MS`. Commit red and green separately.
@@ -353,7 +418,7 @@ Lanes never rebase: a rebase would rewrite the red-first hashes the test plan ci
 
 ### B (developer-B): deploy, smoke and E2E
 
-- [ ] **B1 red then green: preflight.** `apps/api/test/unit/deploy-preflight.test.ts`: one case per refusal in steps 1 to 7, with a fake `DeployShell`. Implement `deploy-preflight.ts` as an ordered list of named steps; the first failure is returned. Commit red and green separately.
+- [ ] **B1 red then green: preflight.** `apps/api/test/unit/deploy-preflight.test.ts`: one case per refusal in steps 1 to 7, with a fake `DeployShell`, and two docs cases: the official number sentinel and an unresolved `npm view zapbip@<version>` (decisions 2026-11-06). Implement `deploy-preflight.ts` as an ordered list of named steps; the first failure is returned. Commit red and green separately.
 - [ ] **B2 red then green: confirmation and dry run.** `apps/api/test/unit/deploy-entry.test.ts`: only the exact answer `production` proceeds on production. `scripts/deploy.ts` exposes `runDeploy({ environment, shell, prompt, isInteractive, environmentVariables })`. Commit red and green separately.
 - [ ] **B3 red then green: terminal shell.** `apps/api/test/unit/terminal-shell.test.ts`: `spawn` with an argument array and no shell; a secret value goes to stdin and never appears in the arguments. Commit red and green separately.
 - [ ] **B4 red then green: smoke inputs.** `apps/api/test/unit/smoke-inputs.test.ts`: each of `SMOKE_BASE_URL`, `SMOKE_CONNECTION_SECRET`, `SMOKE_OWNER_PHONE` and `META_APP_SECRET`, when missing, empty or a placeholder, produces an error naming it. Commit red and green separately.
@@ -367,7 +432,7 @@ Lanes never rebase: a rebase would rewrite the red-first hashes the test plan ci
 ### D (developer-D): runbooks
 
 - [ ] **D1 red: runbook shape.** `tools/repository-shape/src/runbooks.test.ts`: the index links every runbook; links resolve; each runbook has a purpose line, numbered steps and an `If it fails` line per step; `deploy.md` contains the immutable-migration rule. Commit as `test(shape): pin the runbook index`.
-- [ ] **D2 green: runbooks.** Write `docs/runbooks/README.md`, `cloudflare-setup.md`, `dns.md`, `meta-setup.md`, `deploy.md`, `mintlify-publish.md`. Commands match the root scripts. `deploy.md` states the immutable-migration rule: a migration that has reached a deployed environment is never edited; a fix is a new numbered migration. Commit as `docs(runbooks): write the owner's go-live runbooks`.
+- [ ] **D2 green: runbooks.** Write `docs/runbooks/README.md`, `cloudflare-setup.md`, `dns.md`, `meta-setup.md`, `deploy.md`, `mintlify-publish.md`. Commands match the root scripts. `deploy.md` states the immutable-migration rule: a migration that has reached a deployed environment is never edited; a fix is a new numbered migration. `mintlify-publish.md` lists two owner steps before a docs deploy: set `OFFICIAL_WHATSAPP_NUMBER` in place of `OFFICIAL_NUMBER_UNSET`, and publish the exact `zapbip@<version>` to npm. Commit as `docs(runbooks): write the owner's go-live runbooks`.
 
 ## Signed Meta payload
 
@@ -416,7 +481,7 @@ The harness and `buildSignedWebhookPost` produce this shape. It is the minimum s
 | C2 | a binding is repeated in one deployed block only | the C1 parity test lists the missing key | repeat the key in the block |
 | C3 | `environment` breaks slice 1's health assertion | slice 1's `health.test.ts` fails on `ok` | keep `ok: true` at the top level; add `environment` beside it |
 | C5 | `wrangler deploy --dry-run` asks for a Cloudflare login | `deploy-dry-run.test.ts` exits non-zero with an auth message | move the dry run to `e2e` and record `not run` (A19) |
-| C5 | placeholder IDs fail the dry run | the test names a `replace-with-` value | the dry-run test checks the development block for the parse; the deployed dry runs run after the owner pastes IDs (documented in `deploy.md`) |
+| C5 | placeholder IDs fail the dry run | the test names a `REPLACE_WITH_` value | the dry-run test checks the development block for the parse; the deployed dry runs run after the owner pastes IDs (documented in `deploy.md`) |
 | A2 | the migration conflicts with a later one | `wrangler d1 migrations list --local` shows an unexpected state | a deployed migration is immutable: a fix is `0004_…` or later, never an edit |
 | A4 | the alarm is not armed, so usage never reaches D1 | `usage_daily` is still empty after the due time has passed in the test clock | the write path re-arms through the registry; the test advances the clock one hour and expects exactly one row |
 | A4-b | a flush is written per call instead of per hour | the write-count test sees more than one upsert in an hour | the flush runs only from the alarm, never from the write path |
