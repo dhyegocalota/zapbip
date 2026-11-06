@@ -158,8 +158,7 @@ function createSecrets(): RecordingSecrets {
   };
 }
 
-function createRevocations(input: { environment: InMemoryEnvironment }): RecordingRevocations {
-  const { waiters } = input.environment.dependencies;
+function createRevocations(): RecordingRevocations {
   const revoked: AgentName[] = [];
   const cancelled: AgentName[] = [];
   const wakeConfigured = new Set<AgentName>();
@@ -170,11 +169,9 @@ function createRevocations(input: { environment: InMemoryEnvironment }): Recordi
     recordRevocation: async ({ agent }) => {
       revoked.push(agent);
       wakeConfigured.delete(agent);
-      waiters.resolveAgentMessage({ agent });
     },
     cancelWaiters: async ({ agent }) => {
       cancelled.push(agent);
-      waiters.resolveAgentMessage({ agent });
     },
   };
 }
@@ -236,7 +233,7 @@ export function createInMemoryAccountDependencies(input: InMemoryOptions = {}): 
   const directory = createDirectory({ store });
   const accountMedia = createAccountMedia();
   const secrets = createSecrets();
-  const revocations = createRevocations({ environment });
+  const revocations = createRevocations();
   const registry = createRegistry({ store });
   const dependencies: AccountDependencies = {
     ...environment.dependencies,
