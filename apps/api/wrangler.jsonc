@@ -18,11 +18,21 @@
   ],
   "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "zapbip-media" }],
   "rules": [{ "type": "Text", "globs": ["**/*.sql"], "fallthrough": true }],
-  "vars": { "PUBLIC_ORIGIN": "http://localhost:8787" },
+  "vars": { "PUBLIC_ORIGIN": "http://localhost:8787", "WAITLIST_ENABLED": "false" },
+  "ratelimits": [
+    { "name": "OWNER_RATE_LIMITER", "namespace_id": "1001", "simple": { "limit": 20, "period": 60 } },
+    { "name": "OUTBOUND_RATE_LIMITER", "namespace_id": "1002", "simple": { "limit": 30, "period": 60 } },
+    { "name": "ACCOUNT_OUTBOUND_RATE_LIMITER", "namespace_id": "1003", "simple": { "limit": 120, "period": 60 } },
+  ],
   "env": {
     "production": {
       "main": "src/index.ts",
-      "vars": { "PUBLIC_ORIGIN": "http://localhost:8787" },
+      "vars": { "PUBLIC_ORIGIN": "http://localhost:8787", "WAITLIST_ENABLED": "true" },
+      "ratelimits": [
+        { "name": "OWNER_RATE_LIMITER", "namespace_id": "1001", "simple": { "limit": 20, "period": 60 } },
+        { "name": "OUTBOUND_RATE_LIMITER", "namespace_id": "1002", "simple": { "limit": 30, "period": 60 } },
+        { "name": "ACCOUNT_OUTBOUND_RATE_LIMITER", "namespace_id": "1003", "simple": { "limit": 120, "period": 60 } },
+      ],
       "migrations": [{ "tag": "v1", "new_sqlite_classes": ["AccountInbox"] }],
       "durable_objects": {
         "bindings": [{ "name": "ACCOUNT_INBOX", "class_name": "AccountInbox" }],
