@@ -10,6 +10,7 @@ export enum LogEvent {
   MediaRead = 'media_read',
   Sweep = 'sweep',
   ClockAdvanced = 'clock_advanced',
+  BudgetWarning = 'budget.warning',
 }
 
 export type LogFields = {
@@ -20,4 +21,6 @@ export type LogFields = {
   kind?: string;
   sizeBytes?: number;
   errorCode?: string;
+  day?: string;
+  gigabyteSeconds?: number;
 };

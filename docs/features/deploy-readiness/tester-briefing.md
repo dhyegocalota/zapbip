@@ -63,6 +63,21 @@ Commits: `99caf63` (red, wrangler-config), `5f0cbe9` (wrangler.jsonc), `b3279ef`
 - `apps/api/test/integration/health.test.ts`, `production-entry.test.ts` (WI-117 now `{ ok: true, environment: 'production' }`; the helper passes `ENVIRONMENT: production`).
 - `apps/api/test/e2e/production-bundle.e2e.test.ts` — PB-4, the staging dry-run bundle (pin).
 - `docs/features/deploy-readiness/spec.md` — health body amended to `{ ok: true, environment }`.
+## Lane A (usage and jobs) — done
+
+Commits (red marked): `6930ad6` red usage-meter arithmetic, `358e082` arithmetic; `fff8c08` migration `0003_usage.sql`; `6d10114` red, `0cf7989` D1 repository; `1b5d79d` red, `c06ab52` meter in the object (v7, ledger, provider, RPC wrapper); `c22e6ef` pin usage security; `244cb3b` red, `9b72906` media retention; `cfcda2b` red, `043b2f3` budget check and dispatch; `bb99d7c` integration of the two crons.
+
+### What changed
+
+- `apps/api/src/account-inbox/usage-meter.ts` — arithmetic; `usageFlushDueAt` is `(lastFlushedAt or now) + HOUR_MS`.
+- `apps/api/src/account-inbox/migrations/v7.sql` and `index.ts` — table `usage_meter (day, gigabyte_seconds, flushed_gigabyte_seconds, recorded_at, last_flushed_at)`; registry is `[1, 7]`.
+- `apps/api/src/account-inbox/usage-ledger.ts` — SQLite record, list-unflushed and mark-flushed.
+- `apps/api/src/account-inbox/usage-provider.ts` — the due-time provider: flushes absolute day totals to D1 once due, marks them flushed only after `reportDay` resolved.
+- `apps/api/src/account-inbox/account-inbox.ts` — `outcome()` (the funnel of every RPC method) times the call and records it before re-arming the alarm; provider pushed in the constructor.
+- `apps/api/src/adapters/d1/d1-usage-repository.ts`, `apps/api/migrations/0003_usage.sql`.
+- `apps/api/src/adapters/r2/r2-media-listing.ts`, `apps/api/src/operations/{media-retention,budget-check,scheduled}.ts`.
+- `apps/api/src/contract/log.ts` — additive: `LogEvent.BudgetWarning = 'budget.warning'`, fields `day`, `gigabyteSeconds` (no lane owned this file).
+- `apps/api/test/integration/account-inbox.test.ts` (slice 1) — WI-118 expects `[1, 7]` and `usage_meter`; the alarm-deadline test deletes the `usage_meter` row first, because the usage flush (one hour) is now earlier than the 24 hour expiry.
 
 ### How to run
 
@@ -70,6 +85,9 @@ Commits: `99caf63` (red, wrangler-config), `5f0cbe9` (wrangler.jsonc), `b3279ef`
 cd apps/api && pnpm exec vitest run --config vitest.unit.config.mts wrangler-config
 cd apps/api && pnpm exec vitest run --config vitest.integration.config.mts health production-entry
 cd apps/api && pnpm exec vitest run --config vitest.e2e.config.mts production-bundle
+cd apps/api
+pnpm exec vitest run --config vitest.unit.config.mts test/unit/usage-meter.test.ts test/unit/media-retention.test.ts test/unit/scheduled.test.ts
+pnpm exec vitest run --config vitest.integration.config.mts test/integration/usage-repository.test.ts test/integration/usage-in-object.test.ts test/integration/usage-security.test.ts test/integration/scheduled.test.ts
 ```
 
 ### Red today, green after
@@ -99,6 +117,32 @@ Pins: the first four wrangler-config cases, PB-4.
 
 - `ratelimits` and `analytics_engine_datasets` parity is not asserted; neither key exists yet.
 - The deploy command and runbooks must not use `--env production` (plan A7 and the production-bundle line were stale).
+| Test | Red text | Green because |
+|---|---|---|
+| `usage-meter.test.ts` (11) | `gigabyteSecondsForDuration is not implemented` | arithmetic bodies |
+| `usage-repository.test.ts` (5) | `D1UsageRepository.readDayTotal is not implemented` / `.reportDay is not implemented` | upsert and sum |
+| `usage-in-object.test.ts` (4) | `no such table: usage_meter: SQLITE_ERROR`; flush cases `expected false to be true` (no alarm armed) | v7, ledger, provider, wrapper |
+| `media-retention.test.ts` (4) | `runMediaRetention is not implemented` | listing and batched delete |
+| `scheduled.test.ts` unit (7) | `runScheduled is not implemented` | record-keyed dispatch and budget check |
+| `usage-security.test.ts` (3), `scheduled.test.ts` integration (4) | pins, green on landing | |
+
+### Hypotheses to attack
+
+1. A resolved RPC call adds its wall-clock duration to `usage_meter` and never writes to D1 from the request path. Break it by: counting `usage_daily` upserts across 1,000 calls inside one hour (test-plan U-HOUR); expect none before the alarm.
+2. The flush writes the absolute day total, so a repeated or retried flush is idempotent. Break it by: running the alarm twice with new calls in between.
+3. A failed D1 write keeps the due time, so the next alarm retries and the caller is unaffected. Break it by: dropping `usage_daily`, calling, advancing an hour, then restoring the table and running the alarm.
+4. A request with an unknown, revoked or malformed secret never reaches the object. Break it by: a secret that shares a prefix with a real one.
+5. Retention deletes only objects with `uploaded < now - MEDIA_RETENTION_MS`, across pages. Break it by: 2,001 objects, and a key deleted between list and delete.
+6. The budget check reads one D1 total and never lists accounts. Break it by: spying on `prepare`.
+
+### Known gaps
+
+- Zero-usage decision: a call measuring 0 ms adds 0 gigabyte seconds, creates no flushable usage and no D1 write; only gigabyte seconds are metered, not calls (pin in `usage-in-object.test.ts`).
+- A D1 outage retries every 5 seconds (`ALARM_MIN_DELAY_MS`) until it recovers, per the test plan ("the due time is kept"). Not load-tested.
+- Pruning runs inside the object at every alarm (flushed rows older than `USAGE_METER_RETENTION_MS`, seven days), not in the daily cron: the test plan requires retention to touch R2 only and no cron fans out over accounts.
+- Retention deletes every object in the bucket past the cutoff and does not look at key shape; the bucket holds media only. It collects all listed objects in memory before deleting; a very large bucket is not tested.
+- U-HOUR (1,000 calls, counted with D1 triggers), alarm order and zero usage are pins in `usage-in-object.test.ts` (commit after c22e6ef); the prune case was red first.
+- Order changed from the plan: A7 landed before A6/A8, and A6 shares its red/green commits with A8 because the budget cases run through `runScheduled`.
 
 ## Lane B: deploy, smoke and helpers (steps B1 to B9; B10 blocked)
 
@@ -156,6 +200,19 @@ Pins (green on arrival): `env-example.test.ts`, `root-scripts.test.ts` (`19d03f1
 - B10 (E2E owner flow and `smoke-development`) is not written: the dev stack has no `/webhooks/whatsapp` route (whatsapp-cloud-channel) and no `novo agente` flow (accounts-and-keys, whose install reply carries an install link rather than the MCP URL, so `mcpSecretOf` will need the `/i/<code>` step). Needed at that merge: smoke check 2 expects `Object.values(McpToolName)`, which becomes eleven when `set_wake` joins the enum.
 - The `wrangler ... --json` output shapes for `versions list`, `time-travel info` and `secret list --format json` are read from wrangler's source, not from a live account.
 - `SignatureHeader` is declared in `signed-webhook.ts`; whatsapp-cloud-channel declares `WEBHOOK_SIGNATURE_HEADER` in its adapter. Merge by importing one.
+## Lane D (runbooks)
+
+- Changed: `docs/runbooks/{README,cloudflare-setup,dns,meta-setup,deploy,mintlify-publish}.md`, `tools/repository-shape/src/runbooks.test.ts`.
+- Run: `pnpm --filter @zapbip/repository-shape exec vitest run src/runbooks.test.ts`.
+- Red (1465f0b): 3 failed, 6 passed; `ENOENT ... docs/runbooks/README.md` and `deploy.md`. Green: 9 of 9 in the file, 71 of 71 in the package.
+- Hypotheses: every step has Expect and If it fails lines; the README order matches the test plan; every `pnpm <script>` is a root script; production commands carry no `--env` (lane C binding).
+- Gaps:
+  - Resource names follow the spec table (`zapbip-staging`, `zapbip-production`, `zapbip-media-*`); lane C's `wrangler.jsonc` must match.
+  - The first deploy of an environment fails smoke checks 2 and 5 (no smoke connection yet) and `SMOKE_CONNECTION_SECRET=pending` is needed to pass preflight step 7; lane B may prefer a cleaner path.
+  - `OFFICIAL_WHATSAPP_NUMBER` lives in `libs/types/src/constants.ts` per docs-experience; the `zapbip` package path `apps/connector` and its `private: true` come from local-connector; neither is on this branch.
+  - Meta and Mintlify UI labels are from memory and unverified; the runbooks tell the owner to follow the dashboard where it differs. Whether Mintlify starts in the browser language and builds from `apps/docs` is unverified.
+  - No privacy policy page exists in `apps/docs`; Meta's Live mode needs a public URL (meta-setup step 10).
+  - `root scripts migrate:production` / `deploy:production` still pass `--env production` on this branch; lanes B and C must drop it.
 
 ### Lane B update (owner and coordinator orders, 2026-11-06)
 
@@ -168,3 +225,12 @@ Pins (green on arrival): `env-example.test.ts`, `root-scripts.test.ts` (`19d03f1
 
 - Production Worker deploys and the docs deploy now run `npm view <package>@<version> maintainers --json` (replacing `... version`); the package must resolve AND its maintainers must include `ZAPBIP_NPM_PUBLISHER` from the owner's environment file (placeholder, empty or missing refuses with no npm command). Docs checks `zapbip` and `@zapbip/openclaw-plugin`; the Worker checks `zapbip@ZAPBIP_NPM_VERSION`, production only. Red `45d02ab`.
 - Publishing with two-factor authentication and provenance is an owner runbook step. The maintainers output format (`name <email>` strings) is assumed from npm's documented behaviour, not run against the registry.
+
+### Lane B and D: ops tester fixes (s8-ops, 2026-11-06)
+
+- D1: `inspectWorkerSource` reads only `src/app.ts` and `src/routes/**`; red `3e5bb35`, green `7fcc4e2`. The real-tree test compares the flag with an independent read of the same files, so it stays true after install-skills mounts the route.
+- D2: `pnpm docs:preflight` (root script, `apps/api/scripts/docs-preflight.ts`); red `95970f6`, green `87663a2`. It passes `ZAPBIP_NPM_VERSION` for both npm packages (both are 0.1.0).
+- D3: `deploy.ts` already forwarded `--first-deploy`; the runbook now uses it and drops the `pending` trick. pnpm forwarding of `pnpm deploy:staging --first-deploy` to the script is not run here (it needs the owner's environment file).
+- D4 and D7: official number, company facts and the npm maintainer check apply to production and docs only; staging needs placeholders and secrets. Order is now environment, production gates, placeholders, readiness, smoke inputs, git, secrets, migrations, gate, dry run. Red `6b7d43a`, green `47c69ba`.
+- D5, D6, D8, D9 and the missing steps (payment method, number PIN, PyPI commands, buying the domain, the first secret put creating the Worker): runbooks and README order rewritten; the go-live order in `runbooks.test.ts` updated; three new runbook tests are pins.
+- D10, E1, E2, E3, E5, E6: smoke output names the failure kind (`ECONNREFUSED`) and never the URL or message; lowercase and hyphenated placeholders are refused; non-JSON wrangler output is refused or reported clearly; an empty version list says "no previous Worker version"; a trailing slash is trimmed from `SMOKE_BASE_URL`; a failed `git fetch` is refused. Red `6b7d43a` and the smoke and rollback red commits; green `47c69ba`, the smoke fix and `66d89f1`.

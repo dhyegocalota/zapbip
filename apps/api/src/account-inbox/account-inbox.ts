@@ -24,6 +24,7 @@ import { ChannelErrorKind } from '@zapbip/types';
 import { createFakeWhatsAppSender, type FakeWhatsAppSender } from '../adapters/fake/fake-whatsapp-sender';
 import { createIdGenerator } from '../adapters/platform/ids';
 import { loadDurableClock, type DurableClock } from '../adapters/platform/clock';
+import { D1UsageRepository } from '../adapters/d1/d1-usage-repository';
 import { mediaStoreOf } from '../adapters/r2/r2-media-store';
 import { createSqliteInboxRepository } from '../adapters/sqlite/sqlite-inbox-repository';
 import { createNoneWaker } from '../adapters/wake/none-waker';
@@ -35,6 +36,9 @@ import { logEvent } from '../log';
 import { ALARM_MIN_DELAY_MS, AlarmErrorCode } from './constants';
 import { ACCOUNT_INBOX_MIGRATIONS } from './migrations';
 import { runMigrations } from './run-migrations';
+import { recordUsage } from './usage-ledger';
+import { gigabyteSecondsForDuration, utcDay } from './usage-meter';
+import { createUsageProvider } from './usage-provider';
 
 type ReceiveOwnerMessageRequest = Parameters<AccountInboxRpc['receiveOwnerMessage']>[0];
 
@@ -74,7 +78,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       ids: createIdGenerator(),
       waiters: inbox.createReplyWaiters({ clock: this.clock }),
     };
-    this.dueTimeProviders.push(this.createExpiryProvider(), this.createRoutingListProvider());
+    this.dueTimeProviders.push(this.createExpiryProvider(), this.createRoutingListProvider(), this.createUsageProvider());
     await this.armAlarm();
   }
 
@@ -93,6 +97,24 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       nextDueAt: () => inbox.findRoutingListDueAt({ dependencies: this.dependencies }),
       runDue: () => inbox.expireRoutingList({ dependencies: this.dependencies }),
     };
+  }
+
+  private createUsageProvider(): DueTimeProvider {
+    return createUsageProvider({
+      storage: this.ctx.storage,
+      repository: new D1UsageRepository({ database: this.env.CONNECTIONS }),
+      accountId: this.accountId,
+    });
+  }
+
+  private recordUsage(input: { startedAt: number }): void {
+    const now = this.clock.now();
+    recordUsage({
+      storage: this.ctx.storage,
+      day: utcDay({ now }),
+      gigabyteSeconds: gigabyteSecondsForDuration({ durationMs: Date.now() - input.startedAt }),
+      now,
+    });
   }
 
   private log(fields: LogFields): void {
@@ -130,6 +152,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
   }
 
   private async outcome<Value>(input: { run: () => Promise<Value>; describe?: (value: Value) => LogFields }): Promise<CallOutcome<Value>> {
+    const startedAt = Date.now();
     try {
       const value = await input.run();
       if (input.describe !== undefined) this.log(input.describe(value));
@@ -140,6 +163,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       this.log({ event, errorCode: error.code });
       return { ok: false, errorCode: error.code, message: error.message };
     } finally {
+      this.recordUsage({ startedAt });
       await this.armAlarm();
     }
   }
