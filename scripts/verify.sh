@@ -131,7 +131,7 @@ gate_format() {
   [[ $mode == all ]] && { pnpm format:check; return; }
   local existing_files=() path
   while IFS= read -r path; do
-    [[ -f $path ]] && existing_files+=("$path")
+    [[ -f $path && ! -L $path ]] && existing_files+=("$path")
   done <<< "$changed_paths"
   [[ ${#existing_files[@]} -gt 0 ]] && { pnpm exec prettier --check --ignore-unknown "${existing_files[@]}"; return; }
   echo "verify: format has no changed file to check"
