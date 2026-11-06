@@ -8,6 +8,9 @@ const README_PATHSPEC = '*README.md';
 const WORKSPACE_PACKAGE_PARENTS = ['apps', 'libs', 'tools'];
 export const PACKAGE_MANIFEST = 'package.json';
 const LINE_SEPARATOR = '\n';
+export const DOCS_ROOT = 'apps/docs';
+export const PAGE_EXTENSION = '.mdx';
+const PAGE_DIRECTORY_MARKERS = ['node_modules'];
 
 export function repositoryPath(path: string): string {
   return resolve(REPOSITORY_ROOT, path);
@@ -37,4 +40,14 @@ export function workspacePackages(): string[] {
       .map((entry) => posix.join(parent, entry.name))
       .filter((path) => existsSync(repositoryPath(posix.join(path, PACKAGE_MANIFEST)))),
   );
+}
+
+export function documentFiles(directory: string): string[] {
+  return readdirSync(repositoryPath(posix.join(DOCS_ROOT, directory)), { withFileTypes: true })
+    .filter((entry) => !PAGE_DIRECTORY_MARKERS.includes(entry.name))
+    .flatMap((entry) => {
+      const path = posix.join(directory, entry.name);
+      if (entry.isDirectory()) return documentFiles(path);
+      return entry.name.endsWith(PAGE_EXTENSION) ? [path] : [];
+    });
 }
