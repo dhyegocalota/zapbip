@@ -7,21 +7,21 @@ Salva como esta conexão é acordada quando você escreve e nenhuma chamada est�
 
 ## Entrada
 
-| Campo   | Tipo             | Notas                                                                                                                                                  |
-| ------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `mode`  | string           | `webhook` salva um webhook; `none` limpa o despertar. `local`, `scheduled` e `standby` respondem "wake mode not available yet".                        |
-| `url`   | string, opcional | Obrigatório para `webhook`. `https`, sem usuário e senha, sem fragmento, porta 443 ou ausente, até 512 caracteres. O host escolhe o provedor.          |
+| Campo   | Tipo             | Notas                                                                                                                                                      |
+| ------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mode`  | string           | `webhook` salva um webhook; `none` limpa o despertar. `local`, `scheduled` e `standby` respondem "wake mode not available yet".                            |
+| `url`   | string, opcional | Obrigatório para `webhook`. `https`, sem usuário e senha, sem fragmento, porta 443 ou ausente, até 512 caracteres. O host escolhe o provedor.              |
 | `token` | string, opcional | Obrigatório para `webhook`. Imprimível, sem espaços, de 16 a 512 caracteres. Em um webhook genérico é a chave de assinatura, com pelo menos 32 caracteres. |
 
 ## Provedores
 
 O provedor é escolhido pelo host da URL, nunca por um campo.
 
-| Provedor         | Host                      | Caminho                                      | Autenticação                                                    |
-| ---------------- | ------------------------- | -------------------------------------------- | --------------------------------------------------------------- |
-| `grok_routine`   | `api2.cursor.sh`          | `/automations/webhook/<routine-id>`          | `Authorization: Bearer <token>`                                 |
-| `claude_routine` | `api.anthropic.com`       | `/v1/claude_code/routines/<trigger-id>/fire` | `Authorization: Bearer <token>`                                 |
-| `generic`        | qualquer host `https` público | qualquer                                 | `X-Zapbip-Timestamp` e `X-Zapbip-Signature`, nenhum segredo enviado |
+| Provedor         | Host                          | Caminho                                      | Autenticação                                                        |
+| ---------------- | ----------------------------- | -------------------------------------------- | ------------------------------------------------------------------- |
+| `grok_routine`   | `api2.cursor.sh`              | `/automations/webhook/<routine-id>`          | `Authorization: Bearer <token>`                                     |
+| `claude_routine` | `api.anthropic.com`           | `/v1/claude_code/routines/<trigger-id>/fire` | `Authorization: Bearer <token>`                                     |
+| `generic`        | qualquer host `https` público | qualquer                                     | `X-Zapbip-Timestamp` e `X-Zapbip-Signature`, nenhum segredo enviado |
 
 ## Saída
 
