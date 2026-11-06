@@ -45,7 +45,15 @@ describe('runWake', () => {
     expect(result).toEqual({ outcome: ConnectorWakeOutcome.Answered, exitCode: 0 });
     expect(runs).toHaveLength(1);
     expect(runAt({ runs, index: 0 }).clientName).toBe('claude');
-    expect(runAt({ runs, index: 0 }).argv.slice(0, 4)).toEqual(['-p', '--resume', SESSION_ID, `--allowedTools=${WAKE_ALLOWED_TOOL}`]);
+    expect(runAt({ runs, index: 0 }).argv).toEqual([
+      '-p',
+      '--resume',
+      SESSION_ID,
+      '--permission-mode',
+      'dontAsk',
+      '--tools=',
+      `--allowedTools=${WAKE_ALLOWED_TOOL}`,
+    ]);
   });
 
   it('resumes the given Codex session with the restricted flags', async () => {
@@ -55,7 +63,7 @@ describe('runWake', () => {
     const argv = runAt({ runs, index: 0 }).argv;
     expect(runAt({ runs, index: 0 }).clientName).toBe('codex');
     expect(argv.slice(0, 5)).toEqual(['exec', '--skip-git-repo-check', '-s', 'read-only', '-c']);
-    expect(argv.slice(-3, -1)).toEqual(['resume', SESSION_ID]);
+    expect(argv.slice(-3)).toEqual(['resume', SESSION_ID, '-']);
   });
 
   it('starts no process without a session', async () => {
@@ -109,12 +117,28 @@ describe('runWake', () => {
     expect(written.mock.calls.flat().join('')).not.toContain(CHILD_OUTPUT_MARKER);
   });
 
-  it('hands owner text to the child as one argument and runs no shell', async () => {
+  it('hands the owner prompt to the child on standard input and never in its arguments', async () => {
+    await wake({ client: ConnectorClient.ClaudeCode, text: 'private words' });
+
+    const runs = await fakeClients.readRuns();
+    expect(runAt({ runs, index: 0 }).stdin).toContain('private words');
+    expect(JSON.stringify(runAt({ runs, index: 0 }).argv)).not.toContain('private words');
+  });
+
+  it('removes the connection link from the environment of the child', async () => {
+    vi.stubEnv('ZAPBIP_CONNECTION_URL', 'https://zapbip.example/c/secret/mcp');
+    await wake({ client: ConnectorClient.ClaudeCode });
+
+    const runs = await fakeClients.readRuns();
+    expect(runAt({ runs, index: 0 }).hadConnectionUrl).toBe(false);
+  });
+
+  it('hands owner text to the child as input and runs no shell', async () => {
     const markerPath = join(fakeClients.rootDirectory, SHELL_MARKER_FILE);
     await wake({ client: ConnectorClient.ClaudeCode, text: `$(touch ${markerPath}); rm -rf ~ #` });
 
     const runs = await fakeClients.readRuns();
-    expect(runAt({ runs, index: 0 }).argv.at(-1)).toContain(`$(touch ${markerPath}); rm -rf ~ #`);
+    expect(runAt({ runs, index: 0 }).stdin).toContain(`$(touch ${markerPath}); rm -rf ~ #`);
     await expect(access(markerPath)).rejects.toThrow();
   });
 
@@ -129,7 +153,7 @@ describe('runWake', () => {
       expect(runAt({ runs, index: 0 }).argv).toContain('resume');
       expect(runAt({ runs, index: 1 }).argv).not.toContain('resume');
       expect(runAt({ runs, index: 1 }).cwd).toBe(fakeClients.workingDirectory);
-      expect(runAt({ runs, index: 1 }).argv.at(-1)).toBe(runAt({ runs, index: 0 }).argv.at(-1));
+      expect(runAt({ runs, index: 1 }).stdin).toBe(runAt({ runs, index: 0 }).stdin);
     });
 
     it('does not fall back a second time when the new session is refused too', async () => {

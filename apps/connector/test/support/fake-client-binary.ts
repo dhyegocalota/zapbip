@@ -26,6 +26,8 @@ export type FakeClientRun = {
   clientName: string;
   argv: string[];
   cwd: string;
+  stdin: string;
+  hadConnectionUrl: boolean;
   startedAt: number;
   endedAt: number | null;
   exitCode: number | null;
@@ -37,6 +39,8 @@ type RecordLine = {
   clientName: string;
   argv: string[];
   cwd: string;
+  stdin?: string;
+  hadConnectionUrl?: boolean;
   at: number;
   event: 'started' | 'ended';
   exitCode?: number | null;
@@ -85,6 +89,8 @@ function mergeRuns(input: { lines: RecordLine[] }): FakeClientRun[] {
       clientName: line.clientName,
       argv: line.argv,
       cwd: line.cwd,
+      stdin: line.stdin === undefined ? '' : line.stdin,
+      hadConnectionUrl: line.hadConnectionUrl === true,
       startedAt: line.at,
       endedAt: ended === undefined ? null : ended.at,
       exitCode: ended === undefined || ended.exitCode === undefined ? null : ended.exitCode,

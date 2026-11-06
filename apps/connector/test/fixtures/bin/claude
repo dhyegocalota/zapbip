@@ -1,9 +1,10 @@
 #!/usr/bin/env node
-import { appendFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 
 const clientName = basename(process.argv[1]);
 const clientArguments = process.argv.slice(2);
+const standardInput = readFileSync(0, 'utf8');
 const isResume = clientArguments.includes('resume');
 const ACTIVE_WRITER_TEXT = 'Error: thread already has an active writer for this session';
 const HOLD_POLL_MS = 10;
@@ -46,7 +47,7 @@ function waitForRelease(releaseFile) {
 }
 
 function main() {
-  record({ event: 'started' });
+  record({ event: 'started', stdin: standardInput, hadConnectionUrl: 'ZAPBIP_CONNECTION_URL' in process.env });
   process.on('SIGTERM', () => {
     record({ event: 'ended', exitCode: null, signal: 'SIGTERM' });
     process.exit(SIGTERM_EXIT_CODE);

@@ -168,15 +168,16 @@ describe('runConnection', () => {
 
       const runs = await fakeClients.readRuns();
       expect(runs).toHaveLength(1);
-      expect(runAt({ runs, index: 0 }).argv.slice(0, 4)).toEqual([
+      expect(runAt({ runs, index: 0 }).argv).toEqual([
         '-p',
         '--resume',
         PINNED_SESSION_ID,
+        '--permission-mode',
+        'dontAsk',
+        '--tools=',
         `--allowedTools=${WAKE_ALLOWED_TOOL}`,
       ]);
-      expect(runAt({ runs, index: 0 }).argv.at(-1)).toMatch(
-        /^<channel source="zapbip" sender="owner" verified="true">text of msg_1<\/channel>/,
-      );
+      expect(runAt({ runs, index: 0 }).stdin).toMatch(/^<channel source="zapbip" sender="owner" verified="true">text of msg_1<\/channel>/);
       expect(doneMessageIds()).toEqual(['msg_1']);
       expect(loggedFieldsOf({ event: ConnectorLogEvent.WakeFinished })).toMatchObject({
         messageId: 'msg_1',
@@ -218,7 +219,7 @@ describe('runConnection', () => {
       await server.waitForFrames({ type: ConnectorFrameType.Done, count: 1 });
 
       const runs = await fakeClients.readRuns();
-      expect(runAt({ runs, index: 0 }).argv.at(-1)).toContain(`$(touch ${markerPath})`);
+      expect(runAt({ runs, index: 0 }).stdin).toContain(`$(touch ${markerPath})`);
       await expect(access(markerPath)).rejects.toThrow();
     });
   });
@@ -280,7 +281,7 @@ describe('runConnection', () => {
       await server.waitForFrames({ type: ConnectorFrameType.Done, count: 3 });
 
       const runs = await fakeClients.readRuns();
-      expect(runs.map((run) => run.argv.at(-1))).toEqual(
+      expect(runs.map((run) => run.stdin)).toEqual(
         ['msg_1', 'msg_2', 'msg_3'].map((messageId) => expect.stringContaining(`text of ${messageId}`)),
       );
       expect(runAt({ runs, index: 0 }).endedAt).toBeLessThanOrEqual(runAt({ runs, index: 1 }).startedAt);

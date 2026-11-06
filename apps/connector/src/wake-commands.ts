@@ -8,7 +8,7 @@ import {
   WAKE_ALLOWED_TOOL,
 } from '@zapbip/types';
 
-type ResumeArgumentBuilder = (input: { sessionId: string; prompt: string }) => string[];
+type ResumeArgumentBuilder = (input: { sessionId: string; prompt?: string }) => string[];
 
 const CODEX_SERVER_CONFIGURATION_PREFIX = `mcp_servers.${CODEX_ZAPBIP_SERVER_NAME}`;
 const CODEX_SAFETY_ARGUMENTS = [
@@ -34,16 +34,16 @@ function assertSessionId(input: { sessionId: string }): void {
 export const RESUME_ARGUMENT_BUILDERS: Record<ConnectorClient, ResumeArgumentBuilder> = {
   [ConnectorClient.ClaudeCode]: ({ sessionId, prompt }) => {
     assertSessionId({ sessionId });
-    return ['-p', '--resume', sessionId, `--allowedTools=${WAKE_ALLOWED_TOOL}`, prompt];
+    return ['-p', '--resume', sessionId, `--allowedTools=${WAKE_ALLOWED_TOOL}`, String(prompt)];
   },
   [ConnectorClient.Codex]: ({ sessionId, prompt }) => {
     assertSessionId({ sessionId });
-    return [...CODEX_SAFETY_ARGUMENTS, 'resume', sessionId, prompt];
+    return [...CODEX_SAFETY_ARGUMENTS, 'resume', sessionId, String(prompt)];
   },
 };
 
-export function buildCodexNewSessionArguments(input: { prompt: string }): string[] {
-  return [...CODEX_SAFETY_ARGUMENTS, input.prompt];
+export function buildCodexNewSessionArguments(input?: { prompt: string }): string[] {
+  return [...CODEX_SAFETY_ARGUMENTS, String(input?.prompt)];
 }
 
 export function isActiveWriterRefusal(input: { stderrText: string }): boolean {
