@@ -1,6 +1,6 @@
 # Webhook wake
 
-**Status:** Building
+**Status:** In review
 **Tier:** 🔴
 **Owner approval:** approved 2026-11-06 (owner delegated)
 **ADRs:** [0018](../../adr/0018-webhook-wake-carries-no-message-content.md), [0019](../../adr/0019-outbound-wake-targets-pinned-providers-and-guarded-generic-hosts.md); builds on [0006](../../adr/0006-one-secret-per-connection-in-the-mcp-url.md), [0007](../../adr/0007-a-durable-inbox-and-a-wake-ladder.md), [0008](../../adr/0008-a-pure-core-behind-ports.md), [0009](../../adr/0009-cloudflare-workers-with-one-durable-object-per-account.md), [0011](../../adr/0011-the-24-hour-window-queues-and-sends-one-notice.md)
