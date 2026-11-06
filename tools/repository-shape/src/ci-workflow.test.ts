@@ -1,5 +1,7 @@
+import { existsSync, readdirSync } from 'node:fs';
+import { posix } from 'node:path';
 import { describe, expect, test } from 'vitest';
-import { readRepositoryFile } from './repository-files';
+import { readRepositoryFile, repositoryPath } from './repository-files';
 
 const WORKFLOW_FILE = '.github/workflows/verify.yml';
 const JOB_LINE_PATTERN = /^ {2}[\w-]+:$/;
@@ -36,6 +38,21 @@ const UNIT_MATRIX_ENTRIES = ['{ name: repository-shape, filter: "@zapbip/reposit
 const UNIT_FILTER_STEP = 'run: pnpm --filter "${{ matrix.filter }}" test:unit';
 const FAIL_FAST_DISABLED = 'fail-fast: false';
 const TOKEN_REFERENCE = 'secrets.';
+const WORKFLOWS_DIRECTORY = '.github/workflows';
+const ACTIONS_DIRECTORY = '.github/actions';
+const YAML_EXTENSION = '.yml';
+const EXTERNAL_ACTION_PATTERN = /^\s*-?\s*uses: (?!\.\/)(\S+)(.*)$/gm;
+const PINNED_ACTION_PATTERN = /^[\w.-]+\/[\w./-]+@[0-9a-f]{40}$/;
+const VERSION_COMMENT_PATTERN = /^ # v\d[\w.-]*$/;
+
+function yamlFiles(directory: string): string[] {
+  if (!existsSync(repositoryPath(directory))) return [];
+  return readdirSync(repositoryPath(directory), { withFileTypes: true }).flatMap((entry) => {
+    const path = posix.join(directory, entry.name);
+    if (entry.isDirectory()) return yamlFiles(path);
+    return entry.name.endsWith(YAML_EXTENSION) ? [path] : [];
+  });
+}
 
 function job(name: string): string {
   const workflow = readRepositoryFile(WORKFLOW_FILE);
@@ -115,5 +132,14 @@ describe('CI workflow', () => {
       return match === null || Number(match[1]) > MAXIMUM_TIMEOUT_MINUTES;
     });
     expect(unbounded).toEqual([]);
+  });
+
+  test('every external action is pinned to a full commit hash with its version tag as a trailing comment', () => {
+    const unpinned = [...yamlFiles(WORKFLOWS_DIRECTORY), ...yamlFiles(ACTIONS_DIRECTORY)].flatMap((file) =>
+      [...readRepositoryFile(file).matchAll(EXTERNAL_ACTION_PATTERN)]
+        .filter(([, action, trailer]) => !PINNED_ACTION_PATTERN.test(action!) || !VERSION_COMMENT_PATTERN.test(trailer!))
+        .map(([, action]) => `${file}: ${action}`),
+    );
+    expect(unpinned).toEqual([]);
   });
 });
