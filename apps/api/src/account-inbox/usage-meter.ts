@@ -1,4 +1,4 @@
-import { HOUR_MS, SECOND_MS } from '@zapbip/types';
+import { DAY_MS, HOUR_MS, SECOND_MS } from '@zapbip/types';
 import {
   DAILY_BUDGET_WARNING_RATIO,
   DURABLE_OBJECT_DAILY_GIGABYTE_SECONDS,
@@ -6,6 +6,7 @@ import {
 } from '../operations/constants';
 
 const USAGE_FLUSH_INTERVAL_MS = HOUR_MS;
+export const USAGE_METER_RETENTION_MS = 7 * DAY_MS;
 const ISO_DAY_LENGTH = 'YYYY-MM-DD'.length;
 
 export function gigabyteSecondsForDuration(input: { durationMs: number }): number {
