@@ -1,0 +1,83 @@
+---
+title: 'Faça sua IA te ouvir mesmo quando você não está olhando'
+description: 'Deixe um programa pequeno aberto no seu computador para o Claude Code ou o Codex responder no WhatsApp, mesmo parado.'
+---
+
+Normalmente sua IA só lê o WhatsApp quando já está trabalhando. Se você escreve enquanto ela está parada, sua mensagem fica esperando.
+
+O conector do zapbip resolve isso. É um programa pequeno que fica aberto no seu computador. Quando você escreve no WhatsApp, ele acorda a sessão de IA que você já usava, entrega sua mensagem e deixa a IA te responder. Leva cerca de 7 segundos no Claude Code e 6 no Codex.
+
+Funciona com o Claude Code e o Codex. Seu computador precisa estar ligado e acordado, e o conector precisa estar rodando.
+
+## O que você precisa
+
+- Claude Code ou Codex, já conectado ao zapbip.
+- Pelo menos uma sessão anterior na pasta em que você quer que a IA trabalhe.
+- Node 24 ou mais novo.
+- Seu link de conexão, o mesmo `https://.../c/<secret>/mcp` que sua IA usa para falar com o zapbip. Trate como uma senha.
+
+## Como iniciar
+
+Abra um terminal na pasta em que você usa sua IA e rode um destes:
+
+```bash
+export ZAPBIP_CONNECTION_URL='https://<host>/c/<secret>/mcp'
+npx zapbip connect --client claude-code
+```
+
+```bash
+export ZAPBIP_CONNECTION_URL='https://<host>/c/<secret>/mcp'
+npx zapbip connect --client codex
+```
+
+Se você não definir `ZAPBIP_CONNECTION_URL`, o conector pergunta o link. Ele nunca aceita o link como argumento, porque argumentos aparecem no histórico do terminal e na lista de processos.
+
+Deixe o terminal aberto. O conector imprime uma linha para cada evento e para quando você aperta `Ctrl+C`. Para mantê-lo rodando sem terminal, veja [Rodar em segundo plano](/pt-br/guides/background-running).
+
+## O que acontece quando você escreve
+
+1. Você escreve para sua IA no WhatsApp.
+2. O conector recebe sua mensagem e acorda a sessão mais recente da pasta.
+3. A IA lê sua mensagem e responde no WhatsApp.
+4. Se várias mensagens chegarem juntas, elas são tratadas uma por vez, em ordem.
+
+Se você estava sem conexão ou o conector estava parado, suas mensagens não se perdem. Quando ele conecta de novo, pega todas as que não foram respondidas.
+
+## Escolha a sessão
+
+Por padrão o conector usa a sessão mais recente da pasta. Se a mesma pasta estiver aberta em outra janela, um despertar pode acrescentar àquela conversa. Para evitar, fixe uma sessão:
+
+```bash
+npx zapbip connect --client claude-code --session <session-id>
+```
+
+| Opção       | O que faz                                                            |
+| ----------- | -------------------------------------------------------------------- |
+| `--client`  | `claude-code` ou `codex`. Obrigatória.                               |
+| `--cwd`     | A pasta de trabalho. O padrão é a pasta em que você rodou o comando. |
+| `--session` | Um id de sessão para sempre retomar, em vez da mais recente.         |
+
+## O que a IA pode fazer quando é acordada
+
+Só uma coisa: te mandar uma mensagem de volta. Ela não pode usar outras ferramentas, e o Codex roda com um sandbox somente leitura. Sua mensagem chega como uma mensagem sua, marcada como verificada.
+
+Se o app do Codex já estiver com a conversa aberta, o Codex recusa retomá-la. O conector então abre uma única sessão nova na mesma pasta, que começa sem a conversa anterior, e passa a usá-la.
+
+## Um conector por conexão
+
+Se você iniciar um segundo conector para a mesma conexão, o primeiro para. Rode em um computador por vez.
+
+Enquanto um conector está ligado, o zapbip acorda sua IA por ele. Quando ele fecha, o zapbip volta à configuração que você tinha antes.
+
+## O que ele imprime
+
+Cada linha é um JSON com a hora e um evento, como `wake_started` e `wake_finished`. As linhas trazem ids, tipos, resultados e tempos. Nunca trazem suas mensagens, as respostas da IA nem seu link de conexão.
+
+## Quando algo não funciona
+
+| O que você vê                  | O que significa                                                                                                              |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| O conector sai na hora         | O link é desconhecido ou foi revogado. Peça um novo.                                                                         |
+| Sua mensagem fica sem resposta | Ainda não há sessão na pasta, ou `claude` ou `codex` não está instalado onde o conector roda. Abra a IA uma vez nessa pasta. |
+| Ele reconecta sem parar        | Sua rede caiu. Ele tenta de novo com esperas crescentes, até 30 segundos, e continua de onde parou.                          |
+| Ele parou sozinho              | Você iniciou outro conector para a mesma conexão.                                                                            |

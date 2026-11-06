@@ -1,0 +1,17 @@
+---
+title: 'Janela de 24 horas'
+description: 'Por que uma mensagem pode ir para a fila e o que o dono recebe.'
+---
+
+O WhatsApp só deixa o zapbip enviar mensagens livres até 24 horas depois da última mensagem do dono. O zapbip fecha a própria janela 10 minutos antes. Uma reação do dono não abre a janela.
+
+Com a janela aberta, as mensagens saem na hora com `delivery: "sent"`.
+
+Com ela fechada:
+
+- a ferramenta devolve `delivery: "queued"` e a mensagem espera na fila de saída;
+- a primeira mensagem na fila envia ao dono um aviso aprovado, uma vez por janela fechada;
+- a próxima mensagem do dono abre a janela e descarrega a fila em ordem;
+- mensagens na fila com mais de 7 dias viram `expired`.
+
+Um envio que o canal recusa fica registrado com `delivery: "failed"`, e a ferramenta devolve um erro que nomeia o tipo.

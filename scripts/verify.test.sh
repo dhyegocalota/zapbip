@@ -16,7 +16,7 @@ DEFAULT_NODE_VERSION=v24.7.0
 OTHER_NODE_VERSION=v25.0.0
 ALL_GATES="doctor format secrets typecheck audit unit integration e2e docs"
 DOCS_GATES="doctor format secrets audit shape"
-ALL_PACKAGES="@zapbip/api @zapbip/core @zapbip/server @zapbip/types @zapbip/web"
+ALL_PACKAGES="@zapbip/api @zapbip/core @zapbip/server @zapbip/types @zapbip/web zapbip"
 API_GATES="doctor format secrets typecheck audit shape unit integration e2e"
 
 expect_match() {
@@ -92,6 +92,7 @@ new_repository() {
   cp "$source_root/scripts/verify.sh" "$source_root/scripts/verify-gates.tsv" "$repository/scripts/"
   write_package apps/web @zapbip/web '{"@zapbip/core":"workspace:*","@zapbip/types":"workspace:*"}'
   write_package apps/api @zapbip/api '{"@zapbip/core":"workspace:*","@zapbip/types":"workspace:*"}'
+  write_package apps/connector zapbip '{"@zapbip/core":"workspace:*","@zapbip/types":"workspace:*"}'
   write_package apps/docs @zapbip/docs '{}'
   write_package apps/server @zapbip/server '{"@zapbip/core":"workspace:*","@zapbip/types":"workspace:*"}'
   write_package libs/core @zapbip/core '{"@zapbip/types":"workspace:*"}'
@@ -165,6 +166,11 @@ classify apps/api/src/x.ts
 expect_line "an api file" "$output" class product
 expect_line "an api file" "$output" gates "$API_GATES"
 expect_line "an api file" "$output" packages @zapbip/api
+
+classify apps/connector/src/x.ts
+expect_line "a connector file" "$output" class product
+expect_line "a connector file" "$output" gates "doctor format secrets typecheck audit shape unit e2e"
+expect_line "a connector file" "$output" packages zapbip
 
 classify apps/docs/docs.json
 expect_line "a docs site file" "$output" class docs
@@ -418,6 +424,13 @@ expect_equal "a core change exits 0" "$status" 0
 expect_match "a core change runs the api integration suite" "$(calls)" 'pnpm --filter @zapbip/api test:integration'
 expect_match "a core change runs the api end to end suite" "$(calls)" 'pnpm --filter @zapbip/api test:e2e'
 expect_no_match "a core change skips the docs links" "$(calls)" 'mint'
+
+new_repository
+commit_change apps/connector/src/x.ts
+run_verify
+expect_equal "a connector change exits 0" "$status" 0
+expect_match "a connector change runs the connector end to end suite" "$(calls)" 'pnpm --filter zapbip test:e2e'
+expect_match "a connector change runs the connector packaging suite" "$(calls)" 'pnpm --filter zapbip test:packaging'
 
 new_repository
 commit_change apps/docs/docs.json
