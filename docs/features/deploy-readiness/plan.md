@@ -389,12 +389,12 @@ Lanes never rebase: a rebase would rewrite the red-first hashes the test plan ci
 ### S0 (developer-0): contract
 
 ~~- [ ] **S0.1 Scaffold.** Add `tsx` 4.23.15 to the root `devDependencies` and merge the root scripts into `package.json`. Run `pnpm install` once; commit `pnpm-lock.yaml`. Commit as `chore(deps): add tsx for the deploy and smoke scripts`.~~
-- [ ] **S0.1 Scaffold (corrected at Step R).** Merge the root scripts into `package.json`. `tsx` 4.23.15 is already a root devDependency. Run `pnpm install --frozen-lockfile`; the lockfile must not change. Commit as `chore(api): add the deploy and smoke root scripts`.
+- [x] **S0.1 Scaffold (corrected at Step R).** Merge the root scripts into `package.json`. `tsx` 4.23.15 is already a root devDependency. Run `pnpm install --frozen-lockfile`; the lockfile must not change. Commit as `chore(api): add the deploy and smoke root scripts`. — evidence: c7048b1
 ~~- [ ] **S0.2 Rename (only if R1 says so).** Rename `MEDIA_LINK_SECRET` to `MEDIA_LINK_SIGNING_KEY` in every file that uses it. Commit as `refactor(api): name the media link key after its secret`.~~
 - [x] **S0.2 Rename (dropped at Step R).** R1 found no rename to make.
-- [ ] **S0.3 Contract files.** Write each file in **Contract** verbatim, with stub bodies where the contract shows a throw. Add the `scheduled` export to `index.ts` and `index.dev.ts`, keeping `export { AccountInbox }`. Add the meter wrapper to `AccountInbox` as a pass-through. Run `pnpm typecheck` and slice 1's integration tests; they stay green. Commit as `feat(api): land the deploy-readiness contract`.
-- [ ] **S0.4 Env and gates.** Write the root env example, add `.dev.vars` to `.gitignore`, add the two gate rows, add `.env.example` to `ROOT_ENTRIES`. Run `pnpm test:verify` and the repository-shape unit tests. Commit as `chore(env): add the environment example and its gate rows`.
-- [ ] **S0.5 ADRs.** Copy ADRs 0026 and 0027 and their index rows. Run the document-index test. Commit as `docs(adr): record the runbook and deploy decisions`.
+- [x] **S0.3 Contract files.** Write each file in **Contract** verbatim, with stub bodies where the contract shows a throw. Add the `scheduled` export to `index.ts` and `index.dev.ts`, keeping `export { AccountInbox }`. Add the meter wrapper to `AccountInbox` as a pass-through. Run `pnpm typecheck` and slice 1's integration tests; they stay green. Commit as `feat(api): land the deploy-readiness contract`. — evidence: 2dc88a2
+- [x] **S0.4 Env and gates.** Write the root env example, add `.dev.vars` to `.gitignore`, add the two gate rows, add `.env.example` to `ROOT_ENTRIES`. Run `pnpm test:verify` and the repository-shape unit tests. Commit as `chore(env): add the environment example and its gate rows`. — evidence: d4e6d60
+- [x] **S0.5 ADRs.** Copy ADRs 0026 and 0027 and their index rows. Run the document-index test. Commit as `docs(adr): record the runbook and deploy decisions`. — evidence: 2f13106
 
 ### C (developer-C): config and health
 
