@@ -9,6 +9,7 @@ export type WebhookEnvironment = {
 export type WhatsAppEnvironment = WebhookEnvironment & {
   graphBaseUrl: string;
   accessToken: string;
+  developmentMediaOrigin: string | null;
 };
 
 type WhatsAppBindingName = Extract<keyof Bindings, 'META_APP_SECRET' | `WHATSAPP_${string}`>;
@@ -34,5 +35,6 @@ export function readWhatsAppEnvironment(input: { env: Bindings }): WhatsAppEnvir
     ...readWebhookEnvironment({ env }),
     graphBaseUrl: requireBinding({ env, name: 'WHATSAPP_GRAPH_BASE_URL' }),
     accessToken: requireBinding({ env, name: 'WHATSAPP_ACCESS_TOKEN' }),
+    developmentMediaOrigin: null,
   };
 }

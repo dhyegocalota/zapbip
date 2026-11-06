@@ -5,6 +5,7 @@ const WRANGLER_CONFIG_PATH = 'wrangler.jsonc';
 const PRODUCTION_DATABASE_ID_PLACEHOLDER = 'REPLACE_WITH_PRODUCTION_D1_DATABASE_ID';
 const DEVELOPMENT_ENVIRONMENT = 'development';
 const LOCAL_DATABASE_ID = 'zapbip-connections-local';
+const PRODUCTION_GRAPH_BASE_URL = 'https://graph.facebook.com';
 
 type DatabaseBinding = { database_id: string };
 
@@ -17,6 +18,17 @@ describe('wrangler config', () => {
   it('pin: the top-level production block serves an https origin', () => {
     const { vars } = readWranglerConfig({ config: WRANGLER_CONFIG_PATH });
     expect(vars.PUBLIC_ORIGIN).toMatch(/^https:\/\//);
+  });
+
+  it('the production block carries no development media origin and points at the real Graph host', () => {
+    const { vars } = readWranglerConfig({ config: WRANGLER_CONFIG_PATH });
+    expect(vars.WHATSAPP_MEDIA_DOWNLOAD_ORIGIN).toBeUndefined();
+    expect(vars.WHATSAPP_GRAPH_BASE_URL).toBe(PRODUCTION_GRAPH_BASE_URL);
+  });
+
+  it('the development environment allows downloads from the fake Graph origin', () => {
+    const { vars } = readWranglerConfig({ config: WRANGLER_CONFIG_PATH, env: DEVELOPMENT_ENVIRONMENT });
+    expect(vars.WHATSAPP_MEDIA_DOWNLOAD_ORIGIN).toBe(vars.WHATSAPP_GRAPH_BASE_URL);
   });
 
   it('the production D1 database id is a placeholder that deploy preflight must replace', () => {
