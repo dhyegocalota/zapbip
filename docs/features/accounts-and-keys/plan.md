@@ -450,8 +450,8 @@ Failure modes for Step 0 are in the table below. Step 0 has no backout: a broken
 
 ### Step L5 (docs)
 
-- [ ] **S5.1 red.** The lead adds the three guide pages to the navigation after L5's red commit; here L5 writes the pages' skeletons only with links to the three names, so `mint broken-links` fails on the missing pages. Commit as `test(docs): link the account guides before their pages exist`.
-- [ ] **S5.2 green.** Write the three pages: `commands` (the command table in both languages, reserved words, limit, menu), `agents-and-links` (create, list, revoke, rotate, the password warning, what WhatsApp previews show, the eight-agent limit), `account-deletion` (the phrase, the 10-minute window, consequences, Meta keeps history, Cloudflare retention, a new account after deletion). `mint broken-links` green. Commit as `docs(api): write the account guides`.
+- [x] (`7f2866b`) **S5.1 red.** The lead adds the three guide pages to the navigation after L5's red commit; here L5 writes the pages' skeletons only with links to the three names, so `mint broken-links` fails on the missing pages. Commit as `test(docs): link the account guides before their pages exist`.
+- [x] (`5ca28f1`) **S5.2 green.** Write the three pages: `commands` (the command table in both languages, reserved words, limit, menu), `agents-and-links` (create, list, revoke, rotate, the password warning, what WhatsApp previews show, the eight-agent limit), `account-deletion` (the phrase, the 10-minute window, consequences, Meta keeps history, Cloudflare retention, a new account after deletion). `mint broken-links` green. Commit as `docs(api): write the account guides`.
 
 ### Step L4 (inbound path, routes, simulator, E2E)
 
