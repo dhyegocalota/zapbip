@@ -177,3 +177,11 @@ Known gaps:
 
 - The install page ends with `INSTALL_PAGE_COPY[locale].footer` ("zapbip is a product of Logic Bit" / "zapbip é um produto da Logic Bit"). `COMPANY` is on no branch yet, so the trade name is a local constant in `install-page-copy.ts` and the website is not rendered. Cross-slice note: at the merge with the slice that defines `COMPANY` in `libs/types`, read the trade name from it and append the website unless it is `COMPANY_FACT_UNSET`.
 - `agents/supported-agents` (en + pt-br) is rewritten without "coming soon": every client can start the conversation and the table says how each one listens.
+
+## Copy defects C1 to C7 and attack pins
+
+- C1 to C5: the Portuguese claude.ai trigger text; Cursor and Gemini CLI listen in a background terminal without Monitor; Hermes and OpenClaw make the plugin the listener and the every-minute job the fallback only; every section tells the owner how the AI is woken and the expected delay (`prompts/wake-notes.ts`, before the self-test); Claude Code uses exactly one listener per connection. Guides en + pt-br mirror the sections. Red commit: `Cannot find module './wake-notes'`.
+- C6: `install-copy.test.ts` pins the Codex 900 s timeout, the ChatGPT 60 minute interval and the 1 minute heartbeat; the existing page test already asserts `AGENT_RULES` verbatim.
+- C7: the plan says ten `prompts/*.test.ts` files; the route is `createInstallPageRoute`.
+- `install-page-attack.test.ts` pins the worker and security tester's attacks (adapted from `worker-attack.test.ts.txt`; observation-only cases dropped, the 400 and rate limit cases kept).
+- `r2-account-media.test.ts` "deletes every object" has a 60 s timeout; at the merge, take accounts-and-keys' fix if it already landed.

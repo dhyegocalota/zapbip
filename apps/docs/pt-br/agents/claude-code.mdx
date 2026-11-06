@@ -32,10 +32,10 @@ description: Conecte Claude Code ao seu WhatsApp.
   <Step title="Salvar a skill do zapbip">
     Depois do seu sim, ele grava `~/.claude/skills/zapbip/SKILL.md`, para que toda sessão saiba usar o WhatsApp, inclusive quando chamar `check_inbox`.
   </Step>
-  <Step title="Iniciar o conector">
-    Ele roda `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@<version> connect --client claude-code` em segundo plano. O conector acorda a sessão quando você escreve com o Claude Code parado e retoma uma sessão fechada com `claude -p --resume`. `<version>` é a versão exata que as instruções da sua IA indicam.
+  <Step title="Escolher um só escutador">
+    Uma conexão tem um escutador só e um segundo substitui o primeiro, então ele usa exatamente um destes, nunca dois juntos. Para uma sessão parada, roda `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@<version> connect --client claude-code` em segundo plano. O conector acorda a sessão quando você escreve com o Claude Code parado e retoma uma sessão fechada com `claude -p --resume`. `<version>` é a versão exata que as instruções da sua IA indicam.
   </Step>
-  <Step title="Começar a escutar">
+  <Step title="Só se os canais não estiverem disponíveis">
     Ele roda `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@<version> listen` em segundo plano e o acompanha com o Monitor, rearmando a cada aviso de tempo esgotado.
   </Step>
   <Step title="Avisar o zapbip que está escutando">
@@ -49,7 +49,7 @@ description: Conecte Claude Code ao seu WhatsApp.
 ## Como a IA escuta
 
 - Inicie o Claude Code com `claude --dangerously-load-development-channels server:zapbip`. O canal do zapbip passa a empurrar cada mensagem do WhatsApp para a sessão aberta assim que ela chega.
-- Se o canal não estiver ligado, o Claude Code mantém `npx zapbip@<version> listen` rodando e o acompanha com o Monitor. Cada acompanhamento dura no máximo 30 minutos, então o Claude Code rearma a cada aviso de tempo esgotado.
+- Use um destes, nunca dois juntos. Se o canal não estiver ligado, o Claude Code mantém `npx zapbip@<version> listen` rodando e o acompanha com o Monitor. Cada acompanhamento dura no máximo 30 minutos, então o Claude Code rearma a cada aviso de tempo esgotado.
 - Se a sessão estiver fechada, o conector a retoma em cerca de 7 segundos.
 - Parado, não gasta tokens. Cada mensagem custa uma rodada.
 

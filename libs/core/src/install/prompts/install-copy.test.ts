@@ -25,7 +25,7 @@ describe('install copy', () => {
       const text = sectionOf({ client, locale });
       expect(text).not.toContain('Monitor');
       expect(text).toContain('background terminal');
-      expect(text).toContain('whenever a new line appears there, call check_inbox');
+      expect(text).toContain('Whenever a new line appears there, call check_inbox');
       expect(text).toContain('no time limit');
     },
   );
@@ -36,7 +36,7 @@ describe('install copy', () => {
       const text = sectionOf({ client, locale });
       expect(text).toContain('The plugin is the listener, with no time limit');
       expect(text).toContain('Only if the plugin cannot be installed, and never together with it');
-      expect(text.match(/every minute/g)).toHaveLength(1);
+      expect(text.match(/Only if the plugin cannot be installed/g)).toHaveLength(1);
     },
   );
 

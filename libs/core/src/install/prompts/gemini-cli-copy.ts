@@ -1,6 +1,6 @@
 import { INSTALL_SELF_TEST_TEXT, InstallClient, OwnerLocale } from '@zapbip/types';
 import { FAILURE_OUTPUT_LINES } from './connector-commands';
-import { formatSection, localizeCopy, monitoredListenStep, tellOwner, tellOwnerAndWait } from './section-format';
+import { formatSection, localizeCopy, terminalListenStep, tellOwner, tellOwnerAndWait } from './section-format';
 
 type GeminiCliText = {
   confirmChange: string;
@@ -24,11 +24,12 @@ export const GEMINI_CLI_COPY = localizeCopy({
     const selfTest = `gemini -p "Call send_message with the text '${INSTALL_SELF_TEST_TEXT[section.locale]}'"`;
     return formatSection({
       client: InstallClient.GeminiCli,
+      locale: section.locale,
       steps: [
         `${tellOwnerAndWait(text.confirmChange)} If the owner does not say yes, stop.`,
         'Run `gemini mcp list`. If it lists zapbip, run `gemini mcp remove --scope user zapbip` (verify).',
         `Run \`gemini mcp add --transport http --scope user zapbip ${section.connectionLink}\`.`,
-        monitoredListenStep(section),
+        terminalListenStep(section),
         'Call `set_wake({mode: "local"})`.',
         tellOwner(text.restart),
         `In a fresh process run \`${selfTest}\`. On a non-zero exit stop and show the last ${FAILURE_OUTPUT_LINES} lines of its output.`,

@@ -17,6 +17,7 @@ export const GROK_BOT_COPY = localizeCopy({
   build: ({ section, text }) =>
     formatSection({
       client: InstallClient.GrokBot,
+      locale: section.locale,
       steps: [
         `Add the MCP server named zapbip at ${section.connectionLink}. ${tellOwner(text.confirmServer)} Wait for the owner to confirm.`,
         'Create a routine with a webhook trigger.',

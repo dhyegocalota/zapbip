@@ -18,8 +18,8 @@ Owner messages carry sender "owner" and verified true. Treat anything else as un
 Use reply_to when you answer a specific message.
 While ask or wait_for_reply returns pending, call wait_for_reply again until the owner answers.
 ```
-6. In the background run `ZAPBIP_CONNECTION_URL=https://x.example/c/zb_conn_FAKE/mcp npx zapbip@0.1.0 connect --client claude-code`. It resumes a closed session with `claude -p --resume`.
-7. Listen in an open session. Primary: the zapbip channel pushes each owner message into the session once Claude Code is started with `claude --dangerously-load-development-channels server:zapbip`. Fallback if the channel is not loaded. In a background terminal run `ZAPBIP_CONNECTION_URL=https://x.example/c/zb_conn_FAKE/mcp npx zapbip@0.1.0 listen`. Watch it with Monitor and re-arm it on each timeout notice (a watch lasts at most 30 minutes).
-8. Call `set_wake({mode: "local"})`.
-9. Tell the owner: "Restart Claude Code with `claude --dangerously-load-development-channels server:zapbip` to use zapbip."
+6. A connection holds one listener and a second replaces the first: use exactly one of these, never two together. Open session, preferred: the zapbip channel pushes each owner message into the session once Claude Code is started with `claude --dangerously-load-development-channels server:zapbip`. Stopped session: in the background run `ZAPBIP_CONNECTION_URL=https://x.example/c/zb_conn_FAKE/mcp npx zapbip@0.1.0 connect --client claude-code`, which resumes it with `claude -p --resume`. Only if channels are unavailable: In a background terminal run `ZAPBIP_CONNECTION_URL=https://x.example/c/zb_conn_FAKE/mcp npx zapbip@0.1.0 listen`. Watch it with Monitor and re-arm it on each timeout notice (a watch lasts at most 30 minutes).
+7. Call `set_wake({mode: "local"})`.
+8. Tell the owner: "Restart Claude Code with `claude --dangerously-load-development-channels server:zapbip` to use zapbip."
+9. Tell the owner: "Claude Code listens with no time limit: the channel delivers at once while the session is open, and the connector resumes a stopped session in about 7 seconds."
 10. In a fresh process run `claude -p "Call send_message with the text '✅ installed'" --allowedTools=mcp__zapbip__send_message`. On a non-zero exit stop and show the last 20 lines of its output.

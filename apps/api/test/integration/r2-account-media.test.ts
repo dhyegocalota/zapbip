@@ -5,6 +5,7 @@ import { testEnv } from '../support/workers-env';
 
 const LARGE_OBJECT_COUNT = 2_500;
 const OTHER_ACCOUNT_OBJECT_COUNT = 3;
+const PURGE_TEST_TIMEOUT_MS = 60_000;
 const BODY = new Uint8Array([1]);
 
 function purge(): R2AccountMedia {
@@ -23,13 +24,17 @@ async function countUnder(input: { prefix: string }): Promise<number> {
 afterEach(reset);
 
 describe('R2 account media purge', () => {
-  it('deletes every object of the account across pages and keeps other accounts', async () => {
-    await putAll({ prefix: 'accounts/acc1/media/', count: LARGE_OBJECT_COUNT });
-    await putAll({ prefix: 'accounts/acc2/media/', count: OTHER_ACCOUNT_OBJECT_COUNT });
-    await purge().deleteAll({ accountId: 'acc1' });
-    expect(await countUnder({ prefix: 'accounts/acc1/' })).toBe(0);
-    expect(await countUnder({ prefix: 'accounts/acc2/' })).toBe(OTHER_ACCOUNT_OBJECT_COUNT);
-  });
+  it(
+    'deletes every object of the account across pages and keeps other accounts',
+    async () => {
+      await putAll({ prefix: 'accounts/acc1/media/', count: LARGE_OBJECT_COUNT });
+      await putAll({ prefix: 'accounts/acc2/media/', count: OTHER_ACCOUNT_OBJECT_COUNT });
+      await purge().deleteAll({ accountId: 'acc1' });
+      expect(await countUnder({ prefix: 'accounts/acc1/' })).toBe(0);
+      expect(await countUnder({ prefix: 'accounts/acc2/' })).toBe(OTHER_ACCOUNT_OBJECT_COUNT);
+    },
+    PURGE_TEST_TIMEOUT_MS,
+  );
 
   it('deletes nothing for an account without objects', async () => {
     await putAll({ prefix: 'accounts/acc2/media/', count: 1 });

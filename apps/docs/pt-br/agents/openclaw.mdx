@@ -33,7 +33,7 @@ description: Conecte OpenClaw ao seu WhatsApp.
     A melhor opção: ele instala e ativa o plugin de canal do zapbip e chama `set_wake({mode: "local"})`.
   </Step>
   <Step title="Ou manter um acompanhamento em segundo plano">
-    Ele cria um job `stream` em `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@<version> listen` com a ferramenta de automações e o mantém rodando. Ou cria um job `every 1m` que chama `check_inbox`. Depois chama `set_wake({mode: "scheduled", interval_minutes: 1})`. Um acompanhamento que consulta custa chamadas ao modelo, e o OpenClaw avisa você disso. `<version>` é a versão exata que as instruções da sua IA indicam.
+    Só se o plugin não puder ser instalado, e nunca junto com ele, cria um job `every 1m` com a ferramenta de automações que chama `check_inbox`. Depois chama `set_wake({mode: "scheduled", interval_minutes: 1})`. Um acompanhamento que consulta custa chamadas ao modelo, e o OpenClaw avisa você disso.
   </Step>
   <Step title="Testar">
     No chat ele chama `send_message` com ✅ instalado.
@@ -43,6 +43,6 @@ description: Conecte OpenClaw ao seu WhatsApp.
 ## Como a IA escuta
 
 - Com o plugin de canal do zapbip, cada mensagem do WhatsApp chega ao OpenClaw assim que é enviada.
-- Sem ele, um job `stream` de longa duração acompanha `npx zapbip@<version> listen`, ou um job por minuto confere a caixa de entrada.
+- Sem ele, um job por minuto confere a caixa de entrada. O plugin e o job nunca são usados juntos.
 
 Não há limite de tempo. Enquanto uma pergunta está aberta, sua IA pergunta de novo até você responder, pelo tempo que for preciso.

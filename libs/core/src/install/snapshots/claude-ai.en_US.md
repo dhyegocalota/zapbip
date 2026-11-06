@@ -6,4 +6,5 @@
 4. If the owner stops here, call `set_wake({mode: "none"})`. Tell the owner: "Without the trigger, this chat sees new messages only when you open it." Then go to the last step.
 5. Otherwise call `set_wake({mode: "webhook", url: <the fire URL>, token: <the token>})`. On an error stop and report the error text.
 6. Tell the owner: "Also create an hourly task that calls check_inbox, as a safety net."
-7. In this chat, call send_message with the text "✅ installed".
+7. Tell the owner: "The routine webhook wakes claude.ai in about 16 seconds; the safety-net scheduled task runs at most once every 60 minutes, a platform minimum."
+8. In this chat, call send_message with the text "✅ installed".

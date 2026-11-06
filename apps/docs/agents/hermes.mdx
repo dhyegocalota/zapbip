@@ -33,7 +33,7 @@ description: Connect Hermes to your WhatsApp.
     The better option: it installs and enables the zapbip platform plugin with `ZAPBIP_ALLOWED_USERS=owner` set, because Hermes otherwise refuses your messages, then calls `set_wake({mode: "local"})`.
   </Step>
   <Step title="Or keep a background watcher">
-    It runs `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@<version> listen` with `terminal(background=true, watch_patterns=…)`. Or it creates a `cronjob_manage` job every minute that calls `check_inbox`. It then calls `set_wake({mode: "scheduled", interval_minutes: 1})`. A watcher that polls costs model calls, and Hermes tells you so. `<version>` is the exact version your AI's instructions name.
+    Only if the plugin cannot be installed, and never together with it, it creates a `cronjob_manage` job every minute that calls `check_inbox`. It then calls `set_wake({mode: "scheduled", interval_minutes: 1})`. A watcher that polls costs model calls, and Hermes tells you so.
   </Step>
   <Step title="Test it">
     In the chat it calls `send_message` with ✅ installed.
@@ -43,6 +43,6 @@ description: Connect Hermes to your WhatsApp.
 ## How your AI listens
 
 - With the zapbip platform plugin, each WhatsApp message arrives in Hermes as it is sent.
-- Without it, Hermes watches `npx zapbip@<version> listen` in the background, or runs a job every minute that checks the inbox.
+- Without it, Hermes runs a job every minute that checks the inbox. The plugin and the job are never used together.
 
 There is no time limit. While a question is open, your AI asks again until you answer, for as long as it takes.

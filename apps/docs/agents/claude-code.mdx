@@ -32,10 +32,10 @@ description: Connect Claude Code to your WhatsApp.
   <Step title="Save the zapbip skill">
     After your yes, it writes `~/.claude/skills/zapbip/SKILL.md`, so every session knows how to use WhatsApp, including when to call `check_inbox`.
   </Step>
-  <Step title="Start the connector">
-    It runs `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@<version> connect --client claude-code` in the background. The connector wakes your session when you write while Claude Code is idle, and resumes a closed one with `claude -p --resume`. `<version>` is the exact version your AI's instructions name.
+  <Step title="Pick one listener">
+    A connection holds one listener and a second replaces the first, so it uses exactly one of these, never two together. For a stopped session it runs `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@<version> connect --client claude-code` in the background. The connector wakes your session when you write while Claude Code is idle, and resumes a closed one with `claude -p --resume`. `<version>` is the exact version your AI's instructions name.
   </Step>
-  <Step title="Start listening">
+  <Step title="Only if channels are unavailable">
     It runs `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@<version> listen` in the background and watches it with Monitor, re-arming it on each timeout notice.
   </Step>
   <Step title="Tell zapbip it is listening">
@@ -49,7 +49,7 @@ description: Connect Claude Code to your WhatsApp.
 ## How your AI listens
 
 - Start Claude Code with `claude --dangerously-load-development-channels server:zapbip`. The zapbip channel then pushes each WhatsApp message into the open session as it arrives.
-- If the channel is not on, Claude Code keeps `npx zapbip@<version> listen` running and watches it with Monitor. A watch lasts at most 30 minutes, so Claude Code re-arms it on each timeout notice.
+- Use one of these, never two together. If the channel is not on, Claude Code keeps `npx zapbip@<version> listen` running and watches it with Monitor. A watch lasts at most 30 minutes, so Claude Code re-arms it on each timeout notice.
 - If the session is closed, the connector resumes it in about 7 seconds.
 - Idle costs no tokens. Each message costs one turn.
 

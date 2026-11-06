@@ -26,6 +26,7 @@ export const CHATGPT_COPY = localizeCopy({
   build: ({ section, text }) =>
     formatSection({
       client: InstallClient.ChatGpt,
+      locale: section.locale,
       steps: [
         tellOwnerAndWait(text.addApp(section.connectionLink)),
         tellOwnerAndWait(text.createTask),

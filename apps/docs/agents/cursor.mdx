@@ -30,7 +30,7 @@ description: Connect Cursor to your WhatsApp.
     It adds an MCP server named `zapbip` over HTTP at `<connectionLink>` in Cursor's MCP settings, and asks you to confirm.
   </Step>
   <Step title="Start listening">
-    It runs `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@<version> listen` in a background terminal and watches it with Monitor, re-arming it on each timeout notice. `<version>` is the exact version your AI's instructions name.
+    It runs `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@<version> listen` in a background terminal and keeps that terminal running, with no time limit. Whenever a new line appears there, it calls `check_inbox` and answers. `<version>` is the exact version your AI's instructions name.
   </Step>
   <Step title="Tell zapbip it is listening">
     It calls `set_wake({mode: "local"})`.
@@ -42,7 +42,7 @@ description: Connect Cursor to your WhatsApp.
 
 ## How your AI listens
 
-- Cursor runs `npx zapbip@<version> listen` in a background terminal and watches it. When you write on WhatsApp, the watcher wakes the chat.
+- Cursor runs `npx zapbip@<version> listen` in a background terminal and keeps it running. When you write on WhatsApp, the new line wakes the chat.
 - Cursor has no scheduled option, so keep the chat open. A watch lasts at most 30 minutes, and Cursor re-arms it on each timeout notice.
 
 There is no time limit. While a question is open, your AI asks again until you answer, for as long as it takes.

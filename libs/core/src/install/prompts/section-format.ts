@@ -1,16 +1,19 @@
 import { INSTALL_SELF_TEST_TEXT, OwnerLocale, type InstallClient } from '@zapbip/types';
 import { INSTALL_PRODUCTS } from '../install-products';
 import { listenCommand } from './connector-commands';
+import { WAKE_NOTES } from './wake-notes';
 import type { InstallSectionInput } from './install-section';
 
 const MONITOR_WATCH_MAXIMUM_MINUTES = 30;
 
 export type LocalizedSectionBuilder<Text> = (input: { section: InstallSectionInput; text: Text }) => string;
 
-export function formatSection(input: { client: InstallClient; steps: string[] }): string {
+export function formatSection(input: { client: InstallClient; locale: OwnerLocale; steps: string[] }): string {
   const product = INSTALL_PRODUCTS[input.client];
   const stopCheck = `If you are not ${product.description}, stop and run no other step of this section.`;
-  const numberedSteps = [stopCheck, ...input.steps].map((step, index) => `${index + 1}. ${step}`);
+  const wakeStep = tellOwner(WAKE_NOTES[input.client][input.locale]);
+  const selfTestStep = input.steps.slice(-1);
+  const numberedSteps = [stopCheck, ...input.steps.slice(0, -1), wakeStep, ...selfTestStep].map((step, index) => `${index + 1}. ${step}`);
   return [`## ${product.name}`, '', ...numberedSteps].join('\n');
 }
 
@@ -29,6 +32,10 @@ export function chatSelfTest(locale: OwnerLocale): string {
 export function monitoredListenStep(input: { connectionLink: string }): string {
   const watchLimit = `a watch lasts at most ${MONITOR_WATCH_MAXIMUM_MINUTES} minutes`;
   return `In a background terminal run \`${listenCommand(input)}\`. Watch it with Monitor and re-arm it on each timeout notice (${watchLimit}).`;
+}
+
+export function terminalListenStep(input: { connectionLink: string }): string {
+  return `In a background terminal run \`${listenCommand(input)}\` and keep that terminal running, with no time limit. Whenever a new line appears there, call check_inbox and answer.`;
 }
 
 export function localizeCopy<Text>(input: {

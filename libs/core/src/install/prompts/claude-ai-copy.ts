@@ -12,7 +12,7 @@ const CLAUDE_AI_TEXT: Record<OwnerLocale, ClaudeAiText> = {
   [OwnerLocale.PortugueseBrazil]: {
     pasteConnector: (connectionLink) => `Cole este endereço como conector personalizado nas configurações do claude.ai: ${connectionLink}`,
     pasteTrigger:
-      'Crie uma tarefa com gatilho de API em claude.ai/code/routines, clique em Generate token e cole aqui a fire URL and token. O token aparece uma vez.',
+      'Crie uma tarefa com gatilho de API em claude.ai/code/routines, clique em Generate token e cole aqui a URL de disparo (fire URL) e o token. O token aparece uma vez.',
     withoutTrigger: 'Sem o gatilho, este chat só vê mensagens novas quando você o abrir.',
     createHourlyTask: 'Crie também uma tarefa por hora que chama check_inbox, como rede de segurança.',
   },
@@ -30,6 +30,7 @@ export const CLAUDE_AI_COPY = localizeCopy({
   build: ({ section, text }) =>
     formatSection({
       client: InstallClient.ClaudeAi,
+      locale: section.locale,
       steps: [
         tellOwnerAndWait(text.pasteConnector(section.connectionLink)),
         tellOwnerAndWait(text.pasteTrigger),

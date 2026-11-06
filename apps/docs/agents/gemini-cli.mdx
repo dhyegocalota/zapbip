@@ -30,7 +30,7 @@ description: Connect Gemini CLI to your WhatsApp.
     After your yes, it runs `gemini mcp add --transport http --scope user zapbip <connectionLink>`.
   </Step>
   <Step title="Start listening">
-    It runs `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@<version> listen` in a background terminal and watches it with Monitor, re-arming it on each timeout notice. `<version>` is the exact version your AI's instructions name.
+    It runs `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@<version> listen` in a background terminal and keeps that terminal running, with no time limit. Whenever a new line appears there, it calls `check_inbox` and answers. `<version>` is the exact version your AI's instructions name.
   </Step>
   <Step title="Tell zapbip it is listening">
     It calls `set_wake({mode: "local"})`.
@@ -42,7 +42,7 @@ description: Connect Gemini CLI to your WhatsApp.
 
 ## How your AI listens
 
-- Gemini CLI runs `npx zapbip@<version> listen` in a background terminal and watches it. When you write on WhatsApp, the watcher wakes the session.
-- Gemini CLI has no scheduled option, so keep the session open. A watch lasts at most 30 minutes, and Gemini CLI re-arms it on each timeout notice.
+- Gemini CLI runs `npx zapbip@<version> listen` in a background terminal and keeps it running. When you write on WhatsApp, the new line wakes the session.
+- Gemini CLI has no scheduled option, so keep the terminal running. It has no time limit.
 
 There is no time limit. While a question is open, your AI asks again until you answer, for as long as it takes.

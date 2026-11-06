@@ -33,7 +33,7 @@ description: Conecte Hermes ao seu WhatsApp.
     A melhor opção: ele instala e ativa o plugin de plataforma do zapbip com `ZAPBIP_ALLOWED_USERS=owner` definido, porque o Hermes recusa suas mensagens sem isso, e chama `set_wake({mode: "local"})`.
   </Step>
   <Step title="Ou manter um acompanhamento em segundo plano">
-    Ele roda `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@<version> listen` com `terminal(background=true, watch_patterns=…)`. Ou cria um job de `cronjob_manage` a cada minuto que chama `check_inbox`. Depois chama `set_wake({mode: "scheduled", interval_minutes: 1})`. Um acompanhamento que consulta custa chamadas ao modelo, e o Hermes avisa você disso. `<version>` é a versão exata que as instruções da sua IA indicam.
+    Só se o plugin não puder ser instalado, e nunca junto com ele, cria um job de `cronjob_manage` a cada minuto que chama `check_inbox`. Depois chama `set_wake({mode: "scheduled", interval_minutes: 1})`. Um acompanhamento que consulta custa chamadas ao modelo, e o Hermes avisa você disso.
   </Step>
   <Step title="Testar">
     No chat ele chama `send_message` com ✅ instalado.
@@ -43,6 +43,6 @@ description: Conecte Hermes ao seu WhatsApp.
 ## Como a IA escuta
 
 - Com o plugin de plataforma do zapbip, cada mensagem do WhatsApp chega ao Hermes assim que é enviada.
-- Sem ele, o Hermes acompanha `npx zapbip@<version> listen` em segundo plano ou roda um job por minuto que confere a caixa de entrada.
+- Sem ele, o Hermes roda um job por minuto que confere a caixa de entrada. O plugin e o job nunca são usados juntos.
 
 Não há limite de tempo. Enquanto uma pergunta está aberta, sua IA pergunta de novo até você responder, pelo tempo que for preciso.

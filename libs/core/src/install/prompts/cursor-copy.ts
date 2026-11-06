@@ -1,5 +1,5 @@
 import { InstallClient, OwnerLocale } from '@zapbip/types';
-import { chatSelfTest, formatSection, localizeCopy, monitoredListenStep, tellOwner, tellOwnerAndWait } from './section-format';
+import { chatSelfTest, formatSection, localizeCopy, terminalListenStep, tellOwner, tellOwnerAndWait } from './section-format';
 
 type CursorText = {
   confirmServer: string;
@@ -22,9 +22,10 @@ export const CURSOR_COPY = localizeCopy({
   build: ({ section, text }) =>
     formatSection({
       client: InstallClient.Cursor,
+      locale: section.locale,
       steps: [
         `Add an MCP server named zapbip over HTTP at ${section.connectionLink} in the Cursor MCP settings. ${tellOwnerAndWait(text.confirmServer)}`,
-        monitoredListenStep(section),
+        terminalListenStep(section),
         'Call `set_wake({mode: "local"})`.',
         tellOwner(text.restart),
         chatSelfTest(section.locale),
