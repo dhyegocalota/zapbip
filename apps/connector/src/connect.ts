@@ -234,6 +234,7 @@ export async function runSocketSession(input: {
         handleData({ data: event.data });
       });
       socket.addEventListener('close', (event) => {
+        if (hasEnded) return;
         const isReplacement = event.code === REPLACED_CLOSE_CODE;
         if (isReplacement) log({ event: ConnectorLogEvent.ConnectorReplaced, fields: { agent: agentName } });
         if (!isReplacement) log({ event: ConnectorLogEvent.ConnectorClosed, fields: { code: event.code } });

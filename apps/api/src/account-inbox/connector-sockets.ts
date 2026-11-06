@@ -1,5 +1,12 @@
 import type { AgentName, DoneFrame, Message, ServerFrame } from '@zapbip/core';
-import { CONNECTOR_FRAME_MAX_BYTES, ConnectorFrameType, FrameRejectionReason, REPLACED_CLOSE_CODE } from '@zapbip/types';
+import {
+  CONNECTOR_FRAME_MAX_BYTES,
+  ConnectorFrameType,
+  FrameRejectionReason,
+  HEARTBEAT_INTERVAL_MS,
+  HEARTBEAT_TIMEOUT_MS,
+  REPLACED_CLOSE_CODE,
+} from '@zapbip/types';
 
 export type DoneFrameParse = { ok: true; frame: DoneFrame } | { ok: false; reason: FrameRejectionReason };
 
@@ -36,8 +43,15 @@ export function sendFrameToAgent(input: { context: DurableObjectState; agent: Ag
   return sockets.length;
 }
 
-export function hasLiveConnectorSocket(input: { context: DurableObjectState; agent: AgentName }): boolean {
-  return input.context.getWebSockets(input.agent).some(isOpenOrConnecting);
+function isAnsweringPings(input: { context: DurableObjectState; socket: WebSocket; nowMs: number }): boolean {
+  const lastAnswer = input.context.getWebSocketAutoResponseTimestamp(input.socket);
+  if (lastAnswer === null) return true;
+  return input.nowMs - lastAnswer.getTime() <= HEARTBEAT_INTERVAL_MS + HEARTBEAT_TIMEOUT_MS;
+}
+
+export function hasLiveConnectorSocket(input: { context: DurableObjectState; agent: AgentName; nowMs?: number }): boolean {
+  const { context, agent, nowMs = Date.now() } = input;
+  return context.getWebSockets(agent).some((socket) => isOpenOrConnecting(socket) && isAnsweringPings({ context, socket, nowMs }));
 }
 
 export function connectorAgentOf(input: { context: DurableObjectState; socket: WebSocket }): AgentName {

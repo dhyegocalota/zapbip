@@ -2,6 +2,7 @@ import { spawn } from 'node:child_process';
 import type { Message } from '@zapbip/core';
 import {
   CONNECTION_URL_VARIABLE,
+  CONNECTOR_KILL_GRACE_MS,
   CONNECTOR_WAKE_TIMEOUT_MS,
   ConnectorClient,
   type ConnectorSessionSource,
@@ -42,13 +43,21 @@ function runChild(input: {
     child.stderr.on('data', (chunk: Buffer) => {
       stderrText += chunk.toString();
     });
-    const timeout = setTimeout(() => child.kill('SIGTERM'), CONNECTOR_WAKE_TIMEOUT_MS);
-    child.on('error', () => {
+    let killTimeout: NodeJS.Timeout | null = null;
+    const timeout = setTimeout(() => {
+      child.kill('SIGTERM');
+      killTimeout = setTimeout(() => child.kill('SIGKILL'), CONNECTOR_KILL_GRACE_MS);
+    }, CONNECTOR_WAKE_TIMEOUT_MS);
+    function clearTimeouts(): void {
       clearTimeout(timeout);
+      if (killTimeout !== null) clearTimeout(killTimeout);
+    }
+    child.on('error', () => {
+      clearTimeouts();
       resolve({ exitCode: null, stderrText });
     });
     child.on('close', (exitCode) => {
-      clearTimeout(timeout);
+      clearTimeouts();
       resolve({ exitCode, stderrText });
     });
   });
