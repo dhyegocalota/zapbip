@@ -269,6 +269,15 @@ describe('assertUploadDeclaration', () => {
     expect(error).toEqual(invalidInput('size_bytes: must be at least 1'));
   });
 
+  test('the largest media limit is accepted', () => {
+    expect(() => assertUploadDeclaration({ mimeType: 'application/pdf', sizeBytes: 100_000_000 })).not.toThrow();
+  });
+
+  test('one byte over the largest media limit', async () => {
+    const error = await captureInboxError(() => assertUploadDeclaration({ mimeType: 'application/pdf', sizeBytes: 100_000_001 }));
+    expect(error).toEqual(invalidInput('size_bytes: must be at most 100000000 bytes'));
+  });
+
   test('CU-44 empty type', async () => {
     const error = await captureInboxError(() => assertUploadDeclaration({ mimeType: '', sizeBytes: 10 }));
     expect(error).toEqual(invalidInput('mime_type: must be at least 3 characters'));

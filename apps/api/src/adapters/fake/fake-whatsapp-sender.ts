@@ -1,4 +1,4 @@
-import { buildNoticePreview, renderCopy, type Clock, type Message, type MessageSender } from '@zapbip/core';
+import { buildNoticePreview, formatRoutingListQuestionId, renderCopy, type Clock, type Message, type MessageSender } from '@zapbip/core';
 import { DEFAULT_LOCALE, InboxCopyKey, MessageKind, TemplateKind } from '@zapbip/types';
 import type { ScreenEntry } from '../../contract/account-inbox-rpc';
 
@@ -26,11 +26,18 @@ export function createFakeWhatsAppSender(input: { storage: DurableObjectStorage;
     return { channelMessageId: `${CHANNEL_MESSAGE_ID_PREFIX}.${crypto.randomUUID()}` };
   }
 
+  function describeChoicePrompt(choice: { message: Extract<Message, { kind: MessageKind.Choice }> }): string {
+    const isRoutingList = choice.message.questionId.startsWith(formatRoutingListQuestionId({ messageId: '' }));
+    if (isRoutingList) return renderCopy({ key: InboxCopyKey.RoutingPrompt, locale: DEFAULT_LOCALE, values: {} });
+    const [question] = sql.exec<{ text: string }>(FIND_QUESTION_STATEMENT, choice.message.questionId).toArray();
+    if (question === undefined) return buildNoticePreview({ content: choice.message, locale: DEFAULT_LOCALE });
+    return question.text;
+  }
+
   function describeSession(message: Message): { text: string; options: string[] } {
     if (message.kind === MessageKind.Text) return { text: message.text, options: [] };
     if (message.kind !== MessageKind.Choice) return { text: buildNoticePreview({ content: message, locale: DEFAULT_LOCALE }), options: [] };
-    const question = sql.exec<{ text: string }>(FIND_QUESTION_STATEMENT, message.questionId).one();
-    return { text: question.text, options: message.options.map((option) => option.title) };
+    return { text: describeChoicePrompt({ message }), options: message.options.map((option) => option.title) };
   }
 
   return {
