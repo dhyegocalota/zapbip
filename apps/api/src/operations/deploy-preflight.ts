@@ -14,6 +14,8 @@ const WRANGLER_PREFIX = ['--filter', '@zapbip/api', 'exec', 'wrangler'];
 const MAIN_BRANCH = 'main';
 const ORIGIN_REMOTE = 'origin';
 const ORIGIN_MAIN = `${ORIGIN_REMOTE}/${MAIN_BRANCH}`;
+const NPM_NOT_FOUND_CODE = 'E404';
+const NO_NPM_ANSWER = 'no answer';
 const NO_PENDING_MIGRATIONS = 'No migrations to apply';
 const NPM_PACKAGE_NAME = 'zapbip';
 export const NPM_PUBLISHER_VARIABLE = 'ZAPBIP_NPM_PUBLISHER';
@@ -77,6 +79,7 @@ function npmNamesOf(input: { people: z.infer<typeof npmPeopleSchema> }): string[
   const people = Array.isArray(input.people) ? input.people : [input.people];
   return people.map((person) => (typeof person === 'string' ? (person.split(' <')[0] as string) : person.name));
 }
+const npmFailureSchema = z.object({ error: z.object({ code: z.string() }) });
 const secretListSchema = z.array(z.object({ name: z.string() }));
 const cronBlockSchema = z.object({ triggers: z.object({ crons: z.array(z.string()) }) });
 
@@ -128,10 +131,17 @@ async function refuseUnsetCompanyFacts(input: { company: CompanyFacts }): Promis
   return `COMPANY facts are still ${COMPANY_FACT_UNSET}: ${unset.join(', ')}; fill the Logic Bit company facts in libs/types before deploying`;
 }
 
+function npmFailureReason(input: { packageSpec: string; stdout: string }): string {
+  const failure = npmFailureSchema.safeParse(parseJsonOrNull({ text: input.stdout }));
+  const code = failure.success ? failure.data.error.code : NO_NPM_ANSWER;
+  if (code === NPM_NOT_FOUND_CODE) return `${input.packageSpec} does not resolve on npm; publish it first`;
+  return `could not reach npm to read ${input.packageSpec} (${code}); check your network and run it again`;
+}
+
 async function untrustedReasonOf(input: { shell: DeployShell; packageSpec: string; publisher: string }): Promise<string | null> {
   const { shell, packageSpec, publisher } = input;
   const maintainerAnswer = await shell.run({ file: NPM, args: ['view', packageSpec, 'maintainers', '--json'] });
-  if (maintainerAnswer.exitCode !== 0) return `${packageSpec} does not resolve on npm; publish it first`;
+  if (maintainerAnswer.exitCode !== 0) return npmFailureReason({ packageSpec, stdout: maintainerAnswer.stdout });
   const maintainers = npmPeopleSchema.safeParse(parseJsonOrNull({ text: maintainerAnswer.stdout }));
   if (!maintainers.success) return `could not read the maintainers of ${packageSpec} as JSON`;
   const names = npmNamesOf({ people: maintainers.data });
@@ -167,13 +177,16 @@ async function refuseUntrustedPackages(input: {
   return firstUntrusted({ shell: input.shell, packageSpecs: input.packageSpecs, publisher });
 }
 
+function publishedPackageSpecsOf(input: { npmVersion: string; openclawPluginVersion: string }): string[] {
+  return [`${NPM_PACKAGE_NAME}@${input.npmVersion}`, `${OPENCLAW_PLUGIN_PACKAGE}@${input.openclawPluginVersion}`];
+}
+
 async function refuseUntrustedWorkerPackage(input: WorkerPreflightInput): Promise<string | null> {
-  return refuseUntrustedPackages({ ...input, packageSpecs: [`${NPM_PACKAGE_NAME}@${input.npmVersion}`] });
+  return refuseUntrustedPackages({ ...input, packageSpecs: publishedPackageSpecsOf(input) });
 }
 
 async function refuseUntrustedDocsPackages(input: DocsPreflightInput): Promise<string | null> {
-  const packageSpecs = [`${NPM_PACKAGE_NAME}@${input.npmVersion}`, `${OPENCLAW_PLUGIN_PACKAGE}@${input.openclawPluginVersion}`];
-  return refuseUntrustedPackages({ ...input, packageSpecs });
+  return refuseUntrustedPackages({ ...input, packageSpecs: publishedPackageSpecsOf(input) });
 }
 
 async function refuseUncleanGit(input: WorkerPreflightInput): Promise<string | null> {

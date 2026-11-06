@@ -1,13 +1,12 @@
 import { MessageSender } from '@zapbip/types';
 import { z } from 'zod';
-import { WHATSAPP_WEBHOOK_PATH } from '../contract/constants';
+import { HEALTH_PATH, WHATSAPP_WEBHOOK_PATH } from '../contract/constants';
 import { McpToolName } from '../contract/tool-definitions';
 import { HttpStatus } from '../routes/http-status';
 import { PLACEHOLDER_VALUE_PREFIX, SMOKE_POLL_ATTEMPTS, SMOKE_POLL_INTERVAL_MS } from './constants';
 import { buildSignedWebhookPost, SIGNATURE_HEADER, signWebhookBody } from './signed-webhook';
 import { SmokeCheck, SmokeInput, type SmokeInputs, type SmokeScope, smokeChecksFor } from './smoke-inputs';
 
-const HEALTH_PATH = '/health';
 const SMOKE_TEXT_PREFIX = '@smoke ';
 const WRONG_VERIFY_TOKEN = 'zapbip-smoke-wrong-token';
 const PLACEHOLDER_APP_SECRET = `${PLACEHOLDER_VALUE_PREFIX}META_APP_SECRET`;

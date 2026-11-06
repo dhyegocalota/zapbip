@@ -47,7 +47,7 @@ export type DeployRun = {
 
 type RollbackPoints = { versionId: string | null; bookmark: string | null };
 
-const versionListSchema = z.array(z.object({ id: z.string() }));
+const deploymentSchema = z.object({ versions: z.array(z.object({ version_id: z.string(), percentage: z.number() })) });
 const bookmarkSchema = z.object({ bookmark: z.string() });
 
 function commandLine(input: { command: ShellCommand }): string {
@@ -62,21 +62,28 @@ export function readDeployBlock(input: { environment: DeployEnvironment }): Depl
   return Object.fromEntries(Object.entries(block));
 }
 
+function mostTrafficVersionOf(input: { versions: { version_id: string; percentage: number }[] }) {
+  return input.versions.reduce<{ version_id: string; percentage: number } | undefined>(
+    (current, candidate) => (current === undefined || candidate.percentage > current.percentage ? candidate : current),
+    undefined,
+  );
+}
+
 async function readRollbackPoints(input: {
   environment: DeployEnvironment;
   shell: DeployShell;
   block: DeployBlock;
 }): Promise<RollbackPoints> {
   const { environment, shell, block } = input;
-  const versions = await shell.run(wranglerCommand({ environment, args: ['versions', 'list'], flags: ['--json'] }));
+  const versions = await shell.run(wranglerCommand({ environment, args: ['deployments', 'status'], flags: ['--json'] }));
   const history = await shell.run(
     wranglerCommand({ environment, args: ['d1', 'time-travel', 'info', databaseNameOf({ block })], flags: ['--json'] }),
   );
-  const versionList = versionListSchema.safeParse(parseJsonOrNull({ text: versions.stdout }));
+  const deployment = deploymentSchema.safeParse(parseJsonOrNull({ text: versions.stdout }));
   const bookmark = bookmarkSchema.safeParse(parseJsonOrNull({ text: history.stdout }));
-  const newestVersion = versionList.success ? versionList.data.at(-1) : undefined;
+  const currentVersion = deployment.success ? mostTrafficVersionOf({ versions: deployment.data.versions }) : undefined;
   return {
-    versionId: versions.exitCode === 0 && newestVersion ? newestVersion.id : null,
+    versionId: versions.exitCode === 0 && currentVersion ? currentVersion.version_id : null,
     bookmark: history.exitCode === 0 && bookmark.success ? bookmark.data.bookmark : null,
   };
 }
