@@ -95,11 +95,6 @@ function createInMemoryRepository(): InboxRepository {
     markRead: async ({ messageIds }) => replaceMessages({ messageIds, change: (message) => ({ ...message, readByAgent: true }) }),
     listHeld: async () =>
       messages.filter((message) => message.direction === MessageDirection.FromOwner && message.agent === null && !message.readByAgent),
-    findChoicePrompt: async ({ questionId }) =>
-      messages.find(
-        (message) =>
-          message.direction === MessageDirection.ToOwner && message.kind === MessageKind.Choice && message.questionId === questionId,
-      ) ?? null,
     assignAgent: async ({ messageIds, agent }) => replaceMessages({ messageIds, change: (message) => ({ ...message, agent }) }),
     listQueued: async () => messages.filter((message) => message.delivery === DeliveryState.Queued),
     findLastAgentWrite: async ({ since }) => {

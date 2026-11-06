@@ -1,5 +1,5 @@
-import { DeliveryState, MediaOrigin, MessageDirection, MessageKind } from '@zapbip/types';
-import { MEDIA_RETENTION_MS, QUEUE_RETENTION_MS, type Message, type StoredMedia } from '@zapbip/core';
+import { DeliveryState, MediaOrigin, MessageDirection, MessageKind, OwnerLocale } from '@zapbip/types';
+import { MEDIA_RETENTION_MS, QUEUE_RETENTION_MS, type RoutingList, type StoredMedia } from '@zapbip/core';
 import { afterEach, describe, expect, it } from 'vitest';
 import { reset } from 'cloudflare:test';
 import { withRepository } from '../support/account-inbox';
@@ -339,23 +339,25 @@ describe('SQLite inbox repository', () => {
     expect(result.stored?.readByAgent).toBe(true);
   });
 
-  it('finds a choice prompt by its question id and nothing for an unknown one', async () => {
-    const prompt: Message = {
-      ...buildEnvelope({ messageId: 'msg_prompt', agent: null }),
-      kind: MessageKind.Choice,
-      questionId: 'route:msg_1',
-      options: [],
-      selected: null,
+  it('keeps the open routing list in the owner window row', async () => {
+    const routingList: RoutingList = {
+      promptMessageId: 'msg_list',
+      openedAt: BASE_TIME,
+      locale: OwnerLocale.PortugueseBrazil,
+      resent: true,
+      reminded: false,
     };
     const result = await inRepository(async (repository) => {
-      await repository.insertMessage({ message: prompt });
-      return {
-        found: await repository.findChoicePrompt({ questionId: 'route:msg_1' }),
-        missing: await repository.findChoicePrompt({ questionId: 'route:msg_2' }),
-      };
+      const initial = await repository.findRoutingList();
+      await repository.saveRoutingList({ routingList });
+      await repository.saveWindow({ window: { lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: false } });
+      const saved = await repository.findRoutingList();
+      await repository.saveRoutingList({ routingList: { ...routingList, reminded: true } });
+      const reminded = await repository.findRoutingList();
+      await repository.clearRoutingList();
+      return { initial, saved, reminded, cleared: await repository.findRoutingList() };
     });
-    expect(result.found?.messageId).toBe('msg_prompt');
-    expect(result.missing).toBeNull();
+    expect(result).toEqual({ initial: null, saved: routingList, reminded: { ...routingList, reminded: true }, cleared: null });
   });
 
   it('links a channel receipt to its message and forgets it with the receipt', async () => {

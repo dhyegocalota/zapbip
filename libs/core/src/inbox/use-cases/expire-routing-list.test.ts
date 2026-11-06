@@ -32,7 +32,9 @@ function agentWrites(input: { environment: Environment; agent: string }) {
 
 async function heldBatch(): Promise<{ environment: Environment; firstMessageId: string }> {
   const environment = await createEnvironment();
-  await registerAgents({ environment, agents: ['alpha', 'beta'] });
+  await registerAgents({ environment, agents: ['alpha'] });
+  await environment.clock.advance({ ms: SECOND_MS });
+  await registerAgents({ environment, agents: ['beta'] });
   const first = await receiveText({ environment, text: 'first' });
   await environment.clock.advance({ ms: SECOND_MS });
   await receiveText({ environment, text: 'second' });
@@ -60,7 +62,8 @@ describe('findRoutingListDueAt', () => {
 describe('expireRoutingList', () => {
   test('does nothing before the TTL', async () => {
     const { environment } = await heldBatch();
-    await environment.clock.advance({ ms: ROUTING_LIST_TTL_MS - 1 });
+    const dueAt = await findRoutingListDueAt({ dependencies: environment.dependencies });
+    await environment.clock.advance({ ms: dueAt! - environment.clock.now() - 1 });
     await expireRoutingList({ dependencies: environment.dependencies });
     expect(await environment.repository.listHeld()).toHaveLength(2);
     expect(routingLists({ environment })).toHaveLength(1);
@@ -154,7 +157,7 @@ describe('expireRoutingList', () => {
     await agentWrites({ environment, agent: 'alpha' });
     await environment.clock.advance({ ms: WINDOW_MS + 1 });
     await expireRoutingList({ dependencies: environment.dependencies });
-    expect(routingLists({ environment })).toHaveLength(2);
+    expect(await environment.repository.findRoutingList()).toMatchObject({ resent: true });
     expect(await environment.repository.listHeld()).toHaveLength(2);
   });
 });

@@ -297,9 +297,8 @@ describe('receiveOwnerMessage routing list', () => {
     const environment = await createEnvironment();
     await registerAgents({ environment, agents: ['alpha', 'beta'] });
     await receiveText({ environment, text: 'first' });
-    const sessionsAfterFirst = environment.sender.sessions.length;
     const second = await receiveText({ environment, text: 'second' });
-    expect(environment.sender.sessions).toHaveLength(sessionsAfterFirst);
+    expect(routingLists({ environment })).toHaveLength(1);
     expect(environment.sender.templates).toHaveLength(0);
     expect(second.agent).toBeNull();
     expect(await environment.repository.listHeld()).toHaveLength(2);

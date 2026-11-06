@@ -31,7 +31,6 @@ export interface InboxRepository {
   countUnread(input: { agent: AgentName }): Promise<number>;
   markRead(input: { messageIds: string[] }): Promise<void>;
   listHeld(): Promise<Message[]>;
-  findChoicePrompt(input: { questionId: string }): Promise<Message | null>;
   assignAgent(input: { messageIds: string[]; agent: AgentName }): Promise<void>;
   listQueued(): Promise<Message[]>;
   findLastAgentWrite(input: { since: number }): Promise<AgentName | null>;

@@ -205,16 +205,6 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
       return selectMessages('WHERE agent IS NULL AND direction = ? AND read_at IS NULL ' + ORDER_BY_ARRIVAL, MessageDirection.FromOwner);
     },
 
-    async findChoicePrompt({ questionId }) {
-      const [message] = selectMessages(
-        "WHERE direction = ? AND kind = ? AND json_extract(payload, '$.questionId') = ? " + ORDER_BY_ARRIVAL + ' LIMIT 1',
-        MessageDirection.ToOwner,
-        MessageKind.Choice,
-        questionId,
-      );
-      return message === undefined ? null : message;
-    },
-
     async assignAgent({ messageIds, agent }) {
       run('UPDATE inbox_messages SET agent = ? WHERE id IN (SELECT value FROM json_each(?))', agent, JSON.stringify(messageIds));
     },

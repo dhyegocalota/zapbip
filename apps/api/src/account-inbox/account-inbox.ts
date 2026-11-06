@@ -74,7 +74,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       ids: createIdGenerator(),
       waiters: inbox.createReplyWaiters({ clock: this.clock }),
     };
-    this.dueTimeProviders.push(this.createExpiryProvider());
+    this.dueTimeProviders.push(this.createExpiryProvider(), this.createRoutingListProvider());
     await this.armAlarm();
   }
 
@@ -85,6 +85,13 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
         await inbox.sweepExpired({ dependencies: this.dependencies });
         this.log({ event: LogEvent.Sweep });
       },
+    };
+  }
+
+  private createRoutingListProvider(): DueTimeProvider {
+    return {
+      nextDueAt: () => inbox.findRoutingListDueAt({ dependencies: this.dependencies }),
+      runDue: () => inbox.expireRoutingList({ dependencies: this.dependencies }),
     };
   }
 

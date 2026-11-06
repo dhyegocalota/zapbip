@@ -1,4 +1,4 @@
-import { formatOptionId, QUEUE_RETENTION_MS, UPLOAD_TTL_MS, WINDOW_MS } from '@zapbip/core';
+import { formatOptionId, QUEUE_RETENTION_MS, ROUTING_LIST_TTL_MS, UPLOAD_TTL_MS, WINDOW_MS } from '@zapbip/core';
 import { DeliveryState, InboxErrorCode, MediaSourceKind, MessageKind, ReplyStatus, TemplateKind } from '@zapbip/types';
 import { abortAllDurableObjects, evictDurableObject, reset, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
@@ -220,6 +220,18 @@ describe('AccountInbox alarm', () => {
     expect(await runDurableObjectAlarm(stub)).toBe(true);
     expect(await stub.describeUpload({ mediaId: upload.uploadId })).toMatchObject({ ok: false, errorCode: InboxErrorCode.NotFound });
     expect(await testEnv.MEDIA.get(objectKey)).toBeNull();
+  });
+
+  it('WI-125 runs the routing list expiry from the alarm and arms it again', async () => {
+    const stub = stubOf({ accountId: FIRST_ACCOUNT });
+    await stub.checkInbox({ connection: connectionOf({ accountId: FIRST_ACCOUNT, agent: 'alpha' }) });
+    await openWindow({ stub });
+    expectOk(await receiveOwnerText({ stub, text: 'oi' }));
+    await advanceClock({ stub, advanceMs: ROUTING_LIST_TTL_MS });
+    expect(await runDurableObjectAlarm(stub)).toBe(true);
+    const screen = await readScreen({ stub });
+    expect(screen.map((entry) => entry.options)).toEqual([['alpha'], ['alpha']]);
+    expect(await runInDurableObject(stub, (_instance, state) => state.storage.getAlarm())).not.toBeNull();
   });
 
   it('WI-17 expires a queued message past its retention', async () => {
