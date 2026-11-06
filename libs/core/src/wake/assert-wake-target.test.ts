@@ -73,12 +73,15 @@ describe('assertWakeTarget providers', () => {
     expect(guard({ url: 'https://HOOKS.Example.com/x', token: LONG_TOKEN }).provider).toBe(WakeProvider.GenericWebhook);
   });
 
-  test('only the exact own host is blocked, not its subdomains', async () => {
+  test('the own host and its subdomains are blocked', async () => {
     expect(await rejection({ url: 'https://zapbip.example/hook', token: LONG_TOKEN })).toEqual({
       code: InboxErrorCode.InvalidInput,
       message: 'invalid url',
     });
-    expect(guard({ url: 'https://sub.zapbip.example/hook', token: LONG_TOKEN }).provider).toBe(WakeProvider.GenericWebhook);
+    expect(await rejection({ url: 'https://sub.zapbip.example/hook', token: LONG_TOKEN })).toEqual({
+      code: InboxErrorCode.InvalidInput,
+      message: 'invalid url',
+    });
   });
 });
 

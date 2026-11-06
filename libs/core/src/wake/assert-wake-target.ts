@@ -53,7 +53,8 @@ function assertGenericHost(input: { hostname: string; publicHost: string }): voi
   const { hostname, publicHost } = input;
   const isBlockedName = WAKE_BLOCKED_HOSTS.includes(hostname) || WAKE_BLOCKED_HOST_SUFFIXES.some((suffix) => hostname.endsWith(suffix));
   const isPublicName = HOST_PATTERN.test(hostname) && !IPV4_PATTERN.test(hostname);
-  const isOwnHost = hostname === publicHost.toLowerCase();
+  const ownHost = publicHost.toLowerCase();
+  const isOwnHost = hostname === ownHost || hostname.endsWith(`.${ownHost}`);
   if (!isPublicName || isBlockedName || isOwnHost) throw invalidWakeField({ field: WakeTargetField.Url });
 }
 

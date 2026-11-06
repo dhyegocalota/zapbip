@@ -1,16 +1,18 @@
 import { IdPrefix, MessageKind, WakeAttemptOutcome, WakeLogEventName, WakeMode, WakeStatus } from '@zapbip/types';
+import { InboxError } from '../inbox/errors';
 import { deliverToOwner } from '../inbox/use-cases/deliver-to-owner';
 import {
   WAKE_BACKOFF_BASE_MS,
   WAKE_BACKOFF_CAP_MS,
-  WAKE_FOLLOW_UP_MS,
   WAKE_LEASE_MS,
   WAKE_MAX_ATTEMPTS,
   WAKE_RETRY_AFTER_STATUSES,
   WAKE_SEALED_KEY_VERSION,
   WAKE_SIGNAL_BODY,
 } from './constants';
+import { assertWakeTarget } from './assert-wake-target';
 import { wakeAssociatedData } from './wake-associated-data';
+import { nextWakeDueAt } from './wake-due-at';
 import { wakeFailedCopy } from './wake-copy';
 import type { RunDueWakesInput, RunDueWakesResult, WakeAttemptResult } from './wake-ports';
 import type { StoredWake, StoredWakeTarget, WakeJob, WakeTarget } from './wake-setting';
@@ -58,16 +60,25 @@ function observeAttempt(input: Attempt & { name: WakeLogEventName }): void {
   });
 }
 
+function guardTarget(input: { url: string; token: string; publicHost: string }): WakeTarget | null {
+  try {
+    return assertWakeTarget(input);
+  } catch (error) {
+    if (!(error instanceof InboxError)) throw error;
+    return null;
+  }
+}
+
 async function openTarget(input: JobRun & { stored: WebhookWake }): Promise<WakeTarget | null> {
-  const { dependencies, wake, ownerLocale, job, stored } = input;
+  const { dependencies, wake, publicHost, job, stored } = input;
   if (stored.target.keyVersion !== WAKE_SEALED_KEY_VERSION) return null;
   const plain = await wake.secretBox.open({
     sealed: stored.target.sealedTarget,
-    associatedData: wakeAssociatedData({ accountId: dependencies.accountId, agent: job.agent, ownerLocale }),
+    associatedData: wakeAssociatedData({ accountId: dependencies.accountId, agent: job.agent }),
   });
   if (plain === null) return null;
   const { url, token } = JSON.parse(plain) as { url: string; token: string };
-  return { provider: stored.target.provider, url, token };
+  return guardTarget({ url, token, publicHost });
 }
 
 async function sendWake(input: JobRun & { stored: WebhookWake }): Promise<WakeAttemptResult> {
@@ -94,7 +105,7 @@ async function finishJob(input: JobRun & { outcome: WakeAttemptOutcome }): Promi
   if (current === null || !current.rewake) return wake.repository.deleteJob({ agent: job.agent });
   const followUp: WakeJob = {
     agent: job.agent,
-    dueAt: dependencies.clock.now() + WAKE_FOLLOW_UP_MS,
+    dueAt: await nextWakeDueAt({ dependencies, wake, agent: job.agent }),
     attempt: 0,
     leaseUntil: null,
     rewake: false,
@@ -210,7 +221,11 @@ async function attemptJob(input: JobRun): Promise<void> {
   if (isUnneeded) return dropJob({ ...input, stored });
   const startedAt = dependencies.clock.now();
   await wake.repository.saveJob({ job: { ...job, leaseUntil: startedAt + WAKE_LEASE_MS } });
+  await wake.repository.saveLastRequestedAt({ agent, at: startedAt });
   const result = await sendWake({ ...input, stored });
+  const current = await wake.repository.findWake({ agent });
+  const isSameWake = isWebhookWake(current) && current.target.sealedTarget === stored.target.sealedTarget;
+  if (!isSameWake) return;
   await SETTLERS[result.outcome]({ ...input, stored, attempt: job.attempt + 1, startedAt, result });
 }
 

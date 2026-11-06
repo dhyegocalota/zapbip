@@ -13,7 +13,6 @@ import {
   WAKE_BACKOFF_BASE_MS,
   WAKE_BACKOFF_CAP_MS,
   WAKE_DEBOUNCE_MS,
-  WAKE_FOLLOW_UP_MS,
   WAKE_LEASE_MS,
   WAKE_MAX_ATTEMPTS,
   WAKE_MIN_INTERVAL_MS,
@@ -360,7 +359,6 @@ describe('runDueWakes target guard and settling', () => {
       associatedData: wakeAssociatedData({
         accountId: wakeEnvironment.environment.dependencies.accountId,
         agent: AGENT,
-        ownerLocale: OWNER_LOCALE,
       }),
     });
     await wakeEnvironment.wake.repository.saveWake({ wake: { ...stored, target: { ...stored.target, sealedTarget } } });
@@ -423,7 +421,7 @@ describe('runDueWakes while a request is in flight', () => {
     const wakeEnvironment = await runWithMessageInFlight({ statusCode: OK });
     expect(await findJob({ wakeEnvironment })).toEqual({
       agent: AGENT,
-      dueAt: wakeEnvironment.environment.clock.now() + WAKE_FOLLOW_UP_MS,
+      dueAt: wakeEnvironment.environment.clock.now() - IN_FLIGHT_HOLD_MS - 1 + WAKE_MIN_INTERVAL_MS,
       attempt: 0,
       leaseUntil: null,
       rewake: false,
@@ -434,7 +432,7 @@ describe('runDueWakes while a request is in flight', () => {
   test('a refused attempt leaves the follow-up job and one notice', async () => {
     const wakeEnvironment = await runWithMessageInFlight({ statusCode: UNAUTHORIZED });
     expect(await findJob({ wakeEnvironment })).toMatchObject({
-      dueAt: wakeEnvironment.environment.clock.now() + WAKE_FOLLOW_UP_MS,
+      dueAt: wakeEnvironment.environment.clock.now() - IN_FLIGHT_HOLD_MS - 1 + WAKE_MIN_INTERVAL_MS,
       rewake: false,
     });
     expect(sentTexts({ wakeEnvironment })).toHaveLength(1);
