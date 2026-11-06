@@ -20,12 +20,12 @@ Each red commit is a step of `plan.md`. The tester checks each red commit with `
 - [ ] S3.3 red `apps/api/test/integration/{d1-directory,d1-message-index,sqlite-repository}.test.ts` — input: the seeded rows; expected: each fails with `<method> is not implemented`.
 - [ ] S3.5 red `apps/api/test/integration/account-inbox.test.ts` — input: the Durable Object cases; expected: each fails with `<method> is not implemented`.
 - [ ] S3.7 red `apps/api/test/integration/dev-seed.test.ts` — input: the seed run; expected: fails with `not implemented`.
-- [ ] S4.1 red `apps/api/test/integration/mcp-auth.test.ts` — input: the secret cases; expected: `expected 401, received 500` (the route stub throws).
+- [ ] S4.1 red `apps/api/test/integration/mcp-auth.test.ts` — input: the secret cases; expected: `expected 401, received 500` (the route stub throws). Observed: `ENOENT` at dacf1ae; red for a different reason, accepted (owner delegated 2026-11-06).
 - [ ] S4.3 red `apps/api/test/integration/mcp-tools.test.ts` and `mcp-inline-images.test.ts` — input: each tool call; expected: each returns an MCP tool error containing `<use case> is not implemented`.
-- [ ] S5.1 red `apps/api/test/integration/upload-route.test.ts` — input: a valid PUT; expected: `expected 201, received 500`.
+- [ ] S5.1 red `apps/api/test/integration/upload-route.test.ts` — input: a valid PUT; expected: `expected 201, received 500`. Observed: `hashConnectionSecret is not implemented` at 654494a; red for a different reason, accepted (owner delegated 2026-11-06).
 - [ ] S5.3 red `apps/api/test/integration/media-route.test.ts` — input: a valid signed link; expected: `expected 200, received 500`.
 - [ ] S5.5 red `apps/api/test/integration/dev-owner.test.ts` — input: a text owner message; expected: `expected 200, received 500`.
-- [ ] S5.9 red `apps/api/test/e2e/mcp-client.e2e.test.ts` — input: the first tool call after `globalSetup`; expected: fails at the tool call with `<use case> is not implemented`, not at `wrangler dev` startup.
+- [ ] S5.9 red `apps/api/test/e2e/mcp-client.e2e.test.ts` — input: the first tool call after `globalSetup`; expected: fails at the tool call with `<use case> is not implemented`, not at `wrangler dev` startup. Observed: `globalSetup` died with `No migrations present` at f0426b3; red for a different reason, accepted (owner delegated 2026-11-06).
 - [ ] S6.1 red `apps/docs` `mint broken-links` — input: `index.mdx`; expected: one broken link, to `mcp-reference/send-message`.
 - [ ] Pins, labelled `pin` and not counted as red: S5.7 (`production-entry.test.ts`), S5.8 (`production-bundle.e2e.test.ts`).
 - [ ] Confirmed each red run failed for the right reason: the failure text in each lane's `tester-briefing.md` section matches the text above.
@@ -229,7 +229,7 @@ Runner: `pnpm --filter @zapbip/core test:unit` (Vitest 5.0.5). Ports are the in-
 - [ ] CU-174 the claim cannot be taken over — input: `UPLOAD_CLAIM_TTL_MS >= UPLOAD_TTL_MS`; a claimed upload, the clock advanced `UPLOAD_TTL_MS`, `claimUpload`; expected: `upload_expired`, never a second claim.
 - [ ] CU-175 claim fencing — input: writer A claims and releases, the clock advances 1 ms, writer B claims; A completes with its token, then releases with its token; expected: `upload_unavailable` for A's completion, B's claim still held after A's release, B completes.
 - [ ] CU-176 the upload media type is stored normalized — input: `createUpload` with ` Application/PDF ; charset=binary`; expected: the media row holds `application/pdf`.
-- [ ] CU-177 control characters in a media type — input: `image/png\n;x`, `image/png\0`, `image/png;\rx`, `image/png;\tx`, `image/png;x\u007f` to `assertMediaFits` and `assertUploadDeclaration`; expected: `invalid_input`, `mime_type: must not contain control characters`.
+- [ ] CU-177 control characters in a media type — input: `image/png\n;x`, `image/png\0`, `image/png;\rx`, `image/png;\tx`, `image/png;x\u007f` to `assertMediaFits` and `assertUploadDeclaration`; expected: `invalid_input`, `mime_type: must be printable ASCII without surrounding whitespace`.
 - [ ] CU-178 a photo quoting a question prompt — input: an open question, the agent in an ordinary `wait_for_reply`, the owner sends a photo quoting the prompt; expected: the wait returns the photo (`ReplyStatus.Message`), no wake notification, no "not listening" text. A stale tap on an answered question leaves the waiter of another question waiting (pin).
 - [ ] CU-159 every message kind round-trips — input: one message of each of the ten kinds (text, image, video, audio with voice, document, sticker, location, contacts, reaction, choice); expected: the in-memory repository returns an equal object for each.
 
@@ -489,10 +489,10 @@ Each row names where its proof lives.
 
 Runner: `pnpm --filter @zapbip/api test:e2e` (`production-bundle.e2e.test.ts`), default in the `e2e` gate.
 
-- [ ] PB-1 dry-run bundle builds — input: `wrangler deploy --dry-run --env production --outdir <scratch>`, where `env.production.main` is `src/index.ts`; expected: exit `0`, one bundle written. If the installed wrangler needs a login for dry-run, the box is recorded `not run` in coverage honesty, and PB-2 uses the bundler output of the same entry.
+- [ ] PB-1 dry-run bundle builds — input: `wrangler deploy --dry-run --outdir <scratch>` on the top-level block, which is production and whose `main` is `src/index.ts` (there is no `env.production`); expected: exit `0`, one bundle written. If the installed wrangler needs a login for dry-run, the box is recorded `not run` in coverage honesty, and PB-2 uses the bundler output of the same entry.
 - [ ] PB-2 bundle has no development surface — input: the bundle from PB-1; expected: no `/dev/owner/` string, no `owner-simulator` identifier, no `advanceClock` and no `readScreen`.
-- [ ] PB-3 development bundle has the development surface — input: `wrangler deploy --dry-run --outdir <scratch>` on the top-level block, whose `main` is `src/index.dev.ts`; expected: `/dev/owner/`, `advanceClock` and `readScreen` present, so PB-2 is not vacuous.
-- [ ] PB-4 wrangler config shape — input: `wrangler.jsonc` parsed; expected: the top-level `main` is `src/index.dev.ts`; `env.production.main` is `src/index.ts`; `env.production` repeats `ACCOUNT_INBOX`, `CONNECTIONS`, `MEDIA`, `vars.PUBLIC_ORIGIN` and `migrations` (tag `v1`, `AccountInbox` in `new_sqlite_classes`); neither `MEDIA_LINK_SIGNING_KEY` nor `UPLOAD_LINK_SIGNING_KEY` appears in the file.
+- [ ] PB-3 development bundle has the development surface — input: `wrangler deploy --dry-run --env development --outdir <scratch>`, whose `main` is `src/index.dev.ts` (the simulator lives in `env.development`); expected: `/dev/owner/`, `advanceClock` and `readScreen` present, so PB-2 is not vacuous.
+- [ ] PB-4 wrangler config shape — input: `wrangler.jsonc` parsed; expected: the top-level `main` is `src/index.ts`; `env.development.main` is `src/index.dev.ts`; `env.development` repeats `ACCOUNT_INBOX`, `CONNECTIONS`, `MEDIA`, `vars.PUBLIC_ORIGIN` and `migrations` (tag `v1`, `AccountInbox` in `new_sqlite_classes`); neither `MEDIA_LINK_SIGNING_KEY` nor `UPLOAD_LINK_SIGNING_KEY` appears in the file.
 
 ## Edge cases found during execution
 

@@ -38,7 +38,7 @@ describe('createUpload', () => {
 
   test('CU-176 stores the normalized media type', async () => {
     const environment = await createEnvironment();
-    const result = await create({ environment, mimeType: ' Application/PDF ; charset=binary', sizeBytes: 1000 });
+    const result = await create({ environment, mimeType: 'Application/PDF ; charset=binary', sizeBytes: 1000 });
     expect(await environment.repository.findMedia({ mediaId: result.uploadId })).toMatchObject({ mimeType: 'application/pdf' });
   });
 });

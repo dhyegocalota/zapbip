@@ -140,7 +140,7 @@ describe('upload route', () => {
     expect(response.status).toBe(STATUS_CONFLICT);
   });
 
-  test('two concurrent PUTs: one answers 201, the other 409 and never writes to the store', async () => {
+  test('WI-128 two concurrent PUTs: one answers 201, the other 409 and never writes to the store', async () => {
     const fixture = await newFixture();
     const bodies = ['a', 'b'].map((letter) => new TextEncoder().encode(letter.repeat(UPLOAD_BYTES.byteLength)));
     const responses = await Promise.all(bodies.map((body) => putUpload({ ...validPut({ fixture }), body })));
@@ -175,15 +175,18 @@ describe('upload route', () => {
     expect(await storedObject({ fixture })).toBeNull();
   });
 
-  test.each(['abc', '0x0c', '12abc', '1.2e1', '-12'])('a Content-Length of %j answers 400 and stores nothing', async (contentLength) => {
-    const fixture = await newFixture();
-    const response = await putUpload({
-      ...validPut({ fixture }),
-      headers: { 'Content-Type': PDF_TYPE, 'Content-Length': contentLength },
-    });
-    expect(response.status).toBe(STATUS_BAD_REQUEST);
-    expect(await storedObject({ fixture })).toBeNull();
-  });
+  test.each(['abc', '0x0c', '12abc', '1.2e1', '-12'])(
+    'WI-127 a Content-Length of %j answers 400 and stores nothing',
+    async (contentLength) => {
+      const fixture = await newFixture();
+      const response = await putUpload({
+        ...validPut({ fixture }),
+        headers: { 'Content-Type': PDF_TYPE, 'Content-Length': contentLength },
+      });
+      expect(response.status).toBe(STATUS_BAD_REQUEST);
+      expect(await storedObject({ fixture })).toBeNull();
+    },
+  );
 
   test('WI-78 a body larger than declared answers 413 and stores nothing', async () => {
     const fixture = await newFixture();
@@ -231,12 +234,16 @@ describe('upload route', () => {
   test('WI-140 pin: a slow writer past the upload deadline cannot complete the upload a second PUT found expired', async () => {
     const fixture = await newFixture();
     const inbox = inboxOf({ accountId: fixture.account.accountId });
-    const release = { resume: () => {} };
+    const release = { resume: () => {}, markPulled: () => {} };
     const resumed = new Promise<void>((resolve) => {
       release.resume = resolve;
     });
+    const pulled = new Promise<void>((resolve) => {
+      release.markPulled = resolve;
+    });
     const slowBody = new ReadableStream<Uint8Array>({
       async pull(controller) {
+        release.markPulled();
         await resumed;
         controller.enqueue(UPLOAD_BYTES);
         controller.close();
@@ -255,6 +262,7 @@ describe('upload route', () => {
       body: slowBody,
       duplex: 'half',
     } as RequestInit);
+    await pulled;
     await inbox.advanceClock({ advanceMs: UPLOAD_TTL_MS + 1 });
     const secondPut = await putUpload(validPut({ fixture }));
     release.resume();
@@ -287,9 +295,12 @@ describe('upload route', () => {
     expect(await storedObject({ fixture })).toBeNull();
   });
 
-  test('WI-141 an R2 failure mid-stream answers 5xx, releases the claim and stores nothing', async () => {
+  test('WI-141 an R2 failure after the first chunk answers 5xx, releases the claim and stores nothing', async () => {
     const fixture = await newFixture();
-    const failingPut = vi.spyOn(env.MEDIA, 'put').mockRejectedValueOnce(new Error('r2 unavailable'));
+    const failingPut = vi.spyOn(env.MEDIA, 'put').mockImplementationOnce(async (_key, body) => {
+      await (body as ReadableStream<Uint8Array>).getReader().read();
+      throw new Error('r2 unavailable');
+    });
     const response = await putUpload(validPut({ fixture }));
     failingPut.mockRestore();
     expect(response.status).toBeGreaterThanOrEqual(STATUS_SERVER_ERROR);
