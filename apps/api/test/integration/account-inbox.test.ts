@@ -126,6 +126,16 @@ describe('AccountInbox owner messages', () => {
     expect(screen[2]?.messageId).toBeNull();
   });
 
+  it('renders the routing list for an unrouted owner text', async () => {
+    const stub = stubOf({ accountId: FIRST_ACCOUNT });
+    await Promise.all(['alpha', 'beta'].map((agent) => stub.checkInbox({ connection: connectionOf({ accountId: FIRST_ACCOUNT, agent }) })));
+    await openWindow({ stub });
+    expectOk(await receiveOwnerText({ stub, text: 'oi' }));
+    const screen = await readScreen({ stub });
+    expect(screen.map((entry) => entry.options)).toEqual([['alpha', 'beta']]);
+    expect(screen[0]?.template).toBeNull();
+  });
+
   it('WI-23 holds an unanswered ask and returns pending', async () => {
     const stub = stubOf({ accountId: FIRST_ACCOUNT });
     await openWindow({ stub });
