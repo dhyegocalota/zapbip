@@ -1,6 +1,5 @@
 import type { LogFields } from './contract/log';
 
 export function logEvent(fields: LogFields): void {
-  void fields;
-  throw new Error('logEvent is not implemented');
+  console.log(JSON.stringify(fields));
 }
