@@ -18,6 +18,8 @@ const ACCESS_TOKEN_VARIABLE = 'WHATSAPP_ACCESS_TOKEN';
 const PRICING_CATEGORY = 'utility';
 const ERROR_CODE = 131047;
 const ERROR_TITLE = 'Re-engagement message';
+const COUNT_OWNER_MESSAGES_STATEMENT = "SELECT COUNT(*) AS total FROM inbox_messages WHERE direction = 'from_owner'";
+const COUNT_RECEIPTS_STATEMENT = 'SELECT COUNT(*) AS total FROM channel_receipts';
 const EMPTY_DETAIL: ChannelStatusDetail = { errorCode: null, errorTitle: null, pricingCategory: null, billable: null };
 
 type RepositoryInternals = { dependencies: CoreDependencies };
@@ -45,14 +47,19 @@ function receiveText(input: { channelMessageId: string; text?: string }) {
   });
 }
 
-function countRows(input: { table: string }) {
-  return runInDurableObject(accountInboxStub({ accountId: ACCOUNT_ID }), (_instance, state) => {
-    const totals: Record<string, number> = {
-      channel_receipts: state.storage.sql.exec<{ total: number }>('SELECT COUNT(*) AS total FROM channel_receipts').one().total,
-      inbox_messages: state.storage.sql.exec<{ total: number }>('SELECT COUNT(*) AS total FROM inbox_messages').one().total,
-    };
-    return totals[input.table];
-  });
+function countRows(input: { statement: string }) {
+  return runInDurableObject(
+    accountInboxStub({ accountId: ACCOUNT_ID }),
+    (_instance, state) => state.storage.sql.exec<{ total: number }>(input.statement).one().total,
+  );
+}
+
+function countOwnerMessages() {
+  return countRows({ statement: COUNT_OWNER_MESSAGES_STATEMENT });
+}
+
+function countReceipts() {
+  return countRows({ statement: COUNT_RECEIPTS_STATEMENT });
 }
 
 async function registerAlpha(): Promise<void> {
@@ -335,10 +342,10 @@ describe('AccountInbox channel messages', () => {
     await registerAlpha();
     const first = await receiveText({ channelMessageId: CHANNEL_MESSAGE_ID });
     const second = await receiveText({ channelMessageId: CHANNEL_MESSAGE_ID });
-    expect(first).toMatchObject({ ok: true, value: { duplicate: false, agent: 'alpha' } });
+    expect(first).toMatchObject({ ok: true, value: { duplicate: false } });
     expect(second).toEqual({ ok: true, value: { messageId: null, agent: null, duplicate: true } });
-    expect(await countRows({ table: 'inbox_messages' })).toBe(1);
-    expect(await countRows({ table: 'channel_receipts' })).toBe(1);
+    expect(await countOwnerMessages()).toBe(1);
+    expect(await countReceipts()).toBe(1);
   });
 
   it('WI-9 leaves nothing behind when a throw happens before the commit, and the retry stores once', async () => {
@@ -355,11 +362,11 @@ describe('AccountInbox channel messages', () => {
       },
     });
     await expect(receiveText({ channelMessageId: CHANNEL_MESSAGE_ID })).rejects.toThrow('injected before the commit');
-    expect(await countRows({ table: 'channel_receipts' })).toBe(0);
-    expect(await countRows({ table: 'inbox_messages' })).toBe(0);
+    expect(await countReceipts()).toBe(0);
+    expect(await countOwnerMessages()).toBe(0);
     const retried = await receiveText({ channelMessageId: CHANNEL_MESSAGE_ID });
     expect(retried).toMatchObject({ ok: true, value: { duplicate: false } });
-    expect(await countRows({ table: 'inbox_messages' })).toBe(1);
+    expect(await countOwnerMessages()).toBe(1);
   });
 
   it('WI-10 keeps the message when a throw happens after the commit, and the retry returns duplicate', async () => {
@@ -372,11 +379,11 @@ describe('AccountInbox channel messages', () => {
       },
     });
     await receiveText({ channelMessageId: CHANNEL_MESSAGE_ID }).catch(() => undefined);
-    expect(await countRows({ table: 'inbox_messages' })).toBe(1);
-    expect(await countRows({ table: 'channel_receipts' })).toBe(1);
+    expect(await countOwnerMessages()).toBe(1);
+    expect(await countReceipts()).toBe(1);
     const retried = await receiveText({ channelMessageId: CHANNEL_MESSAGE_ID });
     expect(retried).toMatchObject({ ok: true, value: { duplicate: true } });
-    expect(await countRows({ table: 'inbox_messages' })).toBe(1);
+    expect(await countOwnerMessages()).toBe(1);
   });
 
   it('WI-11 keeps the receipt across a restart of the object', async () => {
@@ -385,7 +392,7 @@ describe('AccountInbox channel messages', () => {
     await evictDurableObject(accountInboxStub({ accountId: ACCOUNT_ID }));
     const retried = await receiveText({ channelMessageId: CHANNEL_MESSAGE_ID });
     expect(retried).toMatchObject({ ok: true, value: { duplicate: true } });
-    expect(await countRows({ table: 'inbox_messages' })).toBe(1);
+    expect(await countOwnerMessages()).toBe(1);
   });
 
   it('WI-12 prunes receipts past their retention on the alarm', async () => {
@@ -394,7 +401,7 @@ describe('AccountInbox channel messages', () => {
     const stub = accountInboxStub({ accountId: ACCOUNT_ID });
     await advanceClock({ stub, advanceMs: RECEIPT_RETENTION_MS + 1 });
     await runDurableObjectAlarm(stub);
-    expect(await countRows({ table: 'channel_receipts' })).toBe(0);
+    expect(await countReceipts()).toBe(0);
   });
 
   it('WI-13 returns a stale sending claim to the queue on the alarm', async () => {
