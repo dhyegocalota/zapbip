@@ -23,7 +23,7 @@ function unmarkedHandoffTextOf(input: { message: Message }): string {
 
 export function handoffTextOf(input: { message: Message }): string {
   const text = unmarkedHandoffTextOf(input);
-  if (input.message.forwarded) return `${CHANNEL_FORWARDED_PREFIX}\n${text}`;
+  if (input.message.forwarded) return `${CHANNEL_FORWARDED_PREFIX} ${text}`;
   return text;
 }
 
