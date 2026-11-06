@@ -175,17 +175,17 @@ describe('assertHttpsLink', () => {
 
   test('CU-28 http', async () => {
     const error = await captureInboxError(() => assertHttpsLink({ value: 'http://example.com/a.pdf' }));
-    expect(error).toEqual(invalidInput('link: must be an https URL'));
+    expect(error).toEqual(invalidInput('url: must be an https URL'));
   });
 
   test('CU-29 other scheme', async () => {
     const error = await captureInboxError(() => assertHttpsLink({ value: 'ftp://example.com/a.pdf' }));
-    expect(error).toEqual(invalidInput('link: must be an https URL'));
+    expect(error).toEqual(invalidInput('url: must be an https URL'));
   });
 
   test('not a URL', async () => {
     const error = await captureInboxError(() => assertHttpsLink({ value: 'example' }));
-    expect(error).toEqual(invalidInput('link: must be an https URL'));
+    expect(error).toEqual(invalidInput('url: must be an https URL'));
   });
 });
 
