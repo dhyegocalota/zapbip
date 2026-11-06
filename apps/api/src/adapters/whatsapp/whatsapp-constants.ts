@@ -11,6 +11,7 @@ export const OUTBOUND_STICKER_MAX_BYTES = 100 * BYTES_PER_KILOBYTE;
 export const WHATSAPP_MEDIA_HOST_SUFFIXES = ['fbcdn.net', 'fbsbx.com', 'whatsapp.net'] as const;
 export const WEBHOOK_SIGNATURE_PREFIX = 'sha256=';
 export const WEBHOOK_SIGNATURE_HEADER = 'X-Hub-Signature-256';
+export const MAX_FUTURE_SKEW_MS = 5 * MINUTE_MS;
 export const UNINDEXED_STATUS_RETRY_WINDOW_MS = 10 * MINUTE_MS;
 export const RESTRICTION_TTL_MS = 24 * HOUR_MS;
 export const OUTBOUND_BUTTON_BODY_MAX_CHARS = 1_024;

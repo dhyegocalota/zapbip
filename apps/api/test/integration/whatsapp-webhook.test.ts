@@ -13,7 +13,7 @@ import {
 } from '@zapbip/types';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { createApp } from '../../src/app';
-import { GRAPH_REQUEST_TIMEOUT_MS, WEBHOOK_MAX_BYTES, WEBHOOK_SIGNATURE_HEADER } from '../../src/adapters/whatsapp/whatsapp-constants';
+import { GRAPH_REQUEST_TIMEOUT_MS, MAX_FUTURE_SKEW_MS, WEBHOOK_MAX_BYTES, WEBHOOK_SIGNATURE_HEADER } from '../../src/adapters/whatsapp/whatsapp-constants';
 import { OwnerCopyKey, WHATSAPP_COPY } from '../../src/adapters/whatsapp/whatsapp-copy';
 import { OperatorEvent } from '../../src/adapters/whatsapp/whatsapp-enums';
 import { WHATSAPP_WEBHOOK_PATH } from '../../src/contract/constants';
@@ -676,6 +676,30 @@ describe('webhook stale and replayed deliveries', () => {
     const message = {
       ...ownerText({ account, id: 'wamid.EDGE', text: 'Quase' }),
       timestamp: secondsAgo({ ageMs: RECEIPT_RETENTION_MS - STALE_MARGIN_MS }),
+    };
+    const response = await postNotification({ notification: notificationWith({ messages: [message] }) });
+    expect(response.status).toBe(STATUS_OK);
+    expect(ownerTextsOf({ history: await historyOf({ account }) })).toEqual(['Quase']);
+  });
+
+  test('answers 200, stores nothing and logs inbound.future for an entry timestamped beyond the future skew', async () => {
+    const spies = spyOnLogs();
+    const account = await seedAccount({ agent: 'alpha' });
+    const message = {
+      ...ownerText({ account, id: 'wamid.FUTURE', text: 'Amanha' }),
+      timestamp: secondsAgo({ ageMs: -(MAX_FUTURE_SKEW_MS + STALE_MARGIN_MS) }),
+    };
+    const response = await postNotification({ notification: notificationWith({ messages: [message] }) });
+    expect(response.status).toBe(STATUS_OK);
+    expect(ownerTextsOf({ history: await historyOf({ account }) })).toEqual([]);
+    expect(occurrencesOf({ text: loggedText({ spies }), event: OperatorEvent.InboundFuture })).toBe(1);
+  });
+
+  test('pin: processes an entry just inside the future skew', async () => {
+    const account = await seedAccount({ agent: 'alpha' });
+    const message = {
+      ...ownerText({ account, id: 'wamid.SOON', text: 'Quase' }),
+      timestamp: secondsAgo({ ageMs: -(MAX_FUTURE_SKEW_MS - STALE_MARGIN_MS) }),
     };
     const response = await postNotification({ notification: notificationWith({ messages: [message] }) });
     expect(response.status).toBe(STATUS_OK);
