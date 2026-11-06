@@ -1,15 +1,14 @@
 import { execFile } from 'node:child_process';
 import { copyFile, mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { CONTAINER_HOST } from './constants';
 import { buildImage, type Container, startContainer } from './container';
 
 const runCommand = promisify(execFile);
-const REPOSITORY_ROOT = fileURLToPath(new URL('../../..', import.meta.url));
+const REPOSITORY_ROOT = join(import.meta.dirname, '..', '..', '..');
 const PLUGIN_DIRECTORY = join(REPOSITORY_ROOT, 'apps', 'openclaw-plugin');
-const DOCKERFILE = fileURLToPath(new URL('./openclaw/Dockerfile', import.meta.url));
+const DOCKERFILE = join(import.meta.dirname, 'openclaw', 'Dockerfile');
 const PLUGIN_PACKAGE_FILTER = '@zapbip/openclaw-plugin';
 const OPENCLAW_IMAGE_TAG = 'zapbip-e2e-openclaw';
 const PLUGIN_ARCHIVE_FILE = 'plugin.tgz';

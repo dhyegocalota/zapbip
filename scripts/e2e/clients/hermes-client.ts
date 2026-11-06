@@ -1,10 +1,9 @@
 import { cp, mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { CONTAINER_HOST } from './constants';
 import { type Container, startContainer } from './container';
 
-const PLUGIN_DIRECTORY = fileURLToPath(new URL('../../../apps/hermes-plugin/zapbip_platform', import.meta.url));
+const PLUGIN_DIRECTORY = join(import.meta.dirname, '..', '..', '..', 'apps', 'hermes-plugin', 'zapbip_platform');
 const HERMES_IMAGE = 'nousresearch/hermes-agent:v0.22.7';
 const HERMES_PLATFORM = 'linux/amd64';
 const PLUGIN_NAME = 'zapbip-platform';
