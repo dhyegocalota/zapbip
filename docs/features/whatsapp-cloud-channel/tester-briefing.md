@@ -369,7 +369,7 @@ Pins (green on landing): WI-35 to WI-43 (`d93dc2f`), WI-52, WI-53, WI-55, WI-57 
 - `media-download.ts` maps `GraphRequestError` to a channel error before branching, so 131052 is unavailable and a server error or no response is retriable in production.
 - `routes/whatsapp.ts` is `createWhatsappRoutes({ developmentMediaOrigin })`: a stale entry (older than `RECEIPT_RETENTION_MS`) answers `200` and logs `inbound.stale`; a committed message (`hasChannelReceipt` on the account object) answers `200` before any download and logs `inbound.duplicate`; a young status for a message the account has not saved answers `503`.
 - `index.dev.ts` is the only reader of `WHATSAPP_MEDIA_DOWNLOAD_ORIGIN` (`dev/read-development-media-origin.ts`).
-- Forwarded: parser, `ForwardedKind`, DO schema `v5` column `forwarded`, wire field `forwarded`, `verified: false` when forwarded.
+- Forwarded: parser, `ForwardedKind`, DO schema `v4` column `forwarded`, wire field `forwarded`, `verified: false` when forwarded.
 - `graph-client.ts` keeps the abort armed until the body is consumed (`GRAPH_MEDIA_BODY_DEADLINE_MS` for downloads).
 - `channel-error-mapping.ts` takes `isReactionSend`; 131009 on any other send is the unexpected-error kind.
 - A reaction on a wamid nobody has is stored with `targetMessageId: null`.
@@ -382,7 +382,7 @@ Pins (green on landing): WI-35 to WI-43 (`d93dc2f`), WI-52, WI-53, WI-55, WI-57 
 | media download through the real Graph client (4 cases) | `23f714e`: rejects with `GraphRequestError` instead of `{ stored: false }` / `RetriableMediaError` | `b2bdb3e` |
 | env and development origin (3) | `7dc5600`: `readDevelopmentMediaOrigin is not implemented`, `toEqual` on the old shape | `94c4caa` |
 | parser forwarded, graph-client body deadline, unsupported without a type (10) | `455480a`: forwarded messages parse as rejected; stalled bodies time out at 5 s | `5e87016`, `fef0cd2` |
-| forwarded storage and wire, stale, redelivery, receipt, status 503, schema v5 (14 integration, 5 core) | `41d8ddb`, printed: `The RPC receiver does not implement "hasChannelReceipt"` (receipt check, redelivery), `expected undefined to be 'forwarded'` and `expected { ... } to match object { forwarded: ... }` (forwarded text, frequently forwarded, forwarded image, plain text wire), `expected 200 to be 503` (R6), `expected { ok, value } to deeply equal { applied: false, found: false }` (WI-16), the schema v5 and forwarded-kind DO cases; core `has-channel-receipt.test.ts` fails with `Cannot find module './has-channel-receipt'` | `479eb98` |
+| forwarded storage and wire, stale, redelivery, receipt, status 503, schema v4 (14 integration, 5 core) | `41d8ddb`, printed: `The RPC receiver does not implement "hasChannelReceipt"` (receipt check, redelivery), `expected undefined to be 'forwarded'` and `expected { ... } to match object { forwarded: ... }` (forwarded text, frequently forwarded, forwarded image, plain text wire), `expected 200 to be 503` (R6), `expected { ok, value } to deeply equal { applied: false, found: false }` (WI-16), the schema v4 and forwarded-kind DO cases; core `has-channel-receipt.test.ts` fails with `Cannot find module './has-channel-receipt'` | `479eb98` |
 | 131009 kind, reaction target null, nosniff (3) | `382df1d` | the same commit |
 
 Order note: the fixes `fef0cd2` and `5e87016` were written before their red commit `455480a` (the red run was taken on the tree without them; no history rewrite).
