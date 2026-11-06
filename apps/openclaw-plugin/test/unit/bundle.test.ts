@@ -1,0 +1,27 @@
+import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+import { beforeAll, describe, expect, it } from 'vitest';
+
+const PACKAGE_DIRECTORY = new URL('../../', import.meta.url);
+const SDK_SPECIFIER = 'openclaw/plugin-sdk';
+const BUILD_TIMEOUT_MS = 60_000;
+
+let bundle = '';
+
+beforeAll(() => {
+  execFileSync('pnpm', ['run', 'build'], { cwd: PACKAGE_DIRECTORY, stdio: 'ignore' });
+  bundle = readFileSync(new URL('dist/index.js', PACKAGE_DIRECTORY), 'utf8');
+}, BUILD_TIMEOUT_MS);
+
+describe('bundle', () => {
+  it('keeps the SDK external, only in import statements', () => {
+    const sdkLines = bundle.split('\n').filter((line) => line.includes(SDK_SPECIFIER));
+    expect(sdkLines.length).toBeGreaterThan(0);
+    expect(sdkLines.every((line) => line.startsWith('import '))).toBe(true);
+  });
+
+  it('carries no secret literal', () => {
+    expect(bundle).not.toContain('zb_conn_');
+    expect(bundle).not.toContain('ZAPBIP_CONNECTION_URL');
+  });
+});
