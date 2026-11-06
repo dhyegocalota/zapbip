@@ -31,4 +31,20 @@ describe('owner-run Claude Code install script', () => {
   test('never echoes the link variable outside the redaction filter', () => {
     expect(readRepositoryFile(SCRIPT)).not.toMatch(/echo "?\$\{?(connection_url|CONNECTION_URL)/);
   });
+
+  test('applies the directory migrations before seeding and shows seed errors', () => {
+    const script = readRepositoryFile(SCRIPT);
+    expect(script.indexOf('d1 migrations apply')).toBeGreaterThan(-1);
+    expect(script.indexOf('d1 migrations apply')).toBeLessThan(script.indexOf('dev:seed'));
+    expect(script).toContain('--env development');
+    expect(script).not.toMatch(/dev:seed[^\n]*>\/dev\/null/);
+    expect(script).toContain('fail "the seed failed');
+  });
+
+  test('keeps the owner Claude configuration untouched by installing at project scope', () => {
+    const script = readRepositoryFile(SCRIPT);
+    expect(script).toContain('--scope project');
+    expect(script).toContain('.claude/skills/zapbip/SKILL.md');
+    expect(script).not.toContain('--scope user');
+  });
 });
