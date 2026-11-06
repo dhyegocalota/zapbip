@@ -1,5 +1,6 @@
 import type { DoneFrame, HelloFrame, Message, MessagesFrame, ServerFrame } from '@zapbip/core';
 import {
+  CONNECTOR_FRAME_MAX_BYTES,
   CONNECTOR_PING_TEXT,
   CONNECTOR_PONG_TEXT,
   ConnectorFrameType,
@@ -10,7 +11,9 @@ import {
   RECONNECT_BASE_MS,
   RECONNECT_MAX_MS,
   REPLACED_CLOSE_CODE,
+  REVOKED_CLOSE_CODE,
 } from '@zapbip/types';
+import { WebSocket } from 'ws';
 import { ABNORMAL_CLOSE_CODE, CLEAN_EXIT_CODE, FAILURE_EXIT_CODE } from './constants';
 import { parseServerFrame } from './frames';
 import { createHandoffQueue } from './handoff-queue';
@@ -117,7 +120,7 @@ export async function runConnectorSocket({
 
   function holdSocket(): Promise<SocketEnd> {
     return new Promise((resolve) => {
-      const socket = new WebSocket(socketLink);
+      const socket = new WebSocket(socketLink, { maxPayload: CONNECTOR_FRAME_MAX_BYTES });
       currentSocket = socket;
       let wasOpened = false;
       let hasEnded = false;
@@ -149,6 +152,7 @@ export async function runConnectorSocket({
         clearTimeout(timeoutTimer);
         handleData({ data: event.data });
       });
+      socket.addEventListener('error', () => undefined);
       socket.addEventListener('close', (event) => {
         const isReplacement = event.code === REPLACED_CLOSE_CODE;
         if (isReplacement) log({ event: ConnectorLogEvent.ConnectorReplaced, fields: { agent: agentName } });
@@ -160,23 +164,31 @@ export async function runConnectorSocket({
 
   signal.addEventListener('abort', () => currentSocket?.close(), { once: true });
 
-  const probeStatus = await resolveProbeStatus();
-  if (signal.aborted) return CLEAN_EXIT_CODE;
-  if (probeStatus !== HttpStatus.UpgradeRequired) {
+  async function refusalExitCode(): Promise<number | null> {
+    const probeStatus = await resolveProbeStatus();
+    if (signal.aborted) return CLEAN_EXIT_CODE;
+    if (probeStatus === HttpStatus.UpgradeRequired) return null;
     log({ event: ConnectorLogEvent.ConnectorClosed, fields: { status: probeStatus } });
     return FAILURE_EXIT_CODE;
   }
+
+  const firstRefusalExitCode = await refusalExitCode();
+  if (firstRefusalExitCode !== null) return firstRefusalExitCode;
 
   let attempt = 0;
   while (!signal.aborted) {
     const end = await holdSocket();
     if (end.code === REPLACED_CLOSE_CODE) return CLEAN_EXIT_CODE;
+    if (end.code === REVOKED_CLOSE_CODE) return FAILURE_EXIT_CODE;
     if (signal.aborted) break;
     const failedAttempts = end.wasOpened ? 0 : attempt;
     const delayMs = reconnectDelayMs({ attempt: failedAttempts });
     log({ event: ConnectorLogEvent.ConnectorReconnecting, fields: { attempt: failedAttempts, delayMs } });
     await wait({ delayMs, signal });
     attempt = failedAttempts + 1;
+    if (end.wasOpened) continue;
+    const retryRefusalExitCode = await refusalExitCode();
+    if (retryRefusalExitCode !== null) return retryRefusalExitCode;
   }
   return CLEAN_EXIT_CODE;
 }

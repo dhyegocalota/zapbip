@@ -11,6 +11,7 @@ import {
   SEEN_MESSAGE_LIMIT,
 } from '@zapbip/types';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { ABNORMAL_CLOSE_CODE } from '../../src/constants';
 import { reconnectDelayMs, runConnectorSocket } from '../../src/connector-socket';
 import type { ConnectorLogFields } from '../../src/log';
 import {
@@ -28,7 +29,6 @@ const FAST_HEARTBEAT_TIMEOUT_MS = 25;
 const PROMPT_RETURN_MS = 100;
 const IDLE_HEARTBEAT_MS = 60_000;
 const BATCH_SIZE = 100;
-const MESSAGE_TOO_BIG_CLOSE_CODE = 1009;
 const OWNER_SECRET_TEXT = 'segredo-do-dono';
 
 type LoggedEvent = { event: ConnectorLogEvent; fields: ConnectorLogFields };
@@ -426,13 +426,13 @@ describe('frame rules', () => {
     },
   );
 
-  it('closes the socket with 1009 on a frame one byte over the limit and reconnects', async () => {
+  it('drops the socket and reconnects on a frame one byte over the limit', async () => {
     const connector = await startConnector();
     const plugin = startPlugin({ connector });
     await connector.waitForConnections({ count: 1 });
     connector.sendText({ text: framePaddedToBytes({ byteLength: CONNECTOR_FRAME_MAX_BYTES + 1 }) });
     await connector.waitForConnections({ count: 2 });
-    expect(plugin.events).toContainEqual({ event: ConnectorLogEvent.ConnectorClosed, fields: { code: MESSAGE_TOO_BIG_CLOSE_CODE } });
+    expect(plugin.events).toContainEqual({ event: ConnectorLogEvent.ConnectorClosed, fields: { code: ABNORMAL_CLOSE_CODE } });
   });
 
   it('accepts a frame of exactly the limit', async () => {

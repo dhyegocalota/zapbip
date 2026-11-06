@@ -27,6 +27,11 @@ describe('bundle', () => {
     expect(shimIndex).toBeLessThan(bundle.indexOf('__require("http")'));
   });
 
+  it('builds the bundle before every publish', () => {
+    const manifest = JSON.parse(readFileSync(new URL('package.json', PACKAGE_DIRECTORY), 'utf8')) as { scripts: Record<string, string> };
+    expect(manifest.scripts.prepublishOnly).toBe('pnpm run build');
+  });
+
   it('carries no secret literal', () => {
     expect(bundle).not.toContain('zb_conn_');
     expect(bundle).not.toContain('ZAPBIP_CONNECTION_URL');
