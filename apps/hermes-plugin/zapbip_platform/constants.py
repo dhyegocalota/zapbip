@@ -38,20 +38,6 @@ INVALID_LINK_MESSAGE = f"{CONNECTION_LINK_ENV} must be an https link ending in {
 PLATFORM_HINT = "You are chatting with the owner through zapbip (WhatsApp). Plain text only."
 PLATFORM_EMOJI = "💬"
 
-CHANNEL_HANDOFF_NO_TEXT_BY_KIND: dict[str, str] = {
-    "text": "The owner sent a message with no text.",
-    "image": "The owner sent an image without a caption.",
-    "video": "The owner sent a video without a caption.",
-    "audio": "The owner sent an audio message.",
-    "document": "The owner sent a document without a caption.",
-    "sticker": "The owner sent a sticker.",
-    "location": "The owner sent a location.",
-    "contacts": "The owner sent a contact card.",
-    "reaction": "The owner reacted to a message.",
-    "choice": "The owner sent a reply with no option selected.",
-}
-
-
 class MessageKind(Enum):
     TEXT = "text"
     IMAGE = "image"
@@ -63,6 +49,20 @@ class MessageKind(Enum):
     CONTACTS = "contacts"
     REACTION = "reaction"
     CHOICE = "choice"
+
+
+CHANNEL_HANDOFF_NO_TEXT_BY_KIND: dict[MessageKind, str] = {
+    MessageKind.TEXT: "The owner sent a message with no text.",
+    MessageKind.IMAGE: "The owner sent an image without a caption.",
+    MessageKind.VIDEO: "The owner sent a video without a caption.",
+    MessageKind.AUDIO: "The owner sent an audio message.",
+    MessageKind.DOCUMENT: "The owner sent a document without a caption.",
+    MessageKind.STICKER: "The owner sent a sticker.",
+    MessageKind.LOCATION: "The owner sent a location.",
+    MessageKind.CONTACTS: "The owner sent a contact card.",
+    MessageKind.REACTION: "The owner reacted to a message.",
+    MessageKind.CHOICE: "The owner sent a reply with no option selected.",
+}
 
 
 class ConnectorFrameType(Enum):

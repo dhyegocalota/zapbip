@@ -14,19 +14,19 @@ def text_of_text(*, message: Message) -> str:
 def caption_or_no_text(*, message: Message) -> str:
     caption = message["caption"]
     if caption is None:
-        return CHANNEL_HANDOFF_NO_TEXT_BY_KIND[message["kind"]]
+        return CHANNEL_HANDOFF_NO_TEXT_BY_KIND[MessageKind(message["kind"])]
     return str(caption)
 
 
 def selected_title_or_no_text(*, message: Message) -> str:
     selected = message["selected"]
     if selected is None:
-        return CHANNEL_HANDOFF_NO_TEXT_BY_KIND[message["kind"]]
+        return CHANNEL_HANDOFF_NO_TEXT_BY_KIND[MessageKind(message["kind"])]
     return str(selected["title"])
 
 
 def no_text(*, message: Message) -> str:
-    return CHANNEL_HANDOFF_NO_TEXT_BY_KIND[message["kind"]]
+    return CHANNEL_HANDOFF_NO_TEXT_BY_KIND[MessageKind(message["kind"])]
 
 
 HANDOFF_TEXT_BY_KIND: dict[str, Callable[..., str]] = {
@@ -46,7 +46,7 @@ HANDOFF_TEXT_BY_KIND: dict[str, Callable[..., str]] = {
 def handoff_text_of(*, message: Message) -> str:
     text = HANDOFF_TEXT_BY_KIND[message["kind"]](message=message)
     if message["forwarded"]:
-        return f"{CHANNEL_FORWARDED_PREFIX}\n{text}"
+        return f"{CHANNEL_FORWARDED_PREFIX} {text}"
     return text
 
 
