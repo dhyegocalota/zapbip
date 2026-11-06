@@ -310,6 +310,12 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     await inbox.detachLocalConnector({ dependencies: this.dependencies, wake: this.wake, agent, remainingSockets });
   }
 
+  async webSocketError(socket: WebSocket, error: unknown): Promise<void> {
+    void socket;
+    void error;
+    throw new Error('webSocketError is not implemented');
+  }
+
   receiveOwnerMessage(input: ReceiveOwnerMessageRequest): Promise<CallOutcome<inbox.ReceiveResult>> {
     return this.outcome({
       run: async () => {

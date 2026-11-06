@@ -1,7 +1,7 @@
 import type { ServerFrame } from '@zapbip/core';
 import { SELF } from 'cloudflare:test';
-import { ORIGIN } from '../integration/route-fixtures';
 
+const ORIGIN = 'http://example.com';
 const UPGRADE_HEADERS = { Upgrade: 'websocket' };
 
 export type ConnectorSession = {

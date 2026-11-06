@@ -154,4 +154,18 @@ describe('wake setting while a connector is attached', () => {
     await vi.waitFor(async () => expect(await findRestore({ account })).toBeNull());
     expect(await findWake({ account })).toEqual(changed);
   });
+
+  test('a socket error restores the previous setting like a close', async () => {
+    const account = await registeredAccount();
+    const previous = await enableWebhook({ account });
+    const session = await attached({ account });
+    await runInDurableObject(accountInboxStub({ accountId: account.accountId }), async (instance, state) => {
+      const [serverSocket] = state.getWebSockets(AGENT);
+      if (serverSocket === undefined) throw new Error('no server socket');
+      await (instance as AccountInbox).webSocketError(serverSocket, new Error('socket failed'));
+    });
+    expect(await findWake({ account })).toEqual(previous);
+    expect(await findRestore({ account })).toBeNull();
+    session.socket.close();
+  });
 });

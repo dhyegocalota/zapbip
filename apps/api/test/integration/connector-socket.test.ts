@@ -165,4 +165,21 @@ describe('connector socket', () => {
     expect(frame.messages).toHaveLength(1);
     second.socket.close();
   });
+
+  test('after the object restarts a reconnecting connector gets hello and the unread message once', async () => {
+    const account = await registeredAccount();
+    const first = await openConnector({ secret: account.secret });
+    await first.nextFrame();
+    await ownerMessage({ account });
+    await first.nextFrame();
+    await expect(
+      runInDurableObject(accountInboxStub({ accountId: account.accountId }), (_instance, state) => state.abort('evicted')),
+    ).rejects.toThrow('evicted');
+    const second = await openConnector({ secret: account.secret });
+    expect(await second.nextFrame()).toEqual({ type: ConnectorFrameType.Hello, agent: AGENT, previousWakeMode: WakeMode.Local });
+    const frame = (await second.nextFrame()) as MessagesFrame;
+    expect(frame.messages).toHaveLength(1);
+    expect(second.receivedCount()).toBe(0);
+    second.socket.close();
+  });
 });
