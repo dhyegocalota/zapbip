@@ -3,8 +3,7 @@ import { SECOND_MS } from '@zapbip/types';
 export const SCHEDULED_CRON = '*/30 * * * *';
 export const BUDGET_CHECK_MINUTE = 0;
 export const MEDIA_RETENTION_HOUR = 3;
-export const BUDGET_CHECK_CRON = '0 * * * *';
-export const MEDIA_RETENTION_CRON = '5 0 * * *';
+export const MEDIA_RETENTION_MINUTE = 0;
 
 export const DURABLE_OBJECT_DAILY_GIGABYTE_SECONDS = 13_000;
 export const DURABLE_OBJECT_MEMORY_GIGABYTES = 0.125;
