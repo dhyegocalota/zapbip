@@ -37,9 +37,13 @@ describe('production bundle of the WhatsApp channel', () => {
     'PB-1 PB-2 PB-3 the production bundle sends through the Cloud API sender and carries no fake',
     async () => {
       const bundle = await productionBundle();
-      const present = [FAKE_GRAPH_ADDRESS, FIXTURE_MARKER, DEVELOPMENT_MEDIA_ORIGIN_MARKER, DEVELOPMENT_SKEW_MARKER, ...FAKE_SENDER_MARKERS].filter((marker) =>
-        bundle.includes(marker),
-      );
+      const present = [
+        FAKE_GRAPH_ADDRESS,
+        FIXTURE_MARKER,
+        DEVELOPMENT_MEDIA_ORIGIN_MARKER,
+        DEVELOPMENT_SKEW_MARKER,
+        ...FAKE_SENDER_MARKERS,
+      ].filter((marker) => bundle.includes(marker));
       const missing = [GRAPH_BASE_URL_VARIABLE, ...CLOUD_API_SENDER_MARKERS].filter((marker) => !bundle.includes(marker));
       expect({ present, missing }).toEqual({ present: [], missing: [] });
     },
