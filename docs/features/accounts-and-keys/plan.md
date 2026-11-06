@@ -467,7 +467,7 @@ Failure modes: see table.
 ### Step Z (prove and ship)
 
 - [ ] **Z.1 Tester briefing text.** Each lane returns its section to the lead for `tester-briefing.md`, with each red run's printed failure text.
-- [ ] **Z.2 Tester run.** A fresh `tester` sub-agent executed `test-plan.md` and ticked every box with evidence, area by area in parallel.
+- [x] **Z.2 Tester run.** A fresh `tester` sub-agent executed `test-plan.md` and ticked every box with evidence, area by area in parallel. Evidence: `1dc11ec`, `test-results/accounts-and-keys/final-head.md`.
 - [ ] **Z.3 Reviewer.** A fresh `reviewer` sub-agent returned a verdict; refutation of the three riskiest claims is recorded in `test-plan.md`.
 - [ ] **Z.4 Security reviewer.** A fresh `security-reviewer`; the **Security checks** area is its checklist.
 - [ ] **Z.5 /check-ui.** Docs pages walked with Playwright MCP at 1 280 and 375 wide through `mint dev`; the simulator's JSON screens recorded.
@@ -522,7 +522,7 @@ Needs a real number or a deployed environment; none runs in `pnpm verify`.
 ## Z. Prove and ship
 
 - [ ] **Tester briefing text** returned by each lane to the lead.
-- [ ] **Tester run:** a fresh `tester` executed `test-plan.md` and ticked every box with evidence.
+- [x] **Tester run:** a fresh `tester` executed `test-plan.md` and ticked every box with evidence. Evidence: `1dc11ec`, `test-results/accounts-and-keys/final-head.md`.
 - [ ] **Reviewer:** verdict recorded; refutation of the three riskiest claims in `test-plan.md`.
 - [ ] **/check-ui:** docs pages walked; simulator screens recorded.
 - [ ] **/open-pr:** gates passed, learnings sweep stated, PR opened.
