@@ -72,7 +72,7 @@ function createInMemoryRepository(): InMemoryRepository {
   const receipts = new Map<string, number>();
   const receiptMessageIds = new Map<string, string>();
   const media = new Map<string, StoredMedia>();
-  const claimedUploads = new Set<string>();
+  const uploadClaims = new Map<string, number>();
   const channelMessageIds = new Map<string, string>();
   const statusDetails = new Map<string, ChannelStatusDetail>();
   const claimedAt = new Map<string, number>();
@@ -209,6 +209,11 @@ function createInMemoryRepository(): InMemoryRepository {
     saveRoutingList: async (input) => {
       routingList = { ...input.routingList };
     },
+    claimRoutingListExpiry: async ({ openedAt, claimedAt }) => {
+      if (routingList === null || routingList.openedAt !== openedAt) return false;
+      routingList = { ...routingList, openedAt: claimedAt, resent: true };
+      return true;
+    },
     clearRoutingList: async () => {
       routingList = null;
     },
@@ -216,19 +221,21 @@ function createInMemoryRepository(): InMemoryRepository {
       media.set(stored.mediaId, stored);
     },
     findMedia: async ({ mediaId }) => media.get(mediaId) ?? null,
-    claimUpload: async ({ mediaId }) => {
+    claimUpload: async ({ mediaId, claimedAt, staleBefore }) => {
       const stored = media.get(mediaId);
-      const isClaimable = stored !== undefined && stored.receivedAt === null && !claimedUploads.has(mediaId);
-      if (isClaimable) claimedUploads.add(mediaId);
+      const claimedBefore = uploadClaims.get(mediaId);
+      const isFree = claimedBefore === undefined || claimedBefore <= staleBefore;
+      const isClaimable = stored !== undefined && stored.receivedAt === null && isFree;
+      if (isClaimable) uploadClaims.set(mediaId, claimedAt);
       return isClaimable;
     },
     releaseUpload: async ({ mediaId }) => {
-      claimedUploads.delete(mediaId);
+      uploadClaims.delete(mediaId);
     },
     markMediaReceived: async ({ mediaId, receivedAt, retentionUntil }) => {
       const stored = media.get(mediaId);
       if (stored === undefined) return;
-      claimedUploads.delete(mediaId);
+      uploadClaims.delete(mediaId);
       media.set(mediaId, { ...stored, receivedAt, retentionUntil, expiresAt: null });
     },
     listExpiredMediaIds: async ({ now }) =>

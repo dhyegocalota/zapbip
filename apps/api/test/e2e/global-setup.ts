@@ -20,6 +20,7 @@ const SEED_AGENTS = ['alpha', 'beta'];
 const SIGNING_KEY_BYTES = 32;
 const LOOPBACK_HOST = '127.0.0.1';
 const DATABASE_BINDING = 'CONNECTIONS';
+const DEVELOPMENT_ENVIRONMENT = 'development';
 const LOG_FILE_NAME = 'wrangler-dev.log';
 
 const seedOutputSchema = z.object({ connections: z.array(z.object({ agent: z.string(), secret: z.string() })) });
@@ -72,7 +73,7 @@ export default async function setup(project: TestProject): Promise<() => Promise
     'apply',
     DATABASE_BINDING,
     '--env',
-    'development',
+    DEVELOPMENT_ENVIRONMENT,
     '--local',
     ...persistArguments,
   ]);
@@ -96,7 +97,7 @@ export default async function setup(project: TestProject): Promise<() => Promise
       'wrangler',
       'dev',
       '--env',
-      'development',
+      DEVELOPMENT_ENVIRONMENT,
       '--ip',
       LOOPBACK_HOST,
       '--port',

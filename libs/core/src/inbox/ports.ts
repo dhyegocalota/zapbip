@@ -59,9 +59,10 @@ export interface InboxRepository {
   findRoutingList(): Promise<RoutingList | null>;
   saveRoutingList(input: { routingList: RoutingList }): Promise<void>;
   clearRoutingList(): Promise<void>;
+  claimRoutingListExpiry(input: { openedAt: number; claimedAt: number }): Promise<boolean>;
   insertMedia(input: { media: StoredMedia }): Promise<void>;
   findMedia(input: { mediaId: string }): Promise<StoredMedia | null>;
-  claimUpload(input: { mediaId: string }): Promise<boolean>;
+  claimUpload(input: { mediaId: string; claimedAt: number; staleBefore: number }): Promise<boolean>;
   releaseUpload(input: { mediaId: string }): Promise<void>;
   markMediaReceived(input: { mediaId: string; receivedAt: number; retentionUntil: number }): Promise<void>;
   listExpiredMediaIds(input: { now: number }): Promise<string[]>;

@@ -11,7 +11,7 @@ import {
   SECOND_MS,
   WakeOutcome,
 } from '@zapbip/types';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { MEDIA_RETENTION_MS, NOTICE_QUICK_REPLY_ID, QUEUE_RETENTION_MS, ROUTING_LIST_TTL_MS, WINDOW_MS } from '../constants';
 import { renderCopy } from '../inbox-copy';
 import type { Message } from '../message';
@@ -112,7 +112,7 @@ describe('receiveOwnerMessage routing', () => {
     });
   });
 
-  test('CU-136 a tap on an open question answers it with the option title', async () => {
+  test('CU-67 CU-136 a tap on an open question answers it with the option title', async () => {
     const environment = await createEnvironment();
     const question = await askAndAbandon({ environment });
     const result = await tap({
@@ -255,7 +255,7 @@ describe('receiveOwnerMessage routing list', () => {
     expect(sessionTexts({ environment }).at(-1)).toBe(expiredListText());
   });
 
-  test('a route choice naming an unknown agent while the batch is held sends the current list again', async () => {
+  test('CU-163 a route choice naming an unknown agent while the batch is held sends the current list again', async () => {
     const environment = await createEnvironment();
     await registerAgents({ environment, agents: ['alpha'] });
     const held = await receiveText({ environment, text: 'first' });
@@ -662,7 +662,7 @@ describe('receiveOwnerMessage retries and concurrency', () => {
 });
 
 describe('receiveOwnerMessage routing list state', () => {
-  test('the first list is recorded in the owner window row', async () => {
+  test('CU-160 the first list is recorded in the owner window row', async () => {
     const environment = await createEnvironment();
     await registerAgents({ environment, agents: ['alpha', 'beta'] });
     await receiveText({ environment, text: 'first' });
@@ -676,7 +676,33 @@ describe('receiveOwnerMessage routing list state', () => {
     });
   });
 
-  test('a list that failed to send leaves no row', async () => {
+  test('an unknown-agent tap resends the list keeping the timer, the reminder and the resend flag', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha', 'beta'] });
+    const held = await receiveText({ environment, text: 'first' });
+    await receiveText({ environment, text: 'second' });
+    const before = (await environment.repository.findRoutingList())!;
+    await environment.clock.advance({ ms: SECOND_MS });
+    await tap({ environment, optionId: formatRouteOptionId({ messageId: held.messageId!, agent: 'ghost' }), optionTitle: 'ghost' });
+    await receiveText({ environment, text: 'third' });
+    expect(await environment.repository.findRoutingList()).toMatchObject({
+      openedAt: before.openedAt,
+      resent: before.resent,
+      reminded: true,
+    });
+    expect(sessionTexts({ environment })).toEqual([reminderText()]);
+  });
+
+  test('a stale tap resolves no question waiter', async () => {
+    const environment = await createEnvironment();
+    const question = await askAndAbandon({ environment });
+    await tap({ environment, optionId: formatOptionId({ questionId: question.questionId, optionIndex: 0 }), optionTitle: 'Sim' });
+    const resolveQuestionAnswer = vi.spyOn(environment.dependencies.waiters, 'resolveQuestionAnswer');
+    await tap({ environment, optionId: formatOptionId({ questionId: question.questionId, optionIndex: 1 }), optionTitle: 'Não' });
+    expect(resolveQuestionAnswer).not.toHaveBeenCalled();
+  });
+
+  test('CU-160 a list that failed to send leaves no row', async () => {
     const environment = await createEnvironment();
     await registerAgents({ environment, agents: ['alpha', 'beta'] });
     environment.sender.failSessionCalls({ callNumbers: [1] });
@@ -684,7 +710,7 @@ describe('receiveOwnerMessage routing list state', () => {
     expect(await environment.repository.findRoutingList()).toBeNull();
   });
 
-  test('a route choice closes the list', async () => {
+  test('CU-160 a route choice closes the list', async () => {
     const environment = await createEnvironment();
     await registerAgents({ environment, agents: ['alpha', 'beta'] });
     await receiveText({ environment, text: 'first' });
@@ -693,7 +719,7 @@ describe('receiveOwnerMessage routing list state', () => {
     expect(await environment.repository.findRoutingList()).toBeNull();
   });
 
-  test('the owner gets one localized reminder per batch, quoting the list', async () => {
+  test('CU-161 the owner gets one localized reminder per batch, quoting the list', async () => {
     const environment = await createEnvironment();
     await registerAgents({ environment, agents: ['alpha', 'beta'] });
     await receiveText({ environment, text: 'first' });
@@ -706,7 +732,7 @@ describe('receiveOwnerMessage routing list state', () => {
     expect(await environment.repository.listHeld()).toHaveLength(3);
   });
 
-  test('the reminder is written in the locale of the message that triggers it', async () => {
+  test('CU-161 the reminder is written in the locale of the message that triggers it', async () => {
     const environment = await createEnvironment();
     await registerAgents({ environment, agents: ['alpha', 'beta'] });
     await receiveText({ environment, text: 'first' });
@@ -714,7 +740,7 @@ describe('receiveOwnerMessage routing list state', () => {
     expect(sessionTexts({ environment })).toEqual(['Escolha o agente na lista acima']);
   });
 
-  test('a message matched by rules 1 to 4 is never held and never reminds', async () => {
+  test('CU-162 a message matched by rules 1 to 4 is never held and never reminds', async () => {
     const environment = await createEnvironment();
     await registerAgents({ environment, agents: ['alpha', 'beta'] });
     await receiveText({ environment, text: 'first' });
