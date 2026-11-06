@@ -15,6 +15,7 @@ const ORIGIN_REMOTE = 'origin';
 const ORIGIN_MAIN = `${ORIGIN_REMOTE}/${MAIN_BRANCH}`;
 const NO_PENDING_MIGRATIONS = 'No migrations to apply';
 const NPM_PACKAGE_NAME = 'zapbip';
+export const NPM_PUBLISHER_VARIABLE = 'ZAPBIP_NPM_PUBLISHER';
 const OPENCLAW_PLUGIN_PACKAGE = '@zapbip/openclaw-plugin';
 const DEPLOYABLE_ENVIRONMENTS = [DeployEnvironment.Staging, DeployEnvironment.Production];
 
@@ -67,6 +68,7 @@ export type DocsPreflightInput = {
 type PreflightCheck<Input> = { step: PreflightStep; refusalOf: (input: Input) => Promise<string | null> };
 
 const databaseBlockSchema = z.object({ d1_databases: z.tuple([z.object({ database_name: z.string() })], z.unknown()) });
+const maintainerListSchema = z.array(z.string());
 const secretListSchema = z.array(z.object({ name: z.string() }));
 const cronBlockSchema = z.object({ triggers: z.object({ crons: z.array(z.string()) }) });
 
@@ -118,19 +120,46 @@ async function refuseUnsetCompanyFacts(input: { company: CompanyFacts }): Promis
   return `COMPANY facts are still ${COMPANY_FACT_UNSET}: ${unset.join(', ')}; fill the Logic Bit company facts in libs/types before deploying`;
 }
 
-async function firstUnpublished(input: { shell: DeployShell; packages: string[] }): Promise<string | null> {
-  const [current, ...remaining] = input.packages;
-  if (!current) return null;
-  const result = await input.shell.run({ file: NPM, args: ['view', current, 'version'] });
-  if (result.exitCode !== 0) return current;
-  return firstUnpublished({ shell: input.shell, packages: remaining });
+function maintainerNamesOf(input: { stdout: string }): string[] {
+  return maintainerListSchema.parse(JSON.parse(input.stdout)).map((maintainer) => maintainer.split(' <')[0] as string);
 }
 
-async function refuseUnpublishedPackage(input: DocsPreflightInput): Promise<string | null> {
-  const packages = [`${NPM_PACKAGE_NAME}@${input.npmVersion}`, `${OPENCLAW_PLUGIN_PACKAGE}@${input.openclawPluginVersion}`];
-  const unpublished = await firstUnpublished({ shell: input.shell, packages });
-  if (unpublished === null) return null;
-  return `${unpublished} does not resolve on npm; publish it before deploying the docs`;
+async function untrustedReasonOf(input: { shell: DeployShell; packageSpec: string; publisher: string }): Promise<string | null> {
+  const { shell, packageSpec, publisher } = input;
+  const result = await shell.run({ file: NPM, args: ['view', packageSpec, 'maintainers', '--json'] });
+  if (result.exitCode !== 0) return `${packageSpec} does not resolve on npm; publish it first`;
+  if (maintainerNamesOf({ stdout: result.stdout }).includes(publisher)) return null;
+  return `${packageSpec} is not maintained by the npm user ${publisher}`;
+}
+
+async function firstUntrusted(input: { shell: DeployShell; packageSpecs: string[]; publisher: string }): Promise<string | null> {
+  const [current, ...remaining] = input.packageSpecs;
+  if (!current) return null;
+  const reason = await untrustedReasonOf({ shell: input.shell, packageSpec: current, publisher: input.publisher });
+  if (reason !== null) return reason;
+  return firstUntrusted({ ...input, packageSpecs: remaining });
+}
+
+async function refuseUntrustedPackages(input: {
+  shell: DeployShell;
+  environmentVariables: EnvironmentVariables;
+  packageSpecs: string[];
+}): Promise<string | null> {
+  const publisher = input.environmentVariables[NPM_PUBLISHER_VARIABLE];
+  if (publisher === undefined || publisher === '' || publisher.startsWith(PLACEHOLDER_VALUE_PREFIX)) {
+    return `${NPM_PUBLISHER_VARIABLE} is not set; set it to the npm user that publishes the packages`;
+  }
+  return firstUntrusted({ shell: input.shell, packageSpecs: input.packageSpecs, publisher });
+}
+
+async function refuseUntrustedWorkerPackage(input: WorkerPreflightInput): Promise<string | null> {
+  if (input.environment !== DeployEnvironment.Production) return null;
+  return refuseUntrustedPackages({ ...input, packageSpecs: [`${NPM_PACKAGE_NAME}@${input.npmVersion}`] });
+}
+
+async function refuseUntrustedDocsPackages(input: DocsPreflightInput): Promise<string | null> {
+  const packageSpecs = [`${NPM_PACKAGE_NAME}@${input.npmVersion}`, `${OPENCLAW_PLUGIN_PACKAGE}@${input.openclawPluginVersion}`];
+  return refuseUntrustedPackages({ ...input, packageSpecs });
 }
 
 async function refuseUncleanGit(input: WorkerPreflightInput): Promise<string | null> {
@@ -203,6 +232,7 @@ const WORKER_CHECKS: PreflightCheck<WorkerPreflightInput>[] = [
   { step: PreflightStep.Environment, refusalOf: refuseUnlessDeployable },
   { step: PreflightStep.OfficialNumber, refusalOf: refuseUnsetOfficialNumber },
   { step: PreflightStep.CompanyFacts, refusalOf: refuseUnsetCompanyFacts },
+  { step: PreflightStep.NpmVersion, refusalOf: refuseUntrustedWorkerPackage },
   { step: PreflightStep.Git, refusalOf: refuseUncleanGit },
   { step: PreflightStep.Gate, refusalOf: refuseFailedGate },
   { step: PreflightStep.Config, refusalOf: refuseLeftoverPlaceholder },
@@ -215,7 +245,7 @@ const WORKER_CHECKS: PreflightCheck<WorkerPreflightInput>[] = [
 const DOCS_CHECKS: PreflightCheck<DocsPreflightInput>[] = [
   { step: PreflightStep.OfficialNumber, refusalOf: refuseUnsetOfficialNumber },
   { step: PreflightStep.CompanyFacts, refusalOf: refuseUnsetCompanyFacts },
-  { step: PreflightStep.NpmVersion, refusalOf: refuseUnpublishedPackage },
+  { step: PreflightStep.NpmVersion, refusalOf: refuseUntrustedDocsPackages },
 ];
 
 async function firstRefusal<Input>(input: { checks: PreflightCheck<Input>[]; subject: Input }): Promise<PreflightRefusal | null> {
