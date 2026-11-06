@@ -14,6 +14,10 @@ No product code exists yet. Each part arrives as a feature under `docs/features/
 ## Layout
 
 ```
+apps/api                the Cloudflare Worker: MCP server, Durable Object per account, D1 directory, R2 media, fake WhatsApp channel
+apps/docs               the Mintlify documentation site
+libs/core               the inbox rules as plain TypeScript behind ports
+libs/types              shared enums and constants, no logic
 tools/repository-shape  tests about the repository itself: README links, root entries, workflows, feature statuses, indexes, scenarios, agent surfaces
 docs/adr                architecture decision records
 docs/learnings          dated traps, with what inspired them and when they were revisited
@@ -25,13 +29,13 @@ docs/scenarios          agentic walks of the product core, one file per flow, ru
 scripts                 the local gate and its tests
 ```
 
-Applications go under `apps/`, shared libraries under `libs/`; the first feature that adds one adds its line here and its root entry to `delivery-docs.test.ts`.
+Applications go under `apps/`, shared libraries under `libs/`; a feature that adds one adds its line here and, for a new root entry, its entry to `delivery-docs.test.ts`.
 
 Every workspace package has a `README.md` that states purpose only: no commands, configuration, file paths or symbols, because prose is not compiled. Update a README in the same change as the code it describes ([HARNESS → Build](.claude/HARNESS.md#4-build)).
 
 ## Language
 
-Everything in the repo is in English: code, identifiers, comments-free code, docs, ADRs, learnings, commits, PR titles and bodies. Conversation with the owner may be in Portuguese; files never are.
+Everything in the repo is in English: code, identifiers, comments-free code, docs, ADRs, learnings, commits, PR titles and bodies. Conversation with the owner may be in Portuguese; files never are. The one exception is owner-facing product copy: it lives in `*-copy.ts` modules, in `pt_BR` and `en_US`; repo prose and identifiers stay English.
 
 ## Code conventions
 
