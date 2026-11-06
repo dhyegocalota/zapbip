@@ -151,3 +151,46 @@ All under `apps/openclaw-plugin`: `src/{connector-socket,frames,handoff-queue,ha
 ### Forwarded messages (follow-up)
 - `CHANNEL_FORWARDED_PREFIX` (`[forwarded — not written by the owner]`, agent-facing English like the other handoff sentences; plugins do not know the owner locale) lives in `libs/types/src/channel-plugin.ts`; Hermes reads it through the parity test. A message with `forwarded: true` is handed off as `prefix\ntext` in both plugins; OpenClaw also dispatches it with `commandAuthorized: false`. Hermes `MessageEvent` has no untrusted flag in the host API used here.
 - Red: 2 commits back (OpenClaw `expected 'transfer money' to be 'undefined\ntransfer money'`; Hermes `ImportError cannot import name CHANNEL_FORWARDED_PREFIX`). Hypothesis: a forwarded message never reaches either agent without the prefix. Gap: no real host run.
+
+## Lane V (verification, real gateways in Docker)
+
+### What changed
+
+- `apps/api/test/e2e/hermes-openclaw.e2e.test.ts`: opt-in (`ZAPBIP_E2E_CLIENTS=1`, run with `pnpm test:e2e:clients`). It boots the isolated development stack (wrangler dev, `--env development`), a fake OpenAI-compatible model, a self-signed HTTPS front on `host.docker.internal`, then starts real containers: the OpenClaw gateway `2026.10.10` (`node:24-slim`, the plugin installed from an `npm pack` archive with `openclaw plugins install --force --accept-capabilities`) and the Hermes gateway `nousresearch/hermes-agent:v0.22.7` (`linux/amd64`, the plugin folder mounted into `plugins/`, `ZAPBIP_CONNECTION_LINK` and `ZAPBIP_ALLOWED_USERS=owner` as environment only).
+- `scripts/e2e/clients/`: `fake-model.ts` (replies `Recebi: <ping-token>`, records every request), `tls-front.ts` (openssl certificate, HTTP and WebSocket proxy to wrangler), `container.ts` (Docker CLI wrapper), `openclaw-client.ts` and `openclaw/Dockerfile`, `hermes-client.ts`, `free-port.ts`, `constants.ts`. No secret is written to the repository; keys are fake.
+- Cases (test name, plan id): `E1` OpenClaw happy path, `E2` Hermes happy path (platform auto-enabled by the environment alone), forwarded prefix for both products, forwarded slash command for both products, `E3` restart while idle, `E4` replacement (`connector_replaced`, exit `0`), `E7` allowlist (`ZAPBIP_ALLOWED_USERS` not the owner: model never called), `E11` clean shutdown for both (exit `0` within 5 s), `X1` raw socket contract (`messages` frame, `done`, empty `check_inbox`), `E8` secret check inline in E1 and E2 (no `zb_conn_` in container logs), install layout.
+- Not done: E5 and E6 (they need `set_wake`/scheduled polling in the fixture), E9 and E10 (media without caption, choice after timeout), X2 to X7 beyond the X1 `done` check.
+
+### How to run
+
+```bash
+pnpm install --frozen-lockfile
+ZAPBIP_E2E_CLIENTS=1 pnpm --filter @zapbip/api exec vitest run --config vitest.e2e.config.mts test/e2e/hermes-openclaw.e2e.test.ts
+```
+
+Needs Docker with both images pullable (`nousresearch/hermes-agent:v0.22.7`, `node:24-slim`), `openssl`, and about 12 minutes (the Hermes image is `amd64` and runs emulated on Apple silicon; the OpenClaw image runs native).
+
+### Red today
+
+- `Hermes install layout: the plugins directory alone makes the platform load and connect` is red on purpose. Failure printed by the run: the gateway reports `Gateway running with 1 platform(s)` and never `Connecting to zapbip`; the gateway log carries `Failed to load plugin 'zapbip-platform': No module named 'zapbip_platform'`. Cause: `__init__.py` imports `zapbip_platform.*` by absolute name, but Hermes loads a plugins folder as `hermes_plugins.zapbip_platform`, so the package is not importable from `~/.hermes/plugins/zapbip-platform` alone. The other Hermes cases mount a `.pth` file that adds the package root to `sys.path` (a `pip install` stand-in). Fix is lane H's: relative imports, or ship the package with the `hermes_agent.plugins` entry point.
+
+### Findings (each verified in a run)
+
+1. Hermes `env_enablement_fn` `{"configured": True}` does auto-enable the platform when the package is importable: `Connecting to zapbip... zapbip connected`, `Gateway running with 2 platform(s)`, no `platforms:` block in `config.yaml`.
+2. `ZAPBIP_ALLOWED_USERS=owner` lets the owner through; any other value is refused by the gateway allowlist with no model call (E7).
+3. OpenClaw forwarded messages: `commandAuthorized: false` plus a line starting with `/` makes the turn complete without calling the model (`visible channel turn dispatched with no queued reply payloads`): the command is not run, but the agent never sees the forwarded text either. Forwarded text without a slash line reaches the model with the prefix. Hermes passes the slash text through to the model as plain text with the prefix.
+4. `openclaw plugins install <archive>` needs `--force --accept-capabilities` (install section must say so); the package name `@zapbip/openclaw-plugin` differs from the manifest id `zapbip`, so the config key is `zapbip`; OpenClaw warns `provenance-invalid` for an archive install.
+5. On a fresh account with one agent and no earlier conversation, an owner message without `@<agent>` was never pushed to the attached plugin socket (X1 and E1 failed until the fixtures prefixed `@grok`). The plan's input `"oi"` therefore needs the mention.
+6. Hermes under the stock image runs the gateway under s6; plugin log lines land in `/opt/data/logs/gateway.log`, not in `docker logs`. `/opt/data` cannot be a macOS bind mount (the control socket fails with `Errno 22`).
+
+### Hypotheses to attack
+
+1. Hypothesis: after `connector_connected`, an owner message is handed off within seconds for both products. Break it by: posting the message in the same millisecond as the attach, many times.
+2. Hypothesis: one reply per owner message across a restart (E3) and a replacement (E4). Break it by: stopping the container mid-handoff, before `done`.
+3. Hypothesis: no `zb_conn_` string in any container log. Break it by: running with `DEBUG` logging in both gateways.
+
+### Gaps
+
+- The model is fake (no tool calls): replies travel through the plugin's own `send_message`, not through an agent tool call. A real model run stays owner-run (V3).
+- The TLS certificate is self-signed and trusted through `NODE_EXTRA_CA_CERTS` and `SSL_CERT_FILE` in the containers only.
+- `AGENTS.md` layout line for `scripts` and the `delivery-docs` root list do not mention `scripts/e2e/clients`; the lead decides.

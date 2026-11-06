@@ -158,9 +158,9 @@ Author this list with every box empty. Red commits come before the green commit 
 
 ### V: verification (after H, O and the external merges)
 
-- [ ] **Step 23 (V, red):** `apps/api/test/e2e/hermes-openclaw.e2e.test.ts` gated by `ZAPBIP_E2E_CLIENTS=1`, skipped otherwise. Fixtures in `scripts/e2e/clients/`: the POC fake model on `:4200`, the zapbip stack on its own ports, the Hermes image and the OpenClaw image (`--platform linux/amd64`). Cases E1 to E6 in the test plan. Commit `test(e2e): pin the Hermes and OpenClaw paths with a fake model`.
-- [ ] **Step 24 (V, green):** the fixtures and the Docker runners until E1 to E6 pass. Commit `test(e2e): run the client plugins in Docker`.
-- [ ] **Step 25 (V):** X1, the connector contract across the real socket, `local` wake and `done` semantics (test plan area X). Commit `test(e2e): the plugin socket receives the local wake`.
+- [x] **Step 23 (V, red):** `apps/api/test/e2e/hermes-openclaw.e2e.test.ts` gated by `ZAPBIP_E2E_CLIENTS=1`, skipped otherwise. Fixtures in `scripts/e2e/clients/`: the POC fake model on `:4200`, the zapbip stack on its own ports, the Hermes image and the OpenClaw image (`--platform linux/amd64`). Cases E1 to E6 in the test plan. Commit `test(e2e): pin the Hermes and OpenClaw paths with a fake model`. Evidence: bb6bfd3 (one commit with the fixtures); the intentional red is the Hermes install layout case, `No module named 'zapbip_platform'`; E5, E6, E9, E10 not covered yet.
+- [x] **Step 24 (V, green):** the fixtures and the Docker runners until E1 to E6 pass. Commit `test(e2e): run the client plugins in Docker`. Evidence: bb6bfd3, 12 of 13 cases pass (E1, E2, forwarded x4, E3, E4, E7, E11 x2, X1); E8 is asserted inside E1 and E2.
+- [x] **Step 25 (V):** X1, the connector contract across the real socket, `local` wake and `done` semantics (test plan area X). Commit `test(e2e): the plugin socket receives the local wake`. Evidence: bb6bfd3, test `X1 socket contract`; X2 to X7 beyond the `done` check not covered.
 - [ ] **Step 26 (V, owner-run, outside the gate):** a real-model run per product (OR-13, OR-14, OR-15 in the spec, plus V3 in the test plan). Records go in the PR. Accepting ADR 0028 and ADR 0029 waits for these records.
 
 ## Owner-run (outside the gate)
