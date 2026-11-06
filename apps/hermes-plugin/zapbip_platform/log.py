@@ -10,10 +10,18 @@ SECRET_PATH_PATTERN = re.compile(r"/c/[^/\s\"']+/")
 REDACTED_PATH = "/c/redacted/"
 
 
+def redacted(*, text: str) -> str:
+    return SECRET_PATH_PATTERN.sub(REDACTED_PATH, text)
+
+
 class SecretPathRedaction(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
-        record.msg = SECRET_PATH_PATTERN.sub(REDACTED_PATH, record.getMessage())
+        record.msg = redacted(text=record.getMessage())
         record.args = None
+        if record.exc_info:
+            record.exc_text = redacted(text=logging.Formatter().formatException(record.exc_info))
+        if record.stack_info:
+            record.stack_info = redacted(text=record.stack_info)
         return True
 
 
