@@ -634,6 +634,17 @@ describe('runDueWakes when settling throws after the request', () => {
     expect(wakeEnvironment.transport.requests).toHaveLength(1);
   });
 
+  test('a throw after a 2xx schedules the follow-up wake for a message that arrived in flight', async () => {
+    const wakeEnvironment = await armedWithThrowingSettle({ statusCode: OK, throwOn: 'saveWake' });
+    const requestedAt = wakeEnvironment.environment.clock.now();
+    expect(await findJob({ wakeEnvironment })).toMatchObject({
+      attempt: 0,
+      rewake: false,
+      leaseUntil: null,
+      dueAt: requestedAt + WAKE_MIN_INTERVAL_MS,
+    });
+  });
+
   test('a throw while settling a retry keeps the rewake mark set in flight', async () => {
     const wakeEnvironment = await armedWithThrowingSettle({ statusCode: SERVER_ERROR, throwOn: 'saveJob' });
     expect(await findJob({ wakeEnvironment })).toMatchObject({ attempt: 1, rewake: true, leaseUntil: null });
