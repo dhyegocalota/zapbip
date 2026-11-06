@@ -47,8 +47,10 @@ class FakeConnector:
         on_frame: OnFrame | None = None,
         answer_pings: bool = True,
         refused_upgrades: int = 0,
+        secret: str = "secret",
     ) -> None:
         self.probe_status = probe_status
+        self._secret = secret
         self.probe_count = 0
         self.open_count = 0
         self.timeline: list[str] = []
@@ -72,7 +74,7 @@ class FakeConnector:
         port = self._server.sockets[0].getsockname()[1]
         logging.getLogger(LOGGER_NAME).addHandler(self._log_collector)
         logging.getLogger(LOGGER_NAME).setLevel(logging.INFO)
-        self.socket_link = f"ws://{LOCAL_HOST}:{port}/c/secret/connector"
+        self.socket_link = f"ws://{LOCAL_HOST}:{port}/c/{self._secret}/connector"
         return self
 
     async def __aexit__(
