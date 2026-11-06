@@ -142,7 +142,15 @@ Routing of an owner message, first match wins. Rule 0, the account commands, sit
 3. A text starting with `@<agent> `: that agent, prefix removed.
 4. Exactly one agent with an open question: that agent. With several open questions, the newest wins.
 5. The last agent that wrote to the owner within the window.
-6. None: zapbip sends the owner a list of the 10 most recently seen agents, with ids `route:<message_id>:<agent>`, and holds the message with no expiry until the choice arrives; the choice routes the held message to that agent. With no agents at all, the owner gets one text notice (`noAgents`) and the message is held.
+6. None: zapbip sends the owner a list of the 10 most recently seen agents, with ids `route:<message_id>:<agent>`, and holds the message until the choice arrives; the choice routes every held message to that agent. With no agents at all, the owner gets one text notice (`noAgents`) and the message is held.
+
+A routing list is pending for `ROUTING_LIST_TTL_MS` (10 minutes). Its message id and opening time live in the `owner_window` row, so finding the open list is one primary-key read.
+
+- **While it is pending**, a new message that matches none of rules 1 to 4 joins the held batch and sends no new list. The owner gets one reminder per batch, a reply to the list ("Pick the agent in the list above"). A message that matches a rule from 1 to 4 is routed and never held.
+- **On expiry** the alarm runs it as a due-time provider. If an agent wrote within the window (rule 5), the held batch is delivered to it in order. Otherwise the list is sent once more. After a second expiry the batch stays unread for the last agent seen.
+- **Rule 5 beats an open list.** A message that matches rule 5 (an agent wrote within the window) goes straight to that agent even while a list is open; quoted and explicit routing win over the held batch (owner delegated 2026-11-06).
+- **An expiry assignment tells the owner which agent got the batch** ("You did not pick an agent, so your message went to beta"); the "not listening" notice is only for an agent the owner picked. A resend that fails to send keeps the list's resend flag and moves its due time forward, so the alarm never fires in a loop. An unknown-agent tap resends the list but keeps its opening time, reminder and resend flag.
+- **A tap** on a list whose batch was already routed is answered with "That list was already used." A tap naming an unknown agent while the batch is still held sends the current list again.
 
 Media:
 
@@ -206,9 +214,11 @@ Constants (in `libs/core`, named, never inline):
 | Client abandons `ask` or `wait_for_reply` (the Worker cannot see it, per the spike) | The answer stays bound to its `question_id` and the next `wait_for_reply(question_id)` returns it; a plain message handed to a dead call stays in the history `get_messages` returns |
 | Durable Object evicted mid-wait | The client's call ends; state is in SQLite; the retry recovers through `question_id` |
 | Upload without `Content-Length`, larger than declared, wrong type or after expiry | `411` / `413` / `415` / `410`; nothing stored |
+| Upload with a `Content-Length` that is not an integer | `400`; nothing stored |
+| Two concurrent PUTs of one upload | the first claims it in the Durable Object; the second answers `409` and never writes to R2; a failed write releases the claim |
 | Expired or forged media link | `403` |
 | Invalid tool input | an MCP tool error naming the field and the WhatsApp limit |
-| Owner message matches no agent | rule 6: the agent list; with no agents, one text notice and the message is held |
+| Owner message matches no agent | rule 6: the agent list; with no agents, one text notice and the message is held; an unanswered list expires after `ROUTING_LIST_TTL_MS` |
 
 ### Security
 
@@ -236,7 +246,7 @@ Per-account data lives in the `AccountInbox` Durable Object's SQLite. D1 holds o
   - `v2` (`webhook-wake`): `agent_wake` gains `provider`, `host`, `sealed_target`, `key_version`, `status`, `last_delivered_at`; table `wake_jobs`.
   - `v3` (`scheduled-wake`): `agent_wake` gains `interval_minutes`, `standby_agent`, `poller_stale_notified`; `inbox_messages` gains `handed_to`; index `inbox_messages_unread`.
 - The `agent_wake` row (mode `None`, `last_polled_at` set to now) is written on the agent's first contact, in the same call that registers the agent in its inbox.
-- One alarm per object. `alarm()` catches every error, runs the due work of the expiry sweep, wake jobs and poller checks in that order, and re-arms the alarm to the earliest deadline any of them reports.
+- One alarm per object. `alarm()` catches every error, runs the due work of the expiry sweep, wake jobs and poller checks in that order, and re-arms the alarm to the earliest deadline any of them reports. The alarm is never moved later: a tool call re-arms it at the earliest due time, but an alarm already armed earlier stays, so an agent polling faster than the five-second minimum delay cannot postpone a due expiry.
 - `sweepExpired({now})` expires media, questions and queued messages. The alarm runs it; no cron runs in slice 1.
 
 ### Docs (Mintlify, `apps/docs`)
@@ -287,7 +297,13 @@ The E2E gate that [ADR 0005](../../adr/0005-the-local-gate-runs-what-the-diff-ca
 | Development owner seed | — | `pnpm --filter @zapbip/api dev:seed -- --phone <digits> --agents <a,b>` creates the account, the owner identity (`pt_BR`) and one connection per agent in the local D1; it prints the URLs once; slice 3 replaces it with "novo agente" | owner delegated 2026-11-06 |
 | Agent name cap | 32 characters · 20 | at most 20 characters, pattern `^[a-z0-9][a-z0-9-]{0,19}$`; fits the button title and list row limits | owner delegated 2026-11-06 |
 | E2E in the gate | E2E opt-in · E2E default | the E2E suite runs by default in the `e2e` gate; only the Claude Code cases (CC-*) are opt-in through `ZAPBIP_CLAUDE_E2E=1` | owner delegated 2026-11-06 |
-| Second unmatched message while a routing list is open | a new list · joins the held messages | it joins the held messages and sends no new list; a choice routes every held message to the chosen agent | owner delegated 2026-11-06 |
+| Second unmatched message while a routing list is open | a new list · joins the held messages | it joins the held messages and sends no new list, and the owner gets one reminder per batch; a choice routes every held message to the chosen agent | owner delegated 2026-11-06 |
+| Routing list lifetime | no expiry · expiry with a fallback | the list is pending for `ROUTING_LIST_TTL_MS` (10 minutes); on expiry the batch goes to the rule 5 agent, else the list is sent once more, and after a second expiry the batch stays unread for the last agent seen | owner delegated 2026-11-06 |
+| Open list lookup | scan the messages · a column | the open list's message id is recorded in the `owner_window` row (v1 is not deployed, so `v1.sql` is edited) | owner delegated 2026-11-06 |
+| Used-list copy | "expired" · "already used" | `RoutingListExpired` reads "Essa lista já foi usada." / "That list was already used."; a tap naming an unknown agent while the batch is held sends the current list again | owner delegated 2026-11-06 |
+| Concurrent upload PUTs | claim in the route · claim in the object | the object claims the upload atomically (`claimed_at`) before the R2 write; the loser answers `409`; a claim older than `UPLOAD_CLAIM_TTL_MS` (one minute) is free again, and a client stream that aborts answers `400` and releases the claim | owner delegated 2026-11-06 |
+| Media types | compare as sent · normalise | lowercase and drop parameters before every check; `image/SVG+XML` and `image/svg+xml;x=1` are not images; the normalised type must also be a `type/subtype` token (RFC 6838 characters only), so `image/svg+xml,image/png` is invalid input | owner delegated 2026-11-06 |
+| Production D1 id | local id · placeholder | the top-level `database_id` is `REPLACE_WITH_PRODUCTION_D1_DATABASE_ID`; `wrangler deploy` rejects it until the owner replaces it with the created database id | owner delegated 2026-11-06 |
 | Notice quick reply | routed to an agent · window only | a tap on the notice's quick reply only opens the window and flushes the queue; it is never delivered to an agent | owner delegated 2026-11-06 |
 | Development clock offset | in memory · in Durable Object storage | the offset is stored in Durable Object storage, so it survives a restart | owner delegated 2026-11-06 |
 | Media port | remove `put` · keep, with a known length | `put` has two callers at the edge (the upload route and the simulator); it takes `sizeBytes` because R2 needs a known length | owner delegated 2026-11-06 |
@@ -303,7 +319,7 @@ The E2E gate that [ADR 0005](../../adr/0005-the-local-gate-runs-what-the-diff-ca
 | Owner text that answers | — | text routed to an agent with an open question answers that agent's newest open question; a tap on an answered or expired question is routed as a message with `reply_to`; a tap on an unknown question is routed as text | owner delegated 2026-11-06 |
 | Owner media, location, contacts | answer · route only | they route by rules 2, 4, 5 and 6 and never answer a question | owner delegated 2026-11-06 |
 | Rule 5 window | — | "within the window" means the 24 h (`WINDOW_MS`) before the owner's message | owner delegated 2026-11-06 |
-| Rule 6 | — | the routing question lists the 10 most recently seen agents; held messages wait with no expiry; with zero agents the owner gets one text notice and the message is held | owner delegated 2026-11-06 |
+| Rule 6 | — | the routing question lists the 10 most recently seen agents; with zero agents the owner gets one text notice and the message is held | owner delegated 2026-11-06 |
 | Read limits | — | `limit` 1 to 20 bounds the unread messages returned and the history; `check_inbox` returns up to 20 unread; the rest stay unread | owner delegated 2026-11-06 |
 | `wait_for_reply` without a question | — | returns unread messages at once; otherwise waits for the agent's next owner message, re-waits if another call took it, and times out at its deadline; an answer read through `wait_for_reply(question_id)` is marked read | owner delegated 2026-11-06 |
 | Waking notice | a notice per message · per unread batch | `NoneWaker` returns `unreached`; core sends one waiting notice (`inbox-copy.ts`, `pt_BR` and `en_US`) when the agent's unread count goes from 0 to 1 | owner delegated 2026-11-06 |

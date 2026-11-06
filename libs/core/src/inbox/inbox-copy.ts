@@ -9,8 +9,12 @@ export const INBOX_COPY: Record<InboxCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.EnglishUs]: 'Which agent should I send your message to?',
   },
   [InboxCopyKey.RoutingListExpired]: {
-    [OwnerLocale.PortugueseBrazil]: 'Essa lista expirou. Envie sua mensagem de novo.',
-    [OwnerLocale.EnglishUs]: 'That list has expired. Send your message again.',
+    [OwnerLocale.PortugueseBrazil]: 'Essa lista já foi usada.',
+    [OwnerLocale.EnglishUs]: 'That list was already used.',
+  },
+  [InboxCopyKey.RoutingListReminder]: {
+    [OwnerLocale.PortugueseBrazil]: 'Escolha o agente na lista acima',
+    [OwnerLocale.EnglishUs]: 'Pick the agent in the list above',
   },
   [InboxCopyKey.NoAgents]: {
     [OwnerLocale.PortugueseBrazil]: 'Nenhum agente conectado. Sua mensagem ficou guardada.',
@@ -19,6 +23,10 @@ export const INBOX_COPY: Record<InboxCopyKey, Record<OwnerLocale, string>> = {
   [InboxCopyKey.AgentNotListening]: {
     [OwnerLocale.PortugueseBrazil]: 'O agente {agent} não está ouvindo agora. Sua mensagem espera no inbox.',
     [OwnerLocale.EnglishUs]: 'The agent {agent} is not listening right now. Your message waits in the inbox.',
+  },
+  [InboxCopyKey.AgentAssignedByExpiry]: {
+    [OwnerLocale.PortugueseBrazil]: 'Você não escolheu um agente, então sua mensagem foi para {agent}. Ela espera no inbox.',
+    [OwnerLocale.EnglishUs]: 'You did not pick an agent, so your message went to {agent}. It waits in the inbox.',
   },
   [InboxCopyKey.NoticeBody]: {
     [OwnerLocale.PortugueseBrazil]: 'O agente {agent} tem uma mensagem para você: {preview}',

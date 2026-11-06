@@ -23,6 +23,7 @@ const WAKE_ACCOUNT_PHONES = ['5511999990001', '5511999990002', '5511999990003', 
 const SIGNING_KEY_BYTES = 32;
 const LOOPBACK_HOST = '127.0.0.1';
 const DATABASE_BINDING = 'CONNECTIONS';
+const DEVELOPMENT_ENVIRONMENT = 'development';
 const LOG_FILE_NAME = 'wrangler-dev.log';
 
 const seedOutputSchema = z.object({ connections: z.array(z.object({ agent: z.string(), secret: z.string() })) });
@@ -91,7 +92,18 @@ export default async function setup(project: TestProject): Promise<() => Promise
   const origin = `http://${LOOPBACK_HOST}:${port}`;
   const persistArguments = ['--persist-to', persistDirectory];
 
-  await runCommand('pnpm', ['exec', 'wrangler', 'd1', 'migrations', 'apply', DATABASE_BINDING, '--local', ...persistArguments]);
+  await runCommand('pnpm', [
+    'exec',
+    'wrangler',
+    'd1',
+    'migrations',
+    'apply',
+    DATABASE_BINDING,
+    '--env',
+    DEVELOPMENT_ENVIRONMENT,
+    '--local',
+    ...persistArguments,
+  ]);
   const connections = await seedConnections({ phone: SEED_PHONE, agents: SEED_AGENTS, persistArguments });
   const wakeAccounts = await WAKE_ACCOUNT_PHONES.reduce<Promise<WakeAccount[]>>(
     async (seededBefore, phone) => [...(await seededBefore), await seedWakeAccount({ phone, persistArguments })],
@@ -105,7 +117,7 @@ export default async function setup(project: TestProject): Promise<() => Promise
       'wrangler',
       'dev',
       '--env',
-      'development',
+      DEVELOPMENT_ENVIRONMENT,
       '--ip',
       LOOPBACK_HOST,
       '--port',

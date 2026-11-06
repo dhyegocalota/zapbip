@@ -25,6 +25,16 @@ describe('renderCopy', () => {
     expect(error).toEqual({ code: InboxErrorCode.InvalidInput, message: 'copy: missing value for agent' });
   });
 
+  test('the expiry assignment names the agent that got the batch', () => {
+    const values = { agent: 'beta' };
+    expect(renderCopy({ key: InboxCopyKey.AgentAssignedByExpiry, locale: OwnerLocale.PortugueseBrazil, values })).toBe(
+      'Você não escolheu um agente, então sua mensagem foi para beta. Ela espera no inbox.',
+    );
+    expect(renderCopy({ key: InboxCopyKey.AgentAssignedByExpiry, locale: OwnerLocale.EnglishUs, values })).toBe(
+      'You did not pick an agent, so your message went to beta. It waits in the inbox.',
+    );
+  });
+
   test('CU-92 in English', () => {
     expect(renderCopy({ key: InboxCopyKey.NoticeQuickReply, locale: OwnerLocale.EnglishUs, values: {} })).toBe('Open');
   });
@@ -69,6 +79,26 @@ describe('buildNoticePreview', () => {
     );
     expect(buildNoticePreview({ content: { kind: MessageKind.Audio, voice: false, ...fields }, locale: OwnerLocale.EnglishUs })).toBe(
       '[audio]',
+    );
+  });
+});
+
+describe('routing list copy', () => {
+  test('a used list is answered in both locales', () => {
+    expect(renderCopy({ key: InboxCopyKey.RoutingListExpired, locale: OwnerLocale.PortugueseBrazil, values: {} })).toBe(
+      'Essa lista já foi usada.',
+    );
+    expect(renderCopy({ key: InboxCopyKey.RoutingListExpired, locale: OwnerLocale.EnglishUs, values: {} })).toBe(
+      'That list was already used.',
+    );
+  });
+
+  test('pin: the reminder points at the list above in both locales', () => {
+    expect(renderCopy({ key: InboxCopyKey.RoutingListReminder, locale: OwnerLocale.PortugueseBrazil, values: {} })).toBe(
+      'Escolha o agente na lista acima',
+    );
+    expect(renderCopy({ key: InboxCopyKey.RoutingListReminder, locale: OwnerLocale.EnglishUs, values: {} })).toBe(
+      'Pick the agent in the list above',
     );
   });
 });

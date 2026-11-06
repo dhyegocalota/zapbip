@@ -37,6 +37,7 @@ import type { DueTimeProvider } from '../contract/due-time-provider';
 import type { Bindings } from '../contract/env';
 import { LogEvent, type LogFields } from '../contract/log';
 import { logEvent } from '../log';
+import { nextAlarmAt } from './alarm-time';
 import { ALARM_MIN_DELAY_MS, AlarmErrorCode, OWNER_LOCALE_STORAGE_KEY } from './constants';
 import { ACCOUNT_INBOX_MIGRATIONS } from './migrations';
 import { runMigrations } from './run-migrations';
@@ -98,7 +99,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
         repository: this.wake.repository,
       }),
     };
-    this.dueTimeProviders.push(this.createExpiryProvider(), this.createWakeProvider());
+    this.dueTimeProviders.push(this.createExpiryProvider(), this.createRoutingListProvider(), this.createWakeProvider());
     await this.armAlarm();
   }
 
@@ -134,6 +135,13 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     });
   }
 
+  private createRoutingListProvider(): DueTimeProvider {
+    return {
+      nextDueAt: () => inbox.findRoutingListDueAt({ dependencies: this.dependencies }),
+      runDue: () => inbox.expireRoutingList({ dependencies: this.dependencies }),
+    };
+  }
+
   private log(fields: LogFields): void {
     logEvent({ accountId: this.accountId, ...fields });
   }
@@ -159,7 +167,9 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     const pendingDueTimes = dueTimes.filter((dueAt): dueAt is number => dueAt !== null);
     if (pendingDueTimes.length === 0) return this.ctx.storage.deleteAlarm();
     const earliestDueAt = Math.min(...pendingDueTimes);
-    return this.ctx.storage.setAlarm(Math.max(this.clock.toRealTime({ clockTime: earliestDueAt }), Date.now() + ALARM_MIN_DELAY_MS));
+    const armedAt = await this.ctx.storage.getAlarm();
+    const dueAt = this.clock.toRealTime({ clockTime: earliestDueAt });
+    return this.ctx.storage.setAlarm(nextAlarmAt({ dueAt, armedAt, now: Date.now(), minDelayMs: ALARM_MIN_DELAY_MS }));
   }
 
   async alarm(): Promise<void> {
@@ -246,6 +256,14 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
 
   describeUpload(input: { mediaId: string }): Promise<CallOutcome<StoredMedia>> {
     return this.outcome({ run: () => inbox.describeUpload({ ...input, dependencies: this.dependencies }) });
+  }
+
+  claimUpload(input: { mediaId: string }): Promise<CallOutcome<StoredMedia>> {
+    return this.outcome({ run: () => inbox.claimUpload({ ...input, dependencies: this.dependencies }) });
+  }
+
+  releaseUpload(input: { mediaId: string }): Promise<CallOutcome<void>> {
+    return this.outcome({ run: () => inbox.releaseUpload({ ...input, dependencies: this.dependencies }) });
   }
 
   completeUpload(input: { mediaId: string }): Promise<CallOutcome<StoredMedia>> {

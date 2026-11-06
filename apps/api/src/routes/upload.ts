@@ -1,3 +1,4 @@
+import { normalizeMimeType } from '@zapbip/core';
 import { Hono } from 'hono';
 import { createPlatformClock } from '../adapters/platform/clock';
 import { mediaStoreOf } from '../adapters/r2/r2-media-store';
@@ -9,18 +10,14 @@ import { LinkPurpose } from '@zapbip/types';
 import { accountInboxOf } from './account-inbox-stub';
 import { ERROR_STATUS, HttpStatus } from './http-status';
 
-const MEDIA_TYPE_PARAMETERS_PATTERN = /;.*$/;
+const CONTENT_LENGTH_PATTERN = /^\d+$/;
 
 export const uploadRoutes = new Hono<{ Bindings: Bindings }>();
-
-function mediaTypeOf(input: { header: string }): string {
-  return input.header.replace(MEDIA_TYPE_PARAMETERS_PATTERN, '').trim().toLowerCase();
-}
 
 uploadRoutes.put('/u/:account_id/:upload_id', async (context) => {
   const accountId = context.req.param('account_id');
   const uploadId = context.req.param('upload_id');
-  const signedQuery = readSignedQuery({ expiry: context.req.query('exp'), signature: context.req.query('sig') });
+  const signedQuery = readSignedQuery({ expiries: context.req.queries('exp'), signatures: context.req.queries('sig') });
   const clock = createPlatformClock();
   const isSignatureValid =
     signedQuery !== null &&
@@ -43,26 +40,46 @@ uploadRoutes.put('/u/:account_id/:upload_id', async (context) => {
   const declaredLength = description.value.sizeBytes;
   const contentLengthHeader = context.req.header('content-length');
   if (contentLengthHeader === undefined) return context.json({ error: 'length_required' }, HttpStatus.LengthRequired);
+  if (!CONTENT_LENGTH_PATTERN.test(contentLengthHeader)) return context.json({ error: 'invalid_length' }, HttpStatus.BadRequest);
   const contentLength = Number(contentLengthHeader);
   if (contentLength > declaredLength) return context.json({ error: 'payload_too_large' }, HttpStatus.PayloadTooLarge);
   if (contentLength < declaredLength) return context.json({ error: 'length_mismatch' }, HttpStatus.BadRequest);
 
   const contentType = context.req.header('content-type');
   const isDeclaredType =
-    contentType !== undefined && mediaTypeOf({ header: contentType }) === mediaTypeOf({ header: description.value.mimeType });
+    contentType !== undefined && normalizeMimeType({ value: contentType }) === normalizeMimeType({ value: description.value.mimeType });
   if (!isDeclaredType) return context.json({ error: 'unsupported_media_type' }, HttpStatus.UnsupportedMediaType);
 
   const body = context.req.raw.body;
   if (!body) return context.json({ error: 'length_mismatch' }, HttpStatus.BadRequest);
 
+  const claim = await inbox.claimUpload({ mediaId: uploadId });
+  if (!claim.ok) return context.json({ error: claim.errorCode, message: claim.message }, ERROR_STATUS[claim.errorCode]);
+
   const mediaStore = mediaStoreOf({ bindings: context.env, clock });
-  await mediaStore.put({
-    accountId,
-    mediaId: uploadId,
-    body,
-    sizeBytes: declaredLength,
-    mimeType: description.value.mimeType,
-  });
+  const received = { bytes: 0 };
+  const countedBody = body.pipeThrough(
+    new TransformStream<Uint8Array, Uint8Array>({
+      transform(chunk, controller) {
+        received.bytes += chunk.byteLength;
+        controller.enqueue(chunk);
+      },
+    }),
+  );
+  try {
+    await mediaStore.put({
+      accountId,
+      mediaId: uploadId,
+      body: countedBody,
+      sizeBytes: declaredLength,
+      mimeType: description.value.mimeType,
+    });
+  } catch (error) {
+    await inbox.releaseUpload({ mediaId: uploadId });
+    const isClientAbort = received.bytes < declaredLength;
+    if (isClientAbort) return context.json({ error: 'upload_incomplete' }, HttpStatus.BadRequest);
+    throw error;
+  }
   const completion = await inbox.completeUpload({ mediaId: uploadId });
   if (!completion.ok) return context.json({ error: completion.errorCode, message: completion.message }, ERROR_STATUS[completion.errorCode]);
   logEvent({ event: LogEvent.Upload, accountId, sizeBytes: declaredLength });

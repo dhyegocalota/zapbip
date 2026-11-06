@@ -139,6 +139,16 @@ describe('upload route', () => {
     expect(response.status).toBe(STATUS_CONFLICT);
   });
 
+  test('two concurrent PUTs: one answers 201, the other 409 and never writes to the store', async () => {
+    const fixture = await newFixture();
+    const bodies = ['a', 'b'].map((letter) => new TextEncoder().encode(letter.repeat(UPLOAD_BYTES.byteLength)));
+    const responses = await Promise.all(bodies.map((body) => putUpload({ ...validPut({ fixture }), body })));
+    expect(responses.map((response) => response.status).sort()).toEqual([STATUS_CREATED, STATUS_CONFLICT]);
+    const winner = bodies[responses.findIndex((response) => response.status === STATUS_CREATED)];
+    const stored = await env.MEDIA.get(`accounts/${fixture.account.accountId}/media/${fixture.uploadId}`);
+    expect(await stored?.text()).toBe(new TextDecoder().decode(winner));
+  });
+
   test('WI-77 a PUT without Content-Length answers 411 and stores nothing', async () => {
     const fixture = await newFixture();
     const query = await signedQuery({
@@ -161,6 +171,16 @@ describe('upload route', () => {
       duplex: 'half',
     } as RequestInit);
     expect(response.status).toBe(STATUS_LENGTH_REQUIRED);
+    expect(await storedObject({ fixture })).toBeNull();
+  });
+
+  test.each(['abc', '0x0c', '12abc', '1.2e1', '-12'])('a Content-Length of %j answers 400 and stores nothing', async (contentLength) => {
+    const fixture = await newFixture();
+    const response = await putUpload({
+      ...validPut({ fixture }),
+      headers: { 'Content-Type': PDF_TYPE, 'Content-Length': contentLength },
+    });
+    expect(response.status).toBe(STATUS_BAD_REQUEST);
     expect(await storedObject({ fixture })).toBeNull();
   });
 
@@ -215,6 +235,55 @@ describe('upload route', () => {
   test('WI-84 a signature made with the media key answers 403', async () => {
     const fixture = await newFixture();
     const response = await putUpload({ ...validPut({ fixture }), key: env.MEDIA_LINK_SIGNING_KEY });
+    expect(response.status).toBe(STATUS_FORBIDDEN);
+    expect(await storedObject({ fixture })).toBeNull();
+  });
+
+  test('WI-126 an aborted client stream answers 400, releases the claim and stores nothing', async () => {
+    const fixture = await newFixture();
+    const abortedBody = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(UPLOAD_BYTES.slice(0, 1));
+        controller.error(new Error('client aborted'));
+      },
+    });
+    const query = await signedQuery({
+      key: env.UPLOAD_LINK_SIGNING_KEY,
+      accountId: fixture.account.accountId,
+      mediaId: fixture.uploadId,
+      purpose: LinkPurpose.Upload,
+      expiresAt: freshExpiry(),
+    });
+    const response = await SELF.fetch(`${ORIGIN}/u/${fixture.account.accountId}/${fixture.uploadId}?${queryOf(query)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': PDF_TYPE, 'Content-Length': String(UPLOAD_BYTES.byteLength) },
+      body: abortedBody,
+      duplex: 'half',
+    } as RequestInit);
+    expect(response.status).toBe(STATUS_BAD_REQUEST);
+    expect(await storedObject({ fixture })).toBeNull();
+    const retry = await putUpload(validPut({ fixture }));
+    expect(retry.status).toBe(STATUS_CREATED);
+  });
+
+  test.each([
+    { name: 'a repeated signature with the valid one first', build: (query: string) => `${query}&sig=garbage` },
+    { name: 'a repeated signature with the valid one last', build: (query: string) => `sig=garbage&${query}` },
+    { name: 'a repeated expiry', build: (query: string) => `${query}&exp=1` },
+  ])('WI-127 a link with $name answers 403 and stores nothing', async ({ build }) => {
+    const fixture = await newFixture();
+    const query = await signedQuery({
+      key: env.UPLOAD_LINK_SIGNING_KEY,
+      accountId: fixture.account.accountId,
+      mediaId: fixture.uploadId,
+      purpose: LinkPurpose.Upload,
+      expiresAt: freshExpiry(),
+    });
+    const response = await SELF.fetch(`${ORIGIN}/u/${fixture.account.accountId}/${fixture.uploadId}?${build(queryOf(query))}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': PDF_TYPE, 'Content-Length': String(UPLOAD_BYTES.byteLength) },
+      body: UPLOAD_BYTES,
+    });
     expect(response.status).toBe(STATUS_FORBIDDEN);
     expect(await storedObject({ fixture })).toBeNull();
   });

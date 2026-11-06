@@ -209,6 +209,41 @@ describe('assertMediaFits', () => {
     expect(error).toEqual(invalidInput('mime_type: image must not be image/svg+xml'));
   });
 
+  test.each(['image/SVG+XML', 'image/svg+xml;x=1', ' Image/Svg+Xml ; charset=utf-8'])(
+    'CU-169 image with the svg type %s',
+    async (mimeType) => {
+      const error = await captureInboxError(() => assertMediaFits({ kind: MessageKind.Image, mimeType, sizeBytes: 1000 }));
+      expect(error).toEqual(invalidInput('mime_type: image must not be image/svg+xml'));
+    },
+  );
+
+  test.each([
+    'image/svg+xml,image/png',
+    'image/svg+xml\0',
+    'image/svg+xml\u200b',
+    'image/svg+xml\u00a0x',
+    'image',
+    'image/',
+    '/png',
+    'image/svg xml',
+  ])('a media type outside the type/subtype grammar %j is invalid input', async (mimeType) => {
+    const error = await captureInboxError(() => assertMediaFits({ kind: MessageKind.Image, mimeType, sizeBytes: 1000 }));
+    expect(error).toEqual(invalidInput('mime_type: must be a type/subtype token'));
+  });
+
+  test('an upload declaration outside the type/subtype grammar is invalid input', async () => {
+    const error = await captureInboxError(() => assertUploadDeclaration({ mimeType: 'image/svg+xml,image/png', sizeBytes: 10 }));
+    expect(error).toEqual(invalidInput('mime_type: must be a type/subtype token'));
+  });
+
+  test('CU-169 a sticker type is compared without case or parameters', () => {
+    expect(() => assertMediaFits({ kind: MessageKind.Sticker, mimeType: 'IMAGE/WEBP; q=1', sizeBytes: 1000 })).not.toThrow();
+  });
+
+  test('CU-169 a media prefix is compared without case', () => {
+    expect(() => assertMediaFits({ kind: MessageKind.Video, mimeType: 'VIDEO/MP4', sizeBytes: 1000 })).not.toThrow();
+  });
+
   test('CU-33 audio with a video type', async () => {
     const error = await captureInboxError(() => assertMediaFits({ kind: MessageKind.Audio, mimeType: 'video/mp4', sizeBytes: 1000 }));
     expect(error).toEqual(invalidInput('mime_type: audio must be an audio/* type'));

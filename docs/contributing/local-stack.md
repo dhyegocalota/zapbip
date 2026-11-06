@@ -11,8 +11,10 @@ From the repository root:
 ```bash
 pnpm install
 printf 'MEDIA_LINK_SIGNING_KEY=%s\nUPLOAD_LINK_SIGNING_KEY=%s\n' "$(openssl rand -hex 32)" "$(openssl rand -hex 32)" > apps/api/.dev.vars
-pnpm --filter @zapbip/api exec wrangler d1 migrations apply CONNECTIONS --local
+pnpm --filter @zapbip/api exec wrangler d1 migrations apply CONNECTIONS --env development --local
 ```
+
+If you ran the stack before the v1 schema changed, wipe the local data saved under the old v1 schema (the `.wrangler` state of `apps/api`) and apply the migrations again, because `v1.sql` is edited in place until the first deploy.
 
 ## 2. Seed an owner and two agents
 
