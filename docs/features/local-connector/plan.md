@@ -504,15 +504,15 @@ Versions were checked with `npm view` on 2026-11-06. The Worker side uses packag
 
 ### Step L2 (connector loop, process and CLI)
 
-- [ ] **S2.1 red: arguments and links.** `test/unit/cli.test.ts` and `test/unit/connect.test.ts` (`deriveConnectorLinks`, `reconnectDelayMs`). Commit `test(connector): pin the arguments and the links`.
-- [ ] **S2.2 red: frame limits.** `test/unit/connect.test.ts` gains `parseServerFrame` cases: a binary frame is `binary_frame`; a text frame of `CONNECTOR_FRAME_MAX_BYTES + 1` bytes is `frame_too_large`, and of exactly `CONNECTOR_FRAME_MAX_BYTES` is accepted; malformed JSON is `malformed`; an unknown type is `unknown_type`. Run `pnpm --filter zapbip test:unit`. Expected failure: `parseServerFrame is not implemented`. Commit `test(connector): pin the frame limits and binary rejection`.
-- [ ] **S2.3 red: connection loop.** `test/integration/connect.test.ts` against `fake-event-server.ts`, including the pre-flight cases: probe `401` exits 1 with no socket opened; probe `426` continues; probe `500` exits 1. Commit `test(connector): pin the connection loop and the pre-flight`.
-- [ ] **S2.4 red: wake runner.** `test/integration/wake-runner.test.ts` with the fake `claude` and `codex`. Commit `test(connector): pin the wake process`.
-- [ ] **S2.5 green: arguments and links.** Commit `feat(connector): parse the connect command`.
-- [ ] **S2.6 green: frame limits.** Implement `parseServerFrame` and the byte check before `JSON.parse`. Commit `feat(connector): reject binary and oversized frames`.
-- [ ] **S2.7 green: wake runner.** Commit `feat(connector): run one wake as a child process`.
-- [ ] **S2.8 green: connection loop.** Implement `probeConnectorLink`, `runConnection`: heartbeat, reconnect, frames in, `done` out, `acknowledgedIds` through L1's queue, the `hello` log. Commit `feat(connector): keep the local channel open`.
-- [ ] **S2.9 pin: exit on signals.** Passes on arrival. Commit `test(connector): pin shutdown on signals`, labelled `pin` in the briefing.
+- [x] **S2.1 red: arguments and links.** `test/unit/cli.test.ts` and `test/unit/connect.test.ts` (`deriveConnectorLinks`, `reconnectDelayMs`). Commit `test(connector): pin the arguments and the links`. (evidence: 588510d)
+- [x] **S2.2 red: frame limits.** `test/unit/connect.test.ts` gains `parseServerFrame` cases: a binary frame is `binary_frame`; a text frame of `CONNECTOR_FRAME_MAX_BYTES + 1` bytes is `frame_too_large`, and of exactly `CONNECTOR_FRAME_MAX_BYTES` is accepted; malformed JSON is `malformed`; an unknown type is `unknown_type`. Run `pnpm --filter zapbip test:unit`. Expected failure: `parseServerFrame is not implemented`. Commit `test(connector): pin the frame limits and binary rejection`. (evidence: 588510d)
+- [x] **S2.3 red: connection loop.** `test/integration/connect.test.ts` against `fake-event-server.ts`, including the pre-flight cases: probe `401` exits 1 with no socket opened; probe `426` continues; probe `500` exits 1. Commit `test(connector): pin the connection loop and the pre-flight`. (evidence: b2fda48)
+- [x] **S2.4 red: wake runner.** `test/integration/wake-runner.test.ts` with the fake `claude` and `codex`. Commit `test(connector): pin the wake process`. (evidence: b2fda48)
+- [x] **S2.5 green: arguments and links.** Commit `feat(connector): parse the connect command`. (evidence: be12109)
+- [x] **S2.6 green: frame limits.** Implement `parseServerFrame` and the byte check before `JSON.parse`. Commit `feat(connector): reject binary and oversized frames`. (evidence: be12109)
+- [x] **S2.7 green: wake runner.** Commit `feat(connector): run one wake as a child process`. (evidence: a5ee55d)
+- [x] **S2.8 green: connection loop.** Implement `probeConnectorLink`, `runConnection`: heartbeat, reconnect, frames in, `done` out, `acknowledgedIds` through L1's queue, the `hello` log. Commit `feat(connector): keep the local channel open`. (evidence: be12109)
+- [x] **S2.9 pin: exit on signals.** The signal cases (`test/integration/cli.test.ts`, `connect.test.ts`) landed red in b2fda48 and went green in be12109, so they are not a pin (evidence: b2fda48, be12109).
 
 ### Step L3 (Worker and Durable Object)
 
