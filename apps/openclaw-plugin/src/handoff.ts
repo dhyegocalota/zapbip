@@ -23,12 +23,18 @@ function unmarkedHandoffTextOf(input: { message: Message }): string {
 
 export function handoffTextOf(input: { message: Message }): string {
   const text = unmarkedHandoffTextOf(input);
-  if (input.message.forwarded) return `${CHANNEL_FORWARDED_PREFIX}\n${text}`;
+  if (input.message.forwarded) return `${CHANNEL_FORWARDED_PREFIX} ${text}`;
   return text;
+}
+
+function commandBodyOf(input: { message: Message; rawBody: string }): string {
+  if (input.message.forwarded) return CHANNEL_FORWARDED_PREFIX;
+  return input.rawBody;
 }
 
 export async function handOffToAgent(input: { cfg: OpenClawConfig; account: ZapbipAccount; message: Message }): Promise<void> {
   const { cfg, account, message } = input;
+  const rawBody = handoffTextOf({ message });
   const logFailure = () =>
     logConnectorEvent({
       event: ConnectorLogEvent.PluginHandoffFailed,
@@ -44,7 +50,8 @@ export async function handOffToAgent(input: { cfg: OpenClawConfig; account: Zapb
     senderAddress: CHANNEL_SENDER,
     recipientAddress: account.accountId,
     conversationLabel: CHANNEL_SENDER,
-    rawBody: handoffTextOf({ message }),
+    rawBody,
+    commandBody: commandBodyOf({ message, rawBody }),
     messageId: message.messageId,
     timestamp: message.at,
     commandAuthorized: !message.forwarded,

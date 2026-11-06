@@ -8,11 +8,11 @@ from gateway.config import Platform, PlatformConfig
 from gateway.platforms.base import BasePlatformAdapter, SendResult
 from gateway.platforms.event import MessageEvent, MessageType
 
-from zapbip_platform.connection_link import socket_link_of
-from zapbip_platform.connector_socket import run_connector_socket
-from zapbip_platform.constants import CONNECTION_LINK_ENV, OWNER_CHAT_ID, OWNER_CHAT_TYPE, PLATFORM_NAME
-from zapbip_platform.handoff import handoff_text_of, message_timestamp_of
-from zapbip_platform.mcp_outbound import McpOutboundError, send_owner_text
+from .connection_link import socket_link_of
+from .connector_socket import run_connector_socket
+from .constants import CONNECTION_LINK_ENV, OWNER_CHAT_ID, OWNER_CHAT_TYPE, PLATFORM_NAME
+from .handoff import handoff_text_of, message_timestamp_of
+from .mcp_outbound import McpOutboundError, send_owner_text
 
 OWNER_ONLY_MESSAGE = "zapbip delivers only to the owner chat"
 

@@ -1,6 +1,6 @@
 from urllib.parse import urlsplit
 
-from zapbip_platform.constants import (
+from .constants import (
     CONNECTOR_PATH_SUFFIX,
     INVALID_LINK_MESSAGE,
     MCP_PATH_SUFFIX,

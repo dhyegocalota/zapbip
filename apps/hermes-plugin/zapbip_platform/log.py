@@ -2,7 +2,7 @@ import json
 import logging
 import re
 
-from zapbip_platform.constants import ConnectorLogEvent, PluginLogEvent
+from .constants import ConnectorLogEvent, PluginLogEvent
 
 logger = logging.getLogger("zapbip_platform")
 REDACTED_LOGGER_NAMES = ("httpx", "websockets.client")

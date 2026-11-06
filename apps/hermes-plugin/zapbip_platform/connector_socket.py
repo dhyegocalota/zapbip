@@ -10,7 +10,7 @@ import httpx
 from websockets.asyncio.client import ClientConnection, connect
 from websockets.exceptions import ConnectionClosed, WebSocketException
 
-from zapbip_platform.constants import (
+from .constants import (
     ABNORMAL_CLOSE_CODE,
     CLEAN_EXIT_CODE,
     CONNECTOR_PING_TEXT,
@@ -27,9 +27,9 @@ from zapbip_platform.constants import (
     ConnectorLogEvent,
     PluginLogEvent,
 )
-from zapbip_platform.frames import FrameBody, parse_server_frame
-from zapbip_platform.log import log_connector_event
-from zapbip_platform.message_delivery import MessageDelivery
+from .frames import FrameBody, parse_server_frame
+from .log import log_connector_event
+from .message_delivery import MessageDelivery
 
 PROBE_SCHEMES = {"ws": "http", "wss": "https"}
 

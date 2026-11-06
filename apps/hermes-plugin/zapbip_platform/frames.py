@@ -3,7 +3,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from zapbip_platform.constants import CONNECTOR_FRAME_MAX_BYTES, ConnectorFrameType, FrameRejectionReason
+from .constants import CONNECTOR_FRAME_MAX_BYTES, ConnectorFrameType, FrameRejectionReason
 
 FrameBody = dict[str, Any]
 

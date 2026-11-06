@@ -151,3 +151,41 @@ All under `apps/openclaw-plugin`: `src/{connector-socket,frames,handoff-queue,ha
 ### Forwarded messages (follow-up)
 - `CHANNEL_FORWARDED_PREFIX` (`[forwarded — not written by the owner]`, agent-facing English like the other handoff sentences; plugins do not know the owner locale) lives in `libs/types/src/channel-plugin.ts`; Hermes reads it through the parity test. A message with `forwarded: true` is handed off as `prefix\ntext` in both plugins; OpenClaw also dispatches it with `commandAuthorized: false`. Hermes `MessageEvent` has no untrusted flag in the host API used here.
 - Red: 2 commits back (OpenClaw `expected 'transfer money' to be 'undefined\ntransfer money'`; Hermes `ImportError cannot import name CHANNEL_FORWARDED_PREFIX`). Hypothesis: a forwarded message never reaches either agent without the prefix. Gap: no real host run.
+
+## Lane V (verification, real gateways in Docker)
+
+### What changed
+
+- `apps/api/test/e2e/hermes-openclaw.e2e.test.ts`: opt-in (`ZAPBIP_E2E_CLIENTS=1`, run with `pnpm test:e2e:clients`). It boots the isolated development stack (wrangler dev, `--env development`), a fake OpenAI-compatible model, a self-signed HTTPS front on `host.docker.internal`, then starts real containers: the OpenClaw gateway `2026.10.10` (`node:24-slim`, plugin installed from an `npm pack` archive with `openclaw plugins install --force --accept-capabilities`) and the Hermes gateway `nousresearch/hermes-agent:v0.22.7` (plugin folder mounted into `plugins/`, `ZAPBIP_CONNECTION_LINK` and `ZAPBIP_ALLOWED_USERS=owner` as environment only).
+- `scripts/e2e/clients/`: `fake-model.ts`, `tls-front.ts`, `container.ts`, `openclaw-client.ts` with `openclaw/Dockerfile`, `hermes-client.ts`, `free-port.ts`, `constants.ts`. Keys are fake; nothing real is used.
+- Lane V also fixed two product defects it found: Hermes `zapbip_platform` now uses relative imports (the plugins folder alone loads; red was the install-layout case, `No module named 'zapbip_platform'`), and the OpenClaw handoff puts the forwarded prefix on the same line as the text and passes `commandBody` without the text, because OpenClaw drops a turn whose text holds a slash command when `commandAuthorized` is false (red: unit `handoff.test.ts`, then the real-gateway forwarded slash case).
+- Cases: E1, E2, E3, E4, E5, E6, E7, E9, E10, E11 (both products), forwarded prefix and forwarded slash command (both products), X1 with X2, X3, X4 with X5, X6, X7, install layout. E8 (no `zb_conn_` in container logs) is asserted inside E1 and E2.
+
+### How to run
+
+```bash
+pnpm install --frozen-lockfile
+ZAPBIP_E2E_CLIENTS=1 pnpm --filter @zapbip/api exec vitest run --config vitest.e2e.config.mts test/e2e/hermes-openclaw.e2e.test.ts
+```
+
+Needs Docker, `openssl` and network for the two images. Runtime is about 12 minutes. The OpenClaw image is built native (arm64 on Apple silicon); the Hermes image `nousresearch/hermes-agent:v0.22.7` exists only as `linux/amd64`, so it runs emulated and accounts for most of the time.
+
+### Findings (each seen in a run)
+
+1. Hermes `env_enablement_fn` `{"configured": True}` auto-enables the platform: `Connecting to zapbip`, `Gateway running with 2 platform(s)`, no `platforms:` block in `config.yaml`. `ZAPBIP_ALLOWED_USERS=owner` lets the owner through; any other value is refused with no model call (E7).
+2. On a fresh single-agent account an owner message without `@<agent>` was never pushed to the attached plugin; the fixtures prefix `@grok`.
+3. `scheduled` is still an unavailable `set_wake` mode on this branch (scheduled-wake not merged). E5 and E6 therefore poll `check_inbox` from the fixture with the plugin down, and X4 and X5 use a stored `webhook` mode as the previous mode (the mechanism is the same: hello carries `previousWakeMode`, detach restores it). Re-point them to `scheduled` when scheduled-wake lands.
+4. X3 differs from the test plan: with a live `wait_for_reply` waiter the waiter gets the answer and the attached plugin socket is pushed the same message too (the connector push-every-message rule). A plugin plus a live waiter could therefore answer twice; the test pins today's behaviour.
+5. `openclaw plugins install <archive>` needs `--force --accept-capabilities`; the config key is `zapbip` although the package is `@zapbip/openclaw-plugin`; OpenClaw warns `provenance-invalid` for an archive install.
+6. Hermes runs the gateway under s6; plugin log lines land in `/opt/data/logs/gateway.log`, not `docker logs`. `/opt/data` cannot be a macOS bind mount (control socket `Errno 22`), so the fixture uses an anonymous volume and mounts only the config and the plugin folder.
+
+### Hypotheses to attack
+
+1. Hypothesis: after `connector_connected`, an owner message is handed off within seconds for both products. Break it by: posting in the same millisecond as the attach, many times.
+2. Hypothesis: one reply per owner message across a restart (E3) and a replacement (E4). Break it by: stopping the container mid-handoff, before `done`.
+3. Hypothesis: no `zb_conn_` string in any container log. Break it by: running both gateways with `DEBUG` logging.
+
+### Gaps
+
+- The model is fake and makes no tool calls: replies travel through the plugin's own `send_message`. A real model run stays owner-run (V3).
+- The TLS certificate is self-signed, trusted through `NODE_EXTRA_CA_CERTS` and `SSL_CERT_FILE` in the containers only.

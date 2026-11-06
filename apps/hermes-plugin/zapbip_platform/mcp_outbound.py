@@ -2,7 +2,7 @@ from typing import Any
 
 import httpx
 
-from zapbip_platform.constants import (
+from .constants import (
     MCP_PROTOCOL_VERSION,
     MCP_REQUEST_TIMEOUT_SECONDS,
     PLUGIN_NAME,
