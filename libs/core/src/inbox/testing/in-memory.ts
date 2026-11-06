@@ -11,7 +11,7 @@ import {
 } from '@zapbip/types';
 import { QUEUE_RETENTION_MS, QUESTION_RETENTION_MS, RECEIPT_RETENTION_MS } from '../constants';
 import type { AgentName } from '../connection';
-import type { AgentRecord, OwnerWindow, StoredMedia } from '../inbox-records';
+import type { AgentRecord, OwnerWindow, RoutingList, StoredMedia } from '../inbox-records';
 import type { Message } from '../message';
 import type { AgentWaker, Clock, CoreDependencies, IdGenerator, InboxRepository, MediaStore, MessageSender } from '../ports';
 import type { Question } from '../question';
@@ -61,9 +61,11 @@ function createInMemoryRepository(): InboxRepository {
   const receipts = new Map<string, number>();
   const receiptMessageIds = new Map<string, string>();
   const media = new Map<string, StoredMedia>();
+  const claimedUploads = new Set<string>();
   let messages: Message[] = [];
   let questions: Question[] = [];
   let window: OwnerWindow = { lastOwnerMessageAt: null, noticeSentForClosedWindow: false };
+  let routingList: RoutingList | null = null;
 
   function replaceMessages(input: { messageIds: string[]; change: (message: Message) => Message }): void {
     messages = messages.map((message) => (input.messageIds.includes(message.messageId) ? input.change(message) : message));
@@ -93,11 +95,6 @@ function createInMemoryRepository(): InboxRepository {
     markRead: async ({ messageIds }) => replaceMessages({ messageIds, change: (message) => ({ ...message, readByAgent: true }) }),
     listHeld: async () =>
       messages.filter((message) => message.direction === MessageDirection.FromOwner && message.agent === null && !message.readByAgent),
-    findChoicePrompt: async ({ questionId }) =>
-      messages.find(
-        (message) =>
-          message.direction === MessageDirection.ToOwner && message.kind === MessageKind.Choice && message.questionId === questionId,
-      ) ?? null,
     assignAgent: async ({ messageIds, agent }) => replaceMessages({ messageIds, change: (message) => ({ ...message, agent }) }),
     listQueued: async () => messages.filter((message) => message.delivery === DeliveryState.Queued),
     findLastAgentWrite: async ({ since }) => {
@@ -146,13 +143,30 @@ function createInMemoryRepository(): InboxRepository {
       window = { ...window, noticeSentForClosedWindow: true };
       return true;
     },
+    findRoutingList: async () => (routingList === null ? null : { ...routingList }),
+    saveRoutingList: async (input) => {
+      routingList = { ...input.routingList };
+    },
+    clearRoutingList: async () => {
+      routingList = null;
+    },
     insertMedia: async ({ media: stored }) => {
       media.set(stored.mediaId, stored);
     },
     findMedia: async ({ mediaId }) => media.get(mediaId) ?? null,
+    claimUpload: async ({ mediaId }) => {
+      const stored = media.get(mediaId);
+      const isClaimable = stored !== undefined && stored.receivedAt === null && !claimedUploads.has(mediaId);
+      if (isClaimable) claimedUploads.add(mediaId);
+      return isClaimable;
+    },
+    releaseUpload: async ({ mediaId }) => {
+      claimedUploads.delete(mediaId);
+    },
     markMediaReceived: async ({ mediaId, receivedAt, retentionUntil }) => {
       const stored = media.get(mediaId);
       if (stored === undefined) return;
+      claimedUploads.delete(mediaId);
       media.set(mediaId, { ...stored, receivedAt, retentionUntil, expiresAt: null });
     },
     listExpiredMediaIds: async ({ now }) =>

@@ -1,6 +1,15 @@
-import { buildNoticePreview, formatRoutingListQuestionId, renderCopy, type Clock, type Message, type MessageSender } from '@zapbip/core';
+import {
+  buildNoticePreview,
+  formatRoutingListQuestionId,
+  renderCopy,
+  type Clock,
+  type MediaStore,
+  type Message,
+  type MessageSender,
+} from '@zapbip/core';
 import { DEFAULT_LOCALE, InboxCopyKey, MessageKind, TemplateKind } from '@zapbip/types';
 import type { ScreenEntry } from '../../contract/account-inbox-rpc';
+import { resolveMediaLink } from '../../mcp/links';
 
 export type FakeWhatsAppSender = MessageSender & { listScreenEntries(): Promise<ScreenEntry[]> };
 
@@ -16,7 +25,13 @@ const TEMPLATE_COPY_KEYS: Record<TemplateKind, InboxCopyKey> = {
   [TemplateKind.QuestionNotice]: InboxCopyKey.QuestionNoticeBody,
 };
 
-export function createFakeWhatsAppSender(input: { storage: DurableObjectStorage; clock: Clock }): FakeWhatsAppSender {
+export function createFakeWhatsAppSender(input: {
+  storage: DurableObjectStorage;
+  clock: Clock;
+  mediaStore: MediaStore;
+  accountId: string;
+  origin: string;
+}): FakeWhatsAppSender {
   const { sql } = input.storage;
 
   function record(entry: { messageId: string | null; template: TemplateKind | null; text: string; options: string[] }): {
@@ -34,15 +49,19 @@ export function createFakeWhatsAppSender(input: { storage: DurableObjectStorage;
     return question.text;
   }
 
-  function describeSession(message: Message): { text: string; options: string[] } {
+  async function describeSession(message: Message): Promise<{ text: string; options: string[] }> {
     if (message.kind === MessageKind.Text) return { text: message.text, options: [] };
-    if (message.kind !== MessageKind.Choice) return { text: buildNoticePreview({ content: message, locale: DEFAULT_LOCALE }), options: [] };
-    return { text: describeChoicePrompt({ message }), options: message.options.map((option) => option.title) };
+    if (message.kind === MessageKind.Choice)
+      return { text: describeChoicePrompt({ message }), options: message.options.map((option) => option.title) };
+    const preview = buildNoticePreview({ content: message, locale: DEFAULT_LOCALE });
+    const link = await resolveMediaLink({ mediaStore: input.mediaStore, accountId: input.accountId, origin: input.origin, message });
+    if (link === null) return { text: preview, options: [] };
+    return { text: `${preview} ${link}`, options: [] };
   }
 
   return {
     async session({ message }) {
-      return record({ messageId: message.messageId, template: null, ...describeSession(message) });
+      return record({ messageId: message.messageId, template: null, ...(await describeSession(message)) });
     },
 
     async template({ kind, locale, parameters }) {

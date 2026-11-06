@@ -138,6 +138,7 @@ describe('MCP client against wrangler dev', () => {
     expect(put.status).toBe(201);
     expect(sent.structured).toMatchObject({ delivery: 'sent' });
     expect(link).toBeDefined();
+    expect((await readScreen()).at(-1)?.text).toMatch(new RegExp(`^\\[imagem\\] ${String(link).split('?')[0]}\\?exp=\\d+&sig=`));
     const downloaded = await fetch(String(link));
     expect(Buffer.from(await downloaded.arrayBuffer())).toEqual(bytes);
   });
@@ -148,6 +149,18 @@ describe('MCP client against wrangler dev', () => {
     expect(sent.structured).toMatchObject({ delivery: 'sent' });
     const history = await historyOf({ client: alpha });
     expect(history.findLast((message) => message.kind === MessageKind.Image)?.url).toBe(link);
+  });
+
+  test.each([
+    { label: 'video', arguments: { kind: MessageKind.Video }, placeholder: '[vídeo]' },
+    { label: 'voice note', arguments: { kind: MessageKind.Audio, voice: true }, placeholder: '[mensagem de voz]' },
+    { label: 'document', arguments: { kind: MessageKind.Document }, placeholder: '[documento]' },
+    { label: 'sticker', arguments: { kind: MessageKind.Sticker }, placeholder: '[figurinha]' },
+  ])('E2E-7 an outbound $label reaches the screen with its placeholder and link', async ({ arguments: kindArguments, placeholder }) => {
+    const link = `https://example.com/${placeholder.length}.bin`;
+    const sent = await callTool({ client: alpha, name: McpToolName.SendMedia, arguments: { ...kindArguments, url: link } });
+    expect(sent.structured).toMatchObject({ delivery: 'sent' });
+    expect((await readScreen()).at(-1)?.text).toBe(`${placeholder} ${link}`);
   });
 
   test('E2E-8 location, contact and reaction are sent', async () => {

@@ -1,5 +1,5 @@
-import { formatOptionId, QUEUE_RETENTION_MS, UPLOAD_TTL_MS, WINDOW_MS } from '@zapbip/core';
-import { DeliveryState, InboxErrorCode, MediaSourceKind, MessageKind, ReplyStatus, TemplateKind } from '@zapbip/types';
+import { formatOptionId, QUEUE_RETENTION_MS, ROUTING_LIST_TTL_MS, UPLOAD_TTL_MS, WINDOW_MS } from '@zapbip/core';
+import { HOUR_MS, DeliveryState, InboxErrorCode, MediaSourceKind, MessageKind, ReplyStatus, TemplateKind } from '@zapbip/types';
 import { abortAllDurableObjects, evictDurableObject, reset, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 import { ACCOUNT_INBOX_MIGRATIONS } from '../../src/account-inbox/migrations';
@@ -126,6 +126,26 @@ describe('AccountInbox owner messages', () => {
     expect(screen[2]?.messageId).toBeNull();
   });
 
+  it('renders an outbound link media on the screen as its placeholder and link', async () => {
+    const stub = stubOf({ accountId: FIRST_ACCOUNT });
+    const connection = connectionOf({ accountId: FIRST_ACCOUNT, agent: 'alpha' });
+    const link = 'https://example.com/a.jpg';
+    await openWindow({ stub });
+    expectOk(
+      await stub.sendMedia({
+        connection,
+        mediaKind: MessageKind.Image,
+        voice: false,
+        source: { kind: MediaSourceKind.Link, link },
+        caption: null,
+        filename: null,
+        replyToMessageId: null,
+      }),
+    );
+    const screen = await readScreen({ stub });
+    expect(screen.at(-1)?.text).toBe(`[imagem] ${link}`);
+  });
+
   it('renders the routing list for an unrouted owner text', async () => {
     const stub = stubOf({ accountId: FIRST_ACCOUNT });
     await stub.checkInbox({ connection: connectionOf({ accountId: FIRST_ACCOUNT, agent: 'alpha' }) });
@@ -202,6 +222,18 @@ describe('AccountInbox alarm', () => {
     expect(await testEnv.MEDIA.get(objectKey)).toBeNull();
   });
 
+  it('WI-125 runs the routing list expiry from the alarm and arms it again', async () => {
+    const stub = stubOf({ accountId: FIRST_ACCOUNT });
+    await stub.checkInbox({ connection: connectionOf({ accountId: FIRST_ACCOUNT, agent: 'alpha' }) });
+    await openWindow({ stub });
+    expectOk(await receiveOwnerText({ stub, text: 'oi' }));
+    await advanceClock({ stub, advanceMs: ROUTING_LIST_TTL_MS });
+    expect(await runDurableObjectAlarm(stub)).toBe(true);
+    const screen = await readScreen({ stub });
+    expect(screen.map((entry) => entry.options)).toEqual([['alpha'], ['alpha']]);
+    expect(await runInDurableObject(stub, (_instance, state) => state.storage.getAlarm())).not.toBeNull();
+  });
+
   it('WI-17 expires a queued message past its retention', async () => {
     const stub = stubOf({ accountId: FIRST_ACCOUNT });
     const queued = await sendAlphaText({ accountId: FIRST_ACCOUNT, text: 'oi' });
@@ -264,8 +296,8 @@ describe('AccountInbox alarm', () => {
       },
     });
     await registerDueTimeProvider({ stub, provider: { nextDueAt: async () => secondDueAt, runDue: async () => secondRuns() } });
-    await runInDurableObject(stub, (_instance, state) => state.storage.setAlarm(Date.now()));
-    await runDurableObjectAlarm(stub);
+    await runInDurableObject(stub, (_instance, state) => state.storage.setAlarm(Date.now() + HOUR_MS));
+    expect(await runDurableObjectAlarm(stub)).toBe(true);
     const armed = await runInDurableObject(stub, (_instance, state) => state.storage.getAlarm());
     expect(secondRuns).toHaveBeenCalledTimes(1);
     expect(armed).toBe(firstDueAt);
