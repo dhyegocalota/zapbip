@@ -1,0 +1,12 @@
+{
+  "from": "5511900000001",
+  "id": "wamid.LOCATION",
+  "timestamp": "1762430400",
+  "type": "location",
+  "location": {
+    "latitude": -23.5505,
+    "longitude": -46.6333,
+    "name": "Paulista",
+    "address": "Av. Paulista, 1000"
+  }
+}

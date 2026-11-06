@@ -1,0 +1,27 @@
+{
+  "from": "5511900000001",
+  "id": "wamid.CONTACTS",
+  "timestamp": "1762430400",
+  "type": "contacts",
+  "contacts": [
+    {
+      "name": {
+        "formatted_name": "Maria Souza"
+      },
+      "phones": [
+        {
+          "phone": "+55 11 90000-0002",
+          "wa_id": "5511900000002"
+        }
+      ],
+      "emails": [
+        {
+          "email": "maria@example.com"
+        }
+      ],
+      "org": {
+        "company": "Acme"
+      }
+    }
+  ]
+}
