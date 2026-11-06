@@ -4,8 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-neverBuiltDependencies:
-  - openclaw
+onlyBuiltDependencies:
+  - esbuild
+  - workerd
 
 importers:
 
