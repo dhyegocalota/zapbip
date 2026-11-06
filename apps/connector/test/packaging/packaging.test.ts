@@ -17,7 +17,7 @@ function packedFilePaths(): string[] {
   return (report as PackReport[number]).files.map((file) => file.path).sort();
 }
 
-function manifest(): { bin: Record<string, string>; dependencies?: Record<string, string>; private: boolean } {
+function manifest(): { bin: Record<string, string>; dependencies?: Record<string, string>; private?: boolean } {
   return JSON.parse(readFileSync(`${PACKAGE_DIRECTORY}/package.json`, 'utf8'));
 }
 
@@ -28,6 +28,10 @@ describe('the npm package', () => {
 
   it('exposes the zapbip command from the bundle', () => {
     expect(manifest().bin).toEqual({ zapbip: 'dist/cli.js' });
+  });
+
+  it('is not private, so the owner can publish it', () => {
+    expect(manifest().private).toBeUndefined();
   });
 
   it('starts the bundle with the node shebang', () => {

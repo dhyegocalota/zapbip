@@ -368,7 +368,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     if (socket.readyState !== WebSocket.CLOSED) socket.close(replyCode, reason);
   }
 
-  async closeAgentSockets(input: { agent: string }): Promise<void> {
+  async closeAgentSockets(input: Parameters<AccountInboxRpc['closeAgentSockets']>[0]): Promise<void> {
     this.ctx.getWebSockets(input.agent).forEach((socket) => socket.close(REVOKED_CLOSE_CODE));
   }
 

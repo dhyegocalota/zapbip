@@ -179,6 +179,9 @@ describe('runConnection', () => {
         '--permission-mode',
         'dontAsk',
         '--tools=',
+        '--strict-mcp-config',
+        expect.stringMatching(/^--mcp-config=.+mcp\.json$/),
+        '--setting-sources=',
         `--allowedTools=${WAKE_ALLOWED_TOOL}`,
       ]);
       expect(runAt({ runs, index: 0 }).stdin).toMatch(/^<channel source="zapbip" sender="owner" verified="true">text of msg_1<\/channel>/);

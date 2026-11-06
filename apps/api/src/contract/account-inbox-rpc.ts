@@ -1,4 +1,5 @@
 import type {
+  AgentName,
   AskInput,
   AskResult,
   CheckInboxInput,
@@ -51,6 +52,7 @@ export interface AccountInboxRpc extends WakeRpc {
   claimUpload(input: { mediaId: string }): Promise<CallOutcome<UploadClaim>>;
   releaseUpload(input: { mediaId: string; claimedAt: number }): Promise<CallOutcome<void>>;
   completeUpload(input: { mediaId: string; claimedAt: number }): Promise<CallOutcome<StoredMedia>>;
+  closeAgentSockets(input: { agent: AgentName }): Promise<void>;
   receiveOwnerMessage(input: {
     ownerLocale: OwnerLocale;
     channelMessageId: string;
