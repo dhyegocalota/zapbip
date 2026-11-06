@@ -14,6 +14,31 @@ Written by the developer sub-agent when its steps are done. The developer does n
 - `apps/connector` — package `zapbip` (private until deploy-readiness), three Vitest configs, one stub per module of the contract; `pnpm-lock.yaml` gained the `apps/connector` importer (esbuild 0.28.2, ws 8.22.1, @types/ws 8.18.2) and the vite peer variants that esbuild adds.
 - Not done, by design: the wake-side contract (`WakeRepository` restore methods, `libs/core/src/wake/local-connector.ts`, `WakerByRung` entry) waits for `feat/webhook-wake` to merge (plan step S0.2, `(contract: confirm at merge)`).
 
+### Lane L1 (connector pure modules)
+
+- `apps/connector/src/{owner-prompt,wake-commands,session-lookup,wake-queue,log}.ts` — bodies; tests in `apps/connector/test/unit/`; fixture `apps/connector/test/fixtures/claude-folder/-private-tmp-doctor-walk/` (three empty session files, names copied from a real install; the test sets the modification times on a copy).
+- Run: `pnpm --filter zapbip test:unit` (56 passed) and `pnpm --filter zapbip typecheck`.
+- Red then green (red text as printed):
+  - `owner-prompt.test.ts` 5b3244c to 98d4537: 18 failed with `<name> is not implemented`.
+  - `wake-commands.test.ts` 66727c3 to 98d4537: 11 failed, 1 pin (`CLIENT_BINARY_NAME`); the UUID cases failed with the stub message instead of `session id is not a UUID`.
+  - `session-lookup.test.ts` fa11ac2 to 9c852f2: 14 failed with `findNewestSessionId is not implemented` or `claudeProjectFolderName is not implemented`.
+  - `wake-queue.test.ts`, `log.test.ts` 37fca61 to 17c9fdb: 12 failed with `createWakeQueue is not implemented` or `logConnectorEvent is not implemented`.
+- Decisions L2 must know:
+  - `codexHome` is the Codex home (`~/.codex`); rollouts are read under `<codexHome>/sessions`. The defaults sit at the signature of `findNewestSessionId`; the loop passes `CLAUDE_CONFIG_DIR` and `CODEX_HOME` when set.
+  - The queue acknowledges and sends `done` only when `runWake` resolves. A `runWake` that rejects leaves the message unacknowledged, sends no `done`, and does not stop the queue. For `NoSession` (message stays unread) `runWake` must reject; a resolved `runWake` means `done`.
+  - Builders throw `session id is not a UUID` for a bad id.
+  - Prompt text for a kind without text is the `MessageKind` value (`image`, `location`, ...).
+
+Hypotheses:
+
+1. Owner text containing `</channel>`, a forged opening tag or a leading `-` stays one escaped argument inside the block. Break it by: `&`-based or Unicode look-alike brackets, newlines before the closing tag.
+2. The wake argv equals the spec's, with no shell. Break it by: a prompt with quotes, `$()`, backticks and newlines through the fake binary.
+3. Wakes never overlap and run in arrival order. Break it by: a burst of messages with a wake that fails midway.
+4. The newest Codex rollout is the one whose first line records the directory. Break it by: a large first line, a rollout with CRLF, more than 200 newer rollouts for other directories.
+5. Logs carry only the fields given. Break it by: grep a full run for message text.
+
+Gaps: the lookup trusts file modification time for Claude Code; a pre-existing symlinked project folder is followed.
+
 ## How to run
 
 ```bash
