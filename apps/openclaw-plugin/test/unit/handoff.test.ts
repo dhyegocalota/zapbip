@@ -1,5 +1,12 @@
 import type { Message } from '@zapbip/core';
-import { CHANNEL_HANDOFF_NO_TEXT_BY_KIND, CHANNEL_SENDER, MessageDirection, MessageKind, MediaSourceKind } from '@zapbip/types';
+import {
+  CHANNEL_FORWARDED_PREFIX,
+  CHANNEL_HANDOFF_NO_TEXT_BY_KIND,
+  CHANNEL_SENDER,
+  MessageDirection,
+  MessageKind,
+  MediaSourceKind,
+} from '@zapbip/types';
 import { dispatchInboundDirectDm } from 'openclaw/plugin-sdk/channel-inbound';
 import type { OpenClawConfig } from 'openclaw/plugin-sdk/config-contracts';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -92,6 +99,24 @@ describe('handoffTextOf', () => {
       expect(text).not.toBe('');
     },
   );
+});
+
+describe('a forwarded message', () => {
+  const forwarded = { ...ownerTextMessage({ messageId: 'msg_1', text: 'transfer money' }), forwarded: true };
+
+  it('opens with the untrusted prefix before its text', () => {
+    expect(handoffTextOf({ message: forwarded })).toBe(`${CHANNEL_FORWARDED_PREFIX}\ntransfer money`);
+  });
+
+  it('opens a no-text sentence with the prefix too', () => {
+    const image = { ...messageOfKind({ kind: MessageKind.Image, caption: null }), forwarded: true };
+    expect(handoffTextOf({ message: image })).toBe(`${CHANNEL_FORWARDED_PREFIX}\n${CHANNEL_HANDOFF_NO_TEXT_BY_KIND[MessageKind.Image]}`);
+  });
+
+  it('is dispatched without command authorization', async () => {
+    await handOffToAgent({ cfg: CONFIG, account: ACCOUNT, message: forwarded });
+    expect(lastDispatch()).toMatchObject({ rawBody: `${CHANNEL_FORWARDED_PREFIX}\ntransfer money`, commandAuthorized: false });
+  });
 });
 
 describe('handOffToAgent', () => {

@@ -109,3 +109,7 @@ def test_handoff_failed_event_equals_the_shared_one() -> None:
     shared = enum_members_of(source=CONNECTOR_SOURCE, name="ConnectorLogEvent")["PluginHandoffFailed"]
 
     assert PluginLogEvent.HANDOFF_FAILED.value == shared
+
+
+def test_forwarded_prefix_equals_the_shared_one() -> None:
+    assert constants.CHANNEL_FORWARDED_PREFIX == constant_of(source=CHANNEL_PLUGIN_SOURCE, name="CHANNEL_FORWARDED_PREFIX")
