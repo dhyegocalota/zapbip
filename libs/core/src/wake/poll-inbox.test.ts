@@ -59,13 +59,14 @@ describe('pollInbox', () => {
     const wakeEnvironment = await createWakeEnvironment();
     const { repository } = wakeEnvironment.wake;
     await repository.recordPoll({ agent: AGENT, polledAt: 0, ownerLocale: OwnerLocale.PortugueseBrazil });
-    await repository.markStaleNotified({ agent: AGENT });
+    await repository.markStaleNotified({ agent: AGENT, noticedAt: 0 });
     await wakeEnvironment.environment.clock.advance({ ms: MINUTE_MS });
     await poll({ wakeEnvironment });
     expect(await repository.findPollState({ agent: AGENT })).toEqual({
       lastPolledAt: wakeEnvironment.environment.clock.now(),
       hasPolled: true,
       pollerStaleNotified: false,
+      lastStaleNoticeAt: 0,
     });
   });
 

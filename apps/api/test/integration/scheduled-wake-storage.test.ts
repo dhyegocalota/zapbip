@@ -19,6 +19,7 @@ const WEBHOOK_AGENT = 'grok-bot';
 const STANDBY_AGENT = 'grok-web';
 const SCHEDULED_INTERVAL_MINUTES = 60;
 const POLLED_AT = BASE_TIME + 5_000;
+const NOTICED_AT = 2_000;
 const FIRST_VERSION = 1;
 const SECOND_VERSION = 2;
 const THIRD_VERSION = 3;
@@ -220,7 +221,7 @@ describe('poll state', () => {
   it('records a poll', async () => {
     const result = await inRepositories({
       run: async ({ wake, storage }) => {
-        await wake.markStaleNotified({ agent: SCHEDULED_AGENT });
+        await wake.markStaleNotified({ agent: SCHEDULED_AGENT, noticedAt: NOTICED_AT });
         await wake.recordPoll({ agent: SCHEDULED_AGENT, polledAt: POLLED_AT, ownerLocale: OwnerLocale.PortugueseBrazil });
         return { row: readAgentWakeRow({ storage, agent: SCHEDULED_AGENT }), state: await wake.findPollState({ agent: SCHEDULED_AGENT }) };
       },
@@ -231,7 +232,7 @@ describe('poll state', () => {
       owner_locale: OwnerLocale.PortugueseBrazil,
       poller_stale_notified: 0,
     });
-    expect(result.state).toEqual({ lastPolledAt: POLLED_AT, hasPolled: true, pollerStaleNotified: false });
+    expect(result.state).toEqual({ lastPolledAt: POLLED_AT, hasPolled: true, pollerStaleNotified: false, lastStaleNoticeAt: NOTICED_AT });
   });
 
   it('leaves the mode and the target alone and survives a later save', async () => {
@@ -279,9 +280,9 @@ describe('poll state', () => {
   });
 
   it('keeps the stale mark after the object restarts', async () => {
-    await inRepositories({ run: ({ wake }) => wake.markStaleNotified({ agent: SCHEDULED_AGENT }) });
+    await inRepositories({ run: ({ wake }) => wake.markStaleNotified({ agent: SCHEDULED_AGENT, noticedAt: NOTICED_AT }) });
     const state = await inRepositories({ run: ({ wake }) => wake.findPollState({ agent: SCHEDULED_AGENT }) });
-    expect(state).toMatchObject({ pollerStaleNotified: true });
+    expect(state).toMatchObject({ pollerStaleNotified: true, lastStaleNoticeAt: NOTICED_AT });
   });
 
   it('lists the scheduled wakes with their poll state', async () => {

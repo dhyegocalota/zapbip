@@ -1,17 +1,27 @@
-import { IdPrefix, MessageKind } from '@zapbip/types';
+import { IdPrefix, MessageKind, WakeLogEventName } from '@zapbip/types';
 import { deliverToOwner } from '../inbox/use-cases/deliver-to-owner';
-import { isPollerStale, pollerDeadline } from './poller';
+import { observeUnsent } from './observe-unsent';
+import { isStaleNoticeDue, pollerDeadline } from './poller';
 import { staleNoticeCopy } from './wake-copy';
 import type { WakeContext } from './wake-ports';
 import type { ScheduledWake } from './wake-setting';
 
 export type EvaluatePollersResult = { nextDueAt: number | null };
 
-async function noticeStale(input: WakeContext & { scheduledWake: ScheduledWake; now: number }): Promise<void> {
+type StaleWake = WakeContext & { scheduledWake: ScheduledWake; now: number };
+
+function observeNotice(input: StaleWake & { name: WakeLogEventName }): void {
+  const { wake, scheduledWake, name } = input;
+  observeUnsent({ observer: wake.observer, name, stored: scheduledWake, agent: scheduledWake.agent, attempt: 0 });
+}
+
+async function noticeStale(input: StaleWake): Promise<void> {
   const { dependencies, wake, scheduledWake, now } = input;
   const { agent, ownerLocale, hasPolled, lastPolledAt } = scheduledWake;
-  if (ownerLocale === null) throw new Error(`scheduled wake of ${agent} has no owner locale`);
-  await wake.repository.markStaleNotified({ agent });
+  if (ownerLocale === null) {
+    await wake.repository.markStaleNotified({ agent, noticedAt: now });
+    return observeNotice({ ...input, name: WakeLogEventName.NoticeSkipped });
+  }
   const text = staleNoticeCopy({ locale: ownerLocale, agent, elapsedSinceLastPollMs: hasPolled ? now - lastPolledAt : null });
   await deliverToOwner({
     dependencies,
@@ -21,6 +31,15 @@ async function noticeStale(input: WakeContext & { scheduledWake: ScheduledWake; 
     content: { kind: MessageKind.Text, text },
     replyToMessageId: null,
   });
+  await wake.repository.markStaleNotified({ agent, noticedAt: now });
+}
+
+async function noticeStaleOnce(input: StaleWake): Promise<void> {
+  try {
+    await noticeStale(input);
+  } catch {
+    observeNotice({ ...input, name: WakeLogEventName.NoticeFailed });
+  }
 }
 
 export async function nextPollerDeadline(input: Pick<WakeContext, 'wake'>): Promise<number | null> {
@@ -33,11 +52,9 @@ export async function evaluatePollers(input: WakeContext): Promise<EvaluatePolle
   const { dependencies, wake } = input;
   const now = dependencies.clock.now();
   const scheduledWakes = await wake.repository.listScheduledWakes();
-  const staleWakes = scheduledWakes.filter(
-    (scheduledWake) => !scheduledWake.pollerStaleNotified && isPollerStale({ wake: scheduledWake, now }),
-  );
+  const staleWakes = scheduledWakes.filter((scheduledWake) => isStaleNoticeDue({ wake: scheduledWake, now }));
   await staleWakes.reduce(
-    (previous, scheduledWake) => previous.then(() => noticeStale({ ...input, scheduledWake, now })),
+    (previous, scheduledWake) => previous.then(() => noticeStaleOnce({ ...input, scheduledWake, now })),
     Promise.resolve(),
   );
   return { nextDueAt: await nextPollerDeadline({ wake }) };

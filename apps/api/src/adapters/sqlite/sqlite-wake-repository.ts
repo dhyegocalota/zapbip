@@ -19,6 +19,7 @@ type PollRow = WakeRow & {
   last_polled_at: number;
   has_polled: number;
   poller_stale_notified: number;
+  last_stale_notice_at: number | null;
 };
 
 type JobRow = {
@@ -32,7 +33,7 @@ type JobRow = {
 
 const WAKE_COLUMNS =
   'agent, mode, provider, host, sealed_target, key_version, status, last_delivered_at, interval_minutes, standby_agent, owner_locale';
-const POLL_COLUMNS = 'last_polled_at, has_polled, poller_stale_notified';
+const POLL_COLUMNS = 'last_polled_at, has_polled, poller_stale_notified, last_stale_notice_at';
 const SELECT_WAKE = 'SELECT ' + WAKE_COLUMNS + ' FROM agent_wake WHERE agent = ?';
 const SELECT_POLL_STATE = 'SELECT ' + POLL_COLUMNS + ' FROM agent_wake WHERE agent = ?';
 const SELECT_SCHEDULED_WAKES = 'SELECT ' + WAKE_COLUMNS + ', ' + POLL_COLUMNS + ' FROM agent_wake WHERE mode = ? ORDER BY agent';
@@ -40,7 +41,7 @@ const SAVE_WAKE_STATEMENT =
   'UPDATE agent_wake SET mode = ?, provider = ?, host = ?, sealed_target = ?, key_version = ?, status = ?, last_delivered_at = ?, interval_minutes = ?, standby_agent = ?, owner_locale = COALESCE(?, owner_locale), updated_at = ? WHERE agent = ?';
 const RECORD_POLL_STATEMENT =
   'UPDATE agent_wake SET last_polled_at = ?, has_polled = 1, owner_locale = ?, poller_stale_notified = 0 WHERE agent = ?';
-const MARK_STALE_NOTIFIED_STATEMENT = 'UPDATE agent_wake SET poller_stale_notified = 1 WHERE agent = ?';
+const MARK_STALE_NOTIFIED_STATEMENT = 'UPDATE agent_wake SET poller_stale_notified = 1, last_stale_notice_at = ? WHERE agent = ?';
 const CLEAR_WAKE_STATEMENT =
   'UPDATE agent_wake SET mode = ?, provider = NULL, host = NULL, sealed_target = NULL, key_version = NULL, interval_minutes = NULL, standby_agent = NULL, status = ?, updated_at = ? WHERE agent = ?';
 const SELECT_LOCAL_RESTORE = 'SELECT local_restore FROM agent_wake WHERE agent = ?';
@@ -76,6 +77,7 @@ function toPollState(row: PollRow): PollState {
     lastPolledAt: row.last_polled_at,
     hasPolled: row.has_polled === 1,
     pollerStaleNotified: row.poller_stale_notified === 1,
+    lastStaleNoticeAt: row.last_stale_notice_at,
   };
 }
 
@@ -169,8 +171,8 @@ export function createSqliteWakeRepository(input: { storage: DurableObjectStorag
       }));
     },
 
-    async markStaleNotified({ agent }) {
-      const cursor = sql.exec(MARK_STALE_NOTIFIED_STATEMENT, agent);
+    async markStaleNotified({ agent, noticedAt }) {
+      const cursor = sql.exec(MARK_STALE_NOTIFIED_STATEMENT, noticedAt, agent);
       if (cursor.rowsWritten === 0) throw new Error(`no agent_wake row for ${agent}`);
     },
 

@@ -1,5 +1,5 @@
 import { MINUTE_MS, WakeMode } from '@zapbip/types';
-import { STALE_POLL_INTERVAL_MULTIPLE } from './constants';
+import { STALE_NOTICE_MIN_GAP_MS, STALE_POLL_INTERVAL_MULTIPLE } from './constants';
 import type { ScheduledWake } from './wake-setting';
 
 function staleAfterMsOf(input: { wake: ScheduledWake }): number {
@@ -18,5 +18,12 @@ export function pollerDeadline(input: { wake: ScheduledWake }): number | null {
   const { wake } = input;
   const isTracked = wake.mode === WakeMode.Scheduled && !wake.pollerStaleNotified;
   if (!isTracked) return null;
-  return wake.lastPolledAt + staleAfterMsOf({ wake });
+  const staleAt = wake.lastPolledAt + staleAfterMsOf({ wake });
+  if (wake.lastStaleNoticeAt === null) return staleAt;
+  return Math.max(staleAt, wake.lastStaleNoticeAt + STALE_NOTICE_MIN_GAP_MS);
+}
+
+export function isStaleNoticeDue(input: { wake: ScheduledWake; now: number }): boolean {
+  const deadline = pollerDeadline({ wake: input.wake });
+  return deadline !== null && input.now >= deadline;
 }

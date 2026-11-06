@@ -33,7 +33,7 @@ export interface WakeRepository {
   findPollState(input: { agent: AgentName }): Promise<PollState | null>;
   recordPoll(input: { agent: AgentName; polledAt: number; ownerLocale: OwnerLocale }): Promise<void>;
   listScheduledWakes(): Promise<ScheduledWake[]>;
-  markStaleNotified(input: { agent: AgentName }): Promise<void>;
+  markStaleNotified(input: { agent: AgentName; noticedAt: number }): Promise<void>;
   findLocalRestore(input: { agent: AgentName }): Promise<StoredWake | null>;
   saveLocalRestore(input: { agent: AgentName; previous: StoredWake }): Promise<void>;
   deleteLocalRestore(input: { agent: AgentName }): Promise<void>;

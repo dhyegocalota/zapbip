@@ -31,6 +31,7 @@ export type PollState = {
   lastPolledAt: number;
   hasPolled: boolean;
   pollerStaleNotified: boolean;
+  lastStaleNoticeAt: number | null;
 };
 
 export type ScheduledWake = StoredWake & PollState;
