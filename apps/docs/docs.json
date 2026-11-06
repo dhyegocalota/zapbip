@@ -24,7 +24,8 @@
               "features/send-messages-and-media",
               "features/ask-with-buttons-and-lists",
               "features/many-agents-on-one-number",
-              "features/the-24-hour-window"
+              "features/the-24-hour-window",
+              "concepts/owner-notices"
             ]
           },
           {
@@ -38,7 +39,14 @@
               "developers/errors",
               {
                 "group": "Concepts",
-                "pages": ["concepts/inbox", "concepts/questions", "concepts/24-hour-window", "concepts/routing", "concepts/wake-ladder"]
+                "pages": [
+                  "concepts/inbox",
+                  "concepts/questions",
+                  "concepts/24-hour-window",
+                  "concepts/routing",
+                  "concepts/wake-ladder",
+                  "concepts/whatsapp-channel"
+                ]
               },
               {
                 "group": "MCP tools",
@@ -76,7 +84,8 @@
               "pt-br/features/send-messages-and-media",
               "pt-br/features/ask-with-buttons-and-lists",
               "pt-br/features/many-agents-on-one-number",
-              "pt-br/features/the-24-hour-window"
+              "pt-br/features/the-24-hour-window",
+              "pt-br/concepts/owner-notices"
             ]
           },
           {
@@ -95,7 +104,8 @@
                   "pt-br/concepts/questions",
                   "pt-br/concepts/24-hour-window",
                   "pt-br/concepts/routing",
-                  "pt-br/concepts/wake-ladder"
+                  "pt-br/concepts/wake-ladder",
+                  "pt-br/concepts/whatsapp-channel"
                 ]
               },
               {
