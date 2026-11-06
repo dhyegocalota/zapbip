@@ -1,5 +1,6 @@
-import { SECOND_MS, WakeAttemptOutcome, WakeMode, WakeProvider, WakeStatus } from '@zapbip/types';
+import { OwnerLocale, SECOND_MS, WakeAttemptOutcome, WakeMode, WakeProvider, WakeStatus } from '@zapbip/types';
 import type { AgentName } from '../../inbox/connection';
+import type { Clock } from '../../inbox/ports';
 import { PINNED_WAKE_PROVIDER_RULES } from '../wake-provider';
 import { WAKE_CONTENT_TYPE, WAKE_TIMESTAMP_HEADER } from '../constants';
 import type {
@@ -12,7 +13,7 @@ import type {
   WakeSecretBox,
   WakeTransport,
 } from '../wake-ports';
-import type { StoredWake, WakeJob } from '../wake-setting';
+import type { PollState, ScheduledWake, StoredWake, WakeJob } from '../wake-setting';
 
 const SEAL_SEPARATOR = '.';
 const BASE64 = 'base64';
@@ -107,8 +108,31 @@ export function createInMemoryWakeSecretBox(): WakeSecretBox {
   };
 }
 
-export function createInMemoryWakeRepository(): WakeRepository {
+export function storedWakeOf(input: { agent: AgentName; mode: WakeMode } & Partial<StoredWake>): StoredWake {
+  return {
+    target: null,
+    status: WakeStatus.Active,
+    lastDeliveredAt: null,
+    intervalMinutes: null,
+    standbyAgent: null,
+    ownerLocale: null,
+    ...input,
+  };
+}
+
+export function scheduledWakeOf(input: { agent: AgentName } & Partial<ScheduledWake>): ScheduledWake {
+  return {
+    ...storedWakeOf({ mode: WakeMode.Scheduled, intervalMinutes: 60, ownerLocale: OwnerLocale.PortugueseBrazil, ...input }),
+    lastPolledAt: 0,
+    hasPolled: true,
+    pollerStaleNotified: false,
+    ...input,
+  };
+}
+
+export function createInMemoryWakeRepository(input: { clock: Clock }): WakeRepository {
   const wakes = new Map<AgentName, StoredWake>();
+  const pollStates = new Map<AgentName, PollState>();
   const jobs = new Map<AgentName, WakeJob>();
   const effectiveDueAt = (job: WakeJob): number => (job.leaseUntil === null ? job.dueAt : Math.max(job.dueAt, job.leaseUntil));
 
@@ -119,6 +143,8 @@ export function createInMemoryWakeRepository(): WakeRepository {
     },
     saveWake: async ({ wake }) => {
       wakes.set(wake.agent, { ...wake });
+      if (wake.mode !== WakeMode.Scheduled || pollStates.has(wake.agent)) return;
+      pollStates.set(wake.agent, { lastPolledAt: input.clock.now(), hasPolled: false, pollerStaleNotified: false });
     },
     clearWake: async ({ agent }) => {
       const wake = wakes.get(agent);
@@ -146,21 +172,24 @@ export function createInMemoryWakeRepository(): WakeRepository {
       return dueTimes.length === 0 ? null : Math.min(...dueTimes);
     },
     findPollState: async ({ agent }) => {
-      void agent;
-      throw new Error('findPollState is not implemented');
+      const pollState = pollStates.get(agent);
+      return pollState === undefined ? null : { ...pollState };
     },
-    recordPoll: async ({ agent, polledAt, ownerLocale }) => {
-      void agent;
-      void polledAt;
-      void ownerLocale;
-      throw new Error('recordPoll is not implemented');
+    recordPoll: async ({ agent, polledAt }) => {
+      pollStates.set(agent, { lastPolledAt: polledAt, hasPolled: true, pollerStaleNotified: false });
     },
-    listScheduledWakes: async () => {
-      throw new Error('listScheduledWakes is not implemented');
-    },
+    listScheduledWakes: async () =>
+      [...wakes.values()]
+        .filter((wake) => wake.mode === WakeMode.Scheduled)
+        .map((wake) => {
+          const pollState = pollStates.get(wake.agent);
+          if (pollState === undefined) throw new Error(`no poll state for ${wake.agent}`);
+          return { ...wake, ...pollState };
+        }),
     markStaleNotified: async ({ agent }) => {
-      void agent;
-      throw new Error('markStaleNotified is not implemented');
+      const pollState = pollStates.get(agent);
+      if (pollState === undefined) throw new Error(`no poll state for ${agent}`);
+      pollStates.set(agent, { ...pollState, pollerStaleNotified: true });
     },
   };
 }

@@ -11,15 +11,16 @@ export async function wakeAgent(input: {
   unreadBefore: number;
   answeredQuestionId: string | null;
   shouldTellOwner: boolean;
+  messageId?: string;
 }): Promise<void> {
-  const { dependencies, ownerLocale, agent, unreadBefore, answeredQuestionId, shouldTellOwner } = input;
+  const { dependencies, ownerLocale, agent, unreadBefore, answeredQuestionId, shouldTellOwner, messageId } = input;
   const { waiters, waker, ids } = dependencies;
   const hasLiveWaiter = waiters.hasLiveWaiter({ agent, questionId: answeredQuestionId });
   if (answeredQuestionId === null) waiters.resolveAgentMessage({ agent });
   if (answeredQuestionId !== null) waiters.resolveQuestionAnswer({ questionId: answeredQuestionId });
   const isNewBatch = unreadBefore === 0;
   if (hasLiveWaiter || !isNewBatch) return;
-  const outcome = await waker.notify({ agent, reason: AgentWakeReason.MessageWaiting });
+  const outcome = await waker.notify({ agent, reason: AgentWakeReason.MessageWaiting, messageId });
   if (outcome === WakeOutcome.Woken || !shouldTellOwner) return;
   const text = renderCopy({ key: InboxCopyKey.AgentNotListening, locale: ownerLocale, values: { agent } });
   await deliverToOwner({

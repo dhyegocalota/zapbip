@@ -269,7 +269,8 @@ async function deliverPlacement(
   const { agent } = placement.decision;
   if (agent === null) return promptOwner({ ...input, heldMessageId: messageId, prompt: placement.prompt });
   const answeredQuestionId = placement.answer === null ? null : placement.answer.questionId;
-  return wakeAgent({ ...input, agent, unreadBefore, answeredQuestionId, shouldTellOwner });
+  const wakeMessageId = answeredQuestionId === null ? messageId : undefined;
+  return wakeAgent({ ...input, agent, unreadBefore, answeredQuestionId, shouldTellOwner, messageId: wakeMessageId });
 }
 
 async function duplicateResultOf(input: { dependencies: CoreDependencies; wamid: string }): Promise<ReceiveResult> {
