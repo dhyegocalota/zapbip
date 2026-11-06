@@ -1,7 +1,8 @@
-import { InboxErrorCode, WakeMode, WakeStatus } from '@zapbip/types';
+import { InboxErrorCode, WakeMode } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { captureInboxError } from '../inbox/testing/capture-inbox-error';
 import { SCHEDULED_MAX_INTERVAL_MINUTES, SCHEDULED_MIN_INTERVAL_MINUTES } from './constants';
+import { storedWakeOf } from './testing/wake-doubles';
 import { assertWakeSetting, type StoredWake, type WakeSettingInput } from './wake-setting';
 
 const CALLER = 'grok-web';
@@ -14,19 +15,6 @@ const STANDBY_SETTING: WakeSettingInput = {
   intervalMinutes: null,
   standbyAgent: STANDBY_AGENT,
 };
-
-function storedWake(input: { agent: string; mode: WakeMode }): StoredWake {
-  return {
-    agent: input.agent,
-    mode: input.mode,
-    target: null,
-    status: WakeStatus.Active,
-    lastDeliveredAt: null,
-    intervalMinutes: null,
-    standbyAgent: null,
-    ownerLocale: null,
-  };
-}
 
 function rejection(input: { setting: WakeSettingInput; standby?: StoredWake | null }) {
   const { setting, standby = null } = input;
@@ -67,14 +55,14 @@ describe('assertWakeSetting scheduled', () => {
 
 describe('assertWakeSetting standby', () => {
   test('a connected standby that is not in standby mode is accepted', () => {
-    const standby = storedWake({ agent: STANDBY_AGENT, mode: WakeMode.Webhook });
+    const standby = storedWakeOf({ agent: STANDBY_AGENT, mode: WakeMode.Webhook });
     expect(() => assertWakeSetting({ setting: STANDBY_SETTING, caller: CALLER, standby })).not.toThrow();
   });
 
   test('the caller as its own standby is refused', async () => {
     const error = await rejection({
       setting: { ...STANDBY_SETTING, standbyAgent: CALLER },
-      standby: storedWake({ agent: CALLER, mode: WakeMode.Webhook }),
+      standby: storedWakeOf({ agent: CALLER, mode: WakeMode.Webhook }),
     });
     expect(error.code).toBe(InboxErrorCode.InvalidInput);
     expect(error.message).toContain('standby_agent');
@@ -89,7 +77,7 @@ describe('assertWakeSetting standby', () => {
   });
 
   test('a standby in standby mode is refused as one hop', async () => {
-    const error = await rejection({ setting: STANDBY_SETTING, standby: storedWake({ agent: STANDBY_AGENT, mode: WakeMode.Standby }) });
+    const error = await rejection({ setting: STANDBY_SETTING, standby: storedWakeOf({ agent: STANDBY_AGENT, mode: WakeMode.Standby }) });
     expect(error.code).toBe(InboxErrorCode.InvalidInput);
     expect(error.message).toContain('standby_agent');
     expect(error.message).toContain('one hop');
@@ -107,7 +95,7 @@ describe('assertWakeSetting standby', () => {
   ])('a standby wake with %s is refused', async (field, foreign) => {
     const error = await rejection({
       setting: { ...STANDBY_SETTING, ...foreign },
-      standby: storedWake({ agent: STANDBY_AGENT, mode: WakeMode.Webhook }),
+      standby: storedWakeOf({ agent: STANDBY_AGENT, mode: WakeMode.Webhook }),
     });
     expect(error.code).toBe(InboxErrorCode.InvalidInput);
     expect(error.message).toContain(field);

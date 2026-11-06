@@ -51,6 +51,6 @@ export type MessageEnvelope = {
 export type Message = MessageEnvelope & MessageContent;
 
 export function ownerMessageIdOf(input: { message: Message }): string {
-  void input;
-  throw new Error('ownerMessageIdOf is not implemented');
+  const { messageId, originMessageId } = input.message;
+  return originMessageId === null ? messageId : originMessageId;
 }
