@@ -1,6 +1,6 @@
 import { InboxErrorCode } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
-import { UPLOAD_TTL_MS } from '../constants';
+import { UPLOAD_CLAIM_TTL_MS, UPLOAD_TTL_MS } from '../constants';
 import { captureInboxError } from '../testing/capture-inbox-error';
 import { connectionOf, createEnvironment } from '../testing/fixtures';
 import { claimUpload } from './claim-upload';
@@ -41,6 +41,22 @@ describe('claimUpload', () => {
     await releaseUpload({ dependencies: environment.dependencies, mediaId: uploadId });
     const media = await claimUpload({ dependencies: environment.dependencies, mediaId: uploadId });
     expect(media.mediaId).toBe(uploadId);
+  });
+
+  test('a claim older than the claim TTL is free again', async () => {
+    const { environment, uploadId } = await pendingUpload();
+    await claimUpload({ dependencies: environment.dependencies, mediaId: uploadId });
+    await environment.clock.advance({ ms: UPLOAD_CLAIM_TTL_MS });
+    const media = await claimUpload({ dependencies: environment.dependencies, mediaId: uploadId });
+    expect(media.mediaId).toBe(uploadId);
+  });
+
+  test('a claim younger than the claim TTL still holds the upload', async () => {
+    const { environment, uploadId } = await pendingUpload();
+    await claimUpload({ dependencies: environment.dependencies, mediaId: uploadId });
+    await environment.clock.advance({ ms: UPLOAD_CLAIM_TTL_MS - 1 });
+    const error = await captureInboxError(() => claimUpload({ dependencies: environment.dependencies, mediaId: uploadId }));
+    expect(error.code).toBe(InboxErrorCode.UploadUnavailable);
   });
 
   test('the claimed upload can still be completed', async () => {
