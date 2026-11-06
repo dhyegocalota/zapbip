@@ -25,3 +25,10 @@ export async function inspectWorkerSource(input: { sourceRoot: string }): Promis
     mountsInstallRoute: routeSources.some((source) => source.includes(INSTALL_ROUTE_PATH)),
   };
 }
+
+export type WorkerApp = { routes: readonly { method: string; path: string }[] };
+
+export function inspectWorker(input: { sourceRoot: string; app: WorkerApp }): Promise<WorkerFacts> {
+  void input;
+  throw new Error('inspectWorker is not implemented');
+}
