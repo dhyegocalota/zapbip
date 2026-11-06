@@ -4,7 +4,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   plugins: [
     cloudflareTest({
-      wrangler: { configPath: './wrangler.jsonc' },
+      wrangler: { configPath: './wrangler.jsonc', environment: 'development' },
       miniflare: {
         bindings: { MEDIA_LINK_SIGNING_KEY: 'test-media-key', UPLOAD_LINK_SIGNING_KEY: 'test-upload-key' },
       },
