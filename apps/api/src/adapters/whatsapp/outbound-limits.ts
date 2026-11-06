@@ -21,6 +21,8 @@ import {
   OUTBOUND_STICKER_MAX_BYTES,
 } from './whatsapp-constants';
 
+export const REACTION_TARGET_FIELD = 'reaction.message_id';
+
 const OUTBOUND_MEDIA_MAX_BYTES: Record<MediaMessageKind, number> = {
   ...MEDIA_MAX_BYTES,
   [MessageKind.Sticker]: OUTBOUND_STICKER_MAX_BYTES,
@@ -109,7 +111,7 @@ export function assertReactionTarget(input: { messageId: string | null }): void 
   if (!isMissing) return;
   throw new ChannelError({
     kind: ChannelErrorKind.ReactionRejected,
-    message: 'reaction.message_id: must not be empty',
+    message: `${REACTION_TARGET_FIELD}: must not be empty`,
     errorCode: null,
   });
 }
