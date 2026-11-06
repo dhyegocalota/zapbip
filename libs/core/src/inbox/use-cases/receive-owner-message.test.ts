@@ -12,7 +12,7 @@ import {
   WakeOutcome,
 } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
-import { MEDIA_RETENTION_MS, NOTICE_QUICK_REPLY_ID, QUEUE_RETENTION_MS, WINDOW_MS } from '../constants';
+import { MEDIA_RETENTION_MS, NOTICE_QUICK_REPLY_ID, QUEUE_RETENTION_MS, ROUTING_LIST_TTL_MS, WINDOW_MS } from '../constants';
 import { renderCopy } from '../inbox-copy';
 import type { Message } from '../message';
 import { formatChoiceOptionIds, formatOptionId, formatRouteOptionId } from '../option-id';
@@ -69,6 +69,10 @@ function sessionTexts(input: { environment: Environment }): string[] {
 
 function expiredListText(): string {
   return renderCopy({ key: InboxCopyKey.RoutingListExpired, locale: OwnerLocale.EnglishUs, values: {} });
+}
+
+function reminderText(): string {
+  return renderCopy({ key: InboxCopyKey.RoutingListReminder, locale: OwnerLocale.EnglishUs, values: {} });
 }
 
 function routingLists(input: { environment: Environment }): Message[] {
@@ -251,7 +255,7 @@ describe('receiveOwnerMessage routing list', () => {
     expect(sessionTexts({ environment }).at(-1)).toBe(expiredListText());
   });
 
-  test('a route choice for an agent that does not exist is answered with the expired notice and delivered nowhere', async () => {
+  test('a route choice naming an unknown agent while the batch is held sends the current list again', async () => {
     const environment = await createEnvironment();
     await registerAgents({ environment, agents: ['alpha'] });
     const held = await receiveText({ environment, text: 'first' });
@@ -263,7 +267,16 @@ describe('receiveOwnerMessage routing list', () => {
     expect(result).toEqual({ messageId: null, agent: null, duplicate: false });
     expect(await environment.repository.countUnread({ agent: 'ghost' })).toBe(0);
     expect(await environment.repository.listHeld()).toHaveLength(1);
-    expect(sessionTexts({ environment })).toEqual([expiredListText()]);
+    const lists = routingLists({ environment });
+    expect(lists).toHaveLength(2);
+    expect(sessionTexts({ environment })).toEqual([]);
+    expect(await environment.repository.findRoutingList()).toMatchObject({ promptMessageId: lists[1]!.messageId });
+    expect(
+      formatChoiceOptionIds({
+        questionId: (lists[1] as { questionId: string }).questionId,
+        options: [{ optionIndex: 0, title: 'alpha', description: null }],
+      }),
+    ).toEqual([formatRouteOptionId({ messageId: held.messageId!, agent: 'alpha' })]);
   });
 
   test('while a routing list is open a recent agent does not receive new unmatched texts ahead of the held ones', async () => {
@@ -644,5 +657,88 @@ describe('receiveOwnerMessage retries and concurrency', () => {
     await receiveText({ environment, text: 'first' });
     await registerAgents({ environment, agents: ['beta'] });
     expect(await environment.repository.listHeld()).toHaveLength(1);
+  });
+});
+
+describe('receiveOwnerMessage routing list state', () => {
+  test('the first list is recorded in the owner window row', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha', 'beta'] });
+    await receiveText({ environment, text: 'first' });
+    const [list] = routingLists({ environment });
+    expect(await environment.repository.findRoutingList()).toEqual({
+      promptMessageId: list!.messageId,
+      openedAt: environment.clock.now(),
+      locale: OwnerLocale.EnglishUs,
+      resent: false,
+      reminded: false,
+    });
+  });
+
+  test('a list that failed to send leaves no row', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha', 'beta'] });
+    environment.sender.failSessionCalls({ callNumbers: [1] });
+    await expect(receiveText({ environment, text: 'first' })).rejects.toThrow();
+    expect(await environment.repository.findRoutingList()).toBeNull();
+  });
+
+  test('a route choice closes the list', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha', 'beta'] });
+    await receiveText({ environment, text: 'first' });
+    const [list] = routingLists({ environment });
+    await tap({ environment, optionId: routeOptionId({ list: list!, agent: 'beta' }), optionTitle: 'beta' });
+    expect(await environment.repository.findRoutingList()).toBeNull();
+  });
+
+  test('the owner gets one localized reminder per batch, quoting the list', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha', 'beta'] });
+    await receiveText({ environment, text: 'first' });
+    const [list] = routingLists({ environment });
+    await receiveText({ environment, text: 'second' });
+    await receiveText({ environment, text: 'third' });
+    expect(sessionTexts({ environment })).toEqual([reminderText()]);
+    expect(environment.sender.sessions.at(-1)).toMatchObject({ replyToMessageId: list!.messageId });
+    expect(routingLists({ environment })).toHaveLength(1);
+    expect(await environment.repository.listHeld()).toHaveLength(3);
+  });
+
+  test('the reminder is written in the locale of the message that triggers it', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha', 'beta'] });
+    await receiveText({ environment, text: 'first' });
+    await receive({ environment, content: { kind: MessageKind.Text, text: 'segunda' }, ownerLocale: OwnerLocale.PortugueseBrazil });
+    expect(sessionTexts({ environment })).toEqual(['Escolha o agente na lista acima']);
+  });
+
+  test('a message matched by rules 1 to 4 is never held and never reminds', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha', 'beta'] });
+    await receiveText({ environment, text: 'first' });
+    const matched = await receiveText({ environment, text: '@beta hi' });
+    expect(matched.agent).toBe('beta');
+    expect(sessionTexts({ environment })).not.toContain(reminderText());
+    expect(await environment.repository.listHeld()).toHaveLength(1);
+  });
+
+  test('a reaction nobody can be routed to does not remind the owner', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha', 'beta'] });
+    await receiveText({ environment, text: 'first' });
+    await receive({ environment, content: { kind: MessageKind.Reaction, targetMessageId: 'msg_unknown', emoji: '👍' } });
+    expect(sessionTexts({ environment })).toEqual([]);
+  });
+
+  test('a message after the list expired and was answered gets a new list', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha', 'beta'] });
+    await receiveText({ environment, text: 'first' });
+    const [list] = routingLists({ environment });
+    await tap({ environment, optionId: routeOptionId({ list: list!, agent: 'beta' }), optionTitle: 'beta' });
+    await environment.clock.advance({ ms: ROUTING_LIST_TTL_MS });
+    await receiveText({ environment, text: 'again' });
+    expect(routingLists({ environment })).toHaveLength(2);
   });
 });
