@@ -25,3 +25,4 @@ One row per folder, in the order the features ship; a row that turns `Shipped <d
 | Feature | Delivers | Status |
 |---------|----------|--------|
 | [`agent-inbox-core`](agent-inbox-core/) | The core, the durable inbox per account, the MCP contract, the 24-hour window, routing and media, against a fake WhatsApp | Building |
+| [`accounts-and-keys`](accounts-and-keys/) | Account creation over WhatsApp, the command grammar in pt-BR and en, connection create, list, revoke and rotate, waitlist, abuse controls and account deletion | Building |
