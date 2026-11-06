@@ -632,7 +632,7 @@ The English line is for the agent, which reads it as a Monitor event. Any other 
 
 Steps added:
 
-- [x] **LN6 channel reference check (before build).** Confirm from the channel reference that a local stdio process is the only declaration path, and record the exact launch flag. Output: a note in the PR, no code.
+- [x] **LN6 channel reference check (before build).** Confirm from the channel reference that a local stdio process is the only declaration path, and record the exact launch flag. Output: a note in the PR, no code. (evidence: 2a85270)
 - [x] **LN7 listen long-lived.** The `runListen` loop does not exit on an empty or short session, and reconnects with the connection's reconnect delay. Test: a stream of three short runs of `listen` (each started and stopped by the fake runner) keeps one process alive. This is the requirement behind OpenClaw's `stream` job. Pinned by the reconnect case in `listen.test.ts` (green 10d0913).
 - [x] **LN8 docs.** The connector page says: the channel is primary for Claude Code, `listen` is the fallback re-armed by the skill, and the closed-session path is `connect`. Done in 10d0913 (`apps/docs/guides/local-connector.mdx` and the `pt-br` twin).
 
