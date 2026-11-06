@@ -1,0 +1,31 @@
+{
+  "name": "@zapbip/api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "dev:seed": "node scripts/dev-seed.ts",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
+    "test:unit": "vitest run --passWithNoTests --config vitest.unit.config.mts",
+    "test:integration": "vitest run --passWithNoTests --config vitest.integration.config.mts",
+    "test:e2e": "vitest run --passWithNoTests --config vitest.e2e.config.mts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "@zapbip/core": "workspace:*",
+    "@zapbip/types": "workspace:*",
+    "drizzle-orm": "0.45.4",
+    "hono": "4.13.16",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "0.23.0",
+    "@cloudflare/workers-types": "5.20261106.1",
+    "@types/node": "24.19.2",
+    "@vitest/runner": "4.1.12",
+    "@vitest/snapshot": "4.1.12",
+    "drizzle-kit": "0.31.11",
+    "vitest": "4.1.12",
+    "wrangler": "4.158.0"
+  }
+}

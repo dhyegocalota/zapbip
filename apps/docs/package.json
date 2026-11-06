@@ -1,0 +1,8 @@
+{
+  "name": "@zapbip/docs",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "mint": "4.2.1207"
+  }
+}
