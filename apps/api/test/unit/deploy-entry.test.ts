@@ -71,9 +71,9 @@ describe('deploy entry', () => {
     const { exitCode, shell } = await deploy({});
     const fragments = [
       'git status',
-      'pnpm verify',
       'secret list',
       'migrations list',
+      'pnpm verify',
       '--dry-run',
       'versions list',
       'time-travel info',

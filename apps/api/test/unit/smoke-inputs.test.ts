@@ -37,6 +37,11 @@ describe('smoke inputs', () => {
     expect(() => readSmokeInputs({ ...STAGING_SCOPE, environmentVariables })).toThrow(name);
   });
 
+  it('names a lowercase placeholder', () => {
+    const environmentVariables = variablesWith({ name: SmokeInput.BaseUrl, value: 'replace-with-url' });
+    expect(() => readSmokeInputs({ ...STAGING_SCOPE, environmentVariables })).toThrow(SmokeInput.BaseUrl);
+  });
+
   it('returns every required value when all are set', () => {
     expect(readSmokeInputs({ ...STAGING_SCOPE, environmentVariables: COMPLETE_VARIABLES })).toEqual(COMPLETE_VARIABLES);
   });

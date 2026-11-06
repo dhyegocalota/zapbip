@@ -81,20 +81,22 @@ describe('worker preflight', () => {
     expect(shell.commands).toEqual([]);
   });
 
-  it('refuses while the official number is the unset sentinel, before any command', async () => {
+  it('refuses production while the official number is the unset sentinel, before any command', async () => {
     const shell = fakeShell({});
-    const refusal = await runWorkerPreflight(workerInput({ shell, officialWhatsAppNumber: OFFICIAL_NUMBER_UNSET }));
+    const refusal = await runWorkerPreflight(
+      workerInput({ environment: DeployEnvironment.Production, shell, officialWhatsAppNumber: OFFICIAL_NUMBER_UNSET }),
+    );
     expect(refusal?.step).toBe(PreflightStep.OfficialNumber);
     expect(refusal?.message).toContain('OFFICIAL_WHATSAPP_NUMBER');
     expect(shell.commands).toEqual([]);
   });
 
   it.each(['legalName', 'cnpj', 'address', 'website', 'contactEmail'])(
-    'refuses the worker deploy while company %s is unset, before any command',
+    'refuses production while company %s is unset, before any command',
     async (field) => {
       const shell = fakeShell({});
       const company = { ...COMPLETE_COMPANY, [field]: COMPANY_FACT_UNSET };
-      const refusal = await runWorkerPreflight(workerInput({ shell, company }));
+      const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell, company }));
       expect(refusal?.step).toBe(PreflightStep.CompanyFacts);
       expect(refusal?.message).toContain(field);
       expect(shell.commands).toEqual([]);
@@ -173,11 +175,65 @@ describe('worker preflight', () => {
     expect(staging.commands).toContain('pnpm verify');
   });
 
-  it('refuses when the gate fails and runs nothing after it', async () => {
+  it('lets staging deploy while the official number and the company facts are unset', async () => {
+    const company = { ...COMPLETE_COMPANY, cnpj: COMPANY_FACT_UNSET };
+    expect(await runWorkerPreflight(workerInput({ officialWhatsAppNumber: OFFICIAL_NUMBER_UNSET, company }))).toBeNull();
+  });
+
+  it('refuses when the gate fails, after every cheap step has passed', async () => {
     const shell = fakeShell({ replies: { 'pnpm verify': { exitCode: 1, stdout: '' } } });
     const refusal = await runWorkerPreflight(workerInput({ shell }));
     expect(refusal?.step).toBe(PreflightStep.Gate);
-    expect(shell.commands.some((command) => command.includes('secret list'))).toBe(false);
+    expect(shell.commands.at(-1)).toBe('pnpm verify');
+    expect(shell.commands.some((command) => command.includes('secret list'))).toBe(true);
+    expect(shell.commands.some((command) => command.includes('migrations list'))).toBe(true);
+  });
+
+  it.each([
+    [
+      'a placeholder in the block',
+      { block: blockOf({ environment: DeployEnvironment.Staging, databaseId: `${PLACEHOLDER_VALUE_PREFIX}ID` }) },
+    ],
+    ['a missing smoke input', { environmentVariables: { ...COMPLETE_VARIABLES, [SmokeInput.OwnerPhone]: undefined } }],
+  ])('refuses %s before running the gate or any command', async (_name, overrides) => {
+    const shell = fakeShell({});
+    const refusal = await runWorkerPreflight(workerInput({ shell, ...overrides }));
+    expect(refusal).not.toBeNull();
+    expect(shell.commands).toEqual([]);
+  });
+
+  it('refuses a lowercase placeholder in the block', async () => {
+    const block = blockOf({ environment: DeployEnvironment.Staging, databaseId: 'replace-with-staging-id' });
+    const refusal = await runWorkerPreflight(workerInput({ block }));
+    expect(refusal?.step).toBe(PreflightStep.Config);
+    expect(refusal?.message).toContain('database_id');
+  });
+
+  it('refuses a lowercase placeholder smoke input', async () => {
+    const environmentVariables = { ...COMPLETE_VARIABLES, [SmokeInput.ConnectionSecret]: 'replace-with-x' };
+    const refusal = await runWorkerPreflight(workerInput({ environmentVariables }));
+    expect(refusal?.step).toBe(PreflightStep.SmokeInputs);
+  });
+
+  it('refuses a secret list that is not JSON, clearly', async () => {
+    const shell = fakeShell({ replies: { 'secret list': { exitCode: 0, stdout: 'not json' } } });
+    const refusal = await runWorkerPreflight(workerInput({ shell }));
+    expect(refusal?.step).toBe(PreflightStep.Secrets);
+    expect(refusal?.message).toContain('JSON');
+  });
+
+  it('refuses production maintainers that are not JSON, clearly', async () => {
+    const shell = fakeShell({ replies: { 'npm view': { exitCode: 0, stdout: 'not json' } } });
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell }));
+    expect(refusal?.step).toBe(PreflightStep.NpmVersion);
+    expect(refusal?.message).toContain('JSON');
+  });
+
+  it('refuses production with a clear message when git fetch fails', async () => {
+    const shell = fakeShell({ replies: { 'git fetch origin main': { exitCode: 128, stdout: '' } } });
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell }));
+    expect(refusal?.step).toBe(PreflightStep.Git);
+    expect(refusal?.message).toContain('fetch');
   });
 
   it('refuses a placeholder database id, naming database_id', async () => {
