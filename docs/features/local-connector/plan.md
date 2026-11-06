@@ -487,9 +487,9 @@ Versions were checked with `npm view` on 2026-11-06. The Worker side uses packag
 
 ### Step L4 (core)
 
-- [ ] **S4.1 red: acknowledge (L4a).** `libs/core/src/inbox/use-cases/acknowledge-delivery.test.ts` against `createInMemoryDependencies`. Commit `test(core): pin acknowledgeDelivery`.
+- [x] **S4.1 red: acknowledge (L4a)** (evidence: 0bcd490). `libs/core/src/inbox/use-cases/acknowledge-delivery.test.ts` against `createInMemoryDependencies`. Commit `test(core): pin acknowledgeDelivery`.
 - [ ] **S4.2 red: local connector wake setting.** `libs/core/src/wake/local-connector.test.ts` against `createInMemoryWakeRepository()` (L4b, after the merge). Commit `test(core): pin the local connector wake setting`.
-- [ ] **S4.3 green: acknowledge.** Implement: `findMessage`; return when it is `null`, its `agent` is not the input agent or its `direction` is not `MessageDirection.FromOwner`; `markRead({messageIds: [messageId]})`. Commit `feat(core): acknowledge delivery of an owner message`.
+- [x] **S4.3 green: acknowledge** (evidence: 2b39869). Implement: `findMessage`; return when it is `null`, its `agent` is not the input agent or its `direction` is not `MessageDirection.FromOwner`; `markRead({messageIds: [messageId]})`. Commit `feat(core): acknowledge delivery of an owner message`.
 - [ ] **S4.4 green: wake setting.** Implement `attachLocalConnector`, `detachLocalConnector` and the in-memory bodies of the three restore methods. Commit `feat(core): set the local wake while a connector is attached`.
 
 ### Step L1 (connector pure modules)
@@ -518,9 +518,9 @@ Versions were checked with `npm view` on 2026-11-06. The Worker side uses packag
 
 - [ ] **S3.1 red: route.** `apps/api/test/integration/connector-route.test.ts`. Commit `test(api): pin the connector route`.
 - [ ] **S3.2 red: socket.** `apps/api/test/integration/connector-socket.test.ts`, including binary frames and the close-restore case of A3. Commit `test(api): pin the connector socket`.
-- [ ] **S3.3 red: waker and wake setting.** `apps/api/test/unit/local-connector-waker.test.ts` (L3a, now) and `apps/api/test/integration/connector-wake-setting.test.ts` (L3b, the three restore methods on SQLite). Commit `test(api): pin the local waker and the restore record`.
+- [ ] **S3.3 red: waker and wake setting.** L3a half done: red `ee87f26`. `apps/api/test/unit/local-connector-waker.test.ts` (L3a, now) and `apps/api/test/integration/connector-wake-setting.test.ts` (L3b, the three restore methods on SQLite). Commit `test(api): pin the local waker and the restore record`.
 - [ ] **S3.4 green: restore record.** The v5 migration and the bodies of the three methods in `apps/api/src/adapters/sqlite/sqlite-wake-repository.ts`. Commit `feat(api): store the wake setting to restore`.
-- [ ] **S3.5 green: sockets and waker.** Commit `feat(api): push owner messages to connector sockets`.
+- [ ] **S3.5 green: sockets and waker.** L3a half done: `8127931` (also adds `parseDoneFrame` to `connector-sockets.ts` for L3b's `webSocketMessage`). Commit `feat(api): push owner messages to connector sockets`.
 - [ ] **S3.6 green: object and route.** `fetch` (upgrade and attach), `webSocketMessage` (`done` only), `webSocketClose` (`detachLocalConnector` with `remainingSocketCount`), `WakeRung.Local` in `dispatching-agent-waker.ts`, `routes/connector.ts`, the `app.ts` line. Commit `feat(api): accept the local connector socket`.
 
 ### Step L5 (docs)
@@ -530,8 +530,8 @@ Versions were checked with `npm view` on 2026-11-06. The Worker side uses packag
 
 ### Step L6 (shape and gates)
 
-- [ ] **S6.1 red: gate pins.** `scripts/verify.test.sh` expects the row `apps/connector/src/x.ts` → `product typecheck unit e2e`, and `gate_e2e` to call `pnpm --filter zapbip test:e2e`. Run `pnpm test:verify`. Expected failure: the row falls through to `apps/*`. Commit `test(verify): gate the connector end to end`.
-- [ ] **S6.2 green.** Add the row above `apps/*` and the `gate_e2e` call. Add the layout line to `AGENTS.md`. Run `pnpm --filter @zapbip/repository-shape test:unit`. Commit `feat(verify): run the connector suite in the e2e gate`.
+- [x] **S6.1 red: gate pins** (evidence: 030f1e9). `scripts/verify.test.sh` expects the row `apps/connector/src/x.ts` → `product typecheck unit e2e`, and `gate_e2e` to call `pnpm --filter zapbip test:e2e`. Run `pnpm test:verify`. Expected failure: the row falls through to `apps/*`. Commit `test(verify): gate the connector end to end`.
+- [x] **S6.2 green** (evidence: 4438217). Add the row above `apps/*` and the `gate_e2e` call. Add the layout line to `AGENTS.md`. Run `pnpm --filter @zapbip/repository-shape test:unit`. Commit `feat(verify): run the connector suite in the e2e gate`.
 
 ### Step L7 (E2E and packaging)
 

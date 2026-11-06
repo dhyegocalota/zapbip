@@ -91,3 +91,37 @@ pnpm --filter @zapbip/docs exec mint broken-links
 - The pages describe the command from the spec; they were not checked against the built connector (the connector lanes are separate).
 - The connection link's host is a placeholder: the real host and the install flow belong to other slices.
 - No repository-shape twin test exists on this branch; it lives on `feat/agent-inbox-core-docs`.
+
+## L3a, L4a, L6 (sockets and waker, acknowledge, verify gate)
+
+### What changed
+
+- `apps/api/src/account-inbox/connector-sockets.ts`: the four contract functions, plus `parseDoneFrame({data})` returning `{ok: true, frame} | {ok: false, reason: FrameRejectionReason}`. A non-string payload is `binary_frame`; a text payload over `CONNECTOR_FRAME_MAX_BYTES` UTF-8 bytes is `frame_too_large`, checked before `JSON.parse`; a non-object or a `done` without a string `messageId` is `malformed`; any other `type` is `unknown_type`. L3b's `webSocketMessage` is expected to call it and ignore a rejection.
+- `apps/api/src/adapters/wake/local-connector-waker.ts`: `notify` lists up to `CONNECTOR_INBOX_LIMIT` unread messages and sends one `messages` frame; `Woken` only when a socket received it.
+- `libs/core/src/inbox/use-cases/acknowledge-delivery.ts`: marks read only an existing owner message of the given agent.
+- `scripts/verify-gates.tsv`, `scripts/verify.sh`, `scripts/verify.test.sh`, `AGENTS.md`: connector row `typecheck unit e2e` above `apps/*`; `gate_e2e` also runs `pnpm --filter zapbip test:e2e` then `test:packaging`.
+
+### How to run
+
+`pnpm --filter @zapbip/api test:unit`, `pnpm --filter @zapbip/core test:unit`, `pnpm test:verify`.
+
+### Red then green
+
+| Test | Red before | Green after |
+|------|------------|-------------|
+| `apps/api/test/unit/local-connector-waker.test.ts` (20 cases, `ee87f26`) | `createLocalConnectorWaker`, `connectorAgentOf`, `remainingSocketCount`, `acceptConnectorSocket`, `parseDoneFrame is not implemented` | `8127931` |
+| `libs/core/src/inbox/use-cases/acknowledge-delivery.test.ts` (6 cases, `0bcd490`) | `acknowledgeDelivery is not implemented` | `2b39869` |
+| `scripts/verify.test.sh` connector cases (`030f1e9`) | 3 checks failed: row fell through to `apps/*`, no connector e2e or packaging call | `4438217` |
+
+### Hypotheses to attack
+
+1. The waker never sends to a socket of another agent. Break it by: two agents with sockets, owner message for one.
+2. A frame of exactly `CONNECTOR_FRAME_MAX_BYTES` bytes is accepted and one byte more is rejected, including multibyte text. Break it by: boundary payloads in `é`-style characters.
+3. `acknowledgeDelivery` never marks an agent's own outbound message or another agent's message. Break it by: `done` for such ids through a real socket (L3b).
+4. A connector-only change runs the connector e2e and packaging suites and not the API integration suite.
+
+### Known gaps
+
+- `acceptConnectorSocket` is unit tested with a stubbed `WebSocketPair` global; the real pair is covered only by L3b's integration tests.
+- The connector gate runs its e2e suite for every API-side e2e run too (`gate_e2e` is not split by package).
+- `parseDoneFrame` is an addition to the contract, used by L3b.
