@@ -39,7 +39,7 @@ import {
 import type { CallOutcome } from '../contract/account-inbox-rpc';
 import type { Bindings } from '../contract/env';
 import { accountInboxOf } from './account-inbox-stub';
-import { HttpStatus } from './http-status';
+import { HttpStatus } from '../contract/http-status';
 
 type RequestContext = {
   bindings: Bindings;
@@ -137,6 +137,12 @@ async function channelEntryOf(input: {
     maxBytes: MEDIA_MAX_BYTES_INBOUND,
     developmentMediaOrigin: context.developmentMediaOrigin,
     attempts: MEDIA_DOWNLOAD_ATTEMPTS,
+    isCommitted: async () =>
+      valueOf({
+        outcome: await accountInboxOf({ bindings: context.bindings, accountId }).hasChannelReceipt({
+          channelMessageId: parsed.channelMessageId,
+        }),
+      }),
   });
   if (!download.stored) {
     logOperatorEvent({

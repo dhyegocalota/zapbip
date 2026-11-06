@@ -1,6 +1,6 @@
 import { DeliveryState, IdPrefix, MediaOrigin, MediaSourceKind, MessageDirection, MessageKind, ForwardedKind } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
-import { SENDING_STALE_MS } from '../claim-constants';
+import { SENDING_STALE_MS } from '../constants';
 import type { Message, MessageContent } from '../message';
 import { askAndAbandon, createEnvironment } from './fixtures';
 

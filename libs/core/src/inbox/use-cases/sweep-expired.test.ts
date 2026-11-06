@@ -1,7 +1,13 @@
 import { DeliveryState, MediaOrigin, SECOND_MS } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
-import { MEDIA_RETENTION_MS, QUEUE_RETENTION_MS, QUESTION_RETENTION_MS, RECEIPT_RETENTION_MS, UPLOAD_TTL_MS } from '../constants';
-import { SENDING_STALE_MS } from '../claim-constants';
+import {
+  MEDIA_RETENTION_MS,
+  QUEUE_RETENTION_MS,
+  QUESTION_RETENTION_MS,
+  RECEIPT_RETENTION_MS,
+  UPLOAD_TTL_MS,
+  SENDING_STALE_MS,
+} from '../constants';
 import { insertQueued } from '../testing/channel-fixtures';
 import { askAndAbandon, closeWindow, connectionOf, createEnvironment, receiveUpload } from '../testing/fixtures';
 import { claimQueued } from './claim-queued';

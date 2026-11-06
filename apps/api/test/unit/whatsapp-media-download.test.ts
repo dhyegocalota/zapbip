@@ -294,7 +294,6 @@ describe('downloadInboundMedia', () => {
       developmentMediaOrigin: null,
       attempts: MEDIA_DOWNLOAD_ATTEMPTS,
       isCommitted: async () => false,
-      isCommitted: async () => false,
     });
     await expect(result).rejects.toThrow('r2 down');
   });
@@ -324,7 +323,6 @@ describe('downloadInboundMedia through the real Graph client', () => {
       maxBytes: MEDIA_MAX_BYTES_INBOUND,
       developmentMediaOrigin: null,
       attempts: MEDIA_DOWNLOAD_ATTEMPTS,
-      isCommitted: async () => false,
       isCommitted: async () => false,
     });
     return { result, ...storeDouble };
@@ -360,7 +358,6 @@ describe('downloadInboundMedia through the real Graph client', () => {
       maxBytes: MEDIA_MAX_BYTES_INBOUND,
       developmentMediaOrigin: null,
       attempts: MEDIA_DOWNLOAD_ATTEMPTS,
-      isCommitted: async () => false,
       isCommitted: async () => false,
     });
     await expect(run).rejects.toBeInstanceOf(RetriableMediaError);

@@ -1,6 +1,6 @@
 import { DeliveryState } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
-import { FLUSH_CLAIM_LIMIT } from '../claim-constants';
+import { FLUSH_CLAIM_LIMIT } from '../constants';
 import { insertQueued } from '../testing/channel-fixtures';
 import { createEnvironment } from '../testing/fixtures';
 import { claimQueued } from './claim-queued';

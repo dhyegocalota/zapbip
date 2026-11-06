@@ -1,7 +1,6 @@
 import { ChannelErrorKind, DeliveryState, OwnerLocale, TemplateKind } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
-import { FLUSH_CLAIM_LIMIT } from '../claim-constants';
-import { QUEUE_RETENTION_MS } from '../constants';
+import { FLUSH_CLAIM_LIMIT, QUEUE_RETENTION_MS } from '../constants';
 import { channelError, insertQueued } from '../testing/channel-fixtures';
 import { closeWindow as closeWindowFixture, createEnvironment } from '../testing/fixtures';
 import { isOwnerWindowOpen } from '../window';

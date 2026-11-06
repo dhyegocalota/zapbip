@@ -1,5 +1,5 @@
 import { timingSafeEqual } from 'node:crypto';
-import { HttpStatus } from '../../routes/http-status';
+import { HttpStatus } from '../../contract/http-status';
 import { WebhookHubMode } from './whatsapp-enums';
 
 type ChallengeAnswer = { status: number; body: string | null };

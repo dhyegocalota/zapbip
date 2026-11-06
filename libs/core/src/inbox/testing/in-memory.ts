@@ -9,8 +9,7 @@ import {
   type OwnerLocale,
   type TemplateKind,
 } from '@zapbip/types';
-import { SENDING_STALE_MS } from '../claim-constants';
-import { QUEUE_RETENTION_MS, QUESTION_RETENTION_MS, RECEIPT_RETENTION_MS } from '../constants';
+import { SENDING_STALE_MS, QUEUE_RETENTION_MS, QUESTION_RETENTION_MS, RECEIPT_RETENTION_MS } from '../constants';
 import type { AgentName } from '../connection';
 import type { AgentRecord, ChannelStatusDetail, OwnerWindow, RoutingList, StoredMedia } from '../inbox-records';
 import type { Message } from '../message';

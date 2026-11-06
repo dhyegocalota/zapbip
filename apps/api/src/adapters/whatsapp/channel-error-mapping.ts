@@ -1,6 +1,6 @@
 import { ChannelError } from '@zapbip/core';
 import { ChannelErrorKind } from '@zapbip/types';
-import { HttpStatus } from '../../routes/http-status';
+import { HttpStatus } from '../../contract/http-status';
 import { GRAPH_NO_RESPONSE_STATUS } from './graph-client';
 import { WhatsAppErrorCode } from './whatsapp-enums';
 

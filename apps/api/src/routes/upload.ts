@@ -9,7 +9,8 @@ import { logEvent } from '../log';
 import { readSignedQuery, verifyLink } from '../signing';
 import { LinkPurpose } from '@zapbip/types';
 import { accountInboxOf } from './account-inbox-stub';
-import { ERROR_STATUS, HttpStatus } from './http-status';
+import { HttpStatus } from '../contract/http-status';
+import { ERROR_STATUS } from './http-status';
 
 const CONTENT_LENGTH_PATTERN = /^\d+$/;
 
