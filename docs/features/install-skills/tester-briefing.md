@@ -172,3 +172,8 @@ Known gaps:
 - Decision (owner delegated 2026-11-06): the page keeps user scope as the Claude Code default because the spec fixes it. Only the script's prompt adds an instruction to install at project scope and write the skill under `.claude/skills/zapbip/SKILL.md` in the throwaway project, so the owner's `~/.claude.json` and `~/.claude/skills` are untouched; the existing login is reused and never changed.
 - The pt-br "Grok on the web" title and body now say "Grok na web".
 - The live run waits for the merge after accounts-and-keys (see the plan).
+
+## Logic Bit footer and truthful docs
+
+- The install page ends with `INSTALL_PAGE_COPY[locale].footer` ("zapbip is a product of Logic Bit" / "zapbip é um produto da Logic Bit"). `COMPANY` is on no branch yet, so the trade name is a local constant in `install-page-copy.ts` and the website is not rendered. Cross-slice note: at the merge with the slice that defines `COMPANY` in `libs/types`, read the trade name from it and append the website unless it is `COMPANY_FACT_UNSET`.
+- `agents/supported-agents` (en + pt-br) is rewritten without "coming soon": every client can start the conversation and the table says how each one listens.

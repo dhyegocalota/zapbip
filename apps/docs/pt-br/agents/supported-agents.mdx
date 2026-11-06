@@ -1,20 +1,19 @@
 ---
 title: IAs compatíveis
-description: Quais IAs você pode conectar e o que cada uma faz.
+description: Quais IAs você pode conectar e como cada uma escuta você.
 ---
 
-| Sua IA                         | Espera sua resposta por até | Você pode puxar a conversa | Situação |
-| ------------------------------ | --------------------------- | -------------------------- | -------- |
-| ChatGPT                        | 5 minutos                   | Ainda não. Em breve        | Em breve |
-| Claude (app e site)            | 4 minutos                   | Ainda não. Em breve        | Em breve |
-| Claude Code                    | O tempo que precisar        | Ainda não. Em breve        | Em breve |
-| Codex                          | 5 minutos, até 15           | Ainda não. Em breve        | Em breve |
-| Grok                           | 1 minuto                    | Ainda não. Em breve        | Em breve |
-| Grok Bot                       | 2 minutos ou mais           | Ainda não. Em breve        | Em breve |
-| Qualquer app com suporte a MCP | Depende do app              | Não                        | Em breve |
+| Sua IA                | Como ela escuta                                                 | Você pode puxar a conversa |
+| --------------------- | --------------------------------------------------------------- | -------------------------- |
+| Claude Code           | Um canal na sua sessão aberta, ou o conector do zapbip          | Sim                        |
+| Codex                 | O conector do zapbip retoma a sua sessão                        | Sim                        |
+| Cursor                | Um terminal em segundo plano rodando `zapbip listen`            | Sim                        |
+| Gemini CLI            | Um terminal em segundo plano rodando `zapbip listen`            | Sim                        |
+| Hermes                | O plugin de plataforma do zapbip, ou um job a cada minuto       | Sim                        |
+| OpenClaw              | O plugin de canal do zapbip, ou um job a cada minuto            | Sim                        |
+| Grok Bot              | Uma rotina com webhook                                          | Sim                        |
+| Claude (app e site)   | Uma tarefa agendada com gatilho de API                          | Sim                        |
+| ChatGPT               | Uma tarefa agendada, verificada pelo menos uma vez por hora     | Sim, dentro de uma hora    |
+| Grok na web           | O seu Grok Bot fica de prontidão por ele                        | Sim, pelo seu Grok Bot     |
 
-O número do zapbip chega em breve, então todas as IAs aparecem como em breve. A tabela mostra o que cada uma vai fazer.
-
-## Puxar a conversa
-
-Hoje, se você escreve primeiro e sua IA não está ouvindo, a mensagem fica esperando e o zapbip avisa que a IA não está ouvindo agora. Acordar cada IA para ela responder na hora chega em breve.
+Toda IA espera sua resposta o tempo que for preciso. Sua IA define o jeito de escutar durante a instalação.

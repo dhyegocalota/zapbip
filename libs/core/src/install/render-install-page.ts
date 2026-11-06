@@ -27,5 +27,6 @@ export function renderInstallPage(input: InstallPageInput): string {
     '## Rules you follow after install',
     AGENT_RULES,
     ...sections,
+    texts.footer,
   ].join('\n\n');
 }
