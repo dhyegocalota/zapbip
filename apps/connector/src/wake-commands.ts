@@ -12,6 +12,7 @@ import {
 
 type ResumeArgumentBuilder = (input: { sessionId: string; isolationArguments: string[] }) => string[];
 
+const CODEX_WEB_SEARCH_DISABLED_CONFIGURATION = 'web_search="disabled"';
 const CODEX_SERVER_CONFIGURATION_PREFIX = `mcp_servers.${CODEX_ZAPBIP_SERVER_NAME}`;
 const CLAUDE_SAFETY_ARGUMENTS = ['--permission-mode', CLAUDE_PERMISSION_MODE, '--tools='];
 const CODEX_SAFETY_ARGUMENTS = [
@@ -23,6 +24,8 @@ const CODEX_SAFETY_ARGUMENTS = [
   `${CODEX_SERVER_CONFIGURATION_PREFIX}.default_tools_approval_mode="${CODEX_APPROVAL_MODE}"`,
   '-c',
   `${CODEX_SERVER_CONFIGURATION_PREFIX}.enabled_tools=["${CODEX_ALLOWED_TOOL_NAME}"]`,
+  '-c',
+  CODEX_WEB_SEARCH_DISABLED_CONFIGURATION,
 ];
 
 export const CLIENT_BINARY_NAME: Record<ConnectorClient, string> = {

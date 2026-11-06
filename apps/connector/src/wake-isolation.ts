@@ -17,7 +17,7 @@ export type WakeIsolation = { isolationArguments: string[]; cleanup: () => Promi
 export type WakeIsolationInput = { connectionLink: string; workingDirectory: string; codexHome?: string; systemConfigDirectory?: string };
 
 export async function removeStaleWakeDirectories(input: { nowMs?: number; userId?: number } = {}): Promise<void> {
-  const { nowMs = Date.now() } = input;
+  const { nowMs = Date.now(), userId = process.getuid?.() } = input;
   const temporaryDirectory = tmpdir();
   const names = (await readdir(temporaryDirectory)).filter((name) => name.startsWith(WAKE_DIRECTORY_PREFIX));
   await Promise.all(
@@ -25,8 +25,7 @@ export async function removeStaleWakeDirectories(input: { nowMs?: number; userId
       const directory = join(temporaryDirectory, name);
       const status = await statusOrNull({ directory });
       if (status === null) return;
-      const isStaleOwnDirectory =
-        status.isDirectory() && status.uid === process.getuid?.() && nowMs - status.mtimeMs > STALE_WAKE_DIRECTORY_AGE_MS;
+      const isStaleOwnDirectory = status.isDirectory() && status.uid === userId && nowMs - status.mtimeMs > STALE_WAKE_DIRECTORY_AGE_MS;
       if (isStaleOwnDirectory) await rm(directory, { recursive: true, force: true });
     }),
   );
@@ -44,6 +43,8 @@ const CODEX_MANAGED_CONFIG_FILE_NAME = 'managed_config.toml';
 const CODEX_SYSTEM_CONFIG_DIRECTORY = '/etc/codex';
 const STALE_WAKE_DIRECTORY_AGE_MS = CONNECTOR_WAKE_TIMEOUT_MS + CONNECTOR_KILL_GRACE_MS;
 const UNPARSEABLE_CONFIG_REASON = 'a Codex configuration file is not valid TOML';
+const MANAGED_SERVER_REASON = 'a managed Codex configuration declares an MCP server, which outranks the wake isolation';
+const ZAPBIP_REDEFINED_REASON = 'the zapbip MCP server is defined outside the Codex home configuration or is not a URL server';
 const UNIDENTIFIABLE_SERVER_REASON = 'a Codex MCP server in the configuration cannot be identified';
 const BARE_KEY_PATTERN = /^[A-Za-z0-9_-]+$/;
 const MISSING_ENTRY_CODE = 'ENOENT';
@@ -82,7 +83,14 @@ async function readTextOrEmpty(input: { file: string }): Promise<string> {
 }
 
 type TomlTable = Record<string, unknown>;
-type ServerReference = { profile: string | null; name: string };
+type ServerReference = { profile: string | null; name: string; definition: TomlTable };
+type ConfigFile = { file: string; layer: CodexConfigLayer };
+
+enum CodexConfigLayer {
+  Home = 'home',
+  Managed = 'managed',
+  Other = 'other',
+}
 
 function refuse(input: { reason: string }): never {
   throw new WakeIsolationRefusedError(input.reason);
@@ -109,10 +117,7 @@ function serversOf(input: { table: TomlTable; profile: string | null }): ServerR
   const { table, profile } = input;
   if (table.mcp_servers === undefined) return [];
   const servers = tableOrRefuse({ value: table.mcp_servers });
-  return Object.entries(servers).map(([name, definition]) => {
-    tableOrRefuse({ value: definition });
-    return { profile, name };
-  });
+  return Object.entries(servers).map(([name, definition]) => ({ profile, name, definition: tableOrRefuse({ value: definition }) }));
 }
 
 function profileTablesOf(input: { config: TomlTable }): [string, TomlTable][] {
@@ -145,17 +150,42 @@ function ancestorsOf(input: { directory: string }): string[] {
   return [input.directory, ...ancestorsOf({ directory: parent })];
 }
 
-function codexConfigFilesOf(input: { workingDirectory: string; codexHome: string; systemConfigDirectory: string }): string[] {
+function codexConfigFilesOf(input: { workingDirectory: string; codexHome: string; systemConfigDirectory: string }): ConfigFile[] {
   const { workingDirectory, codexHome, systemConfigDirectory } = input;
-  const projectFiles = ancestorsOf({ directory: resolve(workingDirectory) }).map((directory) =>
-    join(directory, CODEX_CONFIG_FOLDER, CODEX_CONFIG_FILE_NAME),
-  );
+  const projectFiles = ancestorsOf({ directory: resolve(workingDirectory) }).map((directory) => ({
+    file: join(directory, CODEX_CONFIG_FOLDER, CODEX_CONFIG_FILE_NAME),
+    layer: CodexConfigLayer.Other,
+  }));
   const layerFiles = [
-    join(systemConfigDirectory, CODEX_CONFIG_FILE_NAME),
-    join(codexHome, CODEX_CONFIG_FILE_NAME),
-    join(codexHome, CODEX_MANAGED_CONFIG_FILE_NAME),
+    { file: join(systemConfigDirectory, CODEX_CONFIG_FILE_NAME), layer: CodexConfigLayer.Other },
+    { file: join(systemConfigDirectory, CODEX_MANAGED_CONFIG_FILE_NAME), layer: CodexConfigLayer.Managed },
+    { file: join(codexHome, CODEX_CONFIG_FILE_NAME), layer: CodexConfigLayer.Home },
+    { file: join(codexHome, CODEX_MANAGED_CONFIG_FILE_NAME), layer: CodexConfigLayer.Managed },
   ];
-  return [...new Set([...layerFiles, ...projectFiles])];
+  return [...new Map([...layerFiles, ...projectFiles].map((configFile) => [configFile.file, configFile])).values()];
+}
+
+function isUrlServer(input: { definition: TomlTable }): boolean {
+  return typeof input.definition.url === 'string' && input.definition.command === undefined;
+}
+
+function assertLayerRules(input: { layer: CodexConfigLayer; references: ServerReference[] }): void {
+  const { layer, references } = input;
+  const zapbipReferences = references.filter((reference) => reference.name === CODEX_ZAPBIP_SERVER_NAME);
+  const otherReferences = references.filter((reference) => reference.name !== CODEX_ZAPBIP_SERVER_NAME);
+  const isManagedWithServers = layer === CodexConfigLayer.Managed && otherReferences.length > 0;
+  const isZapbipOutsideHome = layer !== CodexConfigLayer.Home && zapbipReferences.length > 0;
+  const isHomeZapbipUnsound = zapbipReferences.some((reference) => reference.profile !== null || !isUrlServer(reference));
+  if (isManagedWithServers) refuse({ reason: MANAGED_SERVER_REASON });
+  if (isZapbipOutsideHome) refuse({ reason: ZAPBIP_REDEFINED_REASON });
+  if (isHomeZapbipUnsound) refuse({ reason: ZAPBIP_REDEFINED_REASON });
+}
+
+async function referencesOfConfigFile(input: { configFile: ConfigFile }): Promise<ServerReference[]> {
+  const text = await readTextOrEmpty({ file: input.configFile.file });
+  const references = serverReferencesOf({ text });
+  assertLayerRules({ layer: input.configFile.layer, references });
+  return references;
 }
 
 async function prepareCodexIsolation(input: WakeIsolationInput): Promise<WakeIsolation> {
@@ -165,8 +195,8 @@ async function prepareCodexIsolation(input: WakeIsolationInput): Promise<WakeIso
     systemConfigDirectory = CODEX_SYSTEM_CONFIG_DIRECTORY,
   } = input;
   const configFiles = codexConfigFilesOf({ workingDirectory, codexHome, systemConfigDirectory });
-  const texts = await Promise.all(configFiles.map((file) => readTextOrEmpty({ file })));
-  const references = texts.flatMap((text) => serverReferencesOf({ text }));
+  const referencesPerFile = await Promise.all(configFiles.map((configFile) => referencesOfConfigFile({ configFile })));
+  const references = referencesPerFile.flat();
   const isZapbipAtTopLevel = (reference: ServerReference) => reference.profile === null && reference.name === CODEX_ZAPBIP_SERVER_NAME;
   const disabledArguments = references
     .filter((reference) => !isZapbipAtTopLevel(reference))
