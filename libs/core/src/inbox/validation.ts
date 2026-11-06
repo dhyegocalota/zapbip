@@ -22,7 +22,7 @@ const UPLOAD_MAX_BYTES = Math.max(...Object.values(MEDIA_MAX_BYTES));
 const LIST_ROW_DESCRIPTION_MAX_CHARS = 72;
 const HTTPS_PROTOCOL = 'https:';
 const WHITESPACE_PATTERN = /\s+/g;
-const MIME_TYPE_CONTROL_CHARACTER_PATTERN = /\p{Cc}/u;
+const MIME_TYPE_UNPRINTABLE_PATTERN = /[^\x20-\x7e]|^\s|\s$/;
 const MIME_TYPE_PARAMETERS_PATTERN = /;.*$/;
 const MIME_TYPE_TOKEN_PATTERN = /^[a-z0-9][a-z0-9!#$&^_.+-]{0,126}\/[a-z0-9][a-z0-9!#$&^_.+-]{0,126}$/;
 const EMOJI_PATTERN = /\p{Extended_Pictographic}|\p{Regional_Indicator}|⃣/u;
@@ -88,8 +88,8 @@ export function assertHttpsLink(input: { value: string }): void {
 }
 
 function assertMimeTypeToken(input: { mimeType: string }): void {
-  if (MIME_TYPE_CONTROL_CHARACTER_PATTERN.test(input.mimeType))
-    throw invalidInput({ message: 'mime_type: must not contain control characters' });
+  if (MIME_TYPE_UNPRINTABLE_PATTERN.test(input.mimeType))
+    throw invalidInput({ message: 'mime_type: must be printable ASCII without surrounding whitespace' });
   if (!MIME_TYPE_TOKEN_PATTERN.test(normalizeMimeType({ value: input.mimeType })))
     throw invalidInput({ message: 'mime_type: must be a type/subtype token' });
 }

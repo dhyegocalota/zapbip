@@ -13,19 +13,20 @@ import {
   HEARTBEAT_INTERVAL_MS,
   HEARTBEAT_TIMEOUT_MS,
   MCP_PATH_SUFFIX,
+  MessageKind,
   RECONNECT_BASE_MS,
   RECONNECT_JITTER_RATIO,
   RECONNECT_MAX_MS,
   RECONNECT_STABLE_MS,
   REPLACED_CLOSE_CODE,
   SECRET_REVOKED_MESSAGE,
-  UNAUTHORIZED_STATUS,
-  UPGRADE_REQUIRED_STATUS,
+  HttpStatus,
 } from '@zapbip/types';
 import { logConnectorEvent, type ConnectorLogFields, type ConnectorLogger } from './log';
 import { findNewestSessionId } from './session-lookup';
 import { REAL_TIMERS, type CancelTimer, type ConnectorTimers } from './timers';
 import { createWakeQueue, type WakeQueue } from './wake-queue';
+import { removeStaleWakeDirectories } from './wake-isolation';
 import { runWake } from './wake-runner';
 
 export type ServerFrameParse = { ok: true; frame: ServerFrame } | { ok: false; reason: FrameRejectionReason };
@@ -68,6 +69,14 @@ export async function probeConnectorLink(input: { probeLink: string }): Promise<
   return response.status;
 }
 
+const MESSAGE_KINDS: string[] = Object.values(MessageKind);
+
+function isTrustedMessage(input: { value: unknown }): boolean {
+  const message = asRecord(input);
+  if (message === null) return false;
+  return typeof message.messageId === 'string' && typeof message.forwarded === 'boolean' && MESSAGE_KINDS.includes(String(message.kind));
+}
+
 const FRAME_PARSERS: FrameParsers = {
   [ConnectorFrameType.Hello]: ({ body }) => {
     if (typeof body.agent !== 'string' || typeof body.previousWakeMode !== 'string') return null;
@@ -75,9 +84,8 @@ const FRAME_PARSERS: FrameParsers = {
   },
   [ConnectorFrameType.Messages]: ({ body }) => {
     const { messages } = body;
-    const hasMessageIds =
-      Array.isArray(messages) && messages.every((message) => typeof asRecord({ value: message })?.messageId === 'string');
-    if (!hasMessageIds) return null;
+    const hasTrustedFields = Array.isArray(messages) && messages.every((message) => isTrustedMessage({ value: message }));
+    if (!hasTrustedFields) return null;
     return body as unknown as MessagesFrame;
   },
 };
@@ -134,7 +142,7 @@ export async function runSocketSession(input: {
 }): Promise<number> {
   const { socketLink, signal, log, connectedFields, createQueue, timers = REAL_TIMERS, random = Math.random } = input;
   const probeStatus = await probeStatusOf({ socketLink });
-  if (probeStatus !== UPGRADE_REQUIRED_STATUS) {
+  if (probeStatus !== HttpStatus.UpgradeRequired) {
     log({ event: ConnectorLogEvent.ConnectorClosed, fields: { status: probeStatus } });
     return FAILURE_EXIT_CODE;
   }
@@ -227,6 +235,7 @@ export async function runSocketSession(input: {
         handleData({ data: event.data });
       });
       socket.addEventListener('close', (event) => {
+        if (hasEnded) return;
         const isReplacement = event.code === REPLACED_CLOSE_CODE;
         if (isReplacement) log({ event: ConnectorLogEvent.ConnectorReplaced, fields: { agent: agentName } });
         if (!isReplacement) log({ event: ConnectorLogEvent.ConnectorClosed, fields: { code: event.code } });
@@ -246,7 +255,10 @@ export async function runSocketSession(input: {
   let attempt = 0;
   while (!signal.aborted) {
     const end = await holdSocket();
-    if (end.code === REPLACED_CLOSE_CODE) return FAILURE_EXIT_CODE;
+    if (end.code === REPLACED_CLOSE_CODE) {
+      wakeQueue.stop();
+      return FAILURE_EXIT_CODE;
+    }
     if (signal.aborted) break;
     const failedAttempts = end.wasStable ? 0 : attempt;
     const delayMs = reconnectDelayMs({ attempt: failedAttempts, random });
@@ -254,8 +266,8 @@ export async function runSocketSession(input: {
     await waitOrAbort({ delayMs, signal, timers });
     if (signal.aborted) break;
     const reconnectProbeStatus = await probeStatusOf({ socketLink });
-    if (reconnectProbeStatus === UNAUTHORIZED_STATUS) {
-      log({ event: ConnectorLogEvent.ConnectorClosed, fields: { status: UNAUTHORIZED_STATUS, message: SECRET_REVOKED_MESSAGE } });
+    if (reconnectProbeStatus === HttpStatus.Unauthorized) {
+      log({ event: ConnectorLogEvent.ConnectorClosed, fields: { status: HttpStatus.Unauthorized, message: SECRET_REVOKED_MESSAGE } });
       return FAILURE_EXIT_CODE;
     }
     attempt = failedAttempts + 1;
@@ -264,6 +276,7 @@ export async function runSocketSession(input: {
 }
 
 export async function runConnection(input: {
+  connectionLink: string;
   socketLink: string;
   client: ConnectorClient;
   workingDirectory: string;
@@ -272,8 +285,9 @@ export async function runConnection(input: {
   timers?: ConnectorTimers;
   random?: () => number;
 }): Promise<number> {
-  const { socketLink, client, workingDirectory, pinnedSessionId, signal, timers, random } = input;
+  const { connectionLink, socketLink, client, workingDirectory, pinnedSessionId, signal, timers, random } = input;
   const wakeAbortController = new AbortController();
+  await removeStaleWakeDirectories();
   signal.addEventListener('abort', () => wakeAbortController.abort(), { once: true });
 
   async function resolveSession(): Promise<{ sessionSource: ConnectorSessionSource; sessionId: string | null }> {
@@ -297,7 +311,22 @@ export async function runConnection(input: {
           event: ConnectorLogEvent.WakeStarted,
           fields: { messageId: message.messageId, kind: message.kind, sessionKind: sessionSource },
         });
-        const result = await runWake({ client, sessionSource, sessionId, message, workingDirectory, signal: wakeAbortController.signal });
+        const result = await runWake({
+          client,
+          connectionLink,
+          sessionSource,
+          sessionId,
+          message,
+          workingDirectory,
+          signal: wakeAbortController.signal,
+        });
+        if ('refusalKind' in result) {
+          logConnectorEvent({
+            event: ConnectorLogEvent.WakeRefusedIsolation,
+            fields: { messageId: message.messageId, reason: result.refusalKind },
+          });
+          throw new Error('wake refused: isolation');
+        }
         logConnectorEvent({
           event: ConnectorLogEvent.WakeFinished,
           fields: { messageId: message.messageId, outcome: result.outcome, exitCode: result.exitCode, elapsedMs: Date.now() - startedAt },

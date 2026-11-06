@@ -2,14 +2,14 @@ import { type ChildProcess, execFile, spawn } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { createWriteStream } from 'node:fs';
 import { request } from 'node:https';
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, rm } from 'node:fs/promises';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
-import { CONNECTOR_PATH_SUFFIX, MessageKind, SECOND_MS, UPGRADE_REQUIRED_STATUS } from '@zapbip/types';
+import { CONNECTOR_PATH_SUFFIX, MessageKind, SECOND_MS, HttpStatus } from '@zapbip/types';
 import { z } from 'zod';
 
 const runCommand = promisify(execFile);
@@ -24,15 +24,13 @@ const SIGNING_KEY_BYTES = 32;
 const WAKE_SECRET_KEY_BYTES = 32;
 const OWNER_PHONE = '5511999990000';
 const LOG_FILE_NAME = 'wrangler-dev.log';
-const MCP_CONFIG_FILE_NAME = 'mcp.json';
-const PRIVATE_FILE_MODE = 0o600;
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 
 const seedOutputSchema = z.object({ connections: z.array(z.object({ agent: z.string(), secret: z.string() })) });
 
 export type ScreenEntry = { text: string };
 
-export type StackAgent = { connectionUrl: string; mcpConfigFile: string };
+export type StackAgent = { connectionUrl: string };
 
 export type Stack = {
   origin: string;
@@ -81,7 +79,7 @@ async function waitForProbe(input: { origin: string; secret: string; deadline: n
   const answer = await httpsRequest({ url: `${input.origin}/c/${input.secret}${CONNECTOR_PATH_SUFFIX}`, method: 'GET', body: null }).catch(
     () => null,
   );
-  if (answer !== null && answer.status === UPGRADE_REQUIRED_STATUS) return;
+  if (answer !== null && answer.status === HttpStatus.UpgradeRequired) return;
   if (Date.now() > input.deadline) throw new Error('the connector route did not answer 426 in time');
   await delay(HEALTH_POLL_INTERVAL_MS);
   return waitForProbe(input);
@@ -146,9 +144,7 @@ export async function startStack(input: { agents: string[] }): Promise<Stack> {
   const agentEntries = await Promise.all(
     input.agents.map(async (agent): Promise<[string, StackAgent]> => {
       const connectionUrl = `${origin}/c/${secrets[agent]}/mcp`;
-      const mcpConfigFile = join(persistDirectory, `${agent}-${MCP_CONFIG_FILE_NAME}`);
-      await writeFile(mcpConfigFile, JSON.stringify({ url: connectionUrl }), { mode: PRIVATE_FILE_MODE });
-      return [agent, { connectionUrl, mcpConfigFile }];
+      return [agent, { connectionUrl }];
     }),
   );
 

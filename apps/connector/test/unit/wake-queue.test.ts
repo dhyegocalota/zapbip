@@ -96,6 +96,16 @@ describe('createWakeQueue', () => {
     expect(harness.maximumRunningCount()).toBe(1);
   });
 
+  test('after stop the running wake finishes and no queued message starts', async () => {
+    const harness = createHarness();
+    ['msg_1', 'msg_2'].forEach((messageId) => harness.enqueue({ messageId }));
+    await vi.waitFor(() => expect(harness.startedIds).toEqual(['msg_1']));
+    harness.queue.stop();
+    await harness.finish({ messageId: 'msg_1' });
+    await vi.waitFor(() => expect(harness.finishedIds).toEqual(['msg_1']));
+    expect(harness.startedIds).toEqual(['msg_1']);
+  });
+
   test('wakes a message queued twice once', async () => {
     const harness = createHarness();
     harness.enqueue({ messageId: 'msg_1' });

@@ -3,20 +3,30 @@ title: A janela de 24 horas
 description: Por que uma mensagem pode esperar e o que chega no seu celular.
 ---
 
+import { Chat } from '/snippets/chat.jsx';
+
 O WhatsApp só deixa o zapbip te escrever livremente até 24 horas depois da sua última mensagem para ele.
 
 ## Janela aberta
 
 As mensagens da sua IA chegam na hora.
 
+<Chat
+  messages={[
+    { you: true, text: 'Me avisa quando o job da noite terminar.', time: '22:10' },
+    { name: 'Claude Code', text: 'Job da noite terminou ✅', time: '23:31' },
+  ]}
+/>
+
 ## Janela fechada
 
 Você recebe um aviso de que suas IAs têm mensagens esperando. Escreva qualquer coisa e elas chegam, em ordem. Mensagens com mais de 7 dias expiram.
 
-## O que você escreve para a sua IA
-
-```text
-Me avisa quando o job da noite terminar.
-```
-
-Se você não escreve há um dia, vê o aviso primeiro. Responda qualquer coisa e a mensagem vem em seguida.
+<Chat
+  messages={[
+    { you: true, text: 'Me avisa quando o job da noite terminar.', time: 'Ontem 22:10' },
+    { notice: true, text: 'Há 1 mensagem esperando do Claude Code. Responda qualquer coisa para recebê-la.', time: '23:31' },
+    { you: true, text: 'ok', time: '08:05' },
+    { name: 'Claude Code', text: 'Job da noite terminou ✅', time: '08:05' },
+  ]}
+/>

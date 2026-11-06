@@ -96,9 +96,10 @@ function startShutdownController(): AbortController {
 
 async function connectCommand(input: { argv: string[] }): Promise<number> {
   const { client, workingDirectory, pinnedSessionId } = parseConnectArguments(input);
-  const { socketLink } = deriveConnectorLinks({ connectionLink: await readConnectionLink() });
+  const connectionLink = await readConnectionLink();
+  const { socketLink } = deriveConnectorLinks({ connectionLink });
   const abortController = startShutdownController();
-  return runConnection({ socketLink, client, workingDirectory, pinnedSessionId, signal: abortController.signal });
+  return runConnection({ connectionLink, socketLink, client, workingDirectory, pinnedSessionId, signal: abortController.signal });
 }
 
 function assertNoArguments(input: { argv: string[] }): void {

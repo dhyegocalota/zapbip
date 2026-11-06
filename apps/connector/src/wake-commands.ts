@@ -1,6 +1,7 @@
 import {
   CODEX_ALLOWED_TOOL_NAME,
   CODEX_APPROVAL_MODE,
+  CODEX_WEB_SEARCH_DISABLED_CONFIGURATION,
   CODEX_ACTIVE_WRITER_MESSAGE,
   CODEX_ZAPBIP_SERVER_NAME,
   CLAUDE_PERMISSION_MODE,
@@ -10,7 +11,7 @@ import {
   WAKE_ALLOWED_TOOL,
 } from '@zapbip/types';
 
-type ResumeArgumentBuilder = (input: { sessionId: string }) => string[];
+type ResumeArgumentBuilder = (input: { sessionId: string; isolationArguments: string[] }) => string[];
 
 const CODEX_SERVER_CONFIGURATION_PREFIX = `mcp_servers.${CODEX_ZAPBIP_SERVER_NAME}`;
 const CLAUDE_SAFETY_ARGUMENTS = ['--permission-mode', CLAUDE_PERMISSION_MODE, '--tools='];
@@ -23,6 +24,8 @@ const CODEX_SAFETY_ARGUMENTS = [
   `${CODEX_SERVER_CONFIGURATION_PREFIX}.default_tools_approval_mode="${CODEX_APPROVAL_MODE}"`,
   '-c',
   `${CODEX_SERVER_CONFIGURATION_PREFIX}.enabled_tools=["${CODEX_ALLOWED_TOOL_NAME}"]`,
+  '-c',
+  CODEX_WEB_SEARCH_DISABLED_CONFIGURATION,
 ];
 
 export const CLIENT_BINARY_NAME: Record<ConnectorClient, string> = {
@@ -35,18 +38,18 @@ function assertSessionId(input: { sessionId: string }): void {
 }
 
 export const RESUME_ARGUMENT_BUILDERS: Record<ConnectorClient, ResumeArgumentBuilder> = {
-  [ConnectorClient.ClaudeCode]: ({ sessionId }) => {
+  [ConnectorClient.ClaudeCode]: ({ sessionId, isolationArguments }) => {
     assertSessionId({ sessionId });
-    return ['-p', '--resume', sessionId, ...CLAUDE_SAFETY_ARGUMENTS, `--allowedTools=${WAKE_ALLOWED_TOOL}`];
+    return ['-p', '--resume', sessionId, ...CLAUDE_SAFETY_ARGUMENTS, ...isolationArguments, `--allowedTools=${WAKE_ALLOWED_TOOL}`];
   },
-  [ConnectorClient.Codex]: ({ sessionId }) => {
+  [ConnectorClient.Codex]: ({ sessionId, isolationArguments }) => {
     assertSessionId({ sessionId });
-    return [...CODEX_SAFETY_ARGUMENTS, 'resume', sessionId, STDIN_PROMPT_ARGUMENT];
+    return [...CODEX_SAFETY_ARGUMENTS, ...isolationArguments, 'resume', sessionId, STDIN_PROMPT_ARGUMENT];
   },
 };
 
-export function buildCodexNewSessionArguments(): string[] {
-  return [...CODEX_SAFETY_ARGUMENTS, STDIN_PROMPT_ARGUMENT];
+export function buildCodexNewSessionArguments(input: { isolationArguments: string[] }): string[] {
+  return [...CODEX_SAFETY_ARGUMENTS, ...input.isolationArguments, STDIN_PROMPT_ARGUMENT];
 }
 
 export function isActiveWriterRefusal(input: { stderrText: string }): boolean {

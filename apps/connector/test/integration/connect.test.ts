@@ -1,4 +1,4 @@
-import { access, mkdir } from 'node:fs/promises';
+import { access, mkdir, utimes, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import {
   CONNECTOR_FRAME_MAX_BYTES,
@@ -6,15 +6,16 @@ import {
   ConnectorFrameType,
   ConnectorLogEvent,
   ConnectorWakeOutcome,
+  WakeRefusalKind,
   FrameRejectionReason,
   HEARTBEAT_INTERVAL_MS,
   HEARTBEAT_TIMEOUT_MS,
   RECONNECT_BASE_MS,
   RECONNECT_STABLE_MS,
   REPLACED_CLOSE_CODE,
-  UNAUTHORIZED_STATUS,
   WAKE_ALLOWED_TOOL,
   WakeMode,
+  HttpStatus,
 } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { runConnection } from '../../src/connect';
@@ -51,6 +52,7 @@ vi.mock('../../src/log', () => ({
   },
 }));
 
+const CONNECTION_LINK = 'https://zapbip.example/c/abc123/mcp';
 const PINNED_SESSION_ID = '0b1f6c2e-5d7a-4c3b-9e8f-1a2b3c4d5e6f';
 const NEWEST_SESSION_ID = '7c9e6679-7425-40de-944b-e07fc1f90ae7';
 const FAKE_TIMER_NAMES = ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'] as const;
@@ -99,6 +101,7 @@ describe('runConnection', () => {
   ): Promise<number> {
     const { pinnedSessionId = PINNED_SESSION_ID, client = ConnectorClient.ClaudeCode, socketLink = server.socketLink, timers } = input;
     running = runConnection({
+      connectionLink: CONNECTION_LINK,
       socketLink,
       client,
       workingDirectory: fakeClients.workingDirectory,
@@ -177,6 +180,9 @@ describe('runConnection', () => {
         '--permission-mode',
         'dontAsk',
         '--tools=',
+        '--strict-mcp-config',
+        expect.stringMatching(/^--mcp-config=.+mcp\.json$/),
+        '--setting-sources=',
         `--allowedTools=${WAKE_ALLOWED_TOOL}`,
       ]);
       expect(runAt({ runs, index: 0 }).stdin).toMatch(/^<channel source="zapbip" sender="owner" verified="true">text of msg_1<\/channel>/);
@@ -255,6 +261,48 @@ describe('runConnection', () => {
       sendMessages({ messageIds: ['msg_2'] });
       await server.waitForFrames({ type: ConnectorFrameType.Done, count: 1 });
       expect(doneMessageIds()).toEqual(['msg_2']);
+    });
+
+    it('removes leftover wake folders when it starts', async () => {
+      const leftover = join(fakeClients.rootDirectory, 'zapbip-wake-leftover');
+      await mkdir(leftover, { recursive: true });
+      const longAgoSeconds = 1;
+      await utimes(leftover, longAgoSeconds, longAgoSeconds);
+      vi.stubEnv('TMPDIR', fakeClients.rootDirectory);
+      startConnector();
+      await server.waitForConnections({ count: 1 });
+
+      await expect(access(leftover)).rejects.toThrow();
+    });
+
+    it('refuses to wake Codex over an unparseable config, logs it and sends no done', async () => {
+      await mkdir(fakeClients.codexHome, { recursive: true });
+      await writeFile(join(fakeClients.codexHome, 'config.toml'), 'mcp_servers = = broken\n');
+      startConnector({ client: ConnectorClient.Codex });
+      await server.waitForConnections({ count: 1 });
+      sendMessages({ messageIds: ['msg_1'] });
+      await waitForLog({ event: ConnectorLogEvent.WakeRefusedIsolation });
+
+      expect(loggedFieldsOf({ event: ConnectorLogEvent.WakeRefusedIsolation })).toMatchObject({
+        messageId: 'msg_1',
+        reason: WakeRefusalKind.Unparseable,
+      });
+      expect(await fakeClients.readRuns()).toHaveLength(0);
+      expect(doneMessageIds()).toEqual([]);
+    });
+
+    it('logs the unreadable kind and no path when a Codex config layer cannot be read', async () => {
+      await mkdir(join(fakeClients.codexHome, 'config.toml'), { recursive: true });
+      startConnector({ client: ConnectorClient.Codex });
+      await server.waitForConnections({ count: 1 });
+      sendMessages({ messageIds: ['msg_1'] });
+      await waitForLog({ event: ConnectorLogEvent.WakeRefusedIsolation });
+
+      expect(loggedFieldsOf({ event: ConnectorLogEvent.WakeRefusedIsolation })).toEqual({
+        messageId: 'msg_1',
+        reason: WakeRefusalKind.Unreadable,
+      });
+      expect(doneMessageIds()).toEqual([]);
     });
 
     it('resumes on the next wake the session the Codex fallback created', async () => {
@@ -372,12 +420,12 @@ describe('runConnection', () => {
 
   describe('pre-flight', () => {
     it('exits 1 on a 401 without opening a socket and without logging the link', async () => {
-      await restartServer({ probeStatus: UNAUTHORIZED_STATUS });
+      await restartServer({ probeStatus: HttpStatus.Unauthorized });
       const exitCode = await startConnector();
 
       expect(exitCode).toBe(EXIT_CODE_REFUSED);
       expect(server.upgradeCount()).toBe(0);
-      expect(loggedFieldsOf({ event: ConnectorLogEvent.ConnectorClosed })).toMatchObject({ status: UNAUTHORIZED_STATUS });
+      expect(loggedFieldsOf({ event: ConnectorLogEvent.ConnectorClosed })).toMatchObject({ status: HttpStatus.Unauthorized });
       expect(JSON.stringify(logRecorder.events)).not.toContain(FAKE_SECRET);
     });
 
@@ -438,6 +486,7 @@ describe('runConnection', () => {
       expect(loggedFieldsOf({ event: ConnectorLogEvent.ConnectorReconnecting })).toEqual({ attempt: 0, delayMs: RECONNECT_BASE_MS });
       timers.advance({ ms: RECONNECT_BASE_MS });
       await server.waitForConnections({ count: 2 });
+      expect(loggedEventsOf({ event: ConnectorLogEvent.ConnectorClosed })).toHaveLength(1);
     });
   });
 
@@ -486,7 +535,7 @@ describe('runConnection', () => {
       const timers = createManualTimers();
       const exiting = startConnector({ timers });
       await waitForLog({ event: ConnectorLogEvent.ConnectorConnected });
-      server.setProbeStatus({ status: UNAUTHORIZED_STATUS });
+      server.setProbeStatus({ status: HttpStatus.Unauthorized });
       server.dropConnections();
       await waitForLog({ event: ConnectorLogEvent.ConnectorReconnecting });
       timers.advance({ ms: RECONNECT_BASE_MS });
@@ -494,7 +543,7 @@ describe('runConnection', () => {
       expect(await exiting).toBe(EXIT_CODE_REFUSED);
       expect(server.connectionCount()).toBe(1);
       expect(loggedEventsOf({ event: ConnectorLogEvent.ConnectorClosed }).at(-1)?.fields).toMatchObject({
-        status: UNAUTHORIZED_STATUS,
+        status: HttpStatus.Unauthorized,
         message: expect.stringContaining('revoked'),
       });
       expect(JSON.stringify(logRecorder.events)).not.toContain(FAKE_SECRET);
@@ -603,6 +652,24 @@ describe('runConnection', () => {
       expect(loggedFieldsOf({ event: ConnectorLogEvent.ConnectorReplaced })).toEqual({ agent: FAKE_AGENT });
       expect(server.connectionCount()).toBe(1);
       expect(loggedEventsOf({ event: ConnectorLogEvent.ConnectorReconnecting })).toHaveLength(0);
+    });
+
+    it('runs at most one wake per process and lets a replaced connector finish its running wake', async () => {
+      fakeClients.apply({ behavior: { holdUntilFile: fakeClients.holdFile } });
+      startConnector();
+      await server.waitForConnections({ count: 1 });
+      sendMessages({ messageIds: ['msg_1', 'msg_2'] });
+      await waitForLog({ event: ConnectorLogEvent.WakeStarted });
+      await vi.waitFor(async () => expect(await fakeClients.readRuns()).toHaveLength(1));
+      server.closeConnections({ code: REPLACED_CLOSE_CODE });
+      expect(await running).toBe(EXIT_CODE_REFUSED);
+      expect(await fakeClients.readRuns()).toHaveLength(1);
+
+      await fakeClients.release();
+      await waitForLog({ event: ConnectorLogEvent.WakeFinished });
+      const runs = await fakeClients.readRuns();
+      expect(runs).toHaveLength(1);
+      expect(runAt({ runs, index: 0 })).toMatchObject({ exitCode: 0, signal: null });
     });
 
     it('closes the socket and exits 0 on the signal', async () => {

@@ -8,6 +8,8 @@ import {
 } from '../../src/wake-commands';
 
 const SESSION_ID = '0ff172bc-aa4e-4181-989c-3837345aa2cd';
+const CLAUDE_ISOLATION_ARGUMENTS = ['--strict-mcp-config', '--mcp-config=/private/zapbip-wake/mcp.json', '--setting-sources='];
+const CODEX_ISOLATION_ARGUMENTS = ['-c', 'mcp_servers.deploy.enabled=false'];
 const CODEX_SAFETY_ARGUMENTS = [
   'exec',
   '--skip-git-repo-check',
@@ -17,6 +19,8 @@ const CODEX_SAFETY_ARGUMENTS = [
   'mcp_servers.zapbip.default_tools_approval_mode="approve"',
   '-c',
   'mcp_servers.zapbip.enabled_tools=["send_message"]',
+  '-c',
+  'web_search="disabled"',
 ];
 
 describe('CLIENT_BINARY_NAME', () => {
@@ -26,39 +30,47 @@ describe('CLIENT_BINARY_NAME', () => {
 });
 
 describe('RESUME_ARGUMENT_BUILDERS', () => {
-  test('Claude Code resumes the session in dontAsk mode with every built-in tool off and only send_message allowed', () => {
-    expect(RESUME_ARGUMENT_BUILDERS[ConnectorClient.ClaudeCode]({ sessionId: SESSION_ID })).toEqual([
+  test('Claude Code resumes the session in dontAsk mode with every built-in tool off, only the zapbip server and only send_message allowed', () => {
+    expect(
+      RESUME_ARGUMENT_BUILDERS[ConnectorClient.ClaudeCode]({ sessionId: SESSION_ID, isolationArguments: CLAUDE_ISOLATION_ARGUMENTS }),
+    ).toEqual([
       '-p',
       '--resume',
       SESSION_ID,
       '--permission-mode',
       'dontAsk',
       '--tools=',
+      '--strict-mcp-config',
+      '--mcp-config=/private/zapbip-wake/mcp.json',
+      '--setting-sources=',
       '--allowedTools=mcp__zapbip__send_message',
     ]);
   });
 
-  test('Codex resumes the session read-only with only send_message enabled and reads the prompt from standard input', () => {
-    expect(RESUME_ARGUMENT_BUILDERS[ConnectorClient.Codex]({ sessionId: SESSION_ID })).toEqual([
-      ...CODEX_SAFETY_ARGUMENTS,
-      'resume',
-      SESSION_ID,
-      '-',
-    ]);
+  test('Codex resumes the session read-only with only send_message enabled, every other server off and the prompt on standard input', () => {
+    expect(
+      RESUME_ARGUMENT_BUILDERS[ConnectorClient.Codex]({ sessionId: SESSION_ID, isolationArguments: CODEX_ISOLATION_ARGUMENTS }),
+    ).toEqual([...CODEX_SAFETY_ARGUMENTS, ...CODEX_ISOLATION_ARGUMENTS, 'resume', SESSION_ID, '-']);
   });
 
   test.each([ConnectorClient.ClaudeCode, ConnectorClient.Codex])('%s rejects a session id that is not a UUID', (client) => {
-    expect(() => RESUME_ARGUMENT_BUILDERS[client]({ sessionId: '--dangerously-skip-permissions' })).toThrow('session id is not a UUID');
+    expect(() => RESUME_ARGUMENT_BUILDERS[client]({ sessionId: '--dangerously-skip-permissions', isolationArguments: [] })).toThrow(
+      'session id is not a UUID',
+    );
   });
 });
 
 describe('buildCodexNewSessionArguments', () => {
   test('starts a new session with the same safety flags and reads the prompt from standard input', () => {
-    expect(buildCodexNewSessionArguments()).toEqual([...CODEX_SAFETY_ARGUMENTS, '-']);
+    expect(buildCodexNewSessionArguments({ isolationArguments: CODEX_ISOLATION_ARGUMENTS })).toEqual([
+      ...CODEX_SAFETY_ARGUMENTS,
+      ...CODEX_ISOLATION_ARGUMENTS,
+      '-',
+    ]);
   });
 
   test('never resumes', () => {
-    expect(buildCodexNewSessionArguments()).not.toContain('resume');
+    expect(buildCodexNewSessionArguments({ isolationArguments: [] })).not.toContain('resume');
   });
 });
 

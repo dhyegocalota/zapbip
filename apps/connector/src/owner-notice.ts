@@ -11,7 +11,7 @@ export function buildOwnerNotice(input: { message: Message }): OwnerNotice {
     messageId: message.messageId,
     kind: message.kind,
     sender: CHANNEL_SENDER,
-    verified: !message.forwarded,
+    verified: message.forwarded === false,
     forwarded: message.forwarded,
     text: ownerMessageText({ message }),
   };

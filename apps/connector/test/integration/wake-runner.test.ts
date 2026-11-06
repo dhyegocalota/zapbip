@@ -1,11 +1,25 @@
-import { access } from 'node:fs/promises';
+import { createServer, type Server } from 'node:http';
+import { access, mkdir, writeFile } from 'node:fs/promises';
+import type { AddressInfo } from 'node:net';
 import { join } from 'node:path';
-import { CONNECTOR_WAKE_TIMEOUT_MS, ConnectorClient, ConnectorSessionSource, ConnectorWakeOutcome, WAKE_ALLOWED_TOOL } from '@zapbip/types';
+import {
+  CONNECTOR_KILL_GRACE_MS,
+  CONNECTOR_WAKE_TIMEOUT_MS,
+  ConnectorClient,
+  ConnectorSessionSource,
+  ConnectorWakeOutcome,
+  WAKE_ALLOWED_TOOL,
+  WakeRefusalKind,
+} from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { runWake } from '../../src/wake-runner';
 import { createFakeClients, runAt, type FakeClients } from '../support/fake-client-binary';
 import { ownerTextMessage } from '../support/fake-event-server';
 
+const CONNECTION_LINK = 'https://zapbip.example/c/secret-abc/mcp';
+const DECOY_SERVER_NAME = 'deploy';
+const OWNER_ONLY_MODE = 0o600;
+const MCP_CONFIG_PREFIX = '--mcp-config=';
 const SESSION_ID = '0b1f6c2e-5d7a-4c3b-9e8f-1a2b3c4d5e6f';
 const FAILED_EXIT_CODE = 2;
 const CHILD_OUTPUT_MARKER = 'SECRET-MARKER-42';
@@ -16,10 +30,11 @@ const HOLD_FOREVER_BEHAVIOR = { hang: true };
 describe('runWake', () => {
   let fakeClients: FakeClients;
 
-  function wake(input: { client: ConnectorClient; sessionId?: string | null; text?: string }) {
-    const { client, sessionId = SESSION_ID, text = 'Oi' } = input;
+  function wake(input: { client: ConnectorClient; sessionId?: string | null; text?: string; connectionLink?: string }) {
+    const { client, sessionId = SESSION_ID, text = 'Oi', connectionLink = CONNECTION_LINK } = input;
     return runWake({
       client,
+      connectionLink,
       sessionSource: ConnectorSessionSource.Pinned,
       sessionId,
       message: ownerTextMessage({ messageId: 'msg_1', text }),
@@ -52,8 +67,101 @@ describe('runWake', () => {
       '--permission-mode',
       'dontAsk',
       '--tools=',
+      '--strict-mcp-config',
+      expect.stringMatching(/^--mcp-config=.+mcp\.json$/),
+      '--setting-sources=',
       `--allowedTools=${WAKE_ALLOWED_TOOL}`,
     ]);
+  });
+
+  it('hands Claude Code a private config holding only the zapbip server and removes it after the child exits', async () => {
+    await wake({ client: ConnectorClient.ClaudeCode });
+
+    const runs = await fakeClients.readRuns();
+    const run = runAt({ runs, index: 0 });
+    const configFlag = run.argv.find((argument) => argument.startsWith(MCP_CONFIG_PREFIX)) as string;
+    expect(run.mcpConfig?.mode).toBe(OWNER_ONLY_MODE);
+    expect(JSON.parse(run.mcpConfig?.text as string)).toEqual({ mcpServers: { zapbip: { type: 'http', url: CONNECTION_LINK } } });
+    await expect(access(configFlag.slice(MCP_CONFIG_PREFIX.length))).rejects.toThrow();
+  });
+
+  describe('another MCP server the owner configured', () => {
+    let decoyServer: Server;
+    let zapbipServer: Server;
+    let decoyRequests: number;
+
+    function listen(input: { handler: () => void }): Promise<Server> {
+      const server = createServer((_request, response) => {
+        input.handler();
+        response.writeHead(200).end('{}');
+      });
+      return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve(server)));
+    }
+
+    function linkOf(input: { server: Server }): string {
+      return `http://127.0.0.1:${(input.server.address() as AddressInfo).port}/mcp`;
+    }
+
+    beforeEach(async () => {
+      decoyRequests = 0;
+      decoyServer = await listen({ handler: () => (decoyRequests += 1) });
+      zapbipServer = await listen({ handler: () => undefined });
+      vi.stubEnv('FAKE_CLIENT_USER_MCP_SERVERS', JSON.stringify({ [DECOY_SERVER_NAME]: { url: linkOf({ server: decoyServer }) } }));
+      vi.stubEnv('FAKE_CLIENT_CALLS_MCP', '1');
+    });
+
+    afterEach(async () => {
+      await Promise.all([decoyServer, zapbipServer].map((server) => new Promise((resolve) => server.close(resolve))));
+    });
+
+    it('is never reachable from a woken Claude Code child', async () => {
+      const result = await wake({ client: ConnectorClient.ClaudeCode, connectionLink: linkOf({ server: zapbipServer }) });
+
+      expect(result.outcome).toBe(ConnectorWakeOutcome.Answered);
+      expect(decoyRequests).toBe(0);
+    });
+  });
+
+  it('disables every other MCP server the owner configured for Codex and keeps zapbip', async () => {
+    const codexConfig =
+      '[mcp_servers.zapbip]\nurl = "https://zapbip.example/c/secret-abc/mcp"\n\n[mcp_servers.deploy]\ncommand = "y"\n\n[mcp_servers.mail-box.env]\nA = "1"\n';
+    await mkdir(fakeClients.codexHome, { recursive: true });
+    await writeFile(join(fakeClients.codexHome, 'config.toml'), codexConfig);
+    await wake({ client: ConnectorClient.Codex });
+
+    const runs = await fakeClients.readRuns();
+    expect(runAt({ runs, index: 0 }).argv.slice(-7)).toEqual([
+      '-c',
+      'mcp_servers.deploy.enabled=false',
+      '-c',
+      'mcp_servers.mail-box.enabled=false',
+      'resume',
+      SESSION_ID,
+      '-',
+    ]);
+  });
+
+  it('refuses to wake Codex when its config cannot be parsed and starts no process', async () => {
+    await mkdir(fakeClients.codexHome, { recursive: true });
+    await writeFile(join(fakeClients.codexHome, 'config.toml'), 'mcp_servers = = broken\n');
+
+    expect(await wake({ client: ConnectorClient.Codex })).toEqual({
+      outcome: ConnectorWakeOutcome.RefusedIsolation,
+      exitCode: null,
+      refusalKind: WakeRefusalKind.Unparseable,
+    });
+    expect(await fakeClients.readRuns()).toHaveLength(0);
+  });
+
+  it('refuses to wake Codex when a config layer is unreadable and names the kind', async () => {
+    await mkdir(join(fakeClients.codexHome, 'config.toml'), { recursive: true });
+
+    expect(await wake({ client: ConnectorClient.Codex })).toEqual({
+      outcome: ConnectorWakeOutcome.RefusedIsolation,
+      exitCode: null,
+      refusalKind: WakeRefusalKind.Unreadable,
+    });
+    expect(await fakeClients.readRuns()).toHaveLength(0);
   });
 
   it('resumes the given Codex session with the restricted flags', async () => {
@@ -106,6 +214,18 @@ describe('runWake', () => {
     const runs = await fakeClients.readRuns();
     expect(result.outcome).toBe(ConnectorWakeOutcome.Failed);
     expect(runAt({ runs, index: 0 }).signal).toBe('SIGTERM');
+  });
+
+  it('kills with SIGKILL a child that ignores SIGTERM once the grace period passes and reports failed', async () => {
+    fakeClients.apply({ behavior: { hang: true, ignoreSigterm: true } });
+    vi.useFakeTimers({ toFake: [...FAKE_TIMER_NAMES] });
+    const waking = wake({ client: ConnectorClient.ClaudeCode });
+    await vi.waitFor(async () => expect(await fakeClients.readRuns()).toHaveLength(1));
+    await vi.advanceTimersByTimeAsync(CONNECTOR_WAKE_TIMEOUT_MS);
+    await vi.waitFor(async () => expect(await fakeClients.readRuns()).toHaveLength(1));
+    await vi.advanceTimersByTimeAsync(CONNECTOR_KILL_GRACE_MS);
+
+    expect(await waking).toEqual({ outcome: ConnectorWakeOutcome.Failed, exitCode: null });
   });
 
   it('never prints the output of the child', async () => {

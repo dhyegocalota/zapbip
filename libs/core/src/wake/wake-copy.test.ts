@@ -17,6 +17,12 @@ describe('WAKE_COPY', () => {
   });
 });
 
+describe('WAKE_COPY facts', () => {
+  test('every text says the message waits in the inbox', () => {
+    Object.values(OwnerLocale).forEach((locale) => expect(WAKE_COPY[WakeCopyKey.WakeFailed][locale]).toContain('inbox'));
+  });
+});
+
 describe('wakeFailedCopy', () => {
   test('returns the text of the requested locale', () => {
     Object.values(OwnerLocale).forEach((locale) =>

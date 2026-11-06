@@ -49,6 +49,6 @@ export function ownerMessageText(input: { message: Message }): string {
 
 export function buildOwnerPrompt(input: { message: Message }): string {
   const channelText = escapeChannelText({ text: ownerMessageText(input) });
-  const opening = input.message.forwarded ? FORWARDED_OPENING : VERIFIED_OPENING;
+  const opening = input.message.forwarded === false ? VERIFIED_OPENING : FORWARDED_OPENING;
   return `${opening}${channelText}${CHANNEL_CLOSING}\n${WAKE_INSTRUCTION}`;
 }
