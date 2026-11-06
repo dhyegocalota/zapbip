@@ -7,6 +7,13 @@ const OPENCLAW_CONSTANTS = 'apps/openclaw-plugin/src/constants.ts';
 const HERMES_PROJECT = 'apps/hermes-plugin/pyproject.toml';
 const HERMES_CONSTANTS = 'apps/hermes-plugin/zapbip_platform/constants.py';
 const HERMES_MANIFEST = 'apps/hermes-plugin/zapbip_platform/plugin.yaml';
+const HERMES_RUNTIME_LOCK = 'apps/hermes-plugin/requirements.txt';
+const HERMES_DEVELOPMENT_LOCK = 'apps/hermes-plugin/requirements-dev.txt';
+const WORKFLOW_FILE = '.github/workflows/verify.yml';
+const PIP_INSTALL_PATTERN = /^\s*- run: python3 -m pip install (.+)$/gm;
+const PINNED_DEPENDENCY_PATTERN = /^[\w.-]+==[\w.]+$/;
+const REQUIREMENT_LINE_PATTERN = /^[A-Za-z][\w.-]*==/;
+const HASH_FLAG = '--hash=sha256:';
 
 const sharedVersion = /export const ZAPBIP_NPM_VERSION = '([^']+)'/.exec(readRepositoryFile(SHARED_CONSTANTS))?.[1];
 const openclawManifest = JSON.parse(readRepositoryFile(OPENCLAW_MANIFEST));
@@ -43,5 +50,34 @@ describe('the plugin versions', () => {
   test('the Hermes constants and plugin manifest declare the shared version', () => {
     expect(versionOf({ path: HERMES_CONSTANTS, pattern: /PLUGIN_VERSION = "([^"]+)"/ })).toBe(sharedVersion);
     expect(versionOf({ path: HERMES_MANIFEST, pattern: /^version: (\S+)/m })).toBe(sharedVersion);
+  });
+
+  test('the Hermes project is installable with exactly pinned runtime dependencies and the plugin entry point', () => {
+    const project = readRepositoryFile(HERMES_PROJECT);
+    const dependencies = /^dependencies = \[(.*)\]$/m.exec(project)?.[1];
+    expect(project).toContain('[build-system]');
+    expect(project).toContain('[project.entry-points."hermes_agent.plugins"]');
+    expect(
+      dependencies
+        ?.split(',')
+        .map((entry) => entry.trim().replaceAll('"', ''))
+        .every((entry) => PINNED_DEPENDENCY_PATTERN.test(entry)),
+    ).toBe(true);
+  });
+
+  test.each([HERMES_RUNTIME_LOCK, HERMES_DEVELOPMENT_LOCK])('%s pins every requirement with a hash', (lockFile) => {
+    const requirementBlocks = readRepositoryFile(lockFile)
+      .split('\n')
+      .filter((line) => REQUIREMENT_LINE_PATTERN.test(line));
+    expect(requirementBlocks.length).toBeGreaterThan(0);
+    const text = readRepositoryFile(lockFile);
+    expect(text.split(HASH_FLAG).length - 1).toBeGreaterThanOrEqual(requirementBlocks.length);
+    expect(text).not.toMatch(/^[A-Za-z][\w.-]*==[^\\\n]*$/m);
+  });
+
+  test('the workflow installs the Python requirements only with --require-hashes from the hashed development lock', () => {
+    const installs = [...readRepositoryFile(WORKFLOW_FILE).matchAll(PIP_INSTALL_PATTERN)].map((match) => match[1]);
+    expect(installs.length).toBeGreaterThan(0);
+    expect(installs.every((install) => install === '--require-hashes -r apps/hermes-plugin/requirements-dev.txt')).toBe(true);
   });
 });
