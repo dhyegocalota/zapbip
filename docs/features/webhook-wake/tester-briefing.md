@@ -120,7 +120,7 @@ pnpm -F @zapbip/core test:unit
 
 ## Lane L3 (MCP `set_wake`)
 
-Status: red and implementation committed; green waits for `origin/feat/webhook-wake-l2` (the `setWake` RPC). Until it is merged, `pnpm typecheck` names `setWake` missing on `AccountInboxRpc` in `apps/api/src/mcp/set-wake.ts`.
+Status: green after the L2 merge (`90b73a5`): 11 of 11 pass.
 
 **What changed.** `McpToolName.SetWake` and its `TOOL_DEFINITIONS` entry (`apps/api/src/contract/tool-definitions.ts`); the handler in `apps/api/src/mcp/set-wake.ts` and its line in `tool-handlers.ts`; `apps/api/test/integration/set-wake.test.ts`. The tool input shape widens `WakeMode` with `UnavailableWakeMode` (`local`, `scheduled`, `standby`) so the handler answers `wake mode not available yet` (plan A18) instead of the SDK's input validation error.
 
@@ -189,4 +189,3 @@ pnpm typecheck
 - Not tested at the Durable Object level: the in-flight follow-up (the scripted transport cannot hold a response; core pins it), the live `ask` waiter at the alarm (core pins it), and the object restart between lease and retry (the scripted transport lives in memory and restarts empty).
 - `recordRevocation` is slice 3's (A31); only `clearWake` is tested, through the repository.
 - The own-host case runs with the test `PUBLIC_ORIGIN` (`http://localhost:8787`), whose host is also a blocked name, so it cannot tell the derived host from the blocked list; a variable origin needs a binding override this lane does not have.
->>>>>>> origin/feat/webhook-wake
