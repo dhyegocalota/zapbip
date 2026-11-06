@@ -490,3 +490,54 @@ What is not tested and why.
 - The Playwright walk of the simulator — the simulator has no browser UI; the walk is JSON screens, not a visual check.
 - Install prompt content per client — owned by `install-skills`; this slice tests the generic renderer and the parts only.
 - Agent name length: the tests read `AGENT_NAME_MAX_CHARS` from core, so they follow whichever value slice 1 settles (32 in the spec, 20 in the core review). The value itself is slice 1's decision and is confirmed at build.
+
+## Delta (2026-11-06): the install-link reply
+
+These boxes replace the install prompt parts, the generic renderer and the create and rotate cases that asserted `/c/<secret>/mcp` in a reply. The struck boxes above stay as history.
+
+### Install lines (`account-copy.test.ts`)
+
+- [ ] `renderInstallLines` — input: `installLink` and each locale; expected: exactly two lines, the first with the link, each under `WHATSAPP_TEXT_MAX_CHARS`, no `zb_conn_`.
+- [ ] `renderAccountReply` — input: `Created` and `Rotated` in both locales; expected: the text holds the agent name, the two install lines and the rotate hint, and no `zb_conn_`.
+- [ ] `renderAccountReply` — input: `Created` with the longest agent name; expected: at most `WHATSAPP_TEXT_MAX_CHARS`.
+
+### Create and rotate (`create-agent-connection.test.ts`, `rotate-agent-connection.test.ts`)
+
+- [ ] `createAgentConnection` — input: `claude`; expected: the reply holds `<publicOrigin>/i/zb_inst_`, not `/c/`, not the issued secret; the registered connection carries the install code digest, a sealed secret and `installCodeExpiresAt = now + INSTALL_CODE_TTL_MS`.
+- [ ] `createAgentConnection` — input: the sealed secret opened with the issued install code; expected: the issued secret; opened with another code: fails.
+- [ ] `rotateAgentConnection` — input: `claude` active; expected: a new install code replaces the old one; the old digest no longer resolves; the reply holds the new link.
+- [ ] `rotateAgentConnection` — input: the send fails; expected: the old install code digest, sealed secret and expiry are restored.
+- [ ] `receiveAccountMessage` — input: `novo agente claude`; expected: exactly one session text, no `1/n` label.
+
+### List (`list-agent-connections.test.ts`)
+
+- [ ] `listAgentConnections` — input: one agent with `clientName` `claude-code`, one with `null`; expected: the first line shows the client name, the second shows the empty mark; no secret or install code.
+
+### Vault (`install-code-vault.test.ts`)
+
+- [ ] `issue` — input: 1 000 issues; expected: distinct codes matching `zb_inst_` plus 22 base64url characters (16 bytes), digests of 64 hex characters, digest differs from the code.
+- [ ] `seal` and `open` — input: a round trip; expected: the secret returns.
+- [ ] `open` — input: a code differing in one character; expected: rejects.
+- [ ] `seal` — input: the same code and secret twice; expected: two different sealed values (random IV).
+
+### D1 (`d1-connections-lifecycle.test.ts`, `migration-0002.test.ts`)
+
+- [ ] Migration `0002` — expected: `connections` has `install_code_digest`, `install_code_sealed_secret`, `install_code_expires_at` and `first_call_at`; two rows with the same install code digest are refused.
+- [ ] `resolve` — input: a fresh code; expected: `Ready` with the connection link built from the opened secret, the agent, the account locale, `accountId` and `connectionId`.
+- [ ] `resolve` — input: unknown code, revoked connection; expected: `Unknown`.
+- [ ] `resolve` — input: `now` equal to the expiry; expected: `Expired` with the account locale.
+- [ ] `resolve` — input: after `recordFirstCall`; expected: `Used`.
+- [ ] `recordFirstCall` — input: called twice; expected: `first_call_at` keeps the first value; the sealed secret is null.
+- [ ] `recordFirstCall` — input: two connections, one call; expected: the other connection stays `Ready`.
+- [ ] `rotate` — input: a used connection rotated; expected: the new code is `Ready` and the old code is `Unknown`.
+- [ ] `revoke` — expected: the install code columns are cleared.
+- [ ] Secret never stored — input: a D1 dump after create; expected: no `zb_conn_` and no `zb_inst_` value.
+
+### Sweep (`deletion-sweep.test.ts`)
+
+- [ ] `clearExpiredInstallSecrets` — input: one expired and one live code; expected: only the expired sealed secret is cleared.
+
+### Logs (`logs-redaction.test.ts`) and E2E
+
+- [ ] Logs over the whole walk — expected: no captured line contains `zb_inst_`.
+- [ ] `accounts.e2e.test.ts` — steps: create, read the install link from the screen, the page shows the connection URL, a real MCP call with it, the second use of the link is `410`; expected as the spec's E2E.
