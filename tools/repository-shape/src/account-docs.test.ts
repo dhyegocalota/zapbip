@@ -17,7 +17,13 @@ const TRANSLATED_PREFIX = 'pt-br/';
 type Language = { name: string; prefix: string; localeKey: string; confirmationPhrase: string; historyStatement: RegExp };
 
 const LANGUAGES: Language[] = [
-  { name: 'English', prefix: '', localeKey: 'EnglishUs', confirmationPhrase: 'delete account permanently', historyStatement: /WhatsApp keeps the chat history/ },
+  {
+    name: 'English',
+    prefix: '',
+    localeKey: 'EnglishUs',
+    confirmationPhrase: 'delete account permanently',
+    historyStatement: /WhatsApp keeps the chat history/,
+  },
   {
     name: 'Portuguese',
     prefix: TRANSLATED_PREFIX,
@@ -33,7 +39,9 @@ function pagePath(input: { prefix: string; page: string }): string {
 
 function commandWordsOf(input: { localeKey: string }): string[] {
   const source = readRepositoryFile(COMMAND_WORDS_FILE);
-  return [...source.matchAll(COMMAND_WORD_PATTERN)].filter(([, localeKey]) => localeKey === input.localeKey).map(([, , words]) => words as string);
+  return [...source.matchAll(COMMAND_WORD_PATTERN)]
+    .filter(([, localeKey]) => localeKey === input.localeKey)
+    .map(([, , words]) => words as string);
 }
 
 describe.each(LANGUAGES)('account guides in $name', (language) => {

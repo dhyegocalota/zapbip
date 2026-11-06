@@ -63,10 +63,13 @@ describe('Durable Object agent admission', () => {
     expect((await createUploadFromAgent()).ok).toBe(false);
   });
 
-  it.each([AccountState.Suspended, AccountState.Deleting, AccountState.Waitlisted])('[row 488] createUpload refuses a %s account', async (state) => {
-    await setState({ state });
-    expect((await createUploadFromAgent()).ok).toBe(false);
-  });
+  it.each([AccountState.Suspended, AccountState.Deleting, AccountState.Waitlisted])(
+    '[row 488] createUpload refuses a %s account',
+    async (state) => {
+      await setState({ state });
+      expect((await createUploadFromAgent()).ok).toBe(false);
+    },
+  );
 
   it('serves a name that was revoked and created again', async () => {
     await revokeAgent();
