@@ -1,4 +1,4 @@
-import type { WakeMode } from '@zapbip/types';
+import { WakeMode } from '@zapbip/types';
 
 export type StandbyCandidate = {
   agent: string;
@@ -6,7 +6,15 @@ export type StandbyCandidate = {
   wakeMode: WakeMode;
 };
 
+const INELIGIBLE_WAKE_MODES: WakeMode[] = [WakeMode.None, WakeMode.Scheduled, WakeMode.Standby];
+
 export function pickStandbyAgent(input: { agent: string; candidates: StandbyCandidate[] }): string | null {
-  void input;
-  throw new Error('pickStandbyAgent is not implemented');
+  const eligibleCandidates = input.candidates.filter(
+    (candidate) => candidate.agent !== input.agent && !INELIGIBLE_WAKE_MODES.includes(candidate.wakeMode),
+  );
+  const newest = eligibleCandidates.reduce<StandbyCandidate | null>(
+    (best, candidate) => (best === null || candidate.createdAt > best.createdAt ? candidate : best),
+    null,
+  );
+  return newest === null ? null : newest.agent;
 }
