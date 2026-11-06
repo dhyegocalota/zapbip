@@ -38,14 +38,13 @@ import { HttpStatus } from './http-status';
 type RequestContext = {
   bindings: Bindings;
   environment: WebhookEnvironment;
+  developmentMediaOrigin: string | null;
 };
 
 const HUB_MODE_PARAMETER = 'hub.mode';
 const HUB_TOKEN_PARAMETER = 'hub.verify_token';
 const HUB_CHALLENGE_PARAMETER = 'hub.challenge';
 const PLAIN_TEXT_CONTENT_TYPE = 'text/plain';
-
-export const whatsappRoutes = new Hono<{ Bindings: Bindings }>();
 
 function runInSequence<Item, Result>(input: { items: Item[]; run: (item: Item) => Promise<Result> }): Promise<Result[]> {
   return input.items.reduce<Promise<Result[]>>(async (previous, item) => [...(await previous), await input.run(item)], Promise.resolve([]));
@@ -121,14 +120,14 @@ async function channelEntryOf(input: {
     graph: createGraphClient({
       baseUrl: whatsapp.graphBaseUrl,
       accessToken: whatsapp.accessToken,
-      developmentMediaOrigin: whatsapp.developmentMediaOrigin,
+      developmentMediaOrigin: context.developmentMediaOrigin,
       fetcher: fetch,
     }),
     mediaStore,
     accountId,
     request: media,
     maxBytes: MEDIA_MAX_BYTES_INBOUND,
-    developmentMediaOrigin: whatsapp.developmentMediaOrigin,
+    developmentMediaOrigin: context.developmentMediaOrigin,
     attempts: MEDIA_DOWNLOAD_ATTEMPTS,
   });
   if (!download.stored) {
@@ -202,44 +201,51 @@ async function processChange(input: { context: RequestContext; change: ParsedCha
   return runInSequence({ items: change.statuses, run: (status) => processStatus({ context, status }) });
 }
 
-whatsappRoutes.get(WHATSAPP_WEBHOOK_PATH, async (context) => {
-  const environment = readWebhookEnvironment({ env: context.env });
-  const answer = await answerWebhookChallenge({
-    mode: nullIfAbsent({ value: context.req.query(HUB_MODE_PARAMETER) }),
-    token: nullIfAbsent({ value: context.req.query(HUB_TOKEN_PARAMETER) }),
-    challenge: nullIfAbsent({ value: context.req.query(HUB_CHALLENGE_PARAMETER) }),
-    expectedToken: environment.verifyToken,
-  });
-  return new Response(answer.body, { status: answer.status, headers: { 'Content-Type': PLAIN_TEXT_CONTENT_TYPE } });
-});
+export function createWhatsappRoutes(input: { developmentMediaOrigin: string | null }): Hono<{ Bindings: Bindings }> {
+  const whatsappRoutes = new Hono<{ Bindings: Bindings }>();
 
-whatsappRoutes.post(WHATSAPP_WEBHOOK_PATH, async (context) => {
-  const declaredLength = context.req.header('content-length');
-  if (declaredLength !== undefined && Number(declaredLength) > WEBHOOK_MAX_BYTES) {
-    return context.json({ error: 'payload_too_large' }, HttpStatus.PayloadTooLarge);
-  }
-  const rawBody = await readBodyWithLimit({ body: context.req.raw.body, maxBytes: WEBHOOK_MAX_BYTES });
-  if (rawBody === null) return context.json({ error: 'payload_too_large' }, HttpStatus.PayloadTooLarge);
-  const environment = readWebhookEnvironment({ env: context.env });
-  const isSigned = await verifyWebhookSignature({
-    appSecret: environment.appSecret,
-    rawBody,
-    signatureHeader: nullIfAbsent({ value: context.req.header(WEBHOOK_SIGNATURE_HEADER) }),
+  whatsappRoutes.get(WHATSAPP_WEBHOOK_PATH, async (context) => {
+    const environment = readWebhookEnvironment({ env: context.env });
+    const answer = await answerWebhookChallenge({
+      mode: nullIfAbsent({ value: context.req.query(HUB_MODE_PARAMETER) }),
+      token: nullIfAbsent({ value: context.req.query(HUB_TOKEN_PARAMETER) }),
+      challenge: nullIfAbsent({ value: context.req.query(HUB_CHALLENGE_PARAMETER) }),
+      expectedToken: environment.verifyToken,
+    });
+    return new Response(answer.body, { status: answer.status, headers: { 'Content-Type': PLAIN_TEXT_CONTENT_TYPE } });
   });
-  if (!isSigned) return context.json(UNAUTHORIZED_BODY, HttpStatus.Unauthorized);
-  const parsedJson = parseJson({ text: new TextDecoder().decode(rawBody) });
-  if (!parsedJson.isValid) return context.json({ error: 'invalid_json' }, HttpStatus.BadRequest);
-  const changes = await parseWebhookNotification({ rawJson: parsedJson.value }).catch((error: unknown) => {
-    if (error instanceof z.ZodError) return null;
-    throw error;
+
+  whatsappRoutes.post(WHATSAPP_WEBHOOK_PATH, async (context) => {
+    const declaredLength = context.req.header('content-length');
+    if (declaredLength !== undefined && Number(declaredLength) > WEBHOOK_MAX_BYTES) {
+      return context.json({ error: 'payload_too_large' }, HttpStatus.PayloadTooLarge);
+    }
+    const rawBody = await readBodyWithLimit({ body: context.req.raw.body, maxBytes: WEBHOOK_MAX_BYTES });
+    if (rawBody === null) return context.json({ error: 'payload_too_large' }, HttpStatus.PayloadTooLarge);
+    const environment = readWebhookEnvironment({ env: context.env });
+    const isSigned = await verifyWebhookSignature({
+      appSecret: environment.appSecret,
+      rawBody,
+      signatureHeader: nullIfAbsent({ value: context.req.header(WEBHOOK_SIGNATURE_HEADER) }),
+    });
+    if (!isSigned) return context.json(UNAUTHORIZED_BODY, HttpStatus.Unauthorized);
+    const parsedJson = parseJson({ text: new TextDecoder().decode(rawBody) });
+    if (!parsedJson.isValid) return context.json({ error: 'invalid_json' }, HttpStatus.BadRequest);
+    const changes = await parseWebhookNotification({ rawJson: parsedJson.value }).catch((error: unknown) => {
+      if (error instanceof z.ZodError) return null;
+      throw error;
+    });
+    if (changes === null) return context.json({ error: 'invalid_notification' }, HttpStatus.BadRequest);
+    const requestContext: RequestContext = {
+      bindings: context.env,
+      environment,
+      developmentMediaOrigin: input.developmentMediaOrigin,
+    };
+    const retryFlags = await runInSequence({ items: changes, run: (change) => processChange({ context: requestContext, change }) });
+    const shouldRetry = retryFlags.flat().some(Boolean);
+    if (shouldRetry) return context.body(null, HttpStatus.ServiceUnavailable);
+    return context.body(null, HttpStatus.Ok);
   });
-  if (changes === null) return context.json({ error: 'invalid_notification' }, HttpStatus.BadRequest);
-  const requestContext: RequestContext = {
-    bindings: context.env,
-    environment,
-  };
-  const retryFlags = await runInSequence({ items: changes, run: (change) => processChange({ context: requestContext, change }) });
-  const shouldRetry = retryFlags.flat().some(Boolean);
-  if (shouldRetry) return context.body(null, HttpStatus.ServiceUnavailable);
-  return context.body(null, HttpStatus.Ok);
-});
+
+  return whatsappRoutes;
+}

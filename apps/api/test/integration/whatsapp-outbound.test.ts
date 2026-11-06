@@ -57,7 +57,7 @@ function senderFor(input: { accountId: string }) {
     graph: createGraphClient({
       baseUrl: whatsapp.graphBaseUrl,
       accessToken: whatsapp.accessToken,
-      developmentMediaOrigin: whatsapp.developmentMediaOrigin,
+      developmentMediaOrigin: null,
       fetcher: fetch,
     }),
     findOwnerByAccountId: (lookup) => findOwnerByAccountId({ database: testEnv.CONNECTIONS, accountId: lookup.accountId }),

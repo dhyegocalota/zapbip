@@ -87,7 +87,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       graph: createGraphClient({
         baseUrl: whatsapp.graphBaseUrl,
         accessToken: whatsapp.accessToken,
-        developmentMediaOrigin: whatsapp.developmentMediaOrigin,
+        developmentMediaOrigin: null,
         fetcher: fetch,
       }),
       findOwnerByAccountId: ({ accountId }) => findOwnerByAccountId({ database, accountId }),

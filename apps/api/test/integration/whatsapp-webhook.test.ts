@@ -71,11 +71,12 @@ function postNotification(input: { notification: object }): Promise<Response> {
   return postSigned({ text: JSON.stringify(input.notification) });
 }
 
-async function postNotificationWithAccessToken(input: { notification: object }): Promise<Response> {
+async function postNotificationWithAccessToken(input: { notification: object; developmentMediaOrigin?: string }): Promise<Response> {
+  const { developmentMediaOrigin = null } = input;
   const text = JSON.stringify(input.notification);
   const signature = await signatureHeaderOf({ appSecret: env.META_APP_SECRET as string, body: encode({ text }) });
   const request = new Request(WEBHOOK_URL, { method: 'POST', headers: { [WEBHOOK_SIGNATURE_HEADER]: signature }, body: text });
-  return createApp({ extraRoutes: [] }).fetch(request, whatsappTestEnv);
+  return createApp({ extraRoutes: [], developmentMediaOrigin }).fetch(request, whatsappTestEnv);
 }
 
 async function historyOf(input: { account: SeededAccount }) {
@@ -492,5 +493,50 @@ describe('webhook inbound media', () => {
     expect(response.status).toBe(STATUS_OK);
     expect((await imageOf({ account })).source.kind).toBe(MediaSourceKind.Unavailable);
     expect(calls).toEqual([]);
+  });
+});
+
+describe('webhook development media origin', () => {
+  const DEVELOPMENT_ORIGIN = 'http://127.0.0.1:4011';
+  const DEVELOPMENT_DOWNLOAD_URL = `${DEVELOPMENT_ORIGIN}/media/image`;
+
+  test('pin: the production app never downloads from a development origin, even when the binding is set', async () => {
+    spyOnLogs();
+    const downloaded: string[] = [];
+    const passthrough = globalThis.fetch.bind(globalThis);
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (request, init) => {
+      const url = String(request instanceof Request ? request.url : request);
+      if (url.endsWith(IMAGE_METADATA_PATH)) return Response.json({ url: DEVELOPMENT_DOWNLOAD_URL, file_size: IMAGE_BYTES.byteLength });
+      if (url.startsWith(DEVELOPMENT_ORIGIN)) downloaded.push(url);
+      return passthrough(request, init);
+    });
+    const account = await seedAccount({ agent: 'alpha' });
+    const response = await postNotificationWithAccessToken({
+      notification: await imageNotificationOf({ account, id: 'wamid.DEVORIGIN' }),
+    });
+    expect(response.status).toBe(STATUS_OK);
+    expect((await imageOf({ account })).source.kind).toBe(MediaSourceKind.Unavailable);
+    expect(downloaded).toEqual([]);
+  });
+
+  test('the development app downloads from the configured development origin', async () => {
+    spyOnLogs();
+    const downloaded: string[] = [];
+    const passthrough = globalThis.fetch.bind(globalThis);
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (request, init) => {
+      const url = String(request instanceof Request ? request.url : request);
+      if (url.endsWith(IMAGE_METADATA_PATH)) return Response.json({ url: DEVELOPMENT_DOWNLOAD_URL, file_size: IMAGE_BYTES.byteLength });
+      if (!url.startsWith(DEVELOPMENT_ORIGIN)) return passthrough(request, init);
+      downloaded.push(url);
+      return respondWithImage();
+    });
+    const account = await seedAccount({ agent: 'alpha' });
+    const response = await postNotificationWithAccessToken({
+      notification: await imageNotificationOf({ account, id: 'wamid.DEVORIGINOK' }),
+      developmentMediaOrigin: DEVELOPMENT_ORIGIN,
+    });
+    expect(response.status).toBe(STATUS_OK);
+    expect((await imageOf({ account })).source.kind).toBe(MediaSourceKind.Stored);
+    expect(downloaded).toEqual([DEVELOPMENT_DOWNLOAD_URL]);
   });
 });
