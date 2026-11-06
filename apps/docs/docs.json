@@ -56,8 +56,7 @@
                   "mcp-reference/create-upload",
                   "mcp-reference/set-wake"
                 ]
-              },
-              { "group": "Guides", "pages": ["guides/webhook-wake"] }
+              }
             ]
           }
         ]
@@ -117,8 +116,7 @@
                   "pt-br/mcp-reference/create-upload",
                   "pt-br/mcp-reference/set-wake"
                 ]
-              },
-              { "group": "Guias", "pages": ["pt-br/guides/webhook-wake"] }
+              }
             ]
           }
         ]

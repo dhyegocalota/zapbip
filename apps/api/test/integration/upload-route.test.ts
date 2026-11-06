@@ -139,6 +139,16 @@ describe('upload route', () => {
     expect(response.status).toBe(STATUS_CONFLICT);
   });
 
+  test('two concurrent PUTs: one answers 201, the other 409 and never writes to the store', async () => {
+    const fixture = await newFixture();
+    const bodies = ['a', 'b'].map((letter) => new TextEncoder().encode(letter.repeat(UPLOAD_BYTES.byteLength)));
+    const responses = await Promise.all(bodies.map((body) => putUpload({ ...validPut({ fixture }), body })));
+    expect(responses.map((response) => response.status).sort()).toEqual([STATUS_CREATED, STATUS_CONFLICT]);
+    const winner = bodies[responses.findIndex((response) => response.status === STATUS_CREATED)];
+    const stored = await env.MEDIA.get(`accounts/${fixture.account.accountId}/media/${fixture.uploadId}`);
+    expect(await stored?.text()).toBe(new TextDecoder().decode(winner));
+  });
+
   test('WI-77 a PUT without Content-Length answers 411 and stores nothing', async () => {
     const fixture = await newFixture();
     const query = await signedQuery({
@@ -161,6 +171,16 @@ describe('upload route', () => {
       duplex: 'half',
     } as RequestInit);
     expect(response.status).toBe(STATUS_LENGTH_REQUIRED);
+    expect(await storedObject({ fixture })).toBeNull();
+  });
+
+  test.each(['abc', '0x0c', '12abc', '1.2e1', '-12'])('a Content-Length of %j answers 400 and stores nothing', async (contentLength) => {
+    const fixture = await newFixture();
+    const response = await putUpload({
+      ...validPut({ fixture }),
+      headers: { 'Content-Type': PDF_TYPE, 'Content-Length': contentLength },
+    });
+    expect(response.status).toBe(STATUS_BAD_REQUEST);
     expect(await storedObject({ fixture })).toBeNull();
   });
 

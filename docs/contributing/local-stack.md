@@ -11,7 +11,7 @@ From the repository root:
 ```bash
 pnpm install
 printf 'MEDIA_LINK_SIGNING_KEY=%s\nUPLOAD_LINK_SIGNING_KEY=%s\n' "$(openssl rand -hex 32)" "$(openssl rand -hex 32)" > apps/api/.dev.vars
-pnpm --filter @zapbip/api exec wrangler d1 migrations apply CONNECTIONS --local
+pnpm --filter @zapbip/api exec wrangler d1 migrations apply CONNECTIONS --env development --local
 ```
 
 ## 2. Seed an owner and two agents

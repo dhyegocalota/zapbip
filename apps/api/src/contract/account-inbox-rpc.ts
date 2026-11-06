@@ -47,6 +47,8 @@ export interface AccountInboxRpc extends WakeRpc {
   checkInbox(input: AgentRequest<CheckInboxInput>): Promise<CallOutcome<CheckInboxResult>>;
   createUpload(input: AgentRequest<CreateUploadInput>): Promise<CallOutcome<CreateUploadResult>>;
   describeUpload(input: { mediaId: string }): Promise<CallOutcome<StoredMedia>>;
+  claimUpload(input: { mediaId: string }): Promise<CallOutcome<StoredMedia>>;
+  releaseUpload(input: { mediaId: string }): Promise<CallOutcome<void>>;
   completeUpload(input: { mediaId: string }): Promise<CallOutcome<StoredMedia>>;
   receiveOwnerMessage(input: {
     ownerLocale: OwnerLocale;

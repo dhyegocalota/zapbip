@@ -91,8 +91,30 @@ export default async function setup(project: TestProject): Promise<() => Promise
   const origin = `http://${LOOPBACK_HOST}:${port}`;
   const persistArguments = ['--persist-to', persistDirectory];
 
-  await runCommand('pnpm', ['exec', 'wrangler', 'd1', 'migrations', 'apply', DATABASE_BINDING, '--local', ...persistArguments]);
-  const connections = await seedConnections({ phone: SEED_PHONE, agents: SEED_AGENTS, persistArguments });
+  await runCommand('pnpm', [
+    'exec',
+    'wrangler',
+    'd1',
+    'migrations',
+    'apply',
+    DATABASE_BINDING,
+    '--env',
+    'development',
+    '--local',
+    ...persistArguments,
+  ]);
+  const seeded = await runCommand('pnpm', [
+    'exec',
+    'tsx',
+    'scripts/dev-seed.ts',
+    '--phone',
+    SEED_PHONE,
+    '--agents',
+    SEED_AGENTS.join(','),
+    '--json',
+    ...persistArguments,
+  ]);
+  const { connections } = seedOutputSchema.parse(JSON.parse(seeded.stdout));
   const wakeAccounts = await WAKE_ACCOUNT_PHONES.reduce<Promise<WakeAccount[]>>(
     async (seededBefore, phone) => [...(await seededBefore), await seedWakeAccount({ phone, persistArguments })],
     Promise.resolve([]),
