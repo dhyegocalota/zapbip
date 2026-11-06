@@ -3,7 +3,7 @@ import { deliverToOwner } from '../inbox/use-cases/deliver-to-owner';
 import {
   WAKE_BACKOFF_BASE_MS,
   WAKE_BACKOFF_CAP_MS,
-  WAKE_DEBOUNCE_MS,
+  WAKE_FOLLOW_UP_MS,
   WAKE_LEASE_MS,
   WAKE_MAX_ATTEMPTS,
   WAKE_RETRY_AFTER_STATUSES,
@@ -94,7 +94,7 @@ async function finishJob(input: JobRun & { outcome: WakeAttemptOutcome }): Promi
   if (current === null || !current.rewake) return wake.repository.deleteJob({ agent: job.agent });
   const followUp: WakeJob = {
     agent: job.agent,
-    dueAt: dependencies.clock.now() + WAKE_DEBOUNCE_MS,
+    dueAt: dependencies.clock.now() + WAKE_FOLLOW_UP_MS,
     attempt: 0,
     leaseUntil: null,
     rewake: false,
@@ -104,8 +104,8 @@ async function finishJob(input: JobRun & { outcome: WakeAttemptOutcome }): Promi
 }
 
 async function tellOwner(input: JobRun): Promise<void> {
-  const { dependencies, ownerLocale } = input;
-  const text = wakeFailedCopy({ locale: ownerLocale });
+  const { dependencies, ownerLocale, job } = input;
+  const text = wakeFailedCopy({ locale: ownerLocale, agent: job.agent });
   await deliverToOwner({
     dependencies,
     ownerLocale,
@@ -116,14 +116,42 @@ async function tellOwner(input: JobRun): Promise<void> {
   });
 }
 
+async function tellOwnerOnce(input: JobRun & { stored: StoredWake | null }): Promise<void> {
+  const { wake, job, stored } = input;
+  try {
+    await tellOwner(input);
+  } catch {
+    wake.observer.observe({
+      event: {
+        name: WakeLogEventName.NoticeFailed,
+        provider: stored === null || stored.target === null ? null : stored.target.provider,
+        agent: job.agent,
+        attempt: job.attempt,
+        statusCode: null,
+        latencyMs: null,
+        outcome: null,
+      },
+    });
+  }
+}
+
+async function giveUp(input: JobRun): Promise<void> {
+  const { wake, job } = input;
+  const stored = await wake.repository.findWake({ agent: job.agent });
+  const isNewFailure = stored !== null && stored.status === WakeStatus.Active;
+  await updateStoredWake({ ...input, patch: { status: WakeStatus.Failing } });
+  await wake.repository.deleteJob({ agent: job.agent });
+  if (isNewFailure) await tellOwnerOnce({ ...input, stored });
+}
+
 async function settleFailure(input: Attempt & { eventName: WakeLogEventName }): Promise<void> {
-  const { wake, job, result, eventName } = input;
+  const { wake, job, result, stored, eventName } = input;
   observeAttempt({ ...input, name: eventName });
   const current = await wake.repository.findWake({ agent: job.agent });
   const isNewFailure = current !== null && current.status === WakeStatus.Active;
-  if (isNewFailure) await tellOwner(input);
   await updateStoredWake({ ...input, patch: { status: WakeStatus.Failing } });
   await finishJob({ ...input, outcome: result.outcome });
+  if (isNewFailure) await tellOwnerOnce({ ...input, stored });
 }
 
 async function settleDelivered(input: Attempt): Promise<void> {
@@ -140,7 +168,9 @@ async function settleRetry(input: Attempt): Promise<void> {
   const current = await wake.repository.findJob({ agent: job.agent });
   if (current === null) return;
   const dueAt = dependencies.clock.now() + retryDelayMs({ attempt, result });
-  await wake.repository.saveJob({ job: { ...current, attempt, dueAt, leaseUntil: null, lastOutcome: WakeAttemptOutcome.Retry } });
+  await wake.repository.saveJob({
+    job: { ...current, attempt, dueAt, leaseUntil: null, rewake: false, lastOutcome: WakeAttemptOutcome.Retry },
+  });
 }
 
 function settleRefused(input: Attempt): Promise<void> {
@@ -187,9 +217,11 @@ async function attemptJob(input: JobRun): Promise<void> {
 async function recordFailure(input: JobRun): Promise<void> {
   const { dependencies, wake, job } = input;
   const attempt = job.attempt + 1;
-  if (attempt >= WAKE_MAX_ATTEMPTS) return wake.repository.deleteJob({ agent: job.agent });
+  if (attempt >= WAKE_MAX_ATTEMPTS) return giveUp(input);
   const dueAt = dependencies.clock.now() + backoffMs({ attempt });
-  await wake.repository.saveJob({ job: { ...job, attempt, dueAt, leaseUntil: null, lastOutcome: WakeAttemptOutcome.Retry } });
+  await wake.repository.saveJob({
+    job: { ...job, attempt, dueAt, leaseUntil: null, rewake: false, lastOutcome: WakeAttemptOutcome.Retry },
+  });
 }
 
 async function runJob(input: JobRun): Promise<void> {

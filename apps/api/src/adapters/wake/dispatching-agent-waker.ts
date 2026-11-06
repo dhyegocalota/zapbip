@@ -11,8 +11,10 @@ export function createDispatchingAgentWaker(input: { wakers: WakerByRung; reposi
       if (stored === null) return wakers[WakeRung.Inbox].notify(request);
       return wakers[wakeRungFor({ mode: stored.mode })].notify(request);
     },
-    hasFailedWake: async () => {
-      throw new Error('hasFailedWake is not implemented');
+    hasFailedWake: async (request) => {
+      const stored = await repository.findWake({ agent: request.agent });
+      if (stored === null) return wakers[WakeRung.Inbox].hasFailedWake(request);
+      return wakers[wakeRungFor({ mode: stored.mode })].hasFailedWake(request);
     },
   };
 }
