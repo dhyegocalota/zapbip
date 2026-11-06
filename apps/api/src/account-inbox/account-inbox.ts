@@ -28,6 +28,7 @@ import {
   CONNECTOR_PONG_TEXT,
   ChannelErrorKind,
   ConnectorFrameType,
+  WakeMode,
   WakeRung,
   type OwnerLocale,
 } from '@zapbip/types';
@@ -47,7 +48,14 @@ import type { Bindings } from '../contract/env';
 import { LogEvent, type LogFields } from '../contract/log';
 import { logEvent } from '../log';
 import { HttpStatus } from '../routes/http-status';
-import { acceptConnectorSocket, connectorAgentOf, parseDoneFrame, remainingSocketCount, sendFrameToAgent } from './connector-sockets';
+import {
+  acceptConnectorSocket,
+  connectorAgentOf,
+  hasLiveConnectorSocket,
+  parseDoneFrame,
+  remainingSocketCount,
+  sendFrameToAgent,
+} from './connector-sockets';
 import {
   ALARM_MIN_DELAY_MS,
   AlarmErrorCode,
@@ -267,13 +275,17 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
   setWake(input: Parameters<AccountInboxRpc['setWake']>[0]): Promise<CallOutcome<inbox.SetWakeResult>> {
     return this.outcome({
       run: async () => {
-        await inbox.touchAgent({ dependencies: this.dependencies, agent: input.connection.agent });
-        return inbox.setWake({
+        const { agent } = input.connection;
+        await inbox.touchAgent({ dependencies: this.dependencies, agent });
+        const result = await inbox.setWake({
           ...input,
           dependencies: this.dependencies,
           wake: this.wake,
           publicHost: new URL(this.env.PUBLIC_ORIGIN).hostname,
         });
+        const isLocalWithoutConnector = result.wakeMode === WakeMode.Local && !hasLiveConnectorSocket({ context: this.ctx, agent });
+        if (isLocalWithoutConnector) return { ...result, effectiveRung: WakeRung.Inbox };
+        return result;
       },
     });
   }
@@ -311,9 +323,8 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
   }
 
   async webSocketError(socket: WebSocket, error: unknown): Promise<void> {
-    void socket;
     void error;
-    throw new Error('webSocketError is not implemented');
+    await this.webSocketClose(socket);
   }
 
   receiveOwnerMessage(input: ReceiveOwnerMessageRequest): Promise<CallOutcome<inbox.ReceiveResult>> {

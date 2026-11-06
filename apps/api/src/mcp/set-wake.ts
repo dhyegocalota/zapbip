@@ -16,7 +16,7 @@ export const setWakeToolInputShape = {
 };
 
 function isAvailableWakeMode(mode: WakeMode | UnavailableWakeMode): mode is WakeMode {
-  return mode !== WakeMode.Local && Object.values<string>(WakeMode).includes(mode);
+  return Object.values<string>(WakeMode).includes(mode);
 }
 
 export async function setWake(input: {

@@ -36,6 +36,10 @@ export function sendFrameToAgent(input: { context: DurableObjectState; agent: Ag
   return sockets.length;
 }
 
+export function hasLiveConnectorSocket(input: { context: DurableObjectState; agent: AgentName }): boolean {
+  return input.context.getWebSockets(input.agent).some(isOpenOrConnecting);
+}
+
 export function connectorAgentOf(input: { context: DurableObjectState; socket: WebSocket }): AgentName {
   const [agent] = input.context.getTags(input.socket);
   if (agent === undefined) throw new Error('connector socket has no agent tag');

@@ -1,7 +1,6 @@
 import { SetWakeStatus, WakeMode, WakeStatus } from '@zapbip/types';
 import { assertWakeTarget, invalidWakeField, WakeTargetField } from './assert-wake-target';
-import { invalidInput } from '../inbox/inbox-error-factories';
-import { WAKE_MODE_UNAVAILABLE_MESSAGE, WAKE_SEALED_KEY_VERSION } from './constants';
+import { WAKE_SEALED_KEY_VERSION } from './constants';
 import type { SetWakeInput, SetWakeResult } from './wake-ports';
 import { wakeAssociatedData } from './wake-associated-data';
 import { wakeRungFor } from './wake-rung';
@@ -52,13 +51,19 @@ async function clearWebhook(input: SetWakeInput): Promise<SetWakeResult> {
   return { status: SetWakeStatus.Saved, wakeMode: WakeMode.None, effectiveRung: wakeRungFor({ mode: WakeMode.None }), provider: null };
 }
 
-async function rejectLocal(): Promise<SetWakeResult> {
-  throw invalidInput({ message: WAKE_MODE_UNAVAILABLE_MESSAGE });
+async function saveLocal(input: SetWakeInput): Promise<SetWakeResult> {
+  const { wake, connection } = input;
+  const current = await wake.repository.findWake({ agent: connection.agent });
+  if (current === null) throw new Error(`no wake setting for ${connection.agent}`);
+  await wake.repository.saveWake({ wake: { ...current, mode: WakeMode.Local } });
+  await wake.repository.deleteLocalRestore({ agent: connection.agent });
+  await wake.repository.deleteJob({ agent: connection.agent });
+  return { status: SetWakeStatus.Saved, wakeMode: WakeMode.Local, effectiveRung: wakeRungFor({ mode: WakeMode.Local }), provider: null };
 }
 
 const WAKE_SETTERS: Record<WakeMode, (input: SetWakeInput) => Promise<SetWakeResult>> = {
   [WakeMode.None]: clearWebhook,
-  [WakeMode.Local]: rejectLocal,
+  [WakeMode.Local]: saveLocal,
   [WakeMode.Webhook]: saveWebhook,
 };
 
