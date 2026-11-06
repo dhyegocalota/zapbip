@@ -8,27 +8,35 @@ import {
   type OwnerLocale,
   type TemplateKind,
 } from '@zapbip/types';
+import { SENDING_STALE_MS } from '../claim-constants';
 import { QUEUE_RETENTION_MS, QUESTION_RETENTION_MS, RECEIPT_RETENTION_MS } from '../constants';
 import type { AgentName } from '../connection';
 import type { AgentRecord, ChannelStatusDetail, OwnerWindow, StoredMedia } from '../inbox-records';
 import type { Message } from '../message';
 import type { AgentWaker, Clock, CoreDependencies, IdGenerator, InboxRepository, MediaStore, MessageSender } from '../ports';
 import type { Question } from '../question';
+import { mergeChannelStatusDetail } from '../use-cases/status-rule';
 import { createReplyWaiters } from '../waiters';
 import { createFakeClock, type FakeClock } from './fake-clock';
 
 const DEFAULT_ACCOUNT_ID = 'account_1';
 const DEFAULT_START_AT = 10 * DAY_MS;
 const FAKE_SIGNATURE = 'fake';
+const EMPTY_STATUS_DETAIL: ChannelStatusDetail = { errorCode: null, errorTitle: null, pricingCategory: null, billable: null };
 
 export type SentTemplate = { kind: TemplateKind; locale: OwnerLocale; parameters: string[] };
 export type WakeNotification = { agent: AgentName; reason: AgentWakeReason };
 
+export type SessionRequest = Parameters<MessageSender['session']>[0];
+
 export type RecordingSender = MessageSender & {
   sessions: Message[];
+  sessionRequests: SessionRequest[];
   templates: SentTemplate[];
-  failSessionCalls(input: { callNumbers: number[] }): void;
-  failTemplateCalls(input: { callNumbers: number[] }): void;
+  failSessionCalls(input: { callNumbers: number[]; error?: Error }): void;
+  failTemplateCalls(input: { callNumbers: number[]; error?: Error }): void;
+  holdSessions(): void;
+  releaseSessions(): void;
   holdTemplates(): void;
   releaseTemplates(): void;
 };
@@ -62,6 +70,9 @@ function createInMemoryRepository(): InMemoryRepository {
   const agents = new Map<AgentName, AgentRecord>();
   const receipts = new Map<string, number>();
   const media = new Map<string, StoredMedia>();
+  const channelMessageIds = new Map<string, string>();
+  const statusDetails = new Map<string, ChannelStatusDetail>();
+  const claimedAt = new Map<string, number>();
   let messages: Message[] = [];
   let questions: Question[] = [];
   let window: OwnerWindow = { lastOwnerMessageAt: null, noticeSentForClosedWindow: false, closedAt: null };
@@ -78,14 +89,8 @@ function createInMemoryRepository(): InMemoryRepository {
     messages.filter((message) => message.direction === MessageDirection.FromOwner && message.agent === agent && !message.readByAgent);
 
   return {
-    findStatusDetail: (input) => {
-      void input;
-      throw new Error('findStatusDetail is not implemented');
-    },
-    findClaimedAt: (input) => {
-      void input;
-      throw new Error('findClaimedAt is not implemented');
-    },
+    findStatusDetail: ({ messageId }) => statusDetails.get(messageId) ?? null,
+    findClaimedAt: ({ messageId }) => claimedAt.get(messageId) ?? null,
     registerAgent: async ({ agent, seenAt }) => {
       agents.set(agent, { agent, lastSeenAt: seenAt });
     },
@@ -93,8 +98,10 @@ function createInMemoryRepository(): InMemoryRepository {
     insertMessage: async ({ message }) => {
       messages = [...messages, message];
     },
-    updateDelivery: async ({ messageId, delivery }) =>
-      replaceMessages({ messageIds: [messageId], change: (message) => ({ ...message, delivery }) }),
+    updateDelivery: async ({ messageId, delivery }) => {
+      if (delivery !== DeliveryState.Sending) claimedAt.delete(messageId);
+      replaceMessages({ messageIds: [messageId], change: (message) => ({ ...message, delivery }) });
+    },
     findMessage: async ({ messageId }) => messages.find((message) => message.messageId === messageId) ?? null,
     listAgentHistory: async ({ agent, limit }) => messages.filter((message) => message.agent === agent).slice(-limit),
     listUnread: async ({ agent, limit }) => unreadOf(agent).slice(0, limit),
@@ -128,33 +135,48 @@ function createInMemoryRepository(): InMemoryRepository {
     deleteExpiredReceipts: async ({ receivedBefore }) => {
       [...receipts].filter(([, receivedAt]) => receivedAt < receivedBefore).forEach(([wamid]) => receipts.delete(wamid));
     },
-    commitChannelInbound: async (input) => {
-      void input;
-      throw new Error('commitChannelInbound is not implemented');
+    commitChannelInbound: async ({ channelMessageId, receivedAt, message, answer, media: stored, window: nextWindow }) => {
+      if (receipts.has(channelMessageId)) return false;
+      receipts.set(channelMessageId, receivedAt);
+      if (message !== null) {
+        messages = [...messages, message];
+        channelMessageIds.set(message.messageId, channelMessageId);
+      }
+      if (answer !== null)
+        replaceQuestion({ questionId: answer.questionId, change: (question) => ({ ...question, answer: answer.answer }) });
+      if (stored !== null) media.set(stored.mediaId, stored);
+      window = { ...nextWindow };
+      return true;
     },
-    saveChannelMessageId: async (input) => {
-      void input;
-      throw new Error('saveChannelMessageId is not implemented');
+    saveChannelMessageId: async ({ messageId, channelMessageId }) => {
+      if (channelMessageIds.has(messageId)) return;
+      channelMessageIds.set(messageId, channelMessageId);
     },
-    findMessageByChannelMessageId: async (input) => {
-      void input;
-      throw new Error('findMessageByChannelMessageId is not implemented');
+    findMessageByChannelMessageId: async ({ channelMessageId }) => {
+      const found = [...channelMessageIds].find(([, stored]) => stored === channelMessageId);
+      return found === undefined ? null : (messages.find((message) => message.messageId === found[0]) ?? null);
     },
-    findChannelMessageId: async (input) => {
-      void input;
-      throw new Error('findChannelMessageId is not implemented');
+    findChannelMessageId: async ({ messageId }) => channelMessageIds.get(messageId) ?? null,
+    saveChannelStatusDetail: async ({ messageId, detail }) => {
+      const stored = statusDetails.get(messageId);
+      statusDetails.set(
+        messageId,
+        mergeChannelStatusDetail({ stored: stored === undefined ? EMPTY_STATUS_DETAIL : stored, incoming: detail }),
+      );
     },
-    saveChannelStatusDetail: async (input) => {
-      void input;
-      throw new Error('saveChannelStatusDetail is not implemented');
+    claimQueuedMessages: async ({ claimedAt: claimTime, limit }) => {
+      const claimed = messages.filter((message) => message.delivery === DeliveryState.Queued).slice(0, limit);
+      claimed.forEach((message) => claimedAt.set(message.messageId, claimTime));
+      replaceMessages({
+        messageIds: claimed.map((message) => message.messageId),
+        change: (message) => ({ ...message, delivery: DeliveryState.Sending }),
+      });
+      return claimed.map((message) => ({ ...message, delivery: DeliveryState.Sending }));
     },
-    claimQueuedMessages: async (input) => {
-      void input;
-      throw new Error('claimQueuedMessages is not implemented');
-    },
-    releaseStaleClaims: async (input) => {
-      void input;
-      throw new Error('releaseStaleClaims is not implemented');
+    releaseStaleClaims: async ({ claimedBefore }) => {
+      const staleIds = [...claimedAt].filter(([, claimTime]) => claimTime < claimedBefore).map(([messageId]) => messageId);
+      staleIds.forEach((messageId) => claimedAt.delete(messageId));
+      replaceMessages({ messageIds: staleIds, change: (message) => ({ ...message, delivery: DeliveryState.Queued }) });
     },
     deleteQuestionsAskedBefore: async ({ askedBefore }) => {
       questions = questions.filter((question) => question.askedAt >= askedBefore);
@@ -192,6 +214,7 @@ function createInMemoryRepository(): InMemoryRepository {
         ...[...media.values()].flatMap((stored) => [stored.expiresAt, stored.retentionUntil]),
         ...messages.filter((message) => message.delivery === DeliveryState.Queued).map((message) => message.at + QUEUE_RETENTION_MS),
         ...questions.map((question) => question.askedAt + QUESTION_RETENTION_MS),
+        ...[...claimedAt.values()].map((claimTime) => claimTime + SENDING_STALE_MS),
         ...[...receipts.values()].map((receivedAt) => receivedAt + RECEIPT_RETENTION_MS),
       ].filter((dueTime): dueTime is number => dueTime !== null);
       return dueTimes.length === 0 ? null : Math.min(...dueTimes);
@@ -201,41 +224,60 @@ function createInMemoryRepository(): InMemoryRepository {
 
 function createRecordingSender(): RecordingSender {
   const sessions: Message[] = [];
+  const sessionRequests: SessionRequest[] = [];
   const templates: SentTemplate[] = [];
   let sessionCalls = 0;
   let templateCalls = 0;
-  let failingSessionCalls: number[] = [];
-  let failingTemplateCalls: number[] = [];
+  let failingSessionCalls = new Map<number, Error>();
+  let failingTemplateCalls = new Map<number, Error>();
+  let sessionGate: Promise<void> | null = null;
+  let openSessionGate: () => void = () => undefined;
   let templateGate: Promise<void> | null = null;
   let openTemplateGate: () => void = () => undefined;
 
+  function failuresOf(input: { callNumbers: number[]; error: Error }): Map<number, Error> {
+    return new Map(input.callNumbers.map((callNumber) => [callNumber, input.error]));
+  }
+
   return {
     sessions,
+    sessionRequests,
     templates,
-    failSessionCalls: ({ callNumbers }) => {
-      failingSessionCalls = callNumbers;
+    failSessionCalls: ({ callNumbers, error = new Error('session failed') }) => {
+      failingSessionCalls = failuresOf({ callNumbers, error });
     },
-    failTemplateCalls: ({ callNumbers }) => {
-      failingTemplateCalls = callNumbers;
+    failTemplateCalls: ({ callNumbers, error = new Error('template failed') }) => {
+      failingTemplateCalls = failuresOf({ callNumbers, error });
     },
+    holdSessions: () => {
+      sessionGate = new Promise((resolve) => {
+        openSessionGate = resolve;
+      });
+    },
+    releaseSessions: () => openSessionGate(),
     holdTemplates: () => {
       templateGate = new Promise((resolve) => {
         openTemplateGate = resolve;
       });
     },
     releaseTemplates: () => openTemplateGate(),
-    session: async ({ message }) => {
+    session: async (request) => {
       sessionCalls += 1;
-      if (failingSessionCalls.includes(sessionCalls)) throw new Error('session failed');
-      sessions.push(message);
-      return { channelMessageId: `wamid.session.${sessionCalls}` };
+      const callNumber = sessionCalls;
+      sessionRequests.push(request);
+      await sessionGate;
+      const failure = failingSessionCalls.get(callNumber);
+      if (failure !== undefined) throw failure;
+      sessions.push(request.message);
+      return { channelMessageId: `wamid.session.${callNumber}` };
     },
     template: async ({ kind, locale, parameters }) => {
       templateCalls += 1;
       const callNumber = templateCalls;
       templates.push({ kind, locale, parameters });
       await templateGate;
-      if (failingTemplateCalls.includes(callNumber)) throw new Error('template failed');
+      const failure = failingTemplateCalls.get(callNumber);
+      if (failure !== undefined) throw failure;
       return { channelMessageId: `wamid.template.${callNumber}` };
     },
   };
