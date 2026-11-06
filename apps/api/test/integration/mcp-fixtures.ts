@@ -1,7 +1,9 @@
 import { env, exports } from 'cloudflare:workers';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
-import { OwnerLocale } from '@zapbip/types';
+import type { OwnerInboundContent } from '@zapbip/core';
+import { MessageKind, OwnerLocale } from '@zapbip/types';
+import type { DevAccountInboxRpc } from '../../src/contract/account-inbox-rpc';
 import { generateConnectionSecret } from '../../src/adapters/platform/connection-secret';
 import { hashConnectionSecret } from '../../src/adapters/platform/hash';
 import coreMigration from '../../migrations/0001_core.sql?raw';
@@ -52,4 +54,42 @@ export async function connectClient(input: { secret: string }): Promise<Client> 
   });
   await client.connect(transport);
   return client;
+}
+
+export type ToolResult = {
+  isError?: boolean;
+  content: { type: string; text?: string; data?: string; mimeType?: string }[];
+  structuredContent?: Record<string, unknown>;
+};
+
+export async function callTool(input: { client: Client; name: string; arguments: Record<string, unknown> }): Promise<ToolResult> {
+  return (await input.client.callTool({ name: input.name, arguments: input.arguments })) as ToolResult;
+}
+
+export function accountInbox(input: { accountId: string }): DevAccountInboxRpc {
+  const stub = env.ACCOUNT_INBOX.get(env.ACCOUNT_INBOX.idFromName(input.accountId));
+  return stub as unknown as DevAccountInboxRpc;
+}
+
+export async function ownerWrites(input: { accountId: string; channelMessageId: string; content: OwnerInboundContent }): Promise<string> {
+  const outcome = await accountInbox({ accountId: input.accountId }).receiveOwnerMessage({
+    ownerLocale: OwnerLocale.PortugueseBrazil,
+    channelMessageId: input.channelMessageId,
+    ownerMessage: { at: Date.now(), replyToMessageId: null, content: input.content },
+  });
+  if (!outcome.ok || outcome.value.messageId === null) throw new Error('owner message was not stored');
+  return outcome.value.messageId;
+}
+
+export function ownerText(input: { text: string }): OwnerInboundContent {
+  return { kind: MessageKind.Text, text: input.text };
+}
+
+export async function storeOwnerImage(input: { accountId: string; mediaId: string; sizeBytes: number }): Promise<void> {
+  await env.MEDIA.put(`accounts/${input.accountId}/media/${input.mediaId}`, new Uint8Array(input.sizeBytes));
+}
+
+export async function receiveUpload(input: { accountId: string; uploadId: string; sizeBytes: number }): Promise<void> {
+  await storeOwnerImage({ accountId: input.accountId, mediaId: input.uploadId, sizeBytes: input.sizeBytes });
+  await accountInbox({ accountId: input.accountId }).completeUpload({ mediaId: input.uploadId });
 }
