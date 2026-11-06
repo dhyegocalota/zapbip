@@ -109,7 +109,7 @@ Hypotheses to attack:
 
 Gaps:
 
-- `receiveAccountMessage` on the object and `accounts/deletion-sweep.ts` (with `deletion-sweep.test.ts`) are not built: they need L2's `D1AccountDirectory` and `R2AccountMedia` and L1b's green use cases.
+- None open for `receiveAccountMessage` and the sweep; they landed in red `85ff9b1` and green `b0af45b`. The sweep is not wired to a cron (deploy-readiness owns the dispatch).
 - The tombstone refusals are tested through `runInDurableObject`; a refusal thrown across the RPC boundary is reported by the Workers test pool as an unhandled error.
 - `setState` persists the state but nothing reads it; the `revoked_agents` marker is not cleared when a name is created again (slice 7's standby selection decides).
 - `libs/core/src/inbox/aiters.test.ts` and `use-cases/ait-for-reply.test.ts` are empty tracked files from slice 1 ("No test suite found" fails `pnpm --filter @zapbip/core test:unit`); not mine, not touched.
