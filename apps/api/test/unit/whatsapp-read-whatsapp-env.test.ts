@@ -22,18 +22,12 @@ describe('readWhatsAppEnvironment', () => {
       phoneNumberId: '1000000000000001',
       verifyToken: 'test-verify-token',
       appSecret: 'test-app-secret',
-      developmentMediaOrigin: null,
     });
   });
 
-  it('reads the development media origin when it is set', () => {
+  it('never reads the development media origin binding', () => {
     const env = { ...envOf({}), WHATSAPP_MEDIA_DOWNLOAD_ORIGIN: 'http://127.0.0.1:4011' } as Bindings;
-    expect(readWhatsAppEnvironment({ env }).developmentMediaOrigin).toBe('http://127.0.0.1:4011');
-  });
-
-  it('treats an empty development media origin as unset', () => {
-    const env = { ...envOf({}), WHATSAPP_MEDIA_DOWNLOAD_ORIGIN: '' } as Bindings;
-    expect(readWhatsAppEnvironment({ env }).developmentMediaOrigin).toBeNull();
+    expect(readWhatsAppEnvironment({ env })).not.toHaveProperty('developmentMediaOrigin');
   });
 
   it.each(Object.keys(COMPLETE))('AU-115 throws naming %s when it is missing', (name) => {
