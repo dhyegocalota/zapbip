@@ -110,9 +110,10 @@ Red commit `5ca8f5a`: 20 of 20 cases failed, every one with `Error: saveSchedule
 
 ### Known gaps
 
-- "Alarm order" (expiry sweep before stale notices) is not asserted as behaviour: with the window closed the stale notice is queued and invisible, and with it open nothing expires. It rests on the provider order in `account-inbox.ts`.
-- Not written because they are unit-level or belong to another lane: B3 to B6 waker unit cases (no spy-based test of the wakers in `apps/api` since the plan assigns L3 only the three integration files), "Every owner kind hands off with its content", and "Answer is not handed off".
-- `standby-revocation.test.ts` does not drive the owner command path (needs slice 3).
+- Pins (green on arrival, written after the implementation): `apps/api/test/unit/{scheduled,inbox,standby}-agent-waker.test.ts` and `dispatching-agent-waker.test.ts` (test plan B3 to B6, with `deliverToOwner` mocked and the in-memory wake repository), and `runs the expiry sweep before the stale notice in the same alarm` in `scheduled-wake-alarm.test.ts` (it records the order of the sweep and `markStaleNotified` inside one real alarm).
+- The unit tests build `CoreDependencies` from spies cast through `unknown`, because the core in-memory environment is not exported from `@zapbip/core`.
+- `standby-revocation.test.ts` stays red until slice 3 merges. The integrator writes the owner-command cases (`revogar`, `girar`, the revoked secret answering 401) at that merge and swaps the local `recordRevocation` type for `AccountOwnerRpc`.
+- Not covered anywhere in L3: the answer to a question and a routing-list assignment never carry `messageId` (belongs to the `receive-owner-message.test.ts` cases of L2).
 
 ## Lane L2: core rules and use cases
 

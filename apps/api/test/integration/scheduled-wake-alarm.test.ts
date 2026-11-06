@@ -1,4 +1,12 @@
-import { QUEUE_RETENTION_MS, STALE_POLL_INTERVAL_MULTIPLE, WAKE_COPY, renderCopy, type AgentName } from '@zapbip/core';
+import {
+  QUEUE_RETENTION_MS,
+  STALE_POLL_INTERVAL_MULTIPLE,
+  WAKE_COPY,
+  renderCopy,
+  type AgentName,
+  type CoreDependencies,
+  type WakeDependencies,
+} from '@zapbip/core';
 import { HOUR_MS, InboxCopyKey, MINUTE_MS, OwnerLocale, WakeCopyKey, WakeMode } from '@zapbip/types';
 import { abortAllDurableObjects, reset, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -15,6 +23,10 @@ const STALE_DEADLINE_OFFSET_MS = STALE_POLL_INTERVAL_MULTIPLE * INTERVAL_MINUTES
 const STALE_NOTICE_FRAGMENT = 'parou de olhar a caixa';
 const HOURLY_FRAGMENT = WAKE_COPY[WakeCopyKey.CadenceHourly][OwnerLocale.PortugueseBrazil];
 const OWNER_TEXT = 'oi';
+const EXPIRY_SWEEP_STEP = 'expiry_sweep';
+const STALE_NOTICE_STEP = 'stale_notice';
+
+const alarmSteps: string[] = [];
 
 type LastPollRow = { last_polled_at: number; has_polled: number; poller_stale_notified: number };
 
@@ -62,6 +74,23 @@ function toRealTime(input: { clockTime: number }): Promise<number> {
   return runInDurableObject(stub(), (instance) => (instance as unknown as { clock: DurableClock }).clock.toRealTime(input));
 }
 
+function recordAlarmSteps(): Promise<void> {
+  alarmSteps.length = 0;
+  return runInDurableObject(stub(), (instance) => {
+    const { dependencies, wake } = instance as unknown as { dependencies: CoreDependencies; wake: WakeDependencies };
+    const sweepQuestions = dependencies.repository.deleteQuestionsAskedBefore.bind(dependencies.repository);
+    const markNotified = wake.repository.markStaleNotified.bind(wake.repository);
+    dependencies.repository.deleteQuestionsAskedBefore = async (input) => {
+      alarmSteps.push(EXPIRY_SWEEP_STEP);
+      return sweepQuestions(input);
+    };
+    wake.repository.markStaleNotified = async (input) => {
+      alarmSteps.push(STALE_NOTICE_STEP);
+      return markNotified(input);
+    };
+  });
+}
+
 async function alarmAfter(input: { advanceMs: number }): Promise<void> {
   await advanceClock({ stub: stub(), advanceMs: input.advanceMs });
   await runDurableObjectAlarm(stub());
@@ -81,6 +110,12 @@ describe('scheduled poller alarm', () => {
     await alarmAfter({ advanceMs: STALE_ADVANCE_MS });
     expect(await countStaleNotices()).toBe(1);
     expect((await screenTexts()).find((text) => text.includes(STALE_NOTICE_FRAGMENT))).toContain(POLLING_AGENT);
+  });
+
+  it('runs the expiry sweep before the stale notice in the same alarm', async () => {
+    await recordAlarmSteps();
+    await alarmAfter({ advanceMs: STALE_ADVANCE_MS });
+    expect(alarmSteps).toEqual([EXPIRY_SWEEP_STEP, STALE_NOTICE_STEP]);
   });
 
   it('does not repeat the stale notice on the next alarm', async () => {
