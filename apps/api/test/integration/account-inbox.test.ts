@@ -22,6 +22,7 @@ const FIRST_ACCOUNT = 'acc_one';
 const SECOND_ACCOUNT = 'acc_two';
 const HELD_ASK_TIMEOUT_MS = 10_000;
 const SHORT_ASK_TIMEOUT_MS = 1_000;
+const FAR_FUTURE_MS = 4_000_000_000_000;
 const STARVATION_POLL_COUNT = 5;
 const MEDIA_KEY_PREFIX = 'accounts';
 const LOG_SECRET_TEXT = 'segredo-123';
@@ -304,8 +305,8 @@ describe('AccountInbox alarm', () => {
 
   it('WI-123 keeps the alarm armed when a due-time provider throws', async () => {
     const stub = stubOf({ accountId: FIRST_ACCOUNT });
-    const firstDueAt = Date.now() + 60_000;
-    const secondDueAt = Date.now() + 120_000;
+    const firstDueAt = FAR_FUTURE_MS;
+    const secondDueAt = FAR_FUTURE_MS + HOUR_MS;
     const secondRuns = vi.fn();
     await registerDueTimeProvider({
       stub,
@@ -317,7 +318,7 @@ describe('AccountInbox alarm', () => {
       },
     });
     await registerDueTimeProvider({ stub, provider: { nextDueAt: async () => secondDueAt, runDue: async () => secondRuns() } });
-    await runInDurableObject(stub, (_instance, state) => state.storage.setAlarm(Date.now() + HOUR_MS));
+    await runInDurableObject(stub, (_instance, state) => state.storage.setAlarm(FAR_FUTURE_MS + 2 * HOUR_MS));
     expect(await runDurableObjectAlarm(stub)).toBe(true);
     const armed = await runInDurableObject(stub, (_instance, state) => state.storage.getAlarm());
     expect(secondRuns).toHaveBeenCalledTimes(1);
