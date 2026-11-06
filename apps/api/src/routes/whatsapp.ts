@@ -7,7 +7,7 @@ import { D1MessageIndex } from '../adapters/d1/d1-message-index';
 import { createPlatformClock } from '../adapters/platform/clock';
 import { createR2MediaStore } from '../adapters/r2/r2-media-store';
 import { answerWebhookChallenge } from '../adapters/whatsapp/challenge';
-import { createGraphClient, type GraphClient } from '../adapters/whatsapp/graph-client';
+import { createGraphClient } from '../adapters/whatsapp/graph-client';
 import {
   parseWebhookNotification,
   WebhookField,
@@ -17,7 +17,7 @@ import {
 } from '../adapters/whatsapp/inbound-parser';
 import { downloadInboundMedia } from '../adapters/whatsapp/media-download';
 import { logOperatorEvent } from '../adapters/whatsapp/operator-log';
-import { readWhatsAppEnvironment, type WhatsAppEnvironment } from '../adapters/whatsapp/read-whatsapp-env';
+import { readWebhookEnvironment, readWhatsAppEnvironment, type WebhookEnvironment } from '../adapters/whatsapp/read-whatsapp-env';
 import { verifyWebhookSignature } from '../adapters/whatsapp/signature';
 import type { ParsedStatus } from '../adapters/whatsapp/status-parser';
 import { OwnerCopyKey, WHATSAPP_COPY } from '../adapters/whatsapp/whatsapp-copy';
@@ -37,8 +37,7 @@ import { HttpStatus } from './http-status';
 
 type RequestContext = {
   bindings: Bindings;
-  environment: WhatsAppEnvironment;
-  graph: GraphClient;
+  environment: WebhookEnvironment;
 };
 
 const HUB_MODE_PARAMETER = 'hub.mode';
@@ -117,8 +116,9 @@ async function channelEntryOf(input: {
     uploadLinkSigningKey: context.bindings.UPLOAD_LINK_SIGNING_KEY,
     clock: createPlatformClock(),
   });
+  const whatsapp = readWhatsAppEnvironment({ env: context.bindings });
   const download = await downloadInboundMedia({
-    graph: context.graph,
+    graph: createGraphClient({ baseUrl: whatsapp.graphBaseUrl, accessToken: whatsapp.accessToken, fetcher: fetch }),
     mediaStore,
     accountId,
     request: media,
@@ -197,7 +197,7 @@ async function processChange(input: { context: RequestContext; change: ParsedCha
 }
 
 whatsappRoutes.get(WHATSAPP_WEBHOOK_PATH, async (context) => {
-  const environment = readWhatsAppEnvironment({ env: context.env });
+  const environment = readWebhookEnvironment({ env: context.env });
   const answer = await answerWebhookChallenge({
     mode: nullIfAbsent({ value: context.req.query(HUB_MODE_PARAMETER) }),
     token: nullIfAbsent({ value: context.req.query(HUB_TOKEN_PARAMETER) }),
@@ -214,7 +214,7 @@ whatsappRoutes.post(WHATSAPP_WEBHOOK_PATH, async (context) => {
   }
   const rawBody = await readBodyWithLimit({ body: context.req.raw.body, maxBytes: WEBHOOK_MAX_BYTES });
   if (rawBody === null) return context.json({ error: 'payload_too_large' }, HttpStatus.PayloadTooLarge);
-  const environment = readWhatsAppEnvironment({ env: context.env });
+  const environment = readWebhookEnvironment({ env: context.env });
   const isSigned = await verifyWebhookSignature({
     appSecret: environment.appSecret,
     rawBody,
@@ -231,7 +231,6 @@ whatsappRoutes.post(WHATSAPP_WEBHOOK_PATH, async (context) => {
   const requestContext: RequestContext = {
     bindings: context.env,
     environment,
-    graph: createGraphClient({ baseUrl: environment.graphBaseUrl, accessToken: environment.accessToken, fetcher: fetch }),
   };
   const retryFlags = await runInSequence({ items: changes, run: (change) => processChange({ context: requestContext, change }) });
   const shouldRetry = retryFlags.flat().some(Boolean);

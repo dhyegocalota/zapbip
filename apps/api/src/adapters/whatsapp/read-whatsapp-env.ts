@@ -1,11 +1,14 @@
 import type { Bindings } from '../../contract/env';
 
-export type WhatsAppEnvironment = {
-  graphBaseUrl: string;
-  accessToken: string;
+export type WebhookEnvironment = {
   phoneNumberId: string;
   verifyToken: string;
   appSecret: string;
+};
+
+export type WhatsAppEnvironment = WebhookEnvironment & {
+  graphBaseUrl: string;
+  accessToken: string;
 };
 
 type WhatsAppBindingName = Extract<keyof Bindings, 'META_APP_SECRET' | `WHATSAPP_${string}`>;
@@ -16,13 +19,20 @@ function requireBinding(input: { env: Bindings; name: WhatsAppBindingName }): st
   throw new Error(`${input.name} is not set`);
 }
 
-export function readWhatsAppEnvironment(input: { env: Bindings }): WhatsAppEnvironment {
+export function readWebhookEnvironment(input: { env: Bindings }): WebhookEnvironment {
   const { env } = input;
   return {
-    graphBaseUrl: requireBinding({ env, name: 'WHATSAPP_GRAPH_BASE_URL' }),
-    accessToken: requireBinding({ env, name: 'WHATSAPP_ACCESS_TOKEN' }),
     phoneNumberId: requireBinding({ env, name: 'WHATSAPP_PHONE_NUMBER_ID' }),
     verifyToken: requireBinding({ env, name: 'WHATSAPP_VERIFY_TOKEN' }),
     appSecret: requireBinding({ env, name: 'META_APP_SECRET' }),
+  };
+}
+
+export function readWhatsAppEnvironment(input: { env: Bindings }): WhatsAppEnvironment {
+  const { env } = input;
+  return {
+    ...readWebhookEnvironment({ env }),
+    graphBaseUrl: requireBinding({ env, name: 'WHATSAPP_GRAPH_BASE_URL' }),
+    accessToken: requireBinding({ env, name: 'WHATSAPP_ACCESS_TOKEN' }),
   };
 }

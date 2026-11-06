@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { readWhatsAppEnvironment } from '../../src/adapters/whatsapp/read-whatsapp-env';
+import { readWebhookEnvironment, readWhatsAppEnvironment } from '../../src/adapters/whatsapp/read-whatsapp-env';
 import type { Bindings } from '../../src/contract/env';
 
 const COMPLETE = {
@@ -33,5 +33,18 @@ describe('readWhatsAppEnvironment', () => {
 
   it('AU-116 throws naming META_APP_SECRET when it is empty', () => {
     expect(() => readWhatsAppEnvironment({ env: envOf({ META_APP_SECRET: '' }) })).toThrow('META_APP_SECRET');
+  });
+});
+
+describe('readWebhookEnvironment', () => {
+  it('AU-117 returns the three webhook values without the access token and the Graph base URL', () => {
+    const env = envOf({});
+    delete (env as unknown as Record<string, unknown>).WHATSAPP_ACCESS_TOKEN;
+    delete (env as unknown as Record<string, unknown>).WHATSAPP_GRAPH_BASE_URL;
+    expect(readWebhookEnvironment({ env })).toEqual({
+      phoneNumberId: '1000000000000001',
+      verifyToken: 'test-verify-token',
+      appSecret: 'test-app-secret',
+    });
   });
 });

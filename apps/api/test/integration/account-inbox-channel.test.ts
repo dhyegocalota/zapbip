@@ -39,12 +39,27 @@ function ownerTextEntry(input: { text: string; at: number }) {
   };
 }
 
-function receiveText(input: { channelMessageId: string; text?: string }) {
-  return accountInboxStub({ accountId: ACCOUNT_ID }).receiveChannelMessage({
+function textRequestOf(input: { channelMessageId: string; text?: string }) {
+  return {
     ownerLocale: OwnerLocale.PortugueseBrazil,
     channelMessageId: input.channelMessageId,
     entry: ownerTextEntry({ text: input.text === undefined ? 'oi' : input.text, at: Date.now() }),
-  });
+  };
+}
+
+function receiveText(input: { channelMessageId: string; text?: string }) {
+  return accountInboxStub({ accountId: ACCOUNT_ID }).receiveChannelMessage(textRequestOf(input));
+}
+
+function failureMessageOfReceiveText(input: { channelMessageId: string }): Promise<string> {
+  return runInDurableObject(accountInboxStub({ accountId: ACCOUNT_ID }), (instance) =>
+    instance.receiveChannelMessage(textRequestOf(input)).then(
+      () => {
+        throw new Error('the delivery did not fail');
+      },
+      (error: Error) => error.message,
+    ),
+  );
 }
 
 function countRows(input: { statement: string }) {
@@ -362,7 +377,7 @@ describe('AccountInbox channel messages', () => {
         };
       },
     });
-    await expect(receiveText({ channelMessageId: CHANNEL_MESSAGE_ID })).rejects.toThrow('injected before the commit');
+    expect(await failureMessageOfReceiveText({ channelMessageId: CHANNEL_MESSAGE_ID })).toBe('injected before the commit');
     expect(await countReceipts()).toBe(0);
     expect(await countOwnerMessages()).toBe(0);
     const retried = await receiveText({ channelMessageId: CHANNEL_MESSAGE_ID });
