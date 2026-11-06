@@ -20,8 +20,8 @@ describe('the plugin versions', () => {
     expect(openclawManifest.version).toBe(sharedVersion);
   });
 
-  test('the OpenClaw client names the shared version', () => {
-    expect(versionOf({ path: OPENCLAW_CONSTANTS, pattern: /MCP_CLIENT_VERSION = '([^']+)'/ })).toBe(sharedVersion);
+  test('the OpenClaw client names the shared version constant', () => {
+    expect(versionOf({ path: OPENCLAW_CONSTANTS, pattern: /MCP_CLIENT_VERSION = (\w+)/ })).toBe('ZAPBIP_NPM_VERSION');
   });
 
   test('the OpenClaw package is publishable and ships only its build and manifest', () => {

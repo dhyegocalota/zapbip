@@ -126,3 +126,24 @@ All under `apps/openclaw-plugin`: `src/{connector-socket,frames,handoff-queue,ha
 - No run inside a real OpenClaw gateway or with a model (E and V3 cover it).
 - Probe is made once at start; after the first success a revoked secret surfaces as reconnect close codes, not a probe.
 - Reconnect after a close does not re-probe (same as `zapbip listen`).
+
+## Integration (h + o + local-connector)
+
+### What changed
+- Merged `feat/hermes-openclaw-h`, `-o` (briefing sections kept as a union) and `origin/feat/local-connector` (head f17fb37). Conflicts: `wakeAgent` lives in `wake-agent.ts` here, so the connector's push-every-message rule (`pushesEveryMessage`, `hasFailedWake`) was ported there; `AccountInbox` registers the expiry, routing-list and wake providers; e2e global setup keeps `--env development` with the connector's wake-account seeding; `pnpm-lock.yaml` regenerated.
+- OpenClaw test fixtures carry `forwarded: false` (the envelope now requires it).
+- `apps/openclaw-plugin/package.json`: version `0.1.0`, no `private`, `files: [dist, openclaw.plugin.json]`, `openclaw` block (`extensions: ["./dist/index.js"]`, `channel`, `compat.pluginApi >=2026.10.10`), `peerDependencies.openclaw`. Hermes: `pyproject.toml`, `plugin.yaml` and `PLUGIN_VERSION` at `0.1.0`.
+- `tools/repository-shape/src/plugin-versions.test.ts` ties both plugins to `ZAPBIP_NPM_VERSION`.
+- `SEEN_MESSAGE_LIMIT` moved to `libs/types/src/constants.ts`; `ConnectorLogEvent.PluginHandoffFailed` (`plugin_handoff_failed`) added. There is no `LogEvent` enum in `libs/types`; `ConnectorLogEvent` is the shared log enum. OpenClaw logs it on a failed or errored handoff (it used `WakeFinished` with a failed outcome); Hermes `PluginLogEvent.HANDOFF_FAILED` now carries the same value. The Hermes parity test evaluates product expressions such as `25 * SECOND_MS`.
+
+### Red then green
+- 071c76c (red): Hermes parity `constant SEEN_MESSAGE_LIMIT not found`, `KeyError: 'PluginHandoffFailed'`; OpenClaw handoff queue `expected ... event: undefined`; repository-shape `expected undefined to be '0.1.0'`. Green in the next commit.
+
+### Owner publish steps (for the deploy-readiness runbook)
+1. Create or own the npm scope `@zapbip`, then `pnpm --filter @zapbip/openclaw-plugin build` and `npm publish --access public` from `apps/openclaw-plugin` at `0.1.0`.
+2. Publish `zapbip-platform` `0.1.0` from `apps/hermes-plugin` to PyPI (`python -m build`, `twine upload`), or distribute the Hermes plugin folder as documented.
+3. Confirm `npm view @zapbip/openclaw-plugin@0.1.0` resolves before the docs deploy.
+
+### Gaps
+- Plugins do not yet treat `verified=false` (forwarded) messages differently when handing off; the connector channel trust rule is not mirrored here.
+- No publish was run; `compat.pluginApi` was chosen as the installed `2026.10.10` floor.
