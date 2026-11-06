@@ -343,7 +343,8 @@ describe('AccountInbox channel messages', () => {
     const first = await receiveText({ channelMessageId: CHANNEL_MESSAGE_ID });
     const second = await receiveText({ channelMessageId: CHANNEL_MESSAGE_ID });
     expect(first).toMatchObject({ ok: true, value: { duplicate: false } });
-    expect(second).toEqual({ ok: true, value: { messageId: null, agent: null, duplicate: true } });
+    if (!first.ok) throw new Error('the first delivery failed');
+    expect(second).toEqual({ ok: true, value: { ...first.value, duplicate: true } });
     expect(await countOwnerMessages()).toBe(1);
     expect(await countReceipts()).toBe(1);
   });
