@@ -5,6 +5,7 @@ import { DeployEnvironment } from '../../src/operations/deploy-environment';
 
 const ROOT_PACKAGE_PATH = '../../package.json';
 const WRANGLER_CONFIG_PATH = 'wrangler.jsonc';
+const DOCS_PREFLIGHT_COMMAND = 'node --env-file=.env --import tsx apps/api/scripts/docs-preflight.ts';
 const TSX_VERSION = '4.23.15';
 const SCRIPT_NAMES = [
   'deploy:staging',
@@ -32,6 +33,10 @@ function databaseNameOf(input: { environment: string }): string {
 }
 
 describe('root scripts', () => {
+  it('declares docs:preflight, which loads the owner environment file and runs the docs preflight script', () => {
+    expect(rootPackage.scripts['docs:preflight']).toBe(DOCS_PREFLIGHT_COMMAND);
+  });
+
   it('pin: declares the eight deploy, migrate and smoke scripts', () => {
     SCRIPT_NAMES.forEach((name) => expect(rootPackage.scripts).toHaveProperty(name));
   });
