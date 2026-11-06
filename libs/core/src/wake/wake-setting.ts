@@ -1,6 +1,7 @@
 import { WakeMode, type OwnerLocale, type WakeAttemptOutcome, type WakeProvider, type WakeStatus } from '@zapbip/types';
 import type { AgentName } from '../inbox/connection';
 import { invalidInput } from '../inbox/inbox-error-factories';
+import { AGENT_NAME_PATTERN } from '../inbox/constants';
 import { SCHEDULED_MAX_INTERVAL_MINUTES, SCHEDULED_MIN_INTERVAL_MINUTES } from './constants';
 
 export type WakeSettingInput = {
@@ -91,18 +92,39 @@ function assertStandby(input: WakeSettingCheck): void {
     },
   });
   if (setting.standbyAgent === null) throw invalidInput({ message: `${WakeSettingField.StandbyAgent} is required for ${setting.mode}` });
+  if (!AGENT_NAME_PATTERN.test(setting.standbyAgent))
+    throw invalidInput({ message: `${WakeSettingField.StandbyAgent} must match ${AGENT_NAME_PATTERN.source}` });
   if (setting.standbyAgent === caller) throw invalidInput({ message: `${WakeSettingField.StandbyAgent} cannot be the agent itself` });
   if (standby === null) throw invalidInput({ message: `${WakeSettingField.StandbyAgent} is not connected to this account` });
   if (standby.mode === WakeMode.Standby)
     throw invalidInput({ message: `${WakeSettingField.StandbyAgent} cannot be in standby mode: one hop only` });
 }
 
-function assertNothing(): void {}
+function assertWebhook(input: WakeSettingCheck): void {
+  const { setting } = input;
+  assertAbsent({
+    setting,
+    fields: { [WakeSettingField.IntervalMinutes]: setting.intervalMinutes, [WakeSettingField.StandbyAgent]: setting.standbyAgent },
+  });
+}
+
+function assertTargetless(input: WakeSettingCheck): void {
+  const { setting } = input;
+  assertAbsent({
+    setting,
+    fields: {
+      [WakeSettingField.Url]: setting.url,
+      [WakeSettingField.Token]: setting.token,
+      [WakeSettingField.IntervalMinutes]: setting.intervalMinutes,
+      [WakeSettingField.StandbyAgent]: setting.standbyAgent,
+    },
+  });
+}
 
 const WAKE_SETTING_CHECKS: Record<WakeMode, (input: WakeSettingCheck) => void> = {
-  [WakeMode.None]: assertNothing,
-  [WakeMode.Local]: assertNothing,
-  [WakeMode.Webhook]: assertNothing,
+  [WakeMode.None]: assertTargetless,
+  [WakeMode.Local]: assertTargetless,
+  [WakeMode.Webhook]: assertWebhook,
   [WakeMode.Scheduled]: assertScheduled,
   [WakeMode.Standby]: assertStandby,
 };
