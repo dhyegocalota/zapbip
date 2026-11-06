@@ -1,5 +1,5 @@
 import type { AgentName } from './connection';
-import type { MediaOrigin } from '@zapbip/types';
+import type { MediaOrigin, OwnerLocale } from '@zapbip/types';
 
 export type AgentRecord = {
   agent: AgentName;
@@ -17,6 +17,14 @@ export type ChannelStatusDetail = {
   errorTitle: string | null;
   pricingCategory: string | null;
   billable: boolean | null;
+};
+
+export type RoutingList = {
+  promptMessageId: string;
+  openedAt: number;
+  locale: OwnerLocale;
+  resent: boolean;
+  reminded: boolean;
 };
 
 export type StoredMedia = {

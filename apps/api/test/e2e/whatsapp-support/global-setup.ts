@@ -21,6 +21,7 @@ const HEALTH_POLL_INTERVAL_MS = 250;
 const SIGNING_KEY_BYTES = 32;
 const LOOPBACK_HOST = '127.0.0.1';
 const DATABASE_BINDING = 'CONNECTIONS';
+const DEVELOPMENT_ENVIRONMENT_ARGUMENTS = ['--env', 'development'];
 const LOG_FILE_NAME = 'wrangler-dev.log';
 
 const seedOutputSchema = z.object({ connections: z.array(z.object({ agent: z.string(), secret: z.string() })) });
@@ -53,7 +54,17 @@ export default async function setup(project: TestProject): Promise<() => Promise
   const origin = `http://${LOOPBACK_HOST}:${port}`;
   const persistArguments = ['--persist-to', persistDirectory];
 
-  await runCommand('pnpm', ['exec', 'wrangler', 'd1', 'migrations', 'apply', DATABASE_BINDING, '--local', ...persistArguments]);
+  await runCommand('pnpm', [
+    'exec',
+    'wrangler',
+    'd1',
+    'migrations',
+    'apply',
+    DATABASE_BINDING,
+    ...DEVELOPMENT_ENVIRONMENT_ARGUMENTS,
+    '--local',
+    ...persistArguments,
+  ]);
   const seeded = await runCommand('pnpm', [
     'exec',
     'tsx',
@@ -83,6 +94,7 @@ export default async function setup(project: TestProject): Promise<() => Promise
       'exec',
       'wrangler',
       'dev',
+      ...DEVELOPMENT_ENVIRONMENT_ARGUMENTS,
       '--ip',
       LOOPBACK_HOST,
       '--port',

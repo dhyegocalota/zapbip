@@ -28,7 +28,7 @@ import { D1MessageIndex } from '../adapters/d1/d1-message-index';
 import { findOwnerByAccountId } from '../adapters/d1/d1-owner-directory';
 import { createIdGenerator } from '../adapters/platform/ids';
 import { loadDurableClock, type DurableClock } from '../adapters/platform/clock';
-import { createR2MediaStore } from '../adapters/r2/r2-media-store';
+import { mediaStoreOf } from '../adapters/r2/r2-media-store';
 import { createSqliteInboxRepository } from '../adapters/sqlite/sqlite-inbox-repository';
 import { createNoneWaker } from '../adapters/wake/none-waker';
 import { createCloudApiMessageSender } from '../adapters/whatsapp/cloud-api-message-sender';
@@ -49,7 +49,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
   protected sender!: MessageSender;
   protected clock!: DurableClock;
   protected readonly dueTimeProviders: DueTimeProvider[] = [];
-  private accountId!: string;
+  protected accountId!: string;
   private dependencies!: CoreDependencies;
 
   constructor(ctx: DurableObjectState, env: Bindings) {
@@ -63,12 +63,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     runMigrations({ storage: this.ctx.storage, migrations: ACCOUNT_INBOX_MIGRATIONS });
     this.accountId = accountId;
     this.clock = await loadDurableClock({ storage: this.ctx.storage, onAdvanced: () => this.armAlarm() });
-    const mediaStore = createR2MediaStore({
-      bucket: this.env.MEDIA,
-      mediaLinkSigningKey: this.env.MEDIA_LINK_SIGNING_KEY,
-      uploadLinkSigningKey: this.env.UPLOAD_LINK_SIGNING_KEY,
-      clock: this.clock,
-    });
+    const mediaStore = mediaStoreOf({ bindings: this.env, clock: this.clock });
     this.sender = this.createSender({ mediaStore });
     this.dependencies = {
       accountId,
@@ -80,7 +75,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       ids: createIdGenerator(),
       waiters: inbox.createReplyWaiters({ clock: this.clock }),
     };
-    this.dueTimeProviders.push(this.createExpiryProvider());
+    this.dueTimeProviders.push(this.createExpiryProvider(), this.createRoutingListProvider());
     await this.armAlarm();
   }
 
@@ -107,6 +102,13 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
         await inbox.sweepExpired({ dependencies: this.dependencies });
         this.log({ event: LogEvent.Sweep });
       },
+    };
+  }
+
+  private createRoutingListProvider(): DueTimeProvider {
+    return {
+      nextDueAt: () => inbox.findRoutingListDueAt({ dependencies: this.dependencies }),
+      runDue: () => inbox.expireRoutingList({ dependencies: this.dependencies }),
     };
   }
 
@@ -222,6 +224,14 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
 
   describeUpload(input: { mediaId: string }): Promise<CallOutcome<StoredMedia>> {
     return this.outcome({ run: () => inbox.describeUpload({ ...input, dependencies: this.dependencies }) });
+  }
+
+  claimUpload(input: { mediaId: string }): Promise<CallOutcome<StoredMedia>> {
+    return this.outcome({ run: () => inbox.claimUpload({ ...input, dependencies: this.dependencies }) });
+  }
+
+  releaseUpload(input: { mediaId: string }): Promise<CallOutcome<void>> {
+    return this.outcome({ run: () => inbox.releaseUpload({ ...input, dependencies: this.dependencies }) });
   }
 
   completeUpload(input: { mediaId: string }): Promise<CallOutcome<StoredMedia>> {

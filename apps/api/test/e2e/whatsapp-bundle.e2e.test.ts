@@ -11,7 +11,6 @@ import { ACCESS_TOKEN, APP_SECRET, PHONE_NUMBER_ID, VERIFY_TOKEN } from './whats
 const runCommand = promisify(execFile);
 const PRODUCTION_BUNDLE_FILE = 'index.js';
 const BUNDLE_TIMEOUT_MS = 120_000;
-const PRODUCTION_ENVIRONMENT_ARGUMENTS = ['--env', 'production'];
 const FAKE_GRAPH_ADDRESS = '127.0.0.1:4011';
 const FIXTURE_MARKER = 'fixture-marker-whatsapp';
 const FAKE_SENDER_MARKERS = ['fake-whatsapp-sender', 'createFakeWhatsAppSender', 'DevAccountInbox'];
@@ -23,7 +22,7 @@ const outputDirectories: string[] = [];
 async function productionBundle(): Promise<string> {
   const outputDirectory = await mkdtemp(join(tmpdir(), 'zapbip-whatsapp-bundle-'));
   outputDirectories.push(outputDirectory);
-  await runCommand('pnpm', ['exec', 'wrangler', 'deploy', '--dry-run', ...PRODUCTION_ENVIRONMENT_ARGUMENTS, '--outdir', outputDirectory]);
+  await runCommand('pnpm', ['exec', 'wrangler', 'deploy', '--dry-run', '--outdir', outputDirectory]);
   return readFile(join(outputDirectory, PRODUCTION_BUNDLE_FILE), 'utf8');
 }
 

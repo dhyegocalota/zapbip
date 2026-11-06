@@ -2,7 +2,7 @@ import type { AgentWakeReason, IdPrefix, LinkPurpose, OwnerLocale, TemplateKind,
 import type { AgentName, ConnectionIdentity } from './connection';
 import type { Message } from './message';
 import type { Question, QuestionAnswer } from './question';
-import type { AgentRecord, ChannelStatusDetail, OwnerWindow, StoredMedia } from './inbox-records';
+import type { AgentRecord, ChannelStatusDetail, OwnerWindow, RoutingList, StoredMedia } from './inbox-records';
 
 export type MediaBody = ReadableStream<Uint8Array>;
 
@@ -31,7 +31,6 @@ export interface InboxRepository {
   countUnread(input: { agent: AgentName }): Promise<number>;
   markRead(input: { messageIds: string[] }): Promise<void>;
   listHeld(): Promise<Message[]>;
-  findChoicePrompt(input: { questionId: string }): Promise<Message | null>;
   assignAgent(input: { messageIds: string[]; agent: AgentName }): Promise<void>;
   listQueued(): Promise<Message[]>;
   findLastAgentWrite(input: { since: number }): Promise<AgentName | null>;
@@ -48,8 +47,13 @@ export interface InboxRepository {
   findWindow(): Promise<OwnerWindow>;
   saveWindow(input: { window: OwnerWindow }): Promise<void>;
   claimNotice(): Promise<boolean>;
+  findRoutingList(): Promise<RoutingList | null>;
+  saveRoutingList(input: { routingList: RoutingList }): Promise<void>;
+  clearRoutingList(): Promise<void>;
   insertMedia(input: { media: StoredMedia }): Promise<void>;
   findMedia(input: { mediaId: string }): Promise<StoredMedia | null>;
+  claimUpload(input: { mediaId: string }): Promise<boolean>;
+  releaseUpload(input: { mediaId: string }): Promise<void>;
   markMediaReceived(input: { mediaId: string; receivedAt: number; retentionUntil: number }): Promise<void>;
   listExpiredMediaIds(input: { now: number }): Promise<string[]>;
   deleteMedia(input: { mediaIds: string[] }): Promise<void>;

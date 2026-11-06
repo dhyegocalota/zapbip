@@ -9,8 +9,12 @@ export const INBOX_COPY: Record<InboxCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.EnglishUs]: 'Which agent should I send your message to?',
   },
   [InboxCopyKey.RoutingListExpired]: {
-    [OwnerLocale.PortugueseBrazil]: 'Essa lista expirou. Envie sua mensagem de novo.',
-    [OwnerLocale.EnglishUs]: 'That list has expired. Send your message again.',
+    [OwnerLocale.PortugueseBrazil]: 'Essa lista já foi usada.',
+    [OwnerLocale.EnglishUs]: 'That list was already used.',
+  },
+  [InboxCopyKey.RoutingListReminder]: {
+    [OwnerLocale.PortugueseBrazil]: 'Escolha o agente na lista acima',
+    [OwnerLocale.EnglishUs]: 'Pick the agent in the list above',
   },
   [InboxCopyKey.NoAgents]: {
     [OwnerLocale.PortugueseBrazil]: 'Nenhum agente conectado. Sua mensagem ficou guardada.',

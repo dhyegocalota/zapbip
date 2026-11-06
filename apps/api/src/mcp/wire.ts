@@ -1,6 +1,6 @@
 import { formatOptionId, type Message, type MediaFields, type MediaSource } from '@zapbip/core';
 import { MediaSourceKind, MessageDirection, MessageKind, MessageSender } from '@zapbip/types';
-import { buildMediaLink } from './links';
+import { resolveMediaLink } from './links';
 import type { MessageWire, ToolContext } from './types';
 
 type ContentWire = Pick<
@@ -129,16 +129,11 @@ export function toWireMessage(input: { message: Message; link: string | null }):
   };
 }
 
-async function resolveMediaLink(input: { context: ToolContext; message: Message }): Promise<string | null> {
-  const { message } = input;
-  if (!('source' in message)) return null;
-  if (message.source.kind === MediaSourceKind.Link) return message.source.link;
-  if (message.source.kind === MediaSourceKind.Unavailable) return null;
-  return buildMediaLink({ context: input.context, mediaId: message.source.mediaId });
-}
-
 export function toWireMessages(input: { context: ToolContext; messages: Message[] }): Promise<MessageWire[]> {
+  const { mediaStore, connection, origin } = input.context;
   return Promise.all(
-    input.messages.map(async (message) => toWireMessage({ message, link: await resolveMediaLink({ context: input.context, message }) })),
+    input.messages.map(async (message) =>
+      toWireMessage({ message, link: await resolveMediaLink({ mediaStore, accountId: connection.accountId, origin, message }) }),
+    ),
   );
 }

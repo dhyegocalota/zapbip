@@ -50,6 +50,7 @@ export enum OwnerLocale {
 export enum InboxCopyKey {
   RoutingPrompt = 'routing_prompt',
   RoutingListExpired = 'routing_list_expired',
+  RoutingListReminder = 'routing_list_reminder',
   NoAgents = 'no_agents',
   AgentNotListening = 'agent_not_listening',
   NoticeBody = 'notice_body',

@@ -8,7 +8,13 @@ export class DevAccountInbox extends AccountInbox implements Pick<DevAccountInbo
 
   protected createSender(input: { mediaStore: MediaStore }): MessageSender {
     if (this.env.WHATSAPP_ACCESS_TOKEN !== undefined) return super.createSender(input);
-    this.fakeSender = createFakeWhatsAppSender({ storage: this.ctx.storage, clock: this.clock });
+    this.fakeSender = createFakeWhatsAppSender({
+      storage: this.ctx.storage,
+      clock: this.clock,
+      mediaStore: input.mediaStore,
+      accountId: this.accountId,
+      origin: this.env.PUBLIC_ORIGIN,
+    });
     return this.fakeSender;
   }
 
