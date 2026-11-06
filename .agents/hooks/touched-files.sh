@@ -10,7 +10,7 @@ require_jq
 
 touched_files() {
   local file_path
-  file_path=$(jq -r '.tool_input.file_path // ""' <<<"$hook_input")
+  file_path=$(jq -r '.tool_input.file_path // .tool_input.notebook_path // ""' <<<"$hook_input")
   if [[ -n "$file_path" ]]; then
     echo "$file_path"
     return

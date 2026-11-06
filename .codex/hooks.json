@@ -36,6 +36,12 @@
         "hooks": [
           {
             "type": "command",
+            "command": "\"$(git rev-parse --show-toplevel)/.agents/hooks/guard-secrets.sh\"",
+            "timeout": 10,
+            "statusMessage": "Guarding .env files"
+          },
+          {
+            "type": "command",
             "command": "\"$(git rev-parse --show-toplevel)/.agents/hooks/guard-git-add-all.sh\"",
             "timeout": 10,
             "statusMessage": "Guarding git add and the gates"

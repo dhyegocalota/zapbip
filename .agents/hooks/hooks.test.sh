@@ -55,9 +55,9 @@ expect_jq() {
   echo "FAIL $name"
   failures=$((failures + 1))
 }
-expect_jq "settings: guard-secrets watches MultiEdit and NotebookEdit" "$settings_file" '[.hooks.PreToolUse[] | select(any(.hooks[]; .command | endswith("guard-secrets.sh"))) | .matcher] | any(test("MultiEdit") and test("NotebookEdit"))'
-expect_jq "settings: guard-secrets watches Bash" "$settings_file" '[.hooks.PreToolUse[] | select(.matcher == "Bash") | .hooks[].command] | any(endswith("guard-secrets.sh"))'
-expect_jq "codex: guard-secrets watches Bash" "$codex_hooks_file" '[.hooks.PreToolUse[] | select(.matcher == "^Bash$") | .hooks[].command] | any(endswith("guard-secrets.sh"))'
+expect_jq "settings: guard-secrets watches MultiEdit and NotebookEdit" "$settings_file" '[.hooks.PreToolUse[] | select(any(.hooks[]; .command | contains("guard-secrets.sh"))) | .matcher] | any(test("MultiEdit") and test("NotebookEdit"))'
+expect_jq "settings: guard-secrets watches Bash" "$settings_file" '[.hooks.PreToolUse[] | select(.matcher == "Bash") | .hooks[].command] | any(contains("guard-secrets.sh"))'
+expect_jq "codex: guard-secrets watches Bash" "$codex_hooks_file" '[.hooks.PreToolUse[] | select(.matcher == "^Bash$") | .hooks[].command] | any(contains("guard-secrets.sh"))'
 for rule in 'Edit(./**/.env)' 'Edit(./**/.env.local)' 'Write(./**/.env)' 'Write(./**/.env.production)' 'Read(./**/.env.*.local)' 'Read(~/.ssh/**)'; do
   expect_jq "settings: deny lists $rule" "$settings_file" ".permissions.deny | index(\"$rule\") != null"
 done
