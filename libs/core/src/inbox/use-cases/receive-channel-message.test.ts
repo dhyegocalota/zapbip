@@ -265,6 +265,21 @@ describe('receiveChannelMessage', () => {
     });
   });
 
+  test.each([ForwardedKind.Forwarded, ForwardedKind.FrequentlyForwarded])(
+    'a %s text never answers an open question and still reaches the agent',
+    async (forwarded) => {
+      const environment = await createEnvironment();
+      const question = await askAndAbandon({ environment });
+      const result = await receiveChannel({ environment, entry: ownerTextEntry({ environment, text: 'Sim', forwarded }) });
+      expect((await environment.repository.findQuestion({ questionId: question.questionId }))?.answer).toBeNull();
+      expect(await environment.repository.findMessage({ messageId: result.messageId! })).toMatchObject({
+        agent: question.agent,
+        text: 'Sim',
+        forwarded,
+      });
+    },
+  );
+
   test('a reaction does not open the window or flush the queue', async () => {
     const environment = await environmentWithAlpha();
     await closeWindow({ environment });

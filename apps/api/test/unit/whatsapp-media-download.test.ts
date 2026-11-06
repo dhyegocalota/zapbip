@@ -21,6 +21,8 @@ const CHANNEL_MEDIA_ID = '900000000000001';
 const FAKE_GRAPH_PORT_ANY = 0;
 const STATUS_BAD_REQUEST = 400;
 const STATUS_UNAUTHORIZED = 401;
+const STATUS_TOO_MANY_REQUESTS = 429;
+const GRAPH_INVALID_REQUEST_CODE = 100;
 const ACCESS_TOKEN = 'test-access-token';
 
 class TestDigestStream extends WritableStream<Uint8Array> {
@@ -331,6 +333,18 @@ describe('downloadInboundMedia through the real Graph client', () => {
       attempts: MEDIA_DOWNLOAD_ATTEMPTS,
     });
     await expect(run).rejects.toBeInstanceOf(RetriableMediaError);
+  });
+
+  it('treats a permanent 4xx on the metadata as unavailable', async () => {
+    await metadataFailure({ status: STATUS_NOT_FOUND, code: GRAPH_INVALID_REQUEST_CODE });
+    const run = downloadThroughRealClient();
+    expect(await run.result).toEqual({ stored: false });
+    expect(run.objects.size).toBe(0);
+  });
+
+  it('pin: rethrows a rate limit on the metadata so Meta retries', async () => {
+    await metadataFailure({ status: STATUS_TOO_MANY_REQUESTS, code: WhatsAppErrorCode.RateLimitedThroughput });
+    await expect(downloadThroughRealClient().result).rejects.toMatchObject({ code: ChannelErrorKind.RateLimited });
   });
 
   it('rethrows an authentication failure as a channel error', async () => {
