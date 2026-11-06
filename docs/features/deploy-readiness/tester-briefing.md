@@ -51,3 +51,47 @@ No Step 0 test is red: the contract is stubs that throw, and no test calls them 
 - The plan's Step 0 "meter wrapper as a pass-through" on `AccountInbox` is not in Step 0. Nothing needs it until lane A's test exists; it lands with A4.
 - `scripts/deploy.ts`, `smoke.ts`, `runbooks/` and the docs preflight do not exist yet (lanes B and D).
 - The spec's health check text (`status: "ok"`) conflicts with the decisions file (`ok: true`); the decisions file is followed.
+
+## Lane C (config and health)
+
+Commits: `99caf63` (red, wrangler-config), `5f0cbe9` (wrangler.jsonc), `b3279ef` (red, health and WI-117), the PB-4 pin, and the spec/plan commit. Health green (C3) is not landed: see Gaps.
+
+### What changed
+
+- `apps/api/wrangler.jsonc` — top level is production; `env.development` and `env.staging` repeat every binding; plain JSON (no comments, no trailing commas).
+- `apps/api/test/unit/wrangler-config.test.ts` — 18 cases: block values, key-set parity per binding class, vars parity, migrations, crons, placeholders.
+- `apps/api/test/integration/health.test.ts`, `production-entry.test.ts` (WI-117 now `{ ok: true, environment: 'production' }`; the helper passes `ENVIRONMENT: production`).
+- `apps/api/test/e2e/production-bundle.e2e.test.ts` — PB-4, the staging dry-run bundle (pin).
+- `docs/features/deploy-readiness/spec.md` — health body amended to `{ ok: true, environment }`.
+
+### How to run
+
+```bash
+cd apps/api && pnpm exec vitest run --config vitest.unit.config.mts wrangler-config
+cd apps/api && pnpm exec vitest run --config vitest.integration.config.mts health production-entry
+cd apps/api && pnpm exec vitest run --config vitest.e2e.config.mts production-bundle
+```
+
+### Red today, green after
+
+| Test | Red text | Green after |
+|---|---|---|
+| `wrangler-config.test.ts` (whole suite) | `SyntaxError: Expected double-quoted property name in JSON at position 293 (line 9 column 3)` (trailing commas, no `env.staging`) | `5f0cbe9`, 18/18 |
+| `health.test.ts::names the configured environment` | `expected { ok: true } to deeply equal { ok: true, environment: 'staging' }` | needs the `app.ts` health line and the `parseDeployEnvironment` body |
+| `health.test.ts::an unknown environment is a Worker error…` | `expected 200 to be 500` | same |
+| `production-entry.test.ts::WI-117` | `expected { ok: true } to deeply equal { ok: true, environment: 'production' }` | same |
+
+Pins: the first four wrangler-config cases, PB-4.
+
+### Hypotheses to attack
+
+1. `wrangler deploy --dry-run` (no flag) is the production bundle and `--env staging` the staging bundle; both exit 0 with placeholder D1 ids and no login. Break it by running both.
+2. `--env production` is refused by wrangler ("No environment found in configuration with name production"). Any script that passes it (the deploy command, the runbooks) is wrong; production deploys with no `--env`.
+3. Every binding class is identical across the three blocks. Break it by deleting `rules` from one block.
+
+### Gaps
+
+- C3 green (health line in `apps/api/src/app.ts`) is blocked: `parseDeployEnvironment` is still the Step 0 stub and no lane's file map owns its body.
+- Prettier adds trailing commas to `.jsonc`; the file is plain JSON for the preflight's `JSON.parse`. It needs a `.prettierrc` override (`apps/api/wrangler.jsonc`, `trailingComma: none`) or the `format` gate fails.
+- `ratelimits` and `analytics_engine_datasets` parity is not asserted; neither key exists yet.
+- The deploy command and runbooks must not use `--env production` (plan A7 and the production-bundle line were stale).

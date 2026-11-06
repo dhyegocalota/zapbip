@@ -80,7 +80,8 @@ Diff of this plan against `origin/feat/agent-inbox-core`, the base of this branc
 Cross-slice checks (not this slice's code):
 
 - **accounts-and-keys (owner decision, coordinator 2026-11-06):** revoke must close the agent's connector sockets. Checked when accounts-and-keys meets local-connector; this slice does not own it.
-- **Spec conflict:** the spec's health check 1 expects `{ "status": "ok", "environment": … }`. The decisions file governs: `{ ok: true, environment }`. The owner-approved spec is left unedited and the owner decides.
+~~- **Spec conflict:** the spec's health check 1 expects `{ "status": "ok", "environment": … }`. The decisions file governs: `{ ok: true, environment }`. The owner-approved spec is left unedited and the owner decides.~~
+- **Spec conflict (resolved at lane C):** the spec's health body is amended to `{ ok: true, environment }`; its Open questions table records it as `owner delegated 2026-11-06`.
 
 ## Assumptions (decided, owner can override)
 
@@ -398,11 +399,13 @@ Lanes never rebase: a rebase would rewrite the red-first hashes the test plan ci
 
 ### C (developer-C): config and health
 
-- [ ] **C1 red: wrangler parity.** `apps/api/test/unit/wrangler-config.test.ts` reads `wrangler.jsonc` with `JSON.parse` and asserts the rules of the test plan's **Config** section, including key-set parity of every binding across the three blocks, the var keys, the crons, the routes and the names. Expected failure: one block and no `env` key. Commit as `test(api): pin the three wrangler environments`.
-- [ ] **C2 green: wrangler.** Restructure `apps/api/wrangler.jsonc` to the shape in **Wrangler**, repeating every key in the staging and production blocks, with `replace-with-…` placeholders for the deployed IDs. Commit as `feat(api): declare the development, staging and production blocks`.
+- [x] **C1 red: wrangler parity.** `apps/api/test/unit/wrangler-config.test.ts` reads `wrangler.jsonc` with `JSON.parse` and asserts the rules of the test plan's **Config** section, including key-set parity of every binding across the three blocks, the var keys, the crons, the routes and the names. Expected failure: one block and no `env` key. Commit as `test(api): pin the three wrangler environments`. — evidence: 99caf63 (red: SyntaxError, trailing commas and no env.staging; the suite fails to load)
+- [x] **C2 green: wrangler.** Restructure `apps/api/wrangler.jsonc` to the shape in **Wrangler**, repeating every key in the staging and production blocks, with `replace-with-…` placeholders for the deployed IDs. Commit as `feat(api): declare the development, staging and production blocks`. — evidence: 5f0cbe9 (wrangler-config 18/18; the integration suite 184/184; file written with `prettier --trailing-comma none`, see tester-briefing)
 - [ ] **C3 red then green: health.** `apps/api/test/integration/health.test.ts`: `GET /health` returns `{ ok: true, environment }`; an unknown `ENVIRONMENT` returns a Worker error; slice 1's health assertions also run. Red first, then the body in `apps/api/src/app.ts` (the `/health` line; corrected at Step R, `routes/health.ts` does not exist). Lane C also updates the WI-117 assertion in `production-entry.test.ts` to `{ ok: true, environment: 'production' }`. Commit red and green separately.
-- [ ] **C4 bundle tests.** `apps/api/test/e2e/production-bundle.e2e.test.ts` and slice 2's no-env dry run run with `--env production`. Assertions stay. Commit as `test(api): bundle the production environment`.
-- [ ] **C5 red then green: dry run.** `apps/api/test/integration/deploy-dry-run.test.ts`: `wrangler deploy --dry-run --env staging` and `--env production` exit `0`; each bundle lacks `/dev/owner/`. Commit red and green separately.
+~~- [ ] **C4 bundle tests.** `apps/api/test/e2e/production-bundle.e2e.test.ts` and slice 2's no-env dry run run with `--env production`. Assertions stay. Commit as `test(api): bundle the production environment`.~~
+- [x] **C4 bundle tests (struck at lane C).** The top level is production, so `--env production` fails with "No environment found in configuration with name production". PB-1 already bundles the top level. PB-4 adds the staging bundle. — evidence: pin, test(api) commit for PB-4 (3/3 in production-bundle.e2e)
+~~- [ ] **C5 red then green: dry run.** `apps/api/test/integration/deploy-dry-run.test.ts`: `wrangler deploy --dry-run --env staging` and `--env production` exit `0`; each bundle lacks `/dev/owner/`. Commit red and green separately.~~
+- [x] **C5 dry run (moved).** The workerd integration pool has no `child_process`, so the dry run for staging lives in `apps/api/test/e2e/production-bundle.e2e.test.ts` as PB-4 (exit 0, no `/dev/owner/`); production is PB-1. Green on landing, a pin.
 
 ### A (developer-A): usage and jobs
 

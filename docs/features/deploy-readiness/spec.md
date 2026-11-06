@@ -140,7 +140,7 @@ Migrations run first, always, through `migrate:<environment>` (`pnpm exec wrangl
 
 | # | Check | Environments | What it proves |
 |---|---|---|---|
-| 1 | `health`: `GET /health` returns `200` and `{ "status": "ok", "environment": <requested> }` | all | the route reaches the right Worker and environment |
+| 1 | `health`: `GET /health` returns `200` and `{ "ok": true, "environment": <requested> }` | all | the route reaches the right Worker and environment |
 | 2 | `mcp initialize`: JSON-RPC `initialize` then `tools/list` on `/c/<smoke secret>/mcp`; expects the eleven tool names of the MCP contract (agent-inbox-core's ten and `set_wake`) | all | the MCP server and the secret resolve |
 | 3 | `webhook verify`: `GET /webhooks/whatsapp` with the verify token and a random challenge returns `200` and the challenge; a wrong token returns `403` | all | the subscription challenge works |
 | 4 | `signature rejected`: a webhook POST with a wrong `X-Hub-Signature-256` is refused | all | the signature check is on |
@@ -220,7 +220,7 @@ Worker MCP request ──► waitUntil ──► usage_daily (GB-seconds)
 | `apps/api/wrangler.jsonc` | three blocks as above; `compatibility_date` `2026-11-01`; the crons equal the constants |
 | `apps/api/src/operations/worker-secret.ts` | enum `WorkerSecret` of the seven secret names; the deploy preflight and the `.env.example` test both use it |
 | `apps/api/src/operations/constants.ts` | `QUEUE_EXPIRY_CRON`, `OPERATIONS_DAILY_CRON`, `DURABLE_OBJECT_DAILY_GB_SECONDS`, `DURABLE_OBJECT_MEMORY_GB`, `DAILY_BUDGET_WARNING_RATIO`, `SMOKE_POLL_ATTEMPTS`, `SMOKE_POLL_INTERVAL_MS` |
-| `apps/api/src/routes/health.ts` | `GET /health` → `{ status, environment }`; no database read |
+| `apps/api/src/routes/health.ts` | `GET /health` → `{ ok: true, environment }`; no database read |
 | `apps/api/src/operations/scheduled.ts` | the `scheduled` export: dispatches on `event.cron` to queue expiry, budget check, media retention |
 | `apps/api/scripts/deploy.ts`, `smoke.ts` | `--environment development \| staging \| production`, a `DeployEnvironment` enum; `deploy.ts` takes its shell and its prompt as named parameters so tests replace them |
 | root scripts | `deploy:staging`, `deploy:production`, `migrate:development`, `migrate:staging`, `migrate:production`, `smoke:development`, `smoke:staging`, `smoke:production` |
@@ -281,6 +281,7 @@ Known risks, for the owner to accept or act on:
 | Migration numbers | one per slice · by what holds D1 data | `0001_core`, `0002_accounts_and_keys`, `0003_usage`; wake and scheduled state live in the Durable Object and add none | owner delegated 2026-11-06 |
 | Waitlist in staging | true · false | `false` in staging, so smoke check 5 creates an active account; `true` in production only | owner delegated 2026-11-06 |
 | Smoke connection | development script · WhatsApp `novo agente` | WhatsApp `novo agente smoke` on deployed environments, the simulator in development | owner delegated 2026-11-06 |
+| Health body | `{ status: "ok", environment }` · `{ ok: true, environment }` | `{ ok: true, environment }`, matching slice 1's `ok` key | owner delegated 2026-11-06 |
 
 ## Test strategy summary
 
