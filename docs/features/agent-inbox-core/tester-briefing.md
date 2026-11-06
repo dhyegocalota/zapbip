@@ -81,3 +81,50 @@ State when this was written: L2's bodies were merged; L3 had pushed only its red
 - `expires_at` is rendered from the Durable Object's time while the upload link's `exp` comes from the Worker's real clock; they differ when the development clock offset is non-zero.
 - An owner image missing from R2 is returned as a link only, without an image block.
 - The WI-39 to WI-42 uploads are marked received by writing to R2 and calling `completeUpload`; the PUT route belongs to L4b.
+
+## Lane L4b
+
+### What changed
+
+- `apps/api/src/routes/{upload,media,dev-owner}.ts`, `routes/http-status.ts` (status enum and the error-code map), `routes/account-inbox-stub.ts` (typed stub lookup). `upload.ts` uses L4a's `mcp/resolve-connection.ts`.
+- `apps/api/src/dev/dev-account-inbox.ts`: `readScreen` and `advanceClock`. They assume the base class assigns the fake sender to `sender` and a `DurableClock` to `clock`.
+- `apps/api/test/integration/{upload-route,media-route,dev-owner,production-entry}.test.ts` and `route-fixtures.ts` (builds on L3's `test/support`).
+- `apps/api/test/e2e/{global-setup,stack,mcp-client.e2e,production-bundle.e2e,claude-code.e2e}.test.ts` and `global-setup.ts`.
+
+### How to run
+
+```bash
+pnpm --filter @zapbip/api test:integration
+pnpm --filter @zapbip/api test:e2e
+ZAPBIP_CLAUDE_E2E=1 pnpm --filter @zapbip/api test:e2e
+```
+
+### Red today, green after
+
+| Test | Red before the change because | Green after because |
+|------|-------------------------------|---------------------|
+| `upload-route.test.ts` (14) | red 654494a: all 14 failed with `hashConnectionSecret is not implemented` (Step 0 stub in the seed) | 33006ec, once L3's Durable Object and clock land |
+| `media-route.test.ts` (7) | red 73a344d: `createPlatformClock is not implemented`, `signLink is not implemented` | 090041c, once L3's clock, R2 store and signing land |
+| `dev-owner.test.ts` (16 cases) | red 7194fe5: `hashConnectionSecret is not implemented`; WI-106 and WI-107 passed (pins, an unmounted route is already a 404) | dc6fac4, once L3's Durable Object lands |
+| `production-entry.test.ts` | pin 8be18b9: WI-117 and WI-122 green at once | the other cases need L3 and L4a |
+| `production-bundle.e2e.test.ts` PB-2 | red 26f1a96: `expected [ "/dev/owner/", "advanceClock", …(1) ] to deeply equal []` | needs a change to `app.ts` (below). PB-3 passes. |
+
+State when this was written: L2, L3 (D1 directory, repository) and L4a were merged. The Durable Object and `adapters/platform/clock.ts` were still stubs, so 76 of 121 integration cases failed with `createPlatformClock is not implemented`, `sendText is not implemented` and `createUpload is not implemented`. The E2E suite was not run: it needs L3's `scripts/dev-seed.ts`.
+
+### Hypotheses to attack
+
+1. Hypothesis: the upload checks run in the order 401, 403, 404/410/409, 411, 413, 400, 415, and no failing PUT leaves an R2 object. Break it by: each failing case followed by `MEDIA.head`.
+2. Hypothesis: a media link is bound to its account id, so swapping the path account id gives 403. Break it by: reusing `exp` and `sig` with another account id.
+3. Hypothesis: the read and upload keys are not interchangeable. Break it by: signing with the other key.
+4. Hypothesis: the simulator stamps owner messages with the Durable Object's offset time, so the window reopens after the clock moves. Break it by: advancing the clock, posting owner text, sending as an agent and expecting `sent`.
+5. Hypothesis: a duplicate `wamid` stores one message. Break it by: posting twice, concurrently.
+6. Hypothesis: the simulator routes are absent from the production entry (WI-109 to WI-111). Break it by: all three on `index.ts`.
+
+### Known gaps
+
+- **Blocker, `src/app.ts`:** `createApp` imports `routes/dev-owner` statically, so the production bundle contains the simulator (PB-2 is red). The change: `createApp` takes the simulator routes as a parameter, and only `index.dev.ts` imports `routes/dev-owner`.
+- The E2E assertions about the screen text of media (a link matching `/m/`) and about `ScreenEntry.options` holding option ids are guesses about L3's fake sender. Check them when it lands.
+- `global-setup.ts` expects the dev seed to print `{"connections":[{"agent","secret"}]}`.
+- A rejected owner media type (WI-108) leaves its bytes in R2: the simulator stores them before core validates.
+- CC-4 and CC-5 are not written; only CC-1, CC-2, CC-3 and CC-6 are.
+- `advanceClock({advanceMs: 0})` is how the simulator reads the Durable Object's offset; it logs nothing.
