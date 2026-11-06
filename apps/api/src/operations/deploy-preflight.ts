@@ -52,6 +52,7 @@ export type WorkerPreflightInput = {
   environmentVariables: EnvironmentVariables;
   officialWhatsAppNumber: string;
   company: CompanyFacts;
+  npmVersion: string;
 };
 
 export type DocsPreflightInput = {
@@ -60,6 +61,7 @@ export type DocsPreflightInput = {
   company: CompanyFacts;
   npmVersion: string;
   openclawPluginVersion: string;
+  environmentVariables: EnvironmentVariables;
 };
 
 type PreflightCheck<Input> = { step: PreflightStep; refusalOf: (input: Input) => Promise<string | null> };

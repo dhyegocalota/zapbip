@@ -8,6 +8,7 @@ import {
   COMPLETE_VARIABLES,
   type FakeShell,
   fakeShell,
+  NPM_VERSION,
   OFFICIAL_NUMBER,
   READY_WORKER_FACTS,
 } from './fake-deploy-shell';
@@ -59,6 +60,7 @@ async function deploy(input: {
     environmentVariables: COMPLETE_VARIABLES,
     officialWhatsAppNumber: OFFICIAL_NUMBER,
     company: COMPLETE_COMPANY,
+    npmVersion: NPM_VERSION,
     log: (line) => lines.push(line),
   });
   return { exitCode, shell, prompt, output: lines.join('\n') };

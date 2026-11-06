@@ -19,6 +19,8 @@ import {
   COMPLETE_VARIABLES,
   type FakeShell,
   fakeShell,
+  NPM_PUBLISHER,
+  NPM_PUBLISHER_VARIABLE,
   NPM_VERSION,
   OFFICIAL_NUMBER,
   READY_WORKER_FACTS,
@@ -33,12 +35,29 @@ function workerInput(input: {
   environmentVariables?: EnvironmentVariables;
   officialWhatsAppNumber?: string;
   company?: CompanyFacts;
+  npmVersion?: string;
   workerFacts?: WorkerFacts;
 }) {
   const { environment = DeployEnvironment.Staging, isInteractive = true, firstDeploy = false } = input;
   const { shell = fakeShell({}), environmentVariables = COMPLETE_VARIABLES, officialWhatsAppNumber = OFFICIAL_NUMBER } = input;
-  const { block = blockOf({ environment }), workerFacts = READY_WORKER_FACTS, company = COMPLETE_COMPANY } = input;
-  return { environment, firstDeploy, block, workerFacts, shell, isInteractive, environmentVariables, officialWhatsAppNumber, company };
+  const {
+    block = blockOf({ environment }),
+    workerFacts = READY_WORKER_FACTS,
+    company = COMPLETE_COMPANY,
+    npmVersion = NPM_VERSION,
+  } = input;
+  return {
+    environment,
+    firstDeploy,
+    block,
+    workerFacts,
+    shell,
+    isInteractive,
+    environmentVariables,
+    officialWhatsAppNumber,
+    company,
+    npmVersion,
+  };
 }
 
 describe('worker preflight', () => {
@@ -81,6 +100,39 @@ describe('worker preflight', () => {
       expect(shell.commands).toEqual([]);
     },
   );
+
+  it('refuses production until the zapbip package resolves on npm, naming it', async () => {
+    const shell = fakeShell({ replies: { 'npm view': { exitCode: 1, stdout: '' } } });
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell }));
+    expect(refusal?.step).toBe(PreflightStep.NpmVersion);
+    expect(refusal?.message).toContain(`zapbip@${NPM_VERSION}`);
+    expect(shell.commands).toEqual([`npm view zapbip@${NPM_VERSION} maintainers --json`]);
+  });
+
+  it('refuses production when the maintainers do not include the owner npm user', async () => {
+    const shell = fakeShell({ replies: { 'npm view': { exitCode: 0, stdout: JSON.stringify(['someone-else <x@example.com>']) } } });
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell }));
+    expect(refusal?.step).toBe(PreflightStep.NpmVersion);
+    expect(refusal?.message).toContain(NPM_PUBLISHER);
+  });
+
+  it.each([undefined, '', `${PLACEHOLDER_VALUE_PREFIX}NPM_USER`])(
+    'refuses production when ZAPBIP_NPM_PUBLISHER is %j, running no npm command',
+    async (value) => {
+      const shell = fakeShell({});
+      const environmentVariables = { ...COMPLETE_VARIABLES, [NPM_PUBLISHER_VARIABLE]: value };
+      const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell, environmentVariables }));
+      expect(refusal?.step).toBe(PreflightStep.NpmVersion);
+      expect(refusal?.message).toContain(NPM_PUBLISHER_VARIABLE);
+      expect(shell.commands).toEqual([]);
+    },
+  );
+
+  it('does not look at npm for a staging deploy', async () => {
+    const shell = fakeShell({});
+    await runWorkerPreflight(workerInput({ shell }));
+    expect(shell.commands.some((command) => command.startsWith('npm'))).toBe(false);
+  });
 
   it('refuses production from a branch other than main', async () => {
     const shell = fakeShell({ replies: { 'git rev-parse --abbrev-ref HEAD': { exitCode: 0, stdout: 'feat/x\n' } } });
@@ -241,6 +293,7 @@ describe('docs preflight', () => {
       company: COMPLETE_COMPANY,
       npmVersion: NPM_VERSION,
       openclawPluginVersion: NPM_VERSION,
+      environmentVariables: COMPLETE_VARIABLES,
     });
     expect(refusal?.step).toBe(PreflightStep.OfficialNumber);
     expect(shell.commands).toEqual([]);
@@ -255,6 +308,7 @@ describe('docs preflight', () => {
       company,
       npmVersion: NPM_VERSION,
       openclawPluginVersion: NPM_VERSION,
+      environmentVariables: COMPLETE_VARIABLES,
     });
     expect(refusal?.step).toBe(PreflightStep.CompanyFacts);
     expect(refusal?.message).toContain('cnpj');
@@ -269,10 +323,11 @@ describe('docs preflight', () => {
       company: COMPLETE_COMPANY,
       npmVersion: NPM_VERSION,
       openclawPluginVersion: NPM_VERSION,
+      environmentVariables: COMPLETE_VARIABLES,
     });
     expect(refusal?.step).toBe(PreflightStep.NpmVersion);
     expect(refusal?.message).toContain(`zapbip@${NPM_VERSION}`);
-    expect(shell.commands).toEqual([`npm view zapbip@${NPM_VERSION} version`]);
+    expect(shell.commands).toEqual([`npm view zapbip@${NPM_VERSION} maintainers --json`]);
   });
 
   it('refuses until the OpenClaw plugin version resolves on npm, naming it', async () => {
@@ -283,10 +338,31 @@ describe('docs preflight', () => {
       company: COMPLETE_COMPANY,
       npmVersion: NPM_VERSION,
       openclawPluginVersion: NPM_VERSION,
+      environmentVariables: COMPLETE_VARIABLES,
     });
     expect(refusal?.step).toBe(PreflightStep.NpmVersion);
     expect(refusal?.message).toContain(`@zapbip/openclaw-plugin@${NPM_VERSION}`);
-    expect(shell.commands).toEqual([`npm view zapbip@${NPM_VERSION} version`, `npm view @zapbip/openclaw-plugin@${NPM_VERSION} version`]);
+    expect(shell.commands).toEqual([
+      `npm view zapbip@${NPM_VERSION} maintainers --json`,
+      `npm view @zapbip/openclaw-plugin@${NPM_VERSION} maintainers --json`,
+    ]);
+  });
+
+  it('refuses the docs deploy when the OpenClaw plugin is not maintained by the owner npm user', async () => {
+    const shell = fakeShell({
+      replies: { '@zapbip/openclaw-plugin': { exitCode: 0, stdout: JSON.stringify(['someone-else <x@example.com>']) } },
+    });
+    const refusal = await runDocsPreflight({
+      shell,
+      officialWhatsAppNumber: OFFICIAL_NUMBER,
+      company: COMPLETE_COMPANY,
+      npmVersion: NPM_VERSION,
+      openclawPluginVersion: NPM_VERSION,
+      environmentVariables: COMPLETE_VARIABLES,
+    });
+    expect(refusal?.step).toBe(PreflightStep.NpmVersion);
+    expect(refusal?.message).toContain(`@zapbip/openclaw-plugin@${NPM_VERSION}`);
+    expect(refusal?.message).toContain(NPM_PUBLISHER);
   });
 
   it('passes when the number is set and the version resolves', async () => {
@@ -298,6 +374,7 @@ describe('docs preflight', () => {
         company: COMPLETE_COMPANY,
         npmVersion: NPM_VERSION,
         openclawPluginVersion: NPM_VERSION,
+        environmentVariables: COMPLETE_VARIABLES,
       }),
     ).toBeNull();
   });

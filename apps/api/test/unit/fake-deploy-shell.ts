@@ -6,6 +6,8 @@ import { WorkerSecret } from '../../src/operations/worker-secret';
 
 export const OFFICIAL_NUMBER = '5511999990000';
 export const NPM_VERSION = '0.1.0';
+export const NPM_PUBLISHER_VARIABLE = 'ZAPBIP_NPM_PUBLISHER';
+export const NPM_PUBLISHER = 'zapbip-owner';
 export const DATABASE_ID = '0a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d';
 export const ALL_SECRETS_JSON = JSON.stringify(Object.values(WorkerSecret).map((name) => ({ name, type: 'secret_text' })));
 export const PASSING: ShellResult = { exitCode: 0, stdout: '' };
@@ -16,7 +18,7 @@ export const HAPPY_REPLIES: Record<string, ShellResult> = {
   'git rev-parse origin/main': { exitCode: 0, stdout: 'abc123\n' },
   'secret list': { exitCode: 0, stdout: ALL_SECRETS_JSON },
   'migrations list': { exitCode: 0, stdout: 'No migrations to apply!' },
-  'npm view': { exitCode: 0, stdout: `${NPM_VERSION}\n` },
+  'npm view': { exitCode: 0, stdout: JSON.stringify([`${NPM_PUBLISHER} <${NPM_PUBLISHER}@example.com>`]) },
 };
 export const COMPLETE_VARIABLES: EnvironmentVariables = {
   [SmokeInput.BaseUrl]: 'https://mcp-staging.zapbip.com',
@@ -25,6 +27,7 @@ export const COMPLETE_VARIABLES: EnvironmentVariables = {
   [SmokeInput.AppSecret]: 'app-secret',
   [SmokeInput.VerifyToken]: 'verify-token',
   [SmokeInput.PhoneNumberId]: '123456',
+  [NPM_PUBLISHER_VARIABLE]: NPM_PUBLISHER,
 };
 
 export type FakeShell = DeployShell & { commands: string[] };
