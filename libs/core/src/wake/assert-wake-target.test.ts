@@ -167,6 +167,8 @@ describe('assertWakeTarget urls', () => {
     'the product apex': 'https://zapbip.com/x',
     'a product subdomain': 'https://hooks.zapbip.com/x',
     'a workers.dev host': 'https://wake.account.workers.dev/x',
+    'the workers.dev apex': 'https://workers.dev/x',
+    'a localdomain host': 'https://a.localhost.localdomain/x',
     'the own host': `https://${PUBLIC_HOST}/x`,
     'an own host subdomain': `https://hooks.${PUBLIC_HOST}/x`,
   };
