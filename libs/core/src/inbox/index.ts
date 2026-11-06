@@ -26,6 +26,8 @@ export * from './use-cases/check-inbox';
 export * from './use-cases/create-upload';
 export * from './use-cases/describe-upload';
 export * from './use-cases/complete-upload';
+export * from './use-cases/claim-upload';
+export * from './use-cases/release-upload';
 export * from './use-cases/receive-owner-message';
 export * from './use-cases/sweep-expired';
 export * from './use-cases/deliver-to-owner';
