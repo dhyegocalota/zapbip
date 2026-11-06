@@ -125,3 +125,45 @@ pnpm --filter @zapbip/docs exec mint broken-links
 - `acceptConnectorSocket` is unit tested with a stubbed `WebSocketPair` global; the real pair is covered only by L3b's integration tests.
 - The connector gate runs its e2e suite for every API-side e2e run too (`gate_e2e` is not split by package).
 - `parseDoneFrame` is an addition to the contract, used by L3b.
+
+## Lane L2 (connector loop, process and CLI)
+
+### What changed
+
+- `apps/connector/src/connect.ts`: link derivation, backoff, probe, frame parser, `runConnection` (pre-flight, hibernatable socket client, heartbeat, reconnect, hello and messages handlers, `done` through L1's queue).
+- `apps/connector/src/wake-runner.ts`: `runWake` spawns the client with no shell, times out with `SIGTERM`, falls back once for Codex's active writer.
+- `apps/connector/src/cli.ts`: `parseConnectArguments`, the `connect` command, a record of commands keyed by subcommand, the link from `ZAPBIP_CONNECTION_URL` or a prompt.
+- Tests and support: `test/unit/{cli,connect}.test.ts`, `test/integration/{connect,wake-runner,cli}.test.ts`, `test/support/{fake-event-server,fake-client-binary}.ts`, `test/fixtures/bin/{claude,codex}` (`codex` is a symlink to `claude`).
+
+### Deviations from the contract (both in files this lane owns)
+
+- `parseServerFrame` takes `isBinary`, because `{text, byteLength}` cannot express a binary frame.
+- `runWake` takes an optional `signal`, so shutdown reaches the running child.
+- `runWake` still returns `NoSession`; the rejection L1's queue needs (no `done` for an unread message) is thrown by the wake callback inside `runConnection` after it logs `wake_finished` with `no_session`.
+- The pre-flight lives in `runConnection` (the probe link is the socket link over `http:`/`https:`), so the 401, 426 and 500 cases are testable there. It runs once, at start, not on reconnect.
+
+### How to run
+
+`pnpm --filter zapbip test:unit` (unit and fake-server integration, 131 tests). The CLI integration test bundles `src/cli.ts` with esbuild into a temp folder and runs it against a TLS fake server with a certificate made by `openssl` at run time; the child gets `NODE_TLS_REJECT_UNAUTHORIZED=0`.
+
+### Red then green
+
+| Test | Red before | Green after |
+|------|------------|-------------|
+| `test/unit/cli.test.ts`, `test/unit/connect.test.ts` (`588510d`) | `parseConnectArguments`, `deriveConnectorLinks`, `reconnectDelayMs`, `parseServerFrame is not implemented`; 20 failed, 8 passed (the 8 are throw-expected refusals, pins) | `be12109` |
+| `test/integration/connect.test.ts`, `wake-runner.test.ts`, `cli.test.ts` (`b2fda48`) | `runConnection is not implemented`, `runWake is not implemented`, and 5 s timeouts waiting for a socket or a child run; 47 failed | `a5ee55d` (runner), `be12109` (loop, CLI) |
+
+### Hypotheses to attack
+
+1. A message is woken at most once per process, and a `done` lost with the socket is answered on the next connect without a wake. Break it by: dropping the socket at the instant a wake ends.
+2. A replaced connector never reconnects and never sends `done`. Break it by: close code 4001 while a wake runs.
+3. The secret is in no argv, log line or error text. Break it by: unusual links (userinfo, query, uppercase `/MCP`) and failing fetches.
+4. Shutdown sends no `done` for a wake it killed. Break it by: `SIGTERM` at the moment the child exits.
+5. `CLAUDE_CONFIG_DIR` and `CODEX_HOME` reach the lookup when set. Break it by: setting only one.
+
+### Known gaps
+
+- Heartbeat and reconnect timing use vitest fake timers over real sockets; if Node changes how its WebSocket or fetch schedule timers, these tests are the first to move.
+- A `401` on the upgrade itself (after a `426` probe) is not distinguishable with Node's WebSocket and is handled as an ordinary close with backoff.
+- The Codex rollout layout in the fake (`sessions/YYYY/MM/DD/rollout-*.jsonl`, first line `session_meta`) is copied from L1's lookup, not from a real install.
+- Real `claude` and `codex` are never run.
