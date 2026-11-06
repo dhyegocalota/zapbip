@@ -1,10 +1,12 @@
-import { env, SELF } from 'cloudflare:test';
-import { HISTORY_LIMIT } from '@zapbip/core';
+import { env, runInDurableObject, SELF } from 'cloudflare:test';
+import { HISTORY_LIMIT, type CoreDependencies } from '@zapbip/core';
 import { MessageDirection, MessageKind } from '@zapbip/types';
 import { afterEach, describe, expect, test, vi } from 'vitest';
+import { createApp } from '../../src/app';
 import { WEBHOOK_MAX_BYTES, WEBHOOK_SIGNATURE_HEADER } from '../../src/adapters/whatsapp/whatsapp-constants';
 import { OperatorEvent } from '../../src/adapters/whatsapp/whatsapp-enums';
 import { WHATSAPP_WEBHOOK_PATH } from '../../src/contract/constants';
+import imageFixture from '../fixtures/whatsapp/inbound/image.json';
 import orderFixture from '../fixtures/whatsapp/inbound/order.json';
 import textFixture from '../fixtures/whatsapp/inbound/text.json';
 import {
@@ -15,6 +17,7 @@ import {
   OUR_PHONE_NUMBER_ID,
 } from '../fixtures/whatsapp/inbound/notification';
 import { signatureHeaderOf } from '../fixtures/whatsapp/inbound/signed-webhook';
+import { accountInboxStub, whatsappTestEnv } from '../support/workers-env';
 import { inboxOf, ORIGIN, seedAccount, type SeededAccount } from './route-fixtures';
 
 const STATUS_OK = 200;
@@ -22,9 +25,13 @@ const STATUS_BAD_REQUEST = 400;
 const STATUS_UNAUTHORIZED = 401;
 const STATUS_FORBIDDEN = 403;
 const STATUS_PAYLOAD_TOO_LARGE = 413;
+const STATUS_SERVER_ERROR = 500;
 const WEBHOOK_URL = `${ORIGIN}${WHATSAPP_WEBHOOK_PATH}`;
 const CHUNK_BYTES = 64_000;
 const UNKNOWN_PHONE = '5511900000099';
+const IMAGE_METADATA_PATH = `/${imageFixture.image.id}`;
+const IMAGE_DOWNLOAD_URL = 'https://media.fbsbx.com/image';
+const IMAGE_BYTES = new TextEncoder().encode('image-bytes');
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -48,6 +55,13 @@ async function postSigned(input: { text: string; signedText?: string }): Promise
 
 function postNotification(input: { notification: object }): Promise<Response> {
   return postSigned({ text: JSON.stringify(input.notification) });
+}
+
+async function postNotificationWithAccessToken(input: { notification: object }): Promise<Response> {
+  const text = JSON.stringify(input.notification);
+  const signature = await signatureHeaderOf({ appSecret: env.META_APP_SECRET as string, body: encode({ text }) });
+  const request = new Request(WEBHOOK_URL, { method: 'POST', headers: { [WEBHOOK_SIGNATURE_HEADER]: signature }, body: text });
+  return createApp({ extraRoutes: [] }).fetch(request, whatsappTestEnv);
 }
 
 async function historyOf(input: { account: SeededAccount }) {
@@ -244,5 +258,79 @@ describe('webhook inbound messages', () => {
     expect(response.status).toBe(STATUS_OK);
     expect(ownerTextsOf({ history: await historyOf({ account }) })).toEqual([]);
     expect(loggedText({ spies })).toContain(OperatorEvent.NotificationIgnoredField);
+  });
+});
+
+function failFirstCommit(input: { account: SeededAccount }) {
+  return runInDurableObject(accountInboxStub({ accountId: input.account.accountId }), (instance) => {
+    const { repository } = (instance as unknown as { dependencies: CoreDependencies }).dependencies;
+    const commit = repository.commitChannelInbound.bind(repository);
+    let calls = 0;
+    repository.commitChannelInbound = async (commitInput) => {
+      calls += 1;
+      if (calls === 1) throw new Error('injected before the commit');
+      return commit(commitInput);
+    };
+  });
+}
+
+async function imageNotificationOf(input: { account: SeededAccount; id: string }): Promise<object> {
+  const digest = await crypto.subtle.digest('SHA-256', IMAGE_BYTES);
+  const sha256 = btoa(String.fromCharCode(...new Uint8Array(digest)));
+  return notificationWith({
+    messages: [{ ...imageFixture, from: input.account.phone, id: input.id, image: { ...imageFixture.image, sha256 } }],
+  });
+}
+
+function serveImageFromGraph(): void {
+  const passthrough = globalThis.fetch.bind(globalThis);
+  vi.spyOn(globalThis, 'fetch').mockImplementation(async (request, init) => {
+    const url = String(request instanceof Request ? request.url : request);
+    if (url.endsWith(IMAGE_METADATA_PATH)) return Response.json({ url: IMAGE_DOWNLOAD_URL, file_size: IMAGE_BYTES.byteLength });
+    if (url === IMAGE_DOWNLOAD_URL) return new Response(IMAGE_BYTES);
+    return passthrough(request, init);
+  });
+}
+
+function countOwnerMessages(input: { account: SeededAccount; kind: MessageKind }): Promise<number> {
+  return runInDurableObject(
+    accountInboxStub({ accountId: input.account.accountId }),
+    (_instance, state) =>
+      state.storage.sql
+        .exec<{ total: number }>(
+          'SELECT COUNT(*) AS total FROM inbox_messages WHERE direction = ? AND kind = ?',
+          MessageDirection.FromOwner,
+          input.kind,
+        )
+        .one().total,
+  );
+}
+
+describe('webhook failures', () => {
+  test('WI-33 answers 500 when the Durable Object commit fails, and the retry stores one message', async () => {
+    spyOnLogs();
+    const account = await seedAccount({ agent: 'alpha' });
+    await failFirstCommit({ account });
+    const notification = notificationWith({ messages: [ownerText({ account, id: 'wamid.WI33', text: 'Oi' })] });
+    const first = await postNotification({ notification });
+    expect(first.status).toBe(STATUS_SERVER_ERROR);
+    expect(await countOwnerMessages({ account, kind: MessageKind.Text })).toBe(0);
+    const retried = await postNotification({ notification });
+    expect(retried.status).toBe(STATUS_OK);
+    expect(await countOwnerMessages({ account, kind: MessageKind.Text })).toBe(1);
+  });
+
+  test('WI-34 answers 500 when the R2 put fails, and the retry stores one message', async () => {
+    spyOnLogs();
+    serveImageFromGraph();
+    const account = await seedAccount({ agent: 'alpha' });
+    vi.spyOn(env.MEDIA, 'put').mockRejectedValueOnce(new Error('injected R2 failure'));
+    const notification = await imageNotificationOf({ account, id: 'wamid.WI34' });
+    const first = await postNotificationWithAccessToken({ notification });
+    expect(first.status).toBe(STATUS_SERVER_ERROR);
+    expect(await countOwnerMessages({ account, kind: MessageKind.Image })).toBe(0);
+    const retried = await postNotificationWithAccessToken({ notification });
+    expect(retried.status).toBe(STATUS_OK);
+    expect(await countOwnerMessages({ account, kind: MessageKind.Image })).toBe(1);
   });
 });
