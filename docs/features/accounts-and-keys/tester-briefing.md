@@ -183,3 +183,27 @@ Hypotheses to attack:
 6. Hypothesis: the sweep never clears a live code. Break it by: expiry one millisecond ahead of `now`.
 
 Known gaps: no test calls the install page (install-skills); the E2E walk and the `zb_inst_` log redaction entry wait for S4; the HKDF salt is empty because the code carries 128 random bits.
+
+## Integration of core and the channel, docs, and lane L4 (inbound path)
+
+Commits: merges of `origin/feat/accounts-and-keys-delta`, `origin/feat/agent-inbox-core` and `origin/feat/whatsapp-cloud-channel`; `refactor(core): receive account messages as channel entries`; `66a251e` (red), `b3e033b` (green), `4e6f59b` (pin).
+
+Changed: `apps/api/src/inbound/owner-inbound.ts` (sender guard, `openOwnerAccount`, deletion resume, the account object, deletion after confirmation), `apps/api/src/config/waitlist-enabled.ts`, `apps/api/src/routes/whatsapp.ts` (the webhook calls the orchestrator), `apps/api/src/routes/dev-owner.ts` (the simulator calls the same orchestrator; a new phone opens an account; a malformed phone is `400`), `apps/api/src/dev/dev-account-inbox.ts` (`channelMessageIdOf`), `apps/api/src/mcp/{outbound-admission,server,tool-handlers,types,constants}.ts` (the outbound limit answers a tool error that starts with `rate_limited`), `apps/api/src/accounts/deletion-sweep.ts` (shared lifecycle helpers), `apps/api/wrangler.jsonc` (production at the top level, `env.development` for local), docs pages under `apps/docs/{features,help}` and `apps/docs/pt-br/{features,help}` (the three old guides moved; both languages).
+
+Run: `pnpm verify`; the new tests are `apps/api/test/integration/{owner-inbound,simulator-accounts,mcp-account-states,mcp-outbound,logs-redaction}.test.ts`, `apps/api/test/unit/waitlist-enabled.test.ts`, `apps/api/test/e2e/accounts.e2e.test.ts`.
+
+Red then green (`66a251e`): `receiveOwnerInbound is not implemented for wamid.inbound.N` (every orchestrator and log case), `readWaitlistEnabled is not implemented for true`, `expected 404 to be 200` (simulator create), `expected undefined to be true` (outbound limit, the 31st call was not refused). Pins, green on arrival: `mcp-account-states.test.ts`, the per-connection and `check_inbox` cases of `mcp-outbound.test.ts`, and `accounts.e2e.test.ts`.
+
+Existing tests changed because behaviour changed on purpose: `dev-owner.test.ts` WI-106 (an unknown phone opens an account) and WI-107 (a malformed phone is `400`), WI-99 (the quoted message must have been delivered, so the window is opened first), `whatsapp-webhook.test.ts` WI-28 (an unknown sender opens an account, logged as `account_created`), `route-fixtures.ts` `seedAccount` (claims the first message, so the seeded account behaves like one that wrote before), `wrangler-limits.test.ts` (production is the top level).
+
+Hypotheses to attack:
+1. Hypothesis: a blocked or over-limit phone never creates an account and never opens the window. Break it by: a blocked phone with an exhausted limiter; the 21st message in a minute; a blocked phone's first message.
+2. Hypothesis: two simultaneous first messages from one phone make one account and one reply. Break it by: ten concurrent deliveries with the same and different wamids.
+3. Hypothesis: media is downloaded only for a message of an active, already-existing account. Break it by: a photo as the first message, a photo from a waitlisted and from a suspended account (the R2 prefix must stay empty).
+4. Hypothesis: the confirmation reply reaches the owner before the account disappears, and a crash between the two leaves `deleting` that the next message finishes. Break it by: failing `purge`, then sending any message.
+5. Hypothesis: `rate_limited` is per connection for `send_*`, `react` and `ask`, and never for reads. Break it by: 31 calls of each tool; a second connection of the same account; the account limit of 120.
+6. Hypothesis: no log line carries a phone, a secret, an install code, a digest, an agent name or message text. Break it by: the whole owner walk with `wrangler dev` logs (the integration test sees only Worker-side lines, not the Durable Object's).
+
+Known gaps: the Durable Object's own log lines are not captured by `logs-redaction.test.ts` (they run outside the test isolate); the E2E cannot follow the install link because `GET /i/<code>` belongs to install-skills; a first message that is media on an active account is dropped with the `Unknown` reply and not stored, but nothing is downloaded for it; the daily trigger of the deletion sweep and of `clearExpiredInstallSecrets` waits for deploy-readiness's `runScheduled`; outbound keys use `<accountId>:<agent>` because `ConnectionIdentity` carries no connection id; the production `WHATSAPP_GRAPH_BASE_URL` is `https://graph.facebook.com` here and deploy-readiness may own it; the real Rate Limiting binding ran only inside Miniflare.
+
+Docs: `features/whatsapp-commands`, `features/manage-your-agents` and `help/delete-your-account` exist in English and, mirrored, in `pt-br/`. They describe the install as two lines that the AI reads online; no page mentions the simulator or any fake channel.
