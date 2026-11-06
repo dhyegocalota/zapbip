@@ -1,6 +1,7 @@
 import { DurableObject } from 'cloudflare:workers';
 import * as inbox from '@zapbip/core';
 import type {
+  AccountDependencies,
   AskInput,
   AskResult,
   CheckInboxInput,
@@ -21,8 +22,12 @@ import type {
   WaitForReplyResult,
 } from '@zapbip/core';
 import { AccountState, ChannelErrorKind } from '@zapbip/types';
+import { D1AccountDirectory } from '../adapters/d1/d1-account-directory';
+import { D1ConnectionRegistry } from '../adapters/d1/d1-connection-registry';
 import { createFakeWhatsAppSender, type FakeWhatsAppSender } from '../adapters/fake/fake-whatsapp-sender';
+import { createConnectionSecrets } from '../adapters/platform/connection-secrets';
 import { createIdGenerator } from '../adapters/platform/ids';
+import { createGenericInstallPromptRenderer } from '../adapters/prompt/generic-install-prompt';
 import { loadDurableClock, type DurableClock } from '../adapters/platform/clock';
 import { createR2MediaStore } from '../adapters/r2/r2-media-store';
 import { createSqliteInboxRepository } from '../adapters/sqlite/sqlite-inbox-repository';
@@ -36,6 +41,8 @@ import { logEvent } from '../log';
 import { AccountTombstoned } from './account-tombstoned';
 import { revokeAgentState } from './agent-revocation';
 import { ALARM_MIN_DELAY_MS, ALARM_PROVIDER_FAILED, TOMBSTONE_STORAGE_KEY } from './constants';
+import { createSqliteDeletionRequests } from './deletion-requests';
+import { createSqliteFirstMessageClaim } from './first-message-claim';
 import { ACCOUNT_INBOX_MIGRATIONS } from './migrations';
 import { runMigrations } from './run-migrations';
 
@@ -50,6 +57,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
   protected readonly dueTimeProviders: DueTimeProvider[] = [];
   private accountId!: string;
   private dependencies!: CoreDependencies;
+  private accountDependencies!: AccountDependencies;
   private isTombstoned = false;
 
   constructor(ctx: DurableObjectState, env: Bindings) {
@@ -80,6 +88,19 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       clock: this.clock,
       ids: createIdGenerator(),
       waiters: inbox.createReplyWaiters({ clock: this.clock }),
+    };
+    this.accountDependencies = {
+      ...this.dependencies,
+      accounts: new D1AccountDirectory({ database: this.env.CONNECTIONS }),
+      connections: new D1ConnectionRegistry({ database: this.env.CONNECTIONS }),
+      connectionSecrets: createConnectionSecrets(),
+      installPromptRenderer: createGenericInstallPromptRenderer(),
+      revocations: {
+        recordRevocation: ({ agent }) => this.recordRevocation({ agent }),
+        cancelWaiters: ({ agent }) => this.cancelWaiters({ agent }),
+      },
+      firstMessage: createSqliteFirstMessageClaim({ storage: this.ctx.storage }),
+      deletionRequests: createSqliteDeletionRequests({ storage: this.ctx.storage }),
     };
     this.dueTimeProviders.push(this.createExpiryProvider());
     await this.armAlarm();
@@ -221,8 +242,10 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
   }
 
   receiveAccountMessage(input: ReceiveAccountMessageRequest): Promise<CallOutcome<inbox.ReceiveAccountMessageResult>> {
-    void input;
-    throw new Error('receiveAccountMessage is not implemented');
+    return this.outcome({
+      run: () => inbox.receiveAccountMessage({ ...input, dependencies: this.accountDependencies }),
+      describe: (value) => ({ event: value.duplicate ? LogEvent.OwnerMessageDuplicate : LogEvent.OwnerMessage }),
+    });
   }
 
   async recordRevocation(input: { agent: string }): Promise<void> {
