@@ -12,7 +12,9 @@ export enum HttpStatus {
   LengthRequired = 411,
   PayloadTooLarge = 413,
   UnsupportedMediaType = 415,
+  InternalServerError = 500,
   BadGateway = 502,
+  ServiceUnavailable = 503,
 }
 
 export const ERROR_STATUS: Record<InboxErrorCode | ChannelErrorKind, HttpStatus> = {

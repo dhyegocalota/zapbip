@@ -2,7 +2,7 @@ import type { ContactCard, MediaMessageKind, OwnerInboundContent, UnavailableOwn
 import { ChannelInboundKind, IdPrefix, MessageKind } from '@zapbip/types';
 import { z } from 'zod';
 import { OWNER_PHONE_PATTERN } from '../../contract/constants';
-import { encodeHex } from '../platform/encoding';
+import { sha256Hex } from '../platform/hash';
 import { unixSecondsSchema, type ParsedStatus, parseStatusItems } from './status-parser';
 import { OperatorLogReason, WhatsAppInteractiveType, WhatsAppMessageType } from './whatsapp-enums';
 
@@ -53,7 +53,6 @@ type MessageParts = { channelMessageId: string; at: number; replyToChannelMessag
 type ParsedContent = { entry: ParsedInboundEntry; media: MediaDownloadRequest | null };
 type MessageHandler = (input: { parts: MessageParts }) => Promise<ParsedContent>;
 
-const SHA256_ALGORITHM = 'SHA-256';
 const HANDLED_FIELDS: string[] = Object.values(WebhookField);
 const KNOWN_TYPES: string[] = Object.values(WhatsAppMessageType);
 
@@ -98,8 +97,7 @@ const choiceSchema = z.object({ id: z.string(), title: z.string(), description: 
 const unsupportedSchema = z.object({ type: z.string() }).optional();
 
 async function mediaIdOf(input: { channelMessageId: string }): Promise<string> {
-  const digest = await crypto.subtle.digest(SHA256_ALGORITHM, new TextEncoder().encode(input.channelMessageId));
-  return `${IdPrefix.Media}_${encodeHex({ bytes: new Uint8Array(digest) })}`;
+  return `${IdPrefix.Media}_${await sha256Hex({ value: input.channelMessageId })}`;
 }
 
 function ownerContent(input: { parts: MessageParts; content: OwnerInboundContent | UnavailableOwnerMedia }): ParsedContent {

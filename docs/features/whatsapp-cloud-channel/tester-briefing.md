@@ -168,8 +168,8 @@ The integration file needs W3's bodies and the fake Graph listening on port 4012
 
 ### Known gaps
 
-- Finding for the lead: the registered body of `zapbip_agent_question` (both languages) starts with `{{1}}`. Meta's template review rejects a body that starts or ends with a parameter; `assertTemplateBodyHasFixedWords` exists and refuses it, but is not wired to the registered bodies because the spec fixes their text. Decide the wording before the owner registers the templates (owner-run probe).
-- `whatsapp-outbound.test.ts` cannot be green on this branch: `findOwnerByAccountId` and `D1ChannelRestrictions` are W3 stubs, and nothing starts the fake Graph on port 4012 for the integration pool. The lead needs a `globalSetup` entry in `vitest.integration.config.mts` (W0-owned) that calls `startFakeGraph({port: 4012})`. W3's `D1ChannelRestrictions` constructor takes `phoneNumberId`; the test will need that argument after the merge.
+- Resolved at integration: the registered bodies of both templates now start and end with fixed words (AU-117 runs `assertTemplateBodyHasFixedWords` over every body).
+- Resolved at integration: the integration pool starts the fake Graph on port 4012 (`test/support/fake-graph-global-setup.ts`), and the test builds `D1ChannelRestrictions` with `phoneNumberId` and the sender environment with the access token (`whatsappTestEnv`).
 - Deferred to W3 and W6 (DO paths): WI-58 through the tool, WI-59 queueing, WI-62 and WI-66 failure state on the stored message, WI-60 as a tool error. The integration file proves the sender against D1, R2 and the fake Graph only.
 - Inbound media download, metadata and `404` refresh routes are not in the fake Graph; `respondWith` serves any method and path once, which W4's tests can use.
 - Stored media of an unknown MIME type or size passes `assertOutboundMedia` (A11); animated stickers are not detected (A12).
@@ -240,7 +240,7 @@ pnpm --filter @zapbip/api test:integration
   - `ParsedEntry.entry` is `ParsedInboundEntry`: it has no `noticeText` (the route adds the owner copy by locale); an unsupported entry carries `unsupportedType`; a media entry carries `UnavailableOwnerMedia` content plus a download request.
   - `MediaDownloadRequest` has no `sizeBytes` (the webhook does not carry it); `downloadInboundMedia` returns `{stored: true, sizeBytes}` or `{stored: false}` and throws `RetriableMediaError` for a `5xx`, a download that fails to answer, or a Graph timeout.
   - `verifyWebhookSignature` and the token check use `node:crypto` `timingSafeEqual` over digests (works in Workers with `nodejs_compat` and in the node unit run), not `crypto.subtle.timingSafeEqual`.
-  - The media id is derived inside `inbound-parser.ts` with `crypto.subtle`; after W3 merges, swap it for `sha256Hex`.
+  - Integration: the media id uses W3's `sha256Hex`.
 
 ### How to run
 
@@ -270,8 +270,8 @@ pnpm --filter @zapbip/api exec vitest run --config vitest.integration.config.mts
 
 - Integration cases cannot be run green here: every route path reads `readWhatsAppEnvironment` and `logOperatorEvent` (W2 stubs), stored-message assertions need W1 and W3 bodies. Waiting on lanes W1, W2 and W3.
 - Not written, because they need hooks owned elsewhere: DO commit failure `500` (WI-33), R2 failure `500` (WI-34), media over HTTP (WI-35 to WI-43; the allowed hosts are real `https` hosts and the fake Graph is `http://127.0.0.1`, so the integration pool needs an outbound mock), and the indexed status cases (WI-52 to WI-55, WI-57), which need a sent message with a channel id. Review focus 4 is covered at unit level (`whatsapp-media-download.test.ts`).
-- `notification.ignored_field` is not logged: `OperatorEvent` has no such member (`whatsapp-enums.ts`, W0 file). Needed: `NotificationIgnoredField = 'notification.ignored_field'`.
+- Resolved at integration: `OperatorEvent.NotificationIgnoredField` is logged for a change with another field (WI-32).
 - Statuses that fail to parse are dropped without a log (`parseStatusItems` returns only parsed items); a malformed change is dropped the same way.
-- `HttpStatus` has no `InternalServerError` or `ServiceUnavailable`; the route relies on Hono's default `500` and on `WEBHOOK_BATCH_UNINDEXED_STATUS` for `503`.
+- Resolved at integration: `HttpStatus` has `InternalServerError` and `ServiceUnavailable`; the route answers `HttpStatus.ServiceUnavailable` and `WEBHOOK_BATCH_UNINDEXED_STATUS` is gone.
 - The `Content-Type` of the `GET` answer is set for the refusal too.
 - Test plan AU-62 reads as a metadata `404`; implemented per A25 (download URL `404` re-requests metadata once).

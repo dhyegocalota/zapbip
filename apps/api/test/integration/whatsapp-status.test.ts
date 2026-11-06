@@ -1,13 +1,10 @@
 import { env, SELF } from 'cloudflare:test';
 import { MINUTE_MS } from '@zapbip/types';
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import {
-  UNINDEXED_STATUS_RETRY_WINDOW_MS,
-  WEBHOOK_BATCH_UNINDEXED_STATUS,
-  WEBHOOK_SIGNATURE_HEADER,
-} from '../../src/adapters/whatsapp/whatsapp-constants';
+import { UNINDEXED_STATUS_RETRY_WINDOW_MS, WEBHOOK_SIGNATURE_HEADER } from '../../src/adapters/whatsapp/whatsapp-constants';
 import { OperatorEvent } from '../../src/adapters/whatsapp/whatsapp-enums';
 import { WHATSAPP_WEBHOOK_PATH } from '../../src/contract/constants';
+import { HttpStatus } from '../../src/routes/http-status';
 import playedFixture from '../fixtures/whatsapp/status/played.json';
 import readFixture from '../fixtures/whatsapp/status/read.json';
 import { notificationWith } from '../fixtures/whatsapp/inbound/notification';
@@ -39,7 +36,7 @@ function secondsAgo(input: { ageMs: number }): string {
 describe('webhook statuses', () => {
   test('WI-50 answers 503 for an unindexed wamid that is young, so Meta retries', async () => {
     const response = await postStatus({ status: { ...readFixture, id: 'wamid.YOUNG', timestamp: secondsAgo({ ageMs: 0 }) } });
-    expect(response.status).toBe(WEBHOOK_BATCH_UNINDEXED_STATUS);
+    expect(response.status).toBe(HttpStatus.ServiceUnavailable);
   });
 
   test('WI-51 answers 200 and logs status.unindexed once the status is older than the window', async () => {

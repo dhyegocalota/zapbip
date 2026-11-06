@@ -63,6 +63,7 @@ export enum OperatorEvent {
   InboundUnmapped = 'inbound.unmapped',
   InboundUnsupported = 'inbound.unsupported',
   InboundMediaUnavailable = 'inbound.media_unavailable',
+  NotificationIgnoredField = 'notification.ignored_field',
   StatusUnindexed = 'status.unindexed',
   StatusIgnored = 'status.ignored',
   StatusFailedIgnored = 'status.failed.ignored',

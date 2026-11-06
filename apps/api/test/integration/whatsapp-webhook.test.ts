@@ -233,6 +233,7 @@ describe('webhook inbound messages', () => {
   });
 
   test('WI-32 skips a change with another field', async () => {
+    const spies = spyOnLogs();
     const account = await seedAccount({ agent: 'alpha' });
     const notification = notificationOf({
       changes: [
@@ -242,5 +243,6 @@ describe('webhook inbound messages', () => {
     const response = await postNotification({ notification });
     expect(response.status).toBe(STATUS_OK);
     expect(ownerTextsOf({ history: await historyOf({ account }) })).toEqual([]);
+    expect(loggedText({ spies })).toContain(OperatorEvent.NotificationIgnoredField);
   });
 });

@@ -25,7 +25,6 @@ import {
   MEDIA_DOWNLOAD_ATTEMPTS,
   MEDIA_MAX_BYTES_INBOUND,
   UNINDEXED_STATUS_RETRY_WINDOW_MS,
-  WEBHOOK_BATCH_UNINDEXED_STATUS,
   WEBHOOK_MAX_BYTES,
   WEBHOOK_SIGNATURE_HEADER,
 } from '../adapters/whatsapp/whatsapp-constants';
@@ -185,7 +184,10 @@ async function processStatus(input: { context: RequestContext; status: ParsedSta
 async function processChange(input: { context: RequestContext; change: ParsedChange }): Promise<boolean[]> {
   const { context, change } = input;
   const isHandledField = change.field === WebhookField.Messages || change.field === WebhookField.Statuses;
-  if (!isHandledField) return [false];
+  if (!isHandledField) {
+    logOperatorEvent({ event: OperatorEvent.NotificationIgnoredField, fields: {} });
+    return [false];
+  }
   if (change.phoneNumberId !== context.environment.phoneNumberId) {
     logOperatorEvent({ event: OperatorEvent.InboundForeignNumber, fields: {} });
     return [false];
@@ -233,6 +235,6 @@ whatsappRoutes.post(WHATSAPP_WEBHOOK_PATH, async (context) => {
   };
   const retryFlags = await runInSequence({ items: changes, run: (change) => processChange({ context: requestContext, change }) });
   const shouldRetry = retryFlags.flat().some(Boolean);
-  if (shouldRetry) return context.body(null, WEBHOOK_BATCH_UNINDEXED_STATUS);
+  if (shouldRetry) return context.body(null, HttpStatus.ServiceUnavailable);
   return context.body(null, HttpStatus.Ok);
 });
