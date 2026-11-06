@@ -539,11 +539,10 @@ describe.skipIf(!isEnabled)('hermes and openclaw plugins against the development
   );
 
   test(
-    'X3 a live waiter takes the answer and the attached plugin socket is pushed the same message too',
+    'X3 a live waiter wins and the attached plugin socket is not pushed the message the waiter consumed',
     async () => {
       const account = isolated.context?.wakeAccounts[4];
       if (!account) throw new Error('no seeded account at 4');
-      await postOwnerText({ account, text: 'ping-x3-open', forwarded: false });
       const attached = attachSocket({ account });
       await helloOf({ attached });
       const agent = await connectAccountAgent({ account });
@@ -558,7 +557,7 @@ describe.skipIf(!isEnabled)('hermes and openclaw plugins against the development
       expect(answered.text).toContain('ping-x3');
       await delay(SETTLE_WINDOW_MS / 2);
       const pushedTexts = pushedMessages({ attached }).map((message) => message.text);
-      expect(pushedTexts).toContain('ping-x3');
+      expect(pushedTexts).not.toContain('ping-x3');
       attached.socket.close();
       await agent.close();
     },
