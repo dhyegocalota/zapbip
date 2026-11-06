@@ -22,7 +22,6 @@ type OwnerEntry = Extract<ChannelInboundEntry, { kind: ChannelInboundKind.Owner 
 type UnsupportedEntry = Extract<ChannelInboundEntry, { kind: ChannelInboundKind.Unsupported }>;
 type WindowOnlyEntry = Extract<ChannelInboundEntry, { kind: ChannelInboundKind.WindowOnly }>;
 
-const DUPLICATE_RESULT: ReceiveResult = { messageId: null, agent: null, duplicate: true };
 const WINDOW_ONLY_RESULT: ReceiveResult = { messageId: null, agent: null, duplicate: false };
 
 async function resolveReactionTarget(input: { context: ChannelContext; content: ArrivalContent }): Promise<ArrivalContent> {
@@ -43,6 +42,13 @@ async function resolveOwnerMessage(input: { context: ChannelContext; entry: Owne
       : await repository.findMessageByChannelMessageId({ channelMessageId: entry.replyToChannelMessageId });
   const content = await resolveReactionTarget({ context, content: entry.content });
   return { at: entry.at, replyToMessageId: repliedTo === null ? null : repliedTo.messageId, content };
+}
+
+async function duplicateResultOf(input: { context: ChannelContext }): Promise<ReceiveResult> {
+  const { dependencies, channelMessageId } = input.context;
+  const stored = await dependencies.repository.findMessageByChannelMessageId({ channelMessageId });
+  if (stored === null) return { messageId: null, agent: null, duplicate: true };
+  return { messageId: stored.messageId, agent: stored.agent, duplicate: true };
 }
 
 async function sendNotice(input: { context: ChannelContext; text: string }): Promise<void> {
@@ -74,7 +80,7 @@ async function commitWindowOnly(input: { context: ChannelContext; at: number }):
 async function receiveWindowOnly(input: { context: ChannelContext; entry: WindowOnlyEntry }): Promise<ReceiveResult> {
   const { context, entry } = input;
   const isNewMessage = await commitWindowOnly({ context, at: entry.at });
-  if (!isNewMessage) return DUPLICATE_RESULT;
+  if (!isNewMessage) return duplicateResultOf({ context });
   await flushQueue({ dependencies: context.dependencies, ownerLocale: context.ownerLocale });
   return WINDOW_ONLY_RESULT;
 }
@@ -109,7 +115,7 @@ async function receiveOwner(input: { context: ChannelContext; entry: OwnerEntry 
     media: placed !== null && isStoredMedia(content) ? buildOwnerMedia({ content, receivedAt }) : null,
     window: isReaction ? currentWindow : openedWindow({ window: currentWindow, at: ownerMessage.at }),
   });
-  if (!isNewMessage) return DUPLICATE_RESULT;
+  if (!isNewMessage) return duplicateResultOf({ context });
   if (!isReaction) await flushQueue({ dependencies, ownerLocale });
   const result = await finishArrival({ ...arrival, plan, messageId });
   if (entry.noticeText !== null) await sendNotice({ context, text: entry.noticeText });
