@@ -172,7 +172,7 @@ pnpm --filter @zapbip/docs exec mint broken-links
 
 ### What changed
 
-- Merge of `origin/feat/webhook-wake` (`8bd2622`). Conflicts kept both sides: `enums.ts` (every member), `docs.json` (the English tree gained `guides/webhook-wake` and `mcp-reference/set-wake`; the pt-BR tree has neither page), the ADR and feature indexes. Reconciliations the merge forced:
+- Merge of `origin/feat/webhook-wake` (`8bd2622`). Conflicts kept both sides: `enums.ts` (every member), `docs.json` (both trees gained `guides/webhook-wake` and `mcp-reference/set-wake`; the pt-BR twins `pt-br/guides/webhook-wake.mdx` and `pt-br/mcp-reference/set-wake.mdx` are translations written in this lane, because `docs-navigation.test.ts` requires a twin for every page), the ADR and feature indexes. Reconciliations the merge forced:
   - `hasLiveWaiter` takes `questionId` on this branch, so `run-due-wakes.ts` passes `null`;
   - `WakeMode.Local` makes `set-wake.ts` and `wake-rung.ts` records incomplete: the setter for `Local` throws `InvalidInput` with `WAKE_MODE_UNAVAILABLE_MESSAGE` (now in `libs/core/src/wake/constants.ts`), and `wakeRungFor` maps `Local` to `Local`;
   - the MCP tool `set_wake` still answers "wake mode not available yet" for `local` (the handler excludes it; `UnavailableWakeMode.Local` was removed because `WakeMode.Local` now exists);
@@ -219,4 +219,3 @@ pnpm --filter @zapbip/docs exec mint broken-links
 
 - Object eviction between attach and close is not exercised.
 - `webSocketError` is not implemented; a socket that errors without a close event does not restore the wake mode.
-- The pt-BR docs have no `webhook-wake` or `set-wake` pages, so the two language trees differ.

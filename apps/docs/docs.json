@@ -69,7 +69,12 @@
           },
           {
             "group": "IAs",
-            "pages": ["pt-br/agents/supported-agents", "pt-br/guides/local-connector", "pt-br/guides/background-running"]
+            "pages": [
+              "pt-br/agents/supported-agents",
+              "pt-br/guides/local-connector",
+              "pt-br/guides/background-running",
+              "pt-br/guides/webhook-wake"
+            ]
           },
           {
             "group": "Funcionalidades",
@@ -111,7 +116,8 @@
                   "pt-br/mcp-reference/wait-for-reply",
                   "pt-br/mcp-reference/get-messages",
                   "pt-br/mcp-reference/check-inbox",
-                  "pt-br/mcp-reference/create-upload"
+                  "pt-br/mcp-reference/create-upload",
+                  "pt-br/mcp-reference/set-wake"
                 ]
               }
             ]
