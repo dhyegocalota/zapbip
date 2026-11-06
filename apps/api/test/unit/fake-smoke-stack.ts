@@ -1,7 +1,8 @@
 import { McpToolName } from '../../src/contract/tool-definitions';
 import { DeployEnvironment } from '../../src/operations/deploy-environment';
 import type { SmokeFetch } from '../../src/operations/smoke-checks';
-import { SIGNATURE_HEADER } from '../../src/operations/signed-webhook';
+import { PLACEHOLDER_VALUE_PREFIX } from '../../src/operations/constants';
+import { SIGNATURE_HEADER, signWebhookBody } from '../../src/operations/signed-webhook';
 import { SmokeInput, type SmokeInputs } from '../../src/operations/smoke-inputs';
 
 export const BASE_URL = 'https://mcp-staging.zapbip.com';
@@ -9,6 +10,7 @@ export const CONNECTION_SECRET = 'zb_conn_distinctive-connection-secret';
 export const APP_SECRET = 'distinctive-app-secret';
 export const VERIFY_TOKEN = 'distinctive-verify-token';
 export const OWNER_PHONE = '5511999990000';
+export const PLACEHOLDER_APP_SECRET = `${PLACEHOLDER_VALUE_PREFIX}META_APP_SECRET`;
 export const ZERO_SIGNATURE = `sha256=${'0'.repeat(64)}`;
 export const WEBHOOK_PATH = '/webhooks/whatsapp';
 export const MCP_PATH = `/c/${CONNECTION_SECRET}/mcp`;
@@ -29,6 +31,7 @@ export type Behavior = {
   toolNames?: string[];
   verifyStatusForWrongToken?: number;
   badSignatureStatus?: number;
+  placeholderSignatureStatus?: number;
   goodSignatureStatus?: number;
   inboxAppearsAtPoll?: number;
   inboxSender?: string;
@@ -47,6 +50,7 @@ export function fakeStack(input: Behavior) {
     toolNames = TOOL_NAMES,
     verifyStatusForWrongToken = 403,
     badSignatureStatus = 401,
+    placeholderSignatureStatus = 401,
     goodSignatureStatus = 200,
     inboxAppearsAtPoll = 1,
     inboxSender = 'owner',
@@ -80,6 +84,9 @@ export function fakeStack(input: Behavior) {
       return new Response('forbidden', { status: verifyStatusForWrongToken });
     }
     if (headers.get(SIGNATURE_HEADER) === ZERO_SIGNATURE) return new Response('unauthorized', { status: badSignatureStatus });
+    if (headers.get(SIGNATURE_HEADER) === signWebhookBody({ appSecret: PLACEHOLDER_APP_SECRET, body })) {
+      return new Response('placeholder', { status: placeholderSignatureStatus });
+    }
     deliveredText = (JSON.parse(body) as { entry: { changes: { value: { messages: { text: { body: string } }[] } }[] }[] }).entry[0]!
       .changes[0]!.value.messages[0]!.text.body;
     return new Response('ok', { status: goodSignatureStatus });

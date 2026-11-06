@@ -3,10 +3,11 @@ import { McpToolName } from '../../src/contract/tool-definitions';
 import { SMOKE_POLL_ATTEMPTS, SMOKE_POLL_INTERVAL_MS } from '../../src/operations/constants';
 import { DeployEnvironment } from '../../src/operations/deploy-environment';
 import { formatSmokeResult, runSmokeChecks } from '../../src/operations/smoke-checks';
-import { SIGNATURE_HEADER } from '../../src/operations/signed-webhook';
+import { SIGNATURE_HEADER, signWebhookBody } from '../../src/operations/signed-webhook';
 import { SmokeCheck, SmokeInput, type SmokeInputs } from '../../src/operations/smoke-inputs';
 import {
   APP_SECRET,
+  PLACEHOLDER_APP_SECRET,
   CONNECTION_SECRET,
   type Behavior,
   fakeStack,
@@ -112,6 +113,27 @@ describe('smoke checks', () => {
     const accepted = await run({ behavior: { badSignatureStatus: 200 } });
     expect(accepted.lines[3]).toMatch(/^FAIL 200 signature rejected/);
     expect(accepted.requests.some((request) => request.headers.get(SIGNATURE_HEADER) === ZERO_SIGNATURE)).toBe(true);
+  });
+
+  it('check 4 also sends a body signed with the placeholder app secret and fails when it is accepted', async () => {
+    const accepted = await run({ behavior: { placeholderSignatureStatus: 200 } });
+    expect(accepted.lines[3]).toMatch(/^FAIL 200 signature rejected/);
+    expect(accepted.lines[3]).toContain('placeholder');
+    const sentWithPlaceholder = accepted.requests.filter(
+      (request) => request.headers.get(SIGNATURE_HEADER) === signWebhookBody({ appSecret: PLACEHOLDER_APP_SECRET, body: request.body }),
+    );
+    expect(sentWithPlaceholder).toHaveLength(1);
+  });
+
+  it('check 4 passes when the placeholder-signed body is refused too', async () => {
+    const refused = await run({ behavior: { placeholderSignatureStatus: 403 } });
+    expect(refused.lines[3]).toBe('PASS 401 signature rejected');
+  });
+
+  it('stops the run when health fails, sending nothing to the connection path', async () => {
+    const { lines, requests } = await run({ behavior: { healthStatus: 500 } });
+    expect(lines).toEqual(['FAIL 500 health (expected status 200)']);
+    expect(requests.some((request) => request.pathname === MCP_PATH)).toBe(false);
   });
 
   it('check 5 signs the exact body it posts with the app secret', async () => {

@@ -18,7 +18,8 @@ export const HAPPY_REPLIES: Record<string, ShellResult> = {
   'git rev-parse origin/main': { exitCode: 0, stdout: 'abc123\n' },
   'secret list': { exitCode: 0, stdout: ALL_SECRETS_JSON },
   'migrations list': { exitCode: 0, stdout: 'No migrations to apply!' },
-  'npm view': { exitCode: 0, stdout: JSON.stringify([`${NPM_PUBLISHER} <${NPM_PUBLISHER}@example.com>`]) },
+  'maintainers --json': { exitCode: 0, stdout: JSON.stringify([`${NPM_PUBLISHER} <${NPM_PUBLISHER}@example.com>`]) },
+  '_npmUser --json': { exitCode: 0, stdout: JSON.stringify(`${NPM_PUBLISHER} <${NPM_PUBLISHER}@example.com>`) },
 };
 export const COMPLETE_VARIABLES: EnvironmentVariables = {
   [SmokeInput.BaseUrl]: 'https://mcp-staging.zapbip.com',

@@ -33,7 +33,7 @@ describe('docs preflight entry', () => {
   });
 
   it('exits one when a package does not resolve on npm', async () => {
-    const { exitCode, output } = await preflight({ replies: { 'npm view': { exitCode: 1, stdout: '' } } });
+    const { exitCode, output } = await preflight({ replies: { 'maintainers --json': { exitCode: 1, stdout: '' } } });
     expect(exitCode).toBe(1);
     expect(output).toContain(`zapbip@${NPM_VERSION}`);
   });

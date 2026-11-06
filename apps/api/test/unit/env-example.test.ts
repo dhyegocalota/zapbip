@@ -1,11 +1,17 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { PLACEHOLDER_VALUE_PREFIX } from '../../src/operations/constants';
+import { SmokeInput } from '../../src/operations/smoke-inputs';
 import { WorkerSecret } from '../../src/operations/worker-secret';
 
 const ENV_EXAMPLE_PATH = '../../.env.example';
 const GITIGNORE_PATH = '../../.gitignore';
-const SMOKE_NAMES = ['SMOKE_BASE_URL', 'SMOKE_CONNECTION_SECRET', 'SMOKE_OWNER_PHONE'];
+const PIPED_SECRET_NAMES = [
+  WorkerSecret.WhatsAppAccessToken,
+  WorkerSecret.MediaLinkSigningKey,
+  WorkerSecret.UploadLinkSigningKey,
+  WorkerSecret.WakeSecretKey,
+];
 const PREFLIGHT_NAMES = ['ZAPBIP_NPM_PUBLISHER'];
 const IGNORED_ENTRIES = ['.env', '.dev.vars'];
 
@@ -19,8 +25,12 @@ const entries: [string, string][] = readFileSync(ENV_EXAMPLE_PATH, 'utf8')
 const gitignoreLines = readFileSync(GITIGNORE_PATH, 'utf8').split('\n');
 
 describe('env example', () => {
-  it('pin: lists exactly the worker secrets, the smoke inputs and the preflight inputs', () => {
-    expect(entries.map(([name]) => name).sort()).toEqual([...Object.values(WorkerSecret), ...SMOKE_NAMES, ...PREFLIGHT_NAMES].sort());
+  it('lists exactly what the scripts read: the smoke inputs and the preflight inputs', () => {
+    expect(entries.map(([name]) => name).sort()).toEqual([...Object.values(SmokeInput), ...PREFLIGHT_NAMES].sort());
+  });
+
+  it.each(PIPED_SECRET_NAMES)('does not hold %s, which no script reads and the runbook pipes into wrangler', (name) => {
+    expect(entries.map(([entryName]) => entryName)).not.toContain(name);
   });
 
   it('pin: gives every name a non-empty placeholder value', () => {

@@ -104,7 +104,7 @@ describe('worker preflight', () => {
   );
 
   it('refuses production until the zapbip package resolves on npm, naming it', async () => {
-    const shell = fakeShell({ replies: { 'npm view': { exitCode: 1, stdout: '' } } });
+    const shell = fakeShell({ replies: { 'maintainers --json': { exitCode: 1, stdout: '' } } });
     const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell }));
     expect(refusal?.step).toBe(PreflightStep.NpmVersion);
     expect(refusal?.message).toContain(`zapbip@${NPM_VERSION}`);
@@ -112,7 +112,9 @@ describe('worker preflight', () => {
   });
 
   it('refuses production when the maintainers do not include the owner npm user', async () => {
-    const shell = fakeShell({ replies: { 'npm view': { exitCode: 0, stdout: JSON.stringify(['someone-else <x@example.com>']) } } });
+    const shell = fakeShell({
+      replies: { 'maintainers --json': { exitCode: 0, stdout: JSON.stringify(['someone-else <x@example.com>']) } },
+    });
     const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell }));
     expect(refusal?.step).toBe(PreflightStep.NpmVersion);
     expect(refusal?.message).toContain(NPM_PUBLISHER);
@@ -129,6 +131,36 @@ describe('worker preflight', () => {
       expect(shell.commands).toEqual([]);
     },
   );
+
+  it('refuses production when the owner npm user has a co-maintainer', async () => {
+    const maintainers = JSON.stringify([`${NPM_PUBLISHER} <o@example.com>`, 'second-person <s@example.com>']);
+    const shell = fakeShell({ replies: { 'maintainers --json': { exitCode: 0, stdout: maintainers } } });
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell }));
+    expect(refusal?.step).toBe(PreflightStep.NpmVersion);
+    expect(refusal?.message).toContain('second-person');
+  });
+
+  it('refuses production when the version was published by someone other than the owner npm user', async () => {
+    const published = JSON.stringify('foreign-publisher <f@example.com>');
+    const shell = fakeShell({ replies: { '_npmUser --json': { exitCode: 0, stdout: published } } });
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell }));
+    expect(refusal?.step).toBe(PreflightStep.NpmVersion);
+    expect(refusal?.message).toContain('foreign-publisher');
+  });
+
+  it('refuses production when the publisher answer is not readable', async () => {
+    const shell = fakeShell({ replies: { '_npmUser --json': { exitCode: 0, stdout: 'not json' } } });
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell }));
+    expect(refusal?.step).toBe(PreflightStep.NpmVersion);
+    expect(refusal?.message).toContain('JSON');
+  });
+
+  it('accepts a single maintainer that npm prints as a string', async () => {
+    const shell = fakeShell({
+      replies: { 'maintainers --json': { exitCode: 0, stdout: JSON.stringify(`${NPM_PUBLISHER} <o@example.com>`) } },
+    });
+    expect(await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell }))).toBeNull();
+  });
 
   it('does not look at npm for a staging deploy', async () => {
     const shell = fakeShell({});
@@ -223,7 +255,7 @@ describe('worker preflight', () => {
   });
 
   it('refuses production maintainers that are not JSON, clearly', async () => {
-    const shell = fakeShell({ replies: { 'npm view': { exitCode: 0, stdout: 'not json' } } });
+    const shell = fakeShell({ replies: { 'maintainers --json': { exitCode: 0, stdout: 'not json' } } });
     const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell }));
     expect(refusal?.step).toBe(PreflightStep.NpmVersion);
     expect(refusal?.message).toContain('JSON');
@@ -372,7 +404,7 @@ describe('docs preflight', () => {
   });
 
   it('refuses until npm view resolves the pinned version, naming it', async () => {
-    const shell = fakeShell({ replies: { 'npm view': { exitCode: 1, stdout: '' } } });
+    const shell = fakeShell({ replies: { 'maintainers --json': { exitCode: 1, stdout: '' } } });
     const refusal = await runDocsPreflight({
       shell,
       officialWhatsAppNumber: OFFICIAL_NUMBER,
@@ -400,6 +432,7 @@ describe('docs preflight', () => {
     expect(refusal?.message).toContain(`@zapbip/openclaw-plugin@${NPM_VERSION}`);
     expect(shell.commands).toEqual([
       `npm view zapbip@${NPM_VERSION} maintainers --json`,
+      `npm view zapbip@${NPM_VERSION} _npmUser --json`,
       `npm view @zapbip/openclaw-plugin@${NPM_VERSION} maintainers --json`,
     ]);
   });
@@ -419,6 +452,25 @@ describe('docs preflight', () => {
     expect(refusal?.step).toBe(PreflightStep.NpmVersion);
     expect(refusal?.message).toContain(`@zapbip/openclaw-plugin@${NPM_VERSION}`);
     expect(refusal?.message).toContain(NPM_PUBLISHER);
+  });
+
+  it('refuses the docs deploy when the OpenClaw plugin was published by someone else', async () => {
+    const shell = fakeShell({
+      replies: {
+        '@zapbip/openclaw-plugin@0.1.0 _npmUser --json': { exitCode: 0, stdout: JSON.stringify('foreign-publisher <f@example.com>') },
+      },
+    });
+    const refusal = await runDocsPreflight({
+      shell,
+      officialWhatsAppNumber: OFFICIAL_NUMBER,
+      company: COMPLETE_COMPANY,
+      npmVersion: NPM_VERSION,
+      openclawPluginVersion: NPM_VERSION,
+      environmentVariables: COMPLETE_VARIABLES,
+    });
+    expect(refusal?.step).toBe(PreflightStep.NpmVersion);
+    expect(refusal?.message).toContain('@zapbip/openclaw-plugin@0.1.0');
+    expect(refusal?.message).toContain('foreign-publisher');
   });
 
   it('passes when the number is set and the version resolves', async () => {
