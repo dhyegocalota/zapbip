@@ -59,7 +59,7 @@ export async function enableGrokWake(input: {
   return expectOk(
     await input.stub.setWake({
       connection: connectionOf({ accountId: WAKE_ACCOUNT, agent }),
-      setting: { mode: WakeMode.Webhook, url: GROK_URL, token },
+      setting: { mode: WakeMode.Webhook, url: GROK_URL, token, intervalMinutes: null, standbyAgent: null },
     }),
   );
 }

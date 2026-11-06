@@ -115,7 +115,7 @@ describe('wake target guard', () => {
     const ownHost = new URL(testEnv.PUBLIC_ORIGIN).hostname;
     const outcome = await stub.setWake({
       connection: connectionOf({ accountId: WAKE_ACCOUNT, agent: WAKE_AGENT }),
-      setting: { mode: WakeMode.Webhook, url: `https://${ownHost}/hook`, token: GROK_TOKEN },
+      setting: { mode: WakeMode.Webhook, url: `https://${ownHost}/hook`, token: GROK_TOKEN, intervalMinutes: null, standbyAgent: null },
     });
     expect(outcome).toEqual({ ok: false, errorCode: InboxErrorCode.InvalidInput, message: 'invalid url' });
   });
