@@ -65,7 +65,7 @@ Setup for every area: no real credentials, no network to third parties. The conn
 - [ ] `backoff_sequence_is_capped` — input: attempts `0..6`; expected: delays `1000, 2000, 4000, 8000, 16000, 30000, 30000`.
 - [ ] `successful_open_resets_attempts` — input: two failed opens, then one open that succeeds, then a close; expected: the next delay is `1000`.
 - [ ] `stop_during_backoff_returns_promptly` — input: stop event set during the wait of 30 000 ms; expected: returns before 100 ms, no further socket.
-- [ ] `hello_wake_mode_is_logged_not_applied` — input: `previousWakeMode: "scheduled"`; expected: a `connector_connected` line with that value and no call to any `set_wake` tool.
+- [ ] `hello_wake_mode_is_logged_not_applied` — input: `previousWakeMode: "scheduled"` (refresh: `scheduled` is not in `WakeMode` until scheduled-wake; the parse accepts any string); expected: a `connector_connected` line with that value and no call to any `set_wake` tool.
 - [ ] Edge: hello then close before any messages — input: close after hello; expected: reconnect, no handoff, no error.
 
 ## H-4 Hermes adapter and outbound (`tests/unit/test_adapter.py`, `tests/unit/test_mcp_outbound.py`)
@@ -137,15 +137,15 @@ Setup for every area: no real credentials, no network to third parties. The conn
 
 - [ ] `entry_declares_zapbip_channel` — input: `openclaw.plugin.json`; expected: `channels` is `["zapbip"]`, `id` is `zapbip`.
 - [ ] `config_takes_only_the_link` — input: `configSchema`; expected: `connectionLink` is the only required property; `baseUrl`, `apiKey`, `agentName`, `ownerId` are absent.
-- [ ] `missing_link_throws` — input: config without `connectionLink`; expected: `startAccount` throws `connectionLink is required` (the exact copy from `libs/types`), no socket.
-- [ ] `http_link_refused` — input: `http://host/c/<secret>/mcp`; expected: throws the https copy before any request.
+- [ ] `missing_link_throws` — input: config without `connectionLink`; expected: `startAccount` throws an error whose message names `connectionLink` (refresh: no shared copy exists in `libs/types`; the text is plugin-local), no socket.
+- [ ] `http_link_refused` — input: `http://host/c/<secret>/mcp`; expected: throws an error whose message names https before any request (refresh: plugin-local text).
 - [ ] `start_account_stops_on_abort` — input: start then abort; expected: the `startAccount` promise resolves, no socket left open.
 - [ ] `outbound_send_text_uses_send_owner_text` — input: `outbound.attachedResults.sendText({text})`; expected: one `tools/call` as in O-3.
 - [ ] Edge: no config section — input: `cfg.channels` missing; expected: `inspectAccount` returns `configured: false`, not a throw.
 
 ## O-5 Parity and bundle
 
-- [ ] `python_constants_match_shared` — input: `apps/hermes-plugin/zapbip_platform/constants.py` and `libs/types/src/channel-plugin.ts`, `libs/types/src/connector.ts`; expected: every mirrored name has the same value (both records, the status codes, the close codes, the timings, the frame strings).
+- [ ] `python_constants_match_shared` — input: `apps/hermes-plugin/zapbip_platform/constants.py` and `libs/types/src/channel-plugin.ts`, `libs/types/src/connector.ts`; expected: every mirrored name has the same value (both records, the status codes, the close codes, the timings, the frame strings, and, refresh, the handoff texts `CHANNEL_HANDOFF_NO_TEXT_BY_KIND` and `CHANNEL_PLUGIN_SELF_TEST_TEXT`, which the Python handoff tests read).
 - [ ] `no_intervals_missing_in_python` — input: the same two files; expected: the Python file defines every name listed in the parity table, none missing.
 - [ ] `bundle_keeps_sdk_external` — input: `dist/index.js` after `build`; expected: the text `openclaw/plugin-sdk` appears only in `import` statements, not as bundled source.
 - [ ] `bundle_has_no_secret_literal` — input: the bundle; expected: no `zb_conn_` literal and no `ZAPBIP_CONNECTION_URL` default value.
@@ -167,6 +167,8 @@ Setup for every area: no real credentials, no network to third parties. The conn
 
 ## X Connector contract on the real socket (`apps/api/test/e2e/hermes-openclaw.e2e.test.ts`, gated)
 
+Refresh: X1 to X7 need the socket route `/c/:secret/connector` and the attach and detach behaviour of local-connector, and X4 to X6 need `set_wake` of webhook-wake. None of them is on this branch yet; the cases are written against the contract and wait for those merges.
+
 - [ ] X1 — input: a fake plugin socket attached to the agent; an owner message arrives with no live waiter; expected: the socket receives one `messages` frame with that message.
 - [ ] X2 — input: X1, then the plugin sends `done`; expected: `check_inbox` afterwards returns empty.
 - [ ] X3 — input: an `ask` waiter is live for the agent when the owner answers; expected: the answer goes to the waiter, the plugin socket receives no frame.
@@ -176,6 +178,8 @@ Setup for every area: no real credentials, no network to third parties. The conn
 - [ ] X7 — input: a `zapbip listen` process (local-connector) on the same connection as a plugin is not used in this slice; expected: this slice never runs both on one connection (documented in the install section, checked in I-2).
 
 ## E End to end, Docker, fake model (opt-in: `ZAPBIP_E2E_CLIENTS=1`)
+
+Refresh: E5 and E6 use `set_wake`, which waits for webhook-wake and scheduled-wake; E1 to E4 and E7 to E11 need the socket route of local-connector.
 
 Setup: the zapbip stack runs over HTTPS with a local self-signed certificate; the containers trust it through `NODE_EXTRA_CA_CERTS` (OpenClaw) and `SSL_CERT_FILE` (Hermes), both test-only. Images: `openclaw@2026.10.10` on `node:24-slim`; `nousresearch/hermes-agent:v0.22.7`; both run `--platform linux/amd64`.
 

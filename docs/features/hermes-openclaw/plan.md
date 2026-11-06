@@ -3,7 +3,7 @@
 **Spec:** spec.md (decisions below are recorded in its "Open questions → answers" table, `owner delegated 2026-11-06`)
 **Tier:** 🟡
 **Seam:** the connector socket `GET /c/<secret>/connector` (WebSocket, `local-connector`) carries owner messages to the plugins; outbound replies go through the MCP tool `send_message` on the connection's MCP URL; the install prompts of `install-skills` consume `CHANNEL_PLUGIN_PACKAGE_NAME`.
-**Depends on (merged before V):** `agent-inbox-core` (MCP tools, `AgentWaker`), `local-connector` (socket, `LocalConnectorWaker`, `acknowledgeDelivery`, the `listen` delta LN1 to LN5), `webhook-wake` (`set_wake`), `scheduled-wake` (`scheduled` mode with the revised floor, see Decisions), `install-skills` (the two sections).
+**Depends on (merged before V):** `agent-inbox-core` (MCP tools, `AgentWaker`; on this branch at a527d63), `local-connector` (socket, `LocalConnectorWaker`, `acknowledgeDelivery`, the `listen` delta LN1 to LN5; the socket route is not on this branch yet), `webhook-wake` (`set_wake`; not on this branch), `scheduled-wake` (`scheduled` mode with the revised floor, see Decisions; not on this branch), `install-skills` (the two sections). Gap list: Plan refresh below.
 
 **Assumptions (decided, owner can override):**
 - A1. The plugins speak the real connector protocol: WebSocket, frames `hello`, `messages`, `done`, text `ping`/`pong`. The POC's SSE endpoints (`/agents/:name/events`, `/agents/:name/send`) do not exist in zapbip and are not ported.
@@ -15,6 +15,8 @@
 - A7. The Python app lives in `apps/hermes-plugin` with a `package.json` whose scripts call `python3 -m pytest` and `python3 -m mypy`, so the existing `apps/*` gate rows cover it without a new root entry. No root file is added (no `.python-version`).
 - A8. Pinned versions, checked with `npm view` / PyPI on 2026-11-06 (age of two weeks is checked again at build): npm `esbuild@0.28.2`, `vitest@5.0.5`, `ws@8.22.1`, `@types/ws@8.18.2`, `@types/node@24.19.2` (the same pins `apps/connector` uses), `typescript` from the root; PyPI `websockets==15.0.1` (the pin Hermes ships for Python 3.14), `httpx==0.28.1` (Hermes core pin), `pytest==9.2.0`, `mypy==2.4.1`. Install nothing at plan time.
 - A9. A plugin retries a network error on the probe with backoff, where `connect` exits. A gateway can start before the network is up, so exiting would leave the owner without a wake. Refusals (`401`, `404`, any status other than `426`) still stop the plugin, as `connect` does.
+- A10. (refresh) Python gates run from an activated 3.13 venv. The local `python3` here is 3.14.7 and out of range; `/opt/homebrew/bin/python3.13` exists on the owner's machine. `doctor.sh` reports the mismatch and never installs (ADR 0004).
+- A11. (refresh) Pin ages on 2026-11-06, from the registries: `openclaw@2026.10.10` published 2026-11-03 (3 days; kept, it is the tested version); `ws@8.22.1` 2026-10-31 (6 days; kept, the same pin `apps/connector` uses); `pytest==9.2.0` 2026-10-27 (10 days) and `mypy==2.4.1` 2026-10-28 (9 days) exist and are kept. The owner decides whether to wait for the two-week age.
 
 ## Decisions taken in this plan (recorded in spec.md)
 
@@ -30,20 +32,44 @@
 
 **Toolchain impact (Python).** The harness has no Python today. This plan adds: `actions/setup-python` (3.13) to `.github/workflows/verify.yml`; a `python3` and `pytest`/`mypy` report in `.agents/hooks/doctor.sh` (reports, never installs, ADR 0004); a `package.json` wrapper per Python app. Dependencies live in `apps/hermes-plugin/pyproject.toml`, not in `pnpm-lock.yaml`. The Hermes end-to-end tests need Docker and are opt-in.
 
+## Plan refresh (2026-11-06, against a527d63)
+
+Checked against slice 1's code on this branch and against `origin/feat/local-connector-listen`. Lines changed in place carry a `(refresh)` note. The plan had no `(contract: confirm at build)` mark; the gaps below take its place.
+
+| Item | What the code has | Resolution |
+|---|---|---|
+| Connector constants and enums | `libs/types/src/connector.ts`: `ConnectorFrameType`, `FrameRejectionReason`, `ConnectorLogEvent`, `HEARTBEAT_INTERVAL_MS`, `HEARTBEAT_TIMEOUT_MS`, `RECONNECT_BASE_MS`, `RECONNECT_MAX_MS`, `REPLACED_CLOSE_CODE` (4001), `UPGRADE_REQUIRED_STATUS` (426), `UNAUTHORIZED_STATUS` (401), `CONNECTOR_PING_TEXT`, `CONNECTOR_PONG_TEXT`, `CONNECTOR_FRAME_MAX_BYTES` | no new TypeScript for these; `channel-plugin.ts` adds only the product enum, package names, handoff texts and self-test text. Python mirrors the values |
+| Probe statuses | `426` and `401` have constants; `404` and `500` do not | the plugin stops on any status other than 426 (A9), so no constant is added for 404 |
+| `Message` (`libs/core/src/inbox/message.ts`) | envelope with `messageId`, `at` (epoch ms), `direction`, `agent`, `readByAgent`; content with `text`, media `caption`, `choice` `selected: {title}` or `null` | the handoff tests use these names and no others |
+| Text limit | `WHATSAPP_TEXT_MAX_CHARS` = 4096 in `libs/core/src/inbox/constants.ts` | tests use 4096 and 4097 as literals; the plugin does not import core at runtime |
+| Tool names | `send_message`, `ask`, `wait_for_reply`, `check_inbox` in `apps/api/src/contract/tool-definitions.ts` | as written |
+| `set_wake` | absent (webhook-wake) | external: E5, E6 and I-3 wait for it |
+| `WakeMode` | `none` and `local` only; `scheduled` comes with scheduled-wake | the Python `hello` parse requires a string and does not enumerate modes |
+| Socket route `/c/:secret/connector` | absent from `apps/api/src/routes`; `acceptConnectorSocket`, `sendFrameToAgent`, `parseDoneFrame` exist in `apps/api/src/account-inbox/connector-sockets.ts` | the route and attach and detach (X4 to X6) belong to local-connector; V's X and E cases wait for them |
+| `done` acknowledgement | `acknowledgeDelivery` exists in `libs/core/src/inbox/use-cases/acknowledge-delivery.ts`: marks read only the agent's own owner messages, no-op for unknown ids | the socket's `done` handler is local-connector's |
+| `zapbip listen` | `apps/connector/src/listen.ts` and its CLI command exist | used by the install section only |
+| Link copy | `connectionLink is required` has no shared copy in `libs/types` | a plugin-local error text; the test asserts that it names `connectionLink` |
+| Link derivation | `deriveConnectorLinks` in `apps/connector/src/connect.ts` | O re-derives the socket link (suffix swap and protocol map). The reviewer at O decides whether to move it to a shared lib |
+| E2E stack | `apps/api/test/e2e/claude-code-stack.ts` | V reuses its pattern |
+| Python on this machine | `python3` 3.14.7; `/opt/homebrew/bin/python3.13` present | A10 |
+| ADRs 0028 and 0029 | in neither the repo nor the stash | written in C0 with their index rows |
+| Verify gates | `scripts/verify-gates.tsv` has `apps/*` rows (typecheck, unit) | no gate row change |
+| Hermes plugin directory | spec says `~/.hermes/plugins/zapbip`; the POC used `poc/hermes/plugin/zapbip/` | ~~`plugin.yaml` in `apps/hermes-plugin/plugin.yaml`~~ `plugin.yaml` sits in `zapbip_platform/` (H, Step 12); H confirms against the POC the directory name Hermes loads |
+
 ## File map
 
 | Group | Paths owned | Developer sub-agent | Runs |
 |---|---|---|---|
-| C0 Contract (shared files, one owner) | `docs/adr/0028-*.md`, `docs/adr/0029-*.md`, `libs/types/src/channel-plugin.ts`, `libs/types/src/index.ts`, `apps/openclaw-plugin/package.json`, `apps/hermes-plugin/package.json`, `apps/openclaw-plugin/README.md`, `apps/hermes-plugin/README.md`, `pnpm-lock.yaml`, root `package.json` (script `test:e2e:clients`), `.github/workflows/verify.yml`, `.agents/hooks/doctor.sh` | `developer-c0` | first, alone |
-| H Hermes plugin | `apps/hermes-plugin/pyproject.toml`, `apps/hermes-plugin/zapbip_platform/**`, `apps/hermes-plugin/tests/unit/**`, `apps/hermes-plugin/tests/support/**` | `developer-h` | after C0 |
-| O OpenClaw plugin | `apps/openclaw-plugin/src/**`, `apps/openclaw-plugin/index.ts`, `apps/openclaw-plugin/openclaw.plugin.json`, `apps/openclaw-plugin/tsconfig.json`, `apps/openclaw-plugin/vitest.config.mts`, `apps/openclaw-plugin/test/unit/**`, `apps/openclaw-plugin/test/support/**` | `developer-o` | after C0, parallel with H |
+| C0 Contract (shared files, one owner) | `docs/adr/0028-*.md`, `docs/adr/0029-*.md`, `docs/adr/README.md`, `libs/types/src/channel-plugin.ts`, `libs/types/src/index.ts`, `apps/openclaw-plugin/{package.json,tsconfig.json,vitest.config.mts,README.md}`, `apps/openclaw-plugin/src/{connector-socket,handoff,send-message}.ts` (stubs), `apps/hermes-plugin/{package.json,pyproject.toml,README.md}`, `apps/hermes-plugin/zapbip_platform/{__init__,constants,frames,handoff,connector_socket,mcp_outbound}.py` (`constants.py` real, the rest stubs), `apps/hermes-plugin/tests/unit/test_constants.py`, `pnpm-lock.yaml`, root `package.json` (script `test:e2e:clients`), `.github/workflows/verify.yml`, `.agents/hooks/doctor.sh` | `developer-c0` | first, alone |
+| H Hermes plugin | `apps/hermes-plugin/zapbip_platform/**` (bodies replace the C0 stubs; `plugin.yaml` and `register` live here), `apps/hermes-plugin/tests/unit/**` (except `test_constants.py`), `apps/hermes-plugin/tests/support/**` | `developer-h` | after C0 |
+| O OpenClaw plugin | `apps/openclaw-plugin/src/**` (bodies replace the C0 stubs; `channel.ts` is new), `apps/openclaw-plugin/index.ts`, `apps/openclaw-plugin/openclaw.plugin.json`, `apps/openclaw-plugin/test/unit/**`, `apps/openclaw-plugin/test/support/**` | `developer-o` | after C0, parallel with H |
 | V Verification | `apps/api/test/e2e/hermes-openclaw.e2e.test.ts`, `scripts/e2e/clients/**` (Dockerfiles, compose, fake model copied from `SCRATCH/poc/fake-model.ts`) | `developer-v` | after H, O and the external merges |
 
 Shared files are owned only by C0. H and O never edit a file outside their list; a needed change to `libs/types` is a new C0 commit that both merge.
 
 ## Contract (Step 0, verbatim)
 
-C0 lands these signatures in one commit. H and O build against them; a later change is a new C0 commit that every lane merges.
+C0 lands these signatures in one commit. H and O build against them; a later change is a new C0 commit that every lane merges. (refresh) The stubs are C0's too: each throws `<name> is not implemented`, so the red runs fail on the stub, as the Expected red text below says.
 
 ```ts
 // libs/types/src/channel-plugin.ts
@@ -103,14 +129,14 @@ Author this list with every box empty. Red commits come before the green commit 
 
 - [ ] **Step 1 (C0):** write `docs/adr/0028-*.md` (rung 1 is the native plugin; alternative: a `stream` or `watch_patterns` listener) and `0029-*.md` (the plugin acknowledges a handoff; alternative: notifier only) as `Proposed`, from D7 (`docs(adr): ...`).
 - [ ] **Step 2 (C0):** add `libs/types/src/channel-plugin.ts` with the contract above; export it from `libs/types/src/index.ts`; `pnpm typecheck` green (`feat(types): name the channel plugins and their handoff text`).
-- [ ] **Step 3 (C0):** write `apps/openclaw-plugin/package.json` (scripts `build`: esbuild bundle to `dist/index.js`, `openclaw` external; `typecheck`: `tsc --noEmit`; `test:unit`: `vitest run --passWithNoTests --config vitest.config.mts`; devDependencies `esbuild@0.28.2`, `vitest@5.0.5`, `ws@8.22.1`, `@types/ws@8.18.2`, `@types/node@24.19.2`, `@zapbip/types` and `@zapbip/core` as `workspace:*`, `openclaw@2026.10.10` as devDependency for types). Regenerate `pnpm-lock.yaml` (`chore(plugins): add the OpenClaw plugin package`).
-- [ ] **Step 4 (C0):** write `apps/hermes-plugin/package.json` (scripts `typecheck`: `python3 -m mypy zapbip_platform`; `test:unit`: `python3 -m pytest tests/unit`; no pnpm dependencies) and both purpose-only READMEs (`chore(plugins): add the Hermes plugin package shell`).
-- [ ] **Step 5 (C0):** `.github/workflows/verify.yml` gets `actions/setup-python` pinned to 3.13 before the verify step; `.agents/hooks/doctor.sh` reports `python3` between 3.11 and 3.13 and whether `pytest` and `mypy` import, and never installs (`ci(harness): run the Python plugin gates`). Check: `scripts/verify.test.sh` and `tools/repository-shape` stay green.
-- [ ] **Step 6 (C0):** root `package.json` gets `test:e2e:clients` (`vitest run --config apps/api/vitest.e2e.config.mts test/e2e/hermes-openclaw.e2e.test.ts` with `ZAPBIP_E2E_CLIENTS=1`); the E2E is not in `pnpm verify`.
+- [ ] **Step 3 (C0):** write `apps/openclaw-plugin/package.json` (name `@zapbip/openclaw-plugin`, the value of `CHANNEL_PLUGIN_PACKAGE_NAME[openclaw]`; scripts `build`: esbuild bundle to `dist/index.js`, `openclaw` external; `typecheck`: `tsc --noEmit`; `test:unit`: `vitest run --passWithNoTests --config vitest.config.mts`; devDependencies `esbuild@0.28.2`, `vitest@5.0.5`, `ws@8.22.1`, `@types/ws@8.18.2`, `@types/node@24.19.2`, `@zapbip/types` and `@zapbip/core` as `workspace:*`, `openclaw@2026.10.10` as devDependency for types). (refresh) Also `tsconfig.json` and `vitest.config.mts`, so `typecheck` and `test:unit` run before any test exists, and the three `src` stubs. The stub's `OpenClawConfig` import path is `(verify at build)` against `openclaw@2026.10.10`'s exports. Regenerate `pnpm-lock.yaml` (`chore(plugins): add the OpenClaw plugin package`).
+- [ ] **Step 4 (C0):** write `apps/hermes-plugin/package.json` (name `@zapbip/hermes-plugin`, private; scripts `typecheck`: `python3 -m mypy zapbip_platform`; `test:unit`: `python3 -m pytest tests/unit`; no pnpm dependencies) and both purpose-only READMEs (`chore(plugins): add the Hermes plugin package shell`). (refresh) Also `pyproject.toml` (`requires-python >=3.11,<3.14`; dependencies `websockets==15.0.1`, `httpx==0.28.1`; test extra `pytest==9.2.0`, `mypy==2.4.1`; `[tool.pytest.ini_options] pythonpath = ["."]`), an empty `zapbip_platform/__init__.py`, the stubs and `tests/unit/test_constants.py`. Pytest exits 5 when it collects nothing, so the shell needs one passing test to keep `pnpm verify` green.
+- [ ] **Step 5 (C0):** `.github/workflows/verify.yml` gets `actions/setup-python` pinned to 3.13 before the verify step (refresh: by full commit SHA with a `# v<major>` comment, as the file's other actions are pinned); `.agents/hooks/doctor.sh` reports `python3` between 3.11 and 3.13 and whether `pytest` and `mypy` import, and never installs (`ci(harness): run the Python plugin gates`). Check: `scripts/verify.test.sh` and `tools/repository-shape` stay green.
+- [ ] **Step 6 (C0):** root `package.json` gets `test:e2e:clients` (`pnpm --filter @zapbip/api exec vitest run --config vitest.e2e.config.mts test/e2e/hermes-openclaw.e2e.test.ts` with `ZAPBIP_E2E_CLIENTS=1`; refresh: the config and `test/` live in `apps/api`, so the command runs through the package, not `apps/api/vitest.e2e.config.mts` from the root); the E2E is not in `pnpm verify`.
 
 ### H: Hermes plugin (after Step 6)
 
-- [ ] **Step 7 (H, red):** `tests/unit/test_frames.py` and `tests/unit/test_handoff.py`. Stubs in `zapbip_platform` raise `NotImplementedError('<name> is not implemented')`. Cases are in the test plan, area H-1 and H-2. Commit `test(hermes): pin the frame and handoff rules`. Expected red text: `NotImplementedError: parse_server_frame is not implemented`.
+- [ ] **Step 7 (H, red):** `tests/unit/test_frames.py` and `tests/unit/test_handoff.py`. (refresh: the stubs come from C0, so this step adds only the tests; the stubs raise `NotImplementedError('<name> is not implemented')`.) Cases are in the test plan, area H-1 and H-2. Commit `test(hermes): pin the frame and handoff rules`. Expected red text: `NotImplementedError: parse_server_frame is not implemented`.
 - [ ] **Step 8 (H, green):** `constants.py`, `frames.py`, `handoff.py`. Commit `feat(hermes): parse connector frames and hand owner messages to the agent`.
 - [ ] **Step 9 (H, red):** `tests/unit/test_connector_socket.py` against `tests/support/fake_connector.py` (a `websockets` server on `127.0.0.1` with an ephemeral port). Commit `test(hermes): pin the connector socket`.
 - [ ] **Step 10 (H, green):** `connector_socket.py`: probe with `httpx` (expects `426`), `hello`, `messages`, `ping` every `HEARTBEAT_INTERVAL_MS`, pong timeout, reconnect backoff, `4001` stops the plugin, `401` and `404` stop it, `done` after `hand_off` returns. Commit `feat(hermes): keep the connector socket open and acknowledge handoffs`.
