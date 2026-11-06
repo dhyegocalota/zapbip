@@ -32,6 +32,7 @@ import type { DueTimeProvider } from '../contract/due-time-provider';
 import type { Bindings } from '../contract/env';
 import { LogEvent, type LogFields } from '../contract/log';
 import { logEvent } from '../log';
+import { nextAlarmAt } from './alarm-time';
 import { ALARM_MIN_DELAY_MS, AlarmErrorCode } from './constants';
 import { ACCOUNT_INBOX_MIGRATIONS } from './migrations';
 import { runMigrations } from './run-migrations';
@@ -120,7 +121,9 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     const pendingDueTimes = dueTimes.filter((dueAt): dueAt is number => dueAt !== null);
     if (pendingDueTimes.length === 0) return this.ctx.storage.deleteAlarm();
     const earliestDueAt = Math.min(...pendingDueTimes);
-    return this.ctx.storage.setAlarm(Math.max(this.clock.toRealTime({ clockTime: earliestDueAt }), Date.now() + ALARM_MIN_DELAY_MS));
+    const armedAt = await this.ctx.storage.getAlarm();
+    const dueAt = this.clock.toRealTime({ clockTime: earliestDueAt });
+    return this.ctx.storage.setAlarm(nextAlarmAt({ dueAt, armedAt, now: Date.now(), minDelayMs: ALARM_MIN_DELAY_MS }));
   }
 
   async alarm(): Promise<void> {

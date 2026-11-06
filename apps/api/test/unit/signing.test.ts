@@ -85,15 +85,20 @@ describe('signing', () => {
 
 describe('readSignedQuery', () => {
   it('reads a canonical expiry and signature', () => {
-    expect(readSignedQuery({ expiry: '5000', signature: 'abc' })).toEqual({ expiresAt: 5000, signature: 'abc' });
+    expect(readSignedQuery({ expiries: ['5000'], signatures: ['abc'] })).toEqual({ expiresAt: 5000, signature: 'abc' });
   });
 
   it.each(['0', '05', '+5', '-5', ' 5', '5 ', '5.0', '1e3', '', 'abc'])('rejects the expiry %j', (expiry) => {
-    expect(readSignedQuery({ expiry, signature: 'abc' })).toBeNull();
+    expect(readSignedQuery({ expiries: [expiry], signatures: ['abc'] })).toBeNull();
+  });
+
+  it('rejects a repeated expiry or signature', () => {
+    expect(readSignedQuery({ expiries: ['5000', '6000'], signatures: ['abc'] })).toBeNull();
+    expect(readSignedQuery({ expiries: ['5000'], signatures: ['abc', 'def'] })).toBeNull();
   });
 
   it('rejects a missing expiry or signature', () => {
-    expect(readSignedQuery({ expiry: undefined, signature: 'abc' })).toBeNull();
-    expect(readSignedQuery({ expiry: '5000', signature: undefined })).toBeNull();
+    expect(readSignedQuery({ expiries: undefined, signatures: ['abc'] })).toBeNull();
+    expect(readSignedQuery({ expiries: ['5000'], signatures: undefined })).toBeNull();
   });
 });

@@ -247,17 +247,37 @@ describe('SQLite inbox repository', () => {
     expect(result).toEqual({ first: true, second: false, afterReset: true });
   });
 
-  it('claims an upload exactly once until it is released or received', async () => {
+  it('claims an upload exactly once until it is released, received or stale', async () => {
+    const claim = { mediaId: 'med_1', claimedAt: BASE_TIME, staleBefore: BASE_TIME - 1 };
     const result = await inRepository(async (repository) => {
       await repository.insertMedia({ media: buildMedia({ mediaId: 'med_1', expiresAt: BASE_TIME + 5 }) });
-      const first = await repository.claimUpload({ mediaId: 'med_1' });
-      const second = await repository.claimUpload({ mediaId: 'med_1' });
+      const first = await repository.claimUpload(claim);
+      const second = await repository.claimUpload(claim);
+      const whileFresh = await repository.claimUpload({ ...claim, claimedAt: BASE_TIME + 1 });
+      const whenStale = await repository.claimUpload({ ...claim, claimedAt: BASE_TIME + 2, staleBefore: BASE_TIME });
       await repository.releaseUpload({ mediaId: 'med_1' });
-      const afterRelease = await repository.claimUpload({ mediaId: 'med_1' });
+      const afterRelease = await repository.claimUpload(claim);
       await repository.markMediaReceived({ mediaId: 'med_1', receivedAt: BASE_TIME, retentionUntil: BASE_TIME + MEDIA_RETENTION_MS });
-      return { first, second, afterRelease, afterReceived: await repository.claimUpload({ mediaId: 'med_1' }) };
+      return { first, second, whileFresh, whenStale, afterRelease, afterReceived: await repository.claimUpload(claim) };
     });
-    expect(result).toEqual({ first: true, second: false, afterRelease: true, afterReceived: false });
+    expect(result).toEqual({ first: true, second: false, whileFresh: false, whenStale: true, afterRelease: true, afterReceived: false });
+  });
+
+  it('claims the routing list expiry once per opening time', async () => {
+    const routingList: RoutingList = {
+      promptMessageId: 'msg_1',
+      openedAt: BASE_TIME,
+      locale: OwnerLocale.EnglishUs,
+      resent: false,
+      reminded: false,
+    };
+    const result = await inRepository(async (repository) => {
+      await repository.saveRoutingList({ routingList });
+      const first = await repository.claimRoutingListExpiry({ openedAt: BASE_TIME, claimedAt: BASE_TIME + 10 });
+      const second = await repository.claimRoutingListExpiry({ openedAt: BASE_TIME, claimedAt: BASE_TIME + 10 });
+      return { first, second, claimed: await repository.findRoutingList() };
+    });
+    expect(result).toEqual({ first: true, second: false, claimed: { ...routingList, openedAt: BASE_TIME + 10, resent: true } });
   });
 
   it('stores media, marks it received and deletes it', async () => {
@@ -369,5 +389,78 @@ describe('SQLite inbox repository', () => {
       return { linked, afterDelete: await repository.findChannelReceiptMessageId({ wamid: 'wamid.1' }) };
     });
     expect(result).toEqual({ linked: 'msg_1', afterDelete: null });
+  });
+
+  it('WI-133 pin: window writes keep the routing list and list writes keep the window', async () => {
+    const list: RoutingList = {
+      promptMessageId: 'msg_list',
+      openedAt: BASE_TIME,
+      locale: OwnerLocale.PortugueseBrazil,
+      resent: true,
+      reminded: true,
+    };
+    const result = await inRepository(async (repository) => {
+      await repository.saveWindow({ window: { lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: false } });
+      await repository.saveRoutingList({ routingList: list });
+      await repository.claimNotice();
+      await repository.saveWindow({ window: { lastOwnerMessageAt: BASE_TIME + 5, noticeSentForClosedWindow: true } });
+      const afterWindow = await repository.findRoutingList();
+      const window = await repository.findWindow();
+      await repository.clearRoutingList();
+      return { afterWindow, window, windowAfterClear: await repository.findWindow(), cleared: await repository.findRoutingList() };
+    });
+    expect(result.afterWindow).toEqual(list);
+    expect(result.window).toEqual({ lastOwnerMessageAt: BASE_TIME + 5, noticeSentForClosedWindow: true });
+    expect(result.windowAfterClear).toEqual(result.window);
+    expect(result.cleared).toBeNull();
+  });
+
+  it('WI-134 pin: clearing resets resent and reminded, and clearing with no list is a no-op', async () => {
+    const list: RoutingList = {
+      promptMessageId: 'msg_list',
+      openedAt: BASE_TIME,
+      locale: OwnerLocale.PortugueseBrazil,
+      resent: true,
+      reminded: true,
+    };
+    const result = await inRepository(async (repository) => {
+      await repository.clearRoutingList();
+      await repository.saveRoutingList({ routingList: list });
+      await repository.clearRoutingList();
+      await repository.saveRoutingList({ routingList: { ...list, resent: false, reminded: false } });
+      return repository.findRoutingList();
+    });
+    expect(result).toEqual({ ...list, resent: false, reminded: false });
+  });
+
+  it('WI-135 pin: a second save replaces the first and an openedAt of zero round-trips', async () => {
+    const list: RoutingList = {
+      promptMessageId: 'msg_list',
+      openedAt: BASE_TIME,
+      locale: OwnerLocale.PortugueseBrazil,
+      resent: false,
+      reminded: false,
+    };
+    const result = await inRepository(async (repository) => {
+      await repository.saveRoutingList({ routingList: list });
+      await repository.saveRoutingList({ routingList: { ...list, promptMessageId: 'msg_other', openedAt: 0 } });
+      return repository.findRoutingList();
+    });
+    expect(result).toMatchObject({ promptMessageId: 'msg_other', openedAt: 0 });
+  });
+
+  it('WI-136 pin: two accounts keep separate routing lists', async () => {
+    const list: RoutingList = {
+      promptMessageId: 'msg_list',
+      openedAt: BASE_TIME,
+      locale: OwnerLocale.PortugueseBrazil,
+      resent: false,
+      reminded: false,
+    };
+    await withRepository({ accountId: 'acc_one', run: (repository) => repository.saveRoutingList({ routingList: list }) });
+    const other = await withRepository({ accountId: 'acc_two', run: (repository) => repository.findRoutingList() });
+    const one = await withRepository({ accountId: 'acc_one', run: (repository) => repository.findRoutingList() });
+    expect(other).toBeNull();
+    expect(one).toEqual(list);
   });
 });

@@ -17,7 +17,7 @@ export const uploadRoutes = new Hono<{ Bindings: Bindings }>();
 uploadRoutes.put('/u/:account_id/:upload_id', async (context) => {
   const accountId = context.req.param('account_id');
   const uploadId = context.req.param('upload_id');
-  const signedQuery = readSignedQuery({ expiry: context.req.query('exp'), signature: context.req.query('sig') });
+  const signedQuery = readSignedQuery({ expiries: context.req.queries('exp'), signatures: context.req.queries('sig') });
   const clock = createPlatformClock();
   const isSignatureValid =
     signedQuery !== null &&
@@ -57,16 +57,27 @@ uploadRoutes.put('/u/:account_id/:upload_id', async (context) => {
   if (!claim.ok) return context.json({ error: claim.errorCode, message: claim.message }, ERROR_STATUS[claim.errorCode]);
 
   const mediaStore = mediaStoreOf({ bindings: context.env, clock });
+  const received = { bytes: 0 };
+  const countedBody = body.pipeThrough(
+    new TransformStream<Uint8Array, Uint8Array>({
+      transform(chunk, controller) {
+        received.bytes += chunk.byteLength;
+        controller.enqueue(chunk);
+      },
+    }),
+  );
   try {
     await mediaStore.put({
       accountId,
       mediaId: uploadId,
-      body,
+      body: countedBody,
       sizeBytes: declaredLength,
       mimeType: description.value.mimeType,
     });
   } catch (error) {
     await inbox.releaseUpload({ mediaId: uploadId });
+    const isClientAbort = received.bytes < declaredLength;
+    if (isClientAbort) return context.json({ error: 'upload_incomplete' }, HttpStatus.BadRequest);
     throw error;
   }
   const completion = await inbox.completeUpload({ mediaId: uploadId });

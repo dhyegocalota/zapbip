@@ -102,7 +102,7 @@ async function findRouteTarget(input: { dependencies: CoreDependencies; optionId
 
 async function applyRouteTarget(input: Arrival & { target: RouteTarget }): Promise<ReceiveResult> {
   const { dependencies, ownerLocale, target } = input;
-  await assignHeldMessages({ dependencies, ownerLocale, messageIds: target.messageIds, agent: target.agent });
+  await assignHeldMessages({ dependencies, ownerLocale, messageIds: target.messageIds, agent: target.agent, isExpiry: false });
   return { messageId: null, agent: target.agent, duplicate: false };
 }
 
@@ -111,7 +111,8 @@ async function resendRoutingList(input: Arrival & { target: RouteTarget }): Prom
   const [heldMessageId] = target.messageIds;
   if (heldMessageId === undefined) throw new Error('route target holds no message');
   const agents = await listRoutingAgents({ dependencies });
-  await openRoutingList({ dependencies, ownerLocale, heldMessageId, agents, resent: false });
+  const previous = await dependencies.repository.findRoutingList();
+  await openRoutingList({ dependencies, ownerLocale, heldMessageId, agents, previous });
   return { messageId: null, agent: null, duplicate: false };
 }
 
@@ -211,7 +212,7 @@ async function placeChoice(input: Arrival & { choice: ChoiceContent }): Promise<
 async function promptOwner(input: Arrival & { heldMessageId: string; prompt: OwnerPrompt }): Promise<void> {
   const { dependencies, ownerLocale, heldMessageId, prompt } = input;
   if (prompt.listedAgents.length > 0)
-    await openRoutingList({ dependencies, ownerLocale, heldMessageId, agents: prompt.listedAgents, resent: false });
+    await openRoutingList({ dependencies, ownerLocale, heldMessageId, agents: prompt.listedAgents, previous: null });
   if (prompt.reminderFor !== null) await remindOwner({ dependencies, ownerLocale, routingList: prompt.reminderFor });
   if (prompt.announcesNoAgents) {
     const text = renderCopy({ key: InboxCopyKey.NoAgents, locale: ownerLocale, values: {} });
@@ -266,8 +267,8 @@ async function deliverPlacement(
   const { placement, messageId, unreadBefore, shouldTellOwner } = input;
   const { agent } = placement.decision;
   if (agent === null) return promptOwner({ ...input, heldMessageId: messageId, prompt: placement.prompt });
-  const answeredQuestionId = placement.answer === null ? null : placement.answer.questionId;
-  return wakeAgent({ ...input, agent, unreadBefore, answeredQuestionId, shouldTellOwner });
+  const { answersQuestionId } = placement.decision;
+  return wakeAgent({ ...input, agent, unreadBefore, answeredQuestionId: answersQuestionId, shouldTellOwner, isExpiry: false });
 }
 
 async function duplicateResultOf(input: { dependencies: CoreDependencies; wamid: string }): Promise<ReceiveResult> {

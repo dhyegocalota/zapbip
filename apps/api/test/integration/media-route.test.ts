@@ -50,6 +50,8 @@ describe('media route', () => {
     { mimeType: 'audio/ogg', disposition: null },
     { mimeType: PDF_TYPE, disposition: 'attachment' },
     { mimeType: 'text/html', disposition: 'attachment' },
+    { mimeType: 'image/svg+xml', disposition: 'attachment' },
+    { mimeType: 'IMAGE/SVG+XML; charset=utf-8', disposition: 'attachment' },
   ])('a $mimeType response is hardened and its disposition is $disposition', async ({ mimeType, disposition }) => {
     const fixture = await storeMedia({ mimeType });
     const response = await getMedia({ path: fixture, signed: fixture, key: env.MEDIA_LINK_SIGNING_KEY, expiresAt: freshExpiry() });
@@ -156,6 +158,23 @@ describe('media route', () => {
     const response = await SELF.fetch(
       `${ORIGIN}/m/${fixture.accountId}/${fixture.mediaId}?${queryOf({ ...query, signature: encodeURIComponent(alter(query.signature)) })}`,
     );
+    expect(response.status).toBe(STATUS_FORBIDDEN);
+  });
+
+  test.each([
+    { name: 'a repeated signature with the valid one first', build: (query: string) => `${query}&sig=garbage` },
+    { name: 'a repeated signature with the valid one last', build: (query: string) => `sig=garbage&${query}` },
+    { name: 'a repeated expiry', build: (query: string) => `${query}&exp=1` },
+  ])('WI-127 a link with $name answers 403', async ({ build }) => {
+    const fixture = await storeMedia();
+    const query = await signedQuery({
+      key: env.MEDIA_LINK_SIGNING_KEY,
+      accountId: fixture.accountId,
+      mediaId: fixture.mediaId,
+      purpose: LinkPurpose.Read,
+      expiresAt: freshExpiry(),
+    });
+    const response = await SELF.fetch(`${ORIGIN}/m/${fixture.accountId}/${fixture.mediaId}?${build(queryOf(query))}`);
     expect(response.status).toBe(STATUS_FORBIDDEN);
   });
 });

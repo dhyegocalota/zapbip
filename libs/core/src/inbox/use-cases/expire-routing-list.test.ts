@@ -1,6 +1,7 @@
-import { MessageKind, OwnerLocale, ReplyStatus, SECOND_MS } from '@zapbip/types';
+import { InboxCopyKey, MessageKind, OwnerLocale, ReplyStatus, SECOND_MS } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { ROUTING_LIST_TTL_MS, WINDOW_MS } from '../constants';
+import { renderCopy } from '../inbox-copy';
 import type { Message } from '../message';
 import { formatChoiceOptionIds, formatRouteOptionId } from '../option-id';
 import { connectionOf, createEnvironment, receive, receiveText, registerAgents } from '../testing/fixtures';
@@ -47,12 +48,12 @@ async function expireAfterTtl(input: { environment: Environment }): Promise<void
 }
 
 describe('findRoutingListDueAt', () => {
-  test('is null without a pending list', async () => {
+  test('CU-164 is null without a pending list', async () => {
     const environment = await createEnvironment();
     expect(await findRoutingListDueAt({ dependencies: environment.dependencies })).toBeNull();
   });
 
-  test('is the opening time plus the routing list TTL', async () => {
+  test('CU-164 is the opening time plus the routing list TTL', async () => {
     const { environment } = await heldBatch();
     const { openedAt } = (await environment.repository.findRoutingList())!;
     expect(await findRoutingListDueAt({ dependencies: environment.dependencies })).toBe(openedAt + ROUTING_LIST_TTL_MS);
@@ -60,7 +61,7 @@ describe('findRoutingListDueAt', () => {
 });
 
 describe('expireRoutingList', () => {
-  test('does nothing before the TTL', async () => {
+  test('CU-166 does nothing before the TTL', async () => {
     const { environment } = await heldBatch();
     const dueAt = await findRoutingListDueAt({ dependencies: environment.dependencies });
     await environment.clock.advance({ ms: dueAt! - environment.clock.now() - 1 });
@@ -69,7 +70,7 @@ describe('expireRoutingList', () => {
     expect(routingLists({ environment })).toHaveLength(1);
   });
 
-  test('delivers the held batch in order to the agent that wrote within the window and wakes its waiter', async () => {
+  test('CU-165 delivers the held batch in order to the agent that wrote within the window and wakes its waiter', async () => {
     const { environment } = await heldBatch();
     await agentWrites({ environment, agent: 'alpha' });
     const holding = waitForReply({
@@ -86,7 +87,7 @@ describe('expireRoutingList', () => {
     expect(routingLists({ environment })).toHaveLength(1);
   });
 
-  test('resends the list once when no agent wrote within the window', async () => {
+  test('CU-166 resends the list once when no agent wrote within the window', async () => {
     const { environment, firstMessageId } = await heldBatch();
     await expireAfterTtl({ environment });
     const lists = routingLists({ environment });
@@ -105,7 +106,7 @@ describe('expireRoutingList', () => {
     });
   });
 
-  test('after the second expiry the batch stays unread for the last agent seen', async () => {
+  test('CU-167 after the second expiry the batch stays unread for the last agent seen', async () => {
     const { environment } = await heldBatch();
     await environment.clock.advance({ ms: SECOND_MS });
     await registerAgents({ environment, agents: ['beta'] });
@@ -118,7 +119,7 @@ describe('expireRoutingList', () => {
     expect(await unreadTexts({ environment, agent: 'beta' })).toEqual(['first', 'second']);
   });
 
-  test('an agent that wrote after the resend takes the batch at the second expiry', async () => {
+  test('CU-167 an agent that wrote after the resend takes the batch at the second expiry', async () => {
     const { environment } = await heldBatch();
     await expireAfterTtl({ environment });
     await agentWrites({ environment, agent: 'alpha' });
@@ -135,7 +136,7 @@ describe('expireRoutingList', () => {
     expect(await environment.repository.findRoutingList()).toMatchObject({ locale: OwnerLocale.PortugueseBrazil });
   });
 
-  test('a list with nothing held is closed', async () => {
+  test('CU-168 a list with nothing held is closed', async () => {
     const environment = await createEnvironment();
     await registerAgents({ environment, agents: ['alpha'] });
     await environment.repository.saveRoutingList({
@@ -152,12 +153,45 @@ describe('expireRoutingList', () => {
     expect(routingLists({ environment })).toEqual([]);
   });
 
-  test('the window of rule 5 is counted back from the expiry', async () => {
+  test('CU-168 the window of rule 5 is counted back from the expiry', async () => {
     const { environment } = await heldBatch();
     await agentWrites({ environment, agent: 'alpha' });
     await environment.clock.advance({ ms: WINDOW_MS + 1 });
     await expireRoutingList({ dependencies: environment.dependencies });
     expect(await environment.repository.findRoutingList()).toMatchObject({ resent: true });
     expect(await environment.repository.listHeld()).toHaveLength(2);
+  });
+
+  test('the owner is told which agent got a batch assigned by expiry, not that it is not listening', async () => {
+    const { environment } = await heldBatch();
+    await agentWrites({ environment, agent: 'alpha' });
+    await expireAfterTtl({ environment });
+    const texts = environment.sender.sessions.flatMap((message) => (message.kind === MessageKind.Text ? [message.text] : []));
+    expect(texts.at(-1)).toBe(
+      renderCopy({ key: InboxCopyKey.AgentAssignedByExpiry, locale: OwnerLocale.EnglishUs, values: { agent: 'alpha' } }),
+    );
+  });
+
+  test('a resend that fails to send still moves the due time forward and the next expiry assigns the batch', async () => {
+    const { environment } = await heldBatch();
+    environment.sender.failSessionCalls({ callNumbers: [3] });
+    await environment.clock.advance({ ms: ROUTING_LIST_TTL_MS });
+    await expect(expireRoutingList({ dependencies: environment.dependencies })).rejects.toThrow();
+    const dueAt = await findRoutingListDueAt({ dependencies: environment.dependencies });
+    expect(dueAt).toBeGreaterThan(environment.clock.now());
+    await expireAfterTtl({ environment });
+    expect(await environment.repository.listHeld()).toEqual([]);
+    expect(await unreadTexts({ environment, agent: 'beta' })).toEqual(['first', 'second']);
+    expect(routingLists({ environment })).toHaveLength(1);
+  });
+
+  test('two expiries running at once send one resend', async () => {
+    const { environment } = await heldBatch();
+    await environment.clock.advance({ ms: ROUTING_LIST_TTL_MS });
+    await Promise.all([
+      expireRoutingList({ dependencies: environment.dependencies }),
+      expireRoutingList({ dependencies: environment.dependencies }),
+    ]);
+    expect(routingLists({ environment })).toHaveLength(2);
   });
 });
