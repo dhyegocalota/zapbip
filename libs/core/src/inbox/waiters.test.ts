@@ -1,3 +1,4 @@
+import { WaiterEnd } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { createFakeClock } from './testing/fake-clock';
 import { createReplyWaiters } from './waiters';
@@ -65,5 +66,28 @@ describe('createReplyWaiters', () => {
     void waiters.awaitAgentMessage({ agent: 'alpha', timeoutMs: 5000 });
     waiters.resolveAgentMessage({ agent: 'beta' });
     expect(waiters.hasLiveWaiter({ agent: 'alpha' })).toBe(true);
+  });
+
+  test('cancelling an agent ends every waiter of that agent as cancelled', async () => {
+    const { waiters } = createWaiters();
+    const message = waiters.awaitAgentMessage({ agent: 'alpha', timeoutMs: 5000 });
+    const question = waiters.awaitQuestionAnswer({ agent: 'alpha', questionId: 'qst_1', timeoutMs: 5000 });
+    waiters.cancelAgent({ agent: 'alpha' });
+    expect(await Promise.all([message, question])).toEqual([WaiterEnd.Cancelled, WaiterEnd.Cancelled]);
+    expect(waiters.hasLiveWaiter({ agent: 'alpha' })).toBe(false);
+  });
+
+  test('cancelling an agent leaves another agent waiting', () => {
+    const { waiters } = createWaiters();
+    void waiters.awaitAgentMessage({ agent: 'beta', timeoutMs: 5000 });
+    waiters.cancelAgent({ agent: 'alpha' });
+    expect(waiters.hasLiveWaiter({ agent: 'beta' })).toBe(true);
+  });
+
+  test('a resolved waiter ends as resolved', async () => {
+    const { waiters } = createWaiters();
+    const waiting = waiters.awaitAgentMessage({ agent: 'alpha', timeoutMs: 5000 });
+    waiters.resolveAgentMessage({ agent: 'alpha' });
+    expect(await waiting).toBe(WaiterEnd.Resolved);
   });
 });

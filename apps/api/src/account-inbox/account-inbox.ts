@@ -1,6 +1,7 @@
 import { DurableObject } from 'cloudflare:workers';
 import * as inbox from '@zapbip/core';
 import type {
+  AccountDependencies,
   AskInput,
   AskResult,
   CheckInboxInput,
@@ -20,30 +21,44 @@ import type {
   WaitForReplyInput,
   WaitForReplyResult,
 } from '@zapbip/core';
-import { ChannelErrorKind } from '@zapbip/types';
+import { AccountState, ChannelErrorKind } from '@zapbip/types';
+import { D1AccountDirectory } from '../adapters/d1/d1-account-directory';
+import { D1ConnectionRegistry } from '../adapters/d1/d1-connection-registry';
 import { createFakeWhatsAppSender, type FakeWhatsAppSender } from '../adapters/fake/fake-whatsapp-sender';
+import { createConnectionSecrets } from '../adapters/platform/connection-secrets';
 import { createIdGenerator } from '../adapters/platform/ids';
+import { createGenericInstallPromptRenderer } from '../adapters/prompt/generic-install-prompt';
 import { loadDurableClock, type DurableClock } from '../adapters/platform/clock';
 import { createR2MediaStore } from '../adapters/r2/r2-media-store';
 import { createSqliteInboxRepository } from '../adapters/sqlite/sqlite-inbox-repository';
 import { createNoneWaker } from '../adapters/wake/none-waker';
 import type { AccountInboxRpc, AgentRequest, CallOutcome } from '../contract/account-inbox-rpc';
+import type { AccountOwnerRpc } from '../contract/account-owner-rpc';
 import type { DueTimeProvider } from '../contract/due-time-provider';
 import type { Bindings } from '../contract/env';
 import { LogEvent, type LogFields } from '../contract/log';
 import { logEvent } from '../log';
-import { ALARM_MIN_DELAY_MS, ALARM_PROVIDER_FAILED } from './constants';
+import { AccountTombstoned } from './account-tombstoned';
+import { revokeAgentState } from './agent-revocation';
+import { ALARM_MIN_DELAY_MS, ALARM_PROVIDER_FAILED, TOMBSTONE_STORAGE_KEY } from './constants';
+import { createSqliteDeletionRequests } from './deletion-requests';
+import { createSqliteFirstMessageClaim } from './first-message-claim';
 import { ACCOUNT_INBOX_MIGRATIONS } from './migrations';
 import { runMigrations } from './run-migrations';
 
+const RECORD_STATE_STATEMENT = 'INSERT INTO account_facts (id, state) VALUES (1, ?) ON CONFLICT (id) DO UPDATE SET state = excluded.state';
+
+type ReceiveAccountMessageRequest = Parameters<AccountOwnerRpc['receiveAccountMessage']>[0];
 type ReceiveOwnerMessageRequest = Parameters<AccountInboxRpc['receiveOwnerMessage']>[0];
 
-export class AccountInbox extends DurableObject<Bindings> implements AccountInboxRpc {
+export class AccountInbox extends DurableObject<Bindings> implements AccountInboxRpc, AccountOwnerRpc {
   protected sender!: FakeWhatsAppSender;
   protected clock!: DurableClock;
   protected readonly dueTimeProviders: DueTimeProvider[] = [];
   private accountId!: string;
   private dependencies!: CoreDependencies;
+  private accountDependencies!: AccountDependencies;
+  private isTombstoned = false;
 
   constructor(ctx: DurableObjectState, env: Bindings) {
     super(ctx, env);
@@ -53,6 +68,8 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
   private async initialize(): Promise<void> {
     const { name: accountId } = this.ctx.id;
     if (accountId === undefined) throw new Error('AccountInbox id has no name');
+    this.isTombstoned = (await this.ctx.storage.get(TOMBSTONE_STORAGE_KEY)) !== undefined;
+    if (this.isTombstoned) return;
     runMigrations({ storage: this.ctx.storage, migrations: ACCOUNT_INBOX_MIGRATIONS });
     this.accountId = accountId;
     this.clock = await loadDurableClock({ storage: this.ctx.storage, onAdvanced: () => this.armAlarm() });
@@ -71,6 +88,19 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       clock: this.clock,
       ids: createIdGenerator(),
       waiters: inbox.createReplyWaiters({ clock: this.clock }),
+    };
+    this.accountDependencies = {
+      ...this.dependencies,
+      accounts: new D1AccountDirectory({ database: this.env.CONNECTIONS }),
+      connections: new D1ConnectionRegistry({ database: this.env.CONNECTIONS }),
+      connectionSecrets: createConnectionSecrets(),
+      installPromptRenderer: createGenericInstallPromptRenderer(),
+      revocations: {
+        recordRevocation: ({ agent }) => this.recordRevocation({ agent }),
+        cancelWaiters: ({ agent }) => this.cancelWaiters({ agent }),
+      },
+      firstMessage: createSqliteFirstMessageClaim({ storage: this.ctx.storage }),
+      deletionRequests: createSqliteDeletionRequests({ storage: this.ctx.storage }),
     };
     this.dueTimeProviders.push(this.createExpiryProvider());
     await this.armAlarm();
@@ -106,7 +136,12 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     }
   }
 
+  private assertLive(): void {
+    if (this.isTombstoned) throw new AccountTombstoned();
+  }
+
   protected async armAlarm(): Promise<void> {
+    if (this.isTombstoned) return;
     const dueTimes = await Promise.all(this.dueTimeProviders.map((provider) => this.findNextDueAt({ provider })));
     const pendingDueTimes = dueTimes.filter((dueAt): dueAt is number => dueAt !== null);
     if (pendingDueTimes.length === 0) return this.ctx.storage.deleteAlarm();
@@ -115,12 +150,14 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
   }
 
   async alarm(): Promise<void> {
+    if (this.isTombstoned) return;
     const now = this.clock.now();
     await this.dueTimeProviders.reduce((previous, provider) => previous.then(() => this.runProvider({ provider, now })), Promise.resolve());
     await this.armAlarm();
   }
 
   private async outcome<Value>(input: { run: () => Promise<Value>; describe?: (value: Value) => LogFields }): Promise<CallOutcome<Value>> {
+    this.assertLive();
     try {
       const value = await input.run();
       if (input.describe !== undefined) this.log(input.describe(value));
@@ -202,6 +239,37 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
 
   completeUpload(input: { mediaId: string }): Promise<CallOutcome<StoredMedia>> {
     return this.outcome({ run: () => inbox.completeUpload({ ...input, dependencies: this.dependencies }) });
+  }
+
+  receiveAccountMessage(input: ReceiveAccountMessageRequest): Promise<CallOutcome<inbox.ReceiveAccountMessageResult>> {
+    return this.outcome({
+      run: () => inbox.receiveAccountMessage({ ...input, dependencies: this.accountDependencies }),
+      describe: (value) => ({ event: value.duplicate ? LogEvent.OwnerMessageDuplicate : LogEvent.OwnerMessage }),
+    });
+  }
+
+  async recordRevocation(input: { agent: string }): Promise<void> {
+    this.assertLive();
+    revokeAgentState({ storage: this.ctx.storage, agent: input.agent, revokedAt: this.clock.now() });
+    this.dependencies.waiters.cancelAgent(input);
+  }
+
+  async cancelWaiters(input: { agent: string }): Promise<void> {
+    this.assertLive();
+    this.dependencies.waiters.cancelAgent(input);
+  }
+
+  async setState(input: { state: AccountState }): Promise<void> {
+    this.assertLive();
+    if (input.state !== AccountState.Active) throw new Error('setState accepts only the return to active');
+    this.ctx.storage.sql.exec(RECORD_STATE_STATEMENT, input.state);
+  }
+
+  async purge(): Promise<void> {
+    this.isTombstoned = true;
+    await this.ctx.storage.deleteAlarm();
+    await this.ctx.storage.deleteAll();
+    await this.ctx.storage.put(TOMBSTONE_STORAGE_KEY, true);
   }
 
   receiveOwnerMessage(input: ReceiveOwnerMessageRequest): Promise<CallOutcome<inbox.ReceiveResult>> {

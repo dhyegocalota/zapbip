@@ -319,7 +319,7 @@ describe('AccountInbox migrations', () => {
         .toArray()
         .map((row) => row.name),
     }));
-    expect(versions).toEqual([1]);
+    expect(versions).toEqual([1, 6]);
     expect(tables).toEqual(
       expect.arrayContaining([
         'inbox_messages',
@@ -330,6 +330,8 @@ describe('AccountInbox migrations', () => {
         'agents',
         'media',
         'screen_entries',
+        'account_facts',
+        'revoked_agents',
       ]),
     );
   });
