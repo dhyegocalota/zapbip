@@ -63,7 +63,7 @@ function pinnedHeaders(input: { provider: PinnedWakeProvider }): HeaderBuilder {
   return async ({ target }) => PINNED_WAKE_PROVIDER_RULES[input.provider].buildHeaders({ token: target.token });
 }
 
-const signedHeaders: HeaderBuilder = async ({ target, body, nowMs }) => {
+async function signedHeaders({ target, body, nowMs }: WakeAttemptRequest): Promise<Record<string, string>> {
   const timestampSeconds = Math.floor(nowMs / SECOND_MS);
   const signature = await hmacHex({ key: target.token, text: signWakeRequest({ timestampSeconds, body }) });
   return {
@@ -71,7 +71,7 @@ const signedHeaders: HeaderBuilder = async ({ target, body, nowMs }) => {
     [WAKE_TIMESTAMP_HEADER]: String(timestampSeconds),
     [WAKE_SIGNATURE_HEADER]: `${WAKE_SIGNATURE_PREFIX}${signature}`,
   };
-};
+}
 
 const HEADER_BUILDERS: Record<WakeProvider, HeaderBuilder> = {
   [WakeProvider.GrokRoutine]: pinnedHeaders({ provider: WakeProvider.GrokRoutine }),

@@ -1,4 +1,5 @@
 import { WakeProvider } from '@zapbip/types';
+import type { InboxError } from '../inbox/errors';
 import { invalidInput } from '../inbox/inbox-error-factories';
 import {
   WAKE_BLOCKED_HOST_SUFFIXES,
@@ -28,7 +29,7 @@ const SCHEME_SEPARATOR = '://';
 
 export type AssertWakeTargetInput = { url: string; token: string; publicHost: string };
 
-export function invalidWakeField(input: { field: WakeTargetField }) {
+export function invalidWakeField(input: { field: WakeTargetField }): InboxError {
   return invalidInput({ message: `invalid ${input.field}` });
 }
 

@@ -578,7 +578,7 @@ describe('runDueWakes while a request is in flight', () => {
   test('a refused attempt leaves the follow-up job and one notice', async () => {
     const wakeEnvironment = await runWithMessageInFlight({ statusCode: UNAUTHORIZED });
     expect(await findJob({ wakeEnvironment })).toMatchObject({
-      dueAt: wakeEnvironment.environment.clock.now() - IN_FLIGHT_HOLD_MS - 1 + WAKE_MIN_INTERVAL_MS,
+      dueAt: wakeEnvironment.environment.clock.now() - IN_FLIGHT_HOLD_MS - 1 + WAKE_FAILED_RETRY_MS,
       rewake: false,
     });
     expect(sentTexts({ wakeEnvironment })).toHaveLength(1);
