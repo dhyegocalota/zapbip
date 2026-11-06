@@ -132,6 +132,11 @@ describe('createFetchWakeTransport outcomes', () => {
     expect((await send({})).retryAfterMs).toBe(RETRY_AFTER_SECONDS * SECOND_MS);
   });
 
+  it.each(['0', '-5'])('ignores a Retry-After of %s', async (value) => {
+    respond({ status: 429, headers: { 'retry-after': value } });
+    expect((await send({})).retryAfterMs).toBeNull();
+  });
+
   it('ignores a Retry-After date', async () => {
     respond({ status: 503, headers: { 'retry-after': 'Wed, 21 Oct 2026 07:28:00 GMT' } });
     expect((await send({})).retryAfterMs).toBeNull();

@@ -99,6 +99,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     });
     this.wake = createWakeDependencies({
       env: this.env,
+      accountId,
       storage: this.ctx.storage,
       clock: this.clock,
       transport: this.createWakeTransport(),
@@ -151,8 +152,14 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
   }
 
   protected async runDueWakes(): Promise<void> {
-    const storedOwnerLocale = (await this.ctx.storage.get<OwnerLocale>(OWNER_LOCALE_STORAGE_KEY)) as OwnerLocale;
-    await inbox.runDueWakes({ dependencies: this.dependencies, wake: this.wake, ownerLocale: storedOwnerLocale });
+    const storedOwnerLocale = await this.ctx.storage.get<OwnerLocale>(OWNER_LOCALE_STORAGE_KEY);
+    if (storedOwnerLocale === undefined) this.log({ event: LogEvent.ToolError, errorCode: AlarmErrorCode.OwnerLocaleMissing });
+    await inbox.runDueWakes({
+      dependencies: this.dependencies,
+      wake: this.wake,
+      ownerLocale: storedOwnerLocale === undefined ? null : storedOwnerLocale,
+      publicHost: new URL(this.env.PUBLIC_ORIGIN).hostname,
+    });
   }
 
   private log(fields: LogFields): void {

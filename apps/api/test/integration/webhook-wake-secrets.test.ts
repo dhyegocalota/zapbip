@@ -25,6 +25,7 @@ import {
   replaceWakeDependencies,
   wakeStub,
 } from '../support/wake-session';
+import { versionAfterLatest } from '../support/migration-versions';
 import { connectionOf, testEnv } from '../support/workers-env';
 
 const BASE64 = 'base64';
@@ -33,8 +34,7 @@ const METRICS_NAME = 'WAKE_METRICS';
 const CURRENT_KEY_VERSION = 1;
 const UNSUPPORTED_KEY_VERSION = 2;
 const SHORT_KEY_BYTES = 31;
-const THIRD_MIGRATION_VERSION = 3;
-const LOCAL_RESTORE_MIGRATION_VERSION = 5;
+const LATER_MIGRATION_VERSION = versionAfterLatest({ offset: 1 });
 const GROK_PATH = '/automations/webhook/abc12345';
 const OTHER_AGENT = 'beta';
 
@@ -43,7 +43,13 @@ const transport: WakeTransport = { send: async () => ({ outcome: WakeAttemptOutc
 
 function wakeDependenciesWith(input: { env: Partial<typeof testEnv> }) {
   return runInDurableObject(stub, (_instance, state) =>
-    createWakeDependencies({ env: { ...testEnv, ...input.env }, storage: state.storage, clock: createPlatformClock(), transport }),
+    createWakeDependencies({
+      env: { ...testEnv, ...input.env },
+      accountId: WAKE_ACCOUNT,
+      storage: state.storage,
+      clock: createPlatformClock(),
+      transport,
+    }),
   );
 }
 
@@ -95,6 +101,14 @@ describe('sealed wake storage', () => {
     await expectRefusedWithOneNotice();
   });
 
+  it('refuses the sealed target of another agent copied into this agent row', async () => {
+    await enableGrokWake({ stub, agent: OTHER_AGENT });
+    const { sealed_target: otherSealedTarget } = await readWakeRow({ stub, agent: OTHER_AGENT });
+    await rewriteRow({ set: 'sealed_target', value: otherSealedTarget! });
+    await wakeAfterOwnerMessage();
+    await expectRefusedWithOneNotice();
+  });
+
   it('refuses a target that the current key does not open', async () => {
     await replaceWakeDependencies({
       stub,
@@ -123,14 +137,43 @@ describe('wake target guard', () => {
 });
 
 describe('wake dependencies', () => {
-  it('throws naming the key when it is absent', async () => {
-    await expect(wakeDependenciesWith({ env: { WAKE_SECRET_KEY: undefined } as never })).rejects.toThrow(KEY_NAME);
+  it('builds without the key and fails naming it only when a target is sealed', async () => {
+    const wake = await wakeDependenciesWith({ env: { WAKE_SECRET_KEY: undefined } as never });
+    await expect(wake.secretBox.seal({ plain: 'x', associatedData: 'y' })).rejects.toThrow(KEY_NAME);
   });
 
-  it('throws naming the key when it has 31 bytes', async () => {
-    await expect(wakeDependenciesWith({ env: { WAKE_SECRET_KEY: Buffer.alloc(SHORT_KEY_BYTES).toString(BASE64) } })).rejects.toThrow(
-      KEY_NAME,
-    );
+  it('builds with a 31 byte key and fails naming it only when a target is opened', async () => {
+    const wake = await wakeDependenciesWith({ env: { WAKE_SECRET_KEY: Buffer.alloc(SHORT_KEY_BYTES).toString(BASE64) } });
+    await expect(wake.secretBox.open({ sealed: 'x', associatedData: 'y' })).rejects.toThrow(KEY_NAME);
+  });
+
+  it('serves send_message from an object that has no key', async () => {
+    const outcome = await runInDurableObject(stub, async (instance, state) => {
+      const AccountInboxClass = instance.constructor as new (ctx: DurableObjectState, env: typeof testEnv) => typeof instance;
+      const keyless = new AccountInboxClass(state, { ...testEnv, WAKE_SECRET_KEY: undefined } as never);
+      await state.blockConcurrencyWhile(async () => undefined);
+      return keyless.sendText({
+        connection: connectionOf({ accountId: WAKE_ACCOUNT, agent: WAKE_AGENT }),
+        text: 'oi',
+        replyToMessageId: null,
+      });
+    });
+    expect(outcome.ok).toBe(true);
+  });
+
+  it('rejects set_wake with a webhook naming the key when the object has no key', async () => {
+    const outcome = await runInDurableObject(stub, async (instance, state) => {
+      const AccountInboxClass = instance.constructor as new (ctx: DurableObjectState, env: typeof testEnv) => typeof instance;
+      const keyless = new AccountInboxClass(state, { ...testEnv, WAKE_SECRET_KEY: undefined } as never);
+      await state.blockConcurrencyWhile(async () => undefined);
+      return keyless
+        .setWake({
+          connection: connectionOf({ accountId: WAKE_ACCOUNT, agent: WAKE_AGENT }),
+          setting: { mode: WakeMode.Webhook, url: GROK_URL, token: GROK_TOKEN },
+        })
+        .catch((error: Error) => error.message);
+    });
+    expect(outcome).toContain(KEY_NAME);
   });
 
   it('throws naming the dataset when it is absent', async () => {
@@ -147,8 +190,8 @@ describe('migration v2', () => {
         sql.exec(`ALTER TABLE agent_wake DROP COLUMN ${column}`),
       );
       sql.exec('DELETE FROM schema_versions WHERE version = 2');
-      sql.exec('INSERT INTO schema_versions (version, applied_at) VALUES (?, 0)', THIRD_MIGRATION_VERSION);
-      const migrations = [{ version: THIRD_MIGRATION_VERSION, sql: 'SELECT 1' }, ...ACCOUNT_INBOX_MIGRATIONS];
+      sql.exec('INSERT INTO schema_versions (version, applied_at) VALUES (?, 0)', LATER_MIGRATION_VERSION);
+      const migrations = [{ version: LATER_MIGRATION_VERSION, sql: 'SELECT 1' }, ...ACCOUNT_INBOX_MIGRATIONS];
       return {
         first: runMigrations({ storage: state.storage, migrations }),
         second: runMigrations({ storage: state.storage, migrations }),
@@ -158,6 +201,10 @@ describe('migration v2', () => {
           .map((row) => row.version),
       };
     });
-    expect(applied).toEqual({ first: [2], second: [], versions: [1, 2, THIRD_MIGRATION_VERSION, LOCAL_RESTORE_MIGRATION_VERSION] });
+    expect(applied).toEqual({
+      first: [2],
+      second: [],
+      versions: [...ACCOUNT_INBOX_MIGRATIONS.map((migration) => migration.version), LATER_MIGRATION_VERSION],
+    });
   });
 });

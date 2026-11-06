@@ -93,7 +93,9 @@ The receiver rejects a timestamp more than `WAKE_SIGNATURE_TOLERANCE_S` (300) se
 ### Coalescing
 
 - One `wake_jobs` row per agent (primary key `agent`). A message that lands while a row is pending keeps its `due_at`. The window is fixed from the first message, so a steady stream cannot postpone the wake forever.
-- A message that lands while the row is in flight sets `rewake = true`. When the attempt settles, the scheduler schedules one follow-up wake after `WAKE_DEBOUNCE_MS`. No message is left without a wake.
+- A message that lands while the row is in flight sets `rewake = true`. When the attempt settles, the scheduler schedules one follow-up wake. A retry clears `rewake`, because the retry already covers the new message. No message is left without a wake.
+- Per-agent cap: at most one wake request per agent per `WAKE_MIN_INTERVAL_MS` (60 s). A new job is due at the later of `now + WAKE_DEBOUNCE_MS` and the last request time plus the cap, so messages inside the cap coalesce into the next allowed request and an agent that never reads gets about one request a minute. The follow-up wake obeys the same cap, which also keeps it longer than a provider's start time (about 16 s for claude.ai). The last request time lives in the object's key-value storage, not in a table.
+- After a wake gives up (`failing`), the next owner message schedules a new wake even when earlier messages are still unread; in the `active` state a message that lands on unread messages schedules none.
 - At fire time the job is dropped without a request when the agent has no unread owner messages or a live waiter. The agent already read them or is answering.
 
 ### Retries and the alarm
@@ -110,12 +112,12 @@ The receiver rejects a timestamp more than `WAKE_SIGNATURE_TOLERANCE_S` (300) se
 |---|---|---|
 | `2xx` | `delivered` | job done; status `active`; `last_delivered_at` set |
 | `408`, `425`, `429`, `500`–`599` except `501` | `retry` | backoff above; `429` and `503` honour `Retry-After` |
-| network error or timeout after `WAKE_REQUEST_TIMEOUT_MS` (10 s) | `retry` | backoff |
+| network error, or timeout after `WAKE_REQUEST_TIMEOUT_MS` (10 s) | `retry` | backoff; the metrics status class is `timeout` when the attempt lasted at least the timeout, `network` otherwise |
 | `3xx` (redirects are not followed), `400`–`499` except `408`, `425`, `429` | `refused` | fallback now; no retry |
 | `501`, or a sealed target that cannot be opened | `refused` | fallback now |
 | attempt `WAKE_MAX_ATTEMPTS` (5) fails | `gave_up` | fallback |
 
-Fallback: `deliverToOwner` with the `wakeFailed` text, which sends the owner the `wakeFailed` notice (`libs/core/src/wake/wake-copy.ts`, `pt_BR` and `en_US`: the message waits in the inbox and the wake must be set again) through the normal outbound path, so the 24-hour window and "one notice per closed window" still hold. Status becomes `failing`. The next `delivered` returns it to `active`. Status is stored on the connection and never repeated as more notices.
+Fallback: `deliverToOwner` with the `wakeFailed` text, which sends the owner the `wakeFailed` notice (`libs/core/src/wake/wake-copy.ts`, `pt_BR` and `en_US`: the message waits in the inbox and the wake must be set again) through the normal outbound path, so the 24-hour window and "one notice per closed window" still hold. The wake is settled first (status `failing`, job finished) and the notice is sent afterwards; a notice that fails is logged as `wake.notice_failed` and never re-sends the wake. A wake cleared or replaced while its request is in flight is not settled and gets no notice. Status becomes `failing`. The next `delivered` returns it to `active`. Status is stored on the connection and never repeated as more notices.
 
 ### Request shape
 
@@ -255,5 +257,11 @@ Provider constants (host, path pattern, headers) sit beside the `WakeProvider` r
 - **Token in chat history.** The owner pastes the provider token into the agent chat so `set_wake` can store it. Mitigation: the owner can rotate it at the provider; the token is never echoed back.
 - **Routine quota.** Each wake starts a provider run that may count against the owner's plan. Coalescing and the drop rule limit the count, not the cost per run.
 - **Provider contracts.** The `/fire` endpoint is in beta and the Grok path is observed, not documented. A change breaks the wake and shows up as a refusal.
-- **Generic targets.** A generic host can still be any public machine the owner names. ADR 0019 accepts this; no secret is sent to it.
+- **Generic targets.** A generic host can still be any public machine the owner names. ADR 0019 accepts this; no secret is sent to it. The guard runs at `set_wake` and again at delivery, and blocks `zapbip.com`, `*.workers.dev`, the own host and its subdomains.
+- **Name-based guard.** The guard judges the host name, not the address it resolves to. A name such as `127.0.0.1.nip.io` or `localtest.me` that resolves to loopback is accepted (DNS-rebinding residual risk); Workers egress does not reach the account's private network, and ADR 0019 records it.
+- **Alarm floor.** `ALARM_MIN_DELAY_MS` is 5 s in production, so a wake is sent 5 s after the owner message at the earliest, not 3 s.
 - **Install-skills expectation.** `install-skills` expects `set_wake` to reject a bad token before the self-test. Only the format is checked here. Decision recorded above; the self-test still proves the outbound path.
+
+## Later
+
+- A wake is dropped when the agent has a live waiter. The check looks at any waiter of the agent, including one waiting for a different question; a waiter query scoped to messages from the owner would drop fewer wakes.

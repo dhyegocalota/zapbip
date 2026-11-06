@@ -39,6 +39,7 @@ export type RecordingSender = MessageSender & {
 export type RecordingWaker = AgentWaker & {
   notifications: WakeNotification[];
   replyWith(input: { outcome: WakeOutcome }): void;
+  failWakesOf(input: { agent: AgentName }): void;
 };
 
 export type InMemoryMediaStore = MediaStore & {
@@ -230,9 +231,14 @@ function createRecordingSender(): RecordingSender {
 
 function createRecordingWaker(): RecordingWaker {
   const notifications: WakeNotification[] = [];
+  const failedAgents = new Set<AgentName>();
   let outcome = WakeOutcome.Unreached;
   return {
     notifications,
+    failWakesOf: ({ agent }) => {
+      failedAgents.add(agent);
+    },
+    hasFailedWake: async ({ agent }) => failedAgents.has(agent),
     replyWith: (input) => {
       outcome = input.outcome;
     },

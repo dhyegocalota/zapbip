@@ -32,6 +32,7 @@ const SAVE_LOCAL_RESTORE_STATEMENT = 'UPDATE agent_wake SET local_restore = ? WH
 const SELECT_JOB = 'SELECT agent, due_at, attempt, lease_until, rewake, last_outcome FROM wake_jobs ';
 const SAVE_JOB_STATEMENT =
   'INSERT INTO wake_jobs (agent, due_at, attempt, lease_until, rewake, last_outcome) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT (agent) DO UPDATE SET due_at = excluded.due_at, attempt = excluded.attempt, lease_until = excluded.lease_until, rewake = excluded.rewake, last_outcome = excluded.last_outcome';
+const LAST_REQUESTED_AT_KEY_PREFIX = 'wake_last_requested_at:';
 const SELECT_NEXT_DUE_AT =
   'SELECT MIN(CASE WHEN lease_until IS NULL THEN due_at ELSE MAX(due_at, lease_until) END) AS next_due_at FROM wake_jobs';
 
@@ -130,6 +131,15 @@ export function createSqliteWakeRepository(input: { storage: DurableObjectStorag
 
     async deleteLocalRestore({ agent }) {
       sql.exec(SAVE_LOCAL_RESTORE_STATEMENT, null, agent);
+    },
+
+    async findLastRequestedAt({ agent }) {
+      const at = input.storage.kv.get<number>(`${LAST_REQUESTED_AT_KEY_PREFIX}${agent}`);
+      return at === undefined ? null : at;
+    },
+
+    async saveLastRequestedAt({ agent, at }) {
+      input.storage.kv.put(`${LAST_REQUESTED_AT_KEY_PREFIX}${agent}`, at);
     },
   };
 }

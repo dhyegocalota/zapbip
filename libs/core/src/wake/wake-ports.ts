@@ -32,6 +32,8 @@ export interface WakeRepository {
   findLocalRestore(input: { agent: AgentName }): Promise<StoredWake | null>;
   saveLocalRestore(input: { agent: AgentName; previous: StoredWake }): Promise<void>;
   deleteLocalRestore(input: { agent: AgentName }): Promise<void>;
+  findLastRequestedAt(input: { agent: AgentName }): Promise<number | null>;
+  saveLastRequestedAt(input: { agent: AgentName; at: number }): Promise<void>;
 }
 
 export type WakeLogEvent = {
@@ -75,7 +77,7 @@ export type SetWakeResult = {
 
 export type ScheduleWakeInput = WakeContext & { agent: AgentName };
 
-export type RunDueWakesInput = WakeContext & { ownerLocale: OwnerLocale };
+export type RunDueWakesInput = WakeContext & { ownerLocale: OwnerLocale | null; publicHost: string };
 export type RunDueWakesResult = { nextDueAt: number | null };
 
 export type ScriptedWakeResponse = {

@@ -8,4 +8,5 @@ export const OWNER_LOCALE_STORAGE_KEY = 'owner_locale';
 
 export enum AlarmErrorCode {
   ProviderFailed = 'alarm_provider_failed',
+  OwnerLocaleMissing = 'owner_locale_missing',
 }

@@ -97,8 +97,10 @@ async function wakeAgent(
   const hasLiveWaiter = waiters.hasLiveWaiter({ agent, questionId: answeredQuestionId });
   if (answeredQuestionId === null) waiters.resolveAgentMessage({ agent });
   if (answeredQuestionId !== null) waiters.resolveQuestionAnswer({ questionId: answeredQuestionId });
+  if (hasLiveWaiter) return;
   const isNewBatch = unreadBefore === 0;
-  if (hasLiveWaiter || !isNewBatch) return;
+  const needsWake = isNewBatch || (await waker.hasFailedWake({ agent }));
+  if (!needsWake) return;
   const outcome = await waker.notify({ agent, reason: AgentWakeReason.MessageWaiting });
   if (outcome === WakeOutcome.Woken || !shouldTellOwner) return;
   const text = renderCopy({ key: InboxCopyKey.AgentNotListening, locale: ownerLocale, values: { agent } });

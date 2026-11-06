@@ -111,6 +111,7 @@ export function createInMemoryWakeRepository(): WakeRepository {
   const wakes = new Map<AgentName, StoredWake>();
   const jobs = new Map<AgentName, WakeJob>();
   const restores = new Map<AgentName, StoredWake>();
+  const lastRequests = new Map<AgentName, number>();
   const effectiveDueAt = (job: WakeJob): number => (job.leaseUntil === null ? job.dueAt : Math.max(job.dueAt, job.leaseUntil));
 
   return {
@@ -155,6 +156,13 @@ export function createInMemoryWakeRepository(): WakeRepository {
     },
     deleteLocalRestore: async ({ agent }) => {
       restores.delete(agent);
+    },
+    findLastRequestedAt: async ({ agent }) => {
+      const at = lastRequests.get(agent);
+      return at === undefined ? null : at;
+    },
+    saveLastRequestedAt: async ({ agent, at }) => {
+      lastRequests.set(agent, at);
     },
   };
 }

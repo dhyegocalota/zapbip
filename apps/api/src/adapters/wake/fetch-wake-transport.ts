@@ -48,7 +48,8 @@ function retryAfterMsOf(input: { response: Response }): number | null {
   const { response } = input;
   const header = response.headers.get(RETRY_AFTER_HEADER);
   const isHonoured = header !== null && WAKE_RETRY_AFTER_STATUSES.includes(response.status) && RETRY_AFTER_PATTERN.test(header);
-  return isHonoured ? Number(header) * SECOND_MS : null;
+  const seconds = isHonoured ? Number(header) : 0;
+  return seconds > 0 ? seconds * SECOND_MS : null;
 }
 
 async function hmacHex(input: { key: string; text: string }): Promise<string> {

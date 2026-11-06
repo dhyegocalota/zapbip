@@ -9,10 +9,19 @@ import {
   WakeCopyKey,
 } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
-import { WAKE_BACKOFF_BASE_MS, WAKE_BACKOFF_CAP_MS, WAKE_DEBOUNCE_MS, WAKE_LEASE_MS, WAKE_SIGNAL_BODY } from './constants';
+import {
+  WAKE_BACKOFF_BASE_MS,
+  WAKE_BACKOFF_CAP_MS,
+  WAKE_DEBOUNCE_MS,
+  WAKE_LEASE_MS,
+  WAKE_MAX_ATTEMPTS,
+  WAKE_MIN_INTERVAL_MS,
+  WAKE_SIGNAL_BODY,
+} from './constants';
 import { runDueWakes } from './run-due-wakes';
 import { scheduleWake } from './schedule-wake';
-import { addUnreadOwnerMessage, createWakeEnvironment, setWebhook, type WakeEnvironment } from './testing/wake-fixtures';
+import { addUnreadOwnerMessage, createWakeEnvironment, PUBLIC_HOST, setWebhook, type WakeEnvironment } from './testing/wake-fixtures';
+import { wakeAssociatedData } from './wake-associated-data';
 import { WAKE_COPY } from './wake-copy';
 import type { ScriptedWakeResponse } from './wake-ports';
 import type { WakeJob } from './wake-setting';
@@ -45,7 +54,7 @@ async function armed(input: { agents?: string[] } = {}): Promise<WakeEnvironment
 
 function run(input: { wakeEnvironment: WakeEnvironment; ownerLocale?: OwnerLocale }) {
   const { wakeEnvironment, ownerLocale = OWNER_LOCALE } = input;
-  return runDueWakes({ ...wakeEnvironment.context, ownerLocale });
+  return runDueWakes({ ...wakeEnvironment.context, ownerLocale, publicHost: PUBLIC_HOST });
 }
 
 async function fireAfter(input: { wakeEnvironment: WakeEnvironment; delayMs: number }) {
@@ -66,7 +75,7 @@ function sentTexts(input: { wakeEnvironment: WakeEnvironment }): string[] {
 }
 
 function failedCopy(input: { locale: OwnerLocale }): string {
-  return WAKE_COPY[WakeCopyKey.WakeFailed][input.locale];
+  return WAKE_COPY[WakeCopyKey.WakeFailed][input.locale].replace('{agent}', AGENT);
 }
 
 async function fireAtDelays(input: { wakeEnvironment: WakeEnvironment; delaysMs: number[] }): Promise<void> {
@@ -203,6 +212,17 @@ describe('runDueWakes retries', () => {
     });
   });
 
+  test.each([
+    ['without Retry-After on 429', 429, null],
+    ['without Retry-After on 503', 503, null],
+    ['with a Retry-After shorter than the base backoff', 429, SECOND_MS],
+  ])('%s waits the base backoff', async (_name, statusCode, retryAfterMs) => {
+    const wakeEnvironment = await armed();
+    enqueue({ wakeEnvironment, responses: [respond({ statusCode, retryAfterMs: retryAfterMs === null ? undefined : retryAfterMs })] });
+    await fireAfter({ wakeEnvironment, delayMs: WAKE_DEBOUNCE_MS });
+    expect(await findJob({ wakeEnvironment })).toMatchObject({ dueAt: wakeEnvironment.environment.clock.now() + WAKE_BACKOFF_BASE_MS });
+  });
+
   test.each([408, 425, 429, 500, 502, 503, 599])('status %i keeps the job for another attempt', async (statusCode) => {
     const wakeEnvironment = await armed();
     enqueue({ wakeEnvironment, responses: [respond({ statusCode })] });
@@ -279,7 +299,7 @@ describe('runDueWakes refusals and the owner notice', () => {
     enqueue({ wakeEnvironment, responses: [respond({ statusCode: UNAUTHORIZED }), respond({ statusCode: UNAUTHORIZED })] });
     await fireAfter({ wakeEnvironment, delayMs: WAKE_DEBOUNCE_MS });
     await scheduleWake({ ...wakeEnvironment.context, agent: AGENT });
-    await fireAfter({ wakeEnvironment, delayMs: WAKE_DEBOUNCE_MS });
+    await fireAfter({ wakeEnvironment, delayMs: WAKE_MIN_INTERVAL_MS });
     expect(wakeEnvironment.transport.requests).toHaveLength(2);
     expect(sentTexts({ wakeEnvironment })).toHaveLength(1);
   });
@@ -289,19 +309,128 @@ describe('runDueWakes refusals and the owner notice', () => {
     enqueue({ wakeEnvironment, responses: [respond({ statusCode: UNAUTHORIZED }), respond({ statusCode: OK })] });
     await fireAfter({ wakeEnvironment, delayMs: WAKE_DEBOUNCE_MS });
     await scheduleWake({ ...wakeEnvironment.context, agent: AGENT });
-    await fireAfter({ wakeEnvironment, delayMs: WAKE_DEBOUNCE_MS });
+    await fireAfter({ wakeEnvironment, delayMs: WAKE_MIN_INTERVAL_MS });
     expect(await findWake({ wakeEnvironment })).toMatchObject({ status: WakeStatus.Active });
     expect(sentTexts({ wakeEnvironment })).toHaveLength(1);
   });
 
-  test('without an owner locale the job stays retrying and no copy is written', async () => {
+  test('without an owner locale the wake is still settled once and no copy is written', async () => {
     const wakeEnvironment = await armed();
     enqueue({ wakeEnvironment, responses: [respond({ statusCode: UNAUTHORIZED })] });
     await wakeEnvironment.environment.clock.advance({ ms: WAKE_DEBOUNCE_MS });
-    await runDueWakes({ ...wakeEnvironment.context, ownerLocale: undefined as unknown as OwnerLocale });
-    expect(await findJob({ wakeEnvironment })).toMatchObject({ lastOutcome: WakeAttemptOutcome.Retry });
+    await runDueWakes({ ...wakeEnvironment.context, ownerLocale: null, publicHost: PUBLIC_HOST });
+    expect(wakeEnvironment.transport.requests).toHaveLength(1);
+    expect(await findJob({ wakeEnvironment })).toBeNull();
     expect(sentTexts({ wakeEnvironment })).toEqual([]);
-    expect(await findWake({ wakeEnvironment })).toMatchObject({ status: WakeStatus.Active });
+    expect(wakeEnvironment.observer.events.map((event) => event.name)).not.toContain(WakeLogEventName.NoticeFailed);
+    expect(await findWake({ wakeEnvironment })).toMatchObject({ status: WakeStatus.Failing });
+  });
+
+  test('a refused wake is sent exactly once when the notice cannot be delivered', async () => {
+    const wakeEnvironment = await armed();
+    wakeEnvironment.environment.sender.failSessionCalls({ callNumbers: [1] });
+    enqueue({ wakeEnvironment, responses: [respond({ statusCode: UNAUTHORIZED }), respond({ statusCode: OK })] });
+    await fireAfter({ wakeEnvironment, delayMs: WAKE_DEBOUNCE_MS });
+    await fireAfter({ wakeEnvironment, delayMs: WAKE_BACKOFF_CAP_MS });
+    expect(wakeEnvironment.transport.requests).toHaveLength(1);
+    expect(await findJob({ wakeEnvironment })).toBeNull();
+    expect(await findWake({ wakeEnvironment })).toMatchObject({ status: WakeStatus.Failing });
+    expect(sentTexts({ wakeEnvironment })).toEqual([]);
+  });
+
+  test('a failed notice is logged', async () => {
+    const wakeEnvironment = await armed();
+    wakeEnvironment.environment.sender.failSessionCalls({ callNumbers: [1] });
+    enqueue({ wakeEnvironment, responses: [respond({ statusCode: UNAUTHORIZED })] });
+    await fireAfter({ wakeEnvironment, delayMs: WAKE_DEBOUNCE_MS });
+    expect(wakeEnvironment.observer.events.map((event) => event.name)).toContain(WakeLogEventName.NoticeFailed);
+  });
+
+  test('a storage failure on the last attempt gives up, marks the wake failing and tells the owner once', async () => {
+    const wakeEnvironment = await armed();
+    const job = await findJob({ wakeEnvironment });
+    if (job === null) throw new Error('expected a job');
+    await wakeEnvironment.wake.repository.saveJob({ job: { ...job, attempt: WAKE_MAX_ATTEMPTS - 1 } });
+    wakeEnvironment.wake.repository.saveJob = async () => {
+      throw new Error('storage unavailable');
+    };
+    await fireAfter({ wakeEnvironment, delayMs: WAKE_DEBOUNCE_MS });
+    expect(await findJob({ wakeEnvironment })).toBeNull();
+    expect(await findWake({ wakeEnvironment })).toMatchObject({ status: WakeStatus.Failing });
+    expect(sentTexts({ wakeEnvironment })).toEqual([failedCopy({ locale: OWNER_LOCALE })]);
+  });
+});
+
+describe('runDueWakes when the job itself keeps throwing', () => {
+  async function throwFiveTimes(input: { ownerLocale: OwnerLocale | null }) {
+    const wakeEnvironment = await armed();
+    wakeEnvironment.environment.dependencies.repository.countUnread = async () => {
+      throw new Error('storage unavailable');
+    };
+    await [3, 5, 10, 20, 40].reduce<Promise<void>>(async (previous, seconds) => {
+      await previous;
+      await wakeEnvironment.environment.clock.advance({ ms: seconds * SECOND_MS });
+      await runDueWakes({ ...wakeEnvironment.context, ownerLocale: input.ownerLocale, publicHost: PUBLIC_HOST });
+    }, Promise.resolve());
+    return wakeEnvironment;
+  }
+
+  test('five throws give up with status failing and one notice', async () => {
+    const wakeEnvironment = await throwFiveTimes({ ownerLocale: OWNER_LOCALE });
+    expect(await findJob({ wakeEnvironment })).toBeNull();
+    expect(await findWake({ wakeEnvironment })).toMatchObject({ status: WakeStatus.Failing });
+    expect(sentTexts({ wakeEnvironment })).toEqual([failedCopy({ locale: OWNER_LOCALE })]);
+  });
+
+  test('five throws without an owner locale still give up with status failing', async () => {
+    const wakeEnvironment = await throwFiveTimes({ ownerLocale: null });
+    expect(await findJob({ wakeEnvironment })).toBeNull();
+    expect(await findWake({ wakeEnvironment })).toMatchObject({ status: WakeStatus.Failing });
+    expect(sentTexts({ wakeEnvironment })).toEqual([]);
+  });
+});
+
+describe('runDueWakes target guard and settling', () => {
+  async function sealTarget(input: { wakeEnvironment: WakeEnvironment; url: string }): Promise<void> {
+    const { wakeEnvironment, url } = input;
+    const stored = await findWake({ wakeEnvironment });
+    if (stored === null || stored.target === null) throw new Error('expected a stored target');
+    const sealedTarget = await wakeEnvironment.wake.secretBox.seal({
+      plain: JSON.stringify({ url, token: 'p'.repeat(32) }),
+      associatedData: wakeAssociatedData({
+        accountId: wakeEnvironment.environment.dependencies.accountId,
+        agent: AGENT,
+      }),
+    });
+    await wakeEnvironment.wake.repository.saveWake({ wake: { ...stored, target: { ...stored.target, sealedTarget } } });
+  }
+
+  test.each(['https://localhost/x', 'https://hooks.zapbip.com/x', 'https://wake.account.workers.dev/x', `https://${PUBLIC_HOST}/x`])(
+    'a stored target %s is refused at delivery before any request',
+    async (url) => {
+      const wakeEnvironment = await armed();
+      await sealTarget({ wakeEnvironment, url });
+      await fireAfter({ wakeEnvironment, delayMs: WAKE_DEBOUNCE_MS });
+      expect(wakeEnvironment.transport.requests).toEqual([]);
+      expect(await findJob({ wakeEnvironment })).toBeNull();
+      expect(await findWake({ wakeEnvironment })).toMatchObject({ status: WakeStatus.Failing });
+      expect(sentTexts({ wakeEnvironment })).toEqual([failedCopy({ locale: OWNER_LOCALE })]);
+    },
+  );
+
+  test('a wake cleared while the request is in flight is neither rewritten nor announced', async () => {
+    const wakeEnvironment = await armed();
+    enqueue({ wakeEnvironment, responses: [respond({ statusCode: UNAUTHORIZED })] });
+    const { transport, wake } = wakeEnvironment;
+    const send = transport.send.bind(transport);
+    transport.send = async (request) => {
+      await wake.repository.clearWake({ agent: AGENT });
+      return send(request);
+    };
+    await fireAfter({ wakeEnvironment, delayMs: WAKE_DEBOUNCE_MS });
+    expect(await findWake({ wakeEnvironment })).toMatchObject({ mode: WakeMode.None, target: null, status: WakeStatus.Active });
+    expect(await findJob({ wakeEnvironment })).toBeNull();
+    expect(sentTexts({ wakeEnvironment })).toEqual([]);
   });
 });
 
@@ -333,7 +462,7 @@ describe('runDueWakes while a request is in flight', () => {
     const wakeEnvironment = await runWithMessageInFlight({ statusCode: OK });
     expect(await findJob({ wakeEnvironment })).toEqual({
       agent: AGENT,
-      dueAt: wakeEnvironment.environment.clock.now() + WAKE_DEBOUNCE_MS,
+      dueAt: wakeEnvironment.environment.clock.now() - IN_FLIGHT_HOLD_MS - 1 + WAKE_MIN_INTERVAL_MS,
       attempt: 0,
       leaseUntil: null,
       rewake: false,
@@ -344,10 +473,15 @@ describe('runDueWakes while a request is in flight', () => {
   test('a refused attempt leaves the follow-up job and one notice', async () => {
     const wakeEnvironment = await runWithMessageInFlight({ statusCode: UNAUTHORIZED });
     expect(await findJob({ wakeEnvironment })).toMatchObject({
-      dueAt: wakeEnvironment.environment.clock.now() + WAKE_DEBOUNCE_MS,
+      dueAt: wakeEnvironment.environment.clock.now() - IN_FLIGHT_HOLD_MS - 1 + WAKE_MIN_INTERVAL_MS,
       rewake: false,
     });
     expect(sentTexts({ wakeEnvironment })).toHaveLength(1);
+  });
+
+  test('a retry clears the rewake mark because the retry covers the new message', async () => {
+    const wakeEnvironment = await runWithMessageInFlight({ statusCode: SERVER_ERROR });
+    expect(await findJob({ wakeEnvironment })).toMatchObject({ attempt: 1, rewake: false });
   });
 
   test('the lease lasts as long as the constant says', async () => {

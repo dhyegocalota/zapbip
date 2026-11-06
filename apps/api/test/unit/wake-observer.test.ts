@@ -1,4 +1,4 @@
-import type { WakeLogEvent } from '@zapbip/core';
+import { WAKE_REQUEST_TIMEOUT_MS, type WakeLogEvent } from '@zapbip/core';
 import { WakeAttemptOutcome, WakeLogEventName, WakeProvider } from '@zapbip/types';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createCloudflareWakeObserver } from '../../src/adapters/wake/wake-observer';
@@ -6,7 +6,8 @@ import { createCloudflareWakeObserver } from '../../src/adapters/wake/wake-obser
 const TOKEN = 'token-with-sixteen-chars';
 const URL_PATH = '/automations/webhook/abc12345';
 const LATENCY_MS = 42;
-const LOG_KEYS = ['agent', 'attempt', 'latencyMs', 'name', 'outcome', 'provider', 'statusCode'];
+const LOG_KEYS = ['accountId', 'agent', 'attempt', 'event', 'latencyMs', 'outcome', 'provider', 'statusCode'];
+const ACCOUNT_ID = 'acc_1';
 
 function eventOf(input: Partial<WakeLogEvent>): WakeLogEvent {
   return {
@@ -24,7 +25,7 @@ function eventOf(input: Partial<WakeLogEvent>): WakeLogEvent {
 function observe(input: { event: WakeLogEvent }) {
   const writeDataPoint = vi.fn();
   const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
-  createCloudflareWakeObserver({ dataset: { writeDataPoint } }).observe({ event: input.event });
+  createCloudflareWakeObserver({ dataset: { writeDataPoint }, accountId: ACCOUNT_ID }).observe({ event: input.event });
   return { writeDataPoint, logSpy };
 }
 
@@ -38,6 +39,12 @@ describe('createCloudflareWakeObserver', () => {
     expect(logSpy).toHaveBeenCalledTimes(1);
     const line = JSON.parse(logSpy.mock.calls[0]![0] as string) as Record<string, unknown>;
     expect(Object.keys(line).sort()).toEqual(LOG_KEYS);
+  });
+
+  it('names the account and the event in the line', () => {
+    const { logSpy } = observe({ event: eventOf({}) });
+    const line = JSON.parse(logSpy.mock.calls[0]![0] as string) as Record<string, unknown>;
+    expect(line).toMatchObject({ accountId: ACCOUNT_ID, event: WakeLogEventName.Delivered });
   });
 
   it('writes neither the token nor the url path', () => {
@@ -65,7 +72,9 @@ describe('createCloudflareWakeObserver', () => {
   });
 
   it('throws naming the dataset when it is absent', () => {
-    expect(() => createCloudflareWakeObserver({ dataset: undefined as unknown as AnalyticsEngineDataset })).toThrow('WAKE_METRICS');
+    expect(() => createCloudflareWakeObserver({ dataset: undefined as unknown as AnalyticsEngineDataset, accountId: ACCOUNT_ID })).toThrow(
+      'WAKE_METRICS',
+    );
   });
 
   it.each([
@@ -73,8 +82,11 @@ describe('createCloudflareWakeObserver', () => {
     { statusCode: 404, outcome: WakeAttemptOutcome.Refused, statusClass: '4xx' },
     { statusCode: 503, outcome: WakeAttemptOutcome.Retry, statusClass: '5xx' },
     { statusCode: null, outcome: WakeAttemptOutcome.Retry, statusClass: 'network' },
-  ])('classifies status $statusCode as $statusClass', ({ statusCode, outcome, statusClass }) => {
-    const { writeDataPoint } = observe({ event: eventOf({ statusCode, outcome }) });
+    { statusCode: null, outcome: WakeAttemptOutcome.Retry, statusClass: 'timeout', latencyMs: WAKE_REQUEST_TIMEOUT_MS },
+  ])('classifies status $statusCode as $statusClass', ({ statusCode, outcome, statusClass, latencyMs }) => {
+    const { writeDataPoint } = observe({
+      event: eventOf({ statusCode, outcome, latencyMs: latencyMs === undefined ? LATENCY_MS : latencyMs }),
+    });
     expect(writeDataPoint.mock.calls[0]![0].blobs[2]).toBe(statusClass);
   });
 });

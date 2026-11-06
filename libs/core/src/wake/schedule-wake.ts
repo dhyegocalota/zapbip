@@ -1,5 +1,5 @@
 import { WakeLogEventName, WakeMode, WakeOutcome } from '@zapbip/types';
-import { WAKE_DEBOUNCE_MS } from './constants';
+import { nextWakeDueAt } from './wake-due-at';
 import type { ScheduleWakeInput } from './wake-ports';
 import type { WakeJob } from './wake-setting';
 
@@ -11,7 +11,7 @@ export async function scheduleWake(input: ScheduleWakeInput): Promise<WakeOutcom
   const now = dependencies.clock.now();
   const job = await repository.findJob({ agent });
   if (job === null) {
-    const scheduled: WakeJob = { agent, dueAt: now + WAKE_DEBOUNCE_MS, attempt: 0, leaseUntil: null, rewake: false, lastOutcome: null };
+    const scheduled: WakeJob = { agent, dueAt: await nextWakeDueAt(input), attempt: 0, leaseUntil: null, rewake: false, lastOutcome: null };
     await repository.saveJob({ job: scheduled });
     observer.observe({
       event: {

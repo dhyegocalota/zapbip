@@ -94,7 +94,7 @@ export function readWakeJobs(input: { stub: DurableObjectStub<AccountInbox> }): 
 export async function readWakeNotices(input: { stub: DurableObjectStub<AccountInbox>; locale?: OwnerLocale }): Promise<number> {
   const locale = input.locale === undefined ? OwnerLocale.PortugueseBrazil : input.locale;
   const entries = await readScreen({ stub: input.stub });
-  return entries.filter((entry) => entry.text === WAKE_COPY[WakeCopyKey.WakeFailed][locale]).length;
+  return entries.filter((entry) => entry.text === WAKE_COPY[WakeCopyKey.WakeFailed][locale].replace('{agent}', WAKE_AGENT)).length;
 }
 
 export function replaceWakeDependencies(input: { stub: DurableObjectStub<AccountInbox>; patch: Partial<WakeDependencies> }): Promise<void> {

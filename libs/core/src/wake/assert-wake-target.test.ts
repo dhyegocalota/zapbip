@@ -73,12 +73,15 @@ describe('assertWakeTarget providers', () => {
     expect(guard({ url: 'https://HOOKS.Example.com/x', token: LONG_TOKEN }).provider).toBe(WakeProvider.GenericWebhook);
   });
 
-  test('only the exact own host is blocked, not its subdomains', async () => {
+  test('the own host and its subdomains are blocked', async () => {
     expect(await rejection({ url: 'https://zapbip.example/hook', token: LONG_TOKEN })).toEqual({
       code: InboxErrorCode.InvalidInput,
       message: 'invalid url',
     });
-    expect(guard({ url: 'https://sub.zapbip.example/hook', token: LONG_TOKEN }).provider).toBe(WakeProvider.GenericWebhook);
+    expect(await rejection({ url: 'https://sub.zapbip.example/hook', token: LONG_TOKEN })).toEqual({
+      code: InboxErrorCode.InvalidInput,
+      message: 'invalid url',
+    });
   });
 });
 
@@ -99,6 +102,32 @@ describe('assertWakeTarget tokens', () => {
   test('pinned tokens of 16 and of 512 characters are accepted', () => {
     expect(guard({ url: GROK_URL, token: 'f'.repeat(16) }).provider).toBe(WakeProvider.GrokRoutine);
     expect(guard({ url: GROK_URL, token: 'f'.repeat(WAKE_TOKEN_MAX_CHARS) }).provider).toBe(WakeProvider.GrokRoutine);
+  });
+});
+
+describe('assertWakeTarget host forms', () => {
+  test.each(['zapbip.example', 'https://zapbip.example', 'https://zapbip.example/'])(
+    'the own host given as %s is refused',
+    async (publicHost) => {
+      expect(await rejection({ url: 'https://zapbip.example/hook', token: LONG_TOKEN, publicHost })).toEqual({
+        code: InboxErrorCode.InvalidInput,
+        message: 'invalid url',
+      });
+    },
+  );
+
+  test.each(['https://evil-api2.cursor.sh/x', 'https://x.api2.cursor.sh/x', 'https://x.api.anthropic.com/x'])(
+    '%s is a generic target and never a pinned provider',
+    (url) => {
+      expect(guard({ url, token: LONG_TOKEN }).provider).toBe(WakeProvider.GenericWebhook);
+    },
+  );
+
+  test('app.localhost is refused', async () => {
+    expect(await rejection({ url: 'https://app.localhost/x', token: LONG_TOKEN })).toEqual({
+      code: InboxErrorCode.InvalidInput,
+      message: 'invalid url',
+    });
   });
 });
 
@@ -130,6 +159,12 @@ describe('assertWakeTarget urls', () => {
     'an arpa name': 'https://1.in-addr.arpa/x',
     'a wildcard localhost': 'https://*.localhost/x',
     'a single-label host': 'https://metadata/',
+    'localhost.localdomain': 'https://localhost.localdomain/x',
+    'the product apex': 'https://zapbip.com/x',
+    'a product subdomain': 'https://hooks.zapbip.com/x',
+    'a workers.dev host': 'https://wake.account.workers.dev/x',
+    'the own host': `https://${PUBLIC_HOST}/x`,
+    'an own host subdomain': `https://hooks.${PUBLIC_HOST}/x`,
   };
 
   test.each(Object.entries(invalidUrls))('%s is refused naming url', async (_name, url) => {

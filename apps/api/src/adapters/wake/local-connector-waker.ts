@@ -12,5 +12,6 @@ export function createLocalConnectorWaker(input: { context: DurableObjectState; 
       const isFullyDelivered = socketCount > 0 && oversizedCount === 0;
       return isFullyDelivered ? WakeOutcome.Woken : WakeOutcome.Unreached;
     },
+    hasFailedWake: async () => false,
   };
 }

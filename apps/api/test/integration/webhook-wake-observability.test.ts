@@ -8,6 +8,7 @@ import {
   GROK_TOKEN,
   GROK_URL,
   UNAVAILABLE,
+  WAKE_ACCOUNT,
   WAKE_AGENT,
   enableGrokWake,
   mentionText,
@@ -26,7 +27,7 @@ let stub: DurableObjectStub<DevAccountInbox>;
 function observeWith(input: { writeDataPoint: (point: AnalyticsEngineDataPoint) => void }) {
   return replaceWakeDependencies({
     stub,
-    patch: { observer: createCloudflareWakeObserver({ dataset: { writeDataPoint: input.writeDataPoint } }) },
+    patch: { observer: createCloudflareWakeObserver({ dataset: { writeDataPoint: input.writeDataPoint }, accountId: WAKE_ACCOUNT }) },
   });
 }
 

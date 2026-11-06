@@ -19,11 +19,16 @@ function encode(input: { text: string }): Uint8Array {
 }
 
 export function createAesGcmWakeSecretBox(input: { base64Key: string }): WakeSecretBox {
-  const keyPromise = crypto.subtle.importKey('raw', decodeKey(input), ALGORITHM, false, ['encrypt', 'decrypt']);
+  let keyPromise: Promise<CryptoKey> | null = null;
+
+  function loadKey(): Promise<CryptoKey> {
+    if (keyPromise === null) keyPromise = crypto.subtle.importKey('raw', decodeKey(input), ALGORITHM, false, ['encrypt', 'decrypt']);
+    return keyPromise;
+  }
 
   return {
     seal: async ({ plain, associatedData }) => {
-      const key = await keyPromise;
+      const key = await loadKey();
       const iv = crypto.getRandomValues(new Uint8Array(WAKE_IV_BYTES));
       const cipher = await crypto.subtle.encrypt(
         { name: ALGORITHM, iv, additionalData: encode({ text: associatedData }) },
@@ -33,7 +38,7 @@ export function createAesGcmWakeSecretBox(input: { base64Key: string }): WakeSec
       return Buffer.concat([Uint8Array.of(WAKE_SEALED_KEY_VERSION), iv, new Uint8Array(cipher)]).toString(BASE64);
     },
     open: async ({ sealed, associatedData }) => {
-      const key = await keyPromise;
+      const key = await loadKey();
       const bytes = Buffer.from(sealed, BASE64);
       if (bytes[0] !== WAKE_SEALED_KEY_VERSION) return null;
       const iv = bytes.subarray(VERSION_BYTES, VERSION_BYTES + WAKE_IV_BYTES);
