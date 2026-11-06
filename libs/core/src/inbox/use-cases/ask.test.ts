@@ -159,7 +159,7 @@ describe('ask', () => {
     const retry = asking({ environment, timeoutMs: SECOND_MS });
     await environment.clock.advance({ ms: SECOND_MS });
     expect((await retry).status).toBe(ReplyStatus.Pending);
-    expect(environment.sender.sessions).toHaveLength(2);
+    expect(environment.sender.sessions).toMatchObject([{ kind: MessageKind.Choice, questionId: 'qst_2' }]);
   });
 
   test('the prompt carries its options with descriptions', async () => {
