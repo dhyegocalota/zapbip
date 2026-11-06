@@ -20,7 +20,7 @@
           },
           {
             "group": "Guides",
-            "pages": ["guides/local-connector"]
+            "pages": ["guides/local-connector", "guides/background-running"]
           },
           {
             "group": "MCP reference",
@@ -44,7 +44,7 @@
         "groups": [
           {
             "group": "Guias",
-            "pages": ["pt-br/guides/local-connector"]
+            "pages": ["pt-br/guides/local-connector", "pt-br/guides/background-running"]
           }
         ]
       }
