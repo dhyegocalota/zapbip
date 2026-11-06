@@ -6,13 +6,15 @@ readonly REMOTE_NAME=origin
 readonly MAIN_BRANCH=main
 readonly MAIN_REF="$REMOTE_NAME/$MAIN_BRANCH"
 readonly FETCH_FAILED="verify: could not fetch origin main; the base is origin/main as last fetched"
-readonly ALL_GATES="doctor format secrets typecheck audit hooks shape unit"
+readonly ALL_GATES="doctor format secrets typecheck audit hooks shape unit integration e2e docs"
 readonly ALWAYS_GATES="doctor format secrets audit shape"
 readonly ALREADY_GREEN_GATES="secrets audit"
 readonly EVERYTHING_GATES=all
 readonly NO_GATES=-
 readonly SERVER_PACKAGE=@zapbip/server
 readonly SHAPE_PACKAGE=@zapbip/repository-shape
+readonly API_PACKAGE=@zapbip/api
+readonly DOCS_PACKAGE=@zapbip/docs
 readonly TIME_ZONE_PROBE=Asia/Kolkata
 readonly NO_RECORD_UNFETCHED="verify: no record: origin main could not be fetched"
 readonly USAGE="usage: verify.sh [auto|all] [--plan]"
@@ -169,6 +171,10 @@ gate_unit() {
   echo "verify: unit in $TIME_ZONE_PROBE"
   TZ=$TIME_ZONE_PROBE pnpm $(printf -- '--filter %s ' $probed_packages) test:unit
 }
+
+gate_integration() { pnpm --filter "$API_PACKAGE" test:integration; }
+gate_e2e() { pnpm --filter "$API_PACKAGE" test:e2e; }
+gate_docs() { pnpm --filter "$DOCS_PACKAGE" exec mint broken-links; }
 
 write_record() {
   mkdir -p "$records_directory"

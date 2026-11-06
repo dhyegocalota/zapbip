@@ -1,4 +1,4 @@
-import { DeliveryState, MediaOrigin } from '@zapbip/types';
+import { DeliveryState, MediaOrigin, SECOND_MS } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { MEDIA_RETENTION_MS, QUEUE_RETENTION_MS, QUESTION_RETENTION_MS, RECEIPT_RETENTION_MS, UPLOAD_TTL_MS } from '../constants';
 import { askAndAbandon, closeWindow, connectionOf, createEnvironment } from '../testing/fixtures';
@@ -46,7 +46,7 @@ describe('sweepExpired', () => {
     const { repository, clock } = environment;
     const question = await askAndAbandon({ environment });
     await repository.recordChannelReceipt({ wamid: 'wamid.fresh', receivedAt: clock.now() });
-    await clock.advance({ ms: Math.min(QUESTION_RETENTION_MS, RECEIPT_RETENTION_MS, QUEUE_RETENTION_MS) - 1 });
+    await clock.advance({ ms: Math.min(QUESTION_RETENTION_MS, RECEIPT_RETENTION_MS, QUEUE_RETENTION_MS) - 2 * SECOND_MS });
     await sweepExpired({ dependencies: environment.dependencies });
     expect(await repository.findQuestion({ questionId: question.questionId })).not.toBeNull();
     expect(await repository.recordChannelReceipt({ wamid: 'wamid.fresh', receivedAt: clock.now() })).toBe(false);
