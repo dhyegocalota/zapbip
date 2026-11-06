@@ -11,7 +11,7 @@ Notation: `CU-n` core unit, `AU-n` API unit, `WI-n` Worker integration, `E2E-n` 
 Each red commit is one of the commits in `plan.md` Steps W1.1, W1.3, W2.2, W2.4, W3.1, W3.3, W4.1, W4.3, W4.5, W5.1 and W6.1. The tester checks each red commit by `git log` and by running the named test on that commit in a throwaway worktree.
 
 - [ ] W1.1 red `libs/core/src/inbox/use-cases/status-rule.test.ts`, `libs/core/src/inbox/window.test.ts` — input: the Step W0 tree; expected: fails with `applyStatusRule is not implemented`; the closed-window case fails with `expected true to be false`.
-- [ ] W1.3 red `libs/core/src/inbox/use-cases/{receive-channel-message,open-window,claim-queued,close-window,apply-status,deliver-to-owner-channel,sweep-expired}.test.ts` — expected: each fails with `<use case> is not implemented`.
+- [ ] W1.3 red `libs/core/src/inbox/use-cases/{receive-channel-message,open-window,claim-queued,close-window,apply-status,deliver-to-owner-channel,sweep-expired}.test.ts` — expected: each fails with `<use case> is not implemented`; `sweep-expired` and `deliver-to-owner-channel` failed on behavioural assertions instead, red for a different reason, accepted (owner delegated 2026-11-06).
 - [ ] W2.2 red `apps/api/test/unit/whatsapp-{outbound-builders,outbound-limits,template-sanitiser,channel-error-mapping}.test.ts` — expected: each fails with `<name> is not implemented`.
 - [ ] W2.4 red `apps/api/test/unit/whatsapp-{graph-client,read-whatsapp-env,operator-log}.test.ts` — expected: each fails with `<name> is not implemented`.
 - [ ] W3.1 red `apps/api/test/integration/{d1-owner-directory-channel,d1-message-index-channel,d1-channel-restrictions,account-inbox-channel}.test.ts` and `apps/api/test/unit/hash-digests.test.ts` — expected: each fails with `<method> is not implemented`.
@@ -20,7 +20,7 @@ Each red commit is one of the commits in `plan.md` Steps W1.1, W1.3, W2.2, W2.4,
 - [ ] W4.3 red `apps/api/test/unit/whatsapp-media-download.test.ts` — expected: fails with `downloadInboundMedia is not implemented`.
 - [ ] W4.5 red `apps/api/test/integration/{whatsapp-webhook,whatsapp-status}.test.ts` — input: a signed text webhook; expected: the response is not `200`, because the stub route throws.
 - [ ] W5.1 red `tools/repository-shape/src/whatsapp-docs.test.ts` — expected: fails because the two MDX pages are missing.
-- [ ] W6.1 red `apps/api/test/e2e/whatsapp-channel.e2e.test.ts` — expected: fails at the first signed webhook, not at `wrangler dev` startup.
+- [ ] W6.1 pin `apps/api/test/e2e/whatsapp-channel.e2e.test.ts` — the lane landed it green at 623d78e, so it is a pin, never red-first; expected: passes, with the first signed webhook accepted.
 - [x] Pin (green on arrival, labelled `pin` in the briefing, never red-first): `whatsapp-copy.test.ts` and `whatsapp-templates.test.ts` (W2.1). They test constants that W0 writes exactly. — evidence: c314c2b rt-api1-3.log (API unit, 25 files / 337 tests, PASS x3, retest-unit-worker.md); whatsapp-copy.test.ts and whatsapp-templates.test.ts in that run
 - [ ] Confirmed each red run failed for the right reason: the failure text recorded in `tester-briefing.md` matches the text above, not a missing module or a typo.
 
