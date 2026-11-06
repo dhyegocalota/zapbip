@@ -1,4 +1,6 @@
 import type {
+  ApplyStatusInput,
+  ApplyStatusResult,
   AskInput,
   AskResult,
   CheckInboxInput,
@@ -10,6 +12,7 @@ import type {
   ReactInput,
   ReceiveResult,
   OwnerInboundMessage,
+  ReceiveChannelInput,
   SendContactsInput,
   SendLocationInput,
   SendMediaInput,
@@ -54,6 +57,8 @@ export interface AccountInboxRpc {
     channelMessageId: string;
     ownerMessage: OwnerInboundMessage;
   }): Promise<CallOutcome<{ messageId: string | null; agent: string | null; duplicate: boolean }>>;
+  receiveChannelMessage(input: AgentRequest<ReceiveChannelInput>): Promise<CallOutcome<ReceiveResult>>;
+  applyChannelStatus(input: AgentRequest<ApplyStatusInput>): Promise<CallOutcome<ApplyStatusResult>>;
 }
 
 export interface DevAccountInboxRpc extends AccountInboxRpc {

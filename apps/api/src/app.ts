@@ -4,6 +4,7 @@ import type { Bindings } from './contract/env';
 import { mcpRoutes } from './routes/mcp';
 import { mediaRoutes } from './routes/media';
 import { uploadRoutes } from './routes/upload';
+import { whatsappRoutes } from './routes/whatsapp';
 
 export type AppRoutes = Hono<{ Bindings: Bindings }>;
 
@@ -13,6 +14,7 @@ export function createApp(input: { extraRoutes: AppRoutes[] }): Hono<{ Bindings:
   app.route('/', mcpRoutes);
   app.route('/', uploadRoutes);
   app.route('/', mediaRoutes);
+  app.route('/', whatsappRoutes);
   input.extraRoutes.forEach((routes) => app.route('/', routes));
   return app;
 }

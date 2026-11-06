@@ -1,5 +1,5 @@
 import { AccountReplyIntent, AccountStateOutcome, IdPrefix, MessageKind, ReplyKind } from '@zapbip/types';
-import { flushQueue } from '../../inbox/use-cases/flush-queue';
+import { openWindow } from '../../inbox/use-cases/open-window';
 import { deliverToOwner } from '../../inbox/use-cases/deliver-to-owner';
 import { receiveOwnerMessage } from '../../inbox/use-cases/receive-owner-message';
 import type { OwnerInboundMessage, ReceiveResult } from '../../inbox/use-cases/types';
@@ -113,12 +113,11 @@ async function sendReplies(input: ReceiveAccountMessageInput & { result: Account
 }
 
 async function answerLocally(input: AnswerInput): Promise<ReceiveAccountMessageResult> {
-  const { dependencies, channelMessageId, ownerMessage, prepare } = input;
+  const { dependencies, channelMessageId, ownerMessage, prepare, account } = input;
   const { repository, clock } = dependencies;
   const isNewMessage = await repository.recordChannelReceipt({ wamid: channelMessageId, receivedAt: clock.now() });
   if (!isNewMessage) return DUPLICATE_RESULT;
-  await repository.saveWindow({ window: { lastOwnerMessageAt: ownerMessage.at, noticeSentForClosedWindow: false } });
-  await flushQueue({ dependencies });
+  await openWindow({ dependencies, ownerLocale: account.locale, at: ownerMessage.at });
   const result = await prepare();
   await sendReplies({ ...input, result });
   return { messageId: null, agent: null, duplicate: false, deletionConfirmed: result.deletionConfirmed };

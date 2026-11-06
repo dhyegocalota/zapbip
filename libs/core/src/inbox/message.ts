@@ -14,7 +14,8 @@ export type QuestionOption = {
   description: string | null;
 };
 
-export type MediaSource = { kind: MediaSourceKind.Link; link: string } | { kind: MediaSourceKind.Stored; mediaId: string };
+export type MediaSource =
+  { kind: MediaSourceKind.Link; link: string } | { kind: MediaSourceKind.Stored; mediaId: string } | { kind: MediaSourceKind.Unavailable };
 
 export type MediaFields = {
   source: MediaSource;

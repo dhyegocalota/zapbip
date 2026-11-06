@@ -25,7 +25,9 @@ export async function createAccountFixture(
   const { claimsFirstMessage = true, ...accountOptions } = input;
   const account = await environment.openAccount(accountOptions);
   if (claimsFirstMessage) await environment.dependencies.firstMessage.claim({ channelMessageId: FIRST_CHANNEL_MESSAGE_ID });
-  await environment.repository.saveWindow({ window: { lastOwnerMessageAt: environment.clock.now(), noticeSentForClosedWindow: false } });
+  await environment.repository.saveWindow({
+    window: { lastOwnerMessageAt: environment.clock.now(), noticeSentForClosedWindow: false, closedAt: null },
+  });
   return { environment, account };
 }
 

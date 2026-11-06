@@ -11,4 +11,9 @@ export type Bindings = {
   OWNER_RATE_LIMITER: RateLimit;
   OUTBOUND_RATE_LIMITER: RateLimit;
   ACCOUNT_OUTBOUND_RATE_LIMITER: RateLimit;
+  META_APP_SECRET?: string;
+  WHATSAPP_VERIFY_TOKEN?: string;
+  WHATSAPP_ACCESS_TOKEN?: string;
+  WHATSAPP_PHONE_NUMBER_ID?: string;
+  WHATSAPP_GRAPH_BASE_URL?: string;
 };

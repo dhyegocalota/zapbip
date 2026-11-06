@@ -1,0 +1,9 @@
+{
+  "from": "5511900000001",
+  "id": "wamid.ORDER",
+  "timestamp": "1762430400",
+  "type": "order",
+  "order": {
+    "catalog_id": "1"
+  }
+}

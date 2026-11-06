@@ -228,12 +228,12 @@ describe('SQLite inbox repository', () => {
   it('starts with a closed window and saves a new one', async () => {
     const result = await inRepository(async (repository) => {
       const initial = await repository.findWindow();
-      await repository.saveWindow({ window: { lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: true } });
+      await repository.saveWindow({ window: { lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: true, closedAt: null } });
       return { initial, saved: await repository.findWindow() };
     });
     expect(result).toEqual({
-      initial: { lastOwnerMessageAt: null, noticeSentForClosedWindow: false },
-      saved: { lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: true },
+      initial: { lastOwnerMessageAt: null, noticeSentForClosedWindow: false, closedAt: null },
+      saved: { lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: true, closedAt: null },
     });
   });
 
@@ -241,7 +241,7 @@ describe('SQLite inbox repository', () => {
     const result = await inRepository(async (repository) => {
       const first = await repository.claimNotice();
       const second = await repository.claimNotice();
-      await repository.saveWindow({ window: { lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: false } });
+      await repository.saveWindow({ window: { lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: false, closedAt: null } });
       return { first, second, afterReset: await repository.claimNotice() };
     });
     expect(result).toEqual({ first: true, second: false, afterReset: true });
@@ -350,7 +350,7 @@ describe('SQLite inbox repository', () => {
     const result = await inRepository(async (repository) => {
       const initial = await repository.findRoutingList();
       await repository.saveRoutingList({ routingList });
-      await repository.saveWindow({ window: { lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: false } });
+      await repository.saveWindow({ window: { lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: false, closedAt: null } });
       const saved = await repository.findRoutingList();
       await repository.saveRoutingList({ routingList: { ...routingList, reminded: true } });
       const reminded = await repository.findRoutingList();

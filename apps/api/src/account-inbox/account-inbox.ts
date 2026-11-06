@@ -11,6 +11,8 @@ import type {
   CreateUploadResult,
   GetMessagesInput,
   GetMessagesResult,
+  MediaStore,
+  MessageSender,
   ReactInput,
   SendContactsInput,
   SendLocationInput,
@@ -23,8 +25,10 @@ import type {
 } from '@zapbip/core';
 import { AccountState, ChannelErrorKind } from '@zapbip/types';
 import { D1AccountDirectory } from '../adapters/d1/d1-account-directory';
+import { D1ChannelRestrictions } from '../adapters/d1/d1-channel-restrictions';
 import { D1ConnectionRegistry } from '../adapters/d1/d1-connection-registry';
-import { createFakeWhatsAppSender, type FakeWhatsAppSender } from '../adapters/fake/fake-whatsapp-sender';
+import { D1MessageIndex } from '../adapters/d1/d1-message-index';
+import { findOwnerByAccountId } from '../adapters/d1/d1-owner-directory';
 import { createConnectionSecrets } from '../adapters/platform/connection-secrets';
 import { createInstallCodeVault } from '../adapters/platform/install-code-vault';
 import { createIdGenerator } from '../adapters/platform/ids';
@@ -32,6 +36,9 @@ import { loadDurableClock, type DurableClock } from '../adapters/platform/clock'
 import { mediaStoreOf } from '../adapters/r2/r2-media-store';
 import { createSqliteInboxRepository } from '../adapters/sqlite/sqlite-inbox-repository';
 import { createNoneWaker } from '../adapters/wake/none-waker';
+import { createCloudApiMessageSender } from '../adapters/whatsapp/cloud-api-message-sender';
+import { createGraphClient } from '../adapters/whatsapp/graph-client';
+import { readWhatsAppEnvironment } from '../adapters/whatsapp/read-whatsapp-env';
 import type { AccountInboxRpc, AgentRequest, CallOutcome } from '../contract/account-inbox-rpc';
 import type { AccountOwnerRpc } from '../contract/account-owner-rpc';
 import type { DueTimeProvider } from '../contract/due-time-provider';
@@ -52,10 +59,10 @@ type ReceiveAccountMessageRequest = Parameters<AccountOwnerRpc['receiveAccountMe
 type ReceiveOwnerMessageRequest = Parameters<AccountInboxRpc['receiveOwnerMessage']>[0];
 
 export class AccountInbox extends DurableObject<Bindings> implements AccountInboxRpc, AccountOwnerRpc {
-  protected sender!: FakeWhatsAppSender;
+  protected sender!: MessageSender;
   protected clock!: DurableClock;
   protected readonly dueTimeProviders: DueTimeProvider[] = [];
-  private accountId!: string;
+  protected accountId!: string;
   private dependencies!: CoreDependencies;
   private accountDependencies!: AccountDependencies;
   private isTombstoned = false;
@@ -74,13 +81,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     this.accountId = accountId;
     this.clock = await loadDurableClock({ storage: this.ctx.storage, onAdvanced: () => this.armAlarm() });
     const mediaStore = mediaStoreOf({ bindings: this.env, clock: this.clock });
-    this.sender = createFakeWhatsAppSender({
-      storage: this.ctx.storage,
-      clock: this.clock,
-      mediaStore,
-      accountId,
-      origin: this.env.PUBLIC_ORIGIN,
-    });
+    this.sender = this.createSender({ mediaStore });
     this.dependencies = {
       accountId,
       repository: createSqliteInboxRepository({ storage: this.ctx.storage, clock: this.clock }),
@@ -106,6 +107,22 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     };
     this.dueTimeProviders.push(this.createExpiryProvider(), this.createRoutingListProvider());
     await this.armAlarm();
+  }
+
+  protected createSender(input: { mediaStore: MediaStore }): MessageSender {
+    const whatsapp = readWhatsAppEnvironment({ env: this.env });
+    const database = this.env.CONNECTIONS;
+    return createCloudApiMessageSender({
+      accountId: this.accountId,
+      graph: createGraphClient({ baseUrl: whatsapp.graphBaseUrl, accessToken: whatsapp.accessToken, fetcher: fetch }),
+      findOwnerByAccountId: ({ accountId }) => findOwnerByAccountId({ database, accountId }),
+      messageIndex: new D1MessageIndex({ database }),
+      restrictions: new D1ChannelRestrictions({ database, phoneNumberId: whatsapp.phoneNumberId }),
+      mediaStore: input.mediaStore,
+      publicOrigin: this.env.PUBLIC_ORIGIN,
+      phoneNumberId: whatsapp.phoneNumberId,
+      clock: this.clock,
+    });
   }
 
   private createExpiryProvider(): DueTimeProvider {
@@ -294,5 +311,16 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       run: () => inbox.receiveOwnerMessage({ ...input, dependencies: this.dependencies }),
       describe: (value) => ({ event: value.duplicate ? LogEvent.OwnerMessageDuplicate : LogEvent.OwnerMessage }),
     });
+  }
+
+  receiveChannelMessage(input: AgentRequest<inbox.ReceiveChannelInput>): Promise<CallOutcome<inbox.ReceiveResult>> {
+    return this.outcome({
+      run: () => inbox.receiveChannelMessage({ ...input, dependencies: this.dependencies }),
+      describe: (value) => ({ event: value.duplicate ? LogEvent.OwnerMessageDuplicate : LogEvent.OwnerMessage }),
+    });
+  }
+
+  applyChannelStatus(input: AgentRequest<inbox.ApplyStatusInput>): Promise<CallOutcome<inbox.ApplyStatusResult>> {
+    return this.outcome({ run: () => inbox.applyStatus({ ...input, dependencies: this.dependencies }) });
   }
 }

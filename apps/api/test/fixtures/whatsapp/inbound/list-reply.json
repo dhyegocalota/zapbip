@@ -1,0 +1,18 @@
+{
+  "from": "5511900000001",
+  "id": "wamid.LISTREPLY",
+  "timestamp": "1762430400",
+  "type": "interactive",
+  "context": {
+    "from": "1000000000000001",
+    "id": "wamid.QUESTION"
+  },
+  "interactive": {
+    "type": "list_reply",
+    "list_reply": {
+      "id": "q_1:1",
+      "title": "Talvez",
+      "description": "Depende do preço"
+    }
+  }
+}

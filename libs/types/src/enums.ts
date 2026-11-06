@@ -24,6 +24,7 @@ export enum MessageKind {
 export enum MediaSourceKind {
   Link = 'link',
   Stored = 'stored',
+  Unavailable = 'unavailable',
 }
 
 export enum MediaOrigin {
@@ -36,6 +37,9 @@ export enum DeliveryState {
   Sent = 'sent',
   Failed = 'failed',
   Expired = 'expired',
+  Delivered = 'delivered',
+  Read = 'read',
+  Sending = 'sending',
 }
 
 export enum OwnerLocale {
@@ -110,6 +114,21 @@ export enum WakeRung {
 
 export enum ChannelErrorKind {
   DeliveryFailed = 'delivery_failed',
+  WindowClosed = 'window_closed',
+  RateLimited = 'rate_limited',
+  Restricted = 'restricted',
+  ReactionRejected = 'reaction_rejected',
+  MediaRejected = 'media_rejected',
+  TemplateRejected = 'template_rejected',
+  Timeout = 'timeout',
+  Auth = 'auth',
+  Unknown = 'unknown',
+}
+
+export enum ChannelInboundKind {
+  Owner = 'owner',
+  WindowOnly = 'window_only',
+  Unsupported = 'unsupported',
 }
 
 export enum LinkPurpose {

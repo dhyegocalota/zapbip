@@ -6,11 +6,19 @@ export default defineConfig({
     cloudflareTest({
       wrangler: { configPath: './wrangler.jsonc', environment: 'development' },
       miniflare: {
-        bindings: { MEDIA_LINK_SIGNING_KEY: 'test-media-key', UPLOAD_LINK_SIGNING_KEY: 'test-upload-key' },
+        bindings: {
+          MEDIA_LINK_SIGNING_KEY: 'test-media-key',
+          UPLOAD_LINK_SIGNING_KEY: 'test-upload-key',
+          META_APP_SECRET: 'test-app-secret',
+          WHATSAPP_VERIFY_TOKEN: 'test-verify-token',
+          WHATSAPP_PHONE_NUMBER_ID: '1000000000000001',
+          WHATSAPP_GRAPH_BASE_URL: 'http://127.0.0.1:4012',
+        },
       },
     }),
   ],
   test: {
     include: ['test/integration/**/*.test.ts'],
+    globalSetup: 'test/support/fake-graph-global-setup.ts',
   },
 });

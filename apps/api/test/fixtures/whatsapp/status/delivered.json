@@ -1,0 +1,11 @@
+{
+  "id": "wamid.DELIVERED",
+  "status": "delivered",
+  "timestamp": "1762430401",
+  "recipient_id": "5511900000001",
+  "pricing": {
+    "billable": false,
+    "pricing_model": "PMP",
+    "category": "service"
+  }
+}
