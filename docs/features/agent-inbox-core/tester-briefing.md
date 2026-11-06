@@ -174,3 +174,54 @@ Counts at the last run: unit 18 passed, integration 59 passed.
 - `findLastAgentWrite` uses `at >= since`; `findRecentQuestion` is inclusive on `askedAfter` and `listOpenQuestions` is newest first, as in the in-memory repository.
 - The fake sender reads the prompt text of a `choice` message from the `questions` row, so `ask` must insert the question before `session`.
 - The history of `eb984a0` carries a fixture string that gitleaks flags; `.gitleaks.toml` allowlists it anchored.
+
+## Lane L4a
+
+### What changed
+
+- `apps/api/src/routes/mcp.ts`: `POST|GET|DELETE` on `/c/:secret/mcp` (path secret) and `/mcp` (Bearer). A malformed, unknown or deleted secret returns `401` with `UNAUTHORIZED_BODY` from one return path; the directory is not queried for a malformed secret. A stateless `WebStandardStreamableHTTPServerTransport` (`enableJsonResponse: true`) and a fresh `McpServer` serve each request.
+- `apps/api/src/mcp/`: `resolve-connection.ts`, `server.ts` (registers every `TOOL_DEFINITIONS` entry, logs `ToolCall` and `ToolError`), `tool-handlers.ts` (one handler per `McpToolName`), `tool-error.ts` (`CallOutcome` error to `isError` with the core message), `wire.ts` (one builder per `MessageKind`), `links.ts` (`/m/...` read links and `/c/<secret>/u/<id>` upload links on `PUBLIC_ORIGIN`), `inline-images.ts` (owner images up to `INLINE_IMAGE_MAX_BYTES`, size checked before `mediaStore.get`), `constants.ts`, `types.ts`.
+- Plan deviation: the plan names `src/mcp/tool-definitions.ts`; the registry already lives in the read-only `src/contract/tool-definitions.ts`, so the handlers are in `src/mcp/tool-handlers.ts`.
+- Tests: `apps/api/test/integration/{mcp-auth,mcp-tools,mcp-inline-images}.test.ts`, with `mcp-fixtures.ts` and `mcp-environment.d.ts` beside them (not in the plan's file list; they only serve these three tests and reuse L3's `test/support/seed.ts`).
+
+### How to run
+
+```bash
+pnpm install
+pnpm --filter @zapbip/api test:integration
+pnpm typecheck
+```
+
+### Red today, green after
+
+| Test | Red before the change because | Green after because |
+|------|--------------------------------|---------------------|
+| `mcp-auth.test.ts` (7 cases) | red commit dacf1ae printed `ENOENT: no such file or directory, open '../../migrations/0001_core.sql'` (the L3 migration was not on the lane base) | c5d29e6 implements the route; green needs L3's `D1ConnectionDirectory` and `hashConnectionSecret` |
+| `mcp-tools.test.ts`, `mcp-inline-images.test.ts` | red commit 9737ac6: same `ENOENT`; with L3 merged and no handler registered the expected text is the MCP "tool not found" error | ce75f06 registers the ten tools; green needs L3's Durable Object and D1 bodies |
+
+State when this was written: L2's bodies were merged; L3 had pushed only its red tests. With them merged, the run printed `D1ConnectionDirectory.resolveSecretDigest is not implemented` for 39 cases and `expected 500 to be 401` / `expected 500 to be 200` for the auth cases. Nothing in this lane has been seen green.
+
+### Hypotheses to attack
+
+1. Hypothesis: unknown, deleted and rejected secrets return byte-equal `401` bodies. Break it by: a revoked connection and a random secret, diffing bytes and headers.
+2. Hypothesis: `/c/<secret>/mcp` ignores a wrong Bearer. Break it by: a wrong Bearer with a valid path secret.
+3. Hypothesis: a malformed secret never reaches D1. Break it by: dropping `connections` and sending `zb_conn_short`.
+4. Hypothesis: tool errors keep the core message and set `isError`. Break it by: every cross-field rule of WI-36 to WI-66.
+5. Hypothesis: `send_media` rejects both or neither of `url` and `upload_id` with `exactly one of url and upload_id is required`.
+6. Hypothesis: an owner image above `INLINE_IMAGE_MAX_BYTES` is never read from R2. Break it by: counting `MEDIA.get` calls for a 1 MB + 1 image.
+7. Hypothesis: `upload_url` is `PUBLIC_ORIGIN/c/<secret>/u/<upload_id>?exp=&sig=`, signed for the upload purpose.
+
+### Known gaps
+
+- The `ask` held-answer test answers with owner text, not a button tap (the option id carries a question id the test cannot know before `ask` returns).
+- `expires_at` is rendered from the Durable Object's time while the upload link's `exp` comes from the Worker's real clock; they differ when the development clock offset is non-zero.
+- An owner image missing from R2 is returned as a link only, without an image block.
+- The WI-39 to WI-42 uploads are marked received by writing to R2 and calling `completeUpload`; the PUT route belongs to L4b.
+
+### Lane L4a update
+
+- 42 of 43 MCP cases pass against L2 and L3. WI-66 (`create_upload` with `size_bytes` 100000001) stays red: core's `assertUploadDeclaration` has no upper bound, so `create_upload` accepts it. The fix belongs in `libs/core` (L2), not in the MCP edge.
+- Tests open the 24 hour window first (a queued warm-up, an owner text, a read), because a closed window returns `queued`, not `sent`.
+- Core's wording for an unreceived upload is `upload_id: bytes not uploaded yet`; the test plan (WI-47) says `upload has not been received`. The test follows core.
+- The screen assertions (WI-35, WI-56) read history through `get_messages`, because `readScreen` is still a stub until L4b.
+- `ask` sends `optionDescriptions` empty when no option has a description.
