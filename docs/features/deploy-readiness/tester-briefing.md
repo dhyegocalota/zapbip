@@ -98,9 +98,9 @@ pnpm exec vitest run --config vitest.integration.config.mts test/integration/usa
 
 ### Known gaps
 
-- Calls with zero measured milliseconds record a zero row and are never flushed (workerd advances `Date.now()` only across I/O). Real cost of such calls is negligible by construction.
+- Zero-usage decision: a call measuring 0 ms adds 0 gigabyte seconds, creates no flushable usage and no D1 write; only gigabyte seconds are metered, not calls (pin in `usage-in-object.test.ts`).
 - A D1 outage retries every 5 seconds (`ALARM_MIN_DELAY_MS`) until it recovers, per the test plan ("the due time is kept"). Not load-tested.
-- `usage_meter` rows of past days are kept (one row per day per account). No pruning step exists in the plan.
+- Pruning runs inside the object at every alarm (flushed rows older than `USAGE_METER_RETENTION_MS`, seven days), not in the daily cron: the test plan requires retention to touch R2 only and no cron fans out over accounts.
 - Retention deletes every object in the bucket past the cutoff and does not look at key shape; the bucket holds media only. It collects all listed objects in memory before deleting; a very large bucket is not tested.
-- U-HOUR (1,000 calls) and "Alarm arming registry" with a second earlier provider are not covered by an automated test of this lane; `usage-in-object.test.ts` covers the three plan cases plus the flush failure.
+- U-HOUR (1,000 calls, counted with D1 triggers), alarm order and zero usage are pins in `usage-in-object.test.ts` (commit after c22e6ef); the prune case was red first.
 - Order changed from the plan: A7 landed before A6/A8, and A6 shares its red/green commits with A8 because the budget cases run through `runScheduled`.
