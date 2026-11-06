@@ -1,6 +1,6 @@
 import { OwnerLocale } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
-import { sectionInput } from '../testing/fixtures';
+import { CONNECTION_LINK, sectionInput } from '../testing/fixtures';
 import { renderChatGptSection } from './chatgpt';
 import { renderClaudeAiSection } from './claude-ai';
 import { renderGrokBotSection } from './grok-bot';
@@ -41,10 +41,18 @@ describe('ChatGPT', () => {
   test('names developer mode, no authentication, the local task and always allow', () => {
     const text = renderChatGptSection(sectionInput({ locale }));
     expect(text).toContain('developer mode');
-    expect(text).toContain('No authentication');
-    expect(text).toContain('Run on this computer');
-    expect(text).toContain('Always allow');
+    expect(text).toContain('`No authentication`');
+    expect(text).toContain('`Run on this computer`');
+    expect(text).toContain('`Always allow`');
     expect(text).toContain('set_wake({mode: "scheduled", interval_minutes: 60})');
+  });
+});
+
+describe('ChatGPT in Portuguese', () => {
+  test('F9 gives the localized label beside the English one', () => {
+    const text = renderChatGptSection(sectionInput({ locale: OwnerLocale.PortugueseBrazil }));
+    expect(text).toContain('Executar neste computador (`Run on this computer`)');
+    expect(text).toContain('Sempre permitir (`Always allow`)');
   });
 });
 
@@ -82,7 +90,7 @@ describe.each([
       expect(text).toContain('set_wake({mode: "scheduled", interval_minutes: 1})');
       expect(text).toContain('check_inbox');
       expect(text).toContain('every minute');
-      expect(text).toContain('(verify)');
+      expect(text).not.toContain('(verify)');
     },
   );
 });
@@ -90,5 +98,23 @@ describe.each([
 describe('Hermes allowlist', () => {
   test.each([OwnerLocale.PortugueseBrazil, OwnerLocale.EnglishUs])('sets the owner as an allowed user in %s', (sectionLocale) => {
     expect(renderHermesSection(sectionInput({ locale: sectionLocale }))).toContain('ZAPBIP_ALLOWED_USERS=owner');
+  });
+});
+
+describe('Hermes and OpenClaw confirmed install steps', () => {
+  test('F4 Hermes names the plugin folder, the enable key and both environment variables', () => {
+    const text = renderHermesSection(sectionInput({ locale }));
+    expect(text).toContain('~/.hermes/plugins/zapbip');
+    expect(text).toContain('plugins.enabled');
+    expect(text).toContain(`ZAPBIP_CONNECTION_LINK=${CONNECTION_LINK}`);
+    expect(text).toContain('ZAPBIP_ALLOWED_USERS=owner');
+    expect(text).toContain('zapbip-platform');
+  });
+
+  test('F4 OpenClaw installs the published package and sets the connection link on the channel', () => {
+    const text = renderOpenClawSection(sectionInput({ locale }));
+    expect(text).toContain('openclaw plugins install @zapbip/openclaw-plugin');
+    expect(text).toContain('channels.zapbip.connectionLink');
+    expect(text).toContain(CONNECTION_LINK);
   });
 });

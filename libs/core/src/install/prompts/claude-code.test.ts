@@ -22,13 +22,22 @@ describe('renderClaudeCodeSection', () => {
     expect(text).toContain(`name: zapbip\ndescription: ${CLAUDE_CODE_SKILL_DESCRIPTION[locale]()}\n---\n${AGENT_RULES}`);
   });
 
-  test('runs the pinned connector and sets the local wake mode', () => {
+  test('runs the pinned connector and leaves the local wake mode to the attach', () => {
     expect(text).toContain(`ZAPBIP_CONNECTION_URL=${CONNECTION_LINK} npx zapbip@${ZAPBIP_NPM_VERSION} connect --client claude-code`);
-    expect(text).toContain('set_wake({mode: "local"})');
+    expect(text).not.toContain('set_wake');
+  });
+
+  test('F1 registers the local channel server and launches the session with it', () => {
+    expect(text).toContain(
+      `claude mcp add --scope user zapbip-channel -e ZAPBIP_CONNECTION_URL=${CONNECTION_LINK} -- npx zapbip@${ZAPBIP_NPM_VERSION} channel`,
+    );
+    expect(text).toContain('claude --dangerously-load-development-channels server:zapbip-channel');
+    expect(text).not.toMatch(/server:zapbip(?!-channel)/);
+    expect(text).toContain('claude mcp remove --scope user zapbip-channel');
   });
 
   test('lists the channel as primary and the monitored listener as fallback', () => {
-    expect(text).toContain('claude --dangerously-load-development-channels server:zapbip');
+    expect(text).toContain('claude --dangerously-load-development-channels server:zapbip-channel');
     expect(text).toContain(`npx zapbip@${ZAPBIP_NPM_VERSION} listen`);
     expect(text).toContain('Monitor');
     expect(text).toContain('re-arm');

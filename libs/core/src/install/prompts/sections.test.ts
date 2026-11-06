@@ -25,10 +25,10 @@ const STOP_CHECK_PATTERN = /^1\. If you are not .+, stop and run no other step o
 const SECRET_FRAGMENT = 'zb_conn_FAKE';
 
 const ALLOWED_WAKE_MODES: Record<InstallClient, string[]> = {
-  [InstallClient.ClaudeCode]: ['local'],
-  [InstallClient.Codex]: ['local'],
-  [InstallClient.Cursor]: ['local'],
-  [InstallClient.GeminiCli]: ['local'],
+  [InstallClient.ClaudeCode]: [],
+  [InstallClient.Codex]: [],
+  [InstallClient.Cursor]: [],
+  [InstallClient.GeminiCli]: [],
   [InstallClient.GrokBot]: ['webhook'],
   [InstallClient.ClaudeAi]: ['webhook', 'none'],
   [InstallClient.ChatGpt]: ['scheduled'],

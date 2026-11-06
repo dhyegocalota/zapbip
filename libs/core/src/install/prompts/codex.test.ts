@@ -24,9 +24,9 @@ describe('renderCodexSection', () => {
     expect(renderCodexSection(sectionInput({ locale: OwnerLocale.PortugueseBrazil }))).toContain('sem supervisão');
   });
 
-  test('runs the pinned connector and sets the local wake mode', () => {
+  test('runs the pinned connector and leaves the local wake mode to the attach', () => {
     expect(text).toContain(`ZAPBIP_CONNECTION_URL=${CONNECTION_LINK} npx zapbip@${ZAPBIP_NPM_VERSION} connect --client codex`);
-    expect(text).toContain('set_wake({mode: "local"})');
+    expect(text).not.toContain('set_wake');
     expect(text).toContain('codex exec resume');
   });
 

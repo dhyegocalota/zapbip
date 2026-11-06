@@ -12,7 +12,7 @@ describe('Cursor and Gemini CLI sections', () => {
     expect(text).toContain('over HTTP');
     expect(text).toContain(`npx zapbip@${ZAPBIP_NPM_VERSION} listen`);
     expect(text).toContain('background terminal');
-    expect(text).toContain('set_wake({mode: "local"})');
+    expect(text).not.toContain('set_wake');
     expect(text).not.toContain('scheduled');
   });
 
@@ -22,9 +22,15 @@ describe('Cursor and Gemini CLI sections', () => {
     expect(text).toContain(`gemini mcp add --transport http --scope user zapbip ${CONNECTION_LINK}`);
     expect(text).toContain(`npx zapbip@${ZAPBIP_NPM_VERSION} listen`);
     expect(text).toContain('background terminal');
-    expect(text).toContain('set_wake({mode: "local"})');
-    expect(text).toContain('gemini -p "');
+    expect(text).not.toContain('set_wake');
+    expect(text).toContain('gemini --yolo -p "');
     expect(text).not.toContain('scheduled');
+  });
+
+  test.each(LOCALES)('F11 Cursor in %s asks the owner before it adds the server', (locale) => {
+    const text = renderCursorSection(sectionInput({ locale }));
+    expect(text.indexOf('Wait for the owner to answer')).toBeGreaterThan(-1);
+    expect(text.indexOf('Wait for the owner to answer')).toBeLessThan(text.indexOf('Add an MCP server'));
   });
 
   test('the Cursor section never uses Grok Bot wording', () => {

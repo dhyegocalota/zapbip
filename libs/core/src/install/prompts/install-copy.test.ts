@@ -2,13 +2,19 @@ import {
   CHATGPT_POLL_INTERVAL_MINUTES,
   CODEX_TOOL_TIMEOUT_SECONDS,
   HEARTBEAT_POLL_INTERVAL_MINUTES,
+  INSTALL_SELF_TEST_TEXT,
   InstallClient,
   OwnerLocale,
 } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { CLIENTS, LOCALES, sectionInput } from '../testing/fixtures';
 import { INSTALL_SECTIONS } from './index';
-import { WAKE_NOTES } from './wake-notes';
+import { wakeNoteOf } from './wake-notes';
+
+const INSTALL_SECTION_RESTART_MARK: Record<OwnerLocale, string> = {
+  [OwnerLocale.PortugueseBrazil]: 'Reinicie',
+  [OwnerLocale.EnglishUs]: 'Restart',
+};
 
 function sectionOf(input: { client: InstallClient; locale: OwnerLocale }): string {
   return INSTALL_SECTIONS[input.client](sectionInput({ locale: input.locale }));
@@ -44,8 +50,9 @@ describe('install copy', () => {
     'C4 $client in $locale says how the AI is woken, before the self-test',
     ({ client, locale }) => {
       const text = sectionOf({ client, locale });
-      expect(text).toContain(WAKE_NOTES[client][locale]);
-      expect(text.indexOf(WAKE_NOTES[client][locale])).toBeLessThan(text.lastIndexOf('send_message'));
+      const wakeNote = wakeNoteOf({ client, locale, standbyAgent: null });
+      expect(text).toContain(wakeNote);
+      expect(text.indexOf(wakeNote)).toBeLessThan(text.lastIndexOf('send_message'));
     },
   );
 
@@ -67,5 +74,36 @@ describe('install copy', () => {
     expect(sectionOf({ client: InstallClient.ChatGpt, locale: OwnerLocale.EnglishUs })).toContain(
       `interval_minutes: ${CHATGPT_POLL_INTERVAL_MINUTES}`,
     );
+  });
+
+  test.each(LOCALES)('F3 Grok on the web without a standby says the chat is only read when opened, in %s', (locale) => {
+    const withoutStandby = INSTALL_SECTIONS[InstallClient.GrokWeb](sectionInput({ locale, standbyAgent: null }));
+    const withStandby = INSTALL_SECTIONS[InstallClient.GrokWeb](sectionInput({ locale, standbyAgent: 'Ana Bot' }));
+    expect(withoutStandby).toContain(wakeNoteOf({ client: InstallClient.GrokWeb, locale, standbyAgent: null }));
+    expect(withStandby).toContain(wakeNoteOf({ client: InstallClient.GrokWeb, locale, standbyAgent: 'Ana Bot' }));
+    expect(wakeNoteOf({ client: InstallClient.GrokWeb, locale, standbyAgent: null })).not.toBe(
+      wakeNoteOf({ client: InstallClient.GrokWeb, locale, standbyAgent: 'Ana Bot' }),
+    );
+    expect(withoutStandby).not.toContain(wakeNoteOf({ client: InstallClient.GrokWeb, locale, standbyAgent: 'Ana Bot' }));
+  });
+
+  test('F3 the English no-standby note says to open the chat', () => {
+    expect(wakeNoteOf({ client: InstallClient.GrokWeb, locale: OwnerLocale.EnglishUs, standbyAgent: null })).toContain('open the chat');
+  });
+
+  test('F10 the Portuguese claude.ai note says at most once every 60 minutes', () => {
+    expect(wakeNoteOf({ client: InstallClient.ClaudeAi, locale: OwnerLocale.PortugueseBrazil, standbyAgent: null })).toContain(
+      'no máximo uma vez a cada 60 minutos',
+    );
+  });
+
+  test.each(
+    LOCALES.flatMap((locale) =>
+      [InstallClient.ClaudeCode, InstallClient.Codex, InstallClient.Cursor, InstallClient.GeminiCli].map((client) => ({ client, locale })),
+    ),
+  )('F2 $client in $locale reaches the self-test without a wake call before the restart', ({ client, locale }) => {
+    const text = sectionOf({ client, locale });
+    expect(text).not.toContain('mode: "local"');
+    expect(text.lastIndexOf(INSTALL_SELF_TEST_TEXT[locale])).toBeGreaterThan(text.indexOf(INSTALL_SECTION_RESTART_MARK[locale]));
   });
 });
