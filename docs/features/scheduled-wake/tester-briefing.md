@@ -46,3 +46,33 @@ Step 0 adds no test. Every stub is reached by a red test in the lane named in `p
 - Merging `origin/feat/webhook-wake-l3` breaks `typecheck` until `apps/api/src/mcp/set-wake.ts` passes `intervalMinutes` and `standbyAgent` to `setWake` and drops `Scheduled` and `Standby` from `UnavailableWakeMode` (plan R14). The merge commit carries that fix; S4.2 finishes it.
 - Slice 4's L2 (Durable Object wiring, `sqlite-wake-repository.ts` body) is not pushed yet. `sqlite-wake-repository.ts` still throws as a whole on this branch, so L1 adds its methods when that lands.
 - The `libs/core` and `apps/api` READMEs say "the webhook wake of a sleeping agent"; they are updated with the lane that makes scheduled and standby real (L2 and L3), not in Step 0.
+
+## Lane L1 (storage)
+
+### What changed
+
+- `apps/api/src/account-inbox/migrations/v3.sql` (registered in `migrations/index.ts`): `agent_wake` gains `interval_minutes`, `standby_agent`, `owner_locale`, `has_polled`, `poller_stale_notified`; `inbox_messages` gains `handed_to`, `origin_message_id` and the partial index `inbox_messages_unread`.
+- `sqlite-wake-repository.ts`: `findPollState`, `recordPoll`, `listScheduledWakes`, `markStaleNotified`; `saveWake` writes the three mode-owned columns and never a poll column; the mapper throws naming the column for a scheduled row without `interval_minutes` or `owner_locale` and a standby row without `standby_agent`. `recordPoll` and `markStaleNotified` throw when the agent has no row.
+- `sqlite-inbox-repository.ts`: the two message columns are written and mapped; `insertHandoff` inserts the copy and marks the primary's unread owner message read with `handed_to` in one `transactionSync`.
+
+### How to run
+
+```bash
+pnpm --filter @zapbip/api test:integration
+```
+
+### Red today, green after
+
+Red commit `12637d8`: 16 of 21 cases of `scheduled-wake-storage.test.ts` failed (`no such column: has_polled`, `expected [] to deeply equal [ 3 ]`, `<name> is not implemented`). Green at `699c8b8`. Pins on arrival: unique message id, zero count, read rows ignored, atomic rollback of the handoff, and the three schema checks that already held.
+
+### Hypotheses to attack
+
+1. A webhook row that polls keeps its mode and target (`recordPoll` touches only the poll columns and `owner_locale`).
+2. `saveWake` of a webhook or none setting writes `owner_locale` as given, so a webhook save with a null locale clears the locale a poll recorded; the next scheduled save or poll restores it.
+3. `insertHandoff` marks only the primary's unread row whose id is `copy.originMessageId`; a copy without `originMessageId` throws.
+4. An object at v1 only, or v1 and v3 without v2, upgrades with its rows intact.
+
+### Known gaps
+
+- `account-inbox.test.ts` (`WI-120`, `WI-121`) and `webhook-wake-secrets.test.ts` (`migration v2`) use `3` as a synthetic "later" migration version; with the real `v3` they fail (`expected [ 4 ] to deeply equal [ 3, 4 ]`, `expected [] to deeply equal [ 3 ]`, `UNIQUE constraint failed: schema_versions.version`). Not L1 files: the lead must move their synthetic versions past `ACCOUNT_INBOX_MIGRATIONS` (for example derive them from the last registered version).
+- accounts-and-keys describes its own DO schema `v6`; the lead renumbers `v3.sql` when merging it, since runner order is by version.
