@@ -141,7 +141,7 @@ Routing of an owner message, first match wins. Rule 0, the account commands, sit
 2. A quoted reply or a reaction: the agent that sent the quoted or reacted message. A reaction to a question message answers that question with the emoji.
 3. A text starting with `@<agent> `: that agent, prefix removed.
 4. Exactly one agent with an open question: that agent. With several open questions, the newest wins.
-5. The last agent that wrote to the owner within the window.
+5. The last agent that wrote to the owner within the window; failing that, the only agent when the account has exactly one (`single_agent`: no list is sent).
 6. None: zapbip sends the owner a list of the 10 most recently seen agents, with ids `route:<message_id>:<agent>`, and holds the message until the choice arrives; the choice routes every held message to that agent. With no agents at all, the owner gets one text notice (`noAgents`) and the message is held.
 
 A routing list is pending for `ROUTING_LIST_TTL_MS` (10 minutes). Its message id and opening time live in the `owner_window` row, so finding the open list is one primary-key read.
@@ -321,6 +321,7 @@ The E2E gate that [ADR 0005](../../adr/0005-the-local-gate-runs-what-the-diff-ca
 | Owner media, location, contacts | answer · route only | they route by rules 2, 4, 5 and 6 and never answer a question | owner delegated 2026-11-06 |
 | Rule 5 window | — | "within the window" means the 24 h (`WINDOW_MS`) before the owner's message | owner delegated 2026-11-06 |
 | Rule 6 | — | the routing question lists the 10 most recently seen agents; with zero agents the owner gets one text notice and the message is held | owner delegated 2026-11-06 |
+| Account with exactly one agent | list of one option · deliver to it | rule 5 falls back to the only agent, so an unaddressed owner message reaches it and no routing list is sent; an account with several agents is unchanged | owner delegated 2026-11-06 |
 | Read limits | — | `limit` 1 to 20 bounds the unread messages returned and the history; `check_inbox` returns up to 20 unread; the rest stay unread | owner delegated 2026-11-06 |
 | `wait_for_reply` without a question | — | returns unread messages at once; otherwise waits for the agent's next owner message, re-waits if another call took it, and times out at its deadline; an answer read through `wait_for_reply(question_id)` is marked read | owner delegated 2026-11-06 |
 | Waking notice | a notice per message · per unread batch | `NoneWaker` returns `unreached`; core sends one waiting notice (`inbox-copy.ts`, `pt_BR` and `en_US`) when the agent's unread count goes from 0 to 1 | owner delegated 2026-11-06 |

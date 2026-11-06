@@ -238,19 +238,35 @@ describe('AccountInbox alarm', () => {
   it('WI-125 runs the routing list expiry from the alarm and arms it again', async () => {
     const stub = stubOf({ accountId: FIRST_ACCOUNT });
     await stub.checkInbox({ connection: connectionOf({ accountId: FIRST_ACCOUNT, agent: 'alpha' }) });
+    await stub.checkInbox({ connection: connectionOf({ accountId: FIRST_ACCOUNT, agent: 'beta' }) });
     await openWindow({ stub });
     expectOk(await receiveOwnerText({ stub, text: 'oi' }));
     await advanceClock({ stub, advanceMs: ROUTING_LIST_TTL_MS });
     expect(await runDurableObjectAlarm(stub)).toBe(true);
     const screen = await readScreen({ stub });
-    expect(screen.map((entry) => entry.options)).toEqual([['alpha'], ['alpha']]);
+    expect(screen.map((entry) => entry.options)).toEqual([
+      ['beta', 'alpha'],
+      ['beta', 'alpha'],
+    ]);
     expect(await runInDurableObject(stub, (_instance, state) => state.storage.getAlarm())).not.toBeNull();
+  });
+
+  it('WI-134 with exactly one agent an unaddressed owner message reaches it and no list is sent', async () => {
+    const stub = stubOf({ accountId: FIRST_ACCOUNT });
+    const connection = connectionOf({ accountId: FIRST_ACCOUNT, agent: 'alpha' });
+    await stub.checkInbox({ connection });
+    await openWindow({ stub });
+    expectOk(await receiveOwnerText({ stub, text: 'oi' }));
+    const inbox = expectOk(await stub.checkInbox({ connection }));
+    expect(inbox.messages).toMatchObject([{ text: 'oi' }]);
+    expect((await readScreen({ stub })).flatMap((entry) => entry.options)).toEqual([]);
   });
 
   it('WI-129 does not postpone a due expiry while the agent keeps calling tools', async () => {
     const stub = stubOf({ accountId: FIRST_ACCOUNT });
     const connection = connectionOf({ accountId: FIRST_ACCOUNT, agent: 'alpha' });
     await stub.checkInbox({ connection });
+    await stub.checkInbox({ connection: connectionOf({ accountId: FIRST_ACCOUNT, agent: 'beta' }) });
     await openWindow({ stub });
     expectOk(await receiveOwnerText({ stub, text: 'oi' }));
     await advanceClock({ stub, advanceMs: ROUTING_LIST_TTL_MS });
