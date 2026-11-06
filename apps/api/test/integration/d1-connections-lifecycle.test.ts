@@ -1,4 +1,4 @@
-import type { ConnectionRecord } from '@zapbip/core';
+import { NO_INSTALL_CODE, type ConnectionRecord, type NewConnection } from '@zapbip/core';
 import { AccountState, OwnerLocale, RegisterOutcome } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { reset } from 'cloudflare:test';
@@ -33,7 +33,7 @@ async function digestOf(input: { secret: string }): Promise<string> {
   return hashConnectionSecret(input);
 }
 
-async function connectionRecord(input: { agent: string; accountId?: string }): Promise<ConnectionRecord> {
+async function connectionRecord(input: { agent: string; accountId?: string }): Promise<NewConnection> {
   const { accountId = ACCOUNT_ID } = input;
   const id = crypto.randomUUID();
   return {
@@ -42,7 +42,14 @@ async function connectionRecord(input: { agent: string; accountId?: string }): P
     agent: input.agent,
     secretDigest: await digestOf({ secret: id }),
     createdAt: SEED_CREATED_AT,
+    installCodeDigest: null,
+    installCodeSealedSecret: null,
+    installCodeExpiresAt: null,
   };
+}
+
+function withReadColumns(connection: NewConnection): ConnectionRecord {
+  return { ...connection, clientName: null, firstCallAt: null };
 }
 
 async function registerAgents(input: { agents: string[]; activeLimit?: number }): Promise<RegisterOutcome[]> {
@@ -171,7 +178,7 @@ describe('D1 connection registry reads and writes', () => {
     await registry().register({ connection: second, activeLimit: ACTIVE_LIMIT });
     await registry().register({ connection: first, activeLimit: ACTIVE_LIMIT });
     await seedConnection({ accountId: ACCOUNT_ID, agent: 'gone', secret: SECRET, revokedAt: REVOKED_AT });
-    expect(await registry().listActive({ accountId: ACCOUNT_ID })).toEqual([first, second]);
+    expect(await registry().listActive({ accountId: ACCOUNT_ID })).toEqual([withReadColumns(first), withReadColumns(second)]);
   });
 
   it('revokes once', async () => {
@@ -186,7 +193,16 @@ describe('D1 connection registry reads and writes', () => {
     await seedConnection({ accountId: ACCOUNT_ID, agent: 'claude', secret: SECRET });
     const fromDigest = await digestOf({ secret: SECRET });
     const toDigest = await digestOf({ secret: NEW_SECRET });
-    expect(await registry().rotate({ accountId: ACCOUNT_ID, agent: 'claude', fromDigest, toDigest, rotatedAt: ROTATED_AT })).toBe(true);
+    expect(
+      await registry().rotate({
+        accountId: ACCOUNT_ID,
+        agent: 'claude',
+        fromDigest,
+        toDigest,
+        installCode: NO_INSTALL_CODE,
+        rotatedAt: ROTATED_AT,
+      }),
+    ).toBe(true);
     expect(await directory().resolveSecretDigest({ secretDigest: fromDigest })).toBeNull();
     expect(await directory().resolveSecretDigest({ secretDigest: toDigest })).not.toBeNull();
   });
@@ -198,6 +214,7 @@ describe('D1 connection registry reads and writes', () => {
       agent: 'claude',
       fromDigest: await digestOf({ secret: THIRD_SECRET }),
       toDigest: await digestOf({ secret: NEW_SECRET }),
+      installCode: NO_INSTALL_CODE,
       rotatedAt: ROTATED_AT,
     });
     expect(rotated).toBe(false);
@@ -216,6 +233,7 @@ describe('D1 connection registry reads and writes', () => {
           agent: 'claude',
           fromDigest,
           toDigest: await digestOf({ secret }),
+          installCode: NO_INSTALL_CODE,
           rotatedAt: ROTATED_AT,
         }),
       ),
@@ -232,6 +250,7 @@ describe('D1 connection registry reads and writes', () => {
         agent: 'claude',
         fromDigest: await digestOf({ secret: SECRET }),
         toDigest: await digestOf({ secret: NEW_SECRET }),
+        installCode: NO_INSTALL_CODE,
         rotatedAt: ROTATED_AT,
       }),
     ).rejects.toThrow(/UNIQUE/);

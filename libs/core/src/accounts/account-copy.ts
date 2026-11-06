@@ -127,3 +127,7 @@ export function buildMenuRows(input: { locale: OwnerLocale }): MenuRow[] {
 export function buildMenuButtonText(input: { locale: OwnerLocale }): string {
   return MENU_BUTTON_TEXT[input.locale];
 }
+
+export function renderInstallLines(_input: { installLink: string; locale: OwnerLocale }): string {
+  throw new Error('renderInstallLines is not implemented');
+}

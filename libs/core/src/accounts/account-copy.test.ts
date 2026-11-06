@@ -2,7 +2,7 @@ import { AccountReplyIntent, AccountReplyParameter, CommandKind, OwnerLocale, Re
 import { describe, expect, test } from 'vitest';
 import { LIST_ROW_TITLE_MAX_CHARS, WHATSAPP_TEXT_MAX_CHARS } from '../inbox/constants';
 import type { AccountReply } from './account-types';
-import { buildMenuButtonText, buildMenuRows, renderAccountReply } from './account-copy';
+import { buildMenuButtonText, buildMenuRows, renderAccountReply, renderInstallLines } from './account-copy';
 import { LIST_BUTTON_TEXT_MAX_CHARS } from './constants';
 
 const LOCALES = Object.values(OwnerLocale);
@@ -52,6 +52,43 @@ describe('renderAccountReply', () => {
       INTENTS.map((intent) => renderAccountReply({ reply: buildReply({ intent, locale }) }).length),
     );
     expect(lengths.every((length) => length <= WHATSAPP_TEXT_MAX_CHARS)).toBe(true);
+  });
+});
+
+const INSTALL_LINK = 'https://zapbip.test/i/zb_inst_example';
+const LINE_BREAK = '\n';
+const CONNECTION_SECRET_MARK = 'zb_conn_';
+
+describe('renderInstallLines', () => {
+  test.each(LOCALES)('is exactly two lines with the link in the first, in %s', (locale) => {
+    const [firstLine, secondLine, ...rest] = renderInstallLines({ installLink: INSTALL_LINK, locale }).split(LINE_BREAK);
+    expect(rest).toEqual([]);
+    expect(firstLine).toContain(INSTALL_LINK);
+    expect(secondLine).not.toContain(INSTALL_LINK);
+  });
+
+  test.each(LOCALES)('keeps each line within the WhatsApp text limit and never names a connection secret in %s', (locale) => {
+    const lines = renderInstallLines({ installLink: INSTALL_LINK, locale }).split(LINE_BREAK);
+    expect(lines.every((line) => line.length <= WHATSAPP_TEXT_MAX_CHARS)).toBe(true);
+    expect(lines.join(LINE_BREAK)).not.toContain(CONNECTION_SECRET_MARK);
+  });
+
+  test.each(LOCALES)('says the link works once for thirty minutes in %s', (locale) => {
+    expect(renderInstallLines({ installLink: INSTALL_LINK, locale })).toContain('30');
+  });
+
+  test.each(
+    LOCALES.flatMap((locale) => [AccountReplyIntent.Created, AccountReplyIntent.Rotated].map((intent) => [locale, intent] as const)),
+  )('%s %s carries the two lines, the rotate hint and no connection secret', (locale, intent) => {
+    const installLines = renderInstallLines({ installLink: INSTALL_LINK, locale });
+    const reply = {
+      ...buildReply({ intent, locale }),
+      parameters: { [AccountReplyParameter.AgentName]: 'claude', [AccountReplyParameter.InstallPrompt]: installLines },
+    };
+    const text = renderAccountReply({ reply });
+    expect(text).toContain(installLines);
+    expect(text).toContain('claude');
+    expect(text).not.toContain(CONNECTION_SECRET_MARK);
   });
 });
 

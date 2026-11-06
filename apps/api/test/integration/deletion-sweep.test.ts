@@ -2,7 +2,8 @@ import { AccountState, OwnerLocale } from '@zapbip/types';
 import { reset, runInDurableObject } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { TOMBSTONE_STORAGE_KEY } from '../../src/account-inbox/constants';
-import { sweepDeletingAccounts } from '../../src/accounts/deletion-sweep';
+import { clearExpiredInstallSecrets, sweepDeletingAccounts } from '../../src/accounts/deletion-sweep';
+import { registerWithInstallCode } from '../support/install-codes';
 import { applyDirectoryMigration, seedAccount, seedConnection, seedOwnerIdentity } from '../support/seed';
 import { accountInboxStub, connectionOf, testEnv } from '../support/workers-env';
 
@@ -74,5 +75,33 @@ describe('sweepDeletingAccounts', () => {
     await sweepDeletingAccounts({ environment: testEnv });
     await expect(sweepDeletingAccounts({ environment: testEnv })).resolves.toBeUndefined();
     expect(await countRows({ table: 'accounts', accountId: SUSPENDED })).toBe(1);
+  });
+});
+
+describe('clearExpiredInstallSecrets', () => {
+  const EXPIRY = 1_000;
+
+  function sealedSecretOf(input: { connectionId: string }): Promise<string | null> {
+    return testEnv.CONNECTIONS.prepare('SELECT install_code_sealed_secret AS sealed FROM connections WHERE id = ?')
+      .bind(input.connectionId)
+      .first<{ sealed: string | null }>()
+      .then((row) => row!.sealed);
+  }
+
+  it('clears only the sealed secrets whose code expired, at the expiry instant included', async () => {
+    const expired = await registerWithInstallCode({ accountId: SUSPENDED, agent: 'expired', expiresAt: EXPIRY });
+    const live = await registerWithInstallCode({ accountId: SUSPENDED, agent: 'live', expiresAt: EXPIRY + 1 });
+    await clearExpiredInstallSecrets({ environment: testEnv, now: EXPIRY });
+    expect(await sealedSecretOf(expired.connection)).toBeNull();
+    expect(await sealedSecretOf(live.connection)).not.toBeNull();
+  });
+
+  it('keeps the digest of an expired code so the page can still say it expired', async () => {
+    const expired = await registerWithInstallCode({ accountId: SUSPENDED, agent: 'expired', expiresAt: EXPIRY });
+    await clearExpiredInstallSecrets({ environment: testEnv, now: EXPIRY });
+    const row = await testEnv.CONNECTIONS.prepare('SELECT install_code_digest AS digest FROM connections WHERE id = ?')
+      .bind(expired.connection.connectionId)
+      .first<{ digest: string | null }>();
+    expect(row!.digest).toBe(expired.connection.installCodeDigest);
   });
 });

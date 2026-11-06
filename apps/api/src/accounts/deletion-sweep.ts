@@ -17,3 +17,7 @@ export function sweepDeletingAccounts(input: { environment: Bindings }): Promise
     }),
   });
 }
+
+export async function clearExpiredInstallSecrets(_input: { environment: Bindings; now: number }): Promise<void> {
+  throw new Error('clearExpiredInstallSecrets is not implemented');
+}

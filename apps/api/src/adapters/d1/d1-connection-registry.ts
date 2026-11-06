@@ -1,4 +1,4 @@
-import type { AgentName, ConnectionRecord, ConnectionRegistry } from '@zapbip/core';
+import type { AgentName, ConnectionRecord, ConnectionRegistry, InstallCodeColumns, NewConnection } from '@zapbip/core';
 import { RegisterOutcome } from '@zapbip/types';
 
 const SELECT_CONNECTION = `SELECT id AS connectionId, account_id AS accountId, agent, secret_digest AS secretDigest, created_at AS createdAt
@@ -20,7 +20,7 @@ export class D1ConnectionRegistry implements ConnectionRegistry {
     this.database = input.database;
   }
 
-  async register(input: { connection: ConnectionRecord; activeLimit: number }): Promise<RegisterOutcome> {
+  async register(input: { connection: NewConnection; activeLimit: number }): Promise<RegisterOutcome> {
     const { connection } = input;
     const result = await this.database
       .prepare(REGISTER_STATEMENT)
@@ -58,7 +58,14 @@ export class D1ConnectionRegistry implements ConnectionRegistry {
     return result.meta.changes === SINGLE_CHANGE;
   }
 
-  async rotate(input: { accountId: string; agent: AgentName; fromDigest: string; toDigest: string; rotatedAt: number }): Promise<boolean> {
+  async rotate(input: {
+    accountId: string;
+    agent: AgentName;
+    fromDigest: string;
+    toDigest: string;
+    installCode: InstallCodeColumns;
+    rotatedAt: number;
+  }): Promise<boolean> {
     const result = await this.database
       .prepare(ROTATE_STATEMENT)
       .bind(input.toDigest, input.rotatedAt, input.accountId, input.agent, input.fromDigest)

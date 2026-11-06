@@ -70,7 +70,7 @@ async function compensate(input: ReceiveAccountMessageInput & { result: AccountC
   const { dependencies, account, result } = input;
   const { compensation } = result;
   if (compensation === null) return;
-  const { agent, oldDigest, newDigest } = compensation;
+  const { agent, oldDigest, newDigest, oldInstallCode } = compensation;
   const { accountId } = account;
   if (oldDigest === null) {
     await dependencies.connections.revoke({ accountId, agent, revokedAt: dependencies.clock.now() });
@@ -81,6 +81,7 @@ async function compensate(input: ReceiveAccountMessageInput & { result: AccountC
     agent,
     fromDigest: newDigest,
     toDigest: oldDigest,
+    installCode: oldInstallCode,
     rotatedAt: dependencies.clock.now(),
   });
 }

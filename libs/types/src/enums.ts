@@ -203,6 +203,13 @@ export enum AccountReplyIntent {
   Unknown = 'unknown',
 }
 
+export enum InstallCodeStatus {
+  Ready = 'ready',
+  Expired = 'expired',
+  Used = 'used',
+  Unknown = 'unknown',
+}
+
 export enum AccountReplyParameter {
   AgentName = 'agent_name',
   Limit = 'limit',

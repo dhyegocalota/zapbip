@@ -1,5 +1,6 @@
 import { AccountReplyIntent, AccountReplyParameter } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
+import { EMPTY_CLIENT_MARK } from '../constants';
 import { addAgent, createAccountFixture, intentsOf, ownerInputOf } from '../testing/fixtures';
 import { listAgentConnections } from './list-agent-connections';
 
@@ -26,5 +27,16 @@ describe('listAgentConnections', () => {
     expect(agents).not.toContain('c3');
     expect(agents).toMatch(/\d{4}-\d{2}-\d{2}/);
     expect(Object.values(result.replies[0]!.parameters).some((value) => SECRET_PATTERN.test(value))).toBe(false);
+  });
+
+  test('shows the client name of each agent and the empty mark while it is unknown', async () => {
+    const fixture = await createAccountFixture();
+    await addAgent({ ...fixture, agent: 'a1' });
+    await addAgent({ ...fixture, agent: 'b2' });
+    await fixture.environment.registry.setClientName({ accountId: fixture.account.accountId, agent: 'a1', clientName: 'claude-code' });
+    const result = await listAgentConnections(ownerInputOf(fixture));
+    const [firstLine, secondLine] = result.replies[0]!.parameters[AccountReplyParameter.Agents]!.split('\n');
+    expect(firstLine).toContain('claude-code');
+    expect(secondLine).toContain(`, ${EMPTY_CLIENT_MARK})`);
   });
 });

@@ -1,6 +1,7 @@
 import { AccountReplyIntent, CommandKind } from '@zapbip/types';
 import type { AccountCommandResult } from '../account-types';
 import { isReservedAgentName, normalizeAgentName } from '../agent-name';
+import { NO_INSTALL_CODE } from '../constants';
 import { buildResult, buildTextReply } from './account-reply';
 import { buildInstallPromptReply } from './install-prompt-reply';
 import type { RotateAgentConnectionInput } from './types';
@@ -21,10 +22,22 @@ export async function rotateAgentConnection(input: RotateAgentConnectionInput): 
     agent,
     fromDigest: current.secretDigest,
     toDigest: issued.digest,
+    installCode: NO_INSTALL_CODE,
     rotatedAt: dependencies.clock.now(),
   });
   if (!isRotated) return notFound;
   const reply = await buildInstallPromptReply({ ...input, intent: AccountReplyIntent.Rotated, agent, secret: issued.secret });
-  const compensation = { connectionId: current.connectionId, agent, oldDigest: current.secretDigest, newDigest: issued.digest };
+  const oldInstallCode = {
+    installCodeDigest: current.installCodeDigest,
+    installCodeSealedSecret: current.installCodeSealedSecret,
+    installCodeExpiresAt: current.installCodeExpiresAt,
+  };
+  const compensation = {
+    connectionId: current.connectionId,
+    agent,
+    oldDigest: current.secretDigest,
+    newDigest: issued.digest,
+    oldInstallCode,
+  };
   return buildResult({ replies: [reply], compensation });
 }

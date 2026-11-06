@@ -1,7 +1,16 @@
 import type { AccountState, OwnerLocale, RegisterOutcome, SenderVerdict } from '@zapbip/types';
 import type { AgentName } from '../inbox/connection';
 import type { CoreDependencies, IdGenerator } from '../inbox/ports';
-import type { AccountLookup, AccountRecord, ConnectionRecord, IssuedSecret } from './account-types';
+import type {
+  AccountLookup,
+  AccountRecord,
+  ConnectionRecord,
+  InstallCodeColumns,
+  InstallCodeResolution,
+  IssuedInstallCode,
+  IssuedSecret,
+  NewConnection,
+} from './account-types';
 
 export interface AccountDirectory {
   findByWaId(input: { waId: string }): Promise<AccountRecord | null>;
@@ -19,15 +28,33 @@ export interface AccountDirectory {
 }
 
 export interface ConnectionRegistry {
-  register(input: { connection: ConnectionRecord; activeLimit: number }): Promise<RegisterOutcome>;
+  register(input: { connection: NewConnection; activeLimit: number }): Promise<RegisterOutcome>;
   findActiveByAgent(input: { accountId: string; agent: AgentName }): Promise<ConnectionRecord | null>;
   listActive(input: { accountId: string }): Promise<ConnectionRecord[]>;
   revoke(input: { accountId: string; agent: AgentName; revokedAt: number }): Promise<boolean>;
-  rotate(input: { accountId: string; agent: AgentName; fromDigest: string; toDigest: string; rotatedAt: number }): Promise<boolean>;
+  rotate(input: {
+    accountId: string;
+    agent: AgentName;
+    fromDigest: string;
+    toDigest: string;
+    installCode: InstallCodeColumns;
+    rotatedAt: number;
+  }): Promise<boolean>;
 }
 
 export interface ConnectionSecrets {
   issue(): Promise<IssuedSecret>;
+}
+
+export interface InstallCodeVault {
+  issue(): Promise<IssuedInstallCode>;
+  seal(input: { installCode: string; secret: string }): Promise<string>;
+  open(input: { installCode: string; sealed: string }): Promise<string>;
+}
+
+export interface InstallCodeDirectory {
+  resolve(input: { installCode: string; now: number }): Promise<InstallCodeResolution>;
+  recordFirstCall(input: { connectionId: string; calledAt: number }): Promise<void>;
 }
 
 export interface InstallPromptRenderer {
@@ -70,6 +97,7 @@ export type AccountDependencies = CoreDependencies & {
   connections: ConnectionRegistry;
   connectionSecrets: ConnectionSecrets;
   installPromptRenderer: InstallPromptRenderer;
+  installCodeVault: InstallCodeVault;
   revocations: ConnectionRevocations;
   firstMessage: FirstMessageClaim;
   deletionRequests: DeletionRequests;

@@ -2,11 +2,13 @@ import { AccountState, IdPrefix, MessageKind, OwnerLocale, type AccountReplyInte
 import type { AgentName } from '../../inbox/connection';
 import type { OwnerInboundContent } from '../../inbox/use-cases/types';
 import type { AccountCommandResult, OwnerAccountContext } from '../account-types';
+import { NO_INSTALL_CODE } from '../constants';
 import { receiveAccountMessage } from '../use-cases/receive-account-message';
 import type { OwnerAccountInput, ReceiveAccountMessageResult } from '../use-cases/types';
-import { createInMemoryAccountDependencies, type InMemoryAccountEnvironment } from './in-memory-accounts';
+import { createInMemoryAccountDependencies, IN_MEMORY_PUBLIC_ORIGIN, type InMemoryAccountEnvironment } from './in-memory-accounts';
 
-export const PUBLIC_ORIGIN = 'https://zapbip.test';
+export const PUBLIC_ORIGIN = IN_MEMORY_PUBLIC_ORIGIN;
+
 export const BRAZIL_WA_ID = '5511999990000';
 export const UNITED_STATES_WA_ID = '14155550100';
 
@@ -70,6 +72,7 @@ export async function addAgent(input: AccountFixture & { agent: AgentName }): Pr
       agent,
       secretDigest: issued.digest,
       createdAt: environment.clock.now(),
+      ...NO_INSTALL_CODE,
     },
     activeLimit: Number.MAX_SAFE_INTEGER,
   });

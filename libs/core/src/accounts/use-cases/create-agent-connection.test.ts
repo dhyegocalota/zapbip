@@ -1,6 +1,6 @@
 import { AccountReplyIntent, AccountReplyParameter, RegisterOutcome } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
-import { AGENTS_PER_ACCOUNT_LIMIT } from '../constants';
+import { AGENTS_PER_ACCOUNT_LIMIT, INSTALL_CODE_TTL_MS, NO_INSTALL_CODE } from '../constants';
 import { AGENT_NAME_MAX_CHARS } from '../../inbox/constants';
 import { addAgent, createAccountFixture, intentsOf, ownerInputOf, PUBLIC_ORIGIN } from '../testing/fixtures';
 import { createAgentConnection } from './create-agent-connection';
@@ -12,21 +12,37 @@ async function create(input: { rawName: string }) {
 }
 
 describe('createAgentConnection', () => {
-  test('creates the normalised connection and replies with the install prompt and the link', async () => {
+  test('creates the normalised connection and replies with the install link only', async () => {
     const { fixture, result } = await create({ rawName: 'Claude Code' });
     const [issued] = fixture.environment.secrets.issued;
+    const [installCode] = fixture.environment.installCodeVault.issued;
     const [active] = await fixture.environment.registry.listActive({ accountId: fixture.account.accountId });
     const [reply] = result.replies;
+    const installPrompt = reply!.parameters[AccountReplyParameter.InstallPrompt]!;
     expect(intentsOf({ result })).toEqual([AccountReplyIntent.Created]);
     expect(active!.agent).toBe('claude-code');
     expect(reply!.parameters[AccountReplyParameter.AgentName]).toBe('claude-code');
-    expect(reply!.parameters[AccountReplyParameter.InstallPrompt]).toContain(`${PUBLIC_ORIGIN}/c/${issued!.secret}/mcp`);
+    expect(installPrompt).toContain(`${PUBLIC_ORIGIN}/i/${installCode!.installCode}`);
+    expect(installPrompt).not.toContain('/c/');
+    expect(installPrompt).not.toContain(issued!.secret);
     expect(result.compensation).toEqual({
       connectionId: active!.connectionId,
       agent: 'claude-code',
       oldDigest: null,
       newDigest: issued!.digest,
+      oldInstallCode: NO_INSTALL_CODE,
     });
+  });
+
+  test('stores the install code digest, the sealed secret and a thirty minute expiry', async () => {
+    const { fixture } = await create({ rawName: 'claude' });
+    const [issued] = fixture.environment.secrets.issued;
+    const [installCode] = fixture.environment.installCodeVault.issued;
+    const [active] = await fixture.environment.registry.listActive({ accountId: fixture.account.accountId });
+    expect(active!.installCodeDigest).toBe(installCode!.digest);
+    expect(active!.installCodeExpiresAt).toBe(fixture.environment.clock.now() + INSTALL_CODE_TTL_MS);
+    const sealed = active!.installCodeSealedSecret!;
+    expect(await fixture.environment.installCodeVault.open({ installCode: installCode!.installCode, sealed })).toBe(issued!.secret);
   });
 
   test('an empty name replies with usage', async () => {

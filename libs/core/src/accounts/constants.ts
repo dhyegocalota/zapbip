@@ -1,4 +1,5 @@
 import { DAY_MS, MINUTE_MS } from '@zapbip/types';
+import type { InstallCodeColumns } from './account-types';
 
 export const AGENTS_PER_ACCOUNT_LIMIT = 8;
 export const OWNER_MESSAGES_PER_MINUTE = 20;
@@ -9,6 +10,16 @@ export const NEW_ACCOUNTS_PER_DAY_LIMIT = 50;
 export const NEW_ACCOUNTS_WINDOW_MS = DAY_MS;
 export const DELETION_CONFIRM_TTL_MS = 10 * MINUTE_MS;
 export const PART_LABEL_BUDGET_CHARS = 16;
+export const INSTALL_CODE_TTL_MS = 30 * MINUTE_MS;
+export const INSTALL_PAGE_PATH_PREFIX = '/i/';
+export const CONNECTION_LINK_PATH_PREFIX = '/c/';
+export const CONNECTION_LINK_PATH_SUFFIX = '/mcp';
+export const EMPTY_CLIENT_MARK = '-';
+export const NO_INSTALL_CODE: InstallCodeColumns = {
+  installCodeDigest: null,
+  installCodeSealedSecret: null,
+  installCodeExpiresAt: null,
+};
 export const COMMAND_LIST_ID_PREFIX = 'zapbip:';
 export const LIST_BUTTON_TEXT_MAX_CHARS = 20;
 export const BRAZIL_COUNTRY_CODE = '55';

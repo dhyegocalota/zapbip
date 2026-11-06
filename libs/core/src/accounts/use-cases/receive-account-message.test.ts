@@ -17,6 +17,7 @@ import { touchAgent } from '../../inbox/use-cases/touch-agent';
 import {
   addAgent,
   createAccountFixture,
+  PUBLIC_ORIGIN,
   receiveAccount,
   receiveAccountText,
   receiveListTap,
@@ -257,37 +258,27 @@ describe('receiveAccountMessage deletion', () => {
   });
 });
 
-const LONG_LINE = 'x'.repeat(1_500);
-
-function withLongPrompt(input: AccountFixture): AccountFixture {
-  const renderer = {
-    render: async (rendering: { connectionLink: string }) => [LONG_LINE, LONG_LINE, LONG_LINE, rendering.connectionLink].join('\n'),
-  };
-  return {
-    ...input,
-    environment: { ...input.environment, dependencies: { ...input.environment.dependencies, installPromptRenderer: renderer } },
-  };
-}
-
 describe('receiveAccountMessage compensation', () => {
-  test('a failed part 2 of a create revokes the new link and tells the owner', async () => {
-    const fixture = withLongPrompt(await createAccountFixture());
-    fixture.environment.sender.failSessionCalls({ callNumbers: [2] });
+  test('a failed create send revokes the new link and tells the owner', async () => {
+    const fixture = await createAccountFixture();
+    fixture.environment.sender.failSessionCalls({ callNumbers: [1] });
     const result = await receiveAccountText({ ...fixture, text: 'novo agente claude' });
     const [issued] = fixture.environment.secrets.issued;
     expect(result.duplicate).toBe(false);
     expect(await fixture.environment.connectionDirectory.resolveSecretDigest({ secretDigest: issued!.digest })).toBeNull();
     expect(await fixture.environment.registry.listActive({ accountId: fixture.account.accountId })).toEqual([]);
-    expect(sessionTexts(fixture)).toHaveLength(2);
-    expect(sessionTexts(fixture).at(-1)).toBe(copyOf({ intent: AccountReplyIntent.SendFailed }));
+    expect(sessionTexts(fixture)).toEqual([copyOf({ intent: AccountReplyIntent.SendFailed })]);
   });
 
-  test('a failed part 2 of a rotate restores the old link and keeps the waiters', async () => {
-    const fixture = withLongPrompt(await createAccountFixture());
+  test('a failed rotate send restores the old link and its install code and keeps the waiters', async () => {
+    const fixture = await createAccountFixture();
     const oldDigest = await addAgent({ ...fixture, agent: 'claude' });
-    fixture.environment.sender.failSessionCalls({ callNumbers: [2] });
+    const before = await fixture.environment.registry.findActiveByAgent({ accountId: fixture.account.accountId, agent: 'claude' });
+    fixture.environment.sender.failSessionCalls({ callNumbers: [1] });
     await receiveAccountText({ ...fixture, text: 'girar claude' });
     const [, rotated] = fixture.environment.secrets.issued;
+    const after = await fixture.environment.registry.findActiveByAgent({ accountId: fixture.account.accountId, agent: 'claude' });
+    expect(after).toEqual(before);
     expect(await fixture.environment.connectionDirectory.resolveSecretDigest({ secretDigest: oldDigest })).not.toBeNull();
     expect(await fixture.environment.connectionDirectory.resolveSecretDigest({ secretDigest: rotated!.digest })).toBeNull();
     expect(fixture.environment.revocations.cancelled).toEqual([]);
@@ -301,10 +292,13 @@ describe('receiveAccountMessage compensation', () => {
     expect(fixture.environment.revocations.revoked).toEqual([]);
   });
 
-  test('a delivered create sends the link once, in parts', async () => {
-    const fixture = withLongPrompt(await createAccountFixture());
+  test('a delivered create sends one text with the install link and no part label', async () => {
+    const fixture = await createAccountFixture();
     const result = await receiveAccountText({ ...fixture, text: 'novo agente claude' });
+    const [installCode] = fixture.environment.installCodeVault.issued;
     expect(result.messageId).toBeNull();
-    expect(sessionTexts(fixture)).toHaveLength(2);
+    expect(sessionTexts(fixture)).toHaveLength(1);
+    expect(sessionTexts(fixture)[0]).toContain(`${PUBLIC_ORIGIN}/i/${installCode!.installCode}`);
+    expect(sessionTexts(fixture)[0]).not.toMatch(/^1\/\d/);
   });
 });

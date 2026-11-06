@@ -6,6 +6,7 @@ export * from './command';
 export * from './agent-name';
 export * from './install-prompt-parts';
 export * from './account-copy';
+export * from './connection-link';
 export * from './state-gate';
 export * from './use-cases/types';
 export * from './use-cases/open-owner-account';

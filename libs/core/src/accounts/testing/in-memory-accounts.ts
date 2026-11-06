@@ -1,8 +1,18 @@
-import { AccountState, OwnerLocale, RegisterOutcome } from '@zapbip/types';
+import { AccountState, InstallCodeStatus, OwnerLocale, RegisterOutcome } from '@zapbip/types';
 import type { AgentName, ConnectionIdentity } from '../../inbox/connection';
 import type { ConnectionDirectory } from '../../inbox/ports';
 import { createInMemoryDependencies, type InMemoryEnvironment, type InMemoryOptions } from '../../inbox/testing/in-memory';
-import type { AccountLookup, AccountRecord, ConnectionRecord, IssuedSecret, OwnerAccountContext } from '../account-types';
+import type {
+  AccountLookup,
+  AccountRecord,
+  ConnectionRecord,
+  InstallCodeResolution,
+  IssuedInstallCode,
+  IssuedSecret,
+  OwnerAccountContext,
+} from '../account-types';
+import { buildConnectionLink } from '../connection-link';
+import { NO_INSTALL_CODE } from '../constants';
 import type {
   AccountDependencies,
   AccountDirectory,
@@ -13,11 +23,17 @@ import type {
   ConnectionSecrets,
   DeletionRequests,
   FirstMessageClaim,
+  InstallCodeDirectory,
+  InstallCodeVault,
   InstallPromptRenderer,
 } from '../ports';
 
 const FAKE_SECRET_PREFIX = 'zb_conn_fake_';
 const FAKE_DIGEST_PREFIX = 'fake:';
+const FAKE_INSTALL_CODE_PREFIX = 'zb_inst_fake_';
+const FAKE_SEALED_PREFIX = 'sealed:';
+const FAKE_SEAL_SEPARATOR = ':';
+export const IN_MEMORY_PUBLIC_ORIGIN = 'https://zapbip.test';
 const DEFAULT_WA_ID = '5511999990000';
 
 type StoredAccount = AccountRecord & { createdAt: number };
@@ -33,8 +49,10 @@ export type InMemoryAccountMedia = AccountMediaPurge & {
   put(input: { accountId: string; mediaId: string }): void;
   count(input: { accountId: string }): number;
 };
+export type RecordingInstallCodeVault = InstallCodeVault & { issued: IssuedInstallCode[] };
 export type InMemoryConnections = ConnectionRegistry & {
   listAll(input: { accountId: string }): StoredConnection[];
+  setClientName(input: { accountId: string; agent: AgentName; clientName: string }): void;
   countAccounts(): number;
 };
 
@@ -45,6 +63,8 @@ export type InMemoryAccountEnvironment = Omit<InMemoryEnvironment, 'dependencies
   registry: InMemoryConnections;
   connectionDirectory: ConnectionDirectory;
   secrets: RecordingSecrets;
+  installCodeVault: RecordingInstallCodeVault;
+  installCodeDirectory: InstallCodeDirectory;
   revocations: RecordingRevocations;
   accountMedia: InMemoryAccountMedia;
   openAccount(input?: { waId?: string; state?: AccountState; locale?: OwnerLocale; accountId?: string }): Promise<OwnerAccountContext>;
@@ -106,10 +126,15 @@ function createRegistry(input: { store: AccountStore }): InMemoryConnections {
   return {
     listAll: ({ accountId }) => [...connections.values()].filter((row) => row.record.accountId === accountId),
     countAccounts: () => accounts.size,
+    setClientName: ({ accountId, agent, clientName }) => {
+      const found = findActive({ accountId, agent });
+      if (found === undefined) return;
+      connections.set(found.record.connectionId, { ...found, record: { ...found.record, clientName } });
+    },
     register: async ({ connection, activeLimit }) => {
       if (findActive(connection) !== undefined) return RegisterOutcome.NameTaken;
       if (activeOf(connection.accountId).length >= activeLimit) return RegisterOutcome.LimitReached;
-      connections.set(connection.connectionId, { record: connection, revokedAt: null });
+      connections.set(connection.connectionId, { record: { ...connection, clientName: null, firstCallAt: null }, revokedAt: null });
       return RegisterOutcome.Registered;
     },
     findActiveByAgent: async (lookup) => {
@@ -120,13 +145,14 @@ function createRegistry(input: { store: AccountStore }): InMemoryConnections {
     revoke: async ({ accountId, agent, revokedAt }) => {
       const found = findActive({ accountId, agent });
       if (found === undefined) return false;
-      connections.set(found.record.connectionId, { ...found, revokedAt });
+      connections.set(found.record.connectionId, { record: { ...found.record, ...NO_INSTALL_CODE }, revokedAt });
       return true;
     },
-    rotate: async ({ accountId, agent, fromDigest, toDigest }) => {
+    rotate: async ({ accountId, agent, fromDigest, toDigest, installCode }) => {
       const found = findActive({ accountId, agent });
       if (found === undefined || found.record.secretDigest !== fromDigest) return false;
-      connections.set(found.record.connectionId, { ...found, record: { ...found.record, secretDigest: toDigest } });
+      const record = { ...found.record, ...installCode, secretDigest: toDigest, firstCallAt: null };
+      connections.set(found.record.connectionId, { ...found, record });
       return true;
     },
   };
@@ -154,6 +180,57 @@ function createSecrets(): RecordingSecrets {
       const next = { secret, digest: `${FAKE_DIGEST_PREFIX}${secret}` };
       issued.push(next);
       return next;
+    },
+  };
+}
+
+function createInstallCodeVault(): RecordingInstallCodeVault {
+  const issued: IssuedInstallCode[] = [];
+  return {
+    issued,
+    issue: async () => {
+      const installCode = `${FAKE_INSTALL_CODE_PREFIX}${issued.length + 1}`;
+      const next = { installCode, digest: `${FAKE_DIGEST_PREFIX}${installCode}` };
+      issued.push(next);
+      return next;
+    },
+    seal: async ({ installCode, secret }) => `${FAKE_SEALED_PREFIX}${installCode}${FAKE_SEAL_SEPARATOR}${secret}`,
+    open: async ({ installCode, sealed }) => {
+      const prefix = `${FAKE_SEALED_PREFIX}${installCode}${FAKE_SEAL_SEPARATOR}`;
+      if (!sealed.startsWith(prefix)) throw new Error('the install code does not open this secret');
+      return sealed.slice(prefix.length);
+    },
+  };
+}
+
+function createInstallCodeDirectory(input: { store: AccountStore; vault: InstallCodeVault; publicOrigin: string }): InstallCodeDirectory {
+  const { accounts, connections } = input.store;
+  return {
+    resolve: async ({ installCode, now }): Promise<InstallCodeResolution> => {
+      const digest = `${FAKE_DIGEST_PREFIX}${installCode}`;
+      const found = [...connections.values()].find((row) => row.record.installCodeDigest === digest && row.revokedAt === null);
+      if (found === undefined) return { status: InstallCodeStatus.Unknown, locale: null };
+      const { record } = found;
+      const account = accounts.get(record.accountId);
+      if (account === undefined) return { status: InstallCodeStatus.Unknown, locale: null };
+      const { locale } = account;
+      if (record.installCodeExpiresAt === null || record.installCodeExpiresAt <= now) return { status: InstallCodeStatus.Expired, locale };
+      if (record.firstCallAt !== null || record.installCodeSealedSecret === null) return { status: InstallCodeStatus.Used, locale };
+      const secret = await input.vault.open({ installCode, sealed: record.installCodeSealedSecret });
+      const connectionLink = buildConnectionLink({ publicOrigin: input.publicOrigin, secret });
+      return {
+        status: InstallCodeStatus.Ready,
+        connectionLink,
+        locale,
+        agent: record.agent,
+        accountId: record.accountId,
+        connectionId: record.connectionId,
+      };
+    },
+    recordFirstCall: async ({ connectionId, calledAt }) => {
+      const found = connections.get(connectionId);
+      if (found === undefined || found.record.firstCallAt !== null) return;
+      connections.set(connectionId, { ...found, record: { ...found.record, firstCallAt: calledAt, installCodeSealedSecret: null } });
     },
   };
 }
@@ -233,6 +310,7 @@ export function createInMemoryAccountDependencies(input: InMemoryOptions = {}): 
   const directory = createDirectory({ store });
   const accountMedia = createAccountMedia();
   const secrets = createSecrets();
+  const installCodeVault = createInstallCodeVault();
   const revocations = createRevocations();
   const registry = createRegistry({ store });
   const dependencies: AccountDependencies = {
@@ -241,6 +319,7 @@ export function createInMemoryAccountDependencies(input: InMemoryOptions = {}): 
     connections: registry,
     connectionSecrets: secrets,
     installPromptRenderer: createInstallPromptRenderer(),
+    installCodeVault,
     revocations,
     firstMessage: createFirstMessageClaim(),
     deletionRequests: createDeletionRequests(),
@@ -274,6 +353,8 @@ export function createInMemoryAccountDependencies(input: InMemoryOptions = {}): 
     registry,
     connectionDirectory: createConnectionDirectory({ store }),
     secrets,
+    installCodeVault,
+    installCodeDirectory: createInstallCodeDirectory({ store, vault: installCodeVault, publicOrigin: IN_MEMORY_PUBLIC_ORIGIN }),
     revocations,
     accountMedia,
     openAccount,
