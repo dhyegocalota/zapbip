@@ -1,3 +1,5 @@
+export const GRAPH_NO_RESPONSE_STATUS = 0;
+
 export type GraphClient = {
   post(input: { path: string; body: unknown }): Promise<unknown>;
   get(input: { path: string }): Promise<unknown>;

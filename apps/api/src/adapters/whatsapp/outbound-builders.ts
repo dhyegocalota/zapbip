@@ -7,6 +7,7 @@ export function buildSessionPayload(input: {
   question: Question | null;
   replyToChannelMessageId: string | null;
   reactionTargetChannelMessageId: string | null;
+  locale: OwnerLocale;
   publicOrigin: string;
   mediaStore: MediaStore;
   accountId: string;

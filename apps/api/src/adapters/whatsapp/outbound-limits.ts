@@ -19,3 +19,13 @@ export function assertListLimits(input: {
   void input;
   throw new Error('assertListLimits is not implemented');
 }
+
+export function assertTextBody(input: { body: string }): void {
+  void input;
+  throw new Error('assertTextBody is not implemented');
+}
+
+export function assertReactionTarget(input: { messageId: string | null }): void {
+  void input;
+  throw new Error('assertReactionTarget is not implemented');
+}

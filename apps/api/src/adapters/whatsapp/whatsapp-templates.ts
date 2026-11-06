@@ -1,4 +1,4 @@
-import { OwnerLocale } from '@zapbip/types';
+import { OwnerLocale, TemplateKind } from '@zapbip/types';
 import { WhatsAppLanguageCode, WhatsAppTemplateName } from './whatsapp-enums';
 
 export const WHATSAPP_TEMPLATE_BODIES: Record<WhatsAppTemplateName, Record<WhatsAppLanguageCode, string>> = {
@@ -18,4 +18,8 @@ export const WHATSAPP_TEMPLATE_QUICK_REPLIES: Record<WhatsAppTemplateName, Recor
 export const OWNER_LOCALE_TO_LANGUAGE_CODE: Record<OwnerLocale, WhatsAppLanguageCode> = {
   [OwnerLocale.PortugueseBrazil]: WhatsAppLanguageCode.PortugueseBrazil,
   [OwnerLocale.EnglishUs]: WhatsAppLanguageCode.EnglishUs,
+};
+export const TEMPLATE_NAME_BY_KIND: Record<TemplateKind, WhatsAppTemplateName> = {
+  [TemplateKind.Notice]: WhatsAppTemplateName.AgentNotice,
+  [TemplateKind.QuestionNotice]: WhatsAppTemplateName.AgentQuestion,
 };

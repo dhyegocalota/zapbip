@@ -1,8 +1,9 @@
-import { OwnerLocale } from '@zapbip/types';
+import { OwnerLocale, TemplateKind } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { WhatsAppLanguageCode, WhatsAppTemplateName } from '../../src/adapters/whatsapp/whatsapp-enums';
 import {
   OWNER_LOCALE_TO_LANGUAGE_CODE,
+  TEMPLATE_NAME_BY_KIND,
   WHATSAPP_TEMPLATE_BODIES,
   WHATSAPP_TEMPLATE_QUICK_REPLIES,
 } from '../../src/adapters/whatsapp/whatsapp-templates';
@@ -37,5 +38,12 @@ describe('WhatsApp templates', () => {
       [OwnerLocale.EnglishUs]: WhatsAppLanguageCode.EnglishUs,
     });
     expect(Object.keys(OWNER_LOCALE_TO_LANGUAGE_CODE).sort()).toEqual(Object.values(OwnerLocale).sort());
+  });
+
+  it('names the template of each kind', () => {
+    expect(TEMPLATE_NAME_BY_KIND).toEqual({
+      [TemplateKind.Notice]: WhatsAppTemplateName.AgentNotice,
+      [TemplateKind.QuestionNotice]: WhatsAppTemplateName.AgentQuestion,
+    });
   });
 });
