@@ -38,6 +38,7 @@ export type FakeConnector = {
   sendFrame: (input: { frame: object }) => void;
   sendText: (input: { text: string }) => void;
   closeConnections: (input: { code: number }) => void;
+  dropConnections: () => void;
   stop: () => Promise<void>;
 };
 
@@ -134,6 +135,7 @@ export async function startFakeConnector(input: FakeConnectorOptions = {}): Prom
     sendFrame: ({ frame }) => liveSockets().forEach((socket) => socket.send(JSON.stringify(frame))),
     sendText: ({ text }) => liveSockets().forEach((socket) => socket.send(text)),
     closeConnections: ({ code }) => liveSockets().forEach((socket) => socket.close(code)),
+    dropConnections: () => liveSockets().forEach((socket) => socket.terminate()),
     stop: async () => {
       sockets.forEach((socket) => socket.terminate());
       socketServer.close();

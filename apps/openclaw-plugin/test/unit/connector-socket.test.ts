@@ -26,6 +26,7 @@ const FAST_HEARTBEAT_INTERVAL_MS = 40;
 const FAST_HEARTBEAT_TIMEOUT_MS = 25;
 const PROMPT_RETURN_MS = 100;
 const IDLE_HEARTBEAT_MS = 60_000;
+const BATCH_SIZE = 100;
 const OWNER_SECRET_TEXT = 'segredo-do-dono';
 
 type LoggedEvent = { event: ConnectorLogEvent; fields: ConnectorLogFields };
@@ -84,6 +85,12 @@ function recordingWait(input: { delays: number[] }) {
 
 function doneIds(input: { connector: FakeConnector }): unknown[] {
   return input.connector.framesOfType({ type: ConnectorFrameType.Done }).map((entry) => entry.frame.messageId);
+}
+
+function chunk(input: { messages: Message[] }): Message[][] {
+  return Array.from({ length: Math.ceil(input.messages.length / BATCH_SIZE) }, (_unused, index) =>
+    input.messages.slice(index * BATCH_SIZE, (index + 1) * BATCH_SIZE),
+  );
 }
 
 function deferred() {
@@ -179,7 +186,7 @@ describe('handoff and done', () => {
     const frame = messagesFrame({ messages: [ownerTextMessage({ messageId: 'msg_1', text: 'um' })] });
     connector.sendFrame({ frame });
     await vi.waitFor(() => expect(handOff).toHaveBeenCalledTimes(1));
-    connector.closeConnections({ code: 1006 });
+    connector.dropConnections();
     await connector.waitForConnections({ count: 2 });
     connector.sendFrame({ frame });
     await connector.waitForFrames({ type: ConnectorFrameType.Done, count: 1 });
@@ -219,7 +226,7 @@ describe('handoff and done', () => {
     await connector.waitForConnections({ count: 1 });
     const total = SEEN_MESSAGE_LIMIT + 1;
     const messages = Array.from({ length: total }, (_unused, index) => ownerTextMessage({ messageId: `msg_${index}`, text: 'oi' }));
-    connector.sendFrame({ frame: messagesFrame({ messages }) });
+    chunk({ messages }).forEach((batch) => connector.sendFrame({ frame: messagesFrame({ messages: batch }) }));
     await connector.waitForFrames({ type: ConnectorFrameType.Done, count: total });
     connector.sendFrame({ frame: messagesFrame({ messages: [messages[0] as Message, messages[total - 1] as Message] }) });
     await connector.waitForFrames({ type: ConnectorFrameType.Done, count: total + 2 });
@@ -278,7 +285,7 @@ describe('close and reconnect', () => {
     const connector = await startConnector();
     const plugin = startPlugin({ connector });
     await connector.waitForConnections({ count: 1 });
-    connector.closeConnections({ code: 1006 });
+    connector.dropConnections();
     await connector.waitForConnections({ count: 2 });
     expect(plugin.delays).toEqual([RECONNECT_BASE_MS]);
     expect(plugin.events.map((entry) => entry.event)).toContain(ConnectorLogEvent.ConnectorReconnecting);
@@ -288,7 +295,7 @@ describe('close and reconnect', () => {
     const connector = await startConnector();
     const plugin = startPlugin({ connector });
     await connector.waitForConnections({ count: 1 });
-    connector.closeConnections({ code: 1006 });
+    connector.dropConnections();
     await connector.waitForConnections({ count: 2 });
     expect(plugin.handOff).not.toHaveBeenCalled();
   });
@@ -297,9 +304,9 @@ describe('close and reconnect', () => {
     const connector = await startConnector();
     const plugin = startPlugin({ connector });
     await connector.waitForConnections({ count: 1 });
-    connector.closeConnections({ code: 1006 });
+    connector.dropConnections();
     await connector.waitForConnections({ count: 2 });
-    connector.closeConnections({ code: 1006 });
+    connector.dropConnections();
     await connector.waitForConnections({ count: 3 });
     expect(plugin.delays).toEqual([RECONNECT_BASE_MS, RECONNECT_BASE_MS]);
   });
@@ -311,7 +318,7 @@ describe('close and reconnect', () => {
       wait: ({ signal }) => new Promise((resolve) => signal.addEventListener('abort', () => resolve(), { once: true })),
     });
     await connector.waitForConnections({ count: 1 });
-    connector.closeConnections({ code: 1006 });
+    connector.dropConnections();
     await vi.waitFor(() => expect(plugin.events.map((entry) => entry.event)).toContain(ConnectorLogEvent.ConnectorReconnecting));
     const startedAt = Date.now();
     plugin.controller.abort();
@@ -405,7 +412,7 @@ describe('secrets', () => {
     const live = await startConnector();
     const livePlugin = startPlugin({ connector: live });
     await live.waitForConnections({ count: 1 });
-    live.closeConnections({ code: 1006 });
+    live.dropConnections();
     await live.waitForConnections({ count: 2 });
     const logged = JSON.stringify([...refusedPlugin.events, ...livePlugin.events]);
     expect(logged).not.toContain(FAKE_SECRET);
