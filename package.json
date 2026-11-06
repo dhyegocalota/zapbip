@@ -14,6 +14,14 @@
     "test:verify": "bash scripts/verify.test.sh",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "deploy:staging": "node --env-file=.env --import tsx apps/api/scripts/deploy.ts --environment staging",
+    "deploy:production": "node --env-file=.env --import tsx apps/api/scripts/deploy.ts --environment production",
+    "migrate:development": "pnpm --filter @zapbip/api exec wrangler d1 migrations apply zapbip-development --env development --local",
+    "migrate:staging": "pnpm --filter @zapbip/api exec wrangler d1 migrations apply zapbip-staging --env staging --remote",
+    "migrate:production": "pnpm --filter @zapbip/api exec wrangler d1 migrations apply zapbip-production --env production --remote",
+    "smoke:development": "node --env-file=.env --import tsx apps/api/scripts/smoke.ts --environment development",
+    "smoke:staging": "node --env-file=.env --import tsx apps/api/scripts/smoke.ts --environment staging",
+    "smoke:production": "node --env-file=.env --import tsx apps/api/scripts/smoke.ts --environment production",
     "verify": "bash scripts/verify.sh"
   },
   "devDependencies": {
