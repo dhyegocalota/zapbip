@@ -297,7 +297,7 @@ describe('receiveOwnerMessage routing list', () => {
     expect(await environment.repository.listHeld()).toMatchObject([{ messageId: result.messageId, agent: null }]);
   });
 
-  test('a reaction nobody can be routed to is held without prompting a closed window', async () => {
+  test('a reaction nobody can be routed to is stored as routed nowhere without prompting a closed window', async () => {
     const environment = await createEnvironment();
     await registerAgents({ environment, agents: ['alpha', 'beta'] });
     await receiveText({ environment, text: 'hello' });
@@ -309,6 +309,33 @@ describe('receiveOwnerMessage routing list', () => {
     expect(result.agent).toBeNull();
     expect(environment.sender.sessions).toHaveLength(sessionsBefore);
     expect(environment.sender.templates).toHaveLength(0);
+    expect(await environment.repository.listHeld()).toEqual([]);
+    expect(await environment.repository.findMessage({ messageId: result.messageId! })).toMatchObject({ agent: null, readByAgent: true });
+  });
+
+  test('a reaction to an unknown message does not suppress the routing list of the next text', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha', 'beta'] });
+    await receive({ environment, content: { kind: MessageKind.Reaction, targetMessageId: 'msg_unknown', emoji: '👍' } });
+    await receiveText({ environment, text: 'hello' });
+    expect(routingLists({ environment })).toHaveLength(1);
+  });
+
+  test('a routing list that failed to send does not suppress the next one', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha', 'beta'] });
+    environment.sender.failSessionCalls({ callNumbers: [1] });
+    await expect(receiveText({ environment, text: 'first' })).rejects.toThrow();
+    await receiveText({ environment, text: 'second' });
+    expect(routingLists({ environment })).toHaveLength(1);
+  });
+
+  test('pin: after the first agent takes the held message of the no-agents notice, the next unmatched text gets a routing list', async () => {
+    const environment = await createEnvironment();
+    await receiveText({ environment, text: 'anyone?' });
+    await registerAgents({ environment, agents: ['alpha', 'beta'] });
+    await receiveText({ environment, text: 'hello' });
+    expect(routingLists({ environment })).toHaveLength(1);
     expect(await environment.repository.listHeld()).toHaveLength(1);
   });
 });
