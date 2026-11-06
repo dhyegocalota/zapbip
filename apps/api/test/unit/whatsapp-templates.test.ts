@@ -7,6 +7,7 @@ import {
   WHATSAPP_TEMPLATE_BODIES,
   WHATSAPP_TEMPLATE_QUICK_REPLIES,
 } from '../../src/adapters/whatsapp/whatsapp-templates';
+import { assertTemplateBodyHasFixedWords } from '../../src/adapters/whatsapp/template-sanitiser';
 
 describe('WhatsApp templates', () => {
   it('AU-116 keeps the registered template bodies', () => {
@@ -21,6 +22,13 @@ describe('WhatsApp templates', () => {
       },
     });
   });
+
+  it.each(Object.values(WHATSAPP_TEMPLATE_BODIES).flatMap((bodies) => Object.values(bodies)))(
+    'AU-117 starts and ends with fixed words: %s',
+    (body) => {
+      expect(() => assertTemplateBodyHasFixedWords({ body })).not.toThrow();
+    },
+  );
 
   it('AU-116 keeps the quick reply texts', () => {
     expect(WHATSAPP_TEMPLATE_QUICK_REPLIES).toEqual({
