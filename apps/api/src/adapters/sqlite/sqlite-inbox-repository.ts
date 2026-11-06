@@ -287,23 +287,26 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
     },
 
     async findWindow() {
-      const row = first<{ last_owner_message_at: number | null; notice_sent_for_closed_window: number }>(
-        'SELECT last_owner_message_at, notice_sent_for_closed_window FROM owner_window WHERE id = ?',
-        WINDOW_ROW_ID,
-      );
+      const row = first<{
+        last_owner_message_at: number | null;
+        notice_sent_for_closed_window: number;
+        notice_retry_locale: OwnerLocale | null;
+      }>('SELECT last_owner_message_at, notice_sent_for_closed_window, notice_retry_locale FROM owner_window WHERE id = ?', WINDOW_ROW_ID);
       if (row === null) throw new Error('owner_window row is missing');
       const window: OwnerWindow = {
         lastOwnerMessageAt: row.last_owner_message_at,
         noticeSentForClosedWindow: row.notice_sent_for_closed_window === 1,
+        noticeRetryLocale: row.notice_retry_locale,
       };
       return window;
     },
 
     async saveWindow({ window }) {
       run(
-        'UPDATE owner_window SET last_owner_message_at = ?, notice_sent_for_closed_window = ? WHERE id = ?',
+        'UPDATE owner_window SET last_owner_message_at = ?, notice_sent_for_closed_window = ?, notice_retry_locale = ? WHERE id = ?',
         window.lastOwnerMessageAt,
         window.noticeSentForClosedWindow ? 1 : 0,
+        window.noticeRetryLocale,
         WINDOW_ROW_ID,
       );
     },

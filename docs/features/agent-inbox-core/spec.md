@@ -141,7 +141,7 @@ Routing of an owner message, first match wins. Rule 0, the account commands, sit
 2. A quoted reply or a reaction: the agent that sent the quoted or reacted message. A reaction to a question message answers that question with the emoji.
 3. A text starting with `@<agent> `: that agent, prefix removed.
 4. Exactly one agent with an open question: that agent. With several open questions, the newest wins.
-5. The last agent that wrote to the owner within the window.
+5. The last agent that wrote to the owner within the window; failing that, the only agent when the account has exactly one (`single_agent`: no list is sent).
 6. None: zapbip sends the owner a list of the 10 most recently seen agents, with ids `route:<message_id>:<agent>`, and holds the message until the choice arrives; the choice routes every held message to that agent. With no agents at all, the owner gets one text notice (`noAgents`) and the message is held.
 
 A routing list is pending for `ROUTING_LIST_TTL_MS` (10 minutes). Its message id and opening time live in the `owner_window` row, so finding the open list is one primary-key read.
@@ -198,6 +198,7 @@ Constants (in `libs/core`, named, never inline):
 | `UPLOAD_TTL_MS` | 15 min |
 | `INLINE_IMAGE_MAX_BYTES` | 1 MB |
 | `NOTICE_PREVIEW_MAX_CHARS` | 60 |
+| `NOTICE_RETRY_MS` | 5 min |
 | `WHATSAPP_TEXT_MAX_CHARS` | 4 096 |
 | `RECEIPT_RETENTION_MS` | 7 days (the longer of Meta's two stated retry windows) |
 | `SECOND_MS`, `MINUTE_MS`, `HOUR_MS`, `DAY_MS` | 1 000, 60 000, 3 600 000, 86 400 000; in `libs/types/src/constants.ts`, used by every slice |
@@ -210,6 +211,7 @@ Constants (in `libs/core`, named, never inline):
 | Unknown or revoked secret | `401`, the same body for both; no hint which |
 | Channel send fails | The tool returns an error naming the kind; the message is stored with `delivery: "failed"` and is not reported as sent |
 | Window closed | `delivery: "queued"`; one notice per closed window; queued items older than `QUEUE_RETENTION_MS` become `expired` |
+| Notice send fails | The send that owns the notice claim raises a delivery failure naming the notice (the tool returns the error) and the message stays `queued`, so a later flush still delivers it; `owner_notice_failed` is logged with the kind and the account only; concurrent sends that lost the claim stay `queued` without error; while queued owner-bound messages exist in a closed window with no notice sent, the alarm retries the notice every `NOTICE_RETRY_MS` (5 minutes) |
 | Client abandons `ask` or `wait_for_reply` (the Worker cannot see it, per the spike) | The answer stays bound to its `question_id` and the next `wait_for_reply(question_id)` returns it; a plain message handed to a dead call stays in the history `get_messages` returns |
 | Durable Object evicted mid-wait | The client's call ends; state is in SQLite; the retry recovers through `question_id` |
 | Upload without `Content-Length`, larger than declared, wrong type or after expiry | `411` / `413` / `415` / `410`; nothing stored |
@@ -301,7 +303,7 @@ The E2E gate that [ADR 0005](../../adr/0005-the-local-gate-runs-what-the-diff-ca
 | Open list lookup | scan the messages · a column | the open list's message id is recorded in the `owner_window` row (v1 is not deployed, so `v1.sql` is edited) | owner delegated 2026-11-06 |
 | Used-list copy | "expired" · "already used" | `RoutingListExpired` reads "Essa lista já foi usada." / "That list was already used."; a tap naming an unknown agent while the batch is held sends the current list again | owner delegated 2026-11-06 |
 | Concurrent upload PUTs | claim in the route · claim in the object | the object claims the upload atomically (`claimed_at`) before the R2 write; the loser answers `409`; the claim lasts the whole life of the upload (`UPLOAD_CLAIM_TTL_MS` = `UPLOAD_TTL_MS`); completion and release only count with the matching `claimedAt`; an R2 failure answers `5xx` and a client abort answers `400`, both release the claim | owner delegated 2026-11-06 |
-| Media types | compare as sent · normalise | lowercase and drop parameters before every check; `image/SVG+XML` and `image/svg+xml;x=1` are not images; the normalised type must also be a `type/subtype` token (RFC 6838 characters only), so `image/svg+xml,image/png` is invalid input | owner delegated 2026-11-06 |
+| Media types | compare as sent · normalise | lowercase and drop parameters before every check; `image/SVG+XML` and `image/svg+xml;x=1` are not images; the normalised type must also be a `type/subtype` token (RFC 6838 characters only), so `image/svg+xml,image/png` is invalid input; the type as sent is printable ASCII with no surrounding whitespace, so `' Application/PDF'` is invalid input | owner delegated 2026-11-06 |
 | Production D1 id | local id · placeholder | the top-level `database_id` is `REPLACE_WITH_PRODUCTION_D1_DATABASE_ID`; `wrangler deploy` rejects it until the owner replaces it with the created database id | owner delegated 2026-11-06 |
 | Notice quick reply | routed to an agent · window only | a tap on the notice's quick reply only opens the window and flushes the queue; it is never delivered to an agent | owner delegated 2026-11-06 |
 | Development clock offset | in memory · in Durable Object storage | the offset is stored in Durable Object storage, so it survives a restart | owner delegated 2026-11-06 |
@@ -319,6 +321,8 @@ The E2E gate that [ADR 0005](../../adr/0005-the-local-gate-runs-what-the-diff-ca
 | Owner media, location, contacts | answer · route only | they route by rules 2, 4, 5 and 6 and never answer a question | owner delegated 2026-11-06 |
 | Rule 5 window | — | "within the window" means the 24 h (`WINDOW_MS`) before the owner's message | owner delegated 2026-11-06 |
 | Rule 6 | — | the routing question lists the 10 most recently seen agents; with zero agents the owner gets one text notice and the message is held | owner delegated 2026-11-06 |
+| Account with exactly one agent | list of one option · deliver to it | rule 5 falls back to the only agent, so an unaddressed owner message reaches it and no routing list is sent; an account with several agents is unchanged | owner delegated 2026-11-06 |
+| Present-tense docs for later slices | hedge every claim · describe the shipped MVP | the docs describe the shipped MVP in the present tense; nothing deploys until every slice is on `main` and docs-experience verifies every claim (reviewer finding 3 rejected) | owner order 2026-11-06 |
 | Read limits | — | `limit` 1 to 20 bounds the unread messages returned and the history; `check_inbox` returns up to 20 unread; the rest stay unread | owner delegated 2026-11-06 |
 | `wait_for_reply` without a question | — | returns unread messages at once; otherwise waits for the agent's next owner message, re-waits if another call took it, and times out at its deadline; an answer read through `wait_for_reply(question_id)` is marked read | owner delegated 2026-11-06 |
 | Waking notice | a notice per message · per unread batch | `NoneWaker` returns `unreached`; core sends one waiting notice (`inbox-copy.ts`, `pt_BR` and `en_US`) when the agent's unread count goes from 0 to 1 | owner delegated 2026-11-06 |

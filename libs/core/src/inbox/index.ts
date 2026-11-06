@@ -31,5 +31,6 @@ export * from './use-cases/release-upload';
 export * from './use-cases/receive-owner-message';
 export * from './use-cases/sweep-expired';
 export * from './use-cases/expire-routing-list';
+export * from './use-cases/retry-notice';
 export * from './use-cases/deliver-to-owner';
 export * from './use-cases/touch-agent';

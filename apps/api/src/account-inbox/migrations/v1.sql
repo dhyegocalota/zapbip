@@ -49,6 +49,7 @@ CREATE TABLE owner_window (
   id INTEGER PRIMARY KEY CHECK (id = 1),
   last_owner_message_at INTEGER,
   notice_sent_for_closed_window INTEGER NOT NULL,
+  notice_retry_locale TEXT,
   routing_list_prompt_message_id TEXT,
   routing_list_opened_at INTEGER,
   routing_list_locale TEXT,

@@ -9,6 +9,7 @@ export type AgentRecord = {
 export type OwnerWindow = {
   lastOwnerMessageAt: number | null;
   noticeSentForClosedWindow: boolean;
+  noticeRetryLocale: OwnerLocale | null;
 };
 
 export type RoutingList = {
