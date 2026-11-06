@@ -1,5 +1,7 @@
-import type { OwnerLocale, WakeAttemptOutcome, WakeMode, WakeProvider, WakeStatus } from '@zapbip/types';
+import { WakeMode, type OwnerLocale, type WakeAttemptOutcome, type WakeProvider, type WakeStatus } from '@zapbip/types';
 import type { AgentName } from '../inbox/connection';
+import { invalidInput } from '../inbox/inbox-error-factories';
+import { SCHEDULED_MAX_INTERVAL_MINUTES, SCHEDULED_MIN_INTERVAL_MINUTES } from './constants';
 
 export type WakeSettingInput = {
   mode: WakeMode;
@@ -41,7 +43,69 @@ export type WakeJob = {
   lastOutcome: WakeAttemptOutcome | null;
 };
 
-export function assertWakeSetting(input: { setting: WakeSettingInput; caller: AgentName; standby: StoredWake | null }): void {
-  void input;
-  throw new Error('assertWakeSetting is not implemented');
+enum WakeSettingField {
+  Url = 'url',
+  Token = 'token',
+  IntervalMinutes = 'interval_minutes',
+  StandbyAgent = 'standby_agent',
+}
+
+type WakeSettingCheck = { setting: WakeSettingInput; caller: AgentName; standby: StoredWake | null };
+
+function assertAbsent(input: { setting: WakeSettingInput; fields: Partial<Record<WakeSettingField, unknown>> }): void {
+  const foreign = Object.entries(input.fields).find(([, value]) => value !== null);
+  if (foreign === undefined) return;
+  throw invalidInput({ message: `${foreign[0]} is not allowed for ${input.setting.mode}` });
+}
+
+function assertScheduled(input: WakeSettingCheck): void {
+  const { setting } = input;
+  assertAbsent({
+    setting,
+    fields: {
+      [WakeSettingField.Url]: setting.url,
+      [WakeSettingField.Token]: setting.token,
+      [WakeSettingField.StandbyAgent]: setting.standbyAgent,
+    },
+  });
+  const { intervalMinutes } = setting;
+  const isValidInterval =
+    intervalMinutes !== null &&
+    Number.isInteger(intervalMinutes) &&
+    intervalMinutes >= SCHEDULED_MIN_INTERVAL_MINUTES &&
+    intervalMinutes <= SCHEDULED_MAX_INTERVAL_MINUTES;
+  if (isValidInterval) return;
+  throw invalidInput({
+    message: `${WakeSettingField.IntervalMinutes} must be a whole number from ${SCHEDULED_MIN_INTERVAL_MINUTES} to ${SCHEDULED_MAX_INTERVAL_MINUTES}`,
+  });
+}
+
+function assertStandby(input: WakeSettingCheck): void {
+  const { setting, caller, standby } = input;
+  assertAbsent({
+    setting,
+    fields: {
+      [WakeSettingField.Url]: setting.url,
+      [WakeSettingField.Token]: setting.token,
+      [WakeSettingField.IntervalMinutes]: setting.intervalMinutes,
+    },
+  });
+  if (setting.standbyAgent === null) throw invalidInput({ message: `${WakeSettingField.StandbyAgent} is required for ${setting.mode}` });
+  if (setting.standbyAgent === caller) throw invalidInput({ message: `${WakeSettingField.StandbyAgent} cannot be the agent itself` });
+  if (standby === null) throw invalidInput({ message: `${WakeSettingField.StandbyAgent} is not connected to this account` });
+  if (standby.mode === WakeMode.Standby)
+    throw invalidInput({ message: `${WakeSettingField.StandbyAgent} cannot be in standby mode: one hop only` });
+}
+
+function assertNothing(): void {}
+
+const WAKE_SETTING_CHECKS: Record<WakeMode, (input: WakeSettingCheck) => void> = {
+  [WakeMode.None]: assertNothing,
+  [WakeMode.Webhook]: assertNothing,
+  [WakeMode.Scheduled]: assertScheduled,
+  [WakeMode.Standby]: assertStandby,
+};
+
+export function assertWakeSetting(input: WakeSettingCheck): void {
+  WAKE_SETTING_CHECKS[input.setting.mode](input);
 }
