@@ -9,7 +9,7 @@ export function createDispatchingAgentWaker(input: { wakers: WakerByRung; reposi
     notify: async (request) => {
       const stored = await repository.findWake({ agent: request.agent });
       if (stored === null) return wakers[WakeRung.Inbox].notify(request);
-      const pollState = await repository.findPollState({ agent: request.agent });
+      const pollState = stored.mode === WakeMode.Scheduled ? await repository.findPollState({ agent: request.agent }) : null;
       const standby =
         stored.mode === WakeMode.Standby && stored.standbyAgent !== null ? await repository.findWake({ agent: stored.standbyAgent }) : null;
       return wakers[wakeRungFor({ wake: stored, pollState, standby, now: clock.now() })].notify(request);
