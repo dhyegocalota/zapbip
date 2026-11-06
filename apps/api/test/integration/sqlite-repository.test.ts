@@ -390,4 +390,77 @@ describe('SQLite inbox repository', () => {
     });
     expect(result).toEqual({ linked: 'msg_1', afterDelete: null });
   });
+
+  it('WI-133 pin: window writes keep the routing list and list writes keep the window', async () => {
+    const list: RoutingList = {
+      promptMessageId: 'msg_list',
+      openedAt: BASE_TIME,
+      locale: OwnerLocale.PortugueseBrazil,
+      resent: true,
+      reminded: true,
+    };
+    const result = await inRepository(async (repository) => {
+      await repository.saveWindow({ window: { lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: false } });
+      await repository.saveRoutingList({ routingList: list });
+      await repository.claimNotice();
+      await repository.saveWindow({ window: { lastOwnerMessageAt: BASE_TIME + 5, noticeSentForClosedWindow: true } });
+      const afterWindow = await repository.findRoutingList();
+      const window = await repository.findWindow();
+      await repository.clearRoutingList();
+      return { afterWindow, window, windowAfterClear: await repository.findWindow(), cleared: await repository.findRoutingList() };
+    });
+    expect(result.afterWindow).toEqual(list);
+    expect(result.window).toEqual({ lastOwnerMessageAt: BASE_TIME + 5, noticeSentForClosedWindow: true });
+    expect(result.windowAfterClear).toEqual(result.window);
+    expect(result.cleared).toBeNull();
+  });
+
+  it('WI-134 pin: clearing resets resent and reminded, and clearing with no list is a no-op', async () => {
+    const list: RoutingList = {
+      promptMessageId: 'msg_list',
+      openedAt: BASE_TIME,
+      locale: OwnerLocale.PortugueseBrazil,
+      resent: true,
+      reminded: true,
+    };
+    const result = await inRepository(async (repository) => {
+      await repository.clearRoutingList();
+      await repository.saveRoutingList({ routingList: list });
+      await repository.clearRoutingList();
+      await repository.saveRoutingList({ routingList: { ...list, resent: false, reminded: false } });
+      return repository.findRoutingList();
+    });
+    expect(result).toEqual({ ...list, resent: false, reminded: false });
+  });
+
+  it('WI-135 pin: a second save replaces the first and an openedAt of zero round-trips', async () => {
+    const list: RoutingList = {
+      promptMessageId: 'msg_list',
+      openedAt: BASE_TIME,
+      locale: OwnerLocale.PortugueseBrazil,
+      resent: false,
+      reminded: false,
+    };
+    const result = await inRepository(async (repository) => {
+      await repository.saveRoutingList({ routingList: list });
+      await repository.saveRoutingList({ routingList: { ...list, promptMessageId: 'msg_other', openedAt: 0 } });
+      return repository.findRoutingList();
+    });
+    expect(result).toMatchObject({ promptMessageId: 'msg_other', openedAt: 0 });
+  });
+
+  it('WI-136 pin: two accounts keep separate routing lists', async () => {
+    const list: RoutingList = {
+      promptMessageId: 'msg_list',
+      openedAt: BASE_TIME,
+      locale: OwnerLocale.PortugueseBrazil,
+      resent: false,
+      reminded: false,
+    };
+    await withRepository({ accountId: 'acc_one', run: (repository) => repository.saveRoutingList({ routingList: list }) });
+    const other = await withRepository({ accountId: 'acc_two', run: (repository) => repository.findRoutingList() });
+    const one = await withRepository({ accountId: 'acc_one', run: (repository) => repository.findRoutingList() });
+    expect(other).toBeNull();
+    expect(one).toEqual(list);
+  });
 });
