@@ -1,5 +1,5 @@
-import { formatOptionId, QUEUE_RETENTION_MS, UPLOAD_TTL_MS, WINDOW_MS } from '@zapbip/core';
-import { DeliveryState, InboxErrorCode, MediaSourceKind, MessageKind, ReplyStatus, TemplateKind } from '@zapbip/types';
+import { formatOptionId, QUEUE_RETENTION_MS, ROUTING_LIST_TTL_MS, UPLOAD_TTL_MS, WINDOW_MS } from '@zapbip/core';
+import { HOUR_MS, DeliveryState, InboxErrorCode, MediaSourceKind, MessageKind, ReplyStatus, TemplateKind } from '@zapbip/types';
 import { abortAllDurableObjects, evictDurableObject, reset, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 import { ACCOUNT_INBOX_MIGRATIONS } from '../../src/account-inbox/migrations';
@@ -222,6 +222,18 @@ describe('AccountInbox alarm', () => {
     expect(await testEnv.MEDIA.get(objectKey)).toBeNull();
   });
 
+  it('WI-125 runs the routing list expiry from the alarm and arms it again', async () => {
+    const stub = stubOf({ accountId: FIRST_ACCOUNT });
+    await stub.checkInbox({ connection: connectionOf({ accountId: FIRST_ACCOUNT, agent: 'alpha' }) });
+    await openWindow({ stub });
+    expectOk(await receiveOwnerText({ stub, text: 'oi' }));
+    await advanceClock({ stub, advanceMs: ROUTING_LIST_TTL_MS });
+    expect(await runDurableObjectAlarm(stub)).toBe(true);
+    const screen = await readScreen({ stub });
+    expect(screen.map((entry) => entry.options)).toEqual([['alpha'], ['alpha']]);
+    expect(await runInDurableObject(stub, (_instance, state) => state.storage.getAlarm())).not.toBeNull();
+  });
+
   it('WI-17 expires a queued message past its retention', async () => {
     const stub = stubOf({ accountId: FIRST_ACCOUNT });
     const queued = await sendAlphaText({ accountId: FIRST_ACCOUNT, text: 'oi' });
@@ -284,8 +296,8 @@ describe('AccountInbox alarm', () => {
       },
     });
     await registerDueTimeProvider({ stub, provider: { nextDueAt: async () => secondDueAt, runDue: async () => secondRuns() } });
-    await runInDurableObject(stub, (_instance, state) => state.storage.setAlarm(Date.now()));
-    await runDurableObjectAlarm(stub);
+    await runInDurableObject(stub, (_instance, state) => state.storage.setAlarm(Date.now() + HOUR_MS));
+    expect(await runDurableObjectAlarm(stub)).toBe(true);
     const armed = await runInDurableObject(stub, (_instance, state) => state.storage.getAlarm());
     expect(secondRuns).toHaveBeenCalledTimes(1);
     expect(armed).toBe(firstDueAt);

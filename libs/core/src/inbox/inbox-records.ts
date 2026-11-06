@@ -1,5 +1,5 @@
 import type { AgentName } from './connection';
-import type { MediaOrigin } from '@zapbip/types';
+import type { MediaOrigin, OwnerLocale } from '@zapbip/types';
 
 export type AgentRecord = {
   agent: AgentName;
@@ -9,6 +9,14 @@ export type AgentRecord = {
 export type OwnerWindow = {
   lastOwnerMessageAt: number | null;
   noticeSentForClosedWindow: boolean;
+};
+
+export type RoutingList = {
+  promptMessageId: string;
+  openedAt: number;
+  locale: OwnerLocale;
+  resent: boolean;
+  reminded: boolean;
 };
 
 export type StoredMedia = {
