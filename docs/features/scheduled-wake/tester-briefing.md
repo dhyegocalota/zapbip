@@ -74,13 +74,12 @@ Step 0 adds no test. Every stub is reached by a red test in the lane named in `p
 
 1. An interval of 1 and 1440 is accepted; 0, 1441, 90.5, -60 and null are refused naming `interval_minutes`. Try the MCP schema's `number` with `NaN` and `Infinity`.
 2. A revoked or unknown standby is refused with the same text (`not connected to this account`).
-3. A poll through `pollInbox` clears `pollerStaleNotified`; `getMessages`, `ask` and `waitForReply` never record a poll (`ask` and `waitForReply` have no test of their own; they do not call `pollInbox`).
+3. A poll through `pollInbox` clears `pollerStaleNotified`; `getMessages`, `ask` and `waitForReply` never record a poll (pins in `poll-inbox.test.ts`).
 4. `messageId` reaches `notify` only when the owner message is not an answer and not a held-message assignment.
 5. `setWake` for `scheduled` deletes a pending webhook job.
 
 ### Gaps
 
-- The test plan writes the never-polled text as `ainda não olhou a caixa`; the Step 0 copy is `Ainda não olhou a caixa.`, so the test asserts the capitalised text.
-- The copy cadence for 1 minute reads `a cada 1 minutos`; the Step 0 `CadenceMinutes` string has no singular.
-- Files outside the lane's list that were touched: `libs/core/src/inbox/use-cases/wake-agent.ts` (needed to carry `messageId`) and `libs/core/src/wake/testing/wake-fixtures.ts` (one line: the in-memory wake repository needs the fake clock).
-- `ask` and `waitForReply` "records no poll" cases of B2 are not written: neither calls `pollInbox` or `recordPoll`.
+- The never-polled text is `Ainda não olhou a caixa.` (test plan and spec aligned).
+- Interval 1 reads `a cada minuto` / `every minute` through the new `WakeCopyKey.CadenceMinute` (added to `libs/types/src/enums.ts`).
+- Files outside the lane's list that were touched: `libs/core/src/inbox/use-cases/wake-agent.ts` (needed to carry `messageId`) and `libs/types/src/enums.ts` (the `CadenceMinute` member) and `libs/core/src/wake/testing/wake-fixtures.ts` (one line: the in-memory wake repository needs the fake clock).
