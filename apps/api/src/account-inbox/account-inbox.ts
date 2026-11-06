@@ -39,7 +39,7 @@ import type { DueTimeProvider } from '../contract/due-time-provider';
 import type { Bindings } from '../contract/env';
 import { LogEvent, type LogFields } from '../contract/log';
 import { logEvent } from '../log';
-import { ALARM_MIN_DELAY_MS, ALARM_PROVIDER_FAILED } from './constants';
+import { ALARM_MIN_DELAY_MS, AlarmErrorCode } from './constants';
 import { ACCOUNT_INBOX_MIGRATIONS } from './migrations';
 import { runMigrations } from './run-migrations';
 
@@ -118,7 +118,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     try {
       await input.provider.runDue({ now: input.now });
     } catch {
-      this.log({ event: LogEvent.Sweep, errorCode: ALARM_PROVIDER_FAILED });
+      this.log({ event: LogEvent.Sweep, errorCode: AlarmErrorCode.ProviderFailed });
     }
   }
 

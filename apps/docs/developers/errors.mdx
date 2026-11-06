@@ -1,0 +1,25 @@
+---
+title: Errors
+description: Technical errors and what they mean.
+---
+
+## 401 unauthorized
+
+The secret is missing, wrong or revoked. Copy the connection URL again from the zapbip number, or ask for a new agent. With the Bearer form, the header is `Authorization: Bearer <secret>`.
+
+## The message is queued
+
+`delivery: "queued"` means the [24-hour window](/features/the-24-hour-window) is closed. The message waits and arrives, in order, as soon as you write to the zapbip number.
+
+## Upload errors
+
+The bytes are rejected before anything is stored:
+
+| Status | Cause                                               |
+| ------ | --------------------------------------------------- |
+| 411    | `PUT` without a `Content-Length`                    |
+| 413    | Body larger than the declared `size_bytes`          |
+| 415    | A type that does not match the declared `mime_type` |
+| 410    | The upload expired after 15 minutes                 |
+
+See [create_upload](/mcp-reference/create-upload).

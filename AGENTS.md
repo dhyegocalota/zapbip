@@ -9,7 +9,7 @@ Domain facts live in `.claude/rules/*.md`. Claude Code loads them by the `paths:
 
 A personal WhatsApp channel for AI agents. A developer connects their own agents (Claude Code, Codex and any MCP client) to their own phone through one official WhatsApp Cloud API number shared by every account: one API key, one MCP server, working in five minutes. Agents send messages, ask questions with buttons or lists and wait for the reply; outside the 24-hour customer-service window they reach the owner through an approved utility template. Several agents share one number, and a reply is routed back to the agent it answers. Only the official Cloud API is used; the owner talks only to their own agents, never to third parties.
 
-No product code exists yet. Each part arrives as a feature under `docs/features/`, starting with the `brainstorming` skill.
+The product core lives in `libs/core` (the inbox, routing and delivery rules) and `apps/api` (the Cloudflare Worker, its MCP server and the per-account Durable Object). Each further part arrives as a feature under `docs/features/`, starting with the `brainstorming` skill.
 
 ## Layout
 
@@ -44,7 +44,7 @@ Everything in the repo is in English: code, identifiers, comments-free code, doc
 - A compound condition gets a name (`isServedReply`, `isOnEditingSurface`) before the `if` that uses it.
 - A name says what the variable holds: a promise is a `…Connection` or `…Promise`, never a `client`.
 - One handler per request kind, dispatched from a record keyed by the kind, instead of one function with interleaved `if`s.
-- Recurring mechanics have one shared helper. Search before adding a local copy; a new one goes under `libs/` or the owning feature, and its name joins this line.
+- Recurring mechanics have one shared helper. Search before adding a local copy; a new one goes under `libs/` or the owning feature, and its name joins this line: `accountInboxOf`, `resolveConnection`, `renderCopy`, `mediaStoreOf`.
 - Durations cross boundaries in milliseconds and convert at the edge (a `Retry-After` header, a label).
 - Copy strings never sit inline in JSX; they live in a `*-copy.ts` file or `libs/types`.
 - Never `?? defaultValue` to mask a missing value. Model absence explicitly: throw, return early or make the field required upstream.
