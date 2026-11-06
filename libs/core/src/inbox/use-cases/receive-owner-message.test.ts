@@ -691,13 +691,44 @@ describe('receiveOwnerMessage routing list state', () => {
     expect(sessionTexts({ environment })).toEqual([reminderText()]);
   });
 
-  test('a stale tap resolves no question waiter', async () => {
+  test('pin: a stale tap leaves the waiter of another question waiting', async () => {
+    const environment = await createEnvironment();
+    const answered = await askAndAbandon({ environment, text: 'First?' });
+    await tap({ environment, optionId: formatOptionId({ questionId: answered.questionId, optionIndex: 0 }), optionTitle: 'Sim' });
+    const open = await askAndAbandon({ environment, text: 'Second?' });
+    const waitingForAnswer = waitForReply({
+      dependencies: environment.dependencies,
+      connection: connectionOf({ agent: 'alpha' }),
+      questionId: open.questionId,
+      timeoutMs: 5 * SECOND_MS,
+    });
+    await environment.clock.advance({ ms: 0 });
+    await tap({ environment, optionId: formatOptionId({ questionId: answered.questionId, optionIndex: 1 }), optionTitle: 'Não' });
+    await environment.clock.advance({ ms: 5 * SECOND_MS });
+    expect(await waitingForAnswer).toMatchObject({ status: ReplyStatus.Timeout });
+  });
+
+  test('a photo quoting an open question prompt wakes the ordinary wait with the photo', async () => {
     const environment = await createEnvironment();
     const question = await askAndAbandon({ environment });
-    await tap({ environment, optionId: formatOptionId({ questionId: question.questionId, optionIndex: 0 }), optionTitle: 'Sim' });
-    const resolveQuestionAnswer = vi.spyOn(environment.dependencies.waiters, 'resolveQuestionAnswer');
-    await tap({ environment, optionId: formatOptionId({ questionId: question.questionId, optionIndex: 1 }), optionTitle: 'Não' });
-    expect(resolveQuestionAnswer).not.toHaveBeenCalled();
+    const holding = waiting({ environment, agent: 'alpha' });
+    await environment.clock.advance({ ms: 0 });
+    await receive({
+      environment,
+      replyToMessageId: question.promptMessageId,
+      content: {
+        kind: MessageKind.Image,
+        voice: false,
+        mediaId: 'wamid.quoting-photo',
+        mimeType: 'image/jpeg',
+        sizeBytes: 1000,
+        filename: null,
+        caption: null,
+      },
+    });
+    expect(await holding).toMatchObject({ status: ReplyStatus.Message, messages: [{ kind: MessageKind.Image }] });
+    expect(environment.waker.notifications).toEqual([]);
+    expect(sessionTexts({ environment })).toEqual([]);
   });
 
   test('CU-160 a list that failed to send leaves no row', async () => {
