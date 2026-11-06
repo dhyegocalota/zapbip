@@ -2,7 +2,7 @@ import type { AgentWakeReason, IdPrefix, LinkPurpose, OwnerLocale, TemplateKind,
 import type { AgentName, ConnectionIdentity } from './connection';
 import type { Message } from './message';
 import type { Question, QuestionAnswer } from './question';
-import type { AgentRecord, OwnerWindow, StoredMedia } from './inbox-records';
+import type { AgentRecord, ChannelStatusDetail, OwnerWindow, StoredMedia } from './inbox-records';
 
 export type MediaBody = ReadableStream<Uint8Array>;
 
@@ -51,10 +51,29 @@ export interface InboxRepository {
   listExpiredMediaIds(input: { now: number }): Promise<string[]>;
   deleteMedia(input: { mediaIds: string[] }): Promise<void>;
   findNextExpiry(): Promise<number | null>;
+  commitChannelInbound(input: {
+    channelMessageId: string;
+    receivedAt: number;
+    message: Message | null;
+    answer: { questionId: string; answer: QuestionAnswer } | null;
+    media: StoredMedia | null;
+    window: OwnerWindow;
+  }): Promise<boolean>;
+  saveChannelMessageId(input: { messageId: string; channelMessageId: string }): Promise<void>;
+  findMessageByChannelMessageId(input: { channelMessageId: string }): Promise<Message | null>;
+  findChannelMessageId(input: { messageId: string }): Promise<string | null>;
+  saveChannelStatusDetail(input: { messageId: string; detail: ChannelStatusDetail }): Promise<void>;
+  claimQueuedMessages(input: { claimedAt: number; limit: number }): Promise<Message[]>;
+  releaseStaleClaims(input: { claimedBefore: number }): Promise<void>;
 }
 
 export interface MessageSender {
-  session(input: { message: Message }): Promise<{ channelMessageId: string }>;
+  session(input: {
+    message: Message;
+    question: Question | null;
+    replyToChannelMessageId: string | null;
+    reactionTargetChannelMessageId: string | null;
+  }): Promise<{ channelMessageId: string }>;
   template(input: { kind: TemplateKind; locale: OwnerLocale; parameters: string[] }): Promise<{ channelMessageId: string }>;
 }
 

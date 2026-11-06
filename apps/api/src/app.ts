@@ -5,6 +5,7 @@ import { devOwnerRoutes } from './routes/dev-owner';
 import { mcpRoutes } from './routes/mcp';
 import { mediaRoutes } from './routes/media';
 import { uploadRoutes } from './routes/upload';
+import { whatsappRoutes } from './routes/whatsapp';
 
 export function createApp(input: { includeSimulator: boolean }): Hono<{ Bindings: Bindings }> {
   const app = new Hono<{ Bindings: Bindings }>();
@@ -12,6 +13,7 @@ export function createApp(input: { includeSimulator: boolean }): Hono<{ Bindings
   app.route('/', mcpRoutes);
   app.route('/', uploadRoutes);
   app.route('/', mediaRoutes);
+  app.route('/', whatsappRoutes);
   if (input.includeSimulator) app.route('/', devOwnerRoutes);
   return app;
 }

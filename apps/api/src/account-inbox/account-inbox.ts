@@ -82,4 +82,14 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     void input;
     throw new Error('receiveOwnerMessage is not implemented');
   }
+
+  receiveChannelMessage(input: never): never {
+    void input;
+    throw new Error('receiveChannelMessage is not implemented');
+  }
+
+  applyChannelStatus(input: never): never {
+    void input;
+    throw new Error('applyChannelStatus is not implemented');
+  }
 }

@@ -9,3 +9,4 @@ export const CLOCK_OFFSET_STORAGE_KEY = 'clock_offset_ms';
 export const DEV_OWNER_PATH_PREFIX = '/dev/owner/:phone';
 export const OWNER_PHONE_PATTERN = /^[0-9]{8,15}$/;
 export const INLINE_IMAGE_CONTENT_TYPE = 'image';
+export const WHATSAPP_WEBHOOK_PATH = '/webhooks/whatsapp';

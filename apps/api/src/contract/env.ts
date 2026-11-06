@@ -7,4 +7,9 @@ export type Bindings = {
   MEDIA_LINK_SIGNING_KEY: string;
   UPLOAD_LINK_SIGNING_KEY: string;
   PUBLIC_ORIGIN: string;
+  META_APP_SECRET?: string;
+  WHATSAPP_VERIFY_TOKEN?: string;
+  WHATSAPP_ACCESS_TOKEN?: string;
+  WHATSAPP_PHONE_NUMBER_ID?: string;
+  WHATSAPP_GRAPH_BASE_URL?: string;
 };
