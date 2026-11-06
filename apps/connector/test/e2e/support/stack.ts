@@ -9,7 +9,7 @@ import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
-import { MessageKind, SECOND_MS } from '@zapbip/types';
+import { CONNECTOR_PATH_SUFFIX, MessageKind, SECOND_MS, UPGRADE_REQUIRED_STATUS } from '@zapbip/types';
 import { z } from 'zod';
 
 const runCommand = promisify(execFile);
@@ -77,6 +77,16 @@ async function waitForHealth(input: { origin: string; server: ChildProcess; dead
   return waitForHealth(input);
 }
 
+async function waitForProbe(input: { origin: string; secret: string; deadline: number }): Promise<void> {
+  const answer = await httpsRequest({ url: `${input.origin}/c/${input.secret}${CONNECTOR_PATH_SUFFIX}`, method: 'GET', body: null }).catch(
+    () => null,
+  );
+  if (answer !== null && answer.status === UPGRADE_REQUIRED_STATUS) return;
+  if (Date.now() > input.deadline) throw new Error('the connector route did not answer 426 in time');
+  await delay(HEALTH_POLL_INTERVAL_MS);
+  return waitForProbe(input);
+}
+
 async function seedConnections(input: { agents: string[]; persistArguments: string[] }): Promise<Record<string, string>> {
   const seeded = await runCommand(
     'pnpm',
@@ -128,6 +138,7 @@ export async function startStack(input: { agents: string[] }): Promise<Stack> {
   const logStream = createWriteStream(join(persistDirectory, LOG_FILE_NAME));
   server.stdout.pipe(logStream);
   server.stderr.pipe(logStream);
+  await Promise.all(Object.values(secrets).map((secret) => waitForProbe({ origin, secret, deadline: Date.now() + HEALTH_TIMEOUT_MS })));
   const agentEntries = await Promise.all(
     input.agents.map(async (agent): Promise<[string, StackAgent]> => {
       const connectionUrl = `${origin}/c/${secrets[agent]}/mcp`;

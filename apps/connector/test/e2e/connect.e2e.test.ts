@@ -120,7 +120,7 @@ describe('the bundled connector against the local stack', () => {
       const lines = listener
         .output()
         .split('\n')
-        .filter((line) => line.startsWith('{"messageId"'));
+        .filter((line) => line.startsWith('{"messageId"') && line.includes('"sender"'));
       expect(lines).toHaveLength(1);
       expect(JSON.parse(lines[0] as string)).toMatchObject({
         kind: 'text',
@@ -152,7 +152,12 @@ describe('the bundled connector against the local stack', () => {
         notifications.push(params);
       });
       clients.push(client);
+      let channelLog = '';
+      transport.stderr?.on('data', (chunk: Buffer) => (channelLog += chunk.toString()));
       await client.connect(transport);
+      await vi.waitFor(() => expect(channelLog).toContain(`"event":"${ConnectorLogEvent.ConnectorConnected}"`), {
+        timeout: SUITE_TIMEOUT_MS,
+      });
       await stack.postOwnerText({ text: `@${CHANNEL_AGENT} ${OWNER_TEXT}` });
 
       await vi.waitFor(() => expect(notifications).toHaveLength(1), { timeout: SUITE_TIMEOUT_MS });
