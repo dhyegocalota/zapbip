@@ -164,6 +164,18 @@ classify .github/workflows/verify.yml
 expect_line "a workflow" "$output" class tooling
 expect_line "a workflow" "$output" gates "doctor format secrets audit shape"
 
+classify .github/scripts/secret-rules-probe.sh
+expect_line "the secret rules probe" "$output" class tooling
+expect_line "the secret rules probe" "$output" gates "doctor format secrets audit shape"
+
+new_repository
+printf '# edited\n' >> "$repository/.github/scripts/secret-rules-probe.sh"
+in_repository add -- .github/scripts/secret-rules-probe.sh
+in_repository commit -q -m "edit the probe"
+run_verify
+expect_equal "a change to the secret rules probe runs green" "$status" 0
+expect_match "a change to the secret rules probe runs the probe" "$(calls)" 'probe '
+
 classify tools/repository-shape/src/x.test.ts
 expect_line "a repository shape test" "$output" gates "doctor format secrets typecheck audit shape"
 
