@@ -8,12 +8,14 @@ export type RateLimiter = {
   limit(input: { key: string }): Promise<{ success: boolean }>;
 };
 
-export function createInstallPageRoute(input: {
+export type InstallPageRouteDependencies = {
   installCodeDirectory: InstallCodeDirectory;
   connectionRegistry: ConnectionRegistry;
-  readWakeModes: () => Promise<WakeModeEntry[]>;
+  readWakeModes: (input: { accountId: string }) => Promise<WakeModeEntry[]>;
   limiter: RateLimiter;
-}): Hono {
+};
+
+export function createInstallPageRoute(input: InstallPageRouteDependencies): Hono {
   void input;
   throw new Error('createInstallPageRoute is not implemented');
 }
