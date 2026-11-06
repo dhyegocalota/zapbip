@@ -140,6 +140,14 @@ describe('runWake', () => {
     ]);
   });
 
+  it('refuses to wake Codex when its config cannot be parsed and starts no process', async () => {
+    await mkdir(fakeClients.codexHome, { recursive: true });
+    await writeFile(join(fakeClients.codexHome, 'config.toml'), 'mcp_servers = = broken\n');
+
+    expect(await wake({ client: ConnectorClient.Codex })).toEqual({ outcome: ConnectorWakeOutcome.RefusedIsolation, exitCode: null });
+    expect(await fakeClients.readRuns()).toHaveLength(0);
+  });
+
   it('resumes the given Codex session with the restricted flags', async () => {
     await wake({ client: ConnectorClient.Codex });
 

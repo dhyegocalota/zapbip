@@ -18,6 +18,7 @@ export enum ConnectorWakeOutcome {
   Failed = 'failed',
   NoSession = 'no_session',
   FallbackNewThread = 'fallback_new_thread',
+  RefusedIsolation = 'refused_isolation',
 }
 
 export enum ConnectorSessionSource {
@@ -33,6 +34,7 @@ export enum ConnectorLogEvent {
   MessagesReceived = 'messages_received',
   WakeStarted = 'wake_started',
   WakeFinished = 'wake_finished',
+  WakeRefusedIsolation = 'wake_refused_isolation',
   DoneSent = 'done_sent',
   FrameRejected = 'frame_rejected',
 }

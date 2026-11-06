@@ -1,4 +1,4 @@
-import { access, mkdir } from 'node:fs/promises';
+import { access, mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import {
   CONNECTOR_FRAME_MAX_BYTES,
@@ -260,6 +260,19 @@ describe('runConnection', () => {
       sendMessages({ messageIds: ['msg_2'] });
       await server.waitForFrames({ type: ConnectorFrameType.Done, count: 1 });
       expect(doneMessageIds()).toEqual(['msg_2']);
+    });
+
+    it('refuses to wake Codex over an unparseable config, logs it and sends no done', async () => {
+      await mkdir(fakeClients.codexHome, { recursive: true });
+      await writeFile(join(fakeClients.codexHome, 'config.toml'), 'mcp_servers = = broken\n');
+      startConnector({ client: ConnectorClient.Codex });
+      await server.waitForConnections({ count: 1 });
+      sendMessages({ messageIds: ['msg_1'] });
+      await waitForLog({ event: ConnectorLogEvent.WakeRefusedIsolation });
+
+      expect(loggedFieldsOf({ event: ConnectorLogEvent.WakeRefusedIsolation })).toMatchObject({ messageId: 'msg_1' });
+      expect(await fakeClients.readRuns()).toHaveLength(0);
+      expect(doneMessageIds()).toEqual([]);
     });
 
     it('resumes on the next wake the session the Codex fallback created', async () => {

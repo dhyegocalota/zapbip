@@ -81,6 +81,9 @@ importers:
       esbuild:
         specifier: 0.28.2
         version: 0.28.2
+      smol-toml:
+        specifier: 1.9.1
+        version: 1.9.1
       vitest:
         specifier: 5.0.5
         version: 5.0.5(@types/node@24.19.2)(vite@8.3.5)
@@ -2744,6 +2747,11 @@ packages:
 
   /siginfo@2.0.0:
     resolution: {integrity: sha512-ybx0WO1/8bSBLEWXZvEd7gMW3Sn3JFlW3TvX1nREbDLRNQNaeNN8WK0meBwPdAaOI7TtRRRJn/Es1zhrrCHu7g==}
+    dev: true
+
+  /smol-toml@1.9.1:
+    resolution: {integrity: sha512-j7WyPdf0CJoutMzMoPLF/bVXHtKZIT9Rb4eGeEbWw8X2t5oirjPgpL+OpaENZrILYaXqYwnVH+qgUwVbl+pUJQ==}
+    engines: {node: '>= 18'}
     dev: true
 
   /source-map-js@1.2.2:

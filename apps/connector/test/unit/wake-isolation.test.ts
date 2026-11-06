@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ConnectorClient } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
-import { WAKE_ISOLATION_PREPARERS } from '../../src/wake-isolation';
+import { WAKE_ISOLATION_PREPARERS, WakeIsolationRefusedError } from '../../src/wake-isolation';
 
 const CONNECTION_LINK = 'https://zapbip.example/c/secret-abc/mcp';
 const OWNER_ONLY_MODE = 0o600;
@@ -105,6 +105,47 @@ describe('Codex isolation', () => {
   test('ignores text that only mentions mcp_servers inside a value', async () => {
     await writeFile(join(codexHome, 'config.toml'), 'note = "mcp_servers.fake.enabled"\n');
     expect((await prepare()).isolationArguments).toEqual([]);
+  });
+
+  test('disables the servers of an inline mcp_servers table', async () => {
+    await writeFile(
+      join(codexHome, 'config.toml'),
+      'mcp_servers = { zapbip = { url = "u" }, deploy = { command = "d" }, mail = { command = "m" } }\n',
+    );
+    expect((await prepare()).isolationArguments).toEqual([
+      '-c',
+      'mcp_servers.deploy.enabled=false',
+      '-c',
+      'mcp_servers.mail.enabled=false',
+    ]);
+  });
+
+  test('disables the servers a profile declares inside that profile', async () => {
+    await writeFile(
+      join(codexHome, 'config.toml'),
+      '[profiles.work.mcp_servers.deploy]\ncommand = "d"\n[profiles."night shift".mcp_servers.mail]\ncommand = "m"\n',
+    );
+    expect((await prepare()).isolationArguments).toEqual([
+      '-c',
+      'profiles.work.mcp_servers.deploy.enabled=false',
+      '-c',
+      'profiles."night shift".mcp_servers.mail.enabled=false',
+    ]);
+  });
+
+  test('refuses a config file that is not valid TOML', async () => {
+    await writeFile(join(codexHome, 'config.toml'), 'mcp_servers = = broken\n');
+    await expect(prepare()).rejects.toBeInstanceOf(WakeIsolationRefusedError);
+  });
+
+  test('refuses a server whose definition is not a table', async () => {
+    await writeFile(join(codexHome, 'config.toml'), '[mcp_servers]\ndeploy = "d"\n');
+    await expect(prepare()).rejects.toBeInstanceOf(WakeIsolationRefusedError);
+  });
+
+  test('refuses an mcp_servers entry that is not a table', async () => {
+    await writeFile(join(codexHome, 'config.toml'), 'mcp_servers = "none"\n');
+    await expect(prepare()).rejects.toBeInstanceOf(WakeIsolationRefusedError);
   });
 
   test('cleanup has nothing to remove', async () => {

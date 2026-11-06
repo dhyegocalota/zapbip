@@ -3,6 +3,8 @@ import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { CLAUDE_MCP_SERVER_TYPE, CODEX_ZAPBIP_SERVER_NAME, ConnectorClient } from '@zapbip/types';
 
+export class WakeIsolationRefusedError extends Error {}
+
 export type WakeIsolation = { isolationArguments: string[]; cleanup: () => Promise<void> };
 export type WakeIsolationInput = { connectionLink: string; workingDirectory: string; codexHome?: string };
 
