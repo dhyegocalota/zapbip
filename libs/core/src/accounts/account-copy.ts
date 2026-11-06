@@ -10,3 +10,8 @@ export function buildMenuRows(input: { locale: OwnerLocale }): MenuRow[] {
   void input;
   throw new Error('buildMenuRows is not implemented');
 }
+
+export function buildMenuButtonText(input: { locale: OwnerLocale }): string {
+  void input;
+  throw new Error('buildMenuButtonText is not implemented');
+}
