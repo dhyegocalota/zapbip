@@ -1,6 +1,7 @@
 import { SELF } from 'cloudflare:test';
 import { ConnectorFrameType, UPGRADE_REQUIRED_STATUS } from '@zapbip/types';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
+import { createApp } from '../../src/app';
 import { UNAUTHORIZED_BODY } from '../../src/contract/constants';
 import { connectorUrl, openConnector } from '../support/connector-session';
 import { testEnv } from '../support/workers-env';
@@ -59,5 +60,27 @@ describe('connector route', () => {
     const session = await openConnector({ secret: account.secret, query: `?agent=${IMPERSONATED_AGENT}` });
     expect(await session.nextFrame()).toMatchObject({ type: ConnectorFrameType.Hello, agent: 'ana' });
     session.socket.close();
+  });
+
+  describe('without reaching the account object', () => {
+    function countedEnvironment() {
+      const objectCalls = vi.fn();
+      const namespace = { idFromName: objectCalls, get: objectCalls };
+      return { objectCalls, environment: { ...testEnv, ACCOUNT_INBOX: namespace as unknown as typeof testEnv.ACCOUNT_INBOX } };
+    }
+
+    test.each([
+      ['an unknown secret', () => ({ path: `/c/${UNKNOWN_SECRET}/connector`, init: { headers: UPGRADE_HEADERS } })],
+      ['a missing upgrade header', async () => ({ path: `/c/${(await seedAccount({ agent: 'ana' })).secret}/connector`, init: {} })],
+      [
+        'a method with no route',
+        async () => ({ path: `/c/${(await seedAccount({ agent: 'ana' })).secret}/connector`, init: { method: 'POST' } }),
+      ],
+    ])('%s makes no call', async (_name, build) => {
+      const { path, init } = await build();
+      const { objectCalls, environment } = countedEnvironment();
+      await createApp({ extraRoutes: [] }).request(path, init, environment);
+      expect(objectCalls).not.toHaveBeenCalled();
+    });
   });
 });

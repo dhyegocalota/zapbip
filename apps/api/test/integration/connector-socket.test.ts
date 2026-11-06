@@ -1,16 +1,18 @@
-import type { CoreDependencies, Message } from '@zapbip/core';
+import { renderCopy, type CoreDependencies, type Message } from '@zapbip/core';
 import {
   CONNECTOR_FRAME_MAX_BYTES,
   CONNECTOR_PING_TEXT,
   CONNECTOR_PONG_TEXT,
   ConnectorFrameType,
+  InboxCopyKey,
+  OwnerLocale,
   REPLACED_CLOSE_CODE,
   WakeMode,
 } from '@zapbip/types';
 import { runInDurableObject } from 'cloudflare:test';
 import { describe, expect, test, vi } from 'vitest';
 import { openConnector } from '../support/connector-session';
-import { receiveOwnerText } from '../support/inbox-session';
+import { readScreen, receiveOwnerText } from '../support/inbox-session';
 import { accountInboxStub } from '../support/workers-env';
 import { inboxOf, seedAccount, type SeededAccount } from './route-fixtures';
 
@@ -134,6 +136,7 @@ describe('connector socket', () => {
     await first.nextFrame();
     const second = await openConnector({ secret: account.secret });
     expect(await first.closeCode()).toBe(REPLACED_CLOSE_CODE);
+    await vi.waitFor(async () => expect(await socketCountOf({ account })).toBe(1));
     expect(await second.nextFrame()).toMatchObject({ type: ConnectorFrameType.Hello });
     second.socket.close();
   });
@@ -239,5 +242,16 @@ describe('connector socket', () => {
     const frame = (await session.nextFrame()) as MessagesFrame;
     expect(frame.messages.map((message) => message.forwarded)).toEqual([true]);
     session.socket.close();
+  });
+
+  test('with no connector the message waits unread and the owner gets exactly one waiting notice', async () => {
+    const account = await registeredAccount();
+    const stub = accountInboxStub({ accountId: account.accountId });
+    await ownerMessage({ account });
+    await ownerMessage({ account });
+    const notice = renderCopy({ key: InboxCopyKey.AgentNotListening, locale: OwnerLocale.PortugueseBrazil, values: { agent: AGENT } });
+    const screen = await readScreen({ stub });
+    expect(screen.filter((entry) => entry.text === notice)).toHaveLength(1);
+    expect(await unreadCountOf({ account })).toBe(2);
   });
 });

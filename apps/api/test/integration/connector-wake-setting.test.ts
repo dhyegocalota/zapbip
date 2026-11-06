@@ -1,4 +1,4 @@
-import { WakeMode, WakeProvider, WakeStatus } from '@zapbip/types';
+import { REPLACED_CLOSE_CODE, WakeMode, WakeProvider, WakeStatus } from '@zapbip/types';
 import type { StoredWake, WakeRepository } from '@zapbip/core';
 import { runInDurableObject } from 'cloudflare:test';
 import { describe, expect, test, vi } from 'vitest';
@@ -27,6 +27,13 @@ function findWake(input: { account: SeededAccount }): Promise<StoredWake | null>
 
 function findRestore(input: { account: SeededAccount }): Promise<StoredWake | null> {
   return withRepository({ account: input.account, run: (repository) => repository.findLocalRestore({ agent: AGENT }) });
+}
+
+function socketsOf(input: { account: SeededAccount }): Promise<number> {
+  return runInDurableObject(
+    accountInboxStub({ accountId: input.account.accountId }),
+    (_instance, state) => state.getWebSockets(AGENT).length,
+  );
 }
 
 async function registeredAccount(): Promise<SeededAccount> {
@@ -197,5 +204,27 @@ describe('wake setting while a connector is attached', () => {
     expect(await findRestore({ account })).toBeNull();
     const jobs = await runInDurableObject(stub, (_instance, state) => state.storage.sql.exec('SELECT agent FROM wake_jobs').toArray());
     expect(jobs).toHaveLength(1);
+  });
+
+  test('a replacement does not restore: the local mode and the restore record stay until the last close', async () => {
+    const account = await registeredAccount();
+    const previous = await enableWebhook({ account });
+    const first = await attached({ account });
+    const second = await attached({ account });
+    expect(await first.closeCode()).toBe(REPLACED_CLOSE_CODE);
+    expect((await findWake({ account }))?.mode).toBe(WakeMode.Local);
+    expect(await findRestore({ account })).toEqual(previous);
+    second.socket.close();
+    await vi.waitFor(async () => expect(await findWake({ account })).toEqual(previous));
+  });
+
+  test('a close with no restore record changes nothing and does not throw', async () => {
+    const account = await registeredAccount();
+    const session = await attached({ account });
+    await withRepository({ account, run: (repository) => repository.deleteLocalRestore({ agent: AGENT }) });
+    session.socket.close();
+    await vi.waitFor(async () => expect(await socketsOf({ account })).toBe(0));
+    expect((await findWake({ account }))?.mode).toBe(WakeMode.Local);
+    expect(await findRestore({ account })).toBeNull();
   });
 });
