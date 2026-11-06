@@ -106,7 +106,9 @@ export async function startStack(input: { agents: string[] }): Promise<Stack> {
   await runCommand(
     'pnpm',
     ['exec', 'wrangler', 'd1', 'migrations', 'apply', DATABASE_BINDING, '--env', 'development', '--local', ...persistArguments],
-    { cwd: API_DIRECTORY },
+    {
+      cwd: API_DIRECTORY,
+    },
   );
   const secrets = await seedConnections({ agents: input.agents, persistArguments });
   const server = spawn(

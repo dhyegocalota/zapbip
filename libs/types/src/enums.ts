@@ -49,6 +49,7 @@ export enum InboxCopyKey {
   RoutingListReminder = 'routing_list_reminder',
   NoAgents = 'no_agents',
   AgentNotListening = 'agent_not_listening',
+  AgentAssignedByExpiry = 'agent_assigned_by_expiry',
   NoticeBody = 'notice_body',
   QuestionNoticeBody = 'question_notice_body',
   NoticeQuickReply = 'notice_quick_reply',
@@ -140,6 +141,7 @@ export enum WakeLogEventName {
   Refused = 'wake.refused',
   GaveUp = 'wake.gave_up',
   NoticeFailed = 'wake.notice_failed',
+  NoticeSkipped = 'wake.notice_skipped',
 }
 
 export enum ChannelErrorKind {

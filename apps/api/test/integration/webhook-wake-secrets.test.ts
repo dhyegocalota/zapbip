@@ -1,5 +1,15 @@
 import { WAKE_SECRET_KEY_BYTES, type WakeTransport } from '@zapbip/core';
-import { InboxErrorCode, WakeAttemptOutcome, WakeMode, WakeStatus } from '@zapbip/types';
+import type { WakeLogEvent } from '@zapbip/core';
+import {
+  InboxErrorCode,
+  MessageKind,
+  OwnerLocale,
+  WakeAttemptOutcome,
+  WakeLogEventName,
+  WakeMode,
+  WakeProvider,
+  WakeStatus,
+} from '@zapbip/types';
 import { reset, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
 import type { DevAccountInbox } from '../../src/dev/dev-account-inbox';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -30,7 +40,6 @@ import { connectionOf, testEnv } from '../support/workers-env';
 
 const BASE64 = 'base64';
 const KEY_NAME = 'WAKE_SECRET_KEY';
-const METRICS_NAME = 'WAKE_METRICS';
 const CURRENT_KEY_VERSION = 1;
 const UNSUPPORTED_KEY_VERSION = 2;
 const SHORT_KEY_BYTES = 31;
@@ -38,8 +47,21 @@ const LATER_MIGRATION_VERSION = versionAfterLatest({ offset: 1 });
 const GROK_PATH = '/automations/webhook/abc12345';
 const OTHER_AGENT = 'beta';
 
+const wakeEvent: WakeLogEvent = {
+  name: WakeLogEventName.Delivered,
+  provider: WakeProvider.GrokRoutine,
+  agent: WAKE_AGENT,
+  attempt: 1,
+  statusCode: 200,
+  latencyMs: 1,
+  outcome: WakeAttemptOutcome.Delivered,
+  timedOut: false,
+};
+
 let stub: DurableObjectStub<DevAccountInbox>;
-const transport: WakeTransport = { send: async () => ({ outcome: WakeAttemptOutcome.Delivered, statusCode: 200, retryAfterMs: null }) };
+const transport: WakeTransport = {
+  send: async () => ({ outcome: WakeAttemptOutcome.Delivered, statusCode: 200, retryAfterMs: null, timedOut: false }),
+};
 
 function wakeDependenciesWith(input: { env: Partial<typeof testEnv> }) {
   return runInDurableObject(stub, (_instance, state) =>
@@ -176,8 +198,40 @@ describe('wake dependencies', () => {
     expect(outcome).toContain(KEY_NAME);
   });
 
-  it('throws naming the dataset when it is absent', async () => {
-    await expect(wakeDependenciesWith({ env: { WAKE_METRICS: undefined } as never })).rejects.toThrow(METRICS_NAME);
+  it('builds without the dataset and loses only the metrics', async () => {
+    const wake = await wakeDependenciesWith({ env: { WAKE_METRICS: undefined } as never });
+    expect(() => wake.observer.observe({ event: wakeEvent })).not.toThrow();
+  });
+
+  it('serves send_message and wakes the agent from an object that has no dataset', async () => {
+    const outcome = await runInDurableObject(stub, async (instance, state) => {
+      const AccountInboxClass = instance.constructor as new (ctx: DurableObjectState, env: typeof testEnv) => DevAccountInbox;
+      const bare = new AccountInboxClass(state, { ...testEnv, WAKE_METRICS: undefined } as never);
+      await state.blockConcurrencyWhile(async () => undefined);
+      await bare.devScriptWake({ agent: WAKE_AGENT, responses: [ACCEPTED] });
+      await bare.receiveOwnerMessage({
+        ownerLocale: OwnerLocale.PortugueseBrazil,
+        channelMessageId: 'wamid.bare',
+        ownerMessage: {
+          at: Date.now(),
+          replyToMessageId: null,
+          forwarded: false,
+          content: { kind: MessageKind.Text, text: mentionText({ text: 'oi' }) },
+        },
+      });
+      await (bare as unknown as { clock: { advance(input: { advanceMs: number }): Promise<number> } }).clock.advance({
+        advanceMs: DEBOUNCE_ADVANCE_MS,
+      });
+      await bare.alarm();
+      const sent = await bare.sendText({
+        connection: connectionOf({ accountId: WAKE_ACCOUNT, agent: WAKE_AGENT }),
+        text: 'oi',
+        replyToMessageId: null,
+      });
+      return { sent, wakes: await bare.devReadWakeRequests({ agent: WAKE_AGENT }) };
+    });
+    expect(outcome.sent.ok).toBe(true);
+    expect(outcome.wakes).toHaveLength(1);
   });
 });
 

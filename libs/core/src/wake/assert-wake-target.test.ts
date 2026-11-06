@@ -116,12 +116,33 @@ describe('assertWakeTarget host forms', () => {
     },
   );
 
-  test.each(['https://evil-api2.cursor.sh/x', 'https://x.api2.cursor.sh/x', 'https://x.api.anthropic.com/x'])(
-    '%s is a generic target and never a pinned provider',
+  test.each(['https://zapbip.example:8787', 'https://zapbip.example/some/path', 'HTTPS://ZAPBIP.EXAMPLE'])(
+    'the own host given as the origin %s is refused',
+    async (publicHost) => {
+      expect(await rejection({ url: 'https://a.b.zapbip.example/hook', token: LONG_TOKEN, publicHost })).toEqual({
+        code: InboxErrorCode.InvalidInput,
+        message: 'invalid url',
+      });
+    },
+  );
+
+  test.each(['https://notzapbip.example/x', 'https://zapbip.example.evil.com/x', 'https://myzapbip.com/x'])(
+    '%s only resembles a blocked host and is accepted',
     (url) => {
       expect(guard({ url, token: LONG_TOKEN }).provider).toBe(WakeProvider.GenericWebhook);
     },
   );
+
+  test.each([
+    'https://evil-api2.cursor.sh/x',
+    'https://x.api2.cursor.sh/x',
+    'https://x.api.anthropic.com/x',
+    'https://api2.cursor.sh.evil.example/x',
+    'https://api.anthropic.com.evil.example/x',
+    'https://xapi.anthropic.com/x',
+  ])('%s is a generic target and never a pinned provider', (url) => {
+    expect(guard({ url, token: LONG_TOKEN }).provider).toBe(WakeProvider.GenericWebhook);
+  });
 
   test('app.localhost is refused', async () => {
     expect(await rejection({ url: 'https://app.localhost/x', token: LONG_TOKEN })).toEqual({
@@ -163,6 +184,8 @@ describe('assertWakeTarget urls', () => {
     'the product apex': 'https://zapbip.com/x',
     'a product subdomain': 'https://hooks.zapbip.com/x',
     'a workers.dev host': 'https://wake.account.workers.dev/x',
+    'the workers.dev apex': 'https://workers.dev/x',
+    'a localdomain host': 'https://a.localhost.localdomain/x',
     'the own host': `https://${PUBLIC_HOST}/x`,
     'an own host subdomain': `https://hooks.${PUBLIC_HOST}/x`,
   };

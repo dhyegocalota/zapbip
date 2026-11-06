@@ -84,9 +84,10 @@ export type ReceiveOwnerMessageInput = {
 export type ReceiveResult = { messageId: string | null; agent: AgentName | null; duplicate: boolean };
 
 export type DescribeUploadInput = { dependencies: CoreDependencies; mediaId: string };
-export type CompleteUploadInput = { dependencies: CoreDependencies; mediaId: string };
+export type CompleteUploadInput = { dependencies: CoreDependencies; mediaId: string; claimedAt: number };
 export type ClaimUploadInput = { dependencies: CoreDependencies; mediaId: string };
-export type ReleaseUploadInput = { dependencies: CoreDependencies; mediaId: string };
+export type ReleaseUploadInput = { dependencies: CoreDependencies; mediaId: string; claimedAt: number };
+export type UploadClaim = StoredMedia & { claimedAt: number };
 export type SweepExpiredInput = { dependencies: CoreDependencies };
 export type SweepExpiredResult = { nextDueAt: number | null };
 

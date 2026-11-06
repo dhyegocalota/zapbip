@@ -496,7 +496,7 @@ Every box is empty when authored. A developer ticks its own box. A wrong step is
 
 ### Lane L3: MCP `set_wake`
 
-- [ ] **W3.1 red: tool.** Write `set-wake.test.ts`. The tool count is taken from the registry constant, not a literal. Expected failure: `set_wake` is missing from `tools/list`. Commit as `test(api): pin set_wake over MCP`.
+- [x] **W3.1 red: tool.** (aaed4db) Write `set-wake.test.ts`. The tool count is taken from the registry constant, not a literal. Expected failure: `set_wake` is missing from `tools/list`. Commit as `test(api): pin set_wake over MCP`.
 - [x] **W3.2 green: tool.** (7eb923a, green after the L2 merge 90b73a5) Implement `set-wake.ts`; register it; map `wake_mode` and `effective_rung`. Errors carry the `InboxError` message and no input values. Commit as `feat(api): expose set_wake`.
 
 ### Lane L4: docs

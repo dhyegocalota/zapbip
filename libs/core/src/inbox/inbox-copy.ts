@@ -24,6 +24,10 @@ export const INBOX_COPY: Record<InboxCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.PortugueseBrazil]: 'O agente {agent} não está ouvindo agora. Sua mensagem espera no inbox.',
     [OwnerLocale.EnglishUs]: 'The agent {agent} is not listening right now. Your message waits in the inbox.',
   },
+  [InboxCopyKey.AgentAssignedByExpiry]: {
+    [OwnerLocale.PortugueseBrazil]: 'Você não escolheu um agente, então sua mensagem foi para {agent}. Ela espera no inbox.',
+    [OwnerLocale.EnglishUs]: 'You did not pick an agent, so your message went to {agent}. It waits in the inbox.',
+  },
   [InboxCopyKey.NoticeBody]: {
     [OwnerLocale.PortugueseBrazil]: 'O agente {agent} tem uma mensagem para você: {preview}',
     [OwnerLocale.EnglishUs]: 'The agent {agent} has a message for you: {preview}',

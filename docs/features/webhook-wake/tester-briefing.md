@@ -251,8 +251,53 @@ Pins (green on arrival): burst of 200 messages, 50 agents, no secret in observer
 - An object without `WAKE_SECRET_KEY` still serves `send_message`; `set_wake` with a webhook names the key.
 - `127.0.0.1.nip.io` and `localtest.me` are accepted (name-based guard, ADR 0019).
 
+### Mutation proofs (break the code, see red, restore)
+
+| Mutation | Red tests |
+|---|---|
+| `findNextDueAt` ignores the lease end | `leaves a leased job alone until the lease passes` (it now also asserts the alarm waits for the lease end) |
+| `wakeAssociatedData` drops the agent | `refuses the sealed target of another agent copied into this agent row` |
+| the secret box validates the key at construction | the four `wake dependencies` cases: 31 byte key, no key, `set_wake` without a key, `send_message` from a keyless object |
+| `runMigrations` skips gaps and does not sort | `WI-120`, `WI-121`, `migration v2 applies once when a later version is already applied` (it also broke the rest of the suite, so the proof is coarse) |
+
+### Timeout class
+
+The transport sets `timedOut` when the request fails with `TimeoutError` or `AbortError` (`isWakeTimeout`); the core does the same for a thrown scripted error. The observer maps `timedOut` to the `timeout` class and a missing status otherwise to `network`. The latency heuristic is gone.
+
 ### Gaps
 
-- Not written: the revoked-secret `set_wake` case, an object restart between lease and retry, an in-flight delayed 200 follow-up, a live `ask` waiter at the alarm (integration), and the strengthened "leaves a leased job alone" test (finding J).
+- New integration tests in `webhook-wake-lifecycle.test.ts` (restart while leased, message during a delayed 200, live `wait_for_reply` waiter at the alarm) and `set-wake.test.ts` (revoked secret) were written after the code they cover, so they are pins.
 - The any-waiter query is recorded under "Later" in the spec.
 - The per-agent cap changes the follow-up delay from 3 s to the cap; `WAKE_FOLLOW_UP_MS` was not kept.
+
+## Fix batch 2 (reviewer minors and retester findings)
+
+### Red then green
+
+| Change | Red | Green |
+|---|---|---|
+| `workers.dev` apex and `*.localdomain` refused | `80940b1`: `expected an InboxError, nothing was thrown` (2 rows) | `e344d14` |
+| a missing `WAKE_METRICS` loses only the metrics | `d6e68b6`: `Error: WAKE_METRICS binding is missing` (1 unit, 2 integration) | `ed88557` |
+| failed retry gap (`WAKE_FAILED_RETRY_MS`, 10 min), finite `Retry-After`, no second send after a throw after a 2xx, rewake kept by `recordFailure`, `wake.notice_skipped`, clear through `clearWake` | `fbed2ec`: `dueAt NaN`, 65 requests against a limit of 15, `length 2` against 1, `rewake false`, no `wake.notice_skipped` | `9f9be00` |
+| `owner_locale_missing` is gone from the alarm; core reports the skipped notice | `550938a`: `expected [ Array(1) ] to deeply equal []` | `819fd18` |
+
+### Pins (green on arrival)
+
+- `fa1ebbf` (pin): the lifecycle integration cases and the stronger lease test.
+- `581b516` (pin): the e2e wake notice names the agent.
+- `21c2690`: the follow-up interval is asserted against the stored request time (the 1 ms race is gone).
+- `fbed2ec`: five throws on an already failing wake send no second notice; the notice waits for the settled wake (both kill the retester's surviving mutants S1 and S2).
+- `64573a6` (pin): recovery after a refusal, a replaced target in flight, a sealed target copied to another agent, own-host origin forms.
+
+### Hypotheses for the tester
+
+- A never-reading agent whose endpoint always answers 503, with a message every 4 s for 30 min, gets at most 15 requests and one notice.
+- After a wake gave up, the next request is at least 10 min after the last one; a `2xx` returns the wake to `active` and the 60 s cap.
+- A `Retry-After` of NaN or Infinity waits the base backoff.
+- With the owner locale missing, a refused wake logs `wake.notice_skipped` once and a delivered wake logs nothing about the locale; `owner_locale_missing` is never logged.
+- An object started without `WAKE_METRICS` logs `wake_metrics_missing` once, still serves `send_message` and still wakes.
+
+### Gaps
+
+- A throw after a `2xx` finishes the job like a delivery: a message that arrived in flight gets its follow-up wake under the 60 s cap.
+- The 60 s cap is per agent; ADR 0019 records the per-account-per-host cap as a later option.

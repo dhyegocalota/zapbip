@@ -11,3 +11,4 @@ export * from './set-wake';
 export * from './local-connector';
 export * from './schedule-wake';
 export * from './run-due-wakes';
+export * from './wake-timeout';

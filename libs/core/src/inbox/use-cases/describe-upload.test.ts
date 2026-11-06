@@ -2,8 +2,7 @@ import { InboxErrorCode } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { UPLOAD_TTL_MS } from '../constants';
 import { captureInboxError } from '../testing/capture-inbox-error';
-import { connectionOf, createEnvironment } from '../testing/fixtures';
-import { completeUpload } from './complete-upload';
+import { connectionOf, createEnvironment, receiveUpload } from '../testing/fixtures';
 import { createUpload } from './create-upload';
 import { describeUpload } from './describe-upload';
 
@@ -43,7 +42,7 @@ describe('describeUpload', () => {
 
   test('CU-130 already received upload', async () => {
     const { environment, uploadId } = await pendingUpload();
-    await completeUpload({ dependencies: environment.dependencies, mediaId: uploadId });
+    await receiveUpload({ environment, mediaId: uploadId });
     const error = await captureInboxError(() => describeUpload({ dependencies: environment.dependencies, mediaId: uploadId }));
     expect(error).toEqual({ code: InboxErrorCode.UploadUnavailable, message: 'upload_id: upload already received' });
   });

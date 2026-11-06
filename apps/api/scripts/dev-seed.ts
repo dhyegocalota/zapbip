@@ -4,12 +4,12 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 import { InboxError } from '@zapbip/core';
+import { DEVELOPMENT_ENVIRONMENT } from '../src/contract/constants';
 import { assertOwnerAbsent, buildDirectorySeed, findOwnerStatement } from './build-directory-seed';
 
 const DATABASE_BINDING = 'CONNECTIONS';
 const SEED_FILE_NAME = 'seed.sql';
 const AGENT_SEPARATOR = ',';
-const DEVELOPMENT_ENVIRONMENT = 'development';
 
 type WranglerRows = { results: { total: number }[] }[];
 

@@ -1,4 +1,4 @@
-import { IdPrefix, type OwnerLocale, MessageKind, WakeAttemptOutcome, WakeLogEventName, WakeMode, WakeStatus } from '@zapbip/types';
+import { IdPrefix, type OwnerLocale, MessageKind, WakeAttemptOutcome, WakeLogEventName, WakeStatus } from '@zapbip/types';
 import { InboxError } from '../inbox/errors';
 import { deliverToOwner } from '../inbox/use-cases/deliver-to-owner';
 import {
@@ -13,24 +13,24 @@ import {
 import { assertWakeTarget } from './assert-wake-target';
 import { wakeAssociatedData } from './wake-associated-data';
 import { nextWakeDueAt } from './wake-due-at';
+import { isWakeTimeout } from './wake-timeout';
 import { wakeFailedCopy } from './wake-copy';
 import type { RunDueWakesInput, RunDueWakesResult, WakeAttemptResult } from './wake-ports';
-import type { StoredWake, StoredWakeTarget, WakeJob, WakeTarget } from './wake-setting';
+import { observeUnsent } from './observe-unsent';
+import { isWebhookWake, type StoredWake, type WakeJob, type WakeTarget, type WebhookWake } from './wake-setting';
 
 type JobRun = RunDueWakesInput & { job: WakeJob };
-type WebhookWake = StoredWake & { target: StoredWakeTarget };
 type Attempt = JobRun & { stored: WebhookWake; attempt: number; startedAt: number; result: WakeAttemptResult };
 
 const BACKOFF_FACTOR = 2;
-const UNSENT_RESULT: WakeAttemptResult = { outcome: WakeAttemptOutcome.Refused, statusCode: null, retryAfterMs: null };
-const FAILED_SEND_RESULT: WakeAttemptResult = { outcome: WakeAttemptOutcome.Retry, statusCode: null, retryAfterMs: null };
+const UNSENT_RESULT: WakeAttemptResult = { outcome: WakeAttemptOutcome.Refused, statusCode: null, retryAfterMs: null, timedOut: false };
 
 function isLeased(input: { job: WakeJob; now: number }): boolean {
   return input.job.leaseUntil !== null && input.job.leaseUntil > input.now;
 }
 
-function isWebhookWake(stored: StoredWake | null): stored is WebhookWake {
-  return stored !== null && stored.mode === WakeMode.Webhook && stored.target !== null;
+function isActiveWake(stored: StoredWake | null): boolean {
+  return stored !== null && stored.status === WakeStatus.Active;
 }
 
 function backoffMs(input: { attempt: number }): number {
@@ -40,7 +40,8 @@ function backoffMs(input: { attempt: number }): number {
 function retryDelayMs(input: { attempt: number; result: WakeAttemptResult }): number {
   const { attempt, result } = input;
   const { statusCode, retryAfterMs } = result;
-  const honoursRetryAfter = statusCode !== null && WAKE_RETRY_AFTER_STATUSES.includes(statusCode) && retryAfterMs !== null;
+  const isRetryAfterStatus = statusCode !== null && WAKE_RETRY_AFTER_STATUSES.includes(statusCode);
+  const honoursRetryAfter = isRetryAfterStatus && retryAfterMs !== null && Number.isFinite(retryAfterMs);
   if (!honoursRetryAfter) return backoffMs({ attempt });
   return Math.max(WAKE_BACKOFF_BASE_MS, Math.min(retryAfterMs, WAKE_BACKOFF_CAP_MS));
 }
@@ -56,6 +57,7 @@ function observeAttempt(input: Attempt & { name: WakeLogEventName }): void {
       statusCode: result.statusCode,
       latencyMs: dependencies.clock.now() - startedAt,
       outcome: result.outcome,
+      timedOut: result.timedOut,
     },
   });
 }
@@ -87,8 +89,8 @@ async function sendWake(input: JobRun & { stored: WebhookWake }): Promise<WakeAt
   if (target === null) return UNSENT_RESULT;
   try {
     return await wake.transport.send({ agent: job.agent, target, body: WAKE_SIGNAL_BODY, nowMs: dependencies.clock.now() });
-  } catch {
-    return FAILED_SEND_RESULT;
+  } catch (error) {
+    return { outcome: WakeAttemptOutcome.Retry, statusCode: null, retryAfterMs: null, timedOut: isWakeTimeout({ error }) };
   }
 }
 
@@ -129,28 +131,19 @@ async function tellOwner(input: JobRun & { ownerLocale: OwnerLocale }): Promise<
 
 async function tellOwnerOnce(input: JobRun & { stored: StoredWake | null }): Promise<void> {
   const { wake, job, stored, ownerLocale } = input;
-  if (ownerLocale === null) return;
+  const unsent = { observer: wake.observer, stored, agent: job.agent, attempt: job.attempt };
+  if (ownerLocale === null) return observeUnsent({ ...unsent, name: WakeLogEventName.NoticeSkipped });
   try {
     await tellOwner({ ...input, ownerLocale });
   } catch {
-    wake.observer.observe({
-      event: {
-        name: WakeLogEventName.NoticeFailed,
-        provider: stored === null || stored.target === null ? null : stored.target.provider,
-        agent: job.agent,
-        attempt: job.attempt,
-        statusCode: null,
-        latencyMs: null,
-        outcome: null,
-      },
-    });
+    observeUnsent({ ...unsent, name: WakeLogEventName.NoticeFailed });
   }
 }
 
 async function giveUp(input: JobRun): Promise<void> {
   const { wake, job } = input;
   const stored = await wake.repository.findWake({ agent: job.agent });
-  const isNewFailure = stored !== null && stored.status === WakeStatus.Active;
+  const isNewFailure = isActiveWake(stored);
   await updateStoredWake({ ...input, patch: { status: WakeStatus.Failing } });
   await wake.repository.deleteJob({ agent: job.agent });
   if (isNewFailure) await tellOwnerOnce({ ...input, stored });
@@ -160,7 +153,7 @@ async function settleFailure(input: Attempt & { eventName: WakeLogEventName }): 
   const { wake, job, result, stored, eventName } = input;
   observeAttempt({ ...input, name: eventName });
   const current = await wake.repository.findWake({ agent: job.agent });
-  const isNewFailure = current !== null && current.status === WakeStatus.Active;
+  const isNewFailure = isActiveWake(current);
   await updateStoredWake({ ...input, patch: { status: WakeStatus.Failing } });
   await finishJob({ ...input, outcome: result.outcome });
   if (isNewFailure) await tellOwnerOnce({ ...input, stored });
@@ -195,20 +188,21 @@ const SETTLERS: Record<WakeAttemptOutcome, (input: Attempt) => Promise<void>> = 
   [WakeAttemptOutcome.Refused]: settleRefused,
 };
 
+async function settleAttempt(input: Attempt): Promise<void> {
+  const { result } = input;
+  try {
+    await SETTLERS[result.outcome](input);
+  } catch (error) {
+    const isDelivered = result.outcome === WakeAttemptOutcome.Delivered;
+    if (!isDelivered) throw error;
+    await finishJob({ ...input, outcome: WakeAttemptOutcome.Delivered });
+  }
+}
+
 async function dropJob(input: JobRun & { stored: StoredWake | null }): Promise<void> {
   const { wake, job, stored } = input;
   await wake.repository.deleteJob({ agent: job.agent });
-  wake.observer.observe({
-    event: {
-      name: WakeLogEventName.Dropped,
-      provider: stored === null || stored.target === null ? null : stored.target.provider,
-      agent: job.agent,
-      attempt: job.attempt,
-      statusCode: null,
-      latencyMs: null,
-      outcome: null,
-    },
-  });
+  observeUnsent({ observer: wake.observer, name: WakeLogEventName.Dropped, stored, agent: job.agent, attempt: job.attempt });
 }
 
 async function attemptJob(input: JobRun): Promise<void> {
@@ -227,17 +221,17 @@ async function attemptJob(input: JobRun): Promise<void> {
   const current = await wake.repository.findWake({ agent });
   const isSameWake = isWebhookWake(current) && current.target.sealedTarget === stored.target.sealedTarget;
   if (!isSameWake) return;
-  await SETTLERS[result.outcome]({ ...input, stored, attempt: job.attempt + 1, startedAt, result });
+  await settleAttempt({ ...input, stored, attempt: job.attempt + 1, startedAt, result });
 }
 
 async function recordFailure(input: JobRun): Promise<void> {
   const { dependencies, wake, job } = input;
-  const attempt = job.attempt + 1;
+  const current = await wake.repository.findJob({ agent: job.agent });
+  if (current === null) return;
+  const attempt = current.attempt + 1;
   if (attempt >= WAKE_MAX_ATTEMPTS) return giveUp(input);
   const dueAt = dependencies.clock.now() + backoffMs({ attempt });
-  await wake.repository.saveJob({
-    job: { ...job, attempt, dueAt, leaseUntil: null, rewake: false, lastOutcome: WakeAttemptOutcome.Retry },
-  });
+  await wake.repository.saveJob({ job: { ...current, attempt, dueAt, leaseUntil: null, lastOutcome: WakeAttemptOutcome.Retry } });
 }
 
 async function runJob(input: JobRun): Promise<void> {

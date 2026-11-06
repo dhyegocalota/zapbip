@@ -220,9 +220,17 @@ Runner: `pnpm --filter @zapbip/core test:unit` (Vitest 5.0.5). Ports are the in-
 - [ ] CU-165 expiry with a rule 5 agent — input: a held batch of two, `alpha` writes, the clock advances `ROUTING_LIST_TTL_MS`, `expireRoutingList`; expected: both messages unread for `alpha` in order, its waiter resolved, the row cleared, no new list.
 - [ ] CU-166 first expiry without a rule 5 agent — input: as CU-165 with no agent write; expected: the list is sent once more for the first held message, `resent` true, the opening time reset, the batch still held. Before the TTL nothing happens.
 - [ ] CU-167 second expiry — input: CU-166 then another TTL; expected: the batch is assigned, unread, to the agent seen last; the row cleared; no third list. If an agent wrote after the resend, it takes the batch instead.
-- [ ] CU-168 expiry edge cases — input: a row with nothing held; a rule 5 write older than `WINDOW_MS` at the expiry; expected: the row is cleared with no list; the list is sent again.
+- [ ] CU-168 expiry edge cases — input: a row with nothing held; a rule 5 write older than `WINDOW_MS` at the expiry; expected: the row is cleared with no list; the resend is queued (`resent: true`) and the list is sent again.
 - [ ] CU-169 media types are normalised — input: image `image/SVG+XML`, `image/svg+xml;x=1`; sticker `IMAGE/WEBP; q=1`; video `VIDEO/MP4`; expected: both SVG images rejected as `mime_type: image must not be image/svg+xml`; the sticker and video accepted.
 - [ ] CU-170 `claimUpload` and `releaseUpload` — input: a pending upload claimed twice; released and claimed again; completed; expired; expected: `upload_id: upload already in progress` on the second claim; the third succeeds; `upload already received` and `upload expired` as for `describeUpload`; `completeUpload` works on a claimed upload.
+- [ ] CU-171 expiry assignment copy — input: the alarm assigns a held batch to `beta` by rule 5; expected: the owner text names `beta` ("You did not pick an agent, so your message went to beta") and is not the "not listening" notice.
+- [ ] CU-172 a failed resend keeps the list moving — input: the expiry resend fails to send; expected: the resend flag is kept, the due time moves forward, and the next expiry assigns the batch.
+- [ ] CU-173 a claimed expiry — input: two expiries running at once on the same list; expected: one resend is sent.
+- [ ] CU-174 the claim cannot be taken over — input: `UPLOAD_CLAIM_TTL_MS >= UPLOAD_TTL_MS`; a claimed upload, the clock advanced `UPLOAD_TTL_MS`, `claimUpload`; expected: `upload_expired`, never a second claim.
+- [ ] CU-175 claim fencing — input: writer A claims and releases, the clock advances 1 ms, writer B claims; A completes with its token, then releases with its token; expected: `upload_unavailable` for A's completion, B's claim still held after A's release, B completes.
+- [ ] CU-176 the upload media type is stored normalized — input: `createUpload` with ` Application/PDF ; charset=binary`; expected: the media row holds `application/pdf`.
+- [ ] CU-177 control characters in a media type — input: `image/png\n;x`, `image/png\0`, `image/png;\rx`, `image/png;\tx`, `image/png;x\u007f` to `assertMediaFits` and `assertUploadDeclaration`; expected: `invalid_input`, `mime_type: must not contain control characters`.
+- [ ] CU-178 a photo quoting a question prompt — input: an open question, the agent in an ordinary `wait_for_reply`, the owner sends a photo quoting the prompt; expected: the wait returns the photo (`ReplyStatus.Message`), no wake notification, no "not listening" text. A stale tap on an answered question leaves the waiter of another question waiting (pin).
 - [ ] CU-159 every message kind round-trips — input: one message of each of the ten kinds (text, image, video, audio with voice, document, sticker, location, contacts, reaction, choice); expected: the in-memory repository returns an equal object for each.
 
 ## Worker integration
@@ -307,7 +315,7 @@ Runner: `pnpm --filter @zapbip/api test:integration` (Vitest 4.1.12, pool-worker
 - [ ] WI-61 `get_messages` default limit — input: no arguments, 25 unread; expected: 20 unread returned.
 - [ ] WI-62 `check_inbox` empty is immediate — input: no unread; expected: `{status: empty, messages: []}` in under 1 s.
 - [ ] WI-63 `check_inbox` new messages — input: one owner text; expected: `{status: new}` with it; `read` `true` afterwards.
-- [ ] WI-64 `create_upload` — input: `{filename: "a.pdf", mime_type: "application/pdf", size_bytes: 1000}`; expected: `upload_id` non-empty, `upload_url` with `/c/` and `/u/` and `exp=` and `sig=`, `expires_at` an ISO 8601 string in the future.
+- [ ] WI-64 `create_upload` — input: `{filename: "a.pdf", mime_type: "application/pdf", size_bytes: 1000}`; expected: `upload_id` non-empty, `upload_url` with `/u/` and `exp=` and `sig=`, `expires_at` an ISO 8601 string in the future.
 - [ ] WI-65 `create_upload` with an empty type — input: `mime_type: ""`; expected: tool error naming `mime_type`.
 - [ ] WI-66 `create_upload` over the document limit — input: `size_bytes: 100000001`; expected: tool error naming `size_bytes`.
 - [ ] WI-67 wire timestamps — input: any call returning messages; expected: every `at` matches ISO 8601.
@@ -331,10 +339,27 @@ Runner: `pnpm --filter @zapbip/api test:integration` (Vitest 4.1.12, pool-worker
 - [ ] WI-79 body smaller than declared — input: `Content-Length` one byte below; expected: `400`, no R2 object.
 - [ ] WI-80 wrong `Content-Type` — input: `video/mp4` for a declared `application/pdf`; expected: `415`, no R2 object.
 - [ ] WI-81 type parameters and case — input: declared `image/png`, sent as `IMAGE/PNG; charset=binary`; expected: `201`.
-- [ ] WI-82 unknown secret on the upload path — input: `/c/<unknown>/u/<id>` with a valid signature for the id; expected: `401`, body `UNAUTHORIZED_BODY`.
-- [ ] WI-83 another account's upload through my secret — input: an upload of `acc_2` PUT through `acc_1`'s secret; expected: `404`.
+- [ ] WI-82 upload path without a secret — input: `PUT /u/<account_id>/<id>` with an unknown account and a valid signature for the id; expected: `403`; the upload route carries no connection secret.
+- [ ] WI-83 another account's upload through my account path — input: an upload of `acc_2` PUT on `/u/acc_1/<id>`; expected: `403`.
 - [ ] WI-127 `Content-Length` that is not an integer — input: `abc`, `0x0c`, `12abc`, `1.2e1`, `-12`; expected: `400`, no R2 object.
 - [ ] WI-128 two concurrent PUTs — input: two PUTs with different bodies of the declared size, sent together; expected: one `201` and one `409`; the R2 object holds the winner's bytes.
+- [ ] WI-129 the alarm is not postponed — input: a due expiry, the agent keeps calling tools; expected: the alarm stays at the due time and fires.
+- [ ] WI-130 concurrent PUTs (attack) — input: two PUTs at once with different bodies; expected: one `201`, the rest `409`, the stored bytes are the winner's.
+- [ ] WI-131 a PUT after the winner — input: a third PUT after completion; expected: `409` and the object untouched.
+- [ ] WI-132 length attacks — input: `Content-Length` values other than the declared size, and a zero-size PUT; expected: no object stored unless the length is the declared size; `400` for zero.
+- [ ] WI-133 window writes keep the routing list — input: `saveWindow` then `saveRoutingList`, both orders; expected: each write keeps the other's columns.
+- [ ] WI-134 clearing the routing list — input: `clearRoutingList` after `resent` and `reminded`, and with no list; expected: the row is reset; a no-op without a list.
+- [ ] WI-135 saving the routing list twice — input: two saves, one with `openedAt` zero; expected: the second replaces the first; zero round-trips.
+- [ ] WI-136 account isolation of routing lists — input: two accounts each with a list; expected: each reads its own.
+- [ ] WI-137 an aborted client stream — input: a PUT whose body errors after one byte; expected: `400`, the claim released, no object; a retry answers `201`.
+- [ ] WI-138 repeated signature or expiry on an upload link — input: `sig` or `exp` given twice, either order; expected: `403`, no object.
+- [ ] WI-139 repeated signature or expiry on a media link — input: as WI-138 on a media link; expected: `403`.
+- [ ] WI-140 pin: a slow writer past the upload deadline — input: a PUT held open, the clock advanced past `UPLOAD_TTL_MS`, a second PUT, then the first body released; expected: both answer `410` and the upload is never recorded as received.
+- [ ] WI-141 an R2 failure mid-stream — input: `MEDIA.put` rejects once; expected: a 5xx (not `400`), the claim released, no object; a retry answers `201`.
+- [ ] WI-142 the object is stored under the normalized type — input: an upload declared `Image/PNG; charset=binary`; expected: the R2 `contentType` is `image/png`.
+- [ ] WI-143 media is served with the normalized type — input: an object stored with `IMAGE/PNG; charset=binary`; expected: `Content-Type: image/png`.
+- [ ] WI-144 repository claim fencing — input: claim at `T`, takeover at `T+5`; complete and release with the `T` token; expected: complete returns `false` and records nothing, release leaves the claim; the `T+5` token completes.
+- [ ] WI-145 svg and non-inline types are attachments — input: media of `image/svg+xml`, `IMAGE/SVG+XML; charset=utf-8`, `text/html`, `application/pdf`; expected: `Content-Disposition: attachment`, `nosniff` and `sandbox` on every response.
 - [ ] WI-84 signature made with the media key — input: a PUT signed with `MEDIA_LINK_SIGNING_KEY`; expected: `403` (the keys are not interchangeable).
 
 ### Signed media links (`media-route.test.ts`)
@@ -445,10 +470,10 @@ Each row names where its proof lives.
 - [ ] SEC-1 secrets hashed at rest — input: seed, read `connections`; expected: only `secret_digest` derives from the secret (WI-4).
 - [ ] SEC-2 enumeration-safe `401` — input: an unseeded and a deleted connection on the same route; expected: same status, byte-equal body (WI-27, WI-28).
 - [ ] SEC-3 account isolation on the MCP surface — input: `acc_1`'s agent reacts to a message id of `acc_2`; expected: `message_id: message not found`; `acc_2` unchanged (WI-15 and this case).
-- [ ] SEC-4 no route takes an account id except the signed media path — input: `/c/<secret>/mcp?account=acc_2` and `/c/<secret>/u/<id>?account=acc_2`; expected: the query is ignored and the response comes from `acc_1` only; the media path is covered by WI-116.
+- [ ] SEC-4 no route takes an account id except the signed media path — input: `/c/<secret>/mcp?account=acc_2` and `/u/<account_id>/<id>?account=acc_2`; expected: the query is ignored and the response comes from `acc_1` only; the media path is covered by WI-116.
 - [ ] SEC-5 signed links reject tampering — input: a media link with `sig` altered, `exp` altered, or the media id or account id swapped; expected: `403` each (WI-86, WI-88, WI-116).
 - [ ] SEC-6 each key works only for its purpose — input: a read link signed with the upload key, and an upload PUT signed with the media key; expected: `403` each (WI-84, WI-90).
-- [ ] SEC-7 secrets never in logs — input: a full E2E run with the `wrangler dev` output captured; expected: no connection secret string in the output.
+- [ ] SEC-7 secrets never in logs — input: a full E2E run with the `wrangler dev` output captured; expected: no connection secret string in the Worker's own log lines; the wrangler or platform request log line that echoes the request URL is accepted (ADR 0006).
 - [ ] SEC-8 message text never in logs — input: owner text `segredo-123` and caption `legenda-456`; expected: neither appears in the captured output (WI-26).
 - [ ] SEC-9 tool errors echo no message body — input: `send_message` with 4097 characters of `segredo`; expected: the error text does not contain `segredo`.
 - [ ] SEC-10 no interpolated SQL — input: `no-interpolated-sql.test.ts` over `apps/api/src/**/*.ts`; expected: no match outside drizzle's `sql` tag.
@@ -490,7 +515,7 @@ What is not tested and why.
 - Client abort propagation: not observable locally (spike, ADR 0009). The tests assume an abort is invisible and cover recovery through `question_id`.
 - Real 24-hour window: closed-window paths use the development clock offset (A18), not a real day.
 - Claude Code session (CC-1 to CC-6): opt-in, not run in CI, and run only after the owner's go-ahead, because it calls the model.
-- The top-level `database_id` in `wrangler.jsonc` is the placeholder `REPLACE_WITH_PRODUCTION_D1_DATABASE_ID` (asserted by `wrangler-config.test.ts`); deploy preflight must replace it with the id of the created D1 database. The development environment keeps the local identifier.
+- The top-level `database_id` in `wrangler.jsonc` is the placeholder `REPLACE_WITH_PRODUCTION_D1_DATABASE_ID` (asserted by `wrangler-config.test.ts`); `wrangler deploy` rejects it until the owner replaces it with the id of the created D1 database. The development environment keeps the local identifier.
 - PB-1 may be `not run` if `wrangler deploy --dry-run` needs a Cloudflare login.
 - Concurrency beyond a handful of waiters per account: covered by CU-88 and WI-23, not by load.
 - The Mintlify site is not published (ADR 0010). DOC-3 and DOC-4 check the local `mint dev` only.

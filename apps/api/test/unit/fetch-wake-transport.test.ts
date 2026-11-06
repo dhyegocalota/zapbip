@@ -107,7 +107,7 @@ describe('createFetchWakeTransport requests', () => {
 describe('createFetchWakeTransport outcomes', () => {
   it.each([200, 201, 204])('delivers on %i', async (status) => {
     respond({ status });
-    expect(await send({})).toEqual({ outcome: WakeAttemptOutcome.Delivered, statusCode: status, retryAfterMs: null });
+    expect(await send({})).toEqual({ outcome: WakeAttemptOutcome.Delivered, statusCode: status, retryAfterMs: null, timedOut: false });
   });
 
   it('refuses a redirect without following it', async () => {
@@ -165,13 +165,18 @@ describe('createFetchWakeTransport outcomes', () => {
           }),
       ),
     );
-    expect(await send({})).toEqual({ outcome: WakeAttemptOutcome.Retry, statusCode: null, retryAfterMs: null });
+    expect(await send({})).toEqual({ outcome: WakeAttemptOutcome.Retry, statusCode: null, retryAfterMs: null, timedOut: true });
+  });
+
+  it.each(['TimeoutError', 'AbortError'])('reports timedOut when the signal fires with %s', async (name) => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new DOMException('aborted', name)));
+    expect((await send({})).timedOut).toBe(true);
   });
 
   it('retries without leaking the error message when the network fails', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError(`getaddrinfo ENOTFOUND ${GENERIC_TARGET.url}`)));
     const result = await send({});
-    expect(result).toEqual({ outcome: WakeAttemptOutcome.Retry, statusCode: null, retryAfterMs: null });
+    expect(result).toEqual({ outcome: WakeAttemptOutcome.Retry, statusCode: null, retryAfterMs: null, timedOut: false });
     expect(JSON.stringify(result)).not.toContain('ENOTFOUND');
   });
 });

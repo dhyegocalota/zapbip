@@ -9,6 +9,7 @@ export type WakeAttemptResult = {
   outcome: WakeAttemptOutcome;
   statusCode: number | null;
   retryAfterMs: number | null;
+  timedOut: boolean;
 };
 
 export interface WakeTransport {
@@ -44,6 +45,7 @@ export type WakeLogEvent = {
   statusCode: number | null;
   latencyMs: number | null;
   outcome: WakeAttemptOutcome | null;
+  timedOut: boolean;
 };
 
 export interface WakeObserver {
