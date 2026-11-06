@@ -84,7 +84,7 @@ Test areas, each run by its own tester sub-agent in parallel: **Unit (core)**, *
 - [ ] One wake at a time — input: three enqueues with a `runWake` that resolves on a manual signal; expected: at most one `runWake` promise pending at any moment.
 - [ ] Duplicate id while queued is ignored — input: `msg_1` enqueued twice before it starts; expected: `runWake` called once for `msg_1`.
 - [ ] Duplicate id while running is ignored — input: `msg_1` enqueued again while its wake runs; expected: `runWake` not called a second time for `msg_1`.
-- [ ] A message can be queued again after it finished — input: `msg_1` enqueued after its wake resolved; expected: `runWake` runs again for `msg_1`.
+- [ ] A message queued again after it finished is not woken again — input: `msg_1` enqueued after its wake resolved; expected: `runWake` not called again, `done` sent.
 - [ ] Edge: a failing wake does not stop the queue — input: `runWake` rejects for `msg_1`, then `msg_2` is enqueued; expected: `msg_2` still runs.
 - [ ] Edge: an empty queue — input: no enqueue; expected: `runWake` never called.
 

@@ -213,7 +213,7 @@ pnpm --filter @zapbip/docs exec mint broken-links
 2. The last close restores the exact previous record, including a sealed webhook target, and a user change made while attached survives. Break it by: `set_wake` webhook and `none` while attached, then closing.
 3. Replacing a connector does not restore the wake mode. Break it by: connect, connect again, and read `agent_wake` between the old socket's close and the new socket's close.
 4. A hibernated object still acknowledges and restores. Break it by: letting the object evict (idle) before sending `done` or closing; the tests do not evict the object.
-5. `set_wake` with `mode: local` still answers "wake mode not available yet" and calls no RPC.
+5. `set_wake` with `mode: local` is accepted (it saves the local mode and drops a stored restore record); `scheduled` and `standby` still answer "wake mode not available yet" and call no RPC.
 
 ### Known gaps
 
