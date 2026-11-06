@@ -58,13 +58,7 @@ import {
   sendFrameToAgent,
   sendMessagesToAgent,
 } from './connector-sockets';
-import {
-  ALARM_MIN_DELAY_MS,
-  AlarmErrorCode,
-  CONNECTOR_AGENT_PARAMETER,
-  OWNER_LOCALE_STORAGE_KEY,
-  SWITCHING_PROTOCOLS_STATUS,
-} from './constants';
+import { ALARM_MIN_DELAY_MS, AlarmErrorCode, CONNECTOR_AGENT_PARAMETER, OWNER_LOCALE_STORAGE_KEY } from './constants';
 import { ACCOUNT_INBOX_MIGRATIONS } from './migrations';
 import { runMigrations } from './run-migrations';
 import { createWakeDependencies } from './wake-dependencies';
@@ -325,7 +319,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     const hello = { type: ConnectorFrameType.Hello, agent, previousWakeMode: attached.previousWakeMode } as const;
     sendFrameToAgent({ context: this.ctx, agent, frame: hello });
     sendMessagesToAgent({ context: this.ctx, agent, messages: attached.unread });
-    return new Response(null, { status: SWITCHING_PROTOCOLS_STATUS, webSocket: client });
+    return new Response(null, { status: HttpStatus.SwitchingProtocols, webSocket: client });
   }
 
   async webSocketMessage(socket: WebSocket, data: string | ArrayBuffer): Promise<void> {
@@ -343,8 +337,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     await inbox.detachLocalConnector({ dependencies: this.dependencies, wake: this.wake, agent, remainingSockets });
   }
 
-  async webSocketError(socket: WebSocket, error: unknown): Promise<void> {
-    void error;
+  async webSocketError(socket: WebSocket): Promise<void> {
     await this.webSocketClose(socket);
   }
 

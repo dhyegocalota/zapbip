@@ -47,7 +47,7 @@ export function connectorAgentOf(input: { context: DurableObjectState; socket: W
 }
 
 export function remainingSocketCount(input: { context: DurableObjectState; agent: AgentName; closing: WebSocket }): number {
-  return input.context.getWebSockets(input.agent).filter((socket) => socket !== input.closing).length;
+  return input.context.getWebSockets(input.agent).filter((socket) => socket !== input.closing && isOpenOrConnecting(socket)).length;
 }
 
 export function parseDoneFrame(input: { data: string | ArrayBuffer }): DoneFrameParse {

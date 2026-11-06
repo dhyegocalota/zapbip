@@ -165,7 +165,7 @@ describe('wake setting while a connector is attached', () => {
     await runInDurableObject(accountInboxStub({ accountId: account.accountId }), async (instance, state) => {
       const [serverSocket] = state.getWebSockets(AGENT);
       if (serverSocket === undefined) throw new Error('no server socket');
-      await (instance as AccountInbox).webSocketError(serverSocket, new Error('socket failed'));
+      await (instance as AccountInbox).webSocketError(serverSocket);
     });
     expect(await findWake({ account })).toEqual(previous);
     expect(await findRestore({ account })).toBeNull();

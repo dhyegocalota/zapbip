@@ -2,6 +2,7 @@ import { ChannelErrorKind, InboxErrorCode } from '@zapbip/types';
 
 export enum HttpStatus {
   Ok = 200,
+  SwitchingProtocols = 101,
   Created = 201,
   BadRequest = 400,
   Unauthorized = 401,
@@ -16,7 +17,9 @@ export enum HttpStatus {
   BadGateway = 502,
 }
 
-export const ERROR_STATUS: Record<InboxErrorCode | ChannelErrorKind, HttpStatus> = {
+export type ErrorHttpStatus = Exclude<HttpStatus, HttpStatus.SwitchingProtocols>;
+
+export const ERROR_STATUS: Record<InboxErrorCode | ChannelErrorKind, ErrorHttpStatus> = {
   [InboxErrorCode.InvalidInput]: HttpStatus.BadRequest,
   [InboxErrorCode.NotFound]: HttpStatus.NotFound,
   [InboxErrorCode.UploadExpired]: HttpStatus.Gone,
