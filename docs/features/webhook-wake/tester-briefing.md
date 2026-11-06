@@ -299,5 +299,5 @@ The transport sets `timedOut` when the request fails with `TimeoutError` or `Abo
 
 ### Gaps
 
-- A throw after a `2xx` drops the job, so a message that arrived in flight waits for the next message to schedule a wake.
+- A throw after a `2xx` finishes the job like a delivery: a message that arrived in flight gets its follow-up wake under the 60 s cap.
 - The 60 s cap is per agent; ADR 0019 records the per-account-per-host cap as a later option.

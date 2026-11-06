@@ -630,7 +630,7 @@ describe('runDueWakes when settling throws after the request', () => {
   test('a throw after a 2xx does not send the wake a second time', async () => {
     const wakeEnvironment = await armedWithThrowingSettle({ statusCode: OK, throwOn: 'saveWake' });
     enqueue({ wakeEnvironment, responses: [respond({ statusCode: OK })] });
-    await fireAfter({ wakeEnvironment, delayMs: WAKE_MIN_INTERVAL_MS });
+    await fireAfter({ wakeEnvironment, delayMs: WAKE_BACKOFF_CAP_MS - SECOND_MS });
     expect(wakeEnvironment.transport.requests).toHaveLength(1);
   });
 

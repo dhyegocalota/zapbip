@@ -189,13 +189,13 @@ const SETTLERS: Record<WakeAttemptOutcome, (input: Attempt) => Promise<void>> = 
 };
 
 async function settleAttempt(input: Attempt): Promise<void> {
-  const { wake, job, result } = input;
+  const { result } = input;
   try {
     await SETTLERS[result.outcome](input);
   } catch (error) {
     const isDelivered = result.outcome === WakeAttemptOutcome.Delivered;
     if (!isDelivered) throw error;
-    await wake.repository.deleteJob({ agent: job.agent });
+    await finishJob({ ...input, outcome: WakeAttemptOutcome.Delivered });
   }
 }
 
