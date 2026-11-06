@@ -25,6 +25,16 @@ describe('renderCopy', () => {
     expect(error).toEqual({ code: InboxErrorCode.InvalidInput, message: 'copy: missing value for agent' });
   });
 
+  test('the expiry assignment names the agent that got the batch', () => {
+    const values = { agent: 'beta' };
+    expect(renderCopy({ key: InboxCopyKey.AgentAssignedByExpiry, locale: OwnerLocale.PortugueseBrazil, values })).toBe(
+      'Você não escolheu um agente, então sua mensagem foi para beta. Ela espera no inbox.',
+    );
+    expect(renderCopy({ key: InboxCopyKey.AgentAssignedByExpiry, locale: OwnerLocale.EnglishUs, values })).toBe(
+      'You did not pick an agent, so your message went to beta. It waits in the inbox.',
+    );
+  });
+
   test('CU-92 in English', () => {
     expect(renderCopy({ key: InboxCopyKey.NoticeQuickReply, locale: OwnerLocale.EnglishUs, values: {} })).toBe('Open');
   });

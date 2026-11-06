@@ -7,6 +7,7 @@ import { join } from 'node:path';
 import { promisify } from 'node:util';
 import type { TestProject } from 'vitest/node';
 import { z } from 'zod';
+import { DEVELOPMENT_ENVIRONMENT } from '../../src/contract/constants';
 import { freePort, HEALTH_TIMEOUT_MS, LOOPBACK_HOST, waitForHealth } from './support/stack-process';
 
 const runCommand = promisify(execFile);
@@ -45,7 +46,7 @@ export default async function setup(project: TestProject): Promise<() => Promise
     'apply',
     DATABASE_BINDING,
     '--env',
-    'development',
+    DEVELOPMENT_ENVIRONMENT,
     '--local',
     ...persistArguments,
   ]);
@@ -69,7 +70,7 @@ export default async function setup(project: TestProject): Promise<() => Promise
       'wrangler',
       'dev',
       '--env',
-      'development',
+      DEVELOPMENT_ENVIRONMENT,
       '--ip',
       LOOPBACK_HOST,
       '--port',

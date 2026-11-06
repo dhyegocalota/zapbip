@@ -1,8 +1,11 @@
 import { DAY_MS, ForwardedKind, MessageKind, OwnerLocale, ReplyStatus, SECOND_MS } from '@zapbip/types';
 import type { ConnectionIdentity } from '../connection';
+import type { StoredMedia } from '../inbox-records';
 import { WINDOW_MS } from '../constants';
 import type { Question } from '../question';
 import { ask } from '../use-cases/ask';
+import { claimUpload } from '../use-cases/claim-upload';
+import { completeUpload } from '../use-cases/complete-upload';
 import { touchAgent } from '../use-cases/touch-agent';
 import { receiveOwnerMessage } from '../use-cases/receive-owner-message';
 import type { OwnerInboundContent, ReceiveResult } from '../use-cases/types';
@@ -66,6 +69,12 @@ export async function askAndAbandon(input: {
   const question = await environment.repository.findQuestion({ questionId: result.questionId });
   if (question === null) throw new Error('expected the question to be stored');
   return question;
+}
+
+export async function receiveUpload(input: { environment: InMemoryEnvironment; mediaId: string }): Promise<StoredMedia> {
+  const { dependencies } = input.environment;
+  const { claimedAt } = await claimUpload({ dependencies, mediaId: input.mediaId });
+  return completeUpload({ dependencies, mediaId: input.mediaId, claimedAt });
 }
 
 export function receive(input: {

@@ -76,7 +76,10 @@ export async function storeOwnerImage(input: { accountId: string; mediaId: strin
 
 export async function receiveUpload(input: { accountId: string; uploadId: string; sizeBytes: number; mimeType: string }): Promise<void> {
   await storeOwnerImage({ accountId: input.accountId, mediaId: input.uploadId, sizeBytes: input.sizeBytes, mimeType: input.mimeType });
-  await accountInbox({ accountId: input.accountId }).completeUpload({ mediaId: input.uploadId });
+  const inbox = accountInbox({ accountId: input.accountId });
+  const claim = await inbox.claimUpload({ mediaId: input.uploadId });
+  if (!claim.ok) throw new Error(claim.message);
+  await inbox.completeUpload({ mediaId: input.uploadId, claimedAt: claim.value.claimedAt });
 }
 
 export async function openWindow(input: { client: Client; accountId: string }): Promise<void> {

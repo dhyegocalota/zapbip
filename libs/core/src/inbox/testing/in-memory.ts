@@ -75,7 +75,7 @@ function createInMemoryRepository(): InMemoryRepository {
   const channelMessageIds = new Map<string, string>();
   const statusDetails = new Map<string, ChannelStatusDetail>();
   const claimedAt = new Map<string, number>();
-  const claimedUploads = new Set<string>();
+  const uploadClaims = new Map<string, number>();
   let messages: Message[] = [];
   let questions: Question[] = [];
   let window: OwnerWindow = { lastOwnerMessageAt: null, noticeSentForClosedWindow: false, closedAt: null };
@@ -210,6 +210,11 @@ function createInMemoryRepository(): InMemoryRepository {
     saveRoutingList: async (input) => {
       routingList = { ...input.routingList };
     },
+    claimRoutingListExpiry: async ({ openedAt, claimedAt }) => {
+      if (routingList === null || routingList.openedAt !== openedAt) return false;
+      routingList = { ...routingList, openedAt: claimedAt, resent: true };
+      return true;
+    },
     clearRoutingList: async () => {
       routingList = null;
     },
@@ -217,20 +222,24 @@ function createInMemoryRepository(): InMemoryRepository {
       media.set(stored.mediaId, stored);
     },
     findMedia: async ({ mediaId }) => media.get(mediaId) ?? null,
-    claimUpload: async ({ mediaId }) => {
+    claimUpload: async ({ mediaId, claimedAt, staleBefore }) => {
       const stored = media.get(mediaId);
-      const isClaimable = stored !== undefined && stored.receivedAt === null && !claimedUploads.has(mediaId);
-      if (isClaimable) claimedUploads.add(mediaId);
+      const claimedBefore = uploadClaims.get(mediaId);
+      const isFree = claimedBefore === undefined || claimedBefore <= staleBefore;
+      const isClaimable = stored !== undefined && stored.receivedAt === null && isFree;
+      if (isClaimable) uploadClaims.set(mediaId, claimedAt);
       return isClaimable;
     },
-    releaseUpload: async ({ mediaId }) => {
-      claimedUploads.delete(mediaId);
+    releaseUpload: async ({ mediaId, claimedAt }) => {
+      if (uploadClaims.get(mediaId) === claimedAt) uploadClaims.delete(mediaId);
     },
-    markMediaReceived: async ({ mediaId, receivedAt, retentionUntil }) => {
+    markMediaReceived: async ({ mediaId, claimedAt, receivedAt, retentionUntil }) => {
       const stored = media.get(mediaId);
-      if (stored === undefined) return;
-      claimedUploads.delete(mediaId);
+      const isHeld = stored !== undefined && uploadClaims.get(mediaId) === claimedAt;
+      if (!isHeld) return false;
+      uploadClaims.delete(mediaId);
       media.set(mediaId, { ...stored, receivedAt, retentionUntil, expiresAt: null });
+      return true;
     },
     listExpiredMediaIds: async ({ now }) =>
       [...media.values()]

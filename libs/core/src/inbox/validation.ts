@@ -22,7 +22,9 @@ const UPLOAD_MAX_BYTES = Math.max(...Object.values(MEDIA_MAX_BYTES));
 const LIST_ROW_DESCRIPTION_MAX_CHARS = 72;
 const HTTPS_PROTOCOL = 'https:';
 const WHITESPACE_PATTERN = /\s+/g;
+const MIME_TYPE_CONTROL_CHARACTER_PATTERN = /\p{Cc}/u;
 const MIME_TYPE_PARAMETERS_PATTERN = /;.*$/;
+const MIME_TYPE_TOKEN_PATTERN = /^[a-z0-9][a-z0-9!#$&^_.+-]{0,126}\/[a-z0-9][a-z0-9!#$&^_.+-]{0,126}$/;
 const EMOJI_PATTERN = /\p{Extended_Pictographic}|\p{Regional_Indicator}|⃣/u;
 const VOWEL_PATTERN = /^[aeiou]/;
 const graphemeSegmenter = new Intl.Segmenter();
@@ -85,12 +87,20 @@ export function assertHttpsLink(input: { value: string }): void {
   if (!isHttps) throw invalidInput({ message: 'url: must be an https URL' });
 }
 
+function assertMimeTypeToken(input: { mimeType: string }): void {
+  if (MIME_TYPE_CONTROL_CHARACTER_PATTERN.test(input.mimeType))
+    throw invalidInput({ message: 'mime_type: must not contain control characters' });
+  if (!MIME_TYPE_TOKEN_PATTERN.test(normalizeMimeType({ value: input.mimeType })))
+    throw invalidInput({ message: 'mime_type: must be a type/subtype token' });
+}
+
 export function assertMediaFits(input: { kind: MediaMessageKind; mimeType: string | null; sizeBytes: number | null }): void {
   const maxBytes = MEDIA_MAX_BYTES[input.kind];
   const mimePrefix = MEDIA_MIME_PREFIX[input.kind];
   const mimeType = input.mimeType === null ? null : normalizeMimeType({ value: input.mimeType });
   const exceedsSize = input.sizeBytes !== null && input.sizeBytes > maxBytes;
   if (exceedsSize) throw invalidInput({ message: `size_bytes: ${input.kind} must be at most ${maxBytes} bytes` });
+  if (input.mimeType !== null) assertMimeTypeToken({ mimeType: input.mimeType });
   const isWrongSticker = input.kind === MessageKind.Sticker && mimeType !== null && mimeType !== STICKER_MIME_TYPE;
   if (isWrongSticker) throw invalidInput({ message: `mime_type: ${input.kind} must be ${STICKER_MIME_TYPE}` });
   const isSvgImage = input.kind === MessageKind.Image && mimeType === SVG_MIME_TYPE;
@@ -111,6 +121,7 @@ export function assertUploadDeclaration(input: { mimeType: string; sizeBytes: nu
     throw invalidInput({ message: `mime_type: must be at least ${MIME_TYPE_MIN_CHARS} characters` });
   if (input.mimeType.length > MIME_TYPE_MAX_CHARS)
     throw invalidInput({ message: `mime_type: must be at most ${MIME_TYPE_MAX_CHARS} characters` });
+  assertMimeTypeToken({ mimeType: input.mimeType });
 }
 
 export function parseOptionDescriptions(input: { descriptions: (string | null)[] }): (string | null)[] {
