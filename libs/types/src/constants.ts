@@ -15,14 +15,14 @@ export type CompanyFacts = {
   contactEmail: string;
 };
 
-export const COMPANY: CompanyFacts = {
+export const COMPANY = {
   tradeName: 'Logic Bit',
   legalName: COMPANY_FACT_UNSET,
   cnpj: COMPANY_FACT_UNSET,
   address: COMPANY_FACT_UNSET,
   website: COMPANY_FACT_UNSET,
   contactEmail: COMPANY_FACT_UNSET,
-};
+} satisfies CompanyFacts;
 export const BYTES_PER_MEGABYTE = 1_000_000;
 export const DEFAULT_LOCALE = OwnerLocale.PortugueseBrazil;
 export const OFFICIAL_NUMBER_UNSET = 'OFFICIAL_NUMBER_UNSET';

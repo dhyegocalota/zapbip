@@ -14,7 +14,7 @@ Follow the steps in order. Each step names the runbook that holds its detail. Ev
 
 ## Go-live order
 
-1. **Prepare your machine.** You need git, Node 24, pnpm and the repository. Install git from `https://git-scm.com/downloads`. Install Node 24 with a version manager (`nvm install 24` after installing `https://github.com/nvm-sh/nvm`, or the installer at `https://nodejs.org`). Turn on pnpm with `corepack enable`, which reads the pinned version from `package.json`. Then clone the repository with `git clone https://github.com/dhyegocalota/zapbip.git`, open the folder, run `pnpm install --frozen-lockfile` and finally `.agents/hooks/doctor.sh`.
+1. **Prepare your machine.** You need git, Node 24, `pnpm` and the repository. Install git from `https://git-scm.com/downloads`. Install Node 24 with a version manager (`nvm install 24` after installing `https://github.com/nvm-sh/nvm`, or the installer at `https://nodejs.org`). Turn on `pnpm` with `corepack enable`, which reads the pinned version from `package.json`. Then clone the repository with `git clone https://github.com/dhyegocalota/zapbip.git`, open the folder, run `pnpm install --frozen-lockfile` and finally `.agents/hooks/doctor.sh`.
 
    Expect: `node --version` prints `v24` and something, `pnpm --version` prints `8.15.9`, and the doctor prints `ok` for every required tool.
 
