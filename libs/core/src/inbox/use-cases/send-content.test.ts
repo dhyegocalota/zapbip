@@ -1,4 +1,4 @@
-import { MessageDirection, MessageKind } from '@zapbip/types';
+import { ForwardedKind, MessageDirection, MessageKind } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import type { Message } from '../message';
 import { connectionOf, createEnvironment, receiveText, registerAgents } from '../testing/fixtures';
@@ -24,6 +24,7 @@ function handoffCopyOf(input: { originMessageId: string }): Message {
     replyToMessageId: null,
     delivery: null,
     readByAgent: false,
+    forwarded: ForwardedKind.None,
     handedTo: null,
     originMessageId: input.originMessageId,
     kind: MessageKind.Text,

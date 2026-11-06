@@ -1,0 +1,9 @@
+{
+  "from": "5511900000001",
+  "id": "wamid.REMOVAL",
+  "timestamp": "1762430400",
+  "type": "reaction",
+  "reaction": {
+    "message_id": "wamid.TARGET"
+  }
+}

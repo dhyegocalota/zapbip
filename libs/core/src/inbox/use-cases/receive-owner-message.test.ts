@@ -10,6 +10,7 @@ import {
   ReplyStatus,
   SECOND_MS,
   WakeOutcome,
+  ForwardedKind,
 } from '@zapbip/types';
 import { describe, expect, test, vi } from 'vitest';
 import { MEDIA_RETENTION_MS, NOTICE_QUICK_REPLY_ID, QUEUE_RETENTION_MS, ROUTING_LIST_TTL_MS, WINDOW_MS } from '../constants';
@@ -91,7 +92,7 @@ describe('receiveOwnerMessage routing', () => {
   test('CU-132 a text with the window closed opens it and wakes the waiting agent', async () => {
     const environment = await createEnvironment();
     await registerAgents({ environment, agents: ['alpha'] });
-    await environment.repository.saveWindow({ window: { lastOwnerMessageAt: null, noticeSentForClosedWindow: false } });
+    await environment.repository.saveWindow({ window: { lastOwnerMessageAt: null, noticeSentForClosedWindow: false, closedAt: null } });
     const holding = waiting({ environment, agent: 'alpha' });
     await environment.clock.advance({ ms: 0 });
     const result = await receiveText({ environment, text: '@alpha oi' });
@@ -108,6 +109,7 @@ describe('receiveOwnerMessage routing', () => {
     expect(await environment.repository.findMessage({ messageId: result.messageId! })).toMatchObject({
       agent: 'alpha',
       readByAgent: false,
+      forwarded: ForwardedKind.None,
       text: 'oi',
     });
   });
@@ -475,7 +477,9 @@ describe('receiveOwnerMessage window and queue', () => {
 
   test('CU-147 an owner message clears the closed window notice flag', async () => {
     const environment = await createEnvironment();
-    await environment.repository.saveWindow({ window: { lastOwnerMessageAt: START_AT - WINDOW_MS, noticeSentForClosedWindow: true } });
+    await environment.repository.saveWindow({
+      window: { lastOwnerMessageAt: START_AT - WINDOW_MS, noticeSentForClosedWindow: true, closedAt: null },
+    });
     await receiveText({ environment, text: 'hello' });
     expect((await environment.repository.findWindow()).noticeSentForClosedWindow).toBe(false);
   });

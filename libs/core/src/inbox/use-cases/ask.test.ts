@@ -142,7 +142,7 @@ describe('ask', () => {
   test('CU-110 outside the window after the notice sends no second notice', async () => {
     const environment = await createEnvironment();
     await environment.repository.saveWindow({
-      window: { lastOwnerMessageAt: environment.clock.now() - WINDOW_MS, noticeSentForClosedWindow: true },
+      window: { lastOwnerMessageAt: environment.clock.now() - WINDOW_MS, noticeSentForClosedWindow: true, closedAt: null },
     });
     const waiting = asking({ environment, timeoutMs: SECOND_MS });
     await environment.clock.advance({ ms: SECOND_MS });

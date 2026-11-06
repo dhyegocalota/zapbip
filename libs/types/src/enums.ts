@@ -24,6 +24,7 @@ export enum MessageKind {
 export enum MediaSourceKind {
   Link = 'link',
   Stored = 'stored',
+  Unavailable = 'unavailable',
 }
 
 export enum MediaOrigin {
@@ -36,6 +37,9 @@ export enum DeliveryState {
   Sent = 'sent',
   Failed = 'failed',
   Expired = 'expired',
+  Delivered = 'delivered',
+  Read = 'read',
+  Sending = 'sending',
 }
 
 export enum OwnerLocale {
@@ -81,6 +85,11 @@ export enum WakeCopyKey {
 export enum OptionRender {
   Buttons = 'buttons',
   List = 'list',
+}
+
+export enum WaiterEnd {
+  Resolved = 'resolved',
+  Cancelled = 'cancelled',
 }
 
 export enum ReplyStatus {
@@ -158,6 +167,21 @@ export enum WakeLogEventName {
 
 export enum ChannelErrorKind {
   DeliveryFailed = 'delivery_failed',
+  WindowClosed = 'window_closed',
+  RateLimited = 'rate_limited',
+  Restricted = 'restricted',
+  ReactionRejected = 'reaction_rejected',
+  MediaRejected = 'media_rejected',
+  TemplateRejected = 'template_rejected',
+  Timeout = 'timeout',
+  Auth = 'auth',
+  Unknown = 'unknown',
+}
+
+export enum ChannelInboundKind {
+  Owner = 'owner',
+  WindowOnly = 'window_only',
+  Unsupported = 'unsupported',
 }
 
 export enum LinkPurpose {
@@ -169,6 +193,8 @@ export enum IdPrefix {
   Message = 'msg',
   Question = 'qst',
   Media = 'med',
+  Account = 'acc',
+  Connection = 'con',
 }
 
 export enum RoutingRule {
@@ -178,6 +204,7 @@ export enum RoutingRule {
   OpenQuestion = 'open_question',
   RecentAgent = 'recent_agent',
   AskOwner = 'ask_owner',
+  AccountCommand = 'account_command',
 }
 
 export enum InboxErrorCode {
@@ -185,4 +212,89 @@ export enum InboxErrorCode {
   NotFound = 'not_found',
   UploadExpired = 'upload_expired',
   UploadUnavailable = 'upload_unavailable',
+}
+
+export enum AccountState {
+  Waitlisted = 'waitlisted',
+  Active = 'active',
+  Suspended = 'suspended',
+  Deleting = 'deleting',
+}
+
+export enum CommandKind {
+  CreateAgent = 'create_agent',
+  ListAgents = 'list_agents',
+  RevokeAgent = 'revoke_agent',
+  RotateAgent = 'rotate_agent',
+  Help = 'help',
+  RequestDeletion = 'request_deletion',
+  ConfirmDeletion = 'confirm_deletion',
+  Unknown = 'unknown',
+}
+
+export enum SenderVerdict {
+  Admitted = 'admitted',
+  Blocked = 'blocked',
+  RateLimited = 'rate_limited',
+}
+
+export enum RegisterOutcome {
+  Registered = 'registered',
+  LimitReached = 'limit_reached',
+  NameTaken = 'name_taken',
+}
+
+export enum AccountStateOutcome {
+  Proceed = 'proceed',
+  Reply = 'reply',
+  Drop = 'drop',
+}
+
+export enum ReplyKind {
+  Text = 'text',
+  List = 'list',
+}
+
+export enum AccountReplyIntent {
+  Waitlisted = 'waitlisted',
+  Suspended = 'suspended',
+  Created = 'created',
+  InvalidName = 'invalid_name',
+  ReservedName = 'reserved_name',
+  NameTaken = 'name_taken',
+  LimitReached = 'limit_reached',
+  NotFound = 'not_found',
+  Revoked = 'revoked',
+  Rotated = 'rotated',
+  Listed = 'listed',
+  EmptyList = 'empty_list',
+  Usage = 'usage',
+  Menu = 'menu',
+  DeletionRequest = 'deletion_request',
+  DeletionExpired = 'deletion_expired',
+  DeletionDone = 'deletion_done',
+  SendFailed = 'send_failed',
+  Unknown = 'unknown',
+}
+
+export enum InstallCodeStatus {
+  Ready = 'ready',
+  Expired = 'expired',
+  Used = 'used',
+  Unknown = 'unknown',
+}
+
+export enum AccountReplyParameter {
+  AgentName = 'agent_name',
+  Limit = 'limit',
+  Usage = 'usage',
+  Phrase = 'phrase',
+  Agents = 'agents',
+  InstallPrompt = 'install_prompt',
+}
+
+export enum ForwardedKind {
+  None = 'none',
+  Forwarded = 'forwarded',
+  FrequentlyForwarded = 'frequently_forwarded',
 }

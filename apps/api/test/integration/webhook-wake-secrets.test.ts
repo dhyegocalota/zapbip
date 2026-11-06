@@ -1,6 +1,7 @@
 import { WAKE_SECRET_KEY_BYTES, type WakeTransport } from '@zapbip/core';
 import type { WakeLogEvent } from '@zapbip/core';
 import {
+  ForwardedKind,
   InboxErrorCode,
   MessageKind,
   OwnerLocale,
@@ -212,7 +213,12 @@ describe('wake dependencies', () => {
       await bare.receiveOwnerMessage({
         ownerLocale: OwnerLocale.PortugueseBrazil,
         channelMessageId: 'wamid.bare',
-        ownerMessage: { at: Date.now(), replyToMessageId: null, content: { kind: MessageKind.Text, text: mentionText({ text: 'oi' }) } },
+        ownerMessage: {
+          at: Date.now(),
+          replyToMessageId: null,
+          forwarded: ForwardedKind.None,
+          content: { kind: MessageKind.Text, text: mentionText({ text: 'oi' }) },
+        },
       });
       await (bare as unknown as { clock: { advance(input: { advanceMs: number }): Promise<number> } }).clock.advance({
         advanceMs: DEBOUNCE_ADVANCE_MS,

@@ -2,6 +2,7 @@ import {
   QUEUE_RETENTION_MS,
   QUESTION_RETENTION_MS,
   RECEIPT_RETENTION_MS,
+  SENDING_STALE_MS,
   type AgentRecord,
   type Clock,
   type InboxRepository,
@@ -12,7 +13,15 @@ import {
   type QuestionAnswer,
   type StoredMedia,
 } from '@zapbip/core';
-import { DeliveryState, MessageDirection, MessageKind, WakeMode, type MediaOrigin, type OwnerLocale } from '@zapbip/types';
+import {
+  DeliveryState,
+  MessageDirection,
+  MessageKind,
+  WakeMode,
+  type ForwardedKind,
+  type MediaOrigin,
+  type OwnerLocale,
+} from '@zapbip/types';
 
 type MessageRow = {
   id: string;
@@ -23,6 +32,7 @@ type MessageRow = {
   reply_to: string | null;
   delivery: DeliveryState | null;
   read_at: number | null;
+  forwarded: ForwardedKind;
   at: number;
   handed_to: string | null;
   origin_message_id: string | null;
@@ -61,16 +71,30 @@ type MediaRow = {
 const SELECT_ROUTING_LIST =
   'SELECT routing_list_prompt_message_id, routing_list_opened_at, routing_list_locale, routing_list_resent, routing_list_reminded FROM owner_window WHERE id = ?';
 const SELECT_MESSAGES =
-  'SELECT id, agent, direction, kind, payload, reply_to, delivery, read_at, at, handed_to, origin_message_id FROM inbox_messages ';
+  'SELECT id, agent, direction, kind, payload, reply_to, delivery, read_at, forwarded, at, handed_to, origin_message_id FROM inbox_messages ';
 const SELECT_QUESTIONS = 'SELECT question_id, agent, text, options, normalized_key, prompt_message_id, asked_at, answer FROM questions ';
 const SELECT_MEDIA = 'SELECT media_id, origin, mime_type, size_bytes, filename, expires_at, received_at, retention_until FROM media ';
 const ORDER_BY_ARRIVAL = 'ORDER BY at, rowid';
 const MARK_READ_STATEMENT = 'UPDATE inbox_messages SET read_at = ? WHERE read_at IS NULL AND id IN (SELECT value FROM json_each(?))';
-const INSERT_MESSAGE_STATEMENT =
-  'INSERT INTO inbox_messages (id, agent, direction, kind, payload, reply_to, delivery, read_at, at, handed_to, origin_message_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
 const HAND_OFF_STATEMENT =
   'UPDATE inbox_messages SET read_at = ?, handed_to = ? WHERE id = ? AND agent = ? AND direction = ? AND read_at IS NULL';
 const WINDOW_ROW_ID = 1;
+const INSERT_MESSAGE_STATEMENT =
+  'INSERT INTO inbox_messages (id, agent, direction, kind, payload, reply_to, delivery, read_at, channel_message_id, forwarded, at, handed_to, origin_message_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+const INSERT_MEDIA_STATEMENT =
+  'INSERT INTO media (media_id, origin, mime_type, size_bytes, filename, expires_at, received_at, retention_until) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
+const SAVE_ANSWER_STATEMENT = 'UPDATE questions SET answer = ? WHERE question_id = ?';
+const SAVE_WINDOW_STATEMENT =
+  'UPDATE owner_window SET last_owner_message_at = ?, notice_sent_for_closed_window = ?, closed_at = ? WHERE id = ?';
+const RECORD_RECEIPT_STATEMENT =
+  'INSERT INTO channel_receipts (wamid, received_at) VALUES (?, ?) ON CONFLICT (wamid) DO NOTHING RETURNING wamid';
+const CLAIM_QUEUED_STATEMENT = 'UPDATE inbox_messages SET delivery = ?, claimed_at = ? WHERE id IN (SELECT value FROM json_each(?))';
+const SAVE_STATUS_DETAIL_STATEMENT = `UPDATE inbox_messages SET
+  error_code = COALESCE(?, error_code),
+  error_title = COALESCE(?, error_title),
+  pricing_category = COALESCE(?, pricing_category),
+  billable = COALESCE(?, billable)
+  WHERE id = ?`;
 
 function toMessage(row: MessageRow): Message {
   const content: MessageContent = JSON.parse(row.payload);
@@ -84,6 +108,7 @@ function toMessage(row: MessageRow): Message {
     readByAgent: row.read_at !== null,
     handedTo: row.handed_to,
     originMessageId: row.origin_message_id,
+    forwarded: row.forwarded,
     ...content,
   };
 }
@@ -134,22 +159,51 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
     return rows<MessageRow>(SELECT_MESSAGES + clause, ...bindings).map(toMessage);
   }
 
-  function insertRow(message: Message): void {
-    const { messageId, direction, agent, at, replyToMessageId, delivery, readByAgent, handedTo, originMessageId, ...content } = message;
+  function insertMessageRow(row: { message: Message; channelMessageId: string | null }): void {
+    const { messageId, direction, agent, at, replyToMessageId, delivery, readByAgent, forwarded, handedTo, originMessageId, ...content } =
+      row.message;
     run(
       INSERT_MESSAGE_STATEMENT,
       messageId,
       agent,
       direction,
-      message.kind,
+      row.message.kind,
       JSON.stringify(content),
       replyToMessageId,
       delivery,
       readByAgent ? input.clock.now() : null,
+      row.channelMessageId,
+      forwarded,
       at,
       handedTo,
       originMessageId,
     );
+  }
+
+  function insertMediaRow(media: StoredMedia): void {
+    run(
+      INSERT_MEDIA_STATEMENT,
+      media.mediaId,
+      media.origin,
+      media.mimeType,
+      media.sizeBytes,
+      media.filename,
+      media.expiresAt,
+      media.receivedAt,
+      media.retentionUntil,
+    );
+  }
+
+  function saveAnswerRow(row: { questionId: string; answer: QuestionAnswer }): void {
+    run(SAVE_ANSWER_STATEMENT, JSON.stringify(row.answer), row.questionId);
+  }
+
+  function saveWindowRow(window: OwnerWindow): void {
+    run(SAVE_WINDOW_STATEMENT, window.lastOwnerMessageAt, window.noticeSentForClosedWindow ? 1 : 0, window.closedAt, WINDOW_ROW_ID);
+  }
+
+  function recordReceiptRow(row: { wamid: string; receivedAt: number }): boolean {
+    return rows(RECORD_RECEIPT_STATEMENT, row.wamid, row.receivedAt).length === 1;
   }
 
   return {
@@ -171,13 +225,13 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
     },
 
     async listAgents() {
-      return rows<{ agent: string; last_seen_at: number }>('SELECT agent, last_seen_at FROM agents ORDER BY agent').map(
-        (row): AgentRecord => ({ agent: row.agent, lastSeenAt: row.last_seen_at }),
-      );
+      return rows<{ agent: string; last_seen_at: number }>(
+        'SELECT agent, last_seen_at FROM agents WHERE agent NOT IN (SELECT agent FROM revoked_agents) ORDER BY agent',
+      ).map((row): AgentRecord => ({ agent: row.agent, lastSeenAt: row.last_seen_at }));
     },
 
     async insertMessage({ message }) {
-      insertRow(message);
+      insertMessageRow({ message, channelMessageId: null });
     },
 
     async updateDelivery({ messageId, delivery }) {
@@ -230,7 +284,7 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
 
     async findLastAgentWrite({ since }) {
       const row = first<{ agent: string }>(
-        'SELECT agent FROM inbox_messages WHERE direction = ? AND agent IS NOT NULL AND at >= ? ORDER BY at DESC, rowid DESC LIMIT 1',
+        'SELECT agent FROM inbox_messages WHERE direction = ? AND agent IS NOT NULL AND agent NOT IN (SELECT agent FROM revoked_agents) AND at >= ? ORDER BY at DESC, rowid DESC LIMIT 1',
         MessageDirection.ToOwner,
         since,
       );
@@ -267,25 +321,25 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
     },
 
     async listOpenQuestions() {
-      return rows<QuestionRow>(SELECT_QUESTIONS + 'WHERE answer IS NULL ORDER BY asked_at DESC, rowid DESC').map(toQuestion);
+      return rows<QuestionRow>(
+        SELECT_QUESTIONS + 'WHERE answer IS NULL AND agent NOT IN (SELECT agent FROM revoked_agents) ORDER BY asked_at DESC, rowid DESC',
+      ).map(toQuestion);
     },
 
     async saveAnswer({ questionId, answer }: { questionId: string; answer: QuestionAnswer }) {
-      run('UPDATE questions SET answer = ? WHERE question_id = ?', JSON.stringify(answer), questionId);
+      saveAnswerRow({ questionId, answer });
     },
 
     async recordChannelReceipt({ wamid, receivedAt }) {
-      return (
-        rows(
-          'INSERT INTO channel_receipts (wamid, received_at) VALUES (?, ?) ON CONFLICT (wamid) DO NOTHING RETURNING wamid',
-          wamid,
-          receivedAt,
-        ).length === 1
-      );
+      return recordReceiptRow({ wamid, receivedAt });
     },
 
     async linkChannelReceipt({ wamid, messageId }) {
       run('UPDATE channel_receipts SET message_id = ? WHERE wamid = ?', messageId, wamid);
+    },
+
+    async hasChannelReceipt({ wamid }) {
+      return first('SELECT wamid FROM channel_receipts WHERE wamid = ?', wamid) !== null;
     },
 
     async findChannelReceiptMessageId({ wamid }) {
@@ -301,26 +355,79 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
       run('DELETE FROM questions WHERE asked_at < ?', askedBefore);
     },
 
+    async commitChannelInbound({ channelMessageId, receivedAt, message, answer, media, window }) {
+      return input.storage.transactionSync(() => {
+        if (!recordReceiptRow({ wamid: channelMessageId, receivedAt })) return false;
+        if (message !== null) insertMessageRow({ message, channelMessageId });
+        if (answer !== null) saveAnswerRow(answer);
+        if (media !== null) insertMediaRow(media);
+        saveWindowRow(window);
+        return true;
+      });
+    },
+
+    async saveChannelMessageId({ messageId, channelMessageId }) {
+      run('UPDATE inbox_messages SET channel_message_id = ? WHERE id = ? AND channel_message_id IS NULL', channelMessageId, messageId);
+    },
+
+    async findMessageByChannelMessageId({ channelMessageId }) {
+      const [message] = selectMessages('WHERE channel_message_id = ?', channelMessageId);
+      return message === undefined ? null : message;
+    },
+
+    async findChannelMessageId({ messageId }) {
+      const row = first<{ channel_message_id: string | null }>('SELECT channel_message_id FROM inbox_messages WHERE id = ?', messageId);
+      return row === null ? null : row.channel_message_id;
+    },
+
+    async saveChannelStatusDetail({ messageId, detail }) {
+      run(
+        SAVE_STATUS_DETAIL_STATEMENT,
+        detail.errorCode,
+        detail.errorTitle,
+        detail.pricingCategory,
+        detail.billable === null ? null : Number(detail.billable),
+        messageId,
+      );
+    },
+
+    async claimQueuedMessages({ claimedAt, limit }) {
+      return input.storage.transactionSync(() => {
+        const messageIds = rows<{ id: string }>(
+          'SELECT id FROM inbox_messages WHERE delivery = ? ' + ORDER_BY_ARRIVAL + ' LIMIT ?',
+          DeliveryState.Queued,
+          limit,
+        ).map((row) => row.id);
+        run(CLAIM_QUEUED_STATEMENT, DeliveryState.Sending, claimedAt, JSON.stringify(messageIds));
+        return selectMessages('WHERE id IN (SELECT value FROM json_each(?)) ' + ORDER_BY_ARRIVAL, JSON.stringify(messageIds));
+      });
+    },
+
+    async releaseStaleClaims({ claimedBefore }) {
+      run(
+        'UPDATE inbox_messages SET delivery = ?, claimed_at = NULL WHERE delivery = ? AND claimed_at < ?',
+        DeliveryState.Queued,
+        DeliveryState.Sending,
+        claimedBefore,
+      );
+    },
+
     async findWindow() {
-      const row = first<{ last_owner_message_at: number | null; notice_sent_for_closed_window: number }>(
-        'SELECT last_owner_message_at, notice_sent_for_closed_window FROM owner_window WHERE id = ?',
+      const row = first<{ last_owner_message_at: number | null; notice_sent_for_closed_window: number; closed_at: number | null }>(
+        'SELECT last_owner_message_at, notice_sent_for_closed_window, closed_at FROM owner_window WHERE id = ?',
         WINDOW_ROW_ID,
       );
       if (row === null) throw new Error('owner_window row is missing');
       const window: OwnerWindow = {
         lastOwnerMessageAt: row.last_owner_message_at,
         noticeSentForClosedWindow: row.notice_sent_for_closed_window === 1,
+        closedAt: row.closed_at,
       };
       return window;
     },
 
     async saveWindow({ window }) {
-      run(
-        'UPDATE owner_window SET last_owner_message_at = ?, notice_sent_for_closed_window = ? WHERE id = ?',
-        window.lastOwnerMessageAt,
-        window.noticeSentForClosedWindow ? 1 : 0,
-        WINDOW_ROW_ID,
-      );
+      saveWindowRow(window);
     },
 
     async claimNotice() {
@@ -377,17 +484,7 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
     },
 
     async insertMedia({ media }) {
-      run(
-        'INSERT INTO media (media_id, origin, mime_type, size_bytes, filename, expires_at, received_at, retention_until) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        media.mediaId,
-        media.origin,
-        media.mimeType,
-        media.sizeBytes,
-        media.filename,
-        media.expiresAt,
-        media.receivedAt,
-        media.retentionUntil,
-      );
+      insertMediaRow(media);
     },
 
     async findMedia({ mediaId }) {
@@ -439,12 +536,15 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
         `SELECT MIN(due) AS due FROM (
           SELECT expires_at AS due FROM media WHERE received_at IS NULL AND expires_at IS NOT NULL
           UNION ALL SELECT retention_until FROM media WHERE retention_until IS NOT NULL
-          UNION ALL SELECT at + ? FROM inbox_messages WHERE delivery = ?
+          UNION ALL SELECT CASE delivery WHEN ? THEN at + ? ELSE claimed_at + ? END FROM inbox_messages WHERE delivery IN (?, ?)
           UNION ALL SELECT asked_at + ? FROM questions
           UNION ALL SELECT received_at + ? FROM channel_receipts
         )`,
-        QUEUE_RETENTION_MS,
         DeliveryState.Queued,
+        QUEUE_RETENTION_MS,
+        SENDING_STALE_MS,
+        DeliveryState.Queued,
+        DeliveryState.Sending,
         QUESTION_RETENTION_MS,
         RECEIPT_RETENTION_MS,
       );
@@ -455,7 +555,7 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
       if (copy.originMessageId === null) throw new Error('handoff copy has no origin message');
       const { originMessageId } = copy;
       input.storage.transactionSync(() => {
-        insertRow(copy);
+        insertMessageRow({ message: copy, channelMessageId: null });
         run(HAND_OFF_STATEMENT, input.clock.now(), handedTo, originMessageId, primaryAgent, MessageDirection.FromOwner);
       });
     },

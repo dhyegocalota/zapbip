@@ -1,8 +1,17 @@
 import type { AgentName, ConnectionIdentity } from '../connection';
-import type { DeliveryState, InboxStatus, MessageKind, OwnerLocale, ReplyStatus } from '@zapbip/types';
+import type {
+  ChannelInboundKind,
+  DeliveryState,
+  ForwardedKind,
+  InboxStatus,
+  MediaSourceKind,
+  MessageKind,
+  OwnerLocale,
+  ReplyStatus,
+} from '@zapbip/types';
 import type { ContactCard, MediaSource, Message, MessageContent, QuestionOption } from '../message';
 import type { MediaMessageKind } from '../constants';
-import type { StoredMedia } from '../inbox-records';
+import type { ChannelStatusDetail, StoredMedia } from '../inbox-records';
 import type { CoreDependencies } from '../ports';
 
 export type CallContext = {
@@ -19,7 +28,7 @@ export type SendTextInput = CallContext & { text: string; replyToMessageId: stri
 export type SendMediaInput = CallContext & {
   mediaKind: MediaMessageKind;
   voice: boolean;
-  source: MediaSource;
+  source: Exclude<MediaSource, { kind: MediaSourceKind.Unavailable }>;
   caption: string | null;
   filename: string | null;
   replyToMessageId: string | null;
@@ -65,12 +74,13 @@ export type OwnerInboundContent =
     }
   | { kind: MessageKind.Location; latitude: number; longitude: number; name: string | null; address: string | null }
   | { kind: MessageKind.Contacts; contacts: ContactCard[] }
-  | { kind: MessageKind.Reaction; targetMessageId: string; emoji: string | null }
+  | { kind: MessageKind.Reaction; targetMessageId: string | null; emoji: string | null }
   | { kind: MessageKind.Choice; optionId: string; optionTitle: string; optionDescription: string | null };
 
 export type OwnerInboundMessage = {
   at: number;
   replyToMessageId: string | null;
+  forwarded: ForwardedKind;
   content: OwnerInboundContent;
 };
 
@@ -99,3 +109,41 @@ export type DeliverToOwnerInput = {
   replyToMessageId: string | null;
 };
 export type DeliverToOwnerResult = { delivery: DeliveryState.Sent | DeliveryState.Queued };
+
+export type UnavailableOwnerMedia = {
+  kind: MediaMessageKind;
+  voice: boolean;
+  filename: string | null;
+  caption: string | null;
+};
+
+export type ChannelInboundEntry =
+  | {
+      kind: ChannelInboundKind.Owner;
+      at: number;
+      content: OwnerInboundContent | UnavailableOwnerMedia;
+      replyToChannelMessageId: string | null;
+      forwarded: ForwardedKind;
+      noticeText: string | null;
+    }
+  | { kind: ChannelInboundKind.WindowOnly; at: number }
+  | { kind: ChannelInboundKind.Unsupported; at: number; noticeText: string };
+
+export type ReceiveChannelInput = {
+  dependencies: CoreDependencies;
+  ownerLocale: OwnerLocale;
+  channelMessageId: string;
+  entry: ChannelInboundEntry;
+};
+
+export type OpenWindowInput = { dependencies: CoreDependencies; ownerLocale: OwnerLocale; at: number };
+export type CloseWindowInput = { dependencies: CoreDependencies; at: number };
+
+export type ApplyStatusInput = {
+  dependencies: CoreDependencies;
+  channelMessageId: string;
+  status: DeliveryState.Sent | DeliveryState.Delivered | DeliveryState.Read | DeliveryState.Failed;
+  detail: ChannelStatusDetail;
+};
+export type ApplyStatusResult = { applied: boolean; found: boolean };
+export type HasChannelReceiptInput = { dependencies: CoreDependencies; channelMessageId: string };

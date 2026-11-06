@@ -1,8 +1,17 @@
-import type { AgentWakeReason, IdPrefix, LinkPurpose, OwnerLocale, TemplateKind, WakeOutcome, DeliveryState } from '@zapbip/types';
+import type {
+  AgentWakeReason,
+  IdPrefix,
+  LinkPurpose,
+  OwnerLocale,
+  TemplateKind,
+  WakeOutcome,
+  DeliveryState,
+  WaiterEnd,
+} from '@zapbip/types';
 import type { AgentName, ConnectionIdentity } from './connection';
 import type { Message } from './message';
 import type { Question, QuestionAnswer } from './question';
-import type { AgentRecord, OwnerWindow, RoutingList, StoredMedia } from './inbox-records';
+import type { AgentRecord, ChannelStatusDetail, OwnerWindow, RoutingList, StoredMedia } from './inbox-records';
 
 export type MediaBody = ReadableStream<Uint8Array>;
 
@@ -42,6 +51,7 @@ export interface InboxRepository {
   recordChannelReceipt(input: { wamid: string; receivedAt: number }): Promise<boolean>;
   linkChannelReceipt(input: { wamid: string; messageId: string }): Promise<void>;
   findChannelReceiptMessageId(input: { wamid: string }): Promise<string | null>;
+  hasChannelReceipt(input: { wamid: string }): Promise<boolean>;
   deleteExpiredReceipts(input: { receivedBefore: number }): Promise<void>;
   deleteQuestionsAskedBefore(input: { askedBefore: number }): Promise<void>;
   findWindow(): Promise<OwnerWindow>;
@@ -60,10 +70,29 @@ export interface InboxRepository {
   deleteMedia(input: { mediaIds: string[] }): Promise<void>;
   findNextExpiry(): Promise<number | null>;
   insertHandoff(input: { copy: Message; primaryAgent: AgentName; handedTo: AgentName }): Promise<void>;
+  commitChannelInbound(input: {
+    channelMessageId: string;
+    receivedAt: number;
+    message: Message | null;
+    answer: { questionId: string; answer: QuestionAnswer } | null;
+    media: StoredMedia | null;
+    window: OwnerWindow;
+  }): Promise<boolean>;
+  saveChannelMessageId(input: { messageId: string; channelMessageId: string }): Promise<void>;
+  findMessageByChannelMessageId(input: { channelMessageId: string }): Promise<Message | null>;
+  findChannelMessageId(input: { messageId: string }): Promise<string | null>;
+  saveChannelStatusDetail(input: { messageId: string; detail: ChannelStatusDetail }): Promise<void>;
+  claimQueuedMessages(input: { claimedAt: number; limit: number }): Promise<Message[]>;
+  releaseStaleClaims(input: { claimedBefore: number }): Promise<void>;
 }
 
 export interface MessageSender {
-  session(input: { message: Message }): Promise<{ channelMessageId: string }>;
+  session(input: {
+    message: Message;
+    question: Question | null;
+    replyToChannelMessageId: string | null;
+    reactionTargetChannelMessageId: string | null;
+  }): Promise<{ channelMessageId: string }>;
   template(input: { kind: TemplateKind; locale: OwnerLocale; parameters: string[] }): Promise<{ channelMessageId: string }>;
 }
 
@@ -84,11 +113,14 @@ export interface ConnectionDirectory {
 }
 
 export interface ReplyWaiters {
-  awaitQuestionAnswer(input: { agent: AgentName; questionId: string; timeoutMs: number }): Promise<void>;
-  awaitAgentMessage(input: { agent: AgentName; timeoutMs: number }): Promise<void>;
+  awaitQuestionAnswer(input: { agent: AgentName; questionId: string; timeoutMs: number }): Promise<WaiterEnd>;
+  awaitAgentMessage(input: { agent: AgentName; timeoutMs: number }): Promise<WaiterEnd>;
   resolveQuestionAnswer(input: { questionId: string }): void;
   resolveAgentMessage(input: { agent: AgentName }): void;
   hasLiveWaiter(input: { agent: AgentName; questionId: string | null }): boolean;
+  hasAgentWaiter(input: { agent: AgentName }): boolean;
+  cancelAgent(input: { agent: AgentName }): void;
+  cancelAll(): void;
 }
 
 export type CoreDependencies = {

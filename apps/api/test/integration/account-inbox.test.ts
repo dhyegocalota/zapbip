@@ -1,7 +1,7 @@
 import { formatOptionId, QUEUE_RETENTION_MS, ROUTING_LIST_TTL_MS, UPLOAD_TTL_MS, WINDOW_MS } from '@zapbip/core';
 import { HOUR_MS, DeliveryState, InboxErrorCode, MediaSourceKind, MessageKind, ReplyStatus, TemplateKind } from '@zapbip/types';
 import { abortAllDurableObjects, evictDurableObject, reset, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
-import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, type MockInstance, vi } from 'vitest';
 import { ACCOUNT_INBOX_MIGRATIONS } from '../../src/account-inbox/migrations';
 import { runMigrations, type Migration } from '../../src/account-inbox/run-migrations';
 import { createPlatformClock } from '../../src/adapters/platform/clock';
@@ -17,6 +17,7 @@ import {
   registerDueTimeProvider,
 } from '../support/inbox-session';
 import { versionAfterLatest } from '../support/migration-versions';
+import { applyDirectoryMigration } from '../support/seed';
 import { accountInboxStub, connectionOf, testEnv } from '../support/workers-env';
 
 const FIRST_ACCOUNT = 'acc_one';
@@ -385,6 +386,8 @@ describe('AccountInbox migrations', () => {
         'agents',
         'media',
         'screen_entries',
+        'account_facts',
+        'revoked_agents',
       ]),
     );
   });
@@ -465,3 +468,5 @@ describe('AccountInbox logs', () => {
     });
   });
 });
+
+beforeEach(applyDirectoryMigration);

@@ -1,6 +1,15 @@
 import type { InboxRepository, Message } from '@zapbip/core';
 import { storedWakeOf } from '@zapbip/core/wake-testing';
-import { AgentWakeReason, InboxErrorCode, MediaSourceKind, MessageDirection, MessageKind, WakeMode, WakeOutcome } from '@zapbip/types';
+import {
+  AgentWakeReason,
+  ForwardedKind,
+  InboxErrorCode,
+  MediaSourceKind,
+  MessageDirection,
+  MessageKind,
+  WakeMode,
+  WakeOutcome,
+} from '@zapbip/types';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createStandbyAgentWaker } from '../../src/adapters/wake/standby-agent-waker';
 import {
@@ -99,6 +108,7 @@ describe('standby agent waker', () => {
     replyToMessageId: null,
     delivery: null,
     readByAgent: false,
+    forwarded: ForwardedKind.None,
     handedTo: null,
     originMessageId: null,
   } as const;

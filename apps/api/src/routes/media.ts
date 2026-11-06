@@ -7,7 +7,7 @@ import type { Bindings } from '../contract/env';
 import { LogEvent } from '../contract/log';
 import { logEvent } from '../log';
 import { readSignedQuery, verifyLink } from '../signing';
-import { HttpStatus } from './http-status';
+import { HttpStatus } from '../contract/http-status';
 
 const INLINE_MEDIA_TYPE_PATTERN = /^(image|video|audio)\//;
 const ATTACHMENT_DISPOSITION = 'attachment';

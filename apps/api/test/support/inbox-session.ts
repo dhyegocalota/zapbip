@@ -1,5 +1,5 @@
 import { NOTICE_QUICK_REPLY_ID, type OwnerInboundContent } from '@zapbip/core';
-import { MessageKind, OwnerLocale } from '@zapbip/types';
+import { ForwardedKind, MessageKind, OwnerLocale } from '@zapbip/types';
 import { runInDurableObject } from 'cloudflare:test';
 import type { AccountInbox } from '../../src/account-inbox/account-inbox';
 import type { DurableClock } from '../../src/adapters/platform/clock';
@@ -32,6 +32,7 @@ export function receiveOwnerContent(input: {
     ownerMessage: {
       at: Date.now(),
       replyToMessageId: input.replyToMessageId === undefined ? null : input.replyToMessageId,
+      forwarded: ForwardedKind.None,
       content: input.content,
     },
   });

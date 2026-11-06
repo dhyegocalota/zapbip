@@ -19,11 +19,32 @@
   "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "zapbip-media" }],
   "analytics_engine_datasets": [{ "binding": "WAKE_METRICS", "dataset": "zapbip_wake" }],
   "rules": [{ "type": "Text", "globs": ["**/*.sql"], "fallthrough": true }],
-  "vars": { "PUBLIC_ORIGIN": "https://mcp.zapbip.com" },
+  "triggers": { "crons": ["*/30 * * * *"] },
+  "vars": {
+    "PUBLIC_ORIGIN": "https://mcp.zapbip.com",
+    "WAITLIST_ENABLED": "true",
+    "WHATSAPP_GRAPH_BASE_URL": "https://graph.facebook.com",
+  },
+  "ratelimits": [
+    { "name": "OWNER_RATE_LIMITER", "namespace_id": "1001", "simple": { "limit": 20, "period": 60 } },
+    { "name": "OUTBOUND_RATE_LIMITER", "namespace_id": "1002", "simple": { "limit": 30, "period": 60 } },
+    { "name": "ACCOUNT_OUTBOUND_RATE_LIMITER", "namespace_id": "1003", "simple": { "limit": 120, "period": 60 } },
+  ],
   "env": {
     "development": {
       "main": "src/index.dev.ts",
-      "vars": { "PUBLIC_ORIGIN": "http://localhost:8787" },
+      "triggers": { "crons": ["*/30 * * * *"] },
+      "vars": {
+        "PUBLIC_ORIGIN": "http://localhost:8787",
+        "WAITLIST_ENABLED": "false",
+        "WHATSAPP_GRAPH_BASE_URL": "http://127.0.0.1:4011",
+        "WHATSAPP_MEDIA_DOWNLOAD_ORIGIN": "http://127.0.0.1:4011",
+      },
+      "ratelimits": [
+        { "name": "OWNER_RATE_LIMITER", "namespace_id": "1001", "simple": { "limit": 20, "period": 60 } },
+        { "name": "OUTBOUND_RATE_LIMITER", "namespace_id": "1002", "simple": { "limit": 30, "period": 60 } },
+        { "name": "ACCOUNT_OUTBOUND_RATE_LIMITER", "namespace_id": "1003", "simple": { "limit": 120, "period": 60 } },
+      ],
       "migrations": [{ "tag": "v1", "new_sqlite_classes": ["AccountInbox"] }],
       "durable_objects": {
         "bindings": [{ "name": "ACCOUNT_INBOX", "class_name": "AccountInbox" }],

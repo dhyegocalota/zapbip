@@ -1,4 +1,4 @@
-import { ReplyStatus } from '@zapbip/types';
+import { ReplyStatus, WaiterEnd } from '@zapbip/types';
 import { HISTORY_LIMIT } from '../constants';
 import type { AgentName } from '../connection';
 import { notFound } from '../inbox-error-factories';
@@ -32,7 +32,8 @@ async function waitForNextMessage(input: {
   if (messages.length > 0) return { status: ReplyStatus.Message, messages };
   const remainingMs = deadline - dependencies.clock.now();
   if (remainingMs <= 0) return { status: ReplyStatus.Timeout };
-  await dependencies.waiters.awaitAgentMessage({ agent, timeoutMs: remainingMs });
+  const end = await dependencies.waiters.awaitAgentMessage({ agent, timeoutMs: remainingMs });
+  if (end === WaiterEnd.Cancelled) return { status: ReplyStatus.Timeout };
   return waitForNextMessage(input);
 }
 

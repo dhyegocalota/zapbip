@@ -1,6 +1,6 @@
 import type { AgentName, AgentWaker, Clock, CoreDependencies, Message, WakeDependencies } from '@zapbip/core';
 import { createInMemoryWakeRepository } from '@zapbip/core/wake-testing';
-import { MessageDirection, MessageKind, WakeOutcome } from '@zapbip/types';
+import { ForwardedKind, MessageDirection, MessageKind, WakeOutcome } from '@zapbip/types';
 import { vi, type Mock } from 'vitest';
 
 export const CLOCK_START_MS = 1_000_000_000_000;
@@ -42,6 +42,7 @@ export function ownerTextOf(input: { messageId?: string; text?: string }): Messa
     replyToMessageId: null,
     delivery: null,
     readByAgent: false,
+    forwarded: ForwardedKind.None,
     handedTo: null,
     originMessageId: null,
     kind: MessageKind.Text,

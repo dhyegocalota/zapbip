@@ -7,7 +7,7 @@ import { logEvent } from '../log';
 import { BEARER_PREFIX, MCP_METHODS } from '../mcp/constants';
 import { resolveConnection } from './resolve-connection';
 import { createConnectionServer } from '../mcp/server';
-import { HttpStatus } from './http-status';
+import { HttpStatus } from '../contract/http-status';
 
 type McpContext = Context<{ Bindings: Bindings }>;
 

@@ -1,4 +1,4 @@
-import { DeliveryState, MediaOrigin, MessageDirection, MessageKind, OwnerLocale } from '@zapbip/types';
+import { DeliveryState, MediaOrigin, MessageDirection, MessageKind, OwnerLocale, ForwardedKind } from '@zapbip/types';
 import { MEDIA_RETENTION_MS, QUEUE_RETENTION_MS, type RoutingList, type StoredMedia } from '@zapbip/core';
 import { afterEach, describe, expect, it } from 'vitest';
 import { reset } from 'cloudflare:test';
@@ -228,12 +228,12 @@ describe('SQLite inbox repository', () => {
   it('starts with a closed window and saves a new one', async () => {
     const result = await inRepository(async (repository) => {
       const initial = await repository.findWindow();
-      await repository.saveWindow({ window: { lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: true } });
+      await repository.saveWindow({ window: { lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: true, closedAt: null } });
       return { initial, saved: await repository.findWindow() };
     });
     expect(result).toEqual({
-      initial: { lastOwnerMessageAt: null, noticeSentForClosedWindow: false },
-      saved: { lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: true },
+      initial: { lastOwnerMessageAt: null, noticeSentForClosedWindow: false, closedAt: null },
+      saved: { lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: true, closedAt: null },
     });
   });
 
@@ -241,7 +241,7 @@ describe('SQLite inbox repository', () => {
     const result = await inRepository(async (repository) => {
       const first = await repository.claimNotice();
       const second = await repository.claimNotice();
-      await repository.saveWindow({ window: { lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: false } });
+      await repository.saveWindow({ window: { lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: false, closedAt: null } });
       return { first, second, afterReset: await repository.claimNotice() };
     });
     expect(result).toEqual({ first: true, second: false, afterReset: true });
@@ -374,6 +374,7 @@ describe('SQLite inbox repository', () => {
       direction: MessageDirection.FromOwner,
       agent: null,
       readByAgent: true,
+      forwarded: ForwardedKind.None,
     });
     const result = await inRepository(async (repository) => {
       await Promise.all([held, routedNowhere].map((message) => repository.insertMessage({ message })));
@@ -397,7 +398,7 @@ describe('SQLite inbox repository', () => {
     const result = await inRepository(async (repository) => {
       const initial = await repository.findRoutingList();
       await repository.saveRoutingList({ routingList });
-      await repository.saveWindow({ window: { lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: false } });
+      await repository.saveWindow({ window: { lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: false, closedAt: null } });
       const saved = await repository.findRoutingList();
       await repository.saveRoutingList({ routingList: { ...routingList, reminded: true } });
       const reminded = await repository.findRoutingList();
@@ -427,17 +428,17 @@ describe('SQLite inbox repository', () => {
       reminded: true,
     };
     const result = await inRepository(async (repository) => {
-      await repository.saveWindow({ window: { lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: false } });
+      await repository.saveWindow({ window: { lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: false, closedAt: null } });
       await repository.saveRoutingList({ routingList: list });
       await repository.claimNotice();
-      await repository.saveWindow({ window: { lastOwnerMessageAt: BASE_TIME + 5, noticeSentForClosedWindow: true } });
+      await repository.saveWindow({ window: { lastOwnerMessageAt: BASE_TIME + 5, noticeSentForClosedWindow: true, closedAt: null } });
       const afterWindow = await repository.findRoutingList();
       const window = await repository.findWindow();
       await repository.clearRoutingList();
       return { afterWindow, window, windowAfterClear: await repository.findWindow(), cleared: await repository.findRoutingList() };
     });
     expect(result.afterWindow).toEqual(list);
-    expect(result.window).toEqual({ lastOwnerMessageAt: BASE_TIME + 5, noticeSentForClosedWindow: true });
+    expect(result.window).toEqual({ lastOwnerMessageAt: BASE_TIME + 5, noticeSentForClosedWindow: true, closedAt: null });
     expect(result.windowAfterClear).toEqual(result.window);
     expect(result.cleared).toBeNull();
   });

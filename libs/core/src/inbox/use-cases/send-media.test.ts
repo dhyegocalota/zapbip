@@ -1,6 +1,5 @@
 import { DeliveryState, InboxErrorCode, MediaSourceKind, MessageKind } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
-import type { MediaSource } from '../message';
 import { captureInboxError } from '../testing/capture-inbox-error';
 import { connectionOf, createEnvironment, receiveUpload } from '../testing/fixtures';
 import { createUpload } from './create-upload';
@@ -8,7 +7,7 @@ import { sendMedia } from './send-media';
 import type { SendMediaInput } from './types';
 
 const alpha = connectionOf({ agent: 'alpha' });
-const IMAGE_LINK: MediaSource = { kind: MediaSourceKind.Link, link: 'https://example.com/a.jpg' };
+const IMAGE_LINK: SendMediaInput['source'] = { kind: MediaSourceKind.Link, link: 'https://example.com/a.jpg' };
 
 type Environment = Awaited<ReturnType<typeof createEnvironment>>;
 
