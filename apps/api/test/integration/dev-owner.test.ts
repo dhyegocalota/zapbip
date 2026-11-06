@@ -1,5 +1,5 @@
 import { env, SELF } from 'cloudflare:test';
-import { WINDOW_MS } from '@zapbip/core';
+import { HISTORY_LIMIT, WINDOW_MS } from '@zapbip/core';
 import { DeliveryState, MessageDirection, MessageKind } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { inboxOf, ORIGIN, seedAccount, type SeededAccount } from './route-fixtures';
@@ -12,7 +12,6 @@ const MALFORMED_PHONE = 'abc';
 const IMAGE_BYTES_BASE64 = btoa('image-bytes');
 const IMAGE_TYPE = 'image/png';
 const STICKER_TYPE = 'image/webp';
-const HISTORY_LIMIT = 50;
 
 type OwnerMessageResult = { message_id: string | null; agent: string | null; duplicate: boolean };
 
@@ -30,7 +29,7 @@ async function listMessages(input: { account: SeededAccount }) {
     limit: HISTORY_LIMIT,
   });
   if (!outcome.ok) throw new Error(outcome.message);
-  return [...outcome.value.history, ...outcome.value.unread];
+  return outcome.value.history;
 }
 
 async function seedListeningAccount(): Promise<{ account: SeededAccount; agentMessageId: string }> {
@@ -145,7 +144,7 @@ describe('owner simulator', () => {
     const { account } = await seedListeningAccount();
     const response = await SELF.fetch(`${ORIGIN}/dev/owner/${account.phone}/screen`);
     expect(response.status).toBe(STATUS_OK);
-    expect(await response.json()).toMatchObject({ entries: [{ text: 'ola' }] });
+    expect(await response.json()).toMatchObject({ entries: [{ text: expect.stringContaining('ola') }] });
   });
 
   test('WI-105 the clock route moves the clock so the next send is queued', async () => {

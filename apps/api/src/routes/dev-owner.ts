@@ -1,5 +1,5 @@
 import { InboxErrorCode, MessageKind, type OwnerLocale } from '@zapbip/types';
-import type { OwnerInboundContent } from '@zapbip/core';
+import { assertMediaFits, InboxError, type OwnerInboundContent } from '@zapbip/core';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { D1MessageIndex } from '../adapters/d1/d1-message-index';
@@ -107,6 +107,16 @@ function decodeBytes(input: { base64: string }): Uint8Array {
   return Uint8Array.from(atob(input.base64), (character) => character.charCodeAt(0));
 }
 
+function mediaFitError(input: { body: MediaBody; sizeBytes: number }): InboxError | null {
+  try {
+    assertMediaFits({ kind: input.body.kind, mimeType: input.body.mime_type, sizeBytes: input.sizeBytes });
+    return null;
+  } catch (error) {
+    if (error instanceof InboxError) return error;
+    throw error;
+  }
+}
+
 function invalidInput(input: { message: string }) {
   return { error: InboxErrorCode.InvalidInput, message: input.message };
 }
@@ -132,6 +142,8 @@ devOwnerRoutes.post(`${DEV_OWNER_PATH_PREFIX}/messages`, async (context) => {
   await new D1MessageIndex({ database: context.env.CONNECTIONS }).record({ id: body.wamid, accountId, at: clock.now() });
   if ('data_base64' in body) {
     const bytes = decodeBytes({ base64: body.data_base64 });
+    const fitError = mediaFitError({ body, sizeBytes: bytes.byteLength });
+    if (fitError) return context.json({ error: fitError.code, message: fitError.message }, ERROR_STATUS[fitError.code]);
     await createR2MediaStore({
       bucket: context.env.MEDIA,
       mediaLinkSigningKey: context.env.MEDIA_LINK_SIGNING_KEY,
