@@ -281,14 +281,14 @@ pnpm --filter @zapbip/api exec vitest run --config vitest.integration.config.mts
 ### What changed
 
 - `apps/api/test/integration/whatsapp-webhook.test.ts`: WI-33 (the Durable Object commit fails once: `500`, no receipt, the retry stores one message) and WI-34 (the R2 put fails on an image: `500`, nothing stored, the retry stores one image). WI-34 posts through `createApp(...).fetch` with `whatsappTestEnv`, because the integration bindings carry no access token and the Graph is replaced with a `fetch` spy that serves the metadata and the bytes.
-- `apps/api/test/integration/whatsapp-send-tools.test.ts` (new): the MCP tools `send_message` and `react` through the real Durable Object, with the Cloud API sender built by `AccountInbox.createSender` against the fake Graph on `4012`. WI-58 (text, wamid mapped to the account), WI-59 (`131047` queues, one notice template, no second notice), WI-60 (`131009` on a reaction: the tool error names `reaction.message_id`, the reaction is `Failed`), WI-62 (`130429`: busy, `Failed`, one request), WI-66 (`500`: timeout text, `Failed`, one request).
+- `apps/api/test/integration/whatsapp-outbound.test.ts`, new `send tools over the Cloud API sender` block (in W2's file because every case shares the one fake Graph on `4012`; a second file runs in parallel and its `reset` and queued answers collide): the MCP tools `send_message` and `react` through the real Durable Object, with the Cloud API sender built by `AccountInbox.createSender` against the fake Graph on `4012`. WI-58 (text, wamid mapped to the account), WI-59 (`131047` queues, one notice template, no second notice), WI-60 (`131009` on a reaction: the tool error names `reaction.message_id`, the reaction is `Failed`), WI-62 (`130429`: busy, `Failed`, one request), WI-66 (`500`: timeout text, `Failed`, one request).
 - `apps/api/vitest.e2e-whatsapp.config.mts`, `apps/api/test/e2e/whatsapp-support/{constants,global-setup,webhook}.ts`, `apps/api/test/e2e/whatsapp-channel.e2e.test.ts` (new): R31. The setup starts the fake Graph on `4011` and its own `wrangler dev` with the four WhatsApp variables and `WHATSAPP_GRAPH_BASE_URL`. `apps/api/package.json` `test:e2e` runs the slice 1 config and then this one.
 - `apps/api/test/e2e/whatsapp-bundle.e2e.test.ts` (new): the production dry-run bundle.
 
 ### How to run
 
 ```bash
-pnpm --filter @zapbip/api exec vitest run --config vitest.integration.config.mts test/integration/whatsapp-webhook.test.ts test/integration/whatsapp-send-tools.test.ts
+pnpm --filter @zapbip/api exec vitest run --config vitest.integration.config.mts test/integration/whatsapp-webhook.test.ts test/integration/whatsapp-outbound.test.ts
 pnpm --filter @zapbip/api exec vitest run --config vitest.e2e-whatsapp.config.mts
 pnpm --filter @zapbip/api exec vitest run --config vitest.e2e.config.mts test/e2e/whatsapp-bundle.e2e.test.ts
 ```
@@ -302,7 +302,7 @@ Every test of this lane is a pin: W3 and W4 are merged, so none was red on landi
 | Draft | Failure printed | Cause |
 |-------|-----------------|-------|
 | WI-33, WI-34 | `expected [] to deeply equal [ 'Oi' ]`; `WHATSAPP_ACCESS_TOKEN is not set` | the history read registered the agent; the route bindings have no token |
-| WI-58 | two `message_index` rows | opening the window sent the "agent is not listening" notice through the Cloud API sender |
+| WI-58 | two `message_index` rows; an extra image request | opening the window sent the "agent is not listening" notice through the Cloud API sender; a separate test file shared the fake Graph in parallel |
 | E2E-1 | `status: 'empty'` | an owner text routes only to an agent that wrote recently |
 
 ### Hypotheses to attack
