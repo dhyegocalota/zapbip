@@ -20,12 +20,12 @@ function readBearerSecret(context: McpContext): string | null {
 
 async function serveMcp(input: { context: McpContext; secret: string | null }): Promise<Response> {
   const { context, secret } = input;
-  const connection = await resolveConnection({ database: context.env.CONNECTIONS, secret });
-  if (!connection) {
+  const resolved = await resolveConnection({ database: context.env.CONNECTIONS, secret });
+  if (!resolved) {
     logEvent({ event: LogEvent.AuthRejected });
     return context.json(UNAUTHORIZED_BODY, 401);
   }
-  const server = createConnectionServer({ connection, environment: context.env });
+  const server = createConnectionServer({ resolved, environment: context.env });
   const transport = new WebStandardStreamableHTTPServerTransport({ enableJsonResponse: true });
   await server.connect(transport);
   return transport.handleRequest(context.req.raw);
