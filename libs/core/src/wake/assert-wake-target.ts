@@ -24,6 +24,7 @@ const HOST_PATTERN = /^[a-z0-9-]+(\.[a-z0-9-]+)+$/;
 const IPV4_PATTERN = /^\d+(\.\d+){3}$/;
 const WHITESPACE_PATTERN = /\s/;
 const FRAGMENT_MARK = '#';
+const SCHEME_SEPARATOR = '://';
 
 export type AssertWakeTargetInput = { url: string; token: string; publicHost: string };
 
@@ -49,11 +50,16 @@ function findPinnedMatch(input: { hostname: string }): PinnedMatch | null {
   return { provider, rule: PINNED_WAKE_PROVIDER_RULES[provider] };
 }
 
+function hostnameOf(input: { publicHost: string }): string {
+  const origin = input.publicHost.includes(SCHEME_SEPARATOR) ? input.publicHost : `${HTTPS_PROTOCOL}//${input.publicHost}`;
+  return new URL(origin).hostname;
+}
+
 function assertGenericHost(input: { hostname: string; publicHost: string }): void {
   const { hostname, publicHost } = input;
   const isBlockedName = WAKE_BLOCKED_HOSTS.includes(hostname) || WAKE_BLOCKED_HOST_SUFFIXES.some((suffix) => hostname.endsWith(suffix));
   const isPublicName = HOST_PATTERN.test(hostname) && !IPV4_PATTERN.test(hostname);
-  const ownHost = publicHost.toLowerCase();
+  const ownHost = hostnameOf({ publicHost });
   const isOwnHost = hostname === ownHost || hostname.endsWith(`.${ownHost}`);
   if (!isPublicName || isBlockedName || isOwnHost) throw invalidWakeField({ field: WakeTargetField.Url });
 }

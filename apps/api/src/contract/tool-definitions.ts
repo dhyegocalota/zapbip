@@ -15,9 +15,9 @@ import {
   sendMediaInputShape,
   sendMessageInputShape,
   setWakeOutputShape,
+  setWakeToolInputShape,
   waitForReplyInputShape,
 } from './mcp-schemas';
-import { setWakeToolInputShape } from '../mcp/set-wake';
 
 export enum McpToolName {
   SendMessage = 'send_message',

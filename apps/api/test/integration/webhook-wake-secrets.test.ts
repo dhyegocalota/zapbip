@@ -43,7 +43,13 @@ const transport: WakeTransport = { send: async () => ({ outcome: WakeAttemptOutc
 
 function wakeDependenciesWith(input: { env: Partial<typeof testEnv> }) {
   return runInDurableObject(stub, (_instance, state) =>
-    createWakeDependencies({ env: { ...testEnv, ...input.env }, storage: state.storage, clock: createPlatformClock(), transport }),
+    createWakeDependencies({
+      env: { ...testEnv, ...input.env },
+      accountId: WAKE_ACCOUNT,
+      storage: state.storage,
+      clock: createPlatformClock(),
+      transport,
+    }),
   );
 }
 

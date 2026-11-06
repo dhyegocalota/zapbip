@@ -1,4 +1,4 @@
-import { IdPrefix, MessageKind, WakeAttemptOutcome, WakeLogEventName, WakeMode, WakeStatus } from '@zapbip/types';
+import { IdPrefix, type OwnerLocale, MessageKind, WakeAttemptOutcome, WakeLogEventName, WakeMode, WakeStatus } from '@zapbip/types';
 import { InboxError } from '../inbox/errors';
 import { deliverToOwner } from '../inbox/use-cases/deliver-to-owner';
 import {
@@ -42,7 +42,7 @@ function retryDelayMs(input: { attempt: number; result: WakeAttemptResult }): nu
   const { statusCode, retryAfterMs } = result;
   const honoursRetryAfter = statusCode !== null && WAKE_RETRY_AFTER_STATUSES.includes(statusCode) && retryAfterMs !== null;
   if (!honoursRetryAfter) return backoffMs({ attempt });
-  return Math.min(retryAfterMs, WAKE_BACKOFF_CAP_MS);
+  return Math.max(WAKE_BACKOFF_BASE_MS, Math.min(retryAfterMs, WAKE_BACKOFF_CAP_MS));
 }
 
 function observeAttempt(input: Attempt & { name: WakeLogEventName }): void {
@@ -114,7 +114,7 @@ async function finishJob(input: JobRun & { outcome: WakeAttemptOutcome }): Promi
   await wake.repository.saveJob({ job: followUp });
 }
 
-async function tellOwner(input: JobRun): Promise<void> {
+async function tellOwner(input: JobRun & { ownerLocale: OwnerLocale }): Promise<void> {
   const { dependencies, ownerLocale, job } = input;
   const text = wakeFailedCopy({ locale: ownerLocale, agent: job.agent });
   await deliverToOwner({
@@ -128,9 +128,10 @@ async function tellOwner(input: JobRun): Promise<void> {
 }
 
 async function tellOwnerOnce(input: JobRun & { stored: StoredWake | null }): Promise<void> {
-  const { wake, job, stored } = input;
+  const { wake, job, stored, ownerLocale } = input;
+  if (ownerLocale === null) return;
   try {
-    await tellOwner(input);
+    await tellOwner({ ...input, ownerLocale });
   } catch {
     wake.observer.observe({
       event: {
