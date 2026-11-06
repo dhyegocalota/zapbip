@@ -307,3 +307,47 @@ State when this was written: L2's bodies were merged; L3 had pushed only its red
 - Core's wording for an unreceived upload is `upload_id: bytes not uploaded yet`; the test plan (WI-47) says `upload has not been received`. The test follows core.
 - The screen assertions (WI-35, WI-56) read history through `get_messages`, because `readScreen` is still a stub until L4b.
 - `ask` sends `optionDescriptions` empty when no option has a description.
+
+## Final review fixes (feat/agent-inbox-core-final)
+
+### What changed
+
+- **Routing list lifetime.** `ROUTING_LIST_TTL_MS` (10 minutes). The open list lives in the `owner_window` row (`routing_list_*` columns of `v1.sql`); `findChoicePrompt` and its `json_extract` scan are gone. New use cases `expireRoutingList` and `findRoutingListDueAt` back a second due-time provider of `AccountInbox`. Helpers moved to `use-cases/routing-list.ts` and `use-cases/wake-agent.ts`.
+- **Reminder.** A new unmatched message while the list is pending joins the held batch and gets one `RoutingListReminder` reply to the list.
+- **Copy.** `RoutingListExpired` now reads "Essa lista já foi usada." / "That list was already used."; a tap naming an unknown agent while the batch is held sends the current list again.
+- **Uploads.** `claimUpload` and `releaseUpload` (use cases, repository, RPC); the media row has an `uploading` flag; the route claims before `mediaStore.put` and releases on failure; the loser answers `409`.
+- **Media types.** `normalizeMimeType` (lowercase, parameters dropped) runs before every check, including the upload route.
+- **Content-Length.** A non-integer value answers `400` (`invalid_length`).
+- **Wrangler.** The test parses `wrangler.jsonc` with `unstable_readConfig`; the top-level `database_id` is `REPLACE_WITH_PRODUCTION_D1_DATABASE_ID`.
+
+### How to run
+
+`pnpm --filter @zapbip/core test:unit`, `pnpm --filter @zapbip/api test:unit`, `pnpm --filter @zapbip/api test:integration`, `pnpm --filter @zapbip/api test:e2e`, then `pnpm verify all`.
+
+### Red today, green after
+
+| Test | Red evidence | Green |
+|---|---|---|
+| `validation.test.ts` media type cases | `Error: expected an InboxError, nothing was thrown` | a1e31d3 |
+| `upload-route.test.ts` Content-Length cases | `expected 201 to be 400` | f00cde5 |
+| `upload-route.test.ts` concurrent PUTs | `expected 'bbbbbbbbbbbb' to be 'aaaaaaaaaaaa'` | 29615d6 |
+| `claim-upload.test.ts` | `Error: claimUpload is not implemented` | 29615d6 |
+| `wrangler-config.test.ts` placeholder | `expected [ 'zapbip-connections-local' ] to deeply equal [ Array(1) ]` (the other two cases are pins) | 934ded0 |
+| `receive-owner-message.test.ts`, `expire-routing-list.test.ts`, `inbox-copy.test.ts` | `expireRoutingList is not implemented`, missing row, missing reminder, old copy; pins: failed list leaves no row, route choice clears, reaction does not remind | routing list commit |
+
+### Hypotheses to attack
+
+1. A pending list never produces a second list, and the owner sees exactly one reminder per batch. Break it by: five unmatched texts, then a text in the other locale.
+2. After 10 minutes with no agent write, the list appears once more; after another 10 the batch is unread for the agent seen last and no third list appears.
+3. An agent that wrote inside the window takes the whole batch in order at the first expiry and its waiting `wait_for_reply` returns.
+4. The alarm, not a request, drives the expiry: `runDurableObjectAlarm` after `advanceClock` is enough.
+5. Two simultaneous PUTs: exactly one `201`, one `409`, the object holds the winner's bytes.
+6. `image/SVG+XML` and `image/svg+xml;x=1` are refused as images; `IMAGE/WEBP; q=1` is a valid sticker.
+7. `Content-Length: 12abc`, `0x0c`, `1.2e1` answer `400`.
+8. The lookup of the open list is a primary-key read: `EXPLAIN QUERY PLAN` gave `SEARCH owner_window USING INTEGER PRIMARY KEY (rowid=?)`; the claim gave `SEARCH media USING INDEX sqlite_autoindex_media_1 (media_id=?)`.
+
+### Known gaps
+
+- A resend after 24 hours of owner silence is queued, not sent (the window is closed).
+- A PUT whose Worker dies between the claim and the write leaves the upload claimed until its deadline (`UPLOAD_TTL_MS`).
+- The failed-write release has no integration test: the in-memory and repository cases cover the release, the route path does not.
