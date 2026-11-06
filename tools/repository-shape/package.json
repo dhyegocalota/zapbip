@@ -6,6 +6,10 @@
     "typecheck": "tsc --noEmit",
     "test:unit": "vitest run"
   },
+  "dependencies": {
+    "@zapbip/core": "workspace:*",
+    "@zapbip/types": "workspace:*"
+  },
   "devDependencies": {
     "@types/node": "24.19.2",
     "vitest": "5.0.5"

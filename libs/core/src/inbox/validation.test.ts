@@ -245,6 +245,7 @@ describe('assertMediaFits', () => {
     '\u2003image/png',
     '\timage/png',
     ' image/png',
+    ' Application/PDF',
     'image/png ',
   ])('CU-179 a media type with %j outside printable ASCII or surrounding whitespace is invalid input', async (mimeType) => {
     const mediaError = await captureInboxError(() => assertMediaFits({ kind: MessageKind.Image, mimeType, sizeBytes: 1000 }));

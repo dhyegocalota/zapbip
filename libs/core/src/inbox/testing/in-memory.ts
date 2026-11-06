@@ -77,7 +77,14 @@ function createInMemoryRepository(): InMemoryRepository {
   const uploadClaims = new Map<string, number>();
   let messages: Message[] = [];
   let questions: Question[] = [];
-  let window: OwnerWindow = { lastOwnerMessageAt: null, noticeSentForClosedWindow: false, closedAt: null };
+  let window: OwnerWindow = {
+    lastOwnerMessageAt: null,
+    noticeSentForClosedWindow: false,
+    closedAt: null,
+    noticeRetryLocale: null,
+    noticeRetryAt: null,
+    noticeRetryAttempt: 0,
+  };
   let routingList: RoutingList | null = null;
 
   function replaceMessages(input: { messageIds: string[]; change: (message: Message) => Message }): void {
@@ -202,7 +209,7 @@ function createInMemoryRepository(): InMemoryRepository {
     },
     claimNotice: async () => {
       if (window.noticeSentForClosedWindow) return false;
-      window = { ...window, noticeSentForClosedWindow: true };
+      window = { ...window, noticeSentForClosedWindow: true, noticeRetryLocale: null, noticeRetryAt: null };
       return true;
     },
     findRoutingList: async () => (routingList === null ? null : { ...routingList }),

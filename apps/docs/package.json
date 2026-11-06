@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "pnpm dlx mint@4.2.1207 dev",
+    "dev": "pnpm dlx mint@4.2.1207 dev --client-version 0.0.4077",
     "broken-links": "pnpm dlx mint@4.2.1207 broken-links"
   }
 }
