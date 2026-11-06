@@ -24,6 +24,8 @@ type MessageRow = {
   delivery: DeliveryState | null;
   read_at: number | null;
   at: number;
+  handed_to: string | null;
+  origin_message_id: string | null;
 };
 
 type QuestionRow = {
@@ -58,11 +60,16 @@ type MediaRow = {
 
 const SELECT_ROUTING_LIST =
   'SELECT routing_list_prompt_message_id, routing_list_opened_at, routing_list_locale, routing_list_resent, routing_list_reminded FROM owner_window WHERE id = ?';
-const SELECT_MESSAGES = 'SELECT id, agent, direction, kind, payload, reply_to, delivery, read_at, at FROM inbox_messages ';
+const SELECT_MESSAGES =
+  'SELECT id, agent, direction, kind, payload, reply_to, delivery, read_at, at, handed_to, origin_message_id FROM inbox_messages ';
 const SELECT_QUESTIONS = 'SELECT question_id, agent, text, options, normalized_key, prompt_message_id, asked_at, answer FROM questions ';
 const SELECT_MEDIA = 'SELECT media_id, origin, mime_type, size_bytes, filename, expires_at, received_at, retention_until FROM media ';
 const ORDER_BY_ARRIVAL = 'ORDER BY at, rowid';
 const MARK_READ_STATEMENT = 'UPDATE inbox_messages SET read_at = ? WHERE read_at IS NULL AND id IN (SELECT value FROM json_each(?))';
+const INSERT_MESSAGE_STATEMENT =
+  'INSERT INTO inbox_messages (id, agent, direction, kind, payload, reply_to, delivery, read_at, at, handed_to, origin_message_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+const HAND_OFF_STATEMENT =
+  'UPDATE inbox_messages SET read_at = ?, handed_to = ? WHERE id = ? AND agent = ? AND direction = ? AND read_at IS NULL';
 const WINDOW_ROW_ID = 1;
 
 function toMessage(row: MessageRow): Message {
@@ -75,8 +82,8 @@ function toMessage(row: MessageRow): Message {
     replyToMessageId: row.reply_to,
     delivery: row.delivery,
     readByAgent: row.read_at !== null,
-    handedTo: null,
-    originMessageId: null,
+    handedTo: row.handed_to,
+    originMessageId: row.origin_message_id,
     ...content,
   };
 }
@@ -127,6 +134,24 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
     return rows<MessageRow>(SELECT_MESSAGES + clause, ...bindings).map(toMessage);
   }
 
+  function insertRow(message: Message): void {
+    const { messageId, direction, agent, at, replyToMessageId, delivery, readByAgent, handedTo, originMessageId, ...content } = message;
+    run(
+      INSERT_MESSAGE_STATEMENT,
+      messageId,
+      agent,
+      direction,
+      message.kind,
+      JSON.stringify(content),
+      replyToMessageId,
+      delivery,
+      readByAgent ? input.clock.now() : null,
+      at,
+      handedTo,
+      originMessageId,
+    );
+  }
+
   return {
     async registerAgent({ agent, seenAt }) {
       input.storage.transactionSync(() => {
@@ -152,19 +177,7 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
     },
 
     async insertMessage({ message }) {
-      const { messageId, direction, agent, at, replyToMessageId, delivery, readByAgent, ...content } = message;
-      run(
-        'INSERT INTO inbox_messages (id, agent, direction, kind, payload, reply_to, delivery, read_at, at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        messageId,
-        agent,
-        direction,
-        message.kind,
-        JSON.stringify(content),
-        replyToMessageId,
-        delivery,
-        readByAgent ? input.clock.now() : null,
-        at,
-      );
+      insertRow(message);
     },
 
     async updateDelivery({ messageId, delivery }) {
@@ -421,10 +434,12 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
     },
 
     async insertHandoff({ copy, primaryAgent, handedTo }) {
-      void copy;
-      void primaryAgent;
-      void handedTo;
-      throw new Error('insertHandoff is not implemented');
+      if (copy.originMessageId === null) throw new Error('handoff copy has no origin message');
+      const { originMessageId } = copy;
+      input.storage.transactionSync(() => {
+        insertRow(copy);
+        run(HAND_OFF_STATEMENT, input.clock.now(), handedTo, originMessageId, primaryAgent, MessageDirection.FromOwner);
+      });
     },
   };
 }

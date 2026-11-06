@@ -4,7 +4,7 @@ import { WAKE_SEALED_KEY_VERSION } from './constants';
 import type { SetWakeInput, SetWakeResult } from './wake-ports';
 import { wakeAssociatedData } from './wake-associated-data';
 import { wakeRungFor } from './wake-rung';
-import type { StoredWake } from './wake-setting';
+import { assertWakeSetting, type StoredWake } from './wake-setting';
 
 async function lastDeliveredAtOf(input: { setWake: SetWakeInput }): Promise<number | null> {
   const previous = await input.setWake.wake.repository.findWake({ agent: input.setWake.connection.agent });
@@ -62,14 +62,39 @@ async function clearWebhook(input: SetWakeInput): Promise<SetWakeResult> {
   };
 }
 
-async function saveScheduled(input: SetWakeInput): Promise<SetWakeResult> {
-  void input;
-  throw new Error('saveScheduled is not implemented');
+async function saveWithoutTarget(
+  input: SetWakeInput & { fields: Pick<StoredWake, 'intervalMinutes' | 'standbyAgent'>; standby: StoredWake | null },
+): Promise<SetWakeResult> {
+  const { wake, connection, setting, dependencies, fields, standby } = input;
+  assertWakeSetting({ setting, caller: connection.agent, standby });
+  const storedWake: StoredWake = {
+    agent: connection.agent,
+    mode: setting.mode,
+    target: null,
+    status: WakeStatus.Active,
+    lastDeliveredAt: await lastDeliveredAtOf({ setWake: input }),
+    ...fields,
+    ownerLocale: connection.ownerLocale,
+  };
+  await wake.repository.saveWake({ wake: storedWake });
+  await wake.repository.deleteJob({ agent: connection.agent });
+  const pollState = await wake.repository.findPollState({ agent: connection.agent });
+  return {
+    status: SetWakeStatus.Saved,
+    wakeMode: setting.mode,
+    effectiveRung: wakeRungFor({ wake: storedWake, pollState, standby, now: dependencies.clock.now() }),
+    provider: null,
+  };
+}
+
+function saveScheduled(input: SetWakeInput): Promise<SetWakeResult> {
+  return saveWithoutTarget({ ...input, fields: { intervalMinutes: input.setting.intervalMinutes, standbyAgent: null }, standby: null });
 }
 
 async function saveStandby(input: SetWakeInput): Promise<SetWakeResult> {
-  void input;
-  throw new Error('saveStandby is not implemented');
+  const { wake, setting } = input;
+  const standby = setting.standbyAgent === null ? null : await wake.repository.findWake({ agent: setting.standbyAgent });
+  return saveWithoutTarget({ ...input, fields: { intervalMinutes: null, standbyAgent: setting.standbyAgent }, standby });
 }
 
 const WAKE_SETTERS: Record<WakeMode, (input: SetWakeInput) => Promise<SetWakeResult>> = {

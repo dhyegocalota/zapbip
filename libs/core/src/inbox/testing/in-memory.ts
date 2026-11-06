@@ -12,7 +12,7 @@ import {
 import { QUEUE_RETENTION_MS, QUESTION_RETENTION_MS, RECEIPT_RETENTION_MS } from '../constants';
 import type { AgentName } from '../connection';
 import type { AgentRecord, OwnerWindow, RoutingList, StoredMedia } from '../inbox-records';
-import type { Message } from '../message';
+import { ownerMessageIdOf, type Message } from '../message';
 import type { AgentWaker, Clock, CoreDependencies, IdGenerator, InboxRepository, MediaStore, MessageSender } from '../ports';
 import type { Question } from '../question';
 import { createReplyWaiters } from '../waiters';
@@ -23,7 +23,7 @@ const DEFAULT_START_AT = 10 * DAY_MS;
 const FAKE_SIGNATURE = 'fake';
 
 export type SentTemplate = { kind: TemplateKind; locale: OwnerLocale; parameters: string[] };
-export type WakeNotification = { agent: AgentName; reason: AgentWakeReason };
+export type WakeNotification = { agent: AgentName; reason: AgentWakeReason; messageId?: string };
 
 export type RecordingSender = MessageSender & {
   sessions: Message[];
@@ -180,10 +180,10 @@ function createInMemoryRepository(): InboxRepository {
       mediaIds.forEach((mediaId) => media.delete(mediaId));
     },
     insertHandoff: async ({ copy, primaryAgent, handedTo }) => {
-      void copy;
-      void primaryAgent;
-      void handedTo;
-      throw new Error('insertHandoff is not implemented');
+      const originMessageId = ownerMessageIdOf({ message: copy });
+      const isPrimaryUnread = (message: Message): boolean =>
+        message.messageId === originMessageId && message.agent === primaryAgent && !message.readByAgent;
+      messages = [...messages.map((message) => (isPrimaryUnread(message) ? { ...message, readByAgent: true, handedTo } : message)), copy];
     },
     findNextExpiry: async () => {
       const dueTimes = [
@@ -256,8 +256,8 @@ function createRecordingWaker(): RecordingWaker {
     replyWith: (input) => {
       outcome = input.outcome;
     },
-    notify: async ({ agent, reason }) => {
-      notifications.push({ agent, reason });
+    notify: async ({ agent, reason, messageId }) => {
+      notifications.push({ agent, reason, messageId });
       return outcome;
     },
   };

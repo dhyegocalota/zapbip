@@ -49,7 +49,7 @@ export function createConnectionServer(input: { resolved: ResolvedConnection; en
     server.registerTool(
       name,
       { description: definition.description, inputSchema: definition.inputShape, outputSchema: definition.outputShape },
-      (toolArguments) => runTool({ name, context, toolArguments }),
+      (toolArguments: unknown) => runTool({ name, context, toolArguments }),
     );
   });
   return server;

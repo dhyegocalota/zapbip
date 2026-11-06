@@ -74,7 +74,7 @@ Test areas, for parallel tester sub-agents: **A** core rules (pure), **B** waker
 - [ ] Elapsed — input: elapsed 59 min; expected: contains `há 59 min`.
 - [ ] Elapsed boundary — input: elapsed 60 min; expected: contains `há 1 h`.
 - [ ] Elapsed rounding — input: elapsed 125 min; expected: contains `há 2 h` (not `há 3 h`).
-- [ ] Never polled — input: `elapsedSinceLastPollMs: null`; expected: contains `ainda não olhou a caixa`.
+- [ ] Never polled — input: `elapsedSinceLastPollMs: null`; expected: contains `Ainda não olhou a caixa.` (capitalised, as declared in `WAKE_COPY`).
 - [ ] `expectedDelayNoteCopy` in en-US — input: interval 60, elapsed 12 min; expected: contains `every hour` and `12 min ago`.
 - [ ] English never polled — input: `null`; expected: contains `has not checked the inbox yet`.
 - [ ] `staleNoticeCopy` — input: agent `chatgpt`, elapsed 3 h, pt-BR; expected: contains `chatgpt` and `há 3 h`, and no message body text.
@@ -123,7 +123,7 @@ Test areas, for parallel tester sub-agents: **A** core rules (pure), **B** waker
 - [ ] ~~No note on 1 → 2 — input: `firstUnread` false; expected: no note; returns `Woken`.~~ replaced by a `receive-owner-message.test.ts` case: input: `chatgpt` already holds one unread; expected: `notify` is not called, so no note (A9).
 - [ ] ~~Note in English for an en-US identity — input: `ownerLocale` en-US, `firstUnread` true; expected: note contains `every hour`.~~ Note in English for an en-US identity — input: `ownerLocale` en-US; expected: note contains `every hour`.
 - [ ] ~~Note carries the last poll — input: last poll 3 h ago, `firstUnread` true; expected: note contains `há 3 h`.~~ Note carries the last poll — input: last poll 3 h ago; expected: note contains `há 3 h`.
-- [ ] ~~Never polled note — input: `hasPolled` false, `firstUnread` true; expected: note contains `ainda não olhou a caixa`.~~ Never polled note — input: `hasPolled` false; expected: note contains `ainda não olhou a caixa`.
+- [ ] ~~Never polled note — input: `hasPolled` false, `firstUnread` true; expected: note contains `ainda não olhou a caixa`.~~ Never polled note — input: `hasPolled` false; expected: note contains `Ainda não olhou a caixa.`
 - [ ] No note for a standby reason — input: reason `StandbyFor`; expected: no note; returns `Woken`.
 
 ### B4 Inbox waker for stale scheduled (`inbox-agent-waker.test.ts`)

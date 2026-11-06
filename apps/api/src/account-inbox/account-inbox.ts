@@ -30,7 +30,10 @@ import { mediaStoreOf } from '../adapters/r2/r2-media-store';
 import { createSqliteInboxRepository } from '../adapters/sqlite/sqlite-inbox-repository';
 import { createDispatchingAgentWaker } from '../adapters/wake/dispatching-agent-waker';
 import { createFetchWakeTransport } from '../adapters/wake/fetch-wake-transport';
+import { createInboxAgentWaker } from '../adapters/wake/inbox-agent-waker';
 import { createNoneWaker } from '../adapters/wake/none-waker';
+import { createScheduledAgentWaker } from '../adapters/wake/scheduled-agent-waker';
+import { createStandbyAgentWaker } from '../adapters/wake/standby-agent-waker';
 import { createWebhookAgentWaker } from '../adapters/wake/webhook-agent-waker';
 import type { AccountInboxRpc, AgentRequest, CallOutcome } from '../contract/account-inbox-rpc';
 import type { DueTimeProvider } from '../contract/due-time-provider';
@@ -77,7 +80,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       clock: this.clock,
       transport: this.createWakeTransport(),
     });
-    const inboxOnlyDependencies: CoreDependencies = {
+    this.dependencies = {
       accountId,
       repository: createSqliteInboxRepository({ storage: this.ctx.storage, clock: this.clock }),
       sender: this.sender,
@@ -87,20 +90,23 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       ids: createIdGenerator(),
       waiters: inbox.createReplyWaiters({ clock: this.clock }),
     };
-    this.dependencies = {
-      ...inboxOnlyDependencies,
-      waker: createDispatchingAgentWaker({
-        wakers: {
-          [WakeRung.Inbox]: createNoneWaker(),
-          [WakeRung.Webhook]: createWebhookAgentWaker({ dependencies: inboxOnlyDependencies, wake: this.wake }),
-          [WakeRung.Scheduled]: createNoneWaker(),
-          [WakeRung.Standby]: createNoneWaker(),
-        },
-        repository: this.wake.repository,
-        clock: this.clock,
-      }),
-    };
-    this.dueTimeProviders.push(this.createExpiryProvider(), this.createRoutingListProvider(), this.createWakeProvider());
+    const wakerContext = { dependencies: this.dependencies, wake: this.wake };
+    this.dependencies.waker = createDispatchingAgentWaker({
+      wakers: {
+        [WakeRung.Inbox]: createInboxAgentWaker(wakerContext),
+        [WakeRung.Webhook]: createWebhookAgentWaker(wakerContext),
+        [WakeRung.Scheduled]: createScheduledAgentWaker(wakerContext),
+        [WakeRung.Standby]: createStandbyAgentWaker(wakerContext),
+      },
+      repository: this.wake.repository,
+      clock: this.clock,
+    });
+    this.dueTimeProviders.push(
+      this.createExpiryProvider(),
+      this.createRoutingListProvider(),
+      this.createWakeProvider(),
+      this.createPollerProvider(),
+    );
     await this.armAlarm();
   }
 
@@ -118,6 +124,15 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     return {
       nextDueAt: () => this.wake.repository.findNextDueAt(),
       runDue: () => this.runDueWakes(),
+    };
+  }
+
+  private createPollerProvider(): DueTimeProvider {
+    return {
+      nextDueAt: () => inbox.nextPollerDeadline({ wake: this.wake }),
+      runDue: async () => {
+        await inbox.evaluatePollers({ dependencies: this.dependencies, wake: this.wake });
+      },
     };
   }
 
@@ -232,7 +247,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
   }
 
   checkInbox(input: AgentRequest<CheckInboxInput>): Promise<CallOutcome<CheckInboxResult>> {
-    return this.outcome({ run: () => inbox.checkInbox({ ...input, dependencies: this.dependencies }) });
+    return this.outcome({ run: () => inbox.pollInbox({ ...input, dependencies: this.dependencies, wake: this.wake }) });
   }
 
   createUpload(input: AgentRequest<CreateUploadInput>): Promise<CallOutcome<CreateUploadResult>> {
