@@ -189,3 +189,59 @@ Needs Docker, `openssl` and network for the two images. Runtime is about 12 minu
 
 - The model is fake and makes no tool calls: replies travel through the plugin's own `send_message`. A real model run stays owner-run (V3).
 - The TLS certificate is self-signed, trusted through `NODE_EXTRA_CA_CERTS` and `SSL_CERT_FILE` in the containers only.
+
+## Fix round 1 (security S1 to S6, reviewer R1 to R9, unit-tester F1 and F2, e2e-tester a to d), at 892fac1
+
+Owner delegated 2026-11-06. Commit f010684 (`test(plugins): forwarded messages ... (red)`) printed its Hermes red as an `ImportError` instead of the assertion text the plan records; accepted by the owner's delegation, not redone.
+
+### What changed
+
+- S1 `package.json` and `pnpm-lock.yaml`: `pnpm.onlyBuiltDependencies: ["esbuild", "workerd"]` replaces `neverBuiltDependencies`; `openclaw` is not listed, so it is still not built. Checked with a clean `pnpm install --frozen-lockfile`.
+- S2 OpenClaw `src/frames.ts`: frame parsers are looked up with `Object.hasOwn`; `__proto__`, `constructor`, `toString`, `hasOwnProperty`, `valueOf` are `unknown_type`. The handler record is reached only after parsing, so it needs no second guard.
+- S3 transport frame cap: Hermes `connect(..., max_size=CONNECTOR_FRAME_MAX_BYTES)`; OpenClaw uses `ws` (already pinned `8.22.1`, bundled into `dist/index.js`) with `maxPayload: CONNECTOR_FRAME_MAX_BYTES`, and the build adds a `createRequire` banner because the bundled CommonJS code asks for Node modules. An oversize frame now closes the socket (close code 1009 on the wire, seen as 1006 by `ws`) and the plugin reconnects; the parse-time size check stays as a second line.
+- S4 Hermes `log.py`: the secret path is redacted in `exc_text` and `stack_info`; the `httpx2` logger (Hermes's own MCP client) is redacted too, found by the new MCP e2e case (the secret URL was in the Hermes log once the documented `mcp_servers` block was configured).
+- S5 Hermes dependencies: `pyproject.toml` has `[build-system]` (setuptools pinned), pinned runtime `dependencies` (httpx, websockets), a `dev` extra (pytest, mypy, pytest-timeout, all pinned) and the `hermes_agent.plugins` entry point; `requirements.txt` (runtime) and `requirements-dev.txt` are `uv pip compile --universal --generate-hashes` locks; CI and the doctor's fix line install with `--require-hashes -r apps/hermes-plugin/requirements-dev.txt`. `requires-python` is now `>=3.11,<3.15` because the pinned Hermes image runs Python 3.14.9. pytest has `timeout = 10`.
+- S6 `scripts/e2e/clients`: the fake model and the TLS front bind to `container-host.ts` (loopback on macOS Docker Desktop, the bridge gateway on Linux); `free-port` probes loopback; the Hermes image is pinned `v0.22.7@sha256:e6d81ae5...` and is built into `zapbip-e2e-hermes` from the packaged wheel (`pip install --no-deps`).
+- R1/R2/R6 docs (`apps/docs/agents/{hermes,openclaw}.mdx`, en and pt-br): replies go through the plugin's own outbound; MCP is for starting a conversation, asking and the polling fallback; install commands as run (`openclaw plugins install @zapbip/openclaw-plugin@0.1.0 --force --accept-capabilities`, `plugins.entries.zapbip.enabled`, `channels.zapbip.connectionLink`; `pip install zapbip-platform==0.1.0` and the environment variables); a "How it listens" section; "ask the agent to send `✅ instalado`"; troubleshooting rows fixed.
+- R3 both plugins: close code 4003 (`REVOKED_CLOSE_CODE`) exits with failure; an attempt that never opened re-probes (a 401 exits with failure, 426 retries).
+- R5 OpenClaw: a failed reply delivery logs `plugin_reply_failed` (new `ConnectorLogEvent.PluginReplyFailed`), is not retried, and is documented.
+- R7 `plan.md` and `spec.md`: stale install-page lines fixed; the "Install path" box is ticked with evidence.
+- R8 Hermes: the forwarded prefix shares a line with the text (space), `CHANNEL_HANDOFF_NO_TEXT_BY_KIND` is keyed by `MessageKind`.
+- R9 OpenClaw `package.json`: `prepublishOnly: pnpm run build`.
+- F1/F2 and kind validation (both plugins): a messages frame whose message has no known `kind` is `malformed` at parse time; the duplicate-while-pending test now reads the duplicate before the handoff resolves; the null `previousWakeMode` hello case is pinned.
+- e2e (b): the fake model can call a tool; the new case `MCP <product>` configures the documented MCP block (`mcp.servers` / `mcp_servers`), the model calls `tool_search` (both products defer MCP tools) and the result naming `check_inbox` returns to the model.
+
+### Red then green (failure text the red runs printed)
+
+| Area | Red commit message says | Green |
+|---|---|---|
+| S2 | `TypeError: parseFrame is not a function`; `expected { ok: true } to equal { ok: false, reason: 'unknown_type' }` | `fix(openclaw): look frame parsers up by own property` |
+| R3, S3 OpenClaw | 4 failed (timeouts, `expected 1 to be 2`) | `feat(openclaw): stop on a revoke ...` |
+| R3, S3 Hermes | 5 failed (TimeoutError, `assert 1 == 2`) | `feat(hermes): stop on a revoke ...` |
+| bundle | `expected -1 to be greater than or equal to 0` | same feat commit |
+| S4 | 2 failed (traceback, stack_info); httpx2 1 failed | `fix(hermes): redact ...` |
+| R5 | `promise rejected "Error: segredo-da-resposta" instead of resolving` | `feat(openclaw): log a failed reply delivery ...` |
+| R8 | 12 failed (`KeyError: <MessageKind.IMAGE: 'image'>`, newline vs space) | `fix(hermes): one forwarded-prefix shape ...` |
+| kind validation | 5 OpenClaw and 6 Hermes cases | `fix(plugins): reject a messages frame ...` |
+| S5, S6 | shape tests: workflow without `--require-hashes`; `0.0.0.0`; Hermes image tag only | the packaging and e2e commits |
+
+Pins (green on arrival): the project and lock shape cases, the null `previousWakeMode` hello, the duplicate-while-pending test, `docs-agent-install`, the prepublish check, the `message`-case of the log redaction.
+
+### How to run
+
+`pnpm verify all` with the Python 3.13 venv active. Docker: `ZAPBIP_E2E_CLIENTS=1 pnpm test:e2e:clients` (about 15 minutes; the first run pulls the pinned Hermes image by digest when the local copy has no digest).
+
+### Hypotheses to attack
+
+1. Hypothesis: after a revoke (4003) both plugins stop and stay stopped. Break it by: closing with 4003 right after a reconnect, and with 4003 during the backoff.
+2. Hypothesis: a never-opened attempt followed by 401 stops both plugins, and one followed by 426 reconnects. Break it by: flipping the probe between attempts.
+3. Hypothesis: no `zb_conn_` reaches any Hermes or OpenClaw log with the MCP block configured. Break it by: running with `DEBUG` logging and a failing tool call.
+4. Hypothesis: the wheel installs into a clean Python 3.13 venv and into the Hermes image, and Hermes lists it as an entry-point plugin.
+5. Hypothesis: `ws` bundled into `dist/index.js` works under OpenClaw's loader. Break it by: the Docker suite (E1, E3, E4).
+
+### Gaps
+
+- The documented 1-minute `check_inbox` fallback job is not covered by the suite (no product scheduler is run); it stays an owner-run check, listed in `plan.md` Owner-run.
+- The registry command `openclaw plugins install @zapbip/openclaw-plugin@0.1.0` cannot be run until the package is published; the suite installs the packed archive with the same flags.
+- The fake model drives `tool_search` for the MCP case, not a real tool call to `check_inbox`; a real model run stays owner-run (V3).
+- `requires-python` allows 3.14 for the Hermes image, while the doctor and CI keep the development toolchain on 3.11 to 3.13.

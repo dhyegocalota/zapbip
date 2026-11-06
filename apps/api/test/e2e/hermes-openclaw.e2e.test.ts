@@ -156,6 +156,7 @@ const PLUGIN_SOURCE_DIRECTORIES = [
   join(import.meta.dirname, '..', '..', '..', 'openclaw-plugin', 'src'),
   join(import.meta.dirname, '..', '..', '..', 'hermes-plugin', 'zapbip_platform'),
 ];
+const TOOL_RESULT_MARKER = 'check_inbox';
 const LISTEN_COMMAND_PATTERN = /zapbip listen|['"]listen['"]/;
 
 type AttachedSocket = { frames: ConnectorFrame[]; socket: WebSocket; closeCodes: number[] };
@@ -257,12 +258,19 @@ async function startUnattachedHermes(input: { accountIndex: number }): Promise<R
     fakeModelPort: fakeModel.port,
     certificateFile: tlsFront.certificateFile,
     allowedUsers: OWNER_SENDER,
+    hasMcpServer: false,
   });
   testContainers.push(container);
   return { container, account };
 }
 
-async function startClient(input: { product: ClientProduct; accountIndex: number; allowedUsers: string }): Promise<RunningClient> {
+async function startClient(input: {
+  product: ClientProduct;
+  accountIndex: number;
+  allowedUsers: string;
+  hasMcpServer?: boolean;
+}): Promise<RunningClient> {
+  const { hasMcpServer = false } = input;
   const account = isolated.context?.wakeAccounts[input.accountIndex];
   if (!account) throw new Error(`no seeded account at ${input.accountIndex}`);
   runIndex += 1;
@@ -273,6 +281,7 @@ async function startClient(input: { product: ClientProduct; accountIndex: number
     connectionLink: connectionLinkOf({ account }),
     fakeModelPort: fakeModel.port,
     certificateFile: tlsFront.certificateFile,
+    hasMcpServer,
   };
   const container =
     input.product === ClientProduct.OpenClaw
@@ -348,6 +357,22 @@ describe.skipIf(!isEnabled)('hermes and openclaw plugins against the development
       const [request] = fakeModel.requestsMentioning({ text: token });
       expect(request?.userText).toContain(CHANNEL_FORWARDED_PREFIX);
       expect(request?.userText).toContain(token);
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  test.each([ClientProduct.OpenClaw, ClientProduct.Hermes])(
+    'MCP %s: the zapbip server from the documented configuration gives the agent check_inbox and the result reaches the model',
+    async (product) => {
+      const client = await startClient({ product, accountIndex: 2, allowedUsers: OWNER_SENDER, hasMcpServer: true });
+      const token = `ping-tool-${product}`;
+      await postOwnerText({ account: client.account, text: token, forwarded: false });
+      await awaitScreenText({ account: client.account, text: replyTo({ token }) });
+      const requests = fakeModel.requestsMentioning({ text: token });
+      const toolResultTexts = requests.flatMap((request) => request.toolResultTexts);
+      expect(toolResultTexts.length).toBeGreaterThan(0);
+      expect(toolResultTexts.join(' ')).toContain(TOOL_RESULT_MARKER);
+      expect(await containerLogs({ container: client.container })).not.toContain(SECRET_PREFIX);
     },
     TEST_TIMEOUT_MS,
   );

@@ -8,6 +8,13 @@ const REPLY_PREFIX = 'Recebi: ';
 const TOKEN_PATTERN = /ping-[a-z0-9-]+/g;
 const NO_TOKEN_TEXT = 'nothing';
 const USER_ROLE = 'user';
+const TOOL_ROLE = 'tool';
+const TOOL_REQUEST_PATTERN = /ping-tool-[a-z0-9-]+/;
+const CHECK_INBOX_TOOL_SUFFIX = 'check_inbox';
+const TOOL_SEARCH_NAME = 'tool_search';
+const TOOL_SEARCH_ARGUMENTS = JSON.stringify({ query: CHECK_INBOX_TOOL_SUFFIX, queries: [CHECK_INBOX_TOOL_SUFFIX] });
+const EMPTY_ARGUMENTS = '{}';
+const TOOL_CALL_ID = 'call_fake_check_inbox';
 const JSON_HEADERS = { 'content-type': 'application/json' };
 const STREAM_HEADERS = { 'content-type': 'text/event-stream', 'cache-control': 'no-cache' };
 const HTTP_OK = 200;
@@ -15,14 +22,16 @@ const HTTP_BAD_REQUEST = 400;
 
 type ContentPart = { text: string } | { type: string };
 type ChatMessage = { role: string; content: string | ContentPart[] };
+type ToolDeclaration = { type?: string; name?: string; function?: { name: string } };
 type ChatBody = {
+  tools: ToolDeclaration[] | undefined;
   model: string | undefined;
   stream: boolean | undefined;
   messages: ChatMessage[] | undefined;
   input: ChatMessage[] | string | undefined;
 };
 
-export type FakeModelRequest = { url: string; userText: string };
+export type FakeModelRequest = { url: string; userText: string; toolResultTexts: string[]; toolNames: string[] };
 
 export type FakeModel = {
   port: number;
@@ -61,6 +70,35 @@ function userTextOf(input: { body: ChatBody }): string {
     .join('\n');
 }
 
+function toolResultTextsOf(input: { body: ChatBody }): string[] {
+  return conversationOf(input)
+    .filter((message) => message.role === TOOL_ROLE)
+    .map((message) => contentText({ content: message.content }));
+}
+
+function declaredNameOf(input: { tool: ToolDeclaration }): string {
+  const { tool } = input;
+  if (tool.function !== undefined) return tool.function.name;
+  if (tool.name !== undefined) return tool.name;
+  return '';
+}
+
+function toolNamesOf(input: { body: ChatBody }): string[] {
+  const { tools } = input.body;
+  if (tools === undefined) return [];
+  return tools.map((tool) => declaredNameOf({ tool }));
+}
+
+type ToolCallPlan = { toolName: string; toolArguments: string };
+
+function toolCallPlanOf(input: { body: ChatBody }): ToolCallPlan | null {
+  const names = toolNamesOf(input);
+  const checkInboxName = names.find((name) => name.endsWith(CHECK_INBOX_TOOL_SUFFIX));
+  if (checkInboxName !== undefined) return { toolName: checkInboxName, toolArguments: EMPTY_ARGUMENTS };
+  if (names.includes(TOOL_SEARCH_NAME)) return { toolName: TOOL_SEARCH_NAME, toolArguments: TOOL_SEARCH_ARGUMENTS };
+  return null;
+}
+
 function modelOf(input: { body: ChatBody }): string {
   if (input.body.model === undefined) return MODEL_ID;
   return input.body.model;
@@ -70,7 +108,7 @@ async function readBody(input: { request: IncomingMessage }): Promise<ChatBody> 
   const chunks: Buffer[] = [];
   for await (const chunk of input.request) chunks.push(chunk as Buffer);
   const raw = Buffer.concat(chunks).toString('utf8');
-  if (raw.length === 0) return { model: undefined, stream: undefined, messages: undefined, input: undefined };
+  if (raw.length === 0) return { model: undefined, stream: undefined, messages: undefined, input: undefined, tools: undefined };
   return JSON.parse(raw) as ChatBody;
 }
 
@@ -92,6 +130,35 @@ function completion(input: { content: string; model: string }): string {
     created: Math.floor(Date.now() / 1000),
     model: input.model,
     choices: [{ index: 0, message: { role: 'assistant', content: input.content }, finish_reason: 'stop' }],
+    usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+  });
+}
+
+function streamedToolCall(input: { plan: ToolCallPlan; model: string }): string {
+  const base = { id: 'chatcmpl-fake', object: 'chat.completion.chunk', created: Math.floor(Date.now() / 1000), model: input.model };
+  const toolCall = {
+    index: 0,
+    id: TOOL_CALL_ID,
+    type: 'function',
+    function: { name: input.plan.toolName, arguments: input.plan.toolArguments },
+  };
+  const first = { ...base, choices: [{ index: 0, delta: { role: 'assistant', tool_calls: [toolCall] }, finish_reason: null }] };
+  const last = {
+    ...base,
+    choices: [{ index: 0, delta: {}, finish_reason: 'tool_calls' }],
+    usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+  };
+  return `data: ${JSON.stringify(first)}\n\ndata: ${JSON.stringify(last)}\n\ndata: [DONE]\n\n`;
+}
+
+function toolCallCompletion(input: { plan: ToolCallPlan; model: string }): string {
+  const toolCall = { id: TOOL_CALL_ID, type: 'function', function: { name: input.plan.toolName, arguments: input.plan.toolArguments } };
+  return JSON.stringify({
+    id: 'chatcmpl-fake',
+    object: 'chat.completion',
+    created: Math.floor(Date.now() / 1000),
+    model: input.model,
+    choices: [{ index: 0, message: { role: 'assistant', content: null, tool_calls: [toolCall] }, finish_reason: 'tool_calls' }],
     usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
   });
 }
@@ -118,9 +185,20 @@ export async function startFakeModel(): Promise<FakeModel> {
     }
     const body = await readBody({ request });
     const userText = userTextOf({ body });
-    requests.push({ url, userText });
+    const toolResultTexts = toolResultTextsOf({ body });
+    requests.push({ url, userText, toolResultTexts, toolNames: toolNamesOf({ body }) });
     const content = replyTo({ token: tokenOf({ text: userText }) });
     const model = modelOf({ body });
+    const plan = toolCallPlanOf({ body });
+    const mustCallTool = plan !== null && TOOL_REQUEST_PATTERN.test(userText) && toolResultTexts.length === 0;
+    if (mustCallTool && body.stream) {
+      response.writeHead(HTTP_OK, STREAM_HEADERS).end(streamedToolCall({ plan, model }));
+      return;
+    }
+    if (mustCallTool) {
+      response.writeHead(HTTP_OK, JSON_HEADERS).end(toolCallCompletion({ plan, model }));
+      return;
+    }
     if (body.stream) {
       response.writeHead(HTTP_OK, STREAM_HEADERS).end(streamedCompletion({ content, model }));
       return;

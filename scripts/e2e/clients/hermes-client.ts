@@ -41,11 +41,17 @@ export type HermesClientInput = {
   directory: string;
   connectionLink: string;
   allowedUsers: string;
+  hasMcpServer: boolean;
   fakeModelPort: number;
   certificateFile: string;
 };
 
-function configOf(input: { fakeModelPort: number }): string {
+function mcpServersLines(input: { connectionLink: string; hasMcpServer: boolean }): string[] {
+  if (!input.hasMcpServer) return [];
+  return ['mcp_servers:', '  zapbip:', `    url: ${input.connectionLink}`];
+}
+
+function configOf(input: { fakeModelPort: number; connectionLink: string; hasMcpServer: boolean }): string {
   return [
     'model:',
     '  provider: custom',
@@ -55,6 +61,7 @@ function configOf(input: { fakeModelPort: number }): string {
     'plugins:',
     '  enabled:',
     `    - ${PLUGIN_NAME}`,
+    ...mcpServersLines(input),
     `_config_version: ${CONFIG_VERSION}`,
     '',
   ].join('\n');

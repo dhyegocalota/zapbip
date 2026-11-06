@@ -27,6 +27,7 @@ export type OpenClawClientInput = {
   connectionLink: string;
   fakeModelPort: number;
   certificateFile: string;
+  hasMcpServer: boolean;
 };
 
 export async function buildOpenClawImage(input: { directory: string }): Promise<void> {
@@ -40,8 +41,14 @@ export async function buildOpenClawImage(input: { directory: string }): Promise<
   await buildImage({ tag: OPENCLAW_IMAGE_TAG, contextDirectory, dockerfile: DOCKERFILE, platform: null, buildArguments: {} });
 }
 
-function configOf(input: { connectionLink: string; fakeModelPort: number }) {
+function mcpConfigOf(input: { connectionLink: string; hasMcpServer: boolean }) {
+  if (!input.hasMcpServer) return {};
+  return { mcp: { servers: { zapbip: { url: input.connectionLink, transport: 'streamable-http' } } } };
+}
+
+function configOf(input: { connectionLink: string; fakeModelPort: number; hasMcpServer: boolean }) {
   return {
+    ...mcpConfigOf(input),
     gateway: { mode: 'local', bind: 'loopback', auth: { mode: 'none' } },
     models: {
       providers: {
