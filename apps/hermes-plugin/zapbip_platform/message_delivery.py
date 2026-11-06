@@ -32,10 +32,10 @@ class MessageDelivery:
 
     def _accept(self, *, message: Message) -> None:
         message_id = message["messageId"]
-        is_known = message_id in self._seen or message_id in self._pending
-        if is_known:
+        if message_id in self._pending:
             return
-        self._pending.add(message_id)
+        if message_id not in self._seen:
+            self._pending.add(message_id)
         self._queue.put_nowait(message)
 
     def _remember(self, *, message_id: str) -> None:
@@ -45,6 +45,9 @@ class MessageDelivery:
 
     async def _deliver(self, *, message: Message) -> None:
         message_id = message["messageId"]
+        if message_id in self._seen:
+            await self._send_done(message_id=message_id)
+            return
         try:
             await self._hand_off(message=message)
         except Exception as error:

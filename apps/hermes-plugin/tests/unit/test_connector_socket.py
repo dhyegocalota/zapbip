@@ -217,7 +217,7 @@ def test_seen_set_is_bounded() -> None:
                 await connector.until(condition=lambda: len(connector.received_frames) == len(message_ids))
                 await connector.broadcast(text=messages_of("msg_0"))
                 await connector.broadcast(text=messages_of(message_ids[-1], "sentinel"))
-                await connector.until(condition=lambda: len(connector.received_frames) == len(message_ids) + 2)
+                await connector.until(condition=lambda: len(connector.received_frames) == len(message_ids) + 3)
             assert handed_off.message_ids[len(message_ids) :] == ["msg_0", "sentinel"]
 
     run(scenario())
