@@ -200,3 +200,16 @@ Pins (green on arrival): `env-example.test.ts`, `root-scripts.test.ts` (`19d03f1
 - B10 (E2E owner flow and `smoke-development`) is not written: the dev stack has no `/webhooks/whatsapp` route (whatsapp-cloud-channel) and no `novo agente` flow (accounts-and-keys, whose install reply carries an install link rather than the MCP URL, so `mcpSecretOf` will need the `/i/<code>` step). Needed at that merge: smoke check 2 expects `Object.values(McpToolName)`, which becomes eleven when `set_wake` joins the enum.
 - The `wrangler ... --json` output shapes for `versions list`, `time-travel info` and `secret list --format json` are read from wrangler's source, not from a live account.
 - `SignatureHeader` is declared in `signed-webhook.ts`; whatsapp-cloud-channel declares `WEBHOOK_SIGNATURE_HEADER` in its adapter. Merge by importing one.
+## Lane D (runbooks)
+
+- Changed: `docs/runbooks/{README,cloudflare-setup,dns,meta-setup,deploy,mintlify-publish}.md`, `tools/repository-shape/src/runbooks.test.ts`.
+- Run: `pnpm --filter @zapbip/repository-shape exec vitest run src/runbooks.test.ts`.
+- Red (1465f0b): 3 failed, 6 passed; `ENOENT ... docs/runbooks/README.md` and `deploy.md`. Green: 9 of 9 in the file, 71 of 71 in the package.
+- Hypotheses: every step has Expect and If it fails lines; the README order matches the test plan; every `pnpm <script>` is a root script; production commands carry no `--env` (lane C binding).
+- Gaps:
+  - Resource names follow the spec table (`zapbip-staging`, `zapbip-production`, `zapbip-media-*`); lane C's `wrangler.jsonc` must match.
+  - The first deploy of an environment fails smoke checks 2 and 5 (no smoke connection yet) and `SMOKE_CONNECTION_SECRET=pending` is needed to pass preflight step 7; lane B may prefer a cleaner path.
+  - `OFFICIAL_WHATSAPP_NUMBER` lives in `libs/types/src/constants.ts` per docs-experience; the `zapbip` package path `apps/connector` and its `private: true` come from local-connector; neither is on this branch.
+  - Meta and Mintlify UI labels are from memory and unverified; the runbooks tell the owner to follow the dashboard where it differs. Whether Mintlify starts in the browser language and builds from `apps/docs` is unverified.
+  - No privacy policy page exists in `apps/docs`; Meta's Live mode needs a public URL (meta-setup step 10).
+  - `root scripts migrate:production` / `deploy:production` still pass `--env production` on this branch; lanes B and C must drop it.

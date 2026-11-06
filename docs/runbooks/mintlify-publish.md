@@ -1,0 +1,47 @@
+# Mintlify publish
+
+Set the official number, publish the npm package, connect the repository to Mintlify and serve the docs on `docs.zapbip.com` in English and Portuguese.
+
+The docs live in `apps/docs` and publish when `main` changes. The site names the official number and pins `npx zapbip@<version>`, so steps 1 and 2 come first: the deploy command refuses while either is missing, and the docs must not point at a number or a package that does not exist. The runbooks themselves are never published ([ADR 0026](../adr/0026-runbooks-live-in-the-repository-not-on-mintlify.md)).
+
+1. **Set the official number.** In `libs/types/src/constants.ts` replace the value `OFFICIAL_NUMBER_UNSET` of `OFFICIAL_WHATSAPP_NUMBER` with the production number's digits from [meta-setup.md](meta-setup.md), step 3: country code first, no plus sign, no spaces. Commit it on a branch and merge it through the normal pull request.
+
+   Expect: `grep -n OFFICIAL_WHATSAPP_NUMBER libs/types/src/constants.ts` shows the digits, and the docs snippet renders the same number with its `wa.me` link.
+
+   If it fails: the unit tests accept either the sentinel or digits; a failure means a page copied the number by hand instead of using the snippet. Fix the page, never the test.
+
+2. **Publish the npm package.** Check that the package version in `apps/connector/package.json` is the exact version the docs and skills pin as `npx zapbip@<version>`. Create an npm account at `https://www.npmjs.com/signup` with two-factor authentication and run `npm login`. Remove `"private": true` from that `package.json` in a pull request, merge it, then from the merged `main` run `pnpm --filter zapbip build`, `npm pack --dry-run` inside `apps/connector` and finally `npm publish --access public` inside `apps/connector`. Enter the one-time code when npm asks.
+
+   Expect: `npm pack --dry-run` lists only `dist/cli.js`, `README.md` and `package.json`, and `npm view zapbip@<version> version` prints the version.
+
+   If it fails: a `403` or a name conflict means the name `zapbip` is taken; stop, because every page and skill pins it. An `EOTP` error means the one-time code expired; run the publish again. A published version cannot be replaced; fix forward with a new version and update the pinned version in the docs and skills.
+
+3. **Create the Mintlify account.** Sign up at `https://mintlify.com` with the owner's email and create the project from the dashboard. Pick the plan that includes a custom domain; read the plan page for what each plan costs and decide there, since this runbook cannot know today's prices.
+
+   Expect: the dashboard shows an empty project.
+
+   If it fails: if no free plan offers the custom domain, either pay for the plan that does or keep the default Mintlify address and skip step 6; record the choice in the go-live record.
+
+4. **Connect the repository.** In the dashboard open Git Settings and install the Mintlify GitHub app on this repository only. Choose the production branch `main`. Turn on the monorepo option and set the docs path to `apps/docs`, where `docs.json` lives.
+
+   Expect: Mintlify builds the site from `apps/docs` and shows a preview address with the Get started group.
+
+   If it fails: if the build cannot find `docs.json`, check the path value. If Mintlify cannot build from a subdirectory, this runbook moves ([ADR 0026](../adr/0026-runbooks-live-in-the-repository-not-on-mintlify.md)); record it before changing anything.
+
+5. **Check the links before every merge.** From `apps/docs` run `pnpm dlx mint@4.2.1207 broken-links`. Run it again after each docs change, before merging to `main`.
+
+   Expect: the command reports no broken links.
+
+   If it fails: fix each reported link in both languages; a page and its Portuguese twin must both exist.
+
+6. **Set the domain.** In the dashboard open Settings, Custom domain, and enter `docs.zapbip.com`. Add the CNAME record it shows, as in [dns.md](dns.md), step 5, and wait for Mintlify to confirm it.
+
+   Expect: `https://docs.zapbip.com` serves the site over HTTPS.
+
+   If it fails: `dig CNAME docs.zapbip.com +short` must print Mintlify's target; if a proxy in Cloudflare hides it, switch the record to DNS only.
+
+7. **Check the languages.** Open `https://docs.zapbip.com` in a browser set to English, then in one set to Portuguese (Brazil). Use the language switcher and open a few pages in each language.
+
+   Expect: both languages exist for every page, with mirrored paths (`/` and `/pt-BR/`). If Mintlify starts the Portuguese browser in Portuguese, note that; if it does not, the switcher is the rule, and no redirect script is added.
+
+   If it fails: a missing twin page shows a 404 in one language; add the page. Language start behaviour is a Mintlify feature, so check its dashboard for a language setting before concluding it is absent.
