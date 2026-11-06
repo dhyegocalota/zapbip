@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+.pr-media/
+.playwright-mcp/
+.superpowers/
+test-results/
+playwright-report/
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+.codex/config.local.toml
+.DS_Store

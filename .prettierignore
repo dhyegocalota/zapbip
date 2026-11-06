@@ -1,0 +1,13 @@
+node_modules
+dist
+coverage
+pnpm-lock.yaml
+.pr-media
+.superpowers
+test-results
+**/_*.spec.ts
+*.md
+*.yml
+*.yaml
+*.sql
+.agents/skills

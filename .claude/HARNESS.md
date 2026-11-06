@@ -1,0 +1,224 @@
+# HARNESS — how work happens in this repo
+
+**Placement rule.** An imperative about *how to work* belongs here. A fact that *describes the system* belongs in `.claude/rules/<domain>.md`. A *decision* and its alternatives belong in `docs/adr/`. A *trap* belongs in `docs/learnings/`. A rule cites files that exist today and the versions the manifests install; when code moves or a dependency is bumped, its rule changes in the same commit (`rules.test.ts` in the `shape` gate).
+
+```
+AGENTS.md            facts and conventions, pointers to this file          (CLAUDE.md, GEMINI.md link here)
+.claude/HARNESS.md   this file: the process
+.claude/rules/       domain facts; Claude Code loads them by path, every other tool opens the ones whose globs match
+.agents/roles/       agent role bodies (one source for .claude/agents and .codex/agents)
+.agents/skills/      skills: vendored superpowers subset + feature, adr, learning, verify, check-ui, open-pr, scenario
+.agents/hooks/       hook scripts (one source for .claude/settings.json and .codex/hooks.json)
+docs/features/<slug> spec.md + plan.md + test-plan.md for every feature or fix
+docs/adr/            decisions            docs/learnings/   dated traps
+docs/scenarios/      agentic walks of the product core, one file per flow, run with /scenario
+<package>/README.md  apps/*, libs/* and tools/*: purpose only (no commands or configuration)
+scripts/verify.sh    the local gate; scripts/verify-gates.tsv maps paths to gates
+```
+
+The process is tool-agnostic. Claude Code, Codex and any agent that reads `AGENTS.md` follow the same phases; only the mechanics of spawning sub-agents differ (see Agents). Every surface has one source under `.agents/` and a thin adapter per tool ([ADR 0001](../docs/adr/0001-one-source-per-agent-surface.md)).
+
+## 0. Invariants
+
+1. Nothing is built before the owner and the agent agree on 100% of the design. Agreement is explicit, in writing, in the spec.
+2. Every feature **and every fix** gets `docs/features/<slug>/` with `spec.md`, `plan.md` and `test-plan.md`. Never one without the others. A fix's spec may be ten lines; it still exists. The docs lane (section 1) is the one exception: `spec.md` alone.
+3. Executing the test plan is the priority. A plan whose test plan is not run is not done. A behaviour-preserving refactor, a tooling change and the docs lane are the exceptions: the reviewer and `pnpm verify` prove them (sections 1 and 5).
+4. The agent that builds never runs the test plan. The tester is a different sub-agent with a fresh context.
+5. Every PR is reviewed by a reviewer sub-agent before it opens. There is always a reviewer.
+6. Every PR that touches UI carries screenshots and a playable video recorded through Playwright MCP, hosted as GitHub Release assets and embedded in the body.
+7. Every decision with alternatives becomes an ADR before the code that depends on it.
+8. Everything in the repo is in English.
+9. Tests are mandatory. No `sleep`. No `?? default`. No comments other than `// NB ADR NNNN:` pointers. See `AGENTS.md` → Code conventions.
+10. Every PR states its merge sensitivity. A sensitive PR also states its blast radius and ends with a checklist a human runs before merging (section 7).
+11. The agent repairs its own machine before it works, and never works with a blocking hook off. `.agents/hooks/doctor.sh` is the only list of the tools the harness needs; it runs at session start, as `/verify` gate 0 and on CI, and prose never repeats it. It reports; the agent asks before installing ([ADR 0004](../docs/adr/0004-the-agent-repairs-its-own-machine-doctor-reports-never-installs.md)).
+
+## 1. Agree
+
+Start with the `brainstorming` skill, always, for features and fixes alike. One question at a time. Present options with trade-offs and a recommendation; **the owner decides**. Design-system choices (components, typography, colours, chart style) are the owner's and are never picked silently. A change that adds or reshapes a screen gets a `frontend-designer` sub-agent before the plan: it writes `docs/features/<slug>/design.md` with the states, components, tokens, copy and options, and the owner's answers land there.
+
+Agreement is reached when the owner approves the written `spec.md`. "Sounds good" in chat approves writing the spec, not building.
+
+Classify the change so the depth of the spec matches the risk:
+
+| Tier | Example | Spec depth |
+|---|---|---|
+| 🟢 small | copy, one-file fix, a flag | problem, change, test list |
+| 🟡 medium | new endpoint, new MCP tool, schema change | + data flow, failure modes |
+| 🔴 structural | message routing, API keys, billing, deploy | + ADR, alternatives, rollback, spike if an assumption is unproven |
+
+A spike's code is never committed: it runs in a scratch worktree, and its answer lands in the feature folder and the ADR. When in doubt, take the heavier tier. Hidden complexity discovered mid-task upgrades the tier: stop, say so, step up.
+
+**Docs lane.** A change whose `pnpm verify --plan` class is `docs`, and that no person or agent follows step by step, may take the docs lane. Runbooks and `docs/scenarios/` are followed step by step, so they never take it. The lane is one ten-line `spec.md` that says `**Lane:** docs`, no plan, test plan or tester, one reviewer on the mid model, no security reviewer, on the class of the whole branch against `origin/main` ([ADR 0005](../docs/adr/0005-the-local-gate-runs-what-the-diff-can-break.md)). The class is necessary, never sufficient. A one-line change to code or configuration never takes it.
+
+## 2. Record
+
+A decision with alternatives → `adr` skill → `docs/adr/NNNN-<slug>.md` (template in `docs/adr/_template.md`). Record it before the dependent code exists. Supersede, never rewrite history. Link the ADR from the spec.
+
+## 3. Plan
+
+`feature` skill → copies `docs/features/_template/` to `docs/features/<slug>/`.
+
+- `spec.md`: the agreed design. Goals, non-goals, data flow, interfaces, failure handling, open questions resolved with the owner's answer.
+- `plan.md`: written with the `writing-plans` skill. Steps in `- [ ]` boxes, **all empty when authored**; a pre-ticked plan is a report of work that has not happened. Disjoint file ownership per developer sub-agent. A failure-modes table: step, what breaks, the concrete signal, how to back out. Steps with no backout are listed by name.
+- `test-plan.md`: written *before* building. Unit, E2E, Playwright MCP walk, edge cases, adversarial review, coverage honesty. Every edge case is its own checkbox stating the input and the exact expected outcome.
+
+Both plans are reviewed by a sub-agent before building (`reviewer` role, lens: "what is missing or ambiguous").
+
+## 4. Build
+
+- Work on a `feat/`, `fix/`, `docs/` or `chore/` branch, never on `main`.
+- `developer` sub-agents implement. Each owns disjoint paths named in the plan. They tick their own steps. A step that turns out wrong is struck through with the reason, not deleted.
+- `test-driven-development` skill: failing test first, confirm it fails for the right reason, minimal code, green, refactor. **Commit the failing test on its own before the implementation commit**, so the tester can prove red-first from `git log` (see [the learning](../docs/learnings/2026-10-16-commit-the-failing-test-first.md)).
+- The red commit may add a stub of the new symbol that throws `<name> is not implemented`, so `pnpm typecheck` stays green and the run reaches the named assertion. The test plan and the tester briefing record the failure text the red run actually printed, not the one expected.
+- A test that is green when it lands is a **pin**, not a red test. Its commit and its briefing row say `pin`; it never stands in for a red-first box.
+- Prettier is enforced by the `format` gate of `pnpm verify`. Run `pnpm exec prettier --write <staged files>` before every commit; Markdown and YAML are ignored by `.prettierignore`.
+- The `Co-Authored-By` trailer names the model that wrote that commit. Mixed trailers across one lane are correct; never rewrite them to match.
+- Developers may run unit tests and typecheck for their own loop. They never run `test-plan.md` and never declare the feature works.
+- When a developer finishes, it writes a **tester briefing** into `docs/features/<slug>/tester-briefing.md`: what changed, how to run it, which tests are red today and green after, and every "it works" stated as a hypothesis.
+- Stuck after three honest attempts → `systematic-debugging` skill, then escalate to the owner with evidence.
+- **Nothing temporary reaches `main`.** Spikes, prototypes, walks, notes and any scratch folder an agent creates live in the scratchpad or a throwaway worktree, never in the repository. The root holds only the entries `delivery-docs.test.ts` lists, and no path may carry a segment such as `spike`, `poc`, `scratch`, `tmp`, `playground`, `sandbox` or `wip`; a new root entry is added to that list in the same PR, where the reviewer sees it.
+- **Docs move with the code.** A change that makes a README, a `.claude/rules/` fact or the `AGENTS.md` layout wrong updates it in the same commit. A package README states purpose only, never commands, configuration or behaviour the code already shows, and links the folders it names so a rename fails CI. The `remind-docs.sh` Stop hook names the documents that describe uncommitted changes; update them or say why none applies.
+
+**Parallel lanes.** When the lead runs several developers at once:
+
+- One developer per file set, one worktree per lane. The lead's prompt gives each developer an explicit ownership list and names the files its siblings own.
+- A developer that must touch a sibling's file stops and asks the lead, or leaves the change out and notes it in the tester briefing. It never edits the file on its own.
+- Developers commit on their lane branch and never push. The lead merges the lanes and pushes.
+- Lane branches take other branches by merge, never by rebase: a rebase rewrites the red-first hashes the test plan cites.
+- When `main` moves, the lead tells each developer what landed and which of its files collide. The developer merges `main` at its next task boundary, never mid-step.
+- Two developers never do the same step. When a step was done twice anyway, reconcile the two in the merge and note it in `plan.md`; never revert either one.
+
+## 5. Prove
+
+- A `tester` sub-agent, never the developer, with a fresh context, executes `test-plan.md` end to end and ticks boxes with evidence (commit hash, log path, counts, screenshot path).
+- Browser work runs through **Playwright MCP** from the user's perspective: walk the whole flow, not the changed screen; assert what the user sees; take the unhappy paths on purpose; read console and network; cover empty, single and many; both desktop and narrow widths; multi-user flows drive each user through its own Playwright MCP server (`playwright`, `playwright-second`, all `--isolated`), never two tabs of one browser, which share the session ([ADR 0003](../docs/adr/0003-agentic-scenario-runs-with-one-browser-per-user.md)). `playwright-third` is a spare: the servers time out a call after a minute, and a role switches to the spare when one does.
+- **Playwright MCP down.** The tester drives a throwaway Playwright spec named `_walk-<slug>.spec.ts` beside the E2E suite, with a scratch copy of the Playwright configuration (without its `testIgnore` for `_*`) whose ports differ from any stack already running. It takes screenshots at 1280 and 375, compares them with the screenshots taken before the change, then deletes the spec and the config. A `_*.spec.ts` file is never committed.
+- A change that folds or deletes tests is proven with **mutation checks**: break the behaviour the dropped test covered, confirm a surviving test goes red, restore. Record each mutation and the test that caught it.
+- Edge cases are hunted during execution, not only listed upfront. New ones found go into `test-plan.md` and get a regression test.
+- Any bug found returns to Build. The tester never fixes product code.
+- A behaviour-preserving refactor lane needs no tester: the reviewer and `pnpm verify all` are the proof. A tooling change (class `tooling`) needs none either: the lead ticks the test plan with the gate output and the reviewer refutes it. A lane that changes anything the user sees always gets one.
+- `verification-before-completion` skill before anything is called done: run it, read the output, then claim it.
+
+## 6. Review
+
+- A `reviewer` sub-agent, with a fresh context, reviews the diff before the PR opens: conventions (`AGENTS.md`, `.claude/rules/`), correctness, security (API keys, account isolation on the shared number, webhook signatures, SQL binding, enumeration-safe verification responses, secrets, outbound webhook targets), performance budgets from the ADRs, and tests. It also tries to **refute** the tester: pick the three claims most likely to be wrong and attack them.
+- Output: numbered findings `CRITICAL | IMPORTANT | MINOR`, each with file:line, the rule, the production consequence and a minimal fix; then the **blast radius** (surfaces touched, who notices first, how to roll back, whether rollback loses data) and `Merge sensitivity: LOW | MEDIUM | HIGH` with a one-line reason; closing with `Ship-ready? YES | NO | WITH RESERVATIONS`.
+- A commit that claims to be formatting only is re-diffed with whitespace and quotes normalised (`git diff -w`, then Prettier on both sides) before "no behaviour change" is trusted.
+- Red-first claims are spot-checked in a throwaway worktree: check out the red commit, run the named test, compare the failure with the text the test plan records.
+- Findings are delivered in chat and fixed before the PR. The reviewer never posts to GitHub.
+- A `security-reviewer` sub-agent, fresh and read-only, then attacks the same diff with the repository's threat model (API keys, account isolation, verification, inbound and outbound webhooks, secrets and message bodies in logs, supply chain) and answers `Security verdict: CLEAR | FINDINGS | NOT APPLICABLE` ([ADR 0002](../docs/adr/0002-mechanical-security-gates-and-a-security-reviewer.md)). It runs on every diff except one in the docs lane (section 1); a `CRITICAL` or `IMPORTANT` finding goes back to Build.
+
+## 7. Ship
+
+`/open-pr` runs the gates in order and stops at the first failure:
+
+1. `/verify`: `pnpm verify` runs what the diff can break, once per commit (ADR 0005).
+2. `test-plan.md` ticked with evidence by the tester for class `product`, by the lead for class `tooling`; skipped in the docs lane.
+3. Reviewer verdict `YES` (or `WITH RESERVATIONS` acknowledged by the owner).
+3b. Security verdict `CLEAR` or `NOT APPLICABLE`; `FINDINGS` at `CRITICAL` or `IMPORTANT` goes back to Build. The verdict line goes into the PR body under `## Security`.
+4. **Visual explainer, every PR.** The body carries a `## Visual explainer` section for humans: one row per user-visible change with an annotated screenshot or a before/after pair, one sentence each, and one Mermaid diagram per data-flow change; a server-only PR states "No user-visible change" and still draws its data flow. The reviewer checks that it matches the diff. UI touched → `/check-ui` recorded: the `recorder` role captures screenshots and a `recordVideo` walk, converts with ffmpeg to `.mp4` and `.gif`, uploads to the GitHub Release `pr-media-<slug>` (pre-release) and embeds the `releases/download/...` URLs. Media stays in the git-ignored `.pr-media/`.
+5. Learnings and docs sweep (section 8, and the documents that describe every path in `git diff --name-only origin/main...HEAD`). "Nothing learned" and "no doc affected" are valid answers, stated out loud.
+6. Merge sensitivity. The reviewer's blast radius and verdict go into the PR body verbatim; a sensitive PR gets its human checklist written before the PR opens.
+7. Conventional Commit, push, `gh pr create` with `.github/pull_request_template.md`.
+8. **The gate is local** (ADR 0005). Hosted runs are not waited for: GitHub Actions does not run for this repository. Before the merge, `git fetch origin` and merge `origin/main` into the branch (never rebase), run `/verify`, post its summary as a PR comment, confirm `origin/main` is still an ancestor of the head after a fresh fetch, and merge on green; a red gate goes back to Build. `.github/workflows/` stay true to the gate through their repository-shape tests for the day hosted runs come back.
+
+9. **Scenarios before the merge.** `/open-pr` matches the diff against the `paths` of every `docs/scenarios/*.md` and names the scenarios to run with `/scenario <slug>`; the owner decides. A scenario boots the whole stack on its own ports with fake external services and walks the product's core with one browser per user, hunting edge cases; a defect it finds goes back to Build with a regression test, never an inline fix (ADR 0003).
+
+**Status.** `spec.md` carries one status line and `docs/features/README.md` one row per folder with the same status: `Draft` when the `feature` skill scaffolds the folder and adds the row, `Approved` when the owner approves the spec, `Building` at the first commit, `In review` when `/open-pr` opens the PR, `Shipped <date>` written on the branch right before the merge, with the PR link on the row. The flip is never left to a follow-up PR: a merged feature whose docs still say `Building` is what every reader of the index sees first. `tools/repository-shape/src/feature-status.test.ts` runs in the `shape` gate of every class and fails when a status leaves that vocabulary, a folder has no row or its row disagrees with the spec, or a pull request from a branch named after a folder (`<type>/<slug>`, whatever the type) was merged while the spec is not `Shipped`. Dates are the merge day in America/Sao_Paulo, the owner's zone. Every index is kept in order and checked in the `shape` gate: shipped feature rows by ship date, ADR rows by number with the record's own title, status and date, learning rows by date within their area (`document-indexes.test.ts`). Insert a row where it belongs; never append and sort later.
+
+**Merge on green.** When the owner asks to merge as soon as the gate is green, write the `Shipped` status, merge, then land the tester's ticks and evidence in a `docs` follow-up PR.
+
+
+The PR body links the feature folder, the ADRs it depends on and the learnings it produced.
+
+**Sensitive PRs.** A PR is sensitive when its tier is 🟡 or 🔴, or when the diff touches API keys or verification, account isolation, inbound or outbound webhooks, billing, schema or migrations, deploy files, data deletion or secrets handling. The reviewer decides: `Merge sensitivity: LOW | MEDIUM | HIGH`, and MEDIUM or HIGH means sensitive. Every PR body carries the verdict with its reason. A sensitive PR also carries a **Blast radius** section (what can break and for whom, who notices first, how to roll back, whether rollback loses data) and ends with a **Human checklist**: the checks a person runs by hand before merging, one box each, concrete enough to execute without the agent (open X as Y, expect Z; run the rollback once; confirm the migration on a copy of production data). The agent writes the checklist, never ticks it, and never lowers the reviewer's verdict.
+
+## 8. Learn
+
+`learning` skill → `docs/learnings/YYYY-MM-DD-<slug>.md`:
+
+```
+# <Trap, stated as the symptom you will see again>
+- Date: YYYY-MM-DD
+- Inspired by: <ADR, PR, test, incident or doc that surfaced it>
+- Revisited: YYYY-MM-DD — <still true | changed because …>   (append one line per revisit)
+
+## Signal   what you actually see when it bites
+## Cause    one paragraph
+## Do       the move that avoids it
+## Anchor   file paths, commits, test names
+```
+
+Write one immediately when: diagnosis took more than fifteen minutes; a failure the failure-modes table did not predict; a doc or vendor API contradicted reality; a hook surprised you. Revisit every learning touched by a change and append the `Revisited` line. Promote in the same change that taught you: a fact → `rules/`, a process → this file, a mechanical check → a hook, a repeatable procedure → a skill. `docs/learnings/README.md` indexes by area.
+
+## 8b. Context economy
+
+Tokens are spent where judgment is needed, not on re-reading documents.
+
+- The orchestrating agent does not read `plan.md` or `test-plan.md` in full on its own initiative. It reads the section it is about to act on, or the status summary at the top, and hands sub-agents the exact excerpt they need inside the prompt.
+- `developer` receives its group's steps in the prompt and the spec sections they depend on. It does not open the whole plan, the test plan or other features' folders.
+- `tester` reads `test-plan.md` because executing it is the job, plus `tester-briefing.md`. It does not read `plan.md`.
+- `reviewer` reads the diff, `spec.md` and the ticked summary of `test-plan.md`. It opens `plan.md` only to check a struck-through step.
+- `researcher` reads code, rules, ADR titles and learnings index; it opens an ADR or learning body only when its title matches the task.
+- Domain rules in `.claude/rules/` load by `paths:` globs in Claude Code; other tools open the rules whose globs match the files they edit, as `AGENTS.md` says. The globs never match `docs/**`, so planning work does not pull them in.
+- Bulk output (test runs, logs, sweeps) runs in a sub-agent that reports failures only. Small tasks that fit in three tool calls run inline; a sub-agent costs a full prompt before its first call.
+- Status lives in one line at the top of `spec.md` and in the ticked boxes; nobody rewrites a summary that a `grep -c "\[x\]"` can produce.
+
+## 9. Agents
+
+Role bodies live in `.agents/roles/<role>.md`, one source. Claude Code reads the thin wrappers in `.claude/agents/`; Codex reads `.codex/agents/*.toml` (`features.multi_agent`). Any other tool: open the role file and paste it as the sub-agent's instructions.
+
+| Role | Context | Owns | Never |
+|---|---|---|---|
+| `researcher` | read-only | finds reusable code, affected files, patterns, risks | writes code |
+| `frontend-designer` | writes design docs only | `design.md`: screens and states, components, tokens, copy, accessibility, options with a recommendation | writes product code, picks a design-system choice for the owner |
+| `developer` | writes | disjoint paths named in the plan, unit tests, tester briefing | runs the test plan, claims it works |
+| `tester` | fresh | executes `test-plan.md`, Playwright MCP walks, evidence, edge-case hunting | fixes product code |
+| `reviewer` | fresh, read-only | conventions, security, refutation, verdict | posts to GitHub |
+| `security-reviewer` | fresh, read-only | attacks the diff: API keys, account isolation, verification, webhooks, secrets, supply chain | posts to GitHub, fixes code |
+| `recorder` | writes media only | screenshots, video, ffmpeg, release upload, PR embeds | touches code |
+
+Routing: bulk reading and sweeps → cheapest model; implementing a decided design → mid model; architecture, security review, "is this right" → strongest model. Small tasks that fit in three tool calls run inline.
+
+## 10. Skills and commands
+
+| Name | Kind | Use |
+|---|---|---|
+| `brainstorming` | skill (vendored) | every feature or fix starts here |
+| `writing-plans` | skill (vendored) | produces `plan.md` from an approved spec |
+| `executing-plans` / `subagent-driven-development` | skill (vendored) | runs the plan through developer sub-agents |
+| `test-driven-development` | skill (vendored) | red → green → refactor |
+| `systematic-debugging` | skill (vendored) | when stuck |
+| `verification-before-completion` | skill (vendored) | before any "done" |
+| `feature` | skill | scaffolds `docs/features/<slug>/` |
+| `adr` | skill | scaffolds a numbered ADR |
+| `learning` | skill | records or revisits a learning |
+| `/verify` | skill | `pnpm verify`: what the diff can break, once per commit, stop at first failure |
+| `/check-ui` | skill | Playwright MCP walk, screenshots, video, release upload |
+| `/open-pr` | skill | the Ship gates, then the PR |
+| `/scenario` | skill | boots the stack on its own ports and walks one `docs/scenarios/<slug>.md` with one Playwright MCP server per user |
+
+Vendored skills come from superpowers 6.4.1 (MIT); the `metadata` block in each `SKILL.md` says what was changed. Claude Code invokes a skill as `/<name>` with `$ARGUMENTS`; Codex as `$<name>` followed by the arguments in plain text.
+
+## 11. Autonomy contract
+
+**Decide alone:** file names inside the agreed layout, test names, internal helper shapes, the order of plan steps, which sub-agent model to use.
+**Ask first:** anything in the spec, anything visible to the user, design-system choices, dependencies added, installing a tool on the machine (the doctor's fix: lines), schema changes, deleting data, commits and pushes, anything that costs money (LLM batch runs, deploys).
+**Never:** edit `.env*`, `git add -A`, `--no-verify`, commit on `main`, post review findings to GitHub, mark a test-plan box without evidence, tick a human checklist box, lower a reviewer's merge sensitivity, call something done without running it.
+
+## 12. Enforcement
+
+| Hook | Event | Effect |
+|---|---|---|
+| `guard-secrets.sh` | PreToolUse Edit/Write | blocks edits to `.env*` except `*.example` |
+| `guard-git-add-all.sh` | PreToolUse Bash | blocks `git add -A`, `git add .`, `--no-verify` |
+| `guard-verify-records.sh` | PreToolUse Bash, Edit/Write | blocks writing records of green commits by hand; only `scripts/verify.sh` writes them (ADR 0005) |
+| `doctor.sh` | SessionStart; `/verify` gate 0; CI `checks` | prints one line per tool the harness needs (`ok`, `missing` or `skipped`, required or optional, what is lost, the `fix:` for this platform's package manager); exit 1 when a required tool is missing. The session hooks force exit 0 so the report reaches the context |
+| `warn-conventions.sh` | PostToolUse Edit/Write | warns on `?? `, `.js'` imports, `sleep`, comments other than `// NB ADR NNNN:`, `else {` in `.ts`/`.tsx` |
+| `remind-docs.sh` | Stop | names the nearest README and the `.claude/rules/` files whose globs match each uncommitted change, when those documents did not change; each document once until the next commit |
+
+The scripts live in `.agents/hooks/` and read the tool input from stdin, in the shape both tools send (`tool_input.file_path` from Claude Code, `apply_patch` headers in `tool_input.command` from Codex). Claude Code wires them in `.claude/settings.json`, Codex in `.codex/hooks.json`; `pnpm test:hooks` runs `.agents/hooks/hooks.test.sh` against both shapes and is part of `pnpm test:unit`. The two guards exit 2 with the doctor's fix line when `jq` is absent; a guard that becomes a no-op is not a guard.
+
+Only unambiguous rules block. Judgment calls warn; a hook that fires on judgment calls trains you to ignore hooks. `remind-docs.sh` is the one judgment hook that blocks, because a warning at Stop never reaches the model: it names each document once until the next commit, never blocks a stop that is already continuing, and the agent may answer that nothing applies.
+
+`scripts/verify.test.sh`, part of `pnpm test:unit`, pins the map from paths to gates, the unit packages and the records of green commits. CI holds the mechanical half: `tools/repository-shape/src/delivery-docs.test.ts` fails when any README links a file or heading that no longer exists, or when a workspace package has no README. `agent-surfaces.test.ts` fails when a role under `.agents/roles/` lacks its Claude Code wrapper, its Codex wrapper or its Codex registration. `feature-status.test.ts` fails when a feature's status line, its index row and the merge history disagree (section 7 → Status). The `security` job of `verify.yml` audits production dependencies at `high` (`pnpm security:audit`) and scans every commit on every branch and tag plus the checked-out tree with a checksum-pinned gitleaks binary, after `.github/scripts/secret-rules-probe.sh` proves the rules fire on a fresh token and stay silent on a shipped placeholder (`.gitleaks.toml` allowlists the exact placeholder strings, anchored); the repository's Dependabot alerts and automated security fixes are on, so a PR opens only for a vulnerable dependency with a fix ([ADR 0002](../docs/adr/0002-mechanical-security-gates-and-a-security-reviewer.md)).
