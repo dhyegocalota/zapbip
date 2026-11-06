@@ -84,6 +84,8 @@ export default async function setup(project: TestProject): Promise<() => Promise
       'exec',
       'wrangler',
       'dev',
+      '--env',
+      'development',
       '--ip',
       LOOPBACK_HOST,
       '--port',

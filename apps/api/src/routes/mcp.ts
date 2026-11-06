@@ -5,8 +5,9 @@ import type { Bindings } from '../contract/env';
 import { LogEvent } from '../contract/log';
 import { logEvent } from '../log';
 import { BEARER_PREFIX, MCP_METHODS } from '../mcp/constants';
-import { resolveConnection } from '../mcp/resolve-connection';
+import { resolveConnection } from './resolve-connection';
 import { createConnectionServer } from '../mcp/server';
+import { HttpStatus } from './http-status';
 
 type McpContext = Context<{ Bindings: Bindings }>;
 
@@ -23,7 +24,7 @@ async function serveMcp(input: { context: McpContext; secret: string | null }): 
   const resolved = await resolveConnection({ database: context.env.CONNECTIONS, secret });
   if (!resolved) {
     logEvent({ event: LogEvent.AuthRejected });
-    return context.json(UNAUTHORIZED_BODY, 401);
+    return context.json(UNAUTHORIZED_BODY, HttpStatus.Unauthorized);
   }
   const server = createConnectionServer({ resolved, environment: context.env });
   const transport = new WebStandardStreamableHTTPServerTransport({ enableJsonResponse: true });

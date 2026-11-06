@@ -175,17 +175,17 @@ describe('assertHttpsLink', () => {
 
   test('CU-28 http', async () => {
     const error = await captureInboxError(() => assertHttpsLink({ value: 'http://example.com/a.pdf' }));
-    expect(error).toEqual(invalidInput('link: must be an https URL'));
+    expect(error).toEqual(invalidInput('url: must be an https URL'));
   });
 
   test('CU-29 other scheme', async () => {
     const error = await captureInboxError(() => assertHttpsLink({ value: 'ftp://example.com/a.pdf' }));
-    expect(error).toEqual(invalidInput('link: must be an https URL'));
+    expect(error).toEqual(invalidInput('url: must be an https URL'));
   });
 
   test('not a URL', async () => {
     const error = await captureInboxError(() => assertHttpsLink({ value: 'example' }));
-    expect(error).toEqual(invalidInput('link: must be an https URL'));
+    expect(error).toEqual(invalidInput('url: must be an https URL'));
   });
 });
 
@@ -202,6 +202,11 @@ describe('assertMediaFits', () => {
   test('CU-32 image with a video type', async () => {
     const error = await captureInboxError(() => assertMediaFits({ kind: MessageKind.Image, mimeType: 'video/mp4', sizeBytes: 1000 }));
     expect(error).toEqual(invalidInput('mime_type: image must be an image/* type'));
+  });
+
+  test('image with an svg type', async () => {
+    const error = await captureInboxError(() => assertMediaFits({ kind: MessageKind.Image, mimeType: 'image/svg+xml', sizeBytes: 1000 }));
+    expect(error).toEqual(invalidInput('mime_type: image must not be image/svg+xml'));
   });
 
   test('CU-33 audio with a video type', async () => {

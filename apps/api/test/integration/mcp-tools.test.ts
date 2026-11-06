@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { HISTORY_LIMIT, ASK_MAX_WAIT_SECONDS } from '@zapbip/core';
 import { DeliveryState, InboxStatus, MessageKind, ReplyStatus } from '@zapbip/types';
+import { CONNECTION_SECRET_PREFIX } from '../../src/contract/constants';
 import { McpToolName, TOOL_DEFINITIONS } from '../../src/contract/tool-definitions';
 import { messageWireSchema } from '../../src/contract/mcp-schemas';
 import {
@@ -117,7 +118,7 @@ describe('MCP tools', () => {
   it('rejects a plain http link', async () => {
     const result = await call({ name: McpToolName.SendMedia, arguments: { kind: MessageKind.Image, url: 'http://example.com/a.jpg' } });
     expect(result.isError).toBe(true);
-    expect(result.content[0]?.text).toBe('link: must be an https URL');
+    expect(result.content[0]?.text).toBe('url: must be an https URL');
   });
 
   it.each([
@@ -296,8 +297,8 @@ describe('MCP tools', () => {
     });
     const uploadUrl = String(result.structuredContent?.upload_url);
     expect(result.structuredContent?.upload_id).toBeTruthy();
-    expect(uploadUrl).toContain('/c/');
-    expect(uploadUrl).toContain('/u/');
+    expect(uploadUrl).toContain(`/u/${ACCOUNT_ID}/${result.structuredContent?.upload_id}`);
+    expect(JSON.stringify(result)).not.toContain(CONNECTION_SECRET_PREFIX);
     expect(uploadUrl).toContain('exp=');
     expect(uploadUrl).toContain('sig=');
     expect(String(result.structuredContent?.expires_at)).toMatch(ISO_TIMESTAMP_PATTERN);

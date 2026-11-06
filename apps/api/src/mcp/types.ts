@@ -8,7 +8,6 @@ export type MessageWire = z.infer<typeof messageWireSchema>;
 
 export type ToolContext = {
   connection: ConnectionIdentity;
-  secret: string;
   origin: string;
   accountInbox: AccountInboxRpc;
   mediaStore: MediaStore;

@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "zapbip-api",
-  "main": "src/index.dev.ts",
+  "main": "src/index.ts",
   "compatibility_date": "2026-08-15",
   "compatibility_flags": ["nodejs_compat"],
   "durable_objects": {
@@ -19,10 +19,10 @@
   "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "zapbip-media" }],
   "analytics_engine_datasets": [{ "binding": "WAKE_METRICS", "dataset": "zapbip_wake" }],
   "rules": [{ "type": "Text", "globs": ["**/*.sql"], "fallthrough": true }],
-  "vars": { "PUBLIC_ORIGIN": "http://localhost:8787" },
+  "vars": { "PUBLIC_ORIGIN": "https://mcp.zapbip.com" },
   "env": {
-    "production": {
-      "main": "src/index.ts",
+    "development": {
+      "main": "src/index.dev.ts",
       "vars": { "PUBLIC_ORIGIN": "http://localhost:8787" },
       "migrations": [{ "tag": "v1", "new_sqlite_classes": ["AccountInbox"] }],
       "durable_objects": {
