@@ -26,3 +26,9 @@ A `Proposed` ADR moves to `Accepted` by editing its status line and date. Any ot
 | [0003](0003-agentic-scenario-runs-with-one-browser-per-user.md) | Agentic scenario runs with one Playwright MCP server per user | Accepted | 2026-11-04 |
 | [0004](0004-the-agent-repairs-its-own-machine-doctor-reports-never-installs.md) | The agent repairs its own machine: a doctor reports at session start and never installs | Accepted | 2026-11-04 |
 | [0005](0005-the-local-gate-runs-what-the-diff-can-break.md) | The local gate runs what the diff can break | Accepted | 2026-11-04 |
+| [0006](0006-one-secret-per-connection-in-the-mcp-url.md) | One secret per connection in the MCP URL | Accepted | 2026-11-06 |
+| [0007](0007-a-durable-inbox-and-a-wake-ladder.md) | A durable inbox and a wake ladder | Accepted | 2026-11-06 |
+| [0008](0008-a-pure-core-behind-ports.md) | A pure core behind ports | Accepted | 2026-11-06 |
+| [0009](0009-cloudflare-workers-with-one-durable-object-per-account.md) | Cloudflare Workers with one Durable Object per account | Accepted | 2026-11-06 |
+| [0010](0010-public-docs-on-mintlify.md) | Public docs on Mintlify | Accepted | 2026-11-06 |
+| [0011](0011-the-24-hour-window-queues-and-sends-one-notice.md) | The 24-hour window queues messages and sends one notice | Accepted | 2026-11-06 |

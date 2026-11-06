@@ -24,3 +24,4 @@ One row per folder, in the order the features ship; a row that turns `Shipped <d
 
 | Feature | Delivers | Status |
 |---------|----------|--------|
+| [`agent-inbox-core`](agent-inbox-core/) | The core, the durable inbox per account, the MCP contract, the 24-hour window, routing and media, against a fake WhatsApp | Building |
