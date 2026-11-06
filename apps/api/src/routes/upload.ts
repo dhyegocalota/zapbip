@@ -9,6 +9,7 @@ import { readSignedQuery, verifyLink } from '../signing';
 import { LinkPurpose } from '@zapbip/types';
 import { accountInboxOf } from './account-inbox-stub';
 import { ERROR_STATUS, HttpStatus } from './http-status';
+import { trackClientFailure } from './track-client-failure';
 
 const CONTENT_LENGTH_PATTERN = /^\d+$/;
 
@@ -17,7 +18,7 @@ export const uploadRoutes = new Hono<{ Bindings: Bindings }>();
 uploadRoutes.put('/u/:account_id/:upload_id', async (context) => {
   const accountId = context.req.param('account_id');
   const uploadId = context.req.param('upload_id');
-  const signedQuery = readSignedQuery({ expiry: context.req.query('exp'), signature: context.req.query('sig') });
+  const signedQuery = readSignedQuery({ expiries: context.req.queries('exp'), signatures: context.req.queries('sig') });
   const clock = createPlatformClock();
   const isSignatureValid =
     signedQuery !== null &&
@@ -57,19 +58,22 @@ uploadRoutes.put('/u/:account_id/:upload_id', async (context) => {
   if (!claim.ok) return context.json({ error: claim.errorCode, message: claim.message }, ERROR_STATUS[claim.errorCode]);
 
   const mediaStore = mediaStoreOf({ bindings: context.env, clock });
+  const tracked = trackClientFailure({ body, sizeBytes: declaredLength });
   try {
     await mediaStore.put({
       accountId,
       mediaId: uploadId,
-      body,
+      body: tracked.stream,
       sizeBytes: declaredLength,
       mimeType: description.value.mimeType,
     });
   } catch (error) {
-    await inbox.releaseUpload({ mediaId: uploadId });
+    await inbox.releaseUpload({ mediaId: uploadId, claimedAt: claim.value.claimedAt });
+    const isClientAbort = tracked.clientFailure.occurred;
+    if (isClientAbort) return context.json({ error: 'upload_incomplete' }, HttpStatus.BadRequest);
     throw error;
   }
-  const completion = await inbox.completeUpload({ mediaId: uploadId });
+  const completion = await inbox.completeUpload({ mediaId: uploadId, claimedAt: claim.value.claimedAt });
   if (!completion.ok) return context.json({ error: completion.errorCode, message: completion.message }, ERROR_STATUS[completion.errorCode]);
   logEvent({ event: LogEvent.Upload, accountId, sizeBytes: declaredLength });
   return context.json({ upload_id: uploadId }, HttpStatus.Created);

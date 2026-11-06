@@ -148,6 +148,7 @@ A routing list is pending for `ROUTING_LIST_TTL_MS` (10 minutes). Its message id
 
 - **While it is pending**, a new message that matches none of rules 1 to 4 joins the held batch and sends no new list. The owner gets one reminder per batch, a reply to the list ("Pick the agent in the list above"). A message that matches a rule from 1 to 4 is routed and never held.
 - **On expiry** the alarm runs it as a due-time provider. If an agent wrote within the window (rule 5), the held batch is delivered to it in order. Otherwise the list is sent once more. After a second expiry the batch stays unread for the last agent seen.
+- **An expiry assignment tells the owner which agent got the batch** ("You did not pick an agent, so your message went to beta"); the "not listening" notice is only for an agent the owner picked. A resend that fails to send keeps the list's resend flag and moves its due time forward, so the alarm never fires in a loop. An unknown-agent tap resends the list but keeps its opening time, reminder and resend flag.
 - **A tap** on a list whose batch was already routed is answered with "That list was already used." A tap naming an unknown agent while the batch is still held sends the current list again.
 
 Media:
@@ -213,7 +214,7 @@ Constants (in `libs/core`, named, never inline):
 | Durable Object evicted mid-wait | The client's call ends; state is in SQLite; the retry recovers through `question_id` |
 | Upload without `Content-Length`, larger than declared, wrong type or after expiry | `411` / `413` / `415` / `410`; nothing stored |
 | Upload with a `Content-Length` that is not an integer | `400`; nothing stored |
-| Two concurrent PUTs of one upload | the first claims it in the Durable Object; the second answers `409` and never writes to R2; a failed write releases the claim |
+| Two concurrent PUTs of one upload | the first claims it in the Durable Object; the second answers `409` and never writes to R2; the claim lasts the whole life of the upload (`UPLOAD_CLAIM_TTL_MS` = `UPLOAD_TTL_MS`) and completion and release only count with the matching `claimedAt`; a failed write releases the claim: an R2 failure answers `5xx`, a client abort `400` |
 | Expired or forged media link | `403` |
 | Invalid tool input | an MCP tool error naming the field and the WhatsApp limit |
 | Owner message matches no agent | rule 6: the agent list; with no agents, one text notice and the message is held; an unanswered list expires after `ROUTING_LIST_TTL_MS` |
@@ -244,7 +245,7 @@ Per-account data lives in the `AccountInbox` Durable Object's SQLite. D1 holds o
   - `v2` (`webhook-wake`): `agent_wake` gains `provider`, `host`, `sealed_target`, `key_version`, `status`, `last_delivered_at`; table `wake_jobs`.
   - `v3` (`scheduled-wake`): `agent_wake` gains `interval_minutes`, `standby_agent`, `poller_stale_notified`; `inbox_messages` gains `handed_to`; index `inbox_messages_unread`.
 - The `agent_wake` row (mode `None`, `last_polled_at` set to now) is written on the agent's first contact, in the same call that registers the agent in its inbox.
-- One alarm per object. `alarm()` catches every error, runs the due work of the expiry sweep, wake jobs and poller checks in that order, and re-arms the alarm to the earliest deadline any of them reports.
+- One alarm per object. `alarm()` catches every error, runs the due work of the expiry sweep, wake jobs and poller checks in that order, and re-arms the alarm to the earliest deadline any of them reports. The alarm is never moved later: a tool call re-arms it at the earliest due time, but an alarm already armed earlier stays, so an agent polling faster than the five-second minimum delay cannot postpone a due expiry.
 - `sweepExpired({now})` expires media, questions and queued messages. The alarm runs it; no cron runs in slice 1.
 
 ### Docs (Mintlify, `apps/docs`)
@@ -299,9 +300,9 @@ The E2E gate that [ADR 0005](../../adr/0005-the-local-gate-runs-what-the-diff-ca
 | Routing list lifetime | no expiry · expiry with a fallback | the list is pending for `ROUTING_LIST_TTL_MS` (10 minutes); on expiry the batch goes to the rule 5 agent, else the list is sent once more, and after a second expiry the batch stays unread for the last agent seen | owner delegated 2026-11-06 |
 | Open list lookup | scan the messages · a column | the open list's message id is recorded in the `owner_window` row (v1 is not deployed, so `v1.sql` is edited) | owner delegated 2026-11-06 |
 | Used-list copy | "expired" · "already used" | `RoutingListExpired` reads "Essa lista já foi usada." / "That list was already used."; a tap naming an unknown agent while the batch is held sends the current list again | owner delegated 2026-11-06 |
-| Concurrent upload PUTs | claim in the route · claim in the object | the object claims the upload atomically (`uploading`) before the R2 write; the loser answers `409` | owner delegated 2026-11-06 |
-| Media types | compare as sent · normalise | lowercase and drop parameters before every check; `image/SVG+XML` and `image/svg+xml;x=1` are not images | owner delegated 2026-11-06 |
-| Production D1 id | local id · placeholder | the top-level `database_id` is `REPLACE_WITH_PRODUCTION_D1_DATABASE_ID`; deploy preflight replaces it | owner delegated 2026-11-06 |
+| Concurrent upload PUTs | claim in the route · claim in the object | the object claims the upload atomically (`claimed_at`) before the R2 write; the loser answers `409`; the claim lasts the whole life of the upload (`UPLOAD_CLAIM_TTL_MS` = `UPLOAD_TTL_MS`); completion and release only count with the matching `claimedAt`; an R2 failure answers `5xx` and a client abort answers `400`, both release the claim | owner delegated 2026-11-06 |
+| Media types | compare as sent · normalise | lowercase and drop parameters before every check; `image/SVG+XML` and `image/svg+xml;x=1` are not images; the normalised type must also be a `type/subtype` token (RFC 6838 characters only), so `image/svg+xml,image/png` is invalid input | owner delegated 2026-11-06 |
+| Production D1 id | local id · placeholder | the top-level `database_id` is `REPLACE_WITH_PRODUCTION_D1_DATABASE_ID`; `wrangler deploy` rejects it until the owner replaces it with the created database id | owner delegated 2026-11-06 |
 | Notice quick reply | routed to an agent · window only | a tap on the notice's quick reply only opens the window and flushes the queue; it is never delivered to an agent | owner delegated 2026-11-06 |
 | Development clock offset | in memory · in Durable Object storage | the offset is stored in Durable Object storage, so it survives a restart | owner delegated 2026-11-06 |
 | Media port | remove `put` · keep, with a known length | `put` has two callers at the edge (the upload route and the simulator); it takes `sizeBytes` because R2 needs a known length | owner delegated 2026-11-06 |

@@ -11,8 +11,9 @@ export async function wakeAgent(input: {
   unreadBefore: number;
   answeredQuestionId: string | null;
   shouldTellOwner: boolean;
+  isExpiry: boolean;
 }): Promise<void> {
-  const { dependencies, ownerLocale, agent, unreadBefore, answeredQuestionId, shouldTellOwner } = input;
+  const { dependencies, ownerLocale, agent, unreadBefore, answeredQuestionId, shouldTellOwner, isExpiry } = input;
   const { waiters, waker, ids } = dependencies;
   const hasLiveWaiter = waiters.hasLiveWaiter({ agent, questionId: answeredQuestionId });
   if (answeredQuestionId === null) waiters.resolveAgentMessage({ agent });
@@ -21,7 +22,8 @@ export async function wakeAgent(input: {
   if (hasLiveWaiter || !isNewBatch) return;
   const outcome = await waker.notify({ agent, reason: AgentWakeReason.MessageWaiting });
   if (outcome === WakeOutcome.Woken || !shouldTellOwner) return;
-  const text = renderCopy({ key: InboxCopyKey.AgentNotListening, locale: ownerLocale, values: { agent } });
+  const key = isExpiry ? InboxCopyKey.AgentAssignedByExpiry : InboxCopyKey.AgentNotListening;
+  const text = renderCopy({ key, locale: ownerLocale, values: { agent } });
   await deliverToOwner({
     dependencies,
     ownerLocale,

@@ -2,8 +2,7 @@ import { DeliveryState, InboxErrorCode, MediaSourceKind, MessageKind } from '@za
 import { describe, expect, test } from 'vitest';
 import type { MediaSource } from '../message';
 import { captureInboxError } from '../testing/capture-inbox-error';
-import { connectionOf, createEnvironment } from '../testing/fixtures';
-import { completeUpload } from './complete-upload';
+import { connectionOf, createEnvironment, receiveUpload } from '../testing/fixtures';
 import { createUpload } from './create-upload';
 import { sendMedia } from './send-media';
 import type { SendMediaInput } from './types';
@@ -36,7 +35,7 @@ async function receivedUpload(input: { environment: Environment; mimeType: strin
     mimeType: input.mimeType,
     sizeBytes: input.sizeBytes,
   });
-  await completeUpload({ dependencies: input.environment.dependencies, mediaId: uploadId });
+  await receiveUpload({ environment: input.environment, mediaId: uploadId });
   return uploadId;
 }
 

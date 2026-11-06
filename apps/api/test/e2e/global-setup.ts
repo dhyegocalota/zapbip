@@ -10,7 +10,7 @@ import { promisify } from 'node:util';
 import { SECOND_MS } from '@zapbip/types';
 import type { TestProject } from 'vitest/node';
 import { z } from 'zod';
-import { HEALTH_PATH } from '../../src/contract/constants';
+import { DEVELOPMENT_ENVIRONMENT, HEALTH_PATH } from '../../src/contract/constants';
 
 const runCommand = promisify(execFile);
 const HEALTH_TIMEOUT_MS = 30 * SECOND_MS;
@@ -72,7 +72,7 @@ export default async function setup(project: TestProject): Promise<() => Promise
     'apply',
     DATABASE_BINDING,
     '--env',
-    'development',
+    DEVELOPMENT_ENVIRONMENT,
     '--local',
     ...persistArguments,
   ]);
@@ -96,7 +96,7 @@ export default async function setup(project: TestProject): Promise<() => Promise
       'wrangler',
       'dev',
       '--env',
-      'development',
+      DEVELOPMENT_ENVIRONMENT,
       '--ip',
       LOOPBACK_HOST,
       '--port',

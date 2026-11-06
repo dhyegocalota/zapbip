@@ -2,6 +2,7 @@ import { experimental_readRawConfig as readRawWranglerConfig, unstable_readConfi
 import { describe, expect, it } from 'vitest';
 import { BUDGET_CHECK_CRON, MEDIA_RETENTION_CRON, PLACEHOLDER_VALUE_PREFIX } from '../../src/operations/constants';
 import { DeployEnvironment } from '../../src/operations/deploy-environment';
+import { DEVELOPMENT_ENVIRONMENT } from '../../src/contract/constants';
 
 const WRANGLER_CONFIG_PATH = 'wrangler.jsonc';
 const PRODUCTION_DATABASE_ID_PLACEHOLDER = 'REPLACE_WITH_PRODUCTION_D1_DATABASE_ID';
@@ -62,7 +63,7 @@ describe('wrangler config', () => {
     expect(vars.PUBLIC_ORIGIN).toMatch(/^https:\/\//);
   });
 
-  it('the production D1 database id is a placeholder that deploy preflight must replace', () => {
+  it('the production D1 database id is a placeholder that must be replaced before a deploy', () => {
     expect(databaseIdsOf({})).toEqual([PRODUCTION_DATABASE_ID_PLACEHOLDER]);
   });
 
