@@ -15,9 +15,10 @@ import {
   type WorkerFacts,
   wranglerCommand,
 } from '../src/operations/deploy-preflight';
+import { createApp } from '../src/app';
 import { parseJsonOrNull } from '../src/operations/json-text';
 import { createTerminalShell } from '../src/operations/terminal-shell';
-import { inspectWorkerSource } from '../src/operations/worker-facts';
+import { inspectWorker } from '../src/operations/worker-facts';
 
 const WRANGLER_CONFIG_PATH = join(import.meta.dirname, '../wrangler.jsonc');
 const SOURCE_ROOT = join(import.meta.dirname, '../src');
@@ -157,7 +158,7 @@ async function main(): Promise<void> {
       environment,
       firstDeploy: values['first-deploy'] === true,
       block: readDeployBlock({ environment }),
-      workerFacts: await inspectWorkerSource({ sourceRoot: SOURCE_ROOT }),
+      workerFacts: await inspectWorker({ sourceRoot: SOURCE_ROOT, app: createApp({ extraRoutes: [] }) }),
       shell: createTerminalShell({}),
       prompt: { ask: ({ question }) => lineReader.question(question) },
       isInteractive: process.stdin.isTTY === true,
