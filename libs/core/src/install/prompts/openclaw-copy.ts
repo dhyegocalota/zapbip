@@ -19,7 +19,7 @@ export const OPENCLAW_COPY = localizeCopy({
       standbyAgent: section.standbyAgent,
       steps: [
         `Add \`mcp.servers.zapbip\` with \`transport: "streamable-http"\` and the URL ${section.connectionLink}.`,
-        `Preferred: run \`openclaw plugins install @zapbip/openclaw-plugin\` and set \`channels.zapbip.connectionLink\` to ${section.connectionLink}. The plugin is the listener, with no time limit. If it works, call \`set_wake({mode: "local"})\` and go to the last step.`,
+        `Preferred: run \`openclaw plugins install @zapbip/openclaw-plugin --force --accept-capabilities\` and set \`channels.zapbip.connectionLink\` to ${section.connectionLink}. The plugin is the listener, with no time limit. If it works, call \`set_wake({mode: "local"})\` and go to the last step.`,
         `Only if the plugin cannot be installed, and never together with it: with the automations tool create a job that runs every minute (\`every 1m\`) and calls \`check_inbox\`, then call \`set_wake({mode: "scheduled", interval_minutes: ${HEARTBEAT_POLL_INTERVAL_MINUTES}})\`.`,
         tellOwner(text.pollCost),
         chatSelfTest(section.locale),

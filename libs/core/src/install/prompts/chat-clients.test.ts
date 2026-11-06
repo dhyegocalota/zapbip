@@ -104,8 +104,8 @@ describe('Hermes allowlist', () => {
 describe('Hermes and OpenClaw confirmed install steps', () => {
   test('F4 Hermes names the plugin folder, the enable key and both environment variables', () => {
     const text = renderHermesSection(sectionInput({ locale }));
-    expect(text).toContain('~/.hermes/plugins/zapbip');
-    expect(text).toContain('plugins.enabled');
+    expect(text).toContain('importable by Hermes');
+    expect(text).not.toContain('plugins.enabled');
     expect(text).toContain(`ZAPBIP_CONNECTION_LINK=${CONNECTION_LINK}`);
     expect(text).toContain('ZAPBIP_ALLOWED_USERS=owner');
     expect(text).toContain('zapbip-platform');
@@ -113,7 +113,7 @@ describe('Hermes and OpenClaw confirmed install steps', () => {
 
   test('F4 OpenClaw installs the published package and sets the connection link on the channel', () => {
     const text = renderOpenClawSection(sectionInput({ locale }));
-    expect(text).toContain('openclaw plugins install @zapbip/openclaw-plugin');
+    expect(text).toContain('openclaw plugins install @zapbip/openclaw-plugin --force --accept-capabilities');
     expect(text).toContain('channels.zapbip.connectionLink');
     expect(text).toContain(CONNECTION_LINK);
   });
