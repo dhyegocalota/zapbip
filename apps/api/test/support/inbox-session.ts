@@ -65,3 +65,15 @@ export function registerDueTimeProvider(input: { stub: DurableObjectStub<Account
     internalsOf(instance).dueTimeProviders.push(input.provider);
   });
 }
+
+export function replaceTemplate(input: {
+  stub: DurableObjectStub<AccountInbox>;
+  template: FakeWhatsAppSender['template'];
+}): Promise<FakeWhatsAppSender['template']> {
+  return runInDurableObject(input.stub, (instance) => {
+    const internals = internalsOf(instance);
+    const original = internals.sender.template;
+    internals.sender.template = input.template;
+    return original;
+  });
+}

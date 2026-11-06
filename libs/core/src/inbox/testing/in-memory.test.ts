@@ -52,7 +52,9 @@ describe('in-memory repository', () => {
 
   test('the notice can be claimed by exactly one of two concurrent callers', async () => {
     const environment = await createEnvironment();
-    await environment.repository.saveWindow({ window: { lastOwnerMessageAt: null, noticeSentForClosedWindow: false } });
+    await environment.repository.saveWindow({
+      window: { lastOwnerMessageAt: null, noticeSentForClosedWindow: false, noticeRetryLocale: null },
+    });
     const claims = await Promise.all([environment.repository.claimNotice(), environment.repository.claimNotice()]);
     expect(claims.slice().sort()).toEqual([false, true]);
   });
@@ -60,7 +62,9 @@ describe('in-memory repository', () => {
   test('a fresh window can be claimed again', async () => {
     const environment = await createEnvironment();
     expect(await environment.repository.claimNotice()).toBe(true);
-    await environment.repository.saveWindow({ window: { lastOwnerMessageAt: 1, noticeSentForClosedWindow: false } });
+    await environment.repository.saveWindow({
+      window: { lastOwnerMessageAt: 1, noticeSentForClosedWindow: false, noticeRetryLocale: null },
+    });
     expect(await environment.repository.claimNotice()).toBe(true);
   });
 

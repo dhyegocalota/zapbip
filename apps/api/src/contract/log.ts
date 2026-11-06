@@ -9,6 +9,7 @@ export enum LogEvent {
   Upload = 'upload',
   MediaRead = 'media_read',
   Sweep = 'sweep',
+  OwnerNoticeFailed = 'owner_notice_failed',
   ClockAdvanced = 'clock_advanced',
 }
 

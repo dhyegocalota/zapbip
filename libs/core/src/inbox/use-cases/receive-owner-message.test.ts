@@ -91,7 +91,9 @@ describe('receiveOwnerMessage routing', () => {
   test('CU-132 a text with the window closed opens it and wakes the waiting agent', async () => {
     const environment = await createEnvironment();
     await registerAgents({ environment, agents: ['alpha'] });
-    await environment.repository.saveWindow({ window: { lastOwnerMessageAt: null, noticeSentForClosedWindow: false } });
+    await environment.repository.saveWindow({
+      window: { lastOwnerMessageAt: null, noticeSentForClosedWindow: false, noticeRetryLocale: null },
+    });
     const holding = waiting({ environment, agent: 'alpha' });
     await environment.clock.advance({ ms: 0 });
     const result = await receiveText({ environment, text: '@alpha oi' });
@@ -475,7 +477,9 @@ describe('receiveOwnerMessage window and queue', () => {
 
   test('CU-147 an owner message clears the closed window notice flag', async () => {
     const environment = await createEnvironment();
-    await environment.repository.saveWindow({ window: { lastOwnerMessageAt: START_AT - WINDOW_MS, noticeSentForClosedWindow: true } });
+    await environment.repository.saveWindow({
+      window: { lastOwnerMessageAt: START_AT - WINDOW_MS, noticeSentForClosedWindow: true, noticeRetryLocale: null },
+    });
     await receiveText({ environment, text: 'hello' });
     expect((await environment.repository.findWindow()).noticeSentForClosedWindow).toBe(false);
   });

@@ -295,6 +295,7 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
       const window: OwnerWindow = {
         lastOwnerMessageAt: row.last_owner_message_at,
         noticeSentForClosedWindow: row.notice_sent_for_closed_window === 1,
+        noticeRetryLocale: null,
       };
       return window;
     },
