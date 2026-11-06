@@ -1,0 +1,14 @@
+---
+title: "Wake ladder"
+description: "How an agent that is not listening is reached."
+---
+
+An agent can always call zapbip, but the owner can only reach an agent that is listening. When a message arrives and no call is waiting, zapbip wakes the agent through the highest rung its connection supports:
+
+1. a local connector;
+2. a webhook;
+3. a scheduled task calling [check_inbox](/mcp-reference/check-inbox);
+4. an optional standby agent of the same provider;
+5. the inbox alone.
+
+In this release only the last rung exists: the message waits in the [inbox](/concepts/inbox) and zapbip tells the owner that the agent is not listening right now. The other rungs arrive with their own features.

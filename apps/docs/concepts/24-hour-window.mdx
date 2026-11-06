@@ -1,0 +1,17 @@
+---
+title: "24-hour window"
+description: "Why a message may be queued and what the owner receives."
+---
+
+WhatsApp lets zapbip send free-form messages only within 24 hours of the last message from the owner. zapbip closes its own window 10 minutes early. A reaction from the owner does not open the window.
+
+While the window is open, messages go out at once with `delivery: "sent"`.
+
+When it is closed:
+
+- the tool returns `delivery: "queued"` and the message waits in the outbound queue;
+- the first queued message sends the owner one approved notice, once per closed window;
+- the next message from the owner opens the window and flushes the queue in order;
+- queued messages older than 7 days become `expired`.
+
+A send that the channel rejects is stored with `delivery: "failed"`, and the tool returns an error naming the kind.

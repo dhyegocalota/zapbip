@@ -1,0 +1,22 @@
+---
+title: "check_inbox"
+description: "Check the inbox without waiting."
+---
+
+Check the inbox without waiting.
+
+## Input
+
+No fields.
+
+## Output
+
+`{ "status": "empty" }` at once, or `{ "status": "new", "messages": [...] }`; the returned messages become read. Meant for scheduled tasks, so it answers cheaply.
+
+
+
+## Message kinds
+
+import MessageKinds from "/snippets/message-kinds.mdx";
+
+<MessageKinds />

@@ -1,0 +1,25 @@
+---
+title: "send_contact"
+description: "Send contact cards to the owner."
+---
+
+Send contact cards to the owner.
+
+## Input
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `contacts` | array, up to 10 | Each with `name`, `phones`, and optional `emails` and `organization`. |
+| `reply_to` | string, optional | Id of the message to quote. |
+
+## Output
+
+`{ "message_id": string, "delivery": "sent" | "queued" }`. `queued` means the [24-hour window](/concepts/24-hour-window) is closed.
+
+
+
+## Message kinds
+
+import MessageKinds from "/snippets/message-kinds.mdx";
+
+<MessageKinds />

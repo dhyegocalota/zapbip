@@ -1,0 +1,26 @@
+---
+title: "ask"
+description: "Ask the owner a question with buttons or a list and wait for the answer."
+---
+
+Ask the owner a question with buttons or a list and wait for the answer.
+
+## Input
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `question` | string | Up to 1024 characters. |
+| `options` | array of 1 to 10 | Up to 3 options render as buttons (title up to 20 characters), 4 to 10 as a list (row up to 24). |
+| `timeout_seconds` | number, optional | Up to 50. |
+
+## Output
+
+`{ "status": "answered", "answer": ..., "message_id": string }` when the owner answers in time, or `{ "status": "pending", "question_id": string }` when the wait ends first. Pass the `question_id` to [wait_for_reply](/mcp-reference/wait-for-reply).
+
+Repeating the same question within 4 minutes returns the same question and sends nothing. See [Questions](/concepts/questions).
+
+## Message kinds
+
+import MessageKinds from "/snippets/message-kinds.mdx";
+
+<MessageKinds />
