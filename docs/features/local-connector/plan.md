@@ -525,8 +525,8 @@ Versions were checked with `npm view` on 2026-11-06. The Worker side uses packag
 
 ### Step L5 (docs)
 
-- [ ] **S5.1 red.** `connect/local-connector.mdx` links to `connect/background-running` before it exists. Run `pnpm --filter @zapbip/docs exec mint broken-links`. Expected failure: a broken link. Commit `test(docs): link the connector pages before they exist`.
-- [ ] **S5.2 green.** Write `connect/background-running.mdx` (launchd and systemd, mode `600`, not installed by the package) and finish the page. Commit `docs(connect): explain the local connector`.
+- [x] **S5.1 red** (evidence: 3316b57). `guides/local-connector.mdx` and `pt-br/guides/local-connector.mdx` link to `background-running` before it exists. Run `pnpm --filter @zapbip/docs exec mint broken-links`. Expected failure: a broken link. Commit `test(docs): link the connector pages before they exist`.
+- [x] **S5.2 green** (evidence: 8c19e93). Write `guides/background-running.mdx` and `pt-br/guides/background-running.mdx` (launchd and systemd, mode `600`, not installed by the package) and finish the page. Commit `docs(connect): explain the local connector`.
 
 ### Step L6 (shape and gates)
 
