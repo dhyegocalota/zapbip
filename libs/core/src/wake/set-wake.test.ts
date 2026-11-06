@@ -96,6 +96,26 @@ describe('setWake', () => {
     expect(await wakeEnvironment.wake.repository.findWake({ agent: AGENT })).toBeNull();
   });
 
+  test.each([
+    ['none', WakeMode.None, { intervalMinutes: 5 }],
+    ['local', WakeMode.Local, { standbyAgent: 'grok-bot' }],
+    ['webhook', WakeMode.Webhook, { url: GROK_URL, token: PINNED_TOKEN, intervalMinutes: 5 }],
+  ])('%s with a foreign field saves nothing', async (_name, mode, fields) => {
+    const wakeEnvironment = await createWakeEnvironment();
+    await setWebhook({ wakeEnvironment, agent: AGENT });
+    const before = await wakeEnvironment.wake.repository.findWake({ agent: AGENT });
+    const error = await captureInboxError(() =>
+      setWake({
+        ...wakeEnvironment.context,
+        connection: connectionOf({ agent: AGENT }),
+        setting: { mode, url: null, token: null, intervalMinutes: null, standbyAgent: null, ...fields },
+        publicHost: PUBLIC_HOST,
+      }),
+    );
+    expect(error.code).toBe(InboxErrorCode.InvalidInput);
+    expect(await wakeEnvironment.wake.repository.findWake({ agent: AGENT })).toEqual(before);
+  });
+
   test('a successful set resets a failing wake to active', async () => {
     const wakeEnvironment = await createWakeEnvironment();
     await setWebhook({ wakeEnvironment, agent: AGENT });

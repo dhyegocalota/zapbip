@@ -103,6 +103,50 @@ describe('assertWakeSetting standby', () => {
   });
 });
 
+describe('assertWakeSetting foreign fields', () => {
+  const FOREIGN_FIELDS = [
+    ['url', { url: 'https://hooks.example.com/zapbip' }],
+    ['token', { token: 'x'.repeat(16) }],
+    ['interval_minutes', { intervalMinutes: 5 }],
+    ['standby_agent', { standbyAgent: STANDBY_AGENT }],
+  ] as const;
+
+  describe.each([WakeMode.None, WakeMode.Local])('%s', (mode) => {
+    test.each(FOREIGN_FIELDS)('a foreign %s is refused', async (field, foreign) => {
+      const error = await rejection({ setting: { mode, url: null, token: null, intervalMinutes: null, standbyAgent: null, ...foreign } });
+      expect(error.code).toBe(InboxErrorCode.InvalidInput);
+      expect(error.message).toContain(field);
+      expect(error.message).toContain(mode);
+    });
+  });
+
+  test.each([FOREIGN_FIELDS[2], FOREIGN_FIELDS[3]])('a webhook wake with a foreign %s is refused', async (field, foreign) => {
+    const error = await rejection({
+      setting: {
+        mode: WakeMode.Webhook,
+        url: 'https://hooks.example.com/zapbip',
+        token: 'x'.repeat(16),
+        intervalMinutes: null,
+        standbyAgent: null,
+        ...foreign,
+      },
+    });
+    expect(error.code).toBe(InboxErrorCode.InvalidInput);
+    expect(error.message).toContain(field);
+    expect(error.message).toContain(WakeMode.Webhook);
+  });
+
+  test('a standby name outside the agent-name pattern is refused', async () => {
+    const error = await rejection({
+      setting: { ...STANDBY_SETTING, standbyAgent: 'Grok Bot!' },
+      standby: storedWakeOf({ agent: 'Grok Bot!', mode: WakeMode.Webhook }),
+    });
+    expect(error.code).toBe(InboxErrorCode.InvalidInput);
+    expect(error.message).toContain('standby_agent');
+    expect(error.message).toContain('must match');
+  });
+});
+
 describe('assertWakeSetting none', () => {
   test('the none mode is accepted', () => {
     const setting: WakeSettingInput = { mode: WakeMode.None, url: null, token: null, intervalMinutes: null, standbyAgent: null };
