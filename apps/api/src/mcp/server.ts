@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
-import { InboxError } from '@zapbip/core';
+import { AGENT_RULES, AGENT_RULES_PROMPT_NAME, InboxError } from '@zapbip/core';
 import { mediaStoreOf } from '../adapters/r2/r2-media-store';
 import { createPlatformClock } from '../adapters/platform/clock';
 import { MCP_SERVER_NAME, MCP_SERVER_VERSION } from '../contract/constants';
@@ -13,6 +13,8 @@ import { toolErrorResult, toolSuccessResult } from './tool-error';
 import type { ResolvedConnection } from '../routes/resolve-connection';
 import { accountInboxOf } from '../routes/account-inbox-stub';
 import type { ToolContext, ToolSuccess } from './types';
+
+const AGENT_RULES_PROMPT_DESCRIPTION = 'How to behave as a zapbip agent';
 
 type UntypedToolHandler = (input: { context: ToolContext; arguments: unknown }) => Promise<ToolSuccess>;
 
@@ -43,7 +45,10 @@ export function createConnectionServer(input: { resolved: ResolvedConnection; en
     accountInbox: accountInboxOf({ bindings: environment, accountId: resolved.connection.accountId }),
     mediaStore: mediaStoreOf({ bindings: environment, clock: createPlatformClock() }),
   };
-  const server = new McpServer({ name: MCP_SERVER_NAME, version: MCP_SERVER_VERSION });
+  const server = new McpServer({ name: MCP_SERVER_NAME, version: MCP_SERVER_VERSION }, { instructions: AGENT_RULES });
+  server.registerPrompt(AGENT_RULES_PROMPT_NAME, { description: AGENT_RULES_PROMPT_DESCRIPTION }, () => ({
+    messages: [{ role: 'user', content: { type: 'text', text: AGENT_RULES } }],
+  }));
   Object.values(McpToolName).forEach((name) => {
     const definition = TOOL_DEFINITIONS[name];
     server.registerTool(

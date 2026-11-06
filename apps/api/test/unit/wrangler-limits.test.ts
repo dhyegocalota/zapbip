@@ -4,7 +4,7 @@ import {
   OWNER_MESSAGES_PER_MINUTE,
   RATE_LIMIT_PERIOD_MS,
 } from '@zapbip/core';
-import { SECOND_MS } from '@zapbip/types';
+import { INSTALL_PAGE_REQUESTS_PER_MINUTE, SECOND_MS } from '@zapbip/types';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { unstable_readConfig as readConfig } from 'wrangler';
@@ -14,6 +14,7 @@ const EXPECTED_LIMITS: Record<string, number> = {
   OWNER_RATE_LIMITER: OWNER_MESSAGES_PER_MINUTE,
   OUTBOUND_RATE_LIMITER: OUTBOUND_MESSAGES_PER_MINUTE,
   ACCOUNT_OUTBOUND_RATE_LIMITER: ACCOUNT_OUTBOUND_MESSAGES_PER_MINUTE,
+  INSTALL_PAGE_LIMITER: INSTALL_PAGE_REQUESTS_PER_MINUTE,
 };
 const environments = [
   { name: 'production', environment: undefined, waitlistEnabled: 'true' },

@@ -11,4 +11,5 @@ export type Bindings = {
   OWNER_RATE_LIMITER: RateLimit;
   OUTBOUND_RATE_LIMITER: RateLimit;
   ACCOUNT_OUTBOUND_RATE_LIMITER: RateLimit;
+  INSTALL_PAGE_LIMITER: RateLimit;
 };

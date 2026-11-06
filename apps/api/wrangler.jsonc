@@ -23,6 +23,7 @@
     { "name": "OWNER_RATE_LIMITER", "namespace_id": "1001", "simple": { "limit": 20, "period": 60 } },
     { "name": "OUTBOUND_RATE_LIMITER", "namespace_id": "1002", "simple": { "limit": 30, "period": 60 } },
     { "name": "ACCOUNT_OUTBOUND_RATE_LIMITER", "namespace_id": "1003", "simple": { "limit": 120, "period": 60 } },
+    { "name": "INSTALL_PAGE_LIMITER", "namespace_id": "1004", "simple": { "limit": 30, "period": 60 } },
   ],
   "env": {
     "development": {
@@ -32,6 +33,7 @@
         { "name": "OWNER_RATE_LIMITER", "namespace_id": "1001", "simple": { "limit": 20, "period": 60 } },
         { "name": "OUTBOUND_RATE_LIMITER", "namespace_id": "1002", "simple": { "limit": 30, "period": 60 } },
         { "name": "ACCOUNT_OUTBOUND_RATE_LIMITER", "namespace_id": "1003", "simple": { "limit": 120, "period": 60 } },
+        { "name": "INSTALL_PAGE_LIMITER", "namespace_id": "1004", "simple": { "limit": 30, "period": 60 } },
       ],
       "migrations": [{ "tag": "v1", "new_sqlite_classes": ["AccountInbox"] }],
       "durable_objects": {
