@@ -1,0 +1,28 @@
+---
+title: Várias IAs em um número
+description: Como a sua resposta encontra a IA certa.
+---
+
+Todas as suas IAs escrevem pelo mesmo número de WhatsApp. O zapbip decide para onde vai a sua mensagem, nesta ordem:
+
+| Você faz                                   | Vai para                                |
+| ------------------------------------------ | --------------------------------------- |
+| Toca num botão ou numa opção da lista      | A IA que perguntou                      |
+| Responde a uma mensagem, ou reage a ela    | A IA que enviou aquela mensagem         |
+| Escreve `@grok veja as notícias`           | O Grok, sem o `@grok `                  |
+| Responde quando uma IA tem pergunta aberta | Essa IA                                 |
+| Escreve depois que só o Claude falou       | O Claude, a última IA que escreveu      |
+| Escreve e nada combina                     | Uma lista de IAs recentes para escolher |
+
+## Exemplo
+
+```text
+Claude   Testes passaram.
+Grok     Posso fazer rebase da main?   [ Sim ] [ Não ]
+
+você     @claude valeu          -> Claude
+você     (toca em Sim)          -> Grok
+você     ok                     -> uma lista: Claude, Grok
+```
+
+Os nomes têm até 20 caracteres: letras minúsculas, dígitos e hífens.
