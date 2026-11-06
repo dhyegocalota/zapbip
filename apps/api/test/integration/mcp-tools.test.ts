@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { HISTORY_LIMIT, ASK_MAX_WAIT_SECONDS } from '@zapbip/core';
+import { HISTORY_LIMIT, ASK_MAX_WAIT_SECONDS, formatOptionId } from '@zapbip/core';
 import { DeliveryState, InboxStatus, MessageKind, ReplyStatus } from '@zapbip/types';
 import { CONNECTION_SECRET_PREFIX } from '../../src/contract/constants';
 import { McpToolName, TOOL_DEFINITIONS } from '../../src/contract/tool-definitions';
@@ -30,6 +30,9 @@ const UNREAD_COUNT = 25;
 const DOCUMENT_OVER_LIMIT_BYTES = 100_000_001;
 const STICKER_LIMIT_BYTES = 100_000;
 const SHORT_WAIT_SECONDS = 1;
+const HELD_ASK_SECONDS = 20;
+const CONCURRENT_CALL_DEADLINE_MS = 3000;
+const CONCURRENT_CALL_TIMED_OUT = 'timed out';
 const ISO_TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
 
 describe('MCP tools', () => {
@@ -222,16 +225,54 @@ describe('MCP tools', () => {
     expect(result.content[0]?.text).toContain('timeout_seconds');
   });
 
-  it('returns the owner answer to a held ask', async () => {
-    const asking = call({ name: McpToolName.Ask, arguments: { question: 'Qual?', options: [{ title: 'sim' }] } });
-    await vi.waitFor(async () => {
+  async function heldQuestionId(): Promise<string> {
+    return vi.waitFor(async () => {
       const messagesResult = await call({ name: McpToolName.GetMessages, arguments: {} });
-      const history = messagesResult.structuredContent?.history as { kind: MessageKind }[];
-      expect(history.map((message) => message.kind)).toContain(MessageKind.Choice);
+      const history = messagesResult.structuredContent?.history as { kind: MessageKind; choice: { question_id: string } | null }[];
+      const question = history.find((message) => message.kind === MessageKind.Choice);
+      if (!question?.choice) throw new Error('question not stored yet');
+      return question.choice.question_id;
     });
-    await ownerWrites({ accountId: ACCOUNT_ID, channelMessageId: 'wamid.answer', content: ownerText({ text: 'sim' }) });
+  }
+
+  it('WI-56 returns the owner tap on a held ask', async () => {
+    const asking = call({ name: McpToolName.Ask, arguments: { question: 'Qual?', options: [{ title: 'sim' }] } });
+    const questionId = await heldQuestionId();
+    await ownerWrites({
+      accountId: ACCOUNT_ID,
+      channelMessageId: 'wamid.tap',
+      content: {
+        kind: MessageKind.Choice,
+        optionId: formatOptionId({ questionId, optionIndex: 0 }),
+        optionTitle: 'sim',
+        optionDescription: null,
+      },
+    });
     const result = await asking;
-    expect(result.structuredContent).toMatchObject({ status: ReplyStatus.Answered, answer: 'sim', question_id: null });
+    expect(result.structuredContent).toMatchObject({ status: ReplyStatus.Answered, answer: 'sim' });
+  });
+
+  it('answers get_messages on the same client while an ask is held', async () => {
+    const asking = call({
+      name: McpToolName.Ask,
+      arguments: { question: 'Qual?', options: [{ title: 'sim' }], timeout_seconds: HELD_ASK_SECONDS },
+    });
+    await heldQuestionId();
+    const deadline = new Promise<string>((resolve) => setTimeout(() => resolve(CONCURRENT_CALL_TIMED_OUT), CONCURRENT_CALL_DEADLINE_MS));
+    const concurrent = call({ name: McpToolName.GetMessages, arguments: {} });
+    expect(await Promise.race([concurrent, deadline])).not.toBe(CONCURRENT_CALL_TIMED_OUT);
+    const questionId = await heldQuestionId();
+    await ownerWrites({
+      accountId: ACCOUNT_ID,
+      channelMessageId: 'wamid.release',
+      content: {
+        kind: MessageKind.Choice,
+        optionId: formatOptionId({ questionId, optionIndex: 0 }),
+        optionTitle: 'sim',
+        optionDescription: null,
+      },
+    });
+    expect((await asking).structuredContent).toMatchObject({ status: ReplyStatus.Answered });
   });
 
   it('returns a pending question when the wait times out', async () => {
