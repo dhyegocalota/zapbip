@@ -87,15 +87,33 @@ describe('sendText', () => {
     expect(history.map((message) => message.delivery)).toEqual([DeliveryState.Failed]);
   });
 
-  test('a failed notice marks the message failed and lets the next send try again', async () => {
+  test('a failed notice releases the claim and the next send tries again', async () => {
     const environment = await createEnvironment();
     await closeWindow({ environment });
     environment.sender.failTemplateCalls({ callNumbers: [1] });
-    const error = await captureInboxError(() => send({ environment, text: 'one' }));
-    expect(error.code).toBe(ChannelErrorKind.DeliveryFailed);
+    const first = await send({ environment, text: 'one' });
+    expect(first.delivery).toBe(DeliveryState.Queued);
     expect((await environment.repository.findWindow()).noticeSentForClosedWindow).toBe(false);
     await send({ environment, text: 'two' });
-    expect(environment.sender.templates).toHaveLength(2);
+    expect(environment.sender.templates).toHaveLength(1);
+  });
+
+  test('CU-94b concurrent sends with the notice failing once keep both queued and the next send retries the notice', async () => {
+    const environment = await createEnvironment();
+    await closeWindow({ environment });
+    environment.sender.holdTemplates();
+    environment.sender.failTemplateCalls({ callNumbers: [1] });
+    const first = send({ environment, text: 'one' });
+    const second = send({ environment, text: 'two' });
+    await environment.clock.advance({ ms: 0 });
+    environment.sender.releaseTemplates();
+    const results = await Promise.all([first, second]);
+    expect(results.map((result) => result.delivery)).toEqual([DeliveryState.Queued, DeliveryState.Queued]);
+    expect(environment.sender.templates).toHaveLength(0);
+    await send({ environment, text: 'three' });
+    expect(environment.sender.templates).toHaveLength(1);
+    const history = await environment.repository.listAgentHistory({ agent: 'alpha', limit: 5 });
+    expect(history.map((message) => message.delivery)).toEqual([DeliveryState.Queued, DeliveryState.Queued, DeliveryState.Queued]);
   });
 
   test('CU-100 a reply to an unknown message is rejected', async () => {
