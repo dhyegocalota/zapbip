@@ -1,6 +1,6 @@
 import { SECOND_MS } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
-import { WAKE_DEBOUNCE_MS, WAKE_MIN_INTERVAL_MS } from './constants';
+import { WAKE_DEBOUNCE_MS, WAKE_MAX_ATTEMPTS, WAKE_MIN_INTERVAL_MS } from './constants';
 import { runDueWakes } from './run-due-wakes';
 import { scheduleWake } from './schedule-wake';
 import {
@@ -22,6 +22,9 @@ const MESSAGE_GAP_MS = 4 * SECOND_MS;
 const TEN_MINUTES_MS = 600 * SECOND_MS;
 const AGENT_COUNT = 50;
 const REQUEST_CEILING = 11;
+const SERVER_ERROR: ScriptedWakeResponse = { statusCode: 503, errorName: null, retryAfterMs: null };
+const THIRTY_MINUTES_MS = 1_800 * SECOND_MS;
+const FAILED_CYCLE_CEILING = 3;
 
 function run(input: { wakeEnvironment: WakeEnvironment }) {
   return runDueWakes({ ...input.wakeEnvironment.context, ownerLocale: OWNER_LOCALE, publicHost: PUBLIC_HOST });
@@ -63,6 +66,23 @@ describe('wake flood limits', () => {
       await run({ wakeEnvironment });
     }, Promise.resolve());
     expect(wakeEnvironment.transport.requests.length).toBeLessThanOrEqual(REQUEST_CEILING);
+  });
+
+  test('an endpoint that always answers 503 gets at most three failed cycles in thirty minutes', async () => {
+    const wakeEnvironment = await createWakeEnvironment();
+    await setWebhook({ wakeEnvironment, agent: 'alpha' });
+    wakeEnvironment.transport.enqueue({
+      agent: 'alpha',
+      responses: Array.from({ length: THIRTY_MINUTES_MS / MESSAGE_GAP_MS }, () => SERVER_ERROR),
+    });
+    await Array.from({ length: THIRTY_MINUTES_MS / MESSAGE_GAP_MS }).reduce<Promise<void>>(async (previous) => {
+      await previous;
+      await messageThenWake({ wakeEnvironment, agent: 'alpha' });
+      await wakeEnvironment.environment.clock.advance({ ms: MESSAGE_GAP_MS });
+      await run({ wakeEnvironment });
+    }, Promise.resolve());
+    expect(wakeEnvironment.transport.requests.length).toBeLessThanOrEqual(FAILED_CYCLE_CEILING * WAKE_MAX_ATTEMPTS);
+    expect(wakeEnvironment.environment.sender.sessions).toHaveLength(1);
   });
 
   test('a message inside the interval coalesces into the next allowed request', async () => {

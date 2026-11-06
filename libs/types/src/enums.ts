@@ -139,6 +139,7 @@ export enum WakeLogEventName {
   Refused = 'wake.refused',
   GaveUp = 'wake.gave_up',
   NoticeFailed = 'wake.notice_failed',
+  NoticeSkipped = 'wake.notice_skipped',
 }
 
 export enum ChannelErrorKind {
