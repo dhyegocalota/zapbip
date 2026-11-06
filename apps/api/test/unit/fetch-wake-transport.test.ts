@@ -156,12 +156,11 @@ describe('createFetchWakeTransport outcomes', () => {
         (_url: string, init: RequestInit) =>
           new Promise<Response>((_resolve, reject) => {
             init.signal?.addEventListener('abort', () => reject(new DOMException('timed out', 'TimeoutError')));
+            controller.abort();
           }),
       ),
     );
-    const pending = send({});
-    controller.abort();
-    expect(await pending).toEqual({ outcome: WakeAttemptOutcome.Retry, statusCode: null, retryAfterMs: null });
+    expect(await send({})).toEqual({ outcome: WakeAttemptOutcome.Retry, statusCode: null, retryAfterMs: null });
   });
 
   it('retries without leaking the error message when the network fails', async () => {
