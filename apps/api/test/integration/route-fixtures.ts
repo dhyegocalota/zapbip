@@ -1,27 +1,13 @@
-import { env } from 'cloudflare:test';
 import type { ConnectionIdentity } from '@zapbip/core';
 import { LinkPurpose, MINUTE_MS, OwnerLocale } from '@zapbip/types';
-import { hashConnectionSecret } from '../../src/adapters/platform/hash';
 import type { DevAccountInboxRpc } from '../../src/contract/account-inbox-rpc';
 import { CONNECTION_SECRET_PREFIX } from '../../src/contract/constants';
-import type { Bindings } from '../../src/contract/env';
 import { signLink } from '../../src/signing';
-
-declare global {
-  namespace Cloudflare {
-    interface Env extends Bindings {}
-  }
-}
+import { accountInboxStub } from '../support/workers-env';
+import { applyDirectoryMigration, seedConnection, seedOwnerIdentity } from '../support/seed';
 
 export const ORIGIN = 'http://example.com';
 export const LINK_VALIDITY_MS = 15 * MINUTE_MS;
-
-const SCHEMA_STATEMENTS = [
-  'CREATE TABLE IF NOT EXISTS accounts (id TEXT PRIMARY KEY, created_at INTEGER NOT NULL)',
-  'CREATE TABLE IF NOT EXISTS connections (id TEXT PRIMARY KEY, account_id TEXT NOT NULL, agent TEXT NOT NULL, secret_digest TEXT NOT NULL UNIQUE, created_at INTEGER NOT NULL, UNIQUE (account_id, agent))',
-  'CREATE TABLE IF NOT EXISTS owner_identities (wa_id TEXT PRIMARY KEY, account_id TEXT NOT NULL UNIQUE, from_user_id TEXT, locale TEXT NOT NULL, created_at INTEGER NOT NULL)',
-  'CREATE TABLE IF NOT EXISTS message_index (wamid TEXT PRIMARY KEY, account_id TEXT NOT NULL, created_at INTEGER NOT NULL)',
-];
 
 const SECRET_BODY_BYTES = 32;
 const PHONE_PREFIX = '55119';
@@ -48,31 +34,20 @@ function randomSecret(): string {
   return `${CONNECTION_SECRET_PREFIX}${body}`;
 }
 
+const directoryMigration = applyDirectoryMigration();
+
 export async function seedAccount(input: { agent: string }): Promise<SeededAccount> {
-  await env.CONNECTIONS.batch(SCHEMA_STATEMENTS.map((statement) => env.CONNECTIONS.prepare(statement)));
+  await directoryMigration;
   const accountId = `acc_${crypto.randomUUID()}`;
   const phone = `${PHONE_PREFIX}${randomDigits(PHONE_SUFFIX_DIGITS)}`;
   const secret = randomSecret();
-  const secretDigest = await hashConnectionSecret({ secret });
-  const now = Date.now();
-  await env.CONNECTIONS.batch([
-    env.CONNECTIONS.prepare('INSERT INTO accounts (id, created_at) VALUES (?, ?)').bind(accountId, now),
-    env.CONNECTIONS.prepare(
-      'INSERT INTO owner_identities (wa_id, account_id, from_user_id, locale, created_at) VALUES (?, ?, ?, ?, ?)',
-    ).bind(phone, accountId, null, OwnerLocale.PortugueseBrazil, now),
-    env.CONNECTIONS.prepare('INSERT INTO connections (id, account_id, agent, secret_digest, created_at) VALUES (?, ?, ?, ?, ?)').bind(
-      `con_${crypto.randomUUID()}`,
-      accountId,
-      input.agent,
-      secretDigest,
-      now,
-    ),
-  ]);
+  await seedOwnerIdentity({ accountId, phone, ownerLocale: OwnerLocale.PortugueseBrazil });
+  await seedConnection({ accountId, agent: input.agent, secret });
   return { accountId, phone, secret, connection: { accountId, agent: input.agent, ownerLocale: OwnerLocale.PortugueseBrazil } };
 }
 
 export function inboxOf(input: { accountId: string }): DevAccountInboxRpc {
-  const stub = env.ACCOUNT_INBOX.get(env.ACCOUNT_INBOX.idFromName(input.accountId));
+  const stub = accountInboxStub({ accountId: input.accountId });
   return stub as unknown as DevAccountInboxRpc;
 }
 

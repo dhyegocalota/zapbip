@@ -1,15 +1,13 @@
 import { Hono } from 'hono';
-import { D1ConnectionDirectory } from '../adapters/d1/d1-connection-directory';
-import { hashConnectionSecret } from '../adapters/platform/hash';
 import { createPlatformClock } from '../adapters/platform/clock';
 import { createR2MediaStore } from '../adapters/r2/r2-media-store';
-import { CONNECTION_SECRET_PATTERN, UNAUTHORIZED_BODY } from '../contract/constants';
+import { UNAUTHORIZED_BODY } from '../contract/constants';
 import type { Bindings } from '../contract/env';
 import { LogEvent } from '../contract/log';
 import { logEvent } from '../log';
 import { verifyLink } from '../signing';
 import { LinkPurpose } from '@zapbip/types';
-import type { ConnectionIdentity } from '@zapbip/core';
+import { resolveConnection } from '../mcp/resolve-connection';
 import { accountInboxOf } from './account-inbox-stub';
 import { ERROR_STATUS, HttpStatus } from './http-status';
 
@@ -21,18 +19,13 @@ function mediaTypeOf(input: { header: string }): string {
   return input.header.replace(MEDIA_TYPE_PARAMETERS_PATTERN, '').trim().toLowerCase();
 }
 
-async function resolveConnection(input: { bindings: Bindings; secret: string }): Promise<ConnectionIdentity | null> {
-  if (!CONNECTION_SECRET_PATTERN.test(input.secret)) return null;
-  const secretDigest = await hashConnectionSecret({ secret: input.secret });
-  return new D1ConnectionDirectory({ database: input.bindings.CONNECTIONS }).resolveSecretDigest({ secretDigest });
-}
-
 uploadRoutes.put('/c/:secret/u/:upload_id', async (context) => {
-  const connection = await resolveConnection({ bindings: context.env, secret: context.req.param('secret') });
-  if (!connection) {
+  const resolved = await resolveConnection({ database: context.env.CONNECTIONS, secret: context.req.param('secret') });
+  if (!resolved) {
     logEvent({ event: LogEvent.AuthRejected });
     return context.json(UNAUTHORIZED_BODY, HttpStatus.Unauthorized);
   }
+  const { connection } = resolved;
   const uploadId = context.req.param('upload_id');
   const expiresAt = Number(context.req.query('exp'));
   const signature = context.req.query('sig');
