@@ -136,6 +136,7 @@ export enum WakeLogEventName {
   Retry = 'wake.retry',
   Refused = 'wake.refused',
   GaveUp = 'wake.gave_up',
+  NoticeFailed = 'wake.notice_failed',
 }
 
 export enum ChannelErrorKind {
