@@ -225,3 +225,12 @@ Pins (green on arrival): `env-example.test.ts`, `root-scripts.test.ts` (`19d03f1
 
 - Production Worker deploys and the docs deploy now run `npm view <package>@<version> maintainers --json` (replacing `... version`); the package must resolve AND its maintainers must include `ZAPBIP_NPM_PUBLISHER` from the owner's environment file (placeholder, empty or missing refuses with no npm command). Docs checks `zapbip` and `@zapbip/openclaw-plugin`; the Worker checks `zapbip@ZAPBIP_NPM_VERSION`, production only. Red `45d02ab`.
 - Publishing with two-factor authentication and provenance is an owner runbook step. The maintainers output format (`name <email>` strings) is assumed from npm's documented behaviour, not run against the registry.
+
+### Lane B and D: ops tester fixes (s8-ops, 2026-11-06)
+
+- D1: `inspectWorkerSource` reads only `src/app.ts` and `src/routes/**`; red `3e5bb35`, green `7fcc4e2`. The real-tree test compares the flag with an independent read of the same files, so it stays true after install-skills mounts the route.
+- D2: `pnpm docs:preflight` (root script, `apps/api/scripts/docs-preflight.ts`); red `95970f6`, green `87663a2`. It passes `ZAPBIP_NPM_VERSION` for both npm packages (both are 0.1.0).
+- D3: `deploy.ts` already forwarded `--first-deploy`; the runbook now uses it and drops the `pending` trick. pnpm forwarding of `pnpm deploy:staging --first-deploy` to the script is not run here (it needs the owner's environment file).
+- D4 and D7: official number, company facts and the npm maintainer check apply to production and docs only; staging needs placeholders and secrets. Order is now environment, production gates, placeholders, readiness, smoke inputs, git, secrets, migrations, gate, dry run. Red `6b7d43a`, green `47c69ba`.
+- D5, D6, D8, D9 and the missing steps (payment method, number PIN, PyPI commands, buying the domain, the first secret put creating the Worker): runbooks and README order rewritten; the go-live order in `runbooks.test.ts` updated; three new runbook tests are pins.
+- D10, E1, E2, E3, E5, E6: smoke output names the failure kind (`ECONNREFUSED`) and never the URL or message; lowercase and hyphenated placeholders are refused; non-JSON wrangler output is refused or reported clearly; an empty version list says "no previous Worker version"; a trailing slash is trimmed from `SMOKE_BASE_URL`; a failed `git fetch` is refused. Red `6b7d43a` and the smoke and rollback red commits; green `47c69ba`, the smoke fix and `66d89f1`.

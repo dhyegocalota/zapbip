@@ -1,8 +1,8 @@
 # Mintlify publish
 
-Set the official number, publish the npm package, connect the repository to Mintlify and serve the docs on `docs.zapbip.com` in English and Portuguese.
+Set the official number and the company facts, publish the packages, run the docs preflight, connect the repository to Mintlify and serve the docs on `docs.zapbip.com` in English and Portuguese.
 
-The docs live in `apps/docs` and publish when `main` changes. The site names the official number and pins `npx zapbip@<version>`, so steps 1 and 2 come first: the deploy command refuses while either is missing, and the docs must not point at a number or a package that does not exist. The runbooks themselves are never published ([ADR 0026](../adr/0026-runbooks-live-in-the-repository-not-on-mintlify.md)).
+The docs live in `apps/docs` and publish when `main` changes. The site names the official number and pins `npx zapbip@<version>`, so steps 1 to 5 come first. Mintlify publishes on every merge to `main` and cannot refuse, so `pnpm docs:preflight` (step 6) is the gate: the docs must not point at a number, a company fact or a package that does not exist. The production deploy refuses on the same facts. The runbooks themselves are never published ([ADR 0026](../adr/0026-runbooks-live-in-the-repository-not-on-mintlify.md)).
 
 1. **Set the official number.** In `libs/types/src/constants.ts` replace the value `OFFICIAL_NUMBER_UNSET` of `OFFICIAL_WHATSAPP_NUMBER` with the production number's digits from [meta-setup.md](meta-setup.md), step 3: country code first, no plus sign, no spaces. Commit it on a branch and merge it through the normal pull request.
 
@@ -16,7 +16,7 @@ The docs live in `apps/docs` and publish when `main` changes. The site names the
 
    If it fails: a `403` or a name conflict means the name `zapbip` is taken; stop, because every page and skill pins it. An `EOTP` error means the one-time code expired; run the publish again. A published version cannot be replaced; fix forward with a new version and update the pinned version in the docs and skills.
 
-3. **Fill the Logic Bit company facts.** In `libs/types/src/constants.ts` replace every `COMPANY_FACT_UNSET` value of `COMPANY` (`legalName`, `cnpj`, `address`, `website`, `contactEmail`) with the real Logic Bit data. Commit it on a branch and merge it through the normal pull request. Never copy the data into a page by hand: the docs footer, the About / Legal page and the install page read it from that one source.
+3. **Fill the Logic Bit company facts.** In `libs/types/src/constants.ts` replace every `COMPANY_FACT_UNSET` value of `COMPANY` (`legalName`, `cnpj`, `address`, `website`, `contactEmail`) with the real Logic Bit data: the legal name and the CNPJ from the company's CNPJ registration certificate (Comprovante de Inscrição e de Situação Cadastral, issued free by the Receita Federal), the registered address from the same certificate, the website you publish for the company and a monitored contact email. Commit it on a branch and merge it through the normal pull request. Never copy the data into a page by hand: the docs footer, the About / Legal page and the install page read it from that one source.
 
    Expect: `grep -n COMPANY_FACT_UNSET libs/types/src/constants.ts` prints only the definition of the sentinel.
 
@@ -28,37 +28,43 @@ The docs live in `apps/docs` and publish when `main` changes. The site names the
 
    If it fails: a 403 means your npm user is not in the `@zapbip` scope; add it in the npm organisation settings. The docs deploy refuses until this command resolves.
 
-5. **Publish the Hermes plugin.** Create an account at `https://pypi.org/account/register/` with two-factor authentication and an API token scoped to the project. From `apps/hermes-plugin` build the distribution and upload it with `twine` under the name `zapbip-platform`, version `0.1.0`.
+5. **Publish the Hermes plugin.** Create an account at `https://pypi.org/account/register/` and turn on two-factor authentication. In Account settings, API tokens, add a token (scope it to the project `zapbip-platform` after the first upload). Then, from the repository root, run `python3 -m pip install --user build twine`, `cd apps/hermes-plugin`, `python3 -m build`, and `python3 -m twine upload dist/*`; when twine asks, the username is `__token__` and the password is the token (paste it at the prompt; never on the command line). The name is `zapbip-platform` and the version `0.1.0`.
 
    Expect: `pip index versions zapbip-platform` lists `0.1.0`.
 
    If it fails: a name or version already taken by someone else cannot be reused; bump the version in `pyproject.toml` through a pull request and update every page that pins it.
 
-6. **Create the Mintlify account.** Sign up at `https://mintlify.com` with the owner's email and create the project from the dashboard. Pick the plan that includes a custom domain; read the plan page for what each plan costs and decide there, since this runbook cannot know today's prices.
+6. **Run the docs preflight.** From the repository root run `pnpm docs:preflight`. It refuses until the official number and every company fact are set, and until `zapbip` and `@zapbip/openclaw-plugin` resolve on npm with your npm user (`ZAPBIP_NPM_PUBLISHER`) among their maintainers. Mintlify publishes whatever is on `main`, so run it before the first merge of the docs and again before enabling the site.
+
+   Expect: the command prints `the docs are ready to publish` and exits zero.
+
+   If it fails: it prints `refused at <step>: <what to do>`; do that step of this runbook and run it again. Nothing is changed by the command.
+
+7. **Create the Mintlify account.** Sign up at `https://mintlify.com` with the owner's email and create the project from the dashboard. Pick the plan that includes a custom domain; read the plan page for what each plan costs and decide there, since this runbook cannot know today's prices.
 
    Expect: the dashboard shows an empty project.
 
-   If it fails: if no free plan offers the custom domain, either pay for the plan that does or keep the default Mintlify address and skip step 6; record the choice in the go-live record.
+   If it fails: if no free plan offers the custom domain, either pay for the plan that does or keep the default Mintlify address and skip step 10; record the choice in the go-live record.
 
-7. **Connect the repository.** In the dashboard open Git Settings and install the Mintlify GitHub app on this repository only. Choose the production branch `main`. Turn on the monorepo option and set the docs path to `apps/docs`, where `docs.json` lives.
+8. **Connect the repository.** In the dashboard open Git Settings and install the Mintlify GitHub app on this repository only. Choose the production branch `main`. Turn on the monorepo option and set the docs path to `apps/docs`, where `docs.json` lives.
 
    Expect: Mintlify builds the site from `apps/docs` and shows a preview address with the Get started group.
 
    If it fails: if the build cannot find `docs.json`, check the path value. If Mintlify cannot build from a subdirectory, this runbook moves ([ADR 0026](../adr/0026-runbooks-live-in-the-repository-not-on-mintlify.md)); record it before changing anything.
 
-8. **Check the links before every merge.** From `apps/docs` run `pnpm dlx mint@4.2.1207 broken-links`. Run it again after each docs change, before merging to `main`.
+9. **Check the links before every merge.** From `apps/docs` run `pnpm dlx mint@4.2.1207 broken-links`. Run it again after each docs change, before merging to `main`.
 
    Expect: the command reports no broken links.
 
    If it fails: fix each reported link in both languages; a page and its Portuguese twin must both exist.
 
-9. **Set the domain.** In the dashboard open Settings, Custom domain, and enter `docs.zapbip.com`. Add the CNAME record it shows, as in [dns.md](dns.md), step 5, and wait for Mintlify to confirm it.
+10. **Set the domain.** In the dashboard open Settings, Custom domain, and enter `docs.zapbip.com`. Add the CNAME record it shows, as in [dns.md](dns.md), step 6, and wait for Mintlify to confirm it.
 
    Expect: `https://docs.zapbip.com` serves the site over HTTPS.
 
    If it fails: `dig CNAME docs.zapbip.com +short` must print Mintlify's target; if a proxy in Cloudflare hides it, switch the record to DNS only.
 
-10. **Check the languages.** Open `https://docs.zapbip.com` in a browser set to English, then in one set to Portuguese (Brazil). Use the language switcher and open a few pages in each language.
+11. **Check the languages.** Open `https://docs.zapbip.com` in a browser set to English, then in one set to Portuguese (Brazil). Use the language switcher and open a few pages in each language.
 
    Expect: both languages exist for every page, with mirrored paths (`/` and `/pt-BR/`). If Mintlify starts the Portuguese browser in Portuguese, note that; if it does not, the switcher is the rule, and no redirect script is added.
 

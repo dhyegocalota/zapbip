@@ -18,12 +18,17 @@ const GO_LIVE_ORDER = [
   'Cloudflare setup',
   'DNS',
   'Meta setup',
+  'Meta templates approved',
   'Resources and secrets',
   'Migrate and deploy staging',
   'Smoke staging',
   'Rollback rehearsal',
-  'Meta templates approved',
-  'Production',
+  'Publish the packages',
+  'Company facts and official number',
+  'Publish the docs',
+  'Meta live mode',
+  'Production deploy',
+  'Smoke production',
 ];
 const PNPM_BUILT_IN_COMMANDS = ['exec', 'dlx', 'install', 'add'];
 const TITLE_PATTERN = /^# .+\n\n(.+)\n/;
@@ -155,6 +160,25 @@ describe('runbooks', () => {
     const titles = readmeStepTitles();
     expect(titles.slice(0, GO_LIVE_ORDER.length)).toEqual(GO_LIVE_ORDER);
     expect(titles.indexOf(PUBLISH_STEP_TITLE)).toBeGreaterThan(titles.indexOf('DNS'));
+  });
+
+  test('deploy.md documents the first deploy flag and no longer the pending secret trick', () => {
+    const text = readRunbook(DEPLOY_RUNBOOK).text;
+    expect(text).toContain('--first-deploy');
+    expect(text).not.toContain('`pending`');
+    expect(text).not.toContain('the word `pending`');
+  });
+
+  test('no runbook types a Worker name after wrangler tail', () => {
+    expect(
+      allRunbooks()
+        .filter(({ text }) => /wrangler tail zapbip/.test(text))
+        .map(({ file }) => file),
+    ).toEqual([]);
+  });
+
+  test('the docs publish runbook points at the docs preflight script', () => {
+    expect(readRunbook('mintlify-publish.md').text).toContain('pnpm docs:preflight');
   });
 
   test('every pnpm command in a runbook is a root script or a pnpm built-in', () => {

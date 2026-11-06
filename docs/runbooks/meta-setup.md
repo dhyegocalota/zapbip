@@ -18,9 +18,11 @@ Staging uses a Meta test number and its own app. Production uses the real offici
 
 3. **Register the production number.** In WhatsApp Manager, Phone numbers, Add phone number, create the WhatsApp Business account and add the number zapbip will use. The number must be able to receive an SMS or a voice call and must not be registered in the WhatsApp or WhatsApp Business app; delete it there first. Enter the code Meta sends. Set the display name and wait for its review. Write the digits, country code first and no plus sign, in the go-live record.
 
-   Expect: the number shows Connected in WhatsApp Manager and its display name is Approved.
+   Then, in WhatsApp Manager, Payment settings, add a payment method: utility templates sent outside the 24-hour window are billed per message and Meta blocks sending without one. Finally open the number, Two-step verification, and set a six-digit PIN; write it in a password manager, because Meta asks for it whenever the number is moved or re-registered.
 
-   If it fails: a number still bound to the consumer app is the usual cause; delete that account in the app, wait, and retry. A rejected display name is edited and resubmitted.
+   Expect: the number shows Connected in WhatsApp Manager, its display name is Approved, a payment method is on file and two-step verification is on.
+
+   If it fails: Meta rejects a card from a country it does not bill; try another card. A number still bound to the consumer app is the usual cause; delete that account in the app, wait, and retry. A rejected display name is edited and resubmitted.
 
 4. **Create the staging app.** Open `https://developers.facebook.com/apps`, Create app, choose the Business type, name it `zapbip staging`, attach the Business portfolio and add the WhatsApp product. Open WhatsApp, API Setup. Meta creates a test WhatsApp Business account and a test number. Add the owner's phone under To, Manage phone number list, and enter the code it receives. Copy the test number's Phone number ID.
 
@@ -62,7 +64,7 @@ Staging uses a Meta test number and its own app. Production uses the real offici
 
     Expect: the production app shows Live, and the verification shows In review or Verified. Unverified businesses have low messaging limits, which are enough to start with one owner.
 
-    If it fails: the privacy policy page must be public. The docs site has no privacy page yet, so publish one before this step ([mintlify-publish.md](mintlify-publish.md)). A rejected verification lists what to correct.
+    If it fails: the privacy policy page must be public. The privacy page is part of the docs site: use `https://docs.zapbip.com/help/privacy` (English) or `https://docs.zapbip.com/pt-BR/help/privacy`, and open it in a browser before pasting it, which needs [mintlify-publish.md](mintlify-publish.md) done first. A rejected verification lists what to correct.
 
 11. **Submit and approve the templates.** In WhatsApp Manager, Message templates, Create template, once per row below in the production WhatsApp account (the staging test account too if you want templates in staging). Category Utility. The name is identical across languages; each language is its own template. Fill the sample values with the fictional text shown, add one Quick reply button and submit.
 
