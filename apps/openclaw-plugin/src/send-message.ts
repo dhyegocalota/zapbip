@@ -8,7 +8,7 @@ import {
   SEND_MESSAGE_TOOL_NAME,
 } from './constants';
 
-type ToolCallResult = { isError?: boolean; content?: Array<{ text?: string }> };
+type ToolCallResult = { isError?: boolean; content?: Array<{ text?: string }>; structuredContent: { message_id: string } };
 type RpcResponse = { result: ToolCallResult };
 
 const INITIALIZE_REQUEST_ID = 1;
@@ -30,9 +30,9 @@ async function postRpc(input: { mcpLink: string; id: number | null; method: stri
   return response;
 }
 
-export async function sendOwnerText(input: { mcpLink: string; text: string }): Promise<void> {
+export async function sendOwnerText(input: { mcpLink: string; text: string }): Promise<string | null> {
   const { mcpLink, text } = input;
-  if (text === '') return;
+  if (text === '') return null;
   await postRpc({
     mcpLink,
     id: INITIALIZE_REQUEST_ID,
@@ -48,4 +48,5 @@ export async function sendOwnerText(input: { mcpLink: string; text: string }): P
   });
   const { result } = (await response.json()) as RpcResponse;
   if (result.isError) throw new Error(result.content?.map((part) => part.text).join(' '));
+  return result.structuredContent.message_id;
 }
