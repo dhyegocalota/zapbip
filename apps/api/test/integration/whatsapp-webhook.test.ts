@@ -13,7 +13,12 @@ import {
 } from '@zapbip/types';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { createApp } from '../../src/app';
-import { GRAPH_REQUEST_TIMEOUT_MS, MAX_FUTURE_SKEW_MS, WEBHOOK_MAX_BYTES, WEBHOOK_SIGNATURE_HEADER } from '../../src/adapters/whatsapp/whatsapp-constants';
+import {
+  GRAPH_REQUEST_TIMEOUT_MS,
+  MAX_FUTURE_SKEW_MS,
+  WEBHOOK_MAX_BYTES,
+  WEBHOOK_SIGNATURE_HEADER,
+} from '../../src/adapters/whatsapp/whatsapp-constants';
 import { OwnerCopyKey, WHATSAPP_COPY } from '../../src/adapters/whatsapp/whatsapp-copy';
 import { OperatorEvent } from '../../src/adapters/whatsapp/whatsapp-enums';
 import { WHATSAPP_WEBHOOK_PATH } from '../../src/contract/constants';
@@ -47,6 +52,7 @@ const STATUS_BAD_REQUEST = 400;
 const STATUS_UNAUTHORIZED = 401;
 const STATUS_FORBIDDEN = 403;
 const STATUS_PAYLOAD_TOO_LARGE = 413;
+const CONCURRENT_POSTS = 10;
 const STATUS_NOT_FOUND = 404;
 const STATUS_FOUND = 302;
 const STATUS_DOWNLOAD_FAILED = 500;
@@ -104,7 +110,7 @@ async function postNotificationWithAccessToken(input: { notification: object; de
   const text = JSON.stringify(input.notification);
   const signature = await signatureHeaderOf({ appSecret: env.META_APP_SECRET as string, body: encode({ text }) });
   const request = new Request(WEBHOOK_URL, { method: 'POST', headers: { [WEBHOOK_SIGNATURE_HEADER]: signature }, body: text });
-  return createApp({ extraRoutes: [], developmentMediaOrigin }).fetch(request, whatsappTestEnv);
+  return createApp({ extraRoutes: [], developmentMediaOrigin, maxFutureSkewMs: MAX_FUTURE_SKEW_MS }).fetch(request, whatsappTestEnv);
 }
 
 async function historyOf(input: { account: SeededAccount }) {
@@ -270,6 +276,22 @@ describe('webhook request checks', () => {
     expect(response.status).toBe(STATUS_PAYLOAD_TOO_LARGE);
   });
 
+  test.each(['abc', '-1'])('accepts a signed body whose Content-Length header is %s because the streaming cap applies', async (header) => {
+    const text = JSON.stringify(notificationWith({}));
+    const signature = await signatureHeaderOf({ appSecret: env.META_APP_SECRET as string, body: encode({ text }) });
+    const response = await SELF.fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { [WEBHOOK_SIGNATURE_HEADER]: signature, 'Content-Length': header },
+      body: text,
+    });
+    expect(response.status).toBe(STATUS_OK);
+  });
+
+  test('answers 413 for an unsigned body over the cap before the signature check', async () => {
+    const response = await SELF.fetch(WEBHOOK_URL, { method: 'POST', body: paddedNotificationOf({ totalBytes: WEBHOOK_MAX_BYTES + 1 }) });
+    expect(response.status).toBe(STATUS_PAYLOAD_TOO_LARGE);
+  });
+
   test('WI-26 accepts a signed body of exactly the cap', async () => {
     const response = await postSigned({ text: paddedNotificationOf({ totalBytes: WEBHOOK_MAX_BYTES }) });
     expect(response.status).toBe(STATUS_OK);
@@ -277,6 +299,14 @@ describe('webhook request checks', () => {
 });
 
 describe('webhook inbound messages', () => {
+  test('stores once when the same signed post arrives ten times at once', async () => {
+    const account = await seedAccount({ agent: 'alpha' });
+    const text = JSON.stringify(notificationWith({ messages: [ownerText({ account, id: 'wamid.TENWAY', text: 'Oi' })] }));
+    const responses = await Promise.all(Array.from({ length: CONCURRENT_POSTS }, () => postSigned({ text })));
+    expect(responses.map((response) => response.status)).toEqual(Array.from({ length: CONCURRENT_POSTS }, () => STATUS_OK));
+    expect(ownerTextsOf({ history: await historyOf({ account }) })).toEqual(['Oi']);
+  });
+
   test('WI-20 stores a signed owner text', async () => {
     const account = await seedAccount({ agent: 'alpha' });
     const response = await postNotification({
@@ -689,7 +719,7 @@ describe('webhook stale and replayed deliveries', () => {
       ...ownerText({ account, id: 'wamid.FUTURE', text: 'Amanha' }),
       timestamp: secondsAgo({ ageMs: -(MAX_FUTURE_SKEW_MS + STALE_MARGIN_MS) }),
     };
-    const response = await postNotification({ notification: notificationWith({ messages: [message] }) });
+    const response = await postNotificationWithAccessToken({ notification: notificationWith({ messages: [message] }) });
     expect(response.status).toBe(STATUS_OK);
     expect(ownerTextsOf({ history: await historyOf({ account }) })).toEqual([]);
     expect(occurrencesOf({ text: loggedText({ spies }), event: OperatorEvent.InboundFuture })).toBe(1);
@@ -701,7 +731,7 @@ describe('webhook stale and replayed deliveries', () => {
       ...ownerText({ account, id: 'wamid.SOON', text: 'Quase' }),
       timestamp: secondsAgo({ ageMs: -(MAX_FUTURE_SKEW_MS - STALE_MARGIN_MS) }),
     };
-    const response = await postNotification({ notification: notificationWith({ messages: [message] }) });
+    const response = await postNotificationWithAccessToken({ notification: notificationWith({ messages: [message] }) });
     expect(response.status).toBe(STATUS_OK);
     expect(ownerTextsOf({ history: await historyOf({ account }) })).toEqual(['Quase']);
   });

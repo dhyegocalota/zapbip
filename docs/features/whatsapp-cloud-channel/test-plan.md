@@ -10,7 +10,7 @@ Notation: `CU-n` core unit, `AU-n` API unit, `WI-n` Worker integration, `E2E-n` 
 
 Each red commit is one of the commits in `plan.md` Steps W1.1, W1.3, W2.2, W2.4, W3.1, W3.3, W4.1, W4.3, W4.5, W5.1 and W6.1. The tester checks each red commit by `git log` and by running the named test on that commit in a throwaway worktree.
 
-- [ ] W1.1 red `libs/core/src/inbox/use-cases/status-rule.test.ts`, `libs/core/src/inbox/window.test.ts` — input: the Step W0 tree; expected: fails with `applyStatusRule is not implemented`; the closed-window case fails with `expected false, received true`.
+- [ ] W1.1 red `libs/core/src/inbox/use-cases/status-rule.test.ts`, `libs/core/src/inbox/window.test.ts` — input: the Step W0 tree; expected: fails with `applyStatusRule is not implemented`; the closed-window case fails with `expected true to be false`.
 - [ ] W1.3 red `libs/core/src/inbox/use-cases/{receive-channel-message,open-window,claim-queued,close-window,apply-status,deliver-to-owner-channel,sweep-expired}.test.ts` — expected: each fails with `<use case> is not implemented`.
 - [ ] W2.2 red `apps/api/test/unit/whatsapp-{outbound-builders,outbound-limits,template-sanitiser,channel-error-mapping}.test.ts` — expected: each fails with `<name> is not implemented`.
 - [ ] W2.4 red `apps/api/test/unit/whatsapp-{graph-client,read-whatsapp-env,operator-log}.test.ts` — expected: each fails with `<name> is not implemented`.
@@ -250,7 +250,7 @@ Runner: `pnpm --filter @zapbip/api test:unit` (Vitest 4.1.12, node). Fixtures ar
 - [x] AU-120 `ListSectionTitle` for each locale — expected: at most 24 characters. — evidence: c314c2b rt-api1-3.log (API unit, 25 files / 337 tests, PASS x3, retest-unit-worker.md)
 - [x] AU-121 `logOperatorEvent({event: OperatorEvent.ChannelRestricted, fields: {[OperatorLogField.ErrorCode]: 131048}})` — expected: one `console.error` line that parses as JSON with `event` `channel.restricted` and `error_code` 131048, and no other key. — evidence: c314c2b rt-api1-3.log (API unit, 25 files / 337 tests, PASS x3, retest-unit-worker.md)
 - [x] AU-122 `logOperatorEvent` with fields keyed `OperatorLogField.TemplateName` and `LanguageCode` — expected: the line has exactly those keys, with the values given. — evidence: c314c2b rt-api1-3.log (API unit, 25 files / 337 tests, PASS x3, retest-unit-worker.md)
-- [ ] Edge: the field keys are enum values — expected: a compile-time check (`expectTypeOf`) rejects a free-text key such as `'phone'`.
+- [ ] AU-125 Edge: the field keys are enum values — expected: a compile-time check (`expectTypeOf`) rejects a free-text key such as `'phone'`.
 
 ### Owner recipients and reply targets in the sender (`whatsapp-outbound.test.ts` is integration; the unit cases here use a fake directory)
 - [x] AU-123 `createCloudApiMessageSender` with a `findOwnerByAccountId` that returns `null` for the account — expected: `session` throws `ChannelError` `DeliveryFailed` naming the owner, no Graph call. — evidence: c314c2b rt-api1-3.log (API unit, 25 files / 337 tests, PASS x3, retest-unit-worker.md)
@@ -287,7 +287,7 @@ Runner: `pnpm --filter @zapbip/api test:integration` (`@cloudflare/vitest-pool-w
 - [x] WI-13 input: a receipt `wamid.OLD` at T, `runDurableObjectAlarm` at T + `RECEIPT_RETENTION_MS` + 1 — expected: `wamid.OLD` gone; a receipt at T + 1 kept. — evidence: c314c2b rt-int1-3.log (integration, 352 tests, PASS x3, retest-unit-worker.md); 1da24d0 worker-integration.md (account-inbox-channel.test.ts)
 - [x] WI-14 input: a `Sending` row claimed at T, alarm at T + `SENDING_STALE_MS` + 1 — expected: the row is `Queued`. — evidence: c314c2b rt-int1-3.log (integration, 352 tests, PASS x3, retest-unit-worker.md); 1da24d0 worker-integration.md (account-inbox-channel.test.ts)
 - [ ] WI-15 input: `applyChannelStatus` for a `wamid` the account sent — expected: delivery changes per the rule; the detail is stored, nulls not written over values.
-- [ ] WI-16 input: `applyChannelStatus` for a `wamid` the account never sent — expected: `{ok: true, value: {applied: false}}`, no write.
+- [ ] WI-16 input: `applyChannelStatus` for a `wamid` the account never sent — expected: `{ok: true, value: {applied: false, found: false}}`, no write.
 - ~~[ ] WI-17 input: the object created without a name — expected: the constructor throws `AccountInbox must be created with idFromName`.~~ (refresh: R16)
 - [ ] WI-17 input: the object created without a name — expected: the constructor fails with slice 1's `AccountInbox id has no name`.
 - ~~[ ] WI-17a input: `WHATSAPP_ACCESS_TOKEN` set — expected: the Cloud API sender is selected.~~ (refresh: R15)
@@ -295,7 +295,7 @@ Runner: `pnpm --filter @zapbip/api test:integration` (`@cloudflare/vitest-pool-w
 - ~~[ ] WI-17b input: token absent and a fake registered by `registerDevelopmentSender` — expected: the fake is selected.~~ (refresh: R15)
 - [x] WI-17b input: `DevAccountInbox` with the token absent — expected: the fake sender is selected. — evidence: c314c2b rt-int1-3.log (integration, 352 tests, PASS x3, retest-unit-worker.md); 1da24d0 worker-integration.md (account-inbox-channel.test.ts)
 - ~~[ ] WI-17c input: token absent and no fake registered — expected: the send throws naming the missing variable; no fallback.~~ (refresh: R15)
-- [ ] WI-17c input: the production `AccountInbox` with the token absent — expected: the send throws naming the missing variable; no fallback.
+- [ ] WI-17c input: the production `AccountInbox` with the token absent — expected: it refuses to build the sender, naming the missing variable; no fallback.
 
 ## Worker integration: webhook and outbound
 
@@ -442,11 +442,11 @@ The tester adds one checkbox per new case (input, exact expected outcome) and a 
 - [x] Text send refused with Graph `131009`: input: `131009` on a text send; expected: the error is kind-neutral, not the reaction wording. — evidence: c314c2b retest-e2e-security-docs.md (walk: "unexpected error", PASS) and retest-unit-worker.md (mutant U3 killed); regression: mutant U3, killed by the unit suite.
 - [x] Challenge answer headers: input: `GET` challenge with the right token; expected: `text/plain` body `777` and `X-Content-Type-Options: nosniff`. — evidence: c314c2b retest-e2e-security-docs.md (challenge walk, PASS); regression: apps/api/test/integration/whatsapp-webhook.test.ts "WI-18 answers the challenge as plain text".
 - [x] Stale entry beside a fresh one: input: one POST with an entry older than the receipt retention and a fresh text; expected: only the fresh text stored, `200`, `inbound.stale` logged. — evidence: c314c2b retest-unit-worker.md (stale beside fresh, PASS); regression: apps/api/test/integration/whatsapp-webhook.test.ts "webhook stale and replayed deliveries".
-- [ ] Ten identical signed posts at once: input: the same signed body posted ten times concurrently; expected: all `200`, one message. — evidence: 1da24d0 docs-security-build.md (x10 concurrent, one message) and c314c2b retest-e2e-security-docs.md (five concurrent, stored once). Regression: none for ten-way concurrency; the E2E duplicate edge covers two sequential posts.
-- [ ] Signature with a valid digest behind a wrong seven-character prefix: input: `sha512=` followed by the correct HMAC-SHA-256 hex of the body; expected: `401`, nothing parsed. — evidence: none; mutant M10 (1da24d0 unit.md) survived and the retest did not re-run it. Regression: none. Open for the developer.
-- [ ] Future timestamp: input: an entry timestamped 30 days ahead; expected: not defined by the plan; observed at c314c2b: stored. Decide whether to reject. Not ticked.
-- [ ] `Content-Length` of `abc` or `-1`: input: a signed body with that header; expected: not defined by the plan; observed at 1da24d0: `200` (the stream limit still applies). Decide. Not ticked.
-- [ ] Unsigned body above the cap: input: unsigned body of 3 145 729 bytes; expected: not defined by the plan; observed at 1da24d0: `413` before the signature check, which reveals the size cap (low). Decide. Not ticked.
+- [ ] Ten identical signed posts at once: input: the same signed body posted ten times concurrently; expected: all `200`, one message. Regression: apps/api/test/integration/whatsapp-webhook.test.ts "stores once when the same signed post arrives ten times at once" (pin).
+- [ ] Signature with a valid digest behind a wrong seven-character prefix: input: `sha512=` followed by the correct HMAC-SHA-256 hex of the body; expected: `401`, nothing parsed. Regression: apps/api/test/integration/whatsapp-webhook.test.ts "answers 401 with the same body for a signature with sha512 prefix" and apps/api/test/unit/whatsapp-signature.test.ts "rejects a valid digest behind another algorithm prefix" (pins).
+- [ ] Future timestamp: input: an entry timestamped more than `MAX_FUTURE_SKEW_MS` (5 minutes) ahead; expected: `200`, `inbound.future` logged, nothing stored; an entry just inside the skew is stored. Decided (owner delegated 2026-11-06, spec row). Red-first: the commit "test(api): an entry timestamped beyond the future skew is acknowledged and not processed (red)" printed `expected [ 'Amanha' ] to deeply equal []`. Regression: apps/api/test/integration/whatsapp-webhook.test.ts "logs inbound.future for an entry timestamped beyond the future skew" and the pin beside it.
+- [ ] `Content-Length` of `abc` or `-1`: input: a signed body with that header; expected: `200`, because the streaming cap applies. Decided (owner delegated 2026-11-06, spec row). Regression: apps/api/test/integration/whatsapp-webhook.test.ts "accepts a signed body whose Content-Length header is %s because the streaming cap applies" (pin).
+- [ ] Unsigned body above the cap: input: unsigned body of 3 145 729 bytes; expected: `413` before the signature check. Decided (owner delegated 2026-11-06, spec row). Regression: apps/api/test/integration/whatsapp-webhook.test.ts "answers 413 for an unsigned body over the cap before the signature check" (pin).
 - [ ] pt-br channel page separators: input: the pt-br channel page; expected: `4.096` and `1.024` with the Portuguese separator; observed at c314c2b: `4,096` and `1,024`, fixed at f002eb7 and not retested. Not ticked.
 - [ ] Docs describe the wrong wire field: input: the MCP wire of an unavailable media; expected: `media_id: null` and `media_status: "unavailable"` (apps/api/src/mcp/wire.ts), not `media: null`; found at 1da24d0, fixed at c314c2b (both locales). Regression: none, docs only. Not ticked.
 

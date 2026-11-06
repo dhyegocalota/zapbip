@@ -37,7 +37,7 @@ describe('logOperatorEvent', () => {
     expect(loggedLines({ spy })).toEqual([{ event: 'channel.timeout' }]);
   });
 
-  it('keys the fields by the enum only', () => {
+  it('AU-125 keys the fields by the enum only', () => {
     type Fields = Parameters<typeof logOperatorEvent>[0]['fields'];
     expectTypeOf<Fields>().not.toHaveProperty('phone');
     expectTypeOf<Fields>().toHaveProperty(OperatorLogField.ErrorCode);

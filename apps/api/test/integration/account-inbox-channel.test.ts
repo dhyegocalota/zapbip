@@ -473,6 +473,32 @@ describe('AccountInbox channel messages', () => {
     expect(outcome).toMatchObject({ ok: true, value: { duplicate: false } });
   });
 
+  it('WI-15 applies a status to a message the account sent and never writes a null over its stored detail', async () => {
+    await registerAlpha();
+    await inRepository(async (repository) => {
+      await repository.insertMessage({ message: buildTextMessage({ messageId: 'msg_1', delivery: DeliveryState.Sent }) });
+      await repository.saveChannelMessageId({ messageId: 'msg_1', channelMessageId: OUTBOUND_CHANNEL_MESSAGE_ID });
+    });
+    const stub = accountInboxStub({ accountId: ACCOUNT_ID });
+    const detail = { errorCode: null, errorTitle: null, pricingCategory: PRICING_CATEGORY, billable: true };
+    const delivered = await stub.applyChannelStatus({
+      channelMessageId: OUTBOUND_CHANNEL_MESSAGE_ID,
+      status: DeliveryState.Delivered,
+      detail,
+    });
+    const read = await stub.applyChannelStatus({
+      channelMessageId: OUTBOUND_CHANNEL_MESSAGE_ID,
+      status: DeliveryState.Read,
+      detail: EMPTY_DETAIL,
+    });
+    const stored = await countRows({
+      statement: `SELECT COUNT(*) AS total FROM inbox_messages WHERE id = 'msg_1' AND delivery = '${DeliveryState.Read}' AND pricing_category = '${PRICING_CATEGORY}' AND billable = 1`,
+    });
+    expect(delivered).toMatchObject({ ok: true, value: { applied: true } });
+    expect(read).toMatchObject({ ok: true, value: { applied: true } });
+    expect(stored).toBe(1);
+  });
+
   it('WI-16 reports an unknown channel id as not found and writes nothing', async () => {
     await registerAlpha();
     const outcome = await accountInboxStub({ accountId: ACCOUNT_ID }).applyChannelStatus({

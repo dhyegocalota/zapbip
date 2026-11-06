@@ -1,5 +1,5 @@
 import { NOTICE_PREVIEW_MAX_CHARS } from '@zapbip/core';
-import { BYTES_PER_KILOBYTE, BYTES_PER_MEGABYTE, HOUR_MS, MINUTE_MS, SECOND_MS } from '@zapbip/types';
+import { BYTES_PER_KILOBYTE, BYTES_PER_MEGABYTE, DAY_MS, HOUR_MS, MINUTE_MS, SECOND_MS } from '@zapbip/types';
 
 export const GRAPH_API_VERSION = 'v24.0';
 export const GRAPH_REQUEST_TIMEOUT_MS = 10 * SECOND_MS;
@@ -12,6 +12,7 @@ export const WHATSAPP_MEDIA_HOST_SUFFIXES = ['fbcdn.net', 'fbsbx.com', 'whatsapp
 export const WEBHOOK_SIGNATURE_PREFIX = 'sha256=';
 export const WEBHOOK_SIGNATURE_HEADER = 'X-Hub-Signature-256';
 export const MAX_FUTURE_SKEW_MS = 5 * MINUTE_MS;
+export const DEVELOPMENT_MAX_FUTURE_SKEW_MS = 2 * DAY_MS;
 export const UNINDEXED_STATUS_RETRY_WINDOW_MS = 10 * MINUTE_MS;
 export const RESTRICTION_TTL_MS = 24 * HOUR_MS;
 export const OUTBOUND_BUTTON_BODY_MAX_CHARS = 1_024;
