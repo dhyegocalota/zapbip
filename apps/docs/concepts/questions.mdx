@@ -1,0 +1,12 @@
+---
+title: 'Questions'
+description: 'Ask the owner and get the answer back.'
+---
+
+A question is asked by one agent with [ask](/mcp-reference/ask) and holds its options and, later, its answer.
+
+- **Wait ceiling.** `ask` and [wait_for_reply](/mcp-reference/wait-for-reply) never hold a call longer than 50 seconds, because some clients cut a call at 60 seconds.
+- **Idempotent ask.** An `ask` with the same agent, question and options as an open or answered question asked within 4 minutes returns that question and sends nothing again. Clients repeat calls on their own.
+- **Answers bound to a question.** An answer belongs to its `question_id`. `wait_for_reply` with that id returns it every time while the question is retained, so a call the client abandoned loses nothing.
+- **Option ids.** Button and list ids carry the question and the option index, so a tap resolves the exact question even when several are open.
+- **Limits.** A button title has up to 20 characters, a list row up to 24, and a question up to 10 options. An error names the field that broke the rule.
