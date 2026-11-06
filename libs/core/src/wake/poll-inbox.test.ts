@@ -67,6 +67,7 @@ describe('pollInbox', () => {
       hasPolled: true,
       pollerStaleNotified: false,
       lastStaleNoticeAt: 0,
+      staleNoticeFailures: 0,
     });
   });
 

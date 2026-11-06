@@ -1,6 +1,6 @@
-import { IdPrefix, MessageKind, WakeLogEventName } from '@zapbip/types';
+import { ChannelErrorKind, IdPrefix, MessageKind, WakeLogEventName } from '@zapbip/types';
+import { InboxError } from '../inbox/errors';
 import { deliverToOwner } from '../inbox/use-cases/deliver-to-owner';
-import { observeUnsent } from './observe-unsent';
 import { isStaleNoticeDue, pollerDeadline } from './poller';
 import { staleNoticeCopy } from './wake-copy';
 import type { WakeContext } from './wake-ports';
@@ -10,9 +10,21 @@ export type EvaluatePollersResult = { nextDueAt: number | null };
 
 type StaleWake = WakeContext & { scheduledWake: ScheduledWake; now: number };
 
-function observeNotice(input: StaleWake & { name: WakeLogEventName }): void {
-  const { wake, scheduledWake, name } = input;
-  observeUnsent({ observer: wake.observer, name, stored: scheduledWake, agent: scheduledWake.agent, attempt: 0 });
+function observeNotice(input: StaleWake & { name: WakeLogEventName; errorCode?: string }): void {
+  const { wake, scheduledWake, name, errorCode } = input;
+  wake.observer.observe({
+    event: {
+      name,
+      provider: null,
+      agent: scheduledWake.agent,
+      attempt: scheduledWake.staleNoticeFailures,
+      statusCode: null,
+      latencyMs: null,
+      outcome: null,
+      timedOut: false,
+      errorCode,
+    },
+  });
 }
 
 async function noticeStale(input: StaleWake): Promise<void> {
@@ -37,8 +49,10 @@ async function noticeStale(input: StaleWake): Promise<void> {
 async function noticeStaleOnce(input: StaleWake): Promise<void> {
   try {
     await noticeStale(input);
-  } catch {
-    observeNotice({ ...input, name: WakeLogEventName.NoticeFailed });
+  } catch (error) {
+    const errorCode = error instanceof InboxError ? error.code : ChannelErrorKind.Unknown;
+    observeNotice({ ...input, name: WakeLogEventName.NoticeFailed, errorCode });
+    await input.wake.repository.recordStaleNoticeFailure({ agent: input.scheduledWake.agent, failedAt: input.now });
   }
 }
 

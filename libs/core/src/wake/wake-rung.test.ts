@@ -6,8 +6,20 @@ import { wakeRungFor } from './wake-rung';
 const NOW = 100 * HOUR_MS;
 const AGENT = 'grok-web';
 const STANDBY_AGENT = 'grok-bot';
-const FRESH_POLL = { lastPolledAt: NOW - HOUR_MS, hasPolled: true, pollerStaleNotified: false, lastStaleNoticeAt: null };
-const STALE_POLL = { lastPolledAt: NOW - 2 * HOUR_MS, hasPolled: true, pollerStaleNotified: false, lastStaleNoticeAt: null };
+const FRESH_POLL = {
+  lastPolledAt: NOW - HOUR_MS,
+  hasPolled: true,
+  pollerStaleNotified: false,
+  lastStaleNoticeAt: null,
+  staleNoticeFailures: 0,
+};
+const STALE_POLL = {
+  lastPolledAt: NOW - 2 * HOUR_MS,
+  hasPolled: true,
+  pollerStaleNotified: false,
+  lastStaleNoticeAt: null,
+  staleNoticeFailures: 0,
+};
 
 function rung(input: {
   wake: ReturnType<typeof storedWakeOf>;

@@ -4,6 +4,7 @@ ALTER TABLE agent_wake ADD COLUMN owner_locale TEXT;
 ALTER TABLE agent_wake ADD COLUMN has_polled INTEGER NOT NULL DEFAULT 0;
 ALTER TABLE agent_wake ADD COLUMN poller_stale_notified INTEGER NOT NULL DEFAULT 0;
 ALTER TABLE agent_wake ADD COLUMN last_stale_notice_at INTEGER;
+ALTER TABLE agent_wake ADD COLUMN stale_notice_failures INTEGER NOT NULL DEFAULT 0;
 
 ALTER TABLE inbox_messages ADD COLUMN handed_to TEXT;
 ALTER TABLE inbox_messages ADD COLUMN origin_message_id TEXT;

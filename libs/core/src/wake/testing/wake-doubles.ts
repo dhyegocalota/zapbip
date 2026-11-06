@@ -128,6 +128,7 @@ export function scheduledWakeOf(input: { agent: AgentName } & Partial<ScheduledW
     hasPolled: true,
     pollerStaleNotified: false,
     lastStaleNoticeAt: null,
+    staleNoticeFailures: 0,
     ...input,
   };
 }
@@ -153,6 +154,7 @@ export function createInMemoryWakeRepository(input: { clock: Clock }): WakeRepos
         hasPolled: false,
         pollerStaleNotified: false,
         lastStaleNoticeAt: null,
+        staleNoticeFailures: 0,
       });
     },
     clearWake: async ({ agent }) => {
@@ -194,7 +196,13 @@ export function createInMemoryWakeRepository(input: { clock: Clock }): WakeRepos
     recordPoll: async ({ agent, polledAt }) => {
       const pollState = pollStates.get(agent);
       const lastStaleNoticeAt = pollState === undefined ? null : pollState.lastStaleNoticeAt;
-      pollStates.set(agent, { lastPolledAt: polledAt, hasPolled: true, pollerStaleNotified: false, lastStaleNoticeAt });
+      pollStates.set(agent, {
+        lastPolledAt: polledAt,
+        hasPolled: true,
+        pollerStaleNotified: false,
+        lastStaleNoticeAt,
+        staleNoticeFailures: 0,
+      });
     },
     listScheduledWakes: async () =>
       [...wakes.values()]
@@ -204,10 +212,15 @@ export function createInMemoryWakeRepository(input: { clock: Clock }): WakeRepos
           if (pollState === undefined) throw new Error(`no poll state for ${wake.agent}`);
           return { ...wake, ...pollState };
         }),
+    recordStaleNoticeFailure: async ({ agent, failedAt }) => {
+      const pollState = pollStates.get(agent);
+      if (pollState === undefined) throw new Error(`no poll state for ${agent}`);
+      pollStates.set(agent, { ...pollState, lastStaleNoticeAt: failedAt, staleNoticeFailures: pollState.staleNoticeFailures + 1 });
+    },
     markStaleNotified: async ({ agent, noticedAt }) => {
       const pollState = pollStates.get(agent);
       if (pollState === undefined) throw new Error(`no poll state for ${agent}`);
-      pollStates.set(agent, { ...pollState, pollerStaleNotified: true, lastStaleNoticeAt: noticedAt });
+      pollStates.set(agent, { ...pollState, pollerStaleNotified: true, lastStaleNoticeAt: noticedAt, staleNoticeFailures: 0 });
     },
     findLocalRestore: async ({ agent }) => {
       const previous = restores.get(agent);

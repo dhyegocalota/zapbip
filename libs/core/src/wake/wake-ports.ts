@@ -34,6 +34,7 @@ export interface WakeRepository {
   recordPoll(input: { agent: AgentName; polledAt: number; ownerLocale: OwnerLocale }): Promise<void>;
   listScheduledWakes(): Promise<ScheduledWake[]>;
   markStaleNotified(input: { agent: AgentName; noticedAt: number }): Promise<void>;
+  recordStaleNoticeFailure(input: { agent: AgentName; failedAt: number }): Promise<void>;
   findLocalRestore(input: { agent: AgentName }): Promise<StoredWake | null>;
   saveLocalRestore(input: { agent: AgentName; previous: StoredWake }): Promise<void>;
   deleteLocalRestore(input: { agent: AgentName }): Promise<void>;
@@ -50,6 +51,7 @@ export type WakeLogEvent = {
   latencyMs: number | null;
   outcome: WakeAttemptOutcome | null;
   timedOut: boolean;
+  errorCode?: string;
 };
 
 export interface WakeObserver {

@@ -113,7 +113,7 @@ describe('evaluatePollers', () => {
 });
 
 describe('evaluatePollers failures', () => {
-  test('a failed delivery is logged, leaves the episode un-notified and the next pass sends the notice', async () => {
+  test('a failed delivery is logged, leaves the episode un-notified and the pass after the backoff sends the notice', async () => {
     const wakeEnvironment = await createWakeEnvironment();
     await schedule({ wakeEnvironment, agent: 'chatgpt' });
     await wakeEnvironment.environment.clock.advance({ ms: 3 * HOUR_MS });
@@ -121,6 +121,7 @@ describe('evaluatePollers failures', () => {
     await evaluatePollers(wakeEnvironment.context);
     expect(wakeEnvironment.observer.events).toMatchObject([{ name: WakeLogEventName.NoticeFailed, agent: 'chatgpt' }]);
     expect(await wakeEnvironment.wake.repository.findPollState({ agent: 'chatgpt' })).toMatchObject({ pollerStaleNotified: false });
+    await wakeEnvironment.environment.clock.advance({ ms: HOUR_MS });
     await evaluatePollers(wakeEnvironment.context);
     expect(sessionTexts({ wakeEnvironment })).toHaveLength(1);
     expect(await wakeEnvironment.wake.repository.findPollState({ agent: 'chatgpt' })).toMatchObject({ pollerStaleNotified: true });

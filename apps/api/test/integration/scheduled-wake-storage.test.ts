@@ -232,7 +232,13 @@ describe('poll state', () => {
       owner_locale: OwnerLocale.PortugueseBrazil,
       poller_stale_notified: 0,
     });
-    expect(result.state).toEqual({ lastPolledAt: POLLED_AT, hasPolled: true, pollerStaleNotified: false, lastStaleNoticeAt: NOTICED_AT });
+    expect(result.state).toEqual({
+      lastPolledAt: POLLED_AT,
+      hasPolled: true,
+      pollerStaleNotified: false,
+      lastStaleNoticeAt: NOTICED_AT,
+      staleNoticeFailures: 0,
+    });
   });
 
   it('leaves the mode and the target alone and survives a later save', async () => {
@@ -277,6 +283,20 @@ describe('poll state', () => {
     const { failure, rows } = await recording;
     expect(failure).toBeInstanceOf(Error);
     expect(rows).toEqual([]);
+  });
+
+  it('counts failed stale notices and a poll or a delivery resets the count', async () => {
+    const failed = await inRepositories({
+      run: async ({ wake }) => {
+        await wake.recordStaleNoticeFailure({ agent: SCHEDULED_AGENT, failedAt: NOTICED_AT });
+        await wake.recordStaleNoticeFailure({ agent: SCHEDULED_AGENT, failedAt: NOTICED_AT });
+        const twice = await wake.findPollState({ agent: SCHEDULED_AGENT });
+        await wake.recordPoll({ agent: SCHEDULED_AGENT, polledAt: POLLED_AT, ownerLocale: OwnerLocale.PortugueseBrazil });
+        return { twice, afterPoll: await wake.findPollState({ agent: SCHEDULED_AGENT }) };
+      },
+    });
+    expect(failed.twice).toMatchObject({ lastStaleNoticeAt: NOTICED_AT, staleNoticeFailures: 2, pollerStaleNotified: false });
+    expect(failed.afterPoll).toMatchObject({ staleNoticeFailures: 0 });
   });
 
   it('keeps the stale mark after the object restarts', async () => {
