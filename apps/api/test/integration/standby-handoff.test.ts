@@ -31,6 +31,15 @@ async function setStandby(input: { agent: AgentName; standbyAgent: AgentName }):
   );
 }
 
+async function setWakeMode(input: { agent: AgentName; mode: WakeMode }): Promise<void> {
+  expectOk(
+    await stub.setWake({
+      connection: connectionFor({ agent: input.agent }),
+      setting: { mode: input.mode, url: null, token: null, intervalMinutes: null, standbyAgent: null },
+    }),
+  );
+}
+
 async function ownerWrites(input: { text: string }): Promise<string> {
   const { messageId } = expectOk(await receiveOwnerText({ stub, text: `@${PRIMARY} ${input.text}` }));
   if (messageId === null) throw new Error('owner message was not stored');
@@ -106,6 +115,31 @@ describe('standby handoff', () => {
     await alarmAfterDebounce();
     expect(await readRequests({ stub, agent: STANDBY })).toHaveLength(1);
     expect((await checkInbox({ agent: STANDBY })).messages).toHaveLength(2);
+  });
+
+  it('copies a later message even when the primary still holds an unread one', async () => {
+    await setWakeMode({ agent: PRIMARY, mode: WakeMode.None });
+    await ownerWrites({ text: OWNER_TEXT });
+    await setStandby({ agent: PRIMARY, standbyAgent: STANDBY });
+    const laterMessageId = await ownerWrites({ text: ANSWER_TEXT });
+    const { messages } = await checkInbox({ agent: STANDBY });
+    expect(messages.map((message) => message.originMessageId)).toEqual([laterMessageId]);
+  });
+
+  it('copies a plain message that follows the owner answer to a question of the primary', async () => {
+    expectOk(
+      await stub.ask({
+        connection: connectionFor({ agent: PRIMARY }),
+        text: 'Deploy?',
+        options: ['Sim', 'Nao'],
+        optionDescriptions: [null, null],
+        timeoutMs: 10,
+      }),
+    );
+    await ownerWrites({ text: 'sim' });
+    const laterMessageId = await ownerWrites({ text: OWNER_TEXT });
+    const { messages } = await checkInbox({ agent: STANDBY });
+    expect(messages.map((message) => message.originMessageId)).toContain(laterMessageId);
   });
 
   it('keeps the message with the primary and tells the owner when the standby became a standby itself', async () => {

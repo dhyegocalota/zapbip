@@ -1,5 +1,5 @@
 import type { AgentName, AgentWaker, Clock, CoreDependencies, Message, WakeDependencies } from '@zapbip/core';
-import { createInMemoryWakeRepository } from '@zapbip/core/wake-testing';
+import { createInMemoryWakeRepository, createRecordingWakeObserver, type RecordingWakeObserver } from '@zapbip/core/wake-testing';
 import { ForwardedKind, MessageDirection, MessageKind, WakeOutcome } from '@zapbip/types';
 import { vi, type Mock } from 'vitest';
 
@@ -16,6 +16,7 @@ export type WakerHarness = {
   dependencies: CoreDependencies;
   wake: WakeDependencies;
   clock: MutableClock;
+  observer: RecordingWakeObserver;
   findMessage: Mock;
   countUnread: Mock;
   insertHandoff: Mock;
@@ -63,8 +64,9 @@ export function createHarness(): WakerHarness {
     ids: { next: () => COPY_MESSAGE_ID },
     waker: { notify: standbyNotify },
   } as unknown as CoreDependencies;
-  const wake = { repository: createInMemoryWakeRepository({ clock }) } as unknown as WakeDependencies;
-  return { dependencies, wake, clock, findMessage, countUnread, insertHandoff, standbyNotify };
+  const observer = createRecordingWakeObserver();
+  const wake = { repository: createInMemoryWakeRepository({ clock }), observer } as unknown as WakeDependencies;
+  return { dependencies, wake, clock, observer, findMessage, countUnread, insertHandoff, standbyNotify };
 }
 
 export function firstCallArgument<Argument>(input: { mock: Mock }): Argument {

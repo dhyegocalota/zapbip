@@ -1,7 +1,17 @@
 import type { DeliverToOwnerInput } from '@zapbip/core';
-import { WAKE_COPY } from '@zapbip/core';
+import { InboxError, WAKE_COPY } from '@zapbip/core';
 import { storedWakeOf } from '@zapbip/core/wake-testing';
-import { AgentWakeReason, HOUR_MS, MessageKind, OwnerLocale, WakeCopyKey, WakeMode, WakeOutcome } from '@zapbip/types';
+import {
+  AgentWakeReason,
+  ChannelErrorKind,
+  HOUR_MS,
+  MessageKind,
+  OwnerLocale,
+  WakeCopyKey,
+  WakeLogEventName,
+  WakeMode,
+  WakeOutcome,
+} from '@zapbip/types';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createScheduledAgentWaker } from '../../src/adapters/wake/scheduled-agent-waker';
 import { POLLING_AGENT, createHarness, firstCallArgument, type WakerHarness } from './waker-fixtures';
@@ -77,14 +87,26 @@ describe('scheduled agent waker', () => {
     expect(sentNote()).toContain(WAKE_COPY[WakeCopyKey.NeverPolled][OwnerLocale.PortugueseBrazil]);
   });
 
-  it('sends no note for a standby wake and reports the agent woken', async () => {
+  it('sends the cadence note for a standby wake too and reports the agent woken', async () => {
     await scheduleAgent({ ownerLocale: OwnerLocale.PortugueseBrazil });
     expect(await notify({ reason: AgentWakeReason.StandbyFor })).toBe(WakeOutcome.Woken);
-    expect(deliverToOwner).not.toHaveBeenCalled();
+    expect(deliverToOwner).toHaveBeenCalledTimes(1);
+    expect(sentNote()).toContain(POLLING_AGENT);
   });
 
-  it('throws when the agent has no stored wake', async () => {
-    await expect(notify({ reason: AgentWakeReason.MessageWaiting })).rejects.toThrow('has no stored state');
+  it.each([
+    ['a delivery failure', new InboxError({ code: ChannelErrorKind.DeliveryFailed, message: 'delivery failed for text' })],
+    ['a plain error', new Error('boom')],
+  ])('logs %s of the note, reports the agent woken and does not throw', async (_name, failure) => {
+    await scheduleAgent({ ownerLocale: OwnerLocale.PortugueseBrazil });
+    deliverToOwner.mockRejectedValue(failure);
+    expect(await notify({ reason: AgentWakeReason.MessageWaiting })).toBe(WakeOutcome.Woken);
+    expect(harness.observer.events).toMatchObject([{ name: WakeLogEventName.NoticeFailed, agent: POLLING_AGENT }]);
+  });
+
+  it('logs a missing stored wake instead of throwing', async () => {
+    expect(await notify({ reason: AgentWakeReason.MessageWaiting })).toBe(WakeOutcome.Woken);
     expect(deliverToOwner).not.toHaveBeenCalled();
+    expect(harness.observer.events).toMatchObject([{ name: WakeLogEventName.NoticeFailed, agent: POLLING_AGENT }]);
   });
 });

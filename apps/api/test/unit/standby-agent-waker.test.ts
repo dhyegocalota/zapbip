@@ -81,6 +81,10 @@ describe('standby agent waker', () => {
     expect(harness.countUnread.mock.invocationCallOrder.at(0)).toBeLessThan(harness.insertHandoff.mock.invocationCallOrder.at(0) as number);
   });
 
+  it('asks to be told of every message so later ones are copied while the primary holds unread messages', async () => {
+    expect(await createStandbyAgentWaker(harness).pushesEveryMessage({ agent: PRIMARY })).toBe(true);
+  });
+
   it('makes no copy and wakes nobody without a message id', async () => {
     expect(await handOff({})).toBe(WakeOutcome.Unreached);
     expect(harness.insertHandoff).not.toHaveBeenCalled();
