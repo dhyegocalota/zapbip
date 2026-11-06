@@ -1,5 +1,5 @@
 import type { ReleaseUploadInput } from './types';
 
-export async function releaseUpload(_input: ReleaseUploadInput): Promise<void> {
-  throw new Error('releaseUpload is not implemented');
+export async function releaseUpload(input: ReleaseUploadInput): Promise<void> {
+  await input.dependencies.repository.releaseUpload({ mediaId: input.mediaId });
 }

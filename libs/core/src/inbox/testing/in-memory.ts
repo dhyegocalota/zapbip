@@ -61,6 +61,7 @@ function createInMemoryRepository(): InboxRepository {
   const receipts = new Map<string, number>();
   const receiptMessageIds = new Map<string, string>();
   const media = new Map<string, StoredMedia>();
+  const claimedUploads = new Set<string>();
   let messages: Message[] = [];
   let questions: Question[] = [];
   let window: OwnerWindow = { lastOwnerMessageAt: null, noticeSentForClosedWindow: false };
@@ -150,9 +151,19 @@ function createInMemoryRepository(): InboxRepository {
       media.set(stored.mediaId, stored);
     },
     findMedia: async ({ mediaId }) => media.get(mediaId) ?? null,
+    claimUpload: async ({ mediaId }) => {
+      const stored = media.get(mediaId);
+      const isClaimable = stored !== undefined && stored.receivedAt === null && !claimedUploads.has(mediaId);
+      if (isClaimable) claimedUploads.add(mediaId);
+      return isClaimable;
+    },
+    releaseUpload: async ({ mediaId }) => {
+      claimedUploads.delete(mediaId);
+    },
     markMediaReceived: async ({ mediaId, receivedAt, retentionUntil }) => {
       const stored = media.get(mediaId);
       if (stored === undefined) return;
+      claimedUploads.delete(mediaId);
       media.set(mediaId, { ...stored, receivedAt, retentionUntil, expiresAt: null });
     },
     listExpiredMediaIds: async ({ now }) =>

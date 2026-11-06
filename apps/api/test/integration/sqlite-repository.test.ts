@@ -247,6 +247,19 @@ describe('SQLite inbox repository', () => {
     expect(result).toEqual({ first: true, second: false, afterReset: true });
   });
 
+  it('claims an upload exactly once until it is released or received', async () => {
+    const result = await inRepository(async (repository) => {
+      await repository.insertMedia({ media: buildMedia({ mediaId: 'med_1', expiresAt: BASE_TIME + 5 }) });
+      const first = await repository.claimUpload({ mediaId: 'med_1' });
+      const second = await repository.claimUpload({ mediaId: 'med_1' });
+      await repository.releaseUpload({ mediaId: 'med_1' });
+      const afterRelease = await repository.claimUpload({ mediaId: 'med_1' });
+      await repository.markMediaReceived({ mediaId: 'med_1', receivedAt: BASE_TIME, retentionUntil: BASE_TIME + MEDIA_RETENTION_MS });
+      return { first, second, afterRelease, afterReceived: await repository.claimUpload({ mediaId: 'med_1' }) };
+    });
+    expect(result).toEqual({ first: true, second: false, afterRelease: true, afterReceived: false });
+  });
+
   it('stores media, marks it received and deletes it', async () => {
     const media = buildMedia({ mediaId: 'med_1', expiresAt: BASE_TIME + 5 });
     const result = await inRepository(async (repository) => {

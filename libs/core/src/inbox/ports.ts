@@ -50,6 +50,8 @@ export interface InboxRepository {
   claimNotice(): Promise<boolean>;
   insertMedia(input: { media: StoredMedia }): Promise<void>;
   findMedia(input: { mediaId: string }): Promise<StoredMedia | null>;
+  claimUpload(input: { mediaId: string }): Promise<boolean>;
+  releaseUpload(input: { mediaId: string }): Promise<void>;
   markMediaReceived(input: { mediaId: string; receivedAt: number; retentionUntil: number }): Promise<void>;
   listExpiredMediaIds(input: { now: number }): Promise<string[]>;
   deleteMedia(input: { mediaIds: string[] }): Promise<void>;

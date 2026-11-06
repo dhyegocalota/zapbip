@@ -202,6 +202,14 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     return this.outcome({ run: () => inbox.describeUpload({ ...input, dependencies: this.dependencies }) });
   }
 
+  claimUpload(input: { mediaId: string }): Promise<CallOutcome<StoredMedia>> {
+    return this.outcome({ run: () => inbox.claimUpload({ ...input, dependencies: this.dependencies }) });
+  }
+
+  releaseUpload(input: { mediaId: string }): Promise<CallOutcome<void>> {
+    return this.outcome({ run: () => inbox.releaseUpload({ ...input, dependencies: this.dependencies }) });
+  }
+
   completeUpload(input: { mediaId: string }): Promise<CallOutcome<StoredMedia>> {
     return this.outcome({ run: () => inbox.completeUpload({ ...input, dependencies: this.dependencies }) });
   }

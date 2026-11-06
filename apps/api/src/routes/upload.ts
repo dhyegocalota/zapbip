@@ -53,14 +53,22 @@ uploadRoutes.put('/u/:account_id/:upload_id', async (context) => {
   const body = context.req.raw.body;
   if (!body) return context.json({ error: 'length_mismatch' }, HttpStatus.BadRequest);
 
+  const claim = await inbox.claimUpload({ mediaId: uploadId });
+  if (!claim.ok) return context.json({ error: claim.errorCode, message: claim.message }, ERROR_STATUS[claim.errorCode]);
+
   const mediaStore = mediaStoreOf({ bindings: context.env, clock });
-  await mediaStore.put({
-    accountId,
-    mediaId: uploadId,
-    body,
-    sizeBytes: declaredLength,
-    mimeType: description.value.mimeType,
-  });
+  try {
+    await mediaStore.put({
+      accountId,
+      mediaId: uploadId,
+      body,
+      sizeBytes: declaredLength,
+      mimeType: description.value.mimeType,
+    });
+  } catch (error) {
+    await inbox.releaseUpload({ mediaId: uploadId });
+    throw error;
+  }
   const completion = await inbox.completeUpload({ mediaId: uploadId });
   if (!completion.ok) return context.json({ error: completion.errorCode, message: completion.message }, ERROR_STATUS[completion.errorCode]);
   logEvent({ event: LogEvent.Upload, accountId, sizeBytes: declaredLength });
