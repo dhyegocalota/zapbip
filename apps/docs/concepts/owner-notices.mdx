@@ -1,0 +1,21 @@
+---
+title: 'Owner notices'
+description: 'The approved messages the owner receives when the window is closed.'
+---
+
+Outside the [24-hour window](/concepts/24-hour-window) WhatsApp only delivers approved templates. zapbip uses two, in the owner's language (Portuguese or English).
+
+| Template | When | Quick reply |
+|---|---|---|
+| `zapbip_agent_notice` | an agent sent a message | `Abrir` / `Open` |
+| `zapbip_agent_question` | an agent asked a question | `Responder` / `Reply` |
+
+Each names the agent and shows a preview of at most 60 characters on one line.
+
+## Why the notice comes first
+
+A notice arrives before the real content and carries none of its own. The real message, or the question with its buttons or list, follows it, because a free-form message is only allowed once the owner has written.
+
+The owner taps the quick reply. That tap is a message from the owner: it opens the window and the queue is delivered in order.
+
+zapbip sends one notice per closed window. The tap is the only action a notice offers, and it is never forwarded to an agent.
