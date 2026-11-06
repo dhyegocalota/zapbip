@@ -4,39 +4,76 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-08-15",
   "compatibility_flags": ["nodejs_compat"],
-  "durable_objects": {
-    "bindings": [{ "name": "ACCOUNT_INBOX", "class_name": "AccountInbox" }],
-  },
+  "observability": { "enabled": true },
+  "workers_dev": false,
+  "preview_urls": false,
+  "durable_objects": { "bindings": [{ "name": "ACCOUNT_INBOX", "class_name": "AccountInbox" }] },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["AccountInbox"] }],
   "d1_databases": [
     {
       "binding": "CONNECTIONS",
-      "database_name": "zapbip-connections",
+      "database_name": "zapbip-production",
       "database_id": "REPLACE_WITH_PRODUCTION_D1_DATABASE_ID",
-      "migrations_dir": "migrations",
-    },
+      "migrations_dir": "migrations"
+    }
   ],
-  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "zapbip-media" }],
+  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "zapbip-media-production" }],
   "rules": [{ "type": "Text", "globs": ["**/*.sql"], "fallthrough": true }],
-  "vars": { "PUBLIC_ORIGIN": "https://mcp.zapbip.com" },
+  "routes": [{ "pattern": "mcp.zapbip.com", "custom_domain": true }],
+  "vars": {
+    "ENVIRONMENT": "production",
+    "PUBLIC_ORIGIN": "https://mcp.zapbip.com",
+    "WAITLIST_ENABLED": "true",
+    "WHATSAPP_GRAPH_BASE_URL": "https://graph.facebook.com"
+  },
+  "triggers": { "crons": ["0 * * * *", "5 0 * * *"] },
   "env": {
     "development": {
+      "name": "zapbip-api-development",
       "main": "src/index.dev.ts",
-      "vars": { "PUBLIC_ORIGIN": "http://localhost:8787" },
+      "durable_objects": { "bindings": [{ "name": "ACCOUNT_INBOX", "class_name": "AccountInbox" }] },
       "migrations": [{ "tag": "v1", "new_sqlite_classes": ["AccountInbox"] }],
-      "durable_objects": {
-        "bindings": [{ "name": "ACCOUNT_INBOX", "class_name": "AccountInbox" }],
-      },
       "d1_databases": [
         {
           "binding": "CONNECTIONS",
-          "database_name": "zapbip-connections",
+          "database_name": "zapbip-development",
           "database_id": "zapbip-connections-local",
-          "migrations_dir": "migrations",
-        },
+          "migrations_dir": "migrations"
+        }
       ],
-      "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "zapbip-media" }],
+      "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "zapbip-media-development" }],
       "rules": [{ "type": "Text", "globs": ["**/*.sql"], "fallthrough": true }],
+      "vars": {
+        "ENVIRONMENT": "development",
+        "PUBLIC_ORIGIN": "http://localhost:8787",
+        "WAITLIST_ENABLED": "false",
+        "WHATSAPP_GRAPH_BASE_URL": "http://127.0.0.1:8788"
+      },
+      "triggers": { "crons": ["0 * * * *", "5 0 * * *"] }
     },
-  },
+    "staging": {
+      "name": "zapbip-api-staging",
+      "main": "src/index.ts",
+      "durable_objects": { "bindings": [{ "name": "ACCOUNT_INBOX", "class_name": "AccountInbox" }] },
+      "migrations": [{ "tag": "v1", "new_sqlite_classes": ["AccountInbox"] }],
+      "d1_databases": [
+        {
+          "binding": "CONNECTIONS",
+          "database_name": "zapbip-staging",
+          "database_id": "REPLACE_WITH_STAGING_D1_DATABASE_ID",
+          "migrations_dir": "migrations"
+        }
+      ],
+      "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "zapbip-media-staging" }],
+      "rules": [{ "type": "Text", "globs": ["**/*.sql"], "fallthrough": true }],
+      "routes": [{ "pattern": "mcp-staging.zapbip.com", "custom_domain": true }],
+      "vars": {
+        "ENVIRONMENT": "staging",
+        "PUBLIC_ORIGIN": "https://mcp-staging.zapbip.com",
+        "WAITLIST_ENABLED": "false",
+        "WHATSAPP_GRAPH_BASE_URL": "https://graph.facebook.com"
+      },
+      "triggers": { "crons": ["0 * * * *", "5 0 * * *"] }
+    }
+  }
 }
