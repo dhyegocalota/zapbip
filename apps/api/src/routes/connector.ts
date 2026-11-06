@@ -6,7 +6,7 @@ import { UNAUTHORIZED_BODY } from '../contract/constants';
 import type { Bindings } from '../contract/env';
 import { LogEvent } from '../contract/log';
 import { logEvent } from '../log';
-import { resolveConnection } from '../mcp/resolve-connection';
+import { resolveConnection } from './resolve-connection';
 import { accountInboxOf } from './account-inbox-stub';
 import { HttpStatus } from './http-status';
 
