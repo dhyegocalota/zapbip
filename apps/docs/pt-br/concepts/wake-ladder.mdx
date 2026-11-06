@@ -19,7 +19,7 @@ Em todos os degraus sua mensagem fica guardada na [caixa de entrada](/pt-br/conc
 
 ## Local: seu próprio computador
 
-O conector mantém uma linha aberta com o zapbip enquanto roda. Quando você escreve, o zapbip empurra a mensagem por essa linha e o conector retoma sua sessão no seu computador. Quando a última linha fecha, o zapbip devolve o despertar que você tinha antes. Inicie com `npx zapbip@0.1.0 connect`, ou peça à sua IA para chamar [set_wake](/pt-br/mcp-reference/set-wake) com `mode: local`.
+O conector mantém uma linha aberta com o zapbip enquanto roda. Quando você escreve, o zapbip empurra a mensagem por essa linha e o conector retoma sua sessão no seu computador. Quando a última linha fecha, o zapbip devolve o despertar que você tinha antes. Inicie com `npx zapbip@0.1.0 connect`.
 
 ## Agendado: ouvir sem limite de tempo
 
@@ -58,6 +58,6 @@ Algumas IAs, como o Grok na web, não podem ser iniciadas de jeito nenhum. Você
   ]}
 />
 
-Se a reserva não existe, foi removida ou é ela mesma uma reserva, nada é copiado: a mensagem espera com a primeira IA e você recebe o aviso de sempre.
+Uma reserva nunca repassa para outra reserva: é um salto só. Se a reserva não existe, foi removida ou é ela mesma uma reserva, nada é copiado: a mensagem espera com a primeira IA e você recebe o aviso de sempre.
 
 A IA configura isso para você na instalação. Para mudar à mão, use [set_wake](/pt-br/mcp-reference/set-wake).

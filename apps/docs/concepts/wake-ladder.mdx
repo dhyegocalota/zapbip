@@ -19,7 +19,7 @@ In every rung your message is kept in the [inbox](/concepts/inbox) until an AI r
 
 ## Local: your own computer
 
-The connector keeps one open line to zapbip while it runs. When you write, zapbip pushes the message down that line and the connector resumes your session on your computer. When the last line closes, zapbip puts back whatever wake you had before. Start it with `npx zapbip@0.1.0 connect`, or ask your AI to call [set_wake](/mcp-reference/set-wake) with `mode: local`.
+The connector keeps one open line to zapbip while it runs. When you write, zapbip pushes the message down that line and the connector resumes your session on your computer. When the last line closes, zapbip puts back whatever wake you had before. Start it with `npx zapbip@0.1.0 connect`.
 
 ## Scheduled: listening with no time limit
 
@@ -58,6 +58,6 @@ Some AIs, such as Grok on the web, cannot be started at all. You can name anothe
   ]}
 />
 
-If the standby is missing, was removed or is itself a standby, nothing is copied: the message waits with the first AI and you get the usual notice.
+A standby never forwards to another standby: it is one hop only. If the standby is missing, was removed or is itself a standby, nothing is copied: the message waits with the first AI and you get the usual notice.
 
 The AI sets this up for you during install. To change it by hand, use [set_wake](/mcp-reference/set-wake).

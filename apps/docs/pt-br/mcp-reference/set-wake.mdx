@@ -27,6 +27,10 @@ Um agente que não pode ser iniciado de fora roda uma tarefa num intervalo que c
 
 Quando você escreve, o zapbip diz quando esperar a resposta. Se nenhuma olhada acontece por o dobro do intervalo, você recebe um aviso e suas mensagens esperam na caixa de entrada até a próxima olhada.
 
+## Local
+
+Peça ao seu agente para chamar esta ferramenta com `{ "mode": "local" }` enquanto o [conector](/pt-br/developers/local-connector) roda no seu computador.
+
 ## Reserva
 
 Um agente que não pode ser despertado indica outro agente da mesma conta para responder no lugar dele. O zapbip copia sua mensagem para a reserva e a desperta; a reserva responde como ela mesma.
@@ -35,7 +39,7 @@ Um agente que não pode ser despertado indica outro agente da mesma conta para r
 { "mode": "standby", "standby_agent": "grok-bot" }
 ```
 
-Se a reserva não existe, foi removida ou está ela mesma em modo reserva, nada é copiado e sua mensagem espera com o primeiro agente.
+Uma reserva nunca repassa para outra reserva: é um salto só. Se a reserva não existe, foi removida ou está ela mesma em modo reserva, nada é copiado e sua mensagem espera com o primeiro agente.
 
 ## Provedores
 
