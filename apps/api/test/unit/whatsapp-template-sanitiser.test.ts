@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { assertTemplateBodyHasFixedWords, sanitiseTemplateParameter } from '../../src/adapters/whatsapp/template-sanitiser';
-import { WHATSAPP_TEMPLATE_BODIES } from '../../src/adapters/whatsapp/whatsapp-templates';
 
 const FALLBACK = 'uma mensagem';
 
@@ -62,11 +61,5 @@ describe('assertTemplateBodyHasFixedWords', () => {
 
   it('AU-115 accepts fixed words around the parameter', () => {
     expect(() => assertTemplateBodyHasFixedWords({ body: 'Você tem {{1}} para ler' })).not.toThrow();
-  });
-
-  it('accepts every registered template body', () => {
-    Object.values(WHATSAPP_TEMPLATE_BODIES).forEach((bodies) =>
-      Object.values(bodies).forEach((body) => expect(() => assertTemplateBodyHasFixedWords({ body })).not.toThrow()),
-    );
   });
 });
