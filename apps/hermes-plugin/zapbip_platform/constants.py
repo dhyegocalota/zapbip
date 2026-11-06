@@ -14,6 +14,7 @@ SECURE_LINK_SCHEME = "https"
 SECURE_SOCKET_SCHEME = "wss"
 CONNECTOR_PING_TEXT = '{"type":"ping"}'
 CONNECTOR_PONG_TEXT = '{"type":"pong"}'
+CHANNEL_FORWARDED_PREFIX = "[forwarded — not written by the owner]"
 CHANNEL_PLUGIN_SELF_TEST_TEXT = "✅ instalado"
 SEEN_MESSAGE_LIMIT = 1_024
 ABNORMAL_CLOSE_CODE = 1006

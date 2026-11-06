@@ -2,7 +2,7 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any
 
-from zapbip_platform.constants import CHANNEL_HANDOFF_NO_TEXT_BY_KIND, MILLISECONDS_PER_SECOND, MessageKind
+from zapbip_platform.constants import CHANNEL_FORWARDED_PREFIX, CHANNEL_HANDOFF_NO_TEXT_BY_KIND, MILLISECONDS_PER_SECOND, MessageKind
 
 Message = dict[str, Any]
 
@@ -44,7 +44,10 @@ HANDOFF_TEXT_BY_KIND: dict[str, Callable[..., str]] = {
 
 
 def handoff_text_of(*, message: Message) -> str:
-    return HANDOFF_TEXT_BY_KIND[message["kind"]](message=message)
+    text = HANDOFF_TEXT_BY_KIND[message["kind"]](message=message)
+    if message["forwarded"]:
+        return f"{CHANNEL_FORWARDED_PREFIX}\n{text}"
+    return text
 
 
 def message_timestamp_of(*, message: Message) -> datetime:

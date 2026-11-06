@@ -1,5 +1,5 @@
 import type { Message } from '@zapbip/core';
-import { CHANNEL_HANDOFF_NO_TEXT_BY_KIND, CHANNEL_SENDER, ConnectorLogEvent, MessageKind } from '@zapbip/types';
+import { CHANNEL_FORWARDED_PREFIX, CHANNEL_HANDOFF_NO_TEXT_BY_KIND, CHANNEL_SENDER, ConnectorLogEvent, MessageKind } from '@zapbip/types';
 import { dispatchInboundDirectDm } from 'openclaw/plugin-sdk/channel-inbound';
 import type { OpenClawConfig } from 'openclaw/plugin-sdk/config-contracts';
 import type { ZapbipAccount } from './account';
@@ -15,10 +15,16 @@ function ownTextOf(input: { message: Message }): string | null {
   return null;
 }
 
-export function handoffTextOf(input: { message: Message }): string {
+function unmarkedHandoffTextOf(input: { message: Message }): string {
   const ownText = ownTextOf(input);
   if (ownText === null) return CHANNEL_HANDOFF_NO_TEXT_BY_KIND[input.message.kind];
   return ownText;
+}
+
+export function handoffTextOf(input: { message: Message }): string {
+  const text = unmarkedHandoffTextOf(input);
+  if (input.message.forwarded) return `${CHANNEL_FORWARDED_PREFIX}\n${text}`;
+  return text;
 }
 
 export async function handOffToAgent(input: { cfg: OpenClawConfig; account: ZapbipAccount; message: Message }): Promise<void> {
@@ -41,7 +47,7 @@ export async function handOffToAgent(input: { cfg: OpenClawConfig; account: Zapb
     rawBody: handoffTextOf({ message }),
     messageId: message.messageId,
     timestamp: message.at,
-    commandAuthorized: true,
+    commandAuthorized: !message.forwarded,
     inboundAccessAuthorized: true,
     provider: CHANNEL_ID,
     surface: CHANNEL_ID,

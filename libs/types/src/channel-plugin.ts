@@ -23,4 +23,6 @@ export const CHANNEL_HANDOFF_NO_TEXT_BY_KIND: Record<MessageKind, string> = {
   [MessageKind.Choice]: 'The owner sent a reply with no option selected.',
 };
 
+export const CHANNEL_FORWARDED_PREFIX = '[forwarded — not written by the owner]';
+
 export const CHANNEL_PLUGIN_SELF_TEST_TEXT = '✅ instalado';
