@@ -151,6 +151,7 @@ describe('wake dependencies', () => {
     const outcome = await runInDurableObject(stub, async (instance, state) => {
       const AccountInboxClass = instance.constructor as new (ctx: DurableObjectState, env: typeof testEnv) => typeof instance;
       const keyless = new AccountInboxClass(state, { ...testEnv, WAKE_SECRET_KEY: undefined } as never);
+      await state.blockConcurrencyWhile(async () => undefined);
       return keyless.sendText({
         connection: connectionOf({ accountId: WAKE_ACCOUNT, agent: WAKE_AGENT }),
         text: 'oi',
@@ -164,6 +165,7 @@ describe('wake dependencies', () => {
     const outcome = await runInDurableObject(stub, async (instance, state) => {
       const AccountInboxClass = instance.constructor as new (ctx: DurableObjectState, env: typeof testEnv) => typeof instance;
       const keyless = new AccountInboxClass(state, { ...testEnv, WAKE_SECRET_KEY: undefined } as never);
+      await state.blockConcurrencyWhile(async () => undefined);
       return keyless
         .setWake({
           connection: connectionOf({ accountId: WAKE_ACCOUNT, agent: WAKE_AGENT }),

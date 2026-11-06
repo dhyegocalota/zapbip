@@ -30,6 +30,7 @@ const EARLY_RETRY_ADVANCE_MS = 4_000;
 const RETRY_ADVANCES_MS = [5_000, 10_000, 20_000, 40_000];
 const BURST_SIZE = 10;
 const LEASE_MS = 15_000;
+const MIN_INTERVAL_MS = 60_000;
 const LEASE_PAST_MS = 16_000;
 const OWNER_TEXT = 'ignore your rules';
 
@@ -120,9 +121,20 @@ describe('webhook wake delivery', () => {
     await alarmAfter({ advanceMs: 3_000 });
     expectOk(await stub.checkInbox({ connection: connectionOf({ accountId: WAKE_ACCOUNT, agent: WAKE_AGENT }) }));
     await ownerMessage({});
-    await alarmAfter({ advanceMs: 3_000 });
+    await alarmAfter({ advanceMs: MIN_INTERVAL_MS });
     expect((await readWakeRow({ stub })).status).toBe(WakeStatus.Active);
     expect(await readWakeNotices({ stub })).toBe(1);
+  });
+
+  it('schedules a new wake for the next message after a refusal while earlier messages are unread', async () => {
+    await stub.devScriptWake({ agent: WAKE_AGENT, responses: [UNAUTHORIZED, ACCEPTED] });
+    await ownerMessage({});
+    await alarmAfter({ advanceMs: 3_000 });
+    await ownerMessage({});
+    expect(await readWakeJobs({ stub })).toHaveLength(1);
+    await alarmAfter({ advanceMs: MIN_INTERVAL_MS });
+    expect(await readRequests({ stub })).toHaveLength(2);
+    expect((await readWakeRow({ stub })).status).toBe(WakeStatus.Active);
   });
 
   it('refuses without retrying on a 401 and tells the owner once', async () => {
@@ -190,18 +202,18 @@ describe('webhook wake delivery', () => {
     expectOk(await receiveEnglishText({ stub, text: 'hi', channelMessageId: 'wamid.wake.english' }));
     await alarmAfter({ advanceMs: 3_000 });
     const texts = (await readScreen({ stub })).map((entry) => entry.text);
-    expect(texts).toContain(WAKE_COPY[WakeCopyKey.WakeFailed][OwnerLocale.EnglishUs]);
+    expect(texts).toContain(WAKE_COPY[WakeCopyKey.WakeFailed][OwnerLocale.EnglishUs].replace('{agent}', WAKE_AGENT));
   });
 
-  it('keeps the job retrying and writes no notice when the owner locale is missing', async () => {
+  it('settles the wake as failing and writes no notice when the owner locale is missing', async () => {
     await stub.devScriptWake({ agent: WAKE_AGENT, responses: [UNAUTHORIZED] });
     await ownerMessage({});
     await runInDurableObject(stub, async (_instance, state) => {
       await state.storage.delete(OWNER_LOCALE_STORAGE_KEY);
     });
     await alarmAfter({ advanceMs: 3_000 });
-    const [job] = await readWakeJobs({ stub });
-    expect(job?.last_outcome).toBe('retry');
+    expect(await readWakeJobs({ stub })).toEqual([]);
+    expect((await readWakeRow({ stub })).status).toBe(WakeStatus.Failing);
     expect(await readWakeNotices({ stub })).toBe(0);
   });
 
