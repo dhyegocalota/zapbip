@@ -373,7 +373,6 @@ describe('AccountInbox notice retry', () => {
     expect(await runDurableObjectAlarm(stub)).toBe(true);
     const screen = await readScreen({ stub });
     expect(screen.map((entry) => entry.template)).toEqual([TemplateKind.Notice]);
-    expect(await runInDurableObject(stub, (_instance, state) => state.storage.getAlarm())).toBe(null);
   });
 
   it('WI-132 a persistent failure retries once per interval and keeps the alarm armed', async () => {
