@@ -12,7 +12,13 @@ import {
 } from '@zapbip/types';
 import { describe, expect, test, vi } from 'vitest';
 import { createEnvironment } from '../../../../libs/core/src/inbox/testing/fixtures';
-import { acceptConnectorSocket, connectorAgentOf, parseDoneFrame, remainingSocketCount } from '../../src/account-inbox/connector-sockets';
+import {
+  acceptConnectorSocket,
+  connectorAgentOf,
+  parseDoneFrame,
+  planMessageFrames,
+  remainingSocketCount,
+} from '../../src/account-inbox/connector-sockets';
 import { createLocalConnectorWaker } from '../../src/adapters/wake/local-connector-waker';
 
 type FakeSocket = WebSocket & { sent: string[]; closedWith: number[] };
@@ -49,7 +55,9 @@ function createFakeState(input: { socketsByAgent: Record<string, FakeSocket[]> }
   return createFakeStateWithAccepted(input).context;
 }
 
-function ownerMessage(input: { index: number }): Message {
+const LARGE_TEXT_BYTES = 10_000;
+
+function ownerMessage(input: { index: number; text?: string }): Message {
   return {
     messageId: `msg_${input.index}`,
     direction: MessageDirection.FromOwner,
@@ -59,14 +67,16 @@ function ownerMessage(input: { index: number }): Message {
     delivery: null,
     readByAgent: false,
     kind: MessageKind.Text,
-    text: `message ${input.index}`,
+    text: input.text === undefined ? `message ${input.index}` : input.text,
   };
 }
 
-async function createWakerFixture(input: { socketsByAgent: Record<string, FakeSocket[]>; unreadCount: number }) {
+async function createWakerFixture(input: { socketsByAgent: Record<string, FakeSocket[]>; unreadCount: number; text?: string }) {
   const environment = await createEnvironment();
   await Promise.all(
-    Array.from({ length: input.unreadCount }, (_, index) => environment.repository.insertMessage({ message: ownerMessage({ index }) })),
+    Array.from({ length: input.unreadCount }, (_, index) =>
+      environment.repository.insertMessage({ message: ownerMessage({ index, text: input.text }) }),
+    ),
   );
   const waker = createLocalConnectorWaker({
     context: createFakeState({ socketsByAgent: input.socketsByAgent }),
@@ -121,6 +131,42 @@ describe('local connector waker', () => {
     const { waker } = await createWakerFixture({ socketsByAgent: { ana: [socket] }, unreadCount: CONNECTOR_INBOX_LIMIT + 10 });
     await notifyAna({ waker });
     expect(JSON.parse(socket.sent.join()).messages).toHaveLength(CONNECTOR_INBOX_LIMIT);
+  });
+});
+
+describe('large backlogs', () => {
+  const largeText = 'x'.repeat(LARGE_TEXT_BYTES);
+
+  test('a backlog over the frame limit is split into frames that each fit', async () => {
+    const socket = createFakeSocket();
+    const { waker } = await createWakerFixture({ socketsByAgent: { ana: [socket] }, unreadCount: 20, text: largeText });
+    expect(await notifyAna({ waker })).toBe(WakeOutcome.Woken);
+    const frames = socket.sent.map((text) => JSON.parse(text));
+    expect(socket.sent.length).toBeGreaterThan(1);
+    socket.sent.forEach((text) => expect(new TextEncoder().encode(text).byteLength).toBeLessThanOrEqual(CONNECTOR_FRAME_MAX_BYTES));
+    expect(frames.flatMap((frame) => frame.messages.map((message: Message) => message.messageId))).toHaveLength(20);
+  });
+
+  test('a single message that cannot fit in any frame is never reported as woken', async () => {
+    const socket = createFakeSocket();
+    const { waker } = await createWakerFixture({
+      socketsByAgent: { ana: [socket] },
+      unreadCount: 1,
+      text: 'x'.repeat(CONNECTOR_FRAME_MAX_BYTES),
+    });
+    expect(await notifyAna({ waker })).toBe(WakeOutcome.Unreached);
+    expect(socket.sent).toEqual([]);
+  });
+
+  test('the plan keeps the order and puts an oversized message aside', () => {
+    const messages = [
+      ownerMessage({ index: 1 }),
+      ownerMessage({ index: 2, text: 'x'.repeat(CONNECTOR_FRAME_MAX_BYTES) }),
+      ownerMessage({ index: 3 }),
+    ];
+    const plan = planMessageFrames({ messages });
+    expect(plan.oversized.map((message) => message.messageId)).toEqual(['msg_2']);
+    expect(plan.frames.flat().map((message) => message.messageId)).toEqual(['msg_1', 'msg_3']);
   });
 });
 

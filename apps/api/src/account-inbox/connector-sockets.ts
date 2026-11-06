@@ -1,4 +1,4 @@
-import type { AgentName, DoneFrame, ServerFrame } from '@zapbip/core';
+import type { AgentName, DoneFrame, Message, ServerFrame } from '@zapbip/core';
 import { CONNECTOR_FRAME_MAX_BYTES, ConnectorFrameType, FrameRejectionReason, REPLACED_CLOSE_CODE } from '@zapbip/types';
 
 export type DoneFrameParse = { ok: true; frame: DoneFrame } | { ok: false; reason: FrameRejectionReason };
@@ -61,4 +61,17 @@ export function parseDoneFrame(input: { data: string | ArrayBuffer }): DoneFrame
   if (type !== ConnectorFrameType.Done) return reject({ reason: FrameRejectionReason.UnknownType });
   if (typeof messageId !== 'string') return reject({ reason: FrameRejectionReason.Malformed });
   return { ok: true, frame: { type: ConnectorFrameType.Done, messageId } };
+}
+
+export type MessageFramePlan = { frames: Message[][]; oversized: Message[] };
+export type MessagesDelivery = { socketCount: number; oversizedCount: number };
+
+export function planMessageFrames(input: { messages: Message[] }): MessageFramePlan {
+  void input;
+  throw new Error('planMessageFrames is not implemented');
+}
+
+export function sendMessagesToAgent(input: { context: DurableObjectState; agent: AgentName; messages: Message[] }): MessagesDelivery {
+  void input;
+  throw new Error('sendMessagesToAgent is not implemented');
 }
