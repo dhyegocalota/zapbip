@@ -231,6 +231,16 @@ describe('assertMediaFits', () => {
     expect(error).toEqual(invalidInput('mime_type: must be a type/subtype token'));
   });
 
+  test.each(['image/png\n;x', 'image/png;\rx', 'image/png;\tx', 'image/png;x\u007f'])(
+    'a media type with a control character %j is invalid input',
+    async (mimeType) => {
+      const mediaError = await captureInboxError(() => assertMediaFits({ kind: MessageKind.Image, mimeType, sizeBytes: 1000 }));
+      const uploadError = await captureInboxError(() => assertUploadDeclaration({ mimeType, sizeBytes: 10 }));
+      expect(mediaError).toEqual(invalidInput('mime_type: must not contain control characters'));
+      expect(uploadError).toEqual(invalidInput('mime_type: must not contain control characters'));
+    },
+  );
+
   test('an upload declaration outside the type/subtype grammar is invalid input', async () => {
     const error = await captureInboxError(() => assertUploadDeclaration({ mimeType: 'image/svg+xml,image/png', sizeBytes: 10 }));
     expect(error).toEqual(invalidInput('mime_type: must be a type/subtype token'));

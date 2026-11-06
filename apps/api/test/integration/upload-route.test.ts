@@ -217,6 +217,53 @@ describe('upload route', () => {
     expect(response.status).toBe(STATUS_CREATED);
   });
 
+  test('stores the object under the normalized declared type', async () => {
+    const fixture = await newFixture({ mimeType: 'Image/PNG; charset=binary' });
+    const response = await putUpload({
+      ...validPut({ fixture }),
+      headers: { 'Content-Type': PNG_TYPE, 'Content-Length': String(UPLOAD_BYTES.byteLength) },
+    });
+    expect(response.status).toBe(STATUS_CREATED);
+    expect((await storedObject({ fixture }))?.httpMetadata?.contentType).toBe(PNG_TYPE);
+  });
+
+  test('a slow writer past the upload deadline cannot complete the upload a second PUT found expired', async () => {
+    const fixture = await newFixture();
+    const inbox = inboxOf({ accountId: fixture.account.accountId });
+    const release = { resume: () => {} };
+    const resumed = new Promise<void>((resolve) => {
+      release.resume = resolve;
+    });
+    const slowBody = new ReadableStream<Uint8Array>({
+      async pull(controller) {
+        await resumed;
+        controller.enqueue(UPLOAD_BYTES);
+        controller.close();
+      },
+    });
+    const query = await signedQuery({
+      key: env.UPLOAD_LINK_SIGNING_KEY,
+      accountId: fixture.account.accountId,
+      mediaId: fixture.uploadId,
+      purpose: LinkPurpose.Upload,
+      expiresAt: freshExpiry(),
+    });
+    const slowPut = SELF.fetch(`${ORIGIN}/u/${fixture.account.accountId}/${fixture.uploadId}?${queryOf(query)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': PDF_TYPE, 'Content-Length': String(UPLOAD_BYTES.byteLength) },
+      body: slowBody,
+      duplex: 'half',
+    } as RequestInit);
+    await inbox.advanceClock({ advanceMs: UPLOAD_TTL_MS + 1 });
+    const secondPut = await putUpload(validPut({ fixture }));
+    release.resume();
+    const slowResponse = await slowPut;
+    const description = await inbox.describeUpload({ mediaId: fixture.uploadId });
+    expect(secondPut.status).toBe(STATUS_GONE);
+    expect(slowResponse.status).toBe(STATUS_GONE);
+    expect(description.ok).toBe(false);
+  });
+
   test('WI-82 a path without a connection secret carries none of it', async () => {
     const fixture = await newFixture();
     const response = await putUpload(validPut({ fixture }));

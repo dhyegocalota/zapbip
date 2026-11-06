@@ -43,6 +43,14 @@ async function getMedia(input: { path: StoredFixture; signed: StoredFixture; key
 
 const PDF_TYPE = 'application/pdf';
 
+describe('media route content type', () => {
+  test('serves the normalized media type', async () => {
+    const fixture = await storeMedia({ mimeType: 'IMAGE/PNG; charset=binary' });
+    const response = await getMedia({ path: fixture, signed: fixture, key: env.MEDIA_LINK_SIGNING_KEY, expiresAt: freshExpiry() });
+    expect(response.headers.get('content-type')).toBe(MEDIA_TYPE);
+  });
+});
+
 describe('media route', () => {
   test.each([
     { mimeType: 'image/png', disposition: null },
