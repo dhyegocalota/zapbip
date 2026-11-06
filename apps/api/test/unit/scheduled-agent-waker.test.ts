@@ -1,3 +1,4 @@
+import type { DeliverToOwnerInput } from '@zapbip/core';
 import { WAKE_COPY } from '@zapbip/core';
 import { storedWakeOf } from '@zapbip/core/wake-testing';
 import { AgentWakeReason, HOUR_MS, MessageKind, OwnerLocale, WakeCopyKey, WakeMode, WakeOutcome } from '@zapbip/types';
@@ -30,7 +31,7 @@ function notify(input: { reason: AgentWakeReason }) {
 }
 
 function sentNote(): string {
-  const call = firstCallArgument({ mock: deliverToOwner });
+  const call = firstCallArgument<DeliverToOwnerInput>({ mock: deliverToOwner });
   if (call.content.kind !== MessageKind.Text) throw new Error('expected a text note');
   return call.content.text;
 }
@@ -45,7 +46,10 @@ describe('scheduled agent waker', () => {
     await scheduleAgent({ ownerLocale: OwnerLocale.PortugueseBrazil });
     expect(await notify({ reason: AgentWakeReason.MessageWaiting })).toBe(WakeOutcome.Woken);
     expect(deliverToOwner).toHaveBeenCalledTimes(1);
-    expect(firstCallArgument({ mock: deliverToOwner })).toMatchObject({ agent: null, ownerLocale: OwnerLocale.PortugueseBrazil });
+    expect(firstCallArgument<DeliverToOwnerInput>({ mock: deliverToOwner })).toMatchObject({
+      agent: null,
+      ownerLocale: OwnerLocale.PortugueseBrazil,
+    });
     expect(sentNote()).toContain(POLLING_AGENT);
     expect(sentNote()).toContain(WAKE_COPY[WakeCopyKey.CadenceHourly][OwnerLocale.PortugueseBrazil]);
   });

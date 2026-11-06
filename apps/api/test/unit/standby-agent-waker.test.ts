@@ -1,4 +1,4 @@
-import type { Message } from '@zapbip/core';
+import type { InboxRepository, Message } from '@zapbip/core';
 import { storedWakeOf } from '@zapbip/core/wake-testing';
 import { AgentWakeReason, InboxErrorCode, MediaSourceKind, MessageDirection, MessageKind, WakeMode, WakeOutcome } from '@zapbip/types';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -13,6 +13,8 @@ import {
   ownerTextOf,
   type WakerHarness,
 } from './waker-fixtures';
+
+type HandoffInput = Parameters<InboxRepository['insertHandoff']>[0];
 
 const SECRET_TEXT = 'segredo';
 const MEDIA_ID = 'media_1';
@@ -33,7 +35,7 @@ describe('standby agent waker', () => {
   it('writes a copy with its own id that points at the owner message', async () => {
     await handOff({ messageId: OWNER_MESSAGE_ID });
     expect(harness.insertHandoff).toHaveBeenCalledTimes(1);
-    const call = firstCallArgument({ mock: harness.insertHandoff });
+    const call = firstCallArgument<HandoffInput>({ mock: harness.insertHandoff });
     expect(call).toMatchObject({ primaryAgent: PRIMARY, handedTo: STANDBY });
     expect(call.copy).toMatchObject({
       messageId: COPY_MESSAGE_ID,
@@ -130,7 +132,7 @@ describe('standby agent waker', () => {
   it.each(Object.entries(contents))('hands a %s message off with its content and a new id', async (_name, message) => {
     harness.findMessage.mockResolvedValue(message);
     await handOff({ messageId: OWNER_MESSAGE_ID });
-    const call = firstCallArgument({ mock: harness.insertHandoff });
+    const call = firstCallArgument<HandoffInput>({ mock: harness.insertHandoff });
     expect(call.copy).toMatchObject({ ...message, messageId: COPY_MESSAGE_ID, originMessageId: OWNER_MESSAGE_ID, agent: STANDBY });
   });
 });

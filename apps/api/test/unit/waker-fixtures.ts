@@ -66,8 +66,8 @@ export function createHarness(): WakerHarness {
   return { dependencies, wake, clock, findMessage, countUnread, insertHandoff, standbyNotify };
 }
 
-export function firstCallArgument(input: { mock: Mock }): any {
+export function firstCallArgument<Argument>(input: { mock: Mock }): Argument {
   const [call] = input.mock.mock.calls;
   if (call === undefined) throw new Error('expected at least one call');
-  return call[0];
+  return call[0] as Argument;
 }

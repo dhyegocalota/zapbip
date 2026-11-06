@@ -1,3 +1,4 @@
+import type { DeliverToOwnerInput } from '@zapbip/core';
 import { storedWakeOf } from '@zapbip/core/wake-testing';
 import { AgentWakeReason, MessageKind, OwnerLocale, WakeMode, WakeOutcome } from '@zapbip/types';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -31,7 +32,7 @@ describe('inbox agent waker', () => {
     });
     expect(await notify()).toBe(WakeOutcome.Unreached);
     expect(deliverToOwner).toHaveBeenCalledTimes(1);
-    expect(firstCallArgument({ mock: deliverToOwner }).content.kind).toBe(MessageKind.Text);
+    expect(firstCallArgument<DeliverToOwnerInput>({ mock: deliverToOwner }).content.kind).toBe(MessageKind.Text);
   });
 
   it.each([WakeMode.None, WakeMode.Webhook, WakeMode.Standby])('sends no note for a %s connection', async (mode) => {
