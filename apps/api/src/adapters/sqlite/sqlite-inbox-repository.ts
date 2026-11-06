@@ -2,6 +2,7 @@ import {
   QUEUE_RETENTION_MS,
   QUESTION_RETENTION_MS,
   RECEIPT_RETENTION_MS,
+  SENDING_STALE_MS,
   type AgentRecord,
   type Clock,
   type InboxRepository,
@@ -13,7 +14,6 @@ import {
   type StoredMedia,
 } from '@zapbip/core';
 import { DeliveryState, MessageDirection, MessageKind, WakeMode, type MediaOrigin, type OwnerLocale } from '@zapbip/types';
-import { SENDING_STALE_MS } from '../whatsapp/whatsapp-constants';
 
 type MessageRow = {
   id: string;

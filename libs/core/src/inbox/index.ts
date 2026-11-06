@@ -1,4 +1,5 @@
 export * from './constants';
+export * from './claim-constants';
 export * from './connection';
 export * from './message';
 export * from './question';

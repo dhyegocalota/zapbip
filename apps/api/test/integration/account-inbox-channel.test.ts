@@ -1,9 +1,8 @@
-import { RECEIPT_RETENTION_MS, type ChannelStatusDetail, type CoreDependencies } from '@zapbip/core';
+import { RECEIPT_RETENTION_MS, SENDING_STALE_MS, type ChannelStatusDetail, type CoreDependencies } from '@zapbip/core';
 import { ChannelInboundKind, DeliveryState, MediaOrigin, MessageDirection, MessageKind, OwnerLocale } from '@zapbip/types';
 import { evictDurableObject, reset, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
 import { afterEach, describe, expect, it } from 'vitest';
 import { AccountInbox } from '../../src/account-inbox/account-inbox';
-import { SENDING_STALE_MS } from '../../src/adapters/whatsapp/whatsapp-constants';
 import type { Bindings } from '../../src/contract/env';
 import { DevAccountInbox } from '../../src/dev/dev-account-inbox';
 import { withRepository } from '../support/account-inbox';
