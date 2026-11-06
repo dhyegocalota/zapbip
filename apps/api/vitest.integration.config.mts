@@ -19,5 +19,6 @@ export default defineConfig({
   ],
   test: {
     include: ['test/integration/**/*.test.ts'],
+    globalSetup: 'test/support/fake-graph-global-setup.ts',
   },
 });

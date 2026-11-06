@@ -19,7 +19,7 @@ import textFixture from '../fixtures/whatsapp/outbound/text.json';
 import { buildEnvelope, buildQuestion, buildTextMessage } from '../support/builders';
 import { FakeGraph } from '../support/fake-graph';
 import { applyDirectoryMigration, seedOwnerIdentity } from '../support/seed';
-import { testEnv } from '../support/workers-env';
+import { testEnv, whatsappTestEnv } from '../support/workers-env';
 
 const FIRST_ACCOUNT = 'acc_a';
 const SECOND_ACCOUNT = 'acc_b';
@@ -28,7 +28,7 @@ const SECOND_OWNER_WA_ID = '5511900000002';
 const PUBLIC_ORIGIN = 'https://api.test';
 const MESSAGES_PATH = '/v24.0/1000000000000001/messages';
 
-const whatsapp = readWhatsAppEnvironment({ env: testEnv });
+const whatsapp = readWhatsAppEnvironment({ env: whatsappTestEnv });
 const fakeGraph = new FakeGraph({ baseUrl: whatsapp.graphBaseUrl });
 const clock = createPlatformClock();
 
@@ -40,7 +40,7 @@ function senderFor(input: { accountId: string }) {
     graph: createGraphClient({ baseUrl: whatsapp.graphBaseUrl, accessToken: whatsapp.accessToken, fetcher: fetch }),
     findOwnerByAccountId: (lookup) => findOwnerByAccountId({ database: testEnv.CONNECTIONS, accountId: lookup.accountId }),
     messageIndex: new D1MessageIndex({ database: testEnv.CONNECTIONS }),
-    restrictions: new D1ChannelRestrictions({ database: testEnv.CONNECTIONS }),
+    restrictions: new D1ChannelRestrictions({ database: testEnv.CONNECTIONS, phoneNumberId: whatsapp.phoneNumberId }),
     mediaStore: createR2MediaStore({
       bucket: testEnv.MEDIA,
       mediaLinkSigningKey: testEnv.MEDIA_LINK_SIGNING_KEY,
@@ -145,14 +145,18 @@ describe('Cloud API sender against the fake Graph', () => {
     await refuseNextSend({ status: 400, errorCode });
     const first = await failureOf({ run: () => sender.session(textInput({ text: 'Olá' })) });
     expect(first.code).toBe(ChannelErrorKind.Restricted);
-    expect(await new D1ChannelRestrictions({ database: testEnv.CONNECTIONS }).findActive({ now: clock.now() })).toEqual({ errorCode });
+    expect(
+      await new D1ChannelRestrictions({ database: testEnv.CONNECTIONS, phoneNumberId: whatsapp.phoneNumberId }).findActive({
+        now: clock.now(),
+      }),
+    ).toEqual({ errorCode });
     const second = await failureOf({ run: () => sender.session(textInput({ text: 'de novo' })) });
     expect(second.code).toBe(ChannelErrorKind.Restricted);
     expect(await sentBodies()).toHaveLength(1);
   });
 
   it('WI-64 sends again once the restriction is older than its time to live', async () => {
-    await new D1ChannelRestrictions({ database: testEnv.CONNECTIONS }).record({
+    await new D1ChannelRestrictions({ database: testEnv.CONNECTIONS, phoneNumberId: whatsapp.phoneNumberId }).record({
       errorCode: 131_048,
       restrictedAt: clock.now() - RESTRICTION_TTL_MS - 1,
     });

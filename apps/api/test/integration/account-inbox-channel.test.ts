@@ -9,7 +9,7 @@ import { DevAccountInbox } from '../../src/dev/dev-account-inbox';
 import { withRepository } from '../support/account-inbox';
 import { BASE_TIME, buildTextMessage } from '../support/builders';
 import { advanceClock } from '../support/inbox-session';
-import { accountInboxStub, connectionOf, testEnv } from '../support/workers-env';
+import { accountInboxStub, connectionOf, testEnv, whatsappTestEnv } from '../support/workers-env';
 
 const ACCOUNT_ID = 'acc_channel';
 const CHANNEL_MESSAGE_ID = 'wamid.inbound.1';
@@ -424,7 +424,7 @@ describe('AccountInbox channel messages', () => {
   });
 
   it('WI-14 picks the Cloud API sender in the development class when the access token is set', async () => {
-    const sender = (await selectSender({ instanceClass: DevAccountInbox, env: testEnv })) as Record<string, unknown>;
+    const sender = (await selectSender({ instanceClass: DevAccountInbox, env: whatsappTestEnv })) as Record<string, unknown>;
     expect(typeof sender.session).toBe('function');
     expect(typeof sender.template).toBe('function');
     expect(sender.listScreenEntries).toBeUndefined();
@@ -440,7 +440,7 @@ describe('AccountInbox channel messages', () => {
   });
 
   it('WI-15 builds the Cloud API sender in the production class when the variables are set', async () => {
-    const sender = (await selectSender({ instanceClass: AccountInbox, env: testEnv })) as Record<string, unknown>;
+    const sender = (await selectSender({ instanceClass: AccountInbox, env: whatsappTestEnv })) as Record<string, unknown>;
     expect(typeof sender.session).toBe('function');
     expect(sender.listScreenEntries).toBeUndefined();
   });
