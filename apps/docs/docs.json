@@ -90,6 +90,7 @@
             "pages": [
               "pt-br/developers/any-mcp-client",
               "pt-br/developers/errors",
+              "pt-br/guides/webhook-wake",
               {
                 "group": "Conceitos",
                 "pages": [
@@ -112,7 +113,8 @@
                   "pt-br/mcp-reference/wait-for-reply",
                   "pt-br/mcp-reference/get-messages",
                   "pt-br/mcp-reference/check-inbox",
-                  "pt-br/mcp-reference/create-upload"
+                  "pt-br/mcp-reference/create-upload",
+                  "pt-br/mcp-reference/set-wake"
                 ]
               }
             ]
