@@ -137,9 +137,45 @@ describe('Codex isolation', () => {
     await expect(prepare()).rejects.toBeInstanceOf(WakeIsolationRefusedError);
   });
 
-  test('accepts a managed config that declares no server', async () => {
-    await writeFile(join(systemConfigDirectory, 'managed_config.toml'), 'approval_policy = "never"\n');
+  test('accepts a managed config that only sets keys on the allowlist', async () => {
+    await writeFile(join(systemConfigDirectory, 'managed_config.toml'), 'model = "gpt-x"\nmodel_reasoning_effort = "high"\n');
     expect((await prepare()).isolationArguments).toEqual([]);
+  });
+
+  test.each([
+    'web_search = "live"',
+    'approval_policy = "never"',
+    'sandbox_mode = "danger-full-access"',
+    'profile = "work"',
+    'unknown_future_key = 1',
+    '[tools]\nweb_search = true',
+    '[features]\nplugins = true',
+    '[profiles.work]\nmodel = "x"',
+  ])('refuses the wake when a managed config sets a key outside the allowlist: %s', async (declaration) => {
+    await writeFile(join(codexHome, 'managed_config.toml'), `${declaration}\n`);
+    await expect(prepare()).rejects.toBeInstanceOf(WakeIsolationRefusedError);
+  });
+
+  test.each([
+    'sandbox_mode = "danger-full-access"',
+    'approval_policy = "never"',
+    '[profiles.work.tools]\nweb_search = true',
+    '[profiles.work.features]\nplugins = true',
+  ])('refuses the wake when a profile sets what cannot be overridden: %s', async (declaration) => {
+    const header = declaration.startsWith('[') ? '' : '[profiles.work]\n';
+    await writeFile(join(codexHome, 'config.toml'), `${header}${declaration}\n`);
+    await expect(prepare()).rejects.toBeInstanceOf(WakeIsolationRefusedError);
+  });
+
+  test('disables web search inside every profile of every layer, once each', async () => {
+    await writeFile(join(codexHome, 'config.toml'), '[profiles.work]\nmodel = "x"\nweb_search = "live"\n');
+    await writeFile(join(workingDirectory, '.codex', 'config.toml'), '[profiles.work]\nmodel = "y"\n[profiles.night-shift]\nmodel = "z"\n');
+    expect((await prepare()).isolationArguments).toEqual([
+      '-c',
+      'profiles.work.web_search="disabled"',
+      '-c',
+      'profiles.night-shift.web_search="disabled"',
+    ]);
   });
 
   test.each([
@@ -200,6 +236,10 @@ describe('Codex isolation', () => {
       'profiles.work.mcp_servers.deploy.enabled=false',
       '-c',
       'profiles.night-shift.mcp_servers.mail.enabled=false',
+      '-c',
+      'profiles.work.web_search="disabled"',
+      '-c',
+      'profiles.night-shift.web_search="disabled"',
     ]);
   });
 
