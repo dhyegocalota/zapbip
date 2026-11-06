@@ -123,3 +123,28 @@ describe('waitForReply without a question', () => {
     expect(statuses).toEqual([ReplyStatus.Message, ReplyStatus.Timeout]);
   });
 });
+
+describe('waitForReply cancelled by a revocation', () => {
+  test('a held wait for the next message ends at once with a timeout and delivers nothing after', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha'] });
+    const holding = waiting({ environment, questionId: null, timeoutMs: 5 * SECOND_MS });
+    await environment.clock.advance({ ms: 0 });
+    environment.dependencies.waiters.cancelAgent({ agent: 'alpha' });
+    expect(await holding).toEqual({ status: ReplyStatus.Timeout });
+    expect(environment.clock.now()).toBe(START_AT);
+    expect(environment.dependencies.waiters.hasLiveWaiter({ agent: 'alpha' })).toBe(false);
+    await receiveText({ environment, text: '@alpha hi' });
+    expect(await environment.repository.countUnread({ agent: 'alpha' })).toBe(1);
+  });
+
+  test('a held wait for a question ends at once with a timeout even if the answer lands with the cancel', async () => {
+    const environment = await createEnvironment();
+    const question = await askAndAbandon({ environment });
+    const holding = waiting({ environment, questionId: question.questionId, timeoutMs: 5 * SECOND_MS });
+    await environment.clock.advance({ ms: 0 });
+    await receiveText({ environment, text: 'sim' });
+    environment.dependencies.waiters.cancelAgent({ agent: 'alpha' });
+    expect(await holding).toEqual({ status: ReplyStatus.Timeout });
+  });
+});

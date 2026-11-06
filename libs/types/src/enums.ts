@@ -67,6 +67,11 @@ export enum OptionRender {
   List = 'list',
 }
 
+export enum WaiterEnd {
+  Resolved = 'resolved',
+  Cancelled = 'cancelled',
+}
+
 export enum ReplyStatus {
   Answered = 'answered',
   Pending = 'pending',

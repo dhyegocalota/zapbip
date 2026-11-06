@@ -20,7 +20,7 @@ import type {
   WaitForReplyInput,
   WaitForReplyResult,
 } from '@zapbip/core';
-import { ChannelErrorKind } from '@zapbip/types';
+import { ChannelErrorKind, type AccountState } from '@zapbip/types';
 import { createFakeWhatsAppSender, type FakeWhatsAppSender } from '../adapters/fake/fake-whatsapp-sender';
 import { createIdGenerator } from '../adapters/platform/ids';
 import { loadDurableClock, type DurableClock } from '../adapters/platform/clock';
@@ -202,6 +202,25 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
 
   completeUpload(input: { mediaId: string }): Promise<CallOutcome<StoredMedia>> {
     return this.outcome({ run: () => inbox.completeUpload({ ...input, dependencies: this.dependencies }) });
+  }
+
+  recordRevocation(input: { agent: string }): Promise<void> {
+    void input;
+    throw new Error('recordRevocation is not implemented');
+  }
+
+  cancelWaiters(input: { agent: string }): Promise<void> {
+    void input;
+    throw new Error('cancelWaiters is not implemented');
+  }
+
+  setState(input: { state: AccountState }): Promise<void> {
+    void input;
+    throw new Error('setState is not implemented');
+  }
+
+  purge(): Promise<void> {
+    throw new Error('purge is not implemented');
   }
 
   receiveOwnerMessage(input: ReceiveOwnerMessageRequest): Promise<CallOutcome<inbox.ReceiveResult>> {
