@@ -95,10 +95,12 @@ export enum AgentWakeReason {
 
 export enum WakeMode {
   None = 'none',
+  Local = 'local',
 }
 
 export enum WakeRung {
   Inbox = 'inbox',
+  Local = 'local',
 }
 
 export enum ChannelErrorKind {

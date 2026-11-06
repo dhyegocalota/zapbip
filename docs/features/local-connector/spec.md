@@ -108,6 +108,7 @@ A new attach for an agent closes the previous socket of that tag with `REPLACED_
 
 | Direction | Frame | Shape |
 |---|---|---|
+| Worker → connector | `hello` | `{type, agent, previousWakeMode}`, first on every attach, before the inbox re-read |
 | Worker → connector | `messages` | `{type, messages: Message[]}`, where `Message` is the core type of owner messages |
 | connector → Worker | `done` | `{type, messageId}` |
 | connector → Worker | `ping` | answered by the Durable Object with `pong`, no wake |
@@ -261,6 +262,10 @@ No command writes either file. A reboot restarts the connector; a reconnect re-r
 | Wake prompt language | Portuguese · English | English, because repo text is English | owner delegated 2026-11-06 |
 | Attach and wake mode | keep the previous mode · set `local` | attach sets `local` and logs the previous mode | owner delegated 2026-11-06 |
 | Wake replies beyond `send_message` | all tools · send only | send only, in this slice | owner delegated 2026-11-06 |
+| Server hello | none · a `hello` frame first | a `hello` frame with the agent and the previous wake mode; the connector logs `connector_connected` when it arrives | owner delegated 2026-11-06 |
+| Wake persistence | new port methods on the inbox repository · slice 4's `WakeRepository` | `WakeRepository`; three restore methods, a `local_restore` column on `agent_wake` in Durable Object schema `v5`; the last close restores the previous setting unless the owner changed it meanwhile | owner delegated 2026-11-06 |
+| Done scope | any message · owner messages of the same agent | only an owner message of the same agent is marked read | owner delegated 2026-11-06 |
+| Connector pre-flight | open the socket directly · a plain HTTPS request first | `GET` the link without `Upgrade`: 401 exits 1, 426 continues, anything else exits 1 | owner delegated 2026-11-06 |
 | Package location | `apps/connector` · `libs/connector` | `apps/connector`, bundled with esbuild, zero runtime dependencies | owner delegated 2026-11-06 |
 
 ## Test strategy summary

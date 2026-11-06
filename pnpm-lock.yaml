@@ -67,6 +67,30 @@ importers:
         specifier: 4.158.0
         version: 4.158.0(@cloudflare/workers-types@5.20261106.1)(@types/node@24.19.2)
 
+  apps/connector:
+    devDependencies:
+      '@types/node':
+        specifier: 24.19.2
+        version: 24.19.2
+      '@types/ws':
+        specifier: 8.18.2
+        version: 8.18.2
+      '@zapbip/core':
+        specifier: workspace:*
+        version: link:../../libs/core
+      '@zapbip/types':
+        specifier: workspace:*
+        version: link:../../libs/types
+      esbuild:
+        specifier: 0.28.2
+        version: 0.28.2
+      vitest:
+        specifier: 5.0.5
+        version: 5.0.5(@types/node@24.19.2)(vite@8.3.5)
+      ws:
+        specifier: 8.22.1
+        version: 8.22.1
+
   apps/docs:
     devDependencies:
       mint:
@@ -3638,7 +3662,7 @@ packages:
       '@vitest/spy': 4.1.12
       estree-walker: 3.0.3
       magic-string: 0.30.21
-      vite: 8.3.5(@types/node@24.19.2)(tsx@4.23.15)
+      vite: 8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(tsx@4.23.15)
     dev: true
 
   /@vitest/mocker@5.0.5(vite@8.3.5):
@@ -3656,7 +3680,7 @@ packages:
       '@vitest/spy': 5.0.5
       estree-walker: 3.0.3
       magic-string: 1.4.5
-      vite: 8.3.5(@types/node@24.19.2)(tsx@4.23.15)
+      vite: 8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(tsx@4.23.15)
     dev: true
 
   /@vitest/pretty-format@4.1.12:
@@ -7399,6 +7423,7 @@ packages:
   /mimic-response@3.1.0:
     resolution: {integrity: sha512-z0yWI+4FDrrweS8Zmt4Ej5HdJmky15+L2e6Wgn3+iK5fWzb6T3fhNFq2+MeTRb064c6Wr4N/wv0DzQTjNzHNGQ==}
     engines: {node: '>=10'}
+    requiresBuild: true
     dev: true
 
   /mimic-response@4.0.0:
@@ -9753,7 +9778,7 @@ packages:
       vfile-message: 4.0.3
     dev: true
 
-  /vite@8.3.5(@types/node@24.19.2)(tsx@4.23.15):
+  /vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(tsx@4.23.15):
     resolution: {integrity: sha512-z1YpjieJ9g0ebTmQpLBv/oq9E3F9EIlOe+7LahW8SrE3LTiG3udBRUXQOlYXP9b+IC2q2phHeVxj9xGlw34OEQ==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
@@ -9797,6 +9822,7 @@ packages:
         optional: true
     dependencies:
       '@types/node': 24.19.2
+      esbuild: 0.28.2
       lightningcss: 1.33.0
       picomatch: 4.0.7
       postcss: 8.5.32
@@ -9867,7 +9893,7 @@ packages:
       tinyexec: 1.3.1
       tinyglobby: 0.2.17
       tinyrainbow: 3.2.0
-      vite: 8.3.5(@types/node@24.19.2)(tsx@4.23.15)
+      vite: 8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(tsx@4.23.15)
       why-is-node-running: 2.3.0
     transitivePeerDependencies:
       - msw
@@ -9927,7 +9953,7 @@ packages:
       tinybench: 6.2.3
       tinyexec: 1.3.1
       tinyglobby: 0.2.17
-      vite: 8.3.5(@types/node@24.19.2)(tsx@4.23.15)
+      vite: 8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(tsx@4.23.15)
       why-is-node-running: 3.2.1
     transitivePeerDependencies:
       - msw

@@ -182,6 +182,13 @@ export enum ConnectorLogEvent {
   FrameRejected = 'frame_rejected',
 }
 
+export enum FrameRejectionReason {
+  BinaryFrame = 'binary_frame',
+  FrameTooLarge = 'frame_too_large',
+  Malformed = 'malformed',
+  UnknownType = 'unknown_type',
+}
+
 export const HEARTBEAT_INTERVAL_MS = 25_000;
 export const HEARTBEAT_TIMEOUT_MS = 10_000;
 export const RECONNECT_BASE_MS = 1_000;
@@ -380,7 +387,7 @@ export async function runConnection(input: {
 }): Promise<number>;
 ```
 
-`probeConnectorLink` returns the HTTP status of the probe `GET`. `parseServerFrame` returns a discriminated result `{ok: true, frame: ServerFrame} | {ok: false, reason: FrameRejectionReason}` (`binary_frame`, `frame_too_large`, `malformed`, `unknown_type`). `runConnection` resolves with the process exit code: `0` on the signal, `1` when replaced or unauthorized.
+`probeConnectorLink` returns the HTTP status of the probe `GET`. `parseServerFrame` returns a discriminated result `{ok: true, frame: ServerFrame} | {ok: false, reason: FrameRejectionReason}` (the `FrameRejectionReason` enum of `libs/types/src/connector.ts`: `binary_frame`, `frame_too_large`, `malformed`, `unknown_type`). `runConnection` resolves with the process exit code: `0` on the signal, `1` when replaced or unauthorized.
 
 ### `apps/connector/src/wake-runner.ts`
 
