@@ -6,7 +6,7 @@ Test areas, each run by its own tester sub-agent in parallel: **Unit (core)**, *
 
 ## The failing test first
 
-- [ ] `libs/core/src/use-cases/acknowledge-delivery.test.ts` — input: owner message `msg_1` for agent `ana`, unread; expected: `readByAgent` is `true` after `acknowledgeDelivery({agent: 'ana', messageId: 'msg_1'})`
+- [ ] `libs/core/src/inbox/use-cases/acknowledge-delivery.test.ts` — input: owner message `msg_1` for agent `ana`, unread; expected: `readByAgent` is `true` after `acknowledgeDelivery({agent: 'ana', messageId: 'msg_1'})`
 - [ ] `apps/connector/test/unit/wake-commands.test.ts` — input: `{sessionId, prompt}` for `ConnectorClient.ClaudeCode`; expected: argv is exactly `['-p', '--resume', sessionId, '--allowedTools=mcp__zapbip__send_message', prompt]`
 - [ ] `apps/connector/test/integration/connect.test.ts` — input: fake server sends one `messages` frame with one owner message; expected: one `done` frame with that `messageId` is received
 - [ ] `apps/api/test/integration/connector-route.test.ts` — input: `GET /c/<valid secret>/connector` without `Upgrade`; expected: status `426`
@@ -14,17 +14,18 @@ Test areas, each run by its own tester sub-agent in parallel: **Unit (core)**, *
 
 ## Unit (core)
 
-`libs/core/src/use-cases/*.test.ts`, against `createInMemoryDependencies`.
+`libs/core/src/inbox/use-cases/*.test.ts`, against `createInMemoryDependencies` (`libs/core/src/inbox/testing/in-memory.ts`). The `attachLocalConnector` and `detachLocalConnector` cases live in `libs/core/src/wake/local-connector.test.ts` against `createInMemoryWakeRepository()` from `@zapbip/core/wake-testing`, and run after the webhook-wake merge `(contract: confirm at merge)`.
 
 - [ ] `acknowledgeDelivery` marks an owner message read — input: unread owner message `msg_1` of agent `ana`, call with `agent: 'ana'`; expected: `readByAgent` is `true`, no error.
 - [ ] `acknowledgeDelivery` ignores an unknown id — input: `messageId: 'msg_missing'`; expected: resolves with `undefined`, no message changes state, no error.
 - [ ] `acknowledgeDelivery` refuses another agent's message — input: unread message `msg_2` of agent `bruno`, call with `agent: 'ana'`; expected: resolves, `msg_2` still `readByAgent: false`.
+- [ ] `acknowledgeDelivery` ignores an agent's own message — input: outbound message `msg_3` of agent `ana` (`MessageDirection.ToOwner`), call with `agent: 'ana'`; expected: resolves, `msg_3` unchanged.
 - [ ] `acknowledgeDelivery` is idempotent — input: the same call twice on `msg_1`; expected: both resolve, `readByAgent` stays `true`.
 - [ ] Edge: empty message id — input: `messageId: ''`; expected: resolves, no state change, no error.
 - [ ] `attachLocalConnector` on a fresh agent — input: agent `ana` with `WakeMode.None` and two unread owner messages `msg_1`, `msg_2`, `limit: 50`; expected: `previousWakeMode` is `WakeMode.None`, `unread` is `[msg_1, msg_2]` in that order, stored mode is `WakeMode.Local`.
 - [ ] `attachLocalConnector` respects the limit — input: three unread owner messages, `limit: 2`; expected: `unread` has the two oldest, length `2`.
 - [ ] `attachLocalConnector` returns the previous mode on re-attach — input: agent already `WakeMode.Local`; expected: `previousWakeMode` is `WakeMode.Local`, stored mode unchanged.
-- [ ] `attachLocalConnector` for an agent with no wake row — input: agent `ghost` with no `agent_wake` row; expected: rejects with an error naming the missing wake setting; no mode is saved.
+- [ ] `attachLocalConnector` for an agent with no wake row — input: agent `ghost` with no stored wake (`findWake` returns `null`); expected: rejects with an error naming the missing wake setting; no mode is saved.
 - [ ] `detachLocalConnector` with sockets remaining — input: `remainingSockets: 1`, mode `local`, restore record stored; expected: no write, restore record kept.
 - [ ] `detachLocalConnector` restores — input: `remainingSockets: 0`, mode `local`, restore record `webhook`; expected: `saveWake` called with the `webhook` record, restore record deleted.
 - [ ] `detachLocalConnector` keeps a user change — input: `remainingSockets: 0`, mode `webhook`, restore record stored; expected: no `saveWake`, restore record deleted.
@@ -44,7 +45,8 @@ Test areas, each run by its own tester sub-agent in parallel: **Unit (core)**, *
 - [ ] Edge: text with newlines — input: `'linha 1\nlinha 2'`; expected: both lines inside the block, the block still closes once.
 - [ ] Media with a caption — input: kind `Media` (image), caption `Foto da obra`; expected: the text is the kind label followed by a newline and the caption.
 - [ ] Media without a caption — input: kind `Media`, caption `null`; expected: the text is the kind label only, with no `null` or `undefined` text.
-- [ ] Choice — input: kind `Choice`, `optionTitle` `Sim`; expected: the text is `Sim`.
+- [ ] Choice — input: kind `Choice`, `selected` option titled `Sim`; expected: the text is `Sim`.
+- [ ] Choice with nothing selected — input: kind `Choice`, `selected` `null`; expected: the text is the kind label only.
 - [ ] Reaction with no emoji — input: kind `Reaction`, `emoji` `null`; expected: the text is the kind label only.
 - [ ] Location — input: kind `Location`; expected: the text is the kind label only, no coordinates in the prompt.
 - [ ] Every `MessageKind` has a handler — input: each enum value; expected: `ownerMessageText` returns a string for each, no throw.
@@ -165,7 +167,7 @@ Test areas, each run by its own tester sub-agent in parallel: **Unit (core)**, *
 
 ## Unit (Worker)
 
-`apps/api/test/unit/local-connector-waker.test.ts`. The waker is tested with a fake `DurableObjectState` and an in-memory `InboxRepository`.
+`apps/api/test/unit/local-connector-waker.test.ts`. The waker is tested with a fake `DurableObjectState` and the in-memory `InboxRepository` of `createInMemoryDependencies`.
 
 - [ ] Waker with no socket — input: `createLocalConnectorWaker` with no sockets for the agent; expected: `notify` returns `WakeOutcome.Unreached`, no frame sent.
 - [ ] Waker with one socket and unread messages — input: one socket, two unread; expected: one `messages` frame with both, `WakeOutcome.Woken`.
@@ -197,7 +199,7 @@ Test areas, each run by its own tester sub-agent in parallel: **Unit (core)**, *
 - [ ] Upgrade refused without the header — input: same path without `Upgrade`; expected: status `426`, no object call.
 - [ ] Unknown secret — input: `GET /c/<random secret>/connector` with `Upgrade`; expected: status `401`, the same body as the MCP route's `401`, no object call.
 - [ ] Revoked secret — input: a connection revoked in D1; expected: status `401`.
-- [ ] Edge: wrong method — input: `POST /c/<valid secret>/connector`; expected: status `404`, no object call (contract: confirm at build against the router's default for unknown methods).
+- [ ] Edge: wrong method — input: `POST /c/<valid secret>/connector`; expected: status `404`, no object call (Hono answers `404` for a method with no route).
 - [ ] The agent comes from the server — input: a client adds `?agent=bruno` to the URL with a secret of `ana`; expected: the object receives `agent` `ana`.
 
 ### Socket
@@ -225,7 +227,7 @@ Harness: `apps/connector/test/e2e/support/stack.ts` (fixed by the plan, file map
 
 - **Port.** The harness binds `net.createServer().listen(0, '127.0.0.1')`, reads the port, and closes the server. It passes that port as `wrangler dev --port <port>` and a second free port as `--inspector-port`. If wrangler exits with `EADDRINUSE`, the harness retries once with new ports; a second failure fails the suite with the port numbers in the message. No port is hard-coded.
 - **Protocol.** `wrangler dev --local-protocol https`, so the connector's HTTPS-only validation (A10) runs unchanged. The child processes of the harness (the connector and the fake clients) get `NODE_TLS_REJECT_UNAUTHORIZED=0` in their environment only, never in `process.env` of the gate. Confirm at build that Node's global `WebSocket` honours it; if not, the harness sets `NODE_EXTRA_CA_CERTS` to the cert wrangler writes.
-- **Secret.** The harness creates the connection through the development-only seed route of slice 1 (`(contract: confirm at build)` for its path, the owner simulator's connection seed), which returns the connection secret and agent name. The harness reads nothing from `.env*`. The secret is passed to the connector only through `ZAPBIP_CONNECTION_URL` = `https://127.0.0.1:<port>/c/<secret>/mcp`, and to the fake client only through a file (below), never through argv.
+- **Secret.** The harness creates the connection through `apps/api/scripts/dev-seed.ts` (`--phone`, `--agents`, `--json`, `--persist-to`, run after `wrangler d1 migrations apply`, as `apps/api/test/e2e/global-setup.ts` does), which returns the connection secret and agent name. The harness reads nothing from `.env*`. The secret is passed to the connector only through `ZAPBIP_CONNECTION_URL` = `https://127.0.0.1:<port>/c/<secret>/mcp`, and to the fake client only through a file (below), never through argv.
 - **Fake client MCP.** The harness writes `<temp>/mcp.json` (mode `600`) with `{"url": "https://127.0.0.1:<port>/c/<secret>/mcp"}` and sets `FAKE_CLIENT_MCP_CONFIG=<temp>/mcp.json` in the environment of the fake `claude` or `codex` only. When that variable is present, the fake client performs the MCP calls: `POST` `initialize`, then the `notifications/initialized` notification, then `tools/call` with name `send_message`, `{agent, text}` where the text is `FAKE-REPLY ` followed by the owner text found inside the `<channel>` block of the wake prompt (the fake reads the prompt from its last argument), the Streamable HTTP headers the SDK requires, and `Accept: application/json, text/event-stream`. The integration tests do not set the variable, so they never call MCP.
 - **Assertion.** The owner simulator's screen (`readScreen`) must contain `FAKE-REPLY Oi` for the owner text `Oi`. The fake's own record (JSON lines) shows the `tools/call` response was `200`.
 
@@ -233,7 +235,7 @@ Harness: `apps/connector/test/e2e/support/stack.ts` (fixed by the plan, file map
 - [ ] Owner message wakes a Codex session — input: same with `--client codex`; expected: the fake `codex` records `exec ... resume <id> <prompt>`, the reply appears on the screen, `answered`.
 - [ ] Message sent while the connector is down — input: stop the connector, the simulator sends `Oi`, start the connector; expected: the message is woken on connect, exactly once.
 - [ ] Two messages in a row — input: two owner messages sent together; expected: two wakes, no overlap, both replies on the screen in order.
-- [ ] Gate row runs the suite — input: a change under `apps/connector/src/x.ts`; expected: `scripts/verify-gates.tsv` resolves it to `product typecheck unit integration e2e` and `gate_e2e` runs `pnpm --filter zapbip test:e2e`.
+- [ ] Gate row runs the suite — input: a change under `apps/connector/src/x.ts`; expected: `scripts/verify-gates.tsv` resolves it to `product typecheck unit e2e` and `gate_e2e` runs `pnpm --filter zapbip test:e2e` and `pnpm --filter zapbip test:packaging`.
 - [ ] Stale bundle is never tested — input: edit `src/cli.ts` then run `test:e2e` without a manual build; expected: `pretest:e2e` rebuilds `dist/cli.js` first (the banner or a marker string from the edit is present in `dist`).
 
 ## Packaging and docs

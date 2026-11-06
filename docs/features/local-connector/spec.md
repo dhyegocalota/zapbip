@@ -95,8 +95,8 @@ npx zapbip connect --client claude-code|codex [--cwd <directory>] [--session <uu
 **Durable Object.** `AccountInbox` accepts the socket with the hibernation API:
 - `ctx.acceptWebSocket(socket, [agent])`, so the agent name is the socket's tag;
 - `ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair(PING frame, PONG frame))`, so heartbeat never wakes the object;
-- the attach saves the wake mode `Local` through `InboxRepository.saveWakeSetting` (agent-inbox-core);
-- the attach sends `messages` with every unread owner message for that agent, which is the inbox re-read.
+- the attach saves the wake mode `Local` through webhook-wake's `WakeRepository.saveWake`, remembering the previous record so the last close restores it;
+- the attach first sends `hello` (`{type, agent, previousWakeMode}`), then `messages` with every unread owner message for that agent, which is the inbox re-read.
 
 A new attach for an agent closes the previous socket of that tag with `REPLACED_CLOSE_CODE`. One connector runs per connection. A replaced connector exits and does not reconnect.
 
@@ -282,7 +282,7 @@ No command writes either file. A reboot restarts the connector; a reconnect re-r
   - the Codex fallback: the fake `codex` refuses `resume` with the active-writer message; the second run is `exec` in the same `--cwd`.
 - **Worker integration (`@cloudflare/vitest-pool-workers`, in `apps/api`):**
   - the upgrade is accepted with a valid secret and returns `401` for an unknown one;
-  - the attach sets `wake_mode` to `local`;
+  - the attach saves the wake mode `local` and remembers the previous one;
   - the attach re-sends unread messages;
   - `done` marks the message read;
   - the auto-response answers `ping` without a message event reaching the object.

@@ -12,11 +12,11 @@
 
 **Tier:** 🔴
 
-**Depends on (merged to `main` before this branch is cut):**
-- `agent-inbox-core`: `libs/types` (`enums.ts`, `constants.ts`, `index.ts`), `libs/core/src/inbox/**` (`ports.ts`, `message.ts`, `connection.ts`, `use-cases/**`, `testing/in-memory.ts`, `index.ts`), the Durable Object `AccountInbox`, the connection resolution used by `/c/:secret/mcp`, `apps/api/wrangler.jsonc`, `env.ts`, `app.ts`, `index.ts`, `index.dev.ts`, and the `agent_wake` row created with every connection.
-- `webhook-wake`: `libs/core/src/wake/**` (`wake-ports.ts` with `WakeRepository`, `wake-setting.ts` with `StoredWake`, `WakeContext`), `apps/api/src/account-inbox/wake-repository.ts` (`DurableObjectWakeRepository`), `apps/api/src/adapters/wake/dispatching-agent-waker.ts` (the waker record keyed by `WakeRung`).
+**Depends on:**
+- `agent-inbox-core` (this branch is based on `feat/agent-inbox-core`; checked at S0.0): `libs/types` (`enums.ts`, `constants.ts`, `index.ts`), `libs/core/src/inbox/**` (`ports.ts`, `message.ts`, `connection.ts`, `use-cases/**`, `testing/in-memory.ts`, `index.ts`), the Durable Object `AccountInbox`, `apps/api/src/mcp/resolve-connection.ts` and `routes/account-inbox-stub.ts` (the connection resolution used by `/c/:secret/mcp`), `apps/api/wrangler.jsonc`, `contract/env.ts`, `app.ts`, `index.ts`, `index.dev.ts`, and the `agent_wake` table of `migrations/v1.sql`.
+- `webhook-wake` (`origin/feat/webhook-wake`, Step 0 contract read at S0.0, **not merged yet**): `libs/core/src/wake/**` (`wake-ports.ts` with `WakeRepository` and `WakeContext`, `wake-setting.ts` with `StoredWake`), `libs/core/src/wake/testing/wake-doubles.ts` (`createInMemoryWakeRepository`, exported as `@zapbip/core/wake-testing`), `apps/api/src/adapters/sqlite/sqlite-wake-repository.ts` (`createSqliteWakeRepository`), `apps/api/src/adapters/wake/dispatching-agent-waker.ts` (`WakerByRung`, `createDispatchingAgentWaker`), `apps/api/src/contract/wake-rpc.ts`. Every item that needs one of these is marked `(contract: confirm at merge)` and lands only in Step L0b, after `feat/webhook-wake` is merged into this branch.
 
-Cross-slice decisions (`SCRATCH/feature-stash/cross-slice-decisions.md`) bind this plan. Paths and names not yet on `main` are marked `(contract: confirm at build)`.
+Cross-slice decisions (`SCRATCH/feature-stash/cross-slice-decisions.md`) bind this plan. Names that exist only on `feat/webhook-wake` are marked `(contract: confirm at merge)`; the rest were checked against this branch at S0.0.
 
 ## Global Constraints
 
@@ -24,7 +24,7 @@ Cross-slice decisions (`SCRATCH/feature-stash/cross-slice-decisions.md`) bind th
 - Wake argv, verbatim from the spec: Claude Code `claude -p --resume <sessionId> --allowedTools=mcp__zapbip__send_message <prompt>`; Codex `codex exec --skip-git-repo-check -s read-only -c mcp_servers.zapbip.default_tools_approval_mode="approve" -c mcp_servers.zapbip.enabled_tools=["send_message"] resume <sessionId> <prompt>`.
 - The prompt is the last argument and starts with `<`. The session id matches `UUID_PATTERN` before it reaches argv.
 - No `shell: true`. No secret, connection link or phone number in argv, logs or error text.
-- Enums come from `@zapbip/types` (`WakeMode`, `WakeRung`, `WakeReason`, `MessageKind`, `DeliveryState`, `ConnectorClient`, and the others of this slice). No string literal stands in for an enum.
+- Enums come from `@zapbip/types` (`WakeMode`, `WakeRung`, `AgentWakeReason`, `MessageKind`, `DeliveryState`, `ConnectorClient`, and the others of this slice). No string literal stands in for an enum.
 - The connector has no runtime dependencies. `@zapbip/core` and `@zapbip/types` are devDependencies (`workspace:*`) because esbuild bundles `@zapbip/types` and `@zapbip/core` is type-only. `apps/connector/package.json` sets `"private": true` until `deploy-readiness` publishes.
 - The E2E suite runs by default in the gate (local `wrangler dev`, fake client binaries, no third-party network). Only real-client cases (real Claude Code, real Codex, the Codex app) are owner-run and stay outside the gate.
 - Repo rules (`AGENTS.md`): no comments except `// NB ADR NNNN:` pointers; flat `if`s; no `else`; no `??` defaults (optional parameters with defaults at the signature are the only allowed defaults); named parameters for any function with more than one parameter; constants over literals; no `.js` extension on relative imports; no acronym in an identifier (`connectionLink`, `signedLink`).
@@ -45,10 +45,10 @@ Cross-slice decisions (`SCRATCH/feature-stash/cross-slice-decisions.md`) bind th
 ## Assumptions (decided, owner can override; `owner delegated 2026-11-06`)
 
 - **A1 Hello frame.** The Durable Object sends `{type: ConnectorFrameType.Hello, agent, previousWakeMode}` first on every attach, before the inbox re-read. `connector_connected` is logged when `hello` arrives. The spec's frame table gains this row (recorded in L0).
-- **A2 Wake persistence (cross-slice decision).** This slice adds no port method to `InboxRepository`. Wake persistence goes through webhook-wake's `WakeRepository`: the attach saves the connection's stored wake with `mode: WakeMode.Local` (`saveWake`), and the restore saves the remembered previous record. `updatedAt`: this lane follows webhook-wake's `StoredWake`, which has no `updatedAt` field, and does not add one. scheduled-wake's `WakeSetting` owns that field. `(contract: confirm at build)`: S0.0 confirms the `StoredWake` shape on `main`.
+- **A2 Wake persistence (cross-slice decision).** This slice adds no port method to `InboxRepository`. Wake persistence goes through webhook-wake's `WakeRepository`: the attach saves the connection's stored wake with `mode: WakeMode.Local` (`saveWake({wake})`), and the restore saves the remembered previous record. `StoredWake` is `{agent, mode, target, status, lastDeliveredAt}` with no `updatedAt`, and this slice does not add one; scheduled-wake's `WakeSetting` owns that field. The restore record is one `local_restore TEXT` column on `agent_wake` (JSON of the previous `StoredWake`, whose target is already sealed), added by Durable Object schema `v5`; `saveWake` writes only the wake columns, so it never touches `local_restore`. `(contract: confirm at merge)`: shapes read from `origin/feat/webhook-wake` Step 0.
 - **A3 Restore on last close.** Attach remembers the connection's previous stored wake in `WakeRepository` (`saveLocalRestore`) only when no restore is stored yet, so a second attach never overwrites the true previous setting. Detach runs when the Durable Object reports a closed connector socket. If sockets remain for the agent, nothing changes. If none remain, the stored restore is saved back and cleared, but only when the current mode is still `WakeMode.Local`. A user who changed the setting meanwhile keeps their change, and the restore is cleared.
 - **A4 Outcomes.** `Answered` is exit code 0 of the wake process. `Failed` is any other exit, a spawn error, or a timeout. The new-session fallback reports `FallbackNewThread` when it exits 0 and `Failed` otherwise. `Answered` does not prove that `send_message` ran.
-- **A5 Done scope.** `acknowledgeDelivery` marks a message read only when the message exists and belongs to the given agent. Any other case returns without effect and without an error.
+- **A5 Done scope.** `acknowledgeDelivery` marks a message read only when the message exists and belongs to the given agent and is an owner message (`MessageDirection.FromOwner`). Any other case returns without effect and without an error.
 - **A6 Acknowledged ids and reconnect.** The connector keeps `acknowledgedIds` (a `Set<string>`) for the process lifetime. The reconnect expectation, exact:
   - a message is woken at most once per process lifetime;
   - a message whose wake is still running when the socket drops is not enqueued again when the server re-sends it; its `done` is sent when the wake ends, on the current socket if one is open;
@@ -61,12 +61,12 @@ Cross-slice decisions (`SCRATCH/feature-stash/cross-slice-decisions.md`) bind th
   - `401`: the secret is unknown or revoked; the connector exits 1;
   - `426`: the secret is valid; the connector continues;
   - any other status, or a network error: the connector exits 1 with a message that names the status and never the link.
-- **A11 Prompt text by kind.** Text: its text. Media: the kind label, then the caption on a second line when the caption is present (an explicit branch on `null`). Choice: its `optionTitle`. Reaction: its `emoji`, or the kind label when it is `null` (explicit branch). Location, Contacts, Question: the kind label only. Dispatch is a record keyed by `MessageKind`.
+- **A11 Prompt text by kind.** Text: its text. Media: the kind label, then the caption on a second line when the caption is present (an explicit branch on `null`). Choice: the title of its `selected` option, or the kind label when `selected` is `null` (explicit branch). Reaction: its `emoji`, or the kind label when it is `null` (explicit branch). Location and Contacts: the kind label only. The kinds an owner message can have are the `MessageKind` values; there is no Question kind. Dispatch is a record keyed by `MessageKind`.
 - **A12 Session lookup.** Claude Code: the project folder of `--cwd` under the Claude config directory, with the name rule `[^A-Za-z0-9]` → `-`; the newest `*.jsonl` by mtime. Codex: rollout files under `CODEX_HOME`, newest directories first, the first line's `session_meta.cwd` equal to `--cwd`. Both config directories are optional parameters with the defaults from the spec.
 - **A13 Package.** npm `zapbip` returned 404 on 2026-11-06, so the name is free. The bin is `dist/cli.js` with a `#!/usr/bin/env node` banner added by esbuild. `files` is `["dist"]`.
-- **A14 Test runners and gates.** `apps/connector` has three named Vitest configs: `vitest.config.mts` (unit and fake-server integration, gate `unit`), `vitest.e2e.config.mts` (gate `e2e`, runs by default), `vitest.packaging.config.mts` (packaging). A `pretest` script runs the build, and `pretest:e2e` and `pretest:packaging` run it too, so no test runs against a stale bundle. `scripts/verify-gates.tsv` gets a row `apps/connector/*  product  typecheck unit integration e2e` above `apps/*`, so connector changes run the E2E gate. `scripts/verify.sh` `gate_e2e` runs `pnpm --filter zapbip test:e2e` next to the API suite.
+- **A14 Test runners and gates.** `apps/connector` has three named Vitest configs: `vitest.config.mts` (unit and fake-server integration, gate `unit`), `vitest.e2e.config.mts` (gate `e2e`, runs by default), `vitest.packaging.config.mts` (packaging). `pretest:e2e` and `pretest:packaging` run the build, so no test runs against a stale bundle. `scripts/verify-gates.tsv` gets a row `apps/connector/*  product  typecheck unit e2e` above `apps/*`, so connector changes run the E2E gate; the fake-server integration tests run inside `test:unit`, because the `integration` gate runs only the API package. `scripts/verify.sh` `gate_e2e` runs `pnpm --filter zapbip test:e2e` and `pnpm --filter zapbip test:packaging` next to the API suite.
 - **A15 Fake clients.** Tests put `claude` and `codex` Node scripts first on `PATH`. They record argv and timestamps as JSON lines to a file named by an environment variable. They never touch a real session or network.
-- **A16 Waker record.** `WakerByRung` (webhook-wake) gains `WakeRung.Local`. This is a one-line edit to `dispatching-agent-waker.ts` by L3, after webhook-wake has merged.
+- **A16 Waker record.** `WakerByRung` (webhook-wake) gains `WakeRung.Local`. This is a one-line type edit plus one record entry in `apps/api/src/adapters/wake/dispatching-agent-waker.ts` (today `Record<WakeRung.Webhook | WakeRung.Inbox, AgentWaker>` on `feat/webhook-wake`), made by L3b after webhook-wake has merged. `wakeRungFor({mode})` (webhook-wake's `libs/core/src/wake/wake-rung.ts`) must map `WakeMode.Local` to `WakeRung.Local`: L4b adds that case and its test after the merge `(contract: confirm at merge)`.
 
 ## Core contract additions
 
@@ -75,10 +75,10 @@ For the orchestrator to merge into `core-contract-additions.md`. Every row is ad
 | # | Slice | Addition | Kind | Lives in | Rule note |
 |---|---|---|---|---|---|
 | 19 | local-connector | `acknowledgeDelivery({dependencies, agent, messageId})` | use case | `libs/core/src/inbox/use-cases/acknowledge-delivery.ts` | marks the message read; the `done` frame; replaces the row's `acknowledgeDelivery` location |
-| 20 | local-connector | `LocalConnectorWaker` (`createLocalConnectorWaker`), registered for `WakeRung.Local` | adapter | `apps/api/src/adapters/local-connector-waker.ts` | a live MCP waiter still wins (core routing) |
+| 20 | local-connector | `LocalConnectorWaker` (`createLocalConnectorWaker`), registered for `WakeRung.Local` | adapter | `apps/api/src/adapters/wake/local-connector-waker.ts` | a live MCP waiter still wins (core routing) |
 | 21 | local-connector | `ConnectorClient`, `ConnectorFrameType`, `ConnectorWakeOutcome`, `ConnectorSessionSource`, `ConnectorLogEvent` enums; connector constants | enums, constants | `libs/types/src/connector.ts` (new file) | connector-only values |
 | 29 | local-connector | `WakeMode.Local = 'local'` and `WakeRung.Local = 'local'`, if absent (checked in L0) | enum values | `libs/types/src/enums.ts` | webhook-wake and scheduled-wake use the same values |
-| 30 | local-connector | `WakeRepository.findLocalRestore({agent})`, `saveLocalRestore({agent, previous})`, `deleteLocalRestore({agent})` | port methods | `libs/core/src/wake/wake-ports.ts` | the restore record of A3; stubs in `DurableObjectWakeRepository` and `InMemoryWakeRepository` |
+| 30 | local-connector | `WakeRepository.findLocalRestore({agent})`, `saveLocalRestore({agent, previous})`, `deleteLocalRestore({agent})` | port methods | `libs/core/src/wake/wake-ports.ts` | the restore record of A3; stubs in `createSqliteWakeRepository` and `createInMemoryWakeRepository` `(contract: confirm at merge)` |
 | 31 | local-connector | `attachLocalConnector({...WakeContext, agent, limit})`, `detachLocalConnector({...WakeContext, agent, remainingSockets})` | use cases | `libs/core/src/wake/local-connector.ts` | the wake setting saves `Local` and restores on last close |
 | 32 | local-connector | connector frame types `HelloFrame`, `MessagesFrame`, `DoneFrame`, `ServerFrame` | types | `libs/core/src/inbox/connector-frames.ts` | A1 and A8 |
 
@@ -88,16 +88,55 @@ Not additions: `InboxRepository.saveWakeSetting` and `findWakeMode` (the earlier
 
 | Lane | Developer sub-agent | Owned paths |
 |------|---------------------|-------------|
-| L0 Contract (serial, first) | `developer-0` | `libs/types/src/connector.ts` (new), `libs/types/src/enums.ts` (`WakeMode.Local`, `WakeRung.Local` if absent), `libs/types/src/index.ts` (one line), `libs/core/src/inbox/connector-frames.ts` (new), `libs/core/src/inbox/use-cases/acknowledge-delivery.ts` (stub), `libs/core/src/wake/local-connector.ts` (stubs), `libs/core/src/wake/wake-ports.ts` (three methods), `libs/core/src/testing/wake-doubles.ts` (`InMemoryWakeRepository` stubs for the three methods), `libs/core/src/index.ts` and `libs/core/src/inbox/index.ts` (export lines), `apps/api/src/account-inbox/wake-repository.ts` (`DurableObjectWakeRepository`, the three stubs; webhook-wake's file, stubbed here because the port changes), `apps/connector/{package.json,tsconfig.json,vitest.config.mts,vitest.e2e.config.mts,vitest.packaging.config.mts,README.md}`, `apps/connector/src/*.ts` (stubs for every module in the contract), `docs/features/local-connector/spec.md` (answers table rows and the frame row), `pnpm-lock.yaml` |
+| L0a Contract (serial, first, no webhook-wake dependency) | `developer-0` | `libs/types/src/connector.ts` (new), `libs/types/src/enums.ts` (`WakeMode.Local`, `WakeRung.Local`: absent today), `libs/types/src/index.ts` (one line), `libs/core/src/inbox/connector-frames.ts` (new), `libs/core/src/inbox/index.ts` (one export line for the frames and one for the use case), `libs/core/src/inbox/use-cases/acknowledge-delivery.ts` (stub), `apps/api/src/account-inbox/connector-sockets.ts` (stubs), `apps/api/src/adapters/wake/local-connector-waker.ts` (stub), `apps/connector/{package.json,tsconfig.json,vitest.config.mts,vitest.e2e.config.mts,vitest.packaging.config.mts,README.md}`, `apps/connector/src/*.ts` (stubs for every module in the contract), `docs/features/local-connector/spec.md` (answers table rows and the frame row), `pnpm-lock.yaml` |
+| L0b Wake-side contract (serial, after `feat/webhook-wake` is merged into this branch) | `developer-0` | `libs/core/src/wake/wake-ports.ts` (three methods), `libs/core/src/wake/local-connector.ts` (new, stubs), `libs/core/src/wake/index.ts` (one export line), `libs/core/src/wake/testing/wake-doubles.ts` (stubs of the three methods inside `createInMemoryWakeRepository`), `apps/api/src/adapters/sqlite/sqlite-wake-repository.ts` (stubs inside `createSqliteWakeRepository`), `apps/api/src/adapters/wake/dispatching-agent-waker.ts` (`WakeRung.Local` in the type) |
 | L1 Connector pure modules | `developer-1` | `apps/connector/src/{owner-prompt,wake-commands,session-lookup,wake-queue,log}.ts`, `apps/connector/test/unit/{owner-prompt,wake-commands,session-lookup,wake-queue,log}.test.ts`, `apps/connector/test/fixtures/claude-folder/**` (names and mtimes copied from a real install, no content) |
 | L2 Connector loop, process and CLI | `developer-2` | `apps/connector/src/{connect,wake-runner,cli}.ts`, `apps/connector/test/unit/{connect,cli}.test.ts`, `apps/connector/test/integration/{connect,wake-runner,cli}.test.ts`, `apps/connector/test/support/{fake-event-server,fake-client-binary}.ts`, `apps/connector/test/fixtures/bin/{claude,codex}` |
-| L3 Worker and Durable Object | `developer-3` | `apps/api/src/routes/connector.ts` (new), `apps/api/src/app.ts` (one route line), `apps/api/src/account-inbox/account-inbox.ts` (`fetch`, `webSocketMessage`, `webSocketClose`), `apps/api/src/account-inbox/connector-sockets.ts` (new), `apps/api/src/account-inbox/wake-repository.ts` (`DurableObjectWakeRepository`, webhook-wake's file: the three restore method bodies; the `agent_wake` table itself stays in `apps/api/src/adapters/sqlite/sqlite-inbox-repository.ts`, slice 1's file, which L3 does not edit), `apps/api/src/adapters/local-connector-waker.ts` (new), `apps/api/src/adapters/wake/dispatching-agent-waker.ts` (one `WakeRung.Local` entry, A16), `apps/api/test/unit/local-connector-waker.test.ts`, `apps/api/test/integration/{connector-route,connector-socket,connector-wake-setting}.test.ts` |
-| L4 Core | `developer-4` | `libs/core/src/inbox/use-cases/acknowledge-delivery.ts` (body), `libs/core/src/inbox/use-cases/acknowledge-delivery.test.ts`, `libs/core/src/wake/local-connector.ts` (bodies), `libs/core/src/wake/local-connector.test.ts`, `libs/core/src/testing/wake-doubles.ts` (bodies of the three stubs), `libs/core/src/testing/in-memory.ts` (no change expected) |
-| L5 Docs | `developer-5` | `apps/docs/connect/local-connector.mdx`, `apps/docs/connect/background-running.mdx`, `apps/docs/docs.json` (navigation lines) |
-| L6 Shape and gates | `developer-6` | `scripts/verify-gates.tsv` (the connector row, above `apps/*`), `scripts/verify.sh` (`gate_e2e` adds the connector suite), `scripts/verify.test.sh` (pins the row and the call), `AGENTS.md` (layout line for `apps/connector`), `tools/repository-shape/src/**` only where a test pins the package list |
+| L3a Sockets and waker (no webhook-wake dependency) | `developer-3` | `apps/api/src/account-inbox/connector-sockets.ts` (bodies), `apps/api/src/adapters/wake/local-connector-waker.ts` (bodies), `apps/api/test/unit/local-connector-waker.test.ts` |
+| L3b Route, object and restore record (after the webhook-wake merge and L4b) | `developer-3` | `apps/api/src/routes/connector.ts` (new), `apps/api/src/routes/http-status.ts` (`UpgradeRequired = 426`), `apps/api/src/app.ts` (one route line), `apps/api/src/account-inbox/account-inbox.ts` (`fetch`, `webSocketMessage`, `webSocketClose`, the `WakeRung.Local` waker registration `(contract: confirm at merge)`), `apps/api/src/account-inbox/migrations/{v5.sql,index.ts}` (`ALTER TABLE agent_wake ADD COLUMN local_restore TEXT`, one entry), `apps/api/src/adapters/sqlite/sqlite-wake-repository.ts` (the three restore method bodies; webhook-wake's file), `apps/api/src/adapters/wake/dispatching-agent-waker.ts` (one `WakeRung.Local` record entry, A16), `apps/api/test/integration/{connector-route,connector-socket,connector-wake-setting}.test.ts` |
+| L4a Core: acknowledge | `developer-4` | `libs/core/src/inbox/use-cases/acknowledge-delivery.ts` (body), `libs/core/src/inbox/use-cases/acknowledge-delivery.test.ts` |
+| L4b Core: wake setting (after the webhook-wake merge and L0b) | `developer-4` | `libs/core/src/wake/local-connector.ts` (bodies), `libs/core/src/wake/local-connector.test.ts`, `libs/core/src/wake/wake-rung.ts` (the `WakeMode.Local` case and its test), `libs/core/src/wake/testing/wake-doubles.ts` (bodies of the three restore methods) |
+| L5 Docs | `developer-5` | `apps/docs/guides/local-connector.mdx`, `apps/docs/guides/background-running.mdx`, `apps/docs/docs.json` (two page entries in the `Guides` group that `feat/webhook-wake` creates; until it merges, the group is created here and the merge keeps one) |
+| L6 Shape and gates | `developer-6` | `scripts/verify-gates.tsv` (the connector row, above `apps/*`), `scripts/verify.sh` (`gate_e2e` adds the connector e2e and packaging suites), `scripts/verify.test.sh` (pins the row and the call), `AGENTS.md` (layout line for `apps/connector`), `tools/repository-shape/src/**` only where a test pins the package list |
 | L7 E2E and packaging | `developer-7` | `apps/connector/test/e2e/{connector-wake.e2e.test.ts,support/stack.ts}`, `apps/connector/test/packaging/packaging.test.ts` |
 
-Lane L0 owns every shared file. A lane that needs one of them stops and asks the lead.
+Lane L0a and L0b own every shared file. A lane that needs one of them stops and asks the lead.
+
+## Lane readiness (S0.0)
+
+| Lane | Starts | Blocker |
+|------|--------|---------|
+| L0a | now | none |
+| L1, L2 | after L0a | none; they use only slice 1 and the L0a frame types |
+| L3a | after L0a | none; it uses slice 1's `AgentWaker`, `InboxRepository` and `DurableObjectState` |
+| L4a | after L0a | none |
+| L5 | after L0a | the `Guides` group in `docs.json` is shared with webhook-wake (additive merge) |
+| L6 | after L0a | none |
+| L7 packaging | after L2 | none |
+| L0b, L4b, L3b | after `feat/webhook-wake` merges | `WakeRepository`, `StoredWake`, `WakeContext`, `createInMemoryWakeRepository`, `createSqliteWakeRepository`, `WakerByRung`, the Durable Object waker wiring |
+| L7 end to end | after L3b | needs the socket route |
+
+## Plan refresh (S0.0)
+
+Each line struck through was wrong against the code; the line in the body is corrected.
+
+| Was | Now | Reason |
+|-----|-----|--------|
+| ~~`libs/core/src/testing/in-memory.ts`~~ | `libs/core/src/inbox/testing/in-memory.ts` (`createInMemoryDependencies`) | slice 1 keeps test doubles beside the inbox |
+| ~~`libs/core/src/testing/wake-doubles.ts`, `InMemoryWakeRepository`~~ | `libs/core/src/wake/testing/wake-doubles.ts`, `createInMemoryWakeRepository()`, imported as `@zapbip/core/wake-testing` | slice 4's Step 0 |
+| ~~`DurableObjectWakeRepository` in `apps/api/src/account-inbox/wake-repository.ts`~~ | `createSqliteWakeRepository` in `apps/api/src/adapters/sqlite/sqlite-wake-repository.ts` | slice 4's Step 0 |
+| ~~`apps/api/src/adapters/local-connector-waker.ts`~~ | `apps/api/src/adapters/wake/local-connector-waker.ts` | beside the other wakers |
+| ~~`WakeReason`~~ | `AgentWakeReason` | slice 1's enum name |
+| ~~`libs/core/src/connection`, `../connection`~~ | `libs/core/src/inbox/connection`, `../inbox/connection` | wake files live in `src/wake` |
+| ~~Question kind, Choice `optionTitle`~~ | no Question kind; Choice uses `selected` | `MessageKind` has no Question; `Choice` carries `selected: QuestionOption | null` |
+| ~~`libs/core/src/wake/local-connector.ts` and the port methods in Step L0~~ | Step L0b, after the webhook-wake merge | the files they extend are not on this branch |
+| ~~`libs/core/src/index.ts` export line~~ | `libs/core/src/inbox/index.ts` for the frames and the use case; `libs/core/src/wake/index.ts` for the wake use cases | `src/index.ts` re-exports `./inbox` (and `./wake` on webhook-wake) |
+| ~~`apps/docs/connect/*`~~ | `apps/docs/guides/*` | webhook-wake created the `Guides` group |
+| ~~gate row `typecheck unit integration e2e`~~ | `typecheck unit e2e` | the `integration` gate runs only `@zapbip/api` |
+| ~~`UNAUTHORIZED_STATUS` and `MCP_PATH_SUFFIX` may move to `libs/types/src/constants.ts`~~ | they stay in `connector.ts`; the Worker uses `HttpStatus.Unauthorized` and gains `HttpStatus.UpgradeRequired` | `libs/types` declares neither; the API already has `HttpStatus` |
+| ~~development-only seed route~~ | `apps/api/scripts/dev-seed.ts --phone --agents --json --persist-to` after `wrangler d1 migrations apply`, as `apps/api/test/e2e/global-setup.ts` does | resolved `(contract: confirm at build)` |
+| A5 only checked the agent | also requires `direction === MessageDirection.FromOwner` | a `done` must never mark an agent's own outbound row |
+| ~~`MCP_PATH_SUFFIX = '/mcp'` only~~ | unchanged; the Worker's `CONNECTION_PATH_PREFIX` is `/c` | confirmed |
 
 ## Contract (Step L0, verbatim)
 
@@ -167,16 +206,15 @@ export const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0
 export const MCP_PATH_SUFFIX = '/mcp';
 ```
 
-`MCP_PATH_SUFFIX` and `UNAUTHORIZED_STATUS` move to `libs/types/src/constants.ts` if `agent-inbox-core` already declares them there (`(contract: confirm at build)`); the connector line is then deleted and imported.
+`libs/types/src/constants.ts` declares neither `MCP_PATH_SUFFIX` nor `UNAUTHORIZED_STATUS`, so both stay in `connector.ts`.
 
-`libs/types/src/enums.ts` (additive, only if absent): `WakeMode.Local = 'local'`, `WakeRung.Local = 'local'`.
+`libs/types/src/enums.ts` (additive; both absent on this branch, `feat/webhook-wake` adds `Webhook` beside them, so the merge keeps both lines): `WakeMode.Local = 'local'`, `WakeRung.Local = 'local'`.
 
 ### `libs/core/src/inbox/connector-frames.ts`
 
 ```ts
-import type { ConnectorFrameType } from '@zapbip/types';
+import type { ConnectorFrameType, WakeMode } from '@zapbip/types';
 import type { AgentName } from './connection';
-import type { WakeMode } from '@zapbip/types';
 import type { Message } from './message';
 
 export type HelloFrame = {
@@ -216,7 +254,7 @@ export async function acknowledgeDelivery(input: AcknowledgeDeliveryInput): Prom
 }
 ```
 
-### `libs/core/src/wake/wake-ports.ts` (three methods added to `WakeRepository`)
+### `libs/core/src/wake/wake-ports.ts` (three methods added to `WakeRepository`; Step L0b, `(contract: confirm at merge)`)
 
 ```ts
 findLocalRestore(input: { agent: AgentName }): Promise<StoredWake | null>;
@@ -224,12 +262,12 @@ saveLocalRestore(input: { agent: AgentName; previous: StoredWake }): Promise<voi
 deleteLocalRestore(input: { agent: AgentName }): Promise<void>;
 ```
 
-### `libs/core/src/wake/local-connector.ts`
+### `libs/core/src/wake/local-connector.ts` (Step L0b, `(contract: confirm at merge)`)
 
 ```ts
-import type { AgentName } from '../connection';
-import type { Message } from '../inbox/message';
 import type { WakeMode } from '@zapbip/types';
+import type { AgentName } from '../inbox/connection';
+import type { Message } from '../inbox/message';
 import type { WakeContext } from './wake-ports';
 
 export type AttachLocalConnectorInput = WakeContext & {
@@ -258,7 +296,7 @@ export async function detachLocalConnector(input: DetachLocalConnectorInput): Pr
 }
 ```
 
-`attachLocalConnector`: `findWake` (a missing row throws), `findLocalRestore`, `saveLocalRestore` only when no restore is stored (A3), `saveWake` with the current record and `mode: WakeMode.Local`, then `repository.listUnread({agent, limit})` through `dependencies.repository`. `detachLocalConnector`: returns when `remainingSockets > 0`; otherwise restores or clears per A3.
+`attachLocalConnector`: `wake.repository.findWake({agent})` (a `null` result throws), `findLocalRestore`, `saveLocalRestore` only when no restore is stored (A3), `saveWake` with the current record and `mode: WakeMode.Local`, then `dependencies.repository.listUnread({agent, limit})`. `detachLocalConnector`: returns when `remainingSockets > 0`; otherwise restores or clears per A3.
 
 ### `apps/connector/src/owner-prompt.ts`
 
@@ -388,7 +426,7 @@ export function remainingSocketCount(input: { context: DurableObjectState; agent
 
 `acceptConnectorSocket` closes every socket tagged with the agent using `REPLACED_CLOSE_CODE`, accepts the new one with the agent as its tag, and returns the client end. `sendFrameToAgent` returns the number of sockets sent to.
 
-### `apps/api/src/adapters/local-connector-waker.ts`
+### `apps/api/src/adapters/wake/local-connector-waker.ts`
 
 ```ts
 import type { AgentWaker, InboxRepository } from '@zapbip/core';
@@ -418,16 +456,16 @@ Versions were checked with `npm view` on 2026-11-06. The Worker side uses packag
 
 ## Sequencing
 
-1. **S0.0 plan refresh** (below) against `main`, before any lane starts.
-2. **L0 (serial).** Developer 0 writes the contract, runs `pnpm typecheck`, and merges into `feat/local-connector`.
+1. **S0.0 plan refresh** (below) against the code, before any lane starts.
+2. **L0a (serial).** Developer 0 writes the contract, runs `pnpm typecheck`, and merges into `feat/local-connector`. **L0b** follows the webhook-wake merge.
 3. **In parallel from the L0 commit:**
-   - L4 writes the core tests (red), then the bodies (green).
+   - L4a writes the acknowledge test (red), then the body (green); L4b waits for L0b.
    - L1 writes the pure-module tests (red), then the modules (green).
    - L2 writes the connector loop tests (red) and waits for L1 to go green.
-   - L3 writes the Worker tests (red), and its integration tests go green after L4.
+   - L3a writes the waker test (red), then the bodies (green); L3b waits for L0b and L4b.
    - L5 writes the docs and the navigation lines.
    - L6 writes the gate rows and their pins.
-4. **Merge order:** L0 → L4 → L1 → L3 → L2 → L5 → L6 → L7.
+4. **Merge order:** L0a → L4a → L1 → L3a → L2 → L5 → L6 → (webhook-wake merge) → L0b → L4b → L3b → L7.
 5. **L7** starts after L2 and L3 merge.
 6. **Z** after L7.
 
@@ -435,15 +473,16 @@ Versions were checked with `npm view` on 2026-11-06. The Worker side uses packag
 
 ### Step L0 (contract)
 
-- [ ] **S0.0 plan refresh against main.** Diff this plan against `main`: every path in the file map, every import, every name in the contract (`libs/types/src/enums.ts`, `libs/core/src/inbox/**`, `libs/core/src/wake/**`, `apps/api/src/account-inbox/**`, `apps/api/src/adapters/wake/**`). Correct the plan, remove any precondition that is already met, and mark each unverified name `(contract: confirm at build)`. Commit the plan change `docs(features): refresh the local connector plan against main`.
-- [ ] **S0.1 contract: enums, constants, frames, port methods, stubs.** Write the files of the contract, including the stubs of the three `WakeRepository` methods in `DurableObjectWakeRepository` and `InMemoryWakeRepository`, the `apps/connector` package skeleton (`"private": true`, `"bin": {"zapbip": "dist/cli.js"}`, `"files": ["dist"]`, `"engines": {"node": ">=24"}`, the devDependencies from **Dependencies**, and the three scripts below), and every connector stub. Scripts: `"build": "esbuild src/cli.ts --bundle --platform=node --format=esm --target=node24 --outfile=dist/cli.js --banner:js=\"#!/usr/bin/env node\""`, `"pretest": "pnpm run build"`, `"pretest:e2e": "pnpm run build"`, `"pretest:packaging": "pnpm run build"`, `"test": "pnpm run test:unit && pnpm run test:e2e && pnpm run test:packaging"`, `"test:unit": "vitest run --config vitest.config.mts"`, `"test:e2e": "vitest run --config vitest.e2e.config.mts"`, `"test:packaging": "vitest run --config vitest.packaging.config.mts"`. Write `apps/connector/README.md` with purpose only. Add the frame row and the answers rows to the spec. Run `pnpm install`. Commit `feat(types): declare the connector contract`. Proof: `pnpm typecheck` green.
-- [ ] **S0.2 contract review.** A `reviewer` sub-agent checks the contract against the spec's frame table and against the core additions table above. Result recorded in `tester-briefing.md`.
+- [x] **S0.0 plan refresh against the code.** Diffed against `feat/agent-inbox-core` and `origin/feat/webhook-wake`; corrections are in **Plan refresh (S0.0)**. Commit `docs(local-connector): refresh the plan against slice 1's code`.
+- [ ] **S0.1 contract (L0a): enums, constants, frames, stubs.** Write the L0a files of the contract: `libs/types/src/connector.ts`, `WakeMode.Local` and `WakeRung.Local`, the frame types, the `acknowledgeDelivery` stub, the stubs of `connector-sockets.ts` and `local-connector-waker.ts`, the `apps/connector` package skeleton (`"private": true`, `"bin": {"zapbip": "dist/cli.js"}`, `"files": ["dist"]`, `"engines": {"node": ">=24"}`, the devDependencies from **Dependencies**, and the scripts below) and every connector stub. Scripts: `"build": "esbuild src/cli.ts --bundle --platform=node --format=esm --target=node24 --outfile=dist/cli.js --banner:js=\"#!/usr/bin/env node\""`, `"typecheck": "tsc --noEmit"`, `"pretest:e2e": "pnpm run build"`, `"pretest:packaging": "pnpm run build"`, `"test:unit": "vitest run --passWithNoTests --config vitest.config.mts"`, `"test:e2e": "vitest run --passWithNoTests --config vitest.e2e.config.mts"`, `"test:packaging": "vitest run --passWithNoTests --config vitest.packaging.config.mts"`. Write `apps/connector/README.md` with purpose only. Add the frame row and the answers rows to the spec. Run `pnpm install`. Commit `feat(types): declare the connector contract`. Proof: `pnpm typecheck` green.
+- [ ] **S0.2 wake-side contract (L0b), after the webhook-wake merge.** The three `WakeRepository` methods, the stubs in `createInMemoryWakeRepository` and `createSqliteWakeRepository`, `libs/core/src/wake/local-connector.ts`, the export line, `WakeRung.Local` in `WakerByRung`. Commit `feat(wake): declare the local connector wake contract`. Proof: `pnpm typecheck` green. Not done in Step 0 of this branch because `feat/webhook-wake` is not merged.
+- [ ] **S0.3 contract review.** A `reviewer` sub-agent checks the contract against the spec's frame table and against the core additions table above. Result recorded in `tester-briefing.md`.
 
 ### Step L4 (core)
 
-- [ ] **S4.1 red: acknowledge.** `libs/core/src/inbox/use-cases/acknowledge-delivery.test.ts` against `createInMemoryDependencies`. Commit `test(core): pin acknowledgeDelivery`.
-- [ ] **S4.2 red: local connector wake setting.** `libs/core/src/wake/local-connector.test.ts` against `InMemoryWakeRepository`. Commit `test(core): pin the local connector wake setting`.
-- [ ] **S4.3 green: acknowledge.** Implement: `findMessage`; return when it is `null` or its `agent` is not the input agent; `markRead({messageIds: [messageId]})`. Commit `feat(core): acknowledge delivery of an owner message`.
+- [ ] **S4.1 red: acknowledge (L4a).** `libs/core/src/inbox/use-cases/acknowledge-delivery.test.ts` against `createInMemoryDependencies`. Commit `test(core): pin acknowledgeDelivery`.
+- [ ] **S4.2 red: local connector wake setting.** `libs/core/src/wake/local-connector.test.ts` against `createInMemoryWakeRepository()` (L4b, after the merge). Commit `test(core): pin the local connector wake setting`.
+- [ ] **S4.3 green: acknowledge.** Implement: `findMessage`; return when it is `null`, its `agent` is not the input agent or its `direction` is not `MessageDirection.FromOwner`; `markRead({messageIds: [messageId]})`. Commit `feat(core): acknowledge delivery of an owner message`.
 - [ ] **S4.4 green: wake setting.** Implement `attachLocalConnector`, `detachLocalConnector` and the in-memory bodies of the three restore methods. Commit `feat(core): set the local wake while a connector is attached`.
 
 ### Step L1 (connector pure modules)
@@ -472,8 +511,8 @@ Versions were checked with `npm view` on 2026-11-06. The Worker side uses packag
 
 - [ ] **S3.1 red: route.** `apps/api/test/integration/connector-route.test.ts`. Commit `test(api): pin the connector route`.
 - [ ] **S3.2 red: socket.** `apps/api/test/integration/connector-socket.test.ts`, including binary frames and the close-restore case of A3. Commit `test(api): pin the connector socket`.
-- [ ] **S3.3 red: waker and wake setting.** `apps/api/test/unit/local-connector-waker.test.ts` and `apps/api/test/integration/connector-wake-setting.test.ts` (the three restore methods on SQLite). Commit `test(api): pin the local waker and the restore record`.
-- [ ] **S3.4 green: restore record.** Bodies of the three methods in `apps/api/src/account-inbox/wake-repository.ts`. Commit `feat(api): store the wake setting to restore`.
+- [ ] **S3.3 red: waker and wake setting.** `apps/api/test/unit/local-connector-waker.test.ts` (L3a, now) and `apps/api/test/integration/connector-wake-setting.test.ts` (L3b, the three restore methods on SQLite). Commit `test(api): pin the local waker and the restore record`.
+- [ ] **S3.4 green: restore record.** The v5 migration and the bodies of the three methods in `apps/api/src/adapters/sqlite/sqlite-wake-repository.ts`. Commit `feat(api): store the wake setting to restore`.
 - [ ] **S3.5 green: sockets and waker.** Commit `feat(api): push owner messages to connector sockets`.
 - [ ] **S3.6 green: object and route.** `fetch` (upgrade and attach), `webSocketMessage` (`done` only), `webSocketClose` (`detachLocalConnector` with `remainingSocketCount`), `WakeRung.Local` in `dispatching-agent-waker.ts`, `routes/connector.ts`, the `app.ts` line. Commit `feat(api): accept the local connector socket`.
 
@@ -484,7 +523,7 @@ Versions were checked with `npm view` on 2026-11-06. The Worker side uses packag
 
 ### Step L6 (shape and gates)
 
-- [ ] **S6.1 red: gate pins.** `scripts/verify.test.sh` expects the row `apps/connector/src/x.ts` → `product typecheck unit integration e2e`, and `gate_e2e` to call `pnpm --filter zapbip test:e2e`. Run `pnpm test:verify`. Expected failure: the row falls through to `apps/*`. Commit `test(verify): gate the connector end to end`.
+- [ ] **S6.1 red: gate pins.** `scripts/verify.test.sh` expects the row `apps/connector/src/x.ts` → `product typecheck unit e2e`, and `gate_e2e` to call `pnpm --filter zapbip test:e2e`. Run `pnpm test:verify`. Expected failure: the row falls through to `apps/*`. Commit `test(verify): gate the connector end to end`.
 - [ ] **S6.2 green.** Add the row above `apps/*` and the `gate_e2e` call. Add the layout line to `AGENTS.md`. Run `pnpm --filter @zapbip/repository-shape test:unit`. Commit `feat(verify): run the connector suite in the e2e gate`.
 
 ### Step L7 (E2E and packaging)
@@ -506,7 +545,7 @@ Versions were checked with `npm view` on 2026-11-06. The Worker side uses packag
 | Step | What breaks | How I notice (the concrete signal) | How I back out |
 |------|-------------|------------------------------------|----------------|
 | S0.1 contract | a lane builds against a signature that changed later | `pnpm typecheck` error naming a contract symbol in another lane's branch | fix forward in a new Step L0 commit, which every lane merges. The commit has no backout. |
-| S0.1 contract | `WakeRepository` gains methods and an adapter lacks them | typecheck error naming `DurableObjectWakeRepository` or `InMemoryWakeRepository` | the stubs in L0 prevent this; if missed, add the stub in a new L0 commit |
+| S0.1 contract | `WakeRepository` gains methods and an adapter lacks them | typecheck error naming `createSqliteWakeRepository` or `createInMemoryWakeRepository` | the stubs in L0b prevent this; if missed, add the stub in a new L0b commit |
 | S0.1 contract | `libs/types/src/enums.ts` already has `WakeMode.Local` with another value | L0 check shows a different string | keep the existing value; the connector uses the enum, never the literal |
 | S3.4 restore record | restore overwritten by a second attach | the test attaches twice then closes once and expects the original previous mode | keep `saveLocalRestore` behind `findLocalRestore` being null; revert |
 | S3.6 close | last socket close does not restore | `connector-socket.test.ts` close case expects the restored mode | check `remainingSocketCount` excludes the closing socket; revert |
