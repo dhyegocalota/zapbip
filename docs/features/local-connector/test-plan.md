@@ -91,7 +91,7 @@ Test areas, each run by its own tester sub-agent in parallel: **Unit (core)**, *
 ### Log
 
 - [x] Each line is JSON with `at` and `event` — input: `ConnectorLogEvent.WakeFinished` with `messageId`, `outcome`, `exitCode`, `elapsedMs`; expected: one stdout line, parses as JSON, has `at` as an ISO string and `event` equal to `wake_finished`. — evidence: 6db08cc retest-unit-connector.md (connector 180/180 x3); 4dee916 unit.md
-- [ ] Secret never logged — input: a fake secret string placed in a `fields` value by mistake; expected: the test asserts the fields list in the **Security** area rejects it at the call sites, see **Security** boxes.
+- [ ] Secret never logged — input: the log call sites; expected: safety by call-site audit plus tests (no runtime guard): every `fields` value is an id, kind, outcome or timing, see **Security** boxes.
 - [x] Edge: `null` and boolean fields serialize — input: `exitCode: null`, `sessionKind: 'pinned'`; expected: JSON has `"exitCode":null`. — evidence: 6db08cc retest-unit-connector.md (connector 180/180 x3); 4dee916 unit.md
 
 ### Connection helpers
@@ -221,7 +221,7 @@ Test areas, each run by its own tester sub-agent in parallel: **Unit (core)**, *
 
 ## E2E (gate)
 
-`apps/connector/test/e2e/connect.e2e.test.ts`, runs by default in the `e2e` gate (`pnpm --filter zapbip test:e2e`, after the `pretest:e2e` build). Starts `wrangler dev` (development entry, owner simulator) on an ephemeral port, runs `node dist/cli.js connect --client claude-code --cwd <temp dir>` with `ZAPBIP_CONNECTION_URL` pointing at the local stack, with the fake `claude` and `codex` on `PATH`. No real credentials, no third-party network.
+`apps/connector/test/e2e/connect.e2e.test.ts`, runs by default in the `e2e` gate (`pnpm --filter zapbip test:e2e`, which builds first). Starts `wrangler dev` (development entry, owner simulator) on an ephemeral port, runs `node dist/cli.js connect --client claude-code --cwd <temp dir>` with `ZAPBIP_CONNECTION_URL` pointing at the local stack, with the fake `claude` and `codex` on `PATH`. No real credentials, no third-party network.
 
 Harness: `apps/connector/test/e2e/support/stack.ts` (fixed by the plan, file map L7).
 
@@ -236,11 +236,11 @@ Harness: `apps/connector/test/e2e/support/stack.ts` (fixed by the plan, file map
 - [ ] Message sent while the connector is down — input: stop the connector, the simulator sends `Oi`, start the connector; expected: the message is woken on connect, exactly once.
 - [ ] Two messages in a row — input: two owner messages sent together; expected: two wakes, no overlap, both replies on the screen in order.
 - [ ] Gate row runs the suite — input: a change under `apps/connector/src/x.ts`; expected: `scripts/verify-gates.tsv` resolves it to `product typecheck unit e2e` and `gate_e2e` runs `pnpm --filter zapbip test:e2e` and `pnpm --filter zapbip test:packaging`.
-- [ ] Stale bundle is never tested — input: edit `src/cli.ts` then run `test:e2e` without a manual build; expected: `pretest:e2e` rebuilds `dist/cli.js` first (the banner or a marker string from the edit is present in `dist`).
+- [ ] Stale bundle is never tested — input: edit `src/cli.ts` then run `test:e2e` without a manual build; expected: `test:e2e` builds first (`pnpm run build && …`), so the banner or a marker string from the edit is present in `dist/cli.js`.
 
 ## Packaging and docs
 
-- [ ] Packaging suite runs under its named config — input: `pnpm --filter zapbip test:packaging`; expected: `vitest.packaging.config.mts` is used, the `pretest:packaging` build ran first.
+- [ ] Packaging suite runs under its named config — input: `pnpm --filter zapbip test:packaging`; expected: `vitest.packaging.config.mts` is used, and `test:packaging` builds first (`pnpm run build && …`).
 - [x] `npm pack --dry-run --json` lists only the package files — input: built package; expected: the file list is exactly `dist/cli.js`, `README.md`, `package.json`. — evidence: 6db08cc retest-packaging-security.md (npm pack: dist/cli.js, package.json, README.md)
 - [ ] The bundle runs from the tarball with no `node_modules` — input: `npm pack`, install the tarball into an empty temp directory with `--offline`, run `zapbip --help`; expected: exit code `0`, usage text printed.
 - [x] The bundle has the shebang — input: `dist/cli.js` first line; expected: `#!/usr/bin/env node`. — evidence: 6db08cc retest-packaging-security.md (shebang #!/usr/bin/env node)
@@ -288,8 +288,8 @@ These need a real Claude Code, a real Codex, the real Codex app, and the hosted 
 
 The tester adds one checkbox per new case (input, exact expected outcome) and a regression test for each.
 
-- [ ] Edge: a message that arrives while a wake runs is woken once that wake ends — input: owner sends `b1`, then `b2` and `b3` while `b1` is still waking on a connected socket; expected: `b2` and `b3` are woken in order, none stays unread. Found at 4dee916 (FAIL-1, `cint-logs/walk.mjs`); PASS x3 at 6db08cc (`retest-logs/walk-f{1,2,3}.log`); no committed regression test yet, so it stays open.
-- [ ] Edge: a shutdown with the Worker behind the socket ends promptly — input: `SIGTERM` to `connect` against `wrangler dev` with a socket open; expected: exit `0` in under 2 s, no `connector_closed` with code `1006`. Found at 4dee916 (FAIL-2, 10 s); fixed per 6db08cc walk (8-43 ms), but the SIGKILL change came after 6db08cc, so it stays open until re-run.
+- [ ] Edge: a message that arrives while a wake runs is woken once that wake ends — input: owner sends `b1`, then `b2` and `b3` while `b1` is still waking on a connected socket; expected: `b2` and `b3` are woken in order, none stays unread. Found at 4dee916 (FAIL-1, `cint-logs/walk.mjs`); PASS x3 at 6db08cc (`retest-logs/walk-f{1,2,3}.log`); committed as `connect.e2e.test.ts` › "messages that arrive while a wake runs are woken one after the other in order" (three sequential runs, the second and third starting after the previous ended).
+- [ ] Edge: a shutdown with the Worker behind the socket ends promptly — input: `SIGTERM` to `connect` against `wrangler dev` with a socket open; expected: exit `0` in under 2 s, no `connector_closed` with code `1006`. Found at 4dee916 (FAIL-2, 10 s); fixed per 6db08cc walk (8-43 ms), but the SIGKILL change came after 6db08cc, so it stays open until re-run. The SIGTERM e2e asserts the output never contains `1006`.
 - [ ] Edge: a channel whose standard input closes exits — input: close the `channel` process's stdin; expected: the process exits `0` without `SIGTERM`. Found at 4dee916 (FAIL-4, alive 45 s); fixed per 6db08cc walk (8-51 ms); no committed regression test, so it stays open.
 - [x] Edge: a server that accepts and closes at once makes the reconnect delay grow — input: a fake server accepts the upgrade and closes it at once, repeatedly; expected: each reconnect delay is longer than the one before, up to `RECONNECT_MAX_MS`. — evidence: 6db08cc retest-unit-connector.md (extra-close.log delays 1182, 2577, 4886, 9262, 22318, 30000; mutations "backoff always zero" and "backoff ignores stability window" caught)
 - [x] Edge: prototype names as frame types are rejected — input: frames `{"type":"constructor"}`, `{"type":"__proto__"}` and `{"type":"toString"}`; expected: `frame_rejected` with `unknown_type`, the process stays up, a later valid frame is processed. — evidence: 6db08cc retest-unit-connector.md (extra-proto.log; mutation `in` instead of `Object.hasOwn` caught by 4 tests)

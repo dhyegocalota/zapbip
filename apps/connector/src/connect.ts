@@ -255,7 +255,10 @@ export async function runSocketSession(input: {
   let attempt = 0;
   while (!signal.aborted) {
     const end = await holdSocket();
-    if (end.code === REPLACED_CLOSE_CODE) return FAILURE_EXIT_CODE;
+    if (end.code === REPLACED_CLOSE_CODE) {
+      wakeQueue.stop();
+      return FAILURE_EXIT_CODE;
+    }
     if (signal.aborted) break;
     const failedAttempts = end.wasStable ? 0 : attempt;
     const delayMs = reconnectDelayMs({ attempt: failedAttempts, random });
@@ -317,8 +320,11 @@ export async function runConnection(input: {
           workingDirectory,
           signal: wakeAbortController.signal,
         });
-        if (result.outcome === ConnectorWakeOutcome.RefusedIsolation) {
-          logConnectorEvent({ event: ConnectorLogEvent.WakeRefusedIsolation, fields: { messageId: message.messageId } });
+        if ('refusalKind' in result) {
+          logConnectorEvent({
+            event: ConnectorLogEvent.WakeRefusedIsolation,
+            fields: { messageId: message.messageId, reason: result.refusalKind },
+          });
           throw new Error('wake refused: isolation');
         }
         logConnectorEvent({

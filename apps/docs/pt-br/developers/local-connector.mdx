@@ -116,7 +116,7 @@ Então as três formas se completam: o canal para uma sessão aberta, o `listen`
 
 ## Um conector por conexão
 
-Se você iniciar um segundo conector para a mesma conexão, o primeiro para. Rode em um computador por vez.
+Se você iniciar um segundo conector para a mesma conexão, o primeiro termina o acordar que está rodando e para. Rode em um computador por vez. Se uma mensagem chegar no momento da troca, os dois conectores podem acordar sua IA para essa mesma mensagem uma vez; o zapbip entrega pelo menos uma vez, nunca zero.
 
 Enquanto um conector está ligado, o zapbip acorda sua IA por ele. Quando ele fecha, o zapbip volta à configuração que você tinha antes.
 

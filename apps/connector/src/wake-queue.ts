@@ -10,9 +10,14 @@ export function createWakeQueue(input: {
   const acknowledgedIds = new Set<string>();
   const pendingIds = new Set<string>();
   let tail: Promise<void> = Promise.resolve();
+  let isStopped = false;
 
   async function wake(wakeInput: { message: Message }): Promise<void> {
     const { messageId } = wakeInput.message;
+    if (isStopped) {
+      pendingIds.delete(messageId);
+      return;
+    }
     try {
       await runWake(wakeInput);
     } catch {
@@ -33,7 +38,7 @@ export function createWakeQueue(input: {
   }
 
   function stop(): void {
-    throw new Error('stop is not implemented');
+    isStopped = true;
   }
 
   return { enqueue, stop };

@@ -7,13 +7,16 @@ import {
   ConnectorClient,
   type ConnectorSessionSource,
   ConnectorWakeOutcome,
+  type WakeRefusalKind,
 } from '@zapbip/types';
 import { buildOwnerPrompt } from './owner-prompt';
 import { WAKE_ISOLATION_PREPARERS, WakeIsolationRefusedError, type WakeIsolation } from './wake-isolation';
 import { buildCodexNewSessionArguments, CLIENT_BINARY_NAME, isActiveWriterRefusal, RESUME_ARGUMENT_BUILDERS } from './wake-commands';
 
 type ChildResult = { exitCode: number | null; stderrText: string };
-export type WakeResult = { outcome: ConnectorWakeOutcome; exitCode: number | null };
+export type WakeResult =
+  | { outcome: ConnectorWakeOutcome; exitCode: number | null }
+  | { outcome: ConnectorWakeOutcome.RefusedIsolation; exitCode: null; refusalKind: WakeRefusalKind };
 
 const CLEAN_EXIT_CODE = 0;
 
@@ -73,12 +76,13 @@ async function prepareIsolation(input: {
   client: ConnectorClient;
   connectionLink: string;
   workingDirectory: string;
-}): Promise<WakeIsolation | null> {
+}): Promise<{ isolation: WakeIsolation } | { refusalKind: WakeRefusalKind }> {
   const { client, connectionLink, workingDirectory } = input;
   try {
-    return await WAKE_ISOLATION_PREPARERS[client]({ connectionLink, workingDirectory, codexHome: process.env.CODEX_HOME });
+    const isolation = await WAKE_ISOLATION_PREPARERS[client]({ connectionLink, workingDirectory, codexHome: process.env.CODEX_HOME });
+    return { isolation };
   } catch (error) {
-    if (error instanceof WakeIsolationRefusedError) return null;
+    if (error instanceof WakeIsolationRefusedError) return { refusalKind: error.kind };
     throw error;
   }
 }
@@ -95,9 +99,11 @@ export async function runWake(input: {
   const { client, connectionLink, sessionId, message, workingDirectory, signal } = input;
   if (sessionId === null) return { outcome: ConnectorWakeOutcome.NoSession, exitCode: null };
   const prompt = buildOwnerPrompt({ message });
-  const isolation = await prepareIsolation({ client, connectionLink, workingDirectory });
-  if (isolation === null) return { outcome: ConnectorWakeOutcome.RefusedIsolation, exitCode: null };
-  const { isolationArguments, cleanup } = isolation;
+  const prepared = await prepareIsolation({ client, connectionLink, workingDirectory });
+  if ('refusalKind' in prepared) {
+    return { outcome: ConnectorWakeOutcome.RefusedIsolation, exitCode: null, refusalKind: prepared.refusalKind };
+  }
+  const { isolationArguments, cleanup } = prepared.isolation;
   try {
     return await wakeWithin({ client, sessionId, prompt, isolationArguments, workingDirectory, signal });
   } finally {
