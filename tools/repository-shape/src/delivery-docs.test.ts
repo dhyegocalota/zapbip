@@ -6,6 +6,8 @@ import { capturedNames, readmes, readRepositoryFile, repositoryPath, workspacePa
 
 const README_FILE = 'README.md';
 const HARNESS_FILE = '.claude/HARNESS.md';
+const CLIENT_FIXTURES_PATH = 'scripts/e2e/clients';
+const AGENTS_FILE = 'AGENTS.md';
 const ROOT_ENTRIES = [
   '.agents',
   '.claude',
@@ -109,6 +111,11 @@ describe('delivery documents', () => {
   test('the root holds only the entries the layout names', () => {
     const rootEntries = new Set(repositoryFiles().map((path) => path.replace(NESTED_PATH_PATTERN, '')));
     expect([...rootEntries].filter((entry) => !ROOT_ENTRIES.includes(entry))).toEqual([]);
+  });
+
+  test('the layout names the client end-to-end fixtures and the folder exists', () => {
+    expect(readRepositoryFile(AGENTS_FILE)).toContain(CLIENT_FIXTURES_PATH);
+    expect(existsSync(repositoryPath(CLIENT_FIXTURES_PATH))).toBe(true);
   });
 
   test('no path carries a folder an agent leaves behind for temporary work', () => {
