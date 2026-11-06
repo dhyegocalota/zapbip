@@ -138,7 +138,7 @@ describe('MCP client against wrangler dev', () => {
     expect(put.status).toBe(201);
     expect(sent.structured).toMatchObject({ delivery: 'sent' });
     expect(link).toBeDefined();
-    expect((await readScreen()).at(-1)?.text).toBe(`[imagem] ${link}`);
+    expect((await readScreen()).at(-1)?.text).toMatch(new RegExp(`^\\[imagem\\] ${String(link).split('?')[0]}\\?exp=\\d+&sig=`));
     const downloaded = await fetch(String(link));
     expect(Buffer.from(await downloaded.arrayBuffer())).toEqual(bytes);
   });
