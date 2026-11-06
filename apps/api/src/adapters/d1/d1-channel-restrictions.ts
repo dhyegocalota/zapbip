@@ -4,7 +4,7 @@ export type ChannelRestrictions = {
 };
 
 export class D1ChannelRestrictions implements ChannelRestrictions {
-  constructor(input: { database: D1Database }) {
+  constructor(input: { database: D1Database; phoneNumberId: string }) {
     void input;
   }
 

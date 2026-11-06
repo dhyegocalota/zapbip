@@ -10,6 +10,8 @@ import type {
   CreateUploadResult,
   GetMessagesInput,
   GetMessagesResult,
+  MediaStore,
+  MessageSender,
   ReactInput,
   SendContactsInput,
   SendLocationInput,
@@ -74,6 +76,11 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     };
     this.dueTimeProviders.push(this.createExpiryProvider());
     await this.armAlarm();
+  }
+
+  protected createSender(input: { mediaStore: MediaStore }): MessageSender {
+    void input;
+    throw new Error('createSender is not implemented');
   }
 
   private createExpiryProvider(): DueTimeProvider {
@@ -211,12 +218,12 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     });
   }
 
-  receiveChannelMessage(input: never): never {
+  receiveChannelMessage(input: AgentRequest<inbox.ReceiveChannelInput>): Promise<CallOutcome<inbox.ReceiveResult>> {
     void input;
     throw new Error('receiveChannelMessage is not implemented');
   }
 
-  applyChannelStatus(input: never): never {
+  applyChannelStatus(input: AgentRequest<inbox.ApplyStatusInput>): Promise<CallOutcome<inbox.ApplyStatusResult>> {
     void input;
     throw new Error('applyChannelStatus is not implemented');
   }
