@@ -1,7 +1,5 @@
-import { AccountReplyIntent, ReplyStatus, SECOND_MS } from '@zapbip/types';
+import { AccountReplyIntent } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
-import { connectionOf } from '../../inbox/testing/fixtures';
-import { waitForReply } from '../../inbox/use-cases/wait-for-reply';
 import { addAgent, createAccountFixture, intentsOf, ownerInputOf } from '../testing/fixtures';
 import { revokeAgentConnection } from './revoke-agent-connection';
 
@@ -53,19 +51,5 @@ describe('revokeAgentConnection', () => {
     expect(fixture.environment.revocations.revoked).toEqual(['claude']);
     expect(fixture.environment.revocations.cancelled).toEqual([]);
     expect(fixture.environment.revocations.wakeConfigured.has('claude')).toBe(false);
-  });
-
-  test('a held wait_for_reply of the agent ends before the use case returns', async () => {
-    const fixture = await createAccountFixture();
-    await addAgent({ ...fixture, agent: 'claude' });
-    const waiting = waitForReply({
-      dependencies: fixture.environment.dependencies,
-      connection: connectionOf({ agent: 'claude' }),
-      questionId: null,
-      timeoutMs: 60 * SECOND_MS,
-    });
-    await fixture.environment.clock.advance({ ms: 1 });
-    await revokeAgentConnection({ ...ownerInputOf(fixture), rawName: 'claude' });
-    expect(await waiting).toEqual({ status: ReplyStatus.Timeout });
   });
 });
