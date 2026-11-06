@@ -1,6 +1,7 @@
 import type { DueTimeProvider } from '../contract/due-time-provider';
 import type { UsageRepository } from '../operations/usage-repository';
-import { listUnflushedUsage, markUsageFlushed } from './usage-ledger';
+import { listUnflushedUsage, markUsageFlushed, pruneUsage } from './usage-ledger';
+import { USAGE_METER_RETENTION_MS, utcDay } from './usage-meter';
 
 export function createUsageProvider(input: {
   storage: DurableObjectStorage;
@@ -19,6 +20,7 @@ export function createUsageProvider(input: {
         await input.repository.reportDay({ day: usage.day, accountId: input.accountId, gigabyteSeconds: usage.gigabyteSeconds });
         markUsageFlushed({ storage: input.storage, day: usage.day, gigabyteSeconds: usage.gigabyteSeconds, now });
       }, Promise.resolve());
+      pruneUsage({ storage: input.storage, beforeDay: utcDay({ now: now - USAGE_METER_RETENTION_MS }) });
     },
   };
 }

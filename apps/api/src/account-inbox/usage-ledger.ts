@@ -7,6 +7,8 @@ const LIST_UNFLUSHED_STATEMENT = `SELECT day, gigabyte_seconds AS gigabyteSecond
   FROM usage_meter WHERE gigabyte_seconds > flushed_gigabyte_seconds`;
 const MARK_FLUSHED_STATEMENT = 'UPDATE usage_meter SET flushed_gigabyte_seconds = ?, last_flushed_at = ? WHERE day = ?';
 
+const PRUNE_STATEMENT = 'DELETE FROM usage_meter WHERE day < ? AND gigabyte_seconds <= flushed_gigabyte_seconds';
+
 type UnflushedRow = { day: string; gigabyteSeconds: number; recordedAt: number; lastFlushedAt: number | null };
 
 export type UnflushedUsage = { day: string; gigabyteSeconds: number; dueAt: number };
@@ -28,4 +30,8 @@ export function listUnflushedUsage(input: { storage: DurableObjectStorage }): Un
 
 export function markUsageFlushed(input: { storage: DurableObjectStorage; day: string; gigabyteSeconds: number; now: number }): void {
   input.storage.sql.exec(MARK_FLUSHED_STATEMENT, input.gigabyteSeconds, input.now, input.day);
+}
+
+export function pruneUsage(input: { storage: DurableObjectStorage; beforeDay: string }): void {
+  input.storage.sql.exec(PRUNE_STATEMENT, input.beforeDay);
 }
