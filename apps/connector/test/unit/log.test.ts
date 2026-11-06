@@ -1,6 +1,6 @@
 import { ConnectorLogEvent, ConnectorWakeOutcome } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { logConnectorEvent } from '../../src/log';
+import { logConnectorEvent, logConnectorEventToStderr } from '../../src/log';
 
 const NOW = new Date('2026-11-06T12:00:00.000Z');
 
@@ -64,5 +64,18 @@ describe('logConnectorEvent', () => {
     logConnectorEvent({ event: ConnectorLogEvent.ConnectorClosed, fields: { code: 1006 } });
     logConnectorEvent({ event: ConnectorLogEvent.ConnectorReconnecting, fields: { attempt: 1, delayMs: 1_000 } });
     expect(writtenChunks).toHaveLength(2);
+  });
+});
+
+describe('logConnectorEventToStderr', () => {
+  test('writes the same line to the error stream and nothing to the output stream', () => {
+    const errorChunks: string[] = [];
+    vi.spyOn(process.stderr, 'write').mockImplementation((chunk) => {
+      errorChunks.push(String(chunk));
+      return true;
+    });
+    logConnectorEventToStderr({ event: ConnectorLogEvent.MessagesReceived, fields: { count: 3 } });
+    expect(writtenChunks).toEqual([]);
+    expect(JSON.parse(errorChunks[0] as string)).toEqual({ at: NOW.toISOString(), event: ConnectorLogEvent.MessagesReceived, count: 3 });
   });
 });

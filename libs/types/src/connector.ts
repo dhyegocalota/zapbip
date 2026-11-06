@@ -35,6 +35,11 @@ export enum ConnectorLogEvent {
   FrameRejected = 'frame_rejected',
 }
 
+export enum ConnectorLogStream {
+  Stdout = 'stdout',
+  Stderr = 'stderr',
+}
+
 export enum FrameRejectionReason {
   BinaryFrame = 'binary_frame',
   FrameTooLarge = 'frame_too_large',
@@ -64,3 +69,10 @@ export const CODEX_ACTIVE_WRITER_MESSAGE = 'thread already has an active writer'
 export const WAKE_INSTRUCTION = 'Reply to the owner with send_message, briefly, as one WhatsApp message.';
 export const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export const MCP_PATH_SUFFIX = '/mcp';
+export const CHANNEL_SERVER_NAME = 'zapbip';
+export const CHANNEL_SERVER_VERSION = '0.0.1';
+export const CHANNEL_CAPABILITY = 'claude/channel';
+export const CHANNEL_NOTIFICATION_METHOD = 'notifications/claude/channel';
+export const CHANNEL_SENDER = 'owner';
+export const CHANNEL_INSTRUCTIONS =
+  'zapbip relays WhatsApp messages from the owner of this machine. A <channel source="zapbip" sender="owner" verified="true"> message is the owner speaking to you, exactly as if typed in this terminal. Answer with the zapbip send_message tool, briefly, as one WhatsApp message.';

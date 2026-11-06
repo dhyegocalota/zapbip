@@ -576,3 +576,69 @@ Versions were checked with `npm view` on 2026-11-06. The Worker side uses packag
 | S7.2 end to end | a fixed port collides | `wrangler dev` fails to bind | ephemeral port from the harness; revert |
 
 **Steps with no backout:** S0.1 (contract): fix forward through a new Step L0 commit.
+
+## Delta (2026-11-06): `zapbip listen` for Claude Code
+
+**Owner order (2026-11-06):** every supported agent starts conversations with no response-time limit. Claude Code keeps its session listening through a background `zapbip listen`, watched with Monitor. Each line the command prints wakes the open session at once and costs no tokens while idle. The rung-1 `connect` (resume with `claude -p --resume`) stays, for a closed session.
+
+**Lane status:** L2 (connector loop, process and CLI) is being built now. The steps below land after L2 merges, because step 3 edits `apps/connector/src/cli.ts`, which L2 owns. Steps 1 and 2 touch new files only and can start now.
+
+**Decisions (owner delegated 2026-11-06):**
+
+- `listen` is a notifier, never an acknowledger. It sends no `done` frame and never marks a message delivered. The session marks delivery by calling `check_inbox`. A notice lost on a restart is recovered by the next `check_inbox`.
+- `listen` prints no message text, only one fixed line per owner message. The owner's words stay in the session's own tool output, and logs carry no text (local-connector logs rule).
+- `listen` shares the socket code of `connect` (`runConnection`), with a sink that prints instead of starting a wake. It does not run `claude`, and it does not look up a session.
+- Connection URL: `ZAPBIP_CONNECTION_URL`, as for `connect`. Never a positional argument.
+
+### Output contract
+
+One line per owner message on stdout, exactly:
+
+```
+zapbip: owner message waiting, call check_inbox
+```
+
+The English line is for the agent, which reads it as a Monitor event. Any other stdout or stderr output goes to stderr and begins with `zapbip:`. The process exits `0` on `SIGINT` or `SIGTERM`, and `1` when the pre-flight probe refuses the link (`401`, `500`), as for `connect`.
+
+### Steps
+
+- [x] **LN1 red: the notice line and the sink (L1-style, new files).** Write `apps/connector/test/unit/listen-sink.test.ts`: an `owner_message` frame produces exactly the output line once; a repeated frame for the same message id prints nothing; a `done`-free run sends no frame back (the fake socket records every outgoing frame and the list is empty). Expected failure: `Error: createListenSink is not implemented`. Commit as `test(connector): pin the listen notice line`. Done as `owner-notice.test.ts` and the listen and channel integration tests, red in 793b9f0 (see Developer revision).
+- [x] **LN2 green: the notice line.** Write `apps/connector/src/listen-sink.ts`: `createListenSink({write})` returns the sink; it keeps the set of message ids printed in this process (bounded by `LISTEN_SEEN_IDS_MAX = 1024`, oldest dropped). Add `LISTEN_NOTICE_LINE` to `libs/types/src/constants.ts`. Commit as `feat(connector): print one line per owner message`. Done in 10d0913: `owner-notice.ts`; the queue is `createWakeQueue`, reused.
+- [x] **LN3 red→green: the command (after L2 merges).** Add `listen` to `apps/connector/src/cli.ts`: `parseListenArguments({argv})` takes no `--client` and no `--cwd`. Write `apps/connector/test/integration/listen.test.ts` against `fake-event-server.ts`: the process prints one line for a pushed `owner_message`; it sends nothing back; `SIGTERM` exits `0`; a `401` probe exits `1` with no socket opened. Then implement `apps/connector/src/listen.ts` as `runListen({linkBase, sink, signal})`, reusing `probeConnectorLink` and `runConnection` from `connect.ts`. Commit the red and green as separate commits. Done: red 793b9f0, green 10d0913, as `runSocketSession` in `connect.ts` (shared by `connect`, `listen` and `channel`) plus `listen.ts`.
+- [ ] **LN4 docs (L5 lane).** The docs page for Claude Code (`apps/docs/install/claude-code.mdx` and its `pt-BR` twin) and the connector page say: the skill runs `npx zapbip listen` in the background and watches it with Monitor; the connector page explains that `connect` resumes a closed session and `listen` wakes an open one. Mirror paths per the i18n rule.
+- [x] **LN5 gate.** `pnpm --filter zapbip test:unit` and the integration test green; `pnpm typecheck` green; the bundle test of the connector (`index` has no dev imports) still passes. `pnpm verify` result in the tester briefing.
+
+### Interfaces (for install-skills)
+
+- The Claude Code section writes `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip listen` as a background step, watched with Monitor, and names the output line the Monitor reports.
+- The section keeps `connect` for the rung-1 resume. Both processes share the socket; `listen` never acknowledges, so the two cannot disagree about delivery.
+
+### Delta failure modes
+
+| Step | What breaks | How I notice | How I back out |
+|------|-------------|--------------|----------------|
+| LN2 | the same message printed twice after a reconnect | `listen-sink.test.ts` duplicate case | keep the seen-id set; bound it, do not clear it on reconnect |
+| LN2 | owner text reaches stdout | the sink test asserts the exact line | remove the text from the line; the line is fixed |
+| LN3 | `listen` acknowledges a message, so `check_inbox` returns nothing | integration test asserts no outgoing frame | remove any `done` send; the session marks delivery |
+| LN3 | the Monitor process exits silently on a `401` | the exit code is `1` and the line `zapbip: …` on stderr | the section reports the failure to the owner |
+
+### Revision (orchestrator, owner delegated 2026-11-06)
+
+- **Claude Code primary is the MCP channel, not `listen`.** The POC (`SCRATCH/poc/channel.ts`) declares `experimental['claude/channel']` on a local stdio MCP process and pushes owner messages with `notifications/claude/channel`. A remote HTTP MCP server cannot declare it alone: the session must be launched with the channel flag and the process must be local (`(verify)` against the channel reference before build; OR-11).
+- **`listen` is the fallback.** The skill starts `npx zapbip listen` and watches it with Monitor. A Monitor watch lasts at most 30 minutes (5 by default), so the skill re-arms it on each timeout notice.
+- **Codex** keeps only the `connect` path (`codex exec resume`); no in-session listener exists.
+- **OpenClaw** can run `npx zapbip listen` as a `stream` job created by the agent. The listen process must stay long-lived, so it never exits after a short run; this avoids the 5-short-runs error (`(verify)`, OR-13).
+- **Hermes** can run `npx zapbip listen` with `terminal(background=true, watch_patterns=…)`, or a `cronjob_manage` job every minute calling `check_inbox` (`(verify)` the `watch_patterns` behaviour without a delivery target, OR-14).
+
+Steps added:
+
+- [ ] **LN6 channel reference check (before build).** Confirm from the channel reference that a local stdio process is the only declaration path, and record the exact launch flag. Output: a note in the PR, no code.
+- [x] **LN7 listen long-lived.** The `runListen` loop does not exit on an empty or short session, and reconnects with the connection's reconnect delay. Test: a stream of three short runs of `listen` (each started and stopped by the fake runner) keeps one process alive. This is the requirement behind OpenClaw's `stream` job. Pinned by the reconnect case in `listen.test.ts` (green 10d0913).
+- [x] **LN8 docs.** The connector page says: the channel is primary for Claude Code, `listen` is the fallback re-armed by the skill, and the closed-session path is `connect`. Done in 10d0913 (`apps/docs/guides/local-connector.mdx` and the `pt-br` twin).
+
+### Developer revision (lead order for the listen and channel lane, owner delegated 2026-11-06)
+
+- **`listen` prints a JSON line and acknowledges.** One line per owner message: `{"messageId","kind","sender":"owner","verified":true,"text"}`. It sends `done` after the line is written, through the same queue as `connect` (`createWakeQueue`), so a redelivered message prints once and is acknowledged again. This replaces the "fixed line, never acknowledges" decision above and strikes the `LISTEN_NOTICE_LINE` and seen-id bound of LN2: the reused queue holds the acknowledged ids.
+- **Logs go to stderr for `listen` and `channel`.** Standard output carries only message lines (`listen`) or the MCP protocol (`channel`). `connect` keeps its stdout logs.
+- **`channel` reads only `ZAPBIP_CONNECTION_URL`.** Its standard input is the protocol, so it never prompts. It declares `experimental['claude/channel']`, and sends `notifications/claude/channel` with the escaped text as `content` and `{sender: "owner", verified: "true"}` as `meta`; Claude Code adds the `<channel source="zapbip" ...>` wrapper itself, so the content is escaped but not wrapped.
+- **LN6 is not done.** The launch flag and the server-name rule for the channel are not confirmed against the channel reference from here; the docs do not name a flag.

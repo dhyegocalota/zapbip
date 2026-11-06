@@ -3,7 +3,9 @@ import { resolve } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { fileURLToPath } from 'node:url';
 import { ConnectorClient, UUID_PATTERN } from '@zapbip/types';
+import { runChannel } from './channel';
 import { deriveConnectorLinks, runConnection } from './connect';
+import { runListen } from './listen';
 
 export type ConnectArguments = {
   client: ConnectorClient;
@@ -13,6 +15,8 @@ export type ConnectArguments = {
 
 enum CliCommand {
   Connect = 'connect',
+  Listen = 'listen',
+  Channel = 'channel',
 }
 
 enum CliFlag {
@@ -24,6 +28,7 @@ enum CliFlag {
 type CliCommandHandler = (input: { argv: string[] }) => Promise<number>;
 
 const CONNECTION_URL_VARIABLE = 'ZAPBIP_CONNECTION_URL';
+const CHANNEL_LINK_MESSAGE = `the channel reads the connection link from ${CONNECTION_URL_VARIABLE}`;
 const CONNECTION_PROMPT = 'Connection link: ';
 const USAGE = `usage: zapbip ${CliCommand.Connect} ${CliFlag.Client} ${Object.values(ConnectorClient).join('|')} [${CliFlag.WorkingDirectory} <directory>] [${CliFlag.Session} <uuid>]`;
 const FAILURE_EXIT_CODE = 1;
@@ -78,16 +83,43 @@ async function readConnectionLink(): Promise<string> {
   return answer.trim();
 }
 
+function startShutdownController(): AbortController {
+  const abortController = new AbortController();
+  SHUTDOWN_SIGNALS.forEach((signalName) => process.once(signalName, () => abortController.abort()));
+  return abortController;
+}
+
 async function connectCommand(input: { argv: string[] }): Promise<number> {
   const { client, workingDirectory, pinnedSessionId } = parseConnectArguments(input);
   const { socketLink } = deriveConnectorLinks({ connectionLink: await readConnectionLink() });
-  const abortController = new AbortController();
-  SHUTDOWN_SIGNALS.forEach((signalName) => process.once(signalName, () => abortController.abort()));
+  const abortController = startShutdownController();
   return runConnection({ socketLink, client, workingDirectory, pinnedSessionId, signal: abortController.signal });
+}
+
+function assertNoArguments(input: { argv: string[] }): void {
+  if (input.argv.length > 0) throw new Error(USAGE);
+}
+
+async function listenCommand(input: { argv: string[] }): Promise<number> {
+  assertNoArguments(input);
+  const { socketLink } = deriveConnectorLinks({ connectionLink: await readConnectionLink() });
+  const abortController = startShutdownController();
+  return runListen({ socketLink, write: ({ line }) => process.stdout.write(line), signal: abortController.signal });
+}
+
+async function channelCommand(input: { argv: string[] }): Promise<number> {
+  assertNoArguments(input);
+  const connectionLink = process.env[CONNECTION_URL_VARIABLE];
+  if (connectionLink === undefined || connectionLink === '') throw new Error(CHANNEL_LINK_MESSAGE);
+  const { socketLink } = deriveConnectorLinks({ connectionLink });
+  const abortController = startShutdownController();
+  return runChannel({ socketLink, signal: abortController.signal });
 }
 
 const COMMAND_HANDLERS: Record<CliCommand, CliCommandHandler> = {
   [CliCommand.Connect]: connectCommand,
+  [CliCommand.Listen]: listenCommand,
+  [CliCommand.Channel]: channelCommand,
 };
 
 async function main(): Promise<number> {

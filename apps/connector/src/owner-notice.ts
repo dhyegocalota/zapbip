@@ -1,0 +1,23 @@
+import type { Message } from '@zapbip/core';
+import { CHANNEL_NOTIFICATION_METHOD, CHANNEL_SENDER, type MessageKind } from '@zapbip/types';
+import { escapeChannelText, ownerMessageText } from './owner-prompt';
+
+export type OwnerNotice = { messageId: string; kind: MessageKind; sender: string; verified: boolean; text: string };
+export type ChannelNotification = { method: string; params: { content: string; meta: Record<string, string> } };
+
+export function buildOwnerNotice(input: { message: Message }): OwnerNotice {
+  const { message } = input;
+  return { messageId: message.messageId, kind: message.kind, sender: CHANNEL_SENDER, verified: true, text: ownerMessageText({ message }) };
+}
+
+export function formatListenLine(input: { message: Message }): string {
+  return `${JSON.stringify(buildOwnerNotice(input))}\n`;
+}
+
+export function buildChannelNotification(input: { message: Message }): ChannelNotification {
+  const { text } = buildOwnerNotice(input);
+  return {
+    method: CHANNEL_NOTIFICATION_METHOD,
+    params: { content: escapeChannelText({ text }), meta: { sender: CHANNEL_SENDER, verified: String(true) } },
+  };
+}
