@@ -494,13 +494,13 @@ Versions were checked with `npm view` on 2026-11-06. The Worker side uses packag
 
 ### Step L1 (connector pure modules)
 
-- [ ] **S1.1 red: owner prompt.** `test/unit/owner-prompt.test.ts`. Commit `test(connector): pin the owner prompt block`.
-- [ ] **S1.2 red: wake commands.** `test/unit/wake-commands.test.ts`. Commit `test(connector): pin the wake argv`.
-- [ ] **S1.3 red: session lookup.** `test/unit/session-lookup.test.ts` with the fixture. Commit `test(connector): pin the session lookup`.
-- [ ] **S1.4 red: wake queue and log.** `test/unit/wake-queue.test.ts` (including the acknowledged-id cases of A6) and `test/unit/log.test.ts`. Commit `test(connector): pin the wake queue and the log`.
-- [ ] **S1.5 green: owner prompt and wake commands.** Commit `feat(connector): build the owner prompt and the wake argv`.
-- [ ] **S1.6 green: session lookup.** Commit `feat(connector): resolve the newest local session`.
-- [ ] **S1.7 green: queue and log.** Commit `feat(connector): queue wakes one at a time`.
+- [x] **S1.1 red: owner prompt.** `test/unit/owner-prompt.test.ts`. Commit `test(connector): pin the owner prompt block`. (evidence: 5b3244c)
+- [x] **S1.2 red: wake commands.** `test/unit/wake-commands.test.ts`. Commit `test(connector): pin the wake argv`. (evidence: 66727c3)
+- [x] **S1.3 red: session lookup.** `test/unit/session-lookup.test.ts` with the fixture. Commit `test(connector): pin the session lookup`. (evidence: fa11ac2)
+- [x] **S1.4 red: wake queue and log.** `test/unit/wake-queue.test.ts` (including the acknowledged-id cases of A6) and `test/unit/log.test.ts`. Commit `test(connector): pin the wake queue and the log`. (evidence: 37fca61)
+- [x] **S1.5 green: owner prompt and wake commands.** Commit `feat(connector): build the owner prompt and the wake argv`. (evidence: 98d4537)
+- [x] **S1.6 green: session lookup.** Commit `feat(connector): resolve the newest local session`. (evidence: 9c852f2)
+- [x] **S1.7 green: queue and log.** Commit `feat(connector): queue wakes one at a time`. (evidence: 17c9fdb)
 
 ### Step L2 (connector loop, process and CLI)
 
