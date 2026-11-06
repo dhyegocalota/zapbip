@@ -36,6 +36,7 @@
             "pages": [
               "developers/any-mcp-client",
               "developers/errors",
+              "guides/webhook-wake",
               {
                 "group": "Concepts",
                 "pages": ["concepts/inbox", "concepts/questions", "concepts/24-hour-window", "concepts/routing", "concepts/wake-ladder"]
@@ -94,6 +95,7 @@
             "pages": [
               "pt-br/developers/any-mcp-client",
               "pt-br/developers/errors",
+              "pt-br/guides/webhook-wake",
               {
                 "group": "Conceitos",
                 "pages": [

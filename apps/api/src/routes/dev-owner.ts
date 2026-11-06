@@ -1,11 +1,11 @@
-import { InboxErrorCode, MessageKind, type OwnerLocale } from '@zapbip/types';
-import { assertMediaFits, InboxError, type OwnerInboundContent } from '@zapbip/core';
+import { MessageKind, type OwnerLocale } from '@zapbip/types';
+import { assertMediaFits, InboxError, invalidInput, notFound, type OwnerInboundContent } from '@zapbip/core';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { D1MessageIndex } from '../adapters/d1/d1-message-index';
 import { findOwnerByPhone } from '../adapters/d1/d1-owner-directory';
 import { createPlatformClock } from '../adapters/platform/clock';
-import { createR2MediaStore } from '../adapters/r2/r2-media-store';
+import { mediaStoreOf } from '../adapters/r2/r2-media-store';
 import type { DevAccountInboxRpc } from '../contract/account-inbox-rpc';
 import { DEV_OWNER_PATH_PREFIX, OWNER_PHONE_PATTERN } from '../contract/constants';
 import type { Bindings } from '../contract/env';
@@ -62,6 +62,13 @@ const ownerMessageSchema = z.discriminatedUnion('kind', [
   choiceSchema,
 ]);
 const clockSchema = z.object({ advance_ms: z.number().int().positive() });
+const wakeScriptSchema = z.object({
+  responses: z.array(
+    z.object({ statusCode: z.number().int().nullable(), errorName: z.string().nullable(), retryAfterMs: z.number().int().nullable() }),
+  ),
+});
+const NO_CONTENT_STATUS = 204;
+const FIND_AGENT_STATEMENT = 'SELECT 1 AS present FROM connections WHERE account_id = ? AND agent = ?';
 
 type OwnerMessageBody = z.infer<typeof ownerMessageSchema>;
 type MediaBody = z.infer<typeof mediaSchema>;
@@ -117,11 +124,11 @@ function mediaFitError(input: { body: MediaBody; sizeBytes: number }): InboxErro
   }
 }
 
-function invalidInput(input: { message: string }) {
-  return { error: InboxErrorCode.InvalidInput, message: input.message };
+function errorBody(input: { error: InboxError }) {
+  return { error: input.error.code, message: input.error.message };
 }
 
-const notFound = { error: InboxErrorCode.NotFound };
+const OWNER_NOT_FOUND_MESSAGE = 'owner: not found';
 
 export const devOwnerRoutes = new Hono<{ Bindings: Bindings }>();
 
@@ -130,12 +137,21 @@ function findOwner(input: { bindings: Bindings; phone: string }): Promise<OwnerI
   return findOwnerByPhone({ database: input.bindings.CONNECTIONS, phone: input.phone });
 }
 
+async function findOwnerOfAgent(input: { bindings: Bindings; phone: string; agent: string }): Promise<OwnerIdentity | null> {
+  const owner = await findOwner(input);
+  if (!owner) return null;
+  const connection = await input.bindings.CONNECTIONS.prepare(FIND_AGENT_STATEMENT).bind(owner.accountId, input.agent).first();
+  if (!connection) return null;
+  return owner;
+}
+
 devOwnerRoutes.post(`${DEV_OWNER_PATH_PREFIX}/messages`, async (context) => {
   const owner = await findOwner({ bindings: context.env, phone: context.req.param('phone') });
-  if (!owner) return context.json(notFound, HttpStatus.NotFound);
+  if (!owner) return context.json(errorBody({ error: notFound({ message: OWNER_NOT_FOUND_MESSAGE }) }), HttpStatus.NotFound);
   const { accountId, ownerLocale } = owner;
   const parsed = ownerMessageSchema.safeParse(await context.req.json().catch(() => null));
-  if (!parsed.success) return context.json(invalidInput({ message: z.prettifyError(parsed.error) }), HttpStatus.BadRequest);
+  if (!parsed.success)
+    return context.json(errorBody({ error: invalidInput({ message: z.prettifyError(parsed.error) }) }), HttpStatus.BadRequest);
   const body = parsed.data;
   const clock = createPlatformClock();
   const inbox = accountInboxOf<DevAccountInboxRpc>({ bindings: context.env, accountId });
@@ -143,13 +159,14 @@ devOwnerRoutes.post(`${DEV_OWNER_PATH_PREFIX}/messages`, async (context) => {
   if ('data_base64' in body) {
     const bytes = decodeBytes({ base64: body.data_base64 });
     const fitError = mediaFitError({ body, sizeBytes: bytes.byteLength });
-    if (fitError) return context.json({ error: fitError.code, message: fitError.message }, ERROR_STATUS[fitError.code]);
-    await createR2MediaStore({
-      bucket: context.env.MEDIA,
-      mediaLinkSigningKey: context.env.MEDIA_LINK_SIGNING_KEY,
-      uploadLinkSigningKey: context.env.UPLOAD_LINK_SIGNING_KEY,
-      clock,
-    }).put({ accountId, mediaId: body.wamid, body: new Blob([bytes]).stream(), sizeBytes: bytes.byteLength, mimeType: body.mime_type });
+    if (fitError) return context.json(errorBody({ error: fitError }), ERROR_STATUS[fitError.code]);
+    await mediaStoreOf({ bindings: context.env, clock }).put({
+      accountId,
+      mediaId: body.wamid,
+      body: new Blob([bytes]).stream(),
+      sizeBytes: bytes.byteLength,
+      mimeType: body.mime_type,
+    });
   }
   const clockOffsetMs = await inbox.advanceClock({ advanceMs: 0 });
   const buildContent = CONTENT_BUILDERS[body.kind] as (body: OwnerMessageBody) => OwnerInboundContent;
@@ -165,7 +182,7 @@ devOwnerRoutes.post(`${DEV_OWNER_PATH_PREFIX}/messages`, async (context) => {
 
 devOwnerRoutes.get(`${DEV_OWNER_PATH_PREFIX}/screen`, async (context) => {
   const owner = await findOwner({ bindings: context.env, phone: context.req.param('phone') });
-  if (!owner) return context.json(notFound, HttpStatus.NotFound);
+  if (!owner) return context.json(errorBody({ error: notFound({ message: OWNER_NOT_FOUND_MESSAGE }) }), HttpStatus.NotFound);
   const { accountId } = owner;
   const entries = await accountInboxOf<DevAccountInboxRpc>({ bindings: context.env, accountId }).readScreen();
   return context.json({ entries }, HttpStatus.Ok);
@@ -173,13 +190,45 @@ devOwnerRoutes.get(`${DEV_OWNER_PATH_PREFIX}/screen`, async (context) => {
 
 devOwnerRoutes.post(`${DEV_OWNER_PATH_PREFIX}/clock`, async (context) => {
   const owner = await findOwner({ bindings: context.env, phone: context.req.param('phone') });
-  if (!owner) return context.json(notFound, HttpStatus.NotFound);
+  if (!owner) return context.json(errorBody({ error: notFound({ message: OWNER_NOT_FOUND_MESSAGE }) }), HttpStatus.NotFound);
   const { accountId } = owner;
   const parsed = clockSchema.safeParse(await context.req.json().catch(() => null));
-  if (!parsed.success) return context.json(invalidInput({ message: z.prettifyError(parsed.error) }), HttpStatus.BadRequest);
+  if (!parsed.success)
+    return context.json(errorBody({ error: invalidInput({ message: z.prettifyError(parsed.error) }) }), HttpStatus.BadRequest);
   const offsetMs = await accountInboxOf<DevAccountInboxRpc>({ bindings: context.env, accountId }).advanceClock({
     advanceMs: parsed.data.advance_ms,
   });
   logEvent({ event: LogEvent.ClockAdvanced, accountId });
   return context.json({ offset_ms: offsetMs }, HttpStatus.Ok);
+});
+
+devOwnerRoutes.post(`${DEV_OWNER_PATH_PREFIX}/agents/:agent/wake/script`, async (context) => {
+  const agent = context.req.param('agent');
+  const owner = await findOwnerOfAgent({ bindings: context.env, phone: context.req.param('phone'), agent });
+  if (!owner) return context.json(errorBody({ error: notFound({ message: OWNER_NOT_FOUND_MESSAGE }) }), HttpStatus.NotFound);
+  const parsed = wakeScriptSchema.safeParse(await context.req.json().catch(() => null));
+  if (!parsed.success)
+    return context.json(errorBody({ error: invalidInput({ message: z.prettifyError(parsed.error) }) }), HttpStatus.BadRequest);
+  await accountInboxOf<DevAccountInboxRpc>({ bindings: context.env, accountId: owner.accountId }).devScriptWake({
+    agent,
+    responses: parsed.data.responses,
+  });
+  return context.body(null, NO_CONTENT_STATUS);
+});
+
+devOwnerRoutes.get(`${DEV_OWNER_PATH_PREFIX}/agents/:agent/wake/requests`, async (context) => {
+  const agent = context.req.param('agent');
+  const owner = await findOwnerOfAgent({ bindings: context.env, phone: context.req.param('phone'), agent });
+  if (!owner) return context.json(errorBody({ error: notFound({ message: OWNER_NOT_FOUND_MESSAGE }) }), HttpStatus.NotFound);
+  const requests = await accountInboxOf<DevAccountInboxRpc>({ bindings: context.env, accountId: owner.accountId }).devReadWakeRequests({
+    agent,
+  });
+  return context.json(requests, HttpStatus.Ok);
+});
+
+devOwnerRoutes.post(`${DEV_OWNER_PATH_PREFIX}/wake/run`, async (context) => {
+  const owner = await findOwner({ bindings: context.env, phone: context.req.param('phone') });
+  if (!owner) return context.json(errorBody({ error: notFound({ message: OWNER_NOT_FOUND_MESSAGE }) }), HttpStatus.NotFound);
+  await accountInboxOf<DevAccountInboxRpc>({ bindings: context.env, accountId: owner.accountId }).devRunDueWakes();
+  return context.body(null, NO_CONTENT_STATUS);
 });

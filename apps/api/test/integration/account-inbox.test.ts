@@ -126,6 +126,26 @@ describe('AccountInbox owner messages', () => {
     expect(screen[2]?.messageId).toBeNull();
   });
 
+  it('renders an outbound link media on the screen as its placeholder and link', async () => {
+    const stub = stubOf({ accountId: FIRST_ACCOUNT });
+    const connection = connectionOf({ accountId: FIRST_ACCOUNT, agent: 'alpha' });
+    const link = 'https://example.com/a.jpg';
+    await openWindow({ stub });
+    expectOk(
+      await stub.sendMedia({
+        connection,
+        mediaKind: MessageKind.Image,
+        voice: false,
+        source: { kind: MediaSourceKind.Link, link },
+        caption: null,
+        filename: null,
+        replyToMessageId: null,
+      }),
+    );
+    const screen = await readScreen({ stub });
+    expect(screen.at(-1)?.text).toBe(`[imagem] ${link}`);
+  });
+
   it('renders the routing list for an unrouted owner text', async () => {
     const stub = stubOf({ accountId: FIRST_ACCOUNT });
     await stub.checkInbox({ connection: connectionOf({ accountId: FIRST_ACCOUNT, agent: 'alpha' }) });

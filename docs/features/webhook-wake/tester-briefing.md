@@ -189,3 +189,29 @@ pnpm typecheck
 - Not tested at the Durable Object level: the in-flight follow-up (the scripted transport cannot hold a response; core pins it), the live `ask` waiter at the alarm (core pins it), and the object restart between lease and retry (the scripted transport lives in memory and restarts empty).
 - `recordRevocation` is slice 3's (A31); only `clearWake` is tested, through the repository.
 - The own-host case runs with the test `PUBLIC_ORIGIN` (`http://localhost:8787`), whose host is also a blocked name, so it cannot tell the derived host from the blocked list; a variable origin needs a binding override this lane does not have.
+
+## Lane L5 (dev routes, E2E and bundle)
+
+**What changed.** `apps/api/test/e2e/global-setup.ts` passes a `WAKE_SECRET_KEY` generated per run (`randomBytes`, never committed) to `wrangler dev --env development` and seeds five single-agent accounts (agent `grok`, phones `5511999990001` to `5511999990005`) exposed as `stack().wakeAccounts`. `apps/api/wrangler.jsonc` gains `WAKE_METRICS` in `env.development` (the Durable Object needs it; the environment block does not inherit the top-level binding). `apps/api/src/routes/dev-owner.ts` gains `POST /dev/owner/:phone/agents/:agent/wake/script` (204), `GET .../agents/:agent/wake/requests` (200, array) and `POST /dev/owner/:phone/wake/run` (204). An unknown or malformed phone, or an agent that is not a connection of that phone's account, answers `404` with the same body; a malformed script answers `400`. Merging slice 1 (`feat/agent-inbox-core`, local tip) needed three conflict resolutions and one fit: `hasLiveWaiter` now takes `questionId`, so `libs/core/src/wake/run-due-wakes.ts` passes `questionId: null` (the wake looks for a waiter that is not tied to a question; the tester should check that a live `ask` waiter on a question still suppresses nothing wrongly).
+
+**Run.** `cd apps/api && pnpm exec vitest run --config vitest.integration.config.mts test/integration/dev-owner-wake.test.ts`; `pnpm exec vitest run --config vitest.e2e.config.mts test/e2e/webhook-wake.e2e.test.ts test/e2e/wake-bundle.e2e.test.ts`.
+
+| Test | Red today | Green after |
+|---|---|---|
+| `dev-owner-wake.test.ts` WR-1, WR-2, WR-5 | red commit `a39a3b1`: `expected 404 to be 204`, `expected 404 to be 200`, `expected 404 to be 400` | `0972935` |
+| WR-3, WR-4 | pin (an unmatched route also answers 404) | same |
+| `wake-bundle.e2e.test.ts` WB-1 | pin (no wake surface in the production bundle) | same |
+| `wake-bundle.e2e.test.ts` WB-2 | red by construction: `wake/script` and the other route markers exist nowhere in `src` at `a39a3b1`; the run itself happened after the routes existed | `0972935` |
+| `webhook-wake.e2e.test.ts` WW-1 to WW-4 | pin: the first run printed `expected [] to have a length of 1` only because the owner text had no `@grok` mention and was not routed; with the mention all four pass on the existing implementation | `e939240` |
+
+**Hypotheses for the tester.**
+- The e2e gate runs with no environment variable and reports `WAKE_SECRET_KEY` only to the `wrangler dev` child; `git grep` finds no key literal.
+- WW-1: account 0 gets exactly one request with body `WAKE_SIGNAL_BODY`; account 1, which has the same agent name and a wake set, gets none.
+- WW-3: after a scripted `503` the second request needs the clock to move by `WAKE_BACKOFF_BASE_MS`; one run earlier sends nothing.
+- WW-4: a `401` leaves exactly one `wakeFailed` notice in the default locale and one request.
+- The production bundle (top-level `wrangler deploy --dry-run`) holds none of the dev RPC names, `ScriptedWakeTransport`, `wake/script`, `wake/requests` or the `/wake/run` route; the marker for the run route is the template literal tail `/wake/run` followed by a backtick, because the source path `libs/core/src/wake/run-due-wakes.ts` appears in the bundle as a comment.
+
+**Gaps.**
+- The test-plan case "`POST /dev/owner/<phone>/wake/run` on the production entry answers 404" is covered by the bundle test (the route is absent), not by a request against a production entry.
+- `wake/script` has no body-size limit; it is a development route.
+- The e2e walk for `ask` with a live waiter at the alarm is not written; core pins it.

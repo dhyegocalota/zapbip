@@ -13,7 +13,7 @@ const STATUS_NOT_FOUND = 404;
 
 type StoredFixture = { accountId: string; mediaId: string };
 
-async function storeMedia(): Promise<StoredFixture> {
+async function storeMedia({ mimeType = MEDIA_TYPE }: { mimeType?: string } = {}): Promise<StoredFixture> {
   const fixture = { accountId: `acc_${crypto.randomUUID()}`, mediaId: `med_${crypto.randomUUID()}` };
   const mediaStore = createR2MediaStore({
     bucket: env.MEDIA,
@@ -25,7 +25,7 @@ async function storeMedia(): Promise<StoredFixture> {
     ...fixture,
     body: new Blob([MEDIA_BYTES]).stream(),
     sizeBytes: MEDIA_BYTES.byteLength,
-    mimeType: MEDIA_TYPE,
+    mimeType,
   });
   return fixture;
 }
@@ -41,7 +41,25 @@ async function getMedia(input: { path: StoredFixture; signed: StoredFixture; key
   return SELF.fetch(`${ORIGIN}/m/${input.path.accountId}/${input.path.mediaId}?${queryOf(query)}`);
 }
 
+const PDF_TYPE = 'application/pdf';
+
 describe('media route', () => {
+  test.each([
+    { mimeType: 'image/png', disposition: null },
+    { mimeType: 'video/mp4', disposition: null },
+    { mimeType: 'audio/ogg', disposition: null },
+    { mimeType: PDF_TYPE, disposition: 'attachment' },
+    { mimeType: 'text/html', disposition: 'attachment' },
+  ])('a $mimeType response is hardened and its disposition is $disposition', async ({ mimeType, disposition }) => {
+    const fixture = await storeMedia({ mimeType });
+    const response = await getMedia({ path: fixture, signed: fixture, key: env.MEDIA_LINK_SIGNING_KEY, expiresAt: freshExpiry() });
+    expect(response.status).toBe(STATUS_OK);
+    expect(response.headers.get('x-content-type-options')).toBe('nosniff');
+    expect(response.headers.get('content-security-policy')).toBe('sandbox');
+    expect(response.headers.get('content-disposition')).toBe(disposition);
+    await response.arrayBuffer();
+  });
+
   test('WI-85 a valid link answers 200 with the stored bytes and type', async () => {
     const fixture = await storeMedia();
     const response = await getMedia({ path: fixture, signed: fixture, key: env.MEDIA_LINK_SIGNING_KEY, expiresAt: freshExpiry() });
@@ -102,5 +120,42 @@ describe('media route', () => {
     const original = await getMedia({ path: fixture, signed: fixture, key: env.MEDIA_LINK_SIGNING_KEY, expiresAt });
     expect(forged.status).toBe(STATUS_FORBIDDEN);
     expect(original.status).toBe(STATUS_OK);
+  });
+
+  test.each([
+    { label: 'a leading zero', exp: (expiresAt: number) => `0${expiresAt}` },
+    { label: 'a plus sign', exp: (expiresAt: number) => `+${expiresAt}` },
+    { label: 'surrounding spaces', exp: (expiresAt: number) => `%20${expiresAt}%20` },
+  ])('a non-canonical expiry with $label answers 403', async ({ exp }) => {
+    const fixture = await storeMedia();
+    const query = await signedQuery({
+      key: env.MEDIA_LINK_SIGNING_KEY,
+      accountId: fixture.accountId,
+      mediaId: fixture.mediaId,
+      purpose: LinkPurpose.Read,
+      expiresAt: freshExpiry(),
+    });
+    const response = await SELF.fetch(
+      `${ORIGIN}/m/${fixture.accountId}/${fixture.mediaId}?exp=${exp(query.expiresAt)}&sig=${query.signature}`,
+    );
+    expect(response.status).toBe(STATUS_FORBIDDEN);
+  });
+
+  test.each([
+    { label: 'padded', alter: (signature: string) => `${signature}=` },
+    { label: 'standard base64', alter: (signature: string) => Buffer.from(signature, 'base64url').toString('base64') },
+  ])('a $label signature answers 403', async ({ alter }) => {
+    const fixture = await storeMedia();
+    const query = await signedQuery({
+      key: env.MEDIA_LINK_SIGNING_KEY,
+      accountId: fixture.accountId,
+      mediaId: fixture.mediaId,
+      purpose: LinkPurpose.Read,
+      expiresAt: freshExpiry(),
+    });
+    const response = await SELF.fetch(
+      `${ORIGIN}/m/${fixture.accountId}/${fixture.mediaId}?${queryOf({ ...query, signature: encodeURIComponent(alter(query.signature)) })}`,
+    );
+    expect(response.status).toBe(STATUS_FORBIDDEN);
   });
 });
