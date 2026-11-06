@@ -478,14 +478,14 @@ Every box is empty when authored. A developer ticks its own box. A wrong step is
 
 ### Lane L1: wake core
 
-- [ ] **W1.1 red: guard and signing.** Write `assert-wake-target.test.ts` and `sign-wake-request.test.ts` (test plan cases) and the test double bodies. Run `pnpm -F @zapbip/core test:unit`. Expected failure: `assertWakeTarget is not implemented`. Commit as `test(wake): pin the target guard and the signing string`.
-- [ ] **W1.2 green: guard and signing.** Implement `assert-wake-target.ts`, `sign-wake-request.ts`, `wake-rung.ts`, `wake-associated-data.ts`. Commit as `feat(wake): implement the target guard and the signing string`.
-- [ ] **W1.3 red: set_wake.** Write `set-wake.test.ts`. Expected failure: `setWake is not implemented`. Commit as `test(wake): pin set_wake`.
-- [ ] **W1.4 green: set_wake.** Validate through `assertWakeTarget`, seal with `wakeAssociatedData`, save `active`, delete the job on `none`, never call the transport. Commit as `feat(wake): implement set_wake`.
-- [ ] **W1.5 red: scheduling.** Write `schedule-wake.test.ts`. Expected failure: `scheduleWake is not implemented`. Commit as `test(wake): pin coalescing`.
-- [ ] **W1.6 green: scheduling.** Commit as `feat(wake): implement coalescing`.
-- [ ] **W1.7 red: due wakes.** Write `run-due-wakes.test.ts` (including the throwing repository, at unit level) and `wake-copy.test.ts`. Expected failure: `runDueWakes is not implemented`. Commit as `test(wake): pin the wake outcomes, retries and fallback`.
-- [ ] **W1.8 green: due wakes.** Implement `run-due-wakes.ts` and `wake-copy.ts`. Commit as `feat(wake): implement due wakes, retries and the owner notice`.
+- [x] **W1.1 red: guard and signing.** Write `assert-wake-target.test.ts` and `sign-wake-request.test.ts` (test plan cases) and the test double bodies. Run `pnpm -F @zapbip/core test:unit`. Expected failure: `assertWakeTarget is not implemented`. Commit as `test(wake): pin the target guard and the signing string`. Evidence: `ca02bb0`.
+- [x] **W1.2 green: guard and signing.** Implement `assert-wake-target.ts`, `sign-wake-request.ts`, `wake-rung.ts`, `wake-associated-data.ts`. Commit as `feat(wake): implement the target guard and the signing string`. Evidence: `3e24947`.
+- [x] **W1.3 red: set_wake.** Write `set-wake.test.ts`. Expected failure: `setWake is not implemented`. Commit as `test(wake): pin set_wake`. Evidence: `3cc023d`.
+- [x] **W1.4 green: set_wake.** Validate through `assertWakeTarget`, seal with `wakeAssociatedData`, save `active`, delete the job on `none`, never call the transport. Commit as `feat(wake): implement set_wake`. Evidence: `34ddfd2`.
+- [x] **W1.5 red: scheduling.** Write `schedule-wake.test.ts`. Expected failure: `scheduleWake is not implemented`. Commit as `test(wake): pin coalescing`. Evidence: `142f761`.
+- [x] **W1.6 green: scheduling.** Commit as `feat(wake): implement coalescing`. Evidence: `f62bba4`.
+- [x] **W1.7 red: due wakes.** Write `run-due-wakes.test.ts` (including the throwing repository, at unit level) and `wake-copy.test.ts`. Expected failure: `runDueWakes is not implemented`. Commit as `test(wake): pin the wake outcomes, retries and fallback`. Evidence: `fa52aaa`.
+- [x] **W1.8 green: due wakes.** Implement `run-due-wakes.ts` and `wake-copy.ts`. Commit as `feat(wake): implement due wakes, retries and the owner notice`. Evidence: `bd33255`.
 
 ### Lane L2: Durable Object and adapters
 

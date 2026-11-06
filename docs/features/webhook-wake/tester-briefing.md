@@ -72,3 +72,48 @@ cd apps/docs && pnpm exec mint broken-links
 
 - The docs state the wake behaviour of the spec; if L1 to L3 change a constant or an error message, the pages need a matching edit.
 - The `/fire` body risk (spec, A22) is not mentioned in the docs.
+
+## Lane L1 (wake core)
+
+### What changed
+
+- `libs/core/src/wake/`: bodies of `assert-wake-target`, `sign-wake-request`, `wake-rung`, `wake-associated-data`, `set-wake`, `schedule-wake`, `run-due-wakes` and `wake-copy`; the four doubles of `testing/wake-doubles.ts`; `testing/wake-fixtures.ts` (new, shared setup of the core tests, not exported from the package).
+- `assert-wake-target.ts` also exports `WakeTargetField` and `invalidWakeField` (used by `set-wake.ts`).
+- The `WAKE_COPY` texts now name `set_wake` (the test plan asks the copy test to check it).
+
+### How to run
+
+```bash
+pnpm -F @zapbip/core test:unit
+```
+
+### Red then green
+
+- `ca02bb0` (red): `Tests 47 failed (47)`, `assertWakeTarget is not implemented` and `signWakeRequest is not implemented`. Green `3e24947`.
+- `3cc023d` (red): `Tests 10 failed (10)`, `setWake is not implemented`. Green `34ddfd2`.
+- A red commit for coalescing (`pin coalescing`): `Tests 6 failed (6)`, `scheduleWake is not implemented`. Green `f62bba4`.
+- `fa52aaa` (red): `Tests 41 failed | 1 passed (42)`, `runDueWakes is not implemented` (38), `wakeFailedCopy is not implemented` (2), and `expected 'Não consegui acordar seu agente. Sua …' to contain 'set_wake'`. The one passing case, the `WAKE_COPY` table check, is a pin. Green `bd33255`.
+
+### Decisions a later lane or the tester needs
+
+- `WakeRepository.findNextDueAt` must return `min` over jobs of `max(dueAt, leaseUntil)`, so a leased job reports its lease end (the in-memory double does; L2's SQLite repository must match). `listDueJobs({now})` returns every job with `dueAt <= now`, leased or not; the core skips the leased ones.
+- `clearWake` clears the target, sets `mode none` and `status active`, keeps `lastDeliveredAt` and deletes the job (the double does; L2 must match).
+- `assertWakeTarget`'s `publicHost` is the bare hostname (`zapbip.example`), not an origin; the caller derives it from `PUBLIC_ORIGIN`. Errors are exactly `invalid url` and `invalid token`.
+- A trailing-dot host is refused naming `url` for every host, pinned look-alikes included.
+- The scripted transport throws when no response is queued, throws an error named `errorName` when scripted, and records the pinned providers' headers (generic: content type and timestamp only, no signature).
+- `runDueWakes` treats a throwing transport as a retry. Any other error in a job is caught: the job gets `attempt + 1`, a backoff and `lastOutcome retry`, and is deleted when that reaches `WAKE_MAX_ATTEMPTS`.
+- The owner notice goes through `deliverToOwner` with `agent: null` (as slice 1's not-listening notice does), once per `active` to `failing` episode; it is sent before the status flips, so a failed notice is retried with the job.
+- The outcome table (status to outcome) exists in the scripted transport double and, separately, must exist in L2's `FetchWakeTransport`.
+
+### Hypotheses for the tester
+
+- Five owner messages in two seconds make one job due at the first plus 3 s; a steady stream never moves it.
+- Backoff requests land at +3, +8, +18, +38, +78 s on 503, then one notice and `failing`.
+- `Retry-After` is honoured on 429 and 503 only, capped at 60 s.
+- A message during a lease yields one follow-up job at settle + 3 s, also after a refusal.
+- No owner text reaches a request body or header; the body is always `WAKE_SIGNAL_BODY`.
+- A missing owner locale writes no copy in any locale and keeps the job retrying.
+
+### Gaps
+
+- The `local`, `scheduled` and `standby` "wake mode not available yet" cases are not tested: `WakeMode` has only `None` and `Webhook`, so the tool layer (L3) owns that error.
