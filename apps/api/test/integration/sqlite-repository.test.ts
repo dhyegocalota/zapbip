@@ -1,5 +1,5 @@
 import { DeliveryState, MediaOrigin, MessageDirection, MessageKind } from '@zapbip/types';
-import { MEDIA_RETENTION_MS, QUEUE_RETENTION_MS, type StoredMedia } from '@zapbip/core';
+import { MEDIA_RETENTION_MS, QUEUE_RETENTION_MS, type Message, type StoredMedia } from '@zapbip/core';
 import { afterEach, describe, expect, it } from 'vitest';
 import { reset } from 'cloudflare:test';
 import { withRepository } from '../support/account-inbox';
@@ -305,5 +305,54 @@ describe('SQLite inbox repository', () => {
       return repository.findNextExpiry();
     });
     expect(next).toBeNull();
+  });
+
+  it('keeps a message stored as read out of the held list', async () => {
+    const held = buildTextMessage({ messageId: 'msg_held', direction: MessageDirection.FromOwner, agent: null });
+    const routedNowhere = buildTextMessage({
+      messageId: 'msg_nowhere',
+      direction: MessageDirection.FromOwner,
+      agent: null,
+      readByAgent: true,
+    });
+    const result = await inRepository(async (repository) => {
+      await Promise.all([held, routedNowhere].map((message) => repository.insertMessage({ message })));
+      return {
+        heldIds: (await repository.listHeld()).map((message) => message.messageId),
+        stored: await repository.findMessage({ messageId: 'msg_nowhere' }),
+      };
+    });
+    expect(result.heldIds).toEqual(['msg_held']);
+    expect(result.stored?.readByAgent).toBe(true);
+  });
+
+  it('finds a choice prompt by its question id and nothing for an unknown one', async () => {
+    const prompt: Message = {
+      ...buildEnvelope({ messageId: 'msg_prompt', agent: null }),
+      kind: MessageKind.Choice,
+      questionId: 'route:msg_1',
+      options: [],
+      selected: null,
+    };
+    const result = await inRepository(async (repository) => {
+      await repository.insertMessage({ message: prompt });
+      return {
+        found: await repository.findChoicePrompt({ questionId: 'route:msg_1' }),
+        missing: await repository.findChoicePrompt({ questionId: 'route:msg_2' }),
+      };
+    });
+    expect(result.found?.messageId).toBe('msg_prompt');
+    expect(result.missing).toBeNull();
+  });
+
+  it('links a channel receipt to its message and forgets it with the receipt', async () => {
+    const result = await inRepository(async (repository) => {
+      await repository.recordChannelReceipt({ wamid: 'wamid.1', receivedAt: BASE_TIME });
+      await repository.linkChannelReceipt({ wamid: 'wamid.1', messageId: 'msg_1' });
+      const linked = await repository.findChannelReceiptMessageId({ wamid: 'wamid.1' });
+      await repository.deleteExpiredReceipts({ receivedBefore: BASE_TIME + 1 });
+      return { linked, afterDelete: await repository.findChannelReceiptMessageId({ wamid: 'wamid.1' }) };
+    });
+    expect(result).toEqual({ linked: 'msg_1', afterDelete: null });
   });
 });

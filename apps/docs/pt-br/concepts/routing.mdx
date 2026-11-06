@@ -1,0 +1,15 @@
+---
+title: 'Roteamento'
+description: 'Como uma mensagem do dono encontra o seu agente.'
+---
+
+Vários agentes dividem um número, então cada mensagem do dono é roteada para um agente. A primeira regra que combina vence.
+
+1. Uma resposta de botão ou lista vai para o agente que fez a pergunta, indicado no id da opção.
+2. Uma resposta citada ou uma reação vai para o agente que enviou a mensagem citada ou reagida. Uma reação a uma mensagem de pergunta responde à pergunta com o emoji.
+3. Um texto que começa com `@agente ` vai para esse agente, sem o prefixo.
+4. Exatamente um agente com pergunta aberta o recebe. Com várias perguntas abertas, vence a mais nova.
+5. Senão, o último agente que escreveu ao dono dentro da janela.
+6. Senão, o zapbip envia ao dono uma lista dos 10 agentes vistos mais recentemente e segura a mensagem até o dono escolher. Sem nenhum agente, o dono recebe um aviso e a mensagem fica retida.
+
+Os nomes de agente têm até 20 caracteres: letras minúsculas, dígitos e hífens.
