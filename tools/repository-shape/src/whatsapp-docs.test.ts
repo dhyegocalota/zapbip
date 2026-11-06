@@ -11,6 +11,8 @@ const CHANNEL_PAGE = 'concepts/whatsapp-channel';
 const NOTICES_PAGE = 'concepts/owner-notices';
 const PAGE_EXTENSION = '.mdx';
 
+const THOUSANDS_SEPARATOR = ',';
+const TRANSLATED_THOUSANDS_SEPARATOR = '.';
 const CHANNEL_LIMITS = ['4,096', '1,024', '3', '20', '10', '24', '72', '5 MB', '16 MB', '100 MB', '100 KB', '30', '24'];
 const NOTICE_TERMS = ['zapbip_agent_notice', 'zapbip_agent_question', 'Abrir', 'Open', 'Responder', 'Reply'];
 const NOTICE_SENTENCE_BY_LANGUAGE: Record<string, string> = {
@@ -53,7 +55,11 @@ describe('whatsapp channel docs', () => {
 
   test.each([DEFAULT_LANGUAGE, TRANSLATED_LANGUAGE])('the %s channel page states every limit', (language) => {
     const source = pageSource({ language, page: CHANNEL_PAGE });
-    expect(CHANNEL_LIMITS.filter((limit) => !source.includes(limit))).toEqual([]);
+    const limits =
+      language === TRANSLATED_LANGUAGE
+        ? CHANNEL_LIMITS.map((limit) => limit.replace(THOUSANDS_SEPARATOR, TRANSLATED_THOUSANDS_SEPARATOR))
+        : CHANNEL_LIMITS;
+    expect(limits.filter((limit) => !source.includes(limit))).toEqual([]);
   });
 
   test.each([DEFAULT_LANGUAGE, TRANSLATED_LANGUAGE])('the %s notices page names both templates and the quick replies', (language) => {

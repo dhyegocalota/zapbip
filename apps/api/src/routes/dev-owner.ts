@@ -14,7 +14,8 @@ import { contactInputSchema, sendableMediaKind } from '../contract/mcp-schemas';
 import { LogEvent } from '../contract/log';
 import { logEvent } from '../log';
 import { accountInboxOf } from './account-inbox-stub';
-import { ERROR_STATUS, HttpStatus } from './http-status';
+import { HttpStatus } from '../contract/http-status';
+import { ERROR_STATUS } from './http-status';
 
 type OwnerIdentity = { accountId: string; ownerLocale: OwnerLocale };
 

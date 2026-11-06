@@ -135,6 +135,7 @@ function download(input: { metadata: Metadata[]; downloads: Download[]; request?
     maxBytes: MEDIA_MAX_BYTES_INBOUND,
     developmentMediaOrigin: input.developmentMediaOrigin === undefined ? null : input.developmentMediaOrigin,
     attempts: MEDIA_DOWNLOAD_ATTEMPTS,
+    isCommitted: async () => false,
   });
   return { result, ...graphDouble, ...storeDouble };
 }
@@ -204,6 +205,30 @@ describe('downloadInboundMedia', () => {
     await expect(run.result).rejects.toBeInstanceOf(RetriableMediaError);
   });
 
+  it('keeps a committed object when a parallel delivery of the same message streams a short body', async () => {
+    const graphDouble = fakeGraph({ metadata: [metadataOf({ fileSize: BODY.byteLength + 1 })], downloads: [bodyResponse()] });
+    const storeDouble = memoryStore();
+    const committed = { bytes: BODY, sizeBytes: BODY.byteLength, mimeType: 'image/jpeg' };
+    storeDouble.objects.set(`${ACCOUNT_ID}/${MEDIA_ID}`, committed);
+    const result = await downloadInboundMedia({
+      graph: graphDouble.graph,
+      mediaStore: storeDouble.mediaStore,
+      accountId: ACCOUNT_ID,
+      request: requestOf(),
+      maxBytes: MEDIA_MAX_BYTES_INBOUND,
+      developmentMediaOrigin: null,
+      attempts: MEDIA_DOWNLOAD_ATTEMPTS,
+      isCommitted: async () => true,
+    });
+    expect(result).toMatchObject({ stored: true });
+    expect(storeDouble.objects.get(`${ACCOUNT_ID}/${MEDIA_ID}`)).toBeDefined();
+  });
+
+  it('treats metadata that does not match the expected shape as unavailable', async () => {
+    const run = download({ metadata: [{ url: 42 }], downloads: [] });
+    expect(await run.result).toEqual({ stored: false });
+  });
+
   it('AU-66 treats a redirect as unavailable and requests nothing else', async () => {
     const redirect = new Response(null, { status: STATUS_FOUND, headers: { location: 'https://evil.example.com/x' } });
     const run = download({ metadata: [metadataOf({})], downloads: [redirect] });
@@ -268,6 +293,7 @@ describe('downloadInboundMedia', () => {
       maxBytes: MEDIA_MAX_BYTES_INBOUND,
       developmentMediaOrigin: null,
       attempts: MEDIA_DOWNLOAD_ATTEMPTS,
+      isCommitted: async () => false,
     });
     await expect(result).rejects.toThrow('r2 down');
   });
@@ -297,6 +323,7 @@ describe('downloadInboundMedia through the real Graph client', () => {
       maxBytes: MEDIA_MAX_BYTES_INBOUND,
       developmentMediaOrigin: null,
       attempts: MEDIA_DOWNLOAD_ATTEMPTS,
+      isCommitted: async () => false,
     });
     return { result, ...storeDouble };
   }
@@ -331,6 +358,7 @@ describe('downloadInboundMedia through the real Graph client', () => {
       maxBytes: MEDIA_MAX_BYTES_INBOUND,
       developmentMediaOrigin: null,
       attempts: MEDIA_DOWNLOAD_ATTEMPTS,
+      isCommitted: async () => false,
     });
     await expect(run).rejects.toBeInstanceOf(RetriableMediaError);
   });

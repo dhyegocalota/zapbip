@@ -1,22 +1,5 @@
 import { ChannelErrorKind, InboxErrorCode } from '@zapbip/types';
-
-export enum HttpStatus {
-  Ok = 200,
-  Created = 201,
-  MultipleChoices = 300,
-  BadRequest = 400,
-  Unauthorized = 401,
-  Forbidden = 403,
-  NotFound = 404,
-  Conflict = 409,
-  Gone = 410,
-  LengthRequired = 411,
-  PayloadTooLarge = 413,
-  UnsupportedMediaType = 415,
-  InternalServerError = 500,
-  BadGateway = 502,
-  ServiceUnavailable = 503,
-}
+import { HttpStatus } from '../contract/http-status';
 
 export const ERROR_STATUS: Record<InboxErrorCode | ChannelErrorKind, HttpStatus> = {
   [InboxErrorCode.InvalidInput]: HttpStatus.BadRequest,

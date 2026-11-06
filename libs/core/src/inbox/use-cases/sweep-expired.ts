@@ -1,6 +1,5 @@
 import { DeliveryState } from '@zapbip/types';
-import { SENDING_STALE_MS } from '../claim-constants';
-import { QUESTION_RETENTION_MS, RECEIPT_RETENTION_MS } from '../constants';
+import { SENDING_STALE_MS, QUESTION_RETENTION_MS, RECEIPT_RETENTION_MS } from '../constants';
 import { isQueuedMessageExpired } from './flush-queue';
 import type { SweepExpiredInput, SweepExpiredResult } from './types';
 

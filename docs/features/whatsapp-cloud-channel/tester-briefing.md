@@ -382,8 +382,10 @@ Pins (green on landing): WI-35 to WI-43 (`d93dc2f`), WI-52, WI-53, WI-55, WI-57 
 | media download through the real Graph client (4 cases) | `23f714e`: rejects with `GraphRequestError` instead of `{ stored: false }` / `RetriableMediaError` | `b2bdb3e` |
 | env and development origin (3) | `7dc5600`: `readDevelopmentMediaOrigin is not implemented`, `toEqual` on the old shape | `94c4caa` |
 | parser forwarded, graph-client body deadline, unsupported without a type (10) | `455480a`: forwarded messages parse as rejected; stalled bodies time out at 5 s | `5e87016`, `fef0cd2` |
-| forwarded storage and wire, stale, redelivery, receipt, status 503, schema v5 (14 integration, 5 core) | `41d8ddb` | the fix-batch implementation commit |
+| forwarded storage and wire, stale, redelivery, receipt, status 503, schema v5 (14 integration, 5 core) | `41d8ddb`, printed: `The RPC receiver does not implement "hasChannelReceipt"` (receipt check, redelivery), `expected undefined to be 'forwarded'` and `expected { ... } to match object { forwarded: ... }` (forwarded text, frequently forwarded, forwarded image, plain text wire), `expected 200 to be 503` (R6), `expected { ok, value } to deeply equal { applied: false, found: false }` (WI-16), the schema v5 and forwarded-kind DO cases; core `has-channel-receipt.test.ts` fails with `Cannot find module './has-channel-receipt'` | `479eb98` |
 | 131009 kind, reaction target null, nosniff (3) | `382df1d` | the same commit |
+
+Order note: the fixes `fef0cd2` and `5e87016` were written before their red commit `455480a` (the red run was taken on the tree without them; no history rewrite).
 
 Pins (green on landing, labelled `pin` in their titles or commits): WI-17, WI-44 to WI-49, the R2 batch cases, WI-29/30/31 assertions, the just-inside-retention entry, the signature variants, the 22 lookalike urls, W4 (`sha512=`), W5 (empty emoji), the development origin cases of `94c4caa`. Commits `3785271` and `7f0481f` mix pins with fixes; no history rewrite.
 

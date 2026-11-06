@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { mapGraphErrorToChannelError } from './channel-error-mapping';
 import { GraphRequestError, type GraphClient } from './graph-client';
 import type { MediaDownloadRequest } from './inbound-parser';
-import { HttpStatus } from '../../routes/http-status';
+import { HttpStatus } from '../../contract/http-status';
 import { isAllowedMediaUrl } from './media-url-policy';
 import { WhatsAppErrorCode } from './whatsapp-enums';
 
@@ -19,6 +19,7 @@ type DownloadInput = {
   request: MediaDownloadRequest;
   maxBytes: number;
   developmentMediaOrigin: string | null;
+  isCommitted: () => Promise<boolean>;
 };
 
 type LengthGuard = { isViolated: boolean };
@@ -32,6 +33,7 @@ async function fetchMetadata(input: { graph: GraphClient; channelMediaId: string
   try {
     return metadataSchema.parse(await input.graph.get({ path: `/${input.channelMediaId}` }));
   } catch (error) {
+    if (error instanceof z.ZodError) return null;
     if (!(error instanceof GraphRequestError)) throw error;
     const channelError = mapGraphErrorToChannelError({
       status: error.status,
@@ -83,7 +85,10 @@ async function storeBody(input: DownloadInput & { body: ReadableStream<Uint8Arra
   const [digestBranch, storeBranch] = input.body.tee();
   const digestStream = new crypto.DigestStream(DIGEST_ALGORITHM);
   const guard: LengthGuard = { isViolated: false };
-  const discard = (): Promise<void> => mediaStore.delete({ accountId, mediaIds: [request.mediaId] });
+  const discard = async (): Promise<void> => {
+    if (await input.isCommitted()) return;
+    await mediaStore.delete({ accountId, mediaIds: [request.mediaId] });
+  };
   try {
     await Promise.all([
       mediaStore.put({
@@ -98,7 +103,7 @@ async function storeBody(input: DownloadInput & { body: ReadableStream<Uint8Arra
   } catch (error) {
     if (!guard.isViolated) throw error;
     await discard();
-    return NOT_STORED;
+    return (await input.isCommitted()) ? { stored: true, sizeBytes: input.sizeBytes } : NOT_STORED;
   }
   const digestBase64 = Buffer.from(await digestStream.digest).toString(DIGEST_ENCODING);
   if (digestBase64 === request.sha256Base64) return { stored: true, sizeBytes: input.sizeBytes };

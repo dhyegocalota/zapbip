@@ -235,6 +235,7 @@ Ranks: `sent` 1, `delivered` 2, `read` 3. `failed` is handled by the rule row, n
 | Commit to `AccountInbox` fails | `500`, so Meta retries; the receipt keeps the retry safe |
 | Media download: `404` on the download URL | the metadata is requested again once; a second `404`, or Meta error `131052`, stores the message with media status `unavailable`; the agent gets `media: null` and a status; the owner gets one session text, copy `mediaUnavailable` |
 | Media download: `5xx` or timeout | `500` for the webhook, nothing stored; Meta retries, and no receipt exists for that message yet |
+| Media metadata answers a permanent `4xx` other than `401` and rate limits (for example `400` or `404` with an unknown error code), or has an unexpected shape | the message is stored with media status `unavailable` and the owner gets the `mediaUnavailable` copy; `401` and rate limits return `500` so Meta retries |
 | Media body longer than the declared size | the stream errors, the object is deleted, the message is stored as unavailable |
 | Media bytes do not match the webhook `sha256` | the streamed object is deleted; the message is stored as unavailable; the owner gets the `mediaUnavailable` copy |
 | R2 write fails | `500`; the key `accounts/<account_id>/media/<mediaId>` is deterministic (`mediaId` is `med_` plus the SHA-256 hex of the `wamid`), so a retry overwrites |

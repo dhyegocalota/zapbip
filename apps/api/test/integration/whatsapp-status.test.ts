@@ -6,7 +6,7 @@ import { D1MessageIndex } from '../../src/adapters/d1/d1-message-index';
 import { UNINDEXED_STATUS_RETRY_WINDOW_MS, WEBHOOK_SIGNATURE_HEADER } from '../../src/adapters/whatsapp/whatsapp-constants';
 import { OperatorEvent } from '../../src/adapters/whatsapp/whatsapp-enums';
 import { WHATSAPP_WEBHOOK_PATH } from '../../src/contract/constants';
-import { HttpStatus } from '../../src/routes/http-status';
+import { HttpStatus } from '../../src/contract/http-status';
 import deliveredFixture from '../fixtures/whatsapp/status/delivered.json';
 import failedFixture from '../fixtures/whatsapp/status/failed.json';
 import playedFixture from '../fixtures/whatsapp/status/played.json';

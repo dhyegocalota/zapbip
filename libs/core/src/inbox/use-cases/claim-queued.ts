@@ -1,4 +1,4 @@
-import { FLUSH_CLAIM_LIMIT } from '../claim-constants';
+import { FLUSH_CLAIM_LIMIT } from '../constants';
 import type { Message } from '../message';
 import type { CoreDependencies } from '../ports';
 
