@@ -1,6 +1,12 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { sendOwnerText } from '../../src/send-message';
-import { FAKE_MCP_SECRET, startFakeMcpRoute, type FakeMcpRoute, type FakeMcpRouteOptions } from '../support/fake-mcp-route';
+import {
+  FAKE_MCP_SECRET,
+  FAKE_MESSAGE_ID,
+  startFakeMcpRoute,
+  type FakeMcpRoute,
+  type FakeMcpRouteOptions,
+} from '../support/fake-mcp-route';
 
 const WHATSAPP_TEXT_LIMIT = 4_096;
 
@@ -25,6 +31,11 @@ describe('sendOwnerText', () => {
     expect(call?.path).toBe(route.secretPath);
   });
 
+  it('returns the message id the tool reports', async () => {
+    const route = await startRoute();
+    await expect(sendOwnerText({ mcpLink: route.mcpLink, text: 'oi' })).resolves.toBe(FAKE_MESSAGE_ID);
+  });
+
   it('initializes and announces it before the call', async () => {
     const route = await startRoute();
     await sendOwnerText({ mcpLink: route.mcpLink, text: 'oi' });
@@ -33,7 +44,7 @@ describe('sendOwnerText', () => {
 
   it('makes no request for an empty text', async () => {
     const route = await startRoute();
-    await expect(sendOwnerText({ mcpLink: route.mcpLink, text: '' })).resolves.toBeUndefined();
+    await expect(sendOwnerText({ mcpLink: route.mcpLink, text: '' })).resolves.toBeNull();
     expect(route.requests()).toEqual([]);
   });
 

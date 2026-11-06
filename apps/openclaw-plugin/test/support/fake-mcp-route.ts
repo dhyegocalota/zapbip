@@ -21,6 +21,7 @@ export type FakeMcpRoute = {
   stop: () => Promise<void>;
 };
 
+export const FAKE_MESSAGE_ID = 'wamid.fake-1';
 export const FAKE_MCP_SECRET = 'zb_conn_fakeroute0123456789abcdef0123456789abc';
 
 async function readBody(input: { request: IncomingMessage }): Promise<string> {
@@ -45,7 +46,7 @@ export async function startFakeMcpRoute(input: FakeMcpRouteOptions = {}): Promis
     const result =
       body.method === 'tools/call' && errorText !== null
         ? { isError: true, content: [{ type: 'text', text: errorText }] }
-        : { content: [{ type: 'text', text: '{}' }] };
+        : { content: [{ type: 'text', text: '{}' }], structuredContent: { message_id: FAKE_MESSAGE_ID, delivery: 'sent' } };
     response.writeHead(OK_STATUS, { 'content-type': 'application/json' }).end(JSON.stringify({ jsonrpc: '2.0', id: body.id, result }));
   });
   await new Promise<void>((resolve) => server.listen(0, LOOPBACK_HOST, resolve));
