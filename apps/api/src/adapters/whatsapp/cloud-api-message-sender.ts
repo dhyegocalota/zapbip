@@ -8,7 +8,7 @@ export function createCloudApiMessageSender(input: {
   accountId: string;
   graph: GraphClient;
   findOwnerByAccountId: (input: { accountId: string }) => Promise<OwnerRecipient | null>;
-  messageIndex: D1MessageIndex;
+  messageIndex: Pick<D1MessageIndex, 'record'>;
   restrictions: ChannelRestrictions;
   mediaStore: MediaStore;
   publicOrigin: string;

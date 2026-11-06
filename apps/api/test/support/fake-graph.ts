@@ -7,7 +7,7 @@ export type RecordedRequest = {
 
 export type FakeGraphResponse = { method: string; path: string; status: number; body: unknown };
 
-export function startFakeGraph(input: { port: number }): Promise<{ stop: () => Promise<void> }> {
+export function startFakeGraph(input: { port: number }): Promise<{ port: number; stop: () => Promise<void> }> {
   void input;
   throw new Error('startFakeGraph is not implemented');
 }
