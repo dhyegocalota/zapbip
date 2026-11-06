@@ -1,6 +1,5 @@
-import { AccountReplyIntent, AccountReplyParameter, InstallCodeStatus } from '@zapbip/types';
+import { AccountReplyIntent, AccountReplyParameter, INSTALL_CODE_TTL_MS, InstallCodeStatus } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
-import { INSTALL_CODE_TTL_MS } from '../constants';
 import { addAgent, createAccountFixture, intentsOf, ownerInputOf, PUBLIC_ORIGIN } from '../testing/fixtures';
 import { rotateAgentConnection } from './rotate-agent-connection';
 

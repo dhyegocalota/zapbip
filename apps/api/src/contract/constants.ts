@@ -1,8 +1,6 @@
 export const CONNECTION_SECRET_PREFIX = 'zb_conn_';
 export const CONNECTION_SECRET_BYTES = 32;
 export const CONNECTION_SECRET_PATTERN = /^zb_conn_[A-Za-z0-9_-]{43}$/;
-export const INSTALL_CODE_PREFIX = 'zb_inst_';
-export const INSTALL_CODE_RANDOM_BYTES = 16;
 export const INSTALL_CODE_PATTERN = /^zb_inst_[A-Za-z0-9_-]{22}$/;
 export const INSTALL_CODE_KEY_INFO = 'zapbip install code seal';
 export const SEAL_INITIALIZATION_VECTOR_BYTES = 12;

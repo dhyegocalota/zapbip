@@ -1,13 +1,11 @@
-import { InstallCodeStatus, OwnerLocale } from '@zapbip/types';
+import { INSTALL_CODE_PREFIX, INSTALL_CODE_TTL_MS, InstallCodeStatus, OwnerLocale } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { reset } from 'cloudflare:test';
 import { createConnectionSecrets } from '../../src/adapters/platform/connection-secrets';
 import { hashConnectionSecret } from '../../src/adapters/platform/hash';
 import { createInstallCodeVault } from '../../src/adapters/platform/install-code-vault';
-import { INSTALL_CODE_PREFIX } from '../../src/contract/constants';
 import {
   connectionRegistry,
-  INSTALL_CODE_TTL_MS,
   installCodeDirectory,
   issueInstallCodeColumns,
   registerWithInstallCode,

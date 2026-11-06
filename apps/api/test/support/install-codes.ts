@@ -1,4 +1,5 @@
 import type { NewConnection } from '@zapbip/core';
+import { INSTALL_CODE_TTL_MS } from '@zapbip/types';
 import { D1ConnectionRegistry } from '../../src/adapters/d1/d1-connection-registry';
 import { D1InstallCodeDirectory } from '../../src/adapters/d1/d1-install-code-directory';
 import { createConnectionSecrets } from '../../src/adapters/platform/connection-secrets';
@@ -6,7 +7,6 @@ import { createInstallCodeVault } from '../../src/adapters/platform/install-code
 import { SEED_CREATED_AT } from './seed';
 import { testEnv } from './workers-env';
 
-export const INSTALL_CODE_TTL_MS = 30 * 60 * 1000;
 const ACTIVE_LIMIT = 8;
 
 export type RegisteredInstallCode = { connection: NewConnection; installCode: string; secret: string };

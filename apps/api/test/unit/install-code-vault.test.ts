@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { createConnectionSecrets } from '../../src/adapters/platform/connection-secrets';
 import { createInstallCodeVault } from '../../src/adapters/platform/install-code-vault';
-import { INSTALL_CODE_PATTERN, INSTALL_CODE_PREFIX } from '../../src/contract/constants';
+import { INSTALL_CODE_PREFIX } from '@zapbip/types';
+import { INSTALL_CODE_PATTERN } from '../../src/contract/constants';
 
 const ISSUED_CODE_COUNT = 1_000;
 const DIGEST_PATTERN = /^[0-9a-f]{64}$/;

@@ -8,7 +8,6 @@ import { renderAccountReply } from '../account-copy';
 import type { AccountCommand, AccountCommandResult, AccountReply, CommandInput } from '../account-types';
 import { parseAccountCommand } from '../command';
 import { ACCOUNT_MENU_QUESTION_ID } from '../constants';
-import { splitInstallPrompt } from '../install-prompt-parts';
 import { evaluateAccountState } from '../state-gate';
 import { applyOwnerCommand } from './apply-owner-command';
 import { buildResult, buildTextReply } from './account-reply';
@@ -16,7 +15,6 @@ import type { ReceiveAccountMessageInput, ReceiveAccountMessageResult } from './
 
 type AnswerInput = ReceiveAccountMessageInput & { prepare: () => Promise<AccountCommandResult> };
 
-const INSTALL_PROMPT_INTENTS: ReadonlySet<AccountReplyIntent> = new Set([AccountReplyIntent.Created, AccountReplyIntent.Rotated]);
 const NOT_CONFIRMED = false;
 
 const DUPLICATE_RESULT: ReceiveAccountMessageResult = { messageId: null, agent: null, duplicate: true, deletionConfirmed: false };
@@ -41,8 +39,7 @@ function parseCommand(input: ReceiveAccountMessageInput): AccountCommand | null 
 function toContents(input: { reply: AccountReply }): MessageContent[] {
   const { reply } = input;
   const text = renderAccountReply({ reply });
-  const texts = INSTALL_PROMPT_INTENTS.has(reply.intent) ? splitInstallPrompt({ prompt: text }) : [text];
-  const textContents = texts.map((part): MessageContent => ({ kind: MessageKind.Text, text: part }));
+  const textContents: MessageContent[] = [{ kind: MessageKind.Text, text }];
   if (reply.kind !== ReplyKind.List) return textContents;
   const options = reply.menuRows.map((row, optionIndex) => ({ optionIndex, title: row.title, description: null }));
   return [...textContents, { kind: MessageKind.Choice, questionId: ACCOUNT_MENU_QUESTION_ID, options, selected: null }];

@@ -1,21 +1,16 @@
-import { AccountReplyParameter, type AccountReplyIntent } from '@zapbip/types';
+import { AccountReplyParameter, INSTALL_PAGE_PATH_PREFIX, type AccountReplyIntent } from '@zapbip/types';
 import type { AgentName } from '../../inbox/connection';
+import { renderInstallLines } from '../account-copy';
 import type { AccountReply } from '../account-types';
-import { buildConnectionLink } from '../connection-link';
 import { buildTextReply } from './account-reply';
 import type { OwnerAccountInput } from './types';
 
-export async function buildInstallPromptReply(
-  input: OwnerAccountInput & { intent: AccountReplyIntent; agent: AgentName; secret: string },
-): Promise<AccountReply> {
-  const { dependencies, account, publicOrigin, intent, agent, secret } = input;
-  const connectionLink = buildConnectionLink({ publicOrigin, secret });
-  const installPrompt = await dependencies.installPromptRenderer.render({
-    accountId: account.accountId,
-    agent,
-    connectionLink,
-    locale: account.locale,
-  });
+export function buildInstallPromptReply(
+  input: OwnerAccountInput & { intent: AccountReplyIntent; agent: AgentName; installCode: string },
+): AccountReply {
+  const { account, publicOrigin, intent, agent, installCode } = input;
+  const installLink = `${publicOrigin}${INSTALL_PAGE_PATH_PREFIX}${installCode}`;
+  const installPrompt = renderInstallLines({ installLink, locale: account.locale });
   return buildTextReply({
     intent,
     locale: account.locale,

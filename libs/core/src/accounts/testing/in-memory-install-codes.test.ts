@@ -1,6 +1,5 @@
-import { InstallCodeStatus } from '@zapbip/types';
+import { INSTALL_CODE_TTL_MS, InstallCodeStatus } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
-import { INSTALL_CODE_TTL_MS } from '../constants';
 import { createAgentConnection } from '../use-cases/create-agent-connection';
 import { rotateAgentConnection } from '../use-cases/rotate-agent-connection';
 import { createAccountFixture, ownerInputOf, PUBLIC_ORIGIN } from './fixtures';

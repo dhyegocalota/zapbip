@@ -57,10 +57,6 @@ export interface InstallCodeDirectory {
   recordFirstCall(input: { connectionId: string; calledAt: number }): Promise<void>;
 }
 
-export interface InstallPromptRenderer {
-  render(input: { accountId: string; agent: AgentName; connectionLink: string; locale: OwnerLocale }): Promise<string>;
-}
-
 export interface SenderGuard {
   admit(input: { waId: string }): Promise<SenderVerdict>;
 }
@@ -96,7 +92,6 @@ export type AccountDependencies = CoreDependencies & {
   accounts: AccountDirectory;
   connections: ConnectionRegistry;
   connectionSecrets: ConnectionSecrets;
-  installPromptRenderer: InstallPromptRenderer;
   installCodeVault: InstallCodeVault;
   revocations: ConnectionRevocations;
   firstMessage: FirstMessageClaim;

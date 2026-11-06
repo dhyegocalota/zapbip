@@ -25,7 +25,6 @@ import type {
   FirstMessageClaim,
   InstallCodeDirectory,
   InstallCodeVault,
-  InstallPromptRenderer,
 } from '../ports';
 
 const FAKE_SECRET_PREFIX = 'zb_conn_fake_';
@@ -298,12 +297,6 @@ function createDeletionRequests(): DeletionRequests {
   };
 }
 
-function createInstallPromptRenderer(): InstallPromptRenderer {
-  return {
-    render: async ({ agent, connectionLink }) => `Install ${agent}\nConnect it with this link\n${connectionLink}`,
-  };
-}
-
 export function createInMemoryAccountDependencies(input: InMemoryOptions = {}): InMemoryAccountEnvironment {
   const environment = createInMemoryDependencies(input);
   const store: AccountStore = { accounts: new Map(), identities: new Map(), connections: new Map() };
@@ -318,7 +311,6 @@ export function createInMemoryAccountDependencies(input: InMemoryOptions = {}): 
     accounts: directory,
     connections: registry,
     connectionSecrets: secrets,
-    installPromptRenderer: createInstallPromptRenderer(),
     installCodeVault,
     revocations,
     firstMessage: createFirstMessageClaim(),

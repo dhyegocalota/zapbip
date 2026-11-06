@@ -1,6 +1,6 @@
-import { AccountReplyIntent, AccountReplyParameter, RegisterOutcome } from '@zapbip/types';
+import { AccountReplyIntent, AccountReplyParameter, INSTALL_CODE_TTL_MS, RegisterOutcome } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
-import { AGENTS_PER_ACCOUNT_LIMIT, INSTALL_CODE_TTL_MS, NO_INSTALL_CODE } from '../constants';
+import { AGENTS_PER_ACCOUNT_LIMIT, NO_INSTALL_CODE } from '../constants';
 import { AGENT_NAME_MAX_CHARS } from '../../inbox/constants';
 import { addAgent, createAccountFixture, intentsOf, ownerInputOf, PUBLIC_ORIGIN } from '../testing/fixtures';
 import { createAgentConnection } from './create-agent-connection';
