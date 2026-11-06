@@ -167,3 +167,25 @@ pnpm --filter @zapbip/docs exec mint broken-links
 - A `401` on the upgrade itself (after a `426` probe) is not distinguishable with Node's WebSocket and is handled as an ordinary close with backoff.
 - The Codex rollout layout in the fake (`sessions/YYYY/MM/DD/rollout-*.jsonl`, first line `session_meta`) is copied from L1's lookup, not from a real install.
 - Real `claude` and `codex` are never run.
+
+### Lane listen (LN1 to LN8): `npx zapbip listen` and `npx zapbip channel`
+
+- `apps/connector/src/connect.ts` — the socket loop moved into `runSocketSession` (probe, heartbeat, reconnect, frames, `done`); `runConnection` is now a thin wrapper that supplies the wake queue. Behaviour of `connect` is unchanged.
+- `apps/connector/src/{listen,channel,owner-notice}.ts` — `runListen` prints `{"messageId","kind","sender":"owner","verified":true,"text"}` per owner message and sends `done` after printing; `runChannel` is a stdio MCP server declaring `experimental['claude/channel']` that sends `notifications/claude/channel` with escaped `content` and `meta {sender: "owner", verified: "true"}`. Both reuse `createWakeQueue`, so a redelivered message is relayed once and acknowledged again.
+- `apps/connector/src/log.ts` — `logConnectorEventToStderr`; `listen` and `channel` log to stderr because stdout is the data stream.
+- `apps/connector/src/cli.ts` — `listen` and `channel` in `COMMAND_HANDLERS`; neither takes arguments; `channel` reads only `ZAPBIP_CONNECTION_URL`.
+- `libs/types/src/connector.ts` — channel constants and `ConnectorLogStream`. `apps/connector/package.json` — `@modelcontextprotocol/sdk` 1.32.2 and `zod` 4.6.7 as dev dependencies (bundled by esbuild).
+- Docs: `apps/docs/guides/local-connector.mdx` and the `pt-br` twin, section "Keep an open session listening".
+- Run: `pnpm --filter zapbip test:unit` (owner-notice, log, listen and channel integration included), `pnpm --filter zapbip typecheck`.
+- Red then green: 793b9f0 to 10d0913. Red text as printed: 19 failed; unit cases `buildOwnerNotice|formatListenLine|buildChannelNotification is not implemented`; integration cases `Test timed out in 5000ms` and `McpError: MCP error -32000: Connection closed`. Pins (green at red): refused link exits 1, argument rejected, missing link for `channel` exits 1.
+
+Hypotheses:
+
+1. `listen` standard output holds only message lines. Break it by: reconnect, a `401` mid-run, a hostile message text with newlines.
+2. A message is acknowledged only after it is printed or notified, and a notify failure leaves it unacknowledged. Break it by: closing the MCP client mid-relay.
+3. Owner text cannot close the channel block. Break it by: `&lt;` look-alikes, newlines, a caption.
+4. Neither command puts the secret in argv, stdout or stderr. Break it by: `ps`, a grep of a full run.
+5. `listen` stays alive for any number of short sessions (the OpenClaw `stream` job). Break it by: many drops in a row.
+6. `channel` exits when Claude Code closes its end. Break it by: closing stdin while the socket is mid-reconnect.
+
+Gaps: LN6 (launch flag and server-name rule for a Claude Code channel) is not confirmed against the channel reference; the docs name no flag. The channel was exercised only by an SDK client, never by Claude Code. The `done` for a message arrives only if the socket is open at that moment; otherwise the next redelivery prints nothing and acknowledges.
