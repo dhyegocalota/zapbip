@@ -428,3 +428,77 @@ Green when they landed (pins, or written with the implementation in a0b8c5f): WI
 
 - A Worker that dies between claim and write leaves the claim until the upload expires (15 minutes); the agent can create a new upload.
 - R2 holds the bytes of a writer that lost the fence only if a takeover were possible; with the TTL equal to the upload life none is.
+
+## Fix round 4 (feat/agent-inbox-core-fix4)
+
+### What changed
+
+- The upload claim lasts the whole life of the upload; the spec rows say so, and `UPLOAD_CLAIM_TTL_MS` already equals `UPLOAD_TTL_MS`.
+- `trackClientFailure` lives in `apps/api/src/routes/track-client-failure.ts`; a `cancel()` from R2 sets a flag, so only an early end without cancellation is a client failure (WI-146).
+- WI-140 awaits the first pull before advancing the clock; WI-141 reads one chunk and then throws; WI-127 and WI-128 titles carry their ids; the bundle test and the integration config use `DEVELOPMENT_ENVIRONMENT`.
+- A media type is invalid input unless it is printable ASCII with no leading or trailing whitespace, in `create_upload` and `send_media` (BOM, NBSP, em-space, tab, space; CU-179, CU-177 message changed).
+- Docs: no "coming soon" statements, a Logic Bit footer, `help/about` and the company snippet fed by `COMPANY` in `libs/types` (every fact but the trade name is `COMPANY_FACT_UNSET` until the owner supplies it).
+- Test plan wording: PB-1 to PB-4 describe the real wrangler config; S4.1, S5.1 and S5.9 record the failure actually observed.
+
+### Red today, green after
+
+| Test | Red commit | Failure text |
+|---|---|---|
+| `track-client-failure.test.ts`, WI-146 | e5ed34d | `AssertionError: expected true to be false` |
+| CU-179 and CU-177 | e5ed34d | `expected { code: 'invalid_input', message: 'mime_type: must be a type/subtype token' } to deeply equal` the printable ASCII message |
+
+Pins: the two other `track-client-failure` cases, WI-140 and WI-141 edits.
+
+### Hypotheses to attack
+
+1. `\uFEFFimage/png`, `image/png\u00A0`, `\u2003image/png`, `\timage/png` and a leading space answer `invalid_input` for `create_upload` and `send_media`.
+2. `Image/PNG; charset=binary` is still accepted and stored as `image/png`.
+3. An R2 cancel during a pending client read answers 5xx, never 400.
+4. Every docs page shows the footer line in its language and links the about page.
+
+### Known gaps
+
+- The test plan has no EC-5 to EC-8 rows on this branch, so none were marked.
+- The footer is one global `docs.json` block showing both languages; Mintlify has no per-language footer text here.
+- No official-number snippet exists yet, so the docs say "the zapbip number".
+
+
+## Fix round 6 (feat/agent-inbox-core-fix6)
+
+### What changed
+
+- A failed owner notice: the send that owns the claim raises `the owner notice failed; your message is queued until the owner next writes` (`NoticeFailedError`), the message stays queued, `owner_notice_failed` is logged (kind and account), and the `AccountInbox` alarm retries every `NOTICE_RETRY_MS` (5 minutes) through a third due-time provider (`retryNotice`, `findNoticeRetryDueAt`). The failed notice's locale is kept in `owner_window.notice_retry_locale` (v1 edited, not deployed). Concurrent losers stay queued without error.
+- Routing rule 5 falls back to the only agent: with exactly one agent an unaddressed owner message reaches it and no list is sent (`RoutingRule.SingleAgent`).
+- Docs: the `<Chat>` notice bubbles quote the real copy; `chat.jsx` has a destructured default, a generic file card for unknown media kinds, `aria-hidden` on decorative glyphs and SVGs and a labelled group role.
+- Tests: company docs read `COMPANY` from `@zapbip/types`; the no-op filter in `docs-conversations.test.ts` is gone; `' Application/PDF'` joins CU-179.
+
+### Red today, green after
+
+- 58bdf8e (red): core `retry-notice.test.ts` "findNoticeRetryDueAt is not implemented" and send-text "expected an InboxError, nothing was thrown"; API WI-147 "expected { ok: true ... } to deeply equal { ok: false ... }", WI-148 "expected [] to deeply equal [ 'notice' ]", WI-149 "expected vi.fn() to be called 4 times, but got 1 times". WI-150 is a pin. Green at 3454b87.
+- CU-94b red text `delivery failed for text` at 63c09ee (the test then kept both sends queued); it is rewritten at 58bdf8e so that only the claim owner fails.
+- c890efc (red): CU-190 routing and receive tests. Green at a2501d3 (WI-151 covers the Durable Object).
+- 245e482 (red): `docs-notices.test.ts` and `docs-chat-component.test.ts`, 10 failed.
+- Pins: company docs test, CU-179 `' Application/PDF'`.
+
+### Hypotheses to attack
+
+1. With the notice failing, `send_text` returns an error naming the notice, the message is `queued`, and the next flush still delivers it.
+2. A persistent failure retries once per five minutes and never in a loop; an armed alarm never moves later.
+3. A fresh account with one agent: `oi` reaches the agent through `check_inbox` or `wait_for_reply` and no list appears; with two agents the list still appears.
+4. Every notice bubble in the docs reads like the simulator's notice.
+
+### Known gaps
+
+- Messages held while the account had zero agents are released to the first agent that registers (`touchAgent` already did this; pins CU-191 and WI-152 prove it, nothing was changed).
+- A notice retry can run when another provider wakes the alarm early; it is benign because the retry time guards it.
+
+## Fix round 7 (core-fix7)
+
+- The retry time is stored: `owner_window.notice_retry_at` and `notice_retry_attempt` (v1 edited, not deployed). `retryNotice` returns while the clock is before `notice_retry_at`, so an alarm woken early by an expiry sends nothing.
+- Backoff: `NOTICE_RETRY_MS` doubles per failed attempt (`NOTICE_RETRY_BACKOFF_FACTOR`) up to `NOTICE_RETRY_MAX_MS` (6 h); reset on a successful notice or when the owner message reopens the window. `claimNotice` clears the retry locale and due time and keeps the attempt count.
+- The tool error says `the owner notice failed; your message is queued until the owner next writes` (same code `delivery_failed`).
+- Account-inbox WI-130..135 are renumbered WI-147..152; WI-153 (early wake) and WI-154 (claim clears the retry) are new. The test plan has a row for CU-94b..j, CU-190, CU-191 and WI-147..154.
+- `docs-notices.test.ts` matches the bubbles only against `NoticeBody`, `QuestionNoticeBody` and `AgentNotListening` (the troubleshooting bubble is a notice-style bubble of that copy).
+- Red: CU-94e, CU-94h, CU-94i, the two send-text cases (error text), WI-147 (error text), WI-153 and WI-154 at a53ec9d. Pins: CU-94j, WI-149.
+- Hypotheses: a failing sender is retried at 5, 10, 20, 40, 80, 160, 320 minutes then every 6 hours; an expiry waking the alarm sends no template; agents that read the error do not resend.
+- Fix round 8: a send while `notice_retry_at` is in the future returns queued without claiming the notice (only the alarm retries); WI-150 and the send-text case prove it (red at the previous commit).
