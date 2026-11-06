@@ -10,7 +10,7 @@ import {
 } from '@zapbip/types';
 import { QUEUE_RETENTION_MS, QUESTION_RETENTION_MS, RECEIPT_RETENTION_MS } from '../constants';
 import type { AgentName } from '../connection';
-import type { AgentRecord, OwnerWindow, StoredMedia } from '../inbox-records';
+import type { AgentRecord, ChannelStatusDetail, OwnerWindow, StoredMedia } from '../inbox-records';
 import type { Message } from '../message';
 import type { AgentWaker, Clock, CoreDependencies, IdGenerator, InboxRepository, MediaStore, MessageSender } from '../ports';
 import type { Question } from '../question';
@@ -38,6 +38,11 @@ export type RecordingWaker = AgentWaker & {
   replyWith(input: { outcome: WakeOutcome }): void;
 };
 
+export type InMemoryRepository = InboxRepository & {
+  findStatusDetail(input: { messageId: string }): ChannelStatusDetail | null;
+  findClaimedAt(input: { messageId: string }): number | null;
+};
+
 export type InMemoryMediaStore = MediaStore & {
   hasObject(input: { mediaId: string }): boolean;
 };
@@ -47,13 +52,13 @@ export type InMemoryOptions = { accountId?: string; startAt?: number };
 export type InMemoryEnvironment = {
   dependencies: CoreDependencies;
   clock: FakeClock;
-  repository: InboxRepository;
+  repository: InMemoryRepository;
   sender: RecordingSender;
   waker: RecordingWaker;
   mediaStore: InMemoryMediaStore;
 };
 
-function createInMemoryRepository(): InboxRepository {
+function createInMemoryRepository(): InMemoryRepository {
   const agents = new Map<AgentName, AgentRecord>();
   const receipts = new Map<string, number>();
   const media = new Map<string, StoredMedia>();
@@ -73,6 +78,14 @@ function createInMemoryRepository(): InboxRepository {
     messages.filter((message) => message.direction === MessageDirection.FromOwner && message.agent === agent && !message.readByAgent);
 
   return {
+    findStatusDetail: (input) => {
+      void input;
+      throw new Error('findStatusDetail is not implemented');
+    },
+    findClaimedAt: (input) => {
+      void input;
+      throw new Error('findClaimedAt is not implemented');
+    },
     registerAgent: async ({ agent, seenAt }) => {
       agents.set(agent, { agent, lastSeenAt: seenAt });
     },
