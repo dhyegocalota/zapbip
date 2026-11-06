@@ -70,9 +70,9 @@ OpenClaw can poll instead. Add the MCP server above and create a job every 1 min
 
 ## When something does not work
 
-| You see                              | What it means                                                                 |
-| ------------------------------------ | ----------------------------------------------------------------------------- |
-| No answer to your message            | The gateway is not running, or `channels.zapbip` has no `connectionLink`.     |
-| The channel stops by itself          | Another channel or connector started for the same connection and replaced it. |
-| OpenClaw hears you but cannot reply  | The `zapbip` MCP server is missing from `mcp.servers`.                        |
-| The channel exits at once            | The link is unknown or revoked. Ask for a new one.                            |
+| You see                             | What it means                                                                 |
+| ----------------------------------- | ----------------------------------------------------------------------------- |
+| No answer to your message           | The gateway is not running, or `channels.zapbip` has no `connectionLink`.     |
+| The channel stops by itself         | Another channel or connector started for the same connection and replaced it. |
+| OpenClaw hears you but cannot reply | The `zapbip` MCP server is missing from `mcp.servers`.                        |
+| The channel exits at once           | The link is unknown or revoked. Ask for a new one.                            |
