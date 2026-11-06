@@ -1,5 +1,5 @@
 import type { ContactCard, MediaMessageKind, OwnerInboundContent, UnavailableOwnerMedia } from '@zapbip/core';
-import { ChannelInboundKind, IdPrefix, MessageKind } from '@zapbip/types';
+import { ChannelInboundKind, ForwardedKind, IdPrefix, MessageKind } from '@zapbip/types';
 import { z } from 'zod';
 import { OWNER_PHONE_PATTERN } from '../../contract/constants';
 import { sha256Hex } from '../platform/hash';
@@ -27,9 +27,10 @@ export type ParsedInboundEntry =
       at: number;
       content: OwnerInboundContent | UnavailableOwnerMedia;
       replyToChannelMessageId: string | null;
+      forwarded: ForwardedKind;
     }
   | { kind: ChannelInboundKind.WindowOnly; at: number }
-  | { kind: ChannelInboundKind.Unsupported; at: number; unsupportedType: string };
+  | { kind: ChannelInboundKind.Unsupported; at: number; unsupportedType: string | null };
 
 export type ParsedEntry =
   | {
@@ -49,7 +50,13 @@ export type ParsedChange = {
   statuses: ParsedStatus[];
 };
 
-type MessageParts = { channelMessageId: string; at: number; replyToChannelMessageId: string | null; payload: unknown };
+type MessageParts = {
+  channelMessageId: string;
+  at: number;
+  replyToChannelMessageId: string | null;
+  forwarded: ForwardedKind;
+  payload: unknown;
+};
 type ParsedContent = { entry: ParsedInboundEntry; media: MediaDownloadRequest | null };
 type MessageHandler = (input: { parts: MessageParts }) => Promise<ParsedContent>;
 
@@ -69,7 +76,13 @@ const messageHeadSchema = z.object({
   id: z.string(),
   timestamp: unixSecondsSchema,
   type: z.string(),
-  context: z.object({ id: z.string() }).optional(),
+  context: z
+    .object({
+      id: z.string().optional(),
+      forwarded: z.boolean().default(false),
+      frequently_forwarded: z.boolean().default(false),
+    })
+    .optional(),
 });
 
 const textSchema = z.object({ body: z.string() });
@@ -102,11 +115,17 @@ async function mediaIdOf(input: { channelMessageId: string }): Promise<string> {
 
 function ownerContent(input: { parts: MessageParts; content: OwnerInboundContent | UnavailableOwnerMedia }): ParsedContent {
   const { parts, content } = input;
-  const entry = { kind: ChannelInboundKind.Owner as const, at: parts.at, content, replyToChannelMessageId: parts.replyToChannelMessageId };
+  const entry = {
+    kind: ChannelInboundKind.Owner as const,
+    at: parts.at,
+    content,
+    replyToChannelMessageId: parts.replyToChannelMessageId,
+    forwarded: parts.forwarded,
+  };
   return { entry, media: null };
 }
 
-function unsupportedContent(input: { parts: MessageParts; unsupportedType: string }): ParsedContent {
+function unsupportedContent(input: { parts: MessageParts; unsupportedType: string | null }): ParsedContent {
   return { entry: { kind: ChannelInboundKind.Unsupported, at: input.parts.at, unsupportedType: input.unsupportedType }, media: null };
 }
 
@@ -181,10 +200,25 @@ const MESSAGE_HANDLERS: Record<WhatsAppMessageType, MessageHandler> = {
   [WhatsAppMessageType.Button]: async ({ parts }) => ({ entry: { kind: ChannelInboundKind.WindowOnly, at: parts.at }, media: null }),
   [WhatsAppMessageType.Unsupported]: async ({ parts }) => {
     const detail = unsupportedSchema.parse(parts.payload);
-    const unsupportedType = detail === undefined ? WhatsAppMessageType.Unsupported : detail.type;
-    return unsupportedContent({ parts, unsupportedType });
+    return unsupportedContent({ parts, unsupportedType: detail === undefined ? null : detail.type });
   },
 };
+
+type MessageContext = z.infer<typeof messageHeadSchema>['context'];
+
+function forwardedKindOf(input: { context: MessageContext }): ForwardedKind {
+  const { context } = input;
+  if (context === undefined) return ForwardedKind.None;
+  if (context.frequently_forwarded) return ForwardedKind.FrequentlyForwarded;
+  if (context.forwarded) return ForwardedKind.Forwarded;
+  return ForwardedKind.None;
+}
+
+function replyTargetOf(input: { context: MessageContext }): string | null {
+  const { context } = input;
+  if (context === undefined || context.id === undefined) return null;
+  return context.id;
+}
 
 function rejected(input: { reason: OperatorLogReason }): ParsedEntry {
   return { kind: 'rejected', reason: input.reason };
@@ -203,7 +237,8 @@ async function parseEntry(input: { rawMessage: unknown }): Promise<ParsedEntry> 
   const parts = {
     channelMessageId: id,
     at: timestamp,
-    replyToChannelMessageId: context === undefined ? null : context.id,
+    replyToChannelMessageId: replyTargetOf({ context }),
+    forwarded: forwardedKindOf({ context }),
     payload: record.data[type],
   };
   const isKnownType = KNOWN_TYPES.includes(type);
