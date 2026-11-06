@@ -31,6 +31,7 @@ export interface InboxRepository {
   countUnread(input: { agent: AgentName }): Promise<number>;
   markRead(input: { messageIds: string[] }): Promise<void>;
   listHeld(): Promise<Message[]>;
+  findChoicePrompt(input: { questionId: string }): Promise<Message | null>;
   assignAgent(input: { messageIds: string[]; agent: AgentName }): Promise<void>;
   listQueued(): Promise<Message[]>;
   findLastAgentWrite(input: { since: number }): Promise<AgentName | null>;
@@ -40,6 +41,8 @@ export interface InboxRepository {
   listOpenQuestions(): Promise<Question[]>;
   saveAnswer(input: { questionId: string; answer: QuestionAnswer }): Promise<void>;
   recordChannelReceipt(input: { wamid: string; receivedAt: number }): Promise<boolean>;
+  linkChannelReceipt(input: { wamid: string; messageId: string }): Promise<void>;
+  findChannelReceiptMessageId(input: { wamid: string }): Promise<string | null>;
   deleteExpiredReceipts(input: { receivedBefore: number }): Promise<void>;
   deleteQuestionsAskedBefore(input: { askedBefore: number }): Promise<void>;
   findWindow(): Promise<OwnerWindow>;
@@ -78,7 +81,7 @@ export interface ReplyWaiters {
   awaitAgentMessage(input: { agent: AgentName; timeoutMs: number }): Promise<void>;
   resolveQuestionAnswer(input: { questionId: string }): void;
   resolveAgentMessage(input: { agent: AgentName }): void;
-  hasLiveWaiter(input: { agent: AgentName }): boolean;
+  hasLiveWaiter(input: { agent: AgentName; questionId: string | null }): boolean;
 }
 
 export type CoreDependencies = {
