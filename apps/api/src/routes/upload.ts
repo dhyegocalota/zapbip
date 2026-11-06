@@ -10,6 +10,8 @@ import { LinkPurpose } from '@zapbip/types';
 import { accountInboxOf } from './account-inbox-stub';
 import { ERROR_STATUS, HttpStatus } from './http-status';
 
+const CONTENT_LENGTH_PATTERN = /^\d+$/;
+
 export const uploadRoutes = new Hono<{ Bindings: Bindings }>();
 
 uploadRoutes.put('/u/:account_id/:upload_id', async (context) => {
@@ -38,6 +40,7 @@ uploadRoutes.put('/u/:account_id/:upload_id', async (context) => {
   const declaredLength = description.value.sizeBytes;
   const contentLengthHeader = context.req.header('content-length');
   if (contentLengthHeader === undefined) return context.json({ error: 'length_required' }, HttpStatus.LengthRequired);
+  if (!CONTENT_LENGTH_PATTERN.test(contentLengthHeader)) return context.json({ error: 'invalid_length' }, HttpStatus.BadRequest);
   const contentLength = Number(contentLengthHeader);
   if (contentLength > declaredLength) return context.json({ error: 'payload_too_large' }, HttpStatus.PayloadTooLarge);
   if (contentLength < declaredLength) return context.json({ error: 'length_mismatch' }, HttpStatus.BadRequest);
