@@ -220,3 +220,8 @@ Pins (green on arrival): `env-example.test.ts`, `root-scripts.test.ts` (`19d03f1
 - Docs preflight also runs `npm view @zapbip/openclaw-plugin@<version> version` after `zapbip@<version>`; the first unresolved package is named. Red/green in the two commits after. The `openclawPluginVersion` input has no caller yet (no docs deploy entry exists); the PyPI package `zapbip-platform` 0.1.0 is a runbook owner step only, the preflight does not check PyPI.
 - Runbook owner steps to add in lane D's files: fill the Logic Bit company facts; publish `@zapbip/openclaw-plugin` 0.1.0 to npm; publish `zapbip-platform` 0.1.0 to PyPI.
 - `INSTALL_PAGE_PATH_PREFIX` exists on no branch, so the install-route readiness check stays a text match on `/i/:installCode`.
+
+### Lane B update: npm maintainer check (security review of install-skills)
+
+- Production Worker deploys and the docs deploy now run `npm view <package>@<version> maintainers --json` (replacing `... version`); the package must resolve AND its maintainers must include `ZAPBIP_NPM_PUBLISHER` from the owner's environment file (placeholder, empty or missing refuses with no npm command). Docs checks `zapbip` and `@zapbip/openclaw-plugin`; the Worker checks `zapbip@ZAPBIP_NPM_VERSION`, production only. Red `45d02ab`.
+- Publishing with two-factor authentication and provenance is an owner runbook step. The maintainers output format (`name <email>` strings) is assumed from npm's documented behaviour, not run against the registry.

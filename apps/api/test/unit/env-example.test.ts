@@ -6,6 +6,7 @@ import { WorkerSecret } from '../../src/operations/worker-secret';
 const ENV_EXAMPLE_PATH = '../../.env.example';
 const GITIGNORE_PATH = '../../.gitignore';
 const SMOKE_NAMES = ['SMOKE_BASE_URL', 'SMOKE_CONNECTION_SECRET', 'SMOKE_OWNER_PHONE'];
+const PREFLIGHT_NAMES = ['ZAPBIP_NPM_PUBLISHER'];
 const IGNORED_ENTRIES = ['.env', '.dev.vars'];
 
 const entries: [string, string][] = readFileSync(ENV_EXAMPLE_PATH, 'utf8')
@@ -18,8 +19,8 @@ const entries: [string, string][] = readFileSync(ENV_EXAMPLE_PATH, 'utf8')
 const gitignoreLines = readFileSync(GITIGNORE_PATH, 'utf8').split('\n');
 
 describe('env example', () => {
-  it('pin: lists exactly the worker secrets and the smoke inputs', () => {
-    expect(entries.map(([name]) => name).sort()).toEqual([...Object.values(WorkerSecret), ...SMOKE_NAMES].sort());
+  it('pin: lists exactly the worker secrets, the smoke inputs and the preflight inputs', () => {
+    expect(entries.map(([name]) => name).sort()).toEqual([...Object.values(WorkerSecret), ...SMOKE_NAMES, ...PREFLIGHT_NAMES].sort());
   });
 
   it('pin: gives every name a non-empty placeholder value', () => {

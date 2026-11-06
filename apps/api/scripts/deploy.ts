@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { parseArgs } from 'node:util';
 import { experimental_readRawConfig as readRawWranglerConfig } from 'wrangler';
-import { COMPANY, type CompanyFacts, OFFICIAL_WHATSAPP_NUMBER } from '@zapbip/types';
+import { COMPANY, type CompanyFacts, OFFICIAL_WHATSAPP_NUMBER, ZAPBIP_NPM_VERSION } from '@zapbip/types';
 import { z } from 'zod';
 import { DeployEnvironment, parseDeployEnvironment } from '../src/operations/deploy-environment';
 import {
@@ -37,6 +37,7 @@ export type DeployRun = {
   environmentVariables: EnvironmentVariables;
   officialWhatsAppNumber: string;
   company: CompanyFacts;
+  npmVersion: string;
   log: (line: string) => void;
 };
 
@@ -152,6 +153,7 @@ async function main(): Promise<void> {
       environmentVariables: process.env,
       officialWhatsAppNumber: OFFICIAL_WHATSAPP_NUMBER,
       company: COMPANY,
+      npmVersion: ZAPBIP_NPM_VERSION,
       log: console.log,
     });
   } finally {
