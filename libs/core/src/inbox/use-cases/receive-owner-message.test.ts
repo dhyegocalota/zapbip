@@ -1,0 +1,526 @@
+import {
+  AgentWakeReason,
+  DeliveryState,
+  InboxCopyKey,
+  InboxErrorCode,
+  InboxStatus,
+  MediaOrigin,
+  MessageKind,
+  OwnerLocale,
+  ReplyStatus,
+  SECOND_MS,
+  WakeOutcome,
+} from '@zapbip/types';
+import { describe, expect, test } from 'vitest';
+import { MEDIA_RETENTION_MS, NOTICE_QUICK_REPLY_ID, QUEUE_RETENTION_MS, WINDOW_MS } from '../constants';
+import { renderCopy } from '../inbox-copy';
+import type { Message } from '../message';
+import { formatChoiceOptionIds, formatOptionId, formatRouteOptionId } from '../option-id';
+import { captureInboxError } from '../testing/capture-inbox-error';
+import {
+  askAndAbandon,
+  closeWindow,
+  connectionOf,
+  createEnvironment,
+  receive,
+  receiveText,
+  registerAgents,
+  START_AT,
+} from '../testing/fixtures';
+import { checkInbox } from './check-inbox';
+import { sendText } from './send-text';
+import { waitForReply } from './wait-for-reply';
+
+type Environment = Awaited<ReturnType<typeof createEnvironment>>;
+
+function send(input: { environment: Environment; agent?: string; text: string }) {
+  const { environment, agent = 'alpha', text } = input;
+  return sendText({ dependencies: environment.dependencies, connection: connectionOf({ agent }), text, replyToMessageId: null });
+}
+
+function waiting(input: { environment: Environment; agent: string }) {
+  return waitForReply({
+    dependencies: input.environment.dependencies,
+    connection: connectionOf({ agent: input.agent }),
+    questionId: null,
+    timeoutMs: 5 * SECOND_MS,
+  });
+}
+
+function tap(input: { environment: Environment; optionId: string; optionTitle: string }) {
+  return receive({
+    environment: input.environment,
+    content: { kind: MessageKind.Choice, optionId: input.optionId, optionTitle: input.optionTitle, optionDescription: null },
+  });
+}
+
+function notListeningText(input: { agent: string }): string {
+  return renderCopy({
+    key: InboxCopyKey.AgentNotListening,
+    locale: OwnerLocale.EnglishUs,
+    values: { agent: input.agent },
+  });
+}
+
+function sessionTexts(input: { environment: Environment }): string[] {
+  return input.environment.sender.sessions.flatMap((message) => (message.kind === MessageKind.Text ? [message.text] : []));
+}
+
+function routingLists(input: { environment: Environment }): Message[] {
+  return input.environment.sender.sessions.filter((message) => message.kind === MessageKind.Choice);
+}
+
+function routeOptionId(input: { list: Message; agent: string }): string {
+  if (input.list.kind !== MessageKind.Choice) throw new Error('expected a routing list');
+  const ids = formatChoiceOptionIds({ questionId: input.list.questionId, options: input.list.options });
+  const optionId = ids.find((id) => id.endsWith(`:${input.agent}`));
+  if (optionId === undefined) throw new Error(`no option for ${input.agent}`);
+  return optionId;
+}
+
+describe('receiveOwnerMessage routing', () => {
+  test('CU-132 a text with the window closed opens it and wakes the waiting agent', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha'] });
+    await environment.repository.saveWindow({ window: { lastOwnerMessageAt: null, noticeSentForClosedWindow: false } });
+    const holding = waiting({ environment, agent: 'alpha' });
+    await environment.clock.advance({ ms: 0 });
+    const result = await receiveText({ environment, text: '@alpha oi' });
+    expect(result).toMatchObject({ agent: 'alpha', duplicate: false });
+    expect((await environment.repository.findWindow()).lastOwnerMessageAt).toBe(environment.clock.now());
+    expect(await holding).toMatchObject({ status: ReplyStatus.Message, messages: [{ text: 'oi' }] });
+    expect(environment.waker.notifications).toEqual([]);
+  });
+
+  test('CU-132 the routed message is stored unread', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha'] });
+    const result = await receiveText({ environment, text: '@alpha oi' });
+    expect(await environment.repository.findMessage({ messageId: result.messageId! })).toMatchObject({
+      agent: 'alpha',
+      readByAgent: false,
+      text: 'oi',
+    });
+  });
+
+  test('CU-136 a tap on an open question answers it with the option title', async () => {
+    const environment = await createEnvironment();
+    const question = await askAndAbandon({ environment });
+    const result = await tap({
+      environment,
+      optionId: formatOptionId({ questionId: question.questionId, optionIndex: 1 }),
+      optionTitle: 'Não',
+    });
+    expect(result.agent).toBe('alpha');
+    expect((await environment.repository.findQuestion({ questionId: question.questionId }))?.answer).toMatchObject({
+      optionIndex: 1,
+      text: 'Não',
+      answerMessageId: result.messageId,
+    });
+    expect(await environment.repository.findMessage({ messageId: result.messageId! })).toMatchObject({
+      kind: MessageKind.Choice,
+      agent: 'alpha',
+      selected: { optionIndex: 1, title: 'Não' },
+    });
+  });
+
+  test('CU-137 a stale tap is routed as a message with reply_to and never answers twice', async () => {
+    const environment = await createEnvironment();
+    const question = await askAndAbandon({ environment });
+    const optionId = formatOptionId({ questionId: question.questionId, optionIndex: 0 });
+    const first = await tap({ environment, optionId, optionTitle: 'Sim' });
+    const stale = await tap({
+      environment,
+      optionId: formatOptionId({ questionId: question.questionId, optionIndex: 1 }),
+      optionTitle: 'Não',
+    });
+    expect(stale.agent).toBe('alpha');
+    expect(await environment.repository.findMessage({ messageId: stale.messageId! })).toMatchObject({
+      kind: MessageKind.Text,
+      text: 'Não',
+      replyToMessageId: question.promptMessageId,
+    });
+    expect((await environment.repository.findQuestion({ questionId: question.questionId }))?.answer).toMatchObject({
+      text: 'Sim',
+      answerMessageId: first.messageId,
+    });
+  });
+
+  test('CU-138 a tap on an unknown question is routed as text', async () => {
+    const environment = await createEnvironment();
+    await send({ environment, text: 'hello' });
+    const result = await tap({ environment, optionId: 'qst_missing:0', optionTitle: 'Sim' });
+    expect(result.agent).toBe('alpha');
+    expect(await environment.repository.findMessage({ messageId: result.messageId! })).toMatchObject({
+      kind: MessageKind.Text,
+      text: 'Sim',
+    });
+  });
+
+  test('CU-120 a reaction to a question prompt answers it without opening the window', async () => {
+    const environment = await createEnvironment();
+    const question = await askAndAbandon({ environment });
+    const windowBefore = await environment.repository.findWindow();
+    await environment.clock.advance({ ms: SECOND_MS });
+    const result = await receive({
+      environment,
+      content: { kind: MessageKind.Reaction, targetMessageId: question.promptMessageId, emoji: '👍' },
+    });
+    expect(result.agent).toBe('alpha');
+    expect((await environment.repository.findQuestion({ questionId: question.questionId }))?.answer).toMatchObject({
+      optionIndex: null,
+      text: '👍',
+      answerMessageId: result.messageId,
+    });
+    expect(await environment.repository.findWindow()).toEqual(windowBefore);
+  });
+
+  test('a removed reaction does not answer', async () => {
+    const environment = await createEnvironment();
+    const question = await askAndAbandon({ environment });
+    await receive({ environment, content: { kind: MessageKind.Reaction, targetMessageId: question.promptMessageId, emoji: null } });
+    expect((await environment.repository.findQuestion({ questionId: question.questionId }))?.answer).toBeNull();
+  });
+
+  test('CU-149 owner media is routed to the agent with the open question and does not answer', async () => {
+    const environment = await createEnvironment();
+    const question = await askAndAbandon({ environment });
+    const result = await receive({
+      environment,
+      content: {
+        kind: MessageKind.Image,
+        voice: false,
+        mediaId: 'wamid.media',
+        mimeType: 'image/jpeg',
+        sizeBytes: 1000,
+        filename: null,
+        caption: null,
+      },
+    });
+    expect(result.agent).toBe('alpha');
+    expect((await environment.repository.findQuestion({ questionId: question.questionId }))?.answer).toBeNull();
+  });
+
+  test('a location does not answer either', async () => {
+    const environment = await createEnvironment();
+    const question = await askAndAbandon({ environment });
+    await receive({ environment, content: { kind: MessageKind.Location, latitude: 1, longitude: 2, name: null, address: null } });
+    expect((await environment.repository.findQuestion({ questionId: question.questionId }))?.answer).toBeNull();
+  });
+
+  test('a quoted reply goes to the agent that wrote the quoted message', async () => {
+    const environment = await createEnvironment();
+    const fromBeta = await send({ environment, agent: 'beta', text: 'from beta' });
+    await send({ environment, agent: 'alpha', text: 'last word' });
+    const result = await receiveText({ environment, text: 'ok', replyToMessageId: fromBeta.messageId });
+    expect(result.agent).toBe('beta');
+  });
+});
+
+describe('receiveOwnerMessage routing list', () => {
+  test('CU-139 a route choice assigns every held message and wakes the agent', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha', 'beta'] });
+    const holding = waiting({ environment, agent: 'beta' });
+    await environment.clock.advance({ ms: 0 });
+    await receiveText({ environment, text: 'first' });
+    await receiveText({ environment, text: 'second' });
+    const [list] = routingLists({ environment });
+    const result = await tap({ environment, optionId: routeOptionId({ list: list!, agent: 'beta' }), optionTitle: 'beta' });
+    expect(result).toMatchObject({ messageId: null, agent: 'beta' });
+    expect(await environment.repository.listHeld()).toEqual([]);
+    expect(await holding).toMatchObject({ status: ReplyStatus.Message, messages: [{ text: 'first' }, { text: 'second' }] });
+  });
+
+  test('CU-140 a stale route choice assigns nothing and is routed as text', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha', 'beta'] });
+    await receiveText({ environment, text: 'first' });
+    const [list] = routingLists({ environment });
+    const optionId = routeOptionId({ list: list!, agent: 'alpha' });
+    await tap({ environment, optionId, optionTitle: 'alpha' });
+    expect(await environment.repository.countUnread({ agent: 'alpha' })).toBe(1);
+    const stale = await tap({ environment, optionId, optionTitle: 'beta' });
+    expect(stale.agent).toBeNull();
+    expect(await environment.repository.countUnread({ agent: 'alpha' })).toBe(1);
+    expect((await environment.repository.listHeld()).map((message) => (message.kind === MessageKind.Text ? message.text : null))).toEqual([
+      'beta',
+    ]);
+  });
+
+  test('a route choice for an agent that does not exist assigns nothing', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha'] });
+    const held = await receiveText({ environment, text: 'first' });
+    await tap({ environment, optionId: formatRouteOptionId({ messageId: held.messageId!, agent: 'ghost' }), optionTitle: 'ghost' });
+    expect(await environment.repository.countUnread({ agent: 'ghost' })).toBe(0);
+  });
+
+  test('CU-141 a second unmatched message joins the held ones without a new list', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha', 'beta'] });
+    await receiveText({ environment, text: 'first' });
+    const sessionsAfterFirst = environment.sender.sessions.length;
+    const second = await receiveText({ environment, text: 'second' });
+    expect(environment.sender.sessions).toHaveLength(sessionsAfterFirst);
+    expect(environment.sender.templates).toHaveLength(0);
+    expect(second.agent).toBeNull();
+    expect(await environment.repository.listHeld()).toHaveLength(2);
+  });
+
+  test('CU-142 the routing list holds the ten most recent agents, newest first', async () => {
+    const environment = await createEnvironment();
+    const agents = Array.from({ length: 12 }, (_, index) => `agent-${index + 1}`);
+    await agents.reduce(
+      (previous, agent) =>
+        previous.then(() => environment.clock.advance({ ms: SECOND_MS })).then(() => registerAgents({ environment, agents: [agent] })),
+      Promise.resolve(),
+    );
+    const held = await receiveText({ environment, text: 'hello' });
+    const [list] = routingLists({ environment });
+    if (list === undefined || list.kind !== MessageKind.Choice) throw new Error('expected a routing list');
+    const optionIds = formatChoiceOptionIds({ questionId: list.questionId, options: list.options });
+    expect(optionIds).toEqual(
+      agents
+        .slice(2)
+        .reverse()
+        .map((agent) => formatRouteOptionId({ messageId: held.messageId!, agent })),
+    );
+  });
+
+  test('CU-143 with no agents the owner gets one notice and the message is held', async () => {
+    const environment = await createEnvironment();
+    const result = await receiveText({ environment, text: 'hello' });
+    expect(routingLists({ environment })).toEqual([]);
+    expect(sessionTexts({ environment })).toEqual([renderCopy({ key: InboxCopyKey.NoAgents, locale: OwnerLocale.EnglishUs, values: {} })]);
+    expect(await environment.repository.listHeld()).toMatchObject([{ messageId: result.messageId, agent: null }]);
+  });
+
+  test('a reaction nobody can be routed to is held without prompting a closed window', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha', 'beta'] });
+    await receiveText({ environment, text: 'hello' });
+    const [list] = routingLists({ environment });
+    await tap({ environment, optionId: routeOptionId({ list: list!, agent: 'beta' }), optionTitle: 'beta' });
+    await closeWindow({ environment });
+    const sessionsBefore = environment.sender.sessions.length;
+    const result = await receive({ environment, content: { kind: MessageKind.Reaction, targetMessageId: list!.messageId, emoji: '👍' } });
+    expect(result.agent).toBeNull();
+    expect(environment.sender.sessions).toHaveLength(sessionsBefore);
+    expect(environment.sender.templates).toHaveLength(0);
+    expect(await environment.repository.listHeld()).toHaveLength(1);
+  });
+});
+
+describe('receiveOwnerMessage window and queue', () => {
+  test('CU-119 a reaction neither opens the window nor flushes the queue', async () => {
+    const environment = await createEnvironment();
+    await closeWindow({ environment });
+    const queued = await send({ environment, text: 'queued' });
+    const windowBefore = await environment.repository.findWindow();
+    await receive({ environment, content: { kind: MessageKind.Reaction, targetMessageId: queued.messageId, emoji: '👍' } });
+    expect(await environment.repository.findMessage({ messageId: queued.messageId })).toMatchObject({ delivery: DeliveryState.Queued });
+    expect(environment.sender.sessions).toHaveLength(0);
+    expect(await environment.repository.findWindow()).toEqual(windowBefore);
+  });
+
+  test('CU-133 the queue flushes in order without a new notice', async () => {
+    const environment = await createEnvironment();
+    await closeWindow({ environment });
+    const queued = await ['one', 'two', 'three'].reduce<Promise<string[]>>(
+      (previous, text) =>
+        previous.then(async (ids) => {
+          await environment.clock.advance({ ms: SECOND_MS });
+          return [...ids, (await send({ environment, text })).messageId];
+        }),
+      Promise.resolve([]),
+    );
+    await receiveText({ environment, text: '@alpha ok' });
+    expect(sessionTexts({ environment }).slice(0, 3)).toEqual(['one', 'two', 'three']);
+    const states = await Promise.all(queued.map((messageId) => environment.repository.findMessage({ messageId })));
+    expect(states.map((message) => message?.delivery)).toEqual([DeliveryState.Sent, DeliveryState.Sent, DeliveryState.Sent]);
+    expect(environment.sender.templates).toHaveLength(1);
+  });
+
+  test('CU-134 a queued message past its retention expires instead of being sent', async () => {
+    const environment = await createEnvironment();
+    await closeWindow({ environment });
+    const old = await send({ environment, text: 'old' });
+    await environment.clock.advance({ ms: QUEUE_RETENTION_MS + 1 });
+    const fresh = await send({ environment, text: 'new' });
+    await receiveText({ environment, text: '@alpha ok' });
+    expect(await environment.repository.findMessage({ messageId: old.messageId })).toMatchObject({ delivery: DeliveryState.Expired });
+    expect(await environment.repository.findMessage({ messageId: fresh.messageId })).toMatchObject({ delivery: DeliveryState.Sent });
+    expect(sessionTexts({ environment })).not.toContain('old');
+  });
+
+  test('CU-135 a failure in the flush does not stop the rest', async () => {
+    const environment = await createEnvironment();
+    await closeWindow({ environment });
+    const ids = await ['one', 'two', 'three'].reduce<Promise<string[]>>(
+      (previous, text) => previous.then(async (sent) => [...sent, (await send({ environment, text })).messageId]),
+      Promise.resolve([]),
+    );
+    environment.sender.failSessionCalls({ callNumbers: [2] });
+    await receiveText({ environment, text: '@alpha ok' });
+    const states = await Promise.all(ids.map((messageId) => environment.repository.findMessage({ messageId })));
+    expect(states.map((message) => message?.delivery)).toEqual([DeliveryState.Sent, DeliveryState.Failed, DeliveryState.Sent]);
+  });
+
+  test('CU-144 the notice quick reply only opens the window and flushes the queue', async () => {
+    const environment = await createEnvironment();
+    await closeWindow({ environment });
+    const queued = await send({ environment, text: 'queued' });
+    const result = await tap({ environment, optionId: NOTICE_QUICK_REPLY_ID, optionTitle: 'Open' });
+    expect(result.messageId).toBeNull();
+    expect((await environment.repository.findWindow()).lastOwnerMessageAt).toBe(environment.clock.now());
+    expect(await environment.repository.findMessage({ messageId: queued.messageId })).toMatchObject({ delivery: DeliveryState.Sent });
+    expect(await environment.repository.countUnread({ agent: 'alpha' })).toBe(0);
+    expect(await environment.repository.listHeld()).toEqual([]);
+  });
+
+  test('CU-147 an owner message clears the closed window notice flag', async () => {
+    const environment = await createEnvironment();
+    await environment.repository.saveWindow({ window: { lastOwnerMessageAt: START_AT - WINDOW_MS, noticeSentForClosedWindow: true } });
+    await receiveText({ environment, text: 'hello' });
+    expect((await environment.repository.findWindow()).noticeSentForClosedWindow).toBe(false);
+  });
+});
+
+describe('receiveOwnerMessage waking', () => {
+  test('CU-145 the waker is told once per unread batch and the owner learns the agent is not listening', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha'] });
+    await receiveText({ environment, text: '@alpha one' });
+    await receiveText({ environment, text: '@alpha two' });
+    expect(environment.waker.notifications).toEqual([{ agent: 'alpha', reason: AgentWakeReason.MessageWaiting }]);
+    expect(sessionTexts({ environment })).toEqual([notListeningText({ agent: 'alpha' })]);
+  });
+
+  test('a woken agent costs the owner no notice', async () => {
+    const environment = await createEnvironment();
+    environment.waker.replyWith({ outcome: WakeOutcome.Woken });
+    await registerAgents({ environment, agents: ['alpha'] });
+    await receiveText({ environment, text: '@alpha one' });
+    expect(environment.waker.notifications).toHaveLength(1);
+    expect(environment.sender.sessions).toHaveLength(0);
+  });
+
+  test('CU-146 a live waiter skips the waker', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha'] });
+    const holding = waiting({ environment, agent: 'alpha' });
+    await environment.clock.advance({ ms: 0 });
+    await receiveText({ environment, text: '@alpha one' });
+    expect(environment.waker.notifications).toEqual([]);
+    expect((await holding).status).toBe(ReplyStatus.Message);
+  });
+});
+
+describe('receiveOwnerMessage media and receipts', () => {
+  test('CU-148 owner media is stored with its retention', async () => {
+    const environment = await createEnvironment();
+    await receive({
+      environment,
+      content: {
+        kind: MessageKind.Image,
+        voice: false,
+        mediaId: 'wamid.1',
+        mimeType: 'image/jpeg',
+        sizeBytes: 1000,
+        filename: null,
+        caption: 'look',
+      },
+    });
+    const now = environment.clock.now();
+    expect(await environment.repository.findMedia({ mediaId: 'wamid.1' })).toMatchObject({
+      origin: MediaOrigin.Owner,
+      mimeType: 'image/jpeg',
+      sizeBytes: 1000,
+      receivedAt: now,
+      retentionUntil: now + MEDIA_RETENTION_MS,
+    });
+  });
+
+  test('CU-150 a repeated channel message is ignored', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha'] });
+    const first = await receive({ environment, content: { kind: MessageKind.Text, text: '@alpha hi' }, channelMessageId: 'wamid.same' });
+    const second = await receive({ environment, content: { kind: MessageKind.Text, text: '@alpha hi' }, channelMessageId: 'wamid.same' });
+    expect(first.duplicate).toBe(false);
+    expect(second).toEqual({ messageId: null, agent: null, duplicate: true });
+    expect(await environment.repository.countUnread({ agent: 'alpha' })).toBe(1);
+  });
+
+  test('CU-151 a voice flag on a non-audio kind is rejected', async () => {
+    const environment = await createEnvironment();
+    const error = await captureInboxError(() =>
+      receive({
+        environment,
+        content: {
+          kind: MessageKind.Image,
+          voice: true,
+          mediaId: 'wamid.1',
+          mimeType: 'image/jpeg',
+          sizeBytes: 1000,
+          filename: null,
+          caption: null,
+        },
+      }),
+    );
+    expect(error).toEqual({ code: InboxErrorCode.InvalidInput, message: 'voice: only audio can be a voice note' });
+    expect(await environment.repository.findMedia({ mediaId: 'wamid.1' })).toBeNull();
+  });
+});
+
+describe('receiveOwnerMessage retries and concurrency', () => {
+  test('two simultaneous owner messages flush the queue once', async () => {
+    const environment = await createEnvironment();
+    await closeWindow({ environment });
+    await send({ environment, text: 'queued' });
+    await Promise.all([receiveText({ environment, text: '@alpha one' }), receiveText({ environment, text: '@alpha two' })]);
+    expect(sessionTexts({ environment }).filter((text) => text === 'queued')).toHaveLength(1);
+  });
+
+  test('a failure before the message is stored lets the retry store it', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha'] });
+    const listOpenQuestions = environment.repository.listOpenQuestions.bind(environment.repository);
+    environment.repository.listOpenQuestions = async () => {
+      environment.repository.listOpenQuestions = listOpenQuestions;
+      throw new Error('storage unavailable');
+    };
+    const content = { kind: MessageKind.Text, text: '@alpha hi' } as const;
+    await expect(receive({ environment, content, channelMessageId: 'wamid.retry' })).rejects.toThrow('storage unavailable');
+    const retry = await receive({ environment, content, channelMessageId: 'wamid.retry' });
+    expect(retry).toMatchObject({ agent: 'alpha', duplicate: false });
+    expect(await environment.repository.countUnread({ agent: 'alpha' })).toBe(1);
+  });
+
+  test('pin: a failure after the message is stored makes the retry a duplicate and keeps the message unread', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha'] });
+    environment.sender.failSessionCalls({ callNumbers: [1] });
+    const content = { kind: MessageKind.Text, text: '@alpha hi' } as const;
+    await expect(receive({ environment, content, channelMessageId: 'wamid.retry' })).rejects.toThrow();
+    const retry = await receive({ environment, content, channelMessageId: 'wamid.retry' });
+    expect(retry.duplicate).toBe(true);
+    expect(await environment.repository.countUnread({ agent: 'alpha' })).toBe(1);
+  });
+
+  test('a message held before the first agent reaches that agent on its first contact', async () => {
+    const environment = await createEnvironment();
+    await receiveText({ environment, text: 'anyone?' });
+    const inbox = await checkInbox({ dependencies: environment.dependencies, connection: connectionOf({ agent: 'alpha' }) });
+    expect(inbox).toMatchObject({ status: InboxStatus.New, messages: [{ text: 'anyone?' }] });
+    expect(await environment.repository.listHeld()).toEqual([]);
+  });
+
+  test('a second agent does not take the held messages of the routing list', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha'] });
+    await receiveText({ environment, text: 'first' });
+    await registerAgents({ environment, agents: ['beta'] });
+    expect(await environment.repository.listHeld()).toHaveLength(1);
+  });
+});
