@@ -5,7 +5,7 @@ import { reset } from 'cloudflare:test';
 import { D1ConnectionDirectory } from '../../src/adapters/d1/d1-connection-directory';
 import { D1ConnectionRegistry } from '../../src/adapters/d1/d1-connection-registry';
 import { hashConnectionSecret } from '../../src/adapters/platform/hash';
-import { resolveConnection } from '../../src/mcp/resolve-connection';
+import { resolveConnection } from '../../src/routes/resolve-connection';
 import { applyDirectoryMigration, SEED_CREATED_AT, seedAccount, seedConnection, seedOwnerIdentity } from '../support/seed';
 import { testEnv } from '../support/workers-env';
 

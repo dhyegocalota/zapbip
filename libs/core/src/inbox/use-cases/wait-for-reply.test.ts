@@ -134,7 +134,7 @@ describe('waitForReply cancelled by a revocation', () => {
     environment.dependencies.waiters.cancelAgent({ agent: 'alpha' });
     expect(await holding).toEqual({ status: ReplyStatus.Timeout });
     expect(environment.clock.now()).toBe(cancelledAt);
-    expect(environment.dependencies.waiters.hasLiveWaiter({ agent: 'alpha' })).toBe(false);
+    expect(environment.dependencies.waiters.hasLiveWaiter({ agent: 'alpha', questionId: null })).toBe(false);
     await receiveText({ environment, text: '@alpha hi' });
     expect(await environment.repository.countUnread({ agent: 'alpha' })).toBe(1);
   });

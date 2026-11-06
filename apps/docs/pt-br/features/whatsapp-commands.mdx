@@ -5,15 +5,15 @@ description: 'O que o dono pode digitar para o número do zapbip.'
 
 O dono gerencia as IAs mandando mensagem para o número do zapbip. Um comando é reconhecido exatamente, em português ou em inglês, depois que o texto é aparado, os espaços internos são reduzidos a um e tudo vira minúsculas. O idioma da palavra-chave é o idioma da resposta.
 
-| Comando           | Português                      | Inglês                       | Efeito                                                          |
-| ----------------- | ------------------------------ | ---------------------------- | --------------------------------------------------------------- |
-| Criar um agente   | `novo agente <nome>`           | `new agent <name>`           | Cria uma conexão e responde com um link de instalação.          |
-| Listar agentes    | `agentes`                      | `agents`                     | Nome, data de criação e cliente de cada agente ativo. Sem segredo. |
-| Revogar um agente | `revogar <nome>`               | `revoke <name>`              | Revoga a conexão agora. O link dela deixa de funcionar.         |
-| Girar um link     | `girar <nome>`                 | `rotate <name>`              | Troca o segredo agora e responde com um novo link de instalação. |
-| Ajuda e menu      | `ajuda` ou `menu`              | `help` ou `menu`             | Texto e uma lista interativa com os comandos.                   |
-| Pedir a exclusão  | `apagar conta`                 | `delete account`             | Explica as consequências e a frase para confirmar.              |
-| Confirmar exclusão | `apagar conta definitivamente` | `delete account permanently` | Apaga a conta.                                                  |
+| Comando            | Português                      | Inglês                       | Efeito                                                             |
+| ------------------ | ------------------------------ | ---------------------------- | ------------------------------------------------------------------ |
+| Criar um agente    | `novo agente <nome>`           | `new agent <name>`           | Cria uma conexão e responde com um link de instalação.             |
+| Listar agentes     | `agentes`                      | `agents`                     | Nome, data de criação e cliente de cada agente ativo. Sem segredo. |
+| Revogar um agente  | `revogar <nome>`               | `revoke <name>`              | Revoga a conexão agora. O link dela deixa de funcionar.            |
+| Girar um link      | `girar <nome>`                 | `rotate <name>`              | Troca o segredo agora e responde com um novo link de instalação.   |
+| Ajuda e menu       | `ajuda` ou `menu`              | `help` ou `menu`             | Texto e uma lista interativa com os comandos.                      |
+| Pedir a exclusão   | `apagar conta`                 | `delete account`             | Explica as consequências e a frase para confirmar.                 |
+| Confirmar exclusão | `apagar conta definitivamente` | `delete account permanently` | Apaga a conta.                                                     |
 
 Pontuação final não casa. `agentes?` é uma mensagem para um agente, não um comando.
 

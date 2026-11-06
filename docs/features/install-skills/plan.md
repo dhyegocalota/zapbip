@@ -88,14 +88,21 @@ export enum InstallClient {
 }
 
 export enum WakeMode {
+  None = 'none',
   Webhook = 'webhook',
-  Local = 'local',
+  Scheduled = 'scheduled',
+  Standby = 'standby',
+}
+
+export enum WakeRung {
+  Inbox = 'inbox',
+  Webhook = 'webhook',
   Scheduled = 'scheduled',
   Standby = 'standby',
 }
 ```
 
-Plan refresh: the `InstallCodeStatus` block the first draft appended is struck. It is already in `libs/types/src/enums.ts` from accounts-and-keys, and S0 must not redeclare it. `WakeMode` on `main` has only `None`, so S0 adds the four values above; `WakeRung` gains nothing here.
+Plan refresh: the `InstallCodeStatus` block the first draft appended is struck; it is already in `libs/types/src/enums.ts` from accounts-and-keys, and S0 must not redeclare it. `WakeMode` and `WakeRung` are copied byte-identical from `origin/feat/scheduled-wake` (the coordinator's order, so that merge is a no-op). `WakeMode.Local` and `WakeRung.Local` are not in that branch, so they are not in S0; local-connector adds them when it merges.
 
 ### `libs/types/src/constants.ts` (append)
 

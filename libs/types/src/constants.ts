@@ -10,3 +10,13 @@ export const INSTALL_CODE_TTL_MS = 30 * MINUTE_MS;
 export const INSTALL_PAGE_PATH_PREFIX = '/i/';
 export const BYTES_PER_MEGABYTE = 1_000_000;
 export const DEFAULT_LOCALE = OwnerLocale.PortugueseBrazil;
+export const CLIENT_NAME_MAX_CHARS = 128;
+export const INITIALIZE_BODY_MAX_BYTES = 4_096;
+export const INSTALL_PAGE_REQUESTS_PER_MINUTE = 30;
+export const CODEX_TOOL_TIMEOUT_SECONDS = 900;
+export const CHATGPT_POLL_INTERVAL_MINUTES = 60;
+export const HEARTBEAT_POLL_INTERVAL_MINUTES = 1;
+export const INSTALL_SELF_TEST_TEXT: Record<OwnerLocale, string> = {
+  [OwnerLocale.PortugueseBrazil]: '✅ instalado',
+  [OwnerLocale.EnglishUs]: '✅ installed',
+};

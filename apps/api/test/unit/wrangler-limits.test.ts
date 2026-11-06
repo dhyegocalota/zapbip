@@ -10,15 +10,14 @@ import { describe, expect, it } from 'vitest';
 import { unstable_readConfig as readConfig } from 'wrangler';
 
 const CONFIG_PATH = join(import.meta.dirname, '..', '..', 'wrangler.jsonc');
-const PRODUCTION_ENVIRONMENT = 'production';
 const EXPECTED_LIMITS: Record<string, number> = {
   OWNER_RATE_LIMITER: OWNER_MESSAGES_PER_MINUTE,
   OUTBOUND_RATE_LIMITER: OUTBOUND_MESSAGES_PER_MINUTE,
   ACCOUNT_OUTBOUND_RATE_LIMITER: ACCOUNT_OUTBOUND_MESSAGES_PER_MINUTE,
 };
 const environments = [
-  { name: 'development', environment: undefined, waitlistEnabled: 'false' },
-  { name: PRODUCTION_ENVIRONMENT, environment: PRODUCTION_ENVIRONMENT, waitlistEnabled: 'true' },
+  { name: 'production', environment: undefined, waitlistEnabled: 'true' },
+  { name: 'development', environment: 'development', waitlistEnabled: 'false' },
 ];
 
 describe.each(environments)('wrangler $name environment', ({ environment, waitlistEnabled }) => {

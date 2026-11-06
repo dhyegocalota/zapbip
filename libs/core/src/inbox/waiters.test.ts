@@ -73,14 +73,14 @@ describe('createReplyWaiters', () => {
     const question = waiters.awaitQuestionAnswer({ agent: 'alpha', questionId: 'qst_1', timeoutMs: 5000 });
     waiters.cancelAgent({ agent: 'alpha' });
     expect(await Promise.all([message, question])).toEqual([WaiterEnd.Cancelled, WaiterEnd.Cancelled]);
-    expect(waiters.hasLiveWaiter({ agent: 'alpha' })).toBe(false);
+    expect(waiters.hasLiveWaiter({ agent: 'alpha', questionId: null })).toBe(false);
   });
 
   test('cancelling an agent leaves another agent waiting', () => {
     const { waiters } = createWaiters();
     void waiters.awaitAgentMessage({ agent: 'beta', timeoutMs: 5000 });
     waiters.cancelAgent({ agent: 'alpha' });
-    expect(waiters.hasLiveWaiter({ agent: 'beta' })).toBe(true);
+    expect(waiters.hasLiveWaiter({ agent: 'beta', questionId: null })).toBe(true);
   });
 
   test('a resolved waiter ends as resolved', async () => {

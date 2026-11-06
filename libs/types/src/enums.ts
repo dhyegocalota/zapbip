@@ -102,12 +102,16 @@ export enum AgentWakeReason {
 
 export enum WakeMode {
   None = 'none',
-  Local = 'local',
+  Webhook = 'webhook',
+  Scheduled = 'scheduled',
+  Standby = 'standby',
 }
 
 export enum WakeRung {
   Inbox = 'inbox',
-  Local = 'local',
+  Webhook = 'webhook',
+  Scheduled = 'scheduled',
+  Standby = 'standby',
 }
 
 export enum ChannelErrorKind {
@@ -221,4 +225,17 @@ export enum AccountReplyParameter {
   Phrase = 'phrase',
   Agents = 'agents',
   InstallPrompt = 'install_prompt',
+}
+
+export enum InstallClient {
+  ClaudeCode = 'claude-code',
+  Codex = 'codex',
+  Cursor = 'cursor',
+  GeminiCli = 'gemini-cli',
+  GrokBot = 'grok-bot',
+  ClaudeAi = 'claude-ai',
+  ChatGpt = 'chatgpt',
+  GrokWeb = 'grok-web',
+  Hermes = 'hermes',
+  OpenClaw = 'openclaw',
 }
