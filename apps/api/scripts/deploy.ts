@@ -2,7 +2,14 @@ import { join } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { parseArgs } from 'node:util';
 import { experimental_readRawConfig as readRawWranglerConfig } from 'wrangler';
-import { COMPANY, type CompanyFacts, OFFICIAL_WHATSAPP_NUMBER, OPENCLAW_PLUGIN_NPM_VERSION, ZAPBIP_NPM_VERSION } from '@zapbip/types';
+import {
+  COMPANY,
+  type CompanyFacts,
+  OFFICIAL_WHATSAPP_NUMBER,
+  OPENCLAW_PLUGIN_NPM_VERSION,
+  ZAPBIP_NPM_VERSION,
+  ZAPBIP_PYPI_VERSION,
+} from '@zapbip/types';
 import { z } from 'zod';
 import { DeployEnvironment, parseDeployEnvironment } from '../src/operations/deploy-environment';
 import {
@@ -17,6 +24,7 @@ import {
 } from '../src/operations/deploy-preflight';
 import { createApp } from '../src/app';
 import { parseJsonOrNull } from '../src/operations/json-text';
+import { createPackageFetcher, type PackageFetcher } from '../src/operations/package-fetcher';
 import { createTerminalShell } from '../src/operations/terminal-shell';
 import { inspectWorker } from '../src/operations/worker-facts';
 
@@ -42,6 +50,8 @@ export type DeployRun = {
   company: CompanyFacts;
   npmVersion: string;
   openclawPluginVersion: string;
+  pypiVersion: string;
+  packageFetcher: PackageFetcher;
   log: (line: string) => void;
 };
 
@@ -175,6 +185,8 @@ async function main(): Promise<void> {
       company: COMPANY,
       npmVersion: ZAPBIP_NPM_VERSION,
       openclawPluginVersion: OPENCLAW_PLUGIN_NPM_VERSION,
+      pypiVersion: ZAPBIP_PYPI_VERSION,
+      packageFetcher: createPackageFetcher(),
       log: console.log,
     });
   } finally {

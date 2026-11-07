@@ -2,6 +2,7 @@ import { COMPANY_FACT_UNSET, type CompanyFacts, OFFICIAL_NUMBER_UNSET } from '@z
 import { z } from 'zod';
 import { DeployEnvironment } from './deploy-environment';
 import { parseJsonOrNull } from './json-text';
+import type { PackageFetcher } from './package-fetcher';
 import { isPlaceholderValue } from './placeholder';
 import { missingSmokeInputs } from './smoke-inputs';
 import { WorkerSecret } from './worker-secret';
@@ -19,6 +20,7 @@ const NO_NPM_ANSWER = 'no answer';
 const NO_PENDING_MIGRATIONS = 'No migrations to apply';
 const NPM_PACKAGE_NAME = 'zapbip';
 export const NPM_PUBLISHER_VARIABLE = 'ZAPBIP_NPM_PUBLISHER';
+export const PYPI_PUBLISHER_VARIABLE = 'ZAPBIP_PYPI_PUBLISHER';
 const OPENCLAW_PLUGIN_PACKAGE = '@zapbip/openclaw-plugin';
 const DEPLOYABLE_ENVIRONMENTS = [DeployEnvironment.Staging, DeployEnvironment.Production];
 
@@ -33,6 +35,7 @@ export enum PreflightStep {
   OfficialNumber = 'official number',
   CompanyFacts = 'company facts',
   NpmVersion = 'npm version',
+  PypiVersion = 'pypi version',
   Git = 'git',
   Gate = 'gate',
   Config = 'config',
@@ -58,6 +61,8 @@ export type WorkerPreflightInput = {
   company: CompanyFacts;
   npmVersion: string;
   openclawPluginVersion: string;
+  pypiVersion: string;
+  packageFetcher: PackageFetcher;
 };
 
 export type DocsPreflightInput = {
@@ -66,6 +71,8 @@ export type DocsPreflightInput = {
   company: CompanyFacts;
   npmVersion: string;
   openclawPluginVersion: string;
+  pypiVersion: string;
+  packageFetcher: PackageFetcher;
   environmentVariables: EnvironmentVariables;
 };
 
@@ -189,6 +196,14 @@ async function refuseUntrustedDocsPackages(input: DocsPreflightInput): Promise<s
   return refuseUntrustedPackages({ ...input, packageSpecs: publishedPackageSpecsOf(input) });
 }
 
+async function refuseUntrustedPypiPackage(input: {
+  packageFetcher: PackageFetcher;
+  environmentVariables: EnvironmentVariables;
+  pypiVersion: string;
+}): Promise<string | null> {
+  throw new Error(`refuseUntrustedPypiPackage is not implemented for ${input.pypiVersion}`);
+}
+
 async function refuseUncleanGit(input: WorkerPreflightInput): Promise<string | null> {
   const { shell, environment } = input;
   const changes = await gitOutput({ shell, args: ['status', '--porcelain'] });
@@ -270,6 +285,7 @@ const WORKER_CHECKS: PreflightCheck<WorkerPreflightInput>[] = [
   { step: PreflightStep.OfficialNumber, refusalOf: productionOnly({ refusalOf: refuseUnsetOfficialNumber }) },
   { step: PreflightStep.CompanyFacts, refusalOf: productionOnly({ refusalOf: refuseUnsetCompanyFacts }) },
   { step: PreflightStep.NpmVersion, refusalOf: productionOnly({ refusalOf: refuseUntrustedWorkerPackage }) },
+  { step: PreflightStep.PypiVersion, refusalOf: productionOnly({ refusalOf: refuseUntrustedPypiPackage }) },
   { step: PreflightStep.Config, refusalOf: refuseLeftoverPlaceholder },
   { step: PreflightStep.Readiness, refusalOf: refuseUnreadyProduction },
   { step: PreflightStep.SmokeInputs, refusalOf: refuseMissingSmokeInputs },
@@ -283,6 +299,7 @@ const DOCS_CHECKS: PreflightCheck<DocsPreflightInput>[] = [
   { step: PreflightStep.OfficialNumber, refusalOf: refuseUnsetOfficialNumber },
   { step: PreflightStep.CompanyFacts, refusalOf: refuseUnsetCompanyFacts },
   { step: PreflightStep.NpmVersion, refusalOf: refuseUntrustedDocsPackages },
+  { step: PreflightStep.PypiVersion, refusalOf: refuseUntrustedPypiPackage },
 ];
 
 async function firstRefusal<Input>(input: { checks: PreflightCheck<Input>[]; subject: Input }): Promise<PreflightRefusal | null> {

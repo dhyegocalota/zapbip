@@ -17,11 +17,17 @@ import {
   blockOf,
   COMPLETE_COMPANY,
   COMPLETE_VARIABLES,
+  type FakePackageFetcher,
   type FakeShell,
+  fakePackageFetcher,
   fakeShell,
   NPM_PUBLISHER,
   NPM_PUBLISHER_VARIABLE,
   NPM_VERSION,
+  PYPI_PUBLISHER,
+  PYPI_PUBLISHER_VARIABLE,
+  PYPI_RELEASE_URL,
+  PYPI_VERSION,
   OFFICIAL_NUMBER,
   READY_WORKER_FACTS,
 } from './fake-deploy-shell';
@@ -37,6 +43,7 @@ function workerInput(input: {
   company?: CompanyFacts;
   npmVersion?: string;
   openclawPluginVersion?: string;
+  packageFetcher?: FakePackageFetcher;
   workerFacts?: WorkerFacts;
 }) {
   const { environment = DeployEnvironment.Staging, isInteractive = true, firstDeploy = false } = input;
@@ -47,6 +54,7 @@ function workerInput(input: {
     company = COMPLETE_COMPANY,
     npmVersion = NPM_VERSION,
     openclawPluginVersion = NPM_VERSION,
+    packageFetcher = fakePackageFetcher({}),
   } = input;
   return {
     environment,
@@ -60,6 +68,8 @@ function workerInput(input: {
     company,
     npmVersion,
     openclawPluginVersion,
+    pypiVersion: PYPI_VERSION,
+    packageFetcher,
   };
 }
 
@@ -140,6 +150,72 @@ describe('worker preflight', () => {
     const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell }));
     expect(refusal?.step).toBe(PreflightStep.NpmVersion);
     expect(refusal?.message).toContain('@zapbip/openclaw-plugin@0.1.0');
+  });
+
+  it('refuses production until PyPI resolves zapbip-platform at the pinned version, naming it', async () => {
+    const packageFetcher = fakePackageFetcher({ answer: { status: 404, body: null } });
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, packageFetcher }));
+    expect(refusal?.step).toBe(PreflightStep.PypiVersion);
+    expect(refusal?.message).toContain(`zapbip-platform==${PYPI_VERSION}`);
+    expect(refusal?.message).toContain('does not resolve on PyPI');
+    expect(packageFetcher.urls).toEqual([PYPI_RELEASE_URL]);
+  });
+
+  it('refuses production when the PyPI maintainer is not the owner', async () => {
+    const packageFetcher = fakePackageFetcher({ answer: { status: 200, body: { info: { maintainer: 'squatter' } } } });
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, packageFetcher }));
+    expect(refusal?.step).toBe(PreflightStep.PypiVersion);
+    expect(refusal?.message).toContain('squatter');
+    expect(refusal?.message).toContain(PYPI_PUBLISHER);
+  });
+
+  it.each([null, undefined])('refuses production when PyPI lists the maintainer as %j', async (maintainer) => {
+    const packageFetcher = fakePackageFetcher({ answer: { status: 200, body: { info: { maintainer } } } });
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, packageFetcher }));
+    expect(refusal?.step).toBe(PreflightStep.PypiVersion);
+    expect(refusal?.message).toContain('no readable maintainer');
+  });
+
+  it.each([undefined, '', `${PLACEHOLDER_VALUE_PREFIX}PYPI_USER`])(
+    'refuses production when ZAPBIP_PYPI_PUBLISHER is %j, fetching nothing',
+    async (value) => {
+      const packageFetcher = fakePackageFetcher({});
+      const environmentVariables = { ...COMPLETE_VARIABLES, [PYPI_PUBLISHER_VARIABLE]: value };
+      const refusal = await runWorkerPreflight(
+        workerInput({ environment: DeployEnvironment.Production, packageFetcher, environmentVariables }),
+      );
+      expect(refusal?.step).toBe(PreflightStep.PypiVersion);
+      expect(refusal?.message).toContain(PYPI_PUBLISHER_VARIABLE);
+      expect(packageFetcher.urls).toEqual([]);
+    },
+  );
+
+  it('says PyPI could not be reached, not that the package is missing, when the fetch fails', async () => {
+    const packageFetcher = fakePackageFetcher({ failure: new Error('getaddrinfo ENOTFOUND pypi.org') });
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, packageFetcher }));
+    expect(refusal?.step).toBe(PreflightStep.PypiVersion);
+    expect(refusal?.message).toContain('could not reach PyPI');
+    expect(refusal?.message).not.toContain('does not resolve');
+  });
+
+  it('says PyPI could not be reached when it answers a server error', async () => {
+    const packageFetcher = fakePackageFetcher({ answer: { status: 503, body: null } });
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, packageFetcher }));
+    expect(refusal?.message).toContain('could not reach PyPI');
+  });
+
+  it('checks npm before PyPI, so a missing npm package never reaches PyPI', async () => {
+    const shell = fakeShell({ replies: { 'maintainers --json': { exitCode: 1, stdout: '' } } });
+    const packageFetcher = fakePackageFetcher({});
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell, packageFetcher }));
+    expect(refusal?.step).toBe(PreflightStep.NpmVersion);
+    expect(packageFetcher.urls).toEqual([]);
+  });
+
+  it('does not look at PyPI for a staging deploy', async () => {
+    const packageFetcher = fakePackageFetcher({ answer: { status: 404, body: null } });
+    expect(await runWorkerPreflight(workerInput({ packageFetcher }))).toBeNull();
+    expect(packageFetcher.urls).toEqual([]);
   });
 
   it('says npm could not be reached, not that the package is missing, when the failure is a network error', async () => {
@@ -409,6 +485,8 @@ describe('docs preflight', () => {
       company: COMPLETE_COMPANY,
       npmVersion: NPM_VERSION,
       openclawPluginVersion: NPM_VERSION,
+      pypiVersion: PYPI_VERSION,
+      packageFetcher: fakePackageFetcher({}),
       environmentVariables: COMPLETE_VARIABLES,
     });
     expect(refusal?.step).toBe(PreflightStep.OfficialNumber);
@@ -424,6 +502,8 @@ describe('docs preflight', () => {
       company,
       npmVersion: NPM_VERSION,
       openclawPluginVersion: NPM_VERSION,
+      pypiVersion: PYPI_VERSION,
+      packageFetcher: fakePackageFetcher({}),
       environmentVariables: COMPLETE_VARIABLES,
     });
     expect(refusal?.step).toBe(PreflightStep.CompanyFacts);
@@ -439,6 +519,8 @@ describe('docs preflight', () => {
       company: COMPLETE_COMPANY,
       npmVersion: NPM_VERSION,
       openclawPluginVersion: NPM_VERSION,
+      pypiVersion: PYPI_VERSION,
+      packageFetcher: fakePackageFetcher({}),
       environmentVariables: COMPLETE_VARIABLES,
     });
     expect(refusal?.step).toBe(PreflightStep.NpmVersion);
@@ -454,6 +536,8 @@ describe('docs preflight', () => {
       company: COMPLETE_COMPANY,
       npmVersion: NPM_VERSION,
       openclawPluginVersion: NPM_VERSION,
+      pypiVersion: PYPI_VERSION,
+      packageFetcher: fakePackageFetcher({}),
       environmentVariables: COMPLETE_VARIABLES,
     });
     expect(refusal?.step).toBe(PreflightStep.NpmVersion);
@@ -475,6 +559,8 @@ describe('docs preflight', () => {
       company: COMPLETE_COMPANY,
       npmVersion: NPM_VERSION,
       openclawPluginVersion: NPM_VERSION,
+      pypiVersion: PYPI_VERSION,
+      packageFetcher: fakePackageFetcher({}),
       environmentVariables: COMPLETE_VARIABLES,
     });
     expect(refusal?.step).toBe(PreflightStep.NpmVersion);
@@ -494,11 +580,48 @@ describe('docs preflight', () => {
       company: COMPLETE_COMPANY,
       npmVersion: NPM_VERSION,
       openclawPluginVersion: NPM_VERSION,
+      pypiVersion: PYPI_VERSION,
+      packageFetcher: fakePackageFetcher({}),
       environmentVariables: COMPLETE_VARIABLES,
     });
     expect(refusal?.step).toBe(PreflightStep.NpmVersion);
     expect(refusal?.message).toContain('@zapbip/openclaw-plugin@0.1.0');
     expect(refusal?.message).toContain('foreign-publisher');
+  });
+
+  it('refuses the docs deploy until PyPI resolves zapbip-platform, after npm resolves both packages', async () => {
+    const shell = fakeShell({});
+    const packageFetcher = fakePackageFetcher({ answer: { status: 404, body: null } });
+    const refusal = await runDocsPreflight({
+      shell,
+      officialWhatsAppNumber: OFFICIAL_NUMBER,
+      company: COMPLETE_COMPANY,
+      npmVersion: NPM_VERSION,
+      openclawPluginVersion: NPM_VERSION,
+      pypiVersion: PYPI_VERSION,
+      packageFetcher,
+      environmentVariables: COMPLETE_VARIABLES,
+    });
+    expect(refusal?.step).toBe(PreflightStep.PypiVersion);
+    expect(refusal?.message).toContain(`zapbip-platform==${PYPI_VERSION}`);
+    expect(shell.commands).toHaveLength(4);
+    expect(packageFetcher.urls).toEqual([PYPI_RELEASE_URL]);
+  });
+
+  it('refuses the docs deploy when the PyPI maintainer is not the owner', async () => {
+    const packageFetcher = fakePackageFetcher({ answer: { status: 200, body: { info: { maintainer: 'squatter' } } } });
+    const refusal = await runDocsPreflight({
+      shell: fakeShell({}),
+      officialWhatsAppNumber: OFFICIAL_NUMBER,
+      company: COMPLETE_COMPANY,
+      npmVersion: NPM_VERSION,
+      openclawPluginVersion: NPM_VERSION,
+      pypiVersion: PYPI_VERSION,
+      packageFetcher,
+      environmentVariables: COMPLETE_VARIABLES,
+    });
+    expect(refusal?.step).toBe(PreflightStep.PypiVersion);
+    expect(refusal?.message).toContain('squatter');
   });
 
   it('passes when the number is set and the version resolves', async () => {
@@ -510,6 +633,8 @@ describe('docs preflight', () => {
         company: COMPLETE_COMPANY,
         npmVersion: NPM_VERSION,
         openclawPluginVersion: NPM_VERSION,
+        pypiVersion: PYPI_VERSION,
+        packageFetcher: fakePackageFetcher({}),
         environmentVariables: COMPLETE_VARIABLES,
       }),
     ).toBeNull();

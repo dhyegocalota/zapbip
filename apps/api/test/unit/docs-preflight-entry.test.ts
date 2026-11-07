@@ -2,10 +2,23 @@ import { COMPANY_FACT_UNSET } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { runDocsPreflightEntry } from '../../scripts/docs-preflight';
 import type { ShellResult } from '../../src/operations/deploy-preflight';
-import { COMPLETE_COMPANY, COMPLETE_VARIABLES, fakeShell, NPM_VERSION, OFFICIAL_NUMBER } from './fake-deploy-shell';
+import {
+  COMPLETE_COMPANY,
+  COMPLETE_VARIABLES,
+  fakePackageFetcher,
+  fakeShell,
+  NPM_VERSION,
+  OFFICIAL_NUMBER,
+  PYPI_VERSION,
+} from './fake-deploy-shell';
+import type { PackageFetcher } from '../../src/operations/package-fetcher';
 
-async function preflight(input: { company?: typeof COMPLETE_COMPANY; replies?: Record<string, ShellResult> }) {
-  const { company = COMPLETE_COMPANY, replies } = input;
+async function preflight(input: {
+  company?: typeof COMPLETE_COMPANY;
+  replies?: Record<string, ShellResult>;
+  packageFetcher?: PackageFetcher;
+}) {
+  const { company = COMPLETE_COMPANY, replies, packageFetcher = fakePackageFetcher({}) } = input;
   const lines: string[] = [];
   const exitCode = await runDocsPreflightEntry({
     shell: fakeShell({ replies }),
@@ -14,6 +27,8 @@ async function preflight(input: { company?: typeof COMPLETE_COMPANY; replies?: R
     company,
     npmVersion: NPM_VERSION,
     openclawPluginVersion: NPM_VERSION,
+    pypiVersion: PYPI_VERSION,
+    packageFetcher,
     log: (line) => lines.push(line),
   });
   return { exitCode, output: lines.join('\n') };
@@ -36,5 +51,11 @@ describe('docs preflight entry', () => {
     const { exitCode, output } = await preflight({ replies: { 'maintainers --json': { exitCode: 1, stdout: '' } } });
     expect(exitCode).toBe(1);
     expect(output).toContain(`zapbip@${NPM_VERSION}`);
+  });
+
+  it('exits one and names the package when PyPI does not know zapbip-platform', async () => {
+    const { exitCode, output } = await preflight({ packageFetcher: fakePackageFetcher({ answer: { status: 404, body: null } }) });
+    expect(exitCode).toBe(1);
+    expect(output).toContain(`zapbip-platform==${PYPI_VERSION}`);
   });
 });

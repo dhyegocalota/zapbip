@@ -30,3 +30,4 @@ export const OFFICIAL_WHATSAPP_NUMBER: string = OFFICIAL_NUMBER_UNSET;
 export const ZAPBIP_NPM_VERSION = '0.1.0';
 export const INSTALL_PAGE_PATH_PREFIX = '/i/';
 export const OPENCLAW_PLUGIN_NPM_VERSION = '0.1.0';
+export const ZAPBIP_PYPI_VERSION = '0.1.0';

@@ -1,6 +1,7 @@
 import type { CompanyFacts } from '@zapbip/types';
 import { DeployEnvironment } from '../../src/operations/deploy-environment';
 import type { DeployBlock, WorkerFacts, DeployShell, EnvironmentVariables, ShellResult } from '../../src/operations/deploy-preflight';
+import type { PackageAnswer, PackageFetcher } from '../../src/operations/package-fetcher';
 import { SmokeInput } from '../../src/operations/smoke-inputs';
 import { WorkerSecret } from '../../src/operations/worker-secret';
 
@@ -8,6 +9,10 @@ export const OFFICIAL_NUMBER = '5511999990000';
 export const NPM_VERSION = '0.1.0';
 export const NPM_PUBLISHER_VARIABLE = 'ZAPBIP_NPM_PUBLISHER';
 export const NPM_PUBLISHER = 'zapbip-owner';
+export const PYPI_VERSION = '0.1.0';
+export const PYPI_PUBLISHER_VARIABLE = 'ZAPBIP_PYPI_PUBLISHER';
+export const PYPI_PUBLISHER = 'zapbip-owner';
+export const PYPI_RELEASE_URL = `https://pypi.org/pypi/zapbip-platform/${PYPI_VERSION}/json`;
 export const DATABASE_ID = '0a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d';
 export const ALL_SECRETS_JSON = JSON.stringify(Object.values(WorkerSecret).map((name) => ({ name, type: 'secret_text' })));
 export const PASSING: ShellResult = { exitCode: 0, stdout: '' };
@@ -29,6 +34,7 @@ export const COMPLETE_VARIABLES: EnvironmentVariables = {
   [SmokeInput.VerifyToken]: 'verify-token',
   [SmokeInput.PhoneNumberId]: '123456',
   [NPM_PUBLISHER_VARIABLE]: NPM_PUBLISHER,
+  [PYPI_PUBLISHER_VARIABLE]: PYPI_PUBLISHER,
 };
 
 export type FakeShell = DeployShell & { commands: string[] };
@@ -48,6 +54,20 @@ export function fakeShell({ replies: overrides = {} }: { replies?: Record<string
       return replies[key] as ShellResult;
     },
   };
+}
+
+export type FakePackageFetcher = PackageFetcher & { urls: string[] };
+
+export const PYPI_FOUND: PackageAnswer = { status: 200, body: { info: { maintainer: PYPI_PUBLISHER } } };
+
+export function fakePackageFetcher({ answer = PYPI_FOUND, failure }: { answer?: PackageAnswer; failure?: Error }): FakePackageFetcher {
+  const urls: string[] = [];
+  const fetcher = async ({ url }: { url: string }): Promise<PackageAnswer> => {
+    urls.push(url);
+    if (failure) throw failure;
+    return answer;
+  };
+  return Object.assign(fetcher, { urls });
 }
 
 export function blockOf(input: { environment: DeployEnvironment; databaseId?: string; bucketName?: string }): DeployBlock {

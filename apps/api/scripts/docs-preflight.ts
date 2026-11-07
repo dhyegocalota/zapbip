@@ -1,5 +1,13 @@
-import { COMPANY, type CompanyFacts, OFFICIAL_WHATSAPP_NUMBER, OPENCLAW_PLUGIN_NPM_VERSION, ZAPBIP_NPM_VERSION } from '@zapbip/types';
+import {
+  COMPANY,
+  type CompanyFacts,
+  OFFICIAL_WHATSAPP_NUMBER,
+  OPENCLAW_PLUGIN_NPM_VERSION,
+  ZAPBIP_NPM_VERSION,
+  ZAPBIP_PYPI_VERSION,
+} from '@zapbip/types';
 import { type DeployShell, type EnvironmentVariables, runDocsPreflight } from '../src/operations/deploy-preflight';
+import { createPackageFetcher, type PackageFetcher } from '../src/operations/package-fetcher';
 import { createTerminalShell } from '../src/operations/terminal-shell';
 
 export type DocsPreflightEntry = {
@@ -9,6 +17,8 @@ export type DocsPreflightEntry = {
   company: CompanyFacts;
   npmVersion: string;
   openclawPluginVersion: string;
+  pypiVersion: string;
+  packageFetcher: PackageFetcher;
   log: (line: string) => void;
 };
 
@@ -31,6 +41,8 @@ if (import.meta.main) {
     company: COMPANY,
     npmVersion: ZAPBIP_NPM_VERSION,
     openclawPluginVersion: OPENCLAW_PLUGIN_NPM_VERSION,
+    pypiVersion: ZAPBIP_PYPI_VERSION,
+    packageFetcher: createPackageFetcher(),
     log: console.log,
   })
     .then((exitCode) => process.exit(exitCode))

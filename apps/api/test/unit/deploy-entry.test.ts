@@ -8,8 +8,10 @@ import {
   COMPLETE_COMPANY,
   COMPLETE_VARIABLES,
   type FakeShell,
+  fakePackageFetcher,
   fakeShell,
   NPM_VERSION,
+  PYPI_VERSION,
   OFFICIAL_NUMBER,
   READY_WORKER_FACTS,
 } from './fake-deploy-shell';
@@ -71,6 +73,8 @@ async function deploy(input: {
     company: COMPLETE_COMPANY,
     npmVersion: NPM_VERSION,
     openclawPluginVersion: NPM_VERSION,
+    pypiVersion: PYPI_VERSION,
+    packageFetcher: fakePackageFetcher({}),
     log: (line) => lines.push(line),
   });
   return { exitCode, shell, prompt, output: lines.join('\n') };
