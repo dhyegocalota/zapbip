@@ -3,6 +3,7 @@ set -euo pipefail
 
 readonly REDACTION_CHECK_FLAG="--check-redaction"
 readonly FIXTURE_LINK_VARIABLE="ZAPBIP_E2E_FIXTURE_LINK"
+readonly CONFIG_DIRECTORY_VARIABLE="ZAPBIP_E2E_CLAUDE_CONFIG_DIR"
 readonly OWNER_PHONE="5511999990000"
 readonly SEED_AGENT="seed"
 readonly NEW_AGENT_TEXT="novo agente install-e2e"
@@ -15,6 +16,7 @@ readonly REDACTED="<redacted>"
 readonly ALLOWED_TOOLS="--allowedTools=mcp__zapbip__send_message"
 readonly PROJECT_SCOPE_INSTRUCTION="This is a throwaway test project: run claude mcp add with --scope project instead of user scope, and write the skill to .claude/skills/zapbip/SKILL.md in the current directory instead of ~/.claude/skills/zapbip/SKILL.md."
 
+claude_config_directory="${!CONFIG_DIRECTORY_VARIABLE:-}"
 repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 work_directory=""
 server_process=""
@@ -33,6 +35,10 @@ fail() {
   exit 1
 }
 
+claude_isolated() {
+  CLAUDE_CONFIG_DIR="$claude_config_directory" HOME="$claude_config_directory" command claude "$@"
+}
+
 cleanup() {
   if [[ -n "$server_process" ]]; then
     kill "$server_process" 2>/dev/null || true
@@ -48,6 +54,15 @@ if [[ "${1:-}" == "$REDACTION_CHECK_FLAG" ]]; then
   run_logged bash -c 'echo "$1"; echo "$1" >&2' _ "$fixture_link"
   exit 0
 fi
+
+[[ -n "$claude_config_directory" ]] || fail "$CONFIG_DIRECTORY_VARIABLE must name an isolated Claude configuration directory"
+[[ "$claude_config_directory" == /* ]] || fail "$CONFIG_DIRECTORY_VARIABLE must be an absolute path"
+[[ -d "$claude_config_directory" ]] || fail "$CONFIG_DIRECTORY_VARIABLE must be an existing directory"
+claude_config_directory="$(cd "$claude_config_directory" && pwd -P)"
+for protected_directory in "$HOME" "$HOME/.claude" "${CLAUDE_CONFIG_DIR:-$HOME/.claude}"; do
+  [[ -d "$protected_directory" ]] || continue
+  [[ "$claude_config_directory" != "$(cd "$protected_directory" && pwd -P)" ]] || fail "$CONFIG_DIRECTORY_VARIABLE must not be the owner Claude configuration"
+done
 
 for required_tool in claude pnpm curl; do
   command -v "$required_tool" >/dev/null || fail "$required_tool is not installed"
@@ -77,9 +92,9 @@ install_link="$(curl --silent --fail "$owner_url/screen" | grep -oE "${SERVER_OR
 curl --silent --fail "$install_link" | grep -q "send_message" || fail "the install page did not render"
 
 cd "$project_directory"
-run_logged claude -p "Connect yourself to my WhatsApp with zapbip: read ${install_link} and follow the instructions. ${PROJECT_SCOPE_INSTRUCTION}" "$ALLOWED_TOOLS" --permission-mode acceptEdits || fail "the Claude Code install run failed"
+run_logged claude_isolated -p "Connect yourself to my WhatsApp with zapbip: read ${install_link} and follow the instructions. ${PROJECT_SCOPE_INSTRUCTION}" "$ALLOWED_TOOLS" --permission-mode acceptEdits || fail "the Claude Code install run failed"
 
-claude mcp list 2>&1 | grep -q "zapbip" || fail "claude mcp list does not show zapbip"
+grep -q "zapbip" "$project_directory/.mcp.json" || fail "the project .mcp.json does not name zapbip"
 
 curl --silent --fail "$owner_url/screen" | grep -q "$SELF_TEST_TEXT" || fail "the self-test text did not reach the owner screen"
 

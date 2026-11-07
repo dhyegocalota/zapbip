@@ -7,4 +7,4 @@
 5. In a background terminal run `ZAPBIP_CONNECTION_URL=https://x.example/c/zb_conn_FAKE/mcp npx zapbip@0.1.0 listen` and keep that terminal running, with no time limit. Whenever a new line appears there, call check_inbox and answer.
 6. Tell the owner: "Restart Gemini CLI to use zapbip."
 7. Tell the owner: "Gemini CLI listens through the background terminal and answers within seconds while it runs, with no time limit."
-8. In a fresh process run `gemini --yolo -p "Call send_message with the text '✅ installed'"`. On a non-zero exit stop and show the last 20 lines of its output.
+8. In a fresh process run `gemini -p "Call send_message with the text '✅ installed'"`. On a non-zero exit stop and show the last 20 lines of its output.

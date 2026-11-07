@@ -1,95 +1,48 @@
 ---
-title: 'Hermes'
-description: 'Write to Hermes on WhatsApp and have it answer, with no time limit.'
+title: Hermes
+description: Connect Hermes to your WhatsApp.
 ---
 
-import { Chat } from '/snippets/chat.jsx';
+## What works
 
-Hermes keeps listening on your WhatsApp through a small zapbip plugin. You write first or answer a question later, and the message reaches the Hermes session.
+- Your AI sends you text, photos, videos, audio, documents, locations, contacts and reactions on WhatsApp.
+- It asks you with buttons or lists and waits for your tap.
+- Write on WhatsApp and Hermes hears you within about a minute.
+- It waits for your answer as long as it takes.
 
-<Chat
-  contact="Hermes"
-  messages={[
-    { you: true, text: 'Summarise what changed in the repo today.', time: '18:02' },
-    { name: 'Hermes', text: 'Three commits: a fix in billing, a new test and a docs update.', time: '18:03' },
-  ]}
-/>
+## Set up from zero
 
-## What you need
+<Steps>
+  <Step title="Message the official zapbip number">
+    Open WhatsApp and send `hi` to the official zapbip number, then `new agent hermes`. [How to start](/get-started/how-to-start) shows every message.
+  </Step>
+  <Step title="Paste the prompt into Hermes">
+    zapbip answers with one line made for you. Paste it into Hermes:
 
-- Hermes with its gateway running.
-- Your connection link, the same `https://.../c/<secret>/mcp` link your AI uses to talk to zapbip. Treat it like a password.
+    ```text
+    Connect yourself to my WhatsApp with zapbip: read https://zapbip.com/i/zb_inst_K7P2QXm9aTfLw3VbN8cYhE and follow the instructions.
+    ```
 
-## Install the plugin
+    Hermes reads the page and follows the steps below, in order. Before it changes a file or a setting, it tells you which one and waits for your yes. The link in that page is secret, so keep it out of chats you share.
 
-Install the package into the Python environment Hermes runs in:
+  </Step>
+  <Step title="Add zapbip to Hermes">
+    It adds an MCP server named `zapbip` at `<connectionLink>`, with its `url` and `headers`, under `mcp_servers` in `config.yaml`.
+  </Step>
+  <Step title="Install the platform plugin">
+    The better option: it runs `pip install zapbip-platform==0.1.0` so Hermes can import it (Hermes then enables the platform by itself) and sets `ZAPBIP_CONNECTION_LINK` and `ZAPBIP_ALLOWED_USERS=owner`, because Hermes otherwise refuses your messages, then calls `set_wake({mode: "local"})`.
+  </Step>
+  <Step title="Or keep a background watcher">
+    Only if the plugin cannot be installed, and never together with it, it creates a `cronjob_manage` job every minute that calls `check_inbox`. It then calls `set_wake({mode: "scheduled", interval_minutes: 1})`. A watcher that polls costs model calls, and Hermes tells you so.
+  </Step>
+  <Step title="Test it">
+    In the chat it calls `send_message` with ✅ installed.
+  </Step>
+</Steps>
 
-```bash
-pip install zapbip-platform==0.1.0
-```
+## How your AI listens
 
-Then enable it in `~/.hermes/config.yaml`:
+- With the zapbip platform plugin, each WhatsApp message arrives in Hermes as it is sent.
+- Without it, Hermes runs a job every minute that checks the inbox. The plugin and the job are never used together.
 
-```yaml
-plugins:
-  enabled:
-    - zapbip-platform
-```
-
-Set the link and who may talk to Hermes in the environment the gateway runs in, never in a file you share:
-
-```bash
-export ZAPBIP_CONNECTION_LINK='https://<host>/c/<secret>/mcp'
-export ZAPBIP_ALLOWED_USERS=owner
-```
-
-The file that holds your connection link works like a password. Give it permission `600` so only your user can read it, and never share it or commit it:
-
-```bash
-chmod 600 <file>
-```
-
-Restart the gateway.
-
-Run only one listener per agent: the plugin or `npx zapbip@0.1.0 listen`, never both. A second listener replaces the first.
-
-## How it listens
-
-The plugin holds one connection to zapbip open, with no time limit. If the network drops it reconnects by itself, waiting a little longer after each failed try (1 second at first, 30 seconds at most). Messages you send meanwhile wait in your zapbip inbox, and the plugin picks up every one that was not answered as soon as it is back.
-
-## How Hermes answers
-
-Hermes sends its replies to your messages back through the plugin itself, with no extra setup.
-
-Add zapbip as an MCP server so Hermes can also start a conversation with you, ask you a question with buttons and wait for the answer, and use the polling fallback below:
-
-```yaml
-mcp_servers: { zapbip: { url: 'https://<host>/c/<secret>/mcp' } }
-```
-
-Then ask Hermes on WhatsApp to send `✅ instalado`. If that message arrives, it works.
-
-<Chat
-  contact="zapbip"
-  messages={[
-    { you: true, text: 'Send ✅ instalado when you are installed.', time: '18:10' },
-    { name: 'Hermes', text: '✅ instalado', time: '18:10' },
-  ]}
-/>
-
-## Messages you forward
-
-A message you forwarded from someone else reaches Hermes with a label that says you did not write it, so Hermes does not treat it as your instruction.
-
-## If the plugin cannot be installed
-
-Hermes can poll instead. Add the MCP server above and create a job every 1 minute that calls `check_inbox`. Your messages wait up to a minute, and the answer comes the same way.
-
-## When something does not work
-
-| You see                                       | What it means                                                                |
-| --------------------------------------------- | ---------------------------------------------------------------------------- |
-| No answer to your message                     | The gateway is not running, or the plugin is not in `plugins.enabled`.       |
-| The plugin stops by itself                    | Another plugin or connector started for the same connection and replaced it. |
-| Hermes cannot start a conversation or ask you | The `zapbip` MCP server is missing from `config.yaml`.                       |
-| The plugin stops with an error                | The link is unknown or the connection was revoked. Ask for a new one.        |
+There is no time limit. While a question is open, your AI asks again until you answer, for as long as it takes.

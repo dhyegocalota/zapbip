@@ -21,7 +21,7 @@ const GEMINI_CLI_TEXT: Record<OwnerLocale, GeminiCliText> = {
 export const GEMINI_CLI_COPY = localizeCopy({
   texts: GEMINI_CLI_TEXT,
   build: ({ section, text }) => {
-    const selfTest = `gemini --yolo -p "Call send_message with the text '${INSTALL_SELF_TEST_TEXT[section.locale]}'"`;
+    const selfTest = `gemini -p "Call send_message with the text '${INSTALL_SELF_TEST_TEXT[section.locale]}'"`;
     return formatSection({
       client: InstallClient.GeminiCli,
       locale: section.locale,
