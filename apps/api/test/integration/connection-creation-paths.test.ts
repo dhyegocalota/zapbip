@@ -15,7 +15,7 @@ const JSON_HEADERS = { 'Content-Type': 'application/json' };
 const CLIENT_ADDRESS_HEADER = 'cf-connecting-ip';
 const CLIENT_ADDRESS = '203.0.113.9';
 const INSTALL_LINK_PATTERN = new RegExp(`${INSTALL_PAGE_PATH_PREFIX}zb_inst_[A-Za-z0-9_-]+`);
-const CONNECTION_SECRET_IN_PAGE_PATTERN = /\/c\/(zb_conn_[A-Za-z0-9_-]+)\//;
+const CONNECTION_SECRET_IN_PAGE_PATTERN = /zb_conn_[A-Za-z0-9_-]+/;
 const CONNECTION_STATEMENT = `SELECT account_id AS accountId, secret_digest AS secretDigest FROM connections
   WHERE agent = ?1 AND revoked_at IS NULL AND account_id = (SELECT account_id FROM owner_identities WHERE wa_id = ?2)`;
 
@@ -45,7 +45,7 @@ async function installPageSecretOf(): Promise<string> {
   const page = await SELF.fetch(`${ORIGIN}${installPath[0]}`, { headers: { [CLIENT_ADDRESS_HEADER]: CLIENT_ADDRESS } });
   const secret = (await page.text()).match(CONNECTION_SECRET_IN_PAGE_PATTERN);
   if (secret === null) throw new Error('the install page carries no connection link');
-  return secret[1];
+  return secret[0];
 }
 
 async function storedConnectionOf(input: { agent: string }): Promise<StoredConnection> {
