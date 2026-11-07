@@ -10,6 +10,11 @@ const OPENCLAW_ENABLE_ENTRY = '"plugins": { "entries": { "zapbip": { "enabled": 
 const OPENCLAW_LINK_KEY = '"channels": { "zapbip": { "connectionLink"';
 const HERMES_INSTALL_COMMAND = 'pip install zapbip-platform==0.1.0';
 const HERMES_ENVIRONMENT_VARIABLES = ['ZAPBIP_CONNECTION_LINK', 'ZAPBIP_ALLOWED_USERS'];
+const ONE_LISTENER_SENTENCES: Record<string, string> = {
+  'apps/docs': 'Run only one listener per agent: the plugin or `npx zapbip listen`, never both. A second listener replaces the first.',
+  'apps/docs/pt-br':
+    'Rode apenas um listener por agente: o plugin ou `npx zapbip listen`, nunca os dois. Um segundo listener substitui o primeiro.',
+};
 const SELF_TEST_TEXT = '✅ instalado';
 const LOST_REPLY_EVENT = 'plugin_reply_failed';
 const PRIVATE_FILE_PERMISSION = 'chmod 600';
@@ -35,6 +40,10 @@ describe.each(PAGE_LOCALES)('the agent install pages in %s', (locale) => {
 
   test.each([OPENCLAW_PAGE, HERMES_PAGE])('%s tells the owner to keep the file with the link readable only by them', (path) => {
     expect(page({ locale, path })).toContain(PRIVATE_FILE_PERMISSION);
+  });
+
+  test.each([OPENCLAW_PAGE, HERMES_PAGE])('%s tells the owner to run only one listener per agent', (path) => {
+    expect(page({ locale, path })).toContain(ONE_LISTENER_SENTENCES[locale]);
   });
 
   test.each([OPENCLAW_PAGE, HERMES_PAGE])('%s asks the agent to send the self-test text', (path) => {
