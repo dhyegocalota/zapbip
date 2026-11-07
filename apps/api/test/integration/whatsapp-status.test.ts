@@ -1,4 +1,4 @@
-import { env, runInDurableObject, SELF } from 'cloudflare:test';
+import { runInDurableObject, SELF } from 'cloudflare:test';
 import { HISTORY_LIMIT, type CoreDependencies } from '@zapbip/core';
 import { DeliveryState, HttpStatus, MINUTE_MS } from '@zapbip/types';
 import { afterEach, describe, expect, test, vi } from 'vitest';
@@ -13,6 +13,7 @@ import readFixture from '../fixtures/whatsapp/status/read.json';
 import { notificationWith } from '../fixtures/whatsapp/inbound/notification';
 import { signatureHeaderOf } from '../fixtures/whatsapp/inbound/signed-webhook';
 import { buildTextMessage } from '../support/builders';
+import { TEST_APP_SECRET } from '../support/whatsapp-numbers';
 import { accountInboxStub, testEnv } from '../support/workers-env';
 import { inboxOf, ORIGIN, seedAccount, type SeededAccount } from './route-fixtures';
 
@@ -31,7 +32,7 @@ afterEach(() => {
 
 async function postStatus(input: { status: object }): Promise<Response> {
   const text = JSON.stringify(notificationWith({ statuses: [input.status] }));
-  const signature = await signatureHeaderOf({ appSecret: env.META_APP_SECRET as string, body: new TextEncoder().encode(text) });
+  const signature = await signatureHeaderOf({ appSecret: TEST_APP_SECRET, body: new TextEncoder().encode(text) });
   return SELF.fetch(`${ORIGIN}${WHATSAPP_WEBHOOK_PATH}`, {
     method: 'POST',
     headers: { [WEBHOOK_SIGNATURE_HEADER]: signature },

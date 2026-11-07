@@ -3,6 +3,7 @@ import { ChannelInboundKind, DeliveryState, HttpStatus, type OwnerLocale } from 
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { D1MessageIndex } from '../adapters/d1/d1-message-index';
+import { numberRegistryOf } from '../adapters/d1/d1-number-registry';
 import { createPlatformClock } from '../adapters/platform/clock';
 import { createR2MediaStore } from '../adapters/r2/r2-media-store';
 import { answerWebhookChallenge } from '../adapters/whatsapp/challenge';
@@ -16,7 +17,7 @@ import {
 } from '../adapters/whatsapp/inbound-parser';
 import { downloadInboundMedia } from '../adapters/whatsapp/media-download';
 import { logOperatorEvent } from '../adapters/whatsapp/operator-log';
-import { readWebhookEnvironment, readWhatsAppEnvironment, type WebhookEnvironment } from '../adapters/whatsapp/read-whatsapp-env';
+import { readWebhookEnvironment, readWhatsAppEnvironment } from '../adapters/whatsapp/read-whatsapp-env';
 import { verifyWebhookSignature } from '../adapters/whatsapp/signature';
 import type { ParsedStatus } from '../adapters/whatsapp/status-parser';
 import { OwnerCopyKey, WHATSAPP_COPY } from '../adapters/whatsapp/whatsapp-copy';
@@ -38,11 +39,12 @@ import {
 import type { CallOutcome } from '../contract/account-inbox-rpc';
 import type { Bindings } from '../contract/env';
 import { receiveOwnerInbound } from '../inbound/owner-inbound';
+import type { OutboundNumber } from '../numbers/number-registry';
 import { accountInboxOf } from './account-inbox-stub';
 
 type RequestContext = {
   bindings: Bindings;
-  environment: WebhookEnvironment;
+  number: OutboundNumber;
   developmentMediaOrigin: string | null;
   maxFutureSkewMs: number;
 };
@@ -124,11 +126,11 @@ async function channelEntryOf(input: {
     uploadLinkSigningKey: context.bindings.UPLOAD_LINK_SIGNING_KEY,
     clock: createPlatformClock(),
   });
-  const whatsapp = readWhatsAppEnvironment({ env: context.bindings });
+  const { graphBaseUrl } = readWhatsAppEnvironment({ env: context.bindings });
   const download = await downloadInboundMedia({
     graph: createGraphClient({
-      baseUrl: whatsapp.graphBaseUrl,
-      accessToken: whatsapp.accessToken,
+      baseUrl: graphBaseUrl,
+      accessToken: context.number.accessToken,
       developmentMediaOrigin: context.developmentMediaOrigin,
       fetcher: fetch,
     }),
@@ -232,7 +234,7 @@ async function processChange(input: { context: RequestContext; change: ParsedCha
     logOperatorEvent({ event: OperatorEvent.NotificationIgnoredField, fields: {} });
     return [false];
   }
-  if (change.phoneNumberId !== context.environment.phoneNumberId) {
+  if (change.phoneNumberId !== context.number.phoneNumberId) {
     logOperatorEvent({ event: OperatorEvent.InboundForeignNumber, fields: {} });
     return [false];
   }
@@ -267,9 +269,10 @@ export function createWhatsappRoutes(input: {
     }
     const rawBody = await readBodyWithLimit({ body: context.req.raw.body, maxBytes: WEBHOOK_MAX_BYTES });
     if (rawBody === null) return context.json(PAYLOAD_TOO_LARGE_BODY, HttpStatus.PayloadTooLarge);
-    const environment = readWebhookEnvironment({ env: context.env });
+    const registry = numberRegistryOf({ bindings: context.env });
+    const number = await registry.openTheOnlyNumber();
     const isSigned = await verifyWebhookSignature({
-      appSecret: environment.appSecret,
+      appSecret: await registry.openAppSecret({ metaAppRef: number.metaAppRef }),
       rawBody,
       signatureHeader: nullIfAbsent({ value: context.req.header(WEBHOOK_SIGNATURE_HEADER) }),
     });
@@ -283,7 +286,7 @@ export function createWhatsappRoutes(input: {
     if (changes === null) return context.json(INVALID_NOTIFICATION_BODY, HttpStatus.BadRequest);
     const requestContext: RequestContext = {
       bindings: context.env,
-      environment,
+      number,
       developmentMediaOrigin: input.developmentMediaOrigin,
       maxFutureSkewMs: input.maxFutureSkewMs,
     };

@@ -7,6 +7,7 @@ import type { AccountOwnerRpc } from '../contract/account-owner-rpc';
 import { DEV_SEED_PATH } from '../contract/constants';
 import type { Bindings } from '../contract/env';
 import { assertOwnerAbsent, buildDirectorySeed, findOwnerStatement } from '../dev/build-directory-seed';
+import { developmentNumberStatements } from '../dev/development-number-seed';
 import { accountInboxOf } from './account-inbox-stub';
 import { ERROR_STATUS } from './http-status';
 
@@ -23,8 +24,10 @@ async function seedDirectory(input: { bindings: Bindings; body: SeedBody }): Pro
   const owners = await database.prepare(findOwnerStatement({ phone: body.phone })).first<{ total: number }>();
   if (owners === null) throw new Error(OWNER_COUNT_MISSING_MESSAGE);
   assertOwnerAbsent({ existingCount: owners.total });
-  const directorySeed = await buildDirectorySeed({ ...body, createdAt: createPlatformClock().now() });
-  await database.batch(directorySeed.statements.map((statement) => database.prepare(statement)));
+  const createdAt = createPlatformClock().now();
+  const directorySeed = await buildDirectorySeed({ ...body, createdAt });
+  const numberStatements = await developmentNumberStatements({ bindings, createdAt });
+  await database.batch([...directorySeed.statements.map((statement) => database.prepare(statement)), ...numberStatements]);
   const inbox = accountInboxOf<AccountOwnerRpc>({ bindings, accountId: directorySeed.accountId });
   await Promise.all(directorySeed.connections.map(({ agent, secretDigest }) => inbox.recordCreation({ agent, secretDigest })));
   return directorySeed.connections.map(({ agent, secret }) => ({ agent, secret }));

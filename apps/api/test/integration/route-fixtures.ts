@@ -7,6 +7,7 @@ import { runInDurableObject } from 'cloudflare:test';
 import { createSqliteFirstMessageClaim } from '../../src/account-inbox/first-message-claim';
 import { accountInboxStub } from '../support/workers-env';
 import { applyDirectoryMigration, seedConnection, seedOwnerIdentity } from '../support/seed';
+import { seedWhatsAppNumber } from '../support/whatsapp-numbers';
 
 export const ORIGIN = 'http://example.com';
 export const LINK_VALIDITY_MS = 15 * MINUTE_MS;
@@ -37,7 +38,7 @@ function randomSecret(): string {
   return `${CONNECTION_SECRET_PREFIX}${body}`;
 }
 
-const directoryMigration = applyDirectoryMigration();
+const directoryMigration = applyDirectoryMigration().then(() => seedWhatsAppNumber());
 
 export async function seedAccount(input: { agent: string }): Promise<SeededAccount> {
   await directoryMigration;

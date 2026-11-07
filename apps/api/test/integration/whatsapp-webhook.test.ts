@@ -43,8 +43,9 @@ import {
   OUR_PHONE_NUMBER_ID,
 } from '../fixtures/whatsapp/inbound/notification';
 import { signatureHeaderOf } from '../fixtures/whatsapp/inbound/signed-webhook';
-import { accountInboxStub, whatsappTestEnv } from '../support/workers-env';
+import { accountInboxStub, testEnv } from '../support/workers-env';
 import { buildTextMessage } from '../support/builders';
+import { TEST_APP_SECRET } from '../support/whatsapp-numbers';
 import { inboxOf, ORIGIN, seedAccount, type SeededAccount } from './route-fixtures';
 
 const STATUS_OK = 200;
@@ -95,7 +96,7 @@ function ownerText(input: { account: SeededAccount; id: string; text: string }):
 
 async function postSigned(input: { text: string; signedText?: string }): Promise<Response> {
   const signature = await signatureHeaderOf({
-    appSecret: env.META_APP_SECRET as string,
+    appSecret: TEST_APP_SECRET,
     body: encode({ text: input.signedText === undefined ? input.text : input.signedText }),
   });
   return SELF.fetch(WEBHOOK_URL, { method: 'POST', headers: { [WEBHOOK_SIGNATURE_HEADER]: signature }, body: input.text });
@@ -108,9 +109,9 @@ function postNotification(input: { notification: object }): Promise<Response> {
 async function postNotificationWithAccessToken(input: { notification: object; developmentMediaOrigin?: string }): Promise<Response> {
   const { developmentMediaOrigin = null } = input;
   const text = JSON.stringify(input.notification);
-  const signature = await signatureHeaderOf({ appSecret: env.META_APP_SECRET as string, body: encode({ text }) });
+  const signature = await signatureHeaderOf({ appSecret: TEST_APP_SECRET, body: encode({ text }) });
   const request = new Request(WEBHOOK_URL, { method: 'POST', headers: { [WEBHOOK_SIGNATURE_HEADER]: signature }, body: text });
-  return createApp({ extraRoutes: [], developmentMediaOrigin, maxFutureSkewMs: MAX_FUTURE_SKEW_MS }).fetch(request, whatsappTestEnv);
+  return createApp({ extraRoutes: [], developmentMediaOrigin, maxFutureSkewMs: MAX_FUTURE_SKEW_MS }).fetch(request, testEnv);
 }
 
 async function historyOf(input: { account: SeededAccount }) {
@@ -211,7 +212,7 @@ describe('webhook signature variants', () => {
   ])('pin: answers 401 with the same body for a signature with %s and stores nothing', async (_name, tamper) => {
     const account = await seedAccount({ agent: 'alpha' });
     const text = JSON.stringify(notificationWith({ messages: [ownerText({ account, id: 'wamid.SIGVARIANT', text: 'Oi' })] }));
-    const valid = await signatureHeaderOf({ appSecret: env.META_APP_SECRET as string, body: encode({ text }) });
+    const valid = await signatureHeaderOf({ appSecret: TEST_APP_SECRET, body: encode({ text }) });
     const response = await SELF.fetch(WEBHOOK_URL, {
       method: 'POST',
       headers: { [WEBHOOK_SIGNATURE_HEADER]: tamper(valid.slice(ALGORITHM_PREFIX.length)) },
@@ -265,7 +266,7 @@ describe('webhook request checks', () => {
       },
     });
     const signedBody = new Uint8Array(chunkCount * CHUNK_BYTES).fill(' '.charCodeAt(0));
-    const signature = await signatureHeaderOf({ appSecret: env.META_APP_SECRET as string, body: signedBody });
+    const signature = await signatureHeaderOf({ appSecret: TEST_APP_SECRET, body: signedBody });
     const request = new Request(WEBHOOK_URL, {
       method: 'POST',
       headers: { [WEBHOOK_SIGNATURE_HEADER]: signature },
@@ -278,7 +279,7 @@ describe('webhook request checks', () => {
 
   test.each(['abc', '-1'])('accepts a signed body whose Content-Length header is %s because the streaming cap applies', async (header) => {
     const text = JSON.stringify(notificationWith({}));
-    const signature = await signatureHeaderOf({ appSecret: env.META_APP_SECRET as string, body: encode({ text }) });
+    const signature = await signatureHeaderOf({ appSecret: TEST_APP_SECRET, body: encode({ text }) });
     const response = await SELF.fetch(WEBHOOK_URL, {
       method: 'POST',
       headers: { [WEBHOOK_SIGNATURE_HEADER]: signature, 'Content-Length': header },

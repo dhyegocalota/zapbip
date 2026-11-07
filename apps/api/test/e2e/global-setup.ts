@@ -128,6 +128,8 @@ export default async function setup(project: TestProject): Promise<() => Promise
       `PUBLIC_ORIGIN:${origin}`,
       '--var',
       `WAKE_SECRET_KEY:${randomBytes(WAKE_SECRET_KEY_BYTES).toString('base64')}`,
+      '--var',
+      `NUMBER_REGISTRY_KEY:${randomBytes(WAKE_SECRET_KEY_BYTES).toString('base64')}`,
     ],
     { stdio: ['ignore', 'pipe', 'pipe'], detached: true },
   );

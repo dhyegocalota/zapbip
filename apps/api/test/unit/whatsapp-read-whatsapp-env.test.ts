@@ -4,10 +4,7 @@ import type { Bindings } from '../../src/contract/env';
 
 const COMPLETE = {
   WHATSAPP_GRAPH_BASE_URL: 'http://127.0.0.1:4011',
-  WHATSAPP_ACCESS_TOKEN: 'test-access-token',
-  WHATSAPP_PHONE_NUMBER_ID: '1000000000000001',
   WHATSAPP_VERIFY_TOKEN: 'test-verify-token',
-  META_APP_SECRET: 'test-app-secret',
 };
 
 function envOf(input: Partial<Record<keyof typeof COMPLETE, string>>): Bindings {
@@ -15,13 +12,10 @@ function envOf(input: Partial<Record<keyof typeof COMPLETE, string>>): Bindings 
 }
 
 describe('readWhatsAppEnvironment', () => {
-  it('AU-114 returns the five values', () => {
+  it('AU-114 returns the two values', () => {
     expect(readWhatsAppEnvironment({ env: envOf({}) })).toEqual({
       graphBaseUrl: 'http://127.0.0.1:4011',
-      accessToken: 'test-access-token',
-      phoneNumberId: '1000000000000001',
       verifyToken: 'test-verify-token',
-      appSecret: 'test-app-secret',
     });
   });
 
@@ -36,20 +30,15 @@ describe('readWhatsAppEnvironment', () => {
     expect(() => readWhatsAppEnvironment({ env })).toThrow(name);
   });
 
-  it('AU-116 throws naming META_APP_SECRET when it is empty', () => {
-    expect(() => readWhatsAppEnvironment({ env: envOf({ META_APP_SECRET: '' }) })).toThrow('META_APP_SECRET');
+  it('AU-116 throws naming WHATSAPP_VERIFY_TOKEN when it is empty', () => {
+    expect(() => readWhatsAppEnvironment({ env: envOf({ WHATSAPP_VERIFY_TOKEN: '' }) })).toThrow('WHATSAPP_VERIFY_TOKEN');
   });
 });
 
 describe('readWebhookEnvironment', () => {
-  it('AU-117 returns the three webhook values without the access token and the Graph base URL', () => {
+  it('AU-117 returns the verify token without the Graph base URL', () => {
     const env = envOf({});
-    delete (env as unknown as Record<string, unknown>).WHATSAPP_ACCESS_TOKEN;
     delete (env as unknown as Record<string, unknown>).WHATSAPP_GRAPH_BASE_URL;
-    expect(readWebhookEnvironment({ env })).toEqual({
-      phoneNumberId: '1000000000000001',
-      verifyToken: 'test-verify-token',
-      appSecret: 'test-app-secret',
-    });
+    expect(readWebhookEnvironment({ env })).toEqual({ verifyToken: 'test-verify-token' });
   });
 });
