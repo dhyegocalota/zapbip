@@ -144,8 +144,8 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     this.dueTimeProviders.push(
       this.createExpiryProvider(),
       this.createRoutingListProvider(),
-      this.createNoticeRetryProvider(),
       this.createWakeProvider(),
+      this.createNoticeRetryProvider(),
     );
     await this.armAlarm();
   }
