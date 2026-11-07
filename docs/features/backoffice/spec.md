@@ -254,7 +254,7 @@ CREATE TABLE backoffice_audit (
 CREATE INDEX backoffice_audit_at ON backoffice_audit (at);
 ```
 
-PR B adds `0006_activity.sql` (Metrics, below).
+PR B adds `0007_activity.sql` (Metrics, below).
 
 **Number states:**
 
@@ -499,7 +499,7 @@ AccountInbox alarm ─► flush usage_meter → usage_daily, activity_meter → 
 | `libs/core` `openOwnerAccount` | input gains `homeNumberId: string`; the `AccountDirectory.create` port carries it |
 | `apps/api/scripts/backoffice-enroll.ts` | `--environment development \| staging \| production`; shell and prompt as named parameters, so tests replace them |
 | root scripts | `backoffice:enroll:development`, `backoffice:enroll:staging`, `backoffice:enroll:production` |
-| `apps/api/migrations/` | `0005_backoffice.sql` (PR A), `0006_activity.sql` (PR B) |
+| `apps/api/migrations/` | `0005_backoffice.sql` (PR A), `0007_activity.sql` (PR B) |
 | `apps/api/src/account-inbox/migrations/v8.sql` | `activity_meter` (PR B) |
 
 ### Failure handling
