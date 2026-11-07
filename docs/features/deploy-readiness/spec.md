@@ -1,6 +1,6 @@
 # Deploy readiness
 
-**Status:** Building
+**Status:** Shipped 2026-11-07
 **Tier:** 🔴
 **Owner approval:** approved 2026-11-06 (owner delegated)
 **ADRs:** [0026](../../adr/0026-runbooks-live-in-the-repository-not-on-mintlify.md), [0027](../../adr/0027-deploys-run-from-the-owners-machine-not-from-ci.md); builds on [0005](../../adr/0005-the-local-gate-runs-what-the-diff-can-break.md), [0006](../../adr/0006-one-secret-per-connection-in-the-mcp-url.md), [0007](../../adr/0007-a-durable-inbox-and-a-wake-ladder.md), [0009](../../adr/0009-cloudflare-workers-with-one-durable-object-per-account.md), [0010](../../adr/0010-public-docs-on-mintlify.md), [0011](../../adr/0011-the-24-hour-window-queues-and-sends-one-notice.md)

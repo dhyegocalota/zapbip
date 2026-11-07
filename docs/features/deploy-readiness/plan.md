@@ -507,5 +507,5 @@ The harness and `buildSignedWebhookPost` produce this shape. It is the minimum s
 - [x] **Tester briefing:** a developer wrote `tester-briefing.md` with the R0 diff lines and the commands of the Local end to end section. — evidence: tester-briefing.md written and corrected in c3d8bcd.
 - [x] **Tester run:** a fresh `tester` sub-agent executed `test-plan.md` and ticked every box with evidence. Owner-run boxes stay unticked and labelled. — evidence: tester A and tester B at c3d8bcd; gaps fixed in 6e2b5ff and the docs commit that follows.
 - [x] **Reviewer:** a fresh `reviewer` sub-agent returned a verdict; refutation of the three riskiest claims is recorded in `test-plan.md`. — evidence: verdict SHIP WITH RESERVATIONS, three minors fixed in c3d8bcd; security re-check CLEAR.
-- [ ] **/check-ui:** not applicable; this slice adds no UI.
-- [ ] **/open-pr:** gates passed, learnings sweep stated, PR opened.
+- [x] **/check-ui:** not applicable; this slice adds no UI.
+- [x] **/open-pr:** gates passed, learnings sweep: none new, PR #13 opened.
