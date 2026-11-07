@@ -55,7 +55,7 @@ export function NumberVerificationPage(props: { page: PageContext; numberId: str
       <h1>{translate(BackofficeCopyKey.VerifyResultTitle, { label })}</h1>
       <VerificationNotice page={page} snapshot={snapshot} />
       {snapshot.outcome === VerificationOutcome.Mismatch ? (
-        <dl>
+        <dl class="key-value">
           <dt>{translate(BackofficeCopyKey.VerifyExpectedNumber)}</dt>
           <dd class="mono">{snapshot.expectedDigits}</dd>
           <dt>{translate(BackofficeCopyKey.VerifyReportedNumber)}</dt>
@@ -65,7 +65,7 @@ export function NumberVerificationPage(props: { page: PageContext; numberId: str
       {hasMetaReport ? (
         <section class="card" aria-labelledby="meta-reports-title">
           <h2 id="meta-reports-title">{translate(BackofficeCopyKey.VerifyMetaReports)}</h2>
-          <dl>
+          <dl class="key-value">
             <dt>{translate(BackofficeCopyKey.VerifyVerifiedName)}</dt>
             <dd>{snapshot.verifiedName}</dd>
             <dt>{translate(BackofficeCopyKey.VerifyQualityRating)}</dt>

@@ -9,7 +9,7 @@ const SEAL_KEY_VERSION = 1;
 const INSERT_META_APP_STATEMENT =
   'INSERT INTO meta_apps (id, meta_app_id, label, sealed_app_secret, seal_key_version, created_at, updated_at) SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?6 WHERE NOT EXISTS (SELECT 1 FROM whatsapp_numbers)';
 const INSERT_NUMBER_STATEMENT =
-  'INSERT INTO whatsapp_numbers (id, meta_app_ref, phone_number_id, waba_id, display_number, label, sealed_access_token, seal_key_version, state, verified_at, created_at, updated_at) SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?10, ?10 WHERE NOT EXISTS (SELECT 1 FROM whatsapp_numbers)';
+  'INSERT INTO whatsapp_numbers (id, meta_app_ref, phone_number_id, waba_id, display_number, label, sealed_access_token, seal_key_version, state, verified_at, credentials_changed_at, created_at, updated_at) SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?10, ?10, ?10 WHERE NOT EXISTS (SELECT 1 FROM whatsapp_numbers)';
 
 export async function developmentNumberStatements(input: {
   bindings: Pick<Bindings, 'CONNECTIONS' | 'NUMBER_REGISTRY_KEY'>;

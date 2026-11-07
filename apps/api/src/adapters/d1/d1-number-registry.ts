@@ -32,8 +32,8 @@ const FIND_FOR_INBOUND_STATEMENT = 'SELECT ' + OUTBOUND_COLUMNS + ' FROM whatsap
 const INSERT_META_APP_STATEMENT =
   'INSERT INTO meta_apps (id, meta_app_id, label, sealed_app_secret, seal_key_version, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)';
 const INSERT_NUMBER_STATEMENT = `INSERT INTO whatsapp_numbers
-  (id, meta_app_ref, phone_number_id, waba_id, display_number, label, sealed_access_token, seal_key_version, state, created_at, updated_at)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+  (id, meta_app_ref, phone_number_id, waba_id, display_number, label, sealed_access_token, seal_key_version, state, credentials_changed_at, created_at, updated_at)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 const SEAL_KEY_VERSION = 1;
 const BACKFILL_ACCOUNTS_STATEMENT =
   'UPDATE accounts SET number_id = ? WHERE number_id IS NULL AND (SELECT COUNT(*) FROM whatsapp_numbers) = 1';
@@ -125,6 +125,7 @@ export class D1NumberRegistry implements NumberRegistry {
           sealedAccessToken,
           SEAL_KEY_VERSION,
           WhatsAppNumberState.Pending,
+          now,
           now,
           now,
         ),

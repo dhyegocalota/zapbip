@@ -209,6 +209,29 @@ main {
   font-size: var(--text-small);
 }
 
+.key-value {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-2) var(--space-4);
+  margin: 0 0 var(--space-4);
+}
+
+.key-value dt {
+  color: var(--color-text-muted);
+  font-size: var(--text-small);
+}
+
+.key-value dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.choice {
+  display: block;
+  min-height: var(--size-tap);
+  padding: var(--space-2) 0;
+}
+
 .field {
   margin-bottom: var(--space-4);
 }
@@ -336,6 +359,10 @@ select {
 
   .button {
     width: 100%;
+  }
+
+  .key-value {
+    grid-template-columns: 1fr;
   }
 
   .data-table thead {

@@ -97,7 +97,13 @@ numberRoutes.post(`${NUMBER_ROUTE}/${NumberSegment.State}`, async (context) => {
   const outcome = await stepUpOf({ context, form, targetKind: TARGET_KIND, targetId: numberId });
   if (outcome === StepUpOutcome.RateLimited) return rateLimitedResponse({ context });
   if (outcome === StepUpOutcome.Rejected) {
-    return detailResponse({ context, numberId, status: HttpStatus.Unauthorized, failure: BackofficeCopyKey.StepUpRejected });
+    return detailResponse({
+      context,
+      numberId,
+      status: HttpStatus.Unauthorized,
+      failure: BackofficeCopyKey.StepUpRejected,
+      selectedState: target as WhatsAppNumberState,
+    });
   }
   await numberRegistryOf({ bindings: context.env }).transition({ numberId, to: target as WhatsAppNumberState });
   await auditNumberAction({

@@ -19,6 +19,7 @@ export type NumberDetailPageProps = {
   siblingLabels: string[];
   allowedTargets: WhatsAppNumberState[];
   failure: BackofficeCopyKey | null;
+  selectedState: WhatsAppNumberState | null;
 };
 
 const TARGET_OPTIONS: Record<WhatsAppNumberState, BackofficeCopyKey> = {
@@ -29,7 +30,7 @@ const TARGET_OPTIONS: Record<WhatsAppNumberState, BackofficeCopyKey> = {
 };
 
 export function NumberDetailPage(props: NumberDetailPageProps) {
-  const { page, entry, siblingLabels, allowedTargets, failure } = props;
+  const { page, entry, siblingLabels, allowedTargets, failure, selectedState } = props;
   const { locale } = page;
   const translate = (key: BackofficeCopyKey, values?: Record<string, string>): string => renderBackofficeCopy({ key, locale, values });
   const credentialStatus = (at: number): string => translate(BackofficeCopyKey.CredentialSet, { date: formatTimestamp({ at }) });
@@ -58,7 +59,7 @@ export function NumberDetailPage(props: NumberDetailPageProps) {
       ) : null}
       <section class="card" aria-labelledby="summary-title">
         <h2 id="summary-title">{translate(BackofficeCopyKey.NumberSummaryTitle)}</h2>
-        <dl>
+        <dl class="key-value">
           <dt>{translate(BackofficeCopyKey.NumberDisplayNumber)}</dt>
           <dd class="mono">{entry.displayNumber}</dd>
           <dt>{translate(BackofficeCopyKey.NumberPhoneNumberId)}</dt>
@@ -68,7 +69,7 @@ export function NumberDetailPage(props: NumberDetailPageProps) {
           <dt>{translate(BackofficeCopyKey.NumberMetaApp)}</dt>
           <dd>{entry.metaAppLabel}</dd>
           <dt>{translate(BackofficeCopyKey.NumberAccessToken)}</dt>
-          <dd>{credentialStatus(entry.updatedAt)}</dd>
+          <dd>{credentialStatus(entry.credentialsChangedAt)}</dd>
           <dt>{translate(BackofficeCopyKey.NumberAppSecret)}</dt>
           <dd>{credentialStatus(entry.metaAppUpdatedAt)}</dd>
           <dt>{translate(BackofficeCopyKey.NumberVerifiedAt)}</dt>
@@ -100,14 +101,14 @@ export function NumberDetailPage(props: NumberDetailPageProps) {
             <fieldset>
               <legend>{translate(BackofficeCopyKey.NumberStateLegend)}</legend>
               {allowedTargets.map((target) => (
-                <label>
-                  <input type="radio" name={NumberFormField.State} value={target} required />
+                <label class="choice">
+                  <input type="radio" name={NumberFormField.State} value={target} checked={target === selectedState} required />
                   {translate(TARGET_OPTIONS[target])}
                 </label>
               ))}
             </fieldset>
             {allowedTargets.includes(WhatsAppNumberState.Disabled) ? (
-              <label>
+              <label class="choice">
                 <input type="checkbox" name={NumberFormField.ConfirmDisable} value={CHECKED_VALUE} />
                 {translate(BackofficeCopyKey.NumberStateDisabledConfirm)}
               </label>

@@ -219,6 +219,14 @@ Author this list with every box empty. A sub-agent ticks its own line. A wrong s
   Then `backoffice/numbers/**`.
   - evidence: red 9d083703 (35 of 38 fail, the routes answer 404) → green 3191866a; pins 99501b0a (form rules, verification snapshot) and 0e2500d2 (logs).
 
+- [x] **Step 30a (coordinator follow-up, reported):** five fixes after the lane review.
+  - A missing or wrong `NUMBER_REGISTRY_KEY` makes the webhook answer `500`: `spec.md` and `test-plan.md` say so, and a pin in `whatsapp-webhook-numbers.test.ts` holds it.
+  - `whatsapp_numbers.credentials_changed_at` (migration 0005) is set at registration and when the access token is replaced, never on a state change; the detail page reads it.
+  - A refused state form keeps the chosen radio.
+  - `INVALID_JSON_BODY` is removed from `contract/constants.ts`.
+  - `design.md` asks for a `KeyValueList` and native radios and checkboxes: the shared stylesheet gained `.key-value` (stacked at 375) and `.choice`, and the views use them.
+  - evidence: red fb69aef0 (unit run: `expected … to contain '.key-value'`, `.choice`; the integration cases were not run in this step because port 4012 was reserved) → green below in the commit that follows it.
+
 ### G4 metrics (PR B)
 
 - [ ] **Step 31:** red: `activity-in-object.test.ts`:

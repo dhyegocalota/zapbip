@@ -20,6 +20,7 @@ CREATE TABLE whatsapp_numbers (
   state TEXT NOT NULL CHECK (state IN ('pending', 'active', 'closed', 'disabled')),
   verified_at INTEGER,
   verification_snapshot TEXT,
+  credentials_changed_at INTEGER NOT NULL,
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL
 );

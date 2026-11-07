@@ -158,6 +158,9 @@ Backoffice numbers pages (`backoffice-numbers.test.ts`):
 - [ ] `/numbers` empty → the empty-state copy and a register link; one number → one row; three → three rows sorted by label
 - [ ] Register → `303` to `/numbers/:id`; the page and every response body contain neither the token nor the app secret
 - [ ] Verify with the fake Graph returning the matching display number → `POST /numbers/:id/verify` answers `303` to `/numbers/:id/verification`; the GET `200` shows the four template rows with their statuses; `verified_at` set
+- [ ] `whatsapp-webhook-numbers.test.ts` (pin): a `NUMBER_REGISTRY_KEY` that does not open the sealed values, or a missing one → the webhook answers `500` and stores nothing
+- [ ] `number-credentials-changed.test.ts`: `credentials_changed_at` equals the registration time, does not move on a state change (only `updated_at` does) and moves when the access token is replaced
+- [ ] `backoffice-numbers.test.ts`: a wrong step-up code on the state form → `401` and the chosen radio is still checked
 - [ ] Reloading `/numbers/:id/verification` → `200` with the same body (no POST repeated)
 - [ ] Verify with a mismatched display number → copy `display_number_mismatch`, `verified_at` null
 - [ ] Verify with fake Graph `401` → copy for kind `auth`; `404` → `not_found`; `500` → `upstream`; with a closed port → kind `network`

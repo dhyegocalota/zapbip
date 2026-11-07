@@ -217,6 +217,7 @@ CREATE TABLE whatsapp_numbers (
   state TEXT NOT NULL CHECK (state IN ('pending', 'active', 'closed', 'disabled')),
   verified_at INTEGER,
   verification_snapshot TEXT,
+  credentials_changed_at INTEGER NOT NULL,
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL
 );
@@ -297,6 +298,8 @@ On success it sets `verified_at` and audits `number.verified`. Template status i
 The flow is POST, `303`, GET. `POST /numbers/:numberId/verify` stores the outcome in `verification_snapshot` (JSON: the outcome kind, the digits of both display numbers, the verified name, the quality rating, the four template statuses and `checked_at`; never a credential or a response body) and redirects to `GET /numbers/:numberId/verification`, which renders the snapshot. Reload repeats a GET, never a POST.
 
 A Graph error shows its kind, mapped from `GraphRequestError` by status: `401` and `403` → `auth`; `404` → `not_found`; status `0` (no response) → `network`; every other status → `upstream`.
+
+**Credential dates.** `credentials_changed_at` is set when a number is registered and when its access token is replaced, and by nothing else: a state change moves `updated_at` only. The page's "set, last changed" line for the token reads it; the app secret line reads `meta_apps.updated_at`, which only a secret replacement moves.
 
 **Rotate.** "Replace access token" and "Replace app secret" each seal the new value, update `updated_at` and audit the action. In-flight requests finish with the old value; the next resolution reads the new one.
 
@@ -510,7 +513,7 @@ AccountInbox alarm ─► flush usage_meter → usage_daily, activity_meter → 
 | Missing or foreign `Origin`, or a bad `csrf` field | `403`, `backoffice.csrf_rejected`, no state change |
 | Session idle more than 30 min or older than 8 h | redirect to `/sign-in`; the row is deleted on the next prune |
 | `BACKOFFICE_*` secret missing | every backoffice request answers `503`; the preflight refuses the deploy first |
-| `NUMBER_REGISTRY_KEY` missing or wrong | sends fail with the restricted-channel error; webhooks answer `401` (Meta retries for up to 7 days); `channel.number_unavailable`; the preflight refuses a missing key |
+| `NUMBER_REGISTRY_KEY` missing or wrong | sends fail with the restricted-channel error; webhooks answer `500`, because it is a server misconfiguration (Meta retries for up to 7 days); `channel.number_unavailable`; the preflight refuses a missing key |
 | A sealed value does not open (swapped row, corrupted value) | hard error naming the internal row ID; that number is unavailable, the others work |
 | Webhook for an unregistered number, or a delivery spanning two apps | `401`, `inbound.unattributed` |
 | Number `pending` or `disabled` | inbound ignored after the signature check, `200`; outbound refused |

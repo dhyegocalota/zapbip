@@ -1,6 +1,11 @@
 import type { NumberRecord } from './number-registry';
 
-export type NumberListEntry = NumberRecord & { metaAppLabel: string; metaAppUpdatedAt: number; accountCount: number };
+export type NumberListEntry = NumberRecord & {
+  credentialsChangedAt: number;
+  metaAppLabel: string;
+  metaAppUpdatedAt: number;
+  accountCount: number;
+};
 
 export type MetaAppRecord = { metaAppRef: string; metaAppId: string; label: string; updatedAt: number };
 

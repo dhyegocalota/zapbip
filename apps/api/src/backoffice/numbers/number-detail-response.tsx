@@ -1,4 +1,4 @@
-import { HttpStatus } from '@zapbip/types';
+import { HttpStatus, type WhatsAppNumberState } from '@zapbip/types';
 import type { Context } from 'hono';
 import { numberAdminOf } from '../../adapters/d1/d1-number-admin';
 import type { NumberListEntry } from '../../numbers/number-admin';
@@ -22,8 +22,9 @@ export async function detailResponse(input: {
   numberId: string;
   status: DetailStatus;
   failure: BackofficeCopyKey | null;
+  selectedState?: WhatsAppNumberState;
 }): Promise<Response> {
-  const { context, numberId, status, failure } = input;
+  const { context, numberId, status, failure, selectedState = null } = input;
   const entries = await numberAdminOf({ bindings: context.env }).listNumbers();
   const entry = entries.find((candidate) => candidate.numberId === numberId);
   if (entry === undefined) return errorResponse({ context, status: HttpStatus.NotFound });
@@ -31,7 +32,14 @@ export async function detailResponse(input: {
   const allowedTargets = allowedTargetsOf({ from: entry.state, verifiedAt: entry.verifiedAt });
   const page = await signedInPageContext({ context });
   return context.html(
-    <NumberDetailPage page={page} entry={entry} siblingLabels={siblingLabels} allowedTargets={allowedTargets} failure={failure} />,
+    <NumberDetailPage
+      page={page}
+      entry={entry}
+      siblingLabels={siblingLabels}
+      allowedTargets={allowedTargets}
+      failure={failure}
+      selectedState={selectedState}
+    />,
     status,
   );
 }

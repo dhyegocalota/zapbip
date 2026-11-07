@@ -58,8 +58,8 @@ export async function seedWhatsAppNumber(input: WhatsAppNumberSeed = {}): Promis
       'INSERT INTO meta_apps (id, meta_app_id, label, sealed_app_secret, seal_key_version, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT (id) DO NOTHING',
     ).bind(metaAppRef, `app-${metaAppRef}`, metaAppRef, sealedAppSecret, SEAL_KEY_VERSION, SEED_CREATED_AT, SEED_CREATED_AT),
     testEnv.CONNECTIONS.prepare(
-      `INSERT INTO whatsapp_numbers (id, meta_app_ref, phone_number_id, waba_id, display_number, label, sealed_access_token, seal_key_version, state, verified_at, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO whatsapp_numbers (id, meta_app_ref, phone_number_id, waba_id, display_number, label, sealed_access_token, seal_key_version, state, verified_at, credentials_changed_at, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     ).bind(
       numberId,
       metaAppRef,
@@ -70,6 +70,7 @@ export async function seedWhatsAppNumber(input: WhatsAppNumberSeed = {}): Promis
       sealedAccessToken,
       SEAL_KEY_VERSION,
       state,
+      SEED_CREATED_AT,
       SEED_CREATED_AT,
       SEED_CREATED_AT,
       SEED_CREATED_AT,

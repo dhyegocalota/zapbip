@@ -25,9 +25,9 @@ async function columnOf(input: { table: string; column: string }): Promise<Colum
 function insertNumber(input: { state: string }) {
   return testEnv.CONNECTIONS.prepare(
     `INSERT INTO whatsapp_numbers
-      (id, meta_app_ref, phone_number_id, waba_id, display_number, label, sealed_access_token, seal_key_version, state, created_at, updated_at)
-     VALUES ('num_1', ?, '1000000000000001', '3000000000000003', '5511900000001', 'Main', 'sealed', 1, ?, ?, ?)`,
-  ).bind(META_APP_ID, input.state, SEED_CREATED_AT, SEED_CREATED_AT);
+      (id, meta_app_ref, phone_number_id, waba_id, display_number, label, sealed_access_token, seal_key_version, state, credentials_changed_at, created_at, updated_at)
+     VALUES ('num_1', ?, '1000000000000001', '3000000000000003', '5511900000001', 'Main', 'sealed', 1, ?, ?, ?, ?)`,
+  ).bind(META_APP_ID, input.state, SEED_CREATED_AT, SEED_CREATED_AT, SEED_CREATED_AT);
 }
 
 afterEach(reset);
@@ -44,6 +44,10 @@ describe('migration 0005 on top of 0001 to 0004', () => {
     )
       .bind(META_APP_ID, SEED_CREATED_AT, SEED_CREATED_AT)
       .run();
+  });
+
+  it('requires the credentials timestamp of a number', async () => {
+    expect(await columnOf({ table: 'whatsapp_numbers', column: 'credentials_changed_at' })).toMatchObject({ notnull: 1 });
   });
 
   it('seeds the operator row with no failures, no lock and no used step', async () => {
