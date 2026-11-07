@@ -43,6 +43,12 @@ export ZAPBIP_CONNECTION_LINK='https://<host>/c/<secret>/mcp'
 export ZAPBIP_ALLOWED_USERS=owner
 ```
 
+O arquivo que guarda seu link de conexão funciona como uma senha. Dê a ele a permissão `600`, para que só o seu usuário consiga ler, e nunca o compartilhe nem o envie para o Git:
+
+```bash
+chmod 600 <arquivo>
+```
+
 Reinicie o gateway.
 
 ## Como ele escuta

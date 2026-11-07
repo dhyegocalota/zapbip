@@ -43,6 +43,12 @@ export ZAPBIP_CONNECTION_LINK='https://<host>/c/<secret>/mcp'
 export ZAPBIP_ALLOWED_USERS=owner
 ```
 
+The file that holds your connection link works like a password. Give it permission `600` so only your user can read it, and never share it or commit it:
+
+```bash
+chmod 600 <file>
+```
+
 Restart the gateway.
 
 ## How it listens

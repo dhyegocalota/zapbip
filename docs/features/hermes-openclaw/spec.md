@@ -82,7 +82,7 @@ Every client keeps waiting through the tool: `ask` and `wait_for_reply` return `
 | Real-model confirmation | before build · at build | at build: a real-model run of each plugin is the gate for its rung, recorded in the PR; the POCs used a fake model | owner delegated 2026-11-06 |
 | Wire protocol of the plugins | the POC's SSE endpoints · the connector WebSocket | the connector WebSocket (`/c/<secret>/connector`, frames `hello`, `messages`, `done`, `ping`); the POC's `/agents/*` endpoints do not exist in zapbip | owner delegated 2026-11-06 |
 | Outbound from the plugin | an MCP client SDK per language · raw JSON-RPC to `send_message` | raw JSON-RPC (`initialize`, `notifications/initialized`, `tools/call`) on the connection's MCP URL; no new runtime dependency | owner delegated 2026-11-06 |
-| Acknowledgement by the plugin | notifier, no `done` (first draft) · `done` after the agent accepts the handoff | `done` after the handoff; a notifier would re-send every unread message on each reconnect; `listen` keeps the notifier rule | owner delegated 2026-11-06 (reverses the first draft) |
+| Acknowledgement by the plugin | notifier, no `done` (first draft) · `done` after the agent accepts the handoff | `done` after the handoff; a notifier would re-send every unread message on each reconnect; `listen` also sends `done`, after it prints each line | owner delegated 2026-11-06 (reverses the first draft) |
 | Scheduled interval floor for the fallback | keep 60 minutes · 1 minute | 1 minute in `scheduled-wake` (`SCHEDULED_MIN_INTERVAL_MINUTES`, a change to its row 22); cloud clients keep 60 through their own install prompts; needs the `scheduled-wake` owner's agreement | owner delegated 2026-11-06 |
 | Fallback shape | cron only · cron plus `listen` watcher | cron `check_inbox` every minute, plus the `listen` watcher where OR-13 and OR-14 pass | owner delegated 2026-11-06 |
 | Language of each plugin | one language · the product's own | OpenClaw in TypeScript (its plugin SDK), Hermes in Python (its platform API); Python adds a toolchain to the harness (plan, toolchain impact) | owner delegated 2026-11-06 |
@@ -102,7 +102,7 @@ Every client keeps waiting through the tool: `ask` and `wait_for_reply` return `
 
 ## Test strategy summary
 
-- Plugins: unit tests against a fake connector socket, per product; the plugin sends `done` only after the agent accepts a handoff (decision D3 in `plan.md`; `zapbip listen` stays a notifier that never sends `done`).
+- Plugins: unit tests against a fake connector socket, per product; the plugin sends `done` only after the agent accepts a handoff (decision D3 in `plan.md`; `zapbip listen` sends `done` after it prints each line).
 - Install pages: `tools/repository-shape` `docs-agent-install` asserts the verified install commands, the configuration keys, the self-test text and the lost-reply event per locale; `mint broken-links` checks the links.
 - Scheduled fallback: `set_wake({mode: "scheduled", interval_minutes: 1})` accepted once scheduled-wake merges.
 - Owner-run: one real install per product with a real model, recorded in the PR; outside `pnpm verify`.

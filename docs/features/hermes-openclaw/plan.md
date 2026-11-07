@@ -8,7 +8,7 @@
 **Assumptions (decided, owner can override):**
 - A1. The plugins speak the real connector protocol: WebSocket, frames `hello`, `messages`, `done`, text `ping`/`pong`. The POC's SSE endpoints (`/agents/:name/events`, `/agents/:name/send`) do not exist in zapbip and are not ported.
 - A2. Outbound is the MCP tool `send_message`, called as JSON-RPC over the connection's stateless MCP route (`initialize`, `notifications/initialized`, `tools/call`). No MCP client SDK is added.
-- A3. A plugin sends `done` after the product accepts the handoff. Listen keeps the notifier rule (no `done`).
+- A3. A plugin sends `done` after the product accepts the handoff. Listen sends `done` after it prints each line.
 - A4. Hermes plugin: Python 3.11 to 3.14 (`requires-python >=3.11,<3.15`, CI runs 3.13). OpenClaw plugin: TypeScript, bundled with esbuild, `openclaw` external, runtime dependencies none.
 - A5. Versions under test: OpenClaw `2026.10.10` (the POC's version, in Docker); Hermes image `nousresearch/hermes-agent:v0.22.7` (the POC's image, run as `linux/amd64`, the image crashes under arm64 emulation). PyPI `hermes-agent` latest is `0.19.0`, a different build; the install path is `(verify)`.
 - A6. Names are free on 2026-11-06 (`npm view` and PyPI both 404): npm `@zapbip/openclaw-plugin`, PyPI `zapbip-platform`. Claiming them is a publish step, outside this slice.

@@ -12,6 +12,7 @@ const HERMES_INSTALL_COMMAND = 'pip install zapbip-platform==0.1.0';
 const HERMES_ENVIRONMENT_VARIABLES = ['ZAPBIP_CONNECTION_LINK', 'ZAPBIP_ALLOWED_USERS'];
 const SELF_TEST_TEXT = '✅ instalado';
 const LOST_REPLY_EVENT = 'plugin_reply_failed';
+const PRIVATE_FILE_PERMISSION = 'chmod 600';
 
 function page({ locale, path }: { locale: string; path: string }): string {
   return readRepositoryFile(`${locale}/${path}`);
@@ -30,6 +31,10 @@ describe.each(PAGE_LOCALES)('the agent install pages in %s', (locale) => {
     const text = page({ locale, path: HERMES_PAGE });
     expect(text).toContain(HERMES_INSTALL_COMMAND);
     HERMES_ENVIRONMENT_VARIABLES.forEach((name) => expect(text).toContain(name));
+  });
+
+  test.each([OPENCLAW_PAGE, HERMES_PAGE])('%s tells the owner to keep the file with the link readable only by them', (path) => {
+    expect(page({ locale, path })).toContain(PRIVATE_FILE_PERMISSION);
   });
 
   test.each([OPENCLAW_PAGE, HERMES_PAGE])('%s asks the agent to send the self-test text', (path) => {

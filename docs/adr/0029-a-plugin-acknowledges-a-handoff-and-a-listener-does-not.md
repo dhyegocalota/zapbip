@@ -1,4 +1,4 @@
-# 0029. A plugin acknowledges a handoff, and a listener does not
+# 0029. A plugin acknowledges after the handoff; a listener acknowledges after it prints
 
 - Status: Accepted (owner delegated 2026-11-06)
 - Date: 2026-11-06
@@ -12,7 +12,7 @@ The connector re-sends every unread owner message on each connect, so a message 
 ## Decision
 
 1. A channel plugin sends `done` with the message id after the agent accepts the handoff, and only then. A handoff that fails sends nothing, so the message is re-sent on the next connect.
-2. A listener (`zapbip listen`, the Claude Code monitor) never sends `done`. Its agent reads through `check_inbox`, which owns read state.
+2. A listener (`zapbip listen`, the Claude Code monitor) sends `done` after it prints each line, because the printed line is the handoff to the agent's loop. This is the shipped behaviour of `apps/connector/src/listen.ts` and `wake-queue.ts`.
 3. A plugin skips a message id it is still handing off, and a message id that it already acknowledged, so a duplicate frame in the same connection does not reach the agent twice.
 
 ## Alternatives considered
