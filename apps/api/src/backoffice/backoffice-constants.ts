@@ -34,3 +34,4 @@ export const CSRF_CONTEXT = 'zapbip backoffice csrf';
 export const BACKOFFICE_PRUNE_HOUR = 4;
 export const BACKOFFICE_PRUNE_MINUTE = 0;
 export const LOCALE_COOKIE_MAX_AGE_SECONDS = (365 * DAY_MS) / SECOND_MS;
+export const AUDIT_PAGE_LIMIT = 200;

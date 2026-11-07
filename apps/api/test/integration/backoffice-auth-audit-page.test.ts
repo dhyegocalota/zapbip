@@ -1,4 +1,4 @@
-import { MINUTE_MS } from '@zapbip/types';
+import { HOUR_MS, MINUTE_MS } from '@zapbip/types';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { testEnv } from '../support/workers-env';
 import { requestBackoffice, resetBackoffice, SESSION_COOKIE, signIn } from './backoffice-auth-fixtures';
@@ -7,7 +7,7 @@ const STATUS_OK = 200;
 const STATUS_SEE_OTHER = 303;
 const ROW_COUNT = 250;
 const PAGE_LIMIT = 200;
-const FIRST_AT = Date.UTC(2026, 0, 1);
+const FIRST_AT = Date.now() + HOUR_MS;
 
 beforeEach(resetBackoffice);
 
@@ -44,6 +44,7 @@ describe('audit page', () => {
 
   test('renders one h1 and the empty state without rows', async () => {
     const { sessionToken } = await signIn({});
+    await testEnv.CONNECTIONS.prepare('DELETE FROM backoffice_audit').run();
     const html = await (await requestBackoffice({ path: '/audit', cookies: { [SESSION_COOKIE]: sessionToken } })).text();
     expect(html.match(/<h1/g)).toHaveLength(1);
     expect(html).not.toContain('<tr class="audit-row"');
