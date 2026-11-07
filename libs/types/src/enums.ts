@@ -71,6 +71,18 @@ export enum InboxCopyKey {
 
 export enum WakeCopyKey {
   WakeFailed = 'wake_failed',
+  ExpectedDelayNote = 'expected_delay_note',
+  StaleNotice = 'stale_notice',
+  CadenceHourly = 'cadence_hourly',
+  CadenceHours = 'cadence_hours',
+  CadenceMinute = 'cadence_minute',
+  CadenceMinutes = 'cadence_minutes',
+  ElapsedMinutes = 'elapsed_minutes',
+  ElapsedHours = 'elapsed_hours',
+  NeverPolled = 'never_polled',
+  StaleElapsedMinutes = 'stale_elapsed_minutes',
+  StaleElapsedHours = 'stale_elapsed_hours',
+  StaleNeverPolled = 'stale_never_polled',
 }
 
 export enum OptionRender {
@@ -107,18 +119,23 @@ export enum WakeOutcome {
 
 export enum AgentWakeReason {
   MessageWaiting = 'message_waiting',
+  StandbyFor = 'standby_for',
 }
 
 export enum WakeMode {
   None = 'none',
   Local = 'local',
   Webhook = 'webhook',
+  Scheduled = 'scheduled',
+  Standby = 'standby',
 }
 
 export enum WakeRung {
   Inbox = 'inbox',
   Local = 'local',
   Webhook = 'webhook',
+  Scheduled = 'scheduled',
+  Standby = 'standby',
 }
 
 export enum WakeAttemptOutcome {
@@ -283,8 +300,8 @@ export enum AccountReplyParameter {
 }
 
 export enum HttpStatus {
-  Ok = 200,
   SwitchingProtocols = 101,
+  Ok = 200,
   Created = 201,
   MultipleChoices = 300,
   BadRequest = 400,

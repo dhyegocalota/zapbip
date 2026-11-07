@@ -6,3 +6,5 @@ export const ACCESS_TOKEN = 'test-access-token';
 export const PHONE_NUMBER_ID = '1000000000000001';
 export const GRAPH_MESSAGES_PATH = `/v24.0/${PHONE_NUMBER_ID}/messages`;
 export const SEED_AGENTS = ['alpha'];
+export const SCHEDULED_OWNER_PHONES = ['5511900000011', '5511900000012'];
+export const SCHEDULED_AGENT = 'alpha';

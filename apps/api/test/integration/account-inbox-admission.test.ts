@@ -61,7 +61,7 @@ describe('Durable Object agent admission', () => {
     await revokeAgent();
     const outcome = await stubOf().setWake({
       connection: connectionOf({ accountId: ACCOUNT, agent: AGENT }),
-      setting: { mode: WakeMode.Webhook, url: WAKE_URL, token: WAKE_TOKEN },
+      setting: { mode: WakeMode.Webhook, url: WAKE_URL, token: WAKE_TOKEN, intervalMinutes: null, standbyAgent: null },
     });
     expect(outcome.ok).toBe(false);
     const wakeRows = await runInDurableObject(stubOf(), (_instance, state) =>

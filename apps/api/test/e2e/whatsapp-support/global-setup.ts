@@ -5,12 +5,23 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
+import { WAKE_SECRET_KEY_BYTES } from '@zapbip/core';
 import type { TestProject } from 'vitest/node';
 import { z } from 'zod';
 import { freePort, HEALTH_TIMEOUT_MS, LOOPBACK_HOST, waitForHealth } from '../support/stack-process';
 import { startFakeGraph } from '../../support/fake-graph';
 import type { StackContext } from '../global-setup';
-import { ACCESS_TOKEN, APP_SECRET, FAKE_GRAPH_PORT, OWNER_PHONE, PHONE_NUMBER_ID, SEED_AGENTS, VERIFY_TOKEN } from './constants';
+import {
+  ACCESS_TOKEN,
+  APP_SECRET,
+  FAKE_GRAPH_PORT,
+  OWNER_PHONE,
+  PHONE_NUMBER_ID,
+  SCHEDULED_AGENT,
+  SCHEDULED_OWNER_PHONES,
+  SEED_AGENTS,
+  VERIFY_TOKEN,
+} from './constants';
 
 const runCommand = promisify(execFile);
 const SIGNING_KEY_BYTES = 32;
@@ -19,6 +30,22 @@ const DEVELOPMENT_ENVIRONMENT_ARGUMENTS = ['--env', 'development'];
 const LOG_FILE_NAME = 'wrangler-dev.log';
 
 const seedOutputSchema = z.object({ connections: z.array(z.object({ agent: z.string(), secret: z.string() })) });
+
+async function seedConnections(input: { phone: string; agents: string[]; origin: string }) {
+  const seeded = await runCommand('pnpm', [
+    'exec',
+    'tsx',
+    'scripts/dev-seed.ts',
+    '--phone',
+    input.phone,
+    '--agents',
+    input.agents.join(','),
+    '--json',
+    '--origin',
+    input.origin,
+  ]);
+  return seedOutputSchema.parse(JSON.parse(seeded.stdout)).connections;
+}
 
 export default async function setup(project: TestProject): Promise<() => Promise<void>> {
   const fakeGraph = await startFakeGraph({ port: FAKE_GRAPH_PORT });
@@ -41,6 +68,7 @@ export default async function setup(project: TestProject): Promise<() => Promise
   const variables = {
     MEDIA_LINK_SIGNING_KEY: randomBytes(SIGNING_KEY_BYTES).toString('hex'),
     UPLOAD_LINK_SIGNING_KEY: randomBytes(SIGNING_KEY_BYTES).toString('hex'),
+    WAKE_SECRET_KEY: randomBytes(WAKE_SECRET_KEY_BYTES).toString('base64'),
     PUBLIC_ORIGIN: origin,
     META_APP_SECRET: APP_SECRET,
     WHATSAPP_VERIFY_TOKEN: VERIFY_TOKEN,
@@ -70,19 +98,14 @@ export default async function setup(project: TestProject): Promise<() => Promise
   server.stdout.pipe(logStream);
   server.stderr.pipe(logStream);
   await waitForHealth({ origin, server, deadline: Date.now() + HEALTH_TIMEOUT_MS });
-  const seeded = await runCommand('pnpm', [
-    'exec',
-    'tsx',
-    'scripts/dev-seed.ts',
-    '--phone',
-    OWNER_PHONE,
-    '--agents',
-    SEED_AGENTS.join(','),
-    '--json',
-    '--origin',
-    origin,
-  ]);
-  const { connections } = seedOutputSchema.parse(JSON.parse(seeded.stdout));
+  const connections = await seedConnections({ phone: OWNER_PHONE, agents: SEED_AGENTS, origin });
+  const scheduledAccounts = await Promise.all(
+    SCHEDULED_OWNER_PHONES.map(async (phone) => {
+      const [connection] = await seedConnections({ phone, agents: [SCHEDULED_AGENT], origin });
+      if (!connection) throw new Error(`no connection seeded for ${phone}`);
+      return { phone, agent: connection.agent, secret: connection.secret };
+    }),
+  );
 
   const context: StackContext = {
     origin,
@@ -91,6 +114,9 @@ export default async function setup(project: TestProject): Promise<() => Promise
     secondPhone: OWNER_PHONE,
     secondSecrets: {},
     wakeAccounts: [],
+    scheduledAccounts,
+    standbyPhone: OWNER_PHONE,
+    standbySecrets: {},
     logFile,
   };
   project.provide('stack', context);

@@ -54,6 +54,8 @@ export async function insertQueued(input: { environment: InMemoryEnvironment; te
     delivery: DeliveryState.Queued,
     readByAgent: true,
     forwarded: false,
+    handedTo: null,
+    originMessageId: null,
     kind: MessageKind.Text,
     text,
   }));

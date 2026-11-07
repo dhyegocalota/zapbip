@@ -17,6 +17,10 @@ export class DevAccountInbox
   private fakeSender: FakeWhatsAppSender | null = null;
   private readonly scriptedTransport = createScriptedWakeTransport();
 
+  protected createWakeTransport(): WakeTransport {
+    return this.scriptedTransport;
+  }
+
   protected createSender(input: { mediaStore: MediaStore }): MessageSender {
     if (this.env.WHATSAPP_ACCESS_TOKEN !== undefined) return super.createSender(input);
     this.fakeSender = createFakeWhatsAppSender({
@@ -27,10 +31,6 @@ export class DevAccountInbox
       origin: this.env.PUBLIC_ORIGIN,
     });
     return this.fakeSender;
-  }
-
-  protected createWakeTransport(): WakeTransport {
-    return this.scriptedTransport;
   }
 
   async readScreen(): Promise<ScreenEntry[]> {

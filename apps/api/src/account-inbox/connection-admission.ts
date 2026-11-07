@@ -16,7 +16,10 @@ export async function isAccountActive(input: { database: D1Database; accountId: 
   return row !== null && row.state === AccountState.Active;
 }
 
-export async function isConnectionAdmitted(input: { database: D1Database; connection: ConnectionIdentity }): Promise<boolean> {
+export async function isConnectionAdmitted(input: {
+  database: D1Database;
+  connection: Pick<ConnectionIdentity, 'accountId' | 'agent'>;
+}): Promise<boolean> {
   const { accountId, agent } = input.connection;
   const row = await input.database.prepare(ADMISSION_STATEMENT).bind(accountId, agent).first<AdmissionRow>();
   if (row === null) throw new Error(ADMISSION_ROW_MISSING_MESSAGE);

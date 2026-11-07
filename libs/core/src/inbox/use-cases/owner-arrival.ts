@@ -62,7 +62,8 @@ async function deliverPlacement(
   const { agent } = placement.decision;
   if (agent === null) return promptOwner({ ...input, heldMessageId: messageId, prompt: placement.prompt });
   const answeredQuestionId = placement.answer === null ? null : placement.answer.questionId;
-  return wakeAgent({ ...input, agent, unreadBefore, answeredQuestionId, shouldTellOwner, isExpiry: false });
+  const wakeMessageId = answeredQuestionId === null ? messageId : undefined;
+  return wakeAgent({ ...input, agent, unreadBefore, answeredQuestionId, shouldTellOwner, isExpiry: false, messageId: wakeMessageId });
 }
 
 export async function finishArrival(input: Arrival & { plan: ArrivalPlan; messageId: string | null }): Promise<ReceiveResult> {

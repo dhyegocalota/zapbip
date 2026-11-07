@@ -69,12 +69,16 @@ const PREVIEW_KEYS: Record<PreviewedKind, InboxCopyKey> = {
   [MessageKind.Choice]: InboxCopyKey.PreviewChoice,
 };
 
-export function renderCopy(input: { key: InboxCopyKey; locale: OwnerLocale; values: Record<string, string> }): string {
-  return INBOX_COPY[input.key][input.locale].replace(COPY_TOKEN_PATTERN, (_token, name: string) => {
+export function fillCopyTokens(input: { text: string; values: Record<string, string> }): string {
+  return input.text.replace(COPY_TOKEN_PATTERN, (_token, name: string) => {
     const value = input.values[name];
     if (value === undefined) throw invalidInput({ message: `copy: missing value for ${name}` });
     return value;
   });
+}
+
+export function renderCopy(input: { key: InboxCopyKey; locale: OwnerLocale; values: Record<string, string> }): string {
+  return fillCopyTokens({ text: INBOX_COPY[input.key][input.locale], values: input.values });
 }
 
 function truncatePreview(input: { text: string }): string {

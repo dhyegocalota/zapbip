@@ -23,6 +23,7 @@ import {
   applyWakeDirectory,
 } from '../support/wake-session';
 import { connectionOf } from '../support/workers-env';
+import { applyDirectoryMigration } from '../support/seed';
 
 const FAILED_RETRY_MS = 600_000;
 const LEASE_MS = 15_000;

@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { WAKE_SECRET_KEY_BYTES } from '@zapbip/core';
+import { OwnerLocale } from '@zapbip/types';
 import type { TestProject } from 'vitest/node';
 import { z } from 'zod';
 import { DEVELOPMENT_ENVIRONMENT } from '../../src/contract/constants';
@@ -18,6 +19,11 @@ const SECOND_SEED_PHONE = '5511999990010';
 const SECOND_SEED_AGENTS = ['rotator', 'revoked', 'doomed'];
 const WAKE_AGENT = 'grok';
 const WAKE_ACCOUNT_PHONES = ['5511999990001', '5511999990002', '5511999990003', '5511999990004', '5511999990005'];
+const SCHEDULED_AGENT = 'chatgpt';
+const SCHEDULED_ACCOUNT_PHONES = ['5511999990021', '5511999990022', '5511999990023', '5511999990024'];
+const ENGLISH_ACCOUNT_INDEX = 3;
+const STANDBY_PHONE = '5511999990031';
+const STANDBY_AGENTS = ['grok-web', 'grok-bot'];
 const SIGNING_KEY_BYTES = 32;
 const DATABASE_BINDING = 'CONNECTIONS';
 const LOG_FILE_NAME = 'wrangler-dev.log';
@@ -33,6 +39,9 @@ export type StackContext = {
   secondPhone: string;
   secondSecrets: Record<string, string>;
   wakeAccounts: WakeAccount[];
+  scheduledAccounts: WakeAccount[];
+  standbyPhone: string;
+  standbySecrets: Record<string, string>;
   logFile: string;
 };
 
@@ -58,10 +67,26 @@ async function seedConnections(input: { phone: string; agents: string[]; origin:
   return seedOutputSchema.parse(JSON.parse(seeded.stdout)).connections;
 }
 
-async function seedWakeAccount(input: { phone: string; origin: string }): Promise<WakeAccount> {
-  const [connection] = await seedConnections({ phone: input.phone, agents: [WAKE_AGENT], origin: input.origin });
+async function seedWakeAccount(input: { phone: string; agent: string; origin: string }): Promise<WakeAccount> {
+  const [connection] = await seedConnections({ phone: input.phone, agents: [input.agent], origin: input.origin });
   if (!connection) throw new Error(`no connection seeded for ${input.phone}`);
   return { phone: input.phone, agent: connection.agent, secret: connection.secret };
+}
+
+async function setOwnerLocale(input: { phone: string; locale: OwnerLocale; persistArguments: string[] }): Promise<void> {
+  await runCommand('pnpm', [
+    'exec',
+    'wrangler',
+    'd1',
+    'execute',
+    DATABASE_BINDING,
+    '--env',
+    DEVELOPMENT_ENVIRONMENT,
+    '--local',
+    ...input.persistArguments,
+    '--command',
+    `UPDATE owner_identities SET locale = '${input.locale}' WHERE wa_id = '${input.phone}'`,
+  ]);
 }
 
 export default async function setup(project: TestProject): Promise<() => Promise<void>> {
@@ -114,9 +139,17 @@ export default async function setup(project: TestProject): Promise<() => Promise
   const connections = await seedConnections({ phone: SEED_PHONE, agents: SEED_AGENTS, origin });
   const secondConnections = await seedConnections({ phone: SECOND_SEED_PHONE, agents: SECOND_SEED_AGENTS, origin });
   const wakeAccounts = await WAKE_ACCOUNT_PHONES.reduce<Promise<WakeAccount[]>>(
-    async (seededBefore, phone) => [...(await seededBefore), await seedWakeAccount({ phone, origin })],
+    async (seededBefore, phone) => [...(await seededBefore), await seedWakeAccount({ phone, agent: WAKE_AGENT, origin })],
     Promise.resolve([]),
   );
+  const scheduledAccounts = await SCHEDULED_ACCOUNT_PHONES.reduce<Promise<WakeAccount[]>>(
+    async (seededBefore, phone) => [...(await seededBefore), await seedWakeAccount({ phone, agent: SCHEDULED_AGENT, origin })],
+    Promise.resolve([]),
+  );
+  const englishAccount = scheduledAccounts[ENGLISH_ACCOUNT_INDEX];
+  if (!englishAccount) throw new Error('no english scheduled account');
+  await setOwnerLocale({ phone: englishAccount.phone, locale: OwnerLocale.EnglishUs, persistArguments });
+  const standbyConnections = await seedConnections({ phone: STANDBY_PHONE, agents: STANDBY_AGENTS, origin });
 
   project.provide('stack', {
     origin,
@@ -125,6 +158,9 @@ export default async function setup(project: TestProject): Promise<() => Promise
     secondPhone: SECOND_SEED_PHONE,
     secondSecrets: Object.fromEntries(secondConnections.map((connection) => [connection.agent, connection.secret])),
     wakeAccounts,
+    scheduledAccounts,
+    standbyPhone: STANDBY_PHONE,
+    standbySecrets: Object.fromEntries(standbyConnections.map((connection) => [connection.agent, connection.secret])),
     logFile,
   });
 

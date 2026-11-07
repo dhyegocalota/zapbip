@@ -1,20 +1,65 @@
 ---
 title: 'Wake ladder'
-description: 'How an agent that is not listening is reached.'
+description: 'How zapbip reaches an AI that is not listening when you write.'
 ---
 
-An agent can always call zapbip, but the owner can only reach an agent that is listening. When a message arrives and no call is waiting, zapbip wakes the agent through the highest rung its connection supports:
+import { Chat } from '/snippets/chat.jsx';
 
-1. a local connector;
-2. a webhook;
-3. a scheduled task calling [check_inbox](/mcp-reference/check-inbox);
-4. an optional standby agent of the same provider;
-5. the inbox alone.
+When you write on WhatsApp, your AI may be closed, busy or simply not waiting for you. zapbip then reaches it through the highest rung its connection supports, and falls to the next one when a rung is not available:
 
-| Rung            | How it works                                                                                                                    | Set with                                                                              |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| Local connector | zapbip pushes the message to the [connector](/developers/local-connector) running on your computer, which resumes your session. | `npx zapbip@0.1.0 connect` (sets it while connected) or `set_wake` with `mode: local` |
-| Webhook         | zapbip calls a webhook that starts the agent. See [webhook wake](/guides/webhook-wake).                                         | `set_wake` with `mode: webhook`                                                       |
-| Inbox only      | The message waits in the [inbox](/concepts/inbox) and zapbip tells the owner that the agent is not listening right now.         | `set_wake` with `mode: none`                                                          |
+| Rung       | What happens                                                                                                                                          |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Local      | zapbip pushes your message to the [connector](/developers/local-connector) running on your computer, which resumes your Claude Code or Codex session. |
+| Webhook    | zapbip calls a link that starts the AI. See the [webhook wake guide](/guides/webhook-wake).                                                           |
+| Scheduled  | The AI checks its inbox on a timer, so it can listen with no time limit.                                                                              |
+| Standby    | Another AI of yours receives a copy of your message and answers instead.                                                                              |
+| Inbox only | The message waits and zapbip tells you the AI is not listening right now.                                                                             |
 
-A connector that connects sets the local rung and, when its last connection closes, puts back what was set before. The scheduled task and standby rungs arrive with their own features.
+In every rung your message is kept in the [inbox](/concepts/inbox) until an AI reads it. Nothing is lost.
+
+## Local: your own computer
+
+The connector keeps one open line to zapbip while it runs. When you write, zapbip pushes the message down that line and the connector resumes your session on your computer. When the last line closes, zapbip puts back whatever wake you had before. Start it with `npx zapbip@0.1.0 connect`.
+
+## Scheduled: listening with no time limit
+
+Some AIs have no way to be started from outside, and each call they make to zapbip ends after a few minutes. A scheduled wake fixes this: you ask the AI to run a small task on a timer, every few minutes or every hour, and each run reads what you wrote and answers.
+
+You choose how often, from every 1 minute to every 1440 minutes (a day). ChatGPT and claude.ai only run scheduled tasks every 60 minutes or less often, so for them the shortest interval is 60 minutes.
+
+When you write, zapbip tells you roughly when to expect the answer:
+
+<Chat
+  contact="zapbip"
+  messages={[
+    { you: true, text: 'Can you summarize the report?' },
+    {
+      notice: true,
+      text: 'The agent Claude checks the inbox every hour. Last check 20 min ago. Your message waits there until the next check.',
+    },
+  ]}
+/>
+
+If the timer stops running, zapbip says so once, after twice the interval passes without a check, and your messages keep waiting:
+
+<Chat contact="zapbip" messages={[{ notice: true, text: "Claude hasn't checked in 2 h: your messages wait" }]} />
+
+The next check ends the warning without another message.
+
+When the [24-hour window](/concepts/24-hour-window) is closed, this note cannot be sent as it is. zapbip sends one template [notice](/concepts/owner-notices) per closed window, and the note waits and arrives when you write.
+
+## Standby: another AI answers
+
+Some AIs, such as Grok on the web, cannot be started at all. You can name another AI of the same account as its standby, for example Grok Bot. When you write to the first one, zapbip gives the standby a copy, wakes it, and it answers as itself, saying who it is. The first AI sees the message as handled by the standby.
+
+<Chat
+  contact="zapbip"
+  messages={[
+    { you: true, text: '@grok what is on my calendar?' },
+    { name: 'Grok Bot (standby for Grok)', text: 'Today you have two meetings: 10:00 and 15:30.' },
+  ]}
+/>
+
+A standby never forwards to another standby: it is one hop only. If the standby is missing, was removed or is itself a standby, nothing is copied: the message waits with the first AI and you get the usual notice.
+
+The AI sets this up for you during install. To change it by hand, use [set_wake](/mcp-reference/set-wake).

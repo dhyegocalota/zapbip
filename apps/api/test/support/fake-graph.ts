@@ -66,7 +66,6 @@ export async function startFakeGraph(input: { port: number }): Promise<{ port: n
     const parsed = sendBodySchema.safeParse(request.body);
     if (!parsed.success)
       return reply({ response: request.response, status: BAD_REQUEST_STATUS, body: graphError({ message: 'invalid message' }) });
-    sentCount += 1;
     reply({
       response: request.response,
       status: OK_STATUS,
@@ -84,6 +83,7 @@ export async function startFakeGraph(input: { port: number }): Promise<{ port: n
     if (request.path === RESET_PATH) {
       recorded.length = 0;
       queued.length = 0;
+      sentCount = 0;
       return reply({ response, status: OK_STATUS, body: {} });
     }
     queued.push(queuedResponseSchema.parse(await readBody({ request: request.request })) as FakeGraphResponse);
@@ -94,12 +94,13 @@ export async function startFakeGraph(input: { port: number }): Promise<{ port: n
     const method = request.request.method === undefined ? '' : request.request.method;
     const body = await readBody({ request: request.request });
     recorded.push({ method, path: request.path, headers: flattenHeaders({ request: request.request }), body });
+    const isSend = method === 'POST' && SEND_PATH_PATTERN.test(request.path);
+    if (isSend) sentCount += 1;
     const queuedAt = queued.findIndex((entry) => entry.method === method && entry.path === request.path);
     if (queuedAt >= 0) {
       const [entry] = queued.splice(queuedAt, 1);
       return reply({ response: request.response, status: entry!.status, body: entry!.body });
     }
-    const isSend = method === 'POST' && SEND_PATH_PATTERN.test(request.path);
     if (isSend) return defaultSend({ body, response: request.response });
     reply({ response: request.response, status: NOT_FOUND_STATUS, body: graphError({ message: 'unknown route' }) });
   }

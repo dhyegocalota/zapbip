@@ -15,8 +15,8 @@ import { accountInboxStub, connectionOf, testEnv, whatsappTestEnv } from '../sup
 
 const ACCOUNT_ID = 'acc_channel';
 const UPGRADE_ACCOUNT_ID = 'acc_upgrade';
-const VERSION_USAGE_METER = 7;
-const MAIN_VERSIONS = [1, 2, 4, 5, 6];
+const SEEDED_VERSIONS = [1, 2, 3, 5];
+const UPGRADED_VERSIONS = [4, 6, 7];
 const USAGE_METER_TABLE = 'usage_meter';
 const LIST_USER_TABLES_STATEMENT =
   "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%'";
@@ -406,7 +406,7 @@ describe('DO schema v4', () => {
 });
 
 describe('DO schema upgrade', () => {
-  it('applies v7 to a database that holds the versions main ships, 1, 2, 4, 5 and 6', async () => {
+  it('applies v4, v6 and v7 to a database that holds every other version', async () => {
     const upgrade = await runInDurableObject(accountInboxStub({ accountId: UPGRADE_ACCOUNT_ID }), (_instance, state) => {
       state.storage.sql
         .exec<{ name: string }>(LIST_USER_TABLES_STATEMENT)
@@ -414,7 +414,7 @@ describe('DO schema upgrade', () => {
         .forEach((table) => state.storage.sql.exec(`DROP TABLE ${table.name}`));
       const seeded = runMigrations({
         storage: state.storage,
-        migrations: ACCOUNT_INBOX_MIGRATIONS.filter((migration) => MAIN_VERSIONS.includes(migration.version)),
+        migrations: ACCOUNT_INBOX_MIGRATIONS.filter((migration) => SEEDED_VERSIONS.includes(migration.version)),
       });
       const applied = runMigrations({ storage: state.storage, migrations: ACCOUNT_INBOX_MIGRATIONS });
       return {
@@ -430,8 +430,8 @@ describe('DO schema upgrade', () => {
           .map((column) => column.name),
       };
     });
-    expect(upgrade.seeded).toEqual(MAIN_VERSIONS);
-    expect(upgrade.applied).toEqual([VERSION_USAGE_METER]);
+    expect(upgrade.seeded).toEqual(SEEDED_VERSIONS);
+    expect(upgrade.applied).toEqual(UPGRADED_VERSIONS);
     expect(upgrade.tables).toContain(USAGE_METER_TABLE);
     expect(upgrade.messageColumns).toContain('channel_message_id');
   });

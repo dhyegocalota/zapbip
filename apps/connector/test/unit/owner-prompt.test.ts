@@ -16,6 +16,8 @@ function ownerMessage(content: MessageContent): Message {
     delivery: null,
     readByAgent: false,
     forwarded: false,
+    handedTo: null,
+    originMessageId: null,
     ...content,
   };
 }

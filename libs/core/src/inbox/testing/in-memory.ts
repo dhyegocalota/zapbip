@@ -12,7 +12,7 @@ import {
 import { SENDING_STALE_MS, QUEUE_RETENTION_MS, QUESTION_RETENTION_MS, RECEIPT_RETENTION_MS } from '../constants';
 import type { AgentName } from '../connection';
 import type { AgentRecord, ChannelStatusDetail, OwnerWindow, RoutingList, StoredMedia } from '../inbox-records';
-import type { Message } from '../message';
+import { ownerMessageIdOf, type Message } from '../message';
 import type { AgentWaker, Clock, CoreDependencies, IdGenerator, InboxRepository, MediaStore, MessageSender } from '../ports';
 import type { Question } from '../question';
 import { mergeChannelStatusDetail } from '../use-cases/status-rule';
@@ -25,7 +25,7 @@ const FAKE_SIGNATURE = 'fake';
 const EMPTY_STATUS_DETAIL: ChannelStatusDetail = { errorCode: null, errorTitle: null, pricingCategory: null, billable: null };
 
 export type SentTemplate = { kind: TemplateKind; locale: OwnerLocale; parameters: string[] };
-export type WakeNotification = { agent: AgentName; reason: AgentWakeReason };
+export type WakeNotification = { agent: AgentName; reason: AgentWakeReason; messageId?: string };
 
 export type SessionRequest = Parameters<MessageSender['session']>[0];
 
@@ -258,6 +258,12 @@ function createInMemoryRepository(): InMemoryRepository {
     deleteMedia: async ({ mediaIds }) => {
       mediaIds.forEach((mediaId) => media.delete(mediaId));
     },
+    insertHandoff: async ({ copy, primaryAgent, handedTo }) => {
+      const originMessageId = ownerMessageIdOf({ message: copy });
+      const isPrimaryUnread = (message: Message): boolean =>
+        message.messageId === originMessageId && message.agent === primaryAgent && !message.readByAgent;
+      messages = [...messages.map((message) => (isPrimaryUnread(message) ? { ...message, readByAgent: true, handedTo } : message)), copy];
+    },
     findNextExpiry: async () => {
       const dueTimes = [
         ...[...media.values()].flatMap((stored) => [stored.expiresAt, stored.retentionUntil]),
@@ -346,8 +352,8 @@ function createRecordingWaker(): RecordingWaker {
     replyWith: (input) => {
       outcome = input.outcome;
     },
-    notify: async ({ agent, reason }) => {
-      notifications.push({ agent, reason });
+    notify: async ({ agent, reason, messageId }) => {
+      notifications.push({ agent, reason, messageId });
       return outcome;
     },
   };

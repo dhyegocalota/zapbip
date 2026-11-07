@@ -13,6 +13,8 @@ const ROOT_PACKAGE_FILE = 'package.json';
 const NODE_MODULES_DIRECTORY = 'node_modules';
 const FIRST_STEP_NUMBER = 1;
 const ANCHOR_SEPARATOR = '#';
+const GO_LIVE_ORDER_PATTERN = /^## Go-live order\n[\s\S]*?(?=^## )/m;
+const MAX_INDEX_LINES = 20;
 const PUBLISH_STEP_TITLE = 'Publish the docs';
 const GO_LIVE_ORDER = [
   'Prepare your machine',
@@ -76,12 +78,22 @@ function stepTitleOf(title: string): string {
   return match[1]!;
 }
 
+function withoutGoLiveOrder(text: string): string {
+  return text.replace(GO_LIVE_ORDER_PATTERN, '');
+}
+
+function goLiveOrderOf(text: string): string {
+  const section = GO_LIVE_ORDER_PATTERN.exec(text);
+  if (!section) throw new Error('deploy.md has no Go-live order section');
+  return section[0];
+}
+
 function shapeViolations({ file, text }: Runbook): string[] {
   const purpose = TITLE_PATTERN.exec(text);
   const hasPurpose = purpose !== null && purpose[1]!.endsWith('.');
   const missingPurpose = hasPurpose ? [] : [`${file}: no purpose sentence after the title`];
-  const steps = stepSections(text);
-  const noSteps = steps.length === 0 ? [`${file}: no numbered steps`] : [];
+  const steps = file === INDEX_FILE_NAME ? [] : stepSections(withoutGoLiveOrder(text));
+  const noSteps = steps.length === 0 && file !== INDEX_FILE_NAME ? [`${file}: no numbered steps`] : [];
   const gaps = steps
     .filter((step, index) => step.number !== index + FIRST_STEP_NUMBER)
     .map((step) => `${file}: step ${step.number} is out of sequence`);
@@ -121,8 +133,12 @@ function filesUnder(directory: string): string[] {
     .flatMap((entry) => (entry.isDirectory() ? filesUnder(posix.join(directory, entry.name)) : [posix.join(directory, entry.name)]));
 }
 
-function readmeStepTitles(): string[] {
-  return stepSections(readRunbook(INDEX_FILE_NAME).text).map((step) => stepTitleOf(step.title));
+function goLiveSteps() {
+  return stepSections(goLiveOrderOf(readRunbook(DEPLOY_RUNBOOK).text));
+}
+
+function goLiveStepTitles(): string[] {
+  return goLiveSteps().map((step) => stepTitleOf(step.title));
 }
 
 describe('runbooks', () => {
@@ -170,10 +186,22 @@ describe('runbooks', () => {
     expect(pointing).toEqual([]);
   });
 
-  test('the index lists the go-live steps in order, with the docs publish after DNS', () => {
-    const titles = readmeStepTitles();
+  test('deploy.md lists the go-live steps in order, with the docs publish after DNS', () => {
+    const titles = goLiveStepTitles();
     expect(titles.slice(0, GO_LIVE_ORDER.length)).toEqual(GO_LIVE_ORDER);
     expect(titles.indexOf(PUBLISH_STEP_TITLE)).toBeGreaterThan(titles.indexOf('DNS'));
+  });
+
+  test('every go-live step is numbered in sequence and has an If it fails line', () => {
+    const steps = goLiveSteps();
+    expect(steps.filter((step, index) => step.number !== index + FIRST_STEP_NUMBER)).toEqual([]);
+    expect(steps.filter((step) => !FAILURE_LINE_PATTERN.test(step.body)).map((step) => step.number)).toEqual([]);
+  });
+
+  test('the index stays a short list: no numbered steps, one line per runbook', () => {
+    const index = readRunbook(INDEX_FILE_NAME).text;
+    expect(stepSections(index)).toEqual([]);
+    expect(index.split('\n').length).toBeLessThan(MAX_INDEX_LINES);
   });
 
   test('deploy.md documents the first deploy flag and no longer the pending secret trick', () => {

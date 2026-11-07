@@ -44,6 +44,14 @@ function socketCountOf(input: { account: SeededAccount }): Promise<number> {
   );
 }
 
+function wakeRowCountOf(input: { account: SeededAccount }): Promise<number> {
+  return runInDurableObject(
+    accountInboxStub({ accountId: input.account.accountId }),
+    (_instance, state) =>
+      state.storage.sql.exec<{ total: number }>('SELECT COUNT(*) AS total FROM agent_wake WHERE agent = ?', AGENT).one().total,
+  );
+}
+
 function holdLiveWaiter(input: { account: SeededAccount }): Promise<void> {
   return runInDurableObject(accountInboxStub({ accountId: input.account.accountId }), async (instance) => {
     const { waiters } = (instance as unknown as { dependencies: CoreDependencies }).dependencies;
@@ -304,7 +312,11 @@ describe('connector socket', () => {
     const account = await registeredAccount();
     const session = await openConnector({ secret: account.secret });
     await session.nextFrame();
-    await receiveOwnerText({ stub: accountInboxStub({ accountId: account.accountId }), text: `@${AGENT} ${OWNER_TEXT}`, forwarded: true });
+    await receiveOwnerText({
+      stub: accountInboxStub({ accountId: account.accountId }),
+      text: `@${AGENT} ${OWNER_TEXT}`,
+      forwarded: true,
+    });
     const frame = (await session.nextFrame()) as MessagesFrame;
     expect(frame.messages.map((message) => message.forwarded)).toEqual([true]);
     session.socket.close();
@@ -331,13 +343,16 @@ describe('connector socket', () => {
     await vi.waitFor(async () => expect(await socketCountOf({ account })).toBe(0));
   });
 
-  test('revoking an agent closes its connector with the revoked code', async () => {
+  test('revoking an agent closes its connector with the revoked code and drops its wake row with the restore record', async () => {
     const account = await registeredAccount();
+    const stub = accountInboxStub({ accountId: account.accountId });
     const session = await openConnector({ secret: account.secret });
     await session.nextFrame();
-    await accountInboxStub({ accountId: account.accountId }).recordRevocation({ agent: AGENT });
+    await stub.recordRevocation({ agent: AGENT });
 
     expect(await session.closeCode()).toBe(REVOKED_CLOSE_CODE);
+    await vi.waitFor(async () => expect(await socketCountOf({ account })).toBe(0));
+    expect(await wakeRowCountOf({ account })).toBe(0);
   });
 
   test('closing the sockets of another agent keeps this connector open', async () => {
