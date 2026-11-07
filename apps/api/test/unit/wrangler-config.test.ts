@@ -10,6 +10,7 @@ const LOCAL_DATABASE_ID = 'zapbip-connections-local';
 const FORBIDDEN_VAR = 'PUBLIC_BASE_URL';
 const PRODUCTION_ORIGIN = 'https://mcp.zapbip.com';
 const GRAPH_ORIGIN = 'https://graph.facebook.com';
+const DEVELOPMENT_ONLY_VAR = 'WHATSAPP_MEDIA_DOWNLOAD_ORIGIN';
 const DEPLOYED_BLOCK_MAIN = 'src/index.ts';
 const DEVELOPMENT_BLOCK_MAIN = 'src/index.dev.ts';
 const EXPECTED_MIGRATIONS = [{ tag: 'v1', new_sqlite_classes: ['AccountInbox'] }];
@@ -48,7 +49,10 @@ const BINDING_KEYS: Record<string, (block: WranglerBlock) => string[]> = {
   r2_buckets: (block) => block.r2_buckets.map((bucket) => bucket.binding),
   durable_objects: (block) => block.durable_objects.bindings.map((binding) => binding.name),
   rules: (block) => block.rules.map((rule) => rule.globs.join()),
-  vars: (block) => Object.keys(block.vars).sort(),
+  vars: (block) =>
+    Object.keys(block.vars)
+      .filter((name) => name !== DEVELOPMENT_ONLY_VAR)
+      .sort(),
   migrations: (block) => block.migrations.map((migration) => migration.tag),
   triggers: (block) => block.triggers.crons,
 };

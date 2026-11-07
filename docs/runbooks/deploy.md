@@ -43,7 +43,7 @@ Migration rule: a migration that has reached a deployed environment is never edi
 
    If it fails: `pnpm deploy:staging` lists the missing names at its secrets step. A secret set for the wrong environment is fixed by running `wrangler secret put` again with the right `--env`; production is the top-level block, so a production command never carries `--env`, and `--env production` fails.
 
-4. **Migrate.** Run `pnpm migrate:staging` (or `pnpm migrate:production`). Run it before every deploy that ships a new migration, never after.
+4. **Migrate.** Run `pnpm migrate:staging` (or `pnpm migrate:production`). Run it before every deploy that ships a new migration, never after: the Durable Object reads the directory tables (the accounts-and-keys migration included) the moment the new Worker serves, and `pnpm deploy:staging` and `pnpm deploy:production` refuse while any D1 migration is pending, so the order cannot be reversed by mistake.
 
    Expect: wrangler lists each migration file applied, and a second run says there is nothing to apply.
 

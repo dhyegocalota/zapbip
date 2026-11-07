@@ -121,6 +121,14 @@ describe('deploy entry', () => {
     expect(shell.commands).toEqual([]);
   });
 
+  it('pin: a pending D1 migration stops the run before the dry run and any deploy', async () => {
+    const shell = fakeShell({ replies: { ...REPLIES, 'migrations list': { exitCode: 0, stdout: '0002_accounts.sql pending' } } });
+    const { exitCode, output } = await deploy({ shell });
+    expect(exitCode).toBe(1);
+    expect(output).toContain('pnpm migrate:staging');
+    expect(shell.commands.some((command) => command.includes('--dry-run') || command.includes('wrangler deploy'))).toBe(false);
+  });
+
   it('stops when the dry run fails and never deploys', async () => {
     const shell = fakeShell({ replies: { ...REPLIES, '--dry-run': { exitCode: 1, stdout: '' } } });
     const { exitCode } = await deploy({ shell });

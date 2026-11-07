@@ -5,6 +5,7 @@ import { INSTALL_PAGE_PATH_PREFIX } from '@zapbip/types';
 import { Hono } from 'hono';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createApp } from '../../src/app';
+import { MAX_FUTURE_SKEW_MS } from '../../src/adapters/whatsapp/whatsapp-constants';
 import type { Bindings } from '../../src/contract/env';
 import { inspectWorker, WORKER_ENTRY_FILE } from '../../src/operations/worker-facts';
 
@@ -59,7 +60,7 @@ describe('worker facts', () => {
 
   it('reads the routes of the real built app, so a route mounted later is seen without a text match', async () => {
     const sourceRoot = await sourceRootWith({ entry: ENTRY_WITH_SCHEDULED });
-    const app = createApp({ extraRoutes: [appWithInstallRoute()] });
+    const app = createApp({ extraRoutes: [appWithInstallRoute()], developmentMediaOrigin: null, maxFutureSkewMs: MAX_FUTURE_SKEW_MS });
     expect((await inspectWorker({ sourceRoot, app })).mountsInstallRoute).toBe(true);
   });
 });

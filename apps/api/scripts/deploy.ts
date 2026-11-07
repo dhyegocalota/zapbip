@@ -23,6 +23,7 @@ import {
   wranglerCommand,
 } from '../src/operations/deploy-preflight';
 import { createApp } from '../src/app';
+import { MAX_FUTURE_SKEW_MS } from '../src/adapters/whatsapp/whatsapp-constants';
 import { parseJsonOrNull } from '../src/operations/json-text';
 import { createPackageFetcher, type PackageFetcher } from '../src/operations/package-fetcher';
 import { createTerminalShell } from '../src/operations/terminal-shell';
@@ -176,7 +177,10 @@ async function main(): Promise<void> {
       environment,
       firstDeploy: values['first-deploy'] === true,
       block: readDeployBlock({ environment }),
-      workerFacts: await inspectWorker({ sourceRoot: SOURCE_ROOT, app: createApp({ extraRoutes: [] }) }),
+      workerFacts: await inspectWorker({
+        sourceRoot: SOURCE_ROOT,
+        app: createApp({ extraRoutes: [], developmentMediaOrigin: null, maxFutureSkewMs: MAX_FUTURE_SKEW_MS }),
+      }),
       shell: createTerminalShell({}),
       prompt: { ask: ({ question }) => lineReader.question(question) },
       isInteractive: process.stdin.isTTY === true,
