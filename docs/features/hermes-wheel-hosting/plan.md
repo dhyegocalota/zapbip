@@ -27,30 +27,30 @@ One developer runs the lanes in order G1, G2, G3, G4, G5 (machine resource cap).
 
 ### G1
 
-- [ ] **Step 1:** red: `hermes-wheel.test.ts` in `libs/types` for `hermesWheelFilename` and `hermesWheelPath`, and the shape test (committed wheel exists for the version, its sha256 equals `ZAPBIP_HERMES_WHEEL_SHA256`, its package files equal `apps/hermes-plugin/zapbip_platform`, `pyproject.toml` version equals the constant) — evidence: red commit
-- [ ] **Step 2:** rename `ZAPBIP_PYPI_VERSION` to `ZAPBIP_HERMES_PLUGIN_VERSION` everywhere (a mechanical sweep; the grep for the old name returns nothing) and add the helpers — evidence: green unit
-- [ ] **Step 3:** `scripts/hermes-wheel/build.ts` builds the wheel with `SOURCE_DATE_EPOCH`, copies it to `release/`, prints the hash; run it once, commit the wheel, set `ZAPBIP_HERMES_WHEEL_SHA256` — evidence: green shape test
+- [x] **Step 1:** red: `hermes-wheel.test.ts` in `libs/types` for `hermesWheelFilename` and `hermesWheelPath`, and the shape test (committed wheel exists for the version, its sha256 equals `ZAPBIP_HERMES_WHEEL_SHA256`, its package files equal `apps/hermes-plugin/zapbip_platform`, `pyproject.toml` version equals the constant) — evidence: red 1d93e909 (libs/types: 'hermesWheelFilename is not implemented'; shape test: 'ZAPBIP_HERMES_PLUGIN_VERSION is not exported')
+- [x] **Step 2:** rename `ZAPBIP_PYPI_VERSION` to `ZAPBIP_HERMES_PLUGIN_VERSION` everywhere (a mechanical sweep; the grep for the old name returns nothing) and add the helpers — evidence: green b91e944f
+- [x] **Step 3:** `scripts/hermes-wheel/build.ts` builds the wheel with `SOURCE_DATE_EPOCH`, copies it to `release/`, prints the hash; run it once, commit the wheel, set `ZAPBIP_HERMES_WHEEL_SHA256` — evidence: green b91e944f (pnpm hermes-wheel:build; wheel and hash committed)
 
 ### G2
 
-- [ ] **Step 1:** red: `package-route.test.ts` (200 with bytes and headers, 404 for missing, malformed and traversal names, 404 for POST, PUT, DELETE, HEAD-less behaviour pinned) — evidence: red commit
-- [ ] **Step 2:** `PACKAGES` binding in `Bindings`, `wrangler.jsonc` (production, staging, development, which the tests use); `packageRoutes` mounted in `app.ts` — evidence: green integration
+- [x] **Step 1:** red: `package-route.test.ts` (200 with bytes and headers, 404 for missing, malformed and traversal names, 404 for POST, PUT, DELETE, HEAD-less behaviour pinned) — evidence: red b41545dc (serving, the no-store 404 and the 503 red; malformed names, write methods and the media bucket are pins on the empty route)
+- [x] **Step 2:** `PACKAGES` binding in `Bindings`, `wrangler.jsonc` (production, staging, development, which the tests use); `packageRoutes` mounted in `app.ts` — evidence: green 90252d57
 
 ### G3
 
-- [ ] **Step 1:** red: `chat-clients.test.ts` and `docs-agent-install.test.ts` expect `hermesInstallCommand()` (the pinned direct reference) in the install copy, both Hermes pages and the plugin README, and the old `==` form nowhere — evidence: red commit
-- [ ] **Step 2:** render the command in `connector-commands.ts`; update the two pages and the README — evidence: green unit and shape
+- [x] **Step 1:** red: `chat-clients.test.ts` and `docs-agent-install.test.ts` expect `hermesInstallCommand()` (the pinned direct reference) in the install copy, both Hermes pages and the plugin README, and the old `==` form nowhere — evidence: red fae2b5bc
+- [x] **Step 2:** render the command in `connector-commands.ts`; update the two pages and the README — evidence: green 47b270cf
 
 ### G4
 
-- [ ] **Step 1:** red: preflight tests for `HermesWheel` (hash equal passes; hash differs refuses with both hashes; object missing refuses with the upload instruction; docs preflight 404 and mismatch refuse; `ZAPBIP_PYPI_PUBLISHER` no longer required) — evidence: red commit
-- [ ] **Step 2:** replace `refuseUntrustedPypiPackage` and the XML-RPC code with `refuseUnhostedHermesWheel` (Worker: shell `r2 object get` and `shasum`; docs: the package fetcher, which now answers a status and a sha256 instead of parsed JSON), drop `ZAPBIP_PYPI_PUBLISHER` and the `pypiVersion` inputs of the scripts from `.env.example` and its test — evidence: green unit
-- [ ] **Step 3:** runbooks: replace step 5 of `mintlify-publish.md` with the build, hash check, `wrangler r2 bucket create zapbip-packages` (in `cloudflare-setup.md`) and `wrangler r2 object put` steps, each with Expect and If it fails; `deploy.md` order: upload wheel, deploy Worker, docs preflight — evidence: `runbooks.test.ts` green
+- [x] **Step 1:** red: preflight tests for `HermesWheel` (hash equal passes; hash differs refuses with both hashes; object missing refuses with the upload instruction; docs preflight 404 and mismatch refuse; `ZAPBIP_PYPI_PUBLISHER` no longer required) — evidence: red 5116f248 ('is not implemented' stubs)
+- [x] **Step 2:** replace `refuseUntrustedPypiPackage` and the XML-RPC code with `refuseUnhostedHermesWheel` (Worker: shell `r2 object get` and `shasum`; docs: the package fetcher, which now answers a status and a sha256 instead of parsed JSON), drop `ZAPBIP_PYPI_PUBLISHER` and the `pypiVersion` inputs of the scripts from `.env.example` and its test — evidence: green c3f9c9b4
+- [x] **Step 3:** runbooks: replace step 5 of `mintlify-publish.md` with the build, hash check, `wrangler r2 bucket create zapbip-packages` (in `cloudflare-setup.md`) and `wrangler r2 object put` steps, each with Expect and If it fails; `deploy.md` order: upload wheel, deploy Worker, docs preflight — evidence: red f5af439b, green 5a0212ef; the go-live order now publishes the docs after the production deploy
 
 ### G5
 
-- [ ] **Step 1:** red: `hermes-wheel.e2e.test.ts` boots the local Worker with a seeded `PACKAGES` bucket, runs `pip install --no-deps --target <dir> "zapbip-platform @ http://127.0.0.1:<port>/pkg/<file>#sha256=<hash>"` and expects success, then the wrong hash and expects pip's mismatch error — evidence: red commit
-- [ ] **Step 2:** the Hermes image installs the committed wheel with the same direct-reference form (`file://` plus `#sha256=`) instead of `pip wheel` at test time; `buildHermesImage` drops the build-tools step — evidence: existing `hermes-openclaw.e2e.test.ts` still green
+- [x] **Step 1:** red: `hermes-wheel.e2e.test.ts` boots the local Worker with a seeded `PACKAGES` bucket, runs `pip install --no-deps --target <dir> "zapbip-platform @ http://127.0.0.1:<port>/pkg/<file>#sha256=<hash>"` and expects success, then the wrong hash and expects pip's mismatch error — evidence: red 76f938fb (pip got 404: wheel not seeded)
+- [x] **Step 2:** the Hermes image installs the committed wheel with the same direct-reference form (`file://` plus `#sha256=`) instead of `pip wheel` at test time; `buildHermesImage` drops the build-tools step — evidence: green 222db1cf (global-setup seeds the local bucket; the Hermes image installs the committed wheel by pin)
 
 ## Failure modes
 
