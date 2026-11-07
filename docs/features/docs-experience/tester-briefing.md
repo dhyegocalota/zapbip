@@ -80,3 +80,28 @@ Pins (green when they landed): the fixture tests built on test-local validators 
 - The Scheduled and Standby rows, their `mode: scheduled` / `mode: standby` values and the 1 to 1440 minute interval come from the scheduled-wake branch (facts at the scheduled-wake merge).
 - `concepts/questions` and `concepts/routing` were not reworded beyond the existing text; `developers/errors` and `developers/any-mcp-client` are unchanged.
 - The Playwright Chromium for 1.65.0 (build 1254) was not installed; it was installed with `pnpm exec playwright install chromium`.
+
+## G4 features (branch `feat/docs-experience-g4`)
+
+### What changed
+
+- `apps/docs/e2e/features.spec.ts`: per language, the six feature pages open with at least one `<Chat>`; `send-messages-and-media` names every `MessageKind` value; `owner-starts-conversations` names the rungs, the delays 7, 6, 9 and 16 and shows the not-listening notice; `whatsapp-commands` lists every command word in both languages and states the reserved-names rule and the forwarded-message rule.
+- `features/send-messages-and-media`: the list became a table of what the person sees against the kind. `features/owner-starts-conversations` (new): the owner writes first, the wake ladder in plain words, the not-listening notice, the closed-window notice (one template notice per closed window; zapbip's own notices take the same path). `features/whatsapp-commands` (new on this base): the command words in both languages side by side, the reserved-names rule, forwarded messages never run a command.
+- `ask-with-buttons-and-lists`, `many-agents-on-one-number` and `the-24-hour-window` already read for the person and keep every conversation at four messages or fewer; unchanged. pt-BR twins are native.
+
+### Red today, green after
+
+| Test | Red before because | Green after |
+|------|--------------------|-------------|
+| `features.spec.ts` (`fa16fb2`: 14 failed, 8 passed) | `Expected substring: "new agent"` / `Received string: "FeaturesWhatsApp commandsThe words you send to zapbip to manage your AIs..."`; `Expected substring: "connector"`; `expect(locator).toBeVisible() failed ... element(s) not found` | 027b395: 22 passed |
+
+### Hypotheses for the tester
+
+- Every command word on `whatsapp-commands` equals `COMMAND_WORDS` of accounts-and-keys (facts at the accounts-and-keys merge); the reserved-name and example replies equal its `account-copy.ts`.
+- The not-listening and closed-window notice bubbles quote `INBOX_COPY` (the repository-shape notice test enforces it).
+- The Scheduled and Standby rows of the wake table, and the "one template notice per closed window" wording, hold at the scheduled-wake and whatsapp-cloud-channel merges (facts at the scheduled-wake merge).
+
+### Gaps
+
+- The `forwarded messages never run a command` rule is stated from the cross-slice decision; the code that enforces it lands with accounts-and-keys.
+- `help/delete-your-account` is a skeleton until G5; the link resolves.
