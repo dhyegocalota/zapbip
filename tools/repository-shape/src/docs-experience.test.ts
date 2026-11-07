@@ -58,6 +58,7 @@ const OTHER_TEST_NUMBER = '15550000002';
 const NEW_CLIENT_PAGE = 'agents/x';
 const DOCS_ONLY_PAGE_NAMES = ['cursor', 'gemini-cli', 'any-mcp-client'];
 const WRONG_MEDIA_DAYS = 14;
+const PRIVACY_PAGE = 'help/privacy-and-security';
 const MCP_REFERENCE_FOLDER = 'mcp-reference';
 const MESSAGE_KINDS_SNIPPET = 'message-kinds';
 const TOOL_NAME_SEPARATOR = '_';
@@ -400,6 +401,15 @@ describe('docs experience: copy', () => {
   test('a typed media figure of 14 days fails naming 30', () => {
     const markdown = `Media is kept ${WRONG_MEDIA_DAYS} days.`;
     expect(retentionFigureViolations({ markdown, kind: DocsRetentionKind.Media })).toEqual(['media: expected 30 days']);
+  });
+});
+
+describe('docs experience: help', () => {
+  test.each(LANGUAGES)('the %s privacy page states every retention figure', (language) => {
+    const page = language === DocsLanguage.English ? PRIVACY_PAGE : `${PAGE_LANGUAGE_FOLDER}/${PRIVACY_PAGE}`;
+    const markdown = readRepositoryFile(pageFileOf(page));
+    const violations = Object.values(DocsRetentionKind).flatMap((kind) => retentionFigureViolations({ markdown, kind }));
+    expect(violations).toEqual([]);
   });
 });
 
