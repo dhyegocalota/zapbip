@@ -14,8 +14,8 @@ export class DevAccountInbox
       'readScreen' | 'advanceClock' | 'channelMessageIdOf' | 'devScriptWake' | 'devReadWakeRequests' | 'devRunDueWakes'
     >
 {
-  private readonly scriptedTransport = createScriptedWakeTransport();
   private fakeSender: FakeWhatsAppSender | null = null;
+  private readonly scriptedTransport = createScriptedWakeTransport();
 
   protected createWakeTransport(): WakeTransport {
     return this.scriptedTransport;

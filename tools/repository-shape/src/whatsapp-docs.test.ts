@@ -53,7 +53,7 @@ describe('whatsapp channel docs', () => {
     expect(navigationPages(language)).toContain(path);
   });
 
-  test.each([DEFAULT_LANGUAGE, TRANSLATED_LANGUAGE])('the %s channel page states every limit', (language) => {
+  test.each([DEFAULT_LANGUAGE, TRANSLATED_LANGUAGE])('DOC-3 the %s channel page states every limit', (language) => {
     const source = pageSource({ language, page: CHANNEL_PAGE });
     const limits =
       language === TRANSLATED_LANGUAGE

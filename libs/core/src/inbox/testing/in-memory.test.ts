@@ -1,4 +1,4 @@
-import { DeliveryState, IdPrefix, MediaOrigin, MediaSourceKind, MessageDirection, MessageKind, ForwardedKind } from '@zapbip/types';
+import { DeliveryState, IdPrefix, MediaOrigin, MediaSourceKind, MessageDirection, MessageKind } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { SENDING_STALE_MS } from '../constants';
 import type { Message, MessageContent } from '../message';
@@ -45,7 +45,7 @@ describe('in-memory repository', () => {
           readByAgent: true,
           handedTo: null,
           originMessageId: null,
-          forwarded: ForwardedKind.None,
+          forwarded: false,
           ...content,
         };
         await environment.repository.insertMessage({ message });
@@ -107,7 +107,7 @@ describe('in-memory repository', () => {
         replyToMessageId: null,
         delivery,
         readByAgent: true,
-        forwarded: ForwardedKind.None,
+        forwarded: false,
         handedTo: null,
         originMessageId: null,
         kind: MessageKind.Text,

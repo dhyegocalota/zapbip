@@ -1,4 +1,4 @@
-import type { DeliveryState, ForwardedKind, MediaSourceKind, MessageDirection, MessageKind } from '@zapbip/types';
+import type { DeliveryState, MediaSourceKind, MessageDirection, MessageKind } from '@zapbip/types';
 import type { AgentName } from './connection';
 
 export type ContactCard = {
@@ -48,7 +48,7 @@ export type MessageEnvelope = {
   readByAgent: boolean;
   handedTo: AgentName | null;
   originMessageId: string | null;
-  forwarded: ForwardedKind;
+  forwarded: boolean;
 };
 
 export type Message = MessageEnvelope & MessageContent;

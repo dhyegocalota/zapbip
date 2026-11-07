@@ -1,5 +1,5 @@
 import type { Message } from '@zapbip/core';
-import { ForwardedKind, MessageDirection, MessageKind } from '@zapbip/types';
+import { MessageDirection, MessageKind } from '@zapbip/types';
 import { describe, expect, test, vi } from 'vitest';
 import { createWakeQueue } from '../../src/wake-queue';
 
@@ -24,7 +24,7 @@ function ownerMessage(input: { messageId: string }): Message {
     replyToMessageId: null,
     delivery: null,
     readByAgent: false,
-    forwarded: ForwardedKind.None,
+    forwarded: false,
     handedTo: null,
     originMessageId: null,
     kind: MessageKind.Text,

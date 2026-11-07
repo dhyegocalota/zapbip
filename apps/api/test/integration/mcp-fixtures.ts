@@ -2,7 +2,7 @@ import { env, exports } from 'cloudflare:workers';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import type { OwnerInboundContent } from '@zapbip/core';
-import { ForwardedKind, MessageKind, OwnerLocale } from '@zapbip/types';
+import { MessageKind, OwnerLocale } from '@zapbip/types';
 import { McpToolName } from '../../src/contract/tool-definitions';
 import type { DevAccountInboxRpc } from '../../src/contract/account-inbox-rpc';
 import { generateConnectionSecret } from '../../src/adapters/platform/connection-secret';
@@ -58,7 +58,7 @@ export async function ownerWrites(input: { accountId: string; channelMessageId: 
   const outcome = await accountInbox({ accountId: input.accountId }).receiveOwnerMessage({
     ownerLocale: OwnerLocale.PortugueseBrazil,
     channelMessageId: input.channelMessageId,
-    ownerMessage: { at: Date.now(), replyToMessageId: null, forwarded: ForwardedKind.None, content: input.content },
+    ownerMessage: { at: Date.now(), replyToMessageId: null, forwarded: false, content: input.content },
   });
   if (!outcome.ok || outcome.value.messageId === null) throw new Error('owner message was not stored');
   return outcome.value.messageId;

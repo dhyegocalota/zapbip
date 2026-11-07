@@ -1,4 +1,4 @@
-import { ForwardedKind, MessageDirection, MessageKind } from '@zapbip/types';
+import { MessageDirection, MessageKind } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { ownerMessageIdOf, type Message } from './message';
 
@@ -11,7 +11,7 @@ function messageOf(input: { messageId: string; originMessageId: string | null })
     replyToMessageId: null,
     delivery: null,
     readByAgent: false,
-    forwarded: ForwardedKind.None,
+    forwarded: false,
     handedTo: null,
     kind: MessageKind.Text,
     text: 'hi',

@@ -1,6 +1,7 @@
 import { SELF } from 'cloudflare:test';
 import { ConnectorFrameType, HttpStatus } from '@zapbip/types';
 import { describe, expect, test, vi } from 'vitest';
+import { MAX_FUTURE_SKEW_MS } from '../../src/adapters/whatsapp/whatsapp-constants';
 import { createApp } from '../../src/app';
 import { UNAUTHORIZED_BODY } from '../../src/contract/constants';
 import { connectorUrl, openConnector } from '../support/connector-session';
@@ -69,7 +70,11 @@ describe('connector route', () => {
 
     async function requestWithoutObject(input: { path: string; init: RequestInit }) {
       const { objectCalls, environment } = countedEnvironment();
-      const response = await createApp({ extraRoutes: [], developmentMediaOrigin: null }).request(input.path, input.init, environment);
+      const response = await createApp({ extraRoutes: [], developmentMediaOrigin: null, maxFutureSkewMs: MAX_FUTURE_SKEW_MS }).request(
+        input.path,
+        input.init,
+        environment,
+      );
       return { objectCalls, response };
     }
 

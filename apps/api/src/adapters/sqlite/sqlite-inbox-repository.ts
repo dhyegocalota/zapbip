@@ -13,15 +13,7 @@ import {
   type QuestionAnswer,
   type StoredMedia,
 } from '@zapbip/core';
-import {
-  DeliveryState,
-  MessageDirection,
-  MessageKind,
-  WakeMode,
-  type ForwardedKind,
-  type MediaOrigin,
-  type OwnerLocale,
-} from '@zapbip/types';
+import { DeliveryState, MessageDirection, MessageKind, WakeMode, type MediaOrigin, type OwnerLocale } from '@zapbip/types';
 
 type MessageRow = {
   id: string;
@@ -32,7 +24,6 @@ type MessageRow = {
   reply_to: string | null;
   delivery: DeliveryState | null;
   read_at: number | null;
-  forwarded: ForwardedKind;
   at: number;
   handed_to: string | null;
   origin_message_id: string | null;
@@ -71,7 +62,7 @@ type MediaRow = {
 const SELECT_ROUTING_LIST =
   'SELECT routing_list_prompt_message_id, routing_list_opened_at, routing_list_locale, routing_list_resent, routing_list_reminded FROM owner_window WHERE id = ?';
 const SELECT_MESSAGES =
-  'SELECT id, agent, direction, kind, payload, reply_to, delivery, read_at, forwarded, at, handed_to, origin_message_id FROM inbox_messages ';
+  'SELECT id, agent, direction, kind, payload, reply_to, delivery, read_at, at, handed_to, origin_message_id FROM inbox_messages ';
 const SELECT_QUESTIONS = 'SELECT question_id, agent, text, options, normalized_key, prompt_message_id, asked_at, answer FROM questions ';
 const SELECT_MEDIA = 'SELECT media_id, origin, mime_type, size_bytes, filename, expires_at, received_at, retention_until FROM media ';
 const ORDER_BY_ARRIVAL = 'ORDER BY at, rowid';
@@ -84,7 +75,7 @@ const REGISTER_AGENT_WAKE_STATEMENT =
   'INSERT OR IGNORE INTO agent_wake (agent, mode, last_polled_at, updated_at) SELECT ?, ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM revoked_agents WHERE agent = ?)';
 const WINDOW_ROW_ID = 1;
 const INSERT_MESSAGE_STATEMENT =
-  'INSERT INTO inbox_messages (id, agent, direction, kind, payload, reply_to, delivery, read_at, channel_message_id, forwarded, at, handed_to, origin_message_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+  'INSERT INTO inbox_messages (id, agent, direction, kind, payload, reply_to, delivery, read_at, channel_message_id, at, handed_to, origin_message_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
 const INSERT_MEDIA_STATEMENT =
   'INSERT INTO media (media_id, origin, mime_type, size_bytes, filename, expires_at, received_at, retention_until) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
 const SAVE_ANSWER_STATEMENT = 'UPDATE questions SET answer = ? WHERE question_id = ?';
@@ -101,7 +92,7 @@ const SAVE_STATUS_DETAIL_STATEMENT = `UPDATE inbox_messages SET
   WHERE id = ?`;
 
 function toMessage(row: MessageRow): Message {
-  const content: MessageContent = JSON.parse(row.payload);
+  const content: MessageContent & { forwarded: boolean } = JSON.parse(row.payload);
   return {
     messageId: row.id,
     direction: row.direction,
@@ -112,7 +103,6 @@ function toMessage(row: MessageRow): Message {
     readByAgent: row.read_at !== null,
     handedTo: row.handed_to,
     originMessageId: row.origin_message_id,
-    forwarded: row.forwarded,
     ...content,
   };
 }
@@ -164,8 +154,7 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
   }
 
   function insertMessageRow(row: { message: Message; channelMessageId: string | null }): void {
-    const { messageId, direction, agent, at, replyToMessageId, delivery, readByAgent, forwarded, handedTo, originMessageId, ...content } =
-      row.message;
+    const { messageId, direction, agent, at, replyToMessageId, delivery, readByAgent, handedTo, originMessageId, ...content } = row.message;
     run(
       INSERT_MESSAGE_STATEMENT,
       messageId,
@@ -177,7 +166,6 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
       delivery,
       readByAgent ? input.clock.now() : null,
       row.channelMessageId,
-      forwarded,
       at,
       handedTo,
       originMessageId,

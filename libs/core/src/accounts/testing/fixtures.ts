@@ -1,12 +1,4 @@
-import {
-  AccountState,
-  ChannelInboundKind,
-  ForwardedKind,
-  IdPrefix,
-  MessageKind,
-  OwnerLocale,
-  type AccountReplyIntent,
-} from '@zapbip/types';
+import { AccountState, ChannelInboundKind, IdPrefix, MessageKind, OwnerLocale, type AccountReplyIntent } from '@zapbip/types';
 import type { AgentName } from '../../inbox/connection';
 import type { OwnerInboundContent } from '../../inbox/use-cases/types';
 import type { AccountCommandResult, OwnerAccountContext } from '../account-types';
@@ -55,7 +47,7 @@ export function receiveAccount(
     content: OwnerInboundContent;
     replyToMessageId?: string | null;
     channelMessageId?: string;
-    forwarded?: ForwardedKind;
+    forwarded?: boolean;
   },
 ): Promise<ReceiveAccountMessageResult> {
   channelMessageCounter += 1;
@@ -65,7 +57,7 @@ export function receiveAccount(
     content,
     replyToMessageId = null,
     channelMessageId = `wamid.account.${channelMessageCounter}`,
-    forwarded = ForwardedKind.None,
+    forwarded = false,
   } = input;
   return receiveAccountMessage({
     dependencies: environment.dependencies,

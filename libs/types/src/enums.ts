@@ -296,12 +296,6 @@ export enum AccountReplyParameter {
   InstallPrompt = 'install_prompt',
 }
 
-export enum ForwardedKind {
-  None = 'none',
-  Forwarded = 'forwarded',
-  FrequentlyForwarded = 'frequently_forwarded',
-}
-
 export enum HttpStatus {
   SwitchingProtocols = 101,
   Ok = 200,

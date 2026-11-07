@@ -1,4 +1,4 @@
-import { ForwardedKind, MessageDirection, MessageKind } from '@zapbip/types';
+import { MessageDirection, MessageKind } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import type { Message } from '../message';
 import { createEnvironment } from '../testing/fixtures';
@@ -15,7 +15,7 @@ function textMessage(input: { messageId: string; agent: string; direction: Messa
     replyToMessageId: null,
     delivery: null,
     readByAgent: false,
-    forwarded: ForwardedKind.None,
+    forwarded: false,
     handedTo: null,
     originMessageId: null,
     kind: MessageKind.Text,

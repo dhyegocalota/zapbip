@@ -1,8 +1,9 @@
 import { RECEIPT_RETENTION_MS, SENDING_STALE_MS, type ChannelStatusDetail, type CoreDependencies } from '@zapbip/core';
-import { ChannelInboundKind, DeliveryState, ForwardedKind, MediaOrigin, MessageDirection, MessageKind, OwnerLocale } from '@zapbip/types';
+import { ChannelInboundKind, DeliveryState, MediaOrigin, MessageDirection, MessageKind, OwnerLocale } from '@zapbip/types';
 import { evictDurableObject, reset, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { AccountInbox } from '../../src/account-inbox/account-inbox';
+import { runMigrations } from '../../src/account-inbox/run-migrations';
 import { ACCOUNT_INBOX_MIGRATIONS } from '../../src/account-inbox/migrations';
 import type { Bindings } from '../../src/contract/env';
 import { DevAccountInbox } from '../../src/dev/dev-account-inbox';
@@ -13,6 +14,10 @@ import { applyDirectoryMigration } from '../support/seed';
 import { accountInboxStub, connectionOf, testEnv, whatsappTestEnv } from '../support/workers-env';
 
 const ACCOUNT_ID = 'acc_channel';
+const UPGRADE_ACCOUNT_ID = 'acc_upgrade';
+const VERSION_BEFORE_CHANNEL = 4;
+const LIST_USER_TABLES_STATEMENT =
+  "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%'";
 const CHANNEL_MESSAGE_ID = 'wamid.inbound.1';
 const OUTBOUND_CHANNEL_MESSAGE_ID = 'wamid.outbound.1';
 const ACCESS_TOKEN_VARIABLE = 'WHATSAPP_ACCESS_TOKEN';
@@ -36,7 +41,7 @@ function ownerTextEntry(input: { text: string; at: number }) {
     at: input.at,
     content: { kind: MessageKind.Text as const, text: input.text },
     replyToChannelMessageId: null,
-    forwarded: ForwardedKind.None,
+    forwarded: false,
     noticeText: null,
   };
 }
@@ -247,7 +252,14 @@ describe('SQLite repository channel methods', () => {
       });
       return repository.findWindow();
     });
-    expect(window).toEqual({ lastOwnerMessageAt: BASE_TIME, noticeSentForClosedWindow: true, closedAt: BASE_TIME + 5 });
+    expect(window).toEqual({
+      lastOwnerMessageAt: BASE_TIME,
+      noticeSentForClosedWindow: true,
+      closedAt: BASE_TIME + 5,
+      noticeRetryLocale: null,
+      noticeRetryAt: null,
+      noticeRetryAttempt: 0,
+    });
   });
 
   it('saves the channel id of a message once and reads it both ways', async () => {
@@ -387,8 +399,34 @@ describe('DO schema v4', () => {
       expect.arrayContaining(['channel_message_id', 'error_code', 'error_title', 'pricing_category', 'billable', 'claimed_at']),
     );
     expect(schema.windowColumns).toContain('closed_at');
-    expect(schema.messageColumns).toContain('forwarded');
     expect(schema.versions).toEqual(ACCOUNT_INBOX_MIGRATIONS.map((migration) => migration.version));
+  });
+});
+
+describe('DO schema upgrade', () => {
+  it('applies v4 to a database that holds every version but itself', async () => {
+    const upgrade = await runInDurableObject(accountInboxStub({ accountId: UPGRADE_ACCOUNT_ID }), (_instance, state) => {
+      state.storage.sql
+        .exec<{ name: string }>(LIST_USER_TABLES_STATEMENT)
+        .toArray()
+        .forEach((table) => state.storage.sql.exec(`DROP TABLE ${table.name}`));
+      const seeded = runMigrations({
+        storage: state.storage,
+        migrations: ACCOUNT_INBOX_MIGRATIONS.filter((migration) => migration.version !== VERSION_BEFORE_CHANNEL),
+      });
+      const applied = runMigrations({ storage: state.storage, migrations: ACCOUNT_INBOX_MIGRATIONS });
+      return {
+        seeded,
+        applied,
+        messageColumns: state.storage.sql
+          .exec<{ name: string }>('PRAGMA table_info(inbox_messages)')
+          .toArray()
+          .map((column) => column.name),
+      };
+    });
+    expect(upgrade.seeded).toEqual([1, 2, 3, 5, 6]);
+    expect(upgrade.applied).toEqual([VERSION_BEFORE_CHANNEL]);
+    expect(upgrade.messageColumns).toContain('channel_message_id');
   });
 });
 
@@ -512,6 +550,32 @@ describe('AccountInbox channel messages', () => {
     expect(outcome).toMatchObject({ ok: true, value: { duplicate: false } });
   });
 
+  it('WI-15 applies a status to a message the account sent and never writes a null over its stored detail', async () => {
+    await registerAlpha();
+    await inRepository(async (repository) => {
+      await repository.insertMessage({ message: buildTextMessage({ messageId: 'msg_1', delivery: DeliveryState.Sent }) });
+      await repository.saveChannelMessageId({ messageId: 'msg_1', channelMessageId: OUTBOUND_CHANNEL_MESSAGE_ID });
+    });
+    const stub = accountInboxStub({ accountId: ACCOUNT_ID });
+    const detail = { errorCode: null, errorTitle: null, pricingCategory: PRICING_CATEGORY, billable: true };
+    const delivered = await stub.applyChannelStatus({
+      channelMessageId: OUTBOUND_CHANNEL_MESSAGE_ID,
+      status: DeliveryState.Delivered,
+      detail,
+    });
+    const read = await stub.applyChannelStatus({
+      channelMessageId: OUTBOUND_CHANNEL_MESSAGE_ID,
+      status: DeliveryState.Read,
+      detail: EMPTY_DETAIL,
+    });
+    const stored = await countRows({
+      statement: `SELECT COUNT(*) AS total FROM inbox_messages WHERE id = 'msg_1' AND delivery = '${DeliveryState.Read}' AND pricing_category = '${PRICING_CATEGORY}' AND billable = 1`,
+    });
+    expect(delivered).toMatchObject({ ok: true, value: { applied: true } });
+    expect(read).toMatchObject({ ok: true, value: { applied: true } });
+    expect(stored).toBe(1);
+  });
+
   it('WI-16 reports an unknown channel id as not found and writes nothing', async () => {
     await registerAlpha();
     const outcome = await accountInboxStub({ accountId: ACCOUNT_ID }).applyChannelStatus({
@@ -537,15 +601,15 @@ describe('AccountInbox channel messages', () => {
     expect(await stub.hasChannelReceipt({ channelMessageId: CHANNEL_MESSAGE_ID })).toEqual({ ok: true, value: true });
   });
 
-  it('stores the forwarded kind of an owner message and returns it', async () => {
+  it('stores the forwarded flag of an owner message and returns it', async () => {
     await registerAlpha();
     const request = textRequestOf({ channelMessageId: CHANNEL_MESSAGE_ID });
     await accountInboxStub({ accountId: ACCOUNT_ID }).receiveChannelMessage({
       ...request,
-      entry: { ...request.entry, forwarded: ForwardedKind.FrequentlyForwarded },
+      entry: { ...request.entry, forwarded: true },
     });
     const stored = await inRepository((repository) => repository.findMessageByChannelMessageId({ channelMessageId: CHANNEL_MESSAGE_ID }));
-    expect(stored).toMatchObject({ forwarded: ForwardedKind.FrequentlyForwarded });
+    expect(stored).toMatchObject({ forwarded: true });
   });
 });
 

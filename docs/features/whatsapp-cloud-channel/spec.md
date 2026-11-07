@@ -1,6 +1,6 @@
 # WhatsApp Cloud channel
 
-**Status:** Building
+**Status:** Shipped 2026-11-06
 **Tier:** 🔴
 **Owner approval:** approved 2026-11-06 (owner delegated)
 **ADRs:** [0012](../../adr/0012-owner-identity-by-wa-id-on-the-shared-number.md), [0013](../../adr/0013-webhook-acknowledged-after-a-durable-commit-and-deduplicated-by-message-id.md), [0014](../../adr/0014-inbound-media-stored-in-r2-at-webhook-time.md); builds on [0006](../../adr/0006-one-secret-per-connection-in-the-mcp-url.md), [0007](../../adr/0007-a-durable-inbox-and-a-wake-ladder.md), [0008](../../adr/0008-a-pure-core-behind-ports.md), [0009](../../adr/0009-cloudflare-workers-with-one-durable-object-per-account.md), [0010](../../adr/0010-public-docs-on-mintlify.md), [0011](../../adr/0011-the-24-hour-window-queues-and-sends-one-notice.md)
@@ -124,12 +124,12 @@ Outbound failure with `131047` goes back into the core as a channel fact: `Accou
 | `interactive` `list_reply` | `choice` `{option_id, title, description?}`; ids starting `zapbip:` are rule 0 (accounts-and-keys) | yes | rule 1 |
 | `button` (template quick reply) | no agent message; the notice's `context.id` is the notice's `wamid` | yes | none: it only opens the window and flushes the queue |
 | any kind with `context.id` | `reply_to` set from `context.id`; `context` may carry no `id` | as the kind | rule 2 |
-| any kind with `context.forwarded` or `context.frequently_forwarded` | `forwarded: forwarded \| frequently_forwarded` on the stored message, `none` otherwise; `frequently_forwarded` wins when both are set | as the kind | as the kind |
+| any kind with `context.forwarded` or `context.frequently_forwarded` | `forwarded: true` on the stored message (a boolean in the message payload, shared with the local connector), `false` otherwise | as the kind | as the kind |
 | `unsupported` | not delivered to agents | yes | none; the owner gets one session text, copy `unsupportedKind` |
 
 The window opens at the message's own `timestamp` (Unix seconds, converted to milliseconds at the edge). Reactions do not open the window; a `131047` on a later send corrects any mistaken opening.
 
-Owner messages keep the core's `sender: "owner"`, and `verified: true` on every kind except a forwarded one: a forwarded message is content the owner relayed, not their own words, so it carries `verified: false` and the `forwarded` kind on the wire (owner delegated 2026-11-06).
+Owner messages keep the core's `sender: "owner"`, and `verified: true` on every kind except a forwarded one: a forwarded message is content the owner relayed, not their own words, so it carries `verified: false` and `forwarded: true` on the wire (owner delegated 2026-11-06). A forwarded message never answers an open `ask` and never runs an owner account command, on the WhatsApp path and on the direct owner path alike.
 
 An entry whose `timestamp` is older than `RECEIPT_RETENTION_MS` is acknowledged with `200`, not processed and logged as `inbound.stale`: its receipt may already be pruned, so a captured replay could not be told from a new message. A message whose receipt already exists is acknowledged with `200` before any media is downloaded, so a redelivery never touches a stored object.
 
@@ -227,7 +227,8 @@ Ranks: `sent` 1, `delivered` 2, `read` 3. `failed` is handled by the rule row, n
 |---|---|
 | `GET` with a wrong `hub.verify_token` or `hub.mode` | `403`, no body |
 | `POST` without `X-Hub-Signature-256`, or with a digest that does not match the raw body | `401`, same body for every reason; nothing parsed or stored |
-| `POST` body over 3 MB | `413` |
+| `POST` body over 3 MB, signed or not | `413`, answered before the signature check (intended: the cap is public in the documentation); the cap is applied to the streamed bytes, so a `Content-Length` of `abc` or `-1` is accepted |
+| Entry `timestamp` more than `MAX_FUTURE_SKEW_MS` in the future | `200`, log `inbound.future`, not processed |
 | Signed body that is not JSON | `400` |
 | `phone_number_id` is not this number | `200`, log `inbound.foreign_number`, nothing stored |
 | Inbound with no `from`, or a `from` with no `owner_identities` row | `200`, log `inbound.unmapped` with no phone number; nothing sent back. From accounts-and-keys on, a first message from an unknown `from` creates the account instead (ADR 0016) |
@@ -277,6 +278,7 @@ Constants (named in `apps/api/src/adapters/whatsapp/whatsapp-constants.ts` or `l
 | `GRAPH_API_VERSION` | `v24.0` | adapter |
 | `GRAPH_REQUEST_TIMEOUT_MS` | 10 000 | adapter |
 | `WEBHOOK_MAX_BYTES` | 3 MB | adapter |
+| `MAX_FUTURE_SKEW_MS` | 5 minutes | adapter |
 | `RECEIPT_RETENTION_MS` | 7 days | core, agent-inbox-core |
 | `MEDIA_DOWNLOAD_ATTEMPTS` | 2 | adapter |
 | `MEDIA_MAX_BYTES_INBOUND` | 100 MB | adapter |
@@ -369,6 +371,9 @@ No account id is ever in these paths.
 | Owner locale source | D1 directory · account property | an account property set by accounts-and-keys, carried by `ConnectionIdentity` for agent calls and read from the directory row for webhook calls, passed to the use cases as `ownerLocale` and to `template({locale})` (A1, plan refresh R5) | owner delegated 2026-11-06 |
 | Flush failure after the commit | roll back the message · keep it | the message is kept; the queue flushes on the next owner message or the alarm (A31) | owner delegated 2026-11-06 |
 
+| Entry timestamped in the future | process · reject | acknowledged `200`, logged `inbound.future`, not processed when more than `MAX_FUTURE_SKEW_MS` (5 minutes) ahead; the development entry allows `DEVELOPMENT_MAX_FUTURE_SKEW_MS` (2 days) because its simulated clock advances a day at a time | owner delegated 2026-11-06 |
+| `Content-Length` of `abc` or `-1` | reject · accept | accepted; the streaming cap applies | owner delegated 2026-11-06 |
+| Unsigned body above the cap | `401` · `413` | `413` before the signature check | owner delegated 2026-11-06 |
 | Plan refresh decisions R1 to R30 | silent · listed | every difference between the plan and slice 1's code, with its decision, is the table "Plan refresh (W-1.1)" in `plan.md`; the notable ones: `ChannelError extends InboxError`, `commitChannelInbound` beside the public `recordChannelReceipt`, slice 1's owner finder and message index reused, no development-sender registry, the fake Graph is an HTTP server | owner delegated 2026-11-06 |
 
 ## Test strategy summary

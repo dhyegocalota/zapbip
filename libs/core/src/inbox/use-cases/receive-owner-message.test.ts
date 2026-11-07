@@ -10,7 +10,6 @@ import {
   ReplyStatus,
   SECOND_MS,
   WakeOutcome,
-  ForwardedKind,
 } from '@zapbip/types';
 import { describe, expect, test, vi } from 'vitest';
 import { MEDIA_RETENTION_MS, NOTICE_QUICK_REPLY_ID, QUEUE_RETENTION_MS, ROUTING_LIST_TTL_MS, WINDOW_MS } from '../constants';
@@ -130,7 +129,7 @@ describe('receiveOwnerMessage routing', () => {
     expect(await environment.repository.findMessage({ messageId: result.messageId! })).toMatchObject({
       agent: 'alpha',
       readByAgent: false,
-      forwarded: ForwardedKind.None,
+      forwarded: false,
       text: 'oi',
     });
   });
@@ -141,10 +140,44 @@ describe('receiveOwnerMessage routing', () => {
     const result = await receive({
       environment,
       content: { kind: MessageKind.Text, text: '@alpha oi' },
-      forwarded: ForwardedKind.Forwarded,
+      forwarded: true,
     });
     expect(await environment.repository.findMessage({ messageId: result.messageId! })).toMatchObject({
-      forwarded: ForwardedKind.Forwarded,
+      forwarded: true,
+    });
+  });
+
+  test('CU-199 a forwarded message does not answer an open ask; it is delivered as a normal message', async () => {
+    const environment = await createEnvironment();
+    const question = await askAndAbandon({ environment });
+    const result = await receive({ environment, content: { kind: MessageKind.Text, text: 'yes' }, forwarded: true });
+    expect((await environment.repository.findQuestion({ questionId: question.questionId }))?.answer).toBeNull();
+    expect(await environment.repository.findMessage({ messageId: result.messageId! })).toMatchObject({
+      agent: question.agent,
+      text: 'yes',
+      forwarded: true,
+      readByAgent: false,
+    });
+  });
+
+  test('CU-199 a forwarded tap on an open ask does not answer it; it is delivered as a normal message', async () => {
+    const environment = await createEnvironment();
+    const question = await askAndAbandon({ environment });
+    const result = await receive({
+      environment,
+      content: {
+        kind: MessageKind.Choice,
+        optionId: formatOptionId({ questionId: question.questionId, optionIndex: 1 }),
+        optionTitle: 'Não',
+        optionDescription: null,
+      },
+      forwarded: true,
+    });
+    expect((await environment.repository.findQuestion({ questionId: question.questionId }))?.answer).toBeNull();
+    expect(await environment.repository.findMessage({ messageId: result.messageId! })).toMatchObject({
+      agent: question.agent,
+      forwarded: true,
+      readByAgent: false,
     });
   });
 

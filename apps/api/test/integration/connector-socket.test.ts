@@ -4,7 +4,6 @@ import {
   CONNECTOR_PING_TEXT,
   CONNECTOR_PONG_TEXT,
   ConnectorFrameType,
-  ForwardedKind,
   InboxCopyKey,
   OwnerLocale,
   ReplyStatus,
@@ -309,10 +308,10 @@ describe('connector socket', () => {
     await receiveOwnerText({
       stub: accountInboxStub({ accountId: account.accountId }),
       text: `@${AGENT} ${OWNER_TEXT}`,
-      forwarded: ForwardedKind.Forwarded,
+      forwarded: true,
     });
     const frame = (await session.nextFrame()) as MessagesFrame;
-    expect(frame.messages.map((message) => message.forwarded)).toEqual([ForwardedKind.Forwarded]);
+    expect(frame.messages.map((message) => message.forwarded)).toEqual([true]);
     session.socket.close();
   });
 

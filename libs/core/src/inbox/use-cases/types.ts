@@ -1,14 +1,5 @@
 import type { AgentName, ConnectionIdentity } from '../connection';
-import type {
-  ChannelInboundKind,
-  DeliveryState,
-  ForwardedKind,
-  InboxStatus,
-  MediaSourceKind,
-  MessageKind,
-  OwnerLocale,
-  ReplyStatus,
-} from '@zapbip/types';
+import type { ChannelInboundKind, DeliveryState, InboxStatus, MediaSourceKind, MessageKind, OwnerLocale, ReplyStatus } from '@zapbip/types';
 import type { ContactCard, MediaSource, Message, MessageContent, QuestionOption } from '../message';
 import type { MediaMessageKind } from '../constants';
 import type { ChannelStatusDetail, StoredMedia } from '../inbox-records';
@@ -80,7 +71,7 @@ export type OwnerInboundContent =
 export type OwnerInboundMessage = {
   at: number;
   replyToMessageId: string | null;
-  forwarded: ForwardedKind;
+  forwarded: boolean;
   content: OwnerInboundContent;
 };
 
@@ -123,7 +114,7 @@ export type ChannelInboundEntry =
       at: number;
       content: OwnerInboundContent | UnavailableOwnerMedia;
       replyToChannelMessageId: string | null;
-      forwarded: ForwardedKind;
+      forwarded: boolean;
       noticeText: string | null;
     }
   | { kind: ChannelInboundKind.WindowOnly; at: number }

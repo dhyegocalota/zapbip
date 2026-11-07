@@ -69,6 +69,7 @@ export enum OperatorEvent {
   InboundUnsupported = 'inbound.unsupported',
   InboundMediaUnavailable = 'inbound.media_unavailable',
   InboundStale = 'inbound.stale',
+  InboundFuture = 'inbound.future',
   InboundDuplicate = 'inbound.duplicate',
   NotificationIgnoredField = 'notification.ignored_field',
   StatusUnindexed = 'status.unindexed',

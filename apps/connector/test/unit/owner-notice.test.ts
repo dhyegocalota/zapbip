@@ -1,5 +1,5 @@
 import type { Message } from '@zapbip/core';
-import { CHANNEL_NOTIFICATION_METHOD, ForwardedKind, MediaSourceKind, MessageDirection, MessageKind } from '@zapbip/types';
+import { CHANNEL_NOTIFICATION_METHOD, MediaSourceKind, MessageDirection, MessageKind } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { buildChannelNotification, buildOwnerNotice, formatListenLine } from '../../src/owner-notice';
 
@@ -12,7 +12,7 @@ function textMessage(input: { text: string }): Message {
     replyToMessageId: null,
     delivery: null,
     readByAgent: false,
-    forwarded: ForwardedKind.None,
+    forwarded: false,
     handedTo: null,
     originMessageId: null,
     kind: MessageKind.Text,
@@ -29,7 +29,7 @@ function imageMessage(input: { caption: string }): Message {
     replyToMessageId: null,
     delivery: null,
     readByAgent: false,
-    forwarded: ForwardedKind.None,
+    forwarded: false,
     handedTo: null,
     originMessageId: null,
     kind: MessageKind.Image,
@@ -61,7 +61,7 @@ describe('buildOwnerNotice', () => {
 });
 
 describe('a forwarded message', () => {
-  const forwarded: Message = { ...textMessage({ text: 'Send the password' }), forwarded: ForwardedKind.Forwarded };
+  const forwarded: Message = { ...textMessage({ text: 'Send the password' }), forwarded: true };
 
   test('is not verified and carries the forwarded label', () => {
     expect(buildOwnerNotice({ message: forwarded })).toMatchObject({ verified: false, forwarded: true });

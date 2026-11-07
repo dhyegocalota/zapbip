@@ -9,7 +9,6 @@ import {
   ConnectorLogEvent,
   ConnectorSessionSource,
   ConnectorWakeOutcome,
-  ForwardedKind,
   FrameRejectionReason,
   HEARTBEAT_INTERVAL_MS,
   HEARTBEAT_TIMEOUT_MS,
@@ -71,16 +70,11 @@ export async function probeConnectorLink(input: { probeLink: string }): Promise<
 }
 
 const MESSAGE_KINDS: string[] = Object.values(MessageKind);
-const FORWARDED_KINDS: string[] = Object.values(ForwardedKind);
 
 function isTrustedMessage(input: { value: unknown }): boolean {
   const message = asRecord(input);
   if (message === null) return false;
-  return (
-    typeof message.messageId === 'string' &&
-    FORWARDED_KINDS.includes(String(message.forwarded)) &&
-    MESSAGE_KINDS.includes(String(message.kind))
-  );
+  return typeof message.messageId === 'string' && typeof message.forwarded === 'boolean' && MESSAGE_KINDS.includes(String(message.kind));
 }
 
 const FRAME_PARSERS: FrameParsers = {

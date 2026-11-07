@@ -2,11 +2,10 @@ import { z } from 'zod';
 import { ASK_MAX_WAIT_SECONDS, HISTORY_LIMIT } from '@zapbip/core';
 import {
   DeliveryState,
-  ForwardedKind,
   InboxStatus,
   MediaSourceKind,
-  MessageDirection,
   MessageKind,
+  MessageDirection,
   MessageSender,
   OwnerLocale,
   ReplyStatus,
@@ -88,7 +87,7 @@ export const messageWireSchema = z.object({
   direction: z.enum(MessageDirection),
   sender: z.enum(MessageSender),
   verified: z.boolean(),
-  forwarded: z.enum(ForwardedKind),
+  forwarded: z.boolean(),
   agent: z.string().nullable(),
   at: z.iso.datetime(),
   reply_to: z.string().nullable(),

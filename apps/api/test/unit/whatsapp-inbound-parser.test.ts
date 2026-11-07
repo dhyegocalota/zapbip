@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { ChannelInboundKind, ForwardedKind, IdPrefix, MessageKind } from '@zapbip/types';
+import { ChannelInboundKind, IdPrefix, MessageKind } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { parseWebhookNotification, type ParsedChange, type ParsedEntry } from '../../src/adapters/whatsapp/inbound-parser';
 import { OperatorLogReason, ParsedEntryKind } from '../../src/adapters/whatsapp/whatsapp-enums';
@@ -65,7 +65,7 @@ describe('parseWebhookNotification', () => {
         at: AT_MS,
         content: { kind: MessageKind.Text, text: 'Oi' },
         replyToChannelMessageId: null,
-        forwarded: ForwardedKind.None,
+        forwarded: false,
       },
     });
   });
@@ -77,7 +77,7 @@ describe('parseWebhookNotification', () => {
       at: AT_MS,
       content: { kind: MessageKind.Image, voice: false, filename: null, caption: 'Foto' },
       replyToChannelMessageId: null,
-      forwarded: ForwardedKind.None,
+      forwarded: false,
     });
     expect(parsed.media).toEqual({
       mediaId: mediaIdOf({ channelMessageId: 'wamid.IMAGE' }),
@@ -177,29 +177,29 @@ describe('parseWebhookNotification', () => {
     expect(parsed.entry).toMatchObject({
       content: { kind: MessageKind.Text, text: 'Oi' },
       replyToChannelMessageId: null,
-      forwarded: ForwardedKind.Forwarded,
+      forwarded: true,
     });
   });
 
   it('parses a frequently forwarded text', async () => {
     const parsed = await inboundOf({ message: textFrequentlyForwardedFixture });
-    expect(parsed.entry).toMatchObject({ replyToChannelMessageId: null, forwarded: ForwardedKind.FrequentlyForwarded });
+    expect(parsed.entry).toMatchObject({ replyToChannelMessageId: null, forwarded: true });
   });
 
-  it('prefers frequently forwarded when both flags are set', async () => {
+  it('flags forwarded true when both context flags are set', async () => {
     const parsed = await inboundOf({ message: { ...textFixture, context: { forwarded: true, frequently_forwarded: true } } });
-    expect(parsed.entry).toMatchObject({ forwarded: ForwardedKind.FrequentlyForwarded });
+    expect(parsed.entry).toMatchObject({ forwarded: true });
   });
 
   it('parses a forwarded image with its download request', async () => {
     const parsed = await inboundOf({ message: imageForwardedFixture });
-    expect(parsed.entry).toMatchObject({ content: { kind: MessageKind.Image }, forwarded: ForwardedKind.Forwarded });
+    expect(parsed.entry).toMatchObject({ content: { kind: MessageKind.Image }, forwarded: true });
     expect(parsed.media).toMatchObject({ channelMediaId: '900000000000001' });
   });
 
   it('keeps the reply target and no forwarding on a plain reply', async () => {
     const parsed = await inboundOf({ message: textReplyFixture });
-    expect(parsed.entry).toMatchObject({ replyToChannelMessageId: 'wamid.X', forwarded: ForwardedKind.None });
+    expect(parsed.entry).toMatchObject({ replyToChannelMessageId: 'wamid.X', forwarded: false });
   });
 
   it('pin: parses a reaction with an empty emoji as a removal', async () => {

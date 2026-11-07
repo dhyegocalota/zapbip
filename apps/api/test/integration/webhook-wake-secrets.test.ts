@@ -1,7 +1,6 @@
 import { WAKE_SECRET_KEY_BYTES, type WakeTransport } from '@zapbip/core';
 import type { WakeLogEvent } from '@zapbip/core';
 import {
-  ForwardedKind,
   InboxErrorCode,
   MessageKind,
   OwnerLocale,
@@ -219,7 +218,7 @@ describe('wake dependencies', () => {
         ownerMessage: {
           at: Date.now(),
           replyToMessageId: null,
-          forwarded: ForwardedKind.None,
+          forwarded: false,
           content: { kind: MessageKind.Text, text: mentionText({ text: 'oi' }) },
         },
       });

@@ -369,7 +369,7 @@ Pins (green on landing): WI-35 to WI-43 (`d93dc2f`), WI-52, WI-53, WI-55, WI-57 
 - `media-download.ts` maps `GraphRequestError` to a channel error before branching, so 131052 is unavailable and a server error or no response is retriable in production.
 - `routes/whatsapp.ts` is `createWhatsappRoutes({ developmentMediaOrigin })`: a stale entry (older than `RECEIPT_RETENTION_MS`) answers `200` and logs `inbound.stale`; a committed message (`hasChannelReceipt` on the account object) answers `200` before any download and logs `inbound.duplicate`; a young status for a message the account has not saved answers `503`.
 - `index.dev.ts` is the only reader of `WHATSAPP_MEDIA_DOWNLOAD_ORIGIN` (`dev/read-development-media-origin.ts`).
-- Forwarded: parser, `ForwardedKind`, DO schema `v5` column `forwarded`, wire field `forwarded`, `verified: false` when forwarded.
+- ~~Forwarded: parser, `ForwardedKind`, DO schema `v4` column `forwarded`, wire field `forwarded`, `verified: false` when forwarded.~~ Superseded: forwarded is a boolean payload flag with no column (owner delegated 2026-11-06).
 - `graph-client.ts` keeps the abort armed until the body is consumed (`GRAPH_MEDIA_BODY_DEADLINE_MS` for downloads).
 - `channel-error-mapping.ts` takes `isReactionSend`; 131009 on any other send is the unexpected-error kind.
 - A reaction on a wamid nobody has is stored with `targetMessageId: null`.
@@ -382,7 +382,7 @@ Pins (green on landing): WI-35 to WI-43 (`d93dc2f`), WI-52, WI-53, WI-55, WI-57 
 | media download through the real Graph client (4 cases) | `23f714e`: rejects with `GraphRequestError` instead of `{ stored: false }` / `RetriableMediaError` | `b2bdb3e` |
 | env and development origin (3) | `7dc5600`: `readDevelopmentMediaOrigin is not implemented`, `toEqual` on the old shape | `94c4caa` |
 | parser forwarded, graph-client body deadline, unsupported without a type (10) | `455480a`: forwarded messages parse as rejected; stalled bodies time out at 5 s | `5e87016`, `fef0cd2` |
-| forwarded storage and wire, stale, redelivery, receipt, status 503, schema v5 (14 integration, 5 core) | `41d8ddb`, printed: `The RPC receiver does not implement "hasChannelReceipt"` (receipt check, redelivery), `expected undefined to be 'forwarded'` and `expected { ... } to match object { forwarded: ... }` (forwarded text, frequently forwarded, forwarded image, plain text wire), `expected 200 to be 503` (R6), `expected { ok, value } to deeply equal { applied: false, found: false }` (WI-16), the schema v5 and forwarded-kind DO cases; core `has-channel-receipt.test.ts` fails with `Cannot find module './has-channel-receipt'` | `479eb98` |
+| forwarded storage and wire, stale, redelivery, receipt, status 503, schema v4 (14 integration, 5 core) | `41d8ddb`, printed: `The RPC receiver does not implement "hasChannelReceipt"` (receipt check, redelivery), `expected undefined to be 'forwarded'` and `expected { ... } to match object { forwarded: ... }` (forwarded text, frequently forwarded, forwarded image, plain text wire), `expected 200 to be 503` (R6), `expected { ok, value } to deeply equal { applied: false, found: false }` (WI-16), the schema v4 and forwarded-kind DO cases; core `has-channel-receipt.test.ts` fails with `Cannot find module './has-channel-receipt'` | `479eb98` |
 | 131009 kind, reaction target null, nosniff (3) | `382df1d` | the same commit |
 
 Order note: the fixes `fef0cd2` and `5e87016` were written before their red commit `455480a` (the red run was taken on the tree without them; no history rewrite).
@@ -403,6 +403,31 @@ Pins (green on landing, labelled `pin` in their titles or commits): WI-17, WI-44
 
 ### Security re-check fixes
 
-- A forwarded text is still stored, routed and delivered with `verified: false`, but it never answers an open question (`isOwnWords` in `owner-placement.ts`); the question stays open and `wait_for_reply` returns the message. Taps (`button_reply`, `list_reply`) cannot be forwarded in WhatsApp, so they are unchanged.
+- A forwarded text is still stored, routed and delivered with `verified: false`, but it never answers an open question (`isOwnWords` in `owner-placement.ts`); the question stays open and `wait_for_reply` returns the message. A forwarded tap (`button_reply`, `list_reply`) is placed as a normal text message with the option title and never answers an ask either (`placeChoice` skips the tap lookup when forwarded).
 - Slice 3 (accounts-and-keys): an owner command ("novo agente", revoke, rotate) read from a forwarded message must not run; check `forwarded` before parsing a command.
 - A permanent 4xx on the media metadata (not 401, not a rate limit) is stored as unavailable with the owner notice; 401 and 429 still answer 500 so Meta retries.
+
+### Merge of main (agent-inbox-core shipped)
+
+- The closed-window notice follows agent-inbox-core: the claim owner gets `delivery_failed` with the notice-failed text, the message stays `Queued`, the alarm retries with backoff. `deliver-to-owner-channel.test.ts` ("a notice the channel rejects leaves the message queued and the agent reads the notice failure text") replaced the earlier expectation that the agent read the channel's own rejection text.
+- `OwnerWindow` carries both `closedAt` (this slice) and the notice retry fields (core); `openWindow` resets the retry fields as `receiveOwnerMessage` does.
+- Hypothesis: a channel `WindowClosed` during a flush stops the flush, closes the window, sends one notice through `sendNotice`, and a failed notice is retried by the alarm without marking any message `Failed`.
+
+### Forwarded messages on the direct owner path
+
+- `receiveOwnerMessage` and `receiveChannelMessage` share `planArrival`, so a forwarded text never answers an open ask on either path. `receive-owner-message.test.ts` CU-199 pins the direct path (pin: green when it landed). `forwarded` is the connector's boolean now; the earlier three-state kind and the `forwarded` column are gone.
+- Gap: owner account commands do not exist in this slice; slice 3 must ignore forwarded messages before parsing a command.
+
+### Merge-delta fix
+
+| Behaviour | Red | Green | Failure the red run printed |
+|---|---|---|---|
+| CU-199 a forwarded tap on an open ask does not answer it | 28dae6e | 676fb19 | `expected { optionIndex: 1, text: 'Não', ... } to be null` |
+| a failed message does not read the notice failure of a later queued message | 28dae6e | 676fb19 | `code: 'delivery_failed'` with the notice-failed text instead of `rate_limited` |
+| DO schema upgrade: a database holding versions 1, 2 and 5 applies v4 | pin (green when it landed) | same commit as the renames | none |
+
+- The renames (`receive-channel-message.test.ts`, `whatsapp-webhook.test.ts`, `whatsapp-inbound-parser.test.ts`) are test titles and data only: forwarded is a boolean, and no case repeats.
+- Hypothesis: `deliverToOwner` throws the notice failure only when the caller's own message is still `Queued`; a caller message that failed reads its own channel error.
+- Hypothesis: a forwarded tap reaches the agent as a normal forwarded text with the option title, `verified: false`, and the question stays open.
+- Docs: `apps/docs/concepts/inbox.mdx` and its pt-br copy state the forwarded exception.
+

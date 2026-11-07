@@ -1,4 +1,4 @@
-import { ChannelInboundKind, ForwardedKind, MessageKind, type OwnerLocale } from '@zapbip/types';
+import { ChannelInboundKind, HttpStatus, MessageKind, type OwnerLocale } from '@zapbip/types';
 import { assertMediaFits, InboxError, invalidInput, notFound, type ChannelInboundEntry, type OwnerInboundContent } from '@zapbip/core';
 import { Hono } from 'hono';
 import { z } from 'zod';
@@ -14,7 +14,6 @@ import { contactInputSchema, sendableMediaKind } from '../contract/mcp-schemas';
 import { LogEvent } from '../contract/log';
 import { logEvent } from '../log';
 import { accountInboxOf } from './account-inbox-stub';
-import { HttpStatus } from '../contract/http-status';
 import { ERROR_STATUS } from './http-status';
 
 type OwnerIdentity = { accountId: string; ownerLocale: OwnerLocale };
@@ -196,7 +195,7 @@ async function buildOwnerEntry(input: {
     at: clock.now() + clockOffsetMs,
     content,
     replyToChannelMessageId,
-    forwarded: body.forwarded ? ForwardedKind.Forwarded : ForwardedKind.None,
+    forwarded: body.forwarded,
     noticeText: null,
   };
 }

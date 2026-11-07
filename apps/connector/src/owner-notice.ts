@@ -1,5 +1,5 @@
 import type { Message } from '@zapbip/core';
-import { CHANNEL_NOTIFICATION_METHOD, CHANNEL_SENDER, ForwardedKind, type MessageKind } from '@zapbip/types';
+import { CHANNEL_NOTIFICATION_METHOD, CHANNEL_SENDER, type MessageKind } from '@zapbip/types';
 import { escapeChannelText, ownerMessageText } from './owner-prompt';
 
 export type OwnerNotice = { messageId: string; kind: MessageKind; sender: string; verified: boolean; forwarded: boolean; text: string };
@@ -7,7 +7,7 @@ export type ChannelNotification = { method: string; params: { content: string; m
 
 export function buildOwnerNotice(input: { message: Message }): OwnerNotice {
   const { message } = input;
-  const isOwnWords = message.forwarded === ForwardedKind.None;
+  const isOwnWords = !message.forwarded;
   return {
     messageId: message.messageId,
     kind: message.kind,

@@ -773,7 +773,7 @@ Failure modes for W0 are in the table below. W0 has no backout: fix forward in a
 ## Z. Prove and ship
 
 - [ ] **Tester briefing:** a developer wrote `tester-briefing.md` (per lane).
-- [ ] **Tester run:** a fresh `tester` sub-agent per test-plan area executed `test-plan.md` and ticked every box with evidence.
+- [x] **Tester run:** a fresh `tester` sub-agent per test-plan area executed `test-plan.md` and ticked every box with evidence. — evidence: /private/tmp/claude-501/-Users-dhyegocalota-Projects-zapbip-zapbip/edbded58-c331-44d5-ac8d-6cac14247a14/scratchpad/test-results/whatsapp-cloud-channel/final-head.md (24a298e).
 - [ ] **Reviewer:** a fresh `reviewer` sub-agent returned a verdict; refutation of the three riskiest claims is recorded in `test-plan.md`.
 - [ ] **/check-ui:** the simulator screen walk on the development entry (owner text, voice note, quick-reply tap) recorded and uploaded.
 - [ ] **/open-pr:** gates passed, learnings sweep stated, PR opened. The owner-run items of `test-plan.md` are listed in the PR as open.
@@ -817,7 +817,7 @@ Not in the core: `D1ChannelRestrictions` (adapter in `apps/api`) and `OwnerLocal
 - [x] **F2 Receipt before download.** `hasChannelReceipt` on the repository, the use case and the Durable Object; the route answers `200` for a committed message before any download. Test commit `41d8ddb`.
 - [x] **F3 Development media origin.** Only `index.dev.ts` reads `WHATSAPP_MEDIA_DOWNLOAD_ORIGIN` and passes it to `createApp`; the production entry passes `null`; the bundle test forbids the binding name. Red `7dc5600`, fix `94c4caa`.
 - [x] **F4 Stale entries.** An entry older than `RECEIPT_RETENTION_MS` answers `200` and logs `inbound.stale`. Test commit `41d8ddb`.
-- [x] **F5 Forwarded.** `ForwardedKind` on the inbound entry, the stored message (DO schema `v5`) and the wire (`forwarded`, `verified: false`). Parser red `455480a`, core and API red `41d8ddb`.
+- [x] **F5 Forwarded.** ~~`ForwardedKind` on the inbound entry, the stored message (DO schema `v4`) and the wire (`forwarded`, `verified: false`).~~ Superseded: forwarded is a boolean payload flag with no column (owner delegated 2026-11-06). Parser red `455480a`, core and API red `41d8ddb`.
 - [x] **F6 Reviewer R1 to R8.** `context` without `id`; the Graph abort armed until the body is read (`GRAPH_MEDIA_BODY_DEADLINE_MS`); claim constants from `@zapbip/core`; `applyStatus` reports `found` and the route answers `503` for a young status the account has not saved; `HttpStatus`, `ParsedEntryKind` and constant error bodies; an `unsupported` message without a type parses to `null`.
 - [x] **F7 Tester findings.** WI-16, WI-17, WI-44 to WI-49 and the stronger WI-20, WI-29, WI-30, WI-31; titles renamed to the plan ids; W4 and W5 pins; docs say 1,024 and `media_id`/`media_status`; `X-Content-Type-Options: nosniff` on the challenge; WI-25 signs the real body; 131009 on a non-reaction send is the unexpected-error kind; a reaction on an unknown target stores `null`, not the wamid. Test commit `382df1d`.
 - Note: `3785271` and `7f0481f` mix pins with fixes (no history rewrite); the briefing rows say which.

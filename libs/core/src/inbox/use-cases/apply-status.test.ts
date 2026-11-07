@@ -1,4 +1,4 @@
-import { DeliveryState, MessageDirection, MessageKind, ForwardedKind } from '@zapbip/types';
+import { DeliveryState, MessageDirection, MessageKind } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import type { ChannelStatusDetail } from '../inbox-records';
 import { createEnvironment } from '../testing/fixtures';
@@ -21,7 +21,7 @@ async function storeOutbound(input: { environment: Environment; delivery: Delive
       replyToMessageId: null,
       delivery,
       readByAgent: true,
-      forwarded: ForwardedKind.None,
+      forwarded: false,
       handedTo: null,
       originMessageId: null,
       kind: MessageKind.Text,
@@ -137,7 +137,7 @@ describe('applyStatus', () => {
         replyToMessageId: null,
         delivery: null,
         readByAgent: false,
-        forwarded: ForwardedKind.None,
+        forwarded: false,
         handedTo: null,
         originMessageId: null,
         kind: MessageKind.Text,

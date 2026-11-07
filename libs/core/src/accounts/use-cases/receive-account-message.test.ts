@@ -4,7 +4,6 @@ import {
   AccountState,
   ChannelErrorKind,
   CommandKind,
-  ForwardedKind,
   MessageDirection,
   MessageKind,
   OwnerLocale,
@@ -414,25 +413,22 @@ describe('receiveAccountMessage connection creation', () => {
 });
 
 describe('receiveAccountMessage forwarded messages', () => {
-  test.each([ForwardedKind.Forwarded, ForwardedKind.FrequentlyForwarded])(
-    'a %s account command is plain text, never a command',
-    async (forwarded) => {
-      const fixture = await createAccountFixture();
-      await addAgent({ ...fixture, agent: 'alpha' });
-      const result = await receiveAccount({ ...fixture, forwarded, content: { kind: MessageKind.Text, text: 'revogar alpha' } });
-      expect(result.commandKind).toBeNull();
-      expect(result.deletionConfirmed).toBe(false);
-      const connections = await fixture.environment.registry.listActive({ accountId: fixture.account.accountId });
-      expect(connections.map((connection) => connection.agent)).toEqual(['alpha']);
-    },
-  );
+  test('a forwarded account command is plain text, never a command', async () => {
+    const fixture = await createAccountFixture();
+    await addAgent({ ...fixture, agent: 'alpha' });
+    const result = await receiveAccount({ ...fixture, forwarded: true, content: { kind: MessageKind.Text, text: 'revogar alpha' } });
+    expect(result.commandKind).toBeNull();
+    expect(result.deletionConfirmed).toBe(false);
+    const connections = await fixture.environment.registry.listActive({ accountId: fixture.account.accountId });
+    expect(connections.map((connection) => connection.agent)).toEqual(['alpha']);
+  });
 
   test('a forwarded deletion confirmation does not delete the account', async () => {
     const fixture = await createAccountFixture();
     await receiveAccountText({ ...fixture, text: 'apagar conta' });
     const result = await receiveAccount({
       ...fixture,
-      forwarded: ForwardedKind.Forwarded,
+      forwarded: true,
       content: { kind: MessageKind.Text, text: 'apagar conta definitivamente' },
     });
     expect(result.deletionConfirmed).toBe(false);

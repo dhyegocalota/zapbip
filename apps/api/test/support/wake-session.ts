@@ -1,6 +1,6 @@
 import type { AgentName, RecordedWakeRequest, ScriptedWakeResponse, SetWakeResult, WakeDependencies } from '@zapbip/core';
 import { WAKE_COPY } from '@zapbip/core';
-import { ForwardedKind, MessageKind, OwnerLocale, WakeCopyKey, WakeMode } from '@zapbip/types';
+import { MessageKind, OwnerLocale, WakeCopyKey, WakeMode } from '@zapbip/types';
 import { runInDurableObject } from 'cloudflare:test';
 import type { AccountInbox } from '../../src/account-inbox/account-inbox';
 import type { CallOutcome } from '../../src/contract/account-inbox-rpc';
@@ -75,7 +75,7 @@ export function receiveEnglishText(input: { stub: DurableObjectStub<AccountInbox
     ownerMessage: {
       at: Date.now(),
       replyToMessageId: null,
-      forwarded: ForwardedKind.None,
+      forwarded: false,
       content: { kind: MessageKind.Text, text: mentionText({ text: input.text }) },
     },
   });

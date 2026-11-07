@@ -1,4 +1,4 @@
-import { DeliveryState, MediaOrigin, MessageDirection, MessageKind, OwnerLocale, ForwardedKind } from '@zapbip/types';
+import { DeliveryState, MediaOrigin, MessageDirection, MessageKind, OwnerLocale } from '@zapbip/types';
 import { MEDIA_RETENTION_MS, QUEUE_RETENTION_MS, type RoutingList, type StoredMedia } from '@zapbip/core';
 import { afterEach, describe, expect, it } from 'vitest';
 import { reset } from 'cloudflare:test';
@@ -455,7 +455,7 @@ describe('SQLite inbox repository', () => {
       direction: MessageDirection.FromOwner,
       agent: null,
       readByAgent: true,
-      forwarded: ForwardedKind.None,
+      forwarded: false,
     });
     const result = await inRepository(async (repository) => {
       await Promise.all([held, routedNowhere].map((message) => repository.insertMessage({ message })));

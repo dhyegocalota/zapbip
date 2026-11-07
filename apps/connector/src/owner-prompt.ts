@@ -1,5 +1,5 @@
 import type { Message } from '@zapbip/core';
-import { ForwardedKind, MessageKind, WAKE_INSTRUCTION } from '@zapbip/types';
+import { MessageKind, WAKE_INSTRUCTION } from '@zapbip/types';
 
 type MessageOfKind<Kind extends MessageKind> = Extract<Message, { kind: Kind }>;
 type MediaKind = MessageKind.Image | MessageKind.Video | MessageKind.Audio | MessageKind.Document | MessageKind.Sticker;
@@ -49,6 +49,6 @@ export function ownerMessageText(input: { message: Message }): string {
 
 export function buildOwnerPrompt(input: { message: Message }): string {
   const channelText = escapeChannelText({ text: ownerMessageText(input) });
-  const opening = input.message.forwarded === ForwardedKind.None ? VERIFIED_OPENING : FORWARDED_OPENING;
+  const opening = input.message.forwarded ? FORWARDED_OPENING : VERIFIED_OPENING;
   return `${opening}${channelText}${CHANNEL_CLOSING}\n${WAKE_INSTRUCTION}`;
 }

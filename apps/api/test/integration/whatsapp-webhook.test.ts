@@ -2,7 +2,6 @@ import { env, runInDurableObject, SELF } from 'cloudflare:test';
 import { formatOptionId, HISTORY_LIMIT, isOwnerWindowOpen, RECEIPT_RETENTION_MS, type CoreDependencies } from '@zapbip/core';
 import {
   DeliveryState,
-  ForwardedKind,
   MediaSourceKind,
   MessageDirection,
   MessageKind,
@@ -13,7 +12,12 @@ import {
 } from '@zapbip/types';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { createApp } from '../../src/app';
-import { GRAPH_REQUEST_TIMEOUT_MS, WEBHOOK_MAX_BYTES, WEBHOOK_SIGNATURE_HEADER } from '../../src/adapters/whatsapp/whatsapp-constants';
+import {
+  GRAPH_REQUEST_TIMEOUT_MS,
+  MAX_FUTURE_SKEW_MS,
+  WEBHOOK_MAX_BYTES,
+  WEBHOOK_SIGNATURE_HEADER,
+} from '../../src/adapters/whatsapp/whatsapp-constants';
 import { OwnerCopyKey, WHATSAPP_COPY } from '../../src/adapters/whatsapp/whatsapp-copy';
 import { OperatorEvent } from '../../src/adapters/whatsapp/whatsapp-enums';
 import { WHATSAPP_WEBHOOK_PATH } from '../../src/contract/constants';
@@ -48,6 +52,7 @@ const STATUS_BAD_REQUEST = 400;
 const STATUS_UNAUTHORIZED = 401;
 const STATUS_FORBIDDEN = 403;
 const STATUS_PAYLOAD_TOO_LARGE = 413;
+const CONCURRENT_POSTS = 10;
 const STATUS_NOT_FOUND = 404;
 const STATUS_FOUND = 302;
 const STATUS_DOWNLOAD_FAILED = 500;
@@ -105,7 +110,7 @@ async function postNotificationWithAccessToken(input: { notification: object; de
   const text = JSON.stringify(input.notification);
   const signature = await signatureHeaderOf({ appSecret: env.META_APP_SECRET as string, body: encode({ text }) });
   const request = new Request(WEBHOOK_URL, { method: 'POST', headers: { [WEBHOOK_SIGNATURE_HEADER]: signature }, body: text });
-  return createApp({ extraRoutes: [], developmentMediaOrigin }).fetch(request, whatsappTestEnv);
+  return createApp({ extraRoutes: [], developmentMediaOrigin, maxFutureSkewMs: MAX_FUTURE_SKEW_MS }).fetch(request, whatsappTestEnv);
 }
 
 async function historyOf(input: { account: SeededAccount }) {
@@ -271,6 +276,22 @@ describe('webhook request checks', () => {
     expect(response.status).toBe(STATUS_PAYLOAD_TOO_LARGE);
   });
 
+  test.each(['abc', '-1'])('accepts a signed body whose Content-Length header is %s because the streaming cap applies', async (header) => {
+    const text = JSON.stringify(notificationWith({}));
+    const signature = await signatureHeaderOf({ appSecret: env.META_APP_SECRET as string, body: encode({ text }) });
+    const response = await SELF.fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { [WEBHOOK_SIGNATURE_HEADER]: signature, 'Content-Length': header },
+      body: text,
+    });
+    expect(response.status).toBe(STATUS_OK);
+  });
+
+  test('answers 413 for an unsigned body over the cap before the signature check', async () => {
+    const response = await SELF.fetch(WEBHOOK_URL, { method: 'POST', body: paddedNotificationOf({ totalBytes: WEBHOOK_MAX_BYTES + 1 }) });
+    expect(response.status).toBe(STATUS_PAYLOAD_TOO_LARGE);
+  });
+
   test('WI-26 accepts a signed body of exactly the cap', async () => {
     const response = await postSigned({ text: paddedNotificationOf({ totalBytes: WEBHOOK_MAX_BYTES }) });
     expect(response.status).toBe(STATUS_OK);
@@ -278,6 +299,14 @@ describe('webhook request checks', () => {
 });
 
 describe('webhook inbound messages', () => {
+  test('stores once when the same signed post arrives ten times at once', async () => {
+    const account = await seedAccount({ agent: 'alpha' });
+    const text = JSON.stringify(notificationWith({ messages: [ownerText({ account, id: 'wamid.TENWAY', text: 'Oi' })] }));
+    const responses = await Promise.all(Array.from({ length: CONCURRENT_POSTS }, () => postSigned({ text })));
+    expect(responses.map((response) => response.status)).toEqual(Array.from({ length: CONCURRENT_POSTS }, () => STATUS_OK));
+    expect(ownerTextsOf({ history: await historyOf({ account }) })).toEqual(['Oi']);
+  });
+
   test('WI-20 stores a signed owner text', async () => {
     const account = await seedAccount({ agent: 'alpha' });
     const response = await postNotification({
@@ -683,6 +712,30 @@ describe('webhook stale and replayed deliveries', () => {
     expect(ownerTextsOf({ history: await historyOf({ account }) })).toEqual(['Quase']);
   });
 
+  test('answers 200, stores nothing and logs inbound.future for an entry timestamped beyond the future skew', async () => {
+    const spies = spyOnLogs();
+    const account = await seedAccount({ agent: 'alpha' });
+    const message = {
+      ...ownerText({ account, id: 'wamid.FUTURE', text: 'Amanha' }),
+      timestamp: secondsAgo({ ageMs: -(MAX_FUTURE_SKEW_MS + STALE_MARGIN_MS) }),
+    };
+    const response = await postNotificationWithAccessToken({ notification: notificationWith({ messages: [message] }) });
+    expect(response.status).toBe(STATUS_OK);
+    expect(ownerTextsOf({ history: await historyOf({ account }) })).toEqual([]);
+    expect(occurrencesOf({ text: loggedText({ spies }), event: OperatorEvent.InboundFuture })).toBe(1);
+  });
+
+  test('pin: processes an entry just inside the future skew', async () => {
+    const account = await seedAccount({ agent: 'alpha' });
+    const message = {
+      ...ownerText({ account, id: 'wamid.SOON', text: 'Quase' }),
+      timestamp: secondsAgo({ ageMs: -(MAX_FUTURE_SKEW_MS - STALE_MARGIN_MS) }),
+    };
+    const response = await postNotificationWithAccessToken({ notification: notificationWith({ messages: [message] }) });
+    expect(response.status).toBe(STATUS_OK);
+    expect(ownerTextsOf({ history: await historyOf({ account }) })).toEqual(['Quase']);
+  });
+
   test('answers 200 and keeps one message when a captured delivery of a stored message id is replayed after the retention', async () => {
     spyOnLogs();
     const account = await seedAccount({ agent: 'alpha' });
@@ -756,11 +809,10 @@ describe('webhook Graph errors on inbound media', () => {
 
 describe('webhook forwarded messages', () => {
   test.each([
-    ['a forwarded text', textForwardedFixture, ForwardedKind.Forwarded],
-    ['a frequently forwarded text', textFrequentlyForwardedFixture, ForwardedKind.FrequentlyForwarded],
-  ])('stores %s with the forwarded kind and verified false', async (_name, fixture, forwarded) => {
+    ['a forwarded text', 'wamid.FWDTEXT', textForwardedFixture],
+    ['a frequently forwarded text', 'wamid.FREQUENTLYFWDTEXT', textFrequentlyForwardedFixture],
+  ])('stores %s with forwarded true and verified false', async (_name, id, fixture) => {
     const account = await seedAccount({ agent: 'alpha' });
-    const id = `wamid.${forwarded}`;
     const message = fresh({ message: fixture, account, id });
     const response = await postNotification({ notification: notificationWith({ messages: [message] }) });
     expect(response.status).toBe(STATUS_OK);
@@ -769,11 +821,11 @@ describe('webhook forwarded messages', () => {
       sender: MessageSender.Owner,
       verified: false,
       read: false,
-      forwarded,
+      forwarded: true,
     });
   });
 
-  test('stores a forwarded image with its media and the forwarded kind', async () => {
+  test('stores a forwarded image with its media and forwarded true', async () => {
     spyOnLogs();
     serveMediaFromGraph();
     const account = await seedAccount({ agent: 'alpha' });
@@ -782,14 +834,14 @@ describe('webhook forwarded messages', () => {
     expect(response.status).toBe(STATUS_OK);
     const image = await imageOf({ account });
     expect(image.source.kind).toBe(MediaSourceKind.Stored);
-    expect(image.forwarded).toBe(ForwardedKind.Forwarded);
+    expect(image.forwarded).toBe(true);
   });
 
-  test('a plain text is stored with forwarded none and verified true', async () => {
+  test('a plain text is stored with forwarded false and verified true', async () => {
     const account = await seedAccount({ agent: 'alpha' });
     await postNotification({ notification: notificationWith({ messages: [ownerText({ account, id: 'wamid.PLAIN', text: 'Oi' })] }) });
     const stored = await storedByChannelId({ account, channelMessageId: 'wamid.PLAIN' });
-    expect(toWireMessage({ message: stored, link: null })).toMatchObject({ verified: true, forwarded: ForwardedKind.None });
+    expect(toWireMessage({ message: stored, link: null })).toMatchObject({ verified: true, forwarded: false });
   });
 });
 
