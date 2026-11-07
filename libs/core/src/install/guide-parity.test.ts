@@ -15,6 +15,9 @@ const ACTION_PATTERN =
 const WAKE_MODE_PATTERN = /mode: "(\w+)"/g;
 const VERSION_PATTERN = /@\S+/;
 
+const PLUGIN_PAGE_CLIENTS: InstallClient[] = [InstallClient.Hermes, InstallClient.OpenClaw];
+const STEP_GUIDE_CLIENTS = Object.values(InstallClient).filter((client) => !PLUGIN_PAGE_CLIENTS.includes(client));
+
 type GuideLanguage = { locale: OwnerLocale; pagePrefix: string };
 
 const GUIDE_LANGUAGES: GuideLanguage[] = [
@@ -49,7 +52,7 @@ function setUpOf(guide: string): string {
 }
 
 describe('install guide parity', () => {
-  test.each(Object.values(InstallClient))('IS-D2 the %s guide mirrors its section: same actions in order, same wake modes', (client) => {
+  test.each(STEP_GUIDE_CLIENTS)('IS-D2 the %s guide mirrors its section: same actions in order, same wake modes', (client) => {
     const guide = setUpOf(readGuide({ pagePrefix: GUIDE_LANGUAGES[0]!.pagePrefix, client }));
     const withStandby = sectionText({ client, standbyAgent: STANDBY_AGENT });
     const withoutStandby = sectionText({ client, standbyAgent: null });
@@ -67,7 +70,7 @@ describe('install guide parity', () => {
     },
   );
 
-  test.each(GUIDE_LANGUAGES.flatMap((language) => Object.values(InstallClient).map((client) => ({ ...language, client }))))(
+  test.each(GUIDE_LANGUAGES.flatMap((language) => STEP_GUIDE_CLIENTS.map((client) => ({ ...language, client }))))(
     'IS-D3 the $locale guide for $client ends with the self-test',
     ({ locale, pagePrefix, client }) => {
       const guide = readGuide({ pagePrefix, client });

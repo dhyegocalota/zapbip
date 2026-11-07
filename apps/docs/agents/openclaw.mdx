@@ -22,6 +22,8 @@ OpenClaw keeps listening on your WhatsApp through a small zapbip channel. You wr
 
 ## Install the channel
 
+The plugin reads your messages for this agent from zapbip and posts the agent replies back. It does nothing else. The install command needs `--accept-capabilities` so OpenClaw can install it without asking you again.
+
 ```bash
 openclaw plugins install @zapbip/openclaw-plugin@0.1.0 --force --accept-capabilities
 ```

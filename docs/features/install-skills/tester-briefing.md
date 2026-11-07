@@ -207,14 +207,14 @@ Known gaps:
 | `chat-clients.test.ts` F4b (2), `editor-clients.test.ts` Gemini (2) | the notice and `gemini -p "` assertions fail | a671b30 then the copy commit |
 | `install-e2e.test.ts` (5 new) | `expected '' to contain 'ZAPBIP_E2E_CLAUDE_CONFIG_DIR'` and the script text lacks `CLAUDE_CONFIG_DIR="$claude_config_directory"` | the script commit (red run seen before the script change) |
 | `install-page.test.ts` crawlers, headers, plain http; `accounts-webhook.test.ts` preview; `mcp-install.test.ts` IS-W6b | written in f29b6e8, not run red (the new route dependency made the file fail to typecheck until ebf46dc) | ebf46dc and the mcp commit |
-| `install-set-wake-modes.test.ts` | red on this branch: `scheduled` and `standby` are not accepted by the server schema | green only after scheduled-wake merges into main and main is merged here (owner delegated 2026-11-06); do not weaken the copy |
+| `install-set-wake-modes.test.ts` | red on this branch: `scheduled` and `standby` are not accepted by the server schema | green after the scheduled-wake merge (2b5e585) |
 
 ### Hypotheses to attack
 
 - A zapbip-authored text (agent null) never previews a link; an agent text with a link still does.
 - A crawler never consumes the code; a browser request right after still gets the page.
 - `ZAPBIP_E2E_CLAUDE_CONFIG_DIR` unset or equal to the owner configuration stops the script before the server starts.
-- The Hermes and OpenClaw pages keep this slice's three-section shape; the facts main's hermes-openclaw tests require (config entries, chmod 600, one listener, plugin_reply_failed) sit in the last section. The merge pass may prefer main's fuller pages and relax install-guides.test.ts for them.
+- The Hermes and OpenClaw pages are main's fuller plugin pages plus the OpenClaw permission sentence; install-guides and guide-parity treat them as plugin pages (no step-shape checks).
 
 ### Known gaps
 

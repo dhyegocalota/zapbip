@@ -5,6 +5,7 @@ import { readRepositoryFile } from './repository-files';
 const DOCS_CONFIG = 'apps/docs/docs.json';
 const SECTION_HEADING_PATTERN = /^## .+$/gm;
 const SECTIONS_PER_GUIDE = 3;
+const PLUGIN_PAGE_CLIENTS: InstallClient[] = [InstallClient.Hermes, InstallClient.OpenClaw];
 const FRONTMATTER_PATTERN = /^---\ntitle: .+\ndescription: .+\n---\n/;
 const CONNECTION_LINK_PLACEHOLDER = '<connectionLink>';
 const CODE_PATTERN = /```[\s\S]*?```|`[^`\n]*`/g;
@@ -27,6 +28,8 @@ function guidePath({ pagePrefix, client }: { pagePrefix: string; client: Install
   return `apps/docs/${pagePrefix}/${client}.mdx`;
 }
 
+const isStepGuide = ({ client }: { client: InstallClient }): boolean => !PLUGIN_PAGE_CLIENTS.includes(client);
+
 const cases = GUIDE_LANGUAGES.flatMap((guideLanguage) =>
   Object.values(InstallClient).map((client) => ({
     ...guideLanguage,
@@ -36,21 +39,34 @@ const cases = GUIDE_LANGUAGES.flatMap((guideLanguage) =>
 );
 
 describe('install guides', () => {
-  test.each(cases)('IS-D1 $path has frontmatter and exactly the three sections', ({ path }) => {
+  test.each(cases.filter(isStepGuide))('IS-D1 $path has frontmatter and exactly the three sections', ({ path }) => {
     const guide = readRepositoryFile(path);
     expect(guide).toMatch(FRONTMATTER_PATTERN);
     expect(guide.match(SECTION_HEADING_PATTERN)).toHaveLength(SECTIONS_PER_GUIDE);
   });
 
-  test.each(cases)('$path starts from the official number and pastes a prompt', ({ path, newAgentWords }) => {
+  test.each(cases.filter((guideCase) => !isStepGuide(guideCase)))(
+    'IS-D1 $path is a plugin page with frontmatter and at least the three sections',
+    ({ path }) => {
+      const guide = readRepositoryFile(path);
+      expect(guide).toMatch(FRONTMATTER_PATTERN);
+      expect(guide.match(SECTION_HEADING_PATTERN)!.length).toBeGreaterThanOrEqual(SECTIONS_PER_GUIDE);
+    },
+  );
+
+  test.each(cases.filter(isStepGuide))('$path starts from the official number and pastes a prompt', ({ path, newAgentWords }) => {
     expect(readRepositoryFile(path)).toContain(newAgentWords);
   });
 
-  test.each(cases)('$path shows the connection link only as the placeholder', ({ path }) => {
+  test.each(cases.filter(isStepGuide))('$path shows the connection link only as the placeholder', ({ path }) => {
     const guide = readRepositoryFile(path);
     expect(guide).toContain(CONNECTION_LINK_PLACEHOLDER);
     expect(guide.replace(CODE_PATTERN, '')).not.toContain(CONNECTION_LINK_PLACEHOLDER);
     expect(guide).not.toMatch(FORBIDDEN_WORDS);
+  });
+
+  test.each(cases.filter((guideCase) => !isStepGuide(guideCase)))('$path never names a test double', ({ path }) => {
+    expect(readRepositoryFile(path)).not.toMatch(FORBIDDEN_WORDS);
   });
 
   test.each(cases)('$path pins the connector package version', ({ path }) => {
