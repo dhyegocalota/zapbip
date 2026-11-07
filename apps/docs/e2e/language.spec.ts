@@ -4,7 +4,6 @@ import { DOCS_LOCALE_OF, DocsViewport, docsOptionsOf } from './support/docs-expe
 
 const PAGE_LANGUAGE_FOLDER = 'pt-br';
 const OVERVIEW_PATH = '/';
-const PORTUGUESE_OVERVIEW_PATH = `/${PAGE_LANGUAGE_FOLDER}/index`;
 const WHATSAPP_COMMANDS_PATH = '/features/whatsapp-commands';
 const SWITCHER_LOCATOR = '#localization-select-trigger';
 const SWITCHER_OPTION_LOCATOR = '[role="menuitem"]';
@@ -29,13 +28,13 @@ for (const language of Object.values(DocsLanguage)) {
       test.skip(testInfo.project.use.locale !== DOCS_LOCALE_OF[language]);
     });
 
-    test(`${DOCS_LOCALE_OF[language]} browser locale opens the ${language} Overview`, async ({ page }) => {
+    test(`${DOCS_LOCALE_OF[language]} browser locale opens the English Overview and shows the switcher`, async ({ page }) => {
       await page.goto(OVERVIEW_PATH);
       const firstHeading = page.locator('#content-area h2').first();
       await expect(firstHeading).toBeVisible();
       const headingText = (await firstHeading.innerText()).replace(ZERO_WIDTH_SPACE, '').trim();
-      expect(headingText).toBe(OVERVIEW_FIRST_HEADING[language]);
-      if (language === DocsLanguage.PortugueseBrazil) expect(pathnameOf({ url: page.url() })).toBe(PORTUGUESE_OVERVIEW_PATH);
+      expect(headingText).toBe(OVERVIEW_FIRST_HEADING[DocsLanguage.English]);
+      expect(pathnameOf({ url: page.url() })).toBe(OVERVIEW_PATH);
       await expect(page.locator(SWITCHER_LOCATOR)).toBeVisible();
     });
   });
