@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join, posix } from 'node:path';
 import { hermesWheelFilename } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
-import { readRepositoryFile, repositoryFiles, repositoryPath } from './repository-files';
+import { readRepositoryFile, repositoryFiles, repositoryPath, trackedFiles } from './repository-files';
 
 const SHARED_CONSTANTS = 'libs/types/src/constants.ts';
 const HERMES_PROJECT = 'apps/hermes-plugin/pyproject.toml';
@@ -16,6 +16,9 @@ const METADATA_FILE = 'METADATA';
 const VERSION_CONSTANT = 'ZAPBIP_HERMES_PLUGIN_VERSION';
 const HASH_CONSTANT = 'ZAPBIP_HERMES_WHEEL_SHA256';
 const PYTHON = 'python3';
+const REMOVED_NAMES = ['ZAPBIP_PYPI_VERSION', 'ZAPBIP_PYPI_PUBLISHER', 'pypi.org'];
+const RECORD_DIRECTORIES = ['docs/adr/', 'docs/learnings/', 'docs/features/'];
+const THIS_TEST = 'tools/repository-shape/src/hermes-wheel.test.ts';
 
 function constantOf({ name, pattern }: { name: string; pattern: string }): string {
   const value = new RegExp(`export const ${name} = '(${pattern})'`).exec(readRepositoryFile(SHARED_CONSTANTS))?.[1];
@@ -77,5 +80,14 @@ describe('the Hermes wheel', () => {
   test('the release directory holds only the wheel of the current version', () => {
     const currentWheel = hermesWheelFilename({ version: pluginVersion() });
     expect(readdirSync(repositoryPath(RELEASE_DIRECTORY))).toEqual([currentWheel]);
+  });
+
+  test('no file outside the records names the removed PyPI constants or hosts', () => {
+    const namingRemoved = trackedFiles()
+      .filter((path) => path !== THIS_TEST)
+      .filter((path) => !RECORD_DIRECTORIES.some((directory) => path.startsWith(directory)))
+      .filter((path) => !path.endsWith('.whl'))
+      .filter((path) => REMOVED_NAMES.some((name) => readRepositoryFile(path).includes(name)));
+    expect(namingRemoved).toEqual([]);
   });
 });
