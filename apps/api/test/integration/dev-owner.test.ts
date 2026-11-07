@@ -112,12 +112,20 @@ describe('owner simulator', () => {
   });
 
   test('WI-99 owner quoted reply keeps its reply_to and goes to the quoted message agent', async () => {
-    const { account, agentMessageId } = await seedListeningAccount();
+    const account = await seedAccount({ agent: 'alpha' });
+    await postOwner({ phone: account.phone, body: { kind: MessageKind.Text, text: 'abre' } });
+    const sent = await inboxOf({ accountId: account.accountId }).sendText({
+      connection: account.connection,
+      text: 'ola',
+      replyToMessageId: null,
+    });
+    if (!sent.ok) throw new Error(sent.message);
+    const agentMessageId = sent.value.messageId;
     const response = await postOwner({ phone: account.phone, body: { kind: MessageKind.Text, text: 'sim', reply_to: agentMessageId } });
     const result = (await response.json()) as OwnerMessageResult;
     expect(result.agent).toBe(account.connection.agent);
     const stored = (await listMessages({ account })).filter((message) => message.direction === MessageDirection.FromOwner);
-    expect(stored).toMatchObject([{ replyToMessageId: agentMessageId }]);
+    expect(stored.at(-1)).toMatchObject({ replyToMessageId: agentMessageId });
   });
 
   test('WI-101 owner choice with a malformed option id answers 200 and routes as text', async () => {
@@ -163,14 +171,14 @@ describe('owner simulator', () => {
     expect(outcome.ok && outcome.value.delivery).toBe(DeliveryState.Queued);
   });
 
-  test('WI-106 an unknown phone answers 404', async () => {
+  test('WI-106 an unknown phone opens an account like any first message', async () => {
     const response = await postOwner({ phone: UNKNOWN_PHONE, body: { kind: MessageKind.Text, text: 'oi' } });
-    expect(response.status).toBe(STATUS_NOT_FOUND);
+    expect(response.status).toBe(STATUS_OK);
   });
 
-  test('WI-107 a malformed phone answers 404', async () => {
+  test('WI-107 a malformed phone answers 400', async () => {
     const response = await postOwner({ phone: MALFORMED_PHONE, body: { kind: MessageKind.Text, text: 'oi' } });
-    expect(response.status).toBe(STATUS_NOT_FOUND);
+    expect(response.status).toBe(STATUS_BAD_REQUEST);
   });
 
   test('WI-108 a sticker that is not webp answers 400 naming mime_type', async () => {

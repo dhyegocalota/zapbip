@@ -16,15 +16,7 @@ pnpm --filter @zapbip/api exec wrangler d1 migrations apply CONNECTIONS --env de
 
 If you ran the stack before the v1 schema changed, wipe the local data saved under the old v1 schema (the `.wrangler` state of `apps/api`) and apply the migrations again, because `v1.sql` is edited in place until the first deploy.
 
-## 2. Seed an owner and two agents
-
-```bash
-pnpm --silent --filter @zapbip/api dev:seed --phone 5511999990000 --agents alpha,beta
-```
-
-It prints one line per agent, `alpha <secret>` and `beta <secret>`. The secret is shown once. Seeding the same phone twice fails.
-
-## 3. Start the Worker
+## 2. Start the Worker
 
 ```bash
 pnpm --filter @zapbip/api dev
@@ -32,6 +24,14 @@ curl http://localhost:8787/health
 ```
 
 The health call answers `{"ok":true}`.
+
+## 3. Seed an owner and two agents
+
+```bash
+pnpm --silent --filter @zapbip/api dev:seed --phone 5511999990000 --agents alpha,beta
+```
+
+The Worker must be running: the seed goes through it so each agent's key is also recorded in its account object. It prints one line per agent, `alpha <secret>` and `beta <secret>`. The secret is shown once. Seeding the same phone twice fails.
 
 ## 4. Connect Claude Code
 

@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { formatChoiceOptionIds, formatOptionId, formatRouteOptionId, parseOptionId, parseRouteOptionId } from './option-id';
 
@@ -47,5 +49,20 @@ describe('formatChoiceOptionIds', () => {
 
   test('a routing list names the agent of each option', () => {
     expect(formatChoiceOptionIds({ questionId: 'route:msg_1', options })).toEqual(['route:msg_1:alpha', 'route:msg_1:beta']);
+  });
+});
+
+describe('option ids of rows that carry their own id', () => {
+  test('a row id on the option is the option id, whatever the question', () => {
+    const options = [
+      { optionIndex: 0, title: 'A', description: null, rowId: 'custom:first' },
+      { optionIndex: 1, title: 'B', description: null, rowId: 'custom:second' },
+    ];
+    expect(formatChoiceOptionIds({ questionId: 'any_question', options })).toEqual(['custom:first', 'custom:second']);
+  });
+
+  test('the option id module does not import the accounts module', () => {
+    const source = readFileSync(join(import.meta.dirname, 'option-id.ts'), 'utf8');
+    expect(source).not.toMatch(/from '\.\.\/accounts/);
   });
 });

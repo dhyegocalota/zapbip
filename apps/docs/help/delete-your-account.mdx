@@ -1,0 +1,45 @@
+---
+title: Delete your account
+description: How to delete everything zapbip keeps about you.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+You can delete your account at any time, from WhatsApp. It takes two messages, so a stray message cannot delete anything.
+
+<Steps>
+  <Step title="Ask">Write `delete account`. zapbip tells you what will be removed and which phrase confirms it.</Step>
+  <Step title="Confirm">
+    Within 10 minutes, write `delete account permanently`. After that time nothing is deleted; write `delete account` again to start over.
+  </Step>
+</Steps>
+
+<Chat
+  messages={[
+    { you: true, text: 'delete account', time: '09:30' },
+    {
+      text: 'This deletes your account, every agent, message and file, and cannot be undone. To confirm within 10 minutes, send: delete account permanently',
+      time: '09:30',
+    },
+    { you: true, text: 'delete account permanently', time: '09:31' },
+    { text: 'Your account is deleted. Your next message starts a new account.', time: '09:31' },
+  ]}
+/>
+
+## What is removed
+
+- Every message, question and pending reply.
+- Every connected AI. Their prompts and links stop working at once.
+- The files stored for you.
+- Your phone number and your account.
+
+## What is not removed
+
+- WhatsApp keeps the chat history on its side. Delete the chat in WhatsApp if you want it off your phone.
+- The infrastructure provider keeps backup copies for its own retention period.
+
+## Starting again
+
+A message from the same phone after the deletion creates a new, empty account.
+
+To disconnect only one AI, see [manage your AIs](/features/manage-your-agents).

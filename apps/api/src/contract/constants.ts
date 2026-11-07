@@ -1,6 +1,9 @@
 export const CONNECTION_SECRET_PREFIX = 'zb_conn_';
 export const CONNECTION_SECRET_BYTES = 32;
 export const CONNECTION_SECRET_PATTERN = /^zb_conn_[A-Za-z0-9_-]{43}$/;
+export const INSTALL_CODE_PATTERN = /^zb_inst_[A-Za-z0-9_-]{22}$/;
+export const INSTALL_CODE_KEY_INFO = 'zapbip install code seal';
+export const SEAL_INITIALIZATION_VECTOR_BYTES = 12;
 export const MCP_SERVER_NAME = 'zapbip';
 export const MCP_SERVER_VERSION = '0.1.0';
 export const DEVELOPMENT_ENVIRONMENT = 'development';
@@ -11,6 +14,7 @@ export const INVALID_JSON_BODY = { error: 'invalid_json' } as const;
 export const INVALID_NOTIFICATION_BODY = { error: 'invalid_notification' } as const;
 export const CLOCK_OFFSET_STORAGE_KEY = 'clock_offset_ms';
 export const DEV_OWNER_PATH_PREFIX = '/dev/owner/:phone';
+export const DEV_SEED_PATH = '/dev/seed';
 export const OWNER_PHONE_PATTERN = /^[0-9]{8,15}$/;
 export const INLINE_IMAGE_CONTENT_TYPE = 'image';
 export const WHATSAPP_WEBHOOK_PATH = '/webhooks/whatsapp';

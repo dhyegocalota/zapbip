@@ -13,6 +13,18 @@ export enum LogEvent {
   Sweep = 'sweep',
   OwnerNoticeFailed = 'owner_notice_failed',
   ClockAdvanced = 'clock_advanced',
+  AccountCreated = 'account_created',
+  AccountStateChanged = 'account_state_changed',
+  CommandReceived = 'command_received',
+  ConnectionCreated = 'connection_created',
+  ConnectionRevoked = 'connection_revoked',
+  ConnectionRotated = 'connection_rotated',
+  ConnectionCompensated = 'connection_compensated',
+  SenderBlocked = 'sender_blocked',
+  SenderRateLimited = 'sender_rate_limited',
+  AccountDailyCap = 'account_daily_cap',
+  AccountDeleted = 'account_deleted',
+  InstallCodeUnreadable = 'install_code_unreadable',
   FrameRejected = 'frame_rejected',
 }
 
@@ -24,6 +36,10 @@ export type LogFields = {
   kind?: string;
   sizeBytes?: number;
   errorCode?: string;
+  connectionId?: string;
+  locale?: string;
+  count?: number;
+  route?: string;
   provider?: WakeProvider | null;
   attempt?: number;
   statusCode?: number | null;

@@ -1,4 +1,13 @@
-import type { AgentWakeReason, IdPrefix, LinkPurpose, OwnerLocale, TemplateKind, WakeOutcome, DeliveryState } from '@zapbip/types';
+import type {
+  AgentWakeReason,
+  IdPrefix,
+  LinkPurpose,
+  OwnerLocale,
+  TemplateKind,
+  WakeOutcome,
+  DeliveryState,
+  WaiterEnd,
+} from '@zapbip/types';
 import type { AgentName, ConnectionIdentity } from './connection';
 import type { Message } from './message';
 import type { Question, QuestionAnswer } from './question';
@@ -104,11 +113,14 @@ export interface ConnectionDirectory {
 }
 
 export interface ReplyWaiters {
-  awaitQuestionAnswer(input: { agent: AgentName; questionId: string; timeoutMs: number }): Promise<void>;
-  awaitAgentMessage(input: { agent: AgentName; timeoutMs: number }): Promise<void>;
+  awaitQuestionAnswer(input: { agent: AgentName; questionId: string; timeoutMs: number }): Promise<WaiterEnd>;
+  awaitAgentMessage(input: { agent: AgentName; timeoutMs: number }): Promise<WaiterEnd>;
   resolveQuestionAnswer(input: { questionId: string }): void;
   resolveAgentMessage(input: { agent: AgentName }): void;
   hasLiveWaiter(input: { agent: AgentName; questionId: string | null }): boolean;
+  hasAgentWaiter(input: { agent: AgentName }): boolean;
+  cancelAgent(input: { agent: AgentName }): void;
+  cancelAll(): void;
 }
 
 export type CoreDependencies = {

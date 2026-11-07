@@ -2,7 +2,6 @@ import { RECEIPT_RETENTION_MS, type ChannelInboundEntry, type OwnerInboundConten
 import { ChannelInboundKind, DeliveryState, HttpStatus, type OwnerLocale } from '@zapbip/types';
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { findOwnerByPhone } from '../adapters/d1/d1-owner-directory';
 import { D1MessageIndex } from '../adapters/d1/d1-message-index';
 import { createPlatformClock } from '../adapters/platform/clock';
 import { createR2MediaStore } from '../adapters/r2/r2-media-store';
@@ -38,6 +37,7 @@ import {
 } from '../contract/constants';
 import type { CallOutcome } from '../contract/account-inbox-rpc';
 import type { Bindings } from '../contract/env';
+import { receiveOwnerInbound } from '../inbound/owner-inbound';
 import { accountInboxOf } from './account-inbox-stub';
 
 type RequestContext = {
@@ -105,9 +105,10 @@ async function channelEntryOf(input: {
   context: RequestContext;
   accountId: string;
   ownerLocale: OwnerLocale;
+  downloadsMedia: boolean;
   parsed: Extract<ParsedEntry, { kind: ParsedEntryKind.Inbound }>;
 }): Promise<ChannelInboundEntry> {
-  const { context, accountId, ownerLocale, parsed } = input;
+  const { context, accountId, ownerLocale, downloadsMedia, parsed } = input;
   const { entry, media } = parsed;
   const copy = WHATSAPP_COPY[ownerLocale];
   if (entry.kind === ChannelInboundKind.WindowOnly) return entry;
@@ -115,7 +116,7 @@ async function channelEntryOf(input: {
     logOperatorEvent({ event: OperatorEvent.InboundUnsupported, fields: { [OperatorLogField.UnsupportedType]: entry.unsupportedType } });
     return { kind: entry.kind, at: entry.at, noticeText: copy[OwnerCopyKey.UnsupportedKind] };
   }
-  if (media === null) return { ...entry, noticeText: null };
+  if (media === null || !downloadsMedia) return { ...entry, noticeText: null };
   if (!isUnavailableMedia(entry.content)) throw new Error('media entry has no media content');
   const mediaStore = createR2MediaStore({
     bucket: context.bindings.MEDIA,
@@ -155,6 +156,15 @@ async function channelEntryOf(input: {
   return { ...entry, content, noticeText: null };
 }
 
+async function hasCommittedReceipt(input: { context: RequestContext; accountId: string; channelMessageId: string }): Promise<boolean> {
+  const { context, accountId, channelMessageId } = input;
+  const inbox = accountInboxOf({ bindings: context.bindings, accountId });
+  const isCommitted = valueOf({ outcome: await inbox.hasChannelReceipt({ channelMessageId }) });
+  if (isCommitted)
+    logOperatorEvent({ event: OperatorEvent.InboundDuplicate, fields: { [OperatorLogField.ChannelMessageId]: channelMessageId } });
+  return isCommitted;
+}
+
 async function processEntry(input: { context: RequestContext; parsed: ParsedEntry }): Promise<void> {
   const { context, parsed } = input;
   if (parsed.kind === ParsedEntryKind.Rejected) {
@@ -171,20 +181,14 @@ async function processEntry(input: { context: RequestContext; parsed: ParsedEntr
     logOperatorEvent({ event: OperatorEvent.InboundFuture, fields: { [OperatorLogField.ChannelMessageId]: parsed.channelMessageId } });
     return;
   }
-  const owner = await findOwnerByPhone({ database: context.bindings.CONNECTIONS, phone: parsed.fromWaId });
-  if (owner === null) {
-    logOperatorEvent({ event: OperatorEvent.InboundUnmapped, fields: { [OperatorLogField.ChannelMessageId]: parsed.channelMessageId } });
-    return;
-  }
-  const inbox = accountInboxOf({ bindings: context.bindings, accountId: owner.accountId });
-  const isCommitted = valueOf({ outcome: await inbox.hasChannelReceipt({ channelMessageId: parsed.channelMessageId }) });
-  if (isCommitted) {
-    logOperatorEvent({ event: OperatorEvent.InboundDuplicate, fields: { [OperatorLogField.ChannelMessageId]: parsed.channelMessageId } });
-    return;
-  }
-  const entry = await channelEntryOf({ context, accountId: owner.accountId, ownerLocale: owner.ownerLocale, parsed });
-  valueOf({
-    outcome: await inbox.receiveChannelMessage({ ownerLocale: owner.ownerLocale, channelMessageId: parsed.channelMessageId, entry }),
+  await receiveOwnerInbound({
+    bindings: context.bindings,
+    waId: parsed.fromWaId,
+    channelMessageId: parsed.channelMessageId,
+    entryOf: async ({ accountId, ownerLocale, downloadsMedia }) => {
+      const isCommitted = downloadsMedia && (await hasCommittedReceipt({ context, accountId, channelMessageId: parsed.channelMessageId }));
+      return channelEntryOf({ context, accountId, ownerLocale, downloadsMedia: downloadsMedia && !isCommitted, parsed });
+    },
   });
 }
 
