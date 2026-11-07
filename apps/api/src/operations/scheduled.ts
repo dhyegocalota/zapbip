@@ -15,6 +15,7 @@ export enum ScheduledJobName {
   SweepDeletingAccounts = 'sweep_deleting_accounts',
   BudgetCheck = 'budget_check',
   MediaRetention = 'media_retention',
+  BackofficePrune = 'backoffice_prune',
 }
 
 const EVERY_TICK = (): boolean => true;
@@ -38,6 +39,10 @@ export const SCHEDULED_JOBS: Record<ScheduledJobName, ScheduledJob> = {
       return tick.getUTCHours() === MEDIA_RETENTION_HOUR && tick.getUTCMinutes() === MEDIA_RETENTION_MINUTE;
     },
     run: ({ env, now }) => runMediaRetention({ bucket: env.MEDIA, now }),
+  },
+  [ScheduledJobName.BackofficePrune]: {
+    isDue: () => false,
+    run: () => Promise.resolve(),
   },
 };
 
