@@ -24,6 +24,9 @@ import { applyDirectoryMigration, seedOwnerIdentity } from '../support/seed';
 import { testEnv } from '../support/workers-env';
 
 const AGENT = 'claude';
+const BROWSER_USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) Chrome/130.0';
+const SECURE_ORIGIN = 'https://api.test';
+const INSECURE_ORIGIN = 'http://api.test';
 const STANDBY_AGENT = 'Ana Bot';
 const CLIENT_ADDRESS = '203.0.113.7';
 const CLIENT_ADDRESS_HEADER = 'cf-connecting-ip';
@@ -36,6 +39,16 @@ const GONE_TEXT: Record<OwnerLocale, string> = {
   [OwnerLocale.PortugueseBrazil]: 'girar <nome>',
   [OwnerLocale.EnglishUs]: 'rotate <name>',
 };
+
+const LINK_PREVIEW_USER_AGENTS = [
+  'WhatsApp/2.24.20.85 A',
+  'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)',
+  'Slackbot-LinkExpanding 1.0 (+https://api.slack.com/robots)',
+  'Twitterbot/1.0',
+  'Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)',
+  'TelegramBot (like TwitterBot)',
+  'LinkedInBot/1.0 (compatible; Mozilla/5.0)',
+];
 
 function randomInstallCode(): string {
   const bytes = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(16))))
@@ -60,24 +73,35 @@ function buildRoute(input: {
   limiter?: ReturnType<typeof createFakeRateLimiter>;
   readWakeModes?: () => Promise<WakeModeEntry[]>;
   directory?: InstallCodeDirectory;
+  requireSecureTransport?: boolean;
 }) {
   const {
     limiter = createFakeRateLimiter({ limit: INSTALL_PAGE_REQUESTS_PER_MINUTE }),
     readWakeModes = async () => [],
     directory = installCodeDirectory(),
+    requireSecureTransport = false,
   } = input;
   return createInstallPageRoute({
     installCodeDirectory: directory,
     connectionRegistry: connectionRegistry(),
     readWakeModes,
     limiter,
+    requireSecureTransport,
   });
 }
 
-function getPage(input: { route: ReturnType<typeof buildRoute>; installCode: string; address?: string }): Promise<Response> {
-  const { address = CLIENT_ADDRESS } = input;
+function getPage(input: {
+  route: ReturnType<typeof buildRoute>;
+  installCode: string;
+  address?: string;
+  userAgent?: string;
+  origin?: string;
+}): Promise<Response> {
+  const { address = CLIENT_ADDRESS, userAgent = BROWSER_USER_AGENT, origin = '' } = input;
   return Promise.resolve(
-    input.route.request(`${INSTALL_PAGE_PATH_PREFIX}${input.installCode}`, { headers: { [CLIENT_ADDRESS_HEADER]: address } }),
+    input.route.request(`${origin}${INSTALL_PAGE_PATH_PREFIX}${input.installCode}`, {
+      headers: { [CLIENT_ADDRESS_HEADER]: address, 'user-agent': userAgent },
+    }),
   );
 }
 
@@ -256,6 +280,53 @@ describe('install page security', () => {
   it('answers 400 when the client address is missing', async () => {
     const response = await buildRoute({}).request(`${INSTALL_PAGE_PATH_PREFIX}${randomInstallCode()}`);
     expect(response.status).toBe(400);
+  });
+});
+
+describe('install page link previews and transport', () => {
+  it.each(LINK_PREVIEW_USER_AGENTS)('answers 404 to %s without consuming the code', async (userAgent) => {
+    const accountId = await seedAccount({ locale: OwnerLocale.EnglishUs });
+    const { installCode, connection } = await registerWithInstallCode({ accountId, agent: AGENT, expiresAt: validExpiry() });
+    const route = buildRoute({});
+    const preview = await getPage({ route, installCode, userAgent });
+    expect(preview.status).toBe(404);
+    expect(await preview.text()).not.toContain(CONNECTION_PATH_MARK);
+    const owner = await getPage({ route, installCode });
+    expect(owner.status).toBe(200);
+    expect(connection.connectionId).toBeTruthy();
+  });
+
+  it('sets the hardening headers on every status', async () => {
+    const accountId = await seedAccount({ locale: OwnerLocale.EnglishUs });
+    const ready = await registerWithInstallCode({ accountId, agent: AGENT, expiresAt: validExpiry() });
+    const route = buildRoute({});
+    const responses = await Promise.all([
+      getPage({ route, installCode: ready.installCode }),
+      getPage({ route, installCode: randomInstallCode() }),
+    ]);
+    responses.forEach((response) => {
+      expect(response.headers.get('referrer-policy')).toBe('no-referrer');
+      expect(response.headers.get('x-content-type-options')).toBe('nosniff');
+      expect(response.headers.get('strict-transport-security')).toMatch(/max-age=\d+/);
+    });
+  });
+
+  it('answers 404 over plain http when secure transport is required, without resolving the code', async () => {
+    const accountId = await seedAccount({ locale: OwnerLocale.EnglishUs });
+    const { installCode } = await registerWithInstallCode({ accountId, agent: AGENT, expiresAt: validExpiry() });
+    const route = buildRoute({ requireSecureTransport: true });
+    const insecure = await getPage({ route, installCode, origin: INSECURE_ORIGIN });
+    expect(insecure.status).toBe(404);
+    expect(await insecure.text()).not.toContain(CONNECTION_PATH_MARK);
+    const secure = await getPage({ route, installCode, origin: SECURE_ORIGIN });
+    expect(secure.status).toBe(200);
+  });
+
+  it('serves plain http when secure transport is not required', async () => {
+    const accountId = await seedAccount({ locale: OwnerLocale.EnglishUs });
+    const { installCode } = await registerWithInstallCode({ accountId, agent: AGENT, expiresAt: validExpiry() });
+    const response = await getPage({ route: buildRoute({}), installCode, origin: INSECURE_ORIGIN });
+    expect(response.status).toBe(200);
   });
 });
 
