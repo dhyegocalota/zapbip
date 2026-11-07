@@ -50,6 +50,7 @@ import { createConnectionSecrets } from '../adapters/platform/connection-secrets
 import { createInstallCodeVault } from '../adapters/platform/install-code-vault';
 import { createIdGenerator } from '../adapters/platform/ids';
 import { loadDurableClock, type DurableClock } from '../adapters/platform/clock';
+import { D1ActivityRepository } from '../adapters/d1/d1-activity-repository';
 import { D1UsageRepository } from '../adapters/d1/d1-usage-repository';
 import { mediaStoreOf } from '../adapters/r2/r2-media-store';
 import { createSqliteInboxRepository } from '../adapters/sqlite/sqlite-inbox-repository';
@@ -106,6 +107,7 @@ import { redactInstallCodes } from './install-code-redaction';
 import { ACCOUNT_INBOX_MIGRATIONS } from './migrations';
 import { runMigrations } from './run-migrations';
 import { recordActivity } from './activity-ledger';
+import { createActivityProvider } from './activity-provider';
 import { recordSenderActivity, recordWakerActivity } from './activity-recording';
 import { recordUsage } from './usage-ledger';
 import { gigabyteSecondsForDuration, utcDay } from './usage-meter';
@@ -210,6 +212,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       this.createPollerProvider(),
       this.createNoticeRetryProvider(),
       this.createUsageProvider(),
+      this.createActivityProvider(),
     );
     await this.armAlarm();
   }
@@ -270,6 +273,14 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     return createUsageProvider({
       storage: this.ctx.storage,
       repository: new D1UsageRepository({ database: this.env.CONNECTIONS }),
+      accountId: this.accountId,
+    });
+  }
+
+  private createActivityProvider(): DueTimeProvider {
+    return createActivityProvider({
+      storage: this.ctx.storage,
+      repository: new D1ActivityRepository({ database: this.env.CONNECTIONS }),
       accountId: this.accountId,
     });
   }

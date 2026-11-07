@@ -459,6 +459,7 @@ describe('AccountInbox alarm and clock', () => {
     await sendAlphaText({ accountId: FIRST_ACCOUNT, text: 'oi' });
     await runInDurableObject(stub, async (_instance, state) => {
       state.storage.sql.exec('DELETE FROM usage_meter');
+      state.storage.sql.exec('DELETE FROM activity_meter');
       await state.storage.deleteAlarm();
     });
     const offsetMs = await advanceClock({ stub, advanceMs: WINDOW_MS });
@@ -516,6 +517,7 @@ describe('AccountInbox migrations', () => {
         'media',
         'screen_entries',
         'usage_meter',
+        'activity_meter',
         'account_facts',
         'revoked_agents',
       ]),
