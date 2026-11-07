@@ -309,3 +309,10 @@ Notes:
 - The connector key is checked in the route and again in the object before the socket is accepted; a stale connect gets a socket closed with `REVOKED_CLOSE_CODE` and touches no row. The check runs before `acceptConnectorSocket` so a stale connect never replaces the live socket of the new key.
 - `isAccountActive` (the alarm) still treats a missing `accounts` row as active; only the admission of agent calls changed. Hypothesis: an alarm on an account with no row is harmless because no due item can exist without a call.
 - The integration tests that relied on a missing `accounts` row now seed the account (`seedAccount`, `applyWakeDirectory`).
+
+## Alarm on a missing directory row, and the purge crash
+
+- `isAccountActive` no longer treats a missing `accounts` row as active. Red `9461c07` ('sends nothing when the account has no row in the directory', the wake request was still sent), green `98d8eb2`. Tests that run alarms seed their account.
+- Root cause of the lost nine tests: closing the hibernating sockets before `deleteAll` in `purge` crashed workerd ("Promise callback destroyed itself") and took the whole `account-inbox-purge.test.ts` file out of the run, silently. Fixed in `6aa8b08` by closing after the wipe; the tombstone is set before the first await, so nothing is served in between. Hypothesis: the full api integration run reports 686 of 686 tests in 57 files, three times in a row.
+- `connector-socket.test.ts` 'a live wait_for_reply waiter ...' was a race between the unawaited `waitForReply` and the first owner message; it now waits for the live waiter (`76e508c`).
+- The schema upgrade pin from main expects v6 beside v1, v2 and v5.
