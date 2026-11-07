@@ -285,9 +285,9 @@ G0 evidence (2026-11-06): Step 1 `ab7d8dc`; Step 2 red `7902adb` (carries the en
 
 ## Z. Prove and ship
 
-- [ ] **Tester briefing:** each lane writes its section of `tester-briefing.md` (the lead owns the file), including the spike result and the pins.
-- [ ] **Tester run:** a fresh `tester` followed the docs only, in `en-US` and `pt-BR`, from the Overview to the WhatsApp step, and ticked every box of `test-plan.md` with evidence.
-- [ ] **Reviewer:** a fresh `reviewer` returned a verdict; the refutation of the three riskiest claims is recorded in `test-plan.md`.
-- [ ] **Security reviewer:** runs per HARNESS §6; the diff has no code path, so the expected verdict is NOT APPLICABLE or CLEAR.
-- [ ] **/check-ui:** screenshots of the Overview and Get started in both languages at 1280 and 375, uploaded per HARNESS §7.
+- [x] **Tester briefing:** each lane writes its section of `tester-briefing.md` (the lead owns the file), including the spike result and the pins. — evidence: tester-briefing.md in this folder
+- [x] **Tester run:** a fresh `tester` followed the docs only, in `en-US` and `pt-BR`, from the Overview to the WhatsApp step, and ticked every box of `test-plan.md` with evidence. — evidence: tester A at f44e967, tester B at c0a4223 and tester delta at babb166 (SCRATCH/test-results/docs-experience/tester-a.md, tester-b.md, tester-delta.md); every row ticked in test-plan.md with its evidence; T6 stays owner-run
+- [x] **Reviewer:** a fresh `reviewer` returned a verdict; the refutation of the three riskiest claims is recorded in `test-plan.md`. — evidence: verdict SHIP after the merge delta; minors fixed in 2693044; the three refuted or held claims are in test-plan.md
+- [x] **Security reviewer:** runs per HARNESS §6; the diff has no code path, so the expected verdict is NOT APPLICABLE or CLEAR. — evidence: minor findings only; PyPI squatting is handled by the self-hosted wheel before publication, and the shell-history note was added to the Claude Code pages (2693044)
+- [x] **/check-ui:** screenshots of the Overview and Get started in both languages at 1280 and 375, uploaded per HARNESS §7. — evidence: the recorder's walk, docs-experience-walkthrough.mp4 and .gif plus screenshots in the pr-media-docs-experience release; local copies in .pr-media/docs-experience/
 - [ ] **/open-pr:** gates passed, learnings sweep stated, ADR 0030 written, `docs/features/README.md` row added, PR opened.
