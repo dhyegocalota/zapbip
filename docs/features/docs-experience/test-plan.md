@@ -82,7 +82,7 @@ Counts: 51 IDs (T1-30a added). At the end of G0, 40 are green: 39 that G0 turns 
 - [ ] `pnpm --filter @zapbip/docs broken-links` — input: the whole site; expected: exit `0`, zero broken links, both languages.
 - [ ] Edge: a link to a page that does not exist — input: a throwaway `[x](/features/nope)`; expected: non-zero exit naming `features/nope`. The throwaway is never committed.
 - [ ] Edge: a pt-br page links to an English page — input: `pt-br/features/x.mdx` links `/features/y`; expected: broken-links passes only if `features/y` exists; the page must link `/pt-br/features/y` for the pt-BR page, and that link must resolve.
-- [ ] `pnpm --filter @zapbip/docs dev` boots — input: `mint dev` on `DOCS_PORT` (3310); expected: HTTP 200 on `/` and on `/pt-br/index`; no error line in the log.
+- [ ] `pnpm --filter @zapbip/docs dev` boots — input: `mint dev` on any free port; expected: HTTP 200 on `/` and on `/pt-br/index`; no error line in the log.
 - [ ] `pnpm --filter @zapbip/docs typecheck` — input: `apps/docs/e2e/**` and the support file; expected: exit `0`.
 
 ## T3 Lane walks (Playwright, run by `gate_docs`, `apps/docs/e2e/`)
