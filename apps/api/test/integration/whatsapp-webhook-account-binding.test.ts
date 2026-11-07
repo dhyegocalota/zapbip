@@ -23,6 +23,7 @@ const STATUS_OK = 200;
 const NEW_OWNER_PHONE = '5511900000066';
 const LATE_OWNER_PHONE = '5511900000068';
 const UNBOUND_OWNER_PHONE = '5511900000067';
+const LEAVING_OWNER_PHONE = '5511900000069';
 const MESSAGES_PATH_SUFFIX = '/messages';
 const SECOND = {
   numberId: 'num_0031',
@@ -33,6 +34,15 @@ const SECOND = {
   appSecret: 'secret-0031',
   displayNumber: '5511900000031',
   state: WhatsAppNumberState.Active,
+};
+
+const THIRD = {
+  ...SECOND,
+  numberId: 'num_0033',
+  metaAppRef: 'mapp_0033',
+  phoneNumberId: '1000000000033',
+  wabaId: '3000000000033',
+  displayNumber: '5511900000033',
 };
 
 type GraphPost = { url: string; authorization: string | null; body: { to: string; text: { body: string } } };
@@ -117,19 +127,45 @@ describe('account binding to a number', () => {
     expect(JSON.stringify(spies.flatMap((spy) => spy.mock.calls))).toContain(OperatorEvent.InboundAccountOnOtherNumber);
   });
 
-  test('an account without a home number is refused by name', async () => {
+  test('an account without a home number is dropped with a log, never thrown at Meta', async () => {
+    const spies = [vi.spyOn(console, 'log'), vi.spyOn(console, 'error'), vi.spyOn(console, 'warn')];
     await seedAccount({ agent: 'alpha' });
     await seedOwnerIdentity({ accountId: 'acc_unbound', phone: UNBOUND_OWNER_PHONE, ownerLocale: OwnerLocale.PortugueseBrazil });
-    await expect(
-      receiveOwnerInbound({
-        number: { ...TEST_REGISTERED_NUMBER, phoneNumberId: TEST_PHONE_NUMBER_ID },
-        bindings: testEnv,
-        waId: UNBOUND_OWNER_PHONE,
-        channelMessageId: 'wamid.BIND4',
-        entryOf: async () => {
-          throw new Error('no entry expected');
-        },
-      }),
-    ).rejects.toThrow('acc_unbound');
+    const result = await receiveOwnerInbound({
+      number: { ...TEST_REGISTERED_NUMBER, phoneNumberId: TEST_PHONE_NUMBER_ID },
+      bindings: testEnv,
+      waId: UNBOUND_OWNER_PHONE,
+      channelMessageId: 'wamid.BIND4',
+      entryOf: async () => {
+        throw new Error('no entry expected');
+      },
+    });
+    expect(result).toEqual({ messageId: null, agent: null, duplicate: false });
+    expect(JSON.stringify(spies.flatMap((spy) => spy.mock.calls))).toContain(OperatorEvent.InboundAccountWithoutNumber);
+  });
+
+  test('an account being deleted is not told about another number', async () => {
+    const spies = [vi.spyOn(console, 'log'), vi.spyOn(console, 'error'), vi.spyOn(console, 'warn')];
+    const posts = recordGraphPosts();
+    await seedAccount({ agent: 'alpha' });
+    await seedWhatsAppNumber(THIRD);
+    await seedOwnerIdentity({
+      accountId: 'acc_leaving',
+      phone: LEAVING_OWNER_PHONE,
+      ownerLocale: OwnerLocale.PortugueseBrazil,
+      numberId: TEST_NUMBER_ID,
+    });
+    await testEnv.CONNECTIONS.prepare("UPDATE accounts SET state = 'deleting' WHERE id = ?").bind('acc_leaving').run();
+    await receiveOwnerInbound({
+      number: { ...TEST_REGISTERED_NUMBER, numberId: THIRD.numberId, phoneNumberId: THIRD.phoneNumberId },
+      bindings: testEnv,
+      waId: LEAVING_OWNER_PHONE,
+      channelMessageId: 'wamid.BIND5',
+      entryOf: async () => {
+        throw new Error('no entry expected');
+      },
+    });
+    expect(posts).toHaveLength(0);
+    expect(JSON.stringify(spies.flatMap((spy) => spy.mock.calls))).not.toContain(OperatorEvent.InboundAccountOnOtherNumber);
   });
 });

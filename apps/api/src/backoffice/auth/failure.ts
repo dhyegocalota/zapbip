@@ -2,7 +2,7 @@ import { BACKOFFICE_LOCKOUT_THRESHOLD } from '../../contract/constants';
 import { LogEvent } from '../../contract/log';
 import { logEvent } from '../../log';
 import { writeAudit } from '../audit/audit-log';
-import { BackofficeAuditAction, BackofficeAuditOutcome } from '../audit/backoffice-audit-action';
+import { BackofficeAuditAction, BackofficeAuditOutcome, type BackofficeAuditTargetKind } from '../audit/backoffice-audit-action';
 import { recordFailure } from './operator-state';
 
 export async function registerFailure(input: {
@@ -10,7 +10,7 @@ export async function registerFailure(input: {
   now: number;
   clientAddress: string | null;
   action: BackofficeAuditAction;
-  targetKind: string | null;
+  targetKind: BackofficeAuditTargetKind | null;
   targetId: string | null;
 }): Promise<void> {
   const { database, now, clientAddress, action, targetKind, targetId } = input;

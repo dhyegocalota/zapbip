@@ -25,6 +25,7 @@ import { OwnerCopyKey, WHATSAPP_COPY } from '../adapters/whatsapp/whatsapp-copy'
 import {
   MEDIA_DOWNLOAD_ATTEMPTS,
   MEDIA_MAX_BYTES_INBOUND,
+  UNATTRIBUTED_DELIVERY_APP_SECRET,
   UNINDEXED_STATUS_RETRY_WINDOW_MS,
   WEBHOOK_MAX_BYTES,
   WEBHOOK_SIGNATURE_HEADER,
@@ -104,10 +105,8 @@ async function attributeDelivery(input: { registry: NumberRegistry; routing: Web
   const { registry, routing } = input;
   const numbers = await registry.findByPhoneNumberIds({ phoneNumberIds: routing.phoneNumberIds });
   const wabaNumbers = await registry.findByWabaIds({ wabaIds: routing.wabaIds });
-  const areAllPhoneNumbersKnown = numbers.length === routing.phoneNumberIds.length;
-  const areAllWabasKnown = routing.wabaIds.every((wabaId) => wabaNumbers.some((registered) => registered.wabaId === wabaId));
   const [first] = [...numbers, ...wabaNumbers];
-  if (first === undefined || !areAllPhoneNumbersKnown || !areAllWabasKnown) return null;
+  if (first === undefined) return null;
   const isOneApp = [...numbers, ...wabaNumbers].every((registered) => registered.metaAppRef === first.metaAppRef);
   return isOneApp ? { metaAppRef: first.metaAppRef, numbers } : null;
 }
@@ -291,6 +290,11 @@ export function createWhatsappRoutes(input: {
     const routing = peekWebhookRouting({ text: new TextDecoder().decode(rawBody) });
     const attribution = routing === null ? null : await attributeDelivery({ registry, routing });
     if (attribution === null) {
+      await verifyWebhookSignature({
+        appSecret: UNATTRIBUTED_DELIVERY_APP_SECRET,
+        rawBody,
+        signatureHeader: nullIfAbsent({ value: context.req.header(WEBHOOK_SIGNATURE_HEADER) }),
+      });
       logOperatorEvent({ event: OperatorEvent.InboundUnattributed, fields: {} });
       return context.json(UNAUTHORIZED_BODY, HttpStatus.Unauthorized);
     }

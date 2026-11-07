@@ -6,7 +6,7 @@ import { createGraphClient } from '../../../adapters/whatsapp/graph-client';
 import { readWhatsAppEnvironment } from '../../../adapters/whatsapp/read-whatsapp-env';
 import { allowedTargetsOf } from '../../../numbers/number-state';
 import { parseVerificationSnapshot, VerificationOutcome, verifyNumber } from '../../../numbers/number-verification';
-import { BackofficeAuditAction, BackofficeAuditOutcome } from '../../audit/backoffice-audit-action';
+import { BackofficeAuditAction, BackofficeAuditOutcome, BackofficeAuditTargetKind } from '../../audit/backoffice-audit-action';
 import { StepUpOutcome } from '../../auth/step-up';
 import { SEE_OTHER_STATUS } from '../../backoffice-constants';
 import { BackofficeCopyKey } from '../../backoffice-copy';
@@ -23,7 +23,7 @@ import { numberPath, NumberSegment, withNotice } from '../number-paths';
 import { rateLimitedResponse, stepUpOf } from '../step-up-gate';
 import { NumberVerificationPage } from '../views/number-verification';
 
-const TARGET_KIND = 'number';
+const TARGET_KIND = BackofficeAuditTargetKind.Number;
 const NUMBER_PARAMETER = 'numberId';
 const NUMBER_ROUTE = `${BackofficePath.Numbers}/:${NUMBER_PARAMETER}`;
 const STATE_VALUES: string[] = Object.values(WhatsAppNumberState);

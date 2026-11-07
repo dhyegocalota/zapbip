@@ -17,8 +17,8 @@ export class RegistrationConflictError extends Error {
 }
 
 export function conflictOf(input: { error: unknown }): RegistrationConflictError | null {
-  const message = input.error instanceof Error ? input.error.message : '';
-  const column = UNIQUE_FAILURE_PATTERN.exec(message);
+  if (!(input.error instanceof Error)) return null;
+  const column = UNIQUE_FAILURE_PATTERN.exec(input.error.message);
   if (column === null || column[1] === undefined || !CONFLICT_FIELDS.includes(column[1])) return null;
   return new RegistrationConflictError({ field: column[1] as RegistrationConflictField });
 }

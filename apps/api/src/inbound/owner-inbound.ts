@@ -66,7 +66,11 @@ async function refuseOtherNumber(input: { bindings: Bindings; number: Registered
   const { bindings, number, account } = input;
   logOperatorEvent({ event: OperatorEvent.InboundAccountOnOtherNumber, fields: {} });
   const registry = numberRegistryOf({ bindings });
-  const home = account.homeNumberId === null ? null : await registry.findNumber({ numberId: account.homeNumberId });
+  if (account.homeNumberId === null) {
+    logOperatorEvent({ event: OperatorEvent.InboundAccountWithoutNumber, fields: {} });
+    return DROPPED_RESULT;
+  }
+  const home = await registry.findNumber({ numberId: account.homeNumberId });
   if (home === null) throw new Error(`account ${account.accountId} has no home number`);
   const text = fillCopyTokens({
     text: WHATSAPP_COPY[account.locale][OwnerCopyKey.AccountOnOtherNumber],
@@ -96,13 +100,13 @@ export async function receiveOwnerInbound(input: OwnerInboundInput): Promise<Rec
     return DROPPED_RESULT;
   }
   const { account, created } = lookup;
-  const isOnOtherNumber = !created && account.homeNumberId !== input.number.numberId;
-  if (isOnOtherNumber) return refuseOtherNumber({ bindings, number: input.number, account });
   if (created) logEvent({ event: LogEvent.AccountCreated, accountId: account.accountId, locale: account.locale });
   if (account.state === AccountState.Deleting) {
     await finishDeletion({ bindings, accountId: account.accountId });
     return DROPPED_RESULT;
   }
+  const isOnOtherNumber = !created && account.homeNumberId !== input.number.numberId;
+  if (isOnOtherNumber) return refuseOtherNumber({ bindings, number: input.number, account });
   const downloadsMedia = !created && account.state === AccountState.Active;
   const entry = await entryOf({ accountId: account.accountId, ownerLocale: account.locale, downloadsMedia });
   const outcome = await accountInboxOf<AccountOwnerRpc>({ bindings, accountId: account.accountId }).receiveAccountMessage({

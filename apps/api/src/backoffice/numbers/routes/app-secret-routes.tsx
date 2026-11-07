@@ -1,7 +1,7 @@
 import { HttpStatus } from '@zapbip/types';
 import { Hono } from 'hono';
 import { numberAdminOf } from '../../../adapters/d1/d1-number-admin';
-import { BackofficeAuditAction, BackofficeAuditOutcome } from '../../audit/backoffice-audit-action';
+import { BackofficeAuditAction, BackofficeAuditOutcome, BackofficeAuditTargetKind } from '../../audit/backoffice-audit-action';
 import { StepUpOutcome } from '../../auth/step-up';
 import { SEE_OTHER_STATUS } from '../../backoffice-constants';
 import { BackofficeCopyKey } from '../../backoffice-copy';
@@ -15,7 +15,7 @@ import { NumberFormField } from '../number-form-fields';
 import { APP_SECRET_SEGMENT, META_APPS_PATH, numberPath, withNotice } from '../number-paths';
 import { rateLimitedResponse, stepUpOf } from '../step-up-gate';
 
-const TARGET_KIND = 'meta_app';
+const TARGET_KIND = BackofficeAuditTargetKind.MetaApp;
 const META_APP_PARAMETER = 'metaAppRef';
 
 export const appSecretRoutes = new Hono<BackofficeEnv>();

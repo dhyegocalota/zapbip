@@ -121,10 +121,11 @@ Re-running enrollment is the only recovery: lost authenticator, lost key, lockou
 3. If `locked_until > now`, answer the generic failure without touching `failed_attempts`. The lockout is checked before the factors, so a locked operator learns nothing. When `locked_until <= now`, one `UPDATE` sets `failed_attempts = 0` and `locked_until = NULL` before the factors are checked, so an expired lock starts a fresh count.
 4. Constant-time compare of the SHA-256 of the submitted key with `BACKOFFICE_KEY_DIGEST`. TOTP check for steps `current-1..current+1`, accepted only when `step > last_totp_step`. Both checks always run; there is no short-circuit.
 5. Failure:
+   - a wrong key is audited (`sign_in.failed`) and logged but changes nothing else; only a valid key with a wrong or reused code runs the increment below;
    - one atomic statement, `UPDATE backoffice_operator SET failed_attempts = failed_attempts + 1, locked_until = CASE WHEN failed_attempts + 1 >= ? THEN ? ELSE locked_until END WHERE id = 1 RETURNING failed_attempts, locked_until`, so concurrent failures lose no increment;
    - the 10th consecutive failure (`BACKOFFICE_LOCKOUT_THRESHOLD`) sets `locked_until = now + BACKOFFICE_LOCKOUT_MS` (15 min);
    - audit `sign_in.failed`, and `sign_in.locked` once, only on the failure whose `RETURNING` shows the lock was just set (never again while it holds);
-   - one generic message ("Sign-in failed") with status `401`, whichever factor was wrong.
+   - one generic message ("Sign-in failed") shown after `303` to `/sign-in?notice=SignInFailed`, whichever factor was wrong.
 6. Success:
    - `last_totp_step = step` and `failed_attempts = 0` (a success resets the consecutive count), in one conditional `UPDATE … WHERE last_totp_step < ?`, so two concurrent uses of one code cannot both win;
    - a new session;
@@ -334,8 +335,9 @@ export interface NumberRegistry {
    - the distinct `entry[].changes[].value.metadata.phone_number_id`;
    - for changes without metadata, `entry[].id` (WABA ID).
    - Unparseable JSON, or nothing to route on, is answered `401 unauthorized`, because it cannot be attributed to a number. This replaces today's `400 invalid_json` for unsigned bodies.
-3. **Attribution.** Resolve the IDs. The delivery must map to exactly one Meta app, because Meta signs each delivery with one app's secret.
-   - Any unknown ID, or two apps in one delivery: `401` and an `inbound.unattributed` operator event.
+3. **Attribution.** Resolve the IDs; only the known ones attribute the delivery, and they must map to exactly one Meta app, because Meta signs each delivery with one app's secret.
+   - No known ID, or known IDs spanning two apps: `401` and an `inbound.unattributed` operator event, after one signature check against a placeholder secret so a known and an unknown number cost the same.
+   - A change with an unknown ID beside a known one is skipped and logged as `inbound.foreign_number`; the delivery is answered `200`, so Meta does not retry the owner's messages forever.
    - The response is the same as for a bad signature, so registration cannot be probed.
 4. **Signature.** `verifyWebhookSignature` with that app's opened secret. A mismatch is `401`.
 5. The full parse and processing as today. The `change.phoneNumberId !== environment.phoneNumberId` check becomes a check on the number's state from the table above.
@@ -358,7 +360,7 @@ export interface NumberRegistry {
 
 - `apps/api/src/dev/build-directory-seed.ts` and `/dev/seed` register a fake number (phone number ID `1000000000000001`, fake Graph) sealed with the development `NUMBER_REGISTRY_KEY`. Development `WHATSAPP_GRAPH_BASE_URL` points at the local fake Graph, so the real sender runs against the seeded number. `dev-account-inbox.ts` loses its `WHATSAPP_ACCESS_TOKEN` fake-or-real `createSender` switch.
 - Integration and e2e suites call `seedWhatsAppNumber()` from `apps/api/test/support/whatsapp-numbers.ts`.
-- `whatsappTestEnv` and the `META_APP_SECRET`, `WHATSAPP_ACCESS_TOKEN` and `WHATSAPP_PHONE_NUMBER_ID` test bindings are deleted.
+- The `META_APP_SECRET`, `WHATSAPP_ACCESS_TOKEN` and `WHATSAPP_PHONE_NUMBER_ID` test bindings are deleted. `whatsappTestEnv` survives with only `WHATSAPP_SEND_THROUGH_GRAPH`, which makes the development account inbox send through the fake Graph.
 
 ### Metrics (read-only, PR B)
 
@@ -515,7 +517,8 @@ AccountInbox alarm ─► flush usage_meter → usage_daily, activity_meter → 
 | `BACKOFFICE_*` secret missing | every backoffice request answers `503`; the preflight refuses the deploy first |
 | `NUMBER_REGISTRY_KEY` missing or wrong | sends fail with the restricted-channel error; webhooks answer `500`, because it is a server misconfiguration (Meta retries for up to 7 days); `channel.number_unavailable`; the preflight refuses a missing key |
 | A sealed value does not open (swapped row, corrupted value) | hard error naming the internal row ID; that number is unavailable, the others work |
-| Webhook for an unregistered number, or a delivery spanning two apps | `401`, `inbound.unattributed` |
+| Webhook with no registered number, or known numbers spanning two apps | `401`, `inbound.unattributed` |
+| Webhook with an unregistered number beside a registered one | `200`, the unregistered change skipped, `inbound.foreign_number` |
 | Number `pending` or `disabled` | inbound ignored after the signature check, `200`; outbound refused |
 | Graph verify fails | the error kind is shown; `verified_at` stays null; state stays `pending` |
 | No registered number in a fresh environment | webhooks `401`, sends refused; the go-live runbook registers the number before the Meta webhook is pointed at the host |
@@ -524,7 +527,7 @@ AccountInbox alarm ─► flush usage_meter → usage_daily, activity_meter → 
 ### Known risks
 
 1. **TOTP is phishable by a real-time relay.** Mitigations: a separate unlisted host, HSTS, step-up on every change, the audit log, re-enrollment. Passkeys in phase 2 remove the risk.
-2. **Lockout can be triggered by anyone who reaches the host.** This is deliberate: it trades a 15-minute denial of service for bounded guessing. Recovery is re-enrollment.
+2. **A wrong key never counts toward the lockout.** Anyone who reaches the host can send wrong keys, which are rate limited, audited and logged but leave `failed_attempts` alone, so they cannot lock the owner out. Only a valid key with a wrong code, and a wrong step-up code (which needs a session), count; recovery is re-enrollment.
 3. **The Workers rate limiter is per location and eventually consistent.** The D1 lockout counter is the hard bound.
 4. **One Worker holds every secret.** A code-execution bug in any route reaches the registry key. Mitigations: the isolation tests and review. A split Worker would not remove the key from this Worker (ADR 0031).
 5. **`backoffice.localhost` cookies in development.** `__Host-` with `Secure` over `http` depends on Chromium treating `*.localhost` as a secure context. The first integration test and the walk prove it; the fallback is `wrangler dev --local-protocol https`.

@@ -5,7 +5,7 @@ import { numberAdminOf } from '../../../adapters/d1/d1-number-admin';
 import { RegistrationConflictError, RegistrationConflictField } from '../../../numbers/registration-conflict';
 import { StepUpOutcome } from '../../auth/step-up';
 import { type FlashStatus, redirectWithFlash, takeFlash } from '../../flash/form-flash';
-import { BackofficeAuditAction, BackofficeAuditOutcome } from '../../audit/backoffice-audit-action';
+import { BackofficeAuditAction, BackofficeAuditOutcome, BackofficeAuditTargetKind } from '../../audit/backoffice-audit-action';
 import { SEE_OTHER_STATUS } from '../../backoffice-constants';
 import type { BackofficeEnv } from '../../backoffice-env';
 import { BackofficeCopyKey } from '../../backoffice-copy';
@@ -19,7 +19,7 @@ import { type FieldErrors, parseRegistration, type RegistrationValues } from '..
 import { rateLimitedResponse, stepUpOf } from '../step-up-gate';
 import { RegisterNumberPage } from '../views/register-number';
 
-const TARGET_KIND = 'number';
+const TARGET_KIND = BackofficeAuditTargetKind.Number;
 const NEW_NUMBER_TARGET = NumberSegment.New;
 const REGISTER_PATH = `${BackofficePath.Numbers}/${NumberSegment.New}`;
 const EMPTY_VALUES: RegistrationValues = {

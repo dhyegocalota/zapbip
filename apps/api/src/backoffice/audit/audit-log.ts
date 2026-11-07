@@ -1,4 +1,4 @@
-import type { BackofficeAuditAction, BackofficeAuditOutcome } from './backoffice-audit-action';
+import type { BackofficeAuditAction, BackofficeAuditOutcome, BackofficeAuditTargetKind } from './backoffice-audit-action';
 
 const INSERT_AUDIT_STATEMENT =
   'INSERT INTO backoffice_audit (id, at, action, target_kind, target_id, outcome, client_address) VALUES (?, ?, ?, ?, ?, ?, ?)';
@@ -7,7 +7,7 @@ export type AuditEntry = {
   now: number;
   action: BackofficeAuditAction;
   outcome: BackofficeAuditOutcome;
-  targetKind: string | null;
+  targetKind: BackofficeAuditTargetKind | null;
   targetId: string | null;
   clientAddress: string | null;
 };
