@@ -17,6 +17,8 @@ import { FAKE_GRAPH_PORT, GRAPH_MESSAGES_PATH, OWNER_PHONE, PHONE_NUMBER_ID } fr
 import { fakeGraph, lastSentWamid, postSignedMessage, postSignedWebhook, sentRequests } from './whatsapp-support/webhook';
 
 const AGENT = 'alpha';
+const NEW_AGENT_COMMAND = 'novo agente beta';
+const INSTALL_LINK_MARK = '/i/';
 const STATUS_OK = 200;
 const POLL_TIMEOUT_MS = 10 * SECOND_MS;
 const ASK_TIMEOUT_MS = 30 * SECOND_MS;
@@ -54,6 +56,8 @@ type WireMessage = {
   voice: boolean | null;
   choice: { question_id: string } | null;
 };
+
+type InstallReplyBody = { text?: { body: string; preview_url: boolean } };
 
 let agent: Client;
 let askAnswer: Promise<ToolResult>;
@@ -243,5 +247,16 @@ describe('WhatsApp channel end to end', () => {
     const foreign = requests.filter((request) => request.method === 'POST' && request.path !== GRAPH_MESSAGES_PATH);
     expect(foreign).toEqual([]);
     expect(PHONE_NUMBER_ID).toBeTruthy();
+  });
+
+  test('E2E-8 the owner reply that carries an install link is sent with link previews off', async () => {
+    const sentBefore = (await sentRequests()).length;
+    const command = { ...textFixture, id: 'wamid.E2E8', text: { body: NEW_AGENT_COMMAND } };
+    const response = await postSignedMessage({ message: command, offsetMs: NO_OFFSET_MS });
+    expect(response.status).toBe(STATUS_OK);
+    const installReplies = (await sentRequests()).slice(sentBefore).map((request) => request.body as InstallReplyBody);
+    const withLink = installReplies.filter((body) => body.text?.body.includes(INSTALL_LINK_MARK));
+    expect(withLink).toHaveLength(1);
+    expect(withLink[0]?.text?.preview_url).toBe(false);
   });
 });

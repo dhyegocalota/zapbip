@@ -1,7 +1,8 @@
-import { env } from 'cloudflare:test';
+import { createExecutionContext, env } from 'cloudflare:test';
 import { MessageKind } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { DevAccountInbox } from '../../src/dev/dev-account-inbox';
+import { DeployEnvironment } from '../../src/operations/deploy-environment';
 import production, { AccountInbox } from '../../src/index';
 import { ORIGIN, seedAccount } from './route-fixtures';
 
@@ -16,15 +17,16 @@ async function request(input: { path: string; method: string; body?: Record<stri
       headers: { 'Content-Type': 'application/json' },
       body: input.body ? JSON.stringify(input.body) : undefined,
     }),
-    env,
+    { ...env, ENVIRONMENT: DeployEnvironment.Production },
+    createExecutionContext(),
   );
 }
 
 describe('production entry', () => {
-  test('WI-117 /health answers 200 with ok true', async () => {
+  test('WI-117 /health answers 200 with ok true and the environment', async () => {
     const response = await request({ path: '/health', method: 'GET' });
     expect(response.status).toBe(STATUS_OK);
-    expect(await response.json()).toEqual({ ok: true });
+    expect(await response.json()).toEqual({ ok: true, environment: DeployEnvironment.Production });
   });
 
   test('WI-109 WI-110 WI-111 the simulator routes answer 404', async () => {
@@ -46,6 +48,7 @@ describe('production entry', () => {
         body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list' }),
       }),
       env,
+      createExecutionContext(),
     );
     expect(response.status).toBe(STATUS_OK);
   });

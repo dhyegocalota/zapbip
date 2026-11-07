@@ -40,6 +40,8 @@ O OpenClaw pode consultar a caixa de entrada. Adicione o servidor MCP da configu
 
 ### Instale o canal
 
+O plugin lê as suas mensagens para este agente no zapbip e publica as respostas do agente de volta. Ele não faz mais nada. O comando de instalação precisa de `--accept-capabilities` para que o OpenClaw instale sem perguntar de novo.
+
 ```bash
 openclaw plugins install @zapbip/openclaw-plugin@0.1.0 --force --accept-capabilities
 ```

@@ -25,7 +25,9 @@ export enum LogEvent {
   AccountDailyCap = 'account_daily_cap',
   AccountDeleted = 'account_deleted',
   InstallCodeUnreadable = 'install_code_unreadable',
+  BudgetWarning = 'budget.warning',
   FrameRejected = 'frame_rejected',
+  InstallPageFailed = 'install_page_failed',
 }
 
 export type LogFields = {
@@ -40,6 +42,8 @@ export type LogFields = {
   locale?: string;
   count?: number;
   route?: string;
+  day?: string;
+  gigabyteSeconds?: number;
   provider?: WakeProvider | null;
   attempt?: number;
   statusCode?: number | null;

@@ -44,7 +44,11 @@ Run one listener at a time. A second listener replaces the first.
 
 3. **Say yes to each change.** Gemini CLI tells you which setting it changes and waits for your yes. Keep the link out of chats you share.
 
-4. **Let it add zapbip.** Gemini CLI adds the zapbip server to its own configuration, then starts the listener in a background terminal.
+4. **Add zapbip to Gemini CLI.** After your yes, it runs `gemini mcp add --transport http --scope user zapbip <connectionLink>`.
+
+5. **Start listening.** It runs `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen` in a background terminal and keeps that terminal running, with no time limit. Whenever a new line appears there, it calls `check_inbox` and answers.
+
+6. **Test it.** In a fresh process it runs `gemini -p "Use zapbip to send ✅ installed to my WhatsApp"`. A `send_message` with ✅ installed reaches your WhatsApp. If the command fails, it stops and shows the last 20 lines. Then restart Gemini CLI.
 
 ## Check it works
 

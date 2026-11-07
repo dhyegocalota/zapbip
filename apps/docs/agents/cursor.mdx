@@ -56,7 +56,13 @@ When your AI asks you something, zapbip holds the question and answers "pending"
 
    Cursor reads the instructions and follows them in order. Before it changes a setting, it tells you which one and waits for your yes. The link is secret, so keep it out of chats you share.
 
-4. **Say yes.** Cursor adds zapbip to its tool settings and opens a background terminal with the listener. Then restart the Cursor chat to use the zapbip tools.
+4. **Say yes.** Cursor then does the rest, in this order.
+
+5. **Add zapbip to Cursor.** It asks you first and waits for your yes. Then it adds an MCP server named `zapbip` over HTTP at `<connectionLink>` in Cursor's MCP settings.
+
+6. **Start listening.** It runs `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen` in a background terminal and keeps that terminal running, with no time limit. Whenever a new line appears there, it calls `check_inbox` and answers.
+
+7. **Test it.** In the chat it calls `send_message` with ✅ installed. Then restart the Cursor chat to use the zapbip tools.
 
 ## Check it works
 

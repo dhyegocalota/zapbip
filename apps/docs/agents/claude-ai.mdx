@@ -31,6 +31,8 @@ Wake type: **Webhook**. When you write on WhatsApp, zapbip fires the trigger lin
 
 When your AI asks you something, zapbip holds the question and answers "pending" at most every 50 seconds. claude.ai then calls again, and keeps calling again until you answer. There is no time limit.
 
+claude.ai waits about 4 minutes for a single answer and retries by itself, so there is no limit overall.
+
 ## Set up from zero
 
 1. **Message the zapbip number on WhatsApp.** Send any text, for example `hi`.
@@ -56,11 +58,15 @@ When your AI asks you something, zapbip holds the question and answers "pending"
 
    claude.ai reads the instructions and follows them in order. The link is secret, so keep it out of chats you share.
 
-4. **Add the connector.** claude.ai asks you to paste a link as a custom connector in Settings. You do this one yourself, because claude.ai only lets you add it.
+4. **Paste the connector.** claude.ai asks you to paste `<connectionLink>` as a custom connector in Settings. You do this one yourself, because claude.ai only lets you add it.
 
-5. **Create the wake task.** claude.ai asks you to create a task with a trigger link in its routines, then to paste the trigger URL and token in the chat. This paste is yours too, because claude.ai shows the token only to you.
+5. **Create the wake task.** It asks you to create a task with an API trigger at claude.ai/code/routines, then to paste its fire URL and token in the chat. The second paste is also yours, because claude.ai shows the token only to you.
 
-6. **Create the safety net.** claude.ai asks you to create an hourly task that checks your messages.
+6. **Tell zapbip how to wake it.** If you stop before the task exists, it calls `set_wake({mode: "none"})` and tells you the chat sees new messages only when you open it. Otherwise it calls `set_wake({mode: "webhook", url, token})`.
+
+7. **Create the hourly safety net.** It asks you to create an hourly task that calls `check_inbox`, so nothing waits more than an hour if a wake is missed.
+
+8. **Test it.** In the chat it calls `send_message` with ✅ installed.
 
 ## Check it works
 

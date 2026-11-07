@@ -33,6 +33,8 @@ When your AI asks you something, zapbip holds the question and answers "pending"
 
 The 900 second tool timeout that the install sets in Codex bounds one call, not the listening. When a call ends, Codex starts the next one.
 
+Codex waits up to 15 minutes for a single answer and asks again, so there is no limit overall.
+
 ## Set up from zero
 
 1. **Message the zapbip number on WhatsApp.** Send any text, for example `hi`.
@@ -58,7 +60,13 @@ The 900 second tool timeout that the install sets in Codex bounds one call, not 
 
    Codex reads the instructions and follows them in order. Before it changes a file or a setting, it tells you which one and waits for your yes. The link is secret, so keep it out of chats you share.
 
-4. **Say yes.** Codex adds zapbip to its configuration, lets the zapbip tools run without asking you each time and says so, and starts the connector. Then restart Codex.
+4. **Say yes.** Codex then does the rest, in this order.
+
+5. **Add zapbip to Codex.** After your yes, it replaces the `[mcp_servers.zapbip]` table in `~/.codex/config.toml` with `url = "<connectionLink>"`, `tool_timeout_sec = 900` and `default_tools_approval_mode = "approve"`. Approval mode lets zapbip tools run without asking you each time, and Codex tells you so.
+
+6. **Start the connector.** It runs `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 connect --client codex` in the background. It keeps listening and resumes your session with `codex exec resume`.
+
+7. **Test it.** In a fresh process it runs `codex exec -c 'mcp_servers.zapbip.default_tools_approval_mode="approve"' "Use zapbip to send ✅ installed to my WhatsApp"`. A `send_message` with ✅ installed reaches your WhatsApp. If the command fails, it stops and shows the last 20 lines. Then restart Codex.
 
 ## Check it works
 

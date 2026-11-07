@@ -40,10 +40,14 @@ A `Proposed` ADR moves to `Accepted` by editing its status line and date. Any ot
 | [0017](0017-connection-secrets-are-shown-once-and-stored-as-digests.md) | Connection secrets are shown once and stored as digests | Accepted | 2026-11-06 |
 | [0018](0018-webhook-wake-carries-no-message-content.md) | A webhook wake carries no message content | Accepted | 2026-11-06 |
 | [0019](0019-outbound-wake-targets-pinned-providers-and-guarded-generic-hosts.md) | Outbound wake targets: pinned provider hosts and guarded generic hosts | Accepted | 2026-11-06 |
+| [0020](0020-one-install-link-per-connection-the-ai-reads-the-instructions.md) | One install link per connection, the AI reads the instructions | Accepted | 2026-11-06 |
+| [0021](0021-the-agent-rules-come-from-the-mcp-server.md) | The agent rules come from the MCP server | Accepted | 2026-11-06 |
 | [0022](0022-a-hibernatable-websocket-for-the-local-connector.md) | A hibernatable WebSocket for the local connector | Accepted | 2026-11-06 |
 | [0023](0023-the-local-session-is-the-newest-one-in-the-working-directory.md) | The local session is the newest one in the working directory | Accepted | 2026-11-06 |
 | [0024](0024-a-standby-gets-a-copy-of-the-owner-message.md) | A standby gets a copy of the owner's message, never its primary's inbox | Accepted | 2026-11-06 |
 | [0025](0025-a-stale-poller-degrades-the-effective-rung.md) | Pollers are recorded per connection, and a stale poller degrades the effective rung | Accepted | 2026-11-06 |
+| [0026](0026-runbooks-live-in-the-repository-not-on-mintlify.md) | Runbooks live in the repository, not on Mintlify | Accepted | 2026-11-06 |
+| [0027](0027-deploys-run-from-the-owners-machine-not-from-ci.md) | Deploys run from the owner's machine, and CI does not deploy | Accepted | 2026-11-06 |
 | [0028](0028-the-native-channel-plugin-is-the-first-rung-for-openclaw-and-hermes.md) | The native channel plugin is the first rung for OpenClaw and Hermes | Accepted | 2026-11-06 |
 | [0029](0029-a-plugin-acknowledges-a-handoff-and-a-listener-does-not.md) | A plugin acknowledges after the handoff; a listener acknowledges after it prints | Accepted | 2026-11-06 |
 | [0030](0030-the-docs-speak-to-any-ai-user-in-two-languages-and-the-switcher-picks-the-language.md) | The docs speak to any AI user in two languages, and the switcher picks the language | Accepted | 2026-11-06 |

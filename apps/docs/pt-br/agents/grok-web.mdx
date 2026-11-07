@@ -23,6 +23,8 @@ Enquanto uma pergunta está aberta, o Grok espera até 50 segundos por vez. Se v
 
 Mantenha a conversa do Grok aberta. Se você tem um Grok Bot conectado ao zapbip, não precisa fazer mais nada.
 
+O Grok espera 1 minuto por uma resposta e pergunta de novo, então não há limite no total.
+
 ## Configure do zero
 
 1. **Mande uma mensagem para o número do zapbip no WhatsApp.** Envie `novo agente grok-web`. [Como começar](/pt-br/get-started/how-to-start) mostra cada mensagem.
@@ -38,9 +40,11 @@ Mantenha a conversa do Grok aberta. Se você tem um Grok Bot conectado ao zapbip
 
    <InstallPrompt />
 
-3. **Adicione o conector você mesmo.** O Grok pede que você cole um link como conector nas configurações dele. É uma regra do app, então esse passo é manual. Mantenha o link fora de conversas que você compartilha.
+3. **Colar o conector.** O Grok pede para você colar `<connectionLink>` como conector nas configurações dele. Esse passo é seu.
 
-4. **Escolha quem responde quando você escreve primeiro.** Se você tem um Grok Bot conectado ao zapbip, o Grok o define como substituto. Sem um, a mensagem espera na Caixa de entrada.
+4. **Escolher quem responde quando você escreve primeiro.** Se você tem um Grok Bot conectado ao zapbip, o Grok chama `set_wake({mode: "standby", standby_agent: "<name>"})` com esse bot. Sem ele, chama `set_wake({mode: "none"})`.
+
+5. **Testar.** No chat ele chama `send_message` com ✅ instalado.
 
 ## Confira se funciona
 

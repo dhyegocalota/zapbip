@@ -3,6 +3,7 @@ import { defineConfig } from 'vitest/config';
 import { DEVELOPMENT_ENVIRONMENT } from './src/contract/constants';
 
 const WAKE_TEST_SECRET_KEY = Buffer.alloc(32).toString('base64');
+const LOADED_MACHINE_TEST_TIMEOUT_MS = 30_000;
 
 export default defineConfig({
   plugins: [
@@ -24,5 +25,7 @@ export default defineConfig({
   test: {
     include: ['test/integration/**/*.test.ts'],
     globalSetup: 'test/support/fake-graph-global-setup.ts',
+    testTimeout: LOADED_MACHINE_TEST_TIMEOUT_MS,
+    hookTimeout: LOADED_MACHINE_TEST_TIMEOUT_MS,
   },
 });

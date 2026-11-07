@@ -90,12 +90,12 @@ Declare os dois servidores no `.mcp.json` da pasta em que você trabalha. O cana
 ```json
 {
   "mcpServers": {
-    "zapbip": {
+    "zapbip-channel": {
       "command": "npx",
       "args": ["zapbip@0.1.0", "channel"],
       "env": { "ZAPBIP_CONNECTION_URL": "https://<host>/c/<secret>/mcp" }
     },
-    "zapbip-agent": {
+    "zapbip": {
       "type": "http",
       "url": "https://<host>/c/<secret>/mcp"
     }
@@ -103,10 +103,10 @@ Declare os dois servidores no `.mcp.json` da pasta em que você trabalha. O cana
 }
 ```
 
-A sessão responde pelo `zapbip-agent`. Sem ele a sessão te ouve, mas não tem como responder. Depois inicie o Claude Code com:
+A sessão responde pelo `zapbip`. Sem ele a sessão te ouve, mas não tem como responder. Depois inicie o Claude Code com:
 
 ```bash
-claude --dangerously-load-development-channels server:zapbip
+claude --dangerously-load-development-channels server:zapbip-channel
 ```
 
 `zapbip` é a chave do servidor do canal no `.mcp.json`. A linha de inicialização mostra `Channels (experimental)`. O Claude Code pede para você aceitar o canal de desenvolvimento e o servidor MCP do projeto; aceite os dois.

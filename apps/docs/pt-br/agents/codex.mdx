@@ -33,6 +33,8 @@ Quando a sua IA faz uma pergunta, o zapbip a guarda e responde "pendente" no má
 
 O limite de 900 segundos por ferramenta, que a instalação define no Codex, vale para uma chamada, não para a escuta. Quando uma chamada termina, o Codex começa a próxima.
 
+O Codex espera até 15 minutos por uma resposta e pergunta de novo, então não há limite no total.
+
 ## Configure do zero
 
 1. **Mande uma mensagem para o número do zapbip no WhatsApp.** Pode ser qualquer texto, por exemplo `oi`.
@@ -58,7 +60,13 @@ O limite de 900 segundos por ferramenta, que a instalação define no Codex, val
 
    O Codex lê as instruções e as segue em ordem. Antes de mudar um arquivo ou uma configuração, ele diz qual é e espera o seu sim. O link é secreto, então não o deixe em conversas que você compartilha.
 
-4. **Diga sim.** O Codex adiciona o zapbip à configuração dele, deixa as ferramentas do zapbip rodarem sem pedir a cada vez e avisa você disso, e inicia o conector. Depois reinicie o Codex.
+4. **Diga sim.** O Codex faz o resto, nesta ordem.
+
+5. **Adicionar o zapbip ao Codex.** Depois do seu sim, ele troca a tabela `[mcp_servers.zapbip]` em `~/.codex/config.toml` por `url = "<connectionLink>"`, `tool_timeout_sec = 900` e `default_tools_approval_mode = "approve"`. O modo de aprovação deixa as ferramentas do zapbip rodarem sem pedir a cada vez, e o Codex avisa você disso.
+
+6. **Iniciar o conector.** Ele roda `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 connect --client codex` em segundo plano. Ele continua escutando e retoma a sua sessão com `codex exec resume`.
+
+7. **Testar.** Em um processo novo ele roda `codex exec -c 'mcp_servers.zapbip.default_tools_approval_mode="approve"' "Use o zapbip para enviar ✅ instalado ao meu WhatsApp"`. Um `send_message` com ✅ instalado chega ao seu WhatsApp. Se o comando falhar, ele para e mostra as últimas 20 linhas. Depois reinicie o Codex.
 
 ## Confira se funciona
 

@@ -23,6 +23,8 @@ While a question is open, Grok waits up to 50 seconds at a time. If you have not
 
 Keep the Grok chat open. If you have a Grok Bot connected to zapbip, you do nothing more.
 
+Grok waits 1 minute for a single answer and asks again, so there is no limit overall.
+
 ## Set up from zero
 
 1. **Message the zapbip number on WhatsApp.** Send `new agent grok-web`. [How to start](/get-started/how-to-start) shows every message.
@@ -38,9 +40,11 @@ Keep the Grok chat open. If you have a Grok Bot connected to zapbip, you do noth
 
    <InstallPrompt />
 
-3. **Add the connector yourself.** Grok tells you to paste a link as a connector in its settings. This is a rule of the app, so you do this one step by hand. Keep the link out of chats you share.
+3. **Paste the connector.** Grok asks you to paste `<connectionLink>` as a connector in its settings. You do this one yourself.
 
-4. **Pick who answers when you write first.** If you have a Grok Bot connected to zapbip, Grok sets it as the standby. Without one, only the inbox is used.
+4. **Pick who answers when you write first.** If you have a Grok Bot connected to zapbip, Grok calls `set_wake({mode: "standby", standby_agent: "<name>"})` with that bot. Without one, it calls `set_wake({mode: "none"})`.
+
+5. **Test it.** In the chat it calls `send_message` with ✅ installed.
 
 ## Check it works
 

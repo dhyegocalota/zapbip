@@ -44,7 +44,11 @@ Use um ouvinte por vez. Um segundo ouvinte substitui o primeiro.
 
 3. **Diga sim a cada mudança.** O Gemini CLI diz qual configuração vai mudar e espera o seu sim. Mantenha o link fora de conversas que você compartilha.
 
-4. **Deixe que ele adicione o zapbip.** O Gemini CLI adiciona o servidor do zapbip à própria configuração e depois inicia o ouvinte em um terminal em segundo plano.
+4. **Adicionar o zapbip ao Gemini CLI.** Depois do seu sim, ele roda `gemini mcp add --transport http --scope user zapbip <connectionLink>`.
+
+5. **Começar a escutar.** Ele roda `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen` em um terminal em segundo plano e mantém esse terminal rodando, sem limite de tempo. Sempre que uma linha nova aparece ali, chama `check_inbox` e responde.
+
+6. **Testar.** Em um processo novo ele roda `gemini -p "Use o zapbip para enviar ✅ instalado ao meu WhatsApp"`. Um `send_message` com ✅ instalado chega ao seu WhatsApp. Se o comando falhar, ele para e mostra as últimas 20 linhas. Depois reinicie o Gemini CLI.
 
 ## Confira se funciona
 

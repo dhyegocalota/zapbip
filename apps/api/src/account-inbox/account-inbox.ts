@@ -49,6 +49,7 @@ import { createConnectionSecrets } from '../adapters/platform/connection-secrets
 import { createInstallCodeVault } from '../adapters/platform/install-code-vault';
 import { createIdGenerator } from '../adapters/platform/ids';
 import { loadDurableClock, type DurableClock } from '../adapters/platform/clock';
+import { D1UsageRepository } from '../adapters/d1/d1-usage-repository';
 import { mediaStoreOf } from '../adapters/r2/r2-media-store';
 import { createSqliteInboxRepository } from '../adapters/sqlite/sqlite-inbox-repository';
 import { createDispatchingAgentWaker } from '../adapters/wake/dispatching-agent-waker';
@@ -62,7 +63,7 @@ import { createWebhookAgentWaker } from '../adapters/wake/webhook-agent-waker';
 import { createCloudApiMessageSender } from '../adapters/whatsapp/cloud-api-message-sender';
 import { createGraphClient } from '../adapters/whatsapp/graph-client';
 import { readWhatsAppEnvironment } from '../adapters/whatsapp/read-whatsapp-env';
-import type { AccountInboxRpc, AgentRequest, CallOutcome } from '../contract/account-inbox-rpc';
+import type { AccountInboxRpc, AgentRequest, CallOutcome, WakeModeEntry } from '../contract/account-inbox-rpc';
 import type { AccountOwnerRpc } from '../contract/account-owner-rpc';
 import type { DueTimeProvider } from '../contract/due-time-provider';
 import type { Bindings } from '../contract/env';
@@ -101,7 +102,14 @@ import { createSqliteFirstMessageClaim } from './first-message-claim';
 import { redactInstallCodes } from './install-code-redaction';
 import { ACCOUNT_INBOX_MIGRATIONS } from './migrations';
 import { runMigrations } from './run-migrations';
+import { recordUsage } from './usage-ledger';
+import { gigabyteSecondsForDuration, utcDay } from './usage-meter';
+import { createUsageProvider } from './usage-provider';
 import { createWakeDependencies } from './wake-dependencies';
+
+const SELECT_WAKE_MODES_STATEMENT = 'SELECT agent, mode FROM agent_wake';
+
+type WakeModeRow = { agent: string; mode: WakeMode };
 
 type ReceiveAccountMessageRequest = Parameters<AccountOwnerRpc['receiveAccountMessage']>[0];
 
@@ -195,6 +203,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       this.createWakeProvider(),
       this.createPollerProvider(),
       this.createNoticeRetryProvider(),
+      this.createUsageProvider(),
     );
     await this.armAlarm();
   }
@@ -243,6 +252,24 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       nextDueAt: () => inbox.findRoutingListDueAt({ dependencies: this.dependencies }),
       runDue: () => inbox.expireRoutingList({ dependencies: this.dependencies }),
     };
+  }
+
+  private createUsageProvider(): DueTimeProvider {
+    return createUsageProvider({
+      storage: this.ctx.storage,
+      repository: new D1UsageRepository({ database: this.env.CONNECTIONS }),
+      accountId: this.accountId,
+    });
+  }
+
+  private recordUsage(input: { startedAt: number }): void {
+    const now = this.clock.now();
+    recordUsage({
+      storage: this.ctx.storage,
+      day: utcDay({ now }),
+      gigabyteSeconds: gigabyteSecondsForDuration({ durationMs: Date.now() - input.startedAt }),
+      now,
+    });
   }
 
   private createWakeProvider(): DueTimeProvider {
@@ -342,6 +369,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     describe?: (value: Value) => LogFields | LogFields[];
     connection?: ConnectionIdentity;
   }): Promise<CallOutcome<Value>> {
+    const startedAt = Date.now();
     this.assertLive();
     if (input.connection !== undefined) {
       const isAdmittedByDirectory = await isConnectionAdmitted({ database: this.env.CONNECTIONS, connection: input.connection });
@@ -361,6 +389,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       this.log(failureLog({ error }));
       return { ok: false, errorCode: error.code, message: error.message };
     } finally {
+      this.recordUsage({ startedAt });
       await this.armAlarm();
     }
   }
@@ -484,6 +513,14 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
   async cancelWaiters(input: { agent: string }): Promise<void> {
     this.assertLive();
     this.dependencies.waiters.cancelAgent(input);
+  }
+
+  async listWakeModes(): Promise<WakeModeEntry[]> {
+    this.assertLive();
+    return this.ctx.storage.sql
+      .exec<WakeModeRow>(SELECT_WAKE_MODES_STATEMENT)
+      .toArray()
+      .map((row) => ({ agent: row.agent, wakeMode: row.mode }));
   }
 
   async purge(): Promise<void> {

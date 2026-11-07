@@ -40,9 +40,13 @@ You do nothing to keep it running.
 
 3. **Say yes to each change.** Grok Bot reads the instructions and, before it changes a setting, tells you which one and waits for your yes. Keep the link out of chats you share.
 
-4. **Confirm the zapbip server.** Grok Bot adds an MCP server named `zapbip` and asks you to confirm.
+4. **Add zapbip to Grok Bot.** It asks the bot to add an MCP server named `zapbip` at `<connectionLink>`. You confirm.
 
-5. **Let it create the routine.** Grok Bot creates a routine with a webhook trigger and gives zapbip its address and key. If anything fails, it stops and tells you.
+5. **Create the routine.** It creates a routine with a webhook trigger, which gives a URL and a key.
+
+6. **Tell zapbip how to wake it.** It calls `set_wake({mode: "webhook", url, token})` with the URL and key of the routine. On an error it stops and reports.
+
+7. **Test it.** In the chat it calls `send_message` with ✅ installed.
 
 ## Check it works
 

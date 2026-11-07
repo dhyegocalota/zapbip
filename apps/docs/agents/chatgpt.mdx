@@ -32,6 +32,8 @@ Wake type: **Scheduled**. ChatGPT reads your WhatsApp messages once an hour, the
 
 When your AI asks you something, zapbip holds the question and answers "pending" at most every 50 seconds. ChatGPT then calls again, and keeps calling again until you answer. There is no time limit.
 
+ChatGPT waits about 5 minutes for a single answer and asks again, so there is no limit overall.
+
 ## Set up from zero
 
 1. **Message the zapbip number on WhatsApp.** Send any text, for example `hi`.
@@ -57,9 +59,13 @@ When your AI asks you something, zapbip holds the question and answers "pending"
 
    ChatGPT reads the instructions and follows them in order. The link is secret, so keep it out of chats you share.
 
-4. **Add the app.** ChatGPT asks you to turn on developer mode and add an app by link, choosing "No authentication". You do this one yourself.
+4. **Add the app.** ChatGPT asks you to turn on developer mode and add an app by URL with `<connectionLink>`, choosing "No authentication". You do this one yourself.
 
-5. **Create the hourly task.** ChatGPT asks you to create an hourly "Run on this computer" task that checks your messages, in one dedicated chat, and to choose "Always allow" once for each tool.
+5. **Create the hourly task.** It asks you to create an hourly "Run on this computer" task that calls `check_inbox`, in one dedicated chat, and to choose "Always allow" once for each tool.
+
+6. **Tell zapbip it polls.** It calls `set_wake({mode: "scheduled", interval_minutes: 60})`.
+
+7. **Test it.** In the chat it calls `send_message` with ✅ installed.
 
 ## Check it works
 

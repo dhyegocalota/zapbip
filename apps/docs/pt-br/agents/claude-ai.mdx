@@ -31,6 +31,8 @@ Tipo de despertar: **Webhook**. Quando você escreve no WhatsApp, o zapbip dispa
 
 Quando a sua IA faz uma pergunta, o zapbip a guarda e responde "pendente" no máximo a cada 50 segundos. O claude.ai então chama de novo, e continua chamando de novo até você responder, sem limite de tempo.
 
+O claude.ai espera cerca de 4 minutos por uma resposta e tenta de novo sozinho, então não há limite no total.
+
 ## Configure do zero
 
 1. **Mande uma mensagem para o número do zapbip no WhatsApp.** Pode ser qualquer texto, por exemplo `oi`.
@@ -56,11 +58,15 @@ Quando a sua IA faz uma pergunta, o zapbip a guarda e responde "pendente" no má
 
    O claude.ai lê as instruções e as segue em ordem. O link é secreto, então não o deixe em conversas que você compartilha.
 
-4. **Adicione o conector.** O claude.ai pede que você cole um link como conector personalizado nas Configurações. Esta parte é sua, porque o claude.ai só deixa você adicioná-lo.
+4. **Colar o conector.** O claude.ai pede para você colar `<connectionLink>` como conector personalizado nas Configurações. Esse passo é seu, porque o claude.ai só permite que você o faça.
 
-5. **Crie a tarefa de despertar.** O claude.ai pede que você crie uma tarefa com link de gatilho nas rotinas dele e cole no chat a URL do gatilho e o token. Esta colagem também é sua, porque o claude.ai mostra o token só para você.
+5. **Criar a tarefa de despertar.** Ele pede para você criar uma tarefa com gatilho de API em claude.ai/code/routines e colar no chat a URL de disparo e o token. A segunda colagem também é sua, porque o claude.ai mostra o token só para você.
 
-6. **Crie a rede de segurança.** O claude.ai pede que você crie uma tarefa a cada hora que confere as suas mensagens.
+6. **Avisar o zapbip como acordá-lo.** Se você parar antes de a tarefa existir, ele chama `set_wake({mode: "none"})` e avisa que o chat só vê mensagens novas quando você o abre. Caso contrário, chama `set_wake({mode: "webhook", url, token})`.
+
+7. **Criar a rede de segurança por hora.** Ele pede para você criar uma tarefa por hora que chama `check_inbox`, para nada esperar mais de uma hora se um despertar falhar.
+
+8. **Testar.** No chat ele chama `send_message` com ✅ instalado.
 
 ## Confira se funciona
 

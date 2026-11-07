@@ -15,6 +15,7 @@ const SIMULATOR_IDENTIFIER = 'owner-simulator';
 const DEV_SEED_ONLY_MESSAGE = 'owner count missing';
 const DEV_METHODS = ['advanceClock', 'readScreen'];
 const DEVELOPMENT_ENVIRONMENT_ARGUMENTS = ['--env', DEVELOPMENT_ENVIRONMENT];
+const STAGING_ENVIRONMENT_ARGUMENTS = ['--env', 'staging'];
 
 const outputDirectories: string[] = [];
 
@@ -37,6 +38,16 @@ describe('production bundle', () => {
       const present = [DEV_OWNER_ROUTE_PREFIX, SIMULATOR_IDENTIFIER, DEV_SEED_PATH, DEV_SEED_ONLY_MESSAGE, ...DEV_METHODS].filter(
         (marker) => bundle.includes(marker),
       );
+      expect(present).toEqual([]);
+    },
+    BUNDLE_TIMEOUT_MS,
+  );
+
+  test(
+    'PB-4 the staging block bundles without the development surface',
+    async () => {
+      const bundle = await bundleOf({ extraArguments: STAGING_ENVIRONMENT_ARGUMENTS, bundleFile: PRODUCTION_BUNDLE_FILE });
+      const present = [DEV_OWNER_ROUTE_PREFIX, SIMULATOR_IDENTIFIER, ...DEV_METHODS].filter((marker) => bundle.includes(marker));
       expect(present).toEqual([]);
     },
     BUNDLE_TIMEOUT_MS,

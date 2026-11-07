@@ -56,7 +56,13 @@ Quando a sua IA faz uma pergunta, o zapbip a guarda e responde "pendente" no má
 
    O Cursor lê as instruções e as segue em ordem. Antes de mudar uma configuração, ele diz qual é e espera o seu sim. O link é secreto, então não o deixe em conversas que você compartilha.
 
-4. **Diga sim.** O Cursor adiciona o zapbip às configurações de ferramentas dele e abre um terminal em segundo plano com o ouvinte. Depois reinicie o chat do Cursor para usar as ferramentas do zapbip.
+4. **Diga sim.** O Cursor faz o resto, nesta ordem.
+
+5. **Adicionar o zapbip ao Cursor.** Ele pergunta antes e espera o seu sim. Depois adiciona um servidor MCP chamado `zapbip` por HTTP em `<connectionLink>` nas configurações de MCP do Cursor.
+
+6. **Começar a escutar.** Ele roda `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen` em um terminal em segundo plano e mantém esse terminal rodando, sem limite de tempo. Sempre que uma linha nova aparece ali, chama `check_inbox` e responde.
+
+7. **Testar.** No chat ele chama `send_message` com ✅ instalado. Depois reinicie o chat do Cursor para usar as ferramentas do zapbip.
 
 ## Confira se funciona
 

@@ -1,3 +1,5 @@
+import { DeployEnvironment } from './deploy-environment';
+
 export const CONNECTION_SECRET_PREFIX = 'zb_conn_';
 export const CONNECTION_SECRET_BYTES = 32;
 export const CONNECTION_SECRET_PATTERN = /^zb_conn_[A-Za-z0-9_-]{43}$/;
@@ -6,11 +8,12 @@ export const INSTALL_CODE_KEY_INFO = 'zapbip install code seal';
 export const SEAL_INITIALIZATION_VECTOR_BYTES = 12;
 export const MCP_SERVER_NAME = 'zapbip';
 export const MCP_SERVER_VERSION = '0.1.0';
-export const DEVELOPMENT_ENVIRONMENT = 'development';
+export const DEVELOPMENT_ENVIRONMENT = DeployEnvironment.Development;
 export const HEALTH_PATH = '/health';
 export const UNAUTHORIZED_BODY = { error: 'unauthorized' } as const;
 export const PAYLOAD_TOO_LARGE_BODY = { error: 'payload_too_large' } as const;
 export const INVALID_JSON_BODY = { error: 'invalid_json' } as const;
+export const BATCH_NOT_SUPPORTED_BODY = { error: 'batch_not_supported' } as const;
 export const INVALID_NOTIFICATION_BODY = { error: 'invalid_notification' } as const;
 export const CLOCK_OFFSET_STORAGE_KEY = 'clock_offset_ms';
 export const DEV_OWNER_PATH_PREFIX = '/dev/owner/:phone';

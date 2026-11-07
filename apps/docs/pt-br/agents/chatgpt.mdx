@@ -32,6 +32,8 @@ Tipo de despertar: **Agendada**. O ChatGPT lê as suas mensagens do WhatsApp uma
 
 Quando a sua IA faz uma pergunta, o zapbip a guarda e responde "pendente" no máximo a cada 50 segundos. O ChatGPT então chama de novo, e continua chamando de novo até você responder, sem limite de tempo.
 
+O ChatGPT espera cerca de 5 minutos por uma resposta e pergunta de novo, então não há limite no total.
+
 ## Configure do zero
 
 1. **Mande uma mensagem para o número do zapbip no WhatsApp.** Pode ser qualquer texto, por exemplo `oi`.
@@ -57,9 +59,13 @@ Quando a sua IA faz uma pergunta, o zapbip a guarda e responde "pendente" no má
 
    O ChatGPT lê as instruções e as segue em ordem. O link é secreto, então não o deixe em conversas que você compartilha.
 
-4. **Adicione o app.** O ChatGPT pede que você ative o modo desenvolvedor e adicione um app por link, escolhendo "Sem autenticação". Esta parte é sua.
+4. **Adicionar o app.** O ChatGPT pede para você ligar o modo desenvolvedor e adicionar um app pela URL `<connectionLink>`, escolhendo "Sem autenticação". Esse passo é seu.
 
-5. **Crie a tarefa a cada hora.** O ChatGPT pede que você crie uma tarefa a cada hora, "Executar neste computador", que confere as suas mensagens, numa conversa dedicada, e que escolha "Sempre permitir" uma vez para cada ferramenta.
+5. **Criar a tarefa por hora.** Ele pede para você criar uma tarefa por hora "Executar neste computador" que chama `check_inbox`, em um chat dedicado, e escolher "Sempre permitir" uma vez para cada ferramenta.
+
+6. **Avisar o zapbip que consulta.** Ele chama `set_wake({mode: "scheduled", interval_minutes: 60})`.
+
+7. **Testar.** No chat ele chama `send_message` com ✅ instalado.
 
 ## Confira se funciona
 
