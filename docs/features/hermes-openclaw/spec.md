@@ -1,6 +1,6 @@
 # Hermes and OpenClaw
 
-**Status:** Building
+**Status:** Shipped 2026-11-07
 **Tier:** 🟡
 **Owner approval:** owner order 2026-11-06 ("foi isso que combinamos": every supported agent can start conversations and has no response-time limit); scope and rung delegated 2026-11-06
 **ADRs:** [0028](../../adr/0028-the-native-channel-plugin-is-the-first-rung-for-openclaw-and-hermes.md) and [0029](../../adr/0029-a-plugin-acknowledges-a-handoff-and-a-listener-does-not.md), both `Proposed` in plan step 1, `Accepted` after the owner-run records (plan, Owner-run).

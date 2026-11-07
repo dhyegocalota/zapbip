@@ -175,7 +175,7 @@ Refresh: X1 to X7 need the socket route `/c/:secret/connector` and the attach an
 - [x] X4 — input: attach the plugin with stored mode `scheduled`; expected: stored mode `local` with the previous mode recorded. — evidence: PASS 74aed8d (delta-74aed8d-docker.md)
 - [x] X5 — input: detach the plugin socket; expected: stored mode restored to `scheduled`, not left at `local`. — evidence: PASS 74aed8d (delta-74aed8d-docker.md)
 - [x] X6 — input: a second plugin attaches to the same connection; expected: the first socket closes with `4001`, the second receives the unread messages. — evidence: PASS 74aed8d (delta-74aed8d-docker.md)
-- [ ] X7 — input: a `zapbip listen` process (local-connector) on the same connection as a plugin is not used in this slice; expected: this slice never runs both on one connection (documented in the install section, checked in I-2).
+- [x] X7 — input: a `zapbip listen` process (local-connector) on the same connection as a plugin is not used in this slice; expected: this slice never runs both on one connection (documented in the install section, checked in I-2). Evidence: 1ca7e06, test `docs-agent-install` one listener per agent.
 
 ## E End to end, Docker, fake model (opt-in: `ZAPBIP_E2E_CLIENTS=1`)
 
