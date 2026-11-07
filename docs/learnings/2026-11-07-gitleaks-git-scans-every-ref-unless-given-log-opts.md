@@ -1,8 +1,8 @@
 # The secrets gate fails on a branch whose own history is clean
 
-- Date: 2026-11-06
+- Date: 2026-11-07
 - Inspired by: `pnpm verify` failing on `feat/docs-experience` for a TOTP test vector committed only on `feat/backoffice-g2`
-- Revisited: 2026-11-06 — still true
+- Revisited: 2026-11-07 — still true
 
 ## Signal
 `verify: secrets failed` on a branch that added no secret; the reported commit is not reachable from `HEAD`.

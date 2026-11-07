@@ -33,6 +33,6 @@ One group, one lane.
 
 ## Z. Prove and ship
 
-- [ ] **Tester briefing:** not applicable, tooling lane; the gate is the proof.
-- [ ] **Tester run:** not applicable (class tooling).
-- [ ] **Reviewer:** a fresh `reviewer` sub-agent returned a verdict.
+- [x] **Tester briefing:** not applicable, tooling lane; the gate is the proof.
+- [x] **Tester run:** a fresh tester ran every row: red at 5996b153, the pin, a mutation removing the flag, and the real gitleaks 8.30.1 on a throwaway repo; all PASS.
+- [x] **Reviewer:** SHIP; the duplicated evidence fixed, the learning dated the day it was written.
