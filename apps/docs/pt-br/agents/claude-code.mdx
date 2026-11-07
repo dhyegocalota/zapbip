@@ -69,6 +69,8 @@ Use um escutador só, nunca dois juntos. Se o canal não estiver ligado, o Claud
 
 5. **Adicionar o zapbip ao Claude Code.** Se já existir um `zapbip` ou `zapbip-channel` antigo, o Claude Code o remove com `claude mcp remove --scope user zapbip` ou `claude mcp remove --scope user zapbip-channel`. Depois roda `claude mcp add --transport http --scope user zapbip <connectionLink>` para as ferramentas e `claude mcp add --scope user zapbip-channel -e ZAPBIP_CONNECTION_URL=<connectionLink> -- npx zapbip@0.1.0 channel` para o canal ao vivo.
 
+   Os comandos destes passos carregam o seu link de conexão, então ele vai parar no histórico do shell. Para deixá-lo de fora, ponha `ZAPBIP_CONNECTION_URL` em um arquivo de ambiente, como em [Rode o conector como serviço](/pt-br/developers/background-running).
+
 6. **Salvar a skill do zapbip.** Depois do seu sim, ele grava `~/.claude/skills/zapbip/SKILL.md`, para que toda sessão saiba usar o WhatsApp, inclusive quando chamar `check_inbox`.
 
 7. **Escolher um só escutador.** Uma conexão tem um escutador só e um segundo substitui o primeiro, então ele usa exatamente um destes, nunca dois juntos. Para uma sessão parada, roda `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 connect --client claude-code` em segundo plano. O conector acorda a sessão quando você escreve com o Claude Code parado e retoma uma sessão fechada com `claude -p --resume`.

@@ -1,8 +1,7 @@
 import { expect, test } from '@playwright/test';
-import { DocsLanguage, MessageKind } from '@zapbip/types';
+import { DocsLanguage, MessageKind, PAGE_LANGUAGE_FOLDER } from '@zapbip/types';
 import { DOCS_LOCALE_OF, DocsViewport, docsOptionsOf } from './support/docs-experience';
 
-const PAGE_LANGUAGE_FOLDER = 'pt-br';
 const OK_STATUS = 200;
 const CHAT_SELECTOR = '#content-area [role="group"][aria-label^="WhatsApp"]';
 const FEATURE_PAGES = [

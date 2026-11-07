@@ -1,8 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
-import { DocsLanguage } from '@zapbip/types';
+import { DocsLanguage, PAGE_LANGUAGE_FOLDER } from '@zapbip/types';
 import { DOCS_LOCALE_OF, DocsViewport, docsOptionsOf } from './support/docs-experience';
 
-const PAGE_LANGUAGE_FOLDER = 'pt-br';
 const OVERVIEW_PATH = '/';
 const WHATSAPP_COMMANDS_PATH = '/features/whatsapp-commands';
 const SWITCHER_LOCATOR = '#localization-select-trigger';

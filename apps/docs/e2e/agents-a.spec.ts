@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
-import { DocsLanguage, DocsOnlyClient, InstallClient } from '@zapbip/types';
+import { DocsLanguage, DocsOnlyClient, InstallClient, PAGE_LANGUAGE_FOLDER } from '@zapbip/types';
 import {
   AGENT_PAGE_HEADINGS,
   AGENT_PAGE_SECTIONS,
@@ -11,7 +11,6 @@ import {
 } from '../../../tools/repository-shape/src/docs-experience';
 import { DOCS_LOCALE_OF, DocsViewport, docsOptionsOf } from './support/docs-experience';
 
-const PAGE_LANGUAGE_FOLDER = 'pt-br';
 const OK_STATUS = 200;
 const ONE_HOUR_SECONDS = 3600;
 const ZERO_WIDTH_SPACE = /​/g;

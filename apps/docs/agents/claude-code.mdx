@@ -64,6 +64,8 @@ Use one listener, never two together. If the channel is not on, Claude Code keep
 
 5. **Add zapbip to Claude Code.** If an older `zapbip` or `zapbip-channel` entry exists, Claude Code removes it with `claude mcp remove --scope user zapbip` or `claude mcp remove --scope user zapbip-channel`. Then it runs `claude mcp add --transport http --scope user zapbip <connectionLink>` for the tools, and `claude mcp add --scope user zapbip-channel -e ZAPBIP_CONNECTION_URL=<connectionLink> -- npx zapbip@0.1.0 channel` for the live channel.
 
+   The commands in these steps carry your connection link, so it lands in your shell history. To keep it out, put `ZAPBIP_CONNECTION_URL` in an env file as in [Run the connector as a service](/developers/background-running).
+
 6. **Save the zapbip skill.** After your yes, it writes `~/.claude/skills/zapbip/SKILL.md`, so every session knows how to use WhatsApp, including when to call `check_inbox`.
 
 7. **Pick one listener.** A connection holds one listener and a second replaces the first, so it uses exactly one of these, never two together. For a stopped session it runs `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 connect --client claude-code` in the background. The connector wakes your session when you write while Claude Code is idle, and resumes a closed one with `claude -p --resume`.

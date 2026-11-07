@@ -1,8 +1,7 @@
 import { expect, test } from '@playwright/test';
-import { DocsLanguage } from '@zapbip/types';
+import { DocsLanguage, PAGE_LANGUAGE_FOLDER } from '@zapbip/types';
 import { DOCS_LOCALE_OF, DocsViewport, docsOptionsOf } from './support/docs-experience';
 
-const PAGE_LANGUAGE_FOLDER = 'pt-br';
 const MISSING_PAGE = '/nope';
 const NOT_FOUND_STATUS = 404;
 const CONTENT_SELECTOR = '#content-area, main';

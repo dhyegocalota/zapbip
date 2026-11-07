@@ -1,5 +1,5 @@
 import { MEDIA_RETENTION_MS, QUEUE_RETENTION_MS, QUESTION_RETENTION_MS } from '@zapbip/core';
-import { DAY_MS, DocsLanguage, DocsOnlyClient, DocsRetentionKind, InstallClient, WakeRung } from '@zapbip/types';
+import { DAY_MS, DocsLanguage, DocsOnlyClient, DocsRetentionKind, InstallClient, PAGE_LANGUAGE_FOLDER, WakeRung } from '@zapbip/types';
 import { DOCS_ROOT, capturedNames, readRepositoryFile } from './repository-files';
 
 export type DocsAgentClient = InstallClient | DocsOnlyClient;
@@ -75,8 +75,6 @@ export const DOCS_GROUPS: Record<DocsLanguage, string[]> = {
   [DocsLanguage.English]: ['Get started', 'Agents', 'Features', 'Help', 'For developers'],
   [DocsLanguage.PortugueseBrazil]: ['Primeiros passos', 'IAs', 'Funcionalidades', 'Ajuda', 'Para desenvolvedores'],
 };
-
-export const PAGE_LANGUAGE_FOLDER = 'pt-br';
 
 export const DOCS_DEVELOPER_LINK_PREFIXES: string[] = [
   '/developers/',

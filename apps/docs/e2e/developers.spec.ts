@@ -1,9 +1,8 @@
 import { expect, test } from '@playwright/test';
-import { DocsLanguage } from '@zapbip/types';
+import { DocsLanguage, PAGE_LANGUAGE_FOLDER } from '@zapbip/types';
 import { WAKE_RUNG_LABELS } from '../../../tools/repository-shape/src/docs-experience';
 import { DOCS_LOCALE_OF, DocsViewport, docsOptionsOf } from './support/docs-experience';
 
-const PAGE_LANGUAGE_FOLDER = 'pt-br';
 const OK_STATUS = 200;
 const CONCEPT_LINK_PATTERN = /^(\/pt-br)?\/(concepts|developers|mcp-reference)\//;
 const FOOTER_LABEL = 'zapbip · Logic Bit';

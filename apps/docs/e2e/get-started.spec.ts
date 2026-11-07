@@ -1,9 +1,8 @@
 import { expect, test } from '@playwright/test';
-import { DocsLanguage, OFFICIAL_WHATSAPP_NUMBER } from '@zapbip/types';
+import { DocsLanguage, OFFICIAL_WHATSAPP_NUMBER, PAGE_LANGUAGE_FOLDER } from '@zapbip/types';
 import { CHAT_MAX_MESSAGES } from '../../../tools/repository-shape/src/docs-experience';
 import { DOCS_LOCALE_OF, DocsViewport, docsOptionsOf } from './support/docs-experience';
 
-const PAGE_LANGUAGE_FOLDER = 'pt-br';
 const OK_STATUS = 200;
 const OVERVIEW_PAGE = 'index';
 const GET_STARTED_PAGE = 'get-started/how-to-start';

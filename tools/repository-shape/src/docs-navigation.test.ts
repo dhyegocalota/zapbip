@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
-import { DocsLanguage } from '@zapbip/types';
+import { DocsLanguage, PAGE_LANGUAGE_FOLDER } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
-import { DOCS_GROUPS, PAGE_LANGUAGE_FOLDER, docsNavigationOf, navigationPagesOf } from './docs-experience';
+import { DOCS_GROUPS, docsNavigationOf, navigationPagesOf } from './docs-experience';
 import { DOCS_ROOT, PAGE_EXTENSION, documentFiles, repositoryPath } from './repository-files';
 
 const SNIPPETS_DIRECTORY = 'snippets';

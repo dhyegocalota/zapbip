@@ -9,6 +9,7 @@ import {
   MessageKind,
   OFFICIAL_NUMBER_UNSET,
   OFFICIAL_WHATSAPP_NUMBER,
+  PAGE_LANGUAGE_FOLDER,
 } from '@zapbip/types';
 import {
   AGENT_PAGE_HEADINGS,
@@ -17,7 +18,6 @@ import {
   CHAT_MAX_MESSAGES,
   DOCS_GROUPS,
   INSTALL_PROMPT_MAX_LINES,
-  PAGE_LANGUAGE_FOLDER,
   RETENTION_DAYS,
   agentPagePathOf,
   chatBlocksOf,
@@ -468,7 +468,7 @@ function docsSiteConfig(): DocsSiteConfig {
 }
 
 function unsizedImages({ markdown }: { markdown: string }): string[] {
-  return (markdown.match(IMAGE_TAG_PATTERN) ?? []).filter((tag) => !IMAGE_SIZE_PATTERN.test(tag));
+  return [...markdown.matchAll(IMAGE_TAG_PATTERN)].map((match) => match[0]).filter((tag) => !IMAGE_SIZE_PATTERN.test(tag));
 }
 
 describe('docs experience: site polish', () => {
@@ -500,8 +500,10 @@ describe('docs experience: site polish', () => {
 
   test('docs.json shows a custom 404 that links the Overview of both languages', () => {
     const notFound = docsSiteConfig().errors?.[404];
-    expect(notFound?.redirect).toBe(false);
-    expect(notFound?.title).toBeTruthy();
-    expect(NOT_FOUND_LINK_PATTERNS.filter((pattern) => !pattern.test(notFound?.description ?? ''))).toEqual([]);
+    const description = notFound?.description;
+    if (!notFound || !description) throw new Error('docs.json has no errors.404 description');
+    expect(notFound.redirect).toBe(false);
+    expect(notFound.title).toBeTruthy();
+    expect(NOT_FOUND_LINK_PATTERNS.filter((pattern) => !pattern.test(description))).toEqual([]);
   });
 });

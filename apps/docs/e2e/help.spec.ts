@@ -1,9 +1,8 @@
 import { expect, test } from '@playwright/test';
-import { DocsLanguage, DocsRetentionKind } from '@zapbip/types';
+import { DocsLanguage, DocsRetentionKind, PAGE_LANGUAGE_FOLDER } from '@zapbip/types';
 import { RETENTION_DAYS } from '../../../tools/repository-shape/src/docs-experience';
 import { DOCS_LOCALE_OF, DocsViewport, docsOptionsOf } from './support/docs-experience';
 
-const PAGE_LANGUAGE_FOLDER = 'pt-br';
 const OK_STATUS = 200;
 const FOOTER_LABEL = 'zapbip · Logic Bit';
 const HELP_PAGES = ['troubleshooting', 'faq', 'privacy-and-security', 'revoke-and-rotate-keys', 'delete-your-account', 'about'];

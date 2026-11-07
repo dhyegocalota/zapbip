@@ -1,9 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
-import { DocsLanguage, DocsOnlyClient, InstallClient, OFFICIAL_WHATSAPP_NUMBER } from '@zapbip/types';
+import { DocsLanguage, DocsOnlyClient, InstallClient, OFFICIAL_WHATSAPP_NUMBER, PAGE_LANGUAGE_FOLDER } from '@zapbip/types';
 import { AGENT_PAGE_HEADINGS, AGENT_PAGE_SECTIONS, type DocsAgentClient } from '../../../tools/repository-shape/src/docs-experience';
 import { DOCS_LOCALE_OF, DOCS_WALK_NOISE_ALLOWLIST, DocsViewport, docsOptionsOf } from './support/docs-experience';
 
-const PAGE_LANGUAGE_FOLDER = 'pt-br';
 const FIRST_ERROR_STATUS = 400;
 const OVERVIEW_PATH = 'index';
 const GET_STARTED_PATH = 'get-started/how-to-start';

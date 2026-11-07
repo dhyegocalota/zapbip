@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { DocsLanguage, DocsOnlyClient, InstallClient } from '@zapbip/types';
+import { DocsLanguage, DocsOnlyClient, InstallClient, PAGE_LANGUAGE_FOLDER } from '@zapbip/types';
 import {
   AGENT_PAGE_HEADINGS,
   AGENT_PAGE_SECTIONS,
@@ -7,7 +7,6 @@ import {
   CLIENT_LISTEN_FACTS,
   type DocsAgentClient,
   LISTEN_STATEMENT_TOKENS,
-  PAGE_LANGUAGE_FOLDER,
   WAKE_RUNG_LABELS,
 } from '../../../tools/repository-shape/src/docs-experience';
 import { DOCS_LOCALE_OF, DocsViewport, docsOptionsOf } from './support/docs-experience';
