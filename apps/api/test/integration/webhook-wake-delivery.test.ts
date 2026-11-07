@@ -66,6 +66,8 @@ async function alarmAfter(input: { advanceMs: number }): Promise<void> {
 beforeEach(applyWakeDirectory);
 
 beforeEach(async () => {
+  const frozenNowMs = Date.now();
+  vi.spyOn(Date, 'now').mockReturnValue(frozenNowMs);
   stub = wakeStub({});
   await enableGrokWake({ stub });
 });
