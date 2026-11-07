@@ -214,7 +214,7 @@ Known gaps:
 - A zapbip-authored text (agent null) never previews a link; an agent text with a link still does.
 - A crawler never consumes the code; a browser request right after still gets the page.
 - `ZAPBIP_E2E_CLAUDE_CONFIG_DIR` unset or equal to the owner configuration stops the script before the server starts.
-- The Hermes and OpenClaw pages are main's plugin pages plus two additions for the parity test: a paragraph in the install section naming the wake calls, and a closing Test it step. The one-listener sentence moved under How it listens.
+- The Hermes and OpenClaw pages keep this slice's three-section shape; the facts main's hermes-openclaw tests require (config entries, chmod 600, one listener, plugin_reply_failed) sit in the last section. The merge pass may prefer main's fuller pages and relax install-guides.test.ts for them.
 
 ### Known gaps
 
