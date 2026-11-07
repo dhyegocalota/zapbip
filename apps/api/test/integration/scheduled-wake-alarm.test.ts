@@ -69,7 +69,7 @@ function readPollRow(input: { agent: AgentName }): Promise<LastPollRow> {
   );
 }
 
-function readArmedAlarmWithoutUsage(): Promise<number | null> {
+function rearmedAlarmWithoutUsage(): Promise<number | null> {
   return runInDurableObject(stub(), async (instance, state) => {
     state.storage.sql.exec(FLUSH_USAGE_STATEMENT);
     await state.storage.deleteAlarm();
@@ -153,7 +153,7 @@ describe('scheduled poller alarm', () => {
 
   it('arms the alarm at the stale deadline after set_wake', async () => {
     const { last_polled_at: lastPolledAt } = await readPollRow({ agent: POLLING_AGENT });
-    expect(await readArmedAlarmWithoutUsage()).toBe(await toRealTime({ clockTime: lastPolledAt + STALE_DEADLINE_OFFSET_MS }));
+    expect(await rearmedAlarmWithoutUsage()).toBe(await toRealTime({ clockTime: lastPolledAt + STALE_DEADLINE_OFFSET_MS }));
   });
 
   it('keeps an alarm armed no later than the stale deadline after the usage flush alarm fires, and the notice still goes out', async () => {
@@ -170,7 +170,7 @@ describe('scheduled poller alarm', () => {
   it('arms the alarm again after the object is evicted and sends the notice', async () => {
     const { last_polled_at: lastPolledAt } = await readPollRow({ agent: POLLING_AGENT });
     await abortAllDurableObjects();
-    expect(await readArmedAlarmWithoutUsage()).toBe(await toRealTime({ clockTime: lastPolledAt + STALE_DEADLINE_OFFSET_MS }));
+    expect(await rearmedAlarmWithoutUsage()).toBe(await toRealTime({ clockTime: lastPolledAt + STALE_DEADLINE_OFFSET_MS }));
     await alarmAfter({ advanceMs: STALE_ADVANCE_MS });
     expect(await countStaleNotices()).toBe(1);
   });
@@ -188,7 +188,7 @@ describe('scheduled poller deadline against the queue expiry', () => {
     await scheduleAgent({ agent: POLLING_AGENT });
     const { last_polled_at: lastPolledAt } = await readPollRow({ agent: POLLING_AGENT });
     expect(QUEUE_RETENTION_MS).toBeGreaterThan(STALE_DEADLINE_OFFSET_MS);
-    expect(await readArmedAlarmWithoutUsage()).toBe(await toRealTime({ clockTime: lastPolledAt + STALE_DEADLINE_OFFSET_MS }));
+    expect(await rearmedAlarmWithoutUsage()).toBe(await toRealTime({ clockTime: lastPolledAt + STALE_DEADLINE_OFFSET_MS }));
   });
 });
 

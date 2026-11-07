@@ -267,7 +267,7 @@ Merged `origin/main` (`a12db19`). Conflicts kept main's rules:
 
 - One `scheduled` handler: `apps/api/src/operations/scheduled.ts` is main's job registry with two more jobs, `budget_check` (minute 0) and `media_retention` (03:00 UTC), beside the two every-tick account jobs. `scheduled-job.ts` is gone. One cron `*/30 * * * *` per block; the unknown-cron refusal stays.
 - Durable Object schema versions are v1, v2, v4, v5, v6 (accounts-and-keys) and v7 (deploy); v3 belongs to scheduled-wake and the runner applies by set.
-- `wrangler.jsonc`: production keeps `routes` and `ENVIRONMENT`; every block, staging included, carries the three rate limiters.
+- `wrangler.jsonc`: production keeps `routes` and `ENVIRONMENT`; every block, staging included, carries the four rate limiters.
 - D1 migrations `0001`, `0002_accounts_and_keys`, `0003_usage`, `0004_whatsapp_channel` all apply before the Worker deploys: the preflight step `migrations` refuses while any is pending.
 
 B10 is two end-to-end files, both on the `whatsapp` e2e stack (fake Graph, `META_APP_SECRET`, verify token):
