@@ -1,4 +1,4 @@
-import { AccountState } from '@zapbip/types';
+import { AccountState, WakeMode } from '@zapbip/types';
 import { reset, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { applyDirectoryMigration, seedConnection } from '../support/seed';
@@ -9,6 +9,9 @@ const AGENT = 'alpha';
 const SECRET = `zb_conn_${'K'.repeat(43)}`;
 const NEW_SECRET = `zb_conn_${'L'.repeat(43)}`;
 const REVOKED_AT = 1;
+const UNSEEDED_ACCOUNT = 'acc_unseeded';
+const WAKE_URL = 'https://api2.cursor.sh/automations/webhook/abc12345';
+const WAKE_TOKEN = 'grok-token-sixteen-chars';
 
 function stubOf() {
   return accountInboxStub({ accountId: ACCOUNT });
@@ -52,6 +55,29 @@ describe('Durable Object agent admission', () => {
     await sendFromAgent();
     await revokeAgent();
     expect((await sendFromAgent()).ok).toBe(false);
+  });
+
+  it('setWake refuses a revoked agent and writes no wake row', async () => {
+    await revokeAgent();
+    const outcome = await stubOf().setWake({
+      connection: connectionOf({ accountId: ACCOUNT, agent: AGENT }),
+      setting: { mode: WakeMode.Webhook, url: WAKE_URL, token: WAKE_TOKEN },
+    });
+    expect(outcome.ok).toBe(false);
+    const wakeRows = await runInDurableObject(stubOf(), (_instance, state) =>
+      state.storage.sql.exec('SELECT agent FROM agent_wake').toArray(),
+    );
+    expect(wakeRows).toEqual([]);
+  });
+
+  it('refuses every call of an account that has no row in the directory', async () => {
+    const stub = accountInboxStub({ accountId: UNSEEDED_ACCOUNT });
+    const outcome = await stub.sendText({
+      connection: connectionOf({ accountId: UNSEEDED_ACCOUNT, agent: AGENT }),
+      text: 'oi',
+      replyToMessageId: null,
+    });
+    expect(outcome.ok).toBe(false);
   });
 
   it('createUpload serves an active connection', async () => {

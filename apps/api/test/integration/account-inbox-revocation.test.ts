@@ -1,12 +1,16 @@
-import { OwnerLocale } from '@zapbip/types';
+import { OwnerLocale, REVOKED_CLOSE_CODE } from '@zapbip/types';
 import { reset, runInDurableObject } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { openWindow, receiveOwnerText } from '../support/inbox-session';
-import { applyDirectoryMigration } from '../support/seed';
+import { openConnector } from '../support/connector-session';
+import { applyDirectoryMigration, seedConnection, seedOwnerIdentity } from '../support/seed';
 import { accountInboxStub, connectionOf } from '../support/workers-env';
 
 const ACCOUNT = 'acc_revocation';
 const OLD_AGENT = 'alpha';
+const CONNECTOR_SECRET = `zb_conn_${'D'.repeat(43)}`;
+const OWNER_PHONE = '5511900000051';
+const WAKE_REQUESTED_KEY = `wake_last_requested_at:${OLD_AGENT}`;
 const PENDING_WAKE_JOB_STATEMENT = 'INSERT INTO wake_jobs (agent, due_at, attempt, lease_until, rewake) VALUES (?, 1, 0, NULL, 0)';
 const ANSWERED_QUESTION_STATEMENT = `INSERT INTO questions (question_id, agent, text, options, normalized_key, prompt_message_id, asked_at, answer)
   VALUES ('que_answered', ?, 'Deploy?', '[]', 'deploy', 'msg_prompt', 1, '{}')`;
@@ -92,6 +96,23 @@ describe('a revoked agent stops being a routing target', () => {
       connection: { accountId: ACCOUNT, agent: OLD_AGENT, ownerLocale: OwnerLocale.PortugueseBrazil },
     });
     expect(inbox.ok && inbox.value.messages).toEqual([]);
+  });
+
+  it('forgets the debounce of the revoked name so the recreated agent is woken at once', async () => {
+    await runInDurableObject(stubOf(), (_instance, state) => state.storage.kv.put(WAKE_REQUESTED_KEY, 1));
+    await stubOf().recordRevocation({ agent: OLD_AGENT });
+    expect(await runInDurableObject(stubOf(), (_instance, state) => state.storage.kv.get(WAKE_REQUESTED_KEY))).toBeUndefined();
+  });
+
+  it('a recreated name inherits neither the old wake row nor the old connector socket', async () => {
+    await seedOwnerIdentity({ accountId: ACCOUNT, phone: OWNER_PHONE, ownerLocale: OwnerLocale.PortugueseBrazil });
+    await seedConnection({ accountId: ACCOUNT, agent: OLD_AGENT, secret: CONNECTOR_SECRET });
+    const session = await openConnector({ secret: CONNECTOR_SECRET });
+    await session.nextFrame();
+    expect(await sql('SELECT agent FROM agent_wake WHERE agent = ?', OLD_AGENT)).toHaveLength(1);
+    await stubOf().recordCreation({ agent: OLD_AGENT });
+    expect(await sql('SELECT agent FROM agent_wake WHERE agent = ?', OLD_AGENT)).toEqual([]);
+    expect(await session.closeCode()).toBe(REVOKED_CLOSE_CODE);
   });
 });
 
