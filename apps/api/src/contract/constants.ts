@@ -11,6 +11,7 @@ export const MCP_SERVER_NAME = 'zapbip';
 export const MCP_SERVER_VERSION = '0.1.0';
 export const DEVELOPMENT_ENVIRONMENT = DeployEnvironment.Development;
 export const HEALTH_PATH = '/health';
+export const CLIENT_ADDRESS_HEADER = 'cf-connecting-ip';
 export const UNAUTHORIZED_BODY = { error: 'unauthorized' } as const;
 export const PAYLOAD_TOO_LARGE_BODY = { error: 'payload_too_large' } as const;
 export const BATCH_NOT_SUPPORTED_BODY = { error: 'batch_not_supported' } as const;

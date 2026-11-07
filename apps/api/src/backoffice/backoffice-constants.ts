@@ -28,7 +28,6 @@ export const CSRF_COOKIE_NAME = '__Host-zb_bo_csrf';
 export const LOCALE_COOKIE_NAME = '__Host-zb_bo_locale';
 export const SESSION_TOKEN_BYTES = 32;
 export const CSRF_TOKEN_BYTES = 32;
-export const CLIENT_ADDRESS_HEADER = 'cf-connecting-ip';
 export const ACCEPT_LANGUAGE_HEADER = 'accept-language';
 export const ENGLISH_LANGUAGE_PREFIX = 'en';
 export const CSRF_CONTEXT = 'zapbip backoffice csrf';
