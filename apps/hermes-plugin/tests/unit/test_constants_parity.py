@@ -8,7 +8,6 @@ from typescript_constants import (
     ENUMS_SOURCE,
     INBOX_CONSTANTS_SOURCE,
     SHARED_CONSTANTS_SOURCE,
-    TOOL_DEFINITIONS_SOURCE,
     constant_of,
     enum_members_of,
     no_text_by_kind,
@@ -104,7 +103,7 @@ def test_text_limit_equals_the_core_limit() -> None:
 
 
 def test_send_message_tool_name_equals_the_api_tool_name() -> None:
-    tool_names = enum_members_of(source=TOOL_DEFINITIONS_SOURCE, name="McpToolName")
+    tool_names = enum_members_of(source=ENUMS_SOURCE, name="McpToolName")
 
     assert constants.SEND_MESSAGE_TOOL_NAME == tool_names["SendMessage"]
 
