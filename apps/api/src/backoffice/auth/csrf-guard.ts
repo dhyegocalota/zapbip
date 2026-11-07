@@ -1,6 +1,7 @@
 import { HttpStatus } from '@zapbip/types';
 import type { Context, Next } from 'hono';
 import { getCookie } from 'hono/cookie';
+import { errorResponse } from '../error-response';
 import { LogEvent } from '../../contract/log';
 import { logEvent } from '../../log';
 import { CSRF_COOKIE_NAME } from '../backoffice-constants';
@@ -30,5 +31,5 @@ export async function csrfGuard(context: Context<BackofficeEnv>, next: Next): Pr
   const isTokenValid = isOriginValid && (await isSubmittedTokenValid({ context, submittedToken }));
   if (isTokenValid) return next();
   logEvent({ event: LogEvent.BackofficeCsrfRejected });
-  return context.body(null, HttpStatus.Forbidden);
+  return errorResponse({ context, status: HttpStatus.Forbidden });
 }

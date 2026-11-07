@@ -1,6 +1,8 @@
 import { HttpStatus } from '@zapbip/types';
 import { Hono } from 'hono';
 import type { BackofficeEnv } from './backoffice-env';
+import { requireConfigured } from './auth/require-configured';
+import { errorResponse } from './error-response';
 import { csrfGuard } from './auth/csrf-guard';
 import { requireSession } from './auth/require-session';
 import { BackofficePath } from './backoffice-paths';
@@ -22,9 +24,7 @@ const PROTECTED_PATHS = [
   '/meta-apps/*',
 ];
 
-function notFoundResponse(): Response {
-  return new Response(null, { status: HttpStatus.NotFound });
-}
+const FORM_PATHS = [BackofficePath.SignIn, BackofficePath.Locale, ...PROTECTED_PATHS];
 
 function createBaseApp(): Hono<BackofficeEnv> {
   const app = new Hono<BackofficeEnv>();
@@ -35,20 +35,21 @@ function createBaseApp(): Hono<BackofficeEnv> {
 
 export function createBackofficeApp(): Hono<BackofficeEnv> {
   const app = createBaseApp();
+  app.use('*', requireConfigured);
   app.route('/', assetRoutes);
   app.use('*', requestContext);
   PROTECTED_PATHS.forEach((path) => app.use(path, requireSession));
-  app.use('*', csrfGuard);
+  FORM_PATHS.forEach((path) => app.use(path, csrfGuard));
   app.route('/', signInRoutes);
   app.route('/', sessionRoutes);
   app.route('/', localeRoutes);
   app.route('/', auditRoutes);
-  app.notFound(notFoundResponse);
+  app.notFound((context) => errorResponse({ context, status: HttpStatus.NotFound }));
   return app;
 }
 
 export function createRejectedHostApp(): Hono<BackofficeEnv> {
   const app = createBaseApp();
-  app.all('*', notFoundResponse);
+  app.all('*', (context) => errorResponse({ context, status: HttpStatus.NotFound }));
   return app;
 }

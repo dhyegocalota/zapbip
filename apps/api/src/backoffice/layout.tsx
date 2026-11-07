@@ -10,7 +10,7 @@ import { SignOutButton } from './components/sign-out-button';
 
 export type LayoutProps = {
   locale: OwnerLocale;
-  environment: DeployEnvironment;
+  environment: DeployEnvironment | null;
   title: string;
   stylesheetHref: string;
   csrfToken: string | null;
@@ -34,7 +34,8 @@ const TITLE_SEPARATOR = ' · ';
 export function Layout(props: LayoutProps) {
   const { locale, environment, csrfToken, signedIn, notice } = props;
   const translate = (key: BackofficeCopyKey, values?: Record<string, string>): string => renderBackofficeCopy({ key, locale, values });
-  const badgeKey = ENVIRONMENT_BADGES[environment];
+  const badgeKey = environment === null ? null : ENVIRONMENT_BADGES[environment];
+  const footerKey = environment === null ? BackofficeCopyKey.BrandName : BackofficeCopyKey.FooterLine;
   const documentTitle = `${props.title}${TITLE_SEPARATOR}${translate(BackofficeCopyKey.BrandName)}`;
   const noticeView = notice === null ? null : NOTICE_VIEWS[notice];
   return (
@@ -60,7 +61,7 @@ export function Layout(props: LayoutProps) {
           {noticeView === null ? null : <Notice variant={noticeView.variant} locale={locale} message={translate(noticeView.copyKey)} />}
           {props.children}
         </main>
-        <footer class="site-footer">{translate(BackofficeCopyKey.FooterLine, { environment })}</footer>
+        <footer class="site-footer">{translate(footerKey, { environment: String(environment) })}</footer>
       </body>
     </html>
   );

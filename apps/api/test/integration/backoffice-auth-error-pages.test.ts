@@ -28,20 +28,20 @@ describe('error pages', () => {
     const response = await requestBackoffice({ path: MARKER_PATH, headers: ENGLISH });
     const html = await response.text();
     expect(response.status).toBe(STATUS_NOT_FOUND);
-    expect(html).toContain('<h1>404 Page not found</h1>');
+    expect(html).toContain('>404 Page not found</h1>');
     expect(html).toContain('href="/"');
     expect(html).not.toContain('marker-7731');
   });
 
   test('the page follows the language of the browser', async () => {
     const html = await (await requestBackoffice({ path: MARKER_PATH })).text();
-    expect(html).toContain('<h1>404 Página não encontrada</h1>');
+    expect(html).toContain('>404 Página não encontrada</h1>');
   });
 
   test('a refused request is a 403 page', async () => {
     const response = await requestBackoffice({ path: '/sign-in', method: 'POST', form: {}, headers: ENGLISH });
     expect(response.status).toBe(STATUS_FORBIDDEN);
-    expect(await response.text()).toContain('<h1>403 Request refused</h1>');
+    expect(await response.text()).toContain('>403 Request refused</h1>');
   });
 
   test('a POST without a session is a 401 page', async () => {
@@ -53,7 +53,7 @@ describe('error pages', () => {
       headers: { Origin: BACKOFFICE_ORIGIN, ...ENGLISH },
     });
     expect(response.status).toBe(STATUS_UNAUTHORIZED);
-    expect(await response.text()).toContain('<h1>401 Your session ended</h1>');
+    expect(await response.text()).toContain('>401 Your session ended</h1>');
   });
 
   test('a rate-limited sign-in is a 429 page that keeps Retry-After', async () => {
@@ -68,7 +68,7 @@ describe('error pages', () => {
     const env = backofficeEnv({ overrides: { BACKOFFICE_TOTP_SECRET: '' } });
     const signInPage = await requestBackoffice({ path: '/sign-in', env, headers: ENGLISH });
     expect(signInPage.status).toBe(STATUS_SERVICE_UNAVAILABLE);
-    expect(await signInPage.text()).toContain('<h1>503 The backoffice is not configured</h1>');
+    expect(await signInPage.text()).toContain('>503 The backoffice is not configured</h1>');
     const stylesheet = await requestBackoffice({ path: '/assets/backoffice.css', env });
     expect(stylesheet.status).toBe(STATUS_SERVICE_UNAVAILABLE);
   });

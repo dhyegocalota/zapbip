@@ -3,6 +3,7 @@ import type { Context, Next } from 'hono';
 import { DeployEnvironment } from '../contract/deploy-environment';
 import { LogEvent } from '../contract/log';
 import { logEvent } from '../log';
+import { errorResponse } from './error-response';
 import type { BackofficeEnv } from './backoffice-env';
 import { HSTS_MAX_AGE_SECONDS, NO_STORE, NON_ERROR_CODE, STATIC_SECURITY_HEADERS } from './backoffice-constants';
 
@@ -23,9 +24,9 @@ export async function securityHeaders(context: Context<BackofficeEnv>, next: Nex
   applySecurityHeaders({ response: context.res, environment: context.env.ENVIRONMENT });
 }
 
-export function handleBackofficeError(error: unknown, context: Context<BackofficeEnv>): Response {
+export async function handleBackofficeError(error: unknown, context: Context<BackofficeEnv>): Promise<Response> {
   logEvent({ event: LogEvent.BackofficeError, errorCode: error instanceof Error ? error.name : NON_ERROR_CODE });
-  const response = new Response(null, { status: HttpStatus.InternalServerError });
+  const response = await errorResponse({ context, status: HttpStatus.InternalServerError });
   applySecurityHeaders({ response, environment: context.env.ENVIRONMENT });
   return response;
 }

@@ -11,6 +11,7 @@ import { CSRF_COOKIE_NAME, CSRF_TOKEN_BYTES, SEE_OTHER_STATUS, SESSION_COOKIE_NA
 import type { BackofficeEnv } from '../backoffice-env';
 import { noticeOf } from '../backoffice-notice';
 import { BackofficePath } from '../backoffice-paths';
+import { errorResponse } from '../error-response';
 import { textFieldOf } from '../form-fields';
 import { SignInPage } from '../views/sign-in';
 
@@ -52,7 +53,8 @@ signInRoutes.post(BackofficePath.SignIn, async (context) => {
     address: clientAddress,
     scope: RateLimitScope.SignIn,
   });
-  if (!isWithinLimit) return context.body(null, HttpStatus.TooManyRequests, { 'Retry-After': RETRY_AFTER_SECONDS });
+  if (!isWithinLimit)
+    return errorResponse({ context, status: HttpStatus.TooManyRequests, headers: { 'Retry-After': RETRY_AFTER_SECONDS } });
   const form = await context.req.parseBody();
   const key = textFieldOf({ form, name: KEY_FIELD });
   const code = textFieldOf({ form, name: CODE_FIELD });
