@@ -272,8 +272,8 @@ Author this list with every box empty. A sub-agent ticks its own line. A wrong s
 
 ### G6 browser specs
 
-- [ ] **Step 38:** `apps/api/playwright.config.ts` boots `wrangler dev --env development` on a free port with the fake Graph, plus `test:walk`. Red spec `sign-in.spec.ts` as in the test plan. Green once G2 lands.
-- [ ] **Step 39:** red specs `numbers.spec.ts` (PR A) and `metrics.spec.ts` (PR B). Green once G3 and G4 land.
+- [x] **Step 38:** `apps/api/playwright.config.ts` boots `wrangler dev --env development` on a free port with the fake Graph, plus `test:walk`. Red spec `sign-in.spec.ts` as in the test plan. Green once G2 lands. — evidence: infra beca09a5, red c38ca2e8 (`403 Pedido recusado`, the form post carried `Origin: null`) → green 40d35cac (`Referrer-Policy: same-origin`) and 319e2cda; `pnpm test:walk`: 26 passed at 1280 and 375
+- [ ] **Step 39:** red specs `numbers.spec.ts` (PR A) and `metrics.spec.ts` (PR B). Green once G3 and G4 land. — PR A half done: `numbers.spec.ts` and `error-pages.spec.ts` red fb50c691 → green 40d35cac and 319e2cda; `metrics.spec.ts` waits for G4
 
 ## Failure modes
 
