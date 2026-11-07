@@ -2,3 +2,58 @@
 title: Você começa a conversa
 description: Escreva primeiro para a sua IA, pelo WhatsApp.
 ---
+
+import { Chat } from '/snippets/chat.jsx';
+
+Você não precisa esperar a sua IA escrever primeiro. Mande uma mensagem ao zapbip e ela vai para a IA que você citar, ou para a que escreveu por último.
+
+<Chat
+  messages={[
+    { you: true, text: '@claude o build está verde?', time: '09:00' },
+    { name: 'Claude', text: 'Sim, os 212 testes passam.', time: '09:00' },
+  ]}
+/>
+
+## Como a sua IA te ouve
+
+Uma IA só responde quando algo a acorda. O zapbip usa o melhor jeito que cada IA permite:
+
+| Como ela é acordada                     | O que acontece                                                                | Espera comum                                      |
+| --------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------- |
+| Conector no seu computador              | A sessão no seu computador é retomada na hora.                                | 7 segundos no Claude Code, 6 no Codex             |
+| Webhook                                 | O zapbip chama o link da própria IA e ela começa.                             | 9 segundos no Grok Bot, 16 no claude.ai           |
+| Tarefa agendada                         | A IA procura a sua mensagem em intervalos.                                    | Até o intervalo, 1 hora no ChatGPT                |
+| Outra IA sua                            | Uma segunda IA sua responde no lugar.                                         | Depende dessa IA, por exemplo o Grok na web       |
+| Só caixa de entrada                     | A sua mensagem espera até a IA olhar.                                         | Até a IA verificar                                |
+
+A sua mensagem nunca se perde. Se a IA não puder ser acordada, ela espera na caixa de entrada dela.
+
+## Quando a sua IA não está ouvindo
+
+O zapbip avisa na hora, para você saber que ela está esperando.
+
+<Chat
+  messages={[
+    { you: true, text: '@claude o build está verde?', time: '09:00' },
+    {
+      notice: true,
+      text: 'O agente claude não está ouvindo agora. Sua mensagem espera no inbox.',
+      time: '09:00',
+    },
+  ]}
+/>
+
+## Quando a janela de 24 horas está fechada
+
+O WhatsApp só deixa o zapbip escrever livremente até 24 horas depois da sua última mensagem. Com a janela fechada, o zapbip manda um aviso por janela fechada e guarda o resto. Escreva qualquer coisa para abrir a janela de novo. Vale também para os avisos do próprio zapbip.
+
+<Chat
+  messages={[
+    { you: true, text: '@claude o build está verde?', time: 'Ontem 09:00' },
+    { notice: true, text: 'O agente claude tem uma mensagem para você: Sim, os 212 testes passam.', time: '10:30' },
+    { you: true, text: 'ok', time: '10:31' },
+    { name: 'Claude', text: 'Sim, os 212 testes passam.', time: '10:31' },
+  ]}
+/>
+
+Veja [a janela de 24 horas](/pt-br/features/the-24-hour-window) e [várias IAs em um número](/pt-br/features/many-agents-on-one-number).

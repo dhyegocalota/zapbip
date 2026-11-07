@@ -221,11 +221,11 @@ G0 evidence (2026-11-06): Step 1 `ab7d8dc`; Step 2 red `7902adb` (carries the en
 
 ### G4 features
 
-- [ ] **Step 22:** Red: `apps/docs/e2e/features.spec.ts`: each feature page has at least one chat; `send-messages-and-media` names every `MessageKind` value from `@zapbip/types`.
-- [ ] **Step 23:** Reword `send-messages-and-media`, `ask-with-buttons-and-lists`, `many-agents-on-one-number`, `the-24-hour-window` (English from agent-inbox-core; pt-BR twins). Each page describes what the person sees.
-- [ ] **Step 24:** `owner-starts-conversations` (new, English and twin): the owner messages first; the wake ladder in plain words; the notice when the 24-hour window is closed; the expected delay from `CLIENT_LISTEN_FACTS`.
-- [ ] **Step 25:** `whatsapp-commands` (English from the accounts-and-keys command words, moved from `guides/commands`): `novo agente <nome>`, `agentes`, `revogar <nome>`, `girar <nome>`, `ajuda`, `apagar conta`, with the English word beside each; the reserved-names rule.
-- [ ] **Step 26 (facts):** every command word equals the accounts-and-keys copy keys; the window and template wording match whatsapp-cloud-channel.
+- [x] **Step 22:** Red: `apps/docs/e2e/features.spec.ts`: each feature page has at least one chat; `send-messages-and-media` names every `MessageKind` value from `@zapbip/types`. Evidence: `fa16fb2` (14 failed, 8 passed).
+- [x] **Step 23:** Reword `send-messages-and-media`, `ask-with-buttons-and-lists`, `many-agents-on-one-number`, `the-24-hour-window` (English from agent-inbox-core; pt-BR twins). Each page describes what the person sees. Evidence: 027b395 (22 passed).
+- [x] **Step 24:** `owner-starts-conversations` (new, English and twin): the owner messages first; the wake ladder in plain words; the notice when the 24-hour window is closed; the expected delay from `CLIENT_LISTEN_FACTS`. Evidence: 027b395 (22 passed).
+- [x] **Step 25:** `whatsapp-commands` (English from the accounts-and-keys command words, moved from `guides/commands`): `novo agente <nome>`, `agentes`, `revogar <nome>`, `girar <nome>`, `ajuda`, `apagar conta`, with the English word beside each; the reserved-names rule. Evidence: 027b395 (22 passed).
+- [x] **Step 26 (facts):** every command word equals the accounts-and-keys copy keys; the window and template wording match whatsapp-cloud-channel. Evidence: facts: command words from accounts-and-keys `command-words.ts`; rows depending on scheduled-wake marked in the briefing.
 
 ### G5 help
 
