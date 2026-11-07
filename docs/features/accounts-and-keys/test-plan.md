@@ -426,6 +426,7 @@ Runner: `pnpm --filter @zapbip/api test:e2e` with `ZAPBIP_E2E=1` (starts `wrangl
 - [x] `accounts.e2e.test.ts` mixed locale — steps: `new agent a1` then `ajuda` then a plain text; expected: the reply to the plain text stays in the language of the account (en-US) although the last command words were Portuguese; the language follows the account, not the last command. — evidence: 1dc11ec final-head.md, [row 426] 1 test(s) passed (accounts.e2e.test.ts)
 - [x] `accounts.e2e.test.ts` limit walk — steps: create eight agents then a ninth; expected: the ninth gets the `LimitReached` reply in the owner's locale; `revogar` one agent then the ninth create succeeds. — evidence: 71999fb e2e.md limit walk (9th refused, revoke frees slot); a88b0d5 retest-e2e-security-docs.md 8-agent limit walk
 - [x] `accounts.e2e.test.ts` bundle — steps: `wrangler deploy --dry-run` against `wrangler.jsonc` with the production entry; expected: the bundle contains no `/dev/owner/` string and no `DevOwnerSimulator` identifier (slice 1's check still green). — evidence: 71999fb e2e.md bundle (PB-1..3, whatsapp-bundle)
+- [x] `production-bundle.e2e.test.ts` dev seed pin — steps: the production bundle must not contain `DEV_SEED_PATH` or the seed-only string `owner count missing`, and the development bundle must; expected: green on arrival (pin); mutation proof: importing `routes/dev-seed` from `src/index.ts` made PB-1 fail with `['/dev/seed', 'owner count missing']`, restored, green. — evidence: mutation run, 2 test(s) passed (production-bundle.e2e.test.ts)
 
 ## Docs links
 
