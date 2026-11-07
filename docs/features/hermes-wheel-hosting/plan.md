@@ -65,6 +65,15 @@ One developer runs the lanes in order G1, G2, G3, G4, G5 (machine resource cap).
 
 **Steps with no backout:** the `wrangler r2 object put` of a new version is a production write the owner runs; a wrong object is replaced only by a new version and a new hash, which is the design.
 
+### G6 (security amendment)
+
+- [x] **Step 1:** red: the requirements-file names and shape tests (every line `==`-pinned with a hash, names match the lock and the project, the dist-info `Requires-Dist` and `entry_points.txt`) — evidence: red c68fec8e; green ab99b7b1, test fix d764606e
+- [x] **Step 2:** the route serves exactly the wheel and the requirements file — evidence: red 6299f028 (integration not run: port 4012 held), green 165664e9
+- [x] **Step 3:** the install command downloads the requirements file, checks its sha256 and installs with `--require-hashes`; pages and snapshots — evidence: red 73d46843, green 9751aa62
+- [x] **Step 4:** the preflight checks both hosted files for the Worker and the docs — evidence: red f8c2ac62, green ed7d3afc
+- [x] **Step 5:** runbooks upload both files; the docs preflight after the production deploy is mandatory — evidence: red 8b61b809, green 948c451a
+- [x] **Step 6:** e2e runs the full command against the local Worker, a tampered requirements file and a tampered dependency hash — evidence: red 7955e96f, green 88ec7cd3 (e2e not run: on hold)
+
 ## Z. Prove and ship
 
 - [ ] **Tester briefing:** written by the developer, covering the Hermes docs walk and the pip install against a local Worker.

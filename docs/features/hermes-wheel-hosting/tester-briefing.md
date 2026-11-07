@@ -55,3 +55,12 @@ Branch `feat/hermes-wheel-hosting`, built on `main` at c8a9b6a. Commits are list
 - The go-live order changed: "Publish the docs" now follows "Production deploy" because the docs preflight reads the wheel from the live Worker.
 - The wheel was built once; byte-reproducibility across machines is deliberately not tested (ADR 0034).
 - The real `wrangler r2 object put` and the bucket creation are deploy-time acts and were not run.
+
+## Security amendment: the hash-pinned requirements file
+
+- The install command is now `curl -fsSL https://mcp.zapbip.com/pkg/zapbip_platform-0.1.0-requirements.txt -o zapbip-requirements.txt && echo "fc258f304227f3eb44169c5416f581424296a876995c6499daaa42c7cf04cc31  zapbip-requirements.txt" | sha256sum -c - && pip install --require-hashes -r zapbip-requirements.txt`. It is rendered from `HERMES_INSTALL_COMMAND`; macOS replaces `sha256sum -c -` with `shasum -a 256 -c -`.
+- Red/green: shape and names c68fec8e / ab99b7b1 (+ d764606e); route 6299f028 / 165664e9; copy 73d46843 / 9751aa62; preflight f8c2ac62 / ed7d3afc; runbooks 8b61b809 / 948c451a; e2e 7955e96f / 88ec7cd3.
+- The route and e2e red commits were written while integration and e2e runs were on hold, so their red failure text was not recorded; the integration and e2e files run in `pnpm verify all`.
+- The e2e downloads httpx, websockets and their dependencies from PyPI by hash, so it needs network access. The local Worker serves a copy of the requirements file whose wheel URL points at the local origin (seeded by `global-setup.ts`).
+- Hypotheses: a changed byte of the requirements file fails the hash check before pip runs; a changed dependency hash fails pip under `--require-hashes`; the docs preflight and the Worker preflight refuse when either hosted file differs from its constant.
+

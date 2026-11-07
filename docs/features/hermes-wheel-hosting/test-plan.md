@@ -47,6 +47,15 @@ Every checkbox states the input and the exact expected outcome. A ticked box car
 - [ ] `::a missing wheel` — steps: the same with the object absent; expected: non-zero exit, output contains `404`
 - [ ] `hermes-openclaw.e2e.test.ts` — expected: unchanged and green, the Hermes image installs the committed wheel by the pinned form
 
+## Requirements file
+
+- [ ] `hermes-wheel.test.ts::every requirement is pinned` — input: the committed requirements file; expected: each block is `name==version` (optional marker) with at least one 64-hex `--hash`, the first being our wheel URL with the wheel hash
+- [ ] `hermes-wheel.test.ts::lists the package and exactly the resolved runtime dependencies` — input: the file and `requirements.txt`; expected: the names equal the lock plus `zapbip-platform`, and every `pyproject.toml` dependency is present
+- [ ] `hermes-wheel.test.ts::the wheel metadata and entry points match the project` — input: `Requires-Dist` and `entry_points.txt` in the wheel; expected: equal to `pyproject.toml`
+- [ ] `package-route.test.ts::serves the requirements file` — input: the object in `PACKAGES`; expected: 200, `text/plain; charset=utf-8`, immutable cache; `-requirements.txt.bak`, `-extra.txt` and `-requirements.whl` answer 404
+- [ ] `hermes-wheel.e2e.test.ts::the printed install command` — input: the command with the local origin; expected: exit 0 with the plugin and httpx installed; a changed requirements hash fails `sha256sum -c`/`shasum -c` and installs nothing; a zeroed httpx hash fails with `DO NOT MATCH THE HASHES`
+- [ ] `deploy-preflight.test.ts` requirements cases — input: other bytes, a missing object, a 404 and a wrong hash for `zapbip_platform-0.1.0-requirements.txt`; expected: refusals at `HermesWheel` naming the file
+
 ## Prove it for real
 
 - [ ] Docs walk with Playwright MCP, en: open the Hermes page; expected: the install block shows the exact rendered command, the copy button copies it, a 12-line terminal-width view does not truncate the hash (it wraps or scrolls inside the block), console and network clean
