@@ -1,4 +1,5 @@
-import { PRODUCTION_PUBLIC_ORIGIN, type CompanyFacts } from '@zapbip/types';
+import { createHash } from 'node:crypto';
+import { hermesWheelPath, PRODUCTION_PUBLIC_ORIGIN, type CompanyFacts } from '@zapbip/types';
 import { DeployEnvironment } from '../../src/operations/deploy-environment';
 import type { DeployBlock, WorkerFacts, DeployShell, EnvironmentVariables, ShellResult } from '../../src/operations/deploy-preflight';
 import type { NameserverResolver } from '../../src/operations/nameserver-resolver';
@@ -10,11 +11,10 @@ export const OFFICIAL_NUMBER = '5511999990000';
 export const NPM_VERSION = '0.1.0';
 export const NPM_PUBLISHER_VARIABLE = 'ZAPBIP_NPM_PUBLISHER';
 export const NPM_PUBLISHER = 'zapbip-owner';
-export const PYPI_VERSION = '0.1.0';
-export const PYPI_PUBLISHER_VARIABLE = 'ZAPBIP_PYPI_PUBLISHER';
-export const PYPI_PUBLISHER = 'zapbip-owner';
-export const PYPI_RELEASE_URL = `https://pypi.org/pypi/zapbip-platform/${PYPI_VERSION}/json`;
-export const PYPI_XML_RPC_URL = 'https://pypi.org/pypi';
+export const HERMES_PLUGIN_VERSION = '0.1.0';
+export const HERMES_WHEEL_SHA256 = createHash('sha256').update('hosted-wheel').digest('hex');
+export const OTHER_WHEEL_SHA256 = createHash('sha256').update('another-wheel').digest('hex');
+export const HERMES_WHEEL_URL = `${PRODUCTION_PUBLIC_ORIGIN}${hermesWheelPath({ version: HERMES_PLUGIN_VERSION })}`;
 export const DATABASE_ID = '0a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d';
 export const ALL_SECRETS_JSON = JSON.stringify(Object.values(WorkerSecret).map((name) => ({ name, type: 'secret_text' })));
 export const PASSING: ShellResult = { exitCode: 0, stdout: '' };
@@ -27,6 +27,7 @@ export const HAPPY_REPLIES: Record<string, ShellResult> = {
   'migrations list': { exitCode: 0, stdout: 'No migrations to apply!' },
   'maintainers --json': { exitCode: 0, stdout: JSON.stringify([`${NPM_PUBLISHER} <${NPM_PUBLISHER}@example.com>`]) },
   '_npmUser --json': { exitCode: 0, stdout: JSON.stringify(`${NPM_PUBLISHER} <${NPM_PUBLISHER}@example.com>`) },
+  'shasum -a 256': { exitCode: 0, stdout: `${HERMES_WHEEL_SHA256}  /tmp/zapbip-wheel.whl\n` },
 };
 export const COMPLETE_VARIABLES: EnvironmentVariables = {
   [SmokeInput.BaseUrl]: 'https://mcp-staging.zapbip.com',
@@ -36,7 +37,6 @@ export const COMPLETE_VARIABLES: EnvironmentVariables = {
   [SmokeInput.VerifyToken]: 'verify-token',
   [SmokeInput.PhoneNumberId]: '123456',
   [NPM_PUBLISHER_VARIABLE]: NPM_PUBLISHER,
-  [PYPI_PUBLISHER_VARIABLE]: PYPI_PUBLISHER,
 };
 
 export type FakeShell = DeployShell & { commands: string[] };
@@ -58,44 +58,24 @@ export function fakeShell({ replies: overrides = {} }: { replies?: Record<string
   };
 }
 
-export type FakePackageFetcher = PackageFetcher & { urls: string[]; xmlBodies: string[] };
+export type FakePackageFetcher = PackageFetcher & { urls: string[] };
 
-export const PYPI_FOUND: PackageAnswer = { status: 200, body: { info: { version: PYPI_VERSION } } };
-
-export function pypiRolesAnswer({ roles }: { roles: [string, string][] }): PackageAnswer {
-  const entries = roles
-    .map(
-      ([role, user]) =>
-        `<value><array><data><value><string>${role}</string></value><value><string>${user}</string></value></data></array></value>`,
-    )
-    .join('');
-  return {
-    status: 200,
-    body: `<?xml version='1.0'?><methodResponse><params><param><value><array><data>${entries}</data></array></value></param></params></methodResponse>`,
-  };
-}
-
-export const PYPI_ROLES_FOUND: PackageAnswer = pypiRolesAnswer({ roles: [['Owner', PYPI_PUBLISHER]] });
+export const HOSTED_WHEEL_FOUND: PackageAnswer = { status: 200, sha256: HERMES_WHEEL_SHA256 };
 
 export function fakePackageFetcher({
-  answer = PYPI_FOUND,
-  rolesAnswer = PYPI_ROLES_FOUND,
+  answer = HOSTED_WHEEL_FOUND,
   failure,
 }: {
   answer?: PackageAnswer;
-  rolesAnswer?: PackageAnswer;
   failure?: Error;
 }): FakePackageFetcher {
   const urls: string[] = [];
-  const xmlBodies: string[] = [];
-  const fetcher = async ({ url, xmlBody }: { url: string; xmlBody?: string }): Promise<PackageAnswer> => {
+  const fetcher = async ({ url }: { url: string }): Promise<PackageAnswer> => {
     urls.push(url);
     if (failure) throw failure;
-    if (xmlBody === undefined) return answer;
-    xmlBodies.push(xmlBody);
-    return rolesAnswer;
+    return answer;
   };
-  return Object.assign(fetcher, { urls, xmlBodies });
+  return Object.assign(fetcher, { urls });
 }
 
 const PUBLIC_ORIGINS: Record<DeployEnvironment, string> = {

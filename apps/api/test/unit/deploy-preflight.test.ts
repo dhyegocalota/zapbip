@@ -26,12 +26,10 @@ import {
   NPM_PUBLISHER,
   NPM_PUBLISHER_VARIABLE,
   NPM_VERSION,
-  PYPI_PUBLISHER,
-  PYPI_PUBLISHER_VARIABLE,
-  PYPI_RELEASE_URL,
-  pypiRolesAnswer,
-  PYPI_VERSION,
-  PYPI_XML_RPC_URL,
+  HERMES_PLUGIN_VERSION,
+  HERMES_WHEEL_SHA256,
+  HERMES_WHEEL_URL,
+  OTHER_WHEEL_SHA256,
   OFFICIAL_NUMBER,
   READY_WORKER_FACTS,
 } from './fake-deploy-shell';
@@ -74,7 +72,8 @@ function workerInput(input: {
     company,
     npmVersion,
     openclawPluginVersion,
-    pypiVersion: PYPI_VERSION,
+    hermesPluginVersion: HERMES_PLUGIN_VERSION,
+    hermesWheelSha256: HERMES_WHEEL_SHA256,
     packageFetcher,
     nameserverResolver,
   };
@@ -161,130 +160,60 @@ describe('worker preflight', () => {
     expect(refusal?.message).toContain('@zapbip/openclaw-plugin@0.1.0');
   });
 
-  it('refuses production until PyPI resolves zapbip-platform at the pinned version, naming it', async () => {
-    const packageFetcher = fakePackageFetcher({ answer: { status: 404, body: null } });
-    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, packageFetcher }));
-    expect(refusal?.step).toBe(PreflightStep.PypiVersion);
-    expect(refusal?.message).toContain(`zapbip-platform==${PYPI_VERSION}`);
-    expect(refusal?.message).toContain('does not resolve on PyPI');
-    expect(packageFetcher.urls).toEqual([PYPI_RELEASE_URL]);
+  it('passes production when the hosted wheel hashes to the constant, reading it from the bucket through wrangler', async () => {
+    const shell = fakeShell({});
+    expect(await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell }))).toBeNull();
+    const [getCommand, hashCommand, removeCommand] = shell.commands.filter(
+      (command) => command.includes('r2 object get') || command.startsWith('shasum') || command.startsWith('rm'),
+    );
+    expect(getCommand).toContain(
+      `r2 object get zapbip-packages/zapbip_platform-${HERMES_PLUGIN_VERSION}-py3-none-any.whl --remote --file `,
+    );
+    expect(hashCommand).toContain('shasum -a 256 ');
+    expect(removeCommand).toContain('rm -f ');
   });
 
-  it('refuses production when PyPI roles name another owner, even if the free-text maintainer matches', async () => {
-    const packageFetcher = fakePackageFetcher({
-      answer: { status: 200, body: { info: { maintainer: PYPI_PUBLISHER } } },
-      rolesAnswer: pypiRolesAnswer({ roles: [['Owner', 'squatter']] }),
-    });
-    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, packageFetcher }));
-    expect(refusal?.step).toBe(PreflightStep.PypiVersion);
-    expect(refusal?.message).toContain('squatter');
-    expect(refusal?.message).toContain(PYPI_PUBLISHER);
+  it('refuses production when the hosted wheel hashes to something else, naming both hashes', async () => {
+    const shell = fakeShell({ replies: { 'shasum -a 256': { exitCode: 0, stdout: `${OTHER_WHEEL_SHA256}  /tmp/zapbip-wheel.whl\n` } } });
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell }));
+    expect(refusal?.step).toBe(PreflightStep.HermesWheel);
+    expect(refusal?.message).toContain(HERMES_WHEEL_SHA256);
+    expect(refusal?.message).toContain(OTHER_WHEEL_SHA256);
   });
 
-  it('refuses production when the owner shares the Owner role on PyPI', async () => {
-    const rolesAnswer = pypiRolesAnswer({
-      roles: [
-        ['Owner', PYPI_PUBLISHER],
-        ['Owner', 'second-person'],
-      ],
-    });
-    const packageFetcher = fakePackageFetcher({ rolesAnswer });
-    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, packageFetcher }));
-    expect(refusal?.step).toBe(PreflightStep.PypiVersion);
-    expect(refusal?.message).toContain('second-person');
+  it('refuses production when the wheel is not in the bucket, naming the upload step', async () => {
+    const shell = fakeShell({ replies: { 'r2 object get': { exitCode: 1, stdout: 'The specified key does not exist' } } });
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell }));
+    expect(refusal?.step).toBe(PreflightStep.HermesWheel);
+    expect(refusal?.message).toContain(`zapbip_platform-${HERMES_PLUGIN_VERSION}-py3-none-any.whl`);
+    expect(refusal?.message).toContain('wrangler r2 object put');
   });
 
-  it('refuses production when anyone else holds the Maintainer role on PyPI', async () => {
-    const rolesAnswer = pypiRolesAnswer({
-      roles: [
-        ['Owner', PYPI_PUBLISHER],
-        ['Maintainer', 'helper'],
-      ],
-    });
-    const packageFetcher = fakePackageFetcher({ rolesAnswer });
-    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, packageFetcher }));
-    expect(refusal?.step).toBe(PreflightStep.PypiVersion);
-    expect(refusal?.message).toContain('helper');
+  it('refuses production when the downloaded wheel cannot be hashed', async () => {
+    const shell = fakeShell({ replies: { 'shasum -a 256': { exitCode: 1, stdout: '' } } });
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell }));
+    expect(refusal?.step).toBe(PreflightStep.HermesWheel);
+    expect(refusal?.message).toContain('could not hash');
   });
 
-  it('accepts production when the publisher holds both the Owner and the Maintainer role on PyPI', async () => {
-    const rolesAnswer = pypiRolesAnswer({
-      roles: [
-        ['Owner', PYPI_PUBLISHER],
-        ['Maintainer', PYPI_PUBLISHER],
-      ],
-    });
-    const packageFetcher = fakePackageFetcher({ rolesAnswer });
-    expect(await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, packageFetcher }))).toBeNull();
+  it('does not require a PyPI publisher variable', async () => {
+    const { ZAPBIP_NPM_PUBLISHER: publisher } = COMPLETE_VARIABLES;
+    const environmentVariables = { ZAPBIP_NPM_PUBLISHER: publisher };
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, environmentVariables }));
+    expect(refusal === null || refusal.step !== PreflightStep.HermesWheel).toBe(true);
   });
 
-  it('asks PyPI for the roles with an XML-RPC package_roles call after the release resolves', async () => {
-    const packageFetcher = fakePackageFetcher({});
-    await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, packageFetcher }));
-    expect(packageFetcher.urls).toEqual([PYPI_RELEASE_URL, PYPI_XML_RPC_URL]);
-    expect(packageFetcher.xmlBodies).toHaveLength(1);
-    expect(packageFetcher.xmlBodies[0]).toContain('<methodName>package_roles</methodName>');
-    expect(packageFetcher.xmlBodies[0]).toContain('<string>zapbip-platform</string>');
-  });
-
-  it.each([
-    ['not XML', { status: 200, body: 'garbage' }],
-    ['no roles', pypiRolesAnswer({ roles: [] })],
-    ['null', { status: 200, body: null }],
-  ])('refuses production when the PyPI roles answer is %s', async (_name, rolesAnswer) => {
-    const packageFetcher = fakePackageFetcher({ rolesAnswer });
-    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, packageFetcher }));
-    expect(refusal?.step).toBe(PreflightStep.PypiVersion);
-    expect(refusal?.message).toContain('Owner');
-  });
-
-  it('says PyPI could not be reached when the roles call answers a server error', async () => {
-    const packageFetcher = fakePackageFetcher({ rolesAnswer: { status: 503, body: null } });
-    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, packageFetcher }));
-    expect(refusal?.step).toBe(PreflightStep.PypiVersion);
-    expect(refusal?.message).toContain('could not reach PyPI');
-  });
-
-  it.each([undefined, '', `${PLACEHOLDER_VALUE_PREFIX}PYPI_USER`])(
-    'refuses production when ZAPBIP_PYPI_PUBLISHER is %j, fetching nothing',
-    async (value) => {
-      const packageFetcher = fakePackageFetcher({});
-      const environmentVariables = { ...COMPLETE_VARIABLES, [PYPI_PUBLISHER_VARIABLE]: value };
-      const refusal = await runWorkerPreflight(
-        workerInput({ environment: DeployEnvironment.Production, packageFetcher, environmentVariables }),
-      );
-      expect(refusal?.step).toBe(PreflightStep.PypiVersion);
-      expect(refusal?.message).toContain(PYPI_PUBLISHER_VARIABLE);
-      expect(packageFetcher.urls).toEqual([]);
-    },
-  );
-
-  it('says PyPI could not be reached, not that the package is missing, when the fetch fails', async () => {
-    const packageFetcher = fakePackageFetcher({ failure: new Error('getaddrinfo ENOTFOUND pypi.org') });
-    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, packageFetcher }));
-    expect(refusal?.step).toBe(PreflightStep.PypiVersion);
-    expect(refusal?.message).toContain('could not reach PyPI');
-    expect(refusal?.message).not.toContain('does not resolve');
-  });
-
-  it('says PyPI could not be reached when it answers a server error', async () => {
-    const packageFetcher = fakePackageFetcher({ answer: { status: 503, body: null } });
-    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, packageFetcher }));
-    expect(refusal?.message).toContain('could not reach PyPI');
-  });
-
-  it('checks npm before PyPI, so a missing npm package never reaches PyPI', async () => {
+  it('checks npm before the wheel, so a missing npm package never reads the bucket', async () => {
     const shell = fakeShell({ replies: { 'maintainers --json': { exitCode: 1, stdout: '' } } });
-    const packageFetcher = fakePackageFetcher({});
-    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell, packageFetcher }));
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell }));
     expect(refusal?.step).toBe(PreflightStep.NpmVersion);
-    expect(packageFetcher.urls).toEqual([]);
+    expect(shell.commands.some((command) => command.includes('r2 object get'))).toBe(false);
   });
 
-  it('does not look at PyPI for a staging deploy', async () => {
-    const packageFetcher = fakePackageFetcher({ answer: { status: 404, body: null } });
-    expect(await runWorkerPreflight(workerInput({ packageFetcher }))).toBeNull();
-    expect(packageFetcher.urls).toEqual([]);
+  it('does not read the bucket for a staging deploy', async () => {
+    const shell = fakeShell({});
+    expect(await runWorkerPreflight(workerInput({ shell }))).toBeNull();
+    expect(shell.commands.some((command) => command.includes('r2 object get'))).toBe(false);
   });
 
   it('says npm could not be reached, not that the package is missing, when the failure is a network error', async () => {
@@ -589,6 +518,21 @@ describe('worker preflight', () => {
   });
 });
 
+function docsInput(input: { packageFetcher?: FakePackageFetcher }) {
+  const { packageFetcher = fakePackageFetcher({}) } = input;
+  return {
+    shell: fakeShell({}),
+    officialWhatsAppNumber: OFFICIAL_NUMBER,
+    company: COMPLETE_COMPANY,
+    npmVersion: NPM_VERSION,
+    openclawPluginVersion: NPM_VERSION,
+    hermesPluginVersion: HERMES_PLUGIN_VERSION,
+    hermesWheelSha256: HERMES_WHEEL_SHA256,
+    packageFetcher,
+    environmentVariables: COMPLETE_VARIABLES,
+  };
+}
+
 describe('docs preflight', () => {
   it('refuses while the official number is the unset sentinel, before any command', async () => {
     const shell = fakeShell({});
@@ -598,7 +542,8 @@ describe('docs preflight', () => {
       company: COMPLETE_COMPANY,
       npmVersion: NPM_VERSION,
       openclawPluginVersion: NPM_VERSION,
-      pypiVersion: PYPI_VERSION,
+      hermesPluginVersion: HERMES_PLUGIN_VERSION,
+      hermesWheelSha256: HERMES_WHEEL_SHA256,
       packageFetcher: fakePackageFetcher({}),
       environmentVariables: COMPLETE_VARIABLES,
     });
@@ -615,7 +560,8 @@ describe('docs preflight', () => {
       company,
       npmVersion: NPM_VERSION,
       openclawPluginVersion: NPM_VERSION,
-      pypiVersion: PYPI_VERSION,
+      hermesPluginVersion: HERMES_PLUGIN_VERSION,
+      hermesWheelSha256: HERMES_WHEEL_SHA256,
       packageFetcher: fakePackageFetcher({}),
       environmentVariables: COMPLETE_VARIABLES,
     });
@@ -632,7 +578,8 @@ describe('docs preflight', () => {
       company: COMPLETE_COMPANY,
       npmVersion: NPM_VERSION,
       openclawPluginVersion: NPM_VERSION,
-      pypiVersion: PYPI_VERSION,
+      hermesPluginVersion: HERMES_PLUGIN_VERSION,
+      hermesWheelSha256: HERMES_WHEEL_SHA256,
       packageFetcher: fakePackageFetcher({}),
       environmentVariables: COMPLETE_VARIABLES,
     });
@@ -651,7 +598,8 @@ describe('docs preflight', () => {
       company: COMPLETE_COMPANY,
       npmVersion: NPM_VERSION,
       openclawPluginVersion: NPM_VERSION,
-      pypiVersion: PYPI_VERSION,
+      hermesPluginVersion: HERMES_PLUGIN_VERSION,
+      hermesWheelSha256: HERMES_WHEEL_SHA256,
       packageFetcher: fakePackageFetcher({}),
       environmentVariables: COMPLETE_VARIABLES,
     });
@@ -674,7 +622,8 @@ describe('docs preflight', () => {
       company: COMPLETE_COMPANY,
       npmVersion: NPM_VERSION,
       openclawPluginVersion: NPM_VERSION,
-      pypiVersion: PYPI_VERSION,
+      hermesPluginVersion: HERMES_PLUGIN_VERSION,
+      hermesWheelSha256: HERMES_WHEEL_SHA256,
       packageFetcher: fakePackageFetcher({}),
       environmentVariables: COMPLETE_VARIABLES,
     });
@@ -695,7 +644,8 @@ describe('docs preflight', () => {
       company: COMPLETE_COMPANY,
       npmVersion: NPM_VERSION,
       openclawPluginVersion: NPM_VERSION,
-      pypiVersion: PYPI_VERSION,
+      hermesPluginVersion: HERMES_PLUGIN_VERSION,
+      hermesWheelSha256: HERMES_WHEEL_SHA256,
       packageFetcher: fakePackageFetcher({}),
       environmentVariables: COMPLETE_VARIABLES,
     });
@@ -704,39 +654,28 @@ describe('docs preflight', () => {
     expect(refusal?.message).toContain('foreign-publisher');
   });
 
-  it('refuses the docs deploy until PyPI resolves zapbip-platform, after npm resolves both packages', async () => {
+  it.each([
+    ['404', { status: 404, sha256: OTHER_WHEEL_SHA256 }, HERMES_WHEEL_URL],
+    ['a wrong hash', { status: 200, sha256: OTHER_WHEEL_SHA256 }, OTHER_WHEEL_SHA256],
+  ])('refuses the docs deploy when the hosted wheel answers %s, after npm resolves both packages', async (_name, answer, expectedText) => {
     const shell = fakeShell({});
-    const packageFetcher = fakePackageFetcher({ answer: { status: 404, body: null } });
-    const refusal = await runDocsPreflight({
-      shell,
-      officialWhatsAppNumber: OFFICIAL_NUMBER,
-      company: COMPLETE_COMPANY,
-      npmVersion: NPM_VERSION,
-      openclawPluginVersion: NPM_VERSION,
-      pypiVersion: PYPI_VERSION,
-      packageFetcher,
-      environmentVariables: COMPLETE_VARIABLES,
-    });
-    expect(refusal?.step).toBe(PreflightStep.PypiVersion);
-    expect(refusal?.message).toContain(`zapbip-platform==${PYPI_VERSION}`);
+    const packageFetcher = fakePackageFetcher({ answer });
+    const refusal = await runDocsPreflight({ ...docsInput({}), shell, packageFetcher });
+    expect(refusal?.step).toBe(PreflightStep.HermesWheel);
+    expect(refusal?.message).toContain(expectedText);
     expect(shell.commands).toHaveLength(4);
-    expect(packageFetcher.urls).toEqual([PYPI_RELEASE_URL]);
+    expect(packageFetcher.urls).toEqual([HERMES_WHEEL_URL]);
   });
 
-  it('refuses the docs deploy when the PyPI Owner role is not the owner', async () => {
-    const packageFetcher = fakePackageFetcher({ rolesAnswer: pypiRolesAnswer({ roles: [['Owner', 'squatter']] }) });
-    const refusal = await runDocsPreflight({
-      shell: fakeShell({}),
-      officialWhatsAppNumber: OFFICIAL_NUMBER,
-      company: COMPLETE_COMPANY,
-      npmVersion: NPM_VERSION,
-      openclawPluginVersion: NPM_VERSION,
-      pypiVersion: PYPI_VERSION,
-      packageFetcher,
-      environmentVariables: COMPLETE_VARIABLES,
-    });
-    expect(refusal?.step).toBe(PreflightStep.PypiVersion);
-    expect(refusal?.message).toContain('squatter');
+  it('says the wheel could not be reached, not that it is missing, when the fetch fails', async () => {
+    const packageFetcher = fakePackageFetcher({ failure: new Error('getaddrinfo ENOTFOUND mcp.zapbip.com') });
+    const refusal = await runDocsPreflight({ ...docsInput({}), packageFetcher });
+    expect(refusal?.step).toBe(PreflightStep.HermesWheel);
+    expect(refusal?.message).toContain('could not reach');
+  });
+
+  it('passes the docs deploy when the hosted wheel hashes to the constant', async () => {
+    expect(await runDocsPreflight(docsInput({}))).toBeNull();
   });
 
   it('passes when the number is set and the version resolves', async () => {
@@ -748,7 +687,8 @@ describe('docs preflight', () => {
         company: COMPLETE_COMPANY,
         npmVersion: NPM_VERSION,
         openclawPluginVersion: NPM_VERSION,
-        pypiVersion: PYPI_VERSION,
+        hermesPluginVersion: HERMES_PLUGIN_VERSION,
+        hermesWheelSha256: HERMES_WHEEL_SHA256,
         packageFetcher: fakePackageFetcher({}),
         environmentVariables: COMPLETE_VARIABLES,
       }),

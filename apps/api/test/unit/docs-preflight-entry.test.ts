@@ -9,7 +9,10 @@ import {
   fakeShell,
   NPM_VERSION,
   OFFICIAL_NUMBER,
-  PYPI_VERSION,
+  HERMES_PLUGIN_VERSION,
+  HERMES_WHEEL_SHA256,
+  HERMES_WHEEL_URL,
+  OTHER_WHEEL_SHA256,
 } from './fake-deploy-shell';
 import type { PackageFetcher } from '../../src/operations/package-fetcher';
 
@@ -27,7 +30,8 @@ async function preflight(input: {
     company,
     npmVersion: NPM_VERSION,
     openclawPluginVersion: NPM_VERSION,
-    pypiVersion: PYPI_VERSION,
+    hermesPluginVersion: HERMES_PLUGIN_VERSION,
+    hermesWheelSha256: HERMES_WHEEL_SHA256,
     packageFetcher,
     log: (line) => lines.push(line),
   });
@@ -53,9 +57,11 @@ describe('docs preflight entry', () => {
     expect(output).toContain(`zapbip@${NPM_VERSION}`);
   });
 
-  it('exits one and names the package when PyPI does not know zapbip-platform', async () => {
-    const { exitCode, output } = await preflight({ packageFetcher: fakePackageFetcher({ answer: { status: 404, body: null } }) });
+  it('exits one and names the wheel when the Worker does not host it', async () => {
+    const { exitCode, output } = await preflight({
+      packageFetcher: fakePackageFetcher({ answer: { status: 404, sha256: OTHER_WHEEL_SHA256 } }),
+    });
     expect(exitCode).toBe(1);
-    expect(output).toContain(`zapbip-platform==${PYPI_VERSION}`);
+    expect(output).toContain(HERMES_WHEEL_URL);
   });
 });

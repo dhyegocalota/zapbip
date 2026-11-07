@@ -12,7 +12,7 @@ const PIPED_SECRET_NAMES = [
   WorkerSecret.UploadLinkSigningKey,
   WorkerSecret.WakeSecretKey,
 ];
-const PREFLIGHT_NAMES = ['ZAPBIP_NPM_PUBLISHER', 'ZAPBIP_PYPI_PUBLISHER'];
+const PREFLIGHT_NAMES = ['ZAPBIP_NPM_PUBLISHER'];
 const IGNORED_ENTRIES = ['.env', '.dev.vars'];
 
 const entries: [string, string][] = readFileSync(ENV_EXAMPLE_PATH, 'utf8')

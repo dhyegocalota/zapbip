@@ -23,6 +23,7 @@ import {
   fakeNameserverResolver,
   fakePackageFetcher,
   fakeShell,
+  HERMES_WHEEL_SHA256,
   OFFICIAL_NUMBER,
   READY_WORKER_FACTS,
 } from '../unit/fake-deploy-shell';
@@ -98,7 +99,8 @@ async function refusalOf(input: {
     company: input.company,
     npmVersion: ZAPBIP_NPM_VERSION,
     openclawPluginVersion: OPENCLAW_PLUGIN_NPM_VERSION,
-    pypiVersion: ZAPBIP_HERMES_PLUGIN_VERSION,
+    hermesPluginVersion: ZAPBIP_HERMES_PLUGIN_VERSION,
+    hermesWheelSha256: HERMES_WHEEL_SHA256,
     packageFetcher: fakePackageFetcher({}),
     nameserverResolver: fakeNameserverResolver({}),
     log: (line) => lines.push(line),
