@@ -152,7 +152,7 @@ Follow the steps in order. Each step names the runbook that holds its detail, an
     Expect: the deploy ends with the smoke test (checks 1, 3 and 4 pass), the health route answers on `mcp.zapbip.com` and Meta verifies the production webhook.
 
     If it fails: `deploy.md` step 8 rolls back the Worker.
-14. **Publish the docs.** Do steps 6 to 11 of `mintlify-publish.md`, starting with `pnpm docs:preflight`, which needs no DNS but reads the production Worker: it checks the constants, npm and the wheel served at `https://mcp.zapbip.com/pkg/`. The custom domain of step 10 uses steps 4 and 5 of `dns.md`. The privacy page is part of the site.
+14. **Publish the docs.** Do steps 6 to 11 of `mintlify-publish.md`, starting with `pnpm docs:preflight`, which needs no DNS but reads the production Worker: it checks the constants, npm and the wheel served at `https://mcp.zapbip.com/pkg/`. The custom domain of step 10 uses steps 4 and 5 of `dns.md`. The privacy page is part of the site. The docs preflight after the production deploy is mandatory: it is the only check that the live Worker serves the wheel and the requirements file with the hashes the docs print, so never connect Mintlify without a passing run.
 
     Expect: `docs.zapbip.com` serves the site in English and in Portuguese, and `https://docs.zapbip.com/help/privacy` loads.
 
