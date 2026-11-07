@@ -28,10 +28,11 @@ A deploy needs a Cloudflare login and touches production secrets, and the migrat
 
 - A deploy depends on the owner's machine: Node 24, pnpm, and a Cloudflare login. The harness doctor reports these at session start.
 - Deploys are manual. A forgotten deploy shows up as a stale Worker, which the smoke test reveals.
+- The `guard-deploy.sh` hook is an allowlist for `wrangler` (dev, a dry-run deploy, local D1, types, version, whoami) and a denylist for the deploy, migrate and secrets package scripts. It is defence in depth, not a sandbox: a shell string can always be built that a text scan misses. The real control is that agent shells never hold production Cloudflare credentials; the owner logs in and deploys from his own shell.
 
 ## Evidence
 
-- The autonomy rules of 2026-11-06: agents never deploy, and production deploys are the owner's. The `guard-deploy.sh` PreToolUse hook enforces it for Claude Code and Codex: it blocks `wrangler deploy`, `versions deploy`, `rollback`, `secret put`, any `d1 ... --remote` and the `pnpm deploy:*` and `migrate:staging|production` scripts, and allows a `--dry-run`.
+- The autonomy rules of 2026-11-06: agents never deploy, and production deploys are the owner's. The `guard-deploy.sh` PreToolUse hook enforces it for Claude Code and Codex: it allows only a safe set of `wrangler` commands (dev, a `--dry-run` deploy, local D1, types, version, whoami) and blocks every other one, with the `deploy:*`, `migrate:staging|production` and `secrets:*` package scripts.
 - [ADR 0005](0005-the-local-gate-runs-what-the-diff-can-break.md): hosted CI is not proof.
 
 ## Revisit when

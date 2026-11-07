@@ -288,4 +288,11 @@ B10 is two end-to-end files, both on the `whatsapp` e2e stack (fake Graph, `META
 - Runbooks: `deploy.md` keeps `META_APP_SECRET` out of the environment file for production, asks the production smoke secret at a hidden prompt, records the D1 time-travel bookmark before migrating; `mintlify-publish.md` says the uploading PyPI account must be the only Owner and to rehearse on TestPyPI because a version cannot be re-uploaded.
 - Hypothesis: the hidden prompt reads `/dev/tty`, so it also works when `pnpm deploy:production` spawns the smoke step. Gap: no test exercises a real terminal; the unit test feeds a stream.
 - Gap: the PyPI check trusts `package_roles` from `https://pypi.org/pypi`; Trusted Publishing provenance is a possible stronger follow-up.
-- Gap: a Maintainer role on PyPI is allowed by design; only Owner is restricted.
+- PyPI: every `package_roles` entry, Owner and Maintainer, must name `ZAPBIP_PYPI_PUBLISHER`.
+- Hooks are defence in depth (ADR 0027): `guard-deploy.sh` is an allowlist for `wrangler`; the real control is that agent shells hold no production credentials.
+
+| Change | Red | Green | Red failure text |
+|---|---|---|---|
+| Re-check: PyPI every role, scoped npm registry | `2e0f6e0` | `62ee485` | 4 failures: the `npm view` argv lacked `--@zapbip:registry`, and a Maintainer `helper` was accepted |
+| Re-check: deploy guard allowlist | `296471c` | `3e0599a` | 64 failures, for example `FAIL claude: wrangler "deploy" is blocked: expected exit 2, got 0` |
+| Re-check: secrets guard evasions | `31272ab` | `007ad51` | 26 failures, all blocked-case, expected exit 2, got 0 |

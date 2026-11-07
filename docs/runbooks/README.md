@@ -81,7 +81,7 @@ Follow the steps in order. Each step names the runbook that holds its detail. Ev
     Expect: you hold the production app secret, the system user token and the verify token, ready for the `wrangler secret put` prompts of the next step.
 
     If it fails: the failing step of `meta-setup.md` says what to check.
-14. **Production deploy.** Do `deploy.md` steps 1 to 5 for production, with `pnpm deploy:production --first-deploy`, then step 9 of `meta-setup.md` for the production app.
+14. **Production deploy.** Do `deploy.md` steps 1 to 5 for production, with `pnpm deploy:production --first-deploy`, then step 9 of `meta-setup.md` for the production app, then step 5 of `dns.md` for the host check.
 
     Expect: the deploy ends with the smoke test (checks 1, 3 and 4 pass), the health route answers on `mcp.zapbip.com` and Meta verifies the production webhook.
 
