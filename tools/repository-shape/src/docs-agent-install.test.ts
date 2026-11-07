@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { readRepositoryFile } from './repository-files';
 
 const PAGE_LOCALES = ['apps/docs', 'apps/docs/pt-br'];
+const FEATURE_SPEC = 'docs/features/hermes-openclaw/spec.md';
 const OPENCLAW_PAGE = 'agents/openclaw.mdx';
 const HERMES_PAGE = 'agents/hermes.mdx';
 const OPENCLAW_INSTALL_COMMAND = 'openclaw plugins install @zapbip/openclaw-plugin@0.1.0 --force --accept-capabilities';
@@ -33,5 +34,11 @@ describe.each(PAGE_LOCALES)('the agent install pages in %s', (locale) => {
 
   test.each([OPENCLAW_PAGE, HERMES_PAGE])('%s asks the agent to send the self-test text', (path) => {
     expect(page({ locale, path })).toContain(SELF_TEST_TEXT);
+  });
+});
+
+describe('the feature spec', () => {
+  test('names the verified OpenClaw install command in the rungs table', () => {
+    expect(readRepositoryFile(FEATURE_SPEC)).toContain(OPENCLAW_INSTALL_COMMAND);
   });
 });
