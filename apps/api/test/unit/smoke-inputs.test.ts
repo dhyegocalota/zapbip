@@ -70,6 +70,11 @@ describe('smoke inputs', () => {
     expect(missingSmokeInputs({ ...PRODUCTION_SCOPE, environmentVariables })).toEqual([]);
   });
 
+  it('asks production for the registered phone number id, because check 4 signs a body naming it', () => {
+    const environmentVariables = { ...COMPLETE_VARIABLES, [SmokeInput.PhoneNumberId]: undefined };
+    expect(missingSmokeInputs({ ...PRODUCTION_SCOPE, environmentVariables })).toEqual([SmokeInput.PhoneNumberId]);
+  });
+
   it('does not ask production for the connection secret in the environment, because it is prompted', () => {
     const environmentVariables = { ...COMPLETE_VARIABLES, [SmokeInput.ConnectionSecret]: undefined };
     expect(missingSmokeInputs({ ...PRODUCTION_SCOPE, environmentVariables })).toEqual([]);
