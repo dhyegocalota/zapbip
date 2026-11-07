@@ -307,7 +307,7 @@ Pins (green on arrival, f349f6d): the owner locale stored on the account and cha
 Notes:
 
 - The connector key is checked in the route and again in the object before the socket is accepted; a stale connect gets a socket closed with `REVOKED_CLOSE_CODE` and touches no row. The check runs before `acceptConnectorSocket` so a stale connect never replaces the live socket of the new key.
-- `isAccountActive` (the alarm) still treats a missing `accounts` row as active; only the admission of agent calls changed. Hypothesis: an alarm on an account with no row is harmless because no due item can exist without a call.
+- ~~`isAccountActive` (the alarm) still treats a missing `accounts` row as active; only the admission of agent calls changed. Hypothesis: an alarm on an account with no row is harmless because no due item can exist without a call.~~ Superseded: the alarm no longer treats a missing row as active (see below).
 - The integration tests that relied on a missing `accounts` row now seed the account (`seedAccount`, `applyWakeDirectory`).
 
 ## Alarm on a missing directory row, and the purge crash
@@ -315,4 +315,22 @@ Notes:
 - `isAccountActive` no longer treats a missing `accounts` row as active. Red `9461c07` ('sends nothing when the account has no row in the directory', the wake request was still sent), green `98d8eb2`. Tests that run alarms seed their account.
 - Root cause of the lost nine tests: closing the hibernating sockets before `deleteAll` in `purge` crashed workerd ("Promise callback destroyed itself") and took the whole `account-inbox-purge.test.ts` file out of the run, silently. Fixed in `6aa8b08` by closing after the wipe; the tombstone is set before the first await, so nothing is served in between. Hypothesis: the full api integration run reports 686 of 686 tests in 57 files, three times in a row.
 - `connector-socket.test.ts` 'a live wait_for_reply waiter ...' was a race between the unawaited `waitForReply` and the first owner message; it now waits for the live waiter (`76e508c`).
-- The schema upgrade pin from main expects v6 beside v1, v2 and v5.
+- The schema upgrade pin seeds v1, v2 and v5 and expects v4 and v6 applied.
+
+## Key digest kept in the object
+
+| Test | Red today | Green after |
+| --- | --- | --- |
+| `connector-revocation-race.test.ts` old-key connect after a rotate | f8ae483: `expected 1 to be +0` (the socket was accepted) | 253792f |
+| `connector-revocation-race.test.ts` purge during the directory read | f8ae483: `no such table: agents: SQLITE_ERROR` instead of `AccountTombstoned` | 253792f |
+| `receive-account-message.test.ts` rotate hands the new digest to the object | f8ae483: `rotated` was `[]` | 253792f |
+| `connector-revocation-race.test.ts` new key after a rotate, revoked agent keeps no digest | pin | pin |
+
+- The object stores `connector_key_digest:<agent>` (set by `recordCreation` and `recordRotation`, deleted by revoke, wiped by purge). A connect is admitted only when the directory says live and the presented digest equals the stored one; the check is synchronous after the directory read, then `assertLive` runs first.
+- Hypothesis: a purge during the directory wait throws `AccountTombstoned` (the same refusal every write method gives), not a SQL error.
+- Gap: a connection created before this change has no stored digest and is refused until it is rotated or recreated; `seedConnection` records the digest in the object for tests.
+- `closeSockets` left the accounts port; `recordRotation` closes the sockets and stores the digest.
+
+## Wake delivery timing flake
+
+- Cause: the object clock is `Date.now() + offset`, and `advanceClock` only moves the offset, so real time elapsed under load added to the 2 s advance and passed the 3 s debounce in 'sends nothing before the debounce has passed'. Fix `f1bf098`: the file freezes `Date.now` in `beforeEach`, so only `advanceClock` moves time. Proof: 10 of 10 green runs of the file under 4 `yes` CPU hogs (stopped by PID).

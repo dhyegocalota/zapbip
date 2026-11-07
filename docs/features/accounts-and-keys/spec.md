@@ -130,7 +130,7 @@ Creation order: generate the secret and the install code, insert the digests and
 
 Rotation order: compare-and-set the digest and the install code columns from the old to the new, send the reply. If the send fails, compare-and-set back from the new digest to the old. The owner never ends up with a rotated link they did not receive.
 
-Revoke and rotate take effect at once and cannot be undone. Every access path closes at once, connector sockets included, re-checked inside the Durable Object: a connector connect, an MCP call and `set_wake` each check the key and the agent again inside the object, rotation closes the old key's sockets, and deletion closes every socket before the storage is wiped. The explicit agent name is their confirmation. Deletion has its own phrase, below.
+Revoke and rotate take effect at once and cannot be undone. Every access path closes at once, connector sockets included, re-checked inside the Durable Object: a connector connect checks the key digest and the agent again inside the object, an MCP call and `set_wake` check the agent again inside the object, rotation closes the old key's sockets, and deletion closes every socket before the storage is wiped. A call already past the Worker's key check when a rotate lands may complete once (the connector socket re-checks the digest; MCP calls are request-scoped). The explicit agent name is their confirmation. Deletion has its own phrase, below.
 
 Concurrency:
 
