@@ -14,8 +14,18 @@ readonly REMOTE_PATTERN='(^|[[:space:]])--remote([[:space:]=]|$)'
 readonly LOCAL_PATTERN='(^|[[:space:]])--local([[:space:]]|$)'
 readonly DRY_RUN_PATTERN='(^|[[:space:]])--dry-run([[:space:]]|$)'
 readonly DRY_RUN_VALUE_PATTERN='--dry-run='
-readonly GIT_COMMIT_PATTERN='^git commit( -[[:alnum:]-]+)* -F [^ ]+( -[[:alnum:]-]+)*$'
-readonly GIT_LOG_PATTERN='^git log( .*)?$'
+readonly OPEN_HEAD_PATTERNS=(
+  '^git commit( -[[:alnum:]-]+)* -F [^ ]+( -[[:alnum:]-]+)*$'
+  '^git (add|diff|show|status|log)( .*)?$'
+  '^git restore --staged( .*)?$'
+  '^(cat|head|tail|wc)( .*)?$'
+  "^sed -n ['\"]?[0-9]+(,[0-9]+)?p['\"]? [^ ]+\$"
+  '^(grep|rg)( .*)?$'
+  '^(pnpm exec |npx |pnpm --filter [^ ]+ exec )?vitest run( .*)?$'
+  '^pnpm test( .*)?$'
+  '^pnpm --filter [^ ]+ test( .*)?$'
+)
+readonly UNSAFE_HEAD_ARGUMENTS_PATTERN='(^| )(--worktree|--pre|--pre-glob|--open-files-in-pager|--exec|--hostname-bin)([ =]|$)|(^| )-[[:alnum:]]*[OWx][[:alnum:]]*( |$)'
 
 command=$(jq -r '.tool_input.command // ""' <<<"$hook_input")
 
@@ -46,9 +56,13 @@ is_wrangler_command=false
 [[ "$command" =~ $WRANGLER_COMMAND_PATTERN ]] && is_wrangler_command=true
 wrangler_arguments=${BASH_REMATCH[3]}
 
-is_git_command=false
-[[ "$command" =~ $GIT_COMMIT_PATTERN || "$command" =~ $GIT_LOG_PATTERN ]] && is_git_command=true
-$is_git_command && exit 0
+is_open_head=false
+for open_head_pattern in "${OPEN_HEAD_PATTERNS[@]}"; do
+  [[ "$command" =~ $open_head_pattern ]] && is_open_head=true
+done
+has_unsafe_arguments=false
+[[ "$command" =~ $UNSAFE_HEAD_ARGUMENTS_PATTERN ]] && has_unsafe_arguments=true
+$is_open_head && ! $has_unsafe_arguments && exit 0
 
 $is_wrangler_command || block "$BLOCKED_MESSAGE"
 is_wrangler_logged_in && ! is_allowed_logged_in_wrangler "$wrangler_arguments" && block "$LOGGED_IN_MESSAGE"

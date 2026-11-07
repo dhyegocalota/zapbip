@@ -2,6 +2,7 @@
 readonly WRANGLER_SESSION_FILE_NAME=wrangler-session
 readonly WRANGLER_LOGGED_IN=logged-in
 readonly WRANGLER_LOGGED_OUT=logged-out
+readonly WRANGLER_UNKNOWN=unknown
 readonly WRANGLER_LOGGED_IN_FIX='wrangler is logged in for this OS user; run `wrangler logout` and deploy with a scoped CLOUDFLARE_API_TOKEN exported only in your own shell'
 
 wrangler_session_file() {
