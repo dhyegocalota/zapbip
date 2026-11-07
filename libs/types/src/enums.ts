@@ -102,11 +102,13 @@ export enum AgentWakeReason {
 
 export enum WakeMode {
   None = 'none',
+  Local = 'local',
   Webhook = 'webhook',
 }
 
 export enum WakeRung {
   Inbox = 'inbox',
+  Local = 'local',
   Webhook = 'webhook',
 }
 
@@ -172,4 +174,21 @@ export enum InboxErrorCode {
   NotFound = 'not_found',
   UploadExpired = 'upload_expired',
   UploadUnavailable = 'upload_unavailable',
+}
+
+export enum HttpStatus {
+  Ok = 200,
+  SwitchingProtocols = 101,
+  Created = 201,
+  BadRequest = 400,
+  Unauthorized = 401,
+  Forbidden = 403,
+  NotFound = 404,
+  Conflict = 409,
+  Gone = 410,
+  LengthRequired = 411,
+  PayloadTooLarge = 413,
+  UnsupportedMediaType = 415,
+  UpgradeRequired = 426,
+  BadGateway = 502,
 }

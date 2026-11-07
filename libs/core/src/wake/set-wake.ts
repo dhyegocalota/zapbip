@@ -43,8 +43,19 @@ async function clearWebhook(input: SetWakeInput): Promise<SetWakeResult> {
   return { status: SetWakeStatus.Saved, wakeMode: WakeMode.None, effectiveRung: wakeRungFor({ mode: WakeMode.None }), provider: null };
 }
 
+async function saveLocal(input: SetWakeInput): Promise<SetWakeResult> {
+  const { wake, connection } = input;
+  const current = await wake.repository.findWake({ agent: connection.agent });
+  if (current === null) throw new Error(`no wake setting for ${connection.agent}`);
+  await wake.repository.saveWake({ wake: { ...current, mode: WakeMode.Local } });
+  await wake.repository.deleteLocalRestore({ agent: connection.agent });
+  await wake.repository.deleteJob({ agent: connection.agent });
+  return { status: SetWakeStatus.Saved, wakeMode: WakeMode.Local, effectiveRung: wakeRungFor({ mode: WakeMode.Local }), provider: null };
+}
+
 const WAKE_SETTERS: Record<WakeMode, (input: SetWakeInput) => Promise<SetWakeResult>> = {
   [WakeMode.None]: clearWebhook,
+  [WakeMode.Local]: saveLocal,
   [WakeMode.Webhook]: saveWebhook,
 };
 

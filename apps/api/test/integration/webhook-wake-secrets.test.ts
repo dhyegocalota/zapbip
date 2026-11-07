@@ -212,7 +212,12 @@ describe('wake dependencies', () => {
       await bare.receiveOwnerMessage({
         ownerLocale: OwnerLocale.PortugueseBrazil,
         channelMessageId: 'wamid.bare',
-        ownerMessage: { at: Date.now(), replyToMessageId: null, content: { kind: MessageKind.Text, text: mentionText({ text: 'oi' }) } },
+        ownerMessage: {
+          at: Date.now(),
+          replyToMessageId: null,
+          forwarded: false,
+          content: { kind: MessageKind.Text, text: mentionText({ text: 'oi' }) },
+        },
       });
       await (bare as unknown as { clock: { advance(input: { advanceMs: number }): Promise<number> } }).clock.advance({
         advanceMs: DEBOUNCE_ADVANCE_MS,
@@ -250,6 +255,10 @@ describe('migration v2', () => {
           .map((row) => row.version),
       };
     });
-    expect(applied).toEqual({ first: [2], second: [], versions: [1, 2, LATER_MIGRATION_VERSION] });
+    expect(applied).toEqual({
+      first: [2],
+      second: [],
+      versions: [...ACCOUNT_INBOX_MIGRATIONS.map((migration) => migration.version), LATER_MIGRATION_VERSION],
+    });
   });
 });

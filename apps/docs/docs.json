@@ -24,7 +24,7 @@
           },
           {
             "group": "Agents",
-            "pages": ["agents/supported-agents"]
+            "pages": ["agents/supported-agents", "guides/webhook-wake"]
           },
           {
             "group": "Features",
@@ -43,6 +43,8 @@
             "group": "For developers",
             "pages": [
               "developers/any-mcp-client",
+              "developers/local-connector",
+              "developers/background-running",
               "developers/errors",
               "guides/webhook-wake",
               {
@@ -78,7 +80,7 @@
           },
           {
             "group": "IAs",
-            "pages": ["pt-br/agents/supported-agents"]
+            "pages": ["pt-br/agents/supported-agents", "pt-br/guides/webhook-wake"]
           },
           {
             "group": "Funcionalidades",
@@ -97,6 +99,8 @@
             "group": "Para desenvolvedores",
             "pages": [
               "pt-br/developers/any-mcp-client",
+              "pt-br/developers/local-connector",
+              "pt-br/developers/background-running",
               "pt-br/developers/errors",
               "pt-br/guides/webhook-wake",
               {

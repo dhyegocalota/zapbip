@@ -151,7 +151,6 @@ export const setWakeInputShape = {
 };
 
 export enum UnavailableWakeMode {
-  Local = 'local',
   Scheduled = 'scheduled',
   Standby = 'standby',
 }

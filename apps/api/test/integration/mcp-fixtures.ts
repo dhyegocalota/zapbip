@@ -58,7 +58,7 @@ export async function ownerWrites(input: { accountId: string; channelMessageId: 
   const outcome = await accountInbox({ accountId: input.accountId }).receiveOwnerMessage({
     ownerLocale: OwnerLocale.PortugueseBrazil,
     channelMessageId: input.channelMessageId,
-    ownerMessage: { at: Date.now(), replyToMessageId: null, content: input.content },
+    ownerMessage: { at: Date.now(), replyToMessageId: null, forwarded: false, content: input.content },
   });
   if (!outcome.ok || outcome.value.messageId === null) throw new Error('owner message was not stored');
   return outcome.value.messageId;

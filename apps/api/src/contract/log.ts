@@ -13,6 +13,7 @@ export enum LogEvent {
   Sweep = 'sweep',
   OwnerNoticeFailed = 'owner_notice_failed',
   ClockAdvanced = 'clock_advanced',
+  FrameRejected = 'frame_rejected',
 }
 
 export type LogFields = {

@@ -2,6 +2,7 @@ import { WakeMode, WakeRung } from '@zapbip/types';
 
 const RUNG_BY_MODE: Record<WakeMode, WakeRung> = {
   [WakeMode.None]: WakeRung.Inbox,
+  [WakeMode.Local]: WakeRung.Local,
   [WakeMode.Webhook]: WakeRung.Webhook,
 };
 
