@@ -321,6 +321,20 @@ describe('step-up on a number action', () => {
     expect(await stateOf({ numberId: 'num_0013' })).toBe(WhatsAppNumberState.Active);
   });
 
+  test('a refused state change keeps the chosen state selected', async () => {
+    await seedNumber({ suffix: '0015', label: 'Active', state: WhatsAppNumberState.Active });
+    const response = await postAction({
+      path: '/numbers/num_0015/state',
+      sessionToken,
+      fields: { [NumberFormField.State]: WhatsAppNumberState.Disabled },
+      code: WRONG_CODE,
+    });
+    const body = await response.text();
+    expect(response.status).toBe(STATUS_UNAUTHORIZED);
+    expect(body).toMatch(/<input[^>]*value="disabled"[^>]*checked/);
+    expect(body).not.toMatch(/<input[^>]*value="closed"[^>]*checked/);
+  });
+
   test('a refused register keeps the typed non-secret fields and never echoes the secrets', async () => {
     const response = await postAction({ path: REGISTER_PATH, sessionToken, fields: registrationFields({}), code: WRONG_CODE });
     const body = await response.text();

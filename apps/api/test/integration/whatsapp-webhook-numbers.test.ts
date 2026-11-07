@@ -1,15 +1,19 @@
 import { SELF } from 'cloudflare:test';
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { WEBHOOK_SIGNATURE_HEADER } from '../../src/adapters/whatsapp/whatsapp-constants';
+import { createApp } from '../../src/app';
+import { MAX_FUTURE_SKEW_MS, WEBHOOK_SIGNATURE_HEADER } from '../../src/adapters/whatsapp/whatsapp-constants';
 import { OperatorEvent } from '../../src/adapters/whatsapp/whatsapp-enums';
 import { WHATSAPP_WEBHOOK_PATH } from '../../src/contract/constants';
 import { changeOf, notificationOf, OUR_PHONE_NUMBER_ID } from '../fixtures/whatsapp/inbound/notification';
 import { signatureHeaderOf } from '../fixtures/whatsapp/inbound/signed-webhook';
+import { testEnv } from '../support/workers-env';
 import { seedWhatsAppNumber, TEST_APP_SECRET, TEST_WABA_ID } from '../support/whatsapp-numbers';
 import { ORIGIN, seedAccount } from './route-fixtures';
 import { ownerText, ownerTextsOf, postSignedWith } from './webhook-number-fixtures';
 
 const STATUS_OK = 200;
+const STATUS_SERVER_ERROR = 500;
+const WRONG_KEY_BYTES = 32;
 const STATUS_UNAUTHORIZED = 401;
 const WEBHOOK_URL = `${ORIGIN}${WHATSAPP_WEBHOOK_PATH}`;
 const SECOND_NUMBER_ID = 'num_second';
@@ -125,5 +129,24 @@ describe('webhook attribution by number', () => {
     });
     expect(response.status).toBe(STATUS_UNAUTHORIZED);
     expect(await response.json()).toEqual(BAD_SIGNATURE_BODY);
+  });
+
+  test.each([
+    { name: 'a key that does not open the sealed values', key: btoa('x'.repeat(WRONG_KEY_BYTES)) },
+    { name: 'a missing key', key: '' },
+  ])('pin: $name makes the webhook answer 500, a server misconfiguration', async ({ key }) => {
+    const account = await seedAccount({ agent: 'alpha' });
+    const notification = notificationOf({ changes: [changeOf({ messages: [ownerText({ account, id: 'wamid.KEY1' })] })] });
+    const text = JSON.stringify(notification);
+    const signature = await signatureHeaderOf({ appSecret: TEST_APP_SECRET, body: new TextEncoder().encode(text) });
+    const request = new Request(`${ORIGIN}${WHATSAPP_WEBHOOK_PATH}`, {
+      method: 'POST',
+      headers: { [WEBHOOK_SIGNATURE_HEADER]: signature },
+      body: text,
+    });
+    const app = createApp({ extraRoutes: [], developmentMediaOrigin: null, maxFutureSkewMs: MAX_FUTURE_SKEW_MS });
+    const response = await app.fetch(request, { ...testEnv, NUMBER_REGISTRY_KEY: key });
+    expect(response.status).toBe(STATUS_SERVER_ERROR);
+    expect(await ownerTextsOf({ account })).toEqual([]);
   });
 });
