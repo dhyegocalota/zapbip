@@ -44,6 +44,7 @@ import { D1ChannelRestrictions } from '../adapters/d1/d1-channel-restrictions';
 import { D1ConnectionDirectory } from '../adapters/d1/d1-connection-directory';
 import { D1ConnectionRegistry } from '../adapters/d1/d1-connection-registry';
 import { D1MessageIndex } from '../adapters/d1/d1-message-index';
+import { numberRegistryOf } from '../adapters/d1/d1-number-registry';
 import { findOwnerByAccountId } from '../adapters/d1/d1-owner-directory';
 import { createConnectionSecrets } from '../adapters/platform/connection-secrets';
 import { createInstallCodeVault } from '../adapters/platform/install-code-vault';
@@ -60,6 +61,7 @@ import { createNoneWaker } from '../adapters/wake/none-waker';
 import { createScheduledAgentWaker } from '../adapters/wake/scheduled-agent-waker';
 import { createStandbyAgentWaker } from '../adapters/wake/standby-agent-waker';
 import { createWebhookAgentWaker } from '../adapters/wake/webhook-agent-waker';
+import { openSendableNumber } from '../numbers/sendable-number';
 import { createCloudApiMessageSender } from '../adapters/whatsapp/cloud-api-message-sender';
 import { createGraphClient } from '../adapters/whatsapp/graph-client';
 import { readWhatsAppEnvironment } from '../adapters/whatsapp/read-whatsapp-env';
@@ -217,23 +219,29 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
   }
 
   protected createSender(input: { mediaStore: MediaStore }): MessageSender {
-    const whatsapp = readWhatsAppEnvironment({ env: this.env });
+    const { graphBaseUrl } = readWhatsAppEnvironment({ env: this.env });
+    const { accountId, clock } = this;
     const database = this.env.CONNECTIONS;
+    const registry = numberRegistryOf({ bindings: this.env });
+    const publicOrigin = this.env.PUBLIC_ORIGIN;
+
     return createCloudApiMessageSender({
-      accountId: this.accountId,
-      graph: createGraphClient({
-        baseUrl: whatsapp.graphBaseUrl,
-        accessToken: whatsapp.accessToken,
-        developmentMediaOrigin: null,
-        fetcher: fetch,
+      accountId,
+      resolveNumber: () => openSendableNumber({ registry, accountId }),
+      channelOf: ({ number }) => ({
+        graph: createGraphClient({
+          baseUrl: graphBaseUrl,
+          accessToken: number.accessToken,
+          developmentMediaOrigin: null,
+          fetcher: fetch,
+        }),
+        restrictions: new D1ChannelRestrictions({ database, phoneNumberId: number.phoneNumberId }),
       }),
-      findOwnerByAccountId: ({ accountId }) => findOwnerByAccountId({ database, accountId }),
+      findOwnerByAccountId: ({ accountId: ownerAccountId }) => findOwnerByAccountId({ database, accountId: ownerAccountId }),
       messageIndex: new D1MessageIndex({ database }),
-      restrictions: new D1ChannelRestrictions({ database, phoneNumberId: whatsapp.phoneNumberId }),
       mediaStore: input.mediaStore,
-      publicOrigin: this.env.PUBLIC_ORIGIN,
-      phoneNumberId: whatsapp.phoneNumberId,
-      clock: this.clock,
+      publicOrigin,
+      clock,
     });
   }
 

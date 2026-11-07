@@ -6,6 +6,7 @@ import { D1MessageIndex } from '../adapters/d1/d1-message-index';
 import { findOwnerByPhone } from '../adapters/d1/d1-owner-directory';
 import { createPlatformClock } from '../adapters/platform/clock';
 import { mediaStoreOf } from '../adapters/r2/r2-media-store';
+import { numberRegistryOf } from '../adapters/d1/d1-number-registry';
 import { receiveOwnerInbound } from '../inbound/owner-inbound';
 import type { DevAccountInboxRpc } from '../contract/account-inbox-rpc';
 import { DEV_OWNER_PATH_PREFIX, OWNER_PHONE_PATTERN } from '../contract/constants';
@@ -212,8 +213,10 @@ devOwnerRoutes.post(`${DEV_OWNER_PATH_PREFIX}/messages`, async (context) => {
     const fitError = mediaFitError({ body, sizeBytes: decodeBytes({ base64: body.data_base64 }).byteLength });
     if (fitError) return context.json(errorBody({ error: fitError }), ERROR_STATUS[fitError.code]);
   }
+  const registry = numberRegistryOf({ bindings: context.env });
   const { messageId, agent, duplicate } = await receiveOwnerInbound({
     bindings: context.env,
+    number: await registry.openTheOnlyNumber(),
     waId: phone,
     channelMessageId: body.wamid,
     entryOf: ({ accountId, downloadsMedia }) => buildOwnerEntry({ bindings: context.env, accountId, body, downloadsMedia }),

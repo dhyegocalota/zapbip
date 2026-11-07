@@ -4,6 +4,7 @@ import { z } from 'zod';
 import type { ChannelRestrictions } from '../d1/d1-channel-restrictions';
 import type { D1MessageIndex } from '../d1/d1-message-index';
 import type { OwnerRecipient } from '../d1/d1-owner-directory';
+import type { OutboundNumber } from '../../numbers/number-registry';
 import { mapGraphErrorToChannelError } from './channel-error-mapping';
 import { GraphRequestError, type GraphClient } from './graph-client';
 import { logOperatorEvent } from './operator-log';
@@ -33,22 +34,27 @@ function describeMessage(input: { message: Message }): string {
   return message.kind;
 }
 
+type Channel = { number: OutboundNumber; graph: GraphClient; restrictions: ChannelRestrictions };
+
 export function createCloudApiMessageSender(input: {
   accountId: string;
-  graph: GraphClient;
+  resolveNumber: () => Promise<OutboundNumber>;
+  channelOf: (input: { number: OutboundNumber }) => { graph: GraphClient; restrictions: ChannelRestrictions };
   findOwnerByAccountId: (input: { accountId: string }) => Promise<OwnerRecipient | null>;
   messageIndex: Pick<D1MessageIndex, 'record'>;
-  restrictions: ChannelRestrictions;
   mediaStore: MediaStore;
   publicOrigin: string;
-  phoneNumberId: string;
   clock: Clock;
 }): MessageSender {
-  const { accountId, graph, restrictions, clock } = input;
-  const messagesPath = `/${input.phoneNumberId}/messages`;
+  const { accountId, clock } = input;
 
-  async function assertNotRestricted(): Promise<void> {
-    const restriction = await restrictions.findActive({ now: clock.now() });
+  async function openChannel(): Promise<Channel> {
+    const number = await input.resolveNumber();
+    return { number, ...input.channelOf({ number }) };
+  }
+
+  async function assertNotRestricted(input: { restrictions: ChannelRestrictions }): Promise<void> {
+    const restriction = await input.restrictions.findActive({ now: clock.now() });
     if (restriction === null) return;
     throw new ChannelError({
       kind: ChannelErrorKind.Restricted,
@@ -80,12 +86,13 @@ export function createCloudApiMessageSender(input: {
   }
 
   async function translate(failure: {
+    channel: Channel;
     error: unknown;
     subject: string;
     template: TemplateUsed | null;
     isReactionSend: boolean;
   }): Promise<unknown> {
-    const { error, subject, template, isReactionSend } = failure;
+    const { channel, error, subject, template, isReactionSend } = failure;
     if (!(error instanceof GraphRequestError)) return error;
     const channelError = mapGraphErrorToChannelError({
       status: error.status,
@@ -97,20 +104,30 @@ export function createCloudApiMessageSender(input: {
     });
     const { errorCode } = channelError;
     const isRestriction = errorCode !== null && RESTRICTING_ERROR_CODES.includes(errorCode);
-    if (isRestriction) await restrictions.record({ errorCode, restrictedAt: clock.now() });
+    if (isRestriction) await channel.restrictions.record({ errorCode, restrictedAt: clock.now() });
     report({ channelError, template });
     return channelError;
   }
 
   async function send(request: {
+    channel: Channel;
     payload: Record<string, unknown>;
     subject: string;
     template: TemplateUsed | null;
     isReactionSend: boolean;
   }): Promise<SentMessage> {
-    const response = await graph.post({ path: messagesPath, body: request.payload }).catch(async (error: unknown) => {
-      throw await translate({ error, subject: request.subject, template: request.template, isReactionSend: request.isReactionSend });
-    });
+    const { channel } = request;
+    const response = await channel.graph
+      .post({ path: `/${channel.number.phoneNumberId}/messages`, body: request.payload })
+      .catch(async (error: unknown) => {
+        throw await translate({
+          channel,
+          error,
+          subject: request.subject,
+          template: request.template,
+          isReactionSend: request.isReactionSend,
+        });
+      });
     const parsed = sendResponseSchema.safeParse(response);
     const [sent] = parsed.success ? parsed.data.messages : [];
     if (sent === undefined) throw new Error('Graph response has no message id');
@@ -120,7 +137,8 @@ export function createCloudApiMessageSender(input: {
 
   return {
     async session({ message, question, replyToChannelMessageId, reactionTargetChannelMessageId }) {
-      await assertNotRestricted();
+      const channel = await openChannel();
+      await assertNotRestricted({ restrictions: channel.restrictions });
       const owner = await requireOwner();
       const payload = await buildSessionPayload({
         recipientWaId: owner.waId,
@@ -134,6 +152,7 @@ export function createCloudApiMessageSender(input: {
         accountId,
       });
       return send({
+        channel,
         payload,
         subject: describeMessage({ message }),
         template: null,
@@ -142,11 +161,12 @@ export function createCloudApiMessageSender(input: {
     },
 
     async template({ kind, locale, parameters }) {
-      await assertNotRestricted();
+      const channel = await openChannel();
+      await assertNotRestricted({ restrictions: channel.restrictions });
       const owner = await requireOwner();
       const payload = buildTemplatePayload({ recipientWaId: owner.waId, kind, locale, parameters });
       const template = { name: TEMPLATE_NAME_BY_KIND[kind], language: OWNER_LOCALE_TO_LANGUAGE_CODE[locale] };
-      return send({ payload, subject: kind, template, isReactionSend: false });
+      return send({ channel, payload, subject: kind, template, isReactionSend: false });
     },
   };
 }

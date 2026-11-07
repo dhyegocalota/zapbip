@@ -125,6 +125,20 @@ describe('smoke checks', () => {
     expect(sentWithPlaceholder).toHaveLength(1);
   });
 
+  it('check 4 names the registered phone number in both bodies, so the signature is what gets checked', async () => {
+    const { requests } = await run({});
+    const signatureChecks = requests.filter(
+      (request) =>
+        request.headers.get(SIGNATURE_HEADER) === ZERO_SIGNATURE ||
+        request.headers.get(SIGNATURE_HEADER) === signWebhookBody({ appSecret: PLACEHOLDER_APP_SECRET, body: request.body }),
+    );
+    expect(signatureChecks).toHaveLength(2);
+    signatureChecks.forEach((request) => {
+      const payload = JSON.parse(request.body) as { entry: { changes: { value: { metadata: { phone_number_id: string } } }[] }[] };
+      expect(payload.entry[0]!.changes[0]!.value.metadata.phone_number_id).toBe(INPUTS[SmokeInput.PhoneNumberId]);
+    });
+  });
+
   it('check 4 passes when the placeholder-signed body is refused too', async () => {
     const refused = await run({ behavior: { placeholderSignatureStatus: 403 } });
     expect(refused.lines[3]).toBe('PASS 401 signature rejected');
@@ -142,6 +156,14 @@ describe('smoke checks', () => {
     expect(post?.headers.get(SIGNATURE_HEADER)).toMatch(/^sha256=[0-9a-f]{64}$/);
     expect(post?.body).toContain(OWNER_PHONE);
     expect(post?.body).toContain('PNID');
+  });
+
+  it('check 5 names the registered phone number in its payload and signs it with the smoke app secret', async () => {
+    const { requests } = await run({});
+    const post = requests.find((request) => request.body.includes('@smoke token'));
+    const payload = JSON.parse(post!.body) as { entry: { changes: { value: { metadata: { phone_number_id: string } } }[] }[] };
+    expect(payload.entry[0]!.changes[0]!.value.metadata.phone_number_id).toBe(INPUTS[SmokeInput.PhoneNumberId]);
+    expect(post?.headers.get(SIGNATURE_HEADER)).toBe(signWebhookBody({ appSecret: APP_SECRET, body: post!.body }));
   });
 
   it('check 5 polls check_inbox spaced by the poll interval until the message arrives', async () => {

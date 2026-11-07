@@ -6,6 +6,7 @@ Before a merge, `/open-pr` names the scenarios whose `paths` the diff touches; t
 
 | Scenario | Authors | Covers |
 |----------|---------|--------|
+| [`backoffice`](backoffice.md) | 2 | The operator signs in, registers, verifies and activates two numbers, and an owner writes to each |
 
 ## File shape
 

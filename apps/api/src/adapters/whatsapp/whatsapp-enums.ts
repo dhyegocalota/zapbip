@@ -65,6 +65,12 @@ export enum WhatsAppLanguageCode {
 
 export enum OperatorEvent {
   InboundForeignNumber = 'inbound.foreign_number',
+  InboundUnattributed = 'inbound.unattributed',
+  InboundNumberPending = 'inbound.number_pending',
+  InboundNumberDisabled = 'inbound.number_disabled',
+  InboundAccountOnOtherNumber = 'inbound.account_on_other_number',
+  InboundAccountWithoutNumber = 'inbound.account_without_number',
+  InboundNumberClosed = 'inbound.number_closed',
   InboundUnmapped = 'inbound.unmapped',
   InboundUnsupported = 'inbound.unsupported',
   InboundMediaUnavailable = 'inbound.media_unavailable',
@@ -79,6 +85,7 @@ export enum OperatorEvent {
   ChannelTemplateRejected = 'channel.template_rejected',
   ChannelAuth = 'channel.auth',
   ChannelTimeout = 'channel.timeout',
+  ChannelNumberUnavailable = 'channel.number_unavailable',
 }
 
 export enum OperatorLogField {

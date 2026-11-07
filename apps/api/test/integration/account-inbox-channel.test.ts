@@ -22,7 +22,7 @@ const LIST_USER_TABLES_STATEMENT =
   "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%'";
 const CHANNEL_MESSAGE_ID = 'wamid.inbound.1';
 const OUTBOUND_CHANNEL_MESSAGE_ID = 'wamid.outbound.1';
-const ACCESS_TOKEN_VARIABLE = 'WHATSAPP_ACCESS_TOKEN';
+const GRAPH_BASE_URL_VARIABLE = 'WHATSAPP_GRAPH_BASE_URL';
 const PRICING_CATEGORY = 'utility';
 const ERROR_CODE = 131047;
 const ERROR_TITLE = 'Re-engagement message';
@@ -104,8 +104,8 @@ async function selectSender(input: { instanceClass: typeof AccountInbox; env: Bi
   });
 }
 
-function withoutAccessToken(): Bindings {
-  const { WHATSAPP_ACCESS_TOKEN: removed, ...rest } = testEnv;
+function withoutGraphBaseUrl(): Bindings {
+  const { WHATSAPP_GRAPH_BASE_URL: removed, ...rest } = testEnv;
   void removed;
   return rest;
 }
@@ -523,24 +523,24 @@ describe('AccountInbox channel messages', () => {
     expect(delivery.delivery).toBe(DeliveryState.Queued);
   });
 
-  it('WI-17a picks the Cloud API sender in the development class when the access token is set', async () => {
+  it('WI-17a picks the Cloud API sender in the development class when it sends through the Graph', async () => {
     const sender = (await selectSender({ instanceClass: DevAccountInbox, env: whatsappTestEnv })) as Record<string, unknown>;
     expect(typeof sender.session).toBe('function');
     expect(typeof sender.template).toBe('function');
     expect(sender.listScreenEntries).toBeUndefined();
   });
 
-  it('WI-17b picks the fake sender in the development class when the access token is absent', async () => {
-    const sender = (await selectSender({ instanceClass: DevAccountInbox, env: withoutAccessToken() })) as Record<string, unknown>;
+  it('WI-17b picks the fake sender in the development class when it does not send through the Graph', async () => {
+    const sender = (await selectSender({ instanceClass: DevAccountInbox, env: testEnv })) as Record<string, unknown>;
     expect(typeof sender.listScreenEntries).toBe('function');
   });
 
-  it('WI-17c refuses to build a sender in the production class when the access token is absent', async () => {
-    await expect(selectSender({ instanceClass: AccountInbox, env: withoutAccessToken() })).rejects.toThrow(ACCESS_TOKEN_VARIABLE);
+  it('WI-17c refuses to build a sender in the production class when the Graph base URL is absent', async () => {
+    await expect(selectSender({ instanceClass: AccountInbox, env: withoutGraphBaseUrl() })).rejects.toThrow(GRAPH_BASE_URL_VARIABLE);
   });
 
-  it('pin: builds the Cloud API sender in the production class when the variables are set', async () => {
-    const sender = (await selectSender({ instanceClass: AccountInbox, env: whatsappTestEnv })) as Record<string, unknown>;
+  it('pin: builds the Cloud API sender in the production class when the Graph base URL is set', async () => {
+    const sender = (await selectSender({ instanceClass: AccountInbox, env: testEnv })) as Record<string, unknown>;
     expect(typeof sender.session).toBe('function');
     expect(sender.listScreenEntries).toBeUndefined();
   });

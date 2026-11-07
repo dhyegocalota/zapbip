@@ -23,6 +23,13 @@ import textFixture from '../fixtures/whatsapp/outbound/text.json';
 import { buildEnvelope, buildQuestion, buildTextMessage } from '../support/builders';
 import { FakeGraph } from '../support/fake-graph';
 import { applyDirectoryMigration, seedConnection, seedOwnerIdentity } from '../support/seed';
+import {
+  seedWhatsAppNumber,
+  TEST_ACCESS_TOKEN,
+  TEST_NUMBER_ID,
+  TEST_PHONE_NUMBER_ID,
+  TEST_REGISTERED_NUMBER,
+} from '../support/whatsapp-numbers';
 import { accountInboxStub, testEnv, whatsappTestEnv } from '../support/workers-env';
 import { callTool, connectClient, ownerText, ownerWrites, type ToolResult } from './mcp-fixtures';
 
@@ -45,7 +52,7 @@ const BUSY_TEXT = 'busy';
 const TIMEOUT_TEXT = 'did not answer in time';
 const TEMPLATE_MESSAGE_TYPE = 'template';
 
-const whatsapp = readWhatsAppEnvironment({ env: whatsappTestEnv });
+const whatsapp = readWhatsAppEnvironment({ env: testEnv });
 const fakeGraph = new FakeGraph({ baseUrl: whatsapp.graphBaseUrl });
 const clock = createPlatformClock();
 
@@ -54,15 +61,18 @@ let errorSpy: MockInstance<typeof console.error>;
 function senderFor(input: { accountId: string }) {
   return createCloudApiMessageSender({
     accountId: input.accountId,
-    graph: createGraphClient({
-      baseUrl: whatsapp.graphBaseUrl,
-      accessToken: whatsapp.accessToken,
-      developmentMediaOrigin: null,
-      fetcher: fetch,
+    resolveNumber: async () => ({ ...TEST_REGISTERED_NUMBER, accessToken: TEST_ACCESS_TOKEN }),
+    channelOf: ({ number }) => ({
+      graph: createGraphClient({
+        baseUrl: whatsapp.graphBaseUrl,
+        accessToken: number.accessToken,
+        developmentMediaOrigin: null,
+        fetcher: fetch,
+      }),
+      restrictions: new D1ChannelRestrictions({ database: testEnv.CONNECTIONS, phoneNumberId: number.phoneNumberId }),
     }),
     findOwnerByAccountId: (lookup) => findOwnerByAccountId({ database: testEnv.CONNECTIONS, accountId: lookup.accountId }),
     messageIndex: new D1MessageIndex({ database: testEnv.CONNECTIONS }),
-    restrictions: new D1ChannelRestrictions({ database: testEnv.CONNECTIONS, phoneNumberId: whatsapp.phoneNumberId }),
     mediaStore: createR2MediaStore({
       bucket: testEnv.MEDIA,
       mediaLinkSigningKey: testEnv.MEDIA_LINK_SIGNING_KEY,
@@ -70,7 +80,6 @@ function senderFor(input: { accountId: string }) {
       clock,
     }),
     publicOrigin: PUBLIC_ORIGIN,
-    phoneNumberId: whatsapp.phoneNumberId,
     clock,
   });
 }
@@ -110,7 +119,13 @@ async function refuseNextSend(input: { status: number; errorCode: number }): Pro
 beforeEach(async () => {
   errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
   await applyDirectoryMigration();
-  await seedOwnerIdentity({ accountId: FIRST_ACCOUNT, phone: FIRST_OWNER_WA_ID, ownerLocale: OwnerLocale.PortugueseBrazil });
+  await seedWhatsAppNumber();
+  await seedOwnerIdentity({
+    accountId: FIRST_ACCOUNT,
+    phone: FIRST_OWNER_WA_ID,
+    ownerLocale: OwnerLocale.PortugueseBrazil,
+    numberId: TEST_NUMBER_ID,
+  });
   await fakeGraph.reset();
 });
 
@@ -168,7 +183,7 @@ describe('Cloud API sender against the fake Graph', () => {
     const first = await failureOf({ run: () => sender.session(textInput({ text: 'Olá' })) });
     expect(first.code).toBe(ChannelErrorKind.Restricted);
     expect(
-      await new D1ChannelRestrictions({ database: testEnv.CONNECTIONS, phoneNumberId: whatsapp.phoneNumberId }).findActive({
+      await new D1ChannelRestrictions({ database: testEnv.CONNECTIONS, phoneNumberId: TEST_PHONE_NUMBER_ID }).findActive({
         now: clock.now(),
       }),
     ).toEqual({ errorCode });
@@ -178,7 +193,7 @@ describe('Cloud API sender against the fake Graph', () => {
   });
 
   it('WI-64 sends again once the restriction is older than its time to live', async () => {
-    await new D1ChannelRestrictions({ database: testEnv.CONNECTIONS, phoneNumberId: whatsapp.phoneNumberId }).record({
+    await new D1ChannelRestrictions({ database: testEnv.CONNECTIONS, phoneNumberId: TEST_PHONE_NUMBER_ID }).record({
       errorCode: 131_048,
       restrictedAt: clock.now() - RESTRICTION_TTL_MS - 1,
     });
@@ -192,7 +207,7 @@ describe('Cloud API sender against the fake Graph', () => {
     expect(error.code).toBe(ChannelErrorKind.Auth);
     const logged = errorSpy.mock.calls.map(([line]) => String(line)).join('\n');
     expect(logged).toContain('channel.auth');
-    expect(logged).not.toContain(whatsapp.accessToken);
+    expect(logged).not.toContain(TEST_ACCESS_TOKEN);
   });
 
   it('WI-68 sends the English notice', async () => {
@@ -287,7 +302,12 @@ describe('Cloud API sender against the fake Graph', () => {
   });
 
   it('WI-73 sends each account only to its own owner', async () => {
-    await seedOwnerIdentity({ accountId: SECOND_ACCOUNT, phone: SECOND_OWNER_WA_ID, ownerLocale: OwnerLocale.EnglishUs });
+    await seedOwnerIdentity({
+      accountId: SECOND_ACCOUNT,
+      phone: SECOND_OWNER_WA_ID,
+      ownerLocale: OwnerLocale.EnglishUs,
+      numberId: TEST_NUMBER_ID,
+    });
     await senderFor({ accountId: FIRST_ACCOUNT }).session(textInput({ text: 'um' }));
     await senderFor({ accountId: SECOND_ACCOUNT }).session(textInput({ text: 'dois' }));
     expect(await sentBodies()).toMatchObject([

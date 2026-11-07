@@ -9,9 +9,11 @@ import { SmokeCheck, SmokeInput, type SmokeInputs, type SmokeScope, smokeChecksF
 
 const SMOKE_TEXT_PREFIX = '@smoke ';
 const WRONG_VERIFY_TOKEN = 'zapbip-smoke-wrong-token';
-const PLACEHOLDER_APP_SECRET = `${PLACEHOLDER_VALUE_PREFIX}META_APP_SECRET`;
+const PLACEHOLDER_APP_SECRET = `${PLACEHOLDER_VALUE_PREFIX}SMOKE_META_APP_SECRET`;
 const ZERO_SIGNATURE = `sha256=${'0'.repeat(64)}`;
-const EMPTY_JSON_BODY = '{}';
+const ROUTED_OBJECT = 'whatsapp_business_account';
+const ROUTED_FIELD = 'messages';
+const ROUTED_ENTRY_ID = 'smoke-business-account';
 const REQUEST_FAILED_STATUS = 0;
 const UNKNOWN_FAILURE_KIND = 'unknown error';
 const TRAILING_SLASHES = /\/+$/;
@@ -128,17 +130,23 @@ async function checkWebhookVerify(run: SmokeRun): Promise<Outcome> {
   return pass({ status: accepted.status });
 }
 
+function routedBodyOf(input: { phoneNumberId: string }): string {
+  const change = { field: ROUTED_FIELD, value: { metadata: { phone_number_id: input.phoneNumberId } } };
+  return JSON.stringify({ object: ROUTED_OBJECT, entry: [{ id: ROUTED_ENTRY_ID, changes: [change] }] });
+}
+
 async function checkSignatureRejected(run: SmokeRun): Promise<Outcome> {
+  const body = routedBodyOf({ phoneNumberId: inputOf({ run, name: SmokeInput.PhoneNumberId }) });
   const response = await run.smokeFetch(urlOf({ run, path: WHATSAPP_WEBHOOK_PATH }), {
     method: 'POST',
     headers: { ...JSON_HEADERS, [SIGNATURE_HEADER]: ZERO_SIGNATURE },
-    body: EMPTY_JSON_BODY,
+    body,
   });
   if (!REFUSAL_STATUSES.includes(response.status)) return fail({ status: response.status, detail: 'a wrong signature was accepted' });
   const placeholderSigned = await run.smokeFetch(urlOf({ run, path: WHATSAPP_WEBHOOK_PATH }), {
     method: 'POST',
-    headers: { ...JSON_HEADERS, [SIGNATURE_HEADER]: signWebhookBody({ appSecret: PLACEHOLDER_APP_SECRET, body: EMPTY_JSON_BODY }) },
-    body: EMPTY_JSON_BODY,
+    headers: { ...JSON_HEADERS, [SIGNATURE_HEADER]: signWebhookBody({ appSecret: PLACEHOLDER_APP_SECRET, body }) },
+    body,
   });
   if (!REFUSAL_STATUSES.includes(placeholderSigned.status)) {
     return fail({ status: placeholderSigned.status, detail: 'a body signed with the placeholder app secret was accepted' });

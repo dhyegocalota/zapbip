@@ -11,17 +11,7 @@ import { z } from 'zod';
 import { freePort, HEALTH_TIMEOUT_MS, LOOPBACK_HOST, waitForHealth } from '../support/stack-process';
 import { startFakeGraph } from '../../support/fake-graph';
 import type { StackContext } from '../global-setup';
-import {
-  ACCESS_TOKEN,
-  APP_SECRET,
-  FAKE_GRAPH_PORT,
-  OWNER_PHONE,
-  PHONE_NUMBER_ID,
-  SCHEDULED_AGENT,
-  SCHEDULED_OWNER_PHONES,
-  SEED_AGENTS,
-  VERIFY_TOKEN,
-} from './constants';
+import { FAKE_GRAPH_PORT, OWNER_PHONE, SCHEDULED_AGENT, SCHEDULED_OWNER_PHONES, SEED_AGENTS, VERIFY_TOKEN } from './constants';
 
 const runCommand = promisify(execFile);
 const SIGNING_KEY_BYTES = 32;
@@ -69,11 +59,10 @@ export default async function setup(project: TestProject): Promise<() => Promise
     MEDIA_LINK_SIGNING_KEY: randomBytes(SIGNING_KEY_BYTES).toString('hex'),
     UPLOAD_LINK_SIGNING_KEY: randomBytes(SIGNING_KEY_BYTES).toString('hex'),
     WAKE_SECRET_KEY: randomBytes(WAKE_SECRET_KEY_BYTES).toString('base64'),
+    NUMBER_REGISTRY_KEY: randomBytes(WAKE_SECRET_KEY_BYTES).toString('base64'),
     PUBLIC_ORIGIN: origin,
-    META_APP_SECRET: APP_SECRET,
     WHATSAPP_VERIFY_TOKEN: VERIFY_TOKEN,
-    WHATSAPP_ACCESS_TOKEN: ACCESS_TOKEN,
-    WHATSAPP_PHONE_NUMBER_ID: PHONE_NUMBER_ID,
+    WHATSAPP_SEND_THROUGH_GRAPH: 'true',
     WHATSAPP_GRAPH_BASE_URL: `http://${LOOPBACK_HOST}:${FAKE_GRAPH_PORT}`,
     WHATSAPP_MEDIA_DOWNLOAD_ORIGIN: `http://${LOOPBACK_HOST}:${FAKE_GRAPH_PORT}`,
   };

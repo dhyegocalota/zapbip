@@ -28,6 +28,7 @@ import type {
   InstallLinkRedaction,
 } from '../ports';
 
+const DEFAULT_HOME_NUMBER_ID = 'num_default';
 const FAKE_SECRET_PREFIX = 'zb_conn_fake_';
 const FAKE_DIGEST_PREFIX = 'fake:';
 const FAKE_INSTALL_CODE_PREFIX = 'zb_inst_fake_';
@@ -84,7 +85,13 @@ type AccountStore = {
 
 function createDirectory(input: { store: AccountStore }): AccountDirectory {
   const { accounts, identities, connections } = input.store;
-  const toRecord = ({ accountId, waId, state, locale }: StoredAccount): AccountRecord => ({ accountId, waId, state, locale });
+  const toRecord = ({ accountId, waId, state, locale, homeNumberId }: StoredAccount): AccountRecord => ({
+    accountId,
+    waId,
+    state,
+    locale,
+    homeNumberId,
+  });
 
   return {
     findByWaId: async ({ waId }) => {
@@ -93,13 +100,21 @@ function createDirectory(input: { store: AccountStore }): AccountDirectory {
       const stored = accounts.get(accountId);
       return stored === undefined ? null : toRecord(stored);
     },
-    findOrCreateByWaId: async ({ waId, accountId, initialState, locale, createdAt, newAccountsCap }): Promise<AccountLookup | null> => {
+    findOrCreateByWaId: async ({
+      waId,
+      accountId,
+      initialState,
+      locale,
+      homeNumberId,
+      createdAt,
+      newAccountsCap,
+    }): Promise<AccountLookup | null> => {
       const existingId = identities.get(waId);
       const existing = existingId === undefined ? undefined : accounts.get(existingId);
       if (existing !== undefined) return { account: toRecord(existing), created: false };
       const recentlyCreated = [...accounts.values()].filter((stored) => stored.createdAt > newAccountsCap.since).length;
       if (recentlyCreated >= newAccountsCap.limit) return null;
-      const stored: StoredAccount = { accountId, waId, state: initialState, locale, createdAt };
+      const stored: StoredAccount = { accountId, waId, state: initialState, locale, homeNumberId, createdAt };
       accounts.set(accountId, stored);
       identities.set(waId, accountId);
       return { account: toRecord(stored), created: true };
@@ -349,12 +364,15 @@ export function createInMemoryAccountDependencies(input: InMemoryOptions = {}): 
     installLinkRedaction,
   };
 
-  async function openAccount(options: { waId?: string; state?: AccountState; locale?: OwnerLocale; accountId?: string } = {}) {
+  async function openAccount(
+    options: { waId?: string; state?: AccountState; locale?: OwnerLocale; accountId?: string; homeNumberId?: string } = {},
+  ) {
     const {
       waId = DEFAULT_WA_ID,
       state = AccountState.Active,
       locale = OwnerLocale.PortugueseBrazil,
       accountId = dependencies.accountId,
+      homeNumberId = DEFAULT_HOME_NUMBER_ID,
     } = options;
     const createdAt = environment.clock.now();
     const lookup = await directory.findOrCreateByWaId({
@@ -362,6 +380,7 @@ export function createInMemoryAccountDependencies(input: InMemoryOptions = {}): 
       accountId,
       initialState: state,
       locale,
+      homeNumberId,
       createdAt,
       newAccountsCap: { since: 0, limit: Number.MAX_SAFE_INTEGER },
     });

@@ -24,8 +24,8 @@ import { OUTBOUND_BUTTON_MAX_REPLIES } from './whatsapp-constants';
 import { OwnerCopyKey, WHATSAPP_COPY } from './whatsapp-copy';
 import { OWNER_LOCALE_TO_LANGUAGE_CODE, TEMPLATE_NAME_BY_KIND } from './whatsapp-templates';
 
-const MESSAGING_PRODUCT = 'whatsapp';
-const RECIPIENT_TYPE = 'individual';
+export const MESSAGING_PRODUCT = 'whatsapp';
+export const RECIPIENT_TYPE = 'individual';
 const MEDIA_LINK_PATH_SEGMENT = 'm';
 const URL_PATTERN = /https?:\/\//;
 const REMOVED_REACTION_EMOJI = '';

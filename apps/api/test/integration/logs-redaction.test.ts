@@ -1,6 +1,7 @@
 import { reset } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { applyDirectoryMigration, SEED_CREATED_AT } from '../support/seed';
+import { SEED_CREATED_AT } from '../support/seed';
+import { applyDirectoryMigrationWithNumber } from '../support/whatsapp-numbers';
 import { testEnv } from '../support/workers-env';
 import { failNextSessionSend } from '../support/session-send-probe';
 import { bindingsWith, deliver, findAccounts, WA_ID } from './owner-inbound-fixtures';
@@ -12,7 +13,7 @@ const AGENT_NAME = 'claude-redaction';
 const FORBIDDEN_PATTERNS = [/zb_conn_/, /zb_inst_/, /[0-9a-f]{64}/, /novo agente/, /apagar conta/];
 
 describe('logs over the owner walk', () => {
-  beforeEach(applyDirectoryMigration);
+  beforeEach(applyDirectoryMigrationWithNumber);
   afterEach(() => {
     vi.restoreAllMocks();
     return reset();

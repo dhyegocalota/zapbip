@@ -200,6 +200,8 @@ export enum IdPrefix {
   Media = 'med',
   Account = 'acc',
   Connection = 'con',
+  Number = 'num',
+  MetaApp = 'app',
 }
 
 export enum RoutingRule {
@@ -327,6 +329,7 @@ export enum HttpStatus {
   PayloadTooLarge = 413,
   UnsupportedMediaType = 415,
   UpgradeRequired = 426,
+  UnprocessableEntity = 422,
   TooManyRequests = 429,
   InternalServerError = 500,
   BadGateway = 502,
@@ -360,4 +363,11 @@ export enum McpToolName {
   CheckInbox = 'check_inbox',
   CreateUpload = 'create_upload',
   SetWake = 'set_wake',
+}
+
+export enum WhatsAppNumberState {
+  Pending = 'pending',
+  Active = 'active',
+  Closed = 'closed',
+  Disabled = 'disabled',
 }

@@ -6,7 +6,7 @@ import { promisify } from 'node:util';
 import { afterAll, describe, expect, test } from 'vitest';
 import { readWhatsAppEnvironment } from '../../src/adapters/whatsapp/read-whatsapp-env';
 import type { Bindings } from '../../src/contract/env';
-import { ACCESS_TOKEN, APP_SECRET, PHONE_NUMBER_ID, VERIFY_TOKEN } from './whatsapp-support/constants';
+import { VERIFY_TOKEN } from './whatsapp-support/constants';
 
 const runCommand = promisify(execFile);
 const PRODUCTION_BUNDLE_FILE = 'index.js';
@@ -51,12 +51,7 @@ describe('production bundle of the WhatsApp channel', () => {
   );
 
   test('PB-4 the channel throws naming WHATSAPP_GRAPH_BASE_URL when production leaves it unset', () => {
-    const environment = {
-      META_APP_SECRET: APP_SECRET,
-      WHATSAPP_VERIFY_TOKEN: VERIFY_TOKEN,
-      WHATSAPP_ACCESS_TOKEN: ACCESS_TOKEN,
-      WHATSAPP_PHONE_NUMBER_ID: PHONE_NUMBER_ID,
-    } as Bindings;
+    const environment = { WHATSAPP_VERIFY_TOKEN: VERIFY_TOKEN } as Bindings;
     expect(() => readWhatsAppEnvironment({ env: environment })).toThrow(`${GRAPH_BASE_URL_VARIABLE} is not set`);
   });
 });

@@ -22,6 +22,7 @@ const LOOPBACK_HOST = '127.0.0.1';
 const DATABASE_BINDING = 'CONNECTIONS';
 const SIGNING_KEY_BYTES = 32;
 const WAKE_SECRET_KEY_BYTES = 32;
+const NUMBER_REGISTRY_KEY_BYTES = 32;
 const OWNER_PHONE = '5511999990000';
 const LOG_FILE_NAME = 'wrangler-dev.log';
 const UNTRUSTED_CERTIFICATE_VARIABLE = 'NODE_TLS_REJECT_UNAUTHORIZED';
@@ -135,6 +136,8 @@ export async function startStack(input: { agents: string[] }): Promise<Stack> {
       `PUBLIC_ORIGIN:${origin}`,
       '--var',
       `WAKE_SECRET_KEY:${randomBytes(WAKE_SECRET_KEY_BYTES).toString('base64')}`,
+      '--var',
+      `NUMBER_REGISTRY_KEY:${randomBytes(NUMBER_REGISTRY_KEY_BYTES).toString('base64')}`,
     ],
     { cwd: API_DIRECTORY, stdio: ['ignore', 'pipe', 'pipe'], detached: true },
   );

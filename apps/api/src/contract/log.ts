@@ -28,6 +28,12 @@ export enum LogEvent {
   BudgetWarning = 'budget.warning',
   FrameRejected = 'frame_rejected',
   InstallPageFailed = 'install_page_failed',
+  BackofficeSignInFailed = 'backoffice.sign_in_failed',
+  BackofficeSignInSucceeded = 'backoffice.sign_in_succeeded',
+  BackofficeLocked = 'backoffice.locked',
+  BackofficeCsrfRejected = 'backoffice.csrf_rejected',
+  BackofficeNumberChanged = 'backoffice.number_changed',
+  BackofficeError = 'backoffice.error',
   PackageUnavailable = 'package_unavailable',
 }
 
@@ -40,6 +46,7 @@ export type LogFields = {
   sizeBytes?: number;
   errorCode?: string;
   connectionId?: string;
+  numberId?: string;
   locale?: string;
   count?: number;
   route?: string;

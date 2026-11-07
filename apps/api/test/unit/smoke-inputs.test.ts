@@ -21,6 +21,10 @@ function variablesWith(input: { name: SmokeInput; value: string | undefined }): 
 }
 
 describe('smoke inputs', () => {
+  it('reads the smoke number credentials under names no Worker secret shares', () => {
+    expect([SmokeInput.AppSecret, SmokeInput.PhoneNumberId]).toEqual(['SMOKE_META_APP_SECRET', 'SMOKE_PHONE_NUMBER_ID']);
+  });
+
   it.each(NAMED_INPUTS)('names %s when it is missing', (name) => {
     const environmentVariables = variablesWith({ name, value: undefined });
     expect(missingSmokeInputs({ ...STAGING_SCOPE, environmentVariables })).toEqual([name]);
@@ -64,6 +68,11 @@ describe('smoke inputs', () => {
     ]);
     const environmentVariables = { ...COMPLETE_VARIABLES, [SmokeInput.AppSecret]: undefined, [SmokeInput.OwnerPhone]: undefined };
     expect(missingSmokeInputs({ ...PRODUCTION_SCOPE, environmentVariables })).toEqual([]);
+  });
+
+  it('asks production for the registered phone number id, because check 4 signs a body naming it', () => {
+    const environmentVariables = { ...COMPLETE_VARIABLES, [SmokeInput.PhoneNumberId]: undefined };
+    expect(missingSmokeInputs({ ...PRODUCTION_SCOPE, environmentVariables })).toEqual([SmokeInput.PhoneNumberId]);
   });
 
   it('does not ask production for the connection secret in the environment, because it is prompted', () => {

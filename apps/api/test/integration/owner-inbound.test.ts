@@ -3,8 +3,9 @@ import { AccountReplyIntent, AccountState, ChannelInboundKind, MessageKind, Owne
 import { reset } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { receiveOwnerInbound } from '../../src/inbound/owner-inbound';
-import { applyDirectoryMigration, SEED_CREATED_AT } from '../support/seed';
+import { SEED_CREATED_AT } from '../support/seed';
 import { countSessionSends, recordAccountStateAtNextSessionSend } from '../support/session-send-probe';
+import { TEST_REGISTERED_NUMBER, applyDirectoryMigrationWithNumber } from '../support/whatsapp-numbers';
 import { testEnv } from '../support/workers-env';
 import { bindingsWith, countAccounts, deliver, findAccounts, nextWamid, screenTextsOf, textEntry, WA_ID } from './owner-inbound-fixtures';
 
@@ -83,7 +84,7 @@ async function activeAccountId(input: { waId: string }): Promise<string> {
   return account.accountId;
 }
 
-beforeEach(applyDirectoryMigration);
+beforeEach(applyDirectoryMigrationWithNumber);
 afterEach(reset);
 
 describe('owner inbound orchestrator', () => {
@@ -232,7 +233,13 @@ describe('owner inbound orchestrator', () => {
 
   it('[row 384][row 494] answers a first image of a new phone with the unknown reply and stores no media and no message', async () => {
     const bindings = bindingsWith({ waitlistEnabled: false });
-    await receiveOwnerInbound({ bindings, waId: WA_ID, channelMessageId: nextWamid(), entryOf: async () => imageEntry() });
+    await receiveOwnerInbound({
+      number: TEST_REGISTERED_NUMBER,
+      bindings,
+      waId: WA_ID,
+      channelMessageId: nextWamid(),
+      entryOf: async () => imageEntry(),
+    });
     const accountId = await activeAccountId({ waId: WA_ID });
     expect(await screenTextsOf({ accountId })).toEqual([
       replyText({ intent: AccountReplyIntent.Unknown, locale: OwnerLocale.PortugueseBrazil }),
@@ -242,7 +249,13 @@ describe('owner inbound orchestrator', () => {
 
   it('[row 495] answers a first image of a waitlisted phone with the waitlist reply and stores no media', async () => {
     const bindings = bindingsWith({ waitlistEnabled: true });
-    await receiveOwnerInbound({ bindings, waId: WA_ID, channelMessageId: nextWamid(), entryOf: async () => imageEntry() });
+    await receiveOwnerInbound({
+      number: TEST_REGISTERED_NUMBER,
+      bindings,
+      waId: WA_ID,
+      channelMessageId: nextWamid(),
+      entryOf: async () => imageEntry(),
+    });
     const accountId = await activeAccountId({ waId: WA_ID });
     expect((await findAccounts({ waId: WA_ID }))[0]?.state).toBe(AccountState.Waitlisted);
     expect(await screenTextsOf({ accountId })).toEqual([
@@ -253,7 +266,13 @@ describe('owner inbound orchestrator', () => {
 
   it('does not download media for a first message', async () => {
     const entryOf = vi.fn().mockResolvedValue(textEntry({ text: 'oi' }));
-    await receiveOwnerInbound({ bindings: bindingsWith({ waitlistEnabled: false }), waId: WA_ID, channelMessageId: nextWamid(), entryOf });
+    await receiveOwnerInbound({
+      number: TEST_REGISTERED_NUMBER,
+      bindings: bindingsWith({ waitlistEnabled: false }),
+      waId: WA_ID,
+      channelMessageId: nextWamid(),
+      entryOf,
+    });
     expect(entryOf).toHaveBeenCalledWith(expect.objectContaining({ downloadsMedia: false }));
   });
 
@@ -276,14 +295,20 @@ describe('owner inbound orchestrator', () => {
       forwarded: false,
       noticeText: null,
     });
-    await receiveOwnerInbound({ bindings, waId: WA_ID, channelMessageId: nextWamid(), entryOf });
+    await receiveOwnerInbound({ number: TEST_REGISTERED_NUMBER, bindings, waId: WA_ID, channelMessageId: nextWamid(), entryOf });
     expect(entryOf).toHaveBeenCalledWith(expect.objectContaining({ downloadsMedia: true }));
   });
 
   it('does not download media for a waitlisted account', async () => {
     await deliver({ bindings: bindingsWith({ waitlistEnabled: true }), text: 'oi' });
     const entryOf = vi.fn().mockResolvedValue(textEntry({ text: 'oi' }));
-    await receiveOwnerInbound({ bindings: bindingsWith({ waitlistEnabled: true }), waId: WA_ID, channelMessageId: nextWamid(), entryOf });
+    await receiveOwnerInbound({
+      number: TEST_REGISTERED_NUMBER,
+      bindings: bindingsWith({ waitlistEnabled: true }),
+      waId: WA_ID,
+      channelMessageId: nextWamid(),
+      entryOf,
+    });
     expect(entryOf).toHaveBeenCalledWith(expect.objectContaining({ downloadsMedia: false }));
   });
 

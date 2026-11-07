@@ -43,12 +43,12 @@ import {
   OUR_PHONE_NUMBER_ID,
 } from '../fixtures/whatsapp/inbound/notification';
 import { signatureHeaderOf } from '../fixtures/whatsapp/inbound/signed-webhook';
-import { accountInboxStub, whatsappTestEnv } from '../support/workers-env';
+import { accountInboxStub, testEnv } from '../support/workers-env';
 import { buildTextMessage } from '../support/builders';
+import { TEST_APP_SECRET } from '../support/whatsapp-numbers';
 import { inboxOf, ORIGIN, seedAccount, type SeededAccount } from './route-fixtures';
 
 const STATUS_OK = 200;
-const STATUS_BAD_REQUEST = 400;
 const STATUS_UNAUTHORIZED = 401;
 const STATUS_FORBIDDEN = 403;
 const STATUS_PAYLOAD_TOO_LARGE = 413;
@@ -95,7 +95,7 @@ function ownerText(input: { account: SeededAccount; id: string; text: string }):
 
 async function postSigned(input: { text: string; signedText?: string }): Promise<Response> {
   const signature = await signatureHeaderOf({
-    appSecret: env.META_APP_SECRET as string,
+    appSecret: TEST_APP_SECRET,
     body: encode({ text: input.signedText === undefined ? input.text : input.signedText }),
   });
   return SELF.fetch(WEBHOOK_URL, { method: 'POST', headers: { [WEBHOOK_SIGNATURE_HEADER]: signature }, body: input.text });
@@ -108,9 +108,9 @@ function postNotification(input: { notification: object }): Promise<Response> {
 async function postNotificationWithAccessToken(input: { notification: object; developmentMediaOrigin?: string }): Promise<Response> {
   const { developmentMediaOrigin = null } = input;
   const text = JSON.stringify(input.notification);
-  const signature = await signatureHeaderOf({ appSecret: env.META_APP_SECRET as string, body: encode({ text }) });
+  const signature = await signatureHeaderOf({ appSecret: TEST_APP_SECRET, body: encode({ text }) });
   const request = new Request(WEBHOOK_URL, { method: 'POST', headers: { [WEBHOOK_SIGNATURE_HEADER]: signature }, body: text });
-  return createApp({ extraRoutes: [], developmentMediaOrigin, maxFutureSkewMs: MAX_FUTURE_SKEW_MS }).fetch(request, whatsappTestEnv);
+  return createApp({ extraRoutes: [], developmentMediaOrigin, maxFutureSkewMs: MAX_FUTURE_SKEW_MS }).fetch(request, testEnv);
 }
 
 async function historyOf(input: { account: SeededAccount }) {
@@ -211,7 +211,7 @@ describe('webhook signature variants', () => {
   ])('pin: answers 401 with the same body for a signature with %s and stores nothing', async (_name, tamper) => {
     const account = await seedAccount({ agent: 'alpha' });
     const text = JSON.stringify(notificationWith({ messages: [ownerText({ account, id: 'wamid.SIGVARIANT', text: 'Oi' })] }));
-    const valid = await signatureHeaderOf({ appSecret: env.META_APP_SECRET as string, body: encode({ text }) });
+    const valid = await signatureHeaderOf({ appSecret: TEST_APP_SECRET, body: encode({ text }) });
     const response = await SELF.fetch(WEBHOOK_URL, {
       method: 'POST',
       headers: { [WEBHOOK_SIGNATURE_HEADER]: tamper(valid.slice(ALGORITHM_PREFIX.length)) },
@@ -238,14 +238,14 @@ describe('webhook request checks', () => {
     expect(response.status).toBe(STATUS_UNAUTHORIZED);
   });
 
-  test('WI-23 answers 400 for a signed body that is not JSON', async () => {
+  test('WI-23 answers 401 for a signed body that is not JSON', async () => {
     const response = await postSigned({ text: 'not json' });
-    expect(response.status).toBe(STATUS_BAD_REQUEST);
+    expect(response.status).toBe(STATUS_UNAUTHORIZED);
   });
 
-  test('answers 400 for a signed JSON body without an entry array', async () => {
+  test('answers 401 for a signed JSON body without an entry array', async () => {
     const response = await postSigned({ text: JSON.stringify({ object: 'whatsapp_business_account' }) });
-    expect(response.status).toBe(STATUS_BAD_REQUEST);
+    expect(response.status).toBe(STATUS_UNAUTHORIZED);
   });
 
   test('WI-24 answers 413 for a declared length over the cap', async () => {
@@ -265,7 +265,7 @@ describe('webhook request checks', () => {
       },
     });
     const signedBody = new Uint8Array(chunkCount * CHUNK_BYTES).fill(' '.charCodeAt(0));
-    const signature = await signatureHeaderOf({ appSecret: env.META_APP_SECRET as string, body: signedBody });
+    const signature = await signatureHeaderOf({ appSecret: TEST_APP_SECRET, body: signedBody });
     const request = new Request(WEBHOOK_URL, {
       method: 'POST',
       headers: { [WEBHOOK_SIGNATURE_HEADER]: signature },
@@ -278,7 +278,7 @@ describe('webhook request checks', () => {
 
   test.each(['abc', '-1'])('accepts a signed body whose Content-Length header is %s because the streaming cap applies', async (header) => {
     const text = JSON.stringify(notificationWith({}));
-    const signature = await signatureHeaderOf({ appSecret: env.META_APP_SECRET as string, body: encode({ text }) });
+    const signature = await signatureHeaderOf({ appSecret: TEST_APP_SECRET, body: encode({ text }) });
     const response = await SELF.fetch(WEBHOOK_URL, {
       method: 'POST',
       headers: { [WEBHOOK_SIGNATURE_HEADER]: signature, 'Content-Length': header },
@@ -328,16 +328,16 @@ describe('webhook inbound messages', () => {
     expect(ownerTextsOf({ history: await historyOf({ account }) })).toEqual(['Oi']);
   });
 
-  test('WI-27 skips a foreign phone number id and logs it without a phone number', async () => {
+  test('WI-27 refuses a foreign phone number id as unattributed and logs it without a phone number', async () => {
     const spies = spyOnLogs();
     const account = await seedAccount({ agent: 'alpha' });
     const notification = notificationOf({
       changes: [changeOf({ phoneNumberId: FOREIGN_PHONE_NUMBER_ID, messages: [ownerText({ account, id: 'wamid.WI27', text: 'Oi' })] })],
     });
     const response = await postNotification({ notification });
-    expect(response.status).toBe(STATUS_OK);
+    expect(response.status).toBe(STATUS_UNAUTHORIZED);
     expect(ownerTextsOf({ history: await historyOf({ account }) })).toEqual([]);
-    expect(loggedText({ spies })).toContain(OperatorEvent.InboundForeignNumber);
+    expect(loggedText({ spies })).toContain(OperatorEvent.InboundUnattributed);
     expect(loggedText({ spies })).not.toContain(account.phone);
   });
 
@@ -378,7 +378,7 @@ describe('webhook inbound messages', () => {
     expect(occurrencesOf({ text: loggedText({ spies }), event: OperatorEvent.InboundUnmapped })).toBe(1);
   });
 
-  test('WI-31 stores the change of our number beside a foreign one', async () => {
+  test('WI-31 skips the change of a foreign number, logs it and stores the change of ours', async () => {
     const spies = spyOnLogs();
     const account = await seedAccount({ agent: 'alpha' });
     const notification = notificationOf({
@@ -391,6 +391,7 @@ describe('webhook inbound messages', () => {
     expect(response.status).toBe(STATUS_OK);
     expect(ownerTextsOf({ history: await historyOf({ account }) })).toEqual(['Oi']);
     expect(occurrencesOf({ text: loggedText({ spies }), event: OperatorEvent.InboundForeignNumber })).toBe(1);
+    expect(occurrencesOf({ text: loggedText({ spies }), event: OperatorEvent.InboundUnattributed })).toBe(0);
   });
 
   test('WI-32 skips a change with another field', async () => {
