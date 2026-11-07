@@ -355,29 +355,30 @@ fix_line=$(DOCTOR_PATH="$doctor_bin" "$here/doctor.sh" --fix jq)
 [[ "$fix_line" == "brew install jq" ]] || { echo "FAIL doctor --fix prints the fix alone: $fix_line"; failures=$((failures + 1)); }
 
 wrangler_fix='wrangler is logged in for this OS user; run `wrangler logout` and deploy with a scoped CLOUDFLARE_API_TOKEN exported only in your own shell'
-wrangler_missing_line='^wrangler \| missing \| required \| lost: [^|]+ \| fix: wrangler is logged in for this OS user; run `wrangler logout` and deploy with a scoped CLOUDFLARE_API_TOKEN exported only in your own shell$'
+wrangler_warning_line='^wrangler \| warning \| warning \| lost: [^|]+ \| fix: wrangler is logged in for this OS user; run `wrangler logout` and deploy with a scoped CLOUDFLARE_API_TOKEN exported only in your own shell$'
 
 stub_all; log_out
-expect_match "doctor: no login is ok" "$(doctor_line Darwin wrangler)" '^wrangler \| ok \| required \|'
+expect_match "doctor: no login is ok" "$(doctor_line Darwin wrangler)" '^wrangler \| ok \| warning \|'
 
 log_in_with "$doctor_home/Library/Preferences/.wrangler/config/default.toml"
 report=$(doctor Darwin)
-expect_match "doctor: a macOS config is a missing required line" "$(doctor_line Darwin wrangler)" "$wrangler_missing_line"
-expect_match "doctor: a login is counted" "$report" 'doctor: 1 missing required, 0 missing optional'
-doctor_exit "doctor: a login exits 1" 1 Darwin
+expect_match "doctor: a macOS config is a warning line" "$(doctor_line Darwin wrangler)" "$wrangler_warning_line"
+expect_match "doctor: a login is not counted as missing" "$report" 'doctor: 0 missing required, 0 missing optional'
+expect_match "doctor: a login prints the warning sentence" "$report" 'doctor: warning: wrangler is logged in for this OS user; run `wrangler logout`'
+doctor_exit "doctor: a login exits 0" 0 Darwin
 stub_all
 
 log_in_with "$doctor_home/.wrangler/config/default.toml"
-expect_match "doctor: a legacy config is missing" "$(doctor_line Darwin wrangler)" "$wrangler_missing_line"
+expect_match "doctor: a legacy config is a warning" "$(doctor_line Darwin wrangler)" "$wrangler_warning_line"
 rm -rf "$doctor_home/.wrangler"
 
 log_in_with "$xdg_wrangler_config"
-expect_match "doctor: an XDG config is missing" "$(doctor_line Darwin wrangler)" "$wrangler_missing_line"
+expect_match "doctor: an XDG config is a warning" "$(doctor_line Darwin wrangler)" "$wrangler_warning_line"
 log_out
 
-expect_match "doctor: an exported API token is missing" "$(CLOUDFLARE_API_TOKEN=scoped-token doctor_line Darwin wrangler)" "$wrangler_missing_line"
-expect_match "doctor: an exported API key is missing" "$(CLOUDFLARE_API_KEY=global-key doctor_line Darwin wrangler)" "$wrangler_missing_line"
-expect_match "doctor: a skipped wrangler is printed as skipped" "$(CLOUDFLARE_API_TOKEN=scoped-token doctor_line Darwin wrangler wrangler)" '^wrangler \| skipped \| required \|'
+expect_match "doctor: an exported API token is a warning" "$(CLOUDFLARE_API_TOKEN=scoped-token doctor_line Darwin wrangler)" "$wrangler_warning_line"
+expect_match "doctor: an exported API key is a warning" "$(CLOUDFLARE_API_KEY=global-key doctor_line Darwin wrangler)" "$wrangler_warning_line"
+expect_match "doctor: a skipped wrangler is printed as skipped" "$(CLOUDFLARE_API_TOKEN=scoped-token doctor_line Darwin wrangler wrangler)" '^wrangler \| skipped \| warning \|'
 
 fix_line=$(DOCTOR_PATH="$doctor_bin" "$here/doctor.sh" --fix wrangler)
 [[ "$fix_line" == "$wrangler_fix" ]] || { echo "FAIL doctor --fix wrangler: $fix_line"; failures=$((failures + 1)); }
