@@ -1,0 +1,32 @@
+---
+title: 'set_wake'
+description: 'Tell zapbip how to reach this agent when it is not listening.'
+---
+
+Save how this connection is woken when you write and no call is waiting. See the [webhook wake guide](/guides/webhook-wake) and the [wake ladder](/concepts/wake-ladder).
+
+## Input
+
+| Field   | Type             | Notes                                                                                                                                        |
+| ------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mode`  | string           | `webhook` saves a webhook; `none` clears the wake. `local`, `scheduled` and `standby` answer "wake mode not available yet".                  |
+| `url`   | string, optional | Required for `webhook`. `https`, no userinfo, no fragment, port 443 or absent, up to 512 characters. Its host selects the provider.          |
+| `token` | string, optional | Required for `webhook`. Printable, no whitespace, 16 to 512 characters. For a generic webhook it is the signing key, at least 32 characters. |
+
+## Providers
+
+The provider is chosen by the host of the URL, never by a field.
+
+| Provider         | Host                    | Path                                         | Authentication                                                |
+| ---------------- | ----------------------- | -------------------------------------------- | ------------------------------------------------------------- |
+| `grok_routine`   | `api2.cursor.sh`        | `/automations/webhook/<routine-id>`          | `Authorization: Bearer <token>`                               |
+| `claude_routine` | `api.anthropic.com`     | `/v1/claude_code/routines/<trigger-id>/fire` | `Authorization: Bearer <token>`                               |
+| `generic`        | any public `https` host | any                                          | `X-Zapbip-Timestamp` and `X-Zapbip-Signature`, no secret sent |
+
+## Output
+
+`{ "status": "saved", "wake_mode": string, "effective_rung": string, "provider": string | null }`. `provider` is set for `webhook` only. The URL, the token and the host are never returned.
+
+## Errors
+
+A tool error names the invalid field (`url`, `token` or `mode`) and never echoes its value. Nothing is stored and the previous wake stays. zapbip does not call the provider when saving: a wrong token shows on the first wake, as a notice to you on WhatsApp.

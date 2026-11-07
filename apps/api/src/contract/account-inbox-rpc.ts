@@ -21,6 +21,7 @@ import type {
   StoredMedia,
   UploadClaim,
 } from '@zapbip/core';
+import type { DevWakeRpc, WakeRpc } from './wake-rpc';
 import type { InboxErrorCode, ChannelErrorKind, OwnerLocale, TemplateKind } from '@zapbip/types';
 
 export type CallOutcome<Value> = { ok: true; value: Value } | { ok: false; errorCode: InboxErrorCode | ChannelErrorKind; message: string };
@@ -35,7 +36,7 @@ export type ScreenEntry = {
   options: string[];
 };
 
-export interface AccountInboxRpc {
+export interface AccountInboxRpc extends WakeRpc {
   sendText(input: AgentRequest<SendTextInput>): Promise<CallOutcome<SendResult>>;
   sendMedia(input: AgentRequest<SendMediaInput>): Promise<CallOutcome<SendResult>>;
   sendLocation(input: AgentRequest<SendLocationInput>): Promise<CallOutcome<SendResult>>;
@@ -57,7 +58,7 @@ export interface AccountInboxRpc {
   }): Promise<CallOutcome<{ messageId: string | null; agent: string | null; duplicate: boolean }>>;
 }
 
-export interface DevAccountInboxRpc extends AccountInboxRpc {
+export interface DevAccountInboxRpc extends AccountInboxRpc, DevWakeRpc {
   readScreen(): Promise<ScreenEntry[]>;
   advanceClock(input: { advanceMs: number }): Promise<number>;
 }

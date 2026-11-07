@@ -25,3 +25,4 @@ One row per folder, in the order the features ship; a row that turns `Shipped <d
 | Feature | Delivers | Status |
 |---------|----------|--------|
 | [`agent-inbox-core`](agent-inbox-core/) | The core, the durable inbox per account, the MCP contract, the 24-hour window, routing and media, with a WhatsApp test double for development | Shipped 2026-11-06 ([PR #2](https://github.com/dhyegocalota/zapbip/pull/2)) |
+| [`webhook-wake`](webhook-wake/) | The webhook wake rung: `set_wake`, Grok Bot and claude.ai routine webhooks, a generic signed webhook, coalescing, retries and encrypted targets | Shipped 2026-11-06 ([PR #3](https://github.com/dhyegocalota/zapbip/pull/3)) |
