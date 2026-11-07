@@ -58,7 +58,7 @@ function requirementBlocks({ text }: { text: string }): RequirementBlock[] {
   return text
     .replace(/\\\n/g, ' ')
     .split('\n')
-    .map((line) => line.trim())
+    .map((line) => line.replace(/\s+/g, ' ').trim())
     .filter((line) => line !== '' && !line.startsWith('#'))
     .map((line) => {
       const [head, ...hashes] = line.split(HASH_FLAG);
