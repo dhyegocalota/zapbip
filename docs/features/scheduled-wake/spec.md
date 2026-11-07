@@ -1,6 +1,6 @@
 # Scheduled wake and standby
 
-**Status:** Building
+**Status:** Shipped 2026-11-07
 **Tier:** 🟡
 **Owner approval:** approved 2026-11-06 (owner delegated)
 **ADRs:** [0007](../../adr/0007-a-durable-inbox-and-a-wake-ladder.md), [0024](../../adr/0024-a-standby-gets-a-copy-of-the-owner-message.md), [0025](../../adr/0025-a-stale-poller-degrades-the-effective-rung.md)
