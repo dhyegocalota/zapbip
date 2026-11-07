@@ -22,7 +22,8 @@ describe('Cursor and Gemini CLI sections', () => {
     expect(text).toContain(`npx zapbip@${ZAPBIP_NPM_VERSION} listen`);
     expect(text).toContain('background terminal');
     expect(text).not.toContain('set_wake');
-    expect(text).toContain('gemini --yolo -p "');
+    expect(text).toContain('gemini -p "');
+    expect(text).not.toContain('--yolo');
     expect(text).not.toContain('scheduled');
   });
 

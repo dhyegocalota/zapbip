@@ -118,4 +118,16 @@ describe('Hermes and OpenClaw confirmed install steps', () => {
     expect(text).toContain('channels.zapbip.connectionLink');
     expect(text).toContain(CONNECTION_LINK);
   });
+
+  test.each([
+    { locale: OwnerLocale.EnglishUs, permissionNotice: 'reads your messages' },
+    { locale: OwnerLocale.PortugueseBrazil, permissionNotice: 'lê as suas mensagens' },
+  ])(
+    'F4b OpenClaw tells the owner in $locale what the plugin may do before the install command',
+    ({ locale: noticeLocale, permissionNotice }) => {
+      const text = renderOpenClawSection(sectionInput({ locale: noticeLocale }));
+      expect(text).toContain(permissionNotice);
+      expect(text.indexOf(permissionNotice)).toBeLessThan(text.indexOf('openclaw plugins install'));
+    },
+  );
 });
