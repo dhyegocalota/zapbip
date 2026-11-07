@@ -25,7 +25,7 @@ Setup for every area: no real credentials, no network to third parties. The conn
 - [ ] `test_pong_is_ignored_without_log` — input: text `{"type":"pong"}`, the exact pong text from `libs/types`; expected: returns the pong marker and no rejection is logged.
 - [ ] `test_binary_frame` — input: bytes `b"\x00\x01"`, `is_binary` true; expected: not ok, reason `binary_frame`.
 - [ ] Edge: boundary size — input: a valid `messages` frame of exactly 65 536 bytes; expected: ok.
-- [ ] Edge: over the limit — input: a frame of 65 537 bytes; expected: not ok, reason `frame_too_large`, no body in the log.
+- [ ] Edge: over the limit — input: a frame of 65 537 bytes; expected: no parse-level check exists, the transport cap (`max_size`) has already closed the socket (see section F, F-3).
 - [ ] Edge: not JSON — input: `not json`; expected: not ok, reason `malformed`.
 - [ ] Edge: JSON array — input: `[]`; expected: not ok, reason `malformed`.
 - [ ] Edge: JSON `null` — input: `null`; expected: not ok, reason `malformed`.
@@ -106,7 +106,7 @@ Setup for every area: no real credentials, no network to third parties. The conn
 - [ ] `backoff_sequence_is_capped` — input: attempts `0..6`; expected: `1000, 2000, 4000, 8000, 16000, 30000, 30000` (the function from `libs/types` values).
 - [ ] `abort_during_backoff_returns` — input: abort signal during a 30 000 ms wait; expected: resolves before 100 ms of real time, no new socket.
 - [ ] Edge: a frame with an unknown type — input: `{"type":"zzz"}`; expected: dropped, a `frame_rejected` line with `reason: "unknown_type"` and no body.
-- [ ] Edge: a frame over 65 536 bytes — input: 65 537 bytes; expected: dropped, `frame_rejected` with `frame_too_large`.
+- [ ] Edge: a frame over 65 536 bytes — input: 65 537 bytes; expected: the transport cap (`maxPayload`) closes the socket with `1006` and the plugin reconnects; no `frame_rejected` line.
 
 ## O-2 OpenClaw handoff (`test/unit/handoff.test.ts`)
 
@@ -186,11 +186,11 @@ Setup: the zapbip stack runs over HTTPS with a local self-signed certificate; th
 - [ ] E1 OpenClaw happy path — input: the owner simulator posts `"oi"`; expected: within 30 s the fake WhatsApp sender receives the fake model's reply, and the MCP route logs one `tools/call` `send_message` from the plugin.
 - [ ] E2 Hermes happy path — input: as E1 against the Hermes container; expected: the same, reply within 30 s, one `send_message` call.
 - [ ] E3 Restart while idle — input: stop the OpenClaw container, the owner posts `"um"`, start the container; expected: `"um"` is handed off once after the reconnect and the owner gets exactly one reply.
-- [ ] E4 Replacement — input: a second plugin container on the same connection; expected: the first logs `connector_replaced` and exits `0`; the second gets the unread messages; one reply per message.
+- [ ] E4 Replacement — input: a second plugin container on the same connection; expected: the first logs `connector_replaced` and `auto-restart skipped, terminal disconnect`, never `auto-restart attempt`, and keeps running with the account blocked (it does not exit); the second gets the unread messages; one reply per message.
 - [ ] E5 Fallback, plugin down — input: stop the plugin container, set `scheduled` with `interval_minutes: 1`, the runner calls `check_inbox` every 60 s (compressed to 2 s in the fixture); owner posts `"dois"`; expected: `check_inbox` returns `"dois"` within one tick, the agent's reply reaches the fake sender.
 - [ ] E6 Fallback restored after reattach — input: restart the plugin after E5; expected: stored mode goes `local`, the next owner message is handed off by the plugin, not by the poll.
 - [ ] E7 Owner not in allowlist (Hermes) — input: a second sender with the same connection path, not the owner; expected: refused by the platform allowlist, no model call.
-- [ ] E8 No secret in container logs — input: `docker logs` of both containers after E1 to E6; expected: no `zb_conn_` string.
+- [ ] E8 No secret in container logs — input: `docker logs` of both containers after E1 to E6; expected: no `zb_conn_` string. With Hermes at DEBUG, a refused link and the MCP block configured, the log holds the Hermes MCP-failure line proving the client tried and failed, and still no `zb_conn_`.
 - [ ] E9 Media without caption — input: owner posts an image without caption; expected: the agent receives `CHANNEL_HANDOFF_NO_TEXT_BY_KIND.image` text and replies once.
 - [ ] E10 Choice reply — input: owner taps a button of an `ask` that already timed out (no live waiter); expected: the agent receives the selected title as text, once.
 - [ ] E11 Clean shutdown — input: SIGTERM to each container; expected: exit `0` within 5 s, the socket closed, no `done` for an unhandled message.
@@ -199,13 +199,16 @@ Setup: the zapbip stack runs over HTTPS with a local self-signed certificate; th
 
 - [ ] F-1 Revocation stop — input: the server closes the plugin socket with `4003`; expected: no reconnect, no further probe, the plugin ends with exit code `1` (OpenClaw `startAccount` throws, Hermes task returns `1`).
 - [ ] F-2 Re-probe after a never-opened attempt — input: the upgrade fails once, then the probe answers `426`; expected: one more probe, then a connection; a probe answering `401` ends with exit code `1` and no connection.
-- [ ] F-3 Frame cap — input: a text frame one byte over `CONNECTOR_FRAME_MAX_BYTES`; expected: dropped with `frame_rejected` reason `frame_too_large`, the socket stays open, nothing handed off.
+- [ ] F-3 Frame cap — input: a text frame one byte over `CONNECTOR_FRAME_MAX_BYTES`; expected: the transport cap (Hermes `max_size`, OpenClaw `maxPayload`) closes the socket, the plugin logs `connector_closed` and reconnects, no `frame_rejected` line, nothing handed off; the parse-level size check was dead code and is removed.
 - [ ] F-4 Unknown and missing kind — input: a `messages` frame whose message has an unknown `kind`, and one with no `kind`; expected: the whole frame is `frame_rejected` as `malformed`, nothing handed off.
-- [ ] F-5 Reply failure is logged — input: the outbound `send_message` fails after the model answered; expected: one `plugin_reply_failed` line with the message id and no reply text or secret in it, the handoff still counts as done.
+- [ ] F-5 Reply failure is logged — input: the outbound `send_message` fails after the model answered; expected: OpenClaw logs one `plugin_reply_failed` line with the message id and no reply text or secret in it; Hermes has no such event and returns `SendResult(success=False)`; in both the handoff still counts as done.
 - [ ] F-6 Redaction, httpx2 and the root handlers — input: a record naming `/c/zb_conn_<secret>/` logged on `httpx2`, `mcp.client.streamable_http`, `mcp.client.auth.oauth2` and `tools.mcp_tool_discovery` at DEBUG; expected: every root handler writes `/c/redacted/` and never the secret, and `connect()` covers handlers added after import.
 - [ ] F-7 MCP end to end — input: each gateway with the documented MCP block and the owner message `ping-tool-<product>`; expected: the model searches for `inbox`, and a tool result that is not an echo of the query names `check_inbox`; no `zb_conn_` in any log, Hermes at DEBUG included.
 - [ ] F-8 Replacement never answers twice — input: a second OpenClaw container takes the connection while the first is attached, then one owner message; expected: the first logs `connector_replaced`, OpenClaw does not log `auto-restart` for it, the fake model gets exactly one call mentioning the message, the owner screen shows exactly one reply, and 20 s later still one.
 - [ ] F-9 Linux bridge host — input: `docker network inspect` prints an empty string, `::` or text that is not IPv4; expected: the fixture throws naming IPv4 before any server binds.
+- [ ] F-10 Doctor and Python 3.14 — input: `python3` reporting 3.14 with `pytest` and `mypy` importable; expected: the doctor line is `python | ok`; 3.15 or 3.10 stays `missing`.
+- [ ] F-11 Spec install command — input: the spec rungs table; expected: it names `openclaw plugins install @zapbip/openclaw-plugin@0.1.0 --force --accept-capabilities`, the command the docs and the Docker suite run.
+- [ ] F-12 No fallbacks in the review-fixed tests — input: `fake-model.ts`, `plugin-versions.test.ts`, `channel.test.ts`; expected: no `??` remains, the fake model throws nothing it cannot reach because the search tool is passed in.
 
 ## I Install sections (checked in `install-skills` tests, against this slice's facts)
 

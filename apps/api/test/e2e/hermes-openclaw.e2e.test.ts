@@ -21,6 +21,7 @@ import {
   type Container,
   containerExitCode,
   containerLogs,
+  isContainerRunning,
   removeContainer,
   restartStoppedContainer,
   stopContainer,
@@ -52,7 +53,9 @@ const POLL_INTERVAL_MS = 500;
 const SETTLE_WINDOW_MS = 8 * SECOND_MS;
 const UNKNOWN_SECRET_LENGTH = 43;
 const RESTART_BACKOFF_WINDOW_MS = 20 * SECOND_MS;
+const HERMES_MCP_FAILURE_LINE = "Failed to connect to MCP server 'zapbip'";
 const OPENCLAW_AUTO_RESTART_LINE = 'auto-restart attempt';
+const OPENCLAW_AUTO_RESTART_SKIPPED_LINE = 'auto-restart skipped, terminal disconnect';
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 const CLEAN_SHUTDOWN_LIMIT_MS = 5 * SECOND_MS;
 const CLEAN_EXIT_CODE = 0;
@@ -398,10 +401,11 @@ describe.skipIf(!isEnabled)('hermes and openclaw plugins against the development
         hasMcpServer: true,
       });
       testContainers.push(container);
+      await awaitLog({ container, pattern: HERMES_MCP_FAILURE_LINE, timeoutMs: HERMES_BOOT_TIMEOUT_MS });
       await awaitLog({ container, pattern: ConnectorLogEvent.ConnectorClosed, timeoutMs: HERMES_BOOT_TIMEOUT_MS });
       await delay(SETTLE_WINDOW_MS);
       const logs = await containerLogs({ container });
-      expect(logs).toMatch(/mcp/i);
+      expect(logs).toContain(HERMES_MCP_FAILURE_LINE);
       expect(logs).not.toContain(SECRET_PREFIX);
     },
     TEST_TIMEOUT_MS,
@@ -459,7 +463,7 @@ describe.skipIf(!isEnabled)('hermes and openclaw plugins against the development
   );
 
   test(
-    'E4 OpenClaw replacement: the older plugin is told it was replaced and exits cleanly, the newer one answers once',
+    'E4 OpenClaw replacement: the older plugin is told it was replaced and stays up blocked without restarting, the newer one answers once',
     async () => {
       const first = await startClient({
         product: ClientProduct.OpenClaw,
@@ -480,8 +484,10 @@ describe.skipIf(!isEnabled)('hermes and openclaw plugins against the development
       const replies = (await readScreen({ account: second.account })).filter((entry) => entry.text.includes(replyTo({ token: 'ping-e4' })));
       expect(replies).toHaveLength(1);
       expect(fakeModel.requestsMentioning({ text: 'ping-e4' })).toHaveLength(1);
-      expect(await containerLogs({ container: first.container })).not.toContain(OPENCLAW_AUTO_RESTART_LINE);
-      expect(await containerExitCode({ container: first.container })).toBe(CLEAN_EXIT_CODE);
+      const olderLogs = await containerLogs({ container: first.container });
+      expect(olderLogs).toContain(OPENCLAW_AUTO_RESTART_SKIPPED_LINE);
+      expect(olderLogs).not.toContain(OPENCLAW_AUTO_RESTART_LINE);
+      expect(await isContainerRunning({ container: first.container })).toBe(true);
     },
     TEST_TIMEOUT_MS,
   );

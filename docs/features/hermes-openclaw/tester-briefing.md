@@ -26,7 +26,7 @@ No red tests in Step 0. `apps/hermes-plugin/tests/unit/test_constants.py` is a p
 
 ### Hypotheses to attack
 
-1. Hypothesis: `doctor.sh` reports `python` as missing when `python3` is outside 3.11-3.13 or `pytest`/`mypy` do not import, and never installs. Break it by: running it under 3.14 and under a venv without the requirements.
+1. Hypothesis: `doctor.sh` reports `python` as missing when `python3` is outside 3.11-3.14 or `pytest`/`mypy` do not import, and never installs. Break it by: running it under 3.14 and under a venv without the requirements.
 2. Hypothesis: the Hermes constants equal the `libs/types` values. Break it by: changing one text in `channel-plugin.ts` and checking whether any test notices (none compares the two sides yet).
 3. Hypothesis: `neverBuiltDependencies` lets `pnpm install --frozen-lockfile` pass on Node 24.7. Break it by: installing on a clean clone.
 
@@ -221,7 +221,7 @@ Owner delegated 2026-11-06. Commit f010684 (`test(plugins): forwarded messages .
 | bundle | `expected -1 to be greater than or equal to 0` | same feat commit |
 | S4 | 2 failed (traceback, stack_info); httpx2 1 failed | `fix(hermes): redact ...` |
 | R5 | `promise rejected "Error: segredo-da-resposta" instead of resolving` | `feat(openclaw): log a failed reply delivery ...` |
-| R8 | 12 failed (`KeyError: <MessageKind.IMAGE: 'image'>`, newline vs space) | `fix(hermes): one forwarded-prefix shape ...` |
+| R8 (4cb3f23) | 12 failed: parity `AttributeError: 'str' object has no attribute 'value'`, 9 handoff cases `KeyError: <MessageKind.IMAGE: 'image'>` and siblings, 2 `AssertionError` newline vs space | `fix(hermes): one forwarded-prefix shape ...` |
 | kind validation | 5 OpenClaw and 6 Hermes cases | `fix(plugins): reject a messages frame ...` |
 | S5, S6 | shape tests: workflow without `--require-hashes`; `0.0.0.0`; Hermes image tag only | the packaging and e2e commits |
 
@@ -244,7 +244,7 @@ Pins (green on arrival): the project and lock shape cases, the null `previousWak
 - The documented 1-minute `check_inbox` fallback job is not covered by the suite (no product scheduler is run); it stays an owner-run check, listed in `plan.md` Owner-run.
 - The registry command `openclaw plugins install @zapbip/openclaw-plugin@0.1.0` cannot be run until the package is published; the suite installs the packed archive with the same flags.
 - The fake model drives `tool_search` for the MCP case, not a real tool call to `check_inbox`; a real model run stays owner-run (V3).
-- `requires-python` allows 3.14 for the Hermes image, while the doctor and CI keep the development toolchain on 3.11 to 3.13.
+- `requires-python` allows 3.14 for the Hermes image, while the doctor accepts 3.11 to 3.14 and CI keeps the development toolchain on 3.13.
 - The E4 flake seen at 892fac1 is fixed in fix round 2 below.
 
 ## Fix round 2 (E4 double answer, review re-checks)
@@ -265,11 +265,12 @@ Seen in a Docker run (container logs of the failing E4): the server closes the o
 |---|---|---|---|
 | OpenClaw replaced account ends terminal | `promise rejected "Error: the zapbip connector stopped with …" instead of resolving` | ec10946 | ebb3948 |
 | OpenClaw 4001 exit code | `expected +0 to be 2` | ec10946 | ebb3948 |
-| Root-handler redaction (4 cases) | `NotImplementedError: redact_root_handlers is not implemented` | 3a25198 | 5e6757f |
+| Root-handler redaction (5 cases) | 3 `AssertionError: assert 'zb_conn_secret' not in 'connecting ...secret/mcp'`; 2 `NotImplementedError: redact_root_handlers is not implemented` | 3a25198 | 5e6757f |
 | Bounded Hermes dependencies | `expected false to be true` | c1a92f8 | 5a13e9b |
 | IPv4 bridge host (5 cases) | `Error: bridgeGatewayHostOf is not implemented` | 9973338 | 3f9f195 |
+| OpenClaw base image pinned by digest | `expected 'FROM node:24-slim\n...' to match /^FROM ...@sha256:[0-9a-f]{64}$/m` | 9973338 | 8e39d83 |
 
-Pins: Hermes replaced socket (f3e229b), OpenClaw digest, `onlyBuiltDependencies`, hashed build requirement, handoff test text.
+Pins: Hermes replaced socket (f3e229b), `onlyBuiltDependencies`, hashed build requirement, handoff test text.
 
 ### Hypotheses to attack
 
@@ -281,3 +282,32 @@ Pins: Hermes replaced socket (f3e229b), OpenClaw digest, `onlyBuiltDependencies`
 
 - The refused-link case uses an unknown secret, not a revoked one: the development stack has no revoke route.
 - Docker needs about 12 GB free in the Docker VM; a full disk surfaces as `Errno 28` inside the Hermes container and a missing `connector_connected`.
+
+## Fix round 3 (final reviewer, security, unit and docs testers), at 6daa58f
+
+### What changed
+
+- E4 now proves what happens: the replaced OpenClaw logs `auto-restart skipped, terminal disconnect`, never `auto-restart attempt`, and is still running (a running container reports exit code 0, so the old assertion proved nothing); the test is renamed.
+- E8 asserts a Hermes MCP-failure log line with the refused link, plus no `zb_conn_`.
+- No `??` left in `scripts/e2e/clients/fake-model.ts` (the search tool is passed in), `plugin-versions.test.ts` (throws) and `channel.test.ts` (defaults at the signature).
+- OpenClaw `LIFECYCLE_BLOCKED` constant replaces the inline `'blocked'`.
+- The parse-level frame size check was unreachable (the transport cap equals it and closes first); removed from both plugins, with its tests. The transport tests stay: Hermes `test_a_frame_over_the_limit_closes_the_socket_and_reconnects`, OpenClaw `drops the socket and reconnects on a frame one byte over the limit`. `FrameRejectionReason.FRAME_TOO_LARGE` stays in the Hermes enum because the parity test ties it to the shared enum.
+- Test-plan wording: F-3 (closes and reconnects), F-5 (OpenClaw only logs `plugin_reply_failed`; Hermes returns `SendResult(success=False)`), E4, E8; new rows F-10 to F-12.
+- Spec rungs table names the verified OpenClaw install command (the docs and the Docker suite run it; the flags are required by OpenClaw 2026.10.10, see round 1 note 5).
+- The doctor accepts Python 3.11 to 3.14; CI stays on 3.13.
+- Briefing corrections: round 1 red texts for 3a25198 (assertion on 3 cases, `NotImplementedError` on 2) and 4cb3f23 (`AttributeError` first, `KeyError` on the handoff cases); 9973338 is a red with two failing groups, green 3f9f195 (IPv4) and 8e39d83 (digest).
+
+### Red then green
+
+| Case | Red text | Red commit | Green commit |
+|---|---|---|---|
+| Doctor accepts Python 3.14 | `output did not match /^python \| ok \|/: python \| missing \| required ...` | 5acf4b4 | e707de4 |
+| Spec names the verified OpenClaw install command | `expected '...' to contain 'openclaw plugins install @zapbip/openclaw-plugin@0.1.0 --force --accept-capabilities'` | 5acf4b4 | e707de4 |
+
+Pins and test-only changes: E4 and E8 assertions, the `??` removals, the dead-check removal (the transport tests that cover the behaviour already existed), the briefing corrections.
+
+### Hypotheses to attack
+
+1. Hypothesis: the replaced OpenClaw never restarts the channel and stays blocked while running; break it by waiting past the restart backoff and replacing again.
+2. Hypothesis: an oversize frame closes and reconnects both plugins with no body in any log.
+3. Hypothesis: `pnpm verify` passes under Python 3.14 and 3.13.

@@ -1,6 +1,6 @@
 # 0028. The native channel plugin is the first rung for OpenClaw and Hermes
 
-- Status: Proposed
+- Status: Accepted (owner delegated 2026-11-06)
 - Date: 2026-11-06
 - Deciders: Dhyego Calota (owner, delegated); Claude (advisor)
 - Inspired by: [ADR 0007](0007-a-durable-inbox-and-a-wake-ladder.md) (the wake ladder), [ADR 0022](0022-a-hibernatable-websocket-for-the-local-connector.md) (the connector socket), `docs/features/hermes-openclaw/spec.md` (research of 2026-11-06, OpenClaw channel plugin SDK and Hermes platform adapters)

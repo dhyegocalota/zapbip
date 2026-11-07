@@ -1,6 +1,6 @@
 # 0029. A plugin acknowledges a handoff, and a listener does not
 
-- Status: Proposed
+- Status: Accepted (owner delegated 2026-11-06)
 - Date: 2026-11-06
 - Deciders: Dhyego Calota (owner, delegated); Claude (advisor)
 - Inspired by: [ADR 0022](0022-a-hibernatable-websocket-for-the-local-connector.md) (`done` frame and unread re-send), [ADR 0028](0028-the-native-channel-plugin-is-the-first-rung-for-openclaw-and-hermes.md), `docs/features/hermes-openclaw/plan.md` decision D3
