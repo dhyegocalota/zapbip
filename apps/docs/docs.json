@@ -24,32 +24,62 @@
           },
           {
             "group": "Agents",
-            "pages": ["agents/supported-agents", "guides/webhook-wake"]
+            "pages": [
+              "agents/supported-agents",
+              "agents/claude-code",
+              "agents/codex",
+              "agents/claude-ai",
+              "agents/chatgpt",
+              "agents/cursor",
+              "agents/grok-bot",
+              "agents/grok-web",
+              "agents/hermes",
+              "agents/openclaw",
+              "agents/gemini-cli",
+              "agents/any-mcp-client"
+            ]
           },
           {
             "group": "Features",
             "pages": [
               "features/send-messages-and-media",
               "features/ask-with-buttons-and-lists",
+              "features/owner-starts-conversations",
               "features/many-agents-on-one-number",
+              "features/whatsapp-commands",
               "features/the-24-hour-window"
             ]
           },
           {
             "group": "Help",
-            "pages": ["help/troubleshooting", "help/faq", "help/about"]
+            "pages": [
+              "help/troubleshooting",
+              "help/faq",
+              "help/privacy-and-security",
+              "help/revoke-and-rotate-keys",
+              "help/delete-your-account",
+              "help/about"
+            ]
           },
           {
             "group": "For developers",
             "pages": [
               "developers/any-mcp-client",
+              "developers/errors",
               "developers/local-connector",
               "developers/background-running",
-              "developers/errors",
-              "guides/webhook-wake",
+              "developers/webhook-wake",
               {
                 "group": "Concepts",
-                "pages": ["concepts/inbox", "concepts/questions", "concepts/24-hour-window", "concepts/routing", "concepts/wake-ladder"]
+                "pages": [
+                  "concepts/inbox",
+                  "concepts/questions",
+                  "concepts/24-hour-window",
+                  "concepts/routing",
+                  "concepts/wake-ladder",
+                  "concepts/whatsapp-channel",
+                  "concepts/owner-notices"
+                ]
               },
               {
                 "group": "MCP tools",
@@ -80,29 +110,51 @@
           },
           {
             "group": "IAs",
-            "pages": ["pt-br/agents/supported-agents", "pt-br/guides/webhook-wake"]
+            "pages": [
+              "pt-br/agents/supported-agents",
+              "pt-br/agents/claude-code",
+              "pt-br/agents/codex",
+              "pt-br/agents/claude-ai",
+              "pt-br/agents/chatgpt",
+              "pt-br/agents/cursor",
+              "pt-br/agents/grok-bot",
+              "pt-br/agents/grok-web",
+              "pt-br/agents/hermes",
+              "pt-br/agents/openclaw",
+              "pt-br/agents/gemini-cli",
+              "pt-br/agents/any-mcp-client"
+            ]
           },
           {
             "group": "Funcionalidades",
             "pages": [
               "pt-br/features/send-messages-and-media",
               "pt-br/features/ask-with-buttons-and-lists",
+              "pt-br/features/owner-starts-conversations",
               "pt-br/features/many-agents-on-one-number",
+              "pt-br/features/whatsapp-commands",
               "pt-br/features/the-24-hour-window"
             ]
           },
           {
             "group": "Ajuda",
-            "pages": ["pt-br/help/troubleshooting", "pt-br/help/faq", "pt-br/help/about"]
+            "pages": [
+              "pt-br/help/troubleshooting",
+              "pt-br/help/faq",
+              "pt-br/help/privacy-and-security",
+              "pt-br/help/revoke-and-rotate-keys",
+              "pt-br/help/delete-your-account",
+              "pt-br/help/about"
+            ]
           },
           {
             "group": "Para desenvolvedores",
             "pages": [
               "pt-br/developers/any-mcp-client",
+              "pt-br/developers/errors",
               "pt-br/developers/local-connector",
               "pt-br/developers/background-running",
-              "pt-br/developers/errors",
-              "pt-br/guides/webhook-wake",
+              "pt-br/developers/webhook-wake",
               {
                 "group": "Conceitos",
                 "pages": [
@@ -110,7 +162,9 @@
                   "pt-br/concepts/questions",
                   "pt-br/concepts/24-hour-window",
                   "pt-br/concepts/routing",
-                  "pt-br/concepts/wake-ladder"
+                  "pt-br/concepts/wake-ladder",
+                  "pt-br/concepts/whatsapp-channel",
+                  "pt-br/concepts/owner-notices"
                 ]
               },
               {
