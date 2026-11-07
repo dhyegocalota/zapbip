@@ -151,3 +151,29 @@ Pins (green when they landed): the fixture tests built on test-local validators 
 - The accounts-and-keys docs checks (Step 27's second red) are not on this base: there is no test to move to `features/whatsapp-commands` and `help/delete-your-account`.
 - Step 32 facts rows depending on accounts-and-keys constants not on this branch: facts at the accounts-and-keys merge (the `10 minutes`, `30 minutes` and `8` figures are typed from its copy and spec).
 - Mintlify on port 3310 was held by another lane's server, so the spec ran against a scratch config on another port (deleted).
+
+## G2 agents A (branch `feat/docs-experience-g2`)
+
+### What changed
+
+- `apps/docs/e2e/agents-a.spec.ts`: per language and per client of `claude-code`, `codex`, `claude-ai`, `chatgpt`, `cursor`: the four headings in order, at least one chat, the rung label, the delay from `CLIENT_LISTEN_FACTS` (skipped when none), `50`, and the `LISTEN_STATEMENT_TOKENS`; the Claude Code channel flag, the Codex `900` and "one call", the claude.ai hourly safety net, the Cursor `npx zapbip@<connector version> listen` (read from `apps/connector/package.json`), the background-running link on Claude Code and Codex; `supported-agents` has eleven rows, each linking its page.
+- The five pages and `supported-agents`, in `apps/docs/agents/` and `apps/docs/pt-br/agents/`. English reworded from `origin/feat/install-skills`; the pt-BR twins are written natively. Setup shows the number, the `new agent <client>` chat, the install prompt snippet and the first-message chat.
+
+### Red today, green after
+
+| Test | Red before the change because | Green after because |
+|------|--------------------------------|---------------------|
+| `agents-a.spec.ts` (`32168d1`: 28 failed, 2 passed; the matrix row test is a pin) | `expect(locator).toBeVisible()` on `#content-area [role="group"][aria-label^="WhatsApp"]` (skeleton pages had no chat); `Expected substring: "claude --dangerously-load-development-channels server:zapbip-channel"` | pages `f7337ef` (30 passed) |
+
+### Hypotheses for the tester
+
+- Each page's How it listens states its rung label, its delay and the 50 second pending loop in the `LISTEN_STATEMENT_TOKENS` words, in both languages.
+- Claude Code and Codex are the only agent pages linking `developers/background-running`; no agent page links another developer page.
+- The quoted install prompt and the `new agent` replies equal the install copy and the accounts-and-keys copy.
+
+### Gaps
+
+- Claude Code's flag is `server:zapbip-channel` (install-skills copy, which registers the `zapbip-channel` server). The local-connector guide on its branch says `server:zapbip`. They disagree; the owner-run channel check decides, and the other page changes.
+- `install-guides.test.ts` is not on this base. On `feat/install-skills` it demands exactly three sections per guide (IS-D1); these pages have four. At the facts merge that test changes to the four headings (the plan's path update) or it fails.
+- Step 17 facts waiting on other merges: the pinned `npx zapbip@0.1.0 listen` (facts at the install-skills merge); the ChatGPT Scheduled wording and the `1 hour` row (facts at the scheduled-wake merge). Commands `connect --client`, `listen` and `channel` equal `apps/connector` help on this base.
+- Mintlify was reached through `reuseExistingServer`; the walk ran on the configured port.

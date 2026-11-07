@@ -1,24 +1,32 @@
 ---
 title: Supported agents
-description: Which AI you can connect, and what each one can do.
+description: Which AI you can connect, and how each one hears you.
 ---
 
-| Agent                     | Wake rung | Two-way | Longest single wait | Page                                  |
-| ------------------------- | --------- | ------- | ------------------- | ------------------------------------- |
-| Claude Code               | Local     | Yes     | No limit            | [Claude Code](/agents/claude-code)    |
-| Codex                     | Local     | Yes     | 5 minutes, up to 15 | [Codex](/agents/codex)                |
-| Cursor                    | Local     | Yes     | Depends on the app  | [Cursor](/agents/cursor)              |
-| Gemini CLI                | Local     | Yes     | Depends on the app  | [Gemini CLI](/agents/gemini-cli)      |
-| Hermes                    | Local     | Yes     | Depends on the app  | [Hermes](/agents/hermes)              |
-| OpenClaw                  | Local     | Yes     | Depends on the app  | [OpenClaw](/agents/openclaw)          |
-| Grok Bot                  | Webhook   | Yes     | 2 minutes or more   | [Grok Bot](/agents/grok-bot)          |
-| claude.ai                 | Webhook   | Yes     | 4 minutes           | [claude.ai](/agents/claude-ai)        |
-| ChatGPT                   | Scheduled | Yes     | 5 minutes           | [ChatGPT](/agents/chatgpt)            |
-| Grok on the web           | Standby   | Yes     | 1 minute            | [Grok on the web](/agents/grok-web)   |
-| Any app that supports MCP | Inbox     | Yes     | Depends on the app  | [Any MCP app](/agents/any-mcp-client) |
+Pick the AI you use and open its page. Each page shows the same four things: what works, how that AI hears you, how to set it up from zero, and how to check it works. All of them send you messages, ask with buttons and lists, and wait for your answer for as long as it takes.
 
-You can start the conversation with any of them from WhatsApp, through the zapbip number.
+The wake type says how your message reaches the AI when you write first from WhatsApp. The expected delay is how long that takes once you write.
 
-## Starting the conversation
+| Agent                                     | Wake type | Expected delay | Page                                  |
+| ----------------------------------------- | --------- | -------------- | ------------------------------------- |
+| Claude Code                               | Local     | 7 seconds      | [Claude Code](/agents/claude-code)    |
+| Codex                                     | Local     | 6 seconds      | [Codex](/agents/codex)                |
+| Cursor                                    | Local     | Not measured   | [Cursor](/agents/cursor)              |
+| Gemini CLI                                | Local     | Not measured   | [Gemini CLI](/agents/gemini-cli)      |
+| Hermes                                    | Local     | Not measured   | [Hermes](/agents/hermes)              |
+| OpenClaw                                  | Local     | Not measured   | [OpenClaw](/agents/openclaw)          |
+| Grok Bot                                  | Webhook   | 9 seconds      | [Grok Bot](/agents/grok-bot)          |
+| claude.ai                                 | Webhook   | 16 seconds     | [claude.ai](/agents/claude-ai)        |
+| ChatGPT                                   | Scheduled | 1 hour         | [ChatGPT](/agents/chatgpt)            |
+| Grok on the web                           | Standby   | Not measured   | [Grok on the web](/agents/grok-web)   |
+| Any app with MCP (Model Context Protocol) | Inbox     | Not measured   | [Any MCP app](/agents/any-mcp-client) |
 
-Each AI keeps listening with no time limit, in the way its app allows: a channel or a background listener for Claude Code, a local connector for Codex, a webhook for Grok Bot, a scheduled task for claude.ai and ChatGPT, a standby for Grok on the web, and a plugin for Hermes and OpenClaw. Write first and your message reaches the AI; if it is not listening right now, your message waits and zapbip tells you so.
+## What each wake type means
+
+- **Local:** a connector or listener on your computer wakes the AI the moment you write.
+- **Webhook:** zapbip calls a link that belongs to the AI, and the AI starts.
+- **Scheduled:** the AI checks for your message on a timer, so it hears you at the next check.
+- **Standby:** another AI of yours, a Grok Bot, answers in its place.
+- **Inbox:** your message waits until the AI looks for it.
+
+If the AI is not listening right now, your message waits and zapbip tells you so. Nothing is lost.

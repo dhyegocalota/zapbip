@@ -3,10 +3,67 @@ title: Claude Code
 description: Conecte o Claude Code ao seu WhatsApp.
 ---
 
+import { Chat } from '/snippets/chat.jsx';
+import OfficialNumber from '/snippets/pt-br/official-number.mdx';
+import InstallPrompt from '/snippets/pt-br/install-prompt.mdx';
+
 ## O que funciona
+
+| Você quer                        | Claude Code                                                               |
+| -------------------------------- | ------------------------------------------------------------------------- |
+| Receber mensagens dele           | Texto, fotos, vídeos, áudios, documentos, localizações, contatos, reações |
+| Responder com um toque           | Botões e listas; ele espera o seu toque                                   |
+| Escrever primeiro pelo WhatsApp  | Sim, ele responde em cerca de 7 segundos, mesmo com a sessão parada       |
+| Deixar uma pergunta aberta horas | Sim, não há limite de tempo                                               |
+
+<Chat
+  messages={[
+    { name: 'Claude', text: 'A refatoração está pronta para o merge. Faço agora?', options: ['Sim', 'Ainda não'], time: '15:20' },
+    { you: true, text: 'Sim', time: '15:21' },
+  ]}
+/>
 
 ## Como ela escuta
 
+Tipo de despertar: **Local**. Um conector no seu computador acorda o Claude Code, que responde cerca de 7 segundos depois que você escreve.
+
+- Inicie o Claude Code com `claude --dangerously-load-development-channels server:zapbip-channel`. O canal do zapbip passa a empurrar cada mensagem do WhatsApp para a sessão aberta assim que ela chega.
+- Se a sessão estiver fechada, o conector a retoma em cerca de 7 segundos. Ficar parado não gasta tokens; cada mensagem custa um turno.
+- Mantenha o ouvinte rodando. Para ele continuar vivo depois de fechar o terminal, siga [Rode o conector como serviço](/pt-br/developers/background-running).
+
+Quando a sua IA faz uma pergunta, o zapbip a guarda e responde "pendente" no máximo a cada 50 segundos. Sua IA então chama de novo, e continua chamando de novo até você responder, sem limite de tempo.
+
 ## Configure do zero
 
+1. **Mande uma mensagem para o número do zapbip no WhatsApp.** Pode ser qualquer texto, por exemplo `oi`.
+
+   <OfficialNumber />
+
+2. **Peça um novo agente.** Agente é uma IA que você conecta.
+
+   <Chat
+     messages={[
+       { you: true, text: 'novo agente claude-code', time: '15:00' },
+       {
+         name: 'zapbip',
+         text: 'Agente claude-code criado. Cole no seu agente: Conecte-se ao meu WhatsApp pelo zapbip: leia https://zapbip.com/i/zb_inst_<code> e siga as instruções. Este link vale 30 minutos e funciona uma vez. Não o compartilhe. Se o link expirar ou for usado, envie "girar claude-code".',
+         time: '15:00',
+       },
+     ]}
+   />
+
+3. **Cole a linha no Claude Code.**
+
+   <InstallPrompt />
+
+   O Claude Code lê as instruções e as segue em ordem. Antes de mudar um arquivo ou uma configuração, ele diz qual é e espera o seu sim. O link é secreto, então não o deixe em conversas que você compartilha.
+
+4. **Diga sim.** O Claude Code adiciona o zapbip às ferramentas dele, salva uma skill do zapbip para toda sessão saber usar o WhatsApp e inicia um ouvinte. Depois reinicie o Claude Code para usar as ferramentas do zapbip.
+
 ## Confira se funciona
+
+Peça ao Claude Code para enviar `✅ instalado` ao seu WhatsApp. Deve chegar em poucos segundos.
+
+<Chat messages={[{ name: 'Claude', text: '✅ instalado', time: '15:03' }]} />
+
+Se nada chegar, veja [Solução de problemas](/pt-br/help/troubleshooting).
