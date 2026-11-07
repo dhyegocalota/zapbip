@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { DocsLanguage, DocsOnlyClient, InstallClient, PAGE_LANGUAGE_FOLDER } from '@zapbip/types';
+import { HERMES_INSTALL_COMMAND } from '../../../libs/core/src/install/prompts/connector-commands';
 import {
   AGENT_PAGE_HEADINGS,
   AGENT_PAGE_SECTIONS,
@@ -36,7 +37,7 @@ const GROK_WEB_STANDBY_WORDS: Record<DocsLanguage, string[]> = {
   [DocsLanguage.PortugueseBrazil]: ['Grok Bot', 'atende no lugar', GROK_WEB_CALL_CAP_SECONDS],
 };
 const PLUGIN_COMMAND_OF: Partial<Record<DocsAgentClient, string>> = {
-  [InstallClient.Hermes]: 'pip install zapbip-platform==0.1.0',
+  [InstallClient.Hermes]: HERMES_INSTALL_COMMAND,
   [InstallClient.OpenClaw]: 'openclaw plugins install @zapbip/openclaw-plugin@0.1.0 --force --accept-capabilities',
 };
 const CONNECTION_FILE_MODE_COMMAND = 'chmod 600';

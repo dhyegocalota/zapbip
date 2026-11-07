@@ -20,7 +20,7 @@ Everything here costs nothing within the free allowances. Cloudflare asks for a 
 
    The buckets `zapbip-media-staging` and `zapbip-media-production` and the D1 databases `zapbip-staging` and `zapbip-production` were created through the API on 2026-11-07 ([deploy.md](deploy.md), step 1).
 
-   Expect: the R2 overview shows no buckets and no error, or only those two buckets.
+   Expect: the R2 overview shows no buckets and no error, or only those two buckets. The packages buckets are created in step 6.
 
    If it fails: the payment method was refused; try another card. R2 cannot be skipped, because `MEDIA` is a bucket binding.
 
@@ -35,3 +35,9 @@ Everything here costs nothing within the free allowances. Cloudflare asks for a 
    Expect: a test email arrives, or the notification is listed as active.
 
    If it fails: if the free plan does not offer a Workers error notification, write that in the go-live record. The owner then relies on `pnpm smoke:production`, on `wrangler tail` and on the weekly cost check in `deploy.md`, and this gap stays recorded as a known risk.
+
+6. **Create the package buckets.** In your own shell with `CLOUDFLARE_API_TOKEN` exported (step 4), run `pnpm --filter @zapbip/api exec wrangler r2 bucket create zapbip-packages`, then the same with `zapbip-packages-staging` and `zapbip-packages-development`. They hold the Hermes wheel the Worker serves ([ADR 0034](../adr/0034-the-hermes-wheel-is-self-hosted-and-installed-by-a-pinned-hash.md)); a bucket that exists already is left as it is.
+
+   Expect: `pnpm --filter @zapbip/api exec wrangler r2 bucket list` names all three buckets.
+
+   If it fails: a name clash means the bucket exists; carry on. A permission error means the token lacks R2 edit (step 4).

@@ -1,12 +1,18 @@
 import { execFile, spawn } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { createWriteStream } from 'node:fs';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { WAKE_SECRET_KEY_BYTES } from '@zapbip/core';
-import { OwnerLocale } from '@zapbip/types';
+import {
+  hermesRequirementsFilename,
+  hermesWheelFilename,
+  OwnerLocale,
+  PRODUCTION_PUBLIC_ORIGIN,
+  ZAPBIP_HERMES_PLUGIN_VERSION,
+} from '@zapbip/types';
 import type { TestProject } from 'vitest/node';
 import { z } from 'zod';
 import { DEVELOPMENT_ENVIRONMENT } from '../../src/contract/constants';
@@ -26,6 +32,10 @@ const STANDBY_PHONE = '5511999990031';
 const STANDBY_AGENTS = ['grok-web', 'grok-bot'];
 const SIGNING_KEY_BYTES = 32;
 const DATABASE_BINDING = 'CONNECTIONS';
+const DEVELOPMENT_PACKAGES_BUCKET = 'zapbip-packages-development';
+const WHEEL_RELEASE_DIRECTORY = join(import.meta.dirname, '..', '..', '..', 'hermes-plugin', 'release');
+const WHEEL_CONTENT_TYPE = 'application/octet-stream';
+const REQUIREMENTS_CONTENT_TYPE = 'text/plain';
 const LOG_FILE_NAME = 'wrangler-dev.log';
 
 const seedOutputSchema = z.object({ connections: z.array(z.object({ agent: z.string(), secret: z.string() })) });
@@ -89,6 +99,42 @@ async function setOwnerLocale(input: { phone: string; locale: OwnerLocale; persi
   ]);
 }
 
+async function putPackage(input: { filename: string; file: string; contentType: string; persistArguments: string[] }): Promise<void> {
+  await runCommand('pnpm', [
+    'exec',
+    'wrangler',
+    'r2',
+    'object',
+    'put',
+    `${DEVELOPMENT_PACKAGES_BUCKET}/${input.filename}`,
+    '--file',
+    input.file,
+    '--content-type',
+    input.contentType,
+    '--env',
+    DEVELOPMENT_ENVIRONMENT,
+    '--local',
+    ...input.persistArguments,
+  ]);
+}
+
+async function seedHermesPackages(input: { persistDirectory: string; origin: string; persistArguments: string[] }): Promise<void> {
+  const { persistArguments } = input;
+  const version = ZAPBIP_HERMES_PLUGIN_VERSION;
+  const wheelFilename = hermesWheelFilename({ version });
+  await putPackage({
+    filename: wheelFilename,
+    file: join(WHEEL_RELEASE_DIRECTORY, wheelFilename),
+    contentType: WHEEL_CONTENT_TYPE,
+    persistArguments,
+  });
+  const requirementsFilename = hermesRequirementsFilename({ version });
+  const releaseRequirements = await readFile(join(WHEEL_RELEASE_DIRECTORY, requirementsFilename), 'utf8');
+  const localRequirements = join(input.persistDirectory, requirementsFilename);
+  await writeFile(localRequirements, releaseRequirements.replaceAll(PRODUCTION_PUBLIC_ORIGIN, input.origin));
+  await putPackage({ filename: requirementsFilename, file: localRequirements, contentType: REQUIREMENTS_CONTENT_TYPE, persistArguments });
+}
+
 export default async function setup(project: TestProject): Promise<() => Promise<void>> {
   const persistDirectory = await mkdtemp(join(tmpdir(), 'zapbip-e2e-'));
   const port = await freePort();
@@ -150,6 +196,7 @@ export default async function setup(project: TestProject): Promise<() => Promise
   if (!englishAccount) throw new Error('no english scheduled account');
   await setOwnerLocale({ phone: englishAccount.phone, locale: OwnerLocale.EnglishUs, persistArguments });
   const standbyConnections = await seedConnections({ phone: STANDBY_PHONE, agents: STANDBY_AGENTS, origin });
+  await seedHermesPackages({ persistDirectory, origin, persistArguments });
 
   project.provide('stack', {
     origin,

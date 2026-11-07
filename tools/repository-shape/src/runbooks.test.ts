@@ -1,5 +1,6 @@
 import { existsSync, readdirSync } from 'node:fs';
 import { posix } from 'node:path';
+import { hermesRequirementsFilename, hermesWheelFilename, PRODUCTION_PACKAGES_BUCKET, ZAPBIP_HERMES_PLUGIN_VERSION } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { capturedNames, readRepositoryFile, repositoryPath } from './repository-files';
 
@@ -16,6 +17,11 @@ const ANCHOR_SEPARATOR = '#';
 const GO_LIVE_ORDER_PATTERN = /^## Go-live order\n[\s\S]*?(?=^## )/m;
 const MAX_INDEX_LINES = 20;
 const PUBLISH_STEP_TITLE = 'Publish the docs';
+const PRODUCTION_DEPLOY_STEP_TITLE = 'Production deploy';
+const WHEEL_UPLOAD_COMMAND = 'wrangler r2 object put';
+const WHEEL_BUILD_COMMAND = 'pnpm hermes-wheel:build';
+const MANDATORY_DOCS_PREFLIGHT_SENTENCE = 'The docs preflight after the production deploy is mandatory';
+const PYPI_UPLOAD_PATTERN = /twine|pypi\.org/;
 const GO_LIVE_ORDER = [
   'Prepare your machine',
   'Cloudflare setup',
@@ -28,9 +34,9 @@ const GO_LIVE_ORDER = [
   'Rollback rehearsal',
   'Publish the packages',
   'Company facts and official number',
-  'Publish the docs',
   'Production Meta credentials',
   'Production deploy',
+  'Publish the docs',
   'Meta live mode',
   'Smoke production',
 ];
@@ -190,6 +196,24 @@ describe('runbooks', () => {
     const titles = goLiveStepTitles();
     expect(titles.slice(0, GO_LIVE_ORDER.length)).toEqual(GO_LIVE_ORDER);
     expect(titles.indexOf(PUBLISH_STEP_TITLE)).toBeGreaterThan(titles.indexOf('DNS'));
+  });
+
+  test('deploy.md publishes the docs after the production deploy, because the docs preflight reads the wheel from the live Worker', () => {
+    const titles = goLiveStepTitles();
+    expect(titles.indexOf(PUBLISH_STEP_TITLE)).toBeGreaterThan(titles.indexOf(PRODUCTION_DEPLOY_STEP_TITLE));
+  });
+
+  test('the Hermes wheel is built, checked against its hash and uploaded to the packages bucket by an immutable key', () => {
+    const text = readRunbook(MINTLIFY_PUBLISH_RUNBOOK).text;
+    expect(text).toContain(WHEEL_BUILD_COMMAND);
+    expect(text).toContain(WHEEL_UPLOAD_COMMAND);
+    expect(text).toContain(`${PRODUCTION_PACKAGES_BUCKET}/${hermesWheelFilename({ version: ZAPBIP_HERMES_PLUGIN_VERSION })}`);
+    expect(text).toContain(`${PRODUCTION_PACKAGES_BUCKET}/${hermesRequirementsFilename({ version: ZAPBIP_HERMES_PLUGIN_VERSION })}`);
+    expect(text).not.toMatch(PYPI_UPLOAD_PATTERN);
+  });
+
+  test('deploy.md keeps the docs preflight mandatory after the production deploy', () => {
+    expect(readRunbook(DEPLOY_RUNBOOK).text).toContain(MANDATORY_DOCS_PREFLIGHT_SENTENCE);
   });
 
   test('every go-live step is numbered in sequence and has an If it fails line', () => {

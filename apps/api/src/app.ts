@@ -8,6 +8,7 @@ import { createInstallPageRoute } from './routes/install-page';
 import { connectorRoutes } from './routes/connector';
 import { mcpRoutes } from './routes/mcp';
 import { mediaRoutes } from './routes/media';
+import { packageRoutes } from './routes/package';
 import { uploadRoutes } from './routes/upload';
 import { createWhatsappRoutes } from './routes/whatsapp';
 
@@ -27,6 +28,7 @@ export function createApp(input: {
   app.route('/', connectorRoutes);
   app.route('/', uploadRoutes);
   app.route('/', mediaRoutes);
+  app.route('/', packageRoutes);
   app.route('/', createWhatsappRoutes({ developmentMediaOrigin: input.developmentMediaOrigin, maxFutureSkewMs: input.maxFutureSkewMs }));
   input.extraRoutes.forEach((routes) => app.route('/', routes));
   return app;

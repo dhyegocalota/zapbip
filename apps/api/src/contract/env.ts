@@ -6,6 +6,7 @@ export type Bindings = {
   ENVIRONMENT: DeployEnvironment;
   CONNECTIONS: D1Database;
   MEDIA: R2Bucket;
+  PACKAGES: R2Bucket;
   MEDIA_LINK_SIGNING_KEY: string;
   UPLOAD_LINK_SIGNING_KEY: string;
   PUBLIC_ORIGIN: string;

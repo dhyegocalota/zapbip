@@ -39,7 +39,7 @@ Migration rule: a migration that has reached a deployed environment is never edi
    | `UPLOAD_LINK_SIGNING_KEY` | `openssl rand -base64 32`, a different value; rotating it fails uploads in progress once |
    | `WAKE_SECRET_KEY` | `openssl rand -base64 32`; not rotated: a new key cannot open stored wake targets |
 
-   The smoke inputs in `.env`: `SMOKE_BASE_URL` (`https://mcp-staging.zapbip.com` or `https://mcp.zapbip.com`, without a trailing slash), `SMOKE_OWNER_PHONE` (your phone, digits with country code, no plus sign or spaces) and, for staging only, `SMOKE_CONNECTION_SECRET` (step 6); production asks for the connection secret at a hidden prompt and never reads it from the file. Leave `SMOKE_CONNECTION_SECRET` and `SMOKE_OWNER_PHONE` as they are until step 6: the first deploy of an environment runs with `--first-deploy`, which does not need them. For production also set `ZAPBIP_PYPI_PUBLISHER` to the PyPI user that is the only Owner of `zapbip-platform` and `ZAPBIP_NPM_PUBLISHER` to your npm user name ([mintlify-publish.md](mintlify-publish.md), step 2).
+   The smoke inputs in `.env`: `SMOKE_BASE_URL` (`https://mcp-staging.zapbip.com` or `https://mcp.zapbip.com`, without a trailing slash), `SMOKE_OWNER_PHONE` (your phone, digits with country code, no plus sign or spaces) and, for staging only, `SMOKE_CONNECTION_SECRET` (step 6); production asks for the connection secret at a hidden prompt and never reads it from the file. Leave `SMOKE_CONNECTION_SECRET` and `SMOKE_OWNER_PHONE` as they are until step 6: the first deploy of an environment runs with `--first-deploy`, which does not need them. For production also set `ZAPBIP_NPM_PUBLISHER` to your npm user name ([mintlify-publish.md](mintlify-publish.md), step 2).
 
    Expect: `pnpm --filter @zapbip/api exec wrangler secret list --env staging` names all seven secrets.
 
@@ -51,7 +51,7 @@ Migration rule: a migration that has reached a deployed environment is never edi
 
    If it fails: a failed migration leaves the previous Worker serving; fix it with a new numbered migration, never by editing the one that ran. The D1 bookmark from this step can restore the directory.
 
-5. **Deploy.** Run `pnpm deploy:staging --first-deploy` for the first deploy of an environment, and `pnpm deploy:staging` afterwards (`pnpm deploy:production --first-deploy`, then `pnpm deploy:production`), in an interactive terminal. The command refuses, in order, the cheap things first: a wrong environment or a non-interactive terminal; production only: `OFFICIAL_WHATSAPP_NUMBER` still `OFFICIAL_NUMBER_UNSET`, a `COMPANY` fact still `COMPANY_FACT_UNSET` ([mintlify-publish.md](mintlify-publish.md), steps 1 and 3), `zapbip@<version>` missing from npm or without your npm user (`ZAPBIP_NPM_PUBLISHER`) among its maintainers (step 2), `zapbip-platform==<version>` missing from PyPI or without your PyPI user (`ZAPBIP_PYPI_PUBLISHER`) as the only holder of any role, Owner or Maintainer ([mintlify-publish.md](mintlify-publish.md), step 5), and a Worker that does not export `scheduled`, a wrangler block without a cron trigger or a `/i/:installCode` route that is not mounted; then, for every environment: a `REPLACE_WITH_` placeholder in any letter case, a missing smoke input, a dirty tree (production also needs branch `main` equal to `origin/main`), a missing secret, a pending migration, a failing `pnpm verify` (`pnpm verify all` for production, and last because it takes minutes) and a failing dry run. Staging needs only placeholders and secrets in place: the official number, the company facts and npm are production gates. It prints the current Worker version and the D1 bookmark (or says there is no previous version, then a rollback means redeploying the prior commit): write both in the go-live record. For production it then asks you to type `production`.
+5. **Deploy.** Run `pnpm deploy:staging --first-deploy` for the first deploy of an environment, and `pnpm deploy:staging` afterwards (`pnpm deploy:production --first-deploy`, then `pnpm deploy:production`), in an interactive terminal. The command refuses, in order, the cheap things first: a wrong environment or a non-interactive terminal; production only: `OFFICIAL_WHATSAPP_NUMBER` still `OFFICIAL_NUMBER_UNSET`, a `COMPANY` fact still `COMPANY_FACT_UNSET` ([mintlify-publish.md](mintlify-publish.md), steps 1 and 3), `zapbip@<version>` missing from npm or without your npm user (`ZAPBIP_NPM_PUBLISHER`) among its maintainers (step 2), the Hermes wheel missing from the `zapbip-packages` bucket or hashing to something other than `ZAPBIP_HERMES_WHEEL_SHA256` ([mintlify-publish.md](mintlify-publish.md), step 5), and a Worker that does not export `scheduled`, a wrangler block without a cron trigger or a `/i/:installCode` route that is not mounted; then, for every environment: a `REPLACE_WITH_` placeholder in any letter case, a missing smoke input, a dirty tree (production also needs branch `main` equal to `origin/main`), a missing secret, a pending migration, a failing `pnpm verify` (`pnpm verify all` for production, and last because it takes minutes) and a failing dry run. Staging needs only placeholders and secrets in place: the official number, the company facts and npm are production gates. It prints the current Worker version and the D1 bookmark (or says there is no previous version, then a rollback means redeploying the prior commit): write both in the go-live record. For production it then asks you to type `production`.
 
    Expect: `wrangler deploy` succeeds and the smoke test runs. With `--first-deploy` the smoke test skips checks 2 and 5 (they need the smoke connection) and prints how to create it. After the first staging deploy, finish [meta-setup.md](meta-setup.md) step 9.
 
@@ -85,7 +85,7 @@ Migration rule: a migration that has reached a deployed environment is never edi
 
 Follow the steps in order. Each step names the runbook that holds its detail, and agents never run them: creating accounts, logging in, spending money and deploying are the owner's acts. Staging comes first and does not wait for the official number, the company facts or the published packages, which gate the docs and production.
 
-1. **Prepare your machine.** You need git, Node 24, `pnpm`, `openssl` (generates secrets), `curl` and `dig` (checks), Python 3.11 to 3.14 with `pip` (the PyPI upload) and the repository. Install git from `https://git-scm.com/downloads`. Install Node 24 with a version manager (`nvm install 24` after installing `https://github.com/nvm-sh/nvm`, or the installer at `https://nodejs.org`). Turn on `pnpm` with `corepack enable`, which reads the pinned version from `package.json`. Then clone the repository with `git clone https://github.com/dhyegocalota/zapbip.git`, open the folder, and run `pnpm install --frozen-lockfile`.
+1. **Prepare your machine.** You need git, Node 24, `pnpm`, `openssl` (generates secrets), `shasum` (checks the wheel hash), `curl` and `dig` (checks), Python 3.11 to 3.14 with `pip` (the wheel build) and the repository. Install git from `https://git-scm.com/downloads`. Install Node 24 with a version manager (`nvm install 24` after installing `https://github.com/nvm-sh/nvm`, or the installer at `https://nodejs.org`). Turn on `pnpm` with `corepack enable`, which reads the pinned version from `package.json`. Then clone the repository with `git clone https://github.com/dhyegocalota/zapbip.git`, open the folder, and run `pnpm install --frozen-lockfile`.
 
    Expect: `node --version` prints `v24` and something, `pnpm --version` prints `8.15.9`, and `openssl version`, `python3 --version`, `curl --version` and `dig -v` each print a version.
 
@@ -130,11 +130,11 @@ Follow the steps in order. Each step names the runbook that holds its detail, an
    Expect: the smoke test passes after each move. Paste the output into the go-live record.
 
    If it fails: stop. Do not go to production with an untested rollback.
-10. **Publish the packages.** Do steps 2, 4 and 5 of `mintlify-publish.md`: `zapbip` and `@zapbip/openclaw-plugin` on npm, and `zapbip-platform` on PyPI.
+10. **Publish the packages.** Do steps 2, 4 and 5 of `mintlify-publish.md`: `zapbip` and `@zapbip/openclaw-plugin` on npm, and the Hermes wheel in the `zapbip-packages` bucket.
 
-   Do this before step 12: linking Mintlify to the repository publishes the docs on every push to `main`, and the docs name all three packages.
+   Do this before step 13: the production deploy refuses until the wheel is in the bucket.
 
-   Expect: `npm view` lists your npm user as a maintainer of both npm packages, and `pip index versions zapbip-platform` lists `0.1.0`.
+   Expect: `npm view` lists your npm user as a maintainer of both npm packages, and the `object get` check of `mintlify-publish.md` step 5 hashes to `ZAPBIP_HERMES_WHEEL_SHA256`.
 
    If it fails: the failing step of `mintlify-publish.md` says what to check.
 11. **Company facts and official number.** Do steps 1 and 3 of `mintlify-publish.md`: the production number from step 3 of `meta-setup.md`, and the Logic Bit company facts.
@@ -142,22 +142,22 @@ Follow the steps in order. Each step names the runbook that holds its detail, an
     Expect: neither `OFFICIAL_NUMBER_UNSET` nor `COMPANY_FACT_UNSET` is left in `libs/types/src/constants.ts` apart from their definitions.
 
     If it fails: the production deploy and `pnpm docs:preflight` refuse and name what is still unset.
-12. **Publish the docs.** Do steps 6 to 11 of `mintlify-publish.md`, starting with `pnpm docs:preflight`, which needs no DNS: it reads the constants, npm and PyPI. The custom domain of step 10 uses steps 4 and 5 of `dns.md`. The privacy page is part of the site.
-
-    Expect: `docs.zapbip.com` serves the site in English and in Portuguese, and `https://docs.zapbip.com/help/privacy` loads.
-
-    If it fails: the failing step of `mintlify-publish.md` says what to check.
-13. **Production Meta credentials.** Do steps 5 to 8 of `meta-setup.md` for production (the production app, its secret, its system user token and its verify token).
+12. **Production Meta credentials.** Do steps 5 to 8 of `meta-setup.md` for production (the production app, its secret, its system user token and its verify token).
 
     Expect: you hold the production app secret, the system user token and the verify token, ready for the `wrangler secret put` prompts of the next step.
 
     If it fails: the failing step of `meta-setup.md` says what to check.
-14. **Production deploy.** Do `deploy.md` steps 1 to 5 for production, with `pnpm deploy:production --first-deploy`, then step 9 of `meta-setup.md` for the production app, then step 3 of `dns.md` for the host check.
+13. **Production deploy.** Do `deploy.md` steps 1 to 5 for production, with `pnpm deploy:production --first-deploy`, then step 9 of `meta-setup.md` for the production app, then step 3 of `dns.md` for the host check.
 
     Expect: the deploy ends with the smoke test (checks 1, 3 and 4 pass), the health route answers on `mcp.zapbip.com` and Meta verifies the production webhook.
 
     If it fails: `deploy.md` step 8 rolls back the Worker.
-15. **Meta live mode.** Do step 10 of `meta-setup.md` with the privacy page of step 12, after the production webhook is verified in the previous step.
+14. **Publish the docs.** Do steps 6 to 11 of `mintlify-publish.md`, starting with `pnpm docs:preflight`, which needs no DNS but reads the production Worker: it checks the constants, npm and the wheel served at `https://mcp.zapbip.com/pkg/`. The custom domain of step 10 uses steps 4 and 5 of `dns.md`. The privacy page is part of the site. The docs preflight after the production deploy is mandatory: it is the only check that the live Worker serves the wheel and the requirements file with the hashes the docs print, so never connect Mintlify without a passing run.
+
+    Expect: `docs.zapbip.com` serves the site in English and in Portuguese, and `https://docs.zapbip.com/help/privacy` loads.
+
+    If it fails: the failing step of `mintlify-publish.md` says what to check.
+15. **Meta live mode.** Do step 10 of `meta-setup.md` with the privacy page of step 14, after the production webhook is verified in the previous step.
 
     Expect: the production app shows Live and the business verification shows In review or Verified.
 

@@ -1,40 +1,38 @@
+import { createHash } from 'node:crypto';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createPackageFetcher } from '../../src/operations/package-fetcher';
 
-const XML_RPC_URL = 'https://pypi.org/pypi';
-const XML_BODY = '<methodCall></methodCall>';
-const RELEASE_URL = 'https://pypi.org/pypi/zapbip-platform/0.1.0/json';
+const WHEEL_URL = 'https://mcp.zapbip.com/pkg/zapbip_platform-0.1.0-py3-none-any.whl';
+const WHEEL_BYTES = new Uint8Array([80, 75, 3, 4, 255, 0, 128]);
+
+function sha256Of(input: { bytes: Uint8Array }): string {
+  return createHash('sha256').update(input.bytes).digest('hex');
+}
 
 afterEach(() => {
   vi.unstubAllGlobals();
 });
 
 describe('package fetcher', () => {
-  it('returns the status and the parsed JSON body of the url it was given', async () => {
-    const fetchSpy = vi.fn(async () => new Response(JSON.stringify({ info: { maintainer: 'owner' } }), { status: 200 }));
+  it('returns the status and the sha256 of the bytes it was given', async () => {
+    const fetchSpy = vi.fn(async () => new Response(WHEEL_BYTES, { status: 200 }));
     vi.stubGlobal('fetch', fetchSpy);
-    const answer = await createPackageFetcher()({ url: RELEASE_URL });
-    expect(answer).toEqual({ status: 200, body: { info: { maintainer: 'owner' } } });
-    expect(fetchSpy).toHaveBeenCalledWith(RELEASE_URL);
+    const answer = await createPackageFetcher()({ url: WHEEL_URL });
+    expect(answer).toEqual({ status: 200, sha256: sha256Of({ bytes: WHEEL_BYTES }) });
+    expect(fetchSpy).toHaveBeenCalledWith(WHEEL_URL);
   });
 
-  it('returns a null body when the answer is not JSON', async () => {
-    vi.stubGlobal('fetch', async () => new Response('<html>Not Found</html>', { status: 404 }));
-    expect(await createPackageFetcher()({ url: RELEASE_URL })).toEqual({ status: 404, body: null });
+  it('hashes the body of a failure too, so a 404 never looks like the wheel', async () => {
+    vi.stubGlobal('fetch', async () => new Response(JSON.stringify({ error: 'not_found' }), { status: 404 }));
+    const answer = await createPackageFetcher()({ url: WHEEL_URL });
+    expect(answer.status).toBe(404);
+    expect(answer.sha256).not.toBe(sha256Of({ bytes: WHEEL_BYTES }));
   });
 
   it('lets a network failure reject', async () => {
     vi.stubGlobal('fetch', async () => {
-      throw new Error('getaddrinfo ENOTFOUND pypi.org');
+      throw new Error('getaddrinfo ENOTFOUND mcp.zapbip.com');
     });
-    await expect(createPackageFetcher()({ url: RELEASE_URL })).rejects.toThrow('ENOTFOUND');
-  });
-
-  it('posts an XML body as text/xml and returns the answer text', async () => {
-    const fetchSpy = vi.fn(async () => new Response('<methodResponse/>', { status: 200 }));
-    vi.stubGlobal('fetch', fetchSpy);
-    const answer = await createPackageFetcher()({ url: XML_RPC_URL, xmlBody: XML_BODY });
-    expect(answer).toEqual({ status: 200, body: '<methodResponse/>' });
-    expect(fetchSpy).toHaveBeenCalledWith(XML_RPC_URL, { method: 'POST', headers: { 'Content-Type': 'text/xml' }, body: XML_BODY });
+    await expect(createPackageFetcher()({ url: WHEEL_URL })).rejects.toThrow('ENOTFOUND');
   });
 });
