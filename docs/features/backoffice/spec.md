@@ -65,7 +65,8 @@ The lane branches from `main` at `273e1a2`, which already holds `feat/deploy-rea
 The backoffice is a second custom domain on the existing Worker `zapbip-api`, dispatched by host before any route is matched:
 
 - `apps/api/src/index.ts` (and `index.dev.ts`) reads the request host.
-  - When it equals the host of `BACKOFFICE_ORIGIN`, the request goes to `createBackofficeApp()`.
+  - When its host and port equal those of `BACKOFFICE_ORIGIN`, compared case-insensitively (RFC 3986 hosts are case-insensitive), the request goes to `createBackofficeApp()`. `BACKOFFICE.LOCALHOST:8787` is served; `backoffice.localhost:8788` is not the backoffice.
+  - The backoffice host with a trailing dot (`backoffice.zapbip.com.`) is rejected: the Worker answers `404` on every path from `fetch` itself, with the backoffice headers, and neither app sees the request.
   - Every other host goes to `createApp()`, unchanged.
 - `createApp()` never mounts a backoffice route, and `createBackofficeApp()` mounts no MCP, connector, media, upload, webhook or install route. A test proves each host answers `404` for the other's paths.
 
@@ -117,15 +118,15 @@ Re-running enrollment is the only recovery: lost authenticator, lost key, lockou
 
 1. Origin check, then the pre-session CSRF double-submit cookie (below).
 2. `BACKOFFICE_RATE_LIMITER.limit({ key: clientRateKey(address) })`, 5 per 60 s. Over the limit: `429` with `Retry-After`.
-3. If `locked_until > now`, answer the generic failure. The lockout is checked before the factors, so a locked operator learns nothing.
+3. If `locked_until > now`, answer the generic failure without touching `failed_attempts`. The lockout is checked before the factors, so a locked operator learns nothing. When `locked_until <= now`, one `UPDATE` sets `failed_attempts = 0` and `locked_until = NULL` before the factors are checked, so an expired lock starts a fresh count.
 4. Constant-time compare of the SHA-256 of the submitted key with `BACKOFFICE_KEY_DIGEST`. TOTP check for steps `current-1..current+1`, accepted only when `step > last_totp_step`. Both checks always run; there is no short-circuit.
 5. Failure:
-   - `failed_attempts + 1`;
-   - at `BACKOFFICE_LOCKOUT_THRESHOLD` (10) consecutive failures, `locked_until = now + BACKOFFICE_LOCKOUT_MS` (15 min);
-   - audit `sign_in.failed`;
+   - one atomic statement, `UPDATE backoffice_operator SET failed_attempts = failed_attempts + 1, locked_until = CASE WHEN failed_attempts + 1 >= ? THEN ? ELSE locked_until END WHERE id = 1 RETURNING failed_attempts, locked_until`, so concurrent failures lose no increment;
+   - the 10th consecutive failure (`BACKOFFICE_LOCKOUT_THRESHOLD`) sets `locked_until = now + BACKOFFICE_LOCKOUT_MS` (15 min);
+   - audit `sign_in.failed`, and `sign_in.locked` once, only on the failure whose `RETURNING` shows the lock was just set (never again while it holds);
    - one generic message ("Sign-in failed") with status `401`, whichever factor was wrong.
 6. Success:
-   - `last_totp_step = step` and `failed_attempts = 0`, in one conditional `UPDATE … WHERE last_totp_step < ?`, so two concurrent uses of one code cannot both win;
+   - `last_totp_step = step` and `failed_attempts = 0` (a success resets the consecutive count), in one conditional `UPDATE … WHERE last_totp_step < ?`, so two concurrent uses of one code cannot both win;
    - a new session;
    - audit `sign_in.succeeded`;
    - `303` to `/`.
@@ -148,6 +149,14 @@ Re-running enrollment is the only recovery: lost authenticator, lost key, lockou
 
 A stolen session cookie alone cannot change the registry.
 
+A step-up code that is wrong or reused is a failed attempt like a sign-in failure:
+
+- it runs the same atomic `failed_attempts` increment and shares the lockout, so a stolen session cannot guess codes without locking everything (the cost is that it can also lock the operator out for 15 minutes: Known risk 2);
+- while `locked_until > now`, every step-up answers `401` without consuming a code, whatever its value;
+- it takes `BACKOFFICE_RATE_LIMITER` with the key `step-up:` plus `clientRateKey(address)`, so step-ups and sign-ins have separate counters in the same namespace; over the limit: `429` with `Retry-After: 60`, no code consumed, no state change;
+- audit `step_up.failed`, with the number as `target_id`;
+- a successful step-up resets `failed_attempts` to 0 in the same conditional `UPDATE` that records `last_totp_step`.
+
 **CSRF.** Two defences, both required on every non-GET request:
 
 1. The `Origin` header equals `BACKOFFICE_ORIGIN`. A missing `Origin` is refused.
@@ -165,7 +174,7 @@ Strict-Transport-Security: max-age=63072000; includeSubDomains   (staging and pr
 X-Frame-Options: DENY
 X-Content-Type-Options: nosniff
 Referrer-Policy: no-referrer
-Cache-Control: no-store
+Cache-Control: no-store   (except GET /assets/backoffice.css: public, max-age=31536000, immutable)
 Cross-Origin-Opener-Policy: same-origin
 Cross-Origin-Resource-Policy: same-origin
 Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
@@ -174,10 +183,12 @@ X-Robots-Tag: noindex, nofollow
 
 **Audit log.** D1 `backoffice_audit(id, at, action, target_kind, target_id, outcome, client_address)`.
 
-- Actions are an enum `BackofficeAuditAction`: `operator.enrolled`, `sign_in.succeeded`, `sign_in.failed`, `sign_in.locked`, `sign_out`, `number.registered`, `number.verified`, `number.access_token_rotated`, `meta_app.app_secret_rotated`, `number.state_changed`.
+- Actions are an enum `BackofficeAuditAction`: `operator.enrolled`, `sign_in.succeeded`, `sign_in.failed`, `sign_in.locked`, `step_up.failed`, `sign_out`, `number.registered`, `number.verified`, `number.access_token_rotated`, `meta_app.app_secret_rotated`, `number.state_changed`.
 - It never stores a submitted value. `target_id` is an internal ID.
 - `client_address` is `cf-connecting-ip`, kept `BACKOFFICE_AUDIT_RETENTION_MS` (365 days) and pruned by the daily scheduled job.
-- `GET /audit` lists the newest 200 rows.
+- `GET /audit` lists the newest 200 rows, newest first, and nothing else.
+
+**Stylesheet.** `GET /assets/backoffice.css` is public (the sign-in page needs it) and serves `apps/api/src/backoffice/assets/backoffice.css` as `text/css; charset=utf-8` with `Cache-Control: public, max-age=31536000, immutable`; the pages link it as `/assets/backoffice.css?v=<content hash>`, so a change is a new URL. It carries every other header above. It is CSP-compatible: no `@import`, no `url(` to another origin, no `data:` URI.
 
 ### Numbers registry
 
@@ -205,6 +216,7 @@ CREATE TABLE whatsapp_numbers (
   seal_key_version INTEGER NOT NULL,
   state TEXT NOT NULL CHECK (state IN ('pending', 'active', 'closed', 'disabled')),
   verified_at INTEGER,
+  verification_snapshot TEXT,
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL
 );
@@ -280,7 +292,11 @@ Allowed transitions:
 - `GET /{phone_number_id}?fields=display_phone_number,verified_name,quality_rating`: the display number must match the registered display number, digits only;
 - `GET /{waba_id}/message_templates?fields=name,language,status&limit=100`: shows the approval status of `zapbip_agent_notice` and `zapbip_agent_question` in `pt_BR` and `en_US`.
 
-On success it sets `verified_at` and audits `number.verified`. Template status is shown and not required: a number whose templates are not approved can be activated, with the warning "out-of-window notices will fail". A Graph error shows its kind (`auth`, `not_found`, `network`), never the response body.
+On success it sets `verified_at` and audits `number.verified`. Template status is shown and not required: a number whose templates are not approved can be activated, with the warning "out-of-window notices will fail".
+
+The flow is POST, `303`, GET. `POST /numbers/:numberId/verify` stores the outcome in `verification_snapshot` (JSON: the outcome kind, the digits of both display numbers, the verified name, the quality rating, the four template statuses and `checked_at`; never a credential or a response body) and redirects to `GET /numbers/:numberId/verification`, which renders the snapshot. Reload repeats a GET, never a POST.
+
+A Graph error shows its kind, mapped from `GraphRequestError` by status: `401` and `403` → `auth`; `404` → `not_found`; status `0` (no response) → `network`; every other status → `upstream`.
 
 **Rotate.** "Replace access token" and "Replace app secret" each seal the new value, update `updated_at` and audit the action. In-flight requests finish with the old value; the next resolution reads the new one.
 
@@ -337,7 +353,7 @@ export interface NumberRegistry {
 
 **Development and tests.**
 
-- `apps/api/src/dev/build-directory-seed.ts` and `/dev/seed` register a fake number (phone number ID `1000000000000001`, fake Graph) sealed with the development `NUMBER_REGISTRY_KEY`.
+- `apps/api/src/dev/build-directory-seed.ts` and `/dev/seed` register a fake number (phone number ID `1000000000000001`, fake Graph) sealed with the development `NUMBER_REGISTRY_KEY`. Development `WHATSAPP_GRAPH_BASE_URL` points at the local fake Graph, so the real sender runs against the seeded number. `dev-account-inbox.ts` loses its `WHATSAPP_ACCESS_TOKEN` fake-or-real `createSender` switch.
 - Integration and e2e suites call `seedWhatsAppNumber()` from `apps/api/test/support/whatsapp-numbers.ts`.
 - `whatsappTestEnv` and the `META_APP_SECRET`, `WHATSAPP_ACCESS_TOKEN` and `WHATSAPP_PHONE_NUMBER_ID` test bindings are deleted.
 
@@ -375,6 +391,7 @@ export interface NumberRegistry {
 - Figures are filtered by number (all, or one) and by period (7, 30 days).
 - Charts are server-rendered inline SVG bars with no script, styled by classes from `backoffice.css`, because `style-src 'self'` forbids inline styles.
 - All queries for a page run in one `D1Database.batch`.
+- The metrics pages are read-only: only `GET` is routed for them, and every statement in the batch is a `SELECT`.
 - Today's row carries the copy "updates hourly".
 
 ### UI stack and copy
@@ -409,11 +426,13 @@ Visual design (layout, tokens, chart style) is the owner's choice and goes in `d
 | `BACKOFFICE_RATE_LIMITER` | added, `simple: { limit: 5, period: 60 }` | rate limit binding |
 | `SMOKE_META_APP_SECRET`, `SMOKE_PHONE_NUMBER_ID` | added to the owner's `.env` only, replacing the smoke script's reads of the removed names; never deployed | smoke inputs |
 
+**Go-live order:** secrets → migrate → enroll → deploy → register number → point the Meta webhook → smoke. `deploy-preflight.ts` refuses a deploy while any `WorkerSecret` is missing, and enroll needs migration `0005` applied. The order lives in `GO_LIVE_ORDER` of `tools/repository-shape/src/runbooks.test.ts` and in `docs/runbooks/deploy.md`.
+
 The deploy preflight gets the new `WorkerSecret` names for free, because step 9 lists the enum. `OFFICIAL_WHATSAPP_NUMBER` in `libs/types` stays, as the front-door number the docs publish (see Open questions).
 
 ### Isolation from agents
 
-- No file under `apps/api/src/mcp`, `apps/api/src/routes`, `apps/api/src/account-inbox`, `apps/connector` or `libs/` imports from `apps/api/src/backoffice` or names a `backoffice_` table.
+- No file under `apps/api/src/mcp`, `apps/api/src/routes`, `apps/api/src/account-inbox`, `apps/connector` or `libs/` imports from `apps/api/src/backoffice` or names a `backoffice_` table. The test scans exactly those directories: `apps/api/src/index.ts`, `index.dev.ts` and `apps/api/scripts/backoffice-enroll.ts` are outside them, so the enrollment script imports `auth/totp.ts` and the base32 helper directly and no shared helper is needed.
 - Only `apps/api/src/numbers`, `apps/api/src/adapters/d1/d1-number-registry.ts` and `apps/api/src/backoffice/numbers` read the sealed columns.
 - A repository test pins both rules.
 - The MCP host answers `404` to every backoffice path.
@@ -471,7 +490,7 @@ AccountInbox alarm ─► flush usage_meter → usage_daily, activity_meter → 
 | Surface | Contract |
 |---|---|
 | `apps/api/src/index.ts`, `index.dev.ts` | host dispatch: `isBackofficeRequest({ url, backofficeOrigin })` → `createBackofficeApp()`; else `createApp()` |
-| `apps/api/src/backoffice/app.ts` | `createBackofficeApp(): Hono<{ Bindings: Bindings }>`; routes `GET /`, `GET/POST /sign-in`, `POST /sign-out`, `POST /locale`, `GET /metrics`, `GET /numbers`, `GET/POST /numbers/new`, `GET /numbers/:numberId`, `POST /numbers/:numberId/verify`, `POST /numbers/:numberId/access-token`, `POST /numbers/:numberId/state`, `POST /meta-apps/:metaAppId/app-secret`, `GET /audit`, `GET /assets/backoffice.css` |
+| `apps/api/src/backoffice/app.ts` | `createBackofficeApp(): Hono<{ Bindings: Bindings }>`; routes `GET /`, `GET/POST /sign-in`, `POST /sign-out`, `POST /locale`, `GET /metrics`, `GET /numbers`, `GET/POST /numbers/new`, `GET /numbers/:numberId`, `POST /numbers/:numberId/verify`, `GET /numbers/:numberId/verification`, `POST /numbers/:numberId/access-token`, `POST /numbers/:numberId/state`, `POST /meta-apps/:metaAppId/app-secret`, `GET /audit`, `GET /assets/backoffice.css` |
 | `apps/api/src/backoffice/auth/totp.ts` | `totpCodeAt({ secretBase32, step })`, `matchTotpStep({ secretBase32, code, now, lastStep }): number \| null` |
 | `apps/api/src/numbers/number-registry.ts` | the port above; `WhatsAppNumberState` enum |
 | `libs/core` `openOwnerAccount` | input gains `homeNumberId: string`; the `AccountDirectory.create` port carries it |
@@ -485,6 +504,7 @@ AccountInbox alarm ─► flush usage_meter → usage_daily, activity_meter → 
 | Failure | Behaviour |
 |---|---|
 | Wrong key, wrong code, reused code or expired code | `401` and the same generic copy; `failed_attempts + 1`; audit row |
+| Wrong or reused step-up code | `401`, re-rendered form, no state change; the same `failed_attempts` and lockout; audit `step_up.failed` |
 | 10 consecutive failures | locked for 15 min, even with correct factors; audit `sign_in.locked`; the owner re-enrolls to unlock at once |
 | More than 5 sign-in POSTs a minute from one address | `429` with `Retry-After: 60` |
 | Missing or foreign `Origin`, or a bad `csrf` field | `403`, `backoffice.csrf_rejected`, no state change |

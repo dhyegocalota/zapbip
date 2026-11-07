@@ -30,7 +30,7 @@ Security headers:
 - [ ] `security-headers` attaches the exact ten headers of the spec; the CSP string equals the spec byte for byte
 
 Routing peek (`webhook-routing-peek.test.ts`):
-- [ ] Every file in `apps/api/test/fixtures/whatsapp/inbound/*.json` and `apps/api/test/fixtures/whatsapp/status/*.json` → `{ phoneNumberIds: ["1000000000000001"], wabaIds: [] }`
+- [ ] Every file in `apps/api/test/fixtures/whatsapp/inbound/*.json` and `apps/api/test/fixtures/whatsapp/status/*.json` is a bare message or status object, so each is wrapped first with `notificationWith({ messages: [fixture] })` or `notificationWith({ statuses: [fixture] })` (`test/fixtures/whatsapp/inbound/notification.ts`, `entry.id` `3000000000000003`) → `{ phoneNumberIds: ["1000000000000001"], wabaIds: [] }`
 - [ ] A template-status payload with `entry[0].id = "WABA_A"` and no metadata → `{ phoneNumberIds: [], wabaIds: ["WABA_A"] }`
 - [ ] Edge: `"{"` → `null`; `{}` → `null`; `{ "entry": [] }` → `null`
 - [ ] Edge: a 2-change payload for two numbers → both IDs, deduplicated
@@ -41,8 +41,15 @@ Number states (`number-state.test.ts`):
 
 Secret box (`aes-gcm-secret-box.test.ts`):
 - [ ] Round trip opens to the plaintext; associated data `whatsapp_numbers:A:access_token` sealed and opened with `whatsapp_numbers:B:access_token` → `null`
-- [ ] Version byte `2` → `null`; a 31-byte key → error `NUMBER_REGISTRY_KEY must be 32 bytes encoded in base64`
-- [ ] Pin: `aes-gcm-wake-secret-box.test.ts` unchanged and green after the extraction
+- [ ] Version byte `2` → `null`; a 31-byte key with `keyName` `NUMBER_REGISTRY_KEY` → error `NUMBER_REGISTRY_KEY must be 32 bytes encoded in base64`
+- [ ] The same 31-byte key through the wake box (`keyName` `WAKE_SECRET_KEY`) → the error names `WAKE_SECRET_KEY`
+- [ ] Pin: `aes-gcm-wake-secret-box.test.ts` unchanged and green after the extraction, still expecting `WAKE_SECRET_KEY`
+
+Graph error kinds (`graph-request-error-kind.test.ts`):
+- [ ] Status `401` → `auth`; `403` → `auth`; `404` → `not_found`; `0` → `network`; `400`, `429`, `500`, `502` → `upstream`
+
+Terminal QR (`backoffice-enroll-qr.test.ts`):
+- [ ] `renderTerminalQr` of an `otpauth://` URI → multi-line text, every line the same width, three finder patterns; `uqr` is in `apps/api/package.json` `devDependencies` with an exact version and `pnpm install --frozen-lockfile` is green
 
 Enrollment script (`backoffice-enroll-entry.test.ts`, fake shell and prompt):
 - [ ] stdin not a TTY → exit 1, message `backoffice:enroll needs an interactive terminal`, zero shell calls
@@ -53,11 +60,24 @@ Enrollment script (`backoffice-enroll-entry.test.ts`, fake shell and prompt):
 - [ ] Development prints `BACKOFFICE_KEY_DIGEST=` and `BACKOFFICE_TOTP_SECRET=` lines and calls `d1 execute --local`, never `secret put`
 
 Hooks (`.agents/hooks/hooks.test.sh`):
-- [ ] `pnpm backoffice:enroll:production` → blocked, exit 2; `pnpm backoffice:enroll:development` → blocked; `node --import tsx apps/api/scripts/backoffice-enroll.ts` → blocked
+- [ ] `pnpm backoffice:enroll:production` → blocked, exit 2; `pnpm backoffice:enroll:development` → blocked (colon form)
+- [ ] `node --import tsx apps/api/scripts/backoffice-enroll.ts` → blocked (hyphen form), matched by `backoffice[:-]enroll` in `guard-deploy.sh`
+- [ ] The sample secret in the blocked-forms list is `NUMBER_REGISTRY_KEY`, not a removed name
 
 Copy:
 - [ ] `BACKOFFICE_COPY` has every `BackofficeCopyKey` in `pt_BR` and `en_US`, none empty; `WHATSAPP_COPY` has `AccountOnOtherNumber` and `NumberClosedToNewAccounts` in both locales
 - [ ] A source scan finds no string-literal JSX child under `apps/api/src/backoffice/**/*.tsx`
+
+Design rules (`backoffice-design-rules.test.ts`):
+- [ ] A source scan finds no `style=` attribute and no `<style>` or `<script>` in any view
+- [ ] Every rendered page has exactly one `h1`, a skip link as the first focusable element, and a label for every input
+- [ ] `backoffice.css` has no raw colour outside the `:root` token blocks
+- [ ] Every text token pair of `design.md` §2.1 has contrast at least 4.5:1 and every non-text pair at least 3:1, in light and dark
+
+Repository shape (`tools/repository-shape`):
+- [ ] The isolation test: no file under `apps/api/src/mcp`, `routes`, `account-inbox`, `apps/connector` or `libs/` imports `apps/api/src/backoffice` or names a `backoffice_` table; `index.ts`, `index.dev.ts` and `scripts/backoffice-enroll.ts` are not scanned
+- [ ] `runbooks.test.ts`: `GO_LIVE_ORDER` places secrets before migrate, migrate before enroll, enroll before deploy, deploy before register number, and smoke last; `docs/runbooks/README.md` stays at 20 lines or fewer
+- [ ] `git grep -nwE "META_APP_SECRET|WHATSAPP_ACCESS_TOKEN|WHATSAPP_PHONE_NUMBER_ID" apps libs .agents scripts tools` lists nothing
 
 ## Integration (Workers pool: workerd, D1, Durable Objects)
 
@@ -65,6 +85,7 @@ Host isolation (`backoffice-host.test.ts`):
 - [ ] The backoffice host: `GET /c/<valid secret>/mcp` → `404`; `POST /webhooks/whatsapp` (validly signed) → `404`; `GET /health` → `404`; `GET /i/<code>` → `404`
 - [ ] The MCP host: `GET /sign-in`, `GET /numbers`, `GET /metrics`, `GET /assets/backoffice.css` → `404`
 - [ ] Host `BACKOFFICE.LOCALHOST:8787` → served as the backoffice (hosts are case-insensitive); host `backoffice.localhost:8788` → the MCP app (`404` on `/sign-in`)
+- [ ] Host `backoffice.localhost.:8787` (trailing dot) → `404` on `/sign-in` and on `/health`, with the backoffice headers
 
 Headers (`backoffice-headers.test.ts`):
 - [ ] All ten headers present on `GET /sign-in` (200), `POST /sign-in` success (303), failure (401), CSRF failure (403), `GET /nope` (404), the rate limit (429), and a route forced to throw (500)
@@ -75,7 +96,11 @@ Sign-in (`backoffice-auth.test.ts`):
 - [ ] The wrong key with the right code, the right key with the wrong code, and both wrong → each `401`, the bodies identical byte for byte, `failed_attempts` 1, 2, 3
 - [ ] The same valid code twice in one step → the first `303`, the second `401`
 - [ ] Two concurrent POSTs with one valid code → exactly one `303`
-- [ ] 10 failures, then correct factors → `401`; `locked_until = now + 15 min`; audit row `sign_in.locked`; the fake clock +15 min + 1 s → `303`, and `failed_attempts` resets to 0
+- [ ] 9 failures → `locked_until` `NULL`; the 10th failure → `locked_until = now + 15 min` exactly, one audit row `sign_in.locked`
+- [ ] The 11th attempt with correct factors → `401`, `failed_attempts` unchanged, still one `sign_in.locked` row
+- [ ] The fake clock +15 min + 1 s: a wrong attempt → `failed_attempts` 1; a correct attempt → `303` and `failed_attempts` 0
+- [ ] 5 failures then a success → `failed_attempts` 0
+- [ ] 5 concurrent failures → `failed_attempts` 5
 - [ ] The rate limiter refuses → `429`, `Retry-After: 60`, zero D1 writes (row counts unchanged)
 - [ ] `BACKOFFICE_TOTP_SECRET` unset in a test env → `GET /sign-in` `503`, no exception leaks
 
@@ -92,6 +117,18 @@ Sessions:
 
 Step-up:
 - [ ] `POST /numbers/:id/state` with a valid session and CSRF but no `code` → `401`, state unchanged; with a code already used at sign-in → `401`
+- [ ] A wrong step-up code → `401`, `failed_attempts` + 1, one audit row `step_up.failed`
+- [ ] 10 wrong step-up codes → `locked_until` set, one `sign_in.locked`; then a correct step-up code → `401` and not consumed; a sign-in with correct factors → `401`
+- [ ] A successful step-up → `failed_attempts` 0
+- [ ] The rate limiter refusing the `step-up:` key → `429`, `Retry-After: 60`, the code not consumed, zero D1 writes
+
+Audit page and stylesheet:
+- [ ] 250 audit rows seeded → `GET /audit` shows exactly 200, newest first; without a session → `303 /sign-in`
+- [ ] `GET /assets/backoffice.css` without a session → `200`, `text/css; charset=utf-8`, `Cache-Control: public, max-age=31536000, immutable`, the other nine headers present; no `@import`, no `url(` to another origin, no `data:`; the page links it with `?v=<hash>`
+
+Open redirect:
+- [ ] `POST /locale` `returnTo` `/numbers`, `/metrics`, `/audit` → `303` to the same path; `https://evil.example`, `//evil.example`, `/\evil.example`, `javascript:alert(1)`, `/numbers/../x`, empty → `303 /`
+- [ ] `?notice=SignedOut` renders its notice; `?notice=<script>alert(1)</script>` and an unknown value render nothing and reflect nothing
 
 Audit and prune:
 - [ ] Each `BackofficeAuditAction` produces exactly one row; no row column contains the test key, code, access token or app secret (a substring search over every column)
@@ -102,7 +139,7 @@ Registry and channel (`number-registry.test.ts`, `whatsapp-webhook-numbers.test.
 - [ ] Copy A's `sealed_access_token` into number B's row → `openForInbound(B)` throws an error containing B's internal ID and not the token
 - [ ] Webhook signed with X's secret for A → `200`; the owner message lands in A's account inbox
 - [ ] Metadata of A signed with Y's secret → `401`
-- [ ] Unknown `phone_number_id` → `401`, body identical to the bad-signature body; operator event `inbound.unattributed`
+- [ ] Unknown `phone_number_id` → `401`, body identical to the bad-signature body; operator event `inbound.unattributed`; this changes the existing `FOREIGN_PHONE_NUMBER_ID` tests in `whatsapp-webhook.test.ts` from `200` to `401`, listed in the briefing
 - [ ] Changes for A (app X) and B (app Y) in one delivery → `401`
 - [ ] Template-status change by WABA of A, signed with X → `200`, `notification.ignored_field`
 - [ ] Invalid JSON → `401` (was `400`; the changed expectation in `whatsapp-webhook.test.ts` is listed in the briefing)
@@ -120,9 +157,10 @@ Registry and channel (`number-registry.test.ts`, `whatsapp-webhook-numbers.test.
 Backoffice numbers pages (`backoffice-numbers.test.ts`):
 - [ ] `/numbers` empty → the empty-state copy and a register link; one number → one row; three → three rows sorted by label
 - [ ] Register → `303` to `/numbers/:id`; the page and every response body contain neither the token nor the app secret
-- [ ] Verify with the fake Graph returning the matching display number → `verified_at` set, the four template rows shown with their statuses
+- [ ] Verify with the fake Graph returning the matching display number → `POST /numbers/:id/verify` answers `303` to `/numbers/:id/verification`; the GET `200` shows the four template rows with their statuses; `verified_at` set
+- [ ] Reloading `/numbers/:id/verification` → `200` with the same body (no POST repeated)
 - [ ] Verify with a mismatched display number → copy `display_number_mismatch`, `verified_at` null
-- [ ] Verify with fake Graph `401` → copy for kind `auth`; with a closed port → kind `network`
+- [ ] Verify with fake Graph `401` → copy for kind `auth`; `404` → `not_found`; `500` → `upstream`; with a closed port → kind `network`
 
 Metrics (PR B: `activity-in-object.test.ts`, `activity-flush.test.ts`, `backoffice-metrics.test.ts`):
 - [ ] Each `ActivityMetric` increments by exactly one on its event; a duplicate inbound adds zero
@@ -130,6 +168,7 @@ Metrics (PR B: `activity-in-object.test.ts`, `activity-flush.test.ts`, `backoffi
 - [ ] Seeded data → every figure equals its definition (accounts 2/3/1/1 by state, agents active 4, connected 3, revoked 2, budget 79 % without the warning class, 81 % with it)
 - [ ] An empty database → the zero state on every tile, no error
 - [ ] Each metrics page makes exactly one `batch` call
+- [ ] Every statement prepared by a metrics page begins with `SELECT`; `POST`, `PUT`, `PATCH` and `DELETE` on `/metrics` → `404`
 
 Logs (`backoffice-logs-redaction.test.ts`):
 - [ ] Across a full run (enroll values, sign-in success and failure, register, verify, rotate, webhook for A and B, sends), the captured `console.log` output contains none of: the test key, its digest, the TOTP secret, any code typed, `ta`, `ta2`, `sx`, the display numbers, the phone number IDs, the WABA IDs, any client address
@@ -166,9 +205,10 @@ Logs (`backoffice-logs-redaction.test.ts`):
 - [ ] Clickjacking: `frame-ancestors 'none'` and `X-Frame-Options: DENY` on every status (integration)
 - [ ] Enumeration: the sign-in failure body is identical for every wrong factor; the webhook body is identical for an unknown number and a bad signature (integration)
 - [ ] Replay: the TOTP step and concurrent use (integration)
-- [ ] Brute force: the rate limit plus lockout (integration)
+- [ ] Brute force: the rate limit plus lockout, on sign-in and on step-up (integration)
 - [ ] Credential exposure: no token or app secret in any response body, log line or audit row (integration)
 - [ ] Sealed-value swap across rows (integration)
+- [ ] Open redirect: `returnTo` and `?notice=` allow-lists (integration)
 - [ ] Host confusion: `Host` and `X-Forwarded-Host` spoofing; the dispatch uses the request URL host only, so `X-Forwarded-Host: backoffice.zapbip.com` on the MCP host → the MCP app (integration)
 - [ ] Agents: the isolation test (repository shape) and the MCP host 404s (integration)
 - [ ] Enrollment: argv carries no value, TTY required, the hook blocks agents (unit, hooks)

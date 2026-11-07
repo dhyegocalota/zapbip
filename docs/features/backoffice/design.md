@@ -329,7 +329,7 @@ Phone number ID and WABA ID are internal identifiers of the operator's own numbe
 | Notice | `Registered`, `Verified`, `AccessTokenReplaced`, `AppSecretReplaced`, `StateChanged`: `success` Notices. |
 | Action failure | The page re-renders with 401 (code not accepted) or 422 (invalid input) and an `error` Notice at the top; the form that failed keeps its non-secret input. |
 
-**Verify form.** Fields: `CodeField`. Button: "Verify with Meta". The result is rendered by the response to the POST itself (4.7), not a redirect, because the template snapshot is not stored.
+**Verify form.** Fields: `CodeField`. Button: "Verify with Meta". The POST stores the outcome in `verification_snapshot` and answers `303` to `GET /numbers/:numberId/verification` (4.7), like every other action.
 
 **State form.** A `<fieldset>` with `<legend>` "Change state", one radio per allowed target (label states the effect: "Active: receives, sends and accepts new accounts"; "Closed: receives and sends, accepts no new accounts"; "Disabled: ignores inbound and refuses sends"), then `CodeField` and the button "Change state". `disabled` additionally needs a required checkbox "I understand this stops this number completely" (option 4). With no allowed target the fieldset shows the reason text and no button.
 
@@ -338,7 +338,7 @@ Phone number ID and WABA ID are internal identifiers of the operator's own numbe
 - Accessibility: the breadcrumb link "Numbers" is first in `<main>`; the four sections are `<section aria-labelledby>` in the order drawn, and the in-page order is the visual order. Radios are inside a `<fieldset>`; a disabled option is never rendered as a disabled control without text: a state with no allowed target replaces the control with a sentence. Credentials are announced "set, last changed 2026-11-07", never as dots.
 - Copy keys: `NumberBack`, `NumberSummaryTitle`, `NumberDisplayNumber`, `NumberPhoneNumberId`, `NumberWabaId`, `NumberMetaApp`, `NumberAccessToken`, `NumberAppSecret`, `NumberVerifiedAt`, `NumberNeverVerified`, `CredentialSet` (with `{date}`), `NumberAccountsBound`, `NumberVerifyTitle`, `NumberVerifyBody`, `NumberVerifySubmit`, `NumberStateTitle`, `NumberStateLegend`, `NumberStateOptionActive`, `NumberStateOptionClosed`, `NumberStateOptionDisabled`, `NumberStateNoTarget`, `NumberStateDisabledConfirm`, `NumberStateSubmit`, `NumberDisabledWarning`, `NumberRotateTokenTitle`, `NumberRotateTokenLabel`, `NumberRotateTokenSubmit`, `NumberRotateSecretTitle`, `NumberRotateSecretBody` (with `{labels}`), `NumberRotateSecretLabel`, `NumberRotateSecretSubmit`, `NoticeRegistered`, `NoticeRegisteredWithBackfill`, `NoticeVerified`, `NoticeAccessTokenReplaced`, `NoticeAppSecretReplaced`, `NoticeStateChanged`, `StepUpRejected`.
 
-### 4.7 Verify result (`POST /numbers/:numberId/verify`, 200)
+### 4.7 Verify result (`GET /numbers/:numberId/verification`, 200, reached by `303` from `POST /numbers/:numberId/verify`)
 
 ```
 1280 and 375 (single column, --measure-form)
@@ -364,13 +364,14 @@ Phone number ID and WABA ID are internal identifiers of the operator's own numbe
 | Verified, all four templates approved | `success` Notice; the template table; no warning. |
 | Verified, a template not approved or missing | `success` Notice plus a `warning` Notice "Out-of-window notices will fail until the templates are approved. You can still activate the number." Each cell reads `Approved`, `Pending`, `Rejected` or `Missing`, text first, with a glyph. |
 | Display number differs | `error` Notice "The number Meta reports does not match the registered display number." Shows both numbers (digits only). `verified_at` unchanged. |
-| Graph failure | `error` Notice with the kind only: `auth` ("Meta refused the access token"), `not_found` ("Meta does not know this phone number ID"), `network` ("Could not reach Meta; try again"). Never a response body. |
+| Graph failure | `error` Notice with the kind only: `auth` ("Meta refused the access token"), `not_found` ("Meta does not know this phone number ID"), `network` ("Could not reach Meta; try again"), `upstream` ("Meta answered with an error; try again later"). Never a response body. |
+| Never verified | Unknown ID or no `verification_snapshot`: the 404 page. |
 | Code not accepted | The number detail page with a 401 `error` Notice. |
 
-Reloading the result re-posts a used code, which is refused; the page says so in a help line ("Reload does not repeat the check; use the button below") and always offers the "Back to <label>" link, which is the only supported way forward.
+Reloading is safe: it repeats a GET and shows the stored snapshot, with the line "Checked <date>" (`VerifyCheckedAt`). The page always offers the "Back to <label>" link.
 
 - Accessibility: the template table has a caption, `th scope`, and a text cell per status; the result Notice is `role="status"` for success and `role="alert"` for errors; focus order is Notice, tables, button.
-- Copy keys: `VerifyResultTitle` (with `{label}`), `VerifyOk`, `VerifyMismatch`, `VerifyErrorAuth`, `VerifyErrorNotFound`, `VerifyErrorNetwork`, `VerifyMetaReports`, `VerifyVerifiedName`, `VerifyQualityRating`, `VerifyTemplatesTitle`, `VerifyTemplateName`, `VerifyTemplateStatusApproved`, `VerifyTemplateStatusPending`, `VerifyTemplateStatusRejected`, `VerifyTemplateStatusMissing`, `VerifyTemplatesWarning`, `VerifyReloadHelp`, `VerifyBack` (with `{label}`), `VerifyExpectedNumber`, `VerifyReportedNumber`.
+- Copy keys: `VerifyResultTitle` (with `{label}`), `VerifyOk`, `VerifyMismatch`, `VerifyErrorAuth`, `VerifyErrorNotFound`, `VerifyErrorNetwork`, `VerifyMetaReports`, `VerifyVerifiedName`, `VerifyQualityRating`, `VerifyTemplatesTitle`, `VerifyTemplateName`, `VerifyTemplateStatusApproved`, `VerifyTemplateStatusPending`, `VerifyTemplateStatusRejected`, `VerifyTemplateStatusMissing`, `VerifyTemplatesWarning`, `VerifyCheckedAt`, `VerifyBack` (with `{label}`), `VerifyExpectedNumber`, `VerifyReportedNumber`, `VerifyErrorUpstream`.
 
 ### 4.8 Metrics (`GET /metrics`, PR B)
 
@@ -624,7 +625,8 @@ The per-page key lists are in section 4. The strings:
 | `VerifyTemplateStatusRejected` | Rejeitado | Rejected |
 | `VerifyTemplateStatusMissing` | Ausente | Missing |
 | `VerifyTemplatesWarning` | Avisos fora da janela vão falhar até os modelos serem aprovados. Você ainda pode ativar o número. | Out-of-window notices will fail until the templates are approved. You can still activate the number. |
-| `VerifyReloadHelp` | Recarregar não repete a verificação. Use o botão abaixo. | Reloading does not repeat the check. Use the button below. |
+| `VerifyCheckedAt` | Verificado em {date} | Checked {date} |
+| `VerifyErrorUpstream` | A Meta respondeu com erro. Tente de novo mais tarde. | Meta answered with an error. Try again later. |
 | `VerifyBack` | Voltar para {label} | Back to {label} |
 
 ### 5.3 Metrics, audit, errors
@@ -832,7 +834,7 @@ All answers are the recommended option, chosen under the owner's delegation. Not
 | Token set in section 2 (colour, type, space, radius, size, measure) | adopted as written | recommended (owner delegated 2026-11-06), 2026-11-07 |
 | Fonts | system stacks only, no web font (the CSP forbids one) | recommended (owner delegated 2026-11-06), 2026-11-07 |
 | Flash messages | allow-listed `notice` query value, no cookie | recommended (owner delegated 2026-11-06), 2026-11-07 |
-| Verify result | rendered in the POST response, not stored | recommended (owner delegated 2026-11-06), 2026-11-07 |
+| Verify result | stored as `verification_snapshot`, rendered by a GET after `303` (POST, 303, GET as in section 1) | recommended (owner delegated 2026-11-06), 2026-11-07 |
 | Date format | `YYYY-MM-DD HH:mm UTC` in both locales | recommended (owner delegated 2026-11-06), 2026-11-07 |
 
 ## 9. Hand-off to the plan
