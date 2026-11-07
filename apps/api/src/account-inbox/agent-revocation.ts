@@ -3,6 +3,7 @@ const CLEAR_WAKE_JOBS_STATEMENT = 'DELETE FROM wake_jobs WHERE agent = ?';
 const CLOSE_QUESTIONS_STATEMENT = 'DELETE FROM questions WHERE agent = ? AND answer IS NULL';
 const MARK_REVOKED_STATEMENT =
   'INSERT INTO revoked_agents (agent, revoked_at) VALUES (?, ?) ON CONFLICT (agent) DO UPDATE SET revoked_at = excluded.revoked_at';
+const SELECT_REVOKED_STATEMENT = 'SELECT agent FROM revoked_agents WHERE agent = ?';
 const FORGET_REVOKED_STATEMENT = 'DELETE FROM revoked_agents WHERE agent = ?';
 const FORGET_MESSAGES_STATEMENT = 'DELETE FROM inbox_messages WHERE agent = ?';
 const FORGET_QUESTIONS_STATEMENT = 'DELETE FROM questions WHERE agent = ?';
@@ -24,4 +25,8 @@ export function reviveAgentName(input: { storage: DurableObjectStorage; agent: s
     input.storage.sql.exec(FORGET_QUESTIONS_STATEMENT, input.agent);
     input.storage.sql.exec(FORGET_AGENT_STATEMENT, input.agent);
   });
+}
+
+export function isAgentRevoked(input: { storage: DurableObjectStorage; agent: string }): boolean {
+  return input.storage.sql.exec(SELECT_REVOKED_STATEMENT, input.agent).toArray().length > 0;
 }

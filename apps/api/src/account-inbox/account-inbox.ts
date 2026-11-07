@@ -41,6 +41,7 @@ import {
 } from '@zapbip/types';
 import { D1AccountDirectory } from '../adapters/d1/d1-account-directory';
 import { D1ChannelRestrictions } from '../adapters/d1/d1-channel-restrictions';
+import { D1ConnectionDirectory } from '../adapters/d1/d1-connection-directory';
 import { D1ConnectionRegistry } from '../adapters/d1/d1-connection-registry';
 import { D1MessageIndex } from '../adapters/d1/d1-message-index';
 import { findOwnerByAccountId } from '../adapters/d1/d1-owner-directory';
@@ -66,7 +67,7 @@ import { LogEvent, type LogFields } from '../contract/log';
 import { logEvent } from '../log';
 import { AccountTombstoned } from './account-tombstoned';
 import { logFieldsOfAccountResult } from './account-log';
-import { reviveAgentName, revokeAgentState } from './agent-revocation';
+import { isAgentRevoked, reviveAgentName, revokeAgentState } from './agent-revocation';
 import { nextAlarmAt } from './alarm-time';
 import { HttpStatus } from '../routes/http-status';
 import { isAccountActive, isConnectionAdmitted } from './connection-admission';
@@ -75,6 +76,7 @@ import {
   connectorAgentOf,
   hasLiveConnectorSocket,
   parseDoneFrame,
+  rejectConnectorSocket,
   remainingSocketCount,
   sendFrameToAgent,
   sendMessagesToAgent,
@@ -84,6 +86,7 @@ import {
   AlarmErrorCode,
   CONNECTION_NOT_ACTIVE_MESSAGE,
   CONNECTOR_AGENT_PARAMETER,
+  CONNECTOR_DIGEST_PARAMETER,
   NORMAL_CLOSE_CODE,
   OWNER_LOCALE_STORAGE_KEY,
   TOMBSTONE_STORAGE_KEY,
@@ -455,6 +458,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     const wasLive = !this.isTombstoned;
     this.isTombstoned = true;
     if (wasLive) this.dependencies.waiters.cancelAll();
+    this.ctx.getWebSockets().forEach((socket) => socket.close(REVOKED_CLOSE_CODE));
     await this.ctx.storage.deleteAlarm();
     await this.ctx.storage.deleteAll();
     await this.ctx.storage.put(TOMBSTONE_STORAGE_KEY, true);
@@ -478,9 +482,21 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     });
   }
 
+  private async isConnectorKeyLive(input: { agent: string; secretDigest: string }): Promise<boolean> {
+    const { agent, secretDigest } = input;
+    const resolved = await new D1ConnectionDirectory({ database: this.env.CONNECTIONS }).resolveSecretDigest({ secretDigest });
+    const isKeyOfThisAgent = resolved !== null && resolved.accountId === this.accountId && resolved.agent === agent;
+    return isKeyOfThisAgent && !isAgentRevoked({ storage: this.ctx.storage, agent });
+  }
+
   async fetch(request: Request): Promise<Response> {
-    const agent = new URL(request.url).searchParams.get(CONNECTOR_AGENT_PARAMETER);
-    if (agent === null) return new Response(null, { status: HttpStatus.BadRequest });
+    this.assertLive();
+    const { searchParams } = new URL(request.url);
+    const agent = searchParams.get(CONNECTOR_AGENT_PARAMETER);
+    const secretDigest = searchParams.get(CONNECTOR_DIGEST_PARAMETER);
+    if (agent === null || secretDigest === null) return new Response(null, { status: HttpStatus.BadRequest });
+    const isKeyLive = await this.isConnectorKeyLive({ agent, secretDigest });
+    if (!isKeyLive) return new Response(null, { status: HttpStatus.SwitchingProtocols, webSocket: rejectConnectorSocket() });
     await inbox.touchAgent({ dependencies: this.dependencies, agent });
     const attached = await inbox.attachLocalConnector({
       dependencies: this.dependencies,
@@ -506,6 +522,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
   }
 
   private async detachSocket(socket: WebSocket): Promise<void> {
+    if (this.isTombstoned) return;
     const agent = connectorAgentOf({ context: this.ctx, socket });
     const remainingSockets = remainingSocketCount({ context: this.ctx, agent, closing: socket });
     await inbox.detachLocalConnector({ dependencies: this.dependencies, wake: this.wake, agent, remainingSockets });
