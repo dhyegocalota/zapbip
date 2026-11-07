@@ -40,6 +40,11 @@ const LINK_PATTERN = /\]\(([^)\s]+)\)/g;
 const EXTERNAL_LINK_PATTERN = /^(https?:|mailto:|#)/;
 const PNPM_COMMAND_PATTERN = /\bpnpm ([a-z][\w:-]*)/g;
 const FENCED_BLOCK_PATTERN = /```[\s\S]*?```/g;
+const MINTLIFY_PUBLISH_RUNBOOK = 'mintlify-publish.md';
+const NPM_PACKAGE_COUNT = 2;
+const NPM_PUBLISH_PATTERN = /`npm publish --access public`/g;
+const PNPM_PUBLISH_PROHIBITION_PATTERN = /never publish or pack with pnpm/g;
+const PNPM_PUBLISH_PATTERN = /pnpm (publish|pack)\b/;
 const IMMUTABLE_MIGRATION_PATTERN = /migration[^.]*is never edited/i;
 
 type Runbook = { file: string; text: string };
@@ -150,6 +155,13 @@ describe('runbooks', () => {
 
   test('deploy.md states that a deployed migration is never edited', () => {
     expect(readRunbook(DEPLOY_RUNBOOK).text).toMatch(IMMUTABLE_MIGRATION_PATTERN);
+  });
+
+  test('the npm packages are published with npm from the package folder, never with pnpm', () => {
+    const text = readRunbook(MINTLIFY_PUBLISH_RUNBOOK).text;
+    expect(text.match(NPM_PUBLISH_PATTERN)).toHaveLength(NPM_PACKAGE_COUNT);
+    expect(text.match(PNPM_PUBLISH_PROHIBITION_PATTERN)).toHaveLength(NPM_PACKAGE_COUNT);
+    expect(text).not.toMatch(PNPM_PUBLISH_PATTERN);
   });
 
   test('no file of the Mintlify site points at the runbooks', () => {

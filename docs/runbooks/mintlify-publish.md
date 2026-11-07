@@ -10,7 +10,7 @@ The docs live in `apps/docs` and publish when `main` changes. The site names the
 
    If it fails: the unit tests accept either the sentinel or digits; a failure means a page copied the number by hand instead of using the snippet. Fix the page, never the test.
 
-2. **Publish the npm package.** Check that the package version in `apps/connector/package.json` is the exact version the docs and skills pin as `npx zapbip@<version>`. Create an npm account at `https://www.npmjs.com/signup` with two-factor authentication and run `npm login`. Remove `"private": true` from that `package.json` in a pull request, merge it, then from the merged `main` run `pnpm --filter zapbip build`, `npm pack --dry-run` inside `apps/connector` and finally `npm publish --access public` inside `apps/connector`. Enter the one-time code when npm asks.
+2. **Publish the npm package.** Check that the package version in `apps/connector/package.json` is the exact version the docs and skills pin as `npx zapbip@<version>`. Create an npm account at `https://www.npmjs.com/signup` with two-factor authentication and run `npm login`. Remove `"private": true` from that `package.json` in a pull request, merge it, then from the merged `main` run `pnpm --filter zapbip build`, `npm pack --dry-run` inside `apps/connector` and finally `npm publish --access public` inside `apps/connector` (never publish or pack with pnpm: it fails on workspace dependencies). Enter the one-time code when npm asks.
 
    Expect: `npm pack --dry-run` lists only `dist/cli.js`, `README.md` and `package.json`, and `npm view zapbip@<version> maintainers --json` lists your npm user. Publish with two-factor authentication on the account and with provenance (`npm publish --access public --provenance` from a trusted CI run, or without `--provenance` only if you publish by hand and accept that). Then write your exact npm user name as `ZAPBIP_NPM_PUBLISHER` in your own environment file: the production deploy and the docs deploy refuse until the package resolves and lists that user as a maintainer.
 
@@ -22,7 +22,7 @@ The docs live in `apps/docs` and publish when `main` changes. The site names the
 
    If it fails: the deploy command refuses at its company facts step and names the fields still holding the sentinel; nothing was deployed.
 
-4. **Publish the OpenClaw plugin.** Log in with `npm login` as a member of the `@zapbip` scope (create the scope at `https://www.npmjs.com/org/create` if it does not exist). Check that `apps/openclaw-plugin/package.json` is version `0.1.0` with the name `@zapbip/openclaw-plugin`, build it, run `npm pack --dry-run` inside `apps/openclaw-plugin` and then `npm publish --access public` there. Enter the one-time code when npm asks.
+4. **Publish the OpenClaw plugin.** Log in with `npm login` as a member of the `@zapbip` scope (create the scope at `https://www.npmjs.com/org/create` if it does not exist). Check that `apps/openclaw-plugin/package.json` is version `0.1.0` with the name `@zapbip/openclaw-plugin`, build it, run `npm pack --dry-run` inside `apps/openclaw-plugin` and then `npm publish --access public` there, from the package folder so its `prepublishOnly` build runs (never publish or pack with pnpm: it fails on the `workspace:*` devDependencies with ERR_PNPM_CANNOT_RESOLVE_WORKSPACE_PROTOCOL). Enter the one-time code when npm asks.
 
    Expect: `npm view @zapbip/openclaw-plugin@0.1.0 maintainers --json` lists your npm user, the same one as `ZAPBIP_NPM_PUBLISHER`.
 
