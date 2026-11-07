@@ -87,7 +87,10 @@ describe('activity flush to the directory', () => {
     await flushDueActivity();
     await sendAgentText();
     await flushDueActivity();
-    expect(await readDailyRows()).toContainEqual(expect.objectContaining({ metric: ActivityMetric.MessagesOut, count: 3 }));
+    const sentTotal = (await readDailyRows())
+      .filter((row) => row.metric === ActivityMetric.MessagesOut)
+      .reduce((total, row) => total + row.count, 0);
+    expect(sentTotal).toBe(3);
   });
 
   it('prunes flushed rows older than seven days and keeps recent ones', async () => {
