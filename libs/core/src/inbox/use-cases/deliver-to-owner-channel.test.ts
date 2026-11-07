@@ -172,6 +172,22 @@ describe('deliverToOwner with the channel', () => {
     expect((await environment.repository.findWindow()).noticeSentForClosedWindow).toBe(false);
   });
 
+  test('a window the channel reports closed with a rejected notice leaves the message queued and the agent reads the notice failure text', async () => {
+    const environment = await createEnvironment();
+    environment.sender.failSessionCalls({
+      callNumbers: [1],
+      error: channelError({ kind: ChannelErrorKind.WindowClosed, errorCode: 131047 }),
+    });
+    environment.sender.failTemplateCalls({
+      callNumbers: [1],
+      error: channelError({ kind: ChannelErrorKind.TemplateRejected, message: 'template not approved', errorCode: 132001 }),
+    });
+    const error = await captureInboxError(() => send({ environment, text: 'hi' }));
+    expect(error).toEqual({ code: ChannelErrorKind.DeliveryFailed, message: NOTICE_FAILED_MESSAGE });
+    const [stored] = await historyOf({ environment });
+    expect(stored).toMatchObject({ delivery: DeliveryState.Queued });
+  });
+
   test('a failed message does not read the notice failure of a later queued message', async () => {
     const environment = await createEnvironment();
     environment.sender.failSessionCalls({
