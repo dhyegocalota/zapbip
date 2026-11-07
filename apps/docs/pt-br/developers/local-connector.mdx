@@ -122,7 +122,7 @@ Cada linha é um JSON com o id da mensagem, o tipo, `"sender":"owner"`, `"verifi
 
 Os dois programas ficam abertos e reconectam sozinhos, como o `connect`. Os dois só marcam uma mensagem como tratada depois de repassá-la, então uma mensagem nunca se perde e nunca aparece duas vezes. Os logs deles vão para a saída de erro e nunca trazem suas mensagens nem seu link.
 
-Então as três formas se completam: o canal para uma sessão aberta, o `listen` como reserva dele e o `connect` para uma sessão fechada.
+Então as três formas se completam: o canal para uma sessão aberta, o `listen` como alternativa a ele e o `connect` para uma sessão fechada.
 
 ## Um conector por conexão
 

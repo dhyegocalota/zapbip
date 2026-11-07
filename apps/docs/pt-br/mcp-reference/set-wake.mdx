@@ -13,7 +13,7 @@ Salva como esta conexão é acordada quando você escreve e nenhuma chamada est�
 | `url`              | string, opcional  | Obrigatório para `webhook`. `https`, sem usuário e senha, sem fragmento, porta 443 ou ausente, até 512 caracteres. O host escolhe o provedor.                                                                                              |
 | `token`            | string, opcional  | Obrigatório para `webhook`. Imprimível, sem espaços, de 16 a 512 caracteres. Em um webhook genérico é a chave de assinatura, com pelo menos 32 caracteres.                                                                                 |
 | `interval_minutes` | inteiro, opcional | Obrigatório para `scheduled`. De 1 a 1440 minutos. O ChatGPT e o claude.ai rodam tarefas agendadas a cada 60 minutos no mínimo.                                                                                                            |
-| `standby_agent`    | string, opcional  | Obrigatório para `standby`. O nome de outra conexão da mesma conta que não seja ela mesma uma reserva.                                                                                                                                     |
+| `standby_agent`    | string, opcional  | Obrigatório para `standby`. O nome de outra conexão da mesma conta que não esteja ela mesma em espera.                                                                                                                                     |
 
 Campos de outro modo devem estar ausentes.
 
@@ -33,13 +33,13 @@ Peça ao seu agente para chamar esta ferramenta com `{ "mode": "local" }` enquan
 
 ## Em espera
 
-Um agente que não pode ser despertado indica outro agente da mesma conta para responder no lugar dele. O zapbip copia sua mensagem para a reserva e a desperta; a reserva responde como ela mesma.
+Um agente que não pode ser despertado indica outro agente da mesma conta para responder no lugar dele. O zapbip copia sua mensagem para a conexão em espera e a desperta; ela responde como ela mesma.
 
 ```json
 { "mode": "standby", "standby_agent": "grok-bot" }
 ```
 
-Uma reserva nunca repassa para outra reserva: é um salto só. Se a reserva não existe, foi removida ou está ela mesma em modo reserva, nada é copiado e sua mensagem espera com o primeiro agente.
+Uma conexão em espera nunca repassa para outra em espera: é um salto só. Se a conexão em espera não existe, foi removida ou está ela mesma em espera, nada é copiado e sua mensagem espera com o primeiro agente.
 
 ## Provedores
 
@@ -53,7 +53,7 @@ O provedor é escolhido pelo host da URL, nunca por um campo.
 
 ## Saída
 
-`{ "status": "saved", "wake_mode": string, "effective_rung": string, "provider": string | null }`. `provider` vem preenchido só para `webhook`. `effective_rung` é `inbox` quando a reserva não pode ser usada, e para `local` enquanto nenhum conector está conectado, porque a mensagem então espera na caixa de entrada. A URL, o token e o host nunca são devolvidos.
+`{ "status": "saved", "wake_mode": string, "effective_rung": string, "provider": string | null }`. `provider` vem preenchido só para `webhook`. `effective_rung` é `inbox` quando a conexão em espera não pode ser usada, e para `local` enquanto nenhum conector está conectado, porque a mensagem então espera na caixa de entrada. A URL, o token e o host nunca são devolvidos.
 
 ## Erros
 

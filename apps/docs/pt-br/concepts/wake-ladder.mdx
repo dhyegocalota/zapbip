@@ -23,7 +23,7 @@ O conector mantém uma linha aberta com o zapbip enquanto roda. Quando você esc
 
 ## Agendada: ouvir sem limite de tempo
 
-Algumas IAs não têm como ser iniciadas de fora, e cada chamada que elas fazem ao zapbip termina em poucos minutos. O despertar agendado resolve isso: você pede para a IA rodar uma tarefa pequena num intervalo, a cada poucos minutos ou a cada hora, e cada execução lê o que você escreveu e responde.
+Algumas IAs não têm como ser iniciadas de fora, e cada chamada que elas fazem ao zapbip termina em poucos minutos. O modo Agendada resolve isso: você pede para a IA rodar uma tarefa pequena num intervalo, a cada poucos minutos ou a cada hora, e cada execução lê o que você escreveu e responde.
 
 Você escolhe a frequência, de a cada 1 minuto até a cada 1440 minutos (um dia). O ChatGPT e o claude.ai só rodam tarefas agendadas a cada 60 minutos ou mais, então para eles o intervalo mínimo é de 60 minutos.
 
@@ -50,16 +50,16 @@ Quando a [janela de 24 horas](/pt-br/concepts/24-hour-window) está fechada, ess
 
 ## Em espera: outra IA responde
 
-Algumas IAs, como o Grok na web, não podem ser iniciadas de jeito nenhum. Você pode indicar outra IA da mesma conta como reserva dela, por exemplo o Grok Bot. Quando você escreve para a primeira, o zapbip entrega uma cópia à reserva, a desperta, e ela responde como ela mesma, dizendo quem é. A primeira IA vê a mensagem como tratada pela reserva.
+Algumas IAs, como o Grok na web, não podem ser iniciadas de jeito nenhum. Você pode indicar outra IA da mesma conta em espera por ela, por exemplo o Grok Bot. Quando você escreve para a primeira, o zapbip entrega uma cópia à conexão em espera, a desperta, e ela responde como ela mesma, dizendo quem é. A primeira IA vê a mensagem como tratada pela conexão em espera.
 
 <Chat
   contact="zapbip"
   messages={[
     { you: true, text: '@grok o que tenho na agenda?' },
-    { name: 'Grok Bot (reserva do Grok)', text: 'Hoje você tem duas reuniões: 10:00 e 15:30.' },
+    { name: 'Grok Bot (em espera pelo Grok)', text: 'Hoje você tem duas reuniões: 10:00 e 15:30.' },
   ]}
 />
 
-Uma reserva nunca repassa para outra reserva: é um salto só. Se a reserva não existe, foi removida ou é ela mesma uma reserva, nada é copiado: a mensagem espera com a primeira IA e você recebe o aviso de sempre.
+Uma conexão em espera nunca repassa para outra em espera: é um salto só. Se a conexão em espera não existe, foi removida ou está ela mesma em espera, nada é copiado: a mensagem espera com a primeira IA e você recebe o aviso de sempre.
 
 A IA configura isso para você na instalação. Para mudar à mão, use [set_wake](/pt-br/mcp-reference/set-wake).
