@@ -1,4 +1,6 @@
 import { DAY_MS } from '@zapbip/types';
+import { BackofficeNotice } from '../backoffice-notice';
+import type { NumberOption } from './metrics-report';
 import { utcDay } from '../../account-inbox/usage-meter';
 
 export enum MetricsPeriod {
@@ -36,4 +38,8 @@ export function periodDays(input: { period: MetricsPeriod }): number {
 export function windowDays(input: { now: number; period: MetricsPeriod }): string[] {
   const count = periodDays({ period: input.period });
   return Array.from({ length: count }, (_, offset) => utcDay({ now: input.now - (count - 1 - offset) * DAY_MS }));
+}
+
+export function isKnownMetricsNumber(_input: { filter: MetricsFilter; numbers: NumberOption[] }): boolean {
+  throw new Error('isKnownMetricsNumber is not implemented');
 }
