@@ -3,6 +3,7 @@ import { reset, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:tes
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { USAGE_METER_RETENTION_MS } from '../../src/account-inbox/usage-meter';
 import { ActivityMetric } from '../../src/contract/activity-metric';
+import { MIDDAY_START, pinClockAt, SHORTLY_BEFORE_MIDNIGHT_START } from '../support/pinned-clock';
 import { advanceClock, openWindow, registerDueTimeProvider } from '../support/inbox-session';
 import { applyActivityMigration, applyDirectoryMigration, seedAccount } from '../support/seed';
 import { TEST_NUMBER_ID, seedWhatsAppNumber } from '../support/whatsapp-numbers';
@@ -56,6 +57,7 @@ async function flushDueActivity(): Promise<void> {
 }
 
 beforeEach(async () => {
+  pinClockAt({ at: MIDDAY_START });
   await applyDirectoryMigration();
   await applyActivityMigration();
   await seedWhatsAppNumber();
@@ -87,10 +89,7 @@ describe('activity flush to the directory', () => {
     await flushDueActivity();
     await sendAgentText();
     await flushDueActivity();
-    const sentTotal = (await readDailyRows())
-      .filter((row) => row.metric === ActivityMetric.MessagesOut)
-      .reduce((total, row) => total + row.count, 0);
-    expect(sentTotal).toBe(3);
+    expect(await readDailyRows()).toContainEqual(expect.objectContaining({ metric: ActivityMetric.MessagesOut, count: 3 }));
   });
 
   it('prunes flushed rows older than seven days and keeps recent ones', async () => {
@@ -109,6 +108,16 @@ describe('activity flush to the directory', () => {
     const meterDays = (await readMeterRows()).map((row) => row.day);
     expect(meterDays).not.toContain(oldDay);
     expect(meterDays.length).toBeGreaterThan(0);
+  });
+
+  it('keeps one row per UTC day when the hour of the flush crosses midnight', async () => {
+    pinClockAt({ at: SHORTLY_BEFORE_MIDNIGHT_START });
+    await recordTwoSends();
+    await sendAgentText();
+    await flushDueActivity();
+    const sentRows = (await readDailyRows()).filter((row) => row.metric === ActivityMetric.MessagesOut);
+    expect(sentRows.map((row) => row.day)).toEqual(['2030-01-01']);
+    expect(sentRows.map((row) => row.count)).toEqual([3]);
   });
 
   it('keeps the alarm at an earlier provider and still flushes at its own due time', async () => {
