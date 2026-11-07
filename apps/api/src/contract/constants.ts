@@ -1,3 +1,4 @@
+import { DAY_MS, HOUR_MS, MINUTE_MS, SECOND_MS } from '@zapbip/types';
 import { DeployEnvironment } from './deploy-environment';
 
 export const CONNECTION_SECRET_PREFIX = 'zb_conn_';
@@ -21,3 +22,11 @@ export const DEV_SEED_PATH = '/dev/seed';
 export const OWNER_PHONE_PATTERN = /^[0-9]{8,15}$/;
 export const INLINE_IMAGE_CONTENT_TYPE = 'image';
 export const WHATSAPP_WEBHOOK_PATH = '/webhooks/whatsapp';
+export const BACKOFFICE_SESSION_IDLE_MS = 30 * MINUTE_MS;
+export const BACKOFFICE_SESSION_MAX_MS = 8 * HOUR_MS;
+export const BACKOFFICE_LOCKOUT_THRESHOLD = 10;
+export const BACKOFFICE_LOCKOUT_MS = 15 * MINUTE_MS;
+export const BACKOFFICE_AUDIT_RETENTION_MS = 365 * DAY_MS;
+export const TOTP_PERIOD_MS = 30 * SECOND_MS;
+export const TOTP_DIGITS = 6;
+export const TOTP_WINDOW_STEPS = 1;

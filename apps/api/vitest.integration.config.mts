@@ -1,8 +1,10 @@
 import { cloudflareTest } from '@cloudflare/vitest-pool-workers';
 import { defineConfig } from 'vitest/config';
 import { DEVELOPMENT_ENVIRONMENT } from './src/contract/constants';
+import { BACKOFFICE_TEST_KEY_DIGEST, BACKOFFICE_TEST_TOTP_SECRET } from './test/support/backoffice-credentials';
 
 const WAKE_TEST_SECRET_KEY = Buffer.alloc(32).toString('base64');
+const NUMBER_REGISTRY_TEST_KEY = Buffer.alloc(32).toString('base64');
 const LOADED_MACHINE_TEST_TIMEOUT_MS = 30_000;
 
 export default defineConfig({
@@ -18,6 +20,9 @@ export default defineConfig({
           WHATSAPP_PHONE_NUMBER_ID: '1000000000000001',
           WHATSAPP_GRAPH_BASE_URL: 'http://127.0.0.1:4012',
           WAKE_SECRET_KEY: WAKE_TEST_SECRET_KEY,
+          NUMBER_REGISTRY_KEY: NUMBER_REGISTRY_TEST_KEY,
+          BACKOFFICE_KEY_DIGEST: BACKOFFICE_TEST_KEY_DIGEST,
+          BACKOFFICE_TOTP_SECRET: BACKOFFICE_TEST_TOTP_SECRET,
         },
       },
     }),
