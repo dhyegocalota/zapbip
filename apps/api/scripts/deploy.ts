@@ -8,7 +8,7 @@ import {
   OFFICIAL_WHATSAPP_NUMBER,
   OPENCLAW_PLUGIN_NPM_VERSION,
   ZAPBIP_NPM_VERSION,
-  ZAPBIP_PYPI_VERSION,
+  ZAPBIP_HERMES_PLUGIN_VERSION,
 } from '@zapbip/types';
 import { z } from 'zod';
 import { DeployEnvironment, parseDeployEnvironment } from '../src/operations/deploy-environment';
@@ -191,7 +191,7 @@ async function main(): Promise<void> {
       company: COMPANY,
       npmVersion: ZAPBIP_NPM_VERSION,
       openclawPluginVersion: OPENCLAW_PLUGIN_NPM_VERSION,
-      pypiVersion: ZAPBIP_PYPI_VERSION,
+      pypiVersion: ZAPBIP_HERMES_PLUGIN_VERSION,
       packageFetcher: createPackageFetcher(),
       nameserverResolver: createNameserverResolver(),
       log: console.log,

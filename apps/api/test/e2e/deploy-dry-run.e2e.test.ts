@@ -10,7 +10,7 @@ import {
   OFFICIAL_WHATSAPP_NUMBER,
   OPENCLAW_PLUGIN_NPM_VERSION,
   ZAPBIP_NPM_VERSION,
-  ZAPBIP_PYPI_VERSION,
+  ZAPBIP_HERMES_PLUGIN_VERSION,
 } from '@zapbip/types';
 import { afterAll, describe, expect, test } from 'vitest';
 import { readDeployBlock, runDeploy } from '../../scripts/deploy';
@@ -98,7 +98,7 @@ async function refusalOf(input: {
     company: input.company,
     npmVersion: ZAPBIP_NPM_VERSION,
     openclawPluginVersion: OPENCLAW_PLUGIN_NPM_VERSION,
-    pypiVersion: ZAPBIP_PYPI_VERSION,
+    pypiVersion: ZAPBIP_HERMES_PLUGIN_VERSION,
     packageFetcher: fakePackageFetcher({}),
     nameserverResolver: fakeNameserverResolver({}),
     log: (line) => lines.push(line),

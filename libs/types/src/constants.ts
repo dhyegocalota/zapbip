@@ -49,5 +49,6 @@ export const CLOUDFLARE_NAMESERVER_SUFFIX = '.ns.cloudflare.com';
 export const NPM_REGISTRY_URL = 'https://registry.npmjs.org';
 export const ZAPBIP_NPM_VERSION = '0.1.0';
 export const OPENCLAW_PLUGIN_NPM_VERSION = '0.1.0';
-export const ZAPBIP_PYPI_VERSION = '0.1.0';
+export const ZAPBIP_HERMES_PLUGIN_VERSION = '0.1.0';
+export const ZAPBIP_HERMES_WHEEL_SHA256 = '25e9eade35908bffc09ed502cde3f41bc4eb59ac6f7befefe4a8c0aba0b30ee1';
 export const SEEN_MESSAGE_LIMIT = 1_024;

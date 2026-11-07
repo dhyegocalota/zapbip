@@ -4,7 +4,7 @@ import {
   OFFICIAL_WHATSAPP_NUMBER,
   OPENCLAW_PLUGIN_NPM_VERSION,
   ZAPBIP_NPM_VERSION,
-  ZAPBIP_PYPI_VERSION,
+  ZAPBIP_HERMES_PLUGIN_VERSION,
 } from '@zapbip/types';
 import { type DeployShell, type EnvironmentVariables, runDocsPreflight } from '../src/operations/deploy-preflight';
 import { createPackageFetcher, type PackageFetcher } from '../src/operations/package-fetcher';
@@ -41,7 +41,7 @@ if (import.meta.main) {
     company: COMPANY,
     npmVersion: ZAPBIP_NPM_VERSION,
     openclawPluginVersion: OPENCLAW_PLUGIN_NPM_VERSION,
-    pypiVersion: ZAPBIP_PYPI_VERSION,
+    pypiVersion: ZAPBIP_HERMES_PLUGIN_VERSION,
     packageFetcher: createPackageFetcher(),
     log: console.log,
   })
