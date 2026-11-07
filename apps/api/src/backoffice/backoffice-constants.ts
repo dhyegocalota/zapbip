@@ -1,3 +1,5 @@
+import { DAY_MS, SECOND_MS } from '@zapbip/types';
+
 export const SEE_OTHER_STATUS = 303;
 export const HSTS_MAX_AGE_SECONDS = 63_072_000;
 export const CONTENT_SECURITY_POLICY = [
@@ -31,3 +33,4 @@ export const ENGLISH_LANGUAGE_PREFIX = 'en';
 export const CSRF_CONTEXT = 'zapbip backoffice csrf';
 export const BACKOFFICE_PRUNE_HOUR = 4;
 export const BACKOFFICE_PRUNE_MINUTE = 0;
+export const LOCALE_COOKIE_MAX_AGE_SECONDS = (365 * DAY_MS) / SECOND_MS;

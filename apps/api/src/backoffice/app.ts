@@ -5,6 +5,7 @@ import { csrfGuard } from './auth/csrf-guard';
 import { requireSession } from './auth/require-session';
 import { BackofficePath } from './backoffice-paths';
 import { sessionRoutes } from './routes/session-routes';
+import { localeRoutes } from './routes/locale-routes';
 import { requestContext } from './request-context';
 import { signInRoutes } from './routes/sign-in-routes';
 import { handleBackofficeError, securityHeaders } from './security-headers';
@@ -37,6 +38,7 @@ export function createBackofficeApp(): Hono<BackofficeEnv> {
   app.use('*', csrfGuard);
   app.route('/', signInRoutes);
   app.route('/', sessionRoutes);
+  app.route('/', localeRoutes);
   app.notFound(notFoundResponse);
   return app;
 }
