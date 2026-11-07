@@ -1,6 +1,6 @@
 # Install skills
 
-**Status:** Building
+**Status:** Shipped 2026-11-07
 **Tier:** 🟡
 **Owner approval:** approved 2026-11-06 (owner delegated; redesign of the same day)
 **ADRs:** [0020](../../adr/0020-one-install-link-per-connection-the-ai-reads-the-instructions.md), [0021](../../adr/0021-the-agent-rules-come-from-the-mcp-server.md)
