@@ -161,34 +161,41 @@ async function metricsHtml(input: { query?: string }): Promise<string> {
   return response.text();
 }
 
-function sqlOfRecorded(input: { sqlOfStatement: WeakMap<object, string>; statement: object }): string {
-  const sql = input.sqlOfStatement.get(input.statement);
-  if (sql === undefined) throw new Error('a batched statement was not prepared through the recorder');
-  return sql;
+type RecordedStatement = { sql: string; statement: D1PreparedStatement };
+
+function recordedOf(input: { recorded: WeakMap<object, RecordedStatement>; statement: object }): RecordedStatement {
+  const entry = input.recorded.get(input.statement);
+  if (entry === undefined) throw new Error('a batched statement was not prepared through the recorder');
+  return entry;
 }
 
 function recordingEnvironment(): { env: ReturnType<typeof backofficeEnv>; batches: string[][] } {
   const batches: string[][] = [];
-  const sqlOfStatement = new WeakMap<object, string>();
+  const recorded = new WeakMap<object, RecordedStatement>();
   const database = new Proxy(testEnv.CONNECTIONS, {
     get(target, property) {
       if (property === 'prepare')
-        return (sql: string) =>
-          new Proxy(target.prepare(sql), {
-            get(statement, statementProperty) {
-              const member = Reflect.get(statement, statementProperty);
-              if (statementProperty !== 'bind') return typeof member === 'function' ? member.bind(statement) : member;
+        return (sql: string) => {
+          const statement = target.prepare(sql);
+          const recorder = new Proxy(statement, {
+            get(source, statementProperty) {
+              const member = Reflect.get(source, statementProperty);
+              if (statementProperty !== 'bind') return typeof member === 'function' ? member.bind(source) : member;
               return (...values: unknown[]) => {
-                const bound = statement.bind(...values);
-                sqlOfStatement.set(bound, sql);
+                const bound = source.bind(...values);
+                recorded.set(bound, { sql, statement: bound });
                 return bound;
               };
             },
           });
+          recorded.set(recorder, { sql, statement });
+          return recorder;
+        };
       if (property === 'batch')
         return (statements: D1PreparedStatement[]) => {
-          batches.push(statements.map((statement) => sqlOfRecorded({ sqlOfStatement, statement })));
-          return target.batch(statements);
+          const entries = statements.map((statement) => recordedOf({ recorded, statement }));
+          batches.push(entries.map((entry) => entry.sql));
+          return target.batch(entries.map((entry) => entry.statement));
         };
       const member = Reflect.get(target, property);
       return typeof member === 'function' ? member.bind(target) : member;
