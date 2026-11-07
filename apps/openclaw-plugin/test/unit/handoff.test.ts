@@ -194,15 +194,15 @@ describe('handOffToAgent', () => {
       written.push(String(chunk));
       return true;
     });
-    vi.mocked(sendOwnerText).mockRejectedValueOnce(new Error('segredo-da-resposta'));
+    vi.mocked(sendOwnerText).mockRejectedValueOnce(new Error('reply-secret'));
     await handOffToAgent({ cfg: CONFIG, account: ACCOUNT, message: ownerTextMessage({ messageId: 'msg_1', text: 'oi' }) });
-    await expect(lastDispatch().deliver({ text: 'segredo-da-resposta' })).resolves.toBeUndefined();
+    await expect(lastDispatch().deliver({ text: 'reply-secret' })).resolves.toBeUndefined();
     writeSpy.mockRestore();
     const logged = written.join('');
     expect(logged).toContain(ConnectorLogEvent.PluginReplyFailed);
     expect(logged).toContain('msg_1');
     expect(logged).not.toContain(ConnectorLogEvent.PluginHandoffFailed);
-    expect(logged).not.toContain('segredo-da-resposta');
+    expect(logged).not.toContain('reply-secret');
   });
 
   it('logs a dispatch error without the owner text and does not reject', async () => {
