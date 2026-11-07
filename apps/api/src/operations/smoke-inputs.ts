@@ -55,12 +55,20 @@ function isUsable(value: string | undefined): value is string {
   return value !== undefined && value !== '' && !isPlaceholderValue({ value });
 }
 
-export function missingSmokeInputs(input: SmokeVariables): SmokeInput[] {
+export function isConnectionSecretPrompted(input: SmokeScope): boolean {
+  return input.environment === DeployEnvironment.Production && !input.firstDeploy;
+}
+
+function unusableSmokeInputs(input: SmokeVariables): SmokeInput[] {
   return requiredSmokeInputs(input).filter((name) => !isUsable(input.environmentVariables[name]));
 }
 
+export function missingSmokeInputs(input: SmokeVariables): SmokeInput[] {
+  return unusableSmokeInputs(input).filter((name) => !(name === SmokeInput.ConnectionSecret && isConnectionSecretPrompted(input)));
+}
+
 export function readSmokeInputs(input: SmokeVariables): SmokeInputs {
-  const missing = missingSmokeInputs(input);
+  const missing = unusableSmokeInputs(input);
   if (missing.length > 0) throw new Error(`missing smoke inputs: ${missing.join(', ')}`);
   return Object.fromEntries(requiredSmokeInputs(input).map((name) => [name, input.environmentVariables[name]]));
 }

@@ -8,10 +8,11 @@ import { z } from 'zod';
 import { readDeployBlock } from './deploy';
 import { parseDeployEnvironment, type DeployEnvironment } from '../src/operations/deploy-environment';
 import { formatSmokeResult, runSmokeChecks, type SmokeFetch } from '../src/operations/smoke-checks';
-import { readSmokeInputs, SmokeInput } from '../src/operations/smoke-inputs';
+import { isConnectionSecretPrompted, readSmokeInputs, SmokeInput } from '../src/operations/smoke-inputs';
 import { readHiddenLine } from '../src/operations/hidden-prompt';
 import { assertSmokeTarget } from '../src/operations/smoke-target';
 
+const CONNECTION_SECRET_QUESTION = `${SmokeInput.ConnectionSecret} (typing is hidden): `;
 const TERMINAL_DEVICE_PATH = '/dev/tty';
 
 const originBlockSchema = z.object({ vars: z.object({ PUBLIC_ORIGIN: z.string() }) });
@@ -38,7 +39,14 @@ function firstDeployInstructions(input: { environment: DeployEnvironment }): str
 
 export async function runSmoke(input: SmokeEntry): Promise<number> {
   const { environment, firstDeploy, environmentVariables, publicOrigin, smokeFetch, wait, log } = input;
-  const inputs = readSmokeInputs({ environment, firstDeploy, environmentVariables });
+  const connectionSecret = isConnectionSecretPrompted({ environment, firstDeploy })
+    ? await input.promptHidden({ question: CONNECTION_SECRET_QUESTION })
+    : environmentVariables[SmokeInput.ConnectionSecret];
+  const inputs = readSmokeInputs({
+    environment,
+    firstDeploy,
+    environmentVariables: { ...environmentVariables, [SmokeInput.ConnectionSecret]: connectionSecret },
+  });
   assertSmokeTarget({ environment, baseUrl: inputs[SmokeInput.BaseUrl] as string, publicOrigin });
   const results = await runSmokeChecks({
     environment,
