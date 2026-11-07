@@ -1,15 +1,13 @@
 import { SELF } from 'cloudflare:test';
-import { HISTORY_LIMIT } from '@zapbip/core';
-import { MessageDirection, MessageKind, SECOND_MS } from '@zapbip/types';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { WEBHOOK_SIGNATURE_HEADER } from '../../src/adapters/whatsapp/whatsapp-constants';
 import { OperatorEvent } from '../../src/adapters/whatsapp/whatsapp-enums';
 import { WHATSAPP_WEBHOOK_PATH } from '../../src/contract/constants';
-import textFixture from '../fixtures/whatsapp/inbound/text.json';
 import { changeOf, notificationOf, OUR_PHONE_NUMBER_ID } from '../fixtures/whatsapp/inbound/notification';
 import { signatureHeaderOf } from '../fixtures/whatsapp/inbound/signed-webhook';
 import { seedWhatsAppNumber, TEST_APP_SECRET, TEST_WABA_ID } from '../support/whatsapp-numbers';
-import { inboxOf, ORIGIN, seedAccount, type SeededAccount } from './route-fixtures';
+import { ORIGIN, seedAccount } from './route-fixtures';
+import { ownerText, ownerTextsOf, postSignedWith } from './webhook-number-fixtures';
 
 const STATUS_OK = 200;
 const STATUS_UNAUTHORIZED = 401;
@@ -26,14 +24,6 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-function nowInSeconds(): string {
-  return String(Math.floor(Date.now() / SECOND_MS));
-}
-
-function ownerText(input: { account: SeededAccount; id: string }): object {
-  return { ...textFixture, from: input.account.phone, id: input.id, timestamp: nowInSeconds(), text: { body: 'Oi' } };
-}
-
 const secondNumberSeed: { promise: Promise<unknown> | null } = { promise: null };
 
 function seedSecondNumber(): Promise<unknown> {
@@ -47,23 +37,6 @@ function seedSecondNumber(): Promise<unknown> {
     displayNumber: '5511900000002',
   });
   return secondNumberSeed.promise;
-}
-
-async function postSignedWith(input: { appSecret: string; notification: object }): Promise<Response> {
-  const text = JSON.stringify(input.notification);
-  const signature = await signatureHeaderOf({ appSecret: input.appSecret, body: new TextEncoder().encode(text) });
-  return SELF.fetch(WEBHOOK_URL, { method: 'POST', headers: { [WEBHOOK_SIGNATURE_HEADER]: signature }, body: text });
-}
-
-async function ownerTextsOf(input: { account: SeededAccount }): Promise<string[]> {
-  const outcome = await inboxOf({ accountId: input.account.accountId }).getMessages({
-    connection: input.account.connection,
-    limit: HISTORY_LIMIT,
-  });
-  if (!outcome.ok) throw new Error(outcome.message);
-  return outcome.value.history.flatMap((message) =>
-    message.direction === MessageDirection.FromOwner && message.kind === MessageKind.Text ? [message.text] : [],
-  );
 }
 
 describe('webhook attribution by number', () => {
