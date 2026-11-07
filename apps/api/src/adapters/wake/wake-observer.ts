@@ -23,8 +23,8 @@ export function createCloudflareWakeObserver(input: { dataset: AnalyticsEngineDa
   if (dataset === undefined) logEvent({ accountId, event: LogEvent.ToolError, errorCode: WakeObserverErrorCode.MetricsMissing });
   return {
     observe: ({ event }) => {
-      const { name, provider, agent, attempt, statusCode, latencyMs, outcome, timedOut } = event;
-      logEvent({ accountId, event: name, agent, provider, attempt, statusCode, latencyMs, outcome });
+      const { name, provider, agent, attempt, statusCode, latencyMs, outcome, timedOut, errorCode } = event;
+      logEvent({ accountId, event: name, agent, provider, attempt, statusCode, latencyMs, outcome, errorCode });
       if (dataset === undefined || outcome === null || latencyMs === null) return;
       dataset.writeDataPoint({ blobs: [provider, outcome, statusClassOf({ statusCode, timedOut })], doubles: [attempt, latencyMs] });
     },

@@ -43,6 +43,8 @@ describe('in-memory repository', () => {
           replyToMessageId: null,
           delivery: DeliveryState.Sent,
           readByAgent: true,
+          handedTo: null,
+          originMessageId: null,
           forwarded: false,
           ...content,
         };
@@ -106,6 +108,8 @@ describe('in-memory repository', () => {
         delivery,
         readByAgent: true,
         forwarded: false,
+        handedTo: null,
+        originMessageId: null,
         kind: MessageKind.Text,
         text: messageId,
       };

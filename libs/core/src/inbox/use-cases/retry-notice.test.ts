@@ -1,9 +1,10 @@
-import { DeliveryState, OwnerLocale, TemplateKind } from '@zapbip/types';
+import { DeliveryState, IdPrefix, MessageKind, OwnerLocale, TemplateKind } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { NOTICE_FAILED_MESSAGE, NOTICE_RETRY_BACKOFF_FACTOR, NOTICE_RETRY_MAX_MS, NOTICE_RETRY_MS } from '../constants';
 import { captureInboxError } from '../testing/capture-inbox-error';
 import { closeWindow, connectionOf, createEnvironment, openWindow } from '../testing/fixtures';
 import type { InMemoryEnvironment } from '../testing/in-memory';
+import { deliverToOwner } from './deliver-to-owner';
 import { findNoticeRetryDueAt, retryNotice } from './retry-notice';
 import { sendText } from './send-text';
 
@@ -105,6 +106,31 @@ describe('retryNotice', () => {
     expect(await findNoticeRetryDueAt({ dependencies: environment.dependencies })).toBeNull();
     await retryNotice({ dependencies: environment.dependencies });
     expect(environment.sender.templates).toHaveLength(1);
+  });
+
+  test('a zapbip note queued ahead of an agent message: the retry names the agent and previews its message', async () => {
+    const environment = await createEnvironment();
+    const { dependencies } = environment;
+    await closeWindow({ environment });
+    environment.sender.failTemplateCalls({ callNumbers: [1] });
+    await captureInboxError(() =>
+      deliverToOwner({
+        dependencies,
+        ownerLocale: OwnerLocale.PortugueseBrazil,
+        agent: null,
+        messageId: dependencies.ids.next({ prefix: IdPrefix.Message }),
+        content: { kind: MessageKind.Text, text: 'note from zapbip' },
+        replyToMessageId: null,
+      }),
+    );
+    await sendText({ dependencies, connection: alpha, text: 'oi', replyToMessageId: null });
+    await environment.clock.advance({ ms: NOTICE_RETRY_MS });
+    await retryNotice({ dependencies });
+    expect(environment.sender.templates.at(-1)).toEqual({
+      kind: TemplateKind.Notice,
+      locale: OwnerLocale.PortugueseBrazil,
+      parameters: ['alpha', 'oi'],
+    });
   });
 
   test('CU-94g a queued message that expired leaves nothing to retry', async () => {

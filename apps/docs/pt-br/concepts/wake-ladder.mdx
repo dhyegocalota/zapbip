@@ -1,30 +1,65 @@
 ---
 title: 'Escada de despertar'
-description: 'Como o zapbip alcança um agente que não está ouvindo quando o dono escreve.'
+description: 'Como o zapbip alcança uma IA que não está ouvindo quando você escreve.'
 ---
 
-Um agente sempre pode chamar o zapbip, mas o dono só alcança um agente que está ouvindo. Quando chega uma mensagem e nenhuma chamada está esperando, o zapbip acorda o agente pelo degrau mais alto que a conexão dele suporta. O agente declara o degrau com [set_wake](/pt-br/mcp-reference/set-wake), e todo degrau mantém a mensagem na [caixa de entrada](/pt-br/concepts/inbox) até que um agente a leia.
+import { Chat } from '/snippets/chat.jsx';
 
-| Degrau           | Como funciona                                                                                                                            | Atraso esperado                    | Definido com                                                     |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ---------------------------------------------------------------- |
-| Local            | O zapbip empurra a mensagem para o [conector](/pt-br/developers/local-connector) no computador do dono, que retoma a sessão.             | 7 s Claude Code, 6 s Codex         | `npx zapbip@0.1.0 connect` (enquanto conectado) ou `mode: local` |
-| Webhook          | O zapbip chama um link que inicia o agente. Veja [despertar por webhook](/pt-br/developers/webhook-wake).                                | 9 s Grok Bot, 16 s claude.ai       | `mode: webhook`                                                  |
-| Agendada         | O agente roda uma tarefa em intervalos que chama [check_inbox](/pt-br/mcp-reference/check-inbox). Os intervalos vão de 1 a 1440 minutos. | até o intervalo, 1 hora no ChatGPT | `mode: scheduled`                                                |
-| Em espera        | Outro agente da mesma conta recebe uma cópia da mensagem e responde no lugar. É um salto só: quem está em espera nunca repassa de novo.  | não medido                         | `mode: standby`                                                  |
-| Caixa de entrada | A mensagem espera na caixa de entrada e o zapbip avisa o dono que o agente não está ouvindo agora.                                       | até o agente chamar                | `mode: none`                                                     |
+Quando você escreve no WhatsApp, sua IA pode estar fechada, ocupada ou só não estar esperando por você. O zapbip então a alcança pelo degrau mais alto que a conexão dela suporta e desce para o próximo quando um degrau não está disponível:
 
-Um conector que se conecta define o degrau local e, quando a última conexão dele fecha, devolve o que estava definido antes. Claude.ai e ChatGPT só rodam tarefas agendadas a cada 60 minutos ou mais; esse piso é da plataforma, não do zapbip.
+| Degrau           | O que acontece                                                                                                                                                  | Atraso esperado              |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| Local            | O zapbip empurra sua mensagem para o [conector](/pt-br/developers/local-connector) rodando no seu computador, que retoma sua sessão do Claude Code ou do Codex. | 7 s Claude Code, 6 s Codex   |
+| Webhook          | O zapbip chama um link que inicia a IA. Veja o [guia de despertar por webhook](/pt-br/developers/webhook-wake).                                                 | 9 s Grok Bot, 16 s claude.ai |
+| Agendada         | A IA olha a caixa de entrada num intervalo, então pode ouvir sem limite de tempo.                                                                               | até o intervalo              |
+| Em espera        | Outra IA sua recebe uma cópia da sua mensagem e responde no lugar.                                                                                              | não medido                   |
+| Caixa de entrada | A mensagem espera e o zapbip avisa que a IA não está ouvindo agora.                                                                                             | até uma IA ler               |
 
-## Qual cliente usa qual degrau
+Em todos os degraus sua mensagem fica guardada na [caixa de entrada](/pt-br/concepts/inbox) até uma IA ler. Nada se perde.
 
-| Degrau           | Clientes                                                 |
-| ---------------- | -------------------------------------------------------- |
-| Local            | Claude Code, Codex, Cursor, Gemini CLI, Hermes, OpenClaw |
-| Webhook          | Grok Bot, claude.ai                                      |
-| Agendada         | ChatGPT                                                  |
-| Em espera        | Grok web, respondido pelo Grok Bot                       |
-| Caixa de entrada | qualquer outro cliente MCP, até chamar `check_inbox`     |
+## Local: seu próprio computador
 
-## O teto de espera
+O conector mantém uma linha aberta com o zapbip enquanto roda. Quando você escreve, o zapbip empurra a mensagem por essa linha e o conector retoma sua sessão no seu computador. Quando a última linha fecha, o zapbip devolve o despertar que você tinha antes. Inicie com `npx zapbip@0.1.0 connect`.
 
-`ask` e [wait_for_reply](/pt-br/mcp-reference/wait-for-reply) nunca seguram uma chamada por mais de 50 segundos. Eles devolvem `pending` e o agente chama de novo até o dono responder, então ouvir não tem limite de tempo.
+## Agendado: ouvir sem limite de tempo
+
+Algumas IAs não têm como ser iniciadas de fora, e cada chamada que elas fazem ao zapbip termina em poucos minutos. O despertar agendado resolve isso: você pede para a IA rodar uma tarefa pequena num intervalo, a cada poucos minutos ou a cada hora, e cada execução lê o que você escreveu e responde.
+
+Você escolhe a frequência, de a cada 1 minuto até a cada 1440 minutos (um dia). O ChatGPT e o claude.ai só rodam tarefas agendadas a cada 60 minutos ou mais, então para eles o intervalo mínimo é de 60 minutos.
+
+Quando você escreve, o zapbip diz mais ou menos quando esperar a resposta:
+
+<Chat
+  contact="zapbip"
+  messages={[
+    { you: true, text: 'Consegue resumir o relatório?' },
+    {
+      notice: true,
+      text: 'O agente Claude olha a caixa de hora em hora. Última checagem há 20 min. Sua mensagem espera lá até a próxima olhada.',
+    },
+  ]}
+/>
+
+Se a tarefa para de rodar, o zapbip avisa uma vez, depois que passa o dobro do intervalo sem nenhuma olhada, e suas mensagens continuam esperando:
+
+<Chat contact="zapbip" messages={[{ notice: true, text: 'Claude não checa há 2 h: suas mensagens esperam' }]} />
+
+A próxima olhada encerra o aviso sem outra mensagem.
+
+Quando a [janela de 24 horas](/pt-br/concepts/24-hour-window) está fechada, esse recado não pode ser enviado como está. O zapbip envia um [aviso](/pt-br/concepts/owner-notices) de modelo por janela fechada, e o recado espera e chega quando você escrever.
+
+## Reserva: outra IA responde
+
+Algumas IAs, como o Grok na web, não podem ser iniciadas de jeito nenhum. Você pode indicar outra IA da mesma conta como reserva dela, por exemplo o Grok Bot. Quando você escreve para a primeira, o zapbip entrega uma cópia à reserva, a desperta, e ela responde como ela mesma, dizendo quem é. A primeira IA vê a mensagem como tratada pela reserva.
+
+<Chat
+  contact="zapbip"
+  messages={[
+    { you: true, text: '@grok o que tenho na agenda?' },
+    { name: 'Grok Bot (reserva do Grok)', text: 'Hoje você tem duas reuniões: 10:00 e 15:30.' },
+  ]}
+/>
+
+Uma reserva nunca repassa para outra reserva: é um salto só. Se a reserva não existe, foi removida ou é ela mesma uma reserva, nada é copiado: a mensagem espera com a primeira IA e você recebe o aviso de sempre.
+
+A IA configura isso para você na instalação. Para mudar à mão, use [set_wake](/pt-br/mcp-reference/set-wake).

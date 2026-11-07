@@ -42,5 +42,7 @@ A `Proposed` ADR moves to `Accepted` by editing its status line and date. Any ot
 | [0019](0019-outbound-wake-targets-pinned-providers-and-guarded-generic-hosts.md) | Outbound wake targets: pinned provider hosts and guarded generic hosts | Accepted | 2026-11-06 |
 | [0022](0022-a-hibernatable-websocket-for-the-local-connector.md) | A hibernatable WebSocket for the local connector | Accepted | 2026-11-06 |
 | [0023](0023-the-local-session-is-the-newest-one-in-the-working-directory.md) | The local session is the newest one in the working directory | Accepted | 2026-11-06 |
+| [0024](0024-a-standby-gets-a-copy-of-the-owner-message.md) | A standby gets a copy of the owner's message, never its primary's inbox | Accepted | 2026-11-06 |
+| [0025](0025-a-stale-poller-degrades-the-effective-rung.md) | Pollers are recorded per connection, and a stale poller degrades the effective rung | Accepted | 2026-11-06 |
 | [0028](0028-the-native-channel-plugin-is-the-first-rung-for-openclaw-and-hermes.md) | The native channel plugin is the first rung for OpenClaw and Hermes | Accepted | 2026-11-06 |
 | [0029](0029-a-plugin-acknowledges-a-handoff-and-a-listener-does-not.md) | A plugin acknowledges after the handoff; a listener acknowledges after it prints | Accepted | 2026-11-06 |

@@ -3,15 +3,43 @@ title: 'set_wake'
 description: 'Tell zapbip how to reach this agent when it is not listening.'
 ---
 
-Save how this connection is woken when you write and no call is waiting. See the [webhook wake guide](/developers/webhook-wake) and the [wake ladder](/concepts/wake-ladder).
+Save how this connection is woken when you write and no call is waiting. See the [wake ladder](/concepts/wake-ladder) and the [webhook wake guide](/developers/webhook-wake).
 
 ## Input
 
-| Field   | Type             | Notes                                                                                                                                                                                  |
-| ------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `mode`  | string           | `webhook` saves a webhook; `local` wakes through the [connector](/developers/local-connector); `none` clears the wake. `scheduled` and `standby` answer "wake mode not available yet". |
-| `url`   | string, optional | Required for `webhook`. `https`, no userinfo, no fragment, port 443 or absent, up to 512 characters. Its host selects the provider.                                                    |
-| `token` | string, optional | Required for `webhook`. Printable, no whitespace, 16 to 512 characters. For a generic webhook it is the signing key, at least 32 characters.                                           |
+| Field              | Type              | Notes                                                                                                                                                                                                                          |
+| ------------------ | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `mode`             | string            | `local` wakes through the [connector](/developers/local-connector); `webhook` saves a webhook; `scheduled` makes the agent check its inbox on a timer; `standby` hands your messages to another agent; `none` clears the wake. |
+| `url`              | string, optional  | Required for `webhook`. `https`, no userinfo, no fragment, port 443 or absent, up to 512 characters. Its host selects the provider.                                                                                            |
+| `token`            | string, optional  | Required for `webhook`. Printable, no whitespace, 16 to 512 characters. For a generic webhook it is the signing key, at least 32 characters.                                                                                   |
+| `interval_minutes` | integer, optional | Required for `scheduled`. From 1 to 1440 minutes. ChatGPT and claude.ai run scheduled tasks every 60 minutes at the shortest.                                                                                                  |
+| `standby_agent`    | string, optional  | Required for `standby`. The name of another connection of the same account that is not itself a standby.                                                                                                                       |
+
+Fields of another mode must be absent.
+
+## Scheduled
+
+An agent that cannot be started from outside runs a task on a timer that calls [check_inbox](/mcp-reference/check-inbox). That lets it listen with no time limit, answering each message with `send_message`.
+
+```json
+{ "mode": "scheduled", "interval_minutes": 60 }
+```
+
+When you write, zapbip tells you when to expect the answer. If no check happens for twice the interval, you get one notice and your messages wait in the inbox until the next check.
+
+## Local
+
+Ask your agent to call this tool with `{ "mode": "local" }` while the [connector](/developers/local-connector) runs on your computer.
+
+## Standby
+
+An agent that cannot be woken names another agent of the same account to answer in its place. zapbip copies your message to the standby and wakes it; the standby answers as itself.
+
+```json
+{ "mode": "standby", "standby_agent": "grok-bot" }
+```
+
+A standby never forwards to another standby: it is one hop only. If the standby is missing, removed or itself in standby mode, nothing is copied and your message waits with the first agent.
 
 ## Providers
 
@@ -25,8 +53,8 @@ The provider is chosen by the host of the URL, never by a field.
 
 ## Output
 
-`{ "status": "saved", "wake_mode": string, "effective_rung": string, "provider": string | null }`. `provider` is set for `webhook` only. `effective_rung` is `inbox` for `local` while no connector is connected, because the message then waits in the inbox. The URL, the token and the host are never returned.
+`{ "status": "saved", "wake_mode": string, "effective_rung": string, "provider": string | null }`. `provider` is set for `webhook` only. `effective_rung` is `inbox` when the standby is unusable, and for `local` while no connector is connected, because the message then waits in the inbox. The URL, the token and the host are never returned.
 
 ## Errors
 
-A tool error names the invalid field (`url`, `token` or `mode`) and never echoes its value. Nothing is stored and the previous wake stays. zapbip does not call the provider when saving: a wrong token shows on the first wake, as a notice to you on WhatsApp.
+A tool error names the invalid field (`url`, `token`, `interval_minutes`, `standby_agent` or `mode`) and its limit, and never echoes its value. Nothing is stored and the previous wake stays. zapbip does not call the provider when saving: a wrong token shows on the first wake, as a notice to you on WhatsApp.

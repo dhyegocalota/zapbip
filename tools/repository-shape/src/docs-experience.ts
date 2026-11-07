@@ -2,13 +2,6 @@ import { MEDIA_RETENTION_MS, QUEUE_RETENTION_MS, QUESTION_RETENTION_MS } from '@
 import { DAY_MS, DocsLanguage, DocsOnlyClient, DocsRetentionKind, InstallClient, WakeRung } from '@zapbip/types';
 import { DOCS_ROOT, capturedNames, readRepositoryFile } from './repository-files';
 
-export enum ScheduledWakeRung {
-  Scheduled = 'scheduled',
-  Standby = 'standby',
-}
-
-export type ListenRung = WakeRung | ScheduledWakeRung;
-
 export type DocsAgentClient = InstallClient | DocsOnlyClient;
 
 export enum AgentPageSection {
@@ -40,26 +33,26 @@ export const AGENT_PAGE_HEADINGS: Record<DocsLanguage, Record<AgentPageSection, 
   },
 };
 
-export const WAKE_RUNG_LABELS: Record<DocsLanguage, Record<ListenRung, string>> = {
+export const WAKE_RUNG_LABELS: Record<DocsLanguage, Record<WakeRung, string>> = {
   [DocsLanguage.English]: {
     [WakeRung.Inbox]: 'Inbox',
     [WakeRung.Local]: 'Local',
     [WakeRung.Webhook]: 'Webhook',
-    [ScheduledWakeRung.Scheduled]: 'Scheduled',
-    [ScheduledWakeRung.Standby]: 'Standby',
+    [WakeRung.Scheduled]: 'Scheduled',
+    [WakeRung.Standby]: 'Standby',
   },
   [DocsLanguage.PortugueseBrazil]: {
     [WakeRung.Inbox]: 'Caixa de entrada',
     [WakeRung.Local]: 'Local',
     [WakeRung.Webhook]: 'Webhook',
-    [ScheduledWakeRung.Scheduled]: 'Agendada',
-    [ScheduledWakeRung.Standby]: 'Em espera',
+    [WakeRung.Scheduled]: 'Agendada',
+    [WakeRung.Standby]: 'Em espera',
   },
 };
 
 const ONE_HOUR_SECONDS = 3600;
 
-export const CLIENT_LISTEN_FACTS: Record<DocsAgentClient, { rung: ListenRung; expectedDelaySeconds: number | null }> = {
+export const CLIENT_LISTEN_FACTS: Record<DocsAgentClient, { rung: WakeRung; expectedDelaySeconds: number | null }> = {
   [InstallClient.ClaudeCode]: { rung: WakeRung.Local, expectedDelaySeconds: 7 },
   [InstallClient.Codex]: { rung: WakeRung.Local, expectedDelaySeconds: 6 },
   [InstallClient.Cursor]: { rung: WakeRung.Local, expectedDelaySeconds: null },
@@ -68,8 +61,8 @@ export const CLIENT_LISTEN_FACTS: Record<DocsAgentClient, { rung: ListenRung; ex
   [InstallClient.OpenClaw]: { rung: WakeRung.Local, expectedDelaySeconds: null },
   [InstallClient.GrokBot]: { rung: WakeRung.Webhook, expectedDelaySeconds: 9 },
   [InstallClient.ClaudeAi]: { rung: WakeRung.Webhook, expectedDelaySeconds: 16 },
-  [InstallClient.ChatGpt]: { rung: ScheduledWakeRung.Scheduled, expectedDelaySeconds: ONE_HOUR_SECONDS },
-  [InstallClient.GrokWeb]: { rung: ScheduledWakeRung.Standby, expectedDelaySeconds: null },
+  [InstallClient.ChatGpt]: { rung: WakeRung.Scheduled, expectedDelaySeconds: ONE_HOUR_SECONDS },
+  [InstallClient.GrokWeb]: { rung: WakeRung.Standby, expectedDelaySeconds: null },
   [DocsOnlyClient.AnyMcpClient]: { rung: WakeRung.Inbox, expectedDelaySeconds: null },
 };
 

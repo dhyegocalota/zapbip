@@ -56,7 +56,7 @@ describe('wake dev routes', () => {
     const account = await seedAccount({ agent: FIRST_AGENT });
     const setting = await inboxOf({ accountId: account.accountId }).setWake({
       connection: account.connection,
-      setting: { mode: WakeMode.Webhook, url: GROK_URL, token: GROK_TOKEN },
+      setting: { mode: WakeMode.Webhook, url: GROK_URL, token: GROK_TOKEN, intervalMinutes: null, standbyAgent: null },
     });
     expect(setting.ok).toBe(true);
     const script = await scriptWake({ phone: account.phone, agent: FIRST_AGENT, body: { responses: [ACCEPTED] } });

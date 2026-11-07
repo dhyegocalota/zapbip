@@ -23,3 +23,9 @@ zapbip sends one notice per closed window. The tap is the only action a notice o
 ## When the template is rejected
 
 If WhatsApp rejects the template, the message stays queued and zapbip tries the notice again after 5 minutes, then after 10, 20 and so on, doubling up to 6 hours. The queued messages are delivered when the owner next writes.
+
+## Notes from zapbip itself
+
+zapbip sometimes writes to you on its own, for example to say that an AI stopped checking its inbox. While the window is closed, such a note follows the same rule: one template notice per closed window, naming zapbip. The note waits in the queue and arrives when you write.
+
+When an AI has also sent a message while the window is closed, the notice names that AI and previews its message, because that is what you most likely want to open. The note from zapbip still arrives right after, in order.

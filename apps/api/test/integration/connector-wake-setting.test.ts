@@ -1,5 +1,6 @@
 import { REPLACED_CLOSE_CODE, WakeMode, WakeProvider, WakeStatus } from '@zapbip/types';
 import type { StoredWake, WakeRepository } from '@zapbip/core';
+import { storedWakeOf } from '@zapbip/core/wake-testing';
 import { runInDurableObject } from 'cloudflare:test';
 import { describe, expect, test, vi } from 'vitest';
 import type { AccountInbox } from '../../src/account-inbox/account-inbox';
@@ -48,7 +49,7 @@ async function enableWebhook(input: { account: SeededAccount; token?: string }):
   expectOk(
     await inboxOf({ accountId: account.accountId }).setWake({
       connection: account.connection,
-      setting: { mode: WakeMode.Webhook, url: GROK_URL, token },
+      setting: { mode: WakeMode.Webhook, url: GROK_URL, token, intervalMinutes: null, standbyAgent: null },
     }),
   );
   const stored = await findWake({ account });
@@ -65,13 +66,13 @@ async function attached(input: { account: SeededAccount }) {
 describe('restore record', () => {
   test('saves, reads and deletes the previous record', async () => {
     const account = await registeredAccount();
-    const previous: StoredWake = {
+    const previous = storedWakeOf({
       agent: AGENT,
       mode: WakeMode.Webhook,
       target: { provider: WakeProvider.GrokRoutine, host: 'api2.cursor.sh', sealedTarget: 'sealed', keyVersion: 1 },
       status: WakeStatus.Failing,
       lastDeliveredAt: 5,
-    };
+    });
     await withRepository({ account, run: (repository) => repository.saveLocalRestore({ agent: AGENT, previous }) });
     expect(await findRestore({ account })).toEqual(previous);
     await withRepository({ account, run: (repository) => repository.deleteLocalRestore({ agent: AGENT }) });
@@ -104,7 +105,7 @@ describe('restore record', () => {
 
   test('refuses to save a restore for an agent with no wake row', async () => {
     const account = await seedAccount({ agent: AGENT });
-    const previous: StoredWake = { agent: AGENT, mode: WakeMode.None, target: null, status: WakeStatus.Active, lastDeliveredAt: null };
+    const previous = storedWakeOf({ agent: AGENT, mode: WakeMode.None });
     await expect(withRepository({ account, run: (repository) => repository.saveLocalRestore({ agent: AGENT, previous }) })).rejects.toThrow(
       'no agent_wake row',
     );

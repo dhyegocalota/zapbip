@@ -22,6 +22,7 @@ export const NOTICE_PREVIEW_MAX_CHARS = 60;
 export const NOTICE_RETRY_MS = 5 * MINUTE_MS;
 export const NOTICE_RETRY_MAX_MS = 6 * HOUR_MS;
 export const NOTICE_RETRY_BACKOFF_FACTOR = 2;
+export const OWN_NOTICE_SENDER = 'zapbip';
 export const NOTICE_FAILED_MESSAGE = 'the owner notice failed; your message is queued until the owner next writes';
 
 export const WHATSAPP_TEXT_MAX_CHARS = 4096;

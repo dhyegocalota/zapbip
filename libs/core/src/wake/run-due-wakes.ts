@@ -1,6 +1,7 @@
 import { IdPrefix, type OwnerLocale, MessageKind, WakeAttemptOutcome, WakeLogEventName, WakeStatus } from '@zapbip/types';
 import { InboxError } from '../inbox/errors';
 import { deliverToOwner } from '../inbox/use-cases/deliver-to-owner';
+import { errorCodeOf } from './error-code-of';
 import {
   WAKE_BACKOFF_BASE_MS,
   WAKE_BACKOFF_CAP_MS,
@@ -135,8 +136,8 @@ async function tellOwnerOnce(input: JobRun & { stored: StoredWake | null }): Pro
   if (ownerLocale === null) return observeUnsent({ ...unsent, name: WakeLogEventName.NoticeSkipped });
   try {
     await tellOwner({ ...input, ownerLocale });
-  } catch {
-    observeUnsent({ ...unsent, name: WakeLogEventName.NoticeFailed });
+  } catch (error) {
+    observeUnsent({ ...unsent, name: WakeLogEventName.NoticeFailed, errorCode: errorCodeOf({ error }) });
   }
 }
 

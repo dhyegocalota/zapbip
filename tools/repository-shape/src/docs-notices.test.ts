@@ -1,13 +1,14 @@
-import { INBOX_COPY } from '@zapbip/core';
-import { InboxCopyKey, OwnerLocale } from '@zapbip/types';
+import { INBOX_COPY, WAKE_COPY } from '@zapbip/core';
+import { InboxCopyKey, OwnerLocale, WakeCopyKey } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { DOCS_ROOT, documentFiles, readRepositoryFile } from './repository-files';
 
-const NOTICE_BUBBLE_PATTERN = /notice: true, text: '((?:[^'\\]|\\.)*)'/g;
+const NOTICE_BUBBLE_PATTERN = /notice: true,\s*text: '((?:[^'\\]|\\.)*)'/g;
 const ESCAPED_COPY_TOKEN_PATTERN = /\\\{\w+\\\}/g;
 const TOKEN_MATCHER = '.+';
 const PORTUGUESE_PAGE_PREFIX = 'pt-br/';
 const NOTICE_COPY_KEYS: InboxCopyKey[] = [InboxCopyKey.NoticeBody, InboxCopyKey.QuestionNoticeBody, InboxCopyKey.AgentNotListening];
+const WAKE_NOTICE_COPY_KEYS: WakeCopyKey[] = [WakeCopyKey.ExpectedDelayNote, WakeCopyKey.StaleNotice];
 const REGEX_SPECIAL_PATTERN = /[.*+?^${}()|[\]\\]/g;
 
 type NoticeBubble = { page: string; locale: OwnerLocale; text: string };
@@ -32,7 +33,11 @@ function noticeBubbles(): NoticeBubble[] {
 }
 
 function matchesRealTemplate(bubble: NoticeBubble): boolean {
-  return NOTICE_COPY_KEYS.map((key) => INBOX_COPY[key][bubble.locale]).some((template) => templateMatcher(template).test(bubble.text));
+  const templates = [
+    ...NOTICE_COPY_KEYS.map((key) => INBOX_COPY[key][bubble.locale]),
+    ...WAKE_NOTICE_COPY_KEYS.map((key) => WAKE_COPY[key][bubble.locale]),
+  ];
+  return templates.some((template) => templateMatcher(template).test(bubble.text));
 }
 
 describe('docs notices', () => {

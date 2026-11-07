@@ -1,5 +1,6 @@
+import { SCHEDULED_MAX_INTERVAL_MINUTES, SCHEDULED_MIN_INTERVAL_MINUTES } from '@zapbip/core';
 import { McpToolName } from '@zapbip/types';
-import type { ZodRawShape } from 'zod';
+import type { ZodRawShape, ZodType } from 'zod';
 import {
   askInputShape,
   checkInboxInputShape,
@@ -16,7 +17,7 @@ import {
   sendMediaInputShape,
   sendMessageInputShape,
   setWakeOutputShape,
-  setWakeToolInputShape,
+  setWakeInputSchema,
   waitForReplyInputShape,
 } from './mcp-schemas';
 
@@ -24,7 +25,7 @@ export { McpToolName };
 
 export type ToolDefinition = {
   description: string;
-  inputShape: ZodRawShape;
+  inputShape: ZodRawShape | ZodType;
   outputShape: ZodRawShape;
 };
 
@@ -80,8 +81,8 @@ export const TOOL_DEFINITIONS: Record<McpToolName, ToolDefinition> = {
     outputShape: createUploadOutputShape,
   },
   [McpToolName.SetWake]: {
-    description: 'Set how this agent is woken when the owner writes: a webhook url and token, or none to clear it.',
-    inputShape: setWakeToolInputShape,
+    description: `Set how this agent is woken when the owner writes: a webhook url and token, scheduled with interval_minutes (${SCHEDULED_MIN_INTERVAL_MINUTES} to ${SCHEDULED_MAX_INTERVAL_MINUTES}) when this agent polls check_inbox on a schedule, standby with standby_agent (another agent of the same account that answers for this one) when it cannot be woken, local when the zapbip connector runs on the computer of the owner, or none to clear it. Fields of another mode must be absent.`,
+    inputShape: setWakeInputSchema,
     outputShape: setWakeOutputShape,
   },
 };

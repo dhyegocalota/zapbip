@@ -65,6 +65,20 @@ describe('clearWake', () => {
   });
 });
 
+describe('recordRevocation', () => {
+  it('deletes the pending wake job and sends no request', async () => {
+    await enableGrokWake({ stub });
+    await stub.devScriptWake({ agent: WAKE_AGENT, responses: [ACCEPTED] });
+    expectOk(await receiveOwnerText({ stub, text: mentionText({ text: 'oi' }) }));
+    expect(await readWakeJobs({ stub })).toHaveLength(1);
+    await stub.recordRevocation({ agent: WAKE_AGENT });
+    expect(await readWakeJobs({ stub })).toEqual([]);
+    await advanceClock({ stub, advanceMs: DEBOUNCE_ADVANCE_MS });
+    await runDurableObjectAlarm(stub);
+    expect(await readRequests({ stub })).toEqual([]);
+  });
+});
+
 describe('wake storage', () => {
   it('resolves clearWake for an agent with no wake', async () => {
     await expect(withWakeRepository({ run: (repository) => repository.clearWake({ agent: OTHER_AGENT }) })).resolves.toBeUndefined();

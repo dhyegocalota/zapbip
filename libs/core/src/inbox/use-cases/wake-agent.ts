@@ -12,8 +12,9 @@ export async function wakeAgent(input: {
   answeredQuestionId: string | null;
   shouldTellOwner: boolean;
   isExpiry: boolean;
+  messageId?: string;
 }): Promise<void> {
-  const { dependencies, ownerLocale, agent, unreadBefore, answeredQuestionId, shouldTellOwner, isExpiry } = input;
+  const { dependencies, ownerLocale, agent, unreadBefore, answeredQuestionId, shouldTellOwner, isExpiry, messageId } = input;
   const { waiters, waker, ids } = dependencies;
   const hasLiveWaiter = waiters.hasLiveWaiter({ agent, questionId: answeredQuestionId });
   if (answeredQuestionId === null) waiters.resolveAgentMessage({ agent });
@@ -22,7 +23,7 @@ export async function wakeAgent(input: {
   const isNewBatch = unreadBefore === 0;
   const needsWake = isNewBatch || (await waker.pushesEveryMessage({ agent })) || (await waker.hasFailedWake({ agent }));
   if (!needsWake) return;
-  const outcome = await waker.notify({ agent, reason: AgentWakeReason.MessageWaiting });
+  const outcome = await waker.notify({ agent, reason: AgentWakeReason.MessageWaiting, messageId });
   if (outcome === WakeOutcome.Woken || !shouldTellOwner) return;
   const key = isExpiry ? InboxCopyKey.AgentAssignedByExpiry : InboxCopyKey.AgentNotListening;
   const text = renderCopy({ key, locale: ownerLocale, values: { agent } });

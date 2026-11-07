@@ -216,6 +216,8 @@ export function buildPlacedMessage(input: { messageId: string; at: number; forwa
     delivery: null,
     readByAgent: placement.isRoutedNowhere,
     forwarded,
+    handedTo: null,
+    originMessageId: null,
     ...placement.content,
   };
 }
