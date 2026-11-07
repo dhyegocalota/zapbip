@@ -1,4 +1,4 @@
-import { AccountState, ChannelInboundKind, ForwardedKind, MessageKind, OwnerLocale, ReplyStatus } from '@zapbip/types';
+import { AccountState, ChannelInboundKind, MessageKind, OwnerLocale, ReplyStatus } from '@zapbip/types';
 import { reset, runInDurableObject } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AccountInbox } from '../../src/account-inbox/account-inbox';
@@ -209,7 +209,7 @@ describe('AccountInbox receiveAccountMessage', () => {
         kind: ChannelInboundKind.Owner,
         at: Date.now(),
         replyToChannelMessageId: null,
-        forwarded: ForwardedKind.None,
+        forwarded: false,
         content: { kind: MessageKind.Text, text: input.text },
         noticeText: null,
       },
@@ -304,7 +304,7 @@ describe('AccountInbox receiveAccountMessage', () => {
             kind: ChannelInboundKind.Owner,
             at: Date.now(),
             replyToChannelMessageId: null,
-            forwarded: ForwardedKind.None,
+            forwarded: false,
             content: { kind: MessageKind.Text, text: 'oi' },
             noticeText: null,
           },

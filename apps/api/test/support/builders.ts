@@ -1,4 +1,4 @@
-import { DeliveryState, ForwardedKind, MediaSourceKind, MessageDirection, MessageKind } from '@zapbip/types';
+import { DeliveryState, MediaSourceKind, MessageDirection, MessageKind } from '@zapbip/types';
 import type { Message, MessageContent, MessageEnvelope, Question } from '@zapbip/core';
 
 export const BASE_TIME = 1_800_000_000_000;
@@ -11,7 +11,7 @@ export function buildEnvelope(input: Partial<MessageEnvelope> & { messageId: str
     replyToMessageId: null,
     delivery: DeliveryState.Sent,
     readByAgent: false,
-    forwarded: ForwardedKind.None,
+    forwarded: false,
     ...input,
   };
 }

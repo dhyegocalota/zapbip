@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { HEALTH_PATH } from './contract/constants';
 import type { Bindings } from './contract/env';
+import { connectorRoutes } from './routes/connector';
 import { mcpRoutes } from './routes/mcp';
 import { mediaRoutes } from './routes/media';
 import { uploadRoutes } from './routes/upload';
@@ -16,6 +17,7 @@ export function createApp(input: {
   const app = new Hono<{ Bindings: Bindings }>();
   app.get(HEALTH_PATH, (context) => context.json({ ok: true }));
   app.route('/', mcpRoutes);
+  app.route('/', connectorRoutes);
   app.route('/', uploadRoutes);
   app.route('/', mediaRoutes);
   app.route('/', createWhatsappRoutes({ developmentMediaOrigin: input.developmentMediaOrigin, maxFutureSkewMs: input.maxFutureSkewMs }));

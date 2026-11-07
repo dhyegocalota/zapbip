@@ -10,7 +10,6 @@ import {
   ReplyStatus,
   SECOND_MS,
   WakeOutcome,
-  ForwardedKind,
 } from '@zapbip/types';
 import { describe, expect, test, vi } from 'vitest';
 import { MEDIA_RETENTION_MS, NOTICE_QUICK_REPLY_ID, QUEUE_RETENTION_MS, ROUTING_LIST_TTL_MS, WINDOW_MS } from '../constants';
@@ -130,8 +129,28 @@ describe('receiveOwnerMessage routing', () => {
     expect(await environment.repository.findMessage({ messageId: result.messageId! })).toMatchObject({
       agent: 'alpha',
       readByAgent: false,
-      forwarded: ForwardedKind.None,
+      forwarded: false,
       text: 'oi',
+    });
+  });
+
+  test('a forwarded message is stored with the forwarded flag', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha'] });
+    const result = await receive({ environment, content: { kind: MessageKind.Text, text: '@alpha oi' }, forwarded: true });
+    expect(await environment.repository.findMessage({ messageId: result.messageId! })).toMatchObject({ forwarded: true });
+  });
+
+  test('CU-199 a forwarded message does not answer an open ask; it is delivered as a normal message', async () => {
+    const environment = await createEnvironment();
+    const question = await askAndAbandon({ environment });
+    const result = await receive({ environment, content: { kind: MessageKind.Text, text: 'yes' }, forwarded: true });
+    expect((await environment.repository.findQuestion({ questionId: question.questionId }))?.answer).toBeNull();
+    expect(await environment.repository.findMessage({ messageId: result.messageId! })).toMatchObject({
+      agent: question.agent,
+      text: 'yes',
+      forwarded: true,
+      readByAgent: false,
     });
   });
 
@@ -530,6 +549,15 @@ describe('receiveOwnerMessage waking', () => {
     await receiveText({ environment, text: '@alpha one' });
     expect(environment.waker.notifications).toHaveLength(1);
     expect(environment.sender.sessions).toHaveLength(0);
+  });
+
+  test('an agent whose wake failed is told again for the next message while earlier ones are unread', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha'] });
+    await receiveText({ environment, text: '@alpha one' });
+    environment.waker.failWakesOf({ agent: 'alpha' });
+    await receiveText({ environment, text: '@alpha two' });
+    expect(environment.waker.notifications).toHaveLength(2);
   });
 
   test('CU-146 a live waiter skips the waker', async () => {

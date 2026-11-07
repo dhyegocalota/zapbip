@@ -1,5 +1,5 @@
 import type { ChannelInboundEntry } from '@zapbip/core';
-import { ChannelInboundKind, ForwardedKind, MessageKind, type AccountState } from '@zapbip/types';
+import { ChannelInboundKind, MessageKind, type AccountState } from '@zapbip/types';
 import type { Bindings } from '../../src/contract/env';
 import { receiveOwnerInbound } from '../../src/inbound/owner-inbound';
 import { createFakeRateLimiter } from '../support/fake-rate-limiter';
@@ -23,7 +23,7 @@ export function textEntry(input: { text: string }): ChannelInboundEntry {
     at: Date.now(),
     content: { kind: MessageKind.Text, text: input.text },
     replyToChannelMessageId: null,
-    forwarded: ForwardedKind.None,
+    forwarded: false,
     noticeText: null,
   };
 }

@@ -1,4 +1,4 @@
-import { AccountState, ForwardedKind, MessageKind, OwnerLocale } from '@zapbip/types';
+import { AccountState, MessageKind, OwnerLocale } from '@zapbip/types';
 import { evictDurableObject, reset, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { AccountInbox } from '../../src/account-inbox/account-inbox';
@@ -102,7 +102,7 @@ describe('AccountInbox after purge', () => {
           ownerMessage: {
             at: Date.now(),
             replyToMessageId: null,
-            forwarded: ForwardedKind.None,
+            forwarded: false,
             content: { kind: MessageKind.Text, text: 'oi' },
           },
         }),

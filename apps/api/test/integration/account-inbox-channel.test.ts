@@ -1,5 +1,5 @@
 import { RECEIPT_RETENTION_MS, SENDING_STALE_MS, type ChannelStatusDetail, type CoreDependencies } from '@zapbip/core';
-import { ChannelInboundKind, DeliveryState, ForwardedKind, MediaOrigin, MessageDirection, MessageKind, OwnerLocale } from '@zapbip/types';
+import { ChannelInboundKind, DeliveryState, MediaOrigin, MessageDirection, MessageKind, OwnerLocale } from '@zapbip/types';
 import { evictDurableObject, reset, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { AccountInbox } from '../../src/account-inbox/account-inbox';
@@ -36,7 +36,7 @@ function ownerTextEntry(input: { text: string; at: number }) {
     at: input.at,
     content: { kind: MessageKind.Text as const, text: input.text },
     replyToChannelMessageId: null,
-    forwarded: ForwardedKind.None,
+    forwarded: false,
     noticeText: null,
   };
 }
@@ -394,7 +394,6 @@ describe('DO schema v4', () => {
       expect.arrayContaining(['channel_message_id', 'error_code', 'error_title', 'pricing_category', 'billable', 'claimed_at']),
     );
     expect(schema.windowColumns).toContain('closed_at');
-    expect(schema.messageColumns).toContain('forwarded');
     expect(schema.versions).toEqual(ACCOUNT_INBOX_MIGRATIONS.map((migration) => migration.version));
   });
 });
@@ -570,15 +569,15 @@ describe('AccountInbox channel messages', () => {
     expect(await stub.hasChannelReceipt({ channelMessageId: CHANNEL_MESSAGE_ID })).toEqual({ ok: true, value: true });
   });
 
-  it('stores the forwarded kind of an owner message and returns it', async () => {
+  it('stores the forwarded flag of an owner message and returns it', async () => {
     await registerAlpha();
     const request = textRequestOf({ channelMessageId: CHANNEL_MESSAGE_ID });
     await accountInboxStub({ accountId: ACCOUNT_ID }).receiveChannelMessage({
       ...request,
-      entry: { ...request.entry, forwarded: ForwardedKind.FrequentlyForwarded },
+      entry: { ...request.entry, forwarded: true },
     });
     const stored = await inRepository((repository) => repository.findMessageByChannelMessageId({ channelMessageId: CHANNEL_MESSAGE_ID }));
-    expect(stored).toMatchObject({ forwarded: ForwardedKind.FrequentlyForwarded });
+    expect(stored).toMatchObject({ forwarded: true });
   });
 });
 

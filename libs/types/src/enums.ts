@@ -69,6 +69,10 @@ export enum InboxCopyKey {
   PreviewChoice = 'preview_choice',
 }
 
+export enum WakeCopyKey {
+  WakeFailed = 'wake_failed',
+}
+
 export enum OptionRender {
   Buttons = 'buttons',
   List = 'list',
@@ -107,10 +111,46 @@ export enum AgentWakeReason {
 
 export enum WakeMode {
   None = 'none',
+  Local = 'local',
+  Webhook = 'webhook',
 }
 
 export enum WakeRung {
   Inbox = 'inbox',
+  Local = 'local',
+  Webhook = 'webhook',
+}
+
+export enum WakeAttemptOutcome {
+  Delivered = 'delivered',
+  Retry = 'retry',
+  Refused = 'refused',
+}
+
+export enum WakeProvider {
+  GrokRoutine = 'grok_routine',
+  ClaudeRoutine = 'claude_routine',
+  GenericWebhook = 'generic',
+}
+
+export enum WakeStatus {
+  Active = 'active',
+  Failing = 'failing',
+}
+
+export enum SetWakeStatus {
+  Saved = 'saved',
+}
+
+export enum WakeLogEventName {
+  Scheduled = 'wake.scheduled',
+  Dropped = 'wake.dropped',
+  Delivered = 'wake.delivered',
+  Retry = 'wake.retry',
+  Refused = 'wake.refused',
+  GaveUp = 'wake.gave_up',
+  NoticeFailed = 'wake.notice_failed',
+  NoticeSkipped = 'wake.notice_skipped',
 }
 
 export enum ChannelErrorKind {
@@ -242,8 +282,22 @@ export enum AccountReplyParameter {
   InstallPrompt = 'install_prompt',
 }
 
-export enum ForwardedKind {
-  None = 'none',
-  Forwarded = 'forwarded',
-  FrequentlyForwarded = 'frequently_forwarded',
+export enum HttpStatus {
+  Ok = 200,
+  SwitchingProtocols = 101,
+  Created = 201,
+  MultipleChoices = 300,
+  BadRequest = 400,
+  Unauthorized = 401,
+  Forbidden = 403,
+  NotFound = 404,
+  Conflict = 409,
+  Gone = 410,
+  LengthRequired = 411,
+  PayloadTooLarge = 413,
+  UnsupportedMediaType = 415,
+  UpgradeRequired = 426,
+  InternalServerError = 500,
+  BadGateway = 502,
+  ServiceUnavailable = 503,
 }

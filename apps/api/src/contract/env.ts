@@ -17,4 +17,6 @@ export type Bindings = {
   WHATSAPP_PHONE_NUMBER_ID?: string;
   WHATSAPP_GRAPH_BASE_URL?: string;
   WHATSAPP_MEDIA_DOWNLOAD_ORIGIN?: string;
+  WAKE_SECRET_KEY: string;
+  WAKE_METRICS: AnalyticsEngineDataset;
 };

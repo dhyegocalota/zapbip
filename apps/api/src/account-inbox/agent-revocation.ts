@@ -1,4 +1,5 @@
 const CLEAR_WAKE_STATEMENT = 'DELETE FROM agent_wake WHERE agent = ?';
+const CLEAR_WAKE_JOBS_STATEMENT = 'DELETE FROM wake_jobs WHERE agent = ?';
 const CLOSE_QUESTIONS_STATEMENT = 'DELETE FROM questions WHERE agent = ? AND answer IS NULL';
 const MARK_REVOKED_STATEMENT =
   'INSERT INTO revoked_agents (agent, revoked_at) VALUES (?, ?) ON CONFLICT (agent) DO UPDATE SET revoked_at = excluded.revoked_at';
@@ -10,6 +11,7 @@ const FORGET_AGENT_STATEMENT = 'DELETE FROM agents WHERE agent = ?';
 export function revokeAgentState(input: { storage: DurableObjectStorage; agent: string; revokedAt: number }): void {
   input.storage.transactionSync(() => {
     input.storage.sql.exec(CLEAR_WAKE_STATEMENT, input.agent);
+    input.storage.sql.exec(CLEAR_WAKE_JOBS_STATEMENT, input.agent);
     input.storage.sql.exec(CLOSE_QUESTIONS_STATEMENT, input.agent);
     input.storage.sql.exec(MARK_REVOKED_STATEMENT, input.agent, input.revokedAt);
   });

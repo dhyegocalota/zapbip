@@ -1,5 +1,5 @@
 import { RECEIPT_RETENTION_MS, type ChannelInboundEntry, type OwnerInboundContent, type UnavailableOwnerMedia } from '@zapbip/core';
-import { ChannelInboundKind, DeliveryState, type OwnerLocale } from '@zapbip/types';
+import { ChannelInboundKind, DeliveryState, HttpStatus, type OwnerLocale } from '@zapbip/types';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { D1MessageIndex } from '../adapters/d1/d1-message-index';
@@ -39,7 +39,6 @@ import type { CallOutcome } from '../contract/account-inbox-rpc';
 import type { Bindings } from '../contract/env';
 import { receiveOwnerInbound } from '../inbound/owner-inbound';
 import { accountInboxOf } from './account-inbox-stub';
-import { HttpStatus } from '../contract/http-status';
 
 type RequestContext = {
   bindings: Bindings;

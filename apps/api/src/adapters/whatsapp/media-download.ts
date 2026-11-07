@@ -1,10 +1,9 @@
 import type { MediaStore } from '@zapbip/core';
-import { ChannelErrorKind } from '@zapbip/types';
+import { ChannelErrorKind, HttpStatus } from '@zapbip/types';
 import { z } from 'zod';
 import { mapGraphErrorToChannelError } from './channel-error-mapping';
 import { GraphRequestError, type GraphClient } from './graph-client';
 import type { MediaDownloadRequest } from './inbound-parser';
-import { HttpStatus } from '../../contract/http-status';
 import { isAllowedMediaUrl } from './media-url-policy';
 import { WhatsAppErrorCode } from './whatsapp-enums';
 

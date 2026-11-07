@@ -1,5 +1,5 @@
 import { normalizeMimeType, SVG_MIME_TYPE } from '@zapbip/core';
-import { LinkPurpose } from '@zapbip/types';
+import { HttpStatus, LinkPurpose } from '@zapbip/types';
 import { Hono } from 'hono';
 import { createPlatformClock } from '../adapters/platform/clock';
 import { mediaStoreOf } from '../adapters/r2/r2-media-store';
@@ -7,7 +7,6 @@ import type { Bindings } from '../contract/env';
 import { LogEvent } from '../contract/log';
 import { logEvent } from '../log';
 import { readSignedQuery, verifyLink } from '../signing';
-import { HttpStatus } from '../contract/http-status';
 
 const INLINE_MEDIA_TYPE_PATTERN = /^(image|video|audio)\//;
 const ATTACHMENT_DISPOSITION = 'attachment';

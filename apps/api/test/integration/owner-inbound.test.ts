@@ -1,5 +1,5 @@
 import { NEW_ACCOUNTS_PER_DAY_LIMIT, renderAccountReply, type AccountReply, type ChannelInboundEntry } from '@zapbip/core';
-import { AccountReplyIntent, AccountState, ChannelInboundKind, ForwardedKind, MessageKind, OwnerLocale, ReplyKind } from '@zapbip/types';
+import { AccountReplyIntent, AccountState, ChannelInboundKind, MessageKind, OwnerLocale, ReplyKind } from '@zapbip/types';
 import { reset } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { receiveOwnerInbound } from '../../src/inbound/owner-inbound';
@@ -63,7 +63,7 @@ function imageEntry(): ChannelInboundEntry {
       caption: null,
     },
     replyToChannelMessageId: null,
-    forwarded: ForwardedKind.None,
+    forwarded: false,
     noticeText: null,
   };
 }
@@ -273,7 +273,7 @@ describe('owner inbound orchestrator', () => {
         caption: null,
       },
       replyToChannelMessageId: null,
-      forwarded: ForwardedKind.None,
+      forwarded: false,
       noticeText: null,
     });
     await receiveOwnerInbound({ bindings, waId: WA_ID, channelMessageId: nextWamid(), entryOf });

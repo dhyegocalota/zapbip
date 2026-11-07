@@ -1,12 +1,11 @@
 import { env, runInDurableObject, SELF } from 'cloudflare:test';
 import { HISTORY_LIMIT, type CoreDependencies } from '@zapbip/core';
-import { DeliveryState, MINUTE_MS } from '@zapbip/types';
+import { DeliveryState, HttpStatus, MINUTE_MS } from '@zapbip/types';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { D1MessageIndex } from '../../src/adapters/d1/d1-message-index';
 import { UNINDEXED_STATUS_RETRY_WINDOW_MS, WEBHOOK_SIGNATURE_HEADER } from '../../src/adapters/whatsapp/whatsapp-constants';
 import { OperatorEvent } from '../../src/adapters/whatsapp/whatsapp-enums';
 import { WHATSAPP_WEBHOOK_PATH } from '../../src/contract/constants';
-import { HttpStatus } from '../../src/contract/http-status';
 import deliveredFixture from '../fixtures/whatsapp/status/delivered.json';
 import failedFixture from '../fixtures/whatsapp/status/failed.json';
 import playedFixture from '../fixtures/whatsapp/status/played.json';

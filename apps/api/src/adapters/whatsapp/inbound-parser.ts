@@ -1,5 +1,5 @@
 import type { ContactCard, MediaMessageKind, OwnerInboundContent, UnavailableOwnerMedia } from '@zapbip/core';
-import { ChannelInboundKind, ForwardedKind, IdPrefix, MessageKind } from '@zapbip/types';
+import { ChannelInboundKind, IdPrefix, MessageKind } from '@zapbip/types';
 import { z } from 'zod';
 import { OWNER_PHONE_PATTERN } from '../../contract/constants';
 import { sha256Hex } from '../platform/hash';
@@ -27,7 +27,7 @@ export type ParsedInboundEntry =
       at: number;
       content: OwnerInboundContent | UnavailableOwnerMedia;
       replyToChannelMessageId: string | null;
-      forwarded: ForwardedKind;
+      forwarded: boolean;
     }
   | { kind: ChannelInboundKind.WindowOnly; at: number }
   | { kind: ChannelInboundKind.Unsupported; at: number; unsupportedType: string | null };
@@ -54,7 +54,7 @@ type MessageParts = {
   channelMessageId: string;
   at: number;
   replyToChannelMessageId: string | null;
-  forwarded: ForwardedKind;
+  forwarded: boolean;
   payload: unknown;
 };
 type ParsedContent = { entry: ParsedInboundEntry; media: MediaDownloadRequest | null };
@@ -206,12 +206,10 @@ const MESSAGE_HANDLERS: Record<WhatsAppMessageType, MessageHandler> = {
 
 type MessageContext = z.infer<typeof messageHeadSchema>['context'];
 
-function forwardedKindOf(input: { context: MessageContext }): ForwardedKind {
+function isForwarded(input: { context: MessageContext }): boolean {
   const { context } = input;
-  if (context === undefined) return ForwardedKind.None;
-  if (context.frequently_forwarded) return ForwardedKind.FrequentlyForwarded;
-  if (context.forwarded) return ForwardedKind.Forwarded;
-  return ForwardedKind.None;
+  if (context === undefined) return false;
+  return context.forwarded || context.frequently_forwarded;
 }
 
 function replyTargetOf(input: { context: MessageContext }): string | null {
@@ -238,7 +236,7 @@ async function parseEntry(input: { rawMessage: unknown }): Promise<ParsedEntry> 
     channelMessageId: id,
     at: timestamp,
     replyToChannelMessageId: replyTargetOf({ context }),
-    forwarded: forwardedKindOf({ context }),
+    forwarded: isForwarded({ context }),
     payload: record.data[type],
   };
   const isKnownType = KNOWN_TYPES.includes(type);

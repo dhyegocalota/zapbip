@@ -6,10 +6,13 @@ import {
   MediaSourceKind,
   MessageKind,
   MessageDirection,
-  ForwardedKind,
   MessageSender,
   OwnerLocale,
   ReplyStatus,
+  SetWakeStatus,
+  WakeMode,
+  WakeProvider,
+  WakeRung,
 } from '@zapbip/types';
 
 const nullableString = z.string().nullable().default(null);
@@ -83,7 +86,7 @@ export const messageWireSchema = z.object({
   direction: z.enum(MessageDirection),
   sender: z.enum(MessageSender),
   verified: z.boolean(),
-  forwarded: z.enum(ForwardedKind),
+  forwarded: z.boolean(),
   agent: z.string().nullable(),
   at: z.iso.datetime(),
   reply_to: z.string().nullable(),
@@ -142,4 +145,27 @@ export const createUploadOutputShape = {
   upload_id: z.string(),
   upload_url: z.string(),
   expires_at: z.iso.datetime(),
+};
+
+export const setWakeInputShape = {
+  mode: z.enum(WakeMode),
+  url: nullableString,
+  token: nullableString,
+};
+
+export enum UnavailableWakeMode {
+  Scheduled = 'scheduled',
+  Standby = 'standby',
+}
+
+export const setWakeToolInputShape = {
+  ...setWakeInputShape,
+  mode: z.enum([...Object.values(WakeMode), ...Object.values(UnavailableWakeMode)]),
+};
+
+export const setWakeOutputShape = {
+  status: z.enum(SetWakeStatus),
+  wake_mode: z.enum(WakeMode),
+  effective_rung: z.enum(WakeRung),
+  provider: z.enum(WakeProvider).nullable(),
 };

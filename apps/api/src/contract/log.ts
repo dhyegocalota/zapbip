@@ -1,3 +1,5 @@
+import type { WakeAttemptOutcome, WakeLogEventName, WakeProvider } from '@zapbip/types';
+
 export enum LogEvent {
   AuthRejected = 'auth_rejected',
   ToolCall = 'tool_call',
@@ -23,10 +25,11 @@ export enum LogEvent {
   AccountDailyCap = 'account_daily_cap',
   AccountDeleted = 'account_deleted',
   InstallCodeUnreadable = 'install_code_unreadable',
+  FrameRejected = 'frame_rejected',
 }
 
 export type LogFields = {
-  event: LogEvent;
+  event: LogEvent | WakeLogEventName;
   accountId?: string;
   agent?: string;
   messageId?: string;
@@ -37,4 +40,9 @@ export type LogFields = {
   locale?: string;
   count?: number;
   route?: string;
+  provider?: WakeProvider | null;
+  attempt?: number;
+  statusCode?: number | null;
+  latencyMs?: number | null;
+  outcome?: WakeAttemptOutcome | null;
 };

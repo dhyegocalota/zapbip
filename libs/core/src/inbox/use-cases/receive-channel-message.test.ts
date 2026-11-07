@@ -1,13 +1,4 @@
-import {
-  ChannelErrorKind,
-  ChannelInboundKind,
-  MediaOrigin,
-  MediaSourceKind,
-  MessageKind,
-  OwnerLocale,
-  WakeOutcome,
-  ForwardedKind,
-} from '@zapbip/types';
+import { ChannelErrorKind, ChannelInboundKind, MediaOrigin, MediaSourceKind, MessageKind, OwnerLocale, WakeOutcome } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { formatRouteOptionId } from '../option-id';
 import { InboxError } from '../errors';
@@ -38,7 +29,7 @@ describe('receiveChannelMessage', () => {
     expect(await environment.repository.findMessage({ messageId: result.messageId! })).toMatchObject({
       agent: 'alpha',
       readByAgent: false,
-      forwarded: ForwardedKind.None,
+      forwarded: false,
       text: 'oi',
     });
     expect(await environment.repository.findMessageByChannelMessageId({ channelMessageId: WAMID })).toMatchObject({
@@ -86,7 +77,8 @@ describe('receiveChannelMessage', () => {
     const failing = {
       ...environment.dependencies,
       waker: {
-        notify: async () => {
+        ...environment.dependencies.waker,
+        notify: async (): Promise<WakeOutcome> => {
           wakeCalls += 1;
           throw new Error('wake failed');
         },
@@ -146,15 +138,12 @@ describe('receiveChannelMessage', () => {
     expect(await environment.repository.countUnread({ agent: 'alpha' })).toBe(0);
   });
 
-  test.each([ForwardedKind.Forwarded, ForwardedKind.FrequentlyForwarded, ForwardedKind.None])(
-    'stores the forwarded kind %s of an owner message',
-    async (forwarded) => {
-      const environment = await environmentWithAlpha();
-      const entry = ownerTextEntry({ environment, text: '@alpha oi', forwarded });
-      const result = await receiveChannel({ environment, entry });
-      expect(await environment.repository.findMessage({ messageId: result.messageId! })).toMatchObject({ forwarded });
-    },
-  );
+  test.each([true, true, false])('stores the forwarded kind %s of an owner message', async (forwarded) => {
+    const environment = await environmentWithAlpha();
+    const entry = ownerTextEntry({ environment, text: '@alpha oi', forwarded });
+    const result = await receiveChannel({ environment, entry });
+    expect(await environment.repository.findMessage({ messageId: result.messageId! })).toMatchObject({ forwarded });
+  });
 
   test('a reaction on a message nobody has is stored with no target instead of the channel id', async () => {
     const environment = await environmentWithAlpha();
@@ -163,7 +152,7 @@ describe('receiveChannelMessage', () => {
       at: environment.clock.now(),
       content: { kind: MessageKind.Reaction, targetMessageId: 'wamid.unknown', emoji: '👍' },
       replyToChannelMessageId: null,
-      forwarded: ForwardedKind.None,
+      forwarded: false,
       noticeText: null,
     };
     const result = await receiveChannel({ environment, entry });
@@ -211,7 +200,7 @@ describe('receiveChannelMessage', () => {
       at: environment.clock.now(),
       content: { kind: MessageKind.Image, voice: false, filename: null, caption: '@alpha look' },
       replyToChannelMessageId: null,
-      forwarded: ForwardedKind.None,
+      forwarded: false,
       noticeText: 'Y',
     };
     const result = await receiveChannel({ environment, entry });
@@ -221,7 +210,7 @@ describe('receiveChannelMessage', () => {
       mimeType: null,
       sizeBytes: null,
       readByAgent: false,
-      forwarded: ForwardedKind.None,
+      forwarded: false,
     });
     expect(environment.sender.sessions.slice(1)).toMatchObject([{ kind: MessageKind.Text, text: 'Y', agent: null }]);
   });
@@ -241,7 +230,7 @@ describe('receiveChannelMessage', () => {
         caption: null,
       },
       replyToChannelMessageId: null,
-      forwarded: ForwardedKind.None,
+      forwarded: false,
       noticeText: null,
     };
     const result = await receiveChannel({ environment, entry });
@@ -265,20 +254,17 @@ describe('receiveChannelMessage', () => {
     });
   });
 
-  test.each([ForwardedKind.Forwarded, ForwardedKind.FrequentlyForwarded])(
-    'a %s text never answers an open question and still reaches the agent',
-    async (forwarded) => {
-      const environment = await createEnvironment();
-      const question = await askAndAbandon({ environment });
-      const result = await receiveChannel({ environment, entry: ownerTextEntry({ environment, text: 'Sim', forwarded }) });
-      expect((await environment.repository.findQuestion({ questionId: question.questionId }))?.answer).toBeNull();
-      expect(await environment.repository.findMessage({ messageId: result.messageId! })).toMatchObject({
-        agent: question.agent,
-        text: 'Sim',
-        forwarded,
-      });
-    },
-  );
+  test('a forwarded text never answers an open question and still reaches the agent', async () => {
+    const environment = await createEnvironment();
+    const question = await askAndAbandon({ environment });
+    const result = await receiveChannel({ environment, entry: ownerTextEntry({ environment, text: 'Sim', forwarded: true }) });
+    expect((await environment.repository.findQuestion({ questionId: question.questionId }))?.answer).toBeNull();
+    expect(await environment.repository.findMessage({ messageId: result.messageId! })).toMatchObject({
+      agent: question.agent,
+      text: 'Sim',
+      forwarded: true,
+    });
+  });
 
   test('a reaction does not open the window or flush the queue', async () => {
     const environment = await environmentWithAlpha();
@@ -290,7 +276,7 @@ describe('receiveChannelMessage', () => {
       at: environment.clock.now(),
       content: { kind: MessageKind.Reaction, targetMessageId: 'wamid.unknown', emoji: '👍' },
       replyToChannelMessageId: null,
-      forwarded: ForwardedKind.None,
+      forwarded: false,
       noticeText: null,
     };
     await receiveChannel({ environment, entry });
@@ -313,7 +299,7 @@ describe('receiveChannelMessage', () => {
         optionDescription: null,
       },
       replyToChannelMessageId: null,
-      forwarded: ForwardedKind.None,
+      forwarded: false,
       noticeText: null,
     };
     const result = await receiveChannel({ environment, entry: tap });
@@ -344,7 +330,7 @@ describe('receiveChannelMessage', () => {
       at: environment.clock.now(),
       content: { kind: MessageKind.Reaction, targetMessageId, emoji: '👍' },
       replyToChannelMessageId: null,
-      forwarded: ForwardedKind.None,
+      forwarded: false,
       noticeText: null,
     });
     const onKnown = await receiveChannel({ environment, entry: reactionOn('wamid.X') });
@@ -363,7 +349,7 @@ describe('receiveChannelMessage', () => {
       at: environment.clock.now(),
       content: { kind: MessageKind.Image, voice: true, filename: null, caption: null },
       replyToChannelMessageId: null,
-      forwarded: ForwardedKind.None,
+      forwarded: false,
       noticeText: null,
     };
     await expect(receiveChannel({ environment, channelMessageId: WAMID, entry })).rejects.toBeInstanceOf(InboxError);

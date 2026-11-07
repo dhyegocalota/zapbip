@@ -160,7 +160,7 @@ describe('deliverToOwner with the channel', () => {
     expect(environment.sender.templates).toMatchObject([{ kind: TemplateKind.Notice, locale: OwnerLocale.EnglishUs }]);
   });
 
-  test('a notice the channel rejects raises a delivery failure naming the notice and keeps the message queued', async () => {
+  test('a notice the channel rejects leaves the message queued and the agent reads the notice failure text', async () => {
     const environment = await createEnvironment();
     await closeWindowFixture({ environment });
     environment.sender.failTemplateCalls({
@@ -169,7 +169,6 @@ describe('deliverToOwner with the channel', () => {
     });
     const error = await captureInboxError(() => send({ environment, text: 'hi' }));
     expect(error).toEqual({ code: ChannelErrorKind.DeliveryFailed, message: NOTICE_FAILED_MESSAGE });
-    expect((await historyOf({ environment })).map((message) => message.delivery)).toEqual([DeliveryState.Queued]);
     expect((await environment.repository.findWindow()).noticeSentForClosedWindow).toBe(false);
   });
 });

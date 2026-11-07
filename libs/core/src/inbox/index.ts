@@ -1,6 +1,7 @@
 export * from './constants';
 export * from './connection';
 export * from './message';
+export * from './connector-frames';
 export * from './question';
 export * from './inbox-records';
 export * from './ports';
@@ -42,3 +43,4 @@ export * from './use-cases/apply-status';
 export * from './use-cases/status-rule';
 export * from './use-cases/claim-queued';
 export * from './use-cases/has-channel-receipt';
+export * from './use-cases/acknowledge-delivery';

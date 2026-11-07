@@ -1,4 +1,4 @@
-import { ForwardedKind, MessageKind, OwnerLocale } from '@zapbip/types';
+import { MessageKind, OwnerLocale } from '@zapbip/types';
 import { reset, runInDurableObject } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Bindings } from '../../src/contract/env';
@@ -50,7 +50,7 @@ describe('a bad WAITLIST_ENABLED binding', () => {
         ownerMessage: {
           at: Date.now(),
           replyToMessageId: null,
-          forwarded: ForwardedKind.None,
+          forwarded: false,
           content: { kind: MessageKind.Text, text: 'oi' },
         },
       });

@@ -2,7 +2,6 @@ import { env, runInDurableObject, SELF } from 'cloudflare:test';
 import { formatOptionId, HISTORY_LIMIT, isOwnerWindowOpen, RECEIPT_RETENTION_MS, type CoreDependencies } from '@zapbip/core';
 import {
   DeliveryState,
-  ForwardedKind,
   MediaSourceKind,
   MessageDirection,
   MessageKind,
@@ -810,8 +809,8 @@ describe('webhook Graph errors on inbound media', () => {
 
 describe('webhook forwarded messages', () => {
   test.each([
-    ['a forwarded text', textForwardedFixture, ForwardedKind.Forwarded],
-    ['a frequently forwarded text', textFrequentlyForwardedFixture, ForwardedKind.FrequentlyForwarded],
+    ['a forwarded text', textForwardedFixture, true],
+    ['a frequently forwarded text', textFrequentlyForwardedFixture, true],
   ])('stores %s with the forwarded kind and verified false', async (_name, fixture, forwarded) => {
     const account = await seedAccount({ agent: 'alpha' });
     const id = `wamid.${forwarded}`;
@@ -836,14 +835,14 @@ describe('webhook forwarded messages', () => {
     expect(response.status).toBe(STATUS_OK);
     const image = await imageOf({ account });
     expect(image.source.kind).toBe(MediaSourceKind.Stored);
-    expect(image.forwarded).toBe(ForwardedKind.Forwarded);
+    expect(image.forwarded).toBe(true);
   });
 
   test('a plain text is stored with forwarded none and verified true', async () => {
     const account = await seedAccount({ agent: 'alpha' });
     await postNotification({ notification: notificationWith({ messages: [ownerText({ account, id: 'wamid.PLAIN', text: 'Oi' })] }) });
     const stored = await storedByChannelId({ account, channelMessageId: 'wamid.PLAIN' });
-    expect(toWireMessage({ message: stored, link: null })).toMatchObject({ verified: true, forwarded: ForwardedKind.None });
+    expect(toWireMessage({ message: stored, link: null })).toMatchObject({ verified: true, forwarded: false });
   });
 });
 

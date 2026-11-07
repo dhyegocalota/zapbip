@@ -90,6 +90,7 @@ export default async function setup(project: TestProject): Promise<() => Promise
     secrets: Object.fromEntries(connections.map((connection) => [connection.agent, connection.secret])),
     secondPhone: OWNER_PHONE,
     secondSecrets: {},
+    wakeAccounts: [],
     logFile,
   };
   project.provide('stack', context);

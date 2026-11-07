@@ -7,6 +7,7 @@ import { accountInboxStub, connectionOf } from '../support/workers-env';
 
 const ACCOUNT = 'acc_revocation';
 const OLD_AGENT = 'alpha';
+const PENDING_WAKE_JOB_STATEMENT = 'INSERT INTO wake_jobs (agent, due_at, attempt, lease_until, rewake) VALUES (?, 1, 0, NULL, 0)';
 const ANSWERED_QUESTION_STATEMENT = `INSERT INTO questions (question_id, agent, text, options, normalized_key, prompt_message_id, asked_at, answer)
   VALUES ('que_answered', ?, 'Deploy?', '[]', 'deploy', 'msg_prompt', 1, '{}')`;
 
@@ -70,6 +71,13 @@ describe('a revoked agent stops being a routing target', () => {
     await ownerWrites({ text: 'alguem?' });
     const options = await sql<{ payload: string }>("SELECT payload FROM inbox_messages WHERE direction = 'to_owner' AND kind = 'choice'");
     expect(options.map((row) => row.payload).join('')).not.toContain(OLD_AGENT);
+  });
+
+  it('deletes the pending wake job of a revoked agent', async () => {
+    await agentSpoke();
+    await sql(PENDING_WAKE_JOB_STATEMENT, OLD_AGENT);
+    await stubOf().recordRevocation({ agent: OLD_AGENT });
+    expect(await sql('SELECT agent FROM wake_jobs WHERE agent = ?', OLD_AGENT)).toEqual([]);
   });
 
   it('[row 478][row 479] forgets the revoked name and its old history when the name is created again', async () => {
