@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 source "$(dirname "$0")/touched-files.sh"
 readonly BLOCKED_MESSAGE="Blocked: agents never edit .env files; document the variable in .env.example instead."
-readonly WRITE_PATTERN='>|(^|[^[:alnum:]_])(tee|cp|mv|install|ln|rsync|dd|open|write_text|write_bytes)([^[:alnum:]_]|$)|sed[[:space:]]+-i|perl[[:space:]]+-[[:alnum:]]*i'
-readonly SCRIPT_PATTERN='(^|[^[:alnum:]_])((sh|bash|zsh)[[:space:]]+-[[:alnum:]]*c|eval|python[0-9.]*|node|perl|ruby)([^[:alnum:]_]|$)'
-readonly PROSE_PATTERN="\"[^\"\$\`]*[[:space:]][^\"\$\`]*\"|'[^']*[[:space:]][^']*'"
-readonly WORD_SEPARATORS=$' \t\n;&|<>=(){}$`"\''
+readonly WRITE_PATTERN='>|(^|[^[:alnum:]_])(tee|cp|mv|install|ln|rsync|dd|touch|truncate|patch|open|write_text|write_bytes)([^[:alnum:]_]|$)|sed[[:space:]]+-i|sed[[:space:]].*[[:space:]/;{]w[[:space:]]|perl[[:space:]]+-[[:alnum:]]*i|(^|[^[:alnum:]_])curl[[:space:]]+(.*[[:space:]])?(-[[:alnum:]]*o|--output)([[:space:]]|$)|(^|[^[:alnum:]_])wget[[:space:]]+(.*[[:space:]])?(-[[:alnum:]]*O|--output-document)([[:space:]=]|$)|(^|[^[:alnum:]_])git([[:space:]]+-[^[:space:]]+)*[[:space:]]+(checkout|restore)([^[:alnum:]_]|$)|(^|[^[:alnum:]_])(python[0-9.]*|node|ruby)[[:space:]]+-[ce]([^[:alnum:]_]|$)'
+readonly WORD_SEPARATORS=$' \t\n;&|<>=(){}$`'
 
 is_protected_env_file() {
   local name="${1##*/}"
@@ -26,9 +24,8 @@ while IFS= read -r file; do
 done <<<"$touched"
 [[ -n "$touched" ]] && exit 0
 command=$(jq -r '.tool_input.command // ""' <<<"$hook_input")
-[[ "$command" =~ $WRITE_PATTERN ]] || exit 0
-scanned_text=$(sed -E "s/${PROSE_PATTERN}//g" <<<"$command")
-[[ "$command" =~ $SCRIPT_PATTERN ]] && scanned_text=$command
+scanned_text=$(tr -d "\"'\\\\" <<<"$command")
+[[ "$scanned_text" =~ $WRITE_PATTERN ]] || exit 0
 while IFS= read -r word; do
   is_protected_env_file "$word" && block
 done < <(tr "$WORD_SEPARATORS" '\n' <<<"$scanned_text")

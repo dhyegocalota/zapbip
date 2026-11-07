@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -u
 root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
+source "$root/.agents/hooks/wrangler-session.sh"
+readonly WRANGLER_OAUTH_PATTERN='logged in with an OAuth Token'
+readonly WRANGLER_PROBE_PROGRAM='alarm shift; exec @ARGV'
+wrangler_timeout_seconds=${DOCTOR_WRANGLER_TIMEOUT_SECONDS:-10}
+wrangler_directory=${DOCTOR_WRANGLER_DIR:-$root/apps/api/node_modules/.bin}
 platform=${DOCTOR_UNAME:-$(uname -s)}
 lookup_path=${DOCTOR_PATH:-$PATH}
 home=${DOCTOR_HOME:-$HOME}
@@ -62,6 +67,7 @@ fix_for() {
     gitleaks) install_with gitleaks "https://github.com/gitleaks/gitleaks#installing" ;;
     python) python_install ;;
     ffmpeg) install_with ffmpeg "https://ffmpeg.org/download.html" ;;
+    wrangler) echo "$WRANGLER_LOGGED_IN_FIX" ;;
   esac
 }
 
@@ -75,6 +81,7 @@ lost_for() {
     gitleaks) echo "the secret scan; pnpm verify fails without it" ;;
     ffmpeg) echo "the recorder's mp4 and gif; a PR that touches UI cannot ship" ;;
     python) echo "the Hermes plugin's typecheck and tests; pnpm verify fails in apps/hermes-plugin" ;;
+    wrangler) echo "the deploy guard refuses every wrangler command, and agent shells can reach the owner's Cloudflare session" ;;
   esac
 }
 
@@ -95,6 +102,20 @@ check_skills() { [[ "$(cd "$root/.claude/skills" 2>/dev/null && pwd -P)" == "$(c
 check_gitleaks() { have gitleaks; }
 check_ffmpeg() { have ffmpeg; }
 check_python() { have python3 && run python3 -c 'import sys, mypy, pytest; sys.exit(not (3, 11) <= sys.version_info[:2] <= (3, 14))' >/dev/null 2>&1; }
+
+wrangler_session() {
+  local binary
+  binary=$(PATH="$lookup_path:$wrangler_directory" command -v wrangler) || { echo "$WRANGLER_LOGGED_OUT"; return; }
+  perl -e "$WRANGLER_PROBE_PROGRAM" "$wrangler_timeout_seconds" "$binary" whoami </dev/null 2>&1 | grep -qi "$WRANGLER_OAUTH_PATTERN" && { echo "$WRANGLER_LOGGED_IN"; return; }
+  echo "$WRANGLER_LOGGED_OUT"
+}
+
+check_wrangler() {
+  local session session_file
+  session=$(wrangler_session)
+  session_file=$(cd "$root" && wrangler_session_file) && printf '%s' "$session" > "$session_file"
+  [[ "$session" == "$WRANGLER_LOGGED_OUT" ]]
+}
 
 fix_name_for() {
   [[ "$1" == gh ]] && have gh && { echo gh-auth; return; }
@@ -130,6 +151,7 @@ report gh required
 report chromium required
 report skills required
 report python required
+report wrangler required
 report gitleaks optional
 report ffmpeg optional
 echo "doctor: $missing_required missing required, $missing_optional missing optional"
