@@ -26,7 +26,6 @@ Paths marked (new) do not exist on `origin/main` at `273e1a2`; every other path 
 | G1 platform and schema | `apps/api/migrations/0005_backoffice.sql` (new), `apps/api/src/contract/env.ts`, `apps/api/src/contract/log.ts`, `apps/api/src/contract/constants.ts`, `apps/api/src/operations/worker-secret.ts`, `apps/api/wrangler.jsonc`, `apps/api/src/adapters/platform/aes-gcm-secret-box.ts` (new), `apps/api/src/adapters/wake/aes-gcm-wake-secret-box.ts`, `apps/api/vitest.*.config.mts`, `apps/api/test/support/workers-env.ts`, `apps/api/tsconfig.json`, `.env.example`, `apps/api/.dev.vars.example`, `apps/api/test/unit/wrangler-config.test.ts`, `apps/api/test/unit/wrangler-rate-limit-namespaces.test.ts`, `apps/api/test/unit/env-example.test.ts`, `apps/api/test/unit/aes-gcm-secret-box.test.ts` (new), `apps/api/test/integration/migration-0005.test.ts` (new), the secret-name removals of step 2 (`apps/api/src/dev/dev-account-inbox.ts`, `apps/api/src/operations/smoke-inputs.ts`, `apps/api/src/operations/smoke-checks.ts`, `apps/api/test/unit/smoke-*.test.ts`, `apps/api/test/unit/fake-smoke-stack.ts`, `apps/api/test/unit/terminal-shell.test.ts`, the sample on line 118 of `.agents/hooks/hooks.test.sh`), and the step 5a bridge (`apps/api/src/numbers/number-registry.ts` (new, the port), the read side of `apps/api/src/adapters/d1/d1-number-registry.ts` (new), `apps/api/test/support/whatsapp-numbers.ts` (new), every existing test that reads the removed bindings, the two `global-setup.ts` files, `apps/api/src/dev/build-directory-seed.ts`, `apps/api/src/routes/dev-seed.ts`) | `developer-1` |
 | G2 backoffice auth and shell | `apps/api/src/backoffice/**` (new) except `apps/api/src/backoffice/numbers/**` (new) and `apps/api/src/backoffice/metrics/**` (new); `apps/api/src/index.ts`, `apps/api/src/index.dev.ts`; `apps/api/scripts/backoffice-enroll.ts` (new); `apps/api/src/operations/scheduled.ts` (prune job); root `package.json` scripts; `.agents/hooks/guard-deploy.sh`, `.agents/hooks/hooks.test.sh`; `apps/api/test/unit/backoffice-*.test.ts`, `apps/api/test/integration/backoffice-auth*.test.ts`, `apps/api/test/integration/backoffice-host.test.ts`, `apps/api/test/unit/operator-enrollment-entry.test.ts`, `apps/api/test/unit/operator-enrollment-qr.test.ts` (new), `apps/api/package.json` (the `uqr` devDependency only) and `pnpm-lock.yaml`, `apps/api/src/backoffice/assets/backoffice.css` (new) | `developer-2` |
 | G3 numbers registry and channel | `apps/api/src/numbers/**` (new), `apps/api/src/adapters/d1/d1-number-registry.ts` (new), `apps/api/src/adapters/d1/d1-account-directory.ts`, `apps/api/src/adapters/whatsapp/read-whatsapp-env.ts`, `apps/api/src/adapters/whatsapp/webhook-routing-peek.ts` (new), `apps/api/src/adapters/whatsapp/cloud-api-message-sender.ts`, `apps/api/src/adapters/whatsapp/whatsapp-copy.ts`, `apps/api/src/adapters/whatsapp/whatsapp-enums.ts`, `apps/api/src/routes/whatsapp.ts`, `apps/api/src/inbound/owner-inbound.ts`, `apps/api/src/account-inbox/account-inbox.ts`, `libs/core/src/accounts/**` (the `openOwnerAccount` input and `AccountDirectory` port), `apps/api/src/dev/build-directory-seed.ts`, `apps/api/src/routes/dev-seed.ts`, `apps/api/src/backoffice/numbers/**` (new), `apps/api/test/support/whatsapp-numbers.ts` (new), every existing test that reads the removed bindings, `apps/api/test/e2e/whatsapp-support/global-setup.ts`, `apps/api/test/e2e/global-setup.ts`, new `apps/api/test/integration/number-registry*.test.ts`, `apps/api/test/integration/whatsapp-webhook-numbers.test.ts`, `apps/api/test/integration/backoffice-numbers.test.ts` | `developer-3` |
-| G4 metrics (PR B) | `apps/api/src/account-inbox/migrations/v8.sql` (new), `apps/api/src/account-inbox/migrations/index.ts`, `apps/api/src/account-inbox/activity-ledger.ts` (new), `apps/api/src/account-inbox/activity-provider.ts` (new), `apps/api/src/contract/activity-metric.ts` (new), `apps/api/migrations/0007_activity.sql` (new; 0006 is `0006_backoffice_flash.sql`, so G4's activity migration is 0007), `apps/api/src/adapters/d1/d1-activity-repository.ts` (new), `apps/api/src/backoffice/metrics/**` (new), `apps/api/test/integration/activity-*.test.ts`, `apps/api/test/integration/backoffice-metrics.test.ts`; the `recordActivity` calls in `account-inbox.ts` after G3's commit to that file lands | `developer-4` |
 | G5 deploy, smoke, runbooks and rules | `apps/api/src/operations/smoke-checks.ts` (check 5's payload only; the input renames are in G1 step 2), `apps/api/src/operations/deploy-preflight.ts` (only if the enum change is not enough), `tools/repository-shape/src/runbooks.test.ts` (`GO_LIVE_ORDER`), `docs/runbooks/README.md`, `docs/runbooks/meta-setup.md`, `docs/runbooks/deploy.md`, `docs/runbooks/dns.md`, `docs/runbooks/backoffice.md` (new), `.claude/rules/backoffice.md` (new), `apps/api/README.md`, `docs/scenarios/backoffice.md` (new), `docs/features/README.md` row, `tools/repository-shape/src/backoffice-isolation.test.ts` (new), `apps/api/test/unit/smoke-*.test.ts` | `developer-5` |
 | G6 browser specs | `apps/api/playwright.config.ts` (new), `apps/api/e2e/backoffice/**` (new), `apps/api/package.json` (`test:walk`, `@playwright/test`; edited only after G2's step 17c commit, so the two `package.json` edits and the lockfile never conflict), `scripts/verify-gates.tsv` row for `apps/api/e2e/*` | `developer-6` |
 
@@ -42,7 +41,7 @@ Paths marked (new) do not exist on `origin/main` at `273e1a2`; every other path 
 - **G2 and G3 in parallel after G1 merges.** G3's backoffice pages under `apps/api/src/backoffice/numbers/**` need G2's layout, session and step-up helpers. G2 lands `backoffice/layout.tsx`, `backoffice/auth/require-session.ts` and `backoffice/auth/step-up.ts` as its first commits. G3 merges G2 at its next task boundary before step 20.
 - **G5 after G3.** The smoke and runbooks describe the registry. The isolation test can start with G2.
 - **PR A** = G1 + G2 + G3 + G5 + G6 specs for sign-in and numbers.
-- **G4 (PR B) starts after PR A's `account-inbox.ts` change is on the lane.** It touches the same file, and G3 owns it until then. G6 adds the metrics spec with G4.
+- G4 (PR B) and its metrics spec moved to [`backoffice-metrics`](../backoffice-metrics/plan.md).
 
 ## Steps
 
@@ -227,29 +226,6 @@ Author this list with every box empty. A sub-agent ticks its own line. A wrong s
   - `design.md` asks for a `KeyValueList` and native radios and checkboxes: the shared stylesheet gained `.key-value` (stacked at 375) and `.choice`, and the views use them.
   - evidence: red fb69aef0 (unit run: `expected … to contain '.key-value'`, `.choice`; the integration cases were not run in this step because port 4012 was reserved) → green below in the commit that follows it.
 
-### G4 metrics (PR B)
-
-- [x] **Step 31:** red: `activity-in-object.test.ts`:
-  - an accepted owner message → `messages_in` +1;
-  - a duplicate → +0;
-  - a session send → `messages_out` +1;
-  - a template notice → `templates_sent_notice` +1;
-  - a failed send → `sends_failed` +1;
-  - a woken wake → `wakes_woken` +1;
-  - unreached → `wakes_unreached` +1.
-
-  Then `v8.sql`, `activity-ledger.ts` and the `recordActivity` calls. — evidence: red bfa914e6 (`expected +0 to be 1`; `v8.sql` and the `ActivityMetric` enum land with the red as scaffolding) → green 80cc59be. The calls live in `activity-recording.ts`, which decorates the sender and the waker at their port, plus three `receive*` methods in `account-inbox.ts`.
-- [x] **Step 32:** red: `activity-flush.test.ts`. After one hour on the fake clock the D1 `activity_daily` row equals the meter, with `number_id` equal to the account's number. A second flush is idempotent. Pruning after 7 days. Then `activity-provider.ts`, ~~`0006_activity.sql`~~ `0007_activity.sql` (0006 is the flash migration) and `d1-activity-repository.ts`. — evidence: red e4b1d8ec (`expected [] to deeply equal [ … ]`; the `0007` table lands with the red; 'does not write again when nothing was recorded after the flush' is a pin) → green 9b207d56. `scheduled-wake-alarm.test.ts` now flushes both meters before it re-arms, and `account-inbox.test.ts` clears the activity meter beside the usage meter.
-- [x] **Step 33:** red: `backoffice-metrics.test.ts`:
-  - seeded accounts in four states, connections active, revoked and connected, `usage_daily` at 79 % and 81 %, and activity across two numbers → each figure on the page equals the spec definition;
-  - the number filter;
-  - the period filter;
-  - an empty database renders the zero state;
-  - one `batch` call per page (a spy on the binding);
-  - read-only: every statement prepared by a metrics page begins with `SELECT`, and `POST`, `PUT`, `PATCH` and `DELETE` on `/metrics` → `404`.
-
-  Then `backoffice/metrics/**`. — evidence: red 6290ca4f (`expected 404 to be 200`; the four non-GET cases are a pin) → green 24e3b39f. Four copy keys for the account states were added (`MetricsAccountState*`) and `PERCENT_MULTIPLIER` joined `libs/types`.
-
 ### G5 deploy, smoke, runbooks and rules
 
 - [x] **Step 34:** (the `SmokeInput` rename is in step 2) red: `smoke-checks.test.ts` expects check 5's payload to carry `metadata.phone_number_id` equal to the `SMOKE_PHONE_NUMBER_ID` input and the signature computed with `SMOKE_META_APP_SECRET`. Then edit `smoke-checks.ts`. — evidence: pin 4968aca0 (green on landing: the payload already carried the smoke inputs)
@@ -273,7 +249,7 @@ Author this list with every box empty. A sub-agent ticks its own line. A wrong s
 ### G6 browser specs
 
 - [x] **Step 38:** `apps/api/playwright.config.ts` boots `wrangler dev --env development` on a free port with the fake Graph, plus `test:walk`. Red spec `sign-in.spec.ts` as in the test plan. Green once G2 lands. — evidence: infra beca09a5, red c38ca2e8 (`403 Pedido recusado`, the form post carried `Origin: null`) → green 40d35cac (`Referrer-Policy: same-origin`) and 319e2cda; `pnpm test:walk`: 26 passed at 1280 and 375
-- [ ] **Step 39:** red specs `numbers.spec.ts` (PR A) and `metrics.spec.ts` (PR B). Green once G3 and G4 land. — PR A half done: `numbers.spec.ts` and `error-pages.spec.ts` red fb50c691 → green 40d35cac and 319e2cda; `metrics.spec.ts` pin 3857ef49 (lands after the page; run by `pnpm --filter @zapbip/api test:walk`)
+- [x] **Step 39:** red specs `numbers.spec.ts` and `error-pages.spec.ts` (PR A). Green once G3 lands. — evidence: red fb50c691 → green 40d35cac and 319e2cda. `metrics.spec.ts` moved to [`backoffice-metrics`](../backoffice-metrics/plan.md).
 
 ### G7 tester findings (PR A)
 
