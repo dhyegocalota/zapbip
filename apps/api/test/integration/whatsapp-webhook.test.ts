@@ -378,7 +378,7 @@ describe('webhook inbound messages', () => {
     expect(occurrencesOf({ text: loggedText({ spies }), event: OperatorEvent.InboundUnmapped })).toBe(1);
   });
 
-  test('WI-31 refuses the whole delivery when a change belongs to a foreign number', async () => {
+  test('WI-31 skips the change of a foreign number, logs it and stores the change of ours', async () => {
     const spies = spyOnLogs();
     const account = await seedAccount({ agent: 'alpha' });
     const notification = notificationOf({
@@ -388,9 +388,10 @@ describe('webhook inbound messages', () => {
       ],
     });
     const response = await postNotification({ notification });
-    expect(response.status).toBe(STATUS_UNAUTHORIZED);
-    expect(ownerTextsOf({ history: await historyOf({ account }) })).toEqual([]);
-    expect(occurrencesOf({ text: loggedText({ spies }), event: OperatorEvent.InboundUnattributed })).toBe(1);
+    expect(response.status).toBe(STATUS_OK);
+    expect(ownerTextsOf({ history: await historyOf({ account }) })).toEqual(['Oi']);
+    expect(occurrencesOf({ text: loggedText({ spies }), event: OperatorEvent.InboundForeignNumber })).toBe(1);
+    expect(occurrencesOf({ text: loggedText({ spies }), event: OperatorEvent.InboundUnattributed })).toBe(0);
   });
 
   test('WI-32 skips a change with another field', async () => {

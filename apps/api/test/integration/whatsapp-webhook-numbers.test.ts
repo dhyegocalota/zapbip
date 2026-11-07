@@ -86,6 +86,33 @@ describe('webhook attribution by number', () => {
     expect(await ownerTextsOf({ account })).toEqual([]);
   });
 
+  test('an unknown change beside a known one is skipped and the signature is checked with the secret of the known number', async () => {
+    const account = await seedAccount({ agent: 'alpha' });
+    await seedSecondNumber();
+    const notification = notificationOf({
+      changes: [
+        changeOf({ phoneNumberId: UNKNOWN_PHONE_NUMBER_ID, messages: [ownerText({ account, id: 'wamid.NUM6A' })] }),
+        changeOf({ phoneNumberId: OUR_PHONE_NUMBER_ID, messages: [ownerText({ account, id: 'wamid.NUM6B', text: 'Oi' })] }),
+      ],
+    });
+    const wrongSecret = await postSignedWith({ appSecret: SECOND_APP_SECRET, notification });
+    expect(wrongSecret.status).toBe(STATUS_UNAUTHORIZED);
+    const rightSecret = await postSignedWith({ appSecret: TEST_APP_SECRET, notification });
+    expect(rightSecret.status).toBe(STATUS_OK);
+    expect(await ownerTextsOf({ account })).toEqual(['Oi']);
+  });
+
+  test('an unknown phone number id costs one signature check against a dummy secret, like a known one', async () => {
+    const account = await seedAccount({ agent: 'alpha' });
+    await seedSecondNumber();
+    const verify = vi.spyOn(crypto.subtle, 'verify');
+    const notification = notificationOf({
+      changes: [changeOf({ phoneNumberId: UNKNOWN_PHONE_NUMBER_ID, messages: [ownerText({ account, id: 'wamid.NUM7' })] })],
+    });
+    await postSignedWith({ appSecret: TEST_APP_SECRET, notification });
+    expect(verify).toHaveBeenCalledTimes(1);
+  });
+
   test('a delivery with changes for two apps answers 401 even when signed by one of them', async () => {
     const account = await seedAccount({ agent: 'alpha' });
     await seedSecondNumber();
