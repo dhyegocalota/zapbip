@@ -87,3 +87,23 @@ describe('sign-in', () => {
     expect(response.headers.get('location')).toBe('/');
   });
 });
+
+describe('one-time codes', () => {
+  test('the same valid code a second time is refused (pin: the read-then-check path already refuses it)', async () => {
+    const code = await validCode({});
+    const first = await postSignIn({ key: BACKOFFICE_TEST_KEY, code });
+    const second = await postSignIn({ key: BACKOFFICE_TEST_KEY, code });
+    expect([first.status, second.status]).toEqual([STATUS_SEE_OTHER, STATUS_UNAUTHORIZED]);
+  });
+
+  test('two concurrent sign-ins with one code open exactly one session', async () => {
+    const code = await validCode({});
+    const { csrf } = await openSignInForm({});
+    const responses = await Promise.all([
+      postSignIn({ key: BACKOFFICE_TEST_KEY, code, csrf }),
+      postSignIn({ key: BACKOFFICE_TEST_KEY, code, csrf }),
+    ]);
+    expect(responses.map((response) => response.status).sort()).toEqual([STATUS_SEE_OTHER, STATUS_UNAUTHORIZED]);
+    expect(await sessionDigests()).toHaveLength(1);
+  });
+});
