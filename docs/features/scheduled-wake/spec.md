@@ -171,7 +171,7 @@ The task prompt for scheduled polls is one rule: call `check_inbox`; if the resu
 
 1. **Declared versus real cadence.** Minute entries were saved as Hourly on ChatGPT, and cron edits were rewritten on claude.ai. A mismatch produces false stale notices or a wrong "de hora em hora". The install uses the picker's Hourly value and creates tasks rather than editing them.
 2. **Safety-net cost.** Hourly claude.ai runs add about 24 short runs a day to the owner's usage. The install states this, and the owner can delete the cron.
-3. **Mac-dependent ChatGPT.** Local runs stop when the Mac sleeps or the app closes. The stale notice is the only signal, so the notice must name the requirement.
+3. **Mac-dependent ChatGPT.** Local runs stop when the Mac sleeps or the app closes. The stale notice is the only signal, so the notice must name the requirement. In a closed window it reaches the owner through the closed-window template notice (sender `zapbip`) and is delivered when the owner next writes.
 4. **Chat noise.** ChatGPT posts every run into its chat, so empty runs add a line each hour. The one-line rule keeps that small.
 5. **Double answer.** A primary that reads its history after a handoff may answer again (ADR 0024).
 6. **Unlabelled replies.** WhatsApp shows no agent name on an outbound message, so the owner may not know which agent answered. The standby's first reply must name itself.
