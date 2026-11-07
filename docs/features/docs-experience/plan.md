@@ -245,8 +245,8 @@ G0 evidence (2026-11-06): Step 1 `ab7d8dc`; Step 2 red `7902adb` (carries the en
 
 ### G7 MCP reference
 
-- [ ] **Step 37:** Red: the registry check in `tools/repository-shape/src/docs-experience.test.ts` (T1-49): each `McpToolName` value has a page `mcp-reference/<name>` in both languages, and no `mcp-reference` page lacks a value. The check imports `McpToolName` from `@zapbip/types`; it never imports `apps/api`. Red: `apps/docs/e2e/mcp-reference.spec.ts`: a message-sending tool page has a message-kind table.
-- [ ] **Step 38:** Update the eleven pages for the developer audience; English reworded; pt-BR twins native. `set-wake` is written by webhook-wake (English) and twinned here.
+- [x] **Step 37 (`f084e7c`, enum move `e9f5dd5`):** Red: the registry check in `tools/repository-shape/src/docs-experience.test.ts` (T1-49): each `McpToolName` value has a page `mcp-reference/<name>` in both languages, and no `mcp-reference` page lacks a value. The check imports `McpToolName` from `@zapbip/types`; it never imports `apps/api`. Red: `apps/docs/e2e/mcp-reference.spec.ts`: a message-sending tool page has a message-kind table.
+- [x] **Step 38 (`5b58b27`; the eleven pages already read for developers and `set-wake` is already twinned, so only the shared message-kinds tables changed):** Update the eleven pages for the developer audience; English reworded; pt-BR twins native. `set-wake` is written by webhook-wake (English) and twinned here.
 
 ### G8 walk and language
 

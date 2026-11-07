@@ -14,6 +14,15 @@ Written by the developer sub-agent when its steps are done. The developer does n
 - `apps/docs/package.json`, `tsconfig.json`, `playwright.config.ts`, `e2e/support/docs-experience.ts`; `@playwright/test` `1.65.0` exact; `pnpm-lock.yaml`.
 - `scripts/verify.sh`, `scripts/verify.test.sh` — `gate_docs` runs `broken-links` then `test:walk`.
 
+### G7 MCP reference (branch `feat/docs-experience-g7`)
+
+- `libs/types/src/enums.ts` now holds `McpToolName`; `apps/api/src/contract/tool-definitions.ts` imports it from `@zapbip/types` and re-exports it so no other file in `apps/api` changes (`e9f5dd5`).
+- `apps/docs/snippets/message-kinds.mdx` and its pt-br twin: the Kind column holds the `MessageKind` values in backticks (`choice` replaces "buttons and list", `audio` carries the `voice` note), and the row for quotes stays (`5b58b27`).
+- `tools/repository-shape/src/docs-experience.test.ts`: `docs experience: mcp reference` (T1-49 registry in both languages plus two fixtures, and the message-kind coverage of both snippets). `apps/docs/e2e/mcp-reference.spec.ts`: six message-sending tool pages in both languages show a table with every kind.
+- Red text at `f084e7c`: `TypeError: Cannot convert undefined or null to object` (`McpToolName` absent from `@zapbip/types`); `AssertionError: expected [ 'missing text', …(9) ] to deeply equal []` (snippets listed no kind value).
+- Hypotheses: the registry test fails naming `missing`/`extra` pages when `accounts-and-keys` or `scheduled-wake` add a tool at the facts merge; the walk passes 24 of 24 in both browser locales.
+- Gap: the eleven pages were not reworded beyond the tables, because their text already matched the tool contract; the facts merge should recheck the input tables against `mcp-schemas.ts`.
+
 ## How to run
 
 ```bash
