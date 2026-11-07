@@ -54,6 +54,12 @@ describe('sign-in', () => {
     expect(sessionCookie).not.toMatch(/Domain/i);
   });
 
+  test('the session cookie carries the Secure attribute', async () => {
+    const response = await postSignIn({ key: BACKOFFICE_TEST_KEY, code: await validCode({}) });
+    const sessionCookie = response.headers.getSetCookie().find((line) => line.startsWith(`${SESSION_COOKIE}=`));
+    expect(sessionCookie?.split('; ')).toContain('Secure');
+  });
+
   test('stores only a digest of the session token', async () => {
     const { sessionToken } = await signIn({});
     expect(await sessionDigests()).toEqual([await sha256Hex({ value: sessionToken })]);

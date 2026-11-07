@@ -18,6 +18,8 @@ const STATUS_UNAUTHORIZED = 401;
 const NOW = Date.UTC(2026, 10, 7, 12);
 const LOCKED_ACTION = 'sign_in.locked';
 const FIVE_FAILURES = 5;
+const LAST_FAILURE_BEFORE_LOCK = 9;
+const LOCKING_FAILURE = 10;
 
 beforeEach(async () => {
   await resetBackoffice();
@@ -43,6 +45,13 @@ async function lockedAuditRows(): Promise<number> {
 }
 
 describe('lockout', () => {
+  test('the threshold is ten: nine failures leave the operator open and the tenth locks', async () => {
+    await failMany({ count: LAST_FAILURE_BEFORE_LOCK });
+    expect(await readOperator()).toMatchObject({ failed_attempts: LAST_FAILURE_BEFORE_LOCK, locked_until: null });
+    await failMany({ count: 1 });
+    expect(await readOperator()).toMatchObject({ failed_attempts: LOCKING_FAILURE, locked_until: NOW + BACKOFFICE_LOCKOUT_MS });
+  });
+
   test('nine failures leave the operator unlocked and the tenth locks for the lockout period', async () => {
     await failMany({ count: BACKOFFICE_LOCKOUT_THRESHOLD - 1 });
     expect((await readOperator()).locked_until).toBeNull();
