@@ -129,7 +129,7 @@ Outbound failure with `131047` goes back into the core as a channel fact: `Accou
 
 The window opens at the message's own `timestamp` (Unix seconds, converted to milliseconds at the edge). Reactions do not open the window; a `131047` on a later send corrects any mistaken opening.
 
-Owner messages keep the core's `sender: "owner"`, and `verified: true` on every kind except a forwarded one: a forwarded message is content the owner relayed, not their own words, so it carries `verified: false` and the `forwarded` kind on the wire (owner delegated 2026-11-06).
+Owner messages keep the core's `sender: "owner"`, and `verified: true` on every kind except a forwarded one: a forwarded message is content the owner relayed, not their own words, so it carries `verified: false` and `forwarded: true` on the wire (owner delegated 2026-11-06). A forwarded message never answers an open `ask` and never runs an owner account command, on the WhatsApp path and on the direct owner path alike.
 
 An entry whose `timestamp` is older than `RECEIPT_RETENTION_MS` is acknowledged with `200`, not processed and logged as `inbound.stale`: its receipt may already be pruned, so a captured replay could not be told from a new message. A message whose receipt already exists is acknowledged with `200` before any media is downloaded, so a redelivery never touches a stored object.
 

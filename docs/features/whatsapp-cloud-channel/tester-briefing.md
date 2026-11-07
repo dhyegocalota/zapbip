@@ -413,3 +413,8 @@ Pins (green on landing, labelled `pin` in their titles or commits): WI-17, WI-44
 - `OwnerWindow` carries both `closedAt` (this slice) and the notice retry fields (core); `openWindow` resets the retry fields as `receiveOwnerMessage` does.
 - Hypothesis: a channel `WindowClosed` during a flush stops the flush, closes the window, sends one notice through `sendNotice`, and a failed notice is retried by the alarm without marking any message `Failed`.
 
+### Forwarded messages on the direct owner path
+
+- `receiveOwnerMessage` and `receiveChannelMessage` share `planArrival`, so a forwarded text never answers an open ask on either path. `receive-owner-message.test.ts` CU-199 pins the direct path (pin: green when it landed). `forwarded` is the connector's boolean now; the earlier three-state kind and the `forwarded` column are gone.
+- Gap: owner account commands do not exist in this slice; slice 3 must ignore forwarded messages before parsing a command.
+
