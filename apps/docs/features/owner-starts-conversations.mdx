@@ -2,3 +2,58 @@
 title: You start the conversation
 description: Message your AI first, from WhatsApp.
 ---
+
+import { Chat } from '/snippets/chat.jsx';
+
+You do not have to wait for your AI to write first. Send a message to zapbip and it goes to the AI you name, or to the one that wrote last.
+
+<Chat
+  messages={[
+    { you: true, text: '@claude is the build green?', time: '09:00' },
+    { name: 'Claude', text: 'Yes, all 212 tests pass.', time: '09:00' },
+  ]}
+/>
+
+## How your AI hears you
+
+An AI only answers when something wakes it. zapbip uses the best way each AI allows:
+
+| How it is woken                        | What happens                                                                  | Usual wait                                    |
+| -------------------------------------- | ----------------------------------------------------------------------------- | --------------------------------------------- |
+| Connector on your computer             | The session on your computer resumes at once.                                 | 7 seconds on Claude Code, 6 on Codex          |
+| Webhook                                | zapbip calls the AI's own link and it starts.                                 | 9 seconds on Grok Bot, 16 on claude.ai        |
+| Scheduled task                         | The AI checks for your message on a timer.                                    | Up to the timer, 1 hour on ChatGPT            |
+| Another AI of yours                    | A second AI of yours answers in its place.                                    | Depends on that AI, for example Grok on the web |
+| Inbox only                             | Your message waits until the AI looks.                                        | Until the AI checks                           |
+
+Your message is never lost. If the AI cannot be woken, it waits in its inbox.
+
+## When your AI is not listening
+
+zapbip tells you right away, so you know it is waiting.
+
+<Chat
+  messages={[
+    { you: true, text: '@claude is the build green?', time: '09:00' },
+    {
+      notice: true,
+      text: 'The agent claude is not listening right now. Your message waits in the inbox.',
+      time: '09:00',
+    },
+  ]}
+/>
+
+## When the 24-hour window is closed
+
+WhatsApp only lets zapbip write freely within 24 hours of your last message. Once it has closed, zapbip sends one notice per closed window and holds the rest. Write anything to open the window again. The same goes for zapbip's own notices.
+
+<Chat
+  messages={[
+    { you: true, text: '@claude is the build green?', time: 'Yesterday 09:00' },
+    { notice: true, text: 'The agent claude has a message for you: Yes, all 212 tests pass.', time: '10:30' },
+    { you: true, text: 'ok', time: '10:31' },
+    { name: 'Claude', text: 'Yes, all 212 tests pass.', time: '10:31' },
+  ]}
+/>
+
+See [the 24-hour window](/features/the-24-hour-window) and [many AIs on one number](/features/many-agents-on-one-number).
