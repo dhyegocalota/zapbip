@@ -14,6 +14,7 @@ import { endBackofficeSession, getPage, NOW, startBackofficeSession } from './ba
 
 const STATUS_OK = 200;
 const STATUS_NOT_FOUND = 404;
+const STATUS_SEE_OTHER = 303;
 const NUMBER_ALPHA = 'num_alpha';
 const NUMBER_BRAVO = 'num_bravo';
 const TODAY = '2026-11-07';
@@ -304,6 +305,30 @@ describe('metrics page filters', () => {
     expect(html).toContain(`value="${NUMBER_ALPHA}"`);
     expect(html).toContain('Alpha line');
     expect(html).toContain('Bravo line');
+  });
+});
+
+describe('metrics page refused filters', () => {
+  test.each(['abc', '90', ''])('redirects the period %j to the canonical page with a notice', async (period) => {
+    const response = await getPage({ path: `/metrics?period=${period}`, sessionToken });
+    expect(response.status).toBe(STATUS_SEE_OTHER);
+    expect(response.headers.get('Location')).toBe('/metrics?notice=MetricsPeriodInvalid');
+    const followed = await (await getPage({ path: '/metrics?notice=MetricsPeriodInvalid', sessionToken })).text();
+    expect(followed).toContain(copy[BackofficeCopyKey.NoticeMetricsPeriodInvalid]);
+  });
+
+  test.each(['nope', "num_alpha' OR 1=1"])('redirects the unknown number %j to the unfiltered page with a notice', async (numberId) => {
+    await seedWorld();
+    const response = await getPage({ path: `/metrics?number=${encodeURIComponent(numberId)}`, sessionToken });
+    expect(response.status).toBe(STATUS_SEE_OTHER);
+    expect(response.headers.get('Location')).toBe('/metrics?notice=MetricsNumberNotFound');
+    const followed = await (await getPage({ path: '/metrics?notice=MetricsNumberNotFound', sessionToken })).text();
+    expect(followed).toContain(copy[BackofficeCopyKey.NoticeMetricsNumberNotFound]);
+  });
+
+  test('keeps the page for a missing period and an empty number', async () => {
+    const response = await getPage({ path: '/metrics?number=', sessionToken });
+    expect(response.status).toBe(STATUS_OK);
   });
 });
 

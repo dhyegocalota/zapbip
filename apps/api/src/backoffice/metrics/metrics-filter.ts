@@ -19,16 +19,14 @@ const PERIOD_DAYS: Record<MetricsPeriod, number> = {
   [MetricsPeriod.Month]: 30,
 };
 
-function periodOf(input: { value: string | undefined }): MetricsPeriod {
-  const period = Object.values(MetricsPeriod).find((candidate) => candidate === input.value);
-  if (period === undefined) return DEFAULT_PERIOD;
-  return period;
-}
+export type MetricsFilterParse = { filter: MetricsFilter } | { notice: BackofficeNotice };
 
-export function parseMetricsFilter(input: { numberId: string | undefined; period: string | undefined }): MetricsFilter {
-  const period = periodOf({ value: input.period });
-  if (input.numberId === undefined || input.numberId === '') return { numberId: null, period };
-  return { numberId: input.numberId, period };
+export function parseMetricsFilter(input: { numberId: string | undefined; period: string | undefined }): MetricsFilterParse {
+  const numberId = input.numberId === undefined || input.numberId === '' ? null : input.numberId;
+  if (input.period === undefined) return { filter: { numberId, period: DEFAULT_PERIOD } };
+  const period = Object.values(MetricsPeriod).find((candidate) => candidate === input.period);
+  if (period === undefined) return { notice: BackofficeNotice.MetricsPeriodInvalid };
+  return { filter: { numberId, period } };
 }
 
 export function periodDays(input: { period: MetricsPeriod }): number {
@@ -40,6 +38,8 @@ export function windowDays(input: { now: number; period: MetricsPeriod }): strin
   return Array.from({ length: count }, (_, offset) => utcDay({ now: input.now - (count - 1 - offset) * DAY_MS }));
 }
 
-export function isKnownMetricsNumber(_input: { filter: MetricsFilter; numbers: NumberOption[] }): boolean {
-  throw new Error('isKnownMetricsNumber is not implemented');
+export function isKnownMetricsNumber(input: { filter: MetricsFilter; numbers: NumberOption[] }): boolean {
+  const { numberId } = input.filter;
+  if (numberId === null) return true;
+  return input.numbers.some((option) => option.numberId === numberId);
 }

@@ -17,6 +17,7 @@ const AGENT = 'alpha';
 const AGENT_TEXT = 'ola';
 const FLUSH_DELAY_MS = HOUR_MS + 1;
 const EARLIER_PROVIDER_DELAY_MS = 60_000;
+const LATER_PROVIDER_DELAY_MS = 10 * 60_000;
 const ISO_DAY_LENGTH = 10;
 const OLD_ROW_COUNT = 5;
 
@@ -51,9 +52,10 @@ function readAlarm(): Promise<number | null> {
   return runInDurableObject(stub(), (_instance, state) => state.storage.getAlarm());
 }
 
-async function flushDueActivity(): Promise<void> {
-  await advanceClock({ stub: stub(), advanceMs: FLUSH_DELAY_MS });
+async function flushDueActivity(): Promise<number> {
+  const offsetMs = await advanceClock({ stub: stub(), advanceMs: FLUSH_DELAY_MS });
   expect(await runDurableObjectAlarm(stub())).toBe(true);
+  return offsetMs;
 }
 
 beforeEach(async () => {
@@ -118,6 +120,14 @@ describe('activity flush to the directory', () => {
     const sentRows = (await readDailyRows()).filter((row) => row.metric === ActivityMetric.MessagesOut);
     expect(sentRows.map((row) => row.day)).toEqual(['2030-01-01']);
     expect(sentRows.map((row) => row.count)).toEqual([3]);
+  });
+
+  it('keeps the next pending deadline armed after the flush alarm fires', async () => {
+    const laterDueAt = Date.now() + FLUSH_DELAY_MS + LATER_PROVIDER_DELAY_MS;
+    await registerDueTimeProvider({ stub: stub(), provider: { nextDueAt: async () => laterDueAt, runDue: async () => undefined } });
+    await recordTwoSends();
+    const offsetMs = await flushDueActivity();
+    expect(await readAlarm()).toBe(laterDueAt - offsetMs);
   });
 
   it('keeps the alarm at an earlier provider and still flushes at its own due time', async () => {
