@@ -1,19 +1,19 @@
 ---
-title: 'Mantenha o conector rodando em segundo plano'
-description: 'Inicie o conector sozinho quando o computador ligar, sem uma janela de terminal.'
+title: 'Keep the connector running in the background'
+description: 'Start the connector by itself when your computer starts, without a terminal window.'
 ---
 
-Se você fechar o terminal, o [conector](/pt-br/guides/local-connector) para e sua IA deixa de te ouvir. Para mantê-lo rodando, deixe o computador iniciá-lo para você. É opcional, e o zapbip nunca instala isso por você: você mesmo cria o arquivo.
+If you close the terminal, the [connector](/developers/local-connector) stops and your AI stops hearing you. To keep it running, let your computer start it for you. This is optional, and zapbip never installs it for you: you create the file yourself.
 
-Depois de um reinício ou de uma queda de conexão, o conector reconecta e pega todas as mensagens que não foram respondidas.
+After a restart or a lost connection, the connector reconnects and picks up every message that was not answered.
 
-O arquivo guarda seu link de conexão, que funciona como uma senha. Dê a ele a permissão `600`, para que só o seu usuário consiga ler, e nunca o compartilhe nem o envie para o Git.
+The file holds your connection link, which works like a password. Give it permission `600` so only your user can read it, and never share it or commit it.
 
-Troque `<path to npx>` pelo resultado de `which npx`, `<your folder>` pela pasta em que sua IA trabalha, e `<host>` e `<secret>` pelas partes do seu link de conexão. Use `codex` no lugar de `claude-code` se essa for a sua IA.
+Replace `<path to npx>` with the result of `which npx`, `<your folder>` with the folder your AI works in, and `<host>` and `<secret>` with the parts of your connection link. Use `codex` instead of `claude-code` if that is your AI.
 
 ## macOS
 
-Crie o arquivo com a permissão certa primeiro e depois preencha:
+Create the file with the right permission first, then fill it:
 
 ```bash
 install -m 600 /dev/null ~/Library/LaunchAgents/com.zapbip.connector.plist
@@ -51,9 +51,9 @@ install -m 600 /dev/null ~/Library/LaunchAgents/com.zapbip.connector.plist
 </plist>
 ```
 
-O `PATH` precisa incluir a pasta em que o `claude` ou o `codex` está instalado.
+`PATH` must include the folder where `claude` or `codex` is installed.
 
-Inicie e, depois, pare:
+Start it, and stop it later:
 
 ```bash
 launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.zapbip.connector.plist
@@ -62,20 +62,20 @@ launchctl bootout gui/$(id -u)/com.zapbip.connector
 
 ## Linux
 
-Guarde o link em um arquivo próprio com permissão `600`:
+Keep the link in its own file with permission `600`:
 
 ```bash
 mkdir -p ~/.config/zapbip ~/.config/systemd/user
 install -m 600 /dev/null ~/.config/zapbip/connector.env
 ```
 
-Coloque uma linha em `~/.config/zapbip/connector.env`:
+Put one line in `~/.config/zapbip/connector.env`:
 
 ```text
 ZAPBIP_CONNECTION_URL=https://<host>/c/<secret>/mcp
 ```
 
-Crie `~/.config/systemd/user/zapbip-connector.service`:
+Create `~/.config/systemd/user/zapbip-connector.service`:
 
 ```ini
 [Unit]
@@ -94,7 +94,7 @@ RestartSec=5
 WantedBy=default.target
 ```
 
-Inicie e faça rodar mesmo quando você não estiver logado:
+Start it, and make it run even when you are not logged in:
 
 ```bash
 systemctl --user daemon-reload
@@ -102,8 +102,8 @@ systemctl --user enable --now zapbip-connector
 loginctl enable-linger $USER
 ```
 
-Leia as linhas dele com `journalctl --user -u zapbip-connector`. Elas não trazem texto de mensagem nem o link.
+Read its lines with `journalctl --user -u zapbip-connector`. They carry no message text and no link.
 
-## Link revogado
+## Revoked link
 
-Se o link for revogado, o conector sai com um erro e o serviço continua reiniciando. Pare o serviço, coloque o novo link no arquivo e inicie de novo.
+If the link is revoked, the connector exits with an error and the service keeps restarting it. Stop the service, put the new link in the file and start it again.

@@ -5,6 +5,14 @@
   "colors": {
     "primary": "#128C7E"
   },
+  "footer": {
+    "links": [
+      {
+        "header": "Logic Bit",
+        "items": [{ "label": "zapbip · Logic Bit", "href": "/help/about" }]
+      }
+    ]
+  },
   "navigation": {
     "languages": [
       {
@@ -28,8 +36,7 @@
               "agents/grok-web",
               "agents/hermes",
               "agents/openclaw",
-              "guides/local-connector",
-              "guides/background-running"
+              "guides/webhook-wake"
             ]
           },
           {
@@ -45,13 +52,16 @@
           },
           {
             "group": "Help",
-            "pages": ["help/troubleshooting", "help/faq", "help/account-deletion"]
+            "pages": ["help/troubleshooting", "help/faq", "help/account-deletion", "help/about"]
           },
           {
             "group": "For developers",
             "pages": [
               "developers/any-mcp-client",
+              "developers/local-connector",
+              "developers/background-running",
               "developers/errors",
+              "guides/webhook-wake",
               {
                 "group": "Concepts",
                 "pages": ["concepts/inbox", "concepts/questions", "concepts/24-hour-window", "concepts/routing", "concepts/wake-ladder"]
@@ -68,7 +78,8 @@
                   "mcp-reference/wait-for-reply",
                   "mcp-reference/get-messages",
                   "mcp-reference/check-inbox",
-                  "mcp-reference/create-upload"
+                  "mcp-reference/create-upload",
+                  "mcp-reference/set-wake"
                 ]
               }
             ]
@@ -96,8 +107,7 @@
               "pt-br/agents/grok-web",
               "pt-br/agents/hermes",
               "pt-br/agents/openclaw",
-              "pt-br/guides/local-connector",
-              "pt-br/guides/background-running"
+              "pt-br/guides/webhook-wake"
             ]
           },
           {
@@ -113,13 +123,16 @@
           },
           {
             "group": "Ajuda",
-            "pages": ["pt-br/help/troubleshooting", "pt-br/help/faq", "pt-br/help/account-deletion"]
+            "pages": ["pt-br/help/troubleshooting", "pt-br/help/faq", "pt-br/help/account-deletion", "pt-br/help/about"]
           },
           {
             "group": "Para desenvolvedores",
             "pages": [
               "pt-br/developers/any-mcp-client",
+              "pt-br/developers/local-connector",
+              "pt-br/developers/background-running",
               "pt-br/developers/errors",
+              "pt-br/guides/webhook-wake",
               {
                 "group": "Conceitos",
                 "pages": [
@@ -142,7 +155,8 @@
                   "pt-br/mcp-reference/wait-for-reply",
                   "pt-br/mcp-reference/get-messages",
                   "pt-br/mcp-reference/check-inbox",
-                  "pt-br/mcp-reference/create-upload"
+                  "pt-br/mcp-reference/create-upload",
+                  "pt-br/mcp-reference/set-wake"
                 ]
               }
             ]

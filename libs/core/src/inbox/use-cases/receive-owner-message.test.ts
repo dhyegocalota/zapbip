@@ -11,7 +11,7 @@ import {
   SECOND_MS,
   WakeOutcome,
 } from '@zapbip/types';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { MEDIA_RETENTION_MS, NOTICE_QUICK_REPLY_ID, QUEUE_RETENTION_MS, ROUTING_LIST_TTL_MS, WINDOW_MS } from '../constants';
 import { renderCopy } from '../inbox-copy';
 import type { Message } from '../message';
@@ -88,10 +88,30 @@ function routeOptionId(input: { list: Message; agent: string }): string {
 }
 
 describe('receiveOwnerMessage routing', () => {
+  test('CU-190 with exactly one agent an unaddressed text reaches it and no list is sent', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha'] });
+    const holding = waiting({ environment, agent: 'alpha' });
+    await environment.clock.advance({ ms: 0 });
+    const result = await receiveText({ environment, text: 'oi' });
+    expect(result).toMatchObject({ agent: 'alpha', duplicate: false });
+    expect(await holding).toMatchObject({ status: ReplyStatus.Message, messages: [{ text: 'oi' }] });
+    expect(routingLists({ environment })).toEqual([]);
+    expect(await environment.repository.listHeld()).toEqual([]);
+  });
+
   test('CU-132 a text with the window closed opens it and wakes the waiting agent', async () => {
     const environment = await createEnvironment();
     await registerAgents({ environment, agents: ['alpha'] });
-    await environment.repository.saveWindow({ window: { lastOwnerMessageAt: null, noticeSentForClosedWindow: false } });
+    await environment.repository.saveWindow({
+      window: {
+        lastOwnerMessageAt: null,
+        noticeSentForClosedWindow: false,
+        noticeRetryLocale: null,
+        noticeRetryAt: null,
+        noticeRetryAttempt: 0,
+      },
+    });
     const holding = waiting({ environment, agent: 'alpha' });
     await environment.clock.advance({ ms: 0 });
     const result = await receiveText({ environment, text: '@alpha oi' });
@@ -108,11 +128,19 @@ describe('receiveOwnerMessage routing', () => {
     expect(await environment.repository.findMessage({ messageId: result.messageId! })).toMatchObject({
       agent: 'alpha',
       readByAgent: false,
+      forwarded: false,
       text: 'oi',
     });
   });
 
-  test('CU-136 a tap on an open question answers it with the option title', async () => {
+  test('a forwarded message is stored with the forwarded flag', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha'] });
+    const result = await receive({ environment, content: { kind: MessageKind.Text, text: '@alpha oi' }, forwarded: true });
+    expect(await environment.repository.findMessage({ messageId: result.messageId! })).toMatchObject({ forwarded: true });
+  });
+
+  test('CU-67 CU-136 a tap on an open question answers it with the option title', async () => {
     const environment = await createEnvironment();
     const question = await askAndAbandon({ environment });
     const result = await tap({
@@ -255,9 +283,9 @@ describe('receiveOwnerMessage routing list', () => {
     expect(sessionTexts({ environment }).at(-1)).toBe(expiredListText());
   });
 
-  test('a route choice naming an unknown agent while the batch is held sends the current list again', async () => {
+  test('CU-163 a route choice naming an unknown agent while the batch is held sends the current list again', async () => {
     const environment = await createEnvironment();
-    await registerAgents({ environment, agents: ['alpha'] });
+    await registerAgents({ environment, agents: ['alpha', 'beta'] });
     const held = await receiveText({ environment, text: 'first' });
     const result = await tap({
       environment,
@@ -475,7 +503,15 @@ describe('receiveOwnerMessage window and queue', () => {
 
   test('CU-147 an owner message clears the closed window notice flag', async () => {
     const environment = await createEnvironment();
-    await environment.repository.saveWindow({ window: { lastOwnerMessageAt: START_AT - WINDOW_MS, noticeSentForClosedWindow: true } });
+    await environment.repository.saveWindow({
+      window: {
+        lastOwnerMessageAt: START_AT - WINDOW_MS,
+        noticeSentForClosedWindow: true,
+        noticeRetryLocale: null,
+        noticeRetryAt: null,
+        noticeRetryAttempt: 0,
+      },
+    });
     await receiveText({ environment, text: 'hello' });
     expect((await environment.repository.findWindow()).noticeSentForClosedWindow).toBe(false);
   });
@@ -498,6 +534,15 @@ describe('receiveOwnerMessage waking', () => {
     await receiveText({ environment, text: '@alpha one' });
     expect(environment.waker.notifications).toHaveLength(1);
     expect(environment.sender.sessions).toHaveLength(0);
+  });
+
+  test('an agent whose wake failed is told again for the next message while earlier ones are unread', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha'] });
+    await receiveText({ environment, text: '@alpha one' });
+    environment.waker.failWakesOf({ agent: 'alpha' });
+    await receiveText({ environment, text: '@alpha two' });
+    expect(environment.waker.notifications).toHaveLength(2);
   });
 
   test('CU-146 a live waiter skips the waker', async () => {
@@ -652,15 +697,15 @@ describe('receiveOwnerMessage retries and concurrency', () => {
 
   test('a second agent does not take the held messages of the routing list', async () => {
     const environment = await createEnvironment();
-    await registerAgents({ environment, agents: ['alpha'] });
+    await registerAgents({ environment, agents: ['alpha', 'beta'] });
     await receiveText({ environment, text: 'first' });
-    await registerAgents({ environment, agents: ['beta'] });
+    await registerAgents({ environment, agents: ['gamma'] });
     expect(await environment.repository.listHeld()).toHaveLength(1);
   });
 });
 
 describe('receiveOwnerMessage routing list state', () => {
-  test('the first list is recorded in the owner window row', async () => {
+  test('CU-160 the first list is recorded in the owner window row', async () => {
     const environment = await createEnvironment();
     await registerAgents({ environment, agents: ['alpha', 'beta'] });
     await receiveText({ environment, text: 'first' });
@@ -674,7 +719,64 @@ describe('receiveOwnerMessage routing list state', () => {
     });
   });
 
-  test('a list that failed to send leaves no row', async () => {
+  test('an unknown-agent tap resends the list keeping the timer, the reminder and the resend flag', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha', 'beta'] });
+    const held = await receiveText({ environment, text: 'first' });
+    await receiveText({ environment, text: 'second' });
+    const before = (await environment.repository.findRoutingList())!;
+    await environment.clock.advance({ ms: SECOND_MS });
+    await tap({ environment, optionId: formatRouteOptionId({ messageId: held.messageId!, agent: 'ghost' }), optionTitle: 'ghost' });
+    await receiveText({ environment, text: 'third' });
+    expect(await environment.repository.findRoutingList()).toMatchObject({
+      openedAt: before.openedAt,
+      resent: before.resent,
+      reminded: true,
+    });
+    expect(sessionTexts({ environment })).toEqual([reminderText()]);
+  });
+
+  test('CU-178 pin: a stale tap leaves the waiter of another question waiting', async () => {
+    const environment = await createEnvironment();
+    const answered = await askAndAbandon({ environment, text: 'First?' });
+    await tap({ environment, optionId: formatOptionId({ questionId: answered.questionId, optionIndex: 0 }), optionTitle: 'Sim' });
+    const open = await askAndAbandon({ environment, text: 'Second?' });
+    const waitingForAnswer = waitForReply({
+      dependencies: environment.dependencies,
+      connection: connectionOf({ agent: 'alpha' }),
+      questionId: open.questionId,
+      timeoutMs: 5 * SECOND_MS,
+    });
+    await environment.clock.advance({ ms: 0 });
+    await tap({ environment, optionId: formatOptionId({ questionId: answered.questionId, optionIndex: 1 }), optionTitle: 'Não' });
+    await environment.clock.advance({ ms: 5 * SECOND_MS });
+    expect(await waitingForAnswer).toMatchObject({ status: ReplyStatus.Timeout });
+  });
+
+  test('CU-178 a photo quoting an open question prompt wakes the ordinary wait with the photo', async () => {
+    const environment = await createEnvironment();
+    const question = await askAndAbandon({ environment });
+    const holding = waiting({ environment, agent: 'alpha' });
+    await environment.clock.advance({ ms: 0 });
+    await receive({
+      environment,
+      replyToMessageId: question.promptMessageId,
+      content: {
+        kind: MessageKind.Image,
+        voice: false,
+        mediaId: 'wamid.quoting-photo',
+        mimeType: 'image/jpeg',
+        sizeBytes: 1000,
+        filename: null,
+        caption: null,
+      },
+    });
+    expect(await holding).toMatchObject({ status: ReplyStatus.Message, messages: [{ kind: MessageKind.Image }] });
+    expect(environment.waker.notifications).toEqual([]);
+    expect(sessionTexts({ environment })).toEqual([]);
+  });
+
+  test('CU-160 a list that failed to send leaves no row', async () => {
     const environment = await createEnvironment();
     await registerAgents({ environment, agents: ['alpha', 'beta'] });
     environment.sender.failSessionCalls({ callNumbers: [1] });
@@ -682,7 +784,7 @@ describe('receiveOwnerMessage routing list state', () => {
     expect(await environment.repository.findRoutingList()).toBeNull();
   });
 
-  test('a route choice closes the list', async () => {
+  test('CU-160 a route choice closes the list', async () => {
     const environment = await createEnvironment();
     await registerAgents({ environment, agents: ['alpha', 'beta'] });
     await receiveText({ environment, text: 'first' });
@@ -691,7 +793,7 @@ describe('receiveOwnerMessage routing list state', () => {
     expect(await environment.repository.findRoutingList()).toBeNull();
   });
 
-  test('the owner gets one localized reminder per batch, quoting the list', async () => {
+  test('CU-161 the owner gets one localized reminder per batch, quoting the list', async () => {
     const environment = await createEnvironment();
     await registerAgents({ environment, agents: ['alpha', 'beta'] });
     await receiveText({ environment, text: 'first' });
@@ -704,7 +806,7 @@ describe('receiveOwnerMessage routing list state', () => {
     expect(await environment.repository.listHeld()).toHaveLength(3);
   });
 
-  test('the reminder is written in the locale of the message that triggers it', async () => {
+  test('CU-161 the reminder is written in the locale of the message that triggers it', async () => {
     const environment = await createEnvironment();
     await registerAgents({ environment, agents: ['alpha', 'beta'] });
     await receiveText({ environment, text: 'first' });
@@ -712,7 +814,7 @@ describe('receiveOwnerMessage routing list state', () => {
     expect(sessionTexts({ environment })).toEqual(['Escolha o agente na lista acima']);
   });
 
-  test('a message matched by rules 1 to 4 is never held and never reminds', async () => {
+  test('CU-162 a message matched by rules 1 to 4 is never held and never reminds', async () => {
     const environment = await createEnvironment();
     await registerAgents({ environment, agents: ['alpha', 'beta'] });
     await receiveText({ environment, text: 'first' });

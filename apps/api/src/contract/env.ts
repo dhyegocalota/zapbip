@@ -12,4 +12,6 @@ export type Bindings = {
   OUTBOUND_RATE_LIMITER: RateLimit;
   ACCOUNT_OUTBOUND_RATE_LIMITER: RateLimit;
   INSTALL_PAGE_LIMITER: RateLimit;
+  WAKE_SECRET_KEY: string;
+  WAKE_METRICS: AnalyticsEngineDataset;
 };

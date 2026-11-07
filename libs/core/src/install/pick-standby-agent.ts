@@ -6,7 +6,7 @@ export type StandbyCandidate = {
   wakeMode: WakeMode;
 };
 
-const INELIGIBLE_WAKE_MODES: WakeMode[] = [WakeMode.None, WakeMode.Scheduled, WakeMode.Standby];
+const INELIGIBLE_WAKE_MODES: WakeMode[] = [WakeMode.None];
 
 export function pickStandbyAgent(input: { agent: string; candidates: StandbyCandidate[] }): string | null {
   const eligibleCandidates = input.candidates.filter(

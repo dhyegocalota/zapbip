@@ -13,9 +13,14 @@ export const RECEIPT_RETENTION_MS = 7 * DAY_MS;
 export const MEDIA_RETENTION_MS = 30 * DAY_MS;
 export const MEDIA_LINK_TTL_MS = HOUR_MS;
 export const UPLOAD_TTL_MS = 15 * MINUTE_MS;
+export const UPLOAD_CLAIM_TTL_MS = UPLOAD_TTL_MS;
 export const ROUTING_LIST_TTL_MS = 10 * MINUTE_MS;
 export const INLINE_IMAGE_MAX_BYTES = 1 * BYTES_PER_MEGABYTE;
 export const NOTICE_PREVIEW_MAX_CHARS = 60;
+export const NOTICE_RETRY_MS = 5 * MINUTE_MS;
+export const NOTICE_RETRY_MAX_MS = 6 * HOUR_MS;
+export const NOTICE_RETRY_BACKOFF_FACTOR = 2;
+export const NOTICE_FAILED_MESSAGE = 'the owner notice failed; your message is queued until the owner next writes';
 
 export const WHATSAPP_TEXT_MAX_CHARS = 4096;
 export const CAPTION_MAX_CHARS = 1024;

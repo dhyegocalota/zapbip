@@ -14,6 +14,8 @@ import {
   sendLocationInputShape,
   sendMediaInputShape,
   sendMessageInputShape,
+  setWakeOutputShape,
+  setWakeToolInputShape,
   waitForReplyInputShape,
 } from './mcp-schemas';
 
@@ -28,6 +30,7 @@ export enum McpToolName {
   GetMessages = 'get_messages',
   CheckInbox = 'check_inbox',
   CreateUpload = 'create_upload',
+  SetWake = 'set_wake',
 }
 
 export type ToolDefinition = {
@@ -86,5 +89,10 @@ export const TOOL_DEFINITIONS: Record<McpToolName, ToolDefinition> = {
     description: 'Reserve an upload for bytes that have no public link; PUT the bytes to the returned URL.',
     inputShape: createUploadInputShape,
     outputShape: createUploadOutputShape,
+  },
+  [McpToolName.SetWake]: {
+    description: 'Set how this agent is woken when the owner writes: a webhook url and token, or none to clear it.',
+    inputShape: setWakeToolInputShape,
+    outputShape: setWakeOutputShape,
   },
 };

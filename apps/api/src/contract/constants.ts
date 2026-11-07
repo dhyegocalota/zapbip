@@ -6,6 +6,7 @@ export const INSTALL_CODE_KEY_INFO = 'zapbip install code seal';
 export const SEAL_INITIALIZATION_VECTOR_BYTES = 12;
 export const MCP_SERVER_NAME = 'zapbip';
 export const MCP_SERVER_VERSION = '0.1.0';
+export const DEVELOPMENT_ENVIRONMENT = 'development';
 export const HEALTH_PATH = '/health';
 export const UNAUTHORIZED_BODY = { error: 'unauthorized' } as const;
 export const CLOCK_OFFSET_STORAGE_KEY = 'clock_offset_ms';

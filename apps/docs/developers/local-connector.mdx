@@ -22,17 +22,17 @@ Open a terminal in the folder where you use your AI and run one of these:
 
 ```bash
 export ZAPBIP_CONNECTION_URL='https://<host>/c/<secret>/mcp'
-npx zapbip connect --client claude-code
+npx zapbip@0.1.0 connect --client claude-code
 ```
 
 ```bash
 export ZAPBIP_CONNECTION_URL='https://<host>/c/<secret>/mcp'
-npx zapbip connect --client codex
+npx zapbip@0.1.0 connect --client codex
 ```
 
 If you do not set `ZAPBIP_CONNECTION_URL`, the connector asks for the link. It never takes the link as an argument, because arguments show up in your shell history and in the process list.
 
-Leave the terminal open. The connector prints one line for every event and stops when you press `Ctrl+C`. To keep it running without a terminal, see [Run it in the background](/guides/background-running).
+Leave the terminal open. The connector prints one line for every event and stops when you press `Ctrl+C`. To keep it running without a terminal, see [Run it in the background](/developers/background-running).
 
 ## What happens when you write
 
@@ -48,7 +48,7 @@ If you were offline or the connector was stopped, your messages are not lost. Wh
 By default the connector uses the newest session in the folder. If you have the same folder open in another window, a wake can add to that conversation. To avoid it, pin a session:
 
 ```bash
-npx zapbip connect --client claude-code --session <session-id>
+npx zapbip@0.1.0 connect --client claude-code --session <session-id>
 ```
 
 | Option      | What it does                                                             |
@@ -59,7 +59,7 @@ npx zapbip connect --client claude-code --session <session-id>
 
 ## What the AI can do when woken
 
-Only one thing: send a message back to you. It cannot use other tools, and Codex runs with a read-only sandbox. Your message reaches it as a message from you, marked as verified.
+Only one thing: send a message back to you. The connector gives the AI a private configuration that holds only zapbip, so tools from your other MCP servers are not available to it. Claude Code also runs without your settings files and with every built-in tool off, and Codex runs with a read-only sandbox and with the other MCP servers it finds in your Codex configuration files turned off. If it cannot read one of those files, it does not wake Codex and leaves the message unread. It also refuses when a managed Codex file sets any key outside a short list of harmless ones, when a profile sets sandbox, approval, tools or features (or any key outside that list), when a file turns a web search switch on, or when `zapbip` is defined anywhere but your Codex home `config.toml`. Codex web search is turned off. What remains for Codex is `send_message` and a read-only shell; apps and connectors of your Codex account are not turned off, and the macOS managed preferences `com.openai.codex` and the managed policy settings of Claude Code still apply. Your message reaches it as a message from you, marked as verified. A message you forwarded from someone else arrives marked as not verified, with a forwarded label, and the AI does not treat it as your instruction.
 
 If the Codex app already has the conversation open, Codex refuses to resume it. The connector then starts one new session in the same folder, which starts without the earlier conversation, and uses it from then on.
 
@@ -67,22 +67,48 @@ If the Codex app already has the conversation open, Codex refuses to resume it. 
 
 `connect` wakes a session that is closed. For a session you have open right now, Claude Code can hear you at once, with no wake and no waiting. There are two ways, and the first is the better one.
 
-The channel is the first choice. It is a small program that Claude Code starts itself, in the same way it starts any other tool. It puts each message you write on WhatsApp straight into the open session, as a message from you, marked as verified. Set `ZAPBIP_CONNECTION_URL` in the environment Claude Code runs in, and Claude Code starts it with:
+The channel is the first choice. It is a small program that Claude Code starts itself, in the same way it starts any other tool. It puts each message you write on WhatsApp straight into the open session, as a message from you, marked as verified (a forwarded message is marked as not verified). Set `ZAPBIP_CONNECTION_URL` in the environment Claude Code runs in, and Claude Code starts it with:
 
 ```bash
-npx zapbip channel
+npx zapbip@0.1.0 channel
 ```
 
 The channel cannot ask you for the link, so it only reads it from `ZAPBIP_CONNECTION_URL`. It does not take arguments.
+
+Declare both servers in the `.mcp.json` of the folder where you work. The channel brings your messages in; the zapbip HTTP server, under another key, gives the session the `send_message` tool it replies with:
+
+```json
+{
+  "mcpServers": {
+    "zapbip": {
+      "command": "npx",
+      "args": ["zapbip@0.1.0", "channel"],
+      "env": { "ZAPBIP_CONNECTION_URL": "https://<host>/c/<secret>/mcp" }
+    },
+    "zapbip-agent": {
+      "type": "http",
+      "url": "https://<host>/c/<secret>/mcp"
+    }
+  }
+}
+```
+
+The session answers through `zapbip-agent`. Without it the session hears you but has no way to reply. Then start Claude Code with:
+
+```bash
+claude --dangerously-load-development-channels server:zapbip
+```
+
+`zapbip` is the key of the channel server in `.mcp.json`. The startup line shows `Channels (experimental)`. Claude Code asks you to accept the development channel and the project MCP server; accept both.
 
 The listener is the backup. It prints one line for every message you write, and Claude Code watches those lines with its Monitor tool. Each line wakes the open session, and nothing is spent while you are silent:
 
 ```bash
 export ZAPBIP_CONNECTION_URL='https://<host>/c/<secret>/mcp'
-npx zapbip listen
+npx zapbip@0.1.0 listen
 ```
 
-Each line is JSON with the message id, its kind, `"sender":"owner"`, `"verified":true` and the text. A Monitor watch lasts up to 30 minutes, so the AI starts the watch again each time one ends. Other agents that can keep a background command running and react to its output, such as OpenClaw and Hermes, can use `npx zapbip listen` the same way.
+Each line is JSON with the message id, its kind, `"sender":"owner"`, `"verified"` (`true` for your own message, `false` for a forwarded one), `"forwarded"` and the text. A Monitor watch lasts up to 30 minutes, so the AI starts the watch again each time one ends. Other agents that can keep a background command running and react to its output, such as OpenClaw and Hermes, can use `npx zapbip@0.1.0 listen` the same way.
 
 Both programs stay open and reconnect by themselves, like `connect`. Both mark a message as handled only after they pass it on, so a message is never lost and never shown twice. Their logs go to the error output and never carry your messages or your link.
 
@@ -90,7 +116,7 @@ So the three ways fit together: the channel for an open session, `listen` as its
 
 ## One connector per connection
 
-If you start a second connector for the same connection, the first one stops. Run it on one computer at a time.
+If you start a second connector for the same connection, the first one finishes the wake it is running and stops. Run it on one computer at a time. If a message arrives at the moment you switch, both connectors can wake your AI for that same message once; zapbip delivers at least once, never zero times.
 
 While a connector is attached, zapbip wakes your AI through it. When it closes, zapbip goes back to the setting you had before.
 

@@ -1,5 +1,5 @@
 import { execFileSync, spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
-import { ConnectorFrameType, ConnectorLogEvent, UNAUTHORIZED_STATUS } from '@zapbip/types';
+import { ConnectorFrameType, ConnectorLogEvent, HttpStatus } from '@zapbip/types';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildCliBundle, CONNECTION_URL_VARIABLE, DISABLE_TLS_VERIFICATION_ENVIRONMENT } from '../support/cli-bundle';
 import {
@@ -91,7 +91,7 @@ describe('zapbip listen', () => {
     await server.waitForFrames({ type: ConnectorFrameType.Done, count: 1 });
 
     expect(printedLines({ listenProcess }).map((line) => JSON.parse(line))).toEqual([
-      { messageId: 'msg_1', kind: 'text', sender: 'owner', verified: true, text: OWNER_TEXT },
+      { messageId: 'msg_1', kind: 'text', sender: 'owner', verified: true, forwarded: false, text: OWNER_TEXT },
     ]);
     expect(server.framesOfType({ type: ConnectorFrameType.Done }).map((entry) => entry.frame.messageId)).toEqual(['msg_1']);
   });
@@ -133,7 +133,7 @@ describe('zapbip listen', () => {
 
   it('exits 1 with no socket when the link is refused', async () => {
     await server.stop();
-    server = await startFakeEventServer({ certificate, probeStatus: UNAUTHORIZED_STATUS });
+    server = await startFakeEventServer({ certificate, probeStatus: HttpStatus.Unauthorized });
     const listenProcess = startListen();
 
     expect(await listenProcess.exited).toBe(EXIT_CODE_FAILURE);

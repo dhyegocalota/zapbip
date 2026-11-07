@@ -16,6 +16,7 @@ export type FakeClientBehavior = {
   refuseAll?: boolean;
   refuseSession?: string;
   hang?: boolean;
+  ignoreSigterm?: boolean;
   runMs?: number;
   holdUntilFile?: string;
   rolloutSessionId?: string;
@@ -26,6 +27,9 @@ export type FakeClientRun = {
   clientName: string;
   argv: string[];
   cwd: string;
+  stdin: string;
+  hadConnectionUrl: boolean;
+  mcpConfig: { text: string; mode: number } | null;
   startedAt: number;
   endedAt: number | null;
   exitCode: number | null;
@@ -37,6 +41,9 @@ type RecordLine = {
   clientName: string;
   argv: string[];
   cwd: string;
+  stdin?: string;
+  hadConnectionUrl?: boolean;
+  mcpConfig?: { text: string; mode: number } | null;
   at: number;
   event: 'started' | 'ended';
   exitCode?: number | null;
@@ -66,6 +73,7 @@ const BEHAVIOR_VARIABLES: Record<keyof FakeClientBehavior, (value: never) => [st
   refuseAll: (value: boolean) => ['FAKE_CLIENT_REFUSE_ALL', value ? '1' : '0'],
   refuseSession: (value: string) => ['FAKE_CLIENT_REFUSE_SESSION', value],
   hang: (value: boolean) => ['FAKE_CLIENT_HANG', value ? '1' : '0'],
+  ignoreSigterm: (value: boolean) => ['FAKE_CLIENT_IGNORE_SIGTERM', value ? '1' : '0'],
   runMs: (value: number) => ['FAKE_CLIENT_RUN_MS', String(value)],
   holdUntilFile: (value: string) => ['FAKE_CLIENT_HOLD_FILE', value],
   rolloutSessionId: (value: string) => ['FAKE_CLIENT_ROLLOUT_SESSION_ID', value],
@@ -85,6 +93,9 @@ function mergeRuns(input: { lines: RecordLine[] }): FakeClientRun[] {
       clientName: line.clientName,
       argv: line.argv,
       cwd: line.cwd,
+      stdin: line.stdin === undefined ? '' : line.stdin,
+      hadConnectionUrl: line.hadConnectionUrl === true,
+      mcpConfig: line.mcpConfig === undefined ? null : line.mcpConfig,
       startedAt: line.at,
       endedAt: ended === undefined ? null : ended.at,
       exitCode: ended === undefined || ended.exitCode === undefined ? null : ended.exitCode,

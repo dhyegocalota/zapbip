@@ -84,7 +84,7 @@ describe('AccountInbox after purge', () => {
         instance.receiveOwnerMessage({
           ownerLocale: OwnerLocale.PortugueseBrazil,
           channelMessageId: 'wamid.after',
-          ownerMessage: { at: Date.now(), replyToMessageId: null, content: { kind: MessageKind.Text, text: 'oi' } },
+          ownerMessage: { at: Date.now(), replyToMessageId: null, forwarded: false, content: { kind: MessageKind.Text, text: 'oi' } },
         }),
       (instance) => instance.recordRevocation({ agent: 'alpha' }),
       (instance) => instance.cancelWaiters({ agent: 'alpha' }),

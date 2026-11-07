@@ -216,7 +216,7 @@ describe('AccountInbox receiveAccountMessage', () => {
     return stubOf().receiveAccountMessage({
       account: { accountId: ACCOUNT, waId: OWNER_PHONE, state: AccountState.Active, locale: OwnerLocale.PortugueseBrazil },
       channelMessageId: input.channelMessageId,
-      ownerMessage: { at: Date.now(), replyToMessageId: null, content: { kind: MessageKind.Text, text: input.text } },
+      ownerMessage: { at: Date.now(), replyToMessageId: null, forwarded: false, content: { kind: MessageKind.Text, text: input.text } },
       publicOrigin: PUBLIC_ORIGIN,
     });
   }
@@ -264,7 +264,7 @@ describe('AccountInbox receiveAccountMessage', () => {
         instance.receiveAccountMessage({
           account: { accountId: ACCOUNT, waId: OWNER_PHONE, state: AccountState.Active, locale: OwnerLocale.PortugueseBrazil },
           channelMessageId: 'wamid.after',
-          ownerMessage: { at: Date.now(), replyToMessageId: null, content: { kind: MessageKind.Text, text: 'oi' } },
+          ownerMessage: { at: Date.now(), replyToMessageId: null, forwarded: false, content: { kind: MessageKind.Text, text: 'oi' } },
           publicOrigin: PUBLIC_ORIGIN,
         }),
       ),

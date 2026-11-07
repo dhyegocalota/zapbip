@@ -17,6 +17,7 @@
     },
   ],
   "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "zapbip-media" }],
+  "analytics_engine_datasets": [{ "binding": "WAKE_METRICS", "dataset": "zapbip_wake" }],
   "rules": [{ "type": "Text", "globs": ["**/*.sql"], "fallthrough": true }],
   "vars": { "PUBLIC_ORIGIN": "https://mcp.zapbip.com", "WAITLIST_ENABLED": "true" },
   "ratelimits": [
@@ -48,6 +49,7 @@
         },
       ],
       "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "zapbip-media" }],
+      "analytics_engine_datasets": [{ "binding": "WAKE_METRICS", "dataset": "zapbip_wake" }],
       "rules": [{ "type": "Text", "globs": ["**/*.sql"], "fallthrough": true }],
     },
   },

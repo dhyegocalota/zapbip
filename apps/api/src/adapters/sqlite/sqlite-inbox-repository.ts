@@ -66,7 +66,7 @@ const MARK_READ_STATEMENT = 'UPDATE inbox_messages SET read_at = ? WHERE read_at
 const WINDOW_ROW_ID = 1;
 
 function toMessage(row: MessageRow): Message {
-  const content: MessageContent = JSON.parse(row.payload);
+  const content: MessageContent & { forwarded: boolean } = JSON.parse(row.payload);
   return {
     messageId: row.id,
     direction: row.direction,
@@ -287,23 +287,35 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
     },
 
     async findWindow() {
-      const row = first<{ last_owner_message_at: number | null; notice_sent_for_closed_window: number }>(
-        'SELECT last_owner_message_at, notice_sent_for_closed_window FROM owner_window WHERE id = ?',
+      const row = first<{
+        last_owner_message_at: number | null;
+        notice_sent_for_closed_window: number;
+        notice_retry_locale: OwnerLocale | null;
+        notice_retry_at: number | null;
+        notice_retry_attempt: number;
+      }>(
+        'SELECT last_owner_message_at, notice_sent_for_closed_window, notice_retry_locale, notice_retry_at, notice_retry_attempt FROM owner_window WHERE id = ?',
         WINDOW_ROW_ID,
       );
       if (row === null) throw new Error('owner_window row is missing');
       const window: OwnerWindow = {
         lastOwnerMessageAt: row.last_owner_message_at,
         noticeSentForClosedWindow: row.notice_sent_for_closed_window === 1,
+        noticeRetryLocale: row.notice_retry_locale,
+        noticeRetryAt: row.notice_retry_at,
+        noticeRetryAttempt: row.notice_retry_attempt,
       };
       return window;
     },
 
     async saveWindow({ window }) {
       run(
-        'UPDATE owner_window SET last_owner_message_at = ?, notice_sent_for_closed_window = ? WHERE id = ?',
+        'UPDATE owner_window SET last_owner_message_at = ?, notice_sent_for_closed_window = ?, notice_retry_locale = ?, notice_retry_at = ?, notice_retry_attempt = ? WHERE id = ?',
         window.lastOwnerMessageAt,
         window.noticeSentForClosedWindow ? 1 : 0,
+        window.noticeRetryLocale,
+        window.noticeRetryAt,
+        window.noticeRetryAttempt,
         WINDOW_ROW_ID,
       );
     },
@@ -311,7 +323,7 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
     async claimNotice() {
       return (
         rows(
-          'UPDATE owner_window SET notice_sent_for_closed_window = 1 WHERE id = ? AND notice_sent_for_closed_window = 0 RETURNING id',
+          'UPDATE owner_window SET notice_sent_for_closed_window = 1, notice_retry_locale = NULL, notice_retry_at = NULL WHERE id = ? AND notice_sent_for_closed_window = 0 RETURNING id',
           WINDOW_ROW_ID,
         ).length === 1
       );
@@ -350,6 +362,17 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
       );
     },
 
+    async claimRoutingListExpiry({ openedAt, claimedAt }) {
+      return (
+        rows(
+          'UPDATE owner_window SET routing_list_opened_at = ?, routing_list_resent = 1 WHERE id = ? AND routing_list_opened_at = ? RETURNING id',
+          claimedAt,
+          WINDOW_ROW_ID,
+          openedAt,
+        ).length === 1
+      );
+    },
+
     async insertMedia({ media }) {
       run(
         'INSERT INTO media (media_id, origin, mime_type, size_bytes, filename, expires_at, received_at, retention_until) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
@@ -369,23 +392,30 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
       return row === null ? null : toMedia(row);
     },
 
-    async claimUpload({ mediaId }) {
+    async claimUpload({ mediaId, claimedAt, staleBefore }) {
       return (
-        rows('UPDATE media SET uploading = 1 WHERE media_id = ? AND uploading = 0 AND received_at IS NULL RETURNING media_id', mediaId)
-          .length === 1
+        rows(
+          'UPDATE media SET claimed_at = ? WHERE media_id = ? AND received_at IS NULL AND (claimed_at IS NULL OR claimed_at <= ?) RETURNING media_id',
+          claimedAt,
+          mediaId,
+          staleBefore,
+        ).length === 1
       );
     },
 
-    async releaseUpload({ mediaId }) {
-      run('UPDATE media SET uploading = 0 WHERE media_id = ?', mediaId);
+    async releaseUpload({ mediaId, claimedAt }) {
+      run('UPDATE media SET claimed_at = NULL WHERE media_id = ? AND claimed_at = ?', mediaId, claimedAt);
     },
 
-    async markMediaReceived({ mediaId, receivedAt, retentionUntil }) {
-      run(
-        'UPDATE media SET received_at = ?, retention_until = ?, expires_at = NULL, uploading = 0 WHERE media_id = ?',
-        receivedAt,
-        retentionUntil,
-        mediaId,
+    async markMediaReceived({ mediaId, claimedAt, receivedAt, retentionUntil }) {
+      return (
+        rows(
+          'UPDATE media SET received_at = ?, retention_until = ?, expires_at = NULL, claimed_at = NULL WHERE media_id = ? AND claimed_at = ? RETURNING media_id',
+          receivedAt,
+          retentionUntil,
+          mediaId,
+          claimedAt,
+        ).length === 1
       );
     },
 

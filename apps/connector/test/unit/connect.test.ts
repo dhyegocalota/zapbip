@@ -29,18 +29,36 @@ describe('deriveConnectorLinks', () => {
 });
 
 describe('reconnectDelayMs', () => {
+  const noJitter = () => 0;
+  const fullJitter = () => 0.999;
+
   it.each([
     [0, 1_000],
     [1, 2_000],
     [2, 4_000],
     [5, RECONNECT_MAX_MS],
     [6, RECONNECT_MAX_MS],
-  ])('attempt %i waits %i ms', (attempt, expected) => {
-    expect(reconnectDelayMs({ attempt })).toBe(expected);
+  ])('attempt %i waits %i ms without jitter', (attempt, expected) => {
+    expect(reconnectDelayMs({ attempt, random: noJitter })).toBe(expected);
+  });
+
+  it('adds up to half of the delay as jitter', () => {
+    expect(reconnectDelayMs({ attempt: 0, random: fullJitter })).toBe(1_499);
+    expect(reconnectDelayMs({ attempt: 1, random: () => 0.5 })).toBe(2_500);
+  });
+
+  it('never exceeds the maximum, jitter included', () => {
+    expect(reconnectDelayMs({ attempt: 9, random: fullJitter })).toBe(RECONNECT_MAX_MS);
   });
 
   it('refuses a negative attempt', () => {
-    expect(() => reconnectDelayMs({ attempt: -1 })).toThrow();
+    expect(() => reconnectDelayMs({ attempt: -1, random: noJitter })).toThrow();
+  });
+});
+
+describe('parseServerFrame with prototype keys', () => {
+  it.each(['constructor', '__proto__', 'toString', 'hasOwnProperty'])('rejects a frame typed %s as unknown instead of crashing', (type) => {
+    expect(parseText({ text: JSON.stringify({ type }) })).toEqual({ ok: false, reason: FrameRejectionReason.UnknownType });
   });
 });
 
@@ -49,6 +67,18 @@ describe('parseServerFrame', () => {
     const message = ownerTextMessage({ messageId: 'msg_1', text: 'Oi' });
     const text = JSON.stringify({ type: ConnectorFrameType.Messages, messages: [message] });
     expect(parseText({ text })).toEqual({ ok: true, frame: { type: ConnectorFrameType.Messages, messages: [message] } });
+  });
+
+  it.each([
+    ['without forwarded', { forwarded: undefined }],
+    ['with a string forwarded', { forwarded: 'false' }],
+    ['with a null forwarded', { forwarded: null }],
+    ['with an unknown kind', { kind: 'surprise' }],
+    ['without a kind', { kind: undefined }],
+  ])('rejects a messages frame whose message is %s', (_name, override) => {
+    const message = { ...ownerTextMessage({ messageId: 'msg_1', text: 'Oi' }), ...override };
+    const text = JSON.stringify({ type: ConnectorFrameType.Messages, messages: [message] });
+    expect(parseText({ text })).toEqual({ ok: false, reason: FrameRejectionReason.Malformed });
   });
 
   it('accepts a hello frame', () => {

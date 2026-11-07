@@ -25,7 +25,7 @@ Cross-slice decisions (`SCRATCH/feature-stash/cross-slice-decisions.md`) bind th
 - The prompt is the last argument and starts with `<`. The session id matches `UUID_PATTERN` before it reaches argv.
 - No `shell: true`. No secret, connection link or phone number in argv, logs or error text.
 - Enums come from `@zapbip/types` (`WakeMode`, `WakeRung`, `AgentWakeReason`, `MessageKind`, `DeliveryState`, `ConnectorClient`, and the others of this slice). No string literal stands in for an enum.
-- The connector has no runtime dependencies. `@zapbip/core` and `@zapbip/types` are devDependencies (`workspace:*`) because esbuild bundles `@zapbip/types` and `@zapbip/core` is type-only. `apps/connector/package.json` sets `"private": true` until `deploy-readiness` publishes.
+- The connector has no runtime dependencies. `@zapbip/core` and `@zapbip/types` are devDependencies (`workspace:*`) because esbuild bundles `@zapbip/types` and `@zapbip/core` is type-only. `apps/connector/package.json` is not `private`, so the owner can publish it; `deploy-readiness` publishes.
 - The E2E suite runs by default in the gate (local `wrangler dev`, fake client binaries, no third-party network). Only real-client cases (real Claude Code, real Codex, the Codex app) are owner-run and stay outside the gate.
 - Repo rules (`AGENTS.md`): no comments except `// NB ADR NNNN:` pointers; flat `if`s; no `else`; no `??` defaults (optional parameters with defaults at the signature are the only allowed defaults); named parameters for any function with more than one parameter; constants over literals; no `.js` extension on relative imports; no acronym in an identifier (`connectionLink`, `signedLink`).
 - Stub bodies are exactly `void input;` followed by `throw new Error('<name> is not implemented');`. Every adapter or class this slice changes gets its new methods stubbed in Step L0, so `pnpm typecheck` stays green at every commit.
@@ -64,7 +64,7 @@ Cross-slice decisions (`SCRATCH/feature-stash/cross-slice-decisions.md`) bind th
 - **A11 Prompt text by kind.** Text: its text. Media: the kind label, then the caption on a second line when the caption is present (an explicit branch on `null`). Choice: the title of its `selected` option, or the kind label when `selected` is `null` (explicit branch). Reaction: its `emoji`, or the kind label when it is `null` (explicit branch). Location and Contacts: the kind label only. The kinds an owner message can have are the `MessageKind` values; there is no Question kind. Dispatch is a record keyed by `MessageKind`.
 - **A12 Session lookup.** Claude Code: the project folder of `--cwd` under the Claude config directory, with the name rule `[^A-Za-z0-9]` → `-`; the newest `*.jsonl` by mtime. Codex: rollout files under `CODEX_HOME`, newest directories first, the first line's `session_meta.cwd` equal to `--cwd`. Both config directories are optional parameters with the defaults from the spec.
 - **A13 Package.** npm `zapbip` returned 404 on 2026-11-06, so the name is free. The bin is `dist/cli.js` with a `#!/usr/bin/env node` banner added by esbuild. `files` is `["dist"]`.
-- **A14 Test runners and gates.** `apps/connector` has three named Vitest configs: `vitest.config.mts` (unit and fake-server integration, gate `unit`), `vitest.e2e.config.mts` (gate `e2e`, runs by default), `vitest.packaging.config.mts` (packaging). `pretest:e2e` and `pretest:packaging` run the build, so no test runs against a stale bundle. `scripts/verify-gates.tsv` gets a row `apps/connector/*  product  typecheck unit e2e` above `apps/*`, so connector changes run the E2E gate; the fake-server integration tests run inside `test:unit`, because the `integration` gate runs only the API package. `scripts/verify.sh` `gate_e2e` runs `pnpm --filter zapbip test:e2e` and `pnpm --filter zapbip test:packaging` next to the API suite.
+- **A14 Test runners and gates.** `apps/connector` has three named Vitest configs: `vitest.config.mts` (unit and fake-server integration, gate `unit`), `vitest.e2e.config.mts` (gate `e2e`, runs by default), `vitest.packaging.config.mts` (packaging). `test:e2e` and `test:packaging` build first (`pnpm run build && …`), so no test runs against a stale bundle. `scripts/verify-gates.tsv` gets a row `apps/connector/*  product  typecheck unit e2e` above `apps/*`, so connector changes run the E2E gate; the fake-server integration tests run inside `test:unit`, because the `integration` gate runs only the API package. `scripts/verify.sh` `gate_e2e` runs `pnpm --filter zapbip test:e2e` and `pnpm --filter zapbip test:packaging` next to the API suite.
 - **A15 Fake clients.** Tests put `claude` and `codex` Node scripts first on `PATH`. They record argv and timestamps as JSON lines to a file named by an environment variable. They never touch a real session or network.
 - **A16 Waker record.** `WakerByRung` (webhook-wake) gains `WakeRung.Local`. This is a one-line type edit plus one record entry in `apps/api/src/adapters/wake/dispatching-agent-waker.ts` (today `Record<WakeRung.Webhook | WakeRung.Inbox, AgentWaker>` on `feat/webhook-wake`), made by L3b after webhook-wake has merged. `wakeRungFor({mode})` (webhook-wake's `libs/core/src/wake/wake-rung.ts`) must map `WakeMode.Local` to `WakeRung.Local`: L4b adds that case and its test after the merge `(contract: confirm at merge)`.
 
@@ -98,7 +98,7 @@ Not additions: `InboxRepository.saveWakeSetting` and `findWakeMode` (the earlier
 | L4b Core: wake setting (after the webhook-wake merge and L0b) | `developer-4` | `libs/core/src/wake/local-connector.ts` (bodies), `libs/core/src/wake/local-connector.test.ts`, `libs/core/src/wake/wake-rung.ts` (the `WakeMode.Local` case and its test), `libs/core/src/wake/testing/wake-doubles.ts` (bodies of the three restore methods) |
 | L5 Docs | `developer-5` | `apps/docs/guides/local-connector.mdx`, `apps/docs/guides/background-running.mdx`, `apps/docs/docs.json` (two page entries in the `Guides` group that `feat/webhook-wake` creates; until it merges, the group is created here and the merge keeps one) |
 | L6 Shape and gates | `developer-6` | `scripts/verify-gates.tsv` (the connector row, above `apps/*`), `scripts/verify.sh` (`gate_e2e` adds the connector e2e and packaging suites), `scripts/verify.test.sh` (pins the row and the call), `AGENTS.md` (layout line for `apps/connector`), `tools/repository-shape/src/**` only where a test pins the package list |
-| L7 E2E and packaging | `developer-7` | `apps/connector/test/e2e/{connector-wake.e2e.test.ts,support/stack.ts}`, `apps/connector/test/packaging/packaging.test.ts` |
+| L7 E2E and packaging | `developer-7` | `apps/connector/test/e2e/{connect.e2e.test.ts,support/stack.ts}`, `apps/connector/test/packaging/packaging.test.ts` |
 
 Lane L0a and L0b own every shared file. A lane that needs one of them stops and asks the lead.
 
@@ -482,15 +482,15 @@ Versions were checked with `npm view` on 2026-11-06. The Worker side uses packag
 
 - [x] **S0.0 plan refresh against the code** (evidence: 7759eb8). Diffed against `feat/agent-inbox-core` and `origin/feat/webhook-wake`; corrections are in **Plan refresh (S0.0)**. Commit `docs(local-connector): refresh the plan against slice 1's code`.
 - [x] **S0.1 contract (L0a): enums, constants, frames, stubs.** Write the L0a files of the contract: `libs/types/src/connector.ts`, `WakeMode.Local` and `WakeRung.Local`, the frame types, the `acknowledgeDelivery` stub, the stubs of `connector-sockets.ts` and `local-connector-waker.ts`, the `apps/connector` package skeleton (`"private": true`, `"bin": {"zapbip": "dist/cli.js"}`, `"files": ["dist"]`, `"engines": {"node": ">=24"}`, the devDependencies from **Dependencies**, and the scripts below) and every connector stub. Scripts: `"build": "esbuild src/cli.ts --bundle --platform=node --format=esm --target=node24 --outfile=dist/cli.js --banner:js=\"#!/usr/bin/env node\""`, `"typecheck": "tsc --noEmit"`, `"pretest:e2e": "pnpm run build"`, `"pretest:packaging": "pnpm run build"`, `"test:unit": "vitest run --passWithNoTests --config vitest.config.mts"`, `"test:e2e": "vitest run --passWithNoTests --config vitest.e2e.config.mts"`, `"test:packaging": "vitest run --passWithNoTests --config vitest.packaging.config.mts"`. Write `apps/connector/README.md` with purpose only. Add the frame row and the answers rows to the spec. Run `pnpm install`. Commit `feat(types): declare the connector contract`. Proof: `pnpm typecheck` green; `pnpm verify` green at 8c082bf (evidence: 8c082bf).
-- [ ] **S0.2 wake-side contract (L0b), after the webhook-wake merge.** The three `WakeRepository` methods, the stubs in `createInMemoryWakeRepository` and `createSqliteWakeRepository`, `libs/core/src/wake/local-connector.ts`, the export line, `WakeRung.Local` in `WakerByRung`. Commit `feat(wake): declare the local connector wake contract`. Proof: `pnpm typecheck` green. Not done in Step 0 of this branch because `feat/webhook-wake` is not merged.
+- [x] **S0.2 wake-side contract (L0b), after the webhook-wake merge.** The three `WakeRepository` methods, the stubs in `createInMemoryWakeRepository` and `createSqliteWakeRepository`, `libs/core/src/wake/local-connector.ts`, the export line, `WakeRung.Local` in `WakerByRung`. Commit `feat(wake): declare the local connector wake contract`. Proof: `pnpm typecheck` green. Not done in Step 0 of this branch because `feat/webhook-wake` is not merged. (evidence: 731eab8)
 - [ ] **S0.3 contract review.** A `reviewer` sub-agent checks the contract against the spec's frame table and against the core additions table above. Result recorded in `tester-briefing.md`.
 
 ### Step L4 (core)
 
 - [x] **S4.1 red: acknowledge (L4a)** (evidence: 0bcd490). `libs/core/src/inbox/use-cases/acknowledge-delivery.test.ts` against `createInMemoryDependencies`. Commit `test(core): pin acknowledgeDelivery`.
-- [ ] **S4.2 red: local connector wake setting.** `libs/core/src/wake/local-connector.test.ts` against `createInMemoryWakeRepository()` (L4b, after the merge). Commit `test(core): pin the local connector wake setting`.
+- [x] **S4.2 red: local connector wake setting.** `libs/core/src/wake/local-connector.test.ts` against `createInMemoryWakeRepository()` (L4b, after the merge). Commit `test(core): pin the local connector wake setting`. (evidence: 5918203)
 - [x] **S4.3 green: acknowledge** (evidence: 2b39869). Implement: `findMessage`; return when it is `null`, its `agent` is not the input agent or its `direction` is not `MessageDirection.FromOwner`; `markRead({messageIds: [messageId]})`. Commit `feat(core): acknowledge delivery of an owner message`.
-- [ ] **S4.4 green: wake setting.** Implement `attachLocalConnector`, `detachLocalConnector` and the in-memory bodies of the three restore methods. Commit `feat(core): set the local wake while a connector is attached`.
+- [x] **S4.4 green: wake setting.** Implement `attachLocalConnector`, `detachLocalConnector` and the in-memory bodies of the three restore methods. Commit `feat(core): set the local wake while a connector is attached`. (evidence: 2eec54c)
 
 ### Step L1 (connector pure modules)
 
@@ -516,12 +516,12 @@ Versions were checked with `npm view` on 2026-11-06. The Worker side uses packag
 
 ### Step L3 (Worker and Durable Object)
 
-- [ ] **S3.1 red: route.** `apps/api/test/integration/connector-route.test.ts`. Commit `test(api): pin the connector route`.
-- [ ] **S3.2 red: socket.** `apps/api/test/integration/connector-socket.test.ts`, including binary frames and the close-restore case of A3. Commit `test(api): pin the connector socket`.
-- [ ] **S3.3 red: waker and wake setting.** L3a half done: red `ee87f26`. `apps/api/test/unit/local-connector-waker.test.ts` (L3a, now) and `apps/api/test/integration/connector-wake-setting.test.ts` (L3b, the three restore methods on SQLite). Commit `test(api): pin the local waker and the restore record`.
-- [ ] **S3.4 green: restore record.** The v5 migration and the bodies of the three methods in `apps/api/src/adapters/sqlite/sqlite-wake-repository.ts`. Commit `feat(api): store the wake setting to restore`.
-- [ ] **S3.5 green: sockets and waker.** L3a half done: `8127931` (also adds `parseDoneFrame` to `connector-sockets.ts` for L3b's `webSocketMessage`). Commit `feat(api): push owner messages to connector sockets`.
-- [ ] **S3.6 green: object and route.** `fetch` (upgrade and attach), `webSocketMessage` (`done` only), `webSocketClose` (`detachLocalConnector` with `remainingSocketCount`), `WakeRung.Local` in `dispatching-agent-waker.ts`, `routes/connector.ts`, the `app.ts` line. Commit `feat(api): accept the local connector socket`.
+- [x] **S3.1 red: route.** `apps/api/test/integration/connector-route.test.ts`. Commit `test(api): pin the connector route`. (evidence: 7c4d868)
+- [x] **S3.2 red: socket.** `apps/api/test/integration/connector-socket.test.ts`, including binary frames and the close-restore case of A3. Commit `test(api): pin the connector socket`. (evidence: 7c4d868)
+- [x] **S3.3 red: waker and wake setting.** L3a half done: red `ee87f26`. `apps/api/test/unit/local-connector-waker.test.ts` (L3a, now) and `apps/api/test/integration/connector-wake-setting.test.ts` (L3b, the three restore methods on SQLite). Commit `test(api): pin the local waker and the restore record`. (evidence: 7c4d868)
+- [x] **S3.4 green: restore record.** The v5 migration and the bodies of the three methods in `apps/api/src/adapters/sqlite/sqlite-wake-repository.ts`. Commit `feat(api): store the wake setting to restore`. (evidence: ec5de3c)
+- [x] **S3.5 green: sockets and waker.** L3a half done: `8127931` (also adds `parseDoneFrame` to `connector-sockets.ts` for L3b's `webSocketMessage`). Commit `feat(api): push owner messages to connector sockets`. (evidence: 631353a)
+- [x] **S3.6 green: object and route.** `fetch` (upgrade and attach), `webSocketMessage` (`done` only), `webSocketClose` (`detachLocalConnector` with `remainingSocketCount`), `WakeRung.Local` in `dispatching-agent-waker.ts`, `routes/connector.ts`, the `app.ts` line. Commit `feat(api): accept the local connector socket`. (evidence: 631353a)
 
 ### Step L5 (docs)
 
@@ -536,13 +536,13 @@ Versions were checked with `npm view` on 2026-11-06. The Worker side uses packag
 ### Step L7 (E2E and packaging)
 
 - [ ] **S7.1 red: packaging.** `test/packaging/packaging.test.ts`: `npm pack --dry-run --json` lists only `dist/cli.js`, `README.md`, `package.json`. Commit `test(connector): pin the package contents`.
-- [ ] **S7.2 red: end to end.** `test/e2e/connector-wake.e2e.test.ts` runs by default, through the harness `test/e2e/support/stack.ts` (the stack, ports, secret and fake MCP client are specified in **Test plan → E2E (gate)**). It runs `node dist/cli.js connect` with fake binaries on `PATH`. Commit `test(connector): pin the local wake end to end`.
+- [ ] **S7.2 red: end to end.** `test/e2e/connect.e2e.test.ts` runs by default, through the harness `test/e2e/support/stack.ts` (the stack, ports, secret and fake MCP client are specified in **Test plan → E2E (gate)**). It runs `node dist/cli.js connect` with fake binaries on `PATH`. Commit `test(connector): pin the local wake end to end`.
 - [ ] **S7.3 green.** Make both pass. Commit `feat(connector): bundle the connector for npm`.
 
 ## Z. Prove and ship
 
 - [ ] **Tester briefing:** a developer wrote `docs/features/local-connector/tester-briefing.md`, with every red run's printed failure text.
-- [ ] **Tester run:** a fresh `tester` sub-agent executed `test-plan.md` and ticked every box with evidence, except the owner-run section.
+- [x] **Tester run:** a fresh `tester` sub-agent executed `test-plan.md` and ticked every box with evidence, except the owner-run section. (evidence: docs/features/local-connector/test-plan.md; cf219d3 delta-head.md, d-conn-unit.log 262/262, d-conn-e2e.log 9/9)
 - [ ] **Reviewer:** a fresh `reviewer` sub-agent returned a verdict; refutation of the three riskiest claims is recorded in `test-plan.md`.
 - [ ] **/check-ui:** not applicable (no UI).
 - [ ] **/open-pr:** gates passed, learnings sweep stated, PR opened.
@@ -632,7 +632,7 @@ The English line is for the agent, which reads it as a Monitor event. Any other 
 
 Steps added:
 
-- [ ] **LN6 channel reference check (before build).** Confirm from the channel reference that a local stdio process is the only declaration path, and record the exact launch flag. Output: a note in the PR, no code.
+- [x] **LN6 channel reference check (before build).** Confirm from the channel reference that a local stdio process is the only declaration path, and record the exact launch flag. Output: a note in the PR, no code. (evidence: 2a85270)
 - [x] **LN7 listen long-lived.** The `runListen` loop does not exit on an empty or short session, and reconnects with the connection's reconnect delay. Test: a stream of three short runs of `listen` (each started and stopped by the fake runner) keeps one process alive. This is the requirement behind OpenClaw's `stream` job. Pinned by the reconnect case in `listen.test.ts` (green 10d0913).
 - [x] **LN8 docs.** The connector page says: the channel is primary for Claude Code, `listen` is the fallback re-armed by the skill, and the closed-session path is `connect`. Done in 10d0913 (`apps/docs/guides/local-connector.mdx` and the `pt-br` twin).
 

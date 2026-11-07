@@ -4,6 +4,7 @@ import { HEALTH_PATH } from './contract/constants';
 import type { Bindings } from './contract/env';
 import { createInstallPageDependencies } from './install/install-page-adapter';
 import { createInstallPageRoute } from './routes/install-page';
+import { connectorRoutes } from './routes/connector';
 import { mcpRoutes } from './routes/mcp';
 import { mediaRoutes } from './routes/media';
 import { uploadRoutes } from './routes/upload';
@@ -17,6 +18,7 @@ export function createApp(input: { extraRoutes: AppRoutes[] }): Hono<{ Bindings:
     createInstallPageRoute(createInstallPageDependencies({ environment: context.env })).fetch(context.req.raw),
   );
   app.route('/', mcpRoutes);
+  app.route('/', connectorRoutes);
   app.route('/', uploadRoutes);
   app.route('/', mediaRoutes);
   input.extraRoutes.forEach((routes) => app.route('/', routes));

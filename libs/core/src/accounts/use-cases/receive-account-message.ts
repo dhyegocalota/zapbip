@@ -117,7 +117,15 @@ async function answerLocally(input: AnswerInput): Promise<ReceiveAccountMessageR
   const { repository, clock } = dependencies;
   const isNewMessage = await repository.recordChannelReceipt({ wamid: channelMessageId, receivedAt: clock.now() });
   if (!isNewMessage) return DUPLICATE_RESULT;
-  await repository.saveWindow({ window: { lastOwnerMessageAt: ownerMessage.at, noticeSentForClosedWindow: false } });
+  await repository.saveWindow({
+    window: {
+      lastOwnerMessageAt: ownerMessage.at,
+      noticeSentForClosedWindow: false,
+      noticeRetryLocale: null,
+      noticeRetryAt: null,
+      noticeRetryAttempt: 0,
+    },
+  });
   await flushQueue({ dependencies });
   const result = await prepare();
   await sendReplies({ ...input, result });

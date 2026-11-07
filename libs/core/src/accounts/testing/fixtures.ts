@@ -25,7 +25,15 @@ export async function createAccountFixture(
   const { claimsFirstMessage = true, ...accountOptions } = input;
   const account = await environment.openAccount(accountOptions);
   if (claimsFirstMessage) await environment.dependencies.firstMessage.claim({ channelMessageId: FIRST_CHANNEL_MESSAGE_ID });
-  await environment.repository.saveWindow({ window: { lastOwnerMessageAt: environment.clock.now(), noticeSentForClosedWindow: false } });
+  await environment.repository.saveWindow({
+    window: {
+      lastOwnerMessageAt: environment.clock.now(),
+      noticeSentForClosedWindow: false,
+      noticeRetryLocale: null,
+      noticeRetryAt: null,
+      noticeRetryAttempt: 0,
+    },
+  });
   return { environment, account };
 }
 
@@ -42,7 +50,7 @@ export function receiveAccount(
     dependencies: environment.dependencies,
     account,
     channelMessageId,
-    ownerMessage: { at: environment.clock.now(), replyToMessageId, content },
+    ownerMessage: { at: environment.clock.now(), replyToMessageId, forwarded: false, content },
     publicOrigin: PUBLIC_ORIGIN,
   });
 }
