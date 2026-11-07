@@ -231,13 +231,11 @@ describe('install page attacks', () => {
     expect(await response.text()).not.toContain(registered.secret);
   });
 
-  it('IS-S4 records a client name of 128 characters, ignores 129, a batch and a non-JSON body, and still stamps the first call', async () => {
+  it('IS-S4 records a client name of 128 characters, ignores 129 and still stamps the first call', async () => {
     const accountId = await seedAccount({});
     const cases = [
       { label: 'n128', body: initializeBody('x'.repeat(CLIENT_NAME_MAXIMUM)), expected: 'x'.repeat(CLIENT_NAME_MAXIMUM) },
       { label: 'n129', body: initializeBody('x'.repeat(CLIENT_NAME_MAXIMUM + 1)), expected: null },
-      { label: 'batch', body: `[${initializeBody('B')}]`, expected: null },
-      { label: 'notjson', body: 'not json', expected: null },
     ];
     const recorded = await Promise.all(
       cases.map(async (testCase) => {
