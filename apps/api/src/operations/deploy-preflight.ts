@@ -1,8 +1,8 @@
-import { COMPANY_FACT_UNSET, type CompanyFacts, OFFICIAL_NUMBER_UNSET } from '@zapbip/types';
+import { COMPANY_FACT_UNSET, type CompanyFacts, HttpStatus, OFFICIAL_NUMBER_UNSET } from '@zapbip/types';
 import { z } from 'zod';
 import { DeployEnvironment } from './deploy-environment';
 import { parseJsonOrNull } from './json-text';
-import type { PackageFetcher } from './package-fetcher';
+import type { PackageAnswer, PackageFetcher } from './package-fetcher';
 import { isPlaceholderValue } from './placeholder';
 import { missingSmokeInputs } from './smoke-inputs';
 import { WorkerSecret } from './worker-secret';
@@ -22,6 +22,8 @@ const NPM_PACKAGE_NAME = 'zapbip';
 export const NPM_PUBLISHER_VARIABLE = 'ZAPBIP_NPM_PUBLISHER';
 export const PYPI_PUBLISHER_VARIABLE = 'ZAPBIP_PYPI_PUBLISHER';
 const OPENCLAW_PLUGIN_PACKAGE = '@zapbip/openclaw-plugin';
+const PYPI_PACKAGE_NAME = 'zapbip-platform';
+const PYPI_ORIGIN = 'https://pypi.org';
 const DEPLOYABLE_ENVIRONMENTS = [DeployEnvironment.Staging, DeployEnvironment.Production];
 
 export type ShellCommand = { file: string; args: string[]; stdin?: string };
@@ -87,6 +89,7 @@ function npmNamesOf(input: { people: z.infer<typeof npmPeopleSchema> }): string[
   return people.map((person) => (typeof person === 'string' ? (person.split(' <')[0] as string) : person.name));
 }
 const npmFailureSchema = z.object({ error: z.object({ code: z.string() }) });
+const pypiReleaseSchema = z.object({ info: z.object({ maintainer: z.string().min(1) }) });
 const secretListSchema = z.array(z.object({ name: z.string() }));
 const cronBlockSchema = z.object({ triggers: z.object({ crons: z.array(z.string()) }) });
 
@@ -196,12 +199,33 @@ async function refuseUntrustedDocsPackages(input: DocsPreflightInput): Promise<s
   return refuseUntrustedPackages({ ...input, packageSpecs: publishedPackageSpecsOf(input) });
 }
 
+async function pypiAnswerOrNull(input: { packageFetcher: PackageFetcher; url: string }): Promise<PackageAnswer | null> {
+  try {
+    return await input.packageFetcher({ url: input.url });
+  } catch {
+    return null;
+  }
+}
+
 async function refuseUntrustedPypiPackage(input: {
   packageFetcher: PackageFetcher;
   environmentVariables: EnvironmentVariables;
   pypiVersion: string;
 }): Promise<string | null> {
-  throw new Error(`refuseUntrustedPypiPackage is not implemented for ${input.pypiVersion}`);
+  const { packageFetcher, environmentVariables, pypiVersion } = input;
+  const publisher = environmentVariables[PYPI_PUBLISHER_VARIABLE];
+  if (publisher === undefined || publisher === '' || isPlaceholderValue({ value: publisher })) {
+    return `${PYPI_PUBLISHER_VARIABLE} is not set; set it to the PyPI user that publishes the package`;
+  }
+  const packageSpec = `${PYPI_PACKAGE_NAME}==${pypiVersion}`;
+  const answer = await pypiAnswerOrNull({ packageFetcher, url: `${PYPI_ORIGIN}/pypi/${PYPI_PACKAGE_NAME}/${pypiVersion}/json` });
+  if (answer?.status === HttpStatus.NotFound) return `${packageSpec} does not resolve on PyPI; publish it first`;
+  if (answer?.status !== HttpStatus.Ok) return `could not reach PyPI to read ${packageSpec}; check your network and run it again`;
+  const release = pypiReleaseSchema.safeParse(answer.body);
+  if (!release.success)
+    return `${packageSpec} on PyPI lists no readable maintainer; set maintainers in pyproject.toml and publish it again`;
+  if (release.data.info.maintainer === publisher) return null;
+  return `${packageSpec} must be maintained by the PyPI user ${publisher}; its maintainer is ${release.data.info.maintainer}`;
 }
 
 async function refuseUncleanGit(input: WorkerPreflightInput): Promise<string | null> {
