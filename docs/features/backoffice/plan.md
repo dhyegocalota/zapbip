@@ -53,7 +53,7 @@ Author this list with every box empty. A sub-agent ticks its own line. A wrong s
 - [x] **Step 0a:** owner answers the pending open questions; spec status → `Approved`; the index row in `docs/features/README.md` matches. — evidence: spec header `**Status:** Approved`; every open-question row answered with its recommended option under the owner's delegation of 2026-11-06; `docs/features/README.md` row `backoffice` `Approved`.
 - [x] **Step 0b:** ADR 0031 status → `Accepted`, row in `docs/adr/README.md` in number order; ADR 0032 written at 0032 (0030 belongs to docs-experience, not merged) and accepted. — evidence: `docs/adr/0031-the-backoffice-is-a-separate-host-signed-in-with-a-key-and-totp-enrolled-from-the-owners-terminal.md` and `docs/adr/0032-whatsapp-numbers-are-rows-in-a-sealed-registry-not-worker-secrets.md` both `- Status: Accepted`; both rows in `docs/adr/README.md` after 0029; the document-indexes test in `pnpm verify`.
 - [x] **Step 0c:** `frontend-designer` writes `docs/features/backoffice/design.md`: sign-in, the numbers list, empty, single and many, register, verify result, rotate, state change, metrics, audit, the error pages, at 1280 and 375. Owner answers. — evidence: design.md 785a4d8
-- [ ] **Step 0d:** reviewer sub-agent reviews `plan.md` and `test-plan.md` with the lens "what is missing or ambiguous"; findings fixed.
+- [x] **Step 0d:** reviewer sub-agent reviews `plan.md` and `test-plan.md` with the lens "what is missing or ambiguous"; findings fixed. — evidence: reviewer FIX FIRST, 12 findings resolved in 299f77a
 
 ### G1 platform and schema
 
