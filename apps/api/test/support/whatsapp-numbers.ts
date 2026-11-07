@@ -1,5 +1,6 @@
 import { WhatsAppNumberState } from '@zapbip/types';
 import { createAesGcmSecretBox } from '../../src/adapters/platform/aes-gcm-secret-box';
+import type { RegisteredNumber } from '../../src/numbers/number-registry';
 import { accessTokenAssociatedData, appSecretAssociatedData } from '../../src/numbers/number-sealing';
 import { WorkerSecret } from '../../src/operations/worker-secret';
 import { SEED_CREATED_AT } from './seed';
@@ -11,6 +12,14 @@ export const TEST_PHONE_NUMBER_ID = '1000000000000001';
 export const TEST_WABA_ID = '3000000000000003';
 export const TEST_ACCESS_TOKEN = 'test-access-token';
 export const TEST_APP_SECRET = 'test-app-secret';
+
+export const TEST_REGISTERED_NUMBER: RegisteredNumber = {
+  numberId: TEST_NUMBER_ID,
+  phoneNumberId: TEST_PHONE_NUMBER_ID,
+  wabaId: TEST_WABA_ID,
+  state: WhatsAppNumberState.Active,
+  metaAppRef: TEST_META_APP_REF,
+};
 
 const TEST_DISPLAY_NUMBER = '5511900000000';
 const SEAL_KEY_VERSION = 1;

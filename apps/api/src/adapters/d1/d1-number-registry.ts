@@ -34,8 +34,10 @@ const INSERT_NUMBER_STATEMENT = `INSERT INTO whatsapp_numbers
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 const SEAL_KEY_VERSION = 1;
 const SINGLE_ROW_CHANGE = 1;
-const FIND_NUMBER_STATEMENT = `SELECT ${NUMBER_COLUMNS}, display_number AS displayNumber, label, verified_at AS verifiedAt,
-  verification_snapshot AS verificationSnapshot, created_at AS createdAt, updated_at AS updatedAt FROM whatsapp_numbers WHERE id = ?`;
+const RECORD_COLUMNS =
+  NUMBER_COLUMNS +
+  ', display_number AS displayNumber, label, verified_at AS verifiedAt, verification_snapshot AS verificationSnapshot, created_at AS createdAt, updated_at AS updatedAt';
+const FIND_NUMBER_STATEMENT = 'SELECT ' + RECORD_COLUMNS + ' FROM whatsapp_numbers WHERE id = ?';
 const TRANSITION_STATEMENT = 'UPDATE whatsapp_numbers SET state = ?, updated_at = ? WHERE id = ? AND state = ?';
 const FIND_FIRST_TWO_STATEMENT = 'SELECT ' + OUTBOUND_COLUMNS + ' FROM whatsapp_numbers ORDER BY created_at, id LIMIT 2';
 

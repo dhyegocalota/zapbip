@@ -1,19 +1,26 @@
-import { finishAccountDeletion, openOwnerAccount, type ChannelInboundEntry, type ReceiveResult } from '@zapbip/core';
-import { AccountState, SenderVerdict, type OwnerLocale } from '@zapbip/types';
+import { finishAccountDeletion, openOwnerAccount, ownerLocaleOf, type ChannelInboundEntry, type ReceiveResult } from '@zapbip/core';
+import { AccountState, SenderVerdict, WhatsAppNumberState, type OwnerLocale } from '@zapbip/types';
 import { lifecycleDependenciesOf, inboxPurgeOf } from '../accounts/deletion-sweep';
+import { numberRegistryOf } from '../adapters/d1/d1-number-registry';
 import { createSenderGuard } from '../adapters/guard/sender-guard';
+import { OperatorEvent } from '../adapters/whatsapp/whatsapp-enums';
+import { logOperatorEvent } from '../adapters/whatsapp/operator-log';
+import { OwnerCopyKey, WHATSAPP_COPY } from '../adapters/whatsapp/whatsapp-copy';
 import { createPlatformClock } from '../adapters/platform/clock';
 import { readWaitlistEnabled } from '../config/waitlist-enabled';
 import type { AccountOwnerRpc } from '../contract/account-owner-rpc';
 import type { Bindings } from '../contract/env';
 import { LogEvent } from '../contract/log';
 import { logEvent } from '../log';
+import { sendNumberNotice } from '../numbers/number-notice';
+import type { RegisteredNumber } from '../numbers/number-registry';
 import { accountInboxOf } from '../routes/account-inbox-stub';
 
 export type OwnerInboundEntryRequest = { accountId: string; ownerLocale: OwnerLocale; downloadsMedia: boolean };
 
 export type OwnerInboundInput = {
   bindings: Bindings;
+  number: RegisteredNumber;
   waId: string;
   channelMessageId: string;
   entryOf: (input: OwnerInboundEntryRequest) => Promise<ChannelInboundEntry>;
@@ -39,12 +46,24 @@ async function admitSender(input: { bindings: Bindings; waId: string }): Promise
   return verdict === SenderVerdict.Admitted;
 }
 
+async function refuseNewAccount(input: OwnerInboundInput): Promise<ReceiveResult> {
+  const { bindings, number, waId } = input;
+  logOperatorEvent({ event: OperatorEvent.InboundNumberClosed, fields: {} });
+  const text = WHATSAPP_COPY[ownerLocaleOf({ waId })][OwnerCopyKey.NumberClosedToNewAccounts];
+  await sendNumberNotice({ bindings, registry: numberRegistryOf({ bindings }), numberId: number.numberId, waId, text });
+  return DROPPED_RESULT;
+}
+
 export async function receiveOwnerInbound(input: OwnerInboundInput): Promise<ReceiveResult> {
   const { bindings, waId, channelMessageId, entryOf } = input;
   const isAdmitted = await admitSender({ bindings, waId });
   if (!isAdmitted) return DROPPED_RESULT;
+  const dependencies = lifecycleDependenciesOf({ environment: bindings });
+  const existing = await dependencies.accounts.findByWaId({ waId });
+  const isNewOwnerOnClosedNumber = existing === null && input.number.state === WhatsAppNumberState.Closed;
+  if (isNewOwnerOnClosedNumber) return refuseNewAccount(input);
   const lookup = await openOwnerAccount({
-    dependencies: lifecycleDependenciesOf({ environment: bindings }),
+    dependencies,
     waId,
     waitlistEnabled: readWaitlistEnabled({ bindings }),
     createdAt: createPlatformClock().now(),

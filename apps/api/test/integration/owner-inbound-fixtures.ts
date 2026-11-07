@@ -5,6 +5,7 @@ import { receiveOwnerInbound } from '../../src/inbound/owner-inbound';
 import { createFakeRateLimiter } from '../support/fake-rate-limiter';
 import { readScreen } from '../support/inbox-session';
 import { installCodeDirectory } from '../support/install-codes';
+import { TEST_REGISTERED_NUMBER } from '../support/whatsapp-numbers';
 import { accountInboxStub, testEnv } from '../support/workers-env';
 
 export const WA_ID = '5511900000000';
@@ -43,6 +44,7 @@ export function bindingsWith(input: { waitlistEnabled: boolean; ownerLimit?: num
 export function deliver(input: { bindings: Bindings; text: string; waId?: string; channelMessageId?: string }) {
   const entry = textEntry({ text: input.text });
   return receiveOwnerInbound({
+    number: TEST_REGISTERED_NUMBER,
     bindings: input.bindings,
     waId: input.waId === undefined ? WA_ID : input.waId,
     channelMessageId: input.channelMessageId === undefined ? nextWamid() : input.channelMessageId,

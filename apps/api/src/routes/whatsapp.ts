@@ -1,5 +1,5 @@
 import { RECEIPT_RETENTION_MS, type ChannelInboundEntry, type OwnerInboundContent, type UnavailableOwnerMedia } from '@zapbip/core';
-import { ChannelInboundKind, DeliveryState, HttpStatus, type OwnerLocale } from '@zapbip/types';
+import { ChannelInboundKind, DeliveryState, HttpStatus, WhatsAppNumberState, type OwnerLocale } from '@zapbip/types';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { D1MessageIndex } from '../adapters/d1/d1-message-index';
@@ -46,6 +46,11 @@ type RequestContext = {
 };
 
 type NumberContext = RequestContext & { number: RegisteredNumber };
+
+const IGNORED_STATE_EVENTS: Partial<Record<WhatsAppNumberState, OperatorEvent>> = {
+  [WhatsAppNumberState.Pending]: OperatorEvent.InboundNumberPending,
+  [WhatsAppNumberState.Disabled]: OperatorEvent.InboundNumberDisabled,
+};
 
 const HUB_MODE_PARAMETER = 'hub.mode';
 const HUB_TOKEN_PARAMETER = 'hub.verify_token';
@@ -190,6 +195,7 @@ async function processEntry(input: { context: NumberContext; parsed: ParsedEntry
   }
   await receiveOwnerInbound({
     bindings: context.bindings,
+    number: context.number,
     waId: parsed.fromWaId,
     channelMessageId: parsed.channelMessageId,
     entryOf: async ({ accountId, ownerLocale, downloadsMedia }) => {
@@ -242,6 +248,11 @@ async function processChange(input: { context: RequestContext; change: ParsedCha
   const number = context.numbers.find((registered) => registered.phoneNumberId === change.phoneNumberId);
   if (number === undefined) {
     logOperatorEvent({ event: OperatorEvent.InboundForeignNumber, fields: {} });
+    return [false];
+  }
+  const stateEvent = IGNORED_STATE_EVENTS[number.state];
+  if (stateEvent !== undefined) {
+    logOperatorEvent({ event: stateEvent, fields: {} });
     return [false];
   }
   const numberContext = { ...context, number };
