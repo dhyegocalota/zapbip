@@ -1,5 +1,5 @@
 import { MEDIA_RETENTION_MS } from '@zapbip/core';
-import { DAY_MS, HOUR_MS } from '@zapbip/types';
+import { DAY_MS, HOUR_MS, OwnerLocale } from '@zapbip/types';
 import { reset } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import usageMigrationSql from '../../migrations/0003_usage.sql?raw';
@@ -8,13 +8,15 @@ import { LogEvent } from '../../src/contract/log';
 import { MEDIA_RETENTION_HOUR, SCHEDULED_CRON } from '../../src/operations/constants';
 import { runMediaRetention } from '../../src/operations/media-retention';
 import { runScheduled } from '../../src/operations/scheduled';
-import { applyDirectoryMigration } from '../support/seed';
+import { applyDirectoryMigration, seedOwnerIdentity } from '../support/seed';
 import { testEnv } from '../support/workers-env';
 
 const NOW = Date.UTC(2026, 10, 6, 12);
 const TODAY = '2026-11-06';
 const MEDIA_KEY = 'accounts/acc_1/media/med_1';
 const MEDIA_SIZE_BYTES = 8;
+const DAILY_TICK = Date.UTC(2026, 10, 6, 3);
+const ACCOUNTS_SEEDED = 3;
 
 async function seedUsage(input: { totals: number[] }): Promise<void> {
   const repository = new D1UsageRepository({ database: testEnv.CONNECTIONS });
@@ -67,5 +69,25 @@ describe('scheduled budget and retention jobs against seeded data', () => {
     const uploadedAt = await storeMediaObject();
     await runMediaRetention({ bucket: testEnv.MEDIA, now: uploadedAt + MEDIA_RETENTION_MS });
     expect(await testEnv.MEDIA.head(MEDIA_KEY)).not.toBeNull();
+  });
+
+  it('runs every job on the daily tick without opening a Durable Object per account', async () => {
+    await Promise.all(
+      Array.from({ length: ACCOUNTS_SEEDED }, (_unused, index) =>
+        seedOwnerIdentity({ accountId: `acc_fan_${index}`, phone: `551190000010${index}`, ownerLocale: OwnerLocale.EnglishUs }),
+      ),
+    );
+    const touchedMembers: string[] = [];
+    const watchedInbox = new Proxy(testEnv.ACCOUNT_INBOX, {
+      get(target, property) {
+        touchedMembers.push(String(property));
+        return Reflect.get(target, property);
+      },
+    });
+    await runScheduled({ cron: SCHEDULED_CRON, now: DAILY_TICK, env: { ...testEnv, ACCOUNT_INBOX: watchedInbox } });
+    expect(touchedMembers).toEqual([]);
+    expect((await testEnv.CONNECTIONS.prepare('SELECT COUNT(*) AS total FROM accounts').first<{ total: number }>())?.total).toBe(
+      ACCOUNTS_SEEDED,
+    );
   });
 });

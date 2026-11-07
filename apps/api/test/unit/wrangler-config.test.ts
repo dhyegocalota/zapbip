@@ -25,6 +25,8 @@ type WranglerBlock = {
   d1_databases: DatabaseBinding[];
   r2_buckets: BucketBinding[];
   durable_objects: { bindings: { name: string }[] };
+  ratelimits: { name: string }[];
+  analytics_engine_datasets: { binding: string }[];
   rules: { globs: string[] }[];
   vars: Record<string, string>;
   migrations: { tag: string }[];
@@ -49,6 +51,8 @@ const BINDING_KEYS: Record<string, (block: WranglerBlock) => string[]> = {
   d1_databases: (block) => block.d1_databases.map((database) => database.binding),
   r2_buckets: (block) => block.r2_buckets.map((bucket) => bucket.binding),
   durable_objects: (block) => block.durable_objects.bindings.map((binding) => binding.name),
+  ratelimits: (block) => block.ratelimits.map((limiter) => limiter.name),
+  analytics_engine_datasets: (block) => block.analytics_engine_datasets.map((dataset) => dataset.binding),
   rules: (block) => block.rules.map((rule) => rule.globs.join()),
   vars: (block) =>
     Object.keys(block.vars)

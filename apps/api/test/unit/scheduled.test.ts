@@ -24,11 +24,15 @@ function runBudgetAndRetention(input: { cron: string; now: number; env: Bindings
 }
 
 function createFakeEnvironment(input: { total: number }) {
-  const prepare = vi.fn(() => ({ bind: () => ({ first: async () => ({ total: input.total }) }) }));
+  let total = input.total;
+  const prepare = vi.fn(() => ({ bind: () => ({ first: async () => ({ total }) }) }));
   const list = vi.fn(async () => ({ objects: [], truncated: false }));
   const remove = vi.fn(async () => undefined);
   const env = { CONNECTIONS: { prepare }, MEDIA: { list, delete: remove } } as unknown as Bindings;
-  return { env, prepare, list };
+  const setTotal = (next: number): void => {
+    total = next;
+  };
+  return { env, prepare, list, setTotal };
 }
 
 function loggedEvents(input: { logSpy: MockInstance<typeof console.log> }): Record<string, unknown>[] {
@@ -47,6 +51,15 @@ afterEach(() => {
 describe('scheduled budget check', () => {
   it('logs budget.warning with the day and the total, then fails the run, at the threshold', async () => {
     const { env } = createFakeEnvironment({ total: WARNING_TOTAL });
+    await expect(runBudgetAndRetention({ cron: SCHEDULED_CRON, now: NOW, env })).rejects.toThrow(TODAY);
+    expect(loggedEvents({ logSpy })).toContainEqual({ event: LogEvent.BudgetWarning, day: TODAY, gigabyteSeconds: WARNING_TOTAL });
+  });
+
+  it('stays quiet on a stale D1 total and warns once the next flush lands', async () => {
+    const { env, setTotal } = createFakeEnvironment({ total: SAFE_TOTAL });
+    await expect(runBudgetAndRetention({ cron: SCHEDULED_CRON, now: NOW, env })).resolves.toBeUndefined();
+    expect(loggedEvents({ logSpy })).toEqual([]);
+    setTotal(WARNING_TOTAL);
     await expect(runBudgetAndRetention({ cron: SCHEDULED_CRON, now: NOW, env })).rejects.toThrow(TODAY);
     expect(loggedEvents({ logSpy })).toContainEqual({ event: LogEvent.BudgetWarning, day: TODAY, gigabyteSeconds: WARNING_TOTAL });
   });

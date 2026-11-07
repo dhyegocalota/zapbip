@@ -10,6 +10,7 @@ import type { Bindings } from '../../src/contract/env';
 import { testEnv } from '../support/workers-env';
 
 const CRON = '*/30 * * * *';
+const RETIRED_HOURLY_CRON = '0 * * * *';
 const EXPIRES_AT = SEED_CREATED_AT + 10;
 const CLEAR_SEALED_SECRET_FRAGMENT = 'install_code_sealed_secret = NULL WHERE install_code_expires_at';
 
@@ -94,5 +95,10 @@ describe('scheduled account jobs', () => {
     const controller = { cron: CRON, scheduledTime: EXPIRES_AT, noRetry: () => undefined } as ScheduledController;
     await worker.scheduled(controller, testEnv);
     expect(await countAccounts()).toBe(0);
+  });
+
+  it('rejects the retired hourly cron through the production entry', async () => {
+    const controller = { cron: RETIRED_HOURLY_CRON, scheduledTime: EXPIRES_AT, noRetry: () => undefined } as ScheduledController;
+    await expect(productionWorker.scheduled(controller, testEnv)).rejects.toThrow(RETIRED_HOURLY_CRON);
   });
 });
