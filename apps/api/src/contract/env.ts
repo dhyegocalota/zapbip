@@ -1,8 +1,9 @@
+import type { DeployEnvironment } from '@zapbip/types';
 import type { AccountInbox } from '../account-inbox/account-inbox';
 
 export type Bindings = {
   ACCOUNT_INBOX: DurableObjectNamespace<AccountInbox>;
-  ENVIRONMENT: string;
+  ENVIRONMENT: DeployEnvironment;
   CONNECTIONS: D1Database;
   MEDIA: R2Bucket;
   MEDIA_LINK_SIGNING_KEY: string;

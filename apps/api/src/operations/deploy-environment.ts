@@ -1,8 +1,6 @@
-export enum DeployEnvironment {
-  Development = 'development',
-  Staging = 'staging',
-  Production = 'production',
-}
+import { DeployEnvironment } from '@zapbip/types';
+
+export { DeployEnvironment };
 
 const DEPLOY_ENVIRONMENTS: string[] = Object.values(DeployEnvironment);
 

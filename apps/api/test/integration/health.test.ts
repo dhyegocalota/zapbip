@@ -10,7 +10,7 @@ const STATUS_SERVER_ERROR = 500;
 const UNKNOWN_ENVIRONMENT = 'preview';
 
 async function healthOf(input: { environment: string }): Promise<Response> {
-  return production.fetch(new Request(`${ORIGIN}${HEALTH_PATH}`), { ...env, ENVIRONMENT: input.environment });
+  return production.fetch(new Request(`${ORIGIN}${HEALTH_PATH}`), { ...env, ENVIRONMENT: input.environment as DeployEnvironment });
 }
 
 describe('health', () => {

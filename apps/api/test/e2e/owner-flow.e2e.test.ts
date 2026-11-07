@@ -15,7 +15,7 @@ const WRONG_SECRET = `zb_conn_${'A'.repeat(43)}`;
 const INSTALL_LINK_PATTERN = /\/i\/zb_inst_[A-Za-z0-9_-]{22}/;
 const FIRST_DEPLOY_NOTICE = 'First deploy:';
 
-type SmokeRun = { exitCode: number; lines: string[] };
+type SmokeRun = { exitCode: number; lines: string[]; errorOutput: string };
 
 async function runSmoke(input: { connectionSecret: string; extraArguments: string[] }): Promise<SmokeRun> {
   const environmentVariables = {
@@ -29,10 +29,14 @@ async function runSmoke(input: { connectionSecret: string; extraArguments: strin
   };
   const smokeArguments = ['--import', 'tsx', SMOKE_SCRIPT, '--environment', 'development', ...input.extraArguments];
   const finished = await runCommand('node', smokeArguments, { env: environmentVariables }).then(
-    (result) => ({ exitCode: 0, stdout: result.stdout }),
-    (failure: { code: number; stdout: string }) => ({ exitCode: failure.code, stdout: failure.stdout }),
+    (result) => ({ exitCode: 0, stdout: result.stdout, stderr: result.stderr }),
+    (failure: { code: number; stdout: string; stderr: string }) => ({
+      exitCode: failure.code,
+      stdout: failure.stdout,
+      stderr: failure.stderr,
+    }),
   );
-  return { exitCode: finished.exitCode, lines: finished.stdout.split('\n').filter((line) => line !== '') };
+  return { exitCode: finished.exitCode, lines: finished.stdout.split('\n').filter((line) => line !== ''), errorOutput: finished.stderr };
 }
 
 function verdictsOf(input: { run: SmokeRun; verdict: string }): string[] {
@@ -71,7 +75,7 @@ describe('owner flow through the smoke script', () => {
       const run = await runSmoke({ connectionSecret: WRONG_SECRET, extraArguments: [] });
       expect(verdictsOf({ run, verdict: 'FAIL' })).toHaveLength(2);
       expect(run.exitCode).toBe(1);
-      expect(run.lines.join('\n')).not.toContain(WRONG_SECRET);
+      expect(`${run.lines.join('\n')}${run.errorOutput}`).not.toContain(WRONG_SECRET);
     },
     SMOKE_TIMEOUT_MS,
   );
