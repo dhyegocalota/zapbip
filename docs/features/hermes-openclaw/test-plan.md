@@ -195,6 +195,18 @@ Setup: the zapbip stack runs over HTTPS with a local self-signed certificate; th
 - [ ] E10 Choice reply — input: owner taps a button of an `ask` that already timed out (no live waiter); expected: the agent receives the selected title as text, once.
 - [ ] E11 Clean shutdown — input: SIGTERM to each container; expected: exit `0` within 5 s, the socket closed, no `done` for an unhandled message.
 
+## F Fix batch cases (found in review, both plugins)
+
+- [ ] F-1 Revocation stop — input: the server closes the plugin socket with `4003`; expected: no reconnect, no further probe, the plugin ends with exit code `1` (OpenClaw `startAccount` throws, Hermes task returns `1`).
+- [ ] F-2 Re-probe after a never-opened attempt — input: the upgrade fails once, then the probe answers `426`; expected: one more probe, then a connection; a probe answering `401` ends with exit code `1` and no connection.
+- [ ] F-3 Frame cap — input: a text frame one byte over `CONNECTOR_FRAME_MAX_BYTES`; expected: dropped with `frame_rejected` reason `frame_too_large`, the socket stays open, nothing handed off.
+- [ ] F-4 Unknown and missing kind — input: a `messages` frame whose message has an unknown `kind`, and one with no `kind`; expected: the whole frame is `frame_rejected` as `malformed`, nothing handed off.
+- [ ] F-5 Reply failure is logged — input: the outbound `send_message` fails after the model answered; expected: one `plugin_reply_failed` line with the message id and no reply text or secret in it, the handoff still counts as done.
+- [ ] F-6 Redaction, httpx2 and the root handlers — input: a record naming `/c/zb_conn_<secret>/` logged on `httpx2`, `mcp.client.streamable_http`, `mcp.client.auth.oauth2` and `tools.mcp_tool_discovery` at DEBUG; expected: every root handler writes `/c/redacted/` and never the secret, and `connect()` covers handlers added after import.
+- [ ] F-7 MCP end to end — input: each gateway with the documented MCP block and the owner message `ping-tool-<product>`; expected: the model searches for `inbox`, and a tool result that is not an echo of the query names `check_inbox`; no `zb_conn_` in any log, Hermes at DEBUG included.
+- [ ] F-8 Replacement never answers twice — input: a second OpenClaw container takes the connection while the first is attached, then one owner message; expected: the first logs `connector_replaced`, OpenClaw does not log `auto-restart` for it, the fake model gets exactly one call mentioning the message, the owner screen shows exactly one reply, and 20 s later still one.
+- [ ] F-9 Linux bridge host — input: `docker network inspect` prints an empty string, `::` or text that is not IPv4; expected: the fixture throws naming IPv4 before any server binds.
+
 ## I Install sections (checked in `install-skills` tests, against this slice's facts)
 
 - [ ] I-1 — input: the Hermes section; expected: names `CHANNEL_PLUGIN_PACKAGE_NAME[hermes]` and no OpenClaw name; ends with the self-test `✅ instalado`.

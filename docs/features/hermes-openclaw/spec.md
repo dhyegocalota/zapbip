@@ -56,8 +56,8 @@ Source: `SCRATCH/feature-stash/research-hermes-openclaw.md`. Tags: [doc] officia
 
 | Product | Rung 1 (local): channel plugin | Rung 3 (scheduled): fallback |
 |---|---|---|
-| Hermes | install the zapbip platform plugin into `~/.hermes/plugins/zapbip`, enable it in `plugins.enabled`, set its connection URL; `set_wake({mode: "local"})` | add the MCP server; create a job `every 1m` that calls `check_inbox`; `set_wake({mode: "scheduled", interval_minutes: 1})` |
-| OpenClaw | install the zapbip channel plugin with `openclaw plugins install` (the package name is `(verify)`), set `channels.zapbip` with the connection URL; `set_wake({mode: "local"})` | add the MCP server with `transport: "streamable-http"`; create a job that calls `check_inbox` every minute (`every` with the 1-minute interval, `(verify)` accepted); `set_wake({mode: "scheduled", interval_minutes: 1})` |
+| Hermes | `pip install zapbip-platform==0.1.0`, enable it in `plugins.enabled`, set its connection URL; `set_wake({mode: "local"})` | add the MCP server; create a job `every 1m` that calls `check_inbox`; `set_wake({mode: "scheduled", interval_minutes: 1})` |
+| OpenClaw | `openclaw plugins install @zapbip/openclaw-plugin@0.1.0`, set `channels.zapbip` with the connection URL; `set_wake({mode: "local"})` | add the MCP server with `transport: "streamable-http"`; create a job that calls `check_inbox` every minute (`every` with the 1-minute interval); `set_wake({mode: "scheduled", interval_minutes: 1})` |
 
 The section tries rung 1 first. If the product refuses the plugin, or the plugin cannot connect, the section falls back to rung 3 and tells the owner which rung is in use. Both sections name only their own product, and each ends with the self-test. Self-test: a `send_message` from the chat (the plugin path sends it through the plugin's outbound, the fallback through MCP).
 

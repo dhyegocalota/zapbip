@@ -245,4 +245,39 @@ Pins (green on arrival): the project and lock shape cases, the null `previousWak
 - The registry command `openclaw plugins install @zapbip/openclaw-plugin@0.1.0` cannot be run until the package is published; the suite installs the packed archive with the same flags.
 - The fake model drives `tool_search` for the MCP case, not a real tool call to `check_inbox`; a real model run stays owner-run (V3).
 - `requires-python` allows 3.14 for the Hermes image, while the doctor and CI keep the development toolchain on 3.11 to 3.13.
-- Known flake, present at 892fac1: `E4 OpenClaw replacement` fails about one run in three with two model calls and two replies for one owner message (reproduced on a clean worktree at 892fac1 with an added `requestsMentioning` length check). Suspected cause, not proven: OpenClaw restarts the channel account after `startAccount` resolves on the `4001` replacement, so the replaced plugin reattaches and both handle the message. Not fixed in this round; the Docker run for this round passed 21 of 23 on the first full run (the two failures were the Hermes forwarded-prefix expectation, fixed in the next commit, and this flake).
+- The E4 flake seen at 892fac1 is fixed in fix round 2 below.
+
+## Fix round 2 (E4 double answer, review re-checks)
+
+### Root cause of the E4 double answer
+
+Seen in a Docker run (container logs of the failing E4): the server closes the older socket with `4001`; the OpenClaw plugin logged `connector_replaced` and `startAccount` returned cleanly, so OpenClaw logged `channel exited without an error` and `auto-restart attempt 1/10 in 5s`. Five seconds later the old container reconnected, which replaced the newer one (`connector_replaced` in the second container too) and received the owner message again (`messages_received count 1`) while the first handoff had not been acknowledged yet. Two model calls and two replies, and the two gateways kept replacing each other every 5 s. Deduplication by message id cannot help: the two listeners are two processes. Hermes does not restart on replacement: its adapter only marks itself disconnected, and the gateway reconnect watcher acts on fatal errors only (pinned by `test_replaced_socket_ends_without_a_second_run`).
+
+### What changed
+
+- OpenClaw `startAccount` reports a replaced socket (new `REPLACED_EXIT_CODE`) with `setStatus({lifecycle: "blocked", terminalDisconnect: true})` and returns; OpenClaw then logs `auto-restart skipped, terminal disconnect`. A revoke still throws, an abort still ends cleanly.
+- Hermes `redact_root_handlers` puts `SecretPathRedaction` on every root handler at import and at `connect()`.
+- Review re-checks: the MCP e2e cases search for `inbox` (the old query `check_inbox` was echoed back by both gateways, even in a validation error, so the case proved nothing); the fake model builds the `tool_search` arguments from the declared schema; Hermes runs at DEBUG in every case plus a refused-link case with the MCP block; `hasMcpServer` is required; nameless tool declarations are dropped; `bridgeGatewayHostOf` throws unless the host is IPv4; the Hermes wheel is built with `--no-build-isolation` from hashed setuptools; the OpenClaw base image is pinned by digest; Hermes `dependencies` are compatible ranges (`httpx>=0.28,<0.29`, `websockets>=15,<16`, the versions the pinned Hermes image ships), exact hashes stay in the locks; spec rungs name the published packages; test-plan section F added.
+
+### Red then green
+
+| Case | Red text | Red commit | Green commit |
+|---|---|---|---|
+| OpenClaw replaced account ends terminal | `promise rejected "Error: the zapbip connector stopped with …" instead of resolving` | ec10946 | ebb3948 |
+| OpenClaw 4001 exit code | `expected +0 to be 2` | ec10946 | ebb3948 |
+| Root-handler redaction (4 cases) | `NotImplementedError: redact_root_handlers is not implemented` | 3a25198 | 5e6757f |
+| Bounded Hermes dependencies | `expected false to be true` | c1a92f8 | 5a13e9b |
+| IPv4 bridge host (5 cases) | `Error: bridgeGatewayHostOf is not implemented` | 9973338 | 3f9f195 |
+
+Pins: Hermes replaced socket (f3e229b), OpenClaw digest, `onlyBuiltDependencies`, hashed build requirement, handoff test text.
+
+### Hypotheses to attack
+
+1. Hypothesis: after a replacement the older OpenClaw never reconnects and the newer one answers once. Break it by: replacing three times in a row, and replacing while a handoff is in flight.
+2. Hypothesis: a revoke (`4003`) after this change still ends the account with an error and OpenClaw backs off, not terminal.
+3. Hypothesis: with Hermes at DEBUG, no `zb_conn_` is in `gateway.log` with a working or a refused link.
+
+### Gaps
+
+- The refused-link case uses an unknown secret, not a revoked one: the development stack has no revoke route.
+- Docker needs about 12 GB free in the Docker VM; a full disk surfaces as `Errno 28` inside the Hermes container and a missing `connector_connected`.
