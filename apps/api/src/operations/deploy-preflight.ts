@@ -2,12 +2,18 @@ import {
   CLOUDFLARE_NAMESERVER_SUFFIX,
   COMPANY_FACT_UNSET,
   type CompanyFacts,
+  hermesWheelFilename,
+  hermesWheelPath,
   HttpStatus,
   NPM_REGISTRY_URL,
   OFFICIAL_NUMBER_UNSET,
+  PRODUCTION_PACKAGES_BUCKET,
   PRODUCTION_PUBLIC_ORIGIN,
   PRODUCTION_ZONE,
 } from '@zapbip/types';
+import { randomUUID } from 'node:crypto';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { z } from 'zod';
 import { DeployEnvironment } from './deploy-environment';
 import { parseJsonOrNull } from './json-text';
@@ -21,6 +27,10 @@ import { INSTALL_ROUTE_PATH } from './worker-facts';
 const PNPM = 'pnpm';
 const GIT = 'git';
 const NPM = 'npm';
+const SHASUM = 'shasum';
+const REMOVE = 'rm';
+const WHITESPACE = /\s+/;
+const WHEEL_DOWNLOAD_PREFIX = 'zapbip-wheel-';
 const WRANGLER_PREFIX = ['--filter', '@zapbip/api', 'exec', 'wrangler'];
 const MAIN_BRANCH = 'main';
 const ORIGIN_REMOTE = 'origin';
@@ -211,12 +221,46 @@ async function refuseUntrustedDocsPackages(input: DocsPreflightInput): Promise<s
   return refuseUntrustedPackages({ ...input, packageSpecs: publishedPackageSpecsOf(input) });
 }
 
+function hostedWheelOf(input: { hermesPluginVersion: string }): { filename: string; url: string } {
+  const filename = hermesWheelFilename({ version: input.hermesPluginVersion });
+  return { filename, url: `${PRODUCTION_PUBLIC_ORIGIN}${hermesWheelPath({ version: input.hermesPluginVersion })}` };
+}
+
+function wheelHashMismatch(input: { filename: string; expected: string; actual: string }): string {
+  return `the hosted ${input.filename} hashes to ${input.actual}, not ${input.expected}; upload the wheel in apps/hermes-plugin/release with the runbook step`;
+}
+
 async function refuseUnhostedWorkerWheel(input: WorkerPreflightInput): Promise<string | null> {
-  throw new Error(`refuseUnhostedWorkerWheel is not implemented for ${input.hermesPluginVersion}`);
+  const { shell, hermesPluginVersion, hermesWheelSha256 } = input;
+  const { filename } = hostedWheelOf({ hermesPluginVersion });
+  const downloadPath = join(tmpdir(), `${WHEEL_DOWNLOAD_PREFIX}${randomUUID()}`);
+  const download = wranglerCommand({
+    environment: DeployEnvironment.Production,
+    args: ['r2', 'object', 'get', `${PRODUCTION_PACKAGES_BUCKET}/${filename}`],
+    flags: ['--remote', '--file', downloadPath],
+  });
+  const downloaded = await shell.run(download);
+  if (downloaded.exitCode !== 0) {
+    return `${filename} is not readable in the ${PRODUCTION_PACKAGES_BUCKET} bucket; upload it with the runbook step (wrangler r2 object put) or check your Cloudflare login`;
+  }
+  const hashed = await shell.run({ file: SHASUM, args: ['-a', '256', downloadPath] });
+  await shell.run({ file: REMOVE, args: ['-f', downloadPath] });
+  const actual = hashed.stdout.trim().split(WHITESPACE)[0];
+  if (hashed.exitCode !== 0 || !actual) return `could not hash the downloaded ${filename}`;
+  if (actual === hermesWheelSha256) return null;
+  return wheelHashMismatch({ filename, expected: hermesWheelSha256, actual });
 }
 
 async function refuseUnhostedDocsWheel(input: DocsPreflightInput): Promise<string | null> {
-  throw new Error(`refuseUnhostedDocsWheel is not implemented for ${input.hermesPluginVersion}`);
+  const { packageFetcher, hermesPluginVersion, hermesWheelSha256 } = input;
+  const { filename, url } = hostedWheelOf({ hermesPluginVersion });
+  const answer = await packageFetcher({ url }).catch(() => null);
+  if (answer === null) return `could not reach ${url}; check your network and run it again`;
+  if (answer.status === HttpStatus.NotFound)
+    return `${url} answers 404; upload the wheel with the runbook step and deploy the Worker first`;
+  if (answer.status !== HttpStatus.Ok) return `could not reach ${url}; it answered ${answer.status}`;
+  if (answer.sha256 === hermesWheelSha256) return null;
+  return wheelHashMismatch({ filename, expected: hermesWheelSha256, actual: answer.sha256 });
 }
 
 async function refuseUncleanGit(input: WorkerPreflightInput): Promise<string | null> {
