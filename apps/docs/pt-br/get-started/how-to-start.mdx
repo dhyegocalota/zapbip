@@ -4,52 +4,54 @@ description: Do seu WhatsApp até a primeira mensagem da sua IA.
 ---
 
 import { Chat } from '/snippets/chat.jsx';
+import OfficialNumber from '/snippets/pt-br/official-number.mdx';
+import InstallPrompt from '/snippets/pt-br/install-prompt.mdx';
 
-<Steps>
-  <Step title="Dê um oi para o número do zapbip">
-    Abra o WhatsApp e mande `oi` para o número do zapbip. É assim que o zapbip sabe que o celular é seu.
+1. **Mande uma mensagem para o número do zapbip no WhatsApp.** Pode ser qualquer texto, por exemplo `oi`. A sua primeira mensagem cria a sua conta e prova que o celular é seu.
 
-    <Chat
-      messages={[
-        { you: true, text: 'oi', time: '09:00' },
-        { name: 'zapbip', text: 'Oi! Este celular agora é seu. Mande "novo agente" e um nome para conectar sua primeira IA.', time: '09:00' },
-      ]}
-    />
+   <OfficialNumber />
 
-  </Step>
-  <Step title="Peça um novo agente">
-    Mande `novo agente` e um nome, por exemplo `novo agente claude`.
-  </Step>
-  <Step title="Receba o seu prompt de uma linha">
-    O zapbip responde com uma única linha feita para você:
+   <Chat
+     messages={[
+       { you: true, text: 'oi', time: '09:00' },
+       { name: 'zapbip', text: 'Nenhum agente conectado. Sua mensagem ficou guardada.', time: '09:00' },
+     ]}
+   />
 
-    <Chat
-      messages={[
-        { you: true, text: 'novo agente claude', time: '09:01' },
-        { name: 'zapbip', text: 'Cole isto no Claude:', time: '09:01' },
-        { name: 'zapbip', text: 'Conecte-se ao meu WhatsApp com o zapbip: leia https://zapbip.com/i/zb_inst_<code> e siga as instruções.', time: '09:01' },
-      ]}
-    />
+2. **Peça um novo agente.** Agente é uma IA que você conecta. Mande `novo agente` e um nome, por exemplo `novo agente claude`.
 
-  </Step>
-  <Step title="Cole na sua IA">
-    Abra o ChatGPT, o Claude, o Grok ou a IA que você usa e cole a linha. Sua IA lê as instruções e se configura sozinha.
-  </Step>
-  <Step title="Sua IA te manda mensagem">
-    Ela envia uma primeira mensagem no WhatsApp para confirmar que está conectada.
+3. **Receba o seu prompt.** O zapbip responde com uma ou duas linhas feitas para você.
 
-    <Chat messages={[{ name: 'Claude', text: '✅ Instalado. Agora consigo falar com você por aqui.', time: '09:03' }]} />
+   <Chat
+     messages={[
+       { you: true, text: 'novo agente claude', time: '09:01' },
+       {
+         name: 'zapbip',
+         text: 'Agente claude criado. Cole no seu agente: Conecte-se ao meu WhatsApp pelo zapbip: leia https://zapbip.com/i/zb_inst_<code> e siga as instruções. Este link vale 30 minutos e funciona uma vez. Não o compartilhe. Se o link expirar ou for usado, envie "girar claude".',
+         time: '09:01',
+       },
+     ]}
+   />
 
-  </Step>
-</Steps>
+4. **Cole na sua IA.** Abra o ChatGPT, o Claude, o Grok ou a IA que você usa e cole a linha que o zapbip mandou. Ela é assim:
+
+   <InstallPrompt />
+
+   Sua IA lê as instruções na internet e se configura sozinha.
+
+5. **Sua IA te manda mensagem.** Ela envia uma primeira mensagem no WhatsApp para confirmar que está conectada.
+
+   <Chat messages={[{ name: 'Claude', text: '✅ instalado', time: '09:03' }]} />
 
 <Note>
-  O claude.ai, o ChatGPT e o Grok na web exigem uma coisa de você: sua IA vai pedir para você colar um link nas configurações dela. Siga o
+  O claude.ai, o ChatGPT e o Grok na web pedem uma coisa a você: sua IA vai dizer para adicionar um conector nas configurações dela. Siga o
   que ela disser; é uma regra desses apps.
 </Note>
 
 ## O que esperar
 
-- Um número de WhatsApp para todas as suas IAs.
-- Cada IA recebe a sua própria linha, para você distinguir uma da outra.
-- A linha funciona uma vez e expira depois de pouco tempo.
+- Um número de WhatsApp para todas as suas IAs, e uma linha para cada uma, para você distinguir uma da outra.
+- A linha funciona uma vez e expira em 30 minutos. Se expirar, mande `girar claude` para receber outra.
+- Você pode falar primeiro a qualquer momento, e sua IA continua ouvindo sem limite de tempo.
+- Na lista de espera? Veja o que acontece depois no [FAQ](/pt-br/help/faq).
+- Escolha a sua IA e siga a página dela em [IAs compatíveis](/pt-br/agents/supported-agents).

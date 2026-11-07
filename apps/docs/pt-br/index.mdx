@@ -4,12 +4,31 @@ description: Sua IA, no seu WhatsApp.
 ---
 
 import { Chat } from '/snippets/chat.jsx';
+import OfficialNumber from '/snippets/pt-br/official-number.mdx';
 
 ## Por que o zapbip existe
 
 Você usa IA para pesquisar, planejar e construir. Mas quando ela precisa de uma decisão, ou termina algo que demorou, você não está olhando a tela. Aí ela espera, ou chuta.
 
-Você já vive no WhatsApp. O zapbip coloca sua IA lá: ela te manda mensagem, pergunta com botões, espera sua resposta, e você também pode falar com ela primeiro.
+Você já vive no WhatsApp. O zapbip coloca sua IA lá: ela te manda mensagem, pergunta com botões, espera sua resposta, e você também pode começar a conversa quando quiser.
+
+O zapbip tem o seu próprio número oficial de WhatsApp. Você manda uma mensagem para ele, recebe uma linha para colar na sua IA, e pronto: é toda a configuração.
+
+<OfficialNumber />
+
+## Como funciona
+
+<Frame>
+  <img
+    src="/images/how-it-works-pt-br.svg"
+    alt="Sua IA se conecta ao zapbip, que envia as mensagens pelo número oficial do WhatsApp até o seu celular. Sua resposta volta e acorda a sua IA."
+    style={{ maxWidth: '420px', width: '100%', margin: '0 auto' }}
+  />
+</Frame>
+
+1. **Conecte sua IA** uma vez, colando uma linha.
+2. **Ela te manda mensagem** com texto, arquivos ou uma pergunta com botões.
+3. **Você responde, ou fala primeiro**, e o zapbip entrega para a IA certa.
 
 ## Como fica
 
@@ -35,29 +54,11 @@ Você já vive no WhatsApp. O zapbip coloca sua IA lá: ela te manda mensagem, p
       ]}
     />
   </Card>
-  <Card title="Me lembra, dá um oi" icon="bell">
+  <Card title="Você fala primeiro" icon="bell">
     <Chat
       messages={[
         { you: true, text: 'Me lembra de renovar o passaporte na sexta.' },
         { name: 'Grok', text: 'Combinado. Te aviso na sexta de manhã.' },
-      ]}
-    />
-  </Card>
-  <Card title="Aprovar um deploy" icon="rocket">
-    <Chat
-      messages={[
-        { name: 'Claude Code', text: 'Posso subir a v2.3 para produção?', options: ['Sim', 'Não'] },
-        { you: true, text: 'Sim' },
-        { name: 'Claude Code', text: 'Deploy feito ✅ 2m14s' },
-      ]}
-    />
-  </Card>
-  <Card title="Fotos nos dois sentidos" icon="image">
-    <Chat
-      messages={[
-        { name: 'Claude', media: { kind: 'image' }, text: 'Falhou aqui' },
-        { you: true, media: { kind: 'image' }, text: 'O quadro branco' },
-        { name: 'Claude', text: 'Entendi o fluxo, ajustando.' },
       ]}
     />
   </Card>
@@ -72,25 +73,9 @@ Você já vive no WhatsApp. O zapbip coloca sua IA lá: ela te manda mensagem, p
   </Card>
 </CardGroup>
 
-<Note>Mostrado como aparece no WhatsApp.</Note>
-
-## Como funciona
-
-<Frame>
-  <img
-    src="/images/how-it-works-pt-br.svg"
-    alt="Sua IA se conecta ao zapbip, que envia as mensagens pelo número oficial do WhatsApp até o seu celular. Sua resposta volta e acorda a sua IA."
-    style={{ maxWidth: '420px', width: '100%', margin: '0 auto' }}
-  />
-</Frame>
-
-1. **Conecte sua IA** uma vez, colando uma linha.
-2. **Ela te manda mensagem** com texto, arquivos ou uma pergunta com botões.
-3. **Você responde, ou fala primeiro**, e o zapbip entrega para a IA certa.
-
 ## Para quem é
 
-Para qualquer pessoa que usa IA: ChatGPT, Claude, Grok, Codex e outras. Você só precisa do WhatsApp. O zapbip fala só com você, nunca com terceiros.
+Para qualquer pessoa que usa IA: ChatGPT, Claude, Grok, Codex, Cursor, Gemini e outras. Você só precisa do WhatsApp. O zapbip fala só com você, nunca com terceiros.
 
 ## O que você pode fazer
 
@@ -102,5 +87,5 @@ Para qualquer pessoa que usa IA: ChatGPT, Claude, Grok, Codex e outras. Você s�
 Veja quais IAs funcionam em [IAs compatíveis](/pt-br/agents/supported-agents).
 
 <Card title="Como começar" icon="rocket" href="/pt-br/get-started/how-to-start">
-  Cinco passos do seu WhatsApp até a primeira mensagem.
+  Mande uma mensagem ao número do zapbip, cole uma linha na sua IA e receba a primeira mensagem dela.
 </Card>
