@@ -1,6 +1,6 @@
 # User-first docs in two languages
 
-**Status:** Building
+**Status:** Shipped 2026-11-07
 **Tier:** 🟡
 **Owner approval:** owner order 2026-11-06 (binding: user-first Mintlify docs for any AI user, en-US and pt-BR twins chosen by browser language, from-zero walk test, Cursor and Gemini CLI included). Information architecture, language, number and path decisions delegated 2026-11-06 and recorded in the answers table. Revised 2026-11-06 after the plan review (13 findings).
 **ADRs:** [0010](../../adr/0010-public-docs-on-mintlify.md), [0026](../../adr/0026-runbooks-live-in-the-repository-not-on-mintlify.md), 0030 (reserved: the audience, information architecture and language rules, written at build)
