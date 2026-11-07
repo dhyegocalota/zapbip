@@ -1,6 +1,7 @@
 import { CLIENT_NAME_MAX_CHARS, INITIALIZE_BODY_MAX_BYTES } from '@zapbip/types';
 import { z } from 'zod';
 import type { ConnectionActivity } from '../adapters/d1/d1-connection-directory';
+import { parseJson } from './json-rpc-outcome';
 
 const INITIALIZE_METHOD = 'initialize';
 const POST_METHOD = 'POST';
@@ -25,14 +26,6 @@ export type ConnectionActivityInput = {
   calledAt: number;
   schedule: (work: Promise<void>) => void;
 };
-
-function parseJson(text: string): unknown {
-  try {
-    return JSON.parse(text);
-  } catch {
-    return null;
-  }
-}
 
 function isBodyWithinCap(input: { request: Request }): boolean {
   const contentLength = input.request.headers.get(CONTENT_LENGTH_HEADER);

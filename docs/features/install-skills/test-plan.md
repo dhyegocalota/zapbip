@@ -108,6 +108,8 @@ Runner: `pnpm --filter @zapbip/api test:integration` (`@cloudflare/vitest-pool-w
 - [ ] IS-D1 ten guides in both languages — input: `apps/docs/agents/*.mdx` and the `/pt-BR/` twins; expected: sixteen files, one per client per language.
 - [ ] IS-D2 guides mirror the sections — input: each guide and its section; expected: the same ordered step verbs and the same `set_wake` modes; the section and the guide differ only in prose.
 - [ ] IS-D3 every guide ends with the self-test — expected: the last step of each guide names `send_message` and the English self-test text.
+- [ ] IS-W6c a JSON-RPC error does not consume the install code — input: `initialize` without a client name and an unknown method on a fresh connection; expected: HTTP `200` with an `error` body, `first_call_at` stays null, the sealed secret stays; red before: `promise resolved "Assertion{...}" instead of rejecting`.
+- [ ] IS-W6d a JSON-RPC batch is refused — input: `[{"jsonrpc":"2.0","id":1,"method":"ping"}]`; expected: `400`, nothing recorded; red before: `expected 200 to be greater than or equal to 400`.
 - [ ] IS-D3b plugin pages ask for their own locale self-test — input: `apps/docs/agents/{hermes,openclaw}.mdx` and the `pt-br` twins; expected: each contains `INSTALL_SELF_TEST_TEXT` of its locale and never the other locale's; red before: `en_US plugin page for hermes asks for its own locale self-test only` failed.
 - [ ] IS-D4 navigation lists the ten guides — expected: `apps/docs/docs.json` `Agents` group has the ten client pages in both languages.
 - [ ] IS-D5 `mint broken-links` green — expected: exit `0`.

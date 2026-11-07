@@ -3,13 +3,14 @@ import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/
 import { Hono, type Context } from 'hono';
 import { recordClientName } from '../adapters/d1/d1-client-name-recorder';
 import { createPlatformClock } from '../adapters/platform/clock';
-import { UNAUTHORIZED_BODY } from '../contract/constants';
+import { BATCH_NOT_SUPPORTED_BODY, UNAUTHORIZED_BODY } from '../contract/constants';
 import type { Bindings } from '../contract/env';
 import { LogEvent } from '../contract/log';
 import { logEvent } from '../log';
 import { createInstallCodeDirectory } from '../install/install-page-adapter';
 import { recordConnectionActivity } from '../mcp/client-name';
 import { BEARER_PREFIX, MCP_METHODS } from '../mcp/constants';
+import { isJsonRpcBatch, isJsonRpcSuccess } from '../mcp/json-rpc-outcome';
 import { resolveConnection, type ResolvedConnection } from './resolve-connection';
 import { createConnectionServer } from '../mcp/server';
 
@@ -45,12 +46,13 @@ async function serveMcp(input: { context: McpContext; secret: string | null }): 
     logEvent({ event: LogEvent.AuthRejected });
     return context.json(UNAUTHORIZED_BODY, HttpStatus.Unauthorized);
   }
+  if (await isJsonRpcBatch({ request: context.req.raw })) return context.json(BATCH_NOT_SUPPORTED_BODY, HttpStatus.BadRequest);
   const activityRequest = context.req.raw.clone();
   const server = createConnectionServer({ resolved, environment: context.env });
   const transport = new WebStandardStreamableHTTPServerTransport({ enableJsonResponse: true });
   await server.connect(transport);
   const response = await transport.handleRequest(context.req.raw);
-  if (response.ok) recordActivity({ context, resolved, request: activityRequest });
+  if (await isJsonRpcSuccess({ response })) recordActivity({ context, resolved, request: activityRequest });
   return response;
 }
 

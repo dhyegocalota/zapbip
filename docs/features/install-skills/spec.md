@@ -61,7 +61,7 @@ The pt_BR text has the same shape: "Conecte-se ao meu WhatsApp pelo zapbip: leia
 | Install code state | Response |
 |---|---|
 | valid (not expired, connection not revoked, account active, no MCP call yet) | `200` with the Markdown page; the connection URL is in it |
-| expired, or the connection already made its first successful MCP call | `410` with the localized text "This link has expired or was already used. Ask zapbip on WhatsApp for a new one: send `rotate <name>`." (pt_BR: "Este link expirou ou já foi usado. Peça um novo ao zapbip no WhatsApp: envie `girar <nome>`.") |
+| expired, or the connection already made its first JSON-RPC success | `410` with the localized text "This link has expired or was already used. Ask zapbip on WhatsApp for a new one: send `rotate <name>`." (pt_BR: "Este link expirou ou já foi usado. Peça um novo ao zapbip no WhatsApp: envie `girar <nome>`.") |
 | unknown code, or replaced by a later rotate | `404`, plain text, no detail |
 | over the rate limit | `429`, plain text, `Retry-After` |
 
@@ -124,7 +124,7 @@ For every client, the section and the rules say the same thing: while `ask` or `
 
 - **Shape.** `zb_inst_` followed by base64url of 16 random bytes: 22 characters, 128 bits. The entropy is far above the 64-bit floor.
 - **Stored.** The digest of the code (SHA-256) in `connections.install_code_digest`, unique. The connection secret sealed with AES-256-GCM under a key derived from the code (HKDF-SHA-256) in `connections.install_code_sealed_secret`. The code is not stored, so the sealed value opens only with the code. Expiry in `connections.install_code_expires_at`.
-- **Life.** Create and rotate issue one code per connection; rotate replaces the previous one; revoke clears it. The first successful MCP call of the connection clears the sealed secret and marks the code used. A daily cron (deploy-readiness) clears the sealed secret of expired codes.
+- **Life.** Create and rotate issue one code per connection; rotate replaces the previous one; revoke clears it. The first JSON-RPC success of the connection (a single, non-batch request answered with a `result`, never an `error`) clears the sealed secret and marks the code used. A daily cron (deploy-readiness) clears the sealed secret of expired codes.
 - **Lookup.** `InstallCodeDirectory.resolve({installCode, now})` returns `Ready` (with `connectionLink`, `locale`, `agent`, `standbyAgent` input), `Expired`, `Used` or `Unknown`, with the same account and connection rules as MCP. The `Expired` and `Used` results carry the account locale for the `410` text.
 - **Constants** (`libs/types`): `INSTALL_CODE_PREFIX = 'zb_inst_'`, `INSTALL_CODE_RANDOM_BYTES = 16`, `INSTALL_CODE_TTL_MS = 30 * MINUTE_MS`, `INSTALL_PAGE_PATH_PREFIX = '/i/'`.
 
@@ -192,7 +192,7 @@ The MCP route records the client name from the first `initialize` `clientInfo.na
 | Which clients are supported? | the eight in the first draft · plus Cursor and Gemini CLI | ten: plus Cursor (`agents/cursor`) and Gemini CLI (`agents/gemini-cli`), each with an install section; MCP over HTTP; listening by the agent running `npx zapbip listen` in a background terminal; no scheduled rung | owner delegated 2026-11-06 (docs-experience decisions) |
 | Self-test text | `✅ instalado` in both · localized | localized: `✅ instalado` (pt_BR), `✅ installed` (en_US) | owner delegated 2026-11-06 |
 | Install code length and entropy | 64 bits · 128 bits | `zb_inst_` plus 16 random bytes, 128 bits | owner delegated 2026-11-06 |
-| Can the page be read after the first MCP call? | yes until expiry · no | no: `410` after the first successful MCP call, as the owner asked | owner delegated 2026-11-06 |
+| Can the page be read after the first MCP call? | yes until expiry · no | no: `410` after the first JSON-RPC success, as the owner asked | owner delegated 2026-11-06 |
 | Is the connection secret stored? | never · sealed for the code's life | sealed under a key derived from the install code, cleared on first call or expiry; an amendment of ADR 0017 for 30 minutes (ADR 0020) | owner delegated 2026-11-06 |
 | claude.ai rung and paste count | one paste · connector plus trigger | connector paste, then the API-trigger paste the platform forces; the owner's "one settings paste" is kept for the connector | owner delegated 2026-11-06 |
 | Can the claude.ai chat create its scheduled task? | ask Claude to create it · owner creates it | owner creates it; the chat calls `set_wake` | owner delegated 2026-11-06 |
