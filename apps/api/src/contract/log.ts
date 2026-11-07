@@ -28,6 +28,7 @@ export enum LogEvent {
   BudgetWarning = 'budget.warning',
   FrameRejected = 'frame_rejected',
   InstallPageFailed = 'install_page_failed',
+  PackageUnavailable = 'package_unavailable',
 }
 
 export type LogFields = {

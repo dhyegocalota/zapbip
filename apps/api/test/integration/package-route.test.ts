@@ -1,6 +1,7 @@
 import { HERMES_WHEEL_PATH_PREFIX, hermesWheelFilename, HttpStatus, ZAPBIP_HERMES_PLUGIN_VERSION } from '@zapbip/types';
 import { env, SELF } from 'cloudflare:test';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
+import { LogEvent } from '../../src/contract/log';
 import { packageRoutes } from '../../src/routes/package';
 import { ORIGIN } from './route-fixtures';
 
@@ -20,6 +21,8 @@ const MALFORMED_PATHS = [
   `/pkg/${WHEEL_FILENAME}.`,
   `/pkg/${WHEEL_FILENAME}/extra`,
   '/pkg/',
+  '/pkg/..%2fsecret',
+  `/pkg/${WHEEL_FILENAME}%0A`,
 ];
 const WRITE_METHODS = ['POST', 'PUT', 'DELETE', 'PATCH'];
 
@@ -65,6 +68,7 @@ describe('package route', () => {
     const response = await packageRoutes.request(path, undefined, { ...env, PACKAGES: bucket });
     expect(response.status).toBe(HttpStatus.NotFound);
     expect(reads()).toBe(0);
+    expect(response.headers.get('cache-control')).toBe(NO_STORE);
   });
 
   test.each(WRITE_METHODS)('answers 404 to %s and leaves the bucket unchanged', async (method) => {
@@ -82,7 +86,8 @@ describe('package route', () => {
     expect(response.status).toBe(HttpStatus.NotFound);
   });
 
-  test('answers 503 without an immutable cache header when the bucket fails', async () => {
+  test('answers 503 without an immutable cache header when the bucket fails, logging only the event name', async () => {
+    const logSpy = vi.spyOn(console, 'log');
     const failingBucket = {
       get: async () => {
         throw new Error('r2 unavailable');
@@ -93,6 +98,22 @@ describe('package route', () => {
       PACKAGES: failingBucket,
     });
     expect(response.status).toBe(HttpStatus.ServiceUnavailable);
+    expect(response.headers.get('cache-control')).toBe(NO_STORE);
+    expect(logSpy.mock.calls).toEqual([[JSON.stringify({ event: LogEvent.PackageUnavailable })]]);
+    logSpy.mockRestore();
+  });
+
+  test('lets an encoded dot segment fall through to the global 404 without an immutable header', async () => {
+    const response = await SELF.fetch(`${ORIGIN}/pkg/%2e%2e/secret`);
+    expect(response.status).toBe(HttpStatus.NotFound);
     expect(response.headers.get('cache-control')).not.toBe(IMMUTABLE_CACHE_CONTROL);
+  });
+
+  test('answers HEAD like GET without a body', async () => {
+    await seedWheel();
+    const response = await SELF.fetch(WHEEL_URL, { method: 'HEAD' });
+    expect(response.status).toBe(HttpStatus.Ok);
+    expect(response.headers.get('cache-control')).toBe(IMMUTABLE_CACHE_CONTROL);
+    expect(await response.text()).toBe('');
   });
 });
