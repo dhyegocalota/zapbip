@@ -9,6 +9,7 @@ import type {
   RegisterMetaAppInput,
   RegisterNumberInput,
 } from '../../numbers/number-registry';
+import { assertNumberTransition } from '../../numbers/number-state';
 import { accessTokenAssociatedData, appSecretAssociatedData } from '../../numbers/number-sealing';
 import { WorkerSecret } from '../../operations/worker-secret';
 import { createAesGcmSecretBox, type SecretBox } from '../platform/aes-gcm-secret-box';
@@ -32,6 +33,10 @@ const INSERT_NUMBER_STATEMENT = `INSERT INTO whatsapp_numbers
   (id, meta_app_ref, phone_number_id, waba_id, display_number, label, sealed_access_token, seal_key_version, state, created_at, updated_at)
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 const SEAL_KEY_VERSION = 1;
+const SINGLE_ROW_CHANGE = 1;
+const FIND_NUMBER_STATEMENT = `SELECT ${NUMBER_COLUMNS}, display_number AS displayNumber, label, verified_at AS verifiedAt,
+  verification_snapshot AS verificationSnapshot, created_at AS createdAt, updated_at AS updatedAt FROM whatsapp_numbers WHERE id = ?`;
+const TRANSITION_STATEMENT = 'UPDATE whatsapp_numbers SET state = ?, updated_at = ? WHERE id = ? AND state = ?';
 const FIND_FIRST_TWO_STATEMENT = 'SELECT ' + OUTBOUND_COLUMNS + ' FROM whatsapp_numbers ORDER BY created_at, id LIMIT 2';
 
 function registeredOf(input: { row: RegisteredNumber }): RegisteredNumber {
@@ -89,12 +94,16 @@ export class D1NumberRegistry implements NumberRegistry {
     return { numberId };
   }
 
-  async findNumber(_input: { numberId: string }): Promise<NumberRecord | null> {
-    throw new Error('findNumber is not implemented');
+  findNumber(input: { numberId: string }): Promise<NumberRecord | null> {
+    return this.database.prepare(FIND_NUMBER_STATEMENT).bind(input.numberId).first<NumberRecord>();
   }
 
-  async transition(_input: { numberId: string; to: WhatsAppNumberState }): Promise<void> {
-    throw new Error('transition is not implemented');
+  async transition(input: { numberId: string; to: WhatsAppNumberState }): Promise<void> {
+    const number = await this.findNumber({ numberId: input.numberId });
+    if (number === null) throw new Error(`number ${input.numberId} is not registered`);
+    assertNumberTransition({ from: number.state, to: input.to, verifiedAt: number.verifiedAt });
+    const result = await this.database.prepare(TRANSITION_STATEMENT).bind(input.to, this.clock.now(), input.numberId, number.state).run();
+    if (result.meta.changes !== SINGLE_ROW_CHANGE) throw new Error(`number ${input.numberId} changed state during the transition`);
   }
 
   async findByPhoneNumberIds(input: { phoneNumberIds: string[] }): Promise<RegisteredNumber[]> {

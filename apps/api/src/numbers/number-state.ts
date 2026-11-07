@@ -1,5 +1,15 @@
-import type { WhatsAppNumberState } from '@zapbip/types';
+import { WhatsAppNumberState } from '@zapbip/types';
 
-export function assertNumberTransition(_input: { from: WhatsAppNumberState; to: WhatsAppNumberState; verifiedAt: number | null }): void {
-  throw new Error('assertNumberTransition is not implemented');
+const ALLOWED_TRANSITIONS: Record<WhatsAppNumberState, WhatsAppNumberState[]> = {
+  [WhatsAppNumberState.Pending]: [WhatsAppNumberState.Active],
+  [WhatsAppNumberState.Active]: [WhatsAppNumberState.Closed, WhatsAppNumberState.Disabled],
+  [WhatsAppNumberState.Closed]: [WhatsAppNumberState.Active, WhatsAppNumberState.Disabled],
+  [WhatsAppNumberState.Disabled]: [WhatsAppNumberState.Closed],
+};
+
+export function assertNumberTransition(input: { from: WhatsAppNumberState; to: WhatsAppNumberState; verifiedAt: number | null }): void {
+  const { from, to, verifiedAt } = input;
+  if (!ALLOWED_TRANSITIONS[from].includes(to)) throw new Error(`transition ${from} → ${to} is not allowed`);
+  const isActivatingUnverified = from === WhatsAppNumberState.Pending && verifiedAt === null;
+  if (isActivatingUnverified) throw new Error(`transition ${from} → ${to} is not allowed: the number is not verified`);
 }
