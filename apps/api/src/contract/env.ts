@@ -1,4 +1,4 @@
-import type { DeployEnvironment } from '@zapbip/types';
+import type { DeployEnvironment } from './deploy-environment';
 import type { AccountInbox } from '../account-inbox/account-inbox';
 
 export type Bindings = {

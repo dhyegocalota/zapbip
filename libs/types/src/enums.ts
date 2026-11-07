@@ -42,12 +42,6 @@ export enum DeliveryState {
   Sending = 'sending',
 }
 
-export enum DeployEnvironment {
-  Development = 'development',
-  Staging = 'staging',
-  Production = 'production',
-}
-
 export enum OwnerLocale {
   PortugueseBrazil = 'pt_BR',
   EnglishUs = 'en_US',

@@ -1,4 +1,4 @@
-import { DeployEnvironment } from '@zapbip/types';
+import { DeployEnvironment } from '../contract/deploy-environment';
 
 export { DeployEnvironment };
 

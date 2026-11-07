@@ -1,4 +1,4 @@
-import { DeployEnvironment } from '@zapbip/types';
+import { DeployEnvironment } from './deploy-environment';
 
 export const CONNECTION_SECRET_PREFIX = 'zb_conn_';
 export const CONNECTION_SECRET_BYTES = 32;
