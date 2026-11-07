@@ -13,11 +13,27 @@ const vitestConfigs = repositoryFiles(VITEST_CONFIG_PATHSPEC);
 const playwrightConfigs = repositoryFiles(PLAYWRIGHT_CONFIG_PATHSPEC);
 
 const playwrightTimeoutPatterns: Record<string, RegExp> = {
-  timeout: new RegExp(`^\\s*timeout: ${NAMED_MILLISECONDS},`, 'm'),
+  timeout: new RegExp(`^ {2}timeout: ${NAMED_MILLISECONDS},`, 'm'),
   'expect.timeout': new RegExp(`expect: \\{\\s*timeout: ${NAMED_MILLISECONDS},`),
   'use.navigationTimeout': new RegExp(`navigationTimeout: ${NAMED_MILLISECONDS},`),
   'use.actionTimeout': new RegExp(`actionTimeout: ${NAMED_MILLISECONDS},`),
 };
+
+const COMPLETE_PLAYWRIGHT_CONFIG = `export default defineConfig({
+  timeout: LOADED_MACHINE_TEST_TIMEOUT_MS,
+  expect: { timeout: LOADED_MACHINE_EXPECT_TIMEOUT_MS },
+  use: {
+    navigationTimeout: LOADED_MACHINE_NAVIGATION_TIMEOUT_MS,
+    actionTimeout: LOADED_MACHINE_ACTION_TIMEOUT_MS,
+  },
+});`;
+const PLAYWRIGHT_CONFIG_WITHOUT_TOP_LEVEL_TIMEOUT = COMPLETE_PLAYWRIGHT_CONFIG.replace('  timeout: LOADED_MACHINE_TEST_TIMEOUT_MS,\n', '');
+
+function missingPlaywrightSettings(source: string): string[] {
+  return Object.entries(playwrightTimeoutPatterns)
+    .filter(([, pattern]) => !pattern.test(source))
+    .map(([setting]) => setting);
+}
 
 function runsVitestWithDefaultConfig(path: string): boolean {
   const manifest = JSON.parse(readRepositoryFile(posix.join(path, PACKAGE_MANIFEST)));
@@ -42,9 +58,15 @@ describe('the test timeouts', () => {
     expect(configNames.some((name) => VITEST_DEFAULT_CONFIG_PATTERN.test(name))).toBe(true);
   });
 
-  describe.each(playwrightConfigs)('%s', (path) => {
-    test.each(Object.entries(playwrightTimeoutPatterns))('sets %s as a named millisecond constant', (_setting, pattern) => {
-      expect(readRepositoryFile(path)).toMatch(pattern);
-    });
+  test.each(playwrightConfigs)('%s sets every Playwright timeout as a named millisecond constant', (path) => {
+    expect(missingPlaywrightSettings(readRepositoryFile(path))).toEqual([]);
+  });
+
+  test('a Playwright configuration with all four timeouts is complete', () => {
+    expect(missingPlaywrightSettings(COMPLETE_PLAYWRIGHT_CONFIG)).toEqual([]);
+  });
+
+  test('a Playwright configuration with only expect.timeout lacks the top-level timeout', () => {
+    expect(missingPlaywrightSettings(PLAYWRIGHT_CONFIG_WITHOUT_TOP_LEVEL_TIMEOUT)).toEqual(['timeout']);
   });
 });

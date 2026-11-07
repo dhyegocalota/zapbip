@@ -13,9 +13,10 @@ On a loaded machine (load 40 to 100) Vitest's default 5 s test timeout fired in 
 ## Goals
 
 - Every Vitest configuration sets `testTimeout` and `hookTimeout` as named millisecond constants sized for a loaded machine.
-- `libs/core` gets a Vitest configuration, since it had none.
+- `libs/core` and `libs/types` get a Vitest configuration, since they had none and ran Vitest on the defaults.
 - Every Playwright configuration sets `timeout`, `expect.timeout`, `use.navigationTimeout` and `use.actionTimeout` as named constants. None exists on `main` today; the shape test covers the first one that lands.
-- `mcp-outbound.test.ts` waits for its in-flight calls before `reset`, so a timeout cannot cascade into other tests.
+- `mcp-outbound.test.ts` and `mcp-tools.test.ts` wait for their in-flight calls before `reset`, so a timeout cannot cascade into other tests.
+- The held-question poll in `mcp-tools.test.ts` (Vitest's `waitFor` defaults to 1 s) waits half of the held ask's lifetime, so a slow poll fails as "not stored" instead of racing the ask's expiry. The first `pnpm verify all` under load failed on exactly this poll in two tests.
 
 ## Non-goals
 

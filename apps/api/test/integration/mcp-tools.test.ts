@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { HISTORY_LIMIT, ASK_MAX_WAIT_SECONDS, formatOptionId } from '@zapbip/core';
-import { DeliveryState, InboxStatus, MessageKind, ReplyStatus } from '@zapbip/types';
+import { DeliveryState, InboxStatus, MessageKind, ReplyStatus, SECOND_MS } from '@zapbip/types';
 import { CONNECTION_SECRET_PREFIX } from '../../src/contract/constants';
 import { McpToolName, TOOL_DEFINITIONS } from '../../src/contract/tool-definitions';
 import { messageWireSchema } from '../../src/contract/mcp-schemas';
@@ -31,7 +31,7 @@ const DOCUMENT_OVER_LIMIT_BYTES = 100_000_001;
 const STICKER_LIMIT_BYTES = 100_000;
 const SHORT_WAIT_SECONDS = 1;
 const HELD_ASK_SECONDS = 20;
-const HELD_QUESTION_WAIT_MS = 20_000;
+const HELD_QUESTION_WAIT_MS = (HELD_ASK_SECONDS * SECOND_MS) / 2;
 const CONCURRENT_CALL_DEADLINE_MS = 3000;
 const CONCURRENT_CALL_TIMED_OUT = 'timed out';
 const ISO_TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
@@ -39,8 +39,12 @@ const ISO_TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
 describe('MCP tools', () => {
   let client: Client;
 
+  const inFlightCalls: Promise<ToolResult>[] = [];
+
   async function call(input: { name: McpToolName; arguments: Record<string, unknown> }): Promise<ToolResult> {
-    return callTool({ client, name: input.name, arguments: input.arguments });
+    const inFlightCall = callTool({ client, name: input.name, arguments: input.arguments });
+    inFlightCalls.push(inFlightCall);
+    return inFlightCall;
   }
 
   async function sendText(text: string): Promise<ToolResult> {
@@ -61,7 +65,10 @@ describe('MCP tools', () => {
     return uploadId;
   }
 
-  afterEach(reset);
+  afterEach(async () => {
+    await Promise.allSettled(inFlightCalls.splice(0));
+    await reset();
+  });
 
   beforeEach(async () => {
     await applyDirectoryMigration();
