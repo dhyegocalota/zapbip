@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { unstable_readConfig as readConfig } from 'wrangler';
 
 const CONFIG_PATH = join(import.meta.dirname, '..', '..', 'wrangler.jsonc');
+const LIMITERS_PER_ENVIRONMENT = 4;
 const ENVIRONMENTS = [undefined, 'staging', 'development'];
 
 function namespaceIdsOf(input: { environment: string | undefined }): string[] {
@@ -16,7 +17,7 @@ describe('wrangler rate limiter namespaces', () => {
     expect(new Set(allIds).size).toBe(allIds.length);
   });
 
-  it('keeps three namespaces per environment', () => {
-    ENVIRONMENTS.forEach((environment) => expect(namespaceIdsOf({ environment })).toHaveLength(3));
+  it('keeps four namespaces per environment', () => {
+    ENVIRONMENTS.forEach((environment) => expect(namespaceIdsOf({ environment })).toHaveLength(LIMITERS_PER_ENVIRONMENT));
   });
 });
