@@ -5,12 +5,14 @@ readonly BLOCKED_MESSAGE="Blocked: agents never edit .env files; document the va
 readonly WORD_SEPARATORS=$' \t\n;&|<>=(){}$`'
 readonly METACHARACTER_PATTERN=$'[;|&$`<>(){}\r\n]'
 readonly READ_HEAD_PATTERN='^(cat|head|tail|wc|grep|rg|git log|git diff|git show|git status|ls|test|\[)( |$)'
+readonly NAME_BUILDING_EXPANSION_PATTERN=$'\\$\'|\\$\\(|`|(^|[[:space:]/"\'])\\.[^[:space:]]*\\{[^}]*,'
 readonly PRINT_LINES_PATTERN="^sed -n ['\"]?[0-9]+(,[0-9]+)?p['\"]?( [^-][^ ]*)+\$"
 readonly PROSE_PATTERN='^(echo|printf)[[:space:]]+([^>]*[^>[:space:]])[[:space:]]*(>>?[[:space:]]*([^[:space:]>]+))?$'
 
 is_protected_env_file() {
-  local name="${1##*/}"
-  [[ "$name" == .*[*?[]* && ".env" == $name ]] && return 0
+  local name
+  name=$(tr '[:upper:]' '[:lower:]' <<<"${1##*/}")
+  [[ "$name" == .*[*?[]* ]] && return 0
   [[ "$name" =~ ^\.env ]] || return 1
   [[ "$name" == *.example ]] && return 1
   return 0
@@ -31,6 +33,11 @@ names_protected_env_file() {
     is_protected_env_file "$word" && return 0
   done < <(tr "$WORD_SEPARATORS" '\n' <<<"$1")
   return 1
+}
+
+may_name_protected_env_file() {
+  names_protected_env_file "$scanned_text" && return 0
+  [[ "$command" =~ $NAME_BUILDING_EXPANSION_PATTERN ]]
 }
 
 is_plain_read() {
@@ -57,7 +64,7 @@ done <<<"$touched"
 command=$(jq -r '.tool_input.command // ""' <<<"$hook_input")
 scanned_text=$(tr -d "\"'\\\\" <<<"$command")
 trimmed_command=${command#"${command%%[![:space:]]*}"}
-names_protected_env_file "$scanned_text" || exit 0
+may_name_protected_env_file || exit 0
 is_plain_read && exit 0
 is_prose && exit 0
 block

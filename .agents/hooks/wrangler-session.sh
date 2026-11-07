@@ -8,6 +8,16 @@ wrangler_repository_root() {
   echo "${WRANGLER_REPOSITORY_ROOT:-$WRANGLER_DEFAULT_REPOSITORY_ROOT}"
 }
 
+wrangler_environment_files() {
+  local repository_root=$1 directory
+  directory=$(jq -r '.cwd // ""' <<<"${hook_input:-}")
+  printf '%s\n' "$repository_root"/.env* "$repository_root"/apps/*/.env*
+  while [[ "$directory" == "$repository_root"/* ]]; do
+    printf '%s\n' "$directory"/.env*
+    directory=$(dirname "$directory")
+  done
+}
+
 is_wrangler_logged_in() {
   local config_directory stored_login environment_file
   local repository_root
@@ -18,9 +28,9 @@ is_wrangler_logged_in() {
       [[ -f "$stored_login" ]] && return 0
     done
   done
-  for environment_file in "$repository_root"/.env* "$repository_root"/apps/*/.env*; do
+  while IFS= read -r environment_file; do
     [[ -f "$environment_file" && "$environment_file" != *.example ]] || continue
     grep -qE "$CLOUDFLARE_CREDENTIAL_PATTERN" "$environment_file" && return 0
-  done
+  done < <(wrangler_environment_files "$repository_root")
   return 1
 }
