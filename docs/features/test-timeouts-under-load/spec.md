@@ -1,6 +1,6 @@
 # Test timeouts under load
 
-**Status:** In review
+**Status:** Shipped 2026-11-07
 **Tier:** 🟢 small
 **Owner approval:** approved 2026-11-07 (owner delegated)
 **ADRs:** none
