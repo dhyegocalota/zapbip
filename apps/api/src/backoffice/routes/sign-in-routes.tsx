@@ -48,7 +48,7 @@ signInRoutes.post(BackofficePath.SignIn, async (context) => {
   const code = textFieldOf({ form, name: CODE_FIELD });
   const csrfToken = textFieldOf({ form, name: CSRF_FIELD });
   if (key === null || code === null || csrfToken === null) return context.body(null, HttpStatus.BadRequest);
-  const result = await attemptSignIn({ env: context.env, key, code, now: Date.now() });
+  const result = await attemptSignIn({ env: context.env, key, code, now: Date.now(), clientAddress: context.get('clientAddress') });
   if (result.outcome === SignInOutcome.Succeeded) {
     setCookie(context, SESSION_COOKIE_NAME, result.sessionToken, {
       ...COOKIE_OPTIONS,
