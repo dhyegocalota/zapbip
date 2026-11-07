@@ -1,0 +1,45 @@
+---
+title: Cursor
+description: Connect Cursor to your WhatsApp.
+---
+
+## What works
+
+- Your AI sends you text, photos, videos, audio, documents, locations, contacts and reactions on WhatsApp.
+- It asks you with buttons or lists and waits for your tap.
+- Write on WhatsApp and Cursor hears you while its chat is open.
+- It waits for your answer as long as it takes.
+
+## Set up from zero
+
+<Steps>
+  <Step title="Message the official zapbip number">
+    Open WhatsApp and send `hi` to the official zapbip number, then `new agent cursor`. [How to start](/get-started/how-to-start) shows every message.
+  </Step>
+  <Step title="Paste the prompt into Cursor">
+    zapbip answers with one line made for you. Paste it into Cursor:
+
+    ```text
+    Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_K7P2QXm9aTfLw3VbN8cYhE and follow the instructions.
+    ```
+
+    Cursor reads the page and follows the steps below, in order. Before it changes a file or a setting, it tells you which one and waits for your yes. The link in that page is secret, so keep it out of chats you share.
+
+  </Step>
+  <Step title="Add zapbip to Cursor">
+    It asks you first and waits for your yes. Then it adds an MCP server named `zapbip` over HTTP at `<connectionLink>` in Cursor's MCP settings.
+  </Step>
+  <Step title="Start listening">
+    It runs `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen` in a background terminal and keeps that terminal running, with no time limit. Whenever a new line appears there, it calls `check_inbox` and answers.
+  </Step>
+  <Step title="Test it">
+    In the chat it calls `send_message` with ✅ installed. Then restart the Cursor chat to use the zapbip tools.
+  </Step>
+</Steps>
+
+## How your AI listens
+
+- Cursor runs `npx zapbip@0.1.0 listen` in a background terminal and keeps it running. When you write on WhatsApp, the new line wakes the chat.
+- Cursor has no scheduled option, so keep the terminal running. It has no time limit.
+
+There is no time limit. While a question is open, your AI asks again until you answer, for as long as it takes.

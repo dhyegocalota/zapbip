@@ -24,7 +24,20 @@
           },
           {
             "group": "Agents",
-            "pages": ["agents/supported-agents", "agents/hermes", "agents/openclaw", "guides/webhook-wake"]
+            "pages": [
+              "agents/supported-agents",
+              "agents/claude-code",
+              "agents/codex",
+              "agents/cursor",
+              "agents/gemini-cli",
+              "agents/grok-bot",
+              "agents/claude-ai",
+              "agents/chatgpt",
+              "agents/grok-web",
+              "agents/hermes",
+              "agents/openclaw",
+              "guides/webhook-wake"
+            ]
           },
           {
             "group": "Features",
@@ -90,7 +103,20 @@
           },
           {
             "group": "IAs",
-            "pages": ["pt-br/agents/supported-agents", "pt-br/agents/hermes", "pt-br/agents/openclaw", "pt-br/guides/webhook-wake"]
+            "pages": [
+              "pt-br/agents/supported-agents",
+              "pt-br/agents/claude-code",
+              "pt-br/agents/codex",
+              "pt-br/agents/cursor",
+              "pt-br/agents/gemini-cli",
+              "pt-br/agents/grok-bot",
+              "pt-br/agents/claude-ai",
+              "pt-br/agents/chatgpt",
+              "pt-br/agents/grok-web",
+              "pt-br/agents/hermes",
+              "pt-br/agents/openclaw",
+              "pt-br/guides/webhook-wake"
+            ]
           },
           {
             "group": "Funcionalidades",
