@@ -48,10 +48,10 @@ Secret box (`aes-gcm-secret-box.test.ts`):
 Graph error kinds (`graph-request-error-kind.test.ts`):
 - [ ] Status `401` → `auth`; `403` → `auth`; `404` → `not_found`; `0` → `network`; `400`, `429`, `500`, `502` → `upstream`
 
-Terminal QR (`backoffice-enroll-qr.test.ts`):
+Terminal QR (`operator-enrollment-qr.test.ts`):
 - [ ] `renderTerminalQr` of an `otpauth://` URI → multi-line text, every line the same width, three finder patterns; `uqr` is in `apps/api/package.json` `devDependencies` with an exact version and `pnpm install --frozen-lockfile` is green
 
-Enrollment script (`backoffice-enroll-entry.test.ts`, fake shell and prompt):
+Enrollment script (`operator-enrollment-entry.test.ts`, fake shell and prompt):
 - [ ] stdin not a TTY → exit 1, message `backoffice:enroll needs an interactive terminal`, zero shell calls
 - [ ] Production, the owner types `prod` (not `production`) → exit 1, zero shell calls
 - [ ] The owner types a wrong code → exit 1, zero `secret put`, zero `d1 execute`
