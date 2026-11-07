@@ -200,7 +200,7 @@ Logs (`backoffice-logs-redaction.test.ts`):
 - [x] Console and network clean: zero console errors, zero script requests (the CSP forbids them), zero failed requests other than the deliberate 401s — evidence: failed first on `/favicon.ico` 404 (tester-c.md); red 7b059ceb → green 2a5fe2dc, walk fixture fails any console error and 32/32 pass
 - [x] Desktop width 1280×800; expected: the layout from `design.md` — evidence: contrast and focus checked, tester-c.md
 - [x] Narrow width 375×812; expected: the tables stack, forms usable, no clipped buttons — evidence: failed first on `/audit` scrollWidth 400 (tester-c.md); red f879b997 → green ee1be832, walk checks `/audit` at 375 (numbers.spec.ts:60)
-- [ ] Screenshots at `.pr-media/backoffice/`; video at `.pr-media/backoffice/walk.mp4` — open, owner-run: screenshots exist (tester-c), the video and upload belong to `/check-ui`
+- [x] Screenshots and video of the walk — evidence: the recorder at 2e3ef0dd uploaded backoffice-walkthrough-1280.mp4, backoffice-walkthrough-375.mp4, backoffice-walkthrough.gif and 8 screenshots to the `pr-media-backoffice` release
 
 ## Security tests (explicit list)
 
