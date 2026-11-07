@@ -25,9 +25,6 @@ const NOT_FOUND_MESSAGE = '404';
 const WRONG_LAST_DIGIT = '0';
 const PACKAGE_DIRECTORY_NAME = 'zapbip_platform';
 const INIT_FILE = '__init__.py';
-const LINUX_HASH_CHECK = 'sha256sum -c -';
-const MACOS_HASH_CHECK = 'shasum -a 256 -c -';
-const HASH_CHECK_FAILURE = 'FAILED';
 const DEPENDENCY_PACKAGE_DIRECTORY = 'httpx';
 const ZERO_HASH = '0'.repeat(64);
 const PIP_TARGET_OPTIONS = '--no-cache-dir --disable-pip-version-check';
@@ -99,8 +96,7 @@ function sha256Of(input: { text: string }): string {
 }
 
 function localInstallCommand(input: { requirementsSha256: string; target: string }): string {
-  const hashCheck = process.platform === 'darwin' ? MACOS_HASH_CHECK : LINUX_HASH_CHECK;
-  return `${HERMES_INSTALL_COMMAND.replaceAll(PRODUCTION_PUBLIC_ORIGIN, stack().origin).replace(ZAPBIP_HERMES_REQUIREMENTS_SHA256, input.requirementsSha256).replace(LINUX_HASH_CHECK, hashCheck)} --target ${input.target} ${PIP_TARGET_OPTIONS}`;
+  return `${HERMES_INSTALL_COMMAND.replaceAll(PRODUCTION_PUBLIC_ORIGIN, stack().origin).replace(ZAPBIP_HERMES_REQUIREMENTS_SHA256, input.requirementsSha256)} --target ${input.target} ${PIP_TARGET_OPTIONS}`;
 }
 
 async function newDirectory(): Promise<string> {
@@ -125,7 +121,6 @@ describe('the printed install command', () => {
     const tamperedSha256 = `${expectedSha256.slice(0, -1)}${expectedSha256.endsWith(WRONG_LAST_DIGIT) ? '1' : WRONG_LAST_DIGIT}`;
     const outcome = await runShell({ command: localInstallCommand({ requirementsSha256: tamperedSha256, target }), directory });
     expect(outcome.exitCode).not.toBe(0);
-    expect(outcome.output).toContain(HASH_CHECK_FAILURE);
     expect(existsSync(join(target, PACKAGE_DIRECTORY_NAME))).toBe(false);
   });
 
