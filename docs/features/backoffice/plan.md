@@ -275,6 +275,17 @@ Author this list with every box empty. A sub-agent ticks its own line. A wrong s
 - [x] **Step 38:** `apps/api/playwright.config.ts` boots `wrangler dev --env development` on a free port with the fake Graph, plus `test:walk`. Red spec `sign-in.spec.ts` as in the test plan. Green once G2 lands. — evidence: infra beca09a5, red c38ca2e8 (`403 Pedido recusado`, the form post carried `Origin: null`) → green 40d35cac (`Referrer-Policy: same-origin`) and 319e2cda; `pnpm test:walk`: 26 passed at 1280 and 375
 - [ ] **Step 39:** red specs `numbers.spec.ts` (PR A) and `metrics.spec.ts` (PR B). Green once G3 and G4 land. — PR A half done: `numbers.spec.ts` and `error-pages.spec.ts` red fb50c691 → green 40d35cac and 319e2cda; `metrics.spec.ts` waits for G4
 
+### G7 tester findings (PR A)
+
+- [x] **Step 40:** fixes from testers B and C, each red then green:
+  - 40a rejected forms are POST, `303`, GET: a failed sign-in redirects to `/sign-in?notice=SignInFailed`; a rejected numbers form redirects with a single-use flash in `backoffice_sessions.flash` (migration `0006`). — evidence: red 760841ef (`the rejected form answered 401 without a Location`) → green cb96679e
+  - 40b a duplicate phone number ID answers `409`. — evidence: red e3bdb700 (`expected 422 to be 409`) → green edf0c43c
+  - 40c a favicon on `/assets/favicon.svg` and `/favicon.ico`, linked by the layout. — evidence: red 7b059ceb → green 2a5fe2dc
+  - 40d the mono cells of a data table wrap, and the walk checks `/audit` at 375. — evidence: red f879b997 → green ee1be832
+  - 40e `X-Forwarded-Host` and `X-Forwarded-Proto` never steer host dispatch. — evidence: pin b674e1d1
+  - 40f the lockout asserts the literals 9 and 10, and the session cookie asserts `Secure`. — evidence: pin 64d80c38
+  - 40g a failed step-up has its own audit label. — evidence: red 266137f9 → green fa771a68
+
 ## Failure modes
 
 | Step | What breaks | How I notice (the concrete signal) | How I back out |

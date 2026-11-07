@@ -30,6 +30,20 @@ From `apps/api`: `pnpm test:unit`, `pnpm test:integration` (port 4012), `pnpm te
 
 `dev-seed-number.test.ts` is a pin written after the code.
 
+### Tester findings fixed (step 40)
+
+| Item | Red | Failure text printed | Green |
+|---|---|---|---|
+| 1 post, redirect, get | 760841ef | `the rejected form answered 401 without a Location`; `expected 401 to be 303` | cb96679e |
+| 2 duplicate is 409 | e3bdb700 | `expected 422 to be 409` | edf0c43c |
+| 3 favicon | 7b059ceb | favicon routes answer 404; layout lacks `<link rel="icon">` | 2a5fe2dc |
+| 4 audit at 375 | f879b997 | stylesheet has no `.data-table .mono` with `overflow-wrap: anywhere` | ee1be832 |
+| 5 forwarded headers | b674e1d1 | pin | |
+| 6 lockout literals, Secure | 64d80c38 | pin | |
+| 7 step-up audit label | 266137f9 | `expected ... to contain 'Código de confirmação recusado'` | fa771a68 |
+
+The flash lives in `backoffice_sessions.flash` (migration `0006_backoffice_flash.sql`); the redirected GET answers the stored status (401, 409 or 422). The walk now expects `/sign-in?notice=SignInFailed` after a failed sign-in.
+
 ### Hypotheses for the tester
 
 - The development simulator still shows outbound messages: `DevAccountInbox` uses the in-object fake sender unless `WHATSAPP_SEND_THROUGH_GRAPH` is set (WI-17a to WI-17c).

@@ -21,7 +21,7 @@ These come from the CSP in the spec: `default-src 'none'; style-src 'self'; img-
 | `style-src 'self'` | No `style=""` attribute, no `<style>` element. All presentation is classes from `backoffice.css`. Chart geometry is SVG attributes (`x`, `width`, `height`), which are not styles. |
 | `font-src` absent | No web fonts. System font stacks only. The docs' Inter cannot load, and the stack is chosen to look close. |
 | `img-src 'self'` | No external images. Icons are inline SVG or text glyphs. No QR code is shown in the browser (enrollment is terminal-only). |
-| `Cache-Control: no-store`, `Referrer-Policy: same-origin` | No flash cookie and no Referer leaves the site; `no-referrer` would make the browser send `Origin: null` on every form post, which the CSRF check refuses. A flash message is an allow-listed `notice` query value on the redirect target; return-after-locale-switch uses an allow-listed `returnTo` path in a hidden field. |
+| `Cache-Control: no-store`, `Referrer-Policy: same-origin` | No flash cookie and no Referer leaves the site; `no-referrer` would make the browser send `Origin: null` on every form post, which the CSRF check refuses. A flash message is an allow-listed `notice` query value on the redirect target, and a rejected form is POST, `303`, GET: the rejection (status, copy keys, field errors, non-secret values) waits in `backoffice_sessions.flash` for one minute and is shown once, by the GET of the same path; return-after-locale-switch uses an allow-listed `returnTo` path in a hidden field. |
 | Strict CSRF | Every form carries the hidden `csrf` field. Every state-changing number form also carries the step-up `code` field. |
 
 ## 2. Tokens
@@ -833,7 +833,7 @@ All answers are the recommended option, chosen under the owner's delegation. Not
 | Option 8, environment marker | A: text badge on staging and development | recommended: A (owner delegated 2026-11-06), 2026-11-07 |
 | Token set in section 2 (colour, type, space, radius, size, measure) | adopted as written | recommended (owner delegated 2026-11-06), 2026-11-07 |
 | Fonts | system stacks only, no web font (the CSP forbids one) | recommended (owner delegated 2026-11-06), 2026-11-07 |
-| Flash messages | allow-listed `notice` query value, no cookie | recommended (owner delegated 2026-11-06), 2026-11-07 |
+| Flash messages | allow-listed `notice` query value, no cookie; a rejected form keeps its non-secret values in a single-use, one-minute flash bound to the session | recommended (owner delegated 2026-11-06), 2026-11-07 |
 | Verify result | stored as `verification_snapshot`, rendered by a GET after `303` (POST, 303, GET as in section 1) | recommended (owner delegated 2026-11-06), 2026-11-07 |
 | Date format | `YYYY-MM-DD HH:mm UTC` in both locales | recommended (owner delegated 2026-11-06), 2026-11-07 |
 
