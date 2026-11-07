@@ -18,6 +18,7 @@ const STATUS_SEE_OTHER = 303;
 const NOW = Date.UTC(2026, 10, 7, 12);
 const LOCKED_ACTION = 'sign_in.locked';
 const FIVE_FAILURES = 5;
+const TWENTY_WRONG_KEYS = 20;
 const LAST_FAILURE_BEFORE_LOCK = 9;
 const LOCKING_FAILURE = 10;
 
@@ -33,6 +34,12 @@ afterEach(() => {
 
 async function failMany(input: { count: number }): Promise<void> {
   for (let attempt = 0; attempt < input.count; attempt += 1) {
+    await postSignIn({ key: BACKOFFICE_TEST_KEY, code: WRONG_CODE });
+  }
+}
+
+async function failManyKeys(input: { count: number }): Promise<void> {
+  for (let attempt = 0; attempt < input.count; attempt += 1) {
     await postSignIn({ key: WRONG_KEY, code: WRONG_CODE });
   }
 }
@@ -45,6 +52,17 @@ async function lockedAuditRows(): Promise<number> {
 }
 
 describe('lockout', () => {
+  test('twenty wrong keys never lock the owner out: they are audited but not counted', async () => {
+    await failManyKeys({ count: TWENTY_WRONG_KEYS });
+    expect(await readOperator()).toMatchObject({ failed_attempts: 0, locked_until: null });
+    const failedRows = await testEnv.CONNECTIONS.prepare('SELECT COUNT(*) AS total FROM backoffice_audit WHERE action = ?')
+      .bind('sign_in.failed')
+      .first<{ total: number }>();
+    expect(failedRows!.total).toBe(TWENTY_WRONG_KEYS);
+    const response = await postSignIn({ key: BACKOFFICE_TEST_KEY, code: await validCode({}) });
+    expect(response.headers.get('location')).toBe('/');
+  });
+
   test('the threshold is ten: nine failures leave the operator open and the tenth locks', async () => {
     await failMany({ count: LAST_FAILURE_BEFORE_LOCK });
     expect(await readOperator()).toMatchObject({ failed_attempts: LAST_FAILURE_BEFORE_LOCK, locked_until: null });
@@ -86,7 +104,7 @@ describe('lockout', () => {
 
   test('five concurrent failures lose no increment', async () => {
     const { csrf } = await openSignInForm({});
-    await Promise.all(Array.from({ length: FIVE_FAILURES }, () => postSignIn({ key: WRONG_KEY, code: WRONG_CODE, csrf })));
+    await Promise.all(Array.from({ length: FIVE_FAILURES }, () => postSignIn({ key: BACKOFFICE_TEST_KEY, code: WRONG_CODE, csrf })));
     expect((await readOperator()).failed_attempts).toBe(FIVE_FAILURES);
   });
 });

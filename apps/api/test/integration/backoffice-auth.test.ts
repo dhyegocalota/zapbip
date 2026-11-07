@@ -65,7 +65,7 @@ describe('sign-in', () => {
     expect(await sessionDigests()).toEqual([await sha256Hex({ value: sessionToken })]);
   });
 
-  test('a wrong key, a wrong code and both are one identical redirect and count as failures', async () => {
+  test('a wrong key, a wrong code and both are one identical redirect and only the wrong code under the right key counts', async () => {
     const { csrf } = await openSignInForm({});
     const wrongKey = await postSignIn({ key: WRONG_KEY, code: await validCode({}), csrf });
     const wrongCode = await postSignIn({ key: BACKOFFICE_TEST_KEY, code: WRONG_CODE, csrf });
@@ -79,7 +79,7 @@ describe('sign-in', () => {
     const bodies = await Promise.all([wrongKey, wrongCode, wrongBoth].map((response) => response.text()));
     expect(bodies[1]).toBe(bodies[0]);
     expect(bodies[2]).toBe(bodies[0]);
-    expect((await readOperator()).failed_attempts).toBe(3);
+    expect((await readOperator()).failed_attempts).toBe(1);
     expect(await sessionDigests()).toEqual([]);
   });
 
