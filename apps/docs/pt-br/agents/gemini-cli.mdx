@@ -48,7 +48,7 @@ Use um ouvinte por vez. Um segundo ouvinte substitui o primeiro.
 
 5. **Começar a escutar.** Ele roda `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen` em um terminal em segundo plano e mantém esse terminal rodando, sem limite de tempo. Sempre que uma linha nova aparece ali, chama `check_inbox` e responde.
 
-6. **Testar.** Em um processo novo ele roda `gemini -p "Use o zapbip para enviar ✅ instalado ao meu WhatsApp"`. Um `send_message` com ✅ instalado chega ao seu WhatsApp. Se o comando falhar, ele para e mostra as últimas 20 linhas. Depois reinicie o Gemini CLI.
+6. **Testar.** Em um processo novo ele roda `gemini -p "Call send_message with the text '✅ instalado'"`. Um `send_message` com ✅ instalado chega ao seu WhatsApp. Se o comando falhar, ele para e mostra as últimas 20 linhas. Depois reinicie o Gemini CLI.
 
 ## Confira se funciona
 

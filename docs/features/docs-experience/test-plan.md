@@ -94,7 +94,7 @@ Each lane spec runs in both projects (`en-US`, `pt-BR`). A lane merges into `fea
 - [ ] `get-started.spec.ts::each Overview chat has at most four messages` — expected: each chat `<= 4` bubbles.
 - [ ] `agents-a.spec.ts::claude-code, codex, claude-ai, chatgpt, cursor show the four sections in order` — expected: four headings in order in the page language.
 - [ ] `agents-a.spec.ts::the matrix shows eleven rows, each linking to a page with status 200` — steps: open `/agents/supported-agents`; expected: 11 rows; each link returns 200.
-- [ ] `agents-a.spec.ts::claude-code shows the channel command` — expected: `--dangerously-load-development-channels server:zapbip` in a code block.
+- [ ] `agents-a.spec.ts::claude-code shows the channel command` — expected: `--dangerously-load-development-channels server:zapbip-channel` in a code block.
 - [ ] `agents-b.spec.ts::grok-bot, grok-web, hermes, openclaw, gemini-cli, any-mcp-client show the four sections in order` — expected: as above.
 - [ ] `agents-b.spec.ts::any-mcp-client links to /developers/any-mcp-client` — expected: the link present and returns 200.
 - [ ] `features.spec.ts::each feature page has at least one example chat` — expected: six pages, each with `>= 1` chat.
@@ -129,7 +129,7 @@ Each lane spec runs in both projects (`en-US`, `pt-BR`). A lane merges into `fea
 - [ ] Latency: slow 3G on the Overview — expected: text readable before the picture loads; the picture shows its alt text while loading.
 - [ ] Console and network clean on every page visited — expected: zero console errors, zero failed requests.
 - [ ] Desktop 1280 — expected: the card grid on the Overview; no horizontal scroll.
-- [ ] Narrow 375 — expected: one column, 16 px side gutter, no horizontal page scroll; chats wrap inside their card.
+- [ ] Narrow 375 — expected: one column, 20 px side gutter (Mintlify's --page-padding), no horizontal page scroll; chats wrap inside their card.
 - [ ] Screenshots in `.pr-media/docs-experience/`, video at `.pr-media/docs-experience/walk.mp4` — expected: both exist and are non-empty.
 
 ## T6 Owner-run (outside the gate, real number and real clients)
@@ -138,7 +138,7 @@ These need the real number, real accounts and real AI apps. The owner runs them;
 
 - [ ] Signup: message the official number with any text from a phone — expected: the reply matches the Get started text; the waitlist state matches `WAITLIST_ENABLED`.
 - [ ] Install prompt, Claude Code: paste the prompt into Claude Code — expected: the AI reads `/i/<code>`, configures the channel as the page says, sends the self-test; the owner receives it on WhatsApp.
-- [ ] Channel flag: start `claude --dangerously-load-development-channels server:zapbip` — expected: an owner message reaches the open session without a new command.
+- [ ] Channel flag: start `claude --dangerously-load-development-channels server:zapbip-channel` — expected: an owner message reaches the open session without a new command.
 - [ ] Codex: paste the prompt into Codex — expected: the self-test arrives; a message triggers `codex exec resume` (owner checks the log line).
 - [ ] claude.ai: paste the connector, then the API-trigger task — expected: a message is answered within the page's stated 16 s.
 - [ ] ChatGPT: developer mode, app by URL, hourly "Run on this computer" task — expected: a message is answered within the hour.

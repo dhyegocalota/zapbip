@@ -18,7 +18,12 @@ import InstallPrompt from '/snippets/pt-br/install-prompt.mdx';
 
 <Chat
   messages={[
-    { name: 'Claude', text: 'A refatoração está pronta para o merge. Faço agora?', options: ['Sim', 'Ainda não'], time: '15:20' },
+    {
+      name: 'Claude',
+      text: 'A refatoração está pronta para ser integrada. Faço isso agora?',
+      options: ['Sim', 'Ainda não'],
+      time: '15:20',
+    },
     { you: true, text: 'Sim', time: '15:21' },
   ]}
 />
@@ -33,7 +38,7 @@ Tipo de despertar: **Local**. Um conector no seu computador acorda o Claude Code
 
 Quando a sua IA faz uma pergunta, o zapbip a guarda e responde "pendente" no máximo a cada 50 segundos. Sua IA então chama de novo, e continua chamando de novo até você responder, sem limite de tempo.
 
-Use um escutador só, nunca dois juntos. Se o canal não estiver ligado, o Claude Code mantém `npx zapbip@0.1.0 listen` rodando e o acompanha com o Monitor. Cada acompanhamento dura no máximo 30 minutos, então o Claude Code rearma a cada aviso de tempo esgotado.
+Use um escutador só, nunca dois juntos. Se o canal não estiver ligado, o Claude Code mantém `npx zapbip@0.1.0 listen` rodando e o acompanha com a ferramenta `Monitor`. Cada acompanhamento dura no máximo 30 minutos, então o Claude Code rearma a cada aviso de tempo esgotado.
 
 ## Configure do zero
 
@@ -68,9 +73,9 @@ Use um escutador só, nunca dois juntos. Se o canal não estiver ligado, o Claud
 
 7. **Escolher um só escutador.** Uma conexão tem um escutador só e um segundo substitui o primeiro, então ele usa exatamente um destes, nunca dois juntos. Para uma sessão parada, roda `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 connect --client claude-code` em segundo plano. O conector acorda a sessão quando você escreve com o Claude Code parado e retoma uma sessão fechada com `claude -p --resume`.
 
-8. **Só se os canais não estiverem disponíveis.** Ele roda `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen` em segundo plano e o acompanha com o Monitor, rearmando a cada aviso de tempo esgotado.
+8. **Só se os canais não estiverem disponíveis.** Ele roda `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen` em segundo plano e o acompanha com a ferramenta `Monitor`, rearmando a cada aviso de tempo esgotado.
 
-9. **Testar.** Em um processo novo ele roda `claude -p "Use o zapbip para enviar ✅ instalado ao meu WhatsApp" --allowedTools=mcp__zapbip__send_message`. Um `send_message` com ✅ instalado chega ao seu WhatsApp. Se o comando falhar, ele para e mostra as últimas 20 linhas. Depois reinicie o Claude Code para usar as ferramentas do zapbip.
+9. **Testar.** Em um processo novo ele roda `claude -p "Call send_message with the text '✅ instalado'" --allowedTools=mcp__zapbip__send_message`. Um `send_message` com ✅ instalado chega ao seu WhatsApp. Se o comando falhar, ele para e mostra as últimas 20 linhas. Depois reinicie o Claude Code para usar as ferramentas do zapbip.
 
 ## Confira se funciona
 

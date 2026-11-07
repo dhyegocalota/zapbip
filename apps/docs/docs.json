@@ -2,6 +2,14 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "zapbip",
+  "favicon": "/favicon.svg",
+  "errors": {
+    "404": {
+      "redirect": false,
+      "title": "Page not found · Página não encontrada",
+      "description": "This page does not exist. · Esta página não existe.\n\n[Back to the Overview](/) · [Voltar para a visão geral](/pt-br)"
+    }
+  },
   "colors": {
     "primary": "#128C7E"
   },
