@@ -14,6 +14,7 @@ import { DOCS_LOCALE_OF, DocsViewport, docsOptionsOf } from './support/docs-expe
 
 const OK_STATUS = 200;
 const CONTENT_SELECTOR = '#content-area';
+const ZERO_WIDTH_SPACE = /\u200B/g;
 const PENDING_LOOP_SECONDS = '50';
 const GROK_WEB_CALL_CAP_SECONDS = '60';
 const BACKGROUND_TERMINAL_COMMAND = 'npx zapbip@0.1.0 listen';
@@ -66,7 +67,7 @@ for (const language of Object.values(DocsLanguage)) {
         const response = await page.goto(urlOf({ client, language }));
         expect(response?.status()).toBe(OK_STATUS);
         const headings = await page.locator(`${CONTENT_SELECTOR} h2`).allTextContents();
-        expect(headings.map((heading) => heading.trim())).toEqual(
+        expect(headings.map((heading) => heading.replace(ZERO_WIDTH_SPACE, '').trim())).toEqual(
           AGENT_PAGE_SECTIONS.map((section) => AGENT_PAGE_HEADINGS[language][section]),
         );
       }

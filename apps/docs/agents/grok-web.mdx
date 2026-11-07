@@ -3,10 +3,51 @@ title: Grok on the web
 description: Connect Grok on the web to your WhatsApp.
 ---
 
+import { Chat } from '/snippets/chat.jsx';
+import InstallPrompt from '/snippets/install-prompt.mdx';
+
 ## What works
+
+| You can                                          | Grok on the web                  |
+| ------------------------------------------------ | -------------------------------- |
+| Receive text, photos, video, audio and documents | Yes                              |
+| Receive locations, contacts and reactions        | Yes                              |
+| Ask you with buttons or a list and wait          | Yes, while its chat is open      |
+| Start a conversation when you write first        | Only through a Grok Bot of yours |
 
 ## How it listens
 
+Rung: Standby. Grok on the web cannot be woken from outside, and each of its calls is capped at 60 seconds. So when you write first, a Grok Bot of yours stands in: it answers and keeps the conversation going. Without a Grok Bot, your message waits until you open the Grok chat, and zapbip tells you on WhatsApp that Grok is not listening right now.
+
+While a question is open, Grok waits up to 50 seconds at a time. If you have not answered, the wait ends as pending and Grok calls again, as many times as it takes, with no time limit.
+
+Keep the Grok chat open. If you have a Grok Bot connected to zapbip, you do nothing more.
+
 ## Set up from zero
 
+1. **Message the zapbip number on WhatsApp.** Send `new agent grok-web`. [How to start](/get-started/how-to-start) shows every message.
+
+   <Chat
+     messages={[
+       { you: true, text: 'new agent grok-web', time: '09:00' },
+       { name: 'zapbip', text: 'Agent grok-web created. Paste this into your agent.', time: '09:00' },
+     ]}
+   />
+
+2. **Paste the line into Grok on the web.** zapbip answers with a line made for you:
+
+   <InstallPrompt />
+
+3. **Add the connector yourself.** Grok tells you to paste a link as a connector in its settings. This is a rule of the app, so you do this one step by hand. Keep the link out of chats you share.
+
+4. **Pick who answers when you write first.** If you have a Grok Bot connected to zapbip, Grok sets it as the standby. Without one, only the inbox is used.
+
 ## Check it works
+
+Ask Grok to send `✅ installed` on WhatsApp. When it arrives, the connection works.
+
+<Chat messages={[{ name: 'Grok', text: '✅ installed', time: '09:03' }]} />
+
+With a Grok Bot connected, write something on WhatsApp while the Grok chat is closed: the Grok Bot answers.
+
+For apps that need a manual setup, see [Connect any MCP client](/developers/any-mcp-client).
