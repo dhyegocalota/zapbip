@@ -91,7 +91,7 @@ for form in "${blocked_deploy_forms[@]}"; do
   expect_exit "claude: $form is blocked" 2 guard-deploy.sh "$(bash_call "$form")"
   expect_exit "codex: $form is blocked" 2 guard-deploy.sh "$(codex_bash_call "$form")"
 done
-allowed_deploy_forms=('wrangler deploy --dry-run' 'pnpm --filter @zapbip/api exec wrangler deploy --env staging --dry-run' 'wrangler d1 migrations apply zapbip-staging --env staging --local' 'pnpm migrate:development' 'pnpm smoke:staging' 'pnpm exec vitest run' 'wrangler secret list --env staging' 'git commit -m \"document wrangler deploy\"')
+allowed_deploy_forms=('wrangler deploy --dry-run' 'pnpm --filter @zapbip/api exec wrangler deploy --env staging --dry-run' 'wrangler d1 migrations apply zapbip-staging --env staging --local' 'pnpm migrate:development' 'pnpm smoke:staging' 'pnpm exec vitest run' 'git commit -m \"document wrangler deploy\"')
 for form in "${allowed_deploy_forms[@]}"; do
   expect_exit "claude: $form is allowed" 0 guard-deploy.sh "$(bash_call "$form")"
   expect_exit "codex: $form is allowed" 0 guard-deploy.sh "$(codex_bash_call "$form")"
@@ -101,8 +101,18 @@ for form in "${evasive_deploy_forms[@]}"; do
   expect_exit "claude: $form is blocked" 2 guard-deploy.sh "$(bash_call "$form")"
   expect_exit "codex: $form is blocked" 2 guard-deploy.sh "$(codex_bash_call "$form")"
 done
-allowed_local_forms=('wrangler dev' 'wrangler d1 migrations apply zapbip --local' 'sh -c \"wrangler deploy --dry-run\"' 'wrangler r2 bucket list' 'wrangler d1 list')
+allowed_local_forms=('wrangler dev' 'wrangler d1 migrations apply zapbip --local' 'sh -c \"wrangler deploy --dry-run\"')
 for form in "${allowed_local_forms[@]}"; do
+  expect_exit "claude: $form is allowed" 0 guard-deploy.sh "$(bash_call "$form")"
+  expect_exit "codex: $form is allowed" 0 guard-deploy.sh "$(codex_bash_call "$form")"
+done
+bypass_deploy_forms=('wrangler \"deploy\"' '(wrangler deploy)' 'wrangler --env production deploy' '\\wrangler deploy' '$(echo wrangler) deploy' '`echo wrangler` deploy' 'w=wrangler; $w deploy' 'bash -lc \"wrangler deploy\"' 'bash -xc \"wrangler deploy\"' 'sh -c \"wrangler secret put X\"' 'eval wrangler deploy' 'echo deploy | xargs wrangler' 'echo wrangler deploy | bash' 'bash <<< \"wrangler deploy\"' 'wrangler deploy # --dry-run' 'wrangler${IFS}deploy' 'wrangler kv key put k v --remote' 'wrangler pages deploy dist' 'npm run deploy:production' 'pnpm run-script deploy:production' 'pnpm -w deploy:production' 'pnpm --silent deploy:production' 'pnpm --filter @zapbip/api run deploy:staging' 'yarn migrate:production' 'pnpm secrets:sync' 'node --env-file=.env --import tsx apps/api/scripts/deploy.ts --environment production' 'tsx apps/api/scripts/smoke.ts --environment staging' 'node node_modules/wrangler/bin/wrangler.js deploy' 'python3 -c \"import os; os.system(\u0027wrangler deploy\u0027)\"' 'wr\"ang\"ler deploy' 'wrangler secret list --env staging' 'wrangler r2 bucket list' 'wrangler d1 list' 'wrangler d1 execute zapbip --command x --remote' 'wrangler dev --remote' 'wrangler d1 execute zapbip --local --remote' 'wrangler deploy --dry-run=false')
+for form in "${bypass_deploy_forms[@]}"; do
+  expect_exit "claude: $form is blocked" 2 guard-deploy.sh "$(bash_call "$form")"
+  expect_exit "codex: $form is blocked" 2 guard-deploy.sh "$(codex_bash_call "$form")"
+done
+allowlisted_deploy_forms=('wrangler dev --env development' 'wrangler deploy --dry-run --env production' 'wrangler deploy --env staging --dry-run --outdir dist' 'wrangler d1 migrations apply zapbip-development --env development --local' 'wrangler d1 execute zapbip --local --command x' 'wrangler types' 'pnpm --filter @zapbip/api exec wrangler types' 'wrangler --version' 'wrangler whoami' 'wrangler dev # wrangler deploy' 'git log --grep wrangler' 'rg -n wrangler docs' 'grep -rn \"wrangler deploy\" docs' 'cat apps/api/wrangler.jsonc' 'git add apps/api/wrangler.jsonc' 'cd /work/deploy-readiness && pnpm exec vitest run' 'pnpm run deploy-docs' 'git commit -m \"$(cat <<\u0027EOF\u0027\nfeat: wrangler deploy docs\nEOF\n)\"')
+for form in "${allowlisted_deploy_forms[@]}"; do
   expect_exit "claude: $form is allowed" 0 guard-deploy.sh "$(bash_call "$form")"
   expect_exit "codex: $form is allowed" 0 guard-deploy.sh "$(codex_bash_call "$form")"
 done
