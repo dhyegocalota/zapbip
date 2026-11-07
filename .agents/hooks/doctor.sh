@@ -121,7 +121,9 @@ report() {
   state=missing
   [[ "$skipped" == *" $tool "* ]] && state=skipped
   [[ "$state" == missing ]] && "check_$tool" && state=ok
+  [[ "$state" == missing && "$requirement" == warning ]] && state=warning
   printf '%s | %s | %s | lost: %s | fix: %s\n' "$tool" "$state" "$requirement" "$(lost_for "$tool")" "$(fix_for "$(fix_name_for "$tool")")"
+  [[ "$state" == warning ]] && echo "doctor: warning: $WRANGLER_LOGGED_IN_FIX"
   [[ "$state" == missing ]] || return 0
   [[ "$requirement" == required ]] && missing_required=$((missing_required + 1)) && return 0
   missing_optional=$((missing_optional + 1))
@@ -134,7 +136,7 @@ report gh required
 report chromium required
 report skills required
 report python required
-report wrangler required
+report wrangler warning
 report gitleaks optional
 report ffmpeg optional
 echo "doctor: $missing_required missing required, $missing_optional missing optional"
