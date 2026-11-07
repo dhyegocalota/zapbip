@@ -50,6 +50,18 @@ describe('audit page', () => {
     expect(html).not.toContain('<tr class="audit-row"');
   });
 
+  test('labels a failed step-up apart from a failed sign-in', async () => {
+    await testEnv.CONNECTIONS.prepare(
+      'INSERT INTO backoffice_audit (id, at, action, target_kind, target_id, outcome, client_address) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    )
+      .bind('audit-step-up', FIRST_AT, 'step_up.failed', 'number', 'T0001', 'failed', '203.0.113.7')
+      .run();
+    const { sessionToken } = await signIn({});
+    const html = await (await requestBackoffice({ path: '/audit', cookies: { [SESSION_COOKIE]: sessionToken } })).text();
+    expect(html).toContain('Código de confirmação recusado');
+    expect(html).not.toContain('Entrada falhou');
+  });
+
   test('redirects to sign-in without a session', async () => {
     const response = await requestBackoffice({ path: '/audit' });
     expect(response.status).toBe(STATUS_SEE_OTHER);
