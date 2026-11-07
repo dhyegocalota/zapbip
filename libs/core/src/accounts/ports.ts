@@ -69,6 +69,7 @@ export interface ConnectionRevocations {
   recordRevocation(input: { accountId: string; agent: AgentName }): Promise<void>;
   recordCreation(input: { accountId: string; agent: AgentName }): Promise<void>;
   cancelWaiters(input: { accountId: string; agent: AgentName }): Promise<void>;
+  closeSockets(input: { accountId: string; agent: AgentName }): Promise<void>;
 }
 
 export interface AccountInboxPurge {

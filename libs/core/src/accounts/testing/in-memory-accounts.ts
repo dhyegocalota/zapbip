@@ -43,6 +43,7 @@ export type RecordingSecrets = ConnectionSecrets & { issued: IssuedSecret[] };
 export type RecordingRevocations = ConnectionRevocations & {
   revoked: AgentName[];
   cancelled: AgentName[];
+  closed: AgentName[];
   created: AgentName[];
   wakeConfigured: Set<AgentName>;
 };
@@ -251,11 +252,13 @@ function createInstallLinkRedaction(): RecordingInstallLinkRedaction {
 function createRevocations(): RecordingRevocations {
   const revoked: AgentName[] = [];
   const cancelled: AgentName[] = [];
+  const closed: AgentName[] = [];
   const created: AgentName[] = [];
   const wakeConfigured = new Set<AgentName>();
   return {
     revoked,
     cancelled,
+    closed,
     created,
     wakeConfigured,
     recordCreation: async ({ agent }) => {
@@ -267,6 +270,9 @@ function createRevocations(): RecordingRevocations {
     },
     cancelWaiters: async ({ agent }) => {
       cancelled.push(agent);
+    },
+    closeSockets: async ({ agent }) => {
+      closed.push(agent);
     },
   };
 }

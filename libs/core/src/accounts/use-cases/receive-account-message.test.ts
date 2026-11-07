@@ -328,6 +328,7 @@ describe('receiveAccountMessage compensation', () => {
     expect(await fixture.environment.connectionDirectory.resolveSecretDigest({ secretDigest: oldDigest })).not.toBeNull();
     expect(await fixture.environment.connectionDirectory.resolveSecretDigest({ secretDigest: rotated!.digest })).toBeNull();
     expect(fixture.environment.revocations.cancelled).toEqual([]);
+    expect(fixture.environment.revocations.closed).toEqual([]);
   });
 
   test('a failed rotate of an agent created through the command restores its real install code columns', async () => {
@@ -350,6 +351,13 @@ describe('receiveAccountMessage compensation', () => {
     await receiveAccountText({ ...fixture, text: 'girar claude' });
     expect(fixture.environment.revocations.cancelled).toEqual(['claude']);
     expect(fixture.environment.revocations.revoked).toEqual([]);
+  });
+
+  test('a delivered rotate closes the connector sockets of that agent only', async () => {
+    const fixture = await createAccountFixture();
+    await addAgent({ ...fixture, agent: 'claude' });
+    await receiveAccountText({ ...fixture, text: 'girar claude' });
+    expect(fixture.environment.revocations.closed).toEqual(['claude']);
   });
 
   test('a delivered create sends one text with the install link and no part label', async () => {

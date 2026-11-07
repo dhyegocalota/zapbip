@@ -1,7 +1,8 @@
-import { InstallCodeStatus } from '@zapbip/types';
+import { ConnectorFrameType, InstallCodeStatus, REVOKED_CLOSE_CODE } from '@zapbip/types';
 import { reset } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { applyDirectoryMigration } from '../support/seed';
+import { openConnector } from '../support/connector-session';
 import { installCodeDirectory } from '../support/install-codes';
 import { failNextSessionSend } from '../support/session-send-probe';
 import { McpToolName } from '../../src/contract/tool-definitions';
@@ -54,6 +55,19 @@ describe('rotating a connection over WhatsApp', () => {
     const client = await connectClient({ secret: newPath.split('/')[SECRET_SEGMENT_INDEX] as string });
     const inbox = await callTool({ client, name: McpToolName.CheckInbox, arguments: {} });
     expect(inbox.isError).not.toBe(true);
+  });
+
+  it('closes the connector of the old secret with the revoked code and serves the new secret', async () => {
+    const oldPath = await latestMcpPath({ accountId: await accountId() });
+    const oldSession = await openConnector({ secret: oldPath.split('/')[SECRET_SEGMENT_INDEX] as string });
+    await oldSession.nextFrame();
+    await deliver({ bindings, text: `girar ${AGENT_NAME}` });
+    expect(await oldSession.closeCode()).toBe(REVOKED_CLOSE_CODE);
+    expect(oldSession.receivedCount()).toBe(0);
+    const newPath = await latestMcpPath({ accountId: await accountId() });
+    const newSession = await openConnector({ secret: newPath.split('/')[SECRET_SEGMENT_INDEX] as string });
+    expect(await newSession.nextFrame()).toMatchObject({ type: ConnectorFrameType.Hello, agent: AGENT_NAME });
+    newSession.socket.close();
   });
 
   it('AK-3 keeps the old secret working when the rotate reply fails to send', async () => {

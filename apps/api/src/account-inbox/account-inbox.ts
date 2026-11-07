@@ -174,6 +174,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
         recordRevocation: ({ agent }) => this.recordRevocation({ agent }),
         recordCreation: ({ agent }) => this.recordCreation({ agent }),
         cancelWaiters: ({ agent }) => this.cancelWaiters({ agent }),
+        closeSockets: ({ agent }) => this.closeAgentSockets({ agent }),
       },
       firstMessage: createSqliteFirstMessageClaim({ storage: this.ctx.storage }),
       deletionRequests: createSqliteDeletionRequests({ storage: this.ctx.storage }),
