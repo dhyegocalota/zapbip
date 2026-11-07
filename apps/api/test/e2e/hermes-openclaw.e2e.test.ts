@@ -385,7 +385,7 @@ describe.skipIf(!isEnabled)('hermes and openclaw plugins against the development
       await postOwnerText({ account: client.account, text: `/status ${token}`, forwarded: true });
       await awaitScreenText({ account: client.account, text: replyTo({ token }) });
       const [request] = fakeModel.requestsMentioning({ text: token });
-      expect(request?.userText).toContain(`${CHANNEL_FORWARDED_PREFIX}\n/status ${token}`);
+      expect(request?.userText).toContain(`${CHANNEL_FORWARDED_PREFIX} /status ${token}`);
     },
     TEST_TIMEOUT_MS,
   );
