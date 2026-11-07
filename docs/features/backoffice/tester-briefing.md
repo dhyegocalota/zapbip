@@ -44,6 +44,17 @@ From `apps/api`: `pnpm test:unit`, `pnpm test:integration` (port 4012), `pnpm te
 
 The flash lives in `backoffice_sessions.flash` (migration `0006_backoffice_flash.sql`); the redirected GET answers the stored status (401, 409 or 422). The walk now expects `/sign-in?notice=SignInFailed` after a failed sign-in.
 
+### Review and security findings fixed (step 41)
+
+| Item | Red | Failure text printed | Green |
+|---|---|---|---|
+| S1 wrong key never counts | de8dfe61 | `expected 1 to be 0`-style failures: 20 wrong keys left `failed_attempts` above 0 | 82f0a321 |
+| S2 and R2 known-ID attribution, dummy signature check | c34496e6 | WI-31 `expected 401 to be 200`; `verify` called 0 times, expected 1 | ffbe9d7e |
+| S3 guard glob | 268cdcfa | `expected exit 2, got 0` | 49873caa |
+| R1 smoke check 4 | 5764d13c | the two check-4 bodies named no phone number ID; production asked for no `SMOKE_PHONE_NUMBER_ID` | ad1f5c00 |
+| R3 no number, deleting | 4206adc6 | `account acc_unbound has no home number`; a notice was posted for a deleting account | 91a957c5 |
+| R6 `conflictOf` non-Error | ed19ff16 | pin | 38290ad8 (refactor with R4, R5) |
+
 ### Hypotheses for the tester
 
 - The development simulator still shows outbound messages: `DevAccountInbox` uses the in-object fake sender unless `WHATSAPP_SEND_THROUGH_GRAPH` is set (WI-17a to WI-17c).

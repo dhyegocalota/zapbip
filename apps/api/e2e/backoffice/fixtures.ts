@@ -1,6 +1,6 @@
 import { randomInt } from 'node:crypto';
 import { expect, test as base } from '@playwright/test';
-import { CLIENT_ADDRESS_HEADER } from '../../src/backoffice/backoffice-constants';
+import { CLIENT_ADDRESS_HEADER } from '../../src/contract/constants';
 import { FakeGraph } from '../../test/support/fake-graph';
 import { clearRegistry } from './support/operator-database';
 import { WalkVariable, walkValue } from './support/walk-environment';

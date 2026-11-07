@@ -1,5 +1,5 @@
 import { HttpStatus } from '@zapbip/types';
-import { CLIENT_ADDRESS_HEADER } from '../../src/backoffice/backoffice-constants';
+import { CLIENT_ADDRESS_HEADER } from '../../src/contract/constants';
 import { BackofficeCopyKey } from '../../src/backoffice/backoffice-copy';
 import { BACKOFFICE_TEST_KEY } from '../../test/support/backoffice-credentials';
 import { expect, test } from './fixtures';
