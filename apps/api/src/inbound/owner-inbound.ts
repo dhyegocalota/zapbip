@@ -1,4 +1,12 @@
-import { finishAccountDeletion, openOwnerAccount, ownerLocaleOf, type ChannelInboundEntry, type ReceiveResult } from '@zapbip/core';
+import {
+  fillCopyTokens,
+  finishAccountDeletion,
+  openOwnerAccount,
+  ownerLocaleOf,
+  type AccountRecord,
+  type ChannelInboundEntry,
+  type ReceiveResult,
+} from '@zapbip/core';
 import { AccountState, SenderVerdict, WhatsAppNumberState, type OwnerLocale } from '@zapbip/types';
 import { lifecycleDependenciesOf, inboxPurgeOf } from '../accounts/deletion-sweep';
 import { numberRegistryOf } from '../adapters/d1/d1-number-registry';
@@ -54,6 +62,20 @@ async function refuseNewAccount(input: OwnerInboundInput): Promise<ReceiveResult
   return DROPPED_RESULT;
 }
 
+async function refuseOtherNumber(input: { bindings: Bindings; number: RegisteredNumber; account: AccountRecord }): Promise<ReceiveResult> {
+  const { bindings, number, account } = input;
+  logOperatorEvent({ event: OperatorEvent.InboundAccountOnOtherNumber, fields: {} });
+  const registry = numberRegistryOf({ bindings });
+  const home = account.homeNumberId === null ? null : await registry.findNumber({ numberId: account.homeNumberId });
+  if (home === null) throw new Error(`account ${account.accountId} has no home number`);
+  const text = fillCopyTokens({
+    text: WHATSAPP_COPY[account.locale][OwnerCopyKey.AccountOnOtherNumber],
+    values: { displayNumber: home.displayNumber },
+  });
+  await sendNumberNotice({ bindings, registry, numberId: number.numberId, waId: account.waId, text });
+  return DROPPED_RESULT;
+}
+
 export async function receiveOwnerInbound(input: OwnerInboundInput): Promise<ReceiveResult> {
   const { bindings, waId, channelMessageId, entryOf } = input;
   const isAdmitted = await admitSender({ bindings, waId });
@@ -74,6 +96,8 @@ export async function receiveOwnerInbound(input: OwnerInboundInput): Promise<Rec
     return DROPPED_RESULT;
   }
   const { account, created } = lookup;
+  const isOnOtherNumber = !created && account.homeNumberId !== input.number.numberId;
+  if (isOnOtherNumber) return refuseOtherNumber({ bindings, number: input.number, account });
   if (created) logEvent({ event: LogEvent.AccountCreated, accountId: account.accountId, locale: account.locale });
   if (account.state === AccountState.Deleting) {
     await finishDeletion({ bindings, accountId: account.accountId });

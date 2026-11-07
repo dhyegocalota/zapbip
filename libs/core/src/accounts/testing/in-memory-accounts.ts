@@ -100,13 +100,21 @@ function createDirectory(input: { store: AccountStore }): AccountDirectory {
       const stored = accounts.get(accountId);
       return stored === undefined ? null : toRecord(stored);
     },
-    findOrCreateByWaId: async ({ waId, accountId, initialState, locale, createdAt, newAccountsCap }): Promise<AccountLookup | null> => {
+    findOrCreateByWaId: async ({
+      waId,
+      accountId,
+      initialState,
+      locale,
+      homeNumberId,
+      createdAt,
+      newAccountsCap,
+    }): Promise<AccountLookup | null> => {
       const existingId = identities.get(waId);
       const existing = existingId === undefined ? undefined : accounts.get(existingId);
       if (existing !== undefined) return { account: toRecord(existing), created: false };
       const recentlyCreated = [...accounts.values()].filter((stored) => stored.createdAt > newAccountsCap.since).length;
       if (recentlyCreated >= newAccountsCap.limit) return null;
-      const stored: StoredAccount = { accountId, waId, state: initialState, locale, homeNumberId: null, createdAt };
+      const stored: StoredAccount = { accountId, waId, state: initialState, locale, homeNumberId, createdAt };
       accounts.set(accountId, stored);
       identities.set(waId, accountId);
       return { account: toRecord(stored), created: true };

@@ -21,6 +21,7 @@ import { OwnerLocale } from '@zapbip/types';
 
 const STATUS_OK = 200;
 const NEW_OWNER_PHONE = '5511900000066';
+const LATE_OWNER_PHONE = '5511900000068';
 const UNBOUND_OWNER_PHONE = '5511900000067';
 const MESSAGES_PATH_SUFFIX = '/messages';
 const SECOND = {
@@ -80,7 +81,7 @@ describe('account binding to a number', () => {
       receiveOwnerInbound({
         number: missing,
         bindings: testEnv,
-        waId: NEW_OWNER_PHONE,
+        waId: LATE_OWNER_PHONE,
         channelMessageId: 'wamid.BIND2',
         entryOf: async () => {
           throw new Error('no entry expected');
@@ -88,7 +89,7 @@ describe('account binding to a number', () => {
       }),
     ).rejects.toThrow();
     const row = await testEnv.CONNECTIONS.prepare('SELECT COUNT(*) AS total FROM owner_identities WHERE wa_id = ?')
-      .bind(NEW_OWNER_PHONE)
+      .bind(LATE_OWNER_PHONE)
       .first<{ total: number }>();
     expect(row).toEqual({ total: 0 });
   });

@@ -9,8 +9,8 @@ const SELECT_ACCOUNT = `SELECT accounts.id AS accountId, owner_identities.wa_id 
   JOIN accounts ON accounts.id = owner_identities.account_id`;
 const FIND_BY_WA_ID_STATEMENT = SELECT_ACCOUNT + ' WHERE owner_identities.wa_id = ?';
 const LIST_BY_STATE_STATEMENT = SELECT_ACCOUNT + ' WHERE accounts.state = ? ORDER BY accounts.created_at, accounts.id';
-const CREATE_ACCOUNT_STATEMENT = `INSERT INTO accounts (id, state, created_at)
-  SELECT ?, ?, ?
+const CREATE_ACCOUNT_STATEMENT = `INSERT INTO accounts (id, state, created_at, number_id)
+  SELECT ?, ?, ?, ?
   WHERE NOT EXISTS (SELECT 1 FROM owner_identities WHERE wa_id = ?)
   AND (SELECT COUNT(*) FROM accounts WHERE created_at > ?) < ?`;
 const CREATE_IDENTITY_STATEMENT = `INSERT INTO owner_identities (wa_id, account_id, from_user_id, locale, created_at)
@@ -49,7 +49,15 @@ export class D1AccountDirectory implements AccountDirectory {
     const [accountInsert] = await this.database.batch([
       this.database
         .prepare(CREATE_ACCOUNT_STATEMENT)
-        .bind(input.accountId, input.initialState, input.createdAt, input.waId, input.newAccountsCap.since, input.newAccountsCap.limit),
+        .bind(
+          input.accountId,
+          input.initialState,
+          input.createdAt,
+          input.homeNumberId,
+          input.waId,
+          input.newAccountsCap.since,
+          input.newAccountsCap.limit,
+        ),
       this.database.prepare(CREATE_IDENTITY_STATEMENT).bind(input.waId, input.accountId, input.locale, input.createdAt, input.accountId),
     ]);
     const account = await this.findByWaId({ waId: input.waId });
