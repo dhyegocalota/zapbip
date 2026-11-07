@@ -6,6 +6,7 @@ import { BACKOFFICE_SESSION_MAX_MS } from '../../contract/constants';
 import { parseDeployEnvironment } from '../../operations/deploy-environment';
 import { isWithinRateLimit, RateLimitScope, RETRY_AFTER_SECONDS } from '../auth/rate-limit';
 import { attemptSignIn, SignInOutcome } from '../auth/sign-in';
+import { STYLESHEET_HREF } from '../assets/stylesheet';
 import { CSRF_COOKIE_NAME, CSRF_TOKEN_BYTES, SEE_OTHER_STATUS, SESSION_COOKIE_NAME } from '../backoffice-constants';
 import type { BackofficeEnv } from '../backoffice-env';
 import { noticeOf } from '../backoffice-notice';
@@ -29,7 +30,7 @@ function pageOf(input: { context: Context<BackofficeEnv>; csrfToken: string; fai
       locale={context.get('locale')}
       environment={parseDeployEnvironment({ value: context.env.ENVIRONMENT })}
       csrfToken={csrfToken}
-      stylesheetHref={BackofficePath.Stylesheet}
+      stylesheetHref={STYLESHEET_HREF}
       notice={noticeOf({ value: context.req.query(NOTICE_QUERY) })}
       failed={failed}
     />

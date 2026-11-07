@@ -35,3 +35,4 @@ export const BACKOFFICE_PRUNE_HOUR = 4;
 export const BACKOFFICE_PRUNE_MINUTE = 0;
 export const LOCALE_COOKIE_MAX_AGE_SECONDS = (365 * DAY_MS) / SECOND_MS;
 export const AUDIT_PAGE_LIMIT = 200;
+export const STYLESHEET_CACHE_CONTROL = 'public, max-age=31536000, immutable';

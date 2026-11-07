@@ -5,6 +5,7 @@ import { csrfGuard } from './auth/csrf-guard';
 import { requireSession } from './auth/require-session';
 import { BackofficePath } from './backoffice-paths';
 import { sessionRoutes } from './routes/session-routes';
+import { assetRoutes } from './routes/asset-routes';
 import { auditRoutes } from './routes/audit-routes';
 import { localeRoutes } from './routes/locale-routes';
 import { requestContext } from './request-context';
@@ -34,6 +35,7 @@ function createBaseApp(): Hono<BackofficeEnv> {
 
 export function createBackofficeApp(): Hono<BackofficeEnv> {
   const app = createBaseApp();
+  app.route('/', assetRoutes);
   app.use('*', requestContext);
   PROTECTED_PATHS.forEach((path) => app.use(path, requireSession));
   app.use('*', csrfGuard);
