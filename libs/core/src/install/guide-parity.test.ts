@@ -14,6 +14,8 @@ const ACTION_PATTERN =
   /claude mcp remove|claude mcp add|gemini mcp add|npx zapbip(?:@\S+)? (?:connect|listen|channel)|set_wake|claude -p|codex exec|gemini -p|check_inbox|send_message/g;
 const WAKE_MODE_PATTERN = /mode: "(\w+)"/g;
 const VERSION_PATTERN = /@\S+/;
+const SELF_TEST_COMMAND_PATTERN = /`((?:claude -p "Call|codex exec -c|gemini -p)[^`]*)`/;
+const SELF_TEST_CLIENTS: InstallClient[] = [InstallClient.ClaudeCode, InstallClient.Codex, InstallClient.GeminiCli];
 
 const PLUGIN_PAGE_CLIENTS: InstallClient[] = [InstallClient.Hermes, InstallClient.OpenClaw];
 const STEP_GUIDE_CLIENTS = Object.values(InstallClient).filter((client) => !PLUGIN_PAGE_CLIENTS.includes(client));
@@ -89,6 +91,16 @@ describe('install guide parity', () => {
       const lastStep = setUp.slice([...setUp.matchAll(STEP_START_PATTERN)].at(-1)!.index);
       expect(lastStep).toContain('send_message');
       expect(lastStep).toContain(INSTALL_SELF_TEST_TEXT[locale]);
+    },
+  );
+
+  test.each(GUIDE_LANGUAGES.flatMap((language) => SELF_TEST_CLIENTS.map((client) => ({ ...language, client }))))(
+    'IS-D3 the $locale guide for $client runs the self-test command of the install copy',
+    ({ locale, pagePrefix, client }) => {
+      const copy = INSTALL_SECTIONS[client]({ connectionLink: CONNECTION_LINK_PLACEHOLDER, locale, standbyAgent: null });
+      const selfTestCommand = copy.match(SELF_TEST_COMMAND_PATTERN)?.[1];
+      expect(selfTestCommand).toBeDefined();
+      expect(readGuide({ pagePrefix, client })).toContain(selfTestCommand);
     },
   );
 });

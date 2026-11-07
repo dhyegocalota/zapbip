@@ -454,3 +454,54 @@ describe('docs experience: mcp reference', () => {
     ]);
   });
 });
+
+const DOCS_CONFIG_FILE = `${DOCS_ROOT}/docs.json`;
+const IMAGE_TAG_PATTERN = /<img\b[^>]*>/g;
+const IMAGE_SIZE_PATTERN = /\bwidth=(\{?["'`]?\d+)[\s\S]*\bheight=(\{?["'`]?\d+)|\bheight=(\{?["'`]?\d+)[\s\S]*\bwidth=(\{?["'`]?\d+)/;
+const PORTUGUESE_ENGLISH_TERM_PATTERN = /\b(job|jobs|merge|merges)\b/gi;
+const NOT_FOUND_LINK_PATTERNS = [/\]\(\/\)/, new RegExp(`\\]\\(/${PAGE_LANGUAGE_FOLDER}\\)`)];
+
+type DocsSiteConfig = { favicon?: string; errors?: { 404?: { redirect?: boolean; title?: string; description?: string } } };
+
+function docsSiteConfig(): DocsSiteConfig {
+  return JSON.parse(readRepositoryFile(DOCS_CONFIG_FILE));
+}
+
+function unsizedImages({ markdown }: { markdown: string }): string[] {
+  return (markdown.match(IMAGE_TAG_PATTERN) ?? []).filter((tag) => !IMAGE_SIZE_PATTERN.test(tag));
+}
+
+describe('docs experience: site polish', () => {
+  test('docs.json sets a favicon that is a file committed in apps/docs', () => {
+    const { favicon } = docsSiteConfig();
+    expect(favicon).toBeTypeOf('string');
+    expect(existsSync(repositoryPath(`${DOCS_ROOT}${favicon}`))).toBe(true);
+  });
+
+  test('every image in the docs reserves its space with a width and a height', () => {
+    const violations = pageEntries.flatMap((page) =>
+      unsizedImages({ markdown: readRepositoryFile(pageFileOf(page)) }).map((tag) => `${page}: ${tag}`),
+    );
+    expect(violations).toEqual([]);
+  });
+
+  test('an image tag without a height fails', () => {
+    expect(unsizedImages({ markdown: '<img src="/a.svg" width="420" />' })).toHaveLength(1);
+  });
+
+  test('the pt-br pages use no English job or merge', () => {
+    const files = Object.fromEntries(
+      pageEntries
+        .filter((page) => languageOf(page) === DocsLanguage.PortugueseBrazil)
+        .map((page) => [page, readRepositoryFile(pageFileOf(page))]),
+    );
+    expect(forbiddenViolations({ files, pattern: PORTUGUESE_ENGLISH_TERM_PATTERN })).toEqual([]);
+  });
+
+  test('docs.json shows a custom 404 that links the Overview of both languages', () => {
+    const notFound = docsSiteConfig().errors?.[404];
+    expect(notFound?.redirect).toBe(false);
+    expect(notFound?.title).toBeTruthy();
+    expect(NOT_FOUND_LINK_PATTERNS.filter((pattern) => !pattern.test(notFound?.description ?? ''))).toEqual([]);
+  });
+});
