@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { WAKE_SECRET_KEY_BYTES } from '@zapbip/core';
-import { OwnerLocale } from '@zapbip/types';
+import { hermesWheelFilename, OwnerLocale, ZAPBIP_HERMES_PLUGIN_VERSION } from '@zapbip/types';
 import type { TestProject } from 'vitest/node';
 import { z } from 'zod';
 import { DEVELOPMENT_ENVIRONMENT } from '../../src/contract/constants';
@@ -26,6 +26,9 @@ const STANDBY_PHONE = '5511999990031';
 const STANDBY_AGENTS = ['grok-web', 'grok-bot'];
 const SIGNING_KEY_BYTES = 32;
 const DATABASE_BINDING = 'CONNECTIONS';
+const DEVELOPMENT_PACKAGES_BUCKET = 'zapbip-packages-development';
+const WHEEL_RELEASE_DIRECTORY = join(import.meta.dirname, '..', '..', '..', 'hermes-plugin', 'release');
+const WHEEL_CONTENT_TYPE = 'application/octet-stream';
 const LOG_FILE_NAME = 'wrangler-dev.log';
 
 const seedOutputSchema = z.object({ connections: z.array(z.object({ agent: z.string(), secret: z.string() })) });
@@ -86,6 +89,26 @@ async function setOwnerLocale(input: { phone: string; locale: OwnerLocale; persi
     ...input.persistArguments,
     '--command',
     `UPDATE owner_identities SET locale = '${input.locale}' WHERE wa_id = '${input.phone}'`,
+  ]);
+}
+
+async function seedHermesWheel(input: { persistArguments: string[] }): Promise<void> {
+  const filename = hermesWheelFilename({ version: ZAPBIP_HERMES_PLUGIN_VERSION });
+  await runCommand('pnpm', [
+    'exec',
+    'wrangler',
+    'r2',
+    'object',
+    'put',
+    `${DEVELOPMENT_PACKAGES_BUCKET}/${filename}`,
+    '--file',
+    join(WHEEL_RELEASE_DIRECTORY, filename),
+    '--content-type',
+    WHEEL_CONTENT_TYPE,
+    '--env',
+    DEVELOPMENT_ENVIRONMENT,
+    '--local',
+    ...input.persistArguments,
   ]);
 }
 
@@ -150,6 +173,7 @@ export default async function setup(project: TestProject): Promise<() => Promise
   if (!englishAccount) throw new Error('no english scheduled account');
   await setOwnerLocale({ phone: englishAccount.phone, locale: OwnerLocale.EnglishUs, persistArguments });
   const standbyConnections = await seedConnections({ phone: STANDBY_PHONE, agents: STANDBY_AGENTS, origin });
+  await seedHermesWheel({ persistArguments });
 
   project.provide('stack', {
     origin,
