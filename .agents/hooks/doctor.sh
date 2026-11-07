@@ -47,7 +47,7 @@ readonly PYTHON_REQUIREMENTS_INSTALL="python3 -m pip install --require-hashes -r
 
 python_install() {
   [[ "$manager" == brew ]] && { echo "brew install python@3.13 && $PYTHON_REQUIREMENTS_INSTALL"; return; }
-  echo "https://www.python.org/downloads/ (3.11 to 3.13), then $PYTHON_REQUIREMENTS_INSTALL"
+  echo "https://www.python.org/downloads/ (3.11 to 3.14), then $PYTHON_REQUIREMENTS_INSTALL"
 }
 
 fix_for() {
@@ -94,7 +94,7 @@ check_chromium() { ls -d "$(browsers_dir)"/chromium-* >/dev/null 2>&1; }
 check_skills() { [[ "$(cd "$root/.claude/skills" 2>/dev/null && pwd -P)" == "$(cd "$root/.agents/skills" && pwd -P)" ]]; }
 check_gitleaks() { have gitleaks; }
 check_ffmpeg() { have ffmpeg; }
-check_python() { have python3 && run python3 -c 'import sys, mypy, pytest; sys.exit(not (3, 11) <= sys.version_info[:2] <= (3, 13))' >/dev/null 2>&1; }
+check_python() { have python3 && run python3 -c 'import sys, mypy, pytest; sys.exit(not (3, 11) <= sys.version_info[:2] <= (3, 14))' >/dev/null 2>&1; }
 
 fix_name_for() {
   [[ "$1" == gh ]] && have gh && { echo gh-auth; return; }
