@@ -53,7 +53,7 @@ Every checkbox states the input and the exact expected outcome. A ticked box car
 - [ ] `hermes-wheel.test.ts::lists the package and exactly the resolved runtime dependencies` — input: the file and `requirements.txt`; expected: the names equal the lock plus `zapbip-platform`, and every `pyproject.toml` dependency is present
 - [ ] `hermes-wheel.test.ts::the wheel metadata and entry points match the project` — input: `Requires-Dist` and `entry_points.txt` in the wheel; expected: equal to `pyproject.toml`
 - [ ] `package-route.test.ts::serves the requirements file` — input: the object in `PACKAGES`; expected: 200, `text/plain; charset=utf-8`, immutable cache; `-requirements.txt.bak`, `-extra.txt` and `-requirements.whl` answer 404
-- [ ] `hermes-wheel.e2e.test.ts::the printed install command` — input: the command with the local origin; expected: exit 0 with the plugin and httpx installed; a changed requirements hash fails `sha256sum -c`/`shasum -c` and installs nothing; a zeroed httpx hash fails with `DO NOT MATCH THE HASHES`
+- [ ] `hermes-wheel.e2e.test.ts::the printed install command` — input: the command with the local origin; expected: exit 0 with the plugin and httpx installed, the exact constant run with only the origin, the hash and `--target` substituted, and no `sha256sum`, `shasum` or `pip` shim needed; a changed requirements hash makes the Python check exit non-zero and installs nothing; a zeroed httpx hash fails with `DO NOT MATCH THE HASHES`
 - [ ] `deploy-preflight.test.ts` requirements cases — input: other bytes, a missing object, a 404 and a wrong hash for `zapbip_platform-0.1.0-requirements.txt`; expected: refusals at `HermesWheel` naming the file
 
 ## Prove it for real

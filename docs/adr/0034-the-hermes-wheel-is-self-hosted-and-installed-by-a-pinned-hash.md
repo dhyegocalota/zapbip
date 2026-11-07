@@ -33,7 +33,7 @@ Amendment (security review, owner delegated 2026-11-06): the `#sha256=` direct r
 ## Consequences
 
 - The runtime dependencies are pinned and hashed too; a dependency bump means regenerating `apps/hermes-plugin/requirements.txt`, rebuilding the requirements file, a new hash constant and a new upload.
-- The command is one shell line with `curl` and `sha256sum` (`shasum -a 256 -c -` on macOS) in front of pip.
+- The command is one portable shell line: `mktemp -d` for a private download directory (no tampering between the check and the install), `curl`, a Python `hashlib` check (stock macOS has no `sha256sum`) and `python3 -m pip install --only-binary=:all: --require-hashes`, so pip never builds an sdist with unhashed build dependencies (security re-check, owner delegated 2026-11-06).
 - Each plugin change needs a rebuilt wheel, a version bump (a new immutable key), a new hash constant and an upload; the shape test blocks any partial step.
 - The command is long. The docs show it in a copyable block and the install copy renders it from the constants, so nobody types it.
 - The hash in the docs is the only trust anchor for the plugin code; protecting the repository and the owner's shell protects it.

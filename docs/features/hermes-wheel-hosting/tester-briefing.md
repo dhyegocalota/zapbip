@@ -64,3 +64,9 @@ Branch `feat/hermes-wheel-hosting`, built on `main` at c8a9b6a. Commits are list
 - The e2e downloads httpx, websockets and their dependencies from PyPI by hash, so it needs network access. The local Worker serves a copy of the requirements file whose wheel URL points at the local origin (seeded by `global-setup.ts`).
 - Hypotheses: a changed byte of the requirements file fails the hash check before pip runs; a changed dependency hash fails pip under `--require-hashes`; the docs preflight and the Worker preflight refuse when either hosted file differs from its constant.
 
+## Portable command (security re-check)
+
+- The final command is `d=$(mktemp -d) && curl -fsSL https://mcp.zapbip.com/pkg/zapbip_platform-0.1.0-requirements.txt -o "$d/zapbip-requirements.txt" && python3 -c 'import hashlib,sys; sys.exit(hashlib.sha256(open(sys.argv[1],"rb").read()).hexdigest() != sys.argv[2])' "$d/zapbip-requirements.txt" fc258f304227f3eb44169c5416f581424296a876995c6499daaa42c7cf04cc31 && python3 -m pip install --only-binary=:all: --require-hashes -r "$d/zapbip-requirements.txt"`.
+- Red afcdb4df; green is the commit after it. The e2e runs the exact constant, with only the origin, the requirements hash and `--target` substituted; the darwin `shasum` swap is gone.
+- Hypotheses: it works on stock macOS and Linux without `sha256sum` or a `pip` shim; a flipped byte in the requirements file makes the Python check exit 1 and nothing installs; `--only-binary=:all:` makes pip refuse any sdist.
+
