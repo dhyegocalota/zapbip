@@ -1,0 +1,18 @@
+{
+  "id": "zapbip",
+  "channels": ["zapbip"],
+  "name": "Zapbip",
+  "description": "Zapbip WhatsApp channel for the owner",
+  "configSchema": { "type": "object", "additionalProperties": false, "properties": {} },
+  "channelConfigs": {
+    "zapbip": {
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["connectionLink"],
+        "properties": { "connectionLink": { "type": "string" } }
+      },
+      "uiHints": { "connectionLink": { "label": "Connection link", "sensitive": true } }
+    }
+  }
+}

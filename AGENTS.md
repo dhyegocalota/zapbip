@@ -28,7 +28,7 @@ docs/scenarios          agentic walks of the product core, one file per flow, ru
 .agents/skills          skills (single source; `.claude/skills` links here)
 .agents/roles           agent role bodies shared by `.claude/agents` and `.codex/agents`
 .agents/hooks           hook scripts shared by `.claude/settings.json` and `.codex/hooks.json`
-scripts                 the local gate and its tests
+scripts                 the local gate and its tests; scripts/e2e/clients holds the Docker fixtures of the client end-to-end suite
 ```
 
 Applications go under `apps/`, shared libraries under `libs/`; a feature that adds one adds its line here and, for a new root entry, its entry to `delivery-docs.test.ts`.
