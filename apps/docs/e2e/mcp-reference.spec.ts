@@ -13,7 +13,8 @@ for (const language of Object.values(DocsLanguage)) {
       await browserPage.goto(`${LANGUAGE_PREFIX_OF[language]}/mcp-reference/${page}`);
       const table = browserPage.getByRole('table').last();
       await expect(table).toBeVisible();
-      for (const kind of Object.values(MessageKind)) await expect(table.getByRole('cell', { name: kind, exact: true })).toBeVisible();
+      for (const kind of Object.values(MessageKind))
+        await expect(table.getByRole('cell', { name: kind, exact: true }).first()).toBeVisible();
     });
   }
 }

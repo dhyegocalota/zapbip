@@ -1,13 +1,13 @@
-| Kind                 | Agent to owner                                                                 | Owner to agent                                                              |
-| -------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
-| text                 | [send_message](/mcp-reference/send-message)                                    | text                                                                        |
-| image                | [send_media](/mcp-reference/send-media), up to 5 MB                            | the image inline when up to 1 MB, otherwise a signed link                   |
-| video                | [send_media](/mcp-reference/send-media), up to 16 MB                           | signed link                                                                 |
-| audio and voice note | [send_media](/mcp-reference/send-media), up to 16 MB, `voice` for a voice note | signed link                                                                 |
-| document             | [send_media](/mcp-reference/send-media), up to 100 MB                          | signed link, file name and MIME type                                        |
-| sticker              | [send_media](/mcp-reference/send-media)                                        | signed link                                                                 |
-| location             | [send_location](/mcp-reference/send-location)                                  | latitude, longitude, name and address                                       |
-| contacts             | [send_contact](/mcp-reference/send-contact)                                    | the contact cards                                                           |
-| reaction             | [react](/mcp-reference/react)                                                  | `message_id` and `emoji`, routed to the agent that sent the reacted message |
-| buttons and list     | [ask](/mcp-reference/ask), up to 3 options as buttons and 4 to 10 as a list    | `choice` with `option_id`, `title` and optional `description`               |
-| quoted reply         | `reply_to` on every send                                                       | `reply_to`, routed to the agent that sent the quoted message                |
+| Kind       | Agent to owner                                                                 | Owner to agent                                                              |
+| ---------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
+| `text`     | [send_message](/mcp-reference/send-message)                                    | text                                                                        |
+| `image`    | [send_media](/mcp-reference/send-media), up to 5 MB                            | the image inline when up to 1 MB, otherwise a signed link                   |
+| `video`    | [send_media](/mcp-reference/send-media), up to 16 MB                           | signed link                                                                 |
+| `audio`    | [send_media](/mcp-reference/send-media), up to 16 MB, `voice` for a voice note | signed link                                                                 |
+| `document` | [send_media](/mcp-reference/send-media), up to 100 MB                          | signed link, file name and MIME type                                        |
+| `sticker`  | [send_media](/mcp-reference/send-media)                                        | signed link                                                                 |
+| `location` | [send_location](/mcp-reference/send-location)                                  | latitude, longitude, name and address                                       |
+| `contacts` | [send_contact](/mcp-reference/send-contact)                                    | the contact cards                                                           |
+| `reaction` | [react](/mcp-reference/react)                                                  | `message_id` and `emoji`, routed to the agent that sent the reacted message |
+| `choice`   | [ask](/mcp-reference/ask), up to 3 options as buttons and 4 to 10 as a list    | `option_id`, `title` and optional `description`                             |
+| quote      | `reply_to` on every send                                                       | `reply_to`, routed to the agent that sent the quoted message                |
