@@ -22,10 +22,10 @@ export async function attemptSignIn(input: { env: Bindings; key: string; code: s
   const operator = await readOperator({ database: env.CONNECTIONS });
   const isKeyValid = await isBackofficeKey({ submittedKey: key, expectedDigest: env.BACKOFFICE_KEY_DIGEST });
   const step = await matchTotpStep({ secretBase32: env.BACKOFFICE_TOTP_SECRET, code, now, lastStep: operator.last_totp_step });
-  if (!isKeyValid || step === null) {
+  const isStepClaimed = isKeyValid && step !== null && (await recordSuccess({ database: env.CONNECTIONS, step }));
+  if (!isStepClaimed) {
     await recordFailure({ database: env.CONNECTIONS });
     return { outcome: SignInOutcome.Failed };
   }
-  await recordSuccess({ database: env.CONNECTIONS, step });
   return { outcome: SignInOutcome.Succeeded, sessionToken: await createSession({ database: env.CONNECTIONS, now }) };
 }
