@@ -6,6 +6,7 @@ import {
   CSRF_COOKIE,
   openSignInForm,
   postSignIn,
+  SIGN_IN_FAILED_LOCATION,
   readOperator,
   requestBackoffice,
   resetBackoffice,
@@ -18,7 +19,6 @@ import {
 
 const STATUS_OK = 200;
 const STATUS_SEE_OTHER = 303;
-const STATUS_UNAUTHORIZED = 401;
 
 beforeEach(resetBackoffice);
 
@@ -65,12 +65,17 @@ describe('sign-in', () => {
     expect(await sessionDigests()).toEqual([await sha256Hex({ value: sessionToken })]);
   });
 
-  test('a wrong key, a wrong code and both are one identical 401 and count as failures', async () => {
+  test('a wrong key, a wrong code and both are one identical redirect and count as failures', async () => {
     const { csrf } = await openSignInForm({});
     const wrongKey = await postSignIn({ key: WRONG_KEY, code: await validCode({}), csrf });
     const wrongCode = await postSignIn({ key: BACKOFFICE_TEST_KEY, code: WRONG_CODE, csrf });
     const wrongBoth = await postSignIn({ key: WRONG_KEY, code: WRONG_CODE, csrf });
-    expect([wrongKey.status, wrongCode.status, wrongBoth.status]).toEqual([STATUS_UNAUTHORIZED, STATUS_UNAUTHORIZED, STATUS_UNAUTHORIZED]);
+    expect([wrongKey.status, wrongCode.status, wrongBoth.status]).toEqual([STATUS_SEE_OTHER, STATUS_SEE_OTHER, STATUS_SEE_OTHER]);
+    expect([wrongKey, wrongCode, wrongBoth].map((response) => response.headers.get('location'))).toEqual([
+      SIGN_IN_FAILED_LOCATION,
+      SIGN_IN_FAILED_LOCATION,
+      SIGN_IN_FAILED_LOCATION,
+    ]);
     const bodies = await Promise.all([wrongKey, wrongCode, wrongBoth].map((response) => response.text()));
     expect(bodies[1]).toBe(bodies[0]);
     expect(bodies[2]).toBe(bodies[0]);
@@ -79,8 +84,10 @@ describe('sign-in', () => {
   });
 
   test('the failure page is the form again and never names the failing factor', async () => {
-    const response = await postSignIn({ key: WRONG_KEY, code: WRONG_CODE });
+    const failed = await postSignIn({ key: WRONG_KEY, code: WRONG_CODE });
+    const response = await requestBackoffice({ path: failed.headers.get('location')! });
     const html = await response.text();
+    expect(response.status).toBe(STATUS_OK);
     expect(html).toContain('action="/sign-in"');
     expect(html).toContain('role="alert"');
     expect(html).not.toContain(WRONG_KEY);
@@ -94,12 +101,22 @@ describe('sign-in', () => {
   });
 });
 
+describe('a failed sign-in', () => {
+  test('is a 303 to a GET, and reloading that GET does not count another failure', async () => {
+    const failed = await postSignIn({ key: WRONG_KEY, code: WRONG_CODE });
+    expect(failed.status).toBe(STATUS_SEE_OTHER);
+    await requestBackoffice({ path: SIGN_IN_FAILED_LOCATION });
+    await requestBackoffice({ path: SIGN_IN_FAILED_LOCATION });
+    expect((await readOperator()).failed_attempts).toBe(1);
+  });
+});
+
 describe('one-time codes', () => {
   test('the same valid code a second time is refused (pin: the read-then-check path already refuses it)', async () => {
     const code = await validCode({});
     const first = await postSignIn({ key: BACKOFFICE_TEST_KEY, code });
     const second = await postSignIn({ key: BACKOFFICE_TEST_KEY, code });
-    expect([first.status, second.status]).toEqual([STATUS_SEE_OTHER, STATUS_UNAUTHORIZED]);
+    expect([first, second].map((response) => response.headers.get('location'))).toEqual(['/', SIGN_IN_FAILED_LOCATION]);
   });
 
   test('two concurrent sign-ins with one code open exactly one session', async () => {
@@ -109,7 +126,7 @@ describe('one-time codes', () => {
       postSignIn({ key: BACKOFFICE_TEST_KEY, code, csrf }),
       postSignIn({ key: BACKOFFICE_TEST_KEY, code, csrf }),
     ]);
-    expect(responses.map((response) => response.status).sort()).toEqual([STATUS_SEE_OTHER, STATUS_UNAUTHORIZED]);
+    expect(responses.map((response) => response.headers.get('location')).sort()).toEqual(['/', SIGN_IN_FAILED_LOCATION]);
     expect(await sessionDigests()).toHaveLength(1);
   });
 });

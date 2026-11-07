@@ -3,10 +3,11 @@ import { BACKOFFICE_LOCKOUT_THRESHOLD } from '../../src/contract/constants';
 import { BACKOFFICE_TEST_KEY } from '../../test/support/backoffice-credentials';
 import { expect, test } from './fixtures';
 import { copy } from './support/copy';
-import { currentCode, wrongCode } from './support/operator-database';
+import { currentCode, failedAttempts, wrongCode } from './support/operator-database';
 import { fillSignIn, signIn } from './support/sign-in';
 
 const SIGN_IN_PATH = /\/sign-in$/;
+const FAILED_SIGN_IN_PATH = /\/sign-in\?notice=SignInFailed$/;
 const SIGNED_OUT_PATH = /\/sign-in\?notice=SignedOut$/;
 
 test('signs in and out', async ({ page }) => {
@@ -22,8 +23,18 @@ test('wrong code shows the generic failure and empties the key field', async ({ 
   await page.goto('/sign-in');
   await fillSignIn({ page, key: BACKOFFICE_TEST_KEY, code: await wrongCode() });
   await expect(page.getByText(copy({ key: BackofficeCopyKey.SignInFailed }))).toBeVisible();
-  await expect(page).toHaveURL(SIGN_IN_PATH);
+  await expect(page).toHaveURL(FAILED_SIGN_IN_PATH);
   await expect(page.getByLabel(copy({ key: BackofficeCopyKey.SignInKeyLabel }))).toHaveValue('');
+});
+
+test('reloading after a failed sign-in does not count another attempt', async ({ page }) => {
+  await page.goto('/sign-in');
+  await fillSignIn({ page, key: BACKOFFICE_TEST_KEY, code: await wrongCode() });
+  await expect(page).toHaveURL(FAILED_SIGN_IN_PATH);
+  expect(failedAttempts()).toBe(1);
+  await page.reload();
+  await expect(page.getByText(copy({ key: BackofficeCopyKey.SignInFailed }))).toBeVisible();
+  expect(failedAttempts()).toBe(1);
 });
 
 test('lockout refuses the correct factors after repeated failures', async ({ page, network }) => {
@@ -38,5 +49,5 @@ test('lockout refuses the correct factors after repeated failures', async ({ pag
   network.rotateAddress();
   await fillSignIn({ page, key: BACKOFFICE_TEST_KEY, code: await currentCode() });
   await expect(page.getByText(copy({ key: BackofficeCopyKey.SignInFailed }))).toBeVisible();
-  await expect(page).toHaveURL(SIGN_IN_PATH);
+  await expect(page).toHaveURL(FAILED_SIGN_IN_PATH);
 });

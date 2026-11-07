@@ -16,6 +16,7 @@ const CLEAR_REGISTRY_STATEMENTS = [
   'DELETE FROM backoffice_audit',
   'DELETE FROM backoffice_sessions',
 ];
+const FAILED_ATTEMPTS_QUERY = 'SELECT failed_attempts FROM backoffice_operator WHERE id = 1';
 const CLEAR_SESSIONS_STATEMENTS = ['DELETE FROM backoffice_sessions'];
 const CODE_WINDOW_STEPS = 1;
 const CANDIDATE_WRONG_CODES = ['000000', '111111'];
@@ -46,6 +47,14 @@ function execute(input: { statements: string[] }): void {
 
 export function releaseOperator(): void {
   execute({ statements: RELEASE_OPERATOR_STATEMENTS });
+}
+
+export function failedAttempts(): number {
+  const database = openDatabase();
+  const row = database.prepare(FAILED_ATTEMPTS_QUERY).get() as { failed_attempts: number } | undefined;
+  database.close();
+  if (row === undefined) throw new Error('the operator row is missing');
+  return row.failed_attempts;
 }
 
 export function clearSessions(): void {

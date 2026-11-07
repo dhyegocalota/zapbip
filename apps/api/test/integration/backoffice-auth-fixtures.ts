@@ -14,6 +14,7 @@ export const SESSION_COOKIE = '__Host-zb_bo_session';
 export const CSRF_COOKIE = '__Host-zb_bo_csrf';
 export const WRONG_KEY = `zb_bo_${'W'.repeat(43)}`;
 export const WRONG_CODE = '000000';
+export const SIGN_IN_FAILED_LOCATION = '/sign-in?notice=SignInFailed';
 export { BACKOFFICE_TEST_KEY };
 
 const UNLIMITED = Number.MAX_SAFE_INTEGER;

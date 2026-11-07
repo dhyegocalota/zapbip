@@ -78,6 +78,14 @@ export async function postAction(input: {
   });
 }
 
+export async function submitRejectedAction(input: Parameters<typeof postAction>[0]): Promise<{ posted: Response; followed: Response }> {
+  const posted = await postAction(input);
+  const location = posted.headers.get('Location');
+  if (location === null) throw new Error(`the rejected form answered ${posted.status} without a Location`);
+  const followed = await getPage({ path: location, sessionToken: input.sessionToken, env: input.env });
+  return { posted, followed };
+}
+
 export function refusingStepUpEnv(): BackofficeBindings {
   return backofficeEnv({ limiter: createFakeRateLimiter({ limit: 0 }) });
 }

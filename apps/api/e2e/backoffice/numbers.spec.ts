@@ -104,6 +104,21 @@ test('refuses a registration whose step-up code is wrong', async ({ page }) => {
   await expect(page.getByRole('heading', { name: copy({ key: BackofficeCopyKey.NumbersEmptyTitle }) })).toBeVisible();
 });
 
+test('a rejected registration is a redirect: reload and Back never resubmit the form', async ({ page }) => {
+  const submissions: string[] = [];
+  page.on('request', (request) => {
+    if (request.method() === 'POST') submissions.push(request.url());
+  });
+  await registerNumber({ page, number: walkNumberOf({ index: 1 }), code: await wrongCode() });
+  await expect(page.getByText(copy({ key: BackofficeCopyKey.StepUpRejected }))).toBeVisible();
+  await page.reload();
+  await page.goBack();
+  const phoneNumberField = page.getByLabel(copy({ key: BackofficeCopyKey.RegisterPhoneNumberIdLabel }), { exact: true });
+  await expect(phoneNumberField).toHaveValue('');
+  await expect(page).toHaveURL(REGISTER_PATH);
+  expect(submissions).toHaveLength(1);
+});
+
 test('refuses a state change whose step-up code is wrong', async ({ page, fakeGraph }) => {
   await activateNumber({ page, fakeGraph, number: walkNumberOf({ index: 1 }) });
   await changeState({ page, optionKey: BackofficeCopyKey.NumberStateOptionClosed, code: await wrongCode() });

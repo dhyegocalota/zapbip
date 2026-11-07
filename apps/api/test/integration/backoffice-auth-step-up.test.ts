@@ -9,6 +9,7 @@ import {
   backofficeEnv,
   CLIENT_ADDRESS,
   postSignIn,
+  SIGN_IN_FAILED_LOCATION,
   readOperator,
   resetBackoffice,
   validCode,
@@ -76,7 +77,7 @@ describe('step-up', () => {
     expect(await stepUp({ code: await validCode({}) })).toBe(StepUpOutcome.Rejected);
     expect((await readOperator()).last_totp_step).toBe(stepBefore);
     const signIn = await postSignIn({ key: BACKOFFICE_TEST_KEY, code: await validCode({}) });
-    expect(signIn.status).toBe(401);
+    expect(signIn.headers.get('location')).toBe(SIGN_IN_FAILED_LOCATION);
   });
 
   test('a correct code is accepted, consumed and resets the failure count', async () => {

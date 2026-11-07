@@ -21,6 +21,7 @@ import {
   registrationFields,
   startBackofficeSession,
   stateOf,
+  submitRejectedAction,
 } from './backoffice-numbers-fixtures';
 
 const STATUS_OK = 200;
@@ -153,9 +154,15 @@ describe('registering a number', () => {
     { field: NumberFormField.Label, value: 'x'.repeat(61), message: BackofficeCopyKey.FieldErrorLabelLength },
     { field: NumberFormField.AccessToken, value: '', message: BackofficeCopyKey.FieldErrorRequired },
   ])('answers 422 with the copy for an invalid $field and registers nothing', async ({ field, value, message }) => {
-    const response = await postAction({ path: REGISTER_PATH, sessionToken, fields: registrationFields({ [field]: value }) });
-    const body = await response.text();
-    expect(response.status).toBe(STATUS_UNPROCESSABLE);
+    const { posted, followed } = await submitRejectedAction({
+      path: REGISTER_PATH,
+      sessionToken,
+      fields: registrationFields({ [field]: value }),
+    });
+    const body = await followed.text();
+    expect(posted.status).toBe(STATUS_SEE_OTHER);
+    expect(posted.headers.get('Location')).toBe(REGISTER_PATH);
+    expect(followed.status).toBe(STATUS_UNPROCESSABLE);
     expect(body).toContain(copy[message]);
     expect(body).not.toContain(APP_SECRET);
     expect(await countRows({ table: 'whatsapp_numbers' })).toBe(0);
@@ -168,9 +175,10 @@ describe('registering a number', () => {
       [NumberFormField.MetaAppId]: '900000000556',
       [NumberFormField.DisplayNumber]: '+5511955550001',
     });
-    const response = await postAction({ path: REGISTER_PATH, sessionToken, fields });
-    expect(response.status).toBe(STATUS_CONFLICT);
-    expect(await response.text()).toContain(copy[BackofficeCopyKey.FieldErrorDuplicate]);
+    const { posted, followed } = await submitRejectedAction({ path: REGISTER_PATH, sessionToken, fields });
+    expect(posted.status).toBe(STATUS_SEE_OTHER);
+    expect(followed.status).toBe(STATUS_CONFLICT);
+    expect(await followed.text()).toContain(copy[BackofficeCopyKey.FieldErrorDuplicate]);
     expect(await countRows({ table: 'whatsapp_numbers' })).toBe(1);
     expect(await countRows({ table: 'meta_apps' })).toBe(1);
   });
@@ -219,23 +227,25 @@ describe('changing the state of a number', () => {
 
   test('refuses to disable without the confirmation and keeps the state', async () => {
     await seedNumber({ suffix: '0008', label: 'Active', state: WhatsAppNumberState.Active });
-    const response = await postAction({
+    const { posted, followed } = await submitRejectedAction({
       path: '/numbers/num_0008/state',
       sessionToken,
       fields: { [NumberFormField.State]: WhatsAppNumberState.Disabled },
     });
-    expect(response.status).toBe(STATUS_UNPROCESSABLE);
+    expect(posted.status).toBe(STATUS_SEE_OTHER);
+    expect(followed.status).toBe(STATUS_UNPROCESSABLE);
     expect(await stateOf({ numberId: 'num_0008' })).toBe(WhatsAppNumberState.Active);
   });
 
   test('refuses a transition the table does not allow and keeps the state', async () => {
     await seedNumber({ suffix: '0009', label: 'Disabled', state: WhatsAppNumberState.Disabled });
-    const response = await postAction({
+    const { posted, followed } = await submitRejectedAction({
       path: '/numbers/num_0009/state',
       sessionToken,
       fields: { [NumberFormField.State]: WhatsAppNumberState.Active },
     });
-    expect(response.status).toBe(STATUS_UNPROCESSABLE);
+    expect(posted.status).toBe(STATUS_SEE_OTHER);
+    expect(followed.status).toBe(STATUS_UNPROCESSABLE);
     expect(await stateOf({ numberId: 'num_0009' })).toBe(WhatsAppNumberState.Disabled);
   });
 
@@ -297,49 +307,58 @@ describe('replacing credentials', () => {
 describe('step-up on a number action', () => {
   test('a missing code answers 401 and changes nothing', async () => {
     await seedNumber({ suffix: '0012', label: 'Active', state: WhatsAppNumberState.Active });
-    const response = await postAction({
+    const { posted, followed } = await submitRejectedAction({
       path: '/numbers/num_0012/state',
       sessionToken,
       fields: { [NumberFormField.State]: WhatsAppNumberState.Closed },
       code: '',
     });
-    expect(response.status).toBe(STATUS_UNAUTHORIZED);
+    expect(posted.status).toBe(STATUS_SEE_OTHER);
+    expect(followed.status).toBe(STATUS_UNAUTHORIZED);
     expect(await stateOf({ numberId: 'num_0012' })).toBe(WhatsAppNumberState.Active);
   });
 
   test('a wrong code answers 401 with the copy, counts one failure and audits step_up.failed', async () => {
     await seedNumber({ suffix: '0013', label: 'Active', state: WhatsAppNumberState.Active });
     const before = (await readOperator()).failed_attempts;
-    const response = await postAction({
+    const { posted, followed } = await submitRejectedAction({
       path: '/numbers/num_0013/state',
       sessionToken,
       fields: { [NumberFormField.State]: WhatsAppNumberState.Closed },
       code: WRONG_CODE,
     });
-    expect(response.status).toBe(STATUS_UNAUTHORIZED);
-    expect(await response.text()).toContain(copy[BackofficeCopyKey.StepUpRejected]);
+    expect(posted.status).toBe(STATUS_SEE_OTHER);
+    expect(followed.status).toBe(STATUS_UNAUTHORIZED);
+    expect(await followed.text()).toContain(copy[BackofficeCopyKey.StepUpRejected]);
     expect((await readOperator()).failed_attempts).toBe(before + 1);
     expect(await stateOf({ numberId: 'num_0013' })).toBe(WhatsAppNumberState.Active);
   });
 
   test('a refused state change keeps the chosen state selected', async () => {
     await seedNumber({ suffix: '0015', label: 'Active', state: WhatsAppNumberState.Active });
-    const response = await postAction({
+    const { posted, followed } = await submitRejectedAction({
       path: '/numbers/num_0015/state',
       sessionToken,
       fields: { [NumberFormField.State]: WhatsAppNumberState.Disabled, [NumberFormField.ConfirmDisable]: CHECKED_VALUE },
       code: WRONG_CODE,
     });
-    const body = await response.text();
-    expect(response.status).toBe(STATUS_UNAUTHORIZED);
+    const body = await followed.text();
+    expect(posted.status).toBe(STATUS_SEE_OTHER);
+    expect(followed.status).toBe(STATUS_UNAUTHORIZED);
     expect(body).toMatch(/<input[^>]*value="disabled"[^>]*checked/);
     expect(body).not.toMatch(/<input[^>]*value="closed"[^>]*checked/);
   });
 
   test('a refused register keeps the typed non-secret fields and never echoes the secrets', async () => {
-    const response = await postAction({ path: REGISTER_PATH, sessionToken, fields: registrationFields({}), code: WRONG_CODE });
-    const body = await response.text();
-    expect(response.status).toBe(STATUS_UNAUTHORIZED);
+    const { posted, followed } = await submitRejectedAction({
+      path: REGISTER_PATH,
+      sessionToken,
+      fields: registrationFields({}),
+      code: WRONG_CODE,
+    });
+    const body = await followed.text();
+    expect(posted.status).toBe(STATUS_SEE_OTHER);
+    expect(followed.status).toBe(STATUS_UNAUTHORIZED);
     expect(body).toContain(PHONE_NUMBER_ID);
     expect(body).not.toContain(ACCESS_TOKEN);
     expect(body).not.toContain(APP_SECRET);

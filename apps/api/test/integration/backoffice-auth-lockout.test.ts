@@ -8,13 +8,13 @@ import {
   postSignIn,
   readOperator,
   resetBackoffice,
+  SIGN_IN_FAILED_LOCATION,
   validCode,
   WRONG_CODE,
   WRONG_KEY,
 } from './backoffice-auth-fixtures';
 
 const STATUS_SEE_OTHER = 303;
-const STATUS_UNAUTHORIZED = 401;
 const NOW = Date.UTC(2026, 10, 7, 12);
 const LOCKED_ACTION = 'sign_in.locked';
 const FIVE_FAILURES = 5;
@@ -63,7 +63,7 @@ describe('lockout', () => {
   test('a locked operator is refused with correct factors and nothing changes', async () => {
     await failMany({ count: BACKOFFICE_LOCKOUT_THRESHOLD });
     const response = await postSignIn({ key: BACKOFFICE_TEST_KEY, code: await validCode({}) });
-    expect(response.status).toBe(STATUS_UNAUTHORIZED);
+    expect(response.headers.get('location')).toBe(SIGN_IN_FAILED_LOCATION);
     expect((await readOperator()).failed_attempts).toBe(BACKOFFICE_LOCKOUT_THRESHOLD);
     expect(await lockedAuditRows()).toBe(1);
   });
