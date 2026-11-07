@@ -123,7 +123,9 @@ describe('worker preflight', () => {
     const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell }));
     expect(refusal?.step).toBe(PreflightStep.NpmVersion);
     expect(refusal?.message).toContain(`zapbip@${NPM_VERSION}`);
-    expect(shell.commands).toEqual([`npm view zapbip@${NPM_VERSION} maintainers --json --registry=${NPM_REGISTRY_URL}`]);
+    expect(shell.commands).toEqual([
+      `npm view zapbip@${NPM_VERSION} maintainers --json --registry=${NPM_REGISTRY_URL} --@zapbip:registry=${NPM_REGISTRY_URL}`,
+    ]);
   });
 
   it('refuses production when the maintainers do not include the owner npm user', async () => {
@@ -187,11 +189,24 @@ describe('worker preflight', () => {
     expect(refusal?.message).toContain('second-person');
   });
 
-  it('accepts production when the owner is the only Owner and others hold lesser roles', async () => {
+  it('refuses production when anyone else holds the Maintainer role on PyPI', async () => {
     const rolesAnswer = pypiRolesAnswer({
       roles: [
         ['Owner', PYPI_PUBLISHER],
         ['Maintainer', 'helper'],
+      ],
+    });
+    const packageFetcher = fakePackageFetcher({ rolesAnswer });
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, packageFetcher }));
+    expect(refusal?.step).toBe(PreflightStep.PypiVersion);
+    expect(refusal?.message).toContain('helper');
+  });
+
+  it('accepts production when the publisher holds both the Owner and the Maintainer role on PyPI', async () => {
+    const rolesAnswer = pypiRolesAnswer({
+      roles: [
+        ['Owner', PYPI_PUBLISHER],
+        ['Maintainer', PYPI_PUBLISHER],
       ],
     });
     const packageFetcher = fakePackageFetcher({ rolesAnswer });
@@ -574,7 +589,9 @@ describe('docs preflight', () => {
     });
     expect(refusal?.step).toBe(PreflightStep.NpmVersion);
     expect(refusal?.message).toContain(`zapbip@${NPM_VERSION}`);
-    expect(shell.commands).toEqual([`npm view zapbip@${NPM_VERSION} maintainers --json --registry=${NPM_REGISTRY_URL}`]);
+    expect(shell.commands).toEqual([
+      `npm view zapbip@${NPM_VERSION} maintainers --json --registry=${NPM_REGISTRY_URL} --@zapbip:registry=${NPM_REGISTRY_URL}`,
+    ]);
   });
 
   it('refuses until the OpenClaw plugin version resolves on npm, naming it', async () => {
@@ -592,9 +609,9 @@ describe('docs preflight', () => {
     expect(refusal?.step).toBe(PreflightStep.NpmVersion);
     expect(refusal?.message).toContain(`@zapbip/openclaw-plugin@${NPM_VERSION}`);
     expect(shell.commands).toEqual([
-      `npm view zapbip@${NPM_VERSION} maintainers --json --registry=${NPM_REGISTRY_URL}`,
-      `npm view zapbip@${NPM_VERSION} _npmUser --json --registry=${NPM_REGISTRY_URL}`,
-      `npm view @zapbip/openclaw-plugin@${NPM_VERSION} maintainers --json --registry=${NPM_REGISTRY_URL}`,
+      `npm view zapbip@${NPM_VERSION} maintainers --json --registry=${NPM_REGISTRY_URL} --@zapbip:registry=${NPM_REGISTRY_URL}`,
+      `npm view zapbip@${NPM_VERSION} _npmUser --json --registry=${NPM_REGISTRY_URL} --@zapbip:registry=${NPM_REGISTRY_URL}`,
+      `npm view @zapbip/openclaw-plugin@${NPM_VERSION} maintainers --json --registry=${NPM_REGISTRY_URL} --@zapbip:registry=${NPM_REGISTRY_URL}`,
     ]);
   });
 
