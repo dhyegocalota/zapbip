@@ -1,6 +1,6 @@
 # Hermes wheel hosting
 
-**Status:** Approved
+**Status:** Building
 **Tier:** 🟡 medium
 **Owner approval:** approved 2026-11-06 (owner delegated)
 **ADRs:** [0034](../../adr/0034-the-hermes-wheel-is-self-hosted-and-installed-by-a-pinned-hash.md)
