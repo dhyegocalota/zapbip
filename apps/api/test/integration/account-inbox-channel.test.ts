@@ -3,6 +3,7 @@ import { ChannelInboundKind, DeliveryState, MediaOrigin, MessageDirection, Messa
 import { evictDurableObject, reset, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
 import { afterEach, describe, expect, it } from 'vitest';
 import { AccountInbox } from '../../src/account-inbox/account-inbox';
+import { runMigrations } from '../../src/account-inbox/run-migrations';
 import { ACCOUNT_INBOX_MIGRATIONS } from '../../src/account-inbox/migrations';
 import type { Bindings } from '../../src/contract/env';
 import { DevAccountInbox } from '../../src/dev/dev-account-inbox';
@@ -12,6 +13,10 @@ import { advanceClock } from '../support/inbox-session';
 import { accountInboxStub, connectionOf, testEnv, whatsappTestEnv } from '../support/workers-env';
 
 const ACCOUNT_ID = 'acc_channel';
+const UPGRADE_ACCOUNT_ID = 'acc_upgrade';
+const VERSION_BEFORE_CHANNEL = 4;
+const LIST_USER_TABLES_STATEMENT =
+  "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%'";
 const CHANNEL_MESSAGE_ID = 'wamid.inbound.1';
 const OUTBOUND_CHANNEL_MESSAGE_ID = 'wamid.outbound.1';
 const ACCESS_TOKEN_VARIABLE = 'WHATSAPP_ACCESS_TOKEN';
@@ -394,6 +399,33 @@ describe('DO schema v4', () => {
     );
     expect(schema.windowColumns).toContain('closed_at');
     expect(schema.versions).toEqual(ACCOUNT_INBOX_MIGRATIONS.map((migration) => migration.version));
+  });
+});
+
+describe('DO schema upgrade', () => {
+  it('applies v4 to a database that holds versions 1, 2 and 5 and nothing else', async () => {
+    const upgrade = await runInDurableObject(accountInboxStub({ accountId: UPGRADE_ACCOUNT_ID }), (_instance, state) => {
+      state.storage.sql
+        .exec<{ name: string }>(LIST_USER_TABLES_STATEMENT)
+        .toArray()
+        .forEach((table) => state.storage.sql.exec(`DROP TABLE ${table.name}`));
+      const seeded = runMigrations({
+        storage: state.storage,
+        migrations: ACCOUNT_INBOX_MIGRATIONS.filter((migration) => migration.version !== VERSION_BEFORE_CHANNEL),
+      });
+      const applied = runMigrations({ storage: state.storage, migrations: ACCOUNT_INBOX_MIGRATIONS });
+      return {
+        seeded,
+        applied,
+        messageColumns: state.storage.sql
+          .exec<{ name: string }>('PRAGMA table_info(inbox_messages)')
+          .toArray()
+          .map((column) => column.name),
+      };
+    });
+    expect(upgrade.seeded).toEqual([1, 2, 5]);
+    expect(upgrade.applied).toEqual([VERSION_BEFORE_CHANNEL]);
+    expect(upgrade.messageColumns).toContain('channel_message_id');
   });
 });
 

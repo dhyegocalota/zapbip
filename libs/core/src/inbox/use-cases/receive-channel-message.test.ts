@@ -138,7 +138,7 @@ describe('receiveChannelMessage', () => {
     expect(await environment.repository.countUnread({ agent: 'alpha' })).toBe(0);
   });
 
-  test.each([true, true, false])('stores the forwarded kind %s of an owner message', async (forwarded) => {
+  test.each([true, false])('stores forwarded %s on an owner message', async (forwarded) => {
     const environment = await environmentWithAlpha();
     const entry = ownerTextEntry({ environment, text: '@alpha oi', forwarded });
     const result = await receiveChannel({ environment, entry });
