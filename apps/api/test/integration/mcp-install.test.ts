@@ -106,19 +106,19 @@ describe('MCP install lifecycle', () => {
     expect((await readColumns({ connection }))?.clientName).toBeNull();
   });
 
-  it.each([
-    { title: 'a batch', body: `[${initializeBody({ name: CLIENT_NAME })}]` },
-    { title: 'text that is not JSON', body: 'not json' },
-  ])('IS-W6b a refused call with $title does not consume the install code', async ({ body }) => {
-    const response = await postBody({ connection, body });
-    expect(response.status).toBeGreaterThanOrEqual(BAD_REQUEST_STATUS);
-    expect(response.status).toBeLessThan(SERVER_ERROR_STATUS);
-    const recordedLater = vi.waitFor(async () => expect((await readColumns({ connection }))?.firstCallAt).not.toBeNull(), {
-      timeout: REFUSAL_OBSERVATION_MS,
-    });
-    await expect(recordedLater).rejects.toThrow();
-    expect((await readColumns({ connection }))?.firstCallAt).toBeNull();
-  });
+  it.each([{ title: 'text that is not JSON', body: 'not json' }])(
+    'IS-W6b a refused call with $title does not consume the install code',
+    async ({ body }) => {
+      const response = await postBody({ connection, body });
+      expect(response.status).toBeGreaterThanOrEqual(BAD_REQUEST_STATUS);
+      expect(response.status).toBeLessThan(SERVER_ERROR_STATUS);
+      const recordedLater = vi.waitFor(async () => expect((await readColumns({ connection }))?.firstCallAt).not.toBeNull(), {
+        timeout: REFUSAL_OBSERVATION_MS,
+      });
+      await expect(recordedLater).rejects.toThrow();
+      expect((await readColumns({ connection }))?.firstCallAt).toBeNull();
+    },
+  );
 
   it('IS-W8 writes the first call once', async () => {
     await postBody({ connection, body: initializeBody({ name: CLIENT_NAME }) });

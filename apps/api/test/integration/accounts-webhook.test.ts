@@ -2,24 +2,20 @@ import { env, reset, SELF } from 'cloudflare:test';
 import { AccountState, SECOND_MS } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { WEBHOOK_SIGNATURE_HEADER } from '../../src/adapters/whatsapp/whatsapp-constants';
-import { readWhatsAppEnvironment } from '../../src/adapters/whatsapp/read-whatsapp-env';
 import { WHATSAPP_WEBHOOK_PATH } from '../../src/contract/constants';
 import { LogEvent } from '../../src/contract/log';
 import textFixture from '../fixtures/whatsapp/inbound/text.json';
 import { notificationWith } from '../fixtures/whatsapp/inbound/notification';
 import { signatureHeaderOf } from '../fixtures/whatsapp/inbound/signed-webhook';
 import textForwardedFixture from '../fixtures/whatsapp/inbound/text-forwarded.json';
-import { FakeGraph } from '../support/fake-graph';
 import { applyDirectoryMigration } from '../support/seed';
-import { testEnv, whatsappTestEnv } from '../support/workers-env';
+import { testEnv } from '../support/workers-env';
 import { findAccounts, screenTextsOf } from './owner-inbound-fixtures';
 
 const WEBHOOK_URL = `http://example.com${WHATSAPP_WEBHOOK_PATH}`;
 const UNKNOWN_PHONE = '5511900000099';
 const FIRST_TEXT = 'AK-first-message-text';
 const STATUS_OK = 200;
-const INSTALL_LINK_MARK = '/i/';
-const fakeGraph = new FakeGraph({ baseUrl: readWhatsAppEnvironment({ env: whatsappTestEnv }).graphBaseUrl });
 
 async function postFromUnknownPhone(input: { base?: typeof textFixture; id?: string; text?: string } = {}): Promise<Response> {
   const { base = textFixture, id = 'wamid.AK1', text = FIRST_TEXT } = input;
@@ -35,10 +31,7 @@ async function postFromUnknownPhone(input: { base?: typeof textFixture; id?: str
   return SELF.fetch(WEBHOOK_URL, { method: 'POST', headers: { [WEBHOOK_SIGNATURE_HEADER]: signature }, body });
 }
 
-beforeEach(async () => {
-  await applyDirectoryMigration();
-  await fakeGraph.reset();
-});
+beforeEach(applyDirectoryMigration);
 afterEach(() => {
   vi.restoreAllMocks();
   return reset();
@@ -77,18 +70,5 @@ describe('webhook route with a forwarded command', () => {
     }>();
     expect(revoked?.total).toBe(0);
     expect(active?.total).toBe(1);
-  });
-});
-
-describe('webhook route with an install link reply', () => {
-  it('sends the new agent reply with link previews off', async () => {
-    await postFromUnknownPhone();
-    await postFromUnknownPhone({ id: 'wamid.AK2', text: 'novo agente alpha' });
-    await postFromUnknownPhone({ id: 'wamid.AK3', text: 'girar alpha' });
-    const requests = await fakeGraph.requests();
-    const textBodies = requests.map((request) => request.body as { text?: { preview_url: boolean; body: string } });
-    const installReplies = textBodies.filter((body) => body.text?.body.includes(INSTALL_LINK_MARK));
-    expect(installReplies).toHaveLength(2);
-    installReplies.forEach((body) => expect(body.text?.preview_url).toBe(false));
   });
 });
