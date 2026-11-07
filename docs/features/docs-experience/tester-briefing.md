@@ -80,3 +80,29 @@ Pins (green when they landed): the fixture tests built on test-local validators 
 - The Scheduled and Standby rows, their `mode: scheduled` / `mode: standby` values and the 1 to 1440 minute interval come from the scheduled-wake branch (facts at the scheduled-wake merge).
 - `concepts/questions` and `concepts/routing` were not reworded beyond the existing text; `developers/errors` and `developers/any-mcp-client` are unchanged.
 - The Playwright Chromium for 1.65.0 (build 1254) was not installed; it was installed with `pnpm exec playwright install chromium`.
+
+## G1 get started and overview (branch `feat/docs-experience-g1`)
+
+### What changed
+
+- `apps/docs/e2e/get-started.spec.ts`: per language, the Overview opens with the h2s why, how it works, examples in that order; the picture loads and its alt text is in the page language; three or four example chats, each at most `CHAT_MAX_MESSAGES`; Get started is one `ol`, shows the official-number link and the `zb_inst_<code>` prompt, and the footer names Logic Bit.
+- `index.mdx` and `pt-br/index.mdx`: why, how it works (picture and three steps), four examples written natively (the deploy and photo cards dropped to stay within four), who it is for, links. The official number snippet and the statement that the owner can start conversations are on the page.
+- `get-started/how-to-start.mdx` and twin: five numbered steps as a Markdown ordered list (`<Steps>` renders no `ol`): message the number, `new agent claude`, get the prompt, paste, first message `✅ installed`. The chats and the prompt wording follow the accounts-and-keys copy (`Created`, `NoAgents`, `renderInstallLines`) read from `origin/feat/accounts-and-keys`; the self-test line follows install-skills' `INSTALL_SELF_TEST_TEXT`.
+
+### Red today, green after
+
+| Test | Red before because | Green after |
+|------|--------------------|-------------|
+| `get-started.spec.ts` (`04ebbf0`: 6 failed, 4 passed) | `Expected: 1 / Received: 0` on `locator('#content-area').locator('ol')`; `Expected: <= 4 / Received: 6` example chats; the h2 order was Why, What it looks like, How it works | `69b12de` (after the test fix `958576a`: the anchor adds a zero-width space to each h2, and the chats are awaited before counting) |
+
+### Hypotheses for the tester
+
+- The Overview and Get started in both languages reach the WhatsApp step with no dead end; `broken-links` reports none.
+- The prompt on the page equals the accounts-and-keys install lines for `en_US` and `pt_BR` with `https://zapbip.com/i/zb_inst_<code>`.
+- A first message of plain text on an account with no agent gets "No agent is connected. Your message is saved." (`InboxCopyKey.NoAgents`), unless the account is on the waitlist.
+
+### Gaps
+
+- Step 13 facts: T1-39 (snippets equal the copy template) is "facts at the accounts-and-keys and install-skills merge"; the constants are not on this branch, so the snippets were compared by hand only. The snippet files were not changed.
+- The first-message reply in the quickstart chat is `NoAgents` from core; accounts-and-keys may send a welcome instead at the facts merge.
+- The official number renders the sentinel `OFFICIAL_NUMBER_UNSET` until the owner supplies the digits.
