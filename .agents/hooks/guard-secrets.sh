@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 source "$(dirname "$0")/touched-files.sh"
 readonly BLOCKED_MESSAGE="Blocked: agents never edit .env files; document the variable in .env.example instead."
-readonly WRITE_PATTERN='>|(^|[^[:alnum:]_])(tee|cp|mv|install|ln|rsync|dd|touch|truncate|patch|open|write_text|write_bytes|tar|unzip)([^[:alnum:]_]|$)|(^|[[:space:]])--ou[[:alnum:]-]*([[:space:]=]|$)|sed[[:space:]]+-i|sed[[:space:]].*[[:space:]/;{]w[[:space:]]|perl[[:space:]]+-[[:alnum:]]*i|(^|[^[:alnum:]_])curl[[:space:]]+(.*[[:space:]])?(-[[:alnum:]]*o|--output)([[:space:]]|$)|(^|[^[:alnum:]_])wget[[:space:]]+(.*[[:space:]])?(-[[:alnum:]]*O|--output-document)([[:space:]=]|$)|(^|[^[:alnum:]_])git([[:space:]]+-[^[:space:]]+)*[[:space:]]+(checkout|restore)([^[:alnum:]_]|$)|(^|[^[:alnum:]_])(python[0-9.]*|node|ruby)[[:space:]]+-[ce]([^[:alnum:]_]|$)'
+readonly WRITE_PATTERN='>|(^|[^[:alnum:]_])(tee|cp|mv|install|ln|rsync|dd|touch|truncate|patch|open|write_text|write_bytes|tar|unzip|pax|ditto|gtar|bsdtar|cpio)([^[:alnum:]_]|$)|(^|[[:space:]])--ou[[:alnum:]-]*([[:space:]=]|$)|sed[[:space:]]+-i|sed[[:space:]].*[[:space:]/;{]w[[:space:]]|perl[[:space:]]+-[[:alnum:]]*i|(^|[^[:alnum:]_])curl[[:space:]]+(.*[[:space:]])?(-[[:alnum:]]*o|--output)([[:space:]]|$)|(^|[^[:alnum:]_])wget[[:space:]]+(.*[[:space:]])?(-[[:alnum:]]*O|--output-document)([[:space:]=]|$)|(^|[^[:alnum:]_])git([[:space:]]+-[^[:space:]]+)*[[:space:]]+(checkout|restore)([^[:alnum:]_]|$)|(^|[^[:alnum:]_])(python[0-9.]*|node|ruby)[[:space:]]+-[ce]([^[:alnum:]_]|$)'
 readonly WORD_SEPARATORS=$' \t\n;&|<>=(){}$`'
 
 is_protected_env_file() {

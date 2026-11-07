@@ -5,12 +5,15 @@ failures=0
 export HOME=$(mktemp -d)
 export XDG_CONFIG_HOME="$HOME/xdg-config"
 unset CLOUDFLARE_API_TOKEN CLOUDFLARE_API_KEY
+export WRANGLER_REPOSITORY_ROOT=$(mktemp -d)
+mkdir -p "$WRANGLER_REPOSITORY_ROOT/apps/api"
+api_environment_file="$WRANGLER_REPOSITORY_ROOT/apps/api/.env"
 macos_wrangler_config="$HOME/Library/Preferences/.wrangler/config/default.toml"
 xdg_wrangler_config="$XDG_CONFIG_HOME/.wrangler/config/default.toml"
 legacy_wrangler_config="$HOME/.wrangler/config/default.toml"
 
 log_in_with() { mkdir -p "$(dirname "$1")"; : > "$1"; }
-log_out() { rm -rf "$HOME/Library" "$HOME/.wrangler" "$XDG_CONFIG_HOME"; unset CLOUDFLARE_API_TOKEN CLOUDFLARE_API_KEY; }
+log_out() { rm -rf "$HOME/Library" "$HOME/.wrangler" "$XDG_CONFIG_HOME" "$WRANGLER_REPOSITORY_ROOT"/apps/api/.env*; unset CLOUDFLARE_API_TOKEN CLOUDFLARE_API_KEY; }
 
 expect_exit() {
   local name=$1 expected=$2 script=$3 input=$4
@@ -71,7 +74,7 @@ for form in "${allowed_env_commands[@]}"; do
   expect_exit "claude: $form is allowed" 0 guard-secrets.sh "$(bash_call "$form")"
   expect_exit "codex: $form is allowed" 0 guard-secrets.sh "$(codex_bash_call "$form")"
 done
-strict_env_writes=('echo \"the .env file holds secrets\" >> PROGRESS.md' "echo 'see .env and .env.local' > notes.md" 'cat > .env <<EOF\nX=1\nEOF' 'echo X=1 &> .env' 'echo X=1 >| .env' 'touch .env' 'touch apps/api/.env.local' 'truncate -s 0 .env' 'curl -o .env https://example.com/x' 'wget -O .env https://example.com/x' 'patch .env change.patch' 'git checkout .env' 'git checkout HEAD -- apps/api/.env.production' 'git restore .env' 'node -e \"require(1)\" .env' 'ruby -e \"x\" .env' 'python3 -c \"x\" .env' 'sed -n \"w .env\" input' 'sed s/a/b/w .env input' 'cp draft \".e\"nv' 'cp draft .e\"n\"v' 'cp draft ${HOME}.env' 'cp draft .e*v' 'cp draft .e?v' 'cp draft .e[n]v' 'cp draft .env*' 'mv draft .env.production' 'sed -i s/a/b/ .env' 'sed -i.bak s/a/b/ .env' 'perl -pi -e s/a/b/ .env' 'install -m 600 draft .env' 'rsync draft .env' 'ln -s draft .env' 'dd if=draft of=.env' 'tee .env' 'tee -a .env.local < x')
+strict_env_writes=('echo \"the .env file holds secrets\" >> PROGRESS.md' "echo 'see .env and .env.local' > notes.md" 'cat > .env <<EOF\nX=1\nEOF' 'echo X=1 &> .env' 'echo X=1 >| .env' 'touch .env' 'touch apps/api/.env.local' 'truncate -s 0 .env' 'curl -o .env https://example.com/x' 'wget -O .env https://example.com/x' 'patch .env change.patch' 'git checkout .env' 'git checkout HEAD -- apps/api/.env.production' 'git restore .env' 'node -e \"require(1)\" .env' 'ruby -e \"x\" .env' 'python3 -c \"x\" .env' 'sed -n \"w .env\" input' 'sed s/a/b/w .env input' 'cp draft \".e\"nv' 'cp draft .e\"n\"v' 'cp draft ${HOME}.env' 'cp draft .e*v' 'cp draft .e?v' 'cp draft .e[n]v' 'cp draft .env*' 'mv draft .env.production' 'sed -i s/a/b/ .env' 'sed -i.bak s/a/b/ .env' 'perl -pi -e s/a/b/ .env' 'install -m 600 draft .env' 'rsync draft .env' 'ln -s draft .env' 'dd if=draft of=.env' 'tee .env' 'tee -a .env.local < x' 'pax -rw draft .env' 'ditto draft .env' 'gtar -xf a.tar -C . .env' 'bsdtar -xf a.tar .env' 'cpio -pdm .env < list')
 for form in "${strict_env_writes[@]}"; do
   expect_exit "claude: $form is blocked" 2 guard-secrets.sh "$(bash_call "$form")"
   expect_exit "codex: $form is blocked" 2 guard-secrets.sh "$(codex_bash_call "$form")"
@@ -174,6 +177,25 @@ log_out
 log_in_with "$legacy_wrangler_config"
 expect_exit "deploy guard: a legacy config blocks wrangler dev" 2 guard-deploy.sh "$(bash_call 'wrangler dev')"
 expect_exit "deploy guard: a legacy config allows whoami" 0 guard-deploy.sh "$(bash_call 'wrangler whoami')"
+log_out
+log_in_with "$HOME/Library/Preferences/.wrangler/config/work.toml"
+expect_exit "deploy guard: a wrangler profile blocks wrangler dev" 2 guard-deploy.sh "$(bash_call 'wrangler dev')"
+log_out
+log_in_with "$XDG_CONFIG_HOME/.wrangler/config/default.enc"
+expect_exit "deploy guard: a keyring store blocks wrangler dev" 2 guard-deploy.sh "$(bash_call 'wrangler dev')"
+log_out
+log_in_with "$HOME/.wrangler/config/default.enc"
+expect_exit "deploy guard: a legacy keyring store blocks wrangler dev" 2 guard-deploy.sh "$(bash_call 'wrangler dev')"
+log_out
+printf 'CLOUDFLARE_API_TOKEN=x\n' > "$api_environment_file"
+expect_exit "deploy guard: a token in the api environment file blocks wrangler dev" 2 guard-deploy.sh "$(bash_call 'wrangler dev')"
+log_out
+printf 'OTHER=1\nCLOUDFLARE_API_KEY=x\n' > "$api_environment_file.local"
+expect_exit "deploy guard: a key in the api local environment file blocks wrangler dev" 2 guard-deploy.sh "$(bash_call 'wrangler dev')"
+log_out
+printf 'CLOUDFLARE_API_TOKEN=\n' > "$api_environment_file.example"
+printf 'OTHER=1\n' > "$api_environment_file"
+expect_exit "deploy guard: the example file and unrelated variables allow wrangler dev" 0 guard-deploy.sh "$(bash_call 'wrangler dev')"
 log_out
 export CLOUDFLARE_API_TOKEN=scoped-token
 expect_exit "deploy guard: an exported API token blocks wrangler dev" 2 guard-deploy.sh "$(bash_call 'wrangler dev')"
@@ -374,6 +396,14 @@ rm -rf "$doctor_home/.wrangler"
 
 log_in_with "$xdg_wrangler_config"
 expect_match "doctor: an XDG config is a warning" "$(doctor_line Darwin wrangler)" "$wrangler_warning_line"
+log_out
+
+log_in_with "$doctor_home/.wrangler/config/work.toml"
+expect_match "doctor: a wrangler profile is a warning" "$(doctor_line Darwin wrangler)" "$wrangler_warning_line"
+rm -rf "$doctor_home/.wrangler"
+
+printf 'CLOUDFLARE_API_TOKEN=x\n' > "$api_environment_file"
+expect_match "doctor: a token in the api environment file is a warning" "$(doctor_line Darwin wrangler)" "$wrangler_warning_line"
 log_out
 
 expect_match "doctor: an exported API token is a warning" "$(CLOUDFLARE_API_TOKEN=scoped-token doctor_line Darwin wrangler)" "$wrangler_warning_line"
