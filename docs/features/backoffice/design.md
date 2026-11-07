@@ -21,7 +21,7 @@ These come from the CSP in the spec: `default-src 'none'; style-src 'self'; img-
 | `style-src 'self'` | No `style=""` attribute, no `<style>` element. All presentation is classes from `backoffice.css`. Chart geometry is SVG attributes (`x`, `width`, `height`), which are not styles. |
 | `font-src` absent | No web fonts. System font stacks only. The docs' Inter cannot load, and the stack is chosen to look close. |
 | `img-src 'self'` | No external images. Icons are inline SVG or text glyphs. No QR code is shown in the browser (enrollment is terminal-only). |
-| `Cache-Control: no-store`, `Referrer-Policy: no-referrer` | No flash cookie and no Referer. A flash message is an allow-listed `notice` query value on the redirect target; return-after-locale-switch uses an allow-listed `returnTo` path in a hidden field. |
+| `Cache-Control: no-store`, `Referrer-Policy: same-origin` | No flash cookie and no Referer leaves the site; `no-referrer` would make the browser send `Origin: null` on every form post, which the CSRF check refuses. A flash message is an allow-listed `notice` query value on the redirect target; return-after-locale-switch uses an allow-listed `returnTo` path in a hidden field. |
 | Strict CSRF | Every form carries the hidden `csrf` field. Every state-changing number form also carries the step-up `code` field. |
 
 ## 2. Tokens

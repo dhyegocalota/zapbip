@@ -173,7 +173,7 @@ Content-Security-Policy: default-src 'none'; style-src 'self'; img-src 'self'; f
 Strict-Transport-Security: max-age=63072000; includeSubDomains   (staging and production)
 X-Frame-Options: DENY
 X-Content-Type-Options: nosniff
-Referrer-Policy: no-referrer
+Referrer-Policy: same-origin
 Cache-Control: no-store   (except GET /assets/backoffice.css: public, max-age=31536000, immutable)
 Cross-Origin-Opener-Policy: same-origin
 Cross-Origin-Resource-Policy: same-origin

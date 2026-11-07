@@ -14,7 +14,7 @@ export const STATIC_SECURITY_HEADERS: Record<string, string> = {
   'Content-Security-Policy': CONTENT_SECURITY_POLICY,
   'X-Frame-Options': 'DENY',
   'X-Content-Type-Options': 'nosniff',
-  'Referrer-Policy': 'no-referrer',
+  'Referrer-Policy': 'same-origin',
   'Cross-Origin-Opener-Policy': 'same-origin',
   'Cross-Origin-Resource-Policy': 'same-origin',
   'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=(), usb=()',

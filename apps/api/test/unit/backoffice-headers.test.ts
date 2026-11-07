@@ -19,7 +19,7 @@ const COMMON_HEADERS: Record<string, string> = {
   'content-security-policy': CONTENT_SECURITY_POLICY,
   'x-frame-options': 'DENY',
   'x-content-type-options': 'nosniff',
-  'referrer-policy': 'no-referrer',
+  'referrer-policy': 'same-origin',
   'cache-control': 'no-store',
   'cross-origin-opener-policy': 'same-origin',
   'cross-origin-resource-policy': 'same-origin',
