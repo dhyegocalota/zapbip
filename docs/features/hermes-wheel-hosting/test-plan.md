@@ -33,6 +33,9 @@ Every checkbox states the input and the exact expected outcome. A ticked box car
 - [ ] `apps/api/test/integration/package-route.test.ts::serves the wheel` — input: object seeded in `PACKAGES`; `GET /pkg/zapbip_platform-0.1.0-py3-none-any.whl`; expected: 200, identical bytes, `Cache-Control: public, max-age=31536000, immutable`, `Content-Type: application/octet-stream`, an `ETag`
 - [ ] `::missing object` — input: valid name, nothing stored; expected: 404 `{"error":"not_found"}` with `Cache-Control: no-store`
 - [ ] `::malformed names` — input: `/pkg/evil.whl`, `/pkg/zapbip_platform-1.0.whl`, `/pkg/..%2Fsecret`, `/pkg/zapbip_platform-0.1.0-py3-none-any.whl/extra`; expected: 404 each and zero reads of the bucket
+- [ ] `::head` — input: HEAD to a valid name with the object stored; expected: 200, the immutable cache header, an empty body
+- [ ] `::encoded and newline names` — input: `/pkg/%2e%2e/secret`, `/pkg/..%2fsecret`, `/pkg/<valid name>%0A`; expected: 404 with `Cache-Control: no-store` for each and zero bucket reads
+- [ ] `::R2 failure is logged` — input: the bucket throws; expected: one `package_unavailable` log line with no error message, filename or body
 - [ ] `::other methods` — input: POST, PUT, DELETE, PATCH to a valid name; expected: 404 and the bucket unchanged
 - [ ] `::the media bucket is not reachable` — input: a media object whose key equals a valid wheel name stored in `MEDIA`; expected: 404
 - [ ] `::R2 failure` — input: the bucket binding throws; expected: 503 and no immutable cache header

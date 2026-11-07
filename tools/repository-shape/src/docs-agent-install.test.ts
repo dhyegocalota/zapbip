@@ -10,7 +10,6 @@ const HERMES_PAGE = 'agents/hermes.mdx';
 const OPENCLAW_INSTALL_COMMAND = 'openclaw plugins install @zapbip/openclaw-plugin@0.1.0 --force --accept-capabilities';
 const OPENCLAW_ENABLE_ENTRY = '"plugins": { "entries": { "zapbip": { "enabled": true } } }';
 const OPENCLAW_LINK_KEY = '"channels": { "zapbip": { "connectionLink"';
-const HERMES_PLUGIN_README = 'apps/hermes-plugin/README.md';
 const UNPINNED_HERMES_INSTALL = 'zapbip-platform==';
 const HERMES_ENVIRONMENT_VARIABLES = ['ZAPBIP_CONNECTION_LINK', 'ZAPBIP_ALLOWED_USERS'];
 const ONE_LISTENER_SENTENCES: Record<string, string> = {
@@ -56,14 +55,6 @@ describe.each(PAGE_LOCALES)('the agent install pages in %s', (locale) => {
 
   test.each([OPENCLAW_PAGE, HERMES_PAGE])('%s asks the agent to send the self-test text', (path) => {
     expect(page({ locale, path })).toContain(SELF_TEST_TEXTS[locale]);
-  });
-});
-
-describe('the Hermes plugin README', () => {
-  test('prints the same install command as the install copy', () => {
-    const text = readRepositoryFile(HERMES_PLUGIN_README);
-    expect(text).toContain(HERMES_INSTALL_COMMAND);
-    expect(text).not.toContain(UNPINNED_HERMES_INSTALL);
   });
 });
 

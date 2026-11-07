@@ -15,7 +15,7 @@
 |-------|-------------|---------------------|
 | G1 identity and build | `libs/types/src/constants.ts`, `libs/types/src/hermes-wheel.ts` (+ `.test.ts`), `libs/types/src/index.ts`, `scripts/hermes-wheel/build.ts`, `apps/hermes-plugin/release/*.whl`, `tools/repository-shape/src/hermes-wheel.test.ts` | `developer` |
 | G2 route | `apps/api/src/routes/package.ts`, `apps/api/src/app.ts`, `apps/api/src/contract/env.ts`, `apps/api/wrangler.jsonc` (production top level, `env.staging`, `env.development`), `apps/api/test/unit/wrangler-config.test.ts`, `apps/api/test/integration/package-route.test.ts` | `developer` |
-| G3 copy and docs | `libs/core/src/install/prompts/connector-commands.ts` (+ `chat-clients.test.ts`, the `hermes.*.md` snapshots), `apps/docs/agents/hermes.mdx`, `apps/docs/pt-br/agents/hermes.mdx`, `apps/docs/e2e/agents-b.spec.ts`, `apps/hermes-plugin/README.md` (install section), `tools/repository-shape/src/docs-agent-install.test.ts` | `developer` |
+| G3 copy and docs | `libs/core/src/install/prompts/connector-commands.ts` (+ `chat-clients.test.ts`, the `hermes.*.md` snapshots), `apps/docs/agents/hermes.mdx`, `apps/docs/pt-br/agents/hermes.mdx`, `apps/docs/e2e/agents-b.spec.ts`, `apps/hermes-plugin/README.md` (a link to the Hermes page), `tools/repository-shape/src/docs-agent-install.test.ts` | `developer` |
 | G4 preflight and runbook | `apps/api/src/operations/deploy-preflight.ts`, `apps/api/src/operations/package-fetcher.ts`, `apps/api/scripts/deploy.ts`, `apps/api/scripts/docs-preflight.ts`, `apps/api/test/unit/{deploy-preflight,deploy-entry,docs-preflight-entry,package-fetcher,env-example}.test.ts`, `apps/api/test/unit/fake-deploy-shell.ts`, `apps/api/test/e2e/deploy-dry-run.e2e.test.ts`, `.env.example`, `docs/runbooks/mintlify-publish.md`, `docs/runbooks/deploy.md`, `docs/runbooks/cloudflare-setup.md` | `developer` |
 | G5 e2e | `scripts/e2e/clients/hermes-client.ts`, `scripts/e2e/clients/hermes/Dockerfile`, `scripts/e2e/clients/hermes/build-requirements.txt` (kept for the build script), `apps/api/test/e2e/hermes-wheel.e2e.test.ts` | `developer` |
 
@@ -38,8 +38,8 @@ One developer runs the lanes in order G1, G2, G3, G4, G5 (machine resource cap).
 
 ### G3
 
-- [x] **Step 1:** red: `chat-clients.test.ts` and `docs-agent-install.test.ts` expect `hermesInstallCommand()` (the pinned direct reference) in the install copy, both Hermes pages and the plugin README, and the old `==` form nowhere — evidence: red fae2b5bc
-- [x] **Step 2:** render the command in `connector-commands.ts`; update the two pages and the README — evidence: green 47b270cf
+- [x] **Step 1:** red: `chat-clients.test.ts` and `docs-agent-install.test.ts` expect `HERMES_INSTALL_COMMAND` (the pinned direct reference) in the install copy and both Hermes pages, and the old `==` form nowhere — evidence: red fae2b5bc
+- [x] **Step 2:** render the command in `connector-commands.ts`; update the two pages — evidence: green 47b270cf
 
 ### G4
 
