@@ -94,7 +94,18 @@ importers:
         specifier: 4.6.7
         version: 4.6.7
 
-  apps/docs: {}
+  apps/docs:
+    dependencies:
+      '@zapbip/types':
+        specifier: workspace:*
+        version: link:../../libs/types
+    devDependencies:
+      '@playwright/test':
+        specifier: 1.65.0
+        version: 1.65.0
+      '@types/node':
+        specifier: 24.19.2
+        version: 24.19.2
 
   libs/core:
     dependencies:
@@ -1328,6 +1339,14 @@ packages:
     resolution: {integrity: sha512-1Duyg48TdJNdyhEB8Xn1L36bT9Pv6GUtlKjHxOys8xkaF/rQq3XJE+bAurSK/AgIz5mGFsb77cn9Pb20+WCScw==}
     dev: true
 
+  /@playwright/test@1.65.0:
+    resolution: {integrity: sha512-iGURLGuKDLakSEl7Pgfv8h7f+XLT+V861Wfhz0zlEl5nyFuKUopdkFBPKqTllTUp06aOwPuH8iuUEb3yp3MpbQ==}
+    engines: {node: '>=20'}
+    hasBin: true
+    dependencies:
+      playwright: 1.65.0
+    dev: true
+
   /@poppinss/colors@4.1.6:
     resolution: {integrity: sha512-H9xkIdFswbS8n1d6vmRd8+c10t2Qe+rZITbbDHHkQixH5+2x1FDGmi/0K+WgWiqQFKPSlIYB7jlH6Kpfn6Fleg==}
     dependencies:
@@ -2505,6 +2524,20 @@ packages:
   /pkce-challenge@5.0.1:
     resolution: {integrity: sha512-wQ0b/W4Fr01qtpHlqSqspcj3EhBvimsdh0KlHhH8HRZnMsEa0ea2fTULOXOS9ccQr3om+GcGRk4e+isrZWV8qQ==}
     engines: {node: '>=16.20.0'}
+
+  /playwright-core@1.65.0:
+    resolution: {integrity: sha512-vNSKgH6YqtN7cdT/L334zo0a+YwkrpicyrHJlWWPIm/Q+Nn2SWInil01oT0mbu96U4GgoRtCYQD9CzJQgju+lA==}
+    engines: {node: '>=20'}
+    hasBin: true
+    dev: true
+
+  /playwright@1.65.0:
+    resolution: {integrity: sha512-F3AMWcR44qMBt4kq+6Kb6mX7bjGXshktKFOPULd7reED6ZJWevjbNRqysP7q+AATE9kdPEZBibex1BYsvpVoeA==}
+    engines: {node: '>=20'}
+    hasBin: true
+    dependencies:
+      playwright-core: 1.65.0
+    dev: true
 
   /postcss@8.5.32:
     resolution: {integrity: sha512-LJlKCCAUFKOuZxipUdYw1NzIITEsPcgyOG9LkvRJvuKj/bRzbuRY0ARXvL0pWGpsZvn8jku+LMep2eU0seHp8g==}
