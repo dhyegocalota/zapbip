@@ -1,11 +1,12 @@
 import {
   DAY_MS,
-  HERMES_REQUIREMENTS_FILENAME_PATTERN,
-  HERMES_WHEEL_FILENAME_PATTERN,
+  hermesRequirementsFilename,
+  hermesWheelFilename,
   HERMES_WHEEL_PATH_PREFIX,
   HttpStatus,
   InboxErrorCode,
   SECOND_MS,
+  ZAPBIP_HERMES_PLUGIN_VERSION,
 } from '@zapbip/types';
 import { type Context, Hono } from 'hono';
 import type { Bindings } from '../contract/env';
@@ -17,8 +18,8 @@ const CACHE_DAYS = 365;
 const IMMUTABLE_CACHE_CONTROL = `public, max-age=${(CACHE_DAYS * DAY_MS) / SECOND_MS}, immutable`;
 const NO_STORE_CACHE_CONTROL = 'no-store';
 const SERVED_PACKAGES = [
-  { pattern: HERMES_WHEEL_FILENAME_PATTERN, contentType: 'application/octet-stream' },
-  { pattern: HERMES_REQUIREMENTS_FILENAME_PATTERN, contentType: 'text/plain; charset=utf-8' },
+  { filename: hermesWheelFilename({ version: ZAPBIP_HERMES_PLUGIN_VERSION }), contentType: 'application/octet-stream' },
+  { filename: hermesRequirementsFilename({ version: ZAPBIP_HERMES_PLUGIN_VERSION }), contentType: 'text/plain; charset=utf-8' },
 ];
 const UNAVAILABLE_ERROR = 'unavailable';
 
@@ -32,7 +33,7 @@ export const packageRoutes = new Hono<{ Bindings: Bindings }>();
 
 packageRoutes.get(`${HERMES_WHEEL_PATH_PREFIX}:${FILENAME_PARAMETER}`, async (context) => {
   const filename = context.req.param(FILENAME_PARAMETER);
-  const served = SERVED_PACKAGES.find(({ pattern }) => pattern.test(filename));
+  const served = SERVED_PACKAGES.find((candidate) => candidate.filename === filename);
   if (!served) return notFound(context);
   const wheel = await context.env.PACKAGES.get(filename);
   if (wheel === null) return notFound(context);
