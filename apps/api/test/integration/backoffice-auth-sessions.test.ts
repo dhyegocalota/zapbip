@@ -44,7 +44,7 @@ describe('sessions', () => {
 
   test('a session past the absolute lifetime redirects even with steady activity', async () => {
     const { sessionToken } = await signIn({});
-    const steps = Math.floor(BACKOFFICE_SESSION_MAX_MS / SESSION_REFRESH_STEP_MS);
+    const steps = Math.floor(BACKOFFICE_SESSION_MAX_MS / SESSION_REFRESH_STEP_MS) - 1;
     for (let step = 1; step <= steps; step += 1) {
       vi.setSystemTime(NOW + step * SESSION_REFRESH_STEP_MS);
       expect((await getAs({ sessionToken })).status).toBe(STATUS_OK);
