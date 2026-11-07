@@ -1,6 +1,6 @@
 # Local connector
 
-**Status:** Building
+**Status:** In review
 **Tier:** 🔴
 **Owner approval:** approved 2026-11-06 (owner delegated)
 **ADRs:** [0006](../../adr/0006-one-secret-per-connection-in-the-mcp-url.md), [0007](../../adr/0007-a-durable-inbox-and-a-wake-ladder.md), [0009](../../adr/0009-cloudflare-workers-with-one-durable-object-per-account.md), [0022](../../adr/0022-a-hibernatable-websocket-for-the-local-connector.md), [0023](../../adr/0023-the-local-session-is-the-newest-one-in-the-working-directory.md)
