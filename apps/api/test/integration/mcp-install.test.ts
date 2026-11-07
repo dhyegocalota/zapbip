@@ -14,6 +14,8 @@ const ACCOUNT_ID = 'acc_1';
 const AGENT = 'alpha';
 const OK_STATUS = 200;
 const SERVER_ERROR_STATUS = 500;
+const BAD_REQUEST_STATUS = 400;
+const REFUSAL_OBSERVATION_MS = 500;
 
 type ConnectionColumns = { clientName: string | null; firstCallAt: number | null };
 
@@ -97,15 +99,25 @@ describe('MCP install lifecycle', () => {
     expect((await readColumns({ connection }))?.clientName).toBeNull();
   });
 
-  it.each([
-    { title: 'a name over the cap', body: initializeBody({ name: 'x'.repeat(CLIENT_NAME_MAX_CHARS + 1) }) },
-    { title: 'a batch', body: `[${initializeBody({ name: CLIENT_NAME })}]` },
-    { title: 'text that is not JSON', body: 'not json' },
-  ])('IS-W6 handles $title like before and writes no name', async ({ body }) => {
-    const response = await postBody({ connection, body });
-    expect(response.status).toBeLessThan(SERVER_ERROR_STATUS);
+  it('IS-W6 handles a name over the cap like before and writes no name', async () => {
+    const response = await postBody({ connection, body: initializeBody({ name: 'x'.repeat(CLIENT_NAME_MAX_CHARS + 1) }) });
+    expect(response.status).toBe(OK_STATUS);
     await vi.waitFor(async () => expect((await readColumns({ connection }))?.firstCallAt).not.toBeNull());
     expect((await readColumns({ connection }))?.clientName).toBeNull();
+  });
+
+  it.each([
+    { title: 'a batch', body: `[${initializeBody({ name: CLIENT_NAME })}]` },
+    { title: 'text that is not JSON', body: 'not json' },
+  ])('IS-W6b a refused call with $title does not consume the install code', async ({ body }) => {
+    const response = await postBody({ connection, body });
+    expect(response.status).toBeGreaterThanOrEqual(BAD_REQUEST_STATUS);
+    expect(response.status).toBeLessThan(SERVER_ERROR_STATUS);
+    const recordedLater = vi.waitFor(async () => expect((await readColumns({ connection }))?.firstCallAt).not.toBeNull(), {
+      timeout: REFUSAL_OBSERVATION_MS,
+    });
+    await expect(recordedLater).rejects.toThrow();
+    expect((await readColumns({ connection }))?.firstCallAt).toBeNull();
   });
 
   it('IS-W8 writes the first call once', async () => {

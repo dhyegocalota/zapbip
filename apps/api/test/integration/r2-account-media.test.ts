@@ -5,7 +5,6 @@ import { testEnv } from '../support/workers-env';
 
 const LARGE_OBJECT_COUNT = 2_500;
 const OTHER_ACCOUNT_OBJECT_COUNT = 3;
-const PURGE_TEST_TIMEOUT_MS = 60_000;
 const BODY = new Uint8Array([1]);
 
 function purge(): R2AccountMedia {
