@@ -6,6 +6,8 @@ readonly WORD_SEPARATORS=$' \t\n;&|<>=(){}$`'
 readonly METACHARACTER_PATTERN=$'[;|&$`<>(){}\r\n]'
 readonly READ_HEAD_PATTERN='^(cat|head|tail|wc|grep|rg|git log|git diff|git show|git status|ls|test|\[)( |$)'
 readonly NAME_BUILDING_EXPANSION_PATTERN=$'\\$\'|\\$\\(|`|(^|[[:space:]/"\'])\\.[^[:space:]]*\\{[^}]*,'
+readonly WRITE_CAPABLE_PATTERN='>|(^|[^[:alnum:]_/.-])(tee|cp|mv|ln|install|dd|rsync|touch|truncate|patch|sponge|script|ex|vim|vi|split|zip|unzip|tar|gtar|bsdtar|pax|ditto|cpio)([[:space:]]|$)|sed[[:space:]]+-[[:alnum:]]*i|perl[[:space:]]+-[[:alnum:]]*pi|(sort|iconv|plutil|curl|base64)[[:space:]].*-o|wget[[:space:]].*-O|openssl[[:space:]].*-out|xxd[[:space:]]+-r|git[[:space:]]+(checkout|restore)|\|[[:space:]]*(env[[:space:]]+)?(sh|bash|zsh|dash|python3?|node|perl|ruby|eval|xargs)([[:space:]]|$)'
+readonly ANGLE_ADDRESS_PATTERN='s/<[^<> ]+>//g'
 readonly PRINT_LINES_PATTERN="^sed -n ['\"]?[0-9]+(,[0-9]+)?p['\"]?( [^-][^ ]*)+\$"
 readonly PROSE_PATTERN='^(echo|printf)[[:space:]]+([^>]*[^>[:space:]])[[:space:]]*(>>?[[:space:]]*([^[:space:]>]+))?$'
 
@@ -37,7 +39,8 @@ names_protected_env_file() {
 
 may_name_protected_env_file() {
   names_protected_env_file "$scanned_text" && return 0
-  [[ "$command" =~ $NAME_BUILDING_EXPANSION_PATTERN ]]
+  [[ "$command" =~ $NAME_BUILDING_EXPANSION_PATTERN ]] || return 1
+  [[ "$(sed -E "$ANGLE_ADDRESS_PATTERN" <<<"$command")" =~ $WRITE_CAPABLE_PATTERN ]]
 }
 
 is_plain_read() {
