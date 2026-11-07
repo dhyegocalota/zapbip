@@ -16,6 +16,7 @@ libs/*/README.md	docs	-
 apps/docs/*	docs	docs
 apps/api/wrangler.jsonc	product	typecheck unit integration e2e
 .env.example	product	unit
+apps/api/e2e/*	product	typecheck
 apps/api/*	product	typecheck unit integration e2e
 libs/core/*	product	typecheck unit integration e2e
 libs/types/*	product	typecheck unit integration e2e
