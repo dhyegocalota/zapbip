@@ -302,3 +302,5 @@ Empty on purpose. The tester adds one checkbox per new case (input, exact expect
 - [ ] Inbox waker note failure — input: stale scheduled connection, delivery throws; expected: `notify` returns `Unreached` and logs `NoticeFailed` — unit `inbox-agent-waker.test.ts`
 - [ ] DO upgrade from main's versions — input: object at versions 1, 2, 4 and 5 with an agent and a wake row; expected: 3 and 6 applied, rows kept, `interval_minutes`, `last_stale_notice_at`, `stale_notice_failures` and `account_facts` present — integration `scheduled-wake-storage.test.ts`
 
+- [ ] Closed-window notice names the first agent message — input: a zapbip note queued ahead of an `alpha` message, the session reports the window closed; expected: the template names `alpha` and previews its message; the same on the alarm retry — unit `flush-queue.test.ts`, `retry-notice.test.ts`
+- [ ] Agent name `zapbip` is reserved — input: `isReservedAgentName` for `zapbip`; expected: true, so `novo agente zapbip` gets the reserved-name reply — unit `agent-name.test.ts`

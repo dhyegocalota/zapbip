@@ -199,6 +199,14 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     await this.armAlarm();
   }
 
+  private async restoreAndNotify(request: Parameters<inbox.AgentWaker['notify']>[0]): Promise<WakeOutcome> {
+    const { agent } = request;
+    const restore = await this.wake.repository.findLocalRestore({ agent });
+    if (restore === null) return WakeOutcome.Unreached;
+    await inbox.detachLocalConnector({ dependencies: this.dependencies, wake: this.wake, agent, remainingSockets: 0 });
+    return this.dependencies.waker.notify(request);
+  }
+
   protected createSender(input: { mediaStore: MediaStore }): MessageSender {
     const whatsapp = readWhatsAppEnvironment({ env: this.env });
     const database = this.env.CONNECTIONS;
@@ -218,14 +226,6 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       phoneNumberId: whatsapp.phoneNumberId,
       clock: this.clock,
     });
-  }
-
-  private async restoreAndNotify(request: Parameters<inbox.AgentWaker['notify']>[0]): Promise<WakeOutcome> {
-    const { agent } = request;
-    const restore = await this.wake.repository.findLocalRestore({ agent });
-    if (restore === null) return WakeOutcome.Unreached;
-    await inbox.detachLocalConnector({ dependencies: this.dependencies, wake: this.wake, agent, remainingSockets: 0 });
-    return this.dependencies.waker.notify(request);
   }
 
   private createExpiryProvider(): DueTimeProvider {

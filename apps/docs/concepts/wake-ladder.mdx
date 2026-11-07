@@ -51,6 +51,8 @@ If the timer stops running, zapbip says so once, after twice the interval passes
 
 The next check ends the warning without another message.
 
+When the [24-hour window](/concepts/24-hour-window) is closed, this note cannot be sent as it is. zapbip sends one template [notice](/concepts/owner-notices) per closed window, and the note waits and arrives when you write.
+
 ## Standby: another AI answers
 
 Some AIs, such as Grok on the web, cannot be started at all. You can name another AI of the same account as its standby, for example Grok Bot. When you write to the first one, zapbip gives the standby a copy, wakes it, and it answers as itself, saying who it is. The first AI sees the message as handled by the standby.

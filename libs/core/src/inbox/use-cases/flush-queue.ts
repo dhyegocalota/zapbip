@@ -4,7 +4,7 @@ import type { Message } from '../message';
 import type { CoreDependencies } from '../ports';
 import { claimQueued } from './claim-queued';
 import { closeWindow } from './close-window';
-import { noticeOwner } from './notice-owner';
+import { noticeOwner, pickNoticeMessage } from './notice-owner';
 import { attemptSession, recordFailure, recordSent, SessionOutcome } from './session-delivery';
 import { createSerializer } from './serialize';
 
@@ -46,7 +46,7 @@ async function stopForClosedWindow(input: Flush & { unsent: Message[]; report: F
   const { repository, clock } = dependencies;
   await Promise.all(unsent.map((message) => repository.updateDelivery({ messageId: message.messageId, delivery: DeliveryState.Queued })));
   await closeWindow({ dependencies, at: clock.now() });
-  const [noticed] = unsent;
+  const noticed = pickNoticeMessage({ messages: unsent });
   if (noticed === undefined) return;
   await noticeOwner({ dependencies, ownerLocale, message: noticed }).catch((error: unknown) => {
     report.noticeFailure = { error };

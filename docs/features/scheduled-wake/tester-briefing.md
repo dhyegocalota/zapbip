@@ -276,3 +276,13 @@ Main (whatsapp-cloud-channel) merged at b63f7bb. Every test-plan row the reviewe
 | The connector takes main's forwarded handling | no new test; the connector suite is unchanged | n/a | 8e8039a |
 
 Core: `noticeOwner` and `retryNotice` take `OWN_NOTICE_SENDER` for a message with no agent, `flushQueue` notices the first unsent message, and `rethrowUnlessQueued` lets a queued zapbip note pass without a failure.
+
+## Review round: notice subject, reserved name
+
+| Change | Test | Red text printed | Commit |
+|---|---|---|---|
+| The closed-window notice names the first queued message that has an agent; a zapbip note is named only when no queued message has an agent (flush) | `flush-queue.test.ts` | `expected "alpha" got "zapbip"` (parameters `['zapbip', 'note from zapbip']` instead of `['alpha', 'oi']`) | f334324 red |
+| The same rule for the alarm retry | `retry-notice.test.ts` "a zapbip note queued ahead of an agent message" | same parameters mismatch | f334324 red |
+| `zapbip` is a reserved agent name | `agent-name.test.ts` "reserves zapbip" | `expected false to be true` | f334324 red |
+| The `set_wake` description builds its interval range from `SCHEDULED_MIN_INTERVAL_MINUTES` and `SCHEDULED_MAX_INTERVAL_MINUTES` | no new test; the contract suite is unchanged | n/a | this branch |
+| Main's order restored in `env.ts`, `vitest.integration.config.mts`, `migrations/index.ts` (v3 kept in version order) and `restoreAndNotify` | no new test; the suites are unchanged | n/a | this branch |

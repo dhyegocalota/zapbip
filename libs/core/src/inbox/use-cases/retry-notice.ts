@@ -1,7 +1,7 @@
 import { MessageDirection, type OwnerLocale } from '@zapbip/types';
 import type { Message } from '../message';
 import type { CoreDependencies } from '../ports';
-import { noticeSenderOf } from './notice-owner';
+import { noticeSenderOf, pickNoticeMessage } from './notice-owner';
 import { sendNotice } from './send-notice';
 
 type PendingRetry = { ownerLocale: OwnerLocale; dueAt: number };
@@ -9,7 +9,7 @@ type NoticeSubject = { message: Message; sender: string };
 
 async function findNoticeSubject(input: { dependencies: CoreDependencies }): Promise<NoticeSubject | null> {
   const queued = await input.dependencies.repository.listQueued();
-  const message = queued.find((candidate) => candidate.direction === MessageDirection.ToOwner);
+  const message = pickNoticeMessage({ messages: queued.filter((candidate) => candidate.direction === MessageDirection.ToOwner) });
   if (message === undefined) return null;
   return { message, sender: noticeSenderOf({ message }) };
 }

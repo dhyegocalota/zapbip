@@ -9,6 +9,13 @@ export function noticeSenderOf(input: { message: Message }): string {
   return agent === null ? OWN_NOTICE_SENDER : agent;
 }
 
+export function pickNoticeMessage(input: { messages: Message[] }): Message | undefined {
+  const agentMessage = input.messages.find((message) => message.agent !== null);
+  if (agentMessage !== undefined) return agentMessage;
+  const [firstMessage] = input.messages;
+  return firstMessage;
+}
+
 export async function noticeOwner(input: { dependencies: CoreDependencies; ownerLocale: OwnerLocale; message: Message }): Promise<void> {
   const { dependencies, ownerLocale, message } = input;
   await sendNotice({ dependencies, ownerLocale, agent: noticeSenderOf({ message }), content: message });

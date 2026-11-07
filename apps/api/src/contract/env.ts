@@ -7,8 +7,6 @@ export type Bindings = {
   MEDIA_LINK_SIGNING_KEY: string;
   UPLOAD_LINK_SIGNING_KEY: string;
   PUBLIC_ORIGIN: string;
-  WAKE_SECRET_KEY: string;
-  WAKE_METRICS: AnalyticsEngineDataset;
   WAITLIST_ENABLED: string;
   OWNER_RATE_LIMITER: RateLimit;
   OUTBOUND_RATE_LIMITER: RateLimit;
@@ -19,4 +17,6 @@ export type Bindings = {
   WHATSAPP_PHONE_NUMBER_ID?: string;
   WHATSAPP_GRAPH_BASE_URL?: string;
   WHATSAPP_MEDIA_DOWNLOAD_ORIGIN?: string;
+  WAKE_SECRET_KEY: string;
+  WAKE_METRICS: AnalyticsEngineDataset;
 };
