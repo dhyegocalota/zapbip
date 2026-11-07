@@ -11,7 +11,7 @@ import {
   SEEN_MESSAGE_LIMIT,
 } from '@zapbip/types';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ABNORMAL_CLOSE_CODE } from '../../src/constants';
+import { ABNORMAL_CLOSE_CODE, REPLACED_EXIT_CODE } from '../../src/constants';
 import { reconnectDelayMs, runConnectorSocket } from '../../src/connector-socket';
 import type { ConnectorLogFields } from '../../src/log';
 import {
@@ -280,7 +280,7 @@ describe('close and reconnect', () => {
     const plugin = startPlugin({ connector });
     await connector.waitForConnections({ count: 1 });
     connector.closeConnections({ code: REPLACED_CLOSE_CODE });
-    await expect(plugin.result).resolves.toBe(0);
+    await expect(plugin.result).resolves.toBe(REPLACED_EXIT_CODE);
     expect(connector.connectionCount()).toBe(1);
     expect(plugin.events.map((entry) => entry.event)).toContain(ConnectorLogEvent.ConnectorReplaced);
   });

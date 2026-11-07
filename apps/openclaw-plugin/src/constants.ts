@@ -4,6 +4,7 @@ export const CHANNEL_ID = 'zapbip';
 export const CHANNEL_LABEL = 'Zapbip';
 export const CLEAN_EXIT_CODE = 0;
 export const FAILURE_EXIT_CODE = 1;
+export const REPLACED_EXIT_CODE = 2;
 export const ABNORMAL_CLOSE_CODE = 1006;
 export const DIRECT_PEER_KIND = 'direct';
 export const SEND_MESSAGE_TOOL_NAME = 'send_message';

@@ -3,6 +3,7 @@ import type { OpenClawConfig } from 'openclaw/plugin-sdk/config-contracts';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import entry from '../../index';
 import { createZapbipPlugin } from '../../src/channel';
+import { REPLACED_EXIT_CODE } from '../../src/constants';
 import { runConnectorSocket } from '../../src/connector-socket';
 import { handOffToAgent } from '../../src/handoff';
 import { sendOwnerText } from '../../src/send-message';
@@ -24,8 +25,13 @@ function configWith(input: { channels?: Record<string, unknown> }): OpenClawConf
   return input as unknown as OpenClawConfig;
 }
 
-function startContext(input: { cfg: OpenClawConfig; signal?: AbortSignal }) {
-  return { cfg: input.cfg, accountId: 'default', abortSignal: input.signal ?? new AbortController().signal } as never;
+function startContext(input: { cfg: OpenClawConfig; signal?: AbortSignal; setStatus?: (next: unknown) => void }) {
+  return {
+    cfg: input.cfg,
+    accountId: 'default',
+    abortSignal: input.signal ?? new AbortController().signal,
+    setStatus: input.setStatus ?? vi.fn(),
+  } as never;
 }
 
 function plugin() {
@@ -127,6 +133,30 @@ describe('startAccount', () => {
     const cfg = configWith({ channels: { zapbip: { connectionLink: 'http://zapbip.example/c/abc123/mcp' } } });
     await expect(startAccount(startContext({ cfg }))).rejects.toThrow(/https/);
     expect(runConnectorSocket).not.toHaveBeenCalled();
+  });
+
+  it('ends a replaced account as terminal so OpenClaw never restarts it', async () => {
+    const { startAccount } = plugin();
+    const setStatus = vi.fn();
+    vi.mocked(runConnectorSocket).mockResolvedValue(REPLACED_EXIT_CODE);
+    const cfg = configWith({ channels: { zapbip: { connectionLink: CONNECTION_LINK } } });
+    await expect(startAccount(startContext({ cfg, setStatus }))).resolves.toBeUndefined();
+    expect(setStatus).toHaveBeenCalledWith(
+      expect.objectContaining({
+        accountId: 'default',
+        lifecycle: 'blocked',
+        terminalDisconnect: true,
+        lastError: expect.stringContaining('replaced'),
+      }),
+    );
+  });
+
+  it('does not mark a clean stop after an abort as terminal', async () => {
+    const { startAccount } = plugin();
+    const setStatus = vi.fn();
+    const cfg = configWith({ channels: { zapbip: { connectionLink: CONNECTION_LINK } } });
+    await startAccount(startContext({ cfg, setStatus }));
+    expect(setStatus).not.toHaveBeenCalled();
   });
 
   it('throws when the socket stops with a failure exit code', async () => {
