@@ -19,7 +19,7 @@ const REQUIRED_KEYS = [
   'RegisterSubmit',
   'MetricsTitle',
 ];
-const TEXT_CHILD_PATTERN = />\s*[^<>{}\s][^<>{}]*</;
+const TEXT_CHILD_PATTERN = />\s*[A-Za-z0-9][^<>{}();=]*</;
 const STRING_CHILD_PATTERN = />\s*\{\s*['"`]/;
 
 function viewSources(input: { directory: string }): { path: string; source: string }[] {
