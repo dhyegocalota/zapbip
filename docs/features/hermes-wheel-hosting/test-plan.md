@@ -63,7 +63,7 @@ Every checkbox states the input and the exact expected outcome. A ticked box car
 - [x] Fresh venv: copy the command from the page and run it against the local Worker origin; expected: installs, then `pip show zapbip-platform` prints the constant version — evidence: tester-delta.md (e469559d): fresh venv manual install PASS (pip show 0.1.0); tester-final.md (a109a876): exact command, PATH without sha256sum, PASS
 - [x] Console and network clean: zero console errors and zero failed requests — evidence: tester-delta.md (e469559d): zero console errors, network 2xx
 - [x] Narrow width: the code block scrolls horizontally inside its container; the page itself does not — evidence: tester-delta.md (e469559d): the code block scrolls inside its container (scrollWidth 2466), the page does not (screenshots hermes-delta-en-375.png, hermes-delta-ptbr-375.png)
-- [ ] Screenshots and a short video staged for the PR — open, owned by /open-pr (the recorder role); the testers' 375 px screenshots are cited in the narrow-width row
+- [x] Screenshots staged for the PR — evidence: hermes-delta-en-375.png and hermes-delta-ptbr-375.png on the `pr-media-hermes-wheel-hosting` release; a video is not applicable to one static command
 
 ## Edge cases found during execution
 

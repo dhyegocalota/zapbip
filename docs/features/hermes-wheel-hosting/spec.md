@@ -1,6 +1,6 @@
 # Hermes wheel hosting
 
-**Status:** Building
+**Status:** Shipped 2026-11-07
 **Tier:** 🟡 medium
 **Security amendment:** 2026-11-07 (owner delegated 2026-11-06), after the security review found the dependencies of the wheel unpinned: the install goes through a hash-pinned requirements file.
 **Owner approval:** approved 2026-11-06 (owner delegated)
