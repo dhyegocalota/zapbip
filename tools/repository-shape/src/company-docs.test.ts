@@ -14,7 +14,16 @@ const TABLE_ROW_PREFIX = '|';
 const TABLE_HEADER_ROW_COUNT = 2;
 const LINE_SEPARATOR = '\n';
 
-const setCompanyFacts: string[] = Object.values(COMPANY).filter((fact) => fact !== COMPANY_FACT_UNSET);
+const PUBLISHED_COMPANY_FACTS = {
+  tradeName: 'Logic Bit',
+  legalName: 'Dhyego Fernando Rissao Calota',
+  cnpj: '32.555.315/0001-91',
+  address: 'R. Rio Grande do Norte, 1435, Sala 708, Savassi, Belo Horizonte – MG, 30130-138, Brasil',
+  website: 'https://logicbit.com.br',
+  contactEmail: 'dhyego@logicbit.com.br',
+};
+
+const companyFacts: string[] = Object.values(COMPANY);
 
 function tableRowCount(snippet: string): number {
   return readRepositoryFile(snippet)
@@ -28,14 +37,19 @@ describe('company docs', () => {
     expect(COMPANY.tradeName).not.toBe(COMPANY_FACT_UNSET);
   });
 
-  test.each(COMPANY_SNIPPETS)('%s shows every fact that is set', (snippet) => {
+  test('every fact equals the value published on the official site and none is the unset sentinel', () => {
+    expect(COMPANY).toEqual(PUBLISHED_COMPANY_FACTS);
+    expect(Object.values(COMPANY)).not.toContain(COMPANY_FACT_UNSET);
+  });
+
+  test.each(COMPANY_SNIPPETS)('%s shows every fact', (snippet) => {
     const text = readRepositoryFile(snippet);
-    const missing = setCompanyFacts.filter((fact) => !text.includes(fact));
+    const missing = companyFacts.filter((fact) => !text.includes(fact));
     expect(missing).toEqual([]);
   });
 
   test.each(COMPANY_SNIPPETS)('%s shows exactly the facts that are set, one row each', (snippet) => {
-    expect(tableRowCount(snippet)).toBe(TABLE_HEADER_ROW_COUNT + setCompanyFacts.length);
+    expect(tableRowCount(snippet)).toBe(TABLE_HEADER_ROW_COUNT + companyFacts.length);
   });
 
   test.each(COMPANY_SNIPPETS)('%s never shows the unset sentinel', (snippet) => {
