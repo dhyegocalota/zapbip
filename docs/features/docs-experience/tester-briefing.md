@@ -97,6 +97,15 @@ Pins (green when they landed): the fixture tests built on test-local validators 
 - `features/send-messages-and-media`: the list became a table of what the person sees against the kind. `features/owner-starts-conversations` (new): the owner writes first, the wake ladder in plain words, the not-listening notice, the closed-window notice (one template notice per closed window; zapbip's own notices take the same path). `features/whatsapp-commands` (new on this base): the command words in both languages side by side, the reserved-names rule, forwarded messages never run a command.
 - `ask-with-buttons-and-lists`, `many-agents-on-one-number` and `the-24-hour-window` already read for the person and keep every conversation at four messages or fewer; unchanged. pt-BR twins are native.
 
+## G5 help (branch `feat/docs-experience-g5`)
+
+### What changed
+
+- `apps/docs/e2e/help.spec.ts`: per language, the six help pages open with a title and the Logic Bit footer; privacy states the `RETENTION_DAYS` figures and Meta and Cloudflare; revoke and rotate names both words and says a rotated link is sent once; delete your account gives both phrases, what Meta and Cloudflare keep and the new waitlist account; the FAQ shows the waitlist question and its answer names the zapbip team and `help` (`ajuda`); no FAQ answer is blank.
+- `tools/repository-shape/src/docs-experience.test.ts`: `docs experience: help` (T1-45, both languages).
+- `help/privacy-and-security`, `revoke-and-rotate-keys`, `delete-your-account`, `faq`, `troubleshooting` and their `pt-br/` twins written natively. `about` is unchanged (it already renders `COMPANY` through the snippet, unset facts are not shown).
+- Facts come from `origin/feat/accounts-and-keys` (`account-copy.ts`, its manage-your-agents and delete pages): the two deletion phrases and the 10 minute window, the reply texts shown in the chats, the 30 minute single-use link, the 8 AI limit, the name rules, and that a failed rotate keeps the old connection.
+
 ### Red today, green after
 
 | Test | Red before because | Green after |
@@ -127,3 +136,18 @@ Pins (green when they landed): the fixture tests built on test-local validators 
 
 - The `forwarded messages never run a command` rule is stated from the cross-slice decision; the code that enforces it lands with accounts-and-keys.
 - `help/delete-your-account` is a skeleton until G5; the link resolves.
+
+| `docs-experience.test.ts` privacy page (2 tests, `bb38227`) | `questions: expected 7 days`, `queue: expected 7 days`, `media: expected 30 days` | the pages commit |
+| `help.spec.ts` (`bb38227`: 8 failed, 14 passed; the render tests and the blank-answer test are pins) | `Expected pattern: /7\s+days/`; `getByText('What if my account is on the waitlist?') ... element(s) not found`; missing `Cloudflare` and `revoke` | the pages commit: 22 of 22 per language project |
+
+### Hypotheses for the tester
+
+- A person on the waitlist who reads the FAQ and troubleshooting knows to wait and to send `help` when access opens.
+- Every command word on the help pages equals the accounts-and-keys copy (`revoke`, `rotate`, `delete account`, `delete account permanently`, `new agent`, and their Portuguese words).
+- Every reply quoted in a chat on these pages equals the `AccountReplyIntent` copy.
+
+### Gaps
+
+- The accounts-and-keys docs checks (Step 27's second red) are not on this base: there is no test to move to `features/whatsapp-commands` and `help/delete-your-account`.
+- Step 32 facts rows depending on accounts-and-keys constants not on this branch: facts at the accounts-and-keys merge (the `10 minutes`, `30 minutes` and `8` figures are typed from its copy and spec).
+- Mintlify on port 3310 was held by another lane's server, so the spec ran against a scratch config on another port (deleted).

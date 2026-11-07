@@ -229,12 +229,12 @@ G0 evidence (2026-11-06): Step 1 `ab7d8dc`; Step 2 red `7902adb` (carries the en
 
 ### G5 help
 
-- [ ] **Step 27:** Red: `apps/docs/e2e/help.spec.ts`: the five pages exist in both languages; `privacy-and-security` shows the `RETENTION_DAYS` figures; `faq` has the waitlist question. Red: the accounts-and-keys docs checks read `features/whatsapp-commands` and `help/delete-your-account`, committed before the moves.
-- [ ] **Step 28:** `troubleshooting` and `faq` (English and twin): symptoms the person sees, each with one fix. The FAQ entry "What if my account is on the waitlist?" says: the account is held until the zapbip team activates it; the person waits; meanwhile `ajuda` lists the commands.
-- [ ] **Step 29:** `privacy-and-security` (English and twin): what zapbip stores and for how long (queued messages and questions 7 days, media 30 days, the secret only as a digest, logs without message text), what Meta and Cloudflare keep after deletion, what zapbip never reads. The figures come from `RETENTION_DAYS`.
-- [ ] **Step 30:** `revoke-and-rotate-keys` (English and twin): `revogar <nome>` and `girar <nome>`, what each does to the link, that a rotated link is sent once.
-- [ ] **Step 31:** `delete-your-account` (English and twin, from accounts-and-keys): `apagar conta`, then `apagar conta definitivamente`; what is deleted; what Meta and Cloudflare keep; the next message starts a new account on the waitlist.
-- [ ] **Step 32 (facts):** the deletion steps match accounts-and-keys.
+- [x] **Step 27:** Red: `apps/docs/e2e/help.spec.ts`: the five pages exist in both languages; `privacy-and-security` shows the `RETENTION_DAYS` figures; `faq` has the waitlist question. Red: the accounts-and-keys docs checks read `features/whatsapp-commands` and `help/delete-your-account`, committed before the moves. Evidence: `bb38227`.
+- [x] **Step 28:** `troubleshooting` and `faq` (English and twin): symptoms the person sees, each with one fix. The FAQ entry "What if my account is on the waitlist?" says: the account is held until the zapbip team activates it; the person waits; meanwhile `ajuda` lists the commands. Evidence: `b1208f0`.
+- [x] **Step 29:** `privacy-and-security` (English and twin): what zapbip stores and for how long (queued messages and questions 7 days, media 30 days, the secret only as a digest, logs without message text), what Meta and Cloudflare keep after deletion, what zapbip never reads. The figures come from `RETENTION_DAYS`. Evidence: `b1208f0`.
+- [x] **Step 30:** `revoke-and-rotate-keys` (English and twin): `revogar <nome>` and `girar <nome>`, what each does to the link, that a rotated link is sent once. Evidence: `b1208f0`.
+- [x] **Step 31:** `delete-your-account` (English and twin, from accounts-and-keys): `apagar conta`, then `apagar conta definitivamente`; what is deleted; what Meta and Cloudflare keep; the next message starts a new account on the waitlist. Evidence: `b1208f0`.
+- [x] **Step 32 (facts):** the deletion steps match accounts-and-keys. Evidence: `b1208f0`.
 
 ### G6 developers and concepts
 

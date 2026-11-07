@@ -2,3 +2,34 @@
 title: Privacy and security
 description: What zapbip stores, for how long, and what it never reads.
 ---
+
+zapbip is a private channel between you and your own AIs. It holds only what it needs to deliver your messages, and it drops each piece after a fixed time.
+
+## What zapbip stores
+
+| What | How long |
+| --- | --- |
+| Messages waiting for you or for an AI | 7 days |
+| Questions an AI asked you and is still waiting on | 7 days |
+| Photos, files and other media | 30 days |
+| The secret of each connection | Only as a digest, never in the clear |
+
+Logs never carry the text of your messages.
+
+## What zapbip never reads
+
+- Your other WhatsApp chats, your contacts and your photos. zapbip sees only the conversation you have with its number.
+- Messages from other people. zapbip talks only to you and to the AIs you connect.
+
+## What Meta and Cloudflare keep
+
+zapbip runs on the official WhatsApp Business platform from Meta and on Cloudflare. When you delete your account, they keep their own copies for their own retention periods.
+
+- Meta keeps the chat history on its side. Delete the chat in WhatsApp to take it off your phone.
+- Cloudflare keeps backup copies of the infrastructure for its own retention period.
+
+## Control
+
+- Cut off one AI with [revoke and rotate](/help/revoke-and-rotate-keys).
+- Remove everything with [delete your account](/help/delete-your-account).
+- Know who makes zapbip on the [about page](/help/about).

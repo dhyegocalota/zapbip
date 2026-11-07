@@ -2,3 +2,44 @@
 title: Delete your account
 description: Remove your account and what zapbip holds.
 ---
+
+import { Chat } from '/snippets/chat.jsx';
+
+You can delete your account at any time, from WhatsApp. It takes two messages, so a stray message cannot delete anything.
+
+<Steps>
+  <Step title="Ask">Write `delete account`. zapbip tells you what will be removed and which phrase confirms it.</Step>
+  <Step title="Confirm">
+    Within 10 minutes, write `delete account permanently`. After that time nothing is deleted; write `delete account` again to start over.
+  </Step>
+</Steps>
+
+<Chat
+  messages={[
+    { you: true, text: 'delete account', time: '09:30' },
+    {
+      text: 'This deletes your account, every agent, message and file, and cannot be undone. To confirm within 10 minutes, send: delete account permanently',
+      time: '09:30',
+    },
+    { you: true, text: 'delete account permanently', time: '09:31' },
+    { text: 'Your account is deleted. Your next message starts a new account.', time: '09:31' },
+  ]}
+/>
+
+## What is deleted
+
+- Every message, question and pending reply.
+- Every connected AI. Their prompts and links stop working at once.
+- The files stored for you.
+- Your phone number and your account.
+
+## What Meta and Cloudflare keep
+
+- Meta keeps the chat history on its side. Delete the chat in WhatsApp if you want it off your phone.
+- Cloudflare keeps backup copies for its own retention period.
+
+## Starting again
+
+A message from the same phone after the deletion starts a new account, and that account joins the waitlist like any new one. See the [FAQ](/help/faq).
+
+To cut off only one AI, see [revoke and rotate](/help/revoke-and-rotate-keys).
