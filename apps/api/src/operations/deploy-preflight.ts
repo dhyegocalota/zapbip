@@ -25,10 +25,9 @@ const OPENCLAW_PLUGIN_PACKAGE = '@zapbip/openclaw-plugin';
 const PYPI_PACKAGE_NAME = 'zapbip-platform';
 const PYPI_ORIGIN = 'https://pypi.org';
 const PYPI_XML_RPC_URL = `${PYPI_ORIGIN}/pypi`;
-const PYPI_OWNER_ROLE = 'Owner';
 const PYPI_ROLE_PATTERN = /<array>\s*<data>\s*<value>\s*<string>([^<]+)<\/string>\s*<\/value>\s*<value>\s*<string>([^<]+)<\/string>/g;
 const PYPI_ROLES_REQUEST = `<?xml version="1.0"?><methodCall><methodName>package_roles</methodName><params><param><value><string>${PYPI_PACKAGE_NAME}</string></value></param></params></methodCall>`;
-const NPM_REGISTRY_FLAG = `--registry=${NPM_REGISTRY_URL}`;
+const NPM_REGISTRY_FLAGS = [`--registry=${NPM_REGISTRY_URL}`, `--@zapbip:registry=${NPM_REGISTRY_URL}`];
 const DEPLOYABLE_ENVIRONMENTS = [DeployEnvironment.Staging, DeployEnvironment.Production];
 
 export type ShellCommand = { file: string; args: string[]; stdin?: string };
@@ -154,7 +153,7 @@ function npmFailureReason(input: { packageSpec: string; stdout: string }): strin
 
 async function untrustedReasonOf(input: { shell: DeployShell; packageSpec: string; publisher: string }): Promise<string | null> {
   const { shell, packageSpec, publisher } = input;
-  const maintainerAnswer = await shell.run({ file: NPM, args: ['view', packageSpec, 'maintainers', '--json', NPM_REGISTRY_FLAG] });
+  const maintainerAnswer = await shell.run({ file: NPM, args: ['view', packageSpec, 'maintainers', '--json', ...NPM_REGISTRY_FLAGS] });
   if (maintainerAnswer.exitCode !== 0) return npmFailureReason({ packageSpec, stdout: maintainerAnswer.stdout });
   const maintainers = npmPeopleSchema.safeParse(parseJsonOrNull({ text: maintainerAnswer.stdout }));
   if (!maintainers.success) return `could not read the maintainers of ${packageSpec} as JSON`;
@@ -162,7 +161,7 @@ async function untrustedReasonOf(input: { shell: DeployShell; packageSpec: strin
   const hasOnlyPublisher = names.length > 0 && names.every((name) => name === publisher);
   if (!hasOnlyPublisher)
     return `${packageSpec} must be maintained only by the npm user ${publisher}; its maintainers are ${names.join(', ')}`;
-  const publisherAnswer = await shell.run({ file: NPM, args: ['view', packageSpec, '_npmUser', '--json', NPM_REGISTRY_FLAG] });
+  const publisherAnswer = await shell.run({ file: NPM, args: ['view', packageSpec, '_npmUser', '--json', ...NPM_REGISTRY_FLAGS] });
   if (publisherAnswer.exitCode !== 0) return `could not read who published ${packageSpec}`;
   const publishedBy = npmPeopleSchema.safeParse(parseJsonOrNull({ text: publisherAnswer.stdout }));
   if (!publishedBy.success) return `could not read who published ${packageSpec} as JSON`;
@@ -211,9 +210,9 @@ async function pypiAnswerOrNull(input: { packageFetcher: PackageFetcher; url: st
   }
 }
 
-function pypiOwnersOf(input: { body: unknown }): string[] {
+function pypiRoleHoldersOf(input: { body: unknown }): string[] {
   if (typeof input.body !== 'string') return [];
-  return [...input.body.matchAll(PYPI_ROLE_PATTERN)].filter((match) => match[1] === PYPI_OWNER_ROLE).map((match) => match[2] as string);
+  return [...input.body.matchAll(PYPI_ROLE_PATTERN)].map((match) => match[2] as string);
 }
 
 async function refuseUntrustedPypiPackage(input: {
@@ -233,11 +232,11 @@ async function refuseUntrustedPypiPackage(input: {
   if (release?.status !== HttpStatus.Ok) return unreachable;
   const roles = await pypiAnswerOrNull({ packageFetcher, url: PYPI_XML_RPC_URL, xmlBody: PYPI_ROLES_REQUEST });
   if (roles?.status !== HttpStatus.Ok) return unreachable;
-  const owners = pypiOwnersOf({ body: roles.body });
-  if (owners.length === 0) return `${PYPI_PACKAGE_NAME} on PyPI lists no ${PYPI_OWNER_ROLE}; check the package roles`;
-  const hasOnlyPublisher = owners.length === 1 && owners[0] === publisher;
+  const holders = pypiRoleHoldersOf({ body: roles.body });
+  if (holders.length === 0) return `${PYPI_PACKAGE_NAME} on PyPI lists no Owner; check the package roles`;
+  const hasOnlyPublisher = holders.every((holder) => holder === publisher);
   if (hasOnlyPublisher) return null;
-  return `${PYPI_PACKAGE_NAME} must have exactly one ${PYPI_OWNER_ROLE} on PyPI, the user ${publisher}; its owners are ${owners.join(', ')}`;
+  return `${PYPI_PACKAGE_NAME} must have the user ${publisher} as the only Owner and Maintainer on PyPI; its role holders are ${holders.join(', ')}`;
 }
 
 async function refuseUncleanGit(input: WorkerPreflightInput): Promise<string | null> {
