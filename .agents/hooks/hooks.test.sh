@@ -4,7 +4,7 @@ here="$(cd "$(dirname "$0")" && pwd)"
 failures=0
 export HOME=$(mktemp -d)
 export XDG_CONFIG_HOME="$HOME/xdg-config"
-unset CLOUDFLARE_API_TOKEN CLOUDFLARE_API_KEY
+unset CLOUDFLARE_API_TOKEN CLOUDFLARE_API_KEY CF_API_TOKEN CF_API_KEY
 export WRANGLER_REPOSITORY_ROOT=$(mktemp -d)
 mkdir -p "$WRANGLER_REPOSITORY_ROOT/apps/api"
 api_environment_file="$WRANGLER_REPOSITORY_ROOT/apps/api/.env"
@@ -13,7 +13,7 @@ xdg_wrangler_config="$XDG_CONFIG_HOME/.wrangler/config/default.toml"
 legacy_wrangler_config="$HOME/.wrangler/config/default.toml"
 
 log_in_with() { mkdir -p "$(dirname "$1")"; : > "$1"; }
-log_out() { rm -rf "$HOME/Library" "$HOME/.wrangler" "$XDG_CONFIG_HOME" "$WRANGLER_REPOSITORY_ROOT"/apps/api/.env*; unset CLOUDFLARE_API_TOKEN CLOUDFLARE_API_KEY; }
+log_out() { rm -rf "$HOME/Library" "$HOME/.wrangler" "$XDG_CONFIG_HOME" "$WRANGLER_REPOSITORY_ROOT"/apps/api/.env* "$WRANGLER_REPOSITORY_ROOT"/.env*; unset CLOUDFLARE_API_TOKEN CLOUDFLARE_API_KEY CF_API_TOKEN CF_API_KEY; }
 
 expect_exit() {
   local name=$1 expected=$2 script=$3 input=$4
@@ -49,35 +49,15 @@ expect_exit "codex: ordinary patch is allowed" 0 guard-secrets.sh "$(codex_patch
 notebook_edit() { printf '{"tool_name":"NotebookEdit","tool_input":{"notebook_path":"%s"}}' "$1"; }
 expect_exit "claude: a notebook edit of .env is blocked" 2 guard-secrets.sh "$(notebook_edit /repo/.env)"
 expect_exit "claude: an ordinary notebook edit is allowed" 0 guard-secrets.sh "$(notebook_edit /repo/analysis.ipynb)"
-blocked_env_writes=('echo X=1 > .env' 'echo X=1 >> apps/server/.env.local' 'echo X=1 >.env.production' 'printf x | tee .env' 'tee -a apps/web/.env.staging < input' 'cp .env.example .env' 'mv draft .env.test' 'sed -i s/a/b/ .env' 'sed -i.bak s/a/b/ apps/server/.env.local' 'echo X=1 > \".env\"')
-for form in "${blocked_env_writes[@]}"; do
+blocked_env_commands=('echo X=1 > .env' 'echo X=1 >> apps/server/.env.local' 'echo X=1 >.env.production' 'printf x | tee .env' 'tee -a apps/web/.env.staging < input' 'cp .env.example .env' 'mv draft .env.test' 'sed -i s/a/b/ .env' 'sed -i.bak s/a/b/ apps/server/.env.local' 'echo X=1 > \".env\"' 'printf x > \"$(true ).env\"' 'tee \"apps/api/$(: ).env.local\"' 'cp draft .e*v' 'cp draft apps/api/.e?v' 'echo X=1 > ${HOME}.env' 'echo X=1 > `pwd`/.env' 'install -m 600 draft .env' 'dd if=draft of=.env' 'ln -sf draft .env' 'rsync draft .env' 'perl -pi -e s/a/b/ .env' 'python3 -c \"open('.env', 'w').write('x')\"' 'bash -c \"cp draft .env\"' 'echo X=1 > .*' 'git log --output=.env' 'git diff --output=apps/api/.env.local' 'git show --output .env HEAD' 'git log --out=.env' 'tar xf archive.tar .env' 'tar -xzf archive.tgz -C apps/api .env.local' 'unzip archive.zip .env' 'unzip -o archive.zip -d apps/api .env' 'cat > .env <<EOF\nX=1\nEOF' 'echo X=1 &> .env' 'echo X=1 >| .env' 'touch .env' 'touch apps/api/.env.local' 'truncate -s 0 .env' 'curl -o .env https://example.com/x' 'wget -O .env https://example.com/x' 'patch .env change.patch' 'git checkout .env' 'git checkout HEAD -- apps/api/.env.production' 'git restore .env' 'node -e \"require(1)\" .env' 'ruby -e \"x\" .env' 'python3 -c \"x\" .env' 'sed -n \"w .env\" input' 'sed s/a/b/w .env input' 'cp draft \".e\"nv' 'cp draft .e\"n\"v' 'cp draft ${HOME}.env' 'cp draft .e[n]v' 'cp draft .env*' 'mv draft .env.production' 'tee .env' 'tee -a .env.local < x' 'pax -rw draft .env' 'ditto draft .env' 'gtar -xf a.tar -C . .env' 'bsdtar -xf a.tar .env' 'cpio -pdm .env < list' 'sort -o .env draft' 'sort draft -o .env' 'sort --output=.env draft' 'uniq draft .env' 'xxd -r hexdump .env' 'base64 -o .env draft' 'base64 -D -i draft -o .env' 'script -q .env' 'zip .env draft' 'iconv -f utf-8 -t utf-8 -o .env draft' 'openssl enc -base64 -d -in draft -out .env' 'sponge .env' 'ex -es .env' 'vim -es .env' 'vi -es apps/api/.env.local' 'split -l 1 draft .env' 'plutil -convert xml1 draft -o .env' 'git commit -m \"the .env file holds secrets\"' 'echo \"see .env\" > notes.md; touch x' 'echo see .env > notes.md && rm x' 'echo see .env | tee notes.md' 'echo see .env > notes.md > other.md' 'echo see .env >> notes.md >> other.md' 'echo \"see .env $HOME\" > notes.md' 'echo \"see .env `id`\" > notes.md' 'echo \"$(cat .env)\" > notes.md' 'echo see .env > $HOME/notes.md' 'echo see .env 2>&1' 'echo see .env > notes.md &' 'echo see .env >> .env.local' 'printf see .env > .envrc' 'echo see .env > \".env\"' 'echo see .env > .e*' 'echo see .env > apps/api/.env.production' 'echo \"a > b .env\" > notes.md' 'cat .env > notes.md' 'cat .env | sh' 'cat .env; touch x' 'cat .env && touch x' 'cat .env || touch x' 'cat $(echo .env)' 'cat `echo .env`' 'cat <.env' 'cat < .env' 'cat .env &' 'cat (.env)' 'cat {.env,x}' 'cat .env\ntouch x' 'env cat .env' 'xargs cat < .env' 'sh -c \"cat .env\"' 'FOO=bar cat .env' 'rg --pre sh x .env' 'rg --pre=sh x .env' 'rg -O sh x .env' 'git log --output=notes .env' 'git diff --ext-diff --output=notes -- .env' 'git grep -O sh x .env' 'sed -n 1p -i .env' 'sed -n \"w notes\" .env' 'sed -n \"e id\" .env' 'sed -n 1p .env > x' 'sed -i s/a/b/ notes .env' 'tail -f .env | sh' 'head -c 5 .env > notes' 'wc -l .env > notes' 'grep x .env >> notes' 'ls .env > notes' 'test -f .env && touch x' 'git status .env; touch x' 'git status .env | sh' 'cp .env notes' 'mv .env notes' 'rm .env' 'rm -f apps/api/.env.local' 'chmod 600 .env' 'ln -s .env link' 'cat .env.local; x' 'less .env' 'open .env' 'source .env' '. .env' 'export $(cat .env)' 'awk 1 .env' 'jq . .env' 'node --env-file=.env x.js' 'bash .env' 'python3 .env')
+for form in "${blocked_env_commands[@]}"; do
   expect_exit "claude: $form is blocked" 2 guard-secrets.sh "$(bash_call "$form")"
   expect_exit "codex: $form is blocked" 2 guard-secrets.sh "$(codex_bash_call "$form")"
 done
-evasive_env_writes=('printf x > \"$(true ).env\"' 'tee \"apps/api/$(: ).env.local\"' 'cp draft .e*v' 'cp draft apps/api/.e?v' 'echo X=1 > ${HOME}.env' 'echo X=1 > `pwd`/.env' 'install -m 600 draft .env' 'dd if=draft of=.env' 'ln -sf draft .env' 'rsync draft .env' 'perl -pi -e s/a/b/ .env' 'python3 -c \"open('.env', 'w').write('x')\"' 'bash -c \"cp draft .env\"' 'echo X=1 > .*')
-for form in "${evasive_env_writes[@]}"; do
-  expect_exit "claude: $form is blocked" 2 guard-secrets.sh "$(bash_call "$form")"
-  expect_exit "codex: $form is blocked" 2 guard-secrets.sh "$(codex_bash_call "$form")"
-done
-output_env_writes=('git log --output=.env' 'git diff --output=apps/api/.env.local' 'git show --output .env HEAD' 'git log --out=.env' 'tar xf archive.tar .env' 'tar -xzf archive.tgz -C apps/api .env.local' 'unzip archive.zip .env' 'unzip -o archive.zip -d apps/api .env')
-for form in "${output_env_writes[@]}"; do
-  expect_exit "claude: $form is blocked" 2 guard-secrets.sh "$(bash_call "$form")"
-  expect_exit "codex: $form is blocked" 2 guard-secrets.sh "$(codex_bash_call "$form")"
-done
-allowed_env_commands=('install -m 600 draft .env.example' 'dd if=draft of=notes.txt' 'ln -sf draft link' 'rsync draft backup' 'perl -pi -e s/a/b/ notes.md')
+allowed_env_commands=('echo X=1 > .env.example' 'cp .env.example /tmp/copy' 'cat .env.example' 'sed -i s/a/b/ .env.example' 'echo x > notes.txt' 'git commit -m \"document the variable\"' 'touch notes.md' 'cp a b' 'git checkout -b feat/x' 'install -m 600 draft .env.example' 'dd if=draft of=notes.txt' 'ln -sf draft link' 'rsync draft backup' 'perl -pi -e s/a/b/ notes.md' 'sort -o notes draft' 'echo see .env and .env.local' 'echo \"the .env file\"' 'printf \"see .env\\n\"' 'echo \"the .env file holds secrets\" >> PROGRESS.md' "echo 'see .env and .env.local' > notes.md" 'printf \"see .env\" > notes.txt' 'echo see .env>notes.md' 'cat .env' 'cat apps/api/.env.local' 'cat -n .envrc' 'head -n 5 .env' 'tail -n 2 apps/api/.env.production' 'wc -l .env' 'grep -n API .env' 'grep -rn .env docs' 'rg X .env' 'rg -n X apps/api/.env.local' 'sed -n 1,5p .env' 'sed -n \"2p\" .env' 'git log --grep .env' 'git log -- .env' 'git diff -- .env' 'git show HEAD:apps/api/.env.local' 'git status .env' 'ls -la .env' 'test -f .env' '[ -f .env ]')
 for form in "${allowed_env_commands[@]}"; do
   expect_exit "claude: $form is allowed" 0 guard-secrets.sh "$(bash_call "$form")"
   expect_exit "codex: $form is allowed" 0 guard-secrets.sh "$(codex_bash_call "$form")"
-done
-allowed_env_commands=('echo X=1 > .env.example' 'cp .env.example /tmp/copy' 'cat .env.example' 'sed -i s/a/b/ .env.example' 'echo x > notes.txt' 'git commit -m \"document the variable\"' 'echo see .env and .env.local' 'git commit -m \"the .env file holds secrets\"' 'grep -rn .env docs' 'cat .env' 'echo \"the .env file\"' 'git log --grep .env' 'git checkout -b feat/x' 'touch notes.md' 'cp a b')
-for form in "${allowed_env_commands[@]}"; do
-  expect_exit "claude: $form is allowed" 0 guard-secrets.sh "$(bash_call "$form")"
-  expect_exit "codex: $form is allowed" 0 guard-secrets.sh "$(codex_bash_call "$form")"
-done
-strict_env_writes=('echo \"the .env file holds secrets\" >> PROGRESS.md' "echo 'see .env and .env.local' > notes.md" 'cat > .env <<EOF\nX=1\nEOF' 'echo X=1 &> .env' 'echo X=1 >| .env' 'touch .env' 'touch apps/api/.env.local' 'truncate -s 0 .env' 'curl -o .env https://example.com/x' 'wget -O .env https://example.com/x' 'patch .env change.patch' 'git checkout .env' 'git checkout HEAD -- apps/api/.env.production' 'git restore .env' 'node -e \"require(1)\" .env' 'ruby -e \"x\" .env' 'python3 -c \"x\" .env' 'sed -n \"w .env\" input' 'sed s/a/b/w .env input' 'cp draft \".e\"nv' 'cp draft .e\"n\"v' 'cp draft ${HOME}.env' 'cp draft .e*v' 'cp draft .e?v' 'cp draft .e[n]v' 'cp draft .env*' 'mv draft .env.production' 'sed -i s/a/b/ .env' 'sed -i.bak s/a/b/ .env' 'perl -pi -e s/a/b/ .env' 'install -m 600 draft .env' 'rsync draft .env' 'ln -s draft .env' 'dd if=draft of=.env' 'tee .env' 'tee -a .env.local < x' 'pax -rw draft .env' 'ditto draft .env' 'gtar -xf a.tar -C . .env' 'bsdtar -xf a.tar .env' 'cpio -pdm .env < list')
-for form in "${strict_env_writes[@]}"; do
-  expect_exit "claude: $form is blocked" 2 guard-secrets.sh "$(bash_call "$form")"
-  expect_exit "codex: $form is blocked" 2 guard-secrets.sh "$(codex_bash_call "$form")"
 done
 settings_file="$here/../../.claude/settings.json"
 codex_hooks_file="$here/../../.codex/hooks.json"
@@ -207,6 +187,36 @@ log_out
 export CLOUDFLARE_API_TOKEN=
 expect_exit "deploy guard: an empty API token is no login" 0 guard-deploy.sh "$(bash_call 'wrangler dev')"
 log_out
+export CF_API_TOKEN=scoped-token
+expect_exit "deploy guard: an exported CF API token blocks wrangler dev" 2 guard-deploy.sh "$(bash_call 'wrangler dev')"
+log_out
+export CF_API_KEY=global-key
+expect_exit "deploy guard: an exported CF API key blocks wrangler dev" 2 guard-deploy.sh "$(bash_call 'wrangler dev')"
+unset CF_API_TOKEN CF_API_KEY
+log_out
+dotenv_credential_lines=('CLOUDFLARE_API_TOKEN=x' 'CF_API_TOKEN=x' 'CF_API_KEY=x' 'export CF_API_KEY=x' '  CLOUDFLARE_API_KEY = x' 'CLOUDFLARE_API_TOKEN: x' 'export   CF_API_TOKEN=x')
+dotenv_credential_files=("$WRANGLER_REPOSITORY_ROOT/.env" "$WRANGLER_REPOSITORY_ROOT/.env.local" "$WRANGLER_REPOSITORY_ROOT/.envrc" "$api_environment_file")
+for credential_file in "${dotenv_credential_files[@]}"; do
+  for credential_line in "${dotenv_credential_lines[@]}"; do
+    printf 'OTHER=1\n%s\n' "$credential_line" > "$credential_file"
+    expect_exit "deploy guard: '$credential_line' in ${credential_file#$WRANGLER_REPOSITORY_ROOT/} blocks wrangler dev" 2 guard-deploy.sh "$(bash_call 'wrangler dev')"
+    log_out
+  done
+done
+printf 'CLOUDFLARE_API_TOKEN=x\n' > "$WRANGLER_REPOSITORY_ROOT/.env.example"
+printf '# CLOUDFLARE_API_TOKEN=x\nMY_CF_API_TOKEN=x\nOTHER=1\n' > "$WRANGLER_REPOSITORY_ROOT/.env"
+expect_exit "deploy guard: a root example file, a comment and a longer name allow wrangler dev" 0 guard-deploy.sh "$(bash_call 'wrangler dev')"
+log_out
+confined_wrangler_forms=('wrangler dev --env-file other.env' 'wrangler dev --env-file=other.env' 'wrangler dev --cwd ../other' 'wrangler dev --cwd=/tmp/x' 'wrangler dev --envFile x' 'wrangler types --env-file x' 'wrangler deploy --dry-run --env-file x' 'wrangler d1 execute zapbip --local --command x --cwd x' 'wrangler dev --config /etc/wrangler.jsonc' 'wrangler dev --config=/etc/wrangler.jsonc' 'wrangler dev -c ../other/wrangler.jsonc' 'wrangler dev --config ../other/wrangler.jsonc' 'wrangler dev --config apps/../../other.jsonc' 'wrangler dev --config ~/wrangler.jsonc' 'wrangler dev --config' 'wrangler dev --config /tmp')
+for form in "${confined_wrangler_forms[@]}"; do
+  expect_exit "claude: $form is blocked" 2 guard-deploy.sh "$(bash_call "$form")"
+  expect_exit "codex: $form is blocked" 2 guard-deploy.sh "$(codex_bash_call "$form")"
+done
+confined_allowed_forms=('wrangler dev --config apps/api/wrangler.jsonc' 'wrangler dev -c apps/api/wrangler.jsonc' 'wrangler dev --config=wrangler.jsonc' "wrangler dev --config $WRANGLER_REPOSITORY_ROOT/apps/api/wrangler.jsonc" 'wrangler types --config apps/api/wrangler.jsonc')
+for form in "${confined_allowed_forms[@]}"; do
+  expect_exit "claude: $form is allowed" 0 guard-deploy.sh "$(bash_call "$form")"
+  expect_exit "codex: $form is allowed" 0 guard-deploy.sh "$(codex_bash_call "$form")"
+done
 expect_jq "settings: guard-deploy watches Bash" "$settings_file" '[.hooks.PreToolUse[] | select(.matcher == "Bash") | .hooks[].command] | any(contains("guard-deploy.sh"))'
 expect_jq "codex: guard-deploy watches Bash" "$codex_hooks_file" '[.hooks.PreToolUse[] | select(.matcher == "^Bash$") | .hooks[].command] | any(contains("guard-deploy.sh"))'
 
