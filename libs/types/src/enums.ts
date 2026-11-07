@@ -192,3 +192,31 @@ export enum HttpStatus {
   UpgradeRequired = 426,
   BadGateway = 502,
 }
+
+export enum InstallClient {
+  ClaudeCode = 'claude-code',
+  Codex = 'codex',
+  Cursor = 'cursor',
+  GeminiCli = 'gemini-cli',
+  GrokBot = 'grok-bot',
+  ClaudeAi = 'claude-ai',
+  ChatGpt = 'chatgpt',
+  GrokWeb = 'grok-web',
+  Hermes = 'hermes',
+  OpenClaw = 'openclaw',
+}
+
+export enum DocsLanguage {
+  English = 'en',
+  PortugueseBrazil = 'pt-BR',
+}
+
+export enum DocsOnlyClient {
+  AnyMcpClient = 'any-mcp-client',
+}
+
+export enum DocsRetentionKind {
+  Questions = 'questions',
+  Queue = 'queue',
+  Media = 'media',
+}
