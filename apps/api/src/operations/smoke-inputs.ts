@@ -28,7 +28,7 @@ const CHECK_INPUTS: Record<SmokeCheck, SmokeInput[]> = {
   [SmokeCheck.Health]: [SmokeInput.BaseUrl],
   [SmokeCheck.McpInitialize]: [SmokeInput.BaseUrl, SmokeInput.ConnectionSecret],
   [SmokeCheck.WebhookVerify]: [SmokeInput.BaseUrl, SmokeInput.VerifyToken],
-  [SmokeCheck.SignatureRejected]: [SmokeInput.BaseUrl],
+  [SmokeCheck.SignatureRejected]: [SmokeInput.BaseUrl, SmokeInput.PhoneNumberId],
   [SmokeCheck.FakeInbound]: [
     SmokeInput.BaseUrl,
     SmokeInput.ConnectionSecret,

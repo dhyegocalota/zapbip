@@ -335,8 +335,9 @@ export interface NumberRegistry {
    - the distinct `entry[].changes[].value.metadata.phone_number_id`;
    - for changes without metadata, `entry[].id` (WABA ID).
    - Unparseable JSON, or nothing to route on, is answered `401 unauthorized`, because it cannot be attributed to a number. This replaces today's `400 invalid_json` for unsigned bodies.
-3. **Attribution.** Resolve the IDs. The delivery must map to exactly one Meta app, because Meta signs each delivery with one app's secret.
-   - Any unknown ID, or two apps in one delivery: `401` and an `inbound.unattributed` operator event.
+3. **Attribution.** Resolve the IDs; only the known ones attribute the delivery, and they must map to exactly one Meta app, because Meta signs each delivery with one app's secret.
+   - No known ID, or known IDs spanning two apps: `401` and an `inbound.unattributed` operator event, after one signature check against a placeholder secret so a known and an unknown number cost the same.
+   - A change with an unknown ID beside a known one is skipped and logged as `inbound.foreign_number`; the delivery is answered `200`, so Meta does not retry the owner's messages forever.
    - The response is the same as for a bad signature, so registration cannot be probed.
 4. **Signature.** `verifyWebhookSignature` with that app's opened secret. A mismatch is `401`.
 5. The full parse and processing as today. The `change.phoneNumberId !== environment.phoneNumberId` check becomes a check on the number's state from the table above.
@@ -516,7 +517,8 @@ AccountInbox alarm ─► flush usage_meter → usage_daily, activity_meter → 
 | `BACKOFFICE_*` secret missing | every backoffice request answers `503`; the preflight refuses the deploy first |
 | `NUMBER_REGISTRY_KEY` missing or wrong | sends fail with the restricted-channel error; webhooks answer `500`, because it is a server misconfiguration (Meta retries for up to 7 days); `channel.number_unavailable`; the preflight refuses a missing key |
 | A sealed value does not open (swapped row, corrupted value) | hard error naming the internal row ID; that number is unavailable, the others work |
-| Webhook for an unregistered number, or a delivery spanning two apps | `401`, `inbound.unattributed` |
+| Webhook with no registered number, or known numbers spanning two apps | `401`, `inbound.unattributed` |
+| Webhook with an unregistered number beside a registered one | `200`, the unregistered change skipped, `inbound.foreign_number` |
 | Number `pending` or `disabled` | inbound ignored after the signature check, `200`; outbound refused |
 | Graph verify fails | the error kind is shown; `verified_at` stays null; state stays `pending` |
 | No registered number in a fresh environment | webhooks `401`, sends refused; the go-live runbook registers the number before the Meta webhook is pointed at the host |
