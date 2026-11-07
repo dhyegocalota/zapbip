@@ -3,6 +3,7 @@ import coreMigrationSql from '../../migrations/0001_core.sql?raw';
 import accountsMigrationSql from '../../migrations/0002_accounts_and_keys.sql?raw';
 import channelMigrationSql from '../../migrations/0004_whatsapp_channel.sql?raw';
 import backofficeMigrationSql from '../../migrations/0005_backoffice.sql?raw';
+import backofficeFlashMigrationSql from '../../migrations/0006_backoffice_flash.sql?raw';
 import { hashConnectionSecret } from '../../src/adapters/platform/hash';
 import { accountInboxStub, testEnv } from './workers-env';
 
@@ -34,11 +35,16 @@ export async function applyBackofficeMigration(): Promise<void> {
   await applyMigration({ sql: backofficeMigrationSql });
 }
 
+export async function applyBackofficeFlashMigration(): Promise<void> {
+  await applyMigration({ sql: backofficeFlashMigrationSql });
+}
+
 export async function applyDirectoryMigration(): Promise<void> {
   await applyCoreMigration();
   await applyAccountsMigration();
   await applyChannelMigration();
   await applyBackofficeMigration();
+  await applyBackofficeFlashMigration();
 }
 
 export async function seedAccount(input: { accountId: string; state?: AccountState; numberId?: string | null }): Promise<void> {

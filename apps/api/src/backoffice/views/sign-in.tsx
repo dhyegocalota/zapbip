@@ -2,10 +2,8 @@ import type { OwnerLocale } from '@zapbip/types';
 import type { DeployEnvironment } from '../../contract/deploy-environment';
 import { BackofficeCopyKey, renderBackofficeCopy } from '../backoffice-copy';
 import type { BackofficeNotice } from '../backoffice-notice';
-import { NoticeVariant } from '../backoffice-notice';
 import { BackofficePath } from '../backoffice-paths';
 import { CodeField, Field } from '../components/fields';
-import { Notice } from '../components/notice';
 import { Layout } from '../layout';
 
 export type SignInPageProps = {
@@ -14,7 +12,6 @@ export type SignInPageProps = {
   csrfToken: string;
   stylesheetHref: string;
   notice: BackofficeNotice | null;
-  failed: boolean;
 };
 
 export function SignInPage(props: SignInPageProps) {
@@ -33,7 +30,6 @@ export function SignInPage(props: SignInPageProps) {
     >
       <section class="card form-card" aria-labelledby="sign-in-title">
         <h1 id="sign-in-title">{translate(BackofficeCopyKey.SignInTitle)}</h1>
-        {props.failed ? <Notice variant={NoticeVariant.Error} locale={locale} message={translate(BackofficeCopyKey.SignInFailed)} /> : null}
         <form method="post" action={BackofficePath.SignIn}>
           <input type="hidden" name="csrf" value={props.csrfToken} />
           <Field

@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { OwnerLocale } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { BackofficeAuditAction, BackofficeAuditOutcome } from '../../src/backoffice/audit/backoffice-audit-action';
+import { BackofficeNotice } from '../../src/backoffice/backoffice-notice';
 import { AuditPage } from '../../src/backoffice/views/audit';
 import { HomePage } from '../../src/backoffice/views/home';
 import { SignInPage } from '../../src/backoffice/views/sign-in';
@@ -26,7 +27,7 @@ const PAGE = {
 };
 
 const PAGES: Record<string, string> = {
-  signIn: String(SignInPage({ ...PAGE, failed: true })),
+  signIn: String(SignInPage({ ...PAGE, notice: BackofficeNotice.SignInFailed })),
   home: String(HomePage({ page: PAGE, counts: { pending: 1, active: 2, closed: 0, disabled: 0 } })),
   homeEmpty: String(HomePage({ page: PAGE, counts: { pending: 0, active: 0, closed: 0, disabled: 0 } })),
   audit: String(

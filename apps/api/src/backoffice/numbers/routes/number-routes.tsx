@@ -16,7 +16,7 @@ import { BackofficePath } from '../../backoffice-paths';
 import { errorResponse } from '../../error-response';
 import { textFieldOf } from '../../form-fields';
 import { signedInPageContext } from '../../page-context';
-import { detailResponse, findNumberEntry } from '../number-detail-response';
+import { findNumberEntry, flashedDetailResponse, rejectDetail } from '../number-detail-response';
 import { auditNumberAction } from '../number-audit';
 import { CHECKED_VALUE, NumberFormField } from '../number-form-fields';
 import { numberPath, NumberSegment, withNotice } from '../number-paths';
@@ -30,9 +30,7 @@ const STATE_VALUES: string[] = Object.values(WhatsAppNumberState);
 
 export const numberRoutes = new Hono<BackofficeEnv>();
 
-numberRoutes.get(NUMBER_ROUTE, (context) =>
-  detailResponse({ context, numberId: context.req.param(NUMBER_PARAMETER), status: HttpStatus.Ok, failure: null }),
-);
+numberRoutes.get(NUMBER_ROUTE, (context) => flashedDetailResponse({ context, numberId: context.req.param(NUMBER_PARAMETER) }));
 
 numberRoutes.post(`${NUMBER_ROUTE}/${NumberSegment.Verify}`, async (context) => {
   const numberId = context.req.param(NUMBER_PARAMETER);
@@ -41,7 +39,7 @@ numberRoutes.post(`${NUMBER_ROUTE}/${NumberSegment.Verify}`, async (context) => 
   const outcome = await stepUpOf({ context, form: await context.req.parseBody(), targetKind: TARGET_KIND, targetId: numberId });
   if (outcome === StepUpOutcome.RateLimited) return rateLimitedResponse({ context });
   if (outcome === StepUpOutcome.Rejected) {
-    return detailResponse({ context, numberId, status: HttpStatus.Unauthorized, failure: BackofficeCopyKey.StepUpRejected });
+    return rejectDetail({ context, numberId, status: HttpStatus.Unauthorized, failure: BackofficeCopyKey.StepUpRejected });
   }
   const { accessToken } = await numberRegistryOf({ bindings: context.env }).openForInbound({ numberId });
   const graph = createGraphClient({
@@ -92,12 +90,12 @@ numberRoutes.post(`${NUMBER_ROUTE}/${NumberSegment.State}`, async (context) => {
   const isDisableConfirmed = textFieldOf({ form, name: NumberFormField.ConfirmDisable }) === CHECKED_VALUE;
   const isUnconfirmedDisable = target === WhatsAppNumberState.Disabled && !isDisableConfirmed;
   if (!isAllowedTarget || isUnconfirmedDisable) {
-    return detailResponse({ context, numberId, status: HttpStatus.UnprocessableEntity, failure: BackofficeCopyKey.ErrorSummaryTitle });
+    return rejectDetail({ context, numberId, status: HttpStatus.UnprocessableEntity, failure: BackofficeCopyKey.ErrorSummaryTitle });
   }
   const outcome = await stepUpOf({ context, form, targetKind: TARGET_KIND, targetId: numberId });
   if (outcome === StepUpOutcome.RateLimited) return rateLimitedResponse({ context });
   if (outcome === StepUpOutcome.Rejected) {
-    return detailResponse({
+    return rejectDetail({
       context,
       numberId,
       status: HttpStatus.Unauthorized,
@@ -123,12 +121,12 @@ numberRoutes.post(`${NUMBER_ROUTE}/${NumberSegment.AccessToken}`, async (context
   const form = await context.req.parseBody();
   const accessToken = textFieldOf({ form, name: NumberFormField.AccessToken });
   if (accessToken === null || accessToken.trim().length === 0) {
-    return detailResponse({ context, numberId, status: HttpStatus.UnprocessableEntity, failure: BackofficeCopyKey.ErrorSummaryTitle });
+    return rejectDetail({ context, numberId, status: HttpStatus.UnprocessableEntity, failure: BackofficeCopyKey.ErrorSummaryTitle });
   }
   const outcome = await stepUpOf({ context, form, targetKind: TARGET_KIND, targetId: numberId });
   if (outcome === StepUpOutcome.RateLimited) return rateLimitedResponse({ context });
   if (outcome === StepUpOutcome.Rejected) {
-    return detailResponse({ context, numberId, status: HttpStatus.Unauthorized, failure: BackofficeCopyKey.StepUpRejected });
+    return rejectDetail({ context, numberId, status: HttpStatus.Unauthorized, failure: BackofficeCopyKey.StepUpRejected });
   }
   await numberAdminOf({ bindings: context.env }).replaceAccessToken({ numberId, accessToken: accessToken.trim() });
   await auditNumberAction({

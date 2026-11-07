@@ -9,7 +9,7 @@ import { attemptSignIn, SignInOutcome } from '../auth/sign-in';
 import { STYLESHEET_HREF } from '../assets/stylesheet';
 import { CSRF_COOKIE_NAME, CSRF_TOKEN_BYTES, SEE_OTHER_STATUS, SESSION_COOKIE_NAME } from '../backoffice-constants';
 import type { BackofficeEnv } from '../backoffice-env';
-import { noticeOf } from '../backoffice-notice';
+import { BackofficeNotice, noticeOf } from '../backoffice-notice';
 import { BackofficePath } from '../backoffice-paths';
 import { errorResponse } from '../error-response';
 import { textFieldOf } from '../form-fields';
@@ -24,8 +24,8 @@ const COOKIE_OPTIONS = { secure: true, httpOnly: true, sameSite: 'Strict', path:
 
 export const signInRoutes = new Hono<BackofficeEnv>();
 
-function pageOf(input: { context: Context<BackofficeEnv>; csrfToken: string; failed: boolean }) {
-  const { context, csrfToken, failed } = input;
+function pageOf(input: { context: Context<BackofficeEnv>; csrfToken: string }) {
+  const { context, csrfToken } = input;
   return (
     <SignInPage
       locale={context.get('locale')}
@@ -33,7 +33,6 @@ function pageOf(input: { context: Context<BackofficeEnv>; csrfToken: string; fai
       csrfToken={csrfToken}
       stylesheetHref={STYLESHEET_HREF}
       notice={noticeOf({ value: context.req.query(NOTICE_QUERY) })}
-      failed={failed}
     />
   );
 }
@@ -42,7 +41,7 @@ signInRoutes.get(BackofficePath.SignIn, (context) => {
   if (context.get('session') !== null) return context.redirect(BackofficePath.Home, SEE_OTHER_STATUS);
   const csrfToken = encodeBase64Url({ bytes: crypto.getRandomValues(new Uint8Array(CSRF_TOKEN_BYTES)) });
   setCookie(context, CSRF_COOKIE_NAME, csrfToken, COOKIE_OPTIONS);
-  return context.html(pageOf({ context, csrfToken, failed: false }));
+  return context.html(pageOf({ context, csrfToken }));
 });
 
 signInRoutes.post(BackofficePath.SignIn, async (context) => {
@@ -68,5 +67,5 @@ signInRoutes.post(BackofficePath.SignIn, async (context) => {
     });
     return context.redirect(BackofficePath.Home, SEE_OTHER_STATUS);
   }
-  return context.html(pageOf({ context, csrfToken, failed: true }), HttpStatus.Unauthorized);
+  return context.redirect(`${BackofficePath.SignIn}?${NOTICE_QUERY}=${BackofficeNotice.SignInFailed}`, SEE_OTHER_STATUS);
 });

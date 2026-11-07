@@ -16,7 +16,7 @@ import {
   submitRejectedAction,
 } from './backoffice-numbers-fixtures';
 
-const WRONG_CODE = '000000';
+const WRONG_CODE = '987654';
 const STATUS_OK = 200;
 const STATUS_SEE_OTHER = 303;
 const STATUS_UNAUTHORIZED = 401;
@@ -66,7 +66,7 @@ describe('the flash of a rejected form', () => {
   });
 
   test('stores no secret, no code and no token', async () => {
-    await rejectRegistration();
+    await postAction({ path: REGISTER_PATH, sessionToken, fields: registrationFields({}), code: WRONG_CODE });
     const rows = await testEnv.CONNECTIONS.prepare('SELECT * FROM backoffice_sessions').all<Record<string, unknown>>();
     const stored = JSON.stringify(rows.results);
     expect(stored).toContain(PHONE_NUMBER_ID);
