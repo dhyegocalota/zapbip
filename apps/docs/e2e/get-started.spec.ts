@@ -13,6 +13,7 @@ const OFFICIAL_NUMBER_LINK = `https://wa.me/${OFFICIAL_WHATSAPP_NUMBER}`;
 const INSTALL_PROMPT_PLACEHOLDER = 'zb_inst_<code>';
 const OVERVIEW_EXAMPLE_COUNT = { minimum: 3, maximum: 4 };
 const OVERVIEW_HEADING_COUNT = 3;
+const ZERO_WIDTH_SPACE = /​/g;
 const MESSAGE_BUBBLES_LOCATOR = ':scope > div:nth-child(2) > div';
 const OVERVIEW_HEADINGS: Record<DocsLanguage, string[]> = {
   [DocsLanguage.English]: ['Why zapbip exists', 'How it works', 'What it looks like'],
@@ -39,7 +40,8 @@ for (const language of Object.values(DocsLanguage)) {
       const response = await page.goto(urlOf({ path: OVERVIEW_PAGE, language }));
       expect(response?.status()).toBe(OK_STATUS);
       const headings = await page.locator('#content-area h2').allInnerTexts();
-      expect(headings.slice(0, OVERVIEW_HEADING_COUNT).map((heading) => heading.trim())).toEqual(OVERVIEW_HEADINGS[language]);
+      const headingTexts = headings.map((heading) => heading.replace(ZERO_WIDTH_SPACE, '').trim());
+      expect(headingTexts.slice(0, OVERVIEW_HEADING_COUNT)).toEqual(OVERVIEW_HEADINGS[language]);
       await expect(page.locator('#content-area')).not.toContainText(COMING_SOON_PATTERN);
     });
 
@@ -56,6 +58,7 @@ for (const language of Object.values(DocsLanguage)) {
     test('the Overview has three or four examples and each chat has at most four messages', async ({ page }) => {
       await page.goto(urlOf({ path: OVERVIEW_PAGE, language }));
       const chats = page.getByRole('group', { name: /WhatsApp/ });
+      await expect(chats.first()).toBeVisible();
       const chatCount = await chats.count();
       expect(chatCount).toBeGreaterThanOrEqual(OVERVIEW_EXAMPLE_COUNT.minimum);
       expect(chatCount).toBeLessThanOrEqual(OVERVIEW_EXAMPLE_COUNT.maximum);
@@ -77,8 +80,8 @@ for (const language of Object.values(DocsLanguage)) {
     test('Get started chats have at most four messages and the footer names Logic Bit', async ({ page }) => {
       await page.goto(urlOf({ path: GET_STARTED_PAGE, language }));
       const chats = page.getByRole('group', { name: /WhatsApp/ });
+      await expect(chats.first()).toBeVisible();
       const chatCount = await chats.count();
-      expect(chatCount).toBeGreaterThan(0);
       for (let position = 0; position < chatCount; position += 1) {
         const messageCount = await chats.nth(position).locator(MESSAGE_BUBBLES_LOCATOR).count();
         expect(messageCount).toBeLessThanOrEqual(CHAT_MAX_MESSAGES);
