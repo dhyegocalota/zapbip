@@ -333,19 +333,6 @@ export enum HttpStatus {
   ServiceUnavailable = 503,
 }
 
-export enum InstallClient {
-  ClaudeCode = 'claude-code',
-  Codex = 'codex',
-  Cursor = 'cursor',
-  GeminiCli = 'gemini-cli',
-  GrokBot = 'grok-bot',
-  ClaudeAi = 'claude-ai',
-  ChatGpt = 'chatgpt',
-  GrokWeb = 'grok-web',
-  Hermes = 'hermes',
-  OpenClaw = 'openclaw',
-}
-
 export enum DocsLanguage {
   English = 'en',
   PortugueseBrazil = 'pt-BR',
