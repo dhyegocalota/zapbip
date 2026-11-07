@@ -1,3 +1,4 @@
+import { INSTALL_SELF_TEST_TEXT, OwnerLocale } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { readRepositoryFile } from './repository-files';
 
@@ -16,7 +17,10 @@ const ONE_LISTENER_SENTENCES: Record<string, string> = {
   'apps/docs/pt-br':
     'Rode apenas um listener por agente: o plugin ou `npx zapbip@0.1.0 listen`, nunca os dois. Um segundo listener substitui o primeiro.',
 };
-const SELF_TEST_TEXT = '✅ instalado';
+const SELF_TEST_TEXTS: Record<string, string> = {
+  'apps/docs': INSTALL_SELF_TEST_TEXT[OwnerLocale.EnglishUs],
+  'apps/docs/pt-br': INSTALL_SELF_TEST_TEXT[OwnerLocale.PortugueseBrazil],
+};
 const LOST_REPLY_EVENT = 'plugin_reply_failed';
 const PRIVATE_FILE_PERMISSION = 'chmod 600';
 
@@ -48,7 +52,7 @@ describe.each(PAGE_LOCALES)('the agent install pages in %s', (locale) => {
   });
 
   test.each([OPENCLAW_PAGE, HERMES_PAGE])('%s asks the agent to send the self-test text', (path) => {
-    expect(page({ locale, path })).toContain(SELF_TEST_TEXT);
+    expect(page({ locale, path })).toContain(SELF_TEST_TEXTS[locale]);
   });
 });
 
