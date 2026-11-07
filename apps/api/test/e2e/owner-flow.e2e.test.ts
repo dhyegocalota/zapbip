@@ -2,13 +2,15 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { describe, expect, test } from 'vitest';
 import { SmokeInput } from '../../src/operations/smoke-inputs';
-import { postOwnerText, readScreen, secretOf, stack } from './stack';
+import { postOwnerText, secretOf, stack } from './stack';
 import { APP_SECRET, OWNER_PHONE, PHONE_NUMBER_ID, VERIFY_TOKEN } from './whatsapp-support/constants';
+import { sentRequests } from './whatsapp-support/webhook';
 
 const runCommand = promisify(execFile);
 const SEED_AGENT = 'alpha';
 const SMOKE_SCRIPT = 'scripts/smoke.ts';
 const SMOKE_TIMEOUT_MS = 120_000;
+const POLL_TIMEOUT_MS = 10_000;
 const WRONG_SECRET = `zb_conn_${'A'.repeat(43)}`;
 const INSTALL_LINK_PATTERN = /\/i\/zb_inst_[A-Za-z0-9_-]{22}/;
 const FIRST_DEPLOY_NOTICE = 'First deploy:';
@@ -42,8 +44,7 @@ describe('owner flow through the smoke script', () => {
     'the owner creates an agent over WhatsApp and the smoke passes all five checks against the seeded connection',
     async () => {
       await postOwnerText({ text: 'novo agente smoke', replyTo: null });
-      const screen = (await readScreen()).map((entry) => entry.text).join('\n');
-      expect(screen).toMatch(INSTALL_LINK_PATTERN);
+      await expect.poll(async () => JSON.stringify(await sentRequests()), { timeout: POLL_TIMEOUT_MS }).toMatch(INSTALL_LINK_PATTERN);
       const run = await runSmoke({ connectionSecret: secretOf({ agent: SEED_AGENT }), extraArguments: [] });
       expect(verdictsOf({ run, verdict: 'PASS' })).toHaveLength(5);
       expect(verdictsOf({ run, verdict: 'FAIL' })).toEqual([]);

@@ -17,7 +17,8 @@ const ACCOUNT_ID = 'acc_channel';
 const UPGRADE_ACCOUNT_ID = 'acc_upgrade';
 const VERSION_BEFORE_CHANNEL = 4;
 const VERSION_AFTER_CHANNEL = 6;
-const UPGRADED_VERSIONS = [VERSION_BEFORE_CHANNEL, VERSION_AFTER_CHANNEL];
+const VERSION_USAGE_METER = 7;
+const UPGRADED_VERSIONS = [VERSION_BEFORE_CHANNEL, VERSION_AFTER_CHANNEL, VERSION_USAGE_METER];
 const LIST_USER_TABLES_STATEMENT =
   "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%'";
 const CHANNEL_MESSAGE_ID = 'wamid.inbound.1';
@@ -406,7 +407,7 @@ describe('DO schema v4', () => {
 });
 
 describe('DO schema upgrade', () => {
-  it('applies v4 and v6 to a database that holds versions 1, 2 and 5 and nothing else', async () => {
+  it('applies v4, v6 and v7 to a database that holds versions 1, 2 and 5 and nothing else', async () => {
     const upgrade = await runInDurableObject(accountInboxStub({ accountId: UPGRADE_ACCOUNT_ID }), (_instance, state) => {
       state.storage.sql
         .exec<{ name: string }>(LIST_USER_TABLES_STATEMENT)
