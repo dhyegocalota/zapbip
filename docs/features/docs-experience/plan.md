@@ -200,10 +200,10 @@ G0 evidence (2026-11-06): Step 1 `ab7d8dc`; Step 2 red `7902adb` (carries the en
 
 ### G1 get started and overview
 
-- [ ] **Step 10:** Red: `apps/docs/e2e/get-started.spec.ts`: Overview headings in order (why, how it works, examples); the picture loads; Get started is one ordered list; the number snippet and the install-prompt snippet are visible; each chat has at most `CHAT_MAX_MESSAGES` messages.
-- [ ] **Step 11:** Overview (`index.mdx` and `pt-br/index.mdx`): why zapbip exists in plain words; `images/how-it-works-en.svg` and `images/how-it-works-pt-br.svg` (existing; the pt-BR picture is checked for pt-BR text); three or four use-case cards, one chat each, written natively. Remove the "Coming soon" card line.
-- [ ] **Step 12:** Quickstart (`get-started/how-to-start.mdx` and twin): zero to the first message in numbered steps: message the official number with any text (the first message creates the account); get the one- or two-line prompt; paste it into the AI; see the AI's first message. Links to the FAQ waitlist entry.
-- [ ] **Step 13 (facts, at the facts merge):** the signup wording matches the accounts-and-keys reply; the prompt snippet equals the install copy template (T1-39).
+- [x] **Step 10:** Red: `apps/docs/e2e/get-started.spec.ts`: Overview headings in order (why, how it works, examples); the picture loads; Get started is one ordered list; the number snippet and the install-prompt snippet are visible; each chat has at most `CHAT_MAX_MESSAGES` messages. Evidence: red `04ebbf0`, fix `958576a`.
+- [x] **Step 11:** Overview (`index.mdx` and `pt-br/index.mdx`): why zapbip exists in plain words; `images/how-it-works-en.svg` and `images/how-it-works-pt-br.svg` (existing; the pt-BR picture is checked for pt-BR text); three or four use-case cards, one chat each, written natively. Remove the "Coming soon" card line. Evidence: `69b12de` (four cards, not three or four plus the earlier six).
+- [x] **Step 12:** Quickstart (`get-started/how-to-start.mdx` and twin): zero to the first message in numbered steps: message the official number with any text (the first message creates the account); get the one- or two-line prompt; paste it into the AI; see the AI's first message. Links to the FAQ waitlist entry. Evidence: `69b12de`.
+- [ ] **Step 13 (facts, at the facts merge):** the signup wording matches the accounts-and-keys reply; the prompt snippet equals the install copy template (T1-39). G1: wording follows the accounts-and-keys copy by hand (`69b12de`); T1-39 waits for the merge.
 
 ### G2 agents A
 
