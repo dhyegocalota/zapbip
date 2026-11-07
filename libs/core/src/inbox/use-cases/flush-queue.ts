@@ -46,7 +46,7 @@ async function stopForClosedWindow(input: Flush & { unsent: Message[]; report: F
   const { repository, clock } = dependencies;
   await Promise.all(unsent.map((message) => repository.updateDelivery({ messageId: message.messageId, delivery: DeliveryState.Queued })));
   await closeWindow({ dependencies, at: clock.now() });
-  const noticed = unsent.find((message) => message.agent !== null);
+  const [noticed] = unsent;
   if (noticed === undefined) return;
   await noticeOwner({ dependencies, ownerLocale, message: noticed }).catch((error: unknown) => {
     report.noticeFailure = { error };

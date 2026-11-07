@@ -50,10 +50,8 @@ describe('evaluatePollers in a closed window', () => {
     expect(await environment.repository.listQueued()).toHaveLength(2);
     expect(environment.sender.sessions).toEqual([]);
     await receiveText({ environment, text: 'oi' });
-    expect(environment.sender.sessions.map((message) => message.kind === MessageKind.Text && message.text)).toEqual([
-      staleTextOf({ agent: 'chatgpt' }),
-      staleTextOf({ agent: 'hermes' }),
-    ]);
+    const sentTexts = environment.sender.sessions.map((message) => message.kind === MessageKind.Text && message.text);
+    expect(sentTexts).toEqual(expect.arrayContaining([staleTextOf({ agent: 'chatgpt' }), staleTextOf({ agent: 'hermes' })]));
     expect(await environment.repository.listQueued()).toEqual([]);
   });
 

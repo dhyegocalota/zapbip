@@ -1,5 +1,6 @@
 import { IdPrefix, MessageKind, WakeLogEventName } from '@zapbip/types';
 import { deliverToOwner } from '../inbox/use-cases/deliver-to-owner';
+import { rethrowUnlessQueued } from '../inbox/use-cases/rethrow-unless-queued';
 import { errorCodeOf } from './error-code-of';
 import { isStaleNoticeDue, pollerDeadline } from './poller';
 import { staleNoticeCopy } from './wake-copy';
@@ -35,14 +36,15 @@ async function noticeStale(input: StaleWake): Promise<void> {
     return observeNotice({ ...input, name: WakeLogEventName.NoticeSkipped });
   }
   const text = staleNoticeCopy({ locale: ownerLocale, agent, elapsedSinceLastPollMs: hasPolled ? now - lastPolledAt : null });
+  const messageId = dependencies.ids.next({ prefix: IdPrefix.Message });
   await deliverToOwner({
     dependencies,
     ownerLocale,
     agent: null,
-    messageId: dependencies.ids.next({ prefix: IdPrefix.Message }),
+    messageId,
     content: { kind: MessageKind.Text, text },
     replyToMessageId: null,
-  });
+  }).catch((error: unknown) => rethrowUnlessQueued({ dependencies, messageId, error }));
   await wake.repository.markStaleNotified({ agent, noticedAt: now });
 }
 

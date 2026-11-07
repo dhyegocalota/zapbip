@@ -2,6 +2,7 @@ import {
   deliverToOwner,
   expectedDelayNoteCopy,
   observeUnsent,
+  rethrowUnlessQueued,
   type AgentName,
   type AgentWaker,
   type CoreDependencies,
@@ -9,11 +10,7 @@ import {
 } from '@zapbip/core';
 import { IdPrefix, MessageKind, WakeLogEventName, WakeOutcome } from '@zapbip/types';
 
-export async function sendExpectedDelayNote(input: {
-  dependencies: CoreDependencies;
-  wake: WakeDependencies;
-  agent: AgentName;
-}): Promise<void> {
+async function sendExpectedDelayNote(input: { dependencies: CoreDependencies; wake: WakeDependencies; agent: AgentName }): Promise<void> {
   const { dependencies, wake, agent } = input;
   const [stored, pollState] = await Promise.all([wake.repository.findWake({ agent }), wake.repository.findPollState({ agent })]);
   if (stored === null || pollState === null) throw new Error(`scheduled wake of ${agent} has no stored state`);
@@ -21,29 +18,39 @@ export async function sendExpectedDelayNote(input: {
   if (intervalMinutes === null) throw new Error(`scheduled wake of ${agent} has no interval_minutes`);
   if (ownerLocale === null) throw new Error(`scheduled wake of ${agent} has no owner_locale`);
   const elapsedSinceLastPollMs = pollState.hasPolled ? dependencies.clock.now() - pollState.lastPolledAt : null;
+  const messageId = dependencies.ids.next({ prefix: IdPrefix.Message });
   await deliverToOwner({
     dependencies,
     ownerLocale,
     agent: null,
-    messageId: dependencies.ids.next({ prefix: IdPrefix.Message }),
+    messageId,
     content: {
       kind: MessageKind.Text,
       text: expectedDelayNoteCopy({ locale: ownerLocale, agent, intervalMinutes, elapsedSinceLastPollMs }),
     },
     replyToMessageId: null,
-  });
+  }).catch((error: unknown) => rethrowUnlessQueued({ dependencies, messageId, error }));
+}
+
+export async function noteExpectedDelay(input: {
+  dependencies: CoreDependencies;
+  wake: WakeDependencies;
+  agent: AgentName;
+}): Promise<void> {
+  const { dependencies, wake, agent } = input;
+  try {
+    await sendExpectedDelayNote({ dependencies, wake, agent });
+  } catch {
+    const stored = await wake.repository.findWake({ agent });
+    observeUnsent({ observer: wake.observer, name: WakeLogEventName.NoticeFailed, stored, agent, attempt: 0 });
+  }
 }
 
 export function createScheduledAgentWaker(input: { dependencies: CoreDependencies; wake: WakeDependencies }): AgentWaker {
   const { dependencies, wake } = input;
   return {
     notify: async ({ agent }) => {
-      try {
-        await sendExpectedDelayNote({ dependencies, wake, agent });
-      } catch {
-        const stored = await wake.repository.findWake({ agent });
-        observeUnsent({ observer: wake.observer, name: WakeLogEventName.NoticeFailed, stored, agent, attempt: 0 });
-      }
+      await noteExpectedDelay({ dependencies, wake, agent });
       return WakeOutcome.Woken;
     },
     hasFailedWake: async () => false,

@@ -1,6 +1,6 @@
 import type { AgentWaker, CoreDependencies, WakeDependencies } from '@zapbip/core';
 import { WakeMode, WakeOutcome } from '@zapbip/types';
-import { sendExpectedDelayNote } from './scheduled-agent-waker';
+import { noteExpectedDelay } from './scheduled-agent-waker';
 
 export function createInboxAgentWaker(input: { dependencies: CoreDependencies; wake: WakeDependencies }): AgentWaker {
   const { dependencies, wake } = input;
@@ -8,7 +8,7 @@ export function createInboxAgentWaker(input: { dependencies: CoreDependencies; w
     notify: async ({ agent }) => {
       const stored = await wake.repository.findWake({ agent });
       const isStaleScheduled = stored !== null && stored.mode === WakeMode.Scheduled;
-      if (isStaleScheduled) await sendExpectedDelayNote({ dependencies, wake, agent });
+      if (isStaleScheduled) await noteExpectedDelay({ dependencies, wake, agent });
       return WakeOutcome.Unreached;
     },
     hasFailedWake: async () => false,
