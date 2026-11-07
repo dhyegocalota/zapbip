@@ -177,3 +177,29 @@ Pins (green when they landed): the fixture tests built on test-local validators 
 - `install-guides.test.ts` is not on this base. On `feat/install-skills` it demands exactly three sections per guide (IS-D1); these pages have four. At the facts merge that test changes to the four headings (the plan's path update) or it fails.
 - Step 17 facts waiting on other merges: the pinned `npx zapbip@0.1.0 listen` (facts at the install-skills merge); the ChatGPT Scheduled wording and the `1 hour` row (facts at the scheduled-wake merge). Commands `connect --client`, `listen` and `channel` equal `apps/connector` help on this base.
 - Mintlify was reached through `reuseExistingServer`; the walk ran on the configured port.
+
+## G3 agents B (branch `feat/docs-experience-g3`)
+
+### What changed
+
+- `apps/docs/e2e/agents-b.spec.ts`: per language, the six pages show the four headings in order; each How-it-listens section holds its rung label, `50`, the three `LISTEN_STATEMENT_TOKENS` and the delay where `CLIENT_LISTEN_FACTS` gives one; Grok web names the Grok Bot stand-in and the 60 second cap; Gemini CLI shows `npx zapbip@0.1.0 listen` in a code block and the background terminal; Hermes and OpenClaw show the plugin command, `chmod 600` and `check_inbox`; any-mcp-client states `check_inbox` and links `/developers/any-mcp-client`.
+- `apps/docs/agents/{grok-bot,grok-web,hermes,openclaw,gemini-cli,any-mcp-client}.mdx` and their `pt-br/agents/` twins: user-first pages, each with one footer link to `developers/any-mcp-client`.
+
+### Red then green
+
+| Test | Red before the change because | Green after because |
+|------|--------------------------------|---------------------|
+| `agents-b.spec.ts` (`206332c`: 26 failed, 26 skipped for the other locale) | the four headings had no body; the heading assertion also compared the anchor's zero-width space, which the green commit strips | pages and spec fix in `c4d796a`: 26 of 26 |
+
+### Hypotheses for the tester
+
+- A person following any of the six pages ends with `✅ installed` (`✅ instalado`) on WhatsApp.
+- `pip install zapbip-platform==0.1.0`, `openclaw plugins install @zapbip/openclaw-plugin@0.1.0 --force --accept-capabilities`, `chmod 600` and `npx zapbip@0.1.0 listen` match the hermes-openclaw and local-connector pages on main.
+- The walk passes on its own port; port 3310 can be held by another lane's server serving that lane's pages (this lane ran on a scratch config, deleted).
+
+### Gaps
+
+- Grok Bot routine details, the Grok web connector and standby wording, and the 2 minute Grok Bot wait come from the install-skills pages: facts at the install-skills merge. The Standby rung label and the Grok web standby choice: facts at the scheduled-wake merge.
+- Gemini CLI keeps Local with `npx zapbip@0.1.0 listen`; whether install-skills separated it from Grok Bot is an open point for the facts merge.
+- The `(verify)` marks of hermes-openclaw are not carried: the pages state only the commands that main's pages state.
+- The Hermes and OpenClaw environment variables and the OpenClaw capability list are summarised, not itemised, because the user pages name no developer detail.

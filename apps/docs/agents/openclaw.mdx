@@ -3,10 +3,65 @@ title: OpenClaw
 description: Connect OpenClaw to your WhatsApp.
 ---
 
+import { Chat } from '/snippets/chat.jsx';
+import InstallPrompt from '/snippets/install-prompt.mdx';
+
 ## What works
+
+| You can                                          | OpenClaw |
+| ------------------------------------------------ | -------- |
+| Receive text, photos, video, audio and documents | Yes      |
+| Receive locations, contacts and reactions        | Yes      |
+| Ask you with buttons or a list and wait          | Yes      |
+| Start a conversation when you write first        | Yes      |
 
 ## How it listens
 
+Rung: Local. A small zapbip channel plugin keeps one connection to zapbip open inside OpenClaw, so each WhatsApp message reaches the session as you send it. If the network drops, the channel reconnects by itself and picks up every message you sent meanwhile.
+
+If the plugin cannot be installed, OpenClaw runs a scheduled job every minute that checks the inbox. Your message then waits up to a minute.
+
+While a question is open, OpenClaw waits up to 50 seconds at a time. If you have not answered, the wait ends as pending and OpenClaw calls again, as many times as it takes, with no time limit.
+
+Run one listener at a time: the plugin or `npx zapbip@0.1.0 listen`, never both. A second listener replaces the first.
+
 ## Set up from zero
 
+1. **Message the zapbip number on WhatsApp.** Send `new agent openclaw`. [How to start](/get-started/how-to-start) shows every message.
+
+   <Chat
+     messages={[
+       { you: true, text: 'new agent openclaw', time: '09:00' },
+       { name: 'zapbip', text: 'Agent openclaw created. Paste this into your agent.', time: '09:00' },
+     ]}
+   />
+
+2. **Paste the line into OpenClaw.** zapbip answers with a line made for you:
+
+   <InstallPrompt />
+
+3. **Say yes to each change.** OpenClaw tells you which setting it changes and waits for your yes. Keep the link out of chats you share.
+
+4. **Let it install the plugin.** The plugin is allowed to read your WhatsApp messages and to send replies through zapbip; it asks you to accept this when it installs.
+
+   ```bash
+   openclaw plugins install @zapbip/openclaw-plugin@0.1.0 --force --accept-capabilities
+   ```
+
+5. **Protect the file that holds your link.** The link works like a password. If it is kept in a file, only your user may read it:
+
+   ```bash
+   chmod 600 <file>
+   ```
+
+6. **Or use the scheduled fallback.** Only if the plugin cannot be installed, and never together with it, OpenClaw creates a job every minute that calls `check_inbox`. A job that polls costs model calls, and OpenClaw tells you so.
+
 ## Check it works
+
+Ask OpenClaw to send `✅ installed` on WhatsApp. When it arrives, the connection works.
+
+<Chat messages={[{ name: 'OpenClaw', text: '✅ installed', time: '09:03' }]} />
+
+Then write something on WhatsApp. OpenClaw answers as it hears you.
+
+For apps that need a manual setup, see [Connect any MCP client](/developers/any-mcp-client).

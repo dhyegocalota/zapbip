@@ -1,12 +1,51 @@
 ---
-title: Any MCP app
+title: Any app that supports MCP
 description: Connect any app that supports MCP to your WhatsApp.
 ---
 
+import { Chat } from '/snippets/chat.jsx';
+import InstallPrompt from '/snippets/install-prompt.mdx';
+
 ## What works
+
+| You can                                       | Any MCP app                     |
+| --------------------------------------------- | ------------------------------- |
+| Send text, photos, video, audio and documents | Yes                             |
+| Receive locations, contacts and reactions     | Yes                             |
+| Ask you with buttons or a list and wait       | Yes                             |
+| Start a conversation when you write first     | Your message waits in the inbox |
 
 ## How it listens
 
+Rung: Inbox. Nothing can wake the app from outside, so a message you send waits in the inbox until the app looks. The app asks zapbip if something new is waiting with `check_inbox`, and reads it.
+
+To listen, the app asks you with `ask` or `wait_for_reply`. Each call returns pending after at most 50 seconds if you have not answered, and the app calls again until you do, with no time limit.
+
 ## Set up from zero
 
+1. **Message the zapbip number on WhatsApp.** Send `new agent my-app`. [How to start](/get-started/how-to-start) shows every message.
+
+   <Chat
+     messages={[
+       { you: true, text: 'new agent my-app', time: '09:00' },
+       { name: 'zapbip', text: 'Agent my-app created. Paste this into your agent.', time: '09:00' },
+     ]}
+   />
+
+2. **Paste the line into your app's AI.** zapbip answers with a line made for you:
+
+   <InstallPrompt />
+
+3. **Add the server.** In the app's MCP settings, the AI adds the zapbip address as a streamable HTTP server. The address holds a secret, so keep it private. If the app asks for a header instead, it sends the secret as `Authorization: Bearer <secret>`.
+
+4. **Check the inbox from time to time.** The app calls `check_inbox` when it can, for example at the start of each task.
+
 ## Check it works
+
+Ask the AI to send `✅ installed` on WhatsApp. When it arrives, the connection works.
+
+<Chat messages={[{ name: 'My app', text: '✅ installed', time: '09:03' }]} />
+
+Then write something on WhatsApp and ask the app to check the inbox: it reads your message.
+
+For the address, the header and the tools, see [Connect any MCP client](/developers/any-mcp-client).
