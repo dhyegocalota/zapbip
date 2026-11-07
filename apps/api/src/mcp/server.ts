@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { AGENT_RULES, AGENT_RULES_PROMPT_NAME, InboxError } from '@zapbip/core';
+import { createOutboundGuard } from '../adapters/guard/outbound-guard';
 import { mediaStoreOf } from '../adapters/r2/r2-media-store';
 import { createPlatformClock } from '../adapters/platform/clock';
 import { MCP_SERVER_NAME, MCP_SERVER_VERSION } from '../contract/constants';
@@ -8,7 +9,8 @@ import type { Bindings } from '../contract/env';
 import { LogEvent } from '../contract/log';
 import { McpToolName, TOOL_DEFINITIONS } from '../contract/tool-definitions';
 import { logEvent } from '../log';
-import { TOOL_HANDLERS } from './tool-handlers';
+import { OUTBOUND_TOOLS, TOOL_HANDLERS } from './tool-handlers';
+import { assertOutboundAdmitted } from './outbound-admission';
 import { toolErrorResult, toolSuccessResult } from './tool-error';
 import type { ResolvedConnection } from '../routes/resolve-connection';
 import { accountInboxOf } from '../routes/account-inbox-stub';
@@ -23,6 +25,7 @@ async function runTool(input: { name: McpToolName; context: ToolContext; toolArg
   logEvent({ event: LogEvent.ToolCall, accountId: connection.accountId, agent: connection.agent, kind: input.name });
   const handler = TOOL_HANDLERS[input.name] as UntypedToolHandler;
   try {
+    if (OUTBOUND_TOOLS.has(input.name)) await assertOutboundAdmitted({ context: input.context });
     return toolSuccessResult(await handler({ context: input.context, arguments: input.toolArguments }));
   } catch (error) {
     if (!(error instanceof InboxError)) throw error;
@@ -44,6 +47,10 @@ export function createConnectionServer(input: { resolved: ResolvedConnection; en
     origin: environment.PUBLIC_ORIGIN,
     accountInbox: accountInboxOf({ bindings: environment, accountId: resolved.connection.accountId }),
     mediaStore: mediaStoreOf({ bindings: environment, clock: createPlatformClock() }),
+    outboundGuard: createOutboundGuard({
+      connectionLimiter: environment.OUTBOUND_RATE_LIMITER,
+      accountLimiter: environment.ACCOUNT_OUTBOUND_RATE_LIMITER,
+    }),
   };
   const server = new McpServer({ name: MCP_SERVER_NAME, version: MCP_SERVER_VERSION }, { instructions: AGENT_RULES });
   server.registerPrompt(AGENT_RULES_PROMPT_NAME, { description: AGENT_RULES_PROMPT_DESCRIPTION }, () => ({

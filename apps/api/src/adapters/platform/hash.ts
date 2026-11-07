@@ -13,10 +13,10 @@ export async function sha256Base64(input: { bytes: ArrayBuffer }): Promise<strin
   return Buffer.from(digest).toString(BASE64_ENCODING);
 }
 
-export function hashInstallCode(input: { installCode: string }): Promise<string> {
-  return sha256Hex({ value: input.installCode });
-}
-
 export function hashConnectionSecret(input: { secret: string }): Promise<string> {
   return sha256Hex({ value: input.secret });
+}
+
+export function hashInstallCode(input: { installCode: string }): Promise<string> {
+  return sha256Hex({ value: input.installCode });
 }

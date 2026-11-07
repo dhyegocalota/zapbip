@@ -62,11 +62,13 @@ export interface SenderGuard {
 }
 
 export interface OutboundGuard {
-  admit(input: { accountId: string; connectionId: string }): Promise<SenderVerdict>;
+  admit(input: { accountId: string; agentKey: string }): Promise<SenderVerdict>;
 }
 
 export interface ConnectionRevocations {
   recordRevocation(input: { accountId: string; agent: AgentName }): Promise<void>;
+  recordCreation(input: { accountId: string; agent: AgentName; secretDigest: string }): Promise<void>;
+  recordRotation(input: { accountId: string; agent: AgentName; secretDigest: string }): Promise<void>;
   cancelWaiters(input: { accountId: string; agent: AgentName }): Promise<void>;
 }
 
@@ -88,6 +90,10 @@ export interface DeletionRequests {
   clear(): Promise<void>;
 }
 
+export interface InstallLinkRedaction {
+  redact(input: { messageIds: string[] }): Promise<void>;
+}
+
 export type AccountDependencies = CoreDependencies & {
   accounts: AccountDirectory;
   connections: ConnectionRegistry;
@@ -96,6 +102,7 @@ export type AccountDependencies = CoreDependencies & {
   revocations: ConnectionRevocations;
   firstMessage: FirstMessageClaim;
   deletionRequests: DeletionRequests;
+  installLinkRedaction: InstallLinkRedaction;
 };
 
 export type AccountLifecycleDependencies = {

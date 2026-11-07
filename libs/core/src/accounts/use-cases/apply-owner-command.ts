@@ -9,7 +9,7 @@ import { revokeAgentConnection } from './revoke-agent-connection';
 import { rotateAgentConnection } from './rotate-agent-connection';
 import type { ApplyOwnerCommandInput, OwnerAccountInput } from './types';
 
-type CommandHandler = (input: OwnerAccountInput & { command: AccountCommand }) => Promise<AccountCommandResult>;
+type CommandHandler = (input: OwnerAccountInput & { command: AccountCommand; isRequestLive: boolean }) => Promise<AccountCommandResult>;
 
 const MISSING_NAME = '';
 
@@ -34,6 +34,7 @@ const COMMAND_HANDLERS: Record<CommandKind, CommandHandler> = {
 
 export function applyOwnerCommand(input: ApplyOwnerCommandInput): Promise<AccountCommandResult> {
   const { command, account } = input;
-  const localizedAccount = { ...account, locale: command.locale };
+  const isMenu = command.kind === CommandKind.Help;
+  const localizedAccount = isMenu ? account : { ...account, locale: command.locale };
   return COMMAND_HANDLERS[command.kind]({ ...input, account: localizedAccount });
 }

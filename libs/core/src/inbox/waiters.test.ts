@@ -73,14 +73,23 @@ describe('createReplyWaiters', () => {
     const question = waiters.awaitQuestionAnswer({ agent: 'alpha', questionId: 'qst_1', timeoutMs: 5000 });
     waiters.cancelAgent({ agent: 'alpha' });
     expect(await Promise.all([message, question])).toEqual([WaiterEnd.Cancelled, WaiterEnd.Cancelled]);
-    expect(waiters.hasLiveWaiter({ agent: 'alpha', questionId: null })).toBe(false);
+    expect(waiters.hasAgentWaiter({ agent: 'alpha' })).toBe(false);
   });
 
   test('cancelling an agent leaves another agent waiting', () => {
     const { waiters } = createWaiters();
     void waiters.awaitAgentMessage({ agent: 'beta', timeoutMs: 5000 });
     waiters.cancelAgent({ agent: 'alpha' });
-    expect(waiters.hasLiveWaiter({ agent: 'beta', questionId: null })).toBe(true);
+    expect(waiters.hasAgentWaiter({ agent: 'beta' })).toBe(true);
+  });
+
+  test('cancelling all ends the waiters of every agent as cancelled', async () => {
+    const { waiters } = createWaiters();
+    const alpha = waiters.awaitAgentMessage({ agent: 'alpha', timeoutMs: 5000 });
+    const beta = waiters.awaitQuestionAnswer({ agent: 'beta', questionId: 'qst_2', timeoutMs: 5000 });
+    waiters.cancelAll();
+    expect(await Promise.all([alpha, beta])).toEqual([WaiterEnd.Cancelled, WaiterEnd.Cancelled]);
+    expect(waiters.hasAgentWaiter({ agent: 'beta' })).toBe(false);
   });
 
   test('a resolved waiter ends as resolved', async () => {

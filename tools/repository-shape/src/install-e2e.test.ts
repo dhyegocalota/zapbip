@@ -32,10 +32,12 @@ describe('owner-run Claude Code install script', () => {
     expect(readRepositoryFile(SCRIPT)).not.toMatch(/echo "?\$\{?(connection_url|CONNECTION_URL)/);
   });
 
-  test('applies the directory migrations before seeding and shows seed errors', () => {
+  test('applies the directory migrations, then seeds through the running worker and shows seed errors', () => {
     const script = readRepositoryFile(SCRIPT);
     expect(script.indexOf('d1 migrations apply')).toBeGreaterThan(-1);
     expect(script.indexOf('d1 migrations apply')).toBeLessThan(script.indexOf('dev:seed'));
+    expect(script.indexOf('wrangler dev')).toBeLessThan(script.indexOf('dev:seed'));
+    expect(script).toContain('dev:seed --origin');
     expect(script).toContain('--env development');
     expect(script).not.toMatch(/dev:seed[^\n]*>\/dev\/null/);
     expect(script).toContain('fail "the seed failed');

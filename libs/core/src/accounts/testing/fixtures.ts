@@ -1,4 +1,4 @@
-import { AccountState, IdPrefix, MessageKind, OwnerLocale, type AccountReplyIntent } from '@zapbip/types';
+import { AccountState, ChannelInboundKind, IdPrefix, MessageKind, OwnerLocale, type AccountReplyIntent } from '@zapbip/types';
 import type { AgentName } from '../../inbox/connection';
 import type { OwnerInboundContent } from '../../inbox/use-cases/types';
 import type { AccountCommandResult, OwnerAccountContext } from '../account-types';
@@ -43,20 +43,39 @@ export function ownerInputOf(input: AccountFixture): OwnerAccountInput {
 }
 
 export function receiveAccount(
-  input: AccountFixture & { content: OwnerInboundContent; replyToMessageId?: string | null; channelMessageId?: string },
+  input: AccountFixture & {
+    content: OwnerInboundContent;
+    replyToMessageId?: string | null;
+    channelMessageId?: string;
+    forwarded?: boolean;
+  },
 ): Promise<ReceiveAccountMessageResult> {
   channelMessageCounter += 1;
-  const { environment, account, content, replyToMessageId = null, channelMessageId = `wamid.account.${channelMessageCounter}` } = input;
+  const {
+    environment,
+    account,
+    content,
+    replyToMessageId = null,
+    channelMessageId = `wamid.account.${channelMessageCounter}`,
+    forwarded = false,
+  } = input;
   return receiveAccountMessage({
     dependencies: environment.dependencies,
     account,
     channelMessageId,
-    ownerMessage: { at: environment.clock.now(), replyToMessageId, forwarded: false, content },
+    entry: {
+      kind: ChannelInboundKind.Owner,
+      at: environment.clock.now(),
+      content,
+      replyToChannelMessageId: replyToMessageId,
+      forwarded,
+      noticeText: null,
+    },
     publicOrigin: PUBLIC_ORIGIN,
   });
 }
 
-export function receiveAccountText(input: AccountFixture & { text: string; replyToMessageId?: string | null }) {
+export function receiveAccountText(input: AccountFixture & { text: string; replyToMessageId?: string | null; channelMessageId?: string }) {
   return receiveAccount({ ...input, content: { kind: MessageKind.Text, text: input.text } });
 }
 

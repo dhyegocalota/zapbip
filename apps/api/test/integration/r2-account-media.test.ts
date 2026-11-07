@@ -24,17 +24,13 @@ async function countUnder(input: { prefix: string }): Promise<number> {
 afterEach(reset);
 
 describe('R2 account media purge', () => {
-  it(
-    'deletes every object of the account across pages and keeps other accounts',
-    async () => {
-      await putAll({ prefix: 'accounts/acc1/media/', count: LARGE_OBJECT_COUNT });
-      await putAll({ prefix: 'accounts/acc2/media/', count: OTHER_ACCOUNT_OBJECT_COUNT });
-      await purge().deleteAll({ accountId: 'acc1' });
-      expect(await countUnder({ prefix: 'accounts/acc1/' })).toBe(0);
-      expect(await countUnder({ prefix: 'accounts/acc2/' })).toBe(OTHER_ACCOUNT_OBJECT_COUNT);
-    },
-    PURGE_TEST_TIMEOUT_MS,
-  );
+  it('[row 496] deletes every object of the account across pages and keeps other accounts', { timeout: 30_000 }, async () => {
+    await putAll({ prefix: 'accounts/acc1/media/', count: LARGE_OBJECT_COUNT });
+    await putAll({ prefix: 'accounts/acc2/media/', count: OTHER_ACCOUNT_OBJECT_COUNT });
+    await purge().deleteAll({ accountId: 'acc1' });
+    expect(await countUnder({ prefix: 'accounts/acc1/' })).toBe(0);
+    expect(await countUnder({ prefix: 'accounts/acc2/' })).toBe(OTHER_ACCOUNT_OBJECT_COUNT);
+  });
 
   it('deletes nothing for an account without objects', async () => {
     await putAll({ prefix: 'accounts/acc2/media/', count: 1 });

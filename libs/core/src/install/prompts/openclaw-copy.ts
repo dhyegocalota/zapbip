@@ -19,7 +19,7 @@ export const OPENCLAW_COPY = localizeCopy({
       locale: section.locale,
       standbyAgent: section.standbyAgent,
       steps: [
-        `Add \`mcp.servers.zapbip\` with \`transport: "streamable-http"\` and the URL ${section.connectionLink}.`,
+        `Add \`mcp.servers.zapbip\` with \`transport: "streamable-http"\` and the URL ${section.connectionLink}. If the URL form is refused, use the same host with \`/mcp\` and the header \`Authorization: Bearer <the secret after /c/ in that URL>\`.`,
         `Preferred: run \`${OPENCLAW_INSTALL_COMMAND}\` and set \`channels.zapbip.connectionLink\` to ${section.connectionLink}. The plugin is the listener, with no time limit. If it works, call \`set_wake({mode: "local"})\` and go to the last step.`,
         `Only if the plugin cannot be installed, and never together with it: with the automations tool create a job that runs every minute (\`every 1m\`) and calls \`check_inbox\`, then call \`set_wake({mode: "scheduled", interval_minutes: ${HEARTBEAT_POLL_INTERVAL_MINUTES}})\`.`,
         tellOwner(text.pollCost),

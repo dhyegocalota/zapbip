@@ -60,12 +60,12 @@ mkdir -p "$project_directory" "$state_directory"
 
 cd "$repository_root"
 run_logged pnpm --filter @zapbip/api exec wrangler d1 migrations apply CONNECTIONS --local --env development --persist-to "$state_directory" || fail "the migrations failed"
-run_logged pnpm --filter @zapbip/api dev:seed --phone "$OWNER_PHONE" --agents "$SEED_AGENT" --json --persist-to "$state_directory" || fail "the seed failed"
 
 pnpm --filter @zapbip/api exec wrangler dev --env development --port "$SERVER_PORT" --persist-to "$state_directory" >"$work_directory/server.log" 2>&1 &
 server_process=$!
 
 curl --silent --fail --retry "$HEALTH_RETRIES" --retry-connrefused --retry-delay 1 "$SERVER_ORIGIN/health" >/dev/null || fail "the server did not start"
+run_logged pnpm --filter @zapbip/api dev:seed --origin "$SERVER_ORIGIN" --phone "$OWNER_PHONE" --agents "$SEED_AGENT" --json || fail "the seed failed"
 
 owner_url="$SERVER_ORIGIN/dev/owner/$OWNER_PHONE"
 curl --silent --fail --request POST --header "content-type: application/json" \

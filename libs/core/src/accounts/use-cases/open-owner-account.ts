@@ -1,9 +1,9 @@
 import { AccountState, IdPrefix, OwnerLocale } from '@zapbip/types';
-import type { OwnerAccountContext } from '../account-types';
+import type { AccountLookup } from '../account-types';
 import { BRAZIL_COUNTRY_CODE, NEW_ACCOUNTS_PER_DAY_LIMIT, NEW_ACCOUNTS_WINDOW_MS } from '../constants';
 import type { OpenOwnerAccountInput } from './types';
 
-export async function openOwnerAccount(input: OpenOwnerAccountInput): Promise<OwnerAccountContext | null> {
+export async function openOwnerAccount(input: OpenOwnerAccountInput): Promise<AccountLookup | null> {
   const { dependencies, waId, waitlistEnabled, createdAt } = input;
   const isBrazilian = waId.startsWith(BRAZIL_COUNTRY_CODE);
   const lookup = await dependencies.accounts.findOrCreateByWaId({
@@ -14,6 +14,5 @@ export async function openOwnerAccount(input: OpenOwnerAccountInput): Promise<Ow
     createdAt,
     newAccountsCap: { since: createdAt - NEW_ACCOUNTS_WINDOW_MS, limit: NEW_ACCOUNTS_PER_DAY_LIMIT },
   });
-  if (lookup === null) return null;
-  return lookup.account;
+  return lookup;
 }

@@ -1,4 +1,4 @@
-import { AccountReplyIntent, CommandKind, OwnerLocale } from '@zapbip/types';
+import { AccountReplyIntent, COMPANY, CommandKind, OwnerLocale } from '@zapbip/types';
 import { invalidInput } from '../inbox/inbox-error-factories';
 import type { AccountReply, MenuRow } from './account-types';
 import { formatMenuRowId } from './command';
@@ -7,6 +7,18 @@ import { MENU_COMMAND_KINDS } from './command-words';
 type LocalizedText = Record<OwnerLocale, string>;
 
 const COPY_TOKEN_PATTERN = /\{(\w+)\}/g;
+const PARAGRAPH_BREAK = '\n\n';
+
+export const COMPANY_LINE: LocalizedText = {
+  [OwnerLocale.PortugueseBrazil]: `zapbip é um produto da ${COMPANY.tradeName}`,
+  [OwnerLocale.EnglishUs]: `zapbip is a product of ${COMPANY.tradeName}`,
+};
+
+const COMPANY_LINE_INTENTS: ReadonlySet<AccountReplyIntent> = new Set([
+  AccountReplyIntent.Waitlisted,
+  AccountReplyIntent.Unknown,
+  AccountReplyIntent.Menu,
+]);
 
 const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
   [AccountReplyIntent.Waitlisted]: {
@@ -117,13 +129,20 @@ const MENU_BUTTON_TEXT: LocalizedText = {
 };
 
 export function renderAccountReply(input: { reply: AccountReply }): string {
+  const { intent, locale } = input.reply;
   const parameters: Record<string, string | undefined> = input.reply.parameters;
-  return ACCOUNT_COPY[input.reply.intent][input.reply.locale].replace(COPY_TOKEN_PATTERN, (_token, name: string) => {
+  const body = ACCOUNT_COPY[intent][locale].replace(COPY_TOKEN_PATTERN, (_token, name: string) => {
     const value = parameters[name];
     if (value === undefined) throw invalidInput({ message: `copy: missing parameter ${name}` });
     return value;
   });
+  return COMPANY_LINE_INTENTS.has(intent) ? `${body}${PARAGRAPH_BREAK}${COMPANY_LINE[locale]}` : body;
 }
+
+export const UNKNOWN_CLIENT_LABEL: Record<OwnerLocale, string> = {
+  [OwnerLocale.PortugueseBrazil]: 'cliente desconhecido',
+  [OwnerLocale.EnglishUs]: 'unknown client',
+};
 
 export function buildMenuRows(input: { locale: OwnerLocale }): MenuRow[] {
   return MENU_COMMAND_KINDS.map((kind) => {

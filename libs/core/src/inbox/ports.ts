@@ -118,7 +118,9 @@ export interface ReplyWaiters {
   resolveQuestionAnswer(input: { questionId: string }): void;
   resolveAgentMessage(input: { agent: AgentName }): void;
   hasLiveWaiter(input: { agent: AgentName; questionId: string | null }): boolean;
+  hasAgentWaiter(input: { agent: AgentName }): boolean;
   cancelAgent(input: { agent: AgentName }): void;
+  cancelAll(): void;
 }
 
 export type CoreDependencies = {

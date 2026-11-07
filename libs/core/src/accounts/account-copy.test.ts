@@ -2,6 +2,8 @@ import { AccountReplyIntent, AccountReplyParameter, CommandKind, OwnerLocale, Re
 import { describe, expect, test } from 'vitest';
 import { LIST_ROW_TITLE_MAX_CHARS, WHATSAPP_TEXT_MAX_CHARS } from '../inbox/constants';
 import type { AccountReply } from './account-types';
+import { buildUsageReply } from './use-cases/usage-reply';
+import { COMMAND_WORDS } from './command-words';
 import { buildMenuButtonText, buildMenuRows, renderAccountReply, renderInstallLines } from './account-copy';
 import { LIST_BUTTON_TEXT_MAX_CHARS } from './constants';
 
@@ -39,7 +41,7 @@ describe('renderAccountReply', () => {
     expect(renderAccountReply({ reply })).toContain('novo agente <nome>');
   });
 
-  test('throws naming the missing install prompt', () => {
+  test('[row 111] throws naming the missing install prompt', () => {
     const reply = {
       ...buildReply({ intent: AccountReplyIntent.Created, locale: OwnerLocale.EnglishUs }),
       parameters: { [AccountReplyParameter.AgentName]: 'claude' },
@@ -47,11 +49,18 @@ describe('renderAccountReply', () => {
     expect(() => renderAccountReply({ reply })).toThrow(AccountReplyParameter.InstallPrompt);
   });
 
-  test('keeps every text within the WhatsApp text limit', () => {
+  test('[row 113] keeps every text within the WhatsApp text limit', () => {
     const lengths = LOCALES.flatMap((locale) =>
       INTENTS.map((intent) => renderAccountReply({ reply: buildReply({ intent, locale }) }).length),
     );
     expect(lengths.every((length) => length <= WHATSAPP_TEXT_MAX_CHARS)).toBe(true);
+  });
+});
+
+describe('usage replies', () => {
+  test.each(LOCALES)('[row 116] every usage text stays within the WhatsApp text limit in %s', (locale) => {
+    const lengths = COMMAND_WORDS.map((entry) => renderAccountReply({ reply: buildUsageReply({ kind: entry.kind, locale }) }).length);
+    expect(Math.max(...lengths)).toBeLessThanOrEqual(WHATSAPP_TEXT_MAX_CHARS);
   });
 });
 
@@ -116,5 +125,27 @@ describe('buildMenuRows', () => {
 
   test('never offers the confirmation as a row', () => {
     expect(buildMenuRows({ locale: OwnerLocale.EnglishUs }).map((row) => row.id)).not.toContain(`zapbip:${CommandKind.ConfirmDeletion}`);
+  });
+});
+
+describe('company line', () => {
+  const WITH_COMPANY_LINE = [AccountReplyIntent.Waitlisted, AccountReplyIntent.Unknown, AccountReplyIntent.Menu];
+  const WITHOUT_COMPANY_LINE = [AccountReplyIntent.EmptyList, AccountReplyIntent.DeletionDone, AccountReplyIntent.Suspended];
+
+  function render(input: { intent: AccountReplyIntent; locale: OwnerLocale }): string {
+    return renderAccountReply({ reply: { ...input, kind: ReplyKind.Text, parameters: {}, menuRows: [] } });
+  }
+
+  test.each(WITH_COMPANY_LINE)('[row 487] ends the %s reply with the company line in both locales', (intent) => {
+    expect(render({ intent, locale: OwnerLocale.PortugueseBrazil }).endsWith('zapbip é um produto da Logic Bit')).toBe(true);
+    expect(render({ intent, locale: OwnerLocale.EnglishUs }).endsWith('zapbip is a product of Logic Bit')).toBe(true);
+  });
+
+  test.each(WITHOUT_COMPANY_LINE)('leaves the %s reply without it', (intent) => {
+    expect(render({ intent, locale: OwnerLocale.EnglishUs })).not.toContain('Logic Bit');
+  });
+
+  test('never prints a company fact sentinel', () => {
+    expect(render({ intent: AccountReplyIntent.Menu, locale: OwnerLocale.EnglishUs })).not.toContain('UNSET');
   });
 });

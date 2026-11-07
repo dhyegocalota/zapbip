@@ -25,6 +25,7 @@ import type {
   FirstMessageClaim,
   InstallCodeDirectory,
   InstallCodeVault,
+  InstallLinkRedaction,
 } from '../ports';
 
 const FAKE_SECRET_PREFIX = 'zb_conn_fake_';
@@ -39,15 +40,20 @@ type StoredAccount = AccountRecord & { createdAt: number };
 type StoredConnection = { record: ConnectionRecord; revokedAt: number | null };
 
 export type RecordingSecrets = ConnectionSecrets & { issued: IssuedSecret[] };
+type RotationRecord = { agent: AgentName; secretDigest: string };
 export type RecordingRevocations = ConnectionRevocations & {
   revoked: AgentName[];
   cancelled: AgentName[];
+  closed: AgentName[];
+  created: AgentName[];
+  rotated: RotationRecord[];
   wakeConfigured: Set<AgentName>;
 };
 export type InMemoryAccountMedia = AccountMediaPurge & {
   put(input: { accountId: string; mediaId: string }): void;
   count(input: { accountId: string }): number;
 };
+export type RecordingInstallLinkRedaction = InstallLinkRedaction & { redacted: string[] };
 export type RecordingInstallCodeVault = InstallCodeVault & { issued: IssuedInstallCode[] };
 export type InMemoryConnections = ConnectionRegistry & {
   listAll(input: { accountId: string }): StoredConnection[];
@@ -65,6 +71,7 @@ export type InMemoryAccountEnvironment = Omit<InMemoryEnvironment, 'dependencies
   installCodeVault: RecordingInstallCodeVault;
   installCodeDirectory: InstallCodeDirectory;
   revocations: RecordingRevocations;
+  installLinkRedaction: RecordingInstallLinkRedaction;
   accountMedia: InMemoryAccountMedia;
   openAccount(input?: { waId?: string; state?: AccountState; locale?: OwnerLocale; accountId?: string }): Promise<OwnerAccountContext>;
 };
@@ -234,14 +241,37 @@ function createInstallCodeDirectory(input: { store: AccountStore; vault: Install
   };
 }
 
+function createInstallLinkRedaction(): RecordingInstallLinkRedaction {
+  const redacted: string[] = [];
+  return {
+    redacted,
+    redact: async ({ messageIds }) => {
+      redacted.push(...messageIds);
+    },
+  };
+}
+
 function createRevocations(): RecordingRevocations {
   const revoked: AgentName[] = [];
   const cancelled: AgentName[] = [];
+  const closed: AgentName[] = [];
+  const created: AgentName[] = [];
+  const rotated: RotationRecord[] = [];
   const wakeConfigured = new Set<AgentName>();
   return {
     revoked,
     cancelled,
+    closed,
+    created,
+    rotated,
     wakeConfigured,
+    recordCreation: async ({ agent }) => {
+      created.push(agent);
+    },
+    recordRotation: async ({ agent, secretDigest }) => {
+      closed.push(agent);
+      rotated.push({ agent, secretDigest });
+    },
     recordRevocation: async ({ agent }) => {
       revoked.push(agent);
       wakeConfigured.delete(agent);
@@ -305,6 +335,7 @@ export function createInMemoryAccountDependencies(input: InMemoryOptions = {}): 
   const secrets = createSecrets();
   const installCodeVault = createInstallCodeVault();
   const revocations = createRevocations();
+  const installLinkRedaction = createInstallLinkRedaction();
   const registry = createRegistry({ store });
   const dependencies: AccountDependencies = {
     ...environment.dependencies,
@@ -315,6 +346,7 @@ export function createInMemoryAccountDependencies(input: InMemoryOptions = {}): 
     revocations,
     firstMessage: createFirstMessageClaim(),
     deletionRequests: createDeletionRequests(),
+    installLinkRedaction,
   };
 
   async function openAccount(options: { waId?: string; state?: AccountState; locale?: OwnerLocale; accountId?: string } = {}) {
@@ -348,6 +380,7 @@ export function createInMemoryAccountDependencies(input: InMemoryOptions = {}): 
     installCodeVault,
     installCodeDirectory: createInstallCodeDirectory({ store, vault: installCodeVault, publicOrigin: IN_MEMORY_PUBLIC_ORIGIN }),
     revocations,
+    installLinkRedaction,
     accountMedia,
     openAccount,
   };

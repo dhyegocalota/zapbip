@@ -18,5 +18,4 @@ export * from './use-cases/request-account-deletion';
 export * from './use-cases/confirm-account-deletion';
 export * from './use-cases/finish-account-deletion';
 export * from './use-cases/finish-deleting-accounts';
-export * from './use-cases/resume-suspended-account';
 export * from './use-cases/receive-account-message';

@@ -1,14 +1,18 @@
-import { AccountState, MessageKind, OwnerLocale } from '@zapbip/types';
+import { AccountState, MessageKind, OwnerLocale, REVOKED_CLOSE_CODE } from '@zapbip/types';
 import { evictDurableObject, reset, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { AccountInbox } from '../../src/account-inbox/account-inbox';
 import { createSqliteDeletionRequests } from '../../src/account-inbox/deletion-requests';
 import { TOMBSTONE_STORAGE_KEY } from '../../src/account-inbox/constants';
+import { openConnector } from '../support/connector-session';
 import { openWindow } from '../support/inbox-session';
+import { applyDirectoryMigration, seedConnection, seedOwnerIdentity } from '../support/seed';
 import { accountInboxStub, connectionOf } from '../support/workers-env';
 
 const ACCOUNT = 'acc_purge';
 const TOMBSTONED_MESSAGE = 'AccountTombstoned';
+const CONNECTOR_SECRET = `zb_conn_${'C'.repeat(43)}`;
+const OWNER_PHONE = '5511900000042';
 
 function stubOf() {
   return accountInboxStub({ accountId: ACCOUNT });
@@ -48,6 +52,29 @@ describe('AccountInbox purge', () => {
     expect(tableCount).toBe(0);
   });
 
+  it('ends every waiter that is still held', async () => {
+    const connection = connectionOf({ accountId: ACCOUNT, agent: 'alpha' });
+    const held = stubOf().waitForReply({ connection, questionId: null, timeoutMs: 20_000 });
+    await stubOf().purge();
+    const settled = await Promise.race([
+      held.then(
+        () => 'settled',
+        () => 'settled',
+      ),
+      new Promise((resolve) => setTimeout(() => resolve('hung'), 3_000)),
+    ]);
+    expect(settled).toBe('settled');
+  });
+
+  it('closes every attached connector socket with the revoked code', async () => {
+    await seedOwnerIdentity({ accountId: ACCOUNT, phone: OWNER_PHONE, ownerLocale: OwnerLocale.PortugueseBrazil });
+    await seedConnection({ accountId: ACCOUNT, agent: 'alpha', secret: CONNECTOR_SECRET });
+    const session = await openConnector({ secret: CONNECTOR_SECRET });
+    await session.nextFrame();
+    await stubOf().purge();
+    expect(await session.closeCode()).toBe(REVOKED_CLOSE_CODE);
+  });
+
   it('is idempotent', async () => {
     await populate();
     await stubOf().purge();
@@ -84,11 +111,15 @@ describe('AccountInbox after purge', () => {
         instance.receiveOwnerMessage({
           ownerLocale: OwnerLocale.PortugueseBrazil,
           channelMessageId: 'wamid.after',
-          ownerMessage: { at: Date.now(), replyToMessageId: null, forwarded: false, content: { kind: MessageKind.Text, text: 'oi' } },
+          ownerMessage: {
+            at: Date.now(),
+            replyToMessageId: null,
+            forwarded: false,
+            content: { kind: MessageKind.Text, text: 'oi' },
+          },
         }),
       (instance) => instance.recordRevocation({ agent: 'alpha' }),
       (instance) => instance.cancelWaiters({ agent: 'alpha' }),
-      (instance) => instance.setState({ state: AccountState.Active }),
       (instance) => instance.sendText({ connection, text: 'oi', replyToMessageId: null }),
     ];
     for (const write of writes) await expect(runInDurableObject(stubOf(), write)).rejects.toThrow(TOMBSTONED_MESSAGE);
@@ -101,3 +132,5 @@ describe('AccountInbox after purge', () => {
     expect(await listKeys()).toEqual([TOMBSTONE_STORAGE_KEY]);
   });
 });
+
+beforeEach(applyDirectoryMigration);

@@ -2,7 +2,7 @@ import { D1ConnectionDirectory, type ConnectionWithActivity } from '../adapters/
 import { hashConnectionSecret } from '../adapters/platform/hash';
 import { CONNECTION_SECRET_PATTERN } from '../contract/constants';
 
-export type ResolvedConnection = ConnectionWithActivity & { secret: string };
+export type ResolvedConnection = ConnectionWithActivity & { secret: string; secretDigest: string };
 
 export async function resolveConnection(input: { database: D1Database; secret: string | null }): Promise<ResolvedConnection | null> {
   const { secret } = input;
@@ -11,5 +11,5 @@ export async function resolveConnection(input: { database: D1Database; secret: s
   const secretDigest = await hashConnectionSecret({ secret });
   const resolved = await new D1ConnectionDirectory({ database: input.database }).resolveWithActivity({ secretDigest });
   if (!resolved) return null;
-  return { ...resolved, secret };
+  return { ...resolved, secret, secretDigest };
 }

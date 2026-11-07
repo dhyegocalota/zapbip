@@ -13,6 +13,7 @@ const ACCOUNT_ID = 'acc_1';
 const PHONE = '5511900000000';
 const ACTIVE_LIMIT = 8;
 const CONCURRENT_CALLS = 20;
+const REVOKES_IN_RACE = 3;
 const REVOKED_AT = SEED_CREATED_AT + 1;
 const ROTATED_AT = SEED_CREATED_AT + 2;
 const SECRET = `zb_conn_${'G'.repeat(43)}`;
@@ -145,6 +146,22 @@ describe('D1 connection registry register', () => {
     expect(countOf({ outcomes, outcome: RegisterOutcome.Registered })).toBe(ACTIVE_LIMIT);
     expect(countOf({ outcomes, outcome: RegisterOutcome.LimitReached })).toBe(CONCURRENT_CALLS - ACTIVE_LIMIT);
     expect(await countActive()).toBe(ACTIVE_LIMIT);
+  });
+
+  it('[row 507] never leaves more than the limit active when twenty creates race three revokes for the last slot', async () => {
+    const seeded = agentNames({ count: ACTIVE_LIMIT - 1 });
+    await registerAgents({ agents: seeded });
+    const racers = agentNames({ count: CONCURRENT_CALLS }).map((agent) => `racer-${agent}`);
+    const revokedAgents = seeded.slice(0, REVOKES_IN_RACE);
+    const [outcomes, revocations] = await Promise.all([
+      registerAgents({ agents: racers }),
+      Promise.all(revokedAgents.map((agent) => registry().revoke({ accountId: ACCOUNT_ID, agent, revokedAt: REVOKED_AT }))),
+    ]);
+    const registered = countOf({ outcomes, outcome: RegisterOutcome.Registered });
+    expect(revocations.every(Boolean)).toBe(true);
+    expect(registered).toBeLessThanOrEqual(1 + REVOKES_IN_RACE);
+    expect(await countActive()).toBe(ACTIVE_LIMIT - 1 + registered - REVOKES_IN_RACE);
+    expect(await countActive()).toBeLessThanOrEqual(ACTIVE_LIMIT);
   });
 
   it('gives one of two concurrent creates of the same name the name taken outcome', async () => {

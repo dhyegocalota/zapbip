@@ -2,6 +2,7 @@ import { DurableObject } from 'cloudflare:workers';
 import * as inbox from '@zapbip/core';
 import type {
   AccountDependencies,
+  ConnectionIdentity,
   AskInput,
   AskResult,
   CheckInboxInput,
@@ -26,12 +27,12 @@ import type {
   WakeTransport,
 } from '@zapbip/core';
 import {
-  AccountState,
   CONNECTOR_INBOX_LIMIT,
   CONNECTOR_PING_TEXT,
   CONNECTOR_PONG_TEXT,
   ChannelErrorKind,
   ConnectorFrameType,
+  InboxErrorCode,
   REVOKED_CLOSE_CODE,
   WakeMode,
   WakeOutcome,
@@ -39,12 +40,13 @@ import {
   type OwnerLocale,
 } from '@zapbip/types';
 import { D1AccountDirectory } from '../adapters/d1/d1-account-directory';
-import { D1ConnectionRegistry } from '../adapters/d1/d1-connection-registry';
-import { createConnectionSecrets } from '../adapters/platform/connection-secrets';
-import { createInstallCodeVault } from '../adapters/platform/install-code-vault';
 import { D1ChannelRestrictions } from '../adapters/d1/d1-channel-restrictions';
+import { D1ConnectionDirectory } from '../adapters/d1/d1-connection-directory';
+import { D1ConnectionRegistry } from '../adapters/d1/d1-connection-registry';
 import { D1MessageIndex } from '../adapters/d1/d1-message-index';
 import { findOwnerByAccountId } from '../adapters/d1/d1-owner-directory';
+import { createConnectionSecrets } from '../adapters/platform/connection-secrets';
+import { createInstallCodeVault } from '../adapters/platform/install-code-vault';
 import { createIdGenerator } from '../adapters/platform/ids';
 import { loadDurableClock, type DurableClock } from '../adapters/platform/clock';
 import { mediaStoreOf } from '../adapters/r2/r2-media-store';
@@ -64,16 +66,18 @@ import type { Bindings } from '../contract/env';
 import { LogEvent, type LogFields } from '../contract/log';
 import { logEvent } from '../log';
 import { AccountTombstoned } from './account-tombstoned';
-import { revokeAgentState } from './agent-revocation';
-import { createSqliteDeletionRequests } from './deletion-requests';
-import { createSqliteFirstMessageClaim } from './first-message-claim';
+import { logFieldsOfAccountResult } from './account-log';
+import { isCurrentKeyDigest, recordKeyDigest } from './agent-key-digest';
+import { isAgentRevoked, reviveAgentName, revokeAgentState } from './agent-revocation';
 import { nextAlarmAt } from './alarm-time';
 import { HttpStatus } from '../routes/http-status';
+import { isAccountActive, isConnectionAdmitted } from './connection-admission';
 import {
   acceptConnectorSocket,
   connectorAgentOf,
   hasLiveConnectorSocket,
   parseDoneFrame,
+  rejectConnectorSocket,
   remainingSocketCount,
   sendFrameToAgent,
   sendMessagesToAgent,
@@ -81,15 +85,26 @@ import {
 import {
   ALARM_MIN_DELAY_MS,
   AlarmErrorCode,
+  CONNECTION_NOT_ACTIVE_MESSAGE,
   CONNECTOR_AGENT_PARAMETER,
+  CONNECTOR_DIGEST_PARAMETER,
   NORMAL_CLOSE_CODE,
   OWNER_LOCALE_STORAGE_KEY,
   TOMBSTONE_STORAGE_KEY,
   UNREPLYABLE_CLOSE_CODES,
 } from './constants';
+import { createSqliteDeletionRequests } from './deletion-requests';
+import { createSqliteFirstMessageClaim } from './first-message-claim';
+import { redactInstallCodes } from './install-code-redaction';
 import { ACCOUNT_INBOX_MIGRATIONS } from './migrations';
 import { runMigrations } from './run-migrations';
 import { createWakeDependencies } from './wake-dependencies';
+
+const SELECT_WAKE_MODES_STATEMENT = 'SELECT agent, mode FROM agent_wake';
+
+type WakeModeRow = { agent: string; mode: WakeMode };
+
+type ReceiveAccountMessageRequest = Parameters<AccountOwnerRpc['receiveAccountMessage']>[0];
 
 function failureLog(input: { error: inbox.InboxError }): LogFields {
   const { error } = input;
@@ -98,12 +113,6 @@ function failureLog(input: { error: inbox.InboxError }): LogFields {
   return { event, errorCode: error.code };
 }
 
-const SELECT_WAKE_MODES_STATEMENT = 'SELECT agent, mode FROM agent_wake';
-const RECORD_STATE_STATEMENT = 'INSERT INTO account_facts (id, state) VALUES (1, ?) ON CONFLICT (id) DO UPDATE SET state = excluded.state';
-
-type WakeModeRow = { agent: string; mode: WakeMode };
-
-type ReceiveAccountMessageRequest = Parameters<AccountOwnerRpc['receiveAccountMessage']>[0];
 type ReceiveOwnerMessageRequest = Parameters<AccountInboxRpc['receiveOwnerMessage']>[0];
 
 export class AccountInbox extends DurableObject<Bindings> implements AccountInboxRpc, AccountOwnerRpc {
@@ -171,10 +180,13 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       installCodeVault: createInstallCodeVault(),
       revocations: {
         recordRevocation: ({ agent }) => this.recordRevocation({ agent }),
+        recordCreation: ({ agent, secretDigest }) => this.recordCreation({ agent, secretDigest }),
+        recordRotation: ({ agent, secretDigest }) => this.recordRotation({ agent, secretDigest }),
         cancelWaiters: ({ agent }) => this.cancelWaiters({ agent }),
       },
       firstMessage: createSqliteFirstMessageClaim({ storage: this.ctx.storage }),
       deletionRequests: createSqliteDeletionRequests({ storage: this.ctx.storage }),
+      installLinkRedaction: { redact: async ({ messageIds }) => redactInstallCodes({ storage: this.ctx.storage, messageIds }) },
     };
     this.ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair(CONNECTOR_PING_TEXT, CONNECTOR_PONG_TEXT));
     this.dueTimeProviders.push(
@@ -304,16 +316,29 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
 
   async alarm(): Promise<void> {
     if (this.isTombstoned) return;
+    const isActive = await isAccountActive({ database: this.env.CONNECTIONS, accountId: this.accountId });
+    if (!isActive) return this.ctx.storage.deleteAlarm();
     const now = this.clock.now();
     await this.dueTimeProviders.reduce((previous, provider) => previous.then(() => this.runProvider({ provider, now })), Promise.resolve());
     await this.armAlarm();
   }
 
-  private async outcome<Value>(input: { run: () => Promise<Value>; describe?: (value: Value) => LogFields }): Promise<CallOutcome<Value>> {
+  private async outcome<Value>(input: {
+    run: () => Promise<Value>;
+    describe?: (value: Value) => LogFields | LogFields[];
+    connection?: ConnectionIdentity;
+  }): Promise<CallOutcome<Value>> {
     this.assertLive();
+    if (input.connection !== undefined) {
+      const isAdmitted = await isConnectionAdmitted({ database: this.env.CONNECTIONS, connection: input.connection });
+      if (!isAdmitted) {
+        this.dependencies.waiters.cancelAgent({ agent: input.connection.agent });
+        return { ok: false, errorCode: InboxErrorCode.NotFound, message: CONNECTION_NOT_ACTIVE_MESSAGE };
+      }
+    }
     try {
       const value = await input.run();
-      if (input.describe !== undefined) this.log(input.describe(value));
+      if (input.describe !== undefined) [input.describe(value)].flat().forEach((fields) => this.log(fields));
       return { ok: true, value };
     } catch (error) {
       if (!(error instanceof inbox.InboxError)) throw error;
@@ -324,57 +349,60 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     }
   }
 
-  private sendOutcome(input: { run: () => Promise<SendResult>; agent: string }): Promise<CallOutcome<SendResult>> {
+  private sendOutcome(input: { run: () => Promise<SendResult>; connection: ConnectionIdentity }): Promise<CallOutcome<SendResult>> {
+    const { connection } = input;
     return this.outcome({
+      connection,
       run: input.run,
-      describe: (value) => ({ event: LogEvent.Send, agent: input.agent, messageId: value.messageId }),
+      describe: (value) => ({ event: LogEvent.Send, agent: connection.agent, messageId: value.messageId }),
     });
   }
 
   sendText(input: AgentRequest<SendTextInput>): Promise<CallOutcome<SendResult>> {
-    return this.sendOutcome({ run: () => inbox.sendText({ ...input, dependencies: this.dependencies }), agent: input.connection.agent });
+    return this.sendOutcome({ run: () => inbox.sendText({ ...input, dependencies: this.dependencies }), connection: input.connection });
   }
 
   sendMedia(input: AgentRequest<SendMediaInput>): Promise<CallOutcome<SendResult>> {
-    return this.sendOutcome({ run: () => inbox.sendMedia({ ...input, dependencies: this.dependencies }), agent: input.connection.agent });
+    return this.sendOutcome({ run: () => inbox.sendMedia({ ...input, dependencies: this.dependencies }), connection: input.connection });
   }
 
   sendLocation(input: AgentRequest<SendLocationInput>): Promise<CallOutcome<SendResult>> {
     return this.sendOutcome({
       run: () => inbox.sendLocation({ ...input, dependencies: this.dependencies }),
-      agent: input.connection.agent,
+      connection: input.connection,
     });
   }
 
   sendContacts(input: AgentRequest<SendContactsInput>): Promise<CallOutcome<SendResult>> {
     return this.sendOutcome({
       run: () => inbox.sendContacts({ ...input, dependencies: this.dependencies }),
-      agent: input.connection.agent,
+      connection: input.connection,
     });
   }
 
   react(input: AgentRequest<ReactInput>): Promise<CallOutcome<SendResult>> {
-    return this.sendOutcome({ run: () => inbox.react({ ...input, dependencies: this.dependencies }), agent: input.connection.agent });
+    return this.sendOutcome({ run: () => inbox.react({ ...input, dependencies: this.dependencies }), connection: input.connection });
   }
 
   ask(input: AgentRequest<AskInput>): Promise<CallOutcome<AskResult>> {
-    return this.outcome({ run: () => inbox.ask({ ...input, dependencies: this.dependencies }) });
+    return this.outcome({ run: () => inbox.ask({ ...input, dependencies: this.dependencies }), connection: input.connection });
   }
 
   waitForReply(input: AgentRequest<WaitForReplyInput>): Promise<CallOutcome<WaitForReplyResult>> {
-    return this.outcome({ run: () => inbox.waitForReply({ ...input, dependencies: this.dependencies }) });
+    return this.outcome({ run: () => inbox.waitForReply({ ...input, dependencies: this.dependencies }), connection: input.connection });
   }
 
   getMessages(input: AgentRequest<GetMessagesInput>): Promise<CallOutcome<GetMessagesResult>> {
-    return this.outcome({ run: () => inbox.getMessages({ ...input, dependencies: this.dependencies }) });
+    return this.outcome({ run: () => inbox.getMessages({ ...input, dependencies: this.dependencies }), connection: input.connection });
   }
 
   checkInbox(input: AgentRequest<CheckInboxInput>): Promise<CallOutcome<CheckInboxResult>> {
-    return this.outcome({ run: () => inbox.checkInbox({ ...input, dependencies: this.dependencies }) });
+    return this.outcome({ run: () => inbox.checkInbox({ ...input, dependencies: this.dependencies }), connection: input.connection });
   }
 
   createUpload(input: AgentRequest<CreateUploadInput>): Promise<CallOutcome<CreateUploadResult>> {
     return this.outcome({
+      connection: input.connection,
       run: () => inbox.createUpload({ ...input, dependencies: this.dependencies }),
       describe: (value) => ({
         event: LogEvent.Upload,
@@ -401,8 +429,65 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     return this.outcome({ run: () => inbox.completeUpload({ ...input, dependencies: this.dependencies }) });
   }
 
+  receiveAccountMessage(input: ReceiveAccountMessageRequest): Promise<CallOutcome<inbox.ReceiveAccountMessageResult>> {
+    return this.outcome({
+      run: async () => {
+        await this.ctx.storage.put(OWNER_LOCALE_STORAGE_KEY, input.account.locale);
+        return inbox.receiveAccountMessage({ ...input, dependencies: this.accountDependencies });
+      },
+      describe: (value) => [
+        { event: value.duplicate ? LogEvent.OwnerMessageDuplicate : LogEvent.OwnerMessage },
+        ...logFieldsOfAccountResult({ result: value, accountId: input.account.accountId, locale: input.account.locale }),
+      ],
+    });
+  }
+
+  async recordRevocation(input: { agent: string }): Promise<void> {
+    this.assertLive();
+    revokeAgentState({ storage: this.ctx.storage, agent: input.agent, revokedAt: this.clock.now() });
+    this.dependencies.waiters.cancelAgent(input);
+    await this.closeAgentSockets(input);
+  }
+
+  async recordCreation(input: { agent: string; secretDigest: string }): Promise<void> {
+    this.assertLive();
+    reviveAgentName({ storage: this.ctx.storage, agent: input.agent });
+    recordKeyDigest({ storage: this.ctx.storage, ...input });
+    await this.closeAgentSockets(input);
+  }
+
+  async recordRotation(input: { agent: string; secretDigest: string }): Promise<void> {
+    this.assertLive();
+    recordKeyDigest({ storage: this.ctx.storage, ...input });
+    await this.closeAgentSockets(input);
+  }
+
+  async cancelWaiters(input: { agent: string }): Promise<void> {
+    this.assertLive();
+    this.dependencies.waiters.cancelAgent(input);
+  }
+
+  async listWakeModes(): Promise<WakeModeEntry[]> {
+    this.assertLive();
+    return this.ctx.storage.sql
+      .exec<WakeModeRow>(SELECT_WAKE_MODES_STATEMENT)
+      .toArray()
+      .map((row) => ({ agent: row.agent, wakeMode: row.mode }));
+  }
+
+  async purge(): Promise<void> {
+    const wasLive = !this.isTombstoned;
+    this.isTombstoned = true;
+    if (wasLive) this.dependencies.waiters.cancelAll();
+    await this.ctx.storage.deleteAlarm();
+    await this.ctx.storage.deleteAll();
+    await this.ctx.storage.put(TOMBSTONE_STORAGE_KEY, true);
+    this.ctx.getWebSockets().forEach((socket) => socket.close(REVOKED_CLOSE_CODE));
+  }
+
   setWake(input: Parameters<AccountInboxRpc['setWake']>[0]): Promise<CallOutcome<inbox.SetWakeResult>> {
     return this.outcome({
+      connection: input.connection,
       run: async () => {
         const { agent } = input.connection;
         await inbox.touchAgent({ dependencies: this.dependencies, agent });
@@ -419,9 +504,24 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     });
   }
 
+  private async isConnectorKeyLive(input: { agent: string; secretDigest: string }): Promise<boolean> {
+    const { agent, secretDigest } = input;
+    const resolved = await new D1ConnectionDirectory({ database: this.env.CONNECTIONS }).resolveSecretDigest({ secretDigest });
+    const isKeyOfThisAgent = resolved !== null && resolved.accountId === this.accountId && resolved.agent === agent;
+    return isKeyOfThisAgent && !isAgentRevoked({ storage: this.ctx.storage, agent });
+  }
+
   async fetch(request: Request): Promise<Response> {
-    const agent = new URL(request.url).searchParams.get(CONNECTOR_AGENT_PARAMETER);
-    if (agent === null) return new Response(null, { status: HttpStatus.BadRequest });
+    this.assertLive();
+    const { searchParams } = new URL(request.url);
+    const agent = searchParams.get(CONNECTOR_AGENT_PARAMETER);
+    const secretDigest = searchParams.get(CONNECTOR_DIGEST_PARAMETER);
+    if (agent === null || secretDigest === null) return new Response(null, { status: HttpStatus.BadRequest });
+    const isKeyLive = await this.isConnectorKeyLive({ agent, secretDigest });
+    this.assertLive();
+    const isCurrentKey = isCurrentKeyDigest({ storage: this.ctx.storage, agent, secretDigest });
+    const isAdmitted = isKeyLive && isCurrentKey;
+    if (!isAdmitted) return new Response(null, { status: HttpStatus.SwitchingProtocols, webSocket: rejectConnectorSocket() });
     await inbox.touchAgent({ dependencies: this.dependencies, agent });
     const attached = await inbox.attachLocalConnector({
       dependencies: this.dependencies,
@@ -447,6 +547,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
   }
 
   private async detachSocket(socket: WebSocket): Promise<void> {
+    if (this.isTombstoned) return;
     const agent = connectorAgentOf({ context: this.ctx, socket });
     const remainingSockets = remainingSocketCount({ context: this.ctx, agent, closing: socket });
     await inbox.detachLocalConnector({ dependencies: this.dependencies, wake: this.wake, agent, remainingSockets });
@@ -466,45 +567,6 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     await this.detachSocket(socket);
   }
 
-  receiveAccountMessage(input: ReceiveAccountMessageRequest): Promise<CallOutcome<inbox.ReceiveAccountMessageResult>> {
-    return this.outcome({
-      run: () => inbox.receiveAccountMessage({ ...input, dependencies: this.accountDependencies }),
-      describe: (value) => ({ event: value.duplicate ? LogEvent.OwnerMessageDuplicate : LogEvent.OwnerMessage }),
-    });
-  }
-
-  async recordRevocation(input: { agent: string }): Promise<void> {
-    this.assertLive();
-    revokeAgentState({ storage: this.ctx.storage, agent: input.agent, revokedAt: this.clock.now() });
-    this.dependencies.waiters.cancelAgent(input);
-  }
-
-  async cancelWaiters(input: { agent: string }): Promise<void> {
-    this.assertLive();
-    this.dependencies.waiters.cancelAgent(input);
-  }
-
-  async listWakeModes(): Promise<WakeModeEntry[]> {
-    this.assertLive();
-    return this.ctx.storage.sql
-      .exec<WakeModeRow>(SELECT_WAKE_MODES_STATEMENT)
-      .toArray()
-      .map((row) => ({ agent: row.agent, wakeMode: row.mode }));
-  }
-
-  async setState(input: { state: AccountState }): Promise<void> {
-    this.assertLive();
-    if (input.state !== AccountState.Active) throw new Error('setState accepts only the return to active');
-    this.ctx.storage.sql.exec(RECORD_STATE_STATEMENT, input.state);
-  }
-
-  async purge(): Promise<void> {
-    this.isTombstoned = true;
-    await this.ctx.storage.deleteAlarm();
-    await this.ctx.storage.deleteAll();
-    await this.ctx.storage.put(TOMBSTONE_STORAGE_KEY, true);
-  }
-
   receiveOwnerMessage(input: ReceiveOwnerMessageRequest): Promise<CallOutcome<inbox.ReceiveResult>> {
     return this.outcome({
       run: async () => {
@@ -517,7 +579,10 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
 
   receiveChannelMessage(input: AgentRequest<inbox.ReceiveChannelInput>): Promise<CallOutcome<inbox.ReceiveResult>> {
     return this.outcome({
-      run: () => inbox.receiveChannelMessage({ ...input, dependencies: this.dependencies }),
+      run: async () => {
+        await this.ctx.storage.put(OWNER_LOCALE_STORAGE_KEY, input.ownerLocale);
+        return inbox.receiveChannelMessage({ ...input, dependencies: this.dependencies });
+      },
       describe: (value) => ({ event: value.duplicate ? LogEvent.OwnerMessageDuplicate : LogEvent.OwnerMessage }),
     });
   }

@@ -12,9 +12,14 @@ export async function revokeAgentConnection(input: RevokeAgentConnectionInput): 
   if (rawName.trim() === '') return buildResult({ replies: [buildUsageReply({ kind: CommandKind.RevokeAgent, locale })] });
   const agent = normalizeAgentName({ rawName });
   if (agent === null || isReservedAgentName({ name: agent })) return notFound;
+  const existing = await dependencies.connections.findActiveByAgent({ accountId, agent });
+  if (existing === null) return notFound;
   const isRevoked = await dependencies.connections.revoke({ accountId, agent, revokedAt: dependencies.clock.now() });
   if (!isRevoked) return notFound;
   await dependencies.revocations.recordRevocation({ accountId, agent });
   const parameters = { [AccountReplyParameter.AgentName]: agent };
-  return buildResult({ replies: [buildTextReply({ intent: AccountReplyIntent.Revoked, locale, parameters })] });
+  return buildResult({
+    replies: [buildTextReply({ intent: AccountReplyIntent.Revoked, locale, parameters })],
+    connectionId: existing.connectionId,
+  });
 }

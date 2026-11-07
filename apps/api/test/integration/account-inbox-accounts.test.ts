@@ -1,4 +1,4 @@
-import { AccountState, MessageKind, OwnerLocale, ReplyStatus } from '@zapbip/types';
+import { AccountState, ChannelInboundKind, MessageKind, OwnerLocale, ReplyStatus } from '@zapbip/types';
 import { reset, runInDurableObject } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AccountInbox } from '../../src/account-inbox/account-inbox';
@@ -8,7 +8,8 @@ import { ACCOUNT_INBOX_MIGRATIONS } from '../../src/account-inbox/migrations';
 import { runMigrations } from '../../src/account-inbox/run-migrations';
 import { D1ConnectionRegistry } from '../../src/adapters/d1/d1-connection-registry';
 import { readScreen } from '../support/inbox-session';
-import { applyDirectoryMigration, seedOwnerIdentity } from '../support/seed';
+import { recordWaiterAtNextSessionSend } from '../support/session-send-probe';
+import { applyDirectoryMigration, seedAccount, seedOwnerIdentity } from '../support/seed';
 import { accountInboxStub, connectionOf, testEnv } from '../support/workers-env';
 
 const ACCOUNT = 'acc_accounts';
@@ -16,7 +17,7 @@ const HELD_TIMEOUT_MS = 20_000;
 const REQUESTED_AT = 1_800_000_000_000;
 const SCHEMA_VERSION_SIX = 6;
 
-type Internals = { dependencies: { waiters: { hasLiveWaiter(input: { agent: string; questionId: string | null }): boolean } } };
+type Internals = { dependencies: { waiters: { hasAgentWaiter(input: { agent: string }): boolean } } };
 
 function stubOf() {
   return accountInboxStub({ accountId: ACCOUNT });
@@ -32,7 +33,7 @@ function seedAgentWake(input: { agent: string }) {
 
 function hasLiveWaiter(input: { agent: string }): Promise<boolean> {
   return runInDurableObject(stubOf(), (instance: AccountInbox) =>
-    (instance as unknown as Internals).dependencies.waiters.hasLiveWaiter({ ...input, questionId: null }),
+    (instance as unknown as Internals).dependencies.waiters.hasAgentWaiter(input),
   );
 }
 
@@ -193,22 +194,10 @@ describe('AccountInbox revocation', () => {
   });
 });
 
-describe('AccountInbox setState', () => {
-  it('accepts the return to active', async () => {
-    await expect(stubOf().setState({ state: AccountState.Active })).resolves.toBeUndefined();
-  });
-
-  it.each([AccountState.Suspended, AccountState.Deleting, AccountState.Waitlisted])('refuses %s', async (state) => {
-    await expect(runInDurableObject(stubOf(), (instance: AccountInbox) => instance.setState({ state }))).rejects.toThrow();
-  });
-});
-
 describe('AccountInbox receiveAccountMessage', () => {
   const OWNER_PHONE = '5511900000009';
   const PUBLIC_ORIGIN = 'https://zapbip.test';
-
   beforeEach(async () => {
-    await applyDirectoryMigration();
     await seedOwnerIdentity({ accountId: ACCOUNT, phone: OWNER_PHONE, ownerLocale: OwnerLocale.PortugueseBrazil });
   });
 
@@ -216,7 +205,14 @@ describe('AccountInbox receiveAccountMessage', () => {
     return stubOf().receiveAccountMessage({
       account: { accountId: ACCOUNT, waId: OWNER_PHONE, state: AccountState.Active, locale: OwnerLocale.PortugueseBrazil },
       channelMessageId: input.channelMessageId,
-      ownerMessage: { at: Date.now(), replyToMessageId: null, forwarded: false, content: { kind: MessageKind.Text, text: input.text } },
+      entry: {
+        kind: ChannelInboundKind.Owner,
+        at: Date.now(),
+        replyToChannelMessageId: null,
+        forwarded: false,
+        content: { kind: MessageKind.Text, text: input.text },
+        noticeText: null,
+      },
       publicOrigin: PUBLIC_ORIGIN,
     });
   }
@@ -235,6 +231,20 @@ describe('AccountInbox receiveAccountMessage', () => {
     expect(sent).not.toContain('zb_conn_');
   });
 
+  it('keeps no clear install code in the stored message log', async () => {
+    await receive({ text: 'novo agente alpha', channelMessageId: 'wamid.mask' });
+    expect((await screenTexts()).join('\n')).toMatch(/\/i\/zb_inst_[A-Za-z0-9_-]{22}/);
+    const stored = await inStorage((storage) =>
+      storage.sql
+        .exec<{ payload: string }>('SELECT payload FROM inbox_messages')
+        .toArray()
+        .map((row) => row.payload)
+        .join('\n'),
+    );
+    expect(stored).toContain('/i/zb_inst_');
+    expect(stored).not.toMatch(/zb_inst_[A-Za-z0-9_-]{22}/);
+  });
+
   it('answers a retried delivery as a duplicate without sending again', async () => {
     await receive({ text: 'novo agente alpha', channelMessageId: 'wamid.retry' });
     const sentBefore = (await screenTexts()).length;
@@ -247,6 +257,32 @@ describe('AccountInbox receiveAccountMessage', () => {
     await receive({ text: 'novo agente alpha', channelMessageId: 'wamid.one' });
     await receive({ text: 'revogar alpha', channelMessageId: 'wamid.two' });
     expect(await listRevokedAgents()).toEqual(['alpha']);
+  });
+
+  it('[row 214] AK-9 ends the held wait of a revoked agent before the revoke reply is sent', async () => {
+    await receive({ text: 'novo agente alpha', channelMessageId: 'wamid.held-revoke-create' });
+    const { holding } = await holdWait({ agent: 'alpha' });
+    const hadLiveWaiter = await recordWaiterAtNextSessionSend({ accountId: ACCOUNT, agent: 'alpha' });
+    await receive({ text: 'revogar alpha', channelMessageId: 'wamid.held-revoke' });
+    expect(hadLiveWaiter()).toBe(false);
+    expect(await holding).toEqual({ ok: true, value: { status: ReplyStatus.Timeout } });
+  });
+
+  it('[row 224] AK-10 ends the held ask of a rotated agent as pending after the rotate reply is sent and does not revoke it', async () => {
+    await receive({ text: 'novo agente alpha', channelMessageId: 'wamid.held-rotate-create' });
+    const holding = stubOf().ask({
+      connection: connectionOf({ accountId: ACCOUNT, agent: 'alpha' }),
+      text: 'Deploy?',
+      options: ['Sim'],
+      optionDescriptions: [null],
+      timeoutMs: HELD_TIMEOUT_MS,
+    });
+    await vi.waitFor(async () => expect(await hasLiveWaiter({ agent: 'alpha' })).toBe(true));
+    const hadLiveWaiter = await recordWaiterAtNextSessionSend({ accountId: ACCOUNT, agent: 'alpha' });
+    await receive({ text: 'girar alpha', channelMessageId: 'wamid.held-rotate' });
+    expect(hadLiveWaiter()).toBe(true);
+    expect(await holding).toMatchObject({ ok: true, value: { status: ReplyStatus.Pending } });
+    expect(await listRevokedAgents()).toEqual([]);
   });
 
   it('stores the deletion request and reports the confirmation', async () => {
@@ -264,10 +300,22 @@ describe('AccountInbox receiveAccountMessage', () => {
         instance.receiveAccountMessage({
           account: { accountId: ACCOUNT, waId: OWNER_PHONE, state: AccountState.Active, locale: OwnerLocale.PortugueseBrazil },
           channelMessageId: 'wamid.after',
-          ownerMessage: { at: Date.now(), replyToMessageId: null, forwarded: false, content: { kind: MessageKind.Text, text: 'oi' } },
+          entry: {
+            kind: ChannelInboundKind.Owner,
+            at: Date.now(),
+            replyToChannelMessageId: null,
+            forwarded: false,
+            content: { kind: MessageKind.Text, text: 'oi' },
+            noticeText: null,
+          },
           publicOrigin: PUBLIC_ORIGIN,
         }),
       ),
     ).rejects.toThrow('AccountTombstoned');
   });
+});
+
+beforeEach(async () => {
+  await applyDirectoryMigration();
+  await seedAccount({ accountId: ACCOUNT });
 });

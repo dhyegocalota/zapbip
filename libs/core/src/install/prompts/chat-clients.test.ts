@@ -113,7 +113,8 @@ describe('Hermes and OpenClaw confirmed install steps', () => {
 
   test('F4 OpenClaw installs the published package and sets the connection link on the channel', () => {
     const text = renderOpenClawSection(sectionInput({ locale }));
-    expect(text).toContain('openclaw plugins install @zapbip/openclaw-plugin@0.1.0');
+    expect(text).toContain('openclaw plugins install @zapbip/openclaw-plugin@0.1.0 --force --accept-capabilities');
+    expect(text).toContain('Authorization: Bearer');
     expect(text).toContain('channels.zapbip.connectionLink');
     expect(text).toContain(CONNECTION_LINK);
   });

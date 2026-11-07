@@ -3,6 +3,8 @@ import { LinkPurpose, MINUTE_MS, OwnerLocale } from '@zapbip/types';
 import type { DevAccountInboxRpc } from '../../src/contract/account-inbox-rpc';
 import { CONNECTION_SECRET_PREFIX } from '../../src/contract/constants';
 import { signLink } from '../../src/signing';
+import { runInDurableObject } from 'cloudflare:test';
+import { createSqliteFirstMessageClaim } from '../../src/account-inbox/first-message-claim';
 import { accountInboxStub } from '../support/workers-env';
 import { applyDirectoryMigration, seedConnection, seedOwnerIdentity } from '../support/seed';
 
@@ -10,6 +12,7 @@ export const ORIGIN = 'http://example.com';
 export const LINK_VALIDITY_MS = 15 * MINUTE_MS;
 
 const SECRET_BODY_BYTES = 32;
+const SEED_FIRST_MESSAGE_ID = 'wamid.seed.first';
 const PHONE_PREFIX = '55119';
 const PHONE_SUFFIX_DIGITS = 8;
 
@@ -43,6 +46,9 @@ export async function seedAccount(input: { agent: string }): Promise<SeededAccou
   const secret = randomSecret();
   await seedOwnerIdentity({ accountId, phone, ownerLocale: OwnerLocale.PortugueseBrazil });
   await seedConnection({ accountId, agent: input.agent, secret });
+  await runInDurableObject(accountInboxStub({ accountId }), (_instance, state) =>
+    createSqliteFirstMessageClaim({ storage: state.storage }).claim({ channelMessageId: SEED_FIRST_MESSAGE_ID }),
+  );
   return { accountId, phone, secret, connection: { accountId, agent: input.agent, ownerLocale: OwnerLocale.PortugueseBrazil } };
 }
 

@@ -66,6 +66,6 @@ export async function recordFailure(input: { dependencies: CoreDependencies; mes
 }
 
 export function deliveryFailureOf(input: { error: unknown; kind: MessageKind }): InboxError {
-  if (input.error instanceof ChannelError) return input.error;
+  if (input.error instanceof InboxError) return input.error;
   return new InboxError({ code: ChannelErrorKind.DeliveryFailed, message: `delivery failed for ${input.kind}` });
 }

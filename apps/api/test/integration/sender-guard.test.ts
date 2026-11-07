@@ -36,9 +36,9 @@ beforeEach(applyDirectoryMigration);
 afterEach(reset);
 
 describe('sender guard', () => {
-  it('drops a blocked phone without calling the limiter', async () => {
+  it('[row 451] drops a blocked phone without calling the limiter', async () => {
     await block({ waId: WA_ID });
-    const { guard, limiter } = senderGuard({ limit: OWNER_MESSAGES_PER_MINUTE });
+    const { guard, limiter } = senderGuard({ limit: 0 });
     expect(await guard.admit({ waId: WA_ID })).toBe(SenderVerdict.Blocked);
     expect(limiter.calls).toEqual([]);
   });
@@ -77,28 +77,30 @@ describe('outbound guard', () => {
     });
   }
 
-  it('limits the thirty-first call of one connection and admits another connection of the account', async () => {
+  it('[row 328] limits the thirty-first call of one connection and admits another connection of the account', async () => {
     const guard = outboundGuard();
     const verdicts = await admitMany({
       count: OUTBOUND_MESSAGES_PER_MINUTE + 1,
-      admit: () => guard.admit({ accountId: ACCOUNT_ID, connectionId: 'con_1' }),
+      admit: () => guard.admit({ accountId: ACCOUNT_ID, agentKey: 'con_1' }),
     });
     expect(verdicts.slice(0, OUTBOUND_MESSAGES_PER_MINUTE).every((verdict) => verdict === SenderVerdict.Admitted)).toBe(true);
     expect(verdicts[OUTBOUND_MESSAGES_PER_MINUTE]).toBe(SenderVerdict.RateLimited);
-    expect(await guard.admit({ accountId: ACCOUNT_ID, connectionId: 'con_2' })).toBe(SenderVerdict.Admitted);
+    expect(await guard.admit({ accountId: ACCOUNT_ID, agentKey: 'con_2' })).toBe(SenderVerdict.Admitted);
   });
 
-  it('limits the account at its own total across connections and admits another account', async () => {
+  it('[row 329] limits the account at its own total across connections and admits another account', async () => {
     const guard = outboundGuard();
     const connectionIds = Array.from({ length: SATURATING_CONNECTIONS + 1 }, (_, index) => `con_${index}`);
     const perConnection = ACCOUNT_OUTBOUND_MESSAGES_PER_MINUTE / SATURATING_CONNECTIONS;
     const admitted = await Promise.all(
       connectionIds
         .slice(0, SATURATING_CONNECTIONS)
-        .map((connectionId) => admitMany({ count: perConnection, admit: () => guard.admit({ accountId: ACCOUNT_ID, connectionId }) })),
+        .map((connectionId) =>
+          admitMany({ count: perConnection, admit: () => guard.admit({ accountId: ACCOUNT_ID, agentKey: connectionId }) }),
+        ),
     );
     expect(admitted.flat().every((verdict) => verdict === SenderVerdict.Admitted)).toBe(true);
-    expect(await guard.admit({ accountId: ACCOUNT_ID, connectionId: `con_${SATURATING_CONNECTIONS}` })).toBe(SenderVerdict.RateLimited);
-    expect(await guard.admit({ accountId: 'acc_2', connectionId: 'con_other' })).toBe(SenderVerdict.Admitted);
+    expect(await guard.admit({ accountId: ACCOUNT_ID, agentKey: `con_${SATURATING_CONNECTIONS}` })).toBe(SenderVerdict.RateLimited);
+    expect(await guard.admit({ accountId: 'acc_2', agentKey: 'con_other' })).toBe(SenderVerdict.Admitted);
   });
 });

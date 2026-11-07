@@ -12,7 +12,7 @@ async function create(input: { rawName: string }) {
 }
 
 describe('createAgentConnection', () => {
-  test('creates the normalised connection and replies with the install link only', async () => {
+  test('[row 188] creates the normalised connection and replies with the install link only', async () => {
     const { fixture, result } = await create({ rawName: 'Claude Code' });
     const [issued] = fixture.environment.secrets.issued;
     const [installCode] = fixture.environment.installCodeVault.issued;

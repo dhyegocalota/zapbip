@@ -19,6 +19,7 @@
   "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "zapbip-media" }],
   "analytics_engine_datasets": [{ "binding": "WAKE_METRICS", "dataset": "zapbip_wake" }],
   "rules": [{ "type": "Text", "globs": ["**/*.sql"], "fallthrough": true }],
+  "triggers": { "crons": ["*/30 * * * *"] },
   "vars": {
     "PUBLIC_ORIGIN": "https://mcp.zapbip.com",
     "WAITLIST_ENABLED": "true",
@@ -33,6 +34,7 @@
   "env": {
     "development": {
       "main": "src/index.dev.ts",
+      "triggers": { "crons": ["*/30 * * * *"] },
       "vars": {
         "PUBLIC_ORIGIN": "http://localhost:8787",
         "WAITLIST_ENABLED": "false",

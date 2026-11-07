@@ -15,7 +15,7 @@ The owner manages agents from WhatsApp: create, list, revoke, rotate, help and d
 2. A command is matched exactly, after normalising case and whitespace. A message that is not an exact match is routed to an agent.
 3. The first word of every command is a reserved agent name.
 4. A new rule 0 runs before the core's rules 1 to 6: an exact command, or a list reply with an id starting `zapbip:`. A command never changes the last-agent rule and never answers a question.
-5. A quoted reply to an agent's message is never a command. A text starting `@<agent> ` routes to that agent (core rule 3) and is never a command.
+5. A forwarded or frequently forwarded message is never a command, so a forwarded `revogar alpha` reaches the agent routing as ordinary text. A quoted reply to an agent's message is never a command. A text starting `@<agent> ` routes to that agent (core rule 3) and is never a command.
 
 ## Alternatives considered
 

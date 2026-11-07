@@ -1,16 +1,16 @@
-import type { AgentName, OwnerAccountContext, OwnerInboundMessage, ReceiveAccountMessageResult } from '@zapbip/core';
-import type { AccountState } from '@zapbip/types';
+import type { AgentName, ChannelInboundEntry, OwnerAccountContext, ReceiveAccountMessageResult } from '@zapbip/core';
 import type { CallOutcome } from './account-inbox-rpc';
 
 export interface AccountOwnerRpc {
   receiveAccountMessage(input: {
     account: OwnerAccountContext;
     channelMessageId: string;
-    ownerMessage: OwnerInboundMessage;
+    entry: ChannelInboundEntry;
     publicOrigin: string;
   }): Promise<CallOutcome<ReceiveAccountMessageResult>>;
   recordRevocation(input: { agent: AgentName }): Promise<void>;
+  recordCreation(input: { agent: AgentName; secretDigest: string }): Promise<void>;
+  recordRotation(input: { agent: AgentName; secretDigest: string }): Promise<void>;
   cancelWaiters(input: { agent: AgentName }): Promise<void>;
   purge(): Promise<void>;
-  setState(input: { state: AccountState }): Promise<void>;
 }

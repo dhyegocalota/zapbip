@@ -1,35 +1,43 @@
 ---
-title: 'Comandos do WhatsApp'
-description: 'O que o dono pode digitar para o número do zapbip.'
+title: Comandos no WhatsApp
+description: O que você pode escrever para o número do zapbip.
 ---
 
-O dono gerencia as IAs mandando mensagem para o número do zapbip. Um comando é reconhecido exatamente, em português ou em inglês, depois que o texto é aparado, os espaços internos são reduzidos a um e tudo vira minúsculas. O idioma da palavra-chave é o idioma da resposta.
+import { Chat } from '/snippets/chat.jsx';
 
-| Comando            | Português                      | Inglês                       | Efeito                                                             |
-| ------------------ | ------------------------------ | ---------------------------- | ------------------------------------------------------------------ |
-| Criar um agente    | `novo agente <nome>`           | `new agent <name>`           | Cria uma conexão e responde com um link de instalação.             |
-| Listar agentes     | `agentes`                      | `agents`                     | Nome, data de criação e cliente de cada agente ativo. Sem segredo. |
-| Revogar um agente  | `revogar <nome>`               | `revoke <name>`              | Revoga a conexão agora. O link dela deixa de funcionar.            |
-| Girar um link      | `girar <nome>`                 | `rotate <name>`              | Troca o segredo agora e responde com um novo link de instalação.   |
-| Ajuda e menu       | `ajuda` ou `menu`              | `help` ou `menu`             | Texto e uma lista interativa com os comandos.                      |
-| Pedir a exclusão   | `apagar conta`                 | `delete account`             | Explica as consequências e a frase para confirmar.                 |
-| Confirmar exclusão | `apagar conta definitivamente` | `delete account permanently` | Apaga a conta.                                                     |
+Você gerencia as suas IAs escrevendo para o número do zapbip. Um comando é uma frase curta, em português ou inglês. O idioma que você escreve é o idioma da resposta.
 
-Pontuação final não casa. `agentes?` é uma mensagem para um agente, não um comando.
+| Você quer              | Escreva                                               | O que acontece                                           |
+| ---------------------- | ----------------------------------------------------- | -------------------------------------------------------- |
+| Conectar uma nova IA   | `novo agente claude`                                  | O zapbip responde com o prompt para colar nessa IA       |
+| Ver suas IAs           | `agentes`                                             | Uma lista com o nome e a data de cada uma                |
+| Desconectar uma IA     | `revogar claude`                                      | Essa IA para de funcionar na hora                        |
+| Receber um novo prompt | `girar claude`                                        | A conexão antiga para e você recebe um prompt novo       |
+| Abrir o menu           | `ajuda` ou `menu`                                     | Os comandos em texto e em uma lista tocável              |
+| Apagar sua conta       | `apagar conta`, depois `apagar conta definitivamente` | Veja [apagar sua conta](/pt-br/help/delete-your-account) |
 
-## O menu
+Escreva a frase sozinha. Um `?` ou `!` no final faz dela uma mensagem comum para as suas IAs.
 
-`ajuda` responde com os comandos em texto e em uma lista interativa. As linhas de `agentes` e `apagar conta` executam na hora. As linhas de `novo agente`, `revogar` e `girar` respondem com a linha de uso, porque precisam de um nome.
+## Exemplo
 
-## Palavras reservadas
+<Chat
+  messages={[
+    { you: true, text: 'agentes', time: '09:20' },
+    { text: 'Seus agentes:\nclaude (2026-11-06, Claude Code)', time: '09:20' },
+    { you: true, text: 'revogar claude', time: '09:21' },
+    { text: 'Agente claude revogado. O link deixou de funcionar.', time: '09:21' },
+  ]}
+/>
 
-A primeira palavra de cada comando é reservada: `novo`, `new`, `agentes`, `agents`, `revogar`, `revoke`, `girar`, `rotate`, `ajuda`, `help`, `menu`, `apagar` e `delete`. Um agente não pode usar nenhuma delas como nome.
+## Falando com uma IA usando uma palavra de comando
 
-## Mandar uma palavra de comando para um agente
+Uma mensagem que é exatamente uma palavra de comando é sempre um comando. Para mandar as mesmas palavras a uma IA, comece com o nome dela: `@claude ajuda` chega ao Claude em vez de abrir o menu.
 
-Uma mensagem que é exatamente uma palavra de comando é sempre um comando. Para mandar as mesmas palavras a um agente, comece a mensagem com `@<agente> `. O prefixo é removido e o resto vai para esse agente. Por exemplo, `@claude-code ajuda` chega ao agente `claude-code` em vez de abrir o menu. Veja [roteamento](/pt-br/concepts/routing).
+## Nomes
+
+As palavras `novo`, `agentes`, `revogar`, `girar`, `ajuda`, `menu`, `apagar` e as versões em inglês não podem ser o nome de uma IA.
 
 ## Próximos passos
 
-- [Agentes e links](/pt-br/features/agents-and-links) explica criar, listar, revogar e girar.
-- [Exclusão da conta](/pt-br/help/account-deletion) explica a exclusão em duas etapas.
+- [Gerencie suas IAs](/pt-br/features/manage-your-agents)
+- [Várias IAs em um número](/pt-br/features/many-agents-on-one-number)

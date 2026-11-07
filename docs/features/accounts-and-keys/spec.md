@@ -1,6 +1,6 @@
 # Accounts and keys
 
-**Status:** Building
+**Status:** Shipped 2026-11-07
 **Tier:** 🔴
 **Owner approval:** approved 2026-11-06 (owner delegated)
 **ADRs:** [0015](../../adr/0015-commands-are-bare-words-routed-before-agents.md), [0016](../../adr/0016-accounts-start-on-the-first-message-and-wait-on-a-list.md), [0017](../../adr/0017-connection-secrets-are-shown-once-and-stored-as-digests.md)
@@ -17,12 +17,12 @@ A shared public number also needs controls the single-owner core does not have: 
 1. Accounts are created by the owner's first message, in state `waitlisted` or `active` as set by the `WAITLIST_ENABLED` variable ([ADR 0016](../../adr/0016-accounts-start-on-the-first-message-and-wait-on-a-list.md)).
 2. Commands in pt-BR and en are recognised before routing and answered by zapbip ([ADR 0015](../../adr/0015-commands-are-bare-words-routed-before-agents.md)).
 3. The connection lifecycle: create (the WhatsApp reply carries the install link, never the secret), list, revoke and rotate, one secret per connection ([ADR 0006](../../adr/0006-one-secret-per-connection-in-the-mcp-url.md)).
-4. Secrets are `zb_conn_` followed by 32 random bytes, stored as SHA-256 digests, compared in constant time and never logged ([ADR 0017](../../adr/0017-connection-secrets-are-shown-once-and-stored-as-digests.md)).
+4. Secrets are `zb_conn_` followed by 32 random bytes, stored as SHA-256 digests, looked up by indexed equality on the digest and never logged ([ADR 0017](../../adr/0017-connection-secrets-are-shown-once-and-stored-as-digests.md)).
 5. The D1 schema and its first migration after `agent-inbox-core`.
 6. Abuse controls on the shared number: a blocklist, a per-phone rate limit, a daily cap on new accounts, and a per-connection outbound limit.
 7. Owner-initiated account deletion for LGPD, which removes the Durable Object, the media and the D1 rows.
 8. The development connection script of `agent-inbox-core` is deleted. The owner simulator creates connections in development.
-9. Docs pages `guides/commands`, `guides/agents-and-links` and `guides/account-deletion` in `apps/docs` ([ADR 0010](../../adr/0010-public-docs-on-mintlify.md)), in the navigation of agent-inbox-core → Docs.
+9. Docs pages `features/whatsapp-commands`, `features/manage-your-agents` and `help/delete-your-account` in `apps/docs`, each with its `pt-br/` twin ([ADR 0010](../../adr/0010-public-docs-on-mintlify.md)), in the navigation of agent-inbox-core → Docs.
 
 ## Non-goals
 
@@ -65,14 +65,14 @@ Text is normalised before matching: trimmed, inner whitespace collapsed, lowerca
 
 Rules:
 
-- **Language of replies.** The keyword used decides the language of the reply. The owner's `locale` in `owner_identities` is set to that language by the last command and is used for replies that are not commands, such as the rule 6 question. `DEFAULT_LOCALE` is pt-BR and applies to a new owner.
-- **Agent names.** A name is normalised: decomposed (NFD), combining marks removed, lowercased, every run of characters outside `a-z0-9` replaced by one `-`, leading and trailing `-` trimmed. `Claude Code` becomes `claude-code`. The result must match the core's pattern `^[a-z0-9][a-z0-9-]{0,31}$`. The reply echoes the normalised name.
+- **Language of replies.** The keyword used decides the language of the reply. The owner's `locale` in `owner_identities` is an account property set at creation (`pt_BR` for `55` numbers, `en_US` otherwise) and commands do not change it; it is used for replies that are not commands, such as the rule 6 question and the `menu` reply.
+- **Agent names.** A name is normalised: decomposed (NFD), combining marks removed, lowercased, every run of characters outside `a-z0-9` replaced by one `-`, leading and trailing `-` trimmed. `Claude Code` becomes `claude-code`. The result must match the core's pattern `^[a-z0-9][a-z0-9-]{0,19}$` (at most 20 characters). The reply echoes the normalised name.
 - **Reserved names.** The first word of every command in both locales is reserved (`novo`, `new`, `agentes`, `agents`, `revogar`, `revoke`, `girar`, `rotate`, `ajuda`, `help`, `menu`, `apagar`, `delete`). An agent cannot take one.
 - **Missing name.** `novo agente` or `revogar` without a name replies with the usage line.
 - **Limit.** Active connections per account are capped by `AGENTS_PER_ACCOUNT_LIMIT` (8). Revoked connections do not count.
 - **Names are unique among active connections.** A revoked name can be created again, as a new connection.
 - **Menu.** `ajuda` replies with text and an interactive list. Its rows have ids `zapbip:<command>`. `agentes` and `apagar conta` run at once. The rows for `novo agente`, `revogar` and `girar` reply with their usage line, because they need a name.
-- **Secret display.** The secret appears in no WhatsApp message and in no log. The create and rotate replies carry the install link only; the install page turns it into the connection URL for 30 minutes (ADR 0020).
+- **Secret display.** The secret appears in no WhatsApp message and in no log. The create and rotate replies carry the install link only; the install page turns it into the connection URL for 30 minutes. The stored copy of a reply is masked by message id once that reply reached `sent`, even when a later send of the same answer fails; a reply that stays `queued` keeps the real link until it is sent.
 
 Replies (intents; the copy lives in `libs/core/src/accounts/account-copy.ts`, with `pt_BR` and `en_US` entries, agent-inbox-core → Language):
 
@@ -130,7 +130,7 @@ Creation order: generate the secret and the install code, insert the digests and
 
 Rotation order: compare-and-set the digest and the install code columns from the old to the new, send the reply. If the send fails, compare-and-set back from the new digest to the old. The owner never ends up with a rotated link they did not receive.
 
-Revoke and rotate take effect at once and cannot be undone. The explicit agent name is their confirmation. Deletion has its own phrase, below.
+Revoke and rotate take effect at once and cannot be undone. Every access path closes at once, connector sockets included, re-checked inside the Durable Object: a connector connect checks the key digest and the agent again inside the object, an MCP call and `set_wake` check the agent again inside the object, rotation closes the old key's sockets, and deletion closes every socket before the storage is wiped. A call already past the Worker's key check when a rotate lands may complete once (the connector socket re-checks the digest; MCP calls are request-scoped). The explicit agent name is their confirmation. Deletion has its own phrase, below.
 
 Concurrency:
 
@@ -140,11 +140,13 @@ Concurrency:
 
 ### Secrets and digests
 
-- **Issue.** `zb_conn_` followed by base64url (no padding) of 32 bytes from `RandomSource`, which is 43 characters. The secret is returned once and never stored in plain text. The install code (`zb_inst_` followed by base64url of 16 random bytes, 128 bits) is the only other secret: its digest is stored, and the connection secret is stored sealed under a key derived from the code, for 30 minutes at most, cleared on the first MCP call or by the daily sweep (ADR 0020).
+- **Issue.** `zb_conn_` followed by base64url (no padding) of 32 bytes from `RandomSource`, which is 43 characters. The secret is returned once and never stored in plain text. The install code (`zb_inst_` followed by base64url of 16 random bytes, 128 bits) is the only other secret: its digest is stored, and the connection secret is stored sealed under a key derived from the code, for 30 minutes at most, cleared within 30 minutes after it expires by the scheduled sweep (ADR 0017), and by the first MCP call once install-skills lands.
 - **Digest.** SHA-256 hex of the full secret string, prefix included. Stored in `connections.secret_digest`.
-- **Resolve.** A value without the `zb_conn_` prefix returns `401` without a D1 read. Otherwise the digest is looked up in D1 and joined with `accounts`. The candidate's stored digest is then compared with the computed digest by constant-time compare, `crypto.subtle.timingSafeEqual` in the adapter. A mismatch, a missing row, a revoked connection or an account that is not `active` returns `401` with the same body in every case.
+- **Resolve.** A value without the `zb_conn_` prefix returns `401` without a D1 read. Otherwise the digest is looked up in D1 and joined with `accounts`. The lookup is an indexed equality on the digest of the presented value; the presented value cannot steer which row is compared, and no application code compares secrets, so there is no timing comparison to make constant (owner delegated 2026-11-06, fixing the spec instead of adding `timingSafeEqual`). A mismatch, a missing row, a revoked connection or an account that is not `active` returns `401` with the same body in every case.
 - **Owner number.** The owner's `wa_id` (the digits of the phone, from Meta's `from`) is stored in plain text in `owner_identities` and `blocked_phones`, as [ADR 0012](../../adr/0012-owner-identity-by-wa-id-on-the-shared-number.md) requires, because the channel must send replies to it. Access is limited to the Worker and the operator, and LGPD deletion removes the row.
 - **Logs.** Logs carry event names, ids and kinds. They never carry secrets, digests, phones, agent names or message text. The request path is logged as its route template (`/c/:secret/mcp`, `/i/:installCode`), never the raw path, because the secret and the install code are in the path.
+
+- **Signed links outlive revoke and rotate.** Signed media and upload links (`/m/…`, `/u/…`) are valid until their own TTL after the connection that asked for them is revoked or rotated, because they carry no connection secret and are bound only to the account, the object and the expiry. Accepted (owner delegated 2026-11-06); the TTL is the bound.
 
 ### Install prompt hook
 
@@ -157,7 +159,9 @@ The lines are copy, not a port: no `InstallPromptRenderer`, no generic renderer 
 
 ### Data model
 
-The D1 schema is in Drizzle (`apps/api/src/adapters/d1/schema.ts`). The migration is generated with `drizzle-kit` into `apps/api/migrations` and applied with `wrangler d1 migrations apply`. Applied migrations are never edited.
+The D1 schema is hand-written SQL, as in `agent-inbox-core` (no Drizzle schema file, no `drizzle-kit`): `apps/api/migrations/0002_accounts_and_keys.sql`, applied with `wrangler d1 migrations apply`, and read through prepared statements. Applied migrations are never edited. Migration `0002` drops and rebuilds `message_index` unchanged, because its rows reference `accounts`. The Durable Object has its own migration `v6` (`account_facts`, `revoked_agents`) and a tombstone key written by `purge`.
+
+**Deploy order.** Apply D1 migration `0002` before the Worker deploys: the Durable Object reads `accounts` on every agent call and alarm, and a Worker that runs ahead of the migration refuses them all.
 
 Migration `0002_accounts_and_keys.sql` (`0001_core` is agent-inbox-core's, see its Storage and migrations):
 
@@ -209,7 +213,7 @@ CREATE TABLE blocked_phones (
 - Timestamps are epoch milliseconds.
 - The rebuild drops development rows only. Nothing is deployed before `0001` applies, so no production data needs keeping; from the first deploy on, migrations are forward-only (`deploy-readiness`).
 - `connections.client_name` is written by the MCP route from the first `initialize` (install-skills); it is null until then.
-- `connections.install_code_*` hold the install code digest, the connection secret sealed under the code, and the code's expiry. Create and rotate write them; revoke and the first MCP call clear the sealed secret; the daily sweep clears it after expiry (ADR 0020).
+- `connections.install_code_*` hold the install code digest, the connection secret sealed under the code, and the code's expiry. Create and rotate write them; revoke and the first MCP call clear the sealed secret; the scheduled sweep, which runs every 30 minutes, clears it within 30 minutes after expiry; the first MCP call clears it once install-skills lands.
 - `connections.first_call_at` is written once, by the MCP route, on the connection's first successful MCP call (install-skills).
 - `owner_identities` is read by whatsapp-cloud-channel (ADR 0012); `from_user_id` stays null until Meta provides it.
 - The deletion batch removes `owner_identities` and `connections` before `accounts`, because the foreign keys have no cascade.
@@ -227,7 +231,7 @@ Ports in `libs/core`. Signatures are indicative; the plan fixes them and every m
 | `ConnectionSecrets` | new | `issue()` returns `{secret, digest}` | WebCrypto plus `RandomSource` |
 | `RandomSource` | new | random bytes for ids and secrets | `crypto.getRandomValues` |
 | `SenderGuard` | new | `admit({waId, now})` returns `SenderVerdict` (`admitted`, `blocked`, `rate_limited`) | Rate Limiting binding and the D1 blocklist |
-| `OutboundGuard` | new | `admit({connectionId})` | Rate Limiting binding |
+| `OutboundGuard` | new | `admit({accountId, agentKey})` | Rate Limiting binding |
 | `InstallCodeVault` | new | `issue()` returns `{installCode, digest}`; `seal({installCode, secret})` and `open({installCode, sealed})` | WebCrypto: SHA-256, HKDF-SHA-256, AES-256-GCM |
 | `InstallCodeDirectory` | new | `resolve({installCode, now})` returns `InstallCodeStatus` with the connection link on `Ready`; `recordFirstCall({connectionId, calledAt})` | D1 |
 | `MediaStore` | extended | `deletePrefix({prefix})` for deletion | R2 |
@@ -263,20 +267,22 @@ HTTP: no new route. The MCP route is unchanged. Development keeps `POST /dev/c/:
 | Per-phone rate limit | Rate Limiting binding, key = `wa_id` | `OWNER_MESSAGES_PER_MINUTE` | silent drop; logged |
 | Daily cap on new accounts | conditional insert over `accounts.created_at` | `NEW_ACCOUNTS_PER_DAY_LIMIT` | silent drop; logged; the operator raises the cap |
 | Agent limit | conditional insert | `AGENTS_PER_ACCOUNT_LIMIT` | reply with the limit |
-| Outbound per connection | Rate Limiting binding, key = connection id | `OUTBOUND_MESSAGES_PER_MINUTE` | MCP tool error `rate_limited` |
+| Outbound per connection | Rate Limiting binding, key = `accountId:agent` | `OUTBOUND_MESSAGES_PER_MINUTE` | MCP tool error `rate_limited` |
 
 The blocklist is manual. Automatic blocking after repeated limit trips is out of scope.
 
 ### Account deletion (LGPD)
 
-1. `apagar conta` replies with the consequences and the phrase `apagar conta definitivamente`. The phrase is the confirmation; no pending state is stored.
-2. The phrase sends the confirmation reply first, while the window is open.
-3. D1 sets the account to `deleting`. Connections stop resolving at once.
+1. `apagar conta` replies with the consequences and the phrase `apagar conta definitivamente`. The phrase is the confirmation, and it works only inside 10 minutes of the request, which is stored as `deletion_requested_at` in the account object.
+2. D1 sets the account to `deleting`, while the window is open. Connections stop resolving at once. A failure here sends nothing, and the redelivery confirms again.
+3. The confirmation reply is sent.
 4. The Durable Object's `purge()` clears its SQLite storage and alarms.
 5. `MediaStore.deletePrefix` removes `accounts/<account_id>/`, listing in pages of 1 000.
 6. A D1 batch deletes the account's `owner_identities` and `connections`, then the `accounts` row.
 
-Every step is idempotent. A failure leaves the account in `deleting`; the owner's next message, or the operator's `resume`, runs the remaining steps. A message from the same phone after deletion creates a new account on the waitlist, as in any first message.
+The Worker has one cron per deployed block, `*/30 * * * *`. Its `scheduled` handler dispatches a record of jobs, each with its tick condition; this slice registers two that run on every tick, clearing the sealed secret of expired install codes and finishing deleting accounts. A job that fails never hides another, and the first failure is rethrown after all have run. deploy-readiness adds its own jobs to the record.
+
+Every step is idempotent. A failure leaves the account in `deleting`; the owner's next message, or the scheduled sweep, runs the remaining steps; the operator's `resume` only returns a `suspended` account to `active`. A message from the same phone after deletion creates a new account whose state follows `WAITLIST_ENABLED` (waitlisted when true, active when false), as in any first message.
 
 The owner is told that Meta keeps the WhatsApp history on its side, and that Cloudflare's point-in-time copies of D1 and the Durable Object persist for their own retention period. Deletion does not touch the blocklist.
 
@@ -286,7 +292,7 @@ The development connection script of `agent-inbox-core` is deleted in this slice
 
 ### Logging
 
-Events: `account.created`, `account.state_changed`, `command.received` (kind and locale), `connection.created`, `connection.revoked`, `connection.rotated`, `sender.blocked`, `sender.rate_limited`, `account.daily_cap`, `account.deleted`, `connection.auth_failed`. Each carries ids and kinds, never secrets, digests, phones, agent names or message text.
+Events: `account_created`, `account_state_changed`, `command_received` (kind and locale), `connection_created`, `connection_revoked`, `connection_rotated`, `connection_compensated`, `sender_blocked`, `sender_rate_limited`, `account_daily_cap`, `account_deleted`, `install_code_unreadable`, `auth_rejected`. Each carries ids and kinds, never secrets, digests, phones, agent names or message text.
 
 ### Failure handling
 
@@ -301,7 +307,7 @@ Events: `account.created`, `account.state_changed`, `command.received` (kind and
 | Limit reached | the reply gives the limit; nothing changes |
 | Two creates race for one name or the last slot | the unique index and the conditional insert decide; the loser gets the reply for its case |
 | Two first messages race for one `wa_id` | `ON CONFLICT DO NOTHING` and a read; one account results |
-| Deletion interrupted | the account stays `deleting`; the next owner message or the operator's `resume` finishes it |
+| Deletion interrupted | the account stays `deleting`; the next owner message or the scheduled sweep finishes it |
 | Value without the `zb_conn_` prefix | `401` with no D1 read |
 | First message is a photo or other media | the account is created and gets the same reply; the content is not stored |
 | Owner message to a suspended account | one suspension reply; nothing is routed |
@@ -332,7 +338,7 @@ Events: `account.created`, `account.state_changed`, `command.received` (kind and
 - After the first deploy: migrations are immutable. Roll the Worker back with `wrangler rollback` to the previous version. Migration `0002` stays applied; the previous version reads `accounts` and `owner_identities` and ignores the new columns.
 - Kill switch for new accounts: set `WAITLIST_ENABLED` to `'true'` in `env.production` and redeploy. Active accounts keep working.
 - Abusive phone: `operator-account.sh block <wa_id>`, then `suspend <wa_id>`. Both reverse with `unblock` and `resume`.
-- A deletion cannot be reversed; `apagar conta` tells the owner so. The daily sweep finishes any interrupted deletion.
+- A deletion cannot be reversed; `apagar conta` tells the owner so. The scheduled sweep finishes any interrupted deletion.
 
 ## Open questions → answers
 
@@ -347,7 +353,7 @@ Events: `account.created`, `account.state_changed`, `command.received` (kind and
 | Daily cap on new accounts | none · cap | cap of 50 per rolling 24 h | 2026-11-06 |
 | How does an owner delete the account? | operator only · command · both | command with a phrase, plus the operator's `delete` | 2026-11-06 |
 | What replaces slice 1's development script? | keep it · simulator | the owner simulator; the script is deleted | 2026-11-06 |
-| Does creation choose the client? | yes now · no | no; `install-skills` renders one prompt with every client's section (ADR 0020) | owner delegated 2026-11-06 |
+| Does creation choose the client? | yes now · no | no; `install-skills` renders one prompt with every client's section | owner delegated 2026-11-06 |
 | In which language are replies sent? | account setting · keyword language | the language of the keyword used; `DEFAULT_LOCALE` pt-BR for new accounts | 2026-11-06 |
 | Can the owner change phone? | yes · no | no; a new phone is a new account | 2026-11-06 |
 | Where is the routing order written? | one place per slice · one table | one table in Routing change; agent-inbox-core keeps rules 1 to 6 | owner delegated 2026-11-06 |
@@ -364,7 +370,7 @@ Events: `account.created`, `account.state_changed`, `command.received` (kind and
 | Waitlist flag check | at module load · per request in the Worker | per request in the Worker's fetch path; the Durable Object does not read it | owner delegated 2026-11-06 |
 | First message detection | in-memory flag · durable | the account object's `first_message_id`, stored with the reply | owner delegated 2026-11-06 |
 | Who stores the install code? | `install-skills` · `accounts-and-keys` | `accounts-and-keys`: the code is minted, rotated and revoked with the connection, and its columns are in this slice's migration `0002`; `install-skills` reads it through `InstallCodeDirectory` | owner delegated 2026-11-06 |
-| Is the connection secret stored? | never · sealed for the code's life | sealed under a key derived from the install code, for 30 minutes at most, cleared on the first MCP call or by the daily sweep (ADR 0020, an amendment of ADR 0017) | owner delegated 2026-11-06 |
+| Is the connection secret stored? | never · sealed for the code's life | sealed under a key derived from the install code, for 30 minutes at most, cleared within 30 minutes after it expires by the scheduled sweep, and by the first MCP call once install-skills lands (ADR 0017) | owner delegated 2026-11-06 |
 | Free agent names in commands | reserved syntax · free name with the `@<agent>` escape | free name; `@<agent> girar a imagem` is the escape (rule 3); recorded in ADR 0015 and the commands guide | owner delegated 2026-11-06 |
 
 ## Test strategy summary
@@ -385,7 +391,7 @@ Events: `account.created`, `account.state_changed`, `command.received` (kind and
 - **`apps/api` adapter unit:**
   - secret format: prefix, 43 characters, base64url alphabet;
   - digest determinism;
-  - the constant-time compare is the one used in resolution;
+  - resolution is an indexed equality on the digest, with no application-code compare;
   - the period is converted from milliseconds to seconds at the binding.
 - **`apps/api` integration (`@cloudflare/vitest-pool-workers`, D1, R2 and Durable Objects):**
   - migration `0002` applies on an empty database and the partial unique index holds;

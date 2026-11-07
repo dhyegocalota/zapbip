@@ -72,4 +72,5 @@ export interface AccountInboxRpc extends WakeRpc {
 export interface DevAccountInboxRpc extends AccountInboxRpc, DevWakeRpc {
   readScreen(): Promise<ScreenEntry[]>;
   advanceClock(input: { advanceMs: number }): Promise<number>;
+  channelMessageIdOf(input: { messageId: string }): Promise<string | null>;
 }

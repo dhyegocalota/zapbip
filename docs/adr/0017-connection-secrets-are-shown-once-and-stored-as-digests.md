@@ -12,7 +12,7 @@ A connection's secret is the only credential its agent holds. The owner needs th
 ## Decision
 
 1. A secret is `zb_conn_` followed by 32 random bytes in base64url. It is returned once, in the create reply and the rotate reply, and never stored.
-2. Its SHA-256 digest is stored. Resolution looks up the digest and compares the stored digest with the computed one in constant time.
+2. Its SHA-256 digest is stored. Resolution is an indexed equality lookup on the digest; the presented value cannot steer which row is compared, so no application code compares secrets and no constant-time compare is needed.
 3. The owner's number stays in plain text as `wa_id` in `owner_identities`, as [ADR 0012](0012-owner-identity-by-wa-id-on-the-shared-number.md) requires. Only the secrets are digested.
 4. Rotation replaces the digest; revocation sets `revoked_at`. Both take effect on the next request.
 
@@ -42,4 +42,4 @@ A connection's secret is the only credential its agent holds. The owner needs th
 
 ## Amendment 2026-11-06 (owner delegated)
 
-The one-line install prompt (ADR 0020) serves the connection URL from `GET /i/<install-code>`. To do that, the secret is kept sealed for at most 30 minutes under a key derived from the install code, and deleted after the first successful MCP call or expiry. The secret is still never sent over WhatsApp and never stored in clear.
+The one-line install prompt serves the connection URL from `GET /i/<install-code>`. To do that, the secret is kept sealed for at most 30 minutes under a key derived from the install code, and cleared by a scheduled sweep that runs every 30 minutes, so an unopened install code's sealed secret is gone within 30 minutes after it expires; once install-skills lands, the first successful MCP call clears it too. The secret is still never sent over WhatsApp and never stored in clear.

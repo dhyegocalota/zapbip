@@ -1,35 +1,43 @@
 ---
-title: 'Commands'
-description: 'What the owner can type to the zapbip number.'
+title: Commands on WhatsApp
+description: What you can type to the zapbip number.
 ---
 
-The owner manages agents by messaging the zapbip number. A command is matched exactly, in Portuguese or English, after the text is trimmed, its inner spaces are collapsed and it is lowercased. The language of the keyword is the language of the reply.
+import { Chat } from '/snippets/chat.jsx';
 
-| Command          | Portuguese                     | English                      | Effect                                                          |
-| ---------------- | ------------------------------ | ---------------------------- | --------------------------------------------------------------- |
-| Create an agent  | `novo agente <nome>`           | `new agent <name>`           | Creates a connection and replies with an install link.          |
-| List agents      | `agentes`                      | `agents`                     | Name, creation date and client of each active agent. No secret. |
-| Revoke an agent  | `revogar <nome>`               | `revoke <name>`              | Revokes the connection now. Its link stops working.             |
-| Rotate a link    | `girar <nome>`                 | `rotate <name>`              | Replaces the secret now and replies with a new install link.    |
-| Help and menu    | `ajuda` or `menu`              | `help` or `menu`             | Text and an interactive list of the commands.                   |
-| Request deletion | `apagar conta`                 | `delete account`             | States the consequences and the phrase to confirm.              |
-| Confirm deletion | `apagar conta definitivamente` | `delete account permanently` | Deletes the account.                                            |
+You manage your AIs by writing to the zapbip number. A command is a short phrase, in Portuguese or English. The language you write is the language of the answer.
 
-Trailing punctuation does not match. `agentes?` is a message for an agent, not a command.
+| You want to         | Write                                               | What happens                                         |
+| ------------------- | --------------------------------------------------- | ---------------------------------------------------- |
+| Connect a new AI    | `new agent claude`                                  | zapbip answers with the prompt to paste into that AI |
+| See your AIs        | `agents`                                            | A list with the name and the date of each one        |
+| Disconnect an AI    | `revoke claude`                                     | That AI stops working at once                        |
+| Get a new prompt    | `rotate claude`                                     | The old connection stops and you get a fresh prompt  |
+| Open the menu       | `help` or `menu`                                    | The commands as text and as a tappable list          |
+| Delete your account | `delete account`, then `delete account permanently` | See [delete your account](/help/delete-your-account) |
 
-## The menu
+Write the phrase alone. A trailing `?` or `!` makes it a normal message for your AIs.
 
-`ajuda` replies with the commands as text and as an interactive list. The rows for `agentes` and `apagar conta` run at once. The rows for `novo agente`, `revogar` and `girar` reply with their usage line, because they need a name.
+## Example
 
-## Reserved words
+<Chat
+  messages={[
+    { you: true, text: 'agents', time: '09:20' },
+    { text: 'Your agents:\nclaude (2026-11-06, Claude Code)', time: '09:20' },
+    { you: true, text: 'revoke claude', time: '09:21' },
+    { text: 'Agent claude revoked. Its link no longer works.', time: '09:21' },
+  ]}
+/>
 
-The first word of every command is reserved: `novo`, `new`, `agentes`, `agents`, `revogar`, `revoke`, `girar`, `rotate`, `ajuda`, `help`, `menu`, `apagar` and `delete`. An agent cannot take one of them as its name.
+## Talking to an AI with a command word
 
-## Sending a command word to an agent
+A message that is exactly a command word is always a command. To send the same words to an AI, start with its name: `@claude help` reaches Claude instead of opening the menu.
 
-A message that is exactly a command word is always a command. To send the same words to an agent, start the message with `@<agent> `. The prefix is removed and the rest goes to that agent. For example, `@claude-code ajuda` reaches the agent `claude-code` instead of opening the menu. See [routing](/concepts/routing).
+## Names
+
+The words `new`, `agents`, `revoke`, `rotate`, `help`, `menu`, `delete` and their Portuguese versions cannot be the name of an AI.
 
 ## Next
 
-- [Agents and links](/features/agents-and-links) covers creating, listing, revoking and rotating.
-- [Account deletion](/help/account-deletion) covers the two-step deletion.
+- [Manage your AIs](/features/manage-your-agents)
+- [Many AIs on one number](/features/many-agents-on-one-number)
