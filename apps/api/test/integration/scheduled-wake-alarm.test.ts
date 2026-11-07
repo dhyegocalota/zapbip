@@ -21,6 +21,7 @@ const OTHER_AGENT: AgentName = 'claude';
 const INTERVAL_MINUTES = 60;
 const STALE_ADVANCE_MS = STALE_POLL_INTERVAL_MULTIPLE * INTERVAL_MINUTES * MINUTE_MS + MINUTE_MS;
 const STALE_DEADLINE_OFFSET_MS = STALE_POLL_INTERVAL_MULTIPLE * INTERVAL_MINUTES * MINUTE_MS;
+const USAGE_FLUSH_ADVANCE_MS = HOUR_MS + MINUTE_MS;
 const STALE_NOTICE_FRAGMENT = 'suas mensagens esperam';
 const HOURLY_FRAGMENT = WAKE_COPY[WakeCopyKey.CadenceHourly][OwnerLocale.PortugueseBrazil];
 const OWNER_TEXT = 'oi';
@@ -153,6 +154,17 @@ describe('scheduled poller alarm', () => {
   it('arms the alarm at the stale deadline after set_wake', async () => {
     const { last_polled_at: lastPolledAt } = await readPollRow({ agent: POLLING_AGENT });
     expect(await readArmedAlarmWithoutUsage()).toBe(await toRealTime({ clockTime: lastPolledAt + STALE_DEADLINE_OFFSET_MS }));
+  });
+
+  it('keeps an alarm armed no later than the stale deadline after the usage flush alarm fires, and the notice still goes out', async () => {
+    const { last_polled_at: lastPolledAt } = await readPollRow({ agent: POLLING_AGENT });
+    await alarmAfter({ advanceMs: USAGE_FLUSH_ADVANCE_MS });
+    const armedAlarm = await runInDurableObject(stub(), (_instance, state) => state.storage.getAlarm());
+    expect(armedAlarm).not.toBeNull();
+    expect(armedAlarm).toBeLessThanOrEqual(await toRealTime({ clockTime: lastPolledAt + STALE_DEADLINE_OFFSET_MS }));
+    expect(await countStaleNotices()).toBe(0);
+    await alarmAfter({ advanceMs: STALE_ADVANCE_MS });
+    expect(await countStaleNotices()).toBe(1);
   });
 
   it('arms the alarm again after the object is evicted and sends the notice', async () => {
