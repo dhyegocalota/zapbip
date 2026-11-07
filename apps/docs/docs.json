@@ -24,7 +24,7 @@
           },
           {
             "group": "Agents",
-            "pages": ["agents/supported-agents", "guides/webhook-wake"]
+            "pages": ["agents/supported-agents", "agents/hermes", "agents/openclaw", "guides/webhook-wake"]
           },
           {
             "group": "Features",
@@ -90,7 +90,7 @@
           },
           {
             "group": "IAs",
-            "pages": ["pt-br/agents/supported-agents", "pt-br/guides/webhook-wake"]
+            "pages": ["pt-br/agents/supported-agents", "pt-br/agents/hermes", "pt-br/agents/openclaw", "pt-br/guides/webhook-wake"]
           },
           {
             "group": "Funcionalidades",
