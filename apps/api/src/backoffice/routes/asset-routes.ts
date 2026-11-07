@@ -1,5 +1,6 @@
 import { HttpStatus } from '@zapbip/types';
 import { Hono } from 'hono';
+import { FAVICON_CONTENT_TYPE, FAVICON_SVG } from '../assets/favicon';
 import { BACKOFFICE_STYLESHEET } from '../assets/stylesheet';
 import { STYLESHEET_CACHE_CONTROL } from '../backoffice-constants';
 import type { BackofficeEnv } from '../backoffice-env';
@@ -17,3 +18,11 @@ assetRoutes.get(
     }),
 );
 assetRoutes.all(BackofficePath.Stylesheet, () => new Response(null, { status: HttpStatus.NotFound }));
+
+[BackofficePath.Favicon, BackofficePath.LegacyFavicon].forEach((path) => {
+  assetRoutes.get(
+    path,
+    () => new Response(FAVICON_SVG, { headers: { 'Content-Type': FAVICON_CONTENT_TYPE, 'Cache-Control': STYLESHEET_CACHE_CONTROL } }),
+  );
+  assetRoutes.all(path, () => new Response(null, { status: HttpStatus.NotFound }));
+});

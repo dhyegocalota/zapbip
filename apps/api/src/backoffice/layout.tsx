@@ -1,6 +1,7 @@
 import { OwnerLocale } from '@zapbip/types';
 import type { Child } from 'hono/jsx';
 import { DeployEnvironment } from '../contract/deploy-environment';
+import { FAVICON_CONTENT_TYPE, FAVICON_HREF } from './assets/favicon';
 import { BackofficeCopyKey, renderBackofficeCopy } from './backoffice-copy';
 import { type BackofficeNotice, NOTICE_VIEWS } from './backoffice-notice';
 import { LocaleSwitch } from './components/locale-switch';
@@ -44,6 +45,7 @@ export function Layout(props: LayoutProps) {
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>{documentTitle}</title>
+        <link rel="icon" href={FAVICON_HREF} type={FAVICON_CONTENT_TYPE} />
         <link rel="stylesheet" href={props.stylesheetHref} />
       </head>
       <body>

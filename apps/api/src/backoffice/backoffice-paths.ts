@@ -7,4 +7,6 @@ export enum BackofficePath {
   Metrics = '/metrics',
   Audit = '/audit',
   Stylesheet = '/assets/backoffice.css',
+  Favicon = '/assets/favicon.svg',
+  LegacyFavicon = '/favicon.ico',
 }
