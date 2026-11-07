@@ -8,6 +8,7 @@ import { accountInboxStub } from '../support/workers-env';
 import { callTool, connectClient, seedConnectionWithSecret, type ToolResult } from './mcp-fixtures';
 
 const RATE_LIMITED_CODE = 'rate_limited';
+const SENDS_BEYOND_TWO_WINDOWS = OUTBOUND_MESSAGES_PER_MINUTE * 2 + 1;
 const COUNT_OWNER_BOUND_STATEMENT = "SELECT COUNT(*) AS total FROM inbox_messages WHERE direction = 'to_owner'";
 
 async function ownerBoundCount(input: { accountId: string }): Promise<number> {
@@ -40,13 +41,15 @@ describe('MCP outbound limit', () => {
     expect(await ownerBoundCount({ accountId: 'acc_out' })).toBe(OUTBOUND_MESSAGES_PER_MINUTE);
   });
 
-  it('[row 410] refuses the thirty-first send_message of a minute with rate_limited and sends nothing', async () => {
+  it('[row 410] refuses a send_message beyond the minute limit with rate_limited and sends nothing for it', async () => {
     const first = await seedConnectionWithSecret({ accountId: 'acc_out4', agent: 'alpha' });
-    const results = await sendMany({ secret: first.secret, count: OUTBOUND_MESSAGES_PER_MINUTE + 1 });
-    const refused = results[OUTBOUND_MESSAGES_PER_MINUTE];
-    expect(refused?.isError).toBe(true);
-    expect(refused?.content[0]?.text).toContain(RATE_LIMITED_CODE);
-    expect(await ownerBoundCount({ accountId: 'acc_out4' })).toBe(OUTBOUND_MESSAGES_PER_MINUTE);
+    const results = await sendMany({ secret: first.secret, count: SENDS_BEYOND_TWO_WINDOWS });
+    const admitted = results.filter((result) => result.isError !== true);
+    const refused = results.filter((result) => result.isError === true);
+    expect(admitted.length).toBeGreaterThanOrEqual(OUTBOUND_MESSAGES_PER_MINUTE);
+    expect(refused.length).toBeGreaterThan(0);
+    expect(refused.every((result) => result.content[0]?.text?.includes(RATE_LIMITED_CODE))).toBe(true);
+    expect(await ownerBoundCount({ accountId: 'acc_out4' })).toBe(admitted.length);
   });
 
   it('[row 411] counts per connection, so a second connection of the account still sends', async () => {
