@@ -447,6 +447,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
   async recordCreation(input: { agent: string }): Promise<void> {
     this.assertLive();
     reviveAgentName({ storage: this.ctx.storage, agent: input.agent });
+    await this.closeAgentSockets(input);
   }
 
   async cancelWaiters(input: { agent: string }): Promise<void> {
@@ -466,6 +467,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
 
   setWake(input: Parameters<AccountInboxRpc['setWake']>[0]): Promise<CallOutcome<inbox.SetWakeResult>> {
     return this.outcome({
+      connection: input.connection,
       run: async () => {
         const { agent } = input.connection;
         await inbox.touchAgent({ dependencies: this.dependencies, agent });

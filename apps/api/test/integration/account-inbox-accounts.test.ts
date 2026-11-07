@@ -9,7 +9,7 @@ import { runMigrations } from '../../src/account-inbox/run-migrations';
 import { D1ConnectionRegistry } from '../../src/adapters/d1/d1-connection-registry';
 import { readScreen } from '../support/inbox-session';
 import { recordWaiterAtNextSessionSend } from '../support/session-send-probe';
-import { applyDirectoryMigration, seedOwnerIdentity } from '../support/seed';
+import { applyDirectoryMigration, seedAccount, seedOwnerIdentity } from '../support/seed';
 import { accountInboxStub, connectionOf, testEnv } from '../support/workers-env';
 
 const ACCOUNT = 'acc_accounts';
@@ -315,4 +315,7 @@ describe('AccountInbox receiveAccountMessage', () => {
   });
 });
 
-beforeEach(applyDirectoryMigration);
+beforeEach(async () => {
+  await applyDirectoryMigration();
+  await seedAccount({ accountId: ACCOUNT });
+});

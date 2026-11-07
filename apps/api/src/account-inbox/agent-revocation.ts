@@ -1,3 +1,5 @@
+import { lastRequestedAtKeyOf } from '../adapters/sqlite/sqlite-wake-repository';
+
 const CLEAR_WAKE_STATEMENT = 'DELETE FROM agent_wake WHERE agent = ?';
 const CLEAR_WAKE_JOBS_STATEMENT = 'DELETE FROM wake_jobs WHERE agent = ?';
 const CLOSE_QUESTIONS_STATEMENT = 'DELETE FROM questions WHERE agent = ? AND answer IS NULL';
@@ -15,11 +17,15 @@ export function revokeAgentState(input: { storage: DurableObjectStorage; agent: 
     input.storage.sql.exec(CLEAR_WAKE_JOBS_STATEMENT, input.agent);
     input.storage.sql.exec(CLOSE_QUESTIONS_STATEMENT, input.agent);
     input.storage.sql.exec(MARK_REVOKED_STATEMENT, input.agent, input.revokedAt);
+    input.storage.kv.delete(lastRequestedAtKeyOf({ agent: input.agent }));
   });
 }
 
 export function reviveAgentName(input: { storage: DurableObjectStorage; agent: string }): void {
   input.storage.transactionSync(() => {
+    input.storage.sql.exec(CLEAR_WAKE_STATEMENT, input.agent);
+    input.storage.sql.exec(CLEAR_WAKE_JOBS_STATEMENT, input.agent);
+    input.storage.kv.delete(lastRequestedAtKeyOf({ agent: input.agent }));
     input.storage.sql.exec(FORGET_REVOKED_STATEMENT, input.agent);
     input.storage.sql.exec(FORGET_MESSAGES_STATEMENT, input.agent);
     input.storage.sql.exec(FORGET_QUESTIONS_STATEMENT, input.agent);

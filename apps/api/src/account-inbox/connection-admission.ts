@@ -17,8 +17,8 @@ export async function isAccountActive(input: { database: D1Database; accountId: 
 export async function isConnectionAdmitted(input: { database: D1Database; connection: ConnectionIdentity }): Promise<boolean> {
   const { accountId, agent } = input.connection;
   const row = await input.database.prepare(ADMISSION_STATEMENT).bind(accountId, agent).first<AdmissionRow>();
-  if (row === null) return true;
-  const isAccountBlocked = row.state !== null && row.state !== AccountState.Active;
+  if (row === null) return false;
+  const isAccountBlocked = row.state !== AccountState.Active;
   const isRevokedWithoutSuccessor = row.hasActive === 0 && row.hasRevoked === 1;
   return !isAccountBlocked && !isRevokedWithoutSuccessor;
 }

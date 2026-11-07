@@ -3,7 +3,7 @@ import { reset, runInDurableObject } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { openWindow, receiveOwnerText } from '../support/inbox-session';
 import { openConnector } from '../support/connector-session';
-import { applyDirectoryMigration, seedConnection, seedOwnerIdentity } from '../support/seed';
+import { applyDirectoryMigration, seedAccount, seedConnection, seedOwnerIdentity } from '../support/seed';
 import { accountInboxStub, connectionOf } from '../support/workers-env';
 
 const ACCOUNT = 'acc_revocation';
@@ -116,4 +116,7 @@ describe('a revoked agent stops being a routing target', () => {
   });
 });
 
-beforeEach(applyDirectoryMigration);
+beforeEach(async () => {
+  await applyDirectoryMigration();
+  await seedAccount({ accountId: ACCOUNT });
+});
