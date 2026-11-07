@@ -20,7 +20,7 @@ Everything here costs nothing within the free allowances. Cloudflare asks for a 
 
    The buckets `zapbip-media-staging` and `zapbip-media-production` and the D1 databases `zapbip-staging` and `zapbip-production` were created through the API on 2026-11-07 ([deploy.md](deploy.md), step 1).
 
-   Expect: the R2 overview shows no buckets and no error, or only those two buckets.
+   Expect: the R2 overview shows no buckets and no error, or only those two buckets. The packages buckets `zapbip-packages` and `zapbip-packages-staging` are created by [mintlify-publish.md](mintlify-publish.md), step 5.
 
    If it fails: the payment method was refused; try another card. R2 cannot be skipped, because `MEDIA` is a bucket binding.
 
