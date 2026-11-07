@@ -8,6 +8,14 @@ import { Chat } from '/snippets/chat.jsx';
 <Steps>
   <Step title="Say hi to the zapbip number">
     Open WhatsApp and send `hi` to the zapbip number. That is how zapbip knows the phone is yours.
+
+    <Chat
+      messages={[
+        { you: true, text: 'hi', time: '09:00' },
+        { name: 'zapbip', text: 'Hi! This phone is now yours. Send "new agent" and a name to connect your first AI.', time: '09:00' },
+      ]}
+    />
+
   </Step>
   <Step title="Ask for a new agent">
     Send `new agent` and a name, for example `new agent claude`.
@@ -17,11 +25,9 @@ import { Chat } from '/snippets/chat.jsx';
 
     <Chat
       messages={[
-        { you: true, text: 'hi', time: '09:00' },
-        { name: 'zapbip', text: 'Hi! This phone is now yours. Send "new agent" and a name to connect your first AI.', time: '09:00' },
         { you: true, text: 'new agent claude', time: '09:01' },
         { name: 'zapbip', text: 'Paste this into Claude:', time: '09:01' },
-        { name: 'zapbip', text: 'Connect yourself to my WhatsApp with zapbip: read https://zapbip.com/i/K7P2QX and follow the instructions.', time: '09:01' },
+        { name: 'zapbip', text: 'Connect yourself to my WhatsApp with zapbip: read https://zapbip.com/i/zb_inst_<code> and follow the instructions.', time: '09:01' },
       ]}
     />
 

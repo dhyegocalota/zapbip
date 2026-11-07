@@ -14,7 +14,7 @@ An agent can always call zapbip, but the owner can only reach an agent that is l
 | Rung            | How it works                                                                                                                    | Set with                                                                              |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | Local connector | zapbip pushes the message to the [connector](/developers/local-connector) running on your computer, which resumes your session. | `npx zapbip@0.1.0 connect` (sets it while connected) or `set_wake` with `mode: local` |
-| Webhook         | zapbip calls a webhook that starts the agent. See [webhook wake](/guides/webhook-wake).                                         | `set_wake` with `mode: webhook`                                                       |
+| Webhook         | zapbip calls a webhook that starts the agent. See [webhook wake](/developers/webhook-wake).                                         | `set_wake` with `mode: webhook`                                                       |
 | Inbox only      | The message waits in the [inbox](/concepts/inbox) and zapbip tells the owner that the agent is not listening right now.         | `set_wake` with `mode: none`                                                          |
 
 A connector that connects sets the local rung and, when its last connection closes, puts back what was set before. The scheduled task and standby rungs arrive with their own features.
