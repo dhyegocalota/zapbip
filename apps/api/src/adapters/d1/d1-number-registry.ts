@@ -33,6 +33,8 @@ const INSERT_NUMBER_STATEMENT = `INSERT INTO whatsapp_numbers
   (id, meta_app_ref, phone_number_id, waba_id, display_number, label, sealed_access_token, seal_key_version, state, created_at, updated_at)
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 const SEAL_KEY_VERSION = 1;
+const BACKFILL_ACCOUNTS_STATEMENT =
+  'UPDATE accounts SET number_id = ? WHERE number_id IS NULL AND (SELECT COUNT(*) FROM whatsapp_numbers) = 1';
 const SINGLE_ROW_CHANGE = 1;
 const RECORD_COLUMNS =
   NUMBER_COLUMNS +
@@ -77,22 +79,24 @@ export class D1NumberRegistry implements NumberRegistry {
       associatedData: accessTokenAssociatedData({ numberId }),
     });
     const now = this.clock.now();
-    await this.database
-      .prepare(INSERT_NUMBER_STATEMENT)
-      .bind(
-        numberId,
-        input.metaAppRef,
-        input.phoneNumberId,
-        input.wabaId,
-        input.displayNumber,
-        input.label,
-        sealedAccessToken,
-        SEAL_KEY_VERSION,
-        WhatsAppNumberState.Pending,
-        now,
-        now,
-      )
-      .run();
+    await this.database.batch([
+      this.database
+        .prepare(INSERT_NUMBER_STATEMENT)
+        .bind(
+          numberId,
+          input.metaAppRef,
+          input.phoneNumberId,
+          input.wabaId,
+          input.displayNumber,
+          input.label,
+          sealedAccessToken,
+          SEAL_KEY_VERSION,
+          WhatsAppNumberState.Pending,
+          now,
+          now,
+        ),
+      this.database.prepare(BACKFILL_ACCOUNTS_STATEMENT).bind(numberId),
+    ]);
     return { numberId };
   }
 
