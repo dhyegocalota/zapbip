@@ -27,7 +27,7 @@ async function seedDirectory(input: { bindings: Bindings; body: SeedBody }): Pro
   const createdAt = createPlatformClock().now();
   const directorySeed = await buildDirectorySeed({ ...body, createdAt });
   const numberStatements = await developmentNumberStatements({ bindings, createdAt });
-  await database.batch([...directorySeed.statements.map((statement) => database.prepare(statement)), ...numberStatements]);
+  await database.batch([...numberStatements, ...directorySeed.statements.map((statement) => database.prepare(statement))]);
   const inbox = accountInboxOf<AccountOwnerRpc>({ bindings, accountId: directorySeed.accountId });
   await Promise.all(directorySeed.connections.map(({ agent, secretDigest }) => inbox.recordCreation({ agent, secretDigest })));
   return directorySeed.connections.map(({ agent, secret }) => ({ agent, secret }));
