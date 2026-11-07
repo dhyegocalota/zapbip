@@ -38,19 +38,6 @@ export default async function setup(project: TestProject): Promise<() => Promise
     '--local',
     ...persistArguments,
   ]);
-  const seeded = await runCommand('pnpm', [
-    'exec',
-    'tsx',
-    'scripts/dev-seed.ts',
-    '--phone',
-    OWNER_PHONE,
-    '--agents',
-    SEED_AGENTS.join(','),
-    '--json',
-    ...persistArguments,
-  ]);
-  const { connections } = seedOutputSchema.parse(JSON.parse(seeded.stdout));
-
   const variables = {
     MEDIA_LINK_SIGNING_KEY: randomBytes(SIGNING_KEY_BYTES).toString('hex'),
     UPLOAD_LINK_SIGNING_KEY: randomBytes(SIGNING_KEY_BYTES).toString('hex'),
@@ -83,6 +70,19 @@ export default async function setup(project: TestProject): Promise<() => Promise
   server.stdout.pipe(logStream);
   server.stderr.pipe(logStream);
   await waitForHealth({ origin, server, deadline: Date.now() + HEALTH_TIMEOUT_MS });
+  const seeded = await runCommand('pnpm', [
+    'exec',
+    'tsx',
+    'scripts/dev-seed.ts',
+    '--phone',
+    OWNER_PHONE,
+    '--agents',
+    SEED_AGENTS.join(','),
+    '--json',
+    '--origin',
+    origin,
+  ]);
+  const { connections } = seedOutputSchema.parse(JSON.parse(seeded.stdout));
 
   const context: StackContext = {
     origin,
