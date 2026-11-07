@@ -35,7 +35,7 @@ Source: `apps/api/test/unit/wrangler-config.test.ts`, reads `apps/api/wrangler.j
 
 Source: `apps/api/test/unit/env-example.test.ts`, `root-scripts.test.ts`.
 
-- [ ] `.env.example` names — input: the keys of the file; expected: exactly the seven `WorkerSecret` values plus `SMOKE_BASE_URL`, `SMOKE_CONNECTION_SECRET`, `SMOKE_OWNER_PHONE`.
+- [ ] `.env.example` names — input: the keys of the file; expected: exactly the three Meta values the scripts read (`META_APP_SECRET`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_VERIFY_TOKEN`), the three smoke inputs (`SMOKE_BASE_URL`, `SMOKE_CONNECTION_SECRET`, `SMOKE_OWNER_PHONE`) and the two publisher variables (`ZAPBIP_NPM_PUBLISHER`, `ZAPBIP_PYPI_PUBLISHER`); no key that only the Worker holds.
 ~~- [ ] `.env.example` values — input: every value; expected: each starts with `replace-with-`, none empty.~~
 - [ ] `.env.example` values — input: every value; expected: each starts with `REPLACE_WITH_`, none empty.
 - [ ] `.gitignore` — input: root `.gitignore`; expected: lists `.dev.vars` and `.env`; `.env.example` is not ignored.
@@ -131,7 +131,7 @@ Source: `deploy-preflight.test.ts`, `deploy-entry.test.ts`, `docs-preflight-entr
 - [ ] Publish order in the runbooks: input: `mintlify-publish.md` and `README.md`; expected: the npm `zapbip`, npm `@zapbip/openclaw-plugin` and PyPI `zapbip-platform` steps come before the step that connects the repository to Mintlify, and each says why.
 - [ ] Readiness: input: no `scheduled` export, no cron trigger, no `GET` route under `INSTALL_PAGE_PATH_PREFIX` on the built app; expected: production refused naming each; staging passes.
 - [ ] Cheap first: input: a placeholder or a missing smoke input; expected: refused with no command run, before the gate.
-- [ ] Case-insensitive placeholders: input: `replace-with-x` in the block and in a smoke input; expected: refused.
+- [ ] Case-insensitive placeholders: input: a lowercase, hyphenated `replace-with-x` (the shape the old placeholders had; still refused) in the block and in a smoke input; expected: refused.
 - [ ] Unreadable wrangler output: input: `secret list` prints `not json`; expected: refused at secrets mentioning JSON; `deployments status` or `time-travel info` unreadable: the deploy continues and says the rollback point is unavailable.
 - [ ] `--first-deploy`: input: placeholder `SMOKE_CONNECTION_SECRET`, no `SMOKE_OWNER_PHONE`; expected: the deploy passes preflight, the smoke command carries `--first-deploy`, checks 2 and 5 are skipped and the follow-up lines are printed.
 - [ ] Child environment: input: an environment holding every `WorkerSecret` and smoke input name; expected: the spawned child sees none of them and keeps the rest, including `ZAPBIP_NPM_PUBLISHER`.

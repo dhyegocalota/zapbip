@@ -14,11 +14,11 @@ Follow the steps in order. Each step names the runbook that holds its detail. Ev
 
 ## Go-live order
 
-1. **Prepare your machine.** You need git, Node 24, `pnpm` and the repository. Install git from `https://git-scm.com/downloads`. Install Node 24 with a version manager (`nvm install 24` after installing `https://github.com/nvm-sh/nvm`, or the installer at `https://nodejs.org`). Turn on `pnpm` with `corepack enable`, which reads the pinned version from `package.json`. Then clone the repository with `git clone https://github.com/dhyegocalota/zapbip.git`, open the folder, run `pnpm install --frozen-lockfile` and finally `.agents/hooks/doctor.sh`.
+1. **Prepare your machine.** You need git, Node 24, `pnpm`, `openssl` (generates secrets), `curl` and `dig` (checks), Python 3.11 to 3.14 with `pip` (the PyPI upload) and the repository. Install git from `https://git-scm.com/downloads`. Install Node 24 with a version manager (`nvm install 24` after installing `https://github.com/nvm-sh/nvm`, or the installer at `https://nodejs.org`). Turn on `pnpm` with `corepack enable`, which reads the pinned version from `package.json`. Then clone the repository with `git clone https://github.com/dhyegocalota/zapbip.git`, open the folder, and run `pnpm install --frozen-lockfile`.
 
-   Expect: `node --version` prints `v24` and something, `pnpm --version` prints `8.15.9`, and the doctor prints `ok` for every required tool.
+   Expect: `node --version` prints `v24` and something, `pnpm --version` prints `8.15.9`, and `openssl version`, `python3 --version`, `curl --version` and `dig -v` each print a version.
 
-   If it fails: the doctor prints a `fix:` line for each missing tool; run it, then run the doctor again. A `corepack` error means Node is older than 24.
+   If it fails: install the missing tool from its own site or your package manager and run the command again. A `corepack` error means Node is older than 24.
 2. **Cloudflare setup.** Do every step of `cloudflare-setup.md`.
 
    Expect: `wrangler whoami` prints your account.
@@ -71,22 +71,27 @@ Follow the steps in order. Each step names the runbook that holds its detail. Ev
     Expect: neither `OFFICIAL_NUMBER_UNSET` nor `COMPANY_FACT_UNSET` is left in `libs/types/src/constants.ts` apart from their definitions.
 
     If it fails: the production deploy and `pnpm docs:preflight` refuse and name what is still unset.
-12. **Publish the docs.** Do steps 6 to 11 of `mintlify-publish.md`, starting with `pnpm docs:preflight`; it needs DNS (step 6 of `dns.md`). The privacy page is part of the site.
+12. **Publish the docs.** Do steps 6 to 11 of `mintlify-publish.md`, starting with `pnpm docs:preflight`, which needs no DNS: it reads the constants, npm and PyPI. The custom domain of step 10 uses step 6 of `dns.md`. The privacy page is part of the site.
 
     Expect: `docs.zapbip.com` serves the site in English and in Portuguese, and `https://docs.zapbip.com/help/privacy` loads.
 
     If it fails: the failing step of `mintlify-publish.md` says what to check.
-13. **Meta live mode.** Do steps 5 to 8 of `meta-setup.md` for production (the production app, its secret, its system user token and its verify token), then step 10 with the privacy page of step 11.
+13. **Production Meta credentials.** Do steps 5 to 8 of `meta-setup.md` for production (the production app, its secret, its system user token and its verify token).
 
-    Expect: the production app shows Live and the business verification shows In review or Verified.
+    Expect: you hold the production app secret, the system user token and the verify token, ready for the `wrangler secret put` prompts of the next step.
 
-    If it fails: step 10 of `meta-setup.md` says what Meta wants corrected.
+    If it fails: the failing step of `meta-setup.md` says what to check.
 14. **Production deploy.** Do `deploy.md` steps 1 to 5 for production, with `pnpm deploy:production --first-deploy`, then step 9 of `meta-setup.md` for the production app.
 
     Expect: the deploy ends with the smoke test (checks 1, 3 and 4 pass), the health route answers on `mcp.zapbip.com` and Meta verifies the production webhook.
 
     If it fails: `deploy.md` step 8 rolls back the Worker.
-15. **Smoke production.** Do step 6 of `deploy.md` for production.
+15. **Meta live mode.** Do step 10 of `meta-setup.md` with the privacy page of step 12, after the production webhook is verified in the previous step.
+
+    Expect: the production app shows Live and the business verification shows In review or Verified.
+
+    If it fails: step 10 of `meta-setup.md` says what Meta wants corrected.
+16. **Smoke production.** Do step 6 of `deploy.md` for production.
 
     Expect: four `PASS` lines from `pnpm smoke:production`.
 
