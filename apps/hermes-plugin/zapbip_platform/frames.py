@@ -3,7 +3,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from .constants import CONNECTOR_FRAME_MAX_BYTES, ConnectorFrameType, FrameRejectionReason, MessageKind
+from .constants import ConnectorFrameType, FrameRejectionReason, MessageKind
 
 FrameBody = dict[str, Any]
 
@@ -64,8 +64,6 @@ def load_body(*, text: str) -> FrameBody | None:
 def parse_server_frame(*, text: str, is_binary: bool) -> ServerFrameParse:
     if is_binary:
         return rejected(reason=FrameRejectionReason.BINARY_FRAME)
-    if len(text.encode()) > CONNECTOR_FRAME_MAX_BYTES:
-        return rejected(reason=FrameRejectionReason.FRAME_TOO_LARGE)
     body = load_body(text=text)
     if body is None:
         return rejected(reason=FrameRejectionReason.MALFORMED)

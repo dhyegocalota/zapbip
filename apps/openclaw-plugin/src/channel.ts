@@ -2,7 +2,7 @@ import { createChannelPluginBase, createChatChannelPlugin, type ChannelPlugin } 
 import type { ChannelAccountSnapshot } from 'openclaw/plugin-sdk/channel-contract';
 import type { OpenClawConfig } from 'openclaw/plugin-sdk/config-contracts';
 import type { ZapbipAccount } from './account';
-import { CHANNEL_ID, CLEAN_EXIT_CODE, DEFAULT_ACCOUNT_ID, DELIVERY_MODE_DIRECT, REPLACED_EXIT_CODE } from './constants';
+import { CHANNEL_ID, CLEAN_EXIT_CODE, DEFAULT_ACCOUNT_ID, DELIVERY_MODE_DIRECT, LIFECYCLE_BLOCKED, REPLACED_EXIT_CODE } from './constants';
 import { deriveSocketLink } from './connection-link';
 import { runConnectorSocket } from './connector-socket';
 import { handOffToAgent } from './handoff';
@@ -35,7 +35,7 @@ async function startAccount({ cfg, abortSignal, setStatus }: StartContext): Prom
     handOff: ({ message }) => handOffToAgent({ cfg, account, message }),
   });
   if (exitCode === REPLACED_EXIT_CODE)
-    return setStatus({ accountId: account.accountId, lifecycle: 'blocked', terminalDisconnect: true, lastError: REPLACED_MESSAGE });
+    return setStatus({ accountId: account.accountId, lifecycle: LIFECYCLE_BLOCKED, terminalDisconnect: true, lastError: REPLACED_MESSAGE });
   if (exitCode !== CLEAN_EXIT_CODE) throw new Error(`the zapbip connector stopped with exit code ${exitCode}`);
 }
 

@@ -1,5 +1,5 @@
 import type { HelloFrame, MessagesFrame, ServerFrame } from '@zapbip/core';
-import { CONNECTOR_FRAME_MAX_BYTES, ConnectorFrameType, FrameRejectionReason, MessageKind } from '@zapbip/types';
+import { ConnectorFrameType, FrameRejectionReason, MessageKind } from '@zapbip/types';
 
 export type ServerFrameParse = { ok: true; frame: ServerFrame } | { ok: false; reason: FrameRejectionReason };
 
@@ -39,9 +39,8 @@ const FRAME_PARSERS: FrameParsers = {
   },
 };
 
-export function parseServerFrame(input: { text: string; byteLength: number; isBinary: boolean }): ServerFrameParse {
+export function parseServerFrame(input: { text: string; isBinary: boolean }): ServerFrameParse {
   if (input.isBinary) return { ok: false, reason: FrameRejectionReason.BinaryFrame };
-  if (input.byteLength > CONNECTOR_FRAME_MAX_BYTES) return { ok: false, reason: FrameRejectionReason.FrameTooLarge };
   const body = asRecord({ value: parseJson({ text: input.text }) });
   if (body === null) return { ok: false, reason: FrameRejectionReason.Malformed };
   const frameType = String(body.type);

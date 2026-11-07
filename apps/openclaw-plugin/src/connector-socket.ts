@@ -113,7 +113,7 @@ export async function runConnectorSocket({
     const isBinary = typeof input.data !== 'string';
     const text = isBinary ? '' : (input.data as string);
     if (text === CONNECTOR_PONG_TEXT) return;
-    const parsed = parseServerFrame({ text, byteLength: Buffer.byteLength(text), isBinary });
+    const parsed = parseServerFrame({ text, isBinary });
     if (!parsed.ok) return log({ event: ConnectorLogEvent.FrameRejected, fields: { reason: parsed.reason } });
     frameHandlers[parsed.frame.type as ConnectorFrameType.Hello | ConnectorFrameType.Messages]({ frame: parsed.frame });
   }

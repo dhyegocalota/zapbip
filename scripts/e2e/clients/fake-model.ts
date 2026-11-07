@@ -91,9 +91,8 @@ function declaredNameOf(input: { tool: ToolDeclaration }): string | undefined {
   return tool.name;
 }
 
-function searchArgumentsOf(input: { body: ChatBody }): string {
-  const searchTool = (input.body.tools ?? []).find((tool) => declaredNameOf({ tool }) === TOOL_SEARCH_NAME);
-  const parameters = searchTool?.function?.parameters ?? searchTool?.parameters;
+function searchArgumentsOf(input: { searchTool: ToolDeclaration }): string {
+  const parameters = input.searchTool.function?.parameters ?? input.searchTool.parameters;
   if (parameters?.properties?.queries?.items?.type === STRING_TYPE) return STRING_QUERIES_ARGUMENTS;
   return SINGLE_QUERY_ARGUMENTS;
 }
@@ -110,8 +109,9 @@ function toolCallPlanOf(input: { body: ChatBody }): ToolCallPlan | null {
   const names = toolNamesOf(input);
   const checkInboxName = names.find((name) => name.endsWith(CHECK_INBOX_TOOL_SUFFIX));
   if (checkInboxName !== undefined) return { toolName: checkInboxName, toolArguments: EMPTY_ARGUMENTS };
-  if (names.includes(TOOL_SEARCH_NAME)) return { toolName: TOOL_SEARCH_NAME, toolArguments: searchArgumentsOf(input) };
-  return null;
+  const searchTool = (input.body.tools ?? []).find((tool) => declaredNameOf({ tool }) === TOOL_SEARCH_NAME);
+  if (searchTool === undefined) return null;
+  return { toolName: TOOL_SEARCH_NAME, toolArguments: searchArgumentsOf({ searchTool }) };
 }
 
 function modelOf(input: { body: ChatBody }): string {

@@ -25,13 +25,16 @@ function configWith(input: { channels?: Record<string, unknown> }): OpenClawConf
   return input as unknown as OpenClawConfig;
 }
 
-function startContext(input: { cfg: OpenClawConfig; signal?: AbortSignal; setStatus?: (next: unknown) => void }) {
-  return {
-    cfg: input.cfg,
-    accountId: 'default',
-    abortSignal: input.signal ?? new AbortController().signal,
-    setStatus: input.setStatus ?? vi.fn(),
-  } as never;
+function startContext({
+  cfg,
+  signal = new AbortController().signal,
+  setStatus = vi.fn(),
+}: {
+  cfg: OpenClawConfig;
+  signal?: AbortSignal;
+  setStatus?: (next: unknown) => void;
+}) {
+  return { cfg, accountId: 'default', abortSignal: signal, setStatus } as never;
 }
 
 function plugin() {

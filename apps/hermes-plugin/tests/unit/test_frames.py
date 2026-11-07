@@ -126,15 +126,6 @@ def test_frame_at_the_size_limit() -> None:
     assert parsed.ok
 
 
-def test_frame_over_the_size_limit() -> None:
-    text = padded_messages_text(byte_length=CONNECTOR_FRAME_MAX_BYTES + 1)
-
-    parsed = parse_server_frame(text=text, is_binary=False)
-
-    assert not parsed.ok
-    assert parsed.reason == FrameRejectionReason.FRAME_TOO_LARGE
-
-
 def test_not_json() -> None:
     parsed = parse_server_frame(text="not json", is_binary=False)
 

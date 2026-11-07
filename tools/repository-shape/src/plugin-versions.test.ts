@@ -4,6 +4,7 @@ import { readRepositoryFile } from './repository-files';
 const SHARED_CONSTANTS = 'libs/types/src/constants.ts';
 const OPENCLAW_MANIFEST = 'apps/openclaw-plugin/package.json';
 const OPENCLAW_CONSTANTS = 'apps/openclaw-plugin/src/constants.ts';
+const MISSING_DEPENDENCIES_MESSAGE = 'the Hermes project declares no dependencies line';
 const HERMES_PROJECT = 'apps/hermes-plugin/pyproject.toml';
 const HERMES_CONSTANTS = 'apps/hermes-plugin/zapbip_platform/constants.py';
 const HERMES_MANIFEST = 'apps/hermes-plugin/zapbip_platform/plugin.yaml';
@@ -56,9 +57,10 @@ describe('the plugin versions', () => {
   test('the Hermes project is installable with bounded runtime dependency ranges and the plugin entry point', () => {
     const project = readRepositoryFile(HERMES_PROJECT);
     const dependencies = /^dependencies = \[(.*)\]$/m.exec(project)?.[1];
+    if (dependencies === undefined) throw new Error(MISSING_DEPENDENCIES_MESSAGE);
     expect(project).toContain('[build-system]');
     expect(project).toContain('[project.entry-points."hermes_agent.plugins"]');
-    const entries = [...(dependencies ?? '').matchAll(QUOTED_ENTRY_PATTERN)].map((match) => match[1] as string);
+    const entries = [...dependencies.matchAll(QUOTED_ENTRY_PATTERN)].map((match) => match[1] as string);
     expect(entries.length).toBeGreaterThan(0);
     expect(entries.every((entry) => BOUNDED_DEPENDENCY_PATTERN.test(entry))).toBe(true);
   });
