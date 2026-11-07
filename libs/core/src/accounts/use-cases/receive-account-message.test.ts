@@ -360,6 +360,14 @@ describe('receiveAccountMessage compensation', () => {
     expect(fixture.environment.revocations.closed).toEqual(['claude']);
   });
 
+  test('a delivered rotate hands the new key digest to the object', async () => {
+    const fixture = await createAccountFixture();
+    await addAgent({ ...fixture, agent: 'claude' });
+    await receiveAccountText({ ...fixture, text: 'girar claude' });
+    const newDigest = fixture.environment.secrets.issued.at(-1)?.digest;
+    expect(fixture.environment.revocations.rotated).toEqual([{ agent: 'claude', secretDigest: newDigest }]);
+  });
+
   test('a delivered create sends one text with the install link and no part label', async () => {
     const fixture = await createAccountFixture();
     const result = await receiveAccountText({ ...fixture, text: 'novo agente claude' });

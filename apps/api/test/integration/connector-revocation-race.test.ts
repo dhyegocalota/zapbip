@@ -1,7 +1,13 @@
 import { CONNECTOR_PATH_SUFFIX, ConnectorFrameType, REVOKED_CLOSE_CODE } from '@zapbip/types';
 import { runInDurableObject } from 'cloudflare:test';
 import { describe, expect, test } from 'vitest';
-import { CONNECTOR_AGENT_PARAMETER, CONNECTOR_DIGEST_PARAMETER, CONNECTOR_OBJECT_ORIGIN } from '../../src/account-inbox/constants';
+import type { AccountInbox } from '../../src/account-inbox/account-inbox';
+import {
+  CONNECTOR_AGENT_PARAMETER,
+  CONNECTOR_DIGEST_PARAMETER,
+  CONNECTOR_OBJECT_ORIGIN,
+  TOMBSTONE_STORAGE_KEY,
+} from '../../src/account-inbox/constants';
 import { hashConnectionSecret } from '../../src/adapters/platform/hash';
 import { openConnector, type ConnectorSession } from '../support/connector-session';
 import { seedConnection, SEED_CREATED_AT } from '../support/seed';
@@ -42,6 +48,93 @@ async function touchedNothing(input: { accountId: string }): Promise<void> {
   expect(await rowCountOf({ ...input, table: 'agents' })).toBe(0);
   expect(await rowCountOf({ ...input, table: 'agent_wake' })).toBe(0);
 }
+
+type DeferredKeyCheck = { isConnectorKeyLive: () => Promise<boolean> };
+
+function connectionRequestOf(input: { secretDigest: string }): Request {
+  const url = new URL(`${CONNECTOR_OBJECT_ORIGIN}${CONNECTOR_PATH_SUFFIX}`);
+  url.searchParams.set(CONNECTOR_AGENT_PARAMETER, AGENT);
+  url.searchParams.set(CONNECTOR_DIGEST_PARAMETER, input.secretDigest);
+  return new Request(url, { headers: UPGRADE_HEADERS });
+}
+
+async function connectWhileKeyCheckIsPending(input: {
+  accountId: string;
+  secretDigest: string;
+  meanwhile: (instance: AccountInbox) => Promise<void>;
+  settle: (input: { instance: AccountInbox; outcome: Promise<Response> }) => Promise<void>;
+}): Promise<void> {
+  await runInDurableObject(accountInboxStub({ accountId: input.accountId }), async (instance: AccountInbox) => {
+    const gate = Promise.withResolvers<void>();
+    const deferred: DeferredKeyCheck = { isConnectorKeyLive: () => gate.promise.then(() => true) };
+    Object.assign(instance, deferred);
+    const outcome = instance.fetch(connectionRequestOf({ secretDigest: input.secretDigest }));
+    await input.meanwhile(instance);
+    gate.resolve();
+    await input.settle({ instance, outcome });
+  });
+}
+
+function socketCountOf(input: { accountId: string }): Promise<number> {
+  return runInDurableObject(accountInboxStub({ accountId: input.accountId }), (_instance, state) => state.getWebSockets(AGENT).length);
+}
+
+describe('connector connect racing a rotation or a purge during the directory read', () => {
+  test('a connect with the old key whose directory read is answered after a rotate is refused and touches nothing', async () => {
+    const account = await seedAccount({ agent: AGENT });
+    const oldDigest = await hashConnectionSecret({ secret: account.secret });
+    const newDigest = await hashConnectionSecret({ secret: OTHER_SECRET });
+    await connectWhileKeyCheckIsPending({
+      accountId: account.accountId,
+      secretDigest: oldDigest,
+      meanwhile: (instance) => instance.recordRotation({ agent: AGENT, secretDigest: newDigest }),
+      settle: async ({ outcome }) => {
+        await outcome;
+      },
+    });
+    expect(await socketCountOf({ accountId: account.accountId })).toBe(0);
+    await touchedNothing({ accountId: account.accountId });
+  });
+
+  test('pin: the new key still connects after a rotate', async () => {
+    const account = await seedAccount({ agent: AGENT });
+    const newDigest = await hashConnectionSecret({ secret: OTHER_SECRET });
+    await accountInboxStub({ accountId: account.accountId }).recordRotation({ agent: AGENT, secretDigest: newDigest });
+    await connectWhileKeyCheckIsPending({
+      accountId: account.accountId,
+      secretDigest: newDigest,
+      meanwhile: async () => undefined,
+      settle: async ({ outcome }) => {
+        await outcome;
+      },
+    });
+    expect(await socketCountOf({ accountId: account.accountId })).toBe(1);
+  });
+
+  test('a revoked agent keeps no key digest in the object', async () => {
+    const account = await seedAccount({ agent: AGENT });
+    await accountInboxStub({ accountId: account.accountId }).recordRevocation({ agent: AGENT });
+    const keys = await runInDurableObject(accountInboxStub({ accountId: account.accountId }), (_instance, state) => [
+      ...state.storage.kv.list(),
+    ]);
+    expect(keys.map(([key]) => key).filter((key) => key.includes(AGENT))).toEqual([]);
+  });
+
+  test('a purge during the directory read refuses the connect as a tombstoned account and touches nothing', async () => {
+    const account = await seedAccount({ agent: AGENT });
+    const secretDigest = await hashConnectionSecret({ secret: account.secret });
+    await connectWhileKeyCheckIsPending({
+      accountId: account.accountId,
+      secretDigest,
+      meanwhile: (instance) => instance.purge(),
+      settle: async ({ instance, outcome }) => {
+        await expect(outcome).rejects.toThrow('AccountTombstoned');
+        expect(instance.ctx.getWebSockets(AGENT)).toHaveLength(0);
+        expect([...(await instance.ctx.storage.list()).keys()]).toEqual([TOMBSTONE_STORAGE_KEY]);
+      },
+    });
+  });
+});
 
 describe('connector connect racing a revocation', () => {
   test('a key revoked between the route check and the object accept is closed and touches nothing', async () => {

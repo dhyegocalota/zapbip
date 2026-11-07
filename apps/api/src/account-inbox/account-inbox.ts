@@ -175,7 +175,8 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       installCodeVault: createInstallCodeVault(),
       revocations: {
         recordRevocation: ({ agent }) => this.recordRevocation({ agent }),
-        recordCreation: ({ agent }) => this.recordCreation({ agent }),
+        recordCreation: ({ agent, secretDigest }) => this.recordCreation({ agent, secretDigest }),
+        recordRotation: ({ agent, secretDigest }) => this.recordRotation({ agent, secretDigest }),
         cancelWaiters: ({ agent }) => this.cancelWaiters({ agent }),
         closeSockets: ({ agent }) => this.closeAgentSockets({ agent }),
       },
@@ -444,9 +445,14 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     await this.closeAgentSockets(input);
   }
 
-  async recordCreation(input: { agent: string }): Promise<void> {
+  async recordCreation(input: { agent: string; secretDigest: string }): Promise<void> {
     this.assertLive();
     reviveAgentName({ storage: this.ctx.storage, agent: input.agent });
+    await this.closeAgentSockets(input);
+  }
+
+  async recordRotation(input: { agent: string; secretDigest: string }): Promise<void> {
+    this.assertLive();
     await this.closeAgentSockets(input);
   }
 

@@ -40,11 +40,13 @@ type StoredAccount = AccountRecord & { createdAt: number };
 type StoredConnection = { record: ConnectionRecord; revokedAt: number | null };
 
 export type RecordingSecrets = ConnectionSecrets & { issued: IssuedSecret[] };
+type RotationRecord = { agent: AgentName; secretDigest: string };
 export type RecordingRevocations = ConnectionRevocations & {
   revoked: AgentName[];
   cancelled: AgentName[];
   closed: AgentName[];
   created: AgentName[];
+  rotated: RotationRecord[];
   wakeConfigured: Set<AgentName>;
 };
 export type InMemoryAccountMedia = AccountMediaPurge & {
@@ -254,15 +256,20 @@ function createRevocations(): RecordingRevocations {
   const cancelled: AgentName[] = [];
   const closed: AgentName[] = [];
   const created: AgentName[] = [];
+  const rotated: RotationRecord[] = [];
   const wakeConfigured = new Set<AgentName>();
   return {
     revoked,
     cancelled,
     closed,
     created,
+    rotated,
     wakeConfigured,
     recordCreation: async ({ agent }) => {
       created.push(agent);
+    },
+    recordRotation: async ({ agent, secretDigest }) => {
+      rotated.push({ agent, secretDigest });
     },
     recordRevocation: async ({ agent }) => {
       revoked.push(agent);

@@ -3,7 +3,7 @@ import coreMigrationSql from '../../migrations/0001_core.sql?raw';
 import accountsMigrationSql from '../../migrations/0002_accounts_and_keys.sql?raw';
 import channelMigrationSql from '../../migrations/0004_whatsapp_channel.sql?raw';
 import { hashConnectionSecret } from '../../src/adapters/platform/hash';
-import { testEnv } from './workers-env';
+import { accountInboxStub, testEnv } from './workers-env';
 
 export const SEED_CREATED_AT = 1_700_000_000_000;
 const STATEMENT_SEPARATOR = ';';
@@ -72,5 +72,6 @@ export async function seedConnection(input: {
       revokedAt,
     )
     .run();
+  if (revokedAt === null) await accountInboxStub({ accountId: input.accountId }).recordCreation({ agent: input.agent, secretDigest });
   return secretDigest;
 }
