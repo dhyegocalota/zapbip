@@ -1,6 +1,8 @@
 import { DAY_MS, HERMES_WHEEL_FILENAME_PATTERN, HERMES_WHEEL_PATH_PREFIX, HttpStatus, InboxErrorCode, SECOND_MS } from '@zapbip/types';
 import { type Context, Hono } from 'hono';
 import type { Bindings } from '../contract/env';
+import { LogEvent } from '../contract/log';
+import { logEvent } from '../log';
 
 const FILENAME_PARAMETER = 'filename';
 const CACHE_DAYS = 365;
@@ -35,6 +37,7 @@ packageRoutes.get(`${HERMES_WHEEL_PATH_PREFIX}:${FILENAME_PARAMETER}`, async (co
 
 packageRoutes.all(`${HERMES_WHEEL_PATH_PREFIX}*`, notFound);
 
-packageRoutes.onError((_error, context) =>
-  context.json({ error: UNAVAILABLE_ERROR }, HttpStatus.ServiceUnavailable, { 'Cache-Control': NO_STORE_CACHE_CONTROL }),
-);
+packageRoutes.onError((_error, context) => {
+  logEvent({ event: LogEvent.PackageUnavailable });
+  return context.json({ error: UNAVAILABLE_ERROR }, HttpStatus.ServiceUnavailable, { 'Cache-Control': NO_STORE_CACHE_CONTROL });
+});
