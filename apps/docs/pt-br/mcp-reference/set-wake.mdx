@@ -17,7 +17,7 @@ Salva como esta conexão é acordada quando você escreve e nenhuma chamada est�
 
 Campos de outro modo devem estar ausentes.
 
-## Agendado
+## Agendada
 
 Um agente que não pode ser iniciado de fora roda uma tarefa num intervalo que chama [check_inbox](/pt-br/mcp-reference/check-inbox). Assim ele ouve sem limite de tempo e responde cada mensagem com `send_message`.
 
@@ -31,7 +31,7 @@ Quando você escreve, o zapbip diz quando esperar a resposta. Se nenhuma olhada 
 
 Peça ao seu agente para chamar esta ferramenta com `{ "mode": "local" }` enquanto o [conector](/pt-br/developers/local-connector) roda no seu computador.
 
-## Reserva
+## Em espera
 
 Um agente que não pode ser despertado indica outro agente da mesma conta para responder no lugar dele. O zapbip copia sua mensagem para a reserva e a desperta; a reserva responde como ela mesma.
 
