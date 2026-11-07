@@ -76,8 +76,9 @@ One developer runs the lanes in order G1, G2, G3, G4, G5 (machine resource cap).
 
 ## Z. Prove and ship
 
-- [ ] **Tester briefing:** written by the developer, covering the Hermes docs walk and the pip install against a local Worker.
-- [ ] **Tester run:** a fresh `tester` sub-agent returned a report.
-- [ ] **Reviewer:** a fresh `reviewer` sub-agent returned a verdict.
-- [ ] **/check-ui:** docs pages in en and pt-br.
+- [x] **Tester briefing:** written by the developer, covering the Hermes docs walk and the pip install against a local Worker. — evidence: tester-briefing.md, with the amendments for the requirements file and the portable command
+- [x] **Tester run:** a fresh `tester` sub-agent returned a report. — evidence: three testers, tester.md (626f8d7d, 17 PASS), tester-delta.md (e469559d, Docker clients 24/24) and tester-final.md (a109a876, all PASS, 2 mutations caught), in test-results/hermes-wheel-hosting
+- [x] **Reviewer:** a fresh `reviewer` sub-agent returned a verdict. — evidence: WITH RESERVATIONS, all fixed in aad68b58
+- [x] **Security reviewer:** two rounds — evidence: the first round's IMPORTANT (unpinned dependencies) fixed with the hashed requirements file (e469559d); the second round's IMPORTANT (stock macOS has no sha256sum) and MINORs (--only-binary, TOCTOU) fixed with the portable command (a109a876)
+- [x] **/check-ui:** docs pages in en and pt-br. — evidence: the docs walk in tester-delta.md and tester-final.md (en and pt-br, 1200x300 and 375, copy button, console and network clean)
 - [ ] **/open-pr:** gates passed, learnings sweep stated, PR opened.
