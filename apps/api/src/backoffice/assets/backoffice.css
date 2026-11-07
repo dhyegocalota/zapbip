@@ -338,6 +338,10 @@ select {
   font-size: var(--text-small);
 }
 
+.data-table .mono {
+  overflow-wrap: anywhere;
+}
+
 .data-table th {
   color: var(--color-text-muted);
 }
