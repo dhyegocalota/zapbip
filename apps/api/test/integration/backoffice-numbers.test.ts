@@ -29,6 +29,7 @@ const STATUS_UNAUTHORIZED = 401;
 const STATUS_FORBIDDEN = 403;
 const STATUS_NOT_FOUND = 404;
 const STATUS_UNPROCESSABLE = 422;
+const STATUS_CONFLICT = 409;
 const STATUS_TOO_MANY_REQUESTS = 429;
 const EVIL_ORIGIN = 'https://evil.example';
 const NEW_ACCESS_TOKEN = 'replacement-access-token-ta2';
@@ -161,14 +162,14 @@ describe('registering a number', () => {
     expect(await countRows({ table: 'meta_apps' })).toBe(0);
   });
 
-  test('answers 422 on a phone number id that is already registered and keeps one row', async () => {
+  test('answers 409 on a phone number id that is already registered and keeps one row', async () => {
     await registerBrazil();
     const fields = registrationFields({
       [NumberFormField.MetaAppId]: '900000000556',
       [NumberFormField.DisplayNumber]: '+5511955550001',
     });
     const response = await postAction({ path: REGISTER_PATH, sessionToken, fields });
-    expect(response.status).toBe(STATUS_UNPROCESSABLE);
+    expect(response.status).toBe(STATUS_CONFLICT);
     expect(await response.text()).toContain(copy[BackofficeCopyKey.FieldErrorDuplicate]);
     expect(await countRows({ table: 'whatsapp_numbers' })).toBe(1);
     expect(await countRows({ table: 'meta_apps' })).toBe(1);
