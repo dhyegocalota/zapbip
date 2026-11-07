@@ -161,7 +161,7 @@ export function docsOptionsOf(input: { language: DocsLanguage; viewport: DocsVie
 
 ## Sequencing
 
-1. **Cut.** `main` carries install-skills, scheduled-wake and local-connector. `feat/docs-experience` is cut from `main` then.
+1. **Cut.** `main` carries install-skills, scheduled-wake and local-connector. `feat/docs-experience` is cut from `main` then. ~~Cut after install-skills and scheduled-wake land~~ owner delegated 2026-11-06: G0 cut early from main; lanes wait.
 2. **G0 first, on `feat/docs-experience`.** Steps 1 to 9 in order. Afterwards G0 is green alone (see the list in test-plan T1, "green in G0").
 3. **Lanes G1 to G7 branch from G0's last commit** and run in parallel in their own worktrees. Each lane's first commit is its red walk spec or its red test (test-plan T1 rows marked for the lane). A lane merges into `feat/docs-experience` when its tests are green.
 4. **G8 last** among the lanes: the walk and the language spike need every page.
@@ -177,7 +177,16 @@ Author this list with every box empty. Step numbers are fixed: the number contra
 
 ### G0 contract
 
-- [ ] **Step 1 (plan refresh):** diff the names this plan takes from other slices against `main`: `InstallClient` and its values (`Cursor`, `GeminiCli` added by install-skills), `WakeRung` and its values (`Local`, `Webhook`, `Scheduled`, `Standby`, `Inbox`), `McpToolName`, `ASK_MAX_WAIT_SECONDS`, the three retention constants, `DAY_MS`, the sentinel and the deploy-readiness preflight. Correct any drift in this plan and commit it before Step 2. Nothing else changes in Step 1.
+- [x] **Step 1 (plan refresh):** diff the names this plan takes from other slices against `main`: `InstallClient` and its values (`Cursor`, `GeminiCli` added by install-skills), `WakeRung` and its values (`Local`, `Webhook`, `Scheduled`, `Standby`, `Inbox`), `McpToolName`, `ASK_MAX_WAIT_SECONDS`, the three retention constants, `DAY_MS`, the sentinel and the deploy-readiness preflight. Correct any drift in this plan and commit it before Step 2. Nothing else changes in Step 1.
+
+  Drift found on 2026-11-06 against `origin/main` (dcfebc9), `origin/feat/install-skills` and `origin/feat/scheduled-wake`:
+  - `InstallClient` (ten values incl. `Cursor`, `GeminiCli`, `ChatGpt`) exists only on `feat/install-skills` (lands with install-skills). Step 3 adds a byte-identical copy to `libs/types/src/enums.ts` so G0 typechecks; the install-skills merge takes the identical hunk.
+  - `WakeRung.Scheduled` and `WakeRung.Standby` exist only on `feat/scheduled-wake` (lands with scheduled-wake). Main has `Inbox`, `Local`, `Webhook`. Step 3 adds the two values identically for the same reason.
+  - `McpToolName` is not in `@zapbip/types` on any branch: it lives in `apps/api/src/contract/tool-definitions.ts`. T1-49 needs it in `libs/types` with `tool-definitions.ts` importing it; that move is G7's first step, not G0 (G0 never reads it).
+  - `ASK_MAX_WAIT_SECONDS`, `QUESTION_RETENTION_MS`, `QUEUE_RETENTION_MS`, `MEDIA_RETENTION_MS` and `DAY_MS` are on main (`libs/core/src/inbox/constants.ts`, `libs/types/src/constants.ts`); the core index re-exports the first four. Confirmed.
+  - `OFFICIAL_NUMBER_UNSET` and `OFFICIAL_WHATSAPP_NUMBER` are on no branch; Step 3 adds them. `COMPANY` and `COMPANY_FACT_UNSET` are on main and are reused.
+  - The deploy-readiness preflight is not on main (lands with deploy-readiness); nothing in G0 depends on it.
+  - `apps/docs` already has `agents/supported-agents`, `developers/*`, `concepts/*`, `features/*` (four), `help/{about,faq,troubleshooting}`, `guides/webhook-wake`, the `snippets/chat.jsx`, `company.mdx` and `message-kinds.mdx` snippets and the pinned `--client-version 0.0.4077`; Step 6 adds only what is missing and moves `guides/webhook-wake` to `developers/webhook-wake`.
 - [ ] **Step 2 (red):** `tools/repository-shape/src/docs-experience.test.ts` with the T1 tests marked "green in G0" and the fixture tests, all imported from `docs-experience.ts`. Commit alone. The run fails on the stubs and the missing pages, not on an import error.
 - [ ] **Step 3 (contract and the number):** `libs/types/src/enums.ts` and `constants.ts` additions (including `OFFICIAL_NUMBER_UNSET` and `OFFICIAL_WHATSAPP_NUMBER`), the helper stubs in `docs-experience.ts`, `apps/docs/e2e/support/docs-experience.ts` with its values. Typecheck green.
 - [ ] **Step 4 (helpers and navigation):** implement the helpers; switch `docs-navigation.test.ts` to `DocsLanguage` values (no string literals `'en'` or `'pt-BR'`). The fixture tests turn green. Pins stay pins.
