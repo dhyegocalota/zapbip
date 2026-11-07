@@ -459,10 +459,10 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     const wasLive = !this.isTombstoned;
     this.isTombstoned = true;
     if (wasLive) this.dependencies.waiters.cancelAll();
-    this.ctx.getWebSockets().forEach((socket) => socket.close(REVOKED_CLOSE_CODE));
     await this.ctx.storage.deleteAlarm();
     await this.ctx.storage.deleteAll();
     await this.ctx.storage.put(TOMBSTONE_STORAGE_KEY, true);
+    this.ctx.getWebSockets().forEach((socket) => socket.close(REVOKED_CLOSE_CODE));
   }
 
   setWake(input: Parameters<AccountInboxRpc['setWake']>[0]): Promise<CallOutcome<inbox.SetWakeResult>> {
