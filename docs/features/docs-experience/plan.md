@@ -250,10 +250,10 @@ G0 evidence (2026-11-06): Step 1 `ab7d8dc`; Step 2 red `7902adb` (carries the en
 
 ### G8 walk and language
 
-- [ ] **Step 39:** Red: `apps/docs/e2e/language.spec.ts`: a `pt-BR` context opens the pt-BR Overview if Mintlify selects by browser language; otherwise the test asserts the switcher is visible and the spike result is written to the tester briefing.
-- [ ] **Step 40 (spike):** `mint dev` run locally in an `en-US` and a `pt-BR` context; the result (selected language, or switcher only) goes into the tester briefing and ADR 0030 (lead).
-- [ ] **Step 41:** Red: `apps/docs/e2e/from-zero.spec.ts`: starts at the Overview, follows Get started, follows each numbered step to the number step, opens every linked Agents page and checks its four sections, follows every internal link, at both viewports, in both languages. The walk stops at the WhatsApp step.
-- [ ] **Step 42:** Green the walk by page work only; no walk assertion is weakened to pass.
+- [x] **Step 39 (`a97c250`, red: pt-BR locale stays on the English Overview):** Red: `apps/docs/e2e/language.spec.ts`: a `pt-BR` context opens the pt-BR Overview if Mintlify selects by browser language; otherwise the test asserts the switcher is visible and the spike result is written to the tester briefing.
+- [x] **Step 40 (spike, `95ac40e`: mint dev ignores the browser locale; the switcher is the rule; ADR 0030 written):** `mint dev` run locally in an `en-US` and a `pt-BR` context; the result (selected language, or switcher only) goes into the tester briefing and ADR 0030 (lead).
+- [x] **Step 41 (`7a8b2a0`, pin: green on landing, mutation-checked):** Red: `apps/docs/e2e/from-zero.spec.ts`: starts at the Overview, follows Get started, follows each numbered step to the number step, opens every linked Agents page and checks its four sections, follows every internal link, at both viewports, in both languages. The walk stops at the WhatsApp step.
+- [x] **Step 42 (`61efb71`; the walk needed no other page work):** Green the walk by page work only; no walk assertion is weakened to pass.
 
 ## Failure modes
 
