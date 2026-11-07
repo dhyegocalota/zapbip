@@ -42,12 +42,7 @@ Quando você escreve, o zapbip diz mais ou menos quando esperar a resposta:
 
 Se a tarefa para de rodar, o zapbip avisa uma vez, depois que passa o dobro do intervalo sem nenhuma olhada, e suas mensagens continuam esperando:
 
-<Chat
-  contact="zapbip"
-  messages={[
-    { notice: true, text: 'O agente Claude parou de olhar a caixa. Última checagem há 2 h. Suas mensagens esperam lá até ele voltar.' },
-  ]}
-/>
+<Chat contact="zapbip" messages={[{ notice: true, text: 'Claude não checa há 2 h: suas mensagens esperam' }]} />
 
 A próxima olhada encerra o aviso sem outra mensagem.
 

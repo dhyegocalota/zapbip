@@ -42,12 +42,7 @@ When you write, zapbip tells you roughly when to expect the answer:
 
 If the timer stops running, zapbip says so once, after twice the interval passes without a check, and your messages keep waiting:
 
-<Chat
-  contact="zapbip"
-  messages={[
-    { notice: true, text: 'The agent Claude stopped checking the inbox. Last check 2 h ago. Your messages wait there until it returns.' },
-  ]}
-/>
+<Chat contact="zapbip" messages={[{ notice: true, text: "Claude hasn't checked in 2 h: your messages wait" }]} />
 
 The next check ends the warning without another message.
 

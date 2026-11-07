@@ -1,5 +1,6 @@
 import { HOUR_MS, MINUTE_MS, OwnerLocale, WakeCopyKey } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
+import { AGENT_NAME_MAX_CHARS, NOTICE_PREVIEW_MAX_CHARS } from '../inbox/constants';
 import { captureInboxError } from '../inbox/testing/capture-inbox-error';
 import { expectedDelayNoteCopy, staleNoticeCopy, WAKE_COPY, wakeFailedCopy } from './wake-copy';
 
@@ -64,6 +65,23 @@ describe('staleNoticeCopy', () => {
     const text = staleNoticeCopy({ locale: OwnerLocale.PortugueseBrazil, agent: AGENT, elapsedSinceLastPollMs: 3 * HOUR_MS });
     expect(text).toContain(AGENT);
     expect(text).toContain('há 3 h');
+  });
+
+  test.each([
+    [OwnerLocale.PortugueseBrazil, 'há 2 h'],
+    [OwnerLocale.EnglishUs, 'in 2 h'],
+  ])('%s keeps the longest agent name and the elapsed time inside the template preview', (locale, elapsed) => {
+    const agent = 'a'.repeat(AGENT_NAME_MAX_CHARS);
+    const preview = staleNoticeCopy({ locale, agent, elapsedSinceLastPollMs: 2 * HOUR_MS }).slice(0, NOTICE_PREVIEW_MAX_CHARS);
+    expect(preview).toContain(agent);
+    expect(preview).toContain(elapsed);
+  });
+
+  test.each([
+    [OwnerLocale.PortugueseBrazil, 'ainda não checou'],
+    [OwnerLocale.EnglishUs, "hasn't checked yet"],
+  ])('%s says a never-polled agent has not checked yet', (locale, never) => {
+    expect(staleNoticeCopy({ locale, agent: AGENT, elapsedSinceLastPollMs: null })).toContain(never);
   });
 });
 

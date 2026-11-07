@@ -17,8 +17,8 @@ export const WAKE_COPY: Record<WakeCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.EnglishUs]: 'The agent {agent} checks the inbox {cadence}. {lastPoll} Your message waits there until the next check.',
   },
   [WakeCopyKey.StaleNotice]: {
-    [OwnerLocale.PortugueseBrazil]: 'O agente {agent} parou de olhar a caixa. {lastPoll} Suas mensagens esperam lá até ele voltar.',
-    [OwnerLocale.EnglishUs]: 'The agent {agent} stopped checking the inbox. {lastPoll} Your messages wait there until it returns.',
+    [OwnerLocale.PortugueseBrazil]: '{agent} {lastPoll}: suas mensagens esperam',
+    [OwnerLocale.EnglishUs]: '{agent} {lastPoll}: your messages wait',
   },
   [WakeCopyKey.CadenceHourly]: {
     [OwnerLocale.PortugueseBrazil]: 'de hora em hora',
@@ -48,6 +48,32 @@ export const WAKE_COPY: Record<WakeCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.PortugueseBrazil]: 'Ainda não olhou a caixa.',
     [OwnerLocale.EnglishUs]: 'It has not checked the inbox yet.',
   },
+  [WakeCopyKey.StaleElapsedMinutes]: {
+    [OwnerLocale.PortugueseBrazil]: 'não checa há {count} min',
+    [OwnerLocale.EnglishUs]: "hasn't checked in {count} min",
+  },
+  [WakeCopyKey.StaleElapsedHours]: {
+    [OwnerLocale.PortugueseBrazil]: 'não checa há {count} h',
+    [OwnerLocale.EnglishUs]: "hasn't checked in {count} h",
+  },
+  [WakeCopyKey.StaleNeverPolled]: {
+    [OwnerLocale.PortugueseBrazil]: 'ainda não checou',
+    [OwnerLocale.EnglishUs]: "hasn't checked yet",
+  },
+};
+
+type ElapsedCopyKeys = { never: WakeCopyKey; minutes: WakeCopyKey; hours: WakeCopyKey };
+
+const LAST_POLL_COPY_KEYS: ElapsedCopyKeys = {
+  never: WakeCopyKey.NeverPolled,
+  minutes: WakeCopyKey.ElapsedMinutes,
+  hours: WakeCopyKey.ElapsedHours,
+};
+
+const STALE_COPY_KEYS: ElapsedCopyKeys = {
+  never: WakeCopyKey.StaleNeverPolled,
+  minutes: WakeCopyKey.StaleElapsedMinutes,
+  hours: WakeCopyKey.StaleElapsedHours,
 };
 
 function renderWakeCopy(input: { key: WakeCopyKey; locale: OwnerLocale; values: Record<string, string> }): string {
@@ -71,15 +97,15 @@ function cadenceCopy(input: { locale: OwnerLocale; intervalMinutes: number }): s
   return renderWakeCopy({ key: WakeCopyKey.CadenceMinutes, locale, values: { count: String(intervalMinutes) } });
 }
 
-function lastPollCopy(input: { locale: OwnerLocale; elapsedSinceLastPollMs: number | null }): string {
-  const { locale, elapsedSinceLastPollMs } = input;
-  if (elapsedSinceLastPollMs === null) return renderWakeCopy({ key: WakeCopyKey.NeverPolled, locale, values: {} });
+function elapsedCopy(input: { locale: OwnerLocale; elapsedSinceLastPollMs: number | null; keys: ElapsedCopyKeys }): string {
+  const { locale, elapsedSinceLastPollMs, keys } = input;
+  if (elapsedSinceLastPollMs === null) return renderWakeCopy({ key: keys.never, locale, values: {} });
   if (elapsedSinceLastPollMs < HOUR_MS) {
     const count = String(Math.floor(elapsedSinceLastPollMs / MINUTE_MS));
-    return renderWakeCopy({ key: WakeCopyKey.ElapsedMinutes, locale, values: { count } });
+    return renderWakeCopy({ key: keys.minutes, locale, values: { count } });
   }
   const count = String(Math.floor(elapsedSinceLastPollMs / HOUR_MS));
-  return renderWakeCopy({ key: WakeCopyKey.ElapsedHours, locale, values: { count } });
+  return renderWakeCopy({ key: keys.hours, locale, values: { count } });
 }
 
 export function expectedDelayNoteCopy(input: {
@@ -90,12 +116,12 @@ export function expectedDelayNoteCopy(input: {
 }): string {
   const { locale, agent, intervalMinutes, elapsedSinceLastPollMs } = input;
   const cadence = cadenceCopy({ locale, intervalMinutes });
-  const lastPoll = lastPollCopy({ locale, elapsedSinceLastPollMs });
+  const lastPoll = elapsedCopy({ locale, elapsedSinceLastPollMs, keys: LAST_POLL_COPY_KEYS });
   return renderWakeCopy({ key: WakeCopyKey.ExpectedDelayNote, locale, values: { agent, cadence, lastPoll } });
 }
 
 export function staleNoticeCopy(input: { locale: OwnerLocale; agent: AgentName; elapsedSinceLastPollMs: number | null }): string {
   const { locale, agent, elapsedSinceLastPollMs } = input;
-  const lastPoll = lastPollCopy({ locale, elapsedSinceLastPollMs });
+  const lastPoll = elapsedCopy({ locale, elapsedSinceLastPollMs, keys: STALE_COPY_KEYS });
   return renderWakeCopy({ key: WakeCopyKey.StaleNotice, locale, values: { agent, lastPoll } });
 }

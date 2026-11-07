@@ -80,6 +80,9 @@ export enum WakeCopyKey {
   ElapsedMinutes = 'elapsed_minutes',
   ElapsedHours = 'elapsed_hours',
   NeverPolled = 'never_polled',
+  StaleElapsedMinutes = 'stale_elapsed_minutes',
+  StaleElapsedHours = 'stale_elapsed_hours',
+  StaleNeverPolled = 'stale_never_polled',
 }
 
 export enum OptionRender {
