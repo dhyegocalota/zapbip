@@ -23,7 +23,13 @@ import textFixture from '../fixtures/whatsapp/outbound/text.json';
 import { buildEnvelope, buildQuestion, buildTextMessage } from '../support/builders';
 import { FakeGraph } from '../support/fake-graph';
 import { applyDirectoryMigration, seedConnection, seedOwnerIdentity } from '../support/seed';
-import { seedWhatsAppNumber, TEST_ACCESS_TOKEN, TEST_PHONE_NUMBER_ID } from '../support/whatsapp-numbers';
+import {
+  seedWhatsAppNumber,
+  TEST_ACCESS_TOKEN,
+  TEST_NUMBER_ID,
+  TEST_PHONE_NUMBER_ID,
+  TEST_REGISTERED_NUMBER,
+} from '../support/whatsapp-numbers';
 import { accountInboxStub, testEnv, whatsappTestEnv } from '../support/workers-env';
 import { callTool, connectClient, ownerText, ownerWrites, type ToolResult } from './mcp-fixtures';
 
@@ -55,15 +61,18 @@ let errorSpy: MockInstance<typeof console.error>;
 function senderFor(input: { accountId: string }) {
   return createCloudApiMessageSender({
     accountId: input.accountId,
-    graph: createGraphClient({
-      baseUrl: whatsapp.graphBaseUrl,
-      accessToken: TEST_ACCESS_TOKEN,
-      developmentMediaOrigin: null,
-      fetcher: fetch,
+    resolveNumber: async () => ({ ...TEST_REGISTERED_NUMBER, accessToken: TEST_ACCESS_TOKEN }),
+    channelOf: ({ number }) => ({
+      graph: createGraphClient({
+        baseUrl: whatsapp.graphBaseUrl,
+        accessToken: number.accessToken,
+        developmentMediaOrigin: null,
+        fetcher: fetch,
+      }),
+      restrictions: new D1ChannelRestrictions({ database: testEnv.CONNECTIONS, phoneNumberId: number.phoneNumberId }),
     }),
     findOwnerByAccountId: (lookup) => findOwnerByAccountId({ database: testEnv.CONNECTIONS, accountId: lookup.accountId }),
     messageIndex: new D1MessageIndex({ database: testEnv.CONNECTIONS }),
-    restrictions: new D1ChannelRestrictions({ database: testEnv.CONNECTIONS, phoneNumberId: TEST_PHONE_NUMBER_ID }),
     mediaStore: createR2MediaStore({
       bucket: testEnv.MEDIA,
       mediaLinkSigningKey: testEnv.MEDIA_LINK_SIGNING_KEY,
@@ -71,7 +80,6 @@ function senderFor(input: { accountId: string }) {
       clock,
     }),
     publicOrigin: PUBLIC_ORIGIN,
-    phoneNumberId: TEST_PHONE_NUMBER_ID,
     clock,
   });
 }
@@ -112,7 +120,12 @@ beforeEach(async () => {
   errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
   await applyDirectoryMigration();
   await seedWhatsAppNumber();
-  await seedOwnerIdentity({ accountId: FIRST_ACCOUNT, phone: FIRST_OWNER_WA_ID, ownerLocale: OwnerLocale.PortugueseBrazil });
+  await seedOwnerIdentity({
+    accountId: FIRST_ACCOUNT,
+    phone: FIRST_OWNER_WA_ID,
+    ownerLocale: OwnerLocale.PortugueseBrazil,
+    numberId: TEST_NUMBER_ID,
+  });
   await fakeGraph.reset();
 });
 
@@ -289,7 +302,12 @@ describe('Cloud API sender against the fake Graph', () => {
   });
 
   it('WI-73 sends each account only to its own owner', async () => {
-    await seedOwnerIdentity({ accountId: SECOND_ACCOUNT, phone: SECOND_OWNER_WA_ID, ownerLocale: OwnerLocale.EnglishUs });
+    await seedOwnerIdentity({
+      accountId: SECOND_ACCOUNT,
+      phone: SECOND_OWNER_WA_ID,
+      ownerLocale: OwnerLocale.EnglishUs,
+      numberId: TEST_NUMBER_ID,
+    });
     await senderFor({ accountId: FIRST_ACCOUNT }).session(textInput({ text: 'um' }));
     await senderFor({ accountId: SECOND_ACCOUNT }).session(textInput({ text: 'dois' }));
     expect(await sentBodies()).toMatchObject([

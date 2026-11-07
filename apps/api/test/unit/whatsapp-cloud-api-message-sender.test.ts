@@ -1,5 +1,5 @@
 import { ChannelError, type Clock, type MediaStore } from '@zapbip/core';
-import { ChannelErrorKind, MessageKind, OwnerLocale, TemplateKind } from '@zapbip/types';
+import { ChannelErrorKind, MessageKind, OwnerLocale, TemplateKind, WhatsAppNumberState } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ChannelRestrictions } from '../../src/adapters/d1/d1-channel-restrictions';
 import { createCloudApiMessageSender } from '../../src/adapters/whatsapp/cloud-api-message-sender';
@@ -8,6 +8,14 @@ import { buildEnvelope, buildTextMessage } from '../support/builders';
 
 const ACCOUNT_ID = 'acc_a';
 const PHONE_NUMBER_ID = '1000000000000001';
+const OUTBOUND_NUMBER = {
+  numberId: 'num_a',
+  phoneNumberId: PHONE_NUMBER_ID,
+  wabaId: '3000000000003',
+  state: WhatsAppNumberState.Active,
+  metaAppRef: 'mapp_a',
+  accessToken: 'token-a',
+};
 const OWNER = { waId: '5511900000001', ownerLocale: OwnerLocale.PortugueseBrazil };
 const NOW = 1_800_000_000_000;
 const SENT_ID = 'wamid.SENT';
@@ -48,7 +56,8 @@ function setup(input: { owner?: typeof OWNER | null; failWith?: GraphRequestErro
   const indexed: { id: string; accountId: string; at: number }[] = [];
   const sender = createCloudApiMessageSender({
     accountId: ACCOUNT_ID,
-    graph,
+    resolveNumber: async () => OUTBOUND_NUMBER,
+    channelOf: () => ({ graph, restrictions }),
     findOwnerByAccountId: async () => (input.owner === undefined ? OWNER : input.owner),
     messageIndex: {
       record: async (entry) => {
@@ -56,10 +65,8 @@ function setup(input: { owner?: typeof OWNER | null; failWith?: GraphRequestErro
         return true;
       },
     },
-    restrictions,
     mediaStore,
     publicOrigin: 'https://api.test',
-    phoneNumberId: PHONE_NUMBER_ID,
     clock,
   });
   return { sender, posts, recorded, indexed, graph, restrictions };

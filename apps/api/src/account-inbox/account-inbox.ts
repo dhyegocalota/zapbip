@@ -61,6 +61,7 @@ import { createNoneWaker } from '../adapters/wake/none-waker';
 import { createScheduledAgentWaker } from '../adapters/wake/scheduled-agent-waker';
 import { createStandbyAgentWaker } from '../adapters/wake/standby-agent-waker';
 import { createWebhookAgentWaker } from '../adapters/wake/webhook-agent-waker';
+import { openSendableNumber } from '../numbers/sendable-number';
 import { createCloudApiMessageSender } from '../adapters/whatsapp/cloud-api-message-sender';
 import { createGraphClient } from '../adapters/whatsapp/graph-client';
 import { readWhatsAppEnvironment } from '../adapters/whatsapp/read-whatsapp-env';
@@ -224,30 +225,24 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     const registry = numberRegistryOf({ bindings: this.env });
     const publicOrigin = this.env.PUBLIC_ORIGIN;
 
-    async function openSender(): Promise<MessageSender> {
-      const number = await registry.openTheOnlyNumber();
-      return createCloudApiMessageSender({
-        accountId,
+    return createCloudApiMessageSender({
+      accountId,
+      resolveNumber: () => openSendableNumber({ registry, accountId }),
+      channelOf: ({ number }) => ({
         graph: createGraphClient({
           baseUrl: graphBaseUrl,
           accessToken: number.accessToken,
           developmentMediaOrigin: null,
           fetcher: fetch,
         }),
-        findOwnerByAccountId: ({ accountId: ownerAccountId }) => findOwnerByAccountId({ database, accountId: ownerAccountId }),
-        messageIndex: new D1MessageIndex({ database }),
         restrictions: new D1ChannelRestrictions({ database, phoneNumberId: number.phoneNumberId }),
-        mediaStore: input.mediaStore,
-        publicOrigin,
-        phoneNumberId: number.phoneNumberId,
-        clock,
-      });
-    }
-
-    return {
-      session: async (request) => (await openSender()).session(request),
-      template: async (request) => (await openSender()).template(request),
-    };
+      }),
+      findOwnerByAccountId: ({ accountId: ownerAccountId }) => findOwnerByAccountId({ database, accountId: ownerAccountId }),
+      messageIndex: new D1MessageIndex({ database }),
+      mediaStore: input.mediaStore,
+      publicOrigin,
+      clock,
+    });
   }
 
   private createExpiryProvider(): DueTimeProvider {
