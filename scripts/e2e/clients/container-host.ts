@@ -1,4 +1,5 @@
 import { execFile } from 'node:child_process';
+import { isIPv4 } from 'node:net';
 import { promisify } from 'node:util';
 import { LOOPBACK_HOST } from './constants';
 
@@ -7,7 +8,9 @@ const DOCKER_DESKTOP_PLATFORM = 'darwin';
 const BRIDGE_GATEWAY_TEMPLATE = '{{(index .IPAM.Config 0).Gateway}}';
 
 export function bridgeGatewayHostOf(input: { output: string }): string {
-  throw new Error('bridgeGatewayHostOf is not implemented');
+  const host = input.output.trim();
+  if (!isIPv4(host)) throw new Error(`the docker bridge gateway is not an IPv4 address: "${host}"`);
+  return host;
 }
 
 export async function containerReachableHost(): Promise<string> {
