@@ -10,6 +10,10 @@ import {
   MessageSender,
   OwnerLocale,
   ReplyStatus,
+  SetWakeStatus,
+  WakeMode,
+  WakeProvider,
+  WakeRung,
 } from '@zapbip/types';
 
 const nullableString = z.string().nullable().default(null);
@@ -142,4 +146,28 @@ export const createUploadOutputShape = {
   upload_id: z.string(),
   upload_url: z.string(),
   expires_at: z.iso.datetime(),
+};
+
+export const setWakeInputShape = {
+  mode: z.enum(WakeMode),
+  url: nullableString,
+  token: nullableString,
+};
+
+export enum UnavailableWakeMode {
+  Local = 'local',
+  Scheduled = 'scheduled',
+  Standby = 'standby',
+}
+
+export const setWakeToolInputShape = {
+  ...setWakeInputShape,
+  mode: z.enum([...Object.values(WakeMode), ...Object.values(UnavailableWakeMode)]),
+};
+
+export const setWakeOutputShape = {
+  status: z.enum(SetWakeStatus),
+  wake_mode: z.enum(WakeMode),
+  effective_rung: z.enum(WakeRung),
+  provider: z.enum(WakeProvider).nullable(),
 };

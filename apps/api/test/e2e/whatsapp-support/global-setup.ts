@@ -88,6 +88,7 @@ export default async function setup(project: TestProject): Promise<() => Promise
     origin,
     phone: OWNER_PHONE,
     secrets: Object.fromEntries(connections.map((connection) => [connection.agent, connection.secret])),
+    wakeAccounts: [],
     logFile,
   };
   project.provide('stack', context);

@@ -36,6 +36,7 @@ import {
   registerDueTimeProvider,
   replaceTemplate,
 } from '../support/inbox-session';
+import { versionAfterLatest } from '../support/migration-versions';
 import { accountInboxStub, connectionOf, testEnv } from '../support/workers-env';
 
 const FIRST_ACCOUNT = 'acc_one';
@@ -522,22 +523,25 @@ describe('AccountInbox migrations', () => {
   });
 
   it('WI-120 applies the missing versions in ascending order', async () => {
+    const firstVersion = versionAfterLatest({ offset: 1 });
+    const secondVersion = versionAfterLatest({ offset: 2 });
     const migrations: Migration[] = [
-      { version: 3, sql: 'CREATE TABLE three (id INTEGER)' },
+      { version: secondVersion, sql: 'CREATE TABLE later_two (id INTEGER)' },
       ...ACCOUNT_INBOX_MIGRATIONS,
-      { version: 2, sql: 'CREATE TABLE two (id INTEGER)' },
+      { version: firstVersion, sql: 'CREATE TABLE later_one (id INTEGER)' },
     ];
     const applied = await runInDurableObject(stubOf({ accountId: FIRST_ACCOUNT }), async (_instance, state) =>
       runMigrations({ storage: state.storage, migrations }),
     );
-    expect(applied).toEqual([2, 3]);
+    expect(applied).toEqual([firstVersion, secondVersion]);
   });
 
   it('WI-121 fills a gap and orders an unsorted registry', async () => {
+    const gapVersion = versionAfterLatest({ offset: 1 });
     const gapApplied = await runInDurableObject(stubOf({ accountId: FIRST_ACCOUNT }), async (_instance, state) =>
       runMigrations({
         storage: state.storage,
-        migrations: [...ACCOUNT_INBOX_MIGRATIONS, { version: 3, sql: 'CREATE TABLE three (id INTEGER)' }],
+        migrations: [...ACCOUNT_INBOX_MIGRATIONS, { version: gapVersion, sql: 'CREATE TABLE later (id INTEGER)' }],
       }),
     );
     const unsortedApplied = await runInDurableObject(stubOf({ accountId: SECOND_ACCOUNT }), async (_instance, state) => {
@@ -550,7 +554,7 @@ describe('AccountInbox migrations', () => {
         ],
       });
     });
-    expect(gapApplied).toEqual([3]);
+    expect(gapApplied).toEqual([gapVersion]);
     expect(unsortedApplied).toEqual([1, 2]);
   });
 });

@@ -86,7 +86,8 @@ describe('receiveChannelMessage', () => {
     const failing = {
       ...environment.dependencies,
       waker: {
-        notify: async () => {
+        ...environment.dependencies.waker,
+        notify: async (): Promise<WakeOutcome> => {
           wakeCalls += 1;
           throw new Error('wake failed');
         },

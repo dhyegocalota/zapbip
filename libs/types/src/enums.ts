@@ -69,6 +69,10 @@ export enum InboxCopyKey {
   PreviewChoice = 'preview_choice',
 }
 
+export enum WakeCopyKey {
+  WakeFailed = 'wake_failed',
+}
+
 export enum OptionRender {
   Buttons = 'buttons',
   List = 'list',
@@ -102,10 +106,44 @@ export enum AgentWakeReason {
 
 export enum WakeMode {
   None = 'none',
+  Webhook = 'webhook',
 }
 
 export enum WakeRung {
   Inbox = 'inbox',
+  Webhook = 'webhook',
+}
+
+export enum WakeAttemptOutcome {
+  Delivered = 'delivered',
+  Retry = 'retry',
+  Refused = 'refused',
+}
+
+export enum WakeProvider {
+  GrokRoutine = 'grok_routine',
+  ClaudeRoutine = 'claude_routine',
+  GenericWebhook = 'generic',
+}
+
+export enum WakeStatus {
+  Active = 'active',
+  Failing = 'failing',
+}
+
+export enum SetWakeStatus {
+  Saved = 'saved',
+}
+
+export enum WakeLogEventName {
+  Scheduled = 'wake.scheduled',
+  Dropped = 'wake.dropped',
+  Delivered = 'wake.delivered',
+  Retry = 'wake.retry',
+  Refused = 'wake.refused',
+  GaveUp = 'wake.gave_up',
+  NoticeFailed = 'wake.notice_failed',
+  NoticeSkipped = 'wake.notice_skipped',
 }
 
 export enum ChannelErrorKind {

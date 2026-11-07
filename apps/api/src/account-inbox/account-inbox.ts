@@ -21,8 +21,10 @@ import type {
   StoredMedia,
   WaitForReplyInput,
   WaitForReplyResult,
+  WakeDependencies,
+  WakeTransport,
 } from '@zapbip/core';
-import { ChannelErrorKind } from '@zapbip/types';
+import { ChannelErrorKind, WakeRung, type OwnerLocale } from '@zapbip/types';
 import { D1ChannelRestrictions } from '../adapters/d1/d1-channel-restrictions';
 import { D1MessageIndex } from '../adapters/d1/d1-message-index';
 import { findOwnerByAccountId } from '../adapters/d1/d1-owner-directory';
@@ -30,19 +32,23 @@ import { createIdGenerator } from '../adapters/platform/ids';
 import { loadDurableClock, type DurableClock } from '../adapters/platform/clock';
 import { mediaStoreOf } from '../adapters/r2/r2-media-store';
 import { createSqliteInboxRepository } from '../adapters/sqlite/sqlite-inbox-repository';
+import { createDispatchingAgentWaker } from '../adapters/wake/dispatching-agent-waker';
+import { createFetchWakeTransport } from '../adapters/wake/fetch-wake-transport';
 import { createNoneWaker } from '../adapters/wake/none-waker';
 import { createCloudApiMessageSender } from '../adapters/whatsapp/cloud-api-message-sender';
 import { createGraphClient } from '../adapters/whatsapp/graph-client';
 import { readWhatsAppEnvironment } from '../adapters/whatsapp/read-whatsapp-env';
+import { createWebhookAgentWaker } from '../adapters/wake/webhook-agent-waker';
 import type { AccountInboxRpc, AgentRequest, CallOutcome } from '../contract/account-inbox-rpc';
 import type { DueTimeProvider } from '../contract/due-time-provider';
 import type { Bindings } from '../contract/env';
 import { LogEvent, type LogFields } from '../contract/log';
 import { logEvent } from '../log';
 import { nextAlarmAt } from './alarm-time';
-import { ALARM_MIN_DELAY_MS, AlarmErrorCode } from './constants';
+import { ALARM_MIN_DELAY_MS, AlarmErrorCode, OWNER_LOCALE_STORAGE_KEY } from './constants';
 import { ACCOUNT_INBOX_MIGRATIONS } from './migrations';
 import { runMigrations } from './run-migrations';
+import { createWakeDependencies } from './wake-dependencies';
 
 function failureLog(input: { error: inbox.InboxError }): LogFields {
   const { error } = input;
@@ -56,6 +62,7 @@ type ReceiveOwnerMessageRequest = Parameters<AccountInboxRpc['receiveOwnerMessag
 export class AccountInbox extends DurableObject<Bindings> implements AccountInboxRpc {
   protected sender!: MessageSender;
   protected clock!: DurableClock;
+  protected wake!: WakeDependencies;
   protected readonly dueTimeProviders: DueTimeProvider[] = [];
   protected accountId!: string;
   private dependencies!: CoreDependencies;
@@ -73,7 +80,14 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     this.clock = await loadDurableClock({ storage: this.ctx.storage, onAdvanced: () => this.armAlarm() });
     const mediaStore = mediaStoreOf({ bindings: this.env, clock: this.clock });
     this.sender = this.createSender({ mediaStore });
-    this.dependencies = {
+    this.wake = createWakeDependencies({
+      env: this.env,
+      accountId,
+      storage: this.ctx.storage,
+      clock: this.clock,
+      transport: this.createWakeTransport(),
+    });
+    const inboxOnlyDependencies: CoreDependencies = {
       accountId,
       repository: createSqliteInboxRepository({ storage: this.ctx.storage, clock: this.clock }),
       sender: this.sender,
@@ -83,7 +97,22 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       ids: createIdGenerator(),
       waiters: inbox.createReplyWaiters({ clock: this.clock }),
     };
-    this.dueTimeProviders.push(this.createExpiryProvider(), this.createRoutingListProvider(), this.createNoticeRetryProvider());
+    this.dependencies = {
+      ...inboxOnlyDependencies,
+      waker: createDispatchingAgentWaker({
+        wakers: {
+          [WakeRung.Inbox]: createNoneWaker(),
+          [WakeRung.Webhook]: createWebhookAgentWaker({ dependencies: inboxOnlyDependencies, wake: this.wake }),
+        },
+        repository: this.wake.repository,
+      }),
+    };
+    this.dueTimeProviders.push(
+      this.createExpiryProvider(),
+      this.createRoutingListProvider(),
+      this.createWakeProvider(),
+      this.createNoticeRetryProvider(),
+    );
     await this.armAlarm();
   }
 
@@ -116,6 +145,27 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
         this.log({ event: LogEvent.Sweep });
       },
     };
+  }
+
+  private createWakeProvider(): DueTimeProvider {
+    return {
+      nextDueAt: () => this.wake.repository.findNextDueAt(),
+      runDue: () => this.runDueWakes(),
+    };
+  }
+
+  protected createWakeTransport(): WakeTransport {
+    return createFetchWakeTransport();
+  }
+
+  protected async runDueWakes(): Promise<void> {
+    const storedOwnerLocale = await this.ctx.storage.get<OwnerLocale>(OWNER_LOCALE_STORAGE_KEY);
+    await inbox.runDueWakes({
+      dependencies: this.dependencies,
+      wake: this.wake,
+      ownerLocale: storedOwnerLocale === undefined ? null : storedOwnerLocale,
+      publicHost: new URL(this.env.PUBLIC_ORIGIN).hostname,
+    });
   }
 
   private createRoutingListProvider(): DueTimeProvider {
@@ -266,9 +316,26 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     return this.outcome({ run: () => inbox.completeUpload({ ...input, dependencies: this.dependencies }) });
   }
 
+  setWake(input: Parameters<AccountInboxRpc['setWake']>[0]): Promise<CallOutcome<inbox.SetWakeResult>> {
+    return this.outcome({
+      run: async () => {
+        await inbox.touchAgent({ dependencies: this.dependencies, agent: input.connection.agent });
+        return inbox.setWake({
+          ...input,
+          dependencies: this.dependencies,
+          wake: this.wake,
+          publicHost: new URL(this.env.PUBLIC_ORIGIN).hostname,
+        });
+      },
+    });
+  }
+
   receiveOwnerMessage(input: ReceiveOwnerMessageRequest): Promise<CallOutcome<inbox.ReceiveResult>> {
     return this.outcome({
-      run: () => inbox.receiveOwnerMessage({ ...input, dependencies: this.dependencies }),
+      run: async () => {
+        await this.ctx.storage.put(OWNER_LOCALE_STORAGE_KEY, input.ownerLocale);
+        return inbox.receiveOwnerMessage({ ...input, dependencies: this.dependencies });
+      },
       describe: (value) => ({ event: value.duplicate ? LogEvent.OwnerMessageDuplicate : LogEvent.OwnerMessage }),
     });
   }

@@ -17,6 +17,7 @@
     },
   ],
   "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "zapbip-media" }],
+  "analytics_engine_datasets": [{ "binding": "WAKE_METRICS", "dataset": "zapbip_wake" }],
   "rules": [{ "type": "Text", "globs": ["**/*.sql"], "fallthrough": true }],
   "vars": { "PUBLIC_ORIGIN": "https://mcp.zapbip.com", "WHATSAPP_GRAPH_BASE_URL": "https://graph.facebook.com" },
   "env": {
@@ -40,6 +41,7 @@
         },
       ],
       "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "zapbip-media" }],
+      "analytics_engine_datasets": [{ "binding": "WAKE_METRICS", "dataset": "zapbip_wake" }],
       "rules": [{ "type": "Text", "globs": ["**/*.sql"], "fallthrough": true }],
     },
   },

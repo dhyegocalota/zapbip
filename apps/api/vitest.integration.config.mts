@@ -2,6 +2,8 @@ import { cloudflareTest } from '@cloudflare/vitest-pool-workers';
 import { defineConfig } from 'vitest/config';
 import { DEVELOPMENT_ENVIRONMENT } from './src/contract/constants';
 
+const WAKE_TEST_SECRET_KEY = Buffer.alloc(32).toString('base64');
+
 export default defineConfig({
   plugins: [
     cloudflareTest({
@@ -14,6 +16,7 @@ export default defineConfig({
           WHATSAPP_VERIFY_TOKEN: 'test-verify-token',
           WHATSAPP_PHONE_NUMBER_ID: '1000000000000001',
           WHATSAPP_GRAPH_BASE_URL: 'http://127.0.0.1:4012',
+          WAKE_SECRET_KEY: WAKE_TEST_SECRET_KEY,
         },
       },
     }),

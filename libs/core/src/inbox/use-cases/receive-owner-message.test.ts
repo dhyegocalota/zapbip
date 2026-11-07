@@ -532,6 +532,15 @@ describe('receiveOwnerMessage waking', () => {
     expect(environment.sender.sessions).toHaveLength(0);
   });
 
+  test('an agent whose wake failed is told again for the next message while earlier ones are unread', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha'] });
+    await receiveText({ environment, text: '@alpha one' });
+    environment.waker.failWakesOf({ agent: 'alpha' });
+    await receiveText({ environment, text: '@alpha two' });
+    expect(environment.waker.notifications).toHaveLength(2);
+  });
+
   test('CU-146 a live waiter skips the waker', async () => {
     const environment = await createEnvironment();
     await registerAgents({ environment, agents: ['alpha'] });
