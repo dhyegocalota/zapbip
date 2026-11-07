@@ -7,13 +7,12 @@ export type ChannelNotification = { method: string; params: { content: string; m
 
 export function buildOwnerNotice(input: { message: Message }): OwnerNotice {
   const { message } = input;
-  const isOwnWords = !message.forwarded;
   return {
     messageId: message.messageId,
     kind: message.kind,
     sender: CHANNEL_SENDER,
-    verified: isOwnWords,
-    forwarded: !isOwnWords,
+    verified: message.forwarded === false,
+    forwarded: message.forwarded,
     text: ownerMessageText({ message }),
   };
 }
