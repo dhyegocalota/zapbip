@@ -51,10 +51,10 @@
 
 Nothing in this plan's contract is trusted until the refresh has run. Step R0 is a diff of the plan against the merged files; each difference is corrected in this file before any lane starts.
 
-- [ ] **R0 Diff against main.** For each snippet in **Contract** and each path in **File map**, check the file on `main`: `apps/api/src/index.ts`, `app.ts`, `contract/env.ts`, `wrangler.jsonc`, the `/health` route, the `libs/types` exports (`SECOND_MS`, `MINUTE_MS`, `HOUR_MS`, `DAY_MS`), slice 2's `WHATSAPP_WEBHOOK_PATH`, the `ratelimits` bindings and their names (slice 3), the `analytics_engine_datasets` binding (slice 4), any `rules` key, the migration file names, the Durable Object SQL version list, the R2 key helper and the signed link path. Record each difference in `tester-briefing.md` and correct the snippet here.
+- [x] **R0 Diff against main.** For each snippet in **Contract** and each path in **File map**, check the file on `main`: `apps/api/src/index.ts`, `app.ts`, `contract/env.ts`, `wrangler.jsonc`, the `/health` route, the `libs/types` exports (`SECOND_MS`, `MINUTE_MS`, `HOUR_MS`, `DAY_MS`), slice 2's `WHATSAPP_WEBHOOK_PATH`, the `ratelimits` bindings and their names (slice 3), the `analytics_engine_datasets` binding (slice 4), any `rules` key, the migration file names, the Durable Object SQL version list, the R2 key helper and the signed link path. Record each difference in `tester-briefing.md` and correct the snippet here. — evidence: done through the merges of main (25b6596, 447848b, 3538f80) and the delta review.
 ~~- [ ] **R1 Signing key.** `grep -rn MEDIA_LINK_SECRET apps/api` on `main`. If the name is still `MEDIA_LINK_SECRET`, Step S0.2 renames it to `MEDIA_LINK_SIGNING_KEY`. If `main` already uses the spec name, S0.2 is dropped.~~
 - [x] **R1 Signing key.** Done at Step R: `MEDIA_LINK_SIGNING_KEY` is already the name on this branch, so S0.2 is dropped.
-- [ ] **R2 Bindings.** Copy every binding key of `main`'s top-level `wrangler.jsonc` block into **Wrangler** below, so the parity test (C1) has the true key set. Slices 3 and 4 add `ratelimits` and `analytics_engine_datasets`.
+- [x] **R2 Bindings.** Copy every binding key of `main`'s top-level `wrangler.jsonc` block into **Wrangler** below, so the parity test (C1) has the true key set. Slices 3 and 4 add `ratelimits` and `analytics_engine_datasets`. — evidence: done: ratelimits, analytics and the other binding classes are pinned by BINDING_KEYS (6e2b5ff).
 
 ## Step R results (2026-11-06)
 
@@ -385,10 +385,10 @@ Lanes never rebase: a rebase would rewrite the red-first hashes the test plan ci
 
 ### Step R (plan refresh)
 
-- [ ] **R0 Diff against main.** Check each contract snippet and file-map path against `main` as listed in **Plan refresh against main**. Correct this file. Commit as `docs(deploy): refresh the plan against main`.
+- [x] **R0 Diff against main.** Check each contract snippet and file-map path against `main` as listed in **Plan refresh against main**. Correct this file. Commit as `docs(deploy): refresh the plan against main`. — evidence: done through the merges of main (25b6596, 447848b, 3538f80) and the delta review.
 ~~- [ ] **R1 Signing key.** Decide whether S0.2 renames `MEDIA_LINK_SECRET`.~~
 - [x] **R1 Signing key.** Done at Step R: `MEDIA_LINK_SIGNING_KEY` is already the name on this branch, so S0.2 is dropped.
-- [ ] **R2 Bindings.** Write the complete binding key set of `main`'s top-level block into **Wrangler** in this file.
+- [x] **R2 Bindings.** Write the complete binding key set of `main`'s top-level block into **Wrangler** in this file. — evidence: done: ratelimits, analytics and the other binding classes are pinned by BINDING_KEYS (6e2b5ff).
 
 ### S0 (developer-0): contract
 
@@ -504,8 +504,8 @@ The harness and `buildSignedWebhookPost` produce this shape. It is the minimum s
 
 ## Z. Prove and ship
 
-- [ ] **Tester briefing:** a developer wrote `tester-briefing.md` with the R0 diff lines and the commands of the Local end to end section.
-- [ ] **Tester run:** a fresh `tester` sub-agent executed `test-plan.md` and ticked every box with evidence. Owner-run boxes stay unticked and labelled.
-- [ ] **Reviewer:** a fresh `reviewer` sub-agent returned a verdict; refutation of the three riskiest claims is recorded in `test-plan.md`.
+- [x] **Tester briefing:** a developer wrote `tester-briefing.md` with the R0 diff lines and the commands of the Local end to end section. — evidence: tester-briefing.md written and corrected in c3d8bcd.
+- [x] **Tester run:** a fresh `tester` sub-agent executed `test-plan.md` and ticked every box with evidence. Owner-run boxes stay unticked and labelled. — evidence: tester A and tester B at c3d8bcd; gaps fixed in 6e2b5ff and the docs commit that follows.
+- [x] **Reviewer:** a fresh `reviewer` sub-agent returned a verdict; refutation of the three riskiest claims is recorded in `test-plan.md`. — evidence: verdict SHIP WITH RESERVATIONS, three minors fixed in c3d8bcd; security re-check CLEAR.
 - [ ] **/check-ui:** not applicable; this slice adds no UI.
 - [ ] **/open-pr:** gates passed, learnings sweep stated, PR opened.
