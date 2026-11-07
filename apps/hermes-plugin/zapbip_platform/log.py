@@ -29,5 +29,9 @@ for redacted_logger_name in REDACTED_LOGGER_NAMES:
     logging.getLogger(redacted_logger_name).addFilter(SecretPathRedaction())
 
 
+def redact_root_handlers() -> None:
+    raise NotImplementedError("redact_root_handlers is not implemented")
+
+
 def log_connector_event(*, event: ConnectorLogEvent | PluginLogEvent, **fields: str | int | bool | None) -> None:
     logger.info(json.dumps({"event": event.value, **fields}))

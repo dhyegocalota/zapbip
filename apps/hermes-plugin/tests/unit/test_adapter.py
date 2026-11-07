@@ -1,4 +1,6 @@
 import asyncio
+import io
+import logging
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -111,6 +113,28 @@ def test_replaced_socket_ends_without_a_second_run() -> None:
 
         assert sockets.runs == 1
         assert gateway_view_of(adapter=adapter)._running is False
+
+    asyncio.run(scenario())
+
+
+def test_connect_redacts_the_secret_path_for_a_root_handler_added_after_import() -> None:
+    async def scenario() -> None:
+        stream = io.StringIO()
+        handler = logging.StreamHandler(stream)
+        root_logger = logging.getLogger()
+        root_logger.addHandler(handler)
+        previous_level = root_logger.level
+        root_logger.setLevel(logging.DEBUG)
+        sockets = SocketRecorder()
+        adapter = build_adapter(sockets=sockets, texts=TextRecorder())
+
+        await adapter.connect()
+        logging.getLogger("mcp.client.streamable_http").debug("connecting to %s", CONNECTION_LINK)
+
+        root_logger.removeHandler(handler)
+        root_logger.setLevel(previous_level)
+        await adapter.disconnect()
+        assert "zb_conn_secret" not in stream.getvalue()
 
     asyncio.run(scenario())
 
