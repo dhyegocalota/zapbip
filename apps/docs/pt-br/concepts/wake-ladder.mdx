@@ -33,7 +33,7 @@ Quando você escreve, o zapbip diz mais ou menos quando esperar a resposta:
   contact="zapbip"
   messages={[
     { you: true, text: 'Consegue resumir o relatório?' },
-    { notice: true, text: 'O Claude olha a caixa de entrada de hora em hora. Última olhada: há 20 min.' },
+    { notice: true, text: 'O agente Claude olha a caixa de hora em hora. Última checagem há 20 min. Sua mensagem espera lá até a próxima olhada.' },
   ]}
 />
 
@@ -41,7 +41,7 @@ Se a tarefa para de rodar, o zapbip avisa uma vez, depois que passa o dobro do i
 
 <Chat
   contact="zapbip"
-  messages={[{ notice: true, text: 'O Claude não olha a caixa de entrada há 2 h. Suas mensagens esperam até ele voltar.' }]}
+  messages={[{ notice: true, text: 'O agente Claude parou de olhar a caixa. Última checagem há 2 h. Suas mensagens esperam lá até ele voltar.' }]}
 />
 
 A próxima olhada encerra o aviso sem outra mensagem.
