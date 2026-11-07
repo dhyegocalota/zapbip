@@ -43,7 +43,7 @@ O Hermes pode consultar a caixa de entrada. Adicione o servidor MCP da configura
 Instale o pacote no ambiente Python em que o Hermes roda:
 
 ```bash
-pip install "zapbip-platform @ https://mcp.zapbip.com/pkg/zapbip_platform-0.1.0-py3-none-any.whl#sha256=25e9eade35908bffc09ed502cde3f41bc4eb59ac6f7befefe4a8c0aba0b30ee1"
+curl -fsSL https://mcp.zapbip.com/pkg/zapbip_platform-0.1.0-requirements.txt -o zapbip-requirements.txt && echo "fc258f304227f3eb44169c5416f581424296a876995c6499daaa42c7cf04cc31  zapbip-requirements.txt" | sha256sum -c - && pip install --require-hashes -r zapbip-requirements.txt
 ```
 
 Depois ative-o em `~/.hermes/config.yaml`:
