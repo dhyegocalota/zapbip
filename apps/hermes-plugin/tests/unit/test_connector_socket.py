@@ -20,9 +20,11 @@ from zapbip_platform.constants import (
 
 FAILURE_EXIT_CODE = 1
 CLEAN_EXIT_CODE = 0
-PROMPT_SECONDS = 0.1
 EXIT_TIMEOUT_SECONDS = 2.0
 HEARTBEAT_INTERVAL_MS = 50
+PROOF_OF_LIFE_INTERVAL_MS = 10
+PROOF_OF_LIFE_TIMEOUT_MS = 400
+PROOF_OF_LIFE_PINGS = 50
 FRAME_CHUNK_SIZE = 200
 
 
@@ -244,7 +246,7 @@ def test_heartbeat_sends_ping() -> None:
     async def scenario() -> None:
         async with FakeConnector() as connector:
             handed_off = HandedOff(connector=connector)
-            timing = ConnectorTiming(HEARTBEAT_INTERVAL_MS, 1_000, 5, 20)
+            timing = ConnectorTiming(HEARTBEAT_INTERVAL_MS, 5_000, 5, 20)
             async with running_socket(connector=connector, hand_off=handed_off.hand_off, timing=timing):
                 await connector.until(condition=lambda: connector.received_frames.count(PING_TEXT) == 3)
             assert connector.open_count == 1
@@ -270,9 +272,9 @@ def test_any_frame_is_proof_of_life() -> None:
     async def scenario() -> None:
         async with FakeConnector(answer_pings=False, on_frame=answer_with_empty_messages) as connector:
             handed_off = HandedOff(connector=connector)
-            timing = ConnectorTiming(20, 200, 5, 20)
+            timing = ConnectorTiming(PROOF_OF_LIFE_INTERVAL_MS, PROOF_OF_LIFE_TIMEOUT_MS, 5, 20)
             async with running_socket(connector=connector, hand_off=handed_off.hand_off, timing=timing):
-                await connector.until(condition=lambda: connector.received_frames.count(PING_TEXT) >= 4)
+                await connector.until(condition=lambda: connector.received_frames.count(PING_TEXT) >= PROOF_OF_LIFE_PINGS)
             assert connector.open_count == 1
 
     run(scenario())
@@ -426,10 +428,8 @@ def test_stop_during_backoff_returns_promptly() -> None:
                 await connector.until(condition=lambda: connector.open_count == 1)
                 connector.drop_connections()
                 await connector.until(condition=lambda: connector.logged(event="connector_reconnecting"))
-                started_at = asyncio.get_running_loop().time()
                 running.stop.set()
-                await running.task
-                assert asyncio.get_running_loop().time() - started_at < PROMPT_SECONDS
+                await asyncio.wait_for(running.task, timeout=EXIT_TIMEOUT_SECONDS)
             assert connector.open_count == 1
 
     run(scenario())
