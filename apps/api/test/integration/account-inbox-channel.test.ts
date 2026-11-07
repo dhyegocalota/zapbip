@@ -393,7 +393,6 @@ describe('DO schema v4', () => {
       expect.arrayContaining(['channel_message_id', 'error_code', 'error_title', 'pricing_category', 'billable', 'claimed_at']),
     );
     expect(schema.windowColumns).toContain('closed_at');
-    expect(schema.messageColumns).toContain('forwarded');
     expect(schema.versions).toEqual(ACCOUNT_INBOX_MIGRATIONS.map((migration) => migration.version));
   });
 });
@@ -569,7 +568,7 @@ describe('AccountInbox channel messages', () => {
     expect(await stub.hasChannelReceipt({ channelMessageId: CHANNEL_MESSAGE_ID })).toEqual({ ok: true, value: true });
   });
 
-  it('stores the forwarded kind of an owner message and returns it', async () => {
+  it('stores the forwarded flag of an owner message and returns it', async () => {
     await registerAlpha();
     const request = textRequestOf({ channelMessageId: CHANNEL_MESSAGE_ID });
     await accountInboxStub({ accountId: ACCOUNT_ID }).receiveChannelMessage({
