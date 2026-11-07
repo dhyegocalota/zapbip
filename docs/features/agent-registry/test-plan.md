@@ -4,6 +4,12 @@ Every checkbox states the input and the exact expected outcome. A ticked box car
 
 Areas: **R** generator, **G** guard (add and remove), **I** install, **D** docs pages, **C** connector, **P** plugins, **B** boundaries, **F** facts and folded tests, **M** mutations, **W** Playwright walks, **O** owner-run.
 
+## Goldens first (pins, green on landing)
+
+- [ ] `libs/agents/testing/golden.test.ts` (Step 4a, commit says `pin`): the full install page for `en_US` and `pt_BR`, each with and without a standby, equals its golden; each of the 22 matrix rows and each navigation entry equals its golden, keyed by agent. Expected: green before any refactor.
+- [ ] `git log --oneline -- libs/agents/testing/golden` at the end of the feature lists exactly two commits: the pin (Step 4a) and the reorder (Step 13b). Any other commit fails the review.
+- [ ] Step 13b diff: only `order.json` changes under `golden/`; the install page sections are in rung-then-name order (claude-code, codex, cursor, gemini-cli, hermes, openclaw, claude-ai, grok-bot, chatgpt, grok-web); the matrix swaps only Grok Bot and claude.ai; the `Agents` and `IAs` lists equal the matrix order.
+
 ## The failing test first
 
 - [ ] `libs/agents/generate/discover.test.ts::lists the folders under supported in name order` — input: roots `[libs/agents/testing/fixture-agent, libs/agents/testing/fixture-plugin-agent]`; expected: ids `fixture-agent`, `fixture-plugin-agent`. Red: `Error: discoverAgents is not implemented`.
@@ -40,9 +46,10 @@ Areas: **R** generator, **G** guard (add and remove), **I** install, **D** docs 
 - [ ] **G1 Add:** plan(real agents + `testing/fixture-agent`) compared with plan(real agents). Expected: the changed paths are exactly `libs/agents/src/generated/ids.ts`, `libs/agents/src/generated/definitions.ts`, `libs/agents/src/generated/install.ts`, `libs/agents/testing/fixture-agent/install.en_US.md`, `libs/agents/testing/fixture-agent/install.pt_BR.md`, `apps/docs/agents/fixture-agent.mdx`, `apps/docs/pt-br/agents/fixture-agent.mdx`, `apps/docs/snippets/agents/matrix.mdx`, `apps/docs/snippets/pt-br/agents/matrix.mdx`, `apps/docs/docs.json`. No other path.
 - [ ] **G1 content:** `ids.ts` holds `FixtureAgent = 'fixture-agent'` in `AgentId` and `InstallClient`; both matrices have one `[Fixture Agent](/agents/fixture-agent)` / `[Agente de teste](/pt-br/agents/fixture-agent)` row; `Agents` and `IAs` list the page; `renderInstallPage` given the planned sections holds `## Fixture Agent` once and names `Fixture Agent` in "Identify your product"; guide parity, the install-section checks, the heading checks and the listen-token checks each list `fixture-agent` among the agents they checked, with 0 violations.
 - [ ] **G2 Confinement:** a spy on `readSource` while planning the fixture. Expected: every path read for `fixture-agent` starts with `libs/agents/testing/fixture-agent/`.
+- [ ] **G2c Connector fixture:** plan + `testing/fixture-connector-agent`. Expected: the G1 set plus `libs/agents/src/generated/connector.ts` and the two connector snippets; `ConnectorClient` gains `FixtureConnectorAgent`; the connector unit suite runs the fixture runtime against its fake binary.
 - [ ] **G2b Plugin fixture:** plan + `testing/fixture-plugin-agent`. Expected: the G1 set plus `libs/agents/src/generated/plugins.ts`; the plugin check lists `fixture-plugin-agent`.
-- [ ] **G3 Remove:** plan(real agents − `supported/cursor`). Expected: deletions exactly `apps/docs/agents/cursor.mdx`, `apps/docs/pt-br/agents/cursor.mdx`. No planned file contains `agents/cursor`, `Cursor = 'cursor'` or `[Cursor](`. Each matrix has 10 rows. The install page has no `## Cursor`. Every check passes. Note: `api2.cursor.sh` in the Grok Bot page is not a match, so the assertion uses the tokens above, not the word.
-- [ ] **G4 No leak, every agent:** for each of the 11 ids, no file outside `libs/agents/supported/<id>/**` and the generated outputs references its enum members or `supported/<id>`. Expected: 0 hits ×11.
+- [ ] **G3 Remove, all 11 (ticked when the pages exist, Step 15):** `test.each` over every real id, not only Cursor. **G3 Remove, first form:** plan(real agents − `supported/cursor`). Expected: deletions exactly `apps/docs/agents/cursor.mdx`, `apps/docs/pt-br/agents/cursor.mdx`. No planned file contains `agents/cursor`, `Cursor = 'cursor'` or `[Cursor](`. Each matrix has 10 rows. The install page has no `## Cursor`. Every check passes. Note: `api2.cursor.sh` in the Grok Bot page is not a match, so the assertion uses the tokens above, not the word.
+- [ ] **G4 No leak, every agent (ticked after Step 27, never on fixtures alone):** for each of the 11 ids, no file outside `libs/agents/supported/<id>/**` and the generated outputs references its enum members or `supported/<id>`. Expected: 0 hits ×11.
 
 ## I. Install
 
@@ -79,6 +86,12 @@ Areas: **R** generator, **G** guard (add and remove), **I** install, **D** docs 
 - [ ] Hosted artifacts — expected: `GET /pkg/<wheel>` and `GET /pkg/<requirements>` return the same bytes, `content-type` and 404s as on `origin/main` (`package-route.test.ts`, import changes only); the preflight wheel step refuses with the same text; `HERMES_INSTALL_COMMAND` is read from `supported/hermes` and `hermes-wheel.e2e.test.ts` passes unchanged; the hash rewrite of `scripts/hermes-wheel/build.ts` lands in `supported/hermes/wheel.ts`.
 - [ ] `@zapbip/core` no longer exports `HERMES_INSTALL_COMMAND`. Expected: `git grep -n HERMES_INSTALL_COMMAND -- libs/core apps/docs tools` returns 0 lines outside `libs/agents`.
 
+- [ ] Hash embedding — for each plugin with an artifact marked `embeddedInInstallCommand`: `installCommand` contains the artifact's `expectedSha256`; Hermes: the requirements hash is in `HERMES_INSTALL_COMMAND` and the requirements file in `releaseFolder` contains the wheel hash. Mutation: change one hex digit in `plugin.ts` -> fails naming the plugin and the artifact `label`.
+- [ ] `routes/package.ts` — the allowlist equals the artifact filenames: `GET /pkg/<wheel>` and `GET /pkg/<requirements>` are 200; `/pkg/other.whl`, `/pkg/../x` and a `\n` suffixed name are 404 exactly as on `origin/main`.
+- [ ] Generic build — `pnpm plugin-wheel:build hermes` rewrites the hashes in `supported/hermes/wheel.ts` by exact-line match and fails on a missing line; `pnpm plugin-wheel:build fixture-plugin-agent` builds nothing outside the fixture; the root `package.json` scripts contain no agent name (`git grep -n -i 'hermes\|openclaw' package.json` returns 0 lines).
+- [ ] Workflow rows — the `unit` matrix rows and pip-install lines of `verify.yml` equal what `planGeneratedFiles` renders from `AGENT_PLUGINS`; hand-editing one row fails `every generated file is fresh`. Adding `testing/fixture-plugin-agent` to the plan adds one row and one pip line, and no other changed path is outside the G1 set plus `verify.yml`.
+- [ ] Two-folder proof — O4 below.
+
 ## B. Boundaries
 
 - [ ] B1 `libs/core` and `libs/types` import no `@zapbip/agents`. Expected: 0 hits.
@@ -93,6 +106,10 @@ Areas: **R** generator, **G** guard (add and remove), **I** install, **D** docs 
 
 - [ ] The rung and delay checks of `docs-experience.test.ts` read `AGENT_DEFINITIONS`. Expected: no `CLIENT_LISTEN_FACTS` left (`git grep` 0).
 - [ ] The background-running link is allowed exactly on the pages of agents with a connector facet (claude-code, codex), in both languages.
+- [ ] Speaker labels — `docs-conversations.test.ts` derives `SPEAKER_LABELS` from the fixed labels plus every `speakerNames`; the derived set is a superset of today's list (Owner, You, Dono, Você, Voce, Agent, Agente, zapbip, Claude Code, Claude, Codex, ChatGPT, Grok Bot, Grok, Cursor, Gemini CLI, Gemini, Hermes, OpenClaw). Mutation: drop `Gemini` from gemini-cli's `speakerNames` -> the superset test fails naming it.
+- [ ] `connectCommand` — the argument type is `ConnectorClient`; `connectCommand({ client: 'nope' })` does not typecheck. `apps/connector/test/unit/cli.test.ts`: `--client nope` throws the usage line, and a missing `--client` throws it too; neither falls back to a default.
+- [ ] `tools/install-e2e` is gone: `git ls-files tools/install-e2e` returns 0 lines; `delivery-docs.test.ts` no longer lists it; `git grep -n 'tools/install-e2e' -- . ':!docs/features' ':!docs/adr'` returns 0 lines; `AGENTS.md` names the script only at `libs/agents/supported/claude-code/install-e2e.sh`.
+- [ ] READMEs and rules — `apps/connector/README.md` and `libs/core/README.md` state purpose only and name no moved path; `git grep -n 'libs/core/src/install/prompts\|snapshots\|scripts/hermes-wheel\|scripts/e2e/clients' -- AGENTS.md .claude/rules '*/README.md'` returns 0 lines of stale paths; `rules.test.ts` is green.
 - [ ] `install-e2e.test.ts` iterates the agents with `install-e2e.sh`. Expected: 1 (claude-code); every existing assertion holds at the new path.
 
 ## M. Mutations (break it, see red, restore)
@@ -122,6 +139,9 @@ Areas: **R** generator, **G** guard (add and remove), **I** install, **D** docs 
 
 ## O. Owner-run (scratch worktree, outside the gate)
 
+- [ ] O4 Plugin agent is two folders: `pnpm agents:new demo-plugin --plugin`, point `plugin.ts` at a new `apps/demo-plugin/`, `pnpm agents:generate`. Expected: `git status --porcelain` shows only paths under `libs/agents/supported/demo-plugin/`, `apps/demo-plugin/`, and the generated set of G2b (including the `verify.yml` regions); no other folder.
+- [ ] O5 Remove each of the 11 real agents, one throwaway worktree each (run in sequence, one at a time): regenerate. Expected per agent: typecheck green, `agents:check` clean, no planned file contains the agent's id, and the deleted paths are exactly its pages and generated entries.
+
 - [ ] O1 Add: `pnpm agents:new demo-agent`, edit the names, `pnpm agents:generate`. Expected: `git status --porcelain` shows only `libs/agents/supported/demo-agent/` and the generated set of G1 (with `demo-agent`); `pnpm verify all` green; `mint dev` shows the page in both languages, in the nav and in the matrix; the install page names Demo Agent.
 - [ ] O2 Remove: `rm -r libs/agents/supported/demo-agent`, `pnpm agents:generate`. Expected: `git status --porcelain` empty.
 - [ ] O3 Remove a real agent (cursor) in a throwaway worktree, regenerate. Expected: typecheck green, `pnpm verify all` green, `mint broken-links` exit 0; `pnpm agents:mentions cursor` lists only illustrative mentions (if any), each with its path.
@@ -132,8 +152,9 @@ Empty on purpose.
 
 ## Adversarial review
 
-- [ ] Claim 1: "the install page is byte-identical apart from section order" — attack: render on `origin/main` and on the head for both locales, with and without a standby, and diff after sorting the sections; result: <refuted | held>
+- [ ] Claim 1: "the install page is byte-identical apart from section order" — attack: the goldens of Step 4a against the head, and a fresh render on `origin/main` against the head for both locales, with and without a standby, diffed after sorting the sections; result: <refuted | held>
 - [ ] Claim 2: "removing a folder needs no other edit" — attack: O3 for the agent with the most cross-references (claude-code: connector runtime, install-e2e, background running); result: <refuted | held>
+- [ ] Claim 4: "a plugin agent is exactly two folders" — attack: O4 with a Python plugin and with an npm plugin; also search `git grep -n -i 'hermes\|openclaw' -- .github package.json scripts docs/runbooks` for any agent name left outside the agent folders and the plugin packages; result: <refuted | held>
 - [ ] Claim 3: "the Worker never bundles docs content" — attack: B5 grep plus a dependency trace from `install-page.ts` with `esbuild --metafile`; result: <refuted | held>
 
 ## Coverage honesty

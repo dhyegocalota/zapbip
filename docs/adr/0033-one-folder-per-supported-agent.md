@@ -16,11 +16,12 @@ A supported agent is described today in four packages. Its enum member is in `li
    - its two hand-written pages;
    - its install section and owner copy, with their tests;
    - when it has them, its connector runtime, a pointer to its plugin package, and its owner-run install script.
-2. A plugin package stays in `apps/<id>-plugin/`, with its own end-to-end client. The agent folder points at it, and holds its install command and the files it hosts (the Hermes wheel, [ADR 0034](0034-the-hermes-wheel-is-self-hosted-and-installed-by-a-pinned-hash.md)); the Worker serves and the preflight checks whatever the plugins declare. A plugin agent is two folders.
+2. A plugin package stays in `apps/<id>-plugin/`, with its own end-to-end client. The agent folder points at it, and holds its install command and the files it hosts (the Hermes wheel, [ADR 0034](0034-the-hermes-wheel-is-self-hosted-and-installed-by-a-pinned-hash.md)); the Worker serves and the preflight checks whatever the plugins declare. A plugin agent is exactly two folders: the root scripts take its id, the wheel build and the plugin end-to-end iterate the plugins, and the plugin rows of `verify.yml` are generated.
 3. `pnpm agents:generate` writes every derived file: the enums `AgentId`, `InstallClient`, `ConnectorClient` and `PluginAgent` (in `libs/agents/src/generated/ids.ts`), the facet registries, the rendered install sections, the agent pages under `apps/docs`, the matrix and connector snippets, and the `Agents` and `IAs` page lists of `docs.json`. Generated files are committed. A shape test runs the same planner and fails on any stale file, so a hand edit fails in every gate class.
 4. `libs/core` and `libs/types` know no agent id. The core exposes ports (`InstallSection`, `InstallPageSection`). The composition roots inject the registry: `apps/api`, `apps/connector`, the docs tooling. The Worker imports only the install and plugin facets, and those import no `node:` module.
-5. Pages and copy are moved, never generated or translated (ADR 0030 stands). One order is used everywhere: wake-ladder rung, then name.
-6. Pinned wake providers are not agents. They stay in `libs/core/src/wake` under [ADR 0019](0019-outbound-wake-targets-pinned-providers-and-guarded-generic-hosts.md).
+5. Pages and copy are moved, never generated or translated (ADR 0030 stands). One order is used everywhere: wake-ladder rung, then name. The change of order is one commit, after goldens of the full install page, the matrix rows and the navigation are pinned.
+6. The claim is "at most two folders" for adding or removing an agent on an existing toolchain. Outside it, by decision: a new pinned wake provider (`libs/core/src/wake`, `fetch-wake-transport.ts`), and the first plugin of a language the repository has no toolchain for.
+7. Pinned wake providers are not agents. They stay in `libs/core/src/wake` under [ADR 0019](0019-outbound-wake-targets-pinned-providers-and-guarded-generic-hosts.md).
 
 ## Alternatives considered
 
