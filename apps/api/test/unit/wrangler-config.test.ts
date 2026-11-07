@@ -14,6 +14,29 @@ const GRAPH_ORIGIN = 'https://graph.facebook.com';
 const DEVELOPMENT_ONLY_VAR = 'WHATSAPP_MEDIA_DOWNLOAD_ORIGIN';
 const DEPLOYED_BLOCK_MAIN = 'src/index.ts';
 const DEVELOPMENT_BLOCK_MAIN = 'src/index.dev.ts';
+const BACKOFFICE_RATE_LIMITER = 'BACKOFFICE_RATE_LIMITER';
+const BACKOFFICE_LIMIT = { limit: 5, period: 60 };
+const BACKOFFICE_ORIGINS: Record<DeployEnvironment, string> = {
+  [DeployEnvironment.Production]: 'https://backoffice.zapbip.com',
+  [DeployEnvironment.Staging]: 'https://backoffice-staging.zapbip.com',
+  [DeployEnvironment.Development]: 'http://backoffice.localhost:8787',
+};
+const BACKOFFICE_ROUTES: Record<DeployEnvironment, { pattern: string; custom_domain: boolean }[] | undefined> = {
+  [DeployEnvironment.Production]: [
+    { pattern: 'mcp.zapbip.com', custom_domain: true },
+    { pattern: 'backoffice.zapbip.com', custom_domain: true },
+  ],
+  [DeployEnvironment.Staging]: [
+    { pattern: 'mcp-staging.zapbip.com', custom_domain: true },
+    { pattern: 'backoffice-staging.zapbip.com', custom_domain: true },
+  ],
+  [DeployEnvironment.Development]: undefined,
+};
+const BACKOFFICE_NAMESPACES: Record<DeployEnvironment, string> = {
+  [DeployEnvironment.Production]: '1005',
+  [DeployEnvironment.Staging]: '2005',
+  [DeployEnvironment.Development]: '3005',
+};
 const EXPECTED_MIGRATIONS = [{ tag: 'v1', new_sqlite_classes: ['AccountInbox'] }];
 
 type DatabaseBinding = { binding: string; database_id: string; database_name: string };
@@ -25,7 +48,7 @@ type WranglerBlock = {
   d1_databases: DatabaseBinding[];
   r2_buckets: BucketBinding[];
   durable_objects: { bindings: { name: string }[] };
-  ratelimits: { name: string }[];
+  ratelimits: { name: string; namespace_id: string; simple: { limit: number; period: number } }[];
   analytics_engine_datasets: { binding: string }[];
   rules: { globs: string[] }[];
   vars: Record<string, string>;
@@ -99,7 +122,7 @@ describe('wrangler config', () => {
     expect(wranglerFile).toMatchObject({
       name: 'zapbip-api',
       main: DEPLOYED_BLOCK_MAIN,
-      routes: [{ pattern: 'mcp.zapbip.com', custom_domain: true }],
+      routes: BACKOFFICE_ROUTES[DeployEnvironment.Production],
       vars: {
         ENVIRONMENT: DeployEnvironment.Production,
         PUBLIC_ORIGIN: PRODUCTION_ORIGIN,
@@ -115,7 +138,7 @@ describe('wrangler config', () => {
     expect(wranglerFile.env.staging).toMatchObject({
       name: 'zapbip-api-staging',
       main: DEPLOYED_BLOCK_MAIN,
-      routes: [{ pattern: 'mcp-staging.zapbip.com', custom_domain: true }],
+      routes: BACKOFFICE_ROUTES[DeployEnvironment.Staging],
       vars: {
         ENVIRONMENT: DeployEnvironment.Staging,
         PUBLIC_ORIGIN: 'https://mcp-staging.zapbip.com',
@@ -153,6 +176,19 @@ describe('wrangler config', () => {
 
   it('declares exactly one cron per block, the shared scheduled tick', () => {
     expect(blockEntries.map(([, block]) => block.triggers.crons)).toEqual(Array(blockEntries.length).fill([SCHEDULED_CRON]));
+  });
+
+  it.each(blockEntries)('the %s block names its backoffice origin', (environment, block) => {
+    expect(block.vars.BACKOFFICE_ORIGIN).toBe(BACKOFFICE_ORIGINS[environment]);
+  });
+
+  it.each(blockEntries)('the %s block serves the backoffice custom domain where it is deployed', (environment, block) => {
+    expect(block.routes).toEqual(BACKOFFICE_ROUTES[environment]);
+  });
+
+  it.each(blockEntries)('the %s block limits backoffice sign-ins to five a minute in its own namespace', (environment, block) => {
+    const limiter = block.ratelimits.find((candidate) => candidate.name === BACKOFFICE_RATE_LIMITER);
+    expect(limiter).toMatchObject({ namespace_id: BACKOFFICE_NAMESPACES[environment], simple: BACKOFFICE_LIMIT });
   });
 
   it('leaves no placeholder in any deployed block', () => {
