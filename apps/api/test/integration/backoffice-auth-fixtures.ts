@@ -81,8 +81,8 @@ export async function openSignInForm(input: { env?: Bindings }): Promise<{ csrf:
   return { csrf, response };
 }
 
-export async function postSignIn(input: { key: string; code: string; env?: Bindings }): Promise<Response> {
-  const { csrf } = await openSignInForm({ env: input.env });
+export async function postSignIn(input: { key: string; code: string; csrf?: string; env?: Bindings }): Promise<Response> {
+  const csrf = input.csrf === undefined ? (await openSignInForm({ env: input.env })).csrf : input.csrf;
   return requestBackoffice({
     path: '/sign-in',
     method: 'POST',

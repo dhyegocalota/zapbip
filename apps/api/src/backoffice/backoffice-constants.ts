@@ -20,3 +20,11 @@ export const STATIC_SECURITY_HEADERS: Record<string, string> = {
 };
 export const NO_STORE = 'no-store';
 export const NON_ERROR_CODE = 'NonError';
+export const SESSION_COOKIE_NAME = '__Host-zb_bo_session';
+export const CSRF_COOKIE_NAME = '__Host-zb_bo_csrf';
+export const LOCALE_COOKIE_NAME = '__Host-zb_bo_locale';
+export const SESSION_TOKEN_BYTES = 32;
+export const CSRF_TOKEN_BYTES = 32;
+export const CLIENT_ADDRESS_HEADER = 'cf-connecting-ip';
+export const ACCEPT_LANGUAGE_HEADER = 'accept-language';
+export const ENGLISH_LANGUAGE_PREFIX = 'en';

@@ -36,9 +36,8 @@ describe('sign-in page', () => {
     expect(html).toContain('name="key"');
     expect(html).toContain('name="code"');
     expect(html).toContain(`name="csrf" value="${csrf}"`);
-    expect(response.headers.getSetCookie().find((line) => line.startsWith(`${CSRF_COOKIE}=`))).toMatch(
-      /Secure.*HttpOnly.*SameSite=Strict.*Path=\//is,
-    );
+    const csrfCookie = response.headers.getSetCookie().find((line) => line.startsWith(`${CSRF_COOKIE}=`));
+    ['Secure', 'HttpOnly', 'SameSite=Strict', 'Path=/'].forEach((attribute) => expect(csrfCookie).toContain(attribute));
   });
 });
 
@@ -61,9 +60,10 @@ describe('sign-in', () => {
   });
 
   test('a wrong key, a wrong code and both are one identical 401 and count as failures', async () => {
-    const wrongKey = await postSignIn({ key: WRONG_KEY, code: await validCode({}) });
-    const wrongCode = await postSignIn({ key: BACKOFFICE_TEST_KEY, code: WRONG_CODE });
-    const wrongBoth = await postSignIn({ key: WRONG_KEY, code: WRONG_CODE });
+    const { csrf } = await openSignInForm({});
+    const wrongKey = await postSignIn({ key: WRONG_KEY, code: await validCode({}), csrf });
+    const wrongCode = await postSignIn({ key: BACKOFFICE_TEST_KEY, code: WRONG_CODE, csrf });
+    const wrongBoth = await postSignIn({ key: WRONG_KEY, code: WRONG_CODE, csrf });
     expect([wrongKey.status, wrongCode.status, wrongBoth.status]).toEqual([STATUS_UNAUTHORIZED, STATUS_UNAUTHORIZED, STATUS_UNAUTHORIZED]);
     const bodies = await Promise.all([wrongKey, wrongCode, wrongBoth].map((response) => response.text()));
     expect(bodies[1]).toBe(bodies[0]);
