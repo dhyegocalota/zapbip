@@ -87,9 +87,9 @@ describe('rotating a connection over WhatsApp', () => {
     expect((await postMcp({ path: firstPath })).status).toBe(STATUS_UNAUTHORIZED);
     await failNextSessionSend({ accountId: id });
     await deliver({ bindings, text: `girar ${AGENT_NAME}` });
-    expect((await postMcp({ path: rotatedPath })).status).toBe(STATUS_OK);
     const restored = await installCodeDirectory().resolve({ installCode: rotatedCode, now: Date.now() });
     expect(restored.status).toBe(InstallCodeStatus.Ready);
+    expect((await postMcp({ path: rotatedPath })).status).toBe(STATUS_OK);
   });
 
   it('[row 500] answers the owner message that follows a rotate', async () => {
