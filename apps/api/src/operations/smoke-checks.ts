@@ -9,7 +9,7 @@ import { SmokeCheck, SmokeInput, type SmokeInputs, type SmokeScope, smokeChecksF
 
 const SMOKE_TEXT_PREFIX = '@smoke ';
 const WRONG_VERIFY_TOKEN = 'zapbip-smoke-wrong-token';
-const PLACEHOLDER_APP_SECRET = `${PLACEHOLDER_VALUE_PREFIX}META_APP_SECRET`;
+const PLACEHOLDER_APP_SECRET = `${PLACEHOLDER_VALUE_PREFIX}SMOKE_META_APP_SECRET`;
 const ZERO_SIGNATURE = `sha256=${'0'.repeat(64)}`;
 const EMPTY_JSON_BODY = '{}';
 const REQUEST_FAILED_STATUS = 0;

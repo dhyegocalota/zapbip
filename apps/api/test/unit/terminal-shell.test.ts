@@ -6,7 +6,7 @@ import { createTerminalShell, type ShellProcess } from '../../src/operations/ter
 import { WorkerSecret } from '../../src/operations/worker-secret';
 
 const SECRET_VALUE = 'distinctive-secret-value';
-const WRANGLER_ARGUMENTS = ['wrangler', 'secret', 'put', 'META_APP_SECRET', '--env', 'staging'];
+const WRANGLER_ARGUMENTS = ['wrangler', 'secret', 'put', 'NUMBER_REGISTRY_KEY', '--env', 'staging'];
 
 function fakeProcess(input: { stdout: string; exitCode: number | null }) {
   const stdin = new PassThrough();

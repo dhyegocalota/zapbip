@@ -10,7 +10,7 @@ export const CONNECTION_SECRET = 'zb_conn_distinctive-connection-secret';
 export const APP_SECRET = 'distinctive-app-secret';
 export const VERIFY_TOKEN = 'distinctive-verify-token';
 export const OWNER_PHONE = '5511999990000';
-export const PLACEHOLDER_APP_SECRET = `${PLACEHOLDER_VALUE_PREFIX}META_APP_SECRET`;
+export const PLACEHOLDER_APP_SECRET = `${PLACEHOLDER_VALUE_PREFIX}SMOKE_META_APP_SECRET`;
 export const ZERO_SIGNATURE = `sha256=${'0'.repeat(64)}`;
 export const WEBHOOK_PATH = '/webhooks/whatsapp';
 export const MCP_PATH = `/c/${CONNECTION_SECRET}/mcp`;
