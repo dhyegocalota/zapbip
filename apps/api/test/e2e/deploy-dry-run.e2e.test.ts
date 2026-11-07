@@ -4,7 +4,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import {
-  COMPANY,
+  COMPANY_FACT_UNSET,
+  type CompanyFacts,
   OFFICIAL_NUMBER_UNSET,
   OFFICIAL_WHATSAPP_NUMBER,
   OPENCLAW_PLUGIN_NPM_VERSION,
@@ -32,6 +33,14 @@ const MIGRATIONS_LIST = 'd1 migrations list';
 const WORKER_DEPLOY = 'wrangler deploy';
 const PENDING_MIGRATIONS = { exitCode: 0, stdout: '0002_accounts_and_keys.sql' };
 const UNRESOLVED_NPM = { exitCode: 1, stdout: JSON.stringify({ error: { code: 'E404' } }) };
+const UNSET_COMPANY: CompanyFacts = {
+  legalName: COMPANY_FACT_UNSET,
+  tradeName: COMPANY_FACT_UNSET,
+  cnpj: COMPANY_FACT_UNSET,
+  address: COMPANY_FACT_UNSET,
+  website: COMPANY_FACT_UNSET,
+  contactEmail: COMPANY_FACT_UNSET,
+};
 const PLACEHOLDER_PATTERN = new RegExp(`${PLACEHOLDER_VALUE_PREFIX}\\w+`, 'g');
 const RESOLVED_VALUE = 'resolved-value';
 const EXPECTED_BINDINGS = [
@@ -70,7 +79,7 @@ function resolvedBlockOf(input: { environment: DeployEnvironment }) {
 async function refusalOf(input: {
   environment: DeployEnvironment;
   officialWhatsAppNumber: string;
-  company: typeof COMPANY;
+  company: CompanyFacts;
   replies?: Record<string, { exitCode: number; stdout: string }>;
 }) {
   const shell = fakeShell({ replies: input.replies });
@@ -131,7 +140,7 @@ describe('preflight against the real constants and the real wrangler blocks', ()
     const { exitCode, output } = await refusalOf({
       environment: DeployEnvironment.Production,
       officialWhatsAppNumber: OFFICIAL_NUMBER,
-      company: COMPANY,
+      company: UNSET_COMPANY,
     });
     expect(exitCode).toBe(1);
     expect(output).toContain(`refused at ${PreflightStep.CompanyFacts}`);
