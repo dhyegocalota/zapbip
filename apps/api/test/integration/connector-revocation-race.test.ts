@@ -51,6 +51,14 @@ async function touchedNothing(input: { accountId: string }): Promise<void> {
 
 type DeferredKeyCheck = { isConnectorKeyLive: () => Promise<boolean> };
 
+function deferredGate(): { promise: Promise<void>; resolve: () => void } {
+  let resolve: () => void = () => undefined;
+  const promise = new Promise<void>((resolveGate) => {
+    resolve = resolveGate;
+  });
+  return { promise, resolve };
+}
+
 function connectionRequestOf(input: { secretDigest: string }): Request {
   const url = new URL(`${CONNECTOR_OBJECT_ORIGIN}${CONNECTOR_PATH_SUFFIX}`);
   url.searchParams.set(CONNECTOR_AGENT_PARAMETER, AGENT);
@@ -62,16 +70,16 @@ async function connectWhileKeyCheckIsPending(input: {
   accountId: string;
   secretDigest: string;
   meanwhile: (instance: AccountInbox) => Promise<void>;
-  settle: (input: { instance: AccountInbox; outcome: Promise<Response> }) => Promise<void>;
+  settle: (input: { outcome: Promise<Response> }) => Promise<void>;
 }): Promise<void> {
   await runInDurableObject(accountInboxStub({ accountId: input.accountId }), async (instance: AccountInbox) => {
-    const gate = Promise.withResolvers<void>();
+    const gate = deferredGate();
     const deferred: DeferredKeyCheck = { isConnectorKeyLive: () => gate.promise.then(() => true) };
     Object.assign(instance, deferred);
     const outcome = instance.fetch(connectionRequestOf({ secretDigest: input.secretDigest }));
     await input.meanwhile(instance);
     gate.resolve();
-    await input.settle({ instance, outcome });
+    await input.settle({ outcome });
   });
 }
 
@@ -127,12 +135,15 @@ describe('connector connect racing a rotation or a purge during the directory re
       accountId: account.accountId,
       secretDigest,
       meanwhile: (instance) => instance.purge(),
-      settle: async ({ instance, outcome }) => {
+      settle: async ({ outcome }) => {
         await expect(outcome).rejects.toThrow('AccountTombstoned');
-        expect(instance.ctx.getWebSockets(AGENT)).toHaveLength(0);
-        expect([...(await instance.ctx.storage.list()).keys()]).toEqual([TOMBSTONE_STORAGE_KEY]);
       },
     });
+    expect(await socketCountOf({ accountId: account.accountId })).toBe(0);
+    const keys = await runInDurableObject(accountInboxStub({ accountId: account.accountId }), async (_instance, state) => [
+      ...(await state.storage.list()).keys(),
+    ]);
+    expect(keys).toEqual([TOMBSTONE_STORAGE_KEY]);
   });
 });
 

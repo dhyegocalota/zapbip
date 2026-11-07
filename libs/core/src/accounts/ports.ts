@@ -70,7 +70,6 @@ export interface ConnectionRevocations {
   recordCreation(input: { accountId: string; agent: AgentName; secretDigest: string }): Promise<void>;
   recordRotation(input: { accountId: string; agent: AgentName; secretDigest: string }): Promise<void>;
   cancelWaiters(input: { accountId: string; agent: AgentName }): Promise<void>;
-  closeSockets(input: { accountId: string; agent: AgentName }): Promise<void>;
 }
 
 export interface AccountInboxPurge {

@@ -269,6 +269,7 @@ function createRevocations(): RecordingRevocations {
       created.push(agent);
     },
     recordRotation: async ({ agent, secretDigest }) => {
+      closed.push(agent);
       rotated.push({ agent, secretDigest });
     },
     recordRevocation: async ({ agent }) => {
@@ -277,9 +278,6 @@ function createRevocations(): RecordingRevocations {
     },
     cancelWaiters: async ({ agent }) => {
       cancelled.push(agent);
-    },
-    closeSockets: async ({ agent }) => {
-      closed.push(agent);
     },
   };
 }

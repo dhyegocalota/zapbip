@@ -67,6 +67,7 @@ import { LogEvent, type LogFields } from '../contract/log';
 import { logEvent } from '../log';
 import { AccountTombstoned } from './account-tombstoned';
 import { logFieldsOfAccountResult } from './account-log';
+import { isCurrentKeyDigest, recordKeyDigest } from './agent-key-digest';
 import { isAgentRevoked, reviveAgentName, revokeAgentState } from './agent-revocation';
 import { nextAlarmAt } from './alarm-time';
 import { HttpStatus } from '../routes/http-status';
@@ -178,7 +179,6 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
         recordCreation: ({ agent, secretDigest }) => this.recordCreation({ agent, secretDigest }),
         recordRotation: ({ agent, secretDigest }) => this.recordRotation({ agent, secretDigest }),
         cancelWaiters: ({ agent }) => this.cancelWaiters({ agent }),
-        closeSockets: ({ agent }) => this.closeAgentSockets({ agent }),
       },
       firstMessage: createSqliteFirstMessageClaim({ storage: this.ctx.storage }),
       deletionRequests: createSqliteDeletionRequests({ storage: this.ctx.storage }),
@@ -448,11 +448,13 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
   async recordCreation(input: { agent: string; secretDigest: string }): Promise<void> {
     this.assertLive();
     reviveAgentName({ storage: this.ctx.storage, agent: input.agent });
+    recordKeyDigest({ storage: this.ctx.storage, ...input });
     await this.closeAgentSockets(input);
   }
 
   async recordRotation(input: { agent: string; secretDigest: string }): Promise<void> {
     this.assertLive();
+    recordKeyDigest({ storage: this.ctx.storage, ...input });
     await this.closeAgentSockets(input);
   }
 
@@ -504,7 +506,10 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     const secretDigest = searchParams.get(CONNECTOR_DIGEST_PARAMETER);
     if (agent === null || secretDigest === null) return new Response(null, { status: HttpStatus.BadRequest });
     const isKeyLive = await this.isConnectorKeyLive({ agent, secretDigest });
-    if (!isKeyLive) return new Response(null, { status: HttpStatus.SwitchingProtocols, webSocket: rejectConnectorSocket() });
+    this.assertLive();
+    const isCurrentKey = isCurrentKeyDigest({ storage: this.ctx.storage, agent, secretDigest });
+    const isAdmitted = isKeyLive && isCurrentKey;
+    if (!isAdmitted) return new Response(null, { status: HttpStatus.SwitchingProtocols, webSocket: rejectConnectorSocket() });
     await inbox.touchAgent({ dependencies: this.dependencies, agent });
     const attached = await inbox.attachLocalConnector({
       dependencies: this.dependencies,

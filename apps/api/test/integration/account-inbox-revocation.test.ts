@@ -1,6 +1,7 @@
 import { OwnerLocale, REVOKED_CLOSE_CODE } from '@zapbip/types';
 import { reset, runInDurableObject } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { hashConnectionSecret } from '../../src/adapters/platform/hash';
 import { openWindow, receiveOwnerText } from '../support/inbox-session';
 import { openConnector } from '../support/connector-session';
 import { applyDirectoryMigration, seedAccount, seedConnection, seedOwnerIdentity } from '../support/seed';
@@ -88,7 +89,7 @@ describe('a revoked agent stops being a routing target', () => {
     await agentSpoke();
     await sql(ANSWERED_QUESTION_STATEMENT, OLD_AGENT);
     await stubOf().recordRevocation({ agent: OLD_AGENT });
-    await stubOf().recordCreation({ agent: OLD_AGENT });
+    await stubOf().recordCreation({ agent: OLD_AGENT, secretDigest: await hashConnectionSecret({ secret: CONNECTOR_SECRET }) });
     expect(await sql('SELECT agent FROM revoked_agents')).toEqual([]);
     expect(await sql('SELECT question_id FROM questions WHERE agent = ?', OLD_AGENT)).toEqual([]);
     expect(await sql('SELECT id FROM inbox_messages WHERE agent = ?', OLD_AGENT)).toEqual([]);
@@ -110,7 +111,7 @@ describe('a revoked agent stops being a routing target', () => {
     const session = await openConnector({ secret: CONNECTOR_SECRET });
     await session.nextFrame();
     expect(await sql('SELECT agent FROM agent_wake WHERE agent = ?', OLD_AGENT)).toHaveLength(1);
-    await stubOf().recordCreation({ agent: OLD_AGENT });
+    await stubOf().recordCreation({ agent: OLD_AGENT, secretDigest: await hashConnectionSecret({ secret: CONNECTOR_SECRET }) });
     expect(await sql('SELECT agent FROM agent_wake WHERE agent = ?', OLD_AGENT)).toEqual([]);
     expect(await session.closeCode()).toBe(REVOKED_CLOSE_CODE);
   });

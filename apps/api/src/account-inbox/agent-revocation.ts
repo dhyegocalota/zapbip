@@ -1,4 +1,5 @@
 import { lastRequestedAtKeyOf } from '../adapters/sqlite/sqlite-wake-repository';
+import { keyDigestKeyOf } from './agent-key-digest';
 
 const CLEAR_WAKE_STATEMENT = 'DELETE FROM agent_wake WHERE agent = ?';
 const CLEAR_WAKE_JOBS_STATEMENT = 'DELETE FROM wake_jobs WHERE agent = ?';
@@ -18,6 +19,7 @@ export function revokeAgentState(input: { storage: DurableObjectStorage; agent: 
     input.storage.sql.exec(CLOSE_QUESTIONS_STATEMENT, input.agent);
     input.storage.sql.exec(MARK_REVOKED_STATEMENT, input.agent, input.revokedAt);
     input.storage.kv.delete(lastRequestedAtKeyOf({ agent: input.agent }));
+    input.storage.kv.delete(keyDigestKeyOf({ agent: input.agent }));
   });
 }
 
