@@ -124,6 +124,18 @@ describe('package route', () => {
     logSpy.mockRestore();
   });
 
+  test.each([
+    'zapbip_platform-9.9.9-py3-none-any.whl',
+    'zapbip_platform-9.9.9-requirements.txt',
+    `zapbip_platform-${ZAPBIP_HERMES_PLUGIN_VERSION}-py3-none-any.tar.gz`,
+    `zapbip_platform-${ZAPBIP_HERMES_PLUGIN_VERSION}-py3-none-macosx.whl`,
+  ])('answers 404 with no-store for the near miss %s even when the object exists', async (filename) => {
+    await env.PACKAGES.put(filename, WHEEL_TEXT);
+    const response = await SELF.fetch(`${ORIGIN}${HERMES_WHEEL_PATH_PREFIX}${filename}`);
+    expect(response.status).toBe(HttpStatus.NotFound);
+    expect(response.headers.get('cache-control')).toBe(NO_STORE);
+  });
+
   test('lets an encoded dot segment fall through to the global 404 without an immutable header', async () => {
     const response = await SELF.fetch(`${ORIGIN}/pkg/%2e%2e/secret`);
     expect(response.status).toBe(HttpStatus.NotFound);

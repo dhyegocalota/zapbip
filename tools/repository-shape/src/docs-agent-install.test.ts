@@ -11,7 +11,7 @@ const OPENCLAW_INSTALL_COMMAND = 'openclaw plugins install @zapbip/openclaw-plug
 const OPENCLAW_ENABLE_ENTRY = '"plugins": { "entries": { "zapbip": { "enabled": true } } }';
 const OPENCLAW_LINK_KEY = '"channels": { "zapbip": { "connectionLink"';
 const UNPINNED_HERMES_INSTALL = 'zapbip-platform==';
-const HASH_CHECKED_INSTALL_TOKENS = ['sha256sum -c -', 'pip install --require-hashes -r zapbip-requirements.txt'];
+const HASH_CHECKED_INSTALL_TOKENS = ['sha256sum -c -', 'python3 -m pip install --require-hashes -r zapbip-requirements.txt'];
 const HERMES_ENVIRONMENT_VARIABLES = ['ZAPBIP_CONNECTION_LINK', 'ZAPBIP_ALLOWED_USERS'];
 const ONE_LISTENER_SENTENCES: Record<string, string> = {
   'apps/docs':

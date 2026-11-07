@@ -109,7 +109,7 @@ describe('Hermes and OpenClaw confirmed install steps', () => {
     expect(text).toContain(`ZAPBIP_CONNECTION_LINK=${CONNECTION_LINK}`);
     expect(text).toContain('ZAPBIP_ALLOWED_USERS=owner');
     expect(text).toContain(
-      `curl -fsSL https://mcp.zapbip.com/pkg/zapbip_platform-0.1.0-requirements.txt -o zapbip-requirements.txt && echo "${ZAPBIP_HERMES_REQUIREMENTS_SHA256}  zapbip-requirements.txt" | sha256sum -c - && pip install --require-hashes -r zapbip-requirements.txt`,
+      `curl -fsSL https://mcp.zapbip.com/pkg/zapbip_platform-0.1.0-requirements.txt -o zapbip-requirements.txt && echo "${ZAPBIP_HERMES_REQUIREMENTS_SHA256}  zapbip-requirements.txt" | sha256sum -c - && python3 -m pip install --require-hashes -r zapbip-requirements.txt`,
     );
     expect(text).not.toContain('zapbip-platform==');
   });
