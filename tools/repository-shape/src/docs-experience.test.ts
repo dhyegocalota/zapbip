@@ -47,6 +47,8 @@ const LINE_SEPARATOR = '\n';
 const COMING_SOON_PATTERN = /coming soon|em breve|\bbeta\b/gi;
 const TEST_DOUBLE_PATTERN = /\b(fake|simulator|simulador)\b/gi;
 const INSTALL_CODE_PATTERN = /zb_inst_[A-Za-z0-9]{8,}/g;
+const INSTALL_LINK_ORIGIN = 'https://mcp.zapbip.com';
+const INSTALL_LINK_PATTERN = /https:\/\/[^\s/]+\/i\/zb_inst_[^\s`'"]+/g;
 const LINK_PATH_PATTERN = /\/[ci]\/([^\s)`'"]+)/g;
 const PLACEHOLDER_MARK = '<';
 const OFFICIAL_NUMBER_PATTERN = new RegExp(`^(${OFFICIAL_NUMBER_UNSET}|\\d+)$`);
@@ -367,6 +369,15 @@ describe('docs experience: copy', () => {
   test('a real-looking install code fails', () => {
     const realLookingCode = ['zb', 'inst', 'AbC123xyz987'].join('_');
     expect(secretViolations({ files: { 'snippets/install-prompt.mdx': `read https://zapbip.com/i/${realLookingCode}` } })).toHaveLength(2);
+  });
+
+  test('every install link in the docs is served from the connector origin', () => {
+    const wrongOriginLinks = Object.entries(docsSourceFiles()).flatMap(([path, content]) =>
+      Array.from(content.matchAll(INSTALL_LINK_PATTERN), (match) => match[0])
+        .filter((link) => !link.startsWith(`${INSTALL_LINK_ORIGIN}/`))
+        .map((link) => `${path}: ${link}`),
+    );
+    expect(wrongOriginLinks).toEqual([]);
   });
 
   test.each(LANGUAGES)('the install prompt snippet is at most the maximum number of lines in %s', (language) => {
