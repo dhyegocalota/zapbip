@@ -34,6 +34,10 @@ describe('backoffice layout', () => {
     expect(html).toContain('<title>Overview · zapbip backoffice</title>');
   });
 
+  it('links the favicon as the page icon', () => {
+    expect(render({})).toContain('<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml"');
+  });
+
   it('puts the skip link first and targets the main content', () => {
     const html = render({});
     expect(html.indexOf('<a')).toBe(html.indexOf('<a href="#content"'));
