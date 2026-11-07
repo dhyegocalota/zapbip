@@ -15,7 +15,7 @@ The G4 briefing of the shipped [`backoffice`](../backoffice/tester-briefing.md) 
 
 ## Gaps
 
-- The integration cases and the re-arm mutation were not run before this briefing: staging deploy freeze.
+- None known for step 33a: the integration cases and the re-arm mutation were run.
 
 ## G4 metrics (developer-4, moved from backoffice)
 

@@ -126,6 +126,9 @@ describe('activity flush to the directory', () => {
     const laterDueAt = Date.now() + FLUSH_DELAY_MS + LATER_PROVIDER_DELAY_MS;
     await registerDueTimeProvider({ stub: stub(), provider: { nextDueAt: async () => laterDueAt, runDue: async () => undefined } });
     await recordTwoSends();
+    await runInDurableObject(stub(), (_instance, state) =>
+      state.storage.sql.exec('UPDATE usage_meter SET flushed_gigabyte_seconds = gigabyte_seconds'),
+    );
     const offsetMs = await flushDueActivity();
     expect(await readAlarm()).toBe(laterDueAt - offsetMs);
   });

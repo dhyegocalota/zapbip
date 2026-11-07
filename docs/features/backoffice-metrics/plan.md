@@ -43,9 +43,9 @@ One developer. Branch `feat/backoffice-metrics`, merged from `feat/backoffice` a
 
 - [x] **Step 33a:** tester findings of PR B (18 PASS, 2 FAIL, 1 observation). Decisions owner delegated 2026-11-06.
   - [x] An invalid `period` and an unknown `number` redirect with a notice instead of rendering a silent default. — evidence: red 63428ec9 (`expected { numberId: null, period: '30' } to deeply equal { notice: 'MetricsPeriodInvalid' }`; `isKnownMetricsNumber is not implemented`) → green 14f8dd7f (unit, 40 passed with the copy and design-rule suites)
-  - [ ] The integration cases for both redirects in `backoffice-metrics.test.ts` pass. — written in 14f8dd7f, not run: staging deploy freeze
+  - [x] The integration cases for both redirects in `backoffice-metrics.test.ts` pass. — evidence: 19 passed (written with the fix in 14f8dd7f, so no separate red run; the unit red is 63428ec9)
   - [x] `wakes_unreached` counts a `notify` that answered `unreached`; a mention that makes no wake attempt counts nothing, and the briefing now says so. — evidence: pin, `activity-recording.test.ts` (3 passed)
-  - [ ] After the activity flush alarm fires, the next pending deadline is still armed, and the assertion fails when the re-arm after the flush is skipped. — assertion written in 14f8dd7f (`activity-flush.test.ts`), mutation not run: staging deploy freeze
+  - [x] After the activity flush alarm fires, the next pending deadline is still armed, and the assertion fails when the re-arm after the flush is skipped. — evidence: the first run failed with `expected 1893499205022 to be 1893499800006` because the usage meter was already due again; the test now marks usage flushed first (7 passed). Mutation: removing the `armAlarm()` at the end of `alarm()` fails it with `expected null to be 1893499800007`; restored
 
 ### G6 browser specs
 
