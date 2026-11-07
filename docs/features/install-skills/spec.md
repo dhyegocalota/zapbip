@@ -48,11 +48,11 @@ The product is for any AI user (ChatGPT, Claude, Grok, Codex users), not only de
 Two lines, in the owner's locale. The English text:
 
 ```
-Connect yourself to my WhatsApp with zapbip: read https://zapbip.com/i/zb_inst_<code> and follow the instructions.
+Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions.
 This link works once for 30 minutes. Do not share it.
 ```
 
-The pt_BR text has the same shape: "Conecte-se ao meu WhatsApp pelo zapbip: leia https://zapbip.com/i/zb_inst_<code> e siga as instruções." and "Este link vale 30 minutos e funciona uma vez. Não o compartilhe." The reply wrapping these lines (the agent name, the warning on rotate) is `accounts-and-keys` copy.
+The pt_BR text has the same shape: "Conecte-se ao meu WhatsApp pelo zapbip: leia https://mcp.zapbip.com/i/zb_inst_<code> e siga as instruções." and "Este link vale 30 minutos e funciona uma vez. Não o compartilhe." The reply wrapping these lines (the agent name, the warning on rotate) is `accounts-and-keys` copy.
 
 ### The install page
 
