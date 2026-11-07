@@ -14,6 +14,13 @@ export const DOCS_LOCALE_OF: Record<DocsLanguage, string> = {
   [DocsLanguage.PortugueseBrazil]: 'pt-BR',
 };
 
+export const DOCS_WALK_NOISE_ALLOWLIST: { pattern: RegExp; reason: string }[] = [
+  {
+    pattern: /^requestfailed .*\/socket\.io\//,
+    reason: 'mint dev holds a live-reload polling request open and the browser aborts it on every navigation',
+  },
+];
+
 const VIEWPORT_WIDTH_PX_OF: Record<DocsViewport, number> = {
   [DocsViewport.Desktop]: DESKTOP_WIDTH_PX,
   [DocsViewport.Narrow]: NARROW_WIDTH_PX,
