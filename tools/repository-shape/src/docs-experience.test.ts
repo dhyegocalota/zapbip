@@ -5,6 +5,8 @@ import {
   DocsOnlyClient,
   DocsRetentionKind,
   InstallClient,
+  McpToolName,
+  MessageKind,
   OFFICIAL_NUMBER_UNSET,
   OFFICIAL_WHATSAPP_NUMBER,
 } from '@zapbip/types';
@@ -56,6 +58,12 @@ const OTHER_TEST_NUMBER = '15550000002';
 const NEW_CLIENT_PAGE = 'agents/x';
 const DOCS_ONLY_PAGE_NAMES = ['cursor', 'gemini-cli', 'any-mcp-client'];
 const WRONG_MEDIA_DAYS = 14;
+const MCP_REFERENCE_FOLDER = 'mcp-reference';
+const MESSAGE_KINDS_SNIPPET = 'message-kinds';
+const TOOL_NAME_SEPARATOR = '_';
+const PAGE_NAME_SEPARATOR = '-';
+const EXTRA_TOOL_PAGE = 'mcp-reference/not-a-tool';
+const FIRST_CELL_PATTERN = /^\|\s*`([a-z]+)`/g;
 
 const LANGUAGES = Object.values(DocsLanguage);
 const CLIENTS: DocsAgentClient[] = [...Object.values(InstallClient), ...Object.values(DocsOnlyClient)];
@@ -117,6 +125,28 @@ function agentHeadingViolations({ page, markdown, language }: { page: string; ma
 function listenTokenViolations({ page, markdown, language }: { page: string; markdown: string; language: DocsLanguage }): string[] {
   const section = sectionOf({ markdown, heading: AGENT_PAGE_HEADINGS[language][AgentPageSection.HowItListens] });
   return missingListenTokens({ section, language }).map((token) => `${page}: missing ${token}`);
+}
+
+function mcpReferencePagesOf({ language }: { language: DocsLanguage }): string[] {
+  const prefix = language === DocsLanguage.English ? `${MCP_REFERENCE_FOLDER}/` : `${PAGE_LANGUAGE_FOLDER}/${MCP_REFERENCE_FOLDER}/`;
+  return pageEntries.filter((page) => page.startsWith(prefix));
+}
+
+function toolPageOf({ tool, language }: { tool: McpToolName; language: DocsLanguage }): string {
+  const page = `${MCP_REFERENCE_FOLDER}/${tool.replaceAll(TOOL_NAME_SEPARATOR, PAGE_NAME_SEPARATOR)}`;
+  return language === DocsLanguage.English ? page : `${PAGE_LANGUAGE_FOLDER}/${page}`;
+}
+
+function toolPageViolations({ tools, pages, language }: { tools: McpToolName[]; pages: string[]; language: DocsLanguage }): string[] {
+  const expected = tools.map((tool) => toolPageOf({ tool, language }));
+  const missing = expected.filter((page) => !pages.includes(page)).map((page) => `missing ${page}`);
+  const extra = pages.filter((page) => !expected.includes(page)).map((page) => `extra ${page}`);
+  return [...missing, ...extra];
+}
+
+function messageKindViolations({ snippet, kinds }: { snippet: string; kinds: MessageKind[] }): string[] {
+  const listed = snippet.split(LINE_SEPARATOR).flatMap((line) => capturedNames({ text: line, pattern: FIRST_CELL_PATTERN }));
+  return kinds.filter((kind) => !listed.includes(kind)).map((kind) => `missing ${kind}`);
 }
 
 function chatLengthViolations({ page, markdown }: { page: string; markdown: string }): string[] {
@@ -370,5 +400,36 @@ describe('docs experience: copy', () => {
   test('a typed media figure of 14 days fails naming 30', () => {
     const markdown = `Media is kept ${WRONG_MEDIA_DAYS} days.`;
     expect(retentionFigureViolations({ markdown, kind: DocsRetentionKind.Media })).toEqual(['media: expected 30 days']);
+  });
+});
+
+describe('docs experience: mcp reference', () => {
+  test.each(LANGUAGES)('every McpToolName has a %s page and no page is extra', (language) => {
+    expect(toolPageViolations({ tools: Object.values(McpToolName), pages: mcpReferencePagesOf({ language }), language })).toEqual([]);
+  });
+
+  test('a tool without a page fails', () => {
+    const pages = mcpReferencePagesOf({ language: DocsLanguage.English });
+    expect(toolPageViolations({ tools: Object.values(McpToolName), pages: pages.slice(1), language: DocsLanguage.English })).toEqual([
+      `missing ${pages[0]}`,
+    ]);
+  });
+
+  test('a page without a tool fails', () => {
+    const pages = [...mcpReferencePagesOf({ language: DocsLanguage.English }), EXTRA_TOOL_PAGE];
+    expect(toolPageViolations({ tools: Object.values(McpToolName), pages, language: DocsLanguage.English })).toEqual([
+      `extra ${EXTRA_TOOL_PAGE}`,
+    ]);
+  });
+
+  test.each(LANGUAGES)('the %s message kinds table lists every MessageKind', (language) => {
+    const snippet = readRepositoryFile(snippetPathOf({ name: MESSAGE_KINDS_SNIPPET, language }));
+    expect(messageKindViolations({ snippet, kinds: Object.values(MessageKind) })).toEqual([]);
+  });
+
+  test('a table without the sticker kind fails', () => {
+    expect(messageKindViolations({ snippet: '| `text` | a |', kinds: [MessageKind.Text, MessageKind.Sticker] })).toEqual([
+      'missing sticker',
+    ]);
   });
 });

@@ -1,3 +1,4 @@
+import { McpToolName } from '@zapbip/types';
 import type { ZodRawShape } from 'zod';
 import {
   askInputShape,
@@ -19,19 +20,7 @@ import {
   waitForReplyInputShape,
 } from './mcp-schemas';
 
-export enum McpToolName {
-  SendMessage = 'send_message',
-  SendMedia = 'send_media',
-  SendLocation = 'send_location',
-  SendContact = 'send_contact',
-  React = 'react',
-  Ask = 'ask',
-  WaitForReply = 'wait_for_reply',
-  GetMessages = 'get_messages',
-  CheckInbox = 'check_inbox',
-  CreateUpload = 'create_upload',
-  SetWake = 'set_wake',
-}
+export { McpToolName };
 
 export type ToolDefinition = {
   description: string;
