@@ -177,7 +177,8 @@ async function placeContent(input: Arrival & { content: MessageContent }): Promi
 }
 
 async function placeChoice(input: Arrival & { choice: ChoiceContent }): Promise<Placement> {
-  const tapped = await findTappedOption({ dependencies: input.dependencies, optionId: input.choice.optionId });
+  const isOwnWords = !input.ownerMessage.forwarded;
+  const tapped = isOwnWords ? await findTappedOption({ dependencies: input.dependencies, optionId: input.choice.optionId }) : null;
   if (tapped !== null) return placeTap({ tapped });
   return placeContent({ ...input, content: { kind: MessageKind.Text, text: input.choice.optionTitle } });
 }
