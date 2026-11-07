@@ -254,15 +254,15 @@ describe('receiveChannelMessage', () => {
     });
   });
 
-  test.each([true, true])('a %s text never answers an open question and still reaches the agent', async (forwarded) => {
+  test('a forwarded text never answers an open question and still reaches the agent', async () => {
     const environment = await createEnvironment();
     const question = await askAndAbandon({ environment });
-    const result = await receiveChannel({ environment, entry: ownerTextEntry({ environment, text: 'Sim', forwarded }) });
+    const result = await receiveChannel({ environment, entry: ownerTextEntry({ environment, text: 'Sim', forwarded: true }) });
     expect((await environment.repository.findQuestion({ questionId: question.questionId }))?.answer).toBeNull();
     expect(await environment.repository.findMessage({ messageId: result.messageId! })).toMatchObject({
       agent: question.agent,
       text: 'Sim',
-      forwarded,
+      forwarded: true,
     });
   });
 

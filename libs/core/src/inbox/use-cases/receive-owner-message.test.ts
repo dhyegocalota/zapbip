@@ -141,6 +141,19 @@ describe('receiveOwnerMessage routing', () => {
     expect(await environment.repository.findMessage({ messageId: result.messageId! })).toMatchObject({ forwarded: true });
   });
 
+  test('CU-199 a forwarded message does not answer an open ask; it is delivered as a normal message', async () => {
+    const environment = await createEnvironment();
+    const question = await askAndAbandon({ environment });
+    const result = await receive({ environment, content: { kind: MessageKind.Text, text: 'yes' }, forwarded: true });
+    expect((await environment.repository.findQuestion({ questionId: question.questionId }))?.answer).toBeNull();
+    expect(await environment.repository.findMessage({ messageId: result.messageId! })).toMatchObject({
+      agent: question.agent,
+      text: 'yes',
+      forwarded: true,
+      readByAgent: false,
+    });
+  });
+
   test('CU-67 CU-136 a tap on an open question answers it with the option title', async () => {
     const environment = await createEnvironment();
     const question = await askAndAbandon({ environment });
