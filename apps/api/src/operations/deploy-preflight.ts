@@ -2,6 +2,8 @@ import {
   CLOUDFLARE_NAMESERVER_SUFFIX,
   COMPANY_FACT_UNSET,
   type CompanyFacts,
+  hermesRequirementsFilename,
+  hermesRequirementsPath,
   hermesWheelFilename,
   hermesWheelPath,
   HttpStatus,
@@ -223,18 +225,36 @@ async function refuseUntrustedDocsPackages(input: DocsPreflightInput): Promise<s
   return refuseUntrustedPackages({ ...input, packageSpecs: publishedPackageSpecsOf(input) });
 }
 
-function hostedWheelOf(input: { hermesPluginVersion: string }): { filename: string; url: string } {
-  const filename = hermesWheelFilename({ version: input.hermesPluginVersion });
-  return { filename, url: `${PRODUCTION_PUBLIC_ORIGIN}${hermesWheelPath({ version: input.hermesPluginVersion })}` };
+type HostedArtifact = { filename: string; url: string; expectedSha256: string };
+
+function hostedArtifactsOf(input: {
+  hermesPluginVersion: string;
+  hermesWheelSha256: string;
+  hermesRequirementsSha256: string;
+}): HostedArtifact[] {
+  const { hermesPluginVersion } = input;
+  return [
+    {
+      filename: hermesWheelFilename({ version: hermesPluginVersion }),
+      url: `${PRODUCTION_PUBLIC_ORIGIN}${hermesWheelPath({ version: hermesPluginVersion })}`,
+      expectedSha256: input.hermesWheelSha256,
+    },
+    {
+      filename: hermesRequirementsFilename({ version: hermesPluginVersion }),
+      url: `${PRODUCTION_PUBLIC_ORIGIN}${hermesRequirementsPath({ version: hermesPluginVersion })}`,
+      expectedSha256: input.hermesRequirementsSha256,
+    },
+  ];
 }
 
-function wheelHashMismatch(input: { filename: string; expected: string; actual: string }): string {
-  return `the hosted ${input.filename} hashes to ${input.actual}, not ${input.expected}; upload the wheel in apps/hermes-plugin/release with the runbook step`;
+function hashMismatch(input: { artifact: HostedArtifact; actual: string }): string {
+  const { artifact, actual } = input;
+  return `the hosted ${artifact.filename} hashes to ${actual}, not ${artifact.expectedSha256}; upload the files in apps/hermes-plugin/release with the runbook step`;
 }
 
-async function refuseUnhostedWorkerWheel(input: WorkerPreflightInput): Promise<string | null> {
-  const { shell, hermesPluginVersion, hermesWheelSha256 } = input;
-  const { filename } = hostedWheelOf({ hermesPluginVersion });
+async function workerArtifactRefusal(input: { shell: DeployShell; artifact: HostedArtifact }): Promise<string | null> {
+  const { shell, artifact } = input;
+  const { filename } = artifact;
   const downloadPath = join(tmpdir(), `${WHEEL_DOWNLOAD_PREFIX}${randomUUID()}-${filename}`);
   const download = wranglerCommand({
     environment: DeployEnvironment.Production,
@@ -249,20 +269,44 @@ async function refuseUnhostedWorkerWheel(input: WorkerPreflightInput): Promise<s
   await shell.run({ file: REMOVE, args: ['-f', downloadPath] });
   const actual = hashed.stdout.trim().split(WHITESPACE)[0];
   if (hashed.exitCode !== 0 || !actual) return `could not hash the downloaded ${filename}`;
-  if (actual === hermesWheelSha256) return null;
-  return wheelHashMismatch({ filename, expected: hermesWheelSha256, actual });
+  if (actual === artifact.expectedSha256) return null;
+  return hashMismatch({ artifact, actual });
+}
+
+async function docsArtifactRefusal(input: { packageFetcher: PackageFetcher; artifact: HostedArtifact }): Promise<string | null> {
+  const { packageFetcher, artifact } = input;
+  const { url } = artifact;
+  const answer = await packageFetcher({ url }).catch(() => null);
+  if (answer === null) return `could not reach ${url}; check your network and run it again`;
+  if (answer.status === HttpStatus.NotFound) return `${url} answers 404; upload the file with the runbook step and deploy the Worker first`;
+  if (answer.status !== HttpStatus.Ok) return `could not reach ${url}; it answered ${answer.status}`;
+  if (answer.sha256 === artifact.expectedSha256) return null;
+  return hashMismatch({ artifact, actual: answer.sha256 });
+}
+
+async function firstArtifactRefusal(input: {
+  artifacts: HostedArtifact[];
+  refusalOf: (artifact: HostedArtifact) => Promise<string | null>;
+}): Promise<string | null> {
+  const [current, ...remaining] = input.artifacts;
+  if (!current) return null;
+  const refusal = await input.refusalOf(current);
+  if (refusal !== null) return refusal;
+  return firstArtifactRefusal({ ...input, artifacts: remaining });
+}
+
+async function refuseUnhostedWorkerWheel(input: WorkerPreflightInput): Promise<string | null> {
+  return firstArtifactRefusal({
+    artifacts: hostedArtifactsOf(input),
+    refusalOf: (artifact) => workerArtifactRefusal({ shell: input.shell, artifact }),
+  });
 }
 
 async function refuseUnhostedDocsWheel(input: DocsPreflightInput): Promise<string | null> {
-  const { packageFetcher, hermesPluginVersion, hermesWheelSha256 } = input;
-  const { filename, url } = hostedWheelOf({ hermesPluginVersion });
-  const answer = await packageFetcher({ url }).catch(() => null);
-  if (answer === null) return `could not reach ${url}; check your network and run it again`;
-  if (answer.status === HttpStatus.NotFound)
-    return `${url} answers 404; upload the wheel with the runbook step and deploy the Worker first`;
-  if (answer.status !== HttpStatus.Ok) return `could not reach ${url}; it answered ${answer.status}`;
-  if (answer.sha256 === hermesWheelSha256) return null;
-  return wheelHashMismatch({ filename, expected: hermesWheelSha256, actual: answer.sha256 });
+  return firstArtifactRefusal({
+    artifacts: hostedArtifactsOf(input),
+    refusalOf: (artifact) => docsArtifactRefusal({ packageFetcher: input.packageFetcher, artifact }),
+  });
 }
 
 async function refuseUncleanGit(input: WorkerPreflightInput): Promise<string | null> {
