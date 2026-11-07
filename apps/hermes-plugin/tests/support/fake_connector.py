@@ -71,7 +71,7 @@ class FakeConnector:
         self._server = await serve(
             self._handle, LOCAL_HOST, 0, process_request=self._process_request, ping_interval=None
         )
-        port = self._server.sockets[0].getsockname()[1]
+        port = next(iter(self._server.sockets)).getsockname()[1]
         logging.getLogger(LOGGER_NAME).addHandler(self._log_collector)
         logging.getLogger(LOGGER_NAME).setLevel(logging.INFO)
         self.socket_link = f"ws://{LOCAL_HOST}:{port}/c/{self._secret}/connector"

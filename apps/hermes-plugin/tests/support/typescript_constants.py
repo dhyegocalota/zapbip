@@ -1,6 +1,7 @@
 import ast
 import operator
 import re
+from collections.abc import Callable
 from pathlib import Path
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
@@ -17,7 +18,7 @@ CONSTANT_PATTERN = r"export const {name}(?::[^=]+)? = ([^;]+);"
 NUMBER_PATTERN = re.compile(r"^[\d_]+$")
 EXPRESSION_PATTERN = re.compile(r"^[\w\s*+()]+$")
 IDENTIFIER_PATTERN = re.compile(r"[A-Z][A-Z_]+")
-OPERATORS = {ast.Mult: operator.mul, ast.Add: operator.add}
+OPERATORS: dict[type[ast.operator], Callable[[int, int], int]] = {ast.Mult: operator.mul, ast.Add: operator.add}
 NUMERIC_MEMBER_PATTERN = re.compile(r"(\w+) = (\d+)")
 TEXT_BY_KIND_PATTERN = re.compile(r"\[MessageKind\.(\w+)\]: '([^']*)'")
 
@@ -51,7 +52,8 @@ def resolve_identifiers(*, literal: str) -> str:
 
 def evaluate_expression(*, expression: ast.expr) -> int:
     if isinstance(expression, ast.Constant):
-        return int(expression.value)
+        assert isinstance(expression.value, int), f"unsupported constant {ast.dump(expression)}"
+        return expression.value
     assert isinstance(expression, ast.BinOp), f"unsupported expression {ast.dump(expression)}"
     return OPERATORS[type(expression.op)](
         evaluate_expression(expression=expression.left), evaluate_expression(expression=expression.right)
