@@ -287,3 +287,25 @@ Spec: the deletion steps now read state first, then the reply, which is what the
 - The owner locale the wake ladder reads is stored on the account and channel paths too (`OWNER_LOCALE_STORAGE_KEY`).
 - DO schema versions: v1 core, v2 webhook-wake, v4 whatsapp, v5 local-connector, v6 accounts. The webhook-wake integration tests apply the directory migration because the Durable Object now reads `accounts`.
 - Hypothesis for the tester: after the merge, a forwarded `revogar alpha` through the simulator never revokes `alpha`; revoking an agent with a live connector drops the socket and no wake request is sent for it afterwards.
+
+## Security re-check fix
+
+Every access path closes at once, connector sockets included, and the Durable Object re-checks the key itself. Hypotheses for the tester, not claims.
+
+| Finding | Test | Red | Green |
+|---|---|---|---|
+| 1 rotate leaves the old connector socket open | `receive-account-message.test.ts` 'a delivered rotate closes the connector sockets of that agent only'; `mcp-rotation.test.ts` 'closes the connector of the old secret with the revoked code and serves the new secret' | c74952a (`closed` was `[]`; the old socket never closed) | ac74196 |
+| 2 a connect racing a revoke or a rotate keeps a socket | `connector-revocation-race.test.ts` three cases (revoked, rotated, on the revoked list inside the object) plus a live-key pin | 782f390 (`expected 1 to be +0`: the `agents` row was touched) | 3c88aad |
+| 3 purge leaves connector sockets open | `account-inbox-purge.test.ts` 'closes every attached connector socket with the revoked code' | b7329ee (timed out waiting for the close) | 3c88aad |
+| 2+ `set_wake` has no in-object admission | `account-inbox-admission.test.ts` 'setWake refuses a revoked agent and writes no wake row' | 9f8d65a | 4e74cbb |
+| 2+ a recreated name inherits the old wake row and socket | `account-inbox-revocation.test.ts` 'a recreated name inherits neither the old wake row nor the old connector socket' | 9f8d65a | 4e74cbb |
+| 4 revoke keeps `wake_last_requested_at:<agent>` | `account-inbox-revocation.test.ts` 'forgets the debounce of the revoked name so the recreated agent is woken at once' | 9f8d65a | 4e74cbb |
+| 6 a missing `accounts` row counts as active | `account-inbox-admission.test.ts` 'refuses every call of an account that has no row in the directory' | 9f8d65a | 4e74cbb |
+
+Pins (green on arrival, f349f6d): the owner locale stored on the account and channel paths (`webhook-wake-delivery.test.ts`), a forwarded `revogar alpha` through the webhook (`accounts-webhook.test.ts`), the queued delivery of a rejected notice (`deliver-to-owner-channel.test.ts`).
+
+Notes:
+
+- The connector key is checked in the route and again in the object before the socket is accepted; a stale connect gets a socket closed with `REVOKED_CLOSE_CODE` and touches no row. The check runs before `acceptConnectorSocket` so a stale connect never replaces the live socket of the new key.
+- `isAccountActive` (the alarm) still treats a missing `accounts` row as active; only the admission of agent calls changed. Hypothesis: an alarm on an account with no row is harmless because no due item can exist without a call.
+- The integration tests that relied on a missing `accounts` row now seed the account (`seedAccount`, `applyWakeDirectory`).

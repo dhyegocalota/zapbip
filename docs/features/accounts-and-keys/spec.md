@@ -130,7 +130,7 @@ Creation order: generate the secret and the install code, insert the digests and
 
 Rotation order: compare-and-set the digest and the install code columns from the old to the new, send the reply. If the send fails, compare-and-set back from the new digest to the old. The owner never ends up with a rotated link they did not receive.
 
-Revoke and rotate take effect at once and cannot be undone. The explicit agent name is their confirmation. Deletion has its own phrase, below.
+Revoke and rotate take effect at once and cannot be undone. Every access path closes at once, connector sockets included, re-checked inside the Durable Object: a connector connect, an MCP call and `set_wake` each check the key and the agent again inside the object, rotation closes the old key's sockets, and deletion closes every socket before the storage is wiped. The explicit agent name is their confirmation. Deletion has its own phrase, below.
 
 Concurrency:
 
@@ -159,7 +159,9 @@ The lines are copy, not a port: no `InstallPromptRenderer`, no generic renderer 
 
 ### Data model
 
-The D1 schema is in Drizzle (`apps/api/src/adapters/d1/schema.ts`). The migration is generated with `drizzle-kit` into `apps/api/migrations` and applied with `wrangler d1 migrations apply`. Applied migrations are never edited.
+The D1 schema is hand-written SQL, as in `agent-inbox-core` (no Drizzle schema file, no `drizzle-kit`): `apps/api/migrations/0002_accounts_and_keys.sql`, applied with `wrangler d1 migrations apply`, and read through prepared statements. Applied migrations are never edited. Migration `0002` drops and rebuilds `message_index` unchanged, because its rows reference `accounts`. The Durable Object has its own migration `v6` (`account_facts`, `revoked_agents`) and a tombstone key written by `purge`.
+
+**Deploy order.** Apply D1 migration `0002` before the Worker deploys: the Durable Object reads `accounts` on every agent call and alarm, and a Worker that runs ahead of the migration refuses them all.
 
 Migration `0002_accounts_and_keys.sql` (`0001_core` is agent-inbox-core's, see its Storage and migrations):
 
