@@ -22,11 +22,11 @@ Everything here costs nothing within the free allowances. Cloudflare asks for a 
 
    If it fails: the payment method was refused; try another card. R2 cannot be skipped, because `MEDIA` is a bucket binding.
 
-4. **Log wrangler in.** From the repository root run `pnpm install --frozen-lockfile`, then `pnpm --filter @zapbip/api exec wrangler login`. A browser opens; approve the access. Then run `pnpm --filter @zapbip/api exec wrangler whoami`.
+4. **Create the API token.** Never run `wrangler login`: an OAuth session is readable by every agent shell of your OS user. In the Cloudflare dashboard open My Profile, API Tokens, Create Token, and grant only Workers Scripts, D1 and R2 edit on this account. From the repository root run `pnpm install --frozen-lockfile`, then in your own interactive shell run `export CLOUDFLARE_API_TOKEN=<the token>` and `pnpm --filter @zapbip/api exec wrangler whoami`. Run `unset CLOUDFLARE_API_TOKEN` when you finish.
 
-   Expect: `whoami` prints the account name and its account ID.
+   Expect: `whoami` prints the account name and its account ID, and says it is logged in with an API token.
 
-   If it fails: run `pnpm --filter @zapbip/api exec wrangler logout` and log in again; make sure the browser is signed in to the owner's account, not another one.
+   If it fails: check that the token is exported in this shell and covers this account. If the session-start doctor reports an OAuth login, run `pnpm --filter @zapbip/api exec wrangler logout`.
 
 5. **Set the error notification.** Open Notifications, Add, and look for a Workers error or usage notification in the list. Choose it, send it to the owner's email and save. Use the test button if the page has one.
 

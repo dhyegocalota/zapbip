@@ -296,3 +296,8 @@ B10 is two end-to-end files, both on the `whatsapp` e2e stack (fake Graph, `META
 | Re-check: PyPI every role, scoped npm registry | `2e0f6e0` | `62ee485` | 4 failures: the `npm view` argv lacked `--@zapbip:registry`, and a Maintainer `helper` was accepted |
 | Re-check: deploy guard allowlist | `296471c` | `3e0599a` | 64 failures, for example `FAIL claude: wrangler "deploy" is blocked: expected exit 2, got 0` |
 | Re-check: secrets guard evasions | `31272ab` | `007ad51` | 26 failures, all blocked-case, expected exit 2, got 0 |
+| Re-check 2: strict deploy allowlist, dotenv write constructs, wrangler session enforcement | `6270f11` | `ad97c8b` | 137 failures, for example a touch of the dotenv file expected exit 2, got 0; `doctor: an OAuth session exits 1: expected exit 1, got 0` |
+
+- Re-check 2 (ADR 0027): `guard-deploy.sh` no longer scans segments. A command that names `wrangler`, `deploy:`, `migrate:production|staging`, `secrets:`, `scripts/deploy` or `scripts/smoke` passes only as one anchored form with no metacharacter. Known cost: `cat`, `rg`, `git add` and `vitest run` of a path that names those words are refused too; use the Read and Grep tools, `git commit -a`, or `git commit -F`.
+- Hypothesis: `.agents/hooks/doctor.sh` records `logged-in` or `logged-out` in `wrangler-session` under the git common dir, and `guard-deploy.sh` reads it. Gap: the OAuth line of `wrangler whoami` (`logged in with an OAuth Token`) is assumed from wrangler's output, not recorded from a live session; a probe that hangs past 10 seconds is recorded as logged out.
+- Known limit: a command that builds the word without writing it (for example through an encoded string) is not seen; the credential control is the real defence.

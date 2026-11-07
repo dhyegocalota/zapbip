@@ -11,7 +11,7 @@ A deploy needs a Cloudflare login and touches production secrets, and the migrat
 
 ## Decision
 
-1. Deploys run with `pnpm deploy:<environment>` on the owner's machine, after `wrangler login`. The script stops at the first failed preflight check.
+1. Deploys run with `pnpm deploy:<environment>` on the owner's machine, with a scoped `CLOUDFLARE_API_TOKEN` exported only in the owner's interactive shell and never an OAuth `wrangler login`. The script stops at the first failed preflight check.
 2. A production deploy needs an interactive terminal and the owner typing `production`, so no agent or unattended script can finish it.
 3. No workflow deploys, and no Cloudflare or Meta credential is stored in GitHub.
 4. Agents run the gate. They never run a deploy script, for either environment.
@@ -26,13 +26,14 @@ A deploy needs a Cloudflare login and touches production secrets, and the migrat
 
 ## Consequences
 
-- A deploy depends on the owner's machine: Node 24, pnpm, and a Cloudflare login. The harness doctor reports these at session start.
+- A deploy depends on the owner's machine: Node 24, pnpm, and a scoped Cloudflare API token. The harness doctor reports the tools at session start.
 - Deploys are manual. A forgotten deploy shows up as a stale Worker, which the smoke test reveals.
-- The `guard-deploy.sh` hook is an allowlist for `wrangler` (dev, a dry-run deploy, local D1, types, version, whoami) and a denylist for the deploy, migrate and secrets package scripts. It is defence in depth, not a sandbox: a shell string can always be built that a text scan misses. The real control is that agent shells never hold production Cloudflare credentials; the owner logs in and deploys from his own shell.
+- The `guard-deploy.sh` hook is a strict allowlist. A command that names `wrangler`, a production package script or the deploy and smoke scripts passes only when the whole command is one anchored form (`wrangler dev`, a `--dry-run` deploy, local D1, types, version, whoami, `git commit -F <file>`, `git log`) with none of the shell metacharacters (semicolon, pipe, ampersand, dollar, backtick, angle brackets, parentheses, braces, hash, backslash) and no newline; there is no exemption for read-only heads, quoted text or heredoc bodies. It is defence in depth, not a sandbox: a shell string can always be built that a text scan misses.
+- The real control is enforced, not stated: the doctor probes `wrangler whoami` and, when an OAuth session exists for the OS user, reports a required line and records it under the git common dir, and the hook then refuses every wrangler command except `whoami`, `--version` and `logout`. The owner deploys with a scoped API token exported only in his own shell and unset afterwards, so no agent shell ever holds a deploy-capable credential.
 
 ## Evidence
 
-- The autonomy rules of 2026-11-06: agents never deploy, and production deploys are the owner's. The `guard-deploy.sh` PreToolUse hook enforces it for Claude Code and Codex: it allows only a safe set of `wrangler` commands (dev, a `--dry-run` deploy, local D1, types, version, whoami) and blocks every other one, with the `deploy:*`, `migrate:staging|production` and `secrets:*` package scripts.
+- The autonomy rules of 2026-11-06: agents never deploy, and production deploys are the owner's. The `guard-deploy.sh` PreToolUse hook enforces it for Claude Code and Codex: it allows only the anchored `wrangler` forms above and blocks every other command that names `wrangler`, the `deploy:*`, `migrate:staging|production` and `secrets:*` package scripts, or the deploy and smoke scripts.
 - [ADR 0005](0005-the-local-gate-runs-what-the-diff-can-break.md): hosted CI is not proof.
 
 ## Revisit when

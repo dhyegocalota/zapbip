@@ -210,10 +210,10 @@ Vendored skills come from superpowers 6.4.1 (MIT); the `metadata` block in each 
 
 | Hook | Event | Effect |
 |---|---|---|
-| `guard-secrets.sh` | PreToolUse Edit/Write | blocks edits to `.env*` except `*.example` |
+| `guard-secrets.sh` | PreToolUse Edit/Write, Bash | blocks edits to `.env*` except `*.example`, and a shell command that names such a file together with a write construct (redirection, `tee`, `cp`, `mv`, `sed -i`, `touch`, `git checkout` and the like); prose that only mentions the file passes |
 | `guard-git-add-all.sh` | PreToolUse Bash | blocks `git add -A`, `git add .`, `--no-verify` |
 | `guard-verify-records.sh` | PreToolUse Bash, Edit/Write | blocks writing records of green commits by hand; only `scripts/verify.sh` writes them (ADR 0005) |
-| `guard-deploy.sh` | PreToolUse Bash | blocks `wrangler deploy`, `versions deploy`, `rollback`, `secret put`, `d1 ... --remote` and the `deploy:*` and `migrate:staging\|production` scripts; the owner runs them by hand, a `--dry-run` passes (ADR 0027) |
+| `guard-deploy.sh` | PreToolUse Bash | a command that names `wrangler`, a production package script or the deploy and smoke scripts passes only as one anchored allowed form (`wrangler dev`, a `--dry-run` deploy, local D1, types, version, whoami, `git commit -F`, `git log`) with no shell metacharacter; while the doctor records an OAuth wrangler session it refuses every wrangler command but `whoami`, `--version` and `logout`; the owner deploys by hand (ADR 0027) |
 | `doctor.sh` | SessionStart; `/verify` gate 0; CI `checks` | prints one line per tool the harness needs (`ok`, `missing` or `skipped`, required or optional, what is lost, the `fix:` for this platform's package manager); exit 1 when a required tool is missing. The session hooks force exit 0 so the report reaches the context |
 | `warn-conventions.sh` | PostToolUse Edit/Write | warns on `?? `, `.js'` imports, `sleep`, comments other than `// NB ADR NNNN:`, `else {` in `.ts`/`.tsx` |
 | `remind-docs.sh` | Stop | names the nearest README and the `.claude/rules/` files whose globs match each uncommitted change, when those documents did not change; each document once until the next commit |

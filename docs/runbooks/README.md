@@ -6,7 +6,7 @@ Follow the steps in order. Each step names the runbook that holds its detail. Ev
 
 ## Runbooks
 
-- [cloudflare-setup.md](cloudflare-setup.md): the Cloudflare account, the free plan, R2, `wrangler login` and the error notification.
+- [cloudflare-setup.md](cloudflare-setup.md): the Cloudflare account, the free plan, R2, the scoped API token and the error notification.
 - [dns.md](dns.md): buying `zapbip.com`, putting it on Cloudflare and one DNS check per host.
 - [meta-setup.md](meta-setup.md): the policy check, the Meta apps, the numbers, the tokens, the webhook, Live mode and the templates.
 - [deploy.md](deploy.md): resources, secrets, migrations, deploy, smoke, tail, rollback, the weekly cost check and the go-live record.

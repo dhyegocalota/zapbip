@@ -202,7 +202,7 @@ Rehearsal: before production goes live, the owner deploys a second version to st
 All under `docs/runbooks/`, listed in the repository-shape indexes:
 
 - `README.md`: the go-live sequence, in order: Cloudflare setup, DNS, Meta setup, resources and secrets, migrate and deploy staging, smoke staging, rollback rehearsal, Meta templates approved, then production the same way; the Mintlify publish runs any time after DNS.
-- `cloudflare-setup.md`: account; Workers Free; R2 enabled (Cloudflare asks for a payment method even within the free allowance); D1 and Durable Objects; `wrangler login`; Workers Logs; the error-rate notification.
+- `cloudflare-setup.md`: account; Workers Free; R2 enabled (Cloudflare asks for a payment method even within the free allowance); D1 and Durable Objects; a scoped API token exported only in the owner's shell, never `wrangler login`; Workers Logs; the error-rate notification.
 - `dns.md`: `zapbip.com` as a zone on Cloudflare (nameservers changed at the registrar); the Worker custom domains; `docs.zapbip.com` as a CNAME to Mintlify; a `dig` check per host.
 - `meta-setup.md`: a Business portfolio; a WhatsApp Business account; the production number registered with its SMS or voice code, and the Meta test number for staging; two apps, one for staging and one for production, each with the WhatsApp product and its own number; the webhook `https://<host>/<webhook path>` with the verify token; subscription to `messages` and `message_template_status_update`; the system user token; business verification and Advanced Access requests; the templates from `whatsapp-cloud-channel` submitted in WhatsApp Manager and approved before production.
 - `deploy.md`: resources per environment; secrets; `migrate:<environment>`; `deploy:<environment>`; smoke; tail; rollback; the weekly cost check.
@@ -292,6 +292,7 @@ Known risks, for the owner to accept or act on:
 | Migration numbers | one per slice · by what holds D1 data | `0001_core`, `0002_accounts_and_keys`, `0003_usage`; wake and scheduled state live in the Durable Object and add none | owner delegated 2026-11-06 |
 | Waitlist in staging | true · false | `false` in staging, so smoke check 5 creates an active account; `true` in production only | owner delegated 2026-11-06 |
 | Smoke connection | development script · WhatsApp `novo agente` | WhatsApp `novo agente smoke` on deployed environments, the simulator in development | owner delegated 2026-11-06 |
+| Agent deploy guard and Cloudflare credentials (cross-slice) | text scan with exemptions · strict allowlist with an enforced credential control | `guard-deploy.sh` allows only anchored wrangler forms and `git commit -F` / `git log` when the command names wrangler, a production script or the deploy and smoke scripts; `guard-secrets.sh` blocks a write construct that names a dotenv file; the doctor records an OAuth `wrangler whoami` session and the hook then refuses every wrangler command but `whoami`, `--version` and `logout`; the owner deploys with a scoped `CLOUDFLARE_API_TOKEN` and never `wrangler login` ([ADR 0027](../../adr/0027-deploys-run-from-the-owners-machine-not-from-ci.md)) | owner delegated 2026-11-06 |
 | Health body | `{ status: "ok", environment }` · `{ ok: true, environment }` | `{ ok: true, environment }`, matching slice 1's `ok` key | owner delegated 2026-11-06 |
 
 ## Test strategy summary
