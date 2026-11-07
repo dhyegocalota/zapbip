@@ -1,6 +1,7 @@
 import { HttpStatus } from '@zapbip/types';
 import { Hono } from 'hono';
 import type { BackofficeEnv } from './backoffice-env';
+import { csrfGuard } from './auth/csrf-guard';
 import { requestContext } from './request-context';
 import { signInRoutes } from './routes/sign-in-routes';
 import { handleBackofficeError, securityHeaders } from './security-headers';
@@ -19,6 +20,7 @@ function createBaseApp(): Hono<BackofficeEnv> {
 export function createBackofficeApp(): Hono<BackofficeEnv> {
   const app = createBaseApp();
   app.use('*', requestContext);
+  app.use('*', csrfGuard);
   app.route('/', signInRoutes);
   app.notFound(notFoundResponse);
   return app;
