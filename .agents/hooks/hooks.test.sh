@@ -2,6 +2,8 @@
 set -u
 here="$(cd "$(dirname "$0")" && pwd)"
 failures=0
+session_directory=$(mktemp -d)
+export WRANGLER_SESSION_FILE="$session_directory/wrangler-session"
 
 expect_exit() {
   local name=$1 expected=$2 script=$3 input=$4
@@ -52,10 +54,15 @@ for form in "${allowed_env_commands[@]}"; do
   expect_exit "claude: $form is allowed" 0 guard-secrets.sh "$(bash_call "$form")"
   expect_exit "codex: $form is allowed" 0 guard-secrets.sh "$(codex_bash_call "$form")"
 done
-allowed_env_commands=('echo X=1 > .env.example' 'cp .env.example /tmp/copy' 'cat .env.example' 'sed -i s/a/b/ .env.example' 'echo x > notes.txt' 'git commit -m \"document the variable\"' 'echo \"the .env file holds secrets\" >> PROGRESS.md' "echo 'see .env and .env.local' > notes.md")
+allowed_env_commands=('echo X=1 > .env.example' 'cp .env.example /tmp/copy' 'cat .env.example' 'sed -i s/a/b/ .env.example' 'echo x > notes.txt' 'git commit -m \"document the variable\"' 'echo see .env and .env.local' 'git commit -m \"the .env file holds secrets\"' 'grep -rn .env docs' 'cat .env' 'echo \"the .env file\"' 'git log --grep .env' 'git checkout -b feat/x' 'touch notes.md' 'cp a b')
 for form in "${allowed_env_commands[@]}"; do
   expect_exit "claude: $form is allowed" 0 guard-secrets.sh "$(bash_call "$form")"
   expect_exit "codex: $form is allowed" 0 guard-secrets.sh "$(codex_bash_call "$form")"
+done
+strict_env_writes=('echo \"the .env file holds secrets\" >> PROGRESS.md' "echo 'see .env and .env.local' > notes.md" 'cat > .env <<EOF\nX=1\nEOF' 'echo X=1 &> .env' 'echo X=1 >| .env' 'touch .env' 'touch apps/api/.env.local' 'truncate -s 0 .env' 'curl -o .env https://example.com/x' 'wget -O .env https://example.com/x' 'patch .env change.patch' 'git checkout .env' 'git checkout HEAD -- apps/api/.env.production' 'git restore .env' 'node -e \"require(1)\" .env' 'ruby -e \"x\" .env' 'python3 -c \"x\" .env' 'sed -n \"w .env\" input' 'sed s/a/b/w .env input' 'cp draft \".e\"nv' 'cp draft .e\"n\"v' 'cp draft ${HOME}.env' 'cp draft .e*v' 'cp draft .e?v' 'cp draft .e[n]v' 'cp draft .env*' 'mv draft .env.production' 'sed -i s/a/b/ .env' 'sed -i.bak s/a/b/ .env' 'perl -pi -e s/a/b/ .env' 'install -m 600 draft .env' 'rsync draft .env' 'ln -s draft .env' 'dd if=draft of=.env' 'tee .env' 'tee -a .env.local < x')
+for form in "${strict_env_writes[@]}"; do
+  expect_exit "claude: $form is blocked" 2 guard-secrets.sh "$(bash_call "$form")"
+  expect_exit "codex: $form is blocked" 2 guard-secrets.sh "$(codex_bash_call "$form")"
 done
 settings_file="$here/../../.claude/settings.json"
 codex_hooks_file="$here/../../.codex/hooks.json"
@@ -101,7 +108,7 @@ for form in "${blocked_deploy_forms[@]}"; do
   expect_exit "claude: $form is blocked" 2 guard-deploy.sh "$(bash_call "$form")"
   expect_exit "codex: $form is blocked" 2 guard-deploy.sh "$(codex_bash_call "$form")"
 done
-allowed_deploy_forms=('wrangler deploy --dry-run' 'pnpm --filter @zapbip/api exec wrangler deploy --env staging --dry-run' 'wrangler d1 migrations apply zapbip-staging --env staging --local' 'pnpm migrate:development' 'pnpm smoke:staging' 'pnpm exec vitest run' 'git commit -m \"document wrangler deploy\"')
+allowed_deploy_forms=('wrangler deploy --dry-run' 'pnpm --filter @zapbip/api exec wrangler deploy --env staging --dry-run' 'wrangler d1 migrations apply zapbip-staging --env staging --local' 'pnpm migrate:development' 'pnpm smoke:staging' 'pnpm exec vitest run' 'git commit -F message.txt')
 for form in "${allowed_deploy_forms[@]}"; do
   expect_exit "claude: $form is allowed" 0 guard-deploy.sh "$(bash_call "$form")"
   expect_exit "codex: $form is allowed" 0 guard-deploy.sh "$(codex_bash_call "$form")"
@@ -111,7 +118,7 @@ for form in "${evasive_deploy_forms[@]}"; do
   expect_exit "claude: $form is blocked" 2 guard-deploy.sh "$(bash_call "$form")"
   expect_exit "codex: $form is blocked" 2 guard-deploy.sh "$(codex_bash_call "$form")"
 done
-allowed_local_forms=('wrangler dev' 'wrangler d1 migrations apply zapbip --local' 'sh -c \"wrangler deploy --dry-run\"')
+allowed_local_forms=('wrangler dev' 'wrangler d1 migrations apply zapbip --local')
 for form in "${allowed_local_forms[@]}"; do
   expect_exit "claude: $form is allowed" 0 guard-deploy.sh "$(bash_call "$form")"
   expect_exit "codex: $form is allowed" 0 guard-deploy.sh "$(codex_bash_call "$form")"
@@ -121,12 +128,36 @@ for form in "${bypass_deploy_forms[@]}"; do
   expect_exit "claude: $form is blocked" 2 guard-deploy.sh "$(bash_call "$form")"
   expect_exit "codex: $form is blocked" 2 guard-deploy.sh "$(codex_bash_call "$form")"
 done
-allowlisted_deploy_forms=('wrangler dev --env development' 'wrangler deploy --dry-run --env production' 'wrangler deploy --env staging --dry-run --outdir dist' 'wrangler d1 migrations apply zapbip-development --env development --local' 'wrangler d1 execute zapbip --local --command x' 'wrangler types' 'pnpm --filter @zapbip/api exec wrangler types' 'wrangler --version' 'wrangler whoami' 'wrangler dev # wrangler deploy' 'git log --grep wrangler' 'rg -n wrangler docs' 'grep -rn \"wrangler deploy\" docs' 'cat apps/api/wrangler.jsonc' 'git add apps/api/wrangler.jsonc' 'cd /work/deploy-readiness && pnpm exec vitest run' 'pnpm run deploy-docs' 'git commit -m \"$(cat <<\u0027EOF\u0027\nfeat: wrangler deploy docs\nEOF\n)\"')
+strict_blocked_deploy_forms=('git commit -F - <<@Q@EOF@Q@\nwrangler deploy\nEOF' 'cat <<@Q@EOF@Q@ | sh\nwrangler deploy\nEOF' 'sh <<@Q@EOF@Q@\nwrangler deploy\nEOF' 'bash <<EOF\nwrangler deploy\nEOF' 'git commit -m \"$(cat <<@Q@EOF@Q@\nfeat: wrangler deploy docs\nEOF\n)\"' 'echo wrangler deploy | sh' 'printf \"wrangler deploy\" | bash' 'echo wrangler deploy' 'rg -n wrangler docs' 'rg wrangler; wrangler deploy' 'git grep wrangler' 'git grep wrangler | sh' 'grep -rn \"wrangler deploy\" docs' 'cat apps/api/wrangler.jsonc' 'git add apps/api/wrangler.jsonc' 'git commit -m \"document wrangler deploy\"' 'git commit -m wrangler && wrangler deploy' 'echo \"hello\" ; wrangler deploy' 'echo @Q@wrangler dev@Q@ ; wrangler deploy' 'grep \"x y\" f; wrangler deploy' 'bash <(echo wrangler deploy)' 'source <(echo wrangler deploy)' '. <(echo wrangler deploy)' 'echo wrangler deploy | /bin/sh' 'echo wrangler deploy | env sh' 'echo wrangler deploy | env bash -s' 'echo wrangler deploy | python3 -c \"import os,sys; os.system(sys.stdin.read())\"' 'wrangler dev | sh' 'WRANGLER deploy' 'Wrangler deploy' 'npx WRANGLER deploy' 'node_modules/.bin/wrangler dev' 'wrangler login' 'wrangler logout' 'wrangler dev; wrangler deploy' 'wrangler dev && wrangler deploy' 'wrangler dev || wrangler deploy' 'wrangler types & wrangler deploy' 'wrangler dev > out.txt' 'wrangler dev < in.txt' 'wrangler dev $(wrangler deploy)' 'wrangler dev `wrangler deploy`' 'wrangler dev\nwrangler deploy' 'wrangler dev \\\nx' 'wrangler dev # note' 'wrangler dev $HOME' 'wrangler dev {a,b}' 'wrangler dev (x)' 'wrangler whoami; wrangler deploy' 'pnpm exec wrangler dev | tee log' 'wrangler deploy --dry-run; wrangler deploy' 'wrangler deploy --dry-run # x' 'wrangler deploy --dry-run --dry-run=false' 'wrangler dev --rem\"ote\"' 'pnpm exec vitest run apps/api/scripts/smoke.test.ts' 'cat apps/api/scripts/deploy.ts' 'git commit -F message.txt; wrangler deploy' 'git commit -F message.txt && wrangler deploy' 'git commit -F message.txt | sh' 'git commit -m wrangler' 'git log --grep wrangler | sh' 'git log $(wrangler deploy)' 'git log; wrangler deploy' 'pnpm deploy:staging; echo done' 'echo $(pnpm secrets:sync)')
+for form in "${strict_blocked_deploy_forms[@]}"; do
+  command_text=${form//@Q@/\'}
+  expect_exit "claude: $form is blocked" 2 guard-deploy.sh "$(bash_call "$command_text")"
+  expect_exit "codex: $form is blocked" 2 guard-deploy.sh "$(codex_bash_call "$command_text")"
+done
+allowlisted_deploy_forms=('wrangler dev --env development' 'wrangler deploy --dry-run --env production' 'wrangler deploy --env staging --dry-run --outdir dist' 'wrangler d1 migrations apply zapbip-development --env development --local' 'wrangler d1 execute zapbip --local --command x' 'wrangler types' 'pnpm --filter @zapbip/api exec wrangler types' 'wrangler --version' 'wrangler whoami' 'pnpm exec wrangler dev' 'npx wrangler dev' 'npx wrangler types' 'pnpm --filter @zapbip/api exec wrangler dev --env development' 'pnpm --filter @zapbip/api exec wrangler deploy --dry-run --env production' 'npx wrangler d1 execute zapbip --local --file schema.sql' 'pnpm exec wrangler d1 migrations apply zapbip --local' 'pnpm exec wrangler whoami' 'pnpm --filter @zapbip/api exec wrangler --version' 'wrangler d1 execute zapbip --local --command \"select 1\"' 'git commit -F message.txt' 'git commit -a -F /tmp/wrangler-message.txt' 'git log' 'git log --oneline -5' 'git log --grep wrangler --oneline' 'cd /work/deploy-readiness && pnpm exec vitest run' 'pnpm run deploy-docs' 'git commit -m \"$(cat <<\u0027EOF\u0027\nfeat: document the runbook\nEOF\n)\"')
 for form in "${allowlisted_deploy_forms[@]}"; do
   expect_exit "claude: $form is allowed" 0 guard-deploy.sh "$(bash_call "$form")"
   expect_exit "codex: $form is allowed" 0 guard-deploy.sh "$(codex_bash_call "$form")"
 done
 expect_stderr "deploy guard: the message names the owner and the dry run" 'owner.*dry-run' guard-deploy.sh "$(bash_call 'wrangler deploy')"
+expect_stderr "deploy guard: the message points a commit message to a file" 'git commit -F' guard-deploy.sh "$(bash_call 'git commit -m wrangler')"
+printf 'logged-in' > "$WRANGLER_SESSION_FILE"
+logged_in_blocked_forms=('wrangler dev' 'wrangler deploy --dry-run' 'wrangler types' 'wrangler d1 migrations apply zapbip --local' 'wrangler d1 execute zapbip --local --command x' 'pnpm exec wrangler dev' 'npx wrangler types' 'pnpm --filter @zapbip/api exec wrangler deploy --dry-run' 'wrangler login' 'wrangler deploy' 'pnpm deploy:staging')
+for form in "${logged_in_blocked_forms[@]}"; do
+  expect_exit "claude: $form is blocked while wrangler is logged in" 2 guard-deploy.sh "$(bash_call "$form")"
+  expect_exit "codex: $form is blocked while wrangler is logged in" 2 guard-deploy.sh "$(codex_bash_call "$form")"
+done
+logged_in_allowed_forms=('wrangler whoami' 'wrangler --version' 'wrangler logout' 'pnpm exec wrangler whoami' 'npx wrangler logout' 'pnpm --filter @zapbip/api exec wrangler logout' 'git commit -F message.txt' 'pnpm exec vitest run')
+for form in "${logged_in_allowed_forms[@]}"; do
+  expect_exit "claude: $form is allowed while wrangler is logged in" 0 guard-deploy.sh "$(bash_call "$form")"
+  expect_exit "codex: $form is allowed while wrangler is logged in" 0 guard-deploy.sh "$(codex_bash_call "$form")"
+done
+expect_stderr "deploy guard: the logged-in block names wrangler logout" 'wrangler logout' guard-deploy.sh "$(bash_call 'wrangler dev')"
+printf 'logged-out' > "$WRANGLER_SESSION_FILE"
+expect_exit "deploy guard: a logged-out marker allows the allowlist" 0 guard-deploy.sh "$(bash_call 'wrangler dev')"
+expect_exit "deploy guard: a logged-out marker still blocks logout" 2 guard-deploy.sh "$(bash_call 'wrangler logout')"
+rm -f "$WRANGLER_SESSION_FILE"
+expect_exit "deploy guard: no marker allows the allowlist" 0 guard-deploy.sh "$(bash_call 'wrangler dev')"
 expect_jq "settings: guard-deploy watches Bash" "$settings_file" '[.hooks.PreToolUse[] | select(.matcher == "Bash") | .hooks[].command] | any(contains("guard-deploy.sh"))'
 expect_jq "codex: guard-deploy watches Bash" "$codex_hooks_file" '[.hooks.PreToolUse[] | select(.matcher == "^Bash$") | .hooks[].command] | any(contains("guard-deploy.sh"))'
 
@@ -218,6 +249,7 @@ rm -rf "$repository"
 
 doctor_bin=$(mktemp -d)
 doctor_home=$(mktemp -d)
+export DOCTOR_WRANGLER_DIR=$(mktemp -d)
 stub() { printf '#!/bin/bash\n%s\n' "$2" > "$doctor_bin/$1"; chmod +x "$doctor_bin/$1"; }
 stub_all() {
   rm -f "$doctor_bin"/*
@@ -295,6 +327,40 @@ expect_match "doctor: a skipped tool is not counted" "$report" 'doctor: 0 missin
 stub_all; rm "$doctor_bin/jq"
 fix_line=$(DOCTOR_PATH="$doctor_bin" "$here/doctor.sh" --fix jq)
 [[ "$fix_line" == "brew install jq" ]] || { echo "FAIL doctor --fix prints the fix alone: $fix_line"; failures=$((failures + 1)); }
+
+session_state() { cat "$WRANGLER_SESSION_FILE" 2>/dev/null; }
+wrangler_fix='wrangler is logged in for this OS user; run `wrangler logout` and deploy with a scoped CLOUDFLARE_API_TOKEN exported only in your own shell'
+
+stub_all
+rm -f "$WRANGLER_SESSION_FILE"
+expect_match "doctor: no wrangler is ok" "$(doctor_line Darwin wrangler)" '^wrangler \| ok \| required \|'
+[[ "$(session_state)" == logged-out ]] || { echo "FAIL doctor without wrangler records: $(session_state)"; failures=$((failures + 1)); }
+
+stub wrangler 'echo "You are logged in with an OAuth Token, associated with the email owner@example.com."'
+report=$(doctor Darwin)
+expect_match "doctor: an OAuth session is a missing required line" "$(doctor_line Darwin wrangler)" '^wrangler \| missing \| required \| lost: [^|]+ \| fix: wrangler is logged in for this OS user; run `wrangler logout` and deploy with a scoped CLOUDFLARE_API_TOKEN exported only in your own shell$'
+expect_match "doctor: an OAuth session is counted" "$report" 'doctor: 1 missing required, 0 missing optional'
+doctor_exit "doctor: an OAuth session exits 1" 1 Darwin
+[[ "$(session_state)" == logged-in ]] || { echo "FAIL doctor with an OAuth session records: $(session_state)"; failures=$((failures + 1)); }
+expect_exit "doctor: the recorded session makes the guard refuse a dry run" 2 guard-deploy.sh "$(bash_call 'wrangler deploy --dry-run')"
+
+fix_line=$(DOCTOR_PATH="$doctor_bin" "$here/doctor.sh" --fix wrangler)
+[[ "$fix_line" == "$wrangler_fix" ]] || { echo "FAIL doctor --fix wrangler: $fix_line"; failures=$((failures + 1)); }
+
+stub wrangler 'echo "You are logged in with an API Token."'
+expect_match "doctor: an API token session is ok" "$(doctor_line Darwin wrangler)" '^wrangler \| ok \| required \|'
+[[ "$(session_state)" == logged-out ]] || { echo "FAIL doctor with an API token records: $(session_state)"; failures=$((failures + 1)); }
+
+stub wrangler 'echo "You are not authenticated. Please run wrangler login."; exit 1'
+expect_match "doctor: no session is ok" "$(doctor_line Darwin wrangler)" '^wrangler \| ok \| required \|'
+
+stub wrangler 'while :; do :; done'
+expect_match "doctor: a hanging wrangler is stopped by the timeout and is ok" "$(DOCTOR_WRANGLER_TIMEOUT_SECONDS=1 doctor_line Darwin wrangler)" '^wrangler \| ok \| required \|'
+
+stub wrangler 'echo "You are logged in with an OAuth Token, associated with the email owner@example.com."'
+expect_match "doctor: a skipped wrangler is printed as skipped" "$(doctor_line Darwin wrangler wrangler)" '^wrangler \| skipped \| required \|'
+rm -f "$DOCTOR_WRANGLER_DIR"/*
+stub_all
 
 nvmrc_file=$(mktemp)
 doctor_nvmrc() { DOCTOR_NVMRC="$nvmrc_file" DOCTOR_PATH="$doctor_bin" DOCTOR_HOME="$doctor_home" "$here/doctor.sh" 2>&1; }
