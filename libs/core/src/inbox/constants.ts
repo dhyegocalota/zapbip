@@ -10,6 +10,8 @@ export const HISTORY_LIMIT = 20;
 export const QUESTION_RETENTION_MS = 7 * DAY_MS;
 export const QUEUE_RETENTION_MS = 7 * DAY_MS;
 export const RECEIPT_RETENTION_MS = 7 * DAY_MS;
+export const FLUSH_CLAIM_LIMIT = 20;
+export const SENDING_STALE_MS = 60 * SECOND_MS;
 export const MEDIA_RETENTION_MS = 30 * DAY_MS;
 export const MEDIA_LINK_TTL_MS = HOUR_MS;
 export const UPLOAD_TTL_MS = 15 * MINUTE_MS;
@@ -20,7 +22,7 @@ export const NOTICE_PREVIEW_MAX_CHARS = 60;
 export const NOTICE_RETRY_MS = 5 * MINUTE_MS;
 export const NOTICE_RETRY_MAX_MS = 6 * HOUR_MS;
 export const NOTICE_RETRY_BACKOFF_FACTOR = 2;
-export const NOTICE_FAILED_MESSAGE = 'the owner notice failed; your message is queued and will be delivered';
+export const NOTICE_FAILED_MESSAGE = 'the owner notice failed; your message is queued until the owner next writes';
 
 export const WHATSAPP_TEXT_MAX_CHARS = 4096;
 export const CAPTION_MAX_CHARS = 1024;

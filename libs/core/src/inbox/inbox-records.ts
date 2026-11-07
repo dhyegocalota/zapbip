@@ -9,9 +9,17 @@ export type AgentRecord = {
 export type OwnerWindow = {
   lastOwnerMessageAt: number | null;
   noticeSentForClosedWindow: boolean;
+  closedAt: number | null;
   noticeRetryLocale: OwnerLocale | null;
   noticeRetryAt: number | null;
   noticeRetryAttempt: number;
+};
+
+export type ChannelStatusDetail = {
+  errorCode: number | null;
+  errorTitle: string | null;
+  pricingCategory: string | null;
+  billable: boolean | null;
 };
 
 export type RoutingList = {

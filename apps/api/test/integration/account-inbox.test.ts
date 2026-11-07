@@ -430,12 +430,14 @@ describe('AccountInbox notice retry', () => {
     expect(template).toHaveBeenCalledTimes(4);
   });
 
-  it('WI-150 a second failing send does not move the armed retry later', async () => {
+  it('WI-150 a send during the backoff makes no template call and does not move the armed retry', async () => {
     const stub = stubOf({ accountId: FIRST_ACCOUNT });
     const template = vi.fn<FakeWhatsAppSender['template']>().mockRejectedValue(new Error('template failed'));
     await sendWithFailingNotice({ stub, template: template });
     const armedAfterFirst = await runInDurableObject(stub, (_instance, state) => state.storage.getAlarm());
-    await sendWithFailingNotice({ stub, template: template });
+    const second = await sendWithFailingNotice({ stub, template: template });
+    expect(second).toMatchObject({ ok: true });
+    expect(template).toHaveBeenCalledTimes(1);
     const armedAfterSecond = await runInDurableObject(stub, (_instance, state) => state.storage.getAlarm());
     expect(armedAfterFirst).not.toBeNull();
     expect(armedAfterSecond).toBe(armedAfterFirst);

@@ -19,11 +19,15 @@
   "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "zapbip-media" }],
   "analytics_engine_datasets": [{ "binding": "WAKE_METRICS", "dataset": "zapbip_wake" }],
   "rules": [{ "type": "Text", "globs": ["**/*.sql"], "fallthrough": true }],
-  "vars": { "PUBLIC_ORIGIN": "https://mcp.zapbip.com" },
+  "vars": { "PUBLIC_ORIGIN": "https://mcp.zapbip.com", "WHATSAPP_GRAPH_BASE_URL": "https://graph.facebook.com" },
   "env": {
     "development": {
       "main": "src/index.dev.ts",
-      "vars": { "PUBLIC_ORIGIN": "http://localhost:8787" },
+      "vars": {
+        "PUBLIC_ORIGIN": "http://localhost:8787",
+        "WHATSAPP_GRAPH_BASE_URL": "http://127.0.0.1:4011",
+        "WHATSAPP_MEDIA_DOWNLOAD_ORIGIN": "http://127.0.0.1:4011",
+      },
       "migrations": [{ "tag": "v1", "new_sqlite_classes": ["AccountInbox"] }],
       "durable_objects": {
         "bindings": [{ "name": "ACCOUNT_INBOX", "class_name": "AccountInbox" }],

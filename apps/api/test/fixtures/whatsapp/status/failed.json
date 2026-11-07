@@ -1,0 +1,12 @@
+{
+  "id": "wamid.FAILED",
+  "status": "failed",
+  "timestamp": "1762430404",
+  "recipient_id": "5511900000001",
+  "errors": [
+    {
+      "code": 131026,
+      "title": "Message undeliverable"
+    }
+  ]
+}

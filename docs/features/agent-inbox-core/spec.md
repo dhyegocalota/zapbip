@@ -1,6 +1,6 @@
 # Agent inbox core
 
-**Status:** Building
+**Status:** Shipped 2026-11-06
 **Tier:** 🔴
 **Owner approval:** approved 2026-11-06 (owner delegated)
 **ADRs:** [0006](../../adr/0006-one-secret-per-connection-in-the-mcp-url.md), [0007](../../adr/0007-a-durable-inbox-and-a-wake-ladder.md), [0008](../../adr/0008-a-pure-core-behind-ports.md), [0009](../../adr/0009-cloudflare-workers-with-one-durable-object-per-account.md), [0010](../../adr/0010-public-docs-on-mintlify.md), [0011](../../adr/0011-the-24-hour-window-queues-and-sends-one-notice.md)
@@ -211,7 +211,7 @@ Constants (in `libs/core`, named, never inline):
 | Unknown or revoked secret | `401`, the same body for both; no hint which |
 | Channel send fails | The tool returns an error naming the kind; the message is stored with `delivery: "failed"` and is not reported as sent |
 | Window closed | `delivery: "queued"`; one notice per closed window; queued items older than `QUEUE_RETENTION_MS` become `expired` |
-| Notice send fails | The send that owns the notice claim raises a delivery failure that says the message is queued and will be delivered (the tool returns the error) and the message stays `queued`, so a later flush still delivers it; `owner_notice_failed` is logged with the kind and the account only; concurrent sends that lost the claim stay `queued` without error; while queued owner-bound messages exist in a closed window with no notice sent, the alarm retries the notice at the stored `notice_retry_at`, with the spacing doubling per attempt from `NOTICE_RETRY_MS` (5 minutes) up to `NOTICE_RETRY_MAX_MS` (6 hours); the attempts reset on success or when the owner reopens the window |
+| Notice send fails | The send that owns the notice claim raises a delivery failure that says `the owner notice failed; your message is queued until the owner next writes` (the tool returns the error) and the message stays `queued`, so a later flush still delivers it; `owner_notice_failed` is logged with the kind and the account only; concurrent sends that lost the claim stay `queued` without error; while queued owner-bound messages exist in a closed window with no notice sent, the alarm retries the notice at the stored `notice_retry_at`, with the spacing doubling per attempt from `NOTICE_RETRY_MS` (5 minutes) up to `NOTICE_RETRY_MAX_MS` (6 hours); the attempts reset on success or when the owner reopens the window |
 | Client abandons `ask` or `wait_for_reply` (the Worker cannot see it, per the spike) | The answer stays bound to its `question_id` and the next `wait_for_reply(question_id)` returns it; a plain message handed to a dead call stays in the history `get_messages` returns |
 | Durable Object evicted mid-wait | The client's call ends; state is in SQLite; the retry recovers through `question_id` |
 | Upload without `Content-Length`, larger than declared, wrong type or after expiry | `411` / `413` / `415` / `410`; nothing stored |

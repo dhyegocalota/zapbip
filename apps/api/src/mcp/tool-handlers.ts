@@ -4,7 +4,7 @@ import {
   parseTimeoutMs,
   type AskResult,
   type MediaMessageKind,
-  type MediaSource,
+  type SendMediaInput,
   type WaitForReplyResult,
 } from '@zapbip/core';
 import { InboxErrorCode, MediaSourceKind, ReplyStatus } from '@zapbip/types';
@@ -38,7 +38,7 @@ function deliveryResult(input: { messageId: string; delivery: string }): ToolSuc
   return { structured: { message_id: input.messageId, delivery: input.delivery }, images: [] };
 }
 
-function resolveMediaSource(input: { url: string | null; uploadId: string | null }): MediaSource {
+function resolveMediaSource(input: { url: string | null; uploadId: string | null }): SendMediaInput['source'] {
   const { url, uploadId } = input;
   if (url !== null && uploadId === null) return { kind: MediaSourceKind.Link, link: url };
   if (url === null && uploadId !== null) return { kind: MediaSourceKind.Stored, mediaId: uploadId };

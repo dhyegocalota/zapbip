@@ -1,0 +1,15 @@
+{
+  "from": "5511900000001",
+  "id": "wamid.UNSUPPORTED",
+  "timestamp": "1762430400",
+  "type": "unsupported",
+  "errors": [
+    {
+      "code": 131051,
+      "title": "Message type is not supported"
+    }
+  ],
+  "unsupported": {
+    "type": "poll"
+  }
+}

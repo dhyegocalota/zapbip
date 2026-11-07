@@ -10,6 +10,15 @@ export class InboxError extends Error {
   }
 }
 
+export class ChannelError extends InboxError {
+  readonly errorCode: number | null;
+
+  constructor(input: { kind: ChannelErrorKind; message: string; errorCode: number | null }) {
+    super({ code: input.kind, message: input.message });
+    this.errorCode = input.errorCode;
+  }
+}
+
 export class NoticeFailedError extends InboxError {
   readonly templateKind: TemplateKind;
 
