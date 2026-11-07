@@ -83,7 +83,7 @@ for (const language of Object.values(DocsLanguage)) {
       for (const label of Object.values(WAKE_RUNG_LABELS[language])) {
         await expect(page.locator('#content-area table').getByText(label, { exact: false }).first()).toBeVisible();
       }
-      for (const seconds of MEASURED_WAKE_SECONDS) await expect(page.locator('#content-area table')).toContainText(seconds);
+      for (const seconds of MEASURED_WAKE_SECONDS) await expect(page.locator('#content-area table').first()).toContainText(seconds);
     });
 
     test('the owner notices page names both templates, the quick replies and the retry backoff', async ({ page }) => {

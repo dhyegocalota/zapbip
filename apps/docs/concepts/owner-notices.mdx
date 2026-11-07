@@ -1,4 +1,37 @@
 ---
-title: Owner notices
-description: The notices zapbip sends you when an AI is not listening.
+title: 'Owner notices'
+description: 'The approved templates zapbip sends when the 24-hour window is closed.'
 ---
+
+import { Chat } from '/snippets/chat.jsx';
+
+Outside the [24-hour window](/concepts/24-hour-window) WhatsApp only delivers approved templates. zapbip registers two, in the owner's language (Portuguese or English).
+
+| Template                | Sent when                 | Body (English)                                               | Quick reply |
+| ----------------------- | ------------------------- | ------------------------------------------------------------ | ----------- |
+| `zapbip_agent_notice`   | an agent sent a message   | `Message from {{1}}: {{2}} — tap Open to read it.`           | `Open`      |
+| `zapbip_agent_question` | an agent asked a question | `Question from {{1}}: {{2}} — tap Reply to see the options.` | `Reply`     |
+
+`{{1}}` is the agent name and `{{2}}` is a preview of the content, at most 60 characters on one line. A preview of a non-text message is its kind in brackets, such as `[image]`. The Portuguese bodies and the quick replies `Abrir` and `Responder` are registered under the same names.
+
+## What the owner sees
+
+<Chat
+  messages={[
+    { name: 'zapbip', text: 'Message from claude-code: Deploy finished, 2m14s — tap Open to read it.', options: ['Open'] },
+    { you: true, text: 'Open' },
+    { name: 'claude-code', text: 'Deploy finished, 2m14s ✅' },
+  ]}
+/>
+
+## Why the notice comes first
+
+A notice carries none of the real content. The message, or the question with its buttons or list, follows it, because a free-form message is only allowed once the owner has written.
+
+The owner taps the quick reply. That tap is a message from the owner: it opens the window and the queue is delivered in order. The tap is the only action a notice offers and it is never forwarded to an agent.
+
+zapbip sends one notice per closed window. A notice that zapbip writes itself, such as the one for an agent that is not listening, follows the same rule.
+
+## When the template is rejected
+
+If WhatsApp rejects the template, the message stays queued and the send that asked for it returns `delivery: "failed"` with a message saying the notice failed. zapbip tries the notice again after 5 minutes, then after 10, 20 and so on, doubling up to 6 hours. A notice zapbip wrote itself has no agent to tell, so a rejection is only logged. The queued messages are delivered when the owner next writes.

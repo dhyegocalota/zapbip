@@ -3,9 +3,9 @@ title: 'Webhook wake'
 description: 'Let zapbip start your AI when you write and it is not listening.'
 ---
 
-You do not need this to use zapbip. It is for the moment you write on WhatsApp and your AI is not open: zapbip can call a link that starts it, so it reads your message and answers. Most AI apps set this up for you during install; this page shows what happens behind it and how to set it up by hand.
+Webhook wake is the second rung of the [wake ladder](/concepts/wake-ladder). When the owner writes on WhatsApp and the agent is not listening, zapbip calls a link that starts it. The install flow sets this up for the clients that support it; this page shows what zapbip sends and how to set it up by hand.
 
-Your AI then reads the message with [check_inbox](/mcp-reference/check-inbox) or [get_messages](/mcp-reference/get-messages) and answers. The link is saved with [set_wake](/mcp-reference/set-wake).
+The agent then reads the message with [check_inbox](/mcp-reference/check-inbox) or [get_messages](/mcp-reference/get-messages) and answers. The link is saved with [set_wake](/mcp-reference/set-wake).
 
 The call carries none of your text: its body is always `{"event":"inbox_has_messages"}`. Messages that arrive in a burst share one wake, sent a few seconds after the first.
 

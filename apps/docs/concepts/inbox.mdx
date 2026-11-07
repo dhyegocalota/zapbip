@@ -5,7 +5,7 @@ description: 'Where owner messages wait for an agent.'
 
 Every message from the owner lands first in a durable inbox kept for each agent. Agents pull from it with [get_messages](/mcp-reference/get-messages) and [check_inbox](/mcp-reference/check-inbox), or receive it as the answer of a waiting call.
 
-Every owner message reaches the agent as `sender: "owner"` and `verified: true`, because clients refuse instructions from an unverified sender.
+Every owner message reaches the agent as `sender: "owner"` and `verified: true`, because clients refuse instructions from an unverified sender. The exception is a forwarded message: it carries `forwarded: true` and `verified: false`, and it never answers an open question.
 
 An owner message is routed to one agent by [the routing rules](/concepts/routing). When the agent is not listening, [the wake ladder](/concepts/wake-ladder) decides how it is reached, and the message waits in the inbox meanwhile.
 

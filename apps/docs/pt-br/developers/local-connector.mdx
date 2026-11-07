@@ -1,6 +1,6 @@
 ---
-title: 'Faça sua IA te ouvir mesmo quando você não está olhando'
-description: 'Deixe um programa pequeno aberto no seu computador para o Claude Code ou o Codex responder no WhatsApp, mesmo parado.'
+title: 'Conector local'
+description: 'Os comandos zapbip connect, listen e channel: opções, variável de ambiente, isolamento do despertar e logs.'
 ---
 
 Normalmente sua IA só lê o WhatsApp quando já está trabalhando. Se você escreve enquanto ela está parada, sua mensagem fica esperando.
@@ -8,6 +8,16 @@ Normalmente sua IA só lê o WhatsApp quando já está trabalhando. Se você esc
 O conector do zapbip resolve isso. É um programa pequeno que fica aberto no seu computador. Quando você escreve no WhatsApp, ele acorda a sessão de IA que você já usava, entrega sua mensagem e deixa a IA te responder. Leva cerca de 7 segundos no Claude Code e 6 no Codex.
 
 Funciona com o Claude Code e o Codex. Seu computador precisa estar ligado e acordado, e o conector precisa estar rodando.
+
+## Comandos
+
+| Comando   | O que faz                                                                                      |
+| --------- | ---------------------------------------------------------------------------------------------- |
+| `connect` | Acorda uma sessão fechada quando você escreve. Aceita `--client`, `--cwd` e `--session`.       |
+| `listen`  | Imprime uma linha JSON por mensagem, para um agente que acompanha um comando em segundo plano. |
+| `channel` | Roda um canal MCP local que coloca cada mensagem numa sessão aberta do Claude Code.            |
+
+`ZAPBIP_CONNECTION_URL` guarda o link de conexão. `connect` e `listen` pedem o link quando a variável não está definida.
 
 ## O que você precisa
 
@@ -55,7 +65,7 @@ npx zapbip@0.1.0 connect --client claude-code --session <session-id>
 | ----------- | -------------------------------------------------------------------- |
 | `--client`  | `claude-code` ou `codex`. Obrigatória.                               |
 | `--cwd`     | A pasta de trabalho. O padrão é a pasta em que você rodou o comando. |
-| `--session` | Um id de sessão para sempre retomar, em vez da mais recente.         |
+| `--session` | Um id de sessão (UUID) para sempre retomar, em vez da mais recente.  |
 
 ## O que a IA pode fazer quando é acordada
 

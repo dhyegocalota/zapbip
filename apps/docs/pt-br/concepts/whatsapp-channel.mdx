@@ -1,4 +1,48 @@
 ---
-title: O canal do WhatsApp
-description: Como o zapbip conversa com o seu WhatsApp.
+title: 'Canal do WhatsApp'
+description: 'Como uma mensagem vai do dono para a IA e volta, e os limites do WhatsApp.'
 ---
+
+O zapbip conversa com o dono pela API oficial do WhatsApp, em um único número compartilhado por todas as contas.
+
+## Mensagens que chegam
+
+O dono escreve para o número. O zapbip confere a assinatura de cada aviso, guarda cada mensagem uma só vez, mesmo que o WhatsApp entregue duas, e a encaminha para uma IA seguindo [as regras de roteamento](/pt-br/concepts/routing).
+
+| O dono envia                                                       | A IA recebe                                                                                    |
+| ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| texto, imagem, vídeo, áudio, mensagem de voz, documento, figurinha | a mensagem, com o arquivo guardado pelo zapbip                                                 |
+| localização, cartão de contato                                     | a mensagem                                                                                     |
+| um toque em botão ou em item de lista                              | a escolha, que responde à pergunta                                                             |
+| uma reação                                                         | a reação, enviada à IA que mandou a mensagem reagida; ao remover a reação, ela chega sem emoji |
+| qualquer outro tipo de mensagem                                    | nada; o dono é avisado de que esse tipo ainda não é aceito                                     |
+
+Uma mensagem do dono abre a [janela de 24 horas](/pt-br/concepts/24-hour-window). Uma reação não abre.
+
+Se um arquivo não puder ser baixado, a IA recebe a mensagem com `media_id: null` e `media_status: "unavailable"`, e o dono é convidado a enviar de novo.
+
+## Mensagens que saem
+
+Com a janela aberta, todos os tipos saem na hora. Com a janela fechada, a mensagem espera na fila e o dono recebe [um aviso](/pt-br/concepts/owner-notices).
+
+| Tipo      | Limite                                                                                                                                                  |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| texto     | 4.096 caracteres                                                                                                                                        |
+| botões    | até 3 botões, pergunta de até 1.024 caracteres, título de até 20 caracteres                                                                             |
+| lista     | até 10 itens, pergunta de até 1.024 caracteres, botão de até 20 caracteres, título do item de até 24 caracteres, descrição do item de até 72 caracteres |
+| reação    | a mensagem reagida deve ter no máximo 30 dias, estar na mesma conversa e não ter sido apagada                                                           |
+| imagem    | JPEG, PNG ou WebP, até 5 MB                                                                                                                             |
+| vídeo     | 3GP ou MP4, até 16 MB                                                                                                                                   |
+| áudio     | AAC, AMR, MP3, M4A ou OGG, até 16 MB                                                                                                                    |
+| documento | PDF, Word, Excel, PowerPoint ou texto simples, até 100 MB                                                                                               |
+| figurinha | WebP estático, até 100 KB                                                                                                                               |
+
+O zapbip recusa um envio que passe de um limite, e a ferramenta devolve um erro com o nome do campo.
+
+## Entrega
+
+O estado `delivery` de uma mensagem só avança: `sent`, `delivered`, `read`. Um envio que o WhatsApp rejeita vira `failed`. Uma mensagem já `delivered` ou `read` nunca vira `failed`.
+
+## Número restrito
+
+Quando o WhatsApp avisa que o número está restrito ou a conta foi desativada, o zapbip para de enviar por 24 horas e o operador é alertado. As mensagens enviadas nesse período voltam com `delivery: "failed"`.

@@ -1,6 +1,6 @@
 ---
-title: 'Keep the connector running in the background'
-description: 'Start the connector by itself when your computer starts, without a terminal window.'
+title: 'Run the connector as a service'
+description: 'Start the connector with launchd or systemd when the machine boots, without a terminal.'
 ---
 
 If you close the terminal, the [connector](/developers/local-connector) stops and your AI stops hearing you. To keep it running, let your computer start it for you. This is optional, and zapbip never installs it for you: you create the file yourself.
@@ -11,7 +11,7 @@ The file holds your connection link, which works like a password. Give it permis
 
 Replace `<path to npx>` with the result of `which npx`, `<your folder>` with the folder your AI works in, and `<host>` and `<secret>` with the parts of your connection link. Use `codex` instead of `claude-code` if that is your AI.
 
-## macOS
+## macOS (launchd)
 
 Create the file with the right permission first, then fill it:
 
@@ -60,7 +60,7 @@ launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.zapbip.connector.pli
 launchctl bootout gui/$(id -u)/com.zapbip.connector
 ```
 
-## Linux
+## Linux (systemd)
 
 Keep the link in its own file with permission `600`:
 
