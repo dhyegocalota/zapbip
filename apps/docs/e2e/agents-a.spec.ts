@@ -50,6 +50,11 @@ function urlOf(input: { path: string; language: DocsLanguage }): string {
   return `/${PAGE_LANGUAGE_FOLDER}/${input.path}`;
 }
 
+function delayTokenOf(input: { expectedDelaySeconds: number; language: DocsLanguage }): string {
+  if (input.expectedDelaySeconds === ONE_HOUR_SECONDS) return HOURLY_TOKEN[input.language];
+  return `${input.expectedDelaySeconds} ${SECONDS_WORD[input.language]}`;
+}
+
 function agentUrlOf(input: { client: DocsAgentClient; language: DocsLanguage }): string {
   return urlOf({ path: `agents/${input.client}`, language: input.language });
 }
@@ -78,9 +83,8 @@ for (const language of Object.values(DocsLanguage)) {
           const content = page.locator('#content-area');
           const { rung, expectedDelaySeconds } = CLIENT_LISTEN_FACTS[client];
           await expect(content).toContainText(WAKE_RUNG_LABELS[language][rung], { ignoreCase: true });
-          const delayToken =
-            expectedDelaySeconds === ONE_HOUR_SECONDS ? HOURLY_TOKEN[language] : `${expectedDelaySeconds} ${SECONDS_WORD[language]}`;
-          await expect(content).toContainText(delayToken, { ignoreCase: true });
+          if (expectedDelaySeconds !== null)
+            await expect(content).toContainText(delayTokenOf({ expectedDelaySeconds, language }), { ignoreCase: true });
           await expect(content).toContainText(PENDING_SECONDS_TOKEN);
           for (const token of Object.values(LISTEN_STATEMENT_TOKENS[language]))
             await expect(content).toContainText(token, { ignoreCase: true });

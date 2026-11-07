@@ -3,10 +3,67 @@ title: Claude Code
 description: Connect Claude Code to your WhatsApp.
 ---
 
+import { Chat } from '/snippets/chat.jsx';
+import OfficialNumber from '/snippets/official-number.mdx';
+import InstallPrompt from '/snippets/install-prompt.mdx';
+
 ## What works
+
+| You want to                    | Claude Code                                                            |
+| ------------------------------ | ---------------------------------------------------------------------- |
+| Get messages from it           | Text, photos, videos, audio, documents, locations, contacts, reactions |
+| Answer it with a tap           | Buttons and lists; it waits for your tap                               |
+| Write first from WhatsApp      | Yes, it answers in about 7 seconds, even when the session is idle      |
+| Keep a question open for hours | Yes, there is no time limit                                            |
+
+<Chat
+  messages={[
+    { name: 'Claude', text: 'The refactor is ready to merge. Merge it now?', options: ['Yes', 'Not yet'], time: '15:20' },
+    { you: true, text: 'Yes', time: '15:21' },
+  ]}
+/>
 
 ## How it listens
 
+Wake type: **Local**. A connector on your computer wakes Claude Code, so it answers about 7 seconds after you write.
+
+- Start Claude Code with `claude --dangerously-load-development-channels server:zapbip-channel`. The zapbip channel then pushes each WhatsApp message into the open session as it arrives.
+- If the session is closed, the connector resumes it in about 7 seconds. Idle costs no tokens; each message costs one turn.
+- Keep the listener running. To keep it alive after you close the terminal, follow [Run the connector as a service](/developers/background-running).
+
+When your AI asks you something, zapbip holds the question and answers "pending" at most every 50 seconds. Your AI then calls again, and keeps calling again until you answer. There is no time limit.
+
 ## Set up from zero
 
+1. **Message the zapbip number on WhatsApp.** Send any text, for example `hi`.
+
+   <OfficialNumber />
+
+2. **Ask for a new agent.** An agent is one AI you connect.
+
+   <Chat
+     messages={[
+       { you: true, text: 'new agent claude-code', time: '15:00' },
+       {
+         name: 'zapbip',
+         text: 'Agent claude-code created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate claude-code".',
+         time: '15:00',
+       },
+     ]}
+   />
+
+3. **Paste the line into Claude Code.**
+
+   <InstallPrompt />
+
+   Claude Code reads the instructions and follows them in order. Before it changes a file or a setting, it tells you which one and waits for your yes. The link is secret, so keep it out of chats you share.
+
+4. **Say yes.** Claude Code adds zapbip to its tools, saves a zapbip skill so every session knows how to use WhatsApp, and starts one listener. Then restart Claude Code to use the zapbip tools.
+
 ## Check it works
+
+Ask Claude Code to send `✅ installed` to your WhatsApp. It should arrive in a few seconds.
+
+<Chat messages={[{ name: 'Claude', text: '✅ installed', time: '15:03' }]} />
+
+If nothing arrives, see [Troubleshooting](/help/troubleshooting).

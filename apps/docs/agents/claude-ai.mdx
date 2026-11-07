@@ -3,10 +3,69 @@ title: claude.ai
 description: Connect claude.ai to your WhatsApp.
 ---
 
+import { Chat } from '/snippets/chat.jsx';
+import OfficialNumber from '/snippets/official-number.mdx';
+import InstallPrompt from '/snippets/install-prompt.mdx';
+
 ## What works
+
+| You want to                    | claude.ai                                                              |
+| ------------------------------ | ---------------------------------------------------------------------- |
+| Get messages from it           | Text, photos, videos, audio, documents, locations, contacts, reactions |
+| Answer it with a tap           | Buttons and lists; it waits for your tap                               |
+| Write first from WhatsApp      | Yes, a task wakes it in about 16 seconds                               |
+| Keep a question open for hours | Yes, there is no time limit                                            |
+
+<Chat
+  messages={[
+    { name: 'Claude', text: 'The report is done. Send it to the team?', options: ['Yes', 'Not yet'], time: '08:15' },
+    { you: true, text: 'Yes', time: '08:16' },
+  ]}
+/>
 
 ## How it listens
 
+Wake type: **Webhook**. When you write on WhatsApp, zapbip fires the trigger link of a claude.ai task, and the task runs in the cloud with your connectors. It answers about 16 seconds after you write, with no approval prompt.
+
+- claude.ai tasks run on a schedule at most once an hour. That is why you also create an hourly task that checks your messages: it is only a safety net, so nothing waits more than an hour if a wake is missed.
+
+When your AI asks you something, zapbip holds the question and answers "pending" at most every 50 seconds. claude.ai then calls again, and keeps calling again until you answer. There is no time limit.
+
 ## Set up from zero
 
+1. **Message the zapbip number on WhatsApp.** Send any text, for example `hi`.
+
+   <OfficialNumber />
+
+2. **Ask for a new agent.** An agent is one AI you connect.
+
+   <Chat
+     messages={[
+       { you: true, text: 'new agent claude-ai', time: '08:00' },
+       {
+         name: 'zapbip',
+         text: 'Agent claude-ai created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate claude-ai".',
+         time: '08:00',
+       },
+     ]}
+   />
+
+3. **Paste the line into claude.ai.**
+
+   <InstallPrompt />
+
+   claude.ai reads the instructions and follows them in order. The link is secret, so keep it out of chats you share.
+
+4. **Add the connector.** claude.ai asks you to paste a link as a custom connector in Settings. You do this one yourself, because claude.ai only lets you add it.
+
+5. **Create the wake task.** claude.ai asks you to create a task with a trigger link in its routines, then to paste the trigger URL and token in the chat. This paste is yours too, because claude.ai shows the token only to you.
+
+6. **Create the safety net.** claude.ai asks you to create an hourly task that checks your messages.
+
 ## Check it works
+
+claude.ai sends `✅ installed` to your WhatsApp once it is connected.
+
+<Chat messages={[{ name: 'Claude', text: '✅ installed', time: '08:05' }]} />
+
+If nothing arrives, see [Troubleshooting](/help/troubleshooting).

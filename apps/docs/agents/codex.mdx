@@ -3,10 +3,67 @@ title: Codex
 description: Connect Codex to your WhatsApp.
 ---
 
+import { Chat } from '/snippets/chat.jsx';
+import OfficialNumber from '/snippets/official-number.mdx';
+import InstallPrompt from '/snippets/install-prompt.mdx';
+
 ## What works
+
+| You want to                    | Codex                                                                  |
+| ------------------------------ | ---------------------------------------------------------------------- |
+| Get messages from it           | Text, photos, videos, audio, documents, locations, contacts, reactions |
+| Answer it with a tap           | Buttons and lists; it waits for your tap                               |
+| Write first from WhatsApp      | Yes, it answers in about 6 seconds, even when the session is idle      |
+| Keep a question open for hours | Yes, there is no time limit                                            |
+
+<Chat
+  messages={[
+    { name: 'Codex', text: 'The migration finished. Run the seed script too?', options: ['Yes', 'No'], time: '11:40' },
+    { you: true, text: 'Yes', time: '11:41' },
+  ]}
+/>
 
 ## How it listens
 
+Wake type: **Local**. A connector on your computer resumes your Codex session with `codex exec resume` each time you write, in about 6 seconds. If Codex already has the session open in its app, the resume waits until the session is free.
+
+- Keep the connector running. To keep it alive after you close the terminal, follow [Run the connector as a service](/developers/background-running).
+
+When your AI asks you something, zapbip holds the question and answers "pending" at most every 50 seconds. Codex then calls again, and keeps calling again until you answer. There is no time limit.
+
+The 900 second tool timeout that the install sets in Codex bounds one call, not the listening. When a call ends, Codex starts the next one.
+
 ## Set up from zero
 
+1. **Message the zapbip number on WhatsApp.** Send any text, for example `hi`.
+
+   <OfficialNumber />
+
+2. **Ask for a new agent.** An agent is one AI you connect.
+
+   <Chat
+     messages={[
+       { you: true, text: 'new agent codex', time: '11:00' },
+       {
+         name: 'zapbip',
+         text: 'Agent codex created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate codex".',
+         time: '11:00',
+       },
+     ]}
+   />
+
+3. **Paste the line into Codex.**
+
+   <InstallPrompt />
+
+   Codex reads the instructions and follows them in order. Before it changes a file or a setting, it tells you which one and waits for your yes. The link is secret, so keep it out of chats you share.
+
+4. **Say yes.** Codex adds zapbip to its configuration, lets the zapbip tools run without asking you each time and says so, and starts the connector. Then restart Codex.
+
 ## Check it works
+
+Ask Codex to send `✅ installed` to your WhatsApp. It should arrive in a few seconds.
+
+<Chat messages={[{ name: 'Codex', text: '✅ installed', time: '11:03' }]} />
+
+If nothing arrives, see [Troubleshooting](/help/troubleshooting).
