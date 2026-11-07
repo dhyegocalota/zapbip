@@ -36,7 +36,7 @@ The owner's terminal already holds the only deploy-capable credential, a scoped 
 3. **Sign-in hardening.**
    - One generic failure answer.
    - A per-address rate limit (`BACKOFFICE_RATE_LIMITER`, 5 per minute).
-   - A D1 lockout after 10 consecutive failures for 15 minutes.
+   - A D1 lockout after 10 consecutive failures for 15 minutes. Only a valid key with a wrong code counts as a failure at sign-in, so a stranger who guesses keys is rate limited, audited and logged but can never lock the owner out; a wrong step-up code counts, because it needs a session.
    - Sessions in a `__Host-` cookie (`Secure`, `HttpOnly`, `SameSite=Strict`), stored as digests, 30 minutes idle and 8 hours absolute.
    - A fresh TOTP code (step-up) for every registry change.
    - CSRF refused unless both the `Origin` check and an HMAC form token pass.
@@ -63,7 +63,7 @@ The owner's terminal already holds the only deploy-capable credential, a scoped 
 
 - Production go-live adds steps to the runbook: deploy, enroll, sign in, register the number, then point the Meta webhook.
 - `wrangler secret put` creates a new Worker version, so enrollment is a deploy act. That is acceptable because only the owner runs it.
-- Anyone who reaches the host can lock the operator out for 15 minutes; the owner unlocks at once by re-enrolling. Accepted in exchange for bounded online guessing.
+- A wrong key never counts toward the lockout, so reaching the host cannot lock the operator out. The 256-bit key bounds guessing, and the per-address rate limit and the audit log bound the noise. A holder of the key who guesses TOTP codes can still trigger the 15-minute lockout; re-enrolling unlocks at once.
 - TOTP remains open to a real-time phishing relay until passkeys arrive. Mitigations: an unlisted host, HSTS, step-up and the audit log.
 - One Worker holds every secret. A code-execution flaw in any route reaches the registry key. The defence is the isolation tests, review and the security reviewer.
 - Development relies on Chromium treating `*.localhost` as a secure context for `__Host-` cookies over `http`. The fallback is `wrangler dev --local-protocol https`.

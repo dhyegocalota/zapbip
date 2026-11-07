@@ -22,9 +22,29 @@ export async function isBackofficeKey(input: { submittedKey: string; expectedDig
   return constantTimeEqual({ left: submittedDigest, right: input.expectedDigest });
 }
 
-async function failSignIn(input: { database: D1Database; now: number; clientAddress: string | null }): Promise<SignInResult> {
+async function failSignIn(input: {
+  database: D1Database;
+  now: number;
+  clientAddress: string | null;
+  isKeyValid: boolean;
+}): Promise<SignInResult> {
+  const { database, now, clientAddress, isKeyValid } = input;
   logEvent({ event: LogEvent.BackofficeSignInFailed });
-  await registerFailure({ ...input, action: BackofficeAuditAction.SignInFailed, targetKind: null, targetId: null });
+  if (isKeyValid) {
+    await registerFailure({ database, now, clientAddress, action: BackofficeAuditAction.SignInFailed, targetKind: null, targetId: null });
+    return { outcome: SignInOutcome.Failed };
+  }
+  await writeAudit({
+    database,
+    entry: {
+      now,
+      action: BackofficeAuditAction.SignInFailed,
+      outcome: BackofficeAuditOutcome.Failed,
+      targetKind: null,
+      targetId: null,
+      clientAddress,
+    },
+  });
   return { outcome: SignInOutcome.Failed };
 }
 
@@ -43,7 +63,7 @@ export async function attemptSignIn(input: {
   const isKeyValid = await isBackofficeKey({ submittedKey: key, expectedDigest: env.BACKOFFICE_KEY_DIGEST });
   const step = await matchTotpStep({ secretBase32: env.BACKOFFICE_TOTP_SECRET, code, now, lastStep: operator.last_totp_step });
   const isStepClaimed = isKeyValid && step !== null && (await recordSuccess({ database, step }));
-  if (!isStepClaimed) return failSignIn({ database, now, clientAddress });
+  if (!isStepClaimed) return failSignIn({ database, now, clientAddress, isKeyValid });
   logEvent({ event: LogEvent.BackofficeSignInSucceeded });
   await writeAudit({
     database,

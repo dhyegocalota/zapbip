@@ -103,7 +103,7 @@ describe('sign-in', () => {
 
 describe('a failed sign-in', () => {
   test('is a 303 to a GET, and reloading that GET does not count another failure', async () => {
-    const failed = await postSignIn({ key: WRONG_KEY, code: WRONG_CODE });
+    const failed = await postSignIn({ key: BACKOFFICE_TEST_KEY, code: WRONG_CODE });
     expect(failed.status).toBe(STATUS_SEE_OTHER);
     await requestBackoffice({ path: SIGN_IN_FAILED_LOCATION });
     await requestBackoffice({ path: SIGN_IN_FAILED_LOCATION });

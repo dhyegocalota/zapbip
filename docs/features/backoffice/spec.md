@@ -121,10 +121,11 @@ Re-running enrollment is the only recovery: lost authenticator, lost key, lockou
 3. If `locked_until > now`, answer the generic failure without touching `failed_attempts`. The lockout is checked before the factors, so a locked operator learns nothing. When `locked_until <= now`, one `UPDATE` sets `failed_attempts = 0` and `locked_until = NULL` before the factors are checked, so an expired lock starts a fresh count.
 4. Constant-time compare of the SHA-256 of the submitted key with `BACKOFFICE_KEY_DIGEST`. TOTP check for steps `current-1..current+1`, accepted only when `step > last_totp_step`. Both checks always run; there is no short-circuit.
 5. Failure:
+   - a wrong key is audited (`sign_in.failed`) and logged but changes nothing else; only a valid key with a wrong or reused code runs the increment below;
    - one atomic statement, `UPDATE backoffice_operator SET failed_attempts = failed_attempts + 1, locked_until = CASE WHEN failed_attempts + 1 >= ? THEN ? ELSE locked_until END WHERE id = 1 RETURNING failed_attempts, locked_until`, so concurrent failures lose no increment;
    - the 10th consecutive failure (`BACKOFFICE_LOCKOUT_THRESHOLD`) sets `locked_until = now + BACKOFFICE_LOCKOUT_MS` (15 min);
    - audit `sign_in.failed`, and `sign_in.locked` once, only on the failure whose `RETURNING` shows the lock was just set (never again while it holds);
-   - one generic message ("Sign-in failed") with status `401`, whichever factor was wrong.
+   - one generic message ("Sign-in failed") shown after `303` to `/sign-in?notice=SignInFailed`, whichever factor was wrong.
 6. Success:
    - `last_totp_step = step` and `failed_attempts = 0` (a success resets the consecutive count), in one conditional `UPDATE … WHERE last_totp_step < ?`, so two concurrent uses of one code cannot both win;
    - a new session;
@@ -524,7 +525,7 @@ AccountInbox alarm ─► flush usage_meter → usage_daily, activity_meter → 
 ### Known risks
 
 1. **TOTP is phishable by a real-time relay.** Mitigations: a separate unlisted host, HSTS, step-up on every change, the audit log, re-enrollment. Passkeys in phase 2 remove the risk.
-2. **Lockout can be triggered by anyone who reaches the host.** This is deliberate: it trades a 15-minute denial of service for bounded guessing. Recovery is re-enrollment.
+2. **A wrong key never counts toward the lockout.** Anyone who reaches the host can send wrong keys, which are rate limited, audited and logged but leave `failed_attempts` alone, so they cannot lock the owner out. Only a valid key with a wrong code, and a wrong step-up code (which needs a session), count; recovery is re-enrollment.
 3. **The Workers rate limiter is per location and eventually consistent.** The D1 lockout counter is the hard bound.
 4. **One Worker holds every secret.** A code-execution bug in any route reaches the registry key. Mitigations: the isolation tests and review. A split Worker would not remove the key from this Worker (ADR 0031).
 5. **`backoffice.localhost` cookies in development.** `__Host-` with `Secure` over `http` depends on Chromium treating `*.localhost` as a secure context. The first integration test and the walk prove it; the fallback is `wrangler dev --local-protocol https`.
