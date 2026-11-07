@@ -11,6 +11,8 @@ const TYPESCRIPT_EXTENSION = '.ts';
 const OPENCLAW_DOCKERFILE = `${CLIENTS_DIRECTORY}/openclaw/Dockerfile`;
 const DOCKERFILE_DIGEST_PATTERN = /^FROM [\w./-]+:[\w.-]+@sha256:[0-9a-f]{64}$/m;
 const HERMES_BUILD_REQUIREMENTS = `${CLIENTS_DIRECTORY}/hermes/build-requirements.txt`;
+const HERMES_DOCKERFILE = `${CLIENTS_DIRECTORY}/hermes/Dockerfile`;
+const HERMES_WHEEL_BUILD_SCRIPT = 'scripts/hermes-wheel/build.ts';
 const ROOT_MANIFEST = 'package.json';
 const OPENCLAW_PACKAGE = 'openclaw';
 
@@ -34,8 +36,14 @@ describe('the client end-to-end scaffolding', () => {
   });
 
   test('the Hermes wheel is built without isolation from a hashed build requirement', () => {
-    expect(readRepositoryFile(HERMES_CLIENT)).toContain('--no-build-isolation');
+    expect(readRepositoryFile(HERMES_WHEEL_BUILD_SCRIPT)).toContain('--no-build-isolation');
     expect(readRepositoryFile(HERMES_BUILD_REQUIREMENTS)).toMatch(/^setuptools==[\d.]+ \\\n\s+--hash=sha256:[0-9a-f]{64}$/m);
+  });
+
+  test('the Hermes image installs the committed wheel by its sha256 pin and builds nothing', () => {
+    expect(readRepositoryFile(HERMES_DOCKERFILE)).toContain('#sha256=');
+    expect(readRepositoryFile(HERMES_CLIENT)).not.toContain('pip wheel');
+    expect(readRepositoryFile(HERMES_CLIENT)).not.toContain('build-requirements');
   });
 
   test('the root manifest builds only the allowed dependencies and never openclaw', () => {
