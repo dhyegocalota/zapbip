@@ -1,7 +1,6 @@
 import { WAKE_SECRET_KEY_BYTES, type WakeTransport } from '@zapbip/core';
 import type { WakeLogEvent } from '@zapbip/core';
 import {
-  ForwardedKind,
   InboxErrorCode,
   MessageKind,
   OwnerLocale,
@@ -216,7 +215,7 @@ describe('wake dependencies', () => {
         ownerMessage: {
           at: Date.now(),
           replyToMessageId: null,
-          forwarded: ForwardedKind.None,
+          forwarded: false,
           content: { kind: MessageKind.Text, text: mentionText({ text: 'oi' }) },
         },
       });
@@ -256,6 +255,10 @@ describe('migration v2', () => {
           .map((row) => row.version),
       };
     });
-    expect(applied).toEqual({ first: [2], second: [], versions: [1, 2, LATER_MIGRATION_VERSION] });
+    expect(applied).toEqual({
+      first: [2],
+      second: [],
+      versions: [...ACCOUNT_INBOX_MIGRATIONS.map((migration) => migration.version), LATER_MIGRATION_VERSION],
+    });
   });
 });

@@ -1,4 +1,4 @@
-import { ForwardedKind, MediaOrigin, MediaSourceKind, MessageDirection, MessageKind, RoutingRule, type OwnerLocale } from '@zapbip/types';
+import { MediaOrigin, MediaSourceKind, MessageDirection, MessageKind, RoutingRule, type OwnerLocale } from '@zapbip/types';
 import { MEDIA_MAX_BYTES, MEDIA_RETENTION_MS, NOTICE_QUICK_REPLY_ID, WINDOW_MS } from '../constants';
 import type { AgentName } from '../connection';
 import type { RoutingList, StoredMedia } from '../inbox-records';
@@ -12,7 +12,7 @@ import { listRoutingAgents } from './routing-list';
 import type { OwnerInboundContent, UnavailableOwnerMedia } from './types';
 
 export type ArrivalContent = OwnerInboundContent | UnavailableOwnerMedia;
-export type ArrivalMessage = { at: number; replyToMessageId: string | null; forwarded: ForwardedKind; content: ArrivalContent };
+export type ArrivalMessage = { at: number; replyToMessageId: string | null; forwarded: boolean; content: ArrivalContent };
 export type StoredMediaContent = Extract<OwnerInboundContent, { mediaId: string }>;
 export type RouteTarget = { messageIds: string[]; agent: AgentName; isKnownAgent: boolean };
 export type PendingAnswer = { questionId: string; optionIndex: number | null; text: string };
@@ -150,7 +150,7 @@ async function placeContent(input: Arrival & { content: MessageContent }): Promi
     repository.findRoutingList(),
   ]);
   const routingListOpen = routingList !== null;
-  const isOwnWords = ownerMessage.forwarded === ForwardedKind.None;
+  const isOwnWords = !ownerMessage.forwarded;
   const decision = routeOwnerMessage({
     text: textOf(content),
     referencedMessage: reference.message,
@@ -204,7 +204,7 @@ export async function planArrival(input: Arrival): Promise<ArrivalPlan> {
   return { routeTarget, isStaleRoute, isUnknownAgentRoute, placement, unreadBefore };
 }
 
-export function buildPlacedMessage(input: { messageId: string; at: number; forwarded: ForwardedKind; placement: Placement }): Message {
+export function buildPlacedMessage(input: { messageId: string; at: number; forwarded: boolean; placement: Placement }): Message {
   const { messageId, at, forwarded, placement } = input;
   return {
     messageId,

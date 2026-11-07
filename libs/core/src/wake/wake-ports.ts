@@ -30,6 +30,9 @@ export interface WakeRepository {
   deleteJob(input: { agent: AgentName }): Promise<void>;
   listDueJobs(input: { now: number }): Promise<WakeJob[]>;
   findNextDueAt(): Promise<number | null>;
+  findLocalRestore(input: { agent: AgentName }): Promise<StoredWake | null>;
+  saveLocalRestore(input: { agent: AgentName; previous: StoredWake }): Promise<void>;
+  deleteLocalRestore(input: { agent: AgentName }): Promise<void>;
   findLastRequestedAt(input: { agent: AgentName }): Promise<number | null>;
   saveLastRequestedAt(input: { agent: AgentName; at: number }): Promise<void>;
 }

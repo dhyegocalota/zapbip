@@ -111,6 +111,7 @@ export function createInMemoryWakeSecretBox(): WakeSecretBox {
 export function createInMemoryWakeRepository(): WakeRepository {
   const wakes = new Map<AgentName, StoredWake>();
   const jobs = new Map<AgentName, WakeJob>();
+  const restores = new Map<AgentName, StoredWake>();
   const lastRequests = new Map<AgentName, number>();
   const effectiveDueAt = (job: WakeJob): number => (job.leaseUntil === null ? job.dueAt : Math.max(job.dueAt, job.leaseUntil));
 
@@ -146,6 +147,16 @@ export function createInMemoryWakeRepository(): WakeRepository {
     findNextDueAt: async () => {
       const dueTimes = [...jobs.values()].map(effectiveDueAt);
       return dueTimes.length === 0 ? null : Math.min(...dueTimes);
+    },
+    findLocalRestore: async ({ agent }) => {
+      const previous = restores.get(agent);
+      return previous === undefined ? null : { ...previous };
+    },
+    saveLocalRestore: async ({ agent, previous }) => {
+      restores.set(agent, { ...previous });
+    },
+    deleteLocalRestore: async ({ agent }) => {
+      restores.delete(agent);
     },
     findLastRequestedAt: async ({ agent }) => {
       const at = lastRequests.get(agent);

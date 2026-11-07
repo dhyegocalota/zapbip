@@ -1,4 +1,4 @@
-import { ForwardedKind, MessageKind, type OwnerLocale } from '@zapbip/types';
+import { HttpStatus, MessageKind, type OwnerLocale } from '@zapbip/types';
 import { assertMediaFits, InboxError, invalidInput, notFound, type OwnerInboundContent } from '@zapbip/core';
 import { Hono } from 'hono';
 import { z } from 'zod';
@@ -13,13 +13,16 @@ import { contactInputSchema, sendableMediaKind } from '../contract/mcp-schemas';
 import { LogEvent } from '../contract/log';
 import { logEvent } from '../log';
 import { accountInboxOf } from './account-inbox-stub';
-import { HttpStatus } from '../contract/http-status';
 import { ERROR_STATUS } from './http-status';
 
 type OwnerIdentity = { accountId: string; ownerLocale: OwnerLocale };
 
 const nullableString = z.string().nullable().default(null);
-const commonShape = { wamid: z.string().default(() => `wamid.${crypto.randomUUID()}`), reply_to: nullableString };
+const commonShape = {
+  wamid: z.string().default(() => `wamid.${crypto.randomUUID()}`),
+  reply_to: nullableString,
+  forwarded: z.boolean().default(false),
+};
 
 const textSchema = z.object({ kind: z.literal(MessageKind.Text), text: z.string(), ...commonShape });
 const mediaSchema = z.object({
@@ -177,7 +180,7 @@ devOwnerRoutes.post(`${DEV_OWNER_PATH_PREFIX}/messages`, async (context) => {
     ownerMessage: {
       at: clock.now() + clockOffsetMs,
       replyToMessageId: body.reply_to,
-      forwarded: ForwardedKind.None,
+      forwarded: body.forwarded,
       content: buildContent(body),
     },
   });

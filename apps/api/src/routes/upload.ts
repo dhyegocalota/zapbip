@@ -7,9 +7,8 @@ import type { Bindings } from '../contract/env';
 import { LogEvent } from '../contract/log';
 import { logEvent } from '../log';
 import { readSignedQuery, verifyLink } from '../signing';
-import { LinkPurpose } from '@zapbip/types';
+import { HttpStatus, LinkPurpose } from '@zapbip/types';
 import { accountInboxOf } from './account-inbox-stub';
-import { HttpStatus } from '../contract/http-status';
 import { ERROR_STATUS } from './http-status';
 import { trackClientFailure } from './track-client-failure';
 

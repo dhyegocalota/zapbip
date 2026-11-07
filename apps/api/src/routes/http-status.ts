@@ -1,7 +1,10 @@
-import { ChannelErrorKind, InboxErrorCode } from '@zapbip/types';
-import { HttpStatus } from '../contract/http-status';
+import { ChannelErrorKind, HttpStatus, InboxErrorCode } from '@zapbip/types';
 
-export const ERROR_STATUS: Record<InboxErrorCode | ChannelErrorKind, HttpStatus> = {
+export { HttpStatus };
+
+export type ErrorHttpStatus = Exclude<HttpStatus, HttpStatus.SwitchingProtocols>;
+
+export const ERROR_STATUS: Record<InboxErrorCode | ChannelErrorKind, ErrorHttpStatus> = {
   [InboxErrorCode.InvalidInput]: HttpStatus.BadRequest,
   [InboxErrorCode.NotFound]: HttpStatus.NotFound,
   [InboxErrorCode.UploadExpired]: HttpStatus.Gone,

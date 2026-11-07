@@ -1,5 +1,5 @@
 import { RECEIPT_RETENTION_MS, SENDING_STALE_MS, type ChannelStatusDetail, type CoreDependencies } from '@zapbip/core';
-import { ChannelInboundKind, DeliveryState, ForwardedKind, MediaOrigin, MessageDirection, MessageKind, OwnerLocale } from '@zapbip/types';
+import { ChannelInboundKind, DeliveryState, MediaOrigin, MessageDirection, MessageKind, OwnerLocale } from '@zapbip/types';
 import { evictDurableObject, reset, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
 import { afterEach, describe, expect, it } from 'vitest';
 import { AccountInbox } from '../../src/account-inbox/account-inbox';
@@ -35,7 +35,7 @@ function ownerTextEntry(input: { text: string; at: number }) {
     at: input.at,
     content: { kind: MessageKind.Text as const, text: input.text },
     replyToChannelMessageId: null,
-    forwarded: ForwardedKind.None,
+    forwarded: false,
     noticeText: null,
   };
 }
@@ -574,9 +574,9 @@ describe('AccountInbox channel messages', () => {
     const request = textRequestOf({ channelMessageId: CHANNEL_MESSAGE_ID });
     await accountInboxStub({ accountId: ACCOUNT_ID }).receiveChannelMessage({
       ...request,
-      entry: { ...request.entry, forwarded: ForwardedKind.FrequentlyForwarded },
+      entry: { ...request.entry, forwarded: true },
     });
     const stored = await inRepository((repository) => repository.findMessageByChannelMessageId({ channelMessageId: CHANNEL_MESSAGE_ID }));
-    expect(stored).toMatchObject({ forwarded: ForwardedKind.FrequentlyForwarded });
+    expect(stored).toMatchObject({ forwarded: true });
   });
 });

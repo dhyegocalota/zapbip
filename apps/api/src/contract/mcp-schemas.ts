@@ -6,7 +6,6 @@ import {
   MediaSourceKind,
   MessageKind,
   MessageDirection,
-  ForwardedKind,
   MessageSender,
   OwnerLocale,
   ReplyStatus,
@@ -87,7 +86,7 @@ export const messageWireSchema = z.object({
   direction: z.enum(MessageDirection),
   sender: z.enum(MessageSender),
   verified: z.boolean(),
-  forwarded: z.enum(ForwardedKind),
+  forwarded: z.boolean(),
   agent: z.string().nullable(),
   at: z.iso.datetime(),
   reply_to: z.string().nullable(),
@@ -155,7 +154,6 @@ export const setWakeInputShape = {
 };
 
 export enum UnavailableWakeMode {
-  Local = 'local',
   Scheduled = 'scheduled',
   Standby = 'standby',
 }

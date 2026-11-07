@@ -124,7 +124,7 @@ Outbound failure with `131047` goes back into the core as a channel fact: `Accou
 | `interactive` `list_reply` | `choice` `{option_id, title, description?}`; ids starting `zapbip:` are rule 0 (accounts-and-keys) | yes | rule 1 |
 | `button` (template quick reply) | no agent message; the notice's `context.id` is the notice's `wamid` | yes | none: it only opens the window and flushes the queue |
 | any kind with `context.id` | `reply_to` set from `context.id`; `context` may carry no `id` | as the kind | rule 2 |
-| any kind with `context.forwarded` or `context.frequently_forwarded` | `forwarded: forwarded \| frequently_forwarded` on the stored message, `none` otherwise; `frequently_forwarded` wins when both are set | as the kind | as the kind |
+| any kind with `context.forwarded` or `context.frequently_forwarded` | `forwarded: true` on the stored message (a boolean in the message payload, shared with the local connector), `false` otherwise | as the kind | as the kind |
 | `unsupported` | not delivered to agents | yes | none; the owner gets one session text, copy `unsupportedKind` |
 
 The window opens at the message's own `timestamp` (Unix seconds, converted to milliseconds at the edge). Reactions do not open the window; a `131047` on a later send corrects any mistaken opening.

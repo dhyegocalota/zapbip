@@ -1,4 +1,4 @@
-import { DAY_MS, ForwardedKind, MessageKind, OwnerLocale, ReplyStatus, SECOND_MS } from '@zapbip/types';
+import { DAY_MS, MessageKind, OwnerLocale, ReplyStatus, SECOND_MS } from '@zapbip/types';
 import type { ConnectionIdentity } from '../connection';
 import type { StoredMedia } from '../inbox-records';
 import { WINDOW_MS } from '../constants';
@@ -99,13 +99,21 @@ export function receive(input: {
   replyToMessageId?: string | null;
   channelMessageId?: string;
   ownerLocale?: OwnerLocale;
+  forwarded?: boolean;
 }): Promise<ReceiveResult> {
-  const { environment, content, replyToMessageId = null, channelMessageId = nextWamid(), ownerLocale = OwnerLocale.EnglishUs } = input;
+  const {
+    environment,
+    content,
+    replyToMessageId = null,
+    forwarded = false,
+    channelMessageId = nextWamid(),
+    ownerLocale = OwnerLocale.EnglishUs,
+  } = input;
   return receiveOwnerMessage({
     dependencies: environment.dependencies,
     ownerLocale,
     channelMessageId,
-    ownerMessage: { at: environment.clock.now(), replyToMessageId, forwarded: ForwardedKind.None, content },
+    ownerMessage: { at: environment.clock.now(), replyToMessageId, forwarded, content },
   });
 }
 
