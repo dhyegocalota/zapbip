@@ -5,6 +5,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
+import { WAKE_SECRET_KEY_BYTES } from '@zapbip/core';
 import type { TestProject } from 'vitest/node';
 import { z } from 'zod';
 import { freePort, HEALTH_TIMEOUT_MS, LOOPBACK_HOST, waitForHealth } from '../support/stack-process';
@@ -67,6 +68,7 @@ export default async function setup(project: TestProject): Promise<() => Promise
   const variables = {
     MEDIA_LINK_SIGNING_KEY: randomBytes(SIGNING_KEY_BYTES).toString('hex'),
     UPLOAD_LINK_SIGNING_KEY: randomBytes(SIGNING_KEY_BYTES).toString('hex'),
+    WAKE_SECRET_KEY: randomBytes(WAKE_SECRET_KEY_BYTES).toString('base64'),
     PUBLIC_ORIGIN: origin,
     META_APP_SECRET: APP_SECRET,
     WHATSAPP_VERIFY_TOKEN: VERIFY_TOKEN,
