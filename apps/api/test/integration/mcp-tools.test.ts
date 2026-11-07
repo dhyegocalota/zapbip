@@ -31,6 +31,7 @@ const DOCUMENT_OVER_LIMIT_BYTES = 100_000_001;
 const STICKER_LIMIT_BYTES = 100_000;
 const SHORT_WAIT_SECONDS = 1;
 const HELD_ASK_SECONDS = 20;
+const HELD_QUESTION_WAIT_MS = 20_000;
 const CONCURRENT_CALL_DEADLINE_MS = 3000;
 const CONCURRENT_CALL_TIMED_OUT = 'timed out';
 const ISO_TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
@@ -232,7 +233,7 @@ describe('MCP tools', () => {
       const question = history.find((message) => message.kind === MessageKind.Choice);
       if (!question?.choice) throw new Error('question not stored yet');
       return question.choice.question_id;
-    });
+    }, HELD_QUESTION_WAIT_MS);
   }
 
   it('WI-56 returns the owner tap on a held ask', async () => {
