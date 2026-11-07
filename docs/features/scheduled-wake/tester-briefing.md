@@ -199,9 +199,9 @@ Merged into `feat/scheduled-wake`, in this order: `feat/scheduled-wake-l3`, `fea
 - Every wake mode is available: `WakeMode` and `WakeRung` hold `none`, `local`, `webhook`, `scheduled` and `standby`. `UnavailableWakeMode` and the `wake mode not available yet` answer are gone; `setWakeInputSchema` is the tool input.
 - The dispatcher takes a waker per `WakeRung` and asks the waker of the effective rung for `notify`, `hasFailedWake` and `pushesEveryMessage`. The inbox, scheduled and standby wakers answer `false` to the last two.
 - `clearWake` also clears `interval_minutes` and `standby_agent`; `none` goes through `clearWake`; `local` clears both fields as well.
-- `AccountInbox` registers the expiry, routing-list, wake and poller due-time providers; the owner locale is remembered on the owner, channel and account entry points.
-- DO schema versions are 1 to 6. The `forwarded` column moved from `v5.sql` into `v4.sql` (the cloud channel's migration) so `v5.sql` stays the local connector's `local_restore` column, as the reservation table says.
-- `forwarded` is `ForwardedKind` everywhere. The connector wire format keeps the whole `Message`, so the connector reads `message.forwarded === ForwardedKind.None` as verified; its notice and listen line keep the boolean `forwarded`. The dev route keeps a boolean `forwarded` and maps it to `ForwardedKind`.
+- `AccountInbox` registers five due-time providers (expiry, routing-list, wake, poller and notice retry); the owner locale is remembered on the owner, channel and account entry points.
+- ~~DO schema versions are 1 to 6. The `forwarded` column moved from `v5.sql` into `v4.sql`~~ (struck at b63f7bb: `forwarded` is a payload boolean, there is no `forwarded` column; main holds versions 1, 2, 4 and 5 and this branch adds 3 and 6).
+- ~~`forwarded` is `ForwardedKind` everywhere.~~ (struck at b63f7bb: `forwarded` is a boolean everywhere and there is no `ForwardedKind`; the connector takes main's text exactly.)
 - `HttpStatus` lives in `@zapbip/types` (with `SwitchingProtocols` and `UpgradeRequired`); `apps/api/src/contract/http-status.ts` re-exports it.
 - `recordRevocation` also closes the agent's connector sockets with `REVOKED_CLOSE_CODE`; `revokeAgentState` deletes the agent's `wake_jobs` rows in its own transaction.
 - No new cron: scheduled wake runs on Durable Object alarms; the Worker keeps the single `*/30 * * * *` trigger of accounts-and-keys.
@@ -259,4 +259,20 @@ The closed-window notice of `deliver-to-owner.ts` is resolved at the main merge 
 
 ## Main merge (dcfebc9)
 
-`notice-owner.ts` is replaced by agent-inbox-core `send-notice.ts`: a closed-window notice the channel rejects now keeps the message queued and fails the claim owner with `delivery failed` (the notice-failed text); `deliver-to-owner-channel.test.ts` was updated to match, and the alarm retries with backoff. `owner_window` carries both `closed_at` (v4) and the `notice_retry_*` columns (v1).
+~~`notice-owner.ts` is replaced by agent-inbox-core `send-notice.ts`~~ (struck at b63f7bb: `notice-owner.ts` stays and wraps `send-notice.ts`): a closed-window notice the channel rejects now keeps the message queued and fails the claim owner with `delivery failed` (the notice-failed text); `deliver-to-owner-channel.test.ts` was updated to match, and the alarm retries with backoff. `owner_window` carries both `closed_at` (v4) and the `notice_retry_*` columns (v1).
+
+## b63f7bb merge + fix
+
+Main (whatsapp-cloud-channel) merged at b63f7bb. Every test-plan row the reviewer listed is unticked with `retest after b63f7bb merge`.
+
+| Change | Test | Red text printed | Commit |
+|---|---|---|---|
+| A stale notice in a closed window sends one template notice (sender `OWN_NOTICE_SENDER`) per closed window, stays queued and is delivered when the owner writes | `evaluate-pollers-closed-window.test.ts` first test | `expected [] to deeply equal [ { kind: 'notice', …(2) } ]` | 2e3555f red, 61d59e1 green |
+| A rejected template for a zapbip notice leaves it queued, marks the episode notified, and the alarm retry sends the template | `evaluate-pollers-closed-window.test.ts` second test | `expected null to be 875100000 // Object.is equality` | 2e3555f red, 61d59e1 green |
+| A stale notice left queued by a flush that fails the notice of another message marks the episode notified once and logs nothing | `evaluate-pollers-closed-window.test.ts` third test | `expected [ Array(1) ] to deeply equal []` | 2e3555f red, 61d59e1 green |
+| The expected-delay note that stays queued logs no `NoticeFailed` | `scheduled-agent-waker.test.ts` "does not log a failure for a note that stayed queued" | `expected [ Array(1) ] to deeply equal []` | 2e3555f red, 61d59e1 green |
+| The inbox waker logs a failed note instead of throwing | `inbox-agent-waker.test.ts` "logs a failed note" | `Error: boom` | 2e3555f red, 61d59e1 green |
+| A Durable Object at versions 1, 2, 4 and 5 applies 3 and 6 and keeps its rows | `scheduled-wake-storage.test.ts` "applies v3 and v6 to an object at the versions main holds" | pin (green on landing) | this branch |
+| The connector takes main's forwarded handling | no new test; the connector suite is unchanged | n/a | 8e8039a |
+
+Core: `noticeOwner` and `retryNotice` take `OWN_NOTICE_SENDER` for a message with no agent, `flushQueue` notices the first unsent message, and `rethrowUnlessQueued` lets a queued zapbip note pass without a failure.
