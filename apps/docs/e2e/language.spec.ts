@@ -66,8 +66,7 @@ test.describe('the switcher', () => {
     await page.goto(OVERVIEW_PATH);
     await waitForSwitcherHydration({ page });
     await page.locator(SWITCHER_LOCATOR).click();
-    const optionNames = await page.locator(SWITCHER_OPTION_LOCATOR).allInnerTexts();
-    expect(optionNames.map((name) => name.trim())).toEqual(Object.values(LANGUAGE_NAMES));
+    await expect(page.locator(SWITCHER_OPTION_LOCATOR)).toHaveText(Object.values(LANGUAGE_NAMES));
   });
 
   test('switching language keeps the page', async ({ page }) => {

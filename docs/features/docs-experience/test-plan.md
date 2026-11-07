@@ -15,7 +15,7 @@ Conventions used throughout:
 - [ ] `tools/repository-shape/src/docs-experience.test.ts` — input: the G0 Step 2 commit; expected: the suite fails with `AssertionError` on missing pages and `Error: <helper> is not implemented`, not with an import or syntax error.
 - [ ] Confirmed for the right reason: the failure text is recorded verbatim in `tester-briefing.md` — evidence: (red commit hash, log path).
 - [ ] Each lane's red test is committed on the lane branch before its pages — input: the lane branch at its first commit; expected: the test fails on missing text or sections, not on a missing file the test could have created.
-- [ ] `install-guides.test.ts`, the accounts-and-keys docs checks, the local-connector and webhook-wake checks: committed red with the new paths while the old pages still sit at the old paths — expected: each fails naming the missing file.
+- [ ] `install-guides.test.ts`, the local-connector and webhook-wake docs checks: these checks live on slices already merged to main, so their red-first evidence is read from main's history, not recreated here — expected: `git log origin/main -- tools/repository-shape/src/install-guides.test.ts` lists 60d4318 (`test(docs): pin the install guides`, a pin, labelled so), whose facts checks are the ones reconciled here; the local-connector pages arrive with 363546d and f4f3146 and the webhook-wake pages with 80d2123 and 528f103, with the red runs recorded in `docs/features/local-connector/test-plan.md` and `docs/features/webhook-wake/test-plan.md`. The accounts-and-keys docs checks are read the same way from that feature's test plan.
 
 ## T1 Structure and copy (vitest, `tools/repository-shape`)
 

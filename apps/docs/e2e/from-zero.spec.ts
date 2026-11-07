@@ -99,6 +99,7 @@ for (const language of Object.values(DocsLanguage)) {
         for (const agentPath of agentPaths) {
           const response = await page.goto(agentPath);
           expect(response?.status(), agentPath).toBeLessThan(FIRST_ERROR_STATUS);
+          await expect(page.locator('#content-area h2').first()).toBeAttached();
           const headings = await page.locator('#content-area h2').allInnerTexts();
           const headingTexts = headings.map((heading) => heading.replace(ZERO_WIDTH_SPACE, '').trim());
           expect(

@@ -39,6 +39,7 @@ for (const language of Object.values(DocsLanguage)) {
     test('the Overview shows why, how it works and the examples in that order', async ({ page }) => {
       const response = await page.goto(urlOf({ path: OVERVIEW_PAGE, language }));
       expect(response?.status()).toBe(OK_STATUS);
+      await expect(page.locator('#content-area h2').first()).toBeAttached();
       const headings = await page.locator('#content-area h2').allInnerTexts();
       const headingTexts = headings.map((heading) => heading.replace(ZERO_WIDTH_SPACE, '').trim());
       expect(headingTexts.slice(0, OVERVIEW_HEADING_COUNT)).toEqual(OVERVIEW_HEADINGS[language]);

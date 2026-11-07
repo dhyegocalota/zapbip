@@ -66,6 +66,7 @@ for (const language of Object.values(DocsLanguage)) {
       for (const client of AGENT_CLIENTS) {
         const response = await page.goto(urlOf({ client, language }));
         expect(response?.status()).toBe(OK_STATUS);
+        await expect(page.locator(`${CONTENT_SELECTOR} h2`).first()).toBeAttached();
         const headings = await page.locator(`${CONTENT_SELECTOR} h2`).allTextContents();
         expect(headings.map((heading) => heading.replace(ZERO_WIDTH_SPACE, '').trim())).toEqual(
           AGENT_PAGE_SECTIONS.map((section) => AGENT_PAGE_HEADINGS[language][section]),

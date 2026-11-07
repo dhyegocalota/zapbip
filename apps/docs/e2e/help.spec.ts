@@ -80,6 +80,7 @@ for (const language of Object.values(DocsLanguage)) {
 
     test('every FAQ question has an answer', async ({ page }) => {
       await page.goto(urlOf({ path: 'faq', language }));
+      await expect(page.locator('#content-area [data-component-part="accordion-content"]').first()).toBeAttached();
       const answers = await page.locator('#content-area [data-component-part="accordion-content"]').allTextContents();
       expect(answers.length).toBeGreaterThan(0);
       expect(answers.filter((answer) => answer.trim() === '')).toEqual([]);

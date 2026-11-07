@@ -71,6 +71,7 @@ for (const language of Object.values(DocsLanguage)) {
         test('shows the four headings in order and at least one conversation', async ({ page }) => {
           const response = await page.goto(agentUrlOf({ client, language }));
           expect(response?.status()).toBe(OK_STATUS);
+          await expect(page.locator('#content-area h2').first()).toBeAttached();
           const headings = await page.locator('#content-area h2').allInnerTexts();
           const headingTexts = headings.map((heading) => heading.replace(ZERO_WIDTH_SPACE, '').trim());
           const expected = AGENT_PAGE_SECTIONS.map((section) => AGENT_PAGE_HEADINGS[language][section]);
