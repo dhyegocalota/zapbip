@@ -51,6 +51,8 @@ chmod 600 <arquivo>
 
 Reinicie o gateway.
 
+Rode apenas um listener por agente: o plugin ou `npx zapbip listen`, nunca os dois. Um segundo listener substitui o primeiro.
+
 ## Como ele escuta
 
 O plugin mantém uma conexão aberta com o zapbip, sem limite de tempo. Se a rede cair, ele reconecta sozinho, esperando um pouco mais a cada tentativa que falha (1 segundo no começo, 30 segundos no máximo). As mensagens que você enviar nesse meio tempo esperam na sua caixa de entrada do zapbip, e o plugin pega todas as que ficaram sem resposta assim que volta.
