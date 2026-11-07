@@ -106,6 +106,11 @@ describe('wrangler config', () => {
     expect(vars.WHATSAPP_MEDIA_DOWNLOAD_ORIGIN).toBe(vars.WHATSAPP_GRAPH_BASE_URL);
   });
 
+  it('the development environment has no routes, so wrangler dev keeps the request host', () => {
+    const { routes } = readWranglerConfig({ config: WRANGLER_CONFIG_PATH, env: DEVELOPMENT_ENVIRONMENT });
+    expect(routes).toEqual([]);
+  });
+
   it('the production D1 database id is the one created on 2026-11-07', () => {
     expect(databaseIdsOf({})).toEqual([PRODUCTION_DATABASE_ID]);
   });
