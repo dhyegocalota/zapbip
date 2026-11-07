@@ -214,10 +214,10 @@ G0 evidence (2026-11-06): Step 1 `ab7d8dc`; Step 2 red `7902adb` (carries the en
 
 ### G3 agents B
 
-- [ ] **Step 18:** Red: `apps/docs/e2e/agents-b.spec.ts`: the same four headings for `grok-bot`, `grok-web`, `hermes`, `openclaw`, `gemini-cli`, `any-mcp-client`; the listen statements; the Grok web standby sentence; `any-mcp-client` links to `developers/any-mcp-client`.
-- [ ] **Step 19:** `grok-bot` (routine with a webhook trigger, MCP server named `zapbip`, the confirm step) and `grok-web` (connector paste, standby with a Grok Bot connection or inbox only, the 60 s per-call cap as the reason for the standby). English reworded from install-skills; pt-BR twins native.
-- [ ] **Step 20:** `hermes` and `openclaw`: the platform plugin as the better option; the scheduled fallback; the `(verify)` items from hermes-openclaw resolved at the facts merge or removed.
-- [ ] **Step 21:** `gemini-cli` (Local: `npx zapbip listen` in a background terminal; the MCP server added to the client's config as its install section says) and `any-mcp-client` (Inbox: the URL and header, the listen loop in plain words, `check_inbox` polling, a link to `developers/any-mcp-client`). If install-skills has not separated Gemini CLI from Grok Bot by the facts merge, the page keeps Local and the briefing records the open point.
+- [x] **Step 18:** Red: `apps/docs/e2e/agents-b.spec.ts`: the same four headings for `grok-bot`, `grok-web`, `hermes`, `openclaw`, `gemini-cli`, `any-mcp-client`; the listen statements; the Grok web standby sentence; `any-mcp-client` links to `developers/any-mcp-client`. Evidence: `206332c` (26 failed, 26 skipped).
+- [x] **Step 19:** `grok-bot` (routine with a webhook trigger, MCP server named `zapbip`, the confirm step) and `grok-web` (connector paste, standby with a Grok Bot connection or inbox only, the 60 s per-call cap as the reason for the standby). English reworded from install-skills; pt-BR twins native. Evidence: `c4d796a` (26 of 26 per language project).
+- [x] **Step 20:** `hermes` and `openclaw`: the platform plugin as the better option; the scheduled fallback; the `(verify)` items from hermes-openclaw resolved at the facts merge or removed. Evidence: `c4d796a` (26 of 26 per language project).
+- [x] **Step 21:** `gemini-cli` (Local: `npx zapbip listen` in a background terminal; the MCP server added to the client's config as its install section says) and `any-mcp-client` (Inbox: the URL and header, the listen loop in plain words, `check_inbox` polling, a link to `developers/any-mcp-client`). If install-skills has not separated Gemini CLI from Grok Bot by the facts merge, the page keeps Local and the briefing records the open point. Evidence: `c4d796a` (26 of 26 per language project).
 
 ### G4 features
 
