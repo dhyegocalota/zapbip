@@ -1,20 +1,24 @@
 ---
-title: WhatsApp commands
-description: The words you send to zapbip to manage your AIs.
+title: Commands on WhatsApp
+description: What you can type to the zapbip number.
 ---
 
 import { Chat } from '/snippets/chat.jsx';
 
-You manage your AIs by writing to zapbip. A command is a short phrase in English or Portuguese, and zapbip answers in your language. Each row shows the English phrase with the Portuguese one beside it.
+You manage your AIs by writing to the zapbip number. A command is a short phrase, in Portuguese or English. The language you write is the language of the answer.
 
-| You want to         | Write in English                                 | Or in Portuguese                                      | What happens                                   |
-| ------------------- | ------------------------------------------------ | ----------------------------------------------------- | ---------------------------------------------- |
-| Connect a new AI    | `new agent claude`                               | `novo agente claude`                                  | zapbip sends the line to paste into that AI    |
-| See your AIs        | `agents`                                         | `agentes`                                             | A list with the name of each one               |
-| Disconnect an AI    | `revoke claude`                                  | `revogar claude`                                      | That AI stops working at once                  |
-| Get a new link      | `rotate claude`                                  | `girar claude`                                        | The old link stops and you get a fresh one     |
-| Open the menu       | `help` or `menu`                                 | `ajuda` or `menu`                                     | The commands as text and as a tappable list    |
-| Delete your account | `delete account`, then `delete account permanently` | `apagar conta`, then `apagar conta definitivamente` | See [delete your account](/help/delete-your-account) |
+| You want to         | Write                                               | What happens                                         |
+| ------------------- | --------------------------------------------------- | ---------------------------------------------------- |
+| Connect a new AI    | `new agent claude`                                  | zapbip answers with the prompt to paste into that AI |
+| See your AIs        | `agents`                                            | A list with the name and the date of each one        |
+| Disconnect an AI    | `revoke claude`                                     | That AI stops working at once                        |
+| Get a new prompt    | `rotate claude`                                     | The old connection stops and you get a fresh prompt  |
+| Open the menu       | `help` or `menu`                                    | The commands as text and as a tappable list          |
+| Delete your account | `delete account`, then `delete account permanently` | See [delete your account](/help/delete-your-account) |
+
+Write the phrase alone. A trailing `?` or `!` makes it a normal message for your AIs.
+
+## Example
 
 <Chat
   messages={[
@@ -25,19 +29,15 @@ You manage your AIs by writing to zapbip. A command is a short phrase in English
   ]}
 />
 
-Write the phrase alone: a message that is exactly a command word is a command. To send the same words to an AI, start with its name: `@claude help` reaches Claude instead of opening the menu.
+## Talking to an AI with a command word
+
+A message that is exactly a command word is always a command. To send the same words to an AI, start with its name: `@claude help` reaches Claude instead of opening the menu.
 
 ## Names
 
-A name has 1 to 20 lowercase letters, numbers or hyphens. The words that start a command are reserved and cannot name an AI: `new`, `agents`, `revoke`, `rotate`, `help`, `menu`, `delete` and their Portuguese versions.
+The words `new`, `agents`, `revoke`, `rotate`, `help`, `menu`, `delete` and their Portuguese versions cannot be the name of an AI.
 
-<Chat
-  messages={[
-    { you: true, text: 'new agent help', time: '09:22' },
-    { text: 'That name is reserved because it starts a command. Choose another one.', time: '09:22' },
-  ]}
-/>
+## Next
 
-## Forwarded messages
-
-A forwarded message is never a command, even when its text is a command word. It goes to your AI like any other message.
+- [Manage your AIs](/features/manage-your-agents)
+- [Many AIs on one number](/features/many-agents-on-one-number)

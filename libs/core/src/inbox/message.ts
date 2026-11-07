@@ -12,9 +12,11 @@ export type QuestionOption = {
   optionIndex: number;
   title: string;
   description: string | null;
+  rowId?: string;
 };
 
-export type MediaSource = { kind: MediaSourceKind.Link; link: string } | { kind: MediaSourceKind.Stored; mediaId: string };
+export type MediaSource =
+  { kind: MediaSourceKind.Link; link: string } | { kind: MediaSourceKind.Stored; mediaId: string } | { kind: MediaSourceKind.Unavailable };
 
 export type MediaFields = {
   source: MediaSource;
@@ -33,7 +35,7 @@ export type MessageContent =
   | ({ kind: MessageKind.Sticker } & MediaFields)
   | { kind: MessageKind.Location; latitude: number; longitude: number; name: string | null; address: string | null }
   | { kind: MessageKind.Contacts; contacts: ContactCard[] }
-  | { kind: MessageKind.Reaction; targetMessageId: string; emoji: string | null }
+  | { kind: MessageKind.Reaction; targetMessageId: string | null; emoji: string | null }
   | { kind: MessageKind.Choice; questionId: string; options: QuestionOption[]; selected: QuestionOption | null };
 
 export type MessageEnvelope = {

@@ -1,7 +1,16 @@
 import { DeliveryState, MediaOrigin, SECOND_MS } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
-import { MEDIA_RETENTION_MS, QUEUE_RETENTION_MS, QUESTION_RETENTION_MS, RECEIPT_RETENTION_MS, UPLOAD_TTL_MS } from '../constants';
+import {
+  MEDIA_RETENTION_MS,
+  QUEUE_RETENTION_MS,
+  QUESTION_RETENTION_MS,
+  RECEIPT_RETENTION_MS,
+  UPLOAD_TTL_MS,
+  SENDING_STALE_MS,
+} from '../constants';
+import { insertQueued } from '../testing/channel-fixtures';
 import { askAndAbandon, closeWindow, connectionOf, createEnvironment, receiveUpload } from '../testing/fixtures';
+import { claimQueued } from './claim-queued';
 import { createUpload } from './create-upload';
 import { sendText } from './send-text';
 import { sweepExpired } from './sweep-expired';
@@ -94,5 +103,38 @@ describe('sweepExpired', () => {
       },
     });
     expect(await sweepExpired({ dependencies: environment.dependencies })).toEqual({ nextDueAt: now + 5 });
+  });
+
+  test('CU-38 prunes a receipt past its retention and keeps the next one', async () => {
+    const environment = await createEnvironment();
+    const { repository, clock } = environment;
+    const receivedAt = clock.now();
+    await repository.recordChannelReceipt({ wamid: 'wamid.first', receivedAt });
+    await repository.recordChannelReceipt({ wamid: 'wamid.second', receivedAt: receivedAt + 1 });
+    await clock.advance({ ms: RECEIPT_RETENTION_MS + 1 });
+    await sweepExpired({ dependencies: environment.dependencies });
+    expect(await repository.recordChannelReceipt({ wamid: 'wamid.first', receivedAt: clock.now() })).toBe(true);
+    expect(await repository.recordChannelReceipt({ wamid: 'wamid.second', receivedAt: clock.now() })).toBe(false);
+  });
+
+  test('CU-38b requeues a send claim that went stale and keeps a fresh one', async () => {
+    const environment = await createEnvironment();
+    const { repository, clock } = environment;
+    const [stale, fresh] = await insertQueued({ environment, texts: ['stale', 'fresh'] });
+    await repository.claimQueuedMessages({ claimedAt: clock.now(), limit: 1 });
+    await clock.advance({ ms: SENDING_STALE_MS - 1 });
+    await claimQueued({ dependencies: environment.dependencies });
+    await clock.advance({ ms: 2 });
+    await sweepExpired({ dependencies: environment.dependencies });
+    expect(await repository.findMessage({ messageId: stale!.messageId })).toMatchObject({ delivery: DeliveryState.Queued });
+    expect(await repository.findMessage({ messageId: fresh!.messageId })).toMatchObject({ delivery: DeliveryState.Sending });
+  });
+
+  test('reports a stale claim as due', async () => {
+    const environment = await createEnvironment();
+    await insertQueued({ environment, texts: ['claimed'] });
+    const claimedAt = environment.clock.now();
+    await claimQueued({ dependencies: environment.dependencies });
+    expect(await sweepExpired({ dependencies: environment.dependencies })).toEqual({ nextDueAt: claimedAt + SENDING_STALE_MS });
   });
 });

@@ -145,6 +145,7 @@ describe('ask', () => {
       window: {
         lastOwnerMessageAt: environment.clock.now() - WINDOW_MS,
         noticeSentForClosedWindow: true,
+        closedAt: null,
         noticeRetryLocale: null,
         noticeRetryAt: null,
         noticeRetryAttempt: 0,

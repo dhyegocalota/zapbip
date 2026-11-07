@@ -32,7 +32,15 @@ A `Proposed` ADR moves to `Accepted` by editing its status line and date. Any ot
 | [0009](0009-cloudflare-workers-with-one-durable-object-per-account.md) | Cloudflare Workers with one Durable Object per account | Accepted | 2026-11-06 |
 | [0010](0010-public-docs-on-mintlify.md) | Public docs on Mintlify | Accepted | 2026-11-06 |
 | [0011](0011-the-24-hour-window-queues-and-sends-one-notice.md) | The 24-hour window queues messages and sends one notice | Accepted | 2026-11-06 |
+| [0012](0012-owner-identity-by-wa-id-on-the-shared-number.md) | The owner is identified by WhatsApp ID on the shared number | Accepted | 2026-11-06 |
+| [0013](0013-webhook-acknowledged-after-a-durable-commit-and-deduplicated-by-message-id.md) | Webhooks are acknowledged after a durable commit and deduplicated by message id | Accepted | 2026-11-06 |
+| [0014](0014-inbound-media-stored-in-r2-at-webhook-time.md) | Inbound media is stored in R2 when the webhook arrives | Accepted | 2026-11-06 |
+| [0015](0015-commands-are-bare-words-routed-before-agents.md) | Commands are bare words, routed before agents | Accepted | 2026-11-06 |
+| [0016](0016-accounts-start-on-the-first-message-and-wait-on-a-list.md) | Accounts start on the first message and wait on a list | Accepted | 2026-11-06 |
+| [0017](0017-connection-secrets-are-shown-once-and-stored-as-digests.md) | Connection secrets are shown once and stored as digests | Accepted | 2026-11-06 |
 | [0018](0018-webhook-wake-carries-no-message-content.md) | A webhook wake carries no message content | Accepted | 2026-11-06 |
 | [0019](0019-outbound-wake-targets-pinned-providers-and-guarded-generic-hosts.md) | Outbound wake targets: pinned provider hosts and guarded generic hosts | Accepted | 2026-11-06 |
 | [0022](0022-a-hibernatable-websocket-for-the-local-connector.md) | A hibernatable WebSocket for the local connector | Accepted | 2026-11-06 |
 | [0023](0023-the-local-session-is-the-newest-one-in-the-working-directory.md) | The local session is the newest one in the working directory | Accepted | 2026-11-06 |
+| [0028](0028-the-native-channel-plugin-is-the-first-rung-for-openclaw-and-hermes.md) | The native channel plugin is the first rung for OpenClaw and Hermes | Accepted | 2026-11-06 |
+| [0029](0029-a-plugin-acknowledges-a-handoff-and-a-listener-does-not.md) | A plugin acknowledges after the handoff; a listener acknowledges after it prints | Accepted | 2026-11-06 |

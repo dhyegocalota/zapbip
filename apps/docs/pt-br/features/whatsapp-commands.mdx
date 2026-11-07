@@ -1,20 +1,24 @@
 ---
-title: Comandos do WhatsApp
-description: As palavras que você manda ao zapbip para gerenciar suas IAs.
+title: Comandos no WhatsApp
+description: O que você pode escrever para o número do zapbip.
 ---
 
 import { Chat } from '/snippets/chat.jsx';
 
-Você gerencia suas IAs escrevendo ao zapbip. Um comando é uma frase curta em português ou em inglês, e o zapbip responde no seu idioma. Cada linha mostra a frase em português com a em inglês ao lado.
+Você gerencia as suas IAs escrevendo para o número do zapbip. Um comando é uma frase curta, em português ou inglês. O idioma que você escreve é o idioma da resposta.
 
-| Você quer           | Escreva em português                                  | Ou em inglês                                        | O que acontece                                  |
-| ------------------- | ----------------------------------------------------- | --------------------------------------------------- | ----------------------------------------------- |
-| Conectar uma nova IA | `novo agente claude`                                  | `new agent claude`                                  | O zapbip manda a linha para colar nessa IA      |
-| Ver suas IAs        | `agentes`                                             | `agents`                                            | Uma lista com o nome de cada uma                |
-| Desconectar uma IA  | `revogar claude`                                      | `revoke claude`                                     | Essa IA para de funcionar na hora               |
-| Pegar um link novo  | `girar claude`                                        | `rotate claude`                                     | O link antigo para e você recebe um novo        |
-| Abrir o menu        | `ajuda` ou `menu`                                     | `help` ou `menu`                                    | Os comandos em texto e em lista para tocar      |
-| Apagar sua conta    | `apagar conta`, depois `apagar conta definitivamente` | `delete account`, depois `delete account permanently` | Veja [apagar sua conta](/pt-br/help/delete-your-account) |
+| Você quer              | Escreva                                               | O que acontece                                           |
+| ---------------------- | ----------------------------------------------------- | -------------------------------------------------------- |
+| Conectar uma nova IA   | `novo agente claude`                                  | O zapbip responde com o prompt para colar nessa IA       |
+| Ver suas IAs           | `agentes`                                             | Uma lista com o nome e a data de cada uma                |
+| Desconectar uma IA     | `revogar claude`                                      | Essa IA para de funcionar na hora                        |
+| Receber um novo prompt | `girar claude`                                        | A conexão antiga para e você recebe um prompt novo       |
+| Abrir o menu           | `ajuda` ou `menu`                                     | Os comandos em texto e em uma lista tocável              |
+| Apagar sua conta       | `apagar conta`, depois `apagar conta definitivamente` | Veja [apagar sua conta](/pt-br/help/delete-your-account) |
+
+Escreva a frase sozinha. Um `?` ou `!` no final faz dela uma mensagem comum para as suas IAs.
+
+## Exemplo
 
 <Chat
   messages={[
@@ -25,19 +29,15 @@ Você gerencia suas IAs escrevendo ao zapbip. Um comando é uma frase curta em p
   ]}
 />
 
-Escreva a frase sozinha: uma mensagem que é exatamente uma palavra de comando é um comando. Para mandar as mesmas palavras a uma IA, comece pelo nome dela: `@claude ajuda` chega ao Claude em vez de abrir o menu.
+## Falando com uma IA usando uma palavra de comando
+
+Uma mensagem que é exatamente uma palavra de comando é sempre um comando. Para mandar as mesmas palavras a uma IA, comece com o nome dela: `@claude ajuda` chega ao Claude em vez de abrir o menu.
 
 ## Nomes
 
-Um nome tem de 1 a 20 letras minúsculas, números ou hífens. As palavras que iniciam um comando são reservadas e não podem nomear uma IA: `novo`, `agentes`, `revogar`, `girar`, `ajuda`, `menu`, `apagar` e as versões em inglês.
+As palavras `novo`, `agentes`, `revogar`, `girar`, `ajuda`, `menu`, `apagar` e as versões em inglês não podem ser o nome de uma IA.
 
-<Chat
-  messages={[
-    { you: true, text: 'novo agente ajuda', time: '09:22' },
-    { text: 'Esse nome é reservado porque é o início de um comando. Escolha outro.', time: '09:22' },
-  ]}
-/>
+## Próximos passos
 
-## Mensagens encaminhadas
-
-Uma mensagem encaminhada nunca é um comando, mesmo que o texto seja uma palavra de comando. Ela vai para a sua IA como qualquer outra mensagem.
+- [Gerencie suas IAs](/pt-br/features/manage-your-agents)
+- [Várias IAs em um número](/pt-br/features/many-agents-on-one-number)

@@ -45,6 +45,7 @@
               "features/send-messages-and-media",
               "features/ask-with-buttons-and-lists",
               "features/owner-starts-conversations",
+              "features/manage-your-agents",
               "features/many-agents-on-one-number",
               "features/whatsapp-commands",
               "features/the-24-hour-window"
@@ -131,6 +132,7 @@
               "pt-br/features/send-messages-and-media",
               "pt-br/features/ask-with-buttons-and-lists",
               "pt-br/features/owner-starts-conversations",
+              "pt-br/features/manage-your-agents",
               "pt-br/features/many-agents-on-one-number",
               "pt-br/features/whatsapp-commands",
               "pt-br/features/the-24-hour-window"

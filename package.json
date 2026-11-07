@@ -14,12 +14,19 @@
     "test:verify": "bash scripts/verify.test.sh",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "verify": "bash scripts/verify.sh"
+    "verify": "bash scripts/verify.sh",
+    "test:e2e:clients": "ZAPBIP_E2E_CLIENTS=1 pnpm --filter @zapbip/api exec vitest run --config vitest.e2e.config.mts test/e2e/hermes-openclaw.e2e.test.ts"
   },
   "devDependencies": {
     "@types/node": "24.19.2",
     "prettier": "3.9.10",
     "tsx": "4.23.15",
     "typescript": "7.0.2"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "workerd"
+    ]
   }
 }

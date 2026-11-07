@@ -1,0 +1,12 @@
+{
+  "from": "5511900000001",
+  "id": "wamid.DOCUMENT",
+  "timestamp": "1762430400",
+  "type": "document",
+  "document": {
+    "id": "900000000000005",
+    "mime_type": "application/pdf",
+    "sha256": "ZG9jdW1lbnQ=",
+    "filename": "relatorio.pdf"
+  }
+}

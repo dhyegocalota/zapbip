@@ -1,0 +1,42 @@
+{
+  "name": "@zapbip/openclaw-plugin",
+  "version": "0.1.0",
+  "description": "Zapbip WhatsApp channel for OpenClaw",
+  "type": "module",
+  "files": [
+    "dist",
+    "openclaw.plugin.json"
+  ],
+  "openclaw": {
+    "extensions": [
+      "./dist/index.js"
+    ],
+    "channel": {
+      "id": "zapbip",
+      "label": "Zapbip",
+      "blurb": "Talk to this agent from WhatsApp through zapbip."
+    },
+    "compat": {
+      "pluginApi": ">=2026.10.10"
+    }
+  },
+  "scripts": {
+    "prepublishOnly": "pnpm run build",
+    "build": "esbuild index.ts --bundle --platform=node --format=esm --target=node24 --outfile=dist/index.js --banner:js=\"import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);\" --external:openclaw --external:openclaw/*",
+    "typecheck": "tsc --noEmit",
+    "test:unit": "vitest run --passWithNoTests --config vitest.config.mts"
+  },
+  "peerDependencies": {
+    "openclaw": ">=2026.10.10"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "@types/ws": "8.18.2",
+    "@zapbip/core": "workspace:*",
+    "@zapbip/types": "workspace:*",
+    "esbuild": "0.28.2",
+    "openclaw": "2026.10.10",
+    "vitest": "5.0.5",
+    "ws": "8.22.1"
+  }
+}

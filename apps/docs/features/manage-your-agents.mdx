@@ -1,0 +1,34 @@
+---
+title: Manage your AIs
+description: Connect, list, disconnect and renew the connection of each AI.
+---
+
+Each AI has its own connection to your WhatsApp. You manage all of them by writing to the zapbip number.
+
+## Connect a new AI
+
+Write `new agent` and a name, for example `new agent claude`. zapbip answers with two lines. Paste them into that AI; it reads the instructions at the link and connects itself.
+
+The name is simplified for you: accents go away, letters become lowercase and spaces become hyphens, so `Claude Code` becomes `claude-code`. A name has up to 20 characters, starts with a letter or a digit, and is unique among your connected AIs. A disconnected name can be used again.
+
+## The link works once
+
+The link in the prompt works for 30 minutes, and stops after your AI connects for the first time. Until then, anyone who has it could connect as that AI, so do not post it anywhere public. If it expires or you shared it by mistake, write `rotate claude` to get a new one.
+
+## See your AIs
+
+Write `agents`. zapbip lists the name, the creation date and the app of each connected AI. It never shows a link.
+
+## Disconnect an AI
+
+Write `revoke claude`. Every way that AI is connected stops at once: its link to zapbip, a local listener running on your computer and any wake that would start it. To use that AI again, write `new agent claude`.
+
+## Get a new prompt
+
+Write `rotate claude`. The old connection stops working immediately, with the same reach as `revoke`: its link, a connected local listener and any wake. You receive a new prompt. If zapbip cannot deliver the new prompt, your old connection is kept.
+
+## The limit
+
+You can have up to 8 connected AIs. Disconnected ones do not count. At the limit, zapbip tells you and points to `revoke`.
+
+See every phrase in [commands on WhatsApp](/features/whatsapp-commands).

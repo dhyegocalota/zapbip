@@ -1,37 +1,21 @@
 ---
-title: 'Avisos ao dono'
-description: 'Os modelos aprovados que o zapbip envia quando a janela de 24 horas está fechada.'
+title: 'Avisos para o dono'
+description: 'As mensagens aprovadas que você recebe quando a janela está fechada.'
 ---
 
-import { Chat } from '/snippets/chat.jsx';
+Fora da [janela de 24 horas](/pt-br/concepts/24-hour-window), o WhatsApp só entrega modelos de mensagem aprovados. O zapbip usa dois, no seu idioma (português ou inglês).
 
-Fora da [janela de 24 horas](/pt-br/concepts/24-hour-window), o WhatsApp só entrega modelos de mensagem aprovados. O zapbip registra dois, no idioma do dono (português ou inglês).
+| Modelo                  | Quando                     | Resposta rápida       |
+| ----------------------- | -------------------------- | --------------------- |
+| `zapbip_agent_notice`   | uma IA enviou uma mensagem | `Abrir` / `Open`      |
+| `zapbip_agent_question` | uma IA fez uma pergunta    | `Responder` / `Reply` |
 
-| Modelo                  | Enviado quando             | Corpo (português)                                                   | Resposta rápida |
-| ----------------------- | -------------------------- | ------------------------------------------------------------------- | --------------- |
-| `zapbip_agent_notice`   | uma IA enviou uma mensagem | `Mensagem de {{1}}: {{2}} — toque em Abrir para ler.`               | `Abrir`         |
-| `zapbip_agent_question` | uma IA fez uma pergunta    | `Pergunta de {{1}}: {{2}} — toque em Responder para ver as opções.` | `Responder`     |
-
-`{{1}}` é o nome da IA e `{{2}}` é uma prévia do conteúdo, de até 60 caracteres em uma linha. A prévia de uma mensagem que não é texto é o tipo dela entre colchetes, como `[imagem]`. Os corpos em inglês e as respostas rápidas `Open` e `Reply` são registrados com os mesmos nomes.
-
-## O que o dono vê
-
-<Chat
-  messages={[
-    { name: 'zapbip', text: 'Mensagem de claude-code: Deploy concluído, 2m14s — toque em Abrir para ler.', options: ['Abrir'] },
-    { you: true, text: 'Abrir' },
-    { name: 'claude-code', text: 'Deploy concluído, 2m14s ✅' },
-  ]}
-/>
+Cada um diz o nome da IA e mostra uma prévia de até 60 caracteres, em uma linha.
 
 ## Por que o aviso vem primeiro
 
-O aviso não leva o conteúdo de verdade. A mensagem, ou a pergunta com seus botões ou lista, vem depois, porque o WhatsApp só permite mensagem livre depois que o dono escreve.
+O aviso chega antes do conteúdo de verdade, e não traz nada dele. A mensagem, ou a pergunta com seus botões ou lista, vem depois, porque o WhatsApp só permite mensagem livre depois que você escreve.
 
-O dono toca na resposta rápida. Esse toque conta como uma mensagem dele: abre a janela e a fila é entregue em ordem. O toque é a única ação que um aviso oferece, e ele nunca é repassado a uma IA.
+Você toca na resposta rápida. Esse toque conta como uma mensagem sua: abre a janela e a fila é entregue em ordem.
 
-O zapbip envia um aviso por janela fechada. Um aviso que o próprio zapbip escreve, como o de uma IA que não está ouvindo, segue a mesma regra.
-
-## Quando o modelo é rejeitado
-
-Se o WhatsApp rejeita o modelo, a mensagem continua na fila e o envio que a pediu volta com `delivery: "failed"` e um texto dizendo que o aviso falhou. O zapbip tenta o aviso de novo depois de 5 minutos, depois de 10, 20 e assim por diante, dobrando o intervalo até 6 horas. Um aviso que o próprio zapbip escreveu não tem IA para avisar, então a rejeição só é registrada no log. As mensagens na fila são entregues quando o dono escrever de novo.
+O zapbip envia um aviso por janela fechada. O toque é a única ação que um aviso oferece, e ele nunca é repassado a uma IA.

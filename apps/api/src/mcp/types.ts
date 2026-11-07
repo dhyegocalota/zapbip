@@ -1,4 +1,4 @@
-import type { ConnectionIdentity, MediaStore } from '@zapbip/core';
+import type { ConnectionIdentity, MediaStore, OutboundGuard } from '@zapbip/core';
 import type { z } from 'zod';
 import type { AccountInboxRpc } from '../contract/account-inbox-rpc';
 import type { INLINE_IMAGE_CONTENT_TYPE } from '../contract/constants';
@@ -11,6 +11,7 @@ export type ToolContext = {
   origin: string;
   accountInbox: AccountInboxRpc;
   mediaStore: MediaStore;
+  outboundGuard: OutboundGuard;
 };
 
 export type InlineImage = { type: typeof INLINE_IMAGE_CONTENT_TYPE; data: string; mimeType: string };
