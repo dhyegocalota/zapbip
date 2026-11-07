@@ -115,7 +115,7 @@ Pins (green when they landed): the fixture tests built on test-local validators 
 ### Hypotheses for the tester
 
 - The Overview and Get started in both languages reach the WhatsApp step with no dead end; `broken-links` reports none.
-- The prompt on the page equals the accounts-and-keys install lines for `en_US` and `pt_BR` with `https://zapbip.com/i/zb_inst_<code>`.
+- The prompt on the page equals the accounts-and-keys install lines for `en_US` and `pt_BR` with `https://mcp.zapbip.com/i/zb_inst_<code>`.
 - A first message of plain text on an account with no agent gets "No agent is connected. Your message is saved." (`InboxCopyKey.NoAgents`), unless the account is on the waitlist.
 
 ### Gaps
