@@ -42,7 +42,7 @@ for form in "${blocked_env_writes[@]}"; do
   expect_exit "claude: $form is blocked" 2 guard-secrets.sh "$(bash_call "$form")"
   expect_exit "codex: $form is blocked" 2 guard-secrets.sh "$(codex_bash_call "$form")"
 done
-allowed_env_commands=('echo X=1 > .env.example' 'cp .env.example /tmp/copy' 'cat .env.example' 'sed -i s/a/b/ .env.example' 'echo x > notes.txt' 'git commit -m \"document the variable\"')
+allowed_env_commands=('echo X=1 > .env.example' 'cp .env.example /tmp/copy' 'cat .env.example' 'sed -i s/a/b/ .env.example' 'echo x > notes.txt' 'git commit -m \"document the variable\"' 'echo \"the .env file holds secrets\" >> PROGRESS.md' "echo 'see .env and .env.local' > notes.md")
 for form in "${allowed_env_commands[@]}"; do
   expect_exit "claude: $form is allowed" 0 guard-secrets.sh "$(bash_call "$form")"
   expect_exit "codex: $form is allowed" 0 guard-secrets.sh "$(codex_bash_call "$form")"
@@ -93,6 +93,16 @@ for form in "${blocked_deploy_forms[@]}"; do
 done
 allowed_deploy_forms=('wrangler deploy --dry-run' 'pnpm --filter @zapbip/api exec wrangler deploy --env staging --dry-run' 'wrangler d1 migrations apply zapbip-staging --env staging --local' 'pnpm migrate:development' 'pnpm smoke:staging' 'pnpm exec vitest run' 'wrangler secret list --env staging' 'git commit -m \"document wrangler deploy\"')
 for form in "${allowed_deploy_forms[@]}"; do
+  expect_exit "claude: $form is allowed" 0 guard-deploy.sh "$(bash_call "$form")"
+  expect_exit "codex: $form is allowed" 0 guard-deploy.sh "$(codex_bash_call "$form")"
+done
+evasive_deploy_forms=('wrangler d1 time-travel restore zapbip --timestamp 2026-11-01' 'wrangler d1 delete zapbip' 'wrangler r2 bucket delete zapbip-media' 'wrangler r2 object put zapbip-media/key --file x' 'wrangler triggers deploy' 'pnpm run deploy:production' 'pnpm run migrate:production' "sh -c 'wrangler deploy'" 'bash -c \"wrangler secret put X\"' './node_modules/.bin/wrangler deploy' '/usr/local/bin/wrangler rollback abc')
+for form in "${evasive_deploy_forms[@]}"; do
+  expect_exit "claude: $form is blocked" 2 guard-deploy.sh "$(bash_call "$form")"
+  expect_exit "codex: $form is blocked" 2 guard-deploy.sh "$(codex_bash_call "$form")"
+done
+allowed_local_forms=('wrangler dev' 'wrangler d1 migrations apply zapbip --local' 'sh -c \"wrangler deploy --dry-run\"' 'wrangler r2 bucket list' 'wrangler d1 list')
+for form in "${allowed_local_forms[@]}"; do
   expect_exit "claude: $form is allowed" 0 guard-deploy.sh "$(bash_call "$form")"
   expect_exit "codex: $form is allowed" 0 guard-deploy.sh "$(codex_bash_call "$form")"
 done
