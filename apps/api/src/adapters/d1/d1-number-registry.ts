@@ -2,6 +2,7 @@ import type { Clock, IdGenerator } from '@zapbip/core';
 import { IdPrefix, WhatsAppNumberState } from '@zapbip/types';
 import type { Bindings } from '../../contract/env';
 import type {
+  NumberRecord,
   NumberRegistry,
   OutboundNumber,
   RegisteredNumber,
@@ -86,6 +87,14 @@ export class D1NumberRegistry implements NumberRegistry {
       )
       .run();
     return { numberId };
+  }
+
+  async findNumber(_input: { numberId: string }): Promise<NumberRecord | null> {
+    throw new Error('findNumber is not implemented');
+  }
+
+  async transition(_input: { numberId: string; to: WhatsAppNumberState }): Promise<void> {
+    throw new Error('transition is not implemented');
   }
 
   async findByPhoneNumberIds(input: { phoneNumberIds: string[] }): Promise<RegisteredNumber[]> {

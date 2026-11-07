@@ -10,6 +10,15 @@ export type RegisteredNumber = {
 
 export type OutboundNumber = RegisteredNumber & { accessToken: string };
 
+export type NumberRecord = RegisteredNumber & {
+  displayNumber: string;
+  label: string;
+  verifiedAt: number | null;
+  verificationSnapshot: string | null;
+  createdAt: number;
+  updatedAt: number;
+};
+
 export type RegisterMetaAppInput = { metaAppId: string; label: string; appSecret: string };
 
 export type RegisterNumberInput = {
@@ -24,6 +33,8 @@ export type RegisterNumberInput = {
 export interface NumberRegistry {
   registerMetaApp(input: RegisterMetaAppInput): Promise<{ metaAppRef: string }>;
   registerNumber(input: RegisterNumberInput): Promise<{ numberId: string }>;
+  findNumber(input: { numberId: string }): Promise<NumberRecord | null>;
+  transition(input: { numberId: string; to: WhatsAppNumberState }): Promise<void>;
   findByPhoneNumberIds(input: { phoneNumberIds: string[] }): Promise<RegisteredNumber[]>;
   findByWabaIds(input: { wabaIds: string[] }): Promise<RegisteredNumber[]>;
   openAppSecret(input: { metaAppRef: string }): Promise<string>;
