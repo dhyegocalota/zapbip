@@ -247,3 +247,5 @@ Known gaps:
 ## Merge pass
 
 - `apps/openclaw-plugin/test/unit/connector-socket.test.ts` "heartbeat > sends a ping on every interval" failed under load (`expected 2 to be 1`): the test set the pong timeout equal to the ping interval (40 ms), so a late pong reconnected the socket before the third ping was counted. The test now leaves the timeout at its default, so only the pings are counted. Proof: 30 of 30 runs of the file, 10 of them beside 4 `yes` CPU hogs.
+- "treats any frame as proof of life" had the same exposure (25 ms pong timeout). The fake connector can now answer every ping with a messages frame; the test uses a 300 ms interval, a 200 ms timeout and four pings, so it goes red when a non-pong frame stops resetting the heartbeat (mutation: the `clearTimeout` in the socket message handler removed, test red, restored). Proof: 30 of 30 runs of the file, 10 of them beside 4 `yes` CPU hogs.
+- The install link in the guides and the spec now reads `https://mcp.zapbip.com/i/zb_inst_<code>`, the production `PUBLIC_ORIGIN`.

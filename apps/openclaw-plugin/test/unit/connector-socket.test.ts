@@ -26,6 +26,9 @@ import {
 
 const FAST_HEARTBEAT_INTERVAL_MS = 40;
 const FAST_HEARTBEAT_TIMEOUT_MS = 25;
+const PROOF_OF_LIFE_INTERVAL_MS = 300;
+const PROOF_OF_LIFE_TIMEOUT_MS = 200;
+const PROOF_OF_LIFE_PINGS = 4;
 const PROMPT_RETURN_MS = 100;
 const IDLE_HEARTBEAT_MS = 60_000;
 const BATCH_SIZE = 100;
@@ -265,11 +268,9 @@ describe('heartbeat', () => {
   });
 
   it('treats any frame as proof of life', async () => {
-    const connector = await startConnector({ autoPong: false });
-    startPlugin({ connector, heartbeatIntervalMs: FAST_HEARTBEAT_INTERVAL_MS, heartbeatTimeoutMs: FAST_HEARTBEAT_TIMEOUT_MS });
-    await connector.waitForFrames({ type: ConnectorFrameType.Ping, count: 1 });
-    connector.sendFrame({ frame: messagesFrame({ messages: [] }) });
-    await connector.waitForFrames({ type: ConnectorFrameType.Ping, count: 2 });
+    const connector = await startConnector({ pingAnswerText: JSON.stringify(messagesFrame({ messages: [] })) });
+    startPlugin({ connector, heartbeatIntervalMs: PROOF_OF_LIFE_INTERVAL_MS, heartbeatTimeoutMs: PROOF_OF_LIFE_TIMEOUT_MS });
+    await connector.waitForFrames({ type: ConnectorFrameType.Ping, count: PROOF_OF_LIFE_PINGS });
     expect(connector.connectionCount()).toBe(1);
   });
 });
