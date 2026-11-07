@@ -177,7 +177,7 @@ gate_integration() { pnpm --filter "$API_PACKAGE" test:integration; }
 gate_e2e() {
   pnpm --filter "$API_PACKAGE" test:e2e && pnpm --filter "$CONNECTOR_PACKAGE" test:e2e && pnpm --filter "$CONNECTOR_PACKAGE" test:packaging
 }
-gate_docs() { pnpm --filter "$DOCS_PACKAGE" run broken-links; }
+gate_docs() { pnpm --filter "$DOCS_PACKAGE" run broken-links && pnpm --filter "$DOCS_PACKAGE" run test:walk; }
 
 write_record() {
   mkdir -p "$records_directory"
