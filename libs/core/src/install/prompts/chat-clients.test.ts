@@ -108,12 +108,12 @@ describe('Hermes and OpenClaw confirmed install steps', () => {
     expect(text).not.toContain('plugins.enabled');
     expect(text).toContain(`ZAPBIP_CONNECTION_LINK=${CONNECTION_LINK}`);
     expect(text).toContain('ZAPBIP_ALLOWED_USERS=owner');
-    expect(text).toContain('zapbip-platform');
+    expect(text).toContain('pip install zapbip-platform==0.1.0');
   });
 
   test('F4 OpenClaw installs the published package and sets the connection link on the channel', () => {
     const text = renderOpenClawSection(sectionInput({ locale }));
-    expect(text).toContain('openclaw plugins install @zapbip/openclaw-plugin --force --accept-capabilities');
+    expect(text).toContain('openclaw plugins install @zapbip/openclaw-plugin@0.1.0');
     expect(text).toContain('channels.zapbip.connectionLink');
     expect(text).toContain(CONNECTION_LINK);
   });
