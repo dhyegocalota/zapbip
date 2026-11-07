@@ -229,7 +229,7 @@ Author this list with every box empty. A sub-agent ticks its own line. A wrong s
 
 ### G4 metrics (PR B)
 
-- [ ] **Step 31:** red: `activity-in-object.test.ts`:
+- [x] **Step 31:** red: `activity-in-object.test.ts`:
   - an accepted owner message → `messages_in` +1;
   - a duplicate → +0;
   - a session send → `messages_out` +1;
@@ -238,9 +238,9 @@ Author this list with every box empty. A sub-agent ticks its own line. A wrong s
   - a woken wake → `wakes_woken` +1;
   - unreached → `wakes_unreached` +1.
 
-  Then `v8.sql`, `activity-ledger.ts` and the `recordActivity` calls.
-- [ ] **Step 32:** red: `activity-flush.test.ts`. After one hour on the fake clock the D1 `activity_daily` row equals the meter, with `number_id` equal to the account's number. A second flush is idempotent. Pruning after 7 days. Then `activity-provider.ts`, `0006_activity.sql` and `d1-activity-repository.ts`.
-- [ ] **Step 33:** red: `backoffice-metrics.test.ts`:
+  Then `v8.sql`, `activity-ledger.ts` and the `recordActivity` calls. — evidence: red bfa914e6 (`expected +0 to be 1`; `v8.sql` and the `ActivityMetric` enum land with the red as scaffolding) → green 80cc59be. The calls live in `activity-recording.ts`, which decorates the sender and the waker at their port, plus three `receive*` methods in `account-inbox.ts`.
+- [x] **Step 32:** red: `activity-flush.test.ts`. After one hour on the fake clock the D1 `activity_daily` row equals the meter, with `number_id` equal to the account's number. A second flush is idempotent. Pruning after 7 days. Then `activity-provider.ts`, ~~`0006_activity.sql`~~ `0007_activity.sql` (0006 is the flash migration) and `d1-activity-repository.ts`. — evidence: red e4b1d8ec (`expected [] to deeply equal [ … ]`; the `0007` table lands with the red; 'does not write again when nothing was recorded after the flush' is a pin) → green 9b207d56. `scheduled-wake-alarm.test.ts` now flushes both meters before it re-arms, and `account-inbox.test.ts` clears the activity meter beside the usage meter.
+- [x] **Step 33:** red: `backoffice-metrics.test.ts`:
   - seeded accounts in four states, connections active, revoked and connected, `usage_daily` at 79 % and 81 %, and activity across two numbers → each figure on the page equals the spec definition;
   - the number filter;
   - the period filter;
@@ -248,7 +248,7 @@ Author this list with every box empty. A sub-agent ticks its own line. A wrong s
   - one `batch` call per page (a spy on the binding);
   - read-only: every statement prepared by a metrics page begins with `SELECT`, and `POST`, `PUT`, `PATCH` and `DELETE` on `/metrics` → `404`.
 
-  Then `backoffice/metrics/**`.
+  Then `backoffice/metrics/**`. — evidence: red 6290ca4f (`expected 404 to be 200`; the four non-GET cases are a pin) → green 24e3b39f. Four copy keys for the account states were added (`MetricsAccountState*`) and `PERCENT_MULTIPLIER` joined `libs/types`.
 
 ### G5 deploy, smoke, runbooks and rules
 
@@ -273,7 +273,7 @@ Author this list with every box empty. A sub-agent ticks its own line. A wrong s
 ### G6 browser specs
 
 - [x] **Step 38:** `apps/api/playwright.config.ts` boots `wrangler dev --env development` on a free port with the fake Graph, plus `test:walk`. Red spec `sign-in.spec.ts` as in the test plan. Green once G2 lands. — evidence: infra beca09a5, red c38ca2e8 (`403 Pedido recusado`, the form post carried `Origin: null`) → green 40d35cac (`Referrer-Policy: same-origin`) and 319e2cda; `pnpm test:walk`: 26 passed at 1280 and 375
-- [ ] **Step 39:** red specs `numbers.spec.ts` (PR A) and `metrics.spec.ts` (PR B). Green once G3 and G4 land. — PR A half done: `numbers.spec.ts` and `error-pages.spec.ts` red fb50c691 → green 40d35cac and 319e2cda; `metrics.spec.ts` waits for G4
+- [ ] **Step 39:** red specs `numbers.spec.ts` (PR A) and `metrics.spec.ts` (PR B). Green once G3 and G4 land. — PR A half done: `numbers.spec.ts` and `error-pages.spec.ts` red fb50c691 → green 40d35cac and 319e2cda; `metrics.spec.ts` pin 3857ef49 (lands after the page; run by `pnpm --filter @zapbip/api test:walk`)
 
 ### G7 tester findings (PR A)
 

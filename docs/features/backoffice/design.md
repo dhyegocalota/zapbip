@@ -418,7 +418,7 @@ Chart rules:
 
 Accessibility: the filter form is labelled and keyboard operable; `FigureNumber` is a `<p>` pair (label then value) in a `<section aria-labelledby>`; headings go `h1` page, `h2` card, `h3` sub-block; no information lives only in a chart (the tables carry it).
 
-Copy keys: `MetricsTitle`, `MetricsFilterNumber`, `MetricsFilterNumberAll`, `MetricsFilterPeriod`, `MetricsPeriod7`, `MetricsPeriod30`, `MetricsFilterApply`, `MetricsFreshnessLive`, `MetricsFreshnessHourly`, `MetricsUpdatesHourly`, `MetricsNoData`, `MetricsShowValues`, `MetricsAccountsTitle`, `MetricsAccountsByState`, `MetricsAccountsPerNumber`, `MetricsNewAccountsPerDay`, `MetricsAgentsTitle`, `MetricsAgentsActive`, `MetricsAgentsConnected`, `MetricsAgentsByClient`, `MetricsAgentsNotReported`, `MetricsAgentsCreatedRevoked`, `MetricsMessagesTitle`, `MetricsMessagesIn`, `MetricsMessagesOut`, `MetricsTemplatesTitle`, `MetricsTemplatesNotice`, `MetricsTemplatesQuestion`, `MetricsFailuresTitle`, `MetricsWakeTitle`, `MetricsWakeNoWakes`, `MetricsBudgetTitle`, `MetricsBudgetWithin`, `MetricsBudgetWarning`, `MetricsBudgetThreshold`, `MetricsBudgetUsed` (with `{used}` and `{limit}`), `MetricsBlockedPhones`, `MetricsRestrictedTitle`, `ChartLegendSolid`, `ChartLegendHatched`, `ChartTitle` (with `{metric}` and `{days}`), `ChartDescription` (with `{from}`, `{to}`, `{total}`), `ColumnDay`, `ColumnCount`, `ColumnCreated`, `ColumnRevoked`.
+Copy keys: `MetricsTitle`, `MetricsFilterNumber`, `MetricsFilterNumberAll`, `MetricsFilterPeriod`, `MetricsPeriod7`, `MetricsPeriod30`, `MetricsFilterApply`, `MetricsFreshnessLive`, `MetricsFreshnessHourly`, `MetricsUpdatesHourly`, `MetricsNoData`, `MetricsShowValues`, `MetricsAccountsTitle`, `MetricsAccountsByState`, `MetricsAccountsPerNumber`, `MetricsAccountStateWaitlisted`, `MetricsAccountStateActive`, `MetricsAccountStateSuspended`, `MetricsAccountStateDeleting`, `MetricsNewAccountsPerDay`, `MetricsAgentsTitle`, `MetricsAgentsActive`, `MetricsAgentsConnected`, `MetricsAgentsByClient`, `MetricsAgentsNotReported`, `MetricsAgentsCreatedRevoked`, `MetricsMessagesTitle`, `MetricsMessagesIn`, `MetricsMessagesOut`, `MetricsTemplatesTitle`, `MetricsTemplatesNotice`, `MetricsTemplatesQuestion`, `MetricsFailuresTitle`, `MetricsWakeTitle`, `MetricsWakeNoWakes`, `MetricsBudgetTitle`, `MetricsBudgetWithin`, `MetricsBudgetWarning`, `MetricsBudgetThreshold`, `MetricsBudgetUsed` (with `{used}` and `{limit}`), `MetricsBlockedPhones`, `MetricsRestrictedTitle`, `ChartLegendSolid`, `ChartLegendHatched`, `ChartTitle` (with `{metric}` and `{days}`), `ChartDescription` (with `{from}`, `{to}`, `{total}`), `ColumnDay`, `ColumnCount`, `ColumnCreated`, `ColumnRevoked`.
 
 ### 4.9 Audit log (`GET /audit`)
 
@@ -648,6 +648,10 @@ The per-page key lists are in section 4. The strings:
 | `MetricsAccountsTitle` | Contas | Accounts |
 | `MetricsAccountsByState` | Contas por estado | Accounts by state |
 | `MetricsAccountsPerNumber` | Contas por número | Accounts per number |
+| `MetricsAccountStateWaitlisted` | Em espera | Waitlisted |
+| `MetricsAccountStateActive` | Ativa | Active |
+| `MetricsAccountStateSuspended` | Suspensa | Suspended |
+| `MetricsAccountStateDeleting` | Em exclusão | Deleting |
 | `MetricsNewAccountsPerDay` | Novas contas por dia | New accounts per day |
 | `MetricsAgentsTitle` | Agentes | Agents |
 | `MetricsAgentsActive` | Agentes ativos | Agents active |
