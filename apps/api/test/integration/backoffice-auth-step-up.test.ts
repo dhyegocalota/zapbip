@@ -1,5 +1,6 @@
 import { SECOND_MS } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { BackofficeAuditTargetKind } from '../../src/backoffice/audit/backoffice-audit-action';
 import { StepUpOutcome, verifyStepUp } from '../../src/backoffice/auth/step-up';
 import { TOTP_PERIOD_MS, BACKOFFICE_LOCKOUT_THRESHOLD } from '../../src/contract/constants';
 import { createFakeRateLimiter } from '../support/fake-rate-limiter';
@@ -17,7 +18,7 @@ import {
 } from './backoffice-auth-fixtures';
 
 const NOW = Date.UTC(2026, 10, 7, 12);
-const TARGET_KIND = 'number';
+const TARGET_KIND = BackofficeAuditTargetKind.Number;
 const TARGET_ID = 'num_1';
 const STEP_UP_KEY = `step-up:${CLIENT_ADDRESS}`;
 

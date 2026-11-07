@@ -21,6 +21,7 @@ export const STATIC_SECURITY_HEADERS: Record<string, string> = {
   'X-Robots-Tag': 'noindex, nofollow',
 };
 export const NO_STORE = 'no-store';
+export const RETRY_AFTER_HEADER = 'Retry-After';
 export const NON_ERROR_CODE = 'NonError';
 export const SESSION_COOKIE_NAME = '__Host-zb_bo_session';
 export const CSRF_COOKIE_NAME = '__Host-zb_bo_csrf';

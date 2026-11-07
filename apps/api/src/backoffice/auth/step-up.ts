@@ -1,5 +1,5 @@
 import type { Bindings } from '../../contract/env';
-import { BackofficeAuditAction } from '../audit/backoffice-audit-action';
+import { BackofficeAuditAction, type BackofficeAuditTargetKind } from '../audit/backoffice-audit-action';
 import { registerFailure } from './failure';
 import { isLocked, readOperator, recordSuccess, releaseExpiredLock } from './operator-state';
 import { isWithinRateLimit, RateLimitScope } from './rate-limit';
@@ -16,7 +16,7 @@ export async function verifyStepUp(input: {
   code: string;
   now: number;
   clientAddress: string | null;
-  targetKind: string;
+  targetKind: BackofficeAuditTargetKind;
   targetId: string;
 }): Promise<StepUpOutcome> {
   const { env, code, now, clientAddress, targetKind, targetId } = input;

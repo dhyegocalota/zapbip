@@ -92,7 +92,7 @@ describe('webhook attribution by number', () => {
     const notification = notificationOf({
       changes: [
         changeOf({ phoneNumberId: UNKNOWN_PHONE_NUMBER_ID, messages: [ownerText({ account, id: 'wamid.NUM6A' })] }),
-        changeOf({ phoneNumberId: OUR_PHONE_NUMBER_ID, messages: [ownerText({ account, id: 'wamid.NUM6B', text: 'Oi' })] }),
+        changeOf({ phoneNumberId: OUR_PHONE_NUMBER_ID, messages: [ownerText({ account, id: 'wamid.NUM6B' })] }),
       ],
     });
     const wrongSecret = await postSignedWith({ appSecret: SECOND_APP_SECRET, notification });

@@ -12,6 +12,11 @@ export enum BackofficeAuditAction {
   NumberStateChanged = 'number.state_changed',
 }
 
+export enum BackofficeAuditTargetKind {
+  Number = 'number',
+  MetaApp = 'meta_app',
+}
+
 export enum BackofficeAuditOutcome {
   Succeeded = 'succeeded',
   Failed = 'failed',

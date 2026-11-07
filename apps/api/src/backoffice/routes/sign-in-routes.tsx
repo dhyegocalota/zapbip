@@ -1,4 +1,4 @@
-import { HttpStatus } from '@zapbip/types';
+import { HttpStatus, SECOND_MS } from '@zapbip/types';
 import { type Context, Hono } from 'hono';
 import { setCookie } from 'hono/cookie';
 import { encodeBase64Url } from '../../adapters/platform/encoding';
@@ -7,7 +7,7 @@ import { parseDeployEnvironment } from '../../operations/deploy-environment';
 import { isWithinRateLimit, RateLimitScope, RETRY_AFTER_SECONDS } from '../auth/rate-limit';
 import { attemptSignIn, SignInOutcome } from '../auth/sign-in';
 import { STYLESHEET_HREF } from '../assets/stylesheet';
-import { CSRF_COOKIE_NAME, CSRF_TOKEN_BYTES, SEE_OTHER_STATUS, SESSION_COOKIE_NAME } from '../backoffice-constants';
+import { CSRF_COOKIE_NAME, CSRF_TOKEN_BYTES, RETRY_AFTER_HEADER, SEE_OTHER_STATUS, SESSION_COOKIE_NAME } from '../backoffice-constants';
 import type { BackofficeEnv } from '../backoffice-env';
 import { BackofficeNotice, noticeOf } from '../backoffice-notice';
 import { BackofficePath } from '../backoffice-paths';
@@ -19,7 +19,6 @@ const KEY_FIELD = 'key';
 const CODE_FIELD = 'code';
 const CSRF_FIELD = 'csrf';
 const NOTICE_QUERY = 'notice';
-const MILLISECONDS_PER_SECOND = 1_000;
 const COOKIE_OPTIONS = { secure: true, httpOnly: true, sameSite: 'Strict', path: '/' } as const;
 
 export const signInRoutes = new Hono<BackofficeEnv>();
@@ -53,7 +52,7 @@ signInRoutes.post(BackofficePath.SignIn, async (context) => {
     scope: RateLimitScope.SignIn,
   });
   if (!isWithinLimit)
-    return errorResponse({ context, status: HttpStatus.TooManyRequests, headers: { 'Retry-After': RETRY_AFTER_SECONDS } });
+    return errorResponse({ context, status: HttpStatus.TooManyRequests, headers: { [RETRY_AFTER_HEADER]: RETRY_AFTER_SECONDS } });
   const form = await context.req.parseBody();
   const key = textFieldOf({ form, name: KEY_FIELD });
   const code = textFieldOf({ form, name: CODE_FIELD });
@@ -63,7 +62,7 @@ signInRoutes.post(BackofficePath.SignIn, async (context) => {
   if (result.outcome === SignInOutcome.Succeeded) {
     setCookie(context, SESSION_COOKIE_NAME, result.sessionToken, {
       ...COOKIE_OPTIONS,
-      maxAge: BACKOFFICE_SESSION_MAX_MS / MILLISECONDS_PER_SECOND,
+      maxAge: BACKOFFICE_SESSION_MAX_MS / SECOND_MS,
     });
     return context.redirect(BackofficePath.Home, SEE_OTHER_STATUS);
   }

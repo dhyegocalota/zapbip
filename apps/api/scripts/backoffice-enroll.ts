@@ -1,5 +1,6 @@
 import { createInterface } from 'node:readline/promises';
 import { parseArgs } from 'node:util';
+import { SECOND_MS } from '@zapbip/types';
 import { renderUnicodeCompact } from 'uqr';
 import { encodeBase64Url } from '../src/adapters/platform/encoding';
 import { sha256Hex } from '../src/adapters/platform/hash';
@@ -43,7 +44,7 @@ const CLEAR_SCREEN = '\x1b[2J\x1b[3J\x1b[H';
 const ISSUER = 'zapbip';
 const OPERATOR_ACCOUNT = 'operator';
 const TOTP_ALGORITHM = 'SHA1';
-const PERIOD_SECONDS = TOTP_PERIOD_MS / 1_000;
+const PERIOD_SECONDS = TOTP_PERIOD_MS / SECOND_MS;
 
 function operatorKeyOf(input: { bytes: Uint8Array }): string {
   return `${KEY_PREFIX}${encodeBase64Url({ bytes: input.bytes })}`;
