@@ -1,48 +1,101 @@
 ---
-title: Hermes
-description: Conecte Hermes ao seu WhatsApp.
+title: 'Hermes'
+description: 'Escreva para o Hermes no WhatsApp e ele responde, sem limite de tempo.'
 ---
 
-## O que funciona
+import { Chat } from '/snippets/chat.jsx';
 
-- Sua IA envia texto, fotos, vídeos, áudios, documentos, localizações, contatos e reações no WhatsApp.
-- Ela pergunta com botões ou listas e espera o seu toque.
-- Escreva no WhatsApp e o Hermes te ouve em cerca de um minuto.
-- Ele espera a sua resposta pelo tempo que for preciso.
+O Hermes fica ouvindo seu WhatsApp por um pequeno plugin do zapbip. Você escreve primeiro ou responde uma pergunta depois, e a mensagem chega na sessão do Hermes.
 
-## Configurar do zero
+<Chat
+  contact="Hermes"
+  messages={[
+    { you: true, text: 'Resuma o que mudou no repositório hoje.', time: '18:02' },
+    { name: 'Hermes', text: 'Três commits: uma correção na cobrança, um teste novo e uma atualização da documentação.', time: '18:03' },
+  ]}
+/>
+
+## O que você precisa
+
+- O Hermes com o gateway rodando.
+- Seu link de conexão, o mesmo link `https://.../c/<secret>/mcp` que sua IA usa para falar com o zapbip. Trate-o como uma senha.
+
+## Instale o plugin
+
+Instale o pacote no ambiente Python em que o Hermes roda:
+
+```bash
+pip install zapbip-platform==0.1.0
+```
+
+Depois ative-o em `~/.hermes/config.yaml`:
+
+```yaml
+plugins:
+  enabled:
+    - zapbip-platform
+```
+
+Defina o link e quem pode falar com o Hermes no ambiente em que o gateway roda, nunca em um arquivo que você compartilha:
+
+```bash
+export ZAPBIP_CONNECTION_LINK='https://<host>/c/<secret>/mcp'
+export ZAPBIP_ALLOWED_USERS=owner
+```
+
+O arquivo que guarda seu link de conexão funciona como uma senha. Dê a ele a permissão `600`, para que só o seu usuário consiga ler, e nunca o compartilhe nem o envie para o Git:
+
+```bash
+chmod 600 <arquivo>
+```
+
+Reinicie o gateway.
+
+Depois da instalação, sua IA chama `set_wake({mode: "local"})`. Se o plugin não puder ser instalado, ela consulta em vez disso: cria uma tarefa a cada minuto que chama `check_inbox` e chama `set_wake({mode: "scheduled", interval_minutes: 1})`. Ela termina com `send_message`.
+
+## Como ele escuta
+
+O plugin mantém uma conexão aberta com o zapbip, sem limite de tempo. Se a rede cair, ele reconecta sozinho, esperando um pouco mais a cada tentativa que falha (1 segundo no começo, 30 segundos no máximo). As mensagens que você enviar nesse meio tempo esperam na sua caixa de entrada do zapbip, e o plugin pega todas as que ficaram sem resposta assim que volta.
+
+Rode apenas um listener por agente: o plugin ou `npx zapbip@0.1.0 listen`, nunca os dois. Um segundo listener substitui o primeiro.
+
+## Como o Hermes responde
+
+O Hermes envia as respostas às suas mensagens pelo próprio plugin, sem configuração extra.
+
+Adicione o zapbip como servidor MCP para o Hermes também puxar conversa com você, fazer uma pergunta com botões e esperar a resposta, e usar a consulta periódica abaixo:
+
+```yaml
+mcp_servers: { zapbip: { url: 'https://<host>/c/<secret>/mcp' } }
+```
+
+Depois peça ao Hermes no WhatsApp para enviar `✅ instalado`. Se essa mensagem chegar, está funcionando.
+
+<Chat
+  contact="zapbip"
+  messages={[
+    { you: true, text: 'Envie ✅ instalado quando estiver instalado.', time: '18:10' },
+    { name: 'Hermes', text: '✅ instalado', time: '18:10' },
+  ]}
+/>
+
+## Mensagens encaminhadas
+
+Uma mensagem que você encaminhou de outra pessoa chega ao Hermes com um aviso de que não foi você quem escreveu, então ele não a trata como uma instrução sua.
+
+## Se o plugin não puder ser instalado
+
+O Hermes pode consultar a caixa de entrada. Adicione o servidor MCP acima e crie uma tarefa a cada 1 minuto que chama `check_inbox`. Suas mensagens esperam até um minuto, e a resposta volta do mesmo jeito.
+
+## Quando algo não funciona
+
+| O que você vê                           | O que significa                                                        |
+| --------------------------------------- | ---------------------------------------------------------------------- |
+| Nenhuma resposta à sua mensagem         | O gateway não está rodando, ou o plugin não está em `plugins.enabled`. |
+| O plugin para sozinho                   | Outro plugin ou conector começou para a mesma conexão e o substituiu.  |
+| O Hermes não puxa conversa nem pergunta | O servidor MCP `zapbip` não está no `config.yaml`.                     |
+| O plugin para com erro                  | O link é desconhecido ou a conexão foi revogada. Peça um novo.         |
 
 <Steps>
-  <Step title="Mande mensagem para o número oficial do zapbip">
-    Abra o WhatsApp e mande `oi` para o número oficial do zapbip, depois `novo agente hermes`. [Como começar](/pt-br/get-started/how-to-start) mostra cada mensagem.
-  </Step>
-  <Step title="Cole o prompt em Hermes">
-    O zapbip responde com uma linha feita para você. Cole em Hermes:
-
-    ```text
-    Conecte-se ao meu WhatsApp com o zapbip: leia https://zapbip.com/i/zb_inst_K7P2QXm9aTfLw3VbN8cYhE e siga as instruções.
-    ```
-
-    Hermes lê a página e segue os passos abaixo, em ordem. Antes de mudar um arquivo ou uma configuração, diz qual é e espera o seu sim. O link dessa página é secreto, então não o deixe em conversas que você compartilha.
-
-  </Step>
-  <Step title="Adicionar o zapbip ao Hermes">
-    Ele adiciona um servidor MCP chamado `zapbip` em `<connectionLink>`, com `url` e `headers`, em `mcp_servers` no `config.yaml`.
-  </Step>
-  <Step title="Instalar o plugin de plataforma">
-    A melhor opção: ele roda `pip install zapbip-platform==0.1.0` para o Hermes poder importá-lo (o Hermes ativa a plataforma sozinho) e define `ZAPBIP_CONNECTION_LINK` e `ZAPBIP_ALLOWED_USERS=owner`, porque o Hermes recusa suas mensagens sem isso, e chama `set_wake({mode: "local"})`.
-  </Step>
-  <Step title="Ou manter um acompanhamento em segundo plano">
-    Só se o plugin não puder ser instalado, e nunca junto com ele, cria um job de `cronjob_manage` a cada minuto que chama `check_inbox`. Depois chama `set_wake({mode: "scheduled", interval_minutes: 1})`. Um acompanhamento que consulta custa chamadas ao modelo, e o Hermes avisa você disso.
-  </Step>
-  <Step title="Testar">
-    No chat ele chama `send_message` com ✅ instalado.
-  </Step>
+  <Step title="Teste">Sua IA chama `send_message` com ✅ instalado.</Step>
 </Steps>
-
-## Como a IA escuta
-
-- Com o plugin de plataforma do zapbip, cada mensagem do WhatsApp chega ao Hermes assim que é enviada.
-- Sem ele, o Hermes roda um job por minuto que confere a caixa de entrada. O plugin e o job nunca são usados juntos.
-
-Não há limite de tempo. Enquanto uma pergunta está aberta, sua IA pergunta de novo até você responder, pelo tempo que for preciso.
