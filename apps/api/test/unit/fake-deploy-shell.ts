@@ -13,6 +13,7 @@ export const PYPI_VERSION = '0.1.0';
 export const PYPI_PUBLISHER_VARIABLE = 'ZAPBIP_PYPI_PUBLISHER';
 export const PYPI_PUBLISHER = 'zapbip-owner';
 export const PYPI_RELEASE_URL = `https://pypi.org/pypi/zapbip-platform/${PYPI_VERSION}/json`;
+export const PYPI_XML_RPC_URL = 'https://pypi.org/pypi';
 export const DATABASE_ID = '0a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d';
 export const ALL_SECRETS_JSON = JSON.stringify(Object.values(WorkerSecret).map((name) => ({ name, type: 'secret_text' })));
 export const PASSING: ShellResult = { exitCode: 0, stdout: '' };
@@ -56,18 +57,44 @@ export function fakeShell({ replies: overrides = {} }: { replies?: Record<string
   };
 }
 
-export type FakePackageFetcher = PackageFetcher & { urls: string[] };
+export type FakePackageFetcher = PackageFetcher & { urls: string[]; xmlBodies: string[] };
 
-export const PYPI_FOUND: PackageAnswer = { status: 200, body: { info: { maintainer: PYPI_PUBLISHER } } };
+export const PYPI_FOUND: PackageAnswer = { status: 200, body: { info: { version: PYPI_VERSION } } };
 
-export function fakePackageFetcher({ answer = PYPI_FOUND, failure }: { answer?: PackageAnswer; failure?: Error }): FakePackageFetcher {
+export function pypiRolesAnswer({ roles }: { roles: [string, string][] }): PackageAnswer {
+  const entries = roles
+    .map(
+      ([role, user]) =>
+        `<value><array><data><value><string>${role}</string></value><value><string>${user}</string></value></data></array></value>`,
+    )
+    .join('');
+  return {
+    status: 200,
+    body: `<?xml version='1.0'?><methodResponse><params><param><value><array><data>${entries}</data></array></value></param></params></methodResponse>`,
+  };
+}
+
+export const PYPI_ROLES_FOUND: PackageAnswer = pypiRolesAnswer({ roles: [['Owner', PYPI_PUBLISHER]] });
+
+export function fakePackageFetcher({
+  answer = PYPI_FOUND,
+  rolesAnswer = PYPI_ROLES_FOUND,
+  failure,
+}: {
+  answer?: PackageAnswer;
+  rolesAnswer?: PackageAnswer;
+  failure?: Error;
+}): FakePackageFetcher {
   const urls: string[] = [];
-  const fetcher = async ({ url }: { url: string }): Promise<PackageAnswer> => {
+  const xmlBodies: string[] = [];
+  const fetcher = async ({ url, xmlBody }: { url: string; xmlBody?: string }): Promise<PackageAnswer> => {
     urls.push(url);
     if (failure) throw failure;
-    return answer;
+    if (xmlBody === undefined) return answer;
+    xmlBodies.push(xmlBody);
+    return rolesAnswer;
   };
-  return Object.assign(fetcher, { urls });
+  return Object.assign(fetcher, { urls, xmlBodies });
 }
 
 export function blockOf(input: { environment: DeployEnvironment; databaseId?: string; bucketName?: string }): DeployBlock {

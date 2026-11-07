@@ -1,4 +1,4 @@
-import { COMPANY_FACT_UNSET, OFFICIAL_NUMBER_UNSET } from '@zapbip/types';
+import { COMPANY_FACT_UNSET, NPM_REGISTRY_URL, OFFICIAL_NUMBER_UNSET } from '@zapbip/types';
 import type { CompanyFacts } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { PLACEHOLDER_VALUE_PREFIX } from '../../src/operations/constants';
@@ -27,7 +27,9 @@ import {
   PYPI_PUBLISHER,
   PYPI_PUBLISHER_VARIABLE,
   PYPI_RELEASE_URL,
+  pypiRolesAnswer,
   PYPI_VERSION,
+  PYPI_XML_RPC_URL,
   OFFICIAL_NUMBER,
   READY_WORKER_FACTS,
 } from './fake-deploy-shell';
@@ -121,7 +123,7 @@ describe('worker preflight', () => {
     const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell }));
     expect(refusal?.step).toBe(PreflightStep.NpmVersion);
     expect(refusal?.message).toContain(`zapbip@${NPM_VERSION}`);
-    expect(shell.commands).toEqual([`npm view zapbip@${NPM_VERSION} maintainers --json`]);
+    expect(shell.commands).toEqual([`npm view zapbip@${NPM_VERSION} maintainers --json --registry=${NPM_REGISTRY_URL}`]);
   });
 
   it('refuses production when the maintainers do not include the owner npm user', async () => {
@@ -161,19 +163,66 @@ describe('worker preflight', () => {
     expect(packageFetcher.urls).toEqual([PYPI_RELEASE_URL]);
   });
 
-  it('refuses production when the PyPI maintainer is not the owner', async () => {
-    const packageFetcher = fakePackageFetcher({ answer: { status: 200, body: { info: { maintainer: 'squatter' } } } });
+  it('refuses production when PyPI roles name another owner, even if the free-text maintainer matches', async () => {
+    const packageFetcher = fakePackageFetcher({
+      answer: { status: 200, body: { info: { maintainer: PYPI_PUBLISHER } } },
+      rolesAnswer: pypiRolesAnswer({ roles: [['Owner', 'squatter']] }),
+    });
     const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, packageFetcher }));
     expect(refusal?.step).toBe(PreflightStep.PypiVersion);
     expect(refusal?.message).toContain('squatter');
     expect(refusal?.message).toContain(PYPI_PUBLISHER);
   });
 
-  it.each([null, undefined])('refuses production when PyPI lists the maintainer as %j', async (maintainer) => {
-    const packageFetcher = fakePackageFetcher({ answer: { status: 200, body: { info: { maintainer } } } });
+  it('refuses production when the owner shares the Owner role on PyPI', async () => {
+    const rolesAnswer = pypiRolesAnswer({
+      roles: [
+        ['Owner', PYPI_PUBLISHER],
+        ['Owner', 'second-person'],
+      ],
+    });
+    const packageFetcher = fakePackageFetcher({ rolesAnswer });
     const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, packageFetcher }));
     expect(refusal?.step).toBe(PreflightStep.PypiVersion);
-    expect(refusal?.message).toContain('no readable maintainer');
+    expect(refusal?.message).toContain('second-person');
+  });
+
+  it('accepts production when the owner is the only Owner and others hold lesser roles', async () => {
+    const rolesAnswer = pypiRolesAnswer({
+      roles: [
+        ['Owner', PYPI_PUBLISHER],
+        ['Maintainer', 'helper'],
+      ],
+    });
+    const packageFetcher = fakePackageFetcher({ rolesAnswer });
+    expect(await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, packageFetcher }))).toBeNull();
+  });
+
+  it('asks PyPI for the roles with an XML-RPC package_roles call after the release resolves', async () => {
+    const packageFetcher = fakePackageFetcher({});
+    await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, packageFetcher }));
+    expect(packageFetcher.urls).toEqual([PYPI_RELEASE_URL, PYPI_XML_RPC_URL]);
+    expect(packageFetcher.xmlBodies).toHaveLength(1);
+    expect(packageFetcher.xmlBodies[0]).toContain('<methodName>package_roles</methodName>');
+    expect(packageFetcher.xmlBodies[0]).toContain('<string>zapbip-platform</string>');
+  });
+
+  it.each([
+    ['not XML', { status: 200, body: 'garbage' }],
+    ['no roles', pypiRolesAnswer({ roles: [] })],
+    ['null', { status: 200, body: null }],
+  ])('refuses production when the PyPI roles answer is %s', async (_name, rolesAnswer) => {
+    const packageFetcher = fakePackageFetcher({ rolesAnswer });
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, packageFetcher }));
+    expect(refusal?.step).toBe(PreflightStep.PypiVersion);
+    expect(refusal?.message).toContain('Owner');
+  });
+
+  it('says PyPI could not be reached when the roles call answers a server error', async () => {
+    const packageFetcher = fakePackageFetcher({ rolesAnswer: { status: 503, body: null } });
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, packageFetcher }));
+    expect(refusal?.step).toBe(PreflightStep.PypiVersion);
+    expect(refusal?.message).toContain('could not reach PyPI');
   });
 
   it.each([undefined, '', `${PLACEHOLDER_VALUE_PREFIX}PYPI_USER`])(
@@ -525,7 +574,7 @@ describe('docs preflight', () => {
     });
     expect(refusal?.step).toBe(PreflightStep.NpmVersion);
     expect(refusal?.message).toContain(`zapbip@${NPM_VERSION}`);
-    expect(shell.commands).toEqual([`npm view zapbip@${NPM_VERSION} maintainers --json`]);
+    expect(shell.commands).toEqual([`npm view zapbip@${NPM_VERSION} maintainers --json --registry=${NPM_REGISTRY_URL}`]);
   });
 
   it('refuses until the OpenClaw plugin version resolves on npm, naming it', async () => {
@@ -543,9 +592,9 @@ describe('docs preflight', () => {
     expect(refusal?.step).toBe(PreflightStep.NpmVersion);
     expect(refusal?.message).toContain(`@zapbip/openclaw-plugin@${NPM_VERSION}`);
     expect(shell.commands).toEqual([
-      `npm view zapbip@${NPM_VERSION} maintainers --json`,
-      `npm view zapbip@${NPM_VERSION} _npmUser --json`,
-      `npm view @zapbip/openclaw-plugin@${NPM_VERSION} maintainers --json`,
+      `npm view zapbip@${NPM_VERSION} maintainers --json --registry=${NPM_REGISTRY_URL}`,
+      `npm view zapbip@${NPM_VERSION} _npmUser --json --registry=${NPM_REGISTRY_URL}`,
+      `npm view @zapbip/openclaw-plugin@${NPM_VERSION} maintainers --json --registry=${NPM_REGISTRY_URL}`,
     ]);
   });
 
@@ -608,8 +657,8 @@ describe('docs preflight', () => {
     expect(packageFetcher.urls).toEqual([PYPI_RELEASE_URL]);
   });
 
-  it('refuses the docs deploy when the PyPI maintainer is not the owner', async () => {
-    const packageFetcher = fakePackageFetcher({ answer: { status: 200, body: { info: { maintainer: 'squatter' } } } });
+  it('refuses the docs deploy when the PyPI Owner role is not the owner', async () => {
+    const packageFetcher = fakePackageFetcher({ rolesAnswer: pypiRolesAnswer({ roles: [['Owner', 'squatter']] }) });
     const refusal = await runDocsPreflight({
       shell: fakeShell({}),
       officialWhatsAppNumber: OFFICIAL_NUMBER,

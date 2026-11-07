@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createPackageFetcher } from '../../src/operations/package-fetcher';
 
+const XML_RPC_URL = 'https://pypi.org/pypi';
+const XML_BODY = '<methodCall></methodCall>';
 const RELEASE_URL = 'https://pypi.org/pypi/zapbip-platform/0.1.0/json';
 
 afterEach(() => {
@@ -26,5 +28,13 @@ describe('package fetcher', () => {
       throw new Error('getaddrinfo ENOTFOUND pypi.org');
     });
     await expect(createPackageFetcher()({ url: RELEASE_URL })).rejects.toThrow('ENOTFOUND');
+  });
+
+  it('posts an XML body as text/xml and returns the answer text', async () => {
+    const fetchSpy = vi.fn(async () => new Response('<methodResponse/>', { status: 200 }));
+    vi.stubGlobal('fetch', fetchSpy);
+    const answer = await createPackageFetcher()({ url: XML_RPC_URL, xmlBody: XML_BODY });
+    expect(answer).toEqual({ status: 200, body: '<methodResponse/>' });
+    expect(fetchSpy).toHaveBeenCalledWith(XML_RPC_URL, { method: 'POST', headers: { 'Content-Type': 'text/xml' }, body: XML_BODY });
   });
 });

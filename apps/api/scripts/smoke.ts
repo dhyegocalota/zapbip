@@ -1,5 +1,7 @@
 import { randomUUID } from 'node:crypto';
+import { openSync } from 'node:fs';
 import { setTimeout as delay } from 'node:timers/promises';
+import { ReadStream } from 'node:tty';
 import { parseArgs } from 'node:util';
 import { SECOND_MS } from '@zapbip/types';
 import { z } from 'zod';
@@ -7,7 +9,10 @@ import { readDeployBlock } from './deploy';
 import { parseDeployEnvironment, type DeployEnvironment } from '../src/operations/deploy-environment';
 import { formatSmokeResult, runSmokeChecks, type SmokeFetch } from '../src/operations/smoke-checks';
 import { readSmokeInputs, SmokeInput } from '../src/operations/smoke-inputs';
+import { readHiddenLine } from '../src/operations/hidden-prompt';
 import { assertSmokeTarget } from '../src/operations/smoke-target';
+
+const TERMINAL_DEVICE_PATH = '/dev/tty';
 
 const originBlockSchema = z.object({ vars: z.object({ PUBLIC_ORIGIN: z.string() }) });
 
@@ -19,6 +24,7 @@ export type SmokeEntry = {
   smokeFetch: SmokeFetch;
   wait: (input: { ms: number }) => Promise<void>;
   log: (line: string) => void;
+  promptHidden: (input: { question: string }) => Promise<string>;
 };
 
 function firstDeployInstructions(input: { environment: DeployEnvironment }): string[] {
@@ -48,6 +54,15 @@ export async function runSmoke(input: SmokeEntry): Promise<number> {
   return results.every((result) => result.passed) ? 0 : 1;
 }
 
+async function promptOnTerminal(input: { question: string }): Promise<string> {
+  const terminalInput = new ReadStream(openSync(TERMINAL_DEVICE_PATH, 'r'));
+  try {
+    return await readHiddenLine({ question: input.question, terminalInput, outputStream: process.stdout });
+  } finally {
+    terminalInput.destroy();
+  }
+}
+
 async function main(): Promise<void> {
   const { values } = parseArgs({ options: { environment: { type: 'string' }, 'first-deploy': { type: 'boolean' } } });
   const environment = parseDeployEnvironment({ value: values.environment });
@@ -59,6 +74,7 @@ async function main(): Promise<void> {
     smokeFetch: fetch,
     wait: ({ ms }) => delay(ms),
     log: console.log,
+    promptHidden: promptOnTerminal,
   });
   process.exit(exitCode);
 }

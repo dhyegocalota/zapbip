@@ -13,6 +13,7 @@ async function smoke(input: {
   behavior?: Behavior;
   environmentVariables?: Record<string, string | undefined>;
   publicOrigin?: string;
+  promptedSecret?: string;
 }) {
   const {
     environment = DeployEnvironment.Staging,
@@ -20,9 +21,11 @@ async function smoke(input: {
     behavior = {},
     environmentVariables = ENVIRONMENT_VARIABLES,
     publicOrigin = PUBLIC_ORIGIN,
+    promptedSecret = CONNECTION_SECRET,
   } = input;
   const stack = fakeStack(behavior);
   const lines: string[] = [];
+  const questions: string[] = [];
   const exitCode = await runSmoke({
     environment,
     firstDeploy,
@@ -31,8 +34,12 @@ async function smoke(input: {
     smokeFetch: stack.smokeFetch,
     wait: async () => undefined,
     log: (line) => lines.push(line),
+    promptHidden: async ({ question }) => {
+      questions.push(question);
+      return promptedSecret;
+    },
   });
-  return { exitCode, lines, requests: stack.requests };
+  return { exitCode, lines, questions, requests: stack.requests };
 }
 
 describe('smoke entry', () => {
@@ -60,6 +67,48 @@ describe('smoke entry', () => {
     expect(lines).toHaveLength(4);
   });
 
+  it('asks for the smoke connection secret on production and ignores the one in the environment', async () => {
+    const environmentVariables = {
+      ...ENVIRONMENT_VARIABLES,
+      [SmokeInput.BaseUrl]: 'https://mcp.zapbip.com',
+      [SmokeInput.ConnectionSecret]: 'zb_conn_left_in_dotenv',
+    };
+    const { exitCode, questions, requests } = await smoke({
+      environment: DeployEnvironment.Production,
+      environmentVariables,
+      publicOrigin: 'https://mcp.zapbip.com',
+      behavior: { healthEnvironment: DeployEnvironment.Production },
+    });
+    expect(exitCode).toBe(0);
+    expect(questions).toHaveLength(1);
+    expect(requests.some((request) => request.pathname.includes('zb_conn_left_in_dotenv'))).toBe(false);
+  });
+
+  it('refuses an empty answer to the production prompt before any request', async () => {
+    const environmentVariables = { ...ENVIRONMENT_VARIABLES, [SmokeInput.BaseUrl]: 'https://mcp.zapbip.com' };
+    const failure = smoke({
+      environment: DeployEnvironment.Production,
+      environmentVariables,
+      publicOrigin: 'https://mcp.zapbip.com',
+      promptedSecret: '',
+    });
+    await expect(failure).rejects.toThrow(SmokeInput.ConnectionSecret);
+  });
+
+  it('never asks on staging, nor on a production first deploy', async () => {
+    const staging = await smoke({});
+    const environmentVariables = { ...ENVIRONMENT_VARIABLES, [SmokeInput.BaseUrl]: 'https://mcp.zapbip.com' };
+    const firstDeploy = await smoke({
+      environment: DeployEnvironment.Production,
+      firstDeploy: true,
+      environmentVariables,
+      publicOrigin: 'https://mcp.zapbip.com',
+      behavior: { healthEnvironment: DeployEnvironment.Production },
+    });
+    expect(staging.questions).toEqual([]);
+    expect(firstDeploy.questions).toEqual([]);
+  });
+
   it('prints no secret', async () => {
     const { lines } = await smoke({});
     [APP_SECRET, VERIFY_TOKEN, CONNECTION_SECRET].forEach((secret) => expect(lines.join('\n')).not.toContain(secret));
@@ -77,6 +126,7 @@ describe('smoke entry', () => {
         smokeFetch: stack.smokeFetch,
         wait: async () => undefined,
         log: () => undefined,
+        promptHidden: async () => CONNECTION_SECRET,
       }),
     ).rejects.toThrow(SmokeInput.BaseUrl);
     expect(stack.requests).toEqual([]);
@@ -97,6 +147,7 @@ describe('smoke entry', () => {
       smokeFetch: stack.smokeFetch,
       wait: async () => undefined,
       log: () => undefined,
+      promptHidden: async () => CONNECTION_SECRET,
     });
     await expect(failure).rejects.toThrow(expectedWord);
     await expect(failure).rejects.not.toThrow(CONNECTION_SECRET);

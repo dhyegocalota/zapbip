@@ -32,6 +32,7 @@ export const BYTES_PER_MEGABYTE = 1_000_000;
 export const DEFAULT_LOCALE = OwnerLocale.PortugueseBrazil;
 export const OFFICIAL_NUMBER_UNSET = 'OFFICIAL_NUMBER_UNSET';
 export const OFFICIAL_WHATSAPP_NUMBER: string = OFFICIAL_NUMBER_UNSET;
+export const NPM_REGISTRY_URL = 'https://registry.npmjs.org';
 export const ZAPBIP_NPM_VERSION = '0.1.0';
 export const OPENCLAW_PLUGIN_NPM_VERSION = '0.1.0';
 export const ZAPBIP_PYPI_VERSION = '0.1.0';

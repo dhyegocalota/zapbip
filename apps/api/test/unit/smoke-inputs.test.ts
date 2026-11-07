@@ -66,6 +66,13 @@ describe('smoke inputs', () => {
     expect(missingSmokeInputs({ ...PRODUCTION_SCOPE, environmentVariables })).toEqual([]);
   });
 
+  it('does not ask production for the connection secret in the environment, because it is prompted', () => {
+    const environmentVariables = { ...COMPLETE_VARIABLES, [SmokeInput.ConnectionSecret]: undefined };
+    expect(missingSmokeInputs({ ...PRODUCTION_SCOPE, environmentVariables })).toEqual([]);
+    expect(() => readSmokeInputs({ ...PRODUCTION_SCOPE, environmentVariables })).toThrow(SmokeInput.ConnectionSecret);
+    expect(missingSmokeInputs({ ...STAGING_SCOPE, environmentVariables })).toEqual([SmokeInput.ConnectionSecret]);
+  });
+
   it('skips the connection-dependent checks 2 and 5 on a first deploy and asks for no connection input', () => {
     expect(smokeChecksFor(FIRST_DEPLOY_SCOPE)).toEqual([SmokeCheck.Health, SmokeCheck.WebhookVerify, SmokeCheck.SignatureRejected]);
     const environmentVariables = {
