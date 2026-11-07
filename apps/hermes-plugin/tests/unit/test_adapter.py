@@ -96,6 +96,25 @@ def test_connect_twice_keeps_one_socket_task() -> None:
     asyncio.run(scenario())
 
 
+def test_replaced_socket_ends_without_a_second_run() -> None:
+    async def scenario() -> None:
+        sockets = SocketRecorder()
+
+        async def replaced_socket(*, socket_link: str, stop: asyncio.Event, hand_off: Any) -> int:
+            sockets.runs += 1
+            return 0
+
+        adapter = ZapbipAdapter(PlatformConfig(), run_socket=replaced_socket, send_text=TextRecorder().send_text)
+        await adapter.connect()
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+
+        assert sockets.runs == 1
+        assert gateway_view_of(adapter=adapter)._running is False
+
+    asyncio.run(scenario())
+
+
 def test_disconnect_stops_the_socket_task() -> None:
     async def scenario() -> None:
         sockets = SocketRecorder()
