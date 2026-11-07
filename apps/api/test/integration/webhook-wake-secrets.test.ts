@@ -19,6 +19,7 @@ import { createWakeDependencies } from '../../src/account-inbox/wake-dependencie
 import { createPlatformClock } from '../../src/adapters/platform/clock';
 import { createAesGcmWakeSecretBox } from '../../src/adapters/wake/aes-gcm-wake-secret-box';
 import { advanceClock, receiveOwnerText } from '../support/inbox-session';
+import { applyDirectoryMigration } from '../support/seed';
 import {
   ACCEPTED,
   DEBOUNCE_ADVANCE_MS,
@@ -93,6 +94,8 @@ async function expectRefusedWithOneNotice(): Promise<void> {
   expect((await readWakeRow({ stub })).status).toBe(WakeStatus.Failing);
   expect(await readWakeNotices({ stub })).toBe(1);
 }
+
+beforeEach(applyDirectoryMigration);
 
 beforeEach(async () => {
   stub = wakeStub({});

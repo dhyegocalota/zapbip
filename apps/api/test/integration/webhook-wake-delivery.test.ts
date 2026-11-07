@@ -5,6 +5,7 @@ import type { DevAccountInbox } from '../../src/dev/dev-account-inbox';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { OWNER_LOCALE_STORAGE_KEY } from '../../src/account-inbox/constants';
 import { advanceClock, readScreen, receiveOwnerText } from '../support/inbox-session';
+import { applyDirectoryMigration } from '../support/seed';
 import {
   ACCEPTED,
   DEBOUNCE_ADVANCE_MS,
@@ -48,6 +49,8 @@ async function alarmAfter(input: { advanceMs: number }): Promise<void> {
   await advanceClock({ stub, advanceMs: input.advanceMs });
   await runDurableObjectAlarm(stub);
 }
+
+beforeEach(applyDirectoryMigration);
 
 beforeEach(async () => {
   stub = wakeStub({});

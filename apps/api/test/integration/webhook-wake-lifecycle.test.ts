@@ -4,6 +4,7 @@ import { evictDurableObject, reset, runDurableObjectAlarm, runInDurableObject } 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { DevAccountInbox } from '../../src/dev/dev-account-inbox';
 import { advanceClock, receiveOwnerText } from '../support/inbox-session';
+import { applyDirectoryMigration } from '../support/seed';
 import {
   ACCEPTED,
   UNAUTHORIZED,
@@ -48,6 +49,8 @@ async function untilLeased(input: { polls: number }): Promise<void> {
   if (isLeased) return;
   await untilLeased({ polls: input.polls - 1 });
 }
+
+beforeEach(applyDirectoryMigration);
 
 beforeEach(async () => {
   stub = wakeStub({});

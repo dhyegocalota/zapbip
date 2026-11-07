@@ -279,3 +279,11 @@ New tests:
 
 Pins (green on arrival): everything above except 291 (red first).
 Spec: the deletion steps now read state first, then the reply, which is what the code does.
+
+## Merge with main (webhook-wake, local-connector) and the boolean forwarded flag
+
+- `forwarded` is a boolean in the message payload; `receive-account-message.ts` skips command parsing when it is true. Pins: `receive-account-message.test.ts` 'a forwarded account command is plain text, never a command' and 'a forwarded deletion confirmation does not delete the account'.
+- `recordRevocation` also closes the connector sockets of the agent and deletes its `wake_jobs` row; the `agent_wake` row (wake setting, sealed target, local restore) was already deleted. Pins: `connector-socket.test.ts` 'revoking an agent closes its connector with the revoked code'; `account-inbox-revocation.test.ts` 'deletes the pending wake job of a revoked agent'.
+- The owner locale the wake ladder reads is stored on the account and channel paths too (`OWNER_LOCALE_STORAGE_KEY`).
+- DO schema versions: v1 core, v2 webhook-wake, v4 whatsapp, v5 local-connector, v6 accounts. The webhook-wake integration tests apply the directory migration because the Durable Object now reads `accounts`.
+- Hypothesis for the tester: after the merge, a forwarded `revogar alpha` through the simulator never revokes `alpha`; revoking an agent with a live connector drops the socket and no wake request is sent for it afterwards.
