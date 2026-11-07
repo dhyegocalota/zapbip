@@ -1,11 +1,11 @@
 import { ConnectorFrameType, InstallCodeStatus, REVOKED_CLOSE_CODE } from '@zapbip/types';
 import { reset } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { applyDirectoryMigration } from '../support/seed';
 import { openConnector } from '../support/connector-session';
 import { installCodeDirectory } from '../support/install-codes';
 import { failNextSessionSend } from '../support/session-send-probe';
 import { McpToolName } from '../../src/contract/tool-definitions';
+import { applyDirectoryMigrationWithNumber } from '../support/whatsapp-numbers';
 import { callTool, connectClient, postMcp } from './mcp-fixtures';
 import { bindingsWith, deliver, findAccounts, screenTextsOf, WA_ID } from './owner-inbound-fixtures';
 
@@ -39,7 +39,7 @@ describe('rotating a connection over WhatsApp', () => {
   const bindings = bindingsWith({ waitlistEnabled: false });
 
   beforeEach(async () => {
-    await applyDirectoryMigration();
+    await applyDirectoryMigrationWithNumber();
     await deliver({ bindings, text: `novo agente ${AGENT_NAME}` });
   });
   afterEach(reset);

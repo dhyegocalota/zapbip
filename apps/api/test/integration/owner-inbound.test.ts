@@ -3,9 +3,9 @@ import { AccountReplyIntent, AccountState, ChannelInboundKind, MessageKind, Owne
 import { reset } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { receiveOwnerInbound } from '../../src/inbound/owner-inbound';
-import { applyDirectoryMigration, SEED_CREATED_AT } from '../support/seed';
+import { SEED_CREATED_AT } from '../support/seed';
 import { countSessionSends, recordAccountStateAtNextSessionSend } from '../support/session-send-probe';
-import { TEST_REGISTERED_NUMBER } from '../support/whatsapp-numbers';
+import { TEST_REGISTERED_NUMBER, applyDirectoryMigrationWithNumber } from '../support/whatsapp-numbers';
 import { testEnv } from '../support/workers-env';
 import { bindingsWith, countAccounts, deliver, findAccounts, nextWamid, screenTextsOf, textEntry, WA_ID } from './owner-inbound-fixtures';
 
@@ -84,7 +84,7 @@ async function activeAccountId(input: { waId: string }): Promise<string> {
   return account.accountId;
 }
 
-beforeEach(applyDirectoryMigration);
+beforeEach(applyDirectoryMigrationWithNumber);
 afterEach(reset);
 
 describe('owner inbound orchestrator', () => {

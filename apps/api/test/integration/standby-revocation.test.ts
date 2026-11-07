@@ -17,6 +17,7 @@ import { readScreen, receiveOwnerText } from '../support/inbox-session';
 import { applyWakeDirectory, GROK_TOKEN, GROK_URL, WAKE_ACCOUNT, enableGrokWake, expectOk, wakeStub } from '../support/wake-session';
 import { connectionOf } from '../support/workers-env';
 import { UNAUTHORIZED_BODY } from '../../src/contract/constants';
+import { seedWhatsAppNumber } from '../support/whatsapp-numbers';
 import { postMcp } from './mcp-fixtures';
 import { bindingsWith, deliver, findAccounts, latestMcpPath, screenTextsOf, WA_ID } from './owner-inbound-fixtures';
 
@@ -147,6 +148,7 @@ describe('revoking the standby by the owner command', () => {
   }
 
   beforeEach(async () => {
+    await seedWhatsAppNumber();
     await deliver({ bindings, text: `novo agente ${PRIMARY}` });
     await deliver({ bindings, text: `novo agente ${STANDBY}` });
     accountId = await accountIdOfOwner();

@@ -7,7 +7,8 @@ import { clearExpiredInstallSecrets } from '../../src/accounts/deletion-sweep';
 import { resolveConnection } from '../../src/routes/resolve-connection';
 import { hashConnectionSecret } from '../../src/adapters/platform/hash';
 import { connectionRegistry, installCodeDirectory, registerWithInstallCode } from '../support/install-codes';
-import { applyDirectoryMigration, SEED_CREATED_AT, seedOwnerIdentity } from '../support/seed';
+import { SEED_CREATED_AT, seedOwnerIdentity } from '../support/seed';
+import { applyDirectoryMigrationWithNumber } from '../support/whatsapp-numbers';
 import { accountInboxStub, testEnv } from '../support/workers-env';
 import { bindingsWith, deliver, findAccounts, screenTextsOf, WA_ID } from './owner-inbound-fixtures';
 
@@ -35,7 +36,7 @@ async function dumpDurableObject(accountId: string): Promise<string> {
   });
 }
 
-beforeEach(applyDirectoryMigration);
+beforeEach(applyDirectoryMigrationWithNumber);
 afterEach(reset);
 
 describe('S3 security attacks', () => {

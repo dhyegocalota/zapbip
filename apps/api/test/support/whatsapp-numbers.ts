@@ -3,7 +3,7 @@ import { createAesGcmSecretBox } from '../../src/adapters/platform/aes-gcm-secre
 import type { RegisteredNumber } from '../../src/numbers/number-registry';
 import { accessTokenAssociatedData, appSecretAssociatedData } from '../../src/numbers/number-sealing';
 import { WorkerSecret } from '../../src/operations/worker-secret';
-import { SEED_CREATED_AT } from './seed';
+import { applyDirectoryMigration, SEED_CREATED_AT } from './seed';
 import { testEnv } from './workers-env';
 
 export const TEST_NUMBER_ID = 'num_test';
@@ -21,7 +21,7 @@ export const TEST_REGISTERED_NUMBER: RegisteredNumber = {
   metaAppRef: TEST_META_APP_REF,
 };
 
-export const TEST_DISPLAY_NUMBER = '5511900000000';
+export const TEST_DISPLAY_NUMBER = '5511977770000';
 const SEAL_KEY_VERSION = 1;
 
 export type SeededWhatsAppNumber = {
@@ -76,4 +76,9 @@ export async function seedWhatsAppNumber(input: WhatsAppNumberSeed = {}): Promis
     ),
   ]);
   return { numberId, metaAppRef, phoneNumberId, wabaId, accessToken, appSecret };
+}
+
+export async function applyDirectoryMigrationWithNumber(): Promise<void> {
+  await applyDirectoryMigration();
+  await seedWhatsAppNumber();
 }

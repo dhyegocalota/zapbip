@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Bindings } from '../../src/contract/env';
 import { DevAccountInbox } from '../../src/dev/dev-account-inbox';
 import developmentEntry from '../../src/index.dev';
-import { applyDirectoryMigration } from '../support/seed';
+import { applyDirectoryMigrationWithNumber } from '../support/whatsapp-numbers';
 import { accountInboxStub, testEnv } from '../support/workers-env';
 
 const ORIGIN = 'http://example.com';
@@ -22,7 +22,7 @@ afterEach(async () => {
 });
 
 describe('a bad WAITLIST_ENABLED binding', () => {
-  beforeEach(applyDirectoryMigration);
+  beforeEach(applyDirectoryMigrationWithNumber);
 
   it('[row 259] AK-7 fails the owner simulator request naming the flag and keeps /health up', async () => {
     const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
