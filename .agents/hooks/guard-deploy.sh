@@ -10,10 +10,12 @@ readonly OPEN_WRANGLER_PATTERN='^(dev|types)([[:space:]]|$)|^(whoami|--version)$
 readonly LOCAL_WRANGLER_PATTERN='^d1[[:space:]]+(migrations[[:space:]]+apply|execute)[[:space:]]+[^[:space:]]+[[:space:]]'
 readonly DEPLOY_WRANGLER_PATTERN='^deploy([[:space:]]|$)'
 readonly SESSION_WRANGLER_PATTERN='^(whoami|--version|logout)$'
-readonly REMOTE_PATTERN='(^|[[:space:]])--remote([[:space:]=]|$)'
+readonly REMOTE_PATTERN='(^|[[:space:]])(--remote|-[[:alnum:]]*r[[:alnum:]]*)([[:space:]=]|$)'
 readonly LOCAL_PATTERN='(^|[[:space:]])--local([[:space:]]|$)'
 readonly DRY_RUN_PATTERN='(^|[[:space:]])--dry-run([[:space:]]|$)'
-readonly DRY_RUN_VALUE_PATTERN='--dry-run='
+readonly DRY_RUN_MENTION_PATTERN='dry-?run'
+readonly DRY_RUN_NEGATION_PATTERN='no-dry'
+readonly DRY_RUN_BOOLEAN_PATTERN='(^|[[:space:]])--dry-run[[:space:]]+(true|false)([[:space:]]|$)'
 readonly OPEN_HEAD_PATTERNS=(
   '^git commit( -[[:alnum:]-]+)* -F [^ ]+( -[[:alnum:]-]+)*$'
   '^git (add|diff|show|status|log)( .*)?$'
@@ -25,7 +27,7 @@ readonly OPEN_HEAD_PATTERNS=(
   '^pnpm test( .*)?$'
   '^pnpm --filter [^ ]+ test( .*)?$'
 )
-readonly UNSAFE_HEAD_ARGUMENTS_PATTERN='(^| )(--worktree|--pre|--pre-glob|--open-files-in-pager|--exec|--hostname-bin)([ =]|$)|(^| )-[[:alnum:]]*[OWx][[:alnum:]]*( |$)'
+readonly UNSAFE_HEAD_ARGUMENTS_PATTERN='(^| )(--worktree|--pre|--pre-glob|--open-files-in-pager|--exec|--hostname-bin|--ou[[:alnum:]-]*)([ =]|$)|(^| )-[[:alnum:]]*[OWx][[:alnum:]]*( |$)'
 
 command=$(jq -r '.tool_input.command // ""' <<<"$hook_input")
 
@@ -34,13 +36,20 @@ block() {
   exit 2
 }
 
+is_only_bare_dry_run() {
+  local mentions
+  mentions=$(grep -oE "$DRY_RUN_MENTION_PATTERN" <<<"$1" | wc -l)
+  [[ "$1" =~ $DRY_RUN_NEGATION_PATTERN ]] && return 1
+  [[ "$1" =~ $DRY_RUN_BOOLEAN_PATTERN ]] && return 1
+  [[ "$mentions" -eq 1 && "$1" =~ $DRY_RUN_PATTERN ]]
+}
+
 is_allowed_wrangler() {
   local arguments
-  arguments=$(tr -d "\"'\\\\" <<<"$1")
+  arguments=$(tr -d "\"'\\\\" <<<"$1" | tr '[:upper:]' '[:lower:]')
   [[ "$arguments" =~ $REMOTE_PATTERN ]] && return 1
-  [[ "$arguments" == *$DRY_RUN_VALUE_PATTERN* ]] && return 1
   [[ "$arguments" =~ $LOCAL_WRANGLER_PATTERN && "$arguments" =~ $LOCAL_PATTERN ]] && return 0
-  [[ "$arguments" =~ $DEPLOY_WRANGLER_PATTERN && "$arguments" =~ $DRY_RUN_PATTERN ]] && return 0
+  [[ "$arguments" =~ $DEPLOY_WRANGLER_PATTERN ]] && is_only_bare_dry_run "$arguments" && return 0
   [[ "$arguments" =~ $OPEN_WRANGLER_PATTERN ]]
 }
 

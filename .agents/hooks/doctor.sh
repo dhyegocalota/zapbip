@@ -2,12 +2,6 @@
 set -u
 root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 source "$root/.agents/hooks/wrangler-session.sh"
-readonly WRANGLER_OAUTH_PATTERN='logged in with an OAuth Token'
-readonly WRANGLER_PROBE_PROGRAM='alarm shift; exec @ARGV'
-readonly WRANGLER_TIMEOUT_STATUS=142
-wrangler_session_state=
-wrangler_timeout_seconds=${DOCTOR_WRANGLER_TIMEOUT_SECONDS:-10}
-wrangler_directory=${DOCTOR_WRANGLER_DIR:-$root/apps/api/node_modules/.bin}
 platform=${DOCTOR_UNAME:-$(uname -s)}
 lookup_path=${DOCTOR_PATH:-$PATH}
 home=${DOCTOR_HOME:-$HOME}
@@ -104,23 +98,7 @@ check_skills() { [[ "$(cd "$root/.claude/skills" 2>/dev/null && pwd -P)" == "$(c
 check_gitleaks() { have gitleaks; }
 check_ffmpeg() { have ffmpeg; }
 check_python() { have python3 && run python3 -c 'import sys, mypy, pytest; sys.exit(not (3, 11) <= sys.version_info[:2] <= (3, 14))' >/dev/null 2>&1; }
-
-wrangler_session() {
-  local binary output status
-  binary=$(PATH="$lookup_path:$wrangler_directory" command -v wrangler) || { echo "$WRANGLER_LOGGED_OUT"; return; }
-  output=$(perl -e "$WRANGLER_PROBE_PROGRAM" "$wrangler_timeout_seconds" "$binary" whoami </dev/null 2>&1)
-  status=$?
-  [[ "$status" == "$WRANGLER_TIMEOUT_STATUS" ]] && { echo "$WRANGLER_UNKNOWN"; return; }
-  grep -qi "$WRANGLER_OAUTH_PATTERN" <<<"$output" && { echo "$WRANGLER_LOGGED_IN"; return; }
-  echo "$WRANGLER_LOGGED_OUT"
-}
-
-check_wrangler() {
-  local session_file
-  wrangler_session_state=$(wrangler_session)
-  session_file=$(cd "$root" && wrangler_session_file) && printf '%s' "$wrangler_session_state" > "$session_file"
-  [[ "$wrangler_session_state" != "$WRANGLER_LOGGED_IN" ]]
-}
+check_wrangler() { ! HOME=$home is_wrangler_logged_in; }
 
 fix_name_for() {
   [[ "$1" == gh ]] && have gh && { echo gh-auth; return; }
@@ -159,6 +137,5 @@ report python required
 report wrangler required
 report gitleaks optional
 report ffmpeg optional
-[[ "$wrangler_session_state" == "$WRANGLER_UNKNOWN" ]] && echo "doctor: warning: wrangler whoami did not answer within $wrangler_timeout_seconds seconds; the login state is unknown"
 echo "doctor: $missing_required missing required, $missing_optional missing optional"
 [[ "$missing_required" == 0 ]]
