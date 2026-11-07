@@ -14,7 +14,7 @@ const playwrightConfigs = repositoryFiles(PLAYWRIGHT_CONFIG_PATHSPEC);
 
 const playwrightTimeoutPatterns: Record<string, RegExp> = {
   timeout: new RegExp(`^ {2}timeout: ${NAMED_MILLISECONDS},`, 'm'),
-  'expect.timeout': new RegExp(`expect: \\{\\s*timeout: ${NAMED_MILLISECONDS},`),
+  'expect.timeout': new RegExp(`expect: \\{\\s*timeout: ${NAMED_MILLISECONDS}\\s*[,}]`),
   'use.navigationTimeout': new RegExp(`navigationTimeout: ${NAMED_MILLISECONDS},`),
   'use.actionTimeout': new RegExp(`actionTimeout: ${NAMED_MILLISECONDS},`),
 };
