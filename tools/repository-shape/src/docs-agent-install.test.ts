@@ -1,3 +1,4 @@
+import { HERMES_INSTALL_COMMAND } from '@zapbip/core';
 import { INSTALL_SELF_TEST_TEXT, OwnerLocale } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { readRepositoryFile } from './repository-files';
@@ -9,7 +10,8 @@ const HERMES_PAGE = 'agents/hermes.mdx';
 const OPENCLAW_INSTALL_COMMAND = 'openclaw plugins install @zapbip/openclaw-plugin@0.1.0 --force --accept-capabilities';
 const OPENCLAW_ENABLE_ENTRY = '"plugins": { "entries": { "zapbip": { "enabled": true } } }';
 const OPENCLAW_LINK_KEY = '"channels": { "zapbip": { "connectionLink"';
-const HERMES_INSTALL_COMMAND = 'pip install zapbip-platform==0.1.0';
+const HERMES_PLUGIN_README = 'apps/hermes-plugin/README.md';
+const UNPINNED_HERMES_INSTALL = 'zapbip-platform==';
 const HERMES_ENVIRONMENT_VARIABLES = ['ZAPBIP_CONNECTION_LINK', 'ZAPBIP_ALLOWED_USERS'];
 const ONE_LISTENER_SENTENCES: Record<string, string> = {
   'apps/docs':
@@ -40,6 +42,7 @@ describe.each(PAGE_LOCALES)('the agent install pages in %s', (locale) => {
   test('the Hermes page prints the verified install command and the environment variables', () => {
     const text = page({ locale, path: HERMES_PAGE });
     expect(text).toContain(HERMES_INSTALL_COMMAND);
+    expect(text).not.toContain(UNPINNED_HERMES_INSTALL);
     HERMES_ENVIRONMENT_VARIABLES.forEach((name) => expect(text).toContain(name));
   });
 
@@ -53,6 +56,14 @@ describe.each(PAGE_LOCALES)('the agent install pages in %s', (locale) => {
 
   test.each([OPENCLAW_PAGE, HERMES_PAGE])('%s asks the agent to send the self-test text', (path) => {
     expect(page({ locale, path })).toContain(SELF_TEST_TEXTS[locale]);
+  });
+});
+
+describe('the Hermes plugin README', () => {
+  test('prints the same install command as the install copy', () => {
+    const text = readRepositoryFile(HERMES_PLUGIN_README);
+    expect(text).toContain(HERMES_INSTALL_COMMAND);
+    expect(text).not.toContain(UNPINNED_HERMES_INSTALL);
   });
 });
 

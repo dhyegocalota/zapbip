@@ -1,4 +1,4 @@
-import { OwnerLocale, ZAPBIP_NPM_VERSION, ZAPBIP_HERMES_PLUGIN_VERSION } from '@zapbip/types';
+import { OwnerLocale, ZAPBIP_HERMES_WHEEL_SHA256, ZAPBIP_NPM_VERSION } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { CONNECTION_LINK, sectionInput } from '../testing/fixtures';
 import { renderChatGptSection } from './chatgpt';
@@ -108,7 +108,10 @@ describe('Hermes and OpenClaw confirmed install steps', () => {
     expect(text).not.toContain('plugins.enabled');
     expect(text).toContain(`ZAPBIP_CONNECTION_LINK=${CONNECTION_LINK}`);
     expect(text).toContain('ZAPBIP_ALLOWED_USERS=owner');
-    expect(text).toContain(`pip install zapbip-platform==${ZAPBIP_HERMES_PLUGIN_VERSION}`);
+    expect(text).toContain(
+      `pip install "zapbip-platform @ https://mcp.zapbip.com/pkg/zapbip_platform-0.1.0-py3-none-any.whl#sha256=${ZAPBIP_HERMES_WHEEL_SHA256}"`,
+    );
+    expect(text).not.toContain('zapbip-platform==');
   });
 
   test('Hermes ends its config step with what success looks like', () => {
