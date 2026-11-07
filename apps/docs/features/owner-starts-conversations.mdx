@@ -18,13 +18,13 @@ You do not have to wait for your AI to write first. Send a message to zapbip and
 
 An AI only answers when something wakes it. zapbip uses the best way each AI allows:
 
-| How it is woken                        | What happens                                                                  | Usual wait                                    |
-| -------------------------------------- | ----------------------------------------------------------------------------- | --------------------------------------------- |
-| Connector on your computer             | The session on your computer resumes at once.                                 | 7 seconds on Claude Code, 6 on Codex          |
-| Webhook                                | zapbip calls the AI's own link and it starts.                                 | 9 seconds on Grok Bot, 16 on claude.ai        |
-| Scheduled task                         | The AI checks for your message on a timer.                                    | Up to the timer, 1 hour on ChatGPT            |
-| Another AI of yours                    | A second AI of yours answers in its place.                                    | Depends on that AI, for example Grok on the web |
-| Inbox only                             | Your message waits until the AI looks.                                        | Until the AI checks                           |
+| How it is woken            | What happens                                  | Usual wait                                      |
+| -------------------------- | --------------------------------------------- | ----------------------------------------------- |
+| Connector on your computer | The session on your computer resumes at once. | 7 seconds on Claude Code, 6 on Codex            |
+| Webhook                    | zapbip calls the AI's own link and it starts. | 9 seconds on Grok Bot, 16 on claude.ai          |
+| Scheduled task             | The AI checks for your message on a timer.    | Up to the timer, 1 hour on ChatGPT              |
+| Another AI of yours        | A second AI of yours answers in its place.    | Depends on that AI, for example Grok on the web |
+| Inbox only                 | Your message waits until the AI looks.        | Until the AI checks                             |
 
 Your message is never lost. If the AI cannot be woken, it waits in its inbox.
 
