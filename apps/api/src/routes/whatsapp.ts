@@ -17,6 +17,7 @@ import {
 } from '../adapters/whatsapp/inbound-parser';
 import { downloadInboundMedia } from '../adapters/whatsapp/media-download';
 import { logOperatorEvent } from '../adapters/whatsapp/operator-log';
+import { peekWebhookRouting, type WebhookRouting } from '../adapters/whatsapp/webhook-routing-peek';
 import { readWebhookEnvironment, readWhatsAppEnvironment } from '../adapters/whatsapp/read-whatsapp-env';
 import { verifyWebhookSignature } from '../adapters/whatsapp/signature';
 import type { ParsedStatus } from '../adapters/whatsapp/status-parser';
@@ -29,25 +30,22 @@ import {
   WEBHOOK_SIGNATURE_HEADER,
 } from '../adapters/whatsapp/whatsapp-constants';
 import { OperatorEvent, OperatorLogField, ParsedEntryKind } from '../adapters/whatsapp/whatsapp-enums';
-import {
-  INVALID_JSON_BODY,
-  INVALID_NOTIFICATION_BODY,
-  PAYLOAD_TOO_LARGE_BODY,
-  UNAUTHORIZED_BODY,
-  WHATSAPP_WEBHOOK_PATH,
-} from '../contract/constants';
+import { INVALID_NOTIFICATION_BODY, PAYLOAD_TOO_LARGE_BODY, UNAUTHORIZED_BODY, WHATSAPP_WEBHOOK_PATH } from '../contract/constants';
 import type { CallOutcome } from '../contract/account-inbox-rpc';
 import type { Bindings } from '../contract/env';
 import { receiveOwnerInbound } from '../inbound/owner-inbound';
-import type { OutboundNumber } from '../numbers/number-registry';
+import type { NumberRegistry, RegisteredNumber } from '../numbers/number-registry';
 import { accountInboxOf } from './account-inbox-stub';
 
 type RequestContext = {
   bindings: Bindings;
-  number: OutboundNumber;
+  registry: NumberRegistry;
+  numbers: RegisteredNumber[];
   developmentMediaOrigin: string | null;
   maxFutureSkewMs: number;
 };
+
+type NumberContext = RequestContext & { number: RegisteredNumber };
 
 const HUB_MODE_PARAMETER = 'hub.mode';
 const HUB_TOKEN_PARAMETER = 'hub.verify_token';
@@ -95,16 +93,22 @@ function nullIfAbsent(input: { value: string | undefined }): string | null {
   return input.value === undefined ? null : input.value;
 }
 
-function parseJson(input: { text: string }): { isValid: true; value: unknown } | { isValid: false } {
-  try {
-    return { isValid: true, value: JSON.parse(input.text) as unknown };
-  } catch {
-    return { isValid: false };
-  }
+type Attribution = { metaAppRef: string; numbers: RegisteredNumber[] };
+
+async function attributeDelivery(input: { registry: NumberRegistry; routing: WebhookRouting }): Promise<Attribution | null> {
+  const { registry, routing } = input;
+  const numbers = await registry.findByPhoneNumberIds({ phoneNumberIds: routing.phoneNumberIds });
+  const wabaNumbers = await registry.findByWabaIds({ wabaIds: routing.wabaIds });
+  const areAllPhoneNumbersKnown = numbers.length === routing.phoneNumberIds.length;
+  const areAllWabasKnown = routing.wabaIds.every((wabaId) => wabaNumbers.some((registered) => registered.wabaId === wabaId));
+  const [first] = [...numbers, ...wabaNumbers];
+  if (first === undefined || !areAllPhoneNumbersKnown || !areAllWabasKnown) return null;
+  const isOneApp = [...numbers, ...wabaNumbers].every((registered) => registered.metaAppRef === first.metaAppRef);
+  return isOneApp ? { metaAppRef: first.metaAppRef, numbers } : null;
 }
 
 async function channelEntryOf(input: {
-  context: RequestContext;
+  context: NumberContext;
   accountId: string;
   ownerLocale: OwnerLocale;
   downloadsMedia: boolean;
@@ -127,10 +131,11 @@ async function channelEntryOf(input: {
     clock: createPlatformClock(),
   });
   const { graphBaseUrl } = readWhatsAppEnvironment({ env: context.bindings });
+  const { accessToken } = await context.registry.openForInbound({ numberId: context.number.numberId });
   const download = await downloadInboundMedia({
     graph: createGraphClient({
       baseUrl: graphBaseUrl,
-      accessToken: context.number.accessToken,
+      accessToken,
       developmentMediaOrigin: context.developmentMediaOrigin,
       fetcher: fetch,
     }),
@@ -158,7 +163,7 @@ async function channelEntryOf(input: {
   return { ...entry, content, noticeText: null };
 }
 
-async function hasCommittedReceipt(input: { context: RequestContext; accountId: string; channelMessageId: string }): Promise<boolean> {
+async function hasCommittedReceipt(input: { context: NumberContext; accountId: string; channelMessageId: string }): Promise<boolean> {
   const { context, accountId, channelMessageId } = input;
   const inbox = accountInboxOf({ bindings: context.bindings, accountId });
   const isCommitted = valueOf({ outcome: await inbox.hasChannelReceipt({ channelMessageId }) });
@@ -167,7 +172,7 @@ async function hasCommittedReceipt(input: { context: RequestContext; accountId: 
   return isCommitted;
 }
 
-async function processEntry(input: { context: RequestContext; parsed: ParsedEntry }): Promise<void> {
+async function processEntry(input: { context: NumberContext; parsed: ParsedEntry }): Promise<void> {
   const { context, parsed } = input;
   if (parsed.kind === ParsedEntryKind.Rejected) {
     logOperatorEvent({ event: OperatorEvent.InboundUnmapped, fields: { [OperatorLogField.Reason]: parsed.reason } });
@@ -203,7 +208,7 @@ function retryOrDropUnknownStatus(input: { status: ParsedStatus; isYoung: boolea
   return false;
 }
 
-async function processStatus(input: { context: RequestContext; status: ParsedStatus }): Promise<boolean> {
+async function processStatus(input: { context: NumberContext; status: ParsedStatus }): Promise<boolean> {
   const { context, status } = input;
   if (status.status === null) {
     logOperatorEvent({ event: OperatorEvent.StatusIgnored, fields: { [OperatorLogField.ChannelMessageId]: status.channelMessageId } });
@@ -234,12 +239,14 @@ async function processChange(input: { context: RequestContext; change: ParsedCha
     logOperatorEvent({ event: OperatorEvent.NotificationIgnoredField, fields: {} });
     return [false];
   }
-  if (change.phoneNumberId !== context.number.phoneNumberId) {
+  const number = context.numbers.find((registered) => registered.phoneNumberId === change.phoneNumberId);
+  if (number === undefined) {
     logOperatorEvent({ event: OperatorEvent.InboundForeignNumber, fields: {} });
     return [false];
   }
-  await runInSequence({ items: change.entries, run: (parsed) => processEntry({ context, parsed }) });
-  return runInSequence({ items: change.statuses, run: (status) => processStatus({ context, status }) });
+  const numberContext = { ...context, number };
+  await runInSequence({ items: change.entries, run: (parsed) => processEntry({ context: numberContext, parsed }) });
+  return runInSequence({ items: change.statuses, run: (status) => processStatus({ context: numberContext, status }) });
 }
 
 export function createWhatsappRoutes(input: {
@@ -270,23 +277,29 @@ export function createWhatsappRoutes(input: {
     const rawBody = await readBodyWithLimit({ body: context.req.raw.body, maxBytes: WEBHOOK_MAX_BYTES });
     if (rawBody === null) return context.json(PAYLOAD_TOO_LARGE_BODY, HttpStatus.PayloadTooLarge);
     const registry = numberRegistryOf({ bindings: context.env });
-    const number = await registry.openTheOnlyNumber();
+    const routing = peekWebhookRouting({ text: new TextDecoder().decode(rawBody) });
+    const attribution = routing === null ? null : await attributeDelivery({ registry, routing });
+    if (attribution === null) {
+      logOperatorEvent({ event: OperatorEvent.InboundUnattributed, fields: {} });
+      return context.json(UNAUTHORIZED_BODY, HttpStatus.Unauthorized);
+    }
     const isSigned = await verifyWebhookSignature({
-      appSecret: await registry.openAppSecret({ metaAppRef: number.metaAppRef }),
+      appSecret: await registry.openAppSecret({ metaAppRef: attribution.metaAppRef }),
       rawBody,
       signatureHeader: nullIfAbsent({ value: context.req.header(WEBHOOK_SIGNATURE_HEADER) }),
     });
     if (!isSigned) return context.json(UNAUTHORIZED_BODY, HttpStatus.Unauthorized);
-    const parsedJson = parseJson({ text: new TextDecoder().decode(rawBody) });
-    if (!parsedJson.isValid) return context.json(INVALID_JSON_BODY, HttpStatus.BadRequest);
-    const changes = await parseWebhookNotification({ rawJson: parsedJson.value }).catch((error: unknown) => {
-      if (error instanceof z.ZodError) return null;
-      throw error;
-    });
+    const changes = await parseWebhookNotification({ rawJson: JSON.parse(new TextDecoder().decode(rawBody)) as unknown }).catch(
+      (error: unknown) => {
+        if (error instanceof z.ZodError) return null;
+        throw error;
+      },
+    );
     if (changes === null) return context.json(INVALID_NOTIFICATION_BODY, HttpStatus.BadRequest);
     const requestContext: RequestContext = {
       bindings: context.env,
-      number,
+      registry,
+      numbers: attribution.numbers,
       developmentMediaOrigin: input.developmentMediaOrigin,
       maxFutureSkewMs: input.maxFutureSkewMs,
     };
