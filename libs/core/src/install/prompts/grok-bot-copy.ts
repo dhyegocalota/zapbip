@@ -20,9 +20,16 @@ export const GROK_BOT_COPY = localizeCopy({
       locale: section.locale,
       standbyAgent: section.standbyAgent,
       steps: [
-        `Add the MCP server named zapbip at ${section.connectionLink}. ${tellOwner(text.confirmServer)} Wait for the owner to confirm.`,
-        'Create a routine with a webhook trigger.',
-        'Call `set_wake({mode: "webhook", url: <the webhook URL of the routine>, token: <the key of the routine>})`. On an error stop and report the error text.',
+        {
+          action: `Add the MCP server named zapbip at ${section.connectionLink}. ${tellOwner(text.confirmServer)} Wait for the owner to confirm.`,
+          success: 'the owner confirmed the server in the chat.',
+        },
+        { action: 'Create a routine with a webhook trigger.', success: 'the routine exists and shows its webhook URL and key.' },
+        {
+          action:
+            'Call `set_wake({mode: "webhook", url: <the webhook URL of the routine>, token: <the key of the routine>})`. On an error stop and report the error text.',
+          success: 'set_wake returns without an error.',
+        },
         chatSelfTest(section.locale),
       ],
     }),

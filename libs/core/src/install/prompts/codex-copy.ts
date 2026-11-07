@@ -1,6 +1,6 @@
 import { CODEX_TOOL_TIMEOUT_SECONDS, INSTALL_SELF_TEST_TEXT, InstallClient, OwnerLocale } from '@zapbip/types';
 import { connectCommand, FAILURE_OUTPUT_LINES } from './connector-commands';
-import { formatSection, localizeCopy, tellOwner, tellOwnerAndWait } from './section-format';
+import { formatSection, localizeCopy, noticeStep, tellOwnerAndWait } from './section-format';
 
 const CONFIG_PATH = '~/.codex/config.toml';
 
@@ -35,11 +35,23 @@ export const CODEX_COPY = localizeCopy({
       locale: section.locale,
       standbyAgent: section.standbyAgent,
       steps: [
-        `${tellOwnerAndWait(text.confirmChange)} If the owner does not say yes, stop.`,
-        `Remove any existing [mcp_servers.zapbip] table from ${CONFIG_PATH}, then append this table, so the file never holds a second one:\n\n\`\`\`toml\n${configTable}\n\`\`\``,
-        `In the background run \`${connectCommand({ connectionLink: section.connectionLink, client: InstallClient.Codex })}\`. It keeps listening and resumes the session with \`codex exec resume\`.`,
-        tellOwner(text.restart),
-        `In a fresh process run \`${selfTest}\`. On a non-zero exit stop and show the last ${FAILURE_OUTPUT_LINES} lines of its output.`,
+        {
+          action: `${tellOwnerAndWait(text.confirmChange)} If the owner does not say yes, stop.`,
+          success: 'the owner said yes in the chat.',
+        },
+        {
+          action: `Remove any existing [mcp_servers.zapbip] table from ${CONFIG_PATH}, then append this table, so the file never holds a second one:\n\n\`\`\`toml\n${configTable}\n\`\`\``,
+          success: `${CONFIG_PATH} holds exactly one [mcp_servers.zapbip] table with that content.`,
+        },
+        {
+          action: `In the background run \`${connectCommand({ connectionLink: section.connectionLink, client: InstallClient.Codex })}\`. It keeps listening and resumes the session with \`codex exec resume\`.`,
+          success: 'the connector is running in the background and prints no error.',
+        },
+        noticeStep(text.restart),
+        {
+          action: `In a fresh process run \`${selfTest}\`. On a non-zero exit stop and show the last ${FAILURE_OUTPUT_LINES} lines of its output.`,
+          success: 'the command exits with zero.',
+        },
       ],
     });
   },

@@ -1,5 +1,5 @@
 import { CHATGPT_POLL_INTERVAL_MINUTES, InstallClient, OwnerLocale } from '@zapbip/types';
-import { chatSelfTest, formatSection, localizeCopy, tellOwnerAndWait } from './section-format';
+import { chatSelfTest, formatSection, localizeCopy, questionStep } from './section-format';
 
 type ChatGptText = {
   addApp: (connectionLink: string) => string;
@@ -29,9 +29,12 @@ export const CHATGPT_COPY = localizeCopy({
       locale: section.locale,
       standbyAgent: section.standbyAgent,
       steps: [
-        tellOwnerAndWait(text.addApp(section.connectionLink)),
-        tellOwnerAndWait(text.createTask),
-        `Call \`set_wake({mode: "scheduled", interval_minutes: ${CHATGPT_POLL_INTERVAL_MINUTES}})\`.`,
+        questionStep(text.addApp(section.connectionLink)),
+        questionStep(text.createTask),
+        {
+          action: `Call \`set_wake({mode: "scheduled", interval_minutes: ${CHATGPT_POLL_INTERVAL_MINUTES}})\`.`,
+          success: 'set_wake returns without an error.',
+        },
         chatSelfTest(section.locale),
       ],
     }),

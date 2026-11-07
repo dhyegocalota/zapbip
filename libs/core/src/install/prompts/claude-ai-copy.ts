@@ -1,5 +1,5 @@
 import { InstallClient, OwnerLocale } from '@zapbip/types';
-import { chatSelfTest, formatSection, localizeCopy, tellOwner, tellOwnerAndWait } from './section-format';
+import { chatSelfTest, formatSection, localizeCopy, noticeStep, questionStep, tellOwner } from './section-format';
 
 type ClaudeAiText = {
   pasteConnector: (connectionLink: string) => string;
@@ -33,11 +33,18 @@ export const CLAUDE_AI_COPY = localizeCopy({
       locale: section.locale,
       standbyAgent: section.standbyAgent,
       steps: [
-        tellOwnerAndWait(text.pasteConnector(section.connectionLink)),
-        tellOwnerAndWait(text.pasteTrigger),
-        `If the owner stops here, call \`set_wake({mode: "none"})\`. ${tellOwner(text.withoutTrigger)} Then go to the last step.`,
-        'Otherwise call `set_wake({mode: "webhook", url: <the fire URL>, token: <the token>})`. On an error stop and report the error text.',
-        tellOwner(text.createHourlyTask),
+        questionStep(text.pasteConnector(section.connectionLink)),
+        questionStep(text.pasteTrigger),
+        {
+          action: `If the owner stops here, call \`set_wake({mode: "none"})\`. ${tellOwner(text.withoutTrigger)} Then go to the last step.`,
+          success: 'set_wake returns without an error, or the owner did not stop here.',
+        },
+        {
+          action:
+            'Otherwise call `set_wake({mode: "webhook", url: <the fire URL>, token: <the token>})`. On an error stop and report the error text.',
+          success: 'set_wake returns without an error.',
+        },
+        noticeStep(text.createHourlyTask),
         chatSelfTest(section.locale),
       ],
     }),

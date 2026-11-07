@@ -21,7 +21,7 @@ import { INSTALL_SECTIONS } from './index';
 import { OPENCLAW_COPY } from './openclaw-copy';
 
 const SET_WAKE_MODE_PATTERN = /set_wake\(\{mode: "(\w+)"/g;
-const STOP_CHECK_PATTERN = /^1\. If you are not .+, stop and run no other step of this section\.$/m;
+const STOP_CHECK_PATTERN = /^1\. If you are not .+, stop and run no other step of this section\. Success: .+$/m;
 const STEP_NUMBER_PATTERN = /^\d+\. /m;
 const SUCCESS_LINE_PATTERN = /Success: \S/;
 const SECRET_FRAGMENT = 'zb_conn_FAKE';

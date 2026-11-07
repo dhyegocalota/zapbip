@@ -1,5 +1,5 @@
 import { InstallClient, OwnerLocale } from '@zapbip/types';
-import { chatSelfTest, formatSection, localizeCopy, terminalListenStep, tellOwner, tellOwnerAndWait } from './section-format';
+import { chatSelfTest, formatSection, localizeCopy, noticeStep, terminalListenStep, tellOwnerAndWait } from './section-format';
 
 type CursorText = {
   confirmChange: string;
@@ -25,10 +25,16 @@ export const CURSOR_COPY = localizeCopy({
       locale: section.locale,
       standbyAgent: section.standbyAgent,
       steps: [
-        `${tellOwnerAndWait(text.confirmChange)} If the owner does not say yes, stop.`,
-        `Add an MCP server named zapbip over HTTP at ${section.connectionLink} in the Cursor MCP settings. Success: the Cursor MCP settings list zapbip.`,
+        {
+          action: `${tellOwnerAndWait(text.confirmChange)} If the owner does not say yes, stop.`,
+          success: 'the owner said yes in the chat.',
+        },
+        {
+          action: `Add an MCP server named zapbip over HTTP at ${section.connectionLink} in the Cursor MCP settings.`,
+          success: 'the Cursor MCP settings list zapbip.',
+        },
         terminalListenStep(section),
-        tellOwner(text.restart),
+        noticeStep(text.restart),
         chatSelfTest(section.locale),
       ],
     }),

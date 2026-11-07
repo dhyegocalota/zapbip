@@ -1,7 +1,7 @@
 import { INSTALL_SELF_TEST_TEXT, InstallClient, OwnerLocale, ZAPBIP_NPM_VERSION } from '@zapbip/types';
 import { AGENT_RULES } from '../../agent-rules';
 import { CONNECTION_URL_VARIABLE, connectCommand, FAILURE_OUTPUT_LINES } from './connector-commands';
-import { formatSection, localizeCopy, monitoredListenStep, tellOwner, tellOwnerAndWait } from './section-format';
+import { formatSection, localizeCopy, monitoredListenStep, noticeStep, tellOwnerAndWait } from './section-format';
 
 const SKILL_PATH = '~/.claude/skills/zapbip/SKILL.md';
 const LISTENER_RULE = 'A connection holds one listener and a second replaces the first: use exactly one of these, never two together.';
@@ -45,14 +45,36 @@ export const CLAUDE_CODE_COPY = localizeCopy({
       locale: section.locale,
       standbyAgent: section.standbyAgent,
       steps: [
-        `${tellOwnerAndWait(text.confirmChange)} If the owner does not say yes, stop.`,
-        'Run `claude mcp list`. If it lists zapbip or zapbip-channel, run `claude mcp remove --scope user zapbip` or `claude mcp remove --scope user zapbip-channel` for each. Success: `claude mcp list` no longer lists them.',
-        `Run \`claude mcp add --transport http --scope user zapbip ${section.connectionLink}\` for the tools. Success: \`claude mcp list\` shows zapbip.`,
-        `Run \`claude mcp add --scope user zapbip-channel -e ${CONNECTION_URL_VARIABLE}=${section.connectionLink} -- npx zapbip@${ZAPBIP_NPM_VERSION} channel\` for the live channel. Success: \`claude mcp list\` shows zapbip-channel.`,
-        `Write ${SKILL_PATH} with exactly this content:\n\n\`\`\`\n${skillContent}\n\`\`\`\nSuccess: the file holds exactly that content.`,
-        `${LISTENER_RULE} If the session supports development channels, the zapbip-channel server pushes each owner message into the session once Claude Code is started with \`${CHANNEL_COMMAND}\`. If it does not, in the background run \`${connectCommand({ connectionLink: section.connectionLink, client: InstallClient.ClaudeCode })}\`, which resumes a stopped session with \`claude -p --resume\`. If connect cannot run either, listen instead. ${monitoredListenStep(section)} Success: exactly one listener is running.`,
-        tellOwner(text.restart),
-        `In a fresh process run \`${selfTest}\`. On a non-zero exit stop and show the last ${FAILURE_OUTPUT_LINES} lines of its output.`,
+        {
+          action: `${tellOwnerAndWait(text.confirmChange)} If the owner does not say yes, stop.`,
+          success: 'the owner said yes in the chat.',
+        },
+        {
+          action:
+            'Run `claude mcp list`. If it lists zapbip or zapbip-channel, run `claude mcp remove --scope user zapbip` or `claude mcp remove --scope user zapbip-channel` for each.',
+          success: '`claude mcp list` no longer lists them.',
+        },
+        {
+          action: `Run \`claude mcp add --transport http --scope user zapbip ${section.connectionLink}\` for the tools.`,
+          success: '`claude mcp list` shows zapbip.',
+        },
+        {
+          action: `Run \`claude mcp add --scope user zapbip-channel -e ${CONNECTION_URL_VARIABLE}=${section.connectionLink} -- npx zapbip@${ZAPBIP_NPM_VERSION} channel\` for the live channel.`,
+          success: '`claude mcp list` shows zapbip-channel.',
+        },
+        {
+          action: `Write ${SKILL_PATH} with exactly this content:\n\n\`\`\`\n${skillContent}\n\`\`\``,
+          success: 'the file holds exactly that content.',
+        },
+        {
+          action: `${LISTENER_RULE} If the session supports development channels, the zapbip-channel server pushes each owner message into the session once Claude Code is started with \`${CHANNEL_COMMAND}\`. If it does not, in the background run \`${connectCommand({ connectionLink: section.connectionLink, client: InstallClient.ClaudeCode })}\`, which resumes a stopped session with \`claude -p --resume\`. If connect cannot run either, listen instead. ${monitoredListenStep(section)}`,
+          success: 'exactly one listener is running.',
+        },
+        noticeStep(text.restart),
+        {
+          action: `In a fresh process run \`${selfTest}\`. On a non-zero exit stop and show the last ${FAILURE_OUTPUT_LINES} lines of its output.`,
+          success: 'the command exits with zero.',
+        },
       ],
     });
   },

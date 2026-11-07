@@ -1,6 +1,6 @@
 import { InstallClient, OwnerLocale } from '@zapbip/types';
 import type { InstallSectionInput } from './install-section';
-import { chatSelfTest, formatSection, localizeCopy, tellOwnerAndWait } from './section-format';
+import { chatSelfTest, formatSection, localizeCopy, questionStep, type InstallStep } from './section-format';
 
 type GrokWebText = {
   pasteConnector: (connectionLink: string) => string;
@@ -15,9 +15,10 @@ const GROK_WEB_TEXT: Record<OwnerLocale, GrokWebText> = {
   },
 };
 
-function setWakeStep(input: { standbyAgent: InstallSectionInput['standbyAgent'] }): string {
-  if (input.standbyAgent === null) return 'Call `set_wake({mode: "none"})`.';
-  return `Call \`set_wake({mode: "standby", standby_agent: ${JSON.stringify(input.standbyAgent)}})\`.`;
+function setWakeStep(input: { standbyAgent: InstallSectionInput['standbyAgent'] }): InstallStep {
+  const success = 'set_wake returns without an error.';
+  if (input.standbyAgent === null) return { action: 'Call `set_wake({mode: "none"})`.', success };
+  return { action: `Call \`set_wake({mode: "standby", standby_agent: ${JSON.stringify(input.standbyAgent)}})\`.`, success };
 }
 
 export const GROK_WEB_COPY = localizeCopy({
@@ -27,6 +28,6 @@ export const GROK_WEB_COPY = localizeCopy({
       client: InstallClient.GrokWeb,
       locale: section.locale,
       standbyAgent: section.standbyAgent,
-      steps: [tellOwnerAndWait(text.pasteConnector(section.connectionLink)), setWakeStep(section), chatSelfTest(section.locale)],
+      steps: [questionStep(text.pasteConnector(section.connectionLink)), setWakeStep(section), chatSelfTest(section.locale)],
     }),
 });
