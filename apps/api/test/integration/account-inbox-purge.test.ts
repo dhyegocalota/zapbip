@@ -1,15 +1,18 @@
-import { AccountState, MessageKind, OwnerLocale } from '@zapbip/types';
+import { AccountState, MessageKind, OwnerLocale, REVOKED_CLOSE_CODE } from '@zapbip/types';
 import { evictDurableObject, reset, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { AccountInbox } from '../../src/account-inbox/account-inbox';
 import { createSqliteDeletionRequests } from '../../src/account-inbox/deletion-requests';
 import { TOMBSTONE_STORAGE_KEY } from '../../src/account-inbox/constants';
+import { openConnector } from '../support/connector-session';
 import { openWindow } from '../support/inbox-session';
-import { applyDirectoryMigration } from '../support/seed';
+import { applyDirectoryMigration, seedConnection, seedOwnerIdentity } from '../support/seed';
 import { accountInboxStub, connectionOf } from '../support/workers-env';
 
 const ACCOUNT = 'acc_purge';
 const TOMBSTONED_MESSAGE = 'AccountTombstoned';
+const CONNECTOR_SECRET = `zb_conn_${'C'.repeat(43)}`;
+const OWNER_PHONE = '5511900000042';
 
 function stubOf() {
   return accountInboxStub({ accountId: ACCOUNT });
@@ -61,6 +64,15 @@ describe('AccountInbox purge', () => {
       new Promise((resolve) => setTimeout(() => resolve('hung'), 3_000)),
     ]);
     expect(settled).toBe('settled');
+  });
+
+  it('closes every attached connector socket with the revoked code', async () => {
+    await seedOwnerIdentity({ accountId: ACCOUNT, phone: OWNER_PHONE, ownerLocale: OwnerLocale.PortugueseBrazil });
+    await seedConnection({ accountId: ACCOUNT, agent: 'alpha', secret: CONNECTOR_SECRET });
+    const session = await openConnector({ secret: CONNECTOR_SECRET });
+    await session.nextFrame();
+    await stubOf().purge();
+    expect(await session.closeCode()).toBe(REVOKED_CLOSE_CODE);
   });
 
   it('is idempotent', async () => {
