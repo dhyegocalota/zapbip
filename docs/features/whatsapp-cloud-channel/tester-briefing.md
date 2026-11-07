@@ -406,3 +406,10 @@ Pins (green on landing, labelled `pin` in their titles or commits): WI-17, WI-44
 - A forwarded text is still stored, routed and delivered with `verified: false`, but it never answers an open question (`isOwnWords` in `owner-placement.ts`); the question stays open and `wait_for_reply` returns the message. Taps (`button_reply`, `list_reply`) cannot be forwarded in WhatsApp, so they are unchanged.
 - Slice 3 (accounts-and-keys): an owner command ("novo agente", revoke, rotate) read from a forwarded message must not run; check `forwarded` before parsing a command.
 - A permanent 4xx on the media metadata (not 401, not a rate limit) is stored as unavailable with the owner notice; 401 and 429 still answer 500 so Meta retries.
+
+### Merge of main (agent-inbox-core shipped)
+
+- The closed-window notice follows agent-inbox-core: the claim owner gets `delivery_failed` with the notice-failed text, the message stays `Queued`, the alarm retries with backoff. `deliver-to-owner-channel.test.ts` ("a notice the channel rejects leaves the message queued and the agent reads the notice failure text") replaced the earlier expectation that the agent read the channel's own rejection text.
+- `OwnerWindow` carries both `closedAt` (this slice) and the notice retry fields (core); `openWindow` resets the retry fields as `receiveOwnerMessage` does.
+- Hypothesis: a channel `WindowClosed` during a flush stops the flush, closes the window, sends one notice through `sendNotice`, and a failed notice is retried by the alarm without marking any message `Failed`.
+
