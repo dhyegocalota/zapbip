@@ -33,7 +33,10 @@ When you write, zapbip tells you roughly when to expect the answer:
   contact="zapbip"
   messages={[
     { you: true, text: 'Can you summarize the report?' },
-    { notice: true, text: 'The agent Claude checks the inbox every hour. Last check 20 min ago. Your message waits there until the next check.' },
+    {
+      notice: true,
+      text: 'The agent Claude checks the inbox every hour. Last check 20 min ago. Your message waits there until the next check.',
+    },
   ]}
 />
 
@@ -41,7 +44,9 @@ If the timer stops running, zapbip says so once, after twice the interval passes
 
 <Chat
   contact="zapbip"
-  messages={[{ notice: true, text: 'The agent Claude stopped checking the inbox. Last check 2 h ago. Your messages wait there until it returns.' }]}
+  messages={[
+    { notice: true, text: 'The agent Claude stopped checking the inbox. Last check 2 h ago. Your messages wait there until it returns.' },
+  ]}
 />
 
 The next check ends the warning without another message.
