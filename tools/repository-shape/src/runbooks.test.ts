@@ -1,6 +1,6 @@
 import { existsSync, readdirSync } from 'node:fs';
 import { posix } from 'node:path';
-import { hermesWheelFilename, PRODUCTION_PACKAGES_BUCKET, ZAPBIP_HERMES_PLUGIN_VERSION } from '@zapbip/types';
+import { hermesRequirementsFilename, hermesWheelFilename, PRODUCTION_PACKAGES_BUCKET, ZAPBIP_HERMES_PLUGIN_VERSION } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { capturedNames, readRepositoryFile, repositoryPath } from './repository-files';
 
@@ -20,6 +20,7 @@ const PUBLISH_STEP_TITLE = 'Publish the docs';
 const PRODUCTION_DEPLOY_STEP_TITLE = 'Production deploy';
 const WHEEL_UPLOAD_COMMAND = 'wrangler r2 object put';
 const WHEEL_BUILD_COMMAND = 'pnpm hermes-wheel:build';
+const MANDATORY_DOCS_PREFLIGHT_SENTENCE = 'The docs preflight after the production deploy is mandatory';
 const PYPI_UPLOAD_PATTERN = /twine|pypi\.org/;
 const GO_LIVE_ORDER = [
   'Prepare your machine',
@@ -207,7 +208,12 @@ describe('runbooks', () => {
     expect(text).toContain(WHEEL_BUILD_COMMAND);
     expect(text).toContain(WHEEL_UPLOAD_COMMAND);
     expect(text).toContain(`${PRODUCTION_PACKAGES_BUCKET}/${hermesWheelFilename({ version: ZAPBIP_HERMES_PLUGIN_VERSION })}`);
+    expect(text).toContain(`${PRODUCTION_PACKAGES_BUCKET}/${hermesRequirementsFilename({ version: ZAPBIP_HERMES_PLUGIN_VERSION })}`);
     expect(text).not.toMatch(PYPI_UPLOAD_PATTERN);
+  });
+
+  test('deploy.md keeps the docs preflight mandatory after the production deploy', () => {
+    expect(readRunbook(DEPLOY_RUNBOOK).text).toContain(MANDATORY_DOCS_PREFLIGHT_SENTENCE);
   });
 
   test('every go-live step is numbered in sequence and has an If it fails line', () => {
