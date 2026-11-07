@@ -1,7 +1,7 @@
 import { InboxCopyKey, InboxErrorCode, MediaSourceKind, MessageKind, OwnerLocale } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { NOTICE_PREVIEW_MAX_CHARS } from './constants';
-import { buildNoticePreview, INBOX_COPY, renderCopy } from './inbox-copy';
+import { buildNoticePreview, fillCopyTokens, INBOX_COPY, renderCopy } from './inbox-copy';
 import { captureInboxError } from './testing/capture-inbox-error';
 
 describe('INBOX_COPY', () => {
@@ -9,6 +9,17 @@ describe('INBOX_COPY', () => {
     Object.values(InboxCopyKey).forEach((key) =>
       Object.values(OwnerLocale).forEach((locale) => expect(INBOX_COPY[key][locale].length).toBeGreaterThan(0)),
     );
+  });
+});
+
+describe('fillCopyTokens', () => {
+  test('fills every token of a text', () => {
+    expect(fillCopyTokens({ text: '{agent} waits {count} min', values: { agent: 'alpha', count: '3' } })).toBe('alpha waits 3 min');
+  });
+
+  test('a missing token', async () => {
+    const error = await captureInboxError(() => fillCopyTokens({ text: 'The agent {agent}', values: {} }));
+    expect(error).toEqual({ code: InboxErrorCode.InvalidInput, message: 'copy: missing value for agent' });
   });
 });
 

@@ -25,6 +25,8 @@ type MessageRow = {
   delivery: DeliveryState | null;
   read_at: number | null;
   at: number;
+  handed_to: string | null;
+  origin_message_id: string | null;
 };
 
 type QuestionRow = {
@@ -59,14 +61,21 @@ type MediaRow = {
 
 const SELECT_ROUTING_LIST =
   'SELECT routing_list_prompt_message_id, routing_list_opened_at, routing_list_locale, routing_list_resent, routing_list_reminded FROM owner_window WHERE id = ?';
-const SELECT_MESSAGES = 'SELECT id, agent, direction, kind, payload, reply_to, delivery, read_at, at FROM inbox_messages ';
+const SELECT_MESSAGES =
+  'SELECT id, agent, direction, kind, payload, reply_to, delivery, read_at, at, handed_to, origin_message_id FROM inbox_messages ';
 const SELECT_QUESTIONS = 'SELECT question_id, agent, text, options, normalized_key, prompt_message_id, asked_at, answer FROM questions ';
 const SELECT_MEDIA = 'SELECT media_id, origin, mime_type, size_bytes, filename, expires_at, received_at, retention_until FROM media ';
 const ORDER_BY_ARRIVAL = 'ORDER BY at, rowid';
 const MARK_READ_STATEMENT = 'UPDATE inbox_messages SET read_at = ? WHERE read_at IS NULL AND id IN (SELECT value FROM json_each(?))';
+const HAND_OFF_STATEMENT =
+  'UPDATE inbox_messages SET read_at = ?, handed_to = ? WHERE id = ? AND agent = ? AND direction = ? AND read_at IS NULL';
+const REGISTER_AGENT_STATEMENT =
+  'INSERT INTO agents (agent, last_seen_at) SELECT ?, ? WHERE NOT EXISTS (SELECT 1 FROM revoked_agents WHERE agent = ?) ON CONFLICT (agent) DO UPDATE SET last_seen_at = excluded.last_seen_at';
+const REGISTER_AGENT_WAKE_STATEMENT =
+  'INSERT OR IGNORE INTO agent_wake (agent, mode, last_polled_at, updated_at) SELECT ?, ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM revoked_agents WHERE agent = ?)';
 const WINDOW_ROW_ID = 1;
 const INSERT_MESSAGE_STATEMENT =
-  'INSERT INTO inbox_messages (id, agent, direction, kind, payload, reply_to, delivery, read_at, channel_message_id, at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+  'INSERT INTO inbox_messages (id, agent, direction, kind, payload, reply_to, delivery, read_at, channel_message_id, at, handed_to, origin_message_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
 const INSERT_MEDIA_STATEMENT =
   'INSERT INTO media (media_id, origin, mime_type, size_bytes, filename, expires_at, received_at, retention_until) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
 const SAVE_ANSWER_STATEMENT = 'UPDATE questions SET answer = ? WHERE question_id = ?';
@@ -92,6 +101,8 @@ function toMessage(row: MessageRow): Message {
     replyToMessageId: row.reply_to,
     delivery: row.delivery,
     readByAgent: row.read_at !== null,
+    handedTo: row.handed_to,
+    originMessageId: row.origin_message_id,
     ...content,
   };
 }
@@ -143,7 +154,7 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
   }
 
   function insertMessageRow(row: { message: Message; channelMessageId: string | null }): void {
-    const { messageId, direction, agent, at, replyToMessageId, delivery, readByAgent, ...content } = row.message;
+    const { messageId, direction, agent, at, replyToMessageId, delivery, readByAgent, handedTo, originMessageId, ...content } = row.message;
     run(
       INSERT_MESSAGE_STATEMENT,
       messageId,
@@ -156,6 +167,8 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
       readByAgent ? input.clock.now() : null,
       row.channelMessageId,
       at,
+      handedTo,
+      originMessageId,
     );
   }
 
@@ -197,18 +210,8 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
   return {
     async registerAgent({ agent, seenAt }) {
       input.storage.transactionSync(() => {
-        run(
-          'INSERT INTO agents (agent, last_seen_at) VALUES (?, ?) ON CONFLICT (agent) DO UPDATE SET last_seen_at = excluded.last_seen_at',
-          agent,
-          seenAt,
-        );
-        run(
-          'INSERT OR IGNORE INTO agent_wake (agent, mode, last_polled_at, updated_at) VALUES (?, ?, ?, ?)',
-          agent,
-          WakeMode.None,
-          seenAt,
-          seenAt,
-        );
+        run(REGISTER_AGENT_STATEMENT, agent, seenAt, agent);
+        run(REGISTER_AGENT_WAKE_STATEMENT, agent, WakeMode.None, seenAt, seenAt, agent);
       });
     },
 
@@ -547,6 +550,15 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
         RECEIPT_RETENTION_MS,
       );
       return row === null ? null : row.due;
+    },
+
+    async insertHandoff({ copy, primaryAgent, handedTo }) {
+      if (copy.originMessageId === null) throw new Error('handoff copy has no origin message');
+      const { originMessageId } = copy;
+      input.storage.transactionSync(() => {
+        insertMessageRow({ message: copy, channelMessageId: null });
+        run(HAND_OFF_STATEMENT, input.clock.now(), handedTo, originMessageId, primaryAgent, MessageDirection.FromOwner);
+      });
     },
   };
 }

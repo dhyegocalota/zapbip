@@ -406,7 +406,7 @@ describe('DO schema v4', () => {
 });
 
 describe('DO schema upgrade', () => {
-  it('applies v4 and v6 to a database that holds versions 1, 2 and 5 and nothing else', async () => {
+  it('applies v4 and v6 to a database that holds every other version', async () => {
     const upgrade = await runInDurableObject(accountInboxStub({ accountId: UPGRADE_ACCOUNT_ID }), (_instance, state) => {
       state.storage.sql
         .exec<{ name: string }>(LIST_USER_TABLES_STATEMENT)
@@ -426,7 +426,7 @@ describe('DO schema upgrade', () => {
           .map((column) => column.name),
       };
     });
-    expect(upgrade.seeded).toEqual([1, 2, 5]);
+    expect(upgrade.seeded).toEqual([1, 2, 3, 5]);
     expect(upgrade.applied).toEqual(UPGRADED_VERSIONS);
     expect(upgrade.messageColumns).toContain('channel_message_id');
   });

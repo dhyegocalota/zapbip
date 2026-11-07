@@ -27,6 +27,8 @@ const ENVELOPE = {
   replyToMessageId: null,
   delivery: null,
   readByAgent: false,
+  handedTo: null,
+  originMessageId: null,
   forwarded: false,
 };
 const MEDIA_FIELDS = {

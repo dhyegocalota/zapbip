@@ -1,5 +1,5 @@
 import { InboxStatus } from '@zapbip/types';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { connectionOf, createEnvironment, receiveText, registerAgents } from '../testing/fixtures';
 import { checkInbox } from './check-inbox';
 
@@ -11,6 +11,15 @@ describe('checkInbox', () => {
   test('CU-125 an empty inbox', async () => {
     const environment = await createEnvironment();
     expect(await check({ environment })).toEqual({ status: InboxStatus.Empty, messages: [] });
+  });
+
+  test('an empty inbox reads no body', async () => {
+    const environment = await createEnvironment();
+    const listUnread = vi.spyOn(environment.repository, 'listUnread');
+    const markRead = vi.spyOn(environment.repository, 'markRead');
+    await check({ environment });
+    expect(listUnread).not.toHaveBeenCalled();
+    expect(markRead).not.toHaveBeenCalled();
   });
 
   test('returns new messages once and marks them read', async () => {

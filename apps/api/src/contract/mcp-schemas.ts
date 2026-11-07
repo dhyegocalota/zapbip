@@ -16,6 +16,7 @@ import {
 } from '@zapbip/types';
 
 const nullableString = z.string().nullable().default(null);
+const nullableNumber = z.number().nullable().default(null);
 
 export const sendableMediaKind = z.enum([
   MessageKind.Image,
@@ -151,17 +152,11 @@ export const setWakeInputShape = {
   mode: z.enum(WakeMode),
   url: nullableString,
   token: nullableString,
+  interval_minutes: nullableNumber,
+  standby_agent: nullableString,
 };
 
-export enum UnavailableWakeMode {
-  Scheduled = 'scheduled',
-  Standby = 'standby',
-}
-
-export const setWakeToolInputShape = {
-  ...setWakeInputShape,
-  mode: z.enum([...Object.values(WakeMode), ...Object.values(UnavailableWakeMode)]),
-};
+export const setWakeInputSchema = z.strictObject(setWakeInputShape);
 
 export const setWakeOutputShape = {
   status: z.enum(SetWakeStatus),

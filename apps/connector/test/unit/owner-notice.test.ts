@@ -13,6 +13,8 @@ function textMessage(input: { text: string }): Message {
     delivery: null,
     readByAgent: false,
     forwarded: false,
+    handedTo: null,
+    originMessageId: null,
     kind: MessageKind.Text,
     text: input.text,
   };
@@ -28,6 +30,8 @@ function imageMessage(input: { caption: string }): Message {
     delivery: null,
     readByAgent: false,
     forwarded: false,
+    handedTo: null,
+    originMessageId: null,
     kind: MessageKind.Image,
     source: { kind: MediaSourceKind.Stored, mediaId: 'media_1' },
     mimeType: null,

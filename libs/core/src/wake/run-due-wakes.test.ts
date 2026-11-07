@@ -1,4 +1,5 @@
 import {
+  ChannelErrorKind,
   MessageKind,
   OwnerLocale,
   SECOND_MS,
@@ -463,6 +464,9 @@ describe('runDueWakes refusals and the owner notice', () => {
     enqueue({ wakeEnvironment, responses: [respond({ statusCode: UNAUTHORIZED })] });
     await fireAfter({ wakeEnvironment, delayMs: WAKE_DEBOUNCE_MS });
     expect(wakeEnvironment.observer.events.map((event) => event.name)).toContain(WakeLogEventName.NoticeFailed);
+    expect(wakeEnvironment.observer.events.find((event) => event.name === WakeLogEventName.NoticeFailed)).toMatchObject({
+      errorCode: ChannelErrorKind.DeliveryFailed,
+    });
   });
 
   test('a storage failure on the last attempt gives up, marks the wake failing and tells the owner once', async () => {

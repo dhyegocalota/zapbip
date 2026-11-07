@@ -19,8 +19,6 @@ const INSECURE_URL = `http://${GENERIC_HOST}/wake`;
 const PINNED_TOKEN = 'p'.repeat(16);
 const GENERIC_TOKEN = 'g'.repeat(32);
 const SHORT_TOKEN = 's'.repeat(15);
-const UNAVAILABLE_MODE_MESSAGE = 'wake mode not available yet';
-const UNAVAILABLE_MODES = ['scheduled', 'standby'];
 
 describe('set_wake over MCP', () => {
   let client: Client;
@@ -97,12 +95,6 @@ describe('set_wake over MCP', () => {
     const result = await setWake({ mode: WakeMode.Webhook, token: PINNED_TOKEN });
     expect(result.isError).toBe(true);
     expect(errorText(result)).toContain('url');
-  });
-
-  it.each(UNAVAILABLE_MODES)('answers that the %s mode is not available yet', async (mode) => {
-    const result = await setWake({ mode });
-    expect(result.isError).toBe(true);
-    expect(errorText(result)).toBe(UNAVAILABLE_MODE_MESSAGE);
   });
 
   it('clears a saved webhook', async () => {

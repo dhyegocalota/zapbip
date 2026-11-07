@@ -1,15 +1,16 @@
-import { WakeMode, WakeRung, WakeStatus } from '@zapbip/types';
+import { WakeMode, WakeRung } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { attachLocalConnector, detachLocalConnector } from './local-connector';
 import type { StoredWake } from './wake-setting';
 import { addUnreadOwnerMessage, CLAUDE_URL, createWakeEnvironment, setWebhook, type WakeEnvironment } from './testing/wake-fixtures';
 import { wakeRungFor } from './wake-rung';
+import { storedWakeOf } from './testing/wake-doubles';
 
 const AGENT = 'ana';
 const LIMIT = 50;
 
 function noneWake(): StoredWake {
-  return { agent: AGENT, mode: WakeMode.None, target: null, status: WakeStatus.Active, lastDeliveredAt: null };
+  return storedWakeOf({ agent: AGENT, mode: WakeMode.None });
 }
 
 async function saveNoneWake(input: { wakeEnvironment: WakeEnvironment }): Promise<StoredWake> {
@@ -144,6 +145,8 @@ describe('detachLocalConnector', () => {
 
 describe('wakeRungFor', () => {
   test('maps the local mode to the local rung', () => {
-    expect(wakeRungFor({ mode: WakeMode.Local })).toBe(WakeRung.Local);
+    expect(wakeRungFor({ wake: storedWakeOf({ agent: AGENT, mode: WakeMode.Local }), pollState: null, standby: null, now: 0 })).toBe(
+      WakeRung.Local,
+    );
   });
 });

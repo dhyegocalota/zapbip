@@ -74,6 +74,8 @@ function ownerMessage(input: { index: number; text?: string }): Message {
     delivery: null,
     readByAgent: false,
     forwarded: false,
+    handedTo: null,
+    originMessageId: null,
     kind: MessageKind.Text,
     text: input.text === undefined ? `message ${input.index}` : input.text,
   };

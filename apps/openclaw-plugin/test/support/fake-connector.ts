@@ -55,6 +55,8 @@ export function ownerTextMessage(input: { messageId: string; text: string }): Me
     replyToMessageId: null,
     delivery: null,
     readByAgent: false,
+    handedTo: null,
+    originMessageId: null,
     forwarded: false,
     kind: MessageKind.Text,
     text: input.text,
