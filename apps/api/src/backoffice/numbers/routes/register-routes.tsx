@@ -51,7 +51,7 @@ registerRoutes.post(REGISTER_PATH, async (context) => {
   const page = await signedInPageContext({ context });
   const parsed = parseRegistration({ form, knownMetaAppRefs: metaApps.map((metaApp) => metaApp.metaAppRef) });
   const render = (input: {
-    status: HttpStatus.Unauthorized | HttpStatus.UnprocessableEntity;
+    status: HttpStatus.Unauthorized | HttpStatus.UnprocessableEntity | HttpStatus.Conflict;
     values: RegistrationValues;
     errors: FieldErrors;
     failure: BackofficeCopyKey | null;
@@ -86,7 +86,7 @@ registerRoutes.post(REGISTER_PATH, async (context) => {
   });
   if (registered instanceof RegistrationConflictError) {
     const errors: FieldErrors = { [CONFLICT_FORM_FIELDS[registered.field]]: BackofficeCopyKey.FieldErrorDuplicate };
-    return render({ status: HttpStatus.UnprocessableEntity, values: parsed.values, errors, failure: null });
+    return render({ status: HttpStatus.Conflict, values: parsed.values, errors, failure: null });
   }
   await auditNumberAction({
     context,
