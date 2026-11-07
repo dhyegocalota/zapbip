@@ -21,6 +21,10 @@ function variablesWith(input: { name: SmokeInput; value: string | undefined }): 
 }
 
 describe('smoke inputs', () => {
+  it('reads the smoke number credentials under names no Worker secret shares', () => {
+    expect([SmokeInput.AppSecret, SmokeInput.PhoneNumberId]).toEqual(['SMOKE_META_APP_SECRET', 'SMOKE_PHONE_NUMBER_ID']);
+  });
+
   it.each(NAMED_INPUTS)('names %s when it is missing', (name) => {
     const environmentVariables = variablesWith({ name, value: undefined });
     expect(missingSmokeInputs({ ...STAGING_SCOPE, environmentVariables })).toEqual([name]);
