@@ -213,9 +213,9 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
     },
 
     async listAgents() {
-      return rows<{ agent: string; last_seen_at: number }>('SELECT agent, last_seen_at FROM agents ORDER BY agent').map(
-        (row): AgentRecord => ({ agent: row.agent, lastSeenAt: row.last_seen_at }),
-      );
+      return rows<{ agent: string; last_seen_at: number }>(
+        'SELECT agent, last_seen_at FROM agents WHERE agent NOT IN (SELECT agent FROM revoked_agents) ORDER BY agent',
+      ).map((row): AgentRecord => ({ agent: row.agent, lastSeenAt: row.last_seen_at }));
     },
 
     async insertMessage({ message }) {
@@ -272,7 +272,7 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
 
     async findLastAgentWrite({ since }) {
       const row = first<{ agent: string }>(
-        'SELECT agent FROM inbox_messages WHERE direction = ? AND agent IS NOT NULL AND at >= ? ORDER BY at DESC, rowid DESC LIMIT 1',
+        'SELECT agent FROM inbox_messages WHERE direction = ? AND agent IS NOT NULL AND agent NOT IN (SELECT agent FROM revoked_agents) AND at >= ? ORDER BY at DESC, rowid DESC LIMIT 1',
         MessageDirection.ToOwner,
         since,
       );
@@ -309,7 +309,9 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
     },
 
     async listOpenQuestions() {
-      return rows<QuestionRow>(SELECT_QUESTIONS + 'WHERE answer IS NULL ORDER BY asked_at DESC, rowid DESC').map(toQuestion);
+      return rows<QuestionRow>(
+        SELECT_QUESTIONS + 'WHERE answer IS NULL AND agent NOT IN (SELECT agent FROM revoked_agents) ORDER BY asked_at DESC, rowid DESC',
+      ).map(toQuestion);
     },
 
     async saveAnswer({ questionId, answer }: { questionId: string; answer: QuestionAnswer }) {

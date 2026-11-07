@@ -51,6 +51,12 @@ function holdLiveWaiter(input: { account: SeededAccount }): Promise<void> {
   });
 }
 
+function hasLiveWaiter(input: { account: SeededAccount }): Promise<boolean> {
+  return runInDurableObject(accountInboxStub({ accountId: input.account.accountId }), (instance) =>
+    (instance as unknown as { dependencies: CoreDependencies }).dependencies.waiters.hasLiveWaiter({ agent: AGENT, questionId: null }),
+  );
+}
+
 function newAccount(): Promise<SeededAccount> {
   return seedAccount({ agent: AGENT });
 }
@@ -266,6 +272,7 @@ describe('connector socket', () => {
       questionId: null,
       timeoutMs: WAITER_TIMEOUT_MS,
     });
+    await vi.waitFor(async () => expect(await hasLiveWaiter({ account })).toBe(true));
     await ownerMessage({ account });
     const reply = await waiting;
     expect(reply.ok && reply.value.status).toBe(ReplyStatus.Message);
@@ -322,6 +329,15 @@ describe('connector socket', () => {
 
     expect(await session.closeCode()).toBe(REVOKED_CLOSE_CODE);
     await vi.waitFor(async () => expect(await socketCountOf({ account })).toBe(0));
+  });
+
+  test('revoking an agent closes its connector with the revoked code', async () => {
+    const account = await registeredAccount();
+    const session = await openConnector({ secret: account.secret });
+    await session.nextFrame();
+    await accountInboxStub({ accountId: account.accountId }).recordRevocation({ agent: AGENT });
+
+    expect(await session.closeCode()).toBe(REVOKED_CLOSE_CODE);
   });
 
   test('closing the sockets of another agent keeps this connector open', async () => {

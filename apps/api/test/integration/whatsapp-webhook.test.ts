@@ -23,6 +23,7 @@ import { OperatorEvent } from '../../src/adapters/whatsapp/whatsapp-enums';
 import { WHATSAPP_WEBHOOK_PATH } from '../../src/contract/constants';
 import { toWireMessage } from '../../src/mcp/wire';
 import imageFixture from '../fixtures/whatsapp/inbound/image.json';
+import { LogEvent } from '../../src/contract/log';
 import orderFixture from '../fixtures/whatsapp/inbound/order.json';
 import audioVoiceFixture from '../fixtures/whatsapp/inbound/audio-voice.json';
 import buttonFixture from '../fixtures/whatsapp/inbound/button.json';
@@ -340,13 +341,13 @@ describe('webhook inbound messages', () => {
     expect(loggedText({ spies })).not.toContain(account.phone);
   });
 
-  test('WI-28 skips a sender with no owner row and logs it without a phone number', async () => {
+  test('WI-28 opens an account for a sender with no owner row and logs it without a phone number', async () => {
     const spies = spyOnLogs();
     const response = await postNotification({
       notification: notificationWith({ messages: [{ ...textFixture, from: UNKNOWN_PHONE, id: 'wamid.WI28', timestamp: nowInSeconds() }] }),
     });
     expect(response.status).toBe(STATUS_OK);
-    expect(loggedText({ spies })).toContain(OperatorEvent.InboundUnmapped);
+    expect(loggedText({ spies })).toContain(LogEvent.AccountCreated);
     expect(loggedText({ spies })).not.toContain(UNKNOWN_PHONE);
   });
 

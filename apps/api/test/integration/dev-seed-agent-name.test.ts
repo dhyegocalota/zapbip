@@ -1,7 +1,7 @@
 import { AGENT_NAME_MAX_CHARS } from '@zapbip/core';
 import { InboxErrorCode } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
-import { buildDirectorySeed } from '../../scripts/build-directory-seed';
+import { buildDirectorySeed } from '../../src/dev/build-directory-seed';
 import { SEED_CREATED_AT } from '../support/seed';
 
 const PHONE = '5511999990000';

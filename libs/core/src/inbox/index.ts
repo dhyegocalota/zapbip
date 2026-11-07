@@ -35,6 +35,7 @@ export * from './use-cases/expire-routing-list';
 export * from './use-cases/retry-notice';
 export * from './use-cases/deliver-to-owner';
 export * from './use-cases/touch-agent';
+export * from './use-cases/flush-queue';
 export * from './use-cases/receive-channel-message';
 export * from './use-cases/open-window';
 export * from './use-cases/close-window';

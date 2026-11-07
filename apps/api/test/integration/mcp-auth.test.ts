@@ -1,6 +1,7 @@
 import { env } from 'cloudflare:workers';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CONNECTION_SECRET_PREFIX, UNAUTHORIZED_BODY } from '../../src/contract/constants';
+import { LogEvent } from '../../src/contract/log';
 import { postMcp, seedConnectionWithSecret, type SeededConnection } from './mcp-fixtures';
 import { applyDirectoryMigration } from '../support/seed';
 import { reset } from 'cloudflare:test';
@@ -12,7 +13,10 @@ const UNAUTHORIZED_TEXT = JSON.stringify(UNAUTHORIZED_BODY);
 describe('MCP secret and Bearer resolution', () => {
   let connection: SeededConnection;
 
-  afterEach(reset);
+  afterEach(() => {
+    vi.restoreAllMocks();
+    return reset();
+  });
 
   beforeEach(async () => {
     await applyDirectoryMigration();
@@ -59,5 +63,25 @@ describe('MCP secret and Bearer resolution', () => {
   it('prefers the path secret over a wrong Bearer', async () => {
     const response = await postMcp({ path: `/c/${connection.secret}/mcp`, bearer: UNKNOWN_SECRET });
     expect(response.status).toBe(200);
+  });
+
+  it('[row 417] writes no log line that carries the route or the secret for an accepted request', async () => {
+    const lines: string[] = [];
+    vi.spyOn(console, 'log').mockImplementation((...parts: unknown[]) => void lines.push(parts.join(' ')));
+    const response = await postMcp({ path: `/c/${connection.secret}/mcp` });
+    expect(response.status).toBe(200);
+    const output = lines.join('\n');
+    expect(output).not.toContain(connection.secret);
+    expect(output).not.toContain(CONNECTION_SECRET_PREFIX);
+    expect(output).not.toContain('/mcp');
+  });
+
+  it('[row 418] logs auth_rejected once for an unknown secret and never the secret', async () => {
+    const lines: string[] = [];
+    vi.spyOn(console, 'log').mockImplementation((...parts: unknown[]) => void lines.push(parts.join(' ')));
+    await postMcp({ path: `/c/${UNKNOWN_SECRET}/mcp` });
+    const rejections = lines.filter((line) => line.includes(LogEvent.AuthRejected));
+    expect(rejections).toEqual([JSON.stringify({ event: LogEvent.AuthRejected })]);
+    expect(lines.join('\n')).not.toContain(UNKNOWN_SECRET);
   });
 });

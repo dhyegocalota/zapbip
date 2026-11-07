@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { reset } from 'cloudflare:test';
 import { hashConnectionSecret } from '../../src/adapters/platform/hash';
 import { CONNECTION_SECRET_PATTERN } from '../../src/contract/constants';
-import { assertOwnerAbsent, buildDirectorySeed, findOwnerStatement } from '../../scripts/build-directory-seed';
+import { assertOwnerAbsent, buildDirectorySeed, findOwnerStatement } from '../../src/dev/build-directory-seed';
 import { applyDirectoryMigration, SEED_CREATED_AT } from '../support/seed';
 import { testEnv } from '../support/workers-env';
 

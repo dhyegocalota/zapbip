@@ -7,3 +7,8 @@ export type ConnectionIdentity = {
   agent: AgentName;
   ownerLocale: OwnerLocale;
 };
+
+export function connectionKeyOf(input: { connection: ConnectionIdentity }): string {
+  const { accountId, agent } = input.connection;
+  return `${accountId}:${agent}`;
+}

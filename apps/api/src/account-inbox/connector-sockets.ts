@@ -6,6 +6,7 @@ import {
   HEARTBEAT_INTERVAL_MS,
   HEARTBEAT_TIMEOUT_MS,
   REPLACED_CLOSE_CODE,
+  REVOKED_CLOSE_CODE,
 } from '@zapbip/types';
 
 export type DoneFrameParse = { ok: true; frame: DoneFrame } | { ok: false; reason: FrameRejectionReason };
@@ -34,6 +35,13 @@ export function acceptConnectorSocket(input: { context: DurableObjectState; agen
   const { 0: client, 1: server } = new WebSocketPair();
   context.acceptWebSocket(server, [agent]);
   server.serializeAttachment({ attachedAtMs: nowMs });
+  return client;
+}
+
+export function rejectConnectorSocket(): WebSocket {
+  const { 0: client, 1: server } = new WebSocketPair();
+  server.accept();
+  server.close(REVOKED_CLOSE_CODE);
   return client;
 }
 

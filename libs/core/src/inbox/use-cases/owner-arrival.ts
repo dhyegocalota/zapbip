@@ -1,10 +1,11 @@
 import { IdPrefix, InboxCopyKey, MessageKind } from '@zapbip/types';
+import type { AgentName } from '../connection';
 import { renderCopy } from '../inbox-copy';
 import { deliverToOwner } from './deliver-to-owner';
-import { assignHeldMessages, listRoutingAgents, openRoutingList, remindOwner } from './routing-list';
-import { wakeAgent } from './wake-agent';
 import type { Arrival, ArrivalPlan, OwnerPrompt, Placement, RouteTarget } from './owner-placement';
+import { assignHeldMessages, listRoutingAgents, openRoutingList, remindOwner } from './routing-list';
 import type { ReceiveResult } from './types';
+import { wakeAgent } from './wake-agent';
 
 async function expireRoute(input: Arrival): Promise<ReceiveResult> {
   const { dependencies, ownerLocale } = input;

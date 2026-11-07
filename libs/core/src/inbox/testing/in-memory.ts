@@ -372,7 +372,7 @@ function createInMemoryMediaStore(input: { accountId: string; clock: Clock }): I
 }
 
 function createCountingIds(): IdGenerator {
-  const counters: Record<IdPrefix, number> = { [IdPrefix.Message]: 0, [IdPrefix.Question]: 0, [IdPrefix.Media]: 0 };
+  const counters = Object.fromEntries(Object.values(IdPrefix).map((prefix) => [prefix, 0])) as Record<IdPrefix, number>;
   return {
     next: ({ prefix }) => {
       counters[prefix] += 1;

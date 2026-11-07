@@ -4,3 +4,4 @@ export const MEDIA_PATH_PREFIX = '/m';
 export const UPLOAD_PATH_PREFIX = '/u';
 export const BASE64_ENCODING = 'base64';
 export const TEXT_CONTENT_TYPE = 'text';
+export const OUTBOUND_RATE_LIMITED_MESSAGE = 'rate_limited: too many messages in a minute, try again shortly';
