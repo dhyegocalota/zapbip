@@ -27,6 +27,8 @@ import {
   NPM_PUBLISHER_VARIABLE,
   NPM_VERSION,
   HERMES_PLUGIN_VERSION,
+  HERMES_REQUIREMENTS_SHA256,
+  HERMES_REQUIREMENTS_URL,
   HERMES_WHEEL_SHA256,
   HERMES_WHEEL_URL,
   OTHER_WHEEL_SHA256,
@@ -74,6 +76,7 @@ function workerInput(input: {
     openclawPluginVersion,
     hermesPluginVersion: HERMES_PLUGIN_VERSION,
     hermesWheelSha256: HERMES_WHEEL_SHA256,
+    hermesRequirementsSha256: HERMES_REQUIREMENTS_SHA256,
     packageFetcher,
     nameserverResolver,
   };
@@ -186,6 +189,36 @@ describe('worker preflight', () => {
     const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell }));
     expect(refusal?.step).toBe(PreflightStep.HermesWheel);
     expect(refusal?.message).toContain(`zapbip_platform-${HERMES_PLUGIN_VERSION}-py3-none-any.whl`);
+    expect(refusal?.message).toContain('wrangler r2 object put');
+  });
+
+  it('also reads the requirements file from the bucket', async () => {
+    const shell = fakeShell({});
+    await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell }));
+    expect(
+      shell.commands.some((command) =>
+        command.includes(`r2 object get zapbip-packages/zapbip_platform-${HERMES_PLUGIN_VERSION}-requirements.txt `),
+      ),
+    ).toBe(true);
+  });
+
+  it('refuses production when the hosted requirements file hashes to something else, naming both hashes', async () => {
+    const shell = fakeShell({
+      replies: { 'requirements.txt': { exitCode: 0, stdout: `${OTHER_WHEEL_SHA256}  /tmp/zapbip-requirements.txt\n` } },
+    });
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell }));
+    expect(refusal?.step).toBe(PreflightStep.HermesWheel);
+    expect(refusal?.message).toContain('requirements.txt');
+    expect(refusal?.message).toContain(HERMES_REQUIREMENTS_SHA256);
+    expect(refusal?.message).toContain(OTHER_WHEEL_SHA256);
+  });
+
+  it('refuses production when the requirements file is not in the bucket, naming the upload step', async () => {
+    const missing = `r2 object get zapbip-packages/zapbip_platform-${HERMES_PLUGIN_VERSION}-requirements.txt`;
+    const shell = fakeShell({ replies: { [missing]: { exitCode: 1, stdout: 'The specified key does not exist' } } });
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell }));
+    expect(refusal?.step).toBe(PreflightStep.HermesWheel);
+    expect(refusal?.message).toContain(`zapbip_platform-${HERMES_PLUGIN_VERSION}-requirements.txt`);
     expect(refusal?.message).toContain('wrangler r2 object put');
   });
 
@@ -528,6 +561,7 @@ function docsInput(input: { packageFetcher?: FakePackageFetcher }) {
     openclawPluginVersion: NPM_VERSION,
     hermesPluginVersion: HERMES_PLUGIN_VERSION,
     hermesWheelSha256: HERMES_WHEEL_SHA256,
+    hermesRequirementsSha256: HERMES_REQUIREMENTS_SHA256,
     packageFetcher,
     environmentVariables: COMPLETE_VARIABLES,
   };
@@ -544,6 +578,7 @@ describe('docs preflight', () => {
       openclawPluginVersion: NPM_VERSION,
       hermesPluginVersion: HERMES_PLUGIN_VERSION,
       hermesWheelSha256: HERMES_WHEEL_SHA256,
+      hermesRequirementsSha256: HERMES_REQUIREMENTS_SHA256,
       packageFetcher: fakePackageFetcher({}),
       environmentVariables: COMPLETE_VARIABLES,
     });
@@ -562,6 +597,7 @@ describe('docs preflight', () => {
       openclawPluginVersion: NPM_VERSION,
       hermesPluginVersion: HERMES_PLUGIN_VERSION,
       hermesWheelSha256: HERMES_WHEEL_SHA256,
+      hermesRequirementsSha256: HERMES_REQUIREMENTS_SHA256,
       packageFetcher: fakePackageFetcher({}),
       environmentVariables: COMPLETE_VARIABLES,
     });
@@ -580,6 +616,7 @@ describe('docs preflight', () => {
       openclawPluginVersion: NPM_VERSION,
       hermesPluginVersion: HERMES_PLUGIN_VERSION,
       hermesWheelSha256: HERMES_WHEEL_SHA256,
+      hermesRequirementsSha256: HERMES_REQUIREMENTS_SHA256,
       packageFetcher: fakePackageFetcher({}),
       environmentVariables: COMPLETE_VARIABLES,
     });
@@ -600,6 +637,7 @@ describe('docs preflight', () => {
       openclawPluginVersion: NPM_VERSION,
       hermesPluginVersion: HERMES_PLUGIN_VERSION,
       hermesWheelSha256: HERMES_WHEEL_SHA256,
+      hermesRequirementsSha256: HERMES_REQUIREMENTS_SHA256,
       packageFetcher: fakePackageFetcher({}),
       environmentVariables: COMPLETE_VARIABLES,
     });
@@ -624,6 +662,7 @@ describe('docs preflight', () => {
       openclawPluginVersion: NPM_VERSION,
       hermesPluginVersion: HERMES_PLUGIN_VERSION,
       hermesWheelSha256: HERMES_WHEEL_SHA256,
+      hermesRequirementsSha256: HERMES_REQUIREMENTS_SHA256,
       packageFetcher: fakePackageFetcher({}),
       environmentVariables: COMPLETE_VARIABLES,
     });
@@ -646,6 +685,7 @@ describe('docs preflight', () => {
       openclawPluginVersion: NPM_VERSION,
       hermesPluginVersion: HERMES_PLUGIN_VERSION,
       hermesWheelSha256: HERMES_WHEEL_SHA256,
+      hermesRequirementsSha256: HERMES_REQUIREMENTS_SHA256,
       packageFetcher: fakePackageFetcher({}),
       environmentVariables: COMPLETE_VARIABLES,
     });
@@ -665,6 +705,17 @@ describe('docs preflight', () => {
     expect(refusal?.message).toContain(expectedText);
     expect(shell.commands).toHaveLength(4);
     expect(packageFetcher.urls).toEqual([HERMES_WHEEL_URL]);
+  });
+
+  it.each([
+    ['404', { status: 404, sha256: OTHER_WHEEL_SHA256 }, HERMES_REQUIREMENTS_URL],
+    ['a wrong hash', { status: 200, sha256: OTHER_WHEEL_SHA256 }, OTHER_WHEEL_SHA256],
+  ])('refuses the docs deploy when the hosted requirements file answers %s', async (_name, answer, expectedText) => {
+    const packageFetcher = fakePackageFetcher({ answers: { [HERMES_REQUIREMENTS_URL]: answer } });
+    const refusal = await runDocsPreflight({ ...docsInput({}), packageFetcher });
+    expect(refusal?.step).toBe(PreflightStep.HermesWheel);
+    expect(refusal?.message).toContain(expectedText);
+    expect(packageFetcher.urls).toEqual([HERMES_WHEEL_URL, HERMES_REQUIREMENTS_URL]);
   });
 
   it('says the wheel could not be reached, not that it is missing, when the fetch fails', async () => {
@@ -689,6 +740,7 @@ describe('docs preflight', () => {
         openclawPluginVersion: NPM_VERSION,
         hermesPluginVersion: HERMES_PLUGIN_VERSION,
         hermesWheelSha256: HERMES_WHEEL_SHA256,
+        hermesRequirementsSha256: HERMES_REQUIREMENTS_SHA256,
         packageFetcher: fakePackageFetcher({}),
         environmentVariables: COMPLETE_VARIABLES,
       }),

@@ -84,6 +84,7 @@ export type WorkerPreflightInput = {
   openclawPluginVersion: string;
   hermesPluginVersion: string;
   hermesWheelSha256: string;
+  hermesRequirementsSha256: string;
   packageFetcher: PackageFetcher;
   nameserverResolver: NameserverResolver;
 };
@@ -96,6 +97,7 @@ export type DocsPreflightInput = {
   openclawPluginVersion: string;
   hermesPluginVersion: string;
   hermesWheelSha256: string;
+  hermesRequirementsSha256: string;
   packageFetcher: PackageFetcher;
   environmentVariables: EnvironmentVariables;
 };
@@ -233,7 +235,7 @@ function wheelHashMismatch(input: { filename: string; expected: string; actual: 
 async function refuseUnhostedWorkerWheel(input: WorkerPreflightInput): Promise<string | null> {
   const { shell, hermesPluginVersion, hermesWheelSha256 } = input;
   const { filename } = hostedWheelOf({ hermesPluginVersion });
-  const downloadPath = join(tmpdir(), `${WHEEL_DOWNLOAD_PREFIX}${randomUUID()}`);
+  const downloadPath = join(tmpdir(), `${WHEEL_DOWNLOAD_PREFIX}${randomUUID()}-${filename}`);
   const download = wranglerCommand({
     environment: DeployEnvironment.Production,
     args: ['r2', 'object', 'get', `${PRODUCTION_PACKAGES_BUCKET}/${filename}`],

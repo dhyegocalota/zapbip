@@ -10,6 +10,7 @@ import {
   NPM_VERSION,
   OFFICIAL_NUMBER,
   HERMES_PLUGIN_VERSION,
+  HERMES_REQUIREMENTS_SHA256,
   HERMES_WHEEL_SHA256,
   HERMES_WHEEL_URL,
   OTHER_WHEEL_SHA256,
@@ -32,6 +33,7 @@ async function preflight(input: {
     openclawPluginVersion: NPM_VERSION,
     hermesPluginVersion: HERMES_PLUGIN_VERSION,
     hermesWheelSha256: HERMES_WHEEL_SHA256,
+    hermesRequirementsSha256: HERMES_REQUIREMENTS_SHA256,
     packageFetcher,
     log: (line) => lines.push(line),
   });

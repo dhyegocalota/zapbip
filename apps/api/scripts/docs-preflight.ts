@@ -5,6 +5,7 @@ import {
   OPENCLAW_PLUGIN_NPM_VERSION,
   ZAPBIP_NPM_VERSION,
   ZAPBIP_HERMES_PLUGIN_VERSION,
+  ZAPBIP_HERMES_REQUIREMENTS_SHA256,
   ZAPBIP_HERMES_WHEEL_SHA256,
 } from '@zapbip/types';
 import { type DeployShell, type EnvironmentVariables, runDocsPreflight } from '../src/operations/deploy-preflight';
@@ -20,6 +21,7 @@ export type DocsPreflightEntry = {
   openclawPluginVersion: string;
   hermesPluginVersion: string;
   hermesWheelSha256: string;
+  hermesRequirementsSha256: string;
   packageFetcher: PackageFetcher;
   log: (line: string) => void;
 };
@@ -45,6 +47,7 @@ if (import.meta.main) {
     openclawPluginVersion: OPENCLAW_PLUGIN_NPM_VERSION,
     hermesPluginVersion: ZAPBIP_HERMES_PLUGIN_VERSION,
     hermesWheelSha256: ZAPBIP_HERMES_WHEEL_SHA256,
+    hermesRequirementsSha256: ZAPBIP_HERMES_REQUIREMENTS_SHA256,
     packageFetcher: createPackageFetcher(),
     log: console.log,
   })

@@ -9,6 +9,7 @@ import {
   OPENCLAW_PLUGIN_NPM_VERSION,
   ZAPBIP_NPM_VERSION,
   ZAPBIP_HERMES_PLUGIN_VERSION,
+  ZAPBIP_HERMES_REQUIREMENTS_SHA256,
   ZAPBIP_HERMES_WHEEL_SHA256,
 } from '@zapbip/types';
 import { z } from 'zod';
@@ -55,6 +56,7 @@ export type DeployRun = {
   openclawPluginVersion: string;
   hermesPluginVersion: string;
   hermesWheelSha256: string;
+  hermesRequirementsSha256: string;
   packageFetcher: PackageFetcher;
   nameserverResolver: NameserverResolver;
   log: (line: string) => void;
@@ -195,6 +197,7 @@ async function main(): Promise<void> {
       openclawPluginVersion: OPENCLAW_PLUGIN_NPM_VERSION,
       hermesPluginVersion: ZAPBIP_HERMES_PLUGIN_VERSION,
       hermesWheelSha256: ZAPBIP_HERMES_WHEEL_SHA256,
+      hermesRequirementsSha256: ZAPBIP_HERMES_REQUIREMENTS_SHA256,
       packageFetcher: createPackageFetcher(),
       nameserverResolver: createNameserverResolver(),
       log: console.log,
