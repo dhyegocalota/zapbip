@@ -24,13 +24,17 @@ export function capturedNames({ text, pattern }: { text: string; pattern: RegExp
   return [...text.matchAll(pattern)].flatMap((match) => match.slice(1, 2));
 }
 
-export function readmes(): string[] {
-  const listing = spawnSync('git', ['ls-files', '--cached', '--others', '--exclude-standard', README_PATHSPEC], {
+export function repositoryFiles(pathspec: string): string[] {
+  const listing = spawnSync('git', ['ls-files', '--cached', '--others', '--exclude-standard', pathspec], {
     cwd: REPOSITORY_ROOT,
     encoding: 'utf8',
   });
   if (listing.status !== 0) throw new Error(`git ls-files failed: ${listing.stderr}`);
   return listing.stdout.split(LINE_SEPARATOR).filter((path) => path && existsSync(repositoryPath(path)));
+}
+
+export function readmes(): string[] {
+  return repositoryFiles(README_PATHSPEC);
 }
 
 export function workspacePackages(): string[] {

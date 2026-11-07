@@ -19,6 +19,7 @@ apps/connector          the local connector: `connect` resumes the owner's Claud
 apps/docs               the Mintlify documentation site
 libs/core               the inbox rules as plain TypeScript behind ports
 libs/types              shared enums and constants, no logic
+tools/install-e2e       the owner-run script that installs zapbip into a real Claude Code against the local stack
 tools/repository-shape  tests about the repository itself: README links, root entries, workflows, feature statuses, indexes, scenarios, agent surfaces
 docs/adr                architecture decision records
 docs/learnings          dated traps, with what inspired them and when they were revisited

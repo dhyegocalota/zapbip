@@ -1,15 +1,20 @@
 ---
 title: Supported agents
-description: Which AI you can connect, and what each one can do.
+description: Which AI you can connect, and how each one hears you.
 ---
 
-- **ChatGPT**: waits for your answer for up to 5 minutes.
-- **Claude (app and site)**: waits for your answer for up to 4 minutes.
-- **Claude Code**: waits for your answer for as long as needed.
-- **Codex**: waits for your answer for 5 minutes, up to 15.
-- **Grok**: waits for your answer for up to 1 minute.
-- **Grok Bot**: waits for your answer for 2 minutes or more.
-- **Any app that supports MCP**: depends on the app.
+| Your AI               | How it listens                                          | You can start the conversation |
+| --------------------- | ------------------------------------------------------- | ------------------------------ |
+| Claude Code           | A channel in your open session, or the zapbip connector | Yes                            |
+| Codex                 | The zapbip connector resumes your session               | Yes                            |
+| Cursor                | A background terminal running `zapbip listen`           | Yes                            |
+| Gemini CLI            | A background terminal running `zapbip listen`           | Yes                            |
+| Hermes                | The zapbip platform plugin, or a job every minute       | Yes                            |
+| OpenClaw              | The zapbip channel plugin, or a job every minute        | Yes                            |
+| Grok Bot              | A webhook routine                                       | Yes                            |
+| Claude (app and site) | A scheduled task with an API trigger                    | Yes                            |
+| ChatGPT               | A scheduled task, checked at least once an hour         | Yes, within the hour           |
+| Grok on the web       | Your Grok Bot stands by for it                          | Yes, through your Grok Bot     |
 
 You can start the conversation with any of them from WhatsApp, through the zapbip number.
 

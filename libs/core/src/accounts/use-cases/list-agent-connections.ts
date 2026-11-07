@@ -5,12 +5,13 @@ import { buildResult, buildTextReply } from './account-reply';
 import type { ListAgentConnectionsInput } from './types';
 
 const LINE_BREAK = '\n';
+const WHATSAPP_FORMATTING_PATTERN = /[*_~`]/g;
 const ISO_DATE_LENGTH = 10;
 
 function describeConnection(input: { connection: ConnectionRecord; locale: OwnerLocale }): string {
   const createdOn = new Date(input.connection.createdAt).toISOString().slice(0, ISO_DATE_LENGTH);
   const { agent, clientName } = input.connection;
-  return `${agent} (${createdOn}, ${clientName === null ? UNKNOWN_CLIENT_LABEL[input.locale] : clientName})`;
+  return `${agent} (${createdOn}, ${clientName === null ? UNKNOWN_CLIENT_LABEL[input.locale] : clientName.replace(WHATSAPP_FORMATTING_PATTERN, '')})`;
 }
 
 export async function listAgentConnections(input: ListAgentConnectionsInput): Promise<AccountCommandResult> {

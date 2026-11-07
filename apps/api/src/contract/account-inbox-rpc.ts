@@ -26,9 +26,11 @@ import type {
   UploadClaim,
 } from '@zapbip/core';
 import type { DevWakeRpc, WakeRpc } from './wake-rpc';
-import type { InboxErrorCode, ChannelErrorKind, OwnerLocale, TemplateKind } from '@zapbip/types';
+import type { InboxErrorCode, ChannelErrorKind, OwnerLocale, TemplateKind, WakeMode } from '@zapbip/types';
 
 export type CallOutcome<Value> = { ok: true; value: Value } | { ok: false; errorCode: InboxErrorCode | ChannelErrorKind; message: string };
+
+export type WakeModeEntry = { agent: string; wakeMode: WakeMode };
 
 export type AgentRequest<Input extends { dependencies: CoreDependencies }> = Omit<Input, 'dependencies'>;
 
@@ -61,6 +63,7 @@ export interface AccountInboxRpc extends WakeRpc {
     channelMessageId: string;
     ownerMessage: OwnerInboundMessage;
   }): Promise<CallOutcome<{ messageId: string | null; agent: string | null; duplicate: boolean }>>;
+  listWakeModes(): Promise<WakeModeEntry[]>;
   receiveChannelMessage(input: AgentRequest<ReceiveChannelInput>): Promise<CallOutcome<ReceiveResult>>;
   hasChannelReceipt(input: { channelMessageId: string }): Promise<CallOutcome<boolean>>;
   applyChannelStatus(input: AgentRequest<ApplyStatusInput>): Promise<CallOutcome<ApplyStatusResult>>;

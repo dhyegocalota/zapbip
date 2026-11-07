@@ -23,6 +23,7 @@ export type FakeConnectorOptions = {
   failedProbes?: number;
   failedUpgrades?: number;
   autoPong?: boolean;
+  pingAnswerText?: string;
   greet?: boolean;
 };
 
@@ -79,6 +80,7 @@ export async function startFakeConnector(input: FakeConnectorOptions = {}): Prom
     failedProbes = 0,
     failedUpgrades = 0,
     autoPong = true,
+    pingAnswerText = CONNECTOR_PONG_TEXT,
     greet = true,
   } = input;
   let probeStatus = initialProbeStatus;
@@ -122,7 +124,7 @@ export async function startFakeConnector(input: FakeConnectorOptions = {}): Prom
       const text = data.toString();
       const frame = JSON.parse(text) as Record<string, unknown>;
       frames.push({ connectionIndex, text, frame });
-      if (frame.type === ConnectorFrameType.Ping && autoPong) socket.send(CONNECTOR_PONG_TEXT);
+      if (frame.type === ConnectorFrameType.Ping && autoPong) socket.send(pingAnswerText);
       settleWaiters();
     });
     socket.on('close', settleWaiters);

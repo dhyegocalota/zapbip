@@ -1,5 +1,5 @@
 import { SELF, reset, runInDurableObject } from 'cloudflare:test';
-import { ConnectorFrameType, HttpStatus, MessageKind, WakeMode } from '@zapbip/types';
+import { ConnectorFrameType, HttpStatus, INSTALL_PAGE_PATH_PREFIX, MessageKind, WakeMode } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { isCurrentKeyDigest } from '../../src/account-inbox/agent-key-digest';
 import { DEV_SEED_PATH } from '../../src/contract/constants';
@@ -12,6 +12,10 @@ const PHONE = '5511999990000';
 const AGENT = 'alpha';
 const SECOND_AGENT = 'beta';
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
+const CLIENT_ADDRESS_HEADER = 'cf-connecting-ip';
+const CLIENT_ADDRESS = '203.0.113.9';
+const INSTALL_LINK_PATTERN = new RegExp(`${INSTALL_PAGE_PATH_PREFIX}zb_inst_[A-Za-z0-9_-]+`);
+const CONNECTION_SECRET_IN_PAGE_PATTERN = /zb_conn_[A-Za-z0-9_-]+/;
 const CONNECTION_STATEMENT = `SELECT account_id AS accountId, secret_digest AS secretDigest FROM connections
   WHERE agent = ?1 AND revoked_at IS NULL AND account_id = (SELECT account_id FROM owner_identities WHERE wa_id = ?2)`;
 
@@ -28,6 +32,20 @@ function say(input: { text: string }): Promise<Response> {
     headers: JSON_HEADERS,
     body: JSON.stringify({ kind: MessageKind.Text, text: input.text }),
   });
+}
+
+async function installPageSecretOf(): Promise<string> {
+  const screen = await SELF.fetch(`${ORIGIN}/dev/owner/${PHONE}/screen`);
+  const { entries } = (await screen.json()) as { entries: Array<{ text: string }> };
+  const installPath = entries
+    .map((entry) => entry.text)
+    .join('\n')
+    .match(INSTALL_LINK_PATTERN);
+  if (installPath === null) throw new Error('the screen carries no install link');
+  const page = await SELF.fetch(`${ORIGIN}${installPath[0]}`, { headers: { [CLIENT_ADDRESS_HEADER]: CLIENT_ADDRESS } });
+  const secret = (await page.text()).match(CONNECTION_SECRET_IN_PAGE_PATTERN);
+  if (secret === null) throw new Error('the install page carries no connection link');
+  return secret[0];
 }
 
 async function storedConnectionOf(input: { agent: string }): Promise<StoredConnection> {
@@ -68,6 +86,15 @@ describe('connection creation paths', () => {
   it('refuses a malformed seed body', async () => {
     const response = await SELF.fetch(`${ORIGIN}${DEV_SEED_PATH}`, { method: 'POST', headers: JSON_HEADERS, body: '{}' });
     expect(response.status).toBe(HttpStatus.BadRequest);
+  });
+
+  it('the install page hands out the secret the connector route admits and the object knows', async () => {
+    await say({ text: 'oi' });
+    await say({ text: `novo agente ${AGENT}` });
+    const session = await openConnector({ secret: await installPageSecretOf() });
+    expect(await session.nextFrame()).toEqual({ type: ConnectorFrameType.Hello, agent: AGENT, previousWakeMode: WakeMode.None });
+    expect(await objectKnowsCurrentKey({ agent: AGENT })).toBe(true);
+    session.socket.close();
   });
 
   it.each([

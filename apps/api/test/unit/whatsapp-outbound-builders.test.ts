@@ -1,4 +1,4 @@
-import type { MediaStore, Message, MessageContent } from '@zapbip/core';
+import type { MediaStore, Message, MessageContent, MessageEnvelope } from '@zapbip/core';
 import { ChannelError } from '@zapbip/core';
 import { ChannelErrorKind, MediaSourceKind, MessageKind, OwnerLocale, TemplateKind } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
@@ -23,12 +23,13 @@ const mediaStore: MediaStore = {
   delete: () => Promise.reject(new Error('unexpected delete')),
 };
 
-function message(content: MessageContent): Message {
-  return { ...buildEnvelope({ messageId: 'msg_1' }), ...content };
+function message(input: { content: MessageContent; envelope?: Partial<MessageEnvelope> }): Message {
+  return { ...buildEnvelope({ messageId: 'msg_1', ...input.envelope }), ...input.content };
 }
 
 function session(input: {
   content: MessageContent;
+  envelope?: Partial<MessageEnvelope>;
   question?: ReturnType<typeof buildQuestion> | null;
   replyTo?: string | null;
   reactionTarget?: string | null;
@@ -36,7 +37,7 @@ function session(input: {
 }): Promise<Record<string, unknown>> {
   return buildSessionPayload({
     recipientWaId: RECIPIENT,
-    message: message(input.content),
+    message: message({ content: input.content, envelope: input.envelope }),
     question: input.question === undefined ? null : input.question,
     replyToChannelMessageId: input.replyTo === undefined ? null : input.replyTo,
     reactionTargetChannelMessageId: input.reactionTarget === undefined ? null : input.reactionTarget,
@@ -67,6 +68,12 @@ describe('buildSessionPayload', () => {
   it('AU-74 previews a link in a text', async () => {
     const payload = await session({ content: { kind: MessageKind.Text, text: 'veja https://zapbip.example/x' } });
     expect(payload).toMatchObject({ text: { preview_url: true, body: 'veja https://zapbip.example/x' } });
+  });
+
+  it('never previews a link in a text written by zapbip itself', async () => {
+    const text = 'cole no seu agente: https://api.test/i/zb_inst_x';
+    const payload = await session({ envelope: { agent: null }, content: { kind: MessageKind.Text, text } });
+    expect(payload).toMatchObject({ text: { preview_url: false, body: text } });
   });
 
   it('AU-75 replies in context', async () => {

@@ -6,8 +6,8 @@ import { runScheduled } from './operations/scheduled';
 export { AccountInbox } from './account-inbox/account-inbox';
 
 export default {
-  fetch: (request: Request, env: Bindings): Response | Promise<Response> =>
-    createApp({ extraRoutes: [], developmentMediaOrigin: null, maxFutureSkewMs: MAX_FUTURE_SKEW_MS }).fetch(request, env),
+  fetch: (request: Request, env: Bindings, executionContext: ExecutionContext): Response | Promise<Response> =>
+    createApp({ extraRoutes: [], developmentMediaOrigin: null, maxFutureSkewMs: MAX_FUTURE_SKEW_MS }).fetch(request, env, executionContext),
   scheduled: (controller: ScheduledController, env: Bindings): Promise<void> =>
     runScheduled({ cron: controller.cron, now: controller.scheduledTime, env }),
 };

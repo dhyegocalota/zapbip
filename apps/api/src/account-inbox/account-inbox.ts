@@ -62,7 +62,7 @@ import { createWebhookAgentWaker } from '../adapters/wake/webhook-agent-waker';
 import { createCloudApiMessageSender } from '../adapters/whatsapp/cloud-api-message-sender';
 import { createGraphClient } from '../adapters/whatsapp/graph-client';
 import { readWhatsAppEnvironment } from '../adapters/whatsapp/read-whatsapp-env';
-import type { AccountInboxRpc, AgentRequest, CallOutcome } from '../contract/account-inbox-rpc';
+import type { AccountInboxRpc, AgentRequest, CallOutcome, WakeModeEntry } from '../contract/account-inbox-rpc';
 import type { AccountOwnerRpc } from '../contract/account-owner-rpc';
 import type { DueTimeProvider } from '../contract/due-time-provider';
 import type { Bindings } from '../contract/env';
@@ -102,6 +102,10 @@ import { redactInstallCodes } from './install-code-redaction';
 import { ACCOUNT_INBOX_MIGRATIONS } from './migrations';
 import { runMigrations } from './run-migrations';
 import { createWakeDependencies } from './wake-dependencies';
+
+const SELECT_WAKE_MODES_STATEMENT = 'SELECT agent, mode FROM agent_wake';
+
+type WakeModeRow = { agent: string; mode: WakeMode };
 
 type ReceiveAccountMessageRequest = Parameters<AccountOwnerRpc['receiveAccountMessage']>[0];
 
@@ -484,6 +488,14 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
   async cancelWaiters(input: { agent: string }): Promise<void> {
     this.assertLive();
     this.dependencies.waiters.cancelAgent(input);
+  }
+
+  async listWakeModes(): Promise<WakeModeEntry[]> {
+    this.assertLive();
+    return this.ctx.storage.sql
+      .exec<WakeModeRow>(SELECT_WAKE_MODES_STATEMENT)
+      .toArray()
+      .map((row) => ({ agent: row.agent, wakeMode: row.mode }));
   }
 
   async purge(): Promise<void> {
