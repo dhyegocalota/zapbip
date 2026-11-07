@@ -2,6 +2,7 @@
 source "$(dirname "$0")/touched-files.sh"
 readonly BLOCKED_MESSAGE="Blocked: agents never edit .env files; document the variable in .env.example instead."
 readonly WRITE_PATTERN='>|(^|[^[:alnum:]_])(tee|cp|mv)([^[:alnum:]_]|$)|sed[[:space:]]+-i'
+readonly PROSE_PATTERN="\"[^\"]*[[:space:]][^\"]*\"|'[^']*[[:space:]][^']*'"
 readonly WORD_SEPARATORS=$' \t\n;&|<>=()"\''
 
 is_protected_env_file() {
@@ -26,5 +27,5 @@ command=$(jq -r '.tool_input.command // ""' <<<"$hook_input")
 [[ "$command" =~ $WRITE_PATTERN ]] || exit 0
 while IFS= read -r word; do
   is_protected_env_file "$word" && block
-done < <(tr "$WORD_SEPARATORS" '\n' <<<"$command")
+done < <(sed -E "s/${PROSE_PATTERN}//g" <<<"$command" | tr "$WORD_SEPARATORS" '\n')
 exit 0
