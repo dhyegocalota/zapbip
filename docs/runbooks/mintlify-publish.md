@@ -30,11 +30,13 @@ The docs live in `apps/docs` and publish when `main` changes. The site names the
 
 5. **Publish the Hermes plugin.** Create an account at `https://pypi.org/account/register/` and turn on two-factor authentication. In Account settings, API tokens, add a token (scope it to the project `zapbip-platform` after the first upload). Then, from the repository root, run `python3 -m pip install --user build twine`, `cd apps/hermes-plugin`, `python3 -m build`, and `python3 -m twine upload dist/*`; when twine asks, the username is `__token__` and the password is the token (paste it at the prompt; never on the command line). The name is `zapbip-platform` and the version `0.1.0`.
 
+   Set `maintainers` in `pyproject.toml` to your PyPI user name before building, and write the same name as `ZAPBIP_PYPI_PUBLISHER` in your own environment file: the production deploy and the docs preflight refuse until `https://pypi.org/pypi/zapbip-platform/0.1.0/json` answers and its `info.maintainer` is that name.
+
    Expect: `pip index versions zapbip-platform` lists `0.1.0`.
 
    If it fails: a name or version already taken by someone else cannot be reused; bump the version in `pyproject.toml` through a pull request and update every page that pins it.
 
-6. **Run the docs preflight.** From the repository root run `pnpm docs:preflight`. It refuses until the official number and every company fact are set, and until `zapbip` and `@zapbip/openclaw-plugin` resolve on npm with your npm user (`ZAPBIP_NPM_PUBLISHER`) among their maintainers. Mintlify publishes whatever is on `main`, so run it before the first merge of the docs and again before enabling the site.
+6. **Run the docs preflight.** From the repository root run `pnpm docs:preflight`. It refuses until the official number and every company fact are set, and until `zapbip` and `@zapbip/openclaw-plugin` resolve on npm with your npm user (`ZAPBIP_NPM_PUBLISHER`) as their only maintainer, and `zapbip-platform` resolves on PyPI with your user (`ZAPBIP_PYPI_PUBLISHER`) as its maintainer. Mintlify publishes whatever is on `main`, so run it before the first merge of the docs and again before enabling the site.
 
    Expect: the command prints `the docs are ready to publish` and exits zero.
 
@@ -46,7 +48,7 @@ The docs live in `apps/docs` and publish when `main` changes. The site names the
 
    If it fails: if no free plan offers the custom domain, either pay for the plan that does or keep the default Mintlify address and skip step 10; record the choice in the go-live record.
 
-8. **Connect the repository.** In the dashboard open Git Settings and install the Mintlify GitHub app on this repository only. Choose the production branch `main`. Turn on the monorepo option and set the docs path to `apps/docs`, where `docs.json` lives.
+8. **Connect the repository.** Only after steps 2, 4 and 5 are done and step 6 passes: linking the repository makes Mintlify publish the docs on every push to `main`, and the docs print `npx zapbip@0.1.0`, `@zapbip/openclaw-plugin@0.1.0` and `pip install zapbip-platform==0.1.0`, so a name nobody has published yet would be claimable by anyone who reads the docs. In the dashboard open Git Settings and install the Mintlify GitHub app on this repository only. Choose the production branch `main`. Turn on the monorepo option and set the docs path to `apps/docs`, where `docs.json` lives.
 
    Expect: Mintlify builds the site from `apps/docs` and shows a preview address with the Get started group.
 

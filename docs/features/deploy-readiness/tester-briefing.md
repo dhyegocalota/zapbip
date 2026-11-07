@@ -235,6 +235,16 @@ Pins (green on arrival): `env-example.test.ts`, `root-scripts.test.ts` (`19d03f1
 - D5, D6, D8, D9 and the missing steps (payment method, number PIN, PyPI commands, buying the domain, the first secret put creating the Worker): runbooks and README order rewritten; the go-live order in `runbooks.test.ts` updated; three new runbook tests are pins.
 - D10, E1, E2, E3, E5, E6: smoke output names the failure kind (`ECONNREFUSED`) and never the URL or message; lowercase and hyphenated placeholders are refused; non-JSON wrangler output is refused or reported clearly; an empty version list says "no previous Worker version"; a trailing slash is trimmed from `SMOKE_BASE_URL`; a failed `git fetch` is refused. Red `6b7d43a` and the smoke and rollback red commits; green `47c69ba`, the smoke fix and `66d89f1`.
 
+### Package names before docs (supply chain, 2026-11-06)
+
+Merged `origin/main` (agent-inbox-core, webhook-wake, local-connector) at `7fcdfda`. Conflicts kept main's rules: account-inbox migrations are v1, v2, v5 and v7 (deploy), the `WAKE_METRICS` dataset is declared per wrangler environment, the cron providers include main's wake and notice providers plus the usage provider, and `ZAPBIP_NPM_VERSION` stays one constant.
+
+- Red `a634495`, green `fcaddb7`. The production Worker preflight and the docs preflight also refuse at step `pypi version` unless `https://pypi.org/pypi/zapbip-platform/<ZAPBIP_PYPI_VERSION>/json` answers `200` and `info.maintainer` equals `ZAPBIP_PYPI_PUBLISHER`. The npm checks (both `zapbip` and `@zapbip/openclaw-plugin`) run first and already existed.
+- Red failure text printed: `Error: refuseUntrustedPypiPackage is not implemented for 0.1.0` (22 tests), `Error: createPackageFetcher is not implemented` (3), and the env example list assertion (`expected [ 'META_APP_SECRET', ... ] to deeply equal [ ..., ...(7) ]`).
+- Hypotheses: a `404` says the package does not resolve; a thrown fetch or any other status says PyPI could not be reached; a `null` or empty maintainer says it is unreadable; a missing or placeholder `ZAPBIP_PYPI_PUBLISHER` fetches nothing; staging fetches nothing; npm refusals come before any fetch.
+- Runbooks: `mintlify-publish.md` step 8 (connect Mintlify) and `README.md` step 10 say the three packages are published first; step 5 sets `maintainers` in `pyproject.toml`.
+- Gap: PyPI's JSON `info.maintainer` is free-text metadata the uploader writes, so it proves the owner's intent, not the uploader's identity; the runbook's PyPI two-factor account and project-scoped token are the real control. The real fetcher is pinned only by a stubbed `fetch` test, never run against pypi.org by an agent.
+
 ### Lane B: security and reviewer fixes (2026-11-06)
 
 Correction: the earlier briefing rows `45d02ab` (npm maintainers) and `6b7d43a` (staging scope, cheap-first order) are red commits, not pins, whatever their titles say.

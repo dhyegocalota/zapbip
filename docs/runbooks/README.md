@@ -61,6 +61,8 @@ Follow the steps in order. Each step names the runbook that holds its detail. Ev
    If it fails: stop. Do not go to production with an untested rollback.
 10. **Publish the packages.** Do steps 2, 4 and 5 of `mintlify-publish.md`: `zapbip` and `@zapbip/openclaw-plugin` on npm, and `zapbip-platform` on PyPI.
 
+   Do this before step 12: linking Mintlify to the repository publishes the docs on every push to `main`, and the docs name all three packages.
+
    Expect: `npm view` lists your npm user as a maintainer of both npm packages, and `pip index versions zapbip-platform` lists `0.1.0`.
 
    If it fails: the failing step of `mintlify-publish.md` says what to check.
