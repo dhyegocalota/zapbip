@@ -19,7 +19,7 @@
   ],
   "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "zapbip-media-production" }],
   "analytics_engine_datasets": [{ "binding": "WAKE_METRICS", "dataset": "zapbip_wake_production" }],
-  "rules": [{ "type": "Text", "globs": ["**/*.sql"], "fallthrough": true }],
+  "rules": [{ "type": "Text", "globs": ["**/*.sql", "**/*.css"], "fallthrough": true }],
   "routes": [
     { "pattern": "mcp.zapbip.com", "custom_domain": true },
     { "pattern": "backoffice.zapbip.com", "custom_domain": true },
@@ -55,7 +55,7 @@
       ],
       "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "zapbip-media-development" }],
       "analytics_engine_datasets": [{ "binding": "WAKE_METRICS", "dataset": "zapbip_wake_development" }],
-      "rules": [{ "type": "Text", "globs": ["**/*.sql"], "fallthrough": true }],
+      "rules": [{ "type": "Text", "globs": ["**/*.sql", "**/*.css"], "fallthrough": true }],
       "vars": {
         "ENVIRONMENT": "development",
         "PUBLIC_ORIGIN": "http://localhost:8787",
@@ -88,7 +88,7 @@
       ],
       "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "zapbip-media-staging" }],
       "analytics_engine_datasets": [{ "binding": "WAKE_METRICS", "dataset": "zapbip_wake_staging" }],
-      "rules": [{ "type": "Text", "globs": ["**/*.sql"], "fallthrough": true }],
+      "rules": [{ "type": "Text", "globs": ["**/*.sql", "**/*.css"], "fallthrough": true }],
       "routes": [
         { "pattern": "mcp-staging.zapbip.com", "custom_domain": true },
         { "pattern": "backoffice-staging.zapbip.com", "custom_domain": true },

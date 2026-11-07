@@ -1,0 +1,55 @@
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { join } from 'node:path';
+import { OwnerLocale } from '@zapbip/types';
+import { describe, expect, it } from 'vitest';
+import { BACKOFFICE_COPY, BackofficeCopyKey, renderBackofficeCopy } from '../../src/backoffice/backoffice-copy';
+
+const BACKOFFICE_ROOT = join(import.meta.dirname, '../../src/backoffice');
+const LOCALES = Object.values(OwnerLocale);
+const REQUIRED_KEYS = [
+  'SignInTitle',
+  'SignInFailed',
+  'HomeTitle',
+  'AuditTitle',
+  'Error404Title',
+  'Error503Body',
+  'NoticeLabelError',
+  'NavigationNumbers',
+  'StateActive',
+  'RegisterSubmit',
+  'MetricsTitle',
+];
+const TEXT_CHILD_PATTERN = />\s*[A-Za-z0-9][^<>{}();=]*</;
+const STRING_CHILD_PATTERN = />\s*\{\s*['"`]/;
+
+function viewSources(input: { directory: string }): { path: string; source: string }[] {
+  return readdirSync(input.directory).flatMap((name) => {
+    const path = join(input.directory, name);
+    if (statSync(path).isDirectory()) return viewSources({ directory: path });
+    return name.endsWith('.tsx') ? [{ path, source: readFileSync(path, 'utf8') }] : [];
+  });
+}
+
+describe('backoffice copy', () => {
+  it.each(LOCALES)('%s has every key, none empty', (locale) => {
+    const entries = Object.values(BackofficeCopyKey).map((key) => BACKOFFICE_COPY[locale][key]);
+    expect(entries.every((text) => typeof text === 'string' && text.length > 0)).toBe(true);
+  });
+
+  it.each(REQUIRED_KEYS)('names the key %s', (name) => {
+    expect(Object.keys(BackofficeCopyKey)).toContain(name);
+  });
+
+  it('renders placeholders', () => {
+    expect(renderBackofficeCopy({ key: BackofficeCopyKey.NumbersView, locale: OwnerLocale.EnglishUs, values: { label: 'Brazil' } })).toBe(
+      'View Brazil',
+    );
+  });
+
+  it('keeps string literals out of JSX children', () => {
+    const offenders = viewSources({ directory: BACKOFFICE_ROOT })
+      .filter(({ source }) => TEXT_CHILD_PATTERN.test(source) || STRING_CHILD_PATTERN.test(source))
+      .map(({ path }) => path);
+    expect(offenders).toEqual([]);
+  });
+});

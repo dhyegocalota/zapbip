@@ -93,70 +93,70 @@ Author this list with every box empty. A sub-agent ticks its own line. A wrong s
 
 ### G2 backoffice auth and shell
 
-- [ ] **Step 6:** red: `backoffice-totp.test.ts` runs the RFC 6238 SHA-1 vectors truncated to 6 digits, the ±1 step window, step ≤ `lastStep` → `null`, and a non-numeric or 5-digit code → `null`. Then `auth/totp.ts`.
-- [ ] **Step 7:** red: `backoffice-host.test.ts`:
+- [x] **Step 6:** red: `backoffice-totp.test.ts` runs the RFC 6238 SHA-1 vectors truncated to 6 digits, the ±1 step window, step ≤ `lastStep` → `null`, and a non-numeric or 5-digit code → `null`. Then `auth/totp.ts`. — evidence: red 31f4b2d → green f0e370e. The RFC base32 secret is allowlisted in `.gitleaks.toml` (c51a4b4).
+- [x] **Step 7:** red: `backoffice-host.test.ts`:
   - the backoffice host `GET /c/<secret>/mcp`, `GET /health`, `POST /webhooks/whatsapp` and `GET /i/<code>` → `404`;
   - the MCP host `GET /sign-in`, `GET /numbers` and `GET /assets/backoffice.css` → `404`;
   - host case is ignored: `BACKOFFICE.LOCALHOST:8787` is served as the backoffice (hosts are case-insensitive, RFC 3986);
   - a different port is not the backoffice: `backoffice.localhost:8788` → the MCP app;
   - a trailing dot is rejected: `backoffice.localhost.:8787` answers `404` on `/sign-in` and on `/health`, with the backoffice headers, and neither app runs.
 
-  Then the host dispatch in `index.ts` and `index.dev.ts` (lowercased host and port compared to `BACKOFFICE_ORIGIN`; a trailing-dot variant → `404`), plus `backoffice/app.ts` with `notFound`.
-- [ ] **Step 8:** red: `backoffice-headers.test.ts` checks every header in the spec on `200` (`/sign-in`), `303`, `401`, `403`, `404`, `429` and a forced `500`. Then `backoffice/security-headers.ts` as middleware, plus `onError`.
-- [ ] **Step 9:** red: `backoffice-auth.test.ts`:
+  Then the host dispatch in `index.ts` and `index.dev.ts` (lowercased host and port compared to `BACKOFFICE_ORIGIN`; a trailing-dot variant → `404`), plus `backoffice/app.ts` with `notFound`. — evidence: red 6839d10 (`expected 200 to be 404`) → green 2147994. Deviation: the tests live in `backoffice-host.test.ts` for both entries; the trailing-dot headers are asserted in `backoffice-auth-headers.test.ts`.
+- [x] **Step 8:** red: `backoffice-headers.test.ts` checks every header in the spec on `200` (`/sign-in`), `303`, `401`, `403`, `404`, `429` and a forced `500`. Then `backoffice/security-headers.ts` as middleware, plus `onError`. — evidence: red eb11193 (`securityHeaders is not implemented`, `expected null to be 'default-src …'`) → green 6cd16fe. Deviation: the header matrix over 200, 303, 401, 403, 404, 429 and 500 is the unit test `backoffice-headers.test.ts`; the real-app 404 and trailing-dot checks are in `backoffice-auth-headers.test.ts`.
+- [x] **Step 9:** red: `backoffice-auth.test.ts`:
   - correct key and code → `303` to `/` with a `__Host-zb_bo_session` cookie carrying `Secure`, `HttpOnly`, `SameSite=Strict` and `Path=/`, and one session row holding a digest that is not the cookie value;
   - wrong key, wrong code or both → `401` with the same body byte for byte.
 
-  Then `auth/sign-in.ts`, `auth/sessions.ts` and `views/sign-in.tsx`.
-- [ ] **Step 10:** red: replay. The same valid code twice → the second `401`. Two concurrent sign-ins with one code → exactly one `303`. Then the conditional `UPDATE`.
-- [ ] **Step 11:** red: lockout.
+  Then `auth/sign-in.ts`, `auth/sessions.ts` and `views/sign-in.tsx`. — evidence: red d924cca (`the sign-in page set no csrf cookie`) → green 3663b3f. Deviation: the layout and copy (step 17) were pulled forward first (copy red eb64cc2 → green cbf356b, layout red 685eaa7 → green 9ce7dc5), because the sign-in view renders through the layout.
+- [x] **Step 10:** red: replay. The same valid code twice → the second `401`. Two concurrent sign-ins with one code → exactly one `303`. Then the conditional `UPDATE`. — evidence: red 8e0c727 (`expected [ 303, 303 ] to deeply equal [ 303, 401 ]`; the sequential replay is a pin) → green 40dfb90.
+- [x] **Step 11:** red: lockout.
   - 9 failures → `locked_until` still `NULL`; the 10th failure sets `locked_until = now + BACKOFFICE_LOCKOUT_MS` exactly and writes audit `sign_in.locked` once.
   - The 11th attempt with correct factors → `401`, `failed_attempts` unchanged, and no second `sign_in.locked`.
   - After `BACKOFFICE_LOCKOUT_MS` on the fake clock, a wrong attempt → `failed_attempts` 1 (the expired lock reset the count); a correct attempt → `303` and `failed_attempts` 0.
   - A success after 5 failures resets `failed_attempts` to 0.
   - 5 concurrent failures → `failed_attempts` 5 (no lost increment).
 
-  Then the lockout logic as the single `UPDATE … SET failed_attempts = failed_attempts + 1, locked_until = CASE … END RETURNING …` of the spec, and the expired-lock reset.
-- [ ] **Step 12:** red: the rate limit. With `fake-rate-limiter.ts` refusing → `429` and `Retry-After: 60`, and no D1 write. Then wire `BACKOFFICE_RATE_LIMITER` and `clientRateKey`.
-- [ ] **Step 13:** red: `backoffice-csrf.test.ts`. A POST is refused with `403` and no state change when:
+  Then the lockout logic as the single `UPDATE … SET failed_attempts = failed_attempts + 1, locked_until = CASE … END RETURNING …` of the spec, and the expired-lock reset. — evidence: red bd94516 (`expected null to be 1794053700000`, `expected 303 to be 401`) → green a0262f0. The audit writer landed here (needed by `sign_in.locked`); the concurrency and reset cases are pins.
+- [x] **Step 12:** red: the rate limit. With `fake-rate-limiter.ts` refusing → `429` and `Retry-After: 60`, and no D1 write. Then wire `BACKOFFICE_RATE_LIMITER` and `clientRateKey`. — evidence: red 6732172 (`expected 303 to be 429`) → green 904d675.
+- [x] **Step 13:** red: `backoffice-csrf.test.ts`. A POST is refused with `403` and no state change when:
   - `Origin` is missing;
   - `Origin` is `https://evil.example`;
   - the `csrf` field is missing;
   - the `csrf` field belongs to another session;
   - the sign-in `csrf` does not match its cookie.
 
-  Then `auth/csrf.ts`.
-- [ ] **Step 14:** red: sessions. Idle 31 min → redirect to `/sign-in`. Age 8 h 1 min → redirect. Sign-out deletes the row, and the old cookie → redirect. `last_seen_at` is written at most once per minute. Then `require-session.ts`.
-- [ ] **Step 15:** red: step-up.
+  Then `auth/csrf.ts`. — evidence: red 22fd396 (`expected 303 to be 403`, `csrfTokenOf is not implemented`) → green d0661bd.
+- [x] **Step 14:** red: sessions. Idle 31 min → redirect to `/sign-in`. Age 8 h 1 min → redirect. Sign-out deletes the row, and the old cookie → redirect. `last_seen_at` is written at most once per minute. Then `require-session.ts`. — evidence: red c7934b5 (`expected 404 to be 303`) → green 396aef2. The home page and `page-context.ts` landed here because the guard needs a protected page. Deviation: test names are `backoffice-auth-sessions.test.ts`.
+- [x] **Step 15:** red: step-up.
   - A number action with a valid session but no code, or a reused code → `401`, no change.
   - A wrong step-up code → `401`, `failed_attempts` + 1, audit `step_up.failed`.
   - 10 wrong step-up codes → `locked_until` set and `sign_in.locked` audited once; then a correct step-up code → `401` without consuming the code, and a sign-in with correct factors → `401`.
   - A successful step-up resets `failed_attempts` to 0.
   - With the rate limiter refusing the `step-up:` key → `429`, `Retry-After: 60`, no code consumed, no D1 write.
 
-  Then `auth/step-up.ts`, sharing the atomic increment with sign-in.
-- [ ] **Step 16:** red: the audit log. Each action in `BackofficeAuditAction` writes one row with no submitted value (the test greps the row for the key, the code and the token). The scheduled prune deletes expired sessions and audit rows older than 365 days. Then `audit/*.ts` and the `ScheduledJobName.BackofficePrune` entry.
-- [ ] **Step 17:** red: `backoffice-copy.test.ts`. Both locales have every `BackofficeCopyKey`. No JSX file holds a string literal child (a source scan like `no-interpolated-sql.test.ts`). The locale cookie switch works. Then `backoffice-copy.ts`, `layout.tsx` and `views/home.tsx`.
-- [ ] **Step 16a:** red: `backoffice-audit-page.test.ts`. With 250 audit rows seeded, `GET /audit` → `200`, exactly 200 rows, newest first, the oldest 50 absent; without a session → `303 /sign-in`. Then `GET /audit`.
-- [ ] **Step 16b:** red: `backoffice-assets.test.ts`. `GET /assets/backoffice.css` without a session → `200`, `Content-Type: text/css; charset=utf-8`, `Cache-Control: public, max-age=31536000, immutable`, and the other nine headers present; the body has no `@import`, no `url(` to another origin and no `data:`; the page links `/assets/backoffice.css?v=<hash>` and the hash changes when the file does; `POST /assets/backoffice.css` → `404`. Then the asset route and the exception in `security-headers.ts`.
-- [ ] **Step 17a:** red: `backoffice-design-rules.test.ts` (the rules of `design.md` §9).
+  Then `auth/step-up.ts`, sharing the atomic increment with sign-in. — evidence: red 59f0796 (`verifyStepUp is not implemented`) → green 55007ff. Deviation: step-up is tested at the function level (`backoffice-auth-step-up.test.ts`), because the number routes belong to G3; G3 adds the route-level cases.
+- [x] **Step 16:** red: the audit log. Each action in `BackofficeAuditAction` writes one row with no submitted value (the test greps the row for the key, the code and the token). The scheduled prune deletes expired sessions and audit rows older than 365 days. Then `audit/*.ts` and the `ScheduledJobName.BackofficePrune` entry. — evidence: red b9a1714 (`expected [ 'sign_in.failed', … ] to deeply equal [ …, 'sign_out' ]`, `expected 2 to be 1`) → green 32346d4. Deviation: the prune runs daily at 04:00 UTC (`BACKOFFICE_PRUNE_HOUR`).
+- [x] **Step 17:** red: `backoffice-copy.test.ts`. Both locales have every `BackofficeCopyKey`. No JSX file holds a string literal child (a source scan like `no-interpolated-sql.test.ts`). The locale cookie switch works. Then `backoffice-copy.ts`, `layout.tsx` and `views/home.tsx`. — evidence: copy red eb64cc2 → green cbf356b; layout red 685eaa7 → green 9ce7dc5; error pages red 04b063a → green 87d8e3e; home view in 396aef2; the locale cookie switch is in step 17b. Deviation: the error pages show no navigation, even with a session.
+- [x] **Step 16a:** red: `backoffice-audit-page.test.ts`. With 250 audit rows seeded, `GET /audit` → `200`, exactly 200 rows, newest first, the oldest 50 absent; without a session → `303 /sign-in`. Then `GET /audit`. — evidence: red e20c484 (`expected 404 to be 200`) → green ab0c256.
+- [x] **Step 16b:** red: `backoffice-assets.test.ts`. `GET /assets/backoffice.css` without a session → `200`, `Content-Type: text/css; charset=utf-8`, `Cache-Control: public, max-age=31536000, immutable`, and the other nine headers present; the body has no `@import`, no `url(` to another origin and no `data:`; the page links `/assets/backoffice.css?v=<hash>` and the hash changes when the file does; `POST /assets/backoffice.css` → `404`. Then the asset route and the exception in `security-headers.ts`. — evidence: red c4ca964 (`expected 403 to be 404`, `stylesheetHrefFor is not implemented`) → green cb6704d. Deviation: `apps/api/wrangler.jsonc` `rules` also bundle `**/*.css` as Text (a G1 file, edited because the Worker imports the stylesheet).
+- [x] **Step 17a:** red: `backoffice-design-rules.test.ts` (the rules of `design.md` §9).
   - A source scan of every view finds no `style=` attribute and no `<style>` or `<script>` element.
   - Every rendered page has exactly one `h1`, a skip link as the first focusable element, and a label for every input.
   - The stylesheet holds no raw colour outside the `:root` token blocks.
   - A contrast check of the token pairs of `design.md` §2.1, light and dark: at least 4.5:1 for text pairs and 3:1 for non-text pairs.
 
-  Then the views and `backoffice.css` as designed.
-- [ ] **Step 17b:** red: `backoffice-redirects.test.ts`. `POST /locale` with `returnTo` = `/numbers`, `/metrics`, `/audit` → `303` to that path; with `https://evil.example`, `//evil.example`, `/\evil.example`, `javascript:alert(1)`, `/numbers/../x` and an empty value → `303 /`. `?notice=` renders only a `BackofficeNotice` value; `?notice=<script>alert(1)</script>` and an unknown value render no notice and reflect nothing. Then the allow-lists.
-- [ ] **Step 17c:** red: `operator-enrollment-qr.test.ts`. `renderTerminalQr({ text })` returns multi-line text whose lines all have the same width and which contains the three finder patterns; it fails with a missing module until `uqr` is installed. Then add `uqr` to `apps/api/package.json` `devDependencies` with an exact version (no `^`, no `~`), resolved by `pnpm view uqr version` and at least two weeks old, update `pnpm-lock.yaml`, and add the `renderTerminalQr` helper; `pnpm install --frozen-lockfile` stays green.
-- [ ] **Step 18:** red: `operator-enrollment-entry.test.ts`, with a fake shell and prompt:
+  Then the views and `backoffice.css` as designed. — evidence: red 8b6cac3 (`defines a token block for light and a second one for dark`, both contrast cases) → green 36b5111.
+- [x] **Step 17b:** red: `backoffice-redirects.test.ts`. `POST /locale` with `returnTo` = `/numbers`, `/metrics`, `/audit` → `303` to that path; with `https://evil.example`, `//evil.example`, `/\evil.example`, `javascript:alert(1)`, `/numbers/../x` and an empty value → `303 /`. `?notice=` renders only a `BackofficeNotice` value; `?notice=<script>alert(1)</script>` and an unknown value render no notice and reflect nothing. Then the allow-lists. — evidence: red 6b14a58 (`expected 404 to be 303`) → green 52d5b1b. The notice cases are pins.
+- [x] **Step 17c:** red: `operator-enrollment-qr.test.ts`. `renderTerminalQr({ text })` returns multi-line text whose lines all have the same width and which contains the three finder patterns; it fails with a missing module until `uqr` is installed. Then add `uqr` to `apps/api/package.json` `devDependencies` with an exact version (no `^`, no `~`), resolved by `pnpm view uqr version` and at least two weeks old, update `pnpm-lock.yaml`, and add the `renderTerminalQr` helper; `pnpm install --frozen-lockfile` stays green. — evidence: red 66c3e5e (`renderTerminalQr is not implemented`) → green d4a605d. `uqr` 0.1.3 (published 2026-04-03), exact in `apps/api/package.json`; the lockfile gained only the `uqr` entries and `pnpm install --frozen-lockfile` is green. `renderTerminalQr` lives in `apps/api/scripts/backoffice-enroll.ts`.
+- [x] **Step 18:** red: `operator-enrollment-entry.test.ts`, with a fake shell and prompt:
   - non-TTY → exit 1 and no shell call;
   - production without the typed `production` → nothing runs;
   - a wrong code → no `secret put` and no D1 call;
   - success → two `secret put` calls with the values only on stdin, never in argv, and one D1 execute holding the fixed reset statement;
   - output contains the key once and never the digest.
 
-  Then `apps/api/scripts/backoffice-enroll.ts` (the QR comes from `renderTerminalQr`) and the root scripts.
-- [ ] **Step 19:** red: `hooks.test.sh` cases. `pnpm backoffice:enroll:production`, `pnpm backoffice:enroll:development` and `node --import tsx apps/api/scripts/backoffice-enroll.ts` are blocked (exit 2), so the colon form and the hyphen form both match. Then extend `SENSITIVE_PATTERN` in `guard-deploy.sh` (line 7) with `backoffice[:-]enroll`.
+  Then `apps/api/scripts/backoffice-enroll.ts` (the QR comes from `renderTerminalQr`) and the root scripts. — evidence: red a676cd5 (`runEnrollment is not implemented`) → green b1f056c.
+- [x] **Step 19:** red: `hooks.test.sh` cases. `pnpm backoffice:enroll:production`, `pnpm backoffice:enroll:development` and `node --import tsx apps/api/scripts/backoffice-enroll.ts` are blocked (exit 2), so the colon form and the hyphen form both match. Then extend `SENSITIVE_PATTERN` in `guard-deploy.sh` (line 7) with `backoffice[:-]enroll`. — evidence: red ab56edc (`expected exit 2, got 0` for six forms) → green b88d9fc.
 
 ### G3 numbers registry and channel
 
