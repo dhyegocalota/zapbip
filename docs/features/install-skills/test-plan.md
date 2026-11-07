@@ -117,11 +117,21 @@ Runner: `pnpm --filter @zapbip/api test:integration` (`@cloudflare/vitest-pool-w
 - [ ] PR-1 the page on a phone and a desktop — input: `GET /i/<code>` for the development connection, opened with Playwright MCP at 375 and 1 280 wide; expected: the Markdown reads as plain text, with no horizontal scroll and no console error.
 - [ ] PR-2 the ten guides — input: the ten guides at 375 and 1 280 wide in both languages with `mint dev`; expected: zero console errors, zero failed requests, screenshots saved under the scratchpad folder, paths recorded in the PR.
 
+- [ ] IS-S10 a reply carrying an install link is sent with `preview_url: false` — input: `novo agente alpha` then `girar alpha` through the webhook; expected: both Graph text bodies containing `/i/` have `preview_url: false`; an agent message with a link keeps `true`.
+- [ ] IS-S11 link-preview crawlers get `404` and consume nothing — input: `GET /i/<code>` with each of WhatsApp, facebookexternalhit, Slackbot, Twitterbot, Discordbot, TelegramBot, LinkedInBot; expected: `404`, no connection link in the body, the next browser request is `200`.
+- [ ] IS-S12 hardening headers and transport — input: any page status; expected: `Referrer-Policy: no-referrer`, `X-Content-Type-Options: nosniff`, `Strict-Transport-Security`; over plain http with an https public origin: `404`.
+- [ ] IS-S13 an IPv4-mapped IPv6 client keys as its IPv4 address — input: `::ffff:203.0.113.7` and `::ffff:cb00:7107`; expected: `203.0.113.7`.
+- [ ] IS-S14 a refused or malformed MCP call does not consume the install code — input: a batch and non-JSON POST; expected: 4xx and `first_call_at` stays null.
+- [ ] IS-S15 the OpenClaw section tells the owner, before the install command, what the plugin may do — input: the section in en_US and pt_BR; expected: the notice precedes `openclaw plugins install`.
+- [ ] IS-S16 the Gemini CLI self-test has no `--yolo` — input: the section; expected: `gemini -p "` and no `--yolo`.
+- [ ] IS-S17 `tools/install-e2e/claude-code.sh` refuses without `ZAPBIP_E2E_CLAUDE_CONFIG_DIR`, with a relative path, with `$HOME` or `$HOME/.claude`; every `claude` call runs with `CLAUDE_CONFIG_DIR` and `HOME` set to it.
+- [ ] IS-S18 every `set_wake` mode named in any install section is accepted by the server schema — red on main until scheduled-wake merges, green after.
+
 ## Owner-run (outside the gate)
 
 These spend the owner's subscriptions or touch the owner's real clients. The owner runs them and records the output in the PR. None is part of `pnpm verify`.
 
-- [ ] OR-1 scripted real Claude Code install — input: `tools/install-e2e/claude-code.sh` after the owner sends `novo agente` and pastes the two lines; expected: `claude mcp list` shows one `zapbip` line; `~/.claude/skills/zapbip/SKILL.md` exists with `name: zapbip`; the fresh `claude -p` self-test exits `0`; the owner receives `✅ installed` (or `✅ instalado` for pt_BR).
+- [ ] OR-1 scripted real Claude Code install — input: `ZAPBIP_E2E_CLAUDE_CONFIG_DIR=<an empty directory the owner prepared and logged Claude Code into> tools/install-e2e/claude-code.sh` after the owner sends `novo agente` and pastes the two lines; expected: `claude mcp list` shows one `zapbip` line; `~/.claude/skills/zapbip/SKILL.md` exists with `name: zapbip`; the fresh `claude -p` self-test exits `0`; the owner receives `✅ installed` (or `✅ instalado` for pt_BR).
 - [ ] OR-2 link used once, then rotate — input: OR-1 run again with the same link; expected: the page answers `410` with the localized text; the owner sends `girar <nome>`; the new link works; `claude mcp list` still shows one `zapbip` line.
 - [ ] OR-3 real Codex — input: the Codex section pasted into Codex; expected: `~/.codex/config.toml` has one `[mcp_servers.zapbip]` table after a re-run; the fresh `codex exec` self-test exits `0`; the owner receives the self-test; after the owner restarts Codex, a zapbip tool call works.
 - [ ] OR-4 real Grok Bot — input: the Grok Bot section; the owner confirms the MCP server; expected: a routine with a webhook trigger exists; `set_wake` returns success; the self-test arrives. A bot that declines the server makes the section stop and report.

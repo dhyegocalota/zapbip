@@ -7,12 +7,20 @@ import {
   type InstallCodeDirectory,
   type InstallCodeResolution,
 } from '@zapbip/core';
-import { INSTALL_PAGE_PATH_PREFIX, InstallCodeStatus, SECOND_MS } from '@zapbip/types';
-import { INSTALL_CODE_PREFIX, INSTALL_CODE_RANDOM_BYTES } from '@zapbip/types';
+import {
+  INSTALL_CODE_PREFIX,
+  INSTALL_CODE_RANDOM_BYTES,
+  INSTALL_PAGE_PATH_PREFIX,
+  InstallCodeStatus,
+  OwnerLocale,
+  SECOND_MS,
+} from '@zapbip/types';
 import { Hono, type Context } from 'hono';
 import { createPlatformClock } from '../adapters/platform/clock';
 import { joinStandbyCandidates } from '../install/install-page-adapter';
 import type { WakeModeEntry } from '../contract/account-inbox-rpc';
+import { LogEvent } from '../contract/log';
+import { logEvent } from '../log';
 import { clientRateKey } from './client-rate-key';
 import { HttpStatus } from './http-status';
 
@@ -36,7 +44,7 @@ const CLIENT_ADDRESS_HEADER = 'cf-connecting-ip';
 const INSTALL_CODE_PARAMETER = 'installCode';
 const MARKDOWN_CONTENT_TYPE = 'text/markdown; charset=utf-8';
 const PLAIN_CONTENT_TYPE = 'text/plain; charset=utf-8';
-const NOT_FOUND_TEXT = 'not found';
+const NOT_FOUND_TEXT = INSTALL_PAGE_COPY[OwnerLocale.EnglishUs].notFound;
 const BAD_REQUEST_TEXT = 'bad request';
 const SERVER_ERROR_TEXT = 'server error';
 const RATE_LIMITED_TEXT = 'too many requests';
@@ -109,6 +117,9 @@ export function createInstallPageRoute(input: InstallPageRouteDependencies): Hon
 
   route.get(`${INSTALL_PAGE_PATH_PREFIX}:${INSTALL_CODE_PARAMETER}`, serve);
   route.notFound(() => plainResponse({ body: NOT_FOUND_TEXT, status: HttpStatus.NotFound }));
-  route.onError(() => plainResponse({ body: SERVER_ERROR_TEXT, status: HttpStatus.InternalServerError }));
+  route.onError(() => {
+    logEvent({ event: LogEvent.InstallPageFailed });
+    return plainResponse({ body: SERVER_ERROR_TEXT, status: HttpStatus.InternalServerError });
+  });
   return route;
 }

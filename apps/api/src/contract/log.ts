@@ -26,6 +26,7 @@ export enum LogEvent {
   AccountDeleted = 'account_deleted',
   InstallCodeUnreadable = 'install_code_unreadable',
   FrameRejected = 'frame_rejected',
+  InstallPageFailed = 'install_page_failed',
 }
 
 export type LogFields = {

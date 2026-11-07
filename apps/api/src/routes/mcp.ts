@@ -1,13 +1,14 @@
 import { HttpStatus } from '@zapbip/types';
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
 import { Hono, type Context } from 'hono';
+import { recordClientName } from '../adapters/d1/d1-client-name-recorder';
 import { createPlatformClock } from '../adapters/platform/clock';
 import { UNAUTHORIZED_BODY } from '../contract/constants';
 import type { Bindings } from '../contract/env';
 import { LogEvent } from '../contract/log';
 import { logEvent } from '../log';
 import { createInstallCodeDirectory } from '../install/install-page-adapter';
-import { createConnectionRecorders, recordConnectionActivity } from '../mcp/client-name';
+import { recordConnectionActivity } from '../mcp/client-name';
 import { BEARER_PREFIX, MCP_METHODS } from '../mcp/constants';
 import { resolveConnection, type ResolvedConnection } from './resolve-connection';
 import { createConnectionServer } from '../mcp/server';
@@ -22,16 +23,16 @@ function readBearerSecret(context: McpContext): string | null {
   return authorization.slice(BEARER_PREFIX.length);
 }
 
-function recordActivity(input: { context: McpContext; resolved: ResolvedConnection }): void {
-  const { context, resolved } = input;
+function recordActivity(input: { context: McpContext; resolved: ResolvedConnection; request: Request }): void {
+  const { context, resolved, request } = input;
   const installCodeDirectory = createInstallCodeDirectory({ environment: context.env });
   recordConnectionActivity({
-    request: context.req.raw,
+    request,
     connection: resolved.activity,
-    recorders: createConnectionRecorders({
-      database: context.env.CONNECTIONS,
+    recorders: {
       recordFirstCall: (callInput) => installCodeDirectory.recordFirstCall(callInput),
-    }),
+      recordClientName: (nameInput) => recordClientName({ database: context.env.CONNECTIONS, ...nameInput }),
+    },
     calledAt: createPlatformClock().now(),
     schedule: (work) => context.executionCtx.waitUntil(work),
   });
@@ -44,11 +45,13 @@ async function serveMcp(input: { context: McpContext; secret: string | null }): 
     logEvent({ event: LogEvent.AuthRejected });
     return context.json(UNAUTHORIZED_BODY, HttpStatus.Unauthorized);
   }
-  recordActivity({ context, resolved });
+  const activityRequest = context.req.raw.clone();
   const server = createConnectionServer({ resolved, environment: context.env });
   const transport = new WebStandardStreamableHTTPServerTransport({ enableJsonResponse: true });
   await server.connect(transport);
-  return transport.handleRequest(context.req.raw);
+  const response = await transport.handleRequest(context.req.raw);
+  if (response.ok) recordActivity({ context, resolved, request: activityRequest });
+  return response;
 }
 
 mcpRoutes.on(MCP_METHODS, '/c/:secret/mcp', (context) => serveMcp({ context, secret: context.req.param('secret') }));

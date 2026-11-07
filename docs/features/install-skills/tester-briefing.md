@@ -195,3 +195,28 @@ Known gaps:
 - F5: `RESOLVE_SECRET_DIGEST_STATEMENT` also returns the connection id, client name and first call time, passed through `ResolvedConnection.activity`; the MCP hot path does one D1 read (`mcp-hot-path.test.ts`).
 - F9 to F13: ChatGPT labels in backticks with the Portuguese label beside the English one; pt-br claude.ai "no máximo uma vez a cada 60 minutos"; Cursor asks before adding the server; the Gemini CLI self-test uses `gemini --yolo -p` (`gemini` is not installed here, so the flag is from its documentation); doc example links have the real shape `/i/zb_inst_<22 characters>`; AGENTS.md names `tools/install-e2e`.
 - Security review: client names must be one printable ASCII line, the `agentes` reply strips `* _ ~` and backticks, `/i/` edges answer private 404 and 500, the rate key uses the IPv6 /64 prefix, and the spec states the package version must be published before the Worker goes live.
+
+## Security delta fixes (S1 to S6) and merge-delta fixes
+
+### Red then green
+
+| Test | Red failure text | Green after |
+|---|---|---|
+| `whatsapp-outbound-builders.test.ts` zapbip-written link | `expected { messaging_product: 'whatsapp', …(4) } to match object { text: { preview_url: false, … } }` | f29b6e8 then ebf46dc |
+| `client-rate-key.test.ts` mapped IPv6 (2) | `expected '0:0:0:0' to be '203.0.113.7'` | ebf46dc |
+| `chat-clients.test.ts` F4b (2), `editor-clients.test.ts` Gemini (2) | the notice and `gemini -p "` assertions fail | a671b30 then the copy commit |
+| `install-e2e.test.ts` (5 new) | `expected '' to contain 'ZAPBIP_E2E_CLAUDE_CONFIG_DIR'` and the script text lacks `CLAUDE_CONFIG_DIR="$claude_config_directory"` | the script commit (red run seen before the script change) |
+| `install-page.test.ts` crawlers, headers, plain http; `accounts-webhook.test.ts` preview; `mcp-install.test.ts` IS-W6b | written in f29b6e8, not run red (the new route dependency made the file fail to typecheck until ebf46dc) | ebf46dc and the mcp commit |
+| `install-set-wake-modes.test.ts` | red on this branch: `scheduled` and `standby` are not accepted by the server schema | green only after scheduled-wake merges into main and main is merged here (owner delegated 2026-11-06); do not weaken the copy |
+
+### Hypotheses to attack
+
+- A zapbip-authored text (agent null) never previews a link; an agent text with a link still does.
+- A crawler never consumes the code; a browser request right after still gets the page.
+- `ZAPBIP_E2E_CLAUDE_CONFIG_DIR` unset or equal to the owner configuration stops the script before the server starts.
+- Hermes and OpenClaw guides on this branch are the install-skills pages; main's fuller plugin pages were set aside at the merge because the guide-parity test needs the Set up steps. The merge pass should fold the plugin details back in.
+
+### Known gaps
+
+- The Gemini CLI allowed-tools flag could not be verified offline, so auto-approval is dropped and Gemini asks; the self-test may need the owner to approve once.
+- Run OR-1 with `ZAPBIP_E2E_CLAUDE_CONFIG_DIR=<empty directory> tools/install-e2e/claude-code.sh` after logging Claude Code into that directory; the directory is the script's whole Claude world (`HOME` is set to it too).

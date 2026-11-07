@@ -1,11 +1,10 @@
-import type { ConnectionRecord } from '@zapbip/core';
 import { CLIENT_NAME_MAX_CHARS, INITIALIZE_BODY_MAX_BYTES } from '@zapbip/types';
 import { z } from 'zod';
+import type { ConnectionActivity } from '../adapters/d1/d1-connection-directory';
 
 const INITIALIZE_METHOD = 'initialize';
 const POST_METHOD = 'POST';
 const CONTENT_LENGTH_HEADER = 'content-length';
-const RECORD_CLIENT_NAME_STATEMENT = 'UPDATE connections SET client_name = ? WHERE id = ? AND client_name IS NULL';
 
 const CLIENT_NAME_PATTERN = new RegExp(`^[\\x20-\\x7E]{1,${CLIENT_NAME_MAX_CHARS}}$`);
 
@@ -21,7 +20,7 @@ export type ConnectionRecorders = {
 
 export type ConnectionActivityInput = {
   request: Request;
-  connection: Pick<ConnectionRecord, 'connectionId' | 'clientName' | 'firstCallAt'>;
+  connection: ConnectionActivity;
   recorders: ConnectionRecorders;
   calledAt: number;
   schedule: (work: Promise<void>) => void;
@@ -61,16 +60,4 @@ export function recordConnectionActivity(input: ConnectionActivityInput): void {
   const shouldReadName = connection.clientName === null && isBodyWithinCap({ request });
   if (!shouldReadName) return;
   schedule(recordNameFromBody({ body: request.clone(), connectionId, recorders }));
-}
-
-export function createConnectionRecorders(input: {
-  database: D1Database;
-  recordFirstCall: ConnectionRecorders['recordFirstCall'];
-}): ConnectionRecorders {
-  return {
-    recordFirstCall: input.recordFirstCall,
-    recordClientName: async ({ connectionId, clientName }) => {
-      await input.database.prepare(RECORD_CLIENT_NAME_STATEMENT).bind(clientName, connectionId).run();
-    },
-  };
 }

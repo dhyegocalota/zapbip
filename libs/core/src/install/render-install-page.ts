@@ -1,9 +1,8 @@
-import type { OwnerLocale } from '@zapbip/types';
+import { InstallClient, type OwnerLocale } from '@zapbip/types';
 import { AGENT_RULES } from '../agent-rules';
 import { INSTALL_PAGE_COPY } from './install-page-copy';
 import { INSTALL_PRODUCTS } from './install-products';
 import { INSTALL_SECTIONS } from './prompts/index';
-import { InstallClient } from '@zapbip/types';
 
 export type InstallPageInput = {
   agent: string;
