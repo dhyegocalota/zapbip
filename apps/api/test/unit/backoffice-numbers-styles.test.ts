@@ -34,3 +34,9 @@ describe('the styles the numbers pages ask for', () => {
     expect(labels?.every((label) => label.includes(`class="${CHOICE_CLASS}"`))).toBe(true);
   });
 });
+
+describe('the audit table at narrow widths', () => {
+  it('lets the mono cells of a data table wrap at any character', () => {
+    expect(STYLESHEET).toMatch(/\.data-table\s+\.mono\s*\{[^}]*overflow-wrap:\s*anywhere/);
+  });
+});

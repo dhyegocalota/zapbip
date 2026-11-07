@@ -1,3 +1,4 @@
+import type { Page } from '@playwright/test';
 import { BackofficeCopyKey } from '../../src/backoffice/backoffice-copy';
 import { expect, test } from './fixtures';
 import { copy } from './support/copy';
@@ -20,6 +21,13 @@ const CREDENTIAL_SET_PREFIX = copy({ key: BackofficeCopyKey.CredentialSet, value
 const MANY_NUMBER_COUNT = 3;
 
 test.beforeEach(({ page }) => signIn({ page }));
+
+async function expectNoHorizontalScroll(input: { page: Page }): Promise<void> {
+  const viewport = input.page.viewportSize();
+  if (viewport === null) throw new Error('the page has no viewport');
+  const scrollWidth = await input.page.locator('html').evaluate((element) => element.scrollWidth);
+  expect(scrollWidth).toBeLessThanOrEqual(viewport.width);
+}
 
 test('lists no number before the first registration', async ({ page }) => {
   await page
@@ -57,10 +65,10 @@ test('lists many numbers without horizontal scrolling', async ({ page }) => {
   }, Promise.resolve());
   await page.goto('/numbers');
   await Promise.all(numbers.map((number) => expect(page.getByRole('link', { name: number.label })).toBeVisible()));
-  const viewport = page.viewportSize();
-  if (viewport === null) throw new Error('the page has no viewport');
-  const scrollWidth = await page.locator('html').evaluate((element) => element.scrollWidth);
-  expect(scrollWidth).toBeLessThanOrEqual(viewport.width);
+  await expectNoHorizontalScroll({ page });
+  await page.goto('/audit');
+  await expect(page.getByRole('table')).toBeVisible();
+  await expectNoHorizontalScroll({ page });
 });
 
 test('replaces the access token without showing it', async ({ page }) => {
