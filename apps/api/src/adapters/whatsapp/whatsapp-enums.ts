@@ -69,6 +69,7 @@ export enum OperatorEvent {
   InboundNumberPending = 'inbound.number_pending',
   InboundNumberDisabled = 'inbound.number_disabled',
   InboundAccountOnOtherNumber = 'inbound.account_on_other_number',
+  InboundAccountWithoutNumber = 'inbound.account_without_number',
   InboundNumberClosed = 'inbound.number_closed',
   InboundUnmapped = 'inbound.unmapped',
   InboundUnsupported = 'inbound.unsupported',

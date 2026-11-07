@@ -17,6 +17,7 @@ const NUMBER_OPERATOR_EVENTS = [
   'inbound.number_pending',
   'inbound.number_disabled',
   'inbound.account_on_other_number',
+  'inbound.account_without_number',
   'inbound.number_closed',
   'channel.number_unavailable',
 ];
