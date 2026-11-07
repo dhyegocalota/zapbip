@@ -4,7 +4,9 @@ import {
   OFFICIAL_WHATSAPP_NUMBER,
   OPENCLAW_PLUGIN_NPM_VERSION,
   ZAPBIP_NPM_VERSION,
-  ZAPBIP_PYPI_VERSION,
+  ZAPBIP_HERMES_PLUGIN_VERSION,
+  ZAPBIP_HERMES_REQUIREMENTS_SHA256,
+  ZAPBIP_HERMES_WHEEL_SHA256,
 } from '@zapbip/types';
 import { type DeployShell, type EnvironmentVariables, runDocsPreflight } from '../src/operations/deploy-preflight';
 import { createPackageFetcher, type PackageFetcher } from '../src/operations/package-fetcher';
@@ -17,7 +19,9 @@ export type DocsPreflightEntry = {
   company: CompanyFacts;
   npmVersion: string;
   openclawPluginVersion: string;
-  pypiVersion: string;
+  hermesPluginVersion: string;
+  hermesWheelSha256: string;
+  hermesRequirementsSha256: string;
   packageFetcher: PackageFetcher;
   log: (line: string) => void;
 };
@@ -41,7 +45,9 @@ if (import.meta.main) {
     company: COMPANY,
     npmVersion: ZAPBIP_NPM_VERSION,
     openclawPluginVersion: OPENCLAW_PLUGIN_NPM_VERSION,
-    pypiVersion: ZAPBIP_PYPI_VERSION,
+    hermesPluginVersion: ZAPBIP_HERMES_PLUGIN_VERSION,
+    hermesWheelSha256: ZAPBIP_HERMES_WHEEL_SHA256,
+    hermesRequirementsSha256: ZAPBIP_HERMES_REQUIREMENTS_SHA256,
     packageFetcher: createPackageFetcher(),
     log: console.log,
   })

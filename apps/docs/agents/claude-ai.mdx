@@ -3,49 +3,75 @@ title: claude.ai
 description: Connect claude.ai to your WhatsApp.
 ---
 
+import { Chat } from '/snippets/chat.jsx';
+import OfficialNumber from '/snippets/official-number.mdx';
+import InstallPrompt from '/snippets/install-prompt.mdx';
+
 ## What works
 
-- Your AI sends you text, photos, videos, audio, documents, locations, contacts and reactions on WhatsApp.
-- It asks you with buttons or lists and waits for your tap.
-- Write on WhatsApp and a scheduled task wakes claude.ai in about 16 seconds, with no approval prompt.
-- claude.ai waits about 4 minutes for a single answer and retries by itself, so there is no limit overall.
+| You want to                    | claude.ai                                                              |
+| ------------------------------ | ---------------------------------------------------------------------- |
+| Get messages from it           | Text, photos, videos, audio, documents, locations, contacts, reactions |
+| Answer it with a tap           | Buttons and lists; it waits for your tap                               |
+| Write first from WhatsApp      | Yes, a task wakes it in about 16 seconds                               |
+| Keep a question open for hours | Yes, there is no time limit                                            |
+
+<Chat
+  messages={[
+    { name: 'Claude', text: 'The report is done. Send it to the team?', options: ['Yes', 'Not yet'], time: '08:15' },
+    { you: true, text: 'Yes', time: '08:16' },
+  ]}
+/>
+
+## How it listens
+
+Wake type: **Webhook**. When you write on WhatsApp, zapbip fires the trigger link of a claude.ai task, and the task runs in the cloud with your connectors. It answers about 16 seconds after you write, with no approval prompt.
+
+- claude.ai tasks run on a schedule at most once an hour. That is why you also create an hourly task that checks your messages: it is only a safety net, so nothing waits more than an hour if a wake is missed.
+
+When your AI asks you something, zapbip holds the question and answers "pending" at most every 50 seconds. claude.ai then calls again, and keeps calling again until you answer. There is no time limit.
+
+claude.ai waits about 4 minutes for a single answer and retries by itself, so there is no limit overall.
 
 ## Set up from zero
 
-<Steps>
-  <Step title="Message the official zapbip number">
-    Open WhatsApp and send `hi` to the official zapbip number, then `new agent claude-ai`. [How to start](/get-started/how-to-start) shows every message.
-  </Step>
-  <Step title="Paste the prompt into claude.ai">
-    zapbip answers with one line made for you. Paste it into claude.ai:
+1. **Message the zapbip number on WhatsApp.** Send any text, for example `hi`.
 
-    ```text
-    Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_K7P2QXm9aTfLw3VbN8cYhE and follow the instructions.
-    ```
+   <OfficialNumber />
 
-    claude.ai reads the page and follows the steps below, in order. Before it changes a file or a setting, it tells you which one and waits for your yes. The link in that page is secret, so keep it out of chats you share.
+2. **Ask for a new agent.** An agent is one AI you connect.
 
-  </Step>
-  <Step title="Paste the connector">
-    claude.ai asks you to paste `<connectionLink>` as a custom connector in Settings. You do this one yourself, because claude.ai only lets you add it.
-  </Step>
-  <Step title="Create the wake task">
-    It asks you to create a task with an API trigger at claude.ai/code/routines, then to paste its fire URL and token in the chat. The second paste is also yours, because claude.ai shows the token only to you.
-  </Step>
-  <Step title="Tell zapbip how to wake it">
-    If you stop before the task exists, it calls `set_wake({mode: "none"})` and tells you the chat sees new messages only when you open it. Otherwise it calls `set_wake({mode: "webhook", url, token})`.
-  </Step>
-  <Step title="Create the hourly safety net">
-    It asks you to create an hourly task that calls `check_inbox`, so nothing waits more than an hour if a wake is missed.
-  </Step>
-  <Step title="Test it">
-    In the chat it calls `send_message` with ✅ installed.
-  </Step>
-</Steps>
+   <Chat
+     messages={[
+       { you: true, text: 'new agent claude-ai', time: '08:00' },
+       {
+         name: 'zapbip',
+         text: 'Agent claude-ai created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate claude-ai".',
+         time: '08:00',
+       },
+     ]}
+   />
 
-## How your AI listens
+3. **Paste the line into claude.ai.**
 
-- When you write on WhatsApp, zapbip fires the API trigger and claude.ai runs the task in the cloud with your connectors.
-- claude.ai tasks run at most once an hour on a schedule, which is why the hourly `check_inbox` task is only a safety net.
+   <InstallPrompt />
 
-There is no time limit. While a question is open, your AI asks again until you answer, for as long as it takes.
+   claude.ai reads the instructions and follows them in order. The link is secret, so keep it out of chats you share.
+
+4. **Paste the connector.** claude.ai asks you to paste `<connectionLink>` as a custom connector in Settings. You do this one yourself, because claude.ai only lets you add it.
+
+5. **Create the wake task.** It asks you to create a task with an API trigger at claude.ai/code/routines, then to paste its fire URL and token in the chat. The second paste is also yours, because claude.ai shows the token only to you.
+
+6. **Tell zapbip how to wake it.** If you stop before the task exists, it calls `set_wake({mode: "none"})` and tells you the chat sees new messages only when you open it. Otherwise it calls `set_wake({mode: "webhook", url, token})`.
+
+7. **Create the hourly safety net.** It asks you to create an hourly task that calls `check_inbox`, so nothing waits more than an hour if a wake is missed.
+
+8. **Test it.** In the chat it calls `send_message` with ✅ installed.
+
+## Check it works
+
+claude.ai sends `✅ installed` to your WhatsApp once it is connected.
+
+<Chat messages={[{ name: 'Claude', text: '✅ installed', time: '08:05' }]} />
+
+If nothing arrives, see [Troubleshooting](/help/troubleshooting).

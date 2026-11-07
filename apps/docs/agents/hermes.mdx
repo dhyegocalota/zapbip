@@ -5,6 +5,8 @@ description: 'Write to Hermes on WhatsApp and have it answer, with no time limit
 
 import { Chat } from '/snippets/chat.jsx';
 
+## What works
+
 Hermes keeps listening on your WhatsApp through a small zapbip plugin. You write first or answer a question later, and the message reaches the Hermes session.
 
 <Chat
@@ -15,17 +17,33 @@ Hermes keeps listening on your WhatsApp through a small zapbip plugin. You write
   ]}
 />
 
-## What you need
+### Messages you forward
+
+A message you forwarded from someone else reaches Hermes with a label that says you did not write it, so Hermes does not treat it as your instruction.
+
+## How it listens
+
+Rung: Local. While a question is open, Hermes waits up to 50 seconds at a time. If you have not answered, the wait ends as pending and Hermes calls again, as many times as it takes, with no time limit.
+
+The plugin holds one connection to zapbip open, with no time limit. If the network drops it reconnects by itself, waiting a little longer after each failed try (1 second at first, 30 seconds at most). Messages you send meanwhile wait in your zapbip inbox, and the plugin picks up every one that was not answered as soon as it is back.
+
+### If the plugin cannot be installed
+
+Hermes can poll instead. Add the MCP server from the setup and create a job every 1 minute that calls `check_inbox`. Your messages wait up to a minute, and the answer comes the same way.
+
+## Set up from zero
+
+### What you need
 
 - Hermes with its gateway running.
 - Your connection link, the same `https://.../c/<secret>/mcp` link your AI uses to talk to zapbip. Treat it like a password.
 
-## Install the plugin
+### Install the plugin
 
 Install the package into the Python environment Hermes runs in:
 
 ```bash
-pip install zapbip-platform==0.1.0
+d=$(mktemp -d) && curl -fsSL https://mcp.zapbip.com/pkg/zapbip_platform-0.1.0-requirements.txt -o "$d/zapbip-requirements.txt" && python3 -c 'import hashlib,sys; sys.exit(hashlib.sha256(open(sys.argv[1],"rb").read()).hexdigest() != sys.argv[2])' "$d/zapbip-requirements.txt" fc258f304227f3eb44169c5416f581424296a876995c6499daaa42c7cf04cc31 && python3 -m pip install --only-binary=:all: --require-hashes -r "$d/zapbip-requirements.txt"
 ```
 
 Then enable it in `~/.hermes/config.yaml`:
@@ -53,11 +71,7 @@ Restart the gateway.
 
 Run only one listener per agent: the plugin or `npx zapbip@0.1.0 listen`, never both. A second listener replaces the first.
 
-## How it listens
-
-The plugin holds one connection to zapbip open, with no time limit. If the network drops it reconnects by itself, waiting a little longer after each failed try (1 second at first, 30 seconds at most). Messages you send meanwhile wait in your zapbip inbox, and the plugin picks up every one that was not answered as soon as it is back.
-
-## How Hermes answers
+### How Hermes answers
 
 Hermes sends its replies to your messages back through the plugin itself, with no extra setup.
 
@@ -77,15 +91,7 @@ Then ask Hermes on WhatsApp to send `✅ installed`. If that message arrives, it
   ]}
 />
 
-## Messages you forward
-
-A message you forwarded from someone else reaches Hermes with a label that says you did not write it, so Hermes does not treat it as your instruction.
-
-## If the plugin cannot be installed
-
-Hermes can poll instead. Add the MCP server above and create a job every 1 minute that calls `check_inbox`. Your messages wait up to a minute, and the answer comes the same way.
-
-## When something does not work
+## Check it works
 
 | You see                                       | What it means                                                                |
 | --------------------------------------------- | ---------------------------------------------------------------------------- |

@@ -2,17 +2,25 @@ import {
   CLOUDFLARE_NAMESERVER_SUFFIX,
   COMPANY_FACT_UNSET,
   type CompanyFacts,
+  hermesRequirementsFilename,
+  hermesRequirementsPath,
+  hermesWheelFilename,
+  hermesWheelPath,
   HttpStatus,
   NPM_REGISTRY_URL,
   OFFICIAL_NUMBER_UNSET,
+  PRODUCTION_PACKAGES_BUCKET,
   PRODUCTION_PUBLIC_ORIGIN,
   PRODUCTION_ZONE,
 } from '@zapbip/types';
+import { randomUUID } from 'node:crypto';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { z } from 'zod';
 import { DeployEnvironment } from './deploy-environment';
 import { parseJsonOrNull } from './json-text';
 import type { NameserverResolver } from './nameserver-resolver';
-import type { PackageAnswer, PackageFetcher } from './package-fetcher';
+import type { PackageFetcher } from './package-fetcher';
 import { isPlaceholderValue } from './placeholder';
 import { missingSmokeInputs } from './smoke-inputs';
 import { WorkerSecret } from './worker-secret';
@@ -21,6 +29,10 @@ import { INSTALL_ROUTE_PATH } from './worker-facts';
 const PNPM = 'pnpm';
 const GIT = 'git';
 const NPM = 'npm';
+const SHASUM = 'shasum';
+const REMOVE = 'rm';
+const WHITESPACE = /\s+/;
+const WHEEL_DOWNLOAD_PREFIX = 'zapbip-wheel-';
 const WRANGLER_PREFIX = ['--filter', '@zapbip/api', 'exec', 'wrangler'];
 const MAIN_BRANCH = 'main';
 const ORIGIN_REMOTE = 'origin';
@@ -30,13 +42,7 @@ const NO_NPM_ANSWER = 'no answer';
 const NO_PENDING_MIGRATIONS = 'No migrations to apply';
 const NPM_PACKAGE_NAME = 'zapbip';
 export const NPM_PUBLISHER_VARIABLE = 'ZAPBIP_NPM_PUBLISHER';
-export const PYPI_PUBLISHER_VARIABLE = 'ZAPBIP_PYPI_PUBLISHER';
 const OPENCLAW_PLUGIN_PACKAGE = '@zapbip/openclaw-plugin';
-const PYPI_PACKAGE_NAME = 'zapbip-platform';
-const PYPI_ORIGIN = 'https://pypi.org';
-const PYPI_XML_RPC_URL = `${PYPI_ORIGIN}/pypi`;
-const PYPI_ROLE_PATTERN = /<array>\s*<data>\s*<value>\s*<string>([^<]+)<\/string>\s*<\/value>\s*<value>\s*<string>([^<]+)<\/string>/g;
-const PYPI_ROLES_REQUEST = `<?xml version="1.0"?><methodCall><methodName>package_roles</methodName><params><param><value><string>${PYPI_PACKAGE_NAME}</string></value></param></params></methodCall>`;
 const NPM_REGISTRY_FLAGS = [`--registry=${NPM_REGISTRY_URL}`, `--@zapbip:registry=${NPM_REGISTRY_URL}`];
 const DEPLOYABLE_ENVIRONMENTS = [DeployEnvironment.Staging, DeployEnvironment.Production];
 
@@ -51,7 +57,7 @@ export enum PreflightStep {
   OfficialNumber = 'official number',
   CompanyFacts = 'company facts',
   NpmVersion = 'npm version',
-  PypiVersion = 'pypi version',
+  HermesWheel = 'hermes wheel',
   Git = 'git',
   Gate = 'gate',
   Config = 'config',
@@ -78,7 +84,9 @@ export type WorkerPreflightInput = {
   company: CompanyFacts;
   npmVersion: string;
   openclawPluginVersion: string;
-  pypiVersion: string;
+  hermesPluginVersion: string;
+  hermesWheelSha256: string;
+  hermesRequirementsSha256: string;
   packageFetcher: PackageFetcher;
   nameserverResolver: NameserverResolver;
 };
@@ -89,7 +97,9 @@ export type DocsPreflightInput = {
   company: CompanyFacts;
   npmVersion: string;
   openclawPluginVersion: string;
-  pypiVersion: string;
+  hermesPluginVersion: string;
+  hermesWheelSha256: string;
+  hermesRequirementsSha256: string;
   packageFetcher: PackageFetcher;
   environmentVariables: EnvironmentVariables;
 };
@@ -215,41 +225,88 @@ async function refuseUntrustedDocsPackages(input: DocsPreflightInput): Promise<s
   return refuseUntrustedPackages({ ...input, packageSpecs: publishedPackageSpecsOf(input) });
 }
 
-async function pypiAnswerOrNull(input: { packageFetcher: PackageFetcher; url: string; xmlBody?: string }): Promise<PackageAnswer | null> {
-  try {
-    return await input.packageFetcher({ url: input.url, xmlBody: input.xmlBody });
-  } catch {
-    return null;
+type HostedArtifact = { filename: string; url: string; expectedSha256: string };
+
+function hostedArtifactsOf(input: {
+  hermesPluginVersion: string;
+  hermesWheelSha256: string;
+  hermesRequirementsSha256: string;
+}): HostedArtifact[] {
+  const { hermesPluginVersion } = input;
+  return [
+    {
+      filename: hermesWheelFilename({ version: hermesPluginVersion }),
+      url: `${PRODUCTION_PUBLIC_ORIGIN}${hermesWheelPath({ version: hermesPluginVersion })}`,
+      expectedSha256: input.hermesWheelSha256,
+    },
+    {
+      filename: hermesRequirementsFilename({ version: hermesPluginVersion }),
+      url: `${PRODUCTION_PUBLIC_ORIGIN}${hermesRequirementsPath({ version: hermesPluginVersion })}`,
+      expectedSha256: input.hermesRequirementsSha256,
+    },
+  ];
+}
+
+function hashMismatch(input: { artifact: HostedArtifact; actual: string }): string {
+  const { artifact, actual } = input;
+  return `the hosted ${artifact.filename} hashes to ${actual}, not ${artifact.expectedSha256}; upload the files in apps/hermes-plugin/release with the runbook step`;
+}
+
+async function workerArtifactRefusal(input: { shell: DeployShell; artifact: HostedArtifact }): Promise<string | null> {
+  const { shell, artifact } = input;
+  const { filename } = artifact;
+  const downloadPath = join(tmpdir(), `${WHEEL_DOWNLOAD_PREFIX}${randomUUID()}-${filename}`);
+  const download = wranglerCommand({
+    environment: DeployEnvironment.Production,
+    args: ['r2', 'object', 'get', `${PRODUCTION_PACKAGES_BUCKET}/${filename}`],
+    flags: ['--remote', '--file', downloadPath],
+  });
+  const downloaded = await shell.run(download);
+  if (downloaded.exitCode !== 0) {
+    return `${filename} is not readable in the ${PRODUCTION_PACKAGES_BUCKET} bucket; upload it with the runbook step (wrangler r2 object put) or check your Cloudflare login`;
   }
+  const hashed = await shell.run({ file: SHASUM, args: ['-a', '256', downloadPath] });
+  await shell.run({ file: REMOVE, args: ['-f', downloadPath] });
+  const actual = hashed.stdout.trim().split(WHITESPACE)[0];
+  if (hashed.exitCode !== 0 || !actual) return `could not hash the downloaded ${filename}`;
+  if (actual === artifact.expectedSha256) return null;
+  return hashMismatch({ artifact, actual });
 }
 
-function pypiRoleHoldersOf(input: { body: unknown }): string[] {
-  if (typeof input.body !== 'string') return [];
-  return [...input.body.matchAll(PYPI_ROLE_PATTERN)].map((match) => match[2] as string);
+async function docsArtifactRefusal(input: { packageFetcher: PackageFetcher; artifact: HostedArtifact }): Promise<string | null> {
+  const { packageFetcher, artifact } = input;
+  const { url } = artifact;
+  const answer = await packageFetcher({ url }).catch(() => null);
+  if (answer === null) return `could not reach ${url}; check your network and run it again`;
+  if (answer.status === HttpStatus.NotFound) return `${url} answers 404; upload the file with the runbook step and deploy the Worker first`;
+  if (answer.status !== HttpStatus.Ok) return `could not reach ${url}; it answered ${answer.status}`;
+  if (answer.sha256 === artifact.expectedSha256) return null;
+  return hashMismatch({ artifact, actual: answer.sha256 });
 }
 
-async function refuseUntrustedPypiPackage(input: {
-  packageFetcher: PackageFetcher;
-  environmentVariables: EnvironmentVariables;
-  pypiVersion: string;
+async function firstArtifactRefusal(input: {
+  artifacts: HostedArtifact[];
+  refusalOf: (artifact: HostedArtifact) => Promise<string | null>;
 }): Promise<string | null> {
-  const { packageFetcher, environmentVariables, pypiVersion } = input;
-  const publisher = environmentVariables[PYPI_PUBLISHER_VARIABLE];
-  if (publisher === undefined || publisher === '' || isPlaceholderValue({ value: publisher })) {
-    return `${PYPI_PUBLISHER_VARIABLE} is not set; set it to the PyPI user that publishes the package`;
-  }
-  const packageSpec = `${PYPI_PACKAGE_NAME}==${pypiVersion}`;
-  const unreachable = `could not reach PyPI to read ${packageSpec}; check your network and run it again`;
-  const release = await pypiAnswerOrNull({ packageFetcher, url: `${PYPI_ORIGIN}/pypi/${PYPI_PACKAGE_NAME}/${pypiVersion}/json` });
-  if (release?.status === HttpStatus.NotFound) return `${packageSpec} does not resolve on PyPI; publish it first`;
-  if (release?.status !== HttpStatus.Ok) return unreachable;
-  const roles = await pypiAnswerOrNull({ packageFetcher, url: PYPI_XML_RPC_URL, xmlBody: PYPI_ROLES_REQUEST });
-  if (roles?.status !== HttpStatus.Ok) return unreachable;
-  const holders = pypiRoleHoldersOf({ body: roles.body });
-  if (holders.length === 0) return `${PYPI_PACKAGE_NAME} on PyPI lists no Owner; check the package roles`;
-  const hasOnlyPublisher = holders.every((holder) => holder === publisher);
-  if (hasOnlyPublisher) return null;
-  return `${PYPI_PACKAGE_NAME} must have the user ${publisher} as the only Owner and Maintainer on PyPI; its role holders are ${holders.join(', ')}`;
+  const [current, ...remaining] = input.artifacts;
+  if (!current) return null;
+  const refusal = await input.refusalOf(current);
+  if (refusal !== null) return refusal;
+  return firstArtifactRefusal({ ...input, artifacts: remaining });
+}
+
+async function refuseUnhostedWorkerWheel(input: WorkerPreflightInput): Promise<string | null> {
+  return firstArtifactRefusal({
+    artifacts: hostedArtifactsOf(input),
+    refusalOf: (artifact) => workerArtifactRefusal({ shell: input.shell, artifact }),
+  });
+}
+
+async function refuseUnhostedDocsWheel(input: DocsPreflightInput): Promise<string | null> {
+  return firstArtifactRefusal({
+    artifacts: hostedArtifactsOf(input),
+    refusalOf: (artifact) => docsArtifactRefusal({ packageFetcher: input.packageFetcher, artifact }),
+  });
 }
 
 async function refuseUncleanGit(input: WorkerPreflightInput): Promise<string | null> {
@@ -353,7 +410,7 @@ const WORKER_CHECKS: PreflightCheck<WorkerPreflightInput>[] = [
   { step: PreflightStep.OfficialNumber, refusalOf: productionOnly({ refusalOf: refuseUnsetOfficialNumber }) },
   { step: PreflightStep.CompanyFacts, refusalOf: productionOnly({ refusalOf: refuseUnsetCompanyFacts }) },
   { step: PreflightStep.NpmVersion, refusalOf: productionOnly({ refusalOf: refuseUntrustedWorkerPackage }) },
-  { step: PreflightStep.PypiVersion, refusalOf: productionOnly({ refusalOf: refuseUntrustedPypiPackage }) },
+  { step: PreflightStep.HermesWheel, refusalOf: productionOnly({ refusalOf: refuseUnhostedWorkerWheel }) },
   { step: PreflightStep.Config, refusalOf: refuseLeftoverPlaceholder },
   { step: PreflightStep.Domain, refusalOf: productionOnly({ refusalOf: refuseUnreadyDomain }) },
   { step: PreflightStep.Readiness, refusalOf: refuseUnreadyProduction },
@@ -368,7 +425,7 @@ const DOCS_CHECKS: PreflightCheck<DocsPreflightInput>[] = [
   { step: PreflightStep.OfficialNumber, refusalOf: refuseUnsetOfficialNumber },
   { step: PreflightStep.CompanyFacts, refusalOf: refuseUnsetCompanyFacts },
   { step: PreflightStep.NpmVersion, refusalOf: refuseUntrustedDocsPackages },
-  { step: PreflightStep.PypiVersion, refusalOf: refuseUntrustedPypiPackage },
+  { step: PreflightStep.HermesWheel, refusalOf: refuseUnhostedDocsWheel },
 ];
 
 async function firstRefusal<Input>(input: { checks: PreflightCheck<Input>[]; subject: Input }): Promise<PreflightRefusal | null> {

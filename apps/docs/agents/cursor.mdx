@@ -3,43 +3,71 @@ title: Cursor
 description: Connect Cursor to your WhatsApp.
 ---
 
+import { Chat } from '/snippets/chat.jsx';
+import OfficialNumber from '/snippets/official-number.mdx';
+import InstallPrompt from '/snippets/install-prompt.mdx';
+
 ## What works
 
-- Your AI sends you text, photos, videos, audio, documents, locations, contacts and reactions on WhatsApp.
-- It asks you with buttons or lists and waits for your tap.
-- Write on WhatsApp and Cursor hears you while its chat is open.
-- It waits for your answer as long as it takes.
+| You want to                    | Cursor                                                                 |
+| ------------------------------ | ---------------------------------------------------------------------- |
+| Get messages from it           | Text, photos, videos, audio, documents, locations, contacts, reactions |
+| Answer it with a tap           | Buttons and lists; it waits for your tap                               |
+| Write first from WhatsApp      | Yes, Cursor hears you while its chat is open                           |
+| Keep a question open for hours | Yes, there is no time limit                                            |
+
+<Chat
+  messages={[
+    { name: 'Cursor', text: 'The tests pass. Commit the changes?', options: ['Yes', 'Not yet'], time: '14:10' },
+    { you: true, text: 'Yes', time: '14:11' },
+  ]}
+/>
+
+## How it listens
+
+Wake type: **Local**. Cursor runs `npx zapbip@0.1.0 listen` in a background terminal and keeps it running. When you write on WhatsApp, a new line appears in that terminal and wakes the chat.
+
+- Cursor has no scheduled option, so keep that terminal running.
+
+When your AI asks you something, zapbip holds the question and answers "pending" at most every 50 seconds. Cursor then calls again, and keeps calling again until you answer. There is no time limit.
 
 ## Set up from zero
 
-<Steps>
-  <Step title="Message the official zapbip number">
-    Open WhatsApp and send `hi` to the official zapbip number, then `new agent cursor`. [How to start](/get-started/how-to-start) shows every message.
-  </Step>
-  <Step title="Paste the prompt into Cursor">
-    zapbip answers with one line made for you. Paste it into Cursor:
+1. **Message the zapbip number on WhatsApp.** Send any text, for example `hi`.
 
-    ```text
-    Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_K7P2QXm9aTfLw3VbN8cYhE and follow the instructions.
-    ```
+   <OfficialNumber />
 
-    Cursor reads the page and follows the steps below, in order. Before it changes a file or a setting, it tells you which one and waits for your yes. The link in that page is secret, so keep it out of chats you share.
+2. **Ask for a new agent.** An agent is one AI you connect.
 
-  </Step>
-  <Step title="Add zapbip to Cursor">
-    It asks you first and waits for your yes. Then it adds an MCP server named `zapbip` over HTTP at `<connectionLink>` in Cursor's MCP settings.
-  </Step>
-  <Step title="Start listening">
-    It runs `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen` in a background terminal and keeps that terminal running, with no time limit. Whenever a new line appears there, it calls `check_inbox` and answers.
-  </Step>
-  <Step title="Test it">
-    In the chat it calls `send_message` with ✅ installed. Then restart the Cursor chat to use the zapbip tools.
-  </Step>
-</Steps>
+   <Chat
+     messages={[
+       { you: true, text: 'new agent cursor', time: '14:00' },
+       {
+         name: 'zapbip',
+         text: 'Agent cursor created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate cursor".',
+         time: '14:00',
+       },
+     ]}
+   />
 
-## How your AI listens
+3. **Paste the line into the Cursor chat.**
 
-- Cursor runs `npx zapbip@0.1.0 listen` in a background terminal and keeps it running. When you write on WhatsApp, the new line wakes the chat.
-- Cursor has no scheduled option, so keep the terminal running. It has no time limit.
+   <InstallPrompt />
 
-There is no time limit. While a question is open, your AI asks again until you answer, for as long as it takes.
+   Cursor reads the instructions and follows them in order. Before it changes a setting, it tells you which one and waits for your yes. The link is secret, so keep it out of chats you share.
+
+4. **Say yes.** Cursor then does the rest, in this order.
+
+5. **Add zapbip to Cursor.** It asks you first and waits for your yes. Then it adds an MCP server named `zapbip` over HTTP at `<connectionLink>` in Cursor's MCP settings.
+
+6. **Start listening.** It runs `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen` in a background terminal and keeps that terminal running, with no time limit. Whenever a new line appears there, it calls `check_inbox` and answers.
+
+7. **Test it.** In the chat it calls `send_message` with ✅ installed. Then restart the Cursor chat to use the zapbip tools.
+
+## Check it works
+
+Ask Cursor to send `✅ installed` to your WhatsApp. It should arrive in a few seconds.
+
+<Chat messages={[{ name: 'Cursor', text: '✅ installed', time: '14:03' }]} />
+
+If nothing arrives, see [Troubleshooting](/help/troubleshooting).

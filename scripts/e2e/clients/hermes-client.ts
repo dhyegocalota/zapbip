@@ -1,18 +1,17 @@
-import { execFile } from 'node:child_process';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { promisify } from 'node:util';
+import { ZAPBIP_HERMES_PLUGIN_VERSION, ZAPBIP_HERMES_WHEEL_SHA256 } from '../../../libs/types/src/constants';
+import { hermesWheelFilename } from '../../../libs/types/src/hermes-wheel';
 import { CONTAINER_HOST } from './constants';
 import { buildImage, type Container, startContainer } from './container';
 
-const runCommand = promisify(execFile);
-const PLUGIN_DIRECTORY = join(import.meta.dirname, '..', '..', '..', 'apps', 'hermes-plugin');
+const WHEEL_RELEASE_DIRECTORY = join(import.meta.dirname, '..', '..', '..', 'apps', 'hermes-plugin', 'release');
 const DOCKERFILE = join(import.meta.dirname, 'hermes', 'Dockerfile');
-const BUILD_REQUIREMENTS = join(import.meta.dirname, 'hermes', 'build-requirements.txt');
-const BUILD_TOOLS_DIRECTORY = 'build-tools';
 const HERMES_IMAGE = 'nousresearch/hermes-agent:v0.22.7@sha256:e6d81ae52ebf6a43efa529701405509f20054ba818f179ddd748bed4f8af584c';
 const HERMES_IMAGE_TAG = 'zapbip-e2e-hermes';
 const HERMES_IMAGE_ARGUMENT = 'HERMES_IMAGE';
+const WHEEL_FILENAME_ARGUMENT = 'WHEEL_FILENAME';
+const WHEEL_SHA256_ARGUMENT = 'WHEEL_SHA256';
 const HERMES_PLATFORM = 'linux/amd64';
 const PLUGIN_NAME = 'zapbip-platform';
 const DATA_PATH = '/opt/data';
@@ -28,21 +27,18 @@ export async function buildHermesImage(input: { directory: string }): Promise<vo
   const contextDirectory = join(input.directory, 'hermes-context');
   const wheelDirectory = join(contextDirectory, 'wheel');
   await mkdir(wheelDirectory, { recursive: true });
-  const buildToolsDirectory = join(input.directory, BUILD_TOOLS_DIRECTORY);
-  await runCommand('python3', ['-m', 'pip', 'install', '--require-hashes', '--target', buildToolsDirectory, '-r', BUILD_REQUIREMENTS]);
-  await runCommand(
-    'python3',
-    ['-m', 'pip', 'wheel', '--no-deps', '--no-build-isolation', '--wheel-dir', wheelDirectory, PLUGIN_DIRECTORY],
-    {
-      env: { ...process.env, PYTHONPATH: buildToolsDirectory },
-    },
-  );
+  const wheelFilename = hermesWheelFilename({ version: ZAPBIP_HERMES_PLUGIN_VERSION });
+  await copyFile(join(WHEEL_RELEASE_DIRECTORY, wheelFilename), join(wheelDirectory, wheelFilename));
   await buildImage({
     tag: HERMES_IMAGE_TAG,
     contextDirectory,
     dockerfile: DOCKERFILE,
     platform: HERMES_PLATFORM,
-    buildArguments: { [HERMES_IMAGE_ARGUMENT]: HERMES_IMAGE },
+    buildArguments: {
+      [HERMES_IMAGE_ARGUMENT]: HERMES_IMAGE,
+      [WHEEL_FILENAME_ARGUMENT]: wheelFilename,
+      [WHEEL_SHA256_ARGUMENT]: ZAPBIP_HERMES_WHEEL_SHA256,
+    },
   });
 }
 

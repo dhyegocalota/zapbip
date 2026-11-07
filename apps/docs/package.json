@@ -4,6 +4,15 @@
   "type": "module",
   "scripts": {
     "dev": "pnpm dlx mint@4.2.1207 dev --client-version 0.0.4077",
-    "broken-links": "pnpm dlx mint@4.2.1207 broken-links"
+    "broken-links": "pnpm dlx mint@4.2.1207 broken-links",
+    "test:walk": "playwright test --pass-with-no-tests",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@zapbip/types": "workspace:*"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.0",
+    "@types/node": "24.19.2"
   }
 }

@@ -7,13 +7,13 @@ import { Chat } from '/snippets/chat.jsx';
 
 When you write on WhatsApp, your AI may be closed, busy or simply not waiting for you. zapbip then reaches it through the highest rung its connection supports, and falls to the next one when a rung is not available:
 
-| Rung       | What happens                                                                                                                                          |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Local      | zapbip pushes your message to the [connector](/developers/local-connector) running on your computer, which resumes your Claude Code or Codex session. |
-| Webhook    | zapbip calls a link that starts the AI. See the [webhook wake guide](/guides/webhook-wake).                                                           |
-| Scheduled  | The AI checks its inbox on a timer, so it can listen with no time limit.                                                                              |
-| Standby    | Another AI of yours receives a copy of your message and answers instead.                                                                              |
-| Inbox only | The message waits and zapbip tells you the AI is not listening right now.                                                                             |
+| Rung       | What happens                                                                                                                                          | Expected delay               |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| Local      | zapbip pushes your message to the [connector](/developers/local-connector) running on your computer, which resumes your Claude Code or Codex session. | 7 s Claude Code, 6 s Codex   |
+| Webhook    | zapbip calls a link that starts the AI. See the [webhook wake guide](/developers/webhook-wake).                                                       | 9 s Grok Bot, 16 s claude.ai |
+| Scheduled  | The AI checks its inbox on a timer, so it can listen with no time limit.                                                                              | up to the interval           |
+| Standby    | Another AI of yours receives a copy of your message and answers instead.                                                                              | not measured                 |
+| Inbox only | The message waits and zapbip tells you the AI is not listening right now.                                                                             | until an AI reads it         |
 
 In every rung your message is kept in the [inbox](/concepts/inbox) until an AI reads it. Nothing is lost.
 

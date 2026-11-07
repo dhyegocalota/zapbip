@@ -10,7 +10,7 @@ import {
   OFFICIAL_WHATSAPP_NUMBER,
   OPENCLAW_PLUGIN_NPM_VERSION,
   ZAPBIP_NPM_VERSION,
-  ZAPBIP_PYPI_VERSION,
+  ZAPBIP_HERMES_PLUGIN_VERSION,
 } from '@zapbip/types';
 import { afterAll, describe, expect, test } from 'vitest';
 import { readDeployBlock, runDeploy } from '../../scripts/deploy';
@@ -23,6 +23,8 @@ import {
   fakeNameserverResolver,
   fakePackageFetcher,
   fakeShell,
+  HERMES_REQUIREMENTS_SHA256,
+  HERMES_WHEEL_SHA256,
   OFFICIAL_NUMBER,
   READY_WORKER_FACTS,
 } from '../unit/fake-deploy-shell';
@@ -98,7 +100,9 @@ async function refusalOf(input: {
     company: input.company,
     npmVersion: ZAPBIP_NPM_VERSION,
     openclawPluginVersion: OPENCLAW_PLUGIN_NPM_VERSION,
-    pypiVersion: ZAPBIP_PYPI_VERSION,
+    hermesPluginVersion: ZAPBIP_HERMES_PLUGIN_VERSION,
+    hermesWheelSha256: HERMES_WHEEL_SHA256,
+    hermesRequirementsSha256: HERMES_REQUIREMENTS_SHA256,
     packageFetcher: fakePackageFetcher({}),
     nameserverResolver: fakeNameserverResolver({}),
     log: (line) => lines.push(line),

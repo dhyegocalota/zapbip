@@ -10,7 +10,6 @@ ENUMS_SOURCE = REPOSITORY_ROOT / "libs/types/src/enums.ts"
 CHANNEL_PLUGIN_SOURCE = REPOSITORY_ROOT / "libs/types/src/channel-plugin.ts"
 SHARED_CONSTANTS_SOURCE = REPOSITORY_ROOT / "libs/types/src/constants.ts"
 INBOX_CONSTANTS_SOURCE = REPOSITORY_ROOT / "libs/core/src/inbox/constants.ts"
-TOOL_DEFINITIONS_SOURCE = REPOSITORY_ROOT / "apps/api/src/contract/tool-definitions.ts"
 
 ENUM_PATTERN = r"export enum {name} \{{(.*?)\}}"
 MEMBER_PATTERN = re.compile(r"(\w+) = '([^']*)'")

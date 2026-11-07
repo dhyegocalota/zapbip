@@ -3,46 +3,74 @@ title: ChatGPT
 description: Connect ChatGPT to your WhatsApp.
 ---
 
+import { Chat } from '/snippets/chat.jsx';
+import OfficialNumber from '/snippets/official-number.mdx';
+import InstallPrompt from '/snippets/install-prompt.mdx';
+
 ## What works
 
-- Your AI sends you text, photos, videos, audio, documents, locations, contacts and reactions on WhatsApp.
-- It asks you with buttons or lists and waits for your tap.
-- ChatGPT reads your WhatsApp messages once an hour, the shortest interval the app allows.
-- ChatGPT waits about 5 minutes for a single answer and asks again, so there is no limit overall.
+| You want to                    | ChatGPT                                                                |
+| ------------------------------ | ---------------------------------------------------------------------- |
+| Get messages from it           | Text, photos, videos, audio, documents, locations, contacts, reactions |
+| Answer it with a tap           | Buttons and lists; it waits for your tap                               |
+| Write first from WhatsApp      | Yes, it reads your message within the hour                             |
+| Keep a question open for hours | Yes, there is no time limit                                            |
+
+<Chat
+  messages={[
+    { name: 'ChatGPT', text: 'The summary is ready. Post it to the channel?', options: ['Yes', 'Not yet'], time: '17:00' },
+    { you: true, text: 'Yes', time: '17:02' },
+  ]}
+/>
+
+## How it listens
+
+Wake type: **Scheduled**. ChatGPT reads your WhatsApp messages once an hour, the shortest interval the app allows, so a message can wait up to an hour.
+
+- An hourly task runs on your computer and posts into one dedicated chat. Each run reads what you wrote since the last one.
+- Keep that chat and your computer on, so the task can run.
+
+When your AI asks you something, zapbip holds the question and answers "pending" at most every 50 seconds. ChatGPT then calls again, and keeps calling again until you answer. There is no time limit.
+
+ChatGPT waits about 5 minutes for a single answer and asks again, so there is no limit overall.
 
 ## Set up from zero
 
-<Steps>
-  <Step title="Message the official zapbip number">
-    Open WhatsApp and send `hi` to the official zapbip number, then `new agent chatgpt`. [How to start](/get-started/how-to-start) shows every message.
-  </Step>
-  <Step title="Paste the prompt into ChatGPT">
-    zapbip answers with one line made for you. Paste it into ChatGPT:
+1. **Message the zapbip number on WhatsApp.** Send any text, for example `hi`.
 
-    ```text
-    Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_K7P2QXm9aTfLw3VbN8cYhE and follow the instructions.
-    ```
+   <OfficialNumber />
 
-    ChatGPT reads the page and follows the steps below, in order. Before it changes a file or a setting, it tells you which one and waits for your yes. The link in that page is secret, so keep it out of chats you share.
+2. **Ask for a new agent.** An agent is one AI you connect.
 
-  </Step>
-  <Step title="Add the app">
-    ChatGPT asks you to turn on developer mode and add an app by URL with `<connectionLink>`, choosing "No authentication". You do this one yourself.
-  </Step>
-  <Step title="Create the hourly task">
-    It asks you to create an hourly "Run on this computer" task that calls `check_inbox`, in one dedicated chat, and to choose "Always allow" once for each tool.
-  </Step>
-  <Step title="Tell zapbip it polls">
-    It calls `set_wake({mode: "scheduled", interval_minutes: 60})`.
-  </Step>
-  <Step title="Test it">
-    In the chat it calls `send_message` with ✅ installed.
-  </Step>
-</Steps>
+   <Chat
+     messages={[
+       { you: true, text: 'new agent chatgpt', time: '16:00' },
+       {
+         name: 'zapbip',
+         text: 'Agent chatgpt created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate chatgpt".',
+         time: '16:00',
+       },
+     ]}
+   />
 
-## How your AI listens
+3. **Paste the line into ChatGPT.**
 
-- The hourly task runs on your computer and posts into the same chat. Each run reads what you wrote since the last one, so a message can wait up to an hour.
-- ChatGPT allows no shorter interval for scheduled tasks.
+   <InstallPrompt />
 
-There is no time limit. While a question is open, your AI asks again until you answer, for as long as it takes.
+   ChatGPT reads the instructions and follows them in order. The link is secret, so keep it out of chats you share.
+
+4. **Add the app.** ChatGPT asks you to turn on developer mode and add an app by URL with `<connectionLink>`, choosing "No authentication". You do this one yourself.
+
+5. **Create the hourly task.** It asks you to create an hourly "Run on this computer" task that calls `check_inbox`, in one dedicated chat, and to choose "Always allow" once for each tool.
+
+6. **Tell zapbip it polls.** It calls `set_wake({mode: "scheduled", interval_minutes: 60})`.
+
+7. **Test it.** In the chat it calls `send_message` with ✅ installed.
+
+## Check it works
+
+ChatGPT sends `✅ installed` to your WhatsApp once it is connected.
+
+<Chat messages={[{ name: 'ChatGPT', text: '✅ installed', time: '16:05' }]} />
+
+If nothing arrives, see [Troubleshooting](/help/troubleshooting).

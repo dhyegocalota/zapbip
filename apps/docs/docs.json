@@ -2,6 +2,14 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "zapbip",
+  "favicon": "/favicon.svg",
+  "errors": {
+    "404": {
+      "redirect": false,
+      "title": "Page not found · Página não encontrada",
+      "description": "This page does not exist. · Esta página não existe.\n\n[Back to the Overview](/) · [Voltar para a visão geral](/pt-br)"
+    }
+  },
   "colors": {
     "primary": "#128C7E"
   },
@@ -28,15 +36,15 @@
               "agents/supported-agents",
               "agents/claude-code",
               "agents/codex",
-              "agents/cursor",
-              "agents/gemini-cli",
-              "agents/grok-bot",
               "agents/claude-ai",
               "agents/chatgpt",
+              "agents/cursor",
+              "agents/grok-bot",
               "agents/grok-web",
               "agents/hermes",
               "agents/openclaw",
-              "guides/webhook-wake"
+              "agents/gemini-cli",
+              "agents/any-mcp-client"
             ]
           },
           {
@@ -44,25 +52,32 @@
             "pages": [
               "features/send-messages-and-media",
               "features/ask-with-buttons-and-lists",
-              "features/whatsapp-commands",
+              "features/owner-starts-conversations",
               "features/manage-your-agents",
               "features/many-agents-on-one-number",
-              "features/the-24-hour-window",
-              "concepts/owner-notices"
+              "features/whatsapp-commands",
+              "features/the-24-hour-window"
             ]
           },
           {
             "group": "Help",
-            "pages": ["help/troubleshooting", "help/faq", "help/about", "help/delete-your-account"]
+            "pages": [
+              "help/troubleshooting",
+              "help/faq",
+              "help/privacy-and-security",
+              "help/revoke-and-rotate-keys",
+              "help/delete-your-account",
+              "help/about"
+            ]
           },
           {
             "group": "For developers",
             "pages": [
               "developers/any-mcp-client",
+              "developers/errors",
               "developers/local-connector",
               "developers/background-running",
-              "developers/errors",
-              "guides/webhook-wake",
+              "developers/webhook-wake",
               {
                 "group": "Concepts",
                 "pages": [
@@ -71,7 +86,8 @@
                   "concepts/24-hour-window",
                   "concepts/routing",
                   "concepts/wake-ladder",
-                  "concepts/whatsapp-channel"
+                  "concepts/whatsapp-channel",
+                  "concepts/owner-notices"
                 ]
               },
               {
@@ -107,15 +123,15 @@
               "pt-br/agents/supported-agents",
               "pt-br/agents/claude-code",
               "pt-br/agents/codex",
-              "pt-br/agents/cursor",
-              "pt-br/agents/gemini-cli",
-              "pt-br/agents/grok-bot",
               "pt-br/agents/claude-ai",
               "pt-br/agents/chatgpt",
+              "pt-br/agents/cursor",
+              "pt-br/agents/grok-bot",
               "pt-br/agents/grok-web",
               "pt-br/agents/hermes",
               "pt-br/agents/openclaw",
-              "pt-br/guides/webhook-wake"
+              "pt-br/agents/gemini-cli",
+              "pt-br/agents/any-mcp-client"
             ]
           },
           {
@@ -123,25 +139,32 @@
             "pages": [
               "pt-br/features/send-messages-and-media",
               "pt-br/features/ask-with-buttons-and-lists",
-              "pt-br/features/whatsapp-commands",
+              "pt-br/features/owner-starts-conversations",
               "pt-br/features/manage-your-agents",
               "pt-br/features/many-agents-on-one-number",
-              "pt-br/features/the-24-hour-window",
-              "pt-br/concepts/owner-notices"
+              "pt-br/features/whatsapp-commands",
+              "pt-br/features/the-24-hour-window"
             ]
           },
           {
             "group": "Ajuda",
-            "pages": ["pt-br/help/troubleshooting", "pt-br/help/faq", "pt-br/help/about", "pt-br/help/delete-your-account"]
+            "pages": [
+              "pt-br/help/troubleshooting",
+              "pt-br/help/faq",
+              "pt-br/help/privacy-and-security",
+              "pt-br/help/revoke-and-rotate-keys",
+              "pt-br/help/delete-your-account",
+              "pt-br/help/about"
+            ]
           },
           {
             "group": "Para desenvolvedores",
             "pages": [
               "pt-br/developers/any-mcp-client",
+              "pt-br/developers/errors",
               "pt-br/developers/local-connector",
               "pt-br/developers/background-running",
-              "pt-br/developers/errors",
-              "pt-br/guides/webhook-wake",
+              "pt-br/developers/webhook-wake",
               {
                 "group": "Conceitos",
                 "pages": [
@@ -150,7 +173,8 @@
                   "pt-br/concepts/24-hour-window",
                   "pt-br/concepts/routing",
                   "pt-br/concepts/wake-ladder",
-                  "pt-br/concepts/whatsapp-channel"
+                  "pt-br/concepts/whatsapp-channel",
+                  "pt-br/concepts/owner-notices"
                 ]
               },
               {

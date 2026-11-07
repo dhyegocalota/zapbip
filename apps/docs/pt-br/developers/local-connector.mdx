@@ -1,6 +1,6 @@
 ---
-title: 'Faça sua IA te ouvir mesmo quando você não está olhando'
-description: 'Deixe um programa pequeno aberto no seu computador para o Claude Code ou o Codex responder no WhatsApp, mesmo parado.'
+title: 'Conector local'
+description: 'Os comandos zapbip connect, listen e channel: opções, variável de ambiente, isolamento do despertar e logs.'
 ---
 
 Normalmente sua IA só lê o WhatsApp quando já está trabalhando. Se você escreve enquanto ela está parada, sua mensagem fica esperando.
@@ -8,6 +8,16 @@ Normalmente sua IA só lê o WhatsApp quando já está trabalhando. Se você esc
 O conector do zapbip resolve isso. É um programa pequeno que fica aberto no seu computador. Quando você escreve no WhatsApp, ele acorda a sessão de IA que você já usava, entrega sua mensagem e deixa a IA te responder. Leva cerca de 7 segundos no Claude Code e 6 no Codex.
 
 Funciona com o Claude Code e o Codex. Seu computador precisa estar ligado e acordado, e o conector precisa estar rodando.
+
+## Comandos
+
+| Comando   | O que faz                                                                                      |
+| --------- | ---------------------------------------------------------------------------------------------- |
+| `connect` | Acorda uma sessão fechada quando você escreve. Aceita `--client`, `--cwd` e `--session`.       |
+| `listen`  | Imprime uma linha JSON por mensagem, para um agente que acompanha um comando em segundo plano. |
+| `channel` | Roda um canal MCP local que coloca cada mensagem numa sessão aberta do Claude Code.            |
+
+`ZAPBIP_CONNECTION_URL` guarda o link de conexão. `connect` e `listen` pedem o link quando a variável não está definida.
 
 ## O que você precisa
 
@@ -55,7 +65,7 @@ npx zapbip@0.1.0 connect --client claude-code --session <session-id>
 | ----------- | -------------------------------------------------------------------- |
 | `--client`  | `claude-code` ou `codex`. Obrigatória.                               |
 | `--cwd`     | A pasta de trabalho. O padrão é a pasta em que você rodou o comando. |
-| `--session` | Um id de sessão para sempre retomar, em vez da mais recente.         |
+| `--session` | Um id de sessão (UUID) para sempre retomar, em vez da mais recente.  |
 
 ## O que a IA pode fazer quando é acordada
 
@@ -101,18 +111,18 @@ claude --dangerously-load-development-channels server:zapbip-channel
 
 `zapbip` é a chave do servidor do canal no `.mcp.json`. A linha de inicialização mostra `Channels (experimental)`. O Claude Code pede para você aceitar o canal de desenvolvimento e o servidor MCP do projeto; aceite os dois.
 
-O ouvinte é o plano B. Ele imprime uma linha para cada mensagem que você escreve, e o Claude Code vigia essas linhas com a ferramenta Monitor. Cada linha acorda a sessão aberta, e nada é gasto enquanto você está em silêncio:
+O ouvinte é o plano B. Ele imprime uma linha para cada mensagem que você escreve, e o Claude Code vigia essas linhas com a ferramenta `Monitor`. Cada linha acorda a sessão aberta, e nada é gasto enquanto você está em silêncio:
 
 ```bash
 export ZAPBIP_CONNECTION_URL='https://<host>/c/<secret>/mcp'
 npx zapbip@0.1.0 listen
 ```
 
-Cada linha é um JSON com o id da mensagem, o tipo, `"sender":"owner"`, `"verified"` (`true` para uma mensagem sua, `false` para uma encaminhada), `"forwarded"` e o texto. Uma vigia do Monitor dura até 30 minutos, então a IA a inicia de novo a cada vez que uma termina. Outros agentes que conseguem manter um comando rodando em segundo plano e reagir à saída dele, como o OpenClaw e o Hermes, podem usar `npx zapbip@0.1.0 listen` do mesmo jeito.
+Cada linha é um JSON com o id da mensagem, o tipo, `"sender":"owner"`, `"verified"` (`true` para uma mensagem sua, `false` para uma encaminhada), `"forwarded"` e o texto. Uma vigia do `Monitor` dura até 30 minutos, então a IA a inicia de novo a cada vez que uma termina. Outros agentes que conseguem manter um comando rodando em segundo plano e reagir à saída dele, como o OpenClaw e o Hermes, podem usar `npx zapbip@0.1.0 listen` do mesmo jeito.
 
 Os dois programas ficam abertos e reconectam sozinhos, como o `connect`. Os dois só marcam uma mensagem como tratada depois de repassá-la, então uma mensagem nunca se perde e nunca aparece duas vezes. Os logs deles vão para a saída de erro e nunca trazem suas mensagens nem seu link.
 
-Então as três formas se completam: o canal para uma sessão aberta, o `listen` como reserva dele e o `connect` para uma sessão fechada.
+Então as três formas se completam: o canal para uma sessão aberta, o `listen` como alternativa a ele e o `connect` para uma sessão fechada.
 
 ## Um conector por conexão
 

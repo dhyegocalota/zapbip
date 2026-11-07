@@ -17,7 +17,10 @@
       "migrations_dir": "migrations",
     },
   ],
-  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "zapbip-media-production" }],
+  "r2_buckets": [
+    { "binding": "MEDIA", "bucket_name": "zapbip-media-production" },
+    { "binding": "PACKAGES", "bucket_name": "zapbip-packages" },
+  ],
   "analytics_engine_datasets": [{ "binding": "WAKE_METRICS", "dataset": "zapbip_wake_production" }],
   "rules": [{ "type": "Text", "globs": ["**/*.sql", "**/*.css"], "fallthrough": true }],
   "routes": [
@@ -54,7 +57,10 @@
           "migrations_dir": "migrations",
         },
       ],
-      "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "zapbip-media-development" }],
+      "r2_buckets": [
+        { "binding": "MEDIA", "bucket_name": "zapbip-media-development" },
+        { "binding": "PACKAGES", "bucket_name": "zapbip-packages-development" },
+      ],
       "analytics_engine_datasets": [{ "binding": "WAKE_METRICS", "dataset": "zapbip_wake_development" }],
       "rules": [{ "type": "Text", "globs": ["**/*.sql", "**/*.css"], "fallthrough": true }],
       "vars": {
@@ -87,7 +93,10 @@
           "migrations_dir": "migrations",
         },
       ],
-      "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "zapbip-media-staging" }],
+      "r2_buckets": [
+        { "binding": "MEDIA", "bucket_name": "zapbip-media-staging" },
+        { "binding": "PACKAGES", "bucket_name": "zapbip-packages-staging" },
+      ],
       "analytics_engine_datasets": [{ "binding": "WAKE_METRICS", "dataset": "zapbip_wake_staging" }],
       "rules": [{ "type": "Text", "globs": ["**/*.sql", "**/*.css"], "fallthrough": true }],
       "routes": [

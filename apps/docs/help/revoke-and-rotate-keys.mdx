@@ -1,0 +1,44 @@
+---
+title: Revoke and rotate a connection
+description: Cut off an AI or replace its link.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+Each AI has its own connection. You cut it off, or replace its link, by writing to the zapbip number.
+
+## Cut off an AI
+
+Write `revoke` and the AI's name, for example `revoke claude`. Every way that AI is connected stops at once: its link to zapbip, a listener running on your computer and any wake that would start it.
+
+<Chat
+  messages={[
+    { you: true, text: 'revoke claude', time: '16:02' },
+    { text: 'Agent claude revoked. Its link no longer works.', time: '16:02' },
+  ]}
+/>
+
+To use that AI again, write `new agent claude`.
+
+## Replace a link
+
+Write `rotate` and the name, for example `rotate claude`. The old connection stops working at once, with the same reach as `revoke`, and zapbip sends you a new prompt to paste into that AI.
+
+<Chat
+  messages={[
+    { you: true, text: 'rotate claude', time: '16:05' },
+    {
+      text: 'Link of agent claude replaced. The old link no longer works. Paste this into your agent: ...',
+      time: '16:05',
+    },
+  ]}
+/>
+
+A rotated link is sent once. zapbip never shows it again: `agents` lists your AIs without any link. If the new prompt does not arrive, zapbip keeps the old connection, and you can write `rotate claude` again.
+
+## When to use which
+
+- You lost an AI, stopped using it or shared its link by mistake: `revoke`.
+- The link expired, was used already or leaked, and you still want the AI: `rotate`.
+
+See every word in [commands on WhatsApp](/features/whatsapp-commands).

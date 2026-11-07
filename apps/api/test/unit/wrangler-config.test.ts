@@ -136,7 +136,7 @@ describe('wrangler config', () => {
       },
     });
     expect(wranglerFile.d1_databases.map((database) => database.database_name)).toEqual(['zapbip-production']);
-    expect(wranglerFile.r2_buckets.map((bucket) => bucket.bucket_name)).toEqual(['zapbip-media-production']);
+    expect(wranglerFile.r2_buckets.map((bucket) => bucket.bucket_name)).toEqual(['zapbip-media-production', 'zapbip-packages']);
   });
 
   it('pins the staging block', () => {
@@ -152,7 +152,10 @@ describe('wrangler config', () => {
       },
     });
     expect(wranglerFile.env.staging.d1_databases.map((database) => database.database_name)).toEqual(['zapbip-staging']);
-    expect(wranglerFile.env.staging.r2_buckets.map((bucket) => bucket.bucket_name)).toEqual(['zapbip-media-staging']);
+    expect(wranglerFile.env.staging.r2_buckets.map((bucket) => bucket.bucket_name)).toEqual([
+      'zapbip-media-staging',
+      'zapbip-packages-staging',
+    ]);
   });
 
   it('pins the development block as the only one that mounts the simulator', () => {

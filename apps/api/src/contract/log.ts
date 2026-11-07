@@ -34,6 +34,7 @@ export enum LogEvent {
   BackofficeCsrfRejected = 'backoffice.csrf_rejected',
   BackofficeNumberChanged = 'backoffice.number_changed',
   BackofficeError = 'backoffice.error',
+  PackageUnavailable = 'package_unavailable',
 }
 
 export type LogFields = {
