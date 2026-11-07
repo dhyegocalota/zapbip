@@ -52,7 +52,25 @@ const RETRY_AFTER_SECONDS = RATE_LIMIT_PERIOD_MS / SECOND_MS;
 const HSTS_MAX_AGE_SECONDS = 63_072_000;
 const SECURE_PROTOCOL = 'https:';
 const USER_AGENT_HEADER = 'user-agent';
-const LINK_PREVIEW_USER_AGENTS = ['whatsapp', 'facebookexternalhit', 'slackbot', 'twitterbot', 'discordbot', 'telegrambot', 'linkedinbot'];
+const LINK_PREVIEW_USER_AGENTS = [
+  'whatsapp',
+  'facebookexternalhit',
+  'slackbot',
+  'twitterbot',
+  'discordbot',
+  'telegrambot',
+  'linkedinbot',
+  'skypeuripreview',
+  'applebot',
+  'google-pagerenderer',
+  'iframely',
+  'embedly',
+  'redditbot',
+  'pinterestbot',
+  'vkshare',
+  'mastodon',
+  'cardyb',
+];
 const PRIVATE_HEADERS = {
   'Cache-Control': 'no-store',
   'X-Robots-Tag': 'noindex',

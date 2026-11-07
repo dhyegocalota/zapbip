@@ -70,6 +70,18 @@ describe('install guide parity', () => {
     },
   );
 
+  test.each(GUIDE_LANGUAGES.flatMap((language) => PLUGIN_PAGE_CLIENTS.map((client) => ({ ...language, client }))))(
+    'IS-D3 the $locale plugin page for $client asks for its own locale self-test only',
+    ({ locale, pagePrefix, client }) => {
+      const guide = readGuide({ pagePrefix, client });
+      const otherSelfTests = Object.values(OwnerLocale)
+        .filter((other) => other !== locale)
+        .map((other) => INSTALL_SELF_TEST_TEXT[other]);
+      expect(guide).toContain(INSTALL_SELF_TEST_TEXT[locale]);
+      otherSelfTests.forEach((otherSelfTest) => expect(guide).not.toContain(otherSelfTest));
+    },
+  );
+
   test.each(GUIDE_LANGUAGES.flatMap((language) => STEP_GUIDE_CLIENTS.map((client) => ({ ...language, client }))))(
     'IS-D3 the $locale guide for $client ends with the self-test',
     ({ locale, pagePrefix, client }) => {

@@ -29,7 +29,7 @@ export const GEMINI_CLI_COPY = localizeCopy({
       steps: [
         `${tellOwnerAndWait(text.confirmChange)} If the owner does not say yes, stop.`,
         'Run `gemini mcp list`. If it lists zapbip, run `gemini mcp remove --scope user zapbip`.',
-        `Run \`gemini mcp add --transport http --scope user zapbip ${section.connectionLink}\`.`,
+        `Run \`gemini mcp add --transport http --scope user zapbip ${section.connectionLink}\`. Success: \`gemini mcp list\` shows zapbip.`,
         terminalListenStep(section),
         tellOwner(text.restart),
         `In a fresh process run \`${selfTest}\`. On a non-zero exit stop and show the last ${FAILURE_OUTPUT_LINES} lines of its output.`,

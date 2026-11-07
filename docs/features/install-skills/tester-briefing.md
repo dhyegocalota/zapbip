@@ -220,3 +220,26 @@ Known gaps:
 
 - The Gemini CLI allowed-tools flag could not be verified offline, so auto-approval is dropped and Gemini asks; the self-test may need the owner to approve once.
 - Run OR-1 with `ZAPBIP_E2E_CLAUDE_CONFIG_DIR=<empty directory> tools/install-e2e/claude-code.sh` after logging Claude Code into that directory; the directory is the script's whole Claude world (`HOME` is set to it too).
+
+## Final-round fixes (testers B and C at dfa5667)
+
+### Red then green
+
+| Test | Red failure text | Green after |
+|---|---|---|
+| `install-page.test.ts` crawlers (10 new agents) | `expected 200 to be 404` for SkypeUriPreview, Applebot, Google-PageRenderer, Iframely, Embedly, redditbot, Pinterestbot, vkShare, Mastodon, Bluesky Cardyb | the route constant |
+| `claude-code.test.ts` listener rule, flag sentence; `editor-clients.test.ts` and `chat-clients.test.ts` success lines; `render-install-page.test.ts` paste warning | the missing `Success:` lines, rule sentence and paste warning assertions | the copy commit |
+| `guide-parity.test.ts` IS-D3 plugin pages | `expected '...✅ instalado...' not to contain` on the en_US hermes and openclaw pages | the docs fix |
+| snapshots (claude-code, cursor, gemini-cli, hermes, both locales) | text differs | `vitest -u` after the copy change |
+
+### Hypotheses to attack
+
+- The Claude Code listener step names a rule: channel if the session supports development channels, else `connect`, else `listen`, with no stray capital.
+- Setup steps of Claude Code, Cursor, Gemini CLI and Hermes end with a `Success:` line.
+- The channel flag is explained to the owner in the restart sentence in both locales.
+- The guides name `npx zapbip@0.1.0`, never `<version>`.
+
+### Known gaps
+
+- Signal's generic link preview cannot be recognised by user agent; the page's top line tells the AI to warn the owner. No docs privacy page exists in this slice.
+- The success lines exist on the steps the testers named, not on every client.

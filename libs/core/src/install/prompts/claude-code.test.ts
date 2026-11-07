@@ -43,6 +43,21 @@ describe('renderClaudeCodeSection', () => {
     expect(text).toContain('claude -p --resume');
   });
 
+  test('gives a rule for which listener to run and ends every setup step with its success', () => {
+    const listenerStep = text.split('\n').find((line) => line.includes('exactly one of these'));
+    expect(listenerStep).toContain('If the session supports development channels');
+    expect(listenerStep).toContain('If connect cannot run either, listen instead.');
+    expect(text).not.toContain(': In a');
+    expect(text).toContain('Success: `claude mcp list` shows zapbip.');
+    expect(text).toContain('Success: `claude mcp list` shows zapbip-channel.');
+    expect(text).toContain('Success: the file holds exactly that content.');
+    expect(text).toContain('Success: exactly one listener is running.');
+  });
+
+  test('explains the channel flag to the owner', () => {
+    expect(text).toContain("turns on Claude Code's channel feature for zapbip and does not approve any tool by itself");
+  });
+
   test('self-tests in a fresh process', () => {
     expect(text).toContain('claude -p');
     expect(text).toContain('--allowedTools=mcp__zapbip__send_message');

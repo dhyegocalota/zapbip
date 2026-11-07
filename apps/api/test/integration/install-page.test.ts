@@ -48,6 +48,16 @@ const LINK_PREVIEW_USER_AGENTS = [
   'Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)',
   'TelegramBot (like TwitterBot)',
   'LinkedInBot/1.0 (compatible; Mozilla/5.0)',
+  'Mozilla/5.0 (Windows NT 6.1; WOW64) SkypeUriPreview Preview/0.5 skype-url-preview@microsoft.com',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1.1 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)',
+  'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0 Safari/537.36 Google-PageRenderer Google (+https://developers.google.com/+/web/snippet/)',
+  'Iframely/1.3.1 (+https://iframely.com/docs/about)',
+  'Mozilla/5.0 (compatible; Embedly/0.2; +http://support.embed.ly/)',
+  'redditbot/1.0 (+http://www.reddit.com/feedback)',
+  'Pinterestbot/1.0 (+http://www.pinterest.com/bot.html)',
+  'Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko vkShare; +http://vk.com/dev/Share',
+  'http.rb/5.1.1 (Mastodon/4.2.0; +https://mastodon.social/)',
+  'Bluesky Cardyb/1.1',
 ];
 
 function randomInstallCode(): string {

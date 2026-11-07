@@ -26,7 +26,7 @@ export const CURSOR_COPY = localizeCopy({
       standbyAgent: section.standbyAgent,
       steps: [
         `${tellOwnerAndWait(text.confirmChange)} If the owner does not say yes, stop.`,
-        `Add an MCP server named zapbip over HTTP at ${section.connectionLink} in the Cursor MCP settings.`,
+        `Add an MCP server named zapbip over HTTP at ${section.connectionLink} in the Cursor MCP settings. Success: the Cursor MCP settings list zapbip.`,
         terminalListenStep(section),
         tellOwner(text.restart),
         chatSelfTest(section.locale),

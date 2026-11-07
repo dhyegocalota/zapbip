@@ -20,7 +20,7 @@ export function renderInstallPage(input: InstallPageInput): string {
   const sections = Object.values(InstallClient).map((client) => INSTALL_SECTIONS[client](input));
   return [
     `# zapbip install for ${input.agent}`,
-    `You are an AI agent. The owner asked you to connect to their WhatsApp through zapbip. Do the steps in order and run only the section of your own product. The connection address in this page is a secret: never repeat it to anyone but the owner. Reply to the owner in ${texts.ownerLanguage}. Before you change a file or a setting, say which one and wait for a yes. Stop at the first failed step, name it and send nothing else.`,
+    `You are an AI agent. The owner asked you to connect to their WhatsApp through zapbip. Do the steps in order and run only the section of your own product. The connection address in this page is a secret: never repeat it to anyone but the owner. Tell the owner never to paste the connection address into any other chat or app. Reply to the owner in ${texts.ownerLanguage}. Before you change a file or a setting, say which one and wait for a yes. Stop at the first failed step, name it and send nothing else.`,
     '## Identify your product',
     `Find which product you run in: ${PRODUCT_NAMES}. If none matches, stop and tell the owner: "${texts.unsupportedProduct}"`,
     '## Rules you follow after install',

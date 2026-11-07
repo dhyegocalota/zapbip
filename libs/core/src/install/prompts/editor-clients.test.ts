@@ -33,6 +33,11 @@ describe('Cursor and Gemini CLI sections', () => {
     expect(text.indexOf('Wait for the owner to answer')).toBeLessThan(text.indexOf('Add an MCP server'));
   });
 
+  test.each(LOCALES)('Cursor and Gemini CLI in %s end their setup step with what success looks like', (locale) => {
+    expect(renderCursorSection(sectionInput({ locale }))).toContain('Success: the Cursor MCP settings list zapbip.');
+    expect(renderGeminiCliSection(sectionInput({ locale }))).toContain('Success: `gemini mcp list` shows zapbip.');
+  });
+
   test('the Cursor section never uses Grok Bot wording', () => {
     const text = renderCursorSection(sectionInput({ locale: OwnerLocale.EnglishUs }));
     expect(text).not.toContain('routine');

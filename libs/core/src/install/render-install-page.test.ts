@@ -55,6 +55,10 @@ describe('renderInstallPage', () => {
       expect(page.replaceAll(CONNECTION_LINK, '')).not.toContain('zb_conn_FAKE');
     });
 
+    test('tells the AI to warn the owner never to paste the link anywhere else', () => {
+      expect(page).toContain('Tell the owner never to paste the connection address into any other chat or app.');
+    });
+
     test('renders the same page twice', () => {
       expect(renderInstallPage(pageInput({ locale }))).toBe(page);
     });

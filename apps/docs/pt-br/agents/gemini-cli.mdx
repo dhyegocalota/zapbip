@@ -30,7 +30,7 @@ description: Conecte Gemini CLI ao seu WhatsApp.
     Depois do seu sim, ele roda `gemini mcp add --transport http --scope user zapbip <connectionLink>`.
   </Step>
   <Step title="Começar a escutar">
-    Ele roda `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@<version> listen` em um terminal em segundo plano e mantém esse terminal rodando, sem limite de tempo. Sempre que uma linha nova aparece ali, chama `check_inbox` e responde. `<version>` é a versão exata que as instruções da sua IA indicam.
+    Ele roda `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen` em um terminal em segundo plano e mantém esse terminal rodando, sem limite de tempo. Sempre que uma linha nova aparece ali, chama `check_inbox` e responde.
   </Step>
   <Step title="Testar">
     Em um processo novo ele roda `gemini -p "Use o zapbip para enviar ✅ instalado ao meu WhatsApp"`. Um `send_message` com ✅ instalado chega ao seu WhatsApp. Se o comando falhar, ele para e mostra as últimas 20 linhas. Depois reinicie o Gemini CLI.
@@ -39,7 +39,7 @@ description: Conecte Gemini CLI ao seu WhatsApp.
 
 ## Como a IA escuta
 
-- O Gemini CLI roda `npx zapbip@<version> listen` em um terminal em segundo plano e o mantém rodando. Quando você escreve no WhatsApp, a linha nova acorda a sessão.
+- O Gemini CLI roda `npx zapbip@0.1.0 listen` em um terminal em segundo plano e o mantém rodando. Quando você escreve no WhatsApp, a linha nova acorda a sessão.
 - O Gemini CLI não tem agendamento, então mantenha a sessão aberta. Cada acompanhamento dura no máximo 30 minutos, e o Gemini CLI rearma a cada aviso de tempo esgotado.
 
 Não há limite de tempo. Enquanto uma pergunta está aberta, sua IA pergunta de novo até você responder, pelo tempo que for preciso.
