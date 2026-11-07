@@ -13,3 +13,8 @@ export function assertNumberTransition(input: { from: WhatsAppNumberState; to: W
   const isActivatingUnverified = from === WhatsAppNumberState.Pending && verifiedAt === null;
   if (isActivatingUnverified) throw new Error(`transition ${from} → ${to} is not allowed: the number is not verified`);
 }
+
+export function allowedTargetsOf(input: { from: WhatsAppNumberState; verifiedAt: number | null }): WhatsAppNumberState[] {
+  const isUnverifiedPending = input.from === WhatsAppNumberState.Pending && input.verifiedAt === null;
+  return isUnverifiedPending ? [] : ALLOWED_TRANSITIONS[input.from];
+}

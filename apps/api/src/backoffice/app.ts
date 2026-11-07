@@ -10,6 +10,7 @@ import { sessionRoutes } from './routes/session-routes';
 import { assetRoutes } from './routes/asset-routes';
 import { auditRoutes } from './routes/audit-routes';
 import { localeRoutes } from './routes/locale-routes';
+import { numbersRoutes } from './numbers/numbers-routes';
 import { requestContext } from './request-context';
 import { signInRoutes } from './routes/sign-in-routes';
 import { handleBackofficeError, securityHeaders } from './security-headers';
@@ -44,6 +45,7 @@ export function createBackofficeApp(): Hono<BackofficeEnv> {
   app.route('/', sessionRoutes);
   app.route('/', localeRoutes);
   app.route('/', auditRoutes);
+  app.route('/', numbersRoutes);
   app.notFound((context) => errorResponse({ context, status: HttpStatus.NotFound }));
   return app;
 }

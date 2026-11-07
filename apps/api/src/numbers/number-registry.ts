@@ -30,9 +30,15 @@ export type RegisterNumberInput = {
   accessToken: string;
 };
 
+export type RegisteredNumberResult = { numberId: string; backfilledAccounts: number };
+
 export interface NumberRegistry {
   registerMetaApp(input: RegisterMetaAppInput): Promise<{ metaAppRef: string }>;
-  registerNumber(input: RegisterNumberInput): Promise<{ numberId: string }>;
+  registerNumber(input: RegisterNumberInput): Promise<RegisteredNumberResult>;
+  registerNumberWithNewMetaApp(input: {
+    metaApp: RegisterMetaAppInput;
+    number: Omit<RegisterNumberInput, 'metaAppRef'>;
+  }): Promise<RegisteredNumberResult & { metaAppRef: string }>;
   findNumber(input: { numberId: string }): Promise<NumberRecord | null>;
   transition(input: { numberId: string; to: WhatsAppNumberState }): Promise<void>;
   findByPhoneNumberIds(input: { phoneNumberIds: string[] }): Promise<RegisteredNumber[]>;

@@ -8,7 +8,9 @@ import type {
   RegisteredNumber,
   RegisterMetaAppInput,
   RegisterNumberInput,
+  RegisteredNumberResult,
 } from '../../numbers/number-registry';
+import { conflictOf } from '../../numbers/registration-conflict';
 import { assertNumberTransition } from '../../numbers/number-state';
 import { accessTokenAssociatedData, appSecretAssociatedData } from '../../numbers/number-sealing';
 import { WorkerSecret } from '../../operations/worker-secret';
@@ -43,6 +45,11 @@ const FIND_NUMBER_STATEMENT = 'SELECT ' + RECORD_COLUMNS + ' FROM whatsapp_numbe
 const TRANSITION_STATEMENT = 'UPDATE whatsapp_numbers SET state = ?, updated_at = ? WHERE id = ? AND state = ?';
 const FIND_FIRST_TWO_STATEMENT = 'SELECT ' + OUTBOUND_COLUMNS + ' FROM whatsapp_numbers ORDER BY created_at, id LIMIT 2';
 
+function registrationFailureOf(input: { error: unknown }): unknown {
+  const conflict = conflictOf({ error: input.error });
+  return conflict === null ? input.error : conflict;
+}
+
 function registeredOf(input: { row: RegisteredNumber }): RegisteredNumber {
   const { numberId, phoneNumberId, wabaId, state, metaAppRef } = input.row;
   return { numberId, phoneNumberId, wabaId, state, metaAppRef };
@@ -72,23 +79,49 @@ export class D1NumberRegistry implements NumberRegistry {
     return { metaAppRef };
   }
 
-  async registerNumber(input: RegisterNumberInput): Promise<{ numberId: string }> {
+  async registerNumber(input: RegisterNumberInput): Promise<RegisteredNumberResult> {
     const numberId = this.ids.next({ prefix: IdPrefix.Number });
+    const statements = await this.numberStatements({ numberId, number: input });
+    const backfilledAccounts = await this.runRegistration({ statements });
+    return { numberId, backfilledAccounts };
+  }
+
+  async registerNumberWithNewMetaApp(input: {
+    metaApp: RegisterMetaAppInput;
+    number: Omit<RegisterNumberInput, 'metaAppRef'>;
+  }): Promise<RegisteredNumberResult & { metaAppRef: string }> {
+    const metaAppRef = this.ids.next({ prefix: IdPrefix.MetaApp });
+    const numberId = this.ids.next({ prefix: IdPrefix.Number });
+    const sealedAppSecret = await this.secretBox.seal({
+      plain: input.metaApp.appSecret,
+      associatedData: appSecretAssociatedData({ metaAppRef }),
+    });
+    const now = this.clock.now();
+    const metaAppStatement = this.database
+      .prepare(INSERT_META_APP_STATEMENT)
+      .bind(metaAppRef, input.metaApp.metaAppId, input.metaApp.label, sealedAppSecret, SEAL_KEY_VERSION, now, now);
+    const numberStatements = await this.numberStatements({ numberId, number: { ...input.number, metaAppRef } });
+    const backfilledAccounts = await this.runRegistration({ statements: [metaAppStatement, ...numberStatements] });
+    return { metaAppRef, numberId, backfilledAccounts };
+  }
+
+  private async numberStatements(input: { numberId: string; number: RegisterNumberInput }): Promise<D1PreparedStatement[]> {
+    const { numberId, number } = input;
     const sealedAccessToken = await this.secretBox.seal({
-      plain: input.accessToken,
+      plain: number.accessToken,
       associatedData: accessTokenAssociatedData({ numberId }),
     });
     const now = this.clock.now();
-    await this.database.batch([
+    return [
       this.database
         .prepare(INSERT_NUMBER_STATEMENT)
         .bind(
           numberId,
-          input.metaAppRef,
-          input.phoneNumberId,
-          input.wabaId,
-          input.displayNumber,
-          input.label,
+          number.metaAppRef,
+          number.phoneNumberId,
+          number.wabaId,
+          number.displayNumber,
+          number.label,
           sealedAccessToken,
           SEAL_KEY_VERSION,
           WhatsAppNumberState.Pending,
@@ -96,8 +129,16 @@ export class D1NumberRegistry implements NumberRegistry {
           now,
         ),
       this.database.prepare(BACKFILL_ACCOUNTS_STATEMENT).bind(numberId),
-    ]);
-    return { numberId };
+    ];
+  }
+
+  private async runRegistration(input: { statements: D1PreparedStatement[] }): Promise<number> {
+    const results = await this.database.batch(input.statements).catch((error: unknown) => {
+      throw registrationFailureOf({ error });
+    });
+    const backfill = results[results.length - 1];
+    if (backfill === undefined) throw new Error('the registration batch returned no result');
+    return backfill.meta.changes;
   }
 
   findNumber(input: { numberId: string }): Promise<NumberRecord | null> {

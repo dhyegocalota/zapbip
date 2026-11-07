@@ -45,6 +45,7 @@ export type LogFields = {
   sizeBytes?: number;
   errorCode?: string;
   connectionId?: string;
+  numberId?: string;
   locale?: string;
   count?: number;
   route?: string;
