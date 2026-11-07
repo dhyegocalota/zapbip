@@ -293,7 +293,7 @@ function createRecordingSender(): RecordingSender {
     sessionRequests,
     templates,
     failSessionCalls: ({ callNumbers, error = new Error('session failed') }) => {
-      failingSessionCalls = failuresOf({ callNumbers, error });
+      failingSessionCalls = new Map([...failingSessionCalls, ...failuresOf({ callNumbers, error })]);
     },
     failTemplateCalls: ({ callNumbers, error = new Error('template failed') }) => {
       failingTemplateCalls = failuresOf({ callNumbers, error });

@@ -809,11 +809,10 @@ describe('webhook Graph errors on inbound media', () => {
 
 describe('webhook forwarded messages', () => {
   test.each([
-    ['a forwarded text', textForwardedFixture, true],
-    ['a frequently forwarded text', textFrequentlyForwardedFixture, true],
-  ])('stores %s with the forwarded kind and verified false', async (_name, fixture, forwarded) => {
+    ['a forwarded text', 'wamid.FWDTEXT', textForwardedFixture],
+    ['a frequently forwarded text', 'wamid.FREQUENTLYFWDTEXT', textFrequentlyForwardedFixture],
+  ])('stores %s with forwarded true and verified false', async (_name, id, fixture) => {
     const account = await seedAccount({ agent: 'alpha' });
-    const id = `wamid.${forwarded}`;
     const message = fresh({ message: fixture, account, id });
     const response = await postNotification({ notification: notificationWith({ messages: [message] }) });
     expect(response.status).toBe(STATUS_OK);
@@ -822,11 +821,11 @@ describe('webhook forwarded messages', () => {
       sender: MessageSender.Owner,
       verified: false,
       read: false,
-      forwarded,
+      forwarded: true,
     });
   });
 
-  test('stores a forwarded image with its media and the forwarded kind', async () => {
+  test('stores a forwarded image with its media and forwarded true', async () => {
     spyOnLogs();
     serveMediaFromGraph();
     const account = await seedAccount({ agent: 'alpha' });
@@ -838,7 +837,7 @@ describe('webhook forwarded messages', () => {
     expect(image.forwarded).toBe(true);
   });
 
-  test('a plain text is stored with forwarded none and verified true', async () => {
+  test('a plain text is stored with forwarded false and verified true', async () => {
     const account = await seedAccount({ agent: 'alpha' });
     await postNotification({ notification: notificationWith({ messages: [ownerText({ account, id: 'wamid.PLAIN', text: 'Oi' })] }) });
     const stored = await storedByChannelId({ account, channelMessageId: 'wamid.PLAIN' });

@@ -186,7 +186,7 @@ describe('parseWebhookNotification', () => {
     expect(parsed.entry).toMatchObject({ replyToChannelMessageId: null, forwarded: true });
   });
 
-  it('prefers frequently forwarded when both flags are set', async () => {
+  it('flags forwarded true when both context flags are set', async () => {
     const parsed = await inboundOf({ message: { ...textFixture, context: { forwarded: true, frequently_forwarded: true } } });
     expect(parsed.entry).toMatchObject({ forwarded: true });
   });

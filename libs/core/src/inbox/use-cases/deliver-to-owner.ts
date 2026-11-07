@@ -21,7 +21,9 @@ async function sendSession(input: Delivery): Promise<DeliverToOwnerResult> {
   const current = await dependencies.repository.findMessage({ messageId });
   const delivery = current === null ? null : current.delivery;
   if (delivery === DeliveryState.Sent) return { delivery };
-  if (report.noticeFailure !== null) throw report.noticeFailure.error;
+  const { noticeFailure } = report;
+  const isQueuedWithFailedNotice = delivery === DeliveryState.Queued && noticeFailure !== null;
+  if (isQueuedWithFailedNotice) throw noticeFailure.error;
   if (delivery === DeliveryState.Queued) return { delivery };
   const error = report.failures.get(messageId);
   await recordFailure({ dependencies, messageId, error });
