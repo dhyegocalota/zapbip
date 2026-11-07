@@ -142,7 +142,7 @@ gate_format() {
 
 gate_secrets() {
   [[ -n $gitleaks_binary ]] || { failure_reason="gitleaks is not installed. fix: $("$root/.agents/hooks/doctor.sh" --fix gitleaks)"; return 1; }
-  "$root/.github/scripts/secret-rules-probe.sh" "$gitleaks_binary" && "$gitleaks_binary" git --no-banner --redact --exit-code 1 "$root"
+  "$root/.github/scripts/secret-rules-probe.sh" "$gitleaks_binary" && "$gitleaks_binary" git --no-banner --redact --exit-code 1 --log-opts=HEAD "$root"
 }
 
 gate_typecheck() { pnpm typecheck; }

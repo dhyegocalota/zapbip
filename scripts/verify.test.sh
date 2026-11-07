@@ -460,6 +460,34 @@ run_verify
 expect_match "format checks a changed file" "$(calls)" 'prettier --check --ignore-unknown AGENTS.md'
 expect_no_match "format skips a symbolic link" "$(calls)" 'CLAUDE.md'
 
+SCANNING_GITLEAKS='echo "gitleaks $*" >> "$STUB_LOG"
+revisions=--all
+for argument in "$@"; do [[ $argument == --log-opts=* ]] && revisions=${argument#--log-opts=}; done
+! git -C "${@: -1}" log -p $revisions | grep -q PLANTED_SECRET'
+
+new_repository
+in_repository checkout -q -b other main
+commit_change leaked.txt
+echo PLANTED_SECRET >> "$repository/leaked.txt"
+in_repository add -- leaked.txt
+in_repository commit -q -m "plant a secret on the other branch"
+in_repository checkout -q feature
+commit_change README.md
+write_stub gitleaks "$SCANNING_GITLEAKS"
+run_verify
+expect_equal "a secret only on another branch exits 0" "$status" 0
+expect_no_match "a secret only on another branch is not reported" "$output" 'secrets failed'
+
+new_repository
+commit_change leaked.txt
+echo PLANTED_SECRET >> "$repository/leaked.txt"
+in_repository add -- leaked.txt
+in_repository commit -q -m "plant a secret on this branch"
+write_stub gitleaks "$SCANNING_GITLEAKS"
+run_verify
+expect_equal "a secret in the history of HEAD exits 1" "$status" 1
+expect_match "a secret in the history of HEAD fails the secrets gate" "$output" 'verify: secrets failed'
+
 rm -rf "$scratch"
 
 [[ "$failures" == 0 ]] && echo "verify: all checks passed" && exit 0
