@@ -299,6 +299,19 @@ export enum AccountReplyParameter {
   InstallPrompt = 'install_prompt',
 }
 
+export enum InstallClient {
+  ClaudeCode = 'claude-code',
+  Codex = 'codex',
+  Cursor = 'cursor',
+  GeminiCli = 'gemini-cli',
+  GrokBot = 'grok-bot',
+  ClaudeAi = 'claude-ai',
+  ChatGpt = 'chatgpt',
+  GrokWeb = 'grok-web',
+  Hermes = 'hermes',
+  OpenClaw = 'openclaw',
+}
+
 export enum HttpStatus {
   SwitchingProtocols = 101,
   Ok = 200,
@@ -314,6 +327,7 @@ export enum HttpStatus {
   PayloadTooLarge = 413,
   UnsupportedMediaType = 415,
   UpgradeRequired = 426,
+  TooManyRequests = 429,
   InternalServerError = 500,
   BadGateway = 502,
   ServiceUnavailable = 503,

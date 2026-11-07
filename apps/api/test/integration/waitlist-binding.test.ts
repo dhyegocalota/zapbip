@@ -1,5 +1,5 @@
 import { MessageKind, OwnerLocale } from '@zapbip/types';
-import { reset, runInDurableObject } from 'cloudflare:test';
+import { createExecutionContext, reset, runInDurableObject } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Bindings } from '../../src/contract/env';
 import { DevAccountInbox } from '../../src/dev/dev-account-inbox';
@@ -26,7 +26,7 @@ describe('a bad WAITLIST_ENABLED binding', () => {
 
   it('[row 259] AK-7 fails the owner simulator request naming the flag and keeps /health up', async () => {
     const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    const health = await developmentEntry.fetch(new Request(`${ORIGIN}/health`), badBindings);
+    const health = await developmentEntry.fetch(new Request(`${ORIGIN}/health`), badBindings, createExecutionContext());
     expect(health.status).toBe(STATUS_OK);
     const owner = await developmentEntry.fetch(
       new Request(`${ORIGIN}/dev/owner/${OWNER_PHONE}/messages`, {
@@ -35,6 +35,7 @@ describe('a bad WAITLIST_ENABLED binding', () => {
         body: JSON.stringify({ kind: MessageKind.Text, text: 'oi' }),
       }),
       badBindings,
+      createExecutionContext(),
     );
     expect(owner.status).toBe(STATUS_SERVER_ERROR);
     expect(errors.mock.calls.flat().map(String).join(' ')).toContain('WAITLIST_ENABLED');

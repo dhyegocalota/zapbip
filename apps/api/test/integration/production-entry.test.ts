@@ -1,4 +1,4 @@
-import { env } from 'cloudflare:test';
+import { createExecutionContext, env } from 'cloudflare:test';
 import { MessageKind } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { DevAccountInbox } from '../../src/dev/dev-account-inbox';
@@ -18,6 +18,7 @@ async function request(input: { path: string; method: string; body?: Record<stri
       body: input.body ? JSON.stringify(input.body) : undefined,
     }),
     { ...env, ENVIRONMENT: DeployEnvironment.Production },
+    createExecutionContext(),
   );
 }
 
@@ -47,6 +48,7 @@ describe('production entry', () => {
         body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list' }),
       }),
       env,
+      createExecutionContext(),
     );
     expect(response.status).toBe(STATUS_OK);
   });

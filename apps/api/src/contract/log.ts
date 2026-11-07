@@ -27,6 +27,7 @@ export enum LogEvent {
   InstallCodeUnreadable = 'install_code_unreadable',
   BudgetWarning = 'budget.warning',
   FrameRejected = 'frame_rejected',
+  InstallPageFailed = 'install_page_failed',
 }
 
 export type LogFields = {

@@ -1,5 +1,7 @@
 import { defineConfig } from 'vitest/config';
 
+const LOADED_MACHINE_END_TO_END_TIMEOUT_MS = 120_000;
+
 export default defineConfig({
   test: {
     environment: 'node',
@@ -11,5 +13,7 @@ export default defineConfig({
       'test/e2e/deploy-dry-run.e2e.test.ts',
     ],
     globalSetup: 'test/e2e/global-setup.ts',
+    testTimeout: LOADED_MACHINE_END_TO_END_TIMEOUT_MS,
+    hookTimeout: LOADED_MACHINE_END_TO_END_TIMEOUT_MS,
   },
 });

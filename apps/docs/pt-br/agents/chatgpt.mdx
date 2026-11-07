@@ -1,0 +1,48 @@
+---
+title: ChatGPT
+description: Conecte ChatGPT ao seu WhatsApp.
+---
+
+## O que funciona
+
+- Sua IA envia texto, fotos, vídeos, áudios, documentos, localizações, contatos e reações no WhatsApp.
+- Ela pergunta com botões ou listas e espera o seu toque.
+- O ChatGPT lê as suas mensagens do WhatsApp uma vez por hora, o menor intervalo que o app permite.
+- O ChatGPT espera cerca de 5 minutos por uma resposta e pergunta de novo, então não há limite no total.
+
+## Configurar do zero
+
+<Steps>
+  <Step title="Mande mensagem para o número oficial do zapbip">
+    Abra o WhatsApp e mande `oi` para o número oficial do zapbip, depois `novo agente chatgpt`. [Como começar](/pt-br/get-started/how-to-start) mostra cada mensagem.
+  </Step>
+  <Step title="Cole o prompt em ChatGPT">
+    O zapbip responde com uma linha feita para você. Cole em ChatGPT:
+
+    ```text
+    Conecte-se ao meu WhatsApp com o zapbip: leia https://mcp.zapbip.com/i/zb_inst_K7P2QXm9aTfLw3VbN8cYhE e siga as instruções.
+    ```
+
+    ChatGPT lê a página e segue os passos abaixo, em ordem. Antes de mudar um arquivo ou uma configuração, diz qual é e espera o seu sim. O link dessa página é secreto, então não o deixe em conversas que você compartilha.
+
+  </Step>
+  <Step title="Adicionar o app">
+    O ChatGPT pede para você ligar o modo desenvolvedor e adicionar um app pela URL `<connectionLink>`, escolhendo "Sem autenticação". Esse passo é seu.
+  </Step>
+  <Step title="Criar a tarefa por hora">
+    Ele pede para você criar uma tarefa por hora "Executar neste computador" que chama `check_inbox`, em um chat dedicado, e escolher "Sempre permitir" uma vez para cada ferramenta.
+  </Step>
+  <Step title="Avisar o zapbip que consulta">
+    Ele chama `set_wake({mode: "scheduled", interval_minutes: 60})`.
+  </Step>
+  <Step title="Testar">
+    No chat ele chama `send_message` com ✅ instalado.
+  </Step>
+</Steps>
+
+## Como a IA escuta
+
+- A tarefa por hora roda no seu computador e posta no mesmo chat. Cada execução lê o que você escreveu desde a última, então uma mensagem pode esperar até uma hora.
+- O ChatGPT não permite intervalo menor para tarefas agendadas.
+
+Não há limite de tempo. Enquanto uma pergunta está aberta, sua IA pergunta de novo até você responder, pelo tempo que for preciso.

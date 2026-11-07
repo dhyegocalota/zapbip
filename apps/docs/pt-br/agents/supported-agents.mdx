@@ -1,15 +1,20 @@
 ---
 title: IAs compatíveis
-description: Quais IAs você pode conectar e o que cada uma faz.
+description: Quais IAs você pode conectar e como cada uma escuta você.
 ---
 
-- **ChatGPT**: espera sua resposta por até 5 minutos.
-- **Claude (app e site)**: espera sua resposta por até 4 minutos.
-- **Claude Code**: espera sua resposta pelo tempo que precisar.
-- **Codex**: espera sua resposta por 5 minutos, até 15.
-- **Grok**: espera sua resposta por até 1 minuto.
-- **Grok Bot**: espera sua resposta por 2 minutos ou mais.
-- **Qualquer app com suporte a MCP**: depende do app.
+| Sua IA              | Como ela escuta                                             | Você pode puxar a conversa |
+| ------------------- | ----------------------------------------------------------- | -------------------------- |
+| Claude Code         | Um canal na sua sessão aberta, ou o conector do zapbip      | Sim                        |
+| Codex               | O conector do zapbip retoma a sua sessão                    | Sim                        |
+| Cursor              | Um terminal em segundo plano rodando `zapbip listen`        | Sim                        |
+| Gemini CLI          | Um terminal em segundo plano rodando `zapbip listen`        | Sim                        |
+| Hermes              | O plugin de plataforma do zapbip, ou um job a cada minuto   | Sim                        |
+| OpenClaw            | O plugin de canal do zapbip, ou um job a cada minuto        | Sim                        |
+| Grok Bot            | Uma rotina com webhook                                      | Sim                        |
+| Claude (app e site) | Uma tarefa agendada com gatilho de API                      | Sim                        |
+| ChatGPT             | Uma tarefa agendada, verificada pelo menos uma vez por hora | Sim, dentro de uma hora    |
+| Grok na web         | O seu Grok Bot fica de prontidão por ele                    | Sim, pelo seu Grok Bot     |
 
 Você pode puxar a conversa com qualquer uma delas pelo WhatsApp, usando o número do zapbip.
 
