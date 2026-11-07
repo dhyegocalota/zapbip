@@ -22,11 +22,11 @@ export const BYTES_PER_KILOBYTE = 1_000;
 export const COMPANY_FACT_UNSET = 'COMPANY_FACT_UNSET';
 export const COMPANY = {
   tradeName: 'Logic Bit',
-  legalName: COMPANY_FACT_UNSET,
-  cnpj: COMPANY_FACT_UNSET,
-  address: COMPANY_FACT_UNSET,
-  website: COMPANY_FACT_UNSET,
-  contactEmail: COMPANY_FACT_UNSET,
+  legalName: 'Dhyego Fernando Rissao Calota',
+  cnpj: '32.555.315/0001-91',
+  address: 'R. Rio Grande do Norte, 1435, Sala 708, Savassi, Belo Horizonte – MG, 30130-138, Brasil',
+  website: 'https://logicbit.com.br',
+  contactEmail: 'dhyego@logicbit.com.br',
 } as const;
 export const BYTES_PER_MEGABYTE = 1_000_000;
 export const DEFAULT_LOCALE = OwnerLocale.PortugueseBrazil;
