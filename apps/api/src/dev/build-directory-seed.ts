@@ -1,10 +1,14 @@
 import { AGENT_NAME_PATTERN, InboxError } from '@zapbip/core';
 import { AccountState, DEFAULT_LOCALE, InboxErrorCode } from '@zapbip/types';
-import { generateConnectionSecret } from '../src/adapters/platform/connection-secret';
-import { hashConnectionSecret } from '../src/adapters/platform/hash';
-import { OWNER_PHONE_PATTERN } from '../src/contract/constants';
+import { generateConnectionSecret } from '../adapters/platform/connection-secret';
+import { hashConnectionSecret } from '../adapters/platform/hash';
+import { OWNER_PHONE_PATTERN } from '../contract/constants';
 
-export type DirectorySeed = { connections: { agent: string; secret: string }[]; statements: string[] };
+export type DirectorySeed = {
+  accountId: string;
+  connections: { agent: string; secret: string; secretDigest: string }[];
+  statements: string[];
+};
 
 function invalidInput(input: { message: string }): InboxError {
   return new InboxError({ code: InboxErrorCode.InvalidInput, message: input.message });
@@ -46,23 +50,21 @@ export function assertOwnerAbsent(input: { existingCount: number }): void {
 export async function buildDirectorySeed(input: { phone: string; agents: string[]; createdAt: number }): Promise<DirectorySeed> {
   assertSeedInput(input);
   const accountId = 'acc_' + crypto.randomUUID().replaceAll('-', '');
-  const connections = input.agents.map((agent) => ({ agent, secret: generateConnectionSecret() }));
-  const connectionStatements = await Promise.all(
-    connections.map(async ({ agent, secret }) =>
-      insertStatement({
-        table: 'connections',
-        columns: ['id', 'account_id', 'agent', 'secret_digest', 'created_at'],
-        values: [
-          'con_' + crypto.randomUUID().replaceAll('-', ''),
-          accountId,
-          agent,
-          await hashConnectionSecret({ secret }),
-          input.createdAt,
-        ],
-      }),
-    ),
+  const connections = await Promise.all(
+    input.agents.map(async (agent) => {
+      const secret = generateConnectionSecret();
+      return { agent, secret, secretDigest: await hashConnectionSecret({ secret }) };
+    }),
+  );
+  const connectionStatements = connections.map(({ agent, secretDigest }) =>
+    insertStatement({
+      table: 'connections',
+      columns: ['id', 'account_id', 'agent', 'secret_digest', 'created_at'],
+      values: ['con_' + crypto.randomUUID().replaceAll('-', ''), accountId, agent, secretDigest, input.createdAt],
+    }),
   );
   return {
+    accountId,
     connections,
     statements: [
       insertStatement({

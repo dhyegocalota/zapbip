@@ -1,7 +1,8 @@
 import { AccountState, OwnerLocale } from '@zapbip/types';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { reset } from 'cloudflare:test';
 import { D1AccountDirectory } from '../../src/adapters/d1/d1-account-directory';
+import { LogEvent } from '../../src/contract/log';
 import { applyDirectoryMigration, SEED_CREATED_AT, seedAccount, seedConnection, seedOwnerIdentity } from '../support/seed';
 import { testEnv } from '../support/workers-env';
 
@@ -11,6 +12,7 @@ const CREATED_AT = 1_000;
 const CAP_LIMIT = 50;
 const CAP_SINCE = 500;
 const CONCURRENT_CALLS = 20;
+const ATTACK_CALLS = 50;
 const SECRET = `zb_conn_${'E'.repeat(43)}`;
 const OTHER_SECRET = `zb_conn_${'F'.repeat(43)}`;
 
@@ -48,7 +50,10 @@ async function seedRecentAccounts(input: { count: number; createdAt: number }): 
 }
 
 beforeEach(applyDirectoryMigration);
-afterEach(reset);
+afterEach(() => {
+  vi.restoreAllMocks();
+  return reset();
+});
 
 describe('D1 account directory', () => {
   it('creates the account and its owner identity', async () => {
@@ -90,6 +95,17 @@ describe('D1 account directory', () => {
     expect((await create({ waId: WA_ID, accountId: 'acc_new' }))?.created).toBe(true);
   });
 
+  it('[row 506] resolves fifty concurrent first messages at one below the daily cap to one account and no orphan row', async () => {
+    await seedRecentAccounts({ count: CAP_LIMIT - 1, createdAt: CREATED_AT });
+    const lookups = await Promise.all(
+      Array.from({ length: ATTACK_CALLS }, (_, index) => create({ waId: WA_ID, accountId: `acc_attack_${index}` })),
+    );
+    expect(new Set(lookups.map((lookup) => lookup?.account.accountId)).size).toBe(1);
+    expect(lookups.filter((lookup) => lookup?.created).length).toBe(1);
+    expect(await countRows({ table: 'accounts' })).toBe(CAP_LIMIT);
+    expect(await countRows({ table: 'owner_identities' })).toBe(1);
+  });
+
   it('returns an existing owner while the daily cap is reached', async () => {
     await create({ waId: WA_ID, accountId: 'acc_1' });
     await seedRecentAccounts({ count: CAP_LIMIT, createdAt: CAP_SINCE + 1 });
@@ -104,6 +120,15 @@ describe('D1 account directory', () => {
     await create({ waId: WA_ID, accountId: 'acc_1' });
     await directory().setState({ accountId: 'acc_1', state: AccountState.Suspended });
     expect((await directory().findByWaId({ waId: WA_ID }))?.state).toBe(AccountState.Suspended);
+  });
+
+  it('[row 291] logs account_state_changed with the account id and no phone when the state is set', async () => {
+    await create({ waId: WA_ID, accountId: 'acc_1' });
+    const lines: string[] = [];
+    vi.spyOn(console, 'log').mockImplementation((...parts: unknown[]) => void lines.push(parts.join(' ')));
+    await directory().setState({ accountId: 'acc_1', state: AccountState.Suspended });
+    expect(lines).toEqual([JSON.stringify({ event: LogEvent.AccountStateChanged, accountId: 'acc_1' })]);
+    expect(lines.join('\n')).not.toContain(WA_ID);
   });
 
   it('lists the accounts of one state only', async () => {

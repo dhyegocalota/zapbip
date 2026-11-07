@@ -3,6 +3,8 @@ title: Comandos no WhatsApp
 description: O que você pode escrever para o número do zapbip.
 ---
 
+import { Chat } from '/snippets/chat.jsx';
+
 Você gerencia as suas IAs escrevendo para o número do zapbip. Um comando é uma frase curta, em português ou inglês. O idioma que você escreve é o idioma da resposta.
 
 | Você quer              | Escreva                                               | O que acontece                                           |
@@ -15,6 +17,17 @@ Você gerencia as suas IAs escrevendo para o número do zapbip. Um comando é um
 | Apagar sua conta       | `apagar conta`, depois `apagar conta definitivamente` | Veja [apagar sua conta](/pt-br/help/delete-your-account) |
 
 Escreva a frase sozinha. Um `?` ou `!` no final faz dela uma mensagem comum para as suas IAs.
+
+## Exemplo
+
+<Chat
+  messages={[
+    { you: true, text: 'agentes', time: '09:20' },
+    { text: 'Seus agentes:\nclaude (2026-11-06, Claude Code)', time: '09:20' },
+    { you: true, text: 'revogar claude', time: '09:21' },
+    { text: 'Agente claude revogado. O link deixou de funcionar.', time: '09:21' },
+  ]}
+/>
 
 ## Falando com uma IA usando uma palavra de comando
 

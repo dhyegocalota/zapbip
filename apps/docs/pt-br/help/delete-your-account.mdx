@@ -3,6 +3,8 @@ title: Apague sua conta
 description: Como apagar tudo o que o zapbip guarda sobre você.
 ---
 
+import { Chat } from '/snippets/chat.jsx';
+
 Você pode apagar a sua conta a qualquer momento, pelo WhatsApp. São duas mensagens, para que uma mensagem solta não apague nada.
 
 <Steps>
@@ -12,6 +14,18 @@ Você pode apagar a sua conta a qualquer momento, pelo WhatsApp. São duas mensa
     recomeçar.
   </Step>
 </Steps>
+
+<Chat
+  messages={[
+    { you: true, text: 'apagar conta', time: '09:30' },
+    {
+      text: 'Isso apaga sua conta, todos os agentes, mensagens e arquivos, e não tem volta. Para confirmar em até 10 minutos, envie: apagar conta definitivamente',
+      time: '09:30',
+    },
+    { you: true, text: 'apagar conta definitivamente', time: '09:31' },
+    { text: 'Sua conta foi apagada. A próxima mensagem começa uma nova conta.', time: '09:31' },
+  ]}
+/>
 
 ## O que é removido
 

@@ -36,13 +36,13 @@ export type LogFields = {
   kind?: string;
   sizeBytes?: number;
   errorCode?: string;
+  connectionId?: string;
+  locale?: string;
+  count?: number;
+  route?: string;
   provider?: WakeProvider | null;
   attempt?: number;
   statusCode?: number | null;
   latencyMs?: number | null;
   outcome?: WakeAttemptOutcome | null;
-  connectionId?: string;
-  locale?: string;
-  count?: number;
-  route?: string;
 };

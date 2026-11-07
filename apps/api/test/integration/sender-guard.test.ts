@@ -36,9 +36,9 @@ beforeEach(applyDirectoryMigration);
 afterEach(reset);
 
 describe('sender guard', () => {
-  it('drops a blocked phone without calling the limiter', async () => {
+  it('[row 451] drops a blocked phone without calling the limiter', async () => {
     await block({ waId: WA_ID });
-    const { guard, limiter } = senderGuard({ limit: OWNER_MESSAGES_PER_MINUTE });
+    const { guard, limiter } = senderGuard({ limit: 0 });
     expect(await guard.admit({ waId: WA_ID })).toBe(SenderVerdict.Blocked);
     expect(limiter.calls).toEqual([]);
   });
@@ -77,7 +77,7 @@ describe('outbound guard', () => {
     });
   }
 
-  it('limits the thirty-first call of one connection and admits another connection of the account', async () => {
+  it('[row 328] limits the thirty-first call of one connection and admits another connection of the account', async () => {
     const guard = outboundGuard();
     const verdicts = await admitMany({
       count: OUTBOUND_MESSAGES_PER_MINUTE + 1,
@@ -88,7 +88,7 @@ describe('outbound guard', () => {
     expect(await guard.admit({ accountId: ACCOUNT_ID, agentKey: 'con_2' })).toBe(SenderVerdict.Admitted);
   });
 
-  it('limits the account at its own total across connections and admits another account', async () => {
+  it('[row 329] limits the account at its own total across connections and admits another account', async () => {
     const guard = outboundGuard();
     const connectionIds = Array.from({ length: SATURATING_CONNECTIONS + 1 }, (_, index) => `con_${index}`);
     const perConnection = ACCOUNT_OUTBOUND_MESSAGES_PER_MINUTE / SATURATING_CONNECTIONS;

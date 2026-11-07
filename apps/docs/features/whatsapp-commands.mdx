@@ -3,6 +3,8 @@ title: Commands on WhatsApp
 description: What you can type to the zapbip number.
 ---
 
+import { Chat } from '/snippets/chat.jsx';
+
 You manage your AIs by writing to the zapbip number. A command is a short phrase, in Portuguese or English. The language you write is the language of the answer.
 
 | You want to         | Write                                               | What happens                                         |
@@ -15,6 +17,17 @@ You manage your AIs by writing to the zapbip number. A command is a short phrase
 | Delete your account | `delete account`, then `delete account permanently` | See [delete your account](/help/delete-your-account) |
 
 Write the phrase alone. A trailing `?` or `!` makes it a normal message for your AIs.
+
+## Example
+
+<Chat
+  messages={[
+    { you: true, text: 'agents', time: '09:20' },
+    { text: 'Your agents:\nclaude (2026-11-06, Claude Code)', time: '09:20' },
+    { you: true, text: 'revoke claude', time: '09:21' },
+    { text: 'Agent claude revoked. Its link no longer works.', time: '09:21' },
+  ]}
+/>
 
 ## Talking to an AI with a command word
 

@@ -220,14 +220,14 @@ describe('receiveAccountMessage account states', () => {
 });
 
 describe('receiveAccountMessage deletion', () => {
-  test('confirming without a request replies expired', async () => {
+  test('[row 151] confirming without a request replies expired', async () => {
     const fixture = await createAccountFixture();
     const result = await receiveAccountText({ ...fixture, text: 'apagar conta definitivamente' });
     expect(result.deletionConfirmed).toBe(false);
     expect(sessionTexts(fixture)).toEqual([copyOf({ intent: AccountReplyIntent.DeletionExpired })]);
   });
 
-  test('confirming exactly at the time to live is accepted', async () => {
+  test('[row 152] confirming exactly at the time to live is accepted', async () => {
     const fixture = await createAccountFixture();
     await receiveAccountText({ ...fixture, text: 'apagar conta' });
     await fixture.environment.clock.advance({ ms: DELETION_CONFIRM_TTL_MS });
@@ -236,7 +236,7 @@ describe('receiveAccountMessage deletion', () => {
     expect(sessionTexts(fixture).at(-1)).toBe(copyOf({ intent: AccountReplyIntent.DeletionDone }));
   });
 
-  test('confirming one millisecond late is refused and clears the request', async () => {
+  test('[row 153] confirming one millisecond late is refused and clears the request', async () => {
     const fixture = await createAccountFixture();
     await receiveAccountText({ ...fixture, text: 'apagar conta' });
     await fixture.environment.clock.advance({ ms: DELETION_CONFIRM_TTL_MS + 1 });
@@ -246,7 +246,7 @@ describe('receiveAccountMessage deletion', () => {
     expect(await fixture.environment.dependencies.deletionRequests.find()).toBeNull();
   });
 
-  test('a waitlisted account may confirm its deletion', async () => {
+  test('[row 154] a waitlisted account may confirm its deletion', async () => {
     const fixture = await createAccountFixture({ state: AccountState.Waitlisted });
     await receiveAccountText({ ...fixture, text: 'apagar conta' });
     await fixture.environment.clock.advance({ ms: MINUTE_MS });
@@ -328,6 +328,7 @@ describe('receiveAccountMessage compensation', () => {
     expect(await fixture.environment.connectionDirectory.resolveSecretDigest({ secretDigest: oldDigest })).not.toBeNull();
     expect(await fixture.environment.connectionDirectory.resolveSecretDigest({ secretDigest: rotated!.digest })).toBeNull();
     expect(fixture.environment.revocations.cancelled).toEqual([]);
+    expect(fixture.environment.revocations.closed).toEqual([]);
   });
 
   test('a failed rotate of an agent created through the command restores its real install code columns', async () => {
@@ -350,6 +351,21 @@ describe('receiveAccountMessage compensation', () => {
     await receiveAccountText({ ...fixture, text: 'girar claude' });
     expect(fixture.environment.revocations.cancelled).toEqual(['claude']);
     expect(fixture.environment.revocations.revoked).toEqual([]);
+  });
+
+  test('a delivered rotate closes the connector sockets of that agent only', async () => {
+    const fixture = await createAccountFixture();
+    await addAgent({ ...fixture, agent: 'claude' });
+    await receiveAccountText({ ...fixture, text: 'girar claude' });
+    expect(fixture.environment.revocations.closed).toEqual(['claude']);
+  });
+
+  test('a delivered rotate hands the new key digest to the object', async () => {
+    const fixture = await createAccountFixture();
+    await addAgent({ ...fixture, agent: 'claude' });
+    await receiveAccountText({ ...fixture, text: 'girar claude' });
+    const newDigest = fixture.environment.secrets.issued.at(-1)?.digest;
+    expect(fixture.environment.revocations.rotated).toEqual([{ agent: 'claude', secretDigest: newDigest }]);
   });
 
   test('a delivered create sends one text with the install link and no part label', async () => {
@@ -448,7 +464,7 @@ describe('receiveAccountMessage install link redaction', () => {
     return input.environment.sender.sessions.map((message) => message.messageId);
   }
 
-  test('masks by id the replies that reached sent', async () => {
+  test('[row 486] masks by id the replies that reached sent', async () => {
     const fixture = await createAccountFixture();
     await receiveAccountText({ ...fixture, text: 'novo agente claude' });
     expect(fixture.environment.installLinkRedaction.redacted).toEqual(sentMessageIds(fixture));

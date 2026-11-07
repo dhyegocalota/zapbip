@@ -22,7 +22,7 @@ function mediaStore() {
 afterEach(reset);
 
 describe('R2 media store keys', () => {
-  it('AK-6 puts, gets and deletes under accounts/<account id>/media/<media id>', async () => {
+  it('[row 337] AK-6 puts, gets and deletes under accounts/<account id>/media/<media id>', async () => {
     const store = mediaStore();
     await store.put({
       accountId: ACCOUNT_ID,

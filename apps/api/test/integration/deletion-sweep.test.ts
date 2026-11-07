@@ -48,7 +48,7 @@ beforeEach(async () => {
 afterEach(reset);
 
 describe('sweepDeletingAccounts', () => {
-  it('finishes every deleting account and leaves the suspended one untouched', async () => {
+  it('[row 360] finishes every deleting account and leaves the suspended one untouched', async () => {
     await sweepDeletingAccounts({ environment: testEnv });
     const finished = [FIRST_DELETING, SECOND_DELETING];
     for (const accountId of finished) {
@@ -64,14 +64,14 @@ describe('sweepDeletingAccounts', () => {
     expect(await storageKeys({ accountId: SUSPENDED })).not.toEqual([TOMBSTONE_STORAGE_KEY]);
   });
 
-  it('finishes an account whose object was already purged by an interrupted run', async () => {
+  it('[row 361] finishes an account whose object was already purged by an interrupted run', async () => {
     await accountInboxStub({ accountId: FIRST_DELETING }).purge();
     await sweepDeletingAccounts({ environment: testEnv });
     expect(await countRows({ table: 'accounts', accountId: FIRST_DELETING })).toBe(0);
     expect(await storageKeys({ accountId: FIRST_DELETING })).toEqual([TOMBSTONE_STORAGE_KEY]);
   });
 
-  it('succeeds when run twice', async () => {
+  it('[row 363] succeeds when run twice', async () => {
     await sweepDeletingAccounts({ environment: testEnv });
     await expect(sweepDeletingAccounts({ environment: testEnv })).resolves.toBeUndefined();
     expect(await countRows({ table: 'accounts', accountId: SUSPENDED })).toBe(1);
@@ -88,7 +88,7 @@ describe('clearExpiredInstallSecrets', () => {
       .then((row) => row!.sealed);
   }
 
-  it('clears only the sealed secrets whose code expired, at the expiry instant included', async () => {
+  it('[row 573] clears only the sealed secrets whose code expired, at the expiry instant included', async () => {
     const expired = await registerWithInstallCode({ accountId: SUSPENDED, agent: 'expired', expiresAt: EXPIRY });
     const live = await registerWithInstallCode({ accountId: SUSPENDED, agent: 'live', expiresAt: EXPIRY + 1 });
     await clearExpiredInstallSecrets({ environment: testEnv, now: EXPIRY });

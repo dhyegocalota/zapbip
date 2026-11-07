@@ -10,12 +10,14 @@ import { DevAccountInbox } from '../../src/dev/dev-account-inbox';
 import { withRepository } from '../support/account-inbox';
 import { BASE_TIME, buildTextMessage } from '../support/builders';
 import { advanceClock } from '../support/inbox-session';
-import { applyDirectoryMigration } from '../support/seed';
+import { applyDirectoryMigration, seedAccount } from '../support/seed';
 import { accountInboxStub, connectionOf, testEnv, whatsappTestEnv } from '../support/workers-env';
 
 const ACCOUNT_ID = 'acc_channel';
 const UPGRADE_ACCOUNT_ID = 'acc_upgrade';
 const VERSION_BEFORE_CHANNEL = 4;
+const VERSION_AFTER_CHANNEL = 6;
+const UPGRADED_VERSIONS = [VERSION_BEFORE_CHANNEL, VERSION_AFTER_CHANNEL];
 const LIST_USER_TABLES_STATEMENT =
   "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%'";
 const CHANNEL_MESSAGE_ID = 'wamid.inbound.1';
@@ -404,7 +406,7 @@ describe('DO schema v4', () => {
 });
 
 describe('DO schema upgrade', () => {
-  it('applies v4 to a database that holds every version but itself', async () => {
+  it('applies v4 and v6 to a database that holds every other version', async () => {
     const upgrade = await runInDurableObject(accountInboxStub({ accountId: UPGRADE_ACCOUNT_ID }), (_instance, state) => {
       state.storage.sql
         .exec<{ name: string }>(LIST_USER_TABLES_STATEMENT)
@@ -412,7 +414,7 @@ describe('DO schema upgrade', () => {
         .forEach((table) => state.storage.sql.exec(`DROP TABLE ${table.name}`));
       const seeded = runMigrations({
         storage: state.storage,
-        migrations: ACCOUNT_INBOX_MIGRATIONS.filter((migration) => migration.version !== VERSION_BEFORE_CHANNEL),
+        migrations: ACCOUNT_INBOX_MIGRATIONS.filter((migration) => !UPGRADED_VERSIONS.includes(migration.version)),
       });
       const applied = runMigrations({ storage: state.storage, migrations: ACCOUNT_INBOX_MIGRATIONS });
       return {
@@ -424,8 +426,8 @@ describe('DO schema upgrade', () => {
           .map((column) => column.name),
       };
     });
-    expect(upgrade.seeded).toEqual([1, 2, 3, 5, 6]);
-    expect(upgrade.applied).toEqual([VERSION_BEFORE_CHANNEL]);
+    expect(upgrade.seeded).toEqual([1, 2, 3, 5]);
+    expect(upgrade.applied).toEqual(UPGRADED_VERSIONS);
     expect(upgrade.messageColumns).toContain('channel_message_id');
   });
 });
@@ -613,4 +615,8 @@ describe('AccountInbox channel messages', () => {
   });
 });
 
-beforeEach(applyDirectoryMigration);
+beforeEach(async () => {
+  await applyDirectoryMigration();
+  await seedAccount({ accountId: ACCOUNT_ID });
+  await seedAccount({ accountId: UPGRADE_ACCOUNT_ID });
+});

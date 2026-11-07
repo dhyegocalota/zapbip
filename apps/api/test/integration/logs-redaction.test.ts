@@ -18,7 +18,7 @@ describe('logs over the owner walk', () => {
     return reset();
   });
 
-  it('never carry a secret, an install code, a digest, a phone, an agent name or message text', async () => {
+  it('[row 416][row 453][row 577] never carry a secret, an install code, a digest, a phone, an agent name or message text', async () => {
     const lines: string[] = [];
     vi.spyOn(console, 'log').mockImplementation((...parts: unknown[]) => void lines.push(parts.join(' ')));
     await testEnv.CONNECTIONS.prepare('INSERT INTO blocked_phones (wa_id, reason, created_at) VALUES (?, ?, ?)')

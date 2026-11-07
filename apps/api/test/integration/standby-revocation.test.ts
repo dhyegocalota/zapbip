@@ -10,11 +10,11 @@ import {
   WakeMode,
 } from '@zapbip/types';
 import { reset, runInDurableObject } from 'cloudflare:test';
+import { hashConnectionSecret } from '../../src/adapters/platform/hash';
 import type { DevAccountInbox } from '../../src/dev/dev-account-inbox';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { readScreen, receiveOwnerText } from '../support/inbox-session';
-import { applyDirectoryMigration } from '../support/seed';
-import { GROK_TOKEN, GROK_URL, WAKE_ACCOUNT, enableGrokWake, expectOk, wakeStub } from '../support/wake-session';
+import { applyWakeDirectory, GROK_TOKEN, GROK_URL, WAKE_ACCOUNT, enableGrokWake, expectOk, wakeStub } from '../support/wake-session';
 import { connectionOf } from '../support/workers-env';
 import { UNAUTHORIZED_BODY } from '../../src/contract/constants';
 import { postMcp } from './mcp-fixtures';
@@ -24,6 +24,7 @@ const PRIMARY: AgentName = 'grok-web';
 const STANDBY: AgentName = 'grok-bot';
 const OWNER_TEXT = 'depois da revogacao';
 const STATUS_UNAUTHORIZED = 401;
+const RECREATED_SECRET = `zb_conn_${'R'.repeat(43)}`;
 
 let stub: DurableObjectStub<DevAccountInbox>;
 let accountId = WAKE_ACCOUNT;
@@ -55,7 +56,16 @@ function countRows(input: { agent: AgentName }): Promise<{ wakes: number; copies
   }));
 }
 
-beforeEach(applyDirectoryMigration);
+function countHandoffsTo(input: { agent: AgentName }): Promise<number> {
+  return runInDurableObject(
+    stub,
+    (_instance, state) =>
+      state.storage.sql.exec<{ total: number }>('SELECT COUNT(*) AS total FROM inbox_messages WHERE handed_to = ?', input.agent).one()
+        .total,
+  );
+}
+
+beforeEach(applyWakeDirectory);
 
 beforeEach(async () => {
   accountId = WAKE_ACCOUNT;
@@ -90,6 +100,15 @@ describe('revoking the standby', () => {
     expect(outcome).toMatchObject({ ok: false, errorCode: InboxErrorCode.InvalidInput });
     expect(outcome.ok ? '' : outcome.message).toContain('standby_agent');
     expect(outcome.ok ? '' : outcome.message).toContain('not connected to this account');
+  });
+
+  it('starts a recreated name with no standby or hand-off state of the old connection', async () => {
+    expectOk(await receiveOwnerText({ stub, text: `@${PRIMARY} ${OWNER_TEXT}` }));
+    expectOk(await stub.checkInbox({ connection: connectionFor({ agent: STANDBY }) }));
+    await revoke({ agent: STANDBY });
+    await stub.recordCreation({ agent: STANDBY, secretDigest: await hashConnectionSecret({ secret: RECREATED_SECRET }) });
+    expect(await countRows({ agent: STANDBY })).toEqual({ wakes: 0, copies: 0 });
+    expect(await countHandoffsTo({ agent: STANDBY })).toBe(0);
   });
 
   it('keeps handing off after another connection is revoked', async () => {

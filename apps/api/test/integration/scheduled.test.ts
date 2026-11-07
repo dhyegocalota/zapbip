@@ -31,7 +31,7 @@ beforeEach(applyDirectoryMigration);
 afterEach(reset);
 
 describe('scheduled account jobs', () => {
-  it('clears the sealed secret of an expired install code', async () => {
+  it('[row 499] clears the sealed secret of an expired install code', async () => {
     await seedOwnerIdentity({ accountId: 'acc_cron', phone: '5511900000010', ownerLocale: OwnerLocale.EnglishUs });
     const { connection } = await registerWithInstallCode({ accountId: 'acc_cron', agent: 'claude', expiresAt: EXPIRES_AT });
     await runScheduled({ cron: CRON, now: EXPIRES_AT, env: testEnv });
@@ -45,14 +45,14 @@ describe('scheduled account jobs', () => {
     expect(await sealedSecretOf({ connectionId: connection.connectionId })).not.toBeNull();
   });
 
-  it('finishes the deletion of an account left deleting', async () => {
+  it('[row 499] finishes the deletion of an account left deleting', async () => {
     await seedOwnerIdentity({ accountId: 'acc_gone', phone: '5511900000011', ownerLocale: OwnerLocale.EnglishUs });
     await testEnv.CONNECTIONS.prepare('UPDATE accounts SET state = ? WHERE id = ?').bind(AccountState.Deleting, 'acc_gone').run();
     await runScheduled({ cron: CRON, now: EXPIRES_AT, env: testEnv });
     expect(await countAccounts()).toBe(0);
   });
 
-  it('still clears the expired secret when the deletion sweep fails', async () => {
+  it('[row 485] still clears the expired secret when the deletion sweep fails', async () => {
     await seedOwnerIdentity({ accountId: 'acc_cron', phone: '5511900000010', ownerLocale: OwnerLocale.EnglishUs });
     const { connection } = await registerWithInstallCode({ accountId: 'acc_cron', agent: 'claude', expiresAt: EXPIRES_AT });
     await seedOwnerIdentity({ accountId: 'acc_gone', phone: '5511900000011', ownerLocale: OwnerLocale.EnglishUs });
@@ -68,7 +68,7 @@ describe('scheduled account jobs', () => {
     expect(await sealedSecretOf({ connectionId: connection.connectionId })).toBeNull();
   });
 
-  it('still finishes the deletion when clearing the expired secrets fails', async () => {
+  it('[row 485] still finishes the deletion when clearing the expired secrets fails', async () => {
     await seedOwnerIdentity({ accountId: 'acc_gone', phone: '5511900000011', ownerLocale: OwnerLocale.EnglishUs });
     await testEnv.CONNECTIONS.prepare('UPDATE accounts SET state = ? WHERE id = ?').bind(AccountState.Deleting, 'acc_gone').run();
     const database = new Proxy(testEnv.CONNECTIONS, {

@@ -36,8 +36,8 @@ import {
   registerDueTimeProvider,
   replaceTemplate,
 } from '../support/inbox-session';
+import { applyDirectoryMigration, seedAccount } from '../support/seed';
 import { versionAfterLatest } from '../support/migration-versions';
-import { applyDirectoryMigration } from '../support/seed';
 import { accountInboxStub, connectionOf, testEnv } from '../support/workers-env';
 
 const FIRST_ACCOUNT = 'acc_one';
@@ -594,4 +594,8 @@ describe('AccountInbox logs', () => {
   });
 });
 
-beforeEach(applyDirectoryMigration);
+beforeEach(async () => {
+  await applyDirectoryMigration();
+  await seedAccount({ accountId: FIRST_ACCOUNT });
+  await seedAccount({ accountId: SECOND_ACCOUNT });
+});

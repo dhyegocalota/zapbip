@@ -106,17 +106,23 @@ describe('finishAccountDeletion', () => {
     expect(environment.accountMedia.count({ accountId: other.accountId })).toBe(1);
   });
 
-  test('the same number opens a new account afterwards', async () => {
-    const { environment, account, dependencies, inboxPurge } = await setup();
-    await finishAccountDeletion({ dependencies, accountId: account.accountId, inboxPurge });
-    const reopened = await openOwnerAccount({
-      dependencies: environment.lifecycle,
-      waId: BRAZIL_WA_ID,
-      waitlistEnabled: true,
-      createdAt: 1,
-    });
-    expect(reopened).toMatchObject({ account: { waId: BRAZIL_WA_ID, state: AccountState.Waitlisted }, created: true });
-  });
+  test.each([
+    { waitlistEnabled: true, state: AccountState.Waitlisted },
+    { waitlistEnabled: false, state: AccountState.Active },
+  ])(
+    '[row 235] the same number opens a new $state account afterwards when the waitlist flag is $waitlistEnabled',
+    async ({ waitlistEnabled, state }) => {
+      const { environment, account, dependencies, inboxPurge } = await setup();
+      await finishAccountDeletion({ dependencies, accountId: account.accountId, inboxPurge });
+      const reopened = await openOwnerAccount({
+        dependencies: environment.lifecycle,
+        waId: BRAZIL_WA_ID,
+        waitlistEnabled,
+        createdAt: 1,
+      });
+      expect(reopened).toMatchObject({ account: { waId: BRAZIL_WA_ID, state }, created: true });
+    },
+  );
 });
 
 describe('finishDeletingAccounts', () => {

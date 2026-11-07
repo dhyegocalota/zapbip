@@ -3,6 +3,8 @@ title: Delete your account
 description: How to delete everything zapbip keeps about you.
 ---
 
+import { Chat } from '/snippets/chat.jsx';
+
 You can delete your account at any time, from WhatsApp. It takes two messages, so a stray message cannot delete anything.
 
 <Steps>
@@ -11,6 +13,18 @@ You can delete your account at any time, from WhatsApp. It takes two messages, s
     Within 10 minutes, write `delete account permanently`. After that time nothing is deleted; write `delete account` again to start over.
   </Step>
 </Steps>
+
+<Chat
+  messages={[
+    { you: true, text: 'delete account', time: '09:30' },
+    {
+      text: 'This deletes your account, every agent, message and file, and cannot be undone. To confirm within 10 minutes, send: delete account permanently',
+      time: '09:30',
+    },
+    { you: true, text: 'delete account permanently', time: '09:31' },
+    { text: 'Your account is deleted. Your next message starts a new account.', time: '09:31' },
+  ]}
+/>
 
 ## What is removed
 

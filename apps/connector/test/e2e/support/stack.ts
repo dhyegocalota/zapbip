@@ -24,6 +24,8 @@ const SIGNING_KEY_BYTES = 32;
 const WAKE_SECRET_KEY_BYTES = 32;
 const OWNER_PHONE = '5511999990000';
 const LOG_FILE_NAME = 'wrangler-dev.log';
+const UNTRUSTED_CERTIFICATE_VARIABLE = 'NODE_TLS_REJECT_UNAUTHORIZED';
+const ACCEPT_UNTRUSTED_CERTIFICATE = '0';
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 
 const seedOutputSchema = z.object({ connections: z.array(z.object({ agent: z.string(), secret: z.string() })) });
@@ -85,11 +87,11 @@ async function waitForProbe(input: { origin: string; secret: string; deadline: n
   return waitForProbe(input);
 }
 
-async function seedConnections(input: { agents: string[]; persistArguments: string[] }): Promise<Record<string, string>> {
+async function seedConnections(input: { agents: string[]; origin: string }): Promise<Record<string, string>> {
   const seeded = await runCommand(
     'pnpm',
-    ['exec', 'tsx', 'scripts/dev-seed.ts', '--phone', OWNER_PHONE, '--agents', input.agents.join(','), '--json', ...input.persistArguments],
-    { cwd: API_DIRECTORY },
+    ['exec', 'tsx', 'scripts/dev-seed.ts', '--phone', OWNER_PHONE, '--agents', input.agents.join(','), '--json', '--origin', input.origin],
+    { cwd: API_DIRECTORY, env: { ...process.env, [UNTRUSTED_CERTIFICATE_VARIABLE]: ACCEPT_UNTRUSTED_CERTIFICATE } },
   );
   const { connections } = seedOutputSchema.parse(JSON.parse(seeded.stdout));
   return Object.fromEntries(connections.map((connection) => [connection.agent, connection.secret]));
@@ -108,7 +110,6 @@ export async function startStack(input: { agents: string[] }): Promise<Stack> {
       cwd: API_DIRECTORY,
     },
   );
-  const secrets = await seedConnections({ agents: input.agents, persistArguments });
   const server = spawn(
     'pnpm',
     [
@@ -140,6 +141,8 @@ export async function startStack(input: { agents: string[] }): Promise<Stack> {
   const logStream = createWriteStream(join(persistDirectory, LOG_FILE_NAME));
   server.stdout.pipe(logStream);
   server.stderr.pipe(logStream);
+  await waitForHealth({ origin, server, deadline: Date.now() + HEALTH_TIMEOUT_MS });
+  const secrets = await seedConnections({ agents: input.agents, origin });
   await Promise.all(Object.values(secrets).map((secret) => waitForProbe({ origin, secret, deadline: Date.now() + HEALTH_TIMEOUT_MS })));
   const agentEntries = await Promise.all(
     input.agents.map(async (agent): Promise<[string, StackAgent]> => {

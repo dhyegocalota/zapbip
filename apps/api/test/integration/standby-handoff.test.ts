@@ -5,9 +5,17 @@ import type { DevAccountInbox } from '../../src/dev/dev-account-inbox';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { withRepository } from '../support/account-inbox';
 import { advanceClock, readScreen, receiveOwnerText } from '../support/inbox-session';
-import { ACCEPTED, DEBOUNCE_ADVANCE_MS, WAKE_ACCOUNT, enableGrokWake, expectOk, readRequests, wakeStub } from '../support/wake-session';
+import {
+  applyWakeDirectory,
+  ACCEPTED,
+  DEBOUNCE_ADVANCE_MS,
+  WAKE_ACCOUNT,
+  enableGrokWake,
+  expectOk,
+  readRequests,
+  wakeStub,
+} from '../support/wake-session';
 import { connectionOf } from '../support/workers-env';
-import { applyDirectoryMigration } from '../support/seed';
 
 const PRIMARY: AgentName = 'grok-web';
 const STANDBY: AgentName = 'grok-bot';
@@ -70,7 +78,7 @@ async function alarmAfterDebounce(): Promise<void> {
   await runDurableObjectAlarm(stub);
 }
 
-beforeEach(applyDirectoryMigration);
+beforeEach(applyWakeDirectory);
 
 beforeEach(async () => {
   stub = wakeStub({});

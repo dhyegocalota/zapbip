@@ -1,7 +1,7 @@
 import type { MessageSender } from '@zapbip/core';
 import { runInDurableObject } from 'cloudflare:test';
 import type { AccountInbox } from '../../src/account-inbox/account-inbox';
-import { accountInboxStub } from './workers-env';
+import { accountInboxStub, testEnv } from './workers-env';
 
 type SenderInternals = { sender: MessageSender; dependencies: { waiters: { hasAgentWaiter(input: { agent: string }): boolean } } };
 type SessionSend = MessageSender['session'];
@@ -41,4 +41,34 @@ export async function recordWaiterAtNextSessionSend(input: { accountId: string; 
       },
   });
   return () => observation.value;
+}
+
+export async function recordAccountStateAtNextSessionSend(input: { accountId: string }): Promise<() => string | null> {
+  const observation: { value: string | null } = { value: null };
+  await wrapNextSessionSend({
+    accountId: input.accountId,
+    wrap:
+      ({ original }) =>
+      async (sessionInput) => {
+        const row = await testEnv.CONNECTIONS.prepare('SELECT state FROM accounts WHERE id = ?')
+          .bind(input.accountId)
+          .first<{ state: string }>();
+        observation.value = row === null ? null : row.state;
+        return original(sessionInput);
+      },
+  });
+  return () => observation.value;
+}
+
+export async function countSessionSends(input: { accountId: string }): Promise<() => number> {
+  const observation = { count: 0 };
+  await runInDurableObject(accountInboxStub({ accountId: input.accountId }), (instance: AccountInbox) => {
+    const internals = instance as unknown as SenderInternals;
+    const original = internals.sender.session.bind(internals.sender);
+    internals.sender.session = async (sessionInput) => {
+      observation.count += 1;
+      return original(sessionInput);
+    };
+  });
+  return () => observation.count;
 }

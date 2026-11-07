@@ -57,7 +57,7 @@ describe('migration 0002 on a database that holds 0001 rows', () => {
     ]);
   });
 
-  it('pin applies without a foreign key error and creates the spec tables', async () => {
+  it('[row 280] pin applies without a foreign key error and creates the spec tables', async () => {
     await applyAccountsMigration();
     const tables = await Promise.all(Object.keys(EXPECTED_COLUMNS).map(async (table) => [table, await columnsOf({ table })] as const));
     expect(Object.fromEntries(tables)).toEqual(EXPECTED_COLUMNS);

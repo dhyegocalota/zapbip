@@ -4,9 +4,16 @@ import { reset, runDurableObjectAlarm } from 'cloudflare:test';
 import type { DevAccountInbox } from '../../src/dev/dev-account-inbox';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { advanceClock, openWindow, receiveOwnerText } from '../support/inbox-session';
-import { ACCEPTED, DEBOUNCE_ADVANCE_MS, WAKE_ACCOUNT, enableGrokWake, expectOk, wakeStub } from '../support/wake-session';
+import {
+  applyWakeDirectory,
+  ACCEPTED,
+  DEBOUNCE_ADVANCE_MS,
+  WAKE_ACCOUNT,
+  enableGrokWake,
+  expectOk,
+  wakeStub,
+} from '../support/wake-session';
 import { connectionOf } from '../support/workers-env';
-import { applyDirectoryMigration } from '../support/seed';
 
 const PRIMARY: AgentName = 'grok-web';
 const STANDBY: AgentName = 'grok-bot';
@@ -38,7 +45,7 @@ async function alarmAfter(input: { advanceMs: number }): Promise<void> {
   await runDurableObjectAlarm(stub);
 }
 
-beforeEach(applyDirectoryMigration);
+beforeEach(applyWakeDirectory);
 
 beforeEach(async () => {
   stub = wakeStub({});

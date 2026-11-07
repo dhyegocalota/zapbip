@@ -1,0 +1,4 @@
+
+> @zapbip/api@ typecheck /private/tmp/claude-501/-Users-dhyegocalota-Projects-zapbip-zapbip/edbded58-c331-44d5-ac8d-6cac14247a14/scratchpad/wt/scheduled-wake/apps/api
+> tsc --noEmit && tsc --noEmit -p tsconfig.test.json
+

@@ -1,5 +1,7 @@
 import type { AccountDirectory, AccountLookup, AccountRecord } from '@zapbip/core';
 import type { AccountState, OwnerLocale } from '@zapbip/types';
+import { LogEvent } from '../../contract/log';
+import { logEvent } from '../../log';
 
 const SELECT_ACCOUNT = `SELECT accounts.id AS accountId, owner_identities.wa_id AS waId, accounts.state AS state, owner_identities.locale AS locale
   FROM owner_identities
@@ -55,6 +57,7 @@ export class D1AccountDirectory implements AccountDirectory {
 
   async setState(input: { accountId: string; state: AccountState }): Promise<void> {
     await this.database.prepare(SET_STATE_STATEMENT).bind(input.state, input.accountId).run();
+    logEvent({ event: LogEvent.AccountStateChanged, accountId: input.accountId });
   }
 
   async listByState(input: { state: AccountState }): Promise<AccountRecord[]> {

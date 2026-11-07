@@ -132,10 +132,10 @@ describe('schema v3', () => {
     expect(applied).toEqual([THIRD_VERSION]);
   });
 
-  it('applies v3 and v6 to an object at the versions main holds and keeps its rows', async () => {
+  it('applies v3 to an object at the versions main holds and keeps its rows', async () => {
     const result = await runInDurableObject(accountInboxStub({ accountId: MIGRATION_ACCOUNT_ID }), async (_instance, state) => {
       dropEveryTable({ storage: state.storage });
-      const mainVersions = [FIRST_VERSION, SECOND_VERSION, FOURTH_VERSION, FIFTH_VERSION];
+      const mainVersions = [FIRST_VERSION, SECOND_VERSION, FOURTH_VERSION, FIFTH_VERSION, SIXTH_VERSION];
       const seeded = runMigrations({
         storage: state.storage,
         migrations: ACCOUNT_INBOX_MIGRATIONS.filter((migration) => mainVersions.includes(migration.version)),
@@ -154,8 +154,8 @@ describe('schema v3', () => {
         wakes: state.storage.sql.exec('SELECT agent FROM agent_wake').toArray().length,
       };
     });
-    expect(result.seeded).toEqual([FIRST_VERSION, SECOND_VERSION, FOURTH_VERSION, FIFTH_VERSION]);
-    expect(result.applied).toEqual([THIRD_VERSION, SIXTH_VERSION]);
+    expect(result.seeded).toEqual([FIRST_VERSION, SECOND_VERSION, FOURTH_VERSION, FIFTH_VERSION, SIXTH_VERSION]);
+    expect(result.applied).toEqual([THIRD_VERSION]);
     expect(result.wakeColumns).toEqual(expect.arrayContaining(['interval_minutes', 'last_stale_notice_at', 'stale_notice_failures']));
     expect(result.accountFactsTable).toBe(1);
     expect(result.wakes).toBe(1);

@@ -13,7 +13,7 @@ describe('connection secrets', () => {
     expect(secret).toMatch(CONNECTION_SECRET_PATTERN);
   });
 
-  it('issues distinct secrets in the base64url alphabet', async () => {
+  it('[row 442] issues distinct secrets in the base64url alphabet', async () => {
     const issued = await Promise.all(Array.from({ length: ISSUED_SECRET_COUNT }, () => createConnectionSecrets().issue()));
     expect(new Set(issued.map(({ secret }) => secret)).size).toBe(ISSUED_SECRET_COUNT);
     expect(issued.every(({ secret }) => CONNECTION_SECRET_PATTERN.test(secret))).toBe(true);

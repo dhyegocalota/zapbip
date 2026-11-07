@@ -1,12 +1,18 @@
-import { OwnerLocale } from '@zapbip/types';
+import { OwnerLocale, REVOKED_CLOSE_CODE } from '@zapbip/types';
 import { reset, runInDurableObject } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { hashConnectionSecret } from '../../src/adapters/platform/hash';
 import { openWindow, receiveOwnerText } from '../support/inbox-session';
-import { applyDirectoryMigration } from '../support/seed';
+import { openConnector } from '../support/connector-session';
+import { applyDirectoryMigration, seedAccount, seedConnection, seedOwnerIdentity } from '../support/seed';
 import { accountInboxStub, connectionOf } from '../support/workers-env';
 
 const ACCOUNT = 'acc_revocation';
 const OLD_AGENT = 'alpha';
+const CONNECTOR_SECRET = `zb_conn_${'D'.repeat(43)}`;
+const OWNER_PHONE = '5511900000051';
+const WAKE_REQUESTED_KEY = `wake_last_requested_at:${OLD_AGENT}`;
+const PENDING_WAKE_JOB_STATEMENT = 'INSERT INTO wake_jobs (agent, due_at, attempt, lease_until, rewake) VALUES (?, 1, 0, NULL, 0)';
 const ANSWERED_QUESTION_STATEMENT = `INSERT INTO questions (question_id, agent, text, options, normalized_key, prompt_message_id, asked_at, answer)
   VALUES ('que_answered', ?, 'Deploy?', '[]', 'deploy', 'msg_prompt', 1, '{}')`;
 
@@ -72,11 +78,18 @@ describe('a revoked agent stops being a routing target', () => {
     expect(options.map((row) => row.payload).join('')).not.toContain(OLD_AGENT);
   });
 
-  it('forgets the revoked name and its old history when the name is created again', async () => {
+  it('deletes the pending wake job of a revoked agent', async () => {
+    await agentSpoke();
+    await sql(PENDING_WAKE_JOB_STATEMENT, OLD_AGENT);
+    await stubOf().recordRevocation({ agent: OLD_AGENT });
+    expect(await sql('SELECT agent FROM wake_jobs WHERE agent = ?', OLD_AGENT)).toEqual([]);
+  });
+
+  it('[row 478][row 479] forgets the revoked name and its old history when the name is created again', async () => {
     await agentSpoke();
     await sql(ANSWERED_QUESTION_STATEMENT, OLD_AGENT);
     await stubOf().recordRevocation({ agent: OLD_AGENT });
-    await stubOf().recordCreation({ agent: OLD_AGENT });
+    await stubOf().recordCreation({ agent: OLD_AGENT, secretDigest: await hashConnectionSecret({ secret: CONNECTOR_SECRET }) });
     expect(await sql('SELECT agent FROM revoked_agents')).toEqual([]);
     expect(await sql('SELECT question_id FROM questions WHERE agent = ?', OLD_AGENT)).toEqual([]);
     expect(await sql('SELECT id FROM inbox_messages WHERE agent = ?', OLD_AGENT)).toEqual([]);
@@ -85,6 +98,26 @@ describe('a revoked agent stops being a routing target', () => {
     });
     expect(inbox.ok && inbox.value.messages).toEqual([]);
   });
+
+  it('forgets the debounce of the revoked name so the recreated agent is woken at once', async () => {
+    await runInDurableObject(stubOf(), (_instance, state) => state.storage.kv.put(WAKE_REQUESTED_KEY, 1));
+    await stubOf().recordRevocation({ agent: OLD_AGENT });
+    expect(await runInDurableObject(stubOf(), (_instance, state) => state.storage.kv.get(WAKE_REQUESTED_KEY))).toBeUndefined();
+  });
+
+  it('a recreated name inherits neither the old wake row nor the old connector socket', async () => {
+    await seedOwnerIdentity({ accountId: ACCOUNT, phone: OWNER_PHONE, ownerLocale: OwnerLocale.PortugueseBrazil });
+    await seedConnection({ accountId: ACCOUNT, agent: OLD_AGENT, secret: CONNECTOR_SECRET });
+    const session = await openConnector({ secret: CONNECTOR_SECRET });
+    await session.nextFrame();
+    expect(await sql('SELECT agent FROM agent_wake WHERE agent = ?', OLD_AGENT)).toHaveLength(1);
+    await stubOf().recordCreation({ agent: OLD_AGENT, secretDigest: await hashConnectionSecret({ secret: CONNECTOR_SECRET }) });
+    expect(await sql('SELECT agent FROM agent_wake WHERE agent = ?', OLD_AGENT)).toEqual([]);
+    expect(await session.closeCode()).toBe(REVOKED_CLOSE_CODE);
+  });
 });
 
-beforeEach(applyDirectoryMigration);
+beforeEach(async () => {
+  await applyDirectoryMigration();
+  await seedAccount({ accountId: ACCOUNT });
+});

@@ -21,11 +21,11 @@ Write `agents`. zapbip lists the name, the creation date and the app of each con
 
 ## Disconnect an AI
 
-Write `revoke claude`. The connection ends at once. To use that AI again, write `new agent claude`.
+Write `revoke claude`. Every way that AI is connected stops at once: its link to zapbip, a local listener running on your computer and any wake that would start it. To use that AI again, write `new agent claude`.
 
 ## Get a new prompt
 
-Write `rotate claude`. The old connection stops working immediately and you receive a new prompt. If zapbip cannot deliver the new prompt, your old connection is kept.
+Write `rotate claude`. The old connection stops working immediately, with the same reach as `revoke`: its link, a connected local listener and any wake. You receive a new prompt. If zapbip cannot deliver the new prompt, your old connection is kept.
 
 ## The limit
 

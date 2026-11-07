@@ -6,6 +6,7 @@ import type { AccountInbox } from '../../src/account-inbox/account-inbox';
 import type { CallOutcome } from '../../src/contract/account-inbox-rpc';
 import type { DevAccountInbox } from '../../src/dev/dev-account-inbox';
 import { advanceClock, readScreen } from './inbox-session';
+import { applyDirectoryMigration, seedAccount } from './seed';
 import { accountInboxStub, connectionOf } from './workers-env';
 
 export const WAKE_ACCOUNT = 'acc_wake';
@@ -16,6 +17,11 @@ export const DEBOUNCE_ADVANCE_MS = 3_000;
 export const ACCEPTED: ScriptedWakeResponse = { statusCode: 200, errorName: null, retryAfterMs: null };
 export const UNAVAILABLE: ScriptedWakeResponse = { statusCode: 503, errorName: null, retryAfterMs: null };
 export const UNAUTHORIZED: ScriptedWakeResponse = { statusCode: 401, errorName: null, retryAfterMs: null };
+
+export async function applyWakeDirectory(): Promise<void> {
+  await applyDirectoryMigration();
+  await seedAccount({ accountId: WAKE_ACCOUNT });
+}
 
 export type WakeRow = {
   agent: string;

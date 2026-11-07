@@ -7,7 +7,9 @@ import { LogEvent } from '../../src/contract/log';
 import textFixture from '../fixtures/whatsapp/inbound/text.json';
 import { notificationWith } from '../fixtures/whatsapp/inbound/notification';
 import { signatureHeaderOf } from '../fixtures/whatsapp/inbound/signed-webhook';
+import textForwardedFixture from '../fixtures/whatsapp/inbound/text-forwarded.json';
 import { applyDirectoryMigration } from '../support/seed';
+import { testEnv } from '../support/workers-env';
 import { findAccounts, screenTextsOf } from './owner-inbound-fixtures';
 
 const WEBHOOK_URL = `http://example.com${WHATSAPP_WEBHOOK_PATH}`;
@@ -15,13 +17,14 @@ const UNKNOWN_PHONE = '5511900000099';
 const FIRST_TEXT = 'AK-first-message-text';
 const STATUS_OK = 200;
 
-async function postFromUnknownPhone(): Promise<Response> {
+async function postFromUnknownPhone(input: { base?: typeof textFixture; id?: string; text?: string } = {}): Promise<Response> {
+  const { base = textFixture, id = 'wamid.AK1', text = FIRST_TEXT } = input;
   const message = {
-    ...textFixture,
+    ...base,
     from: UNKNOWN_PHONE,
-    id: 'wamid.AK1',
+    id,
     timestamp: String(Math.floor(Date.now() / SECOND_MS)),
-    text: { body: FIRST_TEXT },
+    text: { body: text },
   };
   const body = JSON.stringify(notificationWith({ messages: [message] }));
   const signature = await signatureHeaderOf({ appSecret: env.META_APP_SECRET as string, body: new TextEncoder().encode(body) });
@@ -35,7 +38,7 @@ afterEach(() => {
 });
 
 describe('webhook route from a phone without an account', () => {
-  it('AK-1 opens an active account, stores no owner message and logs the creation without the phone', async () => {
+  it('[row 385] AK-1 opens an active account, stores no owner message and logs the creation without the phone', async () => {
     const lines: string[] = [];
     vi.spyOn(console, 'log').mockImplementation((...parts: unknown[]) => void lines.push(parts.join(' ')));
     const response = await postFromUnknownPhone();
@@ -51,5 +54,21 @@ describe('webhook route from a phone without an account', () => {
     expect(lines.filter((line) => line.includes(LogEvent.AccountCreated))).toHaveLength(1);
     expect(output).not.toContain(UNKNOWN_PHONE);
     expect(output).not.toContain(FIRST_TEXT);
+  });
+});
+
+describe('webhook route with a forwarded command', () => {
+  it('a forwarded revoke command does not revoke the connection', async () => {
+    await postFromUnknownPhone();
+    await postFromUnknownPhone({ id: 'wamid.AK2', text: 'novo agente alpha' });
+    await postFromUnknownPhone({ base: textForwardedFixture, id: 'wamid.AK3', text: 'revogar alpha' });
+    const revoked = await testEnv.CONNECTIONS.prepare('SELECT COUNT(*) AS total FROM connections WHERE revoked_at IS NOT NULL').first<{
+      total: number;
+    }>();
+    const active = await testEnv.CONNECTIONS.prepare('SELECT COUNT(*) AS total FROM connections WHERE revoked_at IS NULL').first<{
+      total: number;
+    }>();
+    expect(revoked?.total).toBe(0);
+    expect(active?.total).toBe(1);
   });
 });

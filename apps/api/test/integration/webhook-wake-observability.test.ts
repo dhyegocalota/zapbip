@@ -16,6 +16,7 @@ import {
   expectOk,
   replaceWakeDependencies,
   wakeStub,
+  applyWakeDirectory,
 } from '../support/wake-session';
 
 const OWNER_TEXT = 'segredo-do-dono';
@@ -41,7 +42,7 @@ async function runThreeRetriesAndDelivery(): Promise<void> {
   }
 }
 
-beforeEach(applyDirectoryMigration);
+beforeEach(applyWakeDirectory);
 
 beforeEach(async () => {
   stub = wakeStub({});

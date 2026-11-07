@@ -10,14 +10,14 @@ afterEach(() => {
 });
 
 describe('logEvent', () => {
-  it('writes one structured line with the event name and the account id only', () => {
+  it('[row 265] writes one structured line with the event name and the account id only', () => {
     const lines = vi.spyOn(console, 'log').mockImplementation(() => undefined);
     logEvent({ event: LogEvent.AccountCreated, accountId: ACCOUNT_ID });
     expect(lines).toHaveBeenCalledTimes(1);
     expect(lines).toHaveBeenCalledWith(JSON.stringify({ event: LogEvent.AccountCreated, accountId: ACCOUNT_ID }));
   });
 
-  it('has no field that can carry a secret, a digest, a phone or a text', () => {
+  it('[row 266] has no field that can carry a secret, a digest, a phone or a text', () => {
     SECRET_KEYS.forEach((key) => expectTypeOf<LogFields>().not.toHaveProperty(key));
   });
 });

@@ -1,41 +1,12 @@
-import { execFileSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import { parseArgs } from 'node:util';
-import { InboxError } from '@zapbip/core';
-import { DEVELOPMENT_ENVIRONMENT } from '../src/contract/constants';
-import { assertOwnerAbsent, buildDirectorySeed, findOwnerStatement } from './build-directory-seed';
+import { z } from 'zod';
+import { DEV_SEED_PATH } from '../src/contract/constants';
 
-const DATABASE_BINDING = 'CONNECTIONS';
-const SEED_FILE_NAME = 'seed.sql';
+const DEFAULT_ORIGIN = 'http://localhost:8787';
 const AGENT_SEPARATOR = ',';
 
-type WranglerRows = { results: { total: number }[] }[];
-
-function runWrangler(input: { arguments: string[]; persistTo: string | undefined }): string {
-  const persistArguments = input.persistTo === undefined ? [] : ['--persist-to', input.persistTo];
-  return execFileSync(
-    'pnpm',
-    [
-      'exec',
-      'wrangler',
-      'd1',
-      'execute',
-      DATABASE_BINDING,
-      '--env',
-      DEVELOPMENT_ENVIRONMENT,
-      '--local',
-      ...persistArguments,
-      '--json',
-      ...input.arguments,
-    ],
-    {
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'inherit'],
-    },
-  );
-}
+const seedOutputSchema = z.object({ connections: z.array(z.object({ agent: z.string(), secret: z.string() })) });
+const errorOutputSchema = z.object({ error: z.string(), message: z.string() });
 
 async function seed(): Promise<void> {
   const { values } = parseArgs({
@@ -43,35 +14,28 @@ async function seed(): Promise<void> {
       phone: { type: 'string' },
       agents: { type: 'string' },
       json: { type: 'boolean', default: false },
-      'persist-to': { type: 'string' },
+      origin: { type: 'string', default: DEFAULT_ORIGIN },
     },
   });
   if (values.phone === undefined || values.agents === undefined)
-    throw new Error('usage: --phone <digits> --agents <name,name> [--json] [--persist-to <dir>]');
-  const persistTo = values['persist-to'];
-  const owners: WranglerRows = JSON.parse(
-    runWrangler({ arguments: ['--command', findOwnerStatement({ phone: values.phone })], persistTo }),
-  );
-  const [ownerCount] = owners.flatMap((entry) => entry.results);
-  if (ownerCount === undefined) throw new Error('owner count missing');
-  assertOwnerAbsent({ existingCount: ownerCount.total });
-  const directorySeed = await buildDirectorySeed({
-    phone: values.phone,
-    agents: values.agents.split(AGENT_SEPARATOR),
-    createdAt: Date.now(),
+    throw new Error('usage: --phone <digits> --agents <name,name> [--json] [--origin <url>]');
+  const response = await fetch(`${values.origin}${DEV_SEED_PATH}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone: values.phone, agents: values.agents.split(AGENT_SEPARATOR) }),
   });
-  const seedFile = join(mkdtempSync(join(tmpdir(), 'zapbip-seed-')), SEED_FILE_NAME);
-  writeFileSync(seedFile, directorySeed.statements.map((statement) => statement + ';').join('\n'));
-  runWrangler({ arguments: ['--file', seedFile], persistTo });
-  const output = { connections: directorySeed.connections };
+  const body: unknown = await response.json();
+  if (!response.ok) {
+    const failure = errorOutputSchema.parse(body);
+    throw new Error(`${failure.error}: ${failure.message}`);
+  }
+  const output = seedOutputSchema.parse(body);
   console.log(
-    values.json
-      ? JSON.stringify(output)
-      : directorySeed.connections.map((connection) => connection.agent + ' ' + connection.secret).join('\n'),
+    values.json ? JSON.stringify(output) : output.connections.map((connection) => connection.agent + ' ' + connection.secret).join('\n'),
   );
 }
 
 seed().catch((error: unknown) => {
-  console.error(error instanceof InboxError ? error.code + ': ' + error.message : error);
+  console.error(error);
   process.exit(1);
 });

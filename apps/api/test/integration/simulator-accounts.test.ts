@@ -39,7 +39,7 @@ async function accountTotal(): Promise<number> {
 }
 
 describe('owner simulator on the production inbound path', () => {
-  it('creates the account and the install lines for a new phone', async () => {
+  it('[row 390] creates the account and the install lines for a new phone', async () => {
     const phone = newPhone();
     expect((await say({ phone, text: 'oi' })).status).toBe(STATUS_OK);
     expect((await say({ phone, text: 'novo agente claude' })).status).toBe(STATUS_OK);
@@ -65,7 +65,7 @@ describe('owner simulator on the production inbound path', () => {
     expect(await accountTotal()).toBe(before);
   });
 
-  it('deletes the account after the confirmation phrase', async () => {
+  it('[row 394] deletes the account after the confirmation phrase', async () => {
     const phone = newPhone();
     await say({ phone, text: 'oi' });
     expect(await findAccounts({ waId: phone })).toHaveLength(1);

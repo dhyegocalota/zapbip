@@ -5,19 +5,20 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { DevAccountInbox } from '../../src/dev/dev-account-inbox';
 import { receiveOwnerText } from '../support/inbox-session';
 import { applyDirectoryMigration, seedConnection } from '../support/seed';
-import { ACCEPTED, enableGrokWake, expectOk, wakeStub } from '../support/wake-session';
+import { ACCEPTED, WAKE_ACCOUNT, enableGrokWake, expectOk, wakeStub } from '../support/wake-session';
 import { connectionOf, testEnv } from '../support/workers-env';
 
-const ACCOUNT = 'acc_resurrection';
+const ACCOUNT = WAKE_ACCOUNT;
 const PRIMARY: AgentName = 'grok-web';
 const STANDBY: AgentName = 'grok-bot';
 const SECRET = `zb_conn_${'R'.repeat(43)}`;
 const OWNER_TEXT = 'oi';
 const REVOKED_AT = 1;
-const CONNECTOR_URL = `http://account-inbox/connector?agent=${STANDBY}`;
+const CONNECTOR_URL = 'http://account-inbox/connector';
 const UPGRADE_HEADERS = { Upgrade: 'websocket' };
 
 let stub: DurableObjectStub<DevAccountInbox>;
+let standbyDigest: string;
 
 function connectionFor(input: { agent: AgentName }) {
   return connectionOf({ accountId: ACCOUNT, agent: input.agent });
@@ -68,7 +69,7 @@ function injectGhostWake(input: { agent: AgentName }): Promise<void> {
 
 beforeEach(async () => {
   await applyDirectoryMigration();
-  await seedConnection({ accountId: ACCOUNT, agent: STANDBY, secret: SECRET });
+  standbyDigest = await seedConnection({ accountId: ACCOUNT, agent: STANDBY, secret: SECRET });
   stub = wakeStub({ accountId: ACCOUNT });
 });
 
@@ -93,11 +94,10 @@ describe('a revoked agent is not resurrected by an in-flight call', () => {
     expect(await rowCounts({ agent: STANDBY })).toEqual({ agents: 0, wakes: 0 });
   });
 
-  it('refuses a connector upgrade of a revoked connection and leaves no row', async () => {
+  it('closes a connector upgrade of a revoked connection with the revoked code and leaves no row', async () => {
     await revokeInDirectory();
-    const response = await stub.fetch(CONNECTOR_URL, { headers: UPGRADE_HEADERS });
-    expect(response.status).toBe(HttpStatus.Unauthorized);
-    expect(response.webSocket).toBeNull();
+    const response = await stub.fetch(`${CONNECTOR_URL}?agent=${STANDBY}&digest=${standbyDigest}`, { headers: UPGRADE_HEADERS });
+    expect(response.status).toBe(HttpStatus.SwitchingProtocols);
     expect(await rowCounts({ agent: STANDBY })).toEqual({ agents: 0, wakes: 0 });
   });
 

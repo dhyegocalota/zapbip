@@ -15,6 +15,7 @@ const ACCOUNT_ID = 'acc_1';
 const OTHER_ACCOUNT_ID = 'acc_2';
 const CREATED_AT = 1_700_000_000_000;
 const SUCCESS_EXIT_CODE = 0;
+const DIRECTORY_SERVICE = 'd1';
 
 type RunResult = { status: number | null; stdout: string; stderr: string };
 
@@ -84,7 +85,7 @@ afterEach(() => {
 });
 
 describe('operator-account.sh commands', () => {
-  it('suspends an active account with one fixed statement', () => {
+  it('[row 349] suspends an active account with one fixed statement', () => {
     seedAccount({ accountId: ACCOUNT_ID, waId: WA_ID, state: 'active' });
     const result = run({ args: ['suspend', WA_ID] });
     expect(result.status).toBe(SUCCESS_EXIT_CODE);
@@ -104,13 +105,13 @@ describe('operator-account.sh commands', () => {
     expect(refused.stderr).toContain('not waitlisted');
   });
 
-  it('resumes a suspended account', () => {
+  it('[row 354] resumes a suspended account', () => {
     seedAccount({ accountId: ACCOUNT_ID, waId: WA_ID, state: 'suspended' });
     expect(run({ args: ['resume', WA_ID] }).status).toBe(SUCCESS_EXIT_CODE);
     expect(stateOf({ accountId: ACCOUNT_ID })).toBe('active');
   });
 
-  it.each(['active', 'deleting', 'waitlisted'])('refuses to resume a %s account and changes nothing', (state) => {
+  it.each(['active', 'deleting', 'waitlisted'])('[row 353][row 354] refuses to resume a %s account and changes nothing', (state) => {
     seedAccount({ accountId: ACCOUNT_ID, waId: WA_ID, state });
     const result = run({ args: ['resume', WA_ID] });
     expect(result.status).not.toBe(SUCCESS_EXIT_CODE);
@@ -118,12 +119,13 @@ describe('operator-account.sh commands', () => {
     expect(stateOf({ accountId: ACCOUNT_ID })).toBe(state);
   });
 
-  it('marks an active account as deleting without touching anything else', () => {
+  it('[row 355] marks an active account as deleting without touching anything else', () => {
     seedAccount({ accountId: ACCOUNT_ID, waId: WA_ID, state: 'active' });
     seedAccount({ accountId: OTHER_ACCOUNT_ID, waId: OTHER_WA_ID, state: 'active' });
     expect(run({ args: ['delete', WA_ID] }).status).toBe(SUCCESS_EXIT_CODE);
     expect(stateOf({ accountId: ACCOUNT_ID })).toBe('deleting');
     expect(stateOf({ accountId: OTHER_ACCOUNT_ID })).toBe('active');
+    expect(wranglerCalls().every((call) => call.includes(DIRECTORY_SERVICE))).toBe(true);
   });
 
   it('blocks and unblocks a phone and reports a repeat', () => {
@@ -135,9 +137,11 @@ describe('operator-account.sh commands', () => {
     expect(run({ args: ['unblock', WA_ID] }).stderr).toContain('not blocked');
   });
 
-  it('blocks then suspends an abusive phone and reverses both', () => {
+  it('[row 356] blocks then suspends an abusive phone and reverses both', () => {
     seedAccount({ accountId: ACCOUNT_ID, waId: WA_ID, state: 'active' });
     run({ args: ['block', WA_ID] });
+    expect(blockedCount()).toBe(1);
+    expect(stateOf({ accountId: ACCOUNT_ID })).toBe('active');
     run({ args: ['suspend', WA_ID] });
     expect(blockedCount()).toBe(1);
     expect(stateOf({ accountId: ACCOUNT_ID })).toBe('suspended');
@@ -155,6 +159,25 @@ describe('operator-account.sh commands', () => {
 });
 
 describe('operator-account.sh refusals', () => {
+  it('[row 350] refuses a suspend with punctuation in the wa_id and never calls wrangler', () => {
+    seedAccount({ accountId: ACCOUNT_ID, waId: WA_ID, state: 'active' });
+    const result = run({ args: ['suspend', '55-11-9'] });
+    expect(result.status).not.toBe(SUCCESS_EXIT_CODE);
+    expect(wranglerCalls()).toEqual([]);
+  });
+
+  it('[row 351] refuses a block with an injection string and never calls wrangler', () => {
+    const result = run({ args: ['block', "1' OR '1'='1"] });
+    expect(result.status).not.toBe(SUCCESS_EXIT_CODE);
+    expect(wranglerCalls()).toEqual([]);
+  });
+
+  it('[row 352] refuses a block with three digits and never calls wrangler', () => {
+    const result = run({ args: ['block', '123'] });
+    expect(result.status).not.toBe(SUCCESS_EXIT_CODE);
+    expect(wranglerCalls()).toEqual([]);
+  });
+
   it.each([
     ['punctuation', '55-11-9'],
     ['an injection string', "1' OR '1'='1"],
