@@ -5,6 +5,8 @@ description: 'Write to OpenClaw on WhatsApp and have it answer, with no time lim
 
 import { Chat } from '/snippets/chat.jsx';
 
+## What works
+
 OpenClaw keeps listening on your WhatsApp through a small zapbip channel. You write first or answer a question later, and the message reaches the OpenClaw session.
 
 <Chat
@@ -15,12 +17,26 @@ OpenClaw keeps listening on your WhatsApp through a small zapbip channel. You wr
   ]}
 />
 
-## What you need
+### Messages you forward
+
+A message you forwarded from someone else reaches OpenClaw with a label that says you did not write it, and it cannot run commands.
+
+## How it listens
+
+The channel holds one connection to zapbip open, with no time limit. If the network drops it reconnects by itself, waiting a little longer after each failed try (1 second at first, 30 seconds at most). Messages you send meanwhile wait in your zapbip inbox, and the channel picks up every one that was not answered as soon as it is back.
+
+### If the channel cannot be installed
+
+OpenClaw can poll instead. Add the MCP server from the setup and create a job every 1 minute that calls `check_inbox`. Your messages wait up to a minute, and the answer comes the same way.
+
+## Set up from zero
+
+### What you need
 
 - OpenClaw 2026.10.10 or newer, with its gateway running.
 - Your connection link, the same `https://.../c/<secret>/mcp` link your AI uses to talk to zapbip. Treat it like a password.
 
-## Install the channel
+### Install the channel
 
 ```bash
 openclaw plugins install @zapbip/openclaw-plugin@0.1.0 --force --accept-capabilities
@@ -45,11 +61,7 @@ Restart the gateway.
 
 Run only one listener per agent: the plugin or `npx zapbip@0.1.0 listen`, never both. A second listener replaces the first.
 
-## How it listens
-
-The channel holds one connection to zapbip open, with no time limit. If the network drops it reconnects by itself, waiting a little longer after each failed try (1 second at first, 30 seconds at most). Messages you send meanwhile wait in your zapbip inbox, and the channel picks up every one that was not answered as soon as it is back.
-
-## How OpenClaw answers
+### How OpenClaw answers
 
 OpenClaw's replies to your messages go back through the channel itself, with no extra setup. If sending a reply fails, the channel writes `plugin_reply_failed` in the gateway log and does not try again, so that reply can be lost.
 
@@ -75,15 +87,7 @@ Then ask OpenClaw on WhatsApp to send `✅ instalado`. If that message arrives, 
   ]}
 />
 
-## Messages you forward
-
-A message you forwarded from someone else reaches OpenClaw with a label that says you did not write it, and it cannot run commands.
-
-## If the channel cannot be installed
-
-OpenClaw can poll instead. Add the MCP server above and create a job every 1 minute that calls `check_inbox`. Your messages wait up to a minute, and the answer comes the same way.
-
-## When something does not work
+## Check it works
 
 | You see                                         | What it means                                                                                                             |
 | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
