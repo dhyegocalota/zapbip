@@ -29,13 +29,29 @@ export async function createEnvironment(): Promise<InMemoryEnvironment> {
 
 export function openWindow(input: { environment: InMemoryEnvironment }): Promise<void> {
   const { repository, clock } = input.environment;
-  return repository.saveWindow({ window: { lastOwnerMessageAt: clock.now(), noticeSentForClosedWindow: false, closedAt: null } });
+  return repository.saveWindow({
+    window: {
+      lastOwnerMessageAt: clock.now(),
+      noticeSentForClosedWindow: false,
+      closedAt: null,
+      noticeRetryLocale: null,
+      noticeRetryAt: null,
+      noticeRetryAttempt: 0,
+    },
+  });
 }
 
 export function closeWindow(input: { environment: InMemoryEnvironment }): Promise<void> {
   const { repository, clock } = input.environment;
   return repository.saveWindow({
-    window: { lastOwnerMessageAt: clock.now() - WINDOW_MS, noticeSentForClosedWindow: false, closedAt: null },
+    window: {
+      lastOwnerMessageAt: clock.now() - WINDOW_MS,
+      noticeSentForClosedWindow: false,
+      closedAt: null,
+      noticeRetryLocale: null,
+      noticeRetryAt: null,
+      noticeRetryAttempt: 0,
+    },
   });
 }
 

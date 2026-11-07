@@ -100,6 +100,14 @@ import { runMigrations } from './run-migrations';
 import { createWakeDependencies } from './wake-dependencies';
 
 type ReceiveAccountMessageRequest = Parameters<AccountOwnerRpc['receiveAccountMessage']>[0];
+
+function failureLog(input: { error: inbox.InboxError }): LogFields {
+  const { error } = input;
+  if (error instanceof inbox.NoticeFailedError) return { event: LogEvent.OwnerNoticeFailed, kind: error.templateKind };
+  const event = error.code === ChannelErrorKind.DeliveryFailed ? LogEvent.SendFailed : LogEvent.ToolError;
+  return { event, errorCode: error.code };
+}
+
 type ReceiveOwnerMessageRequest = Parameters<AccountInboxRpc['receiveOwnerMessage']>[0];
 
 export class AccountInbox extends DurableObject<Bindings> implements AccountInboxRpc, AccountOwnerRpc {
@@ -181,6 +189,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       this.createRoutingListProvider(),
       this.createWakeProvider(),
       this.createPollerProvider(),
+      this.createNoticeRetryProvider(),
     );
     await this.armAlarm();
   }
@@ -265,6 +274,20 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     await this.ctx.storage.put(OWNER_LOCALE_STORAGE_KEY, input.ownerLocale);
   }
 
+  private createNoticeRetryProvider(): DueTimeProvider {
+    return {
+      nextDueAt: () => inbox.findNoticeRetryDueAt({ dependencies: this.dependencies }),
+      runDue: async () => {
+        try {
+          await inbox.retryNotice({ dependencies: this.dependencies });
+        } catch (error) {
+          if (!(error instanceof inbox.NoticeFailedError)) throw error;
+          this.log(failureLog({ error }));
+        }
+      },
+    };
+  }
+
   private log(fields: LogFields): void {
     logEvent({ accountId: this.accountId, ...fields });
   }
@@ -330,8 +353,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       return { ok: true, value };
     } catch (error) {
       if (!(error instanceof inbox.InboxError)) throw error;
-      const event = error.code === ChannelErrorKind.DeliveryFailed ? LogEvent.SendFailed : LogEvent.ToolError;
-      this.log({ event, errorCode: error.code });
+      this.log(failureLog({ error }));
       return { ok: false, errorCode: error.code, message: error.message };
     } finally {
       await this.armAlarm();

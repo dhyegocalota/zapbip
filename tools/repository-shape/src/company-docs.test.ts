@@ -1,52 +1,49 @@
+import { COMPANY, COMPANY_FACT_UNSET } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { DOCS_ROOT, documentFiles, readRepositoryFile } from './repository-files';
 
-const CONSTANTS_FILE = 'libs/types/src/constants.ts';
 const DOCS_CONFIG = 'apps/docs/docs.json';
 const COMPANY_SNIPPETS = ['apps/docs/snippets/company.mdx', 'apps/docs/snippets/pt-br/company.mdx'];
 const ABOUT_PAGES = ['apps/docs/help/about.mdx', 'apps/docs/pt-br/help/about.mdx'];
 const FOOTER_LABEL = 'zapbip · Logic Bit';
 const FOOTER_HREF = '/help/about';
 const README_PRODUCT_LINE = 'zapbip is a product of Logic Bit';
-const UNSET_SENTINEL_PATTERN = /export const COMPANY_FACT_UNSET = '([^']+)'/;
-const COMPANY_BLOCK_PATTERN = /export const COMPANY = \{([^}]+)\}/;
-const COMPANY_ENTRY_PATTERN = /(\w+): (COMPANY_FACT_UNSET|'[^']*'),/g;
 const README_FILE = 'README.md';
+const COMPANY_FACT_COUNT = 6;
+const TABLE_ROW_PREFIX = '|';
+const TABLE_HEADER_ROW_COUNT = 2;
+const LINE_SEPARATOR = '\n';
 
-function setCompanyFacts(): string[] {
-  return companyFacts().filter((fact) => fact !== unsetSentinel());
-}
+const setCompanyFacts: string[] = Object.values(COMPANY).filter((fact) => fact !== COMPANY_FACT_UNSET);
 
-function unsetSentinel(): string {
-  const sentinel = UNSET_SENTINEL_PATTERN.exec(readRepositoryFile(CONSTANTS_FILE))?.[1];
-  if (!sentinel) throw new Error('COMPANY_FACT_UNSET is missing from libs/types');
-  return sentinel;
-}
-
-function companyFacts(): string[] {
-  const source = readRepositoryFile(CONSTANTS_FILE);
-  const sentinel = UNSET_SENTINEL_PATTERN.exec(source)?.[1];
-  const block = COMPANY_BLOCK_PATTERN.exec(source)?.[1];
-  if (!sentinel || !block) throw new Error('COMPANY is missing from libs/types');
-  return [...block.matchAll(COMPANY_ENTRY_PATTERN)].flatMap(([, , literal]) =>
-    literal === undefined ? [] : [literal === 'COMPANY_FACT_UNSET' ? sentinel : literal.slice(1, -1)],
-  );
+function tableRowCount(snippet: string): number {
+  return readRepositoryFile(snippet)
+    .split(LINE_SEPARATOR)
+    .filter((line) => line.startsWith(TABLE_ROW_PREFIX)).length;
 }
 
 describe('company docs', () => {
-  test('the constant declares six facts', () => {
-    expect(companyFacts()).toHaveLength(6);
+  test('the constant declares six facts and always sets the trade name', () => {
+    expect(Object.keys(COMPANY)).toHaveLength(COMPANY_FACT_COUNT);
+    expect(COMPANY.tradeName).not.toBe(COMPANY_FACT_UNSET);
   });
 
-  test.each(COMPANY_SNIPPETS)('%s renders every company fact that is set', (snippet) => {
+  test.each(COMPANY_SNIPPETS)('%s shows every fact that is set', (snippet) => {
     const text = readRepositoryFile(snippet);
-    const missing = setCompanyFacts().filter((fact) => !text.includes(fact));
+    const missing = setCompanyFacts.filter((fact) => !text.includes(fact));
     expect(missing).toEqual([]);
   });
 
+  test.each(COMPANY_SNIPPETS)('%s shows exactly the facts that are set, one row each', (snippet) => {
+    expect(tableRowCount(snippet)).toBe(TABLE_HEADER_ROW_COUNT + setCompanyFacts.length);
+  });
+
+  test.each(COMPANY_SNIPPETS)('%s never shows the unset sentinel', (snippet) => {
+    expect(readRepositoryFile(snippet)).not.toContain(COMPANY_FACT_UNSET);
+  });
+
   test('no docs page renders the unset sentinel', () => {
-    const sentinel = unsetSentinel();
-    const offenders = documentFiles('').filter((page) => readRepositoryFile(`${DOCS_ROOT}/${page}`).includes(sentinel));
+    const offenders = documentFiles('').filter((page) => readRepositoryFile(`${DOCS_ROOT}/${page}`).includes(COMPANY_FACT_UNSET));
     expect(offenders).toEqual([]);
   });
 

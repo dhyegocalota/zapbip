@@ -1,10 +1,29 @@
-import { formatOptionId, QUEUE_RETENTION_MS, ROUTING_LIST_TTL_MS, UPLOAD_TTL_MS, WINDOW_MS } from '@zapbip/core';
-import { HOUR_MS, DeliveryState, InboxErrorCode, MediaSourceKind, MessageKind, ReplyStatus, TemplateKind } from '@zapbip/types';
+import {
+  formatOptionId,
+  NOTICE_FAILED_MESSAGE,
+  NOTICE_RETRY_BACKOFF_FACTOR,
+  NOTICE_RETRY_MS,
+  QUEUE_RETENTION_MS,
+  ROUTING_LIST_TTL_MS,
+  UPLOAD_TTL_MS,
+  WINDOW_MS,
+} from '@zapbip/core';
+import {
+  HOUR_MS,
+  ChannelErrorKind,
+  DeliveryState,
+  InboxErrorCode,
+  MediaSourceKind,
+  MessageKind,
+  ReplyStatus,
+  TemplateKind,
+} from '@zapbip/types';
 import { abortAllDurableObjects, evictDurableObject, reset, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it, type MockInstance, vi } from 'vitest';
 import { ACCOUNT_INBOX_MIGRATIONS } from '../../src/account-inbox/migrations';
 import { runMigrations, type Migration } from '../../src/account-inbox/run-migrations';
 import { createPlatformClock } from '../../src/adapters/platform/clock';
+import type { FakeWhatsAppSender } from '../../src/adapters/fake/fake-whatsapp-sender';
 import { createSqliteInboxRepository } from '../../src/adapters/sqlite/sqlite-inbox-repository';
 import type { CallOutcome } from '../../src/contract/account-inbox-rpc';
 import { LogEvent } from '../../src/contract/log';
@@ -15,6 +34,7 @@ import {
   receiveOwnerContent,
   receiveOwnerText,
   registerDueTimeProvider,
+  replaceTemplate,
 } from '../support/inbox-session';
 import { versionAfterLatest } from '../support/migration-versions';
 import { applyDirectoryMigration } from '../support/seed';
@@ -229,19 +249,47 @@ describe('AccountInbox alarm', () => {
   it('WI-125 runs the routing list expiry from the alarm and arms it again', async () => {
     const stub = stubOf({ accountId: FIRST_ACCOUNT });
     await stub.checkInbox({ connection: connectionOf({ accountId: FIRST_ACCOUNT, agent: 'alpha' }) });
+    await stub.checkInbox({ connection: connectionOf({ accountId: FIRST_ACCOUNT, agent: 'beta' }) });
     await openWindow({ stub });
     expectOk(await receiveOwnerText({ stub, text: 'oi' }));
     await advanceClock({ stub, advanceMs: ROUTING_LIST_TTL_MS });
     expect(await runDurableObjectAlarm(stub)).toBe(true);
     const screen = await readScreen({ stub });
-    expect(screen.map((entry) => entry.options)).toEqual([['alpha'], ['alpha']]);
+    expect(screen.map((entry) => entry.options)).toEqual([
+      ['beta', 'alpha'],
+      ['beta', 'alpha'],
+    ]);
     expect(await runInDurableObject(stub, (_instance, state) => state.storage.getAlarm())).not.toBeNull();
+  });
+
+  it('WI-151 with exactly one agent an unaddressed owner message reaches it and no list is sent', async () => {
+    const stub = stubOf({ accountId: FIRST_ACCOUNT });
+    const connection = connectionOf({ accountId: FIRST_ACCOUNT, agent: 'alpha' });
+    await stub.checkInbox({ connection });
+    await openWindow({ stub });
+    expectOk(await receiveOwnerText({ stub, text: 'oi' }));
+    const inbox = expectOk(await stub.checkInbox({ connection }));
+    expect(inbox.messages).toMatchObject([{ text: 'oi' }]);
+    expect((await readScreen({ stub })).flatMap((entry) => entry.options)).toEqual([]);
+  });
+
+  it('WI-152 messages held with no agents reach the first agent that connects, once and in order', async () => {
+    const stub = stubOf({ accountId: FIRST_ACCOUNT });
+    const connection = connectionOf({ accountId: FIRST_ACCOUNT, agent: 'alpha' });
+    await openWindow({ stub });
+    expectOk(await receiveOwnerText({ stub, text: 'um' }));
+    expectOk(await receiveOwnerText({ stub, text: 'dois' }));
+    const first = expectOk(await stub.checkInbox({ connection }));
+    expect(first.messages).toMatchObject([{ text: 'um' }, { text: 'dois' }]);
+    const second = expectOk(await stub.checkInbox({ connection }));
+    expect(second.messages).toEqual([]);
   });
 
   it('WI-129 does not postpone a due expiry while the agent keeps calling tools', async () => {
     const stub = stubOf({ accountId: FIRST_ACCOUNT });
     const connection = connectionOf({ accountId: FIRST_ACCOUNT, agent: 'alpha' });
     await stub.checkInbox({ connection });
+    await stub.checkInbox({ connection: connectionOf({ accountId: FIRST_ACCOUNT, agent: 'beta' }) });
     await openWindow({ stub });
     expectOk(await receiveOwnerText({ stub, text: 'oi' }));
     await advanceClock({ stub, advanceMs: ROUTING_LIST_TTL_MS });
@@ -325,6 +373,83 @@ describe('AccountInbox alarm', () => {
     const armed = await runInDurableObject(stub, (_instance, state) => state.storage.getAlarm());
     expect(secondRuns).toHaveBeenCalledTimes(1);
     expect(armed).toBe(firstDueAt);
+  });
+});
+
+describe('AccountInbox notice retry', () => {
+  const failedNoticeOutcome = { ok: false, errorCode: ChannelErrorKind.DeliveryFailed, message: NOTICE_FAILED_MESSAGE };
+
+  async function sendWithFailingNotice(input: { stub: ReturnType<typeof stubOf>; template: FakeWhatsAppSender['template'] }) {
+    await replaceTemplate({ stub: input.stub, template: input.template });
+    return input.stub.sendText({
+      connection: connectionOf({ accountId: FIRST_ACCOUNT, agent: 'alpha' }),
+      text: 'oi',
+      replyToMessageId: null,
+    });
+  }
+
+  it('WI-147 a failing notice returns a tool error, logs owner_notice_failed and the alarm sends the notice later', async () => {
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    const stub = stubOf({ accountId: FIRST_ACCOUNT });
+    const template = vi.fn<FakeWhatsAppSender['template']>().mockRejectedValue(new Error('template failed'));
+    expect(await sendWithFailingNotice({ stub, template: template })).toEqual(failedNoticeOutcome);
+    const events = logSpy.mock.calls.map((call) => JSON.parse(String(call[0])));
+    expect(events).toContainEqual({ event: LogEvent.OwnerNoticeFailed, accountId: FIRST_ACCOUNT, kind: TemplateKind.Notice });
+    const { history } = expectOk(
+      await stub.getMessages({ connection: connectionOf({ accountId: FIRST_ACCOUNT, agent: 'alpha' }), limit: 20 }),
+    );
+    expect(history.map((message) => message.delivery)).toEqual([DeliveryState.Queued]);
+    expect(await readScreen({ stub })).toEqual([]);
+  });
+
+  it('WI-148 the alarm sends the notice once the sender recovers', async () => {
+    const stub = stubOf({ accountId: FIRST_ACCOUNT });
+    const failing = vi.fn<FakeWhatsAppSender['template']>().mockRejectedValue(new Error('template failed'));
+    const original = await replaceTemplate({ stub, template: failing });
+    await stub.sendText({ connection: connectionOf({ accountId: FIRST_ACCOUNT, agent: 'alpha' }), text: 'oi', replyToMessageId: null });
+    await replaceTemplate({ stub, template: original });
+    await advanceClock({ stub, advanceMs: NOTICE_RETRY_MS });
+    expect(await runDurableObjectAlarm(stub)).toBe(true);
+    const screen = await readScreen({ stub });
+    expect(screen.map((entry) => entry.template)).toEqual([TemplateKind.Notice]);
+  });
+
+  it('WI-149 a persistent failure retries at doubling spacing and keeps the alarm armed', async () => {
+    const stub = stubOf({ accountId: FIRST_ACCOUNT });
+    const template = vi.fn<FakeWhatsAppSender['template']>().mockRejectedValue(new Error('template failed'));
+    await sendWithFailingNotice({ stub, template: template });
+    await [0, 1, 2].reduce<Promise<void>>(
+      (previous, attempt) =>
+        previous.then(async () => {
+          await advanceClock({ stub, advanceMs: NOTICE_RETRY_MS * NOTICE_RETRY_BACKOFF_FACTOR ** attempt });
+          await runDurableObjectAlarm(stub);
+          const armed = await runInDurableObject(stub, (_instance, state) => state.storage.getAlarm());
+          expect(armed).not.toBeNull();
+        }),
+      Promise.resolve(),
+    );
+    expect(template).toHaveBeenCalledTimes(4);
+  });
+
+  it('WI-150 a send during the backoff makes no template call and does not move the armed retry', async () => {
+    const stub = stubOf({ accountId: FIRST_ACCOUNT });
+    const template = vi.fn<FakeWhatsAppSender['template']>().mockRejectedValue(new Error('template failed'));
+    await sendWithFailingNotice({ stub, template: template });
+    const armedAfterFirst = await runInDurableObject(stub, (_instance, state) => state.storage.getAlarm());
+    const second = await sendWithFailingNotice({ stub, template: template });
+    expect(second).toMatchObject({ ok: true });
+    expect(template).toHaveBeenCalledTimes(1);
+    const armedAfterSecond = await runInDurableObject(stub, (_instance, state) => state.storage.getAlarm());
+    expect(armedAfterFirst).not.toBeNull();
+    expect(armedAfterSecond).toBe(armedAfterFirst);
+  });
+
+  it('WI-153 an alarm that wakes before the retry is due does not call the template again', async () => {
+    const stub = stubOf({ accountId: FIRST_ACCOUNT });
+    const template = vi.fn<FakeWhatsAppSender['template']>().mockRejectedValue(new Error('template failed'));
+    await sendWithFailingNotice({ stub, template: template });
+    expect(await runDurableObjectAlarm(stub)).toBe(true);
+    expect(template).toHaveBeenCalledTimes(1);
   });
 });
 
