@@ -1,8 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { reset } from 'cloudflare:test';
 import usageMigrationSql from '../../migrations/0003_usage.sql?raw';
-import backofficeMigrationSql from '../../migrations/0005_backoffice.sql?raw';
-import { applyDirectoryMigration, applyMigration, SEED_CREATED_AT } from '../support/seed';
+import {
+  applyAccountsMigration,
+  applyBackofficeMigration,
+  applyChannelMigration,
+  applyCoreMigration,
+  applyMigration,
+  SEED_CREATED_AT,
+} from '../support/seed';
 import { testEnv } from '../support/workers-env';
 
 type ColumnInfo = { name: string; notnull: number };
@@ -28,9 +34,11 @@ afterEach(reset);
 
 describe('migration 0005 on top of 0001 to 0004', () => {
   beforeEach(async () => {
-    await applyDirectoryMigration();
+    await applyCoreMigration();
+    await applyAccountsMigration();
     await applyMigration({ sql: usageMigrationSql });
-    await applyMigration({ sql: backofficeMigrationSql });
+    await applyChannelMigration();
+    await applyBackofficeMigration();
     await testEnv.CONNECTIONS.prepare(
       "INSERT INTO meta_apps (id, meta_app_id, label, sealed_app_secret, seal_key_version, created_at, updated_at) VALUES (?, '2000000000000002', 'App', 'sealed', 1, ?, ?)",
     )

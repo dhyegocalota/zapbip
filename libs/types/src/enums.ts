@@ -332,3 +332,10 @@ export enum HttpStatus {
   BadGateway = 502,
   ServiceUnavailable = 503,
 }
+
+export enum WhatsAppNumberState {
+  Pending = 'pending',
+  Active = 'active',
+  Closed = 'closed',
+  Disabled = 'disabled',
+}
