@@ -9,6 +9,7 @@ import {
   ConnectorSessionSource,
   ConnectorWakeOutcome,
   WAKE_ALLOWED_TOOL,
+  WakeRefusalKind,
 } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { runWake } from '../../src/wake-runner';
@@ -144,7 +145,22 @@ describe('runWake', () => {
     await mkdir(fakeClients.codexHome, { recursive: true });
     await writeFile(join(fakeClients.codexHome, 'config.toml'), 'mcp_servers = = broken\n');
 
-    expect(await wake({ client: ConnectorClient.Codex })).toEqual({ outcome: ConnectorWakeOutcome.RefusedIsolation, exitCode: null });
+    expect(await wake({ client: ConnectorClient.Codex })).toEqual({
+      outcome: ConnectorWakeOutcome.RefusedIsolation,
+      exitCode: null,
+      refusalKind: WakeRefusalKind.Unparseable,
+    });
+    expect(await fakeClients.readRuns()).toHaveLength(0);
+  });
+
+  it('refuses to wake Codex when a config layer is unreadable and names the kind', async () => {
+    await mkdir(join(fakeClients.codexHome, 'config.toml'), { recursive: true });
+
+    expect(await wake({ client: ConnectorClient.Codex })).toEqual({
+      outcome: ConnectorWakeOutcome.RefusedIsolation,
+      exitCode: null,
+      refusalKind: WakeRefusalKind.Unreadable,
+    });
     expect(await fakeClients.readRuns()).toHaveLength(0);
   });
 

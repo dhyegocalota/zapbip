@@ -120,10 +120,13 @@ function main() {
     return finish(1);
   }
   if (process.env.FAKE_CLIENT_CALLS_MCP === '1')
-    return replyThroughMcp().then(complete, (error) => {
-      process.stderr.write(String(error));
-      finish(1);
-    });
+    return replyThroughMcp().then(
+      () => setTimeout(complete, Number(process.env.FAKE_CLIENT_RUN_MS || 0)),
+      (error) => {
+        process.stderr.write(String(error));
+        finish(1);
+      },
+    );
   if (process.env.FAKE_CLIENT_HANG === '1') return setInterval(() => {}, 1 << 30);
   if (process.env.FAKE_CLIENT_HOLD_FILE) return waitForRelease(process.env.FAKE_CLIENT_HOLD_FILE);
   setTimeout(complete, Number(process.env.FAKE_CLIENT_RUN_MS || 0));

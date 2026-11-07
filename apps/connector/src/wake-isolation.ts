@@ -10,9 +10,14 @@ import {
   CONNECTOR_KILL_GRACE_MS,
   CONNECTOR_WAKE_TIMEOUT_MS,
   ConnectorClient,
+  WakeRefusalKind,
 } from '@zapbip/types';
 
-export class WakeIsolationRefusedError extends Error {}
+export class WakeIsolationRefusedError extends Error {
+  constructor(readonly kind: WakeRefusalKind) {
+    super(kind);
+  }
+}
 
 export type WakeIsolation = { isolationArguments: string[]; cleanup: () => Promise<void> };
 export type WakeIsolationInput = { connectionLink: string; workingDirectory: string; codexHome?: string; systemConfigDirectory?: string };
@@ -43,16 +48,10 @@ const CODEX_CONFIG_FILE_NAME = 'config.toml';
 const CODEX_MANAGED_CONFIG_FILE_NAME = 'managed_config.toml';
 const CODEX_SYSTEM_CONFIG_DIRECTORY = '/etc/codex';
 const STALE_WAKE_DIRECTORY_AGE_MS = CONNECTOR_WAKE_TIMEOUT_MS + CONNECTOR_KILL_GRACE_MS;
-const UNPARSEABLE_CONFIG_REASON = 'a Codex configuration file is not valid TOML';
-const MANAGED_KEY_REASON = 'a managed Codex configuration sets a key outside the allowlist, and managed layers outrank the wake isolation';
-const PROFILE_OVERRIDE_REASON = 'a Codex profile sets a key outside the allowlist';
-const LEGACY_WEB_SEARCH_REASON = 'a Codex configuration sets a legacy web search switch the wake isolation cannot override';
 const MANAGED_ALLOWED_KEYS = ['model', 'model_reasoning_effort', 'model_reasoning_summary', 'file_opener', 'hide_agent_reasoning'];
 const PROFILE_ALLOWED_KEYS = [...MANAGED_ALLOWED_KEYS, 'web_search', 'mcp_servers'];
 const WEB_SEARCH_KEY_FRAGMENT = 'web_search';
 const LEGACY_TOOLS_WEB_SEARCH_KEY = 'tools_web_search';
-const ZAPBIP_REDEFINED_REASON = 'the zapbip MCP server is defined outside the Codex home configuration or is not a URL server';
-const UNIDENTIFIABLE_SERVER_REASON = 'a Codex MCP server in the configuration cannot be identified';
 const BARE_KEY_PATTERN = /^[A-Za-z0-9_-]+$/;
 const MISSING_ENTRY_CODE = 'ENOENT';
 
@@ -85,7 +84,7 @@ async function readTextOrEmpty(input: { file: string }): Promise<string> {
     return await readFile(input.file, 'utf8');
   } catch (error) {
     if (isMissingEntry({ error })) return '';
-    throw error;
+    return refuse({ kind: WakeRefusalKind.Unreadable });
   }
 }
 
@@ -99,8 +98,8 @@ enum CodexConfigLayer {
   Other = 'other',
 }
 
-function refuse(input: { reason: string }): never {
-  throw new WakeIsolationRefusedError(input.reason);
+function refuse(input: { kind: WakeRefusalKind }): never {
+  throw new WakeIsolationRefusedError(input.kind);
 }
 
 function isTable(value: unknown): value is TomlTable {
@@ -111,12 +110,12 @@ function parseConfig(input: { text: string }): TomlTable {
   try {
     return parse(input.text);
   } catch {
-    return refuse({ reason: UNPARSEABLE_CONFIG_REASON });
+    return refuse({ kind: WakeRefusalKind.Unparseable });
   }
 }
 
 function tableOrRefuse(input: { value: unknown }): TomlTable {
-  if (!isTable(input.value)) return refuse({ reason: UNIDENTIFIABLE_SERVER_REASON });
+  if (!isTable(input.value)) return refuse({ kind: WakeRefusalKind.UnidentifiableServer });
   return input.value;
 }
 
@@ -137,12 +136,12 @@ type ConfigFindings = { references: ServerReference[]; profileNames: string[] };
 
 function assertManagedAllowlist(input: { config: TomlTable }): void {
   const hasUnlistedKey = Object.keys(input.config).some((key) => !MANAGED_ALLOWED_KEYS.includes(key));
-  if (hasUnlistedKey) refuse({ reason: MANAGED_KEY_REASON });
+  if (hasUnlistedKey) refuse({ kind: WakeRefusalKind.ManagedKey });
 }
 
 function assertProfileCanBeIsolated(input: { table: TomlTable }): void {
   const hasUnlistedKey = Object.keys(input.table).some((key) => !PROFILE_ALLOWED_KEYS.includes(key));
-  if (hasUnlistedKey) refuse({ reason: PROFILE_OVERRIDE_REASON });
+  if (hasUnlistedKey) refuse({ kind: WakeRefusalKind.ProfileKey });
 }
 
 function assertNoLegacyWebSearch(input: { config: TomlTable }): void {
@@ -150,11 +149,11 @@ function assertNoLegacyWebSearch(input: { config: TomlTable }): void {
   const hasFeatureSwitch = isTable(features) && Object.keys(features).some((key) => key.includes(WEB_SEARCH_KEY_FRAGMENT));
   const hasToolSwitch = isTable(tools) && WEB_SEARCH_KEY_FRAGMENT in tools;
   const hasLegacyKey = LEGACY_TOOLS_WEB_SEARCH_KEY in input.config;
-  if (hasFeatureSwitch || hasToolSwitch || hasLegacyKey) refuse({ reason: LEGACY_WEB_SEARCH_REASON });
+  if (hasFeatureSwitch || hasToolSwitch || hasLegacyKey) refuse({ kind: WakeRefusalKind.LegacyWebSearch });
 }
 
 function keyOf(input: { name: string }): string {
-  if (!BARE_KEY_PATTERN.test(input.name)) return refuse({ reason: UNIDENTIFIABLE_SERVER_REASON });
+  if (!BARE_KEY_PATTERN.test(input.name)) return refuse({ kind: WakeRefusalKind.UnidentifiableServer });
   return input.name;
 }
 
@@ -195,8 +194,8 @@ function assertLayerRules(input: { layer: CodexConfigLayer; references: ServerRe
   const zapbipReferences = references.filter((reference) => reference.name === CODEX_ZAPBIP_SERVER_NAME);
   const isZapbipOutsideHome = layer !== CodexConfigLayer.Home && zapbipReferences.length > 0;
   const isHomeZapbipUnsound = zapbipReferences.some((reference) => reference.profile !== null || !isUrlServer(reference));
-  if (isZapbipOutsideHome) refuse({ reason: ZAPBIP_REDEFINED_REASON });
-  if (isHomeZapbipUnsound) refuse({ reason: ZAPBIP_REDEFINED_REASON });
+  if (isZapbipOutsideHome) refuse({ kind: WakeRefusalKind.ZapbipRedefined });
+  if (isHomeZapbipUnsound) refuse({ kind: WakeRefusalKind.ZapbipRedefined });
 }
 
 async function findingsOfConfigFile(input: { configFile: ConfigFile }): Promise<ConfigFindings> {

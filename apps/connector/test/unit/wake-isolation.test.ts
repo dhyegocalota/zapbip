@@ -1,7 +1,7 @@
-import { access, lutimes, mkdir, mkdtemp, readFile, rm, stat, symlink, utimes, writeFile } from 'node:fs/promises';
+import { access, chmod, lutimes, mkdir, mkdtemp, readFile, rm, stat, symlink, utimes, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { CONNECTOR_KILL_GRACE_MS, CONNECTOR_WAKE_TIMEOUT_MS, ConnectorClient } from '@zapbip/types';
+import { CONNECTOR_KILL_GRACE_MS, CONNECTOR_WAKE_TIMEOUT_MS, ConnectorClient, WakeRefusalKind } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { removeStaleWakeDirectories, WAKE_ISOLATION_PREPARERS, WakeIsolationRefusedError } from '../../src/wake-isolation';
 
@@ -275,9 +275,26 @@ describe('Codex isolation', () => {
     ]);
   });
 
-  test('refuses a config file that is not valid TOML', async () => {
+  test('refuses a config file that is not valid TOML and names the kind', async () => {
     await writeFile(join(codexHome, 'config.toml'), 'mcp_servers = = broken\n');
-    await expect(prepare()).rejects.toBeInstanceOf(WakeIsolationRefusedError);
+    await expect(prepare()).rejects.toMatchObject({ kind: WakeRefusalKind.Unparseable });
+  });
+
+  test('refuses a config layer that is a directory and names the kind without the path', async () => {
+    await mkdir(join(codexHome, 'config.toml'));
+    const error = await prepare().then(
+      () => null,
+      (rejection: unknown) => rejection,
+    );
+    expect(error).toBeInstanceOf(WakeIsolationRefusedError);
+    expect(error).toMatchObject({ kind: WakeRefusalKind.Unreadable });
+    expect(String((error as Error).message)).not.toContain(rootDirectory);
+  });
+
+  test.skipIf(process.getuid?.() === 0)('refuses a config layer that has mode 000', async () => {
+    await writeFile(join(codexHome, 'config.toml'), '[mcp_servers.x]\ncommand = "x"\n');
+    await chmod(join(codexHome, 'config.toml'), 0);
+    await expect(prepare()).rejects.toMatchObject({ kind: WakeRefusalKind.Unreadable });
   });
 
   test('refuses a server whose definition is not a table', async () => {

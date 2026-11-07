@@ -21,6 +21,16 @@ export enum ConnectorWakeOutcome {
   RefusedIsolation = 'refused_isolation',
 }
 
+export enum WakeRefusalKind {
+  Unparseable = 'unparseable',
+  Unreadable = 'unreadable',
+  UnidentifiableServer = 'unidentifiable_server',
+  ManagedKey = 'managed_key',
+  ProfileKey = 'profile_key',
+  LegacyWebSearch = 'legacy_web_search',
+  ZapbipRedefined = 'zapbip_redefined',
+}
+
 export enum ConnectorSessionSource {
   Pinned = 'pinned',
   Newest = 'newest',

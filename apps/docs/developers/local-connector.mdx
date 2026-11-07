@@ -116,7 +116,7 @@ So the three ways fit together: the channel for an open session, `listen` as its
 
 ## One connector per connection
 
-If you start a second connector for the same connection, the first one stops. Run it on one computer at a time.
+If you start a second connector for the same connection, the first one finishes the wake it is running and stops. Run it on one computer at a time. If a message arrives at the moment you switch, both connectors can wake your AI for that same message once; zapbip delivers at least once, never zero times.
 
 While a connector is attached, zapbip wakes your AI through it. When it closes, zapbip goes back to the setting you had before.
 

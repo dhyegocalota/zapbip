@@ -6,6 +6,7 @@ import {
   ConnectorFrameType,
   ConnectorLogEvent,
   ConnectorWakeOutcome,
+  WakeRefusalKind,
   FrameRejectionReason,
   HEARTBEAT_INTERVAL_MS,
   HEARTBEAT_TIMEOUT_MS,
@@ -282,8 +283,25 @@ describe('runConnection', () => {
       sendMessages({ messageIds: ['msg_1'] });
       await waitForLog({ event: ConnectorLogEvent.WakeRefusedIsolation });
 
-      expect(loggedFieldsOf({ event: ConnectorLogEvent.WakeRefusedIsolation })).toMatchObject({ messageId: 'msg_1' });
+      expect(loggedFieldsOf({ event: ConnectorLogEvent.WakeRefusedIsolation })).toMatchObject({
+        messageId: 'msg_1',
+        reason: WakeRefusalKind.Unparseable,
+      });
       expect(await fakeClients.readRuns()).toHaveLength(0);
+      expect(doneMessageIds()).toEqual([]);
+    });
+
+    it('logs the unreadable kind and no path when a Codex config layer cannot be read', async () => {
+      await mkdir(join(fakeClients.codexHome, 'config.toml'), { recursive: true });
+      startConnector({ client: ConnectorClient.Codex });
+      await server.waitForConnections({ count: 1 });
+      sendMessages({ messageIds: ['msg_1'] });
+      await waitForLog({ event: ConnectorLogEvent.WakeRefusedIsolation });
+
+      expect(loggedFieldsOf({ event: ConnectorLogEvent.WakeRefusedIsolation })).toEqual({
+        messageId: 'msg_1',
+        reason: WakeRefusalKind.Unreadable,
+      });
       expect(doneMessageIds()).toEqual([]);
     });
 
@@ -634,6 +652,24 @@ describe('runConnection', () => {
       expect(loggedFieldsOf({ event: ConnectorLogEvent.ConnectorReplaced })).toEqual({ agent: FAKE_AGENT });
       expect(server.connectionCount()).toBe(1);
       expect(loggedEventsOf({ event: ConnectorLogEvent.ConnectorReconnecting })).toHaveLength(0);
+    });
+
+    it('runs at most one wake per process and lets a replaced connector finish its running wake', async () => {
+      fakeClients.apply({ behavior: { holdUntilFile: fakeClients.holdFile } });
+      startConnector();
+      await server.waitForConnections({ count: 1 });
+      sendMessages({ messageIds: ['msg_1', 'msg_2'] });
+      await waitForLog({ event: ConnectorLogEvent.WakeStarted });
+      await vi.waitFor(async () => expect(await fakeClients.readRuns()).toHaveLength(1));
+      server.closeConnections({ code: REPLACED_CLOSE_CODE });
+      expect(await running).toBe(EXIT_CODE_REFUSED);
+      expect(await fakeClients.readRuns()).toHaveLength(1);
+
+      await fakeClients.release();
+      await waitForLog({ event: ConnectorLogEvent.WakeFinished });
+      const runs = await fakeClients.readRuns();
+      expect(runs).toHaveLength(1);
+      expect(runAt({ runs, index: 0 })).toMatchObject({ exitCode: 0, signal: null });
     });
 
     it('closes the socket and exits 0 on the signal', async () => {

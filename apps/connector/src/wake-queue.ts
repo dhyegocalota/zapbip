@@ -1,6 +1,6 @@
 import type { Message } from '@zapbip/core';
 
-export type WakeQueue = { enqueue: (input: { message: Message }) => void };
+export type WakeQueue = { enqueue: (input: { message: Message }) => void; stop: () => void };
 
 export function createWakeQueue(input: {
   runWake: (input: { message: Message }) => Promise<void>;
@@ -10,9 +10,14 @@ export function createWakeQueue(input: {
   const acknowledgedIds = new Set<string>();
   const pendingIds = new Set<string>();
   let tail: Promise<void> = Promise.resolve();
+  let isStopped = false;
 
   async function wake(wakeInput: { message: Message }): Promise<void> {
     const { messageId } = wakeInput.message;
+    if (isStopped) {
+      pendingIds.delete(messageId);
+      return;
+    }
     try {
       await runWake(wakeInput);
     } catch {
@@ -32,5 +37,9 @@ export function createWakeQueue(input: {
     tail = tail.then(() => wake(enqueueInput));
   }
 
-  return { enqueue };
+  function stop(): void {
+    isStopped = true;
+  }
+
+  return { enqueue, stop };
 }

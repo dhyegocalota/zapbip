@@ -5,7 +5,7 @@ import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 import { CHANNEL_NOTIFICATION_METHOD, CONNECTION_URL_VARIABLE, ConnectorClient, ConnectorLogEvent } from '@zapbip/types';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
-import { createFakeClients, runAt, type FakeClients } from '../support/fake-client-binary';
+import { createFakeClients, runAt, type FakeClientBehavior, type FakeClients } from '../support/fake-client-binary';
 import { startStack, type Stack } from './support/stack';
 
 const CLI_BUNDLE = fileURLToPath(new URL('../../dist/cli.js', import.meta.url));
@@ -22,6 +22,9 @@ const ZAPBIP_URL_VARIABLE = 'FAKE_CLIENT_ZAPBIP_URL';
 const CODEX_AGENT = 'eva';
 const DOWN_AGENT = 'fabio';
 const ORDER_AGENT = 'gil';
+const BURST_AGENT = 'hana';
+const BURST_RUN_MS = 1_500;
+const ABNORMAL_CLOSE_CODE_TEXT = '1006';
 const CODEX_TEXT = 'Oi codex';
 const CODEX_ROLLOUT_SECONDS = 1_700_000_000;
 const DISABLE_TLS_VERIFICATION = { NODE_TLS_REJECT_UNAUTHORIZED: '0' };
@@ -43,12 +46,12 @@ describe('the bundled connector against the local stack', () => {
     return Object.fromEntries(Object.entries(process.env).filter((entry): entry is [string, string] => entry[1] !== undefined));
   }
 
-  function startCli(input: { agent: string; arguments: string[] }): RunningCli {
+  function startCli(input: { agent: string; arguments: string[]; behavior?: FakeClientBehavior }): RunningCli {
     const { connectionUrl } = agentOf({ agent: input.agent });
     const child = spawn(process.execPath, [CLI_BUNDLE, ...input.arguments], {
       env: {
         ...inheritedEnvironment(),
-        ...fakeClients.environment({ behavior: {} }),
+        ...fakeClients.environment({ behavior: input.behavior === undefined ? {} : input.behavior }),
         [CALLS_MCP_VARIABLE]: '1',
         [ZAPBIP_URL_VARIABLE]: connectionUrl,
         [CONNECTION_URL_VARIABLE]: connectionUrl,
@@ -78,7 +81,9 @@ describe('the bundled connector against the local stack', () => {
   }
 
   beforeAll(async () => {
-    stack = await startStack({ agents: [CONNECT_AGENT, LISTEN_AGENT, CHANNEL_AGENT, SIGNAL_AGENT, CODEX_AGENT, DOWN_AGENT, ORDER_AGENT] });
+    stack = await startStack({
+      agents: [CONNECT_AGENT, LISTEN_AGENT, CHANNEL_AGENT, SIGNAL_AGENT, CODEX_AGENT, DOWN_AGENT, ORDER_AGENT, BURST_AGENT],
+    });
   }, SUITE_TIMEOUT_MS);
 
   afterAll(async () => {
@@ -155,6 +160,33 @@ describe('the bundled connector against the local stack', () => {
       const replies = (await screenTexts()).filter((text) => text === `FAKE-REPLY ${downText}`);
       expect(replies).toHaveLength(1);
       expect(await fakeClients.readRuns()).toHaveLength(1);
+    },
+    SUITE_TIMEOUT_MS,
+  );
+
+  it(
+    'messages that arrive while a wake runs are woken one after the other in order',
+    async () => {
+      const connector = startCli({
+        agent: BURST_AGENT,
+        arguments: ['connect', '--client', ConnectorClient.ClaudeCode, '--cwd', fakeClients.workingDirectory],
+        behavior: { runMs: BURST_RUN_MS },
+      });
+      await connector.waitForEvent({ event: ConnectorLogEvent.ConnectorConnected });
+      await stack.postOwnerText({ text: `@${BURST_AGENT} b1` });
+      await connector.waitForEvent({ event: ConnectorLogEvent.WakeStarted });
+      await stack.postOwnerText({ text: `@${BURST_AGENT} b2` });
+      await stack.postOwnerText({ text: `@${BURST_AGENT} b3` });
+
+      await vi.waitFor(async () => expect(await screenTexts()).toContain('FAKE-REPLY b3'), { timeout: SUITE_TIMEOUT_MS });
+      const texts = await screenTexts();
+      const positions = ['b1', 'b2', 'b3'].map((text) => texts.indexOf(`FAKE-REPLY ${text}`));
+      expect(positions).toEqual([...positions].sort((first, second) => first - second));
+      expect(positions.every((position) => position >= 0)).toBe(true);
+      const runs = await fakeClients.readRuns();
+      expect(runs).toHaveLength(3);
+      expect(runAt({ runs, index: 1 }).startedAt).toBeGreaterThanOrEqual(runAt({ runs, index: 0 }).endedAt as number);
+      expect(runAt({ runs, index: 2 }).startedAt).toBeGreaterThanOrEqual(runAt({ runs, index: 1 }).endedAt as number);
     },
     SUITE_TIMEOUT_MS,
   );
@@ -253,6 +285,7 @@ describe('the bundled connector against the local stack', () => {
 
       expect(await exited).toBe(0);
       expect(Date.now() - signalledAt).toBeLessThan(PROMPT_EXIT_MS);
+      expect(connector.output()).not.toContain(ABNORMAL_CLOSE_CODE_TEXT);
     },
     SUITE_TIMEOUT_MS,
   );
