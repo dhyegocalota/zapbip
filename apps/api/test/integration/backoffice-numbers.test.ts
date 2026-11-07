@@ -326,7 +326,7 @@ describe('step-up on a number action', () => {
     const response = await postAction({
       path: '/numbers/num_0015/state',
       sessionToken,
-      fields: { [NumberFormField.State]: WhatsAppNumberState.Disabled },
+      fields: { [NumberFormField.State]: WhatsAppNumberState.Disabled, [NumberFormField.ConfirmDisable]: CHECKED_VALUE },
       code: WRONG_CODE,
     });
     const body = await response.text();
