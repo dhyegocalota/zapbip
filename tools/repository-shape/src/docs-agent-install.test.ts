@@ -11,6 +11,7 @@ const OPENCLAW_INSTALL_COMMAND = 'openclaw plugins install @zapbip/openclaw-plug
 const OPENCLAW_ENABLE_ENTRY = '"plugins": { "entries": { "zapbip": { "enabled": true } } }';
 const OPENCLAW_LINK_KEY = '"channels": { "zapbip": { "connectionLink"';
 const UNPINNED_HERMES_INSTALL = 'zapbip-platform==';
+const HASH_CHECKED_INSTALL_TOKENS = ['sha256sum -c -', 'pip install --require-hashes -r zapbip-requirements.txt'];
 const HERMES_ENVIRONMENT_VARIABLES = ['ZAPBIP_CONNECTION_LINK', 'ZAPBIP_ALLOWED_USERS'];
 const ONE_LISTENER_SENTENCES: Record<string, string> = {
   'apps/docs':
@@ -42,6 +43,7 @@ describe.each(PAGE_LOCALES)('the agent install pages in %s', (locale) => {
     const text = page({ locale, path: HERMES_PAGE });
     expect(text).toContain(HERMES_INSTALL_COMMAND);
     expect(text).not.toContain(UNPINNED_HERMES_INSTALL);
+    HASH_CHECKED_INSTALL_TOKENS.forEach((token) => expect(text).toContain(token));
     HERMES_ENVIRONMENT_VARIABLES.forEach((name) => expect(text).toContain(name));
   });
 
