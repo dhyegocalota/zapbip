@@ -2,7 +2,7 @@
   "name": "@zapbip/hermes-plugin",
   "private": true,
   "scripts": {
-    "typecheck": "python3 -m mypy zapbip_platform",
+    "typecheck": "python3 -m mypy zapbip_platform tests",
     "test:unit": "python3 -m pytest tests/unit"
   }
 }
