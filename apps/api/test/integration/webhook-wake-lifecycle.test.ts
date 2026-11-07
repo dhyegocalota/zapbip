@@ -20,6 +20,7 @@ import {
   readWakeRow,
   replaceWakeDependencies,
   wakeStub,
+  applyWakeDirectory,
 } from '../support/wake-session';
 import { connectionOf } from '../support/workers-env';
 
@@ -48,6 +49,8 @@ async function untilLeased(input: { polls: number }): Promise<void> {
   if (isLeased) return;
   await untilLeased({ polls: input.polls - 1 });
 }
+
+beforeEach(applyWakeDirectory);
 
 beforeEach(async () => {
   stub = wakeStub({});

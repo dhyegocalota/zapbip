@@ -1,69 +1,98 @@
-import { MEDIA_RETENTION_MS } from '@zapbip/core';
-import { DAY_MS, HOUR_MS } from '@zapbip/types';
+import { AccountState, OwnerLocale } from '@zapbip/types';
 import { reset } from 'cloudflare:test';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import usageMigrationSql from '../../migrations/0003_usage.sql?raw';
-import { D1UsageRepository } from '../../src/adapters/d1/d1-usage-repository';
-import { LogEvent } from '../../src/contract/log';
-import { MEDIA_RETENTION_HOUR, SCHEDULED_CRON } from '../../src/operations/constants';
-import { runMediaRetention } from '../../src/operations/media-retention';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import devWorker from '../../src/index.dev';
+import productionWorker from '../../src/index';
 import { runScheduled } from '../../src/operations/scheduled';
+import { registerWithInstallCode } from '../support/install-codes';
+import { applyDirectoryMigration, SEED_CREATED_AT, seedOwnerIdentity } from '../support/seed';
+import type { Bindings } from '../../src/contract/env';
 import { testEnv } from '../support/workers-env';
 
-const NOW = Date.UTC(2026, 10, 6, 12);
-const TODAY = '2026-11-06';
-const MEDIA_KEY = 'accounts/acc_1/media/med_1';
-const MEDIA_SIZE_BYTES = 8;
+const CRON = '*/30 * * * *';
+const EXPIRES_AT = SEED_CREATED_AT + 10;
+const CLEAR_SEALED_SECRET_FRAGMENT = 'install_code_sealed_secret = NULL WHERE install_code_expires_at';
 
-async function seedUsage(input: { totals: number[] }): Promise<void> {
-  const repository = new D1UsageRepository({ database: testEnv.CONNECTIONS });
-  await Promise.all(
-    input.totals.map((gigabyteSeconds, index) => repository.reportDay({ day: TODAY, accountId: `acc_${index}`, gigabyteSeconds })),
-  );
+async function sealedSecretOf(input: { connectionId: string }): Promise<string | null> {
+  const row = await testEnv.CONNECTIONS.prepare('SELECT install_code_sealed_secret AS sealed FROM connections WHERE id = ?')
+    .bind(input.connectionId)
+    .first<{ sealed: string | null }>();
+  if (row === null) throw new Error('connection row is missing');
+  return row.sealed;
 }
 
-async function storeMediaObject(): Promise<number> {
-  const stored = await testEnv.MEDIA.put(MEDIA_KEY, new Uint8Array(MEDIA_SIZE_BYTES));
-  if (stored === null) throw new Error('media object was not stored');
-  return stored.uploaded.getTime();
+async function countAccounts(): Promise<number> {
+  const row = await testEnv.CONNECTIONS.prepare('SELECT COUNT(*) AS total FROM accounts').first<{ total: number }>();
+  if (row === null) throw new Error('count missing');
+  return row.total;
 }
 
-function retentionTickAfter(input: { instant: number }): number {
-  const nextDayStart = Math.floor(input.instant / DAY_MS) * DAY_MS + DAY_MS;
-  return nextDayStart + MEDIA_RETENTION_HOUR * HOUR_MS;
-}
+beforeEach(applyDirectoryMigration);
+afterEach(reset);
 
-beforeEach(async () => {
-  await testEnv.CONNECTIONS.prepare(usageMigrationSql).run();
-});
-afterEach(async () => {
-  vi.restoreAllMocks();
-  await reset();
-});
-
-describe('scheduled jobs against seeded data', () => {
-  it('logs budget.warning and rejects when the day total reaches the threshold', async () => {
-    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
-    await seedUsage({ totals: [6_000, 4_400] });
-    await expect(runScheduled({ cron: SCHEDULED_CRON, now: NOW, env: testEnv })).rejects.toThrow(TODAY);
-    const logged = logSpy.mock.calls.map(([line]) => JSON.parse(String(line)));
-    expect(logged).toContainEqual({ event: LogEvent.BudgetWarning, day: TODAY, gigabyteSeconds: 10_400 });
+describe('scheduled account jobs', () => {
+  it('[row 499] clears the sealed secret of an expired install code', async () => {
+    await seedOwnerIdentity({ accountId: 'acc_cron', phone: '5511900000010', ownerLocale: OwnerLocale.EnglishUs });
+    const { connection } = await registerWithInstallCode({ accountId: 'acc_cron', agent: 'claude', expiresAt: EXPIRES_AT });
+    await runScheduled({ cron: CRON, now: EXPIRES_AT, env: testEnv });
+    expect(await sealedSecretOf({ connectionId: connection.connectionId })).toBeNull();
   });
 
-  it('resolves when the day total is under the threshold', async () => {
-    await seedUsage({ totals: [6_000, 4_000] });
-    await expect(runScheduled({ cron: SCHEDULED_CRON, now: NOW, env: testEnv })).resolves.toBeUndefined();
+  it('keeps the sealed secret of a live install code', async () => {
+    await seedOwnerIdentity({ accountId: 'acc_cron', phone: '5511900000010', ownerLocale: OwnerLocale.EnglishUs });
+    const { connection } = await registerWithInstallCode({ accountId: 'acc_cron', agent: 'claude', expiresAt: EXPIRES_AT });
+    await runScheduled({ cron: CRON, now: EXPIRES_AT - 1, env: testEnv });
+    expect(await sealedSecretOf({ connectionId: connection.connectionId })).not.toBeNull();
   });
 
-  it('deletes a media object once the retention has passed', async () => {
-    const uploadedAt = await storeMediaObject();
-    await runScheduled({ cron: SCHEDULED_CRON, now: retentionTickAfter({ instant: uploadedAt + MEDIA_RETENTION_MS }), env: testEnv });
-    expect(await testEnv.MEDIA.head(MEDIA_KEY)).toBeNull();
+  it('[row 499] finishes the deletion of an account left deleting', async () => {
+    await seedOwnerIdentity({ accountId: 'acc_gone', phone: '5511900000011', ownerLocale: OwnerLocale.EnglishUs });
+    await testEnv.CONNECTIONS.prepare('UPDATE accounts SET state = ? WHERE id = ?').bind(AccountState.Deleting, 'acc_gone').run();
+    await runScheduled({ cron: CRON, now: EXPIRES_AT, env: testEnv });
+    expect(await countAccounts()).toBe(0);
   });
 
-  it('keeps a media object that is exactly at the retention', async () => {
-    const uploadedAt = await storeMediaObject();
-    await runMediaRetention({ bucket: testEnv.MEDIA, now: uploadedAt + MEDIA_RETENTION_MS });
-    expect(await testEnv.MEDIA.head(MEDIA_KEY)).not.toBeNull();
+  it('[row 485] still clears the expired secret when the deletion sweep fails', async () => {
+    await seedOwnerIdentity({ accountId: 'acc_cron', phone: '5511900000010', ownerLocale: OwnerLocale.EnglishUs });
+    const { connection } = await registerWithInstallCode({ accountId: 'acc_cron', agent: 'claude', expiresAt: EXPIRES_AT });
+    await seedOwnerIdentity({ accountId: 'acc_gone', phone: '5511900000011', ownerLocale: OwnerLocale.EnglishUs });
+    await testEnv.CONNECTIONS.prepare('UPDATE accounts SET state = ? WHERE id = ?').bind(AccountState.Deleting, 'acc_gone').run();
+    const failingInbox = {
+      idFromName: () => {
+        throw new Error('sweep failed');
+      },
+    } as unknown as Bindings['ACCOUNT_INBOX'];
+    await expect(runScheduled({ cron: CRON, now: EXPIRES_AT, env: { ...testEnv, ACCOUNT_INBOX: failingInbox } })).rejects.toThrow(
+      'sweep failed',
+    );
+    expect(await sealedSecretOf({ connectionId: connection.connectionId })).toBeNull();
+  });
+
+  it('[row 485] still finishes the deletion when clearing the expired secrets fails', async () => {
+    await seedOwnerIdentity({ accountId: 'acc_gone', phone: '5511900000011', ownerLocale: OwnerLocale.EnglishUs });
+    await testEnv.CONNECTIONS.prepare('UPDATE accounts SET state = ? WHERE id = ?').bind(AccountState.Deleting, 'acc_gone').run();
+    const database = new Proxy(testEnv.CONNECTIONS, {
+      get(target, property) {
+        const member = Reflect.get(target, property);
+        if (property !== 'prepare') return typeof member === 'function' ? member.bind(target) : member;
+        return (statement: string) => {
+          if (statement.includes(CLEAR_SEALED_SECRET_FRAGMENT)) throw new Error('clear failed');
+          return target.prepare(statement);
+        };
+      },
+    });
+    await expect(runScheduled({ cron: CRON, now: EXPIRES_AT, env: { ...testEnv, CONNECTIONS: database } })).rejects.toThrow('clear failed');
+    expect(await countAccounts()).toBe(0);
+  });
+
+  it.each([
+    ['development', devWorker],
+    ['production', productionWorker],
+  ])('the %s entry exports a scheduled handler that runs them', async (_name, worker) => {
+    await seedOwnerIdentity({ accountId: 'acc_gone', phone: '5511900000011', ownerLocale: OwnerLocale.EnglishUs });
+    await testEnv.CONNECTIONS.prepare('UPDATE accounts SET state = ? WHERE id = ?').bind(AccountState.Deleting, 'acc_gone').run();
+    const controller = { cron: CRON, scheduledTime: EXPIRES_AT, noRetry: () => undefined } as ScheduledController;
+    await worker.scheduled(controller, testEnv);
+    expect(await countAccounts()).toBe(0);
   });
 });

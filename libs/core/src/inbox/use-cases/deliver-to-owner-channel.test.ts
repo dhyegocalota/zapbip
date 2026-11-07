@@ -169,6 +169,7 @@ describe('deliverToOwner with the channel', () => {
     });
     const error = await captureInboxError(() => send({ environment, text: 'hi' }));
     expect(error).toEqual({ code: ChannelErrorKind.DeliveryFailed, message: NOTICE_FAILED_MESSAGE });
+    expect((await historyOf({ environment })).map((message) => message.delivery)).toEqual([DeliveryState.Queued]);
     expect((await environment.repository.findWindow()).noticeSentForClosedWindow).toBe(false);
   });
 

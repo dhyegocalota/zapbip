@@ -1,7 +1,7 @@
 import { RECEIPT_RETENTION_MS, SENDING_STALE_MS, type ChannelStatusDetail, type CoreDependencies } from '@zapbip/core';
 import { ChannelInboundKind, DeliveryState, MediaOrigin, MessageDirection, MessageKind, OwnerLocale } from '@zapbip/types';
 import { evictDurableObject, reset, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { AccountInbox } from '../../src/account-inbox/account-inbox';
 import { runMigrations } from '../../src/account-inbox/run-migrations';
 import { ACCOUNT_INBOX_MIGRATIONS } from '../../src/account-inbox/migrations';
@@ -10,11 +10,14 @@ import { DevAccountInbox } from '../../src/dev/dev-account-inbox';
 import { withRepository } from '../support/account-inbox';
 import { BASE_TIME, buildTextMessage } from '../support/builders';
 import { advanceClock } from '../support/inbox-session';
+import { applyDirectoryMigration, seedAccount } from '../support/seed';
 import { accountInboxStub, connectionOf, testEnv, whatsappTestEnv } from '../support/workers-env';
 
 const ACCOUNT_ID = 'acc_channel';
 const UPGRADE_ACCOUNT_ID = 'acc_upgrade';
 const VERSION_BEFORE_CHANNEL = 4;
+const VERSION_AFTER_CHANNEL = 6;
+const UPGRADED_VERSIONS = [VERSION_BEFORE_CHANNEL, VERSION_AFTER_CHANNEL];
 const LIST_USER_TABLES_STATEMENT =
   "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%'";
 const CHANNEL_MESSAGE_ID = 'wamid.inbound.1';
@@ -403,7 +406,7 @@ describe('DO schema v4', () => {
 });
 
 describe('DO schema upgrade', () => {
-  it('applies v4 to a database that holds versions 1, 2 and 5 and nothing else', async () => {
+  it('applies v4 and v6 to a database that holds versions 1, 2 and 5 and nothing else', async () => {
     const upgrade = await runInDurableObject(accountInboxStub({ accountId: UPGRADE_ACCOUNT_ID }), (_instance, state) => {
       state.storage.sql
         .exec<{ name: string }>(LIST_USER_TABLES_STATEMENT)
@@ -411,7 +414,7 @@ describe('DO schema upgrade', () => {
         .forEach((table) => state.storage.sql.exec(`DROP TABLE ${table.name}`));
       const seeded = runMigrations({
         storage: state.storage,
-        migrations: ACCOUNT_INBOX_MIGRATIONS.filter((migration) => migration.version !== VERSION_BEFORE_CHANNEL),
+        migrations: ACCOUNT_INBOX_MIGRATIONS.filter((migration) => !UPGRADED_VERSIONS.includes(migration.version)),
       });
       const applied = runMigrations({ storage: state.storage, migrations: ACCOUNT_INBOX_MIGRATIONS });
       return {
@@ -424,7 +427,7 @@ describe('DO schema upgrade', () => {
       };
     });
     expect(upgrade.seeded).toEqual([1, 2, 5]);
-    expect(upgrade.applied).toEqual([VERSION_BEFORE_CHANNEL]);
+    expect(upgrade.applied).toEqual(UPGRADED_VERSIONS);
     expect(upgrade.messageColumns).toContain('channel_message_id');
   });
 });
@@ -610,4 +613,10 @@ describe('AccountInbox channel messages', () => {
     const stored = await inRepository((repository) => repository.findMessageByChannelMessageId({ channelMessageId: CHANNEL_MESSAGE_ID }));
     expect(stored).toMatchObject({ forwarded: true });
   });
+});
+
+beforeEach(async () => {
+  await applyDirectoryMigration();
+  await seedAccount({ accountId: ACCOUNT_ID });
+  await seedAccount({ accountId: UPGRADE_ACCOUNT_ID });
 });

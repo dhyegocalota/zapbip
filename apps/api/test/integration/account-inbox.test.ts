@@ -19,7 +19,7 @@ import {
   TemplateKind,
 } from '@zapbip/types';
 import { abortAllDurableObjects, evictDurableObject, reset, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
-import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, type MockInstance, vi } from 'vitest';
 import { ACCOUNT_INBOX_MIGRATIONS } from '../../src/account-inbox/migrations';
 import { runMigrations, type Migration } from '../../src/account-inbox/run-migrations';
 import { createPlatformClock } from '../../src/adapters/platform/clock';
@@ -36,6 +36,7 @@ import {
   registerDueTimeProvider,
   replaceTemplate,
 } from '../support/inbox-session';
+import { applyDirectoryMigration, seedAccount } from '../support/seed';
 import { versionAfterLatest } from '../support/migration-versions';
 import { accountInboxStub, connectionOf, testEnv } from '../support/workers-env';
 
@@ -512,6 +513,8 @@ describe('AccountInbox migrations', () => {
         'media',
         'screen_entries',
         'usage_meter',
+        'account_facts',
+        'revoked_agents',
       ]),
     );
   });
@@ -591,4 +594,10 @@ describe('AccountInbox logs', () => {
       expect(lines.some((line) => line.includes(forbidden))).toBe(false);
     });
   });
+});
+
+beforeEach(async () => {
+  await applyDirectoryMigration();
+  await seedAccount({ accountId: FIRST_ACCOUNT });
+  await seedAccount({ accountId: SECOND_ACCOUNT });
 });

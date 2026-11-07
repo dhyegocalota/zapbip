@@ -12,6 +12,7 @@ export type QuestionOption = {
   optionIndex: number;
   title: string;
   description: string | null;
+  rowId?: string;
 };
 
 export type MediaSource =

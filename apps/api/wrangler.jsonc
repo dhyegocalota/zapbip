@@ -27,6 +27,11 @@
     "WAITLIST_ENABLED": "true",
     "WHATSAPP_GRAPH_BASE_URL": "https://graph.facebook.com",
   },
+  "ratelimits": [
+    { "name": "OWNER_RATE_LIMITER", "namespace_id": "1001", "simple": { "limit": 20, "period": 60 } },
+    { "name": "OUTBOUND_RATE_LIMITER", "namespace_id": "1002", "simple": { "limit": 30, "period": 60 } },
+    { "name": "ACCOUNT_OUTBOUND_RATE_LIMITER", "namespace_id": "1003", "simple": { "limit": 120, "period": 60 } },
+  ],
   "triggers": { "crons": ["*/30 * * * *"] },
   "env": {
     "development": {
@@ -52,6 +57,11 @@
         "WHATSAPP_GRAPH_BASE_URL": "http://127.0.0.1:4011",
         "WHATSAPP_MEDIA_DOWNLOAD_ORIGIN": "http://127.0.0.1:4011",
       },
+      "ratelimits": [
+        { "name": "OWNER_RATE_LIMITER", "namespace_id": "1001", "simple": { "limit": 20, "period": 60 } },
+        { "name": "OUTBOUND_RATE_LIMITER", "namespace_id": "1002", "simple": { "limit": 30, "period": 60 } },
+        { "name": "ACCOUNT_OUTBOUND_RATE_LIMITER", "namespace_id": "1003", "simple": { "limit": 120, "period": 60 } },
+      ],
       "triggers": { "crons": ["*/30 * * * *"] },
     },
     "staging": {
@@ -77,6 +87,11 @@
         "WAITLIST_ENABLED": "false",
         "WHATSAPP_GRAPH_BASE_URL": "https://graph.facebook.com",
       },
+      "ratelimits": [
+        { "name": "OWNER_RATE_LIMITER", "namespace_id": "1001", "simple": { "limit": 20, "period": 60 } },
+        { "name": "OUTBOUND_RATE_LIMITER", "namespace_id": "1002", "simple": { "limit": 30, "period": 60 } },
+        { "name": "ACCOUNT_OUTBOUND_RATE_LIMITER", "namespace_id": "1003", "simple": { "limit": 120, "period": 60 } },
+      ],
       "triggers": { "crons": ["*/30 * * * *"] },
     },
   },

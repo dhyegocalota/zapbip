@@ -3,7 +3,7 @@ import { D1ConnectionDirectory } from '../adapters/d1/d1-connection-directory';
 import { hashConnectionSecret } from '../adapters/platform/hash';
 import { CONNECTION_SECRET_PATTERN } from '../contract/constants';
 
-export type ResolvedConnection = { connection: ConnectionIdentity; secret: string };
+export type ResolvedConnection = { connection: ConnectionIdentity; secret: string; secretDigest: string };
 
 export async function resolveConnection(input: { database: D1Database; secret: string | null }): Promise<ResolvedConnection | null> {
   const { secret } = input;
@@ -12,5 +12,5 @@ export async function resolveConnection(input: { database: D1Database; secret: s
   const secretDigest = await hashConnectionSecret({ secret });
   const connection = await new D1ConnectionDirectory({ database: input.database }).resolveSecretDigest({ secretDigest });
   if (!connection) return null;
-  return { connection, secret };
+  return { connection, secret, secretDigest };
 }

@@ -260,3 +260,19 @@ Correction: the earlier briefing rows `45d02ab` (npm maintainers) and `6b7d43a` 
 - `OPENCLAW_PLUGIN_NPM_VERSION` (libs/types) is tested against `apps/openclaw-plugin/package.json` when that file exists.
 - agent-inbox-core is merged: `COMPANY` is core's, typed `CompanyFacts`; `DEVELOPMENT_ENVIRONMENT` derives from `DeployEnvironment`.
 - Docs: README step 1 prepares the machine; spec and test-plan list every refusal and the nine scripts; `verify-gates.tsv` sends `wrangler.jsonc` through e2e.
+
+### Merge of accounts-and-keys and whatsapp-cloud-channel, and step B10 (2026-11-07)
+
+Merged `origin/main` (`a12db19`). Conflicts kept main's rules:
+
+- One `scheduled` handler: `apps/api/src/operations/scheduled.ts` is main's job registry with two more jobs, `budget_check` (minute 0) and `media_retention` (03:00 UTC), beside the two every-tick account jobs. `scheduled-job.ts` is gone. One cron `*/30 * * * *` per block; the unknown-cron refusal stays.
+- Durable Object schema versions are v1, v2, v4, v5, v6 (accounts-and-keys) and v7 (deploy); v3 belongs to scheduled-wake and the runner applies by set.
+- `wrangler.jsonc`: production keeps `routes` and `ENVIRONMENT`; every block, staging included, carries the three rate limiters.
+- D1 migrations `0001`, `0002_accounts_and_keys`, `0003_usage`, `0004_whatsapp_channel` all apply before the Worker deploys: the preflight step `migrations` refuses while any is pending.
+
+B10 is two end-to-end files, both on the `whatsapp` e2e stack (fake Graph, `META_APP_SECRET`, verify token):
+
+- `apps/api/test/e2e/owner-flow.e2e.test.ts`: `novo agente smoke` through the simulator answers with an install link; `scripts/smoke.ts --environment development` against the seeded connection prints five `PASS`; `--first-deploy` prints three `PASS` and the "First deploy:" instructions; a wrong secret fails the two connection checks, exits 1 and never prints the secret.
+- `apps/api/test/e2e/deploy-dry-run.e2e.test.ts`: `wrangler deploy --dry-run` for production and staging lists every binding; `runDeploy` with the real `libs/types` constants and the real wrangler blocks refuses on the unset official number, the unset company facts, an unresolved npm package and a pending D1 migration, and lists migrations before it deploys the Worker.
+- Deviation from the plan text: the install page is install-skills' route, not on main, so the smoke uses the seeded connection secret, not one read from the screen. Both files are green when they land (they test code that exists): pins.
+- Gap: the smoke never runs against a real deployed Worker; production deploys are forbidden for agents.

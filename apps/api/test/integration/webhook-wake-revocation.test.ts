@@ -16,6 +16,7 @@ import {
   readWakeJobs,
   readWakeRow,
   wakeStub,
+  applyWakeDirectory,
 } from '../support/wake-session';
 
 const OTHER_AGENT = 'beta';
@@ -33,6 +34,8 @@ function withWakeRepository<Result>(input: { run: (repository: ReturnType<typeof
 afterEach(async () => {
   await reset();
 });
+
+beforeEach(applyWakeDirectory);
 
 beforeEach(() => {
   stub = wakeStub({});

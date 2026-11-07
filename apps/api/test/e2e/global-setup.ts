@@ -14,6 +14,8 @@ import { freePort, HEALTH_TIMEOUT_MS, LOOPBACK_HOST, waitForHealth } from './sup
 const runCommand = promisify(execFile);
 const SEED_PHONE = '5511999990000';
 const SEED_AGENTS = ['alpha', 'beta'];
+const SECOND_SEED_PHONE = '5511999990010';
+const SECOND_SEED_AGENTS = ['rotator', 'revoked', 'doomed'];
 const WAKE_AGENT = 'grok';
 const WAKE_ACCOUNT_PHONES = ['5511999990001', '5511999990002', '5511999990003', '5511999990004', '5511999990005'];
 const SIGNING_KEY_BYTES = 32;
@@ -28,6 +30,8 @@ export type StackContext = {
   origin: string;
   phone: string;
   secrets: Record<string, string>;
+  secondPhone: string;
+  secondSecrets: Record<string, string>;
   wakeAccounts: WakeAccount[];
   logFile: string;
 };
@@ -38,7 +42,7 @@ declare module 'vitest' {
   }
 }
 
-async function seedConnections(input: { phone: string; agents: string[]; persistArguments: string[] }) {
+async function seedConnections(input: { phone: string; agents: string[]; origin: string }) {
   const seeded = await runCommand('pnpm', [
     'exec',
     'tsx',
@@ -48,13 +52,14 @@ async function seedConnections(input: { phone: string; agents: string[]; persist
     '--agents',
     input.agents.join(','),
     '--json',
-    ...input.persistArguments,
+    '--origin',
+    input.origin,
   ]);
   return seedOutputSchema.parse(JSON.parse(seeded.stdout)).connections;
 }
 
-async function seedWakeAccount(input: { phone: string; persistArguments: string[] }): Promise<WakeAccount> {
-  const [connection] = await seedConnections({ phone: input.phone, agents: [WAKE_AGENT], persistArguments: input.persistArguments });
+async function seedWakeAccount(input: { phone: string; origin: string }): Promise<WakeAccount> {
+  const [connection] = await seedConnections({ phone: input.phone, agents: [WAKE_AGENT], origin: input.origin });
   if (!connection) throw new Error(`no connection seeded for ${input.phone}`);
   return { phone: input.phone, agent: connection.agent, secret: connection.secret };
 }
@@ -77,12 +82,6 @@ export default async function setup(project: TestProject): Promise<() => Promise
     '--local',
     ...persistArguments,
   ]);
-  const connections = await seedConnections({ phone: SEED_PHONE, agents: SEED_AGENTS, persistArguments });
-  const wakeAccounts = await WAKE_ACCOUNT_PHONES.reduce<Promise<WakeAccount[]>>(
-    async (seededBefore, phone) => [...(await seededBefore), await seedWakeAccount({ phone, persistArguments })],
-    Promise.resolve([]),
-  );
-
   const server = spawn(
     'pnpm',
     [
@@ -112,11 +111,19 @@ export default async function setup(project: TestProject): Promise<() => Promise
   server.stdout.pipe(logStream);
   server.stderr.pipe(logStream);
   await waitForHealth({ origin, server, deadline: Date.now() + HEALTH_TIMEOUT_MS });
+  const connections = await seedConnections({ phone: SEED_PHONE, agents: SEED_AGENTS, origin });
+  const secondConnections = await seedConnections({ phone: SECOND_SEED_PHONE, agents: SECOND_SEED_AGENTS, origin });
+  const wakeAccounts = await WAKE_ACCOUNT_PHONES.reduce<Promise<WakeAccount[]>>(
+    async (seededBefore, phone) => [...(await seededBefore), await seedWakeAccount({ phone, origin })],
+    Promise.resolve([]),
+  );
 
   project.provide('stack', {
     origin,
     phone: SEED_PHONE,
     secrets: Object.fromEntries(connections.map((connection) => [connection.agent, connection.secret])),
+    secondPhone: SECOND_SEED_PHONE,
+    secondSecrets: Object.fromEntries(secondConnections.map((connection) => [connection.agent, connection.secret])),
     wakeAccounts,
     logFile,
   });
