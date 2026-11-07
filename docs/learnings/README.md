@@ -17,6 +17,7 @@ Every learning touched by a change gets a `Revisited` line appended.
 | Date | Title | File | Last revisited |
 |------|-------|------|----------------|
 | 2026-10-17 | `shouldAdvanceTime` lets real lag move the fake clock, so a timer test passes alone and fails under load | [2026-10-17-should-advance-time-lets-real-lag-move-the-fake-clock.md](2026-10-17-should-advance-time-lets-real-lag-move-the-fake-clock.md) | 2026-11-04 |
+| 2026-11-07 | A heartbeat or promptness test passes alone and fails once in a full run on a busy machine | [2026-11-07-wall-clock-assertions-in-asyncio-tests-flake-under-load.md](2026-11-07-wall-clock-assertions-in-asyncio-tests-flake-under-load.md) | 2026-11-07 |
 
 ### tooling
 
