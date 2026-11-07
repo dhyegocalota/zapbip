@@ -191,7 +191,7 @@ Pins: 43e143f9, `number-registry-state` second-number case, 99501b0a (form rules
 ### What changed and where
 
 - `apps/api/playwright.config.ts`: two projects (`desktop` 1280x800, `mobile` 375x812), one worker, locale `pt-BR`, results under the system temporary folder.
-- `apps/api/e2e/backoffice/global-setup.ts`: migrates a throwaway D1, starts the fake Graph and `wrangler dev --env development` on free ports with the test operator credentials, then exports the origin through `support/walk-environment.ts`. Wrangler runs with `--local-upstream backoffice.localhost:<port>` because the development block inherits the deployed routes and wrangler would otherwise rewrite the request host to `mcp.zapbip.com`, so the backoffice host never matches.
+- `apps/api/e2e/backoffice/global-setup.ts`: migrates a throwaway D1, starts the fake Graph and `wrangler dev --env development` on free ports with the test operator credentials, then exports the origin through `support/walk-environment.ts`.
 - `apps/api/e2e/backoffice/fixtures.ts`: a unique `cf-connecting-ip` per test (the development limiter allows 5 a minute per address), a clean registry before each test, and a guard that fails a test on any console error or warning, page error or failed request, which includes every CSP block. A failing document response (401, 403, 404, 429) accounts for its own "Failed to load resource" line.
 - `apps/api/e2e/backoffice/support/operator-database.ts`: opens the Miniflare D1 file with `node:sqlite` to reset the TOTP step and the lockout, so each act can use the current code.
 - Specs: `sign-in.spec.ts`, `numbers.spec.ts`, `error-pages.spec.ts`. `scripts/verify-gates.tsv`: `apps/api/e2e/*` runs `typecheck` only; the browser walk is not a gate.
@@ -212,11 +212,11 @@ From `apps/api`: `pnpm test:walk` (needs the Playwright Chromium; no fixed port;
 
 - Sign-in, sign-out, a wrong code and the 10-failure lockout behave as `design.md` says at both widths.
 - Register, verify, activate, replace token and replace secret each refuse a wrong step-up code and never print a credential.
-- The 404, 403 and 429 pages render with their headings; 401 and 500 pages are not walked.
+- The 404, 403 and 429 pages render with their headings; 401 page is walked by a post without a session; the 500 page is covered by integration only.
 
 ### Gaps and deviations
 
-- `wrangler dev` needs `--local-upstream` for the backoffice host; `env.development` inheriting the deployed routes is worth a `routes: []` in `wrangler.jsonc` (G1 file, not changed).
+- `env.development` now carries `"routes": []` so `wrangler dev` keeps the request host; the walk needs no `--local-upstream`.
 - The lockout and 429 specs rotate or share the client address through a request header, which only works because the development Worker trusts `cf-connecting-ip` as sent.
 - `metrics.spec.ts` waits for G4.
 - The walk shares one database across the two projects and cleans only the registry, audit and sessions.

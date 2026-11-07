@@ -16,6 +16,7 @@ const CLEAR_REGISTRY_STATEMENTS = [
   'DELETE FROM backoffice_audit',
   'DELETE FROM backoffice_sessions',
 ];
+const CLEAR_SESSIONS_STATEMENTS = ['DELETE FROM backoffice_sessions'];
 const CODE_WINDOW_STEPS = 1;
 const CANDIDATE_WRONG_CODES = ['000000', '111111'];
 
@@ -45,6 +46,10 @@ function execute(input: { statements: string[] }): void {
 
 export function releaseOperator(): void {
   execute({ statements: RELEASE_OPERATOR_STATEMENTS });
+}
+
+export function clearSessions(): void {
+  execute({ statements: CLEAR_SESSIONS_STATEMENTS });
 }
 
 export function clearRegistry(): void {

@@ -547,6 +547,8 @@ AccountInbox alarm ─► flush usage_meter → usage_daily, activity_meter → 
 | QR in the terminal | add `uqr` (zero dependencies) as a script devDependency · print only the `otpauth://` URI and base32 | answer: `uqr` as a script devDependency (owner delegated 2026-11-06) | 2026-11-07 |
 | Playwright for the walk in `apps/api` | add `@playwright/test`, pinned exactly when G6 adds it (not in the lockfile today; only `playwright-core@1.63.0` is) · reuse `apps/docs` | recommended: add to `apps/api` (owner delegated 2026-11-06) | 2026-11-07 |
 | `OFFICIAL_WHATSAPP_NUMBER` | keep as the docs' front-door number · remove | recommended: keep as a published fact (the docs are static), with a phase 2 preflight check that the registry holds it as `active` (owner delegated 2026-11-06) | 2026-11-07 |
+| `Referrer-Policy` on the backoffice | `no-referrer` · `same-origin` | `same-origin`: `no-referrer` makes browsers send `Origin: null` on every form post, which the CSRF check refuses; nothing leaves the site either way (found by the G6 walk; owner delegated 2026-11-06) | 2026-11-07 |
+| Development routes | inherit the deployed custom domains · `"routes": []` | `"routes": []` in `env.development`, so `wrangler dev` keeps the request host and `backoffice.localhost` reaches the backoffice (found by the G6 walk) | 2026-11-07 |
 | Audit retention and client address | 365 days with address · no address | recommended: 365 days with address (owner delegated 2026-11-06) | 2026-11-07 |
 | Second ADR | one ADR for access, ADR 0032 for the registry · one combined | two: 0031 for access and 0032 for the numbers registry, both accepted with this spec (owner delegated 2026-11-06) | 2026-11-07 |
 

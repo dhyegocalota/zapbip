@@ -4,8 +4,8 @@ import { BackofficeCopyKey } from '../../src/backoffice/backoffice-copy';
 import { BACKOFFICE_TEST_KEY } from '../../test/support/backoffice-credentials';
 import { expect, test } from './fixtures';
 import { copy } from './support/copy';
-import { wrongCode } from './support/operator-database';
-import { fillSignIn } from './support/sign-in';
+import { clearSessions, wrongCode } from './support/operator-database';
+import { fillSignIn, signIn } from './support/sign-in';
 
 const RATE_LIMIT_ATTEMPTS = 6;
 const FOREIGN_ORIGIN = 'http://evil.localhost';
@@ -39,4 +39,13 @@ test('shows the refused page for a sign-in posted from another origin', async ({
   });
   expect(response.status()).toBe(HttpStatus.Forbidden);
   expect(await response.text()).toContain(copy({ key: BackofficeCopyKey.Error403Title }));
+});
+
+test('shows the unauthorized page for a post without a session', async ({ page }) => {
+  await signIn({ page });
+  clearSessions();
+  await page.getByRole('button', { name: copy({ key: BackofficeCopyKey.SignOut }) }).click();
+  await expect(
+    page.getByRole('heading', { level: 1, name: `${HttpStatus.Unauthorized} ${copy({ key: BackofficeCopyKey.Error401Title })}` }),
+  ).toBeVisible();
 });

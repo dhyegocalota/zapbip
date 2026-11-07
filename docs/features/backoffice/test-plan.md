@@ -179,6 +179,7 @@ Logs (`backoffice-logs-redaction.test.ts`):
 ## E2E (Playwright specs, `apps/api/e2e/backoffice/`)
 
 - [ ] `sign-in.spec.ts::signs in and out` — steps: open `/`, redirected to `/sign-in`, type the test key and the code computed from the test secret, submit, see the home heading, sign out; expected: back on `/sign-in` with the signed-out copy
+- [ ] `error-pages.spec.ts::shows the unauthorized page for a post without a session` — steps: sign in, remove the session row, press sign out; expected: `401 Sua sessão terminou` page. The 500 page stays covered by integration (`backoffice-headers.test.ts`), not by the walk
 - [ ] `sign-in.spec.ts::wrong code` — expected: the generic failure copy, the key field empty, still on `/sign-in`
 - [ ] `numbers.spec.ts::registers, verifies and activates a number` — steps: register app and number, verify, activate with a code; expected: the state badge `active`, template rows visible, no credential text anywhere in the DOM
 - [ ] `numbers.spec.ts::rotates the access token` — expected: "last changed" updates; the token is never shown

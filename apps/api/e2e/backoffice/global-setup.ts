@@ -58,8 +58,6 @@ export default async function setup(): Promise<() => Promise<void>> {
       ...DEVELOPMENT_ENVIRONMENT_ARGUMENTS,
       '--ip',
       LOOPBACK_HOST,
-      '--local-upstream',
-      `${BACKOFFICE_HOST}:${port}`,
       '--port',
       String(port),
       ...persistArguments,
@@ -67,7 +65,7 @@ export default async function setup(): Promise<() => Promise<void>> {
     ],
     { stdio: 'ignore', detached: true },
   );
-  await waitForSignIn({ origin: `http://${LOOPBACK_HOST}:${port}`, server, deadline: Date.now() + HEALTH_TIMEOUT_MS });
+  await waitForSignIn({ origin, server, deadline: Date.now() + HEALTH_TIMEOUT_MS });
   process.env[WalkVariable.Origin] = origin;
   process.env[WalkVariable.PersistDirectory] = persistDirectory;
   process.env[WalkVariable.GraphBaseUrl] = graphBaseUrl;

@@ -43,6 +43,7 @@
     "development": {
       "name": "zapbip-api-development",
       "main": "src/index.dev.ts",
+      "routes": [],
       "durable_objects": { "bindings": [{ "name": "ACCOUNT_INBOX", "class_name": "AccountInbox" }] },
       "migrations": [{ "tag": "v1", "new_sqlite_classes": ["AccountInbox"] }],
       "d1_databases": [

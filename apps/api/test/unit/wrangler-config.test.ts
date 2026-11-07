@@ -30,7 +30,7 @@ const BACKOFFICE_ROUTES: Record<DeployEnvironment, { pattern: string; custom_dom
     { pattern: 'mcp-staging.zapbip.com', custom_domain: true },
     { pattern: 'backoffice-staging.zapbip.com', custom_domain: true },
   ],
-  [DeployEnvironment.Development]: undefined,
+  [DeployEnvironment.Development]: [],
 };
 const BACKOFFICE_NAMESPACES: Record<DeployEnvironment, string> = {
   [DeployEnvironment.Production]: '1005',
