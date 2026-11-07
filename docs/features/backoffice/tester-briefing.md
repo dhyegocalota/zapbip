@@ -109,3 +109,58 @@ Pins (green on landing, named as such in their commits): the MCP-host and other-
 - The numbers, register, verify and metrics pages do not exist (G3, G4); the nav links to them.
 - The error pages show no navigation, even with a session.
 - `design.md` states the audit table shows a short target ID; the page shows the stored ID as is.
+
+## G3 numbers registry and channel (developer-3)
+
+### What changed and where
+
+- Registry write side: `numbers/number-registry.ts` (port: `registerMetaApp`, `registerNumber`, `registerNumberWithNewMetaApp`, `findNumber`, `transition`), `numbers/number-admin.ts` and `adapters/d1/d1-number-admin.ts` (list, verification record, credential replacement), `numbers/number-state.ts`, `numbers/registration-conflict.ts`, `numbers/graph-error-kind.ts`, `numbers/number-verification.ts`, `numbers/number-notice.ts`, `numbers/sendable-number.ts`.
+- Webhook: `adapters/whatsapp/webhook-routing-peek.ts`; `routes/whatsapp.ts` attributes each delivery to one number and one Meta app, verifies with that app's secret, answers `401 {"error":"unauthorized"}` for an unknown number, two apps, bad JSON and a bad signature; `pending` and `disabled` numbers are acknowledged and ignored.
+- Accounts: `libs/core` `openOwnerAccount` takes `homeNumberId`, `AccountRecord.homeNumberId`, `ownerLocaleOf`; `d1-account-directory.ts` writes `number_id` in the account insert; `inbound/owner-inbound.ts` refuses a new owner on a closed number and answers an owner of another number from the receiving number.
+- Outbound: `cloud-api-message-sender.ts` takes `resolveNumber` and `channelOf`; `AccountInbox.createSender` resolves the number of the account on every send.
+- Registration backfill: the first registered number binds every account without a number in the same batch.
+- Pages: `apps/api/src/backoffice/numbers/**` (list, register, detail, verify, verification result, state, access token, app secret); one line in `backoffice/app.ts`.
+- Shared: `IdPrefix.Number` and `IdPrefix.MetaApp`, `HttpStatus.UnprocessableEntity`, `LogFields.numberId`.
+
+### How to run
+
+From `apps/api`, integration one file at a time (port 4012): `pnpm exec vitest run --config vitest.integration.config.mts test/integration/<file>`. G3 files: `number-registry*.test.ts`, `whatsapp-webhook-numbers.test.ts`, `whatsapp-webhook-number-states.test.ts`, `whatsapp-webhook-account-binding.test.ts`, `whatsapp-webhook-media-number.test.ts`, `number-outbound.test.ts`, `backoffice-numbers*.test.ts`; unit: `webhook-routing-peek`, `number-state`, `graph-request-error-kind`, `number-verification`, `backoffice-registration-form`.
+
+### Red then green (failure text printed by the red run)
+
+| Step | Red | Failure text | Green |
+|---|---|---|---|
+| 20 | 5a7de37 | `registerMetaApp is not implemented` (3 of 5) | d7b0a0c |
+| 21 | 8f7887f3 | `assertNumberTransition is not implemented` (17), `transition is not implemented` (5) | f1e6507a |
+| 22 | b47495f2 | `peekWebhookRouting is not implemented` (29 of 30) | e45f6f6d |
+| 23 | caeee131 | `Error: more than one WhatsApp number is registered`, `expected 500 to be 200` (8 of 8) | 063cd454 |
+| 24 | 60ce415f | `expected [ 'Oi' ] to deeply equal []`; `expected 1 to be +0` | a900a9a1 |
+| 25 | b9dbc521 | `expected null to be 'num_test'`; `expected [ 'Oi' ] to deeply equal []`; `expected [Function] to throw error including 'acc_unbound' but got 'no entry expected'` | b9e5155d (+ 4035e3b5) |
+| 26 | 38de3968 | `more than one WhatsApp number is registered` (6 of 6) | 2517c98c |
+| 27 | pin 43e143f9 | green on landing | |
+| 28 | 92d4d9b3 | `expected [ null, null ] to deeply equal [ …(2) ]` (the second-number case is a pin) | cd98d2c0 |
+| 29a | 5c00fee1 | `graphErrorKindOf is not implemented` (8 of 8) | 0cdba2b9 |
+| 30 | 9d083703 | `expected 404 to be 200/303/401/422/429` (35 of 38) | 3191866a |
+
+Pins: 43e143f9, `number-registry-state` second-number case, 99501b0a (form rules and snapshot), 0e2500d2 (logs).
+
+`whatsapp-webhook.test.ts` expectations that changed: WI-23 (`400` → `401`), the signed JSON body without an entry array (`400` → `401`), WI-27 and WI-31 (`200` → `401`, event `inbound.unattributed`).
+
+### Hypotheses for the tester
+
+- A delivery for an unregistered number, for two Meta apps, with bad JSON or a bad signature answers the same `401` body; a registered `pending` or `disabled` number answers `200` and stores nothing.
+- A new owner on a `closed` number gets one text from that number and no account; an owner whose account is on another number gets that number's display number and is not routed.
+- Two numbers send with their own token, a rotated token is used on the next send, and a restriction on one `phone_number_id` does not pause the other.
+- Register, verify, activate, close, disable and re-close work from the browser; each action needs a fresh code and the response never carries the token or the app secret.
+- A verify against Meta shows the four template rows; a mismatch or a Graph error shows its copy and leaves `verified_at` as it was.
+
+### Gaps and deviations
+
+- Files outside the G3 map that changed: `libs/types/src/enums.ts` (`IdPrefix`, `HttpStatus.UnprocessableEntity`), `contract/log.ts` (`numberId`), `routes/dev-owner.ts` (passes the only number), `outbound-builders.ts` (two exported constants), `backoffice/app.ts` (one line), `test/support/seed.ts` (`numberId`), many integration suites (they seed the registered number).
+- `openTheOnlyNumber` stays for the development simulator only; no production path calls it.
+- A webhook with a wrong or missing `NUMBER_REGISTRY_KEY` answers `500`, not `401` (the app secret open throws); Meta retries either way.
+- "Last changed" for the access token is the number's `updated_at`, so a state change also moves it.
+- The state form does not keep the chosen radio after a failed step-up.
+- `INVALID_JSON_BODY` in `contract/constants.ts` is now unused (G1 file).
+- The numbers pages reuse G2's stylesheet classes; `dl` and the template table have no dedicated styles.
+- The `AccountOnOtherNumber` text is filled with `fillCopyTokens`, not `renderCopy`.

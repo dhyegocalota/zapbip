@@ -160,21 +160,23 @@ Author this list with every box empty. A sub-agent ticks its own line. A wrong s
 
 ### G3 numbers registry and channel
 
-- [ ] **Step 20:** red: `number-registry.test.ts`:
+- [x] **Step 20:** red: `number-registry.test.ts`:
   - register an app and a number → the sealed columns are not the plaintext and open to it;
   - a sealed token copied to another row fails to open with an error naming the row ID;
   - `findByPhoneNumberIds` with unknown IDs → `[]`;
   - `openForAccount` for an account without a number → throws `account has no number`.
 
   Then `numbers/number-registry.ts` and `d1-number-registry.ts`.
-- [ ] **Step 21:** red: the state transitions. Every pair in the table: allowed ones update, the others throw `transition <from> → <to> is not allowed`. `pending → active` without `verified_at` throws. Then `numbers/number-state.ts`.
-- [ ] **Step 22:** red: `webhook-routing-peek.test.ts` over every inbound and status fixture, each wrapped as `notificationWith({ messages: [fixture] })` or `notificationWith({ statuses: [fixture] })` from `test/fixtures/whatsapp/inbound/notification.ts` (the fixture files are bare message and status objects; the wrapper's `entry.id` is `3000000000000003`), plus a template-status payload with no metadata:
+  - evidence: red 5a7de37 (`registerMetaApp is not implemented`, 3 of 5) → green d7b0a0c. `IdPrefix` gained `Number = 'num'` and `MetaApp = 'app'` in `libs/types` (outside the file map).
+- [x] **Step 21:** red: the state transitions. Every pair in the table: allowed ones update, the others throw `transition <from> → <to> is not allowed`. `pending → active` without `verified_at` throws. Then `numbers/number-state.ts`. — evidence: red 8f7887f3 (`assertNumberTransition is not implemented` 17 unit, `transition is not implemented` 5 integration) → green f1e6507a.
+- [x] **Step 22:** red: `webhook-routing-peek.test.ts` over every inbound and status fixture, each wrapped as `notificationWith({ messages: [fixture] })` or `notificationWith({ statuses: [fixture] })` from `test/fixtures/whatsapp/inbound/notification.ts` (the fixture files are bare message and status objects; the wrapper's `entry.id` is `3000000000000003`), plus a template-status payload with no metadata:
   - it returns the expected ID sets;
   - invalid JSON → `null`;
   - nothing routable → `null`.
 
   Then `webhook-routing-peek.ts`.
-- [ ] **Step 23:** red: `whatsapp-webhook-numbers.test.ts`, with two numbers on two apps:
+  - evidence: red b47495f2 (`peekWebhookRouting is not implemented`, 29 of 30) → green e45f6f6d.
+- [x] **Step 23:** red: `whatsapp-webhook-numbers.test.ts`, with two numbers on two apps:
   - a body signed with number A's app secret and metadata of A → `200`, and the message reaches A's account;
   - metadata of A signed with B's secret → `401`;
   - an unknown `phone_number_id` → `401`, with a body identical to the bad-signature body;
@@ -185,24 +187,27 @@ Author this list with every box empty. A sub-agent ticks its own line. A wrong s
   Then rewrite the POST in `routes/whatsapp.ts`. Update the `whatsapp-webhook.test.ts` expectations that change, naming each in the tester briefing:
   - invalid JSON `400` → `401`;
   - the `FOREIGN_PHONE_NUMBER_ID` tests (a change for a `phone_number_id` the registry does not hold) `200` → `401`.
-- [ ] **Step 24:** red: number states on inbound. `pending` and `disabled` → `200`, nothing stored, and the operator event logged. `closed` + new owner → no account, and one `NumberClosedToNewAccounts` send from that number. Then the state checks.
-- [ ] **Step 25:** red: account binding.
+  - evidence: red caeee131 (8 of 8 new tests fail with 500 `more than one WhatsApp number is registered`; WI-23, the entry-array case, WI-27 and WI-31 now expect 401) → green 063cd454. The `whatsapp-webhook.test.ts` changes: WI-23 `400` → `401`, the missing entry array `400` → `401`, WI-27 `200` → `401`, WI-31 `200` → `401`.
+- [x] **Step 24:** red: number states on inbound. `pending` and `disabled` → `200`, nothing stored, and the operator event logged. `closed` + new owner → no account, and one `NumberClosedToNewAccounts` send from that number. Then the state checks. — evidence: red 60ce415f (pending and disabled store the message; closed creates the account) → green a900a9a1. Deviation: `routes/dev-owner.ts` passes the only number to `receiveOwnerInbound` (a compile fix outside the file map).
+- [x] **Step 25:** red: account binding.
   - A new owner on A → the `accounts.number_id = A` row is written in the same batch as the account (the test kills the second write and expects no account).
   - The A account owner writing to B → no routing, one `AccountOnOtherNumber` send from B carrying A's display number.
 
   Then the `homeNumberId` input of `openOwnerAccount` and the `AccountDirectory.create` port in `libs/core`, `d1-account-directory.ts`, `owner-inbound.ts` and the `whatsapp-copy.ts` keys.
-- [ ] **Step 26:** red: outbound per number.
+  - evidence: red b9dbc521 → green b9e5155d, suites that open accounts seed the registered number in 4035e3b5. Deviation: the notice text is filled with `fillCopyTokens`, because `renderCopy` takes only `InboxCopyKey`.
+- [x] **Step 26:** red: outbound per number.
   - An account on A sends → the fake Graph sees `/A_phone_number_id/messages` with A's bearer token.
   - Rotating A's token between two sends → the second uses the new token.
   - Number `disabled` → the agent gets the restricted-channel error, and `channel.number_unavailable` is logged.
   - Restrictions are recorded per `phone_number_id`.
 
   Then `resolveNumber` in `cloud-api-message-sender.ts` and `AccountInbox.createSender`.
-- [ ] **Step 27:** red: media download for an inbound on B uses B's token. Then thread the inbound number through `channelEntryOf`.
-- [ ] **Step 28:** red: the first-number backfill. Two accounts with `number_id NULL`, then register the first number → both bound. A second registration binds nothing. Then put it in the registration batch.
+  - evidence: red 38de3968 (6 of 6 fail with `more than one WhatsApp number is registered`) → green 2517c98c. The sender takes `resolveNumber` and `channelOf`; `numbers/sendable-number.ts` refuses a pending, disabled or missing number.
+- [x] **Step 27:** red: media download for an inbound on B uses B's token. Then thread the inbound number through `channelEntryOf`. — evidence: pin 43e143f9 (green on landing: step 23 already opens the receiving number's token per download).
+- [x] **Step 28:** red: the first-number backfill. Two accounts with `number_id NULL`, then register the first number → both bound. A second registration binds nothing. Then put it in the registration batch. — evidence: red 92d4d9b3 (`expected [ null, null ] to equal [ num, num ]`; the second-number case is a pin) → green cd98d2c0.
 - [ ] ~~**Step 29:**~~ moved into G1 as step 5a, so G1 merges with integration and e2e green. G3 re-runs the same proof after step 28.
-- [ ] **Step 29a:** red: `graph-request-error-kind.test.ts`. `GraphRequestError` status `401` → `auth`, `403` → `auth`, `404` → `not_found`, `0` → `network`, and `400`, `429`, `500`, `502` → `upstream`. Then `numbers/graph-error-kind.ts`.
-- [ ] **Step 30:** red: `backoffice-numbers.test.ts`:
+- [x] **Step 29a:** red: `graph-request-error-kind.test.ts`. `GraphRequestError` status `401` → `auth`, `403` → `auth`, `404` → `not_found`, `0` → `network`, and `400`, `429`, `500`, `502` → `upstream`. Then `numbers/graph-error-kind.ts`. — evidence: red 5c00fee1 (`graphErrorKindOf is not implemented`, 8 of 8) → green 0cdba2b9.
+- [x] **Step 30:** red: `backoffice-numbers.test.ts`:
   - GET `/numbers`: empty, then one, then three;
   - register with step-up → `pending`, and the page shows no credential (the response body never contains the token or the app secret);
   - verify is POST → `303` to `/numbers/:id/verification` → GET `200` from the stored `verification_snapshot`; a reload of the GET gives the same `200` and the same body;
@@ -212,6 +217,7 @@ Author this list with every box empty. A sub-agent ticks its own line. A wrong s
   - rotate the token and the app secret.
 
   Then `backoffice/numbers/**`.
+  - evidence: red 9d083703 (35 of 38 fail, the routes answer 404) → green 3191866a; pins 99501b0a (form rules, verification snapshot) and 0e2500d2 (logs).
 
 ### G4 metrics (PR B)
 
