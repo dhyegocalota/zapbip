@@ -14,7 +14,7 @@ import {
   REVOKED_CLOSE_CODE,
 } from '@zapbip/types';
 import { WebSocket } from 'ws';
-import { ABNORMAL_CLOSE_CODE, CLEAN_EXIT_CODE, FAILURE_EXIT_CODE } from './constants';
+import { ABNORMAL_CLOSE_CODE, CLEAN_EXIT_CODE, FAILURE_EXIT_CODE, REPLACED_EXIT_CODE } from './constants';
 import { parseServerFrame } from './frames';
 import { createHandoffQueue } from './handoff-queue';
 import { logConnectorEvent, type ConnectorLogger } from './log';
@@ -178,7 +178,7 @@ export async function runConnectorSocket({
   let attempt = 0;
   while (!signal.aborted) {
     const end = await holdSocket();
-    if (end.code === REPLACED_CLOSE_CODE) return CLEAN_EXIT_CODE;
+    if (end.code === REPLACED_CLOSE_CODE) return REPLACED_EXIT_CODE;
     if (end.code === REVOKED_CLOSE_CODE) return FAILURE_EXIT_CODE;
     if (signal.aborted) break;
     const failedAttempts = end.wasOpened ? 0 : attempt;

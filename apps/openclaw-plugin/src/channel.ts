@@ -1,16 +1,18 @@
 import { createChannelPluginBase, createChatChannelPlugin, type ChannelPlugin } from 'openclaw/plugin-sdk/channel-core';
+import type { ChannelAccountSnapshot } from 'openclaw/plugin-sdk/channel-contract';
 import type { OpenClawConfig } from 'openclaw/plugin-sdk/config-contracts';
 import type { ZapbipAccount } from './account';
-import { CHANNEL_ID, CLEAN_EXIT_CODE, DEFAULT_ACCOUNT_ID, DELIVERY_MODE_DIRECT } from './constants';
+import { CHANNEL_ID, CLEAN_EXIT_CODE, DEFAULT_ACCOUNT_ID, DELIVERY_MODE_DIRECT, REPLACED_EXIT_CODE } from './constants';
 import { deriveSocketLink } from './connection-link';
 import { runConnectorSocket } from './connector-socket';
 import { handOffToAgent } from './handoff';
 import { sendOwnerText } from './send-message';
 
-type StartContext = { cfg: OpenClawConfig; abortSignal: AbortSignal };
+type StartContext = { cfg: OpenClawConfig; abortSignal: AbortSignal; setStatus: (next: ChannelAccountSnapshot) => void };
 type SendTextContext = { cfg: OpenClawConfig; text: string };
 
 const MISSING_LINK_MESSAGE = `channels.${CHANNEL_ID}.connectionLink is required`;
+const REPLACED_MESSAGE = 'a newer listener replaced this one';
 const NOTHING_SENT_MESSAGE = 'there was no text to send to the owner';
 
 function connectionLinkOf(input: { cfg: OpenClawConfig }): string | undefined {
@@ -24,7 +26,7 @@ function resolveAccount(cfg: OpenClawConfig): ZapbipAccount {
   return { accountId: DEFAULT_ACCOUNT_ID, connectionLink };
 }
 
-async function startAccount({ cfg, abortSignal }: StartContext): Promise<void> {
+async function startAccount({ cfg, abortSignal, setStatus }: StartContext): Promise<void> {
   const account = resolveAccount(cfg);
   const socketLink = deriveSocketLink({ connectionLink: account.connectionLink });
   const exitCode = await runConnectorSocket({
@@ -32,6 +34,8 @@ async function startAccount({ cfg, abortSignal }: StartContext): Promise<void> {
     signal: abortSignal,
     handOff: ({ message }) => handOffToAgent({ cfg, account, message }),
   });
+  if (exitCode === REPLACED_EXIT_CODE)
+    return setStatus({ accountId: account.accountId, lifecycle: 'blocked', terminalDisconnect: true, lastError: REPLACED_MESSAGE });
   if (exitCode !== CLEAN_EXIT_CODE) throw new Error(`the zapbip connector stopped with exit code ${exitCode}`);
 }
 
