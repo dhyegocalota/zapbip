@@ -200,6 +200,8 @@ export enum IdPrefix {
   Media = 'med',
   Account = 'acc',
   Connection = 'con',
+  Number = 'num',
+  MetaApp = 'mapp',
 }
 
 export enum RoutingRule {

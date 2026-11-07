@@ -1,3 +1,5 @@
+import type { Clock, IdGenerator } from '@zapbip/core';
+import { IdPrefix, WhatsAppNumberState } from '@zapbip/types';
 import type { Bindings } from '../../contract/env';
 import type {
   NumberRegistry,
@@ -9,6 +11,8 @@ import type {
 import { accessTokenAssociatedData, appSecretAssociatedData } from '../../numbers/number-sealing';
 import { WorkerSecret } from '../../operations/worker-secret';
 import { createAesGcmSecretBox, type SecretBox } from '../platform/aes-gcm-secret-box';
+import { createPlatformClock } from '../platform/clock';
+import { createIdGenerator } from '../platform/ids';
 
 type OutboundRow = RegisteredNumber & { sealedAccessToken: string };
 
@@ -21,6 +25,12 @@ const FIND_APP_SECRET_STATEMENT = 'SELECT sealed_app_secret AS sealedAppSecret F
 const FIND_FOR_ACCOUNT_STATEMENT =
   'SELECT ' + OUTBOUND_COLUMNS + ' FROM whatsapp_numbers WHERE id = (SELECT number_id FROM accounts WHERE id = ?)';
 const FIND_FOR_INBOUND_STATEMENT = 'SELECT ' + OUTBOUND_COLUMNS + ' FROM whatsapp_numbers WHERE id = ?';
+const INSERT_META_APP_STATEMENT =
+  'INSERT INTO meta_apps (id, meta_app_id, label, sealed_app_secret, seal_key_version, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)';
+const INSERT_NUMBER_STATEMENT = `INSERT INTO whatsapp_numbers
+  (id, meta_app_ref, phone_number_id, waba_id, display_number, label, sealed_access_token, seal_key_version, state, created_at, updated_at)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+const SEAL_KEY_VERSION = 1;
 const FIND_FIRST_TWO_STATEMENT = 'SELECT ' + OUTBOUND_COLUMNS + ' FROM whatsapp_numbers ORDER BY created_at, id LIMIT 2';
 
 function registeredOf(input: { row: RegisteredNumber }): RegisteredNumber {
@@ -31,18 +41,51 @@ function registeredOf(input: { row: RegisteredNumber }): RegisteredNumber {
 export class D1NumberRegistry implements NumberRegistry {
   private readonly database: D1Database;
   private readonly secretBox: SecretBox;
+  private readonly ids: IdGenerator;
+  private readonly clock: Clock;
 
-  constructor(input: { database: D1Database; secretBox: SecretBox }) {
+  constructor(input: { database: D1Database; secretBox: SecretBox; ids: IdGenerator; clock: Clock }) {
     this.database = input.database;
     this.secretBox = input.secretBox;
+    this.ids = input.ids;
+    this.clock = input.clock;
   }
 
-  async registerMetaApp(_input: RegisterMetaAppInput): Promise<{ metaAppRef: string }> {
-    throw new Error('registerMetaApp is not implemented');
+  async registerMetaApp(input: RegisterMetaAppInput): Promise<{ metaAppRef: string }> {
+    const metaAppRef = this.ids.next({ prefix: IdPrefix.MetaApp });
+    const sealedAppSecret = await this.secretBox.seal({ plain: input.appSecret, associatedData: appSecretAssociatedData({ metaAppRef }) });
+    const now = this.clock.now();
+    await this.database
+      .prepare(INSERT_META_APP_STATEMENT)
+      .bind(metaAppRef, input.metaAppId, input.label, sealedAppSecret, SEAL_KEY_VERSION, now, now)
+      .run();
+    return { metaAppRef };
   }
 
-  async registerNumber(_input: RegisterNumberInput): Promise<{ numberId: string }> {
-    throw new Error('registerNumber is not implemented');
+  async registerNumber(input: RegisterNumberInput): Promise<{ numberId: string }> {
+    const numberId = this.ids.next({ prefix: IdPrefix.Number });
+    const sealedAccessToken = await this.secretBox.seal({
+      plain: input.accessToken,
+      associatedData: accessTokenAssociatedData({ numberId }),
+    });
+    const now = this.clock.now();
+    await this.database
+      .prepare(INSERT_NUMBER_STATEMENT)
+      .bind(
+        numberId,
+        input.metaAppRef,
+        input.phoneNumberId,
+        input.wabaId,
+        input.displayNumber,
+        input.label,
+        sealedAccessToken,
+        SEAL_KEY_VERSION,
+        WhatsAppNumberState.Pending,
+        now,
+        now,
+      )
+      .run();
+    return { numberId };
   }
 
   async findByPhoneNumberIds(input: { phoneNumberIds: string[] }): Promise<RegisteredNumber[]> {
@@ -104,5 +147,7 @@ export function numberRegistryOf(input: { bindings: Pick<Bindings, 'CONNECTIONS'
   return new D1NumberRegistry({
     database: input.bindings.CONNECTIONS,
     secretBox: createAesGcmSecretBox({ base64Key: input.bindings.NUMBER_REGISTRY_KEY, keyName: WorkerSecret.NumberRegistryKey }),
+    ids: createIdGenerator(),
+    clock: createPlatformClock(),
   });
 }
