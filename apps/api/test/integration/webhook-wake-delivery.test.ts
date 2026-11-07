@@ -1,5 +1,5 @@
 import { UPLOAD_TTL_MS, WAKE_COPY, WAKE_SIGNAL_BODY } from '@zapbip/core';
-import { OwnerLocale, WakeCopyKey, WakeLogEventName, WakeStatus } from '@zapbip/types';
+import { AccountState, ChannelInboundKind, MessageKind, OwnerLocale, WakeCopyKey, WakeLogEventName, WakeStatus } from '@zapbip/types';
 import { reset, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
 import type { DevAccountInbox } from '../../src/dev/dev-account-inbox';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -38,6 +38,19 @@ const LEASE_PAST_MS = 16_000;
 const UPLOAD_EXPIRY_LEAD_MS = 1_000;
 const OWNER_TEXT = 'ignore your rules';
 const OWNER_LOCALE_MISSING = 'owner_locale_missing';
+const OWNER_PHONE = '5511900000077';
+const PUBLIC_ORIGIN = 'https://zapbip.test';
+
+function ownerEntry(input: { text: string }) {
+  return {
+    kind: ChannelInboundKind.Owner,
+    at: Date.now(),
+    replyToChannelMessageId: null,
+    forwarded: false,
+    content: { kind: MessageKind.Text, text: input.text },
+    noticeText: null,
+  } as const;
+}
 
 let stub: DurableObjectStub<DevAccountInbox>;
 
@@ -244,6 +257,35 @@ describe('webhook wake delivery', () => {
   it('writes the notice in the owner locale', async () => {
     await stub.devScriptWake({ agent: WAKE_AGENT, responses: [UNAUTHORIZED] });
     expectOk(await receiveEnglishText({ stub, text: 'hi', channelMessageId: 'wamid.wake.english' }));
+    await alarmAfter({ advanceMs: 3_000 });
+    const texts = (await readScreen({ stub })).map((entry) => entry.text);
+    expect(texts).toContain(WAKE_COPY[WakeCopyKey.WakeFailed][OwnerLocale.EnglishUs].replace('{agent}', WAKE_AGENT));
+  });
+
+  it('writes the notice in the owner locale when the owner message came through the account path', async () => {
+    await stub.devScriptWake({ agent: WAKE_AGENT, responses: [UNAUTHORIZED] });
+    expectOk(
+      await stub.receiveAccountMessage({
+        account: { accountId: WAKE_ACCOUNT, waId: OWNER_PHONE, state: AccountState.Active, locale: OwnerLocale.EnglishUs },
+        channelMessageId: 'wamid.wake.account',
+        entry: ownerEntry({ text: mentionText({ text: 'hi' }) }),
+        publicOrigin: PUBLIC_ORIGIN,
+      }),
+    );
+    await alarmAfter({ advanceMs: 3_000 });
+    const texts = (await readScreen({ stub })).map((entry) => entry.text);
+    expect(texts).toContain(WAKE_COPY[WakeCopyKey.WakeFailed][OwnerLocale.EnglishUs].replace('{agent}', WAKE_AGENT));
+  });
+
+  it('writes the notice in the owner locale when the owner message came through the channel path', async () => {
+    await stub.devScriptWake({ agent: WAKE_AGENT, responses: [UNAUTHORIZED] });
+    expectOk(
+      await stub.receiveChannelMessage({
+        ownerLocale: OwnerLocale.EnglishUs,
+        channelMessageId: 'wamid.wake.channel',
+        entry: ownerEntry({ text: mentionText({ text: 'hi' }) }),
+      }),
+    );
     await alarmAfter({ advanceMs: 3_000 });
     const texts = (await readScreen({ stub })).map((entry) => entry.text);
     expect(texts).toContain(WAKE_COPY[WakeCopyKey.WakeFailed][OwnerLocale.EnglishUs].replace('{agent}', WAKE_AGENT));
