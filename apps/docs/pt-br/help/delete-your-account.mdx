@@ -2,3 +2,45 @@
 title: Apagar sua conta
 description: Remova sua conta e o que o zapbip guarda.
 ---
+
+import { Chat } from '/snippets/chat.jsx';
+
+Você pode apagar a sua conta a qualquer momento, pelo WhatsApp. São duas mensagens, para que uma mensagem solta não apague nada.
+
+<Steps>
+  <Step title="Peça">Escreva `apagar conta`. O zapbip diz o que será removido e qual frase confirma.</Step>
+  <Step title="Confirme">
+    Em até 10 minutos, escreva `apagar conta definitivamente`. Passado esse tempo nada é apagado; escreva `apagar conta` de novo para
+    recomeçar.
+  </Step>
+</Steps>
+
+<Chat
+  messages={[
+    { you: true, text: 'apagar conta', time: '09:30' },
+    {
+      text: 'Isso apaga sua conta, todos os agentes, mensagens e arquivos, e não tem volta. Para confirmar em até 10 minutos, envie: apagar conta definitivamente',
+      time: '09:30',
+    },
+    { you: true, text: 'apagar conta definitivamente', time: '09:31' },
+    { text: 'Sua conta foi apagada. A próxima mensagem começa uma nova conta.', time: '09:31' },
+  ]}
+/>
+
+## O que é apagado
+
+- Todas as mensagens, perguntas e respostas pendentes.
+- Todas as IAs conectadas. Os prompts e links delas param de funcionar na hora.
+- Os arquivos guardados para você.
+- O seu número de telefone e a sua conta.
+
+## O que a Meta e a Cloudflare guardam
+
+- A Meta guarda o histórico da conversa do lado dela. Apague a conversa no WhatsApp se quiser tirá-la do seu celular.
+- A Cloudflare guarda cópias de segurança pelo prazo de retenção dela.
+
+## Recomeçando
+
+Uma mensagem do mesmo telefone depois da exclusão começa uma conta nova, e essa conta entra na lista de espera como qualquer conta nova. Veja as [perguntas frequentes](/pt-br/help/faq).
+
+Para cortar só uma IA, veja [revogar e girar](/pt-br/help/revoke-and-rotate-keys).

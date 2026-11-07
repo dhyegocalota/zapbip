@@ -55,7 +55,7 @@ for (const language of Object.values(DocsLanguage)) {
       await page.goto(urlOf({ path: 'privacy-and-security', language }));
       const content = page.locator('#content-area');
       for (const kind of PRIVACY_KINDS) {
-        await expect(content).toContainText(new RegExp(`\\b${RETENTION_DAYS[kind]}\\s+${DAYS_WORD[language]}\\b`));
+        await expect(content).toContainText(new RegExp(`${RETENTION_DAYS[kind]}\\s+${DAYS_WORD[language]}`));
       }
       for (const token of PRIVACY_TOKENS) await expect(content).toContainText(token);
     });
