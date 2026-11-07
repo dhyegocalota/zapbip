@@ -286,6 +286,17 @@ Author this list with every box empty. A sub-agent ticks its own line. A wrong s
   - 40f the lockout asserts the literals 9 and 10, and the session cookie asserts `Secure`. — evidence: pin 64d80c38
   - 40g a failed step-up has its own audit label. — evidence: red 266137f9 → green fa771a68
 
+### G8 review and security findings (PR A)
+
+- [x] **Step 41:** fixes from the reviewer and the security reviewer, each red then green:
+  - 41a S1 a wrong key never counts toward the lockout (20 wrong keys leave `failed_attempts` 0 and the owner signs in). — red de8dfe61 → green 82f0a321
+  - 41b S2 an unattributed delivery pays one signature check against a placeholder secret; R2 a delivery is attributed by its known IDs only (an unknown change is skipped with `inbound.foreign_number` and answered `200`; no known ID or two apps answers `401`); WI-31 reversed. — red c34496e6 → green ffbe9d7e
+  - 41c S3 `guard-deploy.sh` treats `scripts/backoffice` as sensitive. — red 268cdcfa → green 49873caa
+  - 41d R1 smoke check 4 signs a body naming `SMOKE_PHONE_NUMBER_ID`, now required in production too; `deploy.md` step 6 states what the check proves. — red 5764d13c → green ad1f5c00
+  - 41e R3 an account without a number is dropped with `inbound.account_without_number`; the other-number check sits below the deleting branch. — red 4206adc6 → green 91a957c5
+  - 41f R4 `SECOND_MS`, R5 `BackofficeAuditTargetKind` and `RETRY_AFTER_HEADER`, R6 no fallback in `conflictOf`. — pin ed19ff16, refactor 38290ad8
+  - 41g R7 and R8 docs: spec sign-in status, `whatsappTestEnv`, `AGENTS.md` purpose line, the runbook's "Already registered" fields.
+
 ## Failure modes
 
 | Step | What breaks | How I notice (the concrete signal) | How I back out |

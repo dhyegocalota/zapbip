@@ -14,7 +14,7 @@ You do all of this by hand ([ADR 0031](../adr/0031-the-backoffice-is-a-separate-
 
    Expect: the number is listed as Pending, "Number registered. Verify it before activating." shows, and the form never shows the app secret or the token again, only "Set, last changed" and a date. The first number registered also binds any account that has none.
 
-   If it fails: "Code not accepted" means the step-up code was already used or expired; wait for the next code. A "Already registered" field error means the phone number ID exists. The key and code failing ten times in a row lock the operator for 15 minutes (step 6).
+   If it fails: "Code not accepted" means the step-up code was already used or expired; wait for the next code. An "Already registered" field error names the field that exists already: the phone number ID, the display number or the Meta app ID. The key and code failing ten times in a row lock the operator for 15 minutes (step 6).
 
 3. **Verify the number with Meta.** Open the number, choose Verify with Meta and type a fresh code. The backoffice asks Meta for the number's display number and the status of the templates `zapbip_agent_notice` and `zapbip_agent_question` in `pt_BR` and `en_US`.
 

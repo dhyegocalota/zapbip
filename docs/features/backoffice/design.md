@@ -279,7 +279,7 @@ One form, two fieldsets, in this order so the operator follows Meta's own hierar
 |---|---|---|
 | Default | The form. The Meta app select lists existing apps by label, then "Add a new Meta app" last. With no apps yet, the select has only that option and the new-app fieldset is the whole first section. | 200 |
 | Invalid input | An `error` Notice listing each problem as a link to its field (anchors, native), the offending fields marked `aria-invalid`, non-secret fields kept, `token`, `app secret` and `code` cleared. | 422 |
-| Duplicate | Same page, field error on the duplicated field ("This phone number ID is already registered"). The message names the field, never whose it is. | 422 |
+| Duplicate | Same page, field error on the duplicated field ("This phone number ID is already registered"). The message names the field, never whose it is. | 409 |
 | Code not accepted | `error` Notice "Code not accepted. Wait for the next code and try again." Everything else kept except secrets. | 401 |
 | Session ended | Redirect to `/sign-in?notice=SessionEnded` | 303 |
 | CSRF or origin failure | The 403 page | 403 |

@@ -360,7 +360,7 @@ export interface NumberRegistry {
 
 - `apps/api/src/dev/build-directory-seed.ts` and `/dev/seed` register a fake number (phone number ID `1000000000000001`, fake Graph) sealed with the development `NUMBER_REGISTRY_KEY`. Development `WHATSAPP_GRAPH_BASE_URL` points at the local fake Graph, so the real sender runs against the seeded number. `dev-account-inbox.ts` loses its `WHATSAPP_ACCESS_TOKEN` fake-or-real `createSender` switch.
 - Integration and e2e suites call `seedWhatsAppNumber()` from `apps/api/test/support/whatsapp-numbers.ts`.
-- `whatsappTestEnv` and the `META_APP_SECRET`, `WHATSAPP_ACCESS_TOKEN` and `WHATSAPP_PHONE_NUMBER_ID` test bindings are deleted.
+- The `META_APP_SECRET`, `WHATSAPP_ACCESS_TOKEN` and `WHATSAPP_PHONE_NUMBER_ID` test bindings are deleted. `whatsappTestEnv` survives with only `WHATSAPP_SEND_THROUGH_GRAPH`, which makes the development account inbox send through the fake Graph.
 
 ### Metrics (read-only, PR B)
 
