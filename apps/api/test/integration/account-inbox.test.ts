@@ -457,6 +457,10 @@ describe('AccountInbox alarm and clock', () => {
   it('arms the alarm at the clock deadline after the clock advances', async () => {
     const stub = stubOf({ accountId: FIRST_ACCOUNT });
     await sendAlphaText({ accountId: FIRST_ACCOUNT, text: 'oi' });
+    await runInDurableObject(stub, async (_instance, state) => {
+      state.storage.sql.exec('DELETE FROM usage_meter');
+      await state.storage.deleteAlarm();
+    });
     const offsetMs = await advanceClock({ stub, advanceMs: WINDOW_MS });
     const { armed, next } = await runInDurableObject(stub, async (_instance, state) => ({
       armed: await state.storage.getAlarm(),
@@ -511,6 +515,7 @@ describe('AccountInbox migrations', () => {
         'agents',
         'media',
         'screen_entries',
+        'usage_meter',
         'account_facts',
         'revoked_agents',
       ]),

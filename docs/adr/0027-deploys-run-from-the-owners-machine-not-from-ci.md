@@ -1,0 +1,46 @@
+# 0027. Deploys run from the owner's machine, and CI does not deploy
+
+- Status: Accepted
+- Date: 2026-11-06
+- Deciders: Dhyego Calota (owner, delegated); Claude (advisor)
+- Inspired by: [ADR 0005](0005-the-local-gate-runs-what-the-diff-can-break.md), which keeps the gate local because hosted CI is not the proof the harness waits for; the owner's rule that production deploys are only ever run by the owner
+
+## Context
+
+A deploy needs a Cloudflare login and touches production secrets, and the migration must land before the code that reads it. The owner wants production deploys to be his act alone, and no deploy-capable credential in GitHub.
+
+## Decision
+
+1. Deploys run with `pnpm deploy:<environment>` on the owner's machine, with a scoped `CLOUDFLARE_API_TOKEN` exported only in the owner's interactive shell and never an OAuth `wrangler login`. The script stops at the first failed preflight check.
+2. A production deploy needs an interactive terminal and the owner typing `production`, so no agent or unattended script can finish it.
+3. No workflow deploys, and no Cloudflare or Meta credential is stored in GitHub.
+4. Agents run the gate. They never run a deploy script, for either environment.
+
+## Alternatives considered
+
+| Option | Pros | Cons | Why not |
+|--------|------|------|---------|
+| GitHub Actions deploys on merge to `main`, with a Cloudflare token in repository secrets | automatic; repeatable; a deploy history in GitHub | a deploy-capable token lives in GitHub; production changes without the owner's act; hosted CI is not the proof under ADR 0005 | breaks the owner-only rule |
+| Cloudflare Workers Builds connected to the repository | builds from git; no token in GitHub | deploys on push from a dashboard setting; the preflight, the secrets check and the smoke test live outside the repository | the checks would not be in the harness |
+| A manual `wrangler deploy` with a written checklist | nothing to build | the order (migrate, then deploy) and the secrets check depend on memory | the failure this slice exists to prevent |
+
+## Consequences
+
+- A deploy depends on the owner's machine: Node 24, pnpm, and a scoped Cloudflare API token. The harness doctor reports the tools at session start.
+- Deploys are manual. A forgotten deploy shows up as a stale Worker, which the smoke test reveals.
+- The `guard-deploy.sh` hook is a strict allowlist. A command that names `wrangler`, a production package script or the deploy and smoke scripts passes only when the whole command is one anchored form (`wrangler dev`, a `--dry-run` deploy, local D1, types, version, whoami, `git commit -F <file>`, and the read, stage and test heads `git add|diff|show|status|log|restore --staged`, `cat`, `head`, `tail`, `wc`, `sed -n`, `grep`, `rg` and `vitest run` / `pnpm test`, never with `--pre`, `--pre-glob`, `-O`, `--open-files-in-pager`, `-x`, `--exec` or `--hostname-bin`, because a head without a metacharacter cannot chain) with none of the shell metacharacters (semicolon, pipe, ampersand, dollar, backtick, angle brackets, parentheses, braces, hash, backslash) and no newline; there is no exemption for read-only heads, quoted text or heredoc bodies. It is defence in depth, not a sandbox: a shell string can always be built that a text scan misses.
+- The real control is enforced, not stated: on every call the hook checks the real state, any file in the `config/` folder of a wrangler config directory at the macOS, XDG or legacy path (the OAuth default, named profiles and the keyring store; existence only, never read), a `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_API_KEY`, `CF_API_TOKEN` or `CF_API_KEY` assignment line in a dotenv file at the repository root or in any `apps/*/`, or in the hook's working directory and each parent up to the repository root, other than the example (name match only, the value is never read), or any of the four variables in its environment, and when one exists it refuses every wrangler command except `whoami`, `--version` and `logout`; the doctor reports the same check as a warning line that does not fail the verify gate. There is no marker file to forge. The owner runs `wrangler logout` on this machine and deploys with a scoped API token exported only in his own shell and unset afterwards, so no agent shell ever holds a deploy-capable credential, and agents cannot run wrangler at all while a login exists. A deploy passes the guard only as one bare `--dry-run` with no other argument naming dry-run, no-dry or a boolean value, and `--remote` or any short flag cluster holding `r` is refused, as is every allowed form carrying `--env-file`, `--cwd` or a `--config` that points outside the repository.
+- The `guard-secrets.sh` hook is an allowlist as well (owner delegated 2026-11-06): a command that names a dotenv file (`.env`, `.env.<word>`, `.envrc` in any letter case, any dot-name holding a glob character; never `.env.example`) passes only as one plain read head (`cat`, `head`, `tail`, `wc`, `grep`, `rg`, `sed -n` with a line range, `git log|diff|show|status|rev-parse`, `ls`, `test`, `[`, never with an output or pager flag) with none of the shell metacharacters, or as `echo` / `printf` prose whose only metacharacter is one trailing `>` or `>>` to a path that is not a dotenv file, with no dollar or backtick in the text. Every other writer, known or not, is refused without being listed. The Edit, Write and patch path checks stay.
+- The same hook treats any shell expansion as a command that may name a dotenv file, because the shell can build a name no text scan sees: `$'`, `$(`, a backtick, `${`, a dollar followed by a letter, underscore or digit, a `{…,…}` brace group, or `xargs`, `parallel` or `eval`, anywhere in the command. Such a command passes only as (a) one plain read head, with every `$(…)` or backtick body itself a plain read head or `printf`, `echo` or `pwd` and no redirect, pipe, semicolon, ampersand or newline outside them, (b) `cd` with one argument, or (c) `git commit -F <file>` or a `git commit` whose message is a heredoc with a quoted delimiter and nothing after its closing line. Everything else with an expansion is refused, and the writer list is gone: the allowlist closes `cp`, `c''p`, `/bin/cp`, `scp`, `git archive -o`, `mkfifo`, `ed` and every writer nobody listed, because none of them is an allowed head. Redirect targets and `<address>` text are never stripped, so `echo X=1 </dev/null>$'\x2eenv'` is refused.
+- Residual, accepted (owner delegated 2026-11-06): guard-secrets is a guardrail, not a sandbox. A name built inside an interpreter, with no shell expansion (`python3 -c "open(chr(46)+'env','w')"`, `awk` with `sprintf`, `node`, `perl`, `ruby`), and a patch file applied by `git apply` are not caught by a text scan. The real controls for them are the scoped credential kept out of agent shells, the secret scan in the gate, and review of the diff. A command that mixes a shell expansion into such an interpreter call is refused.
+- Commands that use a variable, for example `PATH="$VENV/bin:$PATH" pnpm verify`, are refused by this hook; run them from an interactive shell or spell the path out.
+
+## Evidence
+
+- The autonomy rules of 2026-11-06: agents never deploy, and production deploys are the owner's. The `guard-deploy.sh` PreToolUse hook enforces it for Claude Code and Codex: it allows only the anchored `wrangler` forms above and blocks every other command that names `wrangler`, the `deploy:*`, `migrate:staging|production` and `secrets:*` package scripts, or the deploy and smoke scripts.
+- [ADR 0005](0005-the-local-gate-runs-what-the-diff-can-break.md): hosted CI is not proof.
+
+## Revisit when
+
+- Hosted CI runs reliably and a second maintainer joins.
+- The owner asks for a staging deploy on every merge.

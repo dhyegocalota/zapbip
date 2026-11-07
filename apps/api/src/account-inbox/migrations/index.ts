@@ -5,6 +5,7 @@ import versionTwoSql from './v2.sql';
 import versionThreeSql from './v3.sql';
 import versionFiveSql from './v5.sql';
 import versionSixSql from './v6.sql';
+import versionSevenSql from './v7.sql';
 
 export const ACCOUNT_INBOX_MIGRATIONS: Migration[] = [
   { version: 1, sql: versionOneSql },
@@ -13,4 +14,5 @@ export const ACCOUNT_INBOX_MIGRATIONS: Migration[] = [
   { version: 4, sql: versionFourSql },
   { version: 5, sql: versionFiveSql },
   { version: 6, sql: versionSixSql },
+  { version: 7, sql: versionSevenSql },
 ];

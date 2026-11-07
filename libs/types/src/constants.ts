@@ -20,6 +20,16 @@ export const INSTALL_SELF_TEST_TEXT: Record<OwnerLocale, string> = {
 };
 export const BYTES_PER_KILOBYTE = 1_000;
 export const COMPANY_FACT_UNSET = 'COMPANY_FACT_UNSET';
+
+export type CompanyFacts = {
+  legalName: string;
+  tradeName: string;
+  cnpj: string;
+  address: string;
+  website: string;
+  contactEmail: string;
+};
+
 export const COMPANY = {
   tradeName: 'Logic Bit',
   legalName: 'Dhyego Fernando Rissao Calota',
@@ -30,6 +40,13 @@ export const COMPANY = {
 } as const;
 export const BYTES_PER_MEGABYTE = 1_000_000;
 export const DEFAULT_LOCALE = OwnerLocale.PortugueseBrazil;
+export const OFFICIAL_NUMBER_UNSET = 'OFFICIAL_NUMBER_UNSET';
+export const OFFICIAL_WHATSAPP_NUMBER: string = OFFICIAL_NUMBER_UNSET;
+export const PRODUCTION_ZONE = 'zapbip.com';
+export const PRODUCTION_PUBLIC_ORIGIN = `https://mcp.${PRODUCTION_ZONE}`;
+export const CLOUDFLARE_NAMESERVER_SUFFIX = '.ns.cloudflare.com';
+export const NPM_REGISTRY_URL = 'https://registry.npmjs.org';
 export const ZAPBIP_NPM_VERSION = '0.1.0';
+export const OPENCLAW_PLUGIN_NPM_VERSION = '0.1.0';
 export const ZAPBIP_PYPI_VERSION = '0.1.0';
 export const SEEN_MESSAGE_LIMIT = 1_024;

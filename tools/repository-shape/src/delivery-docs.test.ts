@@ -12,6 +12,7 @@ const ROOT_ENTRIES = [
   '.agents',
   '.claude',
   '.codex',
+  '.env.example',
   '.github',
   '.gitignore',
   '.gitleaks.toml',
