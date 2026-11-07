@@ -11,7 +11,8 @@ const HERMES_RUNTIME_LOCK = 'apps/hermes-plugin/requirements.txt';
 const HERMES_DEVELOPMENT_LOCK = 'apps/hermes-plugin/requirements-dev.txt';
 const WORKFLOW_FILE = '.github/workflows/verify.yml';
 const PIP_INSTALL_PATTERN = /^\s*- run: python3 -m pip install (.+)$/gm;
-const PINNED_DEPENDENCY_PATTERN = /^[\w.-]+==[\w.]+$/;
+const BOUNDED_DEPENDENCY_PATTERN = /^[\w.-]+>=[\d.]+,<[\d.]+$/;
+const QUOTED_ENTRY_PATTERN = /"([^"]+)"/g;
 const REQUIREMENT_LINE_PATTERN = /^[A-Za-z][\w.-]*==/;
 const HASH_FLAG = '--hash=sha256:';
 
@@ -52,17 +53,14 @@ describe('the plugin versions', () => {
     expect(versionOf({ path: HERMES_MANIFEST, pattern: /^version: (\S+)/m })).toBe(sharedVersion);
   });
 
-  test('the Hermes project is installable with exactly pinned runtime dependencies and the plugin entry point', () => {
+  test('the Hermes project is installable with bounded runtime dependency ranges and the plugin entry point', () => {
     const project = readRepositoryFile(HERMES_PROJECT);
     const dependencies = /^dependencies = \[(.*)\]$/m.exec(project)?.[1];
     expect(project).toContain('[build-system]');
     expect(project).toContain('[project.entry-points."hermes_agent.plugins"]');
-    expect(
-      dependencies
-        ?.split(',')
-        .map((entry) => entry.trim().replaceAll('"', ''))
-        .every((entry) => PINNED_DEPENDENCY_PATTERN.test(entry)),
-    ).toBe(true);
+    const entries = [...(dependencies ?? '').matchAll(QUOTED_ENTRY_PATTERN)].map((match) => match[1] as string);
+    expect(entries.length).toBeGreaterThan(0);
+    expect(entries.every((entry) => BOUNDED_DEPENDENCY_PATTERN.test(entry))).toBe(true);
   });
 
   test.each([HERMES_RUNTIME_LOCK, HERMES_DEVELOPMENT_LOCK])('%s pins every requirement with a hash', (lockFile) => {
