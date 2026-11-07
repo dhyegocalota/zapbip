@@ -20,21 +20,30 @@ enum MetricsQuery {
 }
 
 const NUMBER_FILTER = '(?1 IS NULL OR a.number_id = ?1)';
-const dayOf = (column: string): string => `strftime('%Y-%m-%d', ${column} / 1000, 'unixepoch')`;
-const AGENT_SCOPE = `FROM connections c JOIN accounts a ON a.id = c.account_id WHERE ${NUMBER_FILTER}`;
+const CREATED_DAY = "strftime('%Y-%m-%d', c.created_at / 1000, 'unixepoch')";
+const REVOKED_DAY = "strftime('%Y-%m-%d', c.revoked_at / 1000, 'unixepoch')";
+const ACCOUNT_DAY = "strftime('%Y-%m-%d', a.created_at / 1000, 'unixepoch')";
+const AGENT_SCOPE = 'FROM connections c JOIN accounts a ON a.id = c.account_id WHERE ' + NUMBER_FILTER;
 
 const NUMBERS_STATEMENT = 'SELECT id AS numberId, label FROM whatsapp_numbers ORDER BY label';
-const ACCOUNTS_BY_STATE_STATEMENT = `SELECT a.state AS state, COUNT(*) AS total FROM accounts a WHERE ${NUMBER_FILTER} GROUP BY a.state`;
-const ACCOUNTS_PER_NUMBER_STATEMENT = `SELECT n.id AS numberId, n.label AS label, COUNT(a.id) AS total
-  FROM accounts a JOIN whatsapp_numbers n ON n.id = a.number_id WHERE ${NUMBER_FILTER} GROUP BY n.id, n.label ORDER BY n.label`;
-const NEW_ACCOUNTS_STATEMENT = `SELECT ${dayOf('a.created_at')} AS day, COUNT(*) AS total FROM accounts a
-  WHERE a.created_at >= ?2 AND ${NUMBER_FILTER} GROUP BY day`;
-const AGENT_TOTALS_STATEMENT = `SELECT COUNT(*) AS active, COALESCE(SUM(c.first_call_at IS NOT NULL), 0) AS connected
-  ${AGENT_SCOPE} AND c.revoked_at IS NULL`;
-const AGENTS_BY_CLIENT_STATEMENT = `SELECT c.client_name AS clientName, COUNT(*) AS total ${AGENT_SCOPE} AND c.revoked_at IS NULL
-  GROUP BY c.client_name ORDER BY total DESC`;
-const AGENTS_CREATED_STATEMENT = `SELECT ${dayOf('c.created_at')} AS day, COUNT(*) AS total ${AGENT_SCOPE} AND c.created_at >= ?2 GROUP BY day`;
-const AGENTS_REVOKED_STATEMENT = `SELECT ${dayOf('c.revoked_at')} AS day, COUNT(*) AS total ${AGENT_SCOPE} AND c.revoked_at >= ?2 GROUP BY day`;
+const ACCOUNTS_BY_STATE_STATEMENT =
+  'SELECT a.state AS state, COUNT(*) AS total FROM accounts a WHERE ' + NUMBER_FILTER + ' GROUP BY a.state';
+const ACCOUNTS_PER_NUMBER_STATEMENT =
+  'SELECT n.id AS numberId, n.label AS label, COUNT(a.id) AS total FROM accounts a JOIN whatsapp_numbers n ON n.id = a.number_id WHERE ' +
+  NUMBER_FILTER +
+  ' GROUP BY n.id, n.label ORDER BY n.label';
+const NEW_ACCOUNTS_STATEMENT =
+  'SELECT ' + ACCOUNT_DAY + ' AS day, COUNT(*) AS total FROM accounts a WHERE a.created_at >= ?2 AND ' + NUMBER_FILTER + ' GROUP BY day';
+const AGENT_TOTALS_STATEMENT =
+  'SELECT COUNT(*) AS active, COALESCE(SUM(c.first_call_at IS NOT NULL), 0) AS connected ' + AGENT_SCOPE + ' AND c.revoked_at IS NULL';
+const AGENTS_BY_CLIENT_STATEMENT =
+  'SELECT c.client_name AS clientName, COUNT(*) AS total ' +
+  AGENT_SCOPE +
+  ' AND c.revoked_at IS NULL GROUP BY c.client_name ORDER BY total DESC';
+const AGENTS_CREATED_STATEMENT =
+  'SELECT ' + CREATED_DAY + ' AS day, COUNT(*) AS total ' + AGENT_SCOPE + ' AND c.created_at >= ?2 GROUP BY day';
+const AGENTS_REVOKED_STATEMENT =
+  'SELECT ' + REVOKED_DAY + ' AS day, COUNT(*) AS total ' + AGENT_SCOPE + ' AND c.revoked_at >= ?2 GROUP BY day';
 const ACTIVITY_STATEMENT = `SELECT day, metric, SUM(count) AS total FROM activity_daily
   WHERE day >= ?2 AND (?1 IS NULL OR number_id = ?1) GROUP BY day, metric`;
 const BUDGET_STATEMENT = 'SELECT COALESCE(SUM(gigabyte_seconds), 0) AS total FROM usage_daily WHERE day = ?1';
