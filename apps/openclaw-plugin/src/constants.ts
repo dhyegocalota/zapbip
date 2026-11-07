@@ -1,0 +1,20 @@
+import { ZAPBIP_NPM_VERSION } from '@zapbip/types';
+
+export const CHANNEL_ID = 'zapbip';
+export const CHANNEL_LABEL = 'Zapbip';
+export const CLEAN_EXIT_CODE = 0;
+export const FAILURE_EXIT_CODE = 1;
+export const REPLACED_EXIT_CODE = 2;
+export const ABNORMAL_CLOSE_CODE = 1006;
+export const DIRECT_PEER_KIND = 'direct';
+export const SEND_MESSAGE_TOOL_NAME = 'send_message';
+export const JSON_RPC_VERSION = '2.0';
+export const MCP_PROTOCOL_VERSION = '2025-06-18';
+export const MCP_CLIENT_NAME = 'zapbip-openclaw-plugin';
+export const MCP_CLIENT_VERSION = ZAPBIP_NPM_VERSION;
+export const MCP_ACCEPT_HEADER = 'application/json, text/event-stream';
+export const JSON_CONTENT_TYPE = 'application/json';
+export const CHANNEL_DESCRIPTION = 'Zapbip WhatsApp channel for the owner';
+export const DEFAULT_ACCOUNT_ID = 'default';
+export const DELIVERY_MODE_DIRECT = 'direct';
+export const LIFECYCLE_BLOCKED = 'blocked';

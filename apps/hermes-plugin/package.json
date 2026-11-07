@@ -1,0 +1,8 @@
+{
+  "name": "@zapbip/hermes-plugin",
+  "private": true,
+  "scripts": {
+    "typecheck": "python3 -m mypy zapbip_platform",
+    "test:unit": "python3 -m pytest tests/unit"
+  }
+}

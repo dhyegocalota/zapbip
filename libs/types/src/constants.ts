@@ -36,3 +36,4 @@ export const NPM_REGISTRY_URL = 'https://registry.npmjs.org';
 export const ZAPBIP_NPM_VERSION = '0.1.0';
 export const OPENCLAW_PLUGIN_NPM_VERSION = '0.1.0';
 export const ZAPBIP_PYPI_VERSION = '0.1.0';
+export const SEEN_MESSAGE_LIMIT = 1_024;

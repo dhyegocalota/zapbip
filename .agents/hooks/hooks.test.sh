@@ -208,6 +208,7 @@ stub_all() {
   stub gitleaks 'exit 0'
   stub ffmpeg 'exit 0'
   stub brew 'exit 0'
+  stub python3 'exit 0'
   rm -rf "$doctor_home/Library" "$doctor_home/.cache"
   mkdir -p "$doctor_home/Library/Caches/ms-playwright/chromium-1247" "$doctor_home/.cache/ms-playwright/chromium-1247"
 }
@@ -253,6 +254,12 @@ expect_match "doctor: gh without auth is missing with the human step" "$(doctor_
 
 stub_all; stub node 'echo v22.11.0'
 expect_match "doctor: node below .nvmrc is missing" "$(doctor_line Darwin node)" '^node \| missing \| required \| lost: everything \| fix: nvm install \(reads \.nvmrc\), or https://nodejs\.org/en/download$'
+
+stub_all; stub python3 'exit 1'
+expect_match "doctor: python outside 3.11 to 3.13 is missing" "$(doctor_line Darwin python)" '^python \| missing \| required \| lost: the Hermes plugin.s typecheck and tests; pnpm verify fails in apps/hermes-plugin \| fix: brew install python@3\.13 && python3 -m pip install --require-hashes -r apps/hermes-plugin/requirements-dev\.txt$'
+
+stub_all; stub python3 '[[ "$2" == *"<= (3, 14)"* ]]'
+expect_match "doctor: python 3.14 is accepted" "$(doctor_line Darwin python)" '^python \| ok \|'
 
 stub_all; stub pnpm 'echo 9.0.0'
 expect_match "doctor: pnpm at another version is missing" "$(doctor_line Darwin pnpm)" '^pnpm \| missing \| required \| lost: everything \| fix: corepack enable && corepack prepare pnpm@8\.15\.9 --activate$'

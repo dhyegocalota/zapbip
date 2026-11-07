@@ -29,4 +29,8 @@ One row per folder, in the order the features ship; a row that turns `Shipped <d
 | [`local-connector`](local-connector/) | `npx zapbip connect`: a hibernatable WebSocket per connection and a local Claude Code or Codex session resumed for each owner message | Shipped 2026-11-06 ([PR #4](https://github.com/dhyegocalota/zapbip/pull/4)) |
 | [`whatsapp-cloud-channel`](whatsapp-cloud-channel/) | The real Meta WhatsApp Cloud API adapter: signed inbound webhook, session and template sends for every kind, media to R2 and window facts | Shipped 2026-11-06 ([PR #5](https://github.com/dhyegocalota/zapbip/pull/5)) |
 | [`accounts-and-keys`](accounts-and-keys/) | Account creation over WhatsApp, the command grammar in pt-BR and en, connection create, list, revoke and rotate, waitlist, abuse controls and account deletion | Shipped 2026-11-07 ([PR #6](https://github.com/dhyegocalota/zapbip/pull/6)) |
+<<<<<<< HEAD
 | [`deploy-readiness`](deploy-readiness/) | What an owner needs to deploy: the wrangler environments, the bindings, the secrets, the preflight, the runbooks and the smoke test | Building |
+=======
+| [`hermes-openclaw`](hermes-openclaw/) | Channel plugins for Hermes and OpenClaw that keep the agent listening over the connector socket, with a scheduled fallback | Shipped 2026-11-07 ([PR #7](https://github.com/dhyegocalota/zapbip/pull/7)) |
+>>>>>>> origin/main
