@@ -37,4 +37,4 @@ One group, one lane.
 - [ ] **Tester run:** not applicable.
 - [x] **Reviewer:** WITH RESERVATIONS, all minors fixed (names, evidence commits, facts checked against the site).
 - [x] **/check-ui:** the about pages walked at 1280 and 375, see test-plan.md.
-- [ ] **/open-pr:** gates passed, learnings sweep stated, PR opened.
+- [x] **/open-pr:** gates passed, learnings sweep: none, PR opened.
