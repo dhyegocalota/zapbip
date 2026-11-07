@@ -1,3 +1,5 @@
-export function renderTerminalQr(_input: { text: string }): string {
-  throw new Error('renderTerminalQr is not implemented');
+import { renderUnicodeCompact } from 'uqr';
+
+export function renderTerminalQr(input: { text: string }): string {
+  return renderUnicodeCompact(input.text);
 }

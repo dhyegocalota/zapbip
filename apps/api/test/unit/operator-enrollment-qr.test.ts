@@ -7,11 +7,11 @@ const OTPAUTH_URI =
   'otpauth://totp/zapbip%20backoffice%20(development):operator?secret=JBSWY3DPEHPK3PXP&issuer=zapbip&algorithm=SHA1&digits=6&period=30';
 const FINDER_SIZE = 7;
 const FINDER_COUNT = 3;
-const HALF_BLOCKS: Record<string, [boolean, boolean]> = {
-  '█': [true, true],
-  '▀': [true, false],
-  '▄': [false, true],
-  ' ': [false, false],
+const DARK_MODULES_BY_CHARACTER: Record<string, [boolean, boolean]> = {
+  '█': [false, false],
+  '▀': [false, true],
+  '▄': [true, false],
+  ' ': [true, true],
 };
 const FINDER_PATTERN = [
   [1, 1, 1, 1, 1, 1, 1],
@@ -25,7 +25,7 @@ const FINDER_PATTERN = [
 
 function modulesOf(input: { lines: string[] }): boolean[][] {
   return input.lines.flatMap((line) => {
-    const pairs = [...line].map((character) => HALF_BLOCKS[character]!);
+    const pairs = [...line].map((character) => DARK_MODULES_BY_CHARACTER[character]!);
     return [pairs.map(([top]) => top), pairs.map(([, bottom]) => bottom)];
   });
 }
@@ -50,7 +50,7 @@ describe('terminal QR', () => {
   });
 
   it('draws only half-block characters', () => {
-    expect([...new Set(lines.join(''))].every((character) => character in HALF_BLOCKS)).toBe(true);
+    expect([...new Set(lines.join(''))].every((character) => character in DARK_MODULES_BY_CHARACTER)).toBe(true);
   });
 
   it('holds the three finder patterns', () => {
