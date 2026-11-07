@@ -23,7 +23,7 @@ const PUBLISHED_COMPANY_FACTS = {
   contactEmail: 'dhyego@logicbit.com.br',
 };
 
-const setCompanyFacts: string[] = Object.values(COMPANY).filter((fact) => fact !== COMPANY_FACT_UNSET);
+const setCompanyFacts: string[] = Object.values(COMPANY);
 
 function tableRowCount(snippet: string): number {
   return readRepositoryFile(snippet)
