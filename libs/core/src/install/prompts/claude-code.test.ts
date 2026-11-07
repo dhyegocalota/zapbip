@@ -1,10 +1,9 @@
-import { INSTALL_SELF_TEST_TEXT, OwnerLocale } from '@zapbip/types';
+import { INSTALL_SELF_TEST_TEXT, OwnerLocale, ZAPBIP_NPM_VERSION } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { AGENT_RULES } from '../../agent-rules';
 import { CONNECTION_LINK, sectionInput } from '../testing/fixtures';
 import { CLAUDE_CODE_SKILL_DESCRIPTION } from './claude-code-copy';
 import { renderClaudeCodeSection } from './claude-code';
-import { ZAPBIP_NPM_VERSION } from './connector-commands';
 
 describe('renderClaudeCodeSection', () => {
   const locale = OwnerLocale.EnglishUs;

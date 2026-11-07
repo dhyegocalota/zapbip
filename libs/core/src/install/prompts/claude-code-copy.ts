@@ -1,6 +1,6 @@
-import { INSTALL_SELF_TEST_TEXT, InstallClient, OwnerLocale } from '@zapbip/types';
+import { INSTALL_SELF_TEST_TEXT, InstallClient, OwnerLocale, ZAPBIP_NPM_VERSION } from '@zapbip/types';
 import { AGENT_RULES } from '../../agent-rules';
-import { CONNECTION_URL_VARIABLE, connectCommand, FAILURE_OUTPUT_LINES, ZAPBIP_NPM_VERSION } from './connector-commands';
+import { CONNECTION_URL_VARIABLE, connectCommand, FAILURE_OUTPUT_LINES } from './connector-commands';
 import { formatSection, localizeCopy, monitoredListenStep, tellOwner, tellOwnerAndWait } from './section-format';
 
 const SKILL_PATH = '~/.claude/skills/zapbip/SKILL.md';

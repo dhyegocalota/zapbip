@@ -1,8 +1,7 @@
-import { CODEX_TOOL_TIMEOUT_SECONDS, OwnerLocale } from '@zapbip/types';
+import { CODEX_TOOL_TIMEOUT_SECONDS, OwnerLocale, ZAPBIP_NPM_VERSION } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { CONNECTION_LINK, sectionInput } from '../testing/fixtures';
 import { renderCodexSection } from './codex';
-import { ZAPBIP_NPM_VERSION } from './connector-commands';
 
 describe('renderCodexSection', () => {
   const text = renderCodexSection(sectionInput({ locale: OwnerLocale.EnglishUs }));

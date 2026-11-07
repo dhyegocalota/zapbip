@@ -1,7 +1,6 @@
-import { OwnerLocale } from '@zapbip/types';
+import { OwnerLocale, ZAPBIP_NPM_VERSION } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { CONNECTION_LINK, LOCALES, sectionInput } from '../testing/fixtures';
-import { ZAPBIP_NPM_VERSION } from './connector-commands';
 import { renderCursorSection } from './cursor';
 import { renderGeminiCliSection } from './gemini-cli';
 

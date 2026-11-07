@@ -30,7 +30,7 @@ description: Connect OpenClaw to your WhatsApp.
     It adds `mcp.servers.zapbip` with `transport: "streamable-http"`, the URL `<connectionLink>` and the Bearer header.
   </Step>
   <Step title="Install the channel plugin">
-    The better option: it runs `openclaw plugins install @zapbip/openclaw-plugin --force --accept-capabilities` and sets `channels.zapbip.connectionLink`, then calls `set_wake({mode: "local"})`.
+    The better option: it runs `openclaw plugins install @zapbip/openclaw-plugin@0.1.0` and sets `channels.zapbip.connectionLink`, then calls `set_wake({mode: "local"})`.
   </Step>
   <Step title="Or keep a background watcher">
     Only if the plugin cannot be installed, and never together with it, it creates an `every 1m` job with its automations tool that calls `check_inbox`. It then calls `set_wake({mode: "scheduled", interval_minutes: 1})`. A watcher that polls costs model calls, and OpenClaw tells you so.

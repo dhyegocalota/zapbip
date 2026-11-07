@@ -30,7 +30,7 @@ description: Conecte OpenClaw ao seu WhatsApp.
     Ele adiciona `mcp.servers.zapbip` com `transport: "streamable-http"`, a URL `<connectionLink>` e o cabeçalho Bearer.
   </Step>
   <Step title="Instalar o plugin de canal">
-    A melhor opção: ele roda `openclaw plugins install @zapbip/openclaw-plugin --force --accept-capabilities`, define `channels.zapbip.connectionLink` e chama `set_wake({mode: "local"})`.
+    A melhor opção: ele roda `openclaw plugins install @zapbip/openclaw-plugin@0.1.0`, define `channels.zapbip.connectionLink` e chama `set_wake({mode: "local"})`.
   </Step>
   <Step title="Ou manter um acompanhamento em segundo plano">
     Só se o plugin não puder ser instalado, e nunca junto com ele, cria um job `every 1m` com a ferramenta de automações que chama `check_inbox`. Depois chama `set_wake({mode: "scheduled", interval_minutes: 1})`. Um acompanhamento que consulta custa chamadas ao modelo, e o OpenClaw avisa você disso.

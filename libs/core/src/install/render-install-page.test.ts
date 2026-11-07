@@ -1,7 +1,6 @@
-import { INSTALL_SELF_TEST_TEXT, OwnerLocale } from '@zapbip/types';
+import { INSTALL_SELF_TEST_TEXT, OwnerLocale, ZAPBIP_NPM_VERSION } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { AGENT_RULES } from '../agent-rules';
-import { ZAPBIP_NPM_VERSION } from './prompts/connector-commands';
 import { INSTALL_PAGE_COPY } from './install-page-copy';
 import { INSTALL_PRODUCTS } from './install-products';
 import { renderInstallPage, type InstallPageInput } from './render-install-page';
