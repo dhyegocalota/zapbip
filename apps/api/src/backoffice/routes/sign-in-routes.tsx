@@ -4,6 +4,7 @@ import { setCookie } from 'hono/cookie';
 import { encodeBase64Url } from '../../adapters/platform/encoding';
 import { BACKOFFICE_SESSION_MAX_MS } from '../../contract/constants';
 import { parseDeployEnvironment } from '../../operations/deploy-environment';
+import { isWithinRateLimit, RateLimitScope, RETRY_AFTER_SECONDS } from '../auth/rate-limit';
 import { attemptSignIn, SignInOutcome } from '../auth/sign-in';
 import { CSRF_COOKIE_NAME, CSRF_TOKEN_BYTES, SEE_OTHER_STATUS, SESSION_COOKIE_NAME } from '../backoffice-constants';
 import type { BackofficeEnv } from '../backoffice-env';
@@ -43,12 +44,20 @@ signInRoutes.get(BackofficePath.SignIn, (context) => {
 });
 
 signInRoutes.post(BackofficePath.SignIn, async (context) => {
+  const clientAddress = context.get('clientAddress');
+  if (clientAddress === null) return context.body(null, HttpStatus.BadRequest);
+  const isWithinLimit = await isWithinRateLimit({
+    limiter: context.env.BACKOFFICE_RATE_LIMITER,
+    address: clientAddress,
+    scope: RateLimitScope.SignIn,
+  });
+  if (!isWithinLimit) return context.body(null, HttpStatus.TooManyRequests, { 'Retry-After': RETRY_AFTER_SECONDS });
   const form = await context.req.parseBody();
   const key = textFieldOf({ form, name: KEY_FIELD });
   const code = textFieldOf({ form, name: CODE_FIELD });
   const csrfToken = textFieldOf({ form, name: CSRF_FIELD });
   if (key === null || code === null || csrfToken === null) return context.body(null, HttpStatus.BadRequest);
-  const result = await attemptSignIn({ env: context.env, key, code, now: Date.now(), clientAddress: context.get('clientAddress') });
+  const result = await attemptSignIn({ env: context.env, key, code, now: Date.now(), clientAddress });
   if (result.outcome === SignInOutcome.Succeeded) {
     setCookie(context, SESSION_COOKIE_NAME, result.sessionToken, {
       ...COOKIE_OPTIONS,
