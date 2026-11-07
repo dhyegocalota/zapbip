@@ -203,3 +203,35 @@ Pins (green when they landed): the fixture tests built on test-local validators 
 - Gemini CLI keeps Local with `npx zapbip@0.1.0 listen`; whether install-skills separated it from Grok Bot is an open point for the facts merge.
 - The `(verify)` marks of hermes-openclaw are not carried: the pages state only the commands that main's pages state.
 - The Hermes and OpenClaw environment variables and the OpenClaw capability list are summarised, not itemised, because the user pages name no developer detail.
+
+## G8 walk and language (branch `feat/docs-experience-g8`)
+
+### What changed
+
+- `apps/docs/e2e/language.spec.ts`: the en-US and pt-BR browser locales both open the English Overview at `/` with the switcher visible; the switcher lists `English` and `Português (BR)`; switching on `/features/whatsapp-commands` lands on `/pt-br/features/whatsapp-commands`.
+- `apps/docs/e2e/from-zero.spec.ts`: per language and per viewport (1280, 375): Overview, the How to start card, the five numbered steps with the number as `+<value>` and a wa.me link, Supported agents, every matrix link with its four headings in order, then every internal link seen on those pages returns below 400 with an `h1`, no 404 text, no horizontal overflow, and in pt-BR stays under `/pt-br`. Console errors, page errors, failed requests and responses of 400 or more fail the walk, except the allowlist in `apps/docs/e2e/support/docs-experience.ts`.
+- `docs/adr/0030-...md` and its index row: the audience, information architecture and language rules.
+- `apps/docs/pt-br/concepts/wake-ladder.mdx`, `apps/docs/pt-br/mcp-reference/set-wake.mdx`: headings `Agendada` and `Em espera`.
+
+### Spike result (step 40)
+
+`mint@4.2.1207 dev --client-version 0.0.4077`, Playwright contexts `en-US` and `pt-BR`: both open `/` in English with `<html lang="en">`; there is no redirect to `/pt-br/index`. The switcher is `#localization-select-trigger` with two `menuitem` entries and keeps the page. `/nope` renders "Page Not Found" in the English shell. Only `mint dev` was exercised; the hosted site is unverified. No redirect script is added.
+
+### Red then green
+
+| Test | State | Evidence |
+|------|-------|----------|
+| `language.spec.ts` pt-BR locale | red in `a97c250`: `Expected: "Por que o zapbip existe"  Received: "Why zapbip exists"`; rewritten to the spike result in `95ac40e` | the switcher tests are pins |
+| `from-zero.spec.ts` | pin in `7a8b2a0`: all four walks green on landing | mutation: "How it listens" renamed on `agents/codex` fails with `/agents/codex`; a dead Overview link fails with `404` on `/features/the-24-hour-windows`; both restored |
+
+### Hypotheses for the tester
+
+- The walk, run against a clean `mint dev` on the port in `playwright.config.ts`, passes: 8 walk and language tests plus the other specs (192 passed, 168 skipped for the other locale on a scratch port 3311).
+- The only allowlisted noise is the aborted `socket.io` live-reload polling request of `mint dev`.
+- The pt-BR pagination "previous" link on How to start points to `/pt-br`, the pt-BR home; the walk accepts it.
+
+### Gaps
+
+- Port 3310 can be held by another lane's server serving that lane's pages; this lane ran on a scratch config on 3311, deleted before the commit, so `pnpm --filter @zapbip/docs test:walk` on 3310 was not run here.
+- No page needed install-skills or deploy-readiness facts for the walk to pass.
+- The pt-BR body prose of the wake ladder still says "reserva" and "agendado" as nouns; only the headings were asked for.

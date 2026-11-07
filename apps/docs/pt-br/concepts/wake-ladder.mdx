@@ -21,7 +21,7 @@ Em todos os degraus sua mensagem fica guardada na [caixa de entrada](/pt-br/conc
 
 O conector mantém uma linha aberta com o zapbip enquanto roda. Quando você escreve, o zapbip empurra a mensagem por essa linha e o conector retoma sua sessão no seu computador. Quando a última linha fecha, o zapbip devolve o despertar que você tinha antes. Inicie com `npx zapbip@0.1.0 connect`.
 
-## Agendado: ouvir sem limite de tempo
+## Agendada: ouvir sem limite de tempo
 
 Algumas IAs não têm como ser iniciadas de fora, e cada chamada que elas fazem ao zapbip termina em poucos minutos. O despertar agendado resolve isso: você pede para a IA rodar uma tarefa pequena num intervalo, a cada poucos minutos ou a cada hora, e cada execução lê o que você escreveu e responde.
 
@@ -48,7 +48,7 @@ A próxima olhada encerra o aviso sem outra mensagem.
 
 Quando a [janela de 24 horas](/pt-br/concepts/24-hour-window) está fechada, esse recado não pode ser enviado como está. O zapbip envia um [aviso](/pt-br/concepts/owner-notices) de modelo por janela fechada, e o recado espera e chega quando você escrever.
 
-## Reserva: outra IA responde
+## Em espera: outra IA responde
 
 Algumas IAs, como o Grok na web, não podem ser iniciadas de jeito nenhum. Você pode indicar outra IA da mesma conta como reserva dela, por exemplo o Grok Bot. Quando você escreve para a primeira, o zapbip entrega uma cópia à reserva, a desperta, e ela responde como ela mesma, dizendo quem é. A primeira IA vê a mensagem como tratada pela reserva.
 
