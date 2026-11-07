@@ -326,6 +326,6 @@ Author this list with every box empty. A sub-agent ticks its own line. A wrong s
 - [x] **Tester run:** a fresh `tester` sub-agent executed `test-plan.md` and ticked every box with evidence. — evidence: testers A (unit), B (integration), C (browser and security) and the delta tester at c2ad76c4, `test-results/backoffice/tester-{a,b,c,delta}.md`; PR B rows stay open
 - [x] **Reviewer:** a fresh `reviewer` sub-agent returned a verdict; refutation of the three riskiest claims is recorded in `test-plan.md`. — evidence: SHIP WITH RESERVATIONS, every finding fixed in c2ad76c4 (step 41)
 - [x] **Security reviewer:** a fresh `security-reviewer` sub-agent returned `Security verdict: CLEAR`, or findings below IMPORTANT. — evidence: FINDINGS (one IMPORTANT, two MINOR) fixed in c2ad76c4 (step 41), re-check CLEAR
-- [ ] **/check-ui:** screenshots and video of the walk recorded and uploaded to `pr-media-backoffice`.
+- [x] **/check-ui:** screenshots and video of the walk recorded and uploaded to `pr-media-backoffice` (recorder at 2e3ef0dd).
 - [ ] **/scenario backoffice:** run before merge if the owner chooses it.
-- [ ] **/open-pr:** gates passed, learnings sweep stated, merge sensitivity HIGH with blast radius and human checklist, PR opened.
+- [x] **/open-pr:** PR A: gates passed, learnings sweep stated (the fake-clock learning), merge sensitivity HIGH with blast radius and human checklist, PR opened; PR B follows with G4.

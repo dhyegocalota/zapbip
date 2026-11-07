@@ -1,6 +1,6 @@
 # Backoffice
 
-**Status:** Approved
+**Status:** Shipped 2026-11-08
 **Tier:** 🔴
 **Owner approval:** owner order 2026-11-07; open questions answered by the owner, or by the recommended option under the owner's delegation of 2026-11-06; approved 2026-11-07
 **ADRs:** [0031](../../adr/0031-the-backoffice-is-a-separate-host-signed-in-with-a-key-and-totp-enrolled-from-the-owners-terminal.md); [0032](../../adr/0032-whatsapp-numbers-are-rows-in-a-sealed-registry-not-worker-secrets.md) numbers registry (accepted with this spec); builds on [0005](../../adr/0005-the-local-gate-runs-what-the-diff-can-break.md), [0006](../../adr/0006-one-secret-per-connection-in-the-mcp-url.md), [0008](../../adr/0008-a-pure-core-behind-ports.md), [0009](../../adr/0009-cloudflare-workers-with-one-durable-object-per-account.md), [0012](../../adr/0012-owner-identity-by-wa-id-on-the-shared-number.md), [0013](../../adr/0013-webhook-acknowledged-after-a-durable-commit-and-deduplicated-by-message-id.md), [0017](../../adr/0017-connection-secrets-are-shown-once-and-stored-as-digests.md), [0027](../../adr/0027-deploys-run-from-the-owners-machine-not-from-ci.md)
