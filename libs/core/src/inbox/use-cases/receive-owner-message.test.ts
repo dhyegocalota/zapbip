@@ -137,8 +137,14 @@ describe('receiveOwnerMessage routing', () => {
   test('a forwarded message is stored with the forwarded flag', async () => {
     const environment = await createEnvironment();
     await registerAgents({ environment, agents: ['alpha'] });
-    const result = await receive({ environment, content: { kind: MessageKind.Text, text: '@alpha oi' }, forwarded: true });
-    expect(await environment.repository.findMessage({ messageId: result.messageId! })).toMatchObject({ forwarded: true });
+    const result = await receive({
+      environment,
+      content: { kind: MessageKind.Text, text: '@alpha oi' },
+      forwarded: true,
+    });
+    expect(await environment.repository.findMessage({ messageId: result.messageId! })).toMatchObject({
+      forwarded: true,
+    });
   });
 
   test('CU-199 a forwarded message does not answer an open ask; it is delivered as a normal message', async () => {
@@ -557,9 +563,11 @@ describe('receiveOwnerMessage waking', () => {
   test('CU-145 the waker is told once per unread batch and the owner learns the agent is not listening', async () => {
     const environment = await createEnvironment();
     await registerAgents({ environment, agents: ['alpha'] });
-    await receiveText({ environment, text: '@alpha one' });
+    const first = await receiveText({ environment, text: '@alpha one' });
     await receiveText({ environment, text: '@alpha two' });
-    expect(environment.waker.notifications).toEqual([{ agent: 'alpha', reason: AgentWakeReason.MessageWaiting }]);
+    expect(environment.waker.notifications).toEqual([
+      { agent: 'alpha', reason: AgentWakeReason.MessageWaiting, messageId: first.messageId },
+    ]);
     expect(sessionTexts({ environment })).toEqual([notListeningText({ agent: 'alpha' })]);
   });
 
@@ -592,6 +600,46 @@ describe('receiveOwnerMessage waking', () => {
   });
 });
 
+describe('receiveOwnerMessage handing the message id to the waker', () => {
+  test('a plain message passes its id', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha'] });
+    const received = await receiveText({ environment, text: '@alpha one' });
+    expect(environment.waker.notifications).toEqual([
+      { agent: 'alpha', reason: AgentWakeReason.MessageWaiting, messageId: received.messageId },
+    ]);
+  });
+
+  test('a second message in the same batch does not call the waker', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha'] });
+    await receiveText({ environment, text: '@alpha one' });
+    await receiveText({ environment, text: '@alpha two' });
+    expect(environment.waker.notifications).toHaveLength(1);
+  });
+
+  test('a choice that answers a question passes no id', async () => {
+    const environment = await createEnvironment();
+    const question = await askAndAbandon({ environment, agent: 'alpha' });
+    await tap({
+      environment,
+      optionId: formatOptionId({ questionId: question.questionId, optionIndex: 0 }),
+      optionTitle: 'Sim',
+    });
+    expect(environment.waker.notifications).toEqual([{ agent: 'alpha', reason: AgentWakeReason.MessageWaiting }]);
+    expect(environment.waker.notifications.map((notification) => notification.messageId)).toEqual([undefined]);
+  });
+
+  test('held messages assigned by a routing-list tap pass no id', async () => {
+    const environment = await createEnvironment();
+    await registerAgents({ environment, agents: ['alpha', 'beta'] });
+    await receiveText({ environment, text: 'hello' });
+    const [list] = routingLists({ environment });
+    await tap({ environment, optionId: routeOptionId({ list: list!, agent: 'beta' }), optionTitle: 'beta' });
+    expect(environment.waker.notifications.map((notification) => notification.messageId)).toEqual([undefined]);
+  });
+});
+
 describe('receiveOwnerMessage waking an agent that holds an ask', () => {
   test('owner media reaching an agent that only waits for an answer wakes it and tells the owner', async () => {
     const environment = await createEnvironment();
@@ -604,7 +652,7 @@ describe('receiveOwnerMessage waking an agent that holds an ask', () => {
       timeoutMs: 5 * SECOND_MS,
     });
     await environment.clock.advance({ ms: 0 });
-    await receive({
+    const received = await receive({
       environment,
       content: {
         kind: MessageKind.Image,
@@ -616,7 +664,9 @@ describe('receiveOwnerMessage waking an agent that holds an ask', () => {
         caption: null,
       },
     });
-    expect(environment.waker.notifications).toEqual([{ agent: 'alpha', reason: AgentWakeReason.MessageWaiting }]);
+    expect(environment.waker.notifications).toEqual([
+      { agent: 'alpha', reason: AgentWakeReason.MessageWaiting, messageId: received.messageId },
+    ]);
     expect(sessionTexts({ environment })).toEqual([notListeningText({ agent: 'alpha' })]);
     await environment.clock.advance({ ms: 5 * SECOND_MS });
     await asking;

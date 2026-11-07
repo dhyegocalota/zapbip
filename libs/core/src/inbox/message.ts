@@ -46,7 +46,14 @@ export type MessageEnvelope = {
   replyToMessageId: string | null;
   delivery: DeliveryState | null;
   readByAgent: boolean;
+  handedTo: AgentName | null;
+  originMessageId: string | null;
   forwarded: boolean;
 };
 
 export type Message = MessageEnvelope & MessageContent;
+
+export function ownerMessageIdOf(input: { message: Message }): string {
+  const { messageId, originMessageId } = input.message;
+  return originMessageId === null ? messageId : originMessageId;
+}

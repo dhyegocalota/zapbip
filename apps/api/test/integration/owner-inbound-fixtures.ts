@@ -1,12 +1,15 @@
 import type { ChannelInboundEntry } from '@zapbip/core';
-import { ChannelInboundKind, MessageKind, type AccountState } from '@zapbip/types';
+import { ChannelInboundKind, InstallCodeStatus, MessageKind, type AccountState } from '@zapbip/types';
 import type { Bindings } from '../../src/contract/env';
 import { receiveOwnerInbound } from '../../src/inbound/owner-inbound';
 import { createFakeRateLimiter } from '../support/fake-rate-limiter';
 import { readScreen } from '../support/inbox-session';
+import { installCodeDirectory } from '../support/install-codes';
 import { accountInboxStub, testEnv } from '../support/workers-env';
 
 export const WA_ID = '5511900000000';
+
+const INSTALL_CODE_PATTERN = /zb_inst_[A-Za-z0-9_-]{22}/g;
 
 type AccountRow = { accountId: string; state: AccountState };
 
@@ -65,4 +68,13 @@ export async function countAccounts(): Promise<number> {
 export async function screenTextsOf(input: { accountId: string }): Promise<string[]> {
   const entries = await readScreen({ stub: accountInboxStub({ accountId: input.accountId }) });
   return entries.map((entry) => entry.text);
+}
+
+export async function latestMcpPath(input: { accountId: string }): Promise<string> {
+  const texts = await screenTextsOf({ accountId: input.accountId });
+  const installCode = texts.join('\n').match(INSTALL_CODE_PATTERN)?.at(-1);
+  if (installCode === undefined) throw new Error('no install code on the screen');
+  const resolution = await installCodeDirectory().resolve({ installCode, now: Date.now() });
+  if (resolution.status !== InstallCodeStatus.Ready) throw new Error('the install code is not ready');
+  return new URL(resolution.connectionLink).pathname;
 }

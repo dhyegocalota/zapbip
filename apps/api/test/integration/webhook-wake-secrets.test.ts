@@ -38,6 +38,7 @@ import {
 } from '../support/wake-session';
 import { versionAfterLatest } from '../support/migration-versions';
 import { connectionOf, testEnv } from '../support/workers-env';
+import { applyDirectoryMigration } from '../support/seed';
 
 const BASE64 = 'base64';
 const KEY_NAME = 'WAKE_SECRET_KEY';
@@ -155,7 +156,7 @@ describe('wake target guard', () => {
     const ownHost = new URL(testEnv.PUBLIC_ORIGIN).hostname;
     const outcome = await stub.setWake({
       connection: connectionOf({ accountId: WAKE_ACCOUNT, agent: WAKE_AGENT }),
-      setting: { mode: WakeMode.Webhook, url: `https://${ownHost}/hook`, token: GROK_TOKEN },
+      setting: { mode: WakeMode.Webhook, url: `https://${ownHost}/hook`, token: GROK_TOKEN, intervalMinutes: null, standbyAgent: null },
     });
     expect(outcome).toEqual({ ok: false, errorCode: InboxErrorCode.InvalidInput, message: 'invalid url' });
   });
@@ -194,7 +195,7 @@ describe('wake dependencies', () => {
       return keyless
         .setWake({
           connection: connectionOf({ accountId: WAKE_ACCOUNT, agent: WAKE_AGENT }),
-          setting: { mode: WakeMode.Webhook, url: GROK_URL, token: GROK_TOKEN },
+          setting: { mode: WakeMode.Webhook, url: GROK_URL, token: GROK_TOKEN, intervalMinutes: null, standbyAgent: null },
         })
         .catch((error: Error) => error.message);
     });

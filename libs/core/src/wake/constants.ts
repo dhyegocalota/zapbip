@@ -1,4 +1,4 @@
-import { MINUTE_MS, SECOND_MS } from '@zapbip/types';
+import { DAY_MS, HOUR_MS, MINUTE_MS, SECOND_MS } from '@zapbip/types';
 
 export const WAKE_DEBOUNCE_MS = 3 * SECOND_MS;
 export const WAKE_MIN_INTERVAL_MS = 60 * SECOND_MS;
@@ -39,3 +39,10 @@ export const CLAUDE_ROUTINE_BETA_HEADER = 'anthropic-beta';
 export const CLAUDE_ROUTINE_BETA_VALUE = 'experimental-cc-routine-2026-04-01';
 export const CLAUDE_ROUTINE_VERSION_HEADER = 'anthropic-version';
 export const CLAUDE_ROUTINE_VERSION_VALUE = '2023-06-01';
+export const SCHEDULED_MIN_INTERVAL_MINUTES = MINUTE_MS / MINUTE_MS;
+export const SCHEDULED_MAX_INTERVAL_MINUTES = DAY_MS / MINUTE_MS;
+export const STALE_POLL_INTERVAL_MULTIPLE = 2;
+export const STALE_NOTICE_MIN_GAP_MS = HOUR_MS;
+export const STALE_NOTICE_MAX_GAP_MS = DAY_MS;
+export const STALE_NOTICE_BACKOFF_FACTOR = 2;
+export const SAFETY_NET_CRON = '0 * * * *';

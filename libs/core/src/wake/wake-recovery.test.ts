@@ -78,7 +78,7 @@ describe('wake recovery', () => {
         await setWake({
           ...environment.context,
           connection: connectionOf({ agent: AGENT }),
-          setting: { mode: WakeMode.Webhook, url: GROK_URL, token: OTHER_TOKEN },
+          setting: { mode: WakeMode.Webhook, url: GROK_URL, token: OTHER_TOKEN, intervalMinutes: null, standbyAgent: null },
           publicHost: PUBLIC_HOST,
         });
       },

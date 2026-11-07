@@ -25,6 +25,8 @@ function ownerMessage(input: { messageId: string }): Message {
     delivery: null,
     readByAgent: false,
     forwarded: false,
+    handedTo: null,
+    originMessageId: null,
     kind: MessageKind.Text,
     text: 'oi',
   };

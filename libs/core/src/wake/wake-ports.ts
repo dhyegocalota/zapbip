@@ -1,7 +1,7 @@
 import type { OwnerLocale, SetWakeStatus, WakeAttemptOutcome, WakeLogEventName, WakeMode, WakeProvider, WakeRung } from '@zapbip/types';
 import type { AgentName, ConnectionIdentity } from '../inbox/connection';
 import type { CoreDependencies } from '../inbox/ports';
-import type { StoredWake, WakeJob, WakeSettingInput, WakeTarget } from './wake-setting';
+import type { PollState, ScheduledWake, StoredWake, WakeJob, WakeSettingInput, WakeTarget } from './wake-setting';
 
 export type WakeAttemptRequest = { agent: AgentName; target: WakeTarget; body: string; nowMs: number };
 
@@ -30,6 +30,11 @@ export interface WakeRepository {
   deleteJob(input: { agent: AgentName }): Promise<void>;
   listDueJobs(input: { now: number }): Promise<WakeJob[]>;
   findNextDueAt(): Promise<number | null>;
+  findPollState(input: { agent: AgentName }): Promise<PollState | null>;
+  recordPoll(input: { agent: AgentName; polledAt: number; ownerLocale: OwnerLocale }): Promise<void>;
+  listScheduledWakes(): Promise<ScheduledWake[]>;
+  markStaleNotified(input: { agent: AgentName; noticedAt: number }): Promise<void>;
+  recordStaleNoticeFailure(input: { agent: AgentName; failedAt: number }): Promise<void>;
   findLocalRestore(input: { agent: AgentName }): Promise<StoredWake | null>;
   saveLocalRestore(input: { agent: AgentName; previous: StoredWake }): Promise<void>;
   deleteLocalRestore(input: { agent: AgentName }): Promise<void>;
@@ -46,6 +51,7 @@ export type WakeLogEvent = {
   latencyMs: number | null;
   outcome: WakeAttemptOutcome | null;
   timedOut: boolean;
+  errorCode?: string;
 };
 
 export interface WakeObserver {

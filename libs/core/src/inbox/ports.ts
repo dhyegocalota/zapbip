@@ -69,6 +69,7 @@ export interface InboxRepository {
   listExpiredMediaIds(input: { now: number }): Promise<string[]>;
   deleteMedia(input: { mediaIds: string[] }): Promise<void>;
   findNextExpiry(): Promise<number | null>;
+  insertHandoff(input: { copy: Message; primaryAgent: AgentName; handedTo: AgentName }): Promise<void>;
   commitChannelInbound(input: {
     channelMessageId: string;
     receivedAt: number;
@@ -103,7 +104,7 @@ export interface MediaStore {
 }
 
 export interface AgentWaker {
-  notify(input: { agent: AgentName; reason: AgentWakeReason }): Promise<WakeOutcome>;
+  notify(input: { agent: AgentName; reason: AgentWakeReason; messageId?: string }): Promise<WakeOutcome>;
   hasFailedWake(input: { agent: AgentName }): Promise<boolean>;
   pushesEveryMessage(input: { agent: AgentName }): Promise<boolean>;
 }

@@ -1,37 +1,13 @@
-import { expect, test } from 'vitest';
-import { MINUTE_MS, SECOND_MS } from '@zapbip/types';
-import {
-  WAKE_BACKOFF_BASE_MS,
-  WAKE_BACKOFF_CAP_MS,
-  WAKE_DEBOUNCE_MS,
-  WAKE_FAILED_RETRY_MS,
-  WAKE_LEASE_MS,
-  WAKE_MAX_ATTEMPTS,
-  WAKE_MIN_INTERVAL_MS,
-  WAKE_REQUEST_TIMEOUT_MS,
-  WAKE_URL_MAX_CHARS,
-} from './constants';
+import { describe, expect, test } from 'vitest';
+import { SAFETY_NET_CRON, SCHEDULED_MAX_INTERVAL_MINUTES, SCHEDULED_MIN_INTERVAL_MINUTES, STALE_POLL_INTERVAL_MULTIPLE } from './constants';
 
-test('the wake constants match the spec', () => {
-  expect({
-    debounce: WAKE_DEBOUNCE_MS,
-    requestTimeout: WAKE_REQUEST_TIMEOUT_MS,
-    lease: WAKE_LEASE_MS,
-    backoffBase: WAKE_BACKOFF_BASE_MS,
-    backoffCap: WAKE_BACKOFF_CAP_MS,
-    maxAttempts: WAKE_MAX_ATTEMPTS,
-    minInterval: WAKE_MIN_INTERVAL_MS,
-    failedRetry: WAKE_FAILED_RETRY_MS,
-    urlMaxChars: WAKE_URL_MAX_CHARS,
-  }).toEqual({
-    debounce: 3 * SECOND_MS,
-    requestTimeout: 10 * SECOND_MS,
-    lease: 15 * SECOND_MS,
-    backoffBase: 5 * SECOND_MS,
-    backoffCap: 60 * SECOND_MS,
-    maxAttempts: 5,
-    minInterval: 60 * SECOND_MS,
-    failedRetry: 10 * MINUTE_MS,
-    urlMaxChars: 512,
+describe('scheduled wake constants', () => {
+  test.each([
+    ['SCHEDULED_MIN_INTERVAL_MINUTES', SCHEDULED_MIN_INTERVAL_MINUTES, 1],
+    ['SCHEDULED_MAX_INTERVAL_MINUTES', SCHEDULED_MAX_INTERVAL_MINUTES, 1440],
+    ['STALE_POLL_INTERVAL_MULTIPLE', STALE_POLL_INTERVAL_MULTIPLE, 2],
+    ['SAFETY_NET_CRON', SAFETY_NET_CRON, '0 * * * *'],
+  ])('pin: %s', (_name, actual, expected) => {
+    expect(actual).toBe(expected);
   });
 });

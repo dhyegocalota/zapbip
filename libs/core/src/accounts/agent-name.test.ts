@@ -30,12 +30,24 @@ describe('normalizeAgentName', () => {
 });
 
 describe('isReservedAgentName', () => {
-  test.each(['novo', 'new', 'agentes', 'agents', 'revogar', 'revoke', 'girar', 'rotate', 'ajuda', 'help', 'menu', 'apagar', 'delete'])(
-    'reserves %s',
-    (name) => {
-      expect(isReservedAgentName({ name })).toBe(true);
-    },
-  );
+  test.each([
+    'novo',
+    'new',
+    'agentes',
+    'agents',
+    'revogar',
+    'revoke',
+    'girar',
+    'rotate',
+    'ajuda',
+    'help',
+    'menu',
+    'apagar',
+    'delete',
+    'zapbip',
+  ])('reserves %s', (name) => {
+    expect(isReservedAgentName({ name })).toBe(true);
+  });
 
   test.each(['claude-code', 'agente', 'conta', 'account'])('allows %s', (name) => {
     expect(isReservedAgentName({ name })).toBe(false);

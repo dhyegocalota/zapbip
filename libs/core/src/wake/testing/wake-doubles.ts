@@ -1,5 +1,6 @@
-import { SECOND_MS, WakeAttemptOutcome, WakeMode, WakeProvider, WakeStatus } from '@zapbip/types';
+import { OwnerLocale, SECOND_MS, WakeAttemptOutcome, WakeMode, WakeProvider, WakeStatus } from '@zapbip/types';
 import type { AgentName } from '../../inbox/connection';
+import type { Clock } from '../../inbox/ports';
 import { PINNED_WAKE_PROVIDER_RULES } from '../wake-provider';
 import { WAKE_CONTENT_TYPE, WAKE_TIMESTAMP_HEADER } from '../constants';
 import type {
@@ -12,7 +13,7 @@ import type {
   WakeSecretBox,
   WakeTransport,
 } from '../wake-ports';
-import type { StoredWake, WakeJob } from '../wake-setting';
+import type { PollState, ScheduledWake, StoredWake, WakeJob } from '../wake-setting';
 
 const SEAL_SEPARATOR = '.';
 const BASE64 = 'base64';
@@ -108,8 +109,33 @@ export function createInMemoryWakeSecretBox(): WakeSecretBox {
   };
 }
 
-export function createInMemoryWakeRepository(): WakeRepository {
+export function storedWakeOf(input: { agent: AgentName; mode: WakeMode } & Partial<StoredWake>): StoredWake {
+  return {
+    target: null,
+    status: WakeStatus.Active,
+    lastDeliveredAt: null,
+    intervalMinutes: null,
+    standbyAgent: null,
+    ownerLocale: null,
+    ...input,
+  };
+}
+
+export function scheduledWakeOf(input: { agent: AgentName } & Partial<ScheduledWake>): ScheduledWake {
+  return {
+    ...storedWakeOf({ mode: WakeMode.Scheduled, intervalMinutes: 60, ownerLocale: OwnerLocale.PortugueseBrazil, ...input }),
+    lastPolledAt: 0,
+    hasPolled: true,
+    pollerStaleNotified: false,
+    lastStaleNoticeAt: null,
+    staleNoticeFailures: 0,
+    ...input,
+  };
+}
+
+export function createInMemoryWakeRepository(input: { clock: Clock }): WakeRepository {
   const wakes = new Map<AgentName, StoredWake>();
+  const pollStates = new Map<AgentName, PollState>();
   const jobs = new Map<AgentName, WakeJob>();
   const restores = new Map<AgentName, StoredWake>();
   const lastRequests = new Map<AgentName, number>();
@@ -122,12 +148,27 @@ export function createInMemoryWakeRepository(): WakeRepository {
     },
     saveWake: async ({ wake }) => {
       wakes.set(wake.agent, { ...wake });
+      if (wake.mode !== WakeMode.Scheduled || pollStates.has(wake.agent)) return;
+      pollStates.set(wake.agent, {
+        lastPolledAt: input.clock.now(),
+        hasPolled: false,
+        pollerStaleNotified: false,
+        lastStaleNoticeAt: null,
+        staleNoticeFailures: 0,
+      });
     },
     clearWake: async ({ agent }) => {
       const wake = wakes.get(agent);
       jobs.delete(agent);
       if (wake === undefined) return;
-      wakes.set(agent, { ...wake, mode: WakeMode.None, target: null, status: WakeStatus.Active });
+      wakes.set(agent, {
+        ...wake,
+        mode: WakeMode.None,
+        target: null,
+        intervalMinutes: null,
+        standbyAgent: null,
+        status: WakeStatus.Active,
+      });
     },
     findJob: async ({ agent }) => {
       const job = jobs.get(agent);
@@ -147,6 +188,39 @@ export function createInMemoryWakeRepository(): WakeRepository {
     findNextDueAt: async () => {
       const dueTimes = [...jobs.values()].map(effectiveDueAt);
       return dueTimes.length === 0 ? null : Math.min(...dueTimes);
+    },
+    findPollState: async ({ agent }) => {
+      const pollState = pollStates.get(agent);
+      return pollState === undefined ? null : { ...pollState };
+    },
+    recordPoll: async ({ agent, polledAt }) => {
+      const pollState = pollStates.get(agent);
+      const lastStaleNoticeAt = pollState === undefined ? null : pollState.lastStaleNoticeAt;
+      pollStates.set(agent, {
+        lastPolledAt: polledAt,
+        hasPolled: true,
+        pollerStaleNotified: false,
+        lastStaleNoticeAt,
+        staleNoticeFailures: 0,
+      });
+    },
+    listScheduledWakes: async () =>
+      [...wakes.values()]
+        .filter((wake) => wake.mode === WakeMode.Scheduled)
+        .map((wake) => {
+          const pollState = pollStates.get(wake.agent);
+          if (pollState === undefined) throw new Error(`no poll state for ${wake.agent}`);
+          return { ...wake, ...pollState };
+        }),
+    recordStaleNoticeFailure: async ({ agent, failedAt }) => {
+      const pollState = pollStates.get(agent);
+      if (pollState === undefined) return;
+      pollStates.set(agent, { ...pollState, lastStaleNoticeAt: failedAt, staleNoticeFailures: pollState.staleNoticeFailures + 1 });
+    },
+    markStaleNotified: async ({ agent, noticedAt }) => {
+      const pollState = pollStates.get(agent);
+      if (pollState === undefined) return;
+      pollStates.set(agent, { ...pollState, pollerStaleNotified: true, lastStaleNoticeAt: noticedAt, staleNoticeFailures: 0 });
     },
     findLocalRestore: async ({ agent }) => {
       const previous = restores.get(agent);
