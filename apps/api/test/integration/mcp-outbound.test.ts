@@ -18,12 +18,26 @@ async function ownerBoundCount(input: { accountId: string }): Promise<number> {
   return row.total;
 }
 
-async function sendMany(input: { secret: string; count: number }): Promise<ToolResult[]> {
-  const client = await connectClient({ secret: input.secret });
-  return Array.from({ length: input.count }).reduce<Promise<ToolResult[]>>(
-    async (results) => [...(await results), await callTool({ client, name: McpToolName.SendMessage, arguments: { text: 'oi' } })],
-    Promise.resolve([]),
+const inFlightSequences: Promise<ToolResult[]>[] = [];
+
+function callSequentially(input: {
+  secret: string;
+  count: number;
+  name: McpToolName;
+  arguments: Record<string, unknown>;
+}): Promise<ToolResult[]> {
+  const sequence = connectClient({ secret: input.secret }).then((client) =>
+    Array.from({ length: input.count }).reduce<Promise<ToolResult[]>>(
+      async (results) => [...(await results), await callTool({ client, name: input.name, arguments: input.arguments })],
+      Promise.resolve([]),
+    ),
   );
+  inFlightSequences.push(sequence);
+  return sequence;
+}
+
+function sendMany(input: { secret: string; count: number }): Promise<ToolResult[]> {
+  return callSequentially({ ...input, name: McpToolName.SendMessage, arguments: { text: 'oi' } });
 }
 
 describe('MCP outbound limit', () => {
@@ -31,7 +45,10 @@ describe('MCP outbound limit', () => {
     await applyDirectoryMigration();
   });
 
-  afterEach(reset);
+  afterEach(async () => {
+    await Promise.allSettled(inFlightSequences.splice(0));
+    await reset();
+  });
 
   it('[row 409] admits thirty send_message calls in one minute and every one reaches the owner', async () => {
     const first = await seedConnectionWithSecret({ accountId: 'acc_out', agent: 'alpha' });
@@ -60,11 +77,12 @@ describe('MCP outbound limit', () => {
 
   it('does not count check_inbox toward the outbound limit', async () => {
     const connection = await seedConnectionWithSecret({ accountId: 'acc_out3', agent: 'alpha' });
-    const client = await connectClient({ secret: connection.secret });
-    const results = await Array.from({ length: OUTBOUND_MESSAGES_PER_MINUTE + 1 }).reduce<Promise<ToolResult[]>>(
-      async (collected) => [...(await collected), await callTool({ client, name: McpToolName.CheckInbox, arguments: {} })],
-      Promise.resolve([]),
-    );
+    const results = await callSequentially({
+      secret: connection.secret,
+      count: OUTBOUND_MESSAGES_PER_MINUTE + 1,
+      name: McpToolName.CheckInbox,
+      arguments: {},
+    });
     expect(results.every((result) => result.isError !== true)).toBe(true);
   });
 });
