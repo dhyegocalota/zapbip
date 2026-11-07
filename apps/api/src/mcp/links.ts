@@ -23,6 +23,7 @@ export async function resolveMediaLink(input: {
   const { message } = input;
   if (!('source' in message)) return null;
   if (message.source.kind === MediaSourceKind.Link) return message.source.link;
+  if (message.source.kind === MediaSourceKind.Unavailable) return null;
   return buildMediaLink({ ...input, mediaId: message.source.mediaId });
 }
 

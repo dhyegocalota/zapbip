@@ -1,3 +1,4 @@
+import { HttpStatus } from '@zapbip/types';
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
 import { Hono, type Context } from 'hono';
 import { UNAUTHORIZED_BODY } from '../contract/constants';
@@ -7,7 +8,6 @@ import { logEvent } from '../log';
 import { BEARER_PREFIX, MCP_METHODS } from '../mcp/constants';
 import { resolveConnection } from './resolve-connection';
 import { createConnectionServer } from '../mcp/server';
-import { HttpStatus } from './http-status';
 
 type McpContext = Context<{ Bindings: Bindings }>;
 

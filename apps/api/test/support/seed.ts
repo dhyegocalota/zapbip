@@ -1,5 +1,6 @@
 import { OwnerLocale } from '@zapbip/types';
-import directoryMigrationSql from '../../migrations/0001_core.sql?raw';
+import coreMigrationSql from '../../migrations/0001_core.sql?raw';
+import channelMigrationSql from '../../migrations/0004_whatsapp_channel.sql?raw';
 import { hashConnectionSecret } from '../../src/adapters/platform/hash';
 import { testEnv } from './workers-env';
 
@@ -7,8 +8,8 @@ export const SEED_CREATED_AT = 1_700_000_000_000;
 const STATEMENT_SEPARATOR = ';';
 
 export async function applyDirectoryMigration(): Promise<void> {
-  const statements = directoryMigrationSql
-    .split(STATEMENT_SEPARATOR)
+  const statements = [coreMigrationSql, channelMigrationSql]
+    .flatMap((migrationSql) => migrationSql.split(STATEMENT_SEPARATOR))
     .map((statement) => statement.trim())
     .filter((statement) => statement.length > 0);
   await testEnv.CONNECTIONS.batch(statements.map((statement) => testEnv.CONNECTIONS.prepare(statement)));

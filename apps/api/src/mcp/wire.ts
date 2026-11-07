@@ -7,6 +7,7 @@ type ContentWire = Pick<
   MessageWire,
   | 'text'
   | 'media_id'
+  | 'media_status'
   | 'url'
   | 'mime_type'
   | 'size_bytes'
@@ -30,6 +31,7 @@ type ContentWireBuilders = {
 const NO_CONTENT: ContentWire = {
   text: null,
   media_id: null,
+  media_status: null,
   url: null,
   mime_type: null,
   size_bytes: null,
@@ -51,11 +53,17 @@ function storedMediaId(source: MediaSource): string | null {
   return null;
 }
 
+function unavailableStatus(source: MediaSource): MediaSourceKind.Unavailable | null {
+  if (source.kind === MediaSourceKind.Unavailable) return MediaSourceKind.Unavailable;
+  return null;
+}
+
 function mediaContent(input: { fields: MediaFields; link: string | null; voice: boolean | null }): ContentWire {
   const { fields } = input;
   return {
     ...NO_CONTENT,
     media_id: storedMediaId(fields.source),
+    media_status: unavailableStatus(fields.source),
     url: input.link,
     mime_type: fields.mimeType,
     size_bytes: fields.sizeBytes,
@@ -110,7 +118,8 @@ export function toWireMessage(input: { message: Message; link: string | null }):
     message_id: message.messageId,
     direction: message.direction,
     sender: isFromOwner ? MessageSender.Owner : MessageSender.Agent,
-    verified: isFromOwner,
+    verified: isFromOwner && !message.forwarded,
+    forwarded: message.forwarded,
     agent: message.agent,
     at: toIsoTimestamp({ epochMs: message.at }),
     reply_to: message.replyToMessageId,

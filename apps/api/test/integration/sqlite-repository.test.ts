@@ -232,6 +232,7 @@ describe('SQLite inbox repository', () => {
         window: {
           lastOwnerMessageAt: BASE_TIME,
           noticeSentForClosedWindow: true,
+          closedAt: null,
           noticeRetryLocale: null,
           noticeRetryAt: null,
           noticeRetryAttempt: 0,
@@ -243,6 +244,7 @@ describe('SQLite inbox repository', () => {
       initial: {
         lastOwnerMessageAt: null,
         noticeSentForClosedWindow: false,
+        closedAt: null,
         noticeRetryLocale: null,
         noticeRetryAt: null,
         noticeRetryAttempt: 0,
@@ -250,6 +252,7 @@ describe('SQLite inbox repository', () => {
       saved: {
         lastOwnerMessageAt: BASE_TIME,
         noticeSentForClosedWindow: true,
+        closedAt: null,
         noticeRetryLocale: null,
         noticeRetryAt: null,
         noticeRetryAttempt: 0,
@@ -263,6 +266,7 @@ describe('SQLite inbox repository', () => {
         window: {
           lastOwnerMessageAt: BASE_TIME,
           noticeSentForClosedWindow: false,
+          closedAt: null,
           noticeRetryLocale: OwnerLocale.PortugueseBrazil,
           noticeRetryAt: BASE_TIME + 1,
           noticeRetryAttempt: 1,
@@ -273,6 +277,7 @@ describe('SQLite inbox repository', () => {
     expect(saved).toEqual({
       lastOwnerMessageAt: BASE_TIME,
       noticeSentForClosedWindow: false,
+      closedAt: null,
       noticeRetryLocale: OwnerLocale.PortugueseBrazil,
       noticeRetryAt: BASE_TIME + 1,
       noticeRetryAttempt: 1,
@@ -285,6 +290,7 @@ describe('SQLite inbox repository', () => {
         window: {
           lastOwnerMessageAt: BASE_TIME,
           noticeSentForClosedWindow: false,
+          closedAt: null,
           noticeRetryLocale: OwnerLocale.PortugueseBrazil,
           noticeRetryAt: BASE_TIME + 1,
           noticeRetryAttempt: 2,
@@ -296,6 +302,7 @@ describe('SQLite inbox repository', () => {
     expect(claimed).toEqual({
       lastOwnerMessageAt: BASE_TIME,
       noticeSentForClosedWindow: true,
+      closedAt: null,
       noticeRetryLocale: null,
       noticeRetryAt: null,
       noticeRetryAttempt: 2,
@@ -310,6 +317,7 @@ describe('SQLite inbox repository', () => {
         window: {
           lastOwnerMessageAt: BASE_TIME,
           noticeSentForClosedWindow: false,
+          closedAt: null,
           noticeRetryLocale: null,
           noticeRetryAt: null,
           noticeRetryAttempt: 0,
@@ -475,6 +483,7 @@ describe('SQLite inbox repository', () => {
         window: {
           lastOwnerMessageAt: BASE_TIME,
           noticeSentForClosedWindow: false,
+          closedAt: null,
           noticeRetryLocale: null,
           noticeRetryAt: null,
           noticeRetryAttempt: 0,
@@ -513,6 +522,7 @@ describe('SQLite inbox repository', () => {
         window: {
           lastOwnerMessageAt: BASE_TIME,
           noticeSentForClosedWindow: false,
+          closedAt: null,
           noticeRetryLocale: null,
           noticeRetryAt: null,
           noticeRetryAttempt: 0,
@@ -524,6 +534,7 @@ describe('SQLite inbox repository', () => {
         window: {
           lastOwnerMessageAt: BASE_TIME + 5,
           noticeSentForClosedWindow: true,
+          closedAt: null,
           noticeRetryLocale: null,
           noticeRetryAt: null,
           noticeRetryAttempt: 0,
@@ -538,6 +549,7 @@ describe('SQLite inbox repository', () => {
     expect(result.window).toEqual({
       lastOwnerMessageAt: BASE_TIME + 5,
       noticeSentForClosedWindow: true,
+      closedAt: null,
       noticeRetryLocale: null,
       noticeRetryAt: null,
       noticeRetryAttempt: 0,

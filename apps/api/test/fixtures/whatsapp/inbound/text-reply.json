@@ -1,0 +1,13 @@
+{
+  "from": "5511900000001",
+  "id": "wamid.REPLY",
+  "timestamp": "1762430400",
+  "type": "text",
+  "context": {
+    "from": "1000000000000001",
+    "id": "wamid.X"
+  },
+  "text": {
+    "body": "Sim"
+  }
+}
