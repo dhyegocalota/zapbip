@@ -26,12 +26,10 @@ const HTTP_BAD_REQUEST = 400;
 type ContentPart = { text: string } | { type: string };
 type ChatMessage = { role: string; content: string | ContentPart[] };
 type ToolParameters = { properties?: Record<string, { items?: { type?: string } }> };
-type ToolDeclaration = {
-  type?: string;
-  name?: string;
-  parameters?: ToolParameters;
-  function?: { name: string; parameters?: ToolParameters };
-};
+type NestedToolDeclaration = { type: string; function: { name: string; parameters?: ToolParameters } };
+type FlatToolDeclaration = { name: string; parameters?: ToolParameters };
+type BuiltInToolDeclaration = { type: string };
+type ToolDeclaration = NestedToolDeclaration | FlatToolDeclaration | BuiltInToolDeclaration;
 type ChatBody = {
   tools: ToolDeclaration[] | undefined;
   model: string | undefined;
@@ -87,12 +85,20 @@ function toolResultTextsOf(input: { body: ChatBody }): string[] {
 
 function declaredNameOf(input: { tool: ToolDeclaration }): string | undefined {
   const { tool } = input;
-  if (tool.function !== undefined) return tool.function.name;
-  return tool.name;
+  if ('function' in tool) return tool.function.name;
+  if ('name' in tool) return tool.name;
+  return undefined;
+}
+
+function parametersOf(input: { tool: ToolDeclaration }): ToolParameters | undefined {
+  const { tool } = input;
+  if ('function' in tool) return tool.function.parameters;
+  if ('name' in tool) return tool.parameters;
+  throw new Error(`unknown tool declaration shape: ${JSON.stringify(tool)}`);
 }
 
 function searchArgumentsOf(input: { searchTool: ToolDeclaration }): string {
-  const parameters = input.searchTool.function?.parameters ?? input.searchTool.parameters;
+  const parameters = parametersOf({ tool: input.searchTool });
   if (parameters?.properties?.queries?.items?.type === STRING_TYPE) return STRING_QUERIES_ARGUMENTS;
   return SINGLE_QUERY_ARGUMENTS;
 }
@@ -106,10 +112,12 @@ function toolNamesOf(input: { body: ChatBody }): string[] {
 type ToolCallPlan = { toolName: string; toolArguments: string };
 
 function toolCallPlanOf(input: { body: ChatBody }): ToolCallPlan | null {
+  const { tools } = input.body;
+  if (tools === undefined) return null;
   const names = toolNamesOf(input);
   const checkInboxName = names.find((name) => name.endsWith(CHECK_INBOX_TOOL_SUFFIX));
   if (checkInboxName !== undefined) return { toolName: checkInboxName, toolArguments: EMPTY_ARGUMENTS };
-  const searchTool = (input.body.tools ?? []).find((tool) => declaredNameOf({ tool }) === TOOL_SEARCH_NAME);
+  const searchTool = tools.find((tool) => declaredNameOf({ tool }) === TOOL_SEARCH_NAME);
   if (searchTool === undefined) return null;
   return { toolName: TOOL_SEARCH_NAME, toolArguments: searchArgumentsOf({ searchTool }) };
 }

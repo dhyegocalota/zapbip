@@ -240,7 +240,7 @@ async function pollInboxFor(input: { account: WakeAccount; text: string }): Prom
   await vi.waitFor(
     async () => {
       const inbox = await callTool({ client: agent, name: McpToolName.CheckInbox, arguments: {} });
-      const messages = (inbox.structured?.messages ?? []) as SocketMessage[];
+      const messages = inbox.structured?.messages as SocketMessage[];
       if (!messages.some((message) => message.text === input.text)) throw new Error(`check_inbox does not show ${input.text} yet`);
     },
     { timeout: REPLY_TIMEOUT_MS, interval: POLL_TICK_MS },
