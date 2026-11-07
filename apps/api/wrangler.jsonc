@@ -13,7 +13,7 @@
     {
       "binding": "CONNECTIONS",
       "database_name": "zapbip-production",
-      "database_id": "REPLACE_WITH_PRODUCTION_D1_DATABASE_ID",
+      "database_id": "2147fd23-d09d-4609-9c5e-5751453794df",
       "migrations_dir": "migrations",
     },
   ],
@@ -73,7 +73,7 @@
         {
           "binding": "CONNECTIONS",
           "database_name": "zapbip-staging",
-          "database_id": "REPLACE_WITH_STAGING_D1_DATABASE_ID",
+          "database_id": "7f784389-c79d-46f0-b9ea-2a3eab8aa2ff",
           "migrations_dir": "migrations",
         },
       ],

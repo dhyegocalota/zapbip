@@ -15,13 +15,13 @@ Migration rule: a migration that has reached a deployed environment is never edi
    pnpm --filter @zapbip/api exec wrangler r2 bucket create zapbip-media-staging
    ```
 
-   For production the names are `zapbip-production` and `zapbip-media-production`. The Durable Object class `AccountInbox` needs no command: the first deploy creates it from the `migrations` tag in `apps/api/wrangler.jsonc`.
+   For production the names are `zapbip-production` and `zapbip-media-production`. Done on 2026-11-07, through the Cloudflare API, for both environments: D1 `zapbip-staging` (`7f784389-c79d-46f0-b9ea-2a3eab8aa2ff`), D1 `zapbip-production` (`2147fd23-d09d-4609-9c5e-5751453794df`) and R2 `zapbip-media-staging` and `zapbip-media-production`; skip this step for them. The Durable Object class `AccountInbox` needs no command: the first deploy creates it from the `migrations` tag in `apps/api/wrangler.jsonc`.
 
    Expect: the D1 command prints a `database_id` UUID, and the R2 command reports the bucket as created.
 
    If it fails: a name clash means it already exists; run `pnpm --filter @zapbip/api exec wrangler d1 list` and reuse its ID. A permission error means `wrangler whoami` shows the wrong account ([cloudflare-setup.md](cloudflare-setup.md), step 4).
 
-2. **Replace every placeholder.** Run `grep -n REPLACE_WITH_ apps/api/wrangler.jsonc`. In the block of the environment you are deploying, replace the placeholder database ID with the `database_id` from step 1, and any other `REPLACE_WITH_` value of that block with the real one. Commit the change on a branch and merge it; IDs are account identifiers, not secrets. Staging may deploy from any clean branch, but production deploys only from `main`, so the production block must be merged before the production deploy. Run the grep again.
+2. **Replace every placeholder.** Both database IDs are already in `apps/api/wrangler.jsonc` (2026-11-07); this step is for any `REPLACE_WITH_` value added later. Run `grep -n REPLACE_WITH_ apps/api/wrangler.jsonc`. In the block of the environment you are deploying, replace the placeholder database ID with the `database_id` from step 1, and any other `REPLACE_WITH_` value of that block with the real one. Commit the change on a branch and merge it; IDs are account identifiers, not secrets. Staging may deploy from any clean branch, but production deploys only from `main`, so the production block must be merged before the production deploy. Run the grep again.
 
    Expect: the grep prints nothing for the block of the environment you are deploying.
 

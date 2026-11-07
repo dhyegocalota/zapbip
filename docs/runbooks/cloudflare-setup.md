@@ -18,7 +18,9 @@ Everything here costs nothing within the free allowances. Cloudflare asks for a 
 
 3. **Enable R2.** Open Storage & databases, R2 Object Storage, and follow Purchase R2 Plan. Cloudflare asks for a payment method; the free allowance covers the media zapbip stores for one owner. Read the current free limits on the R2 pricing page and note them in the go-live record.
 
-   Expect: the R2 overview shows no buckets and no error.
+   The buckets `zapbip-media-staging` and `zapbip-media-production` and the D1 databases `zapbip-staging` and `zapbip-production` were created through the API on 2026-11-07 ([deploy.md](deploy.md), step 1).
+
+   Expect: the R2 overview shows no buckets and no error, or only those two buckets.
 
    If it fails: the payment method was refused; try another card. R2 cannot be skipped, because `MEDIA` is a bucket binding.
 

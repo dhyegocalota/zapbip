@@ -5,7 +5,8 @@ import { DeployEnvironment } from '../../src/operations/deploy-environment';
 import { DEVELOPMENT_ENVIRONMENT } from '../../src/contract/constants';
 
 const WRANGLER_CONFIG_PATH = 'wrangler.jsonc';
-const PRODUCTION_DATABASE_ID_PLACEHOLDER = 'REPLACE_WITH_PRODUCTION_D1_DATABASE_ID';
+const PRODUCTION_DATABASE_ID = '2147fd23-d09d-4609-9c5e-5751453794df';
+const STAGING_DATABASE_ID = '7f784389-c79d-46f0-b9ea-2a3eab8aa2ff';
 const LOCAL_DATABASE_ID = 'zapbip-connections-local';
 const FORBIDDEN_VAR = 'PUBLIC_BASE_URL';
 const PRODUCTION_ORIGIN = 'https://mcp.zapbip.com';
@@ -78,8 +79,12 @@ describe('wrangler config', () => {
     expect(vars.WHATSAPP_MEDIA_DOWNLOAD_ORIGIN).toBe(vars.WHATSAPP_GRAPH_BASE_URL);
   });
 
-  it('the production D1 database id is a placeholder that must be replaced before a deploy', () => {
-    expect(databaseIdsOf({})).toEqual([PRODUCTION_DATABASE_ID_PLACEHOLDER]);
+  it('the production D1 database id is the one created on 2026-11-07', () => {
+    expect(databaseIdsOf({})).toEqual([PRODUCTION_DATABASE_ID]);
+  });
+
+  it('the staging D1 database id is the one created on 2026-11-07', () => {
+    expect(databaseIdsOf({ environment: DeployEnvironment.Staging })).toEqual([STAGING_DATABASE_ID]);
   });
 
   it('pin: the development environment keeps the local D1 database id', () => {
@@ -146,14 +151,8 @@ describe('wrangler config', () => {
     expect(blockEntries.map(([, block]) => block.triggers.crons)).toEqual(Array(blockEntries.length).fill([SCHEDULED_CRON]));
   });
 
-  it('marks every deployed database id and no bucket name with the placeholder prefix', () => {
+  it('leaves no placeholder in any deployed block', () => {
     const deployed = [blocks[DeployEnvironment.Staging], blocks[DeployEnvironment.Production]];
-    expect(
-      deployed.flatMap((block) => block.d1_databases.map((database) => database.database_id.startsWith(PLACEHOLDER_VALUE_PREFIX))),
-    ).toEqual([true, true]);
-    expect(deployed.flatMap((block) => block.r2_buckets.map((bucket) => bucket.bucket_name.startsWith(PLACEHOLDER_VALUE_PREFIX)))).toEqual([
-      false,
-      false,
-    ]);
+    expect(deployed.map((block) => JSON.stringify(block).includes(PLACEHOLDER_VALUE_PREFIX))).toEqual([false, false]);
   });
 });

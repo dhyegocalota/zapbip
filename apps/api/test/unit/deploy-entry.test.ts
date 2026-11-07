@@ -218,9 +218,9 @@ describe('read deploy block', () => {
     expect(block).not.toHaveProperty('env');
   });
 
-  it('reads the staging block with its placeholder database id', () => {
+  it('reads the staging block with no placeholder left', () => {
     const block = readDeployBlock({ environment: DeployEnvironment.Staging });
     expect(block).toMatchObject({ name: 'zapbip-api-staging' });
-    expect(JSON.stringify(block)).toContain(PLACEHOLDER_VALUE_PREFIX);
+    expect(JSON.stringify(block)).not.toContain(PLACEHOLDER_VALUE_PREFIX);
   });
 });
