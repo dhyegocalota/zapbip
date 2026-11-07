@@ -1,6 +1,6 @@
 import type { DeliverToOwnerInput } from '@zapbip/core';
 import { storedWakeOf } from '@zapbip/core/wake-testing';
-import { AgentWakeReason, MessageKind, OwnerLocale, WakeMode, WakeOutcome } from '@zapbip/types';
+import { AgentWakeReason, MessageKind, OwnerLocale, WakeLogEventName, WakeMode, WakeOutcome } from '@zapbip/types';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createInboxAgentWaker } from '../../src/adapters/wake/inbox-agent-waker';
 import { POLLING_AGENT, createHarness, firstCallArgument, type WakerHarness } from './waker-fixtures';
@@ -44,5 +44,19 @@ describe('inbox agent waker', () => {
   it('sends no note for an agent without a stored wake', async () => {
     expect(await notify()).toBe(WakeOutcome.Unreached);
     expect(deliverToOwner).not.toHaveBeenCalled();
+  });
+
+  it('logs a failed note, leaves the inbox notice to core and does not throw', async () => {
+    await harness.wake.repository.saveWake({
+      wake: storedWakeOf({
+        agent: POLLING_AGENT,
+        mode: WakeMode.Scheduled,
+        intervalMinutes: 60,
+        ownerLocale: OwnerLocale.PortugueseBrazil,
+      }),
+    });
+    deliverToOwner.mockRejectedValue(new Error('boom'));
+    expect(await notify()).toBe(WakeOutcome.Unreached);
+    expect(harness.observer.events).toMatchObject([{ name: WakeLogEventName.NoticeFailed, agent: POLLING_AGENT }]);
   });
 });

@@ -4,6 +4,7 @@ import { storedWakeOf } from '@zapbip/core/wake-testing';
 import {
   AgentWakeReason,
   ChannelErrorKind,
+  DeliveryState,
   HOUR_MS,
   MessageKind,
   OwnerLocale,
@@ -14,7 +15,7 @@ import {
 } from '@zapbip/types';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createScheduledAgentWaker } from '../../src/adapters/wake/scheduled-agent-waker';
-import { POLLING_AGENT, createHarness, firstCallArgument, type WakerHarness } from './waker-fixtures';
+import { POLLING_AGENT, createHarness, firstCallArgument, ownerTextOf, type WakerHarness } from './waker-fixtures';
 
 const { deliverToOwner } = vi.hoisted(() => ({ deliverToOwner: vi.fn() }));
 
@@ -102,6 +103,14 @@ describe('scheduled agent waker', () => {
     deliverToOwner.mockRejectedValue(failure);
     expect(await notify({ reason: AgentWakeReason.MessageWaiting })).toBe(WakeOutcome.Woken);
     expect(harness.observer.events).toMatchObject([{ name: WakeLogEventName.NoticeFailed, agent: POLLING_AGENT }]);
+  });
+
+  it('does not log a failure for a note that stayed queued', async () => {
+    await scheduleAgent({ ownerLocale: OwnerLocale.PortugueseBrazil });
+    deliverToOwner.mockRejectedValue(new InboxError({ code: ChannelErrorKind.DeliveryFailed, message: 'delivery failed for text' }));
+    harness.findMessage.mockResolvedValue({ ...ownerTextOf({}), delivery: DeliveryState.Queued });
+    expect(await notify({ reason: AgentWakeReason.MessageWaiting })).toBe(WakeOutcome.Woken);
+    expect(harness.observer.events).toEqual([]);
   });
 
   it('logs a missing stored wake instead of throwing', async () => {
