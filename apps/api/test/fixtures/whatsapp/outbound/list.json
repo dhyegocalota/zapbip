@@ -1,0 +1,24 @@
+{
+  "messaging_product": "whatsapp",
+  "recipient_type": "individual",
+  "to": "5511900000001",
+  "type": "interactive",
+  "interactive": {
+    "type": "list",
+    "body": { "text": "Qual ambiente?" },
+    "action": {
+      "button": "Ver opções",
+      "sections": [
+        {
+          "title": "Opções",
+          "rows": [
+            { "id": "qst_1:0", "title": "Produção" },
+            { "id": "qst_1:1", "title": "Staging", "description": "Ambiente de testes" },
+            { "id": "qst_1:2", "title": "Local" },
+            { "id": "qst_1:3", "title": "Sandbox" }
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,5 +1,5 @@
 import { DeliveryState } from '@zapbip/types';
-import { QUESTION_RETENTION_MS, RECEIPT_RETENTION_MS } from '../constants';
+import { SENDING_STALE_MS, QUESTION_RETENTION_MS, RECEIPT_RETENTION_MS } from '../constants';
 import { isQueuedMessageExpired } from './flush-queue';
 import type { SweepExpiredInput, SweepExpiredResult } from './types';
 
@@ -11,6 +11,7 @@ export async function sweepExpired(input: SweepExpiredInput): Promise<SweepExpir
     await mediaStore.delete({ accountId, mediaIds });
     await repository.deleteMedia({ mediaIds });
   }
+  await repository.releaseStaleClaims({ claimedBefore: now - SENDING_STALE_MS });
   const queued = await repository.listQueued();
   await Promise.all(
     queued

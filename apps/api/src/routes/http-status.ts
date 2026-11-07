@@ -10,4 +10,13 @@ export const ERROR_STATUS: Record<InboxErrorCode | ChannelErrorKind, ErrorHttpSt
   [InboxErrorCode.UploadExpired]: HttpStatus.Gone,
   [InboxErrorCode.UploadUnavailable]: HttpStatus.Conflict,
   [ChannelErrorKind.DeliveryFailed]: HttpStatus.BadGateway,
+  [ChannelErrorKind.WindowClosed]: HttpStatus.BadGateway,
+  [ChannelErrorKind.RateLimited]: HttpStatus.BadGateway,
+  [ChannelErrorKind.Restricted]: HttpStatus.BadGateway,
+  [ChannelErrorKind.ReactionRejected]: HttpStatus.BadGateway,
+  [ChannelErrorKind.MediaRejected]: HttpStatus.BadGateway,
+  [ChannelErrorKind.TemplateRejected]: HttpStatus.BadGateway,
+  [ChannelErrorKind.Timeout]: HttpStatus.BadGateway,
+  [ChannelErrorKind.Auth]: HttpStatus.BadGateway,
+  [ChannelErrorKind.Unknown]: HttpStatus.BadGateway,
 };

@@ -1,0 +1,12 @@
+{
+  "from": "5511900000001",
+  "id": "wamid.FORWARDED",
+  "timestamp": "1762430400",
+  "type": "text",
+  "text": {
+    "body": "Oi"
+  },
+  "context": {
+    "forwarded": true
+  }
+}

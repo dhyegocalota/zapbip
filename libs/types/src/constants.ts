@@ -18,6 +18,7 @@ export const INSTALL_SELF_TEST_TEXT: Record<OwnerLocale, string> = {
   [OwnerLocale.PortugueseBrazil]: '✅ instalado',
   [OwnerLocale.EnglishUs]: '✅ installed',
 };
+export const BYTES_PER_KILOBYTE = 1_000;
 export const COMPANY_FACT_UNSET = 'COMPANY_FACT_UNSET';
 export const COMPANY = {
   tradeName: 'Logic Bit',

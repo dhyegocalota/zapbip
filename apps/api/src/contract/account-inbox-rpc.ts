@@ -1,5 +1,7 @@
 import type {
   AgentName,
+  ApplyStatusInput,
+  ApplyStatusResult,
   AskInput,
   AskResult,
   CheckInboxInput,
@@ -11,6 +13,7 @@ import type {
   ReactInput,
   ReceiveResult,
   OwnerInboundMessage,
+  ReceiveChannelInput,
   SendContactsInput,
   SendLocationInput,
   SendMediaInput,
@@ -61,6 +64,9 @@ export interface AccountInboxRpc extends WakeRpc {
     ownerMessage: OwnerInboundMessage;
   }): Promise<CallOutcome<{ messageId: string | null; agent: string | null; duplicate: boolean }>>;
   listWakeModes(): Promise<WakeModeEntry[]>;
+  receiveChannelMessage(input: AgentRequest<ReceiveChannelInput>): Promise<CallOutcome<ReceiveResult>>;
+  hasChannelReceipt(input: { channelMessageId: string }): Promise<CallOutcome<boolean>>;
+  applyChannelStatus(input: AgentRequest<ApplyStatusInput>): Promise<CallOutcome<ApplyStatusResult>>;
 }
 
 export interface DevAccountInboxRpc extends AccountInboxRpc, DevWakeRpc {

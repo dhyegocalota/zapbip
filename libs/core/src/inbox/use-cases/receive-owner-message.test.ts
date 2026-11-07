@@ -107,6 +107,7 @@ describe('receiveOwnerMessage routing', () => {
       window: {
         lastOwnerMessageAt: null,
         noticeSentForClosedWindow: false,
+        closedAt: null,
         noticeRetryLocale: null,
         noticeRetryAt: null,
         noticeRetryAttempt: 0,
@@ -138,6 +139,40 @@ describe('receiveOwnerMessage routing', () => {
     await registerAgents({ environment, agents: ['alpha'] });
     const result = await receive({ environment, content: { kind: MessageKind.Text, text: '@alpha oi' }, forwarded: true });
     expect(await environment.repository.findMessage({ messageId: result.messageId! })).toMatchObject({ forwarded: true });
+  });
+
+  test('CU-199 a forwarded message does not answer an open ask; it is delivered as a normal message', async () => {
+    const environment = await createEnvironment();
+    const question = await askAndAbandon({ environment });
+    const result = await receive({ environment, content: { kind: MessageKind.Text, text: 'yes' }, forwarded: true });
+    expect((await environment.repository.findQuestion({ questionId: question.questionId }))?.answer).toBeNull();
+    expect(await environment.repository.findMessage({ messageId: result.messageId! })).toMatchObject({
+      agent: question.agent,
+      text: 'yes',
+      forwarded: true,
+      readByAgent: false,
+    });
+  });
+
+  test('CU-199 a forwarded tap on an open ask does not answer it; it is delivered as a normal message', async () => {
+    const environment = await createEnvironment();
+    const question = await askAndAbandon({ environment });
+    const result = await receive({
+      environment,
+      content: {
+        kind: MessageKind.Choice,
+        optionId: formatOptionId({ questionId: question.questionId, optionIndex: 1 }),
+        optionTitle: 'Não',
+        optionDescription: null,
+      },
+      forwarded: true,
+    });
+    expect((await environment.repository.findQuestion({ questionId: question.questionId }))?.answer).toBeNull();
+    expect(await environment.repository.findMessage({ messageId: result.messageId! })).toMatchObject({
+      agent: question.agent,
+      forwarded: true,
+      readByAgent: false,
+    });
   });
 
   test('CU-67 CU-136 a tap on an open question answers it with the option title', async () => {
@@ -507,6 +542,7 @@ describe('receiveOwnerMessage window and queue', () => {
       window: {
         lastOwnerMessageAt: START_AT - WINDOW_MS,
         noticeSentForClosedWindow: true,
+        closedAt: null,
         noticeRetryLocale: null,
         noticeRetryAt: null,
         noticeRetryAttempt: 0,

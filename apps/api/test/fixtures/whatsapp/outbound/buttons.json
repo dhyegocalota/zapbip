@@ -1,0 +1,17 @@
+{
+  "messaging_product": "whatsapp",
+  "recipient_type": "individual",
+  "to": "5511900000001",
+  "type": "interactive",
+  "interactive": {
+    "type": "button",
+    "body": { "text": "Fazer o deploy?" },
+    "action": {
+      "buttons": [
+        { "type": "reply", "reply": { "id": "qst_1:0", "title": "Sim" } },
+        { "type": "reply", "reply": { "id": "qst_1:1", "title": "Não" } },
+        { "type": "reply", "reply": { "id": "qst_1:2", "title": "Depois" } }
+      ]
+    }
+  }
+}

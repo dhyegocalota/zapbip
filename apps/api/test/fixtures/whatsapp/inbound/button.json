@@ -1,0 +1,14 @@
+{
+  "from": "5511900000001",
+  "id": "wamid.BUTTON",
+  "timestamp": "1762430400",
+  "type": "button",
+  "context": {
+    "from": "1000000000000001",
+    "id": "wamid.NOTICE"
+  },
+  "button": {
+    "payload": "zapbip_open_window",
+    "text": "Abrir"
+  }
+}

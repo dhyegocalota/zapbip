@@ -1,0 +1,19 @@
+{
+  "messaging_product": "whatsapp",
+  "recipient_type": "individual",
+  "to": "5511900000001",
+  "type": "template",
+  "template": {
+    "name": "zapbip_agent_notice",
+    "language": { "code": "en_US" },
+    "components": [
+      {
+        "type": "body",
+        "parameters": [
+          { "type": "text", "text": "Agente de teste" },
+          { "type": "text", "text": "Mensagem de exemplo" }
+        ]
+      }
+    ]
+  }
+}

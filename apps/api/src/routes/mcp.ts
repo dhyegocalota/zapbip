@@ -1,3 +1,4 @@
+import { HttpStatus } from '@zapbip/types';
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
 import { Hono, type Context } from 'hono';
 import { createPlatformClock } from '../adapters/platform/clock';
@@ -10,7 +11,6 @@ import { createConnectionRecorders, recordConnectionActivity } from '../mcp/clie
 import { BEARER_PREFIX, MCP_METHODS } from '../mcp/constants';
 import { resolveConnection, type ResolvedConnection } from './resolve-connection';
 import { createConnectionServer } from '../mcp/server';
-import { HttpStatus } from './http-status';
 
 type McpContext = Context<{ Bindings: Bindings }>;
 

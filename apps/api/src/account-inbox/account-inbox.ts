@@ -11,6 +11,8 @@ import type {
   CreateUploadResult,
   GetMessagesInput,
   GetMessagesResult,
+  MediaStore,
+  MessageSender,
   ReactInput,
   SendContactsInput,
   SendLocationInput,
@@ -38,9 +40,11 @@ import {
 } from '@zapbip/types';
 import { D1AccountDirectory } from '../adapters/d1/d1-account-directory';
 import { D1ConnectionRegistry } from '../adapters/d1/d1-connection-registry';
-import { createFakeWhatsAppSender, type FakeWhatsAppSender } from '../adapters/fake/fake-whatsapp-sender';
 import { createConnectionSecrets } from '../adapters/platform/connection-secrets';
 import { createInstallCodeVault } from '../adapters/platform/install-code-vault';
+import { D1ChannelRestrictions } from '../adapters/d1/d1-channel-restrictions';
+import { D1MessageIndex } from '../adapters/d1/d1-message-index';
+import { findOwnerByAccountId } from '../adapters/d1/d1-owner-directory';
 import { createIdGenerator } from '../adapters/platform/ids';
 import { loadDurableClock, type DurableClock } from '../adapters/platform/clock';
 import { mediaStoreOf } from '../adapters/r2/r2-media-store';
@@ -49,6 +53,9 @@ import { createDispatchingAgentWaker } from '../adapters/wake/dispatching-agent-
 import { createFetchWakeTransport } from '../adapters/wake/fetch-wake-transport';
 import { createLocalConnectorWaker } from '../adapters/wake/local-connector-waker';
 import { createNoneWaker } from '../adapters/wake/none-waker';
+import { createCloudApiMessageSender } from '../adapters/whatsapp/cloud-api-message-sender';
+import { createGraphClient } from '../adapters/whatsapp/graph-client';
+import { readWhatsAppEnvironment } from '../adapters/whatsapp/read-whatsapp-env';
 import { createWebhookAgentWaker } from '../adapters/wake/webhook-agent-waker';
 import type { AccountInboxRpc, AgentRequest, CallOutcome, WakeModeEntry } from '../contract/account-inbox-rpc';
 import type { AccountOwnerRpc } from '../contract/account-owner-rpc';
@@ -100,11 +107,11 @@ type ReceiveAccountMessageRequest = Parameters<AccountOwnerRpc['receiveAccountMe
 type ReceiveOwnerMessageRequest = Parameters<AccountInboxRpc['receiveOwnerMessage']>[0];
 
 export class AccountInbox extends DurableObject<Bindings> implements AccountInboxRpc, AccountOwnerRpc {
-  protected sender!: FakeWhatsAppSender;
+  protected sender!: MessageSender;
   protected clock!: DurableClock;
   protected wake!: WakeDependencies;
   protected readonly dueTimeProviders: DueTimeProvider[] = [];
-  private accountId!: string;
+  protected accountId!: string;
   private dependencies!: CoreDependencies;
   private accountDependencies!: AccountDependencies;
   private isTombstoned = false;
@@ -123,13 +130,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     this.accountId = accountId;
     this.clock = await loadDurableClock({ storage: this.ctx.storage, onAdvanced: () => this.armAlarm() });
     const mediaStore = mediaStoreOf({ bindings: this.env, clock: this.clock });
-    this.sender = createFakeWhatsAppSender({
-      storage: this.ctx.storage,
-      clock: this.clock,
-      mediaStore,
-      accountId,
-      origin: this.env.PUBLIC_ORIGIN,
-    });
+    this.sender = this.createSender({ mediaStore });
     this.wake = createWakeDependencies({
       env: this.env,
       accountId,
@@ -191,6 +192,27 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     if (restore === null) return WakeOutcome.Unreached;
     await inbox.detachLocalConnector({ dependencies: this.dependencies, wake: this.wake, agent, remainingSockets: 0 });
     return this.dependencies.waker.notify(request);
+  }
+
+  protected createSender(input: { mediaStore: MediaStore }): MessageSender {
+    const whatsapp = readWhatsAppEnvironment({ env: this.env });
+    const database = this.env.CONNECTIONS;
+    return createCloudApiMessageSender({
+      accountId: this.accountId,
+      graph: createGraphClient({
+        baseUrl: whatsapp.graphBaseUrl,
+        accessToken: whatsapp.accessToken,
+        developmentMediaOrigin: null,
+        fetcher: fetch,
+      }),
+      findOwnerByAccountId: ({ accountId }) => findOwnerByAccountId({ database, accountId }),
+      messageIndex: new D1MessageIndex({ database }),
+      restrictions: new D1ChannelRestrictions({ database, phoneNumberId: whatsapp.phoneNumberId }),
+      mediaStore: input.mediaStore,
+      publicOrigin: this.env.PUBLIC_ORIGIN,
+      phoneNumberId: whatsapp.phoneNumberId,
+      clock: this.clock,
+    });
   }
 
   private createExpiryProvider(): DueTimeProvider {
@@ -491,5 +513,20 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       },
       describe: (value) => ({ event: value.duplicate ? LogEvent.OwnerMessageDuplicate : LogEvent.OwnerMessage }),
     });
+  }
+
+  receiveChannelMessage(input: AgentRequest<inbox.ReceiveChannelInput>): Promise<CallOutcome<inbox.ReceiveResult>> {
+    return this.outcome({
+      run: () => inbox.receiveChannelMessage({ ...input, dependencies: this.dependencies }),
+      describe: (value) => ({ event: value.duplicate ? LogEvent.OwnerMessageDuplicate : LogEvent.OwnerMessage }),
+    });
+  }
+
+  hasChannelReceipt(input: { channelMessageId: string }): Promise<CallOutcome<boolean>> {
+    return this.outcome({ run: () => inbox.hasChannelReceipt({ ...input, dependencies: this.dependencies }) });
+  }
+
+  applyChannelStatus(input: AgentRequest<inbox.ApplyStatusInput>): Promise<CallOutcome<inbox.ApplyStatusResult>> {
+    return this.outcome({ run: () => inbox.applyStatus({ ...input, dependencies: this.dependencies }) });
   }
 }

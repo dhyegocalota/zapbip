@@ -1,6 +1,7 @@
 import { AccountState, OwnerLocale } from '@zapbip/types';
 import coreMigrationSql from '../../migrations/0001_core.sql?raw';
 import accountsMigrationSql from '../../migrations/0002_accounts_and_keys.sql?raw';
+import channelMigrationSql from '../../migrations/0004_whatsapp_channel.sql?raw';
 import { hashConnectionSecret } from '../../src/adapters/platform/hash';
 import { testEnv } from './workers-env';
 
@@ -24,9 +25,14 @@ export async function applyAccountsMigration(): Promise<void> {
   await applyMigration({ sql: accountsMigrationSql });
 }
 
+export async function applyChannelMigration(): Promise<void> {
+  await applyMigration({ sql: channelMigrationSql });
+}
+
 export async function applyDirectoryMigration(): Promise<void> {
   await applyCoreMigration();
   await applyAccountsMigration();
+  await applyChannelMigration();
 }
 
 export async function seedAccount(input: { accountId: string; state?: AccountState }): Promise<void> {

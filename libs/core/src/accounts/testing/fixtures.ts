@@ -29,6 +29,7 @@ export async function createAccountFixture(
     window: {
       lastOwnerMessageAt: environment.clock.now(),
       noticeSentForClosedWindow: false,
+      closedAt: null,
       noticeRetryLocale: null,
       noticeRetryAt: null,
       noticeRetryAttempt: 0,
