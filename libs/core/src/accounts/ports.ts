@@ -19,6 +19,7 @@ export interface AccountDirectory {
     accountId: string;
     initialState: AccountState;
     locale: OwnerLocale;
+    homeNumberId: string;
     createdAt: number;
     newAccountsCap: { since: number; limit: number };
   }): Promise<AccountLookup | null>;

@@ -21,7 +21,7 @@ export const TEST_REGISTERED_NUMBER: RegisteredNumber = {
   metaAppRef: TEST_META_APP_REF,
 };
 
-const TEST_DISPLAY_NUMBER = '5511900000000';
+export const TEST_DISPLAY_NUMBER = '5511900000000';
 const SEAL_KEY_VERSION = 1;
 
 export type SeededWhatsAppNumber = {

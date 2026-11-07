@@ -15,6 +15,7 @@ export type AccountRecord = {
   waId: string;
   state: AccountState;
   locale: OwnerLocale;
+  homeNumberId: string | null;
 };
 
 export type AccountLookup = { account: AccountRecord; created: boolean };

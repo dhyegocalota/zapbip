@@ -7,7 +7,7 @@ import { runInDurableObject } from 'cloudflare:test';
 import { createSqliteFirstMessageClaim } from '../../src/account-inbox/first-message-claim';
 import { accountInboxStub } from '../support/workers-env';
 import { applyDirectoryMigration, seedConnection, seedOwnerIdentity } from '../support/seed';
-import { seedWhatsAppNumber } from '../support/whatsapp-numbers';
+import { seedWhatsAppNumber, TEST_NUMBER_ID } from '../support/whatsapp-numbers';
 
 export const ORIGIN = 'http://example.com';
 export const LINK_VALIDITY_MS = 15 * MINUTE_MS;
@@ -45,7 +45,7 @@ export async function seedAccount(input: { agent: string }): Promise<SeededAccou
   const accountId = `acc_${crypto.randomUUID()}`;
   const phone = `${PHONE_PREFIX}${randomDigits(PHONE_SUFFIX_DIGITS)}`;
   const secret = randomSecret();
-  await seedOwnerIdentity({ accountId, phone, ownerLocale: OwnerLocale.PortugueseBrazil });
+  await seedOwnerIdentity({ accountId, phone, ownerLocale: OwnerLocale.PortugueseBrazil, numberId: TEST_NUMBER_ID });
   await seedConnection({ accountId, agent: input.agent, secret });
   await runInDurableObject(accountInboxStub({ accountId }), (_instance, state) =>
     createSqliteFirstMessageClaim({ storage: state.storage }).claim({ channelMessageId: SEED_FIRST_MESSAGE_ID }),

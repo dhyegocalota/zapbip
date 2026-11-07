@@ -41,15 +41,22 @@ export async function applyDirectoryMigration(): Promise<void> {
   await applyBackofficeMigration();
 }
 
-export async function seedAccount(input: { accountId: string; state?: AccountState }): Promise<void> {
-  const { accountId, state = AccountState.Active } = input;
-  await testEnv.CONNECTIONS.prepare('INSERT INTO accounts (id, state, created_at) VALUES (?, ?, ?) ON CONFLICT (id) DO NOTHING')
-    .bind(accountId, state, SEED_CREATED_AT)
+export async function seedAccount(input: { accountId: string; state?: AccountState; numberId?: string | null }): Promise<void> {
+  const { accountId, state = AccountState.Active, numberId = null } = input;
+  await testEnv.CONNECTIONS.prepare(
+    'INSERT INTO accounts (id, state, created_at, number_id) VALUES (?, ?, ?, ?) ON CONFLICT (id) DO NOTHING',
+  )
+    .bind(accountId, state, SEED_CREATED_AT, numberId)
     .run();
 }
 
-export async function seedOwnerIdentity(input: { accountId: string; phone: string; ownerLocale: OwnerLocale }): Promise<void> {
-  await seedAccount({ accountId: input.accountId });
+export async function seedOwnerIdentity(input: {
+  accountId: string;
+  phone: string;
+  ownerLocale: OwnerLocale;
+  numberId?: string | null;
+}): Promise<void> {
+  await seedAccount({ accountId: input.accountId, numberId: input.numberId });
   await testEnv.CONNECTIONS.prepare(
     'INSERT INTO owner_identities (wa_id, account_id, from_user_id, locale, created_at) VALUES (?, ?, NULL, ?, ?)',
   )

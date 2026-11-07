@@ -3,7 +3,8 @@ import type { AccountState, OwnerLocale } from '@zapbip/types';
 import { LogEvent } from '../../contract/log';
 import { logEvent } from '../../log';
 
-const SELECT_ACCOUNT = `SELECT accounts.id AS accountId, owner_identities.wa_id AS waId, accounts.state AS state, owner_identities.locale AS locale
+const SELECT_ACCOUNT = `SELECT accounts.id AS accountId, owner_identities.wa_id AS waId, accounts.state AS state, owner_identities.locale AS locale,
+  accounts.number_id AS homeNumberId
   FROM owner_identities
   JOIN accounts ON accounts.id = owner_identities.account_id`;
 const FIND_BY_WA_ID_STATEMENT = SELECT_ACCOUNT + ' WHERE owner_identities.wa_id = ?';
@@ -41,6 +42,7 @@ export class D1AccountDirectory implements AccountDirectory {
     accountId: string;
     initialState: AccountState;
     locale: OwnerLocale;
+    homeNumberId: string;
     createdAt: number;
     newAccountsCap: { since: number; limit: number };
   }): Promise<AccountLookup | null> {

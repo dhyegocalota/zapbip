@@ -4,6 +4,7 @@ import { reset } from 'cloudflare:test';
 import { D1AccountDirectory } from '../../src/adapters/d1/d1-account-directory';
 import { LogEvent } from '../../src/contract/log';
 import { applyDirectoryMigration, SEED_CREATED_AT, seedAccount, seedConnection, seedOwnerIdentity } from '../support/seed';
+import { seedWhatsAppNumber, TEST_NUMBER_ID } from '../support/whatsapp-numbers';
 import { testEnv } from '../support/workers-env';
 
 const WA_ID = '5511900000000';
@@ -20,13 +21,14 @@ function directory(): D1AccountDirectory {
   return new D1AccountDirectory({ database: testEnv.CONNECTIONS });
 }
 
-function create(input: { waId: string; accountId: string; since?: number; initialState?: AccountState }) {
-  const { since = CAP_SINCE, initialState = AccountState.Waitlisted } = input;
+function create(input: { waId: string; accountId: string; since?: number; initialState?: AccountState; homeNumberId?: string }) {
+  const { since = CAP_SINCE, initialState = AccountState.Waitlisted, homeNumberId = TEST_NUMBER_ID } = input;
   return directory().findOrCreateByWaId({
     waId: input.waId,
     accountId: input.accountId,
     initialState,
     locale: OwnerLocale.PortugueseBrazil,
+    homeNumberId,
     createdAt: CREATED_AT,
     newAccountsCap: { since, limit: CAP_LIMIT },
   });
@@ -49,7 +51,10 @@ async function seedRecentAccounts(input: { count: number; createdAt: number }): 
   await testEnv.CONNECTIONS.batch(statements);
 }
 
-beforeEach(applyDirectoryMigration);
+beforeEach(async () => {
+  await applyDirectoryMigration();
+  await seedWhatsAppNumber();
+});
 afterEach(() => {
   vi.restoreAllMocks();
   return reset();
@@ -58,11 +63,31 @@ afterEach(() => {
 describe('D1 account directory', () => {
   it('creates the account and its owner identity', async () => {
     expect(await create({ waId: WA_ID, accountId: 'acc_1' })).toEqual({
-      account: { accountId: 'acc_1', waId: WA_ID, state: AccountState.Waitlisted, locale: OwnerLocale.PortugueseBrazil },
+      account: {
+        accountId: 'acc_1',
+        waId: WA_ID,
+        state: AccountState.Waitlisted,
+        locale: OwnerLocale.PortugueseBrazil,
+        homeNumberId: TEST_NUMBER_ID,
+      },
       created: true,
     });
     expect(await countRows({ table: 'accounts' })).toBe(1);
     expect(await countRows({ table: 'owner_identities' })).toBe(1);
+  });
+
+  it('writes the home number in the same insert as the account', async () => {
+    await create({ waId: WA_ID, accountId: 'acc_1' });
+    const row = await testEnv.CONNECTIONS.prepare('SELECT number_id AS numberId FROM accounts WHERE id = ?')
+      .bind('acc_1')
+      .first<{ numberId: string | null }>();
+    expect(row).toEqual({ numberId: TEST_NUMBER_ID });
+  });
+
+  it('creates neither the account nor the identity when the home number is not registered', async () => {
+    await expect(create({ waId: WA_ID, accountId: 'acc_1', homeNumberId: 'num_missing' })).rejects.toThrow();
+    expect(await countRows({ table: 'accounts' })).toBe(0);
+    expect(await countRows({ table: 'owner_identities' })).toBe(0);
   });
 
   it('returns the existing account for the same wa_id without a new row', async () => {
@@ -135,7 +160,13 @@ describe('D1 account directory', () => {
     await create({ waId: WA_ID, accountId: 'acc_1', initialState: AccountState.Deleting });
     await create({ waId: OTHER_WA_ID, accountId: 'acc_2', initialState: AccountState.Suspended });
     expect(await directory().listByState({ state: AccountState.Deleting })).toEqual([
-      { accountId: 'acc_1', waId: WA_ID, state: AccountState.Deleting, locale: OwnerLocale.PortugueseBrazil },
+      {
+        accountId: 'acc_1',
+        waId: WA_ID,
+        state: AccountState.Deleting,
+        locale: OwnerLocale.PortugueseBrazil,
+        homeNumberId: TEST_NUMBER_ID,
+      },
     ]);
   });
 });

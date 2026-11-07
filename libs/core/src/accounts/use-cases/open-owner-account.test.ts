@@ -6,6 +6,8 @@ import { BRAZIL_WA_ID, UNITED_STATES_WA_ID } from '../testing/fixtures';
 import { openOwnerAccount } from './open-owner-account';
 
 const NOW = 10 * DAY_MS;
+const HOME_NUMBER_ID = 'num_home';
+const OTHER_NUMBER_ID = 'num_other';
 
 async function seedAccounts(input: { count: number; createdAt: number }) {
   const environment = createInMemoryAccountDependencies();
@@ -16,6 +18,7 @@ async function seedAccounts(input: { count: number; createdAt: number }) {
         accountId: `seed_${index}`,
         initialState: AccountState.Active,
         locale: OwnerLocale.EnglishUs,
+        homeNumberId: HOME_NUMBER_ID,
         createdAt: input.createdAt,
         newAccountsCap: { since: 0, limit: NEW_ACCOUNTS_PER_DAY_LIMIT + input.count },
       }),
@@ -24,9 +27,14 @@ async function seedAccounts(input: { count: number; createdAt: number }) {
   return environment;
 }
 
-function openLookup(input: { environment: Awaited<ReturnType<typeof seedAccounts>>; waId: string; waitlistEnabled?: boolean }) {
-  const { environment, waId, waitlistEnabled = false } = input;
-  return openOwnerAccount({ dependencies: environment.lifecycle, waId, waitlistEnabled, createdAt: NOW });
+function openLookup(input: {
+  environment: Awaited<ReturnType<typeof seedAccounts>>;
+  waId: string;
+  homeNumberId?: string;
+  waitlistEnabled?: boolean;
+}) {
+  const { environment, waId, homeNumberId = HOME_NUMBER_ID, waitlistEnabled = false } = input;
+  return openOwnerAccount({ dependencies: environment.lifecycle, waId, homeNumberId, waitlistEnabled, createdAt: NOW });
 }
 
 async function open(input: { environment: Awaited<ReturnType<typeof seedAccounts>>; waId: string; waitlistEnabled?: boolean }) {
@@ -35,6 +43,19 @@ async function open(input: { environment: Awaited<ReturnType<typeof seedAccounts
 }
 
 describe('openOwnerAccount', () => {
+  test('a new account is bound to the home number it was opened on', async () => {
+    const environment = await seedAccounts({ count: 0, createdAt: NOW });
+    const account = await open({ environment, waId: BRAZIL_WA_ID });
+    expect(account?.homeNumberId).toBe(HOME_NUMBER_ID);
+  });
+
+  test('an existing account keeps its first home number when opened on another', async () => {
+    const environment = await seedAccounts({ count: 0, createdAt: NOW });
+    await open({ environment, waId: BRAZIL_WA_ID });
+    const lookup = await openLookup({ environment, waId: BRAZIL_WA_ID, homeNumberId: OTHER_NUMBER_ID });
+    expect(lookup?.account.homeNumberId).toBe(HOME_NUMBER_ID);
+  });
+
   test('a Brazilian number starts waitlisted in pt_BR when the flag is on', async () => {
     const environment = await seedAccounts({ count: 0, createdAt: NOW });
     const account = await open({ environment, waId: BRAZIL_WA_ID, waitlistEnabled: true });

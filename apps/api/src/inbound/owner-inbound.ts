@@ -65,6 +65,7 @@ export async function receiveOwnerInbound(input: OwnerInboundInput): Promise<Rec
   const lookup = await openOwnerAccount({
     dependencies,
     waId,
+    homeNumberId: input.number.numberId,
     waitlistEnabled: readWaitlistEnabled({ bindings }),
     createdAt: createPlatformClock().now(),
   });
