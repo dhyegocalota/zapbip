@@ -4,46 +4,54 @@ description: From your WhatsApp to your first message from your AI.
 ---
 
 import { Chat } from '/snippets/chat.jsx';
+import OfficialNumber from '/snippets/official-number.mdx';
+import InstallPrompt from '/snippets/install-prompt.mdx';
 
-<Steps>
-  <Step title="Say hi to the zapbip number">
-    Open WhatsApp and send `hi` to the zapbip number. That is how zapbip knows the phone is yours.
-  </Step>
-  <Step title="Ask for a new agent">
-    Send `new agent` and a name, for example `new agent claude`.
-  </Step>
-  <Step title="Get your one-line prompt">
-    zapbip answers with a single line made for you:
+1. **Message the zapbip number on WhatsApp.** Send any text, for example `hi`. Your first message creates your account and proves the phone is yours.
 
-    <Chat
-      messages={[
-        { you: true, text: 'hi', time: '09:00' },
-        { name: 'zapbip', text: 'Hi! This phone is now yours. Send "new agent" and a name to connect your first AI.', time: '09:00' },
-        { you: true, text: 'new agent claude', time: '09:01' },
-        { name: 'zapbip', text: 'Paste this into Claude:', time: '09:01' },
-        { name: 'zapbip', text: 'Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_K7P2QXm9aTfLw3VbN8cYhE and follow the instructions.', time: '09:01' },
-      ]}
-    />
+   <OfficialNumber />
 
-  </Step>
-  <Step title="Paste it into your AI">
-    Open ChatGPT, Claude, Grok or the AI you use, and paste the line. Your AI reads the instructions and sets itself up.
-  </Step>
-  <Step title="Your AI messages you">
-    It sends you a first message on WhatsApp to confirm it is connected.
+   <Chat
+     messages={[
+       { you: true, text: 'hi', time: '09:00' },
+       { name: 'zapbip', text: 'No agent is connected. Your message is saved.', time: '09:00' },
+     ]}
+   />
 
-    <Chat messages={[{ name: 'Claude', text: '✅ Installed. I can reach you here now.', time: '09:03' }]} />
+2. **Ask for a new agent.** An agent is one AI you connect. Send `new agent` and a name, for example `new agent claude`.
 
-  </Step>
-</Steps>
+3. **Get your prompt.** zapbip answers with one or two lines made for you.
+
+   <Chat
+     messages={[
+       { you: true, text: 'new agent claude', time: '09:01' },
+       {
+         name: 'zapbip',
+         text: 'Agent claude created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate claude".',
+         time: '09:01',
+       },
+     ]}
+   />
+
+4. **Paste it into your AI.** Open ChatGPT, Claude, Grok or the AI you use, and paste the line zapbip sent you. It looks like this:
+
+   <InstallPrompt />
+
+   Your AI reads the instructions online and sets itself up.
+
+5. **Your AI messages you.** It sends a first message on WhatsApp to confirm it is connected.
+
+   <Chat messages={[{ name: 'Claude', text: '✅ installed', time: '09:03' }]} />
 
 <Note>
-  claude.ai, ChatGPT and Grok on the web require one thing from you: your AI will ask you to paste a link into its settings. Follow what it
-  tells you; it is a rule of those apps.
+  claude.ai, ChatGPT and Grok on the web ask one thing of you: your AI will tell you to add a connector in its settings. Follow what it
+  says; it is a rule of those apps.
 </Note>
 
 ## What to expect
 
-- One WhatsApp number for all your AIs.
-- Each AI gets its own line, so you can tell them apart.
-- The line works once and expires after a short time.
+- One WhatsApp number for all your AIs, and a line for each one so you can tell them apart.
+- The line works once and expires after 30 minutes. If it expires, send `rotate claude` for a new one.
+- You can write first at any time, and your AI keeps listening with no time limit.
+- On the waitlist? See [the FAQ](/help/faq) for what happens next.
+- Pick your AI and follow its page in [Supported agents](/agents/supported-agents).

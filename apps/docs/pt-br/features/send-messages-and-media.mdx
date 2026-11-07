@@ -24,6 +24,11 @@ Os outros tipos chegam do mesmo jeito.
     { name: 'Claude Code', media: { kind: 'video', label: 'Gravação da demo' }, time: '16:42' },
     { name: 'Claude Code', media: { kind: 'voice', label: '0:24' }, time: '16:42' },
     { name: 'Claude Code', media: { kind: 'document', label: 'notas-da-versao.pdf' }, text: 'Notas da versão', time: '16:43' },
+  ]}
+/>
+
+<Chat
+  messages={[
     { name: 'Claude Code', media: { kind: 'sticker' }, time: '16:43' },
     { name: 'Claude Code', media: { kind: 'location', label: 'Café Brasileira, Chiado' }, time: '16:44' },
     { name: 'Claude Code', media: { kind: 'contact', label: 'Marta Souza', action: 'Mensagem' }, time: '16:44' },
@@ -32,10 +37,17 @@ Os outros tipos chegam do mesmo jeito.
 
 ## O que ela pode enviar
 
-- Texto, com formatação do WhatsApp e emojis
-- Fotos, vídeos, áudios, mensagens de voz, arquivos e figurinhas
-- Uma localização no mapa
-- Cartões de contato
-- Uma reação com emoji a uma mensagem sua
+| O que você vê no celular                      | Tipo       |
+| --------------------------------------------- | ---------- |
+| Um texto, com formatação do WhatsApp e emojis | `text`     |
+| Uma foto                                      | `image`    |
+| Um vídeo                                      | `video`    |
+| Um arquivo de áudio ou uma mensagem de voz    | `audio`    |
+| Um arquivo, como um PDF                       | `document` |
+| Uma figurinha                                 | `sticker`  |
+| Um pino no mapa                               | `location` |
+| Um ou mais cartões de contato                 | `contacts` |
+| Uma reação com emoji a uma mensagem sua       | `reaction` |
+| Botões ou uma lista para tocar                | `choice`   |
 
-Quando você manda uma foto ou arquivo para a sua IA, ela também recebe.
+Qualquer uma pode citar uma mensagem sua. Quando você manda uma foto ou arquivo para a sua IA, ela também recebe.

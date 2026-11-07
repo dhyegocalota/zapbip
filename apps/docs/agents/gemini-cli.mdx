@@ -3,43 +3,59 @@ title: Gemini CLI
 description: Connect Gemini CLI to your WhatsApp.
 ---
 
+import { Chat } from '/snippets/chat.jsx';
+import InstallPrompt from '/snippets/install-prompt.mdx';
+
 ## What works
 
-- Your AI sends you text, photos, videos, audio, documents, locations, contacts and reactions on WhatsApp.
-- It asks you with buttons or lists and waits for your tap.
-- Write on WhatsApp and Gemini CLI hears you while its session is open.
-- It waits for your answer as long as it takes.
+| You can                                          | Gemini CLI                     |
+| ------------------------------------------------ | ------------------------------ |
+| Receive text, photos, video, audio and documents | Yes                            |
+| Receive locations, contacts and reactions        | Yes                            |
+| Ask you with buttons or a list and wait          | Yes                            |
+| Start a conversation when you write first        | Yes, while the session is open |
+
+## How it listens
+
+Rung: Local. Gemini CLI runs the zapbip listener in a background terminal and keeps it running. When you write on WhatsApp, a new line appears there and wakes the session. Keep that terminal open: Gemini CLI has no scheduled option.
+
+```bash
+npx zapbip@0.1.0 listen
+```
+
+While a question is open, Gemini CLI waits up to 50 seconds at a time. If you have not answered, the wait ends as pending and Gemini CLI calls again, as many times as it takes, with no time limit.
+
+Run one listener at a time. A second listener replaces the first.
 
 ## Set up from zero
 
-<Steps>
-  <Step title="Message the official zapbip number">
-    Open WhatsApp and send `hi` to the official zapbip number, then `new agent gemini-cli`. [How to start](/get-started/how-to-start) shows every message.
-  </Step>
-  <Step title="Paste the prompt into Gemini CLI">
-    zapbip answers with one line made for you. Paste it into Gemini CLI:
+1. **Message the zapbip number on WhatsApp.** Send `new agent gemini-cli`. [How to start](/get-started/how-to-start) shows every message.
 
-    ```text
-    Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_K7P2QXm9aTfLw3VbN8cYhE and follow the instructions.
-    ```
+   <Chat
+     messages={[
+       { you: true, text: 'new agent gemini-cli', time: '09:00' },
+       { name: 'zapbip', text: 'Agent gemini-cli created. Paste this into your agent.', time: '09:00' },
+     ]}
+   />
 
-    Gemini CLI reads the page and follows the steps below, in order. Before it changes a file or a setting, it tells you which one and waits for your yes. The link in that page is secret, so keep it out of chats you share.
+2. **Paste the line into Gemini CLI.** zapbip answers with a line made for you:
 
-  </Step>
-  <Step title="Add zapbip to Gemini CLI">
-    After your yes, it runs `gemini mcp add --transport http --scope user zapbip <connectionLink>`.
-  </Step>
-  <Step title="Start listening">
-    It runs `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen` in a background terminal and keeps that terminal running, with no time limit. Whenever a new line appears there, it calls `check_inbox` and answers.
-  </Step>
-  <Step title="Test it">
-    In a fresh process it runs `gemini -p "Use zapbip to send ✅ installed to my WhatsApp"`. A `send_message` with ✅ installed reaches your WhatsApp. If the command fails, it stops and shows the last 20 lines. Then restart Gemini CLI.
-  </Step>
-</Steps>
+   <InstallPrompt />
 
-## How your AI listens
+3. **Say yes to each change.** Gemini CLI tells you which setting it changes and waits for your yes. Keep the link out of chats you share.
 
-- Gemini CLI runs `npx zapbip@0.1.0 listen` in a background terminal and keeps it running. When you write on WhatsApp, the new line wakes the session.
-- Gemini CLI has no scheduled option, so keep the terminal running. It has no time limit.
+4. **Add zapbip to Gemini CLI.** After your yes, it runs `gemini mcp add --transport http --scope user zapbip <connectionLink>`.
 
-There is no time limit. While a question is open, your AI asks again until you answer, for as long as it takes.
+5. **Start listening.** It runs `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen` in a background terminal and keeps that terminal running, with no time limit. Whenever a new line appears there, it calls `check_inbox` and answers.
+
+6. **Test it.** In a fresh process it runs `gemini -p "Call send_message with the text '✅ installed'"`. A `send_message` with ✅ installed reaches your WhatsApp. If the command fails, it stops and shows the last 20 lines. Then restart Gemini CLI.
+
+## Check it works
+
+Ask Gemini CLI to send `✅ installed` on WhatsApp. When it arrives, the connection works.
+
+<Chat messages={[{ name: 'Gemini CLI', text: '✅ installed', time: '09:03' }]} />
+
+If it does not arrive, restart Gemini CLI and ask again.
+
+For apps that need a manual setup, see [Connect any MCP client](/developers/any-mcp-client).

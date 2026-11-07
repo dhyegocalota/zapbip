@@ -24,12 +24,19 @@ All your AIs write from the same WhatsApp number. zapbip decides where your mess
     { name: 'Grok', text: 'Can I rebase main?', options: ['Yes', 'No'], time: '10:03' },
     { you: true, text: '@claude thanks', time: '10:04' },
     { you: true, text: 'Yes', time: '10:04' },
+  ]}
+/>
+
+`@claude thanks` goes to Claude and the tap on Yes goes to Grok.
+
+<Chat
+  messages={[
     { you: true, text: 'ok', time: '10:05' },
     { name: 'zapbip', text: 'Which AI is this for? Claude, Grok', options: ['Claude', 'Grok'], time: '10:05' },
   ]}
 />
 
-`@claude thanks` goes to Claude, the tap on Yes goes to Grok, and the plain `ok` gets a list of recent AIs to pick from.
+A plain `ok` gets a list of recent AIs to pick from.
 
 Reply to a message to talk to the AI that sent it:
 

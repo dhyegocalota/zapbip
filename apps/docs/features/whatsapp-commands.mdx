@@ -5,16 +5,16 @@ description: What you can type to the zapbip number.
 
 import { Chat } from '/snippets/chat.jsx';
 
-You manage your AIs by writing to the zapbip number. A command is a short phrase, in Portuguese or English. The language you write is the language of the answer.
+You manage your AIs by writing to the zapbip number. A command is a short phrase, in Portuguese or English. The language you write is the language of the answer. Each row shows both versions.
 
-| You want to         | Write                                               | What happens                                         |
-| ------------------- | --------------------------------------------------- | ---------------------------------------------------- |
-| Connect a new AI    | `new agent claude`                                  | zapbip answers with the prompt to paste into that AI |
-| See your AIs        | `agents`                                            | A list with the name and the date of each one        |
-| Disconnect an AI    | `revoke claude`                                     | That AI stops working at once                        |
-| Get a new prompt    | `rotate claude`                                     | The old connection stops and you get a fresh prompt  |
-| Open the menu       | `help` or `menu`                                    | The commands as text and as a tappable list          |
-| Delete your account | `delete account`, then `delete account permanently` | See [delete your account](/help/delete-your-account) |
+| You want to         | Write in English                                    | Or in Portuguese                                    | What happens                                         |
+| ------------------- | --------------------------------------------------- | --------------------------------------------------- | ---------------------------------------------------- |
+| Connect a new AI    | `new agent claude`                                  | `novo agente claude`                                | zapbip answers with the prompt to paste into that AI |
+| See your AIs        | `agents`                                            | `agentes`                                           | A list with the name and the date of each one        |
+| Disconnect an AI    | `revoke claude`                                     | `revogar claude`                                    | That AI stops working at once                        |
+| Get a new prompt    | `rotate claude`                                     | `girar claude`                                      | The old connection stops and you get a fresh prompt  |
+| Open the menu       | `help` or `menu`                                    | `ajuda` or `menu`                                   | The commands as text and as a tappable list          |
+| Delete your account | `delete account`, then `delete account permanently` | `apagar conta`, then `apagar conta definitivamente` | See [delete your account](/help/delete-your-account) |
 
 Write the phrase alone. A trailing `?` or `!` makes it a normal message for your AIs.
 
@@ -35,7 +35,11 @@ A message that is exactly a command word is always a command. To send the same w
 
 ## Names
 
-The words `new`, `agents`, `revoke`, `rotate`, `help`, `menu`, `delete` and their Portuguese versions cannot be the name of an AI.
+The words `new`, `agents`, `revoke`, `rotate`, `help`, `menu`, `delete` and their Portuguese versions are reserved: they cannot be the name of an AI.
+
+## Forwarded messages
+
+A forwarded message is never a command, even when its text is a command word. It goes to your AIs like any other message.
 
 ## Next
 

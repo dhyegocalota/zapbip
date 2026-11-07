@@ -1,23 +1,32 @@
 ---
 title: IAs compatíveis
-description: Quais IAs você pode conectar e como cada uma escuta você.
+description: Quais IAs você pode conectar e como cada uma ouve você.
 ---
 
-| Sua IA              | Como ela escuta                                             | Você pode puxar a conversa |
-| ------------------- | ----------------------------------------------------------- | -------------------------- |
-| Claude Code         | Um canal na sua sessão aberta, ou o conector do zapbip      | Sim                        |
-| Codex               | O conector do zapbip retoma a sua sessão                    | Sim                        |
-| Cursor              | Um terminal em segundo plano rodando `zapbip listen`        | Sim                        |
-| Gemini CLI          | Um terminal em segundo plano rodando `zapbip listen`        | Sim                        |
-| Hermes              | O plugin de plataforma do zapbip, ou um job a cada minuto   | Sim                        |
-| OpenClaw            | O plugin de canal do zapbip, ou um job a cada minuto        | Sim                        |
-| Grok Bot            | Uma rotina com webhook                                      | Sim                        |
-| Claude (app e site) | Uma tarefa agendada com gatilho de API                      | Sim                        |
-| ChatGPT             | Uma tarefa agendada, verificada pelo menos uma vez por hora | Sim, dentro de uma hora    |
-| Grok na web         | O seu Grok Bot fica de prontidão por ele                    | Sim, pelo seu Grok Bot     |
+Escolha a IA que você usa e abra a página dela. Todas mostram as mesmas quatro coisas: o que funciona, como aquela IA ouve você, como configurar do zero e como conferir se funciona. Todas enviam mensagens, perguntam com botões e listas e esperam a sua resposta pelo tempo que for preciso.
 
-Você pode puxar a conversa com qualquer uma delas pelo WhatsApp, usando o número do zapbip.
+O tipo de despertar diz como a sua mensagem chega à IA quando você escreve primeiro pelo WhatsApp. O atraso esperado é quanto isso leva depois que você escreve.
 
-## Puxar a conversa
+| IA                                            | Tipo de despertar | Atraso esperado | Página                                           |
+| --------------------------------------------- | ----------------- | --------------- | ------------------------------------------------ |
+| Claude Code                                   | Local             | 7 segundos      | [Claude Code](/pt-br/agents/claude-code)         |
+| Codex                                         | Local             | 6 segundos      | [Codex](/pt-br/agents/codex)                     |
+| Cursor                                        | Local             | Não medido      | [Cursor](/pt-br/agents/cursor)                   |
+| Gemini CLI                                    | Local             | Não medido      | [Gemini CLI](/pt-br/agents/gemini-cli)           |
+| Hermes                                        | Local             | Não medido      | [Hermes](/pt-br/agents/hermes)                   |
+| OpenClaw                                      | Local             | Não medido      | [OpenClaw](/pt-br/agents/openclaw)               |
+| Grok Bot                                      | Webhook           | 9 segundos      | [Grok Bot](/pt-br/agents/grok-bot)               |
+| claude.ai                                     | Webhook           | 16 segundos     | [claude.ai](/pt-br/agents/claude-ai)             |
+| ChatGPT                                       | Agendada          | 1 hora          | [ChatGPT](/pt-br/agents/chatgpt)                 |
+| Grok na web                                   | Em espera         | Não medido      | [Grok na web](/pt-br/agents/grok-web)            |
+| Qualquer app com MCP (Model Context Protocol) | Caixa de entrada  | Não medido      | [Qualquer app MCP](/pt-br/agents/any-mcp-client) |
 
-Cada IA fica ouvindo, sem limite de tempo, do jeito que o app permite: um canal ou um ouvinte em segundo plano no Claude Code, um conector local no Codex, um webhook no Grok Bot, uma tarefa agendada no claude.ai e no ChatGPT, um standby para o Grok na web e um plugin para [Hermes](/pt-br/agents/hermes) e [OpenClaw](/pt-br/agents/openclaw). Escreva primeiro e a mensagem chega na IA; se ela não estiver ouvindo agora, a mensagem espera e o zapbip avisa.
+## O que cada tipo de despertar significa
+
+- **Local:** um conector ou ouvinte no seu computador acorda a IA no instante em que você escreve.
+- **Webhook:** o zapbip chama um link que pertence à IA, e a IA começa a rodar.
+- **Agendada:** a IA procura a sua mensagem num intervalo fixo, então ouve você na próxima conferência.
+- **Em espera:** outra IA sua, um Grok Bot, responde no lugar dela.
+- **Caixa de entrada:** a sua mensagem espera até a IA procurar por ela.
+
+Se a IA não estiver ouvindo agora, a sua mensagem espera e o zapbip avisa. Nada se perde.

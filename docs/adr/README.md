@@ -50,3 +50,4 @@ A `Proposed` ADR moves to `Accepted` by editing its status line and date. Any ot
 | [0027](0027-deploys-run-from-the-owners-machine-not-from-ci.md) | Deploys run from the owner's machine, and CI does not deploy | Accepted | 2026-11-06 |
 | [0028](0028-the-native-channel-plugin-is-the-first-rung-for-openclaw-and-hermes.md) | The native channel plugin is the first rung for OpenClaw and Hermes | Accepted | 2026-11-06 |
 | [0029](0029-a-plugin-acknowledges-a-handoff-and-a-listener-does-not.md) | A plugin acknowledges after the handoff; a listener acknowledges after it prints | Accepted | 2026-11-06 |
+| [0030](0030-the-docs-speak-to-any-ai-user-in-two-languages-and-the-switcher-picks-the-language.md) | The docs speak to any AI user in two languages, and the switcher picks the language | Accepted | 2026-11-06 |

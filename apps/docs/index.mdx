@@ -4,12 +4,33 @@ description: Your AI, in your WhatsApp.
 ---
 
 import { Chat } from '/snippets/chat.jsx';
+import OfficialNumber from '/snippets/official-number.mdx';
 
 ## Why zapbip exists
 
 You use AI to research, plan and build. But when it needs a decision, or finishes something that took a while, you are not looking at the screen. So it waits, or it guesses.
 
-You already live on WhatsApp. zapbip puts your AI there: it messages you, asks with buttons, waits for your answer, and you can message it first.
+You already live on WhatsApp. zapbip puts your AI there: it messages you, asks with buttons, waits for your answer, and you can start the conversation too, whenever you want.
+
+zapbip has its own official WhatsApp number. You message it once, it gives you a line to paste into your AI, and that is the whole setup.
+
+<OfficialNumber />
+
+## How it works
+
+<Frame>
+  <img
+    src="/images/how-it-works-en.svg"
+    alt="Your AI connects to zapbip, which sends its messages through the official WhatsApp number to your phone. Your answer travels back and wakes your AI."
+    width="420"
+    height="640"
+    style={{ maxWidth: '420px', width: '100%', height: 'auto', aspectRatio: '420 / 640', margin: '0 auto' }}
+  />
+</Frame>
+
+1. **Connect your AI** once, by pasting one line.
+2. **It messages you** with text, files, or a question with buttons.
+3. **You answer, or write first**, and zapbip delivers it to the right AI.
 
 ## What it looks like
 
@@ -35,29 +56,11 @@ You already live on WhatsApp. zapbip puts your AI there: it messages you, asks w
       ]}
     />
   </Card>
-  <Card title="Remind me, check in" icon="bell">
+  <Card title="You write first" icon="bell">
     <Chat
       messages={[
         { you: true, text: 'Remind me to renew my passport on Friday.' },
         { name: 'Grok', text: 'Done. I will check in on Friday morning.' },
-      ]}
-    />
-  </Card>
-  <Card title="Approve a deploy" icon="rocket">
-    <Chat
-      messages={[
-        { name: 'Claude Code', text: 'Can I deploy v2.3 to production?', options: ['Yes', 'No'] },
-        { you: true, text: 'Yes' },
-        { name: 'Claude Code', text: 'Deployed ✅ 2m14s' },
-      ]}
-    />
-  </Card>
-  <Card title="Photos both ways" icon="image">
-    <Chat
-      messages={[
-        { name: 'Claude', media: { kind: 'image' }, text: 'Failed here' },
-        { you: true, media: { kind: 'image' }, text: 'The whiteboard' },
-        { name: 'Claude', text: 'Got the flow, fixing it.' },
       ]}
     />
   </Card>
@@ -72,25 +75,9 @@ You already live on WhatsApp. zapbip puts your AI there: it messages you, asks w
   </Card>
 </CardGroup>
 
-<Note>Shown as they look on WhatsApp.</Note>
-
-## How it works
-
-<Frame>
-  <img
-    src="/images/how-it-works-en.svg"
-    alt="Your AI connects to zapbip, which sends its messages through the official WhatsApp number to your phone. Your answer travels back and wakes your AI."
-    style={{ maxWidth: '420px', width: '100%', margin: '0 auto' }}
-  />
-</Frame>
-
-1. **Connect your AI** once, by pasting one line.
-2. **It messages you** with text, files, or a question with buttons.
-3. **You answer, or write first**, and zapbip delivers it to the right AI.
-
 ## Who it is for
 
-Anyone who uses AI: ChatGPT, Claude, Grok, Codex and more. You need nothing but WhatsApp. zapbip talks only to you, never to third parties.
+Anyone who uses AI: ChatGPT, Claude, Grok, Codex, Cursor, Gemini and more. You need nothing but WhatsApp. zapbip talks only to you, never to third parties.
 
 ## What you can do
 
@@ -102,5 +89,5 @@ Anyone who uses AI: ChatGPT, Claude, Grok, Codex and more. You need nothing but 
 See which AIs work in [Supported agents](/agents/supported-agents).
 
 <Card title="How to start" icon="rocket" href="/get-started/how-to-start">
-  Five steps from your WhatsApp to your first message.
+  Message the zapbip number, paste one line into your AI, and get its first message.
 </Card>

@@ -332,3 +332,32 @@ export enum HttpStatus {
   BadGateway = 502,
   ServiceUnavailable = 503,
 }
+
+export enum DocsLanguage {
+  English = 'en',
+  PortugueseBrazil = 'pt-BR',
+}
+
+export enum DocsOnlyClient {
+  AnyMcpClient = 'any-mcp-client',
+}
+
+export enum DocsRetentionKind {
+  Questions = 'questions',
+  Queue = 'queue',
+  Media = 'media',
+}
+
+export enum McpToolName {
+  SendMessage = 'send_message',
+  SendMedia = 'send_media',
+  SendLocation = 'send_location',
+  SendContact = 'send_contact',
+  React = 'react',
+  Ask = 'ask',
+  WaitForReply = 'wait_for_reply',
+  GetMessages = 'get_messages',
+  CheckInbox = 'check_inbox',
+  CreateUpload = 'create_upload',
+  SetWake = 'set_wake',
+}

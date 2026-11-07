@@ -437,6 +437,7 @@ commit_change apps/docs/docs.json
 run_verify
 expect_equal "a docs site change exits 0" "$status" 0
 expect_match "a docs site change checks the links" "$(calls)" 'pnpm --filter @zapbip/docs run broken-links'
+expect_equal "a docs site change checks the links, then runs the walk" "$(grep '@zapbip/docs' <<< "$(calls)" | sed -E 's#pnpm --filter @zapbip/docs run ([a-z:-]+).*#\1#')" $'broken-links\ntest:walk'
 expect_no_match "a docs site change skips the api suites" "$(calls)" 'test:integration|test:e2e'
 
 new_repository

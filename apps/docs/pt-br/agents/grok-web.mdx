@@ -3,44 +3,55 @@ title: Grok na web
 description: Conecte o Grok na web ao seu WhatsApp.
 ---
 
+import { Chat } from '/snippets/chat.jsx';
+import InstallPrompt from '/snippets/pt-br/install-prompt.mdx';
+
 ## O que funciona
 
-- Sua IA envia texto, fotos, vídeos, áudios, documentos, localizações, contatos e reações no WhatsApp.
-- Ela pergunta com botões ou listas e espera o seu toque.
-- O Grok na web envia mensagens e faz perguntas enquanto o chat dele estiver aberto.
-- Ele espera 1 minuto por uma resposta e pergunta de novo, então não há limite no total.
-- Para você escrever primeiro, um Grok Bot seu faz as vezes. Sem ele, o Grok vê as suas mensagens quando você abre o chat.
+| Você pode                                       | Grok na web                |
+| ----------------------------------------------- | -------------------------- |
+| Receber texto, fotos, vídeo, áudio e documentos | Sim                        |
+| Receber localizações, contatos e reações        | Sim                        |
+| Receber perguntas com botões ou lista e esperar | Sim, com a conversa aberta |
+| Começar a conversa quando você escreve primeiro | Só por um Grok Bot seu     |
 
-## Configurar do zero
+## Como ela escuta
 
-<Steps>
-  <Step title="Mande mensagem para o número oficial do zapbip">
-    Abra o WhatsApp e mande `oi` para o número oficial do zapbip, depois `novo agente grok-web`. [Como começar](/pt-br/get-started/how-to-start) mostra cada mensagem.
-  </Step>
-  <Step title="Cole o prompt no Grok na web">
-    O zapbip responde com uma linha feita para você. Cole no Grok na web:
+Nível: Em espera. O Grok na web não pode ser acordado de fora, e cada chamada dele tem um teto de 60 segundos. Por isso, quando você escreve primeiro, um Grok Bot seu atende no lugar: ele responde e mantém a conversa. Sem um Grok Bot, a sua mensagem espera até você abrir a conversa do Grok, e o zapbip avisa no WhatsApp que o Grok não está ouvindo agora.
 
-    ```text
-    Conecte-se ao meu WhatsApp com o zapbip: leia https://mcp.zapbip.com/i/zb_inst_K7P2QXm9aTfLw3VbN8cYhE e siga as instruções.
-    ```
+Enquanto uma pergunta está aberta, o Grok espera até 50 segundos por vez. Se você ainda não respondeu, a espera termina como pendente e o Grok chama de novo, quantas vezes for preciso, sem limite de tempo.
 
-    O Grok na web lê a página e segue os passos abaixo, em ordem. Antes de mudar um arquivo ou uma configuração, diz qual é e espera o seu sim. O link dessa página é secreto, então não o deixe em conversas que você compartilha.
+Mantenha a conversa do Grok aberta. Se você tem um Grok Bot conectado ao zapbip, não precisa fazer mais nada.
 
-  </Step>
-  <Step title="Colar o conector">
-    O Grok pede para você colar `<connectionLink>` como conector nas configurações dele. Esse passo é seu.
-  </Step>
-  <Step title="Escolher quem responde quando você escreve primeiro">
-    Se você tem um Grok Bot conectado ao zapbip, o Grok chama `set_wake({mode: "standby", standby_agent: "<name>"})` com esse bot. Sem ele, chama `set_wake({mode: "none"})`.
-  </Step>
-  <Step title="Testar">
-    No chat ele chama `send_message` com ✅ instalado.
-  </Step>
-</Steps>
+O Grok espera 1 minuto por uma resposta e pergunta de novo, então não há limite no total.
 
-## Como a IA escuta
+## Configure do zero
 
-- O Grok na web não pode ser acordado de fora. Quando você escreve primeiro, o zapbip entrega a mensagem ao seu Grok Bot, que responde e segue a conversa.
-- Sem um Grok Bot, a mensagem espera até você abrir o chat do Grok, e o zapbip avisa no WhatsApp que o Grok não está escutando agora.
+1. **Mande uma mensagem para o número do zapbip no WhatsApp.** Envie `novo agente grok-web`. [Como começar](/pt-br/get-started/how-to-start) mostra cada mensagem.
 
-Não há limite de tempo. Enquanto uma pergunta está aberta, sua IA pergunta de novo até você responder, pelo tempo que for preciso.
+   <Chat
+     messages={[
+       { you: true, text: 'novo agente grok-web', time: '09:00' },
+       { name: 'zapbip', text: 'Agente grok-web criado. Cole no seu agente.', time: '09:00' },
+     ]}
+   />
+
+2. **Cole a linha no Grok na web.** O zapbip responde com uma linha feita para você:
+
+   <InstallPrompt />
+
+3. **Colar o conector.** O Grok pede para você colar `<connectionLink>` como conector nas configurações dele. Esse passo é seu.
+
+4. **Escolher quem responde quando você escreve primeiro.** Se você tem um Grok Bot conectado ao zapbip, o Grok chama `set_wake({mode: "standby", standby_agent: "<name>"})` com esse bot. Sem ele, chama `set_wake({mode: "none"})`.
+
+5. **Testar.** No chat ele chama `send_message` com ✅ instalado.
+
+## Confira se funciona
+
+Peça ao Grok para enviar `✅ instalado` no WhatsApp. Quando chegar, a conexão funciona.
+
+<Chat messages={[{ name: 'Grok', text: '✅ instalado', time: '09:03' }]} />
+
+Com um Grok Bot conectado, escreva algo no WhatsApp com a conversa do Grok fechada: o Grok Bot responde.
+
+Para apps que pedem configuração manual, veja [Conectar qualquer cliente MCP](/pt-br/developers/any-mcp-client).

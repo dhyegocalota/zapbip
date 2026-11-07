@@ -1,59 +1,42 @@
 import { existsSync } from 'node:fs';
-import { posix } from 'node:path';
+import { DocsLanguage, PAGE_LANGUAGE_FOLDER } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
-import { DOCS_ROOT, PAGE_EXTENSION, documentFiles, readRepositoryFile, repositoryPath } from './repository-files';
+import { DOCS_GROUPS, docsNavigationOf, navigationPagesOf } from './docs-experience';
+import { DOCS_ROOT, PAGE_EXTENSION, documentFiles, repositoryPath } from './repository-files';
 
-const DOCS_CONFIG = `${DOCS_ROOT}/docs.json`;
-const DEFAULT_LANGUAGE = 'en';
-const TRANSLATED_LANGUAGE = 'pt-BR';
-const TRANSLATED_DIRECTORY = 'pt-br';
 const SNIPPETS_DIRECTORY = 'snippets';
 const GROUP_COUNT = 5;
 
-type NavigationNode = string | { group: string; pages: NavigationNode[] };
-type LanguageNavigation = { language: string; groups: { group: string; pages: NavigationNode[] }[] };
-
-function pagesOf(nodes: NavigationNode[]): string[] {
-  return nodes.flatMap((node) => (typeof node === 'string' ? [node] : pagesOf(node.pages)));
-}
+const LANGUAGES = Object.values(DocsLanguage);
 
 function withoutTranslatedDirectory(path: string): string {
-  return path.replace(new RegExp(`(^|/)${TRANSLATED_DIRECTORY}/`), '$1');
+  return path.replace(new RegExp(`(^|/)${PAGE_LANGUAGE_FOLDER}/`), '$1');
 }
 
-const languages = JSON.parse(readRepositoryFile(DOCS_CONFIG)).navigation.languages as LanguageNavigation[];
-const navigationOf = (language: string): LanguageNavigation => {
-  const found = languages.find((entry) => entry.language === language);
-  if (!found) throw new Error(`no navigation for ${language}`);
-  return found;
-};
 const documents = documentFiles('');
-const isTranslated = (path: string): boolean => path.split('/').includes(TRANSLATED_DIRECTORY);
+const isTranslated = (path: string): boolean => path.split('/').includes(PAGE_LANGUAGE_FOLDER);
 
 describe('docs navigation', () => {
   test('both languages are published, the default first', () => {
-    expect(languages.map((entry) => entry.language)).toEqual([DEFAULT_LANGUAGE, TRANSLATED_LANGUAGE]);
+    expect(LANGUAGES.map((language) => docsNavigationOf({ language }).language)).toEqual([
+      DocsLanguage.English,
+      DocsLanguage.PortugueseBrazil,
+    ]);
   });
 
   test('both languages have the same top-level shape', () => {
-    const shapes = languages.map((entry) => entry.groups.length);
+    const shapes = LANGUAGES.map((language) => docsNavigationOf({ language }).groups.length);
     expect(shapes).toEqual([GROUP_COUNT, GROUP_COUNT]);
   });
 
   test('the default language groups are user-first and in order', () => {
-    expect(navigationOf(DEFAULT_LANGUAGE).groups.map((entry) => entry.group)).toEqual([
-      'Get started',
-      'Agents',
-      'Features',
-      'Help',
-      'For developers',
-    ]);
+    expect(docsNavigationOf({ language: DocsLanguage.English }).groups.map((entry) => entry.group)).toEqual(
+      DOCS_GROUPS[DocsLanguage.English],
+    );
   });
 
-  test.each(languages)('every page listed for $language exists', (entry) => {
-    const missing = pagesOf(entry.groups.flatMap((group) => group.pages)).filter(
-      (page) => !existsSync(repositoryPath(`${DOCS_ROOT}/${page}${PAGE_EXTENSION}`)),
-    );
+  test.each(LANGUAGES)('every page listed for %s exists', (language) => {
+    const missing = navigationPagesOf({ language }).filter((page) => !existsSync(repositoryPath(`${DOCS_ROOT}/${page}${PAGE_EXTENSION}`)));
     expect(missing).toEqual([]);
   });
 
@@ -62,8 +45,8 @@ describe('docs navigation', () => {
       .filter((path) => !isTranslated(path))
       .map((path) =>
         path.startsWith(`${SNIPPETS_DIRECTORY}/`)
-          ? path.replace(`${SNIPPETS_DIRECTORY}/`, `${SNIPPETS_DIRECTORY}/${TRANSLATED_DIRECTORY}/`)
-          : `${TRANSLATED_DIRECTORY}/${path}`,
+          ? path.replace(`${SNIPPETS_DIRECTORY}/`, `${SNIPPETS_DIRECTORY}/${PAGE_LANGUAGE_FOLDER}/`)
+          : `${PAGE_LANGUAGE_FOLDER}/${path}`,
       )
       .filter((twin) => !documents.includes(twin));
     expect(missing).toEqual([]);

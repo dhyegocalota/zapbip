@@ -1,13 +1,13 @@
-| Tipo                    | Agente para o dono                                                                     | Dono para o agente                                                       |
-| ----------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| texto                   | [send_message](/pt-br/mcp-reference/send-message)                                      | texto                                                                    |
-| imagem                  | [send_media](/pt-br/mcp-reference/send-media), até 5 MB                                | a imagem inline até 1 MB, senão um link assinado                         |
-| vídeo                   | [send_media](/pt-br/mcp-reference/send-media), até 16 MB                               | link assinado                                                            |
-| áudio e mensagem de voz | [send_media](/pt-br/mcp-reference/send-media), até 16 MB, `voice` para mensagem de voz | link assinado                                                            |
-| documento               | [send_media](/pt-br/mcp-reference/send-media), até 100 MB                              | link assinado, nome do arquivo e tipo MIME                               |
-| figurinha               | [send_media](/pt-br/mcp-reference/send-media)                                          | link assinado                                                            |
-| localização             | [send_location](/pt-br/mcp-reference/send-location)                                    | latitude, longitude, nome e endereço                                     |
-| contatos                | [send_contact](/pt-br/mcp-reference/send-contact)                                      | os cartões de contato                                                    |
-| reação                  | [react](/pt-br/mcp-reference/react)                                                    | `message_id` e `emoji`, roteados ao agente que enviou a mensagem reagida |
-| botões e lista          | [ask](/pt-br/mcp-reference/ask), até 3 opções como botões e de 4 a 10 como lista       | `choice` com `option_id`, `title` e `description` opcional               |
-| resposta citada         | `reply_to` em todo envio                                                               | `reply_to`, roteado ao agente que enviou a mensagem citada               |
+| Tipo       | Agente para o dono                                                                     | Dono para o agente                                                       |
+| ---------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `text`     | [send_message](/pt-br/mcp-reference/send-message)                                      | texto                                                                    |
+| `image`    | [send_media](/pt-br/mcp-reference/send-media), até 5 MB                                | a imagem inline até 1 MB, senão um link assinado                         |
+| `video`    | [send_media](/pt-br/mcp-reference/send-media), até 16 MB                               | link assinado                                                            |
+| `audio`    | [send_media](/pt-br/mcp-reference/send-media), até 16 MB, `voice` para mensagem de voz | link assinado                                                            |
+| `document` | [send_media](/pt-br/mcp-reference/send-media), até 100 MB                              | link assinado, nome do arquivo e tipo MIME                               |
+| `sticker`  | [send_media](/pt-br/mcp-reference/send-media)                                          | link assinado                                                            |
+| `location` | [send_location](/pt-br/mcp-reference/send-location)                                    | latitude, longitude, nome e endereço                                     |
+| `contacts` | [send_contact](/pt-br/mcp-reference/send-contact)                                      | os cartões de contato                                                    |
+| `reaction` | [react](/pt-br/mcp-reference/react)                                                    | `message_id` e `emoji`, roteados ao agente que enviou a mensagem reagida |
+| `choice`   | [ask](/pt-br/mcp-reference/ask), até 3 opções como botões e de 4 a 10 como lista       | `option_id`, `title` e `description` opcional                            |
+| citação    | `reply_to` em todo envio                                                               | `reply_to`, roteado ao agente que enviou a mensagem citada               |

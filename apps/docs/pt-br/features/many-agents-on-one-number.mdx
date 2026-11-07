@@ -24,12 +24,19 @@ Todas as suas IAs escrevem pelo mesmo número de WhatsApp. O zapbip decide para 
     { name: 'Grok', text: 'Posso fazer rebase da main?', options: ['Sim', 'Não'], time: '10:03' },
     { you: true, text: '@claude valeu', time: '10:04' },
     { you: true, text: 'Sim', time: '10:04' },
+  ]}
+/>
+
+`@claude valeu` vai para o Claude e o toque em Sim vai para o Grok.
+
+<Chat
+  messages={[
     { you: true, text: 'ok', time: '10:05' },
     { name: 'zapbip', text: 'Para qual IA é essa mensagem? Claude, Grok', options: ['Claude', 'Grok'], time: '10:05' },
   ]}
 />
 
-`@claude valeu` vai para o Claude, o toque em Sim vai para o Grok, e o `ok` solto recebe uma lista de IAs recentes para escolher.
+Um `ok` solto recebe uma lista de IAs recentes para escolher.
 
 Responda a uma mensagem para falar com a IA que a enviou:
 

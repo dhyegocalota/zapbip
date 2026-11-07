@@ -3,9 +3,9 @@ title: 'Despertar por webhook'
 description: 'Faça o zapbip acordar sua IA quando você escreve e ela não está ouvindo.'
 ---
 
-Você não precisa disto para usar o zapbip. É para o momento em que você escreve no WhatsApp e sua IA não está aberta: o zapbip pode chamar um link que a inicia, para ela ler sua mensagem e responder. A maioria dos apps de IA configura isso para você na instalação; esta página mostra o que acontece por trás e como configurar à mão.
+O despertar por webhook é o segundo degrau da [escada de despertar](/pt-br/concepts/wake-ladder). Quando o dono escreve no WhatsApp e o agente não está ouvindo, o zapbip chama um link que o inicia. A instalação configura isso nos clientes que suportam; esta página mostra o que o zapbip envia e como configurar à mão.
 
-Sua IA então lê a mensagem com [check_inbox](/pt-br/mcp-reference/check-inbox) ou [get_messages](/pt-br/mcp-reference/get-messages) e responde. O link é salvo com [set_wake](/pt-br/mcp-reference/set-wake).
+O agente então lê a mensagem com [check_inbox](/pt-br/mcp-reference/check-inbox) ou [get_messages](/pt-br/mcp-reference/get-messages) e responde. O link é salvo com [set_wake](/pt-br/mcp-reference/set-wake).
 
 A chamada não leva nada do seu texto: o corpo é sempre `{"event":"inbox_has_messages"}`. Mensagens que chegam em sequência compartilham um único despertar, enviado alguns segundos depois da primeira.
 
@@ -27,7 +27,7 @@ Crie uma tarefa agendada com gatilho de API e salve:
 { "mode": "webhook", "url": "https://api.anthropic.com/v1/claude_code/routines/<trigger-id>/fire", "token": "<token>" }
 ```
 
-O zapbip envia `Authorization: Bearer <token>` e os cabeçalhos beta da rotina.
+O zapbip envia `Authorization: Bearer <token>` e os cabeçalhos da rotina.
 
 ## Seu próprio serviço
 

@@ -1,6 +1,6 @@
 ---
-title: 'Let your AI hear you while you are away'
-description: 'Run one small program on your computer so Claude Code or Codex answers you on WhatsApp, even when you are not looking at it.'
+title: 'Local connector'
+description: 'The zapbip connect, listen and channel commands: flags, environment variable, wake isolation and logs.'
 ---
 
 Normally your AI only reads WhatsApp when it is already working. If you write to it while it sits idle, your message waits.
@@ -8,6 +8,16 @@ Normally your AI only reads WhatsApp when it is already working. If you write to
 The zapbip connector fixes that. It is a small program that stays open on your computer. When you write on WhatsApp, it wakes the AI session you were already using, hands it your message and lets it answer you. It takes about 7 seconds for Claude Code and 6 for Codex.
 
 It works with Claude Code and Codex. Your computer must be on and awake, and the connector must be running.
+
+## Commands
+
+| Command   | What it does                                                                      |
+| --------- | --------------------------------------------------------------------------------- |
+| `connect` | Wakes a closed session when you write. Takes `--client`, `--cwd` and `--session`. |
+| `listen`  | Prints one JSON line per message, for an agent that watches a background command. |
+| `channel` | Runs a local MCP channel that puts each message into an open Claude Code session. |
+
+`ZAPBIP_CONNECTION_URL` holds the connection link. `connect` and `listen` ask for it when it is not set.
 
 ## What you need
 
@@ -55,7 +65,7 @@ npx zapbip@0.1.0 connect --client claude-code --session <session-id>
 | ----------- | ------------------------------------------------------------------------ |
 | `--client`  | `claude-code` or `codex`. Required.                                      |
 | `--cwd`     | The folder to work in. The default is the folder you ran the command in. |
-| `--session` | A session id to always resume, instead of the newest one.                |
+| `--session` | A session id (UUID) to always resume, instead of the newest one.         |
 
 ## What the AI can do when woken
 

@@ -3,43 +3,75 @@ title: Codex
 description: Connect Codex to your WhatsApp.
 ---
 
+import { Chat } from '/snippets/chat.jsx';
+import OfficialNumber from '/snippets/official-number.mdx';
+import InstallPrompt from '/snippets/install-prompt.mdx';
+
 ## What works
 
-- Your AI sends you text, photos, videos, audio, documents, locations, contacts and reactions on WhatsApp.
-- It asks you with buttons or lists and waits for your tap.
-- Write on WhatsApp and Codex answers in about 6 seconds, even when the session is idle.
-- Codex waits up to 15 minutes for a single answer and asks again, so there is no limit overall.
+| You want to                    | Codex                                                                  |
+| ------------------------------ | ---------------------------------------------------------------------- |
+| Get messages from it           | Text, photos, videos, audio, documents, locations, contacts, reactions |
+| Answer it with a tap           | Buttons and lists; it waits for your tap                               |
+| Write first from WhatsApp      | Yes, it answers in about 6 seconds, even when the session is idle      |
+| Keep a question open for hours | Yes, there is no time limit                                            |
+
+<Chat
+  messages={[
+    { name: 'Codex', text: 'The migration finished. Run the seed script too?', options: ['Yes', 'No'], time: '11:40' },
+    { you: true, text: 'Yes', time: '11:41' },
+  ]}
+/>
+
+## How it listens
+
+Wake type: **Local**. A connector on your computer resumes your Codex session with `codex exec resume` each time you write, in about 6 seconds. If Codex already has the session open in its app, the resume waits until the session is free.
+
+- Keep the connector running. To keep it alive after you close the terminal, follow [Run the connector as a service](/developers/background-running).
+
+When your AI asks you something, zapbip holds the question and answers "pending" at most every 50 seconds. Codex then calls again, and keeps calling again until you answer. There is no time limit.
+
+The 900 second tool timeout that the install sets in Codex bounds one call, not the listening. When a call ends, Codex starts the next one.
+
+Codex waits up to 15 minutes for a single answer and asks again, so there is no limit overall.
 
 ## Set up from zero
 
-<Steps>
-  <Step title="Message the official zapbip number">
-    Open WhatsApp and send `hi` to the official zapbip number, then `new agent codex`. [How to start](/get-started/how-to-start) shows every message.
-  </Step>
-  <Step title="Paste the prompt into Codex">
-    zapbip answers with one line made for you. Paste it into Codex:
+1. **Message the zapbip number on WhatsApp.** Send any text, for example `hi`.
 
-    ```text
-    Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_K7P2QXm9aTfLw3VbN8cYhE and follow the instructions.
-    ```
+   <OfficialNumber />
 
-    Codex reads the page and follows the steps below, in order. Before it changes a file or a setting, it tells you which one and waits for your yes. The link in that page is secret, so keep it out of chats you share.
+2. **Ask for a new agent.** An agent is one AI you connect.
 
-  </Step>
-  <Step title="Add zapbip to Codex">
-    After your yes, it replaces the `[mcp_servers.zapbip]` table in `~/.codex/config.toml` with `url = "<connectionLink>"`, `tool_timeout_sec = 900` and `default_tools_approval_mode = "approve"`. Approval mode lets zapbip tools run without asking you each time, and Codex tells you so.
-  </Step>
-  <Step title="Start the connector">
-    It runs `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 connect --client codex` in the background. It keeps listening and resumes your session with `codex exec resume`.
-  </Step>
-  <Step title="Test it">
-    In a fresh process it runs `codex exec -c 'mcp_servers.zapbip.default_tools_approval_mode="approve"' "Use zapbip to send ✅ installed to my WhatsApp"`. A `send_message` with ✅ installed reaches your WhatsApp. If the command fails, it stops and shows the last 20 lines. Then restart Codex.
-  </Step>
-</Steps>
+   <Chat
+     messages={[
+       { you: true, text: 'new agent codex', time: '11:00' },
+       {
+         name: 'zapbip',
+         text: 'Agent codex created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate codex".',
+         time: '11:00',
+       },
+     ]}
+   />
 
-## How your AI listens
+3. **Paste the line into Codex.**
 
-- The connector stays open and resumes your Codex session with `codex exec resume` each time you write, in about 6 seconds.
-- If Codex already has the session open in its app, the resume waits until the session is free.
+   <InstallPrompt />
 
-There is no time limit. While a question is open, your AI asks again until you answer, for as long as it takes.
+   Codex reads the instructions and follows them in order. Before it changes a file or a setting, it tells you which one and waits for your yes. The link is secret, so keep it out of chats you share.
+
+4. **Say yes.** Codex then does the rest, in this order.
+
+5. **Add zapbip to Codex.** After your yes, it replaces the `[mcp_servers.zapbip]` table in `~/.codex/config.toml` with `url = "<connectionLink>"`, `tool_timeout_sec = 900` and `default_tools_approval_mode = "approve"`. Approval mode lets zapbip tools run without asking you each time, and Codex tells you so.
+
+6. **Start the connector.** It runs `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 connect --client codex` in the background. It keeps listening and resumes your session with `codex exec resume`.
+
+7. **Test it.** In a fresh process it runs `codex exec -c 'mcp_servers.zapbip.default_tools_approval_mode="approve"' "Call send_message with the text '✅ installed'"`. A `send_message` with ✅ installed reaches your WhatsApp. If the command fails, it stops and shows the last 20 lines. Then restart Codex.
+
+## Check it works
+
+Ask Codex to send `✅ installed` to your WhatsApp. It should arrive in a few seconds.
+
+<Chat messages={[{ name: 'Codex', text: '✅ installed', time: '11:03' }]} />
+
+If nothing arrives, see [Troubleshooting](/help/troubleshooting).

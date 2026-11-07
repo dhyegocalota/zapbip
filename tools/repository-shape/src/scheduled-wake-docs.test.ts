@@ -6,8 +6,8 @@ const SET_WAKE_PAGES = ['mcp-reference/set-wake.mdx', 'pt-br/mcp-reference/set-w
 const ONE_HOP_PHRASES: Record<string, string> = {
   'concepts/wake-ladder.mdx': 'A standby never forwards to another standby',
   'mcp-reference/set-wake.mdx': 'A standby never forwards to another standby',
-  'pt-br/concepts/wake-ladder.mdx': 'Uma reserva nunca repassa para outra reserva',
-  'pt-br/mcp-reference/set-wake.mdx': 'Uma reserva nunca repassa para outra reserva',
+  'pt-br/concepts/wake-ladder.mdx': 'Uma conexão em espera nunca repassa para outra em espera',
+  'pt-br/mcp-reference/set-wake.mdx': 'Uma conexão em espera nunca repassa para outra em espera',
 };
 const ONE_HOP_WORDS: Record<string, string> = {
   'concepts/wake-ladder.mdx': 'one hop',

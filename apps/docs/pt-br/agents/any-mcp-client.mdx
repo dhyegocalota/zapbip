@@ -1,0 +1,51 @@
+---
+title: Qualquer app com suporte a MCP
+description: Conecte qualquer app com suporte a MCP ao seu WhatsApp.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import InstallPrompt from '/snippets/pt-br/install-prompt.mdx';
+
+## O que funciona
+
+| Você pode                                       | Qualquer app MCP                          |
+| ----------------------------------------------- | ----------------------------------------- |
+| Enviar texto, fotos, vídeo, áudio e documentos  | Sim                                       |
+| Receber localizações, contatos e reações        | Sim                                       |
+| Receber perguntas com botões ou lista e esperar | Sim                                       |
+| Começar a conversa quando você escreve primeiro | A sua mensagem espera na caixa de entrada |
+
+## Como ela escuta
+
+Nível: Caixa de entrada. Nada pode acordar o app de fora, então a mensagem que você envia espera na caixa de entrada até o app olhar. O app pergunta ao zapbip se há algo novo com `check_inbox` e lê.
+
+Para ouvir, o app pergunta a você com `ask` ou `wait_for_reply`. Cada chamada volta como pendente depois de no máximo 50 segundos se você não respondeu, e o app chama de novo até você responder, sem limite de tempo.
+
+## Configure do zero
+
+1. **Mande uma mensagem para o número do zapbip no WhatsApp.** Envie `novo agente meu-app`. [Como começar](/pt-br/get-started/how-to-start) mostra cada mensagem.
+
+   <Chat
+     messages={[
+       { you: true, text: 'novo agente meu-app', time: '09:00' },
+       { name: 'zapbip', text: 'Agente meu-app criado. Cole no seu agente.', time: '09:00' },
+     ]}
+   />
+
+2. **Cole a linha na IA do seu app.** O zapbip responde com uma linha feita para você:
+
+   <InstallPrompt />
+
+3. **Adicione o servidor.** Nas configurações de MCP do app, a IA adiciona o endereço do zapbip como servidor HTTP em streaming. O endereço guarda um segredo, então mantenha-o privado. Se o app pedir um cabeçalho, ele envia o segredo como `Authorization: Bearer <segredo>`.
+
+4. **Consulte a caixa de entrada de vez em quando.** O app chama `check_inbox` quando puder, por exemplo no começo de cada tarefa.
+
+## Confira se funciona
+
+Peça à IA para enviar `✅ instalado` no WhatsApp. Quando chegar, a conexão funciona.
+
+<Chat messages={[{ name: 'Meu app', text: '✅ instalado', time: '09:03' }]} />
+
+Depois escreva algo no WhatsApp e peça ao app para consultar a caixa de entrada: ele lê a sua mensagem.
+
+Para o endereço, o cabeçalho e as ferramentas, veja [Conectar qualquer cliente MCP](/pt-br/developers/any-mcp-client).
