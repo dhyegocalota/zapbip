@@ -7,6 +7,8 @@ import type { Bindings } from '../contract/env';
 import { accountInboxOf } from '../routes/account-inbox-stub';
 import type { InstallPageRouteDependencies } from '../routes/install-page';
 
+const SECURE_PROTOCOL = 'https:';
+
 export function createInstallCodeDirectory(input: { environment: Bindings }): D1InstallCodeDirectory {
   return new D1InstallCodeDirectory({
     database: input.environment.CONNECTIONS,
@@ -30,5 +32,6 @@ export function createInstallPageDependencies(input: { environment: Bindings }):
     connectionRegistry: new D1ConnectionRegistry({ database: environment.CONNECTIONS }),
     readWakeModes: ({ accountId }) => accountInboxOf({ bindings: environment, accountId }).listWakeModes(),
     limiter: environment.INSTALL_PAGE_LIMITER,
+    requireSecureTransport: new URL(environment.PUBLIC_ORIGIN).protocol === SECURE_PROTOCOL,
   };
 }

@@ -117,7 +117,9 @@ async function buildChoice(input: { message: Extract<Message, { kind: MessageKin
 const SESSION_BUILDERS: SessionBuilders = {
   [MessageKind.Text]: async ({ message }) => {
     assertTextBody({ body: message.text });
-    return { type: 'text', text: { preview_url: URL_PATTERN.test(message.text), body: message.text } };
+    const isWrittenByZapbip = message.agent === null;
+    const previewsLink = URL_PATTERN.test(message.text) && !isWrittenByZapbip;
+    return { type: 'text', text: { preview_url: previewsLink, body: message.text } };
   },
   [MessageKind.Image]: async (input) => ({
     type: 'image',

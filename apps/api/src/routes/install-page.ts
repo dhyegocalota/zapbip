@@ -25,6 +25,7 @@ export type InstallPageRouteDependencies = {
   connectionRegistry: ConnectionRegistry;
   readWakeModes: (input: { accountId: string }) => Promise<WakeModeEntry[]>;
   limiter: RateLimiter;
+  requireSecureTransport: boolean;
 };
 
 const BASE64_BITS_PER_CHARACTER = 6;
@@ -40,7 +41,17 @@ const BAD_REQUEST_TEXT = 'bad request';
 const SERVER_ERROR_TEXT = 'server error';
 const RATE_LIMITED_TEXT = 'too many requests';
 const RETRY_AFTER_SECONDS = RATE_LIMIT_PERIOD_MS / SECOND_MS;
-const PRIVATE_HEADERS = { 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' };
+const HSTS_MAX_AGE_SECONDS = 63_072_000;
+const SECURE_PROTOCOL = 'https:';
+const USER_AGENT_HEADER = 'user-agent';
+const LINK_PREVIEW_USER_AGENTS = ['whatsapp', 'facebookexternalhit', 'slackbot', 'twitterbot', 'discordbot', 'telegrambot', 'linkedinbot'];
+const PRIVATE_HEADERS = {
+  'Cache-Control': 'no-store',
+  'X-Robots-Tag': 'noindex',
+  'Referrer-Policy': 'no-referrer',
+  'X-Content-Type-Options': 'nosniff',
+  'Strict-Transport-Security': `max-age=${HSTS_MAX_AGE_SECONDS}; includeSubDomains`,
+};
 
 function privateResponse(input: { body: string; status: HttpStatus; contentType: string; headers?: Record<string, string> }): Response {
   return new Response(input.body, {
@@ -70,6 +81,11 @@ export function createInstallPageRoute(input: InstallPageRouteDependencies): Hon
   }
 
   async function serve(context: Context): Promise<Response> {
+    const userAgent = context.req.header(USER_AGENT_HEADER);
+    const isLinkPreviewCrawler =
+      userAgent !== undefined && LINK_PREVIEW_USER_AGENTS.some((crawler) => userAgent.toLowerCase().includes(crawler));
+    const isInsecure = input.requireSecureTransport && new URL(context.req.url).protocol !== SECURE_PROTOCOL;
+    if (isLinkPreviewCrawler || isInsecure) return plainResponse({ body: NOT_FOUND_TEXT, status: HttpStatus.NotFound });
     const clientAddress = context.req.header(CLIENT_ADDRESS_HEADER);
     if (clientAddress === undefined) return plainResponse({ body: BAD_REQUEST_TEXT, status: HttpStatus.BadRequest });
     const { success } = await input.limiter.limit({ key: clientRateKey({ address: clientAddress }) });
