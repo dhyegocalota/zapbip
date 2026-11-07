@@ -2,7 +2,7 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { staleNoticeCopy, WINDOW_MS } from '@zapbip/core';
 import { HOUR_MS, OwnerLocale, SECOND_MS, WakeMode } from '@zapbip/types';
-import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { afterAll, describe, expect, test } from 'vitest';
 import { McpToolName } from '../../src/contract/tool-definitions';
 import textFixture from '../fixtures/whatsapp/inbound/text.json';
 import type { RecordedRequest } from '../support/fake-graph';
@@ -100,10 +100,6 @@ function staleNoticeOf(input: { account: WakeAccount }): string {
     elapsedSinceLastPollMs: CLOSED_WINDOW_OFFSET_MS,
   });
 }
-
-beforeAll(async () => {
-  await fakeGraph.reset();
-});
 
 afterAll(async () => {
   await Promise.all(clients.map((client) => client.close()));
