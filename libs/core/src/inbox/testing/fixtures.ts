@@ -29,12 +29,28 @@ export async function createEnvironment(): Promise<InMemoryEnvironment> {
 
 export function openWindow(input: { environment: InMemoryEnvironment }): Promise<void> {
   const { repository, clock } = input.environment;
-  return repository.saveWindow({ window: { lastOwnerMessageAt: clock.now(), noticeSentForClosedWindow: false } });
+  return repository.saveWindow({
+    window: {
+      lastOwnerMessageAt: clock.now(),
+      noticeSentForClosedWindow: false,
+      noticeRetryLocale: null,
+      noticeRetryAt: null,
+      noticeRetryAttempt: 0,
+    },
+  });
 }
 
 export function closeWindow(input: { environment: InMemoryEnvironment }): Promise<void> {
   const { repository, clock } = input.environment;
-  return repository.saveWindow({ window: { lastOwnerMessageAt: clock.now() - WINDOW_MS, noticeSentForClosedWindow: false } });
+  return repository.saveWindow({
+    window: {
+      lastOwnerMessageAt: clock.now() - WINDOW_MS,
+      noticeSentForClosedWindow: false,
+      noticeRetryLocale: null,
+      noticeRetryAt: null,
+      noticeRetryAttempt: 0,
+    },
+  });
 }
 
 export function connectionOf(input: { agent: string; ownerLocale?: OwnerLocale }): ConnectionIdentity {
@@ -81,13 +97,21 @@ export function receive(input: {
   replyToMessageId?: string | null;
   channelMessageId?: string;
   ownerLocale?: OwnerLocale;
+  forwarded?: boolean;
 }): Promise<ReceiveResult> {
-  const { environment, content, replyToMessageId = null, channelMessageId = nextWamid(), ownerLocale = OwnerLocale.EnglishUs } = input;
+  const {
+    environment,
+    content,
+    replyToMessageId = null,
+    forwarded = false,
+    channelMessageId = nextWamid(),
+    ownerLocale = OwnerLocale.EnglishUs,
+  } = input;
   return receiveOwnerMessage({
     dependencies: environment.dependencies,
     ownerLocale,
     channelMessageId,
-    ownerMessage: { at: environment.clock.now(), replyToMessageId, content },
+    ownerMessage: { at: environment.clock.now(), replyToMessageId, forwarded, content },
   });
 }
 

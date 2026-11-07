@@ -17,7 +17,11 @@ You already live on WhatsApp. zapbip puts your AI there: it messages you, asks w
   <Card title="Research finished" icon="file-pdf">
     <Chat
       messages={[
-        { name: 'ChatGPT', text: 'Your research on e-bikes is ready. Summary attached. 📎 summary.pdf' },
+        {
+          name: 'ChatGPT',
+          text: 'Your research on e-bikes is ready. Summary attached.',
+          media: { kind: 'document', label: 'summary.pdf' },
+        },
         { you: true, text: 'Thanks, perfect.' },
       ]}
     />
@@ -51,8 +55,8 @@ You already live on WhatsApp. zapbip puts your AI there: it messages you, asks w
   <Card title="Photos both ways" icon="image">
     <Chat
       messages={[
-        { name: 'Claude', text: '📷 Failed here' },
-        { you: true, text: '📷 The whiteboard' },
+        { name: 'Claude', media: { kind: 'image' }, text: 'Failed here' },
+        { you: true, media: { kind: 'image' }, text: 'The whiteboard' },
         { name: 'Claude', text: 'Got the flow, fixing it.' },
       ]}
     />
@@ -62,7 +66,7 @@ You already live on WhatsApp. zapbip puts your AI there: it messages you, asks w
       messages={[
         { name: 'Claude', text: 'Tests passed.' },
         { name: 'Grok', text: 'Found 3 sources.' },
-        { you: true, text: 'Which ones? (reply to Grok)' },
+        { you: true, quote: { name: 'Grok', text: 'Found 3 sources.' }, text: 'Which ones?' },
       ]}
     />
   </Card>

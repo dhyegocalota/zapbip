@@ -25,6 +25,7 @@ export function receiveOwnerContent(input: {
   content: OwnerInboundContent;
   channelMessageId?: string;
   replyToMessageId?: string | null;
+  forwarded?: boolean;
 }) {
   return input.stub.receiveOwnerMessage({
     ownerLocale: OwnerLocale.PortugueseBrazil,
@@ -32,16 +33,23 @@ export function receiveOwnerContent(input: {
     ownerMessage: {
       at: Date.now(),
       replyToMessageId: input.replyToMessageId === undefined ? null : input.replyToMessageId,
+      forwarded: input.forwarded === true,
       content: input.content,
     },
   });
 }
 
-export function receiveOwnerText(input: { stub: DurableObjectStub<AccountInbox>; text: string; channelMessageId?: string }) {
+export function receiveOwnerText(input: {
+  stub: DurableObjectStub<AccountInbox>;
+  text: string;
+  channelMessageId?: string;
+  forwarded?: boolean;
+}) {
   return receiveOwnerContent({
     stub: input.stub,
     content: { kind: MessageKind.Text, text: input.text },
     channelMessageId: input.channelMessageId,
+    forwarded: input.forwarded,
   });
 }
 
@@ -63,5 +71,17 @@ export function readScreen(input: { stub: DurableObjectStub<AccountInbox> }): Pr
 export function registerDueTimeProvider(input: { stub: DurableObjectStub<AccountInbox>; provider: DueTimeProvider }): Promise<void> {
   return runInDurableObject(input.stub, (instance) => {
     internalsOf(instance).dueTimeProviders.push(input.provider);
+  });
+}
+
+export function replaceTemplate(input: {
+  stub: DurableObjectStub<AccountInbox>;
+  template: FakeWhatsAppSender['template'];
+}): Promise<FakeWhatsAppSender['template']> {
+  return runInDurableObject(input.stub, (instance) => {
+    const internals = internalsOf(instance);
+    const original = internals.sender.template;
+    internals.sender.template = input.template;
+    return original;
   });
 }

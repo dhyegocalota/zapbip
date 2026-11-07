@@ -1,0 +1,41 @@
+import { OwnerLocale, WakeCopyKey } from '@zapbip/types';
+import { describe, expect, test } from 'vitest';
+import { captureInboxError } from '../inbox/testing/capture-inbox-error';
+import { WAKE_COPY, wakeFailedCopy } from './wake-copy';
+
+const AGENT = 'alpha';
+
+describe('WAKE_COPY', () => {
+  test('every key has text in every locale', () => {
+    Object.values(WakeCopyKey).forEach((key) =>
+      Object.values(OwnerLocale).forEach((locale) => expect(WAKE_COPY[key][locale].length).toBeGreaterThan(0)),
+    );
+  });
+
+  test('every text names set_wake', () => {
+    Object.values(OwnerLocale).forEach((locale) => expect(WAKE_COPY[WakeCopyKey.WakeFailed][locale]).toContain('set_wake'));
+  });
+});
+
+describe('WAKE_COPY facts', () => {
+  test('every text says the message waits in the inbox', () => {
+    Object.values(OwnerLocale).forEach((locale) => expect(WAKE_COPY[WakeCopyKey.WakeFailed][locale]).toContain('inbox'));
+  });
+});
+
+describe('wakeFailedCopy', () => {
+  test('returns the text of the requested locale', () => {
+    Object.values(OwnerLocale).forEach((locale) =>
+      expect(wakeFailedCopy({ locale, agent: AGENT })).toBe(WAKE_COPY[WakeCopyKey.WakeFailed][locale].replace('{agent}', AGENT)),
+    );
+  });
+
+  test('names the agent in every locale', () => {
+    Object.values(OwnerLocale).forEach((locale) => expect(wakeFailedCopy({ locale, agent: AGENT })).toContain(AGENT));
+  });
+
+  test('an unknown locale throws instead of falling back', async () => {
+    const error = await captureInboxError(() => wakeFailedCopy({ locale: undefined as unknown as OwnerLocale, agent: AGENT }));
+    expect(error.message).toBe('wake: unknown locale');
+  });
+});

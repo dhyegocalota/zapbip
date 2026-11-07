@@ -66,7 +66,7 @@ const MARK_READ_STATEMENT = 'UPDATE inbox_messages SET read_at = ? WHERE read_at
 const WINDOW_ROW_ID = 1;
 
 function toMessage(row: MessageRow): Message {
-  const content: MessageContent = JSON.parse(row.payload);
+  const content: MessageContent & { forwarded: boolean } = JSON.parse(row.payload);
   return {
     messageId: row.id,
     direction: row.direction,
@@ -287,23 +287,35 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
     },
 
     async findWindow() {
-      const row = first<{ last_owner_message_at: number | null; notice_sent_for_closed_window: number }>(
-        'SELECT last_owner_message_at, notice_sent_for_closed_window FROM owner_window WHERE id = ?',
+      const row = first<{
+        last_owner_message_at: number | null;
+        notice_sent_for_closed_window: number;
+        notice_retry_locale: OwnerLocale | null;
+        notice_retry_at: number | null;
+        notice_retry_attempt: number;
+      }>(
+        'SELECT last_owner_message_at, notice_sent_for_closed_window, notice_retry_locale, notice_retry_at, notice_retry_attempt FROM owner_window WHERE id = ?',
         WINDOW_ROW_ID,
       );
       if (row === null) throw new Error('owner_window row is missing');
       const window: OwnerWindow = {
         lastOwnerMessageAt: row.last_owner_message_at,
         noticeSentForClosedWindow: row.notice_sent_for_closed_window === 1,
+        noticeRetryLocale: row.notice_retry_locale,
+        noticeRetryAt: row.notice_retry_at,
+        noticeRetryAttempt: row.notice_retry_attempt,
       };
       return window;
     },
 
     async saveWindow({ window }) {
       run(
-        'UPDATE owner_window SET last_owner_message_at = ?, notice_sent_for_closed_window = ? WHERE id = ?',
+        'UPDATE owner_window SET last_owner_message_at = ?, notice_sent_for_closed_window = ?, notice_retry_locale = ?, notice_retry_at = ?, notice_retry_attempt = ? WHERE id = ?',
         window.lastOwnerMessageAt,
         window.noticeSentForClosedWindow ? 1 : 0,
+        window.noticeRetryLocale,
+        window.noticeRetryAt,
+        window.noticeRetryAttempt,
         WINDOW_ROW_ID,
       );
     },
@@ -311,7 +323,7 @@ export function createSqliteInboxRepository(input: { storage: DurableObjectStora
     async claimNotice() {
       return (
         rows(
-          'UPDATE owner_window SET notice_sent_for_closed_window = 1 WHERE id = ? AND notice_sent_for_closed_window = 0 RETURNING id',
+          'UPDATE owner_window SET notice_sent_for_closed_window = 1, notice_retry_locale = NULL, notice_retry_at = NULL WHERE id = ? AND notice_sent_for_closed_window = 0 RETURNING id',
           WINDOW_ROW_ID,
         ).length === 1
       );

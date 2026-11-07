@@ -1338,7 +1338,7 @@ Failure modes: see table.
 ### Step Z (prove and ship)
 
 - [ ] **Z.1 Tester briefing.** Each lane wrote its section `## Lane <id>` in `docs/features/agent-inbox-core/tester-briefing.md`. The lead owns the rest of that file.
-- [ ] **Z.2 Tester run.** A fresh `tester` executed `test-plan.md` and ticked every box with evidence. The CC cases ran only after the owner's go-ahead.
+- [x] **Z.2 Tester run.** A fresh `tester` executed `test-plan.md` and ticked every box with evidence. The CC cases ran only after the owner's go-ahead. Evidence: 5702c16 final-head.md; e593d9a fix5-walk.md; 41f071d fix7.md; 233f3cd fix8.md (test-plan.md fully ticked).
 - [ ] **Z.3 Reviewer.** A fresh `reviewer` returned a verdict; refutation of the three claims in `test-plan.md` is recorded.
 - [ ] **Z.4 Security reviewer.** A fresh `security-reviewer` returned `Security verdict`.
 - [ ] **Z.5 /check-ui.** The Mintlify pages are captured with `mint dev`.
@@ -1378,7 +1378,7 @@ Failure modes: see table.
 ## Z. Prove and ship
 
 - [ ] **Tester briefing:** each lane wrote its `## Lane <id>` section.
-- [ ] **Tester run:** a fresh `tester` executed `test-plan.md`; CC cases run after the owner's go-ahead.
+- [x] **Tester run:** a fresh `tester` executed `test-plan.md`; CC cases run after the owner's go-ahead. Evidence: 5702c16 final-head.md; e593d9a fix5-walk.md; 41f071d fix7.md; 233f3cd fix8.md (test-plan.md fully ticked).
 - [ ] **Reviewer:** a fresh `reviewer` returned a verdict; refutation of the three riskiest claims is recorded.
 - [ ] **Security reviewer:** `Security verdict` returned.
 - [ ] **/check-ui:** the Mintlify pages captured with `mint dev`.

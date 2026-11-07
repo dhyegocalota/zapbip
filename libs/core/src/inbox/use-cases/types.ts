@@ -71,6 +71,7 @@ export type OwnerInboundContent =
 export type OwnerInboundMessage = {
   at: number;
   replyToMessageId: string | null;
+  forwarded: boolean;
   content: OwnerInboundContent;
 };
 

@@ -8,4 +8,6 @@ export type Bindings = {
   MEDIA_LINK_SIGNING_KEY: string;
   UPLOAD_LINK_SIGNING_KEY: string;
   PUBLIC_ORIGIN: string;
+  WAKE_SECRET_KEY: string;
+  WAKE_METRICS: AnalyticsEngineDataset;
 };

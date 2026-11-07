@@ -39,6 +39,7 @@ export type RecordingSender = MessageSender & {
 export type RecordingWaker = AgentWaker & {
   notifications: WakeNotification[];
   replyWith(input: { outcome: WakeOutcome }): void;
+  failWakesOf(input: { agent: AgentName }): void;
 };
 
 export type InMemoryMediaStore = MediaStore & {
@@ -64,7 +65,13 @@ function createInMemoryRepository(): InboxRepository {
   const uploadClaims = new Map<string, number>();
   let messages: Message[] = [];
   let questions: Question[] = [];
-  let window: OwnerWindow = { lastOwnerMessageAt: null, noticeSentForClosedWindow: false };
+  let window: OwnerWindow = {
+    lastOwnerMessageAt: null,
+    noticeSentForClosedWindow: false,
+    noticeRetryLocale: null,
+    noticeRetryAt: null,
+    noticeRetryAttempt: 0,
+  };
   let routingList: RoutingList | null = null;
 
   function replaceMessages(input: { messageIds: string[]; change: (message: Message) => Message }): void {
@@ -140,7 +147,7 @@ function createInMemoryRepository(): InboxRepository {
     },
     claimNotice: async () => {
       if (window.noticeSentForClosedWindow) return false;
-      window = { ...window, noticeSentForClosedWindow: true };
+      window = { ...window, noticeSentForClosedWindow: true, noticeRetryLocale: null, noticeRetryAt: null };
       return true;
     },
     findRoutingList: async () => (routingList === null ? null : { ...routingList }),
@@ -253,9 +260,15 @@ function createRecordingSender(): RecordingSender {
 
 function createRecordingWaker(): RecordingWaker {
   const notifications: WakeNotification[] = [];
+  const failedAgents = new Set<AgentName>();
   let outcome = WakeOutcome.Unreached;
   return {
     notifications,
+    failWakesOf: ({ agent }) => {
+      failedAgents.add(agent);
+    },
+    hasFailedWake: async ({ agent }) => failedAgents.has(agent),
+    pushesEveryMessage: async () => false,
     replyWith: (input) => {
       outcome = input.outcome;
     },

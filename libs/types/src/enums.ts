@@ -65,6 +65,10 @@ export enum InboxCopyKey {
   PreviewChoice = 'preview_choice',
 }
 
+export enum WakeCopyKey {
+  WakeFailed = 'wake_failed',
+}
+
 export enum OptionRender {
   Buttons = 'buttons',
   List = 'list',
@@ -98,10 +102,46 @@ export enum AgentWakeReason {
 
 export enum WakeMode {
   None = 'none',
+  Local = 'local',
+  Webhook = 'webhook',
 }
 
 export enum WakeRung {
   Inbox = 'inbox',
+  Local = 'local',
+  Webhook = 'webhook',
+}
+
+export enum WakeAttemptOutcome {
+  Delivered = 'delivered',
+  Retry = 'retry',
+  Refused = 'refused',
+}
+
+export enum WakeProvider {
+  GrokRoutine = 'grok_routine',
+  ClaudeRoutine = 'claude_routine',
+  GenericWebhook = 'generic',
+}
+
+export enum WakeStatus {
+  Active = 'active',
+  Failing = 'failing',
+}
+
+export enum SetWakeStatus {
+  Saved = 'saved',
+}
+
+export enum WakeLogEventName {
+  Scheduled = 'wake.scheduled',
+  Dropped = 'wake.dropped',
+  Delivered = 'wake.delivered',
+  Retry = 'wake.retry',
+  Refused = 'wake.refused',
+  GaveUp = 'wake.gave_up',
+  NoticeFailed = 'wake.notice_failed',
+  NoticeSkipped = 'wake.notice_skipped',
 }
 
 export enum ChannelErrorKind {
@@ -125,6 +165,7 @@ export enum RoutingRule {
   AgentMention = 'agent_mention',
   OpenQuestion = 'open_question',
   RecentAgent = 'recent_agent',
+  SingleAgent = 'single_agent',
   AskOwner = 'ask_owner',
 }
 
@@ -133,4 +174,21 @@ export enum InboxErrorCode {
   NotFound = 'not_found',
   UploadExpired = 'upload_expired',
   UploadUnavailable = 'upload_unavailable',
+}
+
+export enum HttpStatus {
+  Ok = 200,
+  SwitchingProtocols = 101,
+  Created = 201,
+  BadRequest = 400,
+  Unauthorized = 401,
+  Forbidden = 403,
+  NotFound = 404,
+  Conflict = 409,
+  Gone = 410,
+  LengthRequired = 411,
+  PayloadTooLarge = 413,
+  UnsupportedMediaType = 415,
+  UpgradeRequired = 426,
+  BadGateway = 502,
 }
