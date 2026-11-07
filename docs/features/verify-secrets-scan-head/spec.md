@@ -1,6 +1,6 @@
 # Verify secrets scan HEAD
 
-**Status:** Building
+**Status:** Shipped 2026-11-07
 **Tier:** 🟢 small
 **Owner approval:** approved 2026-11-06 (owner delegated)
 **ADRs:** none
