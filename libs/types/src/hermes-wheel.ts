@@ -8,3 +8,12 @@ export function hermesWheelFilename(input: { version: string }): string {
 export function hermesWheelPath(input: { version: string }): string {
   return `${HERMES_WHEEL_PATH_PREFIX}${hermesWheelFilename(input)}`;
 }
+export const HERMES_REQUIREMENTS_FILENAME_PATTERN = /^zapbip_platform-\d+\.\d+\.\d+-requirements\.txt$/;
+
+export function hermesRequirementsFilename(input: { version: string }): string {
+  throw new Error(`hermesRequirementsFilename is not implemented for ${input.version}`);
+}
+
+export function hermesRequirementsPath(input: { version: string }): string {
+  throw new Error(`hermesRequirementsPath is not implemented for ${input.version}`);
+}
