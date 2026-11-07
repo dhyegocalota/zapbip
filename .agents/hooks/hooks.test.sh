@@ -42,6 +42,16 @@ for form in "${blocked_env_writes[@]}"; do
   expect_exit "claude: $form is blocked" 2 guard-secrets.sh "$(bash_call "$form")"
   expect_exit "codex: $form is blocked" 2 guard-secrets.sh "$(codex_bash_call "$form")"
 done
+evasive_env_writes=('printf x > \"$(true ).env\"' 'tee \"apps/api/$(: ).env.local\"' 'cp draft .e*v' 'cp draft apps/api/.e?v' 'echo X=1 > ${HOME}.env' 'echo X=1 > `pwd`/.env' 'install -m 600 draft .env' 'dd if=draft of=.env' 'ln -sf draft .env' 'rsync draft .env' 'perl -pi -e s/a/b/ .env' 'python3 -c \"open('.env', 'w').write('x')\"' 'bash -c \"cp draft .env\"' 'echo X=1 > .*')
+for form in "${evasive_env_writes[@]}"; do
+  expect_exit "claude: $form is blocked" 2 guard-secrets.sh "$(bash_call "$form")"
+  expect_exit "codex: $form is blocked" 2 guard-secrets.sh "$(codex_bash_call "$form")"
+done
+allowed_env_commands=('install -m 600 draft .env.example' 'dd if=draft of=notes.txt' 'ln -sf draft link' 'rsync draft backup' 'perl -pi -e s/a/b/ notes.md')
+for form in "${allowed_env_commands[@]}"; do
+  expect_exit "claude: $form is allowed" 0 guard-secrets.sh "$(bash_call "$form")"
+  expect_exit "codex: $form is allowed" 0 guard-secrets.sh "$(codex_bash_call "$form")"
+done
 allowed_env_commands=('echo X=1 > .env.example' 'cp .env.example /tmp/copy' 'cat .env.example' 'sed -i s/a/b/ .env.example' 'echo x > notes.txt' 'git commit -m \"document the variable\"' 'echo \"the .env file holds secrets\" >> PROGRESS.md' "echo 'see .env and .env.local' > notes.md")
 for form in "${allowed_env_commands[@]}"; do
   expect_exit "claude: $form is allowed" 0 guard-secrets.sh "$(bash_call "$form")"
