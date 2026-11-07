@@ -8,7 +8,8 @@
 ## Unit
 
 - [x] The same test, green — input: `COMPANY` after the change; expected: equals the published values, no sentinel — evidence: b362b6c
-- [x] Both snippets show every fact, one row each, and never the sentinel — input: `apps/docs/snippets/company.mdx`, `apps/docs/snippets/pt-br/company.mdx`; expected: 8 table rows each — evidence: b362b6c, repository-shape 327/327 green
+- [x] Both snippets show every fact, one row each, and never the sentinel — input: `apps/docs/snippets/company.mdx`, `apps/docs/snippets/pt-br/company.mdx`; expected: 8 table rows each — evidence: b362b6c (constants) and df190b9 (snippets), repository-shape green at 19217ad
+- [x] The facts agree with logicbit.com.br — input: the home, privacy and terms pages on 2026-11-07; expected: CNPJ and email identical, address the same with the site's own punctuation, legal name the owner of the individual company — evidence: all four agree
 - [x] The reply copy that reads `COMPANY.tradeName` is unchanged — input: `libs/core/src/accounts`; expected: green — evidence: 272/272 green
 
 ## Docs walk (Playwright MCP was not available to this agent; a throwaway Playwright script in the scratchpad drove headless Chromium against `mint dev`)

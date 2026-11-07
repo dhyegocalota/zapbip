@@ -23,7 +23,7 @@ const PUBLISHED_COMPANY_FACTS = {
   contactEmail: 'dhyego@logicbit.com.br',
 };
 
-const setCompanyFacts: string[] = Object.values(COMPANY);
+const companyFacts: string[] = Object.values(COMPANY);
 
 function tableRowCount(snippet: string): number {
   return readRepositoryFile(snippet)
@@ -42,14 +42,14 @@ describe('company docs', () => {
     expect(Object.values(COMPANY)).not.toContain(COMPANY_FACT_UNSET);
   });
 
-  test.each(COMPANY_SNIPPETS)('%s shows every fact that is set', (snippet) => {
+  test.each(COMPANY_SNIPPETS)('%s shows every fact', (snippet) => {
     const text = readRepositoryFile(snippet);
-    const missing = setCompanyFacts.filter((fact) => !text.includes(fact));
+    const missing = companyFacts.filter((fact) => !text.includes(fact));
     expect(missing).toEqual([]);
   });
 
   test.each(COMPANY_SNIPPETS)('%s shows exactly the facts that are set, one row each', (snippet) => {
-    expect(tableRowCount(snippet)).toBe(TABLE_HEADER_ROW_COUNT + setCompanyFacts.length);
+    expect(tableRowCount(snippet)).toBe(TABLE_HEADER_ROW_COUNT + companyFacts.length);
   });
 
   test.each(COMPANY_SNIPPETS)('%s never shows the unset sentinel', (snippet) => {

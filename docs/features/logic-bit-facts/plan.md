@@ -21,7 +21,7 @@ One group, one lane.
 ### G1
 
 - [x] **Step 1:** red: `company-docs.test.ts` asserts every fact equals the published value — evidence: 96ed001
-- [x] **Step 2:** set the facts in `COMPANY` and list them in both snippets — evidence: b362b6c
+- [x] **Step 2:** set the facts in `COMPANY` and list them in both snippets — evidence: b362b6c (constants), df190b9 (snippets)
 
 ## Failure modes
 
@@ -35,6 +35,6 @@ One group, one lane.
 
 - [x] **Tester briefing:** not applicable, docs and constants only; the gate and the walk are the proof.
 - [ ] **Tester run:** not applicable.
-- [ ] **Reviewer:** a fresh `reviewer` sub-agent returned a verdict.
+- [x] **Reviewer:** WITH RESERVATIONS, all minors fixed (names, evidence commits, facts checked against the site).
 - [x] **/check-ui:** the about pages walked at 1280 and 375, see test-plan.md.
 - [ ] **/open-pr:** gates passed, learnings sweep stated, PR opened.
