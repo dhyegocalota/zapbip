@@ -19,3 +19,7 @@ A notice arrives before the real content and carries none of its own. The real m
 The owner taps the quick reply. That tap is a message from the owner: it opens the window and the queue is delivered in order.
 
 zapbip sends one notice per closed window. The tap is the only action a notice offers, and it is never forwarded to an agent.
+
+## When the template is rejected
+
+If WhatsApp rejects the template, the message stays queued and zapbip tries the notice again after 5 minutes, then after 10, 20 and so on, doubling up to 6 hours. The queued messages are delivered when the owner next writes.

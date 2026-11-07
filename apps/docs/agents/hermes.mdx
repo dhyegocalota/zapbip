@@ -23,6 +23,8 @@ A message you forwarded from someone else reaches Hermes with a label that says 
 
 ## How it listens
 
+Rung: Local. While a question is open, Hermes waits up to 50 seconds at a time. If you have not answered, the wait ends as pending and Hermes calls again, as many times as it takes, with no time limit.
+
 The plugin holds one connection to zapbip open, with no time limit. If the network drops it reconnects by itself, waiting a little longer after each failed try (1 second at first, 30 seconds at most). Messages you send meanwhile wait in your zapbip inbox, and the plugin picks up every one that was not answered as soon as it is back.
 
 ### If the plugin cannot be installed

@@ -7,7 +7,7 @@ Several agents share one number, so each owner message is routed to one agent. T
 
 1. A button or list reply goes to the agent that asked the question in the option id.
 2. A quoted reply or a reaction goes to the agent that sent the quoted or reacted message. A reaction to a question message answers that question with the emoji.
-3. A text starting with `@agent ` goes to that agent, with the prefix removed. It is also the escape for a command word meant for an agent: `@agent ajuda` reaches the agent instead of opening the [menu](/features/whatsapp-commands).
+3. A text starting with `@agent ` goes to that agent, with the prefix removed. It is also the escape for a command word meant for an agent: `@agent ajuda` reaches the agent instead of opening the menu.
 4. Exactly one agent with an open question receives it. With several open questions, the newest wins.
 5. Otherwise the last agent that wrote to the owner within the window, or the only agent when the account has just one.
 6. Otherwise zapbip sends the owner a list of the 10 most recently seen agents and holds the message until the owner picks one. With no agents at all, the owner gets one notice and the message is held.

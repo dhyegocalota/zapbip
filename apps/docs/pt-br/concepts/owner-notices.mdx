@@ -19,3 +19,7 @@ O aviso chega antes do conteúdo de verdade, e não traz nada dele. A mensagem, 
 Você toca na resposta rápida. Esse toque conta como uma mensagem sua: abre a janela e a fila é entregue em ordem.
 
 O zapbip envia um aviso por janela fechada. O toque é a única ação que um aviso oferece, e ele nunca é repassado a uma IA.
+
+## Quando o template é rejeitado
+
+Se o WhatsApp rejeita o template, a mensagem continua na fila e o zapbip tenta o aviso de novo depois de 5 minutos, depois de 10, 20 e assim por diante, dobrando até 6 horas. As mensagens da fila são entregues quando você escrever de novo.

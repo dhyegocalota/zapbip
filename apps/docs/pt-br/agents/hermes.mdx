@@ -23,6 +23,8 @@ Uma mensagem que você encaminhou de outra pessoa chega ao Hermes com um aviso d
 
 ## Como ela escuta
 
+Tipo: Local. Enquanto uma pergunta está aberta, o Hermes espera até 50 segundos por vez. Se você não respondeu, a espera termina como pendente e o Hermes chama de novo, quantas vezes for preciso, sem limite de tempo.
+
 O plugin mantém uma conexão aberta com o zapbip, sem limite de tempo. Se a rede cair, ele reconecta sozinho, esperando um pouco mais a cada tentativa que falha (1 segundo no começo, 30 segundos no máximo). As mensagens que você enviar nesse meio tempo esperam na sua caixa de entrada do zapbip, e o plugin pega todas as que ficaram sem resposta assim que volta.
 
 ### Se o plugin não puder ser instalado
