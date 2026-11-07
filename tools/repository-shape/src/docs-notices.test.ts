@@ -3,7 +3,7 @@ import { InboxCopyKey, OwnerLocale, WakeCopyKey } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { DOCS_ROOT, documentFiles, readRepositoryFile } from './repository-files';
 
-const NOTICE_BUBBLE_PATTERN = /notice: true, text: '((?:[^'\\]|\\.)*)'/g;
+const NOTICE_BUBBLE_PATTERN = /notice: true,\s*text: '((?:[^'\\]|\\.)*)'/g;
 const ESCAPED_COPY_TOKEN_PATTERN = /\\\{\w+\\\}/g;
 const TOKEN_MATCHER = '.+';
 const PORTUGUESE_PAGE_PREFIX = 'pt-br/';
