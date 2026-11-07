@@ -25,3 +25,4 @@ export const OUTBOUND_BUTTON_ID_MAX_CHARS = 256;
 export const OUTBOUND_LIST_MAX_ROWS = 10;
 export const OUTBOUND_BUTTON_MAX_REPLIES = 3;
 export const TEMPLATE_PREVIEW_MAX_CHARS = NOTICE_PREVIEW_MAX_CHARS;
+export const UNATTRIBUTED_DELIVERY_APP_SECRET = 'zapbip-unattributed-delivery-placeholder';
