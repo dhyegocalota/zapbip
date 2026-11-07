@@ -1,4 +1,10 @@
-import { HERMES_WHEEL_PATH_PREFIX, hermesWheelFilename, HttpStatus, ZAPBIP_HERMES_PLUGIN_VERSION } from '@zapbip/types';
+import {
+  HERMES_WHEEL_PATH_PREFIX,
+  hermesRequirementsFilename,
+  hermesWheelFilename,
+  HttpStatus,
+  ZAPBIP_HERMES_PLUGIN_VERSION,
+} from '@zapbip/types';
 import { env, SELF } from 'cloudflare:test';
 import { describe, expect, test, vi } from 'vitest';
 import { LogEvent } from '../../src/contract/log';
@@ -6,6 +12,8 @@ import { packageRoutes } from '../../src/routes/package';
 import { ORIGIN } from './route-fixtures';
 
 const WHEEL_FILENAME = hermesWheelFilename({ version: ZAPBIP_HERMES_PLUGIN_VERSION });
+const REQUIREMENTS_FILENAME = hermesRequirementsFilename({ version: ZAPBIP_HERMES_PLUGIN_VERSION });
+const REQUIREMENTS_URL = `${ORIGIN}${HERMES_WHEEL_PATH_PREFIX}${REQUIREMENTS_FILENAME}`;
 const WHEEL_URL = `${ORIGIN}${HERMES_WHEEL_PATH_PREFIX}${WHEEL_FILENAME}`;
 const WHEEL_TEXT = 'wheel-bytes';
 const WHEEL_BYTES = new TextEncoder().encode(WHEEL_TEXT);
@@ -21,6 +29,9 @@ const MALFORMED_PATHS = [
   `/pkg/${WHEEL_FILENAME}.`,
   `/pkg/${WHEEL_FILENAME}/extra`,
   '/pkg/',
+  `/pkg/zapbip_platform-0.1.0-requirements.txt.bak`,
+  `/pkg/zapbip_platform-0.1.0-extra.txt`,
+  `/pkg/zapbip_platform-0.1.0-requirements.whl`,
   '/pkg/..%2fsecret',
   `/pkg/${WHEEL_FILENAME}%0A`,
 ];
@@ -53,6 +64,16 @@ describe('package route', () => {
     expect(response.headers.get('content-type')).toBe('application/octet-stream');
     expect(response.headers.get('x-content-type-options')).toBe('nosniff');
     expect(response.headers.get('etag')).not.toBeNull();
+  });
+
+  test('serves the stored requirements file as text with immutable cache headers', async () => {
+    await env.PACKAGES.put(REQUIREMENTS_FILENAME, WHEEL_TEXT);
+    const response = await SELF.fetch(REQUIREMENTS_URL);
+    expect(response.status).toBe(HttpStatus.Ok);
+    expect(await response.text()).toBe(WHEEL_TEXT);
+    expect(response.headers.get('content-type')).toBe('text/plain; charset=utf-8');
+    expect(response.headers.get('cache-control')).toBe(IMMUTABLE_CACHE_CONTROL);
+    expect(response.headers.get('x-content-type-options')).toBe('nosniff');
   });
 
   test('answers 404 with no-store when the wheel is not uploaded yet', async () => {
