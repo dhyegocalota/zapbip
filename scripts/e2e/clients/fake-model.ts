@@ -12,7 +12,10 @@ const TOOL_ROLE = 'tool';
 const TOOL_REQUEST_PATTERN = /ping-tool-[a-z0-9-]+/;
 const CHECK_INBOX_TOOL_SUFFIX = 'check_inbox';
 const TOOL_SEARCH_NAME = 'tool_search';
-const TOOL_SEARCH_ARGUMENTS = JSON.stringify({ query: CHECK_INBOX_TOOL_SUFFIX, queries: [CHECK_INBOX_TOOL_SUFFIX] });
+const TOOL_SEARCH_QUERY = 'inbox';
+const STRING_TYPE = 'string';
+const STRING_QUERIES_ARGUMENTS = JSON.stringify({ queries: [TOOL_SEARCH_QUERY] });
+const SINGLE_QUERY_ARGUMENTS = JSON.stringify({ query: TOOL_SEARCH_QUERY });
 const EMPTY_ARGUMENTS = '{}';
 const TOOL_CALL_ID = 'call_fake_check_inbox';
 const JSON_HEADERS = { 'content-type': 'application/json' };
@@ -22,7 +25,13 @@ const HTTP_BAD_REQUEST = 400;
 
 type ContentPart = { text: string } | { type: string };
 type ChatMessage = { role: string; content: string | ContentPart[] };
-type ToolDeclaration = { type?: string; name?: string; function?: { name: string } };
+type ToolParameters = { properties?: Record<string, { items?: { type?: string } }> };
+type ToolDeclaration = {
+  type?: string;
+  name?: string;
+  parameters?: ToolParameters;
+  function?: { name: string; parameters?: ToolParameters };
+};
 type ChatBody = {
   tools: ToolDeclaration[] | undefined;
   model: string | undefined;
@@ -76,17 +85,23 @@ function toolResultTextsOf(input: { body: ChatBody }): string[] {
     .map((message) => contentText({ content: message.content }));
 }
 
-function declaredNameOf(input: { tool: ToolDeclaration }): string {
+function declaredNameOf(input: { tool: ToolDeclaration }): string | undefined {
   const { tool } = input;
   if (tool.function !== undefined) return tool.function.name;
-  if (tool.name !== undefined) return tool.name;
-  return '';
+  return tool.name;
+}
+
+function searchArgumentsOf(input: { body: ChatBody }): string {
+  const searchTool = (input.body.tools ?? []).find((tool) => declaredNameOf({ tool }) === TOOL_SEARCH_NAME);
+  const parameters = searchTool?.function?.parameters ?? searchTool?.parameters;
+  if (parameters?.properties?.queries?.items?.type === STRING_TYPE) return STRING_QUERIES_ARGUMENTS;
+  return SINGLE_QUERY_ARGUMENTS;
 }
 
 function toolNamesOf(input: { body: ChatBody }): string[] {
   const { tools } = input.body;
   if (tools === undefined) return [];
-  return tools.map((tool) => declaredNameOf({ tool }));
+  return tools.map((tool) => declaredNameOf({ tool })).filter((name): name is string => name !== undefined);
 }
 
 type ToolCallPlan = { toolName: string; toolArguments: string };
@@ -95,7 +110,7 @@ function toolCallPlanOf(input: { body: ChatBody }): ToolCallPlan | null {
   const names = toolNamesOf(input);
   const checkInboxName = names.find((name) => name.endsWith(CHECK_INBOX_TOOL_SUFFIX));
   if (checkInboxName !== undefined) return { toolName: checkInboxName, toolArguments: EMPTY_ARGUMENTS };
-  if (names.includes(TOOL_SEARCH_NAME)) return { toolName: TOOL_SEARCH_NAME, toolArguments: TOOL_SEARCH_ARGUMENTS };
+  if (names.includes(TOOL_SEARCH_NAME)) return { toolName: TOOL_SEARCH_NAME, toolArguments: searchArgumentsOf(input) };
   return null;
 }
 

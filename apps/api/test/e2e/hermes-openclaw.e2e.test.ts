@@ -50,6 +50,9 @@ const ATTACH_TIMEOUT_MS = 120 * SECOND_MS;
 const REPLY_TIMEOUT_MS = 90 * SECOND_MS;
 const POLL_INTERVAL_MS = 500;
 const SETTLE_WINDOW_MS = 8 * SECOND_MS;
+const UNKNOWN_SECRET_LENGTH = 43;
+const RESTART_BACKOFF_WINDOW_MS = 20 * SECOND_MS;
+const OPENCLAW_AUTO_RESTART_LINE = 'auto-restart attempt';
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 const CLEAN_SHUTDOWN_LIMIT_MS = 5 * SECOND_MS;
 const CLEAN_EXIT_CODE = 0;
@@ -268,9 +271,8 @@ async function startClient(input: {
   product: ClientProduct;
   accountIndex: number;
   allowedUsers: string;
-  hasMcpServer?: boolean;
+  hasMcpServer: boolean;
 }): Promise<RunningClient> {
-  const { hasMcpServer = false } = input;
   const account = isolated.context?.wakeAccounts[input.accountIndex];
   if (!account) throw new Error(`no seeded account at ${input.accountIndex}`);
   runIndex += 1;
@@ -281,7 +283,7 @@ async function startClient(input: {
     connectionLink: connectionLinkOf({ account }),
     fakeModelPort: fakeModel.port,
     certificateFile: tlsFront.certificateFile,
-    hasMcpServer,
+    hasMcpServer: input.hasMcpServer,
   };
   const container =
     input.product === ClientProduct.OpenClaw
@@ -327,7 +329,12 @@ describe.skipIf(!isEnabled)('hermes and openclaw plugins against the development
   test(
     'E1 OpenClaw: the owner message reaches the agent and the reply reaches the owner',
     async () => {
-      const client = await startClient({ product: ClientProduct.OpenClaw, accountIndex: 0, allowedUsers: OWNER_SENDER });
+      const client = await startClient({
+        product: ClientProduct.OpenClaw,
+        accountIndex: 0,
+        allowedUsers: OWNER_SENDER,
+        hasMcpServer: false,
+      });
       await postOwnerText({ account: client.account, text: 'ping-e1', forwarded: false });
       await awaitScreenText({ account: client.account, text: replyTo({ token: 'ping-e1' }) });
       expect(fakeModel.requestsMentioning({ text: 'ping-e1' }).length).toBeGreaterThan(0);
@@ -339,7 +346,7 @@ describe.skipIf(!isEnabled)('hermes and openclaw plugins against the development
   test(
     'E2 Hermes: the platform is enabled by the environment alone and the reply reaches the owner',
     async () => {
-      const client = await startClient({ product: ClientProduct.Hermes, accountIndex: 1, allowedUsers: OWNER_SENDER });
+      const client = await startClient({ product: ClientProduct.Hermes, accountIndex: 1, allowedUsers: OWNER_SENDER, hasMcpServer: false });
       await postOwnerText({ account: client.account, text: 'ping-e2', forwarded: false });
       await awaitScreenText({ account: client.account, text: replyTo({ token: 'ping-e2' }) });
       expect(await containerLogs({ container: client.container })).not.toContain(SECRET_PREFIX);
@@ -350,7 +357,7 @@ describe.skipIf(!isEnabled)('hermes and openclaw plugins against the development
   test.each([ClientProduct.OpenClaw, ClientProduct.Hermes])(
     'forwarded %s: the agent sees the forwarded prefix before the text',
     async (product) => {
-      const client = await startClient({ product, accountIndex: 2, allowedUsers: OWNER_SENDER });
+      const client = await startClient({ product, accountIndex: 2, allowedUsers: OWNER_SENDER, hasMcpServer: false });
       const token = `ping-forwarded-${product}`;
       await postOwnerText({ account: client.account, text: token, forwarded: true });
       await awaitScreenText({ account: client.account, text: replyTo({ token }) });
@@ -378,9 +385,32 @@ describe.skipIf(!isEnabled)('hermes and openclaw plugins against the development
   );
 
   test(
+    'E8 Hermes at DEBUG with a refused link and a configured MCP server: no log line holds the secret path',
+    async () => {
+      const unknownSecret = `${SECRET_PREFIX}${'x'.repeat(UNKNOWN_SECRET_LENGTH)}`;
+      const container = await startHermesClient({
+        name: `zapbip-e2e-${ClientProduct.Hermes}-${process.pid}-refused`,
+        directory: workDirectory,
+        connectionLink: `https://${CONTAINER_HOST}:${tlsFront.port}/c/${unknownSecret}/mcp`,
+        fakeModelPort: fakeModel.port,
+        certificateFile: tlsFront.certificateFile,
+        allowedUsers: OWNER_SENDER,
+        hasMcpServer: true,
+      });
+      testContainers.push(container);
+      await awaitLog({ container, pattern: ConnectorLogEvent.ConnectorClosed, timeoutMs: HERMES_BOOT_TIMEOUT_MS });
+      await delay(SETTLE_WINDOW_MS);
+      const logs = await containerLogs({ container });
+      expect(logs).toMatch(/mcp/i);
+      expect(logs).not.toContain(SECRET_PREFIX);
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  test(
     'forwarded hermes: a slash command in a forwarded message reaches the model as prefixed text, not as a command',
     async () => {
-      const client = await startClient({ product: ClientProduct.Hermes, accountIndex: 3, allowedUsers: OWNER_SENDER });
+      const client = await startClient({ product: ClientProduct.Hermes, accountIndex: 3, allowedUsers: OWNER_SENDER, hasMcpServer: false });
       const token = 'ping-command-hermes';
       await postOwnerText({ account: client.account, text: `/status ${token}`, forwarded: true });
       await awaitScreenText({ account: client.account, text: replyTo({ token }) });
@@ -393,7 +423,12 @@ describe.skipIf(!isEnabled)('hermes and openclaw plugins against the development
   test(
     'forwarded openclaw: a slash command in a forwarded message reaches the model as prefixed text, not as a command',
     async () => {
-      const client = await startClient({ product: ClientProduct.OpenClaw, accountIndex: 3, allowedUsers: OWNER_SENDER });
+      const client = await startClient({
+        product: ClientProduct.OpenClaw,
+        accountIndex: 3,
+        allowedUsers: OWNER_SENDER,
+        hasMcpServer: false,
+      });
       const token = 'ping-command-openclaw';
       await postOwnerText({ account: client.account, text: `/status ${token}`, forwarded: true });
       await awaitScreenText({ account: client.account, text: replyTo({ token }) });
@@ -406,7 +441,12 @@ describe.skipIf(!isEnabled)('hermes and openclaw plugins against the development
   test(
     'E3 OpenClaw restart while idle: the message sent while it was down is handed off once',
     async () => {
-      const client = await startClient({ product: ClientProduct.OpenClaw, accountIndex: 3, allowedUsers: OWNER_SENDER });
+      const client = await startClient({
+        product: ClientProduct.OpenClaw,
+        accountIndex: 3,
+        allowedUsers: OWNER_SENDER,
+        hasMcpServer: false,
+      });
       await stopContainer({ container: client.container });
       await postOwnerText({ account: client.account, text: 'ping-e3', forwarded: false });
       await restartStoppedContainer({ container: client.container });
@@ -421,14 +461,26 @@ describe.skipIf(!isEnabled)('hermes and openclaw plugins against the development
   test(
     'E4 OpenClaw replacement: the older plugin is told it was replaced and exits cleanly, the newer one answers once',
     async () => {
-      const first = await startClient({ product: ClientProduct.OpenClaw, accountIndex: 4, allowedUsers: OWNER_SENDER });
-      const second = await startClient({ product: ClientProduct.OpenClaw, accountIndex: 4, allowedUsers: OWNER_SENDER });
+      const first = await startClient({
+        product: ClientProduct.OpenClaw,
+        accountIndex: 4,
+        allowedUsers: OWNER_SENDER,
+        hasMcpServer: false,
+      });
+      const second = await startClient({
+        product: ClientProduct.OpenClaw,
+        accountIndex: 4,
+        allowedUsers: OWNER_SENDER,
+        hasMcpServer: false,
+      });
       await awaitLog({ container: first.container, pattern: ConnectorLogEvent.ConnectorReplaced, timeoutMs: ATTACH_TIMEOUT_MS });
       await postOwnerText({ account: second.account, text: 'ping-e4', forwarded: false });
       await awaitScreenText({ account: second.account, text: replyTo({ token: 'ping-e4' }) });
-      await delay(SETTLE_WINDOW_MS);
+      await delay(RESTART_BACKOFF_WINDOW_MS);
       const replies = (await readScreen({ account: second.account })).filter((entry) => entry.text.includes(replyTo({ token: 'ping-e4' })));
       expect(replies).toHaveLength(1);
+      expect(fakeModel.requestsMentioning({ text: 'ping-e4' })).toHaveLength(1);
+      expect(await containerLogs({ container: first.container })).not.toContain(OPENCLAW_AUTO_RESTART_LINE);
       expect(await containerExitCode({ container: first.container })).toBe(CLEAN_EXIT_CODE);
     },
     TEST_TIMEOUT_MS,
@@ -437,7 +489,12 @@ describe.skipIf(!isEnabled)('hermes and openclaw plugins against the development
   test(
     'E7 Hermes: an owner outside ZAPBIP_ALLOWED_USERS is refused and the model is never called',
     async () => {
-      const client = await startClient({ product: ClientProduct.Hermes, accountIndex: 0, allowedUsers: 'someone-else' });
+      const client = await startClient({
+        product: ClientProduct.Hermes,
+        accountIndex: 0,
+        allowedUsers: 'someone-else',
+        hasMcpServer: false,
+      });
       await postOwnerText({ account: client.account, text: 'ping-e7', forwarded: false });
       await delay(SETTLE_WINDOW_MS);
       expect(fakeModel.requestsMentioning({ text: 'ping-e7' })).toHaveLength(0);
@@ -486,7 +543,12 @@ describe.skipIf(!isEnabled)('hermes and openclaw plugins against the development
   test(
     'E6 fallback restored after reattach: the restarted plugin takes the next message, not a poll',
     async () => {
-      const client = await startClient({ product: ClientProduct.OpenClaw, accountIndex: 0, allowedUsers: OWNER_SENDER });
+      const client = await startClient({
+        product: ClientProduct.OpenClaw,
+        accountIndex: 0,
+        allowedUsers: OWNER_SENDER,
+        hasMcpServer: false,
+      });
       await postOwnerText({ account: client.account, text: 'ping-e6', forwarded: false });
       await awaitScreenText({ account: client.account, text: replyTo({ token: 'ping-e6' }) });
       await awaitLog({ container: client.container, pattern: ConnectorLogEvent.MessagesReceived, timeoutMs: REPLY_TIMEOUT_MS });
@@ -498,7 +560,12 @@ describe.skipIf(!isEnabled)('hermes and openclaw plugins against the development
   test(
     'E9 media without caption: the agent receives the no-text sentence for an image and replies once',
     async () => {
-      const client = await startClient({ product: ClientProduct.OpenClaw, accountIndex: 1, allowedUsers: OWNER_SENDER });
+      const client = await startClient({
+        product: ClientProduct.OpenClaw,
+        accountIndex: 1,
+        allowedUsers: OWNER_SENDER,
+        hasMcpServer: false,
+      });
       await postOwnerText({ account: client.account, text: 'ping-e9', forwarded: false });
       await awaitScreenText({ account: client.account, text: replyTo({ token: 'ping-e9' }) });
       const repliesBefore = (await textsOnScreen({ account: client.account })).length;
@@ -520,7 +587,12 @@ describe.skipIf(!isEnabled)('hermes and openclaw plugins against the development
   test(
     'E10 choice reply: tapping a button of an ask that already timed out hands the selected title to the agent once',
     async () => {
-      const client = await startClient({ product: ClientProduct.OpenClaw, accountIndex: 2, allowedUsers: OWNER_SENDER });
+      const client = await startClient({
+        product: ClientProduct.OpenClaw,
+        accountIndex: 2,
+        allowedUsers: OWNER_SENDER,
+        hasMcpServer: false,
+      });
       await postOwnerText({ account: client.account, text: 'ping-e10', forwarded: false });
       await awaitScreenText({ account: client.account, text: replyTo({ token: 'ping-e10' }) });
       const agent = await connectAccountAgent({ account: client.account });
@@ -647,7 +719,7 @@ describe.skipIf(!isEnabled)('hermes and openclaw plugins against the development
   test.each([ClientProduct.OpenClaw, ClientProduct.Hermes])(
     'E11%s clean shutdown: SIGTERM ends the container with exit code 0 within the limit',
     async (product) => {
-      const client = await startClient({ product, accountIndex: 1, allowedUsers: OWNER_SENDER });
+      const client = await startClient({ product, accountIndex: 1, allowedUsers: OWNER_SENDER, hasMcpServer: false });
       const stoppedAt = Date.now();
       await stopContainer({ container: client.container });
       expect(Date.now() - stoppedAt).toBeLessThan(CLEAN_SHUTDOWN_LIMIT_MS);

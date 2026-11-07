@@ -68,6 +68,8 @@ function configOf(input: { fakeModelPort: number; connectionLink: string; hasMcp
     `  default: ${MODEL_ID}`,
     `  base_url: http://${CONTAINER_HOST}:${input.fakeModelPort}/v1`,
     `  api_key: ${FAKE_API_KEY}`,
+    'logging:',
+    '  level: DEBUG',
     'plugins:',
     '  enabled:',
     `    - ${PLUGIN_NAME}`,
