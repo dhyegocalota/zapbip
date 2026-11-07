@@ -20,6 +20,7 @@ type WalkFixtures = {
   network: ClientNetwork;
   fakeGraph: FakeGraph;
   pageProblems: string[];
+  cleanRegistry: void;
 };
 
 function randomAddress(): string {
@@ -40,6 +41,13 @@ export const test = base.extend<WalkFixtures>({
           currentAddress = randomAddress();
         },
       });
+    },
+    { auto: true },
+  ],
+  cleanRegistry: [
+    async ({}, use) => {
+      clearRegistry();
+      await use();
     },
     { auto: true },
   ],
@@ -70,7 +78,5 @@ export const test = base.extend<WalkFixtures>({
     { auto: true },
   ],
 });
-
-test.beforeEach(() => clearRegistry());
 
 export { expect };

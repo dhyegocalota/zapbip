@@ -1,4 +1,4 @@
-import { expect, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 import { BackofficeCopyKey } from '../../../src/backoffice/backoffice-copy';
 import { NEW_META_APP_VALUE } from '../../../src/backoffice/numbers/number-form-fields';
 import { GRAPH_API_VERSION } from '../../../src/adapters/whatsapp/whatsapp-constants';
@@ -11,6 +11,7 @@ const FIRST_WABA_ID = 3_000_000_000_000_000;
 const FIRST_META_APP_ID = 5_000_000_000_000;
 const FIRST_DISPLAY_NUMBER = 5_511_977_770_000;
 const OK_STATUS = 200;
+const STATE_BADGE_SELECTOR = '.state-badge';
 const VERIFIED_NAME = 'Maria Atendimento';
 const QUALITY_RATING = 'GREEN';
 
@@ -108,4 +109,8 @@ export async function activateNumber(input: { page: Page; fakeGraph: FakeGraph; 
   await verifyNumber({ page, fakeGraph, number });
   await changeState({ page, optionKey: BackofficeCopyKey.NumberStateOptionActive, code: await freshCode() });
   await expect(page.getByText(copy({ key: BackofficeCopyKey.NoticeStateChanged }))).toBeVisible();
+}
+
+export function stateBadgeOf(input: { page: Page; key: BackofficeCopyKey }): Locator {
+  return input.page.locator(STATE_BADGE_SELECTOR).filter({ hasText: copy({ key: input.key }) });
 }

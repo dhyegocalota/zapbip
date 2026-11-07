@@ -9,6 +9,7 @@ import {
   fillCode,
   registerNumber,
   registerNumberWithFreshCode,
+  stateBadgeOf,
   verifyNumber,
   walkNumberOf,
 } from './support/numbers';
@@ -33,14 +34,17 @@ test('registers, verifies and activates a number', async ({ page, fakeGraph }) =
   const number = walkNumberOf({ index: 1 });
   await registerNumberWithFreshCode({ page, number });
   await expect(page.getByText(copy({ key: BackofficeCopyKey.NoticeRegistered }))).toBeVisible();
-  await expect(page.getByText(copy({ key: BackofficeCopyKey.StatePending }), { exact: true })).toBeVisible();
+  await expect(stateBadgeOf({ page, key: BackofficeCopyKey.StatePending })).toBeVisible();
   await verifyNumber({ page, fakeGraph, number });
   await changeState({ page, optionKey: BackofficeCopyKey.NumberStateOptionActive, code: await freshCode() });
   await expect(page.getByText(copy({ key: BackofficeCopyKey.NoticeStateChanged }))).toBeVisible();
-  await expect(page.getByText(copy({ key: BackofficeCopyKey.StateActive }), { exact: true })).toBeVisible();
+  await expect(stateBadgeOf({ page, key: BackofficeCopyKey.StateActive })).toBeVisible();
   const content = await page.content();
   credentialTextsOf({ number }).forEach((credential) => expect(content).not.toContain(credential));
-  await page.getByRole('link', { name: copy({ key: BackofficeCopyKey.NumberBack }), exact: true }).click();
+  await page
+    .getByRole('main')
+    .getByRole('link', { name: copy({ key: BackofficeCopyKey.NumberBack }), exact: true })
+    .click();
   await expect(page.getByRole('link', { name: number.label })).toBeVisible();
   await expect(page.getByText(number.displayNumber)).toBeVisible();
 });
@@ -96,5 +100,5 @@ test('refuses a state change whose step-up code is wrong', async ({ page, fakeGr
   await activateNumber({ page, fakeGraph, number: walkNumberOf({ index: 1 }) });
   await changeState({ page, optionKey: BackofficeCopyKey.NumberStateOptionClosed, code: await wrongCode() });
   await expect(page.getByText(copy({ key: BackofficeCopyKey.StepUpRejected }))).toBeVisible();
-  await expect(page.getByText(copy({ key: BackofficeCopyKey.StateActive }), { exact: true })).toBeVisible();
+  await expect(stateBadgeOf({ page, key: BackofficeCopyKey.StateActive })).toBeVisible();
 });
