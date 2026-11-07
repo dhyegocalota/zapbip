@@ -252,23 +252,23 @@ Author this list with every box empty. A sub-agent ticks its own line. A wrong s
 
 ### G5 deploy, smoke, runbooks and rules
 
-- [ ] **Step 34:** (the `SmokeInput` rename is in step 2) red: `smoke-checks.test.ts` expects check 5's payload to carry `metadata.phone_number_id` equal to the `SMOKE_PHONE_NUMBER_ID` input and the signature computed with `SMOKE_META_APP_SECRET`. Then edit `smoke-checks.ts`.
-- [ ] **Step 35:** red: `tools/repository-shape/src/backoffice-isolation.test.ts`:
+- [x] **Step 34:** (the `SmokeInput` rename is in step 2) red: `smoke-checks.test.ts` expects check 5's payload to carry `metadata.phone_number_id` equal to the `SMOKE_PHONE_NUMBER_ID` input and the signature computed with `SMOKE_META_APP_SECRET`. Then edit `smoke-checks.ts`. — evidence: pin 4968aca0 (green on landing: the payload already carried the smoke inputs)
+- [x] **Step 35:** red: `tools/repository-shape/src/backoffice-isolation.test.ts`:
   - no file under `apps/api/src/mcp`, `apps/api/src/routes`, `apps/api/src/account-inbox`, `apps/connector` or `libs/` imports `apps/api/src/backoffice` (the spec's directories; `index.ts`, `index.dev.ts` and `apps/api/scripts/backoffice-enroll.ts` are not scanned, so the enrollment script imports `auth/totp.ts` and the base32 helper directly and no shared helper is added);
   - no `backoffice_` table name outside `backoffice/**` and migrations;
-  - `sealed_` columns appear only in `numbers/**`, `d1-number-registry.ts` and migrations.
+  - `sealed_` columns appear only in `numbers/**`, `d1-number-registry.ts` and migrations. — evidence: pin 21947d9b (no offender in the scanned directories; the registry code paths `d1-number-admin.ts` and `development-number-seed.ts` are allowed owners of the sealed columns)
 
   Then fix any offender.
-- [ ] **Step 36:** red: edit `GO_LIVE_ORDER` in `tools/repository-shape/src/runbooks.test.ts` (lines 15 to 32) to the new order, so `runbooks.test.ts` fails until `deploy.md` follows it. Then the runbooks.
+- [x] **Step 36:** red: edit `GO_LIVE_ORDER` in `tools/repository-shape/src/runbooks.test.ts` (lines 15 to 32) to the new order, so `runbooks.test.ts` fails until `deploy.md` follows it. Then the runbooks.
   - Order: secrets → migrate → enroll → deploy → register number → point the Meta webhook → smoke. `deploy-preflight.ts` (`refuseMissingSecrets`) refuses a deploy while any `WorkerSecret` is missing, and enroll executes SQL on `backoffice_operator`, which needs `0005` applied. The array keeps one entry per phase and environment, splitting 'Migrate and deploy staging' into migrate, enroll, deploy and register the staging number before 'Smoke staging', and the same for production.
   - `docs/runbooks/README.md` is capped at 20 lines (`MAX_INDEX_LINES`): the order goes in the `## Go-live order` section of `deploy.md`, and the README gains a link line only if it stays within the cap.
   - `docs/runbooks/backoffice.md`: enroll, sign in, register a number, verify, activate, rotate, re-enroll, the lockout.
   - `meta-setup.md`: the webhook URL is the same for every app; the verify token is shared; app secrets and tokens go into the backoffice, not wrangler.
   - `deploy.md`: the new secrets and the order above.
-  - `dns.md`: the backoffice hosts with a `dig` check.
+  - `dns.md`: the backoffice hosts with a `dig` check. — evidence: red 43d565c3 (`expected [ … ] to deeply equal [ … ]`, 16 go-live titles against 25) → green 448a56fe; `runbooks.test.ts` and the shape gate pass
 
   `runbooks.test.ts` stays green.
-- [ ] **Step 37:** `.claude/rules/backoffice.md` with `paths: apps/api/src/backoffice/**, apps/api/src/numbers/**`, stating the security facts of this spec; `apps/api/README.md` purpose line; `docs/scenarios/backoffice.md` (operator signs in, registers two numbers, an owner writes to each).
+- [x] **Step 37:** `.claude/rules/backoffice.md` with `paths: apps/api/src/backoffice/**, apps/api/src/numbers/**`, stating the security facts of this spec; `apps/api/README.md` purpose line; `docs/scenarios/backoffice.md` (operator signs in, registers two numbers, an owner writes to each). — evidence: 448a56fe (the `docs/features/README.md` row already existed)
 
 ### G6 browser specs
 

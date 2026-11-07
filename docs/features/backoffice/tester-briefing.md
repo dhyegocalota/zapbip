@@ -164,3 +164,24 @@ Pins: 43e143f9, `number-registry-state` second-number case, 99501b0a (form rules
 - `INVALID_JSON_BODY` in `contract/constants.ts` is now unused (G1 file).
 - The numbers pages reuse G2's stylesheet classes; `dl` and the template table have no dedicated styles.
 - The `AccountOnOtherNumber` text is filled with `fillCopyTokens`, not `renderCopy`.
+
+## G5 deploy, smoke, runbooks and rules
+
+| Step | Red | Failure text | Green |
+|------|-----|--------------|-------|
+| 34 | pin 4968aca0 | green on landing | |
+| 35 | pin 21947d9b | green on landing | |
+| 36 | 43d565c3 | `deploy.md lists the go-live steps in order`: `expected [ 'Prepare your machine', …(15) ] to deeply equal [ 'Prepare your machine', …(24) ]` | 448a56fe |
+| 37 | | | 448a56fe |
+
+### Hypotheses for the tester
+
+- `deploy.md` lists 25 go-live steps in the order secrets, migrate, enroll, deploy, register, webhook, smoke for both environments, and no runbook names `META_APP_SECRET`, `WHATSAPP_ACCESS_TOKEN` or `WHATSAPP_PHONE_NUMBER_ID`.
+- Following `backoffice.md` by hand enrolls, signs in, registers, verifies and activates a number.
+- `dig` and `curl` on the backoffice host of `dns.md` step 3 work after a deploy.
+
+### Gaps and deviations
+
+- Production gets its own "Production resources and secrets" go-live step, because the secrets must precede the migration; the plan listed only the split of the deploy step.
+- The sealed-column isolation test also allows `d1-number-admin.ts` and `development-number-seed.ts`, the writers of those columns, beyond the spec's list.
+- `docs/features/README.md` already carried the backoffice row. The smoke inputs `SMOKE_META_APP_SECRET` and `SMOKE_PHONE_NUMBER_ID` stay (they are smoke inputs, not Worker secrets); no `.env.example` line named a removed Worker secret.
