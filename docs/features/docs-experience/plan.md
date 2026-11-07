@@ -238,10 +238,10 @@ G0 evidence (2026-11-06): Step 1 `ab7d8dc`; Step 2 red `7902adb` (carries the en
 
 ### G6 developers and concepts
 
-- [ ] **Step 33:** Red: `apps/docs/e2e/developers.spec.ts`: the twelve developer pages exist in both languages. Red: the local-connector checks read `developers/local-connector` and `developers/background-running`; the webhook-wake checks read `developers/webhook-wake`. Committed before the moves.
-- [ ] **Step 34:** `developers/any-mcp-client`, `developers/errors`, `developers/local-connector` (the command, `--client`, `--cwd`, `--session`, the environment variable, logs), `developers/background-running` (launchd and systemd, file mode 600, not installed by the package), `developers/webhook-wake`. English reworded for a developer; pt-BR twins native.
-- [ ] **Step 35:** `concepts/inbox`, `questions`, `24-hour-window`, `routing`, `wake-ladder`, `whatsapp-channel`, `owner-notices` (English and twin). Concepts link only within `concepts/` and to `developers/`. No simulator and no test double.
-- [ ] **Step 36 (facts):** the wake-ladder rung table and times match `CLIENT_LISTEN_FACTS`; the owner-notice templates and quick-reply texts match whatsapp-cloud-channel.
+- [x] **Step 33:** Red: `apps/docs/e2e/developers.spec.ts`: the twelve developer pages exist in both languages. Red: the local-connector checks read `developers/local-connector` and `developers/background-running`; the webhook-wake checks read `developers/webhook-wake`. Committed before the moves. Evidence: red `5636b6f` (8 failed, 42 passed), green `b7dff7f`. No test on this base reads the old `connect/` or `guides/webhook-wake` paths (the moved-path checks live on the slice branches), so the moved-path reads are not applicable here.
+- [x] **Step 34:** `developers/any-mcp-client`, `developers/errors`, `developers/local-connector` (the command, `--client`, `--cwd`, `--session`, the environment variable, logs), `developers/background-running` (launchd and systemd, file mode 600, not installed by the package), `developers/webhook-wake`. English reworded for a developer; pt-BR twins native. Evidence: `b7dff7f`.
+- [x] **Step 35:** `concepts/inbox`, `questions`, `24-hour-window`, `routing`, `wake-ladder`, `whatsapp-channel`, `owner-notices` (English and twin). Concepts link only within `concepts/` and to `developers/`. No simulator and no test double. Evidence: `b7dff7f`.
+- [x] **Step 36 (facts):** the wake-ladder rung table and times match `CLIENT_LISTEN_FACTS`; the owner-notice templates and quick-reply texts match whatsapp-cloud-channel. Evidence: `b7dff7f`; the Scheduled and Standby rows wait for the scheduled-wake merge.
 
 ### G7 MCP reference
 

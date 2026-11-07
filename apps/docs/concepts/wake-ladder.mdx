@@ -1,20 +1,30 @@
 ---
 title: 'Wake ladder'
-description: 'How an agent that is not listening is reached.'
+description: 'How zapbip reaches an agent that is not listening when the owner writes.'
 ---
 
-An agent can always call zapbip, but the owner can only reach an agent that is listening. When a message arrives and no call is waiting, zapbip wakes the agent through the highest rung its connection supports:
+An agent can always call zapbip, but the owner can only reach an agent that is listening. When a message arrives and no call is waiting, zapbip wakes the agent through the highest rung its connection supports. The agent declares the rung with [set_wake](/mcp-reference/set-wake) and every rung keeps the message in the [inbox](/concepts/inbox) until an agent reads it.
 
-1. a local connector;
-2. a webhook;
-3. a scheduled task calling [check_inbox](/mcp-reference/check-inbox);
-4. an optional standby agent of the same provider;
-5. the inbox alone.
+| Rung       | How it works                                                                                                                              | Expected delay                        | Set with                                                      |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------------- |
+| Local      | zapbip pushes the message to the [connector](/developers/local-connector) on the owner's computer, which resumes the session.             | 7 s Claude Code, 6 s Codex            | `npx zapbip@0.1.0 connect` (while connected) or `mode: local` |
+| Webhook    | zapbip calls a link that starts the agent. See [webhook wake](/developers/webhook-wake).                                                  | 9 s Grok Bot, 16 s claude.ai          | `mode: webhook`                                               |
+| Scheduled  | The agent runs a task on a timer that calls [check_inbox](/mcp-reference/check-inbox). Intervals go from 1 to 1440 minutes.               | up to the interval, 1 hour on ChatGPT | `mode: scheduled`                                             |
+| Standby    | Another agent of the same account receives a copy of the message and answers in its place. It is one hop: a standby never forwards again. | not measured                          | `mode: standby`                                               |
+| Inbox only | The message waits in the inbox and zapbip tells the owner that the agent is not listening right now.                                      | until the agent calls                 | `mode: none`                                                  |
 
-| Rung            | How it works                                                                                                                    | Set with                                                                              |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| Local connector | zapbip pushes the message to the [connector](/developers/local-connector) running on your computer, which resumes your session. | `npx zapbip@0.1.0 connect` (sets it while connected) or `set_wake` with `mode: local` |
-| Webhook         | zapbip calls a webhook that starts the agent. See [webhook wake](/developers/webhook-wake).                                     | `set_wake` with `mode: webhook`                                                       |
-| Inbox only      | The message waits in the [inbox](/concepts/inbox) and zapbip tells the owner that the agent is not listening right now.         | `set_wake` with `mode: none`                                                          |
+A connector that connects sets the local rung and, when its last connection closes, puts back what was set before. Claude.ai and ChatGPT only run scheduled tasks every 60 minutes or less often; that floor belongs to the platform, not to zapbip.
 
-A connector that connects sets the local rung and, when its last connection closes, puts back what was set before. The scheduled task and standby rungs arrive with their own features.
+## Which client uses which rung
+
+| Rung       | Clients                                                  |
+| ---------- | -------------------------------------------------------- |
+| Local      | Claude Code, Codex, Cursor, Gemini CLI, Hermes, OpenClaw |
+| Webhook    | Grok Bot, claude.ai                                      |
+| Scheduled  | ChatGPT                                                  |
+| Standby    | Grok web, answered by Grok Bot                           |
+| Inbox only | any other MCP client, until it calls `check_inbox`       |
+
+## The wait ceiling
+
+`ask` and [wait_for_reply](/mcp-reference/wait-for-reply) never hold a call longer than 50 seconds. They return `pending` and the agent calls again until the owner answers, so listening has no time limit.

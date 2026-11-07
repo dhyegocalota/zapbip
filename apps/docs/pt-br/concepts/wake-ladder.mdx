@@ -1,20 +1,30 @@
 ---
 title: 'Escada de despertar'
-description: 'Como um agente que não está ouvindo é alcançado.'
+description: 'Como o zapbip alcança um agente que não está ouvindo quando o dono escreve.'
 ---
 
-Um agente sempre pode chamar o zapbip, mas o dono só alcança um agente que está ouvindo. Quando chega uma mensagem e nenhuma chamada está esperando, o zapbip acorda o agente pelo degrau mais alto que a conexão dele suporta:
+Um agente sempre pode chamar o zapbip, mas o dono só alcança um agente que está ouvindo. Quando chega uma mensagem e nenhuma chamada está esperando, o zapbip acorda o agente pelo degrau mais alto que a conexão dele suporta. O agente declara o degrau com [set_wake](/pt-br/mcp-reference/set-wake), e todo degrau mantém a mensagem na [caixa de entrada](/pt-br/concepts/inbox) até que um agente a leia.
 
-1. um conector local;
-2. um webhook;
-3. uma tarefa agendada chamando [check_inbox](/pt-br/mcp-reference/check-inbox);
-4. um agente reserva opcional do mesmo provedor;
-5. apenas a caixa de entrada.
+| Degrau           | Como funciona                                                                                                                            | Atraso esperado                    | Definido com                                                     |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ---------------------------------------------------------------- |
+| Local            | O zapbip empurra a mensagem para o [conector](/pt-br/developers/local-connector) no computador do dono, que retoma a sessão.             | 7 s Claude Code, 6 s Codex         | `npx zapbip@0.1.0 connect` (enquanto conectado) ou `mode: local` |
+| Webhook          | O zapbip chama um link que inicia o agente. Veja [despertar por webhook](/pt-br/developers/webhook-wake).                                | 9 s Grok Bot, 16 s claude.ai       | `mode: webhook`                                                  |
+| Agendada         | O agente roda uma tarefa em intervalos que chama [check_inbox](/pt-br/mcp-reference/check-inbox). Os intervalos vão de 1 a 1440 minutos. | até o intervalo, 1 hora no ChatGPT | `mode: scheduled`                                                |
+| Em espera        | Outro agente da mesma conta recebe uma cópia da mensagem e responde no lugar. É um salto só: quem está em espera nunca repassa de novo.  | não medido                         | `mode: standby`                                                  |
+| Caixa de entrada | A mensagem espera na caixa de entrada e o zapbip avisa o dono que o agente não está ouvindo agora.                                       | até o agente chamar                | `mode: none`                                                     |
 
-| Degrau                | Como funciona                                                                                                                      | Definido com                                                                                |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| Conector local        | O zapbip empurra a mensagem para o [conector](/pt-br/developers/local-connector) rodando no seu computador, que retoma sua sessão. | `npx zapbip@0.1.0 connect` (define enquanto está conectado) ou `set_wake` com `mode: local` |
-| Webhook               | O zapbip chama um webhook que inicia o agente. Veja [despertar por webhook](/pt-br/developers/webhook-wake).                       | `set_wake` com `mode: webhook`                                                              |
-| Só a caixa de entrada | A mensagem espera na [caixa de entrada](/pt-br/concepts/inbox) e o zapbip avisa o dono que o agente não está ouvindo agora.        | `set_wake` com `mode: none`                                                                 |
+Um conector que se conecta define o degrau local e, quando a última conexão dele fecha, devolve o que estava definido antes. Claude.ai e ChatGPT só rodam tarefas agendadas a cada 60 minutos ou mais; esse piso é da plataforma, não do zapbip.
 
-Um conector que se conecta define o degrau local e, quando a última conexão dele fecha, devolve o que estava definido antes. As tarefas agendadas e o agente reserva chegam com suas próprias funcionalidades.
+## Qual cliente usa qual degrau
+
+| Degrau           | Clientes                                                 |
+| ---------------- | -------------------------------------------------------- |
+| Local            | Claude Code, Codex, Cursor, Gemini CLI, Hermes, OpenClaw |
+| Webhook          | Grok Bot, claude.ai                                      |
+| Agendada         | ChatGPT                                                  |
+| Em espera        | Grok web, respondido pelo Grok Bot                       |
+| Caixa de entrada | qualquer outro cliente MCP, até chamar `check_inbox`     |
+
+## O teto de espera
+
+`ask` e [wait_for_reply](/pt-br/mcp-reference/wait-for-reply) nunca seguram uma chamada por mais de 50 segundos. Eles devolvem `pending` e o agente chama de novo até o dono responder, então ouvir não tem limite de tempo.

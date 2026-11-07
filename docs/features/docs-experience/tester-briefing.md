@@ -43,3 +43,31 @@ Pins (green when they landed): the fixture tests built on test-local validators 
 - The agent pages are skeletons: four headings, no body. The walk, the listen tests (T1-19 to T1-26), the retention test (T1-45), the registry test (T1-49) and the copy facts test (T1-39) belong to the lanes.
 - `McpToolName` lives in `apps/api/src/contract/tool-definitions.ts`; G7 moves it to `libs/types`.
 - The official number is the sentinel; the sentinel is rendered by the snippets.
+
+## G6 developers and concepts (branch `feat/docs-experience-g6`)
+
+### What changed
+
+- `apps/docs/e2e/developers.spec.ts`: per language, the twelve pages open with a title, a body and the Logic Bit footer; the local connector page names `--client`, `--cwd`, `--session` and `ZAPBIP_CONNECTION_URL`; background running names launchd, systemd and `600`; webhook wake states 5, 10, 20 and 40 seconds; the wake ladder lists every `WAKE_RUNG_LABELS` label and the delays 7, 6, 9 and 16; owner notices name both templates, the quick replies and the 5 minute / 6 hour retry; the channel page has its three sections and a table; each concept page links only to `concepts/`, `developers/` and `mcp-reference/`.
+- `concepts/owner-notices` and `concepts/whatsapp-channel`: restored from `main` (the G0 skeletons had dropped them), with the template bodies, quick replies (`Open`/`Reply`, `Abrir`/`Responder`), a `Chat` example and the notice retry backoff (5 minutes doubling to 6 hours). `main`'s Portuguese table listed `Open` as the Portuguese quick reply of the question template; the page now matches `whatsapp-templates.ts`.
+- `concepts/wake-ladder`: the five rungs with expected delays and the client per rung. `concepts/inbox`: the forwarded-message sentence is back.
+- `developers/local-connector`: a Commands table (`connect`, `listen`, `channel`, as `apps/connector` help prints them) and the session id as a UUID. `developers/background-running` and `developers/webhook-wake`: developer wording, launchd and systemd named. Portuguese twins written natively.
+- The moved-path reads from Step 33 have no test to update on this base: the local-connector and webhook-wake docs checks live on their slice branches.
+
+### Red today, green after
+
+| Test | Red before because | Green after |
+|------|--------------------|-------------|
+| `developers.spec.ts` (`5636b6f`: 8 failed, 42 passed) | `Expected substring: "zapbip_agent_notice"` / `Received string: "ConceptsOwner noticesThe notices zapbip sends you when an AI is not listening…"` (both languages); `expect(locator).toBeVisible() failed ... element(s) not found` (wake ladder rows and channel sections); `Expected substring: "launchd"` on background running | `b7dff7f`: 50 passed (the spec also gained `.first()` on the table locators, which matched two tables) |
+
+### Hypotheses for the tester
+
+- `pnpm --filter @zapbip/docs broken-links` reports no broken link; the shape tests (347) pass.
+- Every number on the wake ladder equals `CLIENT_LISTEN_FACTS`; every template and quick-reply text equals `whatsapp-templates.ts`; the connector flags equal `apps/connector/src/cli.ts`.
+- No page under `concepts/` or `developers/` names a simulator or a test double.
+
+### Gaps
+
+- The Scheduled and Standby rows, their `mode: scheduled` / `mode: standby` values and the 1 to 1440 minute interval come from the scheduled-wake branch (facts at the scheduled-wake merge).
+- `concepts/questions` and `concepts/routing` were not reworded beyond the existing text; `developers/errors` and `developers/any-mcp-client` are unchanged.
+- The Playwright Chromium for 1.65.0 (build 1254) was not installed; it was installed with `pnpm exec playwright install chromium`.
