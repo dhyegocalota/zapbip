@@ -10,7 +10,20 @@ export type RegisteredNumber = {
 
 export type OutboundNumber = RegisteredNumber & { accessToken: string };
 
+export type RegisterMetaAppInput = { metaAppId: string; label: string; appSecret: string };
+
+export type RegisterNumberInput = {
+  metaAppRef: string;
+  phoneNumberId: string;
+  wabaId: string;
+  displayNumber: string;
+  label: string;
+  accessToken: string;
+};
+
 export interface NumberRegistry {
+  registerMetaApp(input: RegisterMetaAppInput): Promise<{ metaAppRef: string }>;
+  registerNumber(input: RegisterNumberInput): Promise<{ numberId: string }>;
   findByPhoneNumberIds(input: { phoneNumberIds: string[] }): Promise<RegisteredNumber[]>;
   findByWabaIds(input: { wabaIds: string[] }): Promise<RegisteredNumber[]>;
   openAppSecret(input: { metaAppRef: string }): Promise<string>;

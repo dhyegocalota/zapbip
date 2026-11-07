@@ -1,5 +1,11 @@
 import type { Bindings } from '../../contract/env';
-import type { NumberRegistry, OutboundNumber, RegisteredNumber } from '../../numbers/number-registry';
+import type {
+  NumberRegistry,
+  OutboundNumber,
+  RegisteredNumber,
+  RegisterMetaAppInput,
+  RegisterNumberInput,
+} from '../../numbers/number-registry';
 import { accessTokenAssociatedData, appSecretAssociatedData } from '../../numbers/number-sealing';
 import { WorkerSecret } from '../../operations/worker-secret';
 import { createAesGcmSecretBox, type SecretBox } from '../platform/aes-gcm-secret-box';
@@ -29,6 +35,14 @@ export class D1NumberRegistry implements NumberRegistry {
   constructor(input: { database: D1Database; secretBox: SecretBox }) {
     this.database = input.database;
     this.secretBox = input.secretBox;
+  }
+
+  async registerMetaApp(_input: RegisterMetaAppInput): Promise<{ metaAppRef: string }> {
+    throw new Error('registerMetaApp is not implemented');
+  }
+
+  async registerNumber(_input: RegisterNumberInput): Promise<{ numberId: string }> {
+    throw new Error('registerNumber is not implemented');
   }
 
   async findByPhoneNumberIds(input: { phoneNumberIds: string[] }): Promise<RegisteredNumber[]> {
