@@ -33,6 +33,7 @@ export function openWindow(input: { environment: InMemoryEnvironment }): Promise
     window: {
       lastOwnerMessageAt: clock.now(),
       noticeSentForClosedWindow: false,
+      closedAt: null,
       noticeRetryLocale: null,
       noticeRetryAt: null,
       noticeRetryAttempt: 0,
@@ -46,6 +47,7 @@ export function closeWindow(input: { environment: InMemoryEnvironment }): Promis
     window: {
       lastOwnerMessageAt: clock.now() - WINDOW_MS,
       noticeSentForClosedWindow: false,
+      closedAt: null,
       noticeRetryLocale: null,
       noticeRetryAt: null,
       noticeRetryAttempt: 0,

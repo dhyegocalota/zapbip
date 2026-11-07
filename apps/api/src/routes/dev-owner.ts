@@ -1,4 +1,4 @@
-import { MessageKind, type OwnerLocale } from '@zapbip/types';
+import { HttpStatus, MessageKind, type OwnerLocale } from '@zapbip/types';
 import { assertMediaFits, InboxError, invalidInput, notFound, type OwnerInboundContent } from '@zapbip/core';
 import { Hono } from 'hono';
 import { z } from 'zod';
@@ -13,7 +13,7 @@ import { contactInputSchema, sendableMediaKind } from '../contract/mcp-schemas';
 import { LogEvent } from '../contract/log';
 import { logEvent } from '../log';
 import { accountInboxOf } from './account-inbox-stub';
-import { ERROR_STATUS, HttpStatus } from './http-status';
+import { ERROR_STATUS } from './http-status';
 
 type OwnerIdentity = { accountId: string; ownerLocale: OwnerLocale };
 

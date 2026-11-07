@@ -63,6 +63,17 @@ describe('wrangler config', () => {
     expect(vars.PUBLIC_ORIGIN).toMatch(/^https:\/\//);
   });
 
+  it('the production block carries no development media origin and points at the real Graph host', () => {
+    const { vars } = readWranglerConfig({ config: WRANGLER_CONFIG_PATH });
+    expect(vars.WHATSAPP_MEDIA_DOWNLOAD_ORIGIN).toBeUndefined();
+    expect(vars.WHATSAPP_GRAPH_BASE_URL).toBe(GRAPH_ORIGIN);
+  });
+
+  it('the development environment allows downloads from the fake Graph origin', () => {
+    const { vars } = readWranglerConfig({ config: WRANGLER_CONFIG_PATH, env: DEVELOPMENT_ENVIRONMENT });
+    expect(vars.WHATSAPP_MEDIA_DOWNLOAD_ORIGIN).toBe(vars.WHATSAPP_GRAPH_BASE_URL);
+  });
+
   it('the production D1 database id is a placeholder that must be replaced before a deploy', () => {
     expect(databaseIdsOf({})).toEqual([PRODUCTION_DATABASE_ID_PLACEHOLDER]);
   });

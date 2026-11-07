@@ -1,0 +1,17 @@
+{
+  "from": "5511900000001",
+  "id": "wamid.BUTTONREPLY",
+  "timestamp": "1762430400",
+  "type": "interactive",
+  "context": {
+    "from": "1000000000000001",
+    "id": "wamid.QUESTION"
+  },
+  "interactive": {
+    "type": "button_reply",
+    "button_reply": {
+      "id": "q_1:0",
+      "title": "Sim"
+    }
+  }
+}

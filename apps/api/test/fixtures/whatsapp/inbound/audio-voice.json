@@ -1,0 +1,12 @@
+{
+  "from": "5511900000001",
+  "id": "wamid.VOICE",
+  "timestamp": "1762430400",
+  "type": "audio",
+  "audio": {
+    "id": "900000000000004",
+    "mime_type": "audio/ogg; codecs=opus",
+    "sha256": "dm9pY2U=",
+    "voice": true
+  }
+}
