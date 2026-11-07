@@ -49,7 +49,6 @@ import { TEST_APP_SECRET } from '../support/whatsapp-numbers';
 import { inboxOf, ORIGIN, seedAccount, type SeededAccount } from './route-fixtures';
 
 const STATUS_OK = 200;
-const STATUS_BAD_REQUEST = 400;
 const STATUS_UNAUTHORIZED = 401;
 const STATUS_FORBIDDEN = 403;
 const STATUS_PAYLOAD_TOO_LARGE = 413;
@@ -239,14 +238,14 @@ describe('webhook request checks', () => {
     expect(response.status).toBe(STATUS_UNAUTHORIZED);
   });
 
-  test('WI-23 answers 400 for a signed body that is not JSON', async () => {
+  test('WI-23 answers 401 for a signed body that is not JSON', async () => {
     const response = await postSigned({ text: 'not json' });
-    expect(response.status).toBe(STATUS_BAD_REQUEST);
+    expect(response.status).toBe(STATUS_UNAUTHORIZED);
   });
 
-  test('answers 400 for a signed JSON body without an entry array', async () => {
+  test('answers 401 for a signed JSON body without an entry array', async () => {
     const response = await postSigned({ text: JSON.stringify({ object: 'whatsapp_business_account' }) });
-    expect(response.status).toBe(STATUS_BAD_REQUEST);
+    expect(response.status).toBe(STATUS_UNAUTHORIZED);
   });
 
   test('WI-24 answers 413 for a declared length over the cap', async () => {
@@ -329,16 +328,16 @@ describe('webhook inbound messages', () => {
     expect(ownerTextsOf({ history: await historyOf({ account }) })).toEqual(['Oi']);
   });
 
-  test('WI-27 skips a foreign phone number id and logs it without a phone number', async () => {
+  test('WI-27 refuses a foreign phone number id as unattributed and logs it without a phone number', async () => {
     const spies = spyOnLogs();
     const account = await seedAccount({ agent: 'alpha' });
     const notification = notificationOf({
       changes: [changeOf({ phoneNumberId: FOREIGN_PHONE_NUMBER_ID, messages: [ownerText({ account, id: 'wamid.WI27', text: 'Oi' })] })],
     });
     const response = await postNotification({ notification });
-    expect(response.status).toBe(STATUS_OK);
+    expect(response.status).toBe(STATUS_UNAUTHORIZED);
     expect(ownerTextsOf({ history: await historyOf({ account }) })).toEqual([]);
-    expect(loggedText({ spies })).toContain(OperatorEvent.InboundForeignNumber);
+    expect(loggedText({ spies })).toContain(OperatorEvent.InboundUnattributed);
     expect(loggedText({ spies })).not.toContain(account.phone);
   });
 
@@ -379,7 +378,7 @@ describe('webhook inbound messages', () => {
     expect(occurrencesOf({ text: loggedText({ spies }), event: OperatorEvent.InboundUnmapped })).toBe(1);
   });
 
-  test('WI-31 stores the change of our number beside a foreign one', async () => {
+  test('WI-31 refuses the whole delivery when a change belongs to a foreign number', async () => {
     const spies = spyOnLogs();
     const account = await seedAccount({ agent: 'alpha' });
     const notification = notificationOf({
@@ -389,9 +388,9 @@ describe('webhook inbound messages', () => {
       ],
     });
     const response = await postNotification({ notification });
-    expect(response.status).toBe(STATUS_OK);
-    expect(ownerTextsOf({ history: await historyOf({ account }) })).toEqual(['Oi']);
-    expect(occurrencesOf({ text: loggedText({ spies }), event: OperatorEvent.InboundForeignNumber })).toBe(1);
+    expect(response.status).toBe(STATUS_UNAUTHORIZED);
+    expect(ownerTextsOf({ history: await historyOf({ account }) })).toEqual([]);
+    expect(occurrencesOf({ text: loggedText({ spies }), event: OperatorEvent.InboundUnattributed })).toBe(1);
   });
 
   test('WI-32 skips a change with another field', async () => {
