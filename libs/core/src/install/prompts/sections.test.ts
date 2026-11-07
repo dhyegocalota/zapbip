@@ -22,6 +22,8 @@ import { OPENCLAW_COPY } from './openclaw-copy';
 
 const SET_WAKE_MODE_PATTERN = /set_wake\(\{mode: "(\w+)"/g;
 const STOP_CHECK_PATTERN = /^1\. If you are not .+, stop and run no other step of this section\.$/m;
+const STEP_NUMBER_PATTERN = /^\d+\. /m;
+const SUCCESS_LINE_PATTERN = /Success: \S/;
 const SECRET_FRAGMENT = 'zb_conn_FAKE';
 
 const ALLOWED_WAKE_MODES: Record<InstallClient, string[]> = {
@@ -74,6 +76,12 @@ describe('install sections', () => {
 
     test('opens with the stop check', () => {
       expect(text).toMatch(STOP_CHECK_PATTERN);
+    });
+
+    test('states what success looks like in every step', () => {
+      const steps = text.split(STEP_NUMBER_PATTERN).slice(1);
+      expect(steps.length).toBeGreaterThan(1);
+      steps.forEach((step) => expect(step).toMatch(SUCCESS_LINE_PATTERN));
     });
 
     test('sets only the wake modes of its own product', () => {
