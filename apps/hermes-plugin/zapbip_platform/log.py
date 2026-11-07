@@ -30,7 +30,12 @@ for redacted_logger_name in REDACTED_LOGGER_NAMES:
 
 
 def redact_root_handlers() -> None:
-    raise NotImplementedError("redact_root_handlers is not implemented")
+    for handler in logging.getLogger().handlers:
+        if not any(isinstance(item, SecretPathRedaction) for item in handler.filters):
+            handler.addFilter(SecretPathRedaction())
+
+
+redact_root_handlers()
 
 
 def log_connector_event(*, event: ConnectorLogEvent | PluginLogEvent, **fields: str | int | bool | None) -> None:

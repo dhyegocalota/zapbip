@@ -12,6 +12,7 @@ from .connection_link import socket_link_of
 from .connector_socket import run_connector_socket
 from .constants import CONNECTION_LINK_ENV, OWNER_CHAT_ID, OWNER_CHAT_TYPE, PLATFORM_NAME
 from .handoff import handoff_text_of, message_timestamp_of
+from .log import redact_root_handlers
 from .mcp_outbound import McpOutboundError, send_owner_text
 
 OWNER_ONLY_MESSAGE = "zapbip delivers only to the owner chat"
@@ -43,6 +44,7 @@ class ZapbipAdapter(BasePlatformAdapter):
     async def connect(self, *, is_reconnect: bool = False) -> bool:
         if self._socket_task is not None and not self._socket_task.done():
             return True
+        redact_root_handlers()
         self._stop = asyncio.Event()
         self._socket_task = asyncio.create_task(
             self._run_socket(socket_link=self._socket_link, stop=self._stop, hand_off=self._hand_off)
