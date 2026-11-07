@@ -62,9 +62,9 @@ export function fakeStack(input: Behavior) {
   const smokeFetch: SmokeFetch = async (target, init) => {
     if (throwOnFetch) throw new TypeError(`fetch failed for ${String(target)}`, { cause: { code: 'ECONNREFUSED' } });
     const url = new URL(String(target));
-    const method = init?.method ?? 'GET';
-    const body = typeof init?.body === 'string' ? init.body : '';
-    const headers = new Headers(init?.headers);
+    const { method } = init;
+    const body = init.body === undefined ? '' : init.body;
+    const headers = new Headers(init.headers);
     requests.push({ method, pathname: url.pathname, search: url.searchParams, body, headers });
     if (url.pathname === '/health') return json({ body: { ok: true, environment: healthEnvironment }, status: healthStatus });
     if (url.pathname === MCP_PATH) {

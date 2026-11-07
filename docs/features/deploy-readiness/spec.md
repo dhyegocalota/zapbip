@@ -44,7 +44,7 @@ The free-tier design also needs guardrails before traffic arrives: held Durable 
 | Runs as | `wrangler dev`, local D1, R2 and Durable Objects | deployed Worker | deployed Worker |
 | Worker name | `zapbip-api-development` | `zapbip-api-staging` | `zapbip-api` |
 | Host | `localhost:8787` | `mcp-staging.zapbip.com` | `mcp.zapbip.com` |
-| `PUBLIC_BASE_URL` | `http://localhost:8787` | `https://mcp-staging.zapbip.com` | `https://mcp.zapbip.com` |
+| `PUBLIC_ORIGIN` | `http://localhost:8787` | `https://mcp-staging.zapbip.com` | `https://mcp.zapbip.com` |
 | `ENVIRONMENT` | `development` | `staging` | `production` |
 | D1 database | `zapbip-development` | `zapbip-staging` | `zapbip-production` |
 | R2 bucket | `zapbip-media-development` | `zapbip-media-staging` | `zapbip-media-production` |
@@ -83,11 +83,11 @@ Durable Object migrations, one tag per deployed block:
 Routes and triggers:
 
 - `routes: [{ "pattern": "mcp.zapbip.com", "custom_domain": true }]` in production, `mcp-staging.zapbip.com` in staging. Wrangler creates the DNS record for a custom domain when the zone is on the same Cloudflare account (`docs/runbooks/dns.md`).
-- `triggers.crons`: `["0 * * * *", "5 0 * * *"]`, the strings of `QUEUE_EXPIRY_CRON` and `OPERATIONS_DAILY_CRON` in `apps/api/src/operations/constants.ts`. A test pins the equality, because wrangler cannot import TypeScript constants.
+- `triggers.crons`: one cron per block, `["*/30 * * * *"]`, the string of `SCHEDULED_CRON` in `apps/api/src/operations/constants.ts`. A test pins the equality, because wrangler cannot import TypeScript constants. Each tick runs the job registry in `apps/api/src/operations/scheduled.ts`: every tick clears expired install secrets and sweeps deleting accounts; minute 0 runs the budget check; 03:00 UTC runs media retention (owner delegated 2026-11-06).
 
 Resource IDs: `wrangler d1 create` returns a database ID, which the owner pastes into the environment's block. IDs are account identifiers, not secrets, so they are committed. The deploy preflight refuses a placeholder ID.
 
-Vars, non-secret, per block: `ENVIRONMENT`, `PUBLIC_BASE_URL`, `WAITLIST_ENABLED` and `WHATSAPP_GRAPH_BASE_URL` (table above).
+Vars, non-secret, per block: `ENVIRONMENT`, `PUBLIC_ORIGIN`, `WAITLIST_ENABLED` and `WHATSAPP_GRAPH_BASE_URL` (table above).
 
 ### Secrets
 
@@ -178,9 +178,9 @@ The smoke connections are owner-created. Their messages stay in staging history;
 
 The free allowances this design relies on, from the [ADR 0009](../../adr/0009-cloudflare-workers-with-one-durable-object-per-account.md) evidence: Durable Objects 100 000 requests and 13 000 GB-s a day; Workers 100 000 requests a day; D1 100 000 rows written and 5 M read a day. R2 and D1 storage limits are checked on Cloudflare's pricing page during setup, not assumed here.
 
-**Durable Object duration budget.** Every MCP request in the Worker records its wall-clock time as GB-seconds (`durationMs / 1000 × DURABLE_OBJECT_MEMORY_GB`, 128 MB = 0.125 GB) into D1 table `usage_daily(day, gb_seconds)`. The write runs through `waitUntil`, so the caller does not wait. The hourly job reads today's total. At `DAILY_BUDGET_WARNING_RATIO` (0.8) of `DURABLE_OBJECT_DAILY_GB_SECONDS` (13 000), it logs `budget.warning` and fails the run, so the error-rate alert emails the owner. The meter approximates Cloudflare's bill, which counts the time an object is active, so the owner checks the real figure on the Durable Objects usage page every week.
+**Durable Object duration budget.** Every MCP request in the Worker records its wall-clock time as GB-seconds (`durationMs / 1000 × DURABLE_OBJECT_MEMORY_GB`, 128 MB = 0.125 GB) into the `usage_meter` table of the account's Durable Object (migration v7), which flushes its total to D1 `usage_daily(day, gb_seconds)` once an hour, so the caller never waits on D1. The budget job, at minute 0 of the `*/30` tick, reads today's total. At `DAILY_BUDGET_WARNING_RATIO` (0.8) of `DURABLE_OBJECT_DAILY_GB_SECONDS` (13 000), it logs `budget.warning` and fails the run, so the error-rate alert emails the owner. The meter approximates Cloudflare's bill, which counts the time an object is active, so the owner checks the real figure on the Durable Objects usage page every week.
 
-**Queue expiry.** The hourly job lists accounts from `CONNECTION_DIRECTORY` and calls `sweepExpired` on each account's `AccountInbox`, so `QUEUE_RETENTION_MS` holds even when the owner never writes again. One account's failure is logged, the other accounts still run, and the run fails at the end.
+**Queue expiry.** No cron fans out over accounts: queue and question expiry are per-object Durable Object alarms from slice 1, so `QUEUE_RETENTION_MS` holds even when the owner never writes again. The `*/30` tick only clears expired install secrets and sweeps deleting accounts, and a failing job fails the run after the other due jobs ran.
 
 **Media retention.** The daily job pages through `MEDIA_BUCKET` and deletes objects uploaded more than `MEDIA_RETENTION_MS` ago. It deletes objects, not history rows: an expired media link returns `404`, and the message text stays in history. An R2 lifecycle rule would also work with no code, but it counts in whole days, while retention is a millisecond constant in `libs/core`. The job keeps one number in one place, so it is chosen.
 
@@ -230,9 +230,9 @@ Worker MCP request ──► waitUntil ──► usage_daily (GB-seconds)
 |---|---|
 | `apps/api/wrangler.jsonc` | three blocks as above; `compatibility_date` `2026-11-01`; the crons equal the constants |
 | `apps/api/src/operations/worker-secret.ts` | enum `WorkerSecret` of the seven secret names; the deploy preflight and the `.env.example` test both use it |
-| `apps/api/src/operations/constants.ts` | `QUEUE_EXPIRY_CRON`, `OPERATIONS_DAILY_CRON`, `DURABLE_OBJECT_DAILY_GB_SECONDS`, `DURABLE_OBJECT_MEMORY_GB`, `DAILY_BUDGET_WARNING_RATIO`, `SMOKE_POLL_ATTEMPTS`, `SMOKE_POLL_INTERVAL_MS` |
+| `apps/api/src/operations/constants.ts` | `SCHEDULED_CRON`, `BUDGET_CHECK_MINUTE`, `MEDIA_RETENTION_HOUR`, `MEDIA_RETENTION_MINUTE`, `DURABLE_OBJECT_DAILY_GIGABYTE_SECONDS`, `DURABLE_OBJECT_MEMORY_GIGABYTES`, `DAILY_BUDGET_WARNING_RATIO`, `SMOKE_POLL_ATTEMPTS`, `SMOKE_POLL_INTERVAL_MS` |
 | `apps/api/src/routes/health.ts` | `GET /health` → `{ ok: true, environment }`; no database read |
-| `apps/api/src/operations/scheduled.ts` | the `scheduled` export: dispatches on `event.cron` to queue expiry, budget check, media retention |
+| `apps/api/src/operations/scheduled.ts` | the `scheduled` export: runs the due jobs of the registry for the `*/30 * * * *` tick (install-secret clear, deletion sweep, budget check, media retention) and rejects any other cron |
 | `apps/api/scripts/deploy.ts`, `smoke.ts` | `--environment development \| staging \| production`, a `DeployEnvironment` enum; `deploy.ts` takes its shell and its prompt as named parameters so tests replace them |
 | root scripts | `deploy:staging`, `deploy:production`, `migrate:development`, `migrate:staging`, `migrate:production`, `smoke:development`, `smoke:staging`, `smoke:production` |
 | `apps/api/migrations/` | `0003_usage` (`usage_daily`); `0001_core` and `0002_accounts_and_keys` belong to agent-inbox-core and accounts-and-keys; generated with drizzle-kit |

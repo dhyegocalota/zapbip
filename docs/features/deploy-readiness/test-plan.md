@@ -25,8 +25,8 @@ Source: `apps/api/test/unit/wrangler-config.test.ts`, reads `apps/api/wrangler.j
 - [ ] Parity of vars — input: `vars` keys of each block; expected: identical key sets (`ENVIRONMENT`, `PUBLIC_ORIGIN`, `WAITLIST_ENABLED`, `WHATSAPP_GRAPH_BASE_URL`, plus any slice adds).
 - [ ] Forbidden var — input: any block's `vars`; expected: no key named `PUBLIC_BASE_URL`.
 - [ ] Migrations per block — input: each block's `migrations`; expected: `[{ "tag": "v1", "new_sqlite_classes": ["AccountInbox"] }]`.
-- [ ] Crons — input: each block's `triggers.crons`; expected: `["0 * * * *", "5 0 * * *"]`, equal to `BUDGET_CHECK_CRON` and `MEDIA_RETENTION_CRON`.
-- [ ] No hourly fan-out — input: the cron list; expected: exactly two crons, and neither is a per-account job (no test imports `QUEUE_EXPIRY_CRON`).
+- [ ] Crons — input: each block's `triggers.crons`; expected: `["*/30 * * * *"]`, equal to `SCHEDULED_CRON`.
+- [ ] No per-account fan-out — input: the cron list; expected: exactly one cron, and no job in the registry iterates accounts for queue expiry.
 - [ ] Simulator mounting — input: `main` of each block; expected: the development block is `src/index.dev.ts`; the deployed blocks are `src/index.ts`, which never imports the simulator.
 ~~- [ ] Placeholder IDs — input: `database_id` and `bucket_name` of staging and production; expected: each starts with `replace-with-`, and the test lists the four keys.~~
 - [ ] Placeholder IDs — input: `database_id` and `bucket_name` of staging and production; expected: each starts with `REPLACE_WITH_`, and the test lists the four keys.
@@ -125,9 +125,9 @@ Source: `deploy-preflight.test.ts`, `deploy-entry.test.ts`, `docs-preflight-entr
 
 - [ ] Official number, production only: input: `OFFICIAL_NUMBER_UNSET`; expected: production refused before any command, staging passes.
 - [ ] Company facts, production only: input: each of `legalName`, `cnpj`, `address`, `website`, `contactEmail` set to `COMPANY_FACT_UNSET`; expected: production refused naming the field, no command; staging passes.
-- [ ] npm maintainers, both packages: input: a co-maintainer, a foreign `_npmUser`, an unreadable answer, a missing `ZAPBIP_NPM_PUBLISHER`; expected: production and `docs:preflight` refused, each message naming the package or the variable.
+- [ ] npm maintainers, both packages (every `npm view` carries `--registry=https://registry.npmjs.org`): input: a co-maintainer, a foreign `_npmUser`, an unreadable answer, a missing `ZAPBIP_NPM_PUBLISHER`; expected: production and `docs:preflight` refused, each message naming the package or the variable.
 - [ ] npm network failure: input: `npm view` exits non-zero with `ENOTFOUND`; expected: the message says npm could not be reached; with `E404` it says the package does not resolve.
-- [ ] PyPI package: input: a fake fetcher answering `404`, a foreign or `null` `info.maintainer`, a `503`, a thrown network error, and a missing `ZAPBIP_PYPI_PUBLISHER`; expected: production and `docs:preflight` refused at `pypi version`, the message naming `zapbip-platform==<version>`, the maintainer or the variable; `404` says the package does not resolve, the others say PyPI could not be reached or the maintainer is unreadable; staging fetches nothing.
+- [ ] PyPI package: input: a fake fetcher answering `404`, an XML-RPC `package_roles` answer whose Owner is not `ZAPBIP_PYPI_PUBLISHER` even when `info.maintainer` matches, a second Owner, an unreadable roles answer, a `503`, a thrown network error, and a missing `ZAPBIP_PYPI_PUBLISHER`; expected: production and `docs:preflight` refused at `pypi version`, the message naming `zapbip-platform==<version>`, the owners or the variable; `404` says the package does not resolve, the others say PyPI could not be reached or the Owner role is missing or not the one allowed Owner; staging fetches nothing.
 - [ ] Publish order in the runbooks: input: `mintlify-publish.md` and `README.md`; expected: the npm `zapbip`, npm `@zapbip/openclaw-plugin` and PyPI `zapbip-platform` steps come before the step that connects the repository to Mintlify, and each says why.
 - [ ] Readiness: input: no `scheduled` export, no cron trigger, no `GET` route under `INSTALL_PAGE_PATH_PREFIX` on the built app; expected: production refused naming each; staging passes.
 - [ ] Cheap first: input: a placeholder or a missing smoke input; expected: refused with no command run, before the gate.
@@ -173,7 +173,7 @@ Source: `usage-meter.test.ts`, `scheduled.test.ts`, `media-retention.test.ts`, `
 - [ ] Retention mixed — input: 1,001 objects, every second one old; expected: exactly the old ones deleted.
 - [ ] Retention absent key — input: `delete` for a key already gone; expected: no exception; the run continues.
 - [ ] Retention lists R2 only — input: the daily cron; expected: no D1 or Durable Object call is made.
-- [ ] Cron dispatch — input: `BUDGET_CHECK_CRON`; expected: budget check only. `MEDIA_RETENTION_CRON`; expected: retention only.
+- [ ] Cron dispatch — input: ticks at minute 30, minute 0 and 03:00 UTC; expected: only the every-tick jobs run at :30, plus the budget check at minute 0, plus retention at 03:00.
 - [ ] Unknown cron — input: `*/5 * * * *`; expected: throws naming the cron; no job runs.
 - [ ] Budget and retention independent — input: the budget check throws; expected: the retention cron still runs when triggered on its own, and the two share no state.
 - [ ] Edge: flush failure — input: the D1 upsert rejects at the hour's flush; expected: the MCP response is unaffected, the due time is kept, the next alarm retries, and the failure is logged with the account id and no message text.
@@ -187,7 +187,7 @@ Source: `apps/api/test/integration/*.test.ts`, under `@cloudflare/vitest-pool-wo
 ~~- [ ] Simulator absent on staging — input: `createApp({ includeSimulator: false })` with `ENVIRONMENT: 'staging'`; expected: `GET /dev/owner/<phone>/screen` returns `404`.~~
 - [ ] Simulator absent on staging — input: the default export of `src/index.ts` (the production entry) with `ENVIRONMENT: 'staging'` (corrected at Step R: `createApp` takes `extraRoutes`, not `includeSimulator`); expected: `GET /dev/owner/<phone>/screen` returns `404`.
 - [ ] Migrations applied — input: the pool applies `migrations/`; expected: `usage_daily` exists with `day`, `account_id`, `gigabyte_seconds`.
-- [ ] Scheduled export wired — input: `default.scheduled` with `cron: '0 * * * *'`; expected: resolves; with an unknown cron, rejects.
+- [ ] Scheduled export wired — input: `default.scheduled` with `cron: '*/30 * * * *'`; expected: resolves; with any other cron, including the retired `0 * * * *`, rejects with `unknown cron`.
 - [ ] Budget against seeded data — input: seeded `usage_daily` rows for today totalling `10400`; expected: the hourly cron logs `budget.warning` and rejects.
 - [ ] Retention against R2 — input: one R2 object older than retention and one newer, `now` moved past retention for the first; expected: the old object is gone, the new one remains.
 - [ ] Deploy dry run staging — input: `wrangler deploy --dry-run --env staging --outdir <scratch>`; expected: exit `0`; the bundle lacks `/dev/owner/`.
@@ -232,7 +232,7 @@ Source: `tools/repository-shape/src/runbooks.test.ts`.
 
 Runs in `pnpm verify` by default. It starts the fake Graph harness, `wrangler dev --env development` on free ports, and passes fake secrets with `--var`. It writes no env file.
 
-- [ ] Owner flow — input: the simulator sends `novo agente smoke` from the owner phone through `POST /dev/owner/:phone/messages`; expected: the reply on `GET /dev/owner/:phone/screen` carries the MCP URL, and the connection exists.
+- [ ] Owner flow — input: the simulator sends `novo agente smoke` from the owner phone through `POST /dev/owner/:phone/messages`; expected: the fake Graph recorded a send whose body carries an install link, and `smoke.ts --environment development` against the seeded connection prints five `PASS` and exits `0`. A wrong connection secret prints two `FAIL`, exits `1`, and neither stdout nor stderr contains the secret.
 - [ ] Smoke development — input: `smoke.ts --environment development` with that secret; expected: five `PASS` lines; exit `0`.
 - [ ] Check 5 end to end — input: the same run; expected: the `@smoke` text is in the smoke connection's inbox with `sender: "owner"`, `verified: true`.
 - [ ] Fake Graph used — input: the owner reply; expected: the fake Graph recorded one send matching a recorded fixture, and no request reached `graph.facebook.com`.
@@ -242,6 +242,17 @@ Runs in `pnpm verify` by default. It starts the fake Graph harness, `wrangler de
 - [ ] Console clean — input: `wrangler dev` output during the run; expected: no `Error` line other than the deliberate `401` (check 4) and the refused verify token.
 - [ ] Gate runs without a flag — input: `pnpm verify` with no environment variable set; expected: the `e2e` gate runs, not skipped.
 - [ ] Port failure is loud — input: a busy port forced in the test; expected: the test fails naming the port, not a skip.
+
+## Security fixes (final security review, 2026-11-07)
+
+- [ ] PyPI roles — input: a fake fetcher whose JSON `info.maintainer` is the owner but whose `package_roles` answer names another Owner, a second Owner, no roles, a `503`; expected: production and `docs:preflight` refuse at `pypi version`; one Owner equal to `ZAPBIP_PYPI_PUBLISHER` plus lesser roles passes; the roles request is a POST of `package_roles` for `zapbip-platform`.
+- [ ] Deploy guard evasions — input: `wrangler d1 time-travel restore`, `d1 delete`, `r2 bucket delete`, `r2 object put`, `triggers deploy`, `pnpm run deploy:production`, `sh -c 'wrangler deploy'`, `./node_modules/.bin/wrangler deploy`, each through the Claude Code and the Codex shape; expected: exit `2`. `wrangler dev`, `d1 migrations apply --local`, `deploy --dry-run`, `r2 bucket list`: exit `0`.
+- [ ] Secrets guard on prose — input: a command that echoes a sentence mentioning the dotenv file into `PROGRESS.md`; expected: exit `0`; every redirection or `tee` into a dotenv file still exits `2`.
+- [ ] Production app secret — input: read `docs/runbooks/deploy.md` step 3; expected: `META_APP_SECRET` is in the environment file for staging only and the production value goes only into the `wrangler secret put` prompt.
+- [ ] Production smoke secret — input: `runSmoke` for production with a different `SMOKE_CONNECTION_SECRET` in the environment; expected: one hidden prompt, the prompted value is the one sent, an empty answer is refused before any request; staging and a production first deploy never prompt. The hidden prompt writes the question and a newline, never the typed text.
+- [ ] Rate limiter namespaces — input: `ratelimits` of production, staging and development; expected: nine distinct `namespace_id` values.
+- [ ] npm registry — input: every `npm view` the preflight runs; expected: the argv ends with `--registry=https://registry.npmjs.org`.
+- [ ] DO upgrade from main — input: a Durable Object holding versions 1, 2, 4, 5, 6; expected: v7 is applied alone and the `usage_meter` table exists.
 
 ## Production bundle
 

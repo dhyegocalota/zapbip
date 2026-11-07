@@ -24,7 +24,7 @@
 - Wrangler Durable Object migrations: `[{ "tag": "v1", "new_sqlite_classes": ["AccountInbox"] }]` in every block. These wrangler tags are separate from the Durable Object SQL schema versions below.
 ~~- `apps/api/wrangler.jsonc` is plain JSON: no comments, no trailing commas. The preflight reads it with `JSON.parse`.~~
 - `apps/api/wrangler.jsonc` is JSONC, formatted by the repository Prettier (trailing commas allowed). Every reader parses it with wrangler's `experimental_readRawConfig`, never `JSON.parse` (corrected at lane C, coordinator 2026-11-06).
-- Crons: `BUDGET_CHECK_CRON = '0 * * * *'` (hourly) and `MEDIA_RETENTION_CRON = '5 0 * * *'` (daily), in `apps/api/src/operations/constants.ts`. No cron fans out over accounts. Queue and question expiry are per-object Durable Object alarms from slice 1.
+- Cron: one `SCHEDULED_CRON = '*/30 * * * *'` per block with a job registry by tick (every tick install-secret clear and deletion sweep; minute 0 budget check; 03:00 UTC media retention), in `apps/api/src/operations/constants.ts`. No cron fans out over accounts. Queue and question expiry are per-object Durable Object alarms from slice 1.
 - Time constants come from `libs/types` (`SECOND_MS`, `MINUTE_MS`, `HOUR_MS`, `DAY_MS`, slice 1). No local copy.
 - The webhook path is slice 2's exported constant `WHATSAPP_WEBHOOK_PATH` (`/webhooks/whatsapp`). This slice imports it and does not declare its own.
 - Secrets: exactly the seven `WorkerSecret` names: `META_APP_SECRET`, `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_VERIFY_TOKEN`, `MEDIA_LINK_SIGNING_KEY`, `UPLOAD_LINK_SIGNING_KEY`, `WAKE_SECRET_KEY`. `MEDIA_LINK_SIGNING_KEY` is the name in the spec and the decisions file; Step R1 confirmed this branch already uses it (`contract/env.ts`, `routes/media.ts`), so no rename is needed.
@@ -101,7 +101,7 @@ Cross-slice checks (not this slice's code):
 - **A11 Retention is daily and reads R2 only.** `media-retention` pages the bucket with `cursor` and deletes objects uploaded more than `MEDIA_RETENTION_MS` ago. It reads no account list and deletes no history rows.
 - **A12 Overlap.** Slice 1's Durable Object alarm already purges media an account references. The R2 retention cron is the backstop for objects nothing references. The two are independent; a second delete of an absent key is a no-op.
 - **A13 Enum homes.** `DeployEnvironment` in `apps/api/src/operations/deploy-environment.ts`; `WorkerSecret` in `worker-secret.ts`; `ScheduledJob` in `scheduled-job.ts`.
-- **A14 Cron dispatch.** A record keyed by the cron string: `BUDGET_CHECK_CRON` runs the budget check; `MEDIA_RETENTION_CRON` runs retention. An unknown cron throws.
+- **A14 Cron dispatch.** A job registry run for the one `SCHEDULED_CRON` tick: each job says whether it is due at that tick (every tick, minute 0, 03:00 UTC). Any other cron throws `unknown cron`. Steps A6 and A8 below name the retired `BUDGET_CHECK_CRON` and `MEDIA_RETENTION_CRON`; they are kept as the history of the red commits.
 - **A15 Simulator keys.** Phone-keyed, as the spec says: `POST /dev/owner/:phone/messages`, `GET /dev/owner/:phone/screen`, `POST /dev/owner/:phone/clock`, mounted only by `src/index.dev.ts`. The accounts-and-keys spec's `/dev/c/:secret/owner/messages` is superseded.
 - **A16 Smoke connection.** Staging: the owner creates it with WhatsApp `novo agente smoke`. Development and E2E: the harness creates it through the simulator with `novo agente smoke` and reads the MCP URL from the reply on `GET /dev/owner/:phone/screen`. Both store the secret in `SMOKE_CONNECTION_SECRET`.
 - **A17 Fake Graph.** The E2E harness starts the fake Graph server on a free port and passes its URL to `wrangler dev` as `--var WHATSAPP_GRAPH_BASE_URL:<url>`. The recorded fixtures live in `apps/api/test/fixtures/whatsapp/` (whatsapp-cloud-channel).
@@ -162,8 +162,10 @@ export enum WorkerSecret {
 ```ts
 import { SECOND_MS } from '@zapbip/types';
 
-export const BUDGET_CHECK_CRON = '0 * * * *';
-export const MEDIA_RETENTION_CRON = '5 0 * * *';
+export const SCHEDULED_CRON = '*/30 * * * *';
+export const BUDGET_CHECK_MINUTE = 0;
+export const MEDIA_RETENTION_HOUR = 3;
+export const MEDIA_RETENTION_MINUTE = 0;
 
 export const DURABLE_OBJECT_DAILY_GIGABYTE_SECONDS = 13_000;
 export const DURABLE_OBJECT_MEMORY_GIGABYTES = 0.125;
@@ -321,7 +323,7 @@ The top-level block is production, as slice 1 shipped it. `env.development` runs
   "rules": [{ "type": "Text", "globs": ["**/*.sql"], "fallthrough": true }],
   "routes": [{ "pattern": "mcp.zapbip.com", "custom_domain": true }],
   "vars": { "ENVIRONMENT": "production", "PUBLIC_ORIGIN": "https://mcp.zapbip.com", "WAITLIST_ENABLED": "true", "WHATSAPP_GRAPH_BASE_URL": "https://graph.facebook.com" },
-  "triggers": { "crons": ["0 * * * *", "5 0 * * *"] },
+  "triggers": { "crons": ["*/30 * * * *"] },
   "env": {
     "development": {
       "name": "zapbip-api-development",
@@ -332,7 +334,7 @@ The top-level block is production, as slice 1 shipped it. `env.development` runs
       "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "zapbip-media-development" }],
       "rules": [{ "type": "Text", "globs": ["**/*.sql"], "fallthrough": true }],
       "vars": { "ENVIRONMENT": "development", "PUBLIC_ORIGIN": "http://localhost:8787", "WAITLIST_ENABLED": "false", "WHATSAPP_GRAPH_BASE_URL": "http://127.0.0.1:8788" },
-      "triggers": { "crons": ["0 * * * *", "5 0 * * *"] }
+      "triggers": { "crons": ["*/30 * * * *"] }
     },
     "staging": {
       "name": "zapbip-api-staging",
@@ -344,7 +346,7 @@ The top-level block is production, as slice 1 shipped it. `env.development` runs
       "rules": [{ "type": "Text", "globs": ["**/*.sql"], "fallthrough": true }],
       "routes": [{ "pattern": "mcp-staging.zapbip.com", "custom_domain": true }],
       "vars": { "ENVIRONMENT": "staging", "PUBLIC_ORIGIN": "https://mcp-staging.zapbip.com", "WAITLIST_ENABLED": "false", "WHATSAPP_GRAPH_BASE_URL": "https://graph.facebook.com" },
-      "triggers": { "crons": ["0 * * * *", "5 0 * * *"] }
+      "triggers": { "crons": ["*/30 * * * *"] }
     }
   }
 }

@@ -13,7 +13,7 @@ type Seen = { url: string; method: string; body: string };
 function recordingFetch(input: { response: Response }): { fetchRequest: SmokeFetch; seen: Seen[] } {
   const seen: Seen[] = [];
   const fetchRequest: SmokeFetch = async (target, init) => {
-    seen.push({ url: String(target), method: init?.method ?? 'GET', body: typeof init?.body === 'string' ? init.body : '' });
+    seen.push({ url: String(target), method: init.method, body: init.body === undefined ? '' : init.body });
     return input.response.clone();
   };
   return { fetchRequest, seen };

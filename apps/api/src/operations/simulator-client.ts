@@ -2,7 +2,7 @@ import { MessageKind, TemplateKind } from '@zapbip/types';
 import { z } from 'zod';
 import type { ScreenEntry } from '../contract/account-inbox-rpc';
 import { CONNECTION_SECRET_PREFIX } from '../contract/constants';
-import type { SmokeFetch } from './smoke-checks';
+import { GET_REQUEST, type SmokeFetch } from './smoke-checks';
 
 const MCP_URL_SECRET_PATTERN = new RegExp(`/c/(${CONNECTION_SECRET_PREFIX}[A-Za-z0-9_-]+)/mcp`);
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
@@ -34,7 +34,7 @@ export async function postOwnerText(input: SimulatorTarget & { text: string }): 
 }
 
 export async function readOwnerScreen(input: SimulatorTarget): Promise<ScreenEntry[]> {
-  const response = await input.fetchRequest(ownerUrlOf({ ...input, resource: 'screen' }));
+  const response = await input.fetchRequest(ownerUrlOf({ ...input, resource: 'screen' }), GET_REQUEST);
   if (!response.ok) throw new Error(`owner simulator answered ${response.status}`);
   return screenSchema.parse(await response.json()).entries;
 }

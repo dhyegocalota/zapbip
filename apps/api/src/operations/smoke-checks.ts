@@ -24,7 +24,9 @@ const JSON_HEADERS = { 'Content-Type': 'application/json' };
 const MCP_HEADERS = { ...JSON_HEADERS, Accept: 'application/json, text/event-stream' };
 const REFUSAL_STATUSES: number[] = [HttpStatus.Unauthorized, HttpStatus.Forbidden];
 
-export type SmokeFetch = typeof fetch;
+export type SmokeRequest = { method: string; headers?: Record<string, string>; body?: string };
+export type SmokeFetch = (target: string, init: SmokeRequest) => Promise<Response>;
+export const GET_REQUEST: SmokeRequest = { method: 'GET' };
 
 export type SmokeResult = { check: SmokeCheck; passed: boolean; status: number; detail: string | null };
 
@@ -88,7 +90,7 @@ async function callMcp(input: { run: SmokeRun; id: number; method: string; param
 }
 
 async function checkHealth(run: SmokeRun): Promise<Outcome> {
-  const response = await run.smokeFetch(urlOf({ run, path: HEALTH_PATH }));
+  const response = await run.smokeFetch(urlOf({ run, path: HEALTH_PATH }), GET_REQUEST);
   if (response.status !== HttpStatus.Ok) return fail({ status: response.status, detail: 'expected status 200' });
   const body = healthSchema.safeParse(await response.json());
   if (!body.success) return fail({ status: response.status, detail: 'unexpected health body' });
@@ -115,10 +117,13 @@ async function checkMcpInitialize(run: SmokeRun): Promise<Outcome> {
 
 async function checkWebhookVerify(run: SmokeRun): Promise<Outcome> {
   const challenge = run.randomToken();
-  const accepted = await run.smokeFetch(verifyUrlOf({ run, token: inputOf({ run, name: SmokeInput.VerifyToken }), challenge }));
+  const accepted = await run.smokeFetch(
+    verifyUrlOf({ run, token: inputOf({ run, name: SmokeInput.VerifyToken }), challenge }),
+    GET_REQUEST,
+  );
   if (accepted.status !== HttpStatus.Ok) return fail({ status: accepted.status, detail: 'the verify token was refused' });
   if ((await accepted.text()) !== challenge) return fail({ status: accepted.status, detail: 'the challenge was not echoed' });
-  const refused = await run.smokeFetch(verifyUrlOf({ run, token: WRONG_VERIFY_TOKEN, challenge }));
+  const refused = await run.smokeFetch(verifyUrlOf({ run, token: WRONG_VERIFY_TOKEN, challenge }), GET_REQUEST);
   if (!REFUSAL_STATUSES.includes(refused.status)) return fail({ status: refused.status, detail: 'a wrong verify token was accepted' });
   return pass({ status: accepted.status });
 }

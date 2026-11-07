@@ -276,3 +276,16 @@ B10 is two end-to-end files, both on the `whatsapp` e2e stack (fake Graph, `META
 - `apps/api/test/e2e/deploy-dry-run.e2e.test.ts`: `wrangler deploy --dry-run` for production and staging lists every binding; `runDeploy` with the real `libs/types` constants and the real wrangler blocks refuses on the unset official number, the unset company facts, an unresolved npm package and a pending D1 migration, and lists migrations before it deploys the Worker.
 - Deviation from the plan text: the install page is install-skills' route, not on main, so the smoke uses the seeded connection secret, not one read from the screen. Both files are green when they land (they test code that exists): pins.
 - Gap: the smoke never runs against a real deployed Worker; production deploys are forbidden for agents.
+
+### Final security and review round (2026-11-07)
+
+| Change | Red | Green | Red failure text |
+|---|---|---|---|
+| Deploy guard evasions and dotenv prose in `hooks.test.sh` | `4ae877a` | `0bac437` | `FAIL claude: wrangler d1 delete zapbip is blocked: expected exit 2, got 0`; the prose command expected exit 0, got 2 |
+| PyPI `package_roles` Owner check, npm `--registry`, hidden production smoke prompt, distinct rate-limit ids | `6bbd01b` | `88ff113` | 29 failures in `deploy-preflight`, `smoke-entry`, `smoke-inputs`, `hidden-prompt`, `wrangler-rate-limit-namespaces`; for example `readHiddenLine is not implemented` and a duplicated `namespace_id` set |
+| Explicit `method` on the smoke fetch, `DeployEnvironment` moved to `libs/types`, stderr in the no-secret assertion, DO upgrade seeded with 1, 2, 4, 5, 6 | none | `51d868c` and the following commit | pins: behaviour-preserving, caught by typecheck and the existing suites |
+
+- Runbooks: `deploy.md` keeps `META_APP_SECRET` out of the environment file for production, asks the production smoke secret at a hidden prompt, records the D1 time-travel bookmark before migrating; `mintlify-publish.md` says the uploading PyPI account must be the only Owner and to rehearse on TestPyPI because a version cannot be re-uploaded.
+- Hypothesis: the hidden prompt reads `/dev/tty`, so it also works when `pnpm deploy:production` spawns the smoke step. Gap: no test exercises a real terminal; the unit test feeds a stream.
+- Gap: the PyPI check trusts `package_roles` from `https://pypi.org/pypi`; Trusted Publishing provenance is a possible stronger follow-up.
+- Gap: a Maintainer role on PyPI is allowed by design; only Owner is restricted.
