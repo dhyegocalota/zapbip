@@ -1,5 +1,6 @@
 import { ChannelErrorKind, DeliveryState, MessageKind, OwnerLocale, TemplateKind, WakeOutcome } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
+import { NOTICE_FAILED_MESSAGE } from '../constants';
 import { channelError } from '../testing/channel-fixtures';
 import { captureInboxError } from '../testing/capture-inbox-error';
 import {
@@ -159,7 +160,7 @@ describe('deliverToOwner with the channel', () => {
     expect(environment.sender.templates).toMatchObject([{ kind: TemplateKind.Notice, locale: OwnerLocale.EnglishUs }]);
   });
 
-  test('a notice the channel rejects fails the message and the agent reads the channel text', async () => {
+  test('a notice the channel rejects keeps the message queued and the agent reads the notice failure', async () => {
     const environment = await createEnvironment();
     await closeWindowFixture({ environment });
     environment.sender.failTemplateCalls({
@@ -167,7 +168,7 @@ describe('deliverToOwner with the channel', () => {
       error: channelError({ kind: ChannelErrorKind.TemplateRejected, message: 'template not approved', errorCode: 132001 }),
     });
     const error = await captureInboxError(() => send({ environment, text: 'hi' }));
-    expect(error).toEqual({ code: ChannelErrorKind.TemplateRejected, message: 'template not approved' });
+    expect(error).toEqual({ code: ChannelErrorKind.DeliveryFailed, message: NOTICE_FAILED_MESSAGE });
     expect((await environment.repository.findWindow()).noticeSentForClosedWindow).toBe(false);
   });
 });

@@ -256,3 +256,7 @@ The closed-window notice of `deliver-to-owner.ts` is resolved at the main merge 
 
 - `set_wake` of `mode: none` with the MCP schema still accepts the foreign keys at the wire (they are nullable); the refusal comes from the core rule, covered by `set-wake.test.ts`.
 - The English-locale E2E account is set by updating `owner_identities.locale` after seeding.
+
+## Main merge (dcfebc9)
+
+`notice-owner.ts` is replaced by agent-inbox-core `send-notice.ts`: a closed-window notice the channel rejects now keeps the message queued and fails the claim owner with `delivery failed` (the notice-failed text); `deliver-to-owner-channel.test.ts` was updated to match, and the alarm retries with backoff. `owner_window` carries both `closed_at` (v4) and the `notice_retry_*` columns (v1).
