@@ -10,7 +10,7 @@ import { DevAccountInbox } from '../../src/dev/dev-account-inbox';
 import { withRepository } from '../support/account-inbox';
 import { BASE_TIME, buildTextMessage } from '../support/builders';
 import { advanceClock } from '../support/inbox-session';
-import { applyDirectoryMigration } from '../support/seed';
+import { applyDirectoryMigration, seedAccount } from '../support/seed';
 import { accountInboxStub, connectionOf, testEnv, whatsappTestEnv } from '../support/workers-env';
 
 const ACCOUNT_ID = 'acc_channel';
@@ -424,7 +424,7 @@ describe('DO schema upgrade', () => {
           .map((column) => column.name),
       };
     });
-    expect(upgrade.seeded).toEqual([1, 2, 5]);
+    expect(upgrade.seeded).toEqual([1, 2, 5, 6]);
     expect(upgrade.applied).toEqual([VERSION_BEFORE_CHANNEL]);
     expect(upgrade.messageColumns).toContain('channel_message_id');
   });
@@ -613,4 +613,8 @@ describe('AccountInbox channel messages', () => {
   });
 });
 
-beforeEach(applyDirectoryMigration);
+beforeEach(async () => {
+  await applyDirectoryMigration();
+  await seedAccount({ accountId: ACCOUNT_ID });
+  await seedAccount({ accountId: UPGRADE_ACCOUNT_ID });
+});

@@ -11,7 +11,7 @@ type AdmissionRow = { state: AccountState | null; hasActive: number; hasRevoked:
 
 export async function isAccountActive(input: { database: D1Database; accountId: string }): Promise<boolean> {
   const row = await input.database.prepare(STATE_STATEMENT).bind(input.accountId).first<{ state: AccountState }>();
-  return row === null || row.state === AccountState.Active;
+  return row !== null && row.state === AccountState.Active;
 }
 
 export async function isConnectionAdmitted(input: { database: D1Database; connection: ConnectionIdentity }): Promise<boolean> {
