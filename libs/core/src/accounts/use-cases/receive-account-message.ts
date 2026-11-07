@@ -141,7 +141,9 @@ async function settleRotation(input: ReceiveAccountMessageInput & { result: Acco
   const { compensation } = result;
   const isRotation = compensation !== null && compensation.oldDigest !== null;
   if (!isRotation) return;
-  await dependencies.revocations.cancelWaiters({ accountId: account.accountId, agent: compensation.agent });
+  const { accountId } = account;
+  await dependencies.revocations.cancelWaiters({ accountId, agent: compensation.agent });
+  await dependencies.revocations.closeSockets({ accountId, agent: compensation.agent });
 }
 
 async function sendReplies(input: ReceiveAccountMessageInput & { result: AccountCommandResult }): Promise<void> {
