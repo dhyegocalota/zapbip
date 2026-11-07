@@ -24,7 +24,7 @@ import {
   wakeStub,
   applyWakeDirectory,
 } from '../support/wake-session';
-import { connectionOf } from '../support/workers-env';
+import { connectionOf, testEnv } from '../support/workers-env';
 
 const BEFORE_DEBOUNCE_MS = 2_000;
 const FIRST_RETRY_DELAY_MS = 5_000;
@@ -128,6 +128,14 @@ describe('webhook wake delivery', () => {
     await alarmAfter({ advanceMs: 3_000 });
     await runDurableObjectAlarm(stub);
     expect(await readRequests({ stub })).toHaveLength(1);
+  });
+
+  it('sends nothing when the account has no row in the directory', async () => {
+    await stub.devScriptWake({ agent: WAKE_AGENT, responses: [ACCEPTED] });
+    await ownerMessage({});
+    await testEnv.CONNECTIONS.prepare('DELETE FROM accounts WHERE id = ?').bind(WAKE_ACCOUNT).run();
+    await alarmAfter({ advanceMs: 3_000 });
+    expect(await readRequests({ stub })).toEqual([]);
   });
 
   it('sends nothing when the agent read its messages before the alarm', async () => {
