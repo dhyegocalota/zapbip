@@ -6,8 +6,12 @@ const runCommand = promisify(execFile);
 const DOCKER_DESKTOP_PLATFORM = 'darwin';
 const BRIDGE_GATEWAY_TEMPLATE = '{{(index .IPAM.Config 0).Gateway}}';
 
+export function bridgeGatewayHostOf(input: { output: string }): string {
+  throw new Error('bridgeGatewayHostOf is not implemented');
+}
+
 export async function containerReachableHost(): Promise<string> {
   if (process.platform === DOCKER_DESKTOP_PLATFORM) return LOOPBACK_HOST;
   const { stdout } = await runCommand('docker', ['network', 'inspect', 'bridge', '-f', BRIDGE_GATEWAY_TEMPLATE]);
-  return stdout.trim();
+  return bridgeGatewayHostOf({ output: stdout });
 }
