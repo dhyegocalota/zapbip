@@ -11,9 +11,10 @@ const OPENCLAW_LINK_KEY = '"channels": { "zapbip": { "connectionLink"';
 const HERMES_INSTALL_COMMAND = 'pip install zapbip-platform==0.1.0';
 const HERMES_ENVIRONMENT_VARIABLES = ['ZAPBIP_CONNECTION_LINK', 'ZAPBIP_ALLOWED_USERS'];
 const ONE_LISTENER_SENTENCES: Record<string, string> = {
-  'apps/docs': 'Run only one listener per agent: the plugin or `npx zapbip listen`, never both. A second listener replaces the first.',
+  'apps/docs':
+    'Run only one listener per agent: the plugin or `npx zapbip@0.1.0 listen`, never both. A second listener replaces the first.',
   'apps/docs/pt-br':
-    'Rode apenas um listener por agente: o plugin ou `npx zapbip listen`, nunca os dois. Um segundo listener substitui o primeiro.',
+    'Rode apenas um listener por agente: o plugin ou `npx zapbip@0.1.0 listen`, nunca os dois. Um segundo listener substitui o primeiro.',
 };
 const SELF_TEST_TEXT = '✅ instalado';
 const LOST_REPLY_EVENT = 'plugin_reply_failed';
