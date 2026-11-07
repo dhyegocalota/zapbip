@@ -1,6 +1,8 @@
 import { WhatsAppNumberState } from '@zapbip/types';
 import { Hono } from 'hono';
 import { deleteCookie } from 'hono/cookie';
+import { writeAudit } from '../audit/audit-log';
+import { BackofficeAuditAction, BackofficeAuditOutcome } from '../audit/backoffice-audit-action';
 import { deleteSession } from '../auth/sessions';
 import { SEE_OTHER_STATUS, SESSION_COOKIE_NAME } from '../backoffice-constants';
 import type { BackofficeEnv } from '../backoffice-env';
@@ -33,6 +35,17 @@ sessionRoutes.post(BackofficePath.SignOut, async (context) => {
   const session = context.get('session');
   if (session === null) throw new Error('sign-out ran without a session');
   await deleteSession({ database: context.env.CONNECTIONS, digest: session.digest });
+  await writeAudit({
+    database: context.env.CONNECTIONS,
+    entry: {
+      now: Date.now(),
+      action: BackofficeAuditAction.SignOut,
+      outcome: BackofficeAuditOutcome.Succeeded,
+      targetKind: null,
+      targetId: null,
+      clientAddress: context.get('clientAddress'),
+    },
+  });
   deleteCookie(context, SESSION_COOKIE_NAME, { secure: true, path: '/' });
   return context.redirect(`${BackofficePath.SignIn}?${NOTICE_QUERY}=${BackofficeNotice.SignedOut}`, SEE_OTHER_STATUS);
 });

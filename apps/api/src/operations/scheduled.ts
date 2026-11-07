@@ -1,4 +1,6 @@
 import { clearExpiredInstallSecrets, sweepDeletingAccounts } from '../accounts/deletion-sweep';
+import { pruneBackoffice } from '../backoffice/audit/prune';
+import { BACKOFFICE_PRUNE_HOUR, BACKOFFICE_PRUNE_MINUTE } from '../backoffice/backoffice-constants';
 import { D1UsageRepository } from '../adapters/d1/d1-usage-repository';
 import type { Bindings } from '../contract/env';
 import { runBudgetCheck } from './budget-check';
@@ -41,8 +43,11 @@ export const SCHEDULED_JOBS: Record<ScheduledJobName, ScheduledJob> = {
     run: ({ env, now }) => runMediaRetention({ bucket: env.MEDIA, now }),
   },
   [ScheduledJobName.BackofficePrune]: {
-    isDue: () => false,
-    run: () => Promise.resolve(),
+    isDue: ({ now }) => {
+      const tick = new Date(now);
+      return tick.getUTCHours() === BACKOFFICE_PRUNE_HOUR && tick.getUTCMinutes() === BACKOFFICE_PRUNE_MINUTE;
+    },
+    run: ({ env, now }) => pruneBackoffice({ database: env.CONNECTIONS, now }),
   },
 };
 

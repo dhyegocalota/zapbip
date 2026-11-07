@@ -29,3 +29,5 @@ export const CLIENT_ADDRESS_HEADER = 'cf-connecting-ip';
 export const ACCEPT_LANGUAGE_HEADER = 'accept-language';
 export const ENGLISH_LANGUAGE_PREFIX = 'en';
 export const CSRF_CONTEXT = 'zapbip backoffice csrf';
+export const BACKOFFICE_PRUNE_HOUR = 4;
+export const BACKOFFICE_PRUNE_MINUTE = 0;
