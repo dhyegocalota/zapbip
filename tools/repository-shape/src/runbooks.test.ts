@@ -27,8 +27,9 @@ const GO_LIVE_ORDER = [
   'Publish the packages',
   'Company facts and official number',
   'Publish the docs',
-  'Meta live mode',
+  'Production Meta credentials',
   'Production deploy',
+  'Meta live mode',
   'Smoke production',
 ];
 const PNPM_BUILT_IN_COMMANDS = ['exec', 'dlx', 'install', 'add'];
