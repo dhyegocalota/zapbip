@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 source "$(dirname "$0")/touched-files.sh"
-readonly BLOCKED_MESSAGE="Blocked: agents never edit .env files; document the variable in .env.example instead."
-readonly WRITE_PATTERN='>|(^|[^[:alnum:]_])(tee|cp|mv|install|ln|rsync|dd|touch|truncate|patch|open|write_text|write_bytes|tar|unzip|pax|ditto|gtar|bsdtar|cpio)([^[:alnum:]_]|$)|(^|[[:space:]])--ou[[:alnum:]-]*([[:space:]=]|$)|sed[[:space:]]+-i|sed[[:space:]].*[[:space:]/;{]w[[:space:]]|perl[[:space:]]+-[[:alnum:]]*i|(^|[^[:alnum:]_])curl[[:space:]]+(.*[[:space:]])?(-[[:alnum:]]*o|--output)([[:space:]]|$)|(^|[^[:alnum:]_])wget[[:space:]]+(.*[[:space:]])?(-[[:alnum:]]*O|--output-document)([[:space:]=]|$)|(^|[^[:alnum:]_])git([[:space:]]+-[^[:space:]]+)*[[:space:]]+(checkout|restore)([^[:alnum:]_]|$)|(^|[^[:alnum:]_])(python[0-9.]*|node|ruby)[[:space:]]+-[ce]([^[:alnum:]_]|$)'
+source "$(dirname "$0")/unsafe-head-arguments.sh"
+readonly BLOCKED_MESSAGE="Blocked: agents never edit .env files; document the variable in .env.example instead. A command naming a dotenv file passes only as one plain read (cat, head, tail, wc, grep, rg, sed -n, git log|diff|show|status, ls, test) or as echo/printf prose redirected to another file."
 readonly WORD_SEPARATORS=$' \t\n;&|<>=(){}$`'
+readonly METACHARACTER_PATTERN=$'[;|&$`<>(){}\r\n]'
+readonly READ_HEAD_PATTERN='^(cat|head|tail|wc|grep|rg|git log|git diff|git show|git status|ls|test|\[)( |$)'
+readonly PRINT_LINES_PATTERN="^sed -n ['\"]?[0-9]+(,[0-9]+)?p['\"]?( [^-][^ ]*)+\$"
+readonly PROSE_PATTERN='^(echo|printf)[[:space:]]+([^>]*[^>[:space:]])[[:space:]]*(>>?[[:space:]]*([^[:space:]>]+))?$'
 
 is_protected_env_file() {
   local name="${1##*/}"
@@ -17,6 +21,33 @@ block() {
   exit 2
 }
 
+has_metacharacter() {
+  [[ "$1" =~ $METACHARACTER_PATTERN ]]
+}
+
+names_protected_env_file() {
+  local word
+  while IFS= read -r word; do
+    is_protected_env_file "$word" && return 0
+  done < <(tr "$WORD_SEPARATORS" '\n' <<<"$1")
+  return 1
+}
+
+is_plain_read() {
+  has_metacharacter "$trimmed_command" && return 1
+  [[ "$scanned_text" =~ $UNSAFE_HEAD_ARGUMENTS_PATTERN ]] && return 1
+  [[ "$trimmed_command" =~ $READ_HEAD_PATTERN || "$trimmed_command" =~ $PRINT_LINES_PATTERN ]]
+}
+
+is_prose() {
+  [[ "$trimmed_command" =~ $PROSE_PATTERN ]] || return 1
+  local text=${BASH_REMATCH[2]} target=${BASH_REMATCH[4]}
+  has_metacharacter "$text" && return 1
+  has_metacharacter "$target" && return 1
+  names_protected_env_file "$(tr -d "\"'\\\\" <<<"$target")" && return 1
+  return 0
+}
+
 touched=$(touched_files)
 while IFS= read -r file; do
   [[ -n "$file" ]] || continue
@@ -25,8 +56,8 @@ done <<<"$touched"
 [[ -n "$touched" ]] && exit 0
 command=$(jq -r '.tool_input.command // ""' <<<"$hook_input")
 scanned_text=$(tr -d "\"'\\\\" <<<"$command")
-[[ "$scanned_text" =~ $WRITE_PATTERN ]] || exit 0
-while IFS= read -r word; do
-  is_protected_env_file "$word" && block
-done < <(tr "$WORD_SEPARATORS" '\n' <<<"$scanned_text")
-exit 0
+trimmed_command=${command#"${command%%[![:space:]]*}"}
+names_protected_env_file "$scanned_text" || exit 0
+is_plain_read && exit 0
+is_prose && exit 0
+block

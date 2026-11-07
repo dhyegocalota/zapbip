@@ -210,7 +210,7 @@ Vendored skills come from superpowers 6.4.1 (MIT); the `metadata` block in each 
 
 | Hook | Event | Effect |
 |---|---|---|
-| `guard-secrets.sh` | PreToolUse Edit/Write, Bash | blocks edits to `.env*` except `*.example`, and a shell command that names such a file together with a write construct (redirection, `tee`, `cp`, `mv`, `sed -i`, `touch`, `git checkout` and the like); prose that only mentions the file passes |
+| `guard-secrets.sh` | PreToolUse Edit/Write, Bash | blocks edits to `.env*` except `*.example`, and any shell command that names such a file unless it is one plain read (`cat`, `head`, `tail`, `wc`, `grep`, `rg`, `sed -n`, `git log|diff|show|status`, `ls`, `test`, with no shell metacharacter) or `echo`/`printf` prose redirected to a file that is not a dotenv file |
 | `guard-git-add-all.sh` | PreToolUse Bash | blocks `git add -A`, `git add .`, `--no-verify` |
 | `guard-verify-records.sh` | PreToolUse Bash, Edit/Write | blocks writing records of green commits by hand; only `scripts/verify.sh` writes them (ADR 0005) |
 | `guard-deploy.sh` | PreToolUse Bash | a command that names `wrangler`, a production package script or the deploy and smoke scripts passes only as one anchored allowed form (`wrangler dev`, a `--dry-run` deploy, local D1, types, version, whoami, `git commit -F`, and the read, stage and test heads such as `git add`, `cat`, `rg`, `vitest run`) with no shell metacharacter; while the doctor records an OAuth wrangler session it refuses every wrangler command but `whoami`, `--version` and `logout`; the owner deploys by hand (ADR 0027) |

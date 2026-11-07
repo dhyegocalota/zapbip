@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 source "$(dirname "$0")/touched-files.sh"
 source "$(dirname "$0")/wrangler-session.sh"
+source "$(dirname "$0")/unsafe-head-arguments.sh"
 readonly BLOCKED_MESSAGE="Blocked: deploys, remote database changes and secrets are run by the owner by hand, never by an agent (ADR 0027). Only a --dry-run and local wrangler commands pass. To mention these words in a commit, write the message to a file and use git commit -F <file>."
 readonly LOGGED_IN_MESSAGE="Blocked: $WRANGLER_LOGGED_IN_FIX (ADR 0027)."
 readonly SENSITIVE_PATTERN='wrangler|deploy:|migrate:production|migrate:staging|secrets:|scripts/deploy|scripts/smoke'
@@ -11,6 +12,10 @@ readonly LOCAL_WRANGLER_PATTERN='^d1[[:space:]]+(migrations[[:space:]]+apply|exe
 readonly DEPLOY_WRANGLER_PATTERN='^deploy([[:space:]]|$)'
 readonly SESSION_WRANGLER_PATTERN='^(whoami|--version|logout)$'
 readonly REMOTE_PATTERN='(^|[[:space:]])(--remote|-[[:alnum:]]*r[[:alnum:]]*)([[:space:]=]|$)'
+readonly REDIRECTING_FLAG_PATTERN='(^|[[:space:]])--(env-?file|cwd)([[:space:]=]|$)'
+readonly CONFIG_ASSIGNMENT_PATTERN='^(--config|-c)=(.*)$'
+readonly SHORT_FLAG_CLUSTER_PATTERN='^-[[:alnum:]]*c[[:alnum:]]*$'
+readonly PARENT_SEGMENT_PATTERN='(^|/)\.\.(/|$)'
 readonly LOCAL_PATTERN='(^|[[:space:]])--local([[:space:]]|$)'
 readonly DRY_RUN_PATTERN='(^|[[:space:]])--dry-run([[:space:]]|$)'
 readonly DRY_RUN_MENTION_PATTERN='dry-?run'
@@ -27,7 +32,6 @@ readonly OPEN_HEAD_PATTERNS=(
   '^pnpm test( .*)?$'
   '^pnpm --filter [^ ]+ test( .*)?$'
 )
-readonly UNSAFE_HEAD_ARGUMENTS_PATTERN='(^| )(--worktree|--pre|--pre-glob|--open-files-in-pager|--exec|--hostname-bin|--ou[[:alnum:]-]*)([ =]|$)|(^| )-[[:alnum:]]*[OWx][[:alnum:]]*( |$)'
 
 command=$(jq -r '.tool_input.command // ""' <<<"$hook_input")
 
@@ -44,10 +48,35 @@ is_only_bare_dry_run() {
   [[ "$mentions" -eq 1 && "$1" =~ $DRY_RUN_PATTERN ]]
 }
 
+is_inside_repository() {
+  local repository_root
+  repository_root=$(wrangler_repository_root)
+  [[ -n "$1" && "$1" != -* && "$1" != "~"* ]] || return 1
+  [[ "$1" =~ $PARENT_SEGMENT_PATTERN ]] && return 1
+  [[ "$1" == /* && "$1" != "$repository_root"/* ]] && return 1
+  return 0
+}
+
+has_outside_config() {
+  local word expects_path=false
+  local -a words
+  read -ra words <<<"$1"
+  for word in "${words[@]}"; do
+    $expects_path && ! is_inside_repository "$word" && return 0
+    expects_path=false
+    [[ "$word" =~ $CONFIG_ASSIGNMENT_PATTERN ]] && ! is_inside_repository "${BASH_REMATCH[2]}" && return 0
+    [[ "$word" == -c || "$word" == --config ]] && expects_path=true
+    [[ "$word" =~ $SHORT_FLAG_CLUSTER_PATTERN && "$word" != -c ]] && return 0
+  done
+  $expects_path
+}
+
 is_allowed_wrangler() {
   local arguments
   arguments=$(tr -d "\"'\\\\" <<<"$1" | tr '[:upper:]' '[:lower:]')
   [[ "$arguments" =~ $REMOTE_PATTERN ]] && return 1
+  [[ "$arguments" =~ $REDIRECTING_FLAG_PATTERN ]] && return 1
+  has_outside_config "$(tr -d "\"'\\\\" <<<"$1")" && return 1
   [[ "$arguments" =~ $LOCAL_WRANGLER_PATTERN && "$arguments" =~ $LOCAL_PATTERN ]] && return 0
   [[ "$arguments" =~ $DEPLOY_WRANGLER_PATTERN ]] && is_only_bare_dry_run "$arguments" && return 0
   [[ "$arguments" =~ $OPEN_WRANGLER_PATTERN ]]
