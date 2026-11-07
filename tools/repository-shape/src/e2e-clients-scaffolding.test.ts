@@ -10,6 +10,7 @@ const DIGEST_PINNED_IMAGE_PATTERN = /HERMES_IMAGE = '[\w./-]+:[\w.-]+@sha256:[0-
 const TYPESCRIPT_EXTENSION = '.ts';
 const OPENCLAW_DOCKERFILE = `${CLIENTS_DIRECTORY}/openclaw/Dockerfile`;
 const DOCKERFILE_DIGEST_PATTERN = /^FROM [\w./-]+:[\w.-]+@sha256:[0-9a-f]{64}$/m;
+const HERMES_BUILD_REQUIREMENTS = `${CLIENTS_DIRECTORY}/hermes/build-requirements.txt`;
 const ROOT_MANIFEST = 'package.json';
 const OPENCLAW_PACKAGE = 'openclaw';
 
@@ -30,6 +31,11 @@ describe('the client end-to-end scaffolding', () => {
 
   test('the OpenClaw base image is pinned by digest', () => {
     expect(readRepositoryFile(OPENCLAW_DOCKERFILE)).toMatch(DOCKERFILE_DIGEST_PATTERN);
+  });
+
+  test('the Hermes wheel is built without isolation from a hashed build requirement', () => {
+    expect(readRepositoryFile(HERMES_CLIENT)).toContain('--no-build-isolation');
+    expect(readRepositoryFile(HERMES_BUILD_REQUIREMENTS)).toMatch(/^setuptools==[\d.]+ \\\n\s+--hash=sha256:[0-9a-f]{64}$/m);
   });
 
   test('the root manifest builds only the allowed dependencies and never openclaw', () => {
