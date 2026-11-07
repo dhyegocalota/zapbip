@@ -19,6 +19,7 @@ import { PLACEHOLDER_VALUE_PREFIX } from '../../src/operations/constants';
 import {
   COMPLETE_COMPANY,
   COMPLETE_VARIABLES,
+  fakeNameserverResolver,
   fakePackageFetcher,
   fakeShell,
   OFFICIAL_NUMBER,
@@ -89,6 +90,7 @@ async function refusalOf(input: {
     openclawPluginVersion: OPENCLAW_PLUGIN_NPM_VERSION,
     pypiVersion: ZAPBIP_PYPI_VERSION,
     packageFetcher: fakePackageFetcher({}),
+    nameserverResolver: fakeNameserverResolver({}),
     log: (line) => lines.push(line),
   });
   return { exitCode, shell, output: lines.join('\n') };

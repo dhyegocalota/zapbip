@@ -1,6 +1,7 @@
-import type { CompanyFacts } from '@zapbip/types';
+import { PRODUCTION_PUBLIC_ORIGIN, type CompanyFacts } from '@zapbip/types';
 import { DeployEnvironment } from '../../src/operations/deploy-environment';
 import type { DeployBlock, WorkerFacts, DeployShell, EnvironmentVariables, ShellResult } from '../../src/operations/deploy-preflight';
+import type { NameserverResolver } from '../../src/operations/nameserver-resolver';
 import type { PackageAnswer, PackageFetcher } from '../../src/operations/package-fetcher';
 import { SmokeInput } from '../../src/operations/smoke-inputs';
 import { WorkerSecret } from '../../src/operations/worker-secret';
@@ -97,13 +98,38 @@ export function fakePackageFetcher({
   return Object.assign(fetcher, { urls, xmlBodies });
 }
 
+const PUBLIC_ORIGINS: Record<DeployEnvironment, string> = {
+  [DeployEnvironment.Production]: PRODUCTION_PUBLIC_ORIGIN,
+  [DeployEnvironment.Staging]: 'https://mcp-staging.zapbip.com',
+  [DeployEnvironment.Development]: 'http://localhost:8787',
+};
+export const CLOUDFLARE_NAMESERVERS = ['elisabeth.ns.cloudflare.com', 'langston.ns.cloudflare.com'];
+
+export type FakeNameserverResolver = NameserverResolver & { zones: string[] };
+
+export function fakeNameserverResolver({
+  answer = CLOUDFLARE_NAMESERVERS,
+  failure,
+}: {
+  answer?: string[];
+  failure?: Error;
+}): FakeNameserverResolver {
+  const zones: string[] = [];
+  const resolver = async ({ zone }: { zone: string }): Promise<string[]> => {
+    zones.push(zone);
+    if (failure) throw failure;
+    return answer;
+  };
+  return Object.assign(resolver, { zones });
+}
+
 export function blockOf(input: { environment: DeployEnvironment; databaseId?: string; bucketName?: string }): DeployBlock {
   const { environment, databaseId = DATABASE_ID, bucketName = `zapbip-media-${input.environment}` } = input;
   return {
     name: `zapbip-api-${environment}`,
     d1_databases: [{ binding: 'CONNECTIONS', database_name: `zapbip-${environment}`, database_id: databaseId }],
     r2_buckets: [{ binding: 'MEDIA', bucket_name: bucketName }],
-    vars: { ENVIRONMENT: environment },
+    vars: { ENVIRONMENT: environment, PUBLIC_ORIGIN: PUBLIC_ORIGINS[environment] },
     triggers: { crons: ['0 * * * *'] },
   };
 }

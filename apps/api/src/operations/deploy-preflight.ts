@@ -1,7 +1,17 @@
-import { COMPANY_FACT_UNSET, type CompanyFacts, HttpStatus, NPM_REGISTRY_URL, OFFICIAL_NUMBER_UNSET } from '@zapbip/types';
+import {
+  CLOUDFLARE_NAMESERVER_SUFFIX,
+  COMPANY_FACT_UNSET,
+  type CompanyFacts,
+  HttpStatus,
+  NPM_REGISTRY_URL,
+  OFFICIAL_NUMBER_UNSET,
+  PRODUCTION_PUBLIC_ORIGIN,
+  PRODUCTION_ZONE,
+} from '@zapbip/types';
 import { z } from 'zod';
 import { DeployEnvironment } from './deploy-environment';
 import { parseJsonOrNull } from './json-text';
+import type { NameserverResolver } from './nameserver-resolver';
 import type { PackageAnswer, PackageFetcher } from './package-fetcher';
 import { isPlaceholderValue } from './placeholder';
 import { missingSmokeInputs } from './smoke-inputs';
@@ -45,6 +55,7 @@ export enum PreflightStep {
   Git = 'git',
   Gate = 'gate',
   Config = 'config',
+  Domain = 'domain',
   Readiness = 'readiness',
   Secrets = 'secrets',
   Migrations = 'migrations',
@@ -69,6 +80,7 @@ export type WorkerPreflightInput = {
   openclawPluginVersion: string;
   pypiVersion: string;
   packageFetcher: PackageFetcher;
+  nameserverResolver: NameserverResolver;
 };
 
 export type DocsPreflightInput = {
@@ -94,6 +106,7 @@ function npmNamesOf(input: { people: z.infer<typeof npmPeopleSchema> }): string[
 }
 const npmFailureSchema = z.object({ error: z.object({ code: z.string() }) });
 const secretListSchema = z.array(z.object({ name: z.string() }));
+const originBlockSchema = z.object({ vars: z.object({ PUBLIC_ORIGIN: z.string() }) });
 const cronBlockSchema = z.object({ triggers: z.object({ crons: z.array(z.string()) }) });
 
 function environmentFlag(input: { environment: DeployEnvironment }): string[] {
@@ -268,6 +281,26 @@ async function refuseLeftoverPlaceholder(input: WorkerPreflightInput): Promise<s
   return `the ${input.environment} block still holds placeholders: ${paths.join(', ')}`;
 }
 
+async function nameserversOrReason(input: { nameserverResolver: NameserverResolver }): Promise<string[] | string> {
+  try {
+    return await input.nameserverResolver({ zone: PRODUCTION_ZONE });
+  } catch (error) {
+    return `could not look up the ${PRODUCTION_ZONE} nameservers: ${error instanceof Error ? error.message : String(error)}`;
+  }
+}
+
+async function refuseUnreadyDomain(input: WorkerPreflightInput): Promise<string | null> {
+  const origin = originBlockSchema.safeParse(input.block);
+  if (!origin.success || origin.data.vars.PUBLIC_ORIGIN !== PRODUCTION_PUBLIC_ORIGIN) {
+    return `PUBLIC_ORIGIN must be ${PRODUCTION_PUBLIC_ORIGIN} in production`;
+  }
+  const nameservers = await nameserversOrReason(input);
+  if (typeof nameservers === 'string') return nameservers;
+  const isOnCloudflare = nameservers.length > 0 && nameservers.every((name) => name.toLowerCase().endsWith(CLOUDFLARE_NAMESERVER_SUFFIX));
+  if (isOnCloudflare) return null;
+  return `${PRODUCTION_ZONE} nameservers are ${nameservers.join(', ') || 'none'}; they must be Cloudflare nameservers (*${CLOUDFLARE_NAMESERVER_SUFFIX}); see docs/runbooks/dns.md`;
+}
+
 async function refuseUnreadyProduction(input: WorkerPreflightInput): Promise<string | null> {
   if (input.environment !== DeployEnvironment.Production) return null;
   const parsed = cronBlockSchema.safeParse(input.block);
@@ -322,6 +355,7 @@ const WORKER_CHECKS: PreflightCheck<WorkerPreflightInput>[] = [
   { step: PreflightStep.NpmVersion, refusalOf: productionOnly({ refusalOf: refuseUntrustedWorkerPackage }) },
   { step: PreflightStep.PypiVersion, refusalOf: productionOnly({ refusalOf: refuseUntrustedPypiPackage }) },
   { step: PreflightStep.Config, refusalOf: refuseLeftoverPlaceholder },
+  { step: PreflightStep.Domain, refusalOf: productionOnly({ refusalOf: refuseUnreadyDomain }) },
   { step: PreflightStep.Readiness, refusalOf: refuseUnreadyProduction },
   { step: PreflightStep.SmokeInputs, refusalOf: refuseMissingSmokeInputs },
   { step: PreflightStep.Git, refusalOf: refuseUncleanGit },

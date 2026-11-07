@@ -25,6 +25,7 @@ import {
 import { createApp } from '../src/app';
 import { MAX_FUTURE_SKEW_MS } from '../src/adapters/whatsapp/whatsapp-constants';
 import { parseJsonOrNull } from '../src/operations/json-text';
+import { createNameserverResolver, type NameserverResolver } from '../src/operations/nameserver-resolver';
 import { createPackageFetcher, type PackageFetcher } from '../src/operations/package-fetcher';
 import { createTerminalShell } from '../src/operations/terminal-shell';
 import { inspectWorker } from '../src/operations/worker-facts';
@@ -53,6 +54,7 @@ export type DeployRun = {
   openclawPluginVersion: string;
   pypiVersion: string;
   packageFetcher: PackageFetcher;
+  nameserverResolver: NameserverResolver;
   log: (line: string) => void;
 };
 
@@ -191,6 +193,7 @@ async function main(): Promise<void> {
       openclawPluginVersion: OPENCLAW_PLUGIN_NPM_VERSION,
       pypiVersion: ZAPBIP_PYPI_VERSION,
       packageFetcher: createPackageFetcher(),
+      nameserverResolver: createNameserverResolver(),
       log: console.log,
     });
   } finally {

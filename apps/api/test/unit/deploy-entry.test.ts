@@ -8,6 +8,7 @@ import {
   COMPLETE_COMPANY,
   COMPLETE_VARIABLES,
   type FakeShell,
+  fakeNameserverResolver,
   fakePackageFetcher,
   fakeShell,
   NPM_VERSION,
@@ -75,6 +76,7 @@ async function deploy(input: {
     openclawPluginVersion: NPM_VERSION,
     pypiVersion: PYPI_VERSION,
     packageFetcher: fakePackageFetcher({}),
+    nameserverResolver: fakeNameserverResolver({}),
     log: (line) => lines.push(line),
   });
   return { exitCode, shell, prompt, output: lines.join('\n') };

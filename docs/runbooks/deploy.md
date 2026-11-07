@@ -55,7 +55,7 @@ Migration rule: a migration that has reached a deployed environment is never edi
 
    Expect: `wrangler deploy` succeeds and the smoke test runs. With `--first-deploy` the smoke test skips checks 2 and 5 (they need the smoke connection) and prints how to create it. After the first staging deploy, finish [meta-setup.md](meta-setup.md) step 9.
 
-   If it fails: each refusal prints what to do next, and nothing is deployed before the dry run passes. A smoke failure prints the rollback commands and runs none of them; you decide.
+   If it fails: each refusal prints what to do next, and nothing is deployed before the dry run passes. A production-only domain refusal (after the placeholder check) means `PUBLIC_ORIGIN` is not `https://mcp.zapbip.com` or the `zapbip.com` nameservers are not Cloudflare's; fix it with [dns.md](dns.md), step 1. A smoke failure prints the rollback commands and runs none of them; you decide.
 
 6. **Smoke test.** Create the smoke connection: from your phone send `novo agente smoke` to the environment's WhatsApp number, open the install link in the reply and read the MCP URL `https://<host>/c/<secret>/mcp`. For staging put the part between `/c/` and `/mcp` in the environment file as `SMOKE_CONNECTION_SECRET`, then run `pnpm smoke:staging`. For production run `pnpm smoke:production` and paste the part at the hidden prompt (nothing is echoed or stored); the deploy command's own smoke step prompts the same way.
 

@@ -17,7 +17,9 @@ import {
   blockOf,
   COMPLETE_COMPANY,
   COMPLETE_VARIABLES,
+  type FakeNameserverResolver,
   type FakePackageFetcher,
+  fakeNameserverResolver,
   type FakeShell,
   fakePackageFetcher,
   fakeShell,
@@ -46,6 +48,7 @@ function workerInput(input: {
   npmVersion?: string;
   openclawPluginVersion?: string;
   packageFetcher?: FakePackageFetcher;
+  nameserverResolver?: FakeNameserverResolver;
   workerFacts?: WorkerFacts;
 }) {
   const { environment = DeployEnvironment.Staging, isInteractive = true, firstDeploy = false } = input;
@@ -57,6 +60,7 @@ function workerInput(input: {
     npmVersion = NPM_VERSION,
     openclawPluginVersion = NPM_VERSION,
     packageFetcher = fakePackageFetcher({}),
+    nameserverResolver = fakeNameserverResolver({}),
   } = input;
   return {
     environment,
@@ -72,6 +76,7 @@ function workerInput(input: {
     openclawPluginVersion,
     pypiVersion: PYPI_VERSION,
     packageFetcher,
+    nameserverResolver,
   };
 }
 
@@ -455,6 +460,50 @@ describe('worker preflight', () => {
     const refusal = await runWorkerPreflight(workerInput({ block }));
     expect(refusal?.step).toBe(PreflightStep.Config);
     expect(refusal?.message).toContain('PUBLIC_ORIGIN');
+  });
+
+  it('refuses production when PUBLIC_ORIGIN is not the production origin, before asking DNS', async () => {
+    const nameserverResolver = fakeNameserverResolver({});
+    const block = { ...blockOf({ environment: DeployEnvironment.Production }), vars: { PUBLIC_ORIGIN: 'https://mcp-staging.zapbip.com' } };
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, block, nameserverResolver }));
+    expect(refusal?.step).toBe(PreflightStep.Domain);
+    expect(refusal?.message).toContain('PUBLIC_ORIGIN');
+    expect(refusal?.message).toContain('https://mcp.zapbip.com');
+    expect(nameserverResolver.zones).toEqual([]);
+  });
+
+  it('refuses production when the zone nameservers are not Cloudflare', async () => {
+    const nameserverResolver = fakeNameserverResolver({ answer: ['ns1.registrar.example'] });
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, nameserverResolver }));
+    expect(refusal?.step).toBe(PreflightStep.Domain);
+    expect(refusal?.message).toContain('zapbip.com');
+    expect(refusal?.message).toContain('Cloudflare nameservers');
+    expect(nameserverResolver.zones).toEqual(['zapbip.com']);
+  });
+
+  it('refuses production when one of the nameservers is not Cloudflare', async () => {
+    const nameserverResolver = fakeNameserverResolver({ answer: ['elisabeth.ns.cloudflare.com', 'ns1.registrar.example'] });
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, nameserverResolver }));
+    expect(refusal?.step).toBe(PreflightStep.Domain);
+  });
+
+  it('refuses production when the zone has no nameservers', async () => {
+    const nameserverResolver = fakeNameserverResolver({ answer: [] });
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, nameserverResolver }));
+    expect(refusal?.step).toBe(PreflightStep.Domain);
+  });
+
+  it('refuses production when the nameserver lookup fails, naming the reason', async () => {
+    const nameserverResolver = fakeNameserverResolver({ failure: new Error('queryNs ENOTFOUND') });
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, nameserverResolver }));
+    expect(refusal?.step).toBe(PreflightStep.Domain);
+    expect(refusal?.message).toContain('queryNs ENOTFOUND');
+  });
+
+  it('does not look up DNS for staging', async () => {
+    const nameserverResolver = fakeNameserverResolver({ answer: ['ns1.registrar.example'] });
+    expect(await runWorkerPreflight(workerInput({ nameserverResolver }))).toBeNull();
+    expect(nameserverResolver.zones).toEqual([]);
   });
 
   it('refuses production when the Worker does not export scheduled', async () => {

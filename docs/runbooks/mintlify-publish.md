@@ -60,7 +60,7 @@ The docs live in `apps/docs` and publish when `main` changes. The site names the
 
    If it fails: fix each reported link in both languages; a page and its Portuguese twin must both exist.
 
-10. **Set the domain.** In the dashboard open Settings, Custom domain, and enter `docs.zapbip.com`. Add the CNAME record it shows, as in [dns.md](dns.md), step 6, and wait for Mintlify to confirm it.
+10. **Set the domain.** In the dashboard open Settings, Custom domain, and enter `docs.zapbip.com`. Add the CNAME record it shows, as in [dns.md](dns.md), step 4, then redirect the bare domain with step 5, and wait for Mintlify to confirm it.
 
    Expect: `https://docs.zapbip.com` serves the site over HTTPS.
 

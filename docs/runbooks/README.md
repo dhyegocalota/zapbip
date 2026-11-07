@@ -7,7 +7,7 @@ Follow the steps in order. Each step names the runbook that holds its detail. Ev
 ## Runbooks
 
 - [cloudflare-setup.md](cloudflare-setup.md): the Cloudflare account, the free plan, R2, the scoped API token and the error notification.
-- [dns.md](dns.md): buying `zapbip.com`, putting it on Cloudflare and one DNS check per host.
+- [dns.md](dns.md): checking the existing `zapbip.com` zone on Cloudflare, one DNS check per host, the docs CNAME and the bare-domain redirect.
 - [meta-setup.md](meta-setup.md): the policy check, the Meta apps, the numbers, the tokens, the webhook, Live mode and the templates.
 - [deploy.md](deploy.md): resources, secrets, migrations, deploy, smoke, tail, rollback, the weekly cost check and the go-live record.
 - [mintlify-publish.md](mintlify-publish.md): the official number, the company facts, the packages, the docs preflight, the Mintlify site and its domain.
@@ -24,7 +24,7 @@ Follow the steps in order. Each step names the runbook that holds its detail. Ev
    Expect: `wrangler whoami` prints your account.
 
    If it fails: the failing step of `cloudflare-setup.md` says what to check.
-3. **DNS.** Do steps 1 to 4 of `dns.md`; step 5 follows each deploy and step 6 belongs to the docs publish.
+3. **DNS.** Do steps 1 and 2 of `dns.md`; step 3 follows each deploy, and steps 4 and 5 belong to the docs publish.
 
    Expect: `zapbip.com` is active on Cloudflare.
 
@@ -71,7 +71,7 @@ Follow the steps in order. Each step names the runbook that holds its detail. Ev
     Expect: neither `OFFICIAL_NUMBER_UNSET` nor `COMPANY_FACT_UNSET` is left in `libs/types/src/constants.ts` apart from their definitions.
 
     If it fails: the production deploy and `pnpm docs:preflight` refuse and name what is still unset.
-12. **Publish the docs.** Do steps 6 to 11 of `mintlify-publish.md`, starting with `pnpm docs:preflight`, which needs no DNS: it reads the constants, npm and PyPI. The custom domain of step 10 uses step 6 of `dns.md`. The privacy page is part of the site.
+12. **Publish the docs.** Do steps 6 to 11 of `mintlify-publish.md`, starting with `pnpm docs:preflight`, which needs no DNS: it reads the constants, npm and PyPI. The custom domain of step 10 uses steps 4 and 5 of `dns.md`. The privacy page is part of the site.
 
     Expect: `docs.zapbip.com` serves the site in English and in Portuguese, and `https://docs.zapbip.com/help/privacy` loads.
 
@@ -81,7 +81,7 @@ Follow the steps in order. Each step names the runbook that holds its detail. Ev
     Expect: you hold the production app secret, the system user token and the verify token, ready for the `wrangler secret put` prompts of the next step.
 
     If it fails: the failing step of `meta-setup.md` says what to check.
-14. **Production deploy.** Do `deploy.md` steps 1 to 5 for production, with `pnpm deploy:production --first-deploy`, then step 9 of `meta-setup.md` for the production app, then step 5 of `dns.md` for the host check.
+14. **Production deploy.** Do `deploy.md` steps 1 to 5 for production, with `pnpm deploy:production --first-deploy`, then step 9 of `meta-setup.md` for the production app, then step 3 of `dns.md` for the host check.
 
     Expect: the deploy ends with the smoke test (checks 1, 3 and 4 pass), the health route answers on `mcp.zapbip.com` and Meta verifies the production webhook.
 
