@@ -243,3 +243,7 @@ Known gaps:
 
 - Signal's generic link preview cannot be recognised by user agent; the page's top line tells the AI to warn the owner. No docs privacy page exists in this slice.
 - The success lines exist on the steps the testers named, not on every client.
+
+## Merge pass
+
+- `apps/openclaw-plugin/test/unit/connector-socket.test.ts` "heartbeat > sends a ping on every interval" failed under load (`expected 2 to be 1`): the test set the pong timeout equal to the ping interval (40 ms), so a late pong reconnected the socket before the third ping was counted. The test now leaves the timeout at its default, so only the pings are counted. Proof: 30 of 30 runs of the file, 10 of them beside 4 `yes` CPU hogs.

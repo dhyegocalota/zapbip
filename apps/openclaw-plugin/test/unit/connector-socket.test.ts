@@ -253,7 +253,7 @@ describe('handoff and done', () => {
 describe('heartbeat', () => {
   it('sends a ping on every interval', async () => {
     const connector = await startConnector();
-    startPlugin({ connector, heartbeatIntervalMs: FAST_HEARTBEAT_INTERVAL_MS, heartbeatTimeoutMs: FAST_HEARTBEAT_INTERVAL_MS });
+    startPlugin({ connector, heartbeatIntervalMs: FAST_HEARTBEAT_INTERVAL_MS });
     await connector.waitForFrames({ type: ConnectorFrameType.Ping, count: 3 });
     expect(connector.connectionCount()).toBe(1);
   });
