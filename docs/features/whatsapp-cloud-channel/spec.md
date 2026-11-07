@@ -1,6 +1,6 @@
 # WhatsApp Cloud channel
 
-**Status:** In review
+**Status:** Shipped 2026-11-06
 **Tier:** 🔴
 **Owner approval:** approved 2026-11-06 (owner delegated)
 **ADRs:** [0012](../../adr/0012-owner-identity-by-wa-id-on-the-shared-number.md), [0013](../../adr/0013-webhook-acknowledged-after-a-durable-commit-and-deduplicated-by-message-id.md), [0014](../../adr/0014-inbound-media-stored-in-r2-at-webhook-time.md); builds on [0006](../../adr/0006-one-secret-per-connection-in-the-mcp-url.md), [0007](../../adr/0007-a-durable-inbox-and-a-wake-ladder.md), [0008](../../adr/0008-a-pure-core-behind-ports.md), [0009](../../adr/0009-cloudflare-workers-with-one-durable-object-per-account.md), [0010](../../adr/0010-public-docs-on-mintlify.md), [0011](../../adr/0011-the-24-hour-window-queues-and-sends-one-notice.md)
