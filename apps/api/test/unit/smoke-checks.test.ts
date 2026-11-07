@@ -144,6 +144,14 @@ describe('smoke checks', () => {
     expect(post?.body).toContain('PNID');
   });
 
+  it('check 5 names the registered phone number in its payload and signs it with the smoke app secret', async () => {
+    const { requests } = await run({});
+    const post = requests.find((request) => request.body.includes('@smoke token'));
+    const payload = JSON.parse(post!.body) as { entry: { changes: { value: { metadata: { phone_number_id: string } } }[] }[] };
+    expect(payload.entry[0]!.changes[0]!.value.metadata.phone_number_id).toBe(INPUTS[SmokeInput.PhoneNumberId]);
+    expect(post?.headers.get(SIGNATURE_HEADER)).toBe(signWebhookBody({ appSecret: APP_SECRET, body: post!.body }));
+  });
+
   it('check 5 polls check_inbox spaced by the poll interval until the message arrives', async () => {
     const { lines, waits, requests } = await run({ behavior: { inboxAppearsAtPoll: 3 } });
     expect(lines[4]).toBe('PASS 200 fake inbound');
