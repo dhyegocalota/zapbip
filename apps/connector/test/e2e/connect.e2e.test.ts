@@ -11,10 +11,6 @@ import { startStack, type Stack } from './support/stack';
 
 const CLI_BUNDLE = fileURLToPath(new URL('../../dist/cli.js', import.meta.url));
 const SUBJECT_CLIENT = Object.values(ConnectorClient)[0] as ConnectorClient;
-const RUNTIME_AGENTS = Object.values(ConnectorClient).map((client, index) => ({
-  client,
-  agent: `${RUNTIME_AGENT_PREFIX}${String.fromCharCode(FIRST_LETTER_CODE + index)}`,
-}));
 const SESSION_ID = '0b1f6c2e-5d7a-4c3b-9e8f-1a2b3c4d5e6f';
 const CONNECT_AGENT = 'ana';
 const LISTEN_AGENT = 'bia';
@@ -27,6 +23,10 @@ const CALLS_MCP_VARIABLE = 'FAKE_CLIENT_CALLS_MCP';
 const ZAPBIP_URL_VARIABLE = 'FAKE_CLIENT_ZAPBIP_URL';
 const RUNTIME_AGENT_PREFIX = 'runtime';
 const FIRST_LETTER_CODE = 97;
+const RUNTIME_AGENTS = Object.values(ConnectorClient).map((client, index) => ({
+  client,
+  agent: `${RUNTIME_AGENT_PREFIX}${String.fromCharCode(FIRST_LETTER_CODE + index)}`,
+}));
 const DOWN_AGENT = 'fabio';
 const ORDER_AGENT = 'gil';
 const BURST_AGENT = 'hana';
