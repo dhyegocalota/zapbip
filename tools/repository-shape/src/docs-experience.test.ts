@@ -38,6 +38,7 @@ import { DOCS_ROOT, PAGE_EXTENSION, capturedNames, documentFiles, readRepository
 const SNIPPETS_DIRECTORY = 'snippets';
 const AGENTS_DIRECTORY = 'agents';
 const MATRIX_PAGE = 'agents/supported-agents';
+const MATRIX_SNIPPET = 'agents/matrix';
 const INSTALL_PROMPT_SNIPPET = 'install-prompt';
 const OFFICIAL_NUMBER_SNIPPET = 'official-number';
 const NAVIGATION_TEST_FILE = 'tools/repository-shape/src/docs-navigation.test.ts';
@@ -239,8 +240,7 @@ describe('docs experience: agent pages', () => {
   });
 
   test.each(LANGUAGES)('the matrix has exactly one row per client in %s', (language) => {
-    const matrixPage = twinPathOf({ path: MATRIX_PAGE, language });
-    const markdown = readRepositoryFile(pageFileOf(matrixPage));
+    const markdown = readRepositoryFile(snippetPathOf({ name: MATRIX_SNIPPET, language }));
     const rows = markdown.split(LINE_SEPARATOR).filter((line) => TABLE_ROW_PATTERN.test(line)).length - TABLE_HEADER_ROW_COUNT;
     expect(rows).toBe(CLIENTS.length);
     expect(matrixClientsOf({ markdown }).sort()).toEqual([...CLIENTS].sort());
@@ -259,7 +259,9 @@ describe('docs experience: agent pages', () => {
 
   test('every agent page has no page without a matrix row', () => {
     const pages = documentFiles(AGENTS_DIRECTORY).map((path) => withoutExtension(path).replace(`${AGENTS_DIRECTORY}/`, ''));
-    const matrixClients = matrixClientsOf({ markdown: readRepositoryFile(pageFileOf(MATRIX_PAGE)) });
+    const matrixClients = matrixClientsOf({
+      markdown: readRepositoryFile(snippetPathOf({ name: MATRIX_SNIPPET, language: DocsLanguage.English })),
+    });
     const clientPages = pages.filter((page) => `${AGENTS_DIRECTORY}/${page}` !== MATRIX_PAGE);
     expect(unmatrixedAgentPages({ matrixClients, pages: clientPages })).toEqual([]);
   });
