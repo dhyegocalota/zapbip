@@ -11,6 +11,7 @@ import type { RateLimiter } from './install-page';
 import { plainResponse, privateResponse } from './private-response';
 import { startLinkLocaleOf } from './start-link-language';
 import { renderStartUnavailablePage } from './start-link-page';
+import { START_LINK_STYLE_HASH } from './start-link-style';
 import { startLinkTarget } from './start-link-target';
 
 export type StartLinkRouteDependencies = {
@@ -27,7 +28,7 @@ const RATE_LIMITED_TEXT = 'too many requests';
 const RETRY_AFTER_HEADER = 'Retry-After';
 const RATE_LIMIT_RETRY_AFTER_SECONDS = RATE_LIMIT_PERIOD_MS / SECOND_MS;
 const UNAVAILABLE_RETRY_AFTER_SECONDS = MINUTE_MS / SECOND_MS;
-const UNAVAILABLE_CONTENT_SECURITY_POLICY = "default-src 'none'";
+const UNAVAILABLE_CONTENT_SECURITY_POLICY = `default-src 'none'; style-src '${START_LINK_STYLE_HASH}'`;
 
 function unavailableResponse(input: { locale: OwnerLocale }): Response {
   return privateResponse({
