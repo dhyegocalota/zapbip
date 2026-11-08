@@ -11,37 +11,60 @@ export type ChartReference = { value: number; label: string };
 
 export type ChartSeries = { label: string; cell: MetricCell; values: number[]; valueTexts: string[]; pattern: BarPattern };
 
-const CHART_WIDTH = 640;
+const LEFT_GUTTER = 52;
+const RIGHT_GUTTER = 120;
+const PLOT_WIDTH = 548;
+const CHART_WIDTH = LEFT_GUTTER + PLOT_WIDTH + RIGHT_GUTTER;
+const TOP_MARGIN = 20;
 const PLOT_HEIGHT = 140;
-const CHART_HEIGHT = 164;
-const LABEL_BASELINE = 158;
-const MAXIMUM_LABEL_BASELINE = 12;
+const BASELINE_Y = TOP_MARGIN + PLOT_HEIGHT;
+const DAY_LABEL_Y = BASELINE_Y + 18;
+const CHART_HEIGHT = DAY_LABEL_Y + 8;
+const HEADROOM_RATIO = 1.08;
+const AXIS_LABEL_GAP = 6;
+const LABEL_BASELINE_SHIFT = 4;
+const REFERENCE_LABEL_GAP = 8;
+const REFERENCE_LABEL_HEIGHT = 14;
 const BAR_GAP = 2;
 const DAY_LABEL_INTERVAL = 7;
 const DAY_LABEL_START = 5;
 const HATCH_SIZE = 6;
 const HATCH_ROTATION = 45;
 const MINIMUM_MAXIMUM = 1;
-const REFERENCE_LABEL_GAP = 3;
 
 type Bar = { x: number; y: number; width: number; height: number; pattern: BarPattern };
+type PlacedReference = ChartReference & { lineY: number; labelY: number };
 
-function barsOf(input: { series: ChartSeries[]; maximum: number }): Bar[] {
+function plotY(input: { value: number; scale: number }): number {
+  return BASELINE_Y - (input.value / input.scale) * PLOT_HEIGHT;
+}
+
+function barsOf(input: { series: ChartSeries[]; scale: number }): Bar[] {
   const dayCount = input.series.reduce((count, series) => Math.max(count, series.values.length), 0);
-  const groupWidth = CHART_WIDTH / dayCount;
+  const groupWidth = PLOT_WIDTH / dayCount;
   const barWidth = (groupWidth - BAR_GAP) / input.series.length;
   return input.series.flatMap((series, seriesIndex) =>
     series.values.map((value, dayIndex) => {
-      const height = (value / input.maximum) * PLOT_HEIGHT;
+      const y = plotY({ value, scale: input.scale });
       return {
-        x: dayIndex * groupWidth + BAR_GAP / 2 + seriesIndex * barWidth,
-        y: PLOT_HEIGHT - height,
+        x: LEFT_GUTTER + dayIndex * groupWidth + BAR_GAP / 2 + seriesIndex * barWidth,
+        y,
         width: barWidth,
-        height,
+        height: BASELINE_Y - y,
         pattern: series.pattern,
       };
     }),
   );
+}
+
+function placeReferences(input: { references: ChartReference[]; scale: number }): PlacedReference[] {
+  const highestFirst = [...input.references].sort((first, second) => second.value - first.value);
+  return highestFirst.reduce<PlacedReference[]>((placed, reference) => {
+    const lineY = plotY({ value: reference.value, scale: input.scale });
+    const previous = placed.at(-1);
+    const labelY = previous === undefined ? lineY : Math.max(lineY, previous.labelY + REFERENCE_LABEL_HEIGHT);
+    return [...placed, { ...reference, lineY, labelY }];
+  }, []);
 }
 
 export function BarChart(props: {
@@ -61,6 +84,7 @@ export function BarChart(props: {
   if (!hasData) return <p class="empty-text">{translate(BackofficeCopyKey.MetricsNoData)}</p>;
   const references = props.references === undefined ? [] : props.references;
   const maximum = Math.max(MINIMUM_MAXIMUM, ...series.flatMap((entry) => entry.values), ...references.map((reference) => reference.value));
+  const scale = maximum * HEADROOM_RATIO;
   const patternId = `${id}-hatch`;
   const [firstDay, lastDay] = [days.at(0), days.at(-1)];
   if (firstDay === undefined || lastDay === undefined) throw new Error('a chart needs at least one day');
@@ -86,7 +110,7 @@ export function BarChart(props: {
             <line class="hatch-line" x1="0" y1="0" x2="0" y2={HATCH_SIZE} />
           </pattern>
         </defs>
-        {barsOf({ series, maximum }).map((bar) => (
+        {barsOf({ series, scale }).map((bar) => (
           <rect
             class={`bar bar-${bar.pattern}`}
             x={bar.x}
@@ -96,32 +120,30 @@ export function BarChart(props: {
             fill={bar.pattern === BarPattern.Hatched ? `url(#${patternId})` : undefined}
           />
         ))}
-        {references.map((reference) => (
+        {placeReferences({ references, scale }).map((reference) => (
           <g>
-            <line
-              class="chart-reference"
-              x1="0"
-              y1={PLOT_HEIGHT - (reference.value / maximum) * PLOT_HEIGHT}
-              x2={CHART_WIDTH}
-              y2={PLOT_HEIGHT - (reference.value / maximum) * PLOT_HEIGHT}
-            />
+            <line class="chart-reference" x1={LEFT_GUTTER} y1={reference.lineY} x2={LEFT_GUTTER + PLOT_WIDTH} y2={reference.lineY} />
             <text
               class="chart-axis-label chart-reference-label"
-              x={CHART_WIDTH}
-              y={PLOT_HEIGHT - (reference.value / maximum) * PLOT_HEIGHT - REFERENCE_LABEL_GAP}
-              text-anchor="end"
+              x={LEFT_GUTTER + PLOT_WIDTH + REFERENCE_LABEL_GAP}
+              y={reference.labelY + LABEL_BASELINE_SHIFT}
             >
               {reference.label}
             </text>
           </g>
         ))}
-        <line class="chart-baseline" x1="0" y1={PLOT_HEIGHT} x2={CHART_WIDTH} y2={PLOT_HEIGHT} />
-        <text class="chart-axis-label chart-axis-maximum" x="0" y={MAXIMUM_LABEL_BASELINE}>
+        <line class="chart-baseline" x1={LEFT_GUTTER} y1={BASELINE_Y} x2={LEFT_GUTTER + PLOT_WIDTH} y2={BASELINE_Y} />
+        <text
+          class="chart-axis-label chart-axis-maximum"
+          x={LEFT_GUTTER - AXIS_LABEL_GAP}
+          y={plotY({ value: maximum, scale }) + LABEL_BASELINE_SHIFT}
+          text-anchor="end"
+        >
           {maximum}
         </text>
         {days.map((day, index) =>
           index % DAY_LABEL_INTERVAL === 0 ? (
-            <text class="chart-axis-label" x={(index * CHART_WIDTH) / days.length} y={LABEL_BASELINE}>
+            <text class="chart-axis-label" x={LEFT_GUTTER + (index * PLOT_WIDTH) / days.length} y={DAY_LABEL_Y}>
               {day.slice(DAY_LABEL_START)}
             </text>
           ) : null,
