@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'vitest';
 import { leakViolationsOf, type LeakAgent, type LeakFile } from './leaks';
 
-const CURSOR: LeakAgent = { id: 'cursor', enumMember: 'Cursor' };
-const HERMES: LeakAgent = { id: 'hermes', enumMember: 'Hermes' };
+const CURSOR: LeakAgent = { id: 'cursor', enumMember: 'Cursor', literals: ['.cursor-home', 'CURSOR_HOME'] };
+const HERMES: LeakAgent = { id: 'hermes', enumMember: 'Hermes', literals: [] };
 const GENERATED_PREFIX = 'libs/agents/src/generated/';
 
 function leaksIn(input: { files: LeakFile[]; agents?: LeakAgent[] }): string[] {
@@ -28,6 +28,20 @@ describe('leakViolationsOf', () => {
   test('accepts a record keyed by the enum inside the generated outputs', () => {
     const files = [{ path: `${GENERATED_PREFIX}install.ts`, text: 'const names: Record<InstallClient, string> = {};' }];
     expect(leaksIn({ files })).toEqual([]);
+  });
+
+  test.each(['.cursor-home', 'CURSOR_HOME'])('names the literal %s of an agent outside its folder', (literal) => {
+    const files = [{ path: 'apps/connector/src/example.ts', text: `const first = 1;\nconst home = join(homedir(), '${literal}');` }];
+    expect(leaksIn({ files })).toEqual(['apps/connector/src/example.ts:2 names cursor']);
+  });
+
+  test('accepts the literals inside the agent folder', () => {
+    const files = [{ path: 'libs/agents/supported/cursor/connector.ts', text: "process.env.CURSOR_HOME; join(home, '.cursor-home')" }];
+    expect(leaksIn({ files })).toEqual([]);
+  });
+
+  test.each(['MY_CURSOR_HOME', 'CURSOR_HOME_EXTRA', '.cursor-homes'])('ignores %s, which only contains a literal', (text) => {
+    expect(leaksIn({ files: [{ path: 'tools/example.ts', text }] })).toEqual([]);
   });
 
   test('names a path under supported/<id>', () => {

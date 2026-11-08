@@ -1,4 +1,4 @@
-export type LeakAgent = { id: string; enumMember: string };
+export type LeakAgent = { id: string; enumMember: string; literals: string[] };
 export type LeakFile = { path: string; text: string };
 
 const AGENT_ENUM_NAMES = ['AgentId', 'InstallClient', 'ConnectorClient', 'PluginAgent'];

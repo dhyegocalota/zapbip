@@ -37,17 +37,8 @@ const MATRIX_PAGES = ['apps/docs/agents/supported-agents.mdx', 'apps/docs/pt-br/
 const MATRIX_TABLE_ROW_PATTERN = /^\| -{3,}/m;
 const CONNECTOR_SNIPPETS = ['apps/docs/snippets/agents/connector-clients.mdx', 'apps/docs/snippets/pt-br/agents/connector-clients.mdx'];
 const LEAK_SCANNED_EXTENSIONS = ['.ts', '.tsx', '.mts', '.mjs', '.sh', '.py', '.yml', '.json'];
-const SHARED_MECHANISM_SUITES = [
-  'apps/connector/test/',
-  'apps/api/test/e2e/channel-plugins.e2e.test.ts',
-  'apps/api/test/e2e/hermes-wheel.e2e.test.ts',
-  'apps/api/test/integration/package-route.test.ts',
-  'apps/api/test/unit/fake-deploy-shell.ts',
-  'tools/repository-shape/src/hermes-wheel.test.ts',
-  'tools/repository-shape/src/agent-registry.test.ts',
-  'libs/agents/src/checks/leaks.test.ts',
-];
-const LEAK_ALLOWED_PREFIXES = [GENERATED_FOLDER, ...SHARED_MECHANISM_SUITES];
+const HARNESS_FOLDERS = ['.claude/', '.codex/', '.agents/'];
+const LEAK_ALLOWED_PREFIXES = [GENERATED_FOLDER, ...HARNESS_FOLDERS];
 const ENUM_MEMBER_PATTERN = /^\s*(\w+) = '([a-z-]+)',?$/;
 
 type Fixture = { id: string; member: string; englishName: string; portugueseName: string };
@@ -279,7 +270,7 @@ describe('page rules', () => {
 });
 
 describe('agent knowledge', () => {
-  const agents = Object.entries(AGENT_DEFINITIONS).map(([id, definition]) => ({ id, enumMember: definition.enumMember }));
+  const agents = Object.entries(AGENT_DEFINITIONS).map(([id, definition]) => ({ id, enumMember: definition.enumMember, literals: [] }));
   const files = trackedFiles()
     .filter((path) => LEAK_SCANNED_EXTENSIONS.some((extension) => path.endsWith(extension)))
     .map((path) => ({ path, text: readRepositoryFile(path) }));
