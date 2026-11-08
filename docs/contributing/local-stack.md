@@ -1,6 +1,6 @@
 # Run the local stack
 
-For contributors. The product runs only on zapbip's official WhatsApp number. Locally, a test double stands in for WhatsApp: the development simulator answers as the owner's phone. It exists only for tests and this walkthrough, and the production build does not contain it.
+For contributors. The product runs on the WhatsApp numbers its operator registers in the backoffice. Locally, a test double stands in for WhatsApp: the development simulator answers as the owner's phone. It exists only for tests and this walkthrough, and the production build does not contain it.
 
 You need Node 24, pnpm and [Claude Code](https://claude.com/claude-code).
 
