@@ -1,8 +1,8 @@
 # README review
 
-**Status:** Draft
+**Status:** Building
 **Tier:** 🟢 small
-**Owner approval:** pending
+**Owner approval:** owner delegated 2026-11-06
 **ADRs:** none
 **Not changing:** product code under `apps/*/src` and `libs/*/src`, and every document that is not a README
 

@@ -31,8 +31,8 @@ Author this list with every box empty. A sub-agent ticks its own line. A wrong s
 
 ### G1
 
-- [ ] **Step 2:** red: `purposeViolations` probes (a code span, a fenced block and a file link are reported; folder links and plain prose are not) and the `test.each` over workspace package READMEs, with a stub that throws `purposeViolations is not implemented`; commit alone
-- [ ] **Step 3:** implement `purposeViolations`; the probes go green and the real run stays red only on READMEs still violating the rule
+- [x] **Step 2:** red: `purposeViolations` probes (a code span, a fenced block and a file link are reported; folder links and plain prose are not) and the `test.each` over workspace package READMEs, with a stub that throws `purposeViolations is not implemented`; commit alone — evidence: cece21ed
+- [x] **Step 3:** implement `purposeViolations`; the probes go green and the real run stays red only on READMEs still violating the rule — evidence: cece21ed (helper) and e3493cb7 (apps/hermes-plugin README)
 
 ### G2
 
@@ -43,7 +43,7 @@ Author this list with every box empty. A sub-agent ticks its own line. A wrong s
 ### G3
 
 - [ ] **Step 7:** `apps/api/README.md`
-- [ ] **Step 8:** `apps/hermes-plugin/README.md`: drop the file pointer
+- [x] **Step 8:** `apps/hermes-plugin/README.md`: drop the file pointer — evidence: e3493cb7
 - [ ] **Step 9:** `apps/connector/README.md`, `apps/docs/README.md`, `apps/openclaw-plugin/README.md`: only the registry-driven rewording, or confirm unchanged
 
 ### G4
