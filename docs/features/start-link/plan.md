@@ -28,7 +28,7 @@ Author this list with every box empty. A sub-agent ticks its own line. A wrong s
 
 ### G0
 
-- [ ] **Step 1 (pin):** the constants exist: `START_LINK_PATH`, `START_LINK`, `START_LINK_LANGUAGE_PARAMETER`, `WHATSAPP_LINK_ORIGIN`, `WHATSAPP_LINK_TEXT_PARAMETER`, `START_PREFILLED_TEXT` for both `OwnerLocale`s, and `HttpStatus.Found`. A `libs/types` unit test pins the values (`START_LINK` equals `https://mcp.zapbip.com/start`; both texts are non-empty and are not any bare-word command of ADR 0015). Commit as `pin`.
+- [x] **Step 1 (pin):** the constants exist: `START_LINK_PATH`, `START_LINK`, `START_LINK_LANGUAGE_PARAMETER`, `WHATSAPP_LINK_ORIGIN`, `WHATSAPP_LINK_TEXT_PARAMETER`, `START_PREFILLED_TEXT` for both `OwnerLocale`s, and `HttpStatus.Found`. A `libs/types` unit test pins the values (`START_LINK` equals `https://mcp.zapbip.com/start`; both texts are non-empty and are not any bare-word command of ADR 0015). Commit as `pin`.
 
 ### G1
 

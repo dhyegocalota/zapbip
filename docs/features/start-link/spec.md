@@ -1,8 +1,8 @@
 # Start link
 
-**Status:** Draft
+**Status:** Building
 **Tier:** 🔴 structural
-**Owner approval:** pending
+**Owner approval:** owner delegated 2026-11-06
 **ADRs:** [0035](../../adr/0035-a-start-link-on-the-worker-picks-the-number-new-owners-write-to.md); builds on [0016](../../adr/0016-accounts-start-on-the-first-message-and-wait-on-a-list.md), [0032](../../adr/0032-whatsapp-numbers-are-rows-in-a-sealed-registry-not-worker-secrets.md)
 **Not changing:** account creation, `owner_identities`, `accounts.number_id`, the `closed` and `disabled` semantics, the webhook attribution, the backoffice, the install page route
 
