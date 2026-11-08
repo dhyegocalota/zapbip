@@ -18,14 +18,17 @@ const SYMBOLIC_LINK_MODE = '120000';
 const LISTING_PATH_SEPARATOR = '\t';
 const BINARY_MARKER = '\u0000';
 
-export function trackedTextFiles({ root = REPOSITORY_ROOT }: { root?: string } = {}): { path: string; text: string }[] {
-  const listing = spawnSync('git', ['ls-files', '-z', '--stage'], { cwd: root, encoding: 'utf8', maxBuffer: LISTING_MAX_BUFFER });
+function listingOf({ root, flags }: { root: string; flags: string[] }): string[] {
+  const listing = spawnSync('git', ['ls-files', '-z', ...flags], { cwd: root, encoding: 'utf8', maxBuffer: LISTING_MAX_BUFFER });
   if (listing.status !== 0) throw new Error(`git ls-files failed: ${listing.stderr}`);
-  return listing.stdout
-    .split(ENTRY_SEPARATOR)
-    .filter((entry) => entry)
+  return listing.stdout.split(ENTRY_SEPARATOR).filter((entry) => entry);
+}
+
+export function trackedTextFiles({ root = REPOSITORY_ROOT }: { root?: string } = {}): { path: string; text: string }[] {
+  const deletedPaths = listingOf({ root, flags: ['--deleted'] });
+  return listingOf({ root, flags: ['--stage'] })
     .map((entry) => ({ mode: entry.split(' ')[0], path: entry.slice(entry.indexOf(LISTING_PATH_SEPARATOR) + 1) }))
-    .filter((entry) => entry.mode !== SYMBOLIC_LINK_MODE)
+    .filter((entry) => entry.mode !== SYMBOLIC_LINK_MODE && !deletedPaths.includes(entry.path))
     .map((entry) => ({ path: entry.path, text: readFileSync(resolve(root, entry.path), 'utf8') }))
     .filter((file) => !file.text.includes(BINARY_MARKER));
 }
