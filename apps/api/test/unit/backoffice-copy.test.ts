@@ -19,6 +19,19 @@ const REQUIRED_KEYS = [
   'RegisterSubmit',
   'MetricsTitle',
 ];
+const POLISH_KEYS = [
+  'SignInEyebrow',
+  'SignInLead',
+  'HomeMetricsBody',
+  'HomeAuditBody',
+  'HomeNumbersUnit',
+  'SparklineNumbersMetric',
+  'SparklineMessagesMetric',
+  'SparklineAuditMetric',
+  'SparklineSummary',
+  'SparklineEmpty',
+];
+const PLACEHOLDER_PATTERN = /\{(\w+)\}/g;
 const TEXT_CHILD_PATTERN = />\s*[A-Za-z0-9][^<>{}();=]*</;
 const STRING_CHILD_PATTERN = />\s*\{\s*['"`]/;
 
@@ -44,6 +57,16 @@ describe('backoffice copy', () => {
     expect(renderBackofficeCopy({ key: BackofficeCopyKey.NumbersView, locale: OwnerLocale.EnglishUs, values: { label: 'Brazil' } })).toBe(
       'View Brazil',
     );
+  });
+
+  it.each(POLISH_KEYS)('carries %s in both locales with the same placeholders', (name) => {
+    const key = BackofficeCopyKey[name as keyof typeof BackofficeCopyKey];
+    const [portuguese, english] = LOCALES.map((locale) => BACKOFFICE_COPY[locale][key]);
+    expect(portuguese).toBeTypeOf('string');
+    expect(english).toBeTypeOf('string');
+    expect(portuguese).not.toBe(english);
+    const placeholdersOf = (text: string): string[] => [...text.matchAll(PLACEHOLDER_PATTERN)].map((match) => match[1]!).sort();
+    expect(placeholdersOf(portuguese!)).toEqual(placeholdersOf(english!));
   });
 
   it('keeps string literals out of JSX children', () => {
