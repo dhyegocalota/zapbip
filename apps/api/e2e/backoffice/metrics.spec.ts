@@ -4,8 +4,8 @@ import { BackofficeCopyKey } from '../../src/backoffice/backoffice-copy';
 import { keyedCell, MetricCell } from '../../src/backoffice/metrics/metric-cell';
 import { NUMBER_QUERY } from '../../src/backoffice/metrics/metrics-filter';
 import { expect, test } from './fixtures';
-import { expectNoHorizontalScroll } from './support/layout';
-import { ALPHA_NUMBER, EXPECTED_ALL, EXPECTED_ALPHA, EXPECTED_BUDGET, seedMetrics } from './support/metrics-seed';
+import { expectChartLabelsClear, expectNoHorizontalScroll } from './support/layout';
+import { ALPHA_NUMBER, EXPECTED_ALL, EXPECTED_ALPHA, EXPECTED_BUDGET, pushBudgetOverLimit, seedMetrics } from './support/metrics-seed';
 import { copy } from './support/copy';
 import { signIn } from './support/sign-in';
 
@@ -59,6 +59,18 @@ test('draws the budget per day against the limit and ignores the number filter',
   await page.getByRole('button', { name: copy({ key: BackofficeCopyKey.MetricsFilterApply }) }).click();
   await expect(cell({ page, name: keyedCell({ cell: MetricCell.BudgetUsed, key: yesterday }) })).toHaveText(EXPECTED_BUDGET.yesterday);
   await expect(page.getByText(copy({ key: BackofficeCopyKey.MetricsBudgetAccountWide }))).toBeVisible();
+});
+
+test('keeps the budget chart labels clear of the bars and of each other with a day over the limit', async ({ page }) => {
+  seedMetrics();
+  pushBudgetOverLimit();
+  await openMetrics({ page });
+  const chart = page.locator('svg[aria-labelledby^="chart-budget-title"]');
+  await expectChartLabelsClear({
+    chart,
+    bars: chart.locator('rect.bar'),
+    labels: chart.locator('text.chart-reference-label, text.chart-axis-maximum'),
+  });
 });
 
 test('draws script-free charts with their values in a native table and no horizontal scroll', async ({ page }) => {

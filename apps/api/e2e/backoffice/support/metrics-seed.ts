@@ -6,6 +6,7 @@ const SEALED_PLACEHOLDER = 'walk-sealed-placeholder';
 const SEAL_KEY_VERSION = 1;
 const NUMBER_STATE_ACTIVE = 'active';
 const EPOCH = 0;
+const OVER_LIMIT_GIGABYTE_SECONDS = 14_000;
 const ISO_DAY_LENGTH = 'YYYY-MM-DD'.length;
 
 export const ALPHA_NUMBER = { id: 'walk_num_alpha', label: 'Walk alpha', phoneNumberId: '2000000000001', displayNumber: '+5511900000001' };
@@ -63,6 +64,15 @@ export function seedMetrics(): void {
       insertActivity({ day: today, accountId: 'walk_acc_one', numberId: ALPHA_NUMBER.id, metric: ActivityMetric.MessagesOut, count: 4 }),
       insertActivity({ day: today, accountId: 'walk_acc_one', numberId: ALPHA_NUMBER.id, metric: ActivityMetric.WakesWoken, count: 3 }),
       insertActivity({ day: today, accountId: 'walk_acc_one', numberId: ALPHA_NUMBER.id, metric: ActivityMetric.WakesUnreached, count: 1 }),
+    ],
+  });
+}
+
+export function pushBudgetOverLimit(): void {
+  const today = new Date().toISOString().slice(0, ISO_DAY_LENGTH);
+  execute({
+    statements: [
+      `UPDATE usage_daily SET gigabyte_seconds = ${OVER_LIMIT_GIGABYTE_SECONDS} WHERE day = '${today}' AND account_id = 'walk_acc_one'`,
     ],
   });
 }

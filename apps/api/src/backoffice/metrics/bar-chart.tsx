@@ -106,7 +106,7 @@ export function BarChart(props: {
               y2={PLOT_HEIGHT - (reference.value / maximum) * PLOT_HEIGHT}
             />
             <text
-              class="chart-axis-label"
+              class="chart-axis-label chart-reference-label"
               x={CHART_WIDTH}
               y={PLOT_HEIGHT - (reference.value / maximum) * PLOT_HEIGHT - REFERENCE_LABEL_GAP}
               text-anchor="end"
@@ -116,7 +116,7 @@ export function BarChart(props: {
           </g>
         ))}
         <line class="chart-baseline" x1="0" y1={PLOT_HEIGHT} x2={CHART_WIDTH} y2={PLOT_HEIGHT} />
-        <text class="chart-axis-label" x="0" y={MAXIMUM_LABEL_BASELINE}>
+        <text class="chart-axis-label chart-axis-maximum" x="0" y={MAXIMUM_LABEL_BASELINE}>
           {maximum}
         </text>
         {days.map((day, index) =>
