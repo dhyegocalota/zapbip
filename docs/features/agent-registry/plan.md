@@ -175,4 +175,4 @@ All boxes empty when authored. A wrong step is struck through with the reason.
 - [x] **Reviewer:** fresh `reviewer`; refutations recorded in the test plan. — evidence: reviewer findings of Steps 33 and 35, refutations in the test plan's adversarial review
 - [x] **Security reviewer:** fresh; focus on the install page route (same bytes, same headers), the connector isolation move, the `/pkg/` route and preflight reading `AGENT_PLUGINS` (same bytes, same refusals), and `apps/api` facet boundaries. — evidence: Steps 34, 36 and 37
 - [x] **/check-ui:** the matrix and three agent pages in both languages at 1280 and 375; the nav before and after the reorder. — evidence: test plan W1 to W5 ticked with screenshots in the release `pr-media-agent-registry`
-- [ ] **/open-pr:** gates passed, learnings sweep stated, merge sensitivity stated (expected MEDIUM: the install page route and the connector).
+- [x] **/open-pr:** gates passed, learnings sweep stated, merge sensitivity stated (expected MEDIUM: the install page route and the connector). — evidence: PR #21
