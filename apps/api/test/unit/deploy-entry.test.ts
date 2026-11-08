@@ -17,6 +17,7 @@ import {
 } from './fake-deploy-shell';
 
 const CONFIRMATION = 'production';
+const WARNINGS_HEADING = 'warnings to resolve before launch:';
 const DEPLOYMENT_STATUS_JSON = readFileSync('test/fixtures/deployments-status.json', 'utf8');
 const CURRENT_VERSION_ID = '0c8a4f7e-91d2-4b6a-8e35-2f1d7a6b9c40';
 const SPLIT_DEPLOYMENT_JSON = JSON.stringify({
@@ -158,6 +159,15 @@ describe('deploy entry', () => {
     const { exitCode, output } = await deploy({ shell, environment: DeployEnvironment.Production, answers: [CONFIRMATION] });
     expect(exitCode).toBe(0);
     expect(output).toContain(`zapbip@${NPM_VERSION} is not on npm yet; publish it before launch`);
+  });
+
+  it('prints the warnings again under a heading after the smoke test', async () => {
+    const notFound = { exitCode: 1, stdout: JSON.stringify({ error: { code: 'E404' } }) };
+    const shell = fakeShell({ replies: { ...REPLIES, 'maintainers --json': notFound } });
+    const { output } = await deploy({ shell, environment: DeployEnvironment.Production, answers: [CONFIRMATION] });
+    const [beforeHeading, afterHeading] = output.split(WARNINGS_HEADING);
+    expect(beforeHeading).toContain(`zapbip@${NPM_VERSION} is not on npm yet`);
+    expect(afterHeading).toContain(`zapbip@${NPM_VERSION} is not on npm yet; publish it before launch`);
   });
 
   it.each(['Production', 'production ', 'prod', ''])('does not deploy production on the answer %j', async (answer) => {

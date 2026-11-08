@@ -256,6 +256,38 @@ describe('worker preflight', () => {
     expect(warnings).toContain(`zapbip@${NPM_VERSION} is not on npm yet; publish it before launch`);
   });
 
+  it('refuses production when the version is absent but the package name belongs to a foreign maintainer', async () => {
+    const notFound = JSON.stringify({ error: { code: 'E404' } });
+    const squatter = JSON.stringify(['squatter <s@example.com>']);
+    const shell = fakeShell({
+      replies: {
+        [`zapbip@${NPM_VERSION} maintainers --json`]: { exitCode: 1, stdout: notFound },
+        'view zapbip maintainers --json': { exitCode: 0, stdout: squatter },
+      },
+    });
+    const warnings: string[] = [];
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell, warnings }));
+    expect(refusal?.step).toBe(PreflightStep.NpmVersion);
+    expect(refusal?.message).toContain('squatter');
+    expect(warnings).toEqual([]);
+  });
+
+  it('refuses production when the version is absent and npm cannot be reached for the package name', async () => {
+    const notFound = JSON.stringify({ error: { code: 'E404' } });
+    const networkError = JSON.stringify({ error: { code: 'ENOTFOUND' } });
+    const shell = fakeShell({
+      replies: {
+        [`zapbip@${NPM_VERSION} maintainers --json`]: { exitCode: 1, stdout: notFound },
+        'view zapbip maintainers --json': { exitCode: 1, stdout: networkError },
+      },
+    });
+    const warnings: string[] = [];
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell, warnings }));
+    expect(refusal?.step).toBe(PreflightStep.NpmVersion);
+    expect(refusal?.message).toContain('could not reach npm');
+    expect(warnings).toEqual([]);
+  });
+
   it('refuses production when the only maintainer is not the owner npm user', async () => {
     const maintainers = JSON.stringify(['squatter <s@example.com>']);
     const shell = fakeShell({ replies: { 'maintainers --json': { exitCode: 0, stdout: maintainers } } });
