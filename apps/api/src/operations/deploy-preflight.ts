@@ -52,6 +52,7 @@ export enum PreflightStep {
   CompanyFacts = 'company facts',
   NpmVersion = 'npm version',
   PluginWheel = 'plugin wheel',
+  StartLink = 'start link',
   Git = 'git',
   Gate = 'gate',
   Config = 'config',

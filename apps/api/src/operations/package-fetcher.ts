@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 
-export type PackageAnswer = { status: number; sha256: string };
+export type PackageAnswer = { status: number; sha256: string; location: string | null };
 export type PackageFetcher = (input: { url: string }) => Promise<PackageAnswer>;
 
 export function createPackageFetcher(): PackageFetcher {
@@ -9,6 +9,6 @@ export function createPackageFetcher(): PackageFetcher {
     const sha256 = createHash('sha256')
       .update(Buffer.from(await response.arrayBuffer()))
       .digest('hex');
-    return { status: response.status, sha256 };
+    return { status: response.status, sha256, location: null };
   };
 }

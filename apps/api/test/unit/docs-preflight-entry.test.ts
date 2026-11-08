@@ -68,7 +68,7 @@ describe('docs preflight entry', () => {
 
   it('exits one and names the wheel when the Worker does not host it', async () => {
     const { exitCode, output } = await preflight({
-      packageFetcher: fakePackageFetcher({ answer: { status: 404, sha256: OTHER_WHEEL_SHA256 } }),
+      packageFetcher: fakePackageFetcher({ answer: { status: 404, sha256: OTHER_WHEEL_SHA256, location: null } }),
     });
     expect(exitCode).toBe(1);
     expect(output).toContain(HOSTED_WHEEL_URL);

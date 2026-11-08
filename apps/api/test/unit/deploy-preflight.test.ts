@@ -1,4 +1,4 @@
-import { COMPANY_FACT_UNSET, NPM_REGISTRY_URL, PRODUCTION_PUBLIC_ORIGIN } from '@zapbip/types';
+import { COMPANY_FACT_UNSET, NPM_REGISTRY_URL, PRODUCTION_PUBLIC_ORIGIN, START_LINK, WHATSAPP_LINK_ORIGIN } from '@zapbip/types';
 import type { CompanyFacts } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { PLACEHOLDER_VALUE_PREFIX } from '../../src/operations/constants';
@@ -38,6 +38,7 @@ import {
   HOSTED_WHEEL_URL,
   OTHER_WHEEL_SHA256,
   READY_WORKER_FACTS,
+  START_LINK_FOUND,
 } from './fake-deploy-shell';
 import { SAMPLE_NPM_PACKAGE_NAME } from '../support/hosted-plugin-sample';
 
@@ -699,8 +700,8 @@ describe('docs preflight', () => {
   });
 
   it.each([
-    ['404', { status: 404, sha256: OTHER_WHEEL_SHA256 }, HOSTED_WHEEL_URL],
-    ['a wrong hash', { status: 200, sha256: OTHER_WHEEL_SHA256 }, OTHER_WHEEL_SHA256],
+    ['404', { status: 404, sha256: OTHER_WHEEL_SHA256, location: null }, HOSTED_WHEEL_URL],
+    ['a wrong hash', { status: 200, sha256: OTHER_WHEEL_SHA256, location: null }, OTHER_WHEEL_SHA256],
   ])('refuses the docs deploy when the hosted wheel answers %s, after npm resolves both packages', async (_name, answer, expectedText) => {
     const shell = fakeShell({});
     const packageFetcher = fakePackageFetcher({ answer });
@@ -712,8 +713,8 @@ describe('docs preflight', () => {
   });
 
   it.each([
-    ['404', { status: 404, sha256: OTHER_WHEEL_SHA256 }, HOSTED_REQUIREMENTS_URL],
-    ['a wrong hash', { status: 200, sha256: OTHER_WHEEL_SHA256 }, OTHER_WHEEL_SHA256],
+    ['404', { status: 404, sha256: OTHER_WHEEL_SHA256, location: null }, HOSTED_REQUIREMENTS_URL],
+    ['a wrong hash', { status: 200, sha256: OTHER_WHEEL_SHA256, location: null }, OTHER_WHEEL_SHA256],
   ])('refuses the docs deploy when the hosted requirements file answers %s', async (_name, answer, expectedText) => {
     const packageFetcher = fakePackageFetcher({ answers: { [HOSTED_REQUIREMENTS_URL]: answer } });
     const refusal = await runDocsPreflight({ ...docsInput({}), packageFetcher });
@@ -755,6 +756,38 @@ describe('the hosted artifacts the docs preflight checks', () => {
     const expectedUrls = HOSTED_PLUGINS.flatMap((plugin) =>
       plugin.hostedArtifacts.map((artifact) => `${PRODUCTION_PUBLIC_ORIGIN}${artifact.path}`),
     );
-    expect(packageFetcher.urls).toEqual(expectedUrls);
+    expect(packageFetcher.urls).toEqual([...expectedUrls, START_LINK]);
+  });
+});
+
+describe('the start link the docs preflight checks', () => {
+  const OLD_WORKER = { status: 404, sha256: OTHER_WHEEL_SHA256, location: null };
+  const NO_NUMBER = { status: 503, sha256: OTHER_WHEEL_SHA256, location: null };
+  const FOREIGN_TARGET = { status: 302, sha256: OTHER_WHEEL_SHA256, location: 'https://evil.example/5511999990001' };
+  const MISSING_TARGET = { status: 302, sha256: OTHER_WHEEL_SHA256, location: null };
+
+  it.each([
+    ['a 404 from the old Worker', OLD_WORKER],
+    ['a 503 with no active number', NO_NUMBER],
+    ['a 302 to a foreign target', FOREIGN_TARGET],
+    ['a 302 without a Location', MISSING_TARGET],
+  ])('refuses %s, telling the operator to deploy the Worker and activate a number', async (_name, answer) => {
+    const packageFetcher = fakePackageFetcher({ answers: { [START_LINK]: answer } });
+    const refusal = await runDocsPreflight({ ...docsInput({}), packageFetcher });
+    expect(refusal?.step).toBe(PreflightStep.StartLink);
+    expect(refusal?.message).toContain(START_LINK);
+    expect(refusal?.message).toContain('deploy the Worker and activate a number');
+  });
+
+  it('passes on a 302 to wa.me', async () => {
+    expect(START_LINK_FOUND.location?.startsWith(`${WHATSAPP_LINK_ORIGIN}/`)).toBe(true);
+    expect(await runDocsPreflight(docsInput({}))).toBeNull();
+  });
+
+  it('says the start link could not be reached when the fetch fails for it alone', async () => {
+    const packageFetcher = fakePackageFetcher({ failures: { [START_LINK]: new Error('getaddrinfo ENOTFOUND mcp.zapbip.com') } });
+    const refusal = await runDocsPreflight({ ...docsInput({}), packageFetcher });
+    expect(refusal?.step).toBe(PreflightStep.StartLink);
+    expect(refusal?.message).toContain('could not reach');
   });
 });
