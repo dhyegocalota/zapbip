@@ -4,6 +4,7 @@ import { START_LINK_COPY } from '../../src/routes/start-link-copy';
 import { renderStartUnavailablePage } from '../../src/routes/start-link-page';
 
 const LOCALES = Object.values(OwnerLocale);
+const OWNER_WORD_PATTERN = /owner|dono/i;
 const FORBIDDEN_MARKUP = ['<script', '<style', '<link', 'style=', 'wa.me', 'href=', 'src=', 'http'];
 
 describe('renderStartUnavailablePage', () => {
@@ -20,6 +21,10 @@ describe('renderStartUnavailablePage', () => {
     const other = LOCALES.find((candidate) => candidate !== locale) as OwnerLocale;
     expect(page.indexOf(START_LINK_COPY[locale].unavailableBody)).toBeLessThan(page.indexOf(START_LINK_COPY[other].unavailableBody));
     expect(page).toContain(`<html lang="${START_LINK_COPY[locale].htmlLanguage}">`);
+  });
+
+  it.each(LOCALES)('words the %s unavailable copy without the word owner', (locale) => {
+    expect(START_LINK_COPY[locale].unavailableBody).not.toMatch(OWNER_WORD_PATTERN);
   });
 
   it.each(FORBIDDEN_MARKUP)('never contains %s', (markup) => {

@@ -10,24 +10,6 @@ import {
 } from './constants';
 import { HttpStatus, OwnerLocale } from './enums';
 
-const COMMAND_WORDS = [
-  'novo agente',
-  'new agent',
-  'agentes',
-  'agents',
-  'revogar',
-  'revoke',
-  'girar',
-  'rotate',
-  'ajuda',
-  'help',
-  'menu',
-  'apagar conta',
-  'delete account',
-  'apagar conta definitivamente',
-  'delete account permanently',
-];
-
 describe('start link constants', () => {
   it('names the production start link', () => {
     expect(START_LINK_PATH).toBe('/start');
@@ -45,9 +27,7 @@ describe('start link constants', () => {
     expect(HttpStatus.Found).toBe(302);
   });
 
-  it.each(Object.values(OwnerLocale))('has a prefilled text for %s that is no bare-word command', (locale) => {
-    const text = START_PREFILLED_TEXT[locale];
-    expect(text).not.toBe('');
-    expect(COMMAND_WORDS).not.toContain(text.trim().toLowerCase());
+  it.each(Object.values(OwnerLocale))('has a non-empty prefilled text for %s', (locale) => {
+    expect(START_PREFILLED_TEXT[locale]).not.toBe('');
   });
 });

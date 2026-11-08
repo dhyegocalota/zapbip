@@ -1,9 +1,13 @@
-import { OwnerLocale, START_PREFILLED_TEXT } from '@zapbip/types';
+import { OwnerLocale } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { startLinkTarget } from '../../src/routes/start-link-target';
 
-const DISPLAY_NUMBER = '+55 11 97777-0000';
+const SPACED_DISPLAY_NUMBER = '+55 11 97777-0000';
 const DIGITS = '5511977770000';
+const ENCODED_TEXT: Record<OwnerLocale, string> = {
+  [OwnerLocale.PortugueseBrazil]: 'Oi!%20Quero%20conectar%20meus%20agentes%20de%20IA%20ao%20zapbip.',
+  [OwnerLocale.EnglishUs]: 'Hi!%20I%20want%20to%20connect%20my%20AI%20agents%20to%20zapbip.',
+};
 const REJECTED_DISPLAY_NUMBERS = [
   '',
   '5511977770000',
@@ -20,9 +24,10 @@ const REJECTED_DISPLAY_NUMBERS = [
 ];
 
 describe('startLinkTarget', () => {
-  it.each(Object.values(OwnerLocale))('builds the wa.me link with the fixed text of %s', (locale) => {
-    const target = startLinkTarget({ displayNumber: '+5511977770000', locale });
-    expect(target).toBe(`https://wa.me/${DIGITS}?text=${encodeURIComponent(START_PREFILLED_TEXT[locale])}`);
+  it.each(Object.entries(ENCODED_TEXT))('builds the wa.me link with the fixed text of %s', (locale, encodedText) => {
+    expect(startLinkTarget({ displayNumber: '+5511977770000', locale: locale as OwnerLocale })).toBe(
+      `https://wa.me/${DIGITS}?text=${encodedText}`,
+    );
   });
 
   it('accepts the shortest and the longest valid number', () => {
@@ -32,7 +37,7 @@ describe('startLinkTarget', () => {
     );
   });
 
-  it.each([...REJECTED_DISPLAY_NUMBERS, DISPLAY_NUMBER])('rejects the display number %j', (displayNumber) => {
+  it.each([...REJECTED_DISPLAY_NUMBERS, SPACED_DISPLAY_NUMBER])('rejects the display number %j', (displayNumber) => {
     expect(startLinkTarget({ displayNumber, locale: OwnerLocale.EnglishUs })).toBeNull();
   });
 });

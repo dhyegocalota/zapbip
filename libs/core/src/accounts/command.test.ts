@@ -1,4 +1,4 @@
-import { CommandKind, OwnerLocale } from '@zapbip/types';
+import { CommandKind, OwnerLocale, START_PREFILLED_TEXT } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { parseAccountCommand } from './command';
 
@@ -9,6 +9,12 @@ function parseText(input: { text: string; isQuoting?: boolean }) {
 function parseListReply(input: { listReplyId: string | null; text?: string | null }) {
   return parseAccountCommand({ text: input.text === undefined ? null : input.text, listReplyId: input.listReplyId, isQuoting: false });
 }
+
+describe('parseAccountCommand on the start link text', () => {
+  test.each(Object.values(OwnerLocale))('reads the prefilled text of %s as no command', (locale) => {
+    expect(parseAccountCommand({ text: START_PREFILLED_TEXT[locale], listReplyId: null, isQuoting: false })).toBeNull();
+  });
+});
 
 describe('parseAccountCommand text', () => {
   test.each([
