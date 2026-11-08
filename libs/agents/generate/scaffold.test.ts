@@ -1,13 +1,13 @@
 import { describe, expect, test } from 'vitest';
-import { scaffoldFilesOf } from './scaffold';
-import { listSource, readSource } from './source';
+import { ScaffoldKind, scaffoldFilesOf } from './scaffold';
+import { listTree, readSource } from './source';
 import { REAL_AGENT_IDS } from './test-agents';
 
 const TEMPLATE_FOLDER = 'libs/agents/testing/fixture-agent';
 const NEW_ID = 'probe-zq-agent';
 
-function scaffold(input: { id: string }) {
-  return scaffoldFilesOf({ id: input.id, existingIds: REAL_AGENT_IDS, readSource, listSource });
+function scaffold(input: { id: string; kind?: ScaffoldKind }) {
+  return scaffoldFilesOf({ id: input.id, kind: input.kind ?? ScaffoldKind.Install, existingIds: REAL_AGENT_IDS, readSource, listTree });
 }
 
 function contentOf(input: { files: { path: string; content: string }[]; name: string }): string {
@@ -19,7 +19,7 @@ function contentOf(input: { files: { path: string; content: string }[]; name: st
 describe('scaffoldFilesOf', () => {
   test('copies every file of the template into the new agent folder', () => {
     const files = scaffold({ id: NEW_ID });
-    expect(files.map((file) => file.path)).toEqual(listSource(TEMPLATE_FOLDER).map((name) => `libs/agents/supported/${NEW_ID}/${name}`));
+    expect(files.map((file) => file.path)).toEqual(listTree(TEMPLATE_FOLDER).map((name) => `libs/agents/supported/${NEW_ID}/${name}`));
   });
 
   test('renames the id, the enum member and the display names, and keeps nothing of the template', () => {
@@ -39,5 +39,47 @@ describe('scaffoldFilesOf', () => {
   test('refuses an id that already has a folder', () => {
     const [existingId] = REAL_AGENT_IDS as [string];
     expect(() => scaffold({ id: existingId })).toThrow(`${existingId} already exists`);
+  });
+});
+
+describe('scaffoldFilesOf for a connector agent', () => {
+  const files = scaffold({ id: NEW_ID, kind: ScaffoldKind.Connector });
+
+  test('copies the connector runtime, its fake binary and its test into the agent folder', () => {
+    const paths = files.map((file) => file.path);
+    expect(paths).toContain(`libs/agents/supported/${NEW_ID}/connector.ts`);
+    expect(paths).toContain(`libs/agents/supported/${NEW_ID}/testing/${NEW_ID}-binary.mjs`);
+    expect(paths).toContain(`libs/agents/supported/${NEW_ID}/connector.test.ts`);
+  });
+
+  test('names its own binary, home folder and home variable after the id', () => {
+    const connector = contentOf({ files, name: 'connector.ts' });
+    expect(connector).toContain(`BINARY_NAME = '${NEW_ID}-binary'`);
+    expect(connector).toContain(`HOME_VARIABLE = 'PROBE_ZQ_AGENT_HOME'`);
+    files.forEach((file) => expect(file.content).not.toMatch(/fixture/i));
+  });
+});
+
+describe('scaffoldFilesOf for a plugin agent', () => {
+  const files = scaffold({ id: NEW_ID, kind: ScaffoldKind.Plugin });
+  const packageFiles = files.filter((file) => file.path.startsWith(`apps/${NEW_ID}-plugin/`));
+
+  test('creates the plugin package next to the agent folder, two folders in all', () => {
+    expect(packageFiles.map((file) => file.path)).toEqual(
+      expect.arrayContaining([`apps/${NEW_ID}-plugin/package.json`, `apps/${NEW_ID}-plugin/release/${NEW_ID}-requirements.txt`]),
+    );
+    const folders = new Set(files.map((file) => file.path.split('/').slice(0, 3).join('/')));
+    expect([...folders].sort()).toEqual([`apps/${NEW_ID}-plugin`, `libs/agents/supported`].sort());
+  });
+
+  test('points the plugin at its own package and keeps the release bytes untouched', () => {
+    const plugin = contentOf({ files, name: 'plugin.ts' });
+    expect(plugin).toContain(`PACKAGE_FOLDER = 'apps/${NEW_ID}-plugin'`);
+    expect(plugin).toContain(`filter: '@zapbip/${NEW_ID}-plugin'`);
+    const release = packageFiles.find((file) => file.path.endsWith('-requirements.txt'));
+    expect(release?.content).toBe(readSource('libs/agents/testing/fixture-plugin-package/release/fixture-requirements.txt'));
+    expect(JSON.parse(packageFiles.find((file) => file.path.endsWith('package.json'))?.content as string).name).toBe(
+      `@zapbip/${NEW_ID}-plugin`,
+    );
   });
 });
