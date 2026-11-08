@@ -28,6 +28,8 @@ const REAL_AGENT_IDS = [
 ];
 const INSTALL_FILES = ['install.en_US.md', 'install.pt_BR.md'];
 const MATRIX_SNIPPETS = ['apps/docs/snippets/agents/matrix.mdx', 'apps/docs/snippets/pt-br/agents/matrix.mdx'];
+const MATRIX_PAGES = ['apps/docs/agents/supported-agents.mdx', 'apps/docs/pt-br/agents/supported-agents.mdx'];
+const MATRIX_TABLE_ROW_PATTERN = /^\| -{3,}/m;
 const CONNECTOR_SNIPPETS = ['apps/docs/snippets/agents/connector-clients.mdx', 'apps/docs/snippets/pt-br/agents/connector-clients.mdx'];
 const ENUM_MEMBER_PATTERN = /^\s*(\w+) = '([a-z-]+)',?$/;
 
@@ -115,6 +117,16 @@ describe('the generated files', () => {
     const { violations } = await realPlan();
     expect(violations.filter((violation) => violation.includes(' has no page.'))).toEqual([]);
   });
+
+  test.each(MATRIX_PAGES.map((page, index) => ({ page, snippet: MATRIX_SNIPPETS[index] as string })))(
+    'the matrix page $page shows the generated snippet and holds no table',
+    ({ page, snippet }) => {
+      const source = readSource(page);
+      expect(source).toContain(`import AgentMatrix from '${snippet.replace('apps/docs', '')}';`);
+      expect(source).toContain('<AgentMatrix />');
+      expect(source).not.toMatch(MATRIX_TABLE_ROW_PATTERN);
+    },
+  );
 
   test('the plan has no violations', async () => {
     const { violations } = await realPlan();
