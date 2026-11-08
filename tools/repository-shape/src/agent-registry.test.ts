@@ -36,7 +36,17 @@ const MATRIX_PAGES = ['apps/docs/agents/supported-agents.mdx', 'apps/docs/pt-br/
 const MATRIX_TABLE_ROW_PATTERN = /^\| -{3,}/m;
 const CONNECTOR_SNIPPETS = ['apps/docs/snippets/agents/connector-clients.mdx', 'apps/docs/snippets/pt-br/agents/connector-clients.mdx'];
 const LEAK_SCANNED_EXTENSIONS = ['.ts', '.tsx', '.mts', '.mjs', '.sh', '.py', '.yml', '.json'];
-const LEAK_ALLOWED_PREFIXES = [GENERATED_FOLDER];
+const SHARED_MECHANISM_SUITES = [
+  'apps/connector/test/',
+  'apps/api/test/e2e/channel-plugins.e2e.test.ts',
+  'apps/api/test/e2e/hermes-wheel.e2e.test.ts',
+  'apps/api/test/integration/package-route.test.ts',
+  'apps/api/test/unit/fake-deploy-shell.ts',
+  'tools/repository-shape/src/hermes-wheel.test.ts',
+  'tools/repository-shape/src/agent-registry.test.ts',
+  'libs/agents/src/checks/leaks.test.ts',
+];
+const LEAK_ALLOWED_PREFIXES = [GENERATED_FOLDER, ...SHARED_MECHANISM_SUITES];
 const ENUM_MEMBER_PATTERN = /^\s*(\w+) = '([a-z-]+)',?$/;
 
 type Fixture = { id: string; member: string; englishName: string; portugueseName: string };
@@ -267,16 +277,22 @@ describe('page rules', () => {
   });
 });
 
-describe('no file outside an agent folder names an agent', () => {
-  REAL_AGENT_IDS.forEach((id) => test.todo(`G4: ${id} leaks nowhere, once the leak check exists`));
-});
-
 describe('agent knowledge', () => {
+  const agents = Object.entries(AGENT_DEFINITIONS).map(([id, definition]) => ({ id, enumMember: definition.enumMember }));
+  const files = trackedFiles()
+    .filter((path) => LEAK_SCANNED_EXTENSIONS.some((extension) => path.endsWith(extension)))
+    .map((path) => ({ path, text: readRepositoryFile(path) }));
+  const leaks = leakViolationsOf({ agents, files, allowedPrefixes: LEAK_ALLOWED_PREFIXES });
+
   test('no file outside an agent folder names an agent', () => {
-    const agents = Object.entries(AGENT_DEFINITIONS).map(([id, definition]) => ({ id, enumMember: definition.enumMember }));
-    const files = trackedFiles()
-      .filter((path) => LEAK_SCANNED_EXTENSIONS.some((extension) => path.endsWith(extension)))
-      .map((path) => ({ path, text: readRepositoryFile(path) }));
-    expect(leakViolationsOf({ agents, files, allowedPrefixes: LEAK_ALLOWED_PREFIXES })).toEqual([]);
+    expect(leaks).toEqual([]);
+  });
+
+  test('the leak check knows every real agent', () => {
+    expect(agents.map((agent) => agent.id).sort()).toEqual(REAL_AGENT_IDS);
+  });
+
+  test.each(REAL_AGENT_IDS)('G4: %s leaks nowhere', (id) => {
+    expect(leaks.filter((leak) => leak.endsWith(` names ${id}`))).toEqual([]);
   });
 });

@@ -2,6 +2,7 @@ export type LeakAgent = { id: string; enumMember: string };
 export type LeakFile = { path: string; text: string };
 
 const AGENT_ENUM_NAMES = ['AgentId', 'InstallClient', 'ConnectorClient', 'PluginAgent'];
+const WHOLE_ENUM_RECORD_PATTERN = new RegExp(`\\bRecord<(${AGENT_ENUM_NAMES.join('|')})\\b`);
 const LINE_SEPARATOR = '\n';
 const SUPPORTED_ROOT = 'libs/agents/supported';
 
@@ -22,11 +23,19 @@ function agentLeaksIn(input: { agent: LeakAgent; file: LeakFile }): string[] {
     .flatMap((line, index) => (pattern.test(line) ? [`${input.file.path}:${index + 1} names ${input.agent.id}`] : []));
 }
 
+function wholeEnumRecordLeaksIn(input: { file: LeakFile }): string[] {
+  return input.file.text.split(LINE_SEPARATOR).flatMap((line, index) => {
+    const enumName = WHOLE_ENUM_RECORD_PATTERN.exec(line)?.[1];
+    return enumName ? [`${input.file.path}:${index + 1} keys a record by ${enumName}`] : [];
+  });
+}
+
 export function leakViolationsOf(input: { agents: LeakAgent[]; files: LeakFile[]; allowedPrefixes: string[] }): string[] {
   const checkedFiles = input.files.filter((file) => !input.allowedPrefixes.some((prefix) => file.path.startsWith(prefix)));
-  return checkedFiles.flatMap((file) =>
-    input.agents
+  return checkedFiles.flatMap((file) => [
+    ...wholeEnumRecordLeaksIn({ file }),
+    ...input.agents
       .filter((agent) => !ownedPrefixesOf({ agent }).some((prefix) => file.path.startsWith(prefix)))
       .flatMap((agent) => agentLeaksIn({ agent, file })),
-  );
+  ]);
 }

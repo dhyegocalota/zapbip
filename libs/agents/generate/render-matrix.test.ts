@@ -1,10 +1,8 @@
-import { DocsLanguage } from '@zapbip/types';
+import { DocsLanguage, WakeRung } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
-import { definition as chatgptDefinition } from '../supported/chatgpt/definition';
-import { definition as claudeCodeDefinition } from '../supported/claude-code/definition';
-import { definition as cursorDefinition } from '../supported/cursor/definition';
-import { AgentFacet } from '../src/contract';
+import { AgentFacet, type AgentDefinition } from '../src/contract';
 import { WAKE_RUNG_LABELS } from '../src/docs';
+import { definition as fixtureDefinition } from '../testing/fixture-agent/definition';
 import { renderMatrix } from './render-matrix';
 import { realAgents, resolvedAgentOf } from './test-agents';
 
@@ -15,14 +13,14 @@ const HEADER: Record<DocsLanguage, string[]> = {
 };
 const ROW_FOR_ONE_AGENT: Record<DocsLanguage, string[][]> = {
   [DocsLanguage.English]: [
-    ['Claude Code', 'Local', '7 seconds', '[Claude Code](/agents/claude-code)'],
-    ['Cursor', 'Local', 'Not measured', '[Cursor](/agents/cursor)'],
-    ['ChatGPT', 'Scheduled', '1 hour', '[ChatGPT](/agents/chatgpt)'],
+    ['Alpha Agent', 'Local', '7 seconds', '[Alpha Agent](/agents/alpha-agent)'],
+    ['Beta Agent', 'Local', 'Not measured', '[Beta Agent](/agents/beta-agent)'],
+    ['Gamma Agent', 'Scheduled', '1 hour', '[Gamma Agent](/agents/gamma-agent)'],
   ],
   [DocsLanguage.PortugueseBrazil]: [
-    ['Claude Code', 'Local', '7 segundos', '[Claude Code](/pt-br/agents/claude-code)'],
-    ['Cursor', 'Local', 'Não medido', '[Cursor](/pt-br/agents/cursor)'],
-    ['ChatGPT', 'Agendada', '1 hora', '[ChatGPT](/pt-br/agents/chatgpt)'],
+    ['Alpha Agent', 'Local', '7 segundos', '[Alpha Agent](/pt-br/agents/alpha-agent)'],
+    ['Beta Agent', 'Local', 'Não medido', '[Beta Agent](/pt-br/agents/beta-agent)'],
+    ['Gamma Agent', 'Agendada', '1 hora', '[Gamma Agent](/pt-br/agents/gamma-agent)'],
   ],
 };
 
@@ -40,13 +38,26 @@ function tableOf(input: { table: string }): string[][] {
     .map((line) => cellsOf({ line }));
 }
 
+function definitionOf(input: { name: string; rung: WakeRung; expectedDelaySeconds: number | null }): AgentDefinition {
+  const names = { [DocsLanguage.English]: input.name, [DocsLanguage.PortugueseBrazil]: input.name };
+  return {
+    ...fixtureDefinition,
+    docs: { ...fixtureDefinition.docs, matrixName: names, linkName: names },
+    listen: { ...fixtureDefinition.listen, rung: input.rung, expectedDelaySeconds: input.expectedDelaySeconds },
+  };
+}
+
 function agentsFor(input: { ids: string[] }) {
-  const definitions = { 'claude-code': claudeCodeDefinition, chatgpt: chatgptDefinition, cursor: cursorDefinition };
+  const definitions: Record<string, AgentDefinition> = {
+    'alpha-agent': definitionOf({ name: 'Alpha Agent', rung: WakeRung.Local, expectedDelaySeconds: 7 }),
+    'beta-agent': definitionOf({ name: 'Beta Agent', rung: WakeRung.Local, expectedDelaySeconds: null }),
+    'gamma-agent': definitionOf({ name: 'Gamma Agent', rung: WakeRung.Scheduled, expectedDelaySeconds: 3600 }),
+  };
   return input.ids.map((id) =>
     resolvedAgentOf({
       id,
       folder: `libs/agents/supported/${id}`,
-      definition: definitions[id as keyof typeof definitions],
+      definition: definitions[id] as AgentDefinition,
       facets: [AgentFacet.Definition],
     }),
   );
@@ -55,7 +66,9 @@ function agentsFor(input: { ids: string[] }) {
 describe('renderMatrix', () => {
   describe.each(Object.values(DocsLanguage))('in %s', (language) => {
     test('has its header and one row per agent with seconds, one hour and not measured', () => {
-      const table = tableOf({ table: renderMatrix({ agents: agentsFor({ ids: ['claude-code', 'chatgpt', 'cursor'] }), language }) });
+      const table = tableOf({
+        table: renderMatrix({ agents: agentsFor({ ids: ['alpha-agent', 'beta-agent', 'gamma-agent'] }), language }),
+      });
       expect(table).toEqual([HEADER[language], ...ROW_FOR_ONE_AGENT[language]]);
     });
 

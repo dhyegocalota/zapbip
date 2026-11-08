@@ -1,17 +1,23 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { AGENT_PLUGINS, PluginAgent } from '@zapbip/agents/plugins';
+import { AGENT_PLUGINS } from '@zapbip/agents/plugins';
+import { PluginRegistry } from '@zapbip/agents';
 import { ZAPBIP_NPM_VERSION } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 
-const PLUGIN_PACKAGE_PATH = '../openclaw-plugin/package.json';
+const REPOSITORY_ROOT = '../..';
+const PLUGIN_MANIFEST = 'package.json';
 
-function expectedVersion(): string {
-  if (!existsSync(PLUGIN_PACKAGE_PATH)) return ZAPBIP_NPM_VERSION;
-  return (JSON.parse(readFileSync(PLUGIN_PACKAGE_PATH, 'utf8')) as { version: string }).version;
+function expectedVersion(input: { packageFolder: string }): string {
+  const manifestPath = `${REPOSITORY_ROOT}/${input.packageFolder}/${PLUGIN_MANIFEST}`;
+  if (!existsSync(manifestPath)) return ZAPBIP_NPM_VERSION;
+  return (JSON.parse(readFileSync(manifestPath, 'utf8')) as { version: string }).version;
 }
 
-describe('openclaw plugin version', () => {
-  it('matches the plugin package when it exists, and the connector version until it lands', () => {
-    expect(AGENT_PLUGINS[PluginAgent.OpenClaw].version).toBe(expectedVersion());
-  });
+describe('npm plugin versions', () => {
+  it.each(Object.values(AGENT_PLUGINS).filter((plugin) => plugin.registry === PluginRegistry.Npm))(
+    '$packageName matches its package when it exists, and the connector version until it lands',
+    (plugin) => {
+      expect(plugin.version).toBe(expectedVersion({ packageFolder: plugin.packageFolder }));
+    },
+  );
 });

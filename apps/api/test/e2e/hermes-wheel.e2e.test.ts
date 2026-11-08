@@ -5,7 +5,7 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
-import { HERMES_INSTALL_COMMAND } from '@zapbip/agents/plugins';
+import { AGENT_PLUGINS, PluginAgent } from '@zapbip/agents/plugins';
 import { PRODUCTION_PUBLIC_ORIGIN } from '@zapbip/types';
 import { afterAll, describe, expect, test } from 'vitest';
 import {
@@ -96,7 +96,7 @@ function sha256Of(input: { text: string }): string {
 }
 
 function localInstallCommand(input: { requirementsSha256: string; target: string }): string {
-  return `${HERMES_INSTALL_COMMAND.replaceAll(PRODUCTION_PUBLIC_ORIGIN, stack().origin).replace(ZAPBIP_HERMES_REQUIREMENTS_SHA256, input.requirementsSha256)} --target ${input.target} ${PIP_TARGET_OPTIONS}`;
+  return `${AGENT_PLUGINS[PluginAgent.Hermes].installCommand.replaceAll(PRODUCTION_PUBLIC_ORIGIN, stack().origin).replace(ZAPBIP_HERMES_REQUIREMENTS_SHA256, input.requirementsSha256)} --target ${input.target} ${PIP_TARGET_OPTIONS}`;
 }
 
 async function newDirectory(): Promise<string> {
