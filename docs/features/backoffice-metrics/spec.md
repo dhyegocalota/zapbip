@@ -1,6 +1,6 @@
 # Backoffice metrics
 
-**Status:** Building
+**Status:** Shipped 2026-11-08
 **Tier:** 🟡
 **Owner approval:** owner delegated 2026-11-06; split from [`backoffice`](../backoffice/spec.md) as its PR B on 2026-11-08
 **ADRs:** [0031](../../adr/0031-the-backoffice-is-a-separate-host-signed-in-with-a-key-and-totp-enrolled-from-the-owners-terminal.md)

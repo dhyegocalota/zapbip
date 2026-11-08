@@ -68,8 +68,8 @@ One developer. Branch `feat/backoffice-metrics`, merged from `feat/backoffice` a
 - [x] **Tester run:** two fresh testers executed `test-plan.md`. — evidence: `tester-metrics.md` at dfdfe761 (18 PASS, 2 FAIL, 1 observation, all fixed in 33a) and `tester-metrics-delta.md` at c2593ffb (all passed, 3 mutations caught, one visual defect fixed in 33c)
 - [x] **Reviewer:** WITH RESERVATIONS, all fixed in step 33b.
 - [x] **Security:** CLEAR.
-- [ ] **/check-ui:** left to the lead.
-- [ ] **/open-pr:** left to the lead.
+- [x] **/check-ui:** video and screenshots recorded at b88adc49 on the `pr-media-backoffice-metrics` release.
+- [x] **/open-pr:** gates passed, learnings sweep stated, PR #19 opened.
 
 ## Failure modes
 
