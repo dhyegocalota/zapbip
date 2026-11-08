@@ -60,3 +60,4 @@ export const INSTALL_PRODUCT_TEXT_MAX_LENGTH = 120;
 export const PACKAGE_PATH_PREFIX = '/pkg/';
 export const PRODUCTION_PACKAGES_BUCKET = 'zapbip-packages';
 export const SEEN_MESSAGE_LIMIT = 1_024;
+export const DISPLAY_NUMBER_PATTERN = /^\+\d{7,15}$/;

@@ -25,6 +25,7 @@ import { LogEvent } from '../contract/log';
 import { logEvent } from '../log';
 import { clientRateKey } from './client-rate-key';
 import { HttpStatus } from './http-status';
+import { plainResponse, privateResponse } from './private-response';
 
 export type RateLimiter = {
   limit(input: { key: string }): Promise<{ success: boolean }>;
@@ -44,13 +45,11 @@ const INSTALL_CODE_BODY_LENGTH = Math.ceil((INSTALL_CODE_RANDOM_BYTES * BITS_PER
 const INSTALL_CODE_PATTERN = new RegExp(`^${INSTALL_CODE_PREFIX}[A-Za-z0-9_-]{${INSTALL_CODE_BODY_LENGTH}}$`);
 const INSTALL_CODE_PARAMETER = 'installCode';
 const MARKDOWN_CONTENT_TYPE = 'text/markdown; charset=utf-8';
-const PLAIN_CONTENT_TYPE = 'text/plain; charset=utf-8';
 const NOT_FOUND_TEXT = INSTALL_PAGE_COPY[OwnerLocale.EnglishUs].notFound;
 const BAD_REQUEST_TEXT = 'bad request';
 const SERVER_ERROR_TEXT = 'server error';
 const RATE_LIMITED_TEXT = 'too many requests';
 const RETRY_AFTER_SECONDS = RATE_LIMIT_PERIOD_MS / SECOND_MS;
-const HSTS_MAX_AGE_SECONDS = 63_072_000;
 const SECURE_PROTOCOL = 'https:';
 const USER_AGENT_HEADER = 'user-agent';
 const LINK_PREVIEW_USER_AGENTS = [
@@ -72,25 +71,6 @@ const LINK_PREVIEW_USER_AGENTS = [
   'mastodon',
   'cardyb',
 ];
-const PRIVATE_HEADERS = {
-  'Cache-Control': 'no-store',
-  'X-Robots-Tag': 'noindex',
-  'Referrer-Policy': 'no-referrer',
-  'X-Content-Type-Options': 'nosniff',
-  'Strict-Transport-Security': `max-age=${HSTS_MAX_AGE_SECONDS}; includeSubDomains`,
-};
-
-function privateResponse(input: { body: string; status: HttpStatus; contentType: string; headers?: Record<string, string> }): Response {
-  return new Response(input.body, {
-    status: input.status,
-    headers: { ...PRIVATE_HEADERS, 'Content-Type': input.contentType, ...input.headers },
-  });
-}
-
-function plainResponse(input: { body: string; status: HttpStatus; headers?: Record<string, string> }): Response {
-  return privateResponse({ ...input, contentType: PLAIN_CONTENT_TYPE });
-}
-
 type ReadyResolution = Extract<InstallCodeResolution, { status: InstallCodeStatus.Ready }>;
 
 export function createInstallPageRoute(input: InstallPageRouteDependencies): Hono {
@@ -104,7 +84,7 @@ export function createInstallPageRoute(input: InstallPageRouteDependencies): Hon
     ]);
     const standbyAgent = pickStandbyAgent({ agent, candidates: joinStandbyCandidates({ connections, wakeModes }) });
     const body = renderInstallPage({ agent, connectionLink, locale, standbyAgent, sections: INSTALL_PAGE_SECTIONS });
-    return privateResponse({ body, status: HttpStatus.Ok, contentType: MARKDOWN_CONTENT_TYPE });
+    return privateResponse({ body, status: HttpStatus.Ok, headers: { 'Content-Type': MARKDOWN_CONTENT_TYPE } });
   }
 
   async function serve(context: Context): Promise<Response> {

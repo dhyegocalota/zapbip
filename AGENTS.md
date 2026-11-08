@@ -48,7 +48,7 @@ Everything in the repo is in English: code, identifiers, comments-free code, doc
 - A compound condition gets a name (`isServedReply`, `isOnEditingSurface`) before the `if` that uses it.
 - A name says what the variable holds: a promise is a `…Connection` or `…Promise`, never a `client`.
 - One handler per request kind, dispatched from a record keyed by the kind, instead of one function with interleaved `if`s.
-- Recurring mechanics have one shared helper. Search before adding a local copy; a new one goes under `libs/` or the owning feature, and its name joins this line: `accountInboxOf`, `resolveConnection`, `renderCopy`, `mediaStoreOf`, `agentOrderOf`.
+- Recurring mechanics have one shared helper. Search before adding a local copy; a new one goes under `libs/` or the owning feature, and its name joins this line: `accountInboxOf`, `resolveConnection`, `renderCopy`, `mediaStoreOf`, `agentOrderOf`, `privateResponse`, `DISPLAY_NUMBER_PATTERN`.
 - Durations cross boundaries in milliseconds and convert at the edge (a `Retry-After` header, a label).
 - Copy strings never sit inline in JSX; they live in a `*-copy.ts` file or `libs/types`.
 - Never `?? defaultValue` to mask a missing value. Model absence explicitly: throw, return early or make the field required upstream.

@@ -1,6 +1,11 @@
-import { START_PREFILLED_TEXT, WHATSAPP_LINK_ORIGIN, WHATSAPP_LINK_TEXT_PARAMETER, type OwnerLocale } from '@zapbip/types';
+import {
+  DISPLAY_NUMBER_PATTERN,
+  START_PREFILLED_TEXT,
+  WHATSAPP_LINK_ORIGIN,
+  WHATSAPP_LINK_TEXT_PARAMETER,
+  type OwnerLocale,
+} from '@zapbip/types';
 
-const DISPLAY_NUMBER_PATTERN = /^\+\d{7,15}$/;
 const DISPLAY_NUMBER_PREFIX_LENGTH = 1;
 
 export function startLinkTarget(input: { displayNumber: string; locale: OwnerLocale }): string | null {
