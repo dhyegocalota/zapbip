@@ -36,7 +36,7 @@ function pairOf(point: Point): string {
   return `${point.x},${point.y}`;
 }
 
-export function Sparkline(props: { locale: OwnerLocale; metricLabel: string; values: number[] }) {
+export function Sparkline(props: { id: string; locale: OwnerLocale; metricLabel: string; values: number[] }) {
   const { locale, metricLabel, values } = props;
   assertDrawable({ values });
   const translate = (key: BackofficeCopyKey, replacements: Record<string, string>): string =>

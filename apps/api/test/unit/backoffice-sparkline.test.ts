@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { Sparkline } from '../../src/backoffice/views/sparkline';
 
 const DAY_COUNT = 14;
+const SPARKLINE_ID = 'spark';
 const METRIC_LABEL = 'Messages';
 const RISING = Array.from({ length: DAY_COUNT }, (_, index) => index);
 const ZEROS = new Array<number>(DAY_COUNT).fill(0);
@@ -15,7 +16,7 @@ const SUMMARY_PATTERN = /<p class="sparkline-summary">([^<]*)<\/p>/;
 
 function render(input: { values: number[]; locale?: OwnerLocale }): string {
   const { locale = OwnerLocale.EnglishUs } = input;
-  return String(Sparkline({ locale, metricLabel: METRIC_LABEL, values: input.values }));
+  return String(Sparkline({ id: SPARKLINE_ID, locale, metricLabel: METRIC_LABEL, values: input.values }));
 }
 
 function pointsOf(html: string): { x: number; y: number }[] {
@@ -95,5 +96,26 @@ describe('sparkline', () => {
   it('crops an all-zero series to a shorter box than a drawn one', () => {
     const heightOf = (html: string): number => Number(html.match(VIEW_BOX_PATTERN_ANY)![2]);
     expect(heightOf(render({ values: ZEROS }))).toBeLessThan(heightOf(render({ values: RISING })));
+  });
+
+  it('fills the area from one gradient defined once in the svg', () => {
+    const html = render({ values: RISING });
+    expect(html.match(/<linearGradient id="spark-fill"/g)).toHaveLength(1);
+    expect(html).toMatch(/<polygon class="sparkline-area"[^>]*fill="url\(#spark-fill\)"/);
+    expect(html).toMatch(/<stop class="sparkline-stop-start"/);
+    expect(html).toMatch(/<stop class="sparkline-stop-end"/);
+  });
+
+  it('labels the last value to the right of the end dot', () => {
+    const html = render({ values: RISING });
+    const dot = html.match(/<circle class="sparkline-dot" cx="([\d.]+)" cy="([\d.]+)"/)!;
+    const label = html.match(/<text class="sparkline-label" x="([\d.]+)" y="([\d.]+)">(\d+)<\/text>/)!;
+    expect(Number(label[1])).toBeGreaterThan(Number(dot[1]));
+    expect(label[3]).toBe(String(RISING.at(-1)));
+  });
+
+  it('draws no gradient, label or dot for an all-zero series', () => {
+    const html = render({ values: ZEROS });
+    ['linearGradient', 'sparkline-label', 'sparkline-dot'].forEach((marker) => expect(html).not.toContain(marker));
   });
 });

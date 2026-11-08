@@ -25,7 +25,7 @@ export function HomePage(props: { page: PageContext; overview: HomeOverview }) {
   const totalNumbers = Object.values(counts).reduce((total, count) => total + count, 0);
   const hasNumbers = totalNumbers > 0;
   const sparklineOf = (metric: SparklineMetric) => (
-    <Sparkline locale={locale} metricLabel={translate(SPARKLINE_LABELS[metric])} values={series[metric]} />
+    <Sparkline id={`sparkline-${metric}`} locale={locale} metricLabel={translate(SPARKLINE_LABELS[metric])} values={series[metric]} />
   );
   return (
     <Layout
