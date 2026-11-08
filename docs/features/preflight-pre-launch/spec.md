@@ -14,7 +14,9 @@ The owner said on 2026-11-08: "I don't have the official number yet" and "sobre 
 
 - The Worker deploy preflight no longer checks the official number, and the input type loses the field.
 - In the Worker deploy preflight a package that does not resolve on npm (`E404`) becomes a printed warning, `<spec> is not on npm yet; publish it before launch`, and the deploy goes on. The warning goes through a typed `warn` callback of the preflight input, which `runDeploy` wires to its `log`.
-- Still refused: a package on npm with any maintainer or publisher other than `ZAPBIP_NPM_PUBLISHER` (the squatting guard), and any other npm failure (network or unknown), because squatted and absent cannot be told apart.
+- "Absent" means the version and the name are both absent. `npm view <name>@<version>` answers `E404` when the name exists but that version does not, so a squatter holding `zapbip@0.0.1` must not read as unpublished: on a versioned `E404` the check queries the bare name, warns only if that is `E404` too, and runs the maintainer and publisher comparison against the name when it exists.
+- Still refused: a package on npm with any maintainer or publisher other than `ZAPBIP_NPM_PUBLISHER` (the squatting guard), and any other npm failure (network or unknown), including on the name query, because squatted and absent cannot be told apart.
+- The warning is a typed `PreflightWarning` (`PreflightWarningKind.PackageUnpublished`). `runDeploy` prints it when raised and again, under a heading, after the smoke test.
 - The runbook wording follows.
 
 ## Non-goals

@@ -23,6 +23,7 @@ One group, one lane.
 - [x] **Step 1:** red: the Worker preflight passes with the number unset; E404 warns and passes; foreign maintainer and network error refuse
 - [x] **Step 2:** remove the official number check from `WORKER_CHECKS`, the Worker input type and `DeployRun`; add the `warn` callback and `onAbsentPackage`
 - [x] **Step 3:** update the deploy and Mintlify runbooks
+- [x] **Step 4:** security findings: an absent version checks the package name, a typed warning printed again after the smoke test, the go-live record line, the docs `E404` pin
 
 ## Failure modes
 
