@@ -27,7 +27,7 @@ Author this list with every box empty. A sub-agent ticks its own line. A wrong s
 
 ### Re-audit
 
-- [ ] **Step 1:** after `feat/agent-registry` merges, merge `origin/main` into this branch, then read every README against the code on `main` and record the findings and the final texts in this plan, one block per README. Include the READMEs the audit did not cover (`libs/agents`) and any added since.
+- [x] **Step 1:** after `feat/agent-registry` merges, merge `origin/main` into this branch, then read every README against the code on `main` and record the findings and the final texts in this plan, one block per README. Include the READMEs the audit did not cover (`libs/agents`) and any added since. — evidence: re-audit on `feat/agent-registry` at 2a5cbdc2, findings below
 
 ### G1
 
@@ -36,21 +36,38 @@ Author this list with every box empty. A sub-agent ticks its own line. A wrong s
 
 ### G2
 
-- [ ] **Step 4:** root `README.md`: replace "Early stage", add the runbooks link, keep the Logic Bit line
-- [ ] **Step 5:** `.agents/skills/README.md`: the shortened text
-- [ ] **Step 6:** `tools/repository-shape/README.md`: the category text
+- [x] **Step 4:** root `README.md`: replace "Early stage", add the runbooks link, keep the Logic Bit line — evidence: ae1ff151
+- [x] **Step 5:** `.agents/skills/README.md`: the shortened text — evidence: ae1ff151
+- [x] **Step 6:** `tools/repository-shape/README.md`: the category text — evidence: ae1ff151
 
 ### G3
 
-- [ ] **Step 7:** `apps/api/README.md`
+- [x] **Step 7:** `apps/api/README.md` — evidence: 5eb0c522
 - [x] **Step 8:** `apps/hermes-plugin/README.md`: drop the file pointer — evidence: e3493cb7
-- [ ] **Step 9:** `apps/connector/README.md`, `apps/docs/README.md`, `apps/openclaw-plugin/README.md`: only the registry-driven rewording, or confirm unchanged
+- [x] **Step 9:** `apps/connector/README.md`, `apps/docs/README.md`, `apps/openclaw-plugin/README.md`: only the registry-driven rewording, or confirm unchanged — evidence: 5eb0c522 (docs clause); connector and openclaw-plugin confirmed unchanged
 
 ### G4
 
-- [ ] **Step 10:** `libs/core/README.md`
-- [ ] **Step 11:** `libs/types/README.md`
-- [ ] **Step 12:** `libs/agents/README.md`: confirm against the final folders; amend only if wrong
+- [x] **Step 10:** `libs/core/README.md` — evidence: 737d59c1
+- [x] **Step 11:** `libs/types/README.md` — evidence: 737d59c1
+- [x] **Step 12:** `libs/agents/README.md`: confirm against the final folders; amend only if wrong — evidence: unchanged, `supported/` and `generate/` exist and match
+
+### Re-audit findings (feat/agent-registry at 2a5cbdc2)
+
+| README | Result | Why |
+|--------|--------|-----|
+| `README.md` | changed | "Early stage" was false; replaced, runbooks link added, Logic Bit line kept |
+| `.agents/skills/README.md` | changed | shortened; all 14 listed skills exist in the folder |
+| `tools/repository-shape/README.md` | changed | categories replace the stale list; the audit's "install guides" is now "agent registry" (`agent-registry.test.ts`, `agent-lifecycle.test.ts`) |
+| `apps/api/README.md` | changed | audit text kept; "Hermes plugin package" became "hosted plugin packages" because `routes/package.ts` serves the `hostedArtifacts` of every plugin in the registry; install pages exist in `install/install-page-adapter.ts`; upkeep in `operations/scheduled.ts` |
+| `apps/connector/README.md` | unchanged | already says agent-neutral "local AI session" and points at `libs/agents` for runtimes |
+| `apps/docs/README.md` | changed | one clause: the agent pages (`apps/docs/agents/*.mdx`) are generated from the agent folders |
+| `apps/hermes-plugin/README.md` | unchanged | G1 fixed it; the plugin folder did not move |
+| `apps/openclaw-plugin/README.md` | unchanged | the folder did not move into `libs/agents` |
+| `libs/core/README.md` | changed | audit text amended: the install guides left core (it renders the page from the sections it is given and names no agent); account lifecycle and commands kept (`src/accounts`) |
+| `libs/types/README.md` | changed | audit text amended: connector and channel-plugin contracts stay (`connector.ts`, `channel-plugin.ts`); the Hermes wheel contract is no longer in `libs/types` and is not claimed; `libs/agents` joins the list of consumers |
+| `libs/agents/README.md` | unchanged | matches `supported/` and `generate/` |
+| `docs/adr`, `docs/features`, `docs/learnings`, `docs/runbooks`, `docs/scenarios` | unchanged | test-pinned indexes; the runbooks list matches the folder |
 
 ## Failure modes
 
