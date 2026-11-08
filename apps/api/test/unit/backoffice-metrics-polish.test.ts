@@ -147,4 +147,14 @@ describe('metrics polish', () => {
       Number(html.match(new RegExp(`viewBox="0 0 (\\d+) \\d+" role="img" aria-labelledby="${id}-title`))![1]);
     expect(widthOf('chart-messages')).toBeLessThan(widthOf('chart-budget'));
   });
+
+  it('shows the empty state and five decreases when everything happened in the previous period only', () => {
+    const previousRows = [ActivityMetric.MessagesIn, ActivityMetric.MessagesOut, ActivityMetric.WakesWoken, ActivityMetric.SendsFailed].map(
+      (metric) => ({ day: PREVIOUS_PERIOD_DAY, metric, total: 3 }),
+    );
+    const report = { ...EMPTY_REPORT, activity: previousRows, newAccounts: [{ day: PREVIOUS_PERIOD_DAY, total: 2 }] };
+    const html = String(MetricsPage({ page: PAGE, filter: METRICS_FILTER, report, now: NOW }));
+    expect(html.match(EMPTY_STATE_PATTERN)).toHaveLength(1);
+    expect(html.match(/class="kpi-delta kpi-delta-down"/g)).toHaveLength(KPI_CELLS.length);
+  });
 });
