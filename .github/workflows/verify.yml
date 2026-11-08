@@ -69,6 +69,10 @@ jobs:
   lifecycle:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -82,7 +86,7 @@ jobs:
         env:
           REQUIREMENTS: apps/hermes-plugin/requirements-dev.txt
       # NB ADR 0033: generated pip install lines end
-      - run: pnpm test:lifecycle
+      - run: pnpm test:lifecycle --shard=${{ matrix.shard }}/3
         env:
           GH_TOKEN: ${{ github.token }}
           DOCTOR_SKIP: chromium
