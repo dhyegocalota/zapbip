@@ -8,6 +8,9 @@ import {
   writePlan,
   type GenerationPlan,
 } from '@zapbip/agents/generate';
+import { leakViolationsOf } from '@zapbip/agents/checks/leaks';
+import { AGENT_DEFINITIONS } from '@zapbip/agents/definitions';
+import { trackedFiles, readRepositoryFile } from './repository-files';
 
 const SUPPORTED_ROOT = 'libs/agents/supported';
 const TESTING_ROOT = 'libs/agents/testing';
@@ -32,6 +35,8 @@ const MATRIX_SNIPPETS = ['apps/docs/snippets/agents/matrix.mdx', 'apps/docs/snip
 const MATRIX_PAGES = ['apps/docs/agents/supported-agents.mdx', 'apps/docs/pt-br/agents/supported-agents.mdx'];
 const MATRIX_TABLE_ROW_PATTERN = /^\| -{3,}/m;
 const CONNECTOR_SNIPPETS = ['apps/docs/snippets/agents/connector-clients.mdx', 'apps/docs/snippets/pt-br/agents/connector-clients.mdx'];
+const LEAK_SCANNED_EXTENSIONS = ['.ts', '.tsx', '.mts', '.mjs', '.sh', '.py', '.yml', '.json'];
+const LEAK_ALLOWED_PREFIXES = [GENERATED_FOLDER];
 const ENUM_MEMBER_PATTERN = /^\s*(\w+) = '([a-z-]+)',?$/;
 
 type Fixture = { id: string; member: string; englishName: string; portugueseName: string };
@@ -220,4 +225,14 @@ describe('removing an agent folder', () => {
 
 describe('no file outside an agent folder names an agent', () => {
   REAL_AGENT_IDS.forEach((id) => test.todo(`G4: ${id} leaks nowhere, once the leak check exists`));
+});
+
+describe('agent knowledge', () => {
+  test('no file outside an agent folder names an agent', () => {
+    const agents = Object.entries(AGENT_DEFINITIONS).map(([id, definition]) => ({ id, enumMember: definition.enumMember }));
+    const files = trackedFiles()
+      .filter((path) => LEAK_SCANNED_EXTENSIONS.some((extension) => path.endsWith(extension)))
+      .map((path) => ({ path, text: readRepositoryFile(path) }));
+    expect(leakViolationsOf({ agents, files, allowedPrefixes: LEAK_ALLOWED_PREFIXES })).toEqual([]);
+  });
 });
