@@ -36,3 +36,40 @@ Pins (green on landing): `testing/golden.test.ts` (feb42340), the docs vocabular
 - `apps/docs/e2e/agents-b.spec.ts` imports `HERMES_INSTALL_COMMAND` through the relative path `../../../libs/agents/src/plugins`: `apps/docs/package.json` is not a C0 file, so it cannot depend on `@zapbip/agents`.
 - Added `src/plugins.ts`, `src/install.ts`, `src/connector.ts` (empty facet entry points) and `src/index.ts` so the package exports resolve.
 - Fixture install sections are hand-written: `formatSection` still needs an `InstallClient` until L2.
+
+## L1 registry and generators (developer-l1)
+
+### What changed and where
+
+- `libs/agents/generate/`: `discover`, `load`, `plan`, `write`, `cli`, `format`, `source`, `repository`, `paths`, and the renderers `render-{ids,definitions,install,connector,plugins,registry,matrix,navigation,pages}`. `src/order.ts` (`OrderSurface`, `agentOrderOf`) and `src/checks/registry.ts` (`registryViolationsOf`).
+- Generated and committed: `libs/agents/src/generated/{ids,definitions,install,connector,plugins}.ts`, `apps/docs/snippets/{,pt-br/}agents/matrix.mdx`. `docs.json` and every golden are byte-identical.
+- `tools/repository-shape/src/agent-registry.test.ts`: G1, G2, G2b, G2c, the freshness pin and the violations pin.
+
+### How to run
+
+The `test:unit` script of `@zapbip/agents` and of `@zapbip/repository-shape`, then `agents:check` and `agents:generate` from the root scripts.
+
+### Red then green
+
+| Test | Red commit | Printed | Green commit |
+|---|---|---|---|
+| `generate/*.test.ts`, `src/checks/registry.test.ts` (47 tests) | 5baa1088 | `Error: discoverAgents is not implemented`, and the same for `agentOrderOf`, `renderIds`, `renderMatrix`, `renderNavigation`, `orphanPagePathsOf`, `planPages`, `registryViolationsOf`; 47 failed | c3cdf0c0 |
+| `agent-registry.test.ts` G1, G2, G2b, G2c (5 tests) | 0a9d4de6 | `Error: discoverAgents is not implemented` (discovery is still a stub in this commit, so the run stops before `planGeneratedFiles`) | c3cdf0c0 |
+
+Pins (green on landing): the freshness test and the violations test (3a2efcb6). Mutations, each run and restored: M1 (extra line in `matrix.mdx`) printed `stale apps/docs/snippets/agents/matrix.mdx: run pnpm agents:generate`; M2 (deleted pt-br snippet) printed `missing generated file ...`; M3 (`apps/docs/agents/ghost.mdx`) printed `pending deletion apps/docs/agents/ghost.mdx: run pnpm agents:generate`. M1 and M2 use the matrix snippets because no agent page is generated before Step 15.
+
+### Hypotheses for the tester
+
+- H1. The generated matrix tables equal the tables in the two hand-written matrix pages, row for row (checked by `diff` at Step 9).
+- H2. Running the generator twice writes nothing the second time, from the root and from `apps/docs`.
+- H3. `docs.json` outside the two agent lists is untouched: the generator rewrites only the `pages` arrays of `Agents` and `IAs`.
+
+### Gaps and deviations
+
+- Contract: `planGeneratedFiles` takes a third input, `listSource`, because orphan pages (M3) can only be found by listing `apps/docs/agents`. `agentOrderOf` takes `surface` (`OrderSurface`): the three legacy orders differ until Step 13b makes them one.
+- `discoverAgents` treats a root holding `definition.ts` as one agent folder, otherwise as a container of agent folders. `libs/agents/package.json` `./generate` now points at `generate/index.ts`.
+- A `plugin.ts` that exports no `plugin` (today's Hermes re-export) is not a registry entry; `PluginAgent` is empty until L5b. `InstallClient` and `ConnectorClient` are empty until L2 and L5a.
+- The violations pin ignores `<id> has no page.<lang>.mdx` (22 today); Step 15 removes that exception and ticks G3.
+- G1 asserts the rendered `## Fixture Agent` sections in the planned `install.<locale>.md` and in `generated/install.ts`; the `renderInstallPage` leg, the guide-parity, install-section and listen-token legs belong to L2 and L4.
+- `src/checks/boundaries.ts` (B1 to B4) has no step in L1 and is not written. The generated `verify.yml` regions are L5b. `agents:new` and `agents:mentions` are Step 28 (L4) and throw `is not implemented`.
+- Connector snippets are written only while a connector agent exists; removing the last one leaves the snippet files in place.
