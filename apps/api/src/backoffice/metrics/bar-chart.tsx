@@ -11,6 +11,7 @@ export type ChartReference = { value: number; label: string };
 
 export type ChartSeries = { label: string; cell: MetricCell; values: number[]; valueTexts: string[]; pattern: BarPattern };
 
+export const BAR_RADIUS = 2;
 const LEFT_GUTTER = 52;
 const RIGHT_GUTTER = 120;
 const PLOT_WIDTH = 548;
