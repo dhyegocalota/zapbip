@@ -15,6 +15,8 @@ const GROUP_PAGES = [
 const CUSTOM_STYLE_LOCATOR = 'style[data-custom-css-path]';
 const HERO_LOCATOR = '.zapbip-hero';
 const HERO_COPY_LOCATOR = '.zapbip-hero-copy';
+const HERO_STATEMENT_LOCATOR = '.zapbip-hero-statement';
+const PHONE_MINIMUM_WIDTH_PX = 280;
 const HERO_VISUAL_LOCATOR = '.zapbip-hero-visual';
 const HERO_TEXT_LOCATORS = ['.zapbip-hero-statement', '.zapbip-hero-accent', '.zapbip-hero-lead'];
 const LOGO_LOCATOR = 'img[src*="/logo/"]';
@@ -48,15 +50,17 @@ for (const language of Object.values(DocsLanguage)) {
       test.skip(testInfo.project.use.locale !== DOCS_LOCALE_OF[language]);
     });
 
-    test('the Overview injects the custom stylesheet and shows the hero with its phone clear of the copy', async ({ page }) => {
+    test('the Overview injects the custom stylesheet and puts the phone to the right of the headline', async ({ page }) => {
       await page.goto(urlOf({ path: OVERVIEW_PAGE, language }));
       await expect(page.locator(CUSTOM_STYLE_LOCATOR).first()).toBeAttached();
       await expect(page.locator(HERO_LOCATOR)).toBeVisible();
-      const copy = await boxOf({ locator: page.locator(HERO_COPY_LOCATOR) });
-      const visual = await boxOf({ locator: page.locator(HERO_VISUAL_LOCATOR) });
-      const isBesideCopy = copy.x + copy.width <= visual.x;
-      const isBelowCopy = copy.y + copy.height <= visual.y;
-      expect(isBesideCopy || isBelowCopy).toBe(true);
+      const headline = await boxOf({ locator: page.locator(HERO_STATEMENT_LOCATOR) });
+      const phone = await boxOf({ locator: page.locator(HERO_VISUAL_LOCATOR) });
+      const headlineCentre = headline.y + headline.height / 2;
+      expect(phone.x).toBeGreaterThan(headline.x + headline.width);
+      expect(headlineCentre).toBeGreaterThanOrEqual(phone.y);
+      expect(headlineCentre).toBeLessThanOrEqual(phone.y + phone.height);
+      expect(phone.width).toBeGreaterThanOrEqual(PHONE_MINIMUM_WIDTH_PX);
     });
 
     for (const colorScheme of COLOR_SCHEMES) {
