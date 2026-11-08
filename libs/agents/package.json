@@ -10,6 +10,7 @@
     "./connector": "./src/connector.ts",
     "./plugins": "./src/plugins.ts",
     "./docs": "./src/docs.ts",
+    "./checks/boundaries": "./src/checks/boundaries.ts",
     "./checks/leaks": "./src/checks/leaks.ts",
     "./definitions": "./src/definitions.ts",
     "./generate": "./generate/index.ts"

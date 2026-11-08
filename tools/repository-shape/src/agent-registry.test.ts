@@ -8,6 +8,7 @@ import {
   writePlan,
   type GenerationPlan,
 } from '@zapbip/agents/generate';
+import { boundaryViolationsOf } from '@zapbip/agents/checks/boundaries';
 import { leakViolationsOf } from '@zapbip/agents/checks/leaks';
 import { AGENT_DEFINITIONS } from '@zapbip/agents/definitions';
 import { trackedFiles, readRepositoryFile } from './repository-files';
@@ -294,5 +295,14 @@ describe('agent knowledge', () => {
 
   test.each(REAL_AGENT_IDS)('G4: %s leaks nowhere', (id) => {
     expect(leaks.filter((leak) => leak.endsWith(` names ${id}`))).toEqual([]);
+  });
+});
+
+describe('agent boundaries', () => {
+  test('the repository keeps the import boundaries of ADR 0033', () => {
+    const files = trackedFiles()
+      .filter((path) => LEAK_SCANNED_EXTENSIONS.some((extension) => path.endsWith(extension)))
+      .map((path) => ({ path, text: readRepositoryFile(path) }));
+    expect(boundaryViolationsOf({ files })).toEqual([]);
   });
 });
