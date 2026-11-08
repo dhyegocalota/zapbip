@@ -37,7 +37,7 @@ Migration rule: a migration that has reached a deployed environment is never edi
    | `UPLOAD_LINK_SIGNING_KEY` | `openssl rand -base64 32`, a different value; rotating it fails uploads in progress once |
    | `WAKE_SECRET_KEY` | `openssl rand -base64 32`; not rotated: a new key cannot open stored wake targets |
 
-   The smoke inputs in `.env`: `SMOKE_BASE_URL` (`https://mcp-staging.zapbip.com` or `https://mcp.zapbip.com`, without a trailing slash), `SMOKE_OWNER_PHONE` (your phone, digits with country code, no plus sign or spaces) and, for staging only, `SMOKE_CONNECTION_SECRET` (step 6); production asks for the connection secret at a hidden prompt and never reads it from the file. Leave `SMOKE_CONNECTION_SECRET` and `SMOKE_OWNER_PHONE` as they are until step 6: the first deploy of an environment runs with `--first-deploy`, which does not need them. For production also set `ZAPBIP_NPM_PUBLISHER` to your npm user name ([mintlify-publish.md](mintlify-publish.md), step 2).
+   The smoke inputs in `.env`: `SMOKE_BASE_URL` (`https://mcp-staging.zapbip.com` or `https://mcp.zapbip.com`, without a trailing slash), `SMOKE_OWNER_PHONE` (your phone, digits with country code, no plus sign or spaces) and, for staging only, `SMOKE_CONNECTION_SECRET` (step 6); production asks for the connection secret at a hidden prompt and never reads it from the file. Leave `SMOKE_CONNECTION_SECRET` and `SMOKE_OWNER_PHONE` as they are until step 6: the first deploy of an environment runs with `--first-deploy`, which does not need them. For production also set `ZAPBIP_NPM_PUBLISHER` to your npm user name ([mintlify-publish.md](mintlify-publish.md), step 1).
 
    Expect: `pnpm --filter @zapbip/api exec wrangler secret list --env staging` names the five secrets of the table; the two backoffice secrets arrive with the enrollment.
 
@@ -195,7 +195,7 @@ Follow the steps in order. Each step names the runbook that holds its detail, an
     Expect: Meta verifies the production webhook and shows both fields subscribed.
 
     If it fails: step 9 of `meta-setup.md` says what to check.
-23. **Publish the docs.** Do steps 5 to 10 of `mintlify-publish.md`, starting with `pnpm docs:preflight`, which needs no DNS but reads the production Worker: it checks the constants, npm and the plugin files served at `https://mcp.zapbip.com/pkg/`. The custom domain of step 9 uses steps 4 and 5 of `dns.md`. The privacy page is part of the site. The docs preflight after the production deploy is mandatory: it is the only check that the live Worker serves every plugin file with the hashes the docs print, so never connect Mintlify without a passing run.
+23. **Publish the docs.** Check the start link first (`curl -sI https://mcp.zapbip.com/start`, step 21), then do steps 5 to 10 of `mintlify-publish.md`, starting with `pnpm docs:preflight`, which needs no DNS but reads the production Worker: it checks the constants, npm and the plugin files served at `https://mcp.zapbip.com/pkg/`. The custom domain of step 9 uses steps 4 and 5 of `dns.md`. The privacy page is part of the site. The docs preflight after the production deploy is mandatory: it is the only check that the live Worker serves every plugin file with the hashes the docs print, so never connect Mintlify without a passing run.
 
     Expect: `docs.zapbip.com` serves the site in English and in Portuguese, and `https://docs.zapbip.com/help/privacy` loads.
 

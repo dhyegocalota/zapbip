@@ -32,7 +32,7 @@ The docs live in `apps/docs` and publish when `main` changes. The site links the
 
    Expect: the command prints `the docs are ready to publish` and exits zero.
 
-   If it fails: it prints `refused at <step>: <what to do>`; do that step of this runbook and run it again. Nothing is changed by the command.
+   If it fails: it prints `refused at <step>: <what to do>`; do that step of this runbook and run it again; for `refused at start link`, activate a number ([backoffice.md](backoffice.md), step 4; go-live step 21 of [deploy.md](deploy.md)) and deploy the Worker. Nothing is changed by the command.
 
 6. **Create the Mintlify account.** Sign up at `https://mintlify.com` with the owner's email and create the project from the dashboard. Pick the plan that includes a custom domain; read the plan page for what each plan costs and decide there, since this runbook cannot know today's prices.
 
