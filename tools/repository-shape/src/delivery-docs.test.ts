@@ -46,12 +46,14 @@ const INLINE_CODE_PATTERN = /`[^`\n]*`/g;
 const SLUG_DISALLOWED_PATTERN = /[^a-z0-9 -]/g;
 const SPACE_PATTERN = / /g;
 const EXTERNAL_LINK_PATTERN = /^(https?:|mailto:|#)/;
+const FIXTURE_PLUGIN_PACKAGE = 'libs/agents/testing/fixture-plugin-package';
 const ANCHOR_SEPARATOR = '#';
 const MARKDOWN_EXTENSION = '.md';
 
 enum PurposeViolation {
   CodeSpan = 'code span',
   FencedBlock = 'fenced block',
+  IndentedBlock = 'indented block',
 }
 
 function pathOf(target: string): string {
@@ -131,6 +133,29 @@ describe('delivery documents', () => {
     const text = 'Run `pnpm test`.\n```\ncode\n```\n[page](../docs/agents/hermes.mdx#install) [the core](../core) plain prose';
     expect(purposeViolations(text)).toEqual([PurposeViolation.FencedBlock, PurposeViolation.CodeSpan, '../docs/agents/hermes.mdx#install']);
     expect(purposeViolations('[the core](../core) [site](https://example.com/a.html) plain prose')).toEqual([]);
+  });
+
+  test.each([
+    ['a reference-style link to a file', '[page]: ../docs/agents/hermes.mdx', ['../docs/agents/hermes.mdx']],
+    ['a link to a file with a title', '[page](../docs/agents/hermes.mdx "Hermes")', ['../docs/agents/hermes.mdx']],
+    ['an inline code element', 'Run <code>pnpm test</code>.', [PurposeViolation.CodeSpan]],
+    ['an anchor to a file', '<a href="../docs/agents/hermes.mdx">page</a>', ['../docs/agents/hermes.mdx']],
+    ['a tilde fence', '~~~\ncode\n~~~', [PurposeViolation.FencedBlock]],
+    ['an indented code block', 'Prose.\n\n    pnpm test\n', [PurposeViolation.IndentedBlock]],
+    ['a code span across a line break', 'Run `pnpm\ntest` now.', [PurposeViolation.CodeSpan]],
+  ])('%s is reported', (_name, text, expected) => {
+    expect(purposeViolations(text)).toEqual(expected);
+  });
+
+  test.each([
+    ['a folder whose name contains a dot', '[the core](../core.v2/)'],
+    ['a protocol-relative URL', '[site](//example.com/page.html)'],
+  ])('%s is not reported', (_name, text) => {
+    expect(purposeViolations(text)).toEqual([]);
+  });
+
+  test('a fixture README under a package is not a workspace package', () => {
+    expect(workspacePackages()).not.toContain(FIXTURE_PLUGIN_PACKAGE);
   });
 
   test.each(workspacePackages())('the README of %s states purpose only', (path) => {
