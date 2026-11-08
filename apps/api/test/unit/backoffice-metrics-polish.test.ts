@@ -134,4 +134,17 @@ describe('metrics polish', () => {
     const html = String(MetricsPage({ page: PAGE, filter: METRICS_FILTER, report: { ...DATA_REPORT, activity }, now: NOW }));
     expect(html).toMatch(/data-cell="messages-in">4</);
   });
+
+  it('names the message tiles by what they count', () => {
+    const html = render({ data: true });
+    expect(html).toContain('>Messages in<');
+    expect(html).toContain('>Messages out<');
+  });
+
+  it('draws the cards in the grid on a narrower canvas than the wide budget chart', () => {
+    const html = render({ data: true });
+    const widthOf = (id: string): number =>
+      Number(html.match(new RegExp(`viewBox="0 0 (\\d+) \\d+" role="img" aria-labelledby="${id}-title`))![1]);
+    expect(widthOf('chart-messages')).toBeLessThan(widthOf('chart-budget'));
+  });
 });
