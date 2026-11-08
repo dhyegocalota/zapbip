@@ -48,6 +48,8 @@ const SPACE_PATTERN = / /g;
 const EXTERNAL_LINK_PATTERN = /^(https?:|mailto:|#)/;
 const ANCHOR_SEPARATOR = '#';
 const MARKDOWN_EXTENSION = '.md';
+const CODE_SPAN_VIOLATION = 'code span';
+const FENCED_BLOCK_VIOLATION = 'fenced block';
 
 function slugOf(heading: string): string {
   return heading.toLowerCase().replace(SLUG_DISALLOWED_PATTERN, '').replace(SPACE_PATTERN, '-');
@@ -72,6 +74,22 @@ function brokenTargets({ document, text }: { document: string; text: string }): 
   return capturedNames({ text: prose, pattern: LINK_PATTERN })
     .filter((target) => !EXTERNAL_LINK_PATTERN.test(target))
     .filter((target) => isBroken({ document, target }));
+}
+
+function isFileLink(target: string): boolean {
+  const path = target.split(ANCHOR_SEPARATOR, 1).join('');
+  return posix.extname(path) !== '';
+}
+
+function purposeViolations(text: string): string[] {
+  const withoutFences = text.replace(FENCED_BLOCK_PATTERN, '');
+  const prose = withoutFences.replace(INLINE_CODE_PATTERN, '');
+  const fencedBlocks = [...text.matchAll(FENCED_BLOCK_PATTERN)].map(() => FENCED_BLOCK_VIOLATION);
+  const codeSpans = [...withoutFences.matchAll(INLINE_CODE_PATTERN)].map(() => CODE_SPAN_VIOLATION);
+  const fileLinks = capturedNames({ text: prose, pattern: LINK_PATTERN })
+    .filter((target) => !EXTERNAL_LINK_PATTERN.test(target))
+    .filter(isFileLink);
+  return [...fencedBlocks, ...codeSpans, ...fileLinks];
 }
 
 const LINKED_DOCUMENTS = readmes();
@@ -99,6 +117,16 @@ describe('delivery documents', () => {
   test('a link written as inline code or inside a fenced block is not checked', () => {
     const text = '`[NNNN](NNNN-slug.md)`\n```\n[missing](no-such-file.md)\n```\n[broken](no-such-file.md)';
     expect(brokenTargets({ document: README_FILE, text })).toEqual(['no-such-file.md']);
+  });
+
+  test('a code span, a fenced block and a link to a file are reported; a link to a folder and plain prose are not', () => {
+    const text = 'Run `pnpm test`.\n```\ncode\n```\n[page](../docs/agents/hermes.mdx#install) [the core](../core) plain prose';
+    expect(purposeViolations(text)).toEqual([FENCED_BLOCK_VIOLATION, CODE_SPAN_VIOLATION, '../docs/agents/hermes.mdx#install']);
+    expect(purposeViolations('[the core](../core) [site](https://example.com/a.html) plain prose')).toEqual([]);
+  });
+
+  test.each(workspacePackages())('the README of %s states purpose only', (path) => {
+    expect(purposeViolations(readRepositoryFile(posix.join(path, README_FILE)))).toEqual([]);
   });
 
   test('every workspace package has a README', () => {
