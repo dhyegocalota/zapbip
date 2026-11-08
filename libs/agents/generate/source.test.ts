@@ -3,7 +3,7 @@ import { chmodSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync }
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
-import { trackedTextFiles } from './source';
+import { listedFolders, trackedTextFiles } from './source';
 
 let root = '';
 
@@ -52,5 +52,39 @@ describe('trackedTextFiles', () => {
     track({ path: 'locked.ts', text: 'x' });
     chmodSync(join(root, 'locked.ts'), 0);
     expect(() => trackedTextFiles({ root })).toThrow('locked.ts: cannot be read (EACCES)');
+  });
+});
+
+describe('listedFolders', () => {
+  test('lists a folder with a tracked file', () => {
+    track({ path: 'apps/alpha-plugin/package.json', text: '{}' });
+    expect(listedFolders({ root, parent: 'apps' })).toEqual(['alpha-plugin']);
+  });
+
+  test('lists a folder whose files are not yet added and not ignored', () => {
+    mkdirSync(join(root, 'apps/beta-plugin'), { recursive: true });
+    writeFileSync(join(root, 'apps/beta-plugin/package.json'), '{}');
+    expect(listedFolders({ root, parent: 'apps' })).toEqual(['beta-plugin']);
+  });
+
+  test('does not list a folder that only holds ignored leftovers', () => {
+    track({ path: '.gitignore', text: 'node_modules/\nbuild/\n' });
+    mkdirSync(join(root, 'apps/gamma-plugin/node_modules'), { recursive: true });
+    writeFileSync(join(root, 'apps/gamma-plugin/node_modules/leftover.js'), 'x');
+    mkdirSync(join(root, 'apps/gamma-plugin/build'), { recursive: true });
+    writeFileSync(join(root, 'apps/gamma-plugin/build/out.js'), 'x');
+    expect(listedFolders({ root, parent: 'apps' })).toEqual([]);
+  });
+
+  test('does not list a folder whose tracked files were removed from the index', () => {
+    track({ path: 'apps/delta-plugin/package.json', text: '{}' });
+    git('rm', '-rq', '--', 'apps/delta-plugin');
+    expect(listedFolders({ root, parent: 'apps' })).toEqual([]);
+  });
+
+  test('does not list a folder whose tracked files are deleted from the working tree', () => {
+    track({ path: 'apps/epsilon-plugin/package.json', text: '{}' });
+    rmSync(join(root, 'apps/epsilon-plugin'), { recursive: true });
+    expect(listedFolders({ root, parent: 'apps' })).toEqual([]);
   });
 });

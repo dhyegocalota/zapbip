@@ -11,9 +11,13 @@ const GUIDE_PAGE = [
   'description: Connect Demo.',
   '---',
   '',
+  `import { Chat } from '/snippets/chat.jsx';`,
+  '',
   '## Set up from zero',
   '',
   '1. Ask for a new agent and paste `<connectionLink>`.',
+  '',
+  `<Chat messages={[{ name: 'Demo', text: 'Hello from Demo', time: '14:03' }]} />`,
   '',
 ].join('\n');
 const PLUGIN: AgentPlugin = {
@@ -34,9 +38,13 @@ const PLUGIN_PAGE = [
   'description: Connect Demo.',
   '---',
   '',
+  `import { Chat } from '/snippets/chat.jsx';`,
+  '',
   INSTALL_COMMAND,
   INSTALL_SELF_TEST_TEXT[OwnerLocale.EnglishUs],
   `Run only one listener per agent: the plugin or \`npx zapbip@${ZAPBIP_NPM_VERSION} listen\`, never both. A second listener replaces the first.`,
+  '',
+  `<Chat messages={[{ name: 'Demo', text: 'Hello from Demo', time: '14:03' }]} />`,
   '',
 ].join('\n');
 
@@ -57,6 +65,19 @@ describe('pageRuleViolationsOf', () => {
   test('rejects a page without front matter', () => {
     const page = GUIDE_PAGE.replace(/^---[\s\S]*?---\n/, '');
     expect(pageRuleViolationsOf(guideInput({ page }))).toEqual([`${LABEL}: the page needs a title and a description in its front matter`]);
+  });
+
+  test.each([
+    ['a step guide', guideInput, GUIDE_PAGE],
+    ['a plugin page', pluginInput, PLUGIN_PAGE],
+  ])('rejects %s without a conversation', (_name, inputOf, page) => {
+    const withoutChat = page.replace(/^<Chat .*\/>$/m, '');
+    expect(pageRuleViolationsOf(inputOf({ page: withoutChat }))).toEqual([`${LABEL}: the page must show at least one conversation`]);
+  });
+
+  test('rejects a conversation whose component is not imported', () => {
+    const page = GUIDE_PAGE.replace(/^import .*$/m, '');
+    expect(pageRuleViolationsOf(guideInput({ page }))).toEqual([`${LABEL}: the page must show at least one conversation`]);
   });
 
   test('rejects an unpinned connector package', () => {

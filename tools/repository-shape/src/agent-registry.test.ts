@@ -238,6 +238,7 @@ describe('page rules', () => {
     },
     { name: 'the self-test text of a plugin page', fixture: PLUGIN_FIXTURE, file: 'page.pt-br.mdx', remove: /✅ instalado/g },
     { name: 'the placeholder of a step guide', fixture: INSTALL_FIXTURE, file: 'page.en.mdx', remove: /<connectionLink>/g },
+    { name: 'the conversation of a step guide', fixture: INSTALL_FIXTURE, file: 'page.pt-br.mdx', remove: /<Chat[\s\S]*?\/>/ },
   ];
 
   test.each(PAGE_RULE_MUTATIONS)('removing $name fails the plan naming the page', async ({ fixture, file, remove }) => {

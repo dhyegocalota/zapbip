@@ -180,6 +180,8 @@ describe.skipIf(IS_INSIDE_PROOF)('the agent lifecycle in a throwaway worktree', 
       expect(run({ command: ['pnpm', 'install', '--no-frozen-lockfile', '--offline'], directory: worktree.directory }).status).toBe(0);
       const generation = run({ command: ['pnpm', 'agents:generate'], directory: worktree.directory });
       expect(generation.status, generation.output).toBe(0);
+      const check = run({ command: ['pnpm', 'agents:check'], directory: worktree.directory });
+      expect(check.status, check.output).toBe(0);
       const prefixes = [`${SUPPORTED_ROOT}/${scaffoldId}/`, `apps/${scaffoldId}-plugin/`];
       const outside = changedPathsOf({ directory: worktree.directory }).filter((path) => isOutside({ path, prefixes }));
       expect(outside).toEqual([]);
