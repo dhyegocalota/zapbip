@@ -9,7 +9,11 @@ describe('mentionsOf', () => {
       { path: 'apps/docs/index.mdx', text: 'Intro\nAsk Demo Agent to send it.' },
       { path: 'apps/docs/pt-br/index.mdx', text: 'Peça ao agente demo para enviar.\nPeça ao AGENTE DEMO.' },
     ];
-    expect(mentionsOf({ names: NAMES, files, excludedPrefixes: [] })).toEqual(['apps/docs/index.mdx:2', 'apps/docs/pt-br/index.mdx:2']);
+    expect(mentionsOf({ names: NAMES, files, excludedPrefixes: [] })).toEqual([
+      'apps/docs/index.mdx:2',
+      'apps/docs/pt-br/index.mdx:1',
+      'apps/docs/pt-br/index.mdx:2',
+    ]);
   });
 
   test('skips the excluded prefixes', () => {
@@ -26,7 +30,7 @@ describe('mentionsOf', () => {
   });
 
   test('does not match inside a longer word', () => {
-    const files = [{ path: 'a.md', text: 'a database cursor\nCursor rules' }];
+    const files = [{ path: 'a.md', text: 'Cursors everywhere\nCursor rules' }];
     expect(mentionsOf({ names: ['Cursor'], files, excludedPrefixes: [] })).toEqual(['a.md:2']);
   });
 

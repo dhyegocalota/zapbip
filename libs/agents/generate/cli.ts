@@ -2,7 +2,11 @@ import { GenerationMode, pendingDeletionsOf, staleWritesOf, writePlan } from './
 import { discoverAgents } from './discover';
 import { planGeneratedFiles, type GenerationPlan } from './plan';
 import { SUPPORTED_FOLDER } from './repository';
-import { listSource, readSource } from './source';
+import { loadAgent } from './load';
+import { mentionsOf } from './mentions';
+import { GENERATED_FOLDER } from './paths';
+import { scaffoldFilesOf } from './scaffold';
+import { listSource, readSource, trackedTextFiles } from './source';
 
 enum CliMode {
   Generate = 'generate',
@@ -15,6 +19,8 @@ type CliHandler = (input: { argv: string[] }) => Promise<number>;
 
 const FAILURE_EXIT_CODE = 1;
 const SUCCESS_EXIT_CODE = 0;
+const RECORD_PREFIXES = ['docs/', 'pnpm-lock.yaml'];
+const NEXT_STEP_HINT = 'edit the names and the copy, then run pnpm agents:generate';
 
 async function planFromDisk(): Promise<GenerationPlan> {
   return planGeneratedFiles({ agents: discoverAgents({ roots: [SUPPORTED_FOLDER] }), readSource, listSource });
@@ -36,15 +42,42 @@ async function check(): Promise<number> {
   return counts.every((count) => count === 0) ? SUCCESS_EXIT_CODE : FAILURE_EXIT_CODE;
 }
 
-async function notImplemented(input: { mode: CliMode }): Promise<number> {
-  throw new Error(`agents:${input.mode} is not implemented`);
+function agentIdOf(input: { mode: CliMode; argv: string[] }): string {
+  const [id] = input.argv;
+  if (!id) throw new Error(`usage: agents:${input.mode} <id>`);
+  return id;
+}
+
+async function scaffold(input: { argv: string[] }): Promise<number> {
+  const id = agentIdOf({ mode: CliMode.New, argv: input.argv });
+  const existingIds = discoverAgents({ roots: [SUPPORTED_FOLDER] }).map((agent) => agent.id);
+  const writes = scaffoldFilesOf({ id, existingIds, readSource, listSource });
+  writePlan({ plan: { writes, deletions: [], violations: [] }, mode: GenerationMode.Write }).forEach((path) =>
+    console.log(`wrote ${path}`),
+  );
+  console.log(NEXT_STEP_HINT);
+  return SUCCESS_EXIT_CODE;
+}
+
+async function mentions(input: { argv: string[] }): Promise<number> {
+  const id = agentIdOf({ mode: CliMode.Mentions, argv: input.argv });
+  const agent = discoverAgents({ roots: [SUPPORTED_FOLDER] }).find((candidate) => candidate.id === id);
+  if (!agent) throw new Error(`${id} has no folder; run agents:mentions before deleting it`);
+  const { definition } = await loadAgent({ agent });
+  if (!definition) throw new Error(`${id} has no definition`);
+  const { matrixName, linkName, speakerNames } = definition.docs;
+  const names = [...new Set([id, ...Object.values(matrixName), ...Object.values(linkName), ...speakerNames])];
+  const plan = await planFromDisk();
+  const excludedPrefixes = [`${agent.folder}/`, `${GENERATED_FOLDER}/`, ...RECORD_PREFIXES, ...plan.writes.map((write) => write.path)];
+  mentionsOf({ names, files: trackedTextFiles(), excludedPrefixes }).forEach((mention) => console.log(mention));
+  return SUCCESS_EXIT_CODE;
 }
 
 const HANDLERS: Record<CliMode, CliHandler> = {
   [CliMode.Generate]: generate,
   [CliMode.Check]: check,
-  [CliMode.New]: () => notImplemented({ mode: CliMode.New }),
-  [CliMode.Mentions]: () => notImplemented({ mode: CliMode.Mentions }),
+  [CliMode.New]: scaffold,
+  [CliMode.Mentions]: mentions,
 };
 
 export async function runCli(input: { mode: string; argv: string[] }): Promise<void> {
