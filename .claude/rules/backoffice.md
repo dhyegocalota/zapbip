@@ -2,11 +2,12 @@
 paths:
   - "apps/api/src/backoffice/**"
   - "apps/api/src/numbers/**"
+  - "apps/api/src/routes/start-link*.ts"
 ---
 
 # Backoffice facts
 
-Spec: `docs/features/backoffice/spec.md`. Decisions: `docs/adr/0031-the-backoffice-is-a-separate-host-signed-in-with-a-key-and-totp-enrolled-from-the-owners-terminal.md` and `docs/adr/0032-whatsapp-numbers-are-rows-in-a-sealed-registry-not-worker-secrets.md`.
+Spec: `docs/features/backoffice/spec.md`. Start link: `docs/features/start-link/spec.md`. Decisions: `docs/adr/0031-the-backoffice-is-a-separate-host-signed-in-with-a-key-and-totp-enrolled-from-the-owners-terminal.md` and `docs/adr/0032-whatsapp-numbers-are-rows-in-a-sealed-registry-not-worker-secrets.md`.
 
 - **One Worker, two hosts.** `apps/api/src/backoffice/host-dispatch.ts` sends a request to the backoffice app only when its host and port equal `BACKOFFICE_ORIGIN`. The MCP host answers `404` to every backoffice path, and a host with a trailing dot answers `404` on every path. Neither app mounts the other's routes.
 - **Two factors, one operator.** The backoffice key (`zb_bo_` plus 32 random bytes) is stored only as the SHA-256 digest in `BACKOFFICE_KEY_DIGEST`; the TOTP secret is `BACKOFFICE_TOTP_SECRET`. Both are written only by `pnpm backoffice:enroll:<environment>` from the owner's terminal, which `.agents/hooks/guard-deploy.sh` blocks for agents. Never add a way to create, read back or reset them from the web.
@@ -24,3 +25,4 @@ Spec: `docs/features/backoffice/spec.md`. Decisions: `docs/adr/0031-the-backoffi
 - **Metrics are read-only.** `GET /metrics` runs one `D1Database.batch` of `SELECT` statements; no other method is routed. Activity counts are written in the account's Durable Object (`activity_meter`, v8) and flushed hourly by `createActivityProvider` to `activity_daily` with the account's `number_id`; the page never adds a D1 write per message. Charts are inline SVG sized by attributes, so the strict Content-Security-Policy stays.
 - **One stylesheet, tokens in two blocks.** `apps/api/src/backoffice/assets/backoffice.css` names every colour only inside its two `:root` blocks (light, then dark); every animation is switched off under `prefers-reduced-motion`, and a `forced-colors` block gives the hero card and the sparklines system colours. The contrast of the token pairs is proven from the file by `tools/repository-shape/src/backoffice-contrast.test.ts`.
 - **The home is one batch of selects.** `apps/api/src/backoffice/home-sparklines.ts` reads the state counts and three 14-day series (numbers registered, messages, audit entries) in one `D1Database.batch` of `SELECT` statements, with `dailySeries` and `utcDay` from the metrics.
+- **The start link follows the registry.** `GET /start` on the MCP host reads one display number per request, the oldest `active` one by `created_at` then `id`, with no cache, and answers `302` to a `wa.me` link built from a fixed origin, the validated digits and the fixed text of the `lang` locale; nothing else from the request reaches the target. No active number, or a stored number that fails the `+` and 7 to 15 digits pattern, answers the `503` page and never a redirect. It reuses `INSTALL_PAGE_LIMITER` under the `start:` key prefix. Closing a number sends new owners to the next active one on the next request ([ADR 0035](../../docs/adr/0035-a-start-link-on-the-worker-picks-the-number-new-owners-write-to.md)).

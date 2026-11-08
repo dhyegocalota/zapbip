@@ -10,7 +10,7 @@ You do all of this by hand ([ADR 0031](../adr/0031-the-backoffice-is-a-separate-
 
    If it fails: a refusal that mentions a terminal means stdin or stdout is not interactive; run it in your own terminal tab. A code mismatch stops the script before anything is written; run it again. A D1 error naming `backoffice_operator` means migration `0005` is not applied; run the migrate step first. Use a separate enrollment for each environment: the staging key does not sign in to production.
 
-2. **Sign in and register the number.** Open the backoffice host, type the key and the current authenticator code, and choose Sign in. Open Numbers, Register a number. Pick the Meta app, or add a new one with its Meta app ID, label and app secret ([meta-setup.md](meta-setup.md), step 6). Enter the phone number ID, the WABA ID, the display number in international format with a plus sign, a label, and the access token ([meta-setup.md](meta-setup.md), step 7). Type a fresh authenticator code in the Confirm block and submit. Add a second number the same way, choosing the same Meta app when it belongs to it.
+2. **Sign in and register the number.** Open the backoffice host, type the key and the current authenticator code, and choose Sign in. Open Numbers, Register a number. Pick the Meta app, or add a new one with its Meta app ID, label and app secret ([meta-setup.md](meta-setup.md), step 6). Enter the phone number ID, the WABA ID, the display number in international format with a plus sign, a label, and the access token ([meta-setup.md](meta-setup.md), step 7). Type a fresh authenticator code in the Confirm block and submit. Before you register a second number, run `SELECT COUNT(*) FROM accounts WHERE number_id IS NULL` against the production D1 database from your own terminal: the first number binds those accounts only while it is the only one, and an account left without a number when a second number exists is dropped. Add a second number the same way, choosing the same Meta app when it belongs to it.
 
    Expect: the number is listed as Pending, "Number registered. Verify it before activating." shows, and the form never shows the app secret or the token again, only "Set, last changed" and a date. The first number registered also binds any account that has none.
 
@@ -22,7 +22,7 @@ You do all of this by hand ([ADR 0031](../adr/0031-the-backoffice-is-a-separate-
 
    If it fails: the page names the kind of failure. `auth` means the access token is wrong or lacks `whatsapp_business_messaging`; replace it (step 5). `not_found` means the phone number ID or the WABA ID is wrong. `network` or `upstream` means Meta did not answer; retry in a minute.
 
-4. **Activate the number.** On the number page choose Change state, Active, and type a fresh code. Use Closed to stop accepting new accounts while keeping the existing ones, and Disabled only to stop the number completely.
+4. **Activate the number.** On the number page choose Change state, Active, and type a fresh code. Use Closed to stop accepting new accounts while keeping the existing ones: the start link (`https://mcp.zapbip.com/start`) sends new owners to the oldest Active number, so closing a full number moves them to the next Active one on the next click, and with none Active it shows the "back soon" page. Use Disabled only to stop the number completely. 
 
    Expect: the number shows Active in the list. Once the webhook of the environment is pointed ([meta-setup.md](meta-setup.md), step 9), a message from your phone to this number reaches your agents and replies are sent from it.
 
