@@ -1,7 +1,7 @@
 import { existsSync, readdirSync } from 'node:fs';
 import { posix } from 'node:path';
 import { AGENT_PLUGINS } from '@zapbip/agents/plugins';
-import { PRODUCTION_PACKAGES_BUCKET } from '@zapbip/types';
+import { PRODUCTION_PACKAGES_BUCKET, START_LINK } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { capturedNames, readRepositoryFile, repositoryPath } from './repository-files';
 
@@ -63,6 +63,7 @@ const EXTERNAL_LINK_PATTERN = /^(https?:|mailto:|#)/;
 const PNPM_COMMAND_PATTERN = /\bpnpm ([a-z][\w:-]*)/g;
 const FENCED_BLOCK_PATTERN = /```[\s\S]*?```/g;
 const MINTLIFY_PUBLISH_RUNBOOK = 'mintlify-publish.md';
+const OFFICIAL_NUMBER_PATTERN = /official (WhatsApp )?number|OFFICIAL_(WHATSAPP_)?NUMBER/i;
 const NPM_PACKAGE_COUNT = 2;
 const NPM_PUBLISH_PATTERN = /`npm publish --access public`/g;
 const PNPM_PUBLISH_PROHIBITION_PATTERN = /never publish or pack with pnpm/g;
@@ -228,6 +229,15 @@ describe('runbooks', () => {
     const prose = readRunbook(file).text.replace(LINK_TARGET_PATTERN, '');
     const agentNames = Object.entries(AGENT_PLUGINS).flatMap(([id, plugin]) => [id, plugin.packageName]);
     expect(agentNames.filter((name) => prose.toLowerCase().includes(name.toLowerCase()))).toEqual([]);
+  });
+
+  test.each(runbookFiles())('%s names no official number, because the start link follows the registry', (file) => {
+    expect(readRunbook(file).text).not.toMatch(OFFICIAL_NUMBER_PATTERN);
+  });
+
+  test('deploy.md checks the start link answers before the docs are published', () => {
+    const text = readRunbook(DEPLOY_RUNBOOK).text;
+    expect(text).toContain(`curl -sI ${START_LINK}`);
   });
 
   test('deploy.md keeps the docs preflight mandatory after the production deploy', () => {
