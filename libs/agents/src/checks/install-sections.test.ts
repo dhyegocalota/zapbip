@@ -177,11 +177,14 @@ describe('installSectionViolationsOf', () => {
     );
   });
 
-  test.each(['fixture agent', 'Fixture  Agent', 'Fixture\u200B Agent', '\uFF26ixture Agent'])('refuses the lookalike product name %j', (productName) => {
-    const first = fixtureEntryEditing({ edit: (text) => text });
-    const second = { ...first, id: 'other-agent', install: { ...first.install, productName } };
-    expect(installSectionViolationsOf({ entries: [first, second] })).toContain(
-      `other-agent: the product name ${productName} is also used by ${FIXTURE_ID}`,
-    );
-  });
+  test.each(['fixture agent', 'Fixture  Agent', 'Fixture\u200B Agent', '\uFF26ixture Agent'])(
+    'refuses the lookalike product name %j',
+    (productName) => {
+      const first = fixtureEntryEditing({ edit: (text) => text });
+      const second = { ...first, id: 'other-agent', install: { ...first.install, productName } };
+      expect(installSectionViolationsOf({ entries: [first, second] })).toContain(
+        `other-agent: the product name ${productName} is also used by ${FIXTURE_ID}`,
+      );
+    },
+  );
 });

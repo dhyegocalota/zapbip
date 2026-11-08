@@ -50,7 +50,12 @@ function holdsOneHeadingOnly(input: { text: string }): boolean {
 }
 
 function comparableNameOf(input: { name: string }): string {
-  return input.name.normalize('NFKC').replace(FORMAT_CHARACTER_GLOBAL_PATTERN, '').toLowerCase().replace(WHITESPACE_RUN_PATTERN, ' ').trim();
+  return input.name
+    .normalize('NFKC')
+    .replace(FORMAT_CHARACTER_GLOBAL_PATTERN, '')
+    .toLowerCase()
+    .replace(WHITESPACE_RUN_PATTERN, ' ')
+    .trim();
 }
 
 function duplicateNameViolationsOf(input: { entry: InstallSectionEntry; entries: InstallSectionEntry[] }): string[] {
