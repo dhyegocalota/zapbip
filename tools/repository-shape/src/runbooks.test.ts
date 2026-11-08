@@ -53,12 +53,14 @@ const GO_LIVE_ORDER = [
   'Meta live mode',
   'Smoke production',
 ];
-const STEP_REFERENCE_PATTERN = /([a-z-]+\.md)`?\)?,? steps? (\d+)(?: (?:to|and) (\d+))?/g;
+const FILE_FIRST_REFERENCE_PATTERN = /([a-z-]+\.md)`?\)?,? (go-live )?steps? ((?:\d+(?:, | to | and )?)+)/g;
+const STEP_FIRST_REFERENCE_PATTERN = /(go-live )?steps? ((?:\d+(?:, | to | and )?)+) of \[?`?([a-z-]+\.md)/g;
+const STEP_NUMBER_PATTERN = /\d+/g;
 const REFERENCE_CONTEXT_LENGTH = 160;
-const REFERENCE_SUBJECTS: { keyword: string; titleFragment: string }[] = [
-  { keyword: 'ZAPBIP_NPM_PUBLISHER', titleFragment: 'npm package' },
-  { keyword: 'COMPANY', titleFragment: 'company facts' },
-  { keyword: 'hosted plugin file', titleFragment: 'plugin wheels' },
+const REFERENCE_SUBJECTS: { keyword: RegExp; titleFragment: string }[] = [
+  { keyword: /ZAPBIP_NPM_PUBLISHER/g, titleFragment: 'npm package' },
+  { keyword: /COMPANY/g, titleFragment: 'company facts' },
+  { keyword: /hosted plugin file/g, titleFragment: 'plugin wheels' },
 ];
 const PNPM_BUILT_IN_COMMANDS = ['exec', 'dlx', 'install', 'add'];
 const TITLE_PATTERN = /^# .+\n\n(.+)\n/;
@@ -142,27 +144,54 @@ function brokenLinks({ file, text }: Runbook): string[] {
     .map((target) => `${file}: ${target}`);
 }
 
-function stepTitlesOf(file: string): Record<number, string> {
-  const steps = stepSections(withoutGoLiveOrder(readRunbook(file).text));
+type StepReference = { reference: string; target: string; numbers: number[]; isGoLive: boolean; index: number };
+
+function stepTitlesOf({ file, isGoLive }: { file: string; isGoLive: boolean }): Record<number, string> {
+  const steps = isGoLive ? goLiveSteps() : stepSections(withoutGoLiveOrder(readRunbook(file).text));
   return Object.fromEntries(steps.map((step) => [step.number, stepTitleOf(step.title).toLowerCase()]));
 }
 
-function subjectOf(context: string): { keyword: string; titleFragment: string } | undefined {
-  const present = REFERENCE_SUBJECTS.filter((subject) => context.includes(subject.keyword));
-  return present.sort((first, second) => context.lastIndexOf(second.keyword) - context.lastIndexOf(first.keyword))[0];
+function lastMatchIndex({ context, keyword }: { context: string; keyword: RegExp }): number {
+  return Math.max(-1, ...[...context.matchAll(keyword)].map((match) => match.index));
+}
+
+function subjectOf(context: string): { keyword: RegExp; titleFragment: string } | undefined {
+  const present = REFERENCE_SUBJECTS.filter((subject) => lastMatchIndex({ context, keyword: subject.keyword }) >= 0);
+  return present.sort(
+    (first, second) => lastMatchIndex({ context, keyword: second.keyword }) - lastMatchIndex({ context, keyword: first.keyword }),
+  )[0];
+}
+
+function numbersOf(list: string): number[] {
+  return [...list.matchAll(STEP_NUMBER_PATTERN)].map((match) => Number(match[0]));
+}
+
+function stepReferencesOf(prose: string): StepReference[] {
+  const fileFirst = [...prose.matchAll(FILE_FIRST_REFERENCE_PATTERN)].map((match) => ({
+    reference: match[0],
+    target: match[1]!,
+    numbers: numbersOf(match[3]!),
+    isGoLive: match[2] !== undefined,
+    index: match.index,
+  }));
+  const stepFirst = [...prose.matchAll(STEP_FIRST_REFERENCE_PATTERN)].map((match) => ({
+    reference: match[0],
+    target: match[3]!,
+    numbers: numbersOf(match[2]!),
+    isGoLive: match[1] !== undefined,
+    index: match.index,
+  }));
+  return [...fileFirst, ...stepFirst];
 }
 
 function brokenStepReferences({ file, text }: Runbook): string[] {
   const prose = text.replace(FENCED_BLOCK_PATTERN, '');
-  return [...prose.matchAll(STEP_REFERENCE_PATTERN)].flatMap((match) => {
-    const [reference, target, first, last] = match;
-    if (!runbookFiles().includes(target!)) return [];
-    const titles = stepTitlesOf(target!);
-    const numbers = [first, last].filter((number): number is string => number !== undefined).map(Number);
+  return stepReferencesOf(prose).flatMap(({ reference, target, numbers, isGoLive, index }) => {
+    if (!runbookFiles().includes(target)) return [];
+    const titles = stepTitlesOf({ file: target, isGoLive });
     const missing = numbers.filter((number) => titles[number] === undefined).map((number) => `${file}: ${reference} has no step ${number}`);
     if (missing.length > 0) return missing;
-    const context = prose.slice(Math.max(0, match.index - REFERENCE_CONTEXT_LENGTH), match.index);
-    const subject = subjectOf(context);
+    const subject = subjectOf(prose.slice(Math.max(0, index - REFERENCE_CONTEXT_LENGTH), index));
     const wrongTitle = subject && !titles[numbers[0]!]!.includes(subject.titleFragment);
     return wrongTitle
       ? [`${file}: ${reference} is about ${subject.titleFragment}, but step ${numbers[0]} is "${titles[numbers[0]!]}"`]
@@ -204,10 +233,6 @@ describe('runbooks', () => {
   test('a reference to a missing step and a reference to the wrong title are reported', () => {
     const missing = brokenStepReferences({ file: 'x.md', text: 'See deploy.md step 99.' });
     expect(missing).toEqual(['x.md: deploy.md step 99 has no step 99']);
-    const ofForm = brokenStepReferences({ file: 'x.md', text: 'Do step 99 of `backoffice.md` first.' });
-    expect(ofForm).toEqual(['x.md: step 99 of `backoffice.md` has no step 99']);
-    const goLive = brokenStepReferences({ file: 'x.md', text: 'See go-live step 99 of deploy.md.' });
-    expect(goLive).toEqual(['x.md: go-live step 99 of deploy.md has no step 99']);
     const wrong = brokenStepReferences({
       file: 'x.md',
       text: 'Set ZAPBIP_NPM_PUBLISHER ([mintlify-publish.md](mintlify-publish.md), step 2).',

@@ -51,7 +51,7 @@ Migration rule: a migration that has reached a deployed environment is never edi
 
 5. **Deploy.** Run `pnpm deploy:staging --first-deploy` for the first deploy of an environment, and `pnpm deploy:staging` afterwards (`pnpm deploy:production --first-deploy`, then `pnpm deploy:production`), in an interactive terminal. The command refuses, in order, the cheap things first: a wrong environment or a non-interactive terminal; production only: a `COMPANY` fact still `COMPANY_FACT_UNSET` ([mintlify-publish.md](mintlify-publish.md), step 2), a package on npm that your npm user (`ZAPBIP_NPM_PUBLISHER`) does not alone maintain and publish, or an npm answer that is not a clear yes or no (step 1), a hosted plugin file missing from the `zapbip-packages` bucket or hashing to something other than the hash its plugin pins (`hostedArtifacts` in `libs/agents/src/generated/plugins.ts`) ([mintlify-publish.md](mintlify-publish.md), step 4), and a Worker that does not export `scheduled`, a wrangler block without a cron trigger or a `/i/:installCode` route that is not mounted; then, for every environment: a `REPLACE_WITH_` placeholder in any letter case, a missing smoke input, a dirty tree (production also needs branch `main` equal to `origin/main`), a missing secret, a pending migration, a failing `pnpm verify` (`pnpm verify all` for production, and last because it takes minutes) and a failing dry run. Staging needs only placeholders and secrets in place: the company facts and the npm check are production gates. A package whose version is absent from npm, while its name is absent or yours alone, only prints `<package>@<version> is not on npm yet; publish it before launch` and the deploy goes on; `pnpm docs:preflight` refuses it, never the deploy. It prints the current Worker version and the D1 bookmark (or says there is no previous version, then a rollback means redeploying the prior commit): write both in the go-live record. For production it then asks you to type `production`.
 
-   Expect: `wrangler deploy` succeeds and the smoke test runs. With `--first-deploy` the smoke test skips checks 2 and 5 (they need the smoke connection) and prints how to create it. After the first staging deploy, register the staging number ([backoffice.md](backoffice.md), steps 2 to 4), then finish [meta-setup.md](meta-setup.md) step 9.
+   Expect: `wrangler deploy` succeeds and the smoke test runs. With `--first-deploy` the smoke test skips checks 2 and 5 (they need the smoke connection) and prints how to create it. After the first staging deploy, register the staging number ([backoffice.md](backoffice.md), steps 2 and 3), point the webhook ([meta-setup.md](meta-setup.md), step 9), then activate the number ([backoffice.md](backoffice.md), step 4).
 
    If it fails: each refusal prints what to do next, and nothing is deployed before the dry run passes. A production-only domain refusal (after the placeholder check) means `PUBLIC_ORIGIN` is not `https://mcp.zapbip.com` or the `zapbip.com` nameservers are not Cloudflare's; fix it with [dns.md](dns.md), step 1. A smoke failure prints the rollback commands and runs none of them; you decide.
 
@@ -128,14 +128,14 @@ Follow the steps in order. Each step names the runbook that holds its detail, an
    Expect: the deploy ends with the smoke test (checks 1, 3 and 4 pass; checks 2 and 5 are skipped on a first deploy).
 
    If it fails: `deploy.md` step 8 rolls back; the previous Worker keeps serving.
-10. **Register the staging number.** Do steps 2 to 4 of `backoffice.md` for the staging app and its test number.
+10. **Register the staging number.** Do steps 2 and 3 of `backoffice.md` for the staging app and its test number.
 
-   Expect: the number shows `active` in the backoffice.
+   Expect: the number is listed as Pending and the verification shows "Number verified.".
 
    If it fails: the failing step of `backoffice.md` says what to check.
-11. **Point the staging Meta webhook.** Do step 9 of `meta-setup.md` for the staging app.
+11. **Point the staging Meta webhook.** Do step 9 of `meta-setup.md` for the staging app, then step 4 of `backoffice.md` to activate the number.
 
-   Expect: Meta verifies the staging webhook and shows both fields subscribed.
+   Expect: Meta verifies the staging webhook and shows both fields subscribed, and the number shows `active` in the backoffice.
 
    If it fails: step 9 of `meta-setup.md` says what to check.
 12. **Smoke staging.** Do step 6 of `deploy.md`, then send `novo agente smoke` to the staging test number from your phone.
@@ -185,17 +185,17 @@ Follow the steps in order. Each step names the runbook that holds its detail, an
     Expect: the deploy ends with the smoke test (checks 1, 3 and 4 pass) and the health route answers on `mcp.zapbip.com` and on `backoffice.zapbip.com` (the sign-in page).
 
     If it fails: `deploy.md` step 8 rolls back the Worker.
-21. **Register the production number.** Do steps 2 to 4 of `backoffice.md` on `https://backoffice.zapbip.com` for the production app and the production number from step 3 of `meta-setup.md`.
+21. **Register the production number.** Do steps 2 and 3 of `backoffice.md` on `https://backoffice.zapbip.com` for the production app and the production number from step 3 of `meta-setup.md`.
 
-    Expect: the number shows `active` in the backoffice, and `curl -sI https://mcp.zapbip.com/start` prints `302` and a `location:` header that starts with `https://wa.me/`. The docs link that address. `pnpm docs:preflight` refuses until it does, but run this check by hand first, before step 23.
+    Expect: the number is listed as Pending and the verification shows "Number verified.".
 
     If it fails: the failing step of `backoffice.md` says what to check.
-22. **Point the production Meta webhook.** Do step 9 of `meta-setup.md` for the production app.
+22. **Point the production Meta webhook.** Do step 9 of `meta-setup.md` for the production app, then step 4 of `backoffice.md` to activate the number.
 
-    Expect: Meta verifies the production webhook and shows both fields subscribed.
+    Expect: Meta verifies the production webhook and shows both fields subscribed, the number shows `active` in the backoffice, and `curl -sI https://mcp.zapbip.com/start` prints `302` and a `location:` header that starts with `https://wa.me/`. The docs link that address. `pnpm docs:preflight` refuses until it does, but run this check by hand first, before step 23.
 
     If it fails: step 9 of `meta-setup.md` says what to check.
-23. **Publish the docs.** Check the start link first (`curl -sI https://mcp.zapbip.com/start`, step 21), then do steps 5 to 10 of `mintlify-publish.md`, starting with `pnpm docs:preflight`, which needs no DNS but reads the production Worker: it checks the constants, npm and the plugin files served at `https://mcp.zapbip.com/pkg/`. The custom domain of step 9 uses steps 4 and 5 of `dns.md`. The privacy page is part of the site. The docs preflight after the production deploy is mandatory: it is the only check that the live Worker serves every plugin file with the hashes the docs print, so never connect Mintlify without a passing run.
+23. **Publish the docs.** Check the start link first (`curl -sI https://mcp.zapbip.com/start`, step 22), then do steps 5 to 10 of `mintlify-publish.md`, starting with `pnpm docs:preflight`, which needs no DNS but reads the production Worker: it checks the constants, npm and the plugin files served at `https://mcp.zapbip.com/pkg/`. The custom domain of step 9 uses steps 4 and 5 of `dns.md`. The privacy page is part of the site. The docs preflight after the production deploy is mandatory: it is the only check that the live Worker serves every plugin file with the hashes the docs print, so never connect Mintlify without a passing run.
 
     Expect: `docs.zapbip.com` serves the site in English and in Portuguese, and `https://docs.zapbip.com/help/privacy` loads.
 
