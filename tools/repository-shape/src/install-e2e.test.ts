@@ -2,10 +2,13 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { accessSync, constants } from 'node:fs';
+import { AgentFacet } from '@zapbip/agents';
+import { discoverAgents } from '@zapbip/agents/generate';
 import { describe, expect, test } from 'vitest';
 import { readRepositoryFile, repositoryPath } from './repository-files';
 
-const SCRIPT = 'tools/install-e2e/claude-code.sh';
+const SUPPORTED_ROOT = 'libs/agents/supported';
+const OWNER_RUN_AGENT_IDS = ['claude-code'];
 const FIXTURE_LINK = 'https://mcp.zapbip.com/c/zb_conn_fixturesecret0123456789/mcp';
 const LINK_ENVIRONMENT_VARIABLE = 'ZAPBIP_E2E_FIXTURE_LINK';
 const REDACTION_CHECK_FLAG = '--check-redaction';
@@ -14,7 +17,17 @@ const SCRIPT_TIMEOUT_MS = 30_000;
 const CONFIG_DIRECTORY_VARIABLE = 'ZAPBIP_E2E_CLAUDE_CONFIG_DIR';
 const BARE_CLAUDE_CALL = /^\s*(run_logged\s+)?claude\b/m;
 
-describe('owner-run Claude Code install script', () => {
+const ownerRunAgents = discoverAgents({ roots: [SUPPORTED_ROOT] }).filter((agent) => agent.facets.includes(AgentFacet.OwnerRunInstall));
+
+describe('the agents with an owner-run install script', () => {
+  test('are the ones that bring one', () => {
+    expect(ownerRunAgents.map((agent) => agent.id)).toEqual(OWNER_RUN_AGENT_IDS);
+  });
+});
+
+describe.each(ownerRunAgents)('owner-run install script of $id', ({ folder }) => {
+  const SCRIPT = `${folder}/${AgentFacet.OwnerRunInstall}`;
+
   test('is executable and parses', () => {
     accessSync(repositoryPath(SCRIPT), constants.X_OK);
     const syntaxCheck = spawnSync('bash', ['-n', repositoryPath(SCRIPT)], { encoding: 'utf8' });
