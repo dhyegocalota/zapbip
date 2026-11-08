@@ -13,8 +13,6 @@ import { boundaryViolationsOf } from '@zapbip/agents/checks/boundaries';
 import { leakViolationsOf } from '@zapbip/agents/checks/leaks';
 import { CONNECTOR_RUNTIMES } from '@zapbip/agents/connector';
 import { AGENT_DEFINITIONS } from '@zapbip/agents/definitions';
-import { AGENT_INSTALLS } from '@zapbip/agents/install';
-import { AGENT_PLUGINS } from '@zapbip/agents/plugins';
 import { trackedFiles, readRepositoryFile } from './repository-files';
 
 const SUPPORTED_ROOT = 'libs/agents/supported';
@@ -227,41 +225,28 @@ describe('removing an agent folder', () => {
 });
 
 describe('page rules', () => {
-  const [pluginId] = Object.keys(AGENT_PLUGINS) as [string];
-  const [stepGuideId] = Object.keys(AGENT_INSTALLS).filter((id) => !(id in AGENT_PLUGINS)) as [string];
-  const pluginDefinition = AGENT_DEFINITIONS[pluginId as keyof typeof AGENT_DEFINITIONS];
-  const pageOf = (input: { id: string; file: string }): string => `${SUPPORTED_ROOT}/${input.id}/${input.file}`;
+  const pageOf = (input: { fixture: Fixture; file: string }): string => `${TESTING_ROOT}/${input.fixture.id}/${input.file}`;
   const PAGE_RULE_MUTATIONS = [
-    { name: 'the front matter of a plugin page', id: pluginId, file: 'page.en.mdx', remove: /^---[\s\S]*?---\n/ },
-    {
-      name: 'the install command of a plugin page',
-      id: pluginId,
-      file: 'page.en.mdx',
-      remove: AGENT_PLUGINS[pluginId as keyof typeof AGENT_PLUGINS].installCommand,
-    },
+    { name: 'the front matter of a plugin page', fixture: PLUGIN_FIXTURE, file: 'page.en.mdx', remove: /^---[\s\S]*?---\n/ },
+    { name: 'the install command of a plugin page', fixture: PLUGIN_FIXTURE, file: 'page.en.mdx', remove: /```bash[\s\S]*?```/ },
     {
       name: 'the one-listener sentence of a plugin page',
-      id: pluginId,
+      fixture: PLUGIN_FIXTURE,
       file: 'page.pt-br.mdx',
       remove: 'Rode apenas um listener por agente',
     },
-    {
-      name: 'a page fact of a plugin page',
-      id: pluginId,
-      file: 'page.pt-br.mdx',
-      remove: new RegExp(pluginDefinition.docs.pageFacts[DocsLanguage.PortugueseBrazil][0] as string, 'g'),
-    },
-    { name: 'the placeholder of a step guide', id: stepGuideId, file: 'page.en.mdx', remove: /<connectionLink>/g },
+    { name: 'the self-test text of a plugin page', fixture: PLUGIN_FIXTURE, file: 'page.pt-br.mdx', remove: /✅ instalado/g },
+    { name: 'the placeholder of a step guide', fixture: INSTALL_FIXTURE, file: 'page.en.mdx', remove: /<connectionLink>/g },
   ];
 
-  test.each(PAGE_RULE_MUTATIONS)('removing $name fails the plan naming the page', async ({ id, file, remove }) => {
-    const path = pageOf({ id, file });
+  test.each(PAGE_RULE_MUTATIONS)('removing $name fails the plan naming the page', async ({ fixture, file, remove }) => {
+    const path = pageOf({ fixture, file });
     const mutated = (source: string): string => source.replace(remove, 'removed');
     const plan = await planWith({
-      extraRoots: [],
+      extraRoots: [`${TESTING_ROOT}/${fixture.id}`],
       readFile: (candidate) => (candidate === path ? mutated(readSource(candidate)) : readSource(candidate)),
     });
-    expect(plan.violations.some((entry) => entry.startsWith(`${id} ${file}`))).toBe(true);
+    expect(plan.violations.some((entry) => entry.startsWith(`${fixture.id} ${file}`))).toBe(true);
   });
 });
 
