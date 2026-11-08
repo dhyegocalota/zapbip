@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { AGENT_DEFINITIONS, AgentId } from '@zapbip/agents/definitions';
 import { AGENT_INSTALLS } from '@zapbip/agents/install';
@@ -67,6 +67,13 @@ const PLANTS = [
   },
 ];
 
+const EXTRA_HEADING_AGENT_ID = 'claude-ai';
+const UNREADABLE_FILE = 'README.md';
+
+function extraHeadingEdit(text: string): string {
+  return text.replace(/return (\w+)\[input\.locale\]\(input\);/, 'return `${$1[input.locale](input)}\\n\\n## Extra`;');
+}
+
 const worktrees: { remove: () => void }[] = [];
 
 function newWorktree() {
@@ -122,6 +129,39 @@ describe.skipIf(IS_INSIDE_PROOF)('the agent lifecycle in a throwaway worktree', 
         };
       });
       expect(outcomes.filter((outcome) => outcome.status === 0 || !outcome.namesAgent || !outcome.namesFile)).toEqual([]);
+    },
+    WORKTREE_PROOF_TIMEOUT_MS,
+  );
+
+  test(
+    'agents:generate writes nothing and exits non-zero while a registry check fails',
+    () => {
+      const worktree = newWorktree();
+      expect(checkOutHead({ directory: worktree.directory }).status).toBe(0);
+      expect(run({ command: ['pnpm', 'install', '--frozen-lockfile', '--offline'], directory: worktree.directory }).status).toBe(0);
+      const plantedFile = `${SUPPORTED_ROOT}/${EXTRA_HEADING_AGENT_ID}/install.ts`;
+      const path = join(worktree.directory, plantedFile);
+      writeFileSync(path, extraHeadingEdit(readFileSync(path, 'utf8')));
+      const generation = run({ command: ['pnpm', 'agents:generate'], directory: worktree.directory });
+      expect(generation.status).not.toBe(0);
+      expect(generation.output).toContain(`${EXTRA_HEADING_AGENT_ID} in en_US: the section must hold exactly one heading`);
+      expect(changedPathsOf({ directory: worktree.directory })).toEqual([plantedFile]);
+    },
+    WORKTREE_PROOF_TIMEOUT_MS,
+  );
+
+  test(
+    'agents:check reports an unreadable tracked file as a line and exits 1',
+    () => {
+      const worktree = newWorktree();
+      expect(checkOutHead({ directory: worktree.directory }).status).toBe(0);
+      expect(run({ command: ['pnpm', 'install', '--frozen-lockfile', '--offline'], directory: worktree.directory }).status).toBe(0);
+      chmodSync(join(worktree.directory, UNREADABLE_FILE), 0);
+      const outcome = run({ command: ['pnpm', 'agents:check'], directory: worktree.directory });
+      chmodSync(join(worktree.directory, UNREADABLE_FILE), 0o644);
+      expect(outcome.status).toBe(1);
+      expect(outcome.output).toContain(`${UNREADABLE_FILE}: cannot be read (EACCES)`);
+      expect(outcome.output).not.toContain('node:fs');
     },
     WORKTREE_PROOF_TIMEOUT_MS,
   );

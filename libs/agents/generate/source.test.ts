@@ -51,6 +51,6 @@ describe('trackedTextFiles', () => {
   test('fails on a listed path that cannot be read', () => {
     track({ path: 'locked.ts', text: 'x' });
     chmodSync(join(root, 'locked.ts'), 0);
-    expect(() => trackedTextFiles({ root })).toThrow('locked.ts');
+    expect(() => trackedTextFiles({ root })).toThrow('locked.ts: cannot be read (EACCES)');
   });
 });
