@@ -17,6 +17,8 @@ On 2026-11-08 the owner said: "nao teremos 1 unico numero oficial eu acredito". 
 
 A new owner starts by writing to a zapbip number, so the docs need one stable link that always lands on a number that accepts new owners.
 
+**Supersedes:** [`preflight-pre-launch`](../preflight-pre-launch/) in one part. That feature kept the docs preflight's refusal of an unset official number. The number no longer exists, so the docs preflight has no number refusal and neither input type carries the field. The npm warning, `PreflightWarning` and the warning reprint of that feature stay.
+
 ## Goals
 
 - `GET https://mcp.zapbip.com/start` answers `302` to `https://wa.me/<digits>?text=<prefilled>`, the number being the oldest `active` number of the registry (ADR 0035).
