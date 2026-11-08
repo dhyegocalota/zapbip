@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'vitest';
-import { isOutside } from './throwaway-worktree';
+import { existsSync, rmSync } from 'node:fs';
+import { dirname } from 'node:path';
+import { IS_INSIDE_PROOF, REPOSITORY_ROOT_FOR_PROOFS, checkOutHead, createThrowawayWorktree, isOutside, run } from './throwaway-worktree';
 
 const PLUGIN_PREFIX = 'apps/example-plugin/';
 const AGENT_PREFIX = 'libs/agents/supported/example/';
@@ -20,5 +22,27 @@ describe('isOutside', () => {
 
   test('refuses any other path', () => {
     expect(isOutside({ path: 'libs/core/src/index.ts', prefixes: [AGENT_PREFIX, PLUGIN_PREFIX] })).toBe(true);
+  });
+});
+
+describe.skipIf(IS_INSIDE_PROOF)('the throwaway worktree', () => {
+  test('removing it also deletes the temporary parent folder', () => {
+    const worktree = createThrowawayWorktree();
+    const parent = dirname(worktree.directory);
+    expect(existsSync(parent)).toBe(true);
+    worktree.remove();
+    expect(existsSync(parent)).toBe(false);
+  });
+
+  test('a checkout first prunes the worktrees whose folder is gone', () => {
+    const stale = createThrowawayWorktree();
+    const fresh = createThrowawayWorktree();
+    expect(checkOutHead({ directory: stale.directory }).status).toBe(0);
+    rmSync(stale.directory, { recursive: true, force: true });
+    expect(checkOutHead({ directory: fresh.directory }).status).toBe(0);
+    const listing = run({ command: ['git', 'worktree', 'list', '--porcelain'], directory: REPOSITORY_ROOT_FOR_PROOFS }).output;
+    expect(listing).not.toContain(stale.directory);
+    fresh.remove();
+    stale.remove();
   });
 });

@@ -204,6 +204,21 @@ describe('pluginViolationsOf', () => {
   });
 });
 
+describe('pluginFolderViolationsOf', () => {
+  test.each(['apps/x$(touch PWNED)-plugin', 'apps/a b-plugin', 'apps/a;b-plugin', 'apps/a`b`-plugin', ''])(
+    'refuses the package folder %j',
+    (packageFolder) => {
+      const entry: PluginCheckEntry = { id: FIXTURE_ID, plugin: { ...fixturePlugin, packageFolder } };
+      expect(pluginWorkflowViolationsOf({ entries: [entry] })).toContain(`${FIXTURE_ID}: the package folder must match ^[A-Za-z0-9._/-]+$`);
+    },
+  );
+
+  test('accepts the package folder of the real registry', () => {
+    const entries = Object.entries(AGENT_PLUGINS).map(([id, plugin]) => ({ id, plugin }));
+    expect(pluginWorkflowViolationsOf({ entries }).filter((message) => message.includes('package folder'))).toEqual([]);
+  });
+});
+
 describe('pluginWorkflowViolationsOf', () => {
   function entryWith(workflow: Partial<AgentPlugin['workflow']>): PluginCheckEntry {
     return { id: FIXTURE_ID, plugin: { ...fixturePlugin, workflow: { ...fixturePlugin.workflow, ...workflow } } };

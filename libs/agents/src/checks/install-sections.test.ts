@@ -117,4 +117,32 @@ describe('installSectionViolationsOf', () => {
       `${FIXTURE_ID}: the product name must be one line of at most ${INSTALL_PRODUCT_TEXT_MAX_LENGTH} characters`,
     );
   });
+
+  test.each([
+    ['a tab after the marker', '\n\n##\tOther'],
+    ['an indented marker', '\n\n   ## Other'],
+    ['a bare marker', '\n\n##'],
+    ['an indented underline', '\n\nOther\n   ==='],
+    ['carriage-return line ends', '\r\rOther\r===\r'],
+    ['an inline fence that is no fence', '\n\n```a```\n## Other'],
+    ['a heading inside a list item', '\n\n1. step\n   ## Other'],
+  ])('refuses a second heading hidden behind %s', (_name, tail) => {
+    const entry = fixtureEntryEditing({ edit: (text) => `${text}${tail}` });
+    expect(installSectionViolationsOf({ entries: [entry] })).toContain(`${LABEL}: the section must hold exactly one heading`);
+  });
+
+  test.each(['one\vtwo', 'one\ftwo', 'one\u0085two'])('refuses a product name with the separator %j', (productName) => {
+    const entry = { ...fixtureEntryRendering({ render: fixtureInstall.render }), install: { ...fixtureInstall, productName } };
+    expect(installSectionViolationsOf({ entries: [entry] })).toContain(
+      `${FIXTURE_ID}: the product name must be one line of at most ${INSTALL_PRODUCT_TEXT_MAX_LENGTH} characters`,
+    );
+  });
+
+  test('refuses two entries that share a product name', () => {
+    const first = fixtureEntryEditing({ edit: (text) => text });
+    const second = { ...first, id: 'other-agent' };
+    expect(installSectionViolationsOf({ entries: [first, second] })).toContain(
+      `other-agent: the product name ${fixtureInstall.productName} is also used by ${FIXTURE_ID}`,
+    );
+  });
 });

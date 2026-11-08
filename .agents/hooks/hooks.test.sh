@@ -432,6 +432,18 @@ stub_all; rm "$doctor_bin/jq"
 fix_line=$(DOCTOR_PATH="$doctor_bin" "$here/doctor.sh" --fix jq)
 [[ "$fix_line" == "brew install jq" ]] || { echo "FAIL doctor --fix prints the fix alone: $fix_line"; failures=$((failures + 1)); }
 
+injected_root=$(mktemp -d)
+mkdir -p "$injected_root/.agents/hooks" "$injected_root/apps/x\$(touch PWNED)-plugin" "$injected_root/apps/safe-plugin"
+cp "$here/doctor.sh" "$injected_root/.agents/hooks/doctor.sh"
+touch "$injected_root/apps/x\$(touch PWNED)-plugin/requirements-dev.txt" "$injected_root/apps/safe-plugin/requirements-dev.txt"
+stub_all
+injected_fix=$(cd "$injected_root" && DOCTOR_UNAME=Darwin DOCTOR_PATH="$doctor_bin" DOCTOR_HOME="$doctor_home" "$injected_root/.agents/hooks/doctor.sh" --fix python 2>"$injected_root/stderr")
+expect_no_match "doctor: a plugin folder with a command in its name is not printed in the fix" "$injected_fix" 'touch'
+expect_match "doctor: a safe plugin folder is still printed in the fix" "$injected_fix" 'pip install --require-hashes -r apps/safe-plugin/requirements-dev\.txt'
+expect_match "doctor: the skipped folder is named on stderr" "$(cat "$injected_root/stderr")" 'skipped'
+[[ -e "$injected_root/PWNED" ]] && { echo "FAIL doctor: a plugin folder name was executed"; failures=$((failures + 1)); }
+rm -rf "$injected_root"
+
 wrangler_fix='wrangler is logged in for this OS user; run `wrangler logout` and deploy with a scoped CLOUDFLARE_API_TOKEN exported only in your own shell'
 wrangler_warning_line='^wrangler \| warning \| warning \| lost: [^|]+ \| fix: wrangler is logged in for this OS user; run `wrangler logout` and deploy with a scoped CLOUDFLARE_API_TOKEN exported only in your own shell$'
 

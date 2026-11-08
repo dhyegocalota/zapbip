@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { REPOSITORY_ROOT } from './repository-files';
 
+export const REPOSITORY_ROOT_FOR_PROOFS = REPOSITORY_ROOT;
 export const PROOF_ENVIRONMENT_VARIABLE = 'ZAPBIP_WORKTREE_PROOF';
 export const IS_INSIDE_PROOF = process.env[PROOF_ENVIRONMENT_VARIABLE] !== undefined;
 export const WORKTREE_PROOF_TIMEOUT_MS = 1_200_000;
