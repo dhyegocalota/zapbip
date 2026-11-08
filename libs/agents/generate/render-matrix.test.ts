@@ -16,13 +16,13 @@ const HEADER: Record<DocsLanguage, string[]> = {
 const ROW_FOR_ONE_AGENT: Record<DocsLanguage, string[][]> = {
   [DocsLanguage.English]: [
     ['Claude Code', 'Local', '7 seconds', '[Claude Code](/agents/claude-code)'],
-    ['ChatGPT', 'Scheduled', '1 hour', '[ChatGPT](/agents/chatgpt)'],
     ['Cursor', 'Local', 'Not measured', '[Cursor](/agents/cursor)'],
+    ['ChatGPT', 'Scheduled', '1 hour', '[ChatGPT](/agents/chatgpt)'],
   ],
   [DocsLanguage.PortugueseBrazil]: [
     ['Claude Code', 'Local', '7 segundos', '[Claude Code](/pt-br/agents/claude-code)'],
-    ['ChatGPT', 'Agendada', '1 hora', '[ChatGPT](/pt-br/agents/chatgpt)'],
     ['Cursor', 'Local', 'Não medido', '[Cursor](/pt-br/agents/cursor)'],
+    ['ChatGPT', 'Agendada', '1 hora', '[ChatGPT](/pt-br/agents/chatgpt)'],
   ],
 };
 

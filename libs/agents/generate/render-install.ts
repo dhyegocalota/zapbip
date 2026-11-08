@@ -1,0 +1,39 @@
+import { OwnerLocale } from '@zapbip/types';
+import { installAgentsOf, type ResolvedAgent } from './agent';
+import { renderRegistry } from './render-registry';
+import type { GeneratedFile } from './plan';
+
+const SAMPLE_CONNECTION_LINK = 'https://x.example/c/zb_conn_FAKE/mcp';
+const SAMPLE_STANDBY_AGENT = 'Ana Bot';
+
+export function renderInstallRegistry(input: { agents: ResolvedAgent[] }): string {
+  return renderRegistry({
+    spec: {
+      agents: installAgentsOf({ agents: input.agents }),
+      exportedName: 'AGENT_INSTALLS',
+      moduleFile: 'install',
+      moduleExport: 'install',
+      enumName: 'InstallClient',
+      valueType: 'AgentInstall',
+      contractType: 'AgentInstall',
+      extraImports: ["import type { InstallSection } from '@zapbip/core';"],
+      extraSource: [
+        'export const INSTALL_PAGE_SECTIONS: { productName: string; render: InstallSection }[] = Object.values(InstallClient).map((client) => ({',
+        '  productName: AGENT_INSTALLS[client].productName,',
+        '  render: AGENT_INSTALLS[client].render,',
+        '}));',
+      ],
+    },
+  });
+}
+
+export function planInstallSections(input: { agents: ResolvedAgent[] }): GeneratedFile[] {
+  return installAgentsOf({ agents: input.agents }).flatMap((agent) =>
+    Object.values(OwnerLocale).flatMap((locale) => {
+      const plain = agent.install.render({ connectionLink: SAMPLE_CONNECTION_LINK, locale, standbyAgent: null });
+      const withStandby = agent.install.render({ connectionLink: SAMPLE_CONNECTION_LINK, locale, standbyAgent: SAMPLE_STANDBY_AGENT });
+      const standbyFiles = withStandby === plain ? [] : [{ path: `${agent.folder}/install.standby.${locale}.md`, content: withStandby }];
+      return [{ path: `${agent.folder}/install.${locale}.md`, content: plain }, ...standbyFiles];
+    }),
+  );
+}
