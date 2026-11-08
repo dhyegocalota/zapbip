@@ -5,7 +5,7 @@ import { BackofficePath } from '../backoffice-paths';
 import { formatPercent } from '../format-percent';
 import { isBudgetWarning } from '../../account-inbox/usage-meter';
 import { DAILY_BUDGET_WARNING_RATIO, DURABLE_OBJECT_DAILY_GIGABYTE_SECONDS } from '../../operations/constants';
-import { BarChart, BarPattern, type ChartSeries } from './bar-chart';
+import { BarChart, BarPattern, ChartSize, type ChartSeries } from './bar-chart';
 import { FigureNumber } from './figure-number';
 import { KpiTile } from './kpi-tile';
 import { type Freshness, FreshnessKind, FreshnessLine } from './freshness-line';
@@ -87,7 +87,7 @@ export function MetricsPage(props: { page: PageContext; filter: MetricsFilter; r
     pattern: BarPattern.Solid,
   };
   const accountTotal = sumOf({ values: report.accountsByState.map((entry) => entry.total) });
-  const chartProps = { locale, days, today };
+  const chartProps = { locale, days, today, size: ChartSize.Compact };
   return (
     <Layout
       locale={locale}
@@ -113,8 +113,8 @@ export function MetricsPage(props: { page: PageContext; filter: MetricsFilter; r
           currentTotal={sumOf({ values: newAccountValues })}
           previousTotal={sumOf({ values: dailySeries({ days: previousDays, rows: report.newAccounts }) })}
         />
-        {activityTile({ metric: ActivityMetric.MessagesIn, label: BackofficeCopyKey.MetricsMessagesIn, cell: MetricCell.MessagesIn })}
-        {activityTile({ metric: ActivityMetric.MessagesOut, label: BackofficeCopyKey.MetricsMessagesOut, cell: MetricCell.MessagesOut })}
+        {activityTile({ metric: ActivityMetric.MessagesIn, label: BackofficeCopyKey.MetricsKpiMessagesIn, cell: MetricCell.MessagesIn })}
+        {activityTile({ metric: ActivityMetric.MessagesOut, label: BackofficeCopyKey.MetricsKpiMessagesOut, cell: MetricCell.MessagesOut })}
         <KpiTile
           locale={locale}
           label={translate(BackofficeCopyKey.MetricsKpiWakes)}
@@ -364,6 +364,7 @@ export function MetricsPage(props: { page: PageContext; filter: MetricsFilter; r
             </p>
             <BarChart
               {...chartProps}
+              size={ChartSize.Wide}
               id="chart-budget"
               metricLabel={translate(BackofficeCopyKey.MetricsBudgetTitle)}
               series={[budgetSeries]}
