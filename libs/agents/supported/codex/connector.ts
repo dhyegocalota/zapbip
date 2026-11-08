@@ -4,7 +4,13 @@ import { dirname, join, resolve } from 'node:path';
 import { createInterface } from 'node:readline';
 import { parse } from 'smol-toml';
 import { SESSION_LOOKUP_LIMIT, STDIN_PROMPT_ARGUMENT, UUID_PATTERN, WakeRefusalKind, ZAPBIP_SERVER_NAME } from '@zapbip/types';
-import type { AgentConnectorRuntime, SessionLookupInput, WakeIsolation, WakeIsolationInput } from '../../src/contract';
+import {
+  StrictMcpNullReason,
+  type AgentConnectorRuntime,
+  type SessionLookupInput,
+  type WakeIsolation,
+  type WakeIsolationInput,
+} from '../../src/contract';
 import { assertSessionId } from '../../src/connector-support/session-id';
 import { isMissingEntry } from '../../src/connector-support/missing-entry';
 import { listDirectory } from '../../src/connector-support/list-directory';
@@ -265,6 +271,7 @@ export const runtime: AgentConnectorRuntime = {
   homeFolder: HOME_FOLDER,
   homeVariable: HOME_VARIABLE,
   strictMcpArgument: null,
+  strictMcpNullReason: StrictMcpNullReason.DisablesOtherServers,
   findNewestSessionId,
   resumeArguments,
   newSessionArguments,

@@ -47,7 +47,8 @@ A supported agent is described today in four packages. Its enum member is in `li
 ## Evidence
 
 - Inventory and counts in `docs/features/agent-registry/spec.md`, taken from `origin/main` at 6d32299 on 2026-11-07, after install-skills, docs-experience, deploy-readiness and hermes-wheel-hosting merged.
-- Spikes S1 (Mintlify renders an imported snippet table), S2 (Prettier is stable on `docs.json`), S3 (tsx and vitest load the agent modules), S4 (bundle baseline), recorded in the feature's plan before Step 0.
+- What was proved on the branch: the matrix page renders its imported generated table (docs end-to-end: one linked row per agent, both languages); `docs.json` and every generated file are byte-stable under Prettier (`agents:check` reports 0 stale); `tsx` and vitest load the agent modules without a build; the parity measurements (44 install pages and 22 agent pages byte-identical to main, only the order differs); the removal proof (one agent of each kind removed in a throwaway worktree) and the scaffold proof (an install, a connector and a plugin agent created and generated) run the whole gate suites green. The bundle-size baseline was not recorded; the Worker and connector budgets stay rows of the test plan.
+- `pnpm-lock.yaml` is a generated path: it follows a removed or added plugin package, so the proofs accept it alongside the generated set.
 
 ## Revisit when
 

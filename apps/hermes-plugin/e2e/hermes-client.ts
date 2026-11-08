@@ -1,6 +1,6 @@
 import { copyFile, mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { hermesWheelFilename, ZAPBIP_HERMES_PLUGIN_VERSION, ZAPBIP_HERMES_WHEEL_SHA256 } from '../../../libs/agents/supported/hermes/wheel';
+import { hermesWheelFilename, PLUGIN_VERSION, WHEEL_SHA256 } from '../../../libs/agents/supported/hermes/wheel';
 import { CONTAINER_HOST } from '../../../scripts/e2e/clients/constants';
 import { buildImage, type Container, startContainer } from '../../../scripts/e2e/clients/container';
 import type { PluginClientInput } from '../../../scripts/e2e/clients/plugin-client';
@@ -27,7 +27,7 @@ export async function buildPluginImage(input: { directory: string }): Promise<vo
   const contextDirectory = join(input.directory, 'hermes-context');
   const wheelDirectory = join(contextDirectory, 'wheel');
   await mkdir(wheelDirectory, { recursive: true });
-  const wheelFilename = hermesWheelFilename({ version: ZAPBIP_HERMES_PLUGIN_VERSION });
+  const wheelFilename = hermesWheelFilename({ version: PLUGIN_VERSION });
   await copyFile(join(WHEEL_RELEASE_DIRECTORY, wheelFilename), join(wheelDirectory, wheelFilename));
   await buildImage({
     tag: HERMES_IMAGE_TAG,
@@ -37,7 +37,7 @@ export async function buildPluginImage(input: { directory: string }): Promise<vo
     buildArguments: {
       [HERMES_IMAGE_ARGUMENT]: HERMES_IMAGE,
       [WHEEL_FILENAME_ARGUMENT]: wheelFilename,
-      [WHEEL_SHA256_ARGUMENT]: ZAPBIP_HERMES_WHEEL_SHA256,
+      [WHEEL_SHA256_ARGUMENT]: WHEEL_SHA256,
     },
   });
 }

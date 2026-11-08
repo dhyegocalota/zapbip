@@ -1,4 +1,4 @@
-import { INSTALL_SELF_TEST_TEXT, OwnerLocale, ZAPBIP_NPM_VERSION } from '@zapbip/types';
+import { INSTALL_PRODUCT_TEXT_MAX_LENGTH, INSTALL_SELF_TEST_TEXT, OwnerLocale, ZAPBIP_NPM_VERSION } from '@zapbip/types';
 import type { AgentDefinition, AgentInstall } from '../contract';
 import { violationIf } from './registry';
 
@@ -11,6 +11,8 @@ const STANDBY_AGENT_OPTIONS: (string | null)[] = [null, 'Ana Bot'];
 const STOP_CHECK_PATTERN = /^1\. If you are not .+, stop and run no other step of this section\. Success: .+$/m;
 const STEP_NUMBER_PATTERN = /^\d+\. /m;
 const SUCCESS_LINE_PATTERN = /Success: \S/;
+const HEADING_LINE_PATTERN = /^#{1,2} /gm;
+const LINE_BREAK_PATTERN = /[\r\n]/;
 const SET_WAKE_MODE_PATTERN = /set_wake\(\{mode: "(\w+)"/g;
 const PACKAGE_VERSION_PATTERN = /zapbip@(\S+)/g;
 
@@ -23,8 +25,23 @@ function lastNonEmptyLine(text: string): string {
     .at(-1) as string;
 }
 
-function matchesOf(input: { text: string; pattern: RegExp }): string[] {
-  return [...input.text.matchAll(input.pattern)].map((match) => match[1] as string);
+function matchesOf(input: { text: string; pattern: RegExp; group?: number }): string[] {
+  const { group = 1 } = input;
+  return [...input.text.matchAll(input.pattern)].map((match) => match[group] as string);
+}
+
+function productTextViolationsOf(input: { entry: InstallSectionEntry }): string[] {
+  const { id, install } = input.entry;
+  const fields = [
+    { label: 'product name', value: install.productName },
+    { label: 'product description', value: install.productDescription },
+  ];
+  return fields.flatMap((field) =>
+    violationIf({
+      condition: LINE_BREAK_PATTERN.test(field.value) || field.value.length > INSTALL_PRODUCT_TEXT_MAX_LENGTH,
+      message: `${id}: the ${field.label} must be one line of at most ${INSTALL_PRODUCT_TEXT_MAX_LENGTH} characters`,
+    }),
+  );
 }
 
 function caseViolationsOf(input: { sectionCase: SectionCase }): string[] {
@@ -42,6 +59,10 @@ function caseViolationsOf(input: { sectionCase: SectionCase }): string[] {
     ...violationIf({
       condition: !text.startsWith(`## ${install.productName}\n`),
       message: `${label}: the section must open with the heading ## ${install.productName}`,
+    }),
+    ...violationIf({
+      condition: matchesOf({ text, pattern: HEADING_LINE_PATTERN, group: 0 }).length !== 1,
+      message: `${label}: the section must hold exactly one heading`,
     }),
     ...violationIf({ condition: !STOP_CHECK_PATTERN.test(text), message: `${label}: step 1 must be the stop check` }),
     ...violationIf({
@@ -74,5 +95,5 @@ export function installSectionViolationsOf(input: { entries: InstallSectionEntry
       STANDBY_AGENT_OPTIONS.flatMap((standbyAgent) => caseViolationsOf({ sectionCase: { entry, locale, standbyAgent } })),
     ),
   );
-  return [...new Set(violations)];
+  return [...new Set([...input.entries.flatMap((entry) => productTextViolationsOf({ entry })), ...violations])];
 }

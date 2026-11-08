@@ -1,8 +1,9 @@
 import { posix } from 'node:path';
 import { DocsLanguage } from '@zapbip/types';
 import { compareCodePoints } from '../src/code-points';
+import { pluginWorkflowViolationsOf } from '../src/checks/plugins';
 import { hasValidAgentId, registryViolationsOf } from '../src/checks/registry';
-import type { ResolvedAgent } from './agent';
+import { pluginAgentsOf, type ResolvedAgent } from './agent';
 import type { DiscoveredAgent } from './discover';
 import { formatted } from './format';
 import { loadAgent, registryEntriesOf, type LoadedAgent } from './load';
@@ -81,6 +82,7 @@ export async function planGeneratedFiles(input: PlanInput): Promise<GenerationPl
       ...pages.violations,
       ...navigation.violations,
       ...orphans.violations,
+      ...pluginWorkflowViolationsOf({ entries: pluginAgentsOf({ agents }).map((agent) => ({ id: agent.id, plugin: agent.plugin })) }),
     ],
   };
 }

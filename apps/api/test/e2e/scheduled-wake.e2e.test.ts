@@ -21,7 +21,7 @@ const ACCEPTED = { statusCode: 200, errorName: null, retryAfterMs: null };
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 const OWNER_TEXT = 'oi';
 const OWNER_FOLLOW_UP = 'tem alguem ai?';
-const STANDBY_REPLY = 'respondi como o grok-bot';
+const STANDBY_REPLY = 'respondi como o agent-eight';
 
 type WireMessage = { message_id: string; text: string };
 

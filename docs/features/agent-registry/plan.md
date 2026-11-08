@@ -17,10 +17,10 @@
 
 ## Spikes (scratch worktree, never committed; answers go into this plan and the test plan)
 
-- [ ] **S1 Mintlify snippet table:** `mint@4.2.1207 dev --client-version 0.0.4077`, a page importing `/snippets/agents/matrix.mdx` (a Markdown table) and its pt-br twin; expected: `#content-area table tbody tr` has the rows in both languages, `mint broken-links` exits 0. Fallback recorded in spec Risk 1.
-- [ ] **S2 Prettier stability:** `prettier.format(JSON.stringify(JSON.parse(docs.json), null, 2), { parser: 'json' })` equals `apps/docs/docs.json`; a generated `.ts` index run through Prettier twice is unchanged.
-- [ ] **S3 Loading modules:** `tsx` imports a `definition.ts` that imports enums from `@zapbip/types`; vitest does the same; neither needs a build.
-- [ ] **S4 Baseline:** `wrangler deploy --dry-run --outdir <scratchpad>` for `apps/api`; record bytes and gzip bytes; `apps/connector/dist/cli.js` bytes after `build`.
+- [x] **S1 Mintlify snippet table** (proved by the docs end-to-end of `pnpm verify all`): `mint@4.2.1207 dev --client-version 0.0.4077`, a page importing `/snippets/agents/matrix.mdx` (a Markdown table) and its pt-br twin; expected: `#content-area table tbody tr` has the rows in both languages, `mint broken-links` exits 0. Fallback recorded in spec Risk 1.
+- [x] **S2 Prettier stability** (`agents:check` reports 0 stale): `prettier.format(JSON.stringify(JSON.parse(docs.json), null, 2), { parser: 'json' })` equals `apps/docs/docs.json`; a generated `.ts` index run through Prettier twice is unchanged.
+- [x] **S3 Loading modules** (every suite loads them): `tsx` imports a `definition.ts` that imports enums from `@zapbip/types`; vitest does the same; neither needs a build.
+- [x] ~~**S4 Baseline:** `wrangler deploy --dry-run --outdir <scratchpad>` for `apps/api`; record bytes and gzip bytes; `apps/connector/dist/cli.js` bytes after `build`.~~ Not recorded: the bundle budgets stay as rows B5 and B6 of the test plan for the tester.
 
 ## File map
 
@@ -126,6 +126,9 @@ All boxes empty when authored. A wrong step is struck through with the reason.
 - [x] **Step 31a (added by L4, lead order):** the decoy-MCP integration case is back in `wake-runner.test.ts`, run for every connector runtime whose `strictMcpArgument` is not null; the fake client is strict only when its argv holds that argument. Mutation: removing the flag from the claude-code isolation arguments fails `is never reachable from a woken child`; restored.
 
 - [ ] **Step 32 (tester A, lead order):** (1) `local-connector.mdx` en and pt-br restored byte for byte from main and the connector-clients snippets with their `connector.{en,pt-br}.mdx` paragraphs removed, because the two runtimes share one sentence and cannot be composed word for word (red `d579850e`); Step 19 is struck through for that reason. (2) test-plan evidence reworded. (3) to (5) scaffold, cli subject and G3 per agent, below.
+
+- [x] **Step 33 (reviewer, lead order):** (1) leak rules for bare hyphenated ids, product words and `apps/<id>-plugin`, `.agents` exemption narrowed to four harness scripts, `doctor.sh` derives the plugin requirements, `PreflightStep.PluginWheel` (red `b39c05a8`, green this branch); a single-word id stays quoted-only because `cursor` is an R2 and SQL word. (2) `agent-lifecycle.test.ts` runs the removal and three scaffold kinds (install, `--connector`, `--plugin`) through typecheck, doctor, hooks and every suite (red `173e359e`); ADR 0033 states that `pnpm-lock.yaml` follows a plugin package. (3) ADR evidence rewritten to what was proved; S1 to S3 ticked, S4 struck. (4) AGENTS.md and the API README say hosted plugin wheels and connector runtimes. (5) `compareCodePoints` replaces `localeCompare` (red `173e359e`). (6) the build prints the fixed constants `WHEEL_SHA256` and `REQUIREMENTS_SHA256`, and the Hermes wheel module exports `PLUGIN_VERSION` and those two. (7) `?? ''` and `?? []` replaced by throws. (8) `orphanPagesOf` deletes only pages the Agents lists named and refuses any other (red `baa26ab4`). (9) an empty home variable is read as unset; `runtime-home.test.ts` covers it. (10) the package README is two sentences.
+- [x] **Step 34 (security review, lead order):** (1) `pluginWorkflowViolationsOf` validates name, filter and requirements path, the planner reports them, and the workflow passes the filter and the path through `env:` (red `baa26ab4`). (2) install sections hold exactly one heading and a one-line product name and description of at most `INSTALL_PRODUCT_TEXT_MAX_LENGTH`. (3) a self-hosted wheel plugin must embed exactly one artifact. (4) `strictMcpNullReason` (enum `StrictMcpNullReason`) must explain a null `strictMcpArgument`; `connectorViolationsOf` refuses silence. (5) the OpenClaw plugin takes its version from `ZAPBIP_NPM_VERSION`, so only one value exists.
 
 ## Merge order
 

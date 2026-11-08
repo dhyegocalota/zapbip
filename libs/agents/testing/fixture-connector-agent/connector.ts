@@ -1,5 +1,5 @@
 import { readdir } from 'node:fs/promises';
-import type { AgentConnectorRuntime, SessionLookupInput } from '../../src/contract';
+import { StrictMcpNullReason, type AgentConnectorRuntime, type SessionLookupInput } from '../../src/contract';
 
 const BINARY_NAME = 'fixture-binary';
 const HOME_FOLDER = '.fixture-home';
@@ -19,6 +19,7 @@ export const runtime: AgentConnectorRuntime = {
   homeFolder: HOME_FOLDER,
   homeVariable: HOME_VARIABLE,
   strictMcpArgument: null,
+  strictMcpNullReason: StrictMcpNullReason.DisablesOtherServers,
   findNewestSessionId,
   resumeArguments: ({ sessionId, isolationArguments }) => ['--resume', sessionId, ...isolationArguments],
   newSessionArguments: ({ isolationArguments }) => ['--new', ...isolationArguments],

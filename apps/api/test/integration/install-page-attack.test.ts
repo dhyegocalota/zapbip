@@ -93,7 +93,7 @@ describe('install page attacks', () => {
     const second = await (await getPage({ installCode })).text();
     expect(first).toBe(second);
     expect(first.match(CONNECTION_SECRET_PATTERN)?.[1]).toBe(secret);
-    expect((await postMcp({ path: `/c/${secret}/mcp`, body: initializeBody('Cursor') })).status).toBe(200);
+    expect((await postMcp({ path: `/c/${secret}/mcp`, body: initializeBody('Client One') })).status).toBe(200);
     await waitForFirstCall({ secretDigest: connection.secretDigest });
     expect((await readConnection({ secretDigest: connection.secretDigest })).sealedSecret).toBeNull();
     const gone = await getPage({ installCode });
@@ -128,11 +128,11 @@ describe('install page attacks', () => {
     const { installCode, secret, connection } = await registerWithInstallCode({ accountId, agent: 'claude', expiresAt: validExpiry() });
     const response = await postMcp({
       path: '/mcp',
-      body: initializeBody('Codex'),
+      body: initializeBody('Client Two'),
       headers: { ...MCP_REQUEST_HEADERS, authorization: `Bearer ${secret}` },
     });
     expect(response.status).toBe(200);
-    await vi.waitFor(async () => expect((await readConnection({ secretDigest: connection.secretDigest })).clientName).toBe('Codex'));
+    await vi.waitFor(async () => expect((await readConnection({ secretDigest: connection.secretDigest })).clientName).toBe('Client Two'));
     expect((await getPage({ installCode })).status).toBe(410);
   });
 
@@ -158,8 +158,8 @@ describe('install page attacks', () => {
     const spies = (['log', 'info', 'warn', 'error', 'debug'] as const).map((method) => vi.spyOn(console, method));
     await getPage({ installCode: registered.installCode });
     await getPage({ installCode: randomCode() });
-    await postMcp({ path: `/c/${registered.secret}/mcp`, body: initializeBody('Cursor') });
-    await postMcp({ path: `/c/${registered.installCode}/mcp`, body: initializeBody('Cursor') });
+    await postMcp({ path: `/c/${registered.secret}/mcp`, body: initializeBody('Client One') });
+    await postMcp({ path: `/c/${registered.installCode}/mcp`, body: initializeBody('Client One') });
     await waitForFirstCall({ secretDigest: registered.connection.secretDigest });
     await Promise.all(
       Array.from({ length: OVER_LIMIT_REQUESTS }, () => getPage({ installCode: registered.installCode, address: '203.0.113.99' })),
@@ -198,7 +198,7 @@ describe('install page attacks', () => {
     expect(await (await getPage({ installCode: registered.installCode })).text()).not.toContain('standby_agent');
   });
 
-  it('IS-W12 tells a Cursor agent from a Grok Bot agent by its webhook wake', async () => {
+  it('IS-W12 tells a local agent from a webhook agent by its webhook wake', async () => {
     const accountId = await seedAccount({});
     const registered = await registerWithInstallCode({ accountId, agent: 'claude', expiresAt: validExpiry() });
     await registerWithInstallCode({ accountId, agent: 'agent-three', expiresAt: validExpiry() });
@@ -253,14 +253,16 @@ describe('install page attacks', () => {
     const accountId = await seedAccount({});
     const registered = await registerWithInstallCode({ accountId, agent: 'claude', expiresAt: validExpiry() });
     const results = await Promise.all([
-      ...Array.from({ length: CONCURRENT_CALLS }, () => postMcp({ path: `/c/${registered.secret}/mcp`, body: initializeBody('Cursor') })),
+      ...Array.from({ length: CONCURRENT_CALLS }, () =>
+        postMcp({ path: `/c/${registered.secret}/mcp`, body: initializeBody('Client One') }),
+      ),
       ...Array.from({ length: CONCURRENT_CALLS }, (_, index) =>
         getPage({ installCode: registered.installCode, address: `203.0.113.${100 + index}` }),
       ),
     ]);
     expect(results.every((response) => response.status === 200 || response.status === 410)).toBe(true);
     await vi.waitFor(async () =>
-      expect((await readConnection({ secretDigest: registered.connection.secretDigest })).clientName).toBe('Cursor'),
+      expect((await readConnection({ secretDigest: registered.connection.secretDigest })).clientName).toBe('Client One'),
     );
   });
 

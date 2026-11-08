@@ -47,6 +47,7 @@ export const PRODUCTION_PUBLIC_ORIGIN = `https://mcp.${PRODUCTION_ZONE}`;
 export const CLOUDFLARE_NAMESERVER_SUFFIX = '.ns.cloudflare.com';
 export const NPM_REGISTRY_URL = 'https://registry.npmjs.org';
 export const ZAPBIP_NPM_VERSION = '0.1.0';
+export const INSTALL_PRODUCT_TEXT_MAX_LENGTH = 120;
 export const PACKAGE_PATH_PREFIX = '/pkg/';
 export const PRODUCTION_PACKAGES_BUCKET = 'zapbip-packages';
 export const SEEN_MESSAGE_LIMIT = 1_024;

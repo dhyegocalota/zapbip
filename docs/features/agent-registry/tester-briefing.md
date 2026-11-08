@@ -256,3 +256,11 @@ Mutation checks for the folded tests (M12), automated in `agent-registry.test.ts
 - Plugin package tests moved into `supported/hermes/plugin.test.ts`, `wheel-package.test.ts` and `supported/openclaw/plugin.test.ts`; the claude-code script cases into `supported/claude-code/install-e2e.test.ts`. The goldens are replaced by `testing/surfaces.test.ts`, which compares the matrix and the install page with the registry order.
 - Red then green: `agent-removal.test.ts` and the literal cases of `leaks.test.ts` at `200bd758`; green from `e7019158` to `bc0c0032`. Removal proof printed `Tests 2 passed`, 87 s, over the agents, shape, connector, api unit, api integration suites and `agents:check`.
 - Gaps: the Docker plugin end-to-end and `connect.e2e.test.ts` were not run by the developer (the latter runs in `pnpm verify all`); the removal proof runs against the committed `HEAD`, not the working tree; the decoy-MCP integration case for Claude Code was dropped because the runtime unit tests assert the strict single-server configuration; the speaker-label superset pin and the `keeps the enum member it has today` case are gone with the hand lists they compared to.
+
+### Steps 33 and 34: reviewer and security findings
+
+- `homeDirectoryOf` reads an empty `CLAUDE_CONFIG_DIR` or `CODEX_HOME` as unset (the safer behaviour: an empty value never points a wake at the working directory). `runtime-home.test.ts` covers it.
+- The leak check now also flags bare hyphenated ids, the PascalCase product word and `apps/<id>-plugin`. Single-word ids are matched quoted only. Known blind spot: the action patterns of `guide-parity.ts` name `claude`, `codex` and `gemini` commands.
+- `.github/workflows/verify.yml` lines with plugin names sit inside the generated regions (`# NB ADR 0033` markers); the file is allowed for that reason.
+- `agent-lifecycle.test.ts` is one file so its worktree proofs run one after the other (the API integration suite binds fixed ports).
+- The workflow validation is exercised by unit tests and reported by `agents:check` through the planner; no test edits a fixture plugin file to feed the planner an evil filter.

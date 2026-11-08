@@ -402,7 +402,14 @@ stub_all; stub node 'echo v22.11.0'
 expect_match "doctor: node below .nvmrc is missing" "$(doctor_line Darwin node)" '^node \| missing \| required \| lost: everything \| fix: nvm install \(reads \.nvmrc\), or https://nodejs\.org/en/download$'
 
 stub_all; stub python3 'exit 1'
-expect_match "doctor: python outside 3.11 to 3.13 is missing" "$(doctor_line Darwin python)" '^python \| missing \| required \| lost: the Hermes plugin.s typecheck and tests; pnpm verify fails in apps/hermes-plugin \| fix: brew install python@3\.13 && python3 -m pip install --require-hashes -r apps/hermes-plugin/requirements-dev\.txt$'
+python_requirements_expected=""
+repository_root="$here/../.."
+for requirements_file in "$repository_root"/apps/*-plugin/requirements-dev.txt; do
+  [[ -f "$requirements_file" ]] || continue
+  python_requirements_expected+=" && python3 -m pip install --require-hashes -r apps/$(basename "$(dirname "$requirements_file")")/requirements-dev.txt"
+done
+python_requirements_expected=${python_requirements_expected//./\\.}
+expect_match "doctor: python outside 3.11 to 3.13 is missing" "$(doctor_line Darwin python)" "^python \\| missing \\| required \\| lost: the Python plugins. typecheck and tests; pnpm verify fails in a Python plugin \\| fix: brew install python@3\\.13${python_requirements_expected}\$"
 
 stub_all; stub python3 '[[ "$2" == *"<= (3, 14)"* ]]'
 expect_match "doctor: python 3.14 is accepted" "$(doctor_line Darwin python)" '^python \| ok \|'

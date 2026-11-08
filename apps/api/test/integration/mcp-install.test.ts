@@ -9,7 +9,7 @@ import { testEnv } from '../support/workers-env';
 
 const ORIGIN = 'http://localhost:8787';
 const CLIENT_NAME = 'Claude Code';
-const OTHER_CLIENT_NAME = 'Codex';
+const OTHER_CLIENT_NAME = 'Client Two';
 const ACCOUNT_ID = 'acc_1';
 const AGENT = 'alpha';
 const OK_STATUS = 200;

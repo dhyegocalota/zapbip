@@ -6,7 +6,9 @@ enum WorkflowRegion {
 }
 
 const POINTER = '# NB ADR 0033: generated';
-const PIP_INSTALL_COMMAND = '- run: python3 -m pip install --require-hashes -r';
+const PIP_INSTALL_COMMAND = '- run: python3 -m pip install --require-hashes -r "$REQUIREMENTS"';
+const PIP_ENVIRONMENT_HEADER = '  env:';
+const PIP_ENVIRONMENT_VARIABLE = '    REQUIREMENTS:';
 
 function boundaryOf(input: { region: WorkflowRegion; edge: 'begin' | 'end' }): string {
   return `${POINTER} ${input.region} ${input.edge}`;
@@ -33,7 +35,11 @@ export function renderWorkflow(input: { source: string; agents: ResolvedAgent[] 
   const requirements = plugins.flatMap((plugin) =>
     plugin.workflow.pythonRequirements === null ? [] : [plugin.workflow.pythonRequirements],
   );
-  const pipInstalls = [...new Set(requirements)].map((path) => `${PIP_INSTALL_COMMAND} ${path}`);
+  const pipInstalls = [...new Set(requirements)].flatMap((path) => [
+    PIP_INSTALL_COMMAND,
+    PIP_ENVIRONMENT_HEADER,
+    `${PIP_ENVIRONMENT_VARIABLE} ${path}`,
+  ]);
   const withRows = replaceRegion({ source: input.source, region: WorkflowRegion.MatrixRows, lines: matrixRows });
   return replaceRegion({ source: withRows, region: WorkflowRegion.PipInstalls, lines: pipInstalls });
 }

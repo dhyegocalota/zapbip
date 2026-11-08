@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { PACKAGE_PATH_PREFIX } from '@zapbip/types';
-import type { AgentPlugin, HostedArtifact } from '../contract';
+import { PluginRegistry, type AgentPlugin, type HostedArtifact } from '../contract';
 import { violationIf } from './registry';
 
 export type PluginCheckEntry = { id: string; plugin: AgentPlugin };
@@ -14,6 +14,9 @@ export type PluginCheckSources = {
 type PluginCheckInput = { entry: PluginCheckEntry; sources: PluginCheckSources };
 type ArtifactCheckInput = PluginCheckInput & { artifact: HostedArtifact };
 
+const WORKFLOW_FILTER_PATTERN = /^[@\w/.-]+$/;
+const WORKFLOW_NAME_PATTERN = /^[\w/.-]+$/;
+const REQUIREMENTS_PATH_PATTERN = /^[\w/.-]+$/;
 const SHA256_PATTERN = /^[0-9a-f]{64}$/;
 const SHA256_ALGORITHM = 'sha256';
 const HEXADECIMAL_ENCODING = 'hex';
@@ -91,13 +94,47 @@ function embeddingViolationsOf(input: ArtifactCheckInput): string[] {
   );
 }
 
+function embeddedCountViolationsOf(input: PluginCheckInput): string[] {
+  const { entry } = input;
+  const embeddedCount = entry.plugin.hostedArtifacts.filter((artifact) => artifact.embeddedInInstallCommand).length;
+  return violationIf({
+    condition: entry.plugin.registry === PluginRegistry.SelfHostedWheel && embeddedCount !== 1,
+    message: `${entry.id}: exactly one hosted artifact must be embedded in the install command`,
+  });
+}
+
+export function pluginWorkflowViolationsOf(input: { entries: PluginCheckEntry[] }): string[] {
+  return input.entries.flatMap(({ id, plugin }) => {
+    const { name, filter, pythonRequirements } = plugin.workflow;
+    const isRequirementsPathSafe =
+      pythonRequirements === null ||
+      (REQUIREMENTS_PATH_PATTERN.test(pythonRequirements) &&
+        pythonRequirements.startsWith(`${plugin.packageFolder}/`) &&
+        !pythonRequirements.includes('..'));
+    return [
+      ...violationIf({
+        condition: !WORKFLOW_NAME_PATTERN.test(name),
+        message: `${id}: the workflow name must match ${WORKFLOW_NAME_PATTERN.source}`,
+      }),
+      ...violationIf({
+        condition: !WORKFLOW_FILTER_PATTERN.test(filter),
+        message: `${id}: the workflow filter must match ${WORKFLOW_FILTER_PATTERN.source}`,
+      }),
+      ...violationIf({
+        condition: !isRequirementsPathSafe,
+        message: `${id}: the workflow requirements path must match ${REQUIREMENTS_PATH_PATTERN.source} and sit inside the package folder`,
+      }),
+    ];
+  });
+}
+
 function hostedViolationsOf(input: PluginCheckInput): string[] {
   const { entry } = input;
   const artifactViolations = entry.plugin.hostedArtifacts.flatMap((artifact) => artifactViolationsOf({ ...input, artifact }));
   const embeddingViolations = entry.plugin.hostedArtifacts
     .filter((artifact) => artifact.embeddedInInstallCommand)
     .flatMap((artifact) => embeddingViolationsOf({ ...input, artifact }));
-  return [...artifactViolations, ...embeddingViolations];
+  return [...embeddedCountViolationsOf(input), ...artifactViolations, ...embeddingViolations];
 }
 
 function allowlistViolationsOf(input: { entries: PluginCheckEntry[]; servedFilenames: string[] }): string[] {
@@ -116,6 +153,7 @@ export function pluginViolationsOf(input: { entries: PluginCheckEntry[]; sources
     ...claimViolationsOf({ entries, applicationPluginFolders: sources.applicationPluginFolders }),
     ...entries.flatMap((entry) => versionPinViolationsOf({ entry, sources })),
     ...entries.flatMap((entry) => hostedViolationsOf({ entry, sources })),
+    ...pluginWorkflowViolationsOf({ entries }),
     ...allowlistViolationsOf({ entries, servedFilenames: sources.servedFilenames }),
   ];
 }

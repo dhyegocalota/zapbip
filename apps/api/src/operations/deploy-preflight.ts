@@ -53,7 +53,7 @@ export enum PreflightStep {
   OfficialNumber = 'official number',
   CompanyFacts = 'company facts',
   NpmVersion = 'npm version',
-  HermesWheel = 'hermes wheel',
+  PluginWheel = 'plugin wheel',
   Git = 'git',
   Gate = 'gate',
   Config = 'config',
@@ -272,14 +272,14 @@ async function firstArtifactRefusal(input: {
   return firstArtifactRefusal({ ...input, artifacts: remaining });
 }
 
-async function refuseUnhostedWorkerWheel(input: WorkerPreflightInput): Promise<string | null> {
+async function refuseUnhostedWorkerArtifacts(input: WorkerPreflightInput): Promise<string | null> {
   return firstArtifactRefusal({
     artifacts: hostedArtifactsOf(input),
     refusalOf: (artifact) => workerArtifactRefusal({ shell: input.shell, artifact }),
   });
 }
 
-async function refuseUnhostedDocsWheel(input: DocsPreflightInput): Promise<string | null> {
+async function refuseUnhostedDocsArtifacts(input: DocsPreflightInput): Promise<string | null> {
   return firstArtifactRefusal({
     artifacts: hostedArtifactsOf(input),
     refusalOf: (artifact) => docsArtifactRefusal({ packageFetcher: input.packageFetcher, artifact }),
@@ -387,7 +387,7 @@ const WORKER_CHECKS: PreflightCheck<WorkerPreflightInput>[] = [
   { step: PreflightStep.OfficialNumber, refusalOf: productionOnly({ refusalOf: refuseUnsetOfficialNumber }) },
   { step: PreflightStep.CompanyFacts, refusalOf: productionOnly({ refusalOf: refuseUnsetCompanyFacts }) },
   { step: PreflightStep.NpmVersion, refusalOf: productionOnly({ refusalOf: refuseUntrustedWorkerPackage }) },
-  { step: PreflightStep.HermesWheel, refusalOf: productionOnly({ refusalOf: refuseUnhostedWorkerWheel }) },
+  { step: PreflightStep.PluginWheel, refusalOf: productionOnly({ refusalOf: refuseUnhostedWorkerArtifacts }) },
   { step: PreflightStep.Config, refusalOf: refuseLeftoverPlaceholder },
   { step: PreflightStep.Domain, refusalOf: productionOnly({ refusalOf: refuseUnreadyDomain }) },
   { step: PreflightStep.Readiness, refusalOf: refuseUnreadyProduction },
@@ -402,7 +402,7 @@ const DOCS_CHECKS: PreflightCheck<DocsPreflightInput>[] = [
   { step: PreflightStep.OfficialNumber, refusalOf: refuseUnsetOfficialNumber },
   { step: PreflightStep.CompanyFacts, refusalOf: refuseUnsetCompanyFacts },
   { step: PreflightStep.NpmVersion, refusalOf: refuseUntrustedDocsPackages },
-  { step: PreflightStep.HermesWheel, refusalOf: refuseUnhostedDocsWheel },
+  { step: PreflightStep.PluginWheel, refusalOf: refuseUnhostedDocsArtifacts },
 ];
 
 async function firstRefusal<Input>(input: { checks: PreflightCheck<Input>[]; subject: Input }): Promise<PreflightRefusal | null> {

@@ -14,9 +14,8 @@ const SOURCE_DATE_EPOCH = '1767225600';
 const TEMPORARY_PREFIX = 'zapbip-wheel-build-';
 const NO_WHEEL_PLUGIN_MESSAGE = 'no self-hosted wheel plugin matches';
 const RUNTIME_LOCK_FILE = 'requirements.txt';
-const HASH_CONSTANT_PREFIX = 'ZAPBIP_';
-const WHEEL_HASH_CONSTANT_SUFFIX = '_WHEEL_SHA256';
-const REQUIREMENTS_HASH_CONSTANT_SUFFIX = '_REQUIREMENTS_SHA256';
+const WHEEL_HASH_CONSTANT = 'WHEEL_SHA256';
+const REQUIREMENTS_HASH_CONSTANT = 'REQUIREMENTS_SHA256';
 
 type WheelPlugin = { id: string; plugin: AgentPlugin; wheel: HostedArtifact; requirements: HostedArtifact; buildRequirements: string };
 
@@ -73,7 +72,7 @@ function wheelPluginsOf(input: { requestedId: string | undefined }): WheelPlugin
 }
 
 async function buildPlugin(input: { wheelPlugin: WheelPlugin }): Promise<string> {
-  const { id, plugin, wheel, requirements } = input.wheelPlugin;
+  const { plugin, wheel, requirements } = input.wheelPlugin;
   const directory = await mkdtemp(join(tmpdir(), TEMPORARY_PREFIX));
   try {
     const builtWheel = await buildWheel({ directory, wheelPlugin: input.wheelPlugin });
@@ -86,8 +85,7 @@ async function buildPlugin(input: { wheelPlugin: WheelPlugin }): Promise<string>
     const requirementsText = `${plugin.packageName} @ ${wheelUrl} \\\n    --hash=sha256:${wheelHash}\n${runtimeLock}`;
     const releaseRequirements = join(releaseDirectory, requirements.filename);
     await writeFile(releaseRequirements, requirementsText);
-    const constantName = id.toUpperCase();
-    return `${releaseWheel}\n${releaseRequirements}\nexport const ${HASH_CONSTANT_PREFIX}${constantName}${WHEEL_HASH_CONSTANT_SUFFIX} = '${wheelHash}';\nexport const ${HASH_CONSTANT_PREFIX}${constantName}${REQUIREMENTS_HASH_CONSTANT_SUFFIX} = '${sha256Of({ bytes: requirementsText })}';`;
+    return `${releaseWheel}\n${releaseRequirements}\nexport const ${WHEEL_HASH_CONSTANT} = '${wheelHash}';\nexport const ${REQUIREMENTS_HASH_CONSTANT} = '${sha256Of({ bytes: requirementsText })}';`;
   } finally {
     await rm(directory, { recursive: true, force: true });
   }

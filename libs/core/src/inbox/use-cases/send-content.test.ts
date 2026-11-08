@@ -36,7 +36,7 @@ describe('sendContent reply_to', () => {
   test('a reply to a primary message keeps its id', async () => {
     const environment = await createEnvironment();
     await registerAgents({ environment, agents: ['agent-eight'] });
-    const received = await receiveText({ environment, text: '@grok-bot hi' });
+    const received = await receiveText({ environment, text: '@agent-eight hi' });
     const sent = await reply({ environment, replyToMessageId: received.messageId! });
     expect(await environment.repository.findMessage({ messageId: sent.messageId })).toMatchObject({ replyToMessageId: received.messageId });
   });

@@ -176,7 +176,7 @@ describe('worker preflight', () => {
   it('refuses production when the hosted wheel hashes to something else, naming both hashes', async () => {
     const shell = fakeShell({ replies: { 'shasum -a 256': { exitCode: 0, stdout: `${OTHER_WHEEL_SHA256}  /tmp/zapbip-wheel.whl\n` } } });
     const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell }));
-    expect(refusal?.step).toBe(PreflightStep.HermesWheel);
+    expect(refusal?.step).toBe(PreflightStep.PluginWheel);
     expect(refusal?.message).toContain(HOSTED_WHEEL_SHA256);
     expect(refusal?.message).toContain(OTHER_WHEEL_SHA256);
   });
@@ -184,7 +184,7 @@ describe('worker preflight', () => {
   it('refuses production when the wheel is not in the bucket, naming the upload step', async () => {
     const shell = fakeShell({ replies: { 'r2 object get': { exitCode: 1, stdout: 'The specified key does not exist' } } });
     const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell }));
-    expect(refusal?.step).toBe(PreflightStep.HermesWheel);
+    expect(refusal?.step).toBe(PreflightStep.PluginWheel);
     expect(refusal?.message).toContain(`${HOSTED_WHEEL_FILENAME}`);
     expect(refusal?.message).toContain('wrangler r2 object put');
   });
@@ -200,7 +200,7 @@ describe('worker preflight', () => {
       replies: { 'requirements.txt': { exitCode: 0, stdout: `${OTHER_WHEEL_SHA256}  /tmp/zapbip-requirements.txt\n` } },
     });
     const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell }));
-    expect(refusal?.step).toBe(PreflightStep.HermesWheel);
+    expect(refusal?.step).toBe(PreflightStep.PluginWheel);
     expect(refusal?.message).toContain('requirements.txt');
     expect(refusal?.message).toContain(HOSTED_REQUIREMENTS_SHA256);
     expect(refusal?.message).toContain(OTHER_WHEEL_SHA256);
@@ -210,7 +210,7 @@ describe('worker preflight', () => {
     const missing = `r2 object get zapbip-packages/${HOSTED_REQUIREMENTS_FILENAME}`;
     const shell = fakeShell({ replies: { [missing]: { exitCode: 1, stdout: 'The specified key does not exist' } } });
     const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell }));
-    expect(refusal?.step).toBe(PreflightStep.HermesWheel);
+    expect(refusal?.step).toBe(PreflightStep.PluginWheel);
     expect(refusal?.message).toContain(`${HOSTED_REQUIREMENTS_FILENAME}`);
     expect(refusal?.message).toContain('wrangler r2 object put');
   });
@@ -218,7 +218,7 @@ describe('worker preflight', () => {
   it('refuses production when the downloaded wheel cannot be hashed', async () => {
     const shell = fakeShell({ replies: { 'shasum -a 256': { exitCode: 1, stdout: '' } } });
     const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell }));
-    expect(refusal?.step).toBe(PreflightStep.HermesWheel);
+    expect(refusal?.step).toBe(PreflightStep.PluginWheel);
     expect(refusal?.message).toContain('could not hash');
   });
 
@@ -226,7 +226,7 @@ describe('worker preflight', () => {
     const { ZAPBIP_NPM_PUBLISHER: publisher } = COMPLETE_VARIABLES;
     const environmentVariables = { ZAPBIP_NPM_PUBLISHER: publisher };
     const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, environmentVariables }));
-    expect(refusal === null || refusal.step !== PreflightStep.HermesWheel).toBe(true);
+    expect(refusal === null || refusal.step !== PreflightStep.PluginWheel).toBe(true);
   });
 
   it('checks npm before the wheel, so a missing npm package never reads the bucket', async () => {
@@ -673,7 +673,7 @@ describe('docs preflight', () => {
     const shell = fakeShell({});
     const packageFetcher = fakePackageFetcher({ answer });
     const refusal = await runDocsPreflight({ ...docsInput({}), shell, packageFetcher });
-    expect(refusal?.step).toBe(PreflightStep.HermesWheel);
+    expect(refusal?.step).toBe(PreflightStep.PluginWheel);
     expect(refusal?.message).toContain(expectedText);
     expect(shell.commands).toHaveLength(4);
     expect(packageFetcher.urls).toEqual([HOSTED_WHEEL_URL]);
@@ -685,7 +685,7 @@ describe('docs preflight', () => {
   ])('refuses the docs deploy when the hosted requirements file answers %s', async (_name, answer, expectedText) => {
     const packageFetcher = fakePackageFetcher({ answers: { [HOSTED_REQUIREMENTS_URL]: answer } });
     const refusal = await runDocsPreflight({ ...docsInput({}), packageFetcher });
-    expect(refusal?.step).toBe(PreflightStep.HermesWheel);
+    expect(refusal?.step).toBe(PreflightStep.PluginWheel);
     expect(refusal?.message).toContain(expectedText);
     expect(packageFetcher.urls).toEqual([HOSTED_WHEEL_URL, HOSTED_REQUIREMENTS_URL]);
   });
@@ -693,7 +693,7 @@ describe('docs preflight', () => {
   it('says the wheel could not be reached, not that it is missing, when the fetch fails', async () => {
     const packageFetcher = fakePackageFetcher({ failure: new Error('getaddrinfo ENOTFOUND mcp.zapbip.com') });
     const refusal = await runDocsPreflight({ ...docsInput({}), packageFetcher });
-    expect(refusal?.step).toBe(PreflightStep.HermesWheel);
+    expect(refusal?.step).toBe(PreflightStep.PluginWheel);
     expect(refusal?.message).toContain('could not reach');
   });
 

@@ -23,11 +23,16 @@ export type AgentDefinition = {
 
 export type AgentInstall = { productName: string; productDescription: string; render: InstallSection };
 
+export enum StrictMcpNullReason {
+  DisablesOtherServers = 'disables-other-servers',
+}
+
 export type AgentConnectorRuntime = {
   binaryName: string;
   homeFolder: string;
   homeVariable: string;
   strictMcpArgument: string | null;
+  strictMcpNullReason: StrictMcpNullReason | null;
   findNewestSessionId: (input: SessionLookupInput) => Promise<string | null>;
   resumeArguments: (input: { sessionId: string; isolationArguments: string[] }) => string[];
   newSessionArguments: ((input: { isolationArguments: string[] }) => string[]) | null;

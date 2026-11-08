@@ -14,8 +14,8 @@ The product core lives in `libs/core` (the inbox, routing and delivery rules) an
 ## Layout
 
 ```
-apps/api                the Cloudflare Worker: MCP server, Durable Object per account, D1 directory, R2 media and the hosted Hermes wheel, fake WhatsApp channel
-apps/connector          the local connector: `connect` resumes the owner's Claude Code or Codex session for each owner message, `listen` prints one line per message, `channel` relays them into an open Claude Code session
+apps/api                the Cloudflare Worker: MCP server, Durable Object per account, D1 directory, R2 media and the hosted plugin wheels, fake WhatsApp channel
+apps/connector          the local connector: `connect` resumes the owner's session in a connector runtime for each owner message, `listen` prints one line per message, `channel` relays them into an open Claude Code session
 apps/docs               the Mintlify documentation site
 libs/agents             one folder per supported AI agent; the enums, install sections, docs pages, matrix and navigation come from those folders
 libs/core               the inbox rules as plain TypeScript behind ports

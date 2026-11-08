@@ -42,7 +42,15 @@ function artifactOf(input: Partial<HostedArtifact> & { filename: string; expecte
 }
 
 function syntheticPlugin(input: Partial<AgentPlugin>): AgentPlugin {
-  return { ...fixturePlugin, packageFolder: 'synthetic', hostedArtifacts: [], versionPins: [], installCommand: 'install', ...input };
+  return {
+    ...fixturePlugin,
+    registry: PluginRegistry.Npm,
+    packageFolder: 'synthetic',
+    hostedArtifacts: [],
+    versionPins: [],
+    installCommand: 'install',
+    ...input,
+  };
 }
 
 function syntheticSources(input: Partial<PluginCheckSources>): PluginCheckSources {

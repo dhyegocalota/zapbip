@@ -1,7 +1,12 @@
 import { HEARTBEAT_POLL_INTERVAL_MINUTES, OwnerLocale, ZAPBIP_NPM_VERSION } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { CONNECTION_LINK, installSnapshotTests, installWakeNoteTests, LOCALES, sectionInput } from '../../testing/install-fixtures';
+import { AGENT_INSTALLS } from '../../src/generated/install';
 import { install } from './install';
+
+const otherProductNames = Object.values(AGENT_INSTALLS)
+  .map((other) => other.productName)
+  .filter((name) => name !== install.productName);
 
 const WAKE_NOTE: Record<OwnerLocale, string> = {
   [OwnerLocale.PortugueseBrazil]:
@@ -15,8 +20,8 @@ describe('the OpenClaw install section', () => {
 
   test.each(LOCALES)('names only its own product and polls every minute in %s', (locale) => {
     const text = install.render(sectionInput({ locale }));
-    expect(text).toContain('If you are not OpenClaw');
-    expect(text).not.toContain('Hermes');
+    expect(text).toContain(`If you are not ${install.productName}`);
+    otherProductNames.forEach((name) => expect(text).not.toContain(name));
     expect(text).toContain(`set_wake({mode: "scheduled", interval_minutes: ${HEARTBEAT_POLL_INTERVAL_MINUTES}})`);
     expect(text).toContain('check_inbox');
     expect(text).toContain('every minute');

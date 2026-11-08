@@ -1,8 +1,13 @@
 import { HEARTBEAT_POLL_INTERVAL_MINUTES, OwnerLocale } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { CONNECTION_LINK, installSnapshotTests, installWakeNoteTests, LOCALES, sectionInput } from '../../testing/install-fixtures';
+import { AGENT_INSTALLS } from '../../src/generated/install';
 import { install } from './install';
-import { ZAPBIP_HERMES_REQUIREMENTS_SHA256 } from './wheel';
+import { REQUIREMENTS_SHA256 } from './wheel';
+
+const otherProductNames = Object.values(AGENT_INSTALLS)
+  .map((other) => other.productName)
+  .filter((name) => name !== install.productName);
 
 const WAKE_NOTE: Record<OwnerLocale, string> = {
   [OwnerLocale.PortugueseBrazil]:
@@ -16,8 +21,8 @@ describe('the Hermes install section', () => {
 
   test.each(LOCALES)('names only its own product and polls every minute in %s', (locale) => {
     const text = install.render(sectionInput({ locale }));
-    expect(text).toContain('If you are not Hermes');
-    expect(text).not.toContain('OpenClaw');
+    expect(text).toContain(`If you are not ${install.productName}`);
+    otherProductNames.forEach((name) => expect(text).not.toContain(name));
     expect(text).toContain(`set_wake({mode: "scheduled", interval_minutes: ${HEARTBEAT_POLL_INTERVAL_MINUTES}})`);
     expect(HEARTBEAT_POLL_INTERVAL_MINUTES).toBe(1);
     expect(text).toContain('check_inbox');
@@ -43,7 +48,7 @@ describe('the Hermes install section', () => {
     expect(text).toContain(`ZAPBIP_CONNECTION_LINK=${CONNECTION_LINK}`);
     expect(text).toContain('ZAPBIP_ALLOWED_USERS=owner');
     expect(text).toContain(
-      `d=$(mktemp -d) && curl -fsSL https://mcp.zapbip.com/pkg/zapbip_platform-0.1.0-requirements.txt -o "$d/zapbip-requirements.txt" && python3 -c 'import hashlib,sys; sys.exit(hashlib.sha256(open(sys.argv[1],"rb").read()).hexdigest() != sys.argv[2])' "$d/zapbip-requirements.txt" ${ZAPBIP_HERMES_REQUIREMENTS_SHA256} && python3 -m pip install --only-binary=:all: --require-hashes -r "$d/zapbip-requirements.txt"`,
+      `d=$(mktemp -d) && curl -fsSL https://mcp.zapbip.com/pkg/zapbip_platform-0.1.0-requirements.txt -o "$d/zapbip-requirements.txt" && python3 -c 'import hashlib,sys; sys.exit(hashlib.sha256(open(sys.argv[1],"rb").read()).hexdigest() != sys.argv[2])' "$d/zapbip-requirements.txt" ${REQUIREMENTS_SHA256} && python3 -m pip install --only-binary=:all: --require-hashes -r "$d/zapbip-requirements.txt"`,
     );
     expect(text).not.toContain('sha256sum');
     expect(text).not.toContain('zapbip-platform==');

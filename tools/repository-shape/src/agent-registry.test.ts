@@ -27,7 +27,12 @@ const MATRIX_PAGES = ['apps/docs/agents/supported-agents.mdx', 'apps/docs/pt-br/
 const MATRIX_TABLE_ROW_PATTERN = /^\| -{3,}/m;
 const LEAK_SCANNED_EXTENSIONS = ['.ts', '.tsx', '.mts', '.mjs', '.sh', '.py', '.yml', '.json'];
 const HARNESS_FOLDERS = ['.claude/', '.codex/'];
-const HOOK_TEST_FILE = '.agents/hooks/hooks.test.sh';
+const HARNESS_SCRIPT_FILES = [
+  '.agents/hooks/doctor.sh',
+  '.agents/hooks/hooks.test.sh',
+  '.agents/hooks/remind-docs.sh',
+  '.agents/skills/brainstorming/scripts/start-server.sh',
+];
 const GENERATED_FILES = ['apps/docs/docs.json', '.github/workflows/verify.yml'];
 const HARNESS_TEST_FILES = ['agent-surfaces', 'delivery-docs', 'rules', 'scenarios'].map(
   (name) => `tools/repository-shape/src/${name}.test.ts`,
@@ -36,7 +41,7 @@ const LEAK_CHECK_TEST_FILES = ['libs/agents/src/checks/leaks.test.ts', 'tools/re
 const LEAK_ALLOWED_PREFIXES = [
   GENERATED_FOLDER,
   ...GENERATED_FILES,
-  HOOK_TEST_FILE,
+  ...HARNESS_SCRIPT_FILES,
   ...LEAK_CHECK_TEST_FILES,
   ...HARNESS_TEST_FILES,
   ...HARNESS_FOLDERS,
