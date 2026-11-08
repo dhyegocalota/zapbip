@@ -43,7 +43,7 @@ Pins (green on arrival): `libs/types/src/start-link-constants.test.ts`, the `lib
 
 1. Hypothesis: `/start` never redirects anywhere but `wa.me/<registered digits>`. Break it by: a stored display number with a path or a query, `Host` and `X-Forwarded-*` swaps, encoded and doubled `lang`.
 2. Hypothesis: the choice is made per request. Break it by: close the oldest number in the backoffice between two reloads, and read the `Location`.
-3. Hypothesis: the shared `privateResponse` changed nothing on the install page. Break it by: diff the headers of `/i/<code>` on `main` and on the branch (`Content-Type` for the markdown answer, the `404`, `429`, `410`).
+3. Hypothesis: the shared `privateResponse` changed nothing on the install page. Break it by: diff the headers of `/i/<code>` on `main` and on the branch (`Content-Type` for the markdown answer, the `404`, `429`, `410`). Pinned by `apps/api/test/integration/install-page-headers.test.ts` (pin, `53dfb5d7`): the full header set of 200, 410, 404, 429 and 400 equals the values main produced; the same file passes against main's `install-page.ts`.
 4. Hypothesis: the production deploy lost no gate. Break it by: break each remaining preflight input in turn in the dry run and read the refusal.
 5. Hypothesis: the docs print no number. Break it by: search the built site for `wa.me` and `+55`.
 
@@ -53,3 +53,5 @@ Pins (green on arrival): `libs/types/src/start-link-constants.test.ts`, the `lib
 - The redirect is not followed to a real `wa.me`; the walk fulfils `https://wa.me/**` with `page.route` and records the URL.
 - The backoffice is not signed in by an agent; the capacity rows change `whatsapp_numbers.state` in the local development database with `wrangler d1 execute --local`.
 - G4 (`94bf1216`, red `bf2b4371`): `official-number.test.ts` listed `apps/api/scripts/smoke.ts`, both `faq.mdx`, both `index.mdx`, both `how-it-works` SVGs and `libs/types/src/constants.ts`; green after. The FAQ sentence now says the official WhatsApp Cloud API, which is true.
+
+- The docs preflight now refuses a start link that does not answer `302` to `https://wa.me/` (`PreflightStep.StartLink`, red `620d3970`, green `b6765555`); `PackageAnswer` carries `location` and the fetcher no longer follows redirects.
