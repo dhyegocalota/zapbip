@@ -157,6 +157,19 @@ describe('a new session', () => {
   });
 });
 
+describe('the strict MCP flag', () => {
+  test('is declared by the runtime and is a flag its isolation arguments hold', async () => {
+    expect(runtime.strictMcpArgument).not.toBeNull();
+    const { isolationArguments, cleanup } = await runtime.prepareIsolation({
+      connectionLink: CONNECTION_LINK,
+      workingDirectory,
+      homeDirectory: workingDirectory,
+    });
+    expect(isolationArguments).toContain(runtime.strictMcpArgument);
+    await cleanup();
+  });
+});
+
 describe('isolation', () => {
   function prepare() {
     return runtime.prepareIsolation({ connectionLink: CONNECTION_LINK, workingDirectory, homeDirectory: workingDirectory });

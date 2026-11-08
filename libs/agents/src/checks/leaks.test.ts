@@ -44,6 +44,20 @@ describe('leakViolationsOf', () => {
     expect(leaksIn({ files: [{ path: 'tools/example.ts', text }] })).toEqual([]);
   });
 
+  test.each([`'alpha'`, `"alpha"`, '`alpha`'])('names the quoted id literal %s outside the folder', (literal) => {
+    const files = [{ path: 'tools/example.ts', text: `const first = 1;\nconst agent = ${literal};` }];
+    expect(leaksIn({ files })).toEqual(['tools/example.ts:2 names alpha']);
+  });
+
+  test('accepts the quoted id literal inside the agent folder', () => {
+    const files = [{ path: 'libs/agents/supported/alpha/definition.ts', text: "const id = 'alpha';" }];
+    expect(leaksIn({ files })).toEqual([]);
+  });
+
+  test.each(["'alphabet'", "'alpha-two'", 'alpha', "'xalpha'"])('ignores %s, which is not the quoted id', (text) => {
+    expect(leaksIn({ files: [{ path: 'tools/example.ts', text }] })).toEqual([]);
+  });
+
   test('names a path under supported/<id>', () => {
     const files = [{ path: 'tools/example.ts', text: `import { definition } from '../supported/alpha/definition';` }];
     expect(leaksIn({ files })).toEqual(['tools/example.ts:1 names alpha']);
