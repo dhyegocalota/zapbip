@@ -22,7 +22,7 @@ You do all of this by hand ([ADR 0031](../adr/0031-the-backoffice-is-a-separate-
 
    If it fails: the page names the kind of failure. `auth` means the access token is wrong or lacks `whatsapp_business_messaging`; replace it (step 5). `not_found` means the phone number ID or the WABA ID is wrong. `network` or `upstream` means Meta did not answer; retry in a minute.
 
-4. **Activate the number.** On the number page choose Change state, Active, and type a fresh code. Use Closed to stop accepting new accounts while keeping the existing ones: the start link (`https://mcp.zapbip.com/start`) sends new owners to the oldest Active number, so closing a full number moves them to the next Active one on the next click, and with none Active it shows the "back soon" page. Use Disabled only to stop the number completely. 
+4. **Activate the number.** On the number page choose Change state, Active, and type a fresh code. Use Closed to stop accepting new accounts while keeping the existing ones: the start link (`https://mcp.zapbip.com/start`) sends new owners to the oldest Active number, so closing a full number moves them to the next Active one on the next click, and with none Active it shows the "back soon" page. Use Disabled only to stop the number completely.
 
    Expect: the number shows Active in the list. Once the webhook of the environment is pointed ([meta-setup.md](meta-setup.md), step 9), a message from your phone to this number reaches your agents and replies are sent from it.
 

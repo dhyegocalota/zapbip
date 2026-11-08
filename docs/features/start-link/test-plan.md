@@ -12,13 +12,13 @@ Every checkbox states the input and the exact expected outcome. A ticked box car
 ## Unit
 
 - [ ] `start-link-target.test.ts` — input: display number `+5511999990001`, locale `en_US`; expected: `https://wa.me/5511999990001?text=Hi!%20I%20want%20to%20connect%20my%20AI%20agents%20to%20zapbip.` (the text percent-encoded exactly once).
-- [ ] Edge: display number `5511999990001` (no plus) — expected: throws, no URL.
-- [ ] Edge: display number `+123456` (6 digits), `+1234567890123456` (16 digits), `+55 11 99999-0001`, `+5511999990001/../x`, empty — expected: each throws.
+- [ ] Edge: display number `5511999990001` (no plus) — expected: `null`, no URL.
+- [ ] Edge: display number `+123456` (6 digits), `+1234567890123456` (16 digits), `+55 11 99999-0001`, `+5511999990001/../x`, empty — expected: each returns `null`.
 - [ ] `start-link-language.test.ts` — input: `en`, `pt-BR`; expected: `OwnerLocale.EnglishUs`, `OwnerLocale.PortugueseBrazil`.
 - [ ] Edge: `lang` absent — expected: `DEFAULT_LOCALE`.
 - [ ] Edge: `lang=fr`, `lang=PT-br`, `lang=`, `lang=en&lang=pt-BR` (repeated) — expected: each is a rejection, not a default.
 - [ ] `start-link-page.test.ts` — input: locale `pt_BR`; expected: HTML with `lang="pt-BR"`, the pt-BR copy before the en-US copy, no `<script>`, no `<style>`, no `<a`, no `wa.me`; with `en_US` the order is reversed.
-- [ ] `libs/types` pin: `START_LINK` equals `https://mcp.zapbip.com/start`; `HttpStatus.Found` equals `302`; neither prefilled text equals `ajuda`, `help`, `apagar conta` (bare-word commands).
+- [ ] `libs/types` pin: `START_LINK` equals `https://mcp.zapbip.com/start`; `HttpStatus.Found` equals `302`; both prefilled texts are non-empty. `libs/core` `command.test.ts`: `parseAccountCommand` returns `null` for both prefilled texts (no bare-word command).
 - [ ] `deploy-preflight.test.ts` — input: a production Worker preflight and a docs preflight, all other inputs green, no number field; expected: both return `null`. The cases that expected the `OFFICIAL_WHATSAPP_NUMBER` refusal are gone.
 - [ ] Edge: the preflight still refuses what it refused before (a `COMPANY_FACT_UNSET` fact, a missing npm package) — expected: the same messages, unchanged.
 

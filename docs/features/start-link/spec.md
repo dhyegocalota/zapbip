@@ -123,6 +123,7 @@ Deploy and docs removal:
 | How the docs reach a number | a link on the Worker; the number printed in the docs | a stable link on the Worker; the docs print no number (owner delegated) | 2026-11-06 |
 | How the number is chosen | oldest active; rotation; least loaded; random | oldest active, load spread by closing a number (owner delegated; [ADR 0035](../../adr/0035-a-start-link-on-the-worker-picks-the-number-new-owners-write-to.md)) | 2026-11-06 |
 | No active number | friendly page; redirect to the docs; a broken link | friendly `503` page in both locales, never a `wa.me` link (owner delegated) | 2026-11-06 |
+| Wording of the `503` page | mention owners; neutral sign-up wording | neutral wording, pt_BR "No momento não estamos aceitando novos cadastros. Tente de novo em alguns minutos." and en_US "We are not taking new sign-ups right now. Please try again in a few minutes." (owner delegated) | 2026-11-06 |
 | Locale of the prefilled text | `lang` parameter; `Accept-Language`; fixed pt-BR | `lang` parameter with the `DocsLanguage` values, absent is the default locale, unknown is `400` (owner delegated) | 2026-11-06 |
 | Free `text` parameter | accept it; fixed text only | fixed text only, so the link cannot be used to write messages for a victim (owner delegated) | 2026-11-06 |
 | Rate limit | new binding; reuse the install page limiter with its own key | reuse `INSTALL_PAGE_LIMITER` with the `start:` key prefix (owner delegated) | 2026-11-06 |
