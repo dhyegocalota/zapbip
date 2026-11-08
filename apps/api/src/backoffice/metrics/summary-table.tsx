@@ -1,7 +1,12 @@
 export type SummaryRow = { label: string; value: string; cell: string };
 
 export function SummaryTable(props: { caption: string; rows: SummaryRow[]; emptyText: string }) {
-  if (props.rows.length === 0) return <p class="empty-text">{props.emptyText}</p>;
+  if (props.rows.length === 0)
+    return (
+      <div class="empty-state">
+        <p>{props.emptyText}</p>
+      </div>
+    );
   return (
     <table class="data-table">
       <caption class="visually-hidden">{props.caption}</caption>

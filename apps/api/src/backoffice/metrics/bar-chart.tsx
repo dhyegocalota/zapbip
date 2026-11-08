@@ -82,7 +82,12 @@ export function BarChart(props: {
   const { locale, id, days, series } = props;
   const translate = (key: BackofficeCopyKey, values?: Record<string, string>): string => renderBackofficeCopy({ key, locale, values });
   const hasData = series.some((entry) => entry.values.some((value) => value > 0));
-  if (!hasData) return <p class="empty-text">{translate(BackofficeCopyKey.MetricsNoData)}</p>;
+  if (!hasData)
+    return (
+      <div class="empty-state">
+        <p>{translate(BackofficeCopyKey.MetricsNoData)}</p>
+      </div>
+    );
   const references = props.references === undefined ? [] : props.references;
   const maximum = Math.max(MINIMUM_MAXIMUM, ...series.flatMap((entry) => entry.values), ...references.map((reference) => reference.value));
   const scale = maximum * HEADROOM_RATIO;
@@ -117,6 +122,7 @@ export function BarChart(props: {
             x={bar.x}
             y={bar.y}
             width={bar.width}
+            rx={BAR_RADIUS}
             height={bar.height}
             fill={bar.pattern === BarPattern.Hatched ? `url(#${patternId})` : undefined}
           />
@@ -154,6 +160,7 @@ export function BarChart(props: {
         <ul class="chart-legend">
           {series.map((entry) => (
             <li>
+              <span class={`legend-swatch legend-swatch-${entry.pattern}`}></span>
               {entry.label} ({translate(patternLabels[entry.pattern])})
             </li>
           ))}

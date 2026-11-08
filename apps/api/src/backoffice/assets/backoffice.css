@@ -879,6 +879,10 @@ main > .notice {
   gap: var(--space-2);
 }
 
+.freshness-live {
+  font-weight: 600;
+}
+
 .freshness-hourly::before {
   content: '';
   width: 0.625rem;
@@ -908,10 +912,6 @@ main > .notice {
   border-radius: var(--radius-card) var(--radius-card) var(--radius-card) var(--radius-tail);
   background: var(--mark-bubble);
   animation: bubble-breathe var(--duration-breathe) ease-in-out 1;
-}
-
-.empty-text {
-  color: var(--color-text-muted);
 }
 
 .error-code {

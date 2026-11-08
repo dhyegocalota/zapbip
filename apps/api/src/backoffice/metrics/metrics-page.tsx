@@ -7,6 +7,7 @@ import { isBudgetWarning } from '../../account-inbox/usage-meter';
 import { DAILY_BUDGET_WARNING_RATIO, DURABLE_OBJECT_DAILY_GIGABYTE_SECONDS } from '../../operations/constants';
 import { BarChart, BarPattern, type ChartSeries } from './bar-chart';
 import { FigureNumber } from './figure-number';
+import { type Freshness, FreshnessKind, FreshnessLine } from './freshness-line';
 import { FilterForm } from './filter-form';
 import { SummaryTable } from './summary-table';
 import { keyedCell, MetricCell, NOT_REPORTED_CLIENT_KEY } from './metric-cell';
@@ -31,9 +32,9 @@ export function MetricsPage(props: { page: PageContext; filter: MetricsFilter; r
   const translate = (key: BackofficeCopyKey, values?: Record<string, string>): string => renderBackofficeCopy({ key, locale, values });
   const days = windowDays({ now, period: filter.period });
   const today = utcDay({ now });
-  const liveLabel = translate(BackofficeCopyKey.MetricsFreshnessLive);
+  const live: Freshness = { kind: FreshnessKind.Live, label: translate(BackofficeCopyKey.MetricsFreshnessLive) };
   const noData = translate(BackofficeCopyKey.MetricsNoData);
-  const hourlyLabel = translate(BackofficeCopyKey.MetricsFreshnessHourly);
+  const hourly: Freshness = { kind: FreshnessKind.Hourly, label: translate(BackofficeCopyKey.MetricsFreshnessHourly) };
   const totalOf = (metric: ActivityMetric): number => sumOf({ values: activitySeries({ days, rows: report.activity, metric }) });
   const activityOf = (input: { metric: ActivityMetric; label: string; cell: MetricCell; pattern: BarPattern }): ChartSeries => {
     const values = activitySeries({ days, rows: report.activity, metric: input.metric });
@@ -90,33 +91,33 @@ export function MetricsPage(props: { page: PageContext; filter: MetricsFilter; r
           label={translate(BackofficeCopyKey.MetricsAccountsTitle)}
           value={String(accountTotal)}
           cell={MetricCell.Accounts}
-          freshness={liveLabel}
+          freshness={live}
         />
         <FigureNumber
           id="figure-agents-active"
           label={translate(BackofficeCopyKey.MetricsAgentsActive)}
           value={String(report.agents.active)}
           cell={MetricCell.AgentsActive}
-          freshness={liveLabel}
+          freshness={live}
         />
         <FigureNumber
           id="figure-agents-connected"
           label={translate(BackofficeCopyKey.MetricsAgentsConnected)}
           value={String(report.agents.connected)}
           cell={MetricCell.AgentsConnected}
-          freshness={liveLabel}
+          freshness={live}
         />
         <FigureNumber
           id="figure-blocked-phones"
           label={translate(BackofficeCopyKey.MetricsBlockedPhones)}
           value={String(report.blockedPhones)}
           cell={MetricCell.BlockedPhones}
-          freshness={liveLabel}
+          freshness={live}
         />
       </div>
-      <section class="card" aria-labelledby="metrics-accounts-title">
+      <section class="card hero-card" aria-labelledby="metrics-accounts-title">
         <h2 id="metrics-accounts-title">{translate(BackofficeCopyKey.MetricsAccountsTitle)}</h2>
-        <p class="figure-freshness">{liveLabel}</p>
+        <FreshnessLine freshness={live} />
         <h3>{translate(BackofficeCopyKey.MetricsAccountsByState)}</h3>
         <SummaryTable
           caption={translate(BackofficeCopyKey.MetricsAccountsByState)}
@@ -156,7 +157,7 @@ export function MetricsPage(props: { page: PageContext; filter: MetricsFilter; r
       </section>
       <section class="card" aria-labelledby="metrics-agents-title">
         <h2 id="metrics-agents-title">{translate(BackofficeCopyKey.MetricsAgentsTitle)}</h2>
-        <p class="figure-freshness">{liveLabel}</p>
+        <FreshnessLine freshness={live} />
         <h3>{translate(BackofficeCopyKey.MetricsAgentsByClient)}</h3>
         <SummaryTable
           caption={translate(BackofficeCopyKey.MetricsAgentsByClient)}
@@ -192,21 +193,21 @@ export function MetricsPage(props: { page: PageContext; filter: MetricsFilter; r
       </section>
       <section class="card" aria-labelledby="metrics-messages-title">
         <h2 id="metrics-messages-title">{translate(BackofficeCopyKey.MetricsMessagesTitle)}</h2>
-        <p class="figure-freshness">{hourlyLabel}</p>
+        <FreshnessLine freshness={hourly} />
         <div class="figure-grid">
           <FigureNumber
             id="figure-messages-in"
             label={translate(BackofficeCopyKey.MetricsMessagesIn)}
             value={String(totalOf(ActivityMetric.MessagesIn))}
             cell={MetricCell.MessagesIn}
-            freshness={hourlyLabel}
+            freshness={hourly}
           />
           <FigureNumber
             id="figure-messages-out"
             label={translate(BackofficeCopyKey.MetricsMessagesOut)}
             value={String(totalOf(ActivityMetric.MessagesOut))}
             cell={MetricCell.MessagesOut}
-            freshness={hourlyLabel}
+            freshness={hourly}
           />
         </div>
         <BarChart
@@ -233,21 +234,21 @@ export function MetricsPage(props: { page: PageContext; filter: MetricsFilter; r
       </section>
       <section class="card" aria-labelledby="metrics-templates-title">
         <h2 id="metrics-templates-title">{translate(BackofficeCopyKey.MetricsTemplatesTitle)}</h2>
-        <p class="figure-freshness">{hourlyLabel}</p>
+        <FreshnessLine freshness={hourly} />
         <div class="figure-grid">
           <FigureNumber
             id="figure-templates-notice"
             label={translate(BackofficeCopyKey.MetricsTemplatesNotice)}
             value={String(totalOf(ActivityMetric.TemplatesSentNotice))}
             cell={MetricCell.TemplatesNotice}
-            freshness={hourlyLabel}
+            freshness={hourly}
           />
           <FigureNumber
             id="figure-templates-question"
             label={translate(BackofficeCopyKey.MetricsTemplatesQuestion)}
             value={String(totalOf(ActivityMetric.TemplatesSentQuestion))}
             cell={MetricCell.TemplatesQuestion}
-            freshness={hourlyLabel}
+            freshness={hourly}
           />
         </div>
         <BarChart
@@ -274,13 +275,13 @@ export function MetricsPage(props: { page: PageContext; filter: MetricsFilter; r
       </section>
       <section class="card" aria-labelledby="metrics-failures-title">
         <h2 id="metrics-failures-title">{translate(BackofficeCopyKey.MetricsFailuresTitle)}</h2>
-        <p class="figure-freshness">{hourlyLabel}</p>
+        <FreshnessLine freshness={hourly} />
         <FigureNumber
           id="figure-sends-failed"
           label={translate(BackofficeCopyKey.MetricsFailuresTitle)}
           value={String(totalOf(ActivityMetric.SendsFailed))}
           cell={MetricCell.SendsFailed}
-          freshness={hourlyLabel}
+          freshness={hourly}
         />
         <BarChart
           {...chartProps}
@@ -300,13 +301,13 @@ export function MetricsPage(props: { page: PageContext; filter: MetricsFilter; r
       </section>
       <section class="card" aria-labelledby="metrics-wake-title">
         <h2 id="metrics-wake-title">{translate(BackofficeCopyKey.MetricsWakeTitle)}</h2>
-        <p class="figure-freshness">{hourlyLabel}</p>
+        <FreshnessLine freshness={hourly} />
         <FigureNumber
           id="figure-wake-success"
           label={translate(BackofficeCopyKey.MetricsWakeTitle)}
           value={percentText(overallWake)}
           cell={MetricCell.WakeSuccess}
-          freshness={hourlyLabel}
+          freshness={hourly}
         />
         <BarChart
           {...chartProps}
@@ -319,14 +320,14 @@ export function MetricsPage(props: { page: PageContext; filter: MetricsFilter; r
       </section>
       <section class="card" aria-labelledby="metrics-budget-title">
         <h2 id="metrics-budget-title">{translate(BackofficeCopyKey.MetricsBudgetTitle)}</h2>
-        <p class="figure-freshness">{hourlyLabel}</p>
-        <p class="figure-freshness">{translate(BackofficeCopyKey.MetricsBudgetAccountWide)}</p>
+        <FreshnessLine freshness={hourly} />
+        <p class="field-help">{translate(BackofficeCopyKey.MetricsBudgetAccountWide)}</p>
         <FigureNumber
           id="figure-budget-used"
           label={translate(BackofficeCopyKey.MetricsBudgetTitle)}
           value={String(Math.round(budgetToday))}
           cell={MetricCell.BudgetUsed}
-          freshness={hourlyLabel}
+          freshness={hourly}
         />
         <p>
           {translate(BackofficeCopyKey.MetricsBudgetUsed, {
@@ -359,7 +360,7 @@ export function MetricsPage(props: { page: PageContext; filter: MetricsFilter; r
       </section>
       <section class="card" aria-labelledby="metrics-restricted-title">
         <h2 id="metrics-restricted-title">{translate(BackofficeCopyKey.MetricsRestrictedTitle)}</h2>
-        <p class="figure-freshness">{liveLabel}</p>
+        <FreshnessLine freshness={live} />
         <SummaryTable
           caption={translate(BackofficeCopyKey.MetricsRestrictedTitle)}
           emptyText={noData}

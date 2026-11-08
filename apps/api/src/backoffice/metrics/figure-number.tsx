@@ -1,6 +1,7 @@
+import { type Freshness, FreshnessLine } from './freshness-line';
 import type { MetricCell } from './metric-cell';
 
-export function FigureNumber(props: { id: string; label: string; value: string; cell: MetricCell; freshness: string }) {
+export function FigureNumber(props: { id: string; label: string; value: string; cell: MetricCell; freshness: Freshness }) {
   return (
     <div class="figure">
       <p id={props.id} class="figure-label">
@@ -9,7 +10,7 @@ export function FigureNumber(props: { id: string; label: string; value: string; 
       <p class="figure-value" aria-labelledby={props.id} data-cell={props.cell}>
         {props.value}
       </p>
-      <p class="figure-freshness">{props.freshness}</p>
+      <FreshnessLine freshness={props.freshness} />
     </div>
   );
 }
