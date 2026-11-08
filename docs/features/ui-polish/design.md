@@ -352,6 +352,10 @@ The inline-style pattern stays; colours change for AA; two additions.
 
 Additions: `frame="phone"` wraps the chat in a 10 px `#0E1F1A` bezel with a 44 px outer radius, a status row ("9:41"), and the bubble avatar with three dots in `#25D366` on the header; `{ typing: true }` renders an incoming bubble with three dots (`aria-hidden`, class `zapbip-typing`, animated by `zapbip.css` for 4 iterations of 1.2 s, static under reduced motion). The four "What it looks like" cards keep the default frame.
 
+### 10.4a Wide Overview
+
+Both Overview pages carry frontmatter `mode: "wide"`, which the pinned client 0.0.4077 honours, so the hero sits side by side at 1280. The cost is accepted (owner delegated 2026-11-06): wide mode hides "On this page" on the Overview only. The Overview is a landing page; every other page keeps its table of contents (a walk assertion covers How to start). `zapbip.css` caps paragraphs, which the client renders as `span[data-as="p"]`, and lists at 44rem below the hero.
+
 ### 10.5 Docs motion
 
 Only the typing dots (above) and Mintlify's own transitions. `zapbip.css` wraps the keyframes in `@media (prefers-reduced-motion: no-preference)`.

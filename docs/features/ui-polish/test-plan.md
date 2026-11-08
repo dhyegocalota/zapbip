@@ -77,7 +77,7 @@ Contrast is computed from the stylesheet text by `support/contrast.ts` (the pars
 - [ ] `::sticky header` — steps: at 1280 scroll the metrics page until a table row is under the header; expected: header stays at `top: 0`, its text still passes 4.5:1 sampled against the pixel behind it; at 375 the header scrolls away (not sticky)
 - [ ] The existing backoffice specs (`sign-in`, `numbers`, `error-pages`, and the metrics spec) pass with their selectors unchanged
 - [ ] `apps/docs/e2e/ui-polish.spec.ts::hero` — steps: open `/` and `/pt-br` at 1280 and 375, light and dark; expected: `style[data-custom-css-path]` in `<head>`; hero visible; copy and phone boxes do not overlap at 1280 and are stacked copy-first at 375; `scrollWidth === 375`; the logo image has `naturalWidth` above 0 in both schemes
-- [ ] The docs walk, selectors unchanged — steps: `pnpm --filter @zapbip/docs test:walk`; expected: every existing spec passes with no edit to `apps/docs/e2e/{agents-a,agents-b,developers,features,from-zero,get-started,help,language,mcp-reference,not-found}.spec.ts` (`git diff origin/main -- those files` is empty)
+- [ ] The docs walk, every selector unchanged — steps: `pnpm --filter @zapbip/docs test:walk`; expected: every existing spec passes, and `git diff origin/main -- apps/docs/e2e/{agents-a,agents-b,developers,features,from-zero,get-started,help,language,mcp-reference,not-found}.spec.ts` shows exactly one changed line: `OVERVIEW_EXAMPLE_COUNT.maximum` in `get-started.spec.ts` going from 4 to 5, because the hero adds a fifth chat to the Overview; no locator, selector or assertion changes
 - [ ] Broken links — steps: `pnpm --filter @zapbip/docs broken-links`; expected: zero broken links
 
 ## Docs gate and Mintlify client

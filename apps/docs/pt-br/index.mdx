@@ -1,10 +1,31 @@
 ---
 title: Visão geral
 description: Sua IA, no seu WhatsApp.
+mode: 'wide'
 ---
 
 import { Chat } from '/snippets/chat.jsx';
 import OfficialNumber from '/snippets/pt-br/official-number.mdx';
+import { Hero } from '/snippets/hero.jsx';
+
+<Hero
+  eyebrow="API oficial do WhatsApp Cloud"
+  statement="Sua IA manda mensagem."
+  accent="Você responde no WhatsApp."
+  lead="Decisões, trabalhos prontos e perguntas com botões, no celular que já está com você. Uma linha para configurar."
+  primary={{ label: 'Como começar', href: '/pt-br/get-started/how-to-start' }}
+  secondary={{ label: 'IAs compatíveis', href: '/pt-br/agents/supported-agents' }}
+>
+  <Chat
+    frame="phone"
+    messages={[
+      { name: 'Claude', text: 'Seu voo para Lisboa caiu para R$ 2.100. Reservo?', options: ['Reservar', 'Continuar olhando'] },
+      { you: true, text: 'Reservar' },
+      { name: 'Claude', text: 'Reservado. Mando o cartão de embarque aqui.' },
+      { typing: true },
+    ]}
+  />
+</Hero>
 
 ## Por que o zapbip existe
 
