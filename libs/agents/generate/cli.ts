@@ -2,7 +2,6 @@ import { GenerationMode, applyValidPlan, pendingDeletionsOf, staleWritesOf, writ
 import { existsSync, readFileSync } from 'node:fs';
 import { DocsLanguage } from '@zapbip/types';
 import { AgentFacet, type AgentDefinition } from '../src/contract';
-import { AGENT_DEFINITIONS } from '../src/definitions';
 import { discoverAgents } from './discover';
 import { loadAgent } from './load';
 import { registryCheckViolationsOf } from './registry-checks';
@@ -111,11 +110,6 @@ async function scaffold(input: { argv: string[] }): Promise<number> {
   return SUCCESS_EXIT_CODE;
 }
 
-function generatedDefinitionOf(input: { id: string }): AgentDefinition | null {
-  const found = Object.entries(AGENT_DEFINITIONS).find(([id]) => id === input.id);
-  return found === undefined ? null : found[1];
-}
-
 function namesOf(input: { id: string; definition: AgentDefinition | null }): string[] {
   if (input.definition === null) return [input.id];
   const { matrixName, linkName, speakerNames } = input.definition.docs;
@@ -125,8 +119,8 @@ function namesOf(input: { id: string; definition: AgentDefinition | null }): str
 async function mentions(input: { argv: string[] }): Promise<number> {
   const id = agentIdOf({ mode: CliMode.Mentions, argv: input.argv });
   const agent = discoverAgents({ roots: [SUPPORTED_FOLDER] }).find((candidate) => candidate.id === id);
-  if (!agent) console.error(`${id} has no folder; listing the files that name its id and the names its generated definition still holds`);
-  const definition = agent ? (await loadAgent({ agent })).definition : generatedDefinitionOf({ id });
+  if (!agent) console.error(`${id} has no folder; listing the files that name its id`);
+  const definition = agent ? (await loadAgent({ agent })).definition : null;
   if (agent && !definition) throw new Error(`${id} has no definition`);
   const plan = await planFromDisk();
   const excludedPrefixes = [
