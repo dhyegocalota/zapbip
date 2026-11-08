@@ -23,6 +23,7 @@ const LISTEN_COMMAND = 'listen';
 const EXIT_CODE_CLEAN = 0;
 const EXIT_CODE_FAILURE = 1;
 const OWNER_TEXT = 'Please deploy the staging build';
+const LATE_READ_DELAY_MS = 300;
 
 function printedLines(input: { listenProcess: ListenProcess }): string[] {
   return input.listenProcess
@@ -39,16 +40,16 @@ describe('zapbip listen', () => {
   let server: FakeEventServer;
   let started: ListenProcess[];
 
-  function startListen(input: { arguments?: string[]; connectionUrl?: string } = {}): ListenProcess {
-    const { arguments: extraArguments = [], connectionUrl = server.connectionLink } = input;
+  function startListen(input: { arguments?: string[]; connectionUrl?: string; readDelayMs?: number } = {}): ListenProcess {
+    const { arguments: extraArguments = [], connectionUrl = server.connectionLink, readDelayMs = 0 } = input;
     const child = spawn(process.execPath, [bundleFile, LISTEN_COMMAND, ...extraArguments], {
       env: { ...process.env, [CONNECTION_URL_VARIABLE]: connectionUrl, ...DISABLE_TLS_VERIFICATION_ENVIRONMENT },
       stdio: 'pipe',
     });
     let output = '';
     let errors = '';
-    child.stdout.on('data', (chunk: Buffer) => (output += chunk.toString()));
-    child.stderr.on('data', (chunk: Buffer) => (errors += chunk.toString()));
+    child.stdout.on('data', (chunk: Buffer) => setTimeout(() => (output += chunk.toString()), readDelayMs));
+    child.stderr.on('data', (chunk: Buffer) => setTimeout(() => (errors += chunk.toString()), readDelayMs));
     const exited = new Promise<number | null>((resolve) => child.on('exit', (code) => resolve(code)));
     const listenProcess: ListenProcess = { child, exited, standardOutput: () => output, standardError: () => errors };
     started.push(listenProcess);
@@ -94,6 +95,17 @@ describe('zapbip listen', () => {
       { messageId: 'msg_1', kind: 'text', sender: 'owner', verified: true, forwarded: false, text: OWNER_TEXT },
     ]);
     expect(server.framesOfType({ type: ConnectorFrameType.Done }).map((entry) => entry.frame.messageId)).toEqual(['msg_1']);
+  });
+
+  it('prints one JSON line per owner message even when the output pipe is read late, as on a loaded machine', async () => {
+    const listenProcess = startListen({ readDelayMs: LATE_READ_DELAY_MS });
+    await server.waitForLiveConnections({ count: 1 });
+    pushOwnerMessage({ messageId: 'msg_1', text: OWNER_TEXT });
+    await server.waitForFrames({ type: ConnectorFrameType.Done, count: 1 });
+
+    expect(printedLines({ listenProcess }).map((line) => JSON.parse(line))).toEqual([
+      { messageId: 'msg_1', kind: 'text', sender: 'owner', verified: true, forwarded: false, text: OWNER_TEXT },
+    ]);
   });
 
   it('keeps the output to message lines and sends the logs to the error stream without any message text', async () => {
