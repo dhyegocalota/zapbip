@@ -11,10 +11,23 @@ export type ChartReference = { value: number; label: string };
 
 export type ChartSeries = { label: string; cell: MetricCell; values: number[]; valueTexts: string[]; pattern: BarPattern };
 
-const LEFT_GUTTER = 52;
-const RIGHT_GUTTER = 120;
-const PLOT_WIDTH = 548;
-const CHART_WIDTH = LEFT_GUTTER + PLOT_WIDTH + RIGHT_GUTTER;
+export const BAR_RADIUS = 2;
+export enum ChartSize {
+  Compact = 'compact',
+  Wide = 'wide',
+}
+
+type ChartLayout = { leftGutter: number; plotWidth: number; chartWidth: number };
+
+const CHART_GUTTERS: Record<ChartSize, { leftGutter: number; plotWidth: number; rightGutter: number }> = {
+  [ChartSize.Wide]: { leftGutter: 52, plotWidth: 548, rightGutter: 120 },
+  [ChartSize.Compact]: { leftGutter: 36, plotWidth: 300, rightGutter: 16 },
+};
+
+function layoutOf(input: { size: ChartSize }): ChartLayout {
+  const { leftGutter, plotWidth, rightGutter } = CHART_GUTTERS[input.size];
+  return { leftGutter, plotWidth, chartWidth: leftGutter + plotWidth + rightGutter };
+}
 const TOP_MARGIN = 20;
 const PLOT_HEIGHT = 140;
 const BASELINE_Y = TOP_MARGIN + PLOT_HEIGHT;
@@ -39,15 +52,15 @@ function plotY(input: { value: number; scale: number }): number {
   return BASELINE_Y - (input.value / input.scale) * PLOT_HEIGHT;
 }
 
-function barsOf(input: { series: ChartSeries[]; scale: number }): Bar[] {
+function barsOf(input: { series: ChartSeries[]; scale: number; layout: ChartLayout }): Bar[] {
   const dayCount = input.series.reduce((count, series) => Math.max(count, series.values.length), 0);
-  const groupWidth = PLOT_WIDTH / dayCount;
+  const groupWidth = input.layout.plotWidth / dayCount;
   const barWidth = (groupWidth - BAR_GAP) / input.series.length;
   return input.series.flatMap((series, seriesIndex) =>
     series.values.map((value, dayIndex) => {
       const y = plotY({ value, scale: input.scale });
       return {
-        x: LEFT_GUTTER + dayIndex * groupWidth + BAR_GAP / 2 + seriesIndex * barWidth,
+        x: input.layout.leftGutter + dayIndex * groupWidth + BAR_GAP / 2 + seriesIndex * barWidth,
         y,
         width: barWidth,
         height: BASELINE_Y - y,
@@ -68,6 +81,7 @@ function placeReferences(input: { references: ChartReference[]; scale: number })
 }
 
 export function BarChart(props: {
+  size: ChartSize;
   locale: OwnerLocale;
   id: string;
   metricLabel: string;
@@ -79,9 +93,10 @@ export function BarChart(props: {
   references?: ChartReference[];
 }) {
   const { locale, id, days, series } = props;
+  const layout = layoutOf({ size: props.size });
   const translate = (key: BackofficeCopyKey, values?: Record<string, string>): string => renderBackofficeCopy({ key, locale, values });
   const hasData = series.some((entry) => entry.values.some((value) => value > 0));
-  if (!hasData) return <p class="empty-text">{translate(BackofficeCopyKey.MetricsNoData)}</p>;
+  if (!hasData) return <p class="empty-inline">{translate(BackofficeCopyKey.MetricsNoData)}</p>;
   const references = props.references === undefined ? [] : props.references;
   const maximum = Math.max(MINIMUM_MAXIMUM, ...series.flatMap((entry) => entry.values), ...references.map((reference) => reference.value));
   const scale = maximum * HEADROOM_RATIO;
@@ -96,7 +111,7 @@ export function BarChart(props: {
   };
   return (
     <figure class="chart">
-      <svg class="chart-plot" viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} role="img" aria-labelledby={`${id}-title ${id}-desc`}>
+      <svg class="chart-plot" viewBox={`0 0 ${layout.chartWidth} ${CHART_HEIGHT}`} role="img" aria-labelledby={`${id}-title ${id}-desc`}>
         <title id={`${id}-title`}>{title}</title>
         <desc id={`${id}-desc`}>{description}</desc>
         <defs>
@@ -110,32 +125,39 @@ export function BarChart(props: {
             <line class="hatch-line" x1="0" y1="0" x2="0" y2={HATCH_SIZE} />
           </pattern>
         </defs>
-        {barsOf({ series, scale }).map((bar) => (
+        {barsOf({ series, scale, layout }).map((bar) => (
           <rect
             class={`bar bar-${bar.pattern}`}
             x={bar.x}
             y={bar.y}
             width={bar.width}
+            rx={BAR_RADIUS}
             height={bar.height}
             fill={bar.pattern === BarPattern.Hatched ? `url(#${patternId})` : undefined}
           />
         ))}
         {placeReferences({ references, scale }).map((reference) => (
           <g>
-            <line class="chart-reference" x1={LEFT_GUTTER} y1={reference.lineY} x2={LEFT_GUTTER + PLOT_WIDTH} y2={reference.lineY} />
+            <line
+              class="chart-reference"
+              x1={layout.leftGutter}
+              y1={reference.lineY}
+              x2={layout.leftGutter + layout.plotWidth}
+              y2={reference.lineY}
+            />
             <text
               class="chart-axis-label chart-reference-label"
-              x={LEFT_GUTTER + PLOT_WIDTH + REFERENCE_LABEL_GAP}
+              x={layout.leftGutter + layout.plotWidth + REFERENCE_LABEL_GAP}
               y={reference.labelY + LABEL_BASELINE_SHIFT}
             >
               {reference.label}
             </text>
           </g>
         ))}
-        <line class="chart-baseline" x1={LEFT_GUTTER} y1={BASELINE_Y} x2={LEFT_GUTTER + PLOT_WIDTH} y2={BASELINE_Y} />
+        <line class="chart-baseline" x1={layout.leftGutter} y1={BASELINE_Y} x2={layout.leftGutter + layout.plotWidth} y2={BASELINE_Y} />
         <text
           class="chart-axis-label chart-axis-maximum"
-          x={LEFT_GUTTER - AXIS_LABEL_GAP}
+          x={layout.leftGutter - AXIS_LABEL_GAP}
           y={plotY({ value: maximum, scale }) + LABEL_BASELINE_SHIFT}
           text-anchor="end"
         >
@@ -143,7 +165,7 @@ export function BarChart(props: {
         </text>
         {days.map((day, index) =>
           index % DAY_LABEL_INTERVAL === 0 ? (
-            <text class="chart-axis-label" x={LEFT_GUTTER + (index * PLOT_WIDTH) / days.length} y={DAY_LABEL_Y}>
+            <text class="chart-axis-label" x={layout.leftGutter + (index * layout.plotWidth) / days.length} y={DAY_LABEL_Y}>
               {day.slice(DAY_LABEL_START)}
             </text>
           ) : null,
@@ -153,6 +175,7 @@ export function BarChart(props: {
         <ul class="chart-legend">
           {series.map((entry) => (
             <li>
+              <span class={`legend-swatch legend-swatch-${entry.pattern}`}></span>
               {entry.label} ({translate(patternLabels[entry.pattern])})
             </li>
           ))}

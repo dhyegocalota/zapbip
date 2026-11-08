@@ -4,6 +4,7 @@ import { DeployEnvironment } from '../contract/deploy-environment';
 import { FAVICON_CONTENT_TYPE, FAVICON_HREF } from './assets/favicon';
 import { BackofficeCopyKey, renderBackofficeCopy } from './backoffice-copy';
 import { type BackofficeNotice, NOTICE_VIEWS } from './backoffice-notice';
+import { LiveDot } from './components/live-dot';
 import { LocaleSwitch } from './components/locale-switch';
 import { Notice } from './components/notice';
 import { PrimaryNavigation } from './components/primary-navigation';
@@ -31,6 +32,7 @@ const ENVIRONMENT_BADGES: Record<DeployEnvironment, BackofficeCopyKey | null> = 
   [DeployEnvironment.Development]: BackofficeCopyKey.EnvironmentDevelopment,
 };
 const TITLE_SEPARATOR = ' · ';
+const SIGNED_OUT_SHELL_CLASS = 'shell-signed-out';
 
 export function Layout(props: LayoutProps) {
   const { locale, environment, csrfToken, signedIn, notice } = props;
@@ -48,16 +50,25 @@ export function Layout(props: LayoutProps) {
         <link rel="icon" href={FAVICON_HREF} type={FAVICON_CONTENT_TYPE} />
         <link rel="stylesheet" href={props.stylesheetHref} />
       </head>
-      <body>
+      <body class={signedIn ? undefined : SIGNED_OUT_SHELL_CLASS}>
         <a href="#content" class="skip-link">
           {translate(BackofficeCopyKey.SkipToContent)}
         </a>
         <header class="site-header">
           <span class="brand">{translate(BackofficeCopyKey.BrandName)}</span>
-          {badgeKey === null ? null : <span class="environment-badge">{translate(badgeKey)}</span>}
+          {badgeKey === null ? null : (
+            <span class="environment-badge">
+              <LiveDot />
+              {translate(badgeKey)}
+            </span>
+          )}
           {signedIn ? <PrimaryNavigation locale={locale} currentPath={props.currentPath} /> : null}
-          {csrfToken === null ? null : <LocaleSwitch locale={locale} csrfToken={csrfToken} returnTo={props.currentPath} />}
-          {signedIn && csrfToken !== null ? <SignOutButton locale={locale} csrfToken={csrfToken} /> : null}
+          {csrfToken === null ? null : (
+            <div class="header-end">
+              <LocaleSwitch locale={locale} csrfToken={csrfToken} returnTo={props.currentPath} />
+              {signedIn ? <SignOutButton locale={locale} csrfToken={csrfToken} /> : null}
+            </div>
+          )}
         </header>
         <main id="content">
           {noticeView === null ? null : <Notice variant={noticeView.variant} locale={locale} message={translate(noticeView.copyKey)} />}

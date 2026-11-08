@@ -1,10 +1,31 @@
 ---
 title: Overview
 description: Your AI, in your WhatsApp.
+mode: 'wide'
 ---
 
 import { Chat } from '/snippets/chat.jsx';
 import OfficialNumber from '/snippets/official-number.mdx';
+import { Hero } from '/snippets/hero.jsx';
+
+<Hero
+  eyebrow="Official WhatsApp Cloud API"
+  statement="Your AI messages you."
+  accent="You answer on WhatsApp."
+  lead="Decisions, finished work and questions with buttons, on the phone you already carry. One line to set up."
+  primary={{ label: 'How to start', href: '/get-started/how-to-start' }}
+  secondary={{ label: 'Supported agents', href: '/agents/supported-agents' }}
+>
+  <Chat
+    frame="phone"
+    messages={[
+      { name: 'Claude', text: 'Your flight to Lisbon dropped to $410. Book it?', options: ['Book it', 'Keep watching'] },
+      { you: true, text: 'Book it' },
+      { name: 'Claude', text: 'Booked. I will send the boarding pass here.' },
+      { typing: true },
+    ]}
+  />
+</Hero>
 
 ## Why zapbip exists
 

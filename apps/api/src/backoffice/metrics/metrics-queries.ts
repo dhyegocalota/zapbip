@@ -69,17 +69,19 @@ export async function readMetrics(input: { database: D1Database; filter: Metrics
   const { numberId } = filter;
   const sinceDay = utcDay({ now: now - (periodDays({ period: filter.period }) - 1) * DAY_MS });
   const sinceAt = Date.parse(sinceDay);
+  const comparisonSinceDay = utcDay({ now: now - (2 * periodDays({ period: filter.period }) - 1) * DAY_MS });
+  const comparisonSinceAt = Date.parse(comparisonSinceDay);
   const restrictedSince = now - RESTRICTION_TTL_MS;
   const results = await database.batch([
     database.prepare(NUMBERS_STATEMENT),
     database.prepare(ACCOUNTS_BY_STATE_STATEMENT).bind(numberId),
     database.prepare(ACCOUNTS_PER_NUMBER_STATEMENT).bind(numberId),
-    database.prepare(NEW_ACCOUNTS_STATEMENT).bind(numberId, sinceAt),
+    database.prepare(NEW_ACCOUNTS_STATEMENT).bind(numberId, comparisonSinceAt),
     database.prepare(AGENT_TOTALS_STATEMENT).bind(numberId),
     database.prepare(AGENTS_BY_CLIENT_STATEMENT).bind(numberId),
     database.prepare(AGENTS_CREATED_STATEMENT).bind(numberId, sinceAt),
     database.prepare(AGENTS_REVOKED_STATEMENT).bind(numberId, sinceAt),
-    database.prepare(ACTIVITY_STATEMENT).bind(numberId, sinceDay),
+    database.prepare(ACTIVITY_STATEMENT).bind(numberId, comparisonSinceDay),
     database.prepare(BUDGET_STATEMENT).bind(sinceDay),
     database.prepare(BLOCKED_PHONES_STATEMENT),
     database.prepare(RESTRICTED_STATEMENT).bind(numberId, restrictedSince),

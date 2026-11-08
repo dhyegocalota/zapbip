@@ -11,7 +11,7 @@ import { accessTokenAssociatedData } from '../../src/numbers/number-sealing';
 import { buildTextMessage } from '../support/builders';
 import { FakeGraph } from '../support/fake-graph';
 import { applyDirectoryMigration, seedOwnerIdentity } from '../support/seed';
-import { seedWhatsAppNumber, TEST_ACCESS_TOKEN, TEST_NUMBER_ID, TEST_PHONE_NUMBER_ID, testSecretBox } from '../support/whatsapp-numbers';
+import { seedWhatsAppNumber, TEST_ACCESS_TOKEN, TEST_NUMBER_ID, testSecretBox } from '../support/whatsapp-numbers';
 import { accountInboxStub, testEnv, whatsappTestEnv } from '../support/workers-env';
 
 const FIRST_ACCOUNT = 'acc_on_first';
@@ -22,6 +22,7 @@ const SECOND_OWNER_WA_ID = '5511900000002';
 const UNBOUND_OWNER_WA_ID = '5511900000003';
 const ROTATED_ACCESS_TOKEN = 'rotated-access-token';
 const RESTRICTED_ERROR_CODE = 131_048;
+const FIRST_PHONE_NUMBER_ID = '1000000000000101';
 const SECOND_NUMBER = {
   numberId: 'num_second',
   metaAppRef: 'mapp_second',
@@ -32,7 +33,10 @@ const SECOND_NUMBER = {
   displayNumber: '5511966660000',
 };
 
-const fakeGraph = new FakeGraph({ baseUrl: readWhatsAppEnvironment({ env: testEnv }).graphBaseUrl });
+const fakeGraph = new FakeGraph({
+  baseUrl: readWhatsAppEnvironment({ env: testEnv }).graphBaseUrl,
+  resourceIds: [FIRST_PHONE_NUMBER_ID, SECOND_NUMBER.phoneNumberId],
+});
 
 type SendOutcome = { delivered: true } | { delivered: false; code: string };
 type SenderSelection = { createSender: (input: { mediaStore: CoreDependencies['mediaStore'] }) => CoreDependencies['sender'] };
@@ -65,7 +69,7 @@ async function sendsTo(input: { phoneNumberId: string }) {
 
 beforeEach(async () => {
   await applyDirectoryMigration();
-  await seedWhatsAppNumber();
+  await seedWhatsAppNumber({ phoneNumberId: FIRST_PHONE_NUMBER_ID });
   await seedWhatsAppNumber(SECOND_NUMBER);
   await seedOwnerIdentity({
     accountId: FIRST_ACCOUNT,
@@ -92,7 +96,7 @@ describe('outbound per number', () => {
   it('sends from the number of the account with the token of that number', async () => {
     expect(await sendFrom({ accountId: FIRST_ACCOUNT, text: 'um' })).toEqual({ delivered: true });
     expect(await sendFrom({ accountId: SECOND_ACCOUNT, text: 'dois' })).toEqual({ delivered: true });
-    const [onFirst] = await sendsTo({ phoneNumberId: TEST_PHONE_NUMBER_ID });
+    const [onFirst] = await sendsTo({ phoneNumberId: FIRST_PHONE_NUMBER_ID });
     const [onSecond] = await sendsTo({ phoneNumberId: SECOND_NUMBER.phoneNumberId });
     expect(onFirst?.headers.authorization).toBe(`Bearer ${TEST_ACCESS_TOKEN}`);
     expect(onFirst?.body).toMatchObject({ to: FIRST_OWNER_WA_ID });
@@ -110,7 +114,7 @@ describe('outbound per number', () => {
       .bind(sealed, TEST_NUMBER_ID)
       .run();
     await sendFrom({ accountId: FIRST_ACCOUNT, text: 'depois' });
-    const sends = await sendsTo({ phoneNumberId: TEST_PHONE_NUMBER_ID });
+    const sends = await sendsTo({ phoneNumberId: FIRST_PHONE_NUMBER_ID });
     expect(sends.map((request) => request.headers.authorization)).toEqual([
       `Bearer ${TEST_ACCESS_TOKEN}`,
       `Bearer ${ROTATED_ACCESS_TOKEN}`,
@@ -124,7 +128,7 @@ describe('outbound per number', () => {
       const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
       await testEnv.CONNECTIONS.prepare('UPDATE whatsapp_numbers SET state = ? WHERE id = ?').bind(state, TEST_NUMBER_ID).run();
       expect(await sendFrom({ accountId: FIRST_ACCOUNT, text: 'um' })).toEqual({ delivered: false, code: ChannelErrorKind.Restricted });
-      expect(await sendsTo({ phoneNumberId: TEST_PHONE_NUMBER_ID })).toEqual([]);
+      expect(await sendsTo({ phoneNumberId: FIRST_PHONE_NUMBER_ID })).toEqual([]);
       const logged = JSON.stringify([...errorSpy.mock.calls, ...logSpy.mock.calls]);
       expect(logged).toContain(OperatorEvent.ChannelNumberUnavailable);
       expect(logged).not.toContain(TEST_ACCESS_TOKEN);
@@ -138,13 +142,13 @@ describe('outbound per number', () => {
   it('records a restriction for the phone number id that Meta restricted and not for the other', async () => {
     await fakeGraph.respondWith({
       method: 'POST',
-      path: `/v24.0/${TEST_PHONE_NUMBER_ID}/messages`,
+      path: `/v24.0/${FIRST_PHONE_NUMBER_ID}/messages`,
       status: 400,
       body: { error: { code: RESTRICTED_ERROR_CODE, message: 'refused' } },
     });
     expect(await sendFrom({ accountId: FIRST_ACCOUNT, text: 'um' })).toEqual({ delivered: false, code: ChannelErrorKind.Restricted });
     const now = createPlatformClock().now();
-    const first = new D1ChannelRestrictions({ database: testEnv.CONNECTIONS, phoneNumberId: TEST_PHONE_NUMBER_ID });
+    const first = new D1ChannelRestrictions({ database: testEnv.CONNECTIONS, phoneNumberId: FIRST_PHONE_NUMBER_ID });
     const second = new D1ChannelRestrictions({ database: testEnv.CONNECTIONS, phoneNumberId: SECOND_NUMBER.phoneNumberId });
     expect(await first.findActive({ now })).toEqual({ errorCode: RESTRICTED_ERROR_CODE });
     expect(await second.findActive({ now })).toBeNull();

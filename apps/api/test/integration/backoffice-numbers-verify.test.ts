@@ -26,7 +26,10 @@ const CLOSED_PORT_BASE_URL = 'http://127.0.0.1:1';
 const NUMBER_PATH = `/${GRAPH_API_VERSION}/${PHONE_NUMBER_ID}`;
 const TEMPLATES_PATH = `/${GRAPH_API_VERSION}/${WABA_ID}/message_templates`;
 const copy = BACKOFFICE_COPY[OwnerLocale.PortugueseBrazil];
-const fakeGraph = new FakeGraph({ baseUrl: readWhatsAppEnvironment({ env: testEnv }).graphBaseUrl });
+const fakeGraph = new FakeGraph({
+  baseUrl: readWhatsAppEnvironment({ env: testEnv }).graphBaseUrl,
+  resourceIds: [PHONE_NUMBER_ID, WABA_ID],
+});
 
 let sessionToken: string;
 
@@ -45,7 +48,10 @@ beforeEach(async () => {
   await fakeGraph.reset();
 });
 
-afterEach(endBackofficeSession);
+afterEach(async () => {
+  endBackofficeSession();
+  await fakeGraph.reset();
+});
 
 function answerNumber(input: { reportedDisplayNumber: string }): Promise<void> {
   return fakeGraph.respondWith({

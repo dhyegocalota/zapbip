@@ -14,6 +14,11 @@ export function NumbersListPage(props: { page: PageContext; entries: NumberListE
   const { page, entries } = props;
   const { locale } = page;
   const translate = (key: BackofficeCopyKey, values?: Record<string, string>): string => renderBackofficeCopy({ key, locale, values });
+  const registerLink = (
+    <a href={`${BackofficePath.Numbers}/${NumberSegment.New}`} class="button button-primary">
+      {translate(BackofficeCopyKey.NumbersRegister)}
+    </a>
+  );
   const hasPending = entries.some((entry) => entry.state === WhatsAppNumberState.Pending);
   return (
     <Layout
@@ -26,14 +31,15 @@ export function NumbersListPage(props: { page: PageContext; entries: NumberListE
       currentPath={BackofficePath.Numbers}
       notice={page.notice}
     >
-      <h1>{translate(BackofficeCopyKey.NumbersTitle)}</h1>
-      <a href={`${BackofficePath.Numbers}/${NumberSegment.New}`} class="button button-primary">
-        {translate(BackofficeCopyKey.NumbersRegister)}
-      </a>
+      <div class="page-head">
+        <h1>{translate(BackofficeCopyKey.NumbersTitle)}</h1>
+        {entries.length === 0 ? null : registerLink}
+      </div>
       {entries.length === 0 ? (
-        <section class="card" aria-labelledby="numbers-empty-title">
+        <section class="card empty-state" aria-labelledby="numbers-empty-title">
           <h2 id="numbers-empty-title">{translate(BackofficeCopyKey.NumbersEmptyTitle)}</h2>
           <p>{translate(BackofficeCopyKey.NumbersEmptyBody)}</p>
+          {registerLink}
         </section>
       ) : (
         <table class="data-table">
@@ -53,9 +59,11 @@ export function NumbersListPage(props: { page: PageContext; entries: NumberListE
             {entries.map((entry) => (
               <tr class="number-row">
                 <td data-label={translate(BackofficeCopyKey.NumbersColumnLabel)}>
-                  <a href={numberPath({ numberId: entry.numberId })}>{entry.label}</a>
+                  <a href={numberPath({ numberId: entry.numberId })} class="cell-truncate" title={entry.label}>
+                    {entry.label}
+                  </a>
                 </td>
-                <td data-label={translate(BackofficeCopyKey.NumbersColumnDisplayNumber)} class="mono">
+                <td data-label={translate(BackofficeCopyKey.NumbersColumnDisplayNumber)} class="mono cell-nowrap">
                   {entry.displayNumber}
                 </td>
                 <td data-label={translate(BackofficeCopyKey.NumbersColumnState)}>
@@ -63,10 +71,12 @@ export function NumbersListPage(props: { page: PageContext; entries: NumberListE
                 </td>
                 <td data-label={translate(BackofficeCopyKey.NumbersColumnMetaApp)}>{entry.metaAppLabel}</td>
                 <td data-label={translate(BackofficeCopyKey.NumbersColumnAccounts)}>{entry.accountCount}</td>
-                <td data-label={translate(BackofficeCopyKey.NumbersColumnVerified)}>
+                <td data-label={translate(BackofficeCopyKey.NumbersColumnVerified)} class="cell-nowrap">
                   {entry.verifiedAt === null ? translate(BackofficeCopyKey.NumbersNotVerified) : formatTimestamp({ at: entry.verifiedAt })}
                 </td>
-                <td data-label={translate(BackofficeCopyKey.NumbersColumnUpdated)}>{formatTimestamp({ at: entry.updatedAt })}</td>
+                <td data-label={translate(BackofficeCopyKey.NumbersColumnUpdated)} class="cell-nowrap">
+                  {formatTimestamp({ at: entry.updatedAt })}
+                </td>
               </tr>
             ))}
           </tbody>

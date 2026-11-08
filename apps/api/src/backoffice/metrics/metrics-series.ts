@@ -1,8 +1,38 @@
 import { PERCENT_MULTIPLIER } from '@zapbip/types';
 import { ActivityMetric } from '../../contract/activity-metric';
-import type { ActivityTotal, DayTotal } from './metrics-report';
+import type { ActivityTotal, DayTotal, MetricsReport } from './metrics-report';
 
 export type WakeDay = { woken: number; unreached: number };
+
+export function hasNoActivity(input: { report: MetricsReport; days: string[] }): boolean {
+  const { report, days } = input;
+  const inPeriod = (rows: DayTotal[]): DayTotal[] => rows.filter((row) => days.includes(row.day));
+  const emptyLists = [
+    report.accountsByState,
+    report.accountsPerNumber,
+    inPeriod(report.newAccounts),
+    report.agentsByClient,
+    inPeriod(report.agentsCreated),
+    inPeriod(report.agentsRevoked),
+    inPeriod(report.activity),
+    inPeriod(report.budgetDays),
+    report.restricted,
+  ];
+  return emptyLists.every((list) => list.length === 0) && report.agents.active === 0 && report.blockedPhones === 0;
+}
+
+export enum Trend {
+  Up = 'up',
+  Down = 'down',
+  Flat = 'flat',
+}
+
+export function trendOf(input: { current: number; previous: number }): { trend: Trend; amount: number } {
+  const difference = input.current - input.previous;
+  if (difference > 0) return { trend: Trend.Up, amount: difference };
+  if (difference < 0) return { trend: Trend.Down, amount: -difference };
+  return { trend: Trend.Flat, amount: 0 };
+}
 
 export function sumOf(input: { values: number[] }): number {
   return input.values.reduce((total, value) => total + value, 0);

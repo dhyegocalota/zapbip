@@ -22,7 +22,10 @@ import {
 
 const ROTATED_ACCESS_TOKEN = 'rotated-access-token-ta2';
 const ROTATED_APP_SECRET = 'rotated-app-secret-sx2';
-const fakeGraph = new FakeGraph({ baseUrl: readWhatsAppEnvironment({ env: testEnv }).graphBaseUrl });
+const fakeGraph = new FakeGraph({
+  baseUrl: readWhatsAppEnvironment({ env: testEnv }).graphBaseUrl,
+  resourceIds: [PHONE_NUMBER_ID, WABA_ID],
+});
 
 let sessionToken: string;
 

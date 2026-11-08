@@ -37,3 +37,4 @@ export const LOCALE_COOKIE_MAX_AGE_SECONDS = (365 * DAY_MS) / SECOND_MS;
 export const FLASH_MAX_AGE_MS = MINUTE_MS;
 export const AUDIT_PAGE_LIMIT = 200;
 export const STYLESHEET_CACHE_CONTROL = 'public, max-age=31536000, immutable';
+export const SPARKLINE_DAYS = 14;

@@ -8,6 +8,7 @@ export enum DocsViewport {
 
 export const DOCS_PORT_VARIABLE = 'DOCS_PORT';
 const LOOPBACK_HOST = '127.0.0.1';
+const PATTERN_SPECIAL_CHARACTERS = /[.*+?^${}()|[\]\\]/g;
 export const DESKTOP_WIDTH_PX = 1280;
 export const NARROW_WIDTH_PX = 375;
 export const DOCS_VIEWPORT_HEIGHT_PX = 800;
@@ -16,12 +17,33 @@ export const DOCS_LOCALE_OF: Record<DocsLanguage, string> = {
   [DocsLanguage.PortugueseBrazil]: 'pt-BR',
 };
 
-export const DOCS_WALK_NOISE_ALLOWLIST: { pattern: RegExp; reason: string }[] = [
+export const DOCS_WALK_NOISE_ALLOWLIST: { patternOf: (input: { origin: string }) => RegExp; reason: string }[] = [
   {
-    pattern: /^requestfailed .*\/socket\.io\//,
+    patternOf: () => /^requestfailed .*\/socket\.io\//,
     reason: 'mint dev holds a live-reload polling request open and the browser aborts it on every navigation',
   },
+  {
+    patternOf: ({ origin }) => new RegExp(`^requestfailed ${escapedForPattern({ text: origin })}/_mintlify/api/user net::ERR_ABORTED$`),
+    reason: 'mint dev asks its preview for the signed-in user and the browser aborts that request when the walk navigates away first',
+  },
+  {
+    patternOf: ({ origin }) =>
+      new RegExp(`^requestfailed ${escapedForPattern({ text: origin })}/_mintlify/assets/\\S+\\.js net::ERR_ABORTED$`),
+    reason: 'mint dev serves lazily loaded chunks from its own assets path and the browser aborts one when the walk navigates first',
+  },
 ];
+
+function escapedForPattern(input: { text: string }): string {
+  return input.text.replace(PATTERN_SPECIAL_CHARACTERS, '\\$&');
+}
+
+export function requestFailedNoiseOf(input: { url: string; errorText: string }): string {
+  return `requestfailed ${input.url} ${input.errorText}`;
+}
+
+export function isAllowedNoise(input: { entry: string; origin: string }): boolean {
+  return DOCS_WALK_NOISE_ALLOWLIST.some((allowed) => allowed.patternOf({ origin: input.origin }).test(input.entry));
+}
 
 const VIEWPORT_WIDTH_PX_OF: Record<DocsViewport, number> = {
   [DocsViewport.Desktop]: DESKTOP_WIDTH_PX,

@@ -50,7 +50,9 @@ export function RegisterNumberPage(props: RegisterNumberPageProps) {
           <fieldset>
             <legend>{translate(BackofficeCopyKey.RegisterMetaAppLegend)}</legend>
             <div class="field">
-              <label for="meta-app">{translate(BackofficeCopyKey.RegisterMetaAppLabel)}</label>
+              <label for="meta-app" class="visually-hidden">
+                {translate(BackofficeCopyKey.RegisterMetaAppLabel)}
+              </label>
               <select id="meta-app" name={NumberFormField.MetaApp}>
                 {metaApps.map((metaApp) => (
                   <option value={metaApp.metaAppRef} selected={values.metaApp === metaApp.metaAppRef}>
@@ -144,10 +146,14 @@ export function RegisterNumberPage(props: RegisterNumberPageProps) {
             <legend>{translate(BackofficeCopyKey.RegisterConfirmLegend)}</legend>
             <CodeField locale={locale} id="register-code" />
           </fieldset>
-          <button type="submit" class="button button-primary">
-            {translate(BackofficeCopyKey.RegisterSubmit)}
-          </button>
-          <a href={BackofficePath.Numbers}>{translate(BackofficeCopyKey.RegisterCancel)}</a>
+          <div class="form-actions">
+            <a href={BackofficePath.Numbers} class="button button-secondary">
+              {translate(BackofficeCopyKey.RegisterCancel)}
+            </a>
+            <button type="submit" class="button button-primary">
+              {translate(BackofficeCopyKey.RegisterSubmit)}
+            </button>
+          </div>
         </form>
       </section>
     </Layout>

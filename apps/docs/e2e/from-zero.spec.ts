@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { DocsLanguage, DocsOnlyClient, InstallClient, OFFICIAL_WHATSAPP_NUMBER, PAGE_LANGUAGE_FOLDER } from '@zapbip/types';
 import { AGENT_PAGE_HEADINGS, AGENT_PAGE_SECTIONS, type DocsAgentClient } from '../../../tools/repository-shape/src/docs-experience';
-import { DOCS_LOCALE_OF, DOCS_WALK_NOISE_ALLOWLIST, DocsViewport, docsOptionsOf } from './support/docs-experience';
+import { DOCS_LOCALE_OF, DocsViewport, docsOptionsOf, isAllowedNoise, requestFailedNoiseOf } from './support/docs-experience';
 
 const FIRST_ERROR_STATUS = 400;
 const OVERVIEW_PATH = 'index';
@@ -32,10 +32,6 @@ function isInLanguageFolder(input: { path: string }): boolean {
   return input.path === `/${PAGE_LANGUAGE_FOLDER}` || input.path.startsWith(`/${PAGE_LANGUAGE_FOLDER}/`);
 }
 
-function isAllowedNoise(input: { entry: string }): boolean {
-  return DOCS_WALK_NOISE_ALLOWLIST.some((allowed) => allowed.pattern.test(input.entry));
-}
-
 async function expectNoOverflow(input: { page: Page }): Promise<void> {
   const overflow = await input.page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(overflow).toBeLessThanOrEqual(0);
@@ -57,14 +53,19 @@ for (const language of Object.values(DocsLanguage)) {
         test.skip(testInfo.project.use.locale !== DOCS_LOCALE_OF[language]);
       });
 
-      test(`${DOCS_LOCALE_OF[language]} walk from the Overview to the WhatsApp step`, async ({ page }) => {
+      test(`${DOCS_LOCALE_OF[language]} walk from the Overview to the WhatsApp step`, async ({ page, baseURL }) => {
         test.setTimeout(WALK_TIMEOUT_MS);
+        if (!baseURL) throw new Error('the docs project has no baseURL');
         const noise: string[] = [];
         page.on('console', (message) => {
           if (message.type() === 'error') noise.push(`console ${message.text()}`);
         });
         page.on('pageerror', (error) => noise.push(`pageerror ${error.message}`));
-        page.on('requestfailed', (request) => noise.push(`requestfailed ${request.url()}`));
+        page.on('requestfailed', (request) => {
+          const failure = request.failure();
+          if (!failure) throw new Error(`requestfailed without a failure for ${request.url()}`);
+          noise.push(requestFailedNoiseOf({ url: request.url(), errorText: failure.errorText }));
+        });
         page.on('response', (response) => {
           if (response.status() >= FIRST_ERROR_STATUS) noise.push(`response ${response.status()} ${response.url()}`);
         });
@@ -118,7 +119,7 @@ for (const language of Object.values(DocsLanguage)) {
           await expectNoOverflow({ page });
         }
 
-        expect(noise.filter((entry) => !isAllowedNoise({ entry }))).toEqual([]);
+        expect(noise.filter((entry) => !isAllowedNoise({ entry, origin: new URL(baseURL).origin }))).toEqual([]);
       });
     });
   }
