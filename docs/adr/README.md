@@ -55,3 +55,4 @@ A `Proposed` ADR moves to `Accepted` by editing its status line and date. Any ot
 | [0032](0032-whatsapp-numbers-are-rows-in-a-sealed-registry-not-worker-secrets.md) | WhatsApp numbers are rows in a sealed registry, not Worker secrets | Accepted | 2026-11-07 |
 | [0033](0033-one-folder-per-supported-agent.md) | One folder per supported agent; everything else is generated from it | Accepted | 2026-11-07 |
 | [0034](0034-the-hermes-wheel-is-self-hosted-and-installed-by-a-pinned-hash.md) | The Hermes wheel is self-hosted and installed by a pinned hash | Accepted | 2026-11-07 |
+| [0035](0035-a-start-link-on-the-worker-picks-the-number-new-owners-write-to.md) | A start link on the Worker picks the number new owners write to | Accepted | 2026-11-08 |
