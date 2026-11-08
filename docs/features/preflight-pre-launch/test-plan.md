@@ -19,9 +19,9 @@
 - [x] Deploy entry: the warning is printed again under `warnings to resolve before launch:` after the smoke test — evidence: deploy-entry 'prints the warnings again under a heading'; smoke pass green; smoke FAIL path proven with a throwaway test (exit 1, reprint after heading), see F1 for the missing committed test
 - [x] Pin (green when it landed, `2e8fd0ce`): docs preflight with `E404` on both: `does not resolve on npm; publish it first`; mutating the docs handler to `() => null` turns it red — evidence: docs-preflight-entry 'E404 for the version and the name' green; mutation M2 (docs onAbsentPackage -> null) turns it red
 
-- [ ] Versioned `E404`, bare name answers the owner as maintainer and publisher: the Worker warns `PackageUnpublished` and passes — evidence:
-- [ ] Same input in the docs preflight: refused with `zapbip@<version> does not resolve on npm; publish it first` — evidence:
-- [ ] Pin (green when it landed): deploy entry with `E404` and a failing smoke test exits 1 and prints the warning again under the heading, after the rollback commands — evidence:
+- [x] Versioned `E404`, bare name answers the owner as maintainer and publisher: the Worker warns `PackageUnpublished` and passes — evidence: unit 'warns and passes when the version is absent but the package name belongs to the owner' green at 58cb7a9b; mutation (a) (onAbsentPackage -> null) turns it red
+- [x] Same input in the docs preflight: refused with `zapbip@<version> does not resolve on npm; publish it first` — evidence: docs-preflight-entry 'npm has the package name but not the version' green at 58cb7a9b; mutation (a) turns it red
+- [x] Pin (green when it landed): deploy entry with `E404` and a failing smoke test exits 1 and prints the warning again under the heading, after the rollback commands — evidence: deploy-entry 'pin: prints the warnings again ... when the smoke test fails' green; mutations (c) reprint only on smoke pass and (b) heading before the deploy each turn it red
 
 ## End-to-end
 
