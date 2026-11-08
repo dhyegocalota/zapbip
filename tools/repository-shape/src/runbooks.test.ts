@@ -204,6 +204,10 @@ describe('runbooks', () => {
   test('a reference to a missing step and a reference to the wrong title are reported', () => {
     const missing = brokenStepReferences({ file: 'x.md', text: 'See deploy.md step 99.' });
     expect(missing).toEqual(['x.md: deploy.md step 99 has no step 99']);
+    const ofForm = brokenStepReferences({ file: 'x.md', text: 'Do step 99 of `backoffice.md` first.' });
+    expect(ofForm).toEqual(['x.md: step 99 of `backoffice.md` has no step 99']);
+    const goLive = brokenStepReferences({ file: 'x.md', text: 'See go-live step 99 of deploy.md.' });
+    expect(goLive).toEqual(['x.md: go-live step 99 of deploy.md has no step 99']);
     const wrong = brokenStepReferences({
       file: 'x.md',
       text: 'Set ZAPBIP_NPM_PUBLISHER ([mintlify-publish.md](mintlify-publish.md), step 2).',
