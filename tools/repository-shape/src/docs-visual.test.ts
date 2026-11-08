@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { describe, expect, test } from 'vitest';
 import { DocsLanguage, PAGE_LANGUAGE_FOLDER } from '@zapbip/types';
-import { contrastOf } from './contrast';
+import { compositeOver, contrastOf } from './contrast';
 import { DOCS_ROOT, REPOSITORY_ROOT, PAGE_EXTENSION, capturedNames, readRepositoryFile, repositoryPath } from './repository-files';
 
 const DOCS_CONFIG_FILE = `${DOCS_ROOT}/docs.json`;
@@ -38,6 +38,31 @@ const TYPING_HIDDEN_PATTERN =
   /<div\b[^>]*aria-hidden="true"[^>]*className="zapbip-typing"|<div\b[^>]*className="zapbip-typing"[^>]*aria-hidden="true"/;
 const SENT_BUBBLE = '#D9FDD3';
 const NOTICE_BUBBLE = '#FFEECD';
+const STYLESHEET_FILE = `${DOCS_ROOT}/zapbip.css`;
+const HERO_CLASSES = [
+  'zapbip-hero',
+  'zapbip-hero-copy',
+  'zapbip-hero-visual',
+  'zapbip-hero-eyebrow',
+  'zapbip-hero-statement',
+  'zapbip-hero-accent',
+  'zapbip-hero-lead',
+  'zapbip-hero-actions',
+  'zapbip-button-primary',
+  'zapbip-button-secondary',
+  'zapbip-typing',
+];
+const MOTION_BLOCK_PATTERN = /@media \(prefers-reduced-motion: no-preference\) \{[\s\S]*?\n\}/;
+const KEYFRAMES_PATTERN = /@keyframes/;
+const IMPORT_RULE_PATTERN = /@import/;
+const FOREIGN_URL_PATTERN = /url\(\s*['"]?(?:https?:)?\/\//;
+const FORCED_COLORS_PATTERN = /@media \(forced-colors: active\)/;
+const LIGHT_GLOW = 'rgb(37 211 102 / 0.22)';
+const DARK_GLOW = 'rgb(37 211 102 / 0.14)';
+const LIGHT_HERO_START = '#FFFFFF';
+const LIGHT_HERO_END = '#F1F7F3';
+const DARK_HERO_BASE = '#0D1B17';
+const DARK_PREFIX = '.dark ';
 const BASELINE_REFERENCE = 'origin/main';
 const LIGHT_PAGE = '#F6F8F5';
 const DARK_PAGE = '#07120F';
@@ -81,6 +106,14 @@ function chatColourOf({ name }: { name: string }): string {
   const colour = chatColoursOf()[name];
   if (!colour) throw new Error(`chat.jsx has no ${name} colour`);
   return colour;
+}
+
+function declarationOf({ selector, property }: { selector: string; property: string }): string {
+  const stylesheet = readRepositoryFile(STYLESHEET_FILE);
+  const rule = stylesheet.split('}').find((chunk) => chunk.trim().split('{')[0]?.trim() === selector);
+  const declaration = rule?.match(new RegExp(`(?:^|[\\s;{])${property}:\\s*([^;]+);`))?.[1];
+  if (!declaration) throw new Error(`zapbip.css has no ${property} on ${selector}`);
+  return declaration.trim();
 }
 
 function logoPathOf({ theme }: { theme: keyof DocsLogo }): string {
@@ -255,5 +288,60 @@ describe('docs visual: chat mockup', () => {
     expect(source).toMatch(TYPING_MESSAGE_PATTERN);
     expect(source).toContain(TYPING_CLASS);
     expect(source).toMatch(TYPING_HIDDEN_PATTERN);
+  });
+});
+
+describe('docs visual: stylesheet', () => {
+  test.each(HERO_CLASSES)('it defines .%s', (className) => {
+    expect(readRepositoryFile(STYLESHEET_FILE)).toContain(`.${className}`);
+  });
+
+  test('keyframes live only inside the no-preference motion query', () => {
+    const stylesheet = readRepositoryFile(STYLESHEET_FILE);
+    expect(stylesheet).toMatch(MOTION_BLOCK_PATTERN);
+    expect(stylesheet.replace(MOTION_BLOCK_PATTERN, '')).not.toMatch(KEYFRAMES_PATTERN);
+  });
+
+  test('it imports nothing and loads nothing from another origin', () => {
+    const stylesheet = readRepositoryFile(STYLESHEET_FILE);
+    expect(stylesheet).not.toMatch(IMPORT_RULE_PATTERN);
+    expect(stylesheet).not.toMatch(FOREIGN_URL_PATTERN);
+  });
+
+  test('it has a forced-colors block', () => {
+    expect(readRepositoryFile(STYLESHEET_FILE)).toMatch(FORCED_COLORS_PATTERN);
+  });
+
+  const heroPointsOf = ({ prefix }: { prefix: string }): string[] =>
+    prefix
+      ? [DARK_HERO_BASE, compositeOver({ colour: DARK_GLOW, backdrop: DARK_HERO_BASE })]
+      : [LIGHT_HERO_START, LIGHT_HERO_END, compositeOver({ colour: LIGHT_GLOW, backdrop: LIGHT_HERO_START })];
+
+  test.each(['', DARK_PREFIX])('hero text passes AA on every point of the hero gradient (prefix "%s")', (prefix) => {
+    const textSelectors = ['.zapbip-hero-statement', '.zapbip-hero-accent', '.zapbip-hero-lead'];
+    const failing = textSelectors.flatMap((selector) =>
+      heroPointsOf({ prefix })
+        .map((background) => ({
+          selector,
+          background,
+          ratio: contrastOf({ foreground: declarationOf({ selector: `${prefix}${selector}`, property: 'color' }), background }),
+        }))
+        .filter((pair) => pair.ratio < BODY_TEXT_CONTRAST),
+    );
+    expect(failing).toEqual([]);
+  });
+
+  test.each(['', DARK_PREFIX])('eyebrow and both buttons pass AA (prefix "%s")', (prefix) => {
+    const filled = ['.zapbip-hero-eyebrow', '.zapbip-button-primary', '.zapbip-button-secondary'];
+    const failing = filled
+      .map((selector) => ({
+        selector,
+        ratio: contrastOf({
+          foreground: declarationOf({ selector: `${prefix}${selector}`, property: 'color' }),
+          background: declarationOf({ selector: `${prefix}${selector}`, property: 'background-color' }),
+        }),
+      }))
+      .filter((pair) => pair.ratio < BODY_TEXT_CONTRAST);
+    expect(failing).toEqual([]);
   });
 });
