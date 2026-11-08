@@ -20,6 +20,7 @@ Every learning touched by a change gets a `Revisited` line appended.
 | 2026-11-07 | A heartbeat or promptness test passes alone and fails once in a full run on a busy machine | [2026-11-07-wall-clock-assertions-in-asyncio-tests-flake-under-load.md](2026-11-07-wall-clock-assertions-in-asyncio-tests-flake-under-load.md) | 2026-11-07 |
 | 2026-11-07 | A test that asserts no timing fails with a 5 s timeout and then later tests fail with `no such table` | [2026-11-07-default-test-timeout-measures-the-machine-under-load.md](2026-11-07-default-test-timeout-measures-the-machine-under-load.md) | 2026-11-07 |
 | 2026-11-07 | A test that buckets by UTC day passes all day and fails with "expected one meter row, found 2" near 00:00 UTC | [2026-11-07-a-fake-clock-started-from-now-flakes-at-day-boundaries.md](2026-11-07-a-fake-clock-started-from-now-flakes-at-day-boundaries.md) | 2026-11-07 |
+| 2026-11-07 | The docs walk fails under load with `requestfailed .../_mintlify/api/user` and passes alone | [2026-11-07-a-docs-walk-fails-on-the-aborted-mint-preview-user-request.md](2026-11-07-a-docs-walk-fails-on-the-aborted-mint-preview-user-request.md) | 2026-11-07 |
 
 ### tooling
 

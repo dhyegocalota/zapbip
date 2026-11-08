@@ -21,14 +21,18 @@ export const DOCS_WALK_NOISE_ALLOWLIST: { pattern: RegExp; reason: string }[] = 
     pattern: /^requestfailed .*\/socket\.io\//,
     reason: 'mint dev holds a live-reload polling request open and the browser aborts it on every navigation',
   },
+  {
+    pattern: /^requestfailed \S+\/_mintlify\/api\/user net::ERR_ABORTED$/,
+    reason: 'mint dev asks its preview for the signed-in user and the browser aborts that request when the walk navigates away first',
+  },
 ];
 
 export function requestFailedNoiseOf(input: { url: string; errorText: string }): string {
-  throw new Error('requestFailedNoiseOf is not implemented');
+  return `requestfailed ${input.url} ${input.errorText}`;
 }
 
 export function isAllowedNoise(input: { entry: string }): boolean {
-  throw new Error('isAllowedNoise is not implemented');
+  return DOCS_WALK_NOISE_ALLOWLIST.some((allowed) => allowed.pattern.test(input.entry));
 }
 
 const VIEWPORT_WIDTH_PX_OF: Record<DocsViewport, number> = {
