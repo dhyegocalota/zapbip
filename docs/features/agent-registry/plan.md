@@ -121,6 +121,8 @@ All boxes empty when authored. A wrong step is struck through with the reason.
 - [x] **Step 29 (added by L4, reported to the lead):** `libs/agents/src/checks/boundaries.ts` for B1 to B4 and B7, wired in `agent-registry.test.ts` (red `51c53ed2`, green `ef481099`). `@zapbip/agents/plugins` re-exports `AgentPlugin`, `HostedArtifact` and `PluginRegistry` so the Worker source imports only the install and plugins facets.
 - [x] **Step 30 (added by L4, reviewer finding):** `docs-visual.test.ts` compares the docs navigation against the registry order, in order, instead of sorted (`0cbe22e9`, pin with a recorded mutation).
 
+- [x] **Step 31 (added by L4, lead order 2026-11-08):** no exemptions. Red `200bd758` (`SHARED_MECHANISM_SUITES` removed, folder and variable literals leak, `agent-removal.test.ts`); green `e7019158` (connector runtimes own `homeFolder` and `homeVariable`; the connector suites iterate `ConnectorClient`), `f0250ad1` (plugin, wheel and generator suites take their subject from the registry or from fixtures; plugin package tests moved into the plugin folders; goldens replaced by `testing/surfaces.test.ts`), then the page-rule mutations on the fixtures. The removal proof removes every connector agent, every plugin agent and one install-only agent in a throwaway worktree, regenerates, asserts the only other diff is the generated set plus `pnpm-lock.yaml`, and runs the agents, shape, connector, api unit, api integration and `agents:check` suites: passed (87 s). The `docs-agent-install` feature-spec case is obsolete: it pinned prose of a shipped feature record, records are never rewritten, and the install command on every plugin page is now a page rule.
+
 ## Merge order
 
 1. C0, then L1, merged into `feat/agent-registry`.
