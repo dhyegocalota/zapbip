@@ -49,7 +49,7 @@ Pins (green on arrival): `libs/types/src/start-link-constants.test.ts`, the `lib
 
 ## Known gaps
 
-- `OFFICIAL_WHATSAPP_NUMBER` and `OFFICIAL_NUMBER_UNSET` stay in `libs/types` until G4.
 - PR 24 (`fix/preflight-pre-launch`) was not merged when G3 landed; it edits the same lines of `deploy-preflight.ts`, `deploy.ts`, `deploy.md` and `runbooks.test.ts`, so the merge needs a hand resolution (both remove the same number check and the same step 15 title).
-- `apps/api/scripts/smoke.ts` still says "zapbip official number" in a message; it is outside the groups' files.
-- The redirect is not followed to a real `wa.me`; the Playwright MCP walk intercepts it.
+- The redirect is not followed to a real `wa.me`; the walk fulfils `https://wa.me/**` with `page.route` and records the URL.
+- The backoffice is not signed in by an agent; the capacity rows change `whatsapp_numbers.state` in the local development database with `wrangler d1 execute --local`.
+- G4 (`94bf1216`, red `bf2b4371`): `official-number.test.ts` listed `apps/api/scripts/smoke.ts`, both `faq.mdx`, both `index.mdx`, both `how-it-works` SVGs and `libs/types/src/constants.ts`; green after. The FAQ sentence now says the official WhatsApp Cloud API, which is true.

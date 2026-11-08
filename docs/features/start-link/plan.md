@@ -54,7 +54,7 @@ Author this list with every box empty. A sub-agent ticks its own line. A wrong s
 
 ### G4
 
-- [ ] **Step 15:** after G2 and G3 are merged, delete `OFFICIAL_NUMBER_UNSET` and `OFFICIAL_WHATSAPP_NUMBER` from `libs/types`; `rg 'OFFICIAL_(WHATSAPP_)?NUMBER' --glob '!docs/features/**' --glob '!docs/adr/**'` returns nothing; `pnpm typecheck` is green.
+- [x] **Step 15:** (`bf2b4371` red, `94bf1216` green: `tools/repository-shape/src/official-number.test.ts`) after G2 and G3 are merged, delete `OFFICIAL_NUMBER_UNSET` and `OFFICIAL_WHATSAPP_NUMBER` from `libs/types`; `rg 'OFFICIAL_(WHATSAPP_)?NUMBER' --glob '!docs/features/**' --glob '!docs/adr/**'` returns nothing; `pnpm typecheck` is green.
 - [ ] **Step 16:** the owner's spec approval is written, statuses move `Approved`, `Building`, `In review`, `Shipped <date>` with the index row in step with the spec.
 
 ## Failure modes
