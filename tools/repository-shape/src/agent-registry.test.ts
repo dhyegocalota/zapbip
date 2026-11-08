@@ -1,5 +1,13 @@
 import { describe, expect, test } from 'vitest';
-import { discoverAgents, listSource, planGeneratedFiles, readSource, type GenerationPlan } from '@zapbip/agents/generate';
+import {
+  GenerationMode,
+  discoverAgents,
+  listSource,
+  planGeneratedFiles,
+  readSource,
+  writePlan,
+  type GenerationPlan,
+} from '@zapbip/agents/generate';
 
 const SUPPORTED_ROOT = 'libs/agents/supported';
 const TESTING_ROOT = 'libs/agents/testing';
@@ -21,6 +29,7 @@ const REAL_AGENT_IDS = [
 const INSTALL_FILES = ['install.en_US.md', 'install.pt_BR.md'];
 const MATRIX_SNIPPETS = ['apps/docs/snippets/agents/matrix.mdx', 'apps/docs/snippets/pt-br/agents/matrix.mdx'];
 const CONNECTOR_SNIPPETS = ['apps/docs/snippets/agents/connector-clients.mdx', 'apps/docs/snippets/pt-br/agents/connector-clients.mdx'];
+const PAGE_NOT_MOVED_YET_PATTERN = / has no page\.(en|pt-br)\.mdx$/;
 const ENUM_MEMBER_PATTERN = /^\s*(\w+) = '([a-z-]+)',?$/;
 
 type Fixture = { id: string; member: string; englishName: string; portugueseName: string };
@@ -97,6 +106,17 @@ function pagesOf(input: { content: string; group: string; language: string }): s
 async function realPlan(): Promise<GenerationPlan> {
   return planWith({ extraRoots: [], readFile: readSource });
 }
+
+describe('the generated files', () => {
+  test('every generated file is fresh', async () => {
+    expect(writePlan({ plan: await realPlan(), mode: GenerationMode.Check })).toEqual([]);
+  });
+
+  test('the plan has no violations', async () => {
+    const { violations } = await realPlan();
+    expect(violations.filter((violation) => !PAGE_NOT_MOVED_YET_PATTERN.test(violation))).toEqual([]);
+  });
+});
 
 describe('adding an agent folder', () => {
   test('G1: an install agent changes exactly the generated set', async () => {
