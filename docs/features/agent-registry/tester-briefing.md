@@ -264,3 +264,4 @@ Mutation checks for the folded tests (M12), automated in `agent-registry.test.ts
 - `.github/workflows/verify.yml` lines with plugin names sit inside the generated regions (`# NB ADR 0033` markers); the file is allowed for that reason.
 - `agent-lifecycle.test.ts` is one file so its worktree proofs run one after the other (the API integration suite binds fixed ports).
 - The workflow validation is exercised by unit tests and reported by `agents:check` through the planner; no test edits a fixture plugin file to feed the planner an evil filter.
+- The removal proof keeps one connector runtime: the connector application needs at least one (the registry type is empty without it), so the proof removes every connector agent but the first, every plugin agent and one install-only agent.

@@ -25,7 +25,7 @@ const SCAFFOLD_KINDS = [
 const connectorIds: string[] = Object.values(ConnectorClient);
 const pluginIds = Object.keys(AGENT_PLUGINS);
 const installOnlyId = Object.values(AgentId).find((id) => !connectorIds.includes(id) && !pluginIds.includes(id)) as string;
-const removedIds = [...connectorIds, ...pluginIds, installOnlyId];
+const removedIds = [...connectorIds.slice(1), ...pluginIds, installOnlyId];
 
 function ownedPrefixesOf(input: { id: string }): string[] {
   const plugin = Object.entries(AGENT_PLUGINS).find(([pluginId]) => pluginId === input.id)?.[1];
@@ -45,7 +45,8 @@ afterAll(() => worktrees.forEach((worktree) => worktree.remove()));
 
 describe.skipIf(IS_INSIDE_PROOF)('the agent lifecycle in a throwaway worktree', () => {
   test('the removal covers one agent of each kind', () => {
-    expect(removedIds.length).toBeGreaterThanOrEqual(3);
+    expect(removedIds.length).toBeGreaterThanOrEqual(2);
+    expect(connectorIds.length).toBeGreaterThan(removedIds.filter((id) => connectorIds.includes(id)).length);
     expect(removedIds.every((id) => id in AGENT_DEFINITIONS)).toBe(true);
     expect(discoverAgents({ roots: [SUPPORTED_ROOT] }).map((agent) => agent.id)).toEqual(expect.arrayContaining(removedIds));
   });
