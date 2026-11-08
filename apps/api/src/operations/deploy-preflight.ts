@@ -5,7 +5,6 @@ import {
   type CompanyFacts,
   HttpStatus,
   NPM_REGISTRY_URL,
-  OFFICIAL_NUMBER_UNSET,
   PRODUCTION_PACKAGES_BUCKET,
   PRODUCTION_PUBLIC_ORIGIN,
   PRODUCTION_ZONE,
@@ -50,7 +49,6 @@ export type EnvironmentVariables = Record<string, string | undefined>;
 
 export enum PreflightStep {
   Environment = 'environment',
-  OfficialNumber = 'official number',
   CompanyFacts = 'company facts',
   NpmVersion = 'npm version',
   PluginWheel = 'plugin wheel',
@@ -92,7 +90,6 @@ export type WorkerPreflightInput = {
 
 export type DocsPreflightInput = {
   shell: DeployShell;
-  officialWhatsAppNumber: string;
   company: CompanyFacts;
   npmVersion: string;
   plugins: AgentPlugin[];
@@ -148,11 +145,6 @@ async function refuseUnlessDeployable(input: WorkerPreflightInput): Promise<stri
     return `deploy supports ${DEPLOYABLE_ENVIRONMENTS.join(' or ')}, not ${input.environment}`;
   if (!input.isInteractive) return 'deploy needs an interactive terminal';
   return null;
-}
-
-async function refuseUnsetOfficialNumber(input: { officialWhatsAppNumber: string }): Promise<string | null> {
-  if (input.officialWhatsAppNumber !== OFFICIAL_NUMBER_UNSET) return null;
-  return `OFFICIAL_WHATSAPP_NUMBER is still ${OFFICIAL_NUMBER_UNSET}; set the official number in libs/types before deploying`;
 }
 
 async function refuseUnsetCompanyFacts(input: { company: CompanyFacts }): Promise<string | null> {
@@ -465,7 +457,6 @@ const WORKER_CHECKS: PreflightCheck<WorkerPreflightInput>[] = [
 ];
 
 const DOCS_CHECKS: PreflightCheck<DocsPreflightInput>[] = [
-  { step: PreflightStep.OfficialNumber, refusalOf: refuseUnsetOfficialNumber },
   { step: PreflightStep.CompanyFacts, refusalOf: refuseUnsetCompanyFacts },
   { step: PreflightStep.NpmVersion, refusalOf: refuseUntrustedDocsPackages },
   { step: PreflightStep.PluginWheel, refusalOf: refuseUnhostedDocsArtifacts },
