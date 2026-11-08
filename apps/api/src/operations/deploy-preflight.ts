@@ -8,6 +8,8 @@ import {
   PRODUCTION_PACKAGES_BUCKET,
   PRODUCTION_PUBLIC_ORIGIN,
   PRODUCTION_ZONE,
+  START_LINK,
+  WHATSAPP_LINK_ORIGIN,
 } from '@zapbip/types';
 import { randomUUID } from 'node:crypto';
 import { tmpdir } from 'node:os';
@@ -339,6 +341,14 @@ async function refuseUnhostedWorkerArtifacts(input: WorkerPreflightInput): Promi
   });
 }
 
+async function refuseUnservedStartLink(input: DocsPreflightInput): Promise<string | null> {
+  const answer = await input.packageFetcher({ url: START_LINK }).catch(() => null);
+  if (answer === null) return `could not reach ${START_LINK}; check your network and run it again`;
+  const isWhatsAppRedirect = answer.status === HttpStatus.Found && answer.location?.startsWith(`${WHATSAPP_LINK_ORIGIN}/`) === true;
+  if (isWhatsAppRedirect) return null;
+  return `${START_LINK} answered ${answer.status} and not a redirect to ${WHATSAPP_LINK_ORIGIN}; deploy the Worker and activate a number first`;
+}
+
 async function refuseUnhostedDocsArtifacts(input: DocsPreflightInput): Promise<string | null> {
   return firstArtifactRefusal({
     artifacts: hostedArtifactsOf(input),
@@ -461,6 +471,7 @@ const DOCS_CHECKS: PreflightCheck<DocsPreflightInput>[] = [
   { step: PreflightStep.CompanyFacts, refusalOf: refuseUnsetCompanyFacts },
   { step: PreflightStep.NpmVersion, refusalOf: refuseUntrustedDocsPackages },
   { step: PreflightStep.PluginWheel, refusalOf: refuseUnhostedDocsArtifacts },
+  { step: PreflightStep.StartLink, refusalOf: refuseUnservedStartLink },
 ];
 
 async function firstRefusal<Input>(input: { checks: PreflightCheck<Input>[]; subject: Input }): Promise<PreflightRefusal | null> {
