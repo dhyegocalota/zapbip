@@ -1,10 +1,10 @@
+import type { ConnectorClient } from '@zapbip/agents/connector';
 import type { DoneFrame, HelloFrame, MessagesFrame, ServerFrame } from '@zapbip/core';
 import {
   CONNECTOR_FRAME_MAX_BYTES,
   CONNECTOR_PATH_SUFFIX,
   CONNECTOR_PING_TEXT,
   CONNECTOR_PONG_TEXT,
-  ConnectorClient,
   ConnectorFrameType,
   ConnectorLogEvent,
   ConnectorSessionSource,

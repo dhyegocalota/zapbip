@@ -165,7 +165,7 @@ describe('adding an agent folder', () => {
       [...addedPathsOf({ fixture: CONNECTOR_FIXTURE }), `${GENERATED_FOLDER}/connector.ts`, ...CONNECTOR_SNIPPETS].sort(),
     );
     const ids = contentOf({ plan: extended, path: `${GENERATED_FOLDER}/ids.ts` });
-    expect(membersOf({ source: ids, enumName: 'ConnectorClient' })).toEqual([[CONNECTOR_FIXTURE.member, CONNECTOR_FIXTURE.id]]);
+    expect(membersOf({ source: ids, enumName: 'ConnectorClient' })).toContainEqual([CONNECTOR_FIXTURE.member, CONNECTOR_FIXTURE.id]);
   });
 
   test('G2b: a plugin agent adds the plugin registry', async () => {

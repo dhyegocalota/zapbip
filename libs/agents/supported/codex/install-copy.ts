@@ -1,13 +1,7 @@
-import { INSTALL_SELF_TEST_TEXT, InstallClient, OwnerLocale } from '@zapbip/types';
-import {
-  formatSection,
-  localizeCopy,
-  noticeStep,
-  tellOwnerAndWait,
-  connectCommand,
-  FAILURE_OUTPUT_LINES,
-  type InstallProduct,
-} from '@zapbip/core';
+import { INSTALL_SELF_TEST_TEXT, OwnerLocale } from '@zapbip/types';
+import { formatSection, localizeCopy, noticeStep, tellOwnerAndWait, FAILURE_OUTPUT_LINES, type InstallProduct } from '@zapbip/core';
+import { connectCommand } from '../../src/connect-command';
+import { ConnectorClient } from '../../src/generated/ids';
 
 export const CODEX_PRODUCT: InstallProduct = {
   productName: 'Codex',
@@ -59,7 +53,7 @@ export const CODEX_COPY = localizeCopy({
           success: `${CONFIG_PATH} holds exactly one [mcp_servers.zapbip] table with that content.`,
         },
         {
-          action: `In the background run \`${connectCommand({ connectionLink: section.connectionLink, client: InstallClient.Codex })}\`. It keeps listening and resumes the session with \`codex exec resume\`.`,
+          action: `In the background run \`${connectCommand({ connectionLink: section.connectionLink, client: ConnectorClient.Codex })}\`. It keeps listening and resumes the session with \`codex exec resume\`.`,
           success: 'the connector is running in the background and prints no error.',
         },
         noticeStep(text.restart),

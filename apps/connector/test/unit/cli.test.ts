@@ -1,7 +1,7 @@
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { ConnectorClient } from '@zapbip/types';
+import { ConnectorClient } from '@zapbip/agents/connector';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { parseConnectArguments } from '../../src/cli';
 
@@ -9,6 +9,8 @@ const SESSION_ID = '0b1f6c2e-5d7a-4c3b-9e8f-1a2b3c4d5e6f';
 const CLIENT_FLAG = '--client';
 const SESSION_FLAG = '--session';
 const WORKING_DIRECTORY_FLAG = '--cwd';
+const UNDECLARED_CLIENT = 'nope';
+const USAGE_LINE = `usage: zapbip connect --client ${Object.values(ConnectorClient).join('|')} [--cwd <directory>] [--session <uuid>]`;
 
 function thrownMessage(input: { argv: string[] }): string {
   try {
@@ -54,8 +56,16 @@ describe('parseConnectArguments', () => {
     expect(message).toContain(ConnectorClient.Codex);
   });
 
-  it('refuses a missing client', () => {
-    expect(() => parseConnectArguments({ argv: [] })).toThrow();
+  it('refuses a missing client with the usage line', () => {
+    expect(thrownMessage({ argv: [] })).toBe(USAGE_LINE);
+  });
+
+  it('refuses a client no runtime declares with the usage line and no default', () => {
+    expect(thrownMessage({ argv: [CLIENT_FLAG, UNDECLARED_CLIENT] })).toBe(USAGE_LINE);
+  });
+
+  it.each(Object.values(ConnectorClient))('accepts the %s runtime', (client) => {
+    expect(parseConnectArguments({ argv: [CLIENT_FLAG, client] }).client).toBe(client);
   });
 
   it('refuses a session that is not a uuid without echoing it', () => {

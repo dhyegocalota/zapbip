@@ -1,10 +1,15 @@
+import { existsSync, readdirSync } from 'node:fs';
 import { mkdir, mkdtemp, readFile, realpath, rm, utimes, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { delimiter, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { vi } from 'vitest';
 
-const FIXTURE_BIN_DIRECTORY = fileURLToPath(new URL('../fixtures/bin', import.meta.url));
+const SUPPORTED_DIRECTORY = fileURLToPath(new URL('../../../../libs/agents/supported', import.meta.url));
+const FAKE_BINARY_FOLDER = 'testing';
+const FAKE_BINARY_DIRECTORIES = readdirSync(SUPPORTED_DIRECTORY)
+  .map((agentFolder) => join(SUPPORTED_DIRECTORY, agentFolder, FAKE_BINARY_FOLDER))
+  .filter((directory) => existsSync(directory));
 const CLAUDE_FOLDER_UNSAFE_CHARACTERS = /[^A-Za-z0-9]/g;
 const CLAUDE_FOLDER_REPLACEMENT = '-';
 const HOLD_RELEASE_TEXT = 'release';
@@ -121,7 +126,7 @@ export async function createFakeClients(): Promise<FakeClients> {
   await writeFile(recordFile, '');
 
   const baseEnvironment: Record<string, string> = {
-    PATH: `${FIXTURE_BIN_DIRECTORY}${delimiter}${process.env.PATH}`,
+    PATH: [...FAKE_BINARY_DIRECTORIES, process.env.PATH].join(delimiter),
     CLAUDE_CONFIG_DIR: claudeConfigDirectory,
     CODEX_HOME: codexHome,
     FAKE_CLIENT_RECORD: recordFile,

@@ -2,10 +2,10 @@ import { createServer, type Server } from 'node:http';
 import { access, mkdir, writeFile } from 'node:fs/promises';
 import type { AddressInfo } from 'node:net';
 import { join } from 'node:path';
+import { ConnectorClient } from '@zapbip/agents/connector';
 import {
   CONNECTOR_KILL_GRACE_MS,
   CONNECTOR_WAKE_TIMEOUT_MS,
-  ConnectorClient,
   ConnectorSessionSource,
   ConnectorWakeOutcome,
   WAKE_ALLOWED_TOOL,

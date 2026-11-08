@@ -1,17 +1,15 @@
 import { spawn } from 'node:child_process';
 import type { Message } from '@zapbip/core';
+import { CONNECTOR_RUNTIMES, type ConnectorClient, WakeIsolationRefusedError, type WakeIsolation } from '@zapbip/agents/connector';
 import {
   CONNECTION_URL_VARIABLE,
   CONNECTOR_KILL_GRACE_MS,
   CONNECTOR_WAKE_TIMEOUT_MS,
-  ConnectorClient,
   type ConnectorSessionSource,
   ConnectorWakeOutcome,
   type WakeRefusalKind,
 } from '@zapbip/types';
 import { buildOwnerPrompt } from './owner-prompt';
-import { WAKE_ISOLATION_PREPARERS, WakeIsolationRefusedError, type WakeIsolation } from './wake-isolation';
-import { buildCodexNewSessionArguments, CLIENT_BINARY_NAME, isActiveWriterRefusal, RESUME_ARGUMENT_BUILDERS } from './wake-commands';
 
 type ChildResult = { exitCode: number | null; stderrText: string };
 export type WakeResult =
@@ -33,7 +31,7 @@ function runChild(input: {
 }): Promise<ChildResult> {
   const { client, clientArguments, prompt, workingDirectory, signal } = input;
   return new Promise((resolve) => {
-    const child = spawn(CLIENT_BINARY_NAME[client], clientArguments, {
+    const child = spawn(CONNECTOR_RUNTIMES[client].binaryName, clientArguments, {
       cwd: workingDirectory,
       env: childEnvironment(),
       stdio: ['pipe', 'pipe', 'pipe'],
@@ -79,7 +77,11 @@ async function prepareIsolation(input: {
 }): Promise<{ isolation: WakeIsolation } | { refusalKind: WakeRefusalKind }> {
   const { client, connectionLink, workingDirectory } = input;
   try {
-    const isolation = await WAKE_ISOLATION_PREPARERS[client]({ connectionLink, workingDirectory, codexHome: process.env.CODEX_HOME });
+    const isolation = await CONNECTOR_RUNTIMES[client].prepareIsolation({
+      connectionLink,
+      workingDirectory,
+      codexHome: process.env.CODEX_HOME,
+    });
     return { isolation };
   } catch (error) {
     if (error instanceof WakeIsolationRefusedError) return { refusalKind: error.kind };
@@ -120,18 +122,20 @@ async function wakeWithin(input: {
   signal?: AbortSignal;
 }): Promise<WakeResult> {
   const { client, sessionId, prompt, isolationArguments, workingDirectory, signal } = input;
+  const runtime = CONNECTOR_RUNTIMES[client];
   const resumed = await runChild({
     client,
-    clientArguments: RESUME_ARGUMENT_BUILDERS[client]({ sessionId, isolationArguments }),
+    clientArguments: runtime.resumeArguments({ sessionId, isolationArguments }),
     prompt,
     workingDirectory,
     signal,
   });
-  const isActiveWriterOnCodex = client === ConnectorClient.Codex && isActiveWriterRefusal({ stderrText: resumed.stderrText });
-  if (!isActiveWriterOnCodex) return outcomeOf({ result: resumed, successOutcome: ConnectorWakeOutcome.Answered });
+  const { newSessionArguments } = runtime;
+  const isFallback = newSessionArguments !== null && runtime.isNewSessionFallback({ stderrText: resumed.stderrText });
+  if (!isFallback) return outcomeOf({ result: resumed, successOutcome: ConnectorWakeOutcome.Answered });
   const fallback = await runChild({
     client,
-    clientArguments: buildCodexNewSessionArguments({ isolationArguments }),
+    clientArguments: newSessionArguments({ isolationArguments }),
     prompt,
     workingDirectory,
     signal,

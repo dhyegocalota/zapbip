@@ -1,8 +1,8 @@
 import { access, mkdir, utimes, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { ConnectorClient } from '@zapbip/agents/connector';
 import {
   CONNECTOR_FRAME_MAX_BYTES,
-  ConnectorClient,
   ConnectorFrameType,
   ConnectorLogEvent,
   ConnectorWakeOutcome,

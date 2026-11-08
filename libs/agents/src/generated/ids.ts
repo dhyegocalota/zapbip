@@ -27,6 +27,9 @@ export enum InstallClient {
   GrokWeb = 'grok-web',
 }
 
-export enum ConnectorClient {}
+export enum ConnectorClient {
+  ClaudeCode = 'claude-code',
+  Codex = 'codex',
+}
 
 export enum PluginAgent {}

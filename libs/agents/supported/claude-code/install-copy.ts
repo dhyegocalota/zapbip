@@ -1,4 +1,4 @@
-import { INSTALL_SELF_TEST_TEXT, InstallClient, OwnerLocale, ZAPBIP_NPM_VERSION } from '@zapbip/types';
+import { INSTALL_SELF_TEST_TEXT, OwnerLocale, ZAPBIP_NPM_VERSION } from '@zapbip/types';
 import {
   formatSection,
   localizeCopy,
@@ -6,11 +6,12 @@ import {
   noticeStep,
   tellOwnerAndWait,
   CONNECTION_URL_VARIABLE,
-  connectCommand,
   FAILURE_OUTPUT_LINES,
   AGENT_RULES,
   type InstallProduct,
 } from '@zapbip/core';
+import { connectCommand } from '../../src/connect-command';
+import { ConnectorClient } from '../../src/generated/ids';
 
 export const CLAUDE_CODE_PRODUCT: InstallProduct = {
   productName: 'Claude Code',
@@ -85,7 +86,7 @@ export const CLAUDE_CODE_COPY = localizeCopy({
           success: 'the file holds exactly that content.',
         },
         {
-          action: `${LISTENER_RULE} If the session supports development channels, the zapbip-channel server pushes each owner message into the session once Claude Code is started with \`${CHANNEL_COMMAND}\`. If it does not, in the background run \`${connectCommand({ connectionLink: section.connectionLink, client: InstallClient.ClaudeCode })}\`, which resumes a stopped session with \`claude -p --resume\`. If connect cannot run either, listen instead. ${monitoredListenStep(section)}`,
+          action: `${LISTENER_RULE} If the session supports development channels, the zapbip-channel server pushes each owner message into the session once Claude Code is started with \`${CHANNEL_COMMAND}\`. If it does not, in the background run \`${connectCommand({ connectionLink: section.connectionLink, client: ConnectorClient.ClaudeCode })}\`, which resumes a stopped session with \`claude -p --resume\`. If connect cannot run either, listen instead. ${monitoredListenStep(section)}`,
           success: 'exactly one listener is running.',
         },
         noticeStep(text.restart),
