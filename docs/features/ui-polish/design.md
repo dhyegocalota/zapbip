@@ -350,7 +350,7 @@ The inline-style pattern stays; colours change for AA; two additions.
 | `teal` | kept | `#128C7E` | only the document icon, the audio disc and the quote bar (non-text, 4.14:1) |
 | ink on wallpaper | | unchanged | 13.99:1 |
 
-Additions: `frame="phone"` wraps the chat in a 10 px `#0E1F1A` bezel with a 44 px outer radius, a status row ("9:41"), and the bubble avatar with three dots in `#25D366` on the header; `{ typing: true }` renders an incoming bubble with three dots (`aria-hidden`, class `zapbip-typing`, animated by `zapbip.css` for 4 iterations of 1.2 s, static under reduced motion). The four "What it looks like" cards keep the default frame.
+Additions: `frame="phone"` wraps the chat in a 10 px `#0E1F1A` bezel with a 44 px outer radius, a status row ("9:41"), and the bubble avatar with three dots in `#25D366` on the header; `{ typing: true }` renders an incoming bubble with three dots (`aria-hidden`, class `zapbip-typing`, animated by `zapbip.css` for 4 iterations of 1.1 s, the last dot ending at 4.7 s, static under reduced motion). The four "What it looks like" cards keep the default frame.
 
 ### 10.4a Wide Overview
 

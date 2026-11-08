@@ -144,7 +144,7 @@
 
 @media (prefers-reduced-motion: no-preference) {
   .zapbip-typing span {
-    animation: zapbip-typing-dot 1.2s ease-in-out 4;
+    animation: zapbip-typing-dot 1.1s ease-in-out 4;
   }
 
   .zapbip-typing span:nth-child(2) {
