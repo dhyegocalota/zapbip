@@ -26,6 +26,7 @@ const NARROW_KPI_COLUMNS = 2;
 const HEIGHT_TOLERANCE = 1;
 const MINIMUM_ACTION_GAP = 16;
 const MINIMUM_CARD_GAP = 24;
+const MAXIMUM_CARD_PADDING = 48;
 const NAVIGATION_LINK_COUNT = 4;
 const DELTA_PATTERN = /a mais|a menos|Igual/;
 const TRANSPARENT = 'rgba(0, 0, 0, 0)';
@@ -213,11 +214,23 @@ test.describe('the metrics dashboard', () => {
     const columns = new Set(boxes.map((box) => Math.round(box.x))).size;
     const isWide = viewportWidthOf({ page }) >= WIDE_VIEWPORT;
     expect(columns).toBe(isWide ? 2 : 1);
-    const rowTops = [...new Set(boxes.map((box) => Math.round(box.y)))];
+    const filledBoxes = await boxesOf({ locator: page.locator('.chart-grid > .card:not(:has(.empty-inline))') });
+    const rowTops = [...new Set(filledBoxes.map((box) => Math.round(box.y)))];
     rowTops.forEach((top) => {
-      const heights = boxes.filter((box) => Math.round(box.y) === top).map((box) => box.height);
+      const heights = filledBoxes.filter((box) => Math.round(box.y) === top).map((box) => box.height);
       expect(Math.max(...heights) - Math.min(...heights)).toBeLessThanOrEqual(HEIGHT_TOLERANCE);
     });
+  });
+
+  test('never stretches a card that has an empty section into a void', async ({ page }) => {
+    const cards = await page.locator('.chart-grid > .card:has(.empty-inline)').all();
+    expect(cards.length).toBeGreaterThan(0);
+    for (const card of cards) {
+      const [cardBox] = await boxesOf({ locator: card });
+      const [lastBox] = await boxesOf({ locator: card.locator(':scope > :last-child') });
+      if (cardBox === undefined || lastBox === undefined) throw new Error('the card has no box');
+      expect(cardBox.y + cardBox.height - (lastBox.y + lastBox.height)).toBeLessThanOrEqual(MAXIMUM_CARD_PADDING);
+    }
   });
 
   test('gives the budget chart the full width of the grid', async ({ page }) => {
