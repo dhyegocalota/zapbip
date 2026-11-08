@@ -9,7 +9,7 @@ const GET_STARTED_PAGE = 'get-started/how-to-start';
 const FOOTER_LABEL = 'zapbip · Logic Bit';
 const COMING_SOON_PATTERN = /coming soon|em breve/i;
 const WHATSAPP_NUMBER_LINK_LOCATOR = 'a[href*="wa.me"]';
-const PHONE_NUMBER_PATTERN = /\+\d{7,}/;
+const PHONE_NUMBER_PATTERN = /\+\d[\d\s().-]{8,}\d|\b\d{10,15}\b|\(\d{2}\)\s?\d{4,5}-\d{4}/;
 const INSTALL_PROMPT_PLACEHOLDER = 'zb_inst_<code>';
 const OVERVIEW_EXAMPLE_COUNT = { minimum: 3, maximum: 5 };
 const OVERVIEW_HEADING_COUNT = 3;

@@ -16,7 +16,7 @@ const WALK_TIMEOUT_MS = 300_000;
 const INTERNAL_LINK_LOCATOR = '#content-area a[href^="/"]';
 const MATRIX_LINK_LOCATOR = '#content-area table tbody tr a[href*="agents/"]';
 const WHATSAPP_NUMBER_LINK_LOCATOR = 'a[href*="wa.me"]';
-const PHONE_NUMBER_PATTERN = /\+\d{7,}/;
+const PHONE_NUMBER_PATTERN = /\+\d[\d\s().-]{8,}\d|\b\d{10,15}\b|\(\d{2}\)\s?\d{4,5}-\d{4}/;
 const MATRIX_CLIENTS: AgentId[] = Object.values(AgentId);
 const STEP_COUNT = 5;
 

@@ -52,7 +52,8 @@ const INSTALL_LINK_ORIGIN = 'https://mcp.zapbip.com';
 const INSTALL_LINK_PATTERN = /https:\/\/[^\s/]+\/i\/zb_inst_[^\s`'"]+/g;
 const LINK_PATH_PATTERN = /\/[ci]\/([^\s)`'"]+)/g;
 const PLACEHOLDER_MARK = '<';
-const PHONE_NUMBER_LINK_PATTERN = /wa\.me|OFFICIAL_(WHATSAPP_)?NUMBER|official-number|\+\d{7,}/g;
+const PHONE_NUMBER_LINK_PATTERN =
+  /wa\.me|OFFICIAL_(WHATSAPP_)?NUMBER|official-number|\+\d[\d\s().-]{8,}\d|\b\d{10,15}\b|\(\d{2}\)\s?\d{4,5}-\d{4}/g;
 const MATRIX_LINK_PATTERN = /\]\(\/(?:pt-br\/)?agents\/([a-z0-9-]+)\)/g;
 const TABLE_ROW_PATTERN = /^\|/;
 const TABLE_HEADER_ROW_COUNT = 2;
