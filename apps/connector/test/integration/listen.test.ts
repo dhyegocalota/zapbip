@@ -17,7 +17,11 @@ type ListenProcess = {
   exited: Promise<number | null>;
   standardOutput: () => string;
   standardError: () => string;
+  waitForPrintedLines: (input: { count: number }) => Promise<void>;
+  waitForStandardError: (input: { text: string }) => Promise<void>;
 };
+
+type OutputWaiter = { isSatisfied: () => boolean; resolve: () => void };
 
 const LISTEN_COMMAND = 'listen';
 const EXIT_CODE_CLEAN = 0;
@@ -48,10 +52,37 @@ describe('zapbip listen', () => {
     });
     let output = '';
     let errors = '';
-    child.stdout.on('data', (chunk: Buffer) => setTimeout(() => (output += chunk.toString()), readDelayMs));
-    child.stderr.on('data', (chunk: Buffer) => setTimeout(() => (errors += chunk.toString()), readDelayMs));
+    let waiters: OutputWaiter[] = [];
+    const settleWaiters = (): void => {
+      waiters.filter((waiter) => waiter.isSatisfied()).forEach((waiter) => waiter.resolve());
+      waiters = waiters.filter((waiter) => !waiter.isSatisfied());
+    };
+    const waitUntil = (isSatisfied: () => boolean): Promise<void> => {
+      if (isSatisfied()) return Promise.resolve();
+      return new Promise((resolve) => waiters.push({ isSatisfied, resolve }));
+    };
+    const record = (append: (text: string) => void) => (chunk: Buffer) =>
+      setTimeout(() => {
+        append(chunk.toString());
+        settleWaiters();
+      }, readDelayMs);
+    child.stdout.on(
+      'data',
+      record((text) => (output += text)),
+    );
+    child.stderr.on(
+      'data',
+      record((text) => (errors += text)),
+    );
     const exited = new Promise<number | null>((resolve) => child.on('exit', (code) => resolve(code)));
-    const listenProcess: ListenProcess = { child, exited, standardOutput: () => output, standardError: () => errors };
+    const listenProcess: ListenProcess = {
+      child,
+      exited,
+      standardOutput: () => output,
+      standardError: () => errors,
+      waitForPrintedLines: ({ count }) => waitUntil(() => output.split('\n').filter((line) => line !== '').length >= count),
+      waitForStandardError: ({ text }) => waitUntil(() => errors.includes(text)),
+    };
     started.push(listenProcess);
     return listenProcess;
   }
@@ -90,6 +121,7 @@ describe('zapbip listen', () => {
     await server.waitForLiveConnections({ count: 1 });
     pushOwnerMessage({ messageId: 'msg_1', text: OWNER_TEXT });
     await server.waitForFrames({ type: ConnectorFrameType.Done, count: 1 });
+    await listenProcess.waitForPrintedLines({ count: 1 });
 
     expect(printedLines({ listenProcess }).map((line) => JSON.parse(line))).toEqual([
       { messageId: 'msg_1', kind: 'text', sender: 'owner', verified: true, forwarded: false, text: OWNER_TEXT },
@@ -102,6 +134,7 @@ describe('zapbip listen', () => {
     await server.waitForLiveConnections({ count: 1 });
     pushOwnerMessage({ messageId: 'msg_1', text: OWNER_TEXT });
     await server.waitForFrames({ type: ConnectorFrameType.Done, count: 1 });
+    await listenProcess.waitForPrintedLines({ count: 1 });
 
     expect(printedLines({ listenProcess }).map((line) => JSON.parse(line))).toEqual([
       { messageId: 'msg_1', kind: 'text', sender: 'owner', verified: true, forwarded: false, text: OWNER_TEXT },
@@ -113,6 +146,8 @@ describe('zapbip listen', () => {
     await server.waitForLiveConnections({ count: 1 });
     pushOwnerMessage({ messageId: 'msg_1', text: OWNER_TEXT });
     await server.waitForFrames({ type: ConnectorFrameType.Done, count: 1 });
+    await listenProcess.waitForPrintedLines({ count: 1 });
+    await listenProcess.waitForStandardError({ text: ConnectorLogEvent.ConnectorConnected });
 
     expect(listenProcess.standardOutput()).not.toContain(ConnectorLogEvent.ConnectorConnected);
     expect(listenProcess.standardError()).toContain(ConnectorLogEvent.ConnectorConnected);
@@ -138,6 +173,7 @@ describe('zapbip listen', () => {
     await server.waitForLiveConnections({ count: 1 });
     pushOwnerMessage({ messageId: 'msg_1', text: OWNER_TEXT });
     await server.waitForFrames({ type: ConnectorFrameType.Done, count: 2 });
+    await listenProcess.waitForPrintedLines({ count: 1 });
 
     expect(listenProcess.child.exitCode).toBeNull();
     expect(printedLines({ listenProcess })).toHaveLength(1);

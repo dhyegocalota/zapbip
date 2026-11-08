@@ -6,6 +6,8 @@ Every checkbox states the input and the exact expected outcome. A ticked box car
 
 - [ ] `tools/repository-shape/src/agent-lifecycle.test.ts::resolving the lockfile after a removal needs no registry metadata, as on a runner with a cold cache` — input: a worktree at HEAD, the removed agents `git rm`-ed, `pnpm install --no-frozen-lockfile --offline` with `CI=true` and an empty `npm_config_cache_dir`; expected before the fix: exit 1 with `ERR_PNPM_NO_OFFLINE_META ... vite.json`.
 
+- [ ] `apps/connector/test/integration/listen.test.ts::prints one JSON line per owner message even when the output pipe is read late, as on a loaded machine` — input: the output pipes are read 300 ms late; expected before the fix: `expected [] to deeply equal [ { messageId: 'msg_1', ... } ]`; after: the line is printed.
+
 ## Unit
 
 - [ ] Same test after the fix (`--prefer-offline`) — expected: exit 0.

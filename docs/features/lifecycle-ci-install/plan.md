@@ -19,6 +19,8 @@
 - [x] **Step 1 (red):** `installDependencies` with a cold metadata cache and `CI=true`; every proof install uses it and prints its output; a fast test resolves the lockfile after the removal. Fails locally with `ERR_PNPM_NO_OFFLINE_META`.
 - [x] **Step 2:** the resolving installs use `--prefer-offline`.
 
+- [x] **Step 3:** red `927c36b4` reads the child's output 300 ms late and fails with the CI message; the listen tests wait on the pipes (`waitForPrintedLines`, `waitForStandardError`).
+
 ## Failure modes
 
 | Step | What breaks | How I notice (the concrete signal) | How I back out |
