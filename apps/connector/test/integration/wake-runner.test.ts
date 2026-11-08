@@ -109,6 +109,45 @@ describe.each(CONNECTOR_CLIENTS)('runWake with the %s runtime', (client) => {
     });
   });
 
+  describe.runIf(runtime.strictMcpNullReason !== null)('another MCP server the owner configured, which the runtime disables', () => {
+    let decoyServer: Server;
+    let zapbipServer: Server;
+    let decoyRequests: number;
+
+    function listen(input: { handler: () => void }): Promise<Server> {
+      const server = createServer((_request, response) => {
+        input.handler();
+        response.writeHead(200).end('{}');
+      });
+      return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve(server)));
+    }
+
+    function linkOf(input: { server: Server }): string {
+      return `http://127.0.0.1:${(input.server.address() as AddressInfo).port}/mcp`;
+    }
+
+    beforeEach(async () => {
+      decoyRequests = 0;
+      decoyServer = await listen({ handler: () => (decoyRequests += 1) });
+      zapbipServer = await listen({ handler: () => undefined });
+      vi.stubEnv('FAKE_CLIENT_USER_MCP_SERVERS', JSON.stringify({ [DECOY_SERVER_NAME]: { url: linkOf({ server: decoyServer }) } }));
+      vi.stubEnv('FAKE_CLIENT_CALLS_MCP', '1');
+      vi.stubEnv('FAKE_CLIENT_ZAPBIP_URL', linkOf({ server: zapbipServer }));
+      await fakeClients.writeDecoy({ client, name: DECOY_SERVER_NAME, url: linkOf({ server: decoyServer }) });
+    });
+
+    afterEach(async () => {
+      await Promise.all([decoyServer, zapbipServer].map((server) => new Promise((resolve) => server.close(resolve))));
+    });
+
+    it('is never reachable from a woken child', async () => {
+      const result = await wake({ connectionLink: linkOf({ server: zapbipServer }) });
+
+      expect(result.outcome).toBe(ConnectorWakeOutcome.Answered);
+      expect(decoyRequests).toBe(0);
+    });
+  });
+
   it.each([WakeRefusalKind.Unparseable, WakeRefusalKind.Unreadable])(
     'refuses the wake when its runtime refuses isolation as %s and starts no process',
     async (kind) => {

@@ -69,7 +69,7 @@ export const FULL_SUITES: string[][] = [
   ['bash', '.agents/hooks/hooks.test.sh'],
   ['pnpm', '--filter', '@zapbip/agents', 'test:unit'],
   ['pnpm', '--filter', '@zapbip/repository-shape', 'test:unit'],
-  ['pnpm', '--filter', '@zapbip/connector', 'test:unit'],
+  ['pnpm', '--filter', 'zapbip', 'test:unit'],
   ['pnpm', '--filter', '@zapbip/api', 'test:unit'],
   ['pnpm', '--filter', '@zapbip/api', 'test:integration'],
 ];

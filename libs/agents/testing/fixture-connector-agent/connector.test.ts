@@ -1,69 +1,72 @@
-import { execFile } from 'node:child_process';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, stat, utimes, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { promisify } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { runtime } from './connector';
 
-const SESSION_FOLDER = '.fixture-sessions';
-const FAKE_BINARY = join(import.meta.dirname, 'testing', 'fixture-binary.mjs');
 const OLDER_SESSION_ID = '00000000-0000-4000-8000-000000000001';
 const NEWER_SESSION_ID = '00000000-0000-4000-8000-000000000002';
+const CONNECTION_LINK = 'https://x.example/c/zb_conn_FAKE/mcp';
+const OWNER_ONLY_MODE = 0o600;
+const CONFIG_ARGUMENT = '--mcp-config=';
 
-const execute = promisify(execFile);
-let workingDirectory = '';
+let homeDirectory = '';
 
 beforeEach(async () => {
-  workingDirectory = await mkdtemp(join(tmpdir(), 'fixture-connector-'));
+  homeDirectory = await mkdtemp(join(tmpdir(), 'fixture-connector-'));
 });
 
 afterEach(async () => {
-  await rm(workingDirectory, { recursive: true, force: true });
+  await rm(homeDirectory, { recursive: true, force: true });
 });
 
+async function writeSession(input: { sessionId: string; modifiedAtSeconds: number }): Promise<void> {
+  await mkdir(join(homeDirectory, 'sessions'), { recursive: true });
+  const file = join(homeDirectory, 'sessions', input.sessionId);
+  await writeFile(file, '');
+  await utimes(file, input.modifiedAtSeconds, input.modifiedAtSeconds);
+}
+
 describe('the fixture connector runtime', () => {
-  test('finds the newest session id', async () => {
-    await mkdir(join(workingDirectory, SESSION_FOLDER));
-    await writeFile(join(workingDirectory, SESSION_FOLDER, OLDER_SESSION_ID), '');
-    await writeFile(join(workingDirectory, SESSION_FOLDER, NEWER_SESSION_ID), '');
-    const sessionId = await runtime.findNewestSessionId({
-      workingDirectory,
-      homeDirectory: workingDirectory,
-    });
-    expect(sessionId).toBe(NEWER_SESSION_ID);
+  test('finds the session written last, not the one named last', async () => {
+    await writeSession({ sessionId: NEWER_SESSION_ID, modifiedAtSeconds: 1 });
+    await writeSession({ sessionId: OLDER_SESSION_ID, modifiedAtSeconds: 2 });
+    expect(await runtime.findNewestSessionId({ workingDirectory: homeDirectory, homeDirectory })).toBe(OLDER_SESSION_ID);
   });
 
   test('finds no session id when there is no session folder', async () => {
-    const sessionId = await runtime.findNewestSessionId({
-      workingDirectory,
-      homeDirectory: workingDirectory,
+    expect(await runtime.findNewestSessionId({ workingDirectory: homeDirectory, homeDirectory })).toBeNull();
+  });
+
+  test('pins one MCP server with a strict flag, a private file and a cleanup', async () => {
+    const { isolationArguments, cleanup } = await runtime.prepareIsolation({
+      connectionLink: CONNECTION_LINK,
+      workingDirectory: homeDirectory,
+      homeDirectory,
     });
-    expect(sessionId).toBeNull();
+    const configArgument = isolationArguments.find((argument) => argument.startsWith(CONFIG_ARGUMENT)) as string;
+    const configFile = configArgument.slice(CONFIG_ARGUMENT.length);
+    expect(isolationArguments).toContain(runtime.strictMcpArgument);
+    expect(JSON.parse(await readFile(configFile, 'utf8'))).toEqual({ mcpServers: { zapbip: { type: 'http', url: CONNECTION_LINK } } });
+    expect((await stat(configFile)).mode & 0o777).toBe(OWNER_ONLY_MODE);
+    await cleanup();
+    await expect(stat(configFile)).rejects.toThrow();
   });
 
-  test('prepares isolation arguments and cleans up', async () => {
-    const isolation = await runtime.prepareIsolation({
-      connectionLink: 'https://x.example/c/zb_conn_FAKE/mcp',
-      workingDirectory,
-      homeDirectory: workingDirectory,
-    });
-    expect(isolation.isolationArguments).toEqual(['--isolated']);
-    await expect(isolation.cleanup()).resolves.toBeUndefined();
+  test('resumes a session with the isolation arguments last', () => {
+    expect(runtime.resumeArguments({ sessionId: NEWER_SESSION_ID, isolationArguments: ['--a'] })).toEqual([
+      'resume',
+      NEWER_SESSION_ID,
+      '--a',
+    ]);
   });
 
-  test('resumes a session through the fake binary with the isolation arguments last', async () => {
-    const resumeArguments = runtime.resumeArguments({ sessionId: NEWER_SESSION_ID, isolationArguments: ['--isolated'] });
-    const { stdout } = await execute(process.execPath, [FAKE_BINARY, ...resumeArguments]);
-    expect(JSON.parse(stdout)).toEqual(['--resume', NEWER_SESSION_ID, '--isolated']);
-  });
-
-  test('starts a new session when the runtime offers one', () => {
-    expect(runtime.newSessionArguments?.({ isolationArguments: ['--isolated'] })).toEqual(['--new', '--isolated']);
+  test('starts a new session with the isolation arguments only', () => {
+    expect(runtime.newSessionArguments?.({ isolationArguments: ['--a'] })).toEqual(['--a']);
   });
 
   test('falls back to a new session only on its own refusal message', () => {
-    expect(runtime.isNewSessionFallback({ stderrText: 'error: fixture session is busy' })).toBe(true);
+    expect(runtime.isNewSessionFallback({ stderrText: 'Error: thread already has an active writer for this session' })).toBe(true);
     expect(runtime.isNewSessionFallback({ stderrText: 'error: something else' })).toBe(false);
   });
 });

@@ -51,3 +51,8 @@ export function writePlan(input: { plan: GenerationPlan; mode: GenerationMode })
   if (input.mode === GenerationMode.Check) return problemsOf(input);
   return applyPlan(input);
 }
+
+export function applyValidPlan(input: { plan: GenerationPlan }): string[] {
+  if (input.plan.violations.length > 0) return [];
+  return writePlan({ plan: input.plan, mode: GenerationMode.Write });
+}

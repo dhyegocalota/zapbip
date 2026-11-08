@@ -1,4 +1,4 @@
-import { GenerationMode, pendingDeletionsOf, staleWritesOf, writePlan } from './write';
+import { GenerationMode, applyValidPlan, pendingDeletionsOf, staleWritesOf, writePlan } from './write';
 import { discoverAgents } from './discover';
 import { planGeneratedFiles, type GenerationPlan } from './plan';
 import { SUPPORTED_FOLDER } from './repository';
@@ -28,7 +28,7 @@ async function planFromDisk(): Promise<GenerationPlan> {
 
 async function generate(): Promise<number> {
   const plan = await planFromDisk();
-  writePlan({ plan, mode: GenerationMode.Write }).forEach((path) => console.log(`wrote ${path}`));
+  applyValidPlan({ plan }).forEach((path) => console.log(`wrote ${path}`));
   plan.violations.forEach((violation) => console.error(violation));
   return plan.violations.length === 0 ? SUCCESS_EXIT_CODE : FAILURE_EXIT_CODE;
 }

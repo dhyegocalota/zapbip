@@ -1,18 +1,18 @@
-import { existsSync, readdirSync } from 'node:fs';
-import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { delimiter, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { CONNECTOR_RUNTIMES, ConnectorClient } from '@zapbip/agents/connector';
 import { vi } from 'vitest';
 import { CONNECTOR_CLIENTS } from './connector-clients';
 
 const SUPPORTED_DIRECTORY = fileURLToPath(new URL('../../../../libs/agents/supported', import.meta.url));
 const FAKE_BINARY_FOLDER = 'testing';
-const FAKE_BINARY_DIRECTORIES = readdirSync(SUPPORTED_DIRECTORY)
-  .map((agentFolder) => join(SUPPORTED_DIRECTORY, agentFolder, FAKE_BINARY_FOLDER))
-  .filter((directory) => existsSync(directory));
+const FAKE_CLIENT_ENTRY = 'fake-client.mjs';
+const BINARY_DIRECTORY_NAME = 'bin';
+const EXECUTABLE_MODE = 0o755;
 const SESSION_WRITER_FILE = 'write-session.mjs';
+const DECOY_WRITER_FILE = 'write-decoy.mjs';
 const MILLISECONDS_PER_SECOND = 1000;
 export const ACTIVE_WRITER_TEXT = 'Error: thread already has an active writer for this session';
 
@@ -76,6 +76,7 @@ export type FakeClients = {
   release: () => Promise<void>;
   readRuns: () => Promise<FakeClientRun[]>;
   writeSession: (input: { client: ConnectorClient; sessionId: string; modifiedAtSeconds?: number }) => Promise<void>;
+  writeDecoy: (input: { client: ConnectorClient; name: string; url: string }) => Promise<void>;
   cleanup: () => Promise<void>;
 };
 
@@ -123,6 +124,20 @@ export function runAt(input: { runs: FakeClientRun[]; index: number }): FakeClie
   return run;
 }
 
+async function writeBinaries(input: { rootDirectory: string }): Promise<string> {
+  const binaryDirectory = join(input.rootDirectory, BINARY_DIRECTORY_NAME);
+  await mkdir(binaryDirectory, { recursive: true });
+  await Promise.all(
+    CONNECTOR_CLIENTS.map(async (client) => {
+      const entry = pathToFileURL(join(SUPPORTED_DIRECTORY, client, FAKE_BINARY_FOLDER, FAKE_CLIENT_ENTRY)).href;
+      const binary = join(binaryDirectory, CONNECTOR_RUNTIMES[client].binaryName);
+      await writeFile(binary, `#!/usr/bin/env node\nimport(${JSON.stringify(entry)});\n`);
+      await chmod(binary, EXECUTABLE_MODE);
+    }),
+  );
+  return binaryDirectory;
+}
+
 export async function createFakeClients(): Promise<FakeClients> {
   const rootDirectory = await realpath(await mkdtemp(join(tmpdir(), 'zapbip-fake-clients-')));
   const workingDirectory = join(rootDirectory, 'project');
@@ -131,9 +146,10 @@ export async function createFakeClients(): Promise<FakeClients> {
   const holdFile = join(rootDirectory, 'hold-release');
   await mkdir(workingDirectory, { recursive: true });
   await writeFile(recordFile, '');
+  const binaryDirectory = await writeBinaries({ rootDirectory });
 
   const baseEnvironment: Record<string, string> = {
-    PATH: [...FAKE_BINARY_DIRECTORIES, process.env.PATH].join(delimiter),
+    PATH: [binaryDirectory, process.env.PATH].join(delimiter),
     ...Object.fromEntries(CONNECTOR_CLIENTS.map((client) => [CONNECTOR_RUNTIMES[client].homeVariable, homeDirectories[client]])),
     FAKE_CLIENT_RECORD: recordFile,
   };
@@ -171,6 +187,13 @@ export async function createFakeClients(): Promise<FakeClients> {
     await writer({ homeDirectory: homeDirectoryOf({ client }), workingDirectory, sessionId, modifiedAtSeconds });
   }
 
+  async function writeDecoy(input: { client: ConnectorClient; name: string; url: string }): Promise<void> {
+    const { writeDecoy: writer } = (await import(join(SUPPORTED_DIRECTORY, input.client, FAKE_BINARY_FOLDER, DECOY_WRITER_FILE))) as {
+      writeDecoy: (decoy: { homeDirectory: string; name: string; url: string }) => Promise<void>;
+    };
+    await writer({ homeDirectory: homeDirectoryOf({ client: input.client }), name: input.name, url: input.url });
+  }
+
   async function cleanup(): Promise<void> {
     await rm(rootDirectory, { recursive: true, force: true });
   }
@@ -186,6 +209,7 @@ export async function createFakeClients(): Promise<FakeClients> {
     release,
     readRuns,
     writeSession,
+    writeDecoy,
     cleanup,
   };
 }
