@@ -26,6 +26,11 @@ export enum LockfileMode {
   Resolve = '--no-frozen-lockfile',
 }
 
+const LOCKFILE_INSTALL_FLAGS: Record<LockfileMode, string[]> = {
+  [LockfileMode.Frozen]: [LockfileMode.Frozen, '--offline'],
+  [LockfileMode.Resolve]: [LockfileMode.Resolve, '--prefer-offline'],
+};
+
 const COLD_METADATA_CACHE_FOLDER = 'pnpm-metadata-cache';
 
 export function run(input: { command: string[]; directory: string; environment?: Record<string, string> }): CommandOutcome {
@@ -41,7 +46,7 @@ export function run(input: { command: string[]; directory: string; environment?:
 
 export function installDependencies(input: { directory: string; lockfile: LockfileMode }): CommandOutcome {
   return run({
-    command: ['pnpm', 'install', input.lockfile, '--offline'],
+    command: ['pnpm', 'install', ...LOCKFILE_INSTALL_FLAGS[input.lockfile]],
     directory: input.directory,
     environment: { CI: 'true', npm_config_cache_dir: join(dirname(input.directory), COLD_METADATA_CACHE_FOLDER) },
   });

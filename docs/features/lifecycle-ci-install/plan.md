@@ -17,7 +17,7 @@
 ### G1
 
 - [x] **Step 1 (red):** `installDependencies` with a cold metadata cache and `CI=true`; every proof install uses it and prints its output; a fast test resolves the lockfile after the removal. Fails locally with `ERR_PNPM_NO_OFFLINE_META`.
-- [ ] **Step 2:** the resolving installs use `--prefer-offline`.
+- [x] **Step 2:** the resolving installs use `--prefer-offline`.
 
 ## Failure modes
 
