@@ -19,6 +19,9 @@ const WIDTH_OF: Record<DocsViewport, number> = {
 const USER_REQUEST_URL = 'http://localhost:3000/_mintlify/api/user';
 const ABORTED = 'net::ERR_ABORTED';
 const CONNECTION_REFUSED = 'net::ERR_CONNECTION_REFUSED';
+const CHUNK_URL = 'http://localhost:3000/_mintlify/assets/DrawerViewport-Bx7q1Zk0.js';
+const FOREIGN_CHUNK_URL = 'https://cdn.example.com/_mintlify/assets/DrawerViewport-Bx7q1Zk0.js';
+const PAGE_URL = 'http://localhost:3000/get-started/how-to-start';
 const SOCKET_URL = 'http://localhost:3000/socket.io/?EIO=4';
 
 const CASES = Object.values(DocsLanguage).flatMap((language) => Object.values(DocsViewport).map((viewport) => ({ language, viewport })));
@@ -55,5 +58,25 @@ describe('docs walk support', () => {
 
   test('the live-reload polling abort stays allowed', () => {
     expect(isAllowedNoise({ entry: requestFailedNoiseOf({ url: SOCKET_URL, errorText: ABORTED }) })).toBe(true);
+  });
+
+  test('an aborted same-origin chunk under the mint assets path is allowed noise', () => {
+    expect(isAllowedNoise({ entry: requestFailedNoiseOf({ url: CHUNK_URL, errorText: ABORTED }) })).toBe(true);
+  });
+
+  test('an aborted cross-origin chunk is not allowed', () => {
+    expect(isAllowedNoise({ entry: requestFailedNoiseOf({ url: FOREIGN_CHUNK_URL, errorText: ABORTED }) })).toBe(false);
+  });
+
+  test('a same-origin chunk that is refused is not allowed', () => {
+    expect(isAllowedNoise({ entry: requestFailedNoiseOf({ url: CHUNK_URL, errorText: CONNECTION_REFUSED }) })).toBe(false);
+  });
+
+  test('a same-origin chunk that answers 404 is not allowed', () => {
+    expect(isAllowedNoise({ entry: `response 404 ${CHUNK_URL}` })).toBe(false);
+  });
+
+  test('an aborted same-origin page navigation is not allowed', () => {
+    expect(isAllowedNoise({ entry: requestFailedNoiseOf({ url: PAGE_URL, errorText: ABORTED }) })).toBe(false);
   });
 });
