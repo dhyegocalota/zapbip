@@ -7,6 +7,8 @@ import {
   type DeployBlock,
   type EnvironmentVariables,
   PreflightStep,
+  type PreflightWarning,
+  PreflightWarningKind,
   type WorkerFacts,
   runDocsPreflight,
   runWorkerPreflight,
@@ -47,15 +49,15 @@ function workerInput(input: {
   isInteractive?: boolean;
   firstDeploy?: boolean;
   environmentVariables?: EnvironmentVariables;
-  officialWhatsAppNumber?: string;
   company?: CompanyFacts;
   npmVersion?: string;
   packageFetcher?: FakePackageFetcher;
   nameserverResolver?: FakeNameserverResolver;
   workerFacts?: WorkerFacts;
+  warnings?: PreflightWarning[];
 }) {
-  const { environment = DeployEnvironment.Staging, isInteractive = true, firstDeploy = false } = input;
-  const { shell = fakeShell({}), environmentVariables = COMPLETE_VARIABLES, officialWhatsAppNumber = OFFICIAL_NUMBER } = input;
+  const { environment = DeployEnvironment.Staging, isInteractive = true, firstDeploy = false, warnings = [] } = input;
+  const { shell = fakeShell({}), environmentVariables = COMPLETE_VARIABLES } = input;
   const {
     block = blockOf({ environment }),
     workerFacts = READY_WORKER_FACTS,
@@ -72,12 +74,12 @@ function workerInput(input: {
     shell,
     isInteractive,
     environmentVariables,
-    officialWhatsAppNumber,
     company,
     npmVersion,
     plugins: HOSTED_PLUGINS,
     packageFetcher,
     nameserverResolver,
+    warn: (warning: PreflightWarning) => warnings.push(warning),
   };
 }
 
@@ -102,14 +104,9 @@ describe('worker preflight', () => {
     expect(shell.commands).toEqual([]);
   });
 
-  it('refuses production while the official number is the unset sentinel, before any command', async () => {
-    const shell = fakeShell({});
-    const refusal = await runWorkerPreflight(
-      workerInput({ environment: DeployEnvironment.Production, shell, officialWhatsAppNumber: OFFICIAL_NUMBER_UNSET }),
-    );
-    expect(refusal?.step).toBe(PreflightStep.OfficialNumber);
-    expect(refusal?.message).toContain('OFFICIAL_WHATSAPP_NUMBER');
-    expect(shell.commands).toEqual([]);
+  it('lets production deploy when only the official number is unset, since the Worker never reads it', async () => {
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production }));
+    expect(refusal).toBeNull();
   });
 
   it.each(['legalName', 'cnpj', 'address', 'website', 'contactEmail'])(
@@ -252,12 +249,70 @@ describe('worker preflight', () => {
     expect(refusal?.message).not.toContain('does not resolve');
   });
 
-  it('says the package does not resolve when npm answers E404', async () => {
+  it('warns and passes when npm answers E404, so an unpublished package never blocks production', async () => {
     const notFound = JSON.stringify({ error: { code: 'E404', summary: 'not found' } });
     const shell = fakeShell({ replies: { 'maintainers --json': { exitCode: 1, stdout: notFound } } });
-    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell }));
-    expect(refusal?.message).toContain('does not resolve');
-    expect(refusal?.message).not.toContain('could not reach npm');
+    const warnings: PreflightWarning[] = [];
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell, warnings }));
+    expect(refusal).toBeNull();
+    expect(warnings).toContainEqual({
+      kind: PreflightWarningKind.PackageUnpublished,
+      message: `zapbip@${NPM_VERSION} is not on npm yet; publish it before launch`,
+    });
+  });
+
+  it('warns and passes when the version is absent but the package name belongs to the owner', async () => {
+    const notFound = JSON.stringify({ error: { code: 'E404' } });
+    const shell = fakeShell({ replies: { [`zapbip@${NPM_VERSION} maintainers --json`]: { exitCode: 1, stdout: notFound } } });
+    const warnings: PreflightWarning[] = [];
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell, warnings }));
+    expect(refusal).toBeNull();
+    expect(warnings).toContainEqual({
+      kind: PreflightWarningKind.PackageUnpublished,
+      message: `zapbip@${NPM_VERSION} is not on npm yet; publish it before launch`,
+    });
+  });
+
+  it('refuses production when the version is absent but the package name belongs to a foreign maintainer', async () => {
+    const notFound = JSON.stringify({ error: { code: 'E404' } });
+    const squatter = JSON.stringify(['squatter <s@example.com>']);
+    const shell = fakeShell({
+      replies: {
+        [`zapbip@${NPM_VERSION} maintainers --json`]: { exitCode: 1, stdout: notFound },
+        'view zapbip maintainers --json': { exitCode: 0, stdout: squatter },
+      },
+    });
+    const warnings: PreflightWarning[] = [];
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell, warnings }));
+    expect(refusal?.step).toBe(PreflightStep.NpmVersion);
+    expect(refusal?.message).toContain('squatter');
+    expect(warnings).toEqual([]);
+  });
+
+  it('refuses production when the version is absent and npm cannot be reached for the package name', async () => {
+    const notFound = JSON.stringify({ error: { code: 'E404' } });
+    const networkError = JSON.stringify({ error: { code: 'ENOTFOUND' } });
+    const shell = fakeShell({
+      replies: {
+        [`zapbip@${NPM_VERSION} maintainers --json`]: { exitCode: 1, stdout: notFound },
+        'view zapbip maintainers --json': { exitCode: 1, stdout: networkError },
+      },
+    });
+    const warnings: PreflightWarning[] = [];
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell, warnings }));
+    expect(refusal?.step).toBe(PreflightStep.NpmVersion);
+    expect(refusal?.message).toContain('could not reach npm');
+    expect(warnings).toEqual([]);
+  });
+
+  it('refuses production when the only maintainer is not the owner npm user', async () => {
+    const maintainers = JSON.stringify(['squatter <s@example.com>']);
+    const shell = fakeShell({ replies: { 'maintainers --json': { exitCode: 0, stdout: maintainers } } });
+    const warnings: PreflightWarning[] = [];
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell, warnings }));
+    expect(refusal?.step).toBe(PreflightStep.NpmVersion);
+    expect(refusal?.message).toContain('squatter');
+    expect(warnings).toEqual([]);
   });
 
   it('refuses production when the owner npm user has a co-maintainer', async () => {
@@ -335,9 +390,9 @@ describe('worker preflight', () => {
     expect(staging.commands).toContain('pnpm verify');
   });
 
-  it('lets staging deploy while the official number and the company facts are unset', async () => {
+  it('lets staging deploy while the company facts are unset', async () => {
     const company = { ...COMPLETE_COMPANY, cnpj: COMPANY_FACT_UNSET };
-    expect(await runWorkerPreflight(workerInput({ officialWhatsAppNumber: OFFICIAL_NUMBER_UNSET, company }))).toBeNull();
+    expect(await runWorkerPreflight(workerInput({ company }))).toBeNull();
   });
 
   it('refuses when the gate fails, after every cheap step has passed', async () => {

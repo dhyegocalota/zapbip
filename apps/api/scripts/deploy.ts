@@ -4,7 +4,7 @@ import { parseArgs } from 'node:util';
 import { experimental_readRawConfig as readRawWranglerConfig } from 'wrangler';
 import type { AgentPlugin } from '@zapbip/agents';
 import { AGENT_PLUGINS } from '@zapbip/agents/plugins';
-import { COMPANY, type CompanyFacts, OFFICIAL_WHATSAPP_NUMBER, ZAPBIP_NPM_VERSION } from '@zapbip/types';
+import { COMPANY, type CompanyFacts, ZAPBIP_NPM_VERSION } from '@zapbip/types';
 import { z } from 'zod';
 import { DeployEnvironment, parseDeployEnvironment } from '../src/operations/deploy-environment';
 import {
@@ -12,6 +12,7 @@ import {
   type DeployBlock,
   type DeployShell,
   type EnvironmentVariables,
+  type PreflightWarning,
   runWorkerPreflight,
   type ShellCommand,
   type WorkerFacts,
@@ -28,6 +29,7 @@ import { inspectWorker } from '../src/operations/worker-facts';
 const WRANGLER_CONFIG_PATH = join(import.meta.dirname, '../wrangler.jsonc');
 const SOURCE_ROOT = join(import.meta.dirname, '../src');
 const SMOKE_SCRIPT_PATH = 'apps/api/scripts/smoke.ts';
+const WARNINGS_HEADING = 'warnings to resolve before launch:';
 const NO_PREVIOUS_VERSION = 'no previous Worker version: to roll back, redeploy the prior commit';
 const CONFIRMATION_ANSWER = DeployEnvironment.Production;
 const CONFIRMATION_QUESTION = `Type ${CONFIRMATION_ANSWER} to deploy to ${DeployEnvironment.Production}: `;
@@ -43,7 +45,6 @@ export type DeployRun = {
   prompt: DeployPrompt;
   isInteractive: boolean;
   environmentVariables: EnvironmentVariables;
-  officialWhatsAppNumber: string;
   company: CompanyFacts;
   npmVersion: string;
   plugins: AgentPlugin[];
@@ -134,9 +135,22 @@ function smokeCommand(input: { environment: DeployEnvironment; firstDeploy: bool
   };
 }
 
+function logWarnings(input: { warnings: PreflightWarning[]; log: (line: string) => void }): void {
+  if (input.warnings.length === 0) return;
+  input.log(WARNINGS_HEADING);
+  input.warnings.forEach((warning) => input.log(warning.message));
+}
+
 export async function runDeploy(input: DeployRun): Promise<number> {
   const { environment, firstDeploy, block, shell, prompt, log } = input;
-  const refusal = await runWorkerPreflight(input);
+  const warnings: PreflightWarning[] = [];
+  const refusal = await runWorkerPreflight({
+    ...input,
+    warn: (warning) => {
+      warnings.push(warning);
+      log(warning.message);
+    },
+  });
   if (refusal) {
     log(`refused at ${refusal.step}: ${refusal.message}`);
     return 1;
@@ -158,10 +172,12 @@ export async function runDeploy(input: DeployRun): Promise<number> {
     return 1;
   }
   const smoke = await shell.run(smokeCommand({ environment, firstDeploy }));
-  if (smoke.exitCode === 0) return 0;
-  log('the smoke test failed; to roll back, run:');
-  rollbackCommandLines({ environment, block, points }).forEach(log);
-  return 1;
+  if (smoke.exitCode !== 0) {
+    log('the smoke test failed; to roll back, run:');
+    rollbackCommandLines({ environment, block, points }).forEach(log);
+  }
+  logWarnings({ warnings, log });
+  return smoke.exitCode === 0 ? 0 : 1;
 }
 
 async function main(): Promise<void> {
@@ -181,7 +197,6 @@ async function main(): Promise<void> {
       prompt: { ask: ({ question }) => lineReader.question(question) },
       isInteractive: process.stdin.isTTY === true,
       environmentVariables: process.env,
-      officialWhatsAppNumber: OFFICIAL_WHATSAPP_NUMBER,
       company: COMPANY,
       npmVersion: ZAPBIP_NPM_VERSION,
       plugins: Object.values(AGENT_PLUGINS),

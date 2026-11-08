@@ -13,11 +13,11 @@ import {
   fakeShell,
   HOSTED_PLUGINS,
   NPM_VERSION,
-  OFFICIAL_NUMBER,
   READY_WORKER_FACTS,
 } from './fake-deploy-shell';
 
 const CONFIRMATION = 'production';
+const WARNINGS_HEADING = 'warnings to resolve before launch:';
 const DEPLOYMENT_STATUS_JSON = readFileSync('test/fixtures/deployments-status.json', 'utf8');
 const CURRENT_VERSION_ID = '0c8a4f7e-91d2-4b6a-8e35-2f1d7a6b9c40';
 const SPLIT_DEPLOYMENT_JSON = JSON.stringify({
@@ -70,7 +70,6 @@ async function deploy(input: {
     prompt,
     isInteractive,
     environmentVariables: COMPLETE_VARIABLES,
-    officialWhatsAppNumber: OFFICIAL_NUMBER,
     company: COMPLETE_COMPANY,
     npmVersion: NPM_VERSION,
     plugins: HOSTED_PLUGINS,
@@ -152,6 +151,34 @@ describe('deploy entry', () => {
     const accepted = await deploy({ environment: DeployEnvironment.Production, answers: [CONFIRMATION] });
     expect(accepted.exitCode).toBe(0);
     expect(accepted.prompt.questions).toHaveLength(1);
+  });
+
+  it('warns and deploys production when a package is not on npm yet', async () => {
+    const notFound = { exitCode: 1, stdout: JSON.stringify({ error: { code: 'E404' } }) };
+    const shell = fakeShell({ replies: { ...REPLIES, 'maintainers --json': notFound } });
+    const { exitCode, output } = await deploy({ shell, environment: DeployEnvironment.Production, answers: [CONFIRMATION] });
+    expect(exitCode).toBe(0);
+    expect(output).toContain(`zapbip@${NPM_VERSION} is not on npm yet; publish it before launch`);
+  });
+
+  it('prints the warnings again under a heading after the smoke test', async () => {
+    const notFound = { exitCode: 1, stdout: JSON.stringify({ error: { code: 'E404' } }) };
+    const shell = fakeShell({ replies: { ...REPLIES, 'maintainers --json': notFound } });
+    const { output } = await deploy({ shell, environment: DeployEnvironment.Production, answers: [CONFIRMATION] });
+    const [beforeHeading, afterHeading] = output.split(WARNINGS_HEADING);
+    expect(beforeHeading).toContain(`zapbip@${NPM_VERSION} is not on npm yet`);
+    expect(afterHeading).toContain(`zapbip@${NPM_VERSION} is not on npm yet; publish it before launch`);
+  });
+
+  it('pin: prints the warnings again under the heading when the smoke test fails', async () => {
+    const notFound = { exitCode: 1, stdout: JSON.stringify({ error: { code: 'E404' } }) };
+    const smokeFailed = { exitCode: 1, stdout: '' };
+    const shell = fakeShell({ replies: { ...REPLIES, 'maintainers --json': notFound, 'smoke.ts': smokeFailed } });
+    const { exitCode, output } = await deploy({ shell, environment: DeployEnvironment.Production, answers: [CONFIRMATION] });
+    const [beforeHeading, afterHeading] = output.split(WARNINGS_HEADING);
+    expect(exitCode).toBe(1);
+    expect(beforeHeading).toContain('the smoke test failed; to roll back, run:');
+    expect(afterHeading).toContain(`zapbip@${NPM_VERSION} is not on npm yet; publish it before launch`);
   });
 
   it.each(['Production', 'production ', 'prod', ''])('does not deploy production on the answer %j', async (answer) => {
