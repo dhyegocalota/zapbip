@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { orphanPagePathsOf, renderNavigation } from './render-navigation';
+import { listedAgentSlugsOf, orphanPagesOf, renderNavigation } from './render-navigation';
 import { SAMPLE_IDS_IN_ORDER, sampleAgents } from './test-agents';
 
 type Group = { group: string; pages: unknown[] };
@@ -66,29 +66,45 @@ describe('renderNavigation', () => {
   });
 });
 
-describe('orphanPagePathsOf', () => {
-  test('plans the page and its pt-br twin for a page with no folder, and nothing else', () => {
-    const existingPaths = [
-      'apps/docs/agents/ghost.mdx',
-      'apps/docs/agents/zeta-local.mdx',
-      'apps/docs/agents/supported-agents.mdx',
-      'apps/docs/pt-br/agents/zeta-local.mdx',
-      'apps/docs/pt-br/agents/supported-agents.mdx',
-    ];
-    expect(orphanPagePathsOf({ existingPaths, agentIds: ['zeta-local'] })).toEqual([
-      'apps/docs/agents/ghost.mdx',
-      'apps/docs/pt-br/agents/ghost.mdx',
-    ]);
+describe('orphanPagesOf', () => {
+  const existingPaths = [
+    'apps/docs/agents/ghost.mdx',
+    'apps/docs/agents/zeta-local.mdx',
+    'apps/docs/agents/supported-agents.mdx',
+    'apps/docs/pt-br/agents/zeta-local.mdx',
+    'apps/docs/pt-br/agents/supported-agents.mdx',
+  ];
+
+  test('plans the page and its pt-br twin for a listed page with no folder, and nothing else', () => {
+    expect(orphanPagesOf({ existingPaths, agentIds: ['zeta-local'], listedSlugs: ['ghost', 'zeta-local'] })).toEqual({
+      deletions: ['apps/docs/agents/ghost.mdx', 'apps/docs/pt-br/agents/ghost.mdx'],
+      violations: [],
+    });
   });
 
-  test('finds a page that only the pt-br folder holds', () => {
-    expect(orphanPagePathsOf({ existingPaths: ['apps/docs/pt-br/agents/ghost.mdx'], agentIds: [] })).toEqual([
-      'apps/docs/agents/ghost.mdx',
-      'apps/docs/pt-br/agents/ghost.mdx',
-    ]);
+  test('refuses a page that is neither an agent folder nor listed, and deletes nothing', () => {
+    expect(orphanPagesOf({ existingPaths, agentIds: ['zeta-local'], listedSlugs: ['zeta-local'] })).toEqual({
+      deletions: [],
+      violations: ['agents/ghost has no agent folder and is not in the Agents lists: the generator does not delete a hand-written page'],
+    });
+  });
+
+  test('finds a listed page that only the pt-br folder holds', () => {
+    const result = orphanPagesOf({ existingPaths: ['apps/docs/pt-br/agents/ghost.mdx'], agentIds: [], listedSlugs: ['ghost'] });
+    expect(result.deletions).toEqual(['apps/docs/agents/ghost.mdx', 'apps/docs/pt-br/agents/ghost.mdx']);
   });
 
   test('plans nothing when every page has its folder', () => {
-    expect(orphanPagePathsOf({ existingPaths: ['apps/docs/agents/zeta-local.mdx'], agentIds: ['zeta-local'] })).toEqual([]);
+    expect(orphanPagesOf({ existingPaths: ['apps/docs/agents/zeta-local.mdx'], agentIds: ['zeta-local'], listedSlugs: [] })).toEqual({
+      deletions: [],
+      violations: [],
+    });
+  });
+});
+
+describe('listedAgentSlugsOf', () => {
+  test('lists the agent pages of both languages once, without the matrix page', () => {
+    expect(listedAgentSlugsOf({ source: TODAY })).toContain('zeta-local');
+    expect(listedAgentSlugsOf({ source: TODAY }).filter((slug) => slug === 'zeta-local')).toHaveLength(1);
   });
 });

@@ -1,4 +1,4 @@
-import { OwnerLocale } from '@zapbip/types';
+import { INSTALL_PRODUCT_TEXT_MAX_LENGTH, OwnerLocale } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { definition as fixtureDefinition } from '../../testing/fixture-agent/definition';
 import { install as fixtureInstall } from '../../testing/fixture-agent/install';
@@ -79,5 +79,27 @@ describe('installSectionViolationsOf', () => {
   test('rejects a package version that does not come from ZAPBIP_NPM_VERSION', () => {
     const entry = fixtureEntryEditing({ edit: (text) => text.replace(SECOND_STEP_LINE, '$1 npx zapbip@9.9.9 listen') });
     expect(installSectionViolationsOf({ entries: [entry] })).toContain(`${LABEL}: the package version must come from ZAPBIP_NPM_VERSION`);
+  });
+
+  test('refuses a section with a second heading', () => {
+    const entry = fixtureEntryEditing({ edit: (text) => `${text}\n\n## Other` });
+    expect(installSectionViolationsOf({ entries: [entry] })).toContain(`${LABEL}: the section must hold exactly one heading`);
+  });
+
+  test('refuses a section with a heading of the first level too', () => {
+    const entry = fixtureEntryEditing({ edit: (text) => `${text}\n\n# Other` });
+    expect(installSectionViolationsOf({ entries: [entry] })).toContain(`${LABEL}: the section must hold exactly one heading`);
+  });
+
+  test.each([
+    ['productName', 'Fixture\nAgent'],
+    ['productName', 'x'.repeat(INSTALL_PRODUCT_TEXT_MAX_LENGTH + 1)],
+    ['productDescription', 'one line\n## Injected'],
+    ['productDescription', 'x'.repeat(INSTALL_PRODUCT_TEXT_MAX_LENGTH + 1)],
+  ])('refuses a %s that is not one short line', (field, value) => {
+    const entry = { ...fixtureEntryRendering({ render: fixtureInstall.render }), install: { ...fixtureInstall, [field]: value } };
+    expect(installSectionViolationsOf({ entries: [entry] })).toContain(
+      `${FIXTURE_ID}: the ${field === 'productName' ? 'product name' : 'product description'} must be one line of at most ${INSTALL_PRODUCT_TEXT_MAX_LENGTH} characters`,
+    );
   });
 });

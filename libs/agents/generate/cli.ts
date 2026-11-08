@@ -5,8 +5,8 @@ import { SUPPORTED_FOLDER } from './repository';
 import { loadAgent } from './load';
 import { mentionsOf } from './mentions';
 import { GENERATED_FOLDER } from './paths';
-import { scaffoldFilesOf } from './scaffold';
-import { listSource, readSource, trackedTextFiles } from './source';
+import { ScaffoldKind, scaffoldFilesOf } from './scaffold';
+import { listSource, listTree, readSource, trackedTextFiles } from './source';
 
 enum CliMode {
   Generate = 'generate',
@@ -48,10 +48,24 @@ function agentIdOf(input: { mode: CliMode; argv: string[] }): string {
   return id;
 }
 
+const KIND_FLAGS: Record<string, ScaffoldKind> = {
+  '--connector': ScaffoldKind.Connector,
+  '--plugin': ScaffoldKind.Plugin,
+};
+
+function scaffoldKindOf(input: { argv: string[] }): ScaffoldKind {
+  const [, flag] = input.argv;
+  if (flag === undefined) return ScaffoldKind.Install;
+  const kind = KIND_FLAGS[flag];
+  if (kind === undefined) throw new Error(`usage: agents:new <id> [${Object.keys(KIND_FLAGS).join('|')}]`);
+  return kind;
+}
+
 async function scaffold(input: { argv: string[] }): Promise<number> {
   const id = agentIdOf({ mode: CliMode.New, argv: input.argv });
   const existingIds = discoverAgents({ roots: [SUPPORTED_FOLDER] }).map((agent) => agent.id);
-  const writes = scaffoldFilesOf({ id, existingIds, readSource, listSource });
+  const kind = scaffoldKindOf({ argv: input.argv });
+  const writes = scaffoldFilesOf({ id, kind, existingIds, readSource, listTree });
   writePlan({ plan: { writes, deletions: [], violations: [] }, mode: GenerationMode.Write }).forEach((path) =>
     console.log(`wrote ${path}`),
   );

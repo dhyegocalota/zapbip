@@ -55,13 +55,34 @@ export function renderNavigation(input: { source: string; agents: ResolvedAgent[
   return { content, violations: [] };
 }
 
-export function orphanPagePathsOf(input: { existingPaths: string[]; agentIds: string[] }): string[] {
-  const orphanSlugs = [
+export function listedAgentSlugsOf(input: { source: string }): string[] {
+  const languages = Object.values(DocsLanguage);
+  const listedPages = languages.flatMap((language) => pagesOf({ source: input.source, language }));
+  return [
+    ...new Set(
+      listedPages.flatMap((page) => (typeof page === 'string' && OWNED_PAGE_PATTERN.test(page) ? [page.split('/').at(-1) as string] : [])),
+    ),
+  ];
+}
+
+export function orphanPagesOf(input: { existingPaths: string[]; agentIds: string[]; listedSlugs: string[] }): {
+  deletions: string[];
+  violations: string[];
+} {
+  const slugs = [
     ...new Set(
       input.existingPaths
         .map((path) => ORPHAN_PATH_PATTERN.exec(path)?.[1])
         .filter((slug): slug is string => slug !== undefined && slug !== MATRIX_PAGE_NAME && !input.agentIds.includes(slug)),
     ),
   ];
-  return orphanSlugs.flatMap((slug) => Object.values(PAGE_DIRECTORIES).map((directory) => `${directory}/${slug}${PAGE_EXTENSION}`));
+  const removedSlugs = slugs.filter((slug) => input.listedSlugs.includes(slug));
+  const unknownSlugs = slugs.filter((slug) => !input.listedSlugs.includes(slug));
+  return {
+    deletions: removedSlugs.flatMap((slug) => Object.values(PAGE_DIRECTORIES).map((directory) => `${directory}/${slug}${PAGE_EXTENSION}`)),
+    violations: unknownSlugs.map(
+      (slug) =>
+        `${AGENTS_DIRECTORY}/${slug} has no agent folder and is not in the Agents lists: the generator does not delete a hand-written page`,
+    ),
+  };
 }

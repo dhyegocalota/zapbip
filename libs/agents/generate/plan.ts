@@ -1,5 +1,6 @@
 import { posix } from 'node:path';
 import { DocsLanguage } from '@zapbip/types';
+import { compareCodePoints } from '../src/code-points';
 import { hasValidAgentId, registryViolationsOf } from '../src/checks/registry';
 import type { ResolvedAgent } from './agent';
 import type { DiscoveredAgent } from './discover';
@@ -11,7 +12,7 @@ import { renderDefinitions } from './render-definitions';
 import { renderIds } from './render-ids';
 import { planInstallSections, renderInstallRegistry } from './render-install';
 import { renderMatrix } from './render-matrix';
-import { orphanPagePathsOf, renderNavigation } from './render-navigation';
+import { listedAgentSlugsOf, orphanPagesOf, renderNavigation } from './render-navigation';
 import { planPages } from './render-pages';
 import { renderPluginRegistry } from './render-plugins';
 import { renderWorkflow } from './render-workflow';
@@ -66,17 +67,20 @@ export async function planGeneratedFiles(input: PlanInput): Promise<GenerationPl
     ...navigationWrites,
     { path: WORKFLOW_FILE, content: renderWorkflow({ source: input.readSource(WORKFLOW_FILE), agents }) },
   ];
+  const orphans = orphanPagesOf({
+    existingPaths: existingPagePathsOf({ listSource: input.listSource }),
+    agentIds: input.agents.map((agent) => agent.id),
+    listedSlugs: listedAgentSlugsOf({ source: input.readSource(DOCS_CONFIG) }),
+  });
   const formattedWrites = await Promise.all(writes.map(async (write) => ({ path: write.path, content: await formatted(write) })));
   return {
-    writes: formattedWrites.sort((left, right) => left.path.localeCompare(right.path)),
-    deletions: orphanPagePathsOf({
-      existingPaths: existingPagePathsOf({ listSource: input.listSource }),
-      agentIds: input.agents.map((agent) => agent.id),
-    }),
+    writes: formattedWrites.sort((left, right) => compareCodePoints({ left: left.path, right: right.path })),
+    deletions: orphans.deletions,
     violations: [
       ...registryViolationsOf({ entries: registryEntriesOf({ agents: loaded }) }),
       ...pages.violations,
       ...navigation.violations,
+      ...orphans.violations,
     ],
   };
 }

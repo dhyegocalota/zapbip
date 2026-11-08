@@ -1,4 +1,5 @@
 import { spawnSync } from 'node:child_process';
+import { posix } from 'node:path';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { REPOSITORY_ROOT, repositoryPath } from './repository';
 
@@ -23,4 +24,12 @@ export function trackedTextFiles(): { path: string; text: string }[] {
     .filter((path) => path && existsSync(repositoryPath(path)) && statSync(repositoryPath(path)).isFile())
     .map((path) => ({ path, text: readFileSync(repositoryPath(path), 'utf8') }))
     .filter((file) => !file.text.includes(BINARY_MARKER));
+}
+
+export function listTree(directory: string): string[] {
+  if (!existsSync(repositoryPath(directory))) return [];
+  return readdirSync(repositoryPath(directory), { recursive: true, withFileTypes: true })
+    .filter((entry) => entry.isFile())
+    .map((entry) => posix.join(posix.relative(repositoryPath(directory), entry.parentPath), entry.name))
+    .sort();
 }

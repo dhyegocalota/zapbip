@@ -30,6 +30,13 @@ function agentWith(input: { id: string; plugin: AgentPlugin }) {
 }
 
 describe('renderWorkflow', () => {
+  test('hands the requirements path to the step through the environment, never inline', () => {
+    const plugin = { ...fixturePlugin, workflow: { name: 'x', filter: 'x', pythonRequirements: 'x/requirements-dev.txt' } };
+    const rendered = renderWorkflow({ source: SOURCE, agents: [agentWith({ id: 'x', plugin })] });
+    expect(rendered).toContain('REQUIREMENTS: x/requirements-dev.txt');
+    expect(rendered).not.toMatch(/pip install[^\n]*requirements-dev\.txt/);
+  });
+
   test('rewrites the matrix rows and the pip lines from the plugin workflows', () => {
     const plugin = {
       ...fixturePlugin,
@@ -44,7 +51,9 @@ describe('renderWorkflow', () => {
         '      - { name: fixture, filter: "@zapbip/fixture" }',
         MATRIX_END,
         PIP_BEGIN,
-        '      - run: python3 -m pip install --require-hashes -r fixture/requirements-dev.txt',
+        '      - run: python3 -m pip install --require-hashes -r "$REQUIREMENTS"',
+        '        env:',
+        '          REQUIREMENTS: fixture/requirements-dev.txt',
         PIP_END,
         '      - run: pnpm test',
       ].join('\n'),

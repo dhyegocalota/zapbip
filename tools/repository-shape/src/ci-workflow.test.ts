@@ -35,7 +35,8 @@ const WORKFLOW_PERMISSIONS = '\npermissions:\n  contents: read\n';
 const JOBS_START = '\njobs:\n';
 const LINE_SEPARATOR = '\n';
 const UNIT_MATRIX_ENTRIES = ['{ name: repository-shape, filter: "@zapbip/repository-shape" }'];
-const UNIT_FILTER_STEP = 'run: pnpm --filter "${{ matrix.filter }}" test:unit';
+const UNIT_FILTER_STEP = 'run: pnpm --filter "$FILTER" test:unit';
+const UNIT_FILTER_ENVIRONMENT = 'FILTER: ${{ matrix.filter }}';
 const FAIL_FAST_DISABLED = 'fail-fast: false';
 const TOKEN_REFERENCE = 'secrets.';
 const WORKFLOWS_DIRECTORY = '.github/workflows';
@@ -114,8 +115,10 @@ describe('CI workflow', () => {
     expect(UNIT_MATRIX_ENTRIES.filter((entry) => !unit.includes(entry))).toEqual([]);
   });
 
-  test('the unit step filters by the quoted matrix filter', () => {
+  test('the unit step filters by the matrix filter through the environment, never inline', () => {
     expect(job(UNIT_JOB)).toContain(UNIT_FILTER_STEP);
+    expect(job(UNIT_JOB)).toContain(UNIT_FILTER_ENVIRONMENT);
+    expect(job(UNIT_JOB)).not.toMatch(/run:[^\n]*\$\{\{ matrix/);
   });
 
   test('the unit job checks out the full history, which the feature status check reads', () => {

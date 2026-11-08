@@ -15,7 +15,7 @@ describe('leakViolationsOf: bare names', () => {
     expect(leaksIn({ files: [{ path: 'tools/example.ts', text }], agents: [GAMMA] })).toEqual(['tools/example.ts:1 names gamma-bot']);
   });
 
-  test.each(['gamma-bots', 'xgamma-bot', 'gamma-bot-two', './gamma-bot'])('ignores %s, which only contains the id', (text) => {
+  test.each(['gamma-bots', 'xgamma-bot', 'gamma-bot-two', 'developers/gamma-bot'])('ignores %s, which only contains the id', (text) => {
     expect(leaksIn({ files: [{ path: 'tools/example.ts', text }], agents: [GAMMA] })).toEqual([]);
   });
 
@@ -23,11 +23,11 @@ describe('leakViolationsOf: bare names', () => {
     expect(leaksIn({ files: [{ path: 'tools/example.ts', text: 'the alpha release' }] })).toEqual([]);
   });
 
-  test.each(['PreflightStep.AlphaWheel', 'refuseAlpha_wheel', 'the Alpha plugin'])('names the product word of %s', (text) => {
+  test.each(['PreflightStep.AlphaWheel', 'refuseAlphaWheel', 'nextAlpha', 'the Alpha plugin'])('names the product word of %s', (text) => {
     expect(leaksIn({ files: [{ path: 'tools/example.ts', text }] })).toEqual(['tools/example.ts:1 names alpha']);
   });
 
-  test.each(['nextAlpha', 'Alphabet', 'alphaValue'])('ignores %s, which only contains the product word', (text) => {
+  test.each(['Alphabet', 'alphaValue', 'ALPHAS'])('ignores %s, which only contains the product word', (text) => {
     expect(leaksIn({ files: [{ path: 'tools/example.ts', text }] })).toEqual([]);
   });
 
@@ -116,10 +116,7 @@ describe('leakViolationsOf', () => {
     expect(leaksIn({ files })).toEqual([]);
   });
 
-  test.each(['InstallClient.AlphaLike', 'database alpha', 'api2.alpha.sh', 'supported/alpha-extra', 'MyInstallClient.Alpha'])(
-    'ignores %s',
-    (text) => {
-      expect(leaksIn({ files: [{ path: 'tools/example.ts', text }] })).toEqual([]);
-    },
-  );
+  test.each(['database alpha', 'api2.alpha.sh', 'supported/alpha-extra'])('ignores %s', (text) => {
+    expect(leaksIn({ files: [{ path: 'tools/example.ts', text }] })).toEqual([]);
+  });
 });

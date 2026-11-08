@@ -6,8 +6,8 @@ import { REAL_AGENT_IDS } from './test-agents';
 const TEMPLATE_FOLDER = 'libs/agents/testing/fixture-agent';
 const NEW_ID = 'probe-zq-agent';
 
-function scaffold(input: { id: string; kind?: ScaffoldKind }) {
-  return scaffoldFilesOf({ id: input.id, kind: input.kind ?? ScaffoldKind.Install, existingIds: REAL_AGENT_IDS, readSource, listTree });
+function scaffold({ id, kind = ScaffoldKind.Install }: { id: string; kind?: ScaffoldKind }) {
+  return scaffoldFilesOf({ id, kind, existingIds: REAL_AGENT_IDS, readSource, listTree });
 }
 
 function contentOf(input: { files: { path: string; content: string }[]; name: string }): string {
@@ -68,8 +68,8 @@ describe('scaffoldFilesOf for a plugin agent', () => {
     expect(packageFiles.map((file) => file.path)).toEqual(
       expect.arrayContaining([`apps/${NEW_ID}-plugin/package.json`, `apps/${NEW_ID}-plugin/release/${NEW_ID}-requirements.txt`]),
     );
-    const folders = new Set(files.map((file) => file.path.split('/').slice(0, 3).join('/')));
-    expect([...folders].sort()).toEqual([`apps/${NEW_ID}-plugin`, `libs/agents/supported`].sort());
+    const folders = [`libs/agents/supported/${NEW_ID}/`, `apps/${NEW_ID}-plugin/`];
+    files.forEach((file) => expect(folders.some((folder) => file.path.startsWith(folder))).toBe(true));
   });
 
   test('points the plugin at its own package and keeps the release bytes untouched', () => {

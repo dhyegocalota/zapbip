@@ -1,5 +1,6 @@
 import { existsSync, readdirSync } from 'node:fs';
 import { posix } from 'node:path';
+import { compareCodePoints } from '../src/code-points';
 import { AgentFacet } from '../src/contract';
 import { repositoryPath } from './repository';
 
@@ -21,5 +22,5 @@ export function discoverAgents(input: { roots: string[] }): DiscoveredAgent[] {
   return input.roots
     .flatMap((root) => agentFoldersOf({ root }))
     .map((folder) => ({ id: posix.basename(folder), folder, facets: facetsOf({ folder }) }))
-    .sort((left, right) => left.id.localeCompare(right.id));
+    .sort((left, right) => compareCodePoints({ left: left.id, right: right.id }));
 }

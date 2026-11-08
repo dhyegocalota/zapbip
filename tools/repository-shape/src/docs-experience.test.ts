@@ -322,8 +322,8 @@ describe('docs experience: developer boundary', () => {
 
   test('an agent page may carry one developer footer link only', () => {
     expect(
-      developerLinkViolations({ page: 'agents/claude-ai', links: ['/developers/any-mcp-client', '/developers/local-connector'] }),
-    ).toEqual(['agents/claude-ai -> /developers/local-connector']);
+      developerLinkViolations({ page: 'agents/agent-seven', links: ['/developers/any-mcp-client', '/developers/local-connector'] }),
+    ).toEqual(['agents/agent-seven -> /developers/local-connector']);
   });
 
   test.each(LANGUAGES)('background running is allowed exactly on the pages of agents with a connector, in %s', (language) => {

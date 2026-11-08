@@ -3,9 +3,8 @@ import { describe, expect, test } from 'vitest';
 import { readRepositoryFile } from './repository-files';
 
 const SHARED_CONSTANTS = 'libs/types/src/constants.ts';
-const REQUIRE_HASHES_INSTALL = '--require-hashes -r';
 const WORKFLOW_FILE = '.github/workflows/verify.yml';
-const PIP_INSTALL_PATTERN = /^\s*- run: python3 -m pip install (.+)$/gm;
+const PIP_INSTALL_PATTERN = /^\s*- run: python3 -m pip install --require-hashes -r "\$REQUIREMENTS"\n\s*env:\n\s*REQUIREMENTS: (.+)$/gm;
 
 const sharedVersion = /export const ZAPBIP_NPM_VERSION = '([^']+)'/.exec(readRepositoryFile(SHARED_CONSTANTS))?.[1];
 describe('the plugin versions', () => {
@@ -19,7 +18,7 @@ describe('the plugin versions', () => {
     const pythonRequirements = Object.values(AGENT_PLUGINS).flatMap((plugin) =>
       plugin.workflow.pythonRequirements === null ? [] : [plugin.workflow.pythonRequirements],
     );
-    const allowedInstalls = pythonRequirements.map((path) => `${REQUIRE_HASHES_INSTALL} ${path}`);
+    const allowedInstalls = pythonRequirements;
     expect(installs.every((install) => install !== undefined && allowedInstalls.includes(install))).toBe(true);
     expect(installs.length > 0).toBe(pythonRequirements.length > 0);
   });

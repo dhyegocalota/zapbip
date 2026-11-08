@@ -32,8 +32,8 @@ describe('mentionsOf', () => {
   });
 
   test('does not match inside a longer word', () => {
-    const files = [{ path: 'a.md', text: 'Cursors everywhere\nCursor rules' }];
-    expect(mentionsOf({ names: ['Cursor'], files, excludedPrefixes: [] })).toEqual(['a.md:2']);
+    const files = [{ path: 'a.md', text: 'Widgets everywhere\nWidget rules' }];
+    expect(mentionsOf({ names: ['Widget'], files, excludedPrefixes: [] })).toEqual(['a.md:2']);
   });
 
   test('lists nothing when nothing mentions the agent', () => {

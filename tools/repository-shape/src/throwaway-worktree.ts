@@ -61,3 +61,23 @@ export function createThrowawayWorktree(): { directory: string; remove: () => vo
 export function checkOutHead(input: { directory: string }): CommandOutcome {
   return run({ command: ['git', 'worktree', 'add', '--detach', input.directory, 'HEAD'], directory: REPOSITORY_ROOT });
 }
+
+export const FULL_SUITES: string[][] = [
+  ['pnpm', 'agents:check'],
+  ['pnpm', 'typecheck'],
+  ['bash', '.agents/hooks/doctor.sh'],
+  ['bash', '.agents/hooks/hooks.test.sh'],
+  ['pnpm', '--filter', '@zapbip/agents', 'test:unit'],
+  ['pnpm', '--filter', '@zapbip/repository-shape', 'test:unit'],
+  ['pnpm', '--filter', '@zapbip/connector', 'test:unit'],
+  ['pnpm', '--filter', '@zapbip/api', 'test:unit'],
+  ['pnpm', '--filter', '@zapbip/api', 'test:integration'],
+];
+const OUTPUT_TAIL_LENGTH = 3000;
+
+export function failuresOf(input: { suites: string[][]; directory: string }): string[] {
+  return input.suites
+    .map((command) => ({ command: command.join(' '), ...run({ command, directory: input.directory }) }))
+    .filter((suite) => suite.status !== 0)
+    .map((suite) => `${suite.command}\n${suite.output.slice(-OUTPUT_TAIL_LENGTH)}`);
+}

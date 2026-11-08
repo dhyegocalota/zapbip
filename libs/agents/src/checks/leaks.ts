@@ -20,8 +20,22 @@ function namingPatternOf(input: { agent: LeakAgent }): RegExp {
   const memberReference = `\\b(?:${AGENT_ENUM_NAMES.join('|')})\\.${input.agent.enumMember}\\b`;
   const folderReference = `supported/${input.agent.id}(?![\\w-])`;
   const quotedIdReference = `(['"\`])${escapedOf({ text: input.agent.id })}\\1`;
+  const isHyphenated = input.agent.id.includes('-');
+  const bareIdReferences = isHyphenated ? [`(?<![\\w.-])(?<!developers/)${escapedOf({ text: input.agent.id })}(?![\\w-])`] : [];
+  const productWordReference = `${escapedOf({ text: input.agent.enumMember })}(?![a-z])`;
+  const pluginFolderReference = `apps/${escapedOf({ text: input.agent.id })}-plugin`;
   const literalReferences = input.agent.literals.map((literal) => `(?<![\\w])${escapedOf({ text: literal })}(?![\\w])`);
-  return new RegExp([memberReference, folderReference, quotedIdReference, ...literalReferences].join('|'));
+  return new RegExp(
+    [
+      memberReference,
+      folderReference,
+      quotedIdReference,
+      ...bareIdReferences,
+      productWordReference,
+      pluginFolderReference,
+      ...literalReferences,
+    ].join('|'),
+  );
 }
 
 function agentLeaksIn(input: { agent: LeakAgent; file: LeakFile }): string[] {

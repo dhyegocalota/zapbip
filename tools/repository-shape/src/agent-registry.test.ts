@@ -26,12 +26,21 @@ const MATRIX_SNIPPETS = ['apps/docs/snippets/agents/matrix.mdx', 'apps/docs/snip
 const MATRIX_PAGES = ['apps/docs/agents/supported-agents.mdx', 'apps/docs/pt-br/agents/supported-agents.mdx'];
 const MATRIX_TABLE_ROW_PATTERN = /^\| -{3,}/m;
 const LEAK_SCANNED_EXTENSIONS = ['.ts', '.tsx', '.mts', '.mjs', '.sh', '.py', '.yml', '.json'];
-const HARNESS_FOLDERS = ['.claude/', '.codex/', '.agents/'];
+const HARNESS_FOLDERS = ['.claude/', '.codex/'];
+const HOOK_TEST_FILE = '.agents/hooks/hooks.test.sh';
+const GENERATED_FILES = ['apps/docs/docs.json', '.github/workflows/verify.yml'];
 const HARNESS_TEST_FILES = ['agent-surfaces', 'delivery-docs', 'rules', 'scenarios'].map(
   (name) => `tools/repository-shape/src/${name}.test.ts`,
 );
 const LEAK_CHECK_TEST_FILES = ['libs/agents/src/checks/leaks.test.ts', 'tools/repository-shape/src/agent-registry.test.ts'];
-const LEAK_ALLOWED_PREFIXES = [GENERATED_FOLDER, ...LEAK_CHECK_TEST_FILES, ...HARNESS_TEST_FILES, ...HARNESS_FOLDERS];
+const LEAK_ALLOWED_PREFIXES = [
+  GENERATED_FOLDER,
+  ...GENERATED_FILES,
+  HOOK_TEST_FILE,
+  ...LEAK_CHECK_TEST_FILES,
+  ...HARNESS_TEST_FILES,
+  ...HARNESS_FOLDERS,
+];
 const ENUM_MEMBER_PATTERN = /^\s*(\w+) = '([a-z0-9-]+)',?$/;
 
 type Fixture = { id: string; member: string; englishName: string; portugueseName: string };
@@ -75,7 +84,9 @@ function changedPathsOf(input: { base: GenerationPlan; extended: GenerationPlan 
 }
 
 function membersOf(input: { source: string; enumName: string }): string[][] {
-  const block = input.source.split(`export enum ${input.enumName} {`)[1]?.split('}')[0] ?? '';
+  const afterOpening = input.source.split(`export enum ${input.enumName} {`)[1];
+  if (afterOpening === undefined) throw new Error(`no enum ${input.enumName} in the source`);
+  const block = afterOpening.split('}')[0] as string;
   return block
     .split('\n')
     .map((line) => ENUM_MEMBER_PATTERN.exec(line))
@@ -102,7 +113,9 @@ function addedPathsOf(input: { fixture: Fixture }): string[] {
 function pagesOf(input: { content: string; group: string; language: string }): string[] {
   const languages = JSON.parse(input.content).navigation.languages as { language: string; groups: { group: string; pages: string[] }[] }[];
   const language = languages.find((candidate) => candidate.language === input.language);
-  return language?.groups.find((candidate) => candidate.group === input.group)?.pages ?? [];
+  const group = language?.groups.find((candidate) => candidate.group === input.group);
+  if (!group) throw new Error(`no ${input.group} group for ${input.language}`);
+  return group.pages;
 }
 
 async function realPlan(): Promise<GenerationPlan> {
