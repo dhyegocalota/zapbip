@@ -36,7 +36,7 @@ function memoryFiles(input: { files: Record<string, Buffer> }): (path: string) =
 
 function artifactOf(input: Partial<HostedArtifact> & { filename: string; expectedSha256: string }): HostedArtifact {
   return {
-    label: input.filename,
+    label: `label of ${input.filename}`,
     path: `/pkg/${input.filename}`,
     contentType: 'text/plain',
     releaseFolder: RELEASE_FOLDER,
@@ -106,7 +106,7 @@ describe('pluginViolationsOf', () => {
   test('rejects a plugin package that no plugin.ts claims', () => {
     expect(
       syntheticViolations({ plugin: syntheticPlugin({}), sources: { applicationPluginFolders: ['apps/stray-plugin', 'synthetic'] } }),
-    ).toEqual(['apps/stray-plugin is claimed by no plugin.ts']);
+    ).toEqual(['apps/stray-plugin is claimed by no plugin.ts; if its agent was removed, remove apps/stray-plugin as well']);
   });
 
   test('rejects a plugin package that two plugin.ts files claim', () => {
@@ -176,7 +176,7 @@ describe('pluginViolationsOf', () => {
     const stale = { ...plugin, installCommand: 'pip install' };
     const servedFilenames = [WHEEL_FILENAME, REQUIREMENTS_FILENAME];
     expect(syntheticViolations({ plugin: stale, sources: { readFile: memoryFiles({ files }), servedFilenames } })).toEqual([
-      `synthetic: the install command must embed the hash of ${REQUIREMENTS_FILENAME}`,
+      `synthetic: the install command must embed the hash of ${REQUIREMENTS_FILENAME} (label of ${REQUIREMENTS_FILENAME})`,
     ]);
   });
 
@@ -184,7 +184,7 @@ describe('pluginViolationsOf', () => {
     const { plugin, files } = wheelAndRequirements({ requirementsText: 'wheel without a hash' });
     const servedFilenames = [WHEEL_FILENAME, REQUIREMENTS_FILENAME];
     expect(syntheticViolations({ plugin, sources: { readFile: memoryFiles({ files }), servedFilenames } })).toEqual([
-      `synthetic: ${REQUIREMENTS_FILENAME} must contain the hash of ${WHEEL_FILENAME}`,
+      `synthetic: ${REQUIREMENTS_FILENAME} (label of ${REQUIREMENTS_FILENAME}) must contain the hash of ${WHEEL_FILENAME}`,
     ]);
   });
 

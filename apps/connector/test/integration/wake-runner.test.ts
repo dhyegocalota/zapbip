@@ -25,10 +25,12 @@ const SHELL_MARKER_FILE = 'pwned';
 const FAKE_TIMER_NAMES = ['setTimeout', 'clearTimeout'] as const;
 const HOLD_FOREVER_BEHAVIOR = { hang: true };
 
-describe('the runtimes that pin one MCP server', () => {
-  it('include at least one whenever a runtime is registered, so the decoy case never runs zero times', () => {
-    const runtimes = Object.values(CONNECTOR_RUNTIMES);
-    expect(runtimes.length === 0 || runtimes.some((runtime) => runtime.strictMcpArgument !== null)).toBe(true);
+describe('the registered runtimes', () => {
+  it('are each covered by a decoy case, through the strict flag or the null reason', () => {
+    const uncovered = Object.entries(CONNECTOR_RUNTIMES).filter(
+      ([, runtime]) => runtime.strictMcpArgument === null && runtime.strictMcpNullReason === null,
+    );
+    expect(uncovered.map(([client]) => client)).toEqual([]);
   });
 });
 

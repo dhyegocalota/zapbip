@@ -28,7 +28,7 @@ const SCAFFOLD_KINDS = [
 const connectorIds: string[] = Object.values(ConnectorClient);
 const pluginIds = Object.keys(AGENT_PLUGINS);
 const installOnlyId = Object.values(AgentId).find((id) => !connectorIds.includes(id) && !pluginIds.includes(id)) as string;
-const removedIds = [...connectorIds.slice(1), ...pluginIds, installOnlyId];
+const removedIds = [...connectorIds.slice(0, -1), ...pluginIds, installOnlyId];
 
 function ownedPrefixesOf(input: { id: string }): string[] {
   const plugin = Object.entries(AGENT_PLUGINS).find(([pluginId]) => pluginId === input.id)?.[1];
@@ -99,6 +99,9 @@ describe.skipIf(IS_INSIDE_PROOF)('the agent lifecycle in a throwaway worktree', 
       const removedPrefixes = removedIds.flatMap((id) => ownedPrefixesOf({ id }));
       expect(run({ command: ['git', 'rm', '-rq', ...removedPrefixes], directory: worktree.directory }).output).toBe('');
       expect(run({ command: ['pnpm', 'install', '--no-frozen-lockfile', '--offline'], directory: worktree.directory }).status).toBe(0);
+      const mentions = run({ command: ['pnpm', 'agents:mentions', removedIds[0] as string], directory: worktree.directory });
+      expect(mentions.status, mentions.output).toBe(0);
+      expect(mentions.output).not.toContain('node:internal');
       const generation = run({ command: ['pnpm', 'agents:generate'], directory: worktree.directory });
       expect(generation.status, generation.output).toBe(0);
       const outside = changedPathsOf({ directory: worktree.directory }).filter((path) => isOutside({ path, prefixes: removedPrefixes }));

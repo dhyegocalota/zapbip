@@ -82,4 +82,14 @@ describe('boundaryViolationsOf', () => {
     const text = "export * from '@zapbip/agents/docs';\nconst module = await import('@zapbip/agents/connector');";
     expect(violationsFor({ path: 'apps/api/src/a.ts', text })).toHaveLength(2);
   });
+
+  test('B4: a bare side-effect import of a forbidden facet in the Worker source is refused', () => {
+    const path = 'apps/api/src/routes/install-page.ts';
+    expect(violationsFor({ path, text: "import '@zapbip/agents/docs';" })).toEqual([expect.stringContaining('(@zapbip/agents/docs)')]);
+  });
+
+  test('B3: a bare side-effect import of a node module in an agent folder is refused', () => {
+    const path = 'libs/agents/supported/alpha/install.ts';
+    expect(violationsFor({ path, text: "import 'node:fs';" })).toEqual([expect.stringContaining('(node:fs)')]);
+  });
 });
