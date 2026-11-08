@@ -17,6 +17,8 @@ The test waits until the fake server has received the `done` frame, then reads t
 - The channel tests wait on the notification (and the connected log line on the error stream) before they read them.
 - Every connector test that reads child output or a channel stream after a frame wait is audited. The audit found `channel.test.ts` only: `listen.test.ts` was fixed already; `cli.test.ts`, `connect.e2e.test.ts` and `connect.test.ts` wait on events, on exit or on files the child wrote before it answered.
 
+- The three leak tests (`channel`, `cli`, `listen`) assert a positive anchor on the stream they scan before they assert that the secret and the text are absent, so an empty stream cannot pass them.
+
 ## Non-goals
 
 - Changing what the tests assert.
