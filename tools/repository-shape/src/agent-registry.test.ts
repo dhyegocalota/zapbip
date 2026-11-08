@@ -14,6 +14,7 @@ import {
 import { CONNECTOR_RUNTIMES } from '@zapbip/agents/connector';
 import type { AgentConnectorRuntime } from '@zapbip/agents';
 import { AGENT_DEFINITIONS } from '@zapbip/agents/definitions';
+import { agentPagePathOf } from '@zapbip/agents/docs';
 import { trackedFiles, readRepositoryFile } from './repository-files';
 
 const SUPPORTED_ROOT = 'libs/agents/supported';
@@ -25,6 +26,10 @@ const REAL_AGENT_IDS = discoverAgents({ roots: [SUPPORTED_ROOT] }).map((agent) =
 const INSTALL_FILES = ['install.en_US.md', 'install.pt_BR.md'];
 const MATRIX_SNIPPETS = ['apps/docs/snippets/agents/matrix.mdx', 'apps/docs/snippets/pt-br/agents/matrix.mdx'];
 const MATRIX_PAGES = ['apps/docs/agents/supported-agents.mdx', 'apps/docs/pt-br/agents/supported-agents.mdx'];
+const FOLDER_PAGE_FILES: Record<DocsLanguage, string> = {
+  [DocsLanguage.English]: 'page.en.mdx',
+  [DocsLanguage.PortugueseBrazil]: 'page.pt-br.mdx',
+};
 const MATRIX_TABLE_ROW_PATTERN = /^\| -{3,}/m;
 const ENUM_MEMBER_PATTERN = /^\s*(\w+) = '([a-z0-9-]+)',?$/;
 
@@ -112,10 +117,13 @@ describe('the generated files', () => {
     expect(writePlan({ plan: await realPlan(), mode: GenerationMode.Check })).toEqual([]);
   });
 
-  test('every agent page in apps/docs is the copy of its folder page', async () => {
-    const { violations } = await realPlan();
-    expect(violations.filter((violation) => violation.includes(' has no page.'))).toEqual([]);
-  });
+  test.each(REAL_AGENT_IDS.flatMap((id) => Object.values(DocsLanguage).map((language) => ({ id, language }))))(
+    'every agent page in apps/docs is the copy of its folder page: $id in $language',
+    ({ id, language }) => {
+      const docsPage = readSource(`apps/docs/${agentPagePathOf({ client: id, language })}.mdx`);
+      expect(docsPage).toBe(readSource(`${SUPPORTED_ROOT}/${id}/${FOLDER_PAGE_FILES[language]}`));
+    },
+  );
 
   test.each(MATRIX_PAGES.map((page, index) => ({ page, snippet: MATRIX_SNIPPETS[index] as string })))(
     'the matrix page $page shows the generated snippet and holds no table',
