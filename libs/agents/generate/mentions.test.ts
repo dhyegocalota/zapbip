@@ -1,13 +1,13 @@
 import { describe, expect, test } from 'vitest';
 import { mentionsOf } from './mentions';
 
-const NAMES = ['Demo Agent', 'Agente Demo', 'demo-agent'];
+const NAMES = ['Probe Zq Agent', 'Agente Probe Zq', 'probe-zq-agent'];
 
 describe('mentionsOf', () => {
   test('lists the file and line of every mention, in either language, ignoring case', () => {
     const files = [
-      { path: 'apps/docs/index.mdx', text: 'Intro\nAsk Demo Agent to send it.' },
-      { path: 'apps/docs/pt-br/index.mdx', text: 'Peça ao agente demo para enviar.\nPeça ao AGENTE DEMO.' },
+      { path: 'apps/docs/index.mdx', text: 'Intro\nAsk Probe Zq Agent to send it.' },
+      { path: 'apps/docs/pt-br/index.mdx', text: 'Peça ao agente probe zq para enviar.\nPeça ao AGENTE PROBE ZQ.' },
     ];
     expect(mentionsOf({ names: NAMES, files, excludedPrefixes: [] })).toEqual([
       'apps/docs/index.mdx:2',
@@ -18,10 +18,12 @@ describe('mentionsOf', () => {
 
   test('skips the excluded prefixes', () => {
     const files = [
-      { path: 'libs/agents/supported/demo-agent/page.en.mdx', text: 'Demo Agent' },
-      { path: 'apps/docs/index.mdx', text: 'Demo Agent' },
+      { path: 'libs/agents/supported/probe-zq-agent/page.en.mdx', text: 'Probe Zq Agent' },
+      { path: 'apps/docs/index.mdx', text: 'Probe Zq Agent' },
     ];
-    expect(mentionsOf({ names: NAMES, files, excludedPrefixes: ['libs/agents/supported/demo-agent/'] })).toEqual(['apps/docs/index.mdx:1']);
+    expect(mentionsOf({ names: NAMES, files, excludedPrefixes: ['libs/agents/supported/probe-zq-agent/'] })).toEqual([
+      'apps/docs/index.mdx:1',
+    ]);
   });
 
   test('reads a name literally, not as a pattern', () => {

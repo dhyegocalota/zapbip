@@ -4,7 +4,7 @@ import { listSource, readSource } from './source';
 import { REAL_AGENT_IDS } from './test-agents';
 
 const TEMPLATE_FOLDER = 'libs/agents/testing/fixture-agent';
-const NEW_ID = 'demo-agent';
+const NEW_ID = 'probe-zq-agent';
 
 function scaffold(input: { id: string }) {
   return scaffoldFilesOf({ id: input.id, existingIds: REAL_AGENT_IDS, readSource, listSource });
@@ -25,10 +25,10 @@ describe('scaffoldFilesOf', () => {
   test('renames the id, the enum member and the display names, and keeps nothing of the template', () => {
     const files = scaffold({ id: NEW_ID });
     const definition = contentOf({ files, name: 'definition.ts' });
-    expect(definition).toContain("enumMember: 'DemoAgent'");
-    expect(definition).toContain("[DocsLanguage.English]: 'Demo Agent'");
-    expect(contentOf({ files, name: 'install-copy.ts' })).toContain('renderDemoAgentSection');
-    expect(contentOf({ files, name: 'page.en.mdx' })).toContain('title: Demo Agent');
+    expect(definition).toContain("enumMember: 'ProbeZqAgent'");
+    expect(definition).toContain("[DocsLanguage.English]: 'Probe Zq Agent'");
+    expect(contentOf({ files, name: 'install-copy.ts' })).toContain('renderProbeZqAgentSection');
+    expect(contentOf({ files, name: 'page.en.mdx' })).toContain('title: Probe Zq Agent');
     files.forEach((file) => expect(file.content).not.toMatch(/fixture|Agente de teste/i));
   });
 
