@@ -11,6 +11,9 @@ const INSERT_META_APP_STATEMENT =
 const INSERT_NUMBER_STATEMENT =
   'INSERT INTO whatsapp_numbers (id, meta_app_ref, phone_number_id, waba_id, display_number, label, sealed_access_token, seal_key_version, state, verified_at, credentials_changed_at, created_at, updated_at) SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?10, ?10, ?10 WHERE NOT EXISTS (SELECT 1 FROM whatsapp_numbers)';
 
+const PREFIX_DISPLAY_NUMBER_STATEMENT =
+  "UPDATE whatsapp_numbers SET display_number = '+' || display_number WHERE id = ?1 AND display_number NOT LIKE '+%'";
+
 export async function developmentNumberStatements(input: {
   bindings: Pick<Bindings, 'CONNECTIONS' | 'NUMBER_REGISTRY_KEY'>;
   createdAt: number;
@@ -41,5 +44,6 @@ export async function developmentNumberStatements(input: {
       WhatsAppNumberState.Active,
       createdAt,
     ),
+    bindings.CONNECTIONS.prepare(PREFIX_DISPLAY_NUMBER_STATEMENT).bind(numberId),
   ];
 }
