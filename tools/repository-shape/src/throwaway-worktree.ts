@@ -13,7 +13,6 @@ export const GENERATED_PATTERNS = [
   /^apps\/docs\/snippets\/(?:pt-br\/)?agents\//,
   /^apps\/docs\/docs\.json$/,
   /^\.github\/workflows\/verify\.yml$/,
-  /^pnpm-lock\.yaml$/,
 ];
 
 const MAXIMUM_BUFFER = 64 * 1024 * 1024;
@@ -40,10 +39,14 @@ export function changedPathsOf(input: { directory: string }): string[] {
     .map((line) => line.slice(STATUS_PATH_OFFSET));
 }
 
+const LOCKFILE = 'pnpm-lock.yaml';
+const APPLICATIONS_PREFIX = 'apps/';
+
 export function isOutside(input: { path: string; prefixes: string[] }): boolean {
   const isInsidePrefix = input.prefixes.some((prefix) => input.path.startsWith(prefix));
   const isGenerated = GENERATED_PATTERNS.some((pattern) => pattern.test(input.path));
-  return !isInsidePrefix && !isGenerated;
+  const followsPluginPackage = input.path === LOCKFILE && input.prefixes.some((prefix) => prefix.startsWith(APPLICATIONS_PREFIX));
+  return !isInsidePrefix && !isGenerated && !followsPluginPackage;
 }
 
 export function createThrowawayWorktree(): { directory: string; remove: () => void } {

@@ -265,3 +265,9 @@ Mutation checks for the folded tests (M12), automated in `agent-registry.test.ts
 - `agent-lifecycle.test.ts` is one file so its worktree proofs run one after the other (the API integration suite binds fixed ports).
 - The workflow validation is exercised by unit tests and reported by `agents:check` through the planner; no test edits a fixture plugin file to feed the planner an evil filter.
 - The removal proof keeps one connector runtime: the connector application needs at least one (the registry type is empty without it), so the proof removes every connector agent but the first, every plugin agent and one install-only agent.
+
+### Step 35
+
+- The lifecycle proof now has its own gate (`pnpm test:lifecycle`, CI job `lifecycle`) and is out of the default suites.
+- The connector template (`fixture-connector-agent`) pins one MCP server with a strict flag and uses the shared fake client through `testing/fake-client.mjs`; the test support writes the executable for each runtime from that entry, so a scaffolded runtime needs no executable bit. Codex's decoy case writes the decoy into its own configuration through `testing/write-decoy.mjs`.
+- The earlier lifecycle runs never ran the connector suite: the filter named `@zapbip/connector`, and the package is `zapbip`.

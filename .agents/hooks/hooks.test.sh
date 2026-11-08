@@ -410,6 +410,9 @@ for requirements_file in "$repository_root"/apps/*-plugin/requirements-dev.txt; 
 done
 python_requirements_expected=${python_requirements_expected//./\\.}
 expect_match "doctor: python outside 3.11 to 3.13 is missing" "$(doctor_line Darwin python)" "^python \\| missing \\| required \\| lost: the Python plugins. typecheck and tests; pnpm verify fails in a Python plugin \\| fix: brew install python@3\\.13${python_requirements_expected}\$"
+if [[ -f "$here/../../apps/hermes-plugin/requirements-dev.txt" ]]; then
+  expect_match "doctor: the python fix installs the hashed development lock of the Hermes plugin" "$(doctor_line Darwin python)" 'pip install --require-hashes -r apps/hermes-plugin/requirements-dev\.txt'
+fi
 
 stub_all; stub python3 '[[ "$2" == *"<= (3, 14)"* ]]'
 expect_match "doctor: python 3.14 is accepted" "$(doctor_line Darwin python)" '^python \| ok \|'

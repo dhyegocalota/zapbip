@@ -10,7 +10,7 @@ tsconfig*.json	product	all
 apps/*/package.json	product	all
 libs/*/package.json	product	all
 tools/*/package.json	product	all
-tools/repository-shape/*	product	typecheck
+tools/repository-shape/*	product	typecheck lifecycle
 apps/*/README.md	docs	-
 libs/*/README.md	docs	-
 apps/docs/*	docs	docs
@@ -18,16 +18,19 @@ apps/api/wrangler.jsonc	product	typecheck unit integration e2e
 .env.example	product	unit
 apps/api/e2e/*	product	typecheck
 apps/api/*	product	typecheck unit integration e2e
-libs/agents/*	product	typecheck unit integration e2e docs
+libs/agents/*	product	typecheck unit integration e2e lifecycle docs
 libs/core/*	product	typecheck unit integration e2e
 libs/types/*	product	typecheck unit integration e2e
-apps/connector/*	product	typecheck unit e2e
+apps/connector/*	product	typecheck unit e2e lifecycle
+apps/*-plugin/*	product	typecheck unit lifecycle
 apps/*	product	typecheck unit
 libs/*	product	typecheck unit
+.agents/hooks/*	tooling	hooks lifecycle
 .agents/*	tooling	hooks
 .claude/*	tooling	hooks
 .codex/*	tooling	hooks
 .mcp.json	tooling	hooks
+.github/workflows/*	tooling	lifecycle
 .github/*	tooling	-
 AGENTS.md	tooling	-
 CLAUDE.md	tooling	-

@@ -13,8 +13,8 @@ const FIXTURE_MEMBERS = [
 function membersOf(input: { source: string; enumName: string }): string[][] {
   const afterOpening = input.source.split(`export enum ${input.enumName} {`)[1];
   if (afterOpening === undefined) throw new Error(`no enum ${input.enumName} in the source`);
-  return afterOpening
-    .split('}')[0]
+  const block = afterOpening.split('}')[0] as string;
+  return block
     .split('\n')
     .map((line) => MEMBER_PATTERN.exec(line))
     .flatMap((match) => (match ? [[match[1] as string, match[2] as string]] : []));
