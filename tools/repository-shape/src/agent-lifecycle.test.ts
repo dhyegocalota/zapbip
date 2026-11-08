@@ -67,7 +67,6 @@ const PLANTS = [
   },
 ];
 
-const EXTRA_HEADING_AGENT_ID = 'claude-ai';
 const UNREADABLE_FILE = 'README.md';
 
 function extraHeadingEdit(text: string): string {
@@ -139,12 +138,12 @@ describe.skipIf(IS_INSIDE_PROOF)('the agent lifecycle in a throwaway worktree', 
       const worktree = newWorktree();
       expect(checkOutHead({ directory: worktree.directory }).status).toBe(0);
       expect(run({ command: ['pnpm', 'install', '--frozen-lockfile', '--offline'], directory: worktree.directory }).status).toBe(0);
-      const plantedFile = `${SUPPORTED_ROOT}/${EXTRA_HEADING_AGENT_ID}/install.ts`;
+      const plantedFile = `${SUPPORTED_ROOT}/${installAgentId}/install.ts`;
       const path = join(worktree.directory, plantedFile);
       writeFileSync(path, extraHeadingEdit(readFileSync(path, 'utf8')));
       const generation = run({ command: ['pnpm', 'agents:generate'], directory: worktree.directory });
       expect(generation.status).not.toBe(0);
-      expect(generation.output).toContain(`${EXTRA_HEADING_AGENT_ID} in en_US: the section must hold exactly one heading`);
+      expect(generation.output).toContain(`${installAgentId} in en_US: the section must hold exactly one heading`);
       expect(changedPathsOf({ directory: worktree.directory })).toEqual([plantedFile]);
     },
     WORKTREE_PROOF_TIMEOUT_MS,
