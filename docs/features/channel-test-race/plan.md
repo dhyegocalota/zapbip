@@ -17,7 +17,7 @@
 ### G1
 
 - [x] **Step 1 (red):** a late-read variant of the relay test fails with `expected [] to deeply equal [ { …(2) } ]`.
-- [ ] **Step 2:** the channel tests wait for the notifications and the connected log line before reading them.
+- [x] **Step 2:** the channel tests wait for the notifications and the connected log line before reading them.
 
 ## Failure modes
 
