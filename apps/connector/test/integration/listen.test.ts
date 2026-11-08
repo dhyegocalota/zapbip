@@ -17,12 +17,17 @@ type ListenProcess = {
   exited: Promise<number | null>;
   standardOutput: () => string;
   standardError: () => string;
+  waitForPrintedLines: (input: { count: number }) => Promise<void>;
+  waitForStandardError: (input: { text: string }) => Promise<void>;
 };
+
+type OutputWaiter = { isSatisfied: () => boolean; resolve: () => void };
 
 const LISTEN_COMMAND = 'listen';
 const EXIT_CODE_CLEAN = 0;
 const EXIT_CODE_FAILURE = 1;
 const OWNER_TEXT = 'Please deploy the staging build';
+const LATE_READ_DELAY_MS = 300;
 
 function printedLines(input: { listenProcess: ListenProcess }): string[] {
   return input.listenProcess
@@ -39,18 +44,45 @@ describe('zapbip listen', () => {
   let server: FakeEventServer;
   let started: ListenProcess[];
 
-  function startListen(input: { arguments?: string[]; connectionUrl?: string } = {}): ListenProcess {
-    const { arguments: extraArguments = [], connectionUrl = server.connectionLink } = input;
+  function startListen(input: { arguments?: string[]; connectionUrl?: string; readDelayMs?: number } = {}): ListenProcess {
+    const { arguments: extraArguments = [], connectionUrl = server.connectionLink, readDelayMs = 0 } = input;
     const child = spawn(process.execPath, [bundleFile, LISTEN_COMMAND, ...extraArguments], {
       env: { ...process.env, [CONNECTION_URL_VARIABLE]: connectionUrl, ...DISABLE_TLS_VERIFICATION_ENVIRONMENT },
       stdio: 'pipe',
     });
     let output = '';
     let errors = '';
-    child.stdout.on('data', (chunk: Buffer) => (output += chunk.toString()));
-    child.stderr.on('data', (chunk: Buffer) => (errors += chunk.toString()));
+    let waiters: OutputWaiter[] = [];
+    const settleWaiters = (): void => {
+      waiters.filter((waiter) => waiter.isSatisfied()).forEach((waiter) => waiter.resolve());
+      waiters = waiters.filter((waiter) => !waiter.isSatisfied());
+    };
+    const waitUntil = (isSatisfied: () => boolean): Promise<void> => {
+      if (isSatisfied()) return Promise.resolve();
+      return new Promise((resolve) => waiters.push({ isSatisfied, resolve }));
+    };
+    const record = (append: (text: string) => void) => (chunk: Buffer) =>
+      setTimeout(() => {
+        append(chunk.toString());
+        settleWaiters();
+      }, readDelayMs);
+    child.stdout.on(
+      'data',
+      record((text) => (output += text)),
+    );
+    child.stderr.on(
+      'data',
+      record((text) => (errors += text)),
+    );
     const exited = new Promise<number | null>((resolve) => child.on('exit', (code) => resolve(code)));
-    const listenProcess: ListenProcess = { child, exited, standardOutput: () => output, standardError: () => errors };
+    const listenProcess: ListenProcess = {
+      child,
+      exited,
+      standardOutput: () => output,
+      standardError: () => errors,
+      waitForPrintedLines: ({ count }) => waitUntil(() => output.split('\n').filter((line) => line !== '').length >= count),
+      waitForStandardError: ({ text }) => waitUntil(() => errors.includes(text)),
+    };
     started.push(listenProcess);
     return listenProcess;
   }
@@ -89,6 +121,7 @@ describe('zapbip listen', () => {
     await server.waitForLiveConnections({ count: 1 });
     pushOwnerMessage({ messageId: 'msg_1', text: OWNER_TEXT });
     await server.waitForFrames({ type: ConnectorFrameType.Done, count: 1 });
+    await listenProcess.waitForPrintedLines({ count: 1 });
 
     expect(printedLines({ listenProcess }).map((line) => JSON.parse(line))).toEqual([
       { messageId: 'msg_1', kind: 'text', sender: 'owner', verified: true, forwarded: false, text: OWNER_TEXT },
@@ -96,11 +129,25 @@ describe('zapbip listen', () => {
     expect(server.framesOfType({ type: ConnectorFrameType.Done }).map((entry) => entry.frame.messageId)).toEqual(['msg_1']);
   });
 
+  it('prints one JSON line per owner message even when the output pipe is read late, as on a loaded machine', async () => {
+    const listenProcess = startListen({ readDelayMs: LATE_READ_DELAY_MS });
+    await server.waitForLiveConnections({ count: 1 });
+    pushOwnerMessage({ messageId: 'msg_1', text: OWNER_TEXT });
+    await server.waitForFrames({ type: ConnectorFrameType.Done, count: 1 });
+    await listenProcess.waitForPrintedLines({ count: 1 });
+
+    expect(printedLines({ listenProcess }).map((line) => JSON.parse(line))).toEqual([
+      { messageId: 'msg_1', kind: 'text', sender: 'owner', verified: true, forwarded: false, text: OWNER_TEXT },
+    ]);
+  });
+
   it('keeps the output to message lines and sends the logs to the error stream without any message text', async () => {
     const listenProcess = startListen();
     await server.waitForLiveConnections({ count: 1 });
     pushOwnerMessage({ messageId: 'msg_1', text: OWNER_TEXT });
     await server.waitForFrames({ type: ConnectorFrameType.Done, count: 1 });
+    await listenProcess.waitForPrintedLines({ count: 1 });
+    await listenProcess.waitForStandardError({ text: ConnectorLogEvent.ConnectorConnected });
 
     expect(listenProcess.standardOutput()).not.toContain(ConnectorLogEvent.ConnectorConnected);
     expect(listenProcess.standardError()).toContain(ConnectorLogEvent.ConnectorConnected);
@@ -126,6 +173,7 @@ describe('zapbip listen', () => {
     await server.waitForLiveConnections({ count: 1 });
     pushOwnerMessage({ messageId: 'msg_1', text: OWNER_TEXT });
     await server.waitForFrames({ type: ConnectorFrameType.Done, count: 2 });
+    await listenProcess.waitForPrintedLines({ count: 1 });
 
     expect(listenProcess.child.exitCode).toBeNull();
     expect(printedLines({ listenProcess })).toHaveLength(1);
