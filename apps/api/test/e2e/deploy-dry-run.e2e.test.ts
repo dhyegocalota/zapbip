@@ -118,15 +118,15 @@ describe('wrangler dry run of every deployed block', () => {
 });
 
 describe('preflight against the real constants and the real wrangler blocks', () => {
-  test('production is refused while the official number is the sentinel', async () => {
+  test('production is not refused while the official number is the sentinel', async () => {
     expect(OFFICIAL_WHATSAPP_NUMBER).toBe(OFFICIAL_NUMBER_UNSET);
     const { exitCode, output } = await refusalOf({
       environment: DeployEnvironment.Production,
       officialWhatsAppNumber: OFFICIAL_WHATSAPP_NUMBER,
       company: COMPLETE_COMPANY,
     });
-    expect(exitCode).toBe(1);
-    expect(output).toContain(`refused at ${PreflightStep.OfficialNumber}`);
+    expect(exitCode).toBe(0);
+    expect(output).not.toContain('refused at');
   });
 
   test('production is refused while the company facts are the sentinel', async () => {
@@ -139,15 +139,15 @@ describe('preflight against the real constants and the real wrangler blocks', ()
     expect(output).toContain(`refused at ${PreflightStep.CompanyFacts}`);
   });
 
-  test('production is refused while the npm package does not resolve', async () => {
+  test('production warns and goes on while the npm package does not resolve', async () => {
     const { exitCode, output } = await refusalOf({
       environment: DeployEnvironment.Production,
       officialWhatsAppNumber: OFFICIAL_NUMBER,
       company: COMPLETE_COMPANY,
       replies: { 'maintainers --json': UNRESOLVED_NPM },
     });
-    expect(exitCode).toBe(1);
-    expect(output).toContain(`refused at ${PreflightStep.NpmVersion}`);
+    expect(exitCode).toBe(0);
+    expect(output).toContain('is not on npm yet; publish it before launch');
   });
 
   test('a pending D1 migration stops the deploy before any Worker deploy', async () => {

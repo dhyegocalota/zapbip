@@ -154,6 +154,14 @@ describe('deploy entry', () => {
     expect(accepted.prompt.questions).toHaveLength(1);
   });
 
+  it('warns and deploys production when a package is not on npm yet', async () => {
+    const notFound = { exitCode: 1, stdout: JSON.stringify({ error: { code: 'E404' } }) };
+    const shell = fakeShell({ replies: { ...REPLIES, 'maintainers --json': notFound } });
+    const { exitCode, output } = await deploy({ shell, environment: DeployEnvironment.Production, answers: [CONFIRMATION] });
+    expect(exitCode).toBe(0);
+    expect(output).toContain(`zapbip@${NPM_VERSION} is not on npm yet; publish it before launch`);
+  });
+
   it.each(['Production', 'production ', 'prod', ''])('does not deploy production on the answer %j', async (answer) => {
     const { exitCode, shell, output } = await deploy({ environment: DeployEnvironment.Production, answers: [answer] });
     expect(exitCode).toBe(1);
