@@ -1,10 +1,10 @@
 import { existsSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { DocsLanguage, DocsOnlyClient, InstallClient, OwnerLocale, WakeRung } from '@zapbip/types';
+import { DocsLanguage, OwnerLocale, WakeRung } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import type { AgentDefinition } from '../src/contract';
 import { WAKE_RUNG_LABELS } from '../src/docs';
-import { InstallClient as GeneratedInstallClient } from '../src/generated/ids';
+import { InstallClient } from '../src/generated/ids';
 import { AGENT_INSTALLS } from '../src/generated/install';
 import { GOLDEN_CONNECTION_LINK, matrixRowsByAgentOf, repositoryFile } from './golden-sources';
 
@@ -45,7 +45,6 @@ const TODAY_SPEAKER_NAMES = [
   'Hermes',
   'OpenClaw',
 ];
-const ENUM_MEMBER_PATTERN = /^[A-Z][A-Za-z]*$/;
 
 const agentIds = readdirSync(SUPPORTED_FOLDER, { withFileTypes: true })
   .filter((entry) => entry.isDirectory() && existsSync(`${SUPPORTED_FOLDER}${entry.name}/${DEFINITION_FILE}`))
@@ -65,10 +64,6 @@ function delayLabelOf(input: { expectedDelaySeconds: number | null; language: Do
   return `${input.expectedDelaySeconds} ${SECONDS_WORD[input.language]}`;
 }
 
-function enumMemberOf(id: string): string | undefined {
-  return Object.entries({ ...InstallClient, ...DocsOnlyClient }).find(([, value]) => value === id)?.[0];
-}
-
 describe('the real agent definitions', () => {
   test('there is one definition for each agent the matrix lists', () => {
     expect(agentIds).toEqual(goldenAgentIds);
@@ -76,11 +71,6 @@ describe('the real agent definitions', () => {
 
   describe.each(goldenAgentIds)('%s', (id) => {
     const definition = definitions[id] as AgentDefinition;
-
-    test('keeps the enum member it has today', () => {
-      expect(definition.enumMember).toMatch(ENUM_MEMBER_PATTERN);
-      expect(definition.enumMember).toBe(enumMemberOf(id));
-    });
 
     test.each(Object.values(DocsLanguage))('renders its matrix row in %s as the golden row', (language) => {
       const { matrixName, linkName } = definition.docs;
@@ -105,11 +95,14 @@ describe('the real agent definitions', () => {
     TODAY_SPEAKER_NAMES.forEach((name) => expect(speakerNames).toContain(name));
   });
 
-  test('the wake rung of the only inbox agent is the inbox', () => {
-    expect(definitions[DocsOnlyClient.AnyMcpClient]?.listen.rung).toBe(WakeRung.Inbox);
+  test('the only agent on the inbox rung is the one with no install facet', () => {
+    const inboxIds = Object.entries(definitions)
+      .filter(([, definition]) => definition.listen.rung === WakeRung.Inbox)
+      .map(([id]) => id);
+    expect(inboxIds).toEqual(agentIds.filter((id) => !(id in AGENT_INSTALLS)));
   });
 
-  describe.each(Object.values(GeneratedInstallClient))('the set_wake modes of %s', (client) => {
+  describe.each(Object.values(InstallClient))('the set_wake modes of %s', (client) => {
     test.each(Object.values(OwnerLocale))('in %s match what its install section writes', (locale) => {
       const section = AGENT_INSTALLS[client].render({ connectionLink: GOLDEN_CONNECTION_LINK, locale, standbyAgent: null });
       const written = [...new Set([...section.matchAll(SET_WAKE_MODE_PATTERN)].map((match) => match[1] as string))];
