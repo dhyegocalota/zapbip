@@ -245,3 +245,5 @@ From `apps/api`: `pnpm test:walk` (needs the Playwright Chromium; no fixed port;
 - The lockout and 429 specs rotate or share the client address through a request header, which only works because the development Worker trusts `cf-connecting-ip` as sent.
 - `metrics.spec.ts` waits for G4.
 - The walk shares one database across the two projects and cleans only the registry, audit and sessions.
+
+G4 metrics: moved to [`backoffice-metrics`](../backoffice-metrics/tester-briefing.md).

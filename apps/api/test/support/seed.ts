@@ -4,6 +4,7 @@ import accountsMigrationSql from '../../migrations/0002_accounts_and_keys.sql?ra
 import channelMigrationSql from '../../migrations/0004_whatsapp_channel.sql?raw';
 import backofficeMigrationSql from '../../migrations/0005_backoffice.sql?raw';
 import backofficeFlashMigrationSql from '../../migrations/0006_backoffice_flash.sql?raw';
+import activityMigrationSql from '../../migrations/0007_activity.sql?raw';
 import { hashConnectionSecret } from '../../src/adapters/platform/hash';
 import { accountInboxStub, testEnv } from './workers-env';
 
@@ -37,6 +38,10 @@ export async function applyBackofficeMigration(): Promise<void> {
 
 export async function applyBackofficeFlashMigration(): Promise<void> {
   await applyMigration({ sql: backofficeFlashMigrationSql });
+}
+
+export async function applyActivityMigration(): Promise<void> {
+  await applyMigration({ sql: activityMigrationSql });
 }
 
 export async function applyDirectoryMigration(): Promise<void> {

@@ -50,6 +50,7 @@ import { createConnectionSecrets } from '../adapters/platform/connection-secrets
 import { createInstallCodeVault } from '../adapters/platform/install-code-vault';
 import { createIdGenerator } from '../adapters/platform/ids';
 import { loadDurableClock, type DurableClock } from '../adapters/platform/clock';
+import { D1ActivityRepository } from '../adapters/d1/d1-activity-repository';
 import { D1UsageRepository } from '../adapters/d1/d1-usage-repository';
 import { mediaStoreOf } from '../adapters/r2/r2-media-store';
 import { createSqliteInboxRepository } from '../adapters/sqlite/sqlite-inbox-repository';
@@ -67,6 +68,7 @@ import { createGraphClient } from '../adapters/whatsapp/graph-client';
 import { readWhatsAppEnvironment } from '../adapters/whatsapp/read-whatsapp-env';
 import type { AccountInboxRpc, AgentRequest, CallOutcome, WakeModeEntry } from '../contract/account-inbox-rpc';
 import type { AccountOwnerRpc } from '../contract/account-owner-rpc';
+import { ActivityMetric } from '../contract/activity-metric';
 import type { DueTimeProvider } from '../contract/due-time-provider';
 import type { Bindings } from '../contract/env';
 import { LogEvent, type LogFields } from '../contract/log';
@@ -104,6 +106,9 @@ import { createSqliteFirstMessageClaim } from './first-message-claim';
 import { redactInstallCodes } from './install-code-redaction';
 import { ACCOUNT_INBOX_MIGRATIONS } from './migrations';
 import { runMigrations } from './run-migrations';
+import { recordActivity } from './activity-ledger';
+import { createActivityProvider } from './activity-provider';
+import { recordSenderActivity, recordWakerActivity } from './activity-recording';
 import { recordUsage } from './usage-ledger';
 import { gigabyteSecondsForDuration, utcDay } from './usage-meter';
 import { createUsageProvider } from './usage-provider';
@@ -159,7 +164,11 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     this.dependencies = {
       accountId,
       repository: createSqliteInboxRepository({ storage: this.ctx.storage, clock: this.clock }),
-      sender: this.sender,
+      sender: recordSenderActivity({
+        sender: this.sender,
+        record: (activity) => this.recordActivity(activity),
+        onRecordFailure: () => this.log({ event: LogEvent.ActivityRecordFailed }),
+      }),
       mediaStore,
       waker: createNoneWaker(),
       clock: this.clock,
@@ -167,7 +176,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       waiters: inbox.createReplyWaiters({ clock: this.clock }),
     };
     const wakerContext = { dependencies: this.dependencies, wake: this.wake };
-    this.dependencies.waker = createDispatchingAgentWaker({
+    const dispatchingWaker = createDispatchingAgentWaker({
       wakers: {
         [WakeRung.Inbox]: createInboxAgentWaker(wakerContext),
         [WakeRung.Local]: createLocalConnectorWaker({
@@ -181,6 +190,11 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       },
       repository: this.wake.repository,
       clock: this.clock,
+    });
+    this.dependencies.waker = recordWakerActivity({
+      waker: dispatchingWaker,
+      record: (activity) => this.recordActivity(activity),
+      onRecordFailure: () => this.log({ event: LogEvent.ActivityRecordFailed }),
     });
     this.accountDependencies = {
       ...this.dependencies,
@@ -206,6 +220,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       this.createPollerProvider(),
       this.createNoticeRetryProvider(),
       this.createUsageProvider(),
+      this.createActivityProvider(),
     );
     await this.armAlarm();
   }
@@ -268,6 +283,24 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       repository: new D1UsageRepository({ database: this.env.CONNECTIONS }),
       accountId: this.accountId,
     });
+  }
+
+  private createActivityProvider(): DueTimeProvider {
+    return createActivityProvider({
+      storage: this.ctx.storage,
+      repository: new D1ActivityRepository({ database: this.env.CONNECTIONS }),
+      accountId: this.accountId,
+    });
+  }
+
+  private recordActivity(input: { metric: ActivityMetric }): void {
+    const now = this.clock.now();
+    recordActivity({ storage: this.ctx.storage, day: utcDay({ now }), metric: input.metric, now });
+  }
+
+  private recordAcceptedOwnerMessage(input: { result: inbox.ReceiveResult }): void {
+    const isAccepted = input.result.messageId !== null && !input.result.duplicate;
+    if (isAccepted) this.recordActivity({ metric: ActivityMetric.MessagesIn });
   }
 
   private recordUsage(input: { startedAt: number }): void {
@@ -489,7 +522,9 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     return this.outcome({
       run: async () => {
         await this.rememberOwnerLocale({ ownerLocale: input.account.locale });
-        return inbox.receiveAccountMessage({ ...input, dependencies: this.accountDependencies });
+        const result = await inbox.receiveAccountMessage({ ...input, dependencies: this.accountDependencies });
+        this.recordAcceptedOwnerMessage({ result });
+        return result;
       },
       describe: (value) => [
         { event: value.duplicate ? LogEvent.OwnerMessageDuplicate : LogEvent.OwnerMessage },
@@ -627,7 +662,9 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     return this.outcome({
       run: async () => {
         await this.rememberOwnerLocale({ ownerLocale: input.ownerLocale });
-        return inbox.receiveOwnerMessage({ ...input, dependencies: this.dependencies });
+        const result = await inbox.receiveOwnerMessage({ ...input, dependencies: this.dependencies });
+        this.recordAcceptedOwnerMessage({ result });
+        return result;
       },
       describe: (value) => ({ event: value.duplicate ? LogEvent.OwnerMessageDuplicate : LogEvent.OwnerMessage }),
     });
@@ -637,7 +674,9 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     return this.outcome({
       run: async () => {
         await this.rememberOwnerLocale({ ownerLocale: input.ownerLocale });
-        return inbox.receiveChannelMessage({ ...input, dependencies: this.dependencies });
+        const result = await inbox.receiveChannelMessage({ ...input, dependencies: this.dependencies });
+        this.recordAcceptedOwnerMessage({ result });
+        return result;
       },
       describe: (value) => ({ event: value.duplicate ? LogEvent.OwnerMessageDuplicate : LogEvent.OwnerMessage }),
     });

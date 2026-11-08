@@ -4,6 +4,7 @@ export const SECOND_MS = 1_000;
 export const MINUTE_MS = 60 * SECOND_MS;
 export const HOUR_MS = 60 * MINUTE_MS;
 export const DAY_MS = 24 * HOUR_MS;
+export const PERCENT_MULTIPLIER = 100;
 export const INSTALL_CODE_PREFIX = 'zb_inst_';
 export const INSTALL_CODE_RANDOM_BYTES = 16;
 export const INSTALL_CODE_TTL_MS = 30 * MINUTE_MS;

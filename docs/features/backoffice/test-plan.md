@@ -165,13 +165,7 @@ Backoffice numbers pages (`backoffice-numbers.test.ts`):
 - [x] Verify with a mismatched display number → copy `display_number_mismatch`, `verified_at` null — evidence: `backoffice-numbers-verify` 11/11, tester-b.md
 - [x] Verify with fake Graph `401` → copy for kind `auth`; `404` → `not_found`; `500` → `upstream`; with a closed port → kind `network` — evidence: `backoffice-numbers-verify` 11/11, tester-b.md
 
-Metrics (PR B: `activity-in-object.test.ts`, `activity-flush.test.ts`, `backoffice-metrics.test.ts`):
-- [ ] Each `ActivityMetric` increments by exactly one on its event; a duplicate inbound adds zero — open, PR B (G4)
-- [ ] Flush after 1 h → the `activity_daily` row equals the meter, with `number_id` equal to the account's number; a second flush leaves the same count — open, PR B (G4)
-- [ ] Seeded data → every figure equals its definition (accounts 2/3/1/1 by state, agents active 4, connected 3, revoked 2, budget 79 % without the warning class, 81 % with it) — open, PR B (G4)
-- [ ] An empty database → the zero state on every tile, no error — open, PR B (G4)
-- [ ] Each metrics page makes exactly one `batch` call — open, PR B (G4)
-- [ ] Every statement prepared by a metrics page begins with `SELECT`; `POST`, `PUT`, `PATCH` and `DELETE` on `/metrics` → `404` — open, PR B (G4)
+Metrics (PR B): moved to [`backoffice-metrics`](../backoffice-metrics/test-plan.md).
 
 Logs (`backoffice-logs-redaction.test.ts`):
 - [x] Across a full run (enroll values, sign-in success and failure, register, verify, rotate, webhook for A and B, sends), the captured `console.log` output contains none of: the test key, its digest, the TOTP secret, any code typed, `ta`, `ta2`, `sx`, the display numbers, the phone number IDs, the WABA IDs, any client address — evidence: `backoffice-numbers-logs` 1/1; DB, audit and wrangler log grep clean, tester-b.md, tester-c.md
@@ -183,7 +177,6 @@ Logs (`backoffice-logs-redaction.test.ts`):
 - [x] `sign-in.spec.ts::wrong code` — expected: the generic failure copy, the key field empty, on `/sign-in?notice=SignInFailed` — evidence: sign-in.spec.ts:22, walk 32/32; tester-c.md
 - [x] `numbers.spec.ts::registers, verifies and activates a number` — steps: register app and number, verify, activate with a code; expected: the state badge `active`, template rows visible, no credential text anywhere in the DOM — evidence: numbers.spec.ts:41, walk 32/32; tester-c.md
 - [x] `numbers.spec.ts::rotates the access token` — expected: "last changed" updates; the token is never shown — evidence: numbers.spec.ts:74, walk 32/32; tester-c.md
-- [ ] `metrics.spec.ts::shows seeded metrics and filters by number` (PR B) — expected: the figures match the seed; the filter narrows to one number — open, PR B (G4)
 - [x] Existing `whatsapp-channel.e2e.test.ts`, `whatsapp-bundle.e2e.test.ts` and `owner-flow.e2e.test.ts` pass with a seeded registry row — evidence: `pnpm verify all` e2e gate green at c2ad76c4 (`scratchpad/verify-backoffice-fix2.log`), after tester-c.md did not run it
 
 ## Prove it for real — Playwright MCP
