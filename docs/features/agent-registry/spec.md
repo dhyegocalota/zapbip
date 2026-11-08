@@ -1,6 +1,6 @@
 # Agent registry: one folder per supported agent
 
-**Status:** Building
+**Status:** Shipped 2026-11-08
 **Tier:** 🔴
 **Owner approval:** owner order 2026-11-07; open questions owner delegated 2026-11-06 (recommended options taken)
 **ADRs:** [0033](../../adr/0033-one-folder-per-supported-agent.md) (Accepted, this feature); builds on [0001](../../adr/0001-one-source-per-agent-surface.md), [0008](../../adr/0008-a-pure-core-behind-ports.md), [0019](../../adr/0019-outbound-wake-targets-pinned-providers-and-guarded-generic-hosts.md), [0020](../../adr/0020-one-install-link-per-connection-the-ai-reads-the-instructions.md), [0028](../../adr/0028-the-native-channel-plugin-is-the-first-rung-for-openclaw-and-hermes.md), [0030](../../adr/0030-the-docs-speak-to-any-ai-user-in-two-languages-and-the-switcher-picks-the-language.md), [0034](../../adr/0034-the-hermes-wheel-is-self-hosted-and-installed-by-a-pinned-hash.md)
