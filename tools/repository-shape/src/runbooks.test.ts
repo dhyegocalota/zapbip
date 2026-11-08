@@ -53,6 +53,13 @@ const GO_LIVE_ORDER = [
   'Meta live mode',
   'Smoke production',
 ];
+const STEP_REFERENCE_PATTERN = /([a-z-]+\.md)`?\)?,? steps? (\d+)(?: (?:to|and) (\d+))?/g;
+const REFERENCE_CONTEXT_LENGTH = 160;
+const REFERENCE_SUBJECTS: { keyword: string; titleFragment: string }[] = [
+  { keyword: 'ZAPBIP_NPM_PUBLISHER', titleFragment: 'npm package' },
+  { keyword: 'COMPANY', titleFragment: 'company facts' },
+  { keyword: 'hosted plugin file', titleFragment: 'plugin wheels' },
+];
 const PNPM_BUILT_IN_COMMANDS = ['exec', 'dlx', 'install', 'add'];
 const TITLE_PATTERN = /^# .+\n\n(.+)\n/;
 const STEP_PATTERN = /^(\d+)\. (.*)$/gm;
@@ -135,6 +142,34 @@ function brokenLinks({ file, text }: Runbook): string[] {
     .map((target) => `${file}: ${target}`);
 }
 
+function stepTitlesOf(file: string): Record<number, string> {
+  const steps = stepSections(withoutGoLiveOrder(readRunbook(file).text));
+  return Object.fromEntries(steps.map((step) => [step.number, stepTitleOf(step.title).toLowerCase()]));
+}
+
+function subjectOf(context: string): { keyword: string; titleFragment: string } | undefined {
+  const present = REFERENCE_SUBJECTS.filter((subject) => context.includes(subject.keyword));
+  return present.sort((first, second) => context.lastIndexOf(second.keyword) - context.lastIndexOf(first.keyword))[0];
+}
+
+function brokenStepReferences({ file, text }: Runbook): string[] {
+  const prose = text.replace(FENCED_BLOCK_PATTERN, '');
+  return [...prose.matchAll(STEP_REFERENCE_PATTERN)].flatMap((match) => {
+    const [reference, target, first, last] = match;
+    if (!runbookFiles().includes(target!)) return [];
+    const titles = stepTitlesOf(target!);
+    const numbers = [first, last].filter((number): number is string => number !== undefined).map(Number);
+    const missing = numbers.filter((number) => titles[number] === undefined).map((number) => `${file}: ${reference} has no step ${number}`);
+    if (missing.length > 0) return missing;
+    const context = prose.slice(Math.max(0, match.index - REFERENCE_CONTEXT_LENGTH), match.index);
+    const subject = subjectOf(context);
+    const wrongTitle = subject && !titles[numbers[0]!]!.includes(subject.titleFragment);
+    return wrongTitle
+      ? [`${file}: ${reference} is about ${subject.titleFragment}, but step ${numbers[0]} is "${titles[numbers[0]!]}"`]
+      : [];
+  });
+}
+
 function rootScripts(): string[] {
   return Object.keys(JSON.parse(readRepositoryFile(ROOT_PACKAGE_FILE)).scripts);
 }
@@ -162,6 +197,20 @@ function goLiveStepTitles(): string[] {
 }
 
 describe('runbooks', () => {
+  test('every step reference names a step that exists, and a described one has the matching title', () => {
+    expect(allRunbooks().flatMap(brokenStepReferences)).toEqual([]);
+  });
+
+  test('a reference to a missing step and a reference to the wrong title are reported', () => {
+    const missing = brokenStepReferences({ file: 'x.md', text: 'See deploy.md step 99.' });
+    expect(missing).toEqual(['x.md: deploy.md step 99 has no step 99']);
+    const wrong = brokenStepReferences({
+      file: 'x.md',
+      text: 'Set ZAPBIP_NPM_PUBLISHER ([mintlify-publish.md](mintlify-publish.md), step 2).',
+    });
+    expect(wrong).toHaveLength(1);
+  });
+
   test('the index links every other runbook exactly once', () => {
     const index = readRunbook(INDEX_FILE_NAME).text;
     const linkCounts = runbookFiles()
