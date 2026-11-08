@@ -203,3 +203,48 @@ Pins, green on landing: `render-workflow.test.ts`, the new runbook "names no age
 - `test:e2e:clients` takes no agent id; `plugin-wheel:build` prints the hash lines and does not rewrite `wheel.ts`.
 - The workflow gains an `openclaw-plugin` unit row.
 - `global-setup.ts` and `agent-registry.test.ts` (G2b) were edited outside the L5b row because the deleted constants and the plugin registry reach them.
+
+## L4 facts, rungs and tests (developer-l4)
+
+### What changed and where
+
+- `libs/agents/src/checks/{leaks,pages,boundaries}.ts` and their tests; `generate/{scaffold,mentions}.ts` behind `agents:new <id>` and `agents:mentions <id>`; `src/definitions.ts` (entry `@zapbip/agents/definitions`: `AGENT_DEFINITIONS`, `AgentId`); `@zapbip/agents/plugins` also re-exports the plugin types.
+- `render-pages.ts` runs `pageRuleViolationsOf` (front matter, pinned package, test-double words, step-guide placeholder, plugin command, self-test, one-listener sentence). `install-guides.test.ts` and `docs-agent-install.test.ts` are gone; the OpenClaw and Hermes facts moved into their `pageFacts`. The three fixture pages gained the placeholder, the install command and the one-listener sentence.
+- `docs-experience.ts` lost `CLIENT_LISTEN_FACTS` and `DocsAgentClient`; `BACKGROUND_RUNNING_PAGES` comes from `ConnectorClient`. `docs-conversations.test.ts` derives its speaker labels. `apps/docs/e2e/agents.spec.ts` replaces `agents-a` and `agents-b`; `from-zero.spec.ts` reads `AgentId`.
+- `tools/install-e2e/claude-code.sh` is now `libs/agents/supported/claude-code/install-e2e.sh`; `install-e2e.test.ts` iterates the `OwnerRunInstall` facet. `AGENTS.md` layout updated. `InstallClient` and `DocsOnlyClient` are deleted from `libs/types`.
+- `docs-visual.test.ts`: the Agents and IAs lists are compared with the registry order, in order; the rest of the navigation is compared with `origin/main` unsorted.
+
+### How to run
+
+`pnpm --filter @zapbip/agents test:unit`, `pnpm --filter @zapbip/repository-shape test:unit`, `pnpm --filter @zapbip/api exec vitest run test/unit`, `pnpm agents:check`, `pnpm agents:mentions codex`, `pnpm agents:new demo-agent` then `pnpm agents:generate` (O1; delete the folder and regenerate to undo).
+
+### Red then green
+
+| Test | Red | Printed | Green |
+|---|---|---|---|
+| `checks/leaks.test.ts` (16), `agent-registry.test.ts::no file outside an agent folder names an agent` | 2cac0895 | `Error: leakViolationsOf is not implemented for 2 agents` (11 agents in the repository test) | 5d06ba45 (check), b3fc45d1 (tree clean) |
+| `leaks.test.ts` whole-enum record (4) | 945a2e5d | `AssertionError: expected [] to deeply equal [ Array(1) ]` | b3fc45d1 |
+| `checks/pages.test.ts` (17), `agent-registry.test.ts::page rules` (4 red, 1 pre-existing check) | 04c64f1d | `Error: pageRuleViolationsOf is not implemented for demo page.en.mdx`; `expected false to be true` | 6cd4c5a6 |
+| `install-e2e.test.ts` | 5a70fa74 | `AssertionError: expected [] to deeply equal [ 'claude-code' ]` | dcdae289 |
+| `scaffold.test.ts`, `mentions.test.ts`, `cli.test.ts` (17 red) | 8d78480c | `scaffoldFilesOf is not implemented for ...`; `agents:new is not implemented` | 8264d249 |
+| `checks/boundaries.test.ts` (24) | 51c53ed2 | `boundaryViolationsOf is not implemented for 1 files` | ef481099 |
+
+Pins (green on landing): `docs-visual.test.ts` agent navigation (0cbe22e9; mutation: swapping two agent pages in `docs.json` fails it, the old sorted comparison stayed green), docs checks reading the registry (072eceaf; mutation: dropping `Gemini` from gemini-cli `speakerNames` fails the superset case), `agents.spec.ts` (typechecked only).
+
+Mutation checks for the folded tests (M12), automated in `agent-registry.test.ts::page rules`: Hermes front matter removed, OpenClaw install command removed, Hermes pt-br one-listener sentence removed, OpenClaw pt-br `chmod 600` removed (caught by the older `pageFacts` check), Codex `<connectionLink>` removed. Each names the page.
+
+### Hypotheses for the tester
+
+- H1. G3 (11 ids) and G4 (11 ids) pass; adding `fixture-*` touches only the G1/G2b/G2c sets.
+- H2. `pnpm agents:new demo-agent` then `pnpm agents:generate` changes only `libs/agents/supported/demo-agent/` and the generated set (the developer ran it and reverted; `git status` was empty after).
+- H3. `agents.spec.ts` passes for 11 agents in both languages (not run: it needs the docs walk server). Risks: facts rendered with different whitespace, and the link fact `/developers/any-mcp-client`, which the spec checks as an anchor `href` suffix.
+- H4. M6 (a `Record<InstallClient, string>` anywhere outside the generated set) is named by the leak test with file and line.
+
+### Gaps and deviations
+
+- `SHARED_MECHANISM_SUITES` (in `agent-registry.test.ts`) exempts the suites that use one agent as data: `apps/connector/test/**`, `channel-plugins.e2e.test.ts`, `hermes-wheel.e2e.test.ts`, `package-route.test.ts`, `fake-deploy-shell.ts`, `hermes-wheel.test.ts`, and the leak and registry tests themselves. Removing claude-code, codex or hermes therefore also edits those suites, outside the two-folder claim; the spec classes them F or M. A follow-up would parametrize them over `ConnectorClient` and the self-hosted wheel plugin.
+- The leak check recognises enum members, `supported/<id>` and whole-enum records only; `session-lookup.ts` (`.claude`, `.codex` defaults) and `wake-runner.ts` (`CODEX_HOME`) are not detected because they name no enum member.
+- `docs-agent-install.test.ts` is deleted whole, including its case that a feature spec names the OpenClaw install command.
+- The `render-matrix` and `registry` unit tests use fixture definitions and synthetic names instead of real agents; the "keeps the enum member it has today" case of `definitions.test.ts` is gone with the hand enum it compared to.
+- Steps 29 (boundaries B1 to B4, B7) and 30 (docs-visual) were added; the lead should add them to the test-plan rows B1 to B4 and B7.
+- `agents.spec.ts` drops the per-agent `pre` block check for Gemini CLI and the standalone any-mcp-client link request; both are now `pageFacts`.
