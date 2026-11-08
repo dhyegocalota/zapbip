@@ -170,6 +170,16 @@ describe('deploy entry', () => {
     expect(afterHeading).toContain(`zapbip@${NPM_VERSION} is not on npm yet; publish it before launch`);
   });
 
+  it('pin: prints the warnings again under the heading when the smoke test fails', async () => {
+    const notFound = { exitCode: 1, stdout: JSON.stringify({ error: { code: 'E404' } }) };
+    const smokeFailed = { exitCode: 1, stdout: '' };
+    const shell = fakeShell({ replies: { ...REPLIES, 'maintainers --json': notFound, 'smoke.ts': smokeFailed } });
+    const { exitCode, output } = await deploy({ shell, environment: DeployEnvironment.Production, answers: [CONFIRMATION] });
+    const [, afterHeading] = output.split(WARNINGS_HEADING);
+    expect(exitCode).toBe(1);
+    expect(afterHeading).toContain(`zapbip@${NPM_VERSION} is not on npm yet; publish it before launch`);
+  });
+
   it.each(['Production', 'production ', 'prod', ''])('does not deploy production on the answer %j', async (answer) => {
     const { exitCode, shell, output } = await deploy({ environment: DeployEnvironment.Production, answers: [answer] });
     expect(exitCode).toBe(1);

@@ -261,6 +261,18 @@ describe('worker preflight', () => {
     });
   });
 
+  it('warns and passes when the version is absent but the package name belongs to the owner', async () => {
+    const notFound = JSON.stringify({ error: { code: 'E404' } });
+    const shell = fakeShell({ replies: { [`zapbip@${NPM_VERSION} maintainers --json`]: { exitCode: 1, stdout: notFound } } });
+    const warnings: PreflightWarning[] = [];
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell, warnings }));
+    expect(refusal).toBeNull();
+    expect(warnings).toContainEqual({
+      kind: PreflightWarningKind.PackageUnpublished,
+      message: `zapbip@${NPM_VERSION} is not on npm yet; publish it before launch`,
+    });
+  });
+
   it('refuses production when the version is absent but the package name belongs to a foreign maintainer', async () => {
     const notFound = JSON.stringify({ error: { code: 'E404' } });
     const squatter = JSON.stringify(['squatter <s@example.com>']);

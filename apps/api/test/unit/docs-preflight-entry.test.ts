@@ -61,6 +61,13 @@ describe('docs preflight entry', () => {
     expect(output).toContain('does not resolve on npm; publish it first');
   });
 
+  it('exits one saying the version does not resolve when npm has the package name but not the version', async () => {
+    const notFound = { exitCode: 1, stdout: JSON.stringify({ error: { code: 'E404' } }) };
+    const { exitCode, output } = await preflight({ replies: { [`zapbip@${NPM_VERSION} maintainers --json`]: notFound } });
+    expect(exitCode).toBe(1);
+    expect(output).toContain(`zapbip@${NPM_VERSION} does not resolve on npm; publish it first`);
+  });
+
   it('exits one and names the wheel when the Worker does not host it', async () => {
     const { exitCode, output } = await preflight({
       packageFetcher: fakePackageFetcher({ answer: { status: 404, sha256: OTHER_WHEEL_SHA256 } }),
