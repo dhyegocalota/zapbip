@@ -111,3 +111,40 @@ Pins (green on landing): the freshness test and the violations test (3a2efcb6). 
 - Touched files outside the L2 row: `generate/discover.test.ts` (cursor now also has `install.ts`), `generate/{agent,render-*}.ts` and their tests (the `surface` parameter is gone), `src/checks/registry.ts` (`violationIf` exported), `testing/fixture-agent/install-copy.ts` (Portuguese stop check in English, like every real section), `testing/definitions.test.ts`, new `testing/install-fixtures.ts`.
 - `connectCommand` still takes `InstallClient` from `@zapbip/types` until L5a.
 - Wake notes are repeated as literals in each `install.test.ts` (the test oracle), so a note edit needs two edits on purpose.
+
+## L5a connector runtimes (developer-l5a)
+
+### What changed and where
+
+- `libs/agents/supported/{claude-code,codex}/connector.ts` export `runtime` (session finder, binary, resume and new-session arguments, isolation, `isNewSessionFallback`); moved from `apps/connector/src/{session-lookup,wake-commands,wake-isolation}.ts`. The Codex active-writer branch is `isNewSessionFallback`, and `newSessionArguments` is `null` for Claude Code.
+- `libs/agents/src/connector-support/`: `list-directory`, `missing-entry`, `session-id`, `wake-directory`, `wake-isolation-refused-error`, and `testing/fake-client.mjs` (the shared fake binary; `supported/<id>/testing/{claude,codex}` are shims). `libs/agents/src/connector.ts` exports `CONNECTOR_RUNTIMES`, `ConnectorClient`, `isMissingEntry`, `WAKE_DIRECTORY_PREFIX`, `WakeIsolationRefusedError`.
+- `apps/connector` reads `CONNECTOR_RUNTIMES`; `removeStaleWakeDirectories` stays there. `libs/types/src/connector.ts` lost `ConnectorClient` and the `CLAUDE_*`/`CODEX_*` constants (`CODEX_ZAPBIP_SERVER_NAME` became `ZAPBIP_SERVER_NAME`).
+- `connectCommand` moved to `libs/agents/src/connect-command.ts` and takes `ConnectorClient`.
+- `connector.{en,pt-br}.mdx` per runtime, the generated `connector-clients.mdx` snippets, and both `local-connector` pages import the snippet.
+
+### How to run
+
+`pnpm --filter @zapbip/agents test:unit`, `pnpm --filter zapbip test:unit` (includes the integration cases), `test:packaging`, `test:e2e`, and the `repository-shape` suite.
+
+### Red then green
+
+| Test | Red commit | Printed | Green commit |
+|---|---|---|---|
+| `supported/claude-code/connector.test.ts`, `supported/codex/connector.test.ts` | e2164965 | `Error: claude-code connector runtime is not implemented`, `Error: codex connector runtime is not implemented` (the module throws on import, so both files report no tests) | 76774b34 |
+
+Case counts: the moved tests are the old `session-lookup`, `wake-commands` and `wake-isolation` runtime cases; `connect-command.test.ts` and the three new `cli.test.ts` cases (undeclared client and missing client throw the exact usage line; each runtime is accepted) are pins, green on landing (76774b34).
+
+### Hypotheses for the tester
+
+- H1. `git diff -M e2164965^ 76774b34` shows the Codex isolation code moved with only import and constant-name changes.
+- H2. The usage line reads `--client claude-code|codex`; `--client nope` and a missing `--client` throw it.
+- H3. The bundled connector resumes, falls back to a new Codex thread on the active-writer refusal and never falls back for Claude Code (`wake-runner` integration).
+- H4. Adding `testing/fixture-connector-agent` adds only `FixtureConnectorAgent` to `ConnectorClient` (G2c).
+
+### Gaps and deviations
+
+- `apps/api/test/e2e/claude-code.e2e.test.ts` is not renamed or iterated: it runs the real `claude`, not the runtimes.
+- `background-running` pages are unchanged (no per-runtime paragraph).
+- `session-lookup.ts` still holds the `.claude` and `.codex` default home folders, and `wake-runner.ts` reads `CODEX_HOME`: the contract's `SessionLookupInput` and `WakeIsolationInput` name both agents (L1), so L4's leak check will list them.
+- `connectCommand` left `libs/core` (cycle), which touches `libs/core/src/install/prompts/connector-commands.ts` and the two `install-copy.ts` files, outside the L5a row.
+- `tools/repository-shape/src/agent-registry.test.ts` G2c now asserts the fixture member is contained, since real connector agents exist.
