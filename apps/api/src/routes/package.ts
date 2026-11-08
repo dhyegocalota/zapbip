@@ -17,7 +17,7 @@ const FILENAME_PARAMETER = 'filename';
 const CACHE_DAYS = 365;
 const IMMUTABLE_CACHE_CONTROL = `public, max-age=${(CACHE_DAYS * DAY_MS) / SECOND_MS}, immutable`;
 const NO_STORE_CACHE_CONTROL = 'no-store';
-const SERVED_PACKAGES = [
+export const SERVED_PACKAGES = [
   { filename: hermesWheelFilename({ version: ZAPBIP_HERMES_PLUGIN_VERSION }), contentType: 'application/octet-stream' },
   { filename: hermesRequirementsFilename({ version: ZAPBIP_HERMES_PLUGIN_VERSION }), contentType: 'text/plain; charset=utf-8' },
 ];

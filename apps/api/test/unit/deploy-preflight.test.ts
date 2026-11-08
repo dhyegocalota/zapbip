@@ -1,4 +1,5 @@
-import { COMPANY_FACT_UNSET, NPM_REGISTRY_URL, OFFICIAL_NUMBER_UNSET } from '@zapbip/types';
+import { AGENT_PLUGINS } from '@zapbip/agents/plugins';
+import { COMPANY_FACT_UNSET, NPM_REGISTRY_URL, OFFICIAL_NUMBER_UNSET, PRODUCTION_PUBLIC_ORIGIN } from '@zapbip/types';
 import type { CompanyFacts } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { PLACEHOLDER_VALUE_PREFIX } from '../../src/operations/constants';
@@ -745,5 +746,16 @@ describe('docs preflight', () => {
         environmentVariables: COMPLETE_VARIABLES,
       }),
     ).toBeNull();
+  });
+});
+
+describe('the hosted artifacts the docs preflight checks', () => {
+  it('are the artifacts of every registered plugin, in registry order', async () => {
+    const packageFetcher = fakePackageFetcher({});
+    await runDocsPreflight({ ...docsInput({}), packageFetcher });
+    const expectedUrls = Object.values(AGENT_PLUGINS).flatMap((plugin) =>
+      plugin.hostedArtifacts.map((artifact) => `${PRODUCTION_PUBLIC_ORIGIN}${artifact.path}`),
+    );
+    expect(packageFetcher.urls).toEqual(expectedUrls);
   });
 });
