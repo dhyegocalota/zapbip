@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
-import { DocsLanguage, DocsOnlyClient, InstallClient, OFFICIAL_WHATSAPP_NUMBER, PAGE_LANGUAGE_FOLDER } from '@zapbip/types';
-import { AGENT_PAGE_HEADINGS, AGENT_PAGE_SECTIONS, type DocsAgentClient } from '../../../tools/repository-shape/src/docs-experience';
+import { DocsLanguage, OFFICIAL_WHATSAPP_NUMBER, PAGE_LANGUAGE_FOLDER } from '@zapbip/types';
+import { AgentId } from '../../../libs/agents/src/definitions';
+import { AGENT_PAGE_HEADINGS, AGENT_PAGE_SECTIONS } from '../../../tools/repository-shape/src/docs-experience';
 import { DOCS_LOCALE_OF, DocsViewport, docsOptionsOf, isAllowedNoise, requestFailedNoiseOf } from './support/docs-experience';
 
 const FIRST_ERROR_STATUS = 400;
@@ -16,7 +17,7 @@ const INTERNAL_LINK_LOCATOR = '#content-area a[href^="/"]';
 const MATRIX_LINK_LOCATOR = '#content-area table tbody tr a[href*="agents/"]';
 const NUMBER_LINK = `https://wa.me/${OFFICIAL_WHATSAPP_NUMBER}`;
 const NUMBER_TEXT = `+${OFFICIAL_WHATSAPP_NUMBER}`;
-const MATRIX_CLIENTS: DocsAgentClient[] = [...Object.values(InstallClient), ...Object.values(DocsOnlyClient)];
+const MATRIX_CLIENTS: AgentId[] = Object.values(AgentId);
 const STEP_COUNT = 5;
 
 function urlOf(input: { path: string; language: DocsLanguage }): string {

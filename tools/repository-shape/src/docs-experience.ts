@@ -9,27 +9,10 @@ import {
   agentPagePathOf,
   twinPathOf,
 } from '@zapbip/agents/docs';
+import { ConnectorClient } from '@zapbip/agents/connector';
 import { MEDIA_RETENTION_MS, QUEUE_RETENTION_MS, QUESTION_RETENTION_MS } from '@zapbip/core';
-import { DAY_MS, DocsLanguage, DocsOnlyClient, DocsRetentionKind, InstallClient, PAGE_LANGUAGE_FOLDER, WakeRung } from '@zapbip/types';
+import { DAY_MS, DocsLanguage, DocsRetentionKind, PAGE_LANGUAGE_FOLDER } from '@zapbip/types';
 import { DOCS_ROOT, capturedNames, readRepositoryFile } from './repository-files';
-
-export type DocsAgentClient = InstallClient | DocsOnlyClient;
-
-const ONE_HOUR_SECONDS = 3600;
-
-export const CLIENT_LISTEN_FACTS: Record<DocsAgentClient, { rung: WakeRung; expectedDelaySeconds: number | null }> = {
-  [InstallClient.ClaudeCode]: { rung: WakeRung.Local, expectedDelaySeconds: 7 },
-  [InstallClient.Codex]: { rung: WakeRung.Local, expectedDelaySeconds: 6 },
-  [InstallClient.Cursor]: { rung: WakeRung.Local, expectedDelaySeconds: null },
-  [InstallClient.GeminiCli]: { rung: WakeRung.Local, expectedDelaySeconds: null },
-  [InstallClient.Hermes]: { rung: WakeRung.Local, expectedDelaySeconds: null },
-  [InstallClient.OpenClaw]: { rung: WakeRung.Local, expectedDelaySeconds: null },
-  [InstallClient.GrokBot]: { rung: WakeRung.Webhook, expectedDelaySeconds: 9 },
-  [InstallClient.ClaudeAi]: { rung: WakeRung.Webhook, expectedDelaySeconds: 16 },
-  [InstallClient.ChatGpt]: { rung: WakeRung.Scheduled, expectedDelaySeconds: ONE_HOUR_SECONDS },
-  [InstallClient.GrokWeb]: { rung: WakeRung.Standby, expectedDelaySeconds: null },
-  [DocsOnlyClient.AnyMcpClient]: { rung: WakeRung.Inbox, expectedDelaySeconds: null },
-};
 
 export const DOCS_DEVELOPER_LINK_PREFIXES: string[] = [
   '/developers/',
@@ -67,7 +50,7 @@ const INDEX_PAGE = 'index';
 const GUARDED_PAGE_PREFIXES = ['features/', 'help/', 'get-started/', `${AGENTS_DIRECTORY}/`];
 const ANY_MCP_CLIENT_LINK = '/developers/any-mcp-client';
 const BACKGROUND_RUNNING_LINK = '/developers/background-running';
-const BACKGROUND_RUNNING_PAGES = [`${AGENTS_DIRECTORY}/${InstallClient.ClaudeCode}`, `${AGENTS_DIRECTORY}/${InstallClient.Codex}`];
+const BACKGROUND_RUNNING_PAGES = Object.values(ConnectorClient).map((client) => `${AGENTS_DIRECTORY}/${client}`);
 
 type NestingScan = { depth: number; messages: number };
 
