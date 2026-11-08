@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { DocsLanguage, OFFICIAL_WHATSAPP_NUMBER, PAGE_LANGUAGE_FOLDER } from '@zapbip/types';
+import { DocsLanguage, PAGE_LANGUAGE_FOLDER, START_LINK, START_LINK_LANGUAGE_PARAMETER } from '@zapbip/types';
 import { CHAT_MAX_MESSAGES } from '../../../tools/repository-shape/src/docs-experience';
 import { DOCS_LOCALE_OF, DocsViewport, docsOptionsOf } from './support/docs-experience';
 
@@ -8,7 +8,7 @@ const OVERVIEW_PAGE = 'index';
 const GET_STARTED_PAGE = 'get-started/how-to-start';
 const FOOTER_LABEL = 'zapbip · Logic Bit';
 const COMING_SOON_PATTERN = /coming soon|em breve/i;
-const OFFICIAL_NUMBER_LINK = `https://wa.me/${OFFICIAL_WHATSAPP_NUMBER}`;
+const WHATSAPP_NUMBER_LINK_LOCATOR = 'a[href*="wa.me"]';
 const INSTALL_PROMPT_PLACEHOLDER = 'zb_inst_<code>';
 const OVERVIEW_EXAMPLE_COUNT = { minimum: 3, maximum: 5 };
 const OVERVIEW_HEADING_COUNT = 3;
@@ -68,11 +68,12 @@ for (const language of Object.values(DocsLanguage)) {
       }
     });
 
-    test('Get started is one ordered list with the number and the prompt', async ({ page }) => {
+    test('Get started is one ordered list with the start link and the prompt', async ({ page }) => {
       await page.goto(urlOf({ path: GET_STARTED_PAGE, language }));
       const content = page.locator('#content-area');
       await expect(content.locator('ol')).toHaveCount(1);
-      await expect(content.locator(`a[href="${OFFICIAL_NUMBER_LINK}"]`).first()).toBeVisible();
+      await expect(content.locator(`a[href="${START_LINK}?${START_LINK_LANGUAGE_PARAMETER}=${language}"]`).first()).toBeVisible();
+      await expect(page.locator(WHATSAPP_NUMBER_LINK_LOCATOR)).toHaveCount(0);
       await expect(content.locator('code', { hasText: INSTALL_PROMPT_PLACEHOLDER }).first()).toBeVisible();
       await expect(content).not.toContainText(COMING_SOON_PATTERN);
     });

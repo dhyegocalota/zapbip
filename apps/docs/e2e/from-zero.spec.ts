@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { DocsLanguage, OFFICIAL_WHATSAPP_NUMBER, PAGE_LANGUAGE_FOLDER } from '@zapbip/types';
+import { DocsLanguage, PAGE_LANGUAGE_FOLDER, START_LINK, START_LINK_LANGUAGE_PARAMETER } from '@zapbip/types';
 import { AgentId } from '../../../libs/agents/src/definitions';
 import { AGENT_PAGE_HEADINGS, AGENT_PAGE_SECTIONS } from '../../../tools/repository-shape/src/docs-experience';
 import { DOCS_LOCALE_OF, DocsViewport, docsOptionsOf, isAllowedNoise, requestFailedNoiseOf } from './support/docs-experience';
@@ -15,8 +15,7 @@ const VISIBLE_LINK_LOCATOR = '#content-area a:not([aria-hidden])';
 const WALK_TIMEOUT_MS = 300_000;
 const INTERNAL_LINK_LOCATOR = '#content-area a[href^="/"]';
 const MATRIX_LINK_LOCATOR = '#content-area table tbody tr a[href*="agents/"]';
-const NUMBER_LINK = `https://wa.me/${OFFICIAL_WHATSAPP_NUMBER}`;
-const NUMBER_TEXT = `+${OFFICIAL_WHATSAPP_NUMBER}`;
+const WHATSAPP_NUMBER_LINK_LOCATOR = 'a[href*="wa.me"]';
 const MATRIX_CLIENTS: AgentId[] = Object.values(AgentId);
 const STEP_COUNT = 5;
 
@@ -82,8 +81,8 @@ for (const language of Object.values(DocsLanguage)) {
         const steps = page.locator('#content-area ol > li');
         await expect(steps).toHaveCount(STEP_COUNT);
         for (let position = 0; position < STEP_COUNT; position += 1) await expect(steps.nth(position)).toBeVisible();
-        await expect(steps.first().locator(`a[href="${NUMBER_LINK}"]`)).toBeVisible();
-        await expect(steps.first()).toContainText(NUMBER_TEXT);
+        await expect(steps.first().locator(`a[href="${START_LINK}?${START_LINK_LANGUAGE_PARAMETER}=${language}"]`)).toBeVisible();
+        await expect(page.locator(WHATSAPP_NUMBER_LINK_LOCATOR)).toHaveCount(0);
         await expectNoOverflow({ page });
         (await internalLinksOf({ page })).forEach((path) => visitedLinks.add(path));
 
