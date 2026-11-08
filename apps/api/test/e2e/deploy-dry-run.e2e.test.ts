@@ -117,3 +117,49 @@ describe('wrangler dry run of every deployed block', () => {
 describe('preflight against the real constants and the real wrangler blocks', () => {
   test('production passes with every other check green and no number input', async () => {
     const { exitCode, output } = await refusalOf({ environment: DeployEnvironment.Production, company: COMPLETE_COMPANY });
+    expect(exitCode).toBe(0);
+    expect(output).not.toContain('refused at');
+  });
+
+  test('production is refused while the company facts are the sentinel', async () => {
+    const { exitCode, output } = await refusalOf({
+      environment: DeployEnvironment.Production,
+      company: UNSET_COMPANY,
+    });
+    expect(exitCode).toBe(1);
+    expect(output).toContain(`refused at ${PreflightStep.CompanyFacts}`);
+  });
+
+  test('production warns and goes on while the npm package does not resolve', async () => {
+    const { exitCode, output } = await refusalOf({
+      environment: DeployEnvironment.Production,
+      company: COMPLETE_COMPANY,
+      replies: { 'maintainers --json': UNRESOLVED_NPM },
+    });
+    expect(exitCode).toBe(0);
+    expect(output).toContain('is not on npm yet; publish it before launch');
+  });
+
+  test('a pending D1 migration stops the deploy before any Worker deploy', async () => {
+    const { exitCode, output, shell } = await refusalOf({
+      environment: DeployEnvironment.Staging,
+      company: COMPLETE_COMPANY,
+      replies: { [MIGRATIONS_LIST]: PENDING_MIGRATIONS },
+    });
+    expect(exitCode).toBe(1);
+    expect(output).toContain(`refused at ${PreflightStep.Migrations}`);
+    expect(shell.commands.filter((command) => command.includes(WORKER_DEPLOY))).toEqual([]);
+  });
+
+  test('a deploy with nothing pending lists the migrations before it deploys the Worker', async () => {
+    const { exitCode, shell } = await refusalOf({
+      environment: DeployEnvironment.Staging,
+      company: COMPLETE_COMPANY,
+    });
+    const listedAt = shell.commands.findIndex((command) => command.includes(MIGRATIONS_LIST));
+    const deployedAt = shell.commands.findIndex((command) => command.includes(WORKER_DEPLOY));
+    expect(exitCode).toBe(0);
+    expect(listedAt).toBeGreaterThanOrEqual(0);
+    expect(listedAt).toBeLessThan(deployedAt);
+  });
+});
