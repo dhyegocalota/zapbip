@@ -48,8 +48,19 @@ const SPACE_PATTERN = / /g;
 const EXTERNAL_LINK_PATTERN = /^(https?:|mailto:|#)/;
 const ANCHOR_SEPARATOR = '#';
 const MARKDOWN_EXTENSION = '.md';
-const CODE_SPAN_VIOLATION = 'code span';
-const FENCED_BLOCK_VIOLATION = 'fenced block';
+
+enum PurposeViolation {
+  CodeSpan = 'code span',
+  FencedBlock = 'fenced block',
+}
+
+function pathOf(target: string): string {
+  return target.split(ANCHOR_SEPARATOR, 1).join('');
+}
+
+function proseOf(text: string): string {
+  return text.replace(FENCED_BLOCK_PATTERN, '').replace(INLINE_CODE_PATTERN, '');
+}
 
 function slugOf(heading: string): string {
   return heading.toLowerCase().replace(SLUG_DISALLOWED_PATTERN, '').replace(SPACE_PATTERN, '-');
@@ -60,7 +71,7 @@ function headingSlugs(path: string): string[] {
 }
 
 function isBroken({ document, target }: { document: string; target: string }): boolean {
-  const path = target.split(ANCHOR_SEPARATOR, 1).join('');
+  const path = pathOf(target);
   const anchor = target.slice(path.length + ANCHOR_SEPARATOR.length);
   const targetPath = posix.join(posix.dirname(document), path);
   if (!existsSync(repositoryPath(targetPath))) return true;
@@ -70,23 +81,20 @@ function isBroken({ document, target }: { document: string; target: string }): b
 }
 
 function brokenTargets({ document, text }: { document: string; text: string }): string[] {
-  const prose = text.replace(FENCED_BLOCK_PATTERN, '').replace(INLINE_CODE_PATTERN, '');
-  return capturedNames({ text: prose, pattern: LINK_PATTERN })
+  return capturedNames({ text: proseOf(text), pattern: LINK_PATTERN })
     .filter((target) => !EXTERNAL_LINK_PATTERN.test(target))
     .filter((target) => isBroken({ document, target }));
 }
 
 function isFileLink(target: string): boolean {
-  const path = target.split(ANCHOR_SEPARATOR, 1).join('');
-  return posix.extname(path) !== '';
+  return posix.extname(pathOf(target)) !== '';
 }
 
 function purposeViolations(text: string): string[] {
   const withoutFences = text.replace(FENCED_BLOCK_PATTERN, '');
-  const prose = withoutFences.replace(INLINE_CODE_PATTERN, '');
-  const fencedBlocks = [...text.matchAll(FENCED_BLOCK_PATTERN)].map(() => FENCED_BLOCK_VIOLATION);
-  const codeSpans = [...withoutFences.matchAll(INLINE_CODE_PATTERN)].map(() => CODE_SPAN_VIOLATION);
-  const fileLinks = capturedNames({ text: prose, pattern: LINK_PATTERN })
+  const fencedBlocks = [...text.matchAll(FENCED_BLOCK_PATTERN)].map(() => PurposeViolation.FencedBlock);
+  const codeSpans = [...withoutFences.matchAll(INLINE_CODE_PATTERN)].map(() => PurposeViolation.CodeSpan);
+  const fileLinks = capturedNames({ text: proseOf(text), pattern: LINK_PATTERN })
     .filter((target) => !EXTERNAL_LINK_PATTERN.test(target))
     .filter(isFileLink);
   return [...fencedBlocks, ...codeSpans, ...fileLinks];
@@ -121,7 +129,7 @@ describe('delivery documents', () => {
 
   test('a code span, a fenced block and a link to a file are reported; a link to a folder and plain prose are not', () => {
     const text = 'Run `pnpm test`.\n```\ncode\n```\n[page](../docs/agents/hermes.mdx#install) [the core](../core) plain prose';
-    expect(purposeViolations(text)).toEqual([FENCED_BLOCK_VIOLATION, CODE_SPAN_VIOLATION, '../docs/agents/hermes.mdx#install']);
+    expect(purposeViolations(text)).toEqual([PurposeViolation.FencedBlock, PurposeViolation.CodeSpan, '../docs/agents/hermes.mdx#install']);
     expect(purposeViolations('[the core](../core) [site](https://example.com/a.html) plain prose')).toEqual([]);
   });
 
