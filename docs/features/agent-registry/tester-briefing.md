@@ -148,3 +148,42 @@ Case counts: the moved tests are the old `session-lookup`, `wake-commands` and `
 - `session-lookup.ts` still holds the `.claude` and `.codex` default home folders, and `wake-runner.ts` reads `CODEX_HOME`: the contract's `SessionLookupInput` and `WakeIsolationInput` name both agents (L1), so L4's leak check will list them.
 - `connectCommand` left `libs/core` (cycle), which touches `libs/core/src/install/prompts/connector-commands.ts` and the two `install-copy.ts` files, outside the L5a row.
 - `tools/repository-shape/src/agent-registry.test.ts` G2c now asserts the fixture member is contained, since real connector agents exist.
+
+## L5b: plugins and hosted artifacts
+
+### What changed
+
+- `supported/{hermes,openclaw}/plugin.ts` export the full `plugin` (package folder, registry, version, install command, hosted artifacts, workflow, build requirements, version pins, end-to-end module). `hermes/wheel.ts` (moved from `libs/types/src/hermes-wheel.ts`) holds the version, the two hashes and the filename helpers.
+- `libs/agents/src/checks/plugins.ts` (`pluginViolationsOf`): claim, version pins, `/pkg/` path, 64-hex hash, release file hash, install command embeds the flagged hash, the embedded file holds the other artifacts' hashes, allowlist equals the hosted filenames.
+- `routes/package.ts` builds `SERVED_PACKAGES` from `AGENT_PLUGINS`; `deploy-preflight.ts`, `deploy.ts` and `docs-preflight.ts` take `plugins: AgentPlugin[]` in place of the version and hash fields. Refusal text is unchanged, with the release folder read from the artifact.
+- `scripts/plugin-wheel/build.ts [id]` iterates the `SelfHostedWheel` plugins; `pnpm plugin-wheel:build <id>` replaces `hermes-wheel:build`. The Docker fixtures moved to `apps/{hermes,openclaw}-plugin/e2e`; `channel-plugins.e2e.test.ts` imports each `endToEndModule` (`buildPluginImage`, `startPluginClient`).
+- `verify.yml` carries two generated regions (`# NB ADR 0033` markers); `render-workflow.ts` fills them.
+- The runbooks name no agent; `runbooks.test.ts` asserts it.
+
+### How to run
+
+`pnpm --filter @zapbip/agents test:unit`, `pnpm --filter @zapbip/api test:unit`, `pnpm --filter @zapbip/api test:integration`, `pnpm --filter @zapbip/repository-shape test:unit`, the hermes-wheel and deploy-dry-run e2e, and `pnpm test:e2e:clients` with Docker.
+
+### Red then green
+
+| Test | Red commit | Printed | Green commit |
+|---|---|---|---|
+| `checks/plugins.test.ts` real registry, `package-allowlist.test.ts`, the new `deploy-preflight.test.ts` case | 0e095566 | `Error: hermes hosted artifacts are not implemented` | 2fa6571b |
+| `checks/plugins.test.ts` synthetic cases (13) | 0e095566 | `Error: pluginViolationsOf is not implemented` | 2fa6571b |
+
+Pins, green on landing: `render-workflow.test.ts`, the new runbook "names no agent" cases, the `plugin-versions.test.ts` registry cases.
+
+### Hypotheses for the tester
+
+- H1. `pnpm plugin-wheel:build hermes` leaves `apps/hermes-plugin/release` byte-identical and prints the committed hashes (the developer ran it).
+- H2. `pnpm agents:check` reports 0 stale and no violation for the workflow.
+- H3. The `/pkg/` route answers the same bytes, headers and 404s as before (`package-route.test.ts` unchanged apart from imports).
+- H4. The deploy preflight refusals read the same as before for a missing or mismatched hosted file.
+- H5. Adding the fixture plugin agent adds only its folder, `generated/plugins.ts`, the workflow and the docs files (G2b).
+
+### Gaps and deviations
+
+- The Docker clients e2e and the pip e2e were not run by the developer; `pnpm verify all` covers the pip e2e.
+- `test:e2e:clients` takes no agent id; `plugin-wheel:build` prints the hash lines and does not rewrite `wheel.ts`.
+- The workflow gains an `openclaw-plugin` unit row.
+- `global-setup.ts` and `agent-registry.test.ts` (G2b) were edited outside the L5b row because the deleted constants and the plugin registry reach them.
