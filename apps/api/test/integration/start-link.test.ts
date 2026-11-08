@@ -12,6 +12,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import production from '../../src/index';
 import { START_LINK_COPY } from '../../src/routes/start-link-copy';
+import { START_LINK_STYLE_HASH } from '../../src/routes/start-link-style';
 import { applyDirectoryMigration } from '../support/seed';
 import { captureLogLines } from '../support/capture-log-lines';
 import { changeStartNumberState, seedStartNumber } from '../support/start-link-numbers';
@@ -142,6 +143,13 @@ describe('start link selection', () => {
   });
 });
 
+const STYLE_BLOCK_PATTERN = /<style>([\s\S]*?)<\/style>/;
+
+async function sha256Base64(input: { text: string }): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input.text));
+  return btoa(String.fromCharCode(...new Uint8Array(digest)));
+}
+
 describe('start link without a usable number', () => {
   async function expectUnavailablePage(input: { response: Response; first: OwnerLocale }): Promise<void> {
     const { response, first } = input;
@@ -151,8 +159,10 @@ describe('start link without a usable number', () => {
     expect(response.headers.get('location')).toBeNull();
     expect(response.headers.get('retry-after')).toBe(RETRY_AFTER_SECONDS);
     expect(response.headers.get('content-type')).toMatch(/^text\/html/);
-    expect(response.headers.get('content-security-policy')).toBe("default-src 'none'");
+    expect(response.headers.get('content-security-policy')).toBe(`default-src 'none'; style-src '${START_LINK_STYLE_HASH}'`);
     expect(response.headers.get('cache-control')).toBe('no-store');
+    const servedStyle = body.match(STYLE_BLOCK_PATTERN)?.[1] as string;
+    expect(`sha256-${await sha256Base64({ text: servedStyle })}`).toBe(START_LINK_STYLE_HASH);
     expect(body).toContain(START_LINK_COPY[first].unavailableBody);
     expect(body).toContain(START_LINK_COPY[second].unavailableBody);
     expect(body.indexOf(START_LINK_COPY[first].unavailableBody)).toBeLessThan(body.indexOf(START_LINK_COPY[second].unavailableBody));
