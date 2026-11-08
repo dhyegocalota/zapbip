@@ -7,3 +7,5 @@ export type InstallSectionInput = {
 };
 
 export type InstallSection = (input: InstallSectionInput) => string;
+
+export type InstallPageSection = { productName: string; render: InstallSection };

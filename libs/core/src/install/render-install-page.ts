@@ -3,12 +3,14 @@ import { AGENT_RULES } from '../agent-rules';
 import { INSTALL_PAGE_COPY } from './install-page-copy';
 import { INSTALL_PRODUCTS } from './install-products';
 import { INSTALL_SECTIONS } from './prompts/index';
+import type { InstallPageSection } from './prompts/install-section';
 
 export type InstallPageInput = {
   agent: string;
   connectionLink: string;
   locale: OwnerLocale;
   standbyAgent: string | null;
+  sections?: InstallPageSection[];
 };
 
 const PRODUCT_NAMES = Object.values(InstallClient)

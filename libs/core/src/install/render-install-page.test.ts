@@ -68,4 +68,15 @@ describe('renderInstallPage', () => {
     const page = renderInstallPage(pageInput({ locale: OwnerLocale.EnglishUs, standbyAgent: 'Ana Bot' }));
     expect(page).toContain('set_wake({mode: "standby", standby_agent: "Ana Bot"})');
   });
+
+  test('renders only the sections it is given', () => {
+    const sections = [
+      { productName: 'First Product', render: () => '## First Product\n\n1. first' },
+      { productName: 'Second Product', render: () => '## Second Product\n\n1. second' },
+    ];
+    const page = renderInstallPage({ ...pageInput({ locale: OwnerLocale.EnglishUs }), sections });
+    expect(page).toContain('Find which product you run in: First Product, Second Product.');
+    expect(page.indexOf('## First Product')).toBeLessThan(page.indexOf('## Second Product'));
+    expect(page).not.toContain('## Claude Code');
+  });
 });
