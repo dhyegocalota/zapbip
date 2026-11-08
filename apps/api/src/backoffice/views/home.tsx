@@ -4,6 +4,7 @@ import { NoticeVariant } from '../backoffice-notice';
 import { BackofficePath } from '../backoffice-paths';
 import { Notice } from '../components/notice';
 import { Layout } from '../layout';
+import type { HomeOverview } from '../home-sparklines';
 import type { PageContext } from '../page-context';
 
 export type NumberStateCounts = Record<WhatsAppNumberState, number>;
@@ -15,8 +16,9 @@ const STATE_LABELS: Record<WhatsAppNumberState, BackofficeCopyKey> = {
   [WhatsAppNumberState.Disabled]: BackofficeCopyKey.StateDisabled,
 };
 
-export function HomePage(props: { page: PageContext; counts: NumberStateCounts }) {
-  const { page, counts } = props;
+export function HomePage(props: { page: PageContext; overview: HomeOverview }) {
+  const { page, overview } = props;
+  const { counts } = overview;
   const { locale } = page;
   const translate = (key: BackofficeCopyKey): string => renderBackofficeCopy({ key, locale });
   const hasNumbers = Object.values(counts).some((count) => count > 0);

@@ -12,7 +12,7 @@ import { ErrorPage } from '../../src/backoffice/views/error-page';
 import { HomePage } from '../../src/backoffice/views/home';
 import { SignInPage } from '../../src/backoffice/views/sign-in';
 import { DeployEnvironment } from '../../src/contract/deploy-environment';
-import { DATA_REPORT, EMPTY_REPORT, METRICS_FILTER, NOW, numberEntry } from './backoffice-page-fixtures';
+import { DATA_REPORT, EMPTY_REPORT, homeOverview, METRICS_FILTER, NOW, numberEntry } from './backoffice-page-fixtures';
 
 const BACKOFFICE_ROOT = join(import.meta.dirname, '../../src/backoffice');
 const STYLESHEET = readFileSync(join(BACKOFFICE_ROOT, 'assets/backoffice.css'), 'utf8');
@@ -62,8 +62,8 @@ function detailPage(input: { state: WhatsAppNumberState }): string {
 
 const PAGES: Record<string, string> = {
   signIn: String(SignInPage({ ...PAGE, notice: BackofficeNotice.SignInFailed })),
-  home: String(HomePage({ page: PAGE, counts: { pending: 1, active: 2, closed: 0, disabled: 0 } })),
-  homeEmpty: String(HomePage({ page: PAGE, counts: { pending: 0, active: 0, closed: 0, disabled: 0 } })),
+  home: String(HomePage({ page: PAGE, overview: homeOverview({ counts: { pending: 1, active: 2, closed: 0, disabled: 0 } }) })),
+  homeEmpty: String(HomePage({ page: PAGE, overview: homeOverview({ counts: { pending: 0, active: 0, closed: 0, disabled: 0 } }) })),
   audit: String(
     AuditPage({
       page: PAGE,

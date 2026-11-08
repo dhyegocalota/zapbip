@@ -1,8 +1,11 @@
 import { AccountState, OwnerLocale, WhatsAppNumberState } from '@zapbip/types';
+import { SPARKLINE_DAYS } from '../../src/backoffice/backoffice-constants';
 import { BackofficeNotice } from '../../src/backoffice/backoffice-notice';
+import { type HomeOverview, SparklineMetric } from '../../src/backoffice/home-sparklines';
 import { MetricsPeriod, type MetricsFilter } from '../../src/backoffice/metrics/metrics-filter';
 import type { MetricsReport } from '../../src/backoffice/metrics/metrics-report';
 import type { PageContext } from '../../src/backoffice/page-context';
+import type { NumberStateCounts } from '../../src/backoffice/views/home';
 import type { NumberListEntry } from '../../src/numbers/number-admin';
 import { ActivityMetric } from '../../src/contract/activity-metric';
 import { DeployEnvironment } from '../../src/contract/deploy-environment';
@@ -81,3 +84,13 @@ export const DATA_REPORT: MetricsReport = {
   blockedPhones: 1,
   restricted: [{ numberId: 'num_one', label: 'Brazil', restrictedAt: NOW }],
 };
+
+const RISING_SERIES = Array.from({ length: SPARKLINE_DAYS }, (_, index) => index);
+const SILENT_SERIES = new Array<number>(SPARKLINE_DAYS).fill(0);
+
+export function homeOverview(input: { counts: NumberStateCounts }): HomeOverview {
+  return {
+    counts: input.counts,
+    series: { [SparklineMetric.Numbers]: RISING_SERIES, [SparklineMetric.Messages]: RISING_SERIES, [SparklineMetric.Audit]: SILENT_SERIES },
+  };
+}

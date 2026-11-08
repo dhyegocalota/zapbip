@@ -7,7 +7,9 @@ import { NumberDetailPage } from '../../src/backoffice/numbers/views/number-deta
 import { NumbersListPage } from '../../src/backoffice/numbers/views/numbers-list';
 import { AuditPage } from '../../src/backoffice/views/audit';
 import { ErrorPage } from '../../src/backoffice/views/error-page';
-import { EMPTY_REPORT, METRICS_FILTER, NOW, numberEntry, PAGE } from './backoffice-page-fixtures';
+import { HomePage } from '../../src/backoffice/views/home';
+import { StateBadge } from '../../src/backoffice/numbers/components/state-badge';
+import { EMPTY_REPORT, homeOverview, METRICS_FILTER, NOW, numberEntry, PAGE } from './backoffice-page-fixtures';
 
 const PAGE_HEAD_WITH_ACTION_PATTERN = /<div class="page-head"><h1>[^<]+<\/h1><a [^>]*button-primary/;
 const PAGE_HEAD_ALONE_PATTERN = /<div class="page-head"><h1>[^<]+<\/h1><\/div>/;
@@ -15,6 +17,13 @@ const EMPTY_STATE_PATTERN = /class="[^"]*\bempty-state\b/g;
 const PRIMARY_BUTTON_PATTERN = /button-primary/g;
 const HEADING_PATTERN = /<h1[^>]*>(.*?)<\/h1>/;
 const TAG_PATTERN = /<[^>]+>/g;
+const SECTION_SPLIT_PATTERN = /(?=<section class="card)/;
+const SPARKLINE_PATTERN = /<svg class="sparkline"/g;
+const ARROW_LINK_PATTERN = /<a [^>]*button-arrow/g;
+const FIGURE_PATTERN = /<p class="tile-figure">(\d+)<span class="tile-unit">([^<]+)<\/span><\/p>/;
+const LIVE_DOT_BEFORE_WORD_PATTERN = /<span class="state-badge state-active"><span class="live-dot" aria-hidden="true"><\/span>/;
+const COUNTS = { pending: 1, active: 2, closed: 3, disabled: 4 };
+const NO_COUNTS = { pending: 0, active: 0, closed: 0, disabled: 0 };
 const AUDIT_ROW = {
   at: 0,
   action: BackofficeAuditAction.SignOut,
@@ -103,5 +112,53 @@ describe('empty state', () => {
   it('renders none when the lists have rows', () => {
     expect(String(NumbersListPage({ page: PAGE, entries: [numberEntry({})] }))).not.toContain('empty-state');
     expect(String(AuditPage({ page: PAGE, rows: [AUDIT_ROW] }))).not.toContain('empty-state');
+  });
+});
+
+function homeSections(input: { counts: typeof COUNTS }): string[] {
+  return String(HomePage({ page: PAGE, overview: homeOverview({ counts: input.counts }) }))
+    .split(SECTION_SPLIT_PATTERN)
+    .filter((part) => part.startsWith('<section class="card'));
+}
+
+describe('home cards', () => {
+  it('makes the numbers card the only hero card', () => {
+    const [numbers, metrics, audit] = homeSections({ counts: COUNTS });
+    expect(numbers).toContain('class="card hero-card"');
+    expect(metrics).not.toContain('hero-card');
+    expect(audit).not.toContain('hero-card');
+  });
+
+  it('shows the sum of the state counts as the figure with its unit', () => {
+    const [numbers] = homeSections({ counts: COUNTS });
+    const figure = numbers!.match(FIGURE_PATTERN);
+    expect(figure?.[1]).toBe('10');
+    expect(figure?.[2]).toBe('numbers');
+  });
+
+  it('replaces the figure with the warning and the register action when there are no numbers', () => {
+    const [numbers] = homeSections({ counts: NO_COUNTS });
+    expect(numbers).not.toContain('tile-figure');
+    expect(numbers).toContain('notice-warning');
+  });
+
+  it.each([COUNTS, NO_COUNTS])('draws one sparkline in each of the three cards', (counts) => {
+    const sections = homeSections({ counts });
+    expect(sections).toHaveLength(3);
+    sections.forEach((section) => expect(section.match(SPARKLINE_PATTERN)).toHaveLength(1));
+  });
+
+  it('gives the three links an arrow', () => {
+    const html = homeSections({ counts: COUNTS }).join('');
+    expect(html.match(ARROW_LINK_PATTERN)).toHaveLength(3);
+  });
+});
+
+describe('state badge live dot', () => {
+  it('puts a live dot before the word of an active number only', () => {
+    expect(String(StateBadge({ locale: PAGE.locale, state: WhatsAppNumberState.Active }))).toMatch(LIVE_DOT_BEFORE_WORD_PATTERN);
+    [WhatsAppNumberState.Pending, WhatsAppNumberState.Closed, WhatsAppNumberState.Disabled].forEach((state) =>
+      expect(String(StateBadge({ locale: PAGE.locale, state }))).not.toContain('live-dot'),
+    );
   });
 });

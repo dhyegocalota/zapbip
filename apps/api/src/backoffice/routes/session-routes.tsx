@@ -16,8 +16,8 @@ const NOTICE_QUERY = 'notice';
 export const sessionRoutes = new Hono<BackofficeEnv>();
 
 sessionRoutes.get(BackofficePath.Home, async (context) => {
-  const { counts } = await readHomeOverview({ database: context.env.CONNECTIONS, now: Date.now() });
-  return context.html(<HomePage page={await signedInPageContext({ context })} counts={counts} />);
+  const overview = await readHomeOverview({ database: context.env.CONNECTIONS, now: Date.now() });
+  return context.html(<HomePage page={await signedInPageContext({ context })} overview={overview} />);
 });
 
 sessionRoutes.post(BackofficePath.SignOut, async (context) => {
