@@ -80,7 +80,9 @@ export function MetricsPage(props: { page: PageContext; filter: MetricsFilter; r
       currentPath={BackofficePath.Metrics}
       notice={page.notice}
     >
-      <h1>{translate(BackofficeCopyKey.MetricsTitle)}</h1>
+      <div class="page-head">
+        <h1>{translate(BackofficeCopyKey.MetricsTitle)}</h1>
+      </div>
       <FilterForm locale={locale} filter={filter} numbers={report.numbers} />
       <div class="figure-grid">
         <FigureNumber

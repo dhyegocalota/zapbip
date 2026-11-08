@@ -48,10 +48,14 @@ export function AuditPage(props: { page: PageContext; rows: AuditListRow[] }) {
       currentPath={BackofficePath.Audit}
       notice={page.notice}
     >
-      <h1>{translate(BackofficeCopyKey.AuditTitle)}</h1>
+      <div class="page-head">
+        <h1>{translate(BackofficeCopyKey.AuditTitle)}</h1>
+      </div>
       <p>{translate(BackofficeCopyKey.AuditIntro)}</p>
       {rows.length === 0 ? (
-        <p>{translate(BackofficeCopyKey.AuditEmpty)}</p>
+        <section class="card empty-state">
+          <p>{translate(BackofficeCopyKey.AuditEmpty)}</p>
+        </section>
       ) : (
         <table class="data-table">
           <caption class="visually-hidden">{translate(BackofficeCopyKey.AuditTitle)}</caption>

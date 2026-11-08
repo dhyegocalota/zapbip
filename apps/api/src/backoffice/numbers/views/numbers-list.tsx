@@ -14,6 +14,11 @@ export function NumbersListPage(props: { page: PageContext; entries: NumberListE
   const { page, entries } = props;
   const { locale } = page;
   const translate = (key: BackofficeCopyKey, values?: Record<string, string>): string => renderBackofficeCopy({ key, locale, values });
+  const registerLink = (
+    <a href={`${BackofficePath.Numbers}/${NumberSegment.New}`} class="button button-primary">
+      {translate(BackofficeCopyKey.NumbersRegister)}
+    </a>
+  );
   const hasPending = entries.some((entry) => entry.state === WhatsAppNumberState.Pending);
   return (
     <Layout
@@ -26,14 +31,15 @@ export function NumbersListPage(props: { page: PageContext; entries: NumberListE
       currentPath={BackofficePath.Numbers}
       notice={page.notice}
     >
-      <h1>{translate(BackofficeCopyKey.NumbersTitle)}</h1>
-      <a href={`${BackofficePath.Numbers}/${NumberSegment.New}`} class="button button-primary">
-        {translate(BackofficeCopyKey.NumbersRegister)}
-      </a>
+      <div class="page-head">
+        <h1>{translate(BackofficeCopyKey.NumbersTitle)}</h1>
+        {entries.length === 0 ? null : registerLink}
+      </div>
       {entries.length === 0 ? (
-        <section class="card" aria-labelledby="numbers-empty-title">
+        <section class="card empty-state" aria-labelledby="numbers-empty-title">
           <h2 id="numbers-empty-title">{translate(BackofficeCopyKey.NumbersEmptyTitle)}</h2>
           <p>{translate(BackofficeCopyKey.NumbersEmptyBody)}</p>
+          {registerLink}
         </section>
       ) : (
         <table class="data-table">
