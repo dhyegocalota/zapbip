@@ -51,7 +51,9 @@ describe('the generator command line', () => {
   test('agents:mentions works from the id alone once the folder is gone and prints a message, not a stack', () => {
     const run = spawnSync('node', ['--import', 'tsx', CLI_PATH, 'mentions', 'ghost'], { cwd: repositoryPath('.'), encoding: 'utf8' });
     expect(run.status).toBe(0);
-    expect(run.stderr).toContain('ghost has no folder');
+    expect(run.stderr).toContain(
+      'ghost has no folder; listing files that name its id (run agents:mentions before removing the folder to include its display names)',
+    );
     expect(run.stderr).not.toContain('node:internal');
   });
 });

@@ -41,7 +41,7 @@ A supported agent is described today in four packages. Its enum member is in `li
 - `libs/types` loses `InstallClient`, `DocsOnlyClient`, `ConnectorClient`, `ChannelPluginProduct` and the per-agent constants. Agent ids exist only in `@zapbip/agents`.
 - A merge conflict on a generated path is resolved by rerunning the generator, never by hand.
 - Removing a connector runtime reaches an owner only when they upgrade `zapbip`; a pinned old version keeps it.
-- Brand names in illustrative prose are reviewed with `pnpm agents:mentions <id>`, not gated.
+- Brand names in illustrative prose are reviewed with `pnpm agents:mentions <id>`, not gated. Removal order: run it first, while the agent folder exists, then delete the folder (and `apps/<id>-plugin/`); afterwards it matches the id only.
 - The generated `.ts` files carry one `// NB ADR 0033:` line pointing here.
 
 ## Evidence

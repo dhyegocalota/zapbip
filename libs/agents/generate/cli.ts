@@ -119,7 +119,10 @@ function namesOf(input: { id: string; definition: AgentDefinition | null }): str
 async function mentions(input: { argv: string[] }): Promise<number> {
   const id = agentIdOf({ mode: CliMode.Mentions, argv: input.argv });
   const agent = discoverAgents({ roots: [SUPPORTED_FOLDER] }).find((candidate) => candidate.id === id);
-  if (!agent) console.error(`${id} has no folder; listing the files that name its id`);
+  if (!agent)
+    console.error(
+      `${id} has no folder; listing files that name its id (run agents:mentions before removing the folder to include its display names)`,
+    );
   const definition = agent ? (await loadAgent({ agent })).definition : null;
   if (agent && !definition) throw new Error(`${id} has no definition`);
   const plan = await planFromDisk();
