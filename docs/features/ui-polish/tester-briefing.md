@@ -38,13 +38,13 @@ The backoffice walk fixtures start from `apps/api/e2e/backoffice/support/`. The 
 
 | Test | Red before the change because | Green after because |
 |------|--------------------------------|---------------------|
-| `apps/api/test/unit/backoffice-contrast.test.ts` | `<contrast is not implemented>` (hash `<…>`) | the helper parses hex and `rgb()` with alpha |
-| `apps/api/test/unit/backoffice-design-rules.test.ts` (pairs, dark counterparts, motion guard, forced colors) | `<first failure text>` | tokens, guard and forced-colors block exist |
-| `apps/api/test/unit/backoffice-layout.test.ts`, `backoffice-hooks.test.ts`, `backoffice-copy.test.ts` | `<…>` | the hooks and keys exist |
-| `apps/api/test/integration/backoffice-home-sparklines.test.ts` | `<…>` | one batch of four read-only selects |
-| `apps/api/test/unit/backoffice-sparkline.test.ts` | `<…>` | `Sparkline` exists |
-| `apps/api/test/integration/backoffice-headers-ui-polish.test.ts` | pin, green on landing (hash `<…>`) | unchanged |
-| `apps/api/e2e/backoffice/ui-polish.spec.ts` | `<…>` | no sideways scroll, no overlap, motion and forced colors honoured |
+| `tools/repository-shape/src/contrast.test.ts` (the helper lives in repository-shape by the coordinator's decision) | `contrast is not implemented`, 8 failed (7aeaad98) | the helper parses hex and `rgb()` with alpha (d9b029e7) |
+| `tools/repository-shape/src/backoffice-contrast.test.ts`, `backoffice-tokens.test.ts`; `apps/api/test/unit/backoffice-design-rules.test.ts` (motion guard, hero border, forced colors, class coverage) | `the stylesheet does not define --color-sunken` (a6afaa49); `expected … to match /@media (prefers-reduced-motion: reduce)…` (b5483a27); the class-coverage list starting `shell-signed-out, header-end, notice-glyph` (bd46d10a) | tokens e8339391, guard and hero 3b18e65c, component styles bae4b703 |
+| `apps/api/test/unit/backoffice-layout.test.ts`, `backoffice-hooks.test.ts`, `backoffice-copy.test.ts`, `backoffice-metrics-polish.test.ts` | `expected undefined to be type of 'string'` for the new keys, `to contain '<body class="shell-signed-out">'` (c9d2a10e); `to contain '<a href="/numbers" class="crumb">'` (83d7c347); `expected undefined to be '10'`, sparkline `Target cannot be null` (4295f347); `expected '' to match /freshness-(live\|hourly)/` (47339c14); hero card on the detail summary (a49ea4e8) | eea97e82, d5895291, 17f8a1f9, 971bf8e1, 6f003ab3 |
+| `apps/api/test/integration/backoffice-home-sparklines.test.ts` | `readHomeOverview is not implemented`, `expected [] to have a length of 1 but got +0` (067fce99) | one batch of four read-only selects (67411132) |
+| `apps/api/test/unit/backoffice-sparkline.test.ts` | `Sparkline is not implemented`, 12 failed (4568aa0b) | `Sparkline` exists (96c6a015) |
+| `apps/api/test/integration/backoffice-headers-ui-polish.test.ts` | pin, green on landing (74e30b67) | unchanged |
+| `apps/api/e2e/backoffice/ui-polish.spec.ts` | pin, green on landing (98236193): the CSS landed in step 7, before the spec, per the plan order | no sideways scroll, no overlap, motion and forced colors honoured |
 | `tools/repository-shape/src/docs-visual.test.ts` | `<…>` | logos, tokens, chat, `zapbip.css`, Hero parity |
 | `apps/docs/e2e/ui-polish.spec.ts` | `<…>` | custom CSS injected, hero laid out |
 
@@ -67,4 +67,5 @@ Every "it works" is a hypothesis the tester tries to break.
 
 - Real iOS Safari, Android and Windows high-contrast are not run; Chromium emulation only.
 - Whether the design is "hyper sexy" has no machine check; the before and after pairs are for the owner.
-- `<anything the developers found missing while building>`
+- Lane A deviations: the contrast helper and every contrast test live in `tools/repository-shape` (coordinator decision); the metrics hero card is the first card, the accounts section, because the page has no card named period summary; an empty numbers list moves the register button from the page head into the empty state so there is one primary button; header contrast over a dark row is the shape test floor over `#000000`, and the e2e asserts the sticky header, not sampled pixels; `HomePage` now takes the `overview`; `applyDirectoryMigration` of the test support now includes the activity migration.
+- Lane A has not measured the live look in a browser: the screenshots and the contrast on the real pixels are the tester's.
