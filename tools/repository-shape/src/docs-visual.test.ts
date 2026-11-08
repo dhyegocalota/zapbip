@@ -28,6 +28,16 @@ const OVERVIEW_PAGES: Record<DocsLanguage, string> = {
   [DocsLanguage.English]: 'index',
   [DocsLanguage.PortugueseBrazil]: `${PAGE_LANGUAGE_FOLDER}/index`,
 };
+const CHAT_SNIPPET_FILE = `${DOCS_ROOT}/snippets/chat.jsx`;
+const CHAT_COLOUR_PATTERN = /^ {2}const (\w+) = '(#[0-9A-Fa-f]{6})';$/gm;
+const TEAL_TEXT_PATTERN = /\bcolor: teal\b/;
+const CHAT_PROPS_PATTERN = /export const Chat = \(\{[^}]*\bframe\b[^}]*\}\)/;
+const TYPING_MESSAGE_PATTERN = /message\.typing/;
+const TYPING_CLASS = 'className="zapbip-typing"';
+const TYPING_HIDDEN_PATTERN =
+  /<div\b[^>]*aria-hidden="true"[^>]*className="zapbip-typing"|<div\b[^>]*className="zapbip-typing"[^>]*aria-hidden="true"/;
+const SENT_BUBBLE = '#D9FDD3';
+const NOTICE_BUBBLE = '#FFEECD';
 const BASELINE_REFERENCE = 'origin/main';
 const LIGHT_PAGE = '#F6F8F5';
 const DARK_PAGE = '#07120F';
@@ -59,6 +69,17 @@ function baselineConfig(): DocsVisualConfig {
 
 function requiredColour({ colour, name }: { colour?: string; name: string }): string {
   if (!colour) throw new Error(`docs.json has no ${name}`);
+  return colour;
+}
+
+function chatColoursOf(): Record<string, string> {
+  const source = readRepositoryFile(CHAT_SNIPPET_FILE);
+  return Object.fromEntries([...source.matchAll(CHAT_COLOUR_PATTERN)].map((match) => [match[1], match[2]]));
+}
+
+function chatColourOf({ name }: { name: string }): string {
+  const colour = chatColoursOf()[name];
+  if (!colour) throw new Error(`chat.jsx has no ${name} colour`);
   return colour;
 }
 
@@ -208,5 +229,31 @@ describe('docs visual: theme', () => {
     const baseline = baselineConfig();
     expect(config.favicon).toBe(baseline.favicon);
     expect(JSON.stringify(config.navigation)).toBe(JSON.stringify(baseline.navigation));
+  });
+});
+
+describe('docs visual: chat mockup', () => {
+  test('no text is drawn in the teal that fails AA on white', () => {
+    expect(readRepositoryFile(CHAT_SNIPPET_FILE)).not.toMatch(TEAL_TEXT_PATTERN);
+  });
+
+  test('white text on the header passes AA', () => {
+    expect(contrastOf({ foreground: WHITE, background: chatColourOf({ name: 'header' }) })).toBeGreaterThanOrEqual(BODY_TEXT_CONTRAST);
+  });
+
+  test.each([WHITE, SENT_BUBBLE, NOTICE_BUBBLE])('the sender ink passes AA on %s', (background) => {
+    expect(contrastOf({ foreground: chatColourOf({ name: 'senderInk' }), background })).toBeGreaterThanOrEqual(BODY_TEXT_CONTRAST);
+  });
+
+  test.each([WHITE, SENT_BUBBLE])('the muted ink passes AA on %s', (background) => {
+    expect(contrastOf({ foreground: chatColourOf({ name: 'mutedInk' }), background })).toBeGreaterThanOrEqual(BODY_TEXT_CONTRAST);
+  });
+
+  test('the component takes a frame and renders a typing bubble hidden from assistive technology', () => {
+    const source = readRepositoryFile(CHAT_SNIPPET_FILE);
+    expect(source).toMatch(CHAT_PROPS_PATTERN);
+    expect(source).toMatch(TYPING_MESSAGE_PATTERN);
+    expect(source).toContain(TYPING_CLASS);
+    expect(source).toMatch(TYPING_HIDDEN_PATTERN);
   });
 });
