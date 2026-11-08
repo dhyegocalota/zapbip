@@ -1,8 +1,10 @@
 import { spawnSync } from 'node:child_process';
 import { describe, expect, test } from 'vitest';
 import { repositoryPath } from './repository';
+import { REAL_AGENT_IDS } from './test-agents';
 
 const CLI_PATH = repositoryPath('libs/agents/generate/cli.ts');
+const [EXISTING_ID] = REAL_AGENT_IDS as [string];
 const SUMMARY_PATTERN = /^\d+ stale, \d+ deletions, \d+ violations$/m;
 
 function checkOutputFrom(input: { workingDirectory: string }): string {
@@ -25,9 +27,9 @@ describe('the generator command line', () => {
   });
 
   test('agents:new refuses an existing agent with a message and a failure code', () => {
-    const run = spawnSync('node', ['--import', 'tsx', CLI_PATH, 'new', 'codex'], { cwd: repositoryPath('.'), encoding: 'utf8' });
+    const run = spawnSync('node', ['--import', 'tsx', CLI_PATH, 'new', EXISTING_ID], { cwd: repositoryPath('.'), encoding: 'utf8' });
     expect(run.status).not.toBe(0);
-    expect(run.stderr).toContain('codex already exists');
+    expect(run.stderr).toContain(`${EXISTING_ID} already exists`);
   });
 
   test('agents:new refuses a call without an id', () => {
@@ -37,12 +39,14 @@ describe('the generator command line', () => {
   });
 
   test('agents:mentions lists the files that name the agent, outside its folder and the generated set', () => {
-    const run = spawnSync('node', ['--import', 'tsx', CLI_PATH, 'mentions', 'codex'], { cwd: repositoryPath('.'), encoding: 'utf8' });
+    const run = spawnSync('node', ['--import', 'tsx', CLI_PATH, 'mentions', EXISTING_ID], { cwd: repositoryPath('.'), encoding: 'utf8' });
     expect(run.status).toBe(0);
     const lines = run.stdout.split('\n').filter(Boolean);
     expect(lines.length).toBeGreaterThan(0);
     lines.forEach((line) => expect(line).toMatch(/^\S+:\d+$/));
-    lines.forEach((line) => expect(line).not.toMatch(/^(libs\/agents\/supported\/codex\/|libs\/agents\/src\/generated\/|docs\/)/));
+    lines.forEach((line) =>
+      expect(line).not.toMatch(new RegExp(`^(libs/agents/supported/${EXISTING_ID}/|libs/agents/src/generated/|docs/)`)),
+    );
   });
 
   test('agents:mentions refuses an agent that has no folder', () => {

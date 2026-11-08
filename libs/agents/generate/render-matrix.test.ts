@@ -2,9 +2,8 @@ import { DocsLanguage, WakeRung } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { AgentFacet, type AgentDefinition } from '../src/contract';
 import { WAKE_RUNG_LABELS } from '../src/docs';
-import { definition as fixtureDefinition } from '../testing/fixture-agent/definition';
 import { renderMatrix } from './render-matrix';
-import { realAgents, resolvedAgentOf } from './test-agents';
+import { SAMPLE_IDS_IN_ORDER, resolvedAgentOf, sampleAgents, sampleDefinitionOf } from './test-agents';
 
 const SEPARATOR_ROW_PATTERN = /^\|[\s-|]+\|$/;
 const HEADER: Record<DocsLanguage, string[]> = {
@@ -38,20 +37,11 @@ function tableOf(input: { table: string }): string[][] {
     .map((line) => cellsOf({ line }));
 }
 
-function definitionOf(input: { name: string; rung: WakeRung; expectedDelaySeconds: number | null }): AgentDefinition {
-  const names = { [DocsLanguage.English]: input.name, [DocsLanguage.PortugueseBrazil]: input.name };
-  return {
-    ...fixtureDefinition,
-    docs: { ...fixtureDefinition.docs, matrixName: names, linkName: names },
-    listen: { ...fixtureDefinition.listen, rung: input.rung, expectedDelaySeconds: input.expectedDelaySeconds },
-  };
-}
-
 function agentsFor(input: { ids: string[] }) {
   const definitions: Record<string, AgentDefinition> = {
-    'alpha-agent': definitionOf({ name: 'Alpha Agent', rung: WakeRung.Local, expectedDelaySeconds: 7 }),
-    'beta-agent': definitionOf({ name: 'Beta Agent', rung: WakeRung.Local, expectedDelaySeconds: null }),
-    'gamma-agent': definitionOf({ name: 'Gamma Agent', rung: WakeRung.Scheduled, expectedDelaySeconds: 3600 }),
+    'alpha-agent': sampleDefinitionOf({ name: 'Alpha Agent', rung: WakeRung.Local, expectedDelaySeconds: 7 }),
+    'beta-agent': sampleDefinitionOf({ name: 'Beta Agent', rung: WakeRung.Local, expectedDelaySeconds: null }),
+    'gamma-agent': sampleDefinitionOf({ name: 'Gamma Agent', rung: WakeRung.Scheduled, expectedDelaySeconds: 3600 }),
   };
   return input.ids.map((id) =>
     resolvedAgentOf({
@@ -72,8 +62,8 @@ describe('renderMatrix', () => {
       expect(table).toEqual([HEADER[language], ...ROW_FOR_ONE_AGENT[language]]);
     });
 
-    test('takes the rung cell from the rung labels', async () => {
-      const agents = await realAgents();
+    test('takes the rung cell from the rung labels', () => {
+      const agents = sampleAgents();
       const rungCells = tableOf({ table: renderMatrix({ agents, language }) })
         .slice(1)
         .map((cells) => cells[1]);
@@ -81,11 +71,18 @@ describe('renderMatrix', () => {
       expect(rungCells.every((cell) => rungLabels.includes(cell as string))).toBe(true);
     });
 
-    test('lists the eleven agents in the matrix order', async () => {
-      const table = tableOf({ table: renderMatrix({ agents: await realAgents(), language }) });
-      expect(table).toHaveLength(12);
-      expect(table[1]?.[0]).toBe('Claude Code');
-      expect(table.at(-1)?.[3]).toContain('any-mcp-client');
+    test('lists the agents in the matrix order', () => {
+      const table = tableOf({ table: renderMatrix({ agents: sampleAgents(), language }) });
+      expect(table).toHaveLength(SAMPLE_IDS_IN_ORDER.length + 1);
+      expect(table.slice(1).map((cells) => cells[0])).toEqual([
+        'Alpha Local',
+        'Zeta Local',
+        'Beta Webhook',
+        'Gamma Scheduled',
+        'Delta Standby',
+        'Epsilon Inbox',
+      ]);
+      expect(table.at(-1)?.[3]).toContain('epsilon-inbox');
     });
   });
 });

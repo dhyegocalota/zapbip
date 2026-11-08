@@ -1,4 +1,3 @@
-import { AGENT_PLUGINS } from '@zapbip/agents/plugins';
 import { COMPANY_FACT_UNSET, NPM_REGISTRY_URL, OFFICIAL_NUMBER_UNSET, PRODUCTION_PUBLIC_ORIGIN } from '@zapbip/types';
 import type { CompanyFacts } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
@@ -27,16 +26,19 @@ import {
   NPM_PUBLISHER,
   NPM_PUBLISHER_VARIABLE,
   HOSTED_PLUGINS,
+  HOSTED_REQUIREMENTS_FILENAME,
+  HOSTED_WHEEL_FILENAME,
   NPM_VERSION,
-  HERMES_PLUGIN_VERSION,
-  HERMES_REQUIREMENTS_SHA256,
-  HERMES_REQUIREMENTS_URL,
-  HERMES_WHEEL_SHA256,
-  HERMES_WHEEL_URL,
+  HOSTED_PLUGIN_VERSION,
+  HOSTED_REQUIREMENTS_SHA256,
+  HOSTED_REQUIREMENTS_URL,
+  HOSTED_WHEEL_SHA256,
+  HOSTED_WHEEL_URL,
   OTHER_WHEEL_SHA256,
   OFFICIAL_NUMBER,
   READY_WORKER_FACTS,
 } from './fake-deploy-shell';
+import { SAMPLE_NPM_PACKAGE_NAME } from '../support/hosted-plugin-sample';
 
 function workerInput(input: {
   environment?: DeployEnvironment;
@@ -153,11 +155,11 @@ describe('worker preflight', () => {
     },
   );
 
-  it('refuses production until the OpenClaw plugin also resolves, with the owner as its only maintainer and publisher', async () => {
-    const shell = fakeShell({ replies: { '@zapbip/openclaw-plugin@0.1.0 maintainers --json': { exitCode: 1, stdout: '' } } });
+  it('refuses production until the npm plugin also resolves, with the owner as its only maintainer and publisher', async () => {
+    const shell = fakeShell({ replies: { [`${SAMPLE_NPM_PACKAGE_NAME}@0.1.0 maintainers --json`]: { exitCode: 1, stdout: '' } } });
     const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell }));
     expect(refusal?.step).toBe(PreflightStep.NpmVersion);
-    expect(refusal?.message).toContain('@zapbip/openclaw-plugin@0.1.0');
+    expect(refusal?.message).toContain(`${SAMPLE_NPM_PACKAGE_NAME}@0.1.0`);
   });
 
   it('passes production when the hosted wheel hashes to the constant, reading it from the bucket through wrangler', async () => {
@@ -166,9 +168,7 @@ describe('worker preflight', () => {
     const [getCommand, hashCommand, removeCommand] = shell.commands.filter(
       (command) => command.includes('r2 object get') || command.startsWith('shasum') || command.startsWith('rm'),
     );
-    expect(getCommand).toContain(
-      `r2 object get zapbip-packages/zapbip_platform-${HERMES_PLUGIN_VERSION}-py3-none-any.whl --remote --file `,
-    );
+    expect(getCommand).toContain(`r2 object get zapbip-packages/${HOSTED_WHEEL_FILENAME} --remote --file `);
     expect(hashCommand).toContain('shasum -a 256 ');
     expect(removeCommand).toContain('rm -f ');
   });
@@ -177,7 +177,7 @@ describe('worker preflight', () => {
     const shell = fakeShell({ replies: { 'shasum -a 256': { exitCode: 0, stdout: `${OTHER_WHEEL_SHA256}  /tmp/zapbip-wheel.whl\n` } } });
     const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell }));
     expect(refusal?.step).toBe(PreflightStep.HermesWheel);
-    expect(refusal?.message).toContain(HERMES_WHEEL_SHA256);
+    expect(refusal?.message).toContain(HOSTED_WHEEL_SHA256);
     expect(refusal?.message).toContain(OTHER_WHEEL_SHA256);
   });
 
@@ -185,18 +185,14 @@ describe('worker preflight', () => {
     const shell = fakeShell({ replies: { 'r2 object get': { exitCode: 1, stdout: 'The specified key does not exist' } } });
     const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell }));
     expect(refusal?.step).toBe(PreflightStep.HermesWheel);
-    expect(refusal?.message).toContain(`zapbip_platform-${HERMES_PLUGIN_VERSION}-py3-none-any.whl`);
+    expect(refusal?.message).toContain(`${HOSTED_WHEEL_FILENAME}`);
     expect(refusal?.message).toContain('wrangler r2 object put');
   });
 
   it('also reads the requirements file from the bucket', async () => {
     const shell = fakeShell({});
     await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell }));
-    expect(
-      shell.commands.some((command) =>
-        command.includes(`r2 object get zapbip-packages/zapbip_platform-${HERMES_PLUGIN_VERSION}-requirements.txt `),
-      ),
-    ).toBe(true);
+    expect(shell.commands.some((command) => command.includes(`r2 object get zapbip-packages/${HOSTED_REQUIREMENTS_FILENAME} `))).toBe(true);
   });
 
   it('refuses production when the hosted requirements file hashes to something else, naming both hashes', async () => {
@@ -206,16 +202,16 @@ describe('worker preflight', () => {
     const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell }));
     expect(refusal?.step).toBe(PreflightStep.HermesWheel);
     expect(refusal?.message).toContain('requirements.txt');
-    expect(refusal?.message).toContain(HERMES_REQUIREMENTS_SHA256);
+    expect(refusal?.message).toContain(HOSTED_REQUIREMENTS_SHA256);
     expect(refusal?.message).toContain(OTHER_WHEEL_SHA256);
   });
 
   it('refuses production when the requirements file is not in the bucket, naming the upload step', async () => {
-    const missing = `r2 object get zapbip-packages/zapbip_platform-${HERMES_PLUGIN_VERSION}-requirements.txt`;
+    const missing = `r2 object get zapbip-packages/${HOSTED_REQUIREMENTS_FILENAME}`;
     const shell = fakeShell({ replies: { [missing]: { exitCode: 1, stdout: 'The specified key does not exist' } } });
     const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production, shell }));
     expect(refusal?.step).toBe(PreflightStep.HermesWheel);
-    expect(refusal?.message).toContain(`zapbip_platform-${HERMES_PLUGIN_VERSION}-requirements.txt`);
+    expect(refusal?.message).toContain(`${HOSTED_REQUIREMENTS_FILENAME}`);
     expect(refusal?.message).toContain('wrangler r2 object put');
   });
 
@@ -612,8 +608,8 @@ describe('docs preflight', () => {
     ]);
   });
 
-  it('refuses until the OpenClaw plugin version resolves on npm, naming it', async () => {
-    const shell = fakeShell({ replies: { '@zapbip/openclaw-plugin': { exitCode: 1, stdout: '' } } });
+  it('refuses until the npm plugin version resolves on npm, naming it', async () => {
+    const shell = fakeShell({ replies: { [`${SAMPLE_NPM_PACKAGE_NAME}`]: { exitCode: 1, stdout: '' } } });
     const refusal = await runDocsPreflight({
       shell,
       officialWhatsAppNumber: OFFICIAL_NUMBER,
@@ -624,17 +620,17 @@ describe('docs preflight', () => {
       environmentVariables: COMPLETE_VARIABLES,
     });
     expect(refusal?.step).toBe(PreflightStep.NpmVersion);
-    expect(refusal?.message).toContain(`@zapbip/openclaw-plugin@${NPM_VERSION}`);
+    expect(refusal?.message).toContain(`${SAMPLE_NPM_PACKAGE_NAME}@${NPM_VERSION}`);
     expect(shell.commands).toEqual([
       `npm view zapbip@${NPM_VERSION} maintainers --json --registry=${NPM_REGISTRY_URL} --@zapbip:registry=${NPM_REGISTRY_URL}`,
       `npm view zapbip@${NPM_VERSION} _npmUser --json --registry=${NPM_REGISTRY_URL} --@zapbip:registry=${NPM_REGISTRY_URL}`,
-      `npm view @zapbip/openclaw-plugin@${NPM_VERSION} maintainers --json --registry=${NPM_REGISTRY_URL} --@zapbip:registry=${NPM_REGISTRY_URL}`,
+      `npm view ${SAMPLE_NPM_PACKAGE_NAME}@${NPM_VERSION} maintainers --json --registry=${NPM_REGISTRY_URL} --@zapbip:registry=${NPM_REGISTRY_URL}`,
     ]);
   });
 
-  it('refuses the docs deploy when the OpenClaw plugin is not maintained by the owner npm user', async () => {
+  it('refuses the docs deploy when the npm plugin is not maintained by the owner npm user', async () => {
     const shell = fakeShell({
-      replies: { '@zapbip/openclaw-plugin': { exitCode: 0, stdout: JSON.stringify(['someone-else <x@example.com>']) } },
+      replies: { [`${SAMPLE_NPM_PACKAGE_NAME}`]: { exitCode: 0, stdout: JSON.stringify(['someone-else <x@example.com>']) } },
     });
     const refusal = await runDocsPreflight({
       shell,
@@ -646,14 +642,14 @@ describe('docs preflight', () => {
       environmentVariables: COMPLETE_VARIABLES,
     });
     expect(refusal?.step).toBe(PreflightStep.NpmVersion);
-    expect(refusal?.message).toContain(`@zapbip/openclaw-plugin@${NPM_VERSION}`);
+    expect(refusal?.message).toContain(`${SAMPLE_NPM_PACKAGE_NAME}@${NPM_VERSION}`);
     expect(refusal?.message).toContain(NPM_PUBLISHER);
   });
 
-  it('refuses the docs deploy when the OpenClaw plugin was published by someone else', async () => {
+  it('refuses the docs deploy when the npm plugin was published by someone else', async () => {
     const shell = fakeShell({
       replies: {
-        '@zapbip/openclaw-plugin@0.1.0 _npmUser --json': { exitCode: 0, stdout: JSON.stringify('foreign-publisher <f@example.com>') },
+        [`${SAMPLE_NPM_PACKAGE_NAME}@0.1.0 _npmUser --json`]: { exitCode: 0, stdout: JSON.stringify('foreign-publisher <f@example.com>') },
       },
     });
     const refusal = await runDocsPreflight({
@@ -666,12 +662,12 @@ describe('docs preflight', () => {
       environmentVariables: COMPLETE_VARIABLES,
     });
     expect(refusal?.step).toBe(PreflightStep.NpmVersion);
-    expect(refusal?.message).toContain('@zapbip/openclaw-plugin@0.1.0');
+    expect(refusal?.message).toContain(`${SAMPLE_NPM_PACKAGE_NAME}@0.1.0`);
     expect(refusal?.message).toContain('foreign-publisher');
   });
 
   it.each([
-    ['404', { status: 404, sha256: OTHER_WHEEL_SHA256 }, HERMES_WHEEL_URL],
+    ['404', { status: 404, sha256: OTHER_WHEEL_SHA256 }, HOSTED_WHEEL_URL],
     ['a wrong hash', { status: 200, sha256: OTHER_WHEEL_SHA256 }, OTHER_WHEEL_SHA256],
   ])('refuses the docs deploy when the hosted wheel answers %s, after npm resolves both packages', async (_name, answer, expectedText) => {
     const shell = fakeShell({});
@@ -680,18 +676,18 @@ describe('docs preflight', () => {
     expect(refusal?.step).toBe(PreflightStep.HermesWheel);
     expect(refusal?.message).toContain(expectedText);
     expect(shell.commands).toHaveLength(4);
-    expect(packageFetcher.urls).toEqual([HERMES_WHEEL_URL]);
+    expect(packageFetcher.urls).toEqual([HOSTED_WHEEL_URL]);
   });
 
   it.each([
-    ['404', { status: 404, sha256: OTHER_WHEEL_SHA256 }, HERMES_REQUIREMENTS_URL],
+    ['404', { status: 404, sha256: OTHER_WHEEL_SHA256 }, HOSTED_REQUIREMENTS_URL],
     ['a wrong hash', { status: 200, sha256: OTHER_WHEEL_SHA256 }, OTHER_WHEEL_SHA256],
   ])('refuses the docs deploy when the hosted requirements file answers %s', async (_name, answer, expectedText) => {
-    const packageFetcher = fakePackageFetcher({ answers: { [HERMES_REQUIREMENTS_URL]: answer } });
+    const packageFetcher = fakePackageFetcher({ answers: { [HOSTED_REQUIREMENTS_URL]: answer } });
     const refusal = await runDocsPreflight({ ...docsInput({}), packageFetcher });
     expect(refusal?.step).toBe(PreflightStep.HermesWheel);
     expect(refusal?.message).toContain(expectedText);
-    expect(packageFetcher.urls).toEqual([HERMES_WHEEL_URL, HERMES_REQUIREMENTS_URL]);
+    expect(packageFetcher.urls).toEqual([HOSTED_WHEEL_URL, HOSTED_REQUIREMENTS_URL]);
   });
 
   it('says the wheel could not be reached, not that it is missing, when the fetch fails', async () => {
@@ -725,7 +721,7 @@ describe('the hosted artifacts the docs preflight checks', () => {
   it('are the artifacts of every registered plugin, in registry order', async () => {
     const packageFetcher = fakePackageFetcher({});
     await runDocsPreflight({ ...docsInput({}), packageFetcher });
-    const expectedUrls = Object.values(AGENT_PLUGINS).flatMap((plugin) =>
+    const expectedUrls = HOSTED_PLUGINS.flatMap((plugin) =>
       plugin.hostedArtifacts.map((artifact) => `${PRODUCTION_PUBLIC_ORIGIN}${artifact.path}`),
     );
     expect(packageFetcher.urls).toEqual(expectedUrls);

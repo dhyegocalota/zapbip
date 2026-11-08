@@ -10,7 +10,7 @@ import {
   HOSTED_PLUGINS,
   NPM_VERSION,
   OFFICIAL_NUMBER,
-  HERMES_WHEEL_URL,
+  HOSTED_WHEEL_URL,
   OTHER_WHEEL_SHA256,
 } from './fake-deploy-shell';
 import type { PackageFetcher } from '../../src/operations/package-fetcher';
@@ -59,6 +59,6 @@ describe('docs preflight entry', () => {
       packageFetcher: fakePackageFetcher({ answer: { status: 404, sha256: OTHER_WHEEL_SHA256 } }),
     });
     expect(exitCode).toBe(1);
-    expect(output).toContain(HERMES_WHEEL_URL);
+    expect(output).toContain(HOSTED_WHEEL_URL);
   });
 });

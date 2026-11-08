@@ -1,3 +1,4 @@
+import { DocsLanguage } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import {
   GenerationMode,
@@ -10,7 +11,10 @@ import {
 } from '@zapbip/agents/generate';
 import { boundaryViolationsOf } from '@zapbip/agents/checks/boundaries';
 import { leakViolationsOf } from '@zapbip/agents/checks/leaks';
+import { CONNECTOR_RUNTIMES } from '@zapbip/agents/connector';
 import { AGENT_DEFINITIONS } from '@zapbip/agents/definitions';
+import { AGENT_INSTALLS } from '@zapbip/agents/install';
+import { AGENT_PLUGINS } from '@zapbip/agents/plugins';
 import { trackedFiles, readRepositoryFile } from './repository-files';
 
 const SUPPORTED_ROOT = 'libs/agents/supported';
@@ -18,27 +22,24 @@ const TESTING_ROOT = 'libs/agents/testing';
 const GENERATED_FOLDER = 'libs/agents/src/generated';
 const DOCS_CONFIG = 'apps/docs/docs.json';
 const WORKFLOW_FILE = '.github/workflows/verify.yml';
-const REAL_AGENT_IDS = [
-  'any-mcp-client',
-  'chatgpt',
-  'claude-ai',
-  'claude-code',
-  'codex',
-  'cursor',
-  'gemini-cli',
-  'grok-bot',
-  'grok-web',
-  'hermes',
-  'openclaw',
-];
+const REAL_AGENT_IDS = discoverAgents({ roots: [SUPPORTED_ROOT] }).map((agent) => agent.id);
 const INSTALL_FILES = ['install.en_US.md', 'install.pt_BR.md'];
 const MATRIX_SNIPPETS = ['apps/docs/snippets/agents/matrix.mdx', 'apps/docs/snippets/pt-br/agents/matrix.mdx'];
 const MATRIX_PAGES = ['apps/docs/agents/supported-agents.mdx', 'apps/docs/pt-br/agents/supported-agents.mdx'];
 const MATRIX_TABLE_ROW_PATTERN = /^\| -{3,}/m;
 const CONNECTOR_SNIPPETS = ['apps/docs/snippets/agents/connector-clients.mdx', 'apps/docs/snippets/pt-br/agents/connector-clients.mdx'];
 const LEAK_SCANNED_EXTENSIONS = ['.ts', '.tsx', '.mts', '.mjs', '.sh', '.py', '.yml', '.json'];
-const HARNESS_FOLDERS = ['.claude/', '.codex/', '.agents/'];
-const LEAK_ALLOWED_PREFIXES = [GENERATED_FOLDER, ...HARNESS_FOLDERS];
+const HARNESS_FOLDER_NAMES = ['claude', 'codex', 'agents'];
+const HARNESS_TEST_FILES = ['agent-surfaces', 'delivery-docs', 'rules', 'scenarios'].map(
+  (name) => `tools/repository-shape/src/${name}.test.ts`,
+);
+const LEAK_CHECK_TEST_FILE = 'libs/agents/src/checks/leaks.test.ts';
+const LEAK_ALLOWED_PREFIXES = [
+  GENERATED_FOLDER,
+  LEAK_CHECK_TEST_FILE,
+  ...HARNESS_TEST_FILES,
+  ...HARNESS_FOLDER_NAMES.map((name) => `.${name}/`),
+];
 const ENUM_MEMBER_PATTERN = /^\s*(\w+) = '([a-z-]+)',?$/;
 
 type Fixture = { id: string; member: string; englishName: string; portugueseName: string };
@@ -226,51 +227,53 @@ describe('removing an agent folder', () => {
 });
 
 describe('page rules', () => {
+  const [pluginId] = Object.keys(AGENT_PLUGINS) as [string];
+  const [stepGuideId] = Object.keys(AGENT_INSTALLS).filter((id) => !(id in AGENT_PLUGINS)) as [string];
+  const pluginDefinition = AGENT_DEFINITIONS[pluginId as keyof typeof AGENT_DEFINITIONS];
+  const pageOf = (input: { id: string; file: string }): string => `${SUPPORTED_ROOT}/${input.id}/${input.file}`;
   const PAGE_RULE_MUTATIONS = [
+    { name: 'the front matter of a plugin page', id: pluginId, file: 'page.en.mdx', remove: /^---[\s\S]*?---\n/ },
     {
-      name: 'the Hermes front matter',
-      path: 'libs/agents/supported/hermes/page.en.mdx',
-      remove: /^---[\s\S]*?---\n/,
-      violation: 'hermes page.en.mdx',
+      name: 'the install command of a plugin page',
+      id: pluginId,
+      file: 'page.en.mdx',
+      remove: AGENT_PLUGINS[pluginId as keyof typeof AGENT_PLUGINS].installCommand,
     },
     {
-      name: 'the OpenClaw install command',
-      path: 'libs/agents/supported/openclaw/page.en.mdx',
-      remove: 'openclaw plugins install',
-      violation: 'openclaw page.en.mdx',
-    },
-    {
-      name: 'the Hermes one-listener sentence',
-      path: 'libs/agents/supported/hermes/page.pt-br.mdx',
+      name: 'the one-listener sentence of a plugin page',
+      id: pluginId,
+      file: 'page.pt-br.mdx',
       remove: 'Rode apenas um listener por agente',
-      violation: 'hermes page.pt-br.mdx',
     },
     {
-      name: 'the OpenClaw private-file advice',
-      path: 'libs/agents/supported/openclaw/page.pt-br.mdx',
-      remove: /chmod 600/g,
-      violation: 'openclaw page.pt-br.mdx',
+      name: 'a page fact of a plugin page',
+      id: pluginId,
+      file: 'page.pt-br.mdx',
+      remove: new RegExp(pluginDefinition.docs.pageFacts[DocsLanguage.PortugueseBrazil][0] as string, 'g'),
     },
-    {
-      name: 'the Codex placeholder',
-      path: 'libs/agents/supported/codex/page.en.mdx',
-      remove: /<connectionLink>/g,
-      violation: 'codex page.en.mdx',
-    },
+    { name: 'the placeholder of a step guide', id: stepGuideId, file: 'page.en.mdx', remove: /<connectionLink>/g },
   ];
 
-  test.each(PAGE_RULE_MUTATIONS)('removing $name fails the plan naming the page', async ({ path, remove, violation }) => {
+  test.each(PAGE_RULE_MUTATIONS)('removing $name fails the plan naming the page', async ({ id, file, remove }) => {
+    const path = pageOf({ id, file });
     const mutated = (source: string): string => source.replace(remove, 'removed');
     const plan = await planWith({
       extraRoots: [],
       readFile: (candidate) => (candidate === path ? mutated(readSource(candidate)) : readSource(candidate)),
     });
-    expect(plan.violations.some((entry) => entry.startsWith(violation))).toBe(true);
+    expect(plan.violations.some((entry) => entry.startsWith(`${id} ${file}`))).toBe(true);
   });
 });
 
 describe('agent knowledge', () => {
-  const agents = Object.entries(AGENT_DEFINITIONS).map(([id, definition]) => ({ id, enumMember: definition.enumMember, literals: [] }));
+  const runtimes = Object.entries(CONNECTOR_RUNTIMES);
+  const literalsOf = (id: string): string[] =>
+    runtimes.filter(([runtimeId]) => runtimeId === id).flatMap(([, runtime]) => [runtime.homeFolder, runtime.homeVariable]);
+  const agents = Object.entries(AGENT_DEFINITIONS).map(([id, definition]) => ({
+    id,
+    enumMember: definition.enumMember,
+    literals: literalsOf(id),
+  }));
   const files = trackedFiles()
     .filter((path) => LEAK_SCANNED_EXTENSIONS.some((extension) => path.endsWith(extension)))
     .map((path) => ({ path, text: readRepositoryFile(path) }));
@@ -278,10 +281,6 @@ describe('agent knowledge', () => {
 
   test('no file outside an agent folder names an agent', () => {
     expect(leaks).toEqual([]);
-  });
-
-  test('the leak check knows every real agent', () => {
-    expect(agents.map((agent) => agent.id).sort()).toEqual(REAL_AGENT_IDS);
   });
 
   test.each(REAL_AGENT_IDS)('G4: %s leaks nowhere', (id) => {

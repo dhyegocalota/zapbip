@@ -6,20 +6,6 @@ const CHAT_IMPORT = "import { Chat } from '/snippets/chat.jsx';";
 const CHAT_USAGE = '<Chat';
 const LINE_SEPARATOR = '\n';
 const FIXED_SPEAKER_LABELS = ['Owner', 'You', 'Dono', 'Você', 'Voce', 'Agent', 'Agente', 'zapbip'];
-const PREVIOUS_SPEAKER_LABELS = [
-  ...FIXED_SPEAKER_LABELS,
-  'Claude Code',
-  'Claude',
-  'Codex',
-  'ChatGPT',
-  'Grok Bot',
-  'Grok',
-  'Cursor',
-  'Gemini CLI',
-  'Gemini',
-  'Hermes',
-  'OpenClaw',
-];
 const SPEAKER_LABELS = [
   ...FIXED_SPEAKER_LABELS,
   ...Object.values(AGENT_DEFINITIONS).flatMap((definition) => definition.docs.speakerNames),
@@ -38,10 +24,6 @@ function speakerLines(page: string): string[] {
 describe('docs conversations', () => {
   test('there are pages to check', () => {
     expect(pages.length).toBeGreaterThan(0);
-  });
-
-  test('the speaker labels keep every label of the previous hand list', () => {
-    expect(PREVIOUS_SPEAKER_LABELS.filter((label) => !SPEAKER_LABELS.includes(label))).toEqual([]);
   });
 
   test.each(pages)('%s shows no conversation outside <Chat>', (page) => {

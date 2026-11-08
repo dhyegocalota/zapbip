@@ -1,7 +1,7 @@
 import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { AGENT_PLUGINS, PluginAgent } from '@zapbip/agents/plugins';
+import { AGENT_PLUGINS, PluginAgent, PluginRegistry } from '@zapbip/agents/plugins';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import {
@@ -54,16 +54,16 @@ const POLL_INTERVAL_MS = 500;
 const SETTLE_WINDOW_MS = 8 * SECOND_MS;
 const UNKNOWN_SECRET_LENGTH = 43;
 const RESTART_BACKOFF_WINDOW_MS = 20 * SECOND_MS;
-const HERMES_MCP_FAILURE_LINE = "Failed to connect to MCP server 'zapbip'";
-const OPENCLAW_AUTO_RESTART_LINE = 'auto-restart attempt';
-const OPENCLAW_AUTO_RESTART_SKIPPED_LINE = 'auto-restart skipped, terminal disconnect';
+const WHEEL_MCP_FAILURE_LINE = "Failed to connect to MCP server 'zapbip'";
+const NPM_AUTO_RESTART_LINE = 'auto-restart attempt';
+const NPM_AUTO_RESTART_SKIPPED_LINE = 'auto-restart skipped, terminal disconnect';
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 const CLEAN_SHUTDOWN_LIMIT_MS = 5 * SECOND_MS;
 const CLEAN_EXIT_CODE = 0;
 const MCP_CLIENT_NAME = 'zapbip-e2e-clients';
 const MCP_CLIENT_VERSION = '0.0.0';
-const HERMES_PLATFORM_CONNECTED_LINE = '✓ zapbip connected';
-const HERMES_BOOT_TIMEOUT_MS = 90 * SECOND_MS;
+const WHEEL_PLATFORM_CONNECTED_LINE = '✓ zapbip connected';
+const WHEEL_BOOT_TIMEOUT_MS = 90 * SECOND_MS;
 
 type RunningClient = { container: Container; account: WakeAccount };
 type SocketMessage = { messageId: string; text: string };
@@ -76,7 +76,19 @@ let fakeModel: FakeModel;
 let tlsFront: TlsFront;
 let runIndex = 0;
 let testContainers: Container[] = [];
-const endToEndModules = {} as Record<PluginAgent, PluginEndToEndModule>;
+const endToEndModules = new Map<string, PluginEndToEndModule>();
+
+function endToEndModuleOf(input: { id: string }): PluginEndToEndModule {
+  const endToEndModule = endToEndModules.get(input.id);
+  if (!endToEndModule) throw new Error(`no end-to-end module loaded for ${input.id}`);
+  return endToEndModule;
+}
+const pluginIdsOf = (input: { registry: PluginRegistry }): PluginAgent[] =>
+  (Object.entries(AGENT_PLUGINS) as [PluginAgent, (typeof AGENT_PLUGINS)[PluginAgent]][])
+    .filter(([, plugin]) => plugin.registry === input.registry)
+    .map(([id]) => id);
+const [WHEEL_PLUGIN] = pluginIdsOf({ registry: PluginRegistry.SelfHostedWheel }) as [PluginAgent];
+const [NPM_PLUGIN] = pluginIdsOf({ registry: PluginRegistry.Npm }) as [PluginAgent];
 
 function connectionLinkOf(input: { account: WakeAccount }): string {
   return `https://${CONTAINER_HOST}:${tlsFront.port}/c/${input.account.secret}/mcp`;
@@ -155,10 +167,14 @@ const ASK_WAIT_SECONDS = 30;
 const DETACH_SETTLE_MS = 2 * SECOND_MS;
 const PNG_BASE64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/q842iQAAAABJRU5ErkJggg==';
 const PNG_TYPE = 'image/png';
-const PLUGIN_SOURCE_DIRECTORIES = [
-  join(import.meta.dirname, '..', '..', '..', 'openclaw-plugin', 'src'),
-  join(import.meta.dirname, '..', '..', '..', 'hermes-plugin', 'zapbip_platform'),
-];
+const NPM_SOURCE_FOLDER = 'src';
+const PLUGIN_SOURCE_DIRECTORIES = Object.values(AGENT_PLUGINS).map((plugin) =>
+  join(
+    REPOSITORY_ROOT,
+    plugin.packageFolder,
+    plugin.registry === PluginRegistry.Npm ? NPM_SOURCE_FOLDER : plugin.packageName.replaceAll('-', '_'),
+  ),
+);
 const TOOL_RESULT_MARKER = 'check_inbox';
 const LISTEN_COMMAND_PATTERN = /zapbip listen|['"]listen['"]/;
 
@@ -253,17 +269,17 @@ async function textsOnScreen(input: { account: WakeAccount }): Promise<string[]>
 async function loadEndToEndModules(): Promise<void> {
   await Promise.all(
     Object.entries(AGENT_PLUGINS).map(async ([id, plugin]) => {
-      endToEndModules[id as PluginAgent] = (await import(join(REPOSITORY_ROOT, plugin.endToEndModule))) as PluginEndToEndModule;
+      endToEndModules.set(id, (await import(join(REPOSITORY_ROOT, plugin.endToEndModule))) as PluginEndToEndModule);
     }),
   );
 }
 
-async function startUnattachedHermes(input: { accountIndex: number }): Promise<RunningClient> {
+async function startUnattachedWheelPlugin(input: { accountIndex: number }): Promise<RunningClient> {
   const account = isolated.context?.wakeAccounts[input.accountIndex];
   if (!account) throw new Error(`no seeded account at ${input.accountIndex}`);
   runIndex += 1;
-  const container = await endToEndModules[PluginAgent.Hermes].startPluginClient({
-    name: `zapbip-e2e-${PluginAgent.Hermes}-${process.pid}-${runIndex}`,
+  const container = await endToEndModuleOf({ id: WHEEL_PLUGIN }).startPluginClient({
+    name: `zapbip-e2e-${WHEEL_PLUGIN}-${process.pid}-${runIndex}`,
     directory: workDirectory,
     connectionLink: connectionLinkOf({ account }),
     fakeModelPort: fakeModel.port,
@@ -293,7 +309,7 @@ async function startClient(input: {
     certificateFile: tlsFront.certificateFile,
     hasMcpServer: input.hasMcpServer,
   };
-  const container = await endToEndModules[input.product].startPluginClient({ ...common, allowedUsers: input.allowedUsers });
+  const container = await endToEndModuleOf({ id: input.product }).startPluginClient({ ...common, allowedUsers: input.allowedUsers });
   testContainers.push(container);
   await awaitLog({ container, pattern: ConnectorLogEvent.ConnectorConnected, timeoutMs: ATTACH_TIMEOUT_MS });
   return { container, account };
@@ -307,7 +323,7 @@ describe.skipIf(!isEnabled)('channel plugins against the development stack', () 
     fakeModel = await startFakeModel();
     tlsFront = await startTlsFront({ targetPort: Number(new URL(isolatedStack.context.origin).port), directory: workDirectory });
     await loadEndToEndModules();
-    await Object.values(endToEndModules).reduce(
+    await [...endToEndModules.values()].reduce(
       (previous, endToEndModule) => previous.then(() => endToEndModule.buildPluginImage({ directory: workDirectory })),
       Promise.resolve(),
     );
@@ -326,19 +342,19 @@ describe.skipIf(!isEnabled)('channel plugins against the development stack', () 
   });
 
   test(
-    'Hermes install layout: pip install of the package alone makes the platform load and connect',
+    'Wheel plugin install layout: pip install of the package alone makes the platform load and connect',
     async () => {
-      const client = await startUnattachedHermes({ accountIndex: 0 });
-      await awaitLog({ container: client.container, pattern: HERMES_PLATFORM_CONNECTED_LINE, timeoutMs: HERMES_BOOT_TIMEOUT_MS });
+      const client = await startUnattachedWheelPlugin({ accountIndex: 0 });
+      await awaitLog({ container: client.container, pattern: WHEEL_PLATFORM_CONNECTED_LINE, timeoutMs: WHEEL_BOOT_TIMEOUT_MS });
     },
     TEST_TIMEOUT_MS,
   );
 
   test(
-    'E1 OpenClaw: the owner message reaches the agent and the reply reaches the owner',
+    'E1 npm plugin: the owner message reaches the agent and the reply reaches the owner',
     async () => {
       const client = await startClient({
-        product: PluginAgent.OpenClaw,
+        product: NPM_PLUGIN,
         accountIndex: 0,
         allowedUsers: OWNER_SENDER,
         hasMcpServer: false,
@@ -352,9 +368,9 @@ describe.skipIf(!isEnabled)('channel plugins against the development stack', () 
   );
 
   test(
-    'E2 Hermes: the platform is enabled by the environment alone and the reply reaches the owner',
+    'E2 wheel plugin: the platform is enabled by the environment alone and the reply reaches the owner',
     async () => {
-      const client = await startClient({ product: PluginAgent.Hermes, accountIndex: 1, allowedUsers: OWNER_SENDER, hasMcpServer: false });
+      const client = await startClient({ product: WHEEL_PLUGIN, accountIndex: 1, allowedUsers: OWNER_SENDER, hasMcpServer: false });
       await postOwnerText({ account: client.account, text: 'ping-e2', forwarded: false });
       await awaitScreenText({ account: client.account, text: replyTo({ token: 'ping-e2' }) });
       expect(await containerLogs({ container: client.container })).not.toContain(SECRET_PREFIX);
@@ -393,11 +409,11 @@ describe.skipIf(!isEnabled)('channel plugins against the development stack', () 
   );
 
   test(
-    'E8 Hermes at DEBUG with a refused link and a configured MCP server: no log line holds the secret path',
+    'E8 wheel plugin at DEBUG with a refused link and a configured MCP server: no log line holds the secret path',
     async () => {
       const unknownSecret = `${SECRET_PREFIX}${'x'.repeat(UNKNOWN_SECRET_LENGTH)}`;
-      const container = await endToEndModules[PluginAgent.Hermes].startPluginClient({
-        name: `zapbip-e2e-${PluginAgent.Hermes}-${process.pid}-refused`,
+      const container = await endToEndModuleOf({ id: WHEEL_PLUGIN }).startPluginClient({
+        name: `zapbip-e2e-${WHEEL_PLUGIN}-${process.pid}-refused`,
         directory: workDirectory,
         connectionLink: `https://${CONTAINER_HOST}:${tlsFront.port}/c/${unknownSecret}/mcp`,
         fakeModelPort: fakeModel.port,
@@ -406,21 +422,21 @@ describe.skipIf(!isEnabled)('channel plugins against the development stack', () 
         hasMcpServer: true,
       });
       testContainers.push(container);
-      await awaitLog({ container, pattern: HERMES_MCP_FAILURE_LINE, timeoutMs: HERMES_BOOT_TIMEOUT_MS });
-      await awaitLog({ container, pattern: ConnectorLogEvent.ConnectorClosed, timeoutMs: HERMES_BOOT_TIMEOUT_MS });
+      await awaitLog({ container, pattern: WHEEL_MCP_FAILURE_LINE, timeoutMs: WHEEL_BOOT_TIMEOUT_MS });
+      await awaitLog({ container, pattern: ConnectorLogEvent.ConnectorClosed, timeoutMs: WHEEL_BOOT_TIMEOUT_MS });
       await delay(SETTLE_WINDOW_MS);
       const logs = await containerLogs({ container });
-      expect(logs).toContain(HERMES_MCP_FAILURE_LINE);
+      expect(logs).toContain(WHEEL_MCP_FAILURE_LINE);
       expect(logs).not.toContain(SECRET_PREFIX);
     },
     TEST_TIMEOUT_MS,
   );
 
   test(
-    'forwarded hermes: a slash command in a forwarded message reaches the model as prefixed text, not as a command',
+    'forwarded wheel plugin: a slash command in a forwarded message reaches the model as prefixed text, not as a command',
     async () => {
-      const client = await startClient({ product: PluginAgent.Hermes, accountIndex: 3, allowedUsers: OWNER_SENDER, hasMcpServer: false });
-      const token = 'ping-command-hermes';
+      const client = await startClient({ product: WHEEL_PLUGIN, accountIndex: 3, allowedUsers: OWNER_SENDER, hasMcpServer: false });
+      const token = 'ping-command-wheel';
       await postOwnerText({ account: client.account, text: `/status ${token}`, forwarded: true });
       await awaitScreenText({ account: client.account, text: replyTo({ token }) });
       const [request] = fakeModel.requestsMentioning({ text: token });
@@ -430,10 +446,10 @@ describe.skipIf(!isEnabled)('channel plugins against the development stack', () 
   );
 
   test(
-    'forwarded openclaw: a slash command in a forwarded message reaches the model as prefixed text, not as a command',
+    'forwarded npm plugin: a slash command in a forwarded message reaches the model as prefixed text, not as a command',
     async () => {
       const client = await startClient({
-        product: PluginAgent.OpenClaw,
+        product: NPM_PLUGIN,
         accountIndex: 3,
         allowedUsers: OWNER_SENDER,
         hasMcpServer: false,
@@ -448,10 +464,10 @@ describe.skipIf(!isEnabled)('channel plugins against the development stack', () 
   );
 
   test(
-    'E3 OpenClaw restart while idle: the message sent while it was down is handed off once',
+    'E3 npm plugin restart while idle: the message sent while it was down is handed off once',
     async () => {
       const client = await startClient({
-        product: PluginAgent.OpenClaw,
+        product: NPM_PLUGIN,
         accountIndex: 3,
         allowedUsers: OWNER_SENDER,
         hasMcpServer: false,
@@ -468,16 +484,16 @@ describe.skipIf(!isEnabled)('channel plugins against the development stack', () 
   );
 
   test(
-    'E4 OpenClaw replacement: the older plugin is told it was replaced and stays up blocked without restarting, the newer one answers once',
+    'E4 npm plugin replacement: the older plugin is told it was replaced and stays up blocked without restarting, the newer one answers once',
     async () => {
       const first = await startClient({
-        product: PluginAgent.OpenClaw,
+        product: NPM_PLUGIN,
         accountIndex: 4,
         allowedUsers: OWNER_SENDER,
         hasMcpServer: false,
       });
       const second = await startClient({
-        product: PluginAgent.OpenClaw,
+        product: NPM_PLUGIN,
         accountIndex: 4,
         allowedUsers: OWNER_SENDER,
         hasMcpServer: false,
@@ -490,18 +506,18 @@ describe.skipIf(!isEnabled)('channel plugins against the development stack', () 
       expect(replies).toHaveLength(1);
       expect(fakeModel.requestsMentioning({ text: 'ping-e4' })).toHaveLength(1);
       const olderLogs = await containerLogs({ container: first.container });
-      expect(olderLogs).toContain(OPENCLAW_AUTO_RESTART_SKIPPED_LINE);
-      expect(olderLogs).not.toContain(OPENCLAW_AUTO_RESTART_LINE);
+      expect(olderLogs).toContain(NPM_AUTO_RESTART_SKIPPED_LINE);
+      expect(olderLogs).not.toContain(NPM_AUTO_RESTART_LINE);
       expect(await isContainerRunning({ container: first.container })).toBe(true);
     },
     TEST_TIMEOUT_MS,
   );
 
   test(
-    'E7 Hermes: an owner outside ZAPBIP_ALLOWED_USERS is refused and the model is never called',
+    'E7 wheel plugin: an owner outside ZAPBIP_ALLOWED_USERS is refused and the model is never called',
     async () => {
       const client = await startClient({
-        product: PluginAgent.Hermes,
+        product: WHEEL_PLUGIN,
         accountIndex: 0,
         allowedUsers: 'someone-else',
         hasMcpServer: false,
@@ -555,7 +571,7 @@ describe.skipIf(!isEnabled)('channel plugins against the development stack', () 
     'E6 fallback restored after reattach: the restarted plugin takes the next message, not a poll',
     async () => {
       const client = await startClient({
-        product: PluginAgent.OpenClaw,
+        product: NPM_PLUGIN,
         accountIndex: 0,
         allowedUsers: OWNER_SENDER,
         hasMcpServer: false,
@@ -572,7 +588,7 @@ describe.skipIf(!isEnabled)('channel plugins against the development stack', () 
     'E9 media without caption: the agent receives the no-text sentence for an image and replies once',
     async () => {
       const client = await startClient({
-        product: PluginAgent.OpenClaw,
+        product: NPM_PLUGIN,
         accountIndex: 1,
         allowedUsers: OWNER_SENDER,
         hasMcpServer: false,
@@ -599,7 +615,7 @@ describe.skipIf(!isEnabled)('channel plugins against the development stack', () 
     'E10 choice reply: tapping a button of an ask that already timed out hands the selected title to the agent once',
     async () => {
       const client = await startClient({
-        product: PluginAgent.OpenClaw,
+        product: NPM_PLUGIN,
         accountIndex: 2,
         allowedUsers: OWNER_SENDER,
         hasMcpServer: false,

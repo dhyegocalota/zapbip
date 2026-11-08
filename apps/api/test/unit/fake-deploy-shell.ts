@@ -1,11 +1,18 @@
-import { createHash } from 'node:crypto';
-import { type AgentPlugin, type HostedArtifact } from '@zapbip/agents';
-import { AGENT_PLUGINS, PluginAgent } from '@zapbip/agents/plugins';
+import type { AgentPlugin } from '@zapbip/agents/plugins';
 import { PRODUCTION_PUBLIC_ORIGIN, type CompanyFacts } from '@zapbip/types';
 import { DeployEnvironment } from '../../src/operations/deploy-environment';
 import type { DeployBlock, WorkerFacts, DeployShell, EnvironmentVariables, ShellResult } from '../../src/operations/deploy-preflight';
 import type { NameserverResolver } from '../../src/operations/nameserver-resolver';
 import type { PackageAnswer, PackageFetcher } from '../../src/operations/package-fetcher';
+import {
+  SAMPLE_NPM_PLUGIN,
+  SAMPLE_OTHER_SHA256,
+  SAMPLE_PLUGIN,
+  SAMPLE_REQUIREMENTS_FILENAME,
+  SAMPLE_REQUIREMENTS_SHA256,
+  SAMPLE_WHEEL_FILENAME,
+  SAMPLE_WHEEL_SHA256,
+} from '../support/hosted-plugin-sample';
 import { SmokeInput } from '../../src/operations/smoke-inputs';
 import { WorkerSecret } from '../../src/operations/worker-secret';
 
@@ -13,25 +20,15 @@ export const OFFICIAL_NUMBER = '5511999990000';
 export const NPM_VERSION = '0.1.0';
 export const NPM_PUBLISHER_VARIABLE = 'ZAPBIP_NPM_PUBLISHER';
 export const NPM_PUBLISHER = 'zapbip-owner';
-export const HERMES_PLUGIN_VERSION = AGENT_PLUGINS[PluginAgent.Hermes].version;
-export const HERMES_WHEEL_SHA256 = createHash('sha256').update('hosted-wheel').digest('hex');
-export const HERMES_REQUIREMENTS_SHA256 = createHash('sha256').update('hosted-requirements').digest('hex');
-export const OTHER_WHEEL_SHA256 = createHash('sha256').update('another-wheel').digest('hex');
-function hermesArtifactOf(input: { isEmbedded: boolean }): HostedArtifact {
-  return AGENT_PLUGINS[PluginAgent.Hermes].hostedArtifacts.find(
-    (artifact) => artifact.embeddedInInstallCommand === input.isEmbedded,
-  ) as HostedArtifact;
-}
-
-export const HERMES_REQUIREMENTS_URL = `${PRODUCTION_PUBLIC_ORIGIN}${hermesArtifactOf({ isEmbedded: true }).path}`;
-export const HERMES_WHEEL_URL = `${PRODUCTION_PUBLIC_ORIGIN}${hermesArtifactOf({ isEmbedded: false }).path}`;
-export const HOSTED_PLUGINS: AgentPlugin[] = Object.values(AGENT_PLUGINS).map((plugin) => ({
-  ...plugin,
-  hostedArtifacts: plugin.hostedArtifacts.map((artifact) => ({
-    ...artifact,
-    expectedSha256: artifact.embeddedInInstallCommand ? HERMES_REQUIREMENTS_SHA256 : HERMES_WHEEL_SHA256,
-  })),
-}));
+export const HOSTED_PLUGIN_VERSION = SAMPLE_PLUGIN.version;
+export const HOSTED_WHEEL_SHA256 = SAMPLE_WHEEL_SHA256;
+export const HOSTED_REQUIREMENTS_SHA256 = SAMPLE_REQUIREMENTS_SHA256;
+export const OTHER_WHEEL_SHA256 = SAMPLE_OTHER_SHA256;
+export const HOSTED_WHEEL_FILENAME = SAMPLE_WHEEL_FILENAME;
+export const HOSTED_REQUIREMENTS_FILENAME = SAMPLE_REQUIREMENTS_FILENAME;
+export const HOSTED_REQUIREMENTS_URL = `${PRODUCTION_PUBLIC_ORIGIN}${SAMPLE_PLUGIN.hostedArtifacts.find((artifact) => artifact.embeddedInInstallCommand)?.path}`;
+export const HOSTED_WHEEL_URL = `${PRODUCTION_PUBLIC_ORIGIN}${SAMPLE_PLUGIN.hostedArtifacts.find((artifact) => !artifact.embeddedInInstallCommand)?.path}`;
+export const HOSTED_PLUGINS: AgentPlugin[] = [SAMPLE_PLUGIN, SAMPLE_NPM_PLUGIN];
 export const DATABASE_ID = '0a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d';
 export const ALL_SECRETS_JSON = JSON.stringify(Object.values(WorkerSecret).map((name) => ({ name, type: 'secret_text' })));
 export const PASSING: ShellResult = { exitCode: 0, stdout: '' };
@@ -44,8 +41,8 @@ export const HAPPY_REPLIES: Record<string, ShellResult> = {
   'migrations list': { exitCode: 0, stdout: 'No migrations to apply!' },
   'maintainers --json': { exitCode: 0, stdout: JSON.stringify([`${NPM_PUBLISHER} <${NPM_PUBLISHER}@example.com>`]) },
   '_npmUser --json': { exitCode: 0, stdout: JSON.stringify(`${NPM_PUBLISHER} <${NPM_PUBLISHER}@example.com>`) },
-  'any.whl': { exitCode: 0, stdout: `${HERMES_WHEEL_SHA256}  /tmp/zapbip-wheel.whl\n` },
-  'requirements.txt': { exitCode: 0, stdout: `${HERMES_REQUIREMENTS_SHA256}  /tmp/zapbip-requirements.txt\n` },
+  'any.whl': { exitCode: 0, stdout: `${HOSTED_WHEEL_SHA256}  /tmp/zapbip-wheel.whl\n` },
+  'requirements.txt': { exitCode: 0, stdout: `${HOSTED_REQUIREMENTS_SHA256}  /tmp/zapbip-requirements.txt\n` },
 };
 export const COMPLETE_VARIABLES: EnvironmentVariables = {
   [SmokeInput.BaseUrl]: 'https://mcp-staging.zapbip.com',
@@ -78,8 +75,8 @@ export function fakeShell({ replies: overrides = {} }: { replies?: Record<string
 
 export type FakePackageFetcher = PackageFetcher & { urls: string[] };
 
-export const HOSTED_WHEEL_FOUND: PackageAnswer = { status: 200, sha256: HERMES_WHEEL_SHA256 };
-export const HOSTED_REQUIREMENTS_FOUND: PackageAnswer = { status: 200, sha256: HERMES_REQUIREMENTS_SHA256 };
+export const HOSTED_WHEEL_FOUND: PackageAnswer = { status: 200, sha256: HOSTED_WHEEL_SHA256 };
+export const HOSTED_REQUIREMENTS_FOUND: PackageAnswer = { status: 200, sha256: HOSTED_REQUIREMENTS_SHA256 };
 
 export function fakePackageFetcher({
   answer,
@@ -92,8 +89,8 @@ export function fakePackageFetcher({
 }): FakePackageFetcher {
   const urls: string[] = [];
   const hosted: Record<string, PackageAnswer> = {
-    [HERMES_WHEEL_URL]: HOSTED_WHEEL_FOUND,
-    [HERMES_REQUIREMENTS_URL]: HOSTED_REQUIREMENTS_FOUND,
+    [HOSTED_WHEEL_URL]: HOSTED_WHEEL_FOUND,
+    [HOSTED_REQUIREMENTS_URL]: HOSTED_REQUIREMENTS_FOUND,
     ...answers,
   };
   const fetcher = async ({ url }: { url: string }): Promise<PackageAnswer> => {

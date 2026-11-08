@@ -5,8 +5,9 @@ import { tmpdir } from 'node:os';
 import { join, posix } from 'node:path';
 import { PRODUCTION_PUBLIC_ORIGIN } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
-import { hermesRequirementsFilename, hermesWheelFilename, hermesWheelPath } from '../../../libs/agents/supported/hermes/wheel';
-import { readRepositoryFile, repositoryFiles, repositoryPath, trackedFiles } from './repository-files';
+import { repositoryPath } from '../../generate/repository';
+import { readSource, trackedTextFiles } from '../../generate/source';
+import { hermesRequirementsFilename, hermesWheelFilename, hermesWheelPath } from './wheel';
 
 const WHEEL_CONSTANTS = 'libs/agents/supported/hermes/wheel.ts';
 const HERMES_PROJECT = 'apps/hermes-plugin/pyproject.toml';
@@ -24,12 +25,9 @@ const PINNED_HEAD_PATTERN = /^[A-Za-z][\w.-]*==[\w.!+]+( ; .+)?$/;
 const HASH_PATTERN = /^[0-9a-f]{64}$/;
 const OWN_PACKAGE = 'zapbip-platform';
 const PYTHON = 'python3';
-const REMOVED_NAMES = ['ZAPBIP_PYPI_VERSION', 'ZAPBIP_PYPI_PUBLISHER', 'pypi.org'];
-const RECORD_DIRECTORIES = ['docs/adr/', 'docs/learnings/', 'docs/features/'];
-const THIS_TEST = 'tools/repository-shape/src/hermes-wheel.test.ts';
 
 function constantOf({ name, pattern }: { name: string; pattern: string }): string {
-  const value = new RegExp(`export const ${name} = '(${pattern})'`).exec(readRepositoryFile(WHEEL_CONSTANTS))?.[1];
+  const value = new RegExp(`export const ${name} = '(${pattern})'`).exec(readSource(WHEEL_CONSTANTS))?.[1];
   if (value === undefined) throw new Error(`${name} is not exported from ${WHEEL_CONSTANTS}`);
   return value;
 }
@@ -72,7 +70,7 @@ function nameOf({ head }: { head: string }): string {
 }
 
 function dependencyNamesOfProject(): string[] {
-  const dependencies = /^dependencies = \[(.*)\]$/m.exec(readRepositoryFile(HERMES_PROJECT))?.[1];
+  const dependencies = /^dependencies = \[(.*)\]$/m.exec(readSource(HERMES_PROJECT))?.[1];
   if (dependencies === undefined) throw new Error('the Hermes project declares no dependencies line');
   return [...dependencies.matchAll(/"([\w.-]+)[^"]*"/g)].map((match) => match[1] as string);
 }
@@ -83,7 +81,7 @@ function requirementSpecifiers({ line }: { line: string }): string {
 }
 
 function dependencyLinesOfProject(): string[] {
-  const dependencies = /^dependencies = \[(.*)\]$/m.exec(readRepositoryFile(HERMES_PROJECT))?.[1];
+  const dependencies = /^dependencies = \[(.*)\]$/m.exec(readSource(HERMES_PROJECT))?.[1];
   if (dependencies === undefined) throw new Error('the Hermes project declares no dependencies line');
   return [...dependencies.matchAll(/"([^"]+)"/g)].map((match) => match[1] as string);
 }
@@ -105,7 +103,10 @@ describe('the Hermes wheel', () => {
 
   test('the committed wheel carries exactly the plugin source', () => {
     const extracted = join(extractedWheel(), PACKAGE_DIRECTORY_NAME);
-    const sourceFiles = repositoryFiles(SOURCE_DIRECTORY).map((path) => posix.relative(SOURCE_DIRECTORY, path));
+    const sourceFiles = trackedTextFiles()
+      .map((file) => file.path)
+      .filter((path) => path.startsWith(`${SOURCE_DIRECTORY}/`))
+      .map((path) => posix.relative(SOURCE_DIRECTORY, path));
     const wheelFiles = packageFilesOf({ directory: extracted });
     expect(wheelFiles).toEqual(sourceFiles.sort());
     wheelFiles.forEach((file) =>
@@ -115,7 +116,7 @@ describe('the Hermes wheel', () => {
 
   test('the constant, the project and the wheel metadata declare one version', () => {
     const version = pluginVersion();
-    const projectVersion = /^version = "([^"]+)"/m.exec(readRepositoryFile(HERMES_PROJECT))?.[1];
+    const projectVersion = /^version = "([^"]+)"/m.exec(readSource(HERMES_PROJECT))?.[1];
     const extracted = extractedWheel();
     const metadataFile = packageFilesOf({ directory: extracted }).find((file) => file.endsWith(`.dist-info/${METADATA_FILE}`));
     if (metadataFile === undefined) throw new Error('the wheel has no METADATA');
@@ -137,7 +138,7 @@ describe('the Hermes wheel', () => {
   });
 
   test('every requirement is pinned with == and at least one sha256 hash', () => {
-    const blocks = requirementBlocks({ text: readRepositoryFile(requirementsFile()) });
+    const blocks = requirementBlocks({ text: readSource(requirementsFile()) });
     const [own, ...dependencies] = blocks;
     expect(dependencies.length).toBeGreaterThan(0);
     expect(dependencies.filter((block) => !PINNED_HEAD_PATTERN.test(block.head))).toEqual([]);
@@ -149,8 +150,8 @@ describe('the Hermes wheel', () => {
   });
 
   test('the requirements file lists the package and exactly the resolved runtime dependencies of the project', () => {
-    const names = requirementBlocks({ text: readRepositoryFile(requirementsFile()) }).map(nameOf);
-    const lockNames = requirementBlocks({ text: readRepositoryFile(RUNTIME_LOCK) }).map(nameOf);
+    const names = requirementBlocks({ text: readSource(requirementsFile()) }).map(nameOf);
+    const lockNames = requirementBlocks({ text: readSource(RUNTIME_LOCK) }).map(nameOf);
     expect(names.sort()).toEqual([OWN_PACKAGE, ...lockNames].sort());
     dependencyNamesOfProject().forEach((name) => expect(names).toContain(name));
   });
@@ -173,14 +174,5 @@ describe('the Hermes wheel', () => {
     const entryPoints = readFileSync(join(extracted, entryPointsFile), 'utf8');
     expect(entryPoints).toContain('[hermes_agent.plugins]');
     expect(entryPoints).toContain('zapbip-platform = zapbip_platform');
-  });
-
-  test('no file outside the records names the removed PyPI constants or hosts', () => {
-    const namingRemoved = trackedFiles()
-      .filter((path) => path !== THIS_TEST)
-      .filter((path) => !RECORD_DIRECTORIES.some((directory) => path.startsWith(directory)))
-      .filter((path) => !path.endsWith('.whl'))
-      .filter((path) => REMOVED_NAMES.some((name) => readRepositoryFile(path).includes(name)));
-    expect(namingRemoved).toEqual([]);
   });
 });

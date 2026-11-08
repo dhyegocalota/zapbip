@@ -6,6 +6,12 @@ const WHOLE_ENUM_RECORD_PATTERN = new RegExp(`\\bRecord<(${AGENT_ENUM_NAMES.join
 const LINE_SEPARATOR = '\n';
 const SUPPORTED_ROOT = 'libs/agents/supported';
 
+const REGULAR_EXPRESSION_SPECIALS = /[.*+?^${}()|[\]\\]/g;
+
+function escapedOf(input: { text: string }): string {
+  return input.text.replace(REGULAR_EXPRESSION_SPECIALS, '\\$&');
+}
+
 function ownedPrefixesOf(input: { agent: LeakAgent }): string[] {
   return [`${SUPPORTED_ROOT}/${input.agent.id}/`, `apps/${input.agent.id}-plugin/`];
 }
@@ -13,7 +19,8 @@ function ownedPrefixesOf(input: { agent: LeakAgent }): string[] {
 function namingPatternOf(input: { agent: LeakAgent }): RegExp {
   const memberReference = `\\b(?:${AGENT_ENUM_NAMES.join('|')})\\.${input.agent.enumMember}\\b`;
   const folderReference = `supported/${input.agent.id}(?![\\w-])`;
-  return new RegExp(`${memberReference}|${folderReference}`);
+  const literalReferences = input.agent.literals.map((literal) => `(?<![\\w])${escapedOf({ text: literal })}(?![\\w])`);
+  return new RegExp([memberReference, folderReference, ...literalReferences].join('|'));
 }
 
 function agentLeaksIn(input: { agent: LeakAgent; file: LeakFile }): string[] {
