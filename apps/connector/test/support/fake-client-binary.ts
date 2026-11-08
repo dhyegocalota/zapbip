@@ -5,6 +5,7 @@ import { delimiter, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CONNECTOR_RUNTIMES, ConnectorClient } from '@zapbip/agents/connector';
 import { vi } from 'vitest';
+import { CONNECTOR_CLIENTS } from './connector-clients';
 
 const SUPPORTED_DIRECTORY = fileURLToPath(new URL('../../../../libs/agents/supported', import.meta.url));
 const FAKE_BINARY_FOLDER = 'testing';
@@ -125,9 +126,7 @@ export function runAt(input: { runs: FakeClientRun[]; index: number }): FakeClie
 export async function createFakeClients(): Promise<FakeClients> {
   const rootDirectory = await realpath(await mkdtemp(join(tmpdir(), 'zapbip-fake-clients-')));
   const workingDirectory = join(rootDirectory, 'project');
-  const homeDirectories = Object.fromEntries(
-    Object.values(ConnectorClient).map((client) => [client, join(rootDirectory, `${client}-home`)]),
-  );
+  const homeDirectories = Object.fromEntries(CONNECTOR_CLIENTS.map((client) => [client, join(rootDirectory, `${client}-home`)]));
   const recordFile = join(rootDirectory, 'record.jsonl');
   const holdFile = join(rootDirectory, 'hold-release');
   await mkdir(workingDirectory, { recursive: true });
@@ -135,9 +134,7 @@ export async function createFakeClients(): Promise<FakeClients> {
 
   const baseEnvironment: Record<string, string> = {
     PATH: [...FAKE_BINARY_DIRECTORIES, process.env.PATH].join(delimiter),
-    ...Object.fromEntries(
-      Object.values(ConnectorClient).map((client) => [CONNECTOR_RUNTIMES[client].homeVariable, homeDirectories[client]]),
-    ),
+    ...Object.fromEntries(CONNECTOR_CLIENTS.map((client) => [CONNECTOR_RUNTIMES[client].homeVariable, homeDirectories[client]])),
     FAKE_CLIENT_RECORD: recordFile,
   };
 

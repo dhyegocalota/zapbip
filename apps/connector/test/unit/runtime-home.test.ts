@@ -3,10 +3,11 @@ import { join } from 'node:path';
 import { CONNECTOR_RUNTIMES, ConnectorClient } from '@zapbip/agents/connector';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { homeDirectoryOf } from '../../src/runtime-home';
+import { CONNECTOR_CLIENTS } from '../support/connector-clients';
 
 const OVERRIDDEN_DIRECTORY = '/somewhere/else';
 
-describe.each(Object.values(ConnectorClient))('homeDirectoryOf the %s runtime', (client) => {
+describe.each(CONNECTOR_CLIENTS)('homeDirectoryOf the %s runtime', (client) => {
   const { homeFolder, homeVariable } = CONNECTOR_RUNTIMES[client];
 
   afterEach(() => {

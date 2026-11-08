@@ -17,6 +17,7 @@ import {
   type FakeEventServer,
   type TlsCertificate,
 } from '../support/fake-event-server';
+import { CONNECTOR_CLIENTS, SUBJECT_CLIENT } from '../support/connector-clients';
 
 type CliProcess = {
   child: ChildProcessWithoutNullStreams;
@@ -32,7 +33,6 @@ const DISABLE_TLS_VERIFICATION_VARIABLE = 'NODE_TLS_REJECT_UNAUTHORIZED';
 const DISABLED_VERIFICATION = '0';
 const EXIT_CODE_CLEAN = 0;
 const EXIT_CODE_USAGE = 1;
-const SUBJECT_CLIENT = Object.values(ConnectorClient)[0] as ConnectorClient;
 const CONNECT_COMMAND = 'connect';
 
 describe('zapbip connect', () => {

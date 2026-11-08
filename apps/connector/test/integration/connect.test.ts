@@ -31,6 +31,7 @@ import {
   type FakeEventServer,
   type FakeEventServerOptions,
 } from '../support/fake-event-server';
+import { CONNECTOR_CLIENTS } from '../support/connector-clients';
 
 type LoggedEvent = { event: ConnectorLogEvent; fields: Record<string, string | number | boolean | null> };
 type LogWaiter = { event: ConnectorLogEvent; count: number; resolve: () => void };
@@ -80,7 +81,7 @@ function waitForLog(input: { event: ConnectorLogEvent; count?: number }): Promis
   return new Promise((resolve) => logRecorder.waiters.push({ event, count, resolve }));
 }
 
-describe.each(Object.values(ConnectorClient))('runConnection with the %s runtime', (client) => {
+describe.each(CONNECTOR_CLIENTS)('runConnection with the %s runtime', (client) => {
   const runtime = CONNECTOR_RUNTIMES[client];
   const fallsBackToNewSession = runtime.newSessionArguments !== null && runtime.isNewSessionFallback({ stderrText: ACTIVE_WRITER_TEXT });
   let fakeClients: FakeClients;

@@ -14,6 +14,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { runWake } from '../../src/wake-runner';
 import { ACTIVE_WRITER_TEXT, createFakeClients, runAt, type FakeClients } from '../support/fake-client-binary';
 import { ownerTextMessage } from '../support/fake-event-server';
+import { CONNECTOR_CLIENTS } from '../support/connector-clients';
 
 const CONNECTION_LINK = 'https://zapbip.example/c/secret-abc/mcp';
 const DECOY_SERVER_NAME = 'deploy';
@@ -31,7 +32,7 @@ describe('the runtimes that pin one MCP server', () => {
   });
 });
 
-describe.each(Object.values(ConnectorClient))('runWake with the %s runtime', (client) => {
+describe.each(CONNECTOR_CLIENTS)('runWake with the %s runtime', (client) => {
   const runtime = CONNECTOR_RUNTIMES[client];
   const fallsBackToNewSession = runtime.newSessionArguments !== null && runtime.isNewSessionFallback({ stderrText: ACTIVE_WRITER_TEXT });
   let fakeClients: FakeClients;

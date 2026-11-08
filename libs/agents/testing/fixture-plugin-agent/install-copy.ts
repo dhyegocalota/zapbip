@@ -12,7 +12,7 @@ type SectionText = {
 const SECTION_TEXT: Record<OwnerLocale, SectionText> = {
   [OwnerLocale.PortugueseBrazil]: {
     heading: 'Fixture Plugin Agent',
-    stopCheck: 'Se você não é Fixture Plugin Agent, pare e não rode nenhum outro passo desta seção.',
+    stopCheck: 'If you are not Fixture Plugin Agent, stop and run no other step of this section.',
     stopSuccess: 'você é Fixture Plugin Agent, ou parou.',
     connect: 'Adicione um servidor MCP chamado zapbip em',
     connectSuccess: 'as configurações listam o zapbip.',

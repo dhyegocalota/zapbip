@@ -8,9 +8,9 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { z } from 'zod';
 import { createFakeClients, runAt, type FakeClientBehavior, type FakeClients } from '../support/fake-client-binary';
 import { startStack, type Stack } from './support/stack';
+import { CONNECTOR_CLIENTS, SUBJECT_CLIENT } from '../support/connector-clients';
 
 const CLI_BUNDLE = fileURLToPath(new URL('../../dist/cli.js', import.meta.url));
-const SUBJECT_CLIENT = Object.values(ConnectorClient)[0] as ConnectorClient;
 const SESSION_ID = '0b1f6c2e-5d7a-4c3b-9e8f-1a2b3c4d5e6f';
 const CONNECT_AGENT = 'ana';
 const LISTEN_AGENT = 'bia';
@@ -23,7 +23,7 @@ const CALLS_MCP_VARIABLE = 'FAKE_CLIENT_CALLS_MCP';
 const ZAPBIP_URL_VARIABLE = 'FAKE_CLIENT_ZAPBIP_URL';
 const RUNTIME_AGENT_PREFIX = 'runtime';
 const FIRST_LETTER_CODE = 97;
-const RUNTIME_AGENTS = Object.values(ConnectorClient).map((client, index) => ({
+const RUNTIME_AGENTS = CONNECTOR_CLIENTS.map((client, index) => ({
   client,
   agent: `${RUNTIME_AGENT_PREFIX}${String.fromCharCode(FIRST_LETTER_CODE + index)}`,
 }));

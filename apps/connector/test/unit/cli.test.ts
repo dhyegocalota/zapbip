@@ -4,14 +4,14 @@ import { join } from 'node:path';
 import { ConnectorClient } from '@zapbip/agents/connector';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { parseConnectArguments } from '../../src/cli';
+import { CONNECTOR_CLIENTS, SUBJECT_CLIENT } from '../support/connector-clients';
 
-const SUBJECT_CLIENT = Object.values(ConnectorClient)[0] as ConnectorClient;
 const SESSION_ID = '0b1f6c2e-5d7a-4c3b-9e8f-1a2b3c4d5e6f';
 const CLIENT_FLAG = '--client';
 const SESSION_FLAG = '--session';
 const WORKING_DIRECTORY_FLAG = '--cwd';
 const UNDECLARED_CLIENT = 'nope';
-const USAGE_LINE = `usage: zapbip connect --client ${Object.values(ConnectorClient).join('|')} [--cwd <directory>] [--session <uuid>]`;
+const USAGE_LINE = `usage: zapbip connect --client ${CONNECTOR_CLIENTS.join('|')} [--cwd <directory>] [--session <uuid>]`;
 
 function thrownMessage(input: { argv: string[] }): string {
   try {
@@ -53,7 +53,7 @@ describe('parseConnectArguments', () => {
 
   it('refuses an unknown client and lists the valid ones', () => {
     const message = thrownMessage({ argv: [CLIENT_FLAG, UNDECLARED_CLIENT] });
-    Object.values(ConnectorClient).forEach((client) => expect(message).toContain(client));
+    CONNECTOR_CLIENTS.forEach((client) => expect(message).toContain(client));
   });
 
   it('refuses a missing client with the usage line', () => {
@@ -64,7 +64,7 @@ describe('parseConnectArguments', () => {
     expect(thrownMessage({ argv: [CLIENT_FLAG, UNDECLARED_CLIENT] })).toBe(USAGE_LINE);
   });
 
-  it.each(Object.values(ConnectorClient))('accepts the %s runtime', (client) => {
+  it.each(CONNECTOR_CLIENTS)('accepts the %s runtime', (client) => {
     expect(parseConnectArguments({ argv: [CLIENT_FLAG, client] }).client).toBe(client);
   });
 
