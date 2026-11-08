@@ -3,11 +3,39 @@ import { leakViolationsOf, type LeakAgent, type LeakFile } from './leaks';
 
 const ALPHA: LeakAgent = { id: 'alpha', enumMember: 'Alpha', literals: ['.alpha-home', 'ALPHA_HOME'] };
 const HERMES: LeakAgent = { id: 'beta', enumMember: 'Beta', literals: [] };
+const GAMMA: LeakAgent = { id: 'gamma-bot', enumMember: 'GammaBot', literals: [] };
 const GENERATED_PREFIX = 'libs/agents/src/generated/';
 
 function leaksIn(input: { files: LeakFile[]; agents?: LeakAgent[] }): string[] {
   return leakViolationsOf({ agents: input.agents ?? [ALPHA, HERMES], files: input.files, allowedPrefixes: [GENERATED_PREFIX] });
 }
+
+describe('leakViolationsOf: bare names', () => {
+  test.each(['run gamma-bot now', 'agents/gamma-bot)', '"gamma-bot hint"'])('names the bare hyphenated id in %s', (text) => {
+    expect(leaksIn({ files: [{ path: 'tools/example.ts', text }], agents: [GAMMA] })).toEqual(['tools/example.ts:1 names gamma-bot']);
+  });
+
+  test.each(['gamma-bots', 'xgamma-bot', 'gamma-bot-two', './gamma-bot'])('ignores %s, which only contains the id', (text) => {
+    expect(leaksIn({ files: [{ path: 'tools/example.ts', text }], agents: [GAMMA] })).toEqual([]);
+  });
+
+  test('leaves an ordinary single word alone unless it is quoted', () => {
+    expect(leaksIn({ files: [{ path: 'tools/example.ts', text: 'the alpha release' }] })).toEqual([]);
+  });
+
+  test.each(['PreflightStep.AlphaWheel', 'refuseAlpha_wheel', 'the Alpha plugin'])('names the product word of %s', (text) => {
+    expect(leaksIn({ files: [{ path: 'tools/example.ts', text }] })).toEqual(['tools/example.ts:1 names alpha']);
+  });
+
+  test.each(['nextAlpha', 'Alphabet', 'alphaValue'])('ignores %s, which only contains the product word', (text) => {
+    expect(leaksIn({ files: [{ path: 'tools/example.ts', text }] })).toEqual([]);
+  });
+
+  test('names the plugin package folder outside the plugin', () => {
+    const files = [{ path: '.agents/hooks/doctor.sh', text: 'pip install -r apps/alpha-plugin/requirements-dev.txt' }];
+    expect(leaksIn({ files })).toEqual(['.agents/hooks/doctor.sh:1 names alpha']);
+  });
+});
 
 describe('leakViolationsOf', () => {
   test.each(['AgentId', 'InstallClient', 'ConnectorClient', 'PluginAgent'])('names the file and line that uses %s.Alpha', (enumName) => {
