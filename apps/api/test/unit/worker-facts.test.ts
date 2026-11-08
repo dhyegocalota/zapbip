@@ -70,4 +70,16 @@ describe('worker facts', () => {
     const app = createApp({ extraRoutes: [], developmentMediaOrigin: null, maxFutureSkewMs: MAX_FUTURE_SKEW_MS });
     expect(await inspectWorker({ sourceRoot: WORKER_SOURCE_ROOT, app })).toEqual({ exportsScheduled: true, mountsInstallRoute: true });
   });
+
+  it('does not count an all-methods route outside the install prefix', async () => {
+    const sourceRoot = await sourceRootWith({ entry: ENTRY_WITH_SCHEDULED });
+    const app = new Hono().all('/health', (context) => context.text('no'));
+    expect((await inspectWorker({ sourceRoot, app })).mountsInstallRoute).toBe(false);
+  });
+
+  it('does not count middleware on the install prefix as a page', async () => {
+    const sourceRoot = await sourceRootWith({ entry: ENTRY_WITH_SCHEDULED });
+    const app = new Hono().use(`${INSTALL_PAGE_PATH_PREFIX}*`, async (_context, next) => next());
+    expect((await inspectWorker({ sourceRoot, app })).mountsInstallRoute).toBe(false);
+  });
 });
