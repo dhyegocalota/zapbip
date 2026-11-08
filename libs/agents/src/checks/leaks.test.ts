@@ -20,6 +20,16 @@ describe('leakViolationsOf', () => {
     expect(leaksIn({ files })).toEqual(['tools/example.ts:2 names hermes']);
   });
 
+  test.each(['AgentId', 'InstallClient', 'ConnectorClient', 'PluginAgent'])('names a record keyed by the whole %s enum', (enumName) => {
+    const files = [{ path: 'libs/core/example.ts', text: `const labels = 1;\nconst names: Record<${enumName}, string> = {};` }];
+    expect(leaksIn({ files })).toEqual([`libs/core/example.ts:2 keys a record by ${enumName}`]);
+  });
+
+  test('accepts a record keyed by the enum inside the generated outputs', () => {
+    const files = [{ path: `${GENERATED_PREFIX}install.ts`, text: 'const names: Record<InstallClient, string> = {};' }];
+    expect(leaksIn({ files })).toEqual([]);
+  });
+
   test('names a path under supported/<id>', () => {
     const files = [{ path: 'tools/example.ts', text: `import { definition } from '../supported/cursor/definition';` }];
     expect(leaksIn({ files })).toEqual(['tools/example.ts:1 names cursor']);
