@@ -39,4 +39,6 @@ The red failure text of `b5a42bb1` is the vitest diff of each probe, for example
 
 - A file without an extension and a path written as bare prose are not detected, by design (spec Goals).
 - A folder link without a trailing slash and with a dot in its name is still read as a file.
+- A double-backtick code span is counted as two code spans; the report is wrong in number, still red.
+- `<code class="x">`, `<pre>`, a single-quoted `<a href>` and an autolink to a file were added after the first review round, each red first in the probe commit that follows `6b5d1072`; any other HTML element is not read.
 - The READMEs are stacked on `feat/agent-registry` at 2a5cbdc2; Step 13 of the plan re-reads three of them when the stack merges.
