@@ -10,6 +10,8 @@ const FRESHNESS_LINE_PATTERN = /<p class="figure-freshness([^"]*)">([^]*?)<\/p>/
 const BAR_PATTERN = /<rect class="bar [^"]*"[^>]*>/g;
 const LEGEND_ITEM_PATTERN = /<li>(<span class="legend-swatch [^"]*"><\/span>)?[^<]*\(/g;
 const LEGEND_ITEMS_PATTERN = /<ul class="chart-legend">([^]*?)<\/ul>/g;
+const EMPTY_STATE_PATTERN = /class="card hero-card empty-state"/g;
+const FIGURE_COUNT = 4;
 const HERO_CARD_PATTERN = /class="card hero-card"/g;
 const FIRST_CARD_PATTERN = /<section class="card[^"]*"/;
 
@@ -66,10 +68,23 @@ describe('metrics polish', () => {
     expect(html.match(FIRST_CARD_PATTERN)?.[0]).toContain('hero-card');
   });
 
-  it('renders the empty state once per empty section and no empty text', () => {
+  it('shows one page-level empty state and no section card when there is no activity at all', () => {
     const html = render({ data: false });
-    expect(html).toContain('class="empty-state"');
-    expect(html).not.toContain('empty-text');
+    expect(html.match(EMPTY_STATE_PATTERN)).toHaveLength(1);
+    expect(html).not.toContain('aria-labelledby="metrics-');
+    expect(html).not.toContain('empty-inline');
     expect(html).toContain(copy[BackofficeCopyKey.MetricsNoData]);
+  });
+
+  it('keeps the four figures above the page-level empty state', () => {
+    expect(render({ data: false }).match(/class="figure"/g)).toHaveLength(FIGURE_COUNT);
+  });
+
+  it('shows a compact inline line, not the bubble, for an empty section among sections with data', () => {
+    const report = { ...DATA_REPORT, restricted: [], agentsByClient: [] };
+    const html = String(MetricsPage({ page: PAGE, filter: METRICS_FILTER, report, now: NOW }));
+    expect(html).not.toContain('empty-state');
+    expect(html).toContain(`<p class="empty-inline">${copy[BackofficeCopyKey.MetricsNoData]}</p>`);
+    expect(html.match(HERO_CARD_PATTERN)).toHaveLength(1);
   });
 });
