@@ -112,6 +112,11 @@ describe('the generated files', () => {
     expect(writePlan({ plan: await realPlan(), mode: GenerationMode.Check })).toEqual([]);
   });
 
+  test('every agent page in apps/docs is the copy of its folder page', async () => {
+    const { violations } = await realPlan();
+    expect(violations.filter((violation) => PAGE_NOT_MOVED_YET_PATTERN.test(violation))).toEqual([]);
+  });
+
   test('the plan has no violations', async () => {
     const { violations } = await realPlan();
     expect(violations.filter((violation) => !PAGE_NOT_MOVED_YET_PATTERN.test(violation))).toEqual([]);
