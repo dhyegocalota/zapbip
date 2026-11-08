@@ -29,7 +29,6 @@ const REAL_AGENT_IDS = [
 const INSTALL_FILES = ['install.en_US.md', 'install.pt_BR.md'];
 const MATRIX_SNIPPETS = ['apps/docs/snippets/agents/matrix.mdx', 'apps/docs/snippets/pt-br/agents/matrix.mdx'];
 const CONNECTOR_SNIPPETS = ['apps/docs/snippets/agents/connector-clients.mdx', 'apps/docs/snippets/pt-br/agents/connector-clients.mdx'];
-const PAGE_NOT_MOVED_YET_PATTERN = / has no page\.(en|pt-br)\.mdx$/;
 const ENUM_MEMBER_PATTERN = /^\s*(\w+) = '([a-z-]+)',?$/;
 
 type Fixture = { id: string; member: string; englishName: string; portugueseName: string };
@@ -114,12 +113,12 @@ describe('the generated files', () => {
 
   test('every agent page in apps/docs is the copy of its folder page', async () => {
     const { violations } = await realPlan();
-    expect(violations.filter((violation) => PAGE_NOT_MOVED_YET_PATTERN.test(violation))).toEqual([]);
+    expect(violations.filter((violation) => violation.includes(' has no page.'))).toEqual([]);
   });
 
   test('the plan has no violations', async () => {
     const { violations } = await realPlan();
-    expect(violations.filter((violation) => !PAGE_NOT_MOVED_YET_PATTERN.test(violation))).toEqual([]);
+    expect(violations).toEqual([]);
   });
 });
 
@@ -184,7 +183,23 @@ describe('adding an agent folder', () => {
 });
 
 describe('removing an agent folder', () => {
-  REAL_AGENT_IDS.forEach((id) => test.todo(`G3: ${id} vanishes from every planned file, once its pages live in its folder`));
+  async function planWithout(input: { id: string }): Promise<GenerationPlan> {
+    const agents = discoverAgents({ roots: [SUPPORTED_ROOT] }).filter((agent) => agent.id !== input.id);
+    return planGeneratedFiles({ agents, readSource, listSource });
+  }
+
+  test.each(REAL_AGENT_IDS)('G3: %s vanishes from every planned file', async (id) => {
+    const removed = await planWithout({ id });
+    expect(removed.deletions.sort()).toEqual([`apps/docs/agents/${id}.mdx`, `apps/docs/pt-br/agents/${id}.mdx`]);
+    expect(removed.violations).toEqual([]);
+    removed.writes.forEach((write) => {
+      expect(write.content).not.toContain(`agents/${id})`);
+      expect(write.content).not.toContain(`'${id}'`);
+    });
+    MATRIX_SNIPPETS.forEach((path) =>
+      expect(contentOf({ plan: removed, path }).match(/\]\(\/(?:pt-br\/)?agents\//g)).toHaveLength(REAL_AGENT_IDS.length - 1),
+    );
+  });
 });
 
 describe('no file outside an agent folder names an agent', () => {

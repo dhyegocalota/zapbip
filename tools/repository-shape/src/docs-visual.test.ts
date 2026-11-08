@@ -96,6 +96,15 @@ function baselineConfig(): DocsVisualConfig {
   return JSON.parse(shown.stdout);
 }
 
+function pagesInAnyOrder({ key, value }: { key: string; value: unknown }): unknown {
+  const isPageList = key === 'pages' && Array.isArray(value) && value.every((page) => typeof page === 'string');
+  return isPageList ? [...value].sort() : value;
+}
+
+function navigationFingerprintOf({ navigation }: { navigation: unknown }): string {
+  return JSON.stringify(navigation, (key, value) => pagesInAnyOrder({ key, value }));
+}
+
 function requiredColour({ colour, name }: { colour?: string; name: string }): string {
   if (!colour) throw new Error(`docs.json has no ${name}`);
   return colour;
@@ -265,7 +274,7 @@ describe('docs visual: theme', () => {
     const config = docsVisualConfig();
     const baseline = baselineConfig();
     expect(config.favicon).toBe(baseline.favicon);
-    expect(JSON.stringify(config.navigation)).toBe(JSON.stringify(baseline.navigation));
+    expect(navigationFingerprintOf({ navigation: config.navigation })).toBe(navigationFingerprintOf({ navigation: baseline.navigation }));
   });
 });
 

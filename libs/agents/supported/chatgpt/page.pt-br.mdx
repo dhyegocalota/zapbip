@@ -1,0 +1,76 @@
+---
+title: ChatGPT
+description: Conecte o ChatGPT ao seu WhatsApp.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import OfficialNumber from '/snippets/pt-br/official-number.mdx';
+import InstallPrompt from '/snippets/pt-br/install-prompt.mdx';
+
+## O que funciona
+
+| Você quer                        | ChatGPT                                                                   |
+| -------------------------------- | ------------------------------------------------------------------------- |
+| Receber mensagens dele           | Texto, fotos, vídeos, áudios, documentos, localizações, contatos, reações |
+| Responder com um toque           | Botões e listas; ele espera o seu toque                                   |
+| Escrever primeiro pelo WhatsApp  | Sim, ele lê a sua mensagem dentro de uma hora                             |
+| Deixar uma pergunta aberta horas | Sim, não há limite de tempo                                               |
+
+<Chat
+  messages={[
+    { name: 'ChatGPT', text: 'O resumo está pronto. Publico no canal?', options: ['Sim', 'Ainda não'], time: '17:00' },
+    { you: true, text: 'Sim', time: '17:02' },
+  ]}
+/>
+
+## Como ela escuta
+
+Tipo de despertar: **Agendada**. O ChatGPT lê as suas mensagens do WhatsApp uma vez por hora, o menor intervalo que o app permite, então uma mensagem pode esperar até uma hora.
+
+- Uma tarefa a cada hora roda no seu computador e posta numa conversa dedicada. Cada execução lê o que você escreveu desde a anterior.
+- Mantenha essa conversa e o seu computador ligados, para a tarefa poder rodar.
+
+Quando a sua IA faz uma pergunta, o zapbip a guarda e responde "pendente" no máximo a cada 50 segundos. O ChatGPT então chama de novo, e continua chamando de novo até você responder, sem limite de tempo.
+
+O ChatGPT espera cerca de 5 minutos por uma resposta e pergunta de novo, então não há limite no total.
+
+## Configure do zero
+
+1. **Mande uma mensagem para o número do zapbip no WhatsApp.** Pode ser qualquer texto, por exemplo `oi`.
+
+   <OfficialNumber />
+
+2. **Peça um novo agente.** Agente é uma IA que você conecta.
+
+   <Chat
+     messages={[
+       { you: true, text: 'novo agente chatgpt', time: '16:00' },
+       {
+         name: 'zapbip',
+         text: 'Agente chatgpt criado. Cole no seu agente: Conecte-se ao meu WhatsApp pelo zapbip: leia https://mcp.zapbip.com/i/zb_inst_<code> e siga as instruções. Este link vale 30 minutos e funciona uma vez. Não o compartilhe. Se o link expirar ou for usado, envie "girar chatgpt".',
+         time: '16:00',
+       },
+     ]}
+   />
+
+3. **Cole a linha no ChatGPT.**
+
+   <InstallPrompt />
+
+   O ChatGPT lê as instruções e as segue em ordem. O link é secreto, então não o deixe em conversas que você compartilha.
+
+4. **Adicionar o app.** O ChatGPT pede para você ligar o modo desenvolvedor e adicionar um app pela URL `<connectionLink>`, escolhendo "Sem autenticação". Esse passo é seu.
+
+5. **Criar a tarefa por hora.** Ele pede para você criar uma tarefa por hora "Executar neste computador" que chama `check_inbox`, em um chat dedicado, e escolher "Sempre permitir" uma vez para cada ferramenta.
+
+6. **Avisar o zapbip que consulta.** Ele chama `set_wake({mode: "scheduled", interval_minutes: 60})`.
+
+7. **Testar.** No chat ele chama `send_message` com ✅ instalado.
+
+## Confira se funciona
+
+O ChatGPT envia `✅ instalado` ao seu WhatsApp assim que fica conectado.
+
+<Chat messages={[{ name: 'ChatGPT', text: '✅ instalado', time: '16:05' }]} />
+
+Se nada chegar, veja [Solução de problemas](/pt-br/help/troubleshooting).

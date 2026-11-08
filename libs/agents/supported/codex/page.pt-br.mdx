@@ -1,0 +1,77 @@
+---
+title: Codex
+description: Conecte o Codex ao seu WhatsApp.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import OfficialNumber from '/snippets/pt-br/official-number.mdx';
+import InstallPrompt from '/snippets/pt-br/install-prompt.mdx';
+
+## O que funciona
+
+| Você quer                        | Codex                                                                     |
+| -------------------------------- | ------------------------------------------------------------------------- |
+| Receber mensagens dele           | Texto, fotos, vídeos, áudios, documentos, localizações, contatos, reações |
+| Responder com um toque           | Botões e listas; ele espera o seu toque                                   |
+| Escrever primeiro pelo WhatsApp  | Sim, ele responde em cerca de 6 segundos, mesmo com a sessão parada       |
+| Deixar uma pergunta aberta horas | Sim, não há limite de tempo                                               |
+
+<Chat
+  messages={[
+    { name: 'Codex', text: 'A migração terminou. Rodo o script de seed também?', options: ['Sim', 'Não'], time: '11:40' },
+    { you: true, text: 'Sim', time: '11:41' },
+  ]}
+/>
+
+## Como ela escuta
+
+Tipo de despertar: **Local**. Um conector no seu computador retoma a sua sessão do Codex com `codex exec resume` toda vez que você escreve, em cerca de 6 segundos. Se o Codex já estiver com a sessão aberta no app, a retomada espera a sessão ficar livre.
+
+- Mantenha o conector rodando. Para ele continuar vivo depois de fechar o terminal, siga [Rode o conector como serviço](/pt-br/developers/background-running).
+
+Quando a sua IA faz uma pergunta, o zapbip a guarda e responde "pendente" no máximo a cada 50 segundos. O Codex então chama de novo, e continua chamando de novo até você responder, sem limite de tempo.
+
+O limite de 900 segundos por ferramenta, que a instalação define no Codex, vale para uma chamada, não para a escuta. Quando uma chamada termina, o Codex começa a próxima.
+
+O Codex espera até 15 minutos por uma resposta e pergunta de novo, então não há limite no total.
+
+## Configure do zero
+
+1. **Mande uma mensagem para o número do zapbip no WhatsApp.** Pode ser qualquer texto, por exemplo `oi`.
+
+   <OfficialNumber />
+
+2. **Peça um novo agente.** Agente é uma IA que você conecta.
+
+   <Chat
+     messages={[
+       { you: true, text: 'novo agente codex', time: '11:00' },
+       {
+         name: 'zapbip',
+         text: 'Agente codex criado. Cole no seu agente: Conecte-se ao meu WhatsApp pelo zapbip: leia https://mcp.zapbip.com/i/zb_inst_<code> e siga as instruções. Este link vale 30 minutos e funciona uma vez. Não o compartilhe. Se o link expirar ou for usado, envie "girar codex".',
+         time: '11:00',
+       },
+     ]}
+   />
+
+3. **Cole a linha no Codex.**
+
+   <InstallPrompt />
+
+   O Codex lê as instruções e as segue em ordem. Antes de mudar um arquivo ou uma configuração, ele diz qual é e espera o seu sim. O link é secreto, então não o deixe em conversas que você compartilha.
+
+4. **Diga sim.** O Codex faz o resto, nesta ordem.
+
+5. **Adicionar o zapbip ao Codex.** Depois do seu sim, ele troca a tabela `[mcp_servers.zapbip]` em `~/.codex/config.toml` por `url = "<connectionLink>"`, `tool_timeout_sec = 900` e `default_tools_approval_mode = "approve"`. O modo de aprovação deixa as ferramentas do zapbip rodarem sem pedir a cada vez, e o Codex avisa você disso.
+
+6. **Iniciar o conector.** Ele roda `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 connect --client codex` em segundo plano. Ele continua escutando e retoma a sua sessão com `codex exec resume`.
+
+7. **Testar.** Em um processo novo ele roda `codex exec -c 'mcp_servers.zapbip.default_tools_approval_mode="approve"' "Call send_message with the text '✅ instalado'"`. Um `send_message` com ✅ instalado chega ao seu WhatsApp. Se o comando falhar, ele para e mostra as últimas 20 linhas. Depois reinicie o Codex.
+
+## Confira se funciona
+
+Peça ao Codex para enviar `✅ instalado` ao seu WhatsApp. Deve chegar em poucos segundos.
+
+<Chat messages={[{ name: 'Codex', text: '✅ instalado', time: '11:03' }]} />
+
+Se nada chegar, veja [Solução de problemas](/pt-br/help/troubleshooting).

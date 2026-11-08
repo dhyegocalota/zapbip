@@ -1,0 +1,77 @@
+---
+title: claude.ai
+description: Conecte o claude.ai ao seu WhatsApp.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import OfficialNumber from '/snippets/pt-br/official-number.mdx';
+import InstallPrompt from '/snippets/pt-br/install-prompt.mdx';
+
+## O que funciona
+
+| Você quer                        | claude.ai                                                                 |
+| -------------------------------- | ------------------------------------------------------------------------- |
+| Receber mensagens dele           | Texto, fotos, vídeos, áudios, documentos, localizações, contatos, reações |
+| Responder com um toque           | Botões e listas; ele espera o seu toque                                   |
+| Escrever primeiro pelo WhatsApp  | Sim, uma tarefa o acorda em cerca de 16 segundos                          |
+| Deixar uma pergunta aberta horas | Sim, não há limite de tempo                                               |
+
+<Chat
+  messages={[
+    { name: 'Claude', text: 'O relatório está pronto. Mando para o time?', options: ['Sim', 'Ainda não'], time: '08:15' },
+    { you: true, text: 'Sim', time: '08:16' },
+  ]}
+/>
+
+## Como ela escuta
+
+Tipo de despertar: **Webhook**. Quando você escreve no WhatsApp, o zapbip dispara o link de gatilho de uma tarefa do claude.ai, e a tarefa roda na nuvem com os seus conectores. Ele responde cerca de 16 segundos depois que você escreve, sem pedir aprovação.
+
+- As tarefas do claude.ai rodam num agendamento no máximo uma vez por hora. Por isso você também cria uma tarefa a cada hora que confere as suas mensagens: ela é só uma rede de segurança, para nada esperar mais de uma hora se um despertar falhar.
+
+Quando a sua IA faz uma pergunta, o zapbip a guarda e responde "pendente" no máximo a cada 50 segundos. O claude.ai então chama de novo, e continua chamando de novo até você responder, sem limite de tempo.
+
+O claude.ai espera cerca de 4 minutos por uma resposta e tenta de novo sozinho, então não há limite no total.
+
+## Configure do zero
+
+1. **Mande uma mensagem para o número do zapbip no WhatsApp.** Pode ser qualquer texto, por exemplo `oi`.
+
+   <OfficialNumber />
+
+2. **Peça um novo agente.** Agente é uma IA que você conecta.
+
+   <Chat
+     messages={[
+       { you: true, text: 'novo agente claude-ai', time: '08:00' },
+       {
+         name: 'zapbip',
+         text: 'Agente claude-ai criado. Cole no seu agente: Conecte-se ao meu WhatsApp pelo zapbip: leia https://mcp.zapbip.com/i/zb_inst_<code> e siga as instruções. Este link vale 30 minutos e funciona uma vez. Não o compartilhe. Se o link expirar ou for usado, envie "girar claude-ai".',
+         time: '08:00',
+       },
+     ]}
+   />
+
+3. **Cole a linha no claude.ai.**
+
+   <InstallPrompt />
+
+   O claude.ai lê as instruções e as segue em ordem. O link é secreto, então não o deixe em conversas que você compartilha.
+
+4. **Colar o conector.** O claude.ai pede para você colar `<connectionLink>` como conector personalizado nas Configurações. Esse passo é seu, porque o claude.ai só permite que você o faça.
+
+5. **Criar a tarefa de despertar.** Ele pede para você criar uma tarefa com gatilho de API em claude.ai/code/routines e colar no chat a URL de disparo e o token. A segunda colagem também é sua, porque o claude.ai mostra o token só para você.
+
+6. **Avisar o zapbip como acordá-lo.** Se você parar antes de a tarefa existir, ele chama `set_wake({mode: "none"})` e avisa que o chat só vê mensagens novas quando você o abre. Caso contrário, chama `set_wake({mode: "webhook", url, token})`.
+
+7. **Criar a rede de segurança por hora.** Ele pede para você criar uma tarefa por hora que chama `check_inbox`, para nada esperar mais de uma hora se um despertar falhar.
+
+8. **Testar.** No chat ele chama `send_message` com ✅ instalado.
+
+## Confira se funciona
+
+O claude.ai envia `✅ instalado` ao seu WhatsApp assim que fica conectado.
+
+<Chat messages={[{ name: 'Claude', text: '✅ instalado', time: '08:05' }]} />
+
+Se nada chegar, veja [Solução de problemas](/pt-br/help/troubleshooting).
