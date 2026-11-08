@@ -1,16 +1,19 @@
+import { DAY_MS } from '@zapbip/types';
 import type { Page } from '@playwright/test';
 import { BackofficeCopyKey } from '../../src/backoffice/backoffice-copy';
-import { MetricCell } from '../../src/backoffice/metrics/metric-cell';
+import { keyedCell, MetricCell } from '../../src/backoffice/metrics/metric-cell';
 import { NUMBER_QUERY } from '../../src/backoffice/metrics/metrics-filter';
 import { expect, test } from './fixtures';
 import { expectNoHorizontalScroll } from './support/layout';
-import { ALPHA_NUMBER, EXPECTED_ALL, EXPECTED_ALPHA, seedMetrics } from './support/metrics-seed';
+import { ALPHA_NUMBER, EXPECTED_ALL, EXPECTED_ALPHA, EXPECTED_BUDGET, seedMetrics } from './support/metrics-seed';
 import { copy } from './support/copy';
 import { signIn } from './support/sign-in';
 
+const ISO_DAY_LENGTH = 'YYYY-MM-DD'.length;
+
 test.beforeEach(({ page }) => signIn({ page }));
 
-function cell(input: { page: Page; name: MetricCell }) {
+function cell(input: { page: Page; name: string }) {
   return input.page.locator(`[data-cell="${input.name}"]`);
 }
 
@@ -42,6 +45,20 @@ test('shows seeded metrics and filters by number', async ({ page }) => {
   await expect(cell({ page, name: MetricCell.Accounts })).toHaveText(EXPECTED_ALPHA.accounts);
   await expect(cell({ page, name: MetricCell.AgentsActive })).toHaveText(EXPECTED_ALPHA.agentsActive);
   await expect(cell({ page, name: MetricCell.MessagesIn })).toHaveText(EXPECTED_ALPHA.messagesIn);
+});
+
+test('draws the budget per day against the limit and ignores the number filter', async ({ page }) => {
+  seedMetrics();
+  await openMetrics({ page });
+  const yesterday = new Date(Date.now() - DAY_MS).toISOString().slice(0, ISO_DAY_LENGTH);
+  await expect(cell({ page, name: MetricCell.BudgetUsed })).toHaveText(EXPECTED_BUDGET.today);
+  await expect(cell({ page, name: keyedCell({ cell: MetricCell.BudgetUsed, key: yesterday }) })).toHaveText(EXPECTED_BUDGET.yesterday);
+  await expect(page.locator('#chart-budget-title')).toBeAttached();
+  await expect(page.locator('#chart-budget-hatch')).toBeAttached();
+  await page.getByLabel(copy({ key: BackofficeCopyKey.MetricsFilterNumber }), { exact: true }).selectOption({ label: ALPHA_NUMBER.label });
+  await page.getByRole('button', { name: copy({ key: BackofficeCopyKey.MetricsFilterApply }) }).click();
+  await expect(cell({ page, name: keyedCell({ cell: MetricCell.BudgetUsed, key: yesterday }) })).toHaveText(EXPECTED_BUDGET.yesterday);
+  await expect(page.getByText(copy({ key: BackofficeCopyKey.MetricsBudgetAccountWide }))).toBeVisible();
 });
 
 test('draws script-free charts with their values in a native table and no horizontal scroll', async ({ page }) => {

@@ -17,6 +17,10 @@ Metrics (PR B: `activity-in-object.test.ts`, `activity-flush.test.ts`, `backoffi
 - [ ] `activity-recording.test.ts` — a `notify` answering `unreached` records `wakes_unreached`; `hasFailedWake` records nothing — evidence: unit, 3 passed
 - [ ] `activity-flush.test.ts` — after the flush alarm the next pending deadline is armed at its real time; skipping the re-arm after the flush turns it red — evidence: 7 passed; mutation `expected null to be 1893499800007`
 
+- [ ] `backoffice-metrics.test.ts` — `usage_daily` rows on yesterday (two accounts), today and ten days ago → `budget-used:<day>` cells sum per day; `period=7` drops the ten-day-old day; `number=<id>` keeps the same values and shows the account-wide note; the budget stays inside the one batch of selects
+- [ ] `activity-in-object.test.ts` — `activity_meter` dropped, then a session send → the send reports success, the channel is called once, the log carries `activity_record_failed` and nothing else
+- [ ] `backoffice-format-percent.test.ts` — `66.66666` → `66.7%`, `75` → `75.0%`, in both locales
+
 ## E2E (Playwright specs)
 
 - [ ] `metrics.spec.ts` — the figures match the seed, the filter narrows to one number, the charts carry no script, no horizontal scroll at 1280 and 375 — evidence: walk 40 passed at dfdfe761

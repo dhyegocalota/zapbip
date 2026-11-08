@@ -47,6 +47,15 @@ One developer. Branch `feat/backoffice-metrics`, merged from `feat/backoffice` a
   - [x] `wakes_unreached` counts a `notify` that answered `unreached`; a mention that makes no wake attempt counts nothing, and the briefing now says so. — evidence: pin, `activity-recording.test.ts` (3 passed)
   - [x] After the activity flush alarm fires, the next pending deadline is still armed, and the assertion fails when the re-arm after the flush is skipped. — evidence: the first run failed with `expected 1893499205022 to be 1893499800006` because the usage meter was already due again; the test now marks usage flushed first (7 passed). Mutation: removing the `armAlarm()` at the end of `alarm()` fails it with `expected null to be 1893499800007`; restored
 
+- [x] **Step 33b:** PR B review (WITH RESERVATIONS). Decisions owner delegated 2026-11-06.
+  - [x] The budget is one bar per day of the period against the limit and the 80 % line, from `usage_daily` in the same single batch, account-wide with a note. — evidence: red b3f74f0a (`cell budget-used:2026-11-06 is missing`) → green 855aad37 (`backoffice-metrics` 32 passed with `activity-in-object`); walk case in `metrics.spec.ts`
+  - [x] `docs/features/README.md` no longer says the shipped `backoffice` delivers metrics; the metrics design moved to `backoffice-metrics/design.md`. — evidence: this commit
+  - [x] Recording never fails a send or a wake, and only a channel delivery failure counts as `sends_failed`. — evidence: red b3f74f0a (`expected ok, received delivery_failed`; a plain error counted) → green 855aad37 (unit 14 and the dropped-table integration case)
+  - [x] The spec says `activity_daily.number_id` follows the account's current number. — evidence: this commit
+  - [x] One percent formatter, `format-percent.ts`, with the `%` in a copy key. — evidence: red b3f74f0a (`formatPercent is not implemented`) → green 855aad37
+  - [x] `activity-flush.test.ts` restores mocks after each test. — evidence: this commit
+  - [x] The midnight case starts half an hour before midnight, so a loaded machine cannot cross by accident. — evidence: this commit
+
 ### G6 browser specs
 
 - [x] **Step 39m:** `e2e/backoffice/metrics.spec.ts` with `support/metrics-seed.ts` and `support/layout.ts`, at 1280 and 375. — evidence: pin 3857ef49 (lands after the page); `pnpm --filter @zapbip/api test:walk` 40 passed at dfdfe761

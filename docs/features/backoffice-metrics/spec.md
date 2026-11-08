@@ -30,6 +30,8 @@ The operator has a signed-in backoffice and no view of how the product is used: 
 - Durable Object migration `v8.sql` adds `activity_meter(day, metric, count, flushed_count, recorded_at, last_flushed_at)`. It is written synchronously in the account's Durable Object, in the same place the event happens.
 - `createActivityProvider` flushes it hourly to D1 `activity_daily(day, account_id, number_id, metric, count, PRIMARY KEY (day, account_id, metric))`. It is a `DueTimeProvider`, the same pattern as v7's `usage_meter` → `usage_daily`.
 - No metric adds a D1 write per message.
+- `activity_daily.number_id` is the account's current number at the flush: when an account's number changes, the rows of that day are re-attributed to the new number on the next flush.
+- Recording never fails a send or a wake: a recording error is caught and logged by event name only, and only a delivery failure of the channel counts as `sends_failed`.
 
 `ActivityMetric` enum (`apps/api/src/contract/activity-metric.ts`): `messages_in`, `messages_out`, `templates_sent_notice`, `templates_sent_question`, `sends_failed`, `wakes_woken`, `wakes_unreached`.
 
@@ -47,7 +49,7 @@ The operator has a signed-in backoffice and no view of how the product is used: 
 | Template sends | out-of-window notices sent, by kind | `templates_sent_notice`, `templates_sent_question` | up to 1 h |
 | Send failures | sends that ended `failed` at send time | `sends_failed` | up to 1 h |
 | Wake success | `woken / (woken + unreached)` per day, by rung outcome | `wakes_woken`, `wakes_unreached` | up to 1 h |
-| Durable Object budget | `SUM(gigabyte_seconds)` per day from v7 against `DURABLE_OBJECT_DAILY_GIGABYTE_SECONDS` (13 000), with the `DAILY_BUDGET_WARNING_RATIO` (0.8) line; `isBudgetWarning` decides the colour | D1 `usage_daily` (deploy-readiness) | up to 1 h |
+| Durable Object budget | `SUM(gigabyte_seconds)` per day over the selected period from v7, one bar per day against `DURABLE_OBJECT_DAILY_GIGABYTE_SECONDS` (13 000) with the `DAILY_BUDGET_WARNING_RATIO` (0.8) line; `isBudgetWarning` decides today's status. Account-wide: it ignores the number filter and the page says so | D1 `usage_daily` (deploy-readiness) | up to 1 h |
 | Blocked phones | rows of `blocked_phones` | D1 | live |
 | Restricted numbers | `channel_restrictions` within `RESTRICTION_TTL_MS`, per number | D1 | live |
 | Wake attempt latency and status class | phase 2 | Analytics Engine `WAKE_METRICS` through the SQL API, which needs a read-only analytics token | none in phase 1 |

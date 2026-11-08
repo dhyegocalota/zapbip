@@ -10,6 +10,7 @@ const ISO_DAY_LENGTH = 'YYYY-MM-DD'.length;
 
 export const ALPHA_NUMBER = { id: 'walk_num_alpha', label: 'Walk alpha', phoneNumberId: '2000000000001', displayNumber: '+5511900000001' };
 export const BRAVO_NUMBER = { id: 'walk_num_bravo', label: 'Walk bravo', phoneNumberId: '2000000000002', displayNumber: '+5511900000002' };
+export const EXPECTED_BUDGET = { today: '4200', yesterday: '3100' };
 export const EXPECTED_ALL = { accounts: '3', messagesIn: '12', agentsActive: '2' };
 export const EXPECTED_ALPHA = { accounts: '1', messagesIn: '5', agentsActive: '1' };
 
@@ -34,6 +35,10 @@ function insertActivity(input: { day: string; accountId: string; numberId: strin
   return `INSERT INTO activity_daily (day, account_id, number_id, metric, count) VALUES ('${input.day}', '${input.accountId}', '${input.numberId}', '${input.metric}', ${input.count})`;
 }
 
+function insertUsage(input: { day: string; accountId: string; gigabyteSeconds: number }): string {
+  return `INSERT INTO usage_daily (day, account_id, gigabyte_seconds) VALUES ('${input.day}', '${input.accountId}', ${input.gigabyteSeconds})`;
+}
+
 export function seedMetrics(): void {
   const now = Date.now();
   const today = new Date(now).toISOString().slice(0, ISO_DAY_LENGTH);
@@ -49,6 +54,9 @@ export function seedMetrics(): void {
       insertAccount({ id: 'walk_acc_three', numberId: BRAVO_NUMBER.id, createdAt: now - DAY_MS }),
       insertAgent({ id: 'walk_agent_one', accountId: 'walk_acc_one', createdAt: now }),
       insertAgent({ id: 'walk_agent_two', accountId: 'walk_acc_two', createdAt: now }),
+      insertUsage({ day: today, accountId: 'walk_acc_one', gigabyteSeconds: 4200 }),
+      insertUsage({ day: yesterday, accountId: 'walk_acc_one', gigabyteSeconds: 2000 }),
+      insertUsage({ day: yesterday, accountId: 'walk_acc_two', gigabyteSeconds: 1100 }),
       insertActivity({ day: today, accountId: 'walk_acc_one', numberId: ALPHA_NUMBER.id, metric: ActivityMetric.MessagesIn, count: 3 }),
       insertActivity({ day: yesterday, accountId: 'walk_acc_one', numberId: ALPHA_NUMBER.id, metric: ActivityMetric.MessagesIn, count: 2 }),
       insertActivity({ day: today, accountId: 'walk_acc_two', numberId: BRAVO_NUMBER.id, metric: ActivityMetric.MessagesIn, count: 7 }),

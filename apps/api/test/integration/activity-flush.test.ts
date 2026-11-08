@@ -1,9 +1,9 @@
 import { DAY_MS, HOUR_MS } from '@zapbip/types';
 import { reset, runDurableObjectAlarm, runInDurableObject } from 'cloudflare:test';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { USAGE_METER_RETENTION_MS } from '../../src/account-inbox/usage-meter';
 import { ActivityMetric } from '../../src/contract/activity-metric';
-import { MIDDAY_START, pinClockAt, SHORTLY_BEFORE_MIDNIGHT_START } from '../support/pinned-clock';
+import { MIDDAY_START, pinClockAt, HALF_AN_HOUR_BEFORE_MIDNIGHT_START } from '../support/pinned-clock';
 import { advanceClock, openWindow, registerDueTimeProvider } from '../support/inbox-session';
 import { applyActivityMigration, applyDirectoryMigration, seedAccount } from '../support/seed';
 import { TEST_NUMBER_ID, seedWhatsAppNumber } from '../support/whatsapp-numbers';
@@ -65,7 +65,10 @@ beforeEach(async () => {
   await seedWhatsAppNumber();
   await seedAccount({ accountId: ACCOUNT_ID, numberId: TEST_NUMBER_ID });
 });
-afterEach(reset);
+afterEach(async () => {
+  vi.restoreAllMocks();
+  await reset();
+});
 
 describe('activity flush to the directory', () => {
   it('writes the meter to the day row of the account number once the hour has passed', async () => {
@@ -113,7 +116,7 @@ describe('activity flush to the directory', () => {
   });
 
   it('keeps one row per UTC day when the hour of the flush crosses midnight', async () => {
-    pinClockAt({ at: SHORTLY_BEFORE_MIDNIGHT_START });
+    pinClockAt({ at: HALF_AN_HOUR_BEFORE_MIDNIGHT_START });
     await recordTwoSends();
     await sendAgentText();
     await flushDueActivity();
