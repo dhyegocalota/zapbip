@@ -49,7 +49,7 @@ Migration rule: a migration that has reached a deployed environment is never edi
 
    If it fails: a failed migration leaves the previous Worker serving; fix it with a new numbered migration, never by editing the one that ran. The D1 bookmark from this step can restore the directory.
 
-5. **Deploy.** Run `pnpm deploy:staging --first-deploy` for the first deploy of an environment, and `pnpm deploy:staging` afterwards (`pnpm deploy:production --first-deploy`, then `pnpm deploy:production`), in an interactive terminal. The command refuses, in order, the cheap things first: a wrong environment or a non-interactive terminal; production only: a `COMPANY` fact still `COMPANY_FACT_UNSET` ([mintlify-publish.md](mintlify-publish.md), step 3), a package on npm that your npm user (`ZAPBIP_NPM_PUBLISHER`) does not alone maintain and publish, or an npm answer that is not a clear yes or no (step 2), a hosted plugin file missing from the `zapbip-packages` bucket or hashing to something other than the hash its plugin pins (`hostedArtifacts` in `libs/agents/src/generated/plugins.ts`) ([mintlify-publish.md](mintlify-publish.md), step 5), and a Worker that does not export `scheduled`, a wrangler block without a cron trigger or a `/i/:installCode` route that is not mounted; then, for every environment: a `REPLACE_WITH_` placeholder in any letter case, a missing smoke input, a dirty tree (production also needs branch `main` equal to `origin/main`), a missing secret, a pending migration, a failing `pnpm verify` (`pnpm verify all` for production, and last because it takes minutes) and a failing dry run. Staging needs only placeholders and secrets in place: the company facts and the npm check are production gates. A package whose version is absent from npm, while its name is absent or yours alone, only prints `<package>@<version> is not on npm yet; publish it before launch` and the deploy goes on; the official number is checked by `pnpm docs:preflight`, never by the deploy. It prints the current Worker version and the D1 bookmark (or says there is no previous version, then a rollback means redeploying the prior commit): write both in the go-live record. For production it then asks you to type `production`.
+5. **Deploy.** Run `pnpm deploy:staging --first-deploy` for the first deploy of an environment, and `pnpm deploy:staging` afterwards (`pnpm deploy:production --first-deploy`, then `pnpm deploy:production`), in an interactive terminal. The command refuses, in order, the cheap things first: a wrong environment or a non-interactive terminal; production only: a `COMPANY` fact still `COMPANY_FACT_UNSET` ([mintlify-publish.md](mintlify-publish.md), step 2), a package on npm that your npm user (`ZAPBIP_NPM_PUBLISHER`) does not alone maintain and publish, or an npm answer that is not a clear yes or no (step 1), a hosted plugin file missing from the `zapbip-packages` bucket or hashing to something other than the hash its plugin pins (`hostedArtifacts` in `libs/agents/src/generated/plugins.ts`) ([mintlify-publish.md](mintlify-publish.md), step 4), and a Worker that does not export `scheduled`, a wrangler block without a cron trigger or a `/i/:installCode` route that is not mounted; then, for every environment: a `REPLACE_WITH_` placeholder in any letter case, a missing smoke input, a dirty tree (production also needs branch `main` equal to `origin/main`), a missing secret, a pending migration, a failing `pnpm verify` (`pnpm verify all` for production, and last because it takes minutes) and a failing dry run. Staging needs only placeholders and secrets in place: the company facts and the npm check are production gates. A package whose version is absent from npm, while its name is absent or yours alone, only prints `<package>@<version> is not on npm yet; publish it before launch` and the deploy goes on; `pnpm docs:preflight` refuses it, never the deploy. It prints the current Worker version and the D1 bookmark (or says there is no previous version, then a rollback means redeploying the prior commit): write both in the go-live record. For production it then asks you to type `production`.
 
    Expect: `wrangler deploy` succeeds and the smoke test runs. With `--first-deploy` the smoke test skips checks 2 and 5 (they need the smoke connection) and prints how to create it. After the first staging deploy, register the staging number ([backoffice.md](backoffice.md), steps 2 to 4), then finish [meta-setup.md](meta-setup.md) step 9.
 
@@ -81,7 +81,7 @@ Migration rule: a migration that has reached a deployed environment is never edi
 
 ## Go-live order
 
-Follow the steps in order. Each step names the runbook that holds its detail, and agents never run them: creating accounts, logging in, spending money and deploying are the owner's acts. Staging comes first and does not wait for the official number, the company facts or the published packages, which gate the docs and production.
+Follow the steps in order. Each step names the runbook that holds its detail, and agents never run them: creating accounts, logging in, spending money and deploying are the owner's acts. Staging comes first and does not wait for the company facts or the published packages, which gate the docs and production.
 
 1. **Prepare your machine.** You need git, Node 24, `pnpm`, `openssl` (generates secrets), `shasum` (checks the wheel hash), `curl` and `dig` (checks), Python 3.11 to 3.14 with `pip` (the wheel build) and the repository. Install git from `https://git-scm.com/downloads`. Install Node 24 with a version manager (`nvm install 24` after installing `https://github.com/nvm-sh/nvm`, or the installer at `https://nodejs.org`). Turn on `pnpm` with `corepack enable`, which reads the pinned version from `package.json`. Then clone the repository with `git clone https://github.com/dhyegocalota/zapbip.git`, open the folder, and run `pnpm install --frozen-lockfile`.
 
@@ -148,16 +148,16 @@ Follow the steps in order. Each step names the runbook that holds its detail, an
    Expect: the smoke test passes after each move. Paste the output into the go-live record.
 
    If it fails: stop. Do not go to production with an untested rollback.
-14. **Publish the packages.** Do steps 2, 4 and 5 of `mintlify-publish.md`: `zapbip` and every npm plugin on npm, and every self-hosted plugin file in the `zapbip-packages` bucket.
+14. **Publish the packages.** Do steps 1, 3 and 4 of `mintlify-publish.md`: `zapbip` and every npm plugin on npm, and every self-hosted plugin file in the `zapbip-packages` bucket.
 
    Do this before step 20: the production deploy refuses until the plugin files are in the bucket. An npm package may wait until launch: the production deploy only warns that it is not on npm yet (and prints the warning again after the smoke test), and `pnpm docs:preflight` refuses until it is. After publishing, run `npm view <name>@<version> maintainers --json` for each package and expect your npm user.
 
-   Expect: `npm view` lists your npm user as a maintainer of every npm package, and the `object get` check of `mintlify-publish.md` step 5 hashes to the hash the plugin pins.
+   Expect: `npm view` lists your npm user as a maintainer of every npm package, and the `object get` check of `mintlify-publish.md` step 4 hashes to the hash the plugin pins.
 
    If it fails: the failing step of `mintlify-publish.md` says what to check.
-15. **Company facts.** Do step 3 of `mintlify-publish.md`: the Logic Bit company facts. Step 1 of `mintlify-publish.md`, the production number from step 3 of `meta-setup.md`, waits until step 23, after step 21 registers the number.
+15. **Company facts.** Do step 2 of `mintlify-publish.md`: the Logic Bit company facts.
 
-    Expect: `COMPANY_FACT_UNSET` is not left in `libs/types/src/constants.ts` apart from its definition; `OFFICIAL_NUMBER_UNSET` may stay until step 23.
+    Expect: `COMPANY_FACT_UNSET` is not left in `libs/types/src/constants.ts` apart from its definition.
 
     If it fails: `pnpm docs:preflight` refuses and names what is still unset; the production deploy refuses only the company facts.
 16. **Production Meta credentials.** Do steps 5 to 8 of `meta-setup.md` for production (the production app, its secret, its system user token and its verify token).
@@ -185,9 +185,9 @@ Follow the steps in order. Each step names the runbook that holds its detail, an
     Expect: the deploy ends with the smoke test (checks 1, 3 and 4 pass) and the health route answers on `mcp.zapbip.com` and on `backoffice.zapbip.com` (the sign-in page).
 
     If it fails: `deploy.md` step 8 rolls back the Worker.
-21. **Register the production number.** Do steps 2 to 4 of `backoffice.md` on `https://backoffice.zapbip.com` for the production app and the official number.
+21. **Register the production number.** Do steps 2 to 4 of `backoffice.md` on `https://backoffice.zapbip.com` for the production app and the production number from step 3 of `meta-setup.md`.
 
-    Expect: the number shows `active` in the backoffice.
+    Expect: the number shows `active` in the backoffice, and `curl -sI https://mcp.zapbip.com/start` prints `302` and a `location:` header that starts with `https://wa.me/`. The docs link that address, so this check comes before the docs are published.
 
     If it fails: the failing step of `backoffice.md` says what to check.
 22. **Point the production Meta webhook.** Do step 9 of `meta-setup.md` for the production app.
@@ -195,7 +195,7 @@ Follow the steps in order. Each step names the runbook that holds its detail, an
     Expect: Meta verifies the production webhook and shows both fields subscribed.
 
     If it fails: step 9 of `meta-setup.md` says what to check.
-23. **Publish the docs.** Do step 1, then steps 6 to 11 of `mintlify-publish.md`, starting with `pnpm docs:preflight`, which needs no DNS but reads the production Worker: it checks the constants, npm and the plugin files served at `https://mcp.zapbip.com/pkg/`. The custom domain of step 10 uses steps 4 and 5 of `dns.md`. The privacy page is part of the site. The docs preflight after the production deploy is mandatory: it is the only check that the live Worker serves every plugin file with the hashes the docs print, so never connect Mintlify without a passing run.
+23. **Publish the docs.** Do steps 5 to 10 of `mintlify-publish.md`, starting with `pnpm docs:preflight`, which needs no DNS but reads the production Worker: it checks the constants, npm and the plugin files served at `https://mcp.zapbip.com/pkg/`. The custom domain of step 9 uses steps 4 and 5 of `dns.md`. The privacy page is part of the site. The docs preflight after the production deploy is mandatory: it is the only check that the live Worker serves every plugin file with the hashes the docs print, so never connect Mintlify without a passing run.
 
     Expect: `docs.zapbip.com` serves the site in English and in Portuguese, and `https://docs.zapbip.com/help/privacy` loads.
 

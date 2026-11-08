@@ -11,4 +11,4 @@ The go-live order and the go-live record are in `deploy.md`. Every runbook step 
 - [meta-setup.md](meta-setup.md): the policy check, the Meta apps, the numbers, the tokens, the webhook, Live mode and the templates.
 - [backoffice.md](backoffice.md): enrolling the operator, signing in, registering, verifying and activating a number, replacing a credential and recovering a lockout.
 - [deploy.md](deploy.md): the go-live order, resources, secrets, migrations, deploy, smoke, tail, rollback, the weekly cost check and the go-live record.
-- [mintlify-publish.md](mintlify-publish.md): the official number, the company facts, the packages, the docs preflight, the Mintlify site and its domain.
+- [mintlify-publish.md](mintlify-publish.md): the company facts, the packages, the docs preflight, the Mintlify site and its domain.

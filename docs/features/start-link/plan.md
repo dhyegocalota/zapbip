@@ -50,7 +50,7 @@ Author this list with every box empty. A sub-agent ticks its own line. A wrong s
 
 - [ ] **Step 12 (red):** `deploy-preflight.test.ts` and `deploy-dry-run.e2e.test.ts`: remove the cases that expect the number refusal, and add a case per preflight (docs and Worker, production) that a production run with every other check green passes without any number input. Red because the input type still requires `officialWhatsAppNumber` and the preflight still refuses `OFFICIAL_NUMBER_UNSET`.
 - [ ] **Step 13:** remove the number check and the `officialWhatsAppNumber` field from `deploy-preflight.ts`, `docs-preflight.ts` and `deploy.ts`; green for step 12.
-- [ ] **Step 14:** `deploy.md` (the refusal list and the go-live check), `mintlify-publish.md` (step 1 and its expectation, renumbering the following steps and every cross-reference to "step N") stop mentioning the number.
+- [x] **Step 14:** `deploy.md` (the refusal list and the go-live check), `mintlify-publish.md` (step 1 and its expectation, renumbering the following steps and every cross-reference to "step N") stop mentioning the number.
 
 ### G4
 
