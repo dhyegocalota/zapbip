@@ -89,6 +89,12 @@ async function seedUsage(input: { gigabyteSeconds: number }): Promise<void> {
     .run();
 }
 
+async function seedUsageOn(input: { day: string; accountId: string; gigabyteSeconds: number }): Promise<void> {
+  await testEnv.CONNECTIONS.prepare('INSERT INTO usage_daily (day, account_id, gigabyte_seconds) VALUES (?, ?, ?)')
+    .bind(input.day, input.accountId, input.gigabyteSeconds)
+    .run();
+}
+
 async function seedWorld(): Promise<void> {
   await seedWhatsAppNumber({
     numberId: NUMBER_ALPHA,
@@ -305,6 +311,42 @@ describe('metrics page filters', () => {
     expect(html).toContain(`value="${NUMBER_ALPHA}"`);
     expect(html).toContain('Alpha line');
     expect(html).toContain('Bravo line');
+  });
+});
+
+describe('metrics page budget', () => {
+  beforeEach(async () => {
+    await seedWorld();
+    await seedUsageOn({ day: YESTERDAY, accountId: 'acc_one', gigabyteSeconds: 4000 });
+    await seedUsageOn({ day: YESTERDAY, accountId: 'acc_two', gigabyteSeconds: 1000 });
+    await seedUsageOn({ day: TEN_DAYS_AGO, accountId: 'acc_one', gigabyteSeconds: 2000 });
+  });
+
+  test('draws one value per day of the period summed across accounts', async () => {
+    const html = await metricsHtml({});
+    const cell = (day: string) => cellOf({ html, cell: keyedCell({ cell: MetricCell.BudgetUsed, key: day }) });
+    expect(cell(YESTERDAY)).toBe('5000');
+    expect(cell(TEN_DAYS_AGO)).toBe('2000');
+    expect(cell(TODAY)).toBe(String(BUDGET_BELOW_WARNING));
+  });
+
+  test('leaves out the days before a seven day period', async () => {
+    const html = await metricsHtml({ query: '?period=7' });
+    expect(html).toContain(keyedCell({ cell: MetricCell.BudgetUsed, key: YESTERDAY }));
+    expect(html).not.toContain(keyedCell({ cell: MetricCell.BudgetUsed, key: TEN_DAYS_AGO }));
+  });
+
+  test('ignores the number filter and says so', async () => {
+    const html = await metricsHtml({ query: `?number=${NUMBER_ALPHA}` });
+    expect(cellOf({ html, cell: keyedCell({ cell: MetricCell.BudgetUsed, key: YESTERDAY }) })).toBe('5000');
+    expect(html).toContain(copy[BackofficeCopyKey.MetricsBudgetAccountWide]);
+  });
+
+  test('keeps the budget in the one batch of selects', async () => {
+    const { env, batches } = recordingEnvironment();
+    await requestBackoffice({ path: '/metrics', cookies: { [SESSION_COOKIE]: sessionToken }, env });
+    expect(batches).toHaveLength(1);
+    expect(batches[0]!.some((sql) => sql.includes('usage_daily'))).toBe(true);
   });
 });
 

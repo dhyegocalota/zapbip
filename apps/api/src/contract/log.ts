@@ -35,6 +35,7 @@ export enum LogEvent {
   BackofficeNumberChanged = 'backoffice.number_changed',
   BackofficeError = 'backoffice.error',
   PackageUnavailable = 'package_unavailable',
+  ActivityRecordFailed = 'activity_record_failed',
 }
 
 export type LogFields = {
