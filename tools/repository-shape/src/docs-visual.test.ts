@@ -1,7 +1,9 @@
+import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { describe, expect, test } from 'vitest';
 import { DocsLanguage, PAGE_LANGUAGE_FOLDER } from '@zapbip/types';
-import { DOCS_ROOT, PAGE_EXTENSION, capturedNames, readRepositoryFile, repositoryPath } from './repository-files';
+import { contrastOf } from './contrast';
+import { DOCS_ROOT, REPOSITORY_ROOT, PAGE_EXTENSION, capturedNames, readRepositoryFile, repositoryPath } from './repository-files';
 
 const DOCS_CONFIG_FILE = `${DOCS_ROOT}/docs.json`;
 const LOGO_VIEW_BOX = 'viewBox="0 0 120 32"';
@@ -26,13 +28,38 @@ const OVERVIEW_PAGES: Record<DocsLanguage, string> = {
   [DocsLanguage.English]: 'index',
   [DocsLanguage.PortugueseBrazil]: `${PAGE_LANGUAGE_FOLDER}/index`,
 };
+const BASELINE_REFERENCE = 'origin/main';
+const LIGHT_PAGE = '#F6F8F5';
+const DARK_PAGE = '#07120F';
+const WHITE = '#FFFFFF';
+const BODY_TEXT_CONTRAST = 4.5;
+const LARGE_ELEMENT_CONTRAST = 3;
 const FILL_PATTERN = /fill="(#[0-9A-Fa-f]{6})"/g;
 
 type DocsLogo = { light?: string; dark?: string; href?: string };
-type DocsVisualConfig = { logo?: DocsLogo };
+type DocsVisualConfig = {
+  theme?: string;
+  favicon?: string;
+  logo?: DocsLogo;
+  colors?: { primary?: string; light?: string; dark?: string };
+  background?: { color?: { light?: string; dark?: string }; decoration?: string };
+  appearance?: { default?: string };
+  navigation?: unknown;
+};
 
 function docsVisualConfig(): DocsVisualConfig {
   return JSON.parse(readRepositoryFile(DOCS_CONFIG_FILE));
+}
+
+function baselineConfig(): DocsVisualConfig {
+  const shown = spawnSync('git', ['show', `${BASELINE_REFERENCE}:${DOCS_CONFIG_FILE}`], { cwd: REPOSITORY_ROOT, encoding: 'utf8' });
+  if (shown.status !== 0) throw new Error(`git show failed: ${shown.stderr}`);
+  return JSON.parse(shown.stdout);
+}
+
+function requiredColour({ colour, name }: { colour?: string; name: string }): string {
+  if (!colour) throw new Error(`docs.json has no ${name}`);
+  return colour;
 }
 
 function logoPathOf({ theme }: { theme: keyof DocsLogo }): string {
@@ -151,5 +178,35 @@ describe('docs visual: hero on the Overview pages', () => {
   test.each(Object.values(DocsLanguage))('the %s statement is under eight words', (language) => {
     const { statement } = heroPropsOf({ language }).texts;
     expect(statement?.split(WORD_SEPARATOR).length).toBeLessThanOrEqual(HERO_STATEMENT_MAX_WORDS);
+  });
+});
+
+describe('docs visual: theme', () => {
+  test('the primary colour is the AA teal on both light pages', () => {
+    const primary = requiredColour({ colour: docsVisualConfig().colors?.primary, name: 'colors.primary' });
+    expect(primary).toBe('#0B6B60');
+    expect(contrastOf({ foreground: primary, background: WHITE })).toBeGreaterThanOrEqual(BODY_TEXT_CONTRAST);
+    expect(contrastOf({ foreground: primary, background: LIGHT_PAGE })).toBeGreaterThanOrEqual(BODY_TEXT_CONTRAST);
+  });
+
+  test('the dark accent is the signal green and passes on the dark page', () => {
+    const accent = requiredColour({ colour: docsVisualConfig().colors?.light, name: 'colors.light' });
+    expect(accent).toBe('#25D366');
+    expect(contrastOf({ foreground: accent, background: DARK_PAGE })).toBeGreaterThanOrEqual(LARGE_ELEMENT_CONTRAST);
+  });
+
+  test('the page colours, the glow, the default appearance and the theme are set', () => {
+    const config = docsVisualConfig();
+    expect(config.background?.color).toEqual({ light: LIGHT_PAGE, dark: DARK_PAGE });
+    expect(config.background?.decoration).toBe('gradient');
+    expect(config.appearance?.default).toBe('system');
+    expect(config.theme).toBe('mint');
+  });
+
+  test('the favicon and the navigation are unchanged from the baseline', () => {
+    const config = docsVisualConfig();
+    const baseline = baselineConfig();
+    expect(config.favicon).toBe(baseline.favicon);
+    expect(JSON.stringify(config.navigation)).toBe(JSON.stringify(baseline.navigation));
   });
 });
