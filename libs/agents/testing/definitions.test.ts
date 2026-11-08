@@ -1,10 +1,11 @@
 import { existsSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { INSTALL_SECTIONS } from '@zapbip/core';
 import { DocsLanguage, DocsOnlyClient, InstallClient, OwnerLocale, WakeRung } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import type { AgentDefinition } from '../src/contract';
 import { WAKE_RUNG_LABELS } from '../src/docs';
+import { InstallClient as GeneratedInstallClient } from '../src/generated/ids';
+import { AGENT_INSTALLS } from '../src/generated/install';
 import { GOLDEN_CONNECTION_LINK, matrixRowsByAgentOf, repositoryFile } from './golden-sources';
 
 const SUPPORTED_FOLDER = fileURLToPath(new URL('../supported/', import.meta.url));
@@ -108,9 +109,9 @@ describe('the real agent definitions', () => {
     expect(definitions[DocsOnlyClient.AnyMcpClient]?.listen.rung).toBe(WakeRung.Inbox);
   });
 
-  describe.each(Object.values(InstallClient))('the set_wake modes of %s', (client) => {
+  describe.each(Object.values(GeneratedInstallClient))('the set_wake modes of %s', (client) => {
     test.each(Object.values(OwnerLocale))('in %s match what its install section writes', (locale) => {
-      const section = INSTALL_SECTIONS[client]({ connectionLink: GOLDEN_CONNECTION_LINK, locale, standbyAgent: null });
+      const section = AGENT_INSTALLS[client].render({ connectionLink: GOLDEN_CONNECTION_LINK, locale, standbyAgent: null });
       const written = [...new Set([...section.matchAll(SET_WAKE_MODE_PATTERN)].map((match) => match[1] as string))];
       const allowed = definitions[client]?.listen.setWakeModes as string[];
       expect(written.every((mode) => allowed.includes(mode))).toBe(true);

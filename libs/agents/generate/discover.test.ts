@@ -28,9 +28,11 @@ describe('discoverAgents', () => {
     expect(pluginAgent?.facets).toEqual([...commonFacets, AgentFacet.Plugin]);
   });
 
-  test('a real agent with only a definition has only that facet', () => {
+  test('a real install agent has the definition and install facets and no connector or plugin', () => {
     const cursor = discoverAgents({ roots: [SUPPORTED_ROOT] }).find((agent) => agent.id === 'cursor');
-    expect(cursor?.facets).toEqual([AgentFacet.Definition]);
+    expect(cursor?.facets).toEqual(expect.arrayContaining([AgentFacet.Definition, AgentFacet.Install]));
+    expect(cursor?.facets).not.toContain(AgentFacet.Connector);
+    expect(cursor?.facets).not.toContain(AgentFacet.Plugin);
   });
 
   test('a root that does not exist has no agents', () => {

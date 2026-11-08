@@ -1,18 +1,34 @@
-import { INSTALL_SELF_TEST_TEXT, InstallClient, OwnerLocale } from '@zapbip/types';
-import { FAILURE_OUTPUT_LINES } from './connector-commands';
-import { formatSection, localizeCopy, noticeStep, terminalListenStep, tellOwnerAndWait } from './section-format';
+import { INSTALL_SELF_TEST_TEXT, OwnerLocale } from '@zapbip/types';
+import {
+  formatSection,
+  localizeCopy,
+  noticeStep,
+  terminalListenStep,
+  tellOwnerAndWait,
+  FAILURE_OUTPUT_LINES,
+  type InstallProduct,
+} from '@zapbip/core';
+
+export const GEMINI_CLI_PRODUCT: InstallProduct = {
+  productName: 'Gemini CLI',
+  productDescription: 'Gemini CLI, the agent started by the `gemini` command',
+};
 
 type GeminiCliText = {
+  wakeNote: string;
   confirmChange: string;
   restart: string;
 };
 
 const GEMINI_CLI_TEXT: Record<OwnerLocale, GeminiCliText> = {
   [OwnerLocale.PortugueseBrazil]: {
+    wakeNote:
+      'O Gemini CLI escuta pelo terminal em segundo plano e responde em segundos enquanto ele estiver rodando, sem limite de tempo.',
     confirmChange: 'Vou adicionar o servidor MCP zapbip ao Gemini CLI. Posso?',
     restart: 'Reinicie o Gemini CLI para usar o zapbip.',
   },
   [OwnerLocale.EnglishUs]: {
+    wakeNote: 'Gemini CLI listens through the background terminal and answers within seconds while it runs, with no time limit.',
     confirmChange: 'I will add the zapbip MCP server to Gemini CLI. May I?',
     restart: 'Restart Gemini CLI to use zapbip.',
   },
@@ -23,9 +39,8 @@ export const GEMINI_CLI_COPY = localizeCopy({
   build: ({ section, text }) => {
     const selfTest = `gemini -p "Call send_message with the text '${INSTALL_SELF_TEST_TEXT[section.locale]}'"`;
     return formatSection({
-      client: InstallClient.GeminiCli,
-      locale: section.locale,
-      standbyAgent: section.standbyAgent,
+      ...GEMINI_CLI_PRODUCT,
+      wakeNote: text.wakeNote,
       steps: [
         {
           action: `${tellOwnerAndWait(text.confirmChange)} If the owner does not say yes, stop.`,

@@ -1,9 +1,9 @@
+import type { InstallSectionInput } from '@zapbip/core';
 import type { AgentInstall } from '../../src/contract';
+import { CLAUDE_CODE_COPY, CLAUDE_CODE_PRODUCT } from './install-copy';
 
-export const install: AgentInstall = {
-  productName: 'Claude Code',
-  productDescription: 'Claude Code, the agent started by the `claude` command',
-  render: () => {
-    throw new Error('claude-code install section is not implemented');
-  },
-};
+function render(input: InstallSectionInput): string {
+  return CLAUDE_CODE_COPY[input.locale](input);
+}
+
+export const install: AgentInstall = { ...CLAUDE_CODE_PRODUCT, render };

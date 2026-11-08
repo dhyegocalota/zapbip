@@ -1,9 +1,9 @@
+import type { InstallSectionInput } from '@zapbip/core';
 import type { AgentInstall } from '../../src/contract';
+import { GROK_BOT_COPY, GROK_BOT_PRODUCT } from './install-copy';
 
-export const install: AgentInstall = {
-  productName: 'Grok Bot',
-  productDescription: 'Grok Bot, the Grok routines bot',
-  render: () => {
-    throw new Error('grok-bot install section is not implemented');
-  },
-};
+function render(input: InstallSectionInput): string {
+  return GROK_BOT_COPY[input.locale](input);
+}
+
+export const install: AgentInstall = { ...GROK_BOT_PRODUCT, render };

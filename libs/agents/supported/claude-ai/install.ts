@@ -1,9 +1,9 @@
+import type { InstallSectionInput } from '@zapbip/core';
 import type { AgentInstall } from '../../src/contract';
+import { CLAUDE_AI_COPY, CLAUDE_AI_PRODUCT } from './install-copy';
 
-export const install: AgentInstall = {
-  productName: 'claude.ai',
-  productDescription: 'claude.ai, the chat in the claude.ai web app',
-  render: () => {
-    throw new Error('claude-ai install section is not implemented');
-  },
-};
+function render(input: InstallSectionInput): string {
+  return CLAUDE_AI_COPY[input.locale](input);
+}
+
+export const install: AgentInstall = { ...CLAUDE_AI_PRODUCT, render };

@@ -1,9 +1,9 @@
+import type { InstallSectionInput } from '@zapbip/core';
 import type { AgentInstall } from '../../src/contract';
+import { HERMES_COPY, HERMES_PRODUCT } from './install-copy';
 
-export const install: AgentInstall = {
-  productName: 'Hermes',
-  productDescription: 'Hermes, the agent running Hermes',
-  render: () => {
-    throw new Error('hermes install section is not implemented');
-  },
-};
+function render(input: InstallSectionInput): string {
+  return HERMES_COPY[input.locale](input);
+}
+
+export const install: AgentInstall = { ...HERMES_PRODUCT, render };

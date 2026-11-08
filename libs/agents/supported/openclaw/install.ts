@@ -1,9 +1,9 @@
+import type { InstallSectionInput } from '@zapbip/core';
 import type { AgentInstall } from '../../src/contract';
+import { OPENCLAW_COPY, OPENCLAW_PRODUCT } from './install-copy';
 
-export const install: AgentInstall = {
-  productName: 'OpenClaw',
-  productDescription: 'OpenClaw, the agent running OpenClaw',
-  render: () => {
-    throw new Error('openclaw install section is not implemented');
-  },
-};
+function render(input: InstallSectionInput): string {
+  return OPENCLAW_COPY[input.locale](input);
+}
+
+export const install: AgentInstall = { ...OPENCLAW_PRODUCT, render };

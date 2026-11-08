@@ -1,24 +1,30 @@
-import { InstallClient, OwnerLocale } from '@zapbip/types';
-import { chatSelfTest, formatSection, localizeCopy, tellOwner } from './section-format';
+import { OwnerLocale } from '@zapbip/types';
+import { chatSelfTest, formatSection, localizeCopy, tellOwner, type InstallProduct } from '@zapbip/core';
+
+export const GROK_BOT_PRODUCT: InstallProduct = { productName: 'Grok Bot', productDescription: 'Grok Bot, the Grok routines bot' };
 
 type GrokBotText = {
+  wakeNote: string;
   confirmServer: string;
 };
 
 const GROK_BOT_TEXT: Record<OwnerLocale, GrokBotText> = {
   [OwnerLocale.PortugueseBrazil]: {
+    wakeNote: 'O webhook da rotina acorda o Grok Bot em cerca de 9 segundos, sem limite de tempo.',
     confirmServer: 'Estou adicionando o servidor MCP zapbip ao Grok Bot. Confirme a adição quando ele pedir.',
   },
-  [OwnerLocale.EnglishUs]: { confirmServer: 'I am adding the zapbip MCP server to Grok Bot. Confirm it when it asks.' },
+  [OwnerLocale.EnglishUs]: {
+    wakeNote: 'The routine webhook wakes Grok Bot in about 9 seconds, with no time limit.',
+    confirmServer: 'I am adding the zapbip MCP server to Grok Bot. Confirm it when it asks.',
+  },
 };
 
 export const GROK_BOT_COPY = localizeCopy({
   texts: GROK_BOT_TEXT,
   build: ({ section, text }) =>
     formatSection({
-      client: InstallClient.GrokBot,
-      locale: section.locale,
-      standbyAgent: section.standbyAgent,
+      ...GROK_BOT_PRODUCT,
+      wakeNote: text.wakeNote,
       steps: [
         {
           action: `Add the MCP server named zapbip at ${section.connectionLink}. ${tellOwner(text.confirmServer)} Wait for the owner to confirm.`,

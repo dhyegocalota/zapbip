@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { INSTALL_PAGE_COPY, renderInstallPage } from '@zapbip/core';
 import { DocsLanguage, OwnerLocale } from '@zapbip/types';
+import { INSTALL_PAGE_SECTIONS } from '../src/generated/install';
 
 export type MatrixRows = Record<string, string>;
 export type NavigationEntries = Record<string, string>;
@@ -53,6 +54,7 @@ export function installPageOf(input: { locale: OwnerLocale; standbyAgent: string
     connectionLink: GOLDEN_CONNECTION_LINK,
     locale: input.locale,
     standbyAgent: input.standbyAgent,
+    sections: INSTALL_PAGE_SECTIONS,
   });
 }
 

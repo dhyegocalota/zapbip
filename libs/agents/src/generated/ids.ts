@@ -14,7 +14,18 @@ export enum AgentId {
   AnyMcpClient = 'any-mcp-client',
 }
 
-export enum InstallClient {}
+export enum InstallClient {
+  ClaudeCode = 'claude-code',
+  Codex = 'codex',
+  Cursor = 'cursor',
+  GeminiCli = 'gemini-cli',
+  GrokBot = 'grok-bot',
+  ClaudeAi = 'claude-ai',
+  ChatGpt = 'chatgpt',
+  GrokWeb = 'grok-web',
+  Hermes = 'hermes',
+  OpenClaw = 'openclaw',
+}
 
 export enum ConnectorClient {}
 
