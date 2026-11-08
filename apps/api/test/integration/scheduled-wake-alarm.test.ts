@@ -27,7 +27,10 @@ const HOURLY_FRAGMENT = WAKE_COPY[WakeCopyKey.CadenceHourly][OwnerLocale.Portugu
 const OWNER_TEXT = 'oi';
 const EXPIRY_SWEEP_STEP = 'expiry_sweep';
 const STALE_NOTICE_STEP = 'stale_notice';
-const FLUSH_USAGE_STATEMENT = 'UPDATE usage_meter SET flushed_gigabyte_seconds = gigabyte_seconds';
+const FLUSH_METER_STATEMENTS = [
+  'UPDATE usage_meter SET flushed_gigabyte_seconds = gigabyte_seconds',
+  'UPDATE activity_meter SET flushed_count = count',
+];
 
 const alarmSteps: string[] = [];
 
@@ -69,9 +72,9 @@ function readPollRow(input: { agent: AgentName }): Promise<LastPollRow> {
   );
 }
 
-function rearmedAlarmWithoutUsage(): Promise<number | null> {
+function rearmedAlarmWithoutMeters(): Promise<number | null> {
   return runInDurableObject(stub(), async (instance, state) => {
-    state.storage.sql.exec(FLUSH_USAGE_STATEMENT);
+    FLUSH_METER_STATEMENTS.forEach((statement) => state.storage.sql.exec(statement));
     await state.storage.deleteAlarm();
     await (instance as unknown as { armAlarm(): Promise<void> }).armAlarm();
     return state.storage.getAlarm();
@@ -153,7 +156,7 @@ describe('scheduled poller alarm', () => {
 
   it('arms the alarm at the stale deadline after set_wake', async () => {
     const { last_polled_at: lastPolledAt } = await readPollRow({ agent: POLLING_AGENT });
-    expect(await rearmedAlarmWithoutUsage()).toBe(await toRealTime({ clockTime: lastPolledAt + STALE_DEADLINE_OFFSET_MS }));
+    expect(await rearmedAlarmWithoutMeters()).toBe(await toRealTime({ clockTime: lastPolledAt + STALE_DEADLINE_OFFSET_MS }));
   });
 
   it('keeps an alarm armed no later than the stale deadline after the usage flush alarm fires, and the notice still goes out', async () => {
@@ -170,7 +173,7 @@ describe('scheduled poller alarm', () => {
   it('arms the alarm again after the object is evicted and sends the notice', async () => {
     const { last_polled_at: lastPolledAt } = await readPollRow({ agent: POLLING_AGENT });
     await abortAllDurableObjects();
-    expect(await rearmedAlarmWithoutUsage()).toBe(await toRealTime({ clockTime: lastPolledAt + STALE_DEADLINE_OFFSET_MS }));
+    expect(await rearmedAlarmWithoutMeters()).toBe(await toRealTime({ clockTime: lastPolledAt + STALE_DEADLINE_OFFSET_MS }));
     await alarmAfter({ advanceMs: STALE_ADVANCE_MS });
     expect(await countStaleNotices()).toBe(1);
   });
@@ -188,7 +191,7 @@ describe('scheduled poller deadline against the queue expiry', () => {
     await scheduleAgent({ agent: POLLING_AGENT });
     const { last_polled_at: lastPolledAt } = await readPollRow({ agent: POLLING_AGENT });
     expect(QUEUE_RETENTION_MS).toBeGreaterThan(STALE_DEADLINE_OFFSET_MS);
-    expect(await rearmedAlarmWithoutUsage()).toBe(await toRealTime({ clockTime: lastPolledAt + STALE_DEADLINE_OFFSET_MS }));
+    expect(await rearmedAlarmWithoutMeters()).toBe(await toRealTime({ clockTime: lastPolledAt + STALE_DEADLINE_OFFSET_MS }));
   });
 });
 

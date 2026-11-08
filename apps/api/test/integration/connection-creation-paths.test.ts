@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { isCurrentKeyDigest } from '../../src/account-inbox/agent-key-digest';
 import { DEV_SEED_PATH } from '../../src/contract/constants';
 import { openConnector } from '../support/connector-session';
-import { applyDirectoryMigration } from '../support/seed';
+import { applyDirectoryMigrationWithNumber } from '../support/whatsapp-numbers';
 import { accountInboxStub, testEnv } from '../support/workers-env';
 
 const ORIGIN = 'http://example.com';
@@ -61,7 +61,7 @@ async function objectKnowsCurrentKey(input: { agent: string }): Promise<boolean>
   );
 }
 
-beforeEach(applyDirectoryMigration);
+beforeEach(applyDirectoryMigrationWithNumber);
 afterEach(reset);
 
 describe('connection creation paths', () => {

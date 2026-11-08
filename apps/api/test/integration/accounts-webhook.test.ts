@@ -1,4 +1,4 @@
-import { env, reset, SELF } from 'cloudflare:test';
+import { reset, SELF } from 'cloudflare:test';
 import { AccountState, SECOND_MS } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { WEBHOOK_SIGNATURE_HEADER } from '../../src/adapters/whatsapp/whatsapp-constants';
@@ -9,6 +9,7 @@ import { notificationWith } from '../fixtures/whatsapp/inbound/notification';
 import { signatureHeaderOf } from '../fixtures/whatsapp/inbound/signed-webhook';
 import textForwardedFixture from '../fixtures/whatsapp/inbound/text-forwarded.json';
 import { applyDirectoryMigration } from '../support/seed';
+import { seedWhatsAppNumber, TEST_APP_SECRET } from '../support/whatsapp-numbers';
 import { testEnv } from '../support/workers-env';
 import { findAccounts, screenTextsOf } from './owner-inbound-fixtures';
 
@@ -27,11 +28,14 @@ async function postFromUnknownPhone(input: { base?: typeof textFixture; id?: str
     text: { body: text },
   };
   const body = JSON.stringify(notificationWith({ messages: [message] }));
-  const signature = await signatureHeaderOf({ appSecret: env.META_APP_SECRET as string, body: new TextEncoder().encode(body) });
+  const signature = await signatureHeaderOf({ appSecret: TEST_APP_SECRET, body: new TextEncoder().encode(body) });
   return SELF.fetch(WEBHOOK_URL, { method: 'POST', headers: { [WEBHOOK_SIGNATURE_HEADER]: signature }, body });
 }
 
-beforeEach(applyDirectoryMigration);
+beforeEach(async () => {
+  await applyDirectoryMigration();
+  await seedWhatsAppNumber();
+});
 afterEach(() => {
   vi.restoreAllMocks();
   return reset();

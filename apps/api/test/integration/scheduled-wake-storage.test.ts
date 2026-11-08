@@ -28,6 +28,7 @@ const FOURTH_VERSION = 4;
 const FIFTH_VERSION = 5;
 const SIXTH_VERSION = 6;
 const SEVENTH_VERSION = 7;
+const EIGHTH_VERSION = 8;
 
 type Repositories = { inbox: InboxRepository; wake: WakeRepository; storage: DurableObjectStorage };
 
@@ -156,7 +157,7 @@ describe('schema v3', () => {
       };
     });
     expect(result.seeded).toEqual([FIRST_VERSION, SECOND_VERSION, FOURTH_VERSION, FIFTH_VERSION, SIXTH_VERSION]);
-    expect(result.applied).toEqual([THIRD_VERSION, SEVENTH_VERSION]);
+    expect(result.applied).toEqual([THIRD_VERSION, SEVENTH_VERSION, EIGHTH_VERSION]);
     expect(result.wakeColumns).toEqual(expect.arrayContaining(['interval_minutes', 'last_stale_notice_at', 'stale_notice_failures']));
     expect(result.accountFactsTable).toBe(1);
     expect(result.wakes).toBe(1);

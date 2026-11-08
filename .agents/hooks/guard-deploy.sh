@@ -4,7 +4,7 @@ source "$(dirname "$0")/wrangler-session.sh"
 source "$(dirname "$0")/unsafe-head-arguments.sh"
 readonly BLOCKED_MESSAGE="Blocked: deploys, remote database changes and secrets are run by the owner by hand, never by an agent (ADR 0027). Only a --dry-run and local wrangler commands pass. To mention these words in a commit, write the message to a file and use git commit -F <file>."
 readonly LOGGED_IN_MESSAGE="Blocked: $WRANGLER_LOGGED_IN_FIX (ADR 0027)."
-readonly SENSITIVE_PATTERN='wrangler|deploy:|migrate:production|migrate:staging|secrets:|scripts/deploy|scripts/smoke'
+readonly SENSITIVE_PATTERN='wrangler|deploy:|migrate:production|migrate:staging|secrets:|scripts/deploy|scripts/smoke|scripts/backoffice|backoffice[:-]enroll'
 readonly FORBIDDEN_CHARACTERS_PATTERN=$'[;|&$`<>(){}#\\\r\n]'
 readonly WRANGLER_COMMAND_PATTERN='^(pnpm exec |npx |pnpm --filter [^ ]+ exec )?wrangler( (.*))?$'
 readonly OPEN_WRANGLER_PATTERN='^(dev|types)([[:space:]]|$)|^(whoami|--version)$'

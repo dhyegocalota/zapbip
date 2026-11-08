@@ -12,7 +12,7 @@ declare global {
 
 export const testEnv: Bindings = env;
 
-export const whatsappTestEnv: Bindings = { ...env, WHATSAPP_ACCESS_TOKEN: 'test-access-token' };
+export const whatsappTestEnv: Bindings = { ...env, WHATSAPP_SEND_THROUGH_GRAPH: 'true' };
 
 export function accountInboxStub(input: { accountId: string }): DurableObjectStub<AccountInbox> {
   return testEnv.ACCOUNT_INBOX.get(testEnv.ACCOUNT_INBOX.idFromName(input.accountId));

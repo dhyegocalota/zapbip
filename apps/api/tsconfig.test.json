@@ -1,5 +1,10 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": { "lib": ["ES2023"], "types": ["@cloudflare/workers-types", "node", "@cloudflare/vitest-pool-workers/types"] },
-  "include": ["src", "test", "scripts", "vitest.*.config.mts"]
+  "compilerOptions": {
+    "lib": ["ES2023"],
+    "types": ["@cloudflare/workers-types", "node", "@cloudflare/vitest-pool-workers/types"],
+    "jsx": "react-jsx",
+    "jsxImportSource": "hono/jsx"
+  },
+  "include": ["src", "test", "scripts", "e2e", "playwright.config.ts", "vitest.*.config.mts"]
 }

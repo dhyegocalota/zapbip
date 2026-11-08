@@ -4,6 +4,8 @@ import { generateConnectionSecret } from '../adapters/platform/connection-secret
 import { hashConnectionSecret } from '../adapters/platform/hash';
 import { OWNER_PHONE_PATTERN } from '../contract/constants';
 
+const FIRST_NUMBER_SUBQUERY = '(SELECT id FROM whatsapp_numbers ORDER BY created_at, id LIMIT 1)';
+
 export type DirectorySeed = {
   accountId: string;
   connections: { agent: string; secret: string; secretDigest: string }[];
@@ -67,11 +69,11 @@ export async function buildDirectorySeed(input: { phone: string; agents: string[
     accountId,
     connections,
     statements: [
-      insertStatement({
-        table: 'accounts',
-        columns: ['id', 'state', 'created_at'],
-        values: [accountId, AccountState.Active, input.createdAt],
-      }),
+      'INSERT INTO accounts (id, state, created_at, number_id) VALUES (' +
+        [literal({ value: accountId }), literal({ value: AccountState.Active }), input.createdAt].join(', ') +
+        ', ' +
+        FIRST_NUMBER_SUBQUERY +
+        ')',
       'INSERT INTO owner_identities (wa_id, account_id, from_user_id, locale, created_at) VALUES (' +
         [literal({ value: input.phone }), literal({ value: accountId }), 'NULL', literal({ value: DEFAULT_LOCALE }), input.createdAt].join(
           ', ',

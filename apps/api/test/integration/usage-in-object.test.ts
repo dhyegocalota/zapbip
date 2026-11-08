@@ -7,6 +7,7 @@ import usageMigrationSql from '../../migrations/0003_usage.sql?raw';
 import { AlarmErrorCode } from '../../src/account-inbox/constants';
 import { McpToolName } from '../../src/contract/tool-definitions';
 import { USAGE_METER_RETENTION_MS } from '../../src/account-inbox/usage-meter';
+import { pinClockAt, MIDDAY_START } from '../support/pinned-clock';
 import { advanceClock, registerDueTimeProvider } from '../support/inbox-session';
 import { applyDirectoryMigration } from '../support/seed';
 import { accountInboxStub, connectionOf, testEnv } from '../support/workers-env';
@@ -71,6 +72,7 @@ async function flushDueUsage(): Promise<void> {
 }
 
 beforeEach(async () => {
+  pinClockAt({ at: MIDDAY_START });
   await applyDirectoryMigration();
   await testEnv.CONNECTIONS.prepare(usageMigrationSql).run();
   const connection = await seedConnectionWithSecret({ accountId: ACCOUNT_ID, agent: AGENT });

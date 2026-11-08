@@ -22,7 +22,7 @@ export class DevAccountInbox
   }
 
   protected createSender(input: { mediaStore: MediaStore }): MessageSender {
-    if (this.env.WHATSAPP_ACCESS_TOKEN !== undefined) return super.createSender(input);
+    if (this.env.WHATSAPP_SEND_THROUGH_GRAPH !== undefined) return super.createSender(input);
     this.fakeSender = createFakeWhatsAppSender({
       storage: this.ctx.storage,
       clock: this.clock,

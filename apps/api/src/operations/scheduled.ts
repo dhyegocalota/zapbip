@@ -1,4 +1,6 @@
 import { clearExpiredInstallSecrets, sweepDeletingAccounts } from '../accounts/deletion-sweep';
+import { pruneBackoffice } from '../backoffice/audit/prune';
+import { BACKOFFICE_PRUNE_HOUR, BACKOFFICE_PRUNE_MINUTE } from '../backoffice/backoffice-constants';
 import { D1UsageRepository } from '../adapters/d1/d1-usage-repository';
 import type { Bindings } from '../contract/env';
 import { runBudgetCheck } from './budget-check';
@@ -15,6 +17,7 @@ export enum ScheduledJobName {
   SweepDeletingAccounts = 'sweep_deleting_accounts',
   BudgetCheck = 'budget_check',
   MediaRetention = 'media_retention',
+  BackofficePrune = 'backoffice_prune',
 }
 
 const EVERY_TICK = (): boolean => true;
@@ -38,6 +41,13 @@ export const SCHEDULED_JOBS: Record<ScheduledJobName, ScheduledJob> = {
       return tick.getUTCHours() === MEDIA_RETENTION_HOUR && tick.getUTCMinutes() === MEDIA_RETENTION_MINUTE;
     },
     run: ({ env, now }) => runMediaRetention({ bucket: env.MEDIA, now }),
+  },
+  [ScheduledJobName.BackofficePrune]: {
+    isDue: ({ now }) => {
+      const tick = new Date(now);
+      return tick.getUTCHours() === BACKOFFICE_PRUNE_HOUR && tick.getUTCMinutes() === BACKOFFICE_PRUNE_MINUTE;
+    },
+    run: ({ env, now }) => pruneBackoffice({ database: env.CONNECTIONS, now }),
   },
 };
 

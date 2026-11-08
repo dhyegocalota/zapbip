@@ -20,6 +20,7 @@ export type ConfirmAccountDeletionInput = OwnerAccountInput & { isRequestLive: b
 export type OpenOwnerAccountInput = {
   dependencies: AccountLifecycleDependencies;
   waId: string;
+  homeNumberId: string;
   waitlistEnabled: boolean;
   createdAt: number;
 };

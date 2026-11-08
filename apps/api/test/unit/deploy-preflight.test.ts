@@ -502,7 +502,7 @@ describe('worker preflight', () => {
     const refusal = await runWorkerPreflight(workerInput({ shell }));
     expect(refusal?.step).toBe(PreflightStep.Secrets);
     expect(refusal?.message).toContain(WorkerSecret.WakeSecretKey);
-    expect(refusal?.message).not.toContain(WorkerSecret.MetaAppSecret);
+    expect(refusal?.message).not.toContain(WorkerSecret.WhatsAppVerifyToken);
   });
 
   it('lists secrets with the environment flag on staging and without it on production', async () => {

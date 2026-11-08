@@ -2,7 +2,7 @@
 
 Create the Meta apps, the WhatsApp Business account and numbers, the tokens, the webhook and the approved utility templates for staging and production.
 
-Staging uses a Meta test number and its own app. Production uses the real official number and its own app, so a leaked staging secret never reaches production. Steps 4, 6, 7 and 8 are done once per environment. Never paste a secret into chat, a ticket or the repository; the value goes only into the `wrangler secret put` prompt ([deploy.md](deploy.md)).
+Staging uses a Meta test number and its own app. Production uses the real official number and its own app, so a leaked staging secret never reaches production. Steps 4, 6, 7 and 8 are done once per environment. Never paste a secret into chat, a ticket or the repository. The verify token goes only into the `wrangler secret put` prompt ([deploy.md](deploy.md)); an app secret and an access token go only into the backoffice registration form ([backoffice.md](backoffice.md)), which seals them in the numbers registry. They are not Worker secrets and never go through wrangler.
 
 1. **Check the AI-provider policy.** Open the current WhatsApp Business Solution Terms (`https://www.whatsapp.com/legal/business-solution-terms`) and the WhatsApp Business Messaging Policy (`https://business.whatsapp.com/policy`). Find the clause on AI providers. Secondary sources (TechCrunch, 2025-10-18; respond.io) report that from 2026-01-15 the terms bar general-purpose AI assistants from being distributed on the platform, while business uses such as notifications stay allowed, with reported exceptions for Italy and Brazil; the official text was not read when this was written. Decide in writing, in the go-live record, whether zapbip fits: every conversation is between one verified owner and that owner's own agents, no stranger can message an agent, and no agent is offered to the public. If the text is unclear, ask Meta support through the Business Support Home before registering the production number.
 
@@ -36,17 +36,17 @@ Staging uses a Meta test number and its own app. Production uses the real offici
 
    If it fails: the app and the number must sit under the same Business portfolio; connect the app to the portfolio in App settings, Advanced.
 
-6. **Copy each app secret.** In each app open App settings, Basic, App secret, Show, and keep the value for `META_APP_SECRET` of that environment.
+6. **Copy each app secret.** In each app open App settings, Basic, App secret, Show, and keep the value for the backoffice registration form of that app ([backoffice.md](backoffice.md), step 2).
 
    Expect: a 32-character hexadecimal string per app.
 
-   If it fails: Meta asks for the account password; enter it. If the secret was exposed, use Reset and set the new one in the Worker too.
+   If it fails: Meta asks for the account password; enter it. If the secret was exposed, use Reset and replace the app secret in the backoffice ([backoffice.md](backoffice.md), step 5).
 
-7. **Create the system user and the permanent token.** In Business settings, Users, System users, Add, name it `zapbip-staging` (then `zapbip-production`) with the Admin role. Add assets: the matching app with full control and the matching WhatsApp account with full control. Choose Generate token, select the matching app, set the expiry to Never and tick `whatsapp_business_messaging` and `whatsapp_business_management`. Keep the token for `WHATSAPP_ACCESS_TOKEN` of that environment.
+7. **Create the system user and the permanent token.** In Business settings, Users, System users, Add, name it `zapbip-staging` (then `zapbip-production`) with the Admin role. Add assets: the matching app with full control and the matching WhatsApp account with full control. Choose Generate token, select the matching app, set the expiry to Never and tick `whatsapp_business_messaging` and `whatsapp_business_management`. Keep the token for the backoffice registration form of that number ([backoffice.md](backoffice.md), step 2).
 
    Expect: a long token string that starts with `EAA`, shown once.
 
-   If it fails: if the permissions are missing from the list, the app lacks the WhatsApp product or the asset assignment; fix those first. A lost token is replaced by generating a new one.
+   If it fails: if the permissions are missing from the list, the app lacks the WhatsApp product or the asset assignment; fix those first. A lost token is replaced by generating a new one and replacing it in the backoffice ([backoffice.md](backoffice.md), step 5).
 
 8. **Generate the verify token.** Run `openssl rand -hex 24` once per environment. Keep the value for `WHATSAPP_VERIFY_TOKEN` of that environment and for step 9.
 
@@ -54,7 +54,7 @@ Staging uses a Meta test number and its own app. Production uses the real offici
 
    If it fails: install OpenSSL, or use any password manager to generate 48 hexadecimal characters.
 
-9. **Subscribe the webhook.** Do this only after the Worker of that environment is deployed with its secrets ([deploy.md](deploy.md), step 5). In the app open WhatsApp, Configuration, Edit the callback URL: `https://mcp-staging.zapbip.com/webhooks/whatsapp` for staging, `https://mcp.zapbip.com/webhooks/whatsapp` for production, and the verify token of step 8. Choose Verify and save. Then Manage webhook fields and subscribe `messages` and `message_template_status_update`.
+9. **Subscribe the webhook.** Do this only after the Worker of that environment is deployed and the number is registered and active ([deploy.md](deploy.md), step 5; [backoffice.md](backoffice.md), steps 2 to 4). The callback URL is the same for every app and every number of the environment, and the verify token is the one shared token of step 8: do not generate one per app. In each app open WhatsApp, Configuration, Edit the callback URL: `https://mcp-staging.zapbip.com/webhooks/whatsapp` for staging, `https://mcp.zapbip.com/webhooks/whatsapp` for production, and the verify token of step 8. Choose Verify and save. Then Manage webhook fields and subscribe `messages` and `message_template_status_update`.
 
    Expect: Meta accepts the callback and shows both fields subscribed. Sending `novo agente smoke` from the owner's phone later reaches the Worker.
 

@@ -20,11 +20,12 @@ function wrapNextSessionSend(input: {
   });
 }
 
-export function failNextSessionSend(input: { accountId: string }): Promise<void> {
+export function failNextSessionSend(input: { accountId: string; failure?: Error }): Promise<void> {
+  const { failure = new Error('session send failed') } = input;
   return wrapNextSessionSend({
     accountId: input.accountId,
     wrap: () => async () => {
-      throw new Error('session send failed');
+      throw failure;
     },
   });
 }

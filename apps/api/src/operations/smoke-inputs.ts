@@ -5,9 +5,9 @@ export enum SmokeInput {
   BaseUrl = 'SMOKE_BASE_URL',
   ConnectionSecret = 'SMOKE_CONNECTION_SECRET',
   OwnerPhone = 'SMOKE_OWNER_PHONE',
-  AppSecret = 'META_APP_SECRET',
+  AppSecret = 'SMOKE_META_APP_SECRET',
   VerifyToken = 'WHATSAPP_VERIFY_TOKEN',
-  PhoneNumberId = 'WHATSAPP_PHONE_NUMBER_ID',
+  PhoneNumberId = 'SMOKE_PHONE_NUMBER_ID',
 }
 
 export enum SmokeCheck {
@@ -28,7 +28,7 @@ const CHECK_INPUTS: Record<SmokeCheck, SmokeInput[]> = {
   [SmokeCheck.Health]: [SmokeInput.BaseUrl],
   [SmokeCheck.McpInitialize]: [SmokeInput.BaseUrl, SmokeInput.ConnectionSecret],
   [SmokeCheck.WebhookVerify]: [SmokeInput.BaseUrl, SmokeInput.VerifyToken],
-  [SmokeCheck.SignatureRejected]: [SmokeInput.BaseUrl],
+  [SmokeCheck.SignatureRejected]: [SmokeInput.BaseUrl, SmokeInput.PhoneNumberId],
   [SmokeCheck.FakeInbound]: [
     SmokeInput.BaseUrl,
     SmokeInput.ConnectionSecret,

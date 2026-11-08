@@ -1,3 +1,4 @@
+import { DAY_MS, HOUR_MS, MINUTE_MS, SECOND_MS } from '@zapbip/types';
 import { DeployEnvironment } from './deploy-environment';
 
 export const CONNECTION_SECRET_PREFIX = 'zb_conn_';
@@ -10,9 +11,9 @@ export const MCP_SERVER_NAME = 'zapbip';
 export const MCP_SERVER_VERSION = '0.1.0';
 export const DEVELOPMENT_ENVIRONMENT = DeployEnvironment.Development;
 export const HEALTH_PATH = '/health';
+export const CLIENT_ADDRESS_HEADER = 'cf-connecting-ip';
 export const UNAUTHORIZED_BODY = { error: 'unauthorized' } as const;
 export const PAYLOAD_TOO_LARGE_BODY = { error: 'payload_too_large' } as const;
-export const INVALID_JSON_BODY = { error: 'invalid_json' } as const;
 export const BATCH_NOT_SUPPORTED_BODY = { error: 'batch_not_supported' } as const;
 export const INVALID_NOTIFICATION_BODY = { error: 'invalid_notification' } as const;
 export const CLOCK_OFFSET_STORAGE_KEY = 'clock_offset_ms';
@@ -21,3 +22,11 @@ export const DEV_SEED_PATH = '/dev/seed';
 export const OWNER_PHONE_PATTERN = /^[0-9]{8,15}$/;
 export const INLINE_IMAGE_CONTENT_TYPE = 'image';
 export const WHATSAPP_WEBHOOK_PATH = '/webhooks/whatsapp';
+export const BACKOFFICE_SESSION_IDLE_MS = 30 * MINUTE_MS;
+export const BACKOFFICE_SESSION_MAX_MS = 8 * HOUR_MS;
+export const BACKOFFICE_LOCKOUT_THRESHOLD = 10;
+export const BACKOFFICE_LOCKOUT_MS = 15 * MINUTE_MS;
+export const BACKOFFICE_AUDIT_RETENTION_MS = 365 * DAY_MS;
+export const TOTP_PERIOD_MS = 30 * SECOND_MS;
+export const TOTP_DIGITS = 6;
+export const TOTP_WINDOW_STEPS = 1;
