@@ -9,6 +9,7 @@ const GET_STARTED_PAGE = 'get-started/how-to-start';
 const FOOTER_LABEL = 'zapbip · Logic Bit';
 const COMING_SOON_PATTERN = /coming soon|em breve/i;
 const WHATSAPP_NUMBER_LINK_LOCATOR = 'a[href*="wa.me"]';
+const PHONE_NUMBER_PATTERN = /\+\d{7,}/;
 const INSTALL_PROMPT_PLACEHOLDER = 'zb_inst_<code>';
 const OVERVIEW_EXAMPLE_COUNT = { minimum: 3, maximum: 5 };
 const OVERVIEW_HEADING_COUNT = 3;
@@ -74,6 +75,7 @@ for (const language of Object.values(DocsLanguage)) {
       await expect(content.locator('ol')).toHaveCount(1);
       await expect(content.locator(`a[href="${START_LINK}?${START_LINK_LANGUAGE_PARAMETER}=${language}"]`).first()).toBeVisible();
       await expect(page.locator(WHATSAPP_NUMBER_LINK_LOCATOR)).toHaveCount(0);
+      await expect(content).not.toContainText(PHONE_NUMBER_PATTERN);
       await expect(content.locator('code', { hasText: INSTALL_PROMPT_PLACEHOLDER }).first()).toBeVisible();
       await expect(content).not.toContainText(COMING_SOON_PATTERN);
     });

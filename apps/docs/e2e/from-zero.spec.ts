@@ -16,6 +16,7 @@ const WALK_TIMEOUT_MS = 300_000;
 const INTERNAL_LINK_LOCATOR = '#content-area a[href^="/"]';
 const MATRIX_LINK_LOCATOR = '#content-area table tbody tr a[href*="agents/"]';
 const WHATSAPP_NUMBER_LINK_LOCATOR = 'a[href*="wa.me"]';
+const PHONE_NUMBER_PATTERN = /\+\d{7,}/;
 const MATRIX_CLIENTS: AgentId[] = Object.values(AgentId);
 const STEP_COUNT = 5;
 
@@ -83,6 +84,7 @@ for (const language of Object.values(DocsLanguage)) {
         for (let position = 0; position < STEP_COUNT; position += 1) await expect(steps.nth(position)).toBeVisible();
         await expect(steps.first().locator(`a[href="${START_LINK}?${START_LINK_LANGUAGE_PARAMETER}=${language}"]`)).toBeVisible();
         await expect(page.locator(WHATSAPP_NUMBER_LINK_LOCATOR)).toHaveCount(0);
+        await expect(page.locator('#content-area')).not.toContainText(PHONE_NUMBER_PATTERN);
         await expectNoOverflow({ page });
         (await internalLinksOf({ page })).forEach((path) => visitedLinks.add(path));
 
