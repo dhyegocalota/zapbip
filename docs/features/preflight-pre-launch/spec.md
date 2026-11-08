@@ -1,6 +1,6 @@
 # Preflight pre-launch
 
-**Status:** Draft
+**Status:** Building
 **Tier:** 🟡 medium
 **Owner approval:** approved 2026-11-08 (owner delegated 2026-11-06)
 **ADRs:** none

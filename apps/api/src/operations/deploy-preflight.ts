@@ -76,12 +76,12 @@ export type WorkerPreflightInput = {
   shell: DeployShell;
   isInteractive: boolean;
   environmentVariables: EnvironmentVariables;
-  officialWhatsAppNumber: string;
   company: CompanyFacts;
   npmVersion: string;
   plugins: AgentPlugin[];
   packageFetcher: PackageFetcher;
   nameserverResolver: NameserverResolver;
+  warn: (line: string) => void;
 };
 
 export type DocsPreflightInput = {
@@ -157,17 +157,24 @@ async function refuseUnsetCompanyFacts(input: { company: CompanyFacts }): Promis
   return `COMPANY facts are still ${COMPANY_FACT_UNSET}: ${unset.join(', ')}; fill the Logic Bit company facts in libs/types before deploying`;
 }
 
-function npmFailureReason(input: { packageSpec: string; stdout: string }): string {
+type AbsentPackageHandler = (input: { packageSpec: string }) => string | null;
+
+function npmFailureReason(input: { packageSpec: string; stdout: string; onAbsentPackage: AbsentPackageHandler }): string | null {
   const failure = npmFailureSchema.safeParse(parseJsonOrNull({ text: input.stdout }));
   const code = failure.success ? failure.data.error.code : NO_NPM_ANSWER;
-  if (code === NPM_NOT_FOUND_CODE) return `${input.packageSpec} does not resolve on npm; publish it first`;
+  if (code === NPM_NOT_FOUND_CODE) return input.onAbsentPackage({ packageSpec: input.packageSpec });
   return `could not reach npm to read ${input.packageSpec} (${code}); check your network and run it again`;
 }
 
-async function untrustedReasonOf(input: { shell: DeployShell; packageSpec: string; publisher: string }): Promise<string | null> {
-  const { shell, packageSpec, publisher } = input;
+async function untrustedReasonOf(input: {
+  shell: DeployShell;
+  packageSpec: string;
+  publisher: string;
+  onAbsentPackage: AbsentPackageHandler;
+}): Promise<string | null> {
+  const { shell, packageSpec, publisher, onAbsentPackage } = input;
   const maintainerAnswer = await shell.run({ file: NPM, args: ['view', packageSpec, 'maintainers', '--json', ...NPM_REGISTRY_FLAGS] });
-  if (maintainerAnswer.exitCode !== 0) return npmFailureReason({ packageSpec, stdout: maintainerAnswer.stdout });
+  if (maintainerAnswer.exitCode !== 0) return npmFailureReason({ packageSpec, stdout: maintainerAnswer.stdout, onAbsentPackage });
   const maintainers = npmPeopleSchema.safeParse(parseJsonOrNull({ text: maintainerAnswer.stdout }));
   if (!maintainers.success) return `could not read the maintainers of ${packageSpec} as JSON`;
   const names = npmNamesOf({ people: maintainers.data });
@@ -183,10 +190,15 @@ async function untrustedReasonOf(input: { shell: DeployShell; packageSpec: strin
   return `${packageSpec} was published by ${publishers.join(', ')}, not by the npm user ${publisher}`;
 }
 
-async function firstUntrusted(input: { shell: DeployShell; packageSpecs: string[]; publisher: string }): Promise<string | null> {
+async function firstUntrusted(input: {
+  shell: DeployShell;
+  packageSpecs: string[];
+  publisher: string;
+  onAbsentPackage: AbsentPackageHandler;
+}): Promise<string | null> {
   const [current, ...remaining] = input.packageSpecs;
   if (!current) return null;
-  const reason = await untrustedReasonOf({ shell: input.shell, packageSpec: current, publisher: input.publisher });
+  const reason = await untrustedReasonOf({ ...input, packageSpec: current });
   if (reason !== null) return reason;
   return firstUntrusted({ ...input, packageSpecs: remaining });
 }
@@ -195,12 +207,13 @@ async function refuseUntrustedPackages(input: {
   shell: DeployShell;
   environmentVariables: EnvironmentVariables;
   packageSpecs: string[];
+  onAbsentPackage: AbsentPackageHandler;
 }): Promise<string | null> {
   const publisher = input.environmentVariables[NPM_PUBLISHER_VARIABLE];
   if (publisher === undefined || publisher === '' || isPlaceholderValue({ value: publisher })) {
     return `${NPM_PUBLISHER_VARIABLE} is not set; set it to the npm user that publishes the packages`;
   }
-  return firstUntrusted({ shell: input.shell, packageSpecs: input.packageSpecs, publisher });
+  return firstUntrusted({ shell: input.shell, packageSpecs: input.packageSpecs, publisher, onAbsentPackage: input.onAbsentPackage });
 }
 
 function publishedPackageSpecsOf(input: { npmVersion: string; plugins: AgentPlugin[] }): string[] {
@@ -209,11 +222,22 @@ function publishedPackageSpecsOf(input: { npmVersion: string; plugins: AgentPlug
 }
 
 async function refuseUntrustedWorkerPackage(input: WorkerPreflightInput): Promise<string | null> {
-  return refuseUntrustedPackages({ ...input, packageSpecs: publishedPackageSpecsOf(input) });
+  return refuseUntrustedPackages({
+    ...input,
+    packageSpecs: publishedPackageSpecsOf(input),
+    onAbsentPackage: ({ packageSpec }) => {
+      input.warn(`${packageSpec} is not on npm yet; publish it before launch`);
+      return null;
+    },
+  });
 }
 
 async function refuseUntrustedDocsPackages(input: DocsPreflightInput): Promise<string | null> {
-  return refuseUntrustedPackages({ ...input, packageSpecs: publishedPackageSpecsOf(input) });
+  return refuseUntrustedPackages({
+    ...input,
+    packageSpecs: publishedPackageSpecsOf(input),
+    onAbsentPackage: ({ packageSpec }) => `${packageSpec} does not resolve on npm; publish it first`,
+  });
 }
 
 function hostedArtifactsOf(input: { plugins: AgentPlugin[] }): HostedArtifact[] {
@@ -384,7 +408,6 @@ function productionOnly(input: { refusalOf: (subject: WorkerPreflightInput) => P
 
 const WORKER_CHECKS: PreflightCheck<WorkerPreflightInput>[] = [
   { step: PreflightStep.Environment, refusalOf: refuseUnlessDeployable },
-  { step: PreflightStep.OfficialNumber, refusalOf: productionOnly({ refusalOf: refuseUnsetOfficialNumber }) },
   { step: PreflightStep.CompanyFacts, refusalOf: productionOnly({ refusalOf: refuseUnsetCompanyFacts }) },
   { step: PreflightStep.NpmVersion, refusalOf: productionOnly({ refusalOf: refuseUntrustedWorkerPackage }) },
   { step: PreflightStep.PluginWheel, refusalOf: productionOnly({ refusalOf: refuseUnhostedWorkerArtifacts }) },

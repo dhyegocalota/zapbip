@@ -13,7 +13,6 @@ import {
   fakeShell,
   HOSTED_PLUGINS,
   NPM_VERSION,
-  OFFICIAL_NUMBER,
   READY_WORKER_FACTS,
 } from './fake-deploy-shell';
 
@@ -70,7 +69,6 @@ async function deploy(input: {
     prompt,
     isInteractive,
     environmentVariables: COMPLETE_VARIABLES,
-    officialWhatsAppNumber: OFFICIAL_NUMBER,
     company: COMPLETE_COMPANY,
     npmVersion: NPM_VERSION,
     plugins: HOSTED_PLUGINS,

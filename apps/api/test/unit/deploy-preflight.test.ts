@@ -47,7 +47,6 @@ function workerInput(input: {
   isInteractive?: boolean;
   firstDeploy?: boolean;
   environmentVariables?: EnvironmentVariables;
-  officialWhatsAppNumber?: string;
   company?: CompanyFacts;
   npmVersion?: string;
   packageFetcher?: FakePackageFetcher;
@@ -56,7 +55,7 @@ function workerInput(input: {
   warnings?: string[];
 }) {
   const { environment = DeployEnvironment.Staging, isInteractive = true, firstDeploy = false, warnings = [] } = input;
-  const { shell = fakeShell({}), environmentVariables = COMPLETE_VARIABLES, officialWhatsAppNumber = OFFICIAL_NUMBER } = input;
+  const { shell = fakeShell({}), environmentVariables = COMPLETE_VARIABLES } = input;
   const {
     block = blockOf({ environment }),
     workerFacts = READY_WORKER_FACTS,
@@ -73,7 +72,6 @@ function workerInput(input: {
     shell,
     isInteractive,
     environmentVariables,
-    officialWhatsAppNumber,
     company,
     npmVersion,
     plugins: HOSTED_PLUGINS,
@@ -104,10 +102,8 @@ describe('worker preflight', () => {
     expect(shell.commands).toEqual([]);
   });
 
-  it('lets production deploy while the official number is the unset sentinel', async () => {
-    const refusal = await runWorkerPreflight(
-      workerInput({ environment: DeployEnvironment.Production, officialWhatsAppNumber: OFFICIAL_NUMBER_UNSET }),
-    );
+  it('lets production deploy when only the official number is unset, since the Worker never reads it', async () => {
+    const refusal = await runWorkerPreflight(workerInput({ environment: DeployEnvironment.Production }));
     expect(refusal).toBeNull();
   });
 
@@ -345,9 +341,9 @@ describe('worker preflight', () => {
     expect(staging.commands).toContain('pnpm verify');
   });
 
-  it('lets staging deploy while the official number and the company facts are unset', async () => {
+  it('lets staging deploy while the company facts are unset', async () => {
     const company = { ...COMPLETE_COMPANY, cnpj: COMPANY_FACT_UNSET };
-    expect(await runWorkerPreflight(workerInput({ officialWhatsAppNumber: OFFICIAL_NUMBER_UNSET, company }))).toBeNull();
+    expect(await runWorkerPreflight(workerInput({ company }))).toBeNull();
   });
 
   it('refuses when the gate fails, after every cheap step has passed', async () => {

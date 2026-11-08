@@ -4,7 +4,7 @@ import { parseArgs } from 'node:util';
 import { experimental_readRawConfig as readRawWranglerConfig } from 'wrangler';
 import type { AgentPlugin } from '@zapbip/agents';
 import { AGENT_PLUGINS } from '@zapbip/agents/plugins';
-import { COMPANY, type CompanyFacts, OFFICIAL_WHATSAPP_NUMBER, ZAPBIP_NPM_VERSION } from '@zapbip/types';
+import { COMPANY, type CompanyFacts, ZAPBIP_NPM_VERSION } from '@zapbip/types';
 import { z } from 'zod';
 import { DeployEnvironment, parseDeployEnvironment } from '../src/operations/deploy-environment';
 import {
@@ -43,7 +43,6 @@ export type DeployRun = {
   prompt: DeployPrompt;
   isInteractive: boolean;
   environmentVariables: EnvironmentVariables;
-  officialWhatsAppNumber: string;
   company: CompanyFacts;
   npmVersion: string;
   plugins: AgentPlugin[];
@@ -136,7 +135,7 @@ function smokeCommand(input: { environment: DeployEnvironment; firstDeploy: bool
 
 export async function runDeploy(input: DeployRun): Promise<number> {
   const { environment, firstDeploy, block, shell, prompt, log } = input;
-  const refusal = await runWorkerPreflight(input);
+  const refusal = await runWorkerPreflight({ ...input, warn: log });
   if (refusal) {
     log(`refused at ${refusal.step}: ${refusal.message}`);
     return 1;
@@ -181,7 +180,6 @@ async function main(): Promise<void> {
       prompt: { ask: ({ question }) => lineReader.question(question) },
       isInteractive: process.stdin.isTTY === true,
       environmentVariables: process.env,
-      officialWhatsAppNumber: OFFICIAL_WHATSAPP_NUMBER,
       company: COMPANY,
       npmVersion: ZAPBIP_NPM_VERSION,
       plugins: Object.values(AGENT_PLUGINS),

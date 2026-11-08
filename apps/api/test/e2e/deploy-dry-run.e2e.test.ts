@@ -16,7 +16,6 @@ import {
   fakePackageFetcher,
   fakeShell,
   HOSTED_PLUGINS,
-  OFFICIAL_NUMBER,
   READY_WORKER_FACTS,
 } from '../unit/fake-deploy-shell';
 
@@ -72,7 +71,6 @@ function resolvedBlockOf(input: { environment: DeployEnvironment }) {
 
 async function refusalOf(input: {
   environment: DeployEnvironment;
-  officialWhatsAppNumber: string;
   company: CompanyFacts;
   replies?: Record<string, { exitCode: number; stdout: string }>;
 }) {
@@ -87,7 +85,6 @@ async function refusalOf(input: {
     prompt: { ask: async () => DeployEnvironment.Production },
     isInteractive: true,
     environmentVariables: { ...COMPLETE_VARIABLES, SMOKE_BASE_URL: 'https://mcp.zapbip.com' },
-    officialWhatsAppNumber: input.officialWhatsAppNumber,
     company: input.company,
     npmVersion: ZAPBIP_NPM_VERSION,
     plugins: HOSTED_PLUGINS,
@@ -122,7 +119,6 @@ describe('preflight against the real constants and the real wrangler blocks', ()
     expect(OFFICIAL_WHATSAPP_NUMBER).toBe(OFFICIAL_NUMBER_UNSET);
     const { exitCode, output } = await refusalOf({
       environment: DeployEnvironment.Production,
-      officialWhatsAppNumber: OFFICIAL_WHATSAPP_NUMBER,
       company: COMPLETE_COMPANY,
     });
     expect(exitCode).toBe(0);
@@ -132,7 +128,6 @@ describe('preflight against the real constants and the real wrangler blocks', ()
   test('production is refused while the company facts are the sentinel', async () => {
     const { exitCode, output } = await refusalOf({
       environment: DeployEnvironment.Production,
-      officialWhatsAppNumber: OFFICIAL_NUMBER,
       company: UNSET_COMPANY,
     });
     expect(exitCode).toBe(1);
@@ -142,7 +137,6 @@ describe('preflight against the real constants and the real wrangler blocks', ()
   test('production warns and goes on while the npm package does not resolve', async () => {
     const { exitCode, output } = await refusalOf({
       environment: DeployEnvironment.Production,
-      officialWhatsAppNumber: OFFICIAL_NUMBER,
       company: COMPLETE_COMPANY,
       replies: { 'maintainers --json': UNRESOLVED_NPM },
     });
@@ -153,7 +147,6 @@ describe('preflight against the real constants and the real wrangler blocks', ()
   test('a pending D1 migration stops the deploy before any Worker deploy', async () => {
     const { exitCode, output, shell } = await refusalOf({
       environment: DeployEnvironment.Staging,
-      officialWhatsAppNumber: OFFICIAL_NUMBER,
       company: COMPLETE_COMPANY,
       replies: { [MIGRATIONS_LIST]: PENDING_MIGRATIONS },
     });
@@ -165,7 +158,6 @@ describe('preflight against the real constants and the real wrangler blocks', ()
   test('a deploy with nothing pending lists the migrations before it deploys the Worker', async () => {
     const { exitCode, shell } = await refusalOf({
       environment: DeployEnvironment.Staging,
-      officialWhatsAppNumber: OFFICIAL_NUMBER,
       company: COMPLETE_COMPANY,
     });
     const listedAt = shell.commands.findIndex((command) => command.includes(MIGRATIONS_LIST));

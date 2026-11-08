@@ -20,9 +20,9 @@ One group, one lane.
 
 ### G1
 
-- [ ] **Step 1:** red: the Worker preflight passes with the number unset; E404 warns and passes; foreign maintainer and network error refuse
-- [ ] **Step 2:** remove the official number check from `WORKER_CHECKS`, the Worker input type and `DeployRun`; add the `warn` callback and `onAbsentPackage`
-- [ ] **Step 3:** update the deploy and Mintlify runbooks
+- [x] **Step 1:** red: the Worker preflight passes with the number unset; E404 warns and passes; foreign maintainer and network error refuse
+- [x] **Step 2:** remove the official number check from `WORKER_CHECKS`, the Worker input type and `DeployRun`; add the `warn` callback and `onAbsentPackage`
+- [x] **Step 3:** update the deploy and Mintlify runbooks
 
 ## Failure modes
 
