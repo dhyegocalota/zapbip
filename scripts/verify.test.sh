@@ -18,6 +18,7 @@ ALL_GATES="doctor format secrets typecheck audit unit integration e2e docs"
 DOCS_GATES="doctor format secrets audit shape"
 ALL_PACKAGES="@zapbip/api @zapbip/core @zapbip/server @zapbip/types @zapbip/web zapbip"
 API_GATES="doctor format secrets typecheck audit shape unit integration e2e"
+AGENTS_GATES="doctor format secrets typecheck audit shape unit integration e2e docs"
 
 expect_match() {
   local name=$1 output=$2 pattern=$3
@@ -102,7 +103,7 @@ new_repository() {
   printf '#!/usr/bin/env bash\necho "probe $*" >> "$STUB_LOG"\n' > "$repository/.github/scripts/secret-rules-probe.sh"
   chmod +x "$repository/.agents/hooks/doctor.sh" "$repository/.github/scripts/secret-rules-probe.sh" "$repository/scripts/verify.sh"
   local tracked
-  for tracked in README.md LICENSE AGENTS.md pnpm-lock.yaml docs/architecture.md .agents/skills/x/SKILL.md .github/workflows/verify.yml apps/web/README.md apps/web/vite.config.ts apps/web/src/a.ts apps/server/src/x.ts tools/repository-shape/src/x.test.ts libs/types/src/x.ts; do
+  for tracked in README.md LICENSE AGENTS.md pnpm-lock.yaml docs/architecture.md .agents/skills/x/SKILL.md .github/workflows/verify.yml apps/web/README.md apps/web/vite.config.ts apps/web/src/a.ts apps/server/src/x.ts tools/repository-shape/src/x.test.ts libs/types/src/x.ts libs/agents/src/x.ts; do
     change "$tracked"
   done
   in_repository add -- scripts apps libs tools .agents .github docs README.md LICENSE AGENTS.md pnpm-lock.yaml
@@ -161,6 +162,10 @@ expect_line "a types file" "$output" gates "$API_GATES"
 classify libs/core/src/x.ts
 expect_line "a core file" "$output" class product
 expect_line "a core file" "$output" gates "$API_GATES"
+
+classify libs/agents/src/x.ts
+expect_line "an agents file" "$output" class product
+expect_line "an agents file" "$output" gates "$AGENTS_GATES"
 
 classify apps/api/src/x.ts
 expect_line "an api file" "$output" class product

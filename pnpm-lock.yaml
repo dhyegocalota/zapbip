@@ -30,6 +30,9 @@ importers:
       '@modelcontextprotocol/sdk':
         specifier: 1.32.2
         version: 1.32.2(zod@4.6.7)
+      '@zapbip/agents':
+        specifier: workspace:*
+        version: link:../../libs/agents
       '@zapbip/core':
         specifier: workspace:*
         version: link:../../libs/core
@@ -82,6 +85,9 @@ importers:
       '@types/ws':
         specifier: 8.18.2
         version: 8.18.2
+      '@zapbip/agents':
+        specifier: workspace:*
+        version: link:../../libs/agents
       '@zapbip/core':
         specifier: workspace:*
         version: link:../../libs/core
@@ -146,6 +152,25 @@ importers:
         specifier: 8.22.1
         version: 8.22.1
 
+  libs/agents:
+    dependencies:
+      '@zapbip/core':
+        specifier: workspace:*
+        version: link:../core
+      '@zapbip/types':
+        specifier: workspace:*
+        version: link:../types
+      smol-toml:
+        specifier: 1.9.1
+        version: 1.9.1
+    devDependencies:
+      '@types/node':
+        specifier: 24.19.2
+        version: 24.19.2
+      vitest:
+        specifier: 5.0.5
+        version: 5.0.5(@types/node@24.19.2)(vite@8.3.5)
+
   libs/core:
     dependencies:
       '@zapbip/types':
@@ -170,6 +195,9 @@ importers:
 
   tools/repository-shape:
     dependencies:
+      '@zapbip/agents':
+        specifier: workspace:*
+        version: link:../../libs/agents
       '@zapbip/core':
         specifier: workspace:*
         version: link:../../libs/core
@@ -4829,7 +4857,6 @@ packages:
   /smol-toml@1.9.1:
     resolution: {integrity: sha512-j7WyPdf0CJoutMzMoPLF/bVXHtKZIT9Rb4eGeEbWw8X2t5oirjPgpL+OpaENZrILYaXqYwnVH+qgUwVbl+pUJQ==}
     engines: {node: '>= 18'}
-    dev: true
 
   /source-map-js@1.2.2:
     resolution: {integrity: sha512-KGj/8Y43x35aZVDtt+J4mK1hoLGHULMYfSkODJNQjNDC3oW1PqPoxMwo0pLUsWM/UEGzON/NxeHywEfNXNP3Vw==}

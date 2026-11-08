@@ -27,6 +27,10 @@
     "backoffice:enroll:production": "node --env-file=.env --import tsx apps/api/scripts/backoffice-enroll.ts --environment production",
     "docs:preflight": "node --env-file=.env --import tsx apps/api/scripts/docs-preflight.ts",
     "hermes-wheel:build": "node --import tsx scripts/hermes-wheel/build.ts",
+    "agents:generate": "node --import tsx libs/agents/generate/cli.ts generate",
+    "agents:check": "node --import tsx libs/agents/generate/cli.ts check",
+    "agents:new": "node --import tsx libs/agents/generate/cli.ts new",
+    "agents:mentions": "node --import tsx libs/agents/generate/cli.ts mentions",
     "verify": "bash scripts/verify.sh",
     "test:e2e:clients": "ZAPBIP_E2E_CLIENTS=1 pnpm --filter @zapbip/api exec vitest run --config vitest.e2e.config.mts test/e2e/hermes-openclaw.e2e.test.ts"
   },
