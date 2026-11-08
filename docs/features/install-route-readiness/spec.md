@@ -1,6 +1,6 @@
 # Install route readiness
 
-**Status:** Building
+**Status:** Shipped 2026-11-08
 **Tier:** 🟢 small
 **Owner approval:** approved 2026-11-08 (owner delegated 2026-11-06)
 **ADRs:** none
@@ -12,7 +12,7 @@
 
 ## Goals
 
-- A route serves GET when its method is `GET` or Hono's `ALL`, on the `/i/` prefix.
+- A route serves GET when its method is `GET` or Hono's `ALL`, on the `/i/` prefix, and it is not middleware (`inspectRoutes` from `hono/dev`).
 - A unit test runs `inspectWorker` on the real `createApp`, built as `deploy.ts` builds it, and the real Worker source root.
 
 ## Non-goals
@@ -27,7 +27,7 @@
 
 ### Failure handling
 
-A POST-only install route still reads as not mounted.
+A POST-only install route and a `use()` middleware on the prefix still read as not mounted.
 
 ## Open questions → answers
 
