@@ -1,7 +1,6 @@
 import { DocsLanguage } from '@zapbip/types';
 import { AGENTS_DIRECTORY, agentPagePathOf, twinPathOf } from '../src/docs';
 import { MATRIX_PAGE_NAME } from '../src/checks/registry';
-import { OrderSurface } from '../src/order';
 import { orderedAgentsOf, type ResolvedAgent } from './agent';
 import { DOCS_PAGES_ROOT, PAGE_DIRECTORIES } from './paths';
 
@@ -47,7 +46,7 @@ export function renderNavigation(input: { source: string; agents: ResolvedAgent[
   const languages = Object.values(DocsLanguage);
   const violations = languages.flatMap((language) => foreignPagesViolationsOf({ source: input.source, language }));
   if (violations.length > 0) return { content: input.source, violations };
-  const orderedAgents = orderedAgentsOf({ agents: input.agents, surface: OrderSurface.Navigation });
+  const orderedAgents = orderedAgentsOf({ agents: input.agents });
   const content = languages.reduce((source, language) => {
     const matrixPage = twinPathOf({ path: `${AGENTS_DIRECTORY}/${MATRIX_PAGE_NAME}`, language });
     const agentPages = orderedAgents.map((agent) => agentPagePathOf({ client: agent.id, language }));

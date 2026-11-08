@@ -7,8 +7,8 @@ export enum AgentId {
   GeminiCli = 'gemini-cli',
   Hermes = 'hermes',
   OpenClaw = 'openclaw',
-  GrokBot = 'grok-bot',
   ClaudeAi = 'claude-ai',
+  GrokBot = 'grok-bot',
   ChatGpt = 'chatgpt',
   GrokWeb = 'grok-web',
   AnyMcpClient = 'any-mcp-client',
@@ -19,12 +19,12 @@ export enum InstallClient {
   Codex = 'codex',
   Cursor = 'cursor',
   GeminiCli = 'gemini-cli',
-  GrokBot = 'grok-bot',
-  ClaudeAi = 'claude-ai',
-  ChatGpt = 'chatgpt',
-  GrokWeb = 'grok-web',
   Hermes = 'hermes',
   OpenClaw = 'openclaw',
+  ClaudeAi = 'claude-ai',
+  GrokBot = 'grok-bot',
+  ChatGpt = 'chatgpt',
+  GrokWeb = 'grok-web',
 }
 
 export enum ConnectorClient {}

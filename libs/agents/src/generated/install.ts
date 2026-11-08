@@ -6,35 +6,35 @@ import { install as claudeCodeAgentInstall } from '../../supported/claude-code/i
 import { install as codexAgentInstall } from '../../supported/codex/install';
 import { install as cursorAgentInstall } from '../../supported/cursor/install';
 import { install as geminiCliAgentInstall } from '../../supported/gemini-cli/install';
-import { install as grokBotAgentInstall } from '../../supported/grok-bot/install';
-import { install as claudeAiAgentInstall } from '../../supported/claude-ai/install';
-import { install as chatgptAgentInstall } from '../../supported/chatgpt/install';
-import { install as grokWebAgentInstall } from '../../supported/grok-web/install';
 import { install as hermesAgentInstall } from '../../supported/hermes/install';
 import { install as openclawAgentInstall } from '../../supported/openclaw/install';
+import { install as claudeAiAgentInstall } from '../../supported/claude-ai/install';
+import { install as grokBotAgentInstall } from '../../supported/grok-bot/install';
+import { install as chatgptAgentInstall } from '../../supported/chatgpt/install';
+import { install as grokWebAgentInstall } from '../../supported/grok-web/install';
 export const AGENT_INSTALLS: Record<InstallClient, AgentInstall> = {
   [InstallClient.ClaudeCode]: claudeCodeAgentInstall,
   [InstallClient.Codex]: codexAgentInstall,
   [InstallClient.Cursor]: cursorAgentInstall,
   [InstallClient.GeminiCli]: geminiCliAgentInstall,
-  [InstallClient.GrokBot]: grokBotAgentInstall,
-  [InstallClient.ClaudeAi]: claudeAiAgentInstall,
-  [InstallClient.ChatGpt]: chatgptAgentInstall,
-  [InstallClient.GrokWeb]: grokWebAgentInstall,
   [InstallClient.Hermes]: hermesAgentInstall,
   [InstallClient.OpenClaw]: openclawAgentInstall,
+  [InstallClient.ClaudeAi]: claudeAiAgentInstall,
+  [InstallClient.GrokBot]: grokBotAgentInstall,
+  [InstallClient.ChatGpt]: chatgptAgentInstall,
+  [InstallClient.GrokWeb]: grokWebAgentInstall,
 };
 const INSTALL_ORDER: AgentInstall[] = [
   claudeCodeAgentInstall,
   codexAgentInstall,
   cursorAgentInstall,
   geminiCliAgentInstall,
-  grokBotAgentInstall,
-  claudeAiAgentInstall,
-  chatgptAgentInstall,
-  grokWebAgentInstall,
   hermesAgentInstall,
   openclawAgentInstall,
+  claudeAiAgentInstall,
+  grokBotAgentInstall,
+  chatgptAgentInstall,
+  grokWebAgentInstall,
 ];
 export const INSTALL_PAGE_SECTIONS: { productName: string; render: InstallSection }[] = INSTALL_ORDER.map((install) => ({
   productName: install.productName,

@@ -7,8 +7,8 @@ import { definition as cursorAgentDefinition } from '../../supported/cursor/defi
 import { definition as geminiCliAgentDefinition } from '../../supported/gemini-cli/definition';
 import { definition as hermesAgentDefinition } from '../../supported/hermes/definition';
 import { definition as openclawAgentDefinition } from '../../supported/openclaw/definition';
-import { definition as grokBotAgentDefinition } from '../../supported/grok-bot/definition';
 import { definition as claudeAiAgentDefinition } from '../../supported/claude-ai/definition';
+import { definition as grokBotAgentDefinition } from '../../supported/grok-bot/definition';
 import { definition as chatgptAgentDefinition } from '../../supported/chatgpt/definition';
 import { definition as grokWebAgentDefinition } from '../../supported/grok-web/definition';
 import { definition as anyMcpClientAgentDefinition } from '../../supported/any-mcp-client/definition';
@@ -19,8 +19,8 @@ export const AGENT_DEFINITIONS: Record<AgentId, AgentDefinition> = {
   [AgentId.GeminiCli]: geminiCliAgentDefinition,
   [AgentId.Hermes]: hermesAgentDefinition,
   [AgentId.OpenClaw]: openclawAgentDefinition,
-  [AgentId.GrokBot]: grokBotAgentDefinition,
   [AgentId.ClaudeAi]: claudeAiAgentDefinition,
+  [AgentId.GrokBot]: grokBotAgentDefinition,
   [AgentId.ChatGpt]: chatgptAgentDefinition,
   [AgentId.GrokWeb]: grokWebAgentDefinition,
   [AgentId.AnyMcpClient]: anyMcpClientAgentDefinition,

@@ -1,5 +1,5 @@
 {
-  "installPage": ["Claude Code", "Codex", "Cursor", "Gemini CLI", "Grok Bot", "claude.ai", "ChatGPT", "Grok web", "Hermes", "OpenClaw"],
+  "installPage": ["Claude Code", "Codex", "Cursor", "Gemini CLI", "Hermes", "OpenClaw", "claude.ai", "Grok Bot", "ChatGPT", "Grok web"],
   "matrix": {
     "en": [
       "claude-code",
@@ -8,8 +8,8 @@
       "gemini-cli",
       "hermes",
       "openclaw",
-      "grok-bot",
       "claude-ai",
+      "grok-bot",
       "chatgpt",
       "grok-web",
       "any-mcp-client"
@@ -21,8 +21,8 @@
       "gemini-cli",
       "hermes",
       "openclaw",
-      "grok-bot",
       "claude-ai",
+      "grok-bot",
       "chatgpt",
       "grok-web",
       "any-mcp-client"
@@ -32,27 +32,27 @@
     "en": [
       "claude-code",
       "codex",
-      "claude-ai",
-      "chatgpt",
       "cursor",
-      "grok-bot",
-      "grok-web",
+      "gemini-cli",
       "hermes",
       "openclaw",
-      "gemini-cli",
+      "claude-ai",
+      "grok-bot",
+      "chatgpt",
+      "grok-web",
       "any-mcp-client"
     ],
     "pt-BR": [
       "claude-code",
       "codex",
-      "claude-ai",
-      "chatgpt",
       "cursor",
-      "grok-bot",
-      "grok-web",
+      "gemini-cli",
       "hermes",
       "openclaw",
-      "gemini-cli",
+      "claude-ai",
+      "grok-bot",
+      "chatgpt",
+      "grok-web",
       "any-mcp-client"
     ]
   }

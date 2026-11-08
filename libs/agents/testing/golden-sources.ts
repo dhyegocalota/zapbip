@@ -32,9 +32,9 @@ const SUPPORTED_AGENTS_PAGE = 'supported-agents';
 const DOCS_CONFIG = 'apps/docs/docs.json';
 const NAVIGATION_PAGE_PATTERN = /^(?:pt-br\/)?agents\/(.+)$/;
 
-const MATRIX_PAGE: Record<DocsLanguage, string> = {
-  [DocsLanguage.English]: 'apps/docs/agents/supported-agents.mdx',
-  [DocsLanguage.PortugueseBrazil]: 'apps/docs/pt-br/agents/supported-agents.mdx',
+const MATRIX_SNIPPET: Record<DocsLanguage, string> = {
+  [DocsLanguage.English]: 'apps/docs/snippets/agents/matrix.mdx',
+  [DocsLanguage.PortugueseBrazil]: 'apps/docs/snippets/pt-br/agents/matrix.mdx',
 };
 
 const NAVIGATION_GROUP: Record<DocsLanguage, string> = {
@@ -85,7 +85,7 @@ export function canonicalInstallPageOf(input: { page: string; locale: OwnerLocal
 }
 
 function matrixRowsOf(input: { language: DocsLanguage }): string[] {
-  return repositoryFile(MATRIX_PAGE[input.language])
+  return repositoryFile(MATRIX_SNIPPET[input.language])
     .split(LINE_SEPARATOR)
     .filter((line) => MATRIX_LINK_PATTERN.test(line));
 }

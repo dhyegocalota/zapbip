@@ -1,7 +1,6 @@
 import type { ResolvedAgent } from './agent';
 import { connectorAgentsOf, installAgentsOf, orderedAgentsOf, pluginAgentsOf } from './agent';
 import { GENERATED_POINTER } from './header';
-import { OrderSurface } from '../src/order';
 
 function enumSourceOf(input: { enumName: string; agents: ResolvedAgent[] }): string {
   if (input.agents.length === 0) return `export enum ${input.enumName} {}`;
@@ -12,7 +11,7 @@ function enumSourceOf(input: { enumName: string; agents: ResolvedAgent[] }): str
 export function renderIds(input: { agents: ResolvedAgent[] }): string {
   return [
     GENERATED_POINTER,
-    enumSourceOf({ enumName: 'AgentId', agents: orderedAgentsOf({ agents: input.agents, surface: OrderSurface.Matrix }) }),
+    enumSourceOf({ enumName: 'AgentId', agents: orderedAgentsOf({ agents: input.agents }) }),
     enumSourceOf({ enumName: 'InstallClient', agents: installAgentsOf({ agents: input.agents }) }),
     enumSourceOf({ enumName: 'ConnectorClient', agents: connectorAgentsOf({ agents: input.agents }) }),
     enumSourceOf({ enumName: 'PluginAgent', agents: pluginAgentsOf({ agents: input.agents }) }),

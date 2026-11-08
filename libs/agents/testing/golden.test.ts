@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { DocsLanguage, OwnerLocale } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
-import { LEGACY_INSTALL_PAGE_ORDER, LEGACY_MATRIX_ORDER, LEGACY_NAVIGATION_ORDER } from '../src/legacy-order';
 import {
   GOLDEN_FOLDER,
   GOLDEN_STANDBY_AGENT,
@@ -19,6 +18,31 @@ import {
 const STANDBY_CASES = [
   { name: 'without a standby agent', standbyAgent: null, suffix: '' },
   { name: 'with a standby agent', standbyAgent: GOLDEN_STANDBY_AGENT, suffix: '.standby' },
+];
+const AGENT_ORDER = [
+  'claude-code',
+  'codex',
+  'cursor',
+  'gemini-cli',
+  'hermes',
+  'openclaw',
+  'claude-ai',
+  'grok-bot',
+  'chatgpt',
+  'grok-web',
+  'any-mcp-client',
+];
+const INSTALL_PAGE_ORDER = [
+  'Claude Code',
+  'Codex',
+  'Cursor',
+  'Gemini CLI',
+  'Hermes',
+  'OpenClaw',
+  'claude.ai',
+  'Grok Bot',
+  'ChatGPT',
+  'Grok web',
 ];
 const REAL_AGENT_COUNT = 11;
 const INSTALL_AGENT_COUNT = 10;
@@ -81,11 +105,11 @@ describe('the order golden', () => {
     expect(orderOf()).toEqual(golden);
   });
 
-  test('the golden order is the legacy order', () => {
-    expect(golden.installPage).toEqual(LEGACY_INSTALL_PAGE_ORDER);
+  test('the golden order is wake rung, then name, on every surface', () => {
+    expect(golden.installPage).toEqual(INSTALL_PAGE_ORDER);
     Object.values(DocsLanguage).forEach((language) => {
-      expect(golden.matrix[language]).toEqual(LEGACY_MATRIX_ORDER);
-      expect(golden.navigation[language]).toEqual(LEGACY_NAVIGATION_ORDER);
+      expect(golden.matrix[language]).toEqual(AGENT_ORDER);
+      expect(golden.navigation[language]).toEqual(AGENT_ORDER);
     });
   });
 });

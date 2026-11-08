@@ -1,6 +1,5 @@
 import { DocsLanguage } from '@zapbip/types';
 import { WAKE_RUNG_LABELS, agentPagePathOf } from '../src/docs';
-import { OrderSurface } from '../src/order';
 import { orderedAgentsOf, type ResolvedAgent } from './agent';
 import { DELAY_NOT_MEASURED, MATRIX_HEADERS } from './matrix-copy';
 
@@ -35,8 +34,6 @@ function rowTextOf(input: { cells: string[] }): string {
 export function renderMatrix(input: { agents: ResolvedAgent[]; language: DocsLanguage }): string {
   const header = MATRIX_HEADERS[input.language];
   const separator = header.map(() => '---');
-  const rows = orderedAgentsOf({ agents: input.agents, surface: OrderSurface.Matrix }).map((agent) =>
-    rowOf({ agent, language: input.language }),
-  );
+  const rows = orderedAgentsOf({ agents: input.agents }).map((agent) => rowOf({ agent, language: input.language }));
   return [rowTextOf({ cells: header }), rowTextOf({ cells: separator }), ...rows, ''].join('\n');
 }
