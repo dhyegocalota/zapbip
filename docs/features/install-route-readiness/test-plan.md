@@ -8,8 +8,8 @@
 
 - [x] An app with no `/i/` route gives `mountsInstallRoute: false` — pin: green when it landed (worker-facts.test.ts); tester: dropping the /i/ prefix check turns it red (reports a missing install route)
 - [x] An app that mounts `/i/` only for POST gives `mountsInstallRoute: false` — pin: green when it landed (worker-facts.test.ts); tester: accepting any method turns it red (is not fooled by ... another method)
-- [ ] NEW, unconfirmed: an app with `new Hono().all('/health', handler)` gives `mountsInstallRoute: false` (pin, green when it landed)
-- [ ] NEW, unconfirmed: an app with only `use('/i/*', middleware)` gives `mountsInstallRoute: false` (red first: received `true`)
+- [x] An app with `new Hono().all('/health', handler)` gives `mountsInstallRoute: false` (pin, green when it landed) — tester: head 2577eb37 8 passed; dropping the `/i/` prefix check turns it red (with the missing-route test, 2 failed | 6 passed); reverted
+- [x] An app with only `use('/i/*', middleware)` gives `mountsInstallRoute: false` (red first: received `true`) — tester: red 879a176a (AssertionError: expected true to be false, 1 failed | 7 passed), green 2577eb37 8/8; removing `!route.isMiddleware` turns it red (1 failed | 7 passed), reverted; throwaway inspectWorker on the deploy.ts-built createApp printed {"exportsScheduled":true,"mountsInstallRoute":true} (deleted)
 
 ## Coverage honesty
 

@@ -31,5 +31,5 @@ One group, one lane.
 
 ## Z. Prove and ship
 
-- [ ] **Reviewer:** a fresh `reviewer` sub-agent returned a verdict.
-- [ ] **/open-pr:** gates passed, PR opened.
+- [x] **Reviewer:** a fresh `reviewer` sub-agent returned a verdict — WITH RESERVATIONS, all three findings fixed in 2577eb37
+- [x] **/open-pr:** gates passed, PR opened — PR #25
