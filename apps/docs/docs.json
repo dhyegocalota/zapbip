@@ -3,6 +3,7 @@
   "theme": "mint",
   "name": "zapbip",
   "favicon": "/favicon.svg",
+  "logo": { "light": "/logo/light.svg", "dark": "/logo/dark.svg", "href": "/" },
   "errors": {
     "404": {
       "redirect": false,
