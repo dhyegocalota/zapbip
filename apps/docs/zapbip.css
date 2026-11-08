@@ -132,7 +132,7 @@
   color: #5be39a;
 }
 
-.mdx-content > p,
+.mdx-content > span[data-as='p'],
 .mdx-content > ul,
 .mdx-content > ol {
   max-width: 44rem;
