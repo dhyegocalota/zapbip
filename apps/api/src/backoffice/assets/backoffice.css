@@ -868,6 +868,20 @@ main > .notice {
   overflow-wrap: anywhere;
 }
 
+.data-table .cell-nowrap {
+  overflow-wrap: normal;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.cell-truncate {
+  display: block;
+  max-width: 16rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .data-table thead th {
   background: var(--color-sunken);
   color: var(--color-text-muted);

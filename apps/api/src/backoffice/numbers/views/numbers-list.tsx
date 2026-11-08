@@ -59,9 +59,11 @@ export function NumbersListPage(props: { page: PageContext; entries: NumberListE
             {entries.map((entry) => (
               <tr class="number-row">
                 <td data-label={translate(BackofficeCopyKey.NumbersColumnLabel)}>
-                  <a href={numberPath({ numberId: entry.numberId })}>{entry.label}</a>
+                  <a href={numberPath({ numberId: entry.numberId })} class="cell-truncate" title={entry.label}>
+                    {entry.label}
+                  </a>
                 </td>
-                <td data-label={translate(BackofficeCopyKey.NumbersColumnDisplayNumber)} class="mono">
+                <td data-label={translate(BackofficeCopyKey.NumbersColumnDisplayNumber)} class="mono cell-nowrap">
                   {entry.displayNumber}
                 </td>
                 <td data-label={translate(BackofficeCopyKey.NumbersColumnState)}>
@@ -69,10 +71,12 @@ export function NumbersListPage(props: { page: PageContext; entries: NumberListE
                 </td>
                 <td data-label={translate(BackofficeCopyKey.NumbersColumnMetaApp)}>{entry.metaAppLabel}</td>
                 <td data-label={translate(BackofficeCopyKey.NumbersColumnAccounts)}>{entry.accountCount}</td>
-                <td data-label={translate(BackofficeCopyKey.NumbersColumnVerified)}>
+                <td data-label={translate(BackofficeCopyKey.NumbersColumnVerified)} class="cell-nowrap">
                   {entry.verifiedAt === null ? translate(BackofficeCopyKey.NumbersNotVerified) : formatTimestamp({ at: entry.verifiedAt })}
                 </td>
-                <td data-label={translate(BackofficeCopyKey.NumbersColumnUpdated)}>{formatTimestamp({ at: entry.updatedAt })}</td>
+                <td data-label={translate(BackofficeCopyKey.NumbersColumnUpdated)} class="cell-nowrap">
+                  {formatTimestamp({ at: entry.updatedAt })}
+                </td>
               </tr>
             ))}
           </tbody>
