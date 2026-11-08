@@ -11,7 +11,14 @@ const EXPECTED_JOBS = ['checks', 'unit', 'lifecycle', 'security'];
 const LIFECYCLE_JOB = 'lifecycle';
 const LIFECYCLE_MINIMUM_TIMEOUT_MINUTES = 25;
 const LIFECYCLE_MAXIMUM_TIMEOUT_MINUTES = 45;
-const LIFECYCLE_STEP = 'run: pnpm test:lifecycle';
+const LIFECYCLE_SHARD_COUNT = 3;
+const LIFECYCLE_STEP = `run: pnpm test:lifecycle --shard=\${{ matrix.shard }}/${LIFECYCLE_SHARD_COUNT}`;
+const LIFECYCLE_MATRIX = `shard: [${Array.from({ length: LIFECYCLE_SHARD_COUNT }, (_, index) => index + 1).join(', ')}]`;
+const LIFECYCLE_FILE_PATTERN = /^agent-lifecycle-[a-z-]+\.test\.ts$/;
+const LIFECYCLE_CONFIG = 'tools/repository-shape/vitest.lifecycle.config.ts';
+const DEFAULT_CONFIG = 'tools/repository-shape/vitest.config.ts';
+const SOURCE_DIRECTORY = 'tools/repository-shape/src';
+const SEQUENTIAL_FILES = 'fileParallelism: false';
 const DOCTOR_ENVIRONMENT = ['GH_TOKEN: ${{ github.token }}', 'DOCTOR_SKIP: chromium'];
 const CHECKS_JOB = 'checks';
 const CHECKS_STEPS = [
@@ -141,6 +148,20 @@ describe('CI workflow', () => {
     expect(minutes).toBeLessThanOrEqual(LIFECYCLE_MAXIMUM_TIMEOUT_MINUTES);
     expect(lifecycle).toContain(LIFECYCLE_STEP);
     expect(DOCTOR_ENVIRONMENT.filter((entry) => !lifecycle.includes(entry))).toEqual([]);
+  });
+
+  test('the lifecycle job runs as a matrix of shards, none cancelling the others', () => {
+    const lifecycle = job(LIFECYCLE_JOB);
+    expect(lifecycle).toContain(FAIL_FAST_DISABLED);
+    expect(lifecycle).toContain(LIFECYCLE_MATRIX);
+  });
+
+  test('the lifecycle proofs sit in at least as many files as there are shards and run one file at a time', () => {
+    const files = readdirSync(repositoryPath(SOURCE_DIRECTORY)).filter((name) => LIFECYCLE_FILE_PATTERN.test(name));
+    expect(files.length).toBeGreaterThanOrEqual(LIFECYCLE_SHARD_COUNT);
+    expect(readRepositoryFile(LIFECYCLE_CONFIG)).toContain(SEQUENTIAL_FILES);
+    expect(readRepositoryFile(LIFECYCLE_CONFIG)).toContain('src/agent-lifecycle-*.test.ts');
+    expect(readRepositoryFile(DEFAULT_CONFIG)).toContain('src/agent-lifecycle-*.test.ts');
   });
 
   test('every other job has a bounded timeout', () => {
