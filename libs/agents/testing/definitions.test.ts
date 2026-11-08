@@ -53,7 +53,9 @@ const agentIds = readdirSync(SUPPORTED_FOLDER, { withFileTypes: true })
 
 const goldenAgentIds = Object.keys(matrixRowsByAgentOf({ language: DocsLanguage.English })).sort();
 const definitions: Record<string, AgentDefinition> = Object.fromEntries(
-  await Promise.all(agentIds.map(async (id) => [id, (await import(`../supported/${id}/definition.ts`)).definition as AgentDefinition])),
+  await Promise.all(
+    agentIds.map(async (id) => [id, (await import(`${SUPPORTED_FOLDER}${id}/${DEFINITION_FILE}`)).definition as AgentDefinition]),
+  ),
 );
 
 function delayLabelOf(input: { expectedDelaySeconds: number | null; language: DocsLanguage }): string {

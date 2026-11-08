@@ -1,0 +1,8 @@
+import type { AgentInstall } from '../../src/contract';
+import { renderFixtureConnectorAgentSection } from './install-copy';
+
+export const install: AgentInstall = {
+  productName: 'Fixture Connector Agent',
+  productDescription: 'Fixture Connector Agent, the agent the tests use',
+  render: renderFixtureConnectorAgentSection,
+};
