@@ -34,7 +34,10 @@ function claimViolationsOf(input: { entries: PluginCheckEntry[]; applicationPlug
   return input.applicationPluginFolders.flatMap((folder) => {
     const claimants = input.entries.filter((entry) => entry.plugin.packageFolder === folder).map((entry) => entry.id);
     return [
-      ...violationIf({ condition: claimants.length === 0, message: `${folder} is claimed by no plugin.ts` }),
+      ...violationIf({
+        condition: claimants.length === 0,
+        message: `${folder} is claimed by no plugin.ts; if its agent was removed, remove ${folder} as well`,
+      }),
       ...violationIf({ condition: claimants.length > 1, message: `${folder} is claimed by ${claimants.join(' and ')}` }),
     ];
   });
@@ -77,7 +80,7 @@ function artifactViolationsOf(input: ArtifactCheckInput): string[] {
     ...releaseViolationsOf(input),
     ...violationIf({
       condition: artifact.embeddedInInstallCommand && !entry.plugin.installCommand.includes(artifact.expectedSha256),
-      message: `${entry.id}: the install command must embed the hash of ${artifact.filename}`,
+      message: `${entry.id}: the install command must embed the hash of ${artifact.filename} (${artifact.label})`,
     }),
   ];
 }
@@ -90,7 +93,7 @@ function embeddingViolationsOf(input: ArtifactCheckInput): string[] {
   return wheels.flatMap((other) =>
     violationIf({
       condition: !embedder.toString().includes(other.expectedSha256),
-      message: `${entry.id}: ${artifact.filename} must contain the hash of ${other.filename}`,
+      message: `${entry.id}: ${artifact.filename} (${artifact.label}) must contain the hash of ${other.filename}`,
     }),
   );
 }

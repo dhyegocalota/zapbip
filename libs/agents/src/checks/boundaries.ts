@@ -9,7 +9,7 @@ type BoundaryRule = {
   forbids: (input: { path: string; specifier: string }) => boolean;
 };
 
-const SPECIFIER_PATTERN = /(?:from|import\s*\()\s*['"]([^'"]+)['"]/g;
+const SPECIFIER_PATTERN = /(?:from|import\s*\(?)\s*['"]([^'"]+)['"]/g;
 const AGENTS_PACKAGE = '@zapbip/agents';
 const WORKER_FACETS = [`${AGENTS_PACKAGE}/install`, `${AGENTS_PACKAGE}/plugins`];
 const SUPPORTED_ROOT = 'libs/agents/supported';

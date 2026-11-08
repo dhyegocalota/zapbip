@@ -37,7 +37,7 @@ A supported agent is described today in four packages. Its enum member is in `li
 
 ## Consequences
 
-- Adding an agent edits no file outside its folder. Removing one deletes its folder, and the generator deletes its pages and entries.
+- Adding an agent edits no file outside its folder. Removing one deletes its folder (and `apps/<id>-plugin/` for a plugin agent, which the generator demands by name), and the generator deletes its pages and entries.
 - `libs/types` loses `InstallClient`, `DocsOnlyClient`, `ConnectorClient`, `ChannelPluginProduct` and the per-agent constants. Agent ids exist only in `@zapbip/agents`.
 - A merge conflict on a generated path is resolved by rerunning the generator, never by hand.
 - Removing a connector runtime reaches an owner only when they upgrade `zapbip`; a pinned old version keeps it.
