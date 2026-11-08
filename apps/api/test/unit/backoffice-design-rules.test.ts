@@ -31,6 +31,8 @@ const STATE_ONLY_CLASSES = [
 ];
 const FORCED_COLORS_PATTERN = /@media \(forced-colors: active\)/;
 const FORCED_COLORS_BLOCK_PATTERN = /@media \(forced-colors: active\) \{[\s\S]*?\n\}/;
+const TOP_LEVEL_LINE_PATTERN = /^\S/;
+const BLOCK_END = '}';
 const REDUCED_MOTION_GUARD_PATTERN =
   /@media \(prefers-reduced-motion: reduce\) \{\s*\*,\s*\*::before,\s*\*::after \{\s*animation: none !important;\s*transition: none !important;\s*\}\s*\}/;
 const INFINITE_ANIMATION_PATTERN = /animation[a-z-]*:[^;]*\binfinite\b/;
@@ -160,5 +162,11 @@ describe('design rules', () => {
     );
     const withoutRule = [...new Set(emittedClasses)].filter((name) => !ruleClasses.has(name) && !STATE_ONLY_CLASSES.includes(name));
     expect(withoutRule).toEqual([]);
+  });
+
+  it('ends with the single forced-colors block so its rules win the cascade', () => {
+    expect(STYLESHEET.match(/@media \(forced-colors: active\)/g)).toHaveLength(1);
+    const linesAfterOpening = STYLESHEET.slice(STYLESHEET.search(FORCED_COLORS_PATTERN)).split('\n').slice(1);
+    expect(linesAfterOpening.filter((line) => TOP_LEVEL_LINE_PATTERN.test(line) && line !== BLOCK_END)).toEqual([]);
   });
 });

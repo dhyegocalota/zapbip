@@ -32,6 +32,17 @@ async function expectNoOverlap(input: { page: Page }): Promise<void> {
   );
 }
 
+function computedOf(input: { page: Page; selector: string; property: 'backgroundColor' | 'stroke' | 'borderTopColor' }): Promise<string> {
+  return input.page
+    .locator(input.selector)
+    .first()
+    .evaluate((element, property) => {
+      const view = element.ownerDocument.defaultView;
+      if (view === null) throw new Error('the element has no window');
+      return view.getComputedStyle(element)[property];
+    }, input.property);
+}
+
 function animationNameOf(input: { page: Page; selector: string; pseudo: string | null }): Promise<string> {
   return input.page
     .locator(input.selector)
@@ -94,6 +105,20 @@ test.describe('signed in', () => {
       await page.goto('/');
       await expect(page.locator('.hero-card').first()).not.toHaveCSS('border-top-color', TRANSPARENT);
       await expect(page.getByRole('heading', { level: 1, name: copy({ key: BackofficeCopyKey.HomeTitle }) })).toBeVisible();
+    });
+
+    test('the sparkline, the live dot and the hero border are system colours that differ from the canvas', async ({ page }) => {
+      await page.goto('/');
+      const canvas = await computedOf({ page, selector: 'body', property: 'backgroundColor' });
+      const drawn = await Promise.all([
+        computedOf({ page, selector: '.live-dot', property: 'backgroundColor' }),
+        computedOf({ page, selector: '.sparkline-line', property: 'stroke' }),
+        computedOf({ page, selector: '.hero-card', property: 'borderTopColor' }),
+      ]);
+      drawn.forEach((colour) => {
+        expect(colour).not.toBe(canvas);
+        expect(colour).not.toBe(TRANSPARENT);
+      });
     });
   });
 
