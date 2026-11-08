@@ -22,7 +22,7 @@ export function TextField(props: TextFieldProps) {
         </p>
       )}
       {props.error === null ? null : (
-        <p id={errorId} class="field-help">
+        <p id={errorId} class="field-help field-error">
           {props.error}
         </p>
       )}
