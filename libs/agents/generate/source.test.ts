@@ -78,7 +78,7 @@ describe('listedFolders', () => {
 
   test('does not list a folder whose tracked files were removed from the index', () => {
     track({ path: 'apps/delta-plugin/package.json', text: '{}' });
-    git('rm', '-rq', '--', 'apps/delta-plugin');
+    git('rm', '-rqf', '--', 'apps/delta-plugin');
     expect(listedFolders({ root, parent: 'apps' })).toEqual([]);
   });
 

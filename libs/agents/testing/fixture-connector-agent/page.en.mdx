@@ -3,6 +3,8 @@ title: Fixture Connector Agent
 description: Connect Fixture Connector Agent to your WhatsApp.
 ---
 
+import { Chat } from '/snippets/chat.jsx';
+
 ## What works
 
 Fixture Connector Agent hears you and answers on WhatsApp.
@@ -20,3 +22,5 @@ Wake type: **Local**. Fixture Connector Agent runs a listener on your computer. 
 ## Check it works
 
 Ask Fixture Connector Agent to send `✅ installed` to your WhatsApp.
+
+<Chat messages={[{ name: 'Fixture Connector Agent', text: '✅ installed', time: '14:03' }]} />

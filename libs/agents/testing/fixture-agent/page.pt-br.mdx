@@ -3,6 +3,8 @@ title: Agente de teste
 description: Conecte o Agente de teste ao seu WhatsApp.
 ---
 
+import { Chat } from '/snippets/chat.jsx';
+
 ## O que funciona
 
 O Agente de teste ouve você e responde pelo WhatsApp.
@@ -20,3 +22,5 @@ Tipo de despertar: **Local**. O Agente de teste roda um ouvinte no seu computado
 ## Confira se funciona
 
 Peça ao Agente de teste para enviar `✅ instalado` para o seu WhatsApp.
+
+<Chat messages={[{ name: 'Fixture Agent', text: '✅ instalado', time: '14:03' }]} />

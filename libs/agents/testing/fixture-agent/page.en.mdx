@@ -3,6 +3,8 @@ title: Fixture Agent
 description: Connect Fixture Agent to your WhatsApp.
 ---
 
+import { Chat } from '/snippets/chat.jsx';
+
 ## What works
 
 Fixture Agent hears you and answers on WhatsApp.
@@ -20,3 +22,5 @@ Wake type: **Local**. Fixture Agent runs a listener on your computer. When zapbi
 ## Check it works
 
 Ask Fixture Agent to send `✅ installed` to your WhatsApp.
+
+<Chat messages={[{ name: 'Fixture Agent', text: '✅ installed', time: '14:03' }]} />

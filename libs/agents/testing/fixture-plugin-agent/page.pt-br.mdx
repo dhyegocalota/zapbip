@@ -3,6 +3,8 @@ title: Agente plugin de teste
 description: Conecte o Agente plugin de teste ao seu WhatsApp.
 ---
 
+import { Chat } from '/snippets/chat.jsx';
+
 ## O que funciona
 
 O Agente plugin de teste ouve você e responde pelo WhatsApp.
@@ -25,3 +27,5 @@ pip install --require-hashes --requirement https://mcp.zapbip.com/pkg/fixture-re
 Peça ao Agente plugin de teste para enviar `✅ instalado` para o seu WhatsApp.
 
 Rode apenas um listener por agente: o plugin ou `npx zapbip@0.1.0 listen`, nunca os dois. Um segundo listener substitui o primeiro.
+
+<Chat messages={[{ name: 'Fixture Plugin Agent', text: '✅ instalado', time: '14:03' }]} />

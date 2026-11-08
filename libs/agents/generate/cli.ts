@@ -11,7 +11,7 @@ import { SUPPORTED_FOLDER } from './repository';
 import { mentionsOf } from './mentions';
 import { GENERATED_FOLDER } from './paths';
 import { ScaffoldKind, scaffoldFilesOf } from './scaffold';
-import { UnreadableTrackedFileError, listSource, listTree, readSource, trackedTextFiles } from './source';
+import { UnreadableTrackedFileError, listSource, listedFolders, listTree, readSource, trackedTextFiles } from './source';
 
 enum CliMode {
   Generate = 'generate',
@@ -47,7 +47,7 @@ async function registryCheckViolations(): Promise<string[]> {
     agent.plugin === null ? [] : agent.plugin.hostedArtifacts.map((artifact) => artifact.filename),
   );
   const sources = {
-    applicationPluginFolders: listSource('apps')
+    applicationPluginFolders: listedFolders({ parent: 'apps' })
       .filter((name) => name.endsWith(PLUGIN_FOLDER_SUFFIX))
       .map((name) => `apps/${name}`),
     readFile: (path: string) => (existsSync(repositoryPath(path)) ? readFileSync(repositoryPath(path)) : null),

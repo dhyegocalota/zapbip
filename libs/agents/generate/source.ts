@@ -47,6 +47,16 @@ export function trackedTextFiles({ root = REPOSITORY_ROOT }: { root?: string } =
     .filter((file) => !file.text.includes(BINARY_MARKER));
 }
 
+export function listedFolders({ parent, root = REPOSITORY_ROOT }: { parent: string; root?: string }): string[] {
+  const deletedPaths = listingOf({ root, flags: ['--deleted'] });
+  const folders = listingOf({ root, flags: ['--cached', '--others', '--exclude-standard', '--', `${parent}/`] })
+    .filter((path) => !deletedPaths.includes(path))
+    .map((path) => path.slice(parent.length + 1).split('/'))
+    .filter((parts) => parts.length > 1)
+    .map(([folder]) => folder as string);
+  return [...new Set(folders)].sort();
+}
+
 export function listTree(directory: string): string[] {
   if (!existsSync(repositoryPath(directory))) return [];
   return readdirSync(repositoryPath(directory), { recursive: true, withFileTypes: true })

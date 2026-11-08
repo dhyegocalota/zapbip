@@ -9,6 +9,8 @@ const UNPINNED_PACKAGE_PATTERN = /npx zapbip(?!@)/;
 const TEST_DOUBLE_PATTERN = /fake|simulator|localhost|zb_conn_/i;
 const CONNECTION_LINK_PLACEHOLDER = '<connectionLink>';
 const CODE_PATTERN = /```[\s\S]*?```|`[^`\n]*`/g;
+const CHAT_IMPORT = "import { Chat } from '/snippets/chat.jsx';";
+const CHAT_TAG = '<Chat';
 const NON_PORTABLE_HASH_TOOL = 'sha256sum';
 const OWNER_LOCALES: Record<DocsLanguage, OwnerLocale> = {
   [DocsLanguage.English]: OwnerLocale.EnglishUs,
@@ -68,6 +70,10 @@ export function pageRuleViolationsOf(input: PageRuleInput): string[] {
     ...violationIf({
       condition: !FRONT_MATTER_PATTERN.test(input.page),
       message: `${input.label}: the page needs a title and a description in its front matter`,
+    }),
+    ...violationIf({
+      condition: !input.page.includes(CHAT_IMPORT) || !input.page.includes(CHAT_TAG),
+      message: `${input.label}: the page must show at least one conversation`,
     }),
     ...violationIf({
       condition: UNPINNED_PACKAGE_PATTERN.test(input.page),
