@@ -46,7 +46,7 @@ const AGENTS_REVOKED_STATEMENT =
   'SELECT ' + REVOKED_DAY + ' AS day, COUNT(*) AS total ' + AGENT_SCOPE + ' AND c.revoked_at >= ?2 GROUP BY day';
 const ACTIVITY_STATEMENT = `SELECT day, metric, SUM(count) AS total FROM activity_daily
   WHERE day >= ?2 AND (?1 IS NULL OR number_id = ?1) GROUP BY day, metric`;
-const BUDGET_STATEMENT = 'SELECT COALESCE(SUM(gigabyte_seconds), 0) AS total FROM usage_daily WHERE day = ?1';
+const BUDGET_STATEMENT = 'SELECT day, SUM(gigabyte_seconds) AS total FROM usage_daily WHERE day >= ?1 GROUP BY day';
 const BLOCKED_PHONES_STATEMENT = 'SELECT COUNT(*) AS total FROM blocked_phones';
 const RESTRICTED_STATEMENT = `SELECT n.id AS numberId, n.label AS label, r.restricted_at AS restrictedAt
   FROM channel_restrictions r JOIN whatsapp_numbers n ON n.phone_number_id = r.phone_number_id
@@ -80,7 +80,7 @@ export async function readMetrics(input: { database: D1Database; filter: Metrics
     database.prepare(AGENTS_CREATED_STATEMENT).bind(numberId, sinceAt),
     database.prepare(AGENTS_REVOKED_STATEMENT).bind(numberId, sinceAt),
     database.prepare(ACTIVITY_STATEMENT).bind(numberId, sinceDay),
-    database.prepare(BUDGET_STATEMENT).bind(utcDay({ now })),
+    database.prepare(BUDGET_STATEMENT).bind(sinceDay),
     database.prepare(BLOCKED_PHONES_STATEMENT),
     database.prepare(RESTRICTED_STATEMENT).bind(numberId, restrictedSince),
   ]);
@@ -94,7 +94,7 @@ export async function readMetrics(input: { database: D1Database; filter: Metrics
     agentsCreated: resultRows({ results, query: MetricsQuery.AgentsCreated }),
     agentsRevoked: resultRows({ results, query: MetricsQuery.AgentsRevoked }),
     activity: resultRows({ results, query: MetricsQuery.Activity }),
-    budgetGigabyteSeconds: singleRow<{ total: number }>({ results, query: MetricsQuery.Budget }).total,
+    budgetDays: resultRows({ results, query: MetricsQuery.Budget }),
     blockedPhones: singleRow<{ total: number }>({ results, query: MetricsQuery.BlockedPhones }).total,
     restricted: resultRows({ results, query: MetricsQuery.Restricted }),
   };

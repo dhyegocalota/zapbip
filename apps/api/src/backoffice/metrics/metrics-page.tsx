@@ -2,7 +2,9 @@ import { AccountState } from '@zapbip/types';
 import { ActivityMetric } from '../../contract/activity-metric';
 import { BackofficeCopyKey, renderBackofficeCopy } from '../backoffice-copy';
 import { BackofficePath } from '../backoffice-paths';
-import { BudgetBar } from './budget-bar';
+import { formatPercent } from '../format-percent';
+import { isBudgetWarning } from '../../account-inbox/usage-meter';
+import { DAILY_BUDGET_WARNING_RATIO, DURABLE_OBJECT_DAILY_GIGABYTE_SECONDS } from '../../operations/constants';
 import { BarChart, BarPattern, type ChartSeries } from './bar-chart';
 import { FigureNumber } from './figure-number';
 import { FilterForm } from './filter-form';
@@ -16,7 +18,6 @@ import type { PageContext } from '../page-context';
 import { formatTimestamp } from '../format-timestamp';
 import { utcDay } from '../../account-inbox/usage-meter';
 
-const WAKE_DECIMALS = 1;
 const ACCOUNT_STATE_LABELS: Record<AccountState, BackofficeCopyKey> = {
   [AccountState.Waitlisted]: BackofficeCopyKey.MetricsAccountStateWaitlisted,
   [AccountState.Active]: BackofficeCopyKey.MetricsAccountStateActive,
@@ -49,12 +50,21 @@ export function MetricsPage(props: { page: PageContext; filter: MetricsFilter; r
     unreached: totalOf(ActivityMetric.WakesUnreached),
   });
   const noWakes = translate(BackofficeCopyKey.MetricsWakeNoWakes);
-  const percentText = (percent: number | null): string => (percent === null ? noWakes : `${percent.toFixed(WAKE_DECIMALS)}%`);
+  const percentText = (percent: number | null): string => (percent === null ? noWakes : formatPercent({ percent, locale }));
   const wakeSeries: ChartSeries = {
     label: translate(BackofficeCopyKey.MetricsWakeTitle),
     cell: MetricCell.WakeSuccess,
     values: wakePercents.map((percent) => (percent === null ? 0 : percent)),
     valueTexts: wakePercents.map(percentText),
+    pattern: BarPattern.Solid,
+  };
+  const budgetValues = dailySeries({ days, rows: report.budgetDays });
+  const budgetToday = sumOf({ values: report.budgetDays.filter((entry) => entry.day === today).map((entry) => entry.total) });
+  const budgetSeries: ChartSeries = {
+    label: translate(BackofficeCopyKey.MetricsBudgetTitle),
+    cell: MetricCell.BudgetUsed,
+    values: budgetValues,
+    valueTexts: budgetValues.map((value) => String(Math.round(value))),
     pattern: BarPattern.Solid,
   };
   const accountTotal = sumOf({ values: report.accountsByState.map((entry) => entry.total) });
@@ -308,14 +318,42 @@ export function MetricsPage(props: { page: PageContext; filter: MetricsFilter; r
       <section class="card" aria-labelledby="metrics-budget-title">
         <h2 id="metrics-budget-title">{translate(BackofficeCopyKey.MetricsBudgetTitle)}</h2>
         <p class="figure-freshness">{hourlyLabel}</p>
+        <p class="figure-freshness">{translate(BackofficeCopyKey.MetricsBudgetAccountWide)}</p>
         <FigureNumber
           id="figure-budget-used"
           label={translate(BackofficeCopyKey.MetricsBudgetTitle)}
-          value={String(Math.round(report.budgetGigabyteSeconds))}
+          value={String(Math.round(budgetToday))}
           cell={MetricCell.BudgetUsed}
           freshness={hourlyLabel}
         />
-        <BudgetBar locale={locale} used={report.budgetGigabyteSeconds} />
+        <p>
+          {translate(BackofficeCopyKey.MetricsBudgetUsed, {
+            used: String(Math.round(budgetToday)),
+            limit: String(DURABLE_OBJECT_DAILY_GIGABYTE_SECONDS),
+          })}
+        </p>
+        <p class={isBudgetWarning({ gigabyteSeconds: budgetToday }) ? 'budget-status budget-warning' : 'budget-status'}>
+          {translate(
+            isBudgetWarning({ gigabyteSeconds: budgetToday })
+              ? BackofficeCopyKey.MetricsBudgetWarning
+              : BackofficeCopyKey.MetricsBudgetWithin,
+          )}
+        </p>
+        <BarChart
+          {...chartProps}
+          id="chart-budget"
+          metricLabel={translate(BackofficeCopyKey.MetricsBudgetTitle)}
+          series={[budgetSeries]}
+          totalText={String(Math.round(sumOf({ values: budgetSeries.values })))}
+          isHourly
+          references={[
+            { value: DURABLE_OBJECT_DAILY_GIGABYTE_SECONDS, label: String(DURABLE_OBJECT_DAILY_GIGABYTE_SECONDS) },
+            {
+              value: DURABLE_OBJECT_DAILY_GIGABYTE_SECONDS * DAILY_BUDGET_WARNING_RATIO,
+              label: translate(BackofficeCopyKey.MetricsBudgetThreshold),
+            },
+          ]}
+        />
       </section>
       <section class="card" aria-labelledby="metrics-restricted-title">
         <h2 id="metrics-restricted-title">{translate(BackofficeCopyKey.MetricsRestrictedTitle)}</h2>

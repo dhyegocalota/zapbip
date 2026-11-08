@@ -7,6 +7,8 @@ export enum BarPattern {
   Hatched = 'hatched',
 }
 
+export type ChartReference = { value: number; label: string };
+
 export type ChartSeries = { label: string; cell: MetricCell; values: number[]; valueTexts: string[]; pattern: BarPattern };
 
 const CHART_WIDTH = 640;
@@ -20,6 +22,7 @@ const DAY_LABEL_START = 5;
 const HATCH_SIZE = 6;
 const HATCH_ROTATION = 45;
 const MINIMUM_MAXIMUM = 1;
+const REFERENCE_LABEL_GAP = 3;
 
 type Bar = { x: number; y: number; width: number; height: number; pattern: BarPattern };
 
@@ -50,12 +53,14 @@ export function BarChart(props: {
   totalText: string;
   today: string;
   isHourly: boolean;
+  references?: ChartReference[];
 }) {
   const { locale, id, days, series } = props;
   const translate = (key: BackofficeCopyKey, values?: Record<string, string>): string => renderBackofficeCopy({ key, locale, values });
   const hasData = series.some((entry) => entry.values.some((value) => value > 0));
   if (!hasData) return <p class="empty-text">{translate(BackofficeCopyKey.MetricsNoData)}</p>;
-  const maximum = Math.max(MINIMUM_MAXIMUM, ...series.flatMap((entry) => entry.values));
+  const references = props.references === undefined ? [] : props.references;
+  const maximum = Math.max(MINIMUM_MAXIMUM, ...series.flatMap((entry) => entry.values), ...references.map((reference) => reference.value));
   const patternId = `${id}-hatch`;
   const [firstDay, lastDay] = [days.at(0), days.at(-1)];
   if (firstDay === undefined || lastDay === undefined) throw new Error('a chart needs at least one day');
@@ -90,6 +95,25 @@ export function BarChart(props: {
             height={bar.height}
             fill={bar.pattern === BarPattern.Hatched ? `url(#${patternId})` : undefined}
           />
+        ))}
+        {references.map((reference) => (
+          <g>
+            <line
+              class="chart-reference"
+              x1="0"
+              y1={PLOT_HEIGHT - (reference.value / maximum) * PLOT_HEIGHT}
+              x2={CHART_WIDTH}
+              y2={PLOT_HEIGHT - (reference.value / maximum) * PLOT_HEIGHT}
+            />
+            <text
+              class="chart-axis-label"
+              x={CHART_WIDTH}
+              y={PLOT_HEIGHT - (reference.value / maximum) * PLOT_HEIGHT - REFERENCE_LABEL_GAP}
+              text-anchor="end"
+            >
+              {reference.label}
+            </text>
+          </g>
         ))}
         <line class="chart-baseline" x1="0" y1={PLOT_HEIGHT} x2={CHART_WIDTH} y2={PLOT_HEIGHT} />
         <text class="chart-axis-label" x="0" y={MAXIMUM_LABEL_BASELINE}>

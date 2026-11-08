@@ -5,6 +5,7 @@ import { recordSenderActivity, recordWakerActivity } from '../../src/account-inb
 import { ActivityMetric } from '../../src/contract/activity-metric';
 
 const AGENT = 'alpha';
+const ignoreFailure = (): void => undefined;
 const SENT = { channelMessageId: 'wamid.sent' };
 const SESSION_REQUEST = { message: {}, question: null, replyToChannelMessageId: null, reactionTargetChannelMessageId: null } as never;
 const TEMPLATE_REQUEST = { kind: TemplateKind.Notice, locale: 'pt_BR', parameters: [] } as never;
@@ -44,7 +45,11 @@ describe('wake activity', () => {
     { outcome: WakeOutcome.Unreached, metric: ActivityMetric.WakesUnreached },
   ])('counts a notify that answered $outcome as $metric', async ({ outcome, metric }) => {
     const recorded: ActivityMetric[] = [];
-    const waker = recordWakerActivity({ waker: wakerAnswering({ outcome }), record: (activity) => recorded.push(activity.metric) });
+    const waker = recordWakerActivity({
+      waker: wakerAnswering({ outcome }),
+      record: (activity) => recorded.push(activity.metric),
+      onRecordFailure: ignoreFailure,
+    });
     await waker.notify({ agent: AGENT, reason: AgentWakeReason.MessageWaiting });
     expect(recorded).toEqual([metric]);
   });
@@ -54,6 +59,7 @@ describe('wake activity', () => {
     const waker = recordWakerActivity({
       waker: wakerAnswering({ outcome: WakeOutcome.Woken }),
       record: (activity) => recorded.push(activity.metric),
+      onRecordFailure: ignoreFailure,
     });
     await waker.hasFailedWake({ agent: AGENT });
     await waker.pushesEveryMessage({ agent: AGENT });
@@ -61,25 +67,36 @@ describe('wake activity', () => {
   });
 
   it('still answers the outcome when recording throws', async () => {
-    const waker = recordWakerActivity({ waker: wakerAnswering({ outcome: WakeOutcome.Woken }), record: throwingRecord() });
+    const waker = recordWakerActivity({
+      waker: wakerAnswering({ outcome: WakeOutcome.Woken }),
+      record: throwingRecord(),
+      onRecordFailure: ignoreFailure,
+    });
     expect(await waker.notify({ agent: AGENT, reason: AgentWakeReason.MessageWaiting })).toBe(WakeOutcome.Woken);
   });
 });
 
 describe('send activity', () => {
+  it('reports the recording failure once by callback', async () => {
+    let failures = 0;
+    const sender = recordSenderActivity({ sender: senderAccepting(), record: throwingRecord(), onRecordFailure: () => (failures += 1) });
+    await sender.session(SESSION_REQUEST);
+    expect(failures).toBe(1);
+  });
+
   it('still reports a delivered session send when recording throws', async () => {
-    const sender = recordSenderActivity({ sender: senderAccepting(), record: throwingRecord() });
+    const sender = recordSenderActivity({ sender: senderAccepting(), record: throwingRecord(), onRecordFailure: ignoreFailure });
     expect(await sender.session(SESSION_REQUEST)).toEqual(SENT);
   });
 
   it('still reports a delivered template send when recording throws', async () => {
-    const sender = recordSenderActivity({ sender: senderAccepting(), record: throwingRecord() });
+    const sender = recordSenderActivity({ sender: senderAccepting(), record: throwingRecord(), onRecordFailure: ignoreFailure });
     expect(await sender.template(TEMPLATE_REQUEST)).toEqual(SENT);
   });
 
   it('rethrows the channel error of a failed send, not the recording error', async () => {
     const failure = channelError({ kind: ChannelErrorKind.DeliveryFailed });
-    const sender = recordSenderActivity({ sender: senderRejecting({ failure }), record: throwingRecord() });
+    const sender = recordSenderActivity({ sender: senderRejecting({ failure }), record: throwingRecord(), onRecordFailure: ignoreFailure });
     await expect(sender.session(SESSION_REQUEST)).rejects.toBe(failure);
   });
 
@@ -88,6 +105,7 @@ describe('send activity', () => {
     const sender = recordSenderActivity({
       sender: senderRejecting({ failure: channelError({ kind: ChannelErrorKind.DeliveryFailed }) }),
       record: (activity) => recorded.push(activity.metric),
+      onRecordFailure: ignoreFailure,
     });
     await sender.session(SESSION_REQUEST).catch(() => undefined);
     expect(recorded).toEqual([ActivityMetric.SendsFailed]);
@@ -98,7 +116,11 @@ describe('send activity', () => {
     { name: 'a restricted channel', failure: channelError({ kind: ChannelErrorKind.Restricted }) },
   ])('does not count $name as a failed send', async ({ failure }) => {
     const recorded: ActivityMetric[] = [];
-    const sender = recordSenderActivity({ sender: senderRejecting({ failure }), record: (activity) => recorded.push(activity.metric) });
+    const sender = recordSenderActivity({
+      sender: senderRejecting({ failure }),
+      record: (activity) => recorded.push(activity.metric),
+      onRecordFailure: ignoreFailure,
+    });
     await sender.session(SESSION_REQUEST).catch(() => undefined);
     expect(recorded).toEqual([]);
   });

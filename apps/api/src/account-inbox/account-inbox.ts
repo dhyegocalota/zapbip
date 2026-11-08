@@ -164,7 +164,11 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     this.dependencies = {
       accountId,
       repository: createSqliteInboxRepository({ storage: this.ctx.storage, clock: this.clock }),
-      sender: recordSenderActivity({ sender: this.sender, record: (activity) => this.recordActivity(activity) }),
+      sender: recordSenderActivity({
+        sender: this.sender,
+        record: (activity) => this.recordActivity(activity),
+        onRecordFailure: () => this.log({ event: LogEvent.ActivityRecordFailed }),
+      }),
       mediaStore,
       waker: createNoneWaker(),
       clock: this.clock,
@@ -187,7 +191,11 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       repository: this.wake.repository,
       clock: this.clock,
     });
-    this.dependencies.waker = recordWakerActivity({ waker: dispatchingWaker, record: (activity) => this.recordActivity(activity) });
+    this.dependencies.waker = recordWakerActivity({
+      waker: dispatchingWaker,
+      record: (activity) => this.recordActivity(activity),
+      onRecordFailure: () => this.log({ event: LogEvent.ActivityRecordFailed }),
+    });
     this.accountDependencies = {
       ...this.dependencies,
       accounts: new D1AccountDirectory({ database: this.env.CONNECTIONS }),

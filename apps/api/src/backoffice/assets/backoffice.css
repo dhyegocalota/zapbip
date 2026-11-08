@@ -406,8 +406,7 @@ main > .figure-grid {
   margin: 0 0 var(--space-4);
 }
 
-.chart-plot,
-.budget-plot {
+.chart-plot {
   display: block;
   width: 100%;
   height: auto;
@@ -427,8 +426,7 @@ main > .figure-grid {
   stroke-width: 2;
 }
 
-.chart-baseline,
-.budget-tick {
+.chart-baseline {
   stroke: var(--color-text);
   stroke-width: 1;
 }
@@ -459,20 +457,13 @@ main > .figure-grid {
   cursor: pointer;
 }
 
-.budget-track {
-  fill: var(--color-info-surface);
-  stroke: var(--color-border-control);
-}
-
-.budget-fill {
-  fill: var(--color-brand);
-}
-
-.budget-warning .budget-fill {
+.chart-reference {
   stroke: var(--color-warning);
+  stroke-width: 1;
+  stroke-dasharray: 6 4;
 }
 
-.budget-warning .budget-status {
+.budget-warning {
   color: var(--color-warning);
   font-weight: 600;
 }

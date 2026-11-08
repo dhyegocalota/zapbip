@@ -1,5 +1,12 @@
 import type { OwnerLocale } from '@zapbip/types';
+import { BackofficeCopyKey, renderBackofficeCopy } from './backoffice-copy';
 
-export function formatPercent(_input: { percent: number; locale: OwnerLocale }): string {
-  throw new Error('formatPercent is not implemented');
+const PERCENT_DECIMALS = 1;
+
+export function formatPercent(input: { percent: number; locale: OwnerLocale }): string {
+  return renderBackofficeCopy({
+    key: BackofficeCopyKey.MetricsPercentValue,
+    locale: input.locale,
+    values: { value: input.percent.toFixed(PERCENT_DECIMALS) },
+  });
 }

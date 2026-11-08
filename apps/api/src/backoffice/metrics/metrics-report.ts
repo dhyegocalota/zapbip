@@ -20,7 +20,7 @@ export type MetricsReport = {
   agentsCreated: DayTotal[];
   agentsRevoked: DayTotal[];
   activity: ActivityTotal[];
-  budgetGigabyteSeconds: number;
+  budgetDays: DayTotal[];
   blockedPhones: number;
   restricted: RestrictedNumber[];
 };
