@@ -1,5 +1,6 @@
 import { OwnerLocale } from '@zapbip/types';
 import { installAgentsOf, type ResolvedAgent } from './agent';
+import { camelCaseOf } from './identifiers';
 import { renderRegistry } from './render-registry';
 import type { GeneratedFile } from './plan';
 
@@ -7,9 +8,11 @@ const SAMPLE_CONNECTION_LINK = 'https://x.example/c/zb_conn_FAKE/mcp';
 const SAMPLE_STANDBY_AGENT = 'Ana Bot';
 
 export function renderInstallRegistry(input: { agents: ResolvedAgent[] }): string {
+  const installAgents = installAgentsOf({ agents: input.agents });
+  const installOrder = installAgents.map((agent) => `${camelCaseOf({ id: agent.id })}AgentInstall`).join(', ');
   return renderRegistry({
     spec: {
-      agents: installAgentsOf({ agents: input.agents }),
+      agents: installAgents,
       exportedName: 'AGENT_INSTALLS',
       moduleFile: 'install',
       moduleExport: 'install',
@@ -18,9 +21,10 @@ export function renderInstallRegistry(input: { agents: ResolvedAgent[] }): strin
       contractType: 'AgentInstall',
       extraImports: ["import type { InstallSection } from '@zapbip/core';"],
       extraSource: [
-        'export const INSTALL_PAGE_SECTIONS: { productName: string; render: InstallSection }[] = Object.values(InstallClient).map((client) => ({',
-        '  productName: AGENT_INSTALLS[client].productName,',
-        '  render: AGENT_INSTALLS[client].render,',
+        `const INSTALL_ORDER: AgentInstall[] = [${installOrder}];`,
+        'export const INSTALL_PAGE_SECTIONS: { productName: string; render: InstallSection }[] = INSTALL_ORDER.map((install) => ({',
+        '  productName: install.productName,',
+        '  render: install.render,',
         '}));',
       ],
     },
