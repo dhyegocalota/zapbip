@@ -80,17 +80,17 @@ describe.each([
   test('create, rotate, revoke and delete over the simulator', async () => {
     const phone = newPhone({ prefix: locale.prefix });
     await say({ phone, text: 'hi' });
-    await say({ phone, text: locale.create('claude-code') });
+    await say({ phone, text: locale.create('agent-one') });
     const created = await screenOf({ phone });
     expect(created.join('\n')).toMatch(locale.created);
     expect(created.join('\n')).not.toContain('zb_conn_');
     const firstLink = installLinkIn({ texts: created });
 
-    await say({ phone, text: locale.rotate('claude-code') });
+    await say({ phone, text: locale.rotate('agent-one') });
     const rotatedLink = installLinkIn({ texts: (await screenOf({ phone })).slice(created.length) });
     expect(rotatedLink).not.toBe(firstLink);
 
-    await say({ phone, text: locale.revoke('claude-code') });
+    await say({ phone, text: locale.revoke('agent-one') });
     expect((await screenOf({ phone })).at(-1)).toMatch(locale.revoked);
 
     await say({ phone, text: locale.requestDeletion });

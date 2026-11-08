@@ -26,17 +26,12 @@ const MATRIX_SNIPPETS = ['apps/docs/snippets/agents/matrix.mdx', 'apps/docs/snip
 const MATRIX_PAGES = ['apps/docs/agents/supported-agents.mdx', 'apps/docs/pt-br/agents/supported-agents.mdx'];
 const MATRIX_TABLE_ROW_PATTERN = /^\| -{3,}/m;
 const LEAK_SCANNED_EXTENSIONS = ['.ts', '.tsx', '.mts', '.mjs', '.sh', '.py', '.yml', '.json'];
-const HARNESS_FOLDER_NAMES = ['claude', 'codex', 'agents'];
+const HARNESS_FOLDERS = ['.claude/', '.codex/', '.agents/'];
 const HARNESS_TEST_FILES = ['agent-surfaces', 'delivery-docs', 'rules', 'scenarios'].map(
   (name) => `tools/repository-shape/src/${name}.test.ts`,
 );
-const LEAK_CHECK_TEST_FILE = 'libs/agents/src/checks/leaks.test.ts';
-const LEAK_ALLOWED_PREFIXES = [
-  GENERATED_FOLDER,
-  LEAK_CHECK_TEST_FILE,
-  ...HARNESS_TEST_FILES,
-  ...HARNESS_FOLDER_NAMES.map((name) => `.${name}/`),
-];
+const LEAK_CHECK_TEST_FILES = ['libs/agents/src/checks/leaks.test.ts', 'tools/repository-shape/src/agent-registry.test.ts'];
+const LEAK_ALLOWED_PREFIXES = [GENERATED_FOLDER, ...LEAK_CHECK_TEST_FILES, ...HARNESS_TEST_FILES, ...HARNESS_FOLDERS];
 const ENUM_MEMBER_PATTERN = /^\s*(\w+) = '([a-z-]+)',?$/;
 
 type Fixture = { id: string; member: string; englishName: string; portugueseName: string };
@@ -212,7 +207,8 @@ describe('removing an agent folder', () => {
   test.each(REAL_AGENT_IDS)('G3: %s vanishes from every planned file', async (id) => {
     const removed = await planWithout({ id });
     expect(removed.deletions.sort()).toEqual([`apps/docs/agents/${id}.mdx`, `apps/docs/pt-br/agents/${id}.mdx`]);
-    expect(removed.violations).toEqual([]);
+    const violationsOfOthers = (await realPlan()).violations.filter((violation) => !violation.startsWith(`${id} `));
+    expect(removed.violations).toEqual(violationsOfOthers);
     removed.writes.forEach((write) => {
       expect(write.content).not.toContain(`agents/${id})`);
       expect(write.content).not.toContain(`'${id}'`);

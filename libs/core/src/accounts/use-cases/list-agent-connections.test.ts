@@ -33,10 +33,10 @@ describe('listAgentConnections', () => {
     const fixture = await createAccountFixture();
     await addAgent({ ...fixture, agent: 'a1' });
     await addAgent({ ...fixture, agent: 'b2' });
-    await fixture.environment.registry.setClientName({ accountId: fixture.account.accountId, agent: 'a1', clientName: 'claude-code' });
+    await fixture.environment.registry.setClientName({ accountId: fixture.account.accountId, agent: 'a1', clientName: 'agent-one' });
     const result = await listAgentConnections(ownerInputOf(fixture));
     const [firstLine, secondLine] = result.replies[0]!.parameters[AccountReplyParameter.Agents]!.split('\n');
-    expect(firstLine).toContain('claude-code');
+    expect(firstLine).toContain('agent-one');
     expect(secondLine).toContain(`, ${UNKNOWN_CLIENT_LABEL[fixture.account.locale]})`);
   });
 

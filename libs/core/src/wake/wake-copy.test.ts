@@ -4,7 +4,7 @@ import { AGENT_NAME_MAX_CHARS, NOTICE_PREVIEW_MAX_CHARS } from '../inbox/constan
 import { captureInboxError } from '../inbox/testing/capture-inbox-error';
 import { expectedDelayNoteCopy, staleNoticeCopy, WAKE_COPY, wakeFailedCopy } from './wake-copy';
 
-const AGENT = 'chatgpt';
+const AGENT = 'agent-nine';
 
 function note(input: { intervalMinutes: number; elapsedSinceLastPollMs: number | null; locale?: OwnerLocale }) {
   const { intervalMinutes, elapsedSinceLastPollMs, locale = OwnerLocale.PortugueseBrazil } = input;

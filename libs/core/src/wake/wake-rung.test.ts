@@ -4,8 +4,8 @@ import { scheduledWakeOf, storedWakeOf } from './testing/wake-doubles';
 import { wakeRungFor } from './wake-rung';
 
 const NOW = 100 * HOUR_MS;
-const AGENT = 'grok-web';
-const STANDBY_AGENT = 'grok-bot';
+const AGENT = 'agent-ten';
+const STANDBY_AGENT = 'agent-eight';
 const FRESH_POLL = {
   lastPolledAt: NOW - HOUR_MS,
   hasPolled: true,

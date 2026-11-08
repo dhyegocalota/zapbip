@@ -116,9 +116,9 @@ async function seedWorld(): Promise<void> {
   await seedAccountAt({ accountId: 'acc_three', state: AccountState.Suspended, numberId: NUMBER_BRAVO, daysAgo: 40 });
   await seedAccountAt({ accountId: 'acc_four', state: AccountState.Deleting, numberId: NUMBER_BRAVO, daysAgo: 0 });
   await seedAccountAt({ accountId: 'acc_five', state: AccountState.Active, numberId: null, daysAgo: 10 });
-  await seedAgent({ id: 'agent_one', accountId: 'acc_one', clientName: 'claude-code', connected: true, revoked: false });
+  await seedAgent({ id: 'agent_one', accountId: 'acc_one', clientName: 'agent-one', connected: true, revoked: false });
   await seedAgent({ id: 'agent_two', accountId: 'acc_one', clientName: null, connected: false, revoked: false });
-  await seedAgent({ id: 'agent_three', accountId: 'acc_three', clientName: 'codex', connected: true, revoked: true });
+  await seedAgent({ id: 'agent_three', accountId: 'acc_three', clientName: 'agent-two', connected: true, revoked: true });
   await seedActivity({
     rows: [
       { day: TODAY, accountId: 'acc_one', numberId: NUMBER_ALPHA, metric: ActivityMetric.MessagesIn, count: 4 },
@@ -199,7 +199,7 @@ describe('metrics page figures', () => {
     expect(cell(keyedCell({ cell: MetricCell.NumberAccounts, key: NUMBER_BRAVO }))).toBe('2');
     expect(cell(keyedCell({ cell: MetricCell.NewAccounts, key: YESTERDAY }))).toBe('2');
     expect(cell(keyedCell({ cell: MetricCell.NewAccounts, key: TODAY }))).toBe('1');
-    expect(cell(keyedCell({ cell: MetricCell.AgentClient, key: 'claude-code' }))).toBe('1');
+    expect(cell(keyedCell({ cell: MetricCell.AgentClient, key: 'agent-one' }))).toBe('1');
     expect(cell(keyedCell({ cell: MetricCell.AgentClient, key: NOT_REPORTED_CLIENT_KEY }))).toBe('1');
     expect(cell(keyedCell({ cell: MetricCell.AgentsCreated, key: YESTERDAY }))).toBe('3');
     expect(cell(keyedCell({ cell: MetricCell.AgentsRevoked, key: TODAY }))).toBe('1');

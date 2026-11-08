@@ -9,8 +9,8 @@ import { ACCEPTED, WAKE_ACCOUNT, enableGrokWake, expectOk, wakeStub } from '../s
 import { connectionOf, testEnv } from '../support/workers-env';
 
 const ACCOUNT = WAKE_ACCOUNT;
-const PRIMARY: AgentName = 'grok-web';
-const STANDBY: AgentName = 'grok-bot';
+const PRIMARY: AgentName = 'agent-ten';
+const STANDBY: AgentName = 'agent-eight';
 const SECRET = `zb_conn_${'R'.repeat(43)}`;
 const OWNER_TEXT = 'oi';
 const REVOKED_AT = 1;

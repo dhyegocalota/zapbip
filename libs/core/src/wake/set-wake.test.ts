@@ -14,7 +14,7 @@ import {
   type WakeEnvironment,
 } from './testing/wake-fixtures';
 
-const AGENT = 'claude-code';
+const AGENT = 'agent-one';
 
 describe('setWake', () => {
   test('seals a Grok target and answers without the url or the token', async () => {
@@ -98,7 +98,7 @@ describe('setWake', () => {
 
   test.each([
     ['none', WakeMode.None, { intervalMinutes: 5 }],
-    ['local', WakeMode.Local, { standbyAgent: 'grok-bot' }],
+    ['local', WakeMode.Local, { standbyAgent: 'agent-eight' }],
     ['webhook', WakeMode.Webhook, { url: GROK_URL, token: PINNED_TOKEN, intervalMinutes: 5 }],
   ])('%s with a foreign field saves nothing', async (_name, mode, fields) => {
     const wakeEnvironment = await createWakeEnvironment();
@@ -188,7 +188,7 @@ describe('setWake', () => {
 
     test('rejects an agent with no stored wake', async () => {
       const wakeEnvironment = await createWakeEnvironment();
-      await expect(setLocal({ wakeEnvironment })).rejects.toThrow('no wake setting for claude-code');
+      await expect(setLocal({ wakeEnvironment })).rejects.toThrow('no wake setting for agent-one');
     });
   });
 });
@@ -218,7 +218,7 @@ describe('setWake scheduled', () => {
     const wakeEnvironment = await createWakeEnvironment();
     const result = await setScheduled({
       wakeEnvironment,
-      agent: 'chatgpt',
+      agent: 'agent-nine',
       intervalMinutes: 60,
       ownerLocale: OwnerLocale.PortugueseBrazil,
     });
@@ -228,7 +228,7 @@ describe('setWake scheduled', () => {
       effectiveRung: WakeRung.Scheduled,
       provider: null,
     });
-    expect(await wakeEnvironment.wake.repository.findWake({ agent: 'chatgpt' })).toMatchObject({
+    expect(await wakeEnvironment.wake.repository.findWake({ agent: 'agent-nine' })).toMatchObject({
       mode: WakeMode.Scheduled,
       intervalMinutes: 60,
       standbyAgent: null,
@@ -239,7 +239,7 @@ describe('setWake scheduled', () => {
   test('an interval of zero saves nothing', async () => {
     const wakeEnvironment = await createWakeEnvironment();
     const saveWake = vi.spyOn(wakeEnvironment.wake.repository, 'saveWake');
-    const error = await captureInboxError(() => setScheduled({ wakeEnvironment, agent: 'chatgpt', intervalMinutes: 0 }));
+    const error = await captureInboxError(() => setScheduled({ wakeEnvironment, agent: 'agent-nine', intervalMinutes: 0 }));
     expect(error.code).toBe(InboxErrorCode.InvalidInput);
     expect(saveWake).not.toHaveBeenCalled();
   });
@@ -247,34 +247,34 @@ describe('setWake scheduled', () => {
   test('setting it again keeps the last poll', async () => {
     const wakeEnvironment = await createWakeEnvironment();
     const { clock } = wakeEnvironment.environment;
-    await setScheduled({ wakeEnvironment, agent: 'chatgpt', intervalMinutes: 60 });
+    await setScheduled({ wakeEnvironment, agent: 'agent-nine', intervalMinutes: 60 });
     const polledAt = clock.now();
-    await wakeEnvironment.wake.repository.recordPoll({ agent: 'chatgpt', polledAt, ownerLocale: OwnerLocale.EnglishUs });
+    await wakeEnvironment.wake.repository.recordPoll({ agent: 'agent-nine', polledAt, ownerLocale: OwnerLocale.EnglishUs });
     await clock.advance({ ms: 30 * MINUTE_MS });
-    await setScheduled({ wakeEnvironment, agent: 'chatgpt', intervalMinutes: 30 });
-    expect(await wakeEnvironment.wake.repository.findPollState({ agent: 'chatgpt' })).toMatchObject({ lastPolledAt: polledAt });
+    await setScheduled({ wakeEnvironment, agent: 'agent-nine', intervalMinutes: 30 });
+    expect(await wakeEnvironment.wake.repository.findPollState({ agent: 'agent-nine' })).toMatchObject({ lastPolledAt: polledAt });
   });
 
   test('replaces a pending webhook job', async () => {
     const wakeEnvironment = await createWakeEnvironment();
-    await setWebhook({ wakeEnvironment, agent: 'chatgpt' });
+    await setWebhook({ wakeEnvironment, agent: 'agent-nine' });
     await wakeEnvironment.wake.repository.saveJob({
-      job: { agent: 'chatgpt', dueAt: 1, attempt: 0, leaseUntil: null, rewake: false, lastOutcome: null },
+      job: { agent: 'agent-nine', dueAt: 1, attempt: 0, leaseUntil: null, rewake: false, lastOutcome: null },
     });
-    await setScheduled({ wakeEnvironment, agent: 'chatgpt', intervalMinutes: 60 });
-    expect(await wakeEnvironment.wake.repository.findJob({ agent: 'chatgpt' })).toBeNull();
+    await setScheduled({ wakeEnvironment, agent: 'agent-nine', intervalMinutes: 60 });
+    expect(await wakeEnvironment.wake.repository.findJob({ agent: 'agent-nine' })).toBeNull();
   });
 });
 
 describe('setWake standby', () => {
   test('saves the standby when it is connected', async () => {
     const wakeEnvironment = await createWakeEnvironment();
-    await setWebhook({ wakeEnvironment, agent: 'grok-bot' });
-    const result = await setStandby({ wakeEnvironment, agent: 'grok-web', standbyAgent: 'grok-bot' });
+    await setWebhook({ wakeEnvironment, agent: 'agent-eight' });
+    const result = await setStandby({ wakeEnvironment, agent: 'agent-ten', standbyAgent: 'agent-eight' });
     expect(result).toEqual({ status: SetWakeStatus.Saved, wakeMode: WakeMode.Standby, effectiveRung: WakeRung.Standby, provider: null });
-    expect(await wakeEnvironment.wake.repository.findWake({ agent: 'grok-web' })).toMatchObject({
+    expect(await wakeEnvironment.wake.repository.findWake({ agent: 'agent-ten' })).toMatchObject({
       mode: WakeMode.Standby,
-      standbyAgent: 'grok-bot',
+      standbyAgent: 'agent-eight',
       intervalMinutes: null,
     });
   });
@@ -282,7 +282,7 @@ describe('setWake standby', () => {
   test('a standby that is not connected saves nothing', async () => {
     const wakeEnvironment = await createWakeEnvironment();
     const saveWake = vi.spyOn(wakeEnvironment.wake.repository, 'saveWake');
-    const error = await captureInboxError(() => setStandby({ wakeEnvironment, agent: 'grok-web', standbyAgent: 'grok-bot' }));
+    const error = await captureInboxError(() => setStandby({ wakeEnvironment, agent: 'agent-ten', standbyAgent: 'agent-eight' }));
     expect(error.code).toBe(InboxErrorCode.InvalidInput);
     expect(error.message).toContain('standby_agent');
     expect(saveWake).not.toHaveBeenCalled();

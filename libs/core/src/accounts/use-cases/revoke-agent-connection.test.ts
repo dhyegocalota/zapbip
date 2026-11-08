@@ -32,8 +32,8 @@ describe('revokeAgentConnection', () => {
 
   test('the name is normalised', async () => {
     const fixture = await createAccountFixture();
-    await addAgent({ ...fixture, agent: 'claude-code' });
-    const result = await revokeAgentConnection({ ...ownerInputOf(fixture), rawName: 'Claude Code' });
+    await addAgent({ ...fixture, agent: 'agent-one' });
+    const result = await revokeAgentConnection({ ...ownerInputOf(fixture), rawName: 'Agent One' });
     expect(intentsOf({ result })).toEqual([AccountReplyIntent.Revoked]);
   });
 

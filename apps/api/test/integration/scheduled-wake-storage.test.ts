@@ -13,11 +13,11 @@ import { accountInboxStub } from '../support/workers-env';
 
 const ACCOUNT_ID = 'acc_scheduled_storage';
 const MIGRATION_ACCOUNT_ID = 'acc_scheduled_migration';
-const SCHEDULED_AGENT = 'chatgpt';
-const OTHER_SCHEDULED_AGENT = 'claude-ai';
-const WEBHOOK_AGENT = 'grok-bot';
+const SCHEDULED_AGENT = 'agent-nine';
+const OTHER_SCHEDULED_AGENT = 'agent-seven';
+const WEBHOOK_AGENT = 'agent-eight';
 const GONE_AGENT = 'gone-agent';
-const STANDBY_AGENT = 'grok-web';
+const STANDBY_AGENT = 'agent-ten';
 const SCHEDULED_INTERVAL_MINUTES = 60;
 const POLLED_AT = BASE_TIME + 5_000;
 const NOTICED_AT = 2_000;

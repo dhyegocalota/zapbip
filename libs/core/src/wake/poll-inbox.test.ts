@@ -7,7 +7,7 @@ import { connectionOf, receiveText, registerAgents } from '../inbox/testing/fixt
 import { pollInbox } from './poll-inbox';
 import { createWakeEnvironment, type WakeEnvironment } from './testing/wake-fixtures';
 
-const AGENT = 'chatgpt';
+const AGENT = 'agent-nine';
 
 function poll(input: { wakeEnvironment: WakeEnvironment }) {
   return pollInbox({

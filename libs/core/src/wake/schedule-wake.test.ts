@@ -4,7 +4,7 @@ import { WAKE_DEBOUNCE_MS, WAKE_LEASE_MS } from './constants';
 import { scheduleWake } from './schedule-wake';
 import { createWakeEnvironment, setWebhook, type WakeEnvironment } from './testing/wake-fixtures';
 
-const AGENT = 'claude-code';
+const AGENT = 'agent-one';
 const HALF_SECOND_MS = SECOND_MS / 2;
 
 function notify(input: { wakeEnvironment: WakeEnvironment; agent?: string }) {

@@ -21,8 +21,8 @@ import { seedWhatsAppNumber } from '../support/whatsapp-numbers';
 import { postMcp } from './mcp-fixtures';
 import { bindingsWith, deliver, findAccounts, latestMcpPath, screenTextsOf, WA_ID } from './owner-inbound-fixtures';
 
-const PRIMARY: AgentName = 'grok-web';
-const STANDBY: AgentName = 'grok-bot';
+const PRIMARY: AgentName = 'agent-ten';
+const STANDBY: AgentName = 'agent-eight';
 const OWNER_TEXT = 'depois da revogacao';
 const STATUS_UNAUTHORIZED = 401;
 const RECREATED_SECRET = `zb_conn_${'R'.repeat(43)}`;

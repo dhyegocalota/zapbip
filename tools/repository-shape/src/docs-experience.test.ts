@@ -254,7 +254,7 @@ describe('docs experience: agent pages', () => {
   });
 
   test('an agent page with no matrix row fails naming it', () => {
-    expect(unmatrixedAgentPages({ matrixClients: ['codex'], pages: ['codex', NEW_CLIENT_PAGE] })).toEqual([NEW_CLIENT_PAGE]);
+    expect(unmatrixedAgentPages({ matrixClients: ['agent-two'], pages: ['agent-two', NEW_CLIENT_PAGE] })).toEqual([NEW_CLIENT_PAGE]);
   });
 
   test('every agent page has no page without a matrix row', () => {

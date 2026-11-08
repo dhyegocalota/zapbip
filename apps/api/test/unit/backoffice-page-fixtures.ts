@@ -71,7 +71,7 @@ export const DATA_REPORT: MetricsReport = {
   accountsPerNumber: [{ numberId: 'num_one', label: 'Brazil', total: 3 }],
   newAccounts: [{ day: TODAY, total: 2 }],
   agents: { active: 2, connected: 1 },
-  agentsByClient: [{ clientName: 'claude-code', total: 2 }],
+  agentsByClient: [{ clientName: 'agent-one', total: 2 }],
   agentsCreated: [{ day: TODAY, total: 2 }],
   agentsRevoked: [{ day: TODAY, total: 1 }],
   activity: [

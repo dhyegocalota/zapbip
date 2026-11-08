@@ -201,13 +201,13 @@ describe('install page attacks', () => {
   it('IS-W12 tells a Cursor agent from a Grok Bot agent by its webhook wake', async () => {
     const accountId = await seedAccount({});
     const registered = await registerWithInstallCode({ accountId, agent: 'claude', expiresAt: validExpiry() });
-    await registerWithInstallCode({ accountId, agent: 'cursor', expiresAt: validExpiry() });
+    await registerWithInstallCode({ accountId, agent: 'agent-three', expiresAt: validExpiry() });
     await registerWithInstallCode({ accountId, agent: 'grokbot', expiresAt: validExpiry() });
-    await seedWakeMode({ accountId, agent: 'cursor', mode: WakeMode.None });
+    await seedWakeMode({ accountId, agent: 'agent-three', mode: WakeMode.None });
     await seedWakeMode({ accountId, agent: 'grokbot', mode: WakeMode.Webhook });
     const text = await (await getPage({ installCode: registered.installCode })).text();
     expect(text).toContain('standby_agent: "grokbot"');
-    expect(text).not.toContain('"cursor"');
+    expect(text).not.toContain('"agent-three"');
   });
 
   it('IS-S1 limits the real binding per client address and answers Retry-After', async () => {

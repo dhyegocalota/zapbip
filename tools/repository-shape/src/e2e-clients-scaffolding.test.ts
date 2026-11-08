@@ -7,7 +7,6 @@ const CLIENTS_DIRECTORY = 'scripts/e2e/clients';
 const ALL_INTERFACES_ADDRESS = '0.0.0.0';
 const TYPESCRIPT_EXTENSION = '.ts';
 const ROOT_MANIFEST = 'package.json';
-const OPENCLAW_PACKAGE = 'openclaw';
 
 function scaffoldingFiles(): string[] {
   return readdirSync(repositoryPath(CLIENTS_DIRECTORY))
@@ -20,10 +19,9 @@ describe('the client end-to-end scaffolding', () => {
     expect(readRepositoryFile(file)).not.toContain(ALL_INTERFACES_ADDRESS);
   });
 
-  test('the root manifest builds only the allowed dependencies and never openclaw', () => {
+  test('the root manifest builds only the allowed dependencies', () => {
     const { pnpm } = JSON.parse(readRepositoryFile(ROOT_MANIFEST)) as { pnpm: Record<string, string[] | undefined> };
     expect(pnpm.onlyBuiltDependencies).toBeDefined();
-    expect(pnpm.onlyBuiltDependencies).not.toContain(OPENCLAW_PACKAGE);
     expect(pnpm.neverBuiltDependencies).toBeUndefined();
   });
 

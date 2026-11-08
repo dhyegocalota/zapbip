@@ -17,8 +17,8 @@ import {
 } from '../support/wake-session';
 import { connectionOf } from '../support/workers-env';
 
-const PRIMARY: AgentName = 'grok-web';
-const STANDBY: AgentName = 'grok-bot';
+const PRIMARY: AgentName = 'agent-ten';
+const STANDBY: AgentName = 'agent-eight';
 const THIRD: AgentName = 'claude';
 const OWNER_TEXT = 'segredo do dono';
 const ANSWER_TEXT = 'feito';

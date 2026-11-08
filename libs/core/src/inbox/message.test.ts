@@ -6,7 +6,7 @@ function messageOf(input: { messageId: string; originMessageId: string | null })
   return {
     ...input,
     direction: MessageDirection.FromOwner,
-    agent: 'grok-bot',
+    agent: 'agent-eight',
     at: 0,
     replyToMessageId: null,
     delivery: null,

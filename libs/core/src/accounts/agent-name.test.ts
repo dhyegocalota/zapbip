@@ -4,7 +4,7 @@ import { isReservedAgentName, normalizeAgentName } from './agent-name';
 
 describe('normalizeAgentName', () => {
   test.each([
-    ['Claude Code', 'claude-code'],
+    ['Agent One', 'agent-one'],
     ['Ação', 'acao'],
     ['  -x-  ', 'x'],
     ['a___b', 'a-b'],
@@ -49,7 +49,7 @@ describe('isReservedAgentName', () => {
     expect(isReservedAgentName({ name })).toBe(true);
   });
 
-  test.each(['claude-code', 'agente', 'conta', 'account'])('allows %s', (name) => {
+  test.each(['agent-one', 'agente', 'conta', 'account'])('allows %s', (name) => {
     expect(isReservedAgentName({ name })).toBe(false);
   });
 });

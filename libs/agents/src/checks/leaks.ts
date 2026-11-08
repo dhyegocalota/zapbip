@@ -19,8 +19,9 @@ function ownedPrefixesOf(input: { agent: LeakAgent }): string[] {
 function namingPatternOf(input: { agent: LeakAgent }): RegExp {
   const memberReference = `\\b(?:${AGENT_ENUM_NAMES.join('|')})\\.${input.agent.enumMember}\\b`;
   const folderReference = `supported/${input.agent.id}(?![\\w-])`;
+  const quotedIdReference = `(['"\`])${escapedOf({ text: input.agent.id })}\\1`;
   const literalReferences = input.agent.literals.map((literal) => `(?<![\\w])${escapedOf({ text: literal })}(?![\\w])`);
-  return new RegExp([memberReference, folderReference, ...literalReferences].join('|'));
+  return new RegExp([memberReference, folderReference, quotedIdReference, ...literalReferences].join('|'));
 }
 
 function agentLeaksIn(input: { agent: LeakAgent; file: LeakFile }): string[] {

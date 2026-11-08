@@ -20,19 +20,19 @@ describe('evaluatePollers', () => {
   test('one stale notice per episode, with the agent and the elapsed time', async () => {
     const wakeEnvironment = await createWakeEnvironment();
     const { clock } = wakeEnvironment.environment;
-    await schedule({ wakeEnvironment, agent: 'chatgpt' });
+    await schedule({ wakeEnvironment, agent: 'agent-nine' });
     await clock.advance({ ms: 3 * HOUR_MS });
     const markStaleNotified = vi.spyOn(wakeEnvironment.wake.repository, 'markStaleNotified');
     await evaluatePollers(wakeEnvironment.context);
     expect(markStaleNotified).toHaveBeenCalledOnce();
     expect(sessionTexts({ wakeEnvironment })).toEqual([
-      staleNoticeCopy({ locale: OwnerLocale.PortugueseBrazil, agent: 'chatgpt', elapsedSinceLastPollMs: 3 * HOUR_MS }),
+      staleNoticeCopy({ locale: OwnerLocale.PortugueseBrazil, agent: 'agent-nine', elapsedSinceLastPollMs: 3 * HOUR_MS }),
     ]);
   });
 
   test('a second pass with no poll sends nothing and has no deadline', async () => {
     const wakeEnvironment = await createWakeEnvironment();
-    await schedule({ wakeEnvironment, agent: 'chatgpt' });
+    await schedule({ wakeEnvironment, agent: 'agent-nine' });
     await wakeEnvironment.environment.clock.advance({ ms: 3 * HOUR_MS });
     await evaluatePollers(wakeEnvironment.context);
     expect(await evaluatePollers(wakeEnvironment.context)).toEqual({ nextDueAt: null });
@@ -42,11 +42,11 @@ describe('evaluatePollers', () => {
   test('a poll starts a new episode', async () => {
     const wakeEnvironment = await createWakeEnvironment();
     const { clock } = wakeEnvironment.environment;
-    await schedule({ wakeEnvironment, agent: 'chatgpt' });
+    await schedule({ wakeEnvironment, agent: 'agent-nine' });
     await clock.advance({ ms: 3 * HOUR_MS });
     await evaluatePollers(wakeEnvironment.context);
     await wakeEnvironment.wake.repository.recordPoll({
-      agent: 'chatgpt',
+      agent: 'agent-nine',
       polledAt: clock.now(),
       ownerLocale: OwnerLocale.PortugueseBrazil,
     });
@@ -59,22 +59,22 @@ describe('evaluatePollers', () => {
     const wakeEnvironment = await createWakeEnvironment();
     const { clock } = wakeEnvironment.environment;
     await wakeEnvironment.wake.repository.saveWake({
-      wake: scheduledWakeOf({ agent: 'chatgpt', ownerLocale: OwnerLocale.EnglishUs }),
+      wake: scheduledWakeOf({ agent: 'agent-nine', ownerLocale: OwnerLocale.EnglishUs }),
     });
     await clock.advance({ ms: 2 * HOUR_MS });
     await evaluatePollers(wakeEnvironment.context);
     expect(sessionTexts({ wakeEnvironment })).toEqual([
-      staleNoticeCopy({ locale: OwnerLocale.EnglishUs, agent: 'chatgpt', elapsedSinceLastPollMs: null }),
+      staleNoticeCopy({ locale: OwnerLocale.EnglishUs, agent: 'agent-nine', elapsedSinceLastPollMs: null }),
     ]);
   });
 
   test('the notice is in the locale of the wake', async () => {
     const wakeEnvironment = await createWakeEnvironment();
-    await schedule({ wakeEnvironment, agent: 'chatgpt', ownerLocale: OwnerLocale.EnglishUs });
+    await schedule({ wakeEnvironment, agent: 'agent-nine', ownerLocale: OwnerLocale.EnglishUs });
     await wakeEnvironment.environment.clock.advance({ ms: 2 * HOUR_MS });
     await evaluatePollers(wakeEnvironment.context);
     expect(sessionTexts({ wakeEnvironment })).toEqual([
-      staleNoticeCopy({ locale: OwnerLocale.EnglishUs, agent: 'chatgpt', elapsedSinceLastPollMs: 2 * HOUR_MS }),
+      staleNoticeCopy({ locale: OwnerLocale.EnglishUs, agent: 'agent-nine', elapsedSinceLastPollMs: 2 * HOUR_MS }),
     ]);
   });
 
@@ -82,17 +82,17 @@ describe('evaluatePollers', () => {
     const wakeEnvironment = await createWakeEnvironment();
     const { clock } = wakeEnvironment.environment;
     const start = clock.now();
-    await schedule({ wakeEnvironment, agent: 'chatgpt', intervalMinutes: 120 });
-    await schedule({ wakeEnvironment, agent: 'hermes', intervalMinutes: 60 });
+    await schedule({ wakeEnvironment, agent: 'agent-nine', intervalMinutes: 120 });
+    await schedule({ wakeEnvironment, agent: 'agent-five', intervalMinutes: 60 });
     expect(await evaluatePollers(wakeEnvironment.context)).toEqual({ nextDueAt: start + 2 * HOUR_MS });
   });
 
   test('a notified connection does not count in the deadline', async () => {
     const wakeEnvironment = await createWakeEnvironment();
     const { clock } = wakeEnvironment.environment;
-    await schedule({ wakeEnvironment, agent: 'hermes', intervalMinutes: 60 });
+    await schedule({ wakeEnvironment, agent: 'agent-five', intervalMinutes: 60 });
     await clock.advance({ ms: 2 * HOUR_MS });
-    await schedule({ wakeEnvironment, agent: 'chatgpt', intervalMinutes: 120 });
+    await schedule({ wakeEnvironment, agent: 'agent-nine', intervalMinutes: 120 });
     const expected = clock.now() + 4 * HOUR_MS;
     expect(await evaluatePollers(wakeEnvironment.context)).toEqual({ nextDueAt: expected });
   });
@@ -105,7 +105,7 @@ describe('evaluatePollers', () => {
 
   test('a webhook wake never goes stale', async () => {
     const wakeEnvironment = await createWakeEnvironment();
-    await wakeEnvironment.wake.repository.saveWake({ wake: storedWakeOf({ agent: 'claude-code', mode: WakeMode.Webhook }) });
+    await wakeEnvironment.wake.repository.saveWake({ wake: storedWakeOf({ agent: 'agent-one', mode: WakeMode.Webhook }) });
     await wakeEnvironment.environment.clock.advance({ ms: 10 * HOUR_MS });
     await evaluatePollers(wakeEnvironment.context);
     expect(sessionTexts({ wakeEnvironment })).toEqual([]);
@@ -115,23 +115,23 @@ describe('evaluatePollers', () => {
 describe('evaluatePollers failures', () => {
   test('a failed delivery is logged, leaves the episode un-notified and the pass after the backoff sends the notice', async () => {
     const wakeEnvironment = await createWakeEnvironment();
-    await schedule({ wakeEnvironment, agent: 'chatgpt' });
+    await schedule({ wakeEnvironment, agent: 'agent-nine' });
     await wakeEnvironment.environment.clock.advance({ ms: 3 * HOUR_MS });
     wakeEnvironment.environment.sender.failSessionCalls({ callNumbers: [1] });
     await evaluatePollers(wakeEnvironment.context);
-    expect(wakeEnvironment.observer.events).toMatchObject([{ name: WakeLogEventName.NoticeFailed, agent: 'chatgpt' }]);
-    expect(await wakeEnvironment.wake.repository.findPollState({ agent: 'chatgpt' })).toMatchObject({ pollerStaleNotified: false });
+    expect(wakeEnvironment.observer.events).toMatchObject([{ name: WakeLogEventName.NoticeFailed, agent: 'agent-nine' }]);
+    expect(await wakeEnvironment.wake.repository.findPollState({ agent: 'agent-nine' })).toMatchObject({ pollerStaleNotified: false });
     await wakeEnvironment.environment.clock.advance({ ms: HOUR_MS });
     await evaluatePollers(wakeEnvironment.context);
     expect(sessionTexts({ wakeEnvironment })).toHaveLength(1);
-    expect(await wakeEnvironment.wake.repository.findPollState({ agent: 'chatgpt' })).toMatchObject({ pollerStaleNotified: true });
+    expect(await wakeEnvironment.wake.repository.findPollState({ agent: 'agent-nine' })).toMatchObject({ pollerStaleNotified: true });
   });
 
   test('a wake revoked while its notice is delivered neither throws nor stops the others', async () => {
     const wakeEnvironment = await createWakeEnvironment();
-    await schedule({ wakeEnvironment, agent: 'hermes' });
+    await schedule({ wakeEnvironment, agent: 'agent-five' });
     await wakeEnvironment.environment.clock.advance({ ms: 3 * HOUR_MS });
-    const revokedWake = scheduledWakeOf({ agent: 'chatgpt', lastPolledAt: 0 });
+    const revokedWake = scheduledWakeOf({ agent: 'agent-nine', lastPolledAt: 0 });
     const hermesWake = await wakeEnvironment.wake.repository.listScheduledWakes();
     vi.spyOn(wakeEnvironment.wake.repository, 'listScheduledWakes').mockResolvedValue([revokedWake, ...hermesWake]);
     await evaluatePollers(wakeEnvironment.context);
@@ -141,7 +141,7 @@ describe('evaluatePollers failures', () => {
 
   test('a programming error is not logged as a failed notice', async () => {
     const wakeEnvironment = await createWakeEnvironment();
-    await schedule({ wakeEnvironment, agent: 'chatgpt' });
+    await schedule({ wakeEnvironment, agent: 'agent-nine' });
     await wakeEnvironment.environment.clock.advance({ ms: 3 * HOUR_MS });
     vi.spyOn(wakeEnvironment.wake.repository, 'markStaleNotified').mockRejectedValue(new TypeError('broken'));
     await expect(evaluatePollers(wakeEnvironment.context)).rejects.toThrow('broken');
@@ -150,22 +150,22 @@ describe('evaluatePollers failures', () => {
 
   test('one failing wake does not stop the notices of the others', async () => {
     const wakeEnvironment = await createWakeEnvironment();
-    await schedule({ wakeEnvironment, agent: 'chatgpt' });
-    await schedule({ wakeEnvironment, agent: 'hermes' });
+    await schedule({ wakeEnvironment, agent: 'agent-nine' });
+    await schedule({ wakeEnvironment, agent: 'agent-five' });
     await wakeEnvironment.environment.clock.advance({ ms: 3 * HOUR_MS });
     wakeEnvironment.environment.sender.failSessionCalls({ callNumbers: [1] });
     await evaluatePollers(wakeEnvironment.context);
     expect(sessionTexts({ wakeEnvironment })).toEqual([
-      staleNoticeCopy({ locale: OwnerLocale.PortugueseBrazil, agent: 'hermes', elapsedSinceLastPollMs: 3 * HOUR_MS }),
+      staleNoticeCopy({ locale: OwnerLocale.PortugueseBrazil, agent: 'agent-five', elapsedSinceLastPollMs: 3 * HOUR_MS }),
     ]);
   });
 
   test('a wake without an owner locale is logged as skipped and does not throw', async () => {
     const wakeEnvironment = await createWakeEnvironment();
-    await wakeEnvironment.wake.repository.saveWake({ wake: scheduledWakeOf({ agent: 'chatgpt', ownerLocale: null }) });
+    await wakeEnvironment.wake.repository.saveWake({ wake: scheduledWakeOf({ agent: 'agent-nine', ownerLocale: null }) });
     await wakeEnvironment.environment.clock.advance({ ms: 3 * HOUR_MS });
     await expect(evaluatePollers(wakeEnvironment.context)).resolves.toEqual({ nextDueAt: null });
-    expect(wakeEnvironment.observer.events).toMatchObject([{ name: WakeLogEventName.NoticeSkipped, agent: 'chatgpt' }]);
+    expect(wakeEnvironment.observer.events).toMatchObject([{ name: WakeLogEventName.NoticeSkipped, agent: 'agent-nine' }]);
     expect(sessionTexts({ wakeEnvironment })).toEqual([]);
   });
 });
@@ -176,7 +176,7 @@ describe('evaluatePollers failing channel', () => {
   async function failingDay() {
     const wakeEnvironment = await createWakeEnvironment();
     const { clock, sender } = wakeEnvironment.environment;
-    await schedule({ wakeEnvironment, agent: 'chatgpt', intervalMinutes: 1 });
+    await schedule({ wakeEnvironment, agent: 'agent-nine', intervalMinutes: 1 });
     sender.failSessionCalls({ callNumbers: FAILING_CALLS });
     await Array.from({ length: (20 * HOUR_MS) / MINUTE_MS }).reduce<Promise<void>>(async (previous) => {
       await previous;
@@ -203,11 +203,11 @@ describe('evaluatePollers flood limit', () => {
     const wakeEnvironment = await createWakeEnvironment();
     const { clock } = wakeEnvironment.environment;
     const hours = 20;
-    await schedule({ wakeEnvironment, agent: 'chatgpt', intervalMinutes: 1 });
+    await schedule({ wakeEnvironment, agent: 'agent-nine', intervalMinutes: 1 });
     await Array.from({ length: (hours * HOUR_MS) / (2 * MINUTE_MS) }).reduce<Promise<void>>(async (previous) => {
       await previous;
       await wakeEnvironment.wake.repository.recordPoll({
-        agent: 'chatgpt',
+        agent: 'agent-nine',
         polledAt: clock.now(),
         ownerLocale: OwnerLocale.PortugueseBrazil,
       });
@@ -226,8 +226,8 @@ describe('nextPollerDeadline', () => {
 
   test('equals the deadline evaluatePollers reports after a pass that changes nothing', async () => {
     const wakeEnvironment = await createWakeEnvironment();
-    await schedule({ wakeEnvironment, agent: 'chatgpt', intervalMinutes: 120 });
-    await schedule({ wakeEnvironment, agent: 'hermes', intervalMinutes: 60 });
+    await schedule({ wakeEnvironment, agent: 'agent-nine', intervalMinutes: 120 });
+    await schedule({ wakeEnvironment, agent: 'agent-five', intervalMinutes: 60 });
     const { nextDueAt } = await evaluatePollers(wakeEnvironment.context);
     expect(await nextPollerDeadline({ wake: wakeEnvironment.wake })).toBe(nextDueAt);
   });
