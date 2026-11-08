@@ -63,6 +63,7 @@ const LIGHT_HERO_START = '#FFFFFF';
 const LIGHT_HERO_END = '#F1F7F3';
 const DARK_HERO_BASE = '#0D1B17';
 const DARK_PREFIX = '.dark ';
+const PROSE_MEASURE_SELECTOR = '.mdx-content > p,\n.mdx-content > ul,\n.mdx-content > ol';
 const BASELINE_REFERENCE = 'origin/main';
 const LIGHT_PAGE = '#F6F8F5';
 const DARK_PAGE = '#07120F';
@@ -306,6 +307,10 @@ describe('docs visual: stylesheet', () => {
     const stylesheet = readRepositoryFile(STYLESHEET_FILE);
     expect(stylesheet).not.toMatch(IMPORT_RULE_PATTERN);
     expect(stylesheet).not.toMatch(FOREIGN_URL_PATTERN);
+  });
+
+  test('prose below the hero keeps a readable measure', () => {
+    expect(declarationOf({ selector: PROSE_MEASURE_SELECTOR, property: 'max-width' })).toBe('44rem');
   });
 
   test('it has a forced-colors block', () => {
