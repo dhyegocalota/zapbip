@@ -4,6 +4,7 @@ import { expect, test } from './fixtures';
 import { copy } from './support/copy';
 import { boxesOf, expectNoHorizontalScroll, expectSiblingsApart } from './support/layout';
 import { ALPHA_NUMBER, seedMetrics } from './support/metrics-seed';
+import { registerNumberWithFreshCode, walkNumberOf } from './support/numbers';
 import { signIn } from './support/sign-in';
 
 const STICKY_MINIMUM_WIDTH = 640;
@@ -26,6 +27,8 @@ const NARROW_KPI_COLUMNS = 2;
 const HEIGHT_TOLERANCE = 1;
 const MINIMUM_ACTION_GAP = 16;
 const MINIMUM_CARD_GAP = 24;
+const LONG_LABEL = 'A number label that is forty eight chars long...';
+const ONE_LINE_CELL_HEIGHT = 60;
 const HIDDEN_LABEL_SIZE = 2;
 const MAXIMUM_CARD_PADDING = 56;
 const NAVIGATION_LINK_COUNT = 4;
@@ -257,6 +260,23 @@ test.describe('the metrics dashboard', () => {
     await expect(tiles.locator('.kpi-delta')).toHaveCount(KPI_TILE_COUNT);
     for (const delta of await tiles.locator('.kpi-delta').all()) await expect(delta).toContainText(DELTA_PATTERN);
     for (const area of await tiles.locator('.sparkline-area').all()) await expect(area).toHaveAttribute('fill', /^url\(#/);
+  });
+});
+
+test.describe('a long number label', () => {
+  test.beforeEach(({ page }) => signIn({ page }));
+
+  test('truncates the label and never wraps the number or the dates', async ({ page }) => {
+    expect(LONG_LABEL).toHaveLength(48);
+    await registerNumberWithFreshCode({ page, number: { ...walkNumberOf({ index: 1 }), label: LONG_LABEL } });
+    await page.goto('/numbers');
+    const label = page.locator('.data-table tbody tr a').first();
+    await expect(label).toHaveAttribute('title', LONG_LABEL);
+    await expect(label).toHaveText(LONG_LABEL);
+    expect(await label.evaluate((element) => element.scrollWidth > element.clientWidth)).toBe(true);
+    const cells = await boxesOf({ locator: page.locator('.data-table tbody tr td.cell-nowrap') });
+    expect(cells.length).toBeGreaterThan(0);
+    cells.forEach((cell) => expect(cell.height).toBeLessThan(ONE_LINE_CELL_HEIGHT));
   });
 });
 
