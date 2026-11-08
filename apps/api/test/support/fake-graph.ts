@@ -16,6 +16,9 @@ const CONTROL_PREFIX = '/__fake';
 const REQUESTS_PATH = `${CONTROL_PREFIX}/requests`;
 const RESPONSES_PATH = `${CONTROL_PREFIX}/responses`;
 const RESET_PATH = `${CONTROL_PREFIX}/reset`;
+const RESOURCE_IDS_QUERY = 'resourceIds';
+const RESOURCE_ID_SEPARATOR = ',';
+const RESOURCE_ID_PATTERN = /^\/v\d+\.\d+\/(\d+)/;
 const SEND_PATH_PATTERN = /^\/v\d+\.\d+\/\d+\/messages$/;
 const JSON_HEADERS = { 'content-type': 'application/json' };
 const FAKE_MESSAGE_ID_PREFIX = 'wamid.fake';
@@ -25,7 +28,29 @@ const BAD_REQUEST_STATUS = 400;
 const NOT_FOUND_STATUS = 404;
 
 const sendBodySchema = z.object({ to: z.string() });
+const resetBodySchema = z.object({ resourceIds: z.array(z.string()).optional() });
 const queuedResponseSchema = z.object({ method: z.string(), path: z.string(), status: z.number(), body: z.unknown() });
+
+function resourceIdOf(input: { path: string }): string | null {
+  const match = RESOURCE_ID_PATTERN.exec(input.path);
+  return match === null || match[1] === undefined ? null : match[1];
+}
+
+function isOwned(input: { path: string; resourceIds: string[] | null }): boolean {
+  if (input.resourceIds === null) return true;
+  const resourceId = resourceIdOf({ path: input.path });
+  return resourceId !== null && input.resourceIds.includes(resourceId);
+}
+
+function resourceIdsOf(input: { url: string | undefined }): string[] | null {
+  const query = new URL(input.url === undefined ? '' : input.url, `http://${LOCAL_HOST}`).searchParams.get(RESOURCE_IDS_QUERY);
+  return query === null ? null : query.split(RESOURCE_ID_SEPARATOR);
+}
+
+function keepUnowned(input: { entries: { path: string }[]; scope: string[] | null }): void {
+  const kept = input.entries.filter((entry) => !isOwned({ path: entry.path, resourceIds: input.scope }));
+  input.entries.splice(0, input.entries.length, ...kept);
+}
 
 function graphError(input: { message: string }): unknown {
   return { error: { code: GRAPH_INVALID_REQUEST_CODE, message: input.message } };
@@ -60,9 +85,14 @@ export async function startFakeGraph(input: { port: number }): Promise<{ port: n
   const { createServer } = await import('node:http');
   const recorded: RecordedRequest[] = [];
   const queued: FakeGraphResponse[] = [];
-  let sentCount = 0;
+  const sentCounts = new Map<string, number>();
 
-  function defaultSend(request: { body: unknown; response: ServerResponse }): void {
+  function resourceKeyOf(input: { path: string }): string {
+    const resourceId = resourceIdOf({ path: input.path });
+    return resourceId === null ? input.path : resourceId;
+  }
+
+  function defaultSend(request: { body: unknown; response: ServerResponse; path: string }): void {
     const parsed = sendBodySchema.safeParse(request.body);
     if (!parsed.success)
       return reply({ response: request.response, status: BAD_REQUEST_STATUS, body: graphError({ message: 'invalid message' }) });
@@ -72,18 +102,25 @@ export async function startFakeGraph(input: { port: number }): Promise<{ port: n
       body: {
         messaging_product: 'whatsapp',
         contacts: [{ input: parsed.data.to, wa_id: parsed.data.to }],
-        messages: [{ id: `${FAKE_MESSAGE_ID_PREFIX}.${sentCount}` }],
+        messages: [{ id: `${FAKE_MESSAGE_ID_PREFIX}.${sentCounts.get(resourceKeyOf({ path: request.path }))}` }],
       },
     });
   }
 
   async function handleControl(request: { request: IncomingMessage; response: ServerResponse; path: string }): Promise<void> {
     const { response } = request;
-    if (request.path === REQUESTS_PATH) return reply({ response, status: OK_STATUS, body: recorded });
+    if (request.path === REQUESTS_PATH) {
+      const resourceIds = resourceIdsOf({ url: request.request.url });
+      return reply({ response, status: OK_STATUS, body: recorded.filter((entry) => isOwned({ path: entry.path, resourceIds })) });
+    }
     if (request.path === RESET_PATH) {
-      recorded.length = 0;
-      queued.length = 0;
-      sentCount = 0;
+      const body = await readBody({ request: request.request });
+      const { resourceIds } = resetBodySchema.parse(body === null ? {} : body);
+      const scope = resourceIds === undefined ? null : resourceIds;
+      keepUnowned({ entries: recorded, scope });
+      keepUnowned({ entries: queued, scope });
+      if (scope === null) sentCounts.clear();
+      else scope.forEach((resourceId) => sentCounts.delete(resourceId));
       return reply({ response, status: OK_STATUS, body: {} });
     }
     queued.push(queuedResponseSchema.parse(await readBody({ request: request.request })) as FakeGraphResponse);
@@ -95,13 +132,17 @@ export async function startFakeGraph(input: { port: number }): Promise<{ port: n
     const body = await readBody({ request: request.request });
     recorded.push({ method, path: request.path, headers: flattenHeaders({ request: request.request }), body });
     const isSend = method === 'POST' && SEND_PATH_PATTERN.test(request.path);
-    if (isSend) sentCount += 1;
+    if (isSend) {
+      const key = resourceKeyOf({ path: request.path });
+      const previous = sentCounts.get(key);
+      sentCounts.set(key, previous === undefined ? 1 : previous + 1);
+    }
     const queuedAt = queued.findIndex((entry) => entry.method === method && entry.path === request.path);
     if (queuedAt >= 0) {
       const [entry] = queued.splice(queuedAt, 1);
       return reply({ response: request.response, status: entry!.status, body: entry!.body });
     }
-    if (isSend) return defaultSend({ body, response: request.response });
+    if (isSend) return defaultSend({ body, response: request.response, path: request.path });
     reply({ response: request.response, status: NOT_FOUND_STATUS, body: graphError({ message: 'unknown route' }) });
   }
 
@@ -126,13 +167,16 @@ export async function startFakeGraph(input: { port: number }): Promise<{ port: n
 
 export class FakeGraph {
   readonly baseUrl: string;
+  private readonly resourceIds: string[] | null;
 
-  constructor(input: { baseUrl: string }) {
+  constructor(input: { baseUrl: string; resourceIds?: string[] }) {
     this.baseUrl = input.baseUrl;
+    this.resourceIds = input.resourceIds === undefined ? null : input.resourceIds;
   }
 
   async requests(): Promise<RecordedRequest[]> {
-    const response = await fetch(`${this.baseUrl}${REQUESTS_PATH}`);
+    const scope = this.resourceIds === null ? '' : `?${RESOURCE_IDS_QUERY}=${this.resourceIds.join(RESOURCE_ID_SEPARATOR)}`;
+    const response = await fetch(`${this.baseUrl}${REQUESTS_PATH}${scope}`);
     return (await response.json()) as RecordedRequest[];
   }
 
@@ -141,6 +185,7 @@ export class FakeGraph {
   }
 
   async reset(): Promise<void> {
-    await fetch(`${this.baseUrl}${RESET_PATH}`, { method: 'POST' });
+    const body = this.resourceIds === null ? {} : { resourceIds: this.resourceIds };
+    await fetch(`${this.baseUrl}${RESET_PATH}`, { method: 'POST', headers: JSON_HEADERS, body: JSON.stringify(body) });
   }
 }

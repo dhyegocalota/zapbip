@@ -1,17 +1,18 @@
-import { AccountState } from '@zapbip/types';
+import { AccountState, DAY_MS } from '@zapbip/types';
 import { ActivityMetric } from '../../contract/activity-metric';
 import { BackofficeCopyKey, renderBackofficeCopy } from '../backoffice-copy';
 import { BackofficePath } from '../backoffice-paths';
 import { formatPercent } from '../format-percent';
 import { isBudgetWarning } from '../../account-inbox/usage-meter';
 import { DAILY_BUDGET_WARNING_RATIO, DURABLE_OBJECT_DAILY_GIGABYTE_SECONDS } from '../../operations/constants';
-import { BarChart, BarPattern, type ChartSeries } from './bar-chart';
+import { BarChart, BarPattern, ChartSize, type ChartSeries } from './bar-chart';
 import { FigureNumber } from './figure-number';
+import { KpiTile } from './kpi-tile';
 import { type Freshness, FreshnessKind, FreshnessLine } from './freshness-line';
 import { FilterForm } from './filter-form';
 import { SummaryTable } from './summary-table';
 import { keyedCell, MetricCell, NOT_REPORTED_CLIENT_KEY } from './metric-cell';
-import { windowDays, type MetricsFilter } from './metrics-filter';
+import { lastDays, windowDays, type MetricsFilter } from './metrics-filter';
 import type { MetricsReport } from './metrics-report';
 import { activitySeries, dailySeries, hasNoActivity, sumOf, wakeDays, wakeSuccessPercent } from './metrics-series';
 import { Layout } from '../layout';
@@ -32,10 +33,27 @@ export function MetricsPage(props: { page: PageContext; filter: MetricsFilter; r
   const translate = (key: BackofficeCopyKey, values?: Record<string, string>): string => renderBackofficeCopy({ key, locale, values });
   const days = windowDays({ now, period: filter.period });
   const today = utcDay({ now });
+  const previousDays = lastDays({ now: now - days.length * DAY_MS, count: days.length });
   const live: Freshness = { kind: FreshnessKind.Live, label: translate(BackofficeCopyKey.MetricsFreshnessLive) };
   const noData = translate(BackofficeCopyKey.MetricsNoData);
   const hourly: Freshness = { kind: FreshnessKind.Hourly, label: translate(BackofficeCopyKey.MetricsFreshnessHourly) };
   const totalOf = (metric: ActivityMetric): number => sumOf({ values: activitySeries({ days, rows: report.activity, metric }) });
+  const previousTotalOf = (metric: ActivityMetric): number =>
+    sumOf({ values: activitySeries({ days: previousDays, rows: report.activity, metric }) });
+  const activityTile = (input: { metric: ActivityMetric; label: BackofficeCopyKey; cell: MetricCell }) => (
+    <KpiTile
+      locale={locale}
+      label={translate(input.label)}
+      value={String(totalOf(input.metric))}
+      cell={input.cell}
+      series={activitySeries({ days, rows: report.activity, metric: input.metric })}
+      currentTotal={totalOf(input.metric)}
+      previousTotal={previousTotalOf(input.metric)}
+    />
+  );
+  const wakesOf = (input: { days: string[] }): number =>
+    sumOf({ values: wakeDays({ days: input.days, rows: report.activity }).map((day) => day.woken) });
+  const newAccountValues = dailySeries({ days, rows: report.newAccounts });
   const activityOf = (input: { metric: ActivityMetric; label: string; cell: MetricCell; pattern: BarPattern }): ChartSeries => {
     const values = activitySeries({ days, rows: report.activity, metric: input.metric });
     return { label: input.label, cell: input.cell, values, valueTexts: values.map(String), pattern: input.pattern };
@@ -69,7 +87,7 @@ export function MetricsPage(props: { page: PageContext; filter: MetricsFilter; r
     pattern: BarPattern.Solid,
   };
   const accountTotal = sumOf({ values: report.accountsByState.map((entry) => entry.total) });
-  const chartProps = { locale, days, today };
+  const chartProps = { locale, days, today, size: ChartSize.Compact };
   return (
     <Layout
       locale={locale}
@@ -85,14 +103,30 @@ export function MetricsPage(props: { page: PageContext; filter: MetricsFilter; r
         <h1>{translate(BackofficeCopyKey.MetricsTitle)}</h1>
       </div>
       <FilterForm locale={locale} filter={filter} numbers={report.numbers} />
-      <div class="figure-grid">
-        <FigureNumber
-          id="figure-accounts"
+      <div class="kpi-grid">
+        <KpiTile
+          locale={locale}
           label={translate(BackofficeCopyKey.MetricsAccountsTitle)}
           value={String(accountTotal)}
           cell={MetricCell.Accounts}
-          freshness={live}
+          series={newAccountValues}
+          currentTotal={sumOf({ values: newAccountValues })}
+          previousTotal={sumOf({ values: dailySeries({ days: previousDays, rows: report.newAccounts }) })}
         />
+        {activityTile({ metric: ActivityMetric.MessagesIn, label: BackofficeCopyKey.MetricsKpiMessagesIn, cell: MetricCell.MessagesIn })}
+        {activityTile({ metric: ActivityMetric.MessagesOut, label: BackofficeCopyKey.MetricsKpiMessagesOut, cell: MetricCell.MessagesOut })}
+        <KpiTile
+          locale={locale}
+          label={translate(BackofficeCopyKey.MetricsKpiWakes)}
+          value={String(wakesOf({ days }))}
+          cell={MetricCell.WakesWoken}
+          series={wakeDays({ days, rows: report.activity }).map((day) => day.woken)}
+          currentTotal={wakesOf({ days })}
+          previousTotal={wakesOf({ days: previousDays })}
+        />
+        {activityTile({ metric: ActivityMetric.SendsFailed, label: BackofficeCopyKey.MetricsFailuresTitle, cell: MetricCell.SendsFailed })}
+      </div>
+      <div class="figure-grid">
         <FigureNumber
           id="figure-agents-active"
           label={translate(BackofficeCopyKey.MetricsAgentsActive)}
@@ -120,7 +154,7 @@ export function MetricsPage(props: { page: PageContext; filter: MetricsFilter; r
           <p>{noData}</p>
         </section>
       ) : (
-        <>
+        <div class="chart-grid">
           <section class="card hero-card" aria-labelledby="metrics-accounts-title">
             <h2 id="metrics-accounts-title">{translate(BackofficeCopyKey.MetricsAccountsTitle)}</h2>
             <FreshnessLine freshness={live} />
@@ -157,7 +191,7 @@ export function MetricsPage(props: { page: PageContext; filter: MetricsFilter; r
                   pattern: BarPattern.Solid,
                 }),
               ]}
-              totalText={String(sumOf({ values: report.newAccounts.map((entry) => entry.total) }))}
+              totalText={String(sumOf({ values: newAccountValues }))}
               isHourly={false}
             />
           </section>
@@ -203,22 +237,6 @@ export function MetricsPage(props: { page: PageContext; filter: MetricsFilter; r
           <section class="card" aria-labelledby="metrics-messages-title">
             <h2 id="metrics-messages-title">{translate(BackofficeCopyKey.MetricsMessagesTitle)}</h2>
             <FreshnessLine freshness={hourly} />
-            <div class="figure-grid">
-              <FigureNumber
-                id="figure-messages-in"
-                label={translate(BackofficeCopyKey.MetricsMessagesIn)}
-                value={String(totalOf(ActivityMetric.MessagesIn))}
-                cell={MetricCell.MessagesIn}
-                freshness={hourly}
-              />
-              <FigureNumber
-                id="figure-messages-out"
-                label={translate(BackofficeCopyKey.MetricsMessagesOut)}
-                value={String(totalOf(ActivityMetric.MessagesOut))}
-                cell={MetricCell.MessagesOut}
-                freshness={hourly}
-              />
-            </div>
             <BarChart
               {...chartProps}
               id="chart-messages"
@@ -285,13 +303,6 @@ export function MetricsPage(props: { page: PageContext; filter: MetricsFilter; r
           <section class="card" aria-labelledby="metrics-failures-title">
             <h2 id="metrics-failures-title">{translate(BackofficeCopyKey.MetricsFailuresTitle)}</h2>
             <FreshnessLine freshness={hourly} />
-            <FigureNumber
-              id="figure-sends-failed"
-              label={translate(BackofficeCopyKey.MetricsFailuresTitle)}
-              value={String(totalOf(ActivityMetric.SendsFailed))}
-              cell={MetricCell.SendsFailed}
-              freshness={hourly}
-            />
             <BarChart
               {...chartProps}
               id="chart-failures"
@@ -327,7 +338,7 @@ export function MetricsPage(props: { page: PageContext; filter: MetricsFilter; r
               isHourly
             />
           </section>
-          <section class="card" aria-labelledby="metrics-budget-title">
+          <section class="card chart-card-wide" aria-labelledby="metrics-budget-title">
             <h2 id="metrics-budget-title">{translate(BackofficeCopyKey.MetricsBudgetTitle)}</h2>
             <FreshnessLine freshness={hourly} />
             <p class="field-help">{translate(BackofficeCopyKey.MetricsBudgetAccountWide)}</p>
@@ -353,6 +364,7 @@ export function MetricsPage(props: { page: PageContext; filter: MetricsFilter; r
             </p>
             <BarChart
               {...chartProps}
+              size={ChartSize.Wide}
               id="chart-budget"
               metricLabel={translate(BackofficeCopyKey.MetricsBudgetTitle)}
               series={[budgetSeries]}
@@ -367,7 +379,7 @@ export function MetricsPage(props: { page: PageContext; filter: MetricsFilter; r
               ]}
             />
           </section>
-          <section class="card" aria-labelledby="metrics-restricted-title">
+          <section class="card chart-card-wide" aria-labelledby="metrics-restricted-title">
             <h2 id="metrics-restricted-title">{translate(BackofficeCopyKey.MetricsRestrictedTitle)}</h2>
             <FreshnessLine freshness={live} />
             <SummaryTable
@@ -380,7 +392,7 @@ export function MetricsPage(props: { page: PageContext; filter: MetricsFilter; r
               }))}
             />
           </section>
-        </>
+        </div>
       )}
     </Layout>
   );

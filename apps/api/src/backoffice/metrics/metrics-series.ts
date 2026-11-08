@@ -20,6 +20,19 @@ export function hasNoActivity(input: { report: MetricsReport }): boolean {
   return emptyLists.every((list) => list.length === 0) && report.agents.active === 0 && report.blockedPhones === 0;
 }
 
+export enum Trend {
+  Up = 'up',
+  Down = 'down',
+  Flat = 'flat',
+}
+
+export function trendOf(input: { current: number; previous: number }): { trend: Trend; amount: number } {
+  const difference = input.current - input.previous;
+  if (difference > 0) return { trend: Trend.Up, amount: difference };
+  if (difference < 0) return { trend: Trend.Down, amount: -difference };
+  return { trend: Trend.Flat, amount: 0 };
+}
+
 export function sumOf(input: { values: number[] }): number {
   return input.values.reduce((total, value) => total + value, 0);
 }

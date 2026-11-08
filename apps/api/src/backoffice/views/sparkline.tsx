@@ -5,6 +5,9 @@ const VIEW_WIDTH = 240;
 const VIEW_HEIGHT = 56;
 const VERTICAL_MARGIN = 6;
 const HORIZONTAL_MARGIN = 4;
+const LABEL_GUTTER = 34;
+const LABEL_GAP = 4;
+const LABEL_BASELINE_SHIFT = 4;
 const BASELINE_Y = VIEW_HEIGHT - VERTICAL_MARGIN;
 const EMPTY_TOP = 34;
 const DOT_RADIUS = 3;
@@ -25,7 +28,7 @@ function roundOf(value: number): number {
 
 function pointsOf(input: { values: number[]; peak: number }): Point[] {
   const { values, peak } = input;
-  const step = (VIEW_WIDTH - 2 * HORIZONTAL_MARGIN) / (values.length - 1);
+  const step = (VIEW_WIDTH - 2 * HORIZONTAL_MARGIN - LABEL_GUTTER) / (values.length - 1);
   return values.map((value, index) => ({
     x: roundOf(HORIZONTAL_MARGIN + index * step),
     y: roundOf(BASELINE_Y - (value / peak) * (BASELINE_Y - VERTICAL_MARGIN)),
@@ -36,8 +39,8 @@ function pairOf(point: Point): string {
   return `${point.x},${point.y}`;
 }
 
-export function Sparkline(props: { locale: OwnerLocale; metricLabel: string; values: number[] }) {
-  const { locale, metricLabel, values } = props;
+export function Sparkline(props: { id: string; locale: OwnerLocale; metricLabel: string; values: number[] }) {
+  const { id, locale, metricLabel, values } = props;
   assertDrawable({ values });
   const translate = (key: BackofficeCopyKey, replacements: Record<string, string>): string =>
     renderBackofficeCopy({ key, locale, values: replacements });
@@ -59,14 +62,26 @@ export function Sparkline(props: { locale: OwnerLocale; metricLabel: string; val
         role="img"
       >
         <title>{title}</title>
+        {isEmpty ? null : (
+          <defs>
+            <linearGradient id={`${id}-fill`} x1="0" y1="0" x2="0" y2="1">
+              <stop class="sparkline-stop-start" offset="0" />
+              <stop class="sparkline-stop-end" offset="1" />
+            </linearGradient>
+          </defs>
+        )}
         {firstPoint === undefined || lastPoint === undefined ? null : (
           <>
             <polygon
               class="sparkline-area"
+              fill={`url(#${id}-fill)`}
               points={[{ x: firstPoint.x, y: BASELINE_Y }, ...points, { x: lastPoint.x, y: BASELINE_Y }].map(pairOf).join(POINT_SEPARATOR)}
             />
             <polyline class="sparkline-line" points={points.map(pairOf).join(POINT_SEPARATOR)} />
             <circle class="sparkline-dot" cx={lastPoint.x} cy={lastPoint.y} r={DOT_RADIUS} />
+            <text class="sparkline-label" x={lastPoint.x + DOT_RADIUS + LABEL_GAP} y={lastPoint.y + LABEL_BASELINE_SHIFT}>
+              {values.at(-1)}
+            </text>
           </>
         )}
         <line class="sparkline-baseline" x1={HORIZONTAL_MARGIN} y1={BASELINE_Y} x2={VIEW_WIDTH - HORIZONTAL_MARGIN} y2={BASELINE_Y} />

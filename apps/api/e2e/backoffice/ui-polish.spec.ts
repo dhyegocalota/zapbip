@@ -20,11 +20,22 @@ const SIBLING_CONTAINERS = [
   '.page-head',
   '.title-row',
 ];
+const WIDE_VIEWPORT = 1000;
+const KPI_TILE_COUNT = 5;
+const NARROW_KPI_COLUMNS = 2;
+const HEIGHT_TOLERANCE = 1;
 const MINIMUM_ACTION_GAP = 16;
 const MINIMUM_CARD_GAP = 24;
 const NAVIGATION_LINK_COUNT = 4;
+const DELTA_PATTERN = /a mais|a menos|Igual/;
 const TRANSPARENT = 'rgba(0, 0, 0, 0)';
 const NO_ANIMATION = 'none';
+
+function viewportWidthOf(input: { page: Page }): number {
+  const viewport = input.page.viewportSize();
+  if (viewport === null) throw new Error('the page has no viewport');
+  return viewport.width;
+}
 
 async function expectNoOverlap(input: { page: Page }): Promise<void> {
   await Promise.all(
@@ -177,6 +188,50 @@ test.describe('signed in', () => {
       await page.goto('/');
       expect(await animationNameOf({ page, selector: '.live-dot', pseudo: null })).not.toBe(NO_ANIMATION);
     });
+  });
+});
+
+test.describe('the metrics dashboard', () => {
+  test.beforeEach(async ({ page }) => {
+    seedMetrics();
+    await signIn({ page });
+    await page.goto('/metrics');
+  });
+
+  test('lays the tiles in one row on wide screens and in at most two columns on narrow ones', async ({ page }) => {
+    const boxes = await boxesOf({ locator: page.locator('.kpi-grid > .kpi') });
+    expect(boxes).toHaveLength(KPI_TILE_COUNT);
+    const columns = new Set(boxes.map((box) => Math.round(box.x))).size;
+    const rows = new Set(boxes.map((box) => Math.round(box.y))).size;
+    const isWide = viewportWidthOf({ page }) >= WIDE_VIEWPORT;
+    if (isWide) expect(rows).toBe(1);
+    if (!isWide) expect(columns).toBeLessThanOrEqual(NARROW_KPI_COLUMNS);
+  });
+
+  test('lays the chart cards in two columns on wide screens and one on narrow ones, equal in height within a row', async ({ page }) => {
+    const boxes = await boxesOf({ locator: page.locator('.chart-grid > .card') });
+    const columns = new Set(boxes.map((box) => Math.round(box.x))).size;
+    const isWide = viewportWidthOf({ page }) >= WIDE_VIEWPORT;
+    expect(columns).toBe(isWide ? 2 : 1);
+    const rowTops = [...new Set(boxes.map((box) => Math.round(box.y)))];
+    rowTops.forEach((top) => {
+      const heights = boxes.filter((box) => Math.round(box.y) === top).map((box) => box.height);
+      expect(Math.max(...heights) - Math.min(...heights)).toBeLessThanOrEqual(HEIGHT_TOLERANCE);
+    });
+  });
+
+  test('gives the budget chart the full width of the grid', async ({ page }) => {
+    const [grid] = await boxesOf({ locator: page.locator('.chart-grid') });
+    const [budget] = await boxesOf({ locator: page.locator('.chart-card-wide').first() });
+    if (grid === undefined || budget === undefined) throw new Error('the grid has no box');
+    expect(Math.abs(budget.width - grid.width)).toBeLessThanOrEqual(HEIGHT_TOLERANCE);
+  });
+
+  test('puts a delta sentence and a gradient-filled sparkline in every tile', async ({ page }) => {
+    const tiles = page.locator('.kpi-grid > .kpi');
+    await expect(tiles.locator('.kpi-delta')).toHaveCount(KPI_TILE_COUNT);
+    for (const delta of await tiles.locator('.kpi-delta').all()) await expect(delta).toContainText(DELTA_PATTERN);
+    for (const area of await tiles.locator('.sparkline-area').all()) await expect(area).toHaveAttribute('fill', /^url\(#/);
   });
 });
 

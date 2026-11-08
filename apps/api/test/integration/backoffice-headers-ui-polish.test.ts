@@ -29,7 +29,10 @@ const SIGNED_IN_PATHS = [
   '/nope',
 ];
 const FORBIDDEN_MARKUP = [/<script/, /\sstyle=/, /font-src/];
-const fakeGraph = new FakeGraph({ baseUrl: readWhatsAppEnvironment({ env: testEnv }).graphBaseUrl });
+const fakeGraph = new FakeGraph({
+  baseUrl: readWhatsAppEnvironment({ env: testEnv }).graphBaseUrl,
+  resourceIds: [PHONE_NUMBER_ID, WABA_ID],
+});
 
 let sessionToken: string;
 

@@ -215,4 +215,10 @@ describe('metrics summary tables', () => {
     const html = String(MetricsPage({ page: PAGE, filter: METRICS_FILTER, report: DATA_REPORT, now: NOW }));
     expect(html).toContain('<table class="data-table summary-table">');
   });
+
+  it('keeps the Meta app legend visible and its select label visually hidden', () => {
+    const html = registerHtml({ errors: {} });
+    expect(html).toContain('<label for="meta-app" class="visually-hidden">');
+    expect(html).toContain('<legend>');
+  });
 });
