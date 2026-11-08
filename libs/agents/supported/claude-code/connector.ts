@@ -67,6 +67,7 @@ export const runtime: AgentConnectorRuntime = {
   binaryName: BINARY_NAME,
   homeFolder: HOME_FOLDER,
   homeVariable: HOME_VARIABLE,
+  strictMcpArgument: STRICT_MCP_ARGUMENT,
   findNewestSessionId,
   resumeArguments,
   newSessionArguments: null,

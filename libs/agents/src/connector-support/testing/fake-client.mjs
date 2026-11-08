@@ -59,7 +59,8 @@ export function runFakeClient(input) {
     const configuredZapbip = process.env.FAKE_CLIENT_ZAPBIP_URL ? { zapbip: { url: process.env.FAKE_CLIENT_ZAPBIP_URL } } : {};
     const configured = configPath ? JSON.parse(readFileSync(configPath, 'utf8')).mcpServers : configuredZapbip;
     const userServers = JSON.parse(process.env.FAKE_CLIENT_USER_MCP_SERVERS || '{}');
-    const isStrict = clientArguments.includes('--strict-mcp-config');
+    const strictArgument = process.env.FAKE_CLIENT_STRICT_ARGUMENT;
+    const isStrict = Boolean(strictArgument) && clientArguments.includes(strictArgument);
     return isStrict ? configured : { ...userServers, ...configured };
   }
 

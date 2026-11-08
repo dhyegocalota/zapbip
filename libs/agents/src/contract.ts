@@ -27,6 +27,7 @@ export type AgentConnectorRuntime = {
   binaryName: string;
   homeFolder: string;
   homeVariable: string;
+  strictMcpArgument: string | null;
   findNewestSessionId: (input: SessionLookupInput) => Promise<string | null>;
   resumeArguments: (input: { sessionId: string; isolationArguments: string[] }) => string[];
   newSessionArguments: ((input: { isolationArguments: string[] }) => string[]) | null;
