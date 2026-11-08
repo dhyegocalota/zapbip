@@ -38,6 +38,9 @@ const TYPING_HIDDEN_PATTERN =
   /<div\b[^>]*aria-hidden="true"[^>]*className="zapbip-typing"|<div\b[^>]*className="zapbip-typing"[^>]*aria-hidden="true"/;
 const SENT_BUBBLE = '#D9FDD3';
 const NOTICE_BUBBLE = '#FFEECD';
+const ANIMATION_SHORTHAND_PATTERN = /animation:\s*[\w-]+\s+([\d.]+)s\s+[\w-]+\s+(\d+|infinite)\s*;/g;
+const ANIMATION_DELAY_PATTERN = /animation-delay:\s*([\d.]+)s\s*;/g;
+const MAXIMUM_MOTION_SECONDS = 5;
 const STYLESHEET_FILE = `${DOCS_ROOT}/zapbip.css`;
 const HERO_CLASSES = [
   'zapbip-hero',
@@ -348,5 +351,16 @@ describe('docs visual: stylesheet', () => {
       }))
       .filter((pair) => pair.ratio < BODY_TEXT_CONTRAST);
     expect(failing).toEqual([]);
+  });
+
+  test('no docs animation runs longer than five seconds, delay included', () => {
+    const stylesheet = readRepositoryFile(STYLESHEET_FILE);
+    const durations = [...stylesheet.matchAll(ANIMATION_SHORTHAND_PATTERN)].map((match) => {
+      if (match[2] === 'infinite') throw new Error('a docs animation loops forever');
+      return Number(match[1]) * Number(match[2]);
+    });
+    const delays = [...stylesheet.matchAll(ANIMATION_DELAY_PATTERN)].map((match) => Number(match[1]));
+    expect(durations.length).toBeGreaterThan(0);
+    expect(Math.max(...durations) + Math.max(0, ...delays)).toBeLessThanOrEqual(MAXIMUM_MOTION_SECONDS);
   });
 });
