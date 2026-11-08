@@ -337,9 +337,8 @@ describe('metrics page states', () => {
     const cell = (name: string) => cellOf({ html, cell: name });
     expect(cell(MetricCell.Accounts)).toBe('0');
     expect(cell(MetricCell.AgentsActive)).toBe('0');
-    expect(cell(MetricCell.MessagesIn)).toBe('0');
+    expect(cell(MetricCell.BlockedPhones)).toBe('0');
     expect(html).toContain(copy[BackofficeCopyKey.MetricsNoData]);
-    expect(html).toContain(copy[BackofficeCopyKey.MetricsWakeNoWakes]);
     expect(html).not.toContain('NaN');
   });
 });

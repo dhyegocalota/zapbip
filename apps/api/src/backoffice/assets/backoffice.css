@@ -902,6 +902,12 @@ main > .notice {
   border-radius: var(--radius-pill);
 }
 
+.empty-inline {
+  margin: 0 0 var(--space-4);
+  color: var(--color-text-muted);
+  font-size: var(--text-small);
+}
+
 .empty-state {
   display: grid;
   justify-items: center;

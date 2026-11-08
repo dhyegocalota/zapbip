@@ -1,8 +1,24 @@
 import { PERCENT_MULTIPLIER } from '@zapbip/types';
 import { ActivityMetric } from '../../contract/activity-metric';
-import type { ActivityTotal, DayTotal } from './metrics-report';
+import type { ActivityTotal, DayTotal, MetricsReport } from './metrics-report';
 
 export type WakeDay = { woken: number; unreached: number };
+
+export function hasNoActivity(input: { report: MetricsReport }): boolean {
+  const { report } = input;
+  const emptyLists = [
+    report.accountsByState,
+    report.accountsPerNumber,
+    report.newAccounts,
+    report.agentsByClient,
+    report.agentsCreated,
+    report.agentsRevoked,
+    report.activity,
+    report.budgetDays,
+    report.restricted,
+  ];
+  return emptyLists.every((list) => list.length === 0) && report.agents.active === 0 && report.blockedPhones === 0;
+}
 
 export function sumOf(input: { values: number[] }): number {
   return input.values.reduce((total, value) => total + value, 0);
