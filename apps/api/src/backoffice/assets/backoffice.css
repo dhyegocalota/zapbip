@@ -1015,6 +1015,10 @@ main > .notice {
   gap: var(--space-5);
 }
 
+.chart-grid > .card:has(.empty-inline) {
+  align-self: start;
+}
+
 .freshness {
   display: flex;
   align-items: center;

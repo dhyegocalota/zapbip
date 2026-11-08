@@ -149,7 +149,7 @@ export function MetricsPage(props: { page: PageContext; filter: MetricsFilter; r
           freshness={live}
         />
       </div>
-      {hasNoActivity({ report }) ? (
+      {hasNoActivity({ report, days }) ? (
         <section class="card hero-card empty-state">
           <p>{noData}</p>
         </section>

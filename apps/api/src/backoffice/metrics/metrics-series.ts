@@ -4,17 +4,18 @@ import type { ActivityTotal, DayTotal, MetricsReport } from './metrics-report';
 
 export type WakeDay = { woken: number; unreached: number };
 
-export function hasNoActivity(input: { report: MetricsReport }): boolean {
-  const { report } = input;
+export function hasNoActivity(input: { report: MetricsReport; days: string[] }): boolean {
+  const { report, days } = input;
+  const inPeriod = (rows: DayTotal[]): DayTotal[] => rows.filter((row) => days.includes(row.day));
   const emptyLists = [
     report.accountsByState,
     report.accountsPerNumber,
-    report.newAccounts,
+    inPeriod(report.newAccounts),
     report.agentsByClient,
-    report.agentsCreated,
-    report.agentsRevoked,
-    report.activity,
-    report.budgetDays,
+    inPeriod(report.agentsCreated),
+    inPeriod(report.agentsRevoked),
+    inPeriod(report.activity),
+    inPeriod(report.budgetDays),
     report.restricted,
   ];
   return emptyLists.every((list) => list.length === 0) && report.agents.active === 0 && report.blockedPhones === 0;
