@@ -31,6 +31,8 @@ const STATE_ONLY_CLASSES = [
 ];
 const FORCED_COLORS_PATTERN = /@media \(forced-colors: active\)/;
 const FORCED_COLORS_BLOCK_PATTERN = /@media \(forced-colors: active\) \{[\s\S]*?\n\}/;
+const FIELDSET_RULE_PATTERN = /\nfieldset \{[^}]*border: 0;/;
+const LEGEND_RULE_PATTERN = /\nlegend \{[^}]*font-weight: 600;/;
 const TOP_LEVEL_LINE_PATTERN = /^\S/;
 const BLOCK_END = '}';
 const REDUCED_MOTION_GUARD_PATTERN =
@@ -168,5 +170,10 @@ describe('design rules', () => {
     expect(STYLESHEET.match(/@media \(forced-colors: active\)/g)).toHaveLength(1);
     const linesAfterOpening = STYLESHEET.slice(STYLESHEET.search(FORCED_COLORS_PATTERN)).split('\n').slice(1);
     expect(linesAfterOpening.filter((line) => TOP_LEVEL_LINE_PATTERN.test(line) && line !== BLOCK_END)).toEqual([]);
+  });
+
+  it('resets the default fieldset border and styles the legend', () => {
+    expect(STYLESHEET).toMatch(FIELDSET_RULE_PATTERN);
+    expect(STYLESHEET).toMatch(LEGEND_RULE_PATTERN);
   });
 });

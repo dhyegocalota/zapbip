@@ -2,6 +2,8 @@ import { HttpStatus, OwnerLocale, WhatsAppNumberState } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { BackofficeAuditAction, BackofficeAuditOutcome } from '../../src/backoffice/audit/backoffice-audit-action';
 import { BACKOFFICE_COPY, BackofficeCopyKey } from '../../src/backoffice/backoffice-copy';
+import { RegisterNumberPage } from '../../src/backoffice/numbers/views/register-number';
+import { NumberFormField } from '../../src/backoffice/numbers/number-form-fields';
 import { MetricsPage } from '../../src/backoffice/metrics/metrics-page';
 import { NumberDetailPage } from '../../src/backoffice/numbers/views/number-detail';
 import { NumbersListPage } from '../../src/backoffice/numbers/views/numbers-list';
@@ -178,5 +180,32 @@ describe('number detail hero card and live dot', () => {
     expect(detailHtml({ state: WhatsAppNumberState.Active, verifiedAt: NOW })).toContain('live-dot');
     expect(detailHtml({ state: WhatsAppNumberState.Pending, verifiedAt: null })).not.toContain('live-dot');
     expect(detailHtml({ state: WhatsAppNumberState.Closed, verifiedAt: NOW })).not.toContain('live-dot');
+  });
+});
+
+const FORM_ACTIONS_PATTERN =
+  /<div class="form-actions"><a href="\/numbers" class="button button-secondary">[^<]+<\/a><button type="submit" class="button button-primary">[^<]+<\/button><\/div>/;
+const REGISTRATION_VALUES = {
+  metaApp: 'new',
+  metaAppId: '',
+  metaAppName: '',
+  phoneNumberId: '',
+  wabaId: '',
+  displayNumber: '',
+  label: '',
+};
+
+function registerHtml(input: { errors: Parameters<typeof RegisterNumberPage>[0]['errors'] }): string {
+  return String(RegisterNumberPage({ page: PAGE, metaApps: [], values: REGISTRATION_VALUES, errors: input.errors, failure: null }));
+}
+
+describe('register form', () => {
+  it('puts the cancel link before the primary button in one action row', () => {
+    expect(registerHtml({ errors: {} })).toMatch(FORM_ACTIONS_PATTERN);
+  });
+
+  it('marks a field error with its own class', () => {
+    const html = registerHtml({ errors: { [NumberFormField.Label]: BackofficeCopyKey.ErrorSummaryTitle } });
+    expect(html).toContain('class="field-help field-error"');
   });
 });

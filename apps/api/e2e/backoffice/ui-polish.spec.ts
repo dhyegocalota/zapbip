@@ -20,6 +20,7 @@ const SIBLING_CONTAINERS = [
   '.page-head',
   '.title-row',
 ];
+const MINIMUM_ACTION_GAP = 16;
 const TRANSPARENT = 'rgba(0, 0, 0, 0)';
 const NO_ANIMATION = 'none';
 
@@ -90,6 +91,19 @@ test.describe('signed in', () => {
     const expectedPosition = width >= STICKY_MINIMUM_WIDTH ? 'sticky' : 'static';
     await page.goto('/audit');
     await expect(page.locator('body > header')).toHaveCSS('position', expectedPosition);
+  });
+
+  test('the register form has no default fieldset border and spaces its two actions', async ({ page }) => {
+    await page.goto('/numbers/new');
+    await expect(page.locator('fieldset').first()).toHaveCSS('border-top-width', '0px');
+    const [cancel, submit] = await Promise.all([
+      page.locator('.form-actions > a').boundingBox(),
+      page.locator('.form-actions > button').boundingBox(),
+    ]);
+    if (cancel === null || submit === null) throw new Error('an action has no box');
+    const isStacked = submit.y + submit.height <= cancel.y;
+    const gap = isStacked ? cancel.y - (submit.y + submit.height) : submit.x - (cancel.x + cancel.width);
+    expect(gap).toBeGreaterThanOrEqual(MINIMUM_ACTION_GAP);
   });
 
   test('draws one sparkline in each of the three home cards', async ({ page }) => {
