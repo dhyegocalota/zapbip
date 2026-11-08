@@ -148,32 +148,6 @@
   }
 }
 
-@media (forced-colors: active) {
-  .card,
-  .figure {
-    border-color: CanvasText;
-  }
-
-  .hero-card {
-    border-color: CanvasText;
-    background: Canvas;
-    box-shadow: none;
-  }
-
-  .live-dot {
-    background: CanvasText;
-    box-shadow: none;
-  }
-
-  .sparkline-line {
-    stroke: CanvasText;
-  }
-
-  .sparkline-dot {
-    fill: CanvasText;
-  }
-}
-
 * {
   box-sizing: border-box;
 }
@@ -1161,5 +1135,38 @@ main > .notice {
     font-family: var(--font-sans);
     font-weight: 600;
     text-align: left;
+  }
+}
+
+@media (forced-colors: active) {
+  .card,
+  .figure {
+    border-color: CanvasText;
+  }
+
+  .hero-card {
+    border-color: CanvasText;
+    background: Canvas;
+    box-shadow: none;
+  }
+
+  .live-dot {
+    background: CanvasText;
+    box-shadow: none;
+  }
+
+  .sparkline-line,
+  .sparkline-baseline,
+  .bar-solid {
+    stroke: CanvasText;
+  }
+
+  .sparkline-dot,
+  .bar-solid {
+    fill: CanvasText;
+  }
+
+  .sparkline-area {
+    fill: Canvas;
   }
 }
