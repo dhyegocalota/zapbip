@@ -223,6 +223,50 @@ describe('removing an agent folder', () => {
   });
 });
 
+describe('page rules', () => {
+  const PAGE_RULE_MUTATIONS = [
+    {
+      name: 'the Hermes front matter',
+      path: 'libs/agents/supported/hermes/page.en.mdx',
+      remove: /^---[\s\S]*?---\n/,
+      violation: 'hermes page.en.mdx',
+    },
+    {
+      name: 'the OpenClaw install command',
+      path: 'libs/agents/supported/openclaw/page.en.mdx',
+      remove: 'openclaw plugins install',
+      violation: 'openclaw page.en.mdx',
+    },
+    {
+      name: 'the Hermes one-listener sentence',
+      path: 'libs/agents/supported/hermes/page.pt-br.mdx',
+      remove: 'Rode apenas um listener por agente',
+      violation: 'hermes page.pt-br.mdx',
+    },
+    {
+      name: 'the OpenClaw private-file advice',
+      path: 'libs/agents/supported/openclaw/page.pt-br.mdx',
+      remove: /chmod 600/g,
+      violation: 'openclaw page.pt-br.mdx',
+    },
+    {
+      name: 'the Codex placeholder',
+      path: 'libs/agents/supported/codex/page.en.mdx',
+      remove: /<connectionLink>/g,
+      violation: 'codex page.en.mdx',
+    },
+  ];
+
+  test.each(PAGE_RULE_MUTATIONS)('removing $name fails the plan naming the page', async ({ path, remove, violation }) => {
+    const mutated = (source: string): string => source.replace(remove, 'removed');
+    const plan = await planWith({
+      extraRoots: [],
+      readFile: (candidate) => (candidate === path ? mutated(readSource(candidate)) : readSource(candidate)),
+    });
+    expect(plan.violations.some((entry) => entry.startsWith(violation))).toBe(true);
+  });
+});
+
 describe('no file outside an agent folder names an agent', () => {
   REAL_AGENT_IDS.forEach((id) => test.todo(`G4: ${id} leaks nowhere, once the leak check exists`));
 });
