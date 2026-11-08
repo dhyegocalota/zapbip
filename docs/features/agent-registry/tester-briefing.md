@@ -148,3 +148,19 @@ Case counts: the moved tests are the old `session-lookup`, `wake-commands` and `
 - `session-lookup.ts` still holds the `.claude` and `.codex` default home folders, and `wake-runner.ts` reads `CODEX_HOME`: the contract's `SessionLookupInput` and `WakeIsolationInput` name both agents (L1), so L4's leak check will list them.
 - `connectCommand` left `libs/core` (cycle), which touches `libs/core/src/install/prompts/connector-commands.ts` and the two `install-copy.ts` files, outside the L5a row.
 - `tools/repository-shape/src/agent-registry.test.ts` G2c now asserts the fixture member is contained, since real connector agents exist.
+
+## L3 docs pages (developer-l3)
+
+Changed: the 22 agent pages live in `libs/agents/supported/<id>/page.{en,pt-br}.mdx` and the generator writes the identical copies into `apps/docs`; both `supported-agents.mdx` pages import the generated matrix snippet as `AgentMatrix`; `agent-registry.test.ts` lost the page exception and gained the G3 removal cases for all 11 ids and the matrix import case; `docs-experience.test.ts` reads matrix rows from the snippet; `docs-visual.test.ts` compares the navigation page lists in any order.
+
+Run: `pnpm --filter @zapbip/repository-shape test:unit`, `pnpm agents:check`.
+
+| Test | Red | Failure printed | Green |
+|---|---|---|---|
+| `agent-registry.test.ts::every agent page in apps/docs is the copy of its folder page` | a81002b7 | `AssertionError: expected [ ...(22) ] to deeply equal []` | 24e50764 |
+| `agent-registry.test.ts::the matrix page ... shows the generated snippet and holds no table` | 86630738 | `expected '---\ntitle: Supported agents...' to contain 'import AgentMatrix from ...'` | e275f55d |
+| `agent-registry.test.ts::G3: <id> vanishes from every planned file` (11) | pin | none | 24e50764 |
+
+Hypotheses: the rendered agent pages are byte-identical to `origin/main`; Mintlify renders the `<AgentMatrix />` table with 11 rows (walk W2); the Agents nav order is the registry order.
+
+Gaps: the docs walk and broken-links were not run by the developer; the G3 assertions use id tokens (`agents/<id>)`, `'<id>'`), not the display name.
