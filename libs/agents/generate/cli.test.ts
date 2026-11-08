@@ -23,4 +23,31 @@ describe('the generator command line', () => {
     expect(run.status).not.toBe(0);
     expect(run.stderr).toContain('usage: agents:<generate|check|new|mentions>');
   });
+
+  test('agents:new refuses an existing agent with a message and a failure code', () => {
+    const run = spawnSync('node', ['--import', 'tsx', CLI_PATH, 'new', 'codex'], { cwd: repositoryPath('.'), encoding: 'utf8' });
+    expect(run.status).not.toBe(0);
+    expect(run.stderr).toContain('codex already exists');
+  });
+
+  test('agents:new refuses a call without an id', () => {
+    const run = spawnSync('node', ['--import', 'tsx', CLI_PATH, 'new'], { cwd: repositoryPath('.'), encoding: 'utf8' });
+    expect(run.status).not.toBe(0);
+    expect(run.stderr).toContain('usage: agents:new <id>');
+  });
+
+  test('agents:mentions lists the files that name the agent, outside its folder and the generated set', () => {
+    const run = spawnSync('node', ['--import', 'tsx', CLI_PATH, 'mentions', 'codex'], { cwd: repositoryPath('.'), encoding: 'utf8' });
+    expect(run.status).toBe(0);
+    const lines = run.stdout.split('\n').filter(Boolean);
+    expect(lines.length).toBeGreaterThan(0);
+    lines.forEach((line) => expect(line).toMatch(/^\S+:\d+$/));
+    lines.forEach((line) => expect(line).not.toMatch(/^(libs\/agents\/supported\/codex\/|libs\/agents\/src\/generated\/|docs\/)/));
+  });
+
+  test('agents:mentions refuses an agent that has no folder', () => {
+    const run = spawnSync('node', ['--import', 'tsx', CLI_PATH, 'mentions', 'ghost'], { cwd: repositoryPath('.'), encoding: 'utf8' });
+    expect(run.status).not.toBe(0);
+    expect(run.stderr).toContain('ghost has no folder');
+  });
 });
