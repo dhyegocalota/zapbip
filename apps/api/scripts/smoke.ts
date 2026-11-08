@@ -31,7 +31,7 @@ export type SmokeEntry = {
 function firstDeployInstructions(input: { environment: DeployEnvironment }): string[] {
   return [
     'First deploy: checks 2 (mcp initialize) and 5 (fake inbound) were skipped because they need the smoke connection.',
-    `Create it: from the phone you will put in ${SmokeInput.OwnerPhone}, send "novo agente smoke" to the zapbip official number (development: through the owner simulator).`,
+    `Create it: from the phone you will put in ${SmokeInput.OwnerPhone}, send "novo agente smoke" to zapbip through the start link (development: through the owner simulator).`,
     `Put the connection secret of the MCP URL in ${SmokeInput.ConnectionSecret} and that phone in ${SmokeInput.OwnerPhone} in .env.`,
     `Run it again: pnpm smoke:${input.environment}`,
   ];
