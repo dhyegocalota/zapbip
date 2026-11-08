@@ -4,8 +4,8 @@ const HASH_ALGORITHM = 'sha256';
 const HASH_ENCODING = 'base64';
 
 export const START_LINK_STYLE = [
-  ':root{color-scheme:light dark;--color-page:#f6f8f5;--color-surface:#fff;--color-text:#0e1f1a;--color-text-muted:#4b5e57;--color-border:#dce5e0;--color-signal:#25d366;--radius-card:1.25rem;--radius-tail:.375rem}',
-  '@media (prefers-color-scheme: dark){:root{--color-page:#07120f;--color-surface:#15261f;--color-text:#e8f1ed;--color-text-muted:#9db2aa;--color-border:#1f332d}}',
+  ':root{color-scheme:light dark;--color-page:#f6f8f5;--color-surface:#ffffff;--color-text:#0e1f1a;--color-text-muted:#4b5e57;--color-border:#dce5e0;--color-signal:#25d366;--radius-card:1.25rem;--radius-tail:0.375rem;}',
+  '@media (prefers-color-scheme: dark){:root{--color-page:#07120f;--color-surface:#0d1b17;--color-text:#e8f1ed;--color-text-muted:#9db2aa;--color-border:#1f332d;}}',
   'body{margin:0;min-height:100vh;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;padding:1.5rem;background:var(--color-page) radial-gradient(64rem 28rem at 50% -12rem,rgb(37 211 102/.22),transparent 70%) no-repeat;color:var(--color-text);font:1rem/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}',
   'section{box-sizing:border-box;width:100%;max-width:32rem;padding:1.5rem;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-tail) var(--radius-card) var(--radius-card) var(--radius-card);box-shadow:0 1px 2px rgb(14 31 26/.05),0 8px 24px -12px rgb(14 31 26/.12)}',
   'section:first-of-type{border-top:.25rem solid var(--color-signal)}',
