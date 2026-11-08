@@ -32,5 +32,5 @@
 
 ## Z. Prove and ship
 
-- [ ] **Tester run:** the `lifecycle` job of the PR's CI is green.
-- [ ] **/open-pr:** opened by the lead.
+- [x] **Tester run:** the `lifecycle` job of the PR's CI is green — run 42513973635, all 8 jobs, and a fresh tester ticked the test plan
+- [x] **/open-pr:** opened by the lead — PR #23

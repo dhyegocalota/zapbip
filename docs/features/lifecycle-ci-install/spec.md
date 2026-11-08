@@ -1,6 +1,6 @@
 # Lifecycle CI install
 
-**Status:** Building
+**Status:** Shipped 2026-11-08
 **Tier:** 🟢 small
 **Owner approval:** approved 2026-11-08 (lead order after main CI went red)
 **ADRs:** none
