@@ -422,6 +422,25 @@ describe('docs experience: copy', () => {
     expect(forbiddenViolations({ files, pattern: PHONE_NUMBER_LINK_PATTERN })).toEqual([]);
   });
 
+  test.each(['+55 11 99999-0001', '5511999990001', '(11) 99999-0001', '+5511999990001'])(
+    'a planted formatted number %s is reported',
+    (number) => {
+      const files = { 'get-started/how-to-start.mdx': `Message ${number} now` };
+      expect(forbiddenViolations({ files, pattern: PHONE_NUMBER_LINK_PATTERN })).toHaveLength(1);
+    },
+  );
+
+  test.each([
+    '2026-11-08',
+    '2026-11-08 12:30:45',
+    'zapbip@0.1.0',
+    'sha256 3fa91c0d77aa1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6071829',
+    'v10.4.2-rc.1',
+    'port 8787',
+  ])('the text %s is not taken for a phone number', (text) => {
+    expect(forbiddenViolations({ files: { 'page.mdx': text }, pattern: PHONE_NUMBER_LINK_PATTERN })).toEqual([]);
+  });
+
   test('a planted phone number or official-number snippet in a page is reported', () => {
     const files = { 'get-started/how-to-start.mdx': 'Message +5511999990001 or import /snippets/official-number.mdx' };
     expect(forbiddenViolations({ files, pattern: PHONE_NUMBER_LINK_PATTERN })).toEqual([
