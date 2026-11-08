@@ -1,27 +1,40 @@
 :root {
-  --color-page: #f4f7f6;
+  --color-page: #f6f8f5;
   --color-surface: #ffffff;
-  --color-text: #1b2321;
-  --color-text-muted: #4a5552;
-  --color-border: #c5cfcc;
-  --color-border-control: #6f7b78;
+  --color-sunken: #eef3ef;
+  --color-raised: #ffffff;
+  --color-header: rgb(255 255 255 / 0.88);
+  --color-text: #0e1f1a;
+  --color-text-muted: #4b5e57;
+  --color-border: #dce5e0;
+  --color-border-control: #7a8c85;
   --color-brand: #128c7e;
+  --color-on-brand: #ffffff;
+  --color-signal: #25d366;
   --color-action: #0b6b60;
+  --color-action-hover: #08564d;
   --color-on-action: #ffffff;
+  --color-success-surface: #ddf7e7;
+  --color-info-surface: #e8f3ef;
   --color-danger: #a32d2d;
+  --color-on-danger: #ffffff;
   --color-danger-surface: #fdecec;
   --color-warning: #7a4e00;
   --color-warning-surface: #fff4d6;
-  --color-info-surface: #e3f1ef;
   --color-focus: #1a56db;
-  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-sans: system-ui, -apple-system, 'Segoe UI Variable Text', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-display: ui-rounded, 'SF Pro Rounded', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --text-eyebrow: 0.75rem;
   --text-small: 0.875rem;
   --text-body: 1rem;
   --text-heading-3: 1.125rem;
   --text-heading-2: 1.375rem;
-  --text-heading-1: 1.75rem;
-  --text-figure: 2rem;
+  --text-heading-1: clamp(1.75rem, 1.4rem + 1.4vw, 2.5rem);
+  --text-figure: clamp(2rem, 1.6rem + 1.6vw, 2.75rem);
+  --text-display: clamp(4rem, 3rem + 4vw, 6rem);
+  --tracking-tight: -0.025em;
+  --tracking-eyebrow: 0.08em;
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
@@ -30,31 +43,70 @@
   --space-6: 2rem;
   --space-7: 3rem;
   --space-8: 4rem;
-  --radius-control: 0.375rem;
-  --radius-card: 0.625rem;
+  --radius-control: 0.625rem;
+  --radius-card: 1.25rem;
+  --radius-tail: 0.375rem;
+  --radius-pill: 999px;
   --size-tap: 2.75rem;
   --size-focus-ring: 3px;
   --size-focus-offset: 2px;
   --measure-page: 72rem;
   --measure-form: 32rem;
+  --measure-code: 11rem;
+  --shadow-card: 0 1px 2px rgb(14 31 26 / 0.05), 0 8px 24px -12px rgb(14 31 26 / 0.12);
+  --shadow-raised: 0 2px 4px rgb(14 31 26 / 0.06), 0 32px 64px -24px rgb(14 31 26 / 0.28);
+  --shadow-highlight: inset 0 1px 0 rgb(255 255 255 / 0.16);
+  --glow-signal: 0 0 0 4px rgb(37 211 102 / 0.18);
+  --glow-signal-faded: 0 0 0 7px rgb(37 211 102 / 0);
+  --gradient-page: radial-gradient(64rem 28rem at 50% -12rem, rgb(37 211 102 / 0.22), transparent 70%);
+  --gradient-hero-border: linear-gradient(135deg, var(--color-signal), var(--color-brand));
+  --elevation-hero: 0 2px 4px rgb(14 31 26 / 0.06), 0 24px 48px -20px rgb(37 211 102 / 0.38);
+  --pattern-dots: radial-gradient(rgb(14 31 26 / 0.07) 1px, transparent 1.5px);
+  --duration-quick: 120ms;
+  --duration-base: 220ms;
+  --duration-arrive: 420ms;
+  --duration-chart: 640ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-page: #0f1715;
-    --color-surface: #17211f;
-    --color-text: #e6edeb;
-    --color-text-muted: #a9b6b3;
-    --color-border: #2e3c39;
-    --color-border-control: #7f8f8b;
-    --color-action: #4fd1bf;
-    --color-on-action: #06231f;
+    --color-page: #07120f;
+    --color-surface: #0d1b17;
+    --color-sunken: #0a1613;
+    --color-raised: #15261f;
+    --color-header: rgb(13 27 23 / 0.88);
+    --color-text: #e8f1ed;
+    --color-text-muted: #9db2aa;
+    --color-border: #1f332d;
+    --color-border-control: #5f7a71;
+    --color-brand: #25d366;
+    --color-on-brand: #04140c;
+    --color-action: #5be39a;
+    --color-action-hover: #7deab0;
+    --color-on-action: #04140c;
+    --color-success-surface: #0f2a21;
+    --color-info-surface: #0f2a21;
     --color-danger: #ff9c9c;
+    --color-on-danger: #0d1b17;
     --color-danger-surface: #3a1e1e;
     --color-warning: #f2c46d;
     --color-warning-surface: #3a2e12;
-    --color-info-surface: #173330;
     --color-focus: #8ab4ff;
+    --shadow-card: 0 0 0 1px rgb(232 241 237 / 0.02), 0 12px 32px -16px rgb(0 0 0 / 0.7);
+    --shadow-raised: 0 0 0 1px rgb(232 241 237 / 0.04), 0 40px 80px -24px rgb(0 0 0 / 0.8);
+    --shadow-highlight: inset 0 1px 0 rgb(255 255 255 / 0.22);
+    --gradient-page: radial-gradient(64rem 28rem at 50% -12rem, rgb(37 211 102 / 0.28), transparent 70%);
+    --elevation-hero: 0 0 0 1px rgb(232 241 237 / 0.04), 0 32px 64px -20px rgb(37 211 102 / 0.32);
+    --pattern-dots: radial-gradient(rgb(232 241 237 / 0.06) 1px, transparent 1.5px);
+  }
+}
+
+@media (forced-colors: active) {
+  .card,
+  .figure {
+    border-color: CanvasText;
   }
 }
 
