@@ -10,7 +10,7 @@ import type { AgentConnectorRuntime, AgentDefinition } from '../src/contract';
 
 export type ScannedAgent = { id: string; definition: AgentDefinition; runtime: AgentConnectorRuntime | null };
 
-const SCANNED_EXTENSIONS = ['.ts', '.tsx', '.mts', '.mjs', '.sh', '.py', '.yml', '.json'];
+const SCANNED_EXTENSIONS = ['.ts', '.tsx', '.mts', '.cts', '.js', '.jsx', '.mjs', '.cjs', '.sh', '.py', '.yml', '.yaml', '.toml', '.json'];
 const GENERATED_FOLDER = 'libs/agents/src/generated/';
 const WORKFLOW_FILE = '.github/workflows/verify.yml';
 const NAVIGATION_FILE = 'apps/docs/docs.json';

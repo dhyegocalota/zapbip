@@ -22,11 +22,11 @@
   "dependencies": {
     "@zapbip/core": "workspace:*",
     "@zapbip/types": "workspace:*",
-    "marked": "18.0.11",
     "smol-toml": "1.9.1"
   },
   "devDependencies": {
     "@types/node": "24.19.2",
+    "marked": "18.0.11",
     "vitest": "5.0.5"
   }
 }

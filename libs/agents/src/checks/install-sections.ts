@@ -13,7 +13,14 @@ const STOP_CHECK_PATTERN = /^1\. If you are not .+, stop and run no other step o
 const STEP_NUMBER_PATTERN = /^\d+\. /m;
 const SUCCESS_LINE_PATTERN = /Success: \S/;
 const LINE_BREAK_PATTERN = /[\r\n\v\f\u0085\u2028\u2029]/;
+const FORMAT_CHARACTER_PATTERN = /[\p{Cf}\u2028\u2029]/u;
+const FORMAT_CHARACTER_GLOBAL_PATTERN = /\p{Cf}/gu;
+const UNSPACED_HEADING_MARKER_PATTERN = /^ {0,3}#{1,6}[^\s#]/m;
+const WHITESPACE_RUN_PATTERN = /\s+/g;
+const SENTINEL_HEADING = '\n\n## Sentinel\n';
+const EXPECTED_HEADING_COUNT = 2;
 const MAXIMUM_HEADING_DEPTH = 2;
+const PROSE_TOKEN_TYPES = ['paragraph', 'text'];
 const SET_WAKE_MODE_PATTERN = /set_wake\(\{mode: "(\w+)"/g;
 const PACKAGE_VERSION_PATTERN = /zapbip@(\S+)/g;
 
@@ -30,16 +37,25 @@ function matchesOf({ text, pattern, group = 1 }: { text: string; pattern: RegExp
   return [...text.matchAll(pattern)].map((match) => match[group] as string);
 }
 
-function headingCountOf(input: { text: string }): number {
-  let count = 0;
-  marked.walkTokens(marked.lexer(input.text), (token) => {
-    if (token.type === 'heading' && token.depth <= MAXIMUM_HEADING_DEPTH) count += 1;
+function holdsOneHeadingOnly(input: { text: string }): boolean {
+  let headingCount = 0;
+  let refusedCount = 0;
+  marked.walkTokens(marked.lexer(`${input.text}${SENTINEL_HEADING}`), (token) => {
+    if (token.type === 'heading' && token.depth <= MAXIMUM_HEADING_DEPTH) headingCount += 1;
+    const isHtml = token.type === 'html';
+    const isUnspacedMarker = PROSE_TOKEN_TYPES.includes(token.type) && UNSPACED_HEADING_MARKER_PATTERN.test(token.raw);
+    if (isHtml || isUnspacedMarker) refusedCount += 1;
   });
-  return count;
+  return headingCount === EXPECTED_HEADING_COUNT && refusedCount === 0;
+}
+
+function comparableNameOf(input: { name: string }): string {
+  return input.name.normalize('NFKC').replace(FORMAT_CHARACTER_GLOBAL_PATTERN, '').toLowerCase().replace(WHITESPACE_RUN_PATTERN, ' ').trim();
 }
 
 function duplicateNameViolationsOf(input: { entry: InstallSectionEntry; entries: InstallSectionEntry[] }): string[] {
-  const [first] = input.entries.filter((other) => other.install.productName === input.entry.install.productName);
+  const comparableName = comparableNameOf({ name: input.entry.install.productName });
+  const [first] = input.entries.filter((other) => comparableNameOf({ name: other.install.productName }) === comparableName);
   if (first === undefined || first.id === input.entry.id) return [];
   return [`${input.entry.id}: the product name ${input.entry.install.productName} is also used by ${first.id}`];
 }
@@ -50,12 +66,16 @@ function productTextViolationsOf(input: { entry: InstallSectionEntry }): string[
     { label: 'product name', value: install.productName },
     { label: 'product description', value: install.productDescription },
   ];
-  return fields.flatMap((field) =>
-    violationIf({
+  return fields.flatMap((field) => [
+    ...violationIf({
       condition: LINE_BREAK_PATTERN.test(field.value) || field.value.length > INSTALL_PRODUCT_TEXT_MAX_LENGTH,
       message: `${id}: the ${field.label} must be one line of at most ${INSTALL_PRODUCT_TEXT_MAX_LENGTH} characters`,
     }),
-  );
+    ...violationIf({
+      condition: FORMAT_CHARACTER_PATTERN.test(field.value),
+      message: `${id}: the ${field.label} must not hold format characters`,
+    }),
+  ]);
 }
 
 function caseViolationsOf(input: { sectionCase: SectionCase }): string[] {
@@ -75,8 +95,12 @@ function caseViolationsOf(input: { sectionCase: SectionCase }): string[] {
       message: `${label}: the section must open with the heading ## ${install.productName}`,
     }),
     ...violationIf({
-      condition: headingCountOf({ text }) !== 1,
+      condition: !holdsOneHeadingOnly({ text }),
       message: `${label}: the section must hold exactly one heading`,
+    }),
+    ...violationIf({
+      condition: FORMAT_CHARACTER_PATTERN.test(text),
+      message: `${label}: the section must not hold format characters`,
     }),
     ...violationIf({ condition: !STOP_CHECK_PATTERN.test(text), message: `${label}: step 1 must be the stop check` }),
     ...violationIf({

@@ -160,9 +160,6 @@ importers:
       '@zapbip/types':
         specifier: workspace:*
         version: link:../types
-      marked:
-        specifier: 18.0.11
-        version: 18.0.11
       smol-toml:
         specifier: 1.9.1
         version: 1.9.1
@@ -170,6 +167,9 @@ importers:
       '@types/node':
         specifier: 24.19.2
         version: 24.19.2
+      marked:
+        specifier: 18.0.11
+        version: 18.0.11
       vitest:
         specifier: 5.0.5
         version: 5.0.5(@types/node@24.19.2)(vite@8.3.5)

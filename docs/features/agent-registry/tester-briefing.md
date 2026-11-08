@@ -271,3 +271,10 @@ Mutation checks for the folded tests (M12), automated in `agent-registry.test.ts
 - The lifecycle proof now has its own gate (`pnpm test:lifecycle`, CI job `lifecycle`) and is out of the default suites.
 - The connector template (`fixture-connector-agent`) pins one MCP server with a strict flag and uses the shared fake client through `testing/fake-client.mjs`; the test support writes the executable for each runtime from that entry, so a scaffolded runtime needs no executable bit. Codex's decoy case writes the decoy into its own configuration through `testing/write-decoy.mjs`.
 - The earlier lifecycle runs never ran the connector suite: the filter named `@zapbip/connector`, and the package is `zapbip`.
+
+### Step 37
+
+- The heading check can refuse a legitimate section that carries inline html or a `#word` at the start of a prose line; no real section does today.
+- Names that differ only by a format character count as the same name and also trip the format-character refusal.
+- A tracked path that is a submodule or is missing from disk now fails `agents:check` instead of being skipped.
+
