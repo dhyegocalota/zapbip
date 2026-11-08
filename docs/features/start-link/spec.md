@@ -90,7 +90,7 @@ Route `apps/api/src/routes/start-link.ts`, `createStartLinkRoute({ registry, lim
 | missing client address header | `400`, plain text `bad request` (same as the install page) |
 | any other method or path under `/start/` | `404` |
 
-Security headers on every answer, in the install page's style: `Cache-Control: no-store`, `X-Robots-Tag: noindex`, `Referrer-Policy: no-referrer`, `X-Content-Type-Options: nosniff`, HSTS. The HTML page also carries `Content-Security-Policy: default-src 'none'` and has no script, no style and no external resource.
+Security headers on every answer, in the install page's style: `Cache-Control: no-store`, `X-Robots-Tag: noindex`, `Referrer-Policy: no-referrer`, `X-Content-Type-Options: nosniff`, HSTS. The HTML page also carries `Content-Security-Policy: default-src 'none'; style-src 'sha256-<hash>'`, where the hash is computed in code from the one inline style block of the "Signal" look (light and dark through `prefers-color-scheme`); it has no script, no link, no anchor and no external resource.
 
 Rate limit: reuse the `INSTALL_PAGE_LIMITER` binding (30 per 60 s) with the key `start:<clientRateKey(address)>`, so the counter is separate from the install page's, and no new binding, wrangler block or preflight check is added. (Alternative: a new `START_LINK_LIMITER` namespace; rejected as three wrangler blocks and an env type for the same numbers.)
 
