@@ -24,7 +24,9 @@ jobs:
         with:
           python-version: '3.13'
       # NB ADR 0033: generated pip install lines begin
-      - run: python3 -m pip install --require-hashes -r apps/hermes-plugin/requirements-dev.txt
+      - run: python3 -m pip install --require-hashes -r "$REQUIREMENTS"
+        env:
+          REQUIREMENTS: apps/hermes-plugin/requirements-dev.txt
       # NB ADR 0033: generated pip install lines end
       - run: pnpm format:check
       - run: pnpm typecheck
@@ -56,9 +58,13 @@ jobs:
         with:
           python-version: '3.13'
       # NB ADR 0033: generated pip install lines begin
-      - run: python3 -m pip install --require-hashes -r apps/hermes-plugin/requirements-dev.txt
+      - run: python3 -m pip install --require-hashes -r "$REQUIREMENTS"
+        env:
+          REQUIREMENTS: apps/hermes-plugin/requirements-dev.txt
       # NB ADR 0033: generated pip install lines end
-      - run: pnpm --filter "${{ matrix.filter }}" test:unit
+      - run: pnpm --filter "$FILTER" test:unit
+        env:
+          FILTER: ${{ matrix.filter }}
 
 
   security:
