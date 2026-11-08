@@ -64,7 +64,7 @@ Areas: **R** generator, **G** guard (add and remove), **I** install, **D** docs 
 ## D. Docs pages
 
 - [ ] `git diff origin/main -- apps/docs/agents apps/docs/pt-br/agents ':!*supported-agents*'` — expected: empty.
-- [ ] `git diff -M --stat` for Step 15 — expected: 22 renames at 100% into `libs/agents/supported/*/page.*.mdx`.
+- [ ] Step 15 pages — the pages are generated into `apps/docs`, so git shows 22 creates under `libs/agents/supported/*/page.*.mdx` and the `apps/docs` copies stay. Expected: each folder page is byte-identical to the page on `origin/main` (`git diff origin/main --no-index` or `git show origin/main:<page> | cmp`), 22 of 22.
 - [ ] Matrix pages — expected: the table is gone from both hand-written pages; each imports `/snippets/agents/matrix.mdx` or `/snippets/pt-br/agents/matrix.mdx` once.
 - [ ] `mint broken-links` (gate `docs`) — expected: exit 0.
 
@@ -74,7 +74,7 @@ Areas: **R** generator, **G** guard (add and remove), **I** install, **D** docs 
 - [ ] Moved `connector.test.ts` for both runtimes — expected: the same case count as the source tests had for that runtime (record the counts).
 - [ ] `apps/connector` `test:unit`, `test:e2e`, `test:packaging` — expected: green; the usage line reads `--client claude-code|codex`.
 - [ ] `local-connector.e2e.test.ts` — expected: runs once per `ConnectorClient` (2).
-- [ ] Developer pages en and pt-br — expected: the runtime paragraphs render through the snippet; their text equals the text on `origin/main`.
+- [ ] Developer pages en and pt-br — expected: `apps/docs/developers/local-connector.mdx` and its pt-br twin are byte-identical to `origin/main` (the runtime text stays hand-written because it interleaves both runtimes in one sentence); `local-connector-parity.test.ts` is green.
 
 ## P. Plugins
 

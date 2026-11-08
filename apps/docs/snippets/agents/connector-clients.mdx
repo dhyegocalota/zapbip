@@ -1,5 +1,0 @@
-Claude Code also runs without your settings files and with every built-in tool off, and the managed policy settings of Claude Code still apply.
-
-Codex runs with a read-only sandbox and with the other MCP servers it finds in your Codex configuration files turned off. If it cannot read one of those files, it does not wake Codex and leaves the message unread. It also refuses when a managed Codex file sets any key outside a short list of harmless ones, when a profile sets sandbox, approval, tools or features (or any key outside that list), when a file turns a web search switch on, or when `zapbip` is defined anywhere but your Codex home `config.toml`. Codex web search is turned off. What remains for Codex is `send_message` and a read-only shell; apps and connectors of your Codex account are not turned off, and the macOS managed preferences `com.openai.codex` still apply.
-
-If the Codex app already has the conversation open, Codex refuses to resume it. The connector then starts one new session in the same folder, which starts without the earlier conversation, and uses it from then on.

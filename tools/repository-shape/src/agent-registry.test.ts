@@ -25,7 +25,6 @@ const INSTALL_FILES = ['install.en_US.md', 'install.pt_BR.md'];
 const MATRIX_SNIPPETS = ['apps/docs/snippets/agents/matrix.mdx', 'apps/docs/snippets/pt-br/agents/matrix.mdx'];
 const MATRIX_PAGES = ['apps/docs/agents/supported-agents.mdx', 'apps/docs/pt-br/agents/supported-agents.mdx'];
 const MATRIX_TABLE_ROW_PATTERN = /^\| -{3,}/m;
-const CONNECTOR_SNIPPETS = ['apps/docs/snippets/agents/connector-clients.mdx', 'apps/docs/snippets/pt-br/agents/connector-clients.mdx'];
 const LEAK_SCANNED_EXTENSIONS = ['.ts', '.tsx', '.mts', '.mjs', '.sh', '.py', '.yml', '.json'];
 const HARNESS_FOLDER_NAMES = ['claude', 'codex', 'agents'];
 const HARNESS_TEST_FILES = ['agent-surfaces', 'delivery-docs', 'rules', 'scenarios'].map(
@@ -185,7 +184,7 @@ describe('adding an agent folder', () => {
   test('G2c: a connector agent adds the connector registry and the two connector snippets', async () => {
     const extended = await planWith({ extraRoots: [`${TESTING_ROOT}/${CONNECTOR_FIXTURE.id}`], readFile: readSource });
     expect(changedPathsOf({ base: await realPlan(), extended })).toEqual(
-      [...addedPathsOf({ fixture: CONNECTOR_FIXTURE }), `${GENERATED_FOLDER}/connector.ts`, ...CONNECTOR_SNIPPETS].sort(),
+      [...addedPathsOf({ fixture: CONNECTOR_FIXTURE }), `${GENERATED_FOLDER}/connector.ts`].sort(),
     );
     const ids = contentOf({ plan: extended, path: `${GENERATED_FOLDER}/ids.ts` });
     expect(membersOf({ source: ids, enumName: 'ConnectorClient' })).toContainEqual([CONNECTOR_FIXTURE.member, CONNECTOR_FIXTURE.id]);

@@ -14,14 +14,4 @@ export const MATRIX_SNIPPETS: Record<DocsLanguage, string> = {
   [DocsLanguage.PortugueseBrazil]: 'apps/docs/snippets/pt-br/agents/matrix.mdx',
 };
 
-export const CONNECTOR_SNIPPETS: Record<DocsLanguage, string> = {
-  [DocsLanguage.English]: 'apps/docs/snippets/agents/connector-clients.mdx',
-  [DocsLanguage.PortugueseBrazil]: 'apps/docs/snippets/pt-br/agents/connector-clients.mdx',
-};
-
-export const CONNECTOR_PARAGRAPH_FILES: Record<DocsLanguage, string> = {
-  [DocsLanguage.English]: 'connector.en.mdx',
-  [DocsLanguage.PortugueseBrazil]: 'connector.pt-br.mdx',
-};
-
 export const WORKFLOW_FILE = '.github/workflows/verify.yml';

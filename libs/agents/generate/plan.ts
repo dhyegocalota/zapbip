@@ -6,7 +6,7 @@ import type { DiscoveredAgent } from './discover';
 import { formatted } from './format';
 import { loadAgent, registryEntriesOf, type LoadedAgent } from './load';
 import { DOCS_CONFIG, GENERATED_FOLDER, MATRIX_SNIPPETS, PAGE_DIRECTORIES, WORKFLOW_FILE } from './paths';
-import { planConnectorSnippets, renderConnectorRegistry } from './render-connector';
+import { renderConnectorRegistry } from './render-connector';
 import { renderDefinitions } from './render-definitions';
 import { renderIds } from './render-ids';
 import { planInstallSections, renderInstallRegistry } from './render-install';
@@ -56,7 +56,6 @@ export async function planGeneratedFiles(input: PlanInput): Promise<GenerationPl
   const loaded = await Promise.all(input.agents.map((agent) => loadAgent({ agent })));
   const agents = resolvedAgentsOf({ loaded });
   const pages = planPages({ agents, readSource: input.readSource });
-  const connectorSnippets = planConnectorSnippets({ agents, readSource: input.readSource, listSource: input.listSource });
   const navigation = renderNavigation({ source: input.readSource(DOCS_CONFIG), agents });
   const navigationWrites = navigation.violations.length === 0 ? [{ path: DOCS_CONFIG, content: navigation.content }] : [];
   const writes = [
@@ -64,7 +63,6 @@ export async function planGeneratedFiles(input: PlanInput): Promise<GenerationPl
     ...planInstallSections({ agents }),
     ...pages.writes,
     ...matrixSnippets({ agents }),
-    ...connectorSnippets.writes,
     ...navigationWrites,
     { path: WORKFLOW_FILE, content: renderWorkflow({ source: input.readSource(WORKFLOW_FILE), agents }) },
   ];
@@ -78,7 +76,6 @@ export async function planGeneratedFiles(input: PlanInput): Promise<GenerationPl
     violations: [
       ...registryViolationsOf({ entries: registryEntriesOf({ agents: loaded }) }),
       ...pages.violations,
-      ...connectorSnippets.violations,
       ...navigation.violations,
     ],
   };

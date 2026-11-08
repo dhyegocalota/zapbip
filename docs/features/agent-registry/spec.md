@@ -103,7 +103,6 @@ libs/agents/                         @zapbip/agents
     install.test.ts                  this agent's install behaviour (moved from libs/core)
     install.<owner locale>.md        generated: the rendered section (former snapshots), `install.en_US.md` and `install.pt_BR.md`; install.standby.<owner locale>.md when standby changes it
     connector.ts, connector.test.ts  connector facet (claude-code, codex): session finder, binary, resume and new-session arguments, isolation
-    connector.en.mdx, .pt-br.mdx     connector facet: the paragraph the developer pages show for this runtime
     testing/                         connector facet: the fake binary its tests use
     plugin.ts                        plugin facet (hermes, openclaw): points at apps/<id>-plugin; its install command, version pins and hosted artifacts
     wheel.ts                         hermes only: the hosted wheel names, paths, patterns and pinned hashes (moved from libs/types)
@@ -123,7 +122,7 @@ libs/agents/                         @zapbip/agents
   testing/golden/                    pins written before any refactor: install pages, matrix rows, nav entries; `order.json` is the only order-dependent pin
 ```
 
-Generated outside the package: `apps/docs/agents/<id>.mdx`, `apps/docs/pt-br/agents/<id>.mdx`, `apps/docs/snippets/agents/matrix.mdx`, `apps/docs/snippets/pt-br/agents/matrix.mdx`, `apps/docs/snippets/agents/connector-clients.mdx`, `apps/docs/snippets/pt-br/agents/connector-clients.mdx`, and the `Agents` and `IAs` page lists in `apps/docs/docs.json`. The matrix pages `apps/docs/agents/supported-agents.mdx` and the pt-br twin stay hand-written prose that imports the generated table snippet. The developer pages `local-connector` and `background-running` import the connector-clients snippet.
+Generated outside the package: `apps/docs/agents/<id>.mdx`, `apps/docs/pt-br/agents/<id>.mdx`, `apps/docs/snippets/agents/matrix.mdx`, `apps/docs/snippets/pt-br/agents/matrix.mdx`, and the `Agents` and `IAs` page lists in `apps/docs/docs.json`. The matrix pages `apps/docs/agents/supported-agents.mdx` and the pt-br twin stay hand-written prose that imports the generated table snippet. The developer pages `local-connector` and `background-running` stay hand-written and byte-identical to main.
 
 ### Before and after
 
