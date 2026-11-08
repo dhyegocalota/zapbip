@@ -13,6 +13,7 @@ export enum MetricCell {
   TemplatesNotice = 'templates-notice',
   TemplatesQuestion = 'templates-question',
   SendsFailed = 'sends-failed',
+  WakesWoken = 'wakes-woken',
   WakeSuccess = 'wake-success',
   BudgetUsed = 'budget-used',
   BlockedPhones = 'blocked-phones',

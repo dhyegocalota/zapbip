@@ -30,6 +30,10 @@ const POLISH_KEYS = [
   'SparklineAuditMetric',
   'SparklineSummary',
   'SparklineEmpty',
+  'MetricsDeltaUp',
+  'MetricsDeltaDown',
+  'MetricsDeltaFlat',
+  'MetricsKpiWakes',
 ];
 const PLACEHOLDER_PATTERN = /\{(\w+)\}/g;
 const TEXT_CHILD_PATTERN = />\s*[A-Za-z0-9][^<>{}();=]*</;
