@@ -147,6 +147,7 @@ describe('zapbip connect', () => {
     const cliProcess = startCli({ connectionUrl: null, readDelayMs: LATE_READ_DELAY_MS });
     cliProcess.child.stdin.write(`${server.connectionLink}\n`);
     await server.waitForConnections({ count: 1 });
+    await cliProcess.waitForEvent({ event: ConnectorLogEvent.ConnectorConnected });
 
     expect(cliProcess.outputText()).toContain(ConnectorLogEvent.ConnectorConnected);
     expect(cliProcess.outputText()).not.toContain(FAKE_SECRET);

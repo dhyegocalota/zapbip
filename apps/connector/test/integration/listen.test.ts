@@ -157,6 +157,7 @@ describe('zapbip listen', () => {
   it('keeps the secret out of the process arguments and both output streams', async () => {
     const listenProcess = startListen({ readDelayMs: LATE_READ_DELAY_MS });
     await server.waitForLiveConnections({ count: 1 });
+    await listenProcess.waitForStandardError({ text: ConnectorLogEvent.ConnectorConnected });
 
     expect(listenProcess.standardError()).toContain(ConnectorLogEvent.ConnectorConnected);
     const processArguments = execFileSync('ps', ['-o', 'args=', '-p', String(listenProcess.child.pid)], { encoding: 'utf8' });
