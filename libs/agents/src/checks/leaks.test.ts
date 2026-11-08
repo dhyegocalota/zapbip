@@ -1,8 +1,9 @@
 import { describe, expect, test } from 'vitest';
 import { leakViolationsOf, withoutAgentNavigationLists, withoutGeneratedWorkflowRegions, type LeakAgent, type LeakFile } from './leaks';
 
-const ALPHA: LeakAgent = { id: 'alpha', enumMember: 'Alpha', isOrdinaryWord: false, literals: ['.alpha-home', 'ALPHA_HOME'] };
+const ALPHA: LeakAgent = { id: 'alpha', enumMember: 'Alpha', isOrdinaryWord: true, literals: ['.alpha-home', 'ALPHA_HOME'] };
 const HERMES: LeakAgent = { id: 'beta', enumMember: 'Beta', isOrdinaryWord: true, literals: [] };
+const DELTA: LeakAgent = { id: 'delta', enumMember: 'Delta', isOrdinaryWord: false, literals: [] };
 const GAMMA: LeakAgent = { id: 'gamma-bot', enumMember: 'GammaBot', isOrdinaryWord: false, literals: [] };
 const GENERATED_PREFIX = 'libs/agents/src/generated/';
 
@@ -85,15 +86,15 @@ describe('leakViolationsOf: constants, exemptions and generated regions', () => 
 });
 
 describe('leakViolationsOf: ids in every position', () => {
-  test.each(['const agents = { alpha: 1, other: 3 };', 'run alpha now', "'alpha-ide'", "'alpha.sh'", '"alpha_two"', 'alpha'])(
+  test.each(['const agents = { delta: 1, other: 3 };', 'run delta now', "'delta-ide'", "'delta.sh'", '"delta_two"', 'delta'])(
     'names an id that is not an ordinary word in %s',
     (text) => {
-      expect(leaksIn({ files: [{ path: 'tools/example.ts', text }], agents: [ALPHA] })).toEqual(['tools/example.ts:1 names alpha']);
+      expect(leaksIn({ files: [{ path: 'tools/example.ts', text }], agents: [DELTA] })).toEqual(['tools/example.ts:1 names delta']);
     },
   );
 
-  test.each(['alphabet', 'xalpha', 'alpha2'])('ignores %s, which only contains the id', (text) => {
-    expect(leaksIn({ files: [{ path: 'tools/example.ts', text }], agents: [ALPHA] })).toEqual([]);
+  test.each(['deltabet', 'xdelta', 'delta2'])('ignores %s, which only contains the id', (text) => {
+    expect(leaksIn({ files: [{ path: 'tools/example.ts', text }], agents: [DELTA] })).toEqual([]);
   });
 
   test.each(["'beta'", "'beta-ide'", "'beta.sh'", '"beta_two"', '`beta-agent`'])(
@@ -116,7 +117,7 @@ describe('leakViolationsOf: bare names', () => {
     expect(leaksIn({ files: [{ path: 'tools/example.ts', text }], agents: [GAMMA] })).toEqual(['tools/example.ts:1 names gamma-bot']);
   });
 
-  test.each(['gamma-bots', 'xgamma-bot', 'gamma-bot-two', 'developers/gamma-bot'])('ignores %s, which only contains the id', (text) => {
+  test.each(['gamma-bots', 'xgamma-bot', 'gamma-bot2', 'developers/gamma-bot'])('ignores %s, which only contains the id', (text) => {
     expect(leaksIn({ files: [{ path: 'tools/example.ts', text }], agents: [GAMMA] })).toEqual([]);
   });
 
@@ -183,7 +184,7 @@ describe('leakViolationsOf', () => {
     expect(leaksIn({ files })).toEqual([]);
   });
 
-  test.each(["'alphabet'", "'alpha-two'", 'alpha', "'xalpha'"])('ignores %s, which is not the quoted id', (text) => {
+  test.each(["'alphabet'", 'alpha', "'xalpha'"])('ignores %s, which is not the quoted id', (text) => {
     expect(leaksIn({ files: [{ path: 'tools/example.ts', text }] })).toEqual([]);
   });
 

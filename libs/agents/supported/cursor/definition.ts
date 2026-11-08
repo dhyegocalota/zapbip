@@ -3,6 +3,7 @@ import type { AgentDefinition } from '../../src/contract';
 
 export const definition: AgentDefinition = {
   enumMember: 'Cursor',
+  idIsOrdinaryWord: true,
   docs: {
     matrixName: {
       [DocsLanguage.English]: 'Cursor',

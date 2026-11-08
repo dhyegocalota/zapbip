@@ -380,11 +380,11 @@ describe('poll state', () => {
 describe('handoff', () => {
   it('marks the primary message read and stores the copy for the standby', async () => {
     const result = await inRepositories({
-      agents: [STANDBY_AGENT, 'grok-web-primary'],
+      agents: [STANDBY_AGENT, 'primary-agent'],
       run: async ({ inbox, storage }) => {
-        await inbox.insertMessage({ message: ownerMessage({ messageId: 'm1', agent: 'grok-web-primary' }) });
+        await inbox.insertMessage({ message: ownerMessage({ messageId: 'm1', agent: 'primary-agent' }) });
         const copy = { ...ownerMessage({ messageId: 'c1', agent: STANDBY_AGENT }), originMessageId: 'm1' };
-        await inbox.insertHandoff({ copy, primaryAgent: 'grok-web-primary', handedTo: STANDBY_AGENT });
+        await inbox.insertHandoff({ copy, primaryAgent: 'primary-agent', handedTo: STANDBY_AGENT });
         return {
           primary: readMessageRow({ storage, messageId: 'm1' }),
           copyRow: readMessageRow({ storage, messageId: 'c1' }),
@@ -402,12 +402,12 @@ describe('handoff', () => {
 
   it('rolls the copy back when the primary update fails', async () => {
     const result = await inRepositories({
-      agents: [STANDBY_AGENT, 'grok-web-primary'],
+      agents: [STANDBY_AGENT, 'primary-agent'],
       run: async ({ inbox, storage }) => {
-        await inbox.insertMessage({ message: ownerMessage({ messageId: 'm1', agent: 'grok-web-primary' }) });
+        await inbox.insertMessage({ message: ownerMessage({ messageId: 'm1', agent: 'primary-agent' }) });
         storage.sql.exec("CREATE TRIGGER block_update BEFORE UPDATE ON inbox_messages BEGIN SELECT RAISE(ABORT, 'blocked'); END");
         const copy = { ...ownerMessage({ messageId: 'c1', agent: STANDBY_AGENT }), originMessageId: 'm1' };
-        const failure = await inbox.insertHandoff({ copy, primaryAgent: 'grok-web-primary', handedTo: STANDBY_AGENT }).then(
+        const failure = await inbox.insertHandoff({ copy, primaryAgent: 'primary-agent', handedTo: STANDBY_AGENT }).then(
           () => null,
           (error: Error) => error,
         );

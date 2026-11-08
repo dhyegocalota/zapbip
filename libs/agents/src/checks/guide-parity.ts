@@ -15,10 +15,10 @@ const STANDBY_AGENT = 'standby';
 const HEADING_PATTERN = /^## .+$/m;
 const STEP_START_PATTERN = /\n\d+\. /g;
 const ACTION_PATTERN =
-  /claude mcp remove|claude mcp add|gemini mcp add|npx zapbip(?:@\S+)? (?:connect|listen|channel)|set_wake|claude -p|codex exec|gemini -p|check_inbox|send_message/g;
+  /claude mcp remove|[a-z]+ mcp add|npx zapbip(?:@\S+)? (?:connect|listen|channel)|set_wake|[a-z]+ (?:exec|-p)(?![\w-])|check_inbox|send_message/g;
 const WAKE_MODE_PATTERN = /mode: "(\w+)"/g;
 const VERSION_PATTERN = /@\S+/;
-const SELF_TEST_COMMAND_PATTERN = /`((?:claude -p "Call|codex exec -c|gemini -p)[^`]*)`/;
+const SELF_TEST_COMMAND_PATTERN = /`((?:[a-z]+ -p "Call|[a-z]+ exec -c|[a-z]+ -p)[^`]*)`/;
 const SELF_TEST_ACTION = 'send_message';
 
 const LANGUAGE_LABEL: Record<DocsLanguage, string> = {

@@ -3,6 +3,7 @@ import type { AgentDefinition } from '../../src/contract';
 
 export const definition: AgentDefinition = {
   enumMember: 'GrokBot',
+  idIsOrdinaryWord: false,
   docs: {
     matrixName: {
       [DocsLanguage.English]: 'Grok Bot',

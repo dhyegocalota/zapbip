@@ -32,7 +32,7 @@ import type { PluginEndToEndModule } from '../../../../scripts/e2e/clients/plugi
 import { startTlsFront, type TlsFront } from '../../../../scripts/e2e/clients/tls-front';
 import type { ScreenEntry } from '../../src/contract/account-inbox-rpc';
 import { McpToolName } from '../../src/contract/tool-definitions';
-import { type IsolatedStack, startIsolatedStack } from './claude-code-stack';
+import { type IsolatedStack, startIsolatedStack } from './isolated-stack';
 import type { StackContext, WakeAccount } from './global-setup';
 import { callTool, mcpUrl } from './stack';
 
@@ -454,7 +454,7 @@ describe.skipIf(!isEnabled)('channel plugins against the development stack', () 
         allowedUsers: OWNER_SENDER,
         hasMcpServer: false,
       });
-      const token = 'ping-command-openclaw';
+      const token = 'ping-command-npm';
       await postOwnerText({ account: client.account, text: `/status ${token}`, forwarded: true });
       await awaitScreenText({ account: client.account, text: replyTo({ token }) });
       const [request] = fakeModel.requestsMentioning({ text: token });

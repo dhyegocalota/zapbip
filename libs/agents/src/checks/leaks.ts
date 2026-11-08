@@ -1,3 +1,5 @@
+import { constantNameOf } from '../identifiers';
+
 export type LeakAgent = { id: string; enumMember: string; isOrdinaryWord: boolean; literals: string[] };
 export type LeakFile = { path: string; text: string };
 
@@ -17,23 +19,25 @@ function ownedPrefixesOf(input: { agent: LeakAgent }): string[] {
 }
 
 function namingPatternOf(input: { agent: LeakAgent; includeLiterals: boolean }): RegExp {
-  const memberReference = `\\b(?:${AGENT_ENUM_NAMES.join('|')})\\.${input.agent.enumMember}\\b`;
-  const folderReference = `supported/${input.agent.id}(?![\\w-])`;
-  const quotedIdReference = `(['"\`])${escapedOf({ text: input.agent.id })}\\1`;
-  const isHyphenated = input.agent.id.includes('-');
-  const bareIdReferences = isHyphenated ? [`(?<![\\w.-])(?<!developers/)${escapedOf({ text: input.agent.id })}(?![\\w-])`] : [];
-  const productWordReference = `${escapedOf({ text: input.agent.enumMember })}(?![a-z])`;
-  const pluginFolderReference = `apps/${escapedOf({ text: input.agent.id })}-plugin`;
-  const constantWord = input.agent.id.toUpperCase().replaceAll('-', '_');
+  const { agent } = input;
+  const id = escapedOf({ text: agent.id });
+  const memberReference = `\\b(?:${AGENT_ENUM_NAMES.join('|')})\\.${agent.enumMember}\\b`;
+  const folderReference = `supported/${id}(?![\\w-])`;
+  const quotedIdReference = `(['"\`])${id}\\1`;
+  const quotedIdPrefixReference = `['"\`]${id}[-._]`;
+  const bareIdReference = `(?<![A-Za-z0-9])(?<!developers/)${id}(?![A-Za-z0-9])`;
+  const idReferences = agent.isOrdinaryWord ? [quotedIdReference, quotedIdPrefixReference] : [bareIdReference];
+  const productWordReference = `${escapedOf({ text: agent.enumMember })}(?![a-z])`;
+  const pluginFolderReference = `apps/${id}-plugin`;
+  const constantWord = constantNameOf({ id: agent.id });
   const constantReference = `(?<![A-Z0-9])${escapedOf({ text: constantWord })}(?![A-Z0-9])`;
-  const literals = input.includeLiterals ? input.agent.literals : [];
+  const literals = input.includeLiterals ? agent.literals : [];
   const literalReferences = literals.map((literal) => `(?<![\\w])${escapedOf({ text: literal })}(?![\\w])`);
   return new RegExp(
     [
       memberReference,
       folderReference,
-      quotedIdReference,
-      ...bareIdReferences,
+      ...idReferences,
       productWordReference,
       pluginFolderReference,
       constantReference,

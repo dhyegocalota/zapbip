@@ -3,6 +3,7 @@ import type { AgentDefinition } from '../../src/contract';
 
 export const definition: AgentDefinition = {
   enumMember: 'AnyMcpClient',
+  idIsOrdinaryWord: false,
   docs: {
     matrixName: {
       [DocsLanguage.English]: 'Any app with MCP (Model Context Protocol)',

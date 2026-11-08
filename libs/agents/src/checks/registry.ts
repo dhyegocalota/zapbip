@@ -1,4 +1,5 @@
 import type { AgentDefinition } from '../contract';
+import { constantNameOf, pascalCaseOf } from '../identifiers';
 
 export type RegistryEntry = { id: string; definition: AgentDefinition | null };
 
@@ -43,6 +44,29 @@ function duplicateViolationsOf(input: { entries: RegistryEntry[] }): string[] {
   });
 }
 
+function derivedNameViolationsOf(input: { ids: string[] }): string[] {
+  const derivations = [pascalCaseOf, constantNameOf];
+  return derivations.flatMap((derive) => {
+    const names = input.ids.map((id) => ({ id, name: derive({ id }) }));
+    const collidingNames = [
+      ...new Set(
+        names.filter((entry, index) => names.findIndex((other) => other.name === entry.name) !== index).map((entry) => entry.name),
+      ),
+    ];
+    return collidingNames.map(
+      (name) =>
+        `${names
+          .filter((entry) => entry.name === name)
+          .map((entry) => entry.id)
+          .join(' and ')} both derive the name ${name}`,
+    );
+  });
+}
+
 export function registryViolationsOf(input: { entries: RegistryEntry[] }): string[] {
-  return [...input.entries.flatMap((entry) => entryViolationsOf({ entry })), ...duplicateViolationsOf({ entries: input.entries })];
+  return [
+    ...input.entries.flatMap((entry) => entryViolationsOf({ entry })),
+    ...duplicateViolationsOf({ entries: input.entries }),
+    ...derivedNameViolationsOf({ ids: input.entries.map((entry) => entry.id) }),
+  ];
 }

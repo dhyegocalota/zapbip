@@ -12,6 +12,7 @@ export type WakeIsolation = { isolationArguments: string[]; cleanup: () => Promi
 
 export type AgentDefinition = {
   enumMember: string;
+  idIsOrdinaryWord: boolean;
   docs: {
     matrixName: Record<DocsLanguage, string>;
     linkName: Record<DocsLanguage, string>;

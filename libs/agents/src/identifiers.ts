@@ -1,7 +1,16 @@
+const KEBAB_SEGMENT_PATTERN = /-([a-z0-9])/g;
+const ID_SEPARATOR = '-';
+const CONSTANT_SEPARATOR = '_';
+
+export function camelCaseOf(input: { id: string }): string {
+  return input.id.replace(KEBAB_SEGMENT_PATTERN, (_segment, letter: string) => letter.toUpperCase());
+}
+
 export function pascalCaseOf(input: { id: string }): string {
-  throw new Error(`pascalCaseOf is not implemented for ${input.id}`);
+  const camelCase = camelCaseOf(input);
+  return `${camelCase.charAt(0).toUpperCase()}${camelCase.slice(1)}`;
 }
 
 export function constantNameOf(input: { id: string }): string {
-  throw new Error(`constantNameOf is not implemented for ${input.id}`);
+  return input.id.toUpperCase().replaceAll(ID_SEPARATOR, CONSTANT_SEPARATOR);
 }

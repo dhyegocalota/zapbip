@@ -1,8 +1,13 @@
 import { GenerationMode, applyValidPlan, pendingDeletionsOf, staleWritesOf, writePlan } from './write';
+import { existsSync, readFileSync } from 'node:fs';
+import { DocsLanguage } from '@zapbip/types';
+import { AgentFacet } from '../src/contract';
 import { discoverAgents } from './discover';
+import { loadAgent } from './load';
+import { registryCheckViolationsOf } from './registry-checks';
+import { repositoryPath } from './repository';
 import { planGeneratedFiles, type GenerationPlan } from './plan';
 import { SUPPORTED_FOLDER } from './repository';
-import { loadAgent } from './load';
 import { mentionsOf } from './mentions';
 import { GENERATED_FOLDER } from './paths';
 import { ScaffoldKind, scaffoldFilesOf } from './scaffold';
@@ -19,6 +24,7 @@ type CliHandler = (input: { argv: string[] }) => Promise<number>;
 
 const FAILURE_EXIT_CODE = 1;
 const SUCCESS_EXIT_CODE = 0;
+const PLUGIN_FOLDER_SUFFIX = '-plugin';
 const RECORD_PREFIXES = ['docs/', 'pnpm-lock.yaml'];
 const NEXT_STEP_HINT = 'edit the names and the copy, then run pnpm agents:generate';
 
@@ -33,11 +39,36 @@ async function generate(): Promise<number> {
   return plan.violations.length === 0 ? SUCCESS_EXIT_CODE : FAILURE_EXIT_CODE;
 }
 
+async function registryCheckViolations(): Promise<string[]> {
+  const loaded = await Promise.all(discoverAgents({ roots: [SUPPORTED_FOLDER] }).map((agent) => loadAgent({ agent })));
+  const agents = loaded.map((agent) => ({
+    ...agent,
+    guides: {
+      [DocsLanguage.English]: agent.facets.includes(AgentFacet.EnglishPage) ? readSource(`${agent.folder}/${AgentFacet.EnglishPage}`) : '',
+      [DocsLanguage.PortugueseBrazil]: agent.facets.includes(AgentFacet.PortuguesePage)
+        ? readSource(`${agent.folder}/${AgentFacet.PortuguesePage}`)
+        : '',
+    },
+  }));
+  const hostedFilenames = agents.flatMap((agent) =>
+    agent.plugin === null ? [] : agent.plugin.hostedArtifacts.map((artifact) => artifact.filename),
+  );
+  const sources = {
+    applicationPluginFolders: listSource('apps')
+      .filter((name) => name.endsWith(PLUGIN_FOLDER_SUFFIX))
+      .map((name) => `apps/${name}`),
+    readFile: (path: string) => (existsSync(repositoryPath(path)) ? readFileSync(repositoryPath(path)) : null),
+    servedFilenames: hostedFilenames,
+  };
+  return registryCheckViolationsOf({ agents, files: trackedTextFiles(), sources });
+}
+
 async function check(): Promise<number> {
   const plan = await planFromDisk();
+  const violations = [...plan.violations, ...(await registryCheckViolations())];
   writePlan({ plan, mode: GenerationMode.Check }).forEach((problem) => console.log(problem));
-  plan.violations.forEach((violation) => console.log(violation));
-  const counts = [staleWritesOf({ plan }).length, pendingDeletionsOf({ plan }).length, plan.violations.length];
+  violations.forEach((violation) => console.log(violation));
+  const counts = [staleWritesOf({ plan }).length, pendingDeletionsOf({ plan }).length, violations.length];
   console.log(`${counts[0]} stale, ${counts[1]} deletions, ${counts[2]} violations`);
   return counts.every((count) => count === 0) ? SUCCESS_EXIT_CODE : FAILURE_EXIT_CODE;
 }

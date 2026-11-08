@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
 import { hasValidAgentId } from '../src/checks/registry';
-import { displayNameOf, pascalCaseOf } from './identifiers';
+import { constantNameOf, displayNameOf, pascalCaseOf } from './identifiers';
 import type { GeneratedFile } from './plan';
 import { SUPPORTED_FOLDER } from './repository';
 
@@ -78,6 +78,19 @@ function copiedFiles(input: {
   });
 }
 
+const NAME_DERIVATIONS = [pascalCaseOf, constantNameOf];
+
+function collisionOf(input: { id: string; existingIds: string[] }): string | null {
+  const collisions = input.existingIds.flatMap((other) =>
+    NAME_DERIVATIONS.flatMap((derive) =>
+      derive({ id: other }) === derive({ id: input.id }) ? [`${input.id} collides with ${other} on ${derive({ id: input.id })}`] : [],
+    ),
+  );
+  const [collision] = collisions;
+  if (collision === undefined) return null;
+  return collision;
+}
+
 export function scaffoldFilesOf(input: {
   id: string;
   kind: ScaffoldKind;
@@ -87,6 +100,8 @@ export function scaffoldFilesOf(input: {
 }): GeneratedFile[] {
   if (!hasValidAgentId({ id: input.id })) throw new Error(`${input.id} is not a valid agent id`);
   if (input.existingIds.includes(input.id)) throw new Error(`${input.id} already exists`);
+  const collision = collisionOf({ id: input.id, existingIds: input.existingIds });
+  if (collision !== null) throw new Error(collision);
   const template = TEMPLATES[input.kind];
   const agentFiles = copiedFiles({
     ...input,

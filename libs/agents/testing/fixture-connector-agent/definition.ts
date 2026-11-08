@@ -3,6 +3,7 @@ import type { AgentDefinition } from '../../src/contract';
 
 export const definition: AgentDefinition = {
   enumMember: 'FixtureConnectorAgent',
+  idIsOrdinaryWord: false,
   docs: {
     matrixName: { [DocsLanguage.English]: 'Fixture Connector Agent', [DocsLanguage.PortugueseBrazil]: 'Agente conector de teste' },
     linkName: { [DocsLanguage.English]: 'Fixture Connector Agent', [DocsLanguage.PortugueseBrazil]: 'Agente conector de teste' },
