@@ -456,7 +456,7 @@ fieldset {
 }
 
 fieldset + fieldset {
-  padding-top: var(--space-5);
+  padding-top: var(--space-3);
   border-top: 1px solid var(--color-border);
 }
 
@@ -471,6 +471,16 @@ legend {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
   gap: 0 var(--space-5);
+}
+
+.form-card .field {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-card .field > input,
+.form-card .field > select {
+  margin-top: auto;
 }
 
 .form-card fieldset > .field-help {
@@ -823,6 +833,16 @@ main > .notice {
   font-weight: 600;
 }
 
+.summary-table td {
+  width: 8rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.summary-table th[scope='row'] {
+  font-weight: 500;
+}
+
 .data-table .mono {
   overflow-wrap: anywhere;
 }
@@ -871,6 +891,12 @@ main > .notice {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-bubble);
   box-shadow: var(--shadow-card);
+}
+
+.card .figure {
+  border-color: transparent;
+  background: var(--color-sunken);
+  box-shadow: none;
 }
 
 .figure p {
@@ -1135,7 +1161,7 @@ main > .notice {
 
   .nav-link {
     flex: none;
-    padding: 0 var(--space-3);
+    padding: 0 var(--space-2);
     white-space: nowrap;
   }
 
@@ -1210,6 +1236,10 @@ main > .notice {
     min-width: 0;
     overflow-wrap: anywhere;
     text-align: right;
+  }
+
+  .data-table td:empty {
+    display: none;
   }
 
   .data-table td::before {

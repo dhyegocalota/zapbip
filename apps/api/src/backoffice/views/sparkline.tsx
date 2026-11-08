@@ -6,6 +6,7 @@ const VIEW_HEIGHT = 56;
 const VERTICAL_MARGIN = 6;
 const HORIZONTAL_MARGIN = 4;
 const BASELINE_Y = VIEW_HEIGHT - VERTICAL_MARGIN;
+const EMPTY_TOP = 34;
 const DOT_RADIUS = 3;
 const TITLE_SEPARATOR = ' ';
 const POINT_SEPARATOR = ' ';
@@ -52,7 +53,11 @@ export function Sparkline(props: { locale: OwnerLocale; metricLabel: string; val
   const firstPoint = points.at(0);
   return (
     <>
-      <svg class="sparkline" viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`} role="img">
+      <svg
+        class="sparkline"
+        viewBox={isEmpty ? `0 ${EMPTY_TOP} ${VIEW_WIDTH} ${VIEW_HEIGHT - EMPTY_TOP}` : `0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}
+        role="img"
+      >
         <title>{title}</title>
         {firstPoint === undefined || lastPoint === undefined ? null : (
           <>
