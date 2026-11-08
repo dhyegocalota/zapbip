@@ -12,6 +12,7 @@ import { DeployEnvironment } from '../../src/contract/deploy-environment';
 const BACKOFFICE_ROOT = join(import.meta.dirname, '../../src/backoffice');
 const STYLESHEET = readFileSync(join(BACKOFFICE_ROOT, 'assets/backoffice.css'), 'utf8');
 const RAW_COLOUR_PATTERN = /#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bhsla?\(/;
+const FORCED_COLORS_PATTERN = /@media \(forced-colors: active\)/;
 const TOKEN_BLOCK_PATTERN = /:root\s*\{[^}]*\}/g;
 
 const PAGE = {
@@ -76,5 +77,9 @@ describe('design rules', () => {
 
   it('defines a token block for light and a second one for dark', () => {
     expect(STYLESHEET.match(TOKEN_BLOCK_PATTERN)).toHaveLength(2);
+  });
+
+  it('adapts to forced colors', () => {
+    expect(STYLESHEET).toMatch(FORCED_COLORS_PATTERN);
   });
 });
