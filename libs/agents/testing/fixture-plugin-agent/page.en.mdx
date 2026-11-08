@@ -14,8 +14,14 @@ Wake type: **Local**. Fixture Plugin Agent runs a listener on your computer. Whe
 ## Set up from zero
 
 1. Message the zapbip number on WhatsApp.
-2. Ask for a new agent and paste the line into Fixture Plugin Agent.
+2. Ask for a new agent and run the install command below and add the connection link to the Fixture Plugin Agent settings.
+
+```bash
+pip install --require-hashes --requirement https://mcp.zapbip.com/pkg/fixture-requirements.txt # sha256:f8b152ba844aebd2474b64425ae83702e9b8ed88b0132a7f6f29974bfa6db5eb
+```
 
 ## Check it works
 
 Ask Fixture Plugin Agent to send `✅ installed` to your WhatsApp.
+
+Run only one listener per agent: the plugin or `npx zapbip@0.1.0 listen`, never both. A second listener replaces the first.

@@ -13,8 +13,8 @@ export const definition: AgentDefinition = {
       [DocsLanguage.PortugueseBrazil]: 'Hermes',
     },
     pageFacts: {
-      [DocsLanguage.English]: ['chmod 600', 'check_inbox'],
-      [DocsLanguage.PortugueseBrazil]: ['chmod 600', 'check_inbox'],
+      [DocsLanguage.English]: ['chmod 600', 'check_inbox', 'ZAPBIP_CONNECTION_LINK', 'ZAPBIP_ALLOWED_USERS'],
+      [DocsLanguage.PortugueseBrazil]: ['chmod 600', 'check_inbox', 'ZAPBIP_CONNECTION_LINK', 'ZAPBIP_ALLOWED_USERS'],
     },
     speakerNames: ['Hermes'],
   },

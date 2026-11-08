@@ -13,8 +13,20 @@ export const definition: AgentDefinition = {
       [DocsLanguage.PortugueseBrazil]: 'OpenClaw',
     },
     pageFacts: {
-      [DocsLanguage.English]: ['chmod 600', 'check_inbox'],
-      [DocsLanguage.PortugueseBrazil]: ['chmod 600', 'check_inbox'],
+      [DocsLanguage.English]: [
+        'chmod 600',
+        'check_inbox',
+        '"plugins": { "entries": { "zapbip": { "enabled": true } } }',
+        '"channels": { "zapbip": { "connectionLink"',
+        'plugin_reply_failed',
+      ],
+      [DocsLanguage.PortugueseBrazil]: [
+        'chmod 600',
+        'check_inbox',
+        '"plugins": { "entries": { "zapbip": { "enabled": true } } }',
+        '"channels": { "zapbip": { "connectionLink"',
+        'plugin_reply_failed',
+      ],
     },
     speakerNames: ['OpenClaw'],
   },

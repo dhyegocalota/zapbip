@@ -1,4 +1,5 @@
 import { DocsLanguage } from '@zapbip/types';
+import { pageRuleViolationsOf } from '../src/checks/pages';
 import { AgentFacet } from '../src/contract';
 import { AGENT_PAGE_HEADINGS, AGENT_PAGE_SECTIONS, agentPagePathOf } from '../src/docs';
 import type { ResolvedAgent } from './agent';
@@ -30,7 +31,14 @@ function pageViolationsOf(input: { agent: ResolvedAgent; language: DocsLanguage;
   const factViolations = input.agent.definition.docs.pageFacts[input.language]
     .filter((fact) => !input.page.includes(fact))
     .map((fact) => `${label}: the page fact "${fact}" is missing`);
-  return [...headingViolations, ...factViolations];
+  const ruleViolations = pageRuleViolationsOf({
+    label,
+    language: input.language,
+    page: input.page,
+    hasInstall: input.agent.install !== null,
+    plugin: input.agent.plugin,
+  });
+  return [...headingViolations, ...factViolations, ...ruleViolations];
 }
 
 function planPage(input: { agent: ResolvedAgent; language: DocsLanguage; readSource: (path: string) => string }): {

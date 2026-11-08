@@ -13,7 +13,7 @@ const ENGLISH_FACT = fixtureDefinition.docs.pageFacts[DocsLanguage.English][0] a
 const PORTUGUESE_FACT = fixtureDefinition.docs.pageFacts[DocsLanguage.PortugueseBrazil][0] as string;
 
 function pageOf(input: { headings: string[]; fact: string }): string {
-  return `---\ntitle: Fixture\n---\n\n${input.headings.map((heading) => `## ${heading}\n\n${input.fact}\n`).join('\n')}`;
+  return `---\ntitle: Fixture\ndescription: Fixture page.\n---\n\n${input.headings.map((heading) => `## ${heading}\n\n${input.fact}\n`).join('\n')}`;
 }
 
 function sourcesOf(input: { english: string; portuguese: string }): (path: string) => string {
