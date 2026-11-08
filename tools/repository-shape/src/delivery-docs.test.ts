@@ -39,15 +39,15 @@ const FEATURE_PACKAGES = ['libs/types', 'libs/core', 'apps/api', 'apps/docs'];
 const NESTED_PATH_PATTERN = /\/.*$/;
 const TEMPORARY_SEGMENT_PATTERN =
   /(^|\/)(spikes?|poc|prototypes?|experiments?|scratch|scratchpad|playground|sandbox|tmp|temp|wip|backups?)(\/|$)/i;
-const LINK_PATTERN = /\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g;
-const REFERENCE_LINK_PATTERN = /^\s{0,3}\[[^\]]+\]:\s*(\S+)/gm;
-const ANCHOR_HREF_PATTERN = /<a\s[^>]*href=["']([^"']+)["']/gi;
+const LINK_PATTERN = /\]\(\s*([^)\s]+)(?:\s+(?:"[^"]*"|'[^']*'|\([^)]*\)))?\s*\)/g;
+const REFERENCE_LINK_PATTERN = /^\s{0,3}\[(?!\^)[^\]]+\]:\s*(\S+)/gm;
+const ANCHOR_HREF_PATTERN = /<a\s[^>]*href\s*=\s*["']?([^"'\s>]+)/gi;
 const AUTOLINK_PATTERN = /<([^<>\s]+)>/g;
 const HTML_PRE_PATTERN = /<pre[\s>]/gi;
 const HTML_CODE_PATTERN = /<code[\s>]/gi;
-const INDENTED_BLOCK_PATTERN = /^(?: {4}|\t)\S.*$/gm;
+const INDENTED_BLOCK_PATTERN = /^(?: {4}| {0,3}\t)[^\S\n]*\S.*$/gm;
 const HEADING_PATTERN = /^#{1,6} (.+)$/gm;
-const FENCED_BLOCK_PATTERN = /(```|~~~)[\s\S]*?\1/g;
+const FENCED_BLOCK_PATTERN = /(```|~~~)[\s\S]*?(?:\1|$)/g;
 const INLINE_CODE_PATTERN = /`(?:[^`\n]|\n(?!\s*\n))*`/g;
 const SLUG_DISALLOWED_PATTERN = /[^a-z0-9 -]/g;
 const SPACE_PATTERN = / /g;
@@ -55,6 +55,7 @@ const EXTERNAL_LINK_PATTERN = /^(https?:|mailto:|\/\/|#)/;
 const FIXTURE_PLUGIN_PACKAGE = 'libs/agents/testing/fixture-plugin-package';
 const FOLDER_SUFFIX = '/';
 const ANCHOR_SEPARATOR = '#';
+const MAILBOX_MARKER = '@';
 const MARKDOWN_EXTENSION = '.md';
 
 enum PurposeViolation {
@@ -99,6 +100,7 @@ function brokenTargets({ document, text }: { document: string; text: string }): 
 function isFileLink(target: string): boolean {
   const path = pathOf(target);
   if (path.endsWith(FOLDER_SUFFIX)) return false;
+  if (path.includes(MAILBOX_MARKER)) return false;
   return posix.extname(path) !== '';
 }
 
@@ -108,7 +110,7 @@ function purposeViolations(text: string): string[] {
   const fencedBlocks = [...text.matchAll(FENCED_BLOCK_PATTERN)].map(() => PurposeViolation.FencedBlock);
   const codeSpans = [...withoutFences.matchAll(INLINE_CODE_PATTERN)].map(() => PurposeViolation.CodeSpan);
   const codeElements = [...withoutFences.matchAll(HTML_CODE_PATTERN)].map(() => PurposeViolation.CodeSpan);
-  const preformattedElements = [...withoutFences.matchAll(HTML_PRE_PATTERN)].map(() => PurposeViolation.FencedBlock);
+  const preformattedElements = [...withoutFences.matchAll(HTML_PRE_PATTERN)].map(() => PurposeViolation.PreformattedBlock);
   const indentedBlocks = [...withoutFences.matchAll(INDENTED_BLOCK_PATTERN)].map(() => PurposeViolation.IndentedBlock);
   const fileLinks = [LINK_PATTERN, REFERENCE_LINK_PATTERN, ANCHOR_HREF_PATTERN, AUTOLINK_PATTERN]
     .flatMap((pattern) => capturedNames({ text: prose, pattern }))
