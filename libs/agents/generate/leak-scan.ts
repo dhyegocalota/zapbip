@@ -20,6 +20,7 @@ const FULLY_EXEMPT_FILES = [
   '.agents/hooks/hooks.test.sh',
   '.agents/skills/brainstorming/scripts/start-server.sh',
   'libs/agents/src/checks/leaks.test.ts',
+  'libs/agents/generate/leak-scan.ts',
   'tools/repository-shape/src/agent-registry.test.ts',
   ...['agent-surfaces', 'delivery-docs', 'rules', 'scenarios'].map((name) => `tools/repository-shape/src/${name}.test.ts`),
 ];

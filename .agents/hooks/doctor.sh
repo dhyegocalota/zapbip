@@ -48,7 +48,8 @@ python_requirements_install() {
   local file commands=""
   for file in "$root"/apps/*-plugin/requirements-dev.txt; do
     [[ -f "$file" ]] || continue
-    commands+="${commands:+ && }python3 -m pip install --require-hashes -r ${file#"$root"/}"
+    [[ "${file#"$root"/}" =~ ^[A-Za-z0-9._/-]+$ ]] || { echo "doctor: skipped the plugin folder ${file#"$root"/}: its name has characters outside A-Za-z0-9._/-" >&2; continue; }
+    commands+="${commands:+ && }python3 -m pip install --require-hashes -r $(printf '%q' "${file#"$root"/}")"
   done
   echo "$commands"
 }

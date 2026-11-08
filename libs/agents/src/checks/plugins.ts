@@ -15,6 +15,7 @@ type PluginCheckInput = { entry: PluginCheckEntry; sources: PluginCheckSources }
 type ArtifactCheckInput = PluginCheckInput & { artifact: HostedArtifact };
 
 const WORKFLOW_FILTER_PATTERN = /^[@\w/.-]+$/;
+const PACKAGE_FOLDER_PATTERN = /^[A-Za-z0-9._/-]+$/;
 const WORKFLOW_NAME_PATTERN = /^[\w/.-]+$/;
 const REQUIREMENTS_PATH_PATTERN = /^[\w/.-]+$/;
 const SHA256_PATTERN = /^[0-9a-f]{64}$/;
@@ -112,6 +113,10 @@ export function pluginWorkflowViolationsOf(input: { entries: PluginCheckEntry[] 
         pythonRequirements.startsWith(`${plugin.packageFolder}/`) &&
         !pythonRequirements.includes('..'));
     return [
+      ...violationIf({
+        condition: !PACKAGE_FOLDER_PATTERN.test(plugin.packageFolder),
+        message: `${id}: the package folder must match ${PACKAGE_FOLDER_PATTERN.source}`,
+      }),
       ...violationIf({
         condition: !WORKFLOW_NAME_PATTERN.test(name),
         message: `${id}: the workflow name must match ${WORKFLOW_NAME_PATTERN.source}`,

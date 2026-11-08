@@ -51,18 +51,20 @@ export function isOutside(input: { path: string; prefixes: string[] }): boolean 
 }
 
 export function createThrowawayWorktree(): { directory: string; remove: () => void } {
-  const directory = join(mkdtempSync(join(tmpdir(), 'zapbip-worktree-')), 'tree');
+  const parent = mkdtempSync(join(tmpdir(), 'zapbip-worktree-'));
+  const directory = join(parent, 'tree');
   return {
     directory,
     remove: () => {
       if (IS_INSIDE_PROOF) return;
       run({ command: ['git', 'worktree', 'remove', '--force', directory], directory: REPOSITORY_ROOT });
-      rmSync(directory, { recursive: true, force: true });
+      rmSync(parent, { recursive: true, force: true });
     },
   };
 }
 
 export function checkOutHead(input: { directory: string }): CommandOutcome {
+  run({ command: ['git', 'worktree', 'prune'], directory: REPOSITORY_ROOT });
   return run({ command: ['git', 'worktree', 'add', '--detach', input.directory, 'HEAD'], directory: REPOSITORY_ROOT });
 }
 

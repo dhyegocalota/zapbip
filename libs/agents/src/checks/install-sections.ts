@@ -1,3 +1,4 @@
+import { marked } from 'marked';
 import { INSTALL_PRODUCT_TEXT_MAX_LENGTH, INSTALL_SELF_TEST_TEXT, OwnerLocale, ZAPBIP_NPM_VERSION } from '@zapbip/types';
 import type { AgentDefinition, AgentInstall } from '../contract';
 import { violationIf } from './registry';
@@ -11,10 +12,8 @@ const STANDBY_AGENT_OPTIONS: (string | null)[] = [null, 'Ana Bot'];
 const STOP_CHECK_PATTERN = /^1\. If you are not .+, stop and run no other step of this section\. Success: .+$/m;
 const STEP_NUMBER_PATTERN = /^\d+\. /m;
 const SUCCESS_LINE_PATTERN = /Success: \S/;
-const HEADING_LINE_PATTERN = /^#{1,2} /gm;
-const UNDERLINED_HEADING_PATTERN = /^[^\n]*\S[^\n]*\n(?:=+|-+)[ \t]*$/gm;
-const FENCED_BLOCK_PATTERN = /^```[\s\S]*?^```/gm;
-const LINE_BREAK_PATTERN = /[\r\n\u2028\u2029]/;
+const LINE_BREAK_PATTERN = /[\r\n\v\f\u0085\u2028\u2029]/;
+const MAXIMUM_HEADING_DEPTH = 2;
 const SET_WAKE_MODE_PATTERN = /set_wake\(\{mode: "(\w+)"/g;
 const PACKAGE_VERSION_PATTERN = /zapbip@(\S+)/g;
 
@@ -32,11 +31,17 @@ function matchesOf({ text, pattern, group = 1 }: { text: string; pattern: RegExp
 }
 
 function headingCountOf(input: { text: string }): number {
-  const text = input.text.replace(FENCED_BLOCK_PATTERN, '');
-  return (
-    matchesOf({ text, pattern: HEADING_LINE_PATTERN, group: 0 }).length +
-    matchesOf({ text, pattern: UNDERLINED_HEADING_PATTERN, group: 0 }).length
-  );
+  let count = 0;
+  marked.walkTokens(marked.lexer(input.text), (token) => {
+    if (token.type === 'heading' && token.depth <= MAXIMUM_HEADING_DEPTH) count += 1;
+  });
+  return count;
+}
+
+function duplicateNameViolationsOf(input: { entry: InstallSectionEntry; entries: InstallSectionEntry[] }): string[] {
+  const [first] = input.entries.filter((other) => other.install.productName === input.entry.install.productName);
+  if (first === undefined || first.id === input.entry.id) return [];
+  return [`${input.entry.id}: the product name ${input.entry.install.productName} is also used by ${first.id}`];
 }
 
 function productTextViolationsOf(input: { entry: InstallSectionEntry }): string[] {
@@ -104,5 +109,9 @@ export function installSectionViolationsOf(input: { entries: InstallSectionEntry
       STANDBY_AGENT_OPTIONS.flatMap((standbyAgent) => caseViolationsOf({ sectionCase: { entry, locale, standbyAgent } })),
     ),
   );
-  return [...new Set([...input.entries.flatMap((entry) => productTextViolationsOf({ entry })), ...violations])];
+  const productViolations = input.entries.flatMap((entry) => [
+    ...productTextViolationsOf({ entry }),
+    ...duplicateNameViolationsOf({ entry, entries: input.entries }),
+  ]);
+  return [...new Set([...productViolations, ...violations])];
 }
