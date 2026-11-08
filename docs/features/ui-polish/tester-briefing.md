@@ -68,3 +68,25 @@ Every "it works" is a hypothesis the tester tries to break.
 - Real iOS Safari, Android and Windows high-contrast are not run; Chromium emulation only.
 - Whether the design is "hyper sexy" has no machine check; the before and after pairs are for the owner.
 - `<anything the developers found missing while building>`
+
+## Lane B (docs), steps 16 to 21
+
+Changed: `apps/docs/docs.json` (logo, colors, background, appearance), `apps/docs/logo/{light,dark}.svg`, `apps/docs/snippets/{hero,chat}.jsx`, `apps/docs/zapbip.css`, both Overviews, `apps/docs/e2e/ui-polish.spec.ts`, `tools/repository-shape/src/docs-visual.test.ts`, `docs-experience.test.ts` (images-sized rule now covers snippets and `<Image>`).
+
+Run: `cd tools/repository-shape && pnpm exec vitest run src/docs-visual.test.ts src/docs-experience.test.ts`; `cd apps/docs && pnpm exec playwright test`.
+
+| Test | Red text printed (hash) | Green after |
+|---|---|---|
+| `docs-visual.test.ts` logo | `Error: docs.json has no logo.light` (52b3e059) | 1c333655 |
+| `docs-visual.test.ts` hero | `ENOENT apps/docs/snippets/hero.jsx`, `Error: index has no Hero` (edac8c35) | 5f03c7c1 |
+| `docs-visual.test.ts` theme | `expected '#128C7E' to be '#0B6B60'` (77466999) | 060a029d |
+| `docs-visual.test.ts` chat | `chat.jsx has no header colour`, `expected 4.19 to be >= 4.5` (c1b6c8e0) | f2a759c8 |
+| `docs-visual.test.ts` stylesheet | `ENOENT apps/docs/zapbip.css` (cb2f3bc2) | b71a14c3 |
+| `docs-experience.test.ts` images-sized extension | pin (52b3e059) | n/a |
+| `apps/docs/e2e/ui-polish.spec.ts` | not recorded red (written after the steps) | 65d083ff |
+
+Deviations:
+- At 1280 the content column is 624 px wide (sidebar and table of contents), so the hero's copy and phone wrap and stack; they do not overlap. Design §10.3 expected side by side. Hypothesis: stacked reads well; the owner decides if a wider layout is wanted.
+- The Overview now has five chats (hero plus four cards); `get-started.spec.ts` `OVERVIEW_EXAMPLE_COUNT.maximum` went from 4 to 5. No selector changed, so hypothesis 9 lists this one-constant diff.
+- The logo `font-family` is the system stack, not `--font-display`, because lane A's stylesheet defines no such token.
+- Contrast helper is `tools/repository-shape/src/contrast.ts` (lane A's coordinated location).
