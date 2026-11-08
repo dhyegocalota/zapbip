@@ -1,7 +1,7 @@
 import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { AGENT_PLUGINS, PluginAgent, PluginRegistry } from '@zapbip/agents/plugins';
+import { AGENT_PLUGINS, PluginRegistry } from '@zapbip/agents/plugins';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import {
@@ -83,12 +83,12 @@ function endToEndModuleOf(input: { id: string }): PluginEndToEndModule {
   if (!endToEndModule) throw new Error(`no end-to-end module loaded for ${input.id}`);
   return endToEndModule;
 }
-const pluginIdsOf = (input: { registry: PluginRegistry }): PluginAgent[] =>
-  (Object.entries(AGENT_PLUGINS) as [PluginAgent, (typeof AGENT_PLUGINS)[PluginAgent]][])
+const pluginIdsOf = (input: { registry: PluginRegistry }): string[] =>
+  Object.entries(AGENT_PLUGINS)
     .filter(([, plugin]) => plugin.registry === input.registry)
     .map(([id]) => id);
-const [WHEEL_PLUGIN] = pluginIdsOf({ registry: PluginRegistry.SelfHostedWheel }) as [PluginAgent];
-const [NPM_PLUGIN] = pluginIdsOf({ registry: PluginRegistry.Npm }) as [PluginAgent];
+const [WHEEL_PLUGIN] = pluginIdsOf({ registry: PluginRegistry.SelfHostedWheel }) as [string];
+const [NPM_PLUGIN] = pluginIdsOf({ registry: PluginRegistry.Npm }) as [string];
 
 function connectionLinkOf(input: { account: WakeAccount }): string {
   return `https://${CONTAINER_HOST}:${tlsFront.port}/c/${input.account.secret}/mcp`;
@@ -292,7 +292,7 @@ async function startUnattachedWheelPlugin(input: { accountIndex: number }): Prom
 }
 
 async function startClient(input: {
-  product: PluginAgent;
+  product: string;
   accountIndex: number;
   allowedUsers: string;
   hasMcpServer: boolean;
@@ -378,7 +378,7 @@ describe.skipIf(!isEnabled)('channel plugins against the development stack', () 
     TEST_TIMEOUT_MS,
   );
 
-  test.each(Object.values(PluginAgent))(
+  test.each(Object.keys(AGENT_PLUGINS))(
     'forwarded %s: the agent sees the forwarded prefix before the text',
     async (product) => {
       const client = await startClient({ product, accountIndex: 2, allowedUsers: OWNER_SENDER, hasMcpServer: false });
@@ -392,7 +392,7 @@ describe.skipIf(!isEnabled)('channel plugins against the development stack', () 
     TEST_TIMEOUT_MS,
   );
 
-  test.each(Object.values(PluginAgent))(
+  test.each(Object.keys(AGENT_PLUGINS))(
     'MCP %s: the zapbip server from the documented configuration gives the agent check_inbox and the result reaches the model',
     async (product) => {
       const client = await startClient({ product, accountIndex: 2, allowedUsers: OWNER_SENDER, hasMcpServer: true });
@@ -743,7 +743,7 @@ describe.skipIf(!isEnabled)('channel plugins against the development stack', () 
     sources.flat().forEach((source) => expect(source).not.toMatch(LISTEN_COMMAND_PATTERN));
   });
 
-  test.each(Object.values(PluginAgent))(
+  test.each(Object.keys(AGENT_PLUGINS))(
     'E11%s clean shutdown: SIGTERM ends the container with exit code 0 within the limit',
     async (product) => {
       const client = await startClient({ product, accountIndex: 1, allowedUsers: OWNER_SENDER, hasMcpServer: false });
