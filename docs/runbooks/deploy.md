@@ -150,12 +150,12 @@ Follow the steps in order. Each step names the runbook that holds its detail, an
    If it fails: stop. Do not go to production with an untested rollback.
 14. **Publish the packages.** Do steps 2, 4 and 5 of `mintlify-publish.md`: `zapbip` and every npm plugin on npm, and every self-hosted plugin file in the `zapbip-packages` bucket.
 
-   Do this before step 20: the production deploy refuses until the plugin files are in the bucket. An npm package may wait until launch: the production deploy only warns that it is not on npm yet (and prints the warning again after the smoke test), and `pnpm docs:preflight` refuses until it is. After publishing, run `pnpm docs:preflight` (or redeploy production and expect no warning) before step 21 registers a production number.
+   Do this before step 20: the production deploy refuses until the plugin files are in the bucket. An npm package may wait until launch: the production deploy only warns that it is not on npm yet (and prints the warning again after the smoke test), and `pnpm docs:preflight` refuses until it is. After publishing, run `npm view <name>@<version> maintainers --json` for each package and expect your npm user, or redeploy production and expect no warning.
 
    Expect: `npm view` lists your npm user as a maintainer of every npm package, and the `object get` check of `mintlify-publish.md` step 5 hashes to the hash the plugin pins.
 
    If it fails: the failing step of `mintlify-publish.md` says what to check.
-15. **Company facts and official number.** Do steps 1 and 3 of `mintlify-publish.md`: the production number from step 3 of `meta-setup.md`, and the Logic Bit company facts.
+15. **Company facts.** Do step 3 of `mintlify-publish.md`: the Logic Bit company facts. Step 1 of `mintlify-publish.md`, the production number from step 3 of `meta-setup.md`, waits until the docs are published (step 23).
 
     Expect: `COMPANY_FACT_UNSET` is not left in `libs/types/src/constants.ts` apart from its definition; `OFFICIAL_NUMBER_UNSET` may stay until the docs are published.
 
@@ -219,6 +219,6 @@ This is the one go-live record. Copy this list into a private note, and paste th
 - Worker versions and D1 bookmarks (step 5):
 - Staging smoke output (step 6):
 - Rollback rehearsal output (step 8):
-- npm warnings from the production deploy; the passing `pnpm docs:preflight` after publishing (step 14):
+- npm warnings from the production deploy (step 20), and the `npm view` outputs or the warning-free redeploy after publishing (step 14):
 - Error notification result ([cloudflare-setup.md](cloudflare-setup.md), step 5):
 - Free-plan limits read from the pricing pages:

@@ -176,11 +176,13 @@ function npmFailureCodeOf(input: { stdout: string }): string {
   return failure.success ? failure.data.error.code : NO_NPM_ANSWER;
 }
 
-function packageNameOf(input: { packageSpec: string }): string {
-  return input.packageSpec.slice(0, input.packageSpec.lastIndexOf('@'));
+type PublishedPackage = { name: string; version: string };
+
+function packageSpecOf(input: { published: PublishedPackage }): string {
+  return `${input.published.name}@${input.published.version}`;
 }
 
-async function trustReasonOf(input: {
+async function untrustedOwnershipReasonOf(input: {
   shell: DeployShell;
   packageSpec: string;
   publisher: string;
@@ -204,56 +206,68 @@ async function trustReasonOf(input: {
 
 async function untrustedReasonOf(input: {
   shell: DeployShell;
-  packageSpec: string;
+  published: PublishedPackage;
   publisher: string;
   onAbsentPackage: AbsentPackageHandler;
 }): Promise<string | null> {
-  const { shell, packageSpec, publisher, onAbsentPackage } = input;
+  const { shell, published, publisher, onAbsentPackage } = input;
+  const packageSpec = packageSpecOf({ published });
   const versionAnswer = await shell.run({ file: NPM, args: ['view', packageSpec, 'maintainers', '--json', ...NPM_REGISTRY_FLAGS] });
-  if (versionAnswer.exitCode === 0) return trustReasonOf({ shell, packageSpec, publisher, maintainersStdout: versionAnswer.stdout });
+  if (versionAnswer.exitCode === 0) {
+    return untrustedOwnershipReasonOf({ shell, packageSpec, publisher, maintainersStdout: versionAnswer.stdout });
+  }
   const isVersionAbsent = npmFailureCodeOf({ stdout: versionAnswer.stdout }) === NPM_NOT_FOUND_CODE;
   if (!isVersionAbsent) return npmFailureReason({ packageSpec, stdout: versionAnswer.stdout, onAbsentPackage });
-  const packageName = packageNameOf({ packageSpec });
-  const nameAnswer = await shell.run({ file: NPM, args: ['view', packageName, 'maintainers', '--json', ...NPM_REGISTRY_FLAGS] });
-  if (nameAnswer.exitCode === 0) return trustReasonOf({ shell, packageSpec: packageName, publisher, maintainersStdout: nameAnswer.stdout });
-  return npmFailureReason({ packageSpec, stdout: nameAnswer.stdout, onAbsentPackage });
+  const nameAnswer = await shell.run({ file: NPM, args: ['view', published.name, 'maintainers', '--json', ...NPM_REGISTRY_FLAGS] });
+  if (nameAnswer.exitCode !== 0) return npmFailureReason({ packageSpec, stdout: nameAnswer.stdout, onAbsentPackage });
+  const ownershipReason = await untrustedOwnershipReasonOf({
+    shell,
+    packageSpec: published.name,
+    publisher,
+    maintainersStdout: nameAnswer.stdout,
+  });
+  if (ownershipReason !== null) return ownershipReason;
+  return onAbsentPackage({ packageSpec });
 }
 
 async function firstUntrusted(input: {
   shell: DeployShell;
-  packageSpecs: string[];
+  packages: PublishedPackage[];
   publisher: string;
   onAbsentPackage: AbsentPackageHandler;
 }): Promise<string | null> {
-  const [current, ...remaining] = input.packageSpecs;
+  const [current, ...remaining] = input.packages;
   if (!current) return null;
-  const reason = await untrustedReasonOf({ ...input, packageSpec: current });
+  const reason = await untrustedReasonOf({ ...input, published: current });
   if (reason !== null) return reason;
-  return firstUntrusted({ ...input, packageSpecs: remaining });
+  return firstUntrusted({ ...input, packages: remaining });
 }
 
 async function refuseUntrustedPackages(input: {
   shell: DeployShell;
   environmentVariables: EnvironmentVariables;
-  packageSpecs: string[];
+  packages: PublishedPackage[];
   onAbsentPackage: AbsentPackageHandler;
 }): Promise<string | null> {
   const publisher = input.environmentVariables[NPM_PUBLISHER_VARIABLE];
   if (publisher === undefined || publisher === '' || isPlaceholderValue({ value: publisher })) {
     return `${NPM_PUBLISHER_VARIABLE} is not set; set it to the npm user that publishes the packages`;
   }
-  return firstUntrusted({ shell: input.shell, packageSpecs: input.packageSpecs, publisher, onAbsentPackage: input.onAbsentPackage });
+  return firstUntrusted({ shell: input.shell, packages: input.packages, publisher, onAbsentPackage: input.onAbsentPackage });
 }
 
-function publishedPackageSpecsOf(input: { npmVersion: string; plugins: AgentPlugin[] }): string[] {
+function publishedPackagesOf(input: { npmVersion: string; plugins: AgentPlugin[] }): PublishedPackage[] {
   const npmPlugins = input.plugins.filter((plugin) => plugin.registry === PluginRegistry.Npm);
-  return [`${NPM_PACKAGE_NAME}@${input.npmVersion}`, ...npmPlugins.map((plugin) => `${plugin.packageName}@${plugin.version}`)];
+  return [
+    { name: NPM_PACKAGE_NAME, version: input.npmVersion },
+    ...npmPlugins.map((plugin) => ({ name: plugin.packageName, version: plugin.version })),
+  ];
 }
 
 async function refuseUntrustedWorkerPackage(input: WorkerPreflightInput): Promise<string | null> {
   return refuseUntrustedPackages({
     ...input,
-    packageSpecs: publishedPackageSpecsOf(input),
+    packages: publishedPackagesOf(input),
     onAbsentPackage: ({ packageSpec }) => {
       input.warn({ kind: PreflightWarningKind.PackageUnpublished, message: `${packageSpec} is not on npm yet; publish it before launch` });
       return null;
@@ -264,7 +278,7 @@ async function refuseUntrustedWorkerPackage(input: WorkerPreflightInput): Promis
 async function refuseUntrustedDocsPackages(input: DocsPreflightInput): Promise<string | null> {
   return refuseUntrustedPackages({
     ...input,
-    packageSpecs: publishedPackageSpecsOf(input),
+    packages: publishedPackagesOf(input),
     onAbsentPackage: ({ packageSpec }) => `${packageSpec} does not resolve on npm; publish it first`,
   });
 }

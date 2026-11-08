@@ -40,6 +40,7 @@ A skipped package skips its `_npmUser` check too; it is not on npm, so there is 
 |----------|---------|----------------|------|
 | Move the official number refusal out of the Worker preflight | keep · move to the docs preflight only | move; owner delegated | 2026-11-06 |
 | Unpublished npm package in the Worker preflight | refuse · warn | warn, "sobre npm eu publico quando eu chegar mas que isso nao seja bloqueante" | 2026-11-08 |
+| Amend: an absent version checks the bare package name, the warning is typed and printed again after the smoke test | one-shot warning, versioned check only · amended rules | amended rules; owner delegated 2026-11-06 | 2026-11-08 |
 
 ## Test strategy summary
 
