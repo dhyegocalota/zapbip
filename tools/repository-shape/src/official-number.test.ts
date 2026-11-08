@@ -1,14 +1,14 @@
 import { describe, expect, test } from 'vitest';
 import { readRepositoryFile, trackedFiles } from './repository-files';
 
-const PRODUCT_DIRECTORIES = ['apps/', 'libs/', 'scripts/', 'tools/'];
+const PRODUCT_PATHS = ['apps/', 'libs/', 'scripts/', 'tools/', 'docs/contributing/', 'README.md'];
 const SHAPE_TESTS_DIRECTORY = 'tools/repository-shape/';
 const BINARY_BYTE = '\u0000';
-const OFFICIAL_NUMBER_PATTERN = /official (WhatsApp )?number|número oficial|OFFICIAL_(WHATSAPP_)?NUMBER|OFFICIAL_NUMBER_UNSET/i;
+const OFFICIAL_NUMBER_PATTERN = /official (WhatsApp |Cloud API )?number|número oficial|OFFICIAL_(WHATSAPP_)?NUMBER|OFFICIAL_NUMBER_UNSET/i;
 
 function filesNamingTheOfficialNumber(): string[] {
   return trackedFiles()
-    .filter((path) => PRODUCT_DIRECTORIES.some((directory) => path.startsWith(directory)))
+    .filter((path) => PRODUCT_PATHS.some((productPath) => path.startsWith(productPath)))
     .filter((path) => !path.startsWith(SHAPE_TESTS_DIRECTORY))
     .filter((path) => {
       const text = readRepositoryFile(path);
@@ -24,6 +24,7 @@ describe('the official number is gone', () => {
       'zapbip official number',
       'the official WhatsApp number',
       'número oficial',
+      'one official Cloud API number',
     ];
     expect(wordings.filter((wording) => !OFFICIAL_NUMBER_PATTERN.test(wording))).toEqual([]);
   });
