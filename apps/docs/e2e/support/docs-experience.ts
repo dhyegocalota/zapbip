@@ -23,6 +23,14 @@ export const DOCS_WALK_NOISE_ALLOWLIST: { pattern: RegExp; reason: string }[] = 
   },
 ];
 
+export function requestFailedNoiseOf(input: { url: string; errorText: string }): string {
+  throw new Error('requestFailedNoiseOf is not implemented');
+}
+
+export function isAllowedNoise(input: { entry: string }): boolean {
+  throw new Error('isAllowedNoise is not implemented');
+}
+
 const VIEWPORT_WIDTH_PX_OF: Record<DocsViewport, number> = {
   [DocsViewport.Desktop]: DESKTOP_WIDTH_PX,
   [DocsViewport.Narrow]: NARROW_WIDTH_PX,
