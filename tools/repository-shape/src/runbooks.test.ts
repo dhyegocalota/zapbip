@@ -41,7 +41,7 @@ const GO_LIVE_ORDER = [
   'Smoke staging',
   'Rollback rehearsal',
   'Publish the packages',
-  'Company facts and official number',
+  'Company facts',
   'Production Meta credentials',
   'Production resources and secrets',
   'Migrate production',
