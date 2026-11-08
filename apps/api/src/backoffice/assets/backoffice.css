@@ -428,7 +428,24 @@ main > * + * {
 }
 
 .card-grid > .card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-4);
   min-width: 0;
+}
+
+.card-grid > .card > * {
+  margin: 0;
+}
+
+.card-grid > .card > .sparkline {
+  align-self: stretch;
+  margin-top: auto;
+}
+
+.card-grid > .card > .button {
+  margin-bottom: var(--space-3);
 }
 
 fieldset {
@@ -463,7 +480,7 @@ legend {
 .form-actions {
   display: flex;
   flex-direction: column-reverse;
-  gap: var(--space-3);
+  gap: var(--space-4);
   margin-top: var(--space-6);
 }
 
@@ -1108,6 +1125,22 @@ main > .notice {
   nav,
   .header-end {
     width: 100%;
+  }
+
+  nav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .nav-link {
+    flex: none;
+    padding: 0 var(--space-3);
+    white-space: nowrap;
+  }
+
+  .nav-link:focus-visible {
+    outline-offset: -3px;
   }
 
   .header-end {
