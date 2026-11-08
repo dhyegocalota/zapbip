@@ -1,17 +1,34 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { OwnerLocale } from '@zapbip/types';
+import { HttpStatus, OwnerLocale, WhatsAppNumberState } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { BackofficeAuditAction, BackofficeAuditOutcome } from '../../src/backoffice/audit/backoffice-audit-action';
 import { BackofficeNotice } from '../../src/backoffice/backoffice-notice';
+import { MetricsPage } from '../../src/backoffice/metrics/metrics-page';
+import { NumberDetailPage } from '../../src/backoffice/numbers/views/number-detail';
+import { NumbersListPage } from '../../src/backoffice/numbers/views/numbers-list';
 import { AuditPage } from '../../src/backoffice/views/audit';
+import { ErrorPage } from '../../src/backoffice/views/error-page';
 import { HomePage } from '../../src/backoffice/views/home';
 import { SignInPage } from '../../src/backoffice/views/sign-in';
 import { DeployEnvironment } from '../../src/contract/deploy-environment';
+import { DATA_REPORT, EMPTY_REPORT, METRICS_FILTER, NOW, numberEntry } from './backoffice-page-fixtures';
 
 const BACKOFFICE_ROOT = join(import.meta.dirname, '../../src/backoffice');
 const STYLESHEET = readFileSync(join(BACKOFFICE_ROOT, 'assets/backoffice.css'), 'utf8');
 const RAW_COLOUR_PATTERN = /#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bhsla?\(/;
+const CLASS_ATTRIBUTE_PATTERN = /class="([^"$]+)"/g;
+const SELECTOR_CLASS_PATTERN = /\.([a-z][a-z0-9-]*)/g;
+const STATE_ONLY_CLASSES = [
+  'audit-row',
+  'number-row',
+  'template-row',
+  'outcome',
+  'outcome-succeeded',
+  'budget-status',
+  'bar',
+  'chart-axis-maximum',
+];
 const FORCED_COLORS_PATTERN = /@media \(forced-colors: active\)/;
 const FORCED_COLORS_BLOCK_PATTERN = /@media \(forced-colors: active\) \{[\s\S]*?\n\}/;
 const REDUCED_MOTION_GUARD_PATTERN =
@@ -29,6 +46,19 @@ const PAGE = {
   csrfToken: 'token',
   notice: null,
 };
+
+function detailPage(input: { state: WhatsAppNumberState }): string {
+  return String(
+    NumberDetailPage({
+      page: PAGE,
+      entry: numberEntry({ state: input.state }),
+      siblingLabels: [],
+      allowedTargets: [WhatsAppNumberState.Closed],
+      failure: null,
+      selectedState: null,
+    }),
+  );
+}
 
 const PAGES: Record<string, string> = {
   signIn: String(SignInPage({ ...PAGE, notice: BackofficeNotice.SignInFailed })),
@@ -49,6 +79,17 @@ const PAGES: Record<string, string> = {
       ],
     }),
   ),
+  numbersList: String(
+    NumbersListPage({ page: PAGE, entries: [numberEntry({}), numberEntry({ numberId: 'num_two', state: WhatsAppNumberState.Pending })] }),
+  ),
+  numbersEmpty: String(NumbersListPage({ page: PAGE, entries: [] })),
+  auditEmpty: String(AuditPage({ page: PAGE, rows: [] })),
+  detailPending: detailPage({ state: WhatsAppNumberState.Pending }),
+  detailActive: detailPage({ state: WhatsAppNumberState.Active }),
+  detailDisabled: detailPage({ state: WhatsAppNumberState.Disabled }),
+  metricsEmpty: String(MetricsPage({ page: PAGE, filter: METRICS_FILTER, report: EMPTY_REPORT, now: NOW })),
+  metricsData: String(MetricsPage({ page: PAGE, filter: METRICS_FILTER, report: DATA_REPORT, now: NOW })),
+  notFound: String(ErrorPage({ status: HttpStatus.NotFound, locale: OwnerLocale.EnglishUs, environment: null })),
 };
 
 function viewSources(input: { directory: string }): { path: string; source: string }[] {
@@ -110,5 +151,14 @@ describe('design rules', () => {
 
   it('never opts out of forced colors', () => {
     expect(STYLESHEET).not.toMatch(FORCED_COLOR_OPT_OUT_PATTERN);
+  });
+
+  it('has a rule for every class a view emits', () => {
+    const ruleClasses = new Set([...STYLESHEET.matchAll(SELECTOR_CLASS_PATTERN)].map((match) => match[1]!));
+    const emittedClasses = [...Object.values(PAGES), ...viewSources({ directory: BACKOFFICE_ROOT }).map(({ source }) => source)].flatMap(
+      (markup) => [...markup.matchAll(CLASS_ATTRIBUTE_PATTERN)].flatMap((match) => match[1]!.split(/\s+/)),
+    );
+    const withoutRule = [...new Set(emittedClasses)].filter((name) => !ruleClasses.has(name) && !STATE_ONLY_CLASSES.includes(name));
+    expect(withoutRule).toEqual([]);
   });
 });

@@ -1,9 +1,10 @@
-import { OwnerLocale, WhatsAppNumberState } from '@zapbip/types';
+import { AccountState, OwnerLocale, WhatsAppNumberState } from '@zapbip/types';
 import { BackofficeNotice } from '../../src/backoffice/backoffice-notice';
 import { MetricsPeriod, type MetricsFilter } from '../../src/backoffice/metrics/metrics-filter';
 import type { MetricsReport } from '../../src/backoffice/metrics/metrics-report';
 import type { PageContext } from '../../src/backoffice/page-context';
 import type { NumberListEntry } from '../../src/numbers/number-admin';
+import { ActivityMetric } from '../../src/contract/activity-metric';
 import { DeployEnvironment } from '../../src/contract/deploy-environment';
 
 export const NOW = Date.UTC(2026, 10, 7, 12);
@@ -57,4 +58,26 @@ export const EMPTY_REPORT: MetricsReport = {
   budgetDays: [],
   blockedPhones: 0,
   restricted: [],
+};
+
+export const TODAY = '2026-11-07';
+
+export const DATA_REPORT: MetricsReport = {
+  numbers: [{ numberId: 'num_one', label: 'Brazil' }],
+  accountsByState: [{ state: AccountState.Active, total: 3 }],
+  accountsPerNumber: [{ numberId: 'num_one', label: 'Brazil', total: 3 }],
+  newAccounts: [{ day: TODAY, total: 2 }],
+  agents: { active: 2, connected: 1 },
+  agentsByClient: [{ clientName: 'claude-code', total: 2 }],
+  agentsCreated: [{ day: TODAY, total: 2 }],
+  agentsRevoked: [{ day: TODAY, total: 1 }],
+  activity: [
+    { day: TODAY, metric: ActivityMetric.MessagesIn, total: 4 },
+    { day: TODAY, metric: ActivityMetric.MessagesOut, total: 3 },
+    { day: TODAY, metric: ActivityMetric.WakesWoken, total: 3 },
+    { day: TODAY, metric: ActivityMetric.WakesUnreached, total: 1 },
+  ],
+  budgetDays: [{ day: TODAY, total: 10_600 }],
+  blockedPhones: 1,
+  restricted: [{ numberId: 'num_one', label: 'Brazil', restrictedAt: NOW }],
 };
