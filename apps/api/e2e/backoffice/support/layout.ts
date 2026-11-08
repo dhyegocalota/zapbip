@@ -38,3 +38,9 @@ export async function expectChartLabelsClear(input: { chart: Locator; bars: Loca
     labelBoxes.slice(index + 1).forEach((other) => expect(intersects({ first: label, second: other })).toBe(false));
   });
 }
+
+export async function expectSiblingsApart(input: { container: Locator }): Promise<void> {
+  const children = await input.container.locator(':scope > *').all();
+  const boxes = (await Promise.all(children.map((child) => child.boundingBox()))).filter((box): box is Box => box !== null);
+  boxes.forEach((first, index) => boxes.slice(index + 1).forEach((second) => expect(intersects({ first, second })).toBe(false)));
+}
