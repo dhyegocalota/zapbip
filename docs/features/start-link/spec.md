@@ -1,6 +1,6 @@
 # Start link
 
-**Status:** Building
+**Status:** Shipped 2026-11-08
 **Tier:** 🔴 structural
 **Owner approval:** owner delegated 2026-11-06
 **ADRs:** [0035](../../adr/0035-a-start-link-on-the-worker-picks-the-number-new-owners-write-to.md); builds on [0016](../../adr/0016-accounts-start-on-the-first-message-and-wait-on-a-list.md), [0032](../../adr/0032-whatsapp-numbers-are-rows-in-a-sealed-registry-not-worker-secrets.md)
@@ -11,6 +11,7 @@
 On 2026-11-08 the owner said: "nao teremos 1 unico numero oficial eu acredito". Numbers are already dynamic: the backoffice holds a sealed registry (`NUMBER_REGISTRY_KEY`) and webhooks are attributed by known `phone_number_id`s. The docs still assume one fixed number:
 
 - `libs/types/src/constants.ts` holds `OFFICIAL_WHATSAPP_NUMBER = OFFICIAL_NUMBER_UNSET`;
+- `apps/api/src/operations/deploy-preflight.ts` and `package-fetcher.ts`: the docs preflight gains `PreflightStep.StartLink`, the last docs check. It reads `START_LINK` through the same `PackageFetcher` the hosted-artifact check uses, which now fetches with `redirect: 'manual'` and returns the `Location`, and refuses unless the answer is `302` to `https://wa.me/`, telling the operator to deploy the Worker and activate a number first. It refuses a `404` from an old Worker, a `503` with no number, a `302` to another host and a `302` without a `Location`.
 - `apps/docs/snippets/official-number.mdx` and `apps/docs/snippets/pt-br/official-number.mdx` print `wa.me/OFFICIAL_NUMBER_UNSET`, and eleven pages import them (the home, get-started and the five agent pages, in both languages; the agent pages come from `libs/agents/supported/*/page.*.mdx`);
 - `runDocsPreflight` (`apps/api/src/operations/deploy-preflight.ts`) and `deploy.ts` refuse to publish while the constant is unset;
 - `apps/docs/e2e/get-started.spec.ts`, `apps/docs/e2e/from-zero.spec.ts` and `tools/repository-shape/src/docs-experience.test.ts` read the constant.
@@ -92,7 +93,7 @@ Route `apps/api/src/routes/start-link.ts`, `createStartLinkRoute({ registry, lim
 
 Security headers on every answer, in the install page's style: `Cache-Control: no-store`, `X-Robots-Tag: noindex`, `Referrer-Policy: no-referrer`, `X-Content-Type-Options: nosniff`, HSTS. The HTML page also carries `Content-Security-Policy: default-src 'none'; style-src 'sha256-<hash>'`, where the hash is computed in code from the one inline style block of the "Signal" look (light and dark through `prefers-color-scheme`); it has no script, no link, no anchor and no external resource.
 
-Rate limit: reuse the `INSTALL_PAGE_LIMITER` binding (30 per 60 s) with the key `start:<clientRateKey(address)>`, so the counter is separate from the install page's, and no new binding, wrangler block or preflight check is added. (Alternative: a new `START_LINK_LIMITER` namespace; rejected as three wrangler blocks and an env type for the same numbers.)
+Rate limit: reuse the `INSTALL_PAGE_LIMITER` binding (30 per 60 s) with the key `start:<clientRateKey(address)>`, so the counter is separate from the install page's, and no new binding or wrangler block is added; the one new preflight check is the docs preflight's start link gate (below). (Alternative: a new `START_LINK_LIMITER` namespace; rejected as three wrangler blocks and an env type for the same numbers.)
 
 Deploy and docs removal:
 

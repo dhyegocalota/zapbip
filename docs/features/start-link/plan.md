@@ -42,20 +42,22 @@ Author this list with every box empty. A sub-agent ticks its own line. A wrong s
 
 ### G2
 
-- [ ] **Step 9 (red):** `docs-experience.test.ts`: replace the official-number tests with a start-link snippet test per language (`START_LINK` plus the `lang` value is linked; the file contains no `wa.me` and no `OFFICIAL_`), and a docs-wide test that no file under `apps/docs` and `libs/agents/supported` contains `wa.me` or an `OFFICIAL_NUMBER` token. Red because the snippet still prints the old link. Record the failure text.
-- [ ] **Step 10:** rename the snippets to `start-link.mdx`, rewrite them, update every importer (the source pages under `libs/agents/supported` first, then regenerate `apps/docs/agents` and `apps/docs/pt-br/agents` with the registry's generator), and keep `docs.json` valid. Green for step 9.
-- [ ] **Step 11:** `get-started.spec.ts` and `from-zero.spec.ts` assert `a[href="${START_LINK}?lang=<language>"]` is visible and that no `wa.me` link exists on the page. Playwright config and fixtures otherwise unchanged.
+- [x] **Step 9 (red):** `docs-experience.test.ts`: replace the official-number tests with a start-link snippet test per language (`START_LINK` plus the `lang` value is linked; the file contains no `wa.me` and no `OFFICIAL_`), and a docs-wide test that no file under `apps/docs` and `libs/agents/supported` contains `wa.me` or an `OFFICIAL_NUMBER` token. Red because the snippet still prints the old link. Record the failure text. — evidence: `0e7783fe`
+- [x] **Step 10:** rename the snippets to `start-link.mdx`, rewrite them, update every importer (the source pages under `libs/agents/supported` first, then regenerate `apps/docs/agents` and `apps/docs/pt-br/agents` with the registry's generator), and keep `docs.json` valid. Green for step 9. — evidence: `67f9623e`
+- [x] **Step 11:** `get-started.spec.ts` and `from-zero.spec.ts` assert `a[href="${START_LINK}?lang=<language>"]` is visible and that no `wa.me` link exists on the page. Playwright config and fixtures otherwise unchanged. — evidence: `67f9623e`, phone assertion `6a2583b1`
 
 ### G3
 
-- [ ] **Step 12 (red):** `deploy-preflight.test.ts` and `deploy-dry-run.e2e.test.ts`: remove the cases that expect the number refusal, and add a case per preflight (docs and Worker, production) that a production run with every other check green passes without any number input. Red because the input type still requires `officialWhatsAppNumber` and the preflight still refuses `OFFICIAL_NUMBER_UNSET`.
-- [ ] **Step 13:** remove the number check and the `officialWhatsAppNumber` field from `deploy-preflight.ts`, `docs-preflight.ts` and `deploy.ts`; green for step 12.
+- [x] **Step 12 (red):** `deploy-preflight.test.ts` and `deploy-dry-run.e2e.test.ts`: remove the cases that expect the number refusal, and add a case per preflight (docs and Worker, production) that a production run with every other check green passes without any number input. Red because the input type still requires `officialWhatsAppNumber` and the preflight still refuses `OFFICIAL_NUMBER_UNSET`. — evidence: `50789d26`
+- [x] **Step 13:** remove the number check and the `officialWhatsAppNumber` field from `deploy-preflight.ts`, `docs-preflight.ts` and `deploy.ts`; green for step 12. — evidence: `de2906cd`
 - [x] **Step 14:** `deploy.md` (the refusal list and the go-live check), `mintlify-publish.md` (step 1 and its expectation, renumbering the following steps and every cross-reference to "step N") stop mentioning the number.
+
+- [x] **Step 14b (added):** the docs preflight refuses a start link that does not answer `302` to `https://wa.me/` (`PreflightStep.StartLink`, the fetcher's `redirect: 'manual'` and `Location`). — evidence: red `620d3970`, green `b6765555`; the publish runbook says so (`ce6c67a7`, `2fd6008a`).
 
 ### G4
 
 - [x] **Step 15:** (`dae45eba` red, `f5bf69cf` green: `tools/repository-shape/src/official-number.test.ts`) after G2 and G3 are merged, delete `OFFICIAL_NUMBER_UNSET` and `OFFICIAL_WHATSAPP_NUMBER` from `libs/types`; `rg 'OFFICIAL_(WHATSAPP_)?NUMBER' --glob '!docs/features/**' --glob '!docs/adr/**'` returns nothing; `pnpm typecheck` is green.
-- [ ] **Step 16:** the owner's spec approval is written, statuses move `Approved`, `Building`, `In review`, `Shipped <date>` with the index row in step with the spec.
+- [x] **Step 16:** the owner's spec approval is written, statuses move `Approved`, `Building`, `In review`, `Shipped <date>` with the index row in step with the spec. — evidence: spec and index `Shipped 2026-11-08`, PR #26; `feature-status.test.ts` green.
 
 ## Failure modes
 
@@ -80,9 +82,9 @@ Author this list with every box empty. A sub-agent ticks its own line. A wrong s
 
 ## Z. Prove and ship
 
-- [ ] **Tester briefing:** a developer wrote `tester-briefing.md`.
-- [ ] **Tester run:** a fresh `tester` sub-agent executed `test-plan.md` and ticked every box with evidence.
-- [ ] **Reviewer:** a fresh `reviewer` sub-agent returned a verdict; refutation of the three riskiest claims is recorded in `test-plan.md`.
-- [ ] **Security reviewer:** `security-reviewer` returned `CLEAR` or `NOT APPLICABLE` (a public unauthenticated route and a removed deploy gate are in its scope).
+- [x] **Tester briefing:** a developer wrote `tester-briefing.md`. — evidence: `tester-briefing.md`, `f4970428`, updated through this round.
+- [x] **Tester run:** a fresh `tester` sub-agent executed `test-plan.md` and ticked every box with evidence. — evidence: the final tester ticked 60 of 61 rows and the confirm tester 7 of 7 (`ticks-confirm.patch`); every box in `test-plan.md` is ticked with evidence.
+- [x] **Reviewer:** a fresh `reviewer` sub-agent returned a verdict; refutation of the three riskiest claims is recorded in `test-plan.md`. — evidence: full-diff review at `45ea40c3`: WITH RESERVATIONS, 18 findings fixed in this round; claim 2 recorded as partly refuted in `test-plan.md`.
+- [x] **Security reviewer:** `security-reviewer` returned `CLEAR` or `NOT APPLICABLE` (a public unauthenticated route and a removed deploy gate are in its scope). — evidence: `CLEAR` with one MINOR (the docs preflight lost its gate), fixed in `620d3970` / `b6765555`.
 - [ ] **/check-ui:** screenshots and video of the no-number page and of the redirect hop recorded and uploaded.
-- [ ] **/open-pr:** gates passed, learnings sweep stated, PR opened with merge sensitivity and the human checklist (public route, deploy gate removed, docs order).
+- [x] **/open-pr:** gates passed, learnings sweep stated, PR opened with merge sensitivity and the human checklist (public route, deploy gate removed, docs order). — evidence: PR #26 opened; the gates run locally (ADR 0005).
