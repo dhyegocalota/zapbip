@@ -594,8 +594,25 @@ legend {
 }
 
 .sparkline-area {
-  fill: var(--color-info-surface);
   stroke: none;
+}
+
+.sparkline-stop-start {
+  stop-color: var(--color-brand);
+  stop-opacity: 0.38;
+}
+
+.sparkline-stop-end {
+  stop-color: var(--color-brand);
+  stop-opacity: 0;
+}
+
+.sparkline-label {
+  fill: var(--color-text);
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 .sparkline-line {
@@ -613,6 +630,8 @@ legend {
 
 .sparkline-dot {
   fill: var(--color-brand);
+  stroke: var(--color-surface);
+  stroke-width: 2;
 }
 
 .sparkline-summary {
@@ -1278,6 +1297,7 @@ main > .notice {
   }
 
   .sparkline-dot,
+  .sparkline-label,
   .bar-solid {
     fill: CanvasText;
   }
