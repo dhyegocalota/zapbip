@@ -10,7 +10,7 @@ import {
   type GenerationPlan,
 } from '@zapbip/agents/generate';
 import { boundaryViolationsOf } from '@zapbip/agents/checks/boundaries';
-import { leakViolationsOf } from '@zapbip/agents/checks/leaks';
+import { leakViolationsOf, withoutAgentNavigationLists, withoutGeneratedWorkflowRegions } from '@zapbip/agents/checks/leaks';
 import { CONNECTOR_RUNTIMES } from '@zapbip/agents/connector';
 import { AGENT_DEFINITIONS } from '@zapbip/agents/definitions';
 import { trackedFiles, readRepositoryFile } from './repository-files';
@@ -27,21 +27,19 @@ const MATRIX_PAGES = ['apps/docs/agents/supported-agents.mdx', 'apps/docs/pt-br/
 const MATRIX_TABLE_ROW_PATTERN = /^\| -{3,}/m;
 const LEAK_SCANNED_EXTENSIONS = ['.ts', '.tsx', '.mts', '.mjs', '.sh', '.py', '.yml', '.json'];
 const HARNESS_FOLDERS = ['.claude/', '.codex/'];
-const HARNESS_SCRIPT_FILES = [
-  '.agents/hooks/doctor.sh',
-  '.agents/hooks/hooks.test.sh',
-  '.agents/hooks/remind-docs.sh',
-  '.agents/skills/brainstorming/scripts/start-server.sh',
-];
-const GENERATED_FILES = ['apps/docs/docs.json', '.github/workflows/verify.yml'];
+const HARNESS_LITERAL_EXEMPT_FILES = ['.agents/hooks/doctor.sh', '.agents/hooks/remind-docs.sh'];
+const VENDORED_SKILL_SCRIPT = '.agents/skills/brainstorming/scripts/start-server.sh';
+const HOOK_TEST_FILE = '.agents/hooks/hooks.test.sh';
+const WORKFLOW_FILE_PATH = '.github/workflows/verify.yml';
+const DOCS_CONFIG_PATH = 'apps/docs/docs.json';
 const HARNESS_TEST_FILES = ['agent-surfaces', 'delivery-docs', 'rules', 'scenarios'].map(
   (name) => `tools/repository-shape/src/${name}.test.ts`,
 );
 const LEAK_CHECK_TEST_FILES = ['libs/agents/src/checks/leaks.test.ts', 'tools/repository-shape/src/agent-registry.test.ts'];
 const LEAK_ALLOWED_PREFIXES = [
   GENERATED_FOLDER,
-  ...GENERATED_FILES,
-  ...HARNESS_SCRIPT_FILES,
+  HOOK_TEST_FILE,
+  VENDORED_SKILL_SCRIPT,
   ...LEAK_CHECK_TEST_FILES,
   ...HARNESS_TEST_FILES,
   ...HARNESS_FOLDERS,
@@ -272,10 +270,21 @@ describe('agent knowledge', () => {
     enumMember: definition.enumMember,
     literals: literalsOf(id),
   }));
+  const scannedTextOf = (path: string): string => {
+    const text = readRepositoryFile(path);
+    if (path === WORKFLOW_FILE_PATH) return withoutGeneratedWorkflowRegions({ text });
+    if (path === DOCS_CONFIG_PATH) return withoutAgentNavigationLists({ text });
+    return text;
+  };
   const files = trackedFiles()
     .filter((path) => LEAK_SCANNED_EXTENSIONS.some((extension) => path.endsWith(extension)))
-    .map((path) => ({ path, text: readRepositoryFile(path) }));
-  const leaks = leakViolationsOf({ agents, files, allowedPrefixes: LEAK_ALLOWED_PREFIXES });
+    .map((path) => ({ path, text: scannedTextOf(path) }));
+  const leaks = leakViolationsOf({
+    agents,
+    files,
+    allowedPrefixes: LEAK_ALLOWED_PREFIXES,
+    literalExemptPrefixes: HARNESS_LITERAL_EXEMPT_FILES,
+  });
 
   test('no file outside an agent folder names an agent', () => {
     expect(leaks).toEqual([]);

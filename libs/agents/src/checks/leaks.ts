@@ -16,7 +16,7 @@ function ownedPrefixesOf(input: { agent: LeakAgent }): string[] {
   return [`${SUPPORTED_ROOT}/${input.agent.id}/`, `apps/${input.agent.id}-plugin/`];
 }
 
-function namingPatternOf(input: { agent: LeakAgent }): RegExp {
+function namingPatternOf(input: { agent: LeakAgent; includeLiterals: boolean }): RegExp {
   const memberReference = `\\b(?:${AGENT_ENUM_NAMES.join('|')})\\.${input.agent.enumMember}\\b`;
   const folderReference = `supported/${input.agent.id}(?![\\w-])`;
   const quotedIdReference = `(['"\`])${escapedOf({ text: input.agent.id })}\\1`;
@@ -24,7 +24,10 @@ function namingPatternOf(input: { agent: LeakAgent }): RegExp {
   const bareIdReferences = isHyphenated ? [`(?<![\\w.-])(?<!developers/)${escapedOf({ text: input.agent.id })}(?![\\w-])`] : [];
   const productWordReference = `${escapedOf({ text: input.agent.enumMember })}(?![a-z])`;
   const pluginFolderReference = `apps/${escapedOf({ text: input.agent.id })}-plugin`;
-  const literalReferences = input.agent.literals.map((literal) => `(?<![\\w])${escapedOf({ text: literal })}(?![\\w])`);
+  const constantWord = input.agent.id.toUpperCase().replaceAll('-', '_');
+  const constantReference = `(?<![A-Z0-9])${escapedOf({ text: constantWord })}(?![A-Z0-9])`;
+  const literals = input.includeLiterals ? input.agent.literals : [];
+  const literalReferences = literals.map((literal) => `(?<![\\w])${escapedOf({ text: literal })}(?![\\w])`);
   return new RegExp(
     [
       memberReference,
@@ -33,13 +36,14 @@ function namingPatternOf(input: { agent: LeakAgent }): RegExp {
       ...bareIdReferences,
       productWordReference,
       pluginFolderReference,
+      constantReference,
       ...literalReferences,
     ].join('|'),
   );
 }
 
-function agentLeaksIn(input: { agent: LeakAgent; file: LeakFile }): string[] {
-  const pattern = namingPatternOf({ agent: input.agent });
+function agentLeaksIn(input: { agent: LeakAgent; file: LeakFile; includeLiterals: boolean }): string[] {
+  const pattern = namingPatternOf({ agent: input.agent, includeLiterals: input.includeLiterals });
   return input.file.text
     .split(LINE_SEPARATOR)
     .flatMap((line, index) => (pattern.test(line) ? [`${input.file.path}:${index + 1} names ${input.agent.id}`] : []));
@@ -52,12 +56,39 @@ function wholeEnumRecordLeaksIn(input: { file: LeakFile }): string[] {
   });
 }
 
-export function leakViolationsOf(input: { agents: LeakAgent[]; files: LeakFile[]; allowedPrefixes: string[] }): string[] {
+const WORKFLOW_REGION_PATTERN = /^ *# NB ADR 0033: generated [^\n]* begin\n[\s\S]*?^ *# NB ADR 0033: generated [^\n]* end\n?/gm;
+const NAVIGATION_AGENT_GROUPS = ['Agents', 'IAs'];
+const JSON_INDENT = 2;
+
+type NavigationGroup = { group?: string; pages?: unknown[] };
+type NavigationConfig = { navigation?: { languages?: { groups?: NavigationGroup[] }[] } };
+
+export function withoutGeneratedWorkflowRegions(input: { text: string }): string {
+  return input.text.replace(WORKFLOW_REGION_PATTERN, '').replace(/\n$/, '');
+}
+
+export function withoutAgentNavigationLists(input: { text: string }): string {
+  const config = JSON.parse(input.text) as NavigationConfig;
+  const languages = config.navigation?.languages;
+  if (!languages) return input.text;
+  const groups = languages.flatMap((language) => (language.groups ? language.groups : []));
+  groups.filter((group) => NAVIGATION_AGENT_GROUPS.includes(group.group as string)).forEach((group) => (group.pages = []));
+  return JSON.stringify(config, null, JSON_INDENT);
+}
+
+export function leakViolationsOf(input: {
+  agents: LeakAgent[];
+  files: LeakFile[];
+  allowedPrefixes: string[];
+  literalExemptPrefixes: string[];
+}): string[] {
   const checkedFiles = input.files.filter((file) => !input.allowedPrefixes.some((prefix) => file.path.startsWith(prefix)));
   return checkedFiles.flatMap((file) => [
     ...wholeEnumRecordLeaksIn({ file }),
     ...input.agents
       .filter((agent) => !ownedPrefixesOf({ agent }).some((prefix) => file.path.startsWith(prefix)))
-      .flatMap((agent) => agentLeaksIn({ agent, file })),
+      .flatMap((agent) =>
+        agentLeaksIn({ agent, file, includeLiterals: !input.literalExemptPrefixes.some((prefix) => file.path.startsWith(prefix)) }),
+      ),
   ]);
 }

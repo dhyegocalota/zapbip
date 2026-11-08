@@ -142,7 +142,7 @@ describe('leakViolationsOf', () => {
     expect(leaksIn({ files })).toEqual([]);
   });
 
-  test.each(['MY_ALPHA_HOME', 'ALPHA_HOME_EXTRA', '.alpha-homes'])('ignores %s, which only contains a literal', (text) => {
+  test.each(['.alpha-homes'])('ignores %s, which only contains a literal', (text) => {
     expect(leaksIn({ files: [{ path: 'tools/example.ts', text }] })).toEqual([]);
   });
 

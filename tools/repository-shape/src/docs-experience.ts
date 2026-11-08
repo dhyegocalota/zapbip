@@ -48,7 +48,7 @@ const ATTRIBUTE_LINK_PATTERN = /href="([^"]+)"/g;
 const ANCHOR_PATTERN = /#.*$/;
 const INDEX_PAGE = 'index';
 const GUARDED_PAGE_PREFIXES = ['features/', 'help/', 'get-started/', `${AGENTS_DIRECTORY}/`];
-const ANY_MCP_CLIENT_LINK = '/developers/any-mcp-client';
+const GENERIC_MCP_CLIENT_PAGE_LINK = '/developers/any-mcp-client';
 const BACKGROUND_RUNNING_LINK = '/developers/background-running';
 const BACKGROUND_RUNNING_PAGES = Object.values(ConnectorClient).map((client) => `${AGENTS_DIRECTORY}/${client}`);
 
@@ -111,7 +111,7 @@ export function developerLinkViolations(input: { page: string; links: string[] }
   if (!isGuarded) return [];
   const isAgentPage = englishPage.startsWith(`${AGENTS_DIRECTORY}/`);
   const allowedLinks = [
-    ...(isAgentPage ? [ANY_MCP_CLIENT_LINK] : []),
+    ...(isAgentPage ? [GENERIC_MCP_CLIENT_PAGE_LINK] : []),
     ...(BACKGROUND_RUNNING_PAGES.includes(englishPage) ? [BACKGROUND_RUNNING_LINK] : []),
   ];
   const englishLinkOf = (link: string): string =>
