@@ -12,7 +12,9 @@ const STOP_CHECK_PATTERN = /^1\. If you are not .+, stop and run no other step o
 const STEP_NUMBER_PATTERN = /^\d+\. /m;
 const SUCCESS_LINE_PATTERN = /Success: \S/;
 const HEADING_LINE_PATTERN = /^#{1,2} /gm;
-const LINE_BREAK_PATTERN = /[\r\n]/;
+const UNDERLINED_HEADING_PATTERN = /^[^\n]*\S[^\n]*\n(?:=+|-+)[ \t]*$/gm;
+const FENCED_BLOCK_PATTERN = /^```[\s\S]*?^```/gm;
+const LINE_BREAK_PATTERN = /[\r\n\u2028\u2029]/;
 const SET_WAKE_MODE_PATTERN = /set_wake\(\{mode: "(\w+)"/g;
 const PACKAGE_VERSION_PATTERN = /zapbip@(\S+)/g;
 
@@ -25,9 +27,16 @@ function lastNonEmptyLine(text: string): string {
     .at(-1) as string;
 }
 
-function matchesOf(input: { text: string; pattern: RegExp; group?: number }): string[] {
-  const { group = 1 } = input;
-  return [...input.text.matchAll(input.pattern)].map((match) => match[group] as string);
+function matchesOf({ text, pattern, group = 1 }: { text: string; pattern: RegExp; group?: number }): string[] {
+  return [...text.matchAll(pattern)].map((match) => match[group] as string);
+}
+
+function headingCountOf(input: { text: string }): number {
+  const text = input.text.replace(FENCED_BLOCK_PATTERN, '');
+  return (
+    matchesOf({ text, pattern: HEADING_LINE_PATTERN, group: 0 }).length +
+    matchesOf({ text, pattern: UNDERLINED_HEADING_PATTERN, group: 0 }).length
+  );
 }
 
 function productTextViolationsOf(input: { entry: InstallSectionEntry }): string[] {
@@ -61,7 +70,7 @@ function caseViolationsOf(input: { sectionCase: SectionCase }): string[] {
       message: `${label}: the section must open with the heading ## ${install.productName}`,
     }),
     ...violationIf({
-      condition: matchesOf({ text, pattern: HEADING_LINE_PATTERN, group: 0 }).length !== 1,
+      condition: headingCountOf({ text }) !== 1,
       message: `${label}: the section must hold exactly one heading`,
     }),
     ...violationIf({ condition: !STOP_CHECK_PATTERN.test(text), message: `${label}: step 1 must be the stop check` }),

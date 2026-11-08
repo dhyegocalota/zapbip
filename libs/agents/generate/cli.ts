@@ -56,9 +56,8 @@ const KIND_FLAGS: Record<string, ScaffoldKind> = {
 function scaffoldKindOf(input: { argv: string[] }): ScaffoldKind {
   const [, flag] = input.argv;
   if (flag === undefined) return ScaffoldKind.Install;
-  const kind = KIND_FLAGS[flag];
-  if (kind === undefined) throw new Error(`usage: agents:new <id> [${Object.keys(KIND_FLAGS).join('|')}]`);
-  return kind;
+  if (!Object.hasOwn(KIND_FLAGS, flag)) throw new Error(`usage: agents:new <id> [${Object.keys(KIND_FLAGS).join('|')}]`);
+  return KIND_FLAGS[flag] as ScaffoldKind;
 }
 
 async function scaffold(input: { argv: string[] }): Promise<number> {
