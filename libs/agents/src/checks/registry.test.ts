@@ -57,4 +57,12 @@ describe('registryViolationsOf', () => {
   test.each([null, 7])('accepts an expected delay of %s', (expectedDelaySeconds) => {
     expect(registryViolationsOf({ entries: [{ id: 'sample', definition: withDelay({ expectedDelaySeconds }) }] })).toEqual([]);
   });
+
+  test('refuses two ids that derive the same member name even when they declare different ones', () => {
+    const entries = [
+      { id: 'probe-i-1', definition: { ...installFixtureDefinition, enumMember: 'ProbeIOne' } },
+      { id: 'probe-i1', definition: { ...installFixtureDefinition, enumMember: 'ProbeIUno' } },
+    ];
+    expect(registryViolationsOf({ entries })).toEqual(['probe-i-1 and probe-i1 both derive the name ProbeI1']);
+  });
 });

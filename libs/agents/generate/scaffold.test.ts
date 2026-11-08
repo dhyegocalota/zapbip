@@ -92,4 +92,10 @@ describe('scaffoldFilesOf for a plugin agent', () => {
       `@zapbip/${NEW_ID}-plugin`,
     );
   });
+
+  test('refuses an id whose derived names collide with an existing agent', () => {
+    expect(() => scaffoldFilesOf({ id: 'probe-i1', kind: ScaffoldKind.Install, existingIds: ['probe-i-1'], readSource, listTree })).toThrow(
+      'probe-i1 collides with probe-i-1 on ProbeI1',
+    );
+  });
 });

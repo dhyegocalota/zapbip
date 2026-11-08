@@ -268,6 +268,7 @@ describe('agent knowledge', () => {
   const agents = Object.entries(AGENT_DEFINITIONS).map(([id, definition]) => ({
     id,
     enumMember: definition.enumMember,
+    isOrdinaryWord: false,
     literals: literalsOf(id),
   }));
   const scannedTextOf = (path: string): string => {

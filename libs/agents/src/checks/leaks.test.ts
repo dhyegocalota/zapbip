@@ -1,9 +1,9 @@
 import { describe, expect, test } from 'vitest';
 import { leakViolationsOf, withoutAgentNavigationLists, withoutGeneratedWorkflowRegions, type LeakAgent, type LeakFile } from './leaks';
 
-const ALPHA: LeakAgent = { id: 'alpha', enumMember: 'Alpha', literals: ['.alpha-home', 'ALPHA_HOME'] };
-const HERMES: LeakAgent = { id: 'beta', enumMember: 'Beta', literals: [] };
-const GAMMA: LeakAgent = { id: 'gamma-bot', enumMember: 'GammaBot', literals: [] };
+const ALPHA: LeakAgent = { id: 'alpha', enumMember: 'Alpha', isOrdinaryWord: false, literals: ['.alpha-home', 'ALPHA_HOME'] };
+const HERMES: LeakAgent = { id: 'beta', enumMember: 'Beta', isOrdinaryWord: true, literals: [] };
+const GAMMA: LeakAgent = { id: 'gamma-bot', enumMember: 'GammaBot', isOrdinaryWord: false, literals: [] };
 const GENERATED_PREFIX = 'libs/agents/src/generated/';
 
 function leaksIn({
@@ -84,6 +84,33 @@ describe('leakViolationsOf: constants, exemptions and generated regions', () => 
   });
 });
 
+describe('leakViolationsOf: ids in every position', () => {
+  test.each(['const agents = { alpha: 1, other: 3 };', 'run alpha now', "'alpha-ide'", "'alpha.sh'", '"alpha_two"', 'alpha'])(
+    'names an id that is not an ordinary word in %s',
+    (text) => {
+      expect(leaksIn({ files: [{ path: 'tools/example.ts', text }], agents: [ALPHA] })).toEqual(['tools/example.ts:1 names alpha']);
+    },
+  );
+
+  test.each(['alphabet', 'xalpha', 'alpha2'])('ignores %s, which only contains the id', (text) => {
+    expect(leaksIn({ files: [{ path: 'tools/example.ts', text }], agents: [ALPHA] })).toEqual([]);
+  });
+
+  test.each(["'beta'", "'beta-ide'", "'beta.sh'", '"beta_two"', '`beta-agent`'])(
+    'names a quoted string that starts with an ordinary-word id in %s',
+    (text) => {
+      expect(leaksIn({ files: [{ path: 'tools/example.ts', text }], agents: [HERMES] })).toEqual(['tools/example.ts:1 names beta']);
+    },
+  );
+
+  test.each(['const page = bucket.list({ beta: input.beta });', 'sql.exec(beta)', "'betamax'", 'beta.value'])(
+    'leaves an ordinary-word id alone in %s',
+    (text) => {
+      expect(leaksIn({ files: [{ path: 'tools/example.ts', text }], agents: [HERMES] })).toEqual([]);
+    },
+  );
+});
+
 describe('leakViolationsOf: bare names', () => {
   test.each(['run gamma-bot now', 'agents/gamma-bot)', '"gamma-bot hint"'])('names the bare hyphenated id in %s', (text) => {
     expect(leaksIn({ files: [{ path: 'tools/example.ts', text }], agents: [GAMMA] })).toEqual(['tools/example.ts:1 names gamma-bot']);
@@ -93,8 +120,8 @@ describe('leakViolationsOf: bare names', () => {
     expect(leaksIn({ files: [{ path: 'tools/example.ts', text }], agents: [GAMMA] })).toEqual([]);
   });
 
-  test('leaves an ordinary single word alone unless it is quoted', () => {
-    expect(leaksIn({ files: [{ path: 'tools/example.ts', text: 'the alpha release' }] })).toEqual([]);
+  test('leaves an id that is an ordinary word alone unless it is quoted', () => {
+    expect(leaksIn({ files: [{ path: 'tools/example.ts', text: 'the beta release' }] })).toEqual([]);
   });
 
   test.each(['PreflightStep.AlphaWheel', 'refuseAlphaWheel', 'nextAlpha', 'the Alpha plugin'])('names the product word of %s', (text) => {

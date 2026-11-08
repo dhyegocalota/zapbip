@@ -1,4 +1,4 @@
-import { AgentFacet, type AgentDefinition, type AgentInstall, type AgentPlugin } from '../src/contract';
+import { AgentFacet, type AgentConnectorRuntime, type AgentDefinition, type AgentInstall, type AgentPlugin } from '../src/contract';
 import type { RegistryEntry } from '../src/checks/registry';
 import type { DiscoveredAgent } from './discover';
 import { repositoryPath } from './repository';
@@ -7,9 +7,10 @@ export type LoadedAgent = DiscoveredAgent & {
   definition: AgentDefinition | null;
   install: AgentInstall | null;
   plugin: AgentPlugin | null;
+  runtime: AgentConnectorRuntime | null;
 };
 
-type AgentModule = { definition?: AgentDefinition; install?: AgentInstall; plugin?: AgentPlugin };
+type AgentModule = { definition?: AgentDefinition; install?: AgentInstall; plugin?: AgentPlugin; runtime?: AgentConnectorRuntime };
 
 async function moduleOf(input: { agent: DiscoveredAgent; facet: AgentFacet }): Promise<AgentModule> {
   return import(repositoryPath(`${input.agent.folder}/${input.facet}`));
@@ -28,12 +29,13 @@ async function exportedOf<Name extends keyof AgentModule>(input: {
 
 export async function loadAgent(input: { agent: DiscoveredAgent }): Promise<LoadedAgent> {
   const { agent } = input;
-  const [definition, install, plugin] = await Promise.all([
+  const [definition, install, plugin, runtime] = await Promise.all([
     exportedOf({ agent, facet: AgentFacet.Definition, name: 'definition' }),
     exportedOf({ agent, facet: AgentFacet.Install, name: 'install' }),
     exportedOf({ agent, facet: AgentFacet.Plugin, name: 'plugin' }),
+    exportedOf({ agent, facet: AgentFacet.Connector, name: 'runtime' }),
   ]);
-  return { ...agent, definition, install, plugin };
+  return { ...agent, definition, install, plugin, runtime };
 }
 
 export function registryEntriesOf(input: { agents: LoadedAgent[] }): RegistryEntry[] {
