@@ -11,7 +11,7 @@ import { AuditPage } from '../../src/backoffice/views/audit';
 import { ErrorPage } from '../../src/backoffice/views/error-page';
 import { HomePage } from '../../src/backoffice/views/home';
 import { StateBadge } from '../../src/backoffice/numbers/components/state-badge';
-import { EMPTY_REPORT, homeOverview, METRICS_FILTER, NOW, numberEntry, PAGE } from './backoffice-page-fixtures';
+import { DATA_REPORT, EMPTY_REPORT, homeOverview, METRICS_FILTER, NOW, numberEntry, PAGE } from './backoffice-page-fixtures';
 
 const PAGE_HEAD_WITH_ACTION_PATTERN = /<div class="page-head"><h1>[^<]+<\/h1><a [^>]*button-primary/;
 const PAGE_HEAD_ALONE_PATTERN = /<div class="page-head"><h1>[^<]+<\/h1><\/div>/;
@@ -207,5 +207,12 @@ describe('register form', () => {
   it('marks a field error with its own class', () => {
     const html = registerHtml({ errors: { [NumberFormField.Label]: BackofficeCopyKey.ErrorSummaryTitle } });
     expect(html).toContain('class="field-help field-error"');
+  });
+});
+
+describe('metrics summary tables', () => {
+  it('right-align their values with the summary table class', () => {
+    const html = String(MetricsPage({ page: PAGE, filter: METRICS_FILTER, report: DATA_REPORT, now: NOW }));
+    expect(html).toContain('<table class="data-table summary-table">');
   });
 });

@@ -8,6 +8,7 @@ const RISING = Array.from({ length: DAY_COUNT }, (_, index) => index);
 const ZEROS = new Array<number>(DAY_COUNT).fill(0);
 const SINGLE_DAY = [...new Array<number>(DAY_COUNT - 2).fill(0), 3, 0];
 const VIEW_BOX_PATTERN = /viewBox="0 0 (\d+) (\d+)"/;
+const VIEW_BOX_PATTERN_ANY = /viewBox="0 (\d+) \d+ (\d+)"/;
 const POINTS_PATTERN = /<polyline[^>]*\spoints="([^"]+)"/;
 const TITLE_PATTERN = /<svg[^>]*><title>([^<]*)<\/title>/;
 const SUMMARY_PATTERN = /<p class="sparkline-summary">([^<]*)<\/p>/;
@@ -89,5 +90,10 @@ describe('sparkline', () => {
 
   it.each([-1, Number.NaN, Number.POSITIVE_INFINITY])('throws naming the value %s', (value) => {
     expect(() => render({ values: [...RISING.slice(1), value] })).toThrow(String(value));
+  });
+
+  it('crops an all-zero series to a shorter box than a drawn one', () => {
+    const heightOf = (html: string): number => Number(html.match(VIEW_BOX_PATTERN_ANY)![2]);
+    expect(heightOf(render({ values: ZEROS }))).toBeLessThan(heightOf(render({ values: RISING })));
   });
 });
