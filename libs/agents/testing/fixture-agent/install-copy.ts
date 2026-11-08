@@ -12,8 +12,8 @@ type SectionText = {
 const SECTION_TEXT: Record<OwnerLocale, SectionText> = {
   [OwnerLocale.PortugueseBrazil]: {
     heading: 'Fixture Agent',
-    stopCheck: 'Se você não é Fixture Agent, pare e não rode nenhum outro passo desta seção.',
-    stopSuccess: 'você é Fixture Agent, ou parou.',
+    stopCheck: 'If you are not Fixture Agent, stop and run no other step of this section.',
+    stopSuccess: 'you are Fixture Agent, or you have stopped.',
     connect: 'Adicione um servidor MCP chamado zapbip em',
     connectSuccess: 'as configurações listam o zapbip.',
   },

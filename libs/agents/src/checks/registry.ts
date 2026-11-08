@@ -10,7 +10,7 @@ export function hasValidAgentId(input: { id: string }): boolean {
   return FOLDER_NAME_PATTERN.test(input.id) && input.id !== MATRIX_PAGE_NAME;
 }
 
-function violationIf(input: { condition: boolean; message: string }): string[] {
+export function violationIf(input: { condition: boolean; message: string }): string[] {
   return input.condition ? [input.message] : [];
 }
 
