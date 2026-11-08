@@ -187,7 +187,7 @@ Follow the steps in order. Each step names the runbook that holds its detail, an
     If it fails: `deploy.md` step 8 rolls back the Worker.
 21. **Register the production number.** Do steps 2 to 4 of `backoffice.md` on `https://backoffice.zapbip.com` for the production app and the production number from step 3 of `meta-setup.md`.
 
-    Expect: the number shows `active` in the backoffice, and `curl -sI https://mcp.zapbip.com/start` prints `302` and a `location:` header that starts with `https://wa.me/`. The docs link that address, so this check comes before the docs are published.
+    Expect: the number shows `active` in the backoffice, and `curl -sI https://mcp.zapbip.com/start` prints `302` and a `location:` header that starts with `https://wa.me/`. The docs link that address. `pnpm docs:preflight` refuses until it does, but run this check by hand first, before step 23.
 
     If it fails: the failing step of `backoffice.md` says what to check.
 22. **Point the production Meta webhook.** Do step 9 of `meta-setup.md` for the production app.
