@@ -20,7 +20,6 @@ apps/docs               the Mintlify documentation site
 libs/agents             one folder per supported AI agent; the enums, install sections, docs pages, matrix and navigation come from those folders
 libs/core               the inbox rules as plain TypeScript behind ports
 libs/types              shared enums and constants, no logic
-tools/install-e2e       the owner-run script that installs zapbip into a real Claude Code against the local stack
 tools/repository-shape  tests about the repository itself: README links, root entries, workflows, feature statuses, indexes, scenarios, agent surfaces
 docs/adr                architecture decision records
 docs/learnings          dated traps, with what inspired them and when they were revisited
@@ -29,7 +28,7 @@ docs/scenarios          agentic walks of the product core, one file per flow, ru
 .agents/skills          skills (single source; `.claude/skills` links here)
 .agents/roles           agent role bodies shared by `.claude/agents` and `.codex/agents`
 .agents/hooks           hook scripts shared by `.claude/settings.json` and `.codex/hooks.json`
-scripts                 the local gate and its tests; scripts/e2e/clients holds the Docker fixtures of the client end-to-end suite
+scripts                 the local gate and its tests; scripts/e2e/clients holds the shared Docker helpers of the client end-to-end suite, and each plugin keeps its own fixtures in its package
 ```
 
 Applications go under `apps/`, shared libraries under `libs/`; a feature that adds one adds its line here and, for a new root entry, its entry to `delivery-docs.test.ts`.

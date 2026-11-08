@@ -17,7 +17,7 @@ readonly ALLOWED_TOOLS="--allowedTools=mcp__zapbip__send_message"
 readonly PROJECT_SCOPE_INSTRUCTION="This is a throwaway test project: run claude mcp add with --scope project instead of user scope, and write the skill to .claude/skills/zapbip/SKILL.md in the current directory instead of ~/.claude/skills/zapbip/SKILL.md."
 
 claude_config_directory="${!CONFIG_DIRECTORY_VARIABLE:-}"
-repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
 work_directory=""
 server_process=""
 
