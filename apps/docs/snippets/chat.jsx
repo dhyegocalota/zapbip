@@ -1,10 +1,16 @@
-export const Chat = ({ messages, contact = 'zapbip' }) => {
+export const Chat = ({ messages, contact = 'zapbip', frame }) => {
   const teal = '#128C7E';
+  const header = '#075E54';
+  const senderInk = '#0B6B60';
+  const signal = '#25D366';
+  const bezel = '#0E1F1A';
+  const phoneFrame = 'phone';
+  const isPhone = frame === phoneFrame;
   const ink = '#111B21';
   const wallpaper = '#ECE5DD';
   const white = '#FFFFFF';
   const sent = '#D9FDD3';
-  const mutedInk = '#667781';
+  const mutedInk = '#54656F';
   const readTick = '#53BDEB';
   const noticeBackground = '#FFEECD';
   const thumbnailFrom = '#CFE9E4';
@@ -27,7 +33,7 @@ export const Chat = ({ messages, contact = 'zapbip' }) => {
   );
 
   const renderHeader = () => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', background: teal, color: white }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', background: header, color: white }}>
       <span aria-hidden="true" style={{ fontSize: '16px', lineHeight: 1 }}>
         ‹
       </span>
@@ -41,11 +47,23 @@ export const Chat = ({ messages, contact = 'zapbip' }) => {
           height: '30px',
           borderRadius: '50%',
           background: white,
-          color: teal,
+          color: senderInk,
           fontWeight: 700,
         }}
       >
-        {contact.charAt(0).toLowerCase()}
+        {isPhone ? (
+          <svg aria-hidden="true" width="20" height="20" viewBox="14 14 36 36" fill="none">
+            <path
+              d="M32 14c-10 0-18 7.6-18 17 0 3.600 1.200 6.900 3.200 9.600L15 50l9.800-2.700c2.200 1.100 4.600 1.700 7.200 1.700 10 0 18-7.600 18-17s-8-17-18-17z"
+              fill={senderInk}
+            />
+            <circle cx="25" cy="31" r="2.600" fill={signal} />
+            <circle cx="32" cy="31" r="2.600" fill={signal} />
+            <circle cx="39" cy="31" r="2.600" fill={signal} />
+          </svg>
+        ) : (
+          contact.charAt(0).toLowerCase()
+        )}
       </span>
       <span style={{ display: 'flex', flexDirection: 'column' }}>
         <span style={{ fontWeight: 600, fontSize: '15px', lineHeight: 1.2 }}>{contact}</span>
@@ -188,7 +206,7 @@ export const Chat = ({ messages, contact = 'zapbip' }) => {
           paddingTop: '6px',
           borderTop: `1px solid ${wallpaper}`,
           textAlign: 'center',
-          color: teal,
+          color: senderInk,
           fontWeight: 600,
         }}
       >
@@ -242,7 +260,7 @@ export const Chat = ({ messages, contact = 'zapbip' }) => {
         fontSize: '13px',
       }}
     >
-      <div style={{ fontSize: '12px', fontWeight: 600, color: teal }}>{quote.name}</div>
+      <div style={{ fontSize: '12px', fontWeight: 600, color: senderInk }}>{quote.name}</div>
       <div>{quote.text}</div>
     </div>
   );
@@ -268,7 +286,7 @@ export const Chat = ({ messages, contact = 'zapbip' }) => {
             borderRadius: '8px',
             background: white,
             boxShadow: shadow,
-            color: teal,
+            color: senderInk,
             fontWeight: 600,
             textAlign: 'center',
           }}
@@ -287,7 +305,7 @@ export const Chat = ({ messages, contact = 'zapbip' }) => {
           borderRadius: '8px',
           background: white,
           boxShadow: shadow,
-          color: teal,
+          color: senderInk,
           fontWeight: 600,
           textAlign: 'center',
         }}
@@ -330,13 +348,35 @@ export const Chat = ({ messages, contact = 'zapbip' }) => {
         fontSize: '12.5px',
       }}
     >
-      <div style={{ fontWeight: 600, color: teal }}>zapbip</div>
+      <div style={{ fontWeight: 600, color: senderInk }}>zapbip</div>
       <div>{message.text}</div>
       {message.time ? <div style={{ fontSize: '11px', color: mutedInk }}>{message.time}</div> : null}
     </div>
   );
 
+  const renderTyping = (position) => (
+    <div
+      key={position}
+      aria-hidden="true"
+      className="zapbip-typing"
+      style={{
+        alignSelf: 'flex-start',
+        display: 'flex',
+        gap: '4px',
+        padding: '10px 12px',
+        borderRadius: '8px',
+        background: white,
+        boxShadow: shadow,
+      }}
+    >
+      {[0, 1, 2].map((dot) => (
+        <span key={dot} style={{ width: '6px', height: '6px', borderRadius: '50%', background: mutedInk }} />
+      ))}
+    </div>
+  );
+
   const renderMessage = (message, position) => {
+    if (message.typing) return renderTyping(position);
     if (message.notice)
       return (
         <div key={position} style={{ display: 'flex', flexDirection: 'column' }}>
@@ -369,7 +409,7 @@ export const Chat = ({ messages, contact = 'zapbip' }) => {
           }}
         >
           {startsRun ? renderTail(message) : null}
-          {message.name ? <div style={{ fontSize: '12px', fontWeight: 600, color: teal }}>{message.name}</div> : null}
+          {message.name ? <div style={{ fontSize: '12px', fontWeight: 600, color: senderInk }}>{message.name}</div> : null}
           {message.quote ? renderQuote(message.quote) : null}
           {message.media ? renderMedia(message.media) : null}
           {message.text ? <div>{message.text}</div> : null}
@@ -397,26 +437,53 @@ export const Chat = ({ messages, contact = 'zapbip' }) => {
     );
   };
 
-  return (
+  const renderStatusBar = () => (
+    <div
+      aria-hidden="true"
+      style={{ padding: '8px 20px 0', background: header, color: white, fontSize: '12px', fontWeight: 600, lineHeight: 1 }}
+    >
+      9:41
+    </div>
+  );
+
+  const conversation = (
     <div
       role="group"
       aria-label={`WhatsApp: ${contact}`}
       style={{
         width: '100%',
-        maxWidth: '360px',
+        maxWidth: isPhone ? '100%' : '360px',
         margin: '0 auto',
-        borderRadius: '20px',
+        borderRadius: isPhone ? '34px' : '20px',
         overflow: 'hidden',
-        border: '1px solid rgba(17, 27, 33, 0.15)',
+        border: isPhone ? 'none' : '1px solid rgba(17, 27, 33, 0.15)',
         background: wallpaper,
         color: ink,
         fontSize: '14px',
         lineHeight: 1.35,
-        boxShadow: '0 4px 14px rgba(11, 20, 26, 0.12)',
+        boxShadow: isPhone ? 'none' : '0 4px 14px rgba(11, 20, 26, 0.12)',
       }}
     >
+      {isPhone ? renderStatusBar() : null}
       {renderHeader()}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', padding: '12px 14px' }}>{messages.map(renderMessage)}</div>
+    </div>
+  );
+
+  if (!isPhone) return conversation;
+  return (
+    <div
+      style={{
+        width: '100%',
+        maxWidth: '340px',
+        margin: '0 auto',
+        padding: '10px',
+        borderRadius: '44px',
+        background: bezel,
+        boxShadow: '0 24px 48px rgba(11, 20, 26, 0.28)',
+      }}
+    >
+      {conversation}
     </div>
   );
 };
