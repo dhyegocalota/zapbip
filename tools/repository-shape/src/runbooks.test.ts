@@ -1,7 +1,7 @@
 import { existsSync, readdirSync } from 'node:fs';
 import { posix } from 'node:path';
 import { AGENT_PLUGINS } from '@zapbip/agents/plugins';
-import { PRODUCTION_PACKAGES_BUCKET, START_LINK } from '@zapbip/types';
+import { PRODUCTION_PACKAGES_BUCKET, START_LINK, WHATSAPP_LINK_ORIGIN } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { capturedNames, readRepositoryFile, repositoryPath } from './repository-files';
 
@@ -238,6 +238,11 @@ describe('runbooks', () => {
   test('deploy.md checks the start link answers before the docs are published', () => {
     const text = readRunbook(DEPLOY_RUNBOOK).text;
     expect(text).toContain(`curl -sI ${START_LINK}`);
+  });
+
+  test('mintlify-publish.md says the docs preflight proves the start link redirects to wa.me', () => {
+    const text = readRunbook(MINTLIFY_PUBLISH_RUNBOOK).text;
+    expect(text).toContain(`the start link (${START_LINK}) redirects to ${WHATSAPP_LINK_ORIGIN}`);
   });
 
   test('deploy.md keeps the docs preflight mandatory after the production deploy', () => {
