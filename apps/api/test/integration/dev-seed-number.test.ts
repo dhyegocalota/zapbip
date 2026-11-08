@@ -9,10 +9,19 @@ import { testEnv } from '../support/workers-env';
 
 const OTHER_NUMBER_ID = 'num_other';
 const OTHER_PHONE_NUMBER_ID = '1000000000000009';
+const LEGACY_DISPLAY_NUMBER = '5511900000000';
 
 async function registerDevelopmentNumber(): Promise<void> {
   const statements = await developmentNumberStatements({ bindings: testEnv, createdAt: SEED_CREATED_AT });
   await testEnv.CONNECTIONS.batch(statements);
+}
+
+async function displayNumberOf(input: { numberId: string }): Promise<string> {
+  const row = await testEnv.CONNECTIONS.prepare('SELECT display_number FROM whatsapp_numbers WHERE id = ?')
+    .bind(input.numberId)
+    .first<{ display_number: string }>();
+  if (row === null) throw new Error('number missing');
+  return row.display_number;
 }
 
 async function countNumbers(): Promise<number> {
@@ -40,6 +49,18 @@ describe('the development number seed', () => {
     await registerDevelopmentNumber();
     await registerDevelopmentNumber();
     expect(await countNumbers()).toBe(1);
+  });
+
+  it('adds the plus sign to a development number an older seed stored without it', async () => {
+    await seedWhatsAppNumber({ numberId: DEVELOPMENT_NUMBER.numberId, displayNumber: LEGACY_DISPLAY_NUMBER });
+    await registerDevelopmentNumber();
+    expect(await displayNumberOf({ numberId: DEVELOPMENT_NUMBER.numberId })).toBe(`+${LEGACY_DISPLAY_NUMBER}`);
+  });
+
+  it('leaves the display number of another number alone', async () => {
+    await seedWhatsAppNumber({ numberId: OTHER_NUMBER_ID, phoneNumberId: OTHER_PHONE_NUMBER_ID, displayNumber: LEGACY_DISPLAY_NUMBER });
+    await registerDevelopmentNumber();
+    expect(await displayNumberOf({ numberId: OTHER_NUMBER_ID })).toBe(LEGACY_DISPLAY_NUMBER);
   });
 
   it('leaves a number that was registered before alone', async () => {
