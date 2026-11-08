@@ -84,7 +84,7 @@ Author this list with every box empty. A sub-agent ticks its own line. A wrong s
 
 ## Z. Prove and ship
 
-- [ ] **Tester briefing:** a developer wrote `tester-briefing.md`.
+- [x] **Tester briefing:** a developer wrote `tester-briefing.md`. — evidence: tester-briefing.md
 - [ ] **Tester run:** a fresh `tester` sub-agent executed `test-plan.md` and ticked every box with evidence.
 - [ ] **Reviewer:** a fresh `reviewer` sub-agent returned a verdict; refutation of the three riskiest claims is recorded in `test-plan.md`.
 - [ ] **/check-ui:** not applicable.

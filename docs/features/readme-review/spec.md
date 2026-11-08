@@ -23,7 +23,7 @@ The owner ordered: "review all READMEs: concise but correct." The audit of origi
 ## Goals
 
 - Every README in the repository reads true against the code of `feat/agent-registry` at 2a5cbdc2, which this work is stacked on, and is re-read against `main` when the stack merges: the root, `apps/api`, `apps/connector`, `apps/docs`, `apps/hermes-plugin`, `apps/openclaw-plugin`, `libs/agents`, `libs/core`, `libs/types`, `tools/repository-shape`, `.agents/skills`, and the five index READMEs under `docs/` (`adr`, `features`, `learnings`, `runbooks`, `scenarios`).
-- Every workspace package README states purpose only: no commands, configuration, file paths, symbols or code spans, and links only to folders, so a rename fails the link check. The test reads Markdown links (inline, with a title and reference-style), HTML anchors and `<code>` elements, code spans (also across a line break), backtick and tilde fences and indented blocks. A file without an extension and a path written as bare prose are out of scope. A fixture README below a package, such as `libs/agents/testing/fixture-plugin-package/README.md`, is not a workspace package and is excluded.
+- Every workspace package README states purpose only: no commands, configuration, file paths, symbols or code spans, and links only to folders, so a rename fails the link check. The test reads Markdown links (inline, with a double-quoted, single-quoted or parenthesised title and with spaces inside the parentheses, and reference-style), HTML anchors (any quoting or none), bracketed paths and `<code>` and `<pre>` elements, code spans (also across a line break), backtick and tilde fences (also unclosed) and indented blocks of four or more spaces. A mailbox in angle brackets and a footnote definition are not links. A file without an extension and a path written as bare prose are out of scope. A fixture README below a package, such as `libs/agents/testing/fixture-plugin-package/README.md`, is not a workspace package and is excluded.
 - No stale claim survives: no "Early stage", no list that a new feature makes incomplete, no mechanism detail the code already shows.
 - Each README is short: one paragraph, as many sentences as the purpose needs.
 - A repository-shape test enforces the purpose-only rule on workspace package READMEs so it cannot regress.
@@ -37,7 +37,7 @@ The owner ordered: "review all READMEs: concise but correct." The audit of origi
 
 ### Data flow
 
-1. Re-audit against `main` once `feat/agent-registry` has merged: read every README against the code it describes and list what changed since the 2026-11-07 audit.
+1. Re-audit against the code of `feat/agent-registry`, which this work is stacked on, and again against `main` when the stack merges: read every README against the code it describes and list what changed since the 2026-11-07 audit.
 2. Apply the texts, one group per step, in the order of the plan.
 3. The shape test reads each workspace package README through the existing `workspacePackages()` helper and reports violations.
 
@@ -59,7 +59,7 @@ Texts to start from (the re-audit may amend them; the audit file is the source a
 
 ### The purpose-only test
 
-Extend `tools/repository-shape/src/delivery-docs.test.ts`, which already holds "every workspace package has a README" and the link check; no new file. Add a pure `purposeViolations(text)` helper and a `test.each` over `workspacePackages()` READMEs that asserts it returns `[]`. A violation is a code span, a fenced block, or a relative link whose target is not a folder (has a file extension). Two probe cases prove the helper in both directions, as the existing link probes do. The first probes landed with the implemented helper, so they are a pin; the red run was the real run over `apps/hermes-plugin`, which held a file link until its README was fixed. The detection gaps listed in Goals were each added red first.
+Extend `tools/repository-shape/src/delivery-docs.test.ts`, which already holds "every workspace package has a README" and the link check; no new file. Add a pure `purposeViolations(text)` helper and a `test.each` over `workspacePackages()` READMEs that asserts it returns `[]`. A violation is a code span or `<code>` element, a fenced block (backtick or tilde, closed or not), a `<pre>` element, an indented block, or a relative link whose target is not a folder. The links are inline, reference-style, HTML anchors and bracketed paths. A target is a folder when it ends in a slash; otherwise it is a file when it has an extension. Targets that are external, protocol-relative or contain `@` are skipped. Two probe cases prove the helper in both directions, as the existing link probes do. The first probes landed with the implemented helper, so they are a pin; the red run was the real run over `apps/hermes-plugin`, which held a file link until its README was fixed. The detection gaps listed in Goals were each added red first.
 
 ### Failure handling
 
