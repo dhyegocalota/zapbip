@@ -56,9 +56,20 @@ One developer. Branch `feat/backoffice-metrics`, merged from `feat/backoffice` a
   - [x] `activity-flush.test.ts` restores mocks after each test. — evidence: this commit
   - [x] The midnight case starts half an hour before midnight, so a loaded machine cannot cross by accident. — evidence: this commit
 
+- [x] **Step 33c:** the delta tester's visual defect in the budget chart: head room, a left gutter for the maximum label and a right gutter for the line labels, nudged apart so none overlaps a bar or another label. — evidence: red ce7a82b9 (`expected 4147.84 to be >= 4154.31`, at 1280 and 375) → green 5242599a (`metrics.spec.ts` 12/12)
+
 ### G6 browser specs
 
 - [x] **Step 39m:** `e2e/backoffice/metrics.spec.ts` with `support/metrics-seed.ts` and `support/layout.ts`, at 1280 and 375. — evidence: pin 3857ef49 (lands after the page); `pnpm --filter @zapbip/api test:walk` 40 passed at dfdfe761
+
+### Z closing
+
+- [x] **Tester briefing:** `tester-briefing.md` written. — evidence: this folder
+- [x] **Tester run:** two fresh testers executed `test-plan.md`. — evidence: `tester-metrics.md` at dfdfe761 (18 PASS, 2 FAIL, 1 observation, all fixed in 33a) and `tester-metrics-delta.md` at c2593ffb (all passed, 3 mutations caught, one visual defect fixed in 33c)
+- [x] **Reviewer:** WITH RESERVATIONS, all fixed in step 33b.
+- [x] **Security:** CLEAR.
+- [ ] **/check-ui:** left to the lead.
+- [ ] **/open-pr:** left to the lead.
 
 ## Failure modes
 
