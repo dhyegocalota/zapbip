@@ -32,4 +32,7 @@ export enum ConnectorClient {
   Codex = 'codex',
 }
 
-export enum PluginAgent {}
+export enum PluginAgent {
+  Hermes = 'hermes',
+  OpenClaw = 'openclaw',
+}

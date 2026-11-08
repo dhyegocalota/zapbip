@@ -5,7 +5,7 @@ import type { ResolvedAgent } from './agent';
 import type { DiscoveredAgent } from './discover';
 import { formatted } from './format';
 import { loadAgent, registryEntriesOf, type LoadedAgent } from './load';
-import { DOCS_CONFIG, GENERATED_FOLDER, MATRIX_SNIPPETS, PAGE_DIRECTORIES } from './paths';
+import { DOCS_CONFIG, GENERATED_FOLDER, MATRIX_SNIPPETS, PAGE_DIRECTORIES, WORKFLOW_FILE } from './paths';
 import { planConnectorSnippets, renderConnectorRegistry } from './render-connector';
 import { renderDefinitions } from './render-definitions';
 import { renderIds } from './render-ids';
@@ -14,6 +14,7 @@ import { renderMatrix } from './render-matrix';
 import { orphanPagePathsOf, renderNavigation } from './render-navigation';
 import { planPages } from './render-pages';
 import { renderPluginRegistry } from './render-plugins';
+import { renderWorkflow } from './render-workflow';
 
 export type GeneratedFile = { path: string; content: string };
 export type GenerationPlan = { writes: GeneratedFile[]; deletions: string[]; violations: string[] };
@@ -65,6 +66,7 @@ export async function planGeneratedFiles(input: PlanInput): Promise<GenerationPl
     ...matrixSnippets({ agents }),
     ...connectorSnippets.writes,
     ...navigationWrites,
+    { path: WORKFLOW_FILE, content: renderWorkflow({ source: input.readSource(WORKFLOW_FILE), agents }) },
   ];
   const formattedWrites = await Promise.all(writes.map(async (write) => ({ path: write.path, content: await formatted(write) })));
   return {

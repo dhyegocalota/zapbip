@@ -1,13 +1,5 @@
-import {
-  DAY_MS,
-  hermesRequirementsFilename,
-  hermesWheelFilename,
-  HERMES_WHEEL_PATH_PREFIX,
-  HttpStatus,
-  InboxErrorCode,
-  SECOND_MS,
-  ZAPBIP_HERMES_PLUGIN_VERSION,
-} from '@zapbip/types';
+import { AGENT_PLUGINS } from '@zapbip/agents/plugins';
+import { DAY_MS, HttpStatus, InboxErrorCode, PACKAGE_PATH_PREFIX, SECOND_MS } from '@zapbip/types';
 import { type Context, Hono } from 'hono';
 import type { Bindings } from '../contract/env';
 import { LogEvent } from '../contract/log';
@@ -17,10 +9,9 @@ const FILENAME_PARAMETER = 'filename';
 const CACHE_DAYS = 365;
 const IMMUTABLE_CACHE_CONTROL = `public, max-age=${(CACHE_DAYS * DAY_MS) / SECOND_MS}, immutable`;
 const NO_STORE_CACHE_CONTROL = 'no-store';
-const SERVED_PACKAGES = [
-  { filename: hermesWheelFilename({ version: ZAPBIP_HERMES_PLUGIN_VERSION }), contentType: 'application/octet-stream' },
-  { filename: hermesRequirementsFilename({ version: ZAPBIP_HERMES_PLUGIN_VERSION }), contentType: 'text/plain; charset=utf-8' },
-];
+export const SERVED_PACKAGES = Object.values(AGENT_PLUGINS)
+  .flatMap((plugin) => plugin.hostedArtifacts)
+  .map((artifact) => ({ filename: artifact.filename, contentType: artifact.contentType }));
 const UNAVAILABLE_ERROR = 'unavailable';
 
 type PackageContext = Context<{ Bindings: Bindings }>;
@@ -31,7 +22,7 @@ function notFound(context: PackageContext): Response {
 
 export const packageRoutes = new Hono<{ Bindings: Bindings }>();
 
-packageRoutes.get(`${HERMES_WHEEL_PATH_PREFIX}:${FILENAME_PARAMETER}`, async (context) => {
+packageRoutes.get(`${PACKAGE_PATH_PREFIX}:${FILENAME_PARAMETER}`, async (context) => {
   const filename = context.req.param(FILENAME_PARAMETER);
   const served = SERVED_PACKAGES.find((candidate) => candidate.filename === filename);
   if (!served) return notFound(context);
@@ -48,7 +39,7 @@ packageRoutes.get(`${HERMES_WHEEL_PATH_PREFIX}:${FILENAME_PARAMETER}`, async (co
   });
 });
 
-packageRoutes.all(`${HERMES_WHEEL_PATH_PREFIX}*`, notFound);
+packageRoutes.all(`${PACKAGE_PATH_PREFIX}*`, notFound);
 
 packageRoutes.onError((_error, context) => {
   logEvent({ event: LogEvent.PackageUnavailable });

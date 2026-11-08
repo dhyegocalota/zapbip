@@ -1,11 +1,11 @@
 import { copyFile, mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { ZAPBIP_HERMES_PLUGIN_VERSION, ZAPBIP_HERMES_WHEEL_SHA256 } from '../../../libs/types/src/constants';
-import { hermesWheelFilename } from '../../../libs/types/src/hermes-wheel';
-import { CONTAINER_HOST } from './constants';
-import { buildImage, type Container, startContainer } from './container';
+import { hermesWheelFilename, ZAPBIP_HERMES_PLUGIN_VERSION, ZAPBIP_HERMES_WHEEL_SHA256 } from '../../../libs/agents/supported/hermes/wheel';
+import { CONTAINER_HOST } from '../../../scripts/e2e/clients/constants';
+import { buildImage, type Container, startContainer } from '../../../scripts/e2e/clients/container';
+import type { PluginClientInput } from '../../../scripts/e2e/clients/plugin-client';
 
-const WHEEL_RELEASE_DIRECTORY = join(import.meta.dirname, '..', '..', '..', 'apps', 'hermes-plugin', 'release');
+const WHEEL_RELEASE_DIRECTORY = join(import.meta.dirname, '..', 'release');
 const DOCKERFILE = join(import.meta.dirname, 'hermes', 'Dockerfile');
 const HERMES_IMAGE = 'nousresearch/hermes-agent:v0.22.7@sha256:e6d81ae52ebf6a43efa529701405509f20054ba818f179ddd748bed4f8af584c';
 const HERMES_IMAGE_TAG = 'zapbip-e2e-hermes';
@@ -23,7 +23,7 @@ const FAKE_API_KEY = 'fake-key';
 const MODEL_ID = 'fake-model';
 const LOG_FILES = [`${DATA_PATH}/logs/gateway.log`, `${DATA_PATH}/logs/agent.log`];
 
-export async function buildHermesImage(input: { directory: string }): Promise<void> {
+export async function buildPluginImage(input: { directory: string }): Promise<void> {
   const contextDirectory = join(input.directory, 'hermes-context');
   const wheelDirectory = join(contextDirectory, 'wheel');
   await mkdir(wheelDirectory, { recursive: true });
@@ -41,16 +41,6 @@ export async function buildHermesImage(input: { directory: string }): Promise<vo
     },
   });
 }
-
-export type HermesClientInput = {
-  name: string;
-  directory: string;
-  connectionLink: string;
-  allowedUsers: string;
-  hasMcpServer: boolean;
-  fakeModelPort: number;
-  certificateFile: string;
-};
 
 function mcpServersLines(input: { connectionLink: string; hasMcpServer: boolean }): string[] {
   if (!input.hasMcpServer) return [];
@@ -75,7 +65,7 @@ function configOf(input: { fakeModelPort: number; connectionLink: string; hasMcp
   ].join('\n');
 }
 
-export async function startHermesClient(input: HermesClientInput): Promise<Container> {
+export async function startPluginClient(input: PluginClientInput): Promise<Container> {
   const homeDirectory = join(input.directory, `${input.name}-home`);
   const configFile = join(homeDirectory, 'config.yaml');
   await mkdir(homeDirectory, { recursive: true });

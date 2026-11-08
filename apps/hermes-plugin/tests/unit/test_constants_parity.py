@@ -5,6 +5,7 @@ import pytest
 from typescript_constants import (
     CHANNEL_PLUGIN_SOURCE,
     CONNECTOR_SOURCE,
+    HERMES_PLUGIN_SOURCE,
     ENUMS_SOURCE,
     INBOX_CONSTANTS_SOURCE,
     SHARED_CONSTANTS_SOURCE,
@@ -95,7 +96,7 @@ def test_self_test_text_equals_the_shared_one() -> None:
 
 
 def test_plugin_name_equals_the_shared_package_name() -> None:
-    assert f"'{constants.PLUGIN_NAME}'" in CHANNEL_PLUGIN_SOURCE.read_text()
+    assert f"'{constants.PLUGIN_NAME}'" in HERMES_PLUGIN_SOURCE.read_text()
 
 
 def test_text_limit_equals_the_core_limit() -> None:

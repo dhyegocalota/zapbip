@@ -8,6 +8,7 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
 CONNECTOR_SOURCE = REPOSITORY_ROOT / "libs/types/src/connector.ts"
 ENUMS_SOURCE = REPOSITORY_ROOT / "libs/types/src/enums.ts"
 CHANNEL_PLUGIN_SOURCE = REPOSITORY_ROOT / "libs/types/src/channel-plugin.ts"
+HERMES_PLUGIN_SOURCE = REPOSITORY_ROOT / "libs/agents/supported/hermes/plugin.ts"
 SHARED_CONSTANTS_SOURCE = REPOSITORY_ROOT / "libs/types/src/constants.ts"
 INBOX_CONSTANTS_SOURCE = REPOSITORY_ROOT / "libs/core/src/inbox/constants.ts"
 

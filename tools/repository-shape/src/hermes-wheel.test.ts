@@ -3,11 +3,12 @@ import { createHash } from 'node:crypto';
 import { mkdtempSync, readdirSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, posix } from 'node:path';
-import { hermesRequirementsFilename, hermesWheelFilename, hermesWheelPath, PRODUCTION_PUBLIC_ORIGIN } from '@zapbip/types';
+import { PRODUCTION_PUBLIC_ORIGIN } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
+import { hermesRequirementsFilename, hermesWheelFilename, hermesWheelPath } from '../../../libs/agents/supported/hermes/wheel';
 import { readRepositoryFile, repositoryFiles, repositoryPath, trackedFiles } from './repository-files';
 
-const SHARED_CONSTANTS = 'libs/types/src/constants.ts';
+const WHEEL_CONSTANTS = 'libs/agents/supported/hermes/wheel.ts';
 const HERMES_PROJECT = 'apps/hermes-plugin/pyproject.toml';
 const RELEASE_DIRECTORY = 'apps/hermes-plugin/release';
 const SOURCE_DIRECTORY = 'apps/hermes-plugin/zapbip_platform';
@@ -28,8 +29,8 @@ const RECORD_DIRECTORIES = ['docs/adr/', 'docs/learnings/', 'docs/features/'];
 const THIS_TEST = 'tools/repository-shape/src/hermes-wheel.test.ts';
 
 function constantOf({ name, pattern }: { name: string; pattern: string }): string {
-  const value = new RegExp(`export const ${name} = '(${pattern})'`).exec(readRepositoryFile(SHARED_CONSTANTS))?.[1];
-  if (value === undefined) throw new Error(`${name} is not exported from ${SHARED_CONSTANTS}`);
+  const value = new RegExp(`export const ${name} = '(${pattern})'`).exec(readRepositoryFile(WHEEL_CONSTANTS))?.[1];
+  if (value === undefined) throw new Error(`${name} is not exported from ${WHEEL_CONSTANTS}`);
   return value;
 }
 

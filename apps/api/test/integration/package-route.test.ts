@@ -1,20 +1,23 @@
-import {
-  HERMES_WHEEL_PATH_PREFIX,
-  hermesRequirementsFilename,
-  hermesWheelFilename,
-  HttpStatus,
-  ZAPBIP_HERMES_PLUGIN_VERSION,
-} from '@zapbip/types';
+import { AGENT_PLUGINS, PluginAgent } from '@zapbip/agents/plugins';
+import { HttpStatus, PACKAGE_PATH_PREFIX } from '@zapbip/types';
 import { env, SELF } from 'cloudflare:test';
 import { describe, expect, test, vi } from 'vitest';
 import { LogEvent } from '../../src/contract/log';
 import { packageRoutes } from '../../src/routes/package';
 import { ORIGIN } from './route-fixtures';
 
-const WHEEL_FILENAME = hermesWheelFilename({ version: ZAPBIP_HERMES_PLUGIN_VERSION });
-const REQUIREMENTS_FILENAME = hermesRequirementsFilename({ version: ZAPBIP_HERMES_PLUGIN_VERSION });
-const REQUIREMENTS_URL = `${ORIGIN}${HERMES_WHEEL_PATH_PREFIX}${REQUIREMENTS_FILENAME}`;
-const WHEEL_URL = `${ORIGIN}${HERMES_WHEEL_PATH_PREFIX}${WHEEL_FILENAME}`;
+const HERMES_PLUGIN = AGENT_PLUGINS[PluginAgent.Hermes];
+
+function hostedFilenameOf(input: { isEmbedded: boolean }): string {
+  const hosted = HERMES_PLUGIN.hostedArtifacts.find((artifact) => artifact.embeddedInInstallCommand === input.isEmbedded);
+  if (!hosted) throw new Error('the Hermes plugin hosts no such artifact');
+  return hosted.filename;
+}
+
+const WHEEL_FILENAME = hostedFilenameOf({ isEmbedded: false });
+const REQUIREMENTS_FILENAME = hostedFilenameOf({ isEmbedded: true });
+const REQUIREMENTS_URL = `${ORIGIN}${PACKAGE_PATH_PREFIX}${REQUIREMENTS_FILENAME}`;
+const WHEEL_URL = `${ORIGIN}${PACKAGE_PATH_PREFIX}${WHEEL_FILENAME}`;
 const WHEEL_TEXT = 'wheel-bytes';
 const WHEEL_BYTES = new TextEncoder().encode(WHEEL_TEXT);
 const IMMUTABLE_CACHE_CONTROL = 'public, max-age=31536000, immutable';
@@ -114,7 +117,7 @@ describe('package route', () => {
         throw new Error('r2 unavailable');
       },
     } as unknown as R2Bucket;
-    const response = await packageRoutes.request(`${HERMES_WHEEL_PATH_PREFIX}${WHEEL_FILENAME}`, undefined, {
+    const response = await packageRoutes.request(`${PACKAGE_PATH_PREFIX}${WHEEL_FILENAME}`, undefined, {
       ...env,
       PACKAGES: failingBucket,
     });
@@ -127,11 +130,11 @@ describe('package route', () => {
   test.each([
     'zapbip_platform-9.9.9-py3-none-any.whl',
     'zapbip_platform-9.9.9-requirements.txt',
-    `zapbip_platform-${ZAPBIP_HERMES_PLUGIN_VERSION}-py3-none-any.tar.gz`,
-    `zapbip_platform-${ZAPBIP_HERMES_PLUGIN_VERSION}-py3-none-macosx.whl`,
+    `zapbip_platform-${HERMES_PLUGIN.version}-py3-none-any.tar.gz`,
+    `zapbip_platform-${HERMES_PLUGIN.version}-py3-none-macosx.whl`,
   ])('answers 404 with no-store for the near miss %s even when the object exists', async (filename) => {
     await env.PACKAGES.put(filename, WHEEL_TEXT);
-    const response = await SELF.fetch(`${ORIGIN}${HERMES_WHEEL_PATH_PREFIX}${filename}`);
+    const response = await SELF.fetch(`${ORIGIN}${PACKAGE_PATH_PREFIX}${filename}`);
     expect(response.status).toBe(HttpStatus.NotFound);
     expect(response.headers.get('cache-control')).toBe(NO_STORE);
   });

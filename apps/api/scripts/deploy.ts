@@ -2,16 +2,9 @@ import { join } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { parseArgs } from 'node:util';
 import { experimental_readRawConfig as readRawWranglerConfig } from 'wrangler';
-import {
-  COMPANY,
-  type CompanyFacts,
-  OFFICIAL_WHATSAPP_NUMBER,
-  OPENCLAW_PLUGIN_NPM_VERSION,
-  ZAPBIP_NPM_VERSION,
-  ZAPBIP_HERMES_PLUGIN_VERSION,
-  ZAPBIP_HERMES_REQUIREMENTS_SHA256,
-  ZAPBIP_HERMES_WHEEL_SHA256,
-} from '@zapbip/types';
+import type { AgentPlugin } from '@zapbip/agents';
+import { AGENT_PLUGINS } from '@zapbip/agents/plugins';
+import { COMPANY, type CompanyFacts, OFFICIAL_WHATSAPP_NUMBER, ZAPBIP_NPM_VERSION } from '@zapbip/types';
 import { z } from 'zod';
 import { DeployEnvironment, parseDeployEnvironment } from '../src/operations/deploy-environment';
 import {
@@ -53,10 +46,7 @@ export type DeployRun = {
   officialWhatsAppNumber: string;
   company: CompanyFacts;
   npmVersion: string;
-  openclawPluginVersion: string;
-  hermesPluginVersion: string;
-  hermesWheelSha256: string;
-  hermesRequirementsSha256: string;
+  plugins: AgentPlugin[];
   packageFetcher: PackageFetcher;
   nameserverResolver: NameserverResolver;
   log: (line: string) => void;
@@ -194,10 +184,7 @@ async function main(): Promise<void> {
       officialWhatsAppNumber: OFFICIAL_WHATSAPP_NUMBER,
       company: COMPANY,
       npmVersion: ZAPBIP_NPM_VERSION,
-      openclawPluginVersion: OPENCLAW_PLUGIN_NPM_VERSION,
-      hermesPluginVersion: ZAPBIP_HERMES_PLUGIN_VERSION,
-      hermesWheelSha256: ZAPBIP_HERMES_WHEEL_SHA256,
-      hermesRequirementsSha256: ZAPBIP_HERMES_REQUIREMENTS_SHA256,
+      plugins: Object.values(AGENT_PLUGINS),
       packageFetcher: createPackageFetcher(),
       nameserverResolver: createNameserverResolver(),
       log: console.log,

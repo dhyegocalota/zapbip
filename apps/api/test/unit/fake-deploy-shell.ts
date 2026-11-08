@@ -1,5 +1,7 @@
 import { createHash } from 'node:crypto';
-import { hermesRequirementsPath, hermesWheelPath, PRODUCTION_PUBLIC_ORIGIN, type CompanyFacts } from '@zapbip/types';
+import { type AgentPlugin, type HostedArtifact } from '@zapbip/agents';
+import { AGENT_PLUGINS, PluginAgent } from '@zapbip/agents/plugins';
+import { PRODUCTION_PUBLIC_ORIGIN, type CompanyFacts } from '@zapbip/types';
 import { DeployEnvironment } from '../../src/operations/deploy-environment';
 import type { DeployBlock, WorkerFacts, DeployShell, EnvironmentVariables, ShellResult } from '../../src/operations/deploy-preflight';
 import type { NameserverResolver } from '../../src/operations/nameserver-resolver';
@@ -11,12 +13,25 @@ export const OFFICIAL_NUMBER = '5511999990000';
 export const NPM_VERSION = '0.1.0';
 export const NPM_PUBLISHER_VARIABLE = 'ZAPBIP_NPM_PUBLISHER';
 export const NPM_PUBLISHER = 'zapbip-owner';
-export const HERMES_PLUGIN_VERSION = '0.1.0';
+export const HERMES_PLUGIN_VERSION = AGENT_PLUGINS[PluginAgent.Hermes].version;
 export const HERMES_WHEEL_SHA256 = createHash('sha256').update('hosted-wheel').digest('hex');
 export const HERMES_REQUIREMENTS_SHA256 = createHash('sha256').update('hosted-requirements').digest('hex');
 export const OTHER_WHEEL_SHA256 = createHash('sha256').update('another-wheel').digest('hex');
-export const HERMES_REQUIREMENTS_URL = `${PRODUCTION_PUBLIC_ORIGIN}${hermesRequirementsPath({ version: HERMES_PLUGIN_VERSION })}`;
-export const HERMES_WHEEL_URL = `${PRODUCTION_PUBLIC_ORIGIN}${hermesWheelPath({ version: HERMES_PLUGIN_VERSION })}`;
+function hermesArtifactOf(input: { isEmbedded: boolean }): HostedArtifact {
+  return AGENT_PLUGINS[PluginAgent.Hermes].hostedArtifacts.find(
+    (artifact) => artifact.embeddedInInstallCommand === input.isEmbedded,
+  ) as HostedArtifact;
+}
+
+export const HERMES_REQUIREMENTS_URL = `${PRODUCTION_PUBLIC_ORIGIN}${hermesArtifactOf({ isEmbedded: true }).path}`;
+export const HERMES_WHEEL_URL = `${PRODUCTION_PUBLIC_ORIGIN}${hermesArtifactOf({ isEmbedded: false }).path}`;
+export const HOSTED_PLUGINS: AgentPlugin[] = Object.values(AGENT_PLUGINS).map((plugin) => ({
+  ...plugin,
+  hostedArtifacts: plugin.hostedArtifacts.map((artifact) => ({
+    ...artifact,
+    expectedSha256: artifact.embeddedInInstallCommand ? HERMES_REQUIREMENTS_SHA256 : HERMES_WHEEL_SHA256,
+  })),
+}));
 export const DATABASE_ID = '0a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d';
 export const ALL_SECRETS_JSON = JSON.stringify(Object.values(WorkerSecret).map((name) => ({ name, type: 'secret_text' })));
 export const PASSING: ShellResult = { exitCode: 0, stdout: '' };

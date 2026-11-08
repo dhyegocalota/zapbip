@@ -3,15 +3,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
-import {
-  COMPANY_FACT_UNSET,
-  type CompanyFacts,
-  OFFICIAL_NUMBER_UNSET,
-  OFFICIAL_WHATSAPP_NUMBER,
-  OPENCLAW_PLUGIN_NPM_VERSION,
-  ZAPBIP_NPM_VERSION,
-  ZAPBIP_HERMES_PLUGIN_VERSION,
-} from '@zapbip/types';
+import { COMPANY_FACT_UNSET, type CompanyFacts, OFFICIAL_NUMBER_UNSET, OFFICIAL_WHATSAPP_NUMBER, ZAPBIP_NPM_VERSION } from '@zapbip/types';
 import { afterAll, describe, expect, test } from 'vitest';
 import { readDeployBlock, runDeploy } from '../../scripts/deploy';
 import { DeployEnvironment } from '../../src/operations/deploy-environment';
@@ -23,8 +15,7 @@ import {
   fakeNameserverResolver,
   fakePackageFetcher,
   fakeShell,
-  HERMES_REQUIREMENTS_SHA256,
-  HERMES_WHEEL_SHA256,
+  HOSTED_PLUGINS,
   OFFICIAL_NUMBER,
   READY_WORKER_FACTS,
 } from '../unit/fake-deploy-shell';
@@ -99,10 +90,7 @@ async function refusalOf(input: {
     officialWhatsAppNumber: input.officialWhatsAppNumber,
     company: input.company,
     npmVersion: ZAPBIP_NPM_VERSION,
-    openclawPluginVersion: OPENCLAW_PLUGIN_NPM_VERSION,
-    hermesPluginVersion: ZAPBIP_HERMES_PLUGIN_VERSION,
-    hermesWheelSha256: HERMES_WHEEL_SHA256,
-    hermesRequirementsSha256: HERMES_REQUIREMENTS_SHA256,
+    plugins: HOSTED_PLUGINS,
     packageFetcher: fakePackageFetcher({}),
     nameserverResolver: fakeNameserverResolver({}),
     log: (line) => lines.push(line),
