@@ -73,6 +73,7 @@ describe.skipIf(IS_INSIDE_PROOF)('the agent lifecycle in a throwaway worktree', 
       const scaffoldId = `scaffold-probe-${Math.random().toString(36).slice(2, 8)}`;
       const worktree = newWorktree();
       expect(checkOutHead({ directory: worktree.directory }).status).toBe(0);
+      expect(run({ command: ['pnpm', 'install', '--frozen-lockfile', '--offline'], directory: worktree.directory }).status).toBe(0);
       const scaffold = run({ command: ['pnpm', 'agents:new', scaffoldId, ...flags], directory: worktree.directory });
       expect(scaffold.status, scaffold.output).toBe(0);
       expect(run({ command: ['pnpm', 'install', '--no-frozen-lockfile', '--offline'], directory: worktree.directory }).status).toBe(0);
