@@ -32,7 +32,7 @@ const HARNESS_TEST_FILES = ['agent-surfaces', 'delivery-docs', 'rules', 'scenari
 );
 const LEAK_CHECK_TEST_FILES = ['libs/agents/src/checks/leaks.test.ts', 'tools/repository-shape/src/agent-registry.test.ts'];
 const LEAK_ALLOWED_PREFIXES = [GENERATED_FOLDER, ...LEAK_CHECK_TEST_FILES, ...HARNESS_TEST_FILES, ...HARNESS_FOLDERS];
-const ENUM_MEMBER_PATTERN = /^\s*(\w+) = '([a-z-]+)',?$/;
+const ENUM_MEMBER_PATTERN = /^\s*(\w+) = '([a-z0-9-]+)',?$/;
 
 type Fixture = { id: string; member: string; englishName: string; portugueseName: string };
 

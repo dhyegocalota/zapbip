@@ -10,7 +10,7 @@ import { agentOrderOf } from '../src/order';
 const REPOSITORY_ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const CONNECTION_LINK = 'https://surfaces.example/c/zb_conn_SURFACES/mcp';
 const PAGE_OWNER = 'Ana';
-const MATRIX_LINK_PATTERN = /\]\(\/(?:pt-br\/)?agents\/([a-z-]+)\)/;
+const MATRIX_LINK_PATTERN = /\]\(\/(?:pt-br\/)?agents\/([a-z0-9-]+)\)/;
 const SECTION_MARKER = '## ';
 const FIXED_HEADINGS = ['## Identify your product', '## Rules you follow after install'];
 const MATRIX_SNIPPET: Record<DocsLanguage, string> = {
