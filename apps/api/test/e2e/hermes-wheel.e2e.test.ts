@@ -5,7 +5,7 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
-import { HERMES_INSTALL_COMMAND } from '@zapbip/core';
+import { HERMES_INSTALL_COMMAND } from '@zapbip/agents/plugins';
 import {
   hermesRequirementsPath,
   hermesWheelPath,

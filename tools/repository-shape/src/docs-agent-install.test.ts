@@ -1,4 +1,4 @@
-import { HERMES_INSTALL_COMMAND } from '@zapbip/core';
+import { HERMES_INSTALL_COMMAND } from '@zapbip/agents/plugins';
 import { INSTALL_SELF_TEST_TEXT, OwnerLocale } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { readRepositoryFile } from './repository-files';

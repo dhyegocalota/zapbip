@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { DocsLanguage, DocsOnlyClient, InstallClient, PAGE_LANGUAGE_FOLDER } from '@zapbip/types';
-import { HERMES_INSTALL_COMMAND } from '../../../libs/core/src/install/prompts/connector-commands';
+import { HERMES_INSTALL_COMMAND } from '../../../libs/agents/src/plugins';
 import {
   AGENT_PAGE_HEADINGS,
   AGENT_PAGE_SECTIONS,
