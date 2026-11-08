@@ -7,9 +7,9 @@ import {
   DocsRetentionKind,
   McpToolName,
   MessageKind,
-  OFFICIAL_NUMBER_UNSET,
-  OFFICIAL_WHATSAPP_NUMBER,
   PAGE_LANGUAGE_FOLDER,
+  START_LINK,
+  START_LINK_LANGUAGE_PARAMETER,
 } from '@zapbip/types';
 import {
   AGENT_PAGE_HEADINGS,
@@ -39,7 +39,8 @@ const AGENTS_DIRECTORY = 'agents';
 const MATRIX_PAGE = 'agents/supported-agents';
 const MATRIX_SNIPPET = 'agents/matrix';
 const INSTALL_PROMPT_SNIPPET = 'install-prompt';
-const OFFICIAL_NUMBER_SNIPPET = 'official-number';
+const START_LINK_SNIPPET = 'start-link';
+const AGENT_PAGE_SOURCES_DIRECTORY = 'libs/agents/supported';
 const NAVIGATION_TEST_FILE = 'tools/repository-shape/src/docs-navigation.test.ts';
 const SOURCE_EXTENSIONS = ['.mdx', '.md', '.json', '.jsx'];
 const IGNORED_DIRECTORY = 'node_modules';
@@ -51,12 +52,10 @@ const INSTALL_LINK_ORIGIN = 'https://mcp.zapbip.com';
 const INSTALL_LINK_PATTERN = /https:\/\/[^\s/]+\/i\/zb_inst_[^\s`'"]+/g;
 const LINK_PATH_PATTERN = /\/[ci]\/([^\s)`'"]+)/g;
 const PLACEHOLDER_MARK = '<';
-const OFFICIAL_NUMBER_PATTERN = new RegExp(`^(${OFFICIAL_NUMBER_UNSET}|\\d+)$`);
+const PHONE_NUMBER_LINK_PATTERN = /wa\.me|OFFICIAL_(WHATSAPP_)?NUMBER/g;
 const MATRIX_LINK_PATTERN = /\]\(\/(?:pt-br\/)?agents\/([a-z0-9-]+)\)/g;
 const TABLE_ROW_PATTERN = /^\|/;
 const TABLE_HEADER_ROW_COUNT = 2;
-const TEST_NUMBER = '15550000001';
-const OTHER_TEST_NUMBER = '15550000002';
 const NEW_CLIENT_PAGE = 'agents/x';
 const WRONG_MEDIA_DAYS = 14;
 const PRIVACY_PAGE = 'help/privacy-and-security';
@@ -175,11 +174,18 @@ function identicalViolations({ english, translated }: { english: string; transla
   return english === translated ? ['the translated snippet equals the English one'] : [];
 }
 
-function officialNumberViolations({ snippet, number }: { snippet: string; number: string }): string[] {
-  const isValidNumber = OFFICIAL_NUMBER_PATTERN.test(number);
-  const expectedTokens = [`+${number}`, `https://wa.me/${number}`];
-  const missing = expectedTokens.filter((token) => !snippet.includes(token)).map((token) => `missing ${token}`);
-  return isValidNumber ? missing : [`invalid number ${number}`, ...missing];
+function startLinkViolations({ snippet, language }: { snippet: string; language: DocsLanguage }): string[] {
+  const expectedLink = `${START_LINK}?${START_LINK_LANGUAGE_PARAMETER}=${language}`;
+  return snippet.includes(expectedLink) ? [] : [`missing ${expectedLink}`];
+}
+
+function agentPageSourceFiles(): Record<string, string> {
+  const paths = readdirSync(repositoryPath(AGENT_PAGE_SOURCES_DIRECTORY), { recursive: true, encoding: 'utf8' })
+    .filter((path) => !path.split('/').includes(IGNORED_DIRECTORY))
+    .filter((path) => path.endsWith(PAGE_EXTENSION));
+  return Object.fromEntries(
+    paths.map((path) => [`${AGENT_PAGE_SOURCES_DIRECTORY}/${path}`, readRepositoryFile(`${AGENT_PAGE_SOURCES_DIRECTORY}/${path}`)]),
+  );
 }
 
 function retentionFigureViolations({ markdown, kind }: { markdown: string; kind: DocsRetentionKind }): string[] {
@@ -399,17 +405,21 @@ describe('docs experience: copy', () => {
     expect(identicalViolations({ english: 'same', translated: 'same' })).toHaveLength(1);
   });
 
-  test.each(LANGUAGES)('the official number snippet in %s renders the constant', (language) => {
-    const snippet = readRepositoryFile(snippetPathOf({ name: OFFICIAL_NUMBER_SNIPPET, language }));
-    expect(officialNumberViolations({ snippet, number: OFFICIAL_WHATSAPP_NUMBER })).toEqual([]);
+  test.each(LANGUAGES)('the start link snippet in %s links the start link in that language', (language) => {
+    const snippet = readRepositoryFile(snippetPathOf({ name: START_LINK_SNIPPET, language }));
+    expect(startLinkViolations({ snippet, language })).toEqual([]);
   });
 
-  test('a snippet digit that differs from the constant fails', () => {
-    const snippet = `+${TEST_NUMBER} https://wa.me/${TEST_NUMBER}`;
-    expect(officialNumberViolations({ snippet, number: OTHER_TEST_NUMBER })).toEqual([
-      `missing +${OTHER_TEST_NUMBER}`,
-      `missing https://wa.me/${OTHER_TEST_NUMBER}`,
+  test('a snippet that links the other language fails', () => {
+    const snippet = `${START_LINK}?${START_LINK_LANGUAGE_PARAMETER}=${DocsLanguage.English}`;
+    expect(startLinkViolations({ snippet, language: DocsLanguage.PortugueseBrazil })).toEqual([
+      `missing ${START_LINK}?${START_LINK_LANGUAGE_PARAMETER}=${DocsLanguage.PortugueseBrazil}`,
     ]);
+  });
+
+  test('no docs file or agent page source prints a phone number link or an official number token', () => {
+    const files = { ...docsSourceFiles(), ...agentPageSourceFiles() };
+    expect(forbiddenViolations({ files, pattern: PHONE_NUMBER_LINK_PATTERN })).toEqual([]);
   });
 
   test('a typed media figure of 14 days fails naming 30', () => {
