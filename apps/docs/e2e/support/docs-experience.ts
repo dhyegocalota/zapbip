@@ -35,7 +35,7 @@ export function requestFailedNoiseOf(input: { url: string; errorText: string }):
   return `requestfailed ${input.url} ${input.errorText}`;
 }
 
-export function isAllowedNoise(input: { entry: string }): boolean {
+export function isAllowedNoise(input: { entry: string; origin: string }): boolean {
   return DOCS_WALK_NOISE_ALLOWLIST.some((allowed) => allowed.pattern.test(input.entry));
 }
 

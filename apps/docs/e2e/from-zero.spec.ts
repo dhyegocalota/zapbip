@@ -53,8 +53,9 @@ for (const language of Object.values(DocsLanguage)) {
         test.skip(testInfo.project.use.locale !== DOCS_LOCALE_OF[language]);
       });
 
-      test(`${DOCS_LOCALE_OF[language]} walk from the Overview to the WhatsApp step`, async ({ page }) => {
+      test(`${DOCS_LOCALE_OF[language]} walk from the Overview to the WhatsApp step`, async ({ page, baseURL }) => {
         test.setTimeout(WALK_TIMEOUT_MS);
+        if (!baseURL) throw new Error('the docs project has no baseURL');
         const noise: string[] = [];
         page.on('console', (message) => {
           if (message.type() === 'error') noise.push(`console ${message.text()}`);
@@ -118,7 +119,7 @@ for (const language of Object.values(DocsLanguage)) {
           await expectNoOverflow({ page });
         }
 
-        expect(noise.filter((entry) => !isAllowedNoise({ entry }))).toEqual([]);
+        expect(noise.filter((entry) => !isAllowedNoise({ entry, origin: new URL(baseURL).origin }))).toEqual([]);
       });
     });
   }

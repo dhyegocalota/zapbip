@@ -16,6 +16,8 @@ const WIDTH_OF: Record<DocsViewport, number> = {
   [DocsViewport.Narrow]: NARROW_WIDTH_PX,
 };
 
+const ORIGIN = 'http://localhost:3000';
+const OTHER_PORT_CHUNK_URL = 'http://localhost:4000/_mintlify/assets/DrawerViewport-Bx7q1Zk0.js';
 const USER_REQUEST_URL = 'http://localhost:3000/_mintlify/api/user';
 const ABORTED = 'net::ERR_ABORTED';
 const CONNECTION_REFUSED = 'net::ERR_CONNECTION_REFUSED';
@@ -39,44 +41,53 @@ describe('docs walk support', () => {
   });
 
   test('a request aborted on the preview user path is allowed noise', () => {
-    expect(isAllowedNoise({ entry: requestFailedNoiseOf({ url: USER_REQUEST_URL, errorText: ABORTED }) })).toBe(true);
+    expect(isAllowedNoise({ origin: ORIGIN, entry: requestFailedNoiseOf({ url: USER_REQUEST_URL, errorText: ABORTED }) })).toBe(true);
   });
 
   test('another failure on the preview user path is not allowed', () => {
-    expect(isAllowedNoise({ entry: requestFailedNoiseOf({ url: USER_REQUEST_URL, errorText: CONNECTION_REFUSED }) })).toBe(false);
-  });
-
-  test('a 500 response on the preview user path is not allowed', () => {
-    expect(isAllowedNoise({ entry: `response 500 ${USER_REQUEST_URL}` })).toBe(false);
-  });
-
-  test('an aborted request on another path is not allowed', () => {
-    expect(isAllowedNoise({ entry: requestFailedNoiseOf({ url: 'http://localhost:3000/_mintlify/api/other', errorText: ABORTED }) })).toBe(
+    expect(isAllowedNoise({ origin: ORIGIN, entry: requestFailedNoiseOf({ url: USER_REQUEST_URL, errorText: CONNECTION_REFUSED }) })).toBe(
       false,
     );
   });
 
+  test('a 500 response on the preview user path is not allowed', () => {
+    expect(isAllowedNoise({ origin: ORIGIN, entry: `response 500 ${USER_REQUEST_URL}` })).toBe(false);
+  });
+
+  test('an aborted request on another path is not allowed', () => {
+    expect(
+      isAllowedNoise({
+        origin: ORIGIN,
+        entry: requestFailedNoiseOf({ url: 'http://localhost:3000/_mintlify/api/other', errorText: ABORTED }),
+      }),
+    ).toBe(false);
+  });
+
   test('the live-reload polling abort stays allowed', () => {
-    expect(isAllowedNoise({ entry: requestFailedNoiseOf({ url: SOCKET_URL, errorText: ABORTED }) })).toBe(true);
+    expect(isAllowedNoise({ origin: ORIGIN, entry: requestFailedNoiseOf({ url: SOCKET_URL, errorText: ABORTED }) })).toBe(true);
   });
 
   test('an aborted same-origin chunk under the mint assets path is allowed noise', () => {
-    expect(isAllowedNoise({ entry: requestFailedNoiseOf({ url: CHUNK_URL, errorText: ABORTED }) })).toBe(true);
+    expect(isAllowedNoise({ origin: ORIGIN, entry: requestFailedNoiseOf({ url: CHUNK_URL, errorText: ABORTED }) })).toBe(true);
   });
 
   test('an aborted cross-origin chunk is not allowed', () => {
-    expect(isAllowedNoise({ entry: requestFailedNoiseOf({ url: FOREIGN_CHUNK_URL, errorText: ABORTED }) })).toBe(false);
+    expect(isAllowedNoise({ origin: ORIGIN, entry: requestFailedNoiseOf({ url: FOREIGN_CHUNK_URL, errorText: ABORTED }) })).toBe(false);
   });
 
   test('a same-origin chunk that is refused is not allowed', () => {
-    expect(isAllowedNoise({ entry: requestFailedNoiseOf({ url: CHUNK_URL, errorText: CONNECTION_REFUSED }) })).toBe(false);
+    expect(isAllowedNoise({ origin: ORIGIN, entry: requestFailedNoiseOf({ url: CHUNK_URL, errorText: CONNECTION_REFUSED }) })).toBe(false);
   });
 
   test('a same-origin chunk that answers 404 is not allowed', () => {
-    expect(isAllowedNoise({ entry: `response 404 ${CHUNK_URL}` })).toBe(false);
+    expect(isAllowedNoise({ origin: ORIGIN, entry: `response 404 ${CHUNK_URL}` })).toBe(false);
   });
 
   test('an aborted same-origin page navigation is not allowed', () => {
-    expect(isAllowedNoise({ entry: requestFailedNoiseOf({ url: PAGE_URL, errorText: ABORTED }) })).toBe(false);
+    expect(isAllowedNoise({ origin: ORIGIN, entry: requestFailedNoiseOf({ url: PAGE_URL, errorText: ABORTED }) })).toBe(false);
+  });
+
+  test('an aborted chunk from another localhost port is not allowed', () => {
+    expect(isAllowedNoise({ origin: ORIGIN, entry: requestFailedNoiseOf({ url: OTHER_PORT_CHUNK_URL, errorText: ABORTED }) })).toBe(false);
   });
 });
