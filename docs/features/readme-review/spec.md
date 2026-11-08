@@ -22,7 +22,7 @@ The owner ordered: "review all READMEs: concise but correct." The audit of origi
 
 ## Goals
 
-- Every README in the repository reads true against the code on `main` after `feat/agent-registry` merges: the root, `apps/api`, `apps/connector`, `apps/docs`, `apps/hermes-plugin`, `apps/openclaw-plugin`, `libs/agents`, `libs/core`, `libs/types`, `tools/repository-shape`, `.agents/skills`, and the four index READMEs under `docs/` (`adr`, `features`, `learnings`, `runbooks`, `scenarios`).
+- Every README in the repository reads true against the code on `main` after `feat/agent-registry` merges: the root, `apps/api`, `apps/connector`, `apps/docs`, `apps/hermes-plugin`, `apps/openclaw-plugin`, `libs/agents`, `libs/core`, `libs/types`, `tools/repository-shape`, `.agents/skills`, and the five index READMEs under `docs/` (`adr`, `features`, `learnings`, `runbooks`, `scenarios`).
 - Every workspace package README states purpose only: no commands, configuration, file paths, symbols or code spans, and links only to folders, so a rename fails the link check.
 - No stale claim survives: no "Early stage", no list that a new feature makes incomplete, no mechanism detail the code already shows.
 - Each README is short: one paragraph, as many sentences as the purpose needs.
