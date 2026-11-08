@@ -51,7 +51,7 @@ Author this list with every box empty. A sub-agent ticks its own line. A wrong s
 - [x] **Step 10:** `libs/core/README.md` — evidence: 737d59c1
 - [x] **Step 11:** `libs/types/README.md` — evidence: 737d59c1
 - [x] **Step 12:** `libs/agents/README.md`: confirm against the final folders; amend only if wrong — evidence: reworded in bd1b529a and again in the review round; `supported/` and `generate/` exist and match
-- [ ] **Step 13:** when the stack merges, re-read `libs/agents`, `libs/core` and `apps/connector` against `main` and amend the READMEs that no longer match
+- [x] **Step 13:** when the stack merges, re-read `libs/agents`, `libs/core` and `apps/connector` against `main` and amend the READMEs that no longer match — evidence: rebased onto main at 1750a209; the diff cf2503cd..1750a209 touches `libs/agents/generate` (discovery of listed folders, source, mentions), `libs/agents/src/checks/pages.ts` and fixture pages, and nothing in `libs/core` or `apps/connector`; none of the three READMEs claims anything about discovery, scaffolding, mentions or plugin removal, and `supported/` still holds 11 folders with connector runtimes in `claude-code` and `codex`; all three unchanged
 
 ### Re-audit findings (feat/agent-registry at 2a5cbdc2, updated through the review round)
 

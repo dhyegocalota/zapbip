@@ -1,6 +1,6 @@
 # README review
 
-**Status:** Building
+**Status:** Shipped 2026-11-08
 **Tier:** 🟢 small
 **Owner approval:** owner delegated 2026-11-06
 **ADRs:** none
