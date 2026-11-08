@@ -50,6 +50,7 @@ export async function applyDirectoryMigration(): Promise<void> {
   await applyChannelMigration();
   await applyBackofficeMigration();
   await applyBackofficeFlashMigration();
+  await applyActivityMigration();
 }
 
 export async function seedAccount(input: { accountId: string; state?: AccountState; numberId?: string | null }): Promise<void> {

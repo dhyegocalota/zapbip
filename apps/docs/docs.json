@@ -3,6 +3,7 @@
   "theme": "mint",
   "name": "zapbip",
   "favicon": "/favicon.svg",
+  "logo": { "light": "/logo/light.svg", "dark": "/logo/dark.svg", "href": "/" },
   "errors": {
     "404": {
       "redirect": false,
@@ -11,8 +12,15 @@
     }
   },
   "colors": {
-    "primary": "#128C7E"
+    "primary": "#0B6B60",
+    "light": "#25D366",
+    "dark": "#08564D"
   },
+  "background": {
+    "color": { "light": "#F6F8F5", "dark": "#07120F" },
+    "decoration": "gradient"
+  },
+  "appearance": { "default": "system" },
   "footer": {
     "links": [
       {

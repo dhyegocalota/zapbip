@@ -53,7 +53,7 @@ const TIMEOUT_TEXT = 'did not answer in time';
 const TEMPLATE_MESSAGE_TYPE = 'template';
 
 const whatsapp = readWhatsAppEnvironment({ env: testEnv });
-const fakeGraph = new FakeGraph({ baseUrl: whatsapp.graphBaseUrl });
+const fakeGraph = new FakeGraph({ baseUrl: whatsapp.graphBaseUrl, resourceIds: [TEST_PHONE_NUMBER_ID] });
 const clock = createPlatformClock();
 
 let errorSpy: MockInstance<typeof console.error>;

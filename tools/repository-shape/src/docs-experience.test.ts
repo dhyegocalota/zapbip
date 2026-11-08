@@ -456,7 +456,8 @@ describe('docs experience: mcp reference', () => {
 });
 
 const DOCS_CONFIG_FILE = `${DOCS_ROOT}/docs.json`;
-const IMAGE_TAG_PATTERN = /<img\b[^>]*>/g;
+const IMAGE_TAG_PATTERN = /<(?:img|Image)\b[^>]*>/g;
+const SNIPPET_COMPONENT_EXTENSION = '.jsx';
 const IMAGE_SIZE_PATTERN = /\bwidth=(\{?["'`]?\d+)[\s\S]*\bheight=(\{?["'`]?\d+)|\bheight=(\{?["'`]?\d+)[\s\S]*\bwidth=(\{?["'`]?\d+)/;
 const PORTUGUESE_ENGLISH_TERM_PATTERN = /\b(job|jobs|merge|merges)\b/gi;
 const NOT_FOUND_LINK_PATTERNS = [/\]\(\/\)/, new RegExp(`\\]\\(/${PAGE_LANGUAGE_FOLDER}\\)`)];
@@ -465,6 +466,14 @@ type DocsSiteConfig = { favicon?: string; errors?: { 404?: { redirect?: boolean;
 
 function docsSiteConfig(): DocsSiteConfig {
   return JSON.parse(readRepositoryFile(DOCS_CONFIG_FILE));
+}
+
+function snippetComponentFiles(): string[] {
+  const components = readdirSync(repositoryPath(`${DOCS_ROOT}/${SNIPPETS_DIRECTORY}`)).filter((name) =>
+    name.endsWith(SNIPPET_COMPONENT_EXTENSION),
+  );
+  const pages = documentFiles(SNIPPETS_DIRECTORY);
+  return [...components.map((name) => `${SNIPPETS_DIRECTORY}/${name}`), ...pages].map((path) => `${DOCS_ROOT}/${path}`);
 }
 
 function unsizedImages({ markdown }: { markdown: string }): string[] {
@@ -479,10 +488,13 @@ describe('docs experience: site polish', () => {
   });
 
   test('every image in the docs reserves its space with a width and a height', () => {
-    const violations = pageEntries.flatMap((page) =>
-      unsizedImages({ markdown: readRepositoryFile(pageFileOf(page)) }).map((tag) => `${page}: ${tag}`),
-    );
+    const files = [...pageEntries.map(pageFileOf), ...snippetComponentFiles()];
+    const violations = files.flatMap((file) => unsizedImages({ markdown: readRepositoryFile(file) }).map((tag) => `${file}: ${tag}`));
     expect(violations).toEqual([]);
+  });
+
+  test('an Image component without a height fails', () => {
+    expect(unsizedImages({ markdown: '<Image src="/a.svg" width="420" />' })).toHaveLength(1);
   });
 
   test('an image tag without a height fails', () => {

@@ -33,9 +33,13 @@ export function periodDays(input: { period: MetricsPeriod }): number {
   return PERIOD_DAYS[input.period];
 }
 
+export function lastDays(input: { now: number; count: number }): string[] {
+  const { now, count } = input;
+  return Array.from({ length: count }, (_, offset) => utcDay({ now: now - (count - 1 - offset) * DAY_MS }));
+}
+
 export function windowDays(input: { now: number; period: MetricsPeriod }): string[] {
-  const count = periodDays({ period: input.period });
-  return Array.from({ length: count }, (_, offset) => utcDay({ now: input.now - (count - 1 - offset) * DAY_MS }));
+  return lastDays({ now: input.now, count: periodDays({ period: input.period }) });
 }
 
 export function isKnownMetricsNumber(input: { filter: MetricsFilter; numbers: NumberOption[] }): boolean {

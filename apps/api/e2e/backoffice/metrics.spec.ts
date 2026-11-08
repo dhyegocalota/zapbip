@@ -28,8 +28,8 @@ async function openMetrics(input: { page: Page }): Promise<void> {
 test('shows the empty state before any account exists', async ({ page }) => {
   await openMetrics({ page });
   await expect(cell({ page, name: MetricCell.Accounts })).toHaveText('0');
-  await expect(cell({ page, name: MetricCell.MessagesIn })).toHaveText('0');
-  await expect(page.getByText(copy({ key: BackofficeCopyKey.MetricsNoData })).first()).toBeVisible();
+  await expect(cell({ page, name: MetricCell.BlockedPhones })).toHaveText('0');
+  await expect(page.getByText(copy({ key: BackofficeCopyKey.MetricsNoData }))).toHaveCount(1);
   await expectNoHorizontalScroll({ page });
 });
 

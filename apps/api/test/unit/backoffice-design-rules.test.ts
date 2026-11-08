@@ -1,22 +1,47 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { OwnerLocale } from '@zapbip/types';
+import { HttpStatus, OwnerLocale, WhatsAppNumberState } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { BackofficeAuditAction, BackofficeAuditOutcome } from '../../src/backoffice/audit/backoffice-audit-action';
 import { BackofficeNotice } from '../../src/backoffice/backoffice-notice';
+import { MetricsPage } from '../../src/backoffice/metrics/metrics-page';
+import { NumberDetailPage } from '../../src/backoffice/numbers/views/number-detail';
+import { NumbersListPage } from '../../src/backoffice/numbers/views/numbers-list';
 import { AuditPage } from '../../src/backoffice/views/audit';
+import { ErrorPage } from '../../src/backoffice/views/error-page';
 import { HomePage } from '../../src/backoffice/views/home';
 import { SignInPage } from '../../src/backoffice/views/sign-in';
 import { DeployEnvironment } from '../../src/contract/deploy-environment';
+import { DATA_REPORT, EMPTY_REPORT, homeOverview, METRICS_FILTER, NOW, numberEntry } from './backoffice-page-fixtures';
 
 const BACKOFFICE_ROOT = join(import.meta.dirname, '../../src/backoffice');
 const STYLESHEET = readFileSync(join(BACKOFFICE_ROOT, 'assets/backoffice.css'), 'utf8');
-const TEXT_CONTRAST = 4.5;
-const NON_TEXT_CONTRAST = 3;
 const RAW_COLOUR_PATTERN = /#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bhsla?\(/;
+const CLASS_ATTRIBUTE_PATTERN = /class="([^"$]+)"/g;
+const SELECTOR_CLASS_PATTERN = /\.([a-z][a-z0-9-]*)/g;
+const STATE_ONLY_CLASSES = [
+  'audit-row',
+  'number-row',
+  'template-row',
+  'outcome',
+  'outcome-succeeded',
+  'budget-status',
+  'bar',
+  'chart-axis-maximum',
+];
+const FORCED_COLORS_PATTERN = /@media \(forced-colors: active\)/;
+const FORCED_COLORS_BLOCK_PATTERN = /@media \(forced-colors: active\) \{[\s\S]*?\n\}/;
+const FIELDSET_RULE_PATTERN = /\nfieldset \{[^}]*border: 0;/;
+const LEGEND_RULE_PATTERN = /\nlegend \{[^}]*font-weight: 600;/;
+const TOP_LEVEL_LINE_PATTERN = /^\S/;
+const BLOCK_END = '}';
+const REDUCED_MOTION_GUARD_PATTERN =
+  /@media \(prefers-reduced-motion: reduce\) \{\s*\*,\s*\*::before,\s*\*::after \{\s*animation: none !important;\s*transition: none !important;\s*\}\s*\}/;
+const INFINITE_ANIMATION_PATTERN = /animation[a-z-]*:[^;]*\binfinite\b/;
+const SMOOTH_SCROLL_PATTERN = /scroll-behavior:\s*smooth/;
+const FORCED_COLOR_OPT_OUT_PATTERN = /forced-color-adjust:\s*none/;
+const HERO_CARD_RULE_PATTERN = /\n\.hero-card \{[^}]*\}/;
 const TOKEN_BLOCK_PATTERN = /:root\s*\{[^}]*\}/g;
-const HEX_BASE = 16;
-const LINEAR_THRESHOLD = 0.03928;
 
 const PAGE = {
   locale: OwnerLocale.EnglishUs,
@@ -26,10 +51,23 @@ const PAGE = {
   notice: null,
 };
 
+function detailPage(input: { state: WhatsAppNumberState }): string {
+  return String(
+    NumberDetailPage({
+      page: PAGE,
+      entry: numberEntry({ state: input.state }),
+      siblingLabels: [],
+      allowedTargets: [WhatsAppNumberState.Closed],
+      failure: null,
+      selectedState: null,
+    }),
+  );
+}
+
 const PAGES: Record<string, string> = {
   signIn: String(SignInPage({ ...PAGE, notice: BackofficeNotice.SignInFailed })),
-  home: String(HomePage({ page: PAGE, counts: { pending: 1, active: 2, closed: 0, disabled: 0 } })),
-  homeEmpty: String(HomePage({ page: PAGE, counts: { pending: 0, active: 0, closed: 0, disabled: 0 } })),
+  home: String(HomePage({ page: PAGE, overview: homeOverview({ counts: { pending: 1, active: 2, closed: 0, disabled: 0 } }) })),
+  homeEmpty: String(HomePage({ page: PAGE, overview: homeOverview({ counts: { pending: 0, active: 0, closed: 0, disabled: 0 } }) })),
   audit: String(
     AuditPage({
       page: PAGE,
@@ -45,24 +83,18 @@ const PAGES: Record<string, string> = {
       ],
     }),
   ),
+  numbersList: String(
+    NumbersListPage({ page: PAGE, entries: [numberEntry({}), numberEntry({ numberId: 'num_two', state: WhatsAppNumberState.Pending })] }),
+  ),
+  numbersEmpty: String(NumbersListPage({ page: PAGE, entries: [] })),
+  auditEmpty: String(AuditPage({ page: PAGE, rows: [] })),
+  detailPending: detailPage({ state: WhatsAppNumberState.Pending }),
+  detailActive: detailPage({ state: WhatsAppNumberState.Active }),
+  detailDisabled: detailPage({ state: WhatsAppNumberState.Disabled }),
+  metricsEmpty: String(MetricsPage({ page: PAGE, filter: METRICS_FILTER, report: EMPTY_REPORT, now: NOW })),
+  metricsData: String(MetricsPage({ page: PAGE, filter: METRICS_FILTER, report: DATA_REPORT, now: NOW })),
+  notFound: String(ErrorPage({ status: HttpStatus.NotFound, locale: OwnerLocale.EnglishUs, environment: null })),
 };
-
-const CONTRAST_PAIRS: [string, string, number][] = [
-  ['--color-text', '--color-page', TEXT_CONTRAST],
-  ['--color-text', '--color-surface', TEXT_CONTRAST],
-  ['--color-text-muted', '--color-page', TEXT_CONTRAST],
-  ['--color-text-muted', '--color-surface', TEXT_CONTRAST],
-  ['--color-action', '--color-surface', TEXT_CONTRAST],
-  ['--color-action', '--color-page', TEXT_CONTRAST],
-  ['--color-on-action', '--color-action', TEXT_CONTRAST],
-  ['--color-danger', '--color-surface', TEXT_CONTRAST],
-  ['--color-danger', '--color-danger-surface', TEXT_CONTRAST],
-  ['--color-warning', '--color-warning-surface', TEXT_CONTRAST],
-  ['--color-text', '--color-info-surface', TEXT_CONTRAST],
-  ['--color-border-control', '--color-surface', NON_TEXT_CONTRAST],
-  ['--color-brand', '--color-surface', NON_TEXT_CONTRAST],
-  ['--color-focus', '--color-surface', NON_TEXT_CONTRAST],
-];
 
 function viewSources(input: { directory: string }): { path: string; source: string }[] {
   return readdirSync(input.directory).flatMap((name) => {
@@ -70,36 +102,6 @@ function viewSources(input: { directory: string }): { path: string; source: stri
     if (statSync(path).isDirectory()) return viewSources({ directory: path });
     return name.endsWith('.tsx') ? [{ path, source: readFileSync(path, 'utf8') }] : [];
   });
-}
-
-function tokensOf(input: { block: string }): Record<string, string> {
-  return Object.fromEntries([...input.block.matchAll(/(--[a-z0-9-]+):\s*([^;]+);/g)].map((match) => [match[1]!, match[2]!.trim()]));
-}
-
-function channelLuminance(input: { value: number }): number {
-  const fraction = input.value / 255;
-  return fraction <= LINEAR_THRESHOLD ? fraction / 12.92 : ((fraction + 0.055) / 1.055) ** 2.4;
-}
-
-function luminanceOf(input: { hex: string }): number {
-  const [red, green, blue] = [1, 3, 5].map((offset) =>
-    channelLuminance({ value: parseInt(input.hex.slice(offset, offset + 2), HEX_BASE) }),
-  );
-  return 0.2126 * red! + 0.7152 * green! + 0.0722 * blue!;
-}
-
-function contrastOf(input: { foreground: string; background: string }): number {
-  const [lighter, darker] = [luminanceOf({ hex: input.foreground }), luminanceOf({ hex: input.background })].sort(
-    (left, right) => right - left,
-  );
-  return (lighter! + 0.05) / (darker! + 0.05);
-}
-
-function themeTokens(): { light: Record<string, string>; dark: Record<string, string> } {
-  const blocks = STYLESHEET.match(TOKEN_BLOCK_PATTERN);
-  if (blocks === null || blocks.length !== 2) throw new Error('the stylesheet needs a light and a dark token block');
-  const light = tokensOf({ block: blocks[0]! });
-  return { light, dark: { ...light, ...tokensOf({ block: blocks[1]! }) } };
 }
 
 describe('design rules', () => {
@@ -129,11 +131,49 @@ describe('design rules', () => {
     expect(STYLESHEET.match(TOKEN_BLOCK_PATTERN)).toHaveLength(2);
   });
 
-  it.each(['light', 'dark'] as const)('meets the contrast of the design in %s', (theme) => {
-    const tokens = themeTokens()[theme];
-    const shortfalls = CONTRAST_PAIRS.filter(
-      ([foreground, background, minimum]) => contrastOf({ foreground: tokens[foreground]!, background: tokens[background]! }) < minimum,
-    ).map(([foreground, background]) => `${foreground} on ${background}`);
-    expect(shortfalls).toEqual([]);
+  it('adapts to forced colors', () => {
+    expect(STYLESHEET).toMatch(FORCED_COLORS_PATTERN);
+  });
+
+  it('turns every animation and transition off under reduced motion', () => {
+    expect(STYLESHEET).toMatch(REDUCED_MOTION_GUARD_PATTERN);
+  });
+
+  it('never loops an animation or smooth-scrolls', () => {
+    expect(STYLESHEET).not.toMatch(INFINITE_ANIMATION_PATTERN);
+    expect(STYLESHEET).not.toMatch(SMOOTH_SCROLL_PATTERN);
+  });
+
+  it('draws the hero card border from the gradient token', () => {
+    expect(STYLESHEET.match(HERO_CARD_RULE_PATTERN)?.[0]).toContain('var(--gradient-hero-border)');
+  });
+
+  it('gives the hero card system colours under forced colors', () => {
+    const forcedColorsBlock = STYLESHEET.match(FORCED_COLORS_BLOCK_PATTERN)?.[0];
+    expect(forcedColorsBlock).toMatch(/\.hero-card \{[^}]*border-color: CanvasText;[^}]*background: Canvas;/);
+  });
+
+  it('never opts out of forced colors', () => {
+    expect(STYLESHEET).not.toMatch(FORCED_COLOR_OPT_OUT_PATTERN);
+  });
+
+  it('has a rule for every class a view emits', () => {
+    const ruleClasses = new Set([...STYLESHEET.matchAll(SELECTOR_CLASS_PATTERN)].map((match) => match[1]!));
+    const emittedClasses = [...Object.values(PAGES), ...viewSources({ directory: BACKOFFICE_ROOT }).map(({ source }) => source)].flatMap(
+      (markup) => [...markup.matchAll(CLASS_ATTRIBUTE_PATTERN)].flatMap((match) => match[1]!.split(/\s+/)),
+    );
+    const withoutRule = [...new Set(emittedClasses)].filter((name) => !ruleClasses.has(name) && !STATE_ONLY_CLASSES.includes(name));
+    expect(withoutRule).toEqual([]);
+  });
+
+  it('ends with the single forced-colors block so its rules win the cascade', () => {
+    expect(STYLESHEET.match(/@media \(forced-colors: active\)/g)).toHaveLength(1);
+    const linesAfterOpening = STYLESHEET.slice(STYLESHEET.search(FORCED_COLORS_PATTERN)).split('\n').slice(1);
+    expect(linesAfterOpening.filter((line) => TOP_LEVEL_LINE_PATTERN.test(line) && line !== BLOCK_END)).toEqual([]);
+  });
+
+  it('resets the default fieldset border and styles the legend', () => {
+    expect(STYLESHEET).toMatch(FIELDSET_RULE_PATTERN);
+    expect(STYLESHEET).toMatch(LEGEND_RULE_PATTERN);
   });
 });

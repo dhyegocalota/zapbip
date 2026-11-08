@@ -39,6 +39,7 @@ export function ErrorPage(props: { status: ErrorStatus; locale: OwnerLocale; env
   const view = ERROR_VIEWS[status];
   const title = renderBackofficeCopy({ key: view.title, locale });
   const heading = `${status} ${title}`;
+  const code = String(status);
   return (
     <Layout
       locale={locale}
@@ -51,7 +52,9 @@ export function ErrorPage(props: { status: ErrorStatus; locale: OwnerLocale; env
       notice={null}
     >
       <section class="card form-card" aria-labelledby="error-title">
-        <h1 id="error-title">{heading}</h1>
+        <h1 id="error-title">
+          <span class="error-code">{code}</span> <span class="error-title">{title}</span>
+        </h1>
         <p>{renderBackofficeCopy({ key: view.body, locale })}</p>
         {view.action === null ? null : (
           <a href={view.action.path} class="button button-primary">

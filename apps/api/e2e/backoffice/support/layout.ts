@@ -7,7 +7,7 @@ export async function expectNoHorizontalScroll(input: { page: Page }): Promise<v
   expect(scrollWidth).toBeLessThanOrEqual(viewport.width);
 }
 
-type Box = { x: number; y: number; width: number; height: number };
+export type Box = { x: number; y: number; width: number; height: number };
 
 function intersects(input: { first: Box; second: Box }): boolean {
   const { first, second } = input;
@@ -16,10 +16,10 @@ function intersects(input: { first: Box; second: Box }): boolean {
   return !isSeparatedHorizontally && !isSeparatedVertically;
 }
 
-async function boxesOf(input: { locator: Locator }): Promise<Box[]> {
+export async function boxesOf(input: { locator: Locator }): Promise<Box[]> {
   const boxes = await Promise.all((await input.locator.all()).map((element) => element.boundingBox()));
   return boxes.map((box) => {
-    if (box === null) throw new Error('an element of the chart has no box');
+    if (box === null) throw new Error('an element has no box');
     return box;
   });
 }
@@ -37,4 +37,10 @@ export async function expectChartLabelsClear(input: { chart: Locator; bars: Loca
     barBoxes.forEach((bar) => expect(intersects({ first: label, second: bar })).toBe(false));
     labelBoxes.slice(index + 1).forEach((other) => expect(intersects({ first: label, second: other })).toBe(false));
   });
+}
+
+export async function expectSiblingsApart(input: { container: Locator }): Promise<void> {
+  const children = await input.container.locator(':scope > *').all();
+  const boxes = (await Promise.all(children.map((child) => child.boundingBox()))).filter((box): box is Box => box !== null);
+  boxes.forEach((first, index) => boxes.slice(index + 1).forEach((second) => expect(intersects({ first, second })).toBe(false)));
 }

@@ -5,7 +5,7 @@ import { USAGE_METER_RETENTION_MS } from '../../src/account-inbox/usage-meter';
 import { ActivityMetric } from '../../src/contract/activity-metric';
 import { MIDDAY_START, pinClockAt, HALF_AN_HOUR_BEFORE_MIDNIGHT_START } from '../support/pinned-clock';
 import { advanceClock, openWindow, registerDueTimeProvider } from '../support/inbox-session';
-import { applyActivityMigration, applyDirectoryMigration, seedAccount } from '../support/seed';
+import { applyDirectoryMigration, seedAccount } from '../support/seed';
 import { TEST_NUMBER_ID, seedWhatsAppNumber } from '../support/whatsapp-numbers';
 import { accountInboxStub, connectionOf, testEnv } from '../support/workers-env';
 
@@ -61,7 +61,6 @@ async function flushDueActivity(): Promise<number> {
 beforeEach(async () => {
   pinClockAt({ at: MIDDAY_START });
   await applyDirectoryMigration();
-  await applyActivityMigration();
   await seedWhatsAppNumber();
   await seedAccount({ accountId: ACCOUNT_ID, numberId: TEST_NUMBER_ID });
 });
