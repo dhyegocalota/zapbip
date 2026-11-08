@@ -15,7 +15,7 @@ What is on screen today, from the walks of the shipped features (git-ignored, in
 | Backoffice 375 | `.pr-media/backoffice/sign-in-375-ptbr.png`, `home-375-ptbr.png`, `numbers-one-375-ptbr.png`, `number-detail-375-ptbr.png`, `audit-375-ptbr.png` |
 | Docs | `.pr-media/docs-experience/overview-en-1280.png`, `overview-en-375.png`, `pt-br-index-375.png` |
 
-The fresh `before-*.png` set under `.pr-media/ui-polish/` is taken by the tester at the start of the walk (test plan), on the same ports and data as the after set.
+The fresh `before-*.png` set is taken by the `recorder` on merged `main` (the metrics page included) into `/Users/dhyegocalota/Projects/zapbip/zapbip/.pr-media/ui-polish/` before lane A or lane B changes anything (plan step 1, owner delegated 2026-11-06). The tester takes the after set on the same ports and data.
 
 What those screens show, and what this design fixes:
 
@@ -77,7 +77,7 @@ Tokens live in `:root` of `apps/api/src/backoffice/assets/backoffice.css`; dark 
 | `--color-border-control` | `#7A8C85` | `#5F7A71` | input, select, secondary button borders | changed |
 | `--color-brand` | `#128C7E` | `#25D366` | mark, solid chart bars | changed (dark) |
 | `--color-on-brand` | `#FFFFFF` | `#04140C` | dots inside the mark | new |
-| `--color-signal` | `#25D366` | `#25D366` | live dot, glows; never text in light | new |
+| `--color-signal` | `#25D366` | `#25D366` | live dot, glows, hero border start; never text in light | new |
 | `--color-action` | `#0B6B60` | `#5BE39A` | links, primary fill, hatched series, success text | changed (dark) |
 | `--color-action-hover` | `#08564D` | `#7DEAB0` | primary hover | new |
 | `--color-on-action` | `#FFFFFF` | `#04140C` | text on primary | changed (dark) |
@@ -145,10 +145,14 @@ Every size stays in `rem`; `clamp` mixes `rem` and `vw`, so text zoom still scal
 | `--shadow-highlight` | `inset 0 1px 0 rgb(255 255 255 / 0.16)` | `inset 0 1px 0 rgb(255 255 255 / 0.22)` |
 | `--glow-signal` | `0 0 0 4px rgb(37 211 102 / 0.18)` | same |
 | `--glow-signal-faded` | `0 0 0 7px rgb(37 211 102 / 0)` | same |
-| `--gradient-page` | `radial-gradient(64rem 28rem at 50% -12rem, rgb(37 211 102 / 0.16), transparent 70%)` | same at `0.14` |
+| `--gradient-page` | `radial-gradient(64rem 28rem at 50% -12rem, rgb(37 211 102 / 0.22), transparent 70%)` | same at `0.28` (the header glow band, §16) |
+| `--gradient-hero-border` | `linear-gradient(135deg, var(--color-signal), var(--color-brand))` | same |
+| `--elevation-hero` | `0 2px 4px rgb(14 31 26 / 0.06), 0 24px 48px -20px rgb(37 211 102 / 0.38)` | `0 0 0 1px rgb(232 241 237 / 0.04), 0 32px 64px -20px rgb(37 211 102 / 0.32)` |
 | `--pattern-dots` | `radial-gradient(rgb(14 31 26 / 0.07) 1px, transparent 1.5px)` at `1.25rem` | `rgb(232 241 237 / 0.06)` |
 
-Three levels: flat (tracks, table header), card (`--shadow-card`: cards, tables, figures, selected pills), raised (`--shadow-raised`: the sign-in panel only).
+Four levels: flat (tracks, table header), card (`--shadow-card`: cards, tables, figures, selected pills), raised (`--shadow-raised`: the sign-in panel only), hero (`--elevation-hero`: the one `.hero-card` per page).
+
+**Hero-card border.** One technique, all colours as tokens inside `:root`, so the "no raw colour outside `:root`" scan passes: `.hero-card { border: 1px solid transparent; background: linear-gradient(var(--color-surface), var(--color-surface)) padding-box, var(--gradient-hero-border) border-box; box-shadow: var(--elevation-hero); }`. Under `@media (forced-colors: active)` the gradient is dropped and the system colours take over: `.hero-card { border-color: CanvasText; background: Canvas; box-shadow: none; }` (system-colour keywords are not raw colours). The gradient and glow are decorative; the card reads the same without them.
 
 ## 7. Motion
 
@@ -169,8 +173,8 @@ CSS only. Every animation and transition sits outside a guard that turns it off:
 | Button press | `translateY(1px)` on `:active`; hover changes fill with `--duration-quick` |
 | Arrow buttons (`button-arrow`) | the `→` nudges `3px` on hover |
 | Chart bars | grow from the baseline (`transform-box: fill-box; transform-origin: bottom; scaleY(0)`), once, on load |
-| Live freshness dot | the glow pulses from `--glow-signal` to `--glow-signal-faded`, 2 s, 2 iterations |
-| Empty-state bubble | the three dots breathe (opacity to 0.55), 1.6 s, 3 iterations |
+| `.live-dot` (freshness, environment chip on staging and development, each active number) | the glow pulses from `--glow-signal` to `--glow-signal-faded`, 2 s, 2 iterations |
+| Empty-state bubble (96 px) | the three dots breathe once (opacity to 0.55 and back), 1.6 s, 1 iteration |
 | `<details>` | the `›` chevron rotates 90° when open |
 
 Mockups are captured with reduced motion on, which is the end state of every animation.
@@ -182,7 +186,7 @@ All class names exist today unless marked new. "Hook" means the developer adds a
 | Component | Look |
 |---|---|
 | Brand | `.brand::before`: a `1.75rem` bubble in `--color-brand`, tail corner bottom-left, three `--color-on-brand` dots from radial gradients, `--glow-signal` ring. Text in `--font-display`, `--tracking-tight`. Copy unchanged. |
-| Environment badge | pill, `--color-warning-surface` fill, `--color-warning` text, eyebrow type, a `currentColor` dot before the word. |
+| Environment badge | pill, `--color-warning-surface` fill, `--color-warning` text, eyebrow type, a `span.live-dot` before the word. Rendered on staging and development only, so the pulse never shows on production (owner delegated 2026-11-06). |
 | Primary navigation | `nav` becomes a `--color-sunken` pill track with `--space-1` padding; links are pills `--size-tap` tall in `--color-text-muted`; `aria-current="page"` gets `--color-raised`, `--shadow-card`, `--color-text`, weight 650. Not colour alone: weight and the raised pill. |
 | Locale switch | the same segmented track; the buttons lose their border and fill; `aria-pressed="true"` is the raised pill. |
 | Header end (new hook) | `div.header-end` wraps the locale switch and sign-out, `margin-left: auto`. |
@@ -198,11 +202,14 @@ All class names exist today unless marked new. "Hook" means the developer adds a
 | Breadcrumb (new hook) | `.crumb`: `←` before "Numbers", `--text-small`, 600, no underline until hover. |
 | Page head (new hook) | `.page-head`: `h1` and the page's primary action on one line, wrapping; the button goes full width at 375. |
 | Figure | bubble; label in eyebrow type; value in `--font-display`, `--text-figure`, `--tracking-tight`, tabular. |
-| Freshness (new hooks) | `.freshness-live`: a `--color-signal` dot with the pulse and the word "Live". `.freshness-hourly`: a hollow `--color-text-muted` ring and "Updated hourly". The word is always there. |
+| Freshness (new hooks) | `.freshness-live`: a `span.live-dot` and the word "Live". `.freshness-hourly`: a hollow `--color-text-muted` ring and "Updated hourly". The word is always there. |
+| Live dot (new hook) | `.live-dot`: `0.5rem` circle in `--color-signal`, `--glow-signal` ring, `aria-hidden`, the pulse of §7. Always beside a word ("Live", the state badge text, the environment name). |
+| Hero card (new hook) | `.hero-card` on the first card of a page: the gradient border and `--elevation-hero` of §6. Home: Numbers; number detail: the summary; metrics: the period summary. The other cards keep `--shadow-card`. |
+| Sparkline (new hook) | `svg.sparkline`, 14 points, `viewBox`/`points` by attributes, `--color-brand` stroke 2 (non-text 4.14:1 on surface), area below in `--color-info-surface`, baseline `--color-border-control`, last point a dot. With `.sparkline-summary` beside it in `--text-small` muted: the total and the peak, or the empty sentence. §11 has the copy and the accessible name. |
 | Filter form | one pill-shaped bar (bubble at 375) holding label-beside-select pairs and Apply; at 375 labels go above and Apply goes full width. |
 | Charts | bars get `rx="2"` (a new `BAR_RADIUS` constant in `bar-chart.tsx`); solid `--color-brand`; hatched pattern stroke `--color-action`; baseline `--color-border-control`; `.chart-reference` (new rule) `--color-warning`, 1.5, dashed `4 4`; the reference label gets the new class `chart-reference-label`: `paint-order: stroke; stroke: var(--color-surface); stroke-width: 4px` so it reads over bars; axis labels mono, muted. Legend items show a swatch (solid, or a 45° hatch from `repeating-linear-gradient`) before the text, which still names the pattern. |
 | Show values | `summary` is a sunken pill `--size-tap` tall with a rotating `›`. |
-| Empty state (new hook) | `.empty-state` on the empty card: centred, `--space-8` padding, a typing bubble drawn by `::before` (sunken pill, tail corner, three muted dots), then the existing title, sentence and button. Metrics `.empty-text` gets a `1.75rem` version of the bubble inline before "No data yet". |
+| Empty state (new hook) | `.empty-state` on the empty card: centred, `--space-8` padding, one `6rem` (96 px) brand bubble drawn by `::before` (`--color-brand`, tail corner bottom-left, three `--color-on-brand` dots from radial gradients) whose dots breathe once (§7), then the existing title, sentence and the action as the only primary button. This is the only empty-state bubble: the metrics `.empty-text` uses the same `.empty-state` markup once per section and the inline `1.75rem` variant is dropped. |
 | Error page | the `h1` keeps its text "404 Page not found" and splits into `span.error-code` (`--font-display`, `--text-display`, `--color-brand`; 4.14:1 light and 8.93:1 dark, large text) and `span.error-title`, separated by a space so the accessible name is unchanged. |
 | Signed-out shell (new hook) | `body.shell-signed-out` (sign-in, error pages): `main` centres a single bubble panel; sign-in sits on `--pattern-dots` with `--shadow-raised`. |
 | Page | `body` background is `--gradient-page` over `--color-page`; the header is sticky at ≥ 40rem with `--color-header` and `backdrop-filter: saturate(1.6) blur(14px)`, static below; `html { scroll-padding-top: 6rem }` so a focused field is never under the header. |
@@ -246,7 +253,7 @@ Failure, session-ended and locked states keep their notices in the same slot.
 
 ### 9.3 Home
 
-1280: `h1` Overview; the `notice=` notice; three bubble cards in `card-grid`. Numbers card: the total in `--text-figure` (the sum of the state counts it already renders), the state badges with counts, "Manage numbers →". Metrics and Audit cards: one muted line (`HomeMetricsBody`, `HomeAuditBody`) and their "Open … →" secondary buttons. No-number state: the warning notice and "Register a number" primary replace the figure. 375: one card per row, buttons full width.
+1280: `h1` Overview; the `notice=` notice; three bubble cards in `card-grid`. Numbers card: the total in `--text-figure` (the sum of the state counts it already renders), the state badges with counts, "Manage numbers →". Metrics and Audit cards: one muted line (`HomeMetricsBody`, `HomeAuditBody`) and their "Open … →" secondary buttons. Each of the three cards ends with its sparkline and `.sparkline-summary` (§8, §11). No-number state: the warning notice and "Register a number" primary replace the figure. 375: one card per row, buttons full width.
 
 ### 9.4 Numbers list
 
@@ -282,7 +289,7 @@ One column at `--measure-form`: the result notice, "Meta reports" key-value card
 
 ### 9.8 Metrics
 
-1280 (`option-a-metrics-1280-dark.png`): `h1`; the filter bar; four figure bubbles in one row with live dots; then one card per section, each with its freshness line, inner figure pairs, the chart, the legend and the "Show values" pill. 375: filter stacks, figures two per row, charts full width (SVG scales), no horizontal scroll. Empty: every chart is replaced by the small typing bubble and "No data yet"; figures read 0. Budget at or above 80%: the warning status in bold `--color-warning` and the dashed threshold line labelled over a surface halo.
+1280 (`option-a-metrics-1280-dark.png`): `h1`; the filter bar; four figure bubbles in one row with live dots; then one card per section, each with its freshness line, inner figure pairs, the chart, the legend and the "Show values" pill. 375: filter stacks, figures two per row, charts full width (SVG scales), no horizontal scroll. Empty: every chart is replaced by the `.empty-state` 96 px bubble and "No data yet"; figures read 0. Budget at or above 80%: the warning status in bold `--color-warning` and the dashed threshold line labelled over a surface halo.
 
 ### 9.9 Audit
 
@@ -359,6 +366,14 @@ Backoffice: no existing key changes. New keys in `apps/api/src/backoffice/backof
 | `SignInLead` | Sua chave do backoffice e um código novo. | Your backoffice key and a fresh code. |
 | `HomeMetricsBody` | Contas, mensagens, despertares e orçamento. | Accounts, messages, wakes and budget. |
 | `HomeAuditBody` | Cada entrada, mudança e troca de segredo, por 365 dias. | Every sign-in, change and rotation, kept 365 days. |
+| `HomeNumbersUnit` | números | numbers |
+| `SparklineNumbersMetric` | Números registrados | Numbers registered |
+| `SparklineMessagesMetric` | Mensagens | Messages |
+| `SparklineAuditMetric` | Entradas de auditoria | Audit entries |
+| `SparklineSummary` | {total} no total, pico de {peak} em um dia | {total} in total, peak of {peak} in one day |
+| `SparklineEmpty` | Nenhuma atividade nos últimos {days} dias | No activity in the last {days} days |
+
+Sparkline accessibility: the `svg` is `role="img"` and its first child is `<title>`, whose text is the existing `ChartTitle` (`{metric}, last {days} days`) followed by the summary or the empty sentence, so the accessible name carries the numbers. The same summary or empty sentence is visible in `.sparkline-summary` (the `svg` is not the only carrier). An all-zero series draws only the baseline and shows `SparklineEmpty`; it never draws a flat line as the signal. `{days}` is the `SPARKLINE_DAYS` constant (14).
 
 Docs hero, as props in the two MDX files (the docs keep copy in MDX):
 
@@ -421,6 +436,11 @@ All answers are the recommended option, chosen under the owner's delegation. Not
 | Option 8, docs styling vehicle | A: `zapbip.css` plus inline chat | recommended: A (owner delegated 2026-11-06), 2026-11-08 |
 | Token set, §4 to §7 (new and changed colours, type, radius, measure, elevation, motion) | adopted as written | recommended (owner delegated 2026-11-06), 2026-11-08 |
 | New copy, §11 | adopted as written | recommended (owner delegated 2026-11-06), 2026-11-08 |
+| §16 amendment (header glow, hero card, sparklines, live state, numbers as type, empty state) | adopted, with the reconciliations of §6, §8 and §11 | recommended (owner delegated 2026-11-06), 2026-11-08 |
+| Sparkline queries | three read-only `SELECT`s in the home `database.batch` | recommended (owner delegated 2026-11-06), 2026-11-08 |
+| Environment-chip live dot | staging and development only, never production | recommended (owner delegated 2026-11-06), 2026-11-08 |
+| Empty state | one 96 px bubble, dots animate once | recommended (owner delegated 2026-11-06), 2026-11-08 |
+| Hero-card border | double background (`padding-box`/`border-box`) with a `CanvasText` fallback under `forced-colors` | recommended (owner delegated 2026-11-06), 2026-11-08 |
 
 ## 15. Hand-off to the plan
 
@@ -428,7 +448,11 @@ Markup hooks, each a class or wrapper with no new copy except §11:
 
 - `layout.tsx`: `body` gets `class="shell-signed-out"` when not signed in; `div.header-end` wraps `LocaleSwitch` and `SignOutButton`.
 - `views/sign-in.tsx`: the eyebrow and lead (`SignInEyebrow`, `SignInLead`) above and below the `h1`.
-- `views/home.tsx`: the Numbers total as `p.tile-figure`; `HomeMetricsBody`, `HomeAuditBody`; `button-arrow` on the three links.
+- `views/home.tsx`: the Numbers total as `p.tile-figure` with `span.tile-unit` (`HomeNumbersUnit`); `HomeMetricsBody`, `HomeAuditBody`; `button-arrow` on the three links; `hero-card` on the Numbers card; a `Sparkline` and `.sparkline-summary` on each card.
+- `views/sparkline.tsx` (new): the `Sparkline` component (`svg.sparkline`, `role="img"`, `<title>`, no `style=`).
+- `home-sparklines.ts` (new) and `routes/session-routes.tsx`: the three read-only `SELECT`s joined to the state counts in one `database.batch`; `SPARKLINE_DAYS` in `backoffice-constants.ts`.
+- `.live-dot` (`span`, `aria-hidden`): in `layout.tsx` inside the environment badge (staging and development only), in `metrics/` freshness lines, and before the word of each active-state badge (`numbers/components/state-badge.tsx`).
+- `.hero-card`: home Numbers card, `numbers/views/number-detail.tsx` summary card, the metrics period-summary card.
 - `numbers/views/numbers-list.tsx`, `views/audit.tsx`, `metrics/metrics-page.tsx`: `div.page-head` around the `h1` and the page's primary action; `.empty-state` on the empty card.
 - `numbers/views/number-detail.tsx`: `a.crumb`; `div.title-row` for `h1` and badge; `div.detail-grid` holding the summary card and `div.detail-actions`.
 - `views/error-page.tsx`: `span.error-code` and `span.error-title` inside the `h1`, joined by a space.
@@ -437,17 +461,19 @@ Markup hooks, each a class or wrapper with no new copy except §11:
 - `assets/backoffice.css`: §4 to §8.
 - Docs: `docs.json` per §10.1; `logo/light.svg`, `logo/dark.svg`; `snippets/hero.jsx`; `snippets/chat.jsx` per §10.4; `zapbip.css`; the `Hero` in `index.mdx` and `pt-br/index.mdx`.
 
-Tests the plan adds or updates: the contrast unit test gains every pair in §4.2 for both themes; the stylesheet scan also asserts that every `animation` and `transition` declaration is covered by the reduced-motion guard and that no raw colour sits outside `:root`; a view test per hook above; a docs test that `colors.primary` passes 4.5:1 on white and that `chat.jsx` has no `#128C7E` on text; the Playwright MCP walk at 1280 and 375, light and dark, reduced motion on and off, with `before-*.png` and `after-*.png` in `.pr-media/ui-polish/`, plus `document.documentElement.scrollWidth === 375` on every page at 375 and `style[data-custom-css-path]` present on the docs under `--client-version 0.0.4077`.
+Tests the plan adds or updates ([test-plan.md](test-plan.md) has the rows): the contrast unit test gains every pair in §4.2 for both themes, computed from the parsed CSS, plus the hero, eyebrow, chat and header-over-dark pairs; the stylesheet scan also asserts that every `animation` and `transition` declaration is covered by the reduced-motion guard and that no raw colour sits outside `:root`; a view test per hook above; a docs test that `colors.primary` passes 4.5:1 on white and that `chat.jsx` has no `#128C7E` on text; the Playwright MCP walk at 1280 and 375, light and dark, reduced motion on and off, with `before-*.png` and `after-*.png` in `.pr-media/ui-polish/`, plus `document.documentElement.scrollWidth === 375` on every page at 375 and `style[data-custom-css-path]` present on the docs under `--client-version 0.0.4077`.
 
 ## 16. Amendment: more presence in the backoffice (coordinator, 2026-11-08)
 
 The owner asked for a "hyper sexy" UI. The docs hero meets that bar; the backoffice home mockup is clean but plain. Raise it, within the same constraints (no script, strict CSP, one stylesheet, system fonts, AA in both themes, reduced motion respected):
 
-- **Header glow band.** A soft radial `--signal` glow behind the header and the page title, stronger in dark mode, the same light the docs hero uses.
-- **Hero card.** The first card of each page (Numbers on home, the number summary on the detail page, the period summary on metrics) gets a 1 px gradient border from `--signal` to the primary green and a deeper elevation; the other cards stay flat.
-- **Sparklines.** Every home card shows an inline SVG sparkline of its last 14 days (numbers registered, messages, audit entries), drawn server-side by attributes like the metrics charts, with a text alternative.
-- **Live state.** The environment chip and each active number carry the pulsing live dot (CSS only, off under reduced motion).
+- **Header glow band.** A soft radial `--color-signal` glow behind the header and the page title (`--gradient-page`, §6), stronger in dark mode, the same light the docs hero uses.
+- **Hero card.** The first card of each page (Numbers on home, the number summary on the detail page, the period summary on metrics) gets a 1 px gradient border (`--gradient-hero-border`, from `--color-signal` to `--color-brand`) and `--elevation-hero`, with the technique and the forced-colors fallback of §6; the other cards stay flat. Hook: `.hero-card`.
+- **Sparklines.** Every home card shows an inline SVG sparkline of its last 14 days (numbers registered, messages, audit entries), drawn server-side by attributes like the metrics charts. Hook: `.sparkline`; queries, copy and the accessible name in the spec and §11.
+- **Live state.** The environment chip and each active number carry the pulsing `.live-dot` (CSS only, off under reduced motion). On the environment chip it appears on staging and development only, never on production (decided, owner delegated 2026-11-06).
 - **Numbers as type.** Big figures use tabular numerals with the display stack and a thin unit label, as in the docs hero.
-- **Empty states.** An illustration-free empty state: the brand bubble at 96 px with the three dots animating once, the action as the only primary button.
+- **Empty states.** An illustration-free empty state: the single 96 px brand bubble of §8, its three dots animating once, the action as the only primary button. It replaces the §9.8 small typing bubble.
 
 Decided with the recommended option, owner delegated 2026-11-06. The plan and the test plan carry these as rows.
+
+Token names used throughout: `--color-signal`, `--gradient-hero-border`, `--elevation-hero`.
