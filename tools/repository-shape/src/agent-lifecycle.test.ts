@@ -14,7 +14,9 @@ import {
   checkOutHead,
   createThrowawayWorktree,
   failuresOf,
+  installDependencies,
   isOutside,
+  LockfileMode,
   run,
 } from './throwaway-worktree';
 
@@ -92,13 +94,27 @@ describe.skipIf(IS_INSIDE_PROOF)('the agent lifecycle in a throwaway worktree', 
   });
 
   test(
+    'resolving the lockfile after a removal needs no registry metadata, as on a runner with a cold cache',
+    () => {
+      const worktree = newWorktree();
+      expect(checkOutHead({ directory: worktree.directory }).status).toBe(0);
+      const removedPrefixes = removedIds.flatMap((id) => ownedPrefixesOf({ id }));
+      expect(run({ command: ['git', 'rm', '-rq', ...removedPrefixes], directory: worktree.directory }).output).toBe('');
+      const resolution = installDependencies({ directory: worktree.directory, lockfile: LockfileMode.Resolve });
+      expect(resolution.status, resolution.output).toBe(0);
+    },
+    WORKTREE_PROOF_TIMEOUT_MS,
+  );
+
+  test(
     'removing one agent of each kind leaves the removed folders and the generated set as the only diff, and every suite stays green',
     () => {
       const worktree = newWorktree();
       expect(checkOutHead({ directory: worktree.directory }).status).toBe(0);
       const removedPrefixes = removedIds.flatMap((id) => ownedPrefixesOf({ id }));
       expect(run({ command: ['git', 'rm', '-rq', ...removedPrefixes], directory: worktree.directory }).output).toBe('');
-      expect(run({ command: ['pnpm', 'install', '--no-frozen-lockfile', '--offline'], directory: worktree.directory }).status).toBe(0);
+      const install = installDependencies({ directory: worktree.directory, lockfile: LockfileMode.Resolve });
+      expect(install.status, install.output).toBe(0);
       const mentions = run({ command: ['pnpm', 'agents:mentions', removedIds[0] as string], directory: worktree.directory });
       expect(mentions.status, mentions.output).toBe(0);
       expect(mentions.output).not.toContain('node:internal');
@@ -116,7 +132,8 @@ describe.skipIf(IS_INSIDE_PROOF)('the agent lifecycle in a throwaway worktree', 
     () => {
       const worktree = newWorktree();
       expect(checkOutHead({ directory: worktree.directory }).status).toBe(0);
-      expect(run({ command: ['pnpm', 'install', '--frozen-lockfile', '--offline'], directory: worktree.directory }).status).toBe(0);
+      const install = installDependencies({ directory: worktree.directory, lockfile: LockfileMode.Frozen });
+      expect(install.status, install.output).toBe(0);
       expect(run({ command: ['pnpm', 'agents:check'], directory: worktree.directory }).status).toBe(0);
       const outcomes = PLANTS.map((plant) => {
         const path = join(worktree.directory, plant.file);
@@ -140,7 +157,8 @@ describe.skipIf(IS_INSIDE_PROOF)('the agent lifecycle in a throwaway worktree', 
     () => {
       const worktree = newWorktree();
       expect(checkOutHead({ directory: worktree.directory }).status).toBe(0);
-      expect(run({ command: ['pnpm', 'install', '--frozen-lockfile', '--offline'], directory: worktree.directory }).status).toBe(0);
+      const install = installDependencies({ directory: worktree.directory, lockfile: LockfileMode.Frozen });
+      expect(install.status, install.output).toBe(0);
       const plantedFile = `${SUPPORTED_ROOT}/${installAgentId}/install.ts`;
       const path = join(worktree.directory, plantedFile);
       writeFileSync(path, extraHeadingEdit(readFileSync(path, 'utf8')));
@@ -157,7 +175,8 @@ describe.skipIf(IS_INSIDE_PROOF)('the agent lifecycle in a throwaway worktree', 
     () => {
       const worktree = newWorktree();
       expect(checkOutHead({ directory: worktree.directory }).status).toBe(0);
-      expect(run({ command: ['pnpm', 'install', '--frozen-lockfile', '--offline'], directory: worktree.directory }).status).toBe(0);
+      const install = installDependencies({ directory: worktree.directory, lockfile: LockfileMode.Frozen });
+      expect(install.status, install.output).toBe(0);
       chmodSync(join(worktree.directory, UNREADABLE_FILE), 0);
       const outcome = run({ command: ['pnpm', 'agents:check'], directory: worktree.directory });
       chmodSync(join(worktree.directory, UNREADABLE_FILE), 0o644);
@@ -174,10 +193,12 @@ describe.skipIf(IS_INSIDE_PROOF)('the agent lifecycle in a throwaway worktree', 
       const scaffoldId = `scaffold-probe-${Math.random().toString(36).slice(2, 8)}`;
       const worktree = newWorktree();
       expect(checkOutHead({ directory: worktree.directory }).status).toBe(0);
-      expect(run({ command: ['pnpm', 'install', '--frozen-lockfile', '--offline'], directory: worktree.directory }).status).toBe(0);
+      const install = installDependencies({ directory: worktree.directory, lockfile: LockfileMode.Frozen });
+      expect(install.status, install.output).toBe(0);
       const scaffold = run({ command: ['pnpm', 'agents:new', scaffoldId, ...flags], directory: worktree.directory });
       expect(scaffold.status, scaffold.output).toBe(0);
-      expect(run({ command: ['pnpm', 'install', '--no-frozen-lockfile', '--offline'], directory: worktree.directory }).status).toBe(0);
+      const resolution = installDependencies({ directory: worktree.directory, lockfile: LockfileMode.Resolve });
+      expect(resolution.status, resolution.output).toBe(0);
       const generation = run({ command: ['pnpm', 'agents:generate'], directory: worktree.directory });
       expect(generation.status, generation.output).toBe(0);
       const check = run({ command: ['pnpm', 'agents:check'], directory: worktree.directory });

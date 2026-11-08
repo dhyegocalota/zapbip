@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { REPOSITORY_ROOT } from './repository-files';
 
 export const REPOSITORY_ROOT_FOR_PROOFS = REPOSITORY_ROOT;
@@ -21,15 +21,30 @@ const STATUS_PATH_OFFSET = 3;
 
 export type CommandOutcome = { status: number | null; output: string };
 
-export function run(input: { command: string[]; directory: string }): CommandOutcome {
+export enum LockfileMode {
+  Frozen = '--frozen-lockfile',
+  Resolve = '--no-frozen-lockfile',
+}
+
+const COLD_METADATA_CACHE_FOLDER = 'pnpm-metadata-cache';
+
+export function run(input: { command: string[]; directory: string; environment?: Record<string, string> }): CommandOutcome {
   const [program, ...commandArguments] = input.command;
   const result = spawnSync(program as string, commandArguments, {
     cwd: input.directory,
     encoding: 'utf8',
     maxBuffer: MAXIMUM_BUFFER,
-    env: { ...process.env, [PROOF_ENVIRONMENT_VARIABLE]: '1' },
+    env: { ...process.env, [PROOF_ENVIRONMENT_VARIABLE]: '1', ...input.environment },
   });
   return { status: result.status, output: `${result.stdout}${result.stderr}` };
+}
+
+export function installDependencies(input: { directory: string; lockfile: LockfileMode }): CommandOutcome {
+  return run({
+    command: ['pnpm', 'install', input.lockfile, '--offline'],
+    directory: input.directory,
+    environment: { CI: 'true', npm_config_cache_dir: join(dirname(input.directory), COLD_METADATA_CACHE_FOLDER) },
+  });
 }
 
 export function changedPathsOf(input: { directory: string }): string[] {
