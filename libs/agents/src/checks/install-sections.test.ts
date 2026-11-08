@@ -102,4 +102,19 @@ describe('installSectionViolationsOf', () => {
       `${FIXTURE_ID}: the ${field === 'productName' ? 'product name' : 'product description'} must be one line of at most ${INSTALL_PRODUCT_TEXT_MAX_LENGTH} characters`,
     );
   });
+
+  test.each([
+    ['an underlined line', '\n\nOther\n-----'],
+    ['a second underlined line', '\n\nOther\n====='],
+  ])('refuses a section with %s heading', (_name, tail) => {
+    const entry = fixtureEntryEditing({ edit: (text) => `${text}${tail}` });
+    expect(installSectionViolationsOf({ entries: [entry] })).toContain(`${LABEL}: the section must hold exactly one heading`);
+  });
+
+  test.each(['one\u2028two', 'one\u2029two'])('refuses a product name with the line separator %j', (productName) => {
+    const entry = { ...fixtureEntryRendering({ render: fixtureInstall.render }), install: { ...fixtureInstall, productName } };
+    expect(installSectionViolationsOf({ entries: [entry] })).toContain(
+      `${FIXTURE_ID}: the product name must be one line of at most ${INSTALL_PRODUCT_TEXT_MAX_LENGTH} characters`,
+    );
+  });
 });

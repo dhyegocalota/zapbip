@@ -23,7 +23,10 @@ const registryOrder = agentOrderOf({ definitions: AGENT_DEFINITIONS });
 function matrixOrderOf(input: { language: DocsLanguage }): string[] {
   return readFileSync(`${REPOSITORY_ROOT}${MATRIX_SNIPPET[input.language]}`, 'utf8')
     .split('\n')
-    .flatMap((line) => MATRIX_LINK_PATTERN.exec(line)?.[1] ?? []);
+    .flatMap((line) => {
+      const id = MATRIX_LINK_PATTERN.exec(line)?.[1];
+      return id === undefined ? [] : [id];
+    });
 }
 
 describe('the surfaces that list the agents', () => {

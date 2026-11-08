@@ -27,7 +27,11 @@ function sha256Of(bytes: Buffer): string {
 }
 
 function memoryFiles(input: { files: Record<string, Buffer> }): (path: string) => Buffer | null {
-  return (path) => input.files[path] ?? null;
+  return (path) => {
+    const file = input.files[path];
+    if (file === undefined) return null;
+    return file;
+  };
 }
 
 function artifactOf(input: Partial<HostedArtifact> & { filename: string; expectedSha256: string }): HostedArtifact {
@@ -201,10 +205,9 @@ describe('pluginViolationsOf', () => {
 });
 
 describe('pluginWorkflowViolationsOf', () => {
-  const entryWith = (workflow: Partial<AgentPlugin['workflow']>): PluginCheckEntry => ({
-    id: FIXTURE_ID,
-    plugin: { ...fixturePlugin, workflow: { ...fixturePlugin.workflow, ...workflow } },
-  });
+  function entryWith(workflow: Partial<AgentPlugin['workflow']>): PluginCheckEntry {
+    return { id: FIXTURE_ID, plugin: { ...fixturePlugin, workflow: { ...fixturePlugin.workflow, ...workflow } } };
+  }
 
   test('accepts the workflow of the real registry', () => {
     const entries = Object.entries(AGENT_PLUGINS).map(([id, plugin]) => ({ id, plugin }));
@@ -246,6 +249,19 @@ describe('pluginViolationsOf for a self-hosted wheel', () => {
     const violations = syntheticViolations({
       plugin: { ...flagless, registry: PluginRegistry.SelfHostedWheel },
       sources: { readFile: memoryFiles({ files }), servedFilenames: flagless.hostedArtifacts.map((artifact) => artifact.filename) },
+    });
+    expect(violations).toContain('synthetic: exactly one hosted artifact must be embedded in the install command');
+  });
+
+  test('refuses a plugin whose install command embeds two artifacts', () => {
+    const { plugin, files } = wheelAndRequirements({ requirementsText: 'x' });
+    const doubled = {
+      ...plugin,
+      hostedArtifacts: plugin.hostedArtifacts.map((artifact) => ({ ...artifact, embeddedInInstallCommand: true })),
+    };
+    const violations = syntheticViolations({
+      plugin: { ...doubled, registry: PluginRegistry.SelfHostedWheel },
+      sources: { readFile: memoryFiles({ files }), servedFilenames: doubled.hostedArtifacts.map((artifact) => artifact.filename) },
     });
     expect(violations).toContain('synthetic: exactly one hosted artifact must be embedded in the install command');
   });
