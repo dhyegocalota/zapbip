@@ -41,8 +41,10 @@ const TEMPORARY_SEGMENT_PATTERN =
   /(^|\/)(spikes?|poc|prototypes?|experiments?|scratch|scratchpad|playground|sandbox|tmp|temp|wip|backups?)(\/|$)/i;
 const LINK_PATTERN = /\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g;
 const REFERENCE_LINK_PATTERN = /^\s{0,3}\[[^\]]+\]:\s*(\S+)/gm;
-const ANCHOR_HREF_PATTERN = /<a\s[^>]*href="([^"]+)"/gi;
-const HTML_CODE_PATTERN = /<code>/gi;
+const ANCHOR_HREF_PATTERN = /<a\s[^>]*href=["']([^"']+)["']/gi;
+const AUTOLINK_PATTERN = /<([^<>\s]+)>/g;
+const HTML_PRE_PATTERN = /<pre[\s>]/gi;
+const HTML_CODE_PATTERN = /<code[\s>]/gi;
 const INDENTED_BLOCK_PATTERN = /^(?: {4}|\t)\S.*$/gm;
 const HEADING_PATTERN = /^#{1,6} (.+)$/gm;
 const FENCED_BLOCK_PATTERN = /(```|~~~)[\s\S]*?\1/g;
@@ -105,12 +107,13 @@ function purposeViolations(text: string): string[] {
   const fencedBlocks = [...text.matchAll(FENCED_BLOCK_PATTERN)].map(() => PurposeViolation.FencedBlock);
   const codeSpans = [...withoutFences.matchAll(INLINE_CODE_PATTERN)].map(() => PurposeViolation.CodeSpan);
   const codeElements = [...withoutFences.matchAll(HTML_CODE_PATTERN)].map(() => PurposeViolation.CodeSpan);
+  const preformattedElements = [...withoutFences.matchAll(HTML_PRE_PATTERN)].map(() => PurposeViolation.FencedBlock);
   const indentedBlocks = [...withoutFences.matchAll(INDENTED_BLOCK_PATTERN)].map(() => PurposeViolation.IndentedBlock);
-  const fileLinks = [LINK_PATTERN, REFERENCE_LINK_PATTERN, ANCHOR_HREF_PATTERN]
+  const fileLinks = [LINK_PATTERN, REFERENCE_LINK_PATTERN, ANCHOR_HREF_PATTERN, AUTOLINK_PATTERN]
     .flatMap((pattern) => capturedNames({ text: prose, pattern }))
     .filter((target) => !EXTERNAL_LINK_PATTERN.test(target))
     .filter(isFileLink);
-  return [...fencedBlocks, ...codeSpans, ...codeElements, ...indentedBlocks, ...fileLinks];
+  return [...fencedBlocks, ...preformattedElements, ...codeSpans, ...codeElements, ...indentedBlocks, ...fileLinks];
 }
 
 const LINKED_DOCUMENTS = readmes();
