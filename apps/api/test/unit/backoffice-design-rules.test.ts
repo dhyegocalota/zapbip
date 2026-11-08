@@ -13,6 +13,13 @@ const BACKOFFICE_ROOT = join(import.meta.dirname, '../../src/backoffice');
 const STYLESHEET = readFileSync(join(BACKOFFICE_ROOT, 'assets/backoffice.css'), 'utf8');
 const RAW_COLOUR_PATTERN = /#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bhsla?\(/;
 const FORCED_COLORS_PATTERN = /@media \(forced-colors: active\)/;
+const FORCED_COLORS_BLOCK_PATTERN = /@media \(forced-colors: active\) \{[\s\S]*?\n\}/;
+const REDUCED_MOTION_GUARD_PATTERN =
+  /@media \(prefers-reduced-motion: reduce\) \{\s*\*,\s*\*::before,\s*\*::after \{\s*animation: none !important;\s*transition: none !important;\s*\}\s*\}/;
+const INFINITE_ANIMATION_PATTERN = /animation[a-z-]*:[^;]*\binfinite\b/;
+const SMOOTH_SCROLL_PATTERN = /scroll-behavior:\s*smooth/;
+const FORCED_COLOR_OPT_OUT_PATTERN = /forced-color-adjust:\s*none/;
+const HERO_CARD_RULE_PATTERN = /\n\.hero-card \{[^}]*\}/;
 const TOKEN_BLOCK_PATTERN = /:root\s*\{[^}]*\}/g;
 
 const PAGE = {
@@ -81,5 +88,27 @@ describe('design rules', () => {
 
   it('adapts to forced colors', () => {
     expect(STYLESHEET).toMatch(FORCED_COLORS_PATTERN);
+  });
+
+  it('turns every animation and transition off under reduced motion', () => {
+    expect(STYLESHEET).toMatch(REDUCED_MOTION_GUARD_PATTERN);
+  });
+
+  it('never loops an animation or smooth-scrolls', () => {
+    expect(STYLESHEET).not.toMatch(INFINITE_ANIMATION_PATTERN);
+    expect(STYLESHEET).not.toMatch(SMOOTH_SCROLL_PATTERN);
+  });
+
+  it('draws the hero card border from the gradient token', () => {
+    expect(STYLESHEET.match(HERO_CARD_RULE_PATTERN)?.[0]).toContain('var(--gradient-hero-border)');
+  });
+
+  it('gives the hero card system colours under forced colors', () => {
+    const forcedColorsBlock = STYLESHEET.match(FORCED_COLORS_BLOCK_PATTERN)?.[0];
+    expect(forcedColorsBlock).toMatch(/\.hero-card \{[^}]*border-color: CanvasText;[^}]*background: Canvas;/);
+  });
+
+  it('never opts out of forced colors', () => {
+    expect(STYLESHEET).not.toMatch(FORCED_COLOR_OPT_OUT_PATTERN);
   });
 });
