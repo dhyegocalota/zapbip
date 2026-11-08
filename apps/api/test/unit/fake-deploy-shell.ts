@@ -16,7 +16,7 @@ import {
 import { SmokeInput } from '../../src/operations/smoke-inputs';
 import { WorkerSecret } from '../../src/operations/worker-secret';
 
-export const OFFICIAL_NUMBER = '5511999990000';
+export const SMOKE_OWNER_PHONE = '5511999990000';
 export const NPM_VERSION = '0.1.0';
 export const NPM_PUBLISHER_VARIABLE = 'ZAPBIP_NPM_PUBLISHER';
 export const NPM_PUBLISHER = 'zapbip-owner';
@@ -47,7 +47,7 @@ export const HAPPY_REPLIES: Record<string, ShellResult> = {
 export const COMPLETE_VARIABLES: EnvironmentVariables = {
   [SmokeInput.BaseUrl]: 'https://mcp-staging.zapbip.com',
   [SmokeInput.ConnectionSecret]: 'zb_conn_secret',
-  [SmokeInput.OwnerPhone]: OFFICIAL_NUMBER,
+  [SmokeInput.OwnerPhone]: SMOKE_OWNER_PHONE,
   [SmokeInput.AppSecret]: 'app-secret',
   [SmokeInput.VerifyToken]: 'verify-token',
   [SmokeInput.PhoneNumberId]: '123456',

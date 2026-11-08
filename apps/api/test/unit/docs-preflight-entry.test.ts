@@ -9,7 +9,6 @@ import {
   fakeShell,
   HOSTED_PLUGINS,
   NPM_VERSION,
-  OFFICIAL_NUMBER,
   HOSTED_WHEEL_URL,
   OTHER_WHEEL_SHA256,
 } from './fake-deploy-shell';
@@ -25,7 +24,6 @@ async function preflight(input: {
   const exitCode = await runDocsPreflightEntry({
     shell: fakeShell({ replies }),
     environmentVariables: COMPLETE_VARIABLES,
-    officialWhatsAppNumber: OFFICIAL_NUMBER,
     company,
     npmVersion: NPM_VERSION,
     plugins: HOSTED_PLUGINS,
