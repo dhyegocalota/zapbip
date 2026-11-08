@@ -423,7 +423,7 @@ main > * + * {
 }
 
 .crumb::before {
-  content: '\2190';
+  content: '\2190' / '';
   margin-right: var(--space-2);
 }
 
@@ -708,7 +708,7 @@ select[aria-invalid='true'] {
 }
 
 .button-arrow::after {
-  content: '\2192';
+  content: '\2192' / '';
   margin-left: var(--space-2);
   transition: transform var(--duration-base) var(--ease-out);
 }
@@ -1034,7 +1034,7 @@ main > .notice {
 }
 
 .chart summary::before {
-  content: '\203A';
+  content: '\203A' / '';
   transition: transform var(--duration-base) var(--ease-out);
 }
 
