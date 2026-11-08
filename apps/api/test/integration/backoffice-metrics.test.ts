@@ -1,7 +1,7 @@
 import { AccountState, DAY_MS, HOUR_MS, OwnerLocale } from '@zapbip/types';
 import { afterEach, beforeAll, beforeEach, describe, expect, test } from 'vitest';
 import usageMigrationSql from '../../migrations/0003_usage.sql?raw';
-import { BACKOFFICE_COPY, BackofficeCopyKey } from '../../src/backoffice/backoffice-copy';
+import { BACKOFFICE_COPY, BackofficeCopyKey, renderBackofficeCopy } from '../../src/backoffice/backoffice-copy';
 import { keyedCell, MetricCell, NOT_REPORTED_CLIENT_KEY } from '../../src/backoffice/metrics/metric-cell';
 import { NumberFormField } from '../../src/backoffice/numbers/number-form-fields';
 import { csrfTokenOf } from '../../src/backoffice/auth/csrf';
@@ -212,6 +212,18 @@ describe('metrics page figures', () => {
     expect(cell(MetricCell.BudgetUsed)).toBe(String(BUDGET_BELOW_WARNING));
     expect(html).toContain(copy[BackofficeCopyKey.MetricsBudgetWithin]);
     expect(html).not.toContain(copy[BackofficeCopyKey.MetricsBudgetWarning]);
+  });
+
+  test('compares messages in with the previous period read from the same batch', async () => {
+    await seedWorld();
+    const html = await metricsHtml({});
+    const expected = renderBackofficeCopy({
+      key: BackofficeCopyKey.MetricsDeltaDown,
+      locale: OwnerLocale.PortugueseBrazil,
+      values: { amount: '75' },
+    });
+    expect(html).toContain(expected);
+    expect(cellOf({ html, cell: MetricCell.MessagesIn })).toBe('25');
   });
 
   test('lists a restriction inside the time to live and leaves out an older one', async () => {
