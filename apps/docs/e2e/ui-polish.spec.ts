@@ -20,6 +20,10 @@ const PHONE_MINIMUM_WIDTH_PX = 280;
 const HERO_VISUAL_LOCATOR = '.zapbip-hero-visual';
 const HERO_TEXT_LOCATORS = ['.zapbip-hero-statement', '.zapbip-hero-accent', '.zapbip-hero-lead'];
 const LOGO_LOCATOR = 'img[src*="/logo/"]';
+const PROSE_LOCATOR = '.mdx-content > :is(span[data-as="p"], p, ul, ol)';
+const TABLE_OF_CONTENTS_LOCATOR = '#table-of-contents';
+const GET_STARTED_PAGE = 'get-started/how-to-start';
+const PROSE_MAXIMUM_WIDTH_PX = 704;
 const BODY_TEXT_CONTRAST = 4.5;
 const COLOR_PROPERTY = 'color';
 const HERO_BASE_COLOUR_OF: Record<ColorScheme, string> = { light: '#FFFFFF', dark: '#0D1B17' };
@@ -61,6 +65,22 @@ for (const language of Object.values(DocsLanguage)) {
       expect(headlineCentre).toBeGreaterThanOrEqual(phone.y);
       expect(headlineCentre).toBeLessThanOrEqual(phone.y + phone.height);
       expect(phone.width).toBeGreaterThanOrEqual(PHONE_MINIMUM_WIDTH_PX);
+    });
+
+    for (const path of [OVERVIEW_PAGE, GET_STARTED_PAGE]) {
+      test(`${path} keeps every paragraph and list within the prose measure`, async ({ page }) => {
+        await page.goto(urlOf({ path, language }));
+        await expect(page.locator(PROSE_LOCATOR).first()).toBeVisible();
+        const widths = await page
+          .locator(PROSE_LOCATOR)
+          .evaluateAll((elements) => elements.map((element) => element.getBoundingClientRect().width));
+        expect(widths.filter((width) => width > PROSE_MAXIMUM_WIDTH_PX)).toEqual([]);
+      });
+    }
+
+    test('How to start still shows its table of contents', async ({ page }) => {
+      await page.goto(urlOf({ path: GET_STARTED_PAGE, language }));
+      await expect(page.locator(TABLE_OF_CONTENTS_LOCATOR)).toBeVisible();
     });
 
     for (const colorScheme of COLOR_SCHEMES) {

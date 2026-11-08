@@ -63,7 +63,7 @@ const LIGHT_HERO_START = '#FFFFFF';
 const LIGHT_HERO_END = '#F1F7F3';
 const DARK_HERO_BASE = '#0D1B17';
 const DARK_PREFIX = '.dark ';
-const PROSE_MEASURE_SELECTOR = '.mdx-content > p,\n.mdx-content > ul,\n.mdx-content > ol';
+const PROSE_MEASURE_SELECTOR = '.mdx-content > span[data-as="p"],\n.mdx-content > ul,\n.mdx-content > ol';
 const BASELINE_REFERENCE = 'origin/main';
 const LIGHT_PAGE = '#F6F8F5';
 const DARK_PAGE = '#07120F';
