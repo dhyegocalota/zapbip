@@ -32,13 +32,13 @@ Author this list with every box empty. A sub-agent ticks its own line. A wrong s
 
 ### G1
 
-- [ ] **Step 2 (red):** `start-link-target.test.ts` (unit): the pure builder `startLinkTarget({ displayNumber, locale })` returns `https://wa.me/<digits>?text=<encoded fixed text>`; rejects a display number that fails the pattern. The builder is a stub that throws `startLinkTarget is not implemented`; record the failure text.
-- [ ] **Step 3 (red):** `start-link-language.test.ts` and `start-link-page.test.ts` (unit): the `lang` parser (`en`, `pt-BR`, absent, unknown, repeated) and the page renderer (both locales, `lang` order, no script/style/link to `wa.me`). Stubs throw `<name> is not implemented`.
-- [ ] **Step 4 (red):** `start-link.test.ts` (integration, real D1 in workerd): the route table of the spec, state and age selection, headers and rate limit. Fails today with `404` on `/start`.
-- [ ] **Step 5 (red):** `start-link-attack.test.ts` (integration): open-redirect and injection attempts. Fails today with `404`.
-- [ ] **Step 6:** implement `findStartDisplayNumber` on the port and the D1 adapter (reads no `sealed_` column), the pure builder, the parser, the page renderer and the copy file; make steps 2 and 3 green.
-- [ ] **Step 7:** implement `createStartLinkRoute` and mount it in `app.ts`; add the `LogEvent`s `StartLinkFailed` and `StartLinkInvalidNumber` (names only); make steps 4 and 5 green.
-- [ ] **Step 8:** `.claude/rules/backoffice.md` gets a bullet on the start link (path glob extended to `apps/api/src/routes/start-link*.ts`); `backoffice.md` runbook gets the capacity advice (close a full number; check `accounts.number_id IS NULL` before registering a second number); `meta-setup.md` stops saying "the official number" where it means any production number.
+- [x] **Step 2 (red):** `start-link-target.test.ts` (unit): the pure builder `startLinkTarget({ displayNumber, locale })` returns `https://wa.me/<digits>?text=<encoded fixed text>`; rejects a display number that fails the pattern. The builder is a stub that throws `startLinkTarget is not implemented`; record the failure text.
+- [x] **Step 3 (red):** `start-link-language.test.ts` and `start-link-page.test.ts` (unit): the `lang` parser (`en`, `pt-BR`, absent, unknown, repeated) and the page renderer (both locales, `lang` order, no script/style/link to `wa.me`). Stubs throw `<name> is not implemented`.
+- [x] **Step 4 (red):** `start-link.test.ts` (integration, real D1 in workerd): the route table of the spec, state and age selection, headers and rate limit. Fails today with `404` on `/start`.
+- [x] **Step 5 (red):** `start-link-attack.test.ts` (integration): open-redirect and injection attempts. Fails today with `404`.
+- [x] **Step 6:** implement `findStartDisplayNumber` on the port and the D1 adapter (reads no `sealed_` column), the pure builder, the parser, the page renderer and the copy file; make steps 2 and 3 green.
+- [x] **Step 7:** implement `createStartLinkRoute` and mount it in `app.ts`; add the `LogEvent`s `StartLinkFailed` and `StartLinkInvalidNumber` (names only); make steps 4 and 5 green.
+- [x] **Step 8:** `.claude/rules/backoffice.md` gets a bullet on the start link (path glob extended to `apps/api/src/routes/start-link*.ts`); `backoffice.md` runbook gets the capacity advice (close a full number; check `accounts.number_id IS NULL` before registering a second number); `meta-setup.md` stops saying "the official number" where it means any production number.
 
 ### G2
 
