@@ -1,3 +1,4 @@
+import { INSTALL_PAGE_SECTIONS } from '@zapbip/agents/install';
 import {
   INSTALL_PAGE_COPY,
   pickStandbyAgent,
@@ -102,7 +103,7 @@ export function createInstallPageRoute(input: InstallPageRouteDependencies): Hon
       input.readWakeModes({ accountId }),
     ]);
     const standbyAgent = pickStandbyAgent({ agent, candidates: joinStandbyCandidates({ connections, wakeModes }) });
-    const body = renderInstallPage({ agent, connectionLink, locale, standbyAgent });
+    const body = renderInstallPage({ agent, connectionLink, locale, standbyAgent, sections: INSTALL_PAGE_SECTIONS });
     return privateResponse({ body, status: HttpStatus.Ok, contentType: MARKDOWN_CONTENT_TYPE });
   }
 

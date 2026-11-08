@@ -6,13 +6,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { WAKE_SECRET_KEY_BYTES } from '@zapbip/core';
-import {
-  hermesRequirementsFilename,
-  hermesWheelFilename,
-  OwnerLocale,
-  PRODUCTION_PUBLIC_ORIGIN,
-  ZAPBIP_HERMES_PLUGIN_VERSION,
-} from '@zapbip/types';
+import type { HostedArtifact } from '@zapbip/agents';
+import { AGENT_PLUGINS } from '@zapbip/agents/plugins';
+import { OwnerLocale, PRODUCTION_PUBLIC_ORIGIN } from '@zapbip/types';
 import type { TestProject } from 'vitest/node';
 import { z } from 'zod';
 import { DEVELOPMENT_ENVIRONMENT } from '../../src/contract/constants';
@@ -25,17 +21,16 @@ const SECOND_SEED_PHONE = '5511999990010';
 const SECOND_SEED_AGENTS = ['rotator', 'revoked', 'doomed'];
 const WAKE_AGENT = 'grok';
 const WAKE_ACCOUNT_PHONES = ['5511999990001', '5511999990002', '5511999990003', '5511999990004', '5511999990005'];
-const SCHEDULED_AGENT = 'chatgpt';
+const SCHEDULED_AGENT = 'agent-nine';
 const SCHEDULED_ACCOUNT_PHONES = ['5511999990021', '5511999990022', '5511999990023', '5511999990024'];
 const ENGLISH_ACCOUNT_INDEX = 3;
 const STANDBY_PHONE = '5511999990031';
-const STANDBY_AGENTS = ['grok-web', 'grok-bot'];
+const STANDBY_AGENTS = ['agent-ten', 'agent-eight'];
 const SIGNING_KEY_BYTES = 32;
 const DATABASE_BINDING = 'CONNECTIONS';
 const DEVELOPMENT_PACKAGES_BUCKET = 'zapbip-packages-development';
-const WHEEL_RELEASE_DIRECTORY = join(import.meta.dirname, '..', '..', '..', 'hermes-plugin', 'release');
-const WHEEL_CONTENT_TYPE = 'application/octet-stream';
-const REQUIREMENTS_CONTENT_TYPE = 'text/plain';
+const REPOSITORY_ROOT = join(import.meta.dirname, '..', '..', '..', '..');
+const TEXT_CONTENT_TYPE_PREFIX = 'text/';
 const LOG_FILE_NAME = 'wrangler-dev.log';
 
 const seedOutputSchema = z.object({ connections: z.array(z.object({ agent: z.string(), secret: z.string() })) });
@@ -118,21 +113,26 @@ async function putPackage(input: { filename: string; file: string; contentType: 
   ]);
 }
 
-async function seedHermesPackages(input: { persistDirectory: string; origin: string; persistArguments: string[] }): Promise<void> {
-  const { persistArguments } = input;
-  const version = ZAPBIP_HERMES_PLUGIN_VERSION;
-  const wheelFilename = hermesWheelFilename({ version });
-  await putPackage({
-    filename: wheelFilename,
-    file: join(WHEEL_RELEASE_DIRECTORY, wheelFilename),
-    contentType: WHEEL_CONTENT_TYPE,
-    persistArguments,
-  });
-  const requirementsFilename = hermesRequirementsFilename({ version });
-  const releaseRequirements = await readFile(join(WHEEL_RELEASE_DIRECTORY, requirementsFilename), 'utf8');
-  const localRequirements = join(input.persistDirectory, requirementsFilename);
-  await writeFile(localRequirements, releaseRequirements.replaceAll(PRODUCTION_PUBLIC_ORIGIN, input.origin));
-  await putPackage({ filename: requirementsFilename, file: localRequirements, contentType: REQUIREMENTS_CONTENT_TYPE, persistArguments });
+async function seedHostedArtifact(input: {
+  artifact: HostedArtifact;
+  persistDirectory: string;
+  origin: string;
+  persistArguments: string[];
+}): Promise<void> {
+  const { artifact, persistArguments } = input;
+  const releaseFile = join(REPOSITORY_ROOT, artifact.releaseFolder, artifact.filename);
+  if (!artifact.contentType.startsWith(TEXT_CONTENT_TYPE_PREFIX)) {
+    await putPackage({ filename: artifact.filename, file: releaseFile, contentType: artifact.contentType, persistArguments });
+    return;
+  }
+  const localFile = join(input.persistDirectory, artifact.filename);
+  await writeFile(localFile, (await readFile(releaseFile, 'utf8')).replaceAll(PRODUCTION_PUBLIC_ORIGIN, input.origin));
+  await putPackage({ filename: artifact.filename, file: localFile, contentType: artifact.contentType, persistArguments });
+}
+
+async function seedHostedPackages(input: { persistDirectory: string; origin: string; persistArguments: string[] }): Promise<void> {
+  const artifacts = Object.values(AGENT_PLUGINS).flatMap((plugin) => plugin.hostedArtifacts);
+  await artifacts.reduce((previous, artifact) => previous.then(() => seedHostedArtifact({ ...input, artifact })), Promise.resolve());
 }
 
 export default async function setup(project: TestProject): Promise<() => Promise<void>> {
@@ -198,7 +198,7 @@ export default async function setup(project: TestProject): Promise<() => Promise
   if (!englishAccount) throw new Error('no english scheduled account');
   await setOwnerLocale({ phone: englishAccount.phone, locale: OwnerLocale.EnglishUs, persistArguments });
   const standbyConnections = await seedConnections({ phone: STANDBY_PHONE, agents: STANDBY_AGENTS, origin });
-  await seedHermesPackages({ persistDirectory, origin, persistArguments });
+  await seedHostedPackages({ persistDirectory, origin, persistArguments });
 
   project.provide('stack', {
     origin,

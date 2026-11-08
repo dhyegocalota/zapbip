@@ -44,11 +44,21 @@ gh_install() {
   install_with gh "https://github.com/cli/cli#installation"
 }
 
-readonly PYTHON_REQUIREMENTS_INSTALL="python3 -m pip install --require-hashes -r apps/hermes-plugin/requirements-dev.txt"
+python_requirements_install() {
+  local file commands=""
+  for file in "$root"/apps/*-plugin/requirements-dev.txt; do
+    [[ -f "$file" ]] || continue
+    [[ "${file#"$root"/}" =~ ^[A-Za-z0-9._/-]+$ ]] || { echo "doctor: skipped the plugin folder $(printf '%q' "${file#"$root"/}"): its name has characters outside A-Za-z0-9._/-" >&2; continue; }
+    commands+="${commands:+ && }python3 -m pip install --require-hashes -r $(printf '%q' "${file#"$root"/}")"
+  done
+  echo "$commands"
+}
 
 python_install() {
-  [[ "$manager" == brew ]] && { echo "brew install python@3.13 && $PYTHON_REQUIREMENTS_INSTALL"; return; }
-  echo "https://www.python.org/downloads/ (3.11 to 3.14), then $PYTHON_REQUIREMENTS_INSTALL"
+  local requirements
+  requirements=$(python_requirements_install)
+  [[ "$manager" == brew ]] && { echo "brew install python@3.13${requirements:+ && $requirements}"; return; }
+  echo "https://www.python.org/downloads/ (3.11 to 3.14)${requirements:+, then $requirements}"
 }
 
 fix_for() {
@@ -76,7 +86,7 @@ lost_for() {
     skills) echo "every Claude Code skill (ADR 0001)" ;;
     gitleaks) echo "the secret scan; pnpm verify fails without it" ;;
     ffmpeg) echo "the recorder's mp4 and gif; a PR that touches UI cannot ship" ;;
-    python) echo "the Hermes plugin's typecheck and tests; pnpm verify fails in apps/hermes-plugin" ;;
+    python) echo "the Python plugins' typecheck and tests; pnpm verify fails in a Python plugin" ;;
     wrangler) echo "the deploy guard refuses every wrangler command, and agent shells can reach the owner's Cloudflare session" ;;
   esac
 }

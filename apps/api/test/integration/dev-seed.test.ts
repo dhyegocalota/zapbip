@@ -8,7 +8,7 @@ import { applyDirectoryMigration, SEED_CREATED_AT } from '../support/seed';
 import { testEnv } from '../support/workers-env';
 
 const PHONE = '5511999990000';
-const AGENTS = ['claude-code', 'codex'];
+const AGENTS = ['agent-one', 'agent-two'];
 
 async function runSeed(input: { phone: string; agents: string[] }) {
   const owner = await testEnv.CONNECTIONS.prepare(findOwnerStatement({ phone: input.phone })).first<{ total: number }>();

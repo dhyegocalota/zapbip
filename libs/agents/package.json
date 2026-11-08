@@ -1,0 +1,32 @@
+{
+  "name": "@zapbip/agents",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./install": "./src/install.ts",
+    "./connector": "./src/connector.ts",
+    "./plugins": "./src/plugins.ts",
+    "./docs": "./src/docs.ts",
+    "./checks/boundaries": "./src/checks/boundaries.ts",
+    "./checks/leaks": "./src/checks/leaks.ts",
+    "./definitions": "./src/definitions.ts",
+    "./generate": "./generate/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test:unit": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@zapbip/core": "workspace:*",
+    "@zapbip/types": "workspace:*",
+    "smol-toml": "1.9.1"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "marked": "18.0.11",
+    "vitest": "5.0.5"
+  }
+}

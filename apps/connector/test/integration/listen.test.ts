@@ -142,7 +142,7 @@ describe('zapbip listen', () => {
   });
 
   it('exits 1 with a usage error for an argument', async () => {
-    const listenProcess = startListen({ arguments: ['--client', 'codex'] });
+    const listenProcess = startListen({ arguments: ['--client', 'any-value'] });
 
     expect(await listenProcess.exited).toBe(EXIT_CODE_FAILURE);
     expect(server.connectionCount()).toBe(0);

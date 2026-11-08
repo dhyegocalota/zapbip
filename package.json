@@ -10,6 +10,7 @@
     "typecheck": "pnpm -r typecheck",
     "security:audit": "pnpm audit --prod --audit-level=high",
     "test:unit": "pnpm -r test:unit && pnpm test:hooks && pnpm test:verify",
+    "test:lifecycle": "pnpm --filter @zapbip/repository-shape exec vitest run --config vitest.lifecycle.config.ts",
     "test:hooks": "bash .agents/hooks/hooks.test.sh",
     "test:verify": "bash scripts/verify.test.sh",
     "format": "prettier --write .",
@@ -26,9 +27,13 @@
     "backoffice:enroll:staging": "node --env-file=.env --import tsx apps/api/scripts/backoffice-enroll.ts --environment staging",
     "backoffice:enroll:production": "node --env-file=.env --import tsx apps/api/scripts/backoffice-enroll.ts --environment production",
     "docs:preflight": "node --env-file=.env --import tsx apps/api/scripts/docs-preflight.ts",
-    "hermes-wheel:build": "node --import tsx scripts/hermes-wheel/build.ts",
+    "plugin-wheel:build": "node --import tsx scripts/plugin-wheel/build.ts",
+    "agents:generate": "node --import tsx libs/agents/generate/cli.ts generate",
+    "agents:check": "node --import tsx libs/agents/generate/cli.ts check",
+    "agents:new": "node --import tsx libs/agents/generate/cli.ts new",
+    "agents:mentions": "node --import tsx libs/agents/generate/cli.ts mentions",
     "verify": "bash scripts/verify.sh",
-    "test:e2e:clients": "ZAPBIP_E2E_CLIENTS=1 pnpm --filter @zapbip/api exec vitest run --config vitest.e2e.config.mts test/e2e/hermes-openclaw.e2e.test.ts"
+    "test:e2e:clients": "ZAPBIP_E2E_CLIENTS=1 pnpm --filter @zapbip/api exec vitest run --config vitest.e2e.config.mts test/e2e/channel-plugins.e2e.test.ts"
   },
   "devDependencies": {
     "@types/node": "24.19.2",

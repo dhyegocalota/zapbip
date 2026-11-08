@@ -1,10 +1,10 @@
 import { existsSync, readdirSync } from 'node:fs';
 import { describe, expect, test } from 'vitest';
+import { AgentId } from '@zapbip/agents/definitions';
+import { ConnectorClient } from '@zapbip/agents/connector';
 import {
   DocsLanguage,
-  DocsOnlyClient,
   DocsRetentionKind,
-  InstallClient,
   McpToolName,
   MessageKind,
   OFFICIAL_NUMBER_UNSET,
@@ -31,13 +31,13 @@ import {
   navigationPagesOf,
   sectionOf,
   twinPathOf,
-  type DocsAgentClient,
 } from './docs-experience';
 import { DOCS_ROOT, PAGE_EXTENSION, capturedNames, documentFiles, readRepositoryFile, repositoryPath } from './repository-files';
 
 const SNIPPETS_DIRECTORY = 'snippets';
 const AGENTS_DIRECTORY = 'agents';
 const MATRIX_PAGE = 'agents/supported-agents';
+const MATRIX_SNIPPET = 'agents/matrix';
 const INSTALL_PROMPT_SNIPPET = 'install-prompt';
 const OFFICIAL_NUMBER_SNIPPET = 'official-number';
 const NAVIGATION_TEST_FILE = 'tools/repository-shape/src/docs-navigation.test.ts';
@@ -52,13 +52,12 @@ const INSTALL_LINK_PATTERN = /https:\/\/[^\s/]+\/i\/zb_inst_[^\s`'"]+/g;
 const LINK_PATH_PATTERN = /\/[ci]\/([^\s)`'"]+)/g;
 const PLACEHOLDER_MARK = '<';
 const OFFICIAL_NUMBER_PATTERN = new RegExp(`^(${OFFICIAL_NUMBER_UNSET}|\\d+)$`);
-const MATRIX_LINK_PATTERN = /\]\(\/(?:pt-br\/)?agents\/([a-z-]+)\)/g;
+const MATRIX_LINK_PATTERN = /\]\(\/(?:pt-br\/)?agents\/([a-z0-9-]+)\)/g;
 const TABLE_ROW_PATTERN = /^\|/;
 const TABLE_HEADER_ROW_COUNT = 2;
 const TEST_NUMBER = '15550000001';
 const OTHER_TEST_NUMBER = '15550000002';
 const NEW_CLIENT_PAGE = 'agents/x';
-const DOCS_ONLY_PAGE_NAMES = ['cursor', 'gemini-cli', 'any-mcp-client'];
 const WRONG_MEDIA_DAYS = 14;
 const PRIVACY_PAGE = 'help/privacy-and-security';
 const MCP_REFERENCE_FOLDER = 'mcp-reference';
@@ -69,7 +68,9 @@ const EXTRA_TOOL_PAGE = 'mcp-reference/not-a-tool';
 const FIRST_CELL_PATTERN = /^\|\s*`([a-z]+)`/g;
 
 const LANGUAGES = Object.values(DocsLanguage);
-const CLIENTS: DocsAgentClient[] = [...Object.values(InstallClient), ...Object.values(DocsOnlyClient)];
+const CLIENTS: AgentId[] = Object.values(AgentId);
+const CONNECTOR_CLIENTS: string[] = Object.values(ConnectorClient);
+const BACKGROUND_RUNNING_PATH = 'developers/background-running';
 const pageFileOf = (page: string): string => `${DOCS_ROOT}/${page}${PAGE_EXTENSION}`;
 const withoutExtension = (path: string): string => path.slice(0, -PAGE_EXTENSION.length);
 const pageEntries = documentFiles('')
@@ -101,7 +102,7 @@ function missingTwins({ paths }: { paths: string[] }): string[] {
     .filter((twin) => !paths.includes(twin));
 }
 
-function missingAgentPages({ clients, pageExists }: { clients: DocsAgentClient[]; pageExists: (page: string) => boolean }): string[] {
+function missingAgentPages({ clients, pageExists }: { clients: AgentId[]; pageExists: (page: string) => boolean }): string[] {
   return clients.flatMap((client) =>
     LANGUAGES.map((language) => agentPagePathOf({ client, language })).filter((page) => !pageExists(page)),
   );
@@ -232,34 +233,35 @@ describe('docs experience: agent pages', () => {
   });
 
   test('a client with no page fails naming it', () => {
-    expect(missingAgentPages({ clients: [InstallClient.Cursor], pageExists: () => false })).toEqual([
-      'agents/cursor',
-      'pt-br/agents/cursor',
-    ]);
+    const [client] = CLIENTS as [AgentId];
+    expect(missingAgentPages({ clients: [client], pageExists: () => false })).toEqual(
+      LANGUAGES.map((language) => agentPagePathOf({ client, language })),
+    );
   });
 
   test.each(LANGUAGES)('the matrix has exactly one row per client in %s', (language) => {
-    const matrixPage = twinPathOf({ path: MATRIX_PAGE, language });
-    const markdown = readRepositoryFile(pageFileOf(matrixPage));
+    const markdown = readRepositoryFile(snippetPathOf({ name: MATRIX_SNIPPET, language }));
     const rows = markdown.split(LINE_SEPARATOR).filter((line) => TABLE_ROW_PATTERN.test(line)).length - TABLE_HEADER_ROW_COUNT;
     expect(rows).toBe(CLIENTS.length);
     expect(matrixClientsOf({ markdown }).sort()).toEqual([...CLIENTS].sort());
   });
 
-  test.each(LANGUAGES)('Cursor, Gemini CLI and any MCP client appear in the navigation and as pages in %s', (language) => {
+  test.each(LANGUAGES)('every agent appears in the navigation and as a page in %s', (language) => {
     const listed = navigationPagesOf({ language });
-    const expected = DOCS_ONLY_PAGE_NAMES.map((name) => twinPathOf({ path: `${AGENTS_DIRECTORY}/${name}`, language }));
+    const expected = CLIENTS.map((client) => agentPagePathOf({ client, language }));
     expect(listed.filter((page) => expected.includes(page)).sort()).toEqual([...expected].sort());
     expect(expected.filter((page) => !existsSync(repositoryPath(pageFileOf(page))))).toEqual([]);
   });
 
   test('an agent page with no matrix row fails naming it', () => {
-    expect(unmatrixedAgentPages({ matrixClients: ['codex'], pages: ['codex', NEW_CLIENT_PAGE] })).toEqual([NEW_CLIENT_PAGE]);
+    expect(unmatrixedAgentPages({ matrixClients: ['agent-two'], pages: ['agent-two', NEW_CLIENT_PAGE] })).toEqual([NEW_CLIENT_PAGE]);
   });
 
   test('every agent page has no page without a matrix row', () => {
     const pages = documentFiles(AGENTS_DIRECTORY).map((path) => withoutExtension(path).replace(`${AGENTS_DIRECTORY}/`, ''));
-    const matrixClients = matrixClientsOf({ markdown: readRepositoryFile(pageFileOf(MATRIX_PAGE)) });
+    const matrixClients = matrixClientsOf({
+      markdown: readRepositoryFile(snippetPathOf({ name: MATRIX_SNIPPET, language: DocsLanguage.English })),
+    });
     const clientPages = pages.filter((page) => `${AGENTS_DIRECTORY}/${page}` !== MATRIX_PAGE);
     expect(unmatrixedAgentPages({ matrixClients, pages: clientPages })).toEqual([]);
   });
@@ -320,16 +322,17 @@ describe('docs experience: developer boundary', () => {
 
   test('an agent page may carry one developer footer link only', () => {
     expect(
-      developerLinkViolations({ page: 'agents/claude-ai', links: ['/developers/any-mcp-client', '/developers/local-connector'] }),
-    ).toEqual(['agents/claude-ai -> /developers/local-connector']);
+      developerLinkViolations({ page: 'agents/agent-seven', links: ['/developers/any-mcp-client', '/developers/local-connector'] }),
+    ).toEqual(['agents/agent-seven -> /developers/local-connector']);
   });
 
-  test('background running is allowed on Claude Code and Codex only, in both languages', () => {
-    expect(developerLinkViolations({ page: 'agents/codex', links: ['/developers/background-running'] })).toEqual([]);
-    expect(developerLinkViolations({ page: 'agents/claude-ai', links: ['/developers/background-running'] })).toEqual([
-      'agents/claude-ai -> /developers/background-running',
-    ]);
-    expect(developerLinkViolations({ page: 'pt-br/agents/claude-code', links: ['/pt-br/developers/background-running'] })).toEqual([]);
+  test.each(LANGUAGES)('background running is allowed exactly on the pages of agents with a connector, in %s', (language) => {
+    const violationsOf = (client: AgentId): string[] => {
+      const page = agentPagePathOf({ client, language });
+      return developerLinkViolations({ page, links: [`/${twinPathOf({ path: BACKGROUND_RUNNING_PATH, language })}`] });
+    };
+    const allowedClients = CLIENTS.filter((client) => violationsOf(client).length === 0);
+    expect(allowedClients.sort()).toEqual([...CONNECTOR_CLIENTS].sort());
   });
 
   test('a pt-br feature page linking the MCP reference fails', () => {

@@ -13,15 +13,15 @@ const NOTE_DELAY_MS = 10 * MINUTE_MS;
 const STALE_ADVANCE_MS = 2 * HOUR_MS + MINUTE_MS;
 const STALE_WAIT_MS = 15_000;
 const TEST_TIMEOUT_MS = 30_000;
-const PRIMARY = 'grok-web';
-const STANDBY = 'grok-bot';
+const PRIMARY = 'agent-ten';
+const STANDBY = 'agent-eight';
 const GROK_URL = 'https://api2.cursor.sh/automations/webhook/abcdefgh12';
 const GROK_TOKEN = 'grok-token-sixteen-chars';
 const ACCEPTED = { statusCode: 200, errorName: null, retryAfterMs: null };
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 const OWNER_TEXT = 'oi';
 const OWNER_FOLLOW_UP = 'tem alguem ai?';
-const STANDBY_REPLY = 'respondi como o grok-bot';
+const STANDBY_REPLY = 'respondi como o agent-eight';
 
 type WireMessage = { message_id: string; text: string };
 

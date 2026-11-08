@@ -1,0 +1,26 @@
+---
+title: Fixture Agent
+description: Connect Fixture Agent to your WhatsApp.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+## What works
+
+Fixture Agent hears you and answers on WhatsApp.
+
+## How it listens
+
+Wake type: **Local**. Fixture Agent runs a listener on your computer. When zapbip has a question for you it answers "pending" at most every 50 seconds. Fixture Agent then calls again, and keeps calling again until you answer. There is no time limit.
+
+## Set up from zero
+
+1. Message the zapbip number on WhatsApp.
+2. Ask for a new agent and paste `<connectionLink>` into Fixture Agent.
+3. Ask Fixture Agent to call `send_message` with the text `✅ installed`.
+
+## Check it works
+
+Ask Fixture Agent to send `✅ installed` to your WhatsApp.
+
+<Chat messages={[{ name: 'Fixture Agent', text: '✅ installed', time: '14:03' }]} />

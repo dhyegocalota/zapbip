@@ -4,9 +4,9 @@ import { MessageDirection, MessageKind, WakeOutcome } from '@zapbip/types';
 import { vi, type Mock } from 'vitest';
 
 export const CLOCK_START_MS = 1_000_000_000_000;
-export const PRIMARY: AgentName = 'grok-web';
-export const STANDBY: AgentName = 'grok-bot';
-export const POLLING_AGENT: AgentName = 'chatgpt';
+export const PRIMARY: AgentName = 'agent-ten';
+export const STANDBY: AgentName = 'agent-eight';
+export const POLLING_AGENT: AgentName = 'agent-nine';
 export const OWNER_MESSAGE_ID = 'm1';
 export const COPY_MESSAGE_ID = 'copy_1';
 

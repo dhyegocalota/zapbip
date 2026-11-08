@@ -15,9 +15,9 @@ import {
 } from '../support/wake-session';
 import { connectionOf } from '../support/workers-env';
 
-const PRIMARY: AgentName = 'grok-web';
-const STANDBY: AgentName = 'grok-bot';
-const POLLING: AgentName = 'chatgpt';
+const PRIMARY: AgentName = 'agent-ten';
+const STANDBY: AgentName = 'agent-eight';
+const POLLING: AgentName = 'agent-nine';
 const INTERVAL_MINUTES = 60;
 const STALE_ADVANCE_MS = STALE_POLL_INTERVAL_MULTIPLE * INTERVAL_MINUTES * MINUTE_MS + MINUTE_MS;
 const OWNER_BODY = 'segredo-123';

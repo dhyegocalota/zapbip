@@ -7,7 +7,7 @@ import { promisify } from 'node:util';
 import { MessageKind, SECOND_MS } from '@zapbip/types';
 import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
 import { McpToolName } from '../../src/contract/tool-definitions';
-import { type IsolatedStack, startIsolatedStack } from './claude-code-stack';
+import { type IsolatedStack, startIsolatedStack } from './isolated-stack';
 import type { StackContext } from './global-setup';
 import { callTool, connectAgent, historyOf, lastQuestion, mcpUrl, postOwnerText, readScreen, secretOf, tapLastQuestion } from './stack';
 

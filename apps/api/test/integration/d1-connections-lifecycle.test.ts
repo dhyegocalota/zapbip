@@ -185,8 +185,8 @@ describe('D1 connection registry reads and writes', () => {
       agent: 'claude',
       secretDigest: await digestOf({ secret: SECRET }),
     });
-    await seedConnection({ accountId: ACCOUNT_ID, agent: 'codex', secret: NEW_SECRET, revokedAt: REVOKED_AT });
-    expect(await registry().findActiveByAgent({ accountId: ACCOUNT_ID, agent: 'codex' })).toBeNull();
+    await seedConnection({ accountId: ACCOUNT_ID, agent: 'agent-two', secret: NEW_SECRET, revokedAt: REVOKED_AT });
+    expect(await registry().findActiveByAgent({ accountId: ACCOUNT_ID, agent: 'agent-two' })).toBeNull();
   });
 
   it('lists the active connections ordered by creation', async () => {
@@ -260,7 +260,7 @@ describe('D1 connection registry reads and writes', () => {
 
   it('refuses a rotation to a digest another connection already holds', async () => {
     await seedConnection({ accountId: ACCOUNT_ID, agent: 'claude', secret: SECRET });
-    await seedConnection({ accountId: ACCOUNT_ID, agent: 'codex', secret: NEW_SECRET });
+    await seedConnection({ accountId: ACCOUNT_ID, agent: 'agent-two', secret: NEW_SECRET });
     await expect(
       registry().rotate({
         accountId: ACCOUNT_ID,

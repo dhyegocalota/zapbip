@@ -2,11 +2,13 @@ import { type ChildProcess, spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
-import { CHANNEL_NOTIFICATION_METHOD, CONNECTION_URL_VARIABLE, ConnectorClient, ConnectorLogEvent } from '@zapbip/types';
+import { CONNECTOR_RUNTIMES, ConnectorClient } from '@zapbip/agents/connector';
+import { CHANNEL_NOTIFICATION_METHOD, CONNECTION_URL_VARIABLE, ConnectorLogEvent } from '@zapbip/types';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import { createFakeClients, runAt, type FakeClientBehavior, type FakeClients } from '../support/fake-client-binary';
 import { startStack, type Stack } from './support/stack';
+import { CONNECTOR_CLIENTS, SUBJECT_CLIENT } from '../support/connector-clients';
 
 const CLI_BUNDLE = fileURLToPath(new URL('../../dist/cli.js', import.meta.url));
 const SESSION_ID = '0b1f6c2e-5d7a-4c3b-9e8f-1a2b3c4d5e6f';
@@ -19,14 +21,19 @@ const OWNER_TEXT = 'Oi';
 const FAKE_REPLY = `FAKE-REPLY ${OWNER_TEXT}`;
 const CALLS_MCP_VARIABLE = 'FAKE_CLIENT_CALLS_MCP';
 const ZAPBIP_URL_VARIABLE = 'FAKE_CLIENT_ZAPBIP_URL';
-const CODEX_AGENT = 'eva';
+const RUNTIME_AGENT_PREFIX = 'runtime';
+const FIRST_LETTER_CODE = 97;
+const RUNTIME_AGENTS = CONNECTOR_CLIENTS.map((client, index) => ({
+  client,
+  agent: `${RUNTIME_AGENT_PREFIX}${String.fromCharCode(FIRST_LETTER_CODE + index)}`,
+}));
 const DOWN_AGENT = 'fabio';
 const ORDER_AGENT = 'gil';
 const BURST_AGENT = 'hana';
 const BURST_RUN_MS = 1_500;
 const ABNORMAL_CLOSE_CODE_TEXT = '1006';
-const CODEX_TEXT = 'Oi codex';
-const CODEX_ROLLOUT_SECONDS = 1_700_000_000;
+const RUNTIME_TEXT = 'Oi runtime';
+const SESSION_MODIFIED_SECONDS = 1_700_000_000;
 const DISABLE_TLS_VERIFICATION = { NODE_TLS_REJECT_UNAUTHORIZED: '0' };
 const SUITE_TIMEOUT_MS = 120_000;
 const ChannelNotificationSchema = z.object({
@@ -82,7 +89,16 @@ describe('the bundled connector against the local stack', () => {
 
   beforeAll(async () => {
     stack = await startStack({
-      agents: [CONNECT_AGENT, LISTEN_AGENT, CHANNEL_AGENT, SIGNAL_AGENT, CODEX_AGENT, DOWN_AGENT, ORDER_AGENT, BURST_AGENT],
+      agents: [
+        CONNECT_AGENT,
+        LISTEN_AGENT,
+        CHANNEL_AGENT,
+        SIGNAL_AGENT,
+        ...RUNTIME_AGENTS.map((runtimeAgent) => runtimeAgent.agent),
+        DOWN_AGENT,
+        ORDER_AGENT,
+        BURST_AGENT,
+      ],
     });
   }, SUITE_TIMEOUT_MS);
 
@@ -94,7 +110,7 @@ describe('the bundled connector against the local stack', () => {
     started = [];
     clients = [];
     fakeClients = await createFakeClients();
-    await fakeClients.writeClaudeSession({ sessionId: SESSION_ID });
+    await fakeClients.writeSession({ client: SUBJECT_CLIENT, sessionId: SESSION_ID });
   });
 
   afterEach(async () => {
@@ -108,7 +124,7 @@ describe('the bundled connector against the local stack', () => {
     async () => {
       const connector = startCli({
         agent: CONNECT_AGENT,
-        arguments: ['connect', '--client', ConnectorClient.ClaudeCode, '--cwd', fakeClients.workingDirectory],
+        arguments: ['connect', '--client', SUBJECT_CLIENT, '--cwd', fakeClients.workingDirectory],
       });
       await connector.waitForEvent({ event: ConnectorLogEvent.ConnectorConnected });
       await stack.postOwnerText({ text: `@${CONNECT_AGENT} ${OWNER_TEXT}` });
@@ -121,22 +137,23 @@ describe('the bundled connector against the local stack', () => {
     SUITE_TIMEOUT_MS,
   );
 
-  it(
-    'connect wakes a Codex session with the prompt on standard input and the reply reaches the owner screen',
-    async () => {
-      await fakeClients.writeCodexRollout({ sessionId: SESSION_ID, modifiedAtSeconds: CODEX_ROLLOUT_SECONDS });
+  it.each(RUNTIME_AGENTS)(
+    'connect wakes a $client session with the prompt on standard input and the reply reaches the owner screen',
+    async ({ client, agent }) => {
+      const text = `${RUNTIME_TEXT} ${client}`;
+      await fakeClients.writeSession({ client, sessionId: SESSION_ID, modifiedAtSeconds: SESSION_MODIFIED_SECONDS });
       const connector = startCli({
-        agent: CODEX_AGENT,
-        arguments: ['connect', '--client', ConnectorClient.Codex, '--cwd', fakeClients.workingDirectory],
+        agent,
+        arguments: ['connect', '--client', client, '--cwd', fakeClients.workingDirectory],
       });
       await connector.waitForEvent({ event: ConnectorLogEvent.ConnectorConnected });
-      await stack.postOwnerText({ text: `@${CODEX_AGENT} ${CODEX_TEXT}` });
+      await stack.postOwnerText({ text: `@${agent} ${text}` });
 
-      await vi.waitFor(async () => expect(await screenTexts()).toContain(`FAKE-REPLY ${CODEX_TEXT}`), { timeout: SUITE_TIMEOUT_MS });
+      await vi.waitFor(async () => expect(await screenTexts()).toContain(`FAKE-REPLY ${text}`), { timeout: SUITE_TIMEOUT_MS });
       const runs = await fakeClients.readRuns();
-      expect(runAt({ runs, index: 0 }).clientName).toBe('codex');
-      expect(runAt({ runs, index: 0 }).argv.slice(-3)).toEqual(['resume', SESSION_ID, '-']);
-      expect(runAt({ runs, index: 0 }).stdin).toContain(CODEX_TEXT);
+      expect(runAt({ runs, index: 0 }).clientName).toBe(CONNECTOR_RUNTIMES[client].binaryName);
+      expect(runAt({ runs, index: 0 }).argv).toContain(SESSION_ID);
+      expect(runAt({ runs, index: 0 }).stdin).toContain(text);
     },
     SUITE_TIMEOUT_MS,
   );
@@ -145,7 +162,7 @@ describe('the bundled connector against the local stack', () => {
     'a message sent while the connector is down is woken once when it connects',
     async () => {
       const downText = 'sent while down';
-      const connectArguments = ['connect', '--client', ConnectorClient.ClaudeCode, '--cwd', fakeClients.workingDirectory];
+      const connectArguments = ['connect', '--client', SUBJECT_CLIENT, '--cwd', fakeClients.workingDirectory];
       const firstConnector = startCli({ agent: DOWN_AGENT, arguments: connectArguments });
       await firstConnector.waitForEvent({ event: ConnectorLogEvent.ConnectorConnected });
       const exited = new Promise((resolve) => firstConnector.child.on('exit', resolve));
@@ -169,7 +186,7 @@ describe('the bundled connector against the local stack', () => {
     async () => {
       const connector = startCli({
         agent: BURST_AGENT,
-        arguments: ['connect', '--client', ConnectorClient.ClaudeCode, '--cwd', fakeClients.workingDirectory],
+        arguments: ['connect', '--client', SUBJECT_CLIENT, '--cwd', fakeClients.workingDirectory],
         behavior: { runMs: BURST_RUN_MS },
       });
       await connector.waitForEvent({ event: ConnectorLogEvent.ConnectorConnected });
@@ -196,7 +213,7 @@ describe('the bundled connector against the local stack', () => {
     async () => {
       const connector = startCli({
         agent: ORDER_AGENT,
-        arguments: ['connect', '--client', ConnectorClient.ClaudeCode, '--cwd', fakeClients.workingDirectory],
+        arguments: ['connect', '--client', SUBJECT_CLIENT, '--cwd', fakeClients.workingDirectory],
       });
       await connector.waitForEvent({ event: ConnectorLogEvent.ConnectorConnected });
       await stack.postOwnerText({ text: `@${ORDER_AGENT} first` });
@@ -276,7 +293,7 @@ describe('the bundled connector against the local stack', () => {
     async (signal) => {
       const connector = startCli({
         agent: SIGNAL_AGENT,
-        arguments: ['connect', '--client', ConnectorClient.ClaudeCode, '--cwd', fakeClients.workingDirectory],
+        arguments: ['connect', '--client', SUBJECT_CLIENT, '--cwd', fakeClients.workingDirectory],
       });
       await connector.waitForEvent({ event: ConnectorLogEvent.ConnectorConnected });
       const exited = new Promise<number | null>((resolve) => connector.child.on('exit', (code) => resolve(code)));

@@ -402,7 +402,17 @@ stub_all; stub node 'echo v22.11.0'
 expect_match "doctor: node below .nvmrc is missing" "$(doctor_line Darwin node)" '^node \| missing \| required \| lost: everything \| fix: nvm install \(reads \.nvmrc\), or https://nodejs\.org/en/download$'
 
 stub_all; stub python3 'exit 1'
-expect_match "doctor: python outside 3.11 to 3.13 is missing" "$(doctor_line Darwin python)" '^python \| missing \| required \| lost: the Hermes plugin.s typecheck and tests; pnpm verify fails in apps/hermes-plugin \| fix: brew install python@3\.13 && python3 -m pip install --require-hashes -r apps/hermes-plugin/requirements-dev\.txt$'
+python_requirements_expected=""
+repository_root="$here/../.."
+for requirements_file in "$repository_root"/apps/*-plugin/requirements-dev.txt; do
+  [[ -f "$requirements_file" ]] || continue
+  python_requirements_expected+=" && python3 -m pip install --require-hashes -r apps/$(basename "$(dirname "$requirements_file")")/requirements-dev.txt"
+done
+python_requirements_expected=${python_requirements_expected//./\\.}
+expect_match "doctor: python outside 3.11 to 3.13 is missing" "$(doctor_line Darwin python)" "^python \\| missing \\| required \\| lost: the Python plugins. typecheck and tests; pnpm verify fails in a Python plugin \\| fix: brew install python@3\\.13${python_requirements_expected}\$"
+if [[ -f "$here/../../apps/hermes-plugin/requirements-dev.txt" ]]; then
+  expect_match "doctor: the python fix installs the hashed development lock of the Hermes plugin" "$(doctor_line Darwin python)" 'pip install --require-hashes -r apps/hermes-plugin/requirements-dev\.txt'
+fi
 
 stub_all; stub python3 '[[ "$2" == *"<= (3, 14)"* ]]'
 expect_match "doctor: python 3.14 is accepted" "$(doctor_line Darwin python)" '^python \| ok \|'
@@ -421,6 +431,27 @@ expect_match "doctor: a skipped tool is not counted" "$report" 'doctor: 0 missin
 stub_all; rm "$doctor_bin/jq"
 fix_line=$(DOCTOR_PATH="$doctor_bin" "$here/doctor.sh" --fix jq)
 [[ "$fix_line" == "brew install jq" ]] || { echo "FAIL doctor --fix prints the fix alone: $fix_line"; failures=$((failures + 1)); }
+
+injected_root=$(mktemp -d)
+mkdir -p "$injected_root/.agents/hooks" "$injected_root/apps/x\$(touch PWNED)-plugin" "$injected_root/apps/safe-plugin"
+cp "$here/doctor.sh" "$injected_root/.agents/hooks/doctor.sh"
+touch "$injected_root/apps/x\$(touch PWNED)-plugin/requirements-dev.txt" "$injected_root/apps/safe-plugin/requirements-dev.txt"
+stub_all
+injected_fix=$(cd "$injected_root" && DOCTOR_UNAME=Darwin DOCTOR_PATH="$doctor_bin" DOCTOR_HOME="$doctor_home" "$injected_root/.agents/hooks/doctor.sh" --fix python 2>"$injected_root/stderr")
+expect_no_match "doctor: a plugin folder with a command in its name is not printed in the fix" "$injected_fix" 'touch'
+expect_match "doctor: a safe plugin folder is still printed in the fix" "$injected_fix" 'pip install --require-hashes -r apps/safe-plugin/requirements-dev\.txt'
+expect_match "doctor: the skipped folder is named on stderr" "$(cat "$injected_root/stderr")" 'skipped'
+[[ -e "$injected_root/PWNED" ]] && { echo "FAIL doctor: a plugin folder name was executed"; failures=$((failures + 1)); }
+rm -rf "$injected_root"
+
+escape_root=$(mktemp -d)
+mkdir -p "$escape_root/.agents/hooks" "$escape_root/apps/x"$'\e[2J'"-plugin"
+cp "$here/doctor.sh" "$escape_root/.agents/hooks/doctor.sh"
+touch "$escape_root/apps/x"$'\e[2J'"-plugin/requirements-dev.txt"
+stub_all
+(cd "$escape_root" && DOCTOR_UNAME=Darwin DOCTOR_PATH="$doctor_bin" DOCTOR_HOME="$doctor_home" "$escape_root/.agents/hooks/doctor.sh" --fix python >/dev/null 2>"$escape_root/stderr")
+expect_no_match "doctor: the skipped folder is printed without a raw escape" "$(cat "$escape_root/stderr")" $'\e'
+rm -rf "$escape_root"
 
 wrangler_fix='wrangler is logged in for this OS user; run `wrangler logout` and deploy with a scoped CLOUDFLARE_API_TOKEN exported only in your own shell'
 wrangler_warning_line='^wrangler \| warning \| warning \| lost: [^|]+ \| fix: wrangler is logged in for this OS user; run `wrangler logout` and deploy with a scoped CLOUDFLARE_API_TOKEN exported only in your own shell$'

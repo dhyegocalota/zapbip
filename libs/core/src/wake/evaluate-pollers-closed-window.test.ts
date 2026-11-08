@@ -32,8 +32,8 @@ describe('evaluatePollers in a closed window', () => {
   test('a stale notice triggers one template notice per closed window, stays queued and is delivered when the owner writes', async () => {
     const wakeEnvironment = await createWakeEnvironment();
     const { environment } = wakeEnvironment;
-    await schedule({ wakeEnvironment, agent: 'chatgpt' });
-    await schedule({ wakeEnvironment, agent: 'hermes' });
+    await schedule({ wakeEnvironment, agent: 'agent-nine' });
+    await schedule({ wakeEnvironment, agent: 'agent-five' });
     await goStale({ wakeEnvironment });
     await closeWindow({ environment });
     await evaluatePollers(wakeEnvironment.context);
@@ -43,7 +43,7 @@ describe('evaluatePollers in a closed window', () => {
         locale: LOCALE,
         parameters: [
           OWN_NOTICE_SENDER,
-          buildNoticePreview({ content: { kind: MessageKind.Text, text: staleTextOf({ agent: 'chatgpt' }) }, locale: LOCALE }),
+          buildNoticePreview({ content: { kind: MessageKind.Text, text: staleTextOf({ agent: 'agent-nine' }) }, locale: LOCALE }),
         ],
       },
     ]);
@@ -51,20 +51,20 @@ describe('evaluatePollers in a closed window', () => {
     expect(environment.sender.sessions).toEqual([]);
     await receiveText({ environment, text: 'oi' });
     const sentTexts = environment.sender.sessions.map((message) => message.kind === MessageKind.Text && message.text);
-    expect(sentTexts).toEqual(expect.arrayContaining([staleTextOf({ agent: 'chatgpt' }), staleTextOf({ agent: 'hermes' })]));
+    expect(sentTexts).toEqual(expect.arrayContaining([staleTextOf({ agent: 'agent-nine' }), staleTextOf({ agent: 'agent-five' })]));
     expect(await environment.repository.listQueued()).toEqual([]);
   });
 
   test('a rejected template leaves the notice queued, marks the episode notified and the alarm retry sends the template', async () => {
     const wakeEnvironment = await createWakeEnvironment();
     const { environment } = wakeEnvironment;
-    await schedule({ wakeEnvironment, agent: 'chatgpt' });
+    await schedule({ wakeEnvironment, agent: 'agent-nine' });
     await goStale({ wakeEnvironment });
     await closeWindow({ environment });
     environment.sender.failTemplateCalls({ callNumbers: [1] });
     await evaluatePollers(wakeEnvironment.context);
     expect(wakeEnvironment.observer.events).toEqual([]);
-    expect(await wakeEnvironment.wake.repository.findPollState({ agent: 'chatgpt' })).toMatchObject({ pollerStaleNotified: true });
+    expect(await wakeEnvironment.wake.repository.findPollState({ agent: 'agent-nine' })).toMatchObject({ pollerStaleNotified: true });
     expect(await findNoticeRetryDueAt({ dependencies: environment.dependencies })).toBe(environment.clock.now() + NOTICE_RETRY_MS);
     await environment.clock.advance({ ms: NOTICE_RETRY_MS });
     await retryNotice({ dependencies: environment.dependencies });
@@ -75,7 +75,7 @@ describe('evaluatePollers in a closed window', () => {
   test('a stale message left queued while the flush fails its notice for another message marks the episode notified once', async () => {
     const wakeEnvironment = await createWakeEnvironment();
     const { environment } = wakeEnvironment;
-    await schedule({ wakeEnvironment, agent: 'chatgpt' });
+    await schedule({ wakeEnvironment, agent: 'agent-nine' });
     await goStale({ wakeEnvironment });
     await closeWindow({ environment });
     await sendText({
@@ -92,7 +92,7 @@ describe('evaluatePollers in a closed window', () => {
     environment.sender.failTemplateCalls({ callNumbers: [2] });
     await evaluatePollers(wakeEnvironment.context);
     expect(wakeEnvironment.observer.events).toEqual([]);
-    expect(await wakeEnvironment.wake.repository.findPollState({ agent: 'chatgpt' })).toMatchObject({ pollerStaleNotified: true });
+    expect(await wakeEnvironment.wake.repository.findPollState({ agent: 'agent-nine' })).toMatchObject({ pollerStaleNotified: true });
     const queuedTexts = (await environment.repository.listQueued()).map((message) => message.delivery);
     expect(queuedTexts).toEqual([DeliveryState.Queued, DeliveryState.Queued]);
   });

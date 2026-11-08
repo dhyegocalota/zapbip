@@ -14,10 +14,11 @@ stub_path="$repository/node_modules/.bin:$stub_bin:$linked_bin:/usr/bin:/bin"
 
 DEFAULT_NODE_VERSION=v24.7.0
 OTHER_NODE_VERSION=v25.0.0
-ALL_GATES="doctor format secrets typecheck audit unit integration e2e docs"
+ALL_GATES="doctor format secrets typecheck audit unit integration e2e lifecycle docs"
 DOCS_GATES="doctor format secrets audit shape"
 ALL_PACKAGES="@zapbip/api @zapbip/core @zapbip/server @zapbip/types @zapbip/web zapbip"
 API_GATES="doctor format secrets typecheck audit shape unit integration e2e"
+AGENTS_GATES="doctor format secrets typecheck audit shape unit integration e2e lifecycle docs"
 
 expect_match() {
   local name=$1 output=$2 pattern=$3
@@ -102,7 +103,7 @@ new_repository() {
   printf '#!/usr/bin/env bash\necho "probe $*" >> "$STUB_LOG"\n' > "$repository/.github/scripts/secret-rules-probe.sh"
   chmod +x "$repository/.agents/hooks/doctor.sh" "$repository/.github/scripts/secret-rules-probe.sh" "$repository/scripts/verify.sh"
   local tracked
-  for tracked in README.md LICENSE AGENTS.md pnpm-lock.yaml docs/architecture.md .agents/skills/x/SKILL.md .github/workflows/verify.yml apps/web/README.md apps/web/vite.config.ts apps/web/src/a.ts apps/server/src/x.ts tools/repository-shape/src/x.test.ts libs/types/src/x.ts; do
+  for tracked in README.md LICENSE AGENTS.md pnpm-lock.yaml docs/architecture.md .agents/skills/x/SKILL.md .github/workflows/verify.yml apps/web/README.md apps/web/vite.config.ts apps/web/src/a.ts apps/server/src/x.ts tools/repository-shape/src/x.test.ts libs/types/src/x.ts libs/agents/src/x.ts; do
     change "$tracked"
   done
   in_repository add -- scripts apps libs tools .agents .github docs README.md LICENSE AGENTS.md pnpm-lock.yaml
@@ -129,6 +130,7 @@ classify() {
 calls() { cat "$STUB_LOG"; }
 
 classify README.md
+expect_no_match "a README typo does not select the lifecycle gate" "$output" lifecycle
 expect_line "a README typo" "$output" class docs
 expect_line "a README typo" "$output" gates "$DOCS_GATES"
 expect_line "a README typo" "$output" packages -
@@ -162,6 +164,10 @@ classify libs/core/src/x.ts
 expect_line "a core file" "$output" class product
 expect_line "a core file" "$output" gates "$API_GATES"
 
+classify libs/agents/src/x.ts
+expect_line "an agents file" "$output" class product
+expect_line "an agents file" "$output" gates "$AGENTS_GATES"
+
 classify apps/api/src/x.ts
 expect_line "an api file" "$output" class product
 expect_line "an api file" "$output" gates "$API_GATES"
@@ -169,7 +175,7 @@ expect_line "an api file" "$output" packages @zapbip/api
 
 classify apps/connector/src/x.ts
 expect_line "a connector file" "$output" class product
-expect_line "a connector file" "$output" gates "doctor format secrets typecheck audit shape unit e2e"
+expect_line "a connector file" "$output" gates "doctor format secrets typecheck audit shape unit e2e lifecycle"
 expect_line "a connector file" "$output" packages zapbip
 
 classify apps/docs/docs.json
@@ -181,6 +187,15 @@ classify apps/api/README.md
 expect_line "the api README" "$output" class docs
 expect_line "the api README" "$output" gates "$DOCS_GATES"
 
+classify .agents/hooks/doctor.sh
+expect_line "a hook script" "$output" gates "doctor format secrets audit hooks shape lifecycle"
+
+classify apps/example-plugin/src/x.ts
+expect_line "a plugin file" "$output" gates "doctor format secrets typecheck audit shape unit lifecycle"
+
+classify apps/docs/agents/x.mdx
+expect_no_match "a docs page does not select the lifecycle gate" "$output" lifecycle
+
 classify .agents/skills/x/SKILL.md
 expect_line "a skill" "$output" class tooling
 expect_line "a skill" "$output" gates "doctor format secrets audit hooks shape"
@@ -190,7 +205,7 @@ expect_line "AGENTS.md" "$output" class tooling
 
 classify .github/workflows/verify.yml
 expect_line "a workflow" "$output" class tooling
-expect_line "a workflow" "$output" gates "doctor format secrets audit shape"
+expect_line "a workflow" "$output" gates "doctor format secrets audit shape lifecycle"
 
 classify .github/scripts/secret-rules-probe.sh
 expect_line "the secret rules probe" "$output" class tooling
@@ -205,7 +220,7 @@ expect_equal "a change to the secret rules probe runs green" "$status" 0
 expect_match "a change to the secret rules probe runs the probe" "$(calls)" 'probe '
 
 classify tools/repository-shape/src/x.test.ts
-expect_line "a repository shape test" "$output" gates "doctor format secrets typecheck audit shape"
+expect_line "a repository shape test" "$output" gates "doctor format secrets typecheck audit shape lifecycle"
 
 classify tools/repository-shape/package.json
 expect_line "a tools manifest" "$output" gates "$ALL_GATES"

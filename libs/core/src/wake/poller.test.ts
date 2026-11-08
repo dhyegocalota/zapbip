@@ -5,7 +5,7 @@ import { isPollerStale, pollerDeadline } from './poller';
 import { scheduledWakeOf } from './testing/wake-doubles';
 
 const NOW = 100 * HOUR_MS;
-const AGENT = 'chatgpt';
+const AGENT = 'agent-nine';
 
 describe('isPollerStale', () => {
   test.each([

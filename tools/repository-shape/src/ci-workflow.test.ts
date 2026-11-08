@@ -7,7 +7,12 @@ const WORKFLOW_FILE = '.github/workflows/verify.yml';
 const JOB_LINE_PATTERN = /^ {2}[\w-]+:$/;
 const JOB_INDENT_LENGTH = 2;
 const NEXT_JOB_PATTERN = /\n {2}\S[^\n]*:\n/;
-const EXPECTED_JOBS = ['checks', 'unit', 'security'];
+const EXPECTED_JOBS = ['checks', 'unit', 'lifecycle', 'security'];
+const LIFECYCLE_JOB = 'lifecycle';
+const LIFECYCLE_MINIMUM_TIMEOUT_MINUTES = 25;
+const LIFECYCLE_MAXIMUM_TIMEOUT_MINUTES = 45;
+const LIFECYCLE_STEP = 'run: pnpm test:lifecycle';
+const DOCTOR_ENVIRONMENT = ['GH_TOKEN: ${{ github.token }}', 'DOCTOR_SKIP: chromium'];
 const CHECKS_JOB = 'checks';
 const CHECKS_STEPS = [
   'run: pnpm format:check',
@@ -35,7 +40,8 @@ const WORKFLOW_PERMISSIONS = '\npermissions:\n  contents: read\n';
 const JOBS_START = '\njobs:\n';
 const LINE_SEPARATOR = '\n';
 const UNIT_MATRIX_ENTRIES = ['{ name: repository-shape, filter: "@zapbip/repository-shape" }'];
-const UNIT_FILTER_STEP = 'run: pnpm --filter "${{ matrix.filter }}" test:unit';
+const UNIT_FILTER_STEP = 'run: pnpm --filter "$FILTER" test:unit';
+const UNIT_FILTER_ENVIRONMENT = 'FILTER: ${{ matrix.filter }}';
 const FAIL_FAST_DISABLED = 'fail-fast: false';
 const TOKEN_REFERENCE = 'secrets.';
 const WORKFLOWS_DIRECTORY = '.github/workflows';
@@ -114,8 +120,10 @@ describe('CI workflow', () => {
     expect(UNIT_MATRIX_ENTRIES.filter((entry) => !unit.includes(entry))).toEqual([]);
   });
 
-  test('the unit step filters by the quoted matrix filter', () => {
+  test('the unit step filters by the matrix filter through the environment, never inline', () => {
     expect(job(UNIT_JOB)).toContain(UNIT_FILTER_STEP);
+    expect(job(UNIT_JOB)).toContain(UNIT_FILTER_ENVIRONMENT);
+    expect(job(UNIT_JOB)).not.toMatch(/run:[^\n]*\$\{\{ matrix/);
   });
 
   test('the unit job checks out the full history, which the feature status check reads', () => {
@@ -126,8 +134,17 @@ describe('CI workflow', () => {
     expect(job(UNIT_JOB)).toContain(FAIL_FAST_DISABLED);
   });
 
-  test('every job has a bounded timeout', () => {
-    const unbounded = EXPECTED_JOBS.filter((name) => {
+  test('the lifecycle job has its own long timeout, the doctor environment and the lifecycle step', () => {
+    const lifecycle = job(LIFECYCLE_JOB);
+    const minutes = Number(TIMEOUT_PATTERN.exec(lifecycle)?.[1]);
+    expect(minutes).toBeGreaterThanOrEqual(LIFECYCLE_MINIMUM_TIMEOUT_MINUTES);
+    expect(minutes).toBeLessThanOrEqual(LIFECYCLE_MAXIMUM_TIMEOUT_MINUTES);
+    expect(lifecycle).toContain(LIFECYCLE_STEP);
+    expect(DOCTOR_ENVIRONMENT.filter((entry) => !lifecycle.includes(entry))).toEqual([]);
+  });
+
+  test('every other job has a bounded timeout', () => {
+    const unbounded = EXPECTED_JOBS.filter((name) => name !== LIFECYCLE_JOB).filter((name) => {
       const match = TIMEOUT_PATTERN.exec(job(name));
       return match === null || Number(match[1]) > MAXIMUM_TIMEOUT_MINUTES;
     });

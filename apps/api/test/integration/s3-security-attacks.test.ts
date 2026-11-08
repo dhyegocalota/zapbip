@@ -43,8 +43,8 @@ describe('S3 security attacks', () => {
   it('secret never in replies, D1 or DO after create/rotate; install code only as /i/', async () => {
     const bindings = bindingsWith({ waitlistEnabled: false });
     await deliver({ bindings, text: 'oi' });
-    await deliver({ bindings, text: 'novo agente claude' });
-    await deliver({ bindings, text: 'girar claude' });
+    await deliver({ bindings, text: 'novo agente alfa' });
+    await deliver({ bindings, text: 'girar alfa' });
     await deliver({ bindings, text: 'agentes' });
     const [account] = await findAccounts({ waId: WA_ID });
     const screen = (await screenTextsOf({ accountId: account!.accountId })).join('\n');
@@ -64,8 +64,8 @@ describe('S3 security attacks', () => {
   it('concurrent rotates leave exactly one valid link', async () => {
     const bindings = bindingsWith({ waitlistEnabled: false });
     await deliver({ bindings, text: 'oi' });
-    await deliver({ bindings, text: 'novo agente claude' });
-    await Promise.all(Array.from({ length: 8 }, () => deliver({ bindings, text: 'girar claude' })));
+    await deliver({ bindings, text: 'novo agente alfa' });
+    await Promise.all(Array.from({ length: 8 }, () => deliver({ bindings, text: 'girar alfa' })));
     const [account] = await findAccounts({ waId: WA_ID });
     const screen = (await screenTextsOf({ accountId: account!.accountId })).join('\n');
     const codes = [...screen.matchAll(INSTALL_LINK)].map((m) => m[1]!);
@@ -209,8 +209,8 @@ describe('S3 security attacks', () => {
   it('account deletion removes every trace', async () => {
     const bindings = bindingsWith({ waitlistEnabled: false });
     await deliver({ bindings, text: 'oi' });
-    await deliver({ bindings, text: 'novo agente claude' });
-    await deliver({ bindings, text: 'novo agente codex' });
+    await deliver({ bindings, text: 'novo agente alfa' });
+    await deliver({ bindings, text: 'novo agente beta' });
     const [account] = await findAccounts({ waId: WA_ID });
     const accountId = account!.accountId;
     await testEnv.MEDIA.put(`accounts/${accountId}/media/m1`, new Uint8Array(10));
@@ -223,16 +223,16 @@ describe('S3 security attacks', () => {
     const after = await dumpD1();
     expect(after).not.toContain(WA_ID);
     expect(after).not.toContain(accountId);
-    expect(after).not.toMatch(/claude|codex/);
+    expect(after).not.toMatch(/alfa|beta/);
     expect((await testEnv.MEDIA.list({ prefix: `accounts/${accountId}/` })).objects).toHaveLength(0);
     expect((await testEnv.MEDIA.list({ prefix: `accounts/${accountId}x/` })).objects).toHaveLength(1);
     const dobj = await dumpDurableObject(accountId);
-    expect(dobj).not.toMatch(/claude|codex|apagar|oi/);
+    expect(dobj).not.toMatch(/alfa|beta|apagar|oi/);
     await deliver({ bindings, text: 'oi' });
     const [fresh] = await findAccounts({ waId: WA_ID });
     expect(fresh!.accountId).not.toBe(accountId);
     const freshDump = await dumpD1();
-    expect(freshDump).not.toMatch(/claude|codex/);
+    expect(freshDump).not.toMatch(/alfa|beta/);
   });
 
   it('account deletion with an old secret: old secret is 401-equivalent after delete', async () => {

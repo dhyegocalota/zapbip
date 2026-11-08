@@ -1,12 +1,27 @@
-import { mkdir, mkdtemp, readFile, realpath, rm, utimes, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { delimiter, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { CONNECTOR_RUNTIMES, ConnectorClient } from '@zapbip/agents/connector';
 import { vi } from 'vitest';
+import { CONNECTOR_CLIENTS } from './connector-clients';
 
-const FIXTURE_BIN_DIRECTORY = fileURLToPath(new URL('../fixtures/bin', import.meta.url));
-const CLAUDE_FOLDER_UNSAFE_CHARACTERS = /[^A-Za-z0-9]/g;
-const CLAUDE_FOLDER_REPLACEMENT = '-';
+const SUPPORTED_DIRECTORY = fileURLToPath(new URL('../../../../libs/agents/supported', import.meta.url));
+const FAKE_BINARY_FOLDER = 'testing';
+const FAKE_CLIENT_ENTRY = 'fake-client.mjs';
+const BINARY_DIRECTORY_NAME = 'bin';
+const EXECUTABLE_MODE = 0o755;
+const SESSION_WRITER_FILE = 'write-session.mjs';
+const DECOY_WRITER_FILE = 'write-decoy.mjs';
+const MILLISECONDS_PER_SECOND = 1000;
+export const ACTIVE_WRITER_TEXT = 'Error: thread already has an active writer for this session';
+
+type SessionWriter = (input: {
+  homeDirectory: string;
+  workingDirectory: string;
+  sessionId: string;
+  modifiedAtSeconds: number;
+}) => Promise<void>;
 const HOLD_RELEASE_TEXT = 'release';
 
 export type FakeClientBehavior = {
@@ -53,16 +68,15 @@ type RecordLine = {
 export type FakeClients = {
   rootDirectory: string;
   workingDirectory: string;
-  claudeConfigDirectory: string;
-  codexHome: string;
+  homeDirectoryOf: (input: { client: ConnectorClient }) => string;
   recordFile: string;
   holdFile: string;
   environment: (input: { behavior: FakeClientBehavior }) => Record<string, string>;
   apply: (input: { behavior: FakeClientBehavior }) => void;
   release: () => Promise<void>;
   readRuns: () => Promise<FakeClientRun[]>;
-  writeClaudeSession: (input: { sessionId: string }) => Promise<void>;
-  writeCodexRollout: (input: { sessionId: string; modifiedAtSeconds: number }) => Promise<void>;
+  writeSession: (input: { client: ConnectorClient; sessionId: string; modifiedAtSeconds?: number }) => Promise<void>;
+  writeDecoy: (input: { client: ConnectorClient; name: string; url: string }) => Promise<void>;
   cleanup: () => Promise<void>;
 };
 
@@ -110,20 +124,33 @@ export function runAt(input: { runs: FakeClientRun[]; index: number }): FakeClie
   return run;
 }
 
+async function writeBinaries(input: { rootDirectory: string }): Promise<string> {
+  const binaryDirectory = join(input.rootDirectory, BINARY_DIRECTORY_NAME);
+  await mkdir(binaryDirectory, { recursive: true });
+  await Promise.all(
+    CONNECTOR_CLIENTS.map(async (client) => {
+      const entry = pathToFileURL(join(SUPPORTED_DIRECTORY, client, FAKE_BINARY_FOLDER, FAKE_CLIENT_ENTRY)).href;
+      const binary = join(binaryDirectory, CONNECTOR_RUNTIMES[client].binaryName);
+      await writeFile(binary, `#!/usr/bin/env node\nimport(${JSON.stringify(entry)});\n`);
+      await chmod(binary, EXECUTABLE_MODE);
+    }),
+  );
+  return binaryDirectory;
+}
+
 export async function createFakeClients(): Promise<FakeClients> {
   const rootDirectory = await realpath(await mkdtemp(join(tmpdir(), 'zapbip-fake-clients-')));
   const workingDirectory = join(rootDirectory, 'project');
-  const claudeConfigDirectory = join(rootDirectory, 'claude-config');
-  const codexHome = join(rootDirectory, 'codex-home');
+  const homeDirectories = Object.fromEntries(CONNECTOR_CLIENTS.map((client) => [client, join(rootDirectory, `${client}-home`)]));
   const recordFile = join(rootDirectory, 'record.jsonl');
   const holdFile = join(rootDirectory, 'hold-release');
   await mkdir(workingDirectory, { recursive: true });
   await writeFile(recordFile, '');
+  const binaryDirectory = await writeBinaries({ rootDirectory });
 
   const baseEnvironment: Record<string, string> = {
-    PATH: `${FIXTURE_BIN_DIRECTORY}${delimiter}${process.env.PATH}`,
-    CLAUDE_CONFIG_DIR: claudeConfigDirectory,
-    CODEX_HOME: codexHome,
+    PATH: [binaryDirectory, process.env.PATH].join(delimiter),
+    ...Object.fromEntries(CONNECTOR_CLIENTS.map((client) => [CONNECTOR_RUNTIMES[client].homeVariable, homeDirectories[client]])),
     FAKE_CLIENT_RECORD: recordFile,
   };
 
@@ -148,22 +175,23 @@ export async function createFakeClients(): Promise<FakeClients> {
     return mergeRuns({ lines });
   }
 
-  async function writeClaudeSession(input: { sessionId: string }): Promise<void> {
-    const projectFolder = join(
-      claudeConfigDirectory,
-      'projects',
-      workingDirectory.replace(CLAUDE_FOLDER_UNSAFE_CHARACTERS, CLAUDE_FOLDER_REPLACEMENT),
-    );
-    await mkdir(projectFolder, { recursive: true });
-    await writeFile(join(projectFolder, `${input.sessionId}.jsonl`), '{}\n');
+  function homeDirectoryOf(input: { client: ConnectorClient }): string {
+    return homeDirectories[input.client] as string;
   }
 
-  async function writeCodexRollout(input: { sessionId: string; modifiedAtSeconds: number }): Promise<void> {
-    const directory = join(codexHome, 'sessions', '2020', '01', '01');
-    const file = join(directory, `rollout-2020-01-01T00-00-00-${input.sessionId}.jsonl`);
-    await mkdir(directory, { recursive: true });
-    await writeFile(file, `${JSON.stringify({ type: 'session_meta', payload: { id: input.sessionId, cwd: workingDirectory } })}\n`);
-    await utimes(file, input.modifiedAtSeconds, input.modifiedAtSeconds);
+  async function writeSession(input: { client: ConnectorClient; sessionId: string; modifiedAtSeconds?: number }): Promise<void> {
+    const { writeSession: writer } = (await import(join(SUPPORTED_DIRECTORY, input.client, FAKE_BINARY_FOLDER, SESSION_WRITER_FILE))) as {
+      writeSession: SessionWriter;
+    };
+    const { client, sessionId, modifiedAtSeconds = Math.floor(Date.now() / MILLISECONDS_PER_SECOND) } = input;
+    await writer({ homeDirectory: homeDirectoryOf({ client }), workingDirectory, sessionId, modifiedAtSeconds });
+  }
+
+  async function writeDecoy(input: { client: ConnectorClient; name: string; url: string }): Promise<void> {
+    const { writeDecoy: writer } = (await import(join(SUPPORTED_DIRECTORY, input.client, FAKE_BINARY_FOLDER, DECOY_WRITER_FILE))) as {
+      writeDecoy: (decoy: { homeDirectory: string; name: string; url: string }) => Promise<void>;
+    };
+    await writer({ homeDirectory: homeDirectoryOf({ client: input.client }), name: input.name, url: input.url });
   }
 
   async function cleanup(): Promise<void> {
@@ -173,16 +201,15 @@ export async function createFakeClients(): Promise<FakeClients> {
   return {
     rootDirectory,
     workingDirectory,
-    claudeConfigDirectory,
-    codexHome,
+    homeDirectoryOf,
     recordFile,
     holdFile,
     environment,
     apply,
     release,
     readRuns,
-    writeClaudeSession,
-    writeCodexRollout,
+    writeSession,
+    writeDecoy,
     cleanup,
   };
 }

@@ -124,7 +124,7 @@ describe('D1 install code directory first call', () => {
 
   it('leaves another connection ready', async () => {
     const first = await registerWithInstallCode({ accountId: ACCOUNT_ID, agent: 'claude' });
-    const second = await registerWithInstallCode({ accountId: OTHER_ACCOUNT_ID, agent: 'codex' });
+    const second = await registerWithInstallCode({ accountId: OTHER_ACCOUNT_ID, agent: 'agent-two' });
     await installCodeDirectory().recordFirstCall({ connectionId: first.connection.connectionId, calledAt: FIRST_CALL_AT });
     expect((await installCodeDirectory().resolve({ installCode: second.installCode, now: NOW })).status).toBe(InstallCodeStatus.Ready);
     expect(await readCallColumns({ connectionId: second.connection.connectionId })).toMatchObject({ first_call_at: null });

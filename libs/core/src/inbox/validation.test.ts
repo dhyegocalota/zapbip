@@ -356,7 +356,7 @@ describe('parseAgentName', () => {
   const patternMessage = 'agent: must match ^[a-z0-9][a-z0-9-]{0,19}$';
 
   test('CU-46 valid', () => {
-    expect(parseAgentName({ value: 'claude-code' })).toBe('claude-code');
+    expect(parseAgentName({ value: 'agent-one' })).toBe('agent-one');
   });
 
   test('CU-47 upper case', async () => {

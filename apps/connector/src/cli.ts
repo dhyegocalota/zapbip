@@ -1,7 +1,8 @@
 import { existsSync, realpathSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { CONNECTION_URL_VARIABLE, ConnectorClient, UUID_PATTERN } from '@zapbip/types';
+import { ConnectorClient } from '@zapbip/agents/connector';
+import { CONNECTION_URL_VARIABLE, UUID_PATTERN } from '@zapbip/types';
 import { runChannel } from './channel';
 import { deriveConnectorLinks, runConnection } from './connect';
 import { readHiddenLine } from './hidden-prompt';

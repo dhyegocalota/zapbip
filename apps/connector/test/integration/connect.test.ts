@@ -1,8 +1,8 @@
-import { access, mkdir, utimes, writeFile } from 'node:fs/promises';
+import { access, mkdir, utimes } from 'node:fs/promises';
 import { join } from 'node:path';
+import { CONNECTOR_RUNTIMES, ConnectorClient, WakeIsolationRefusedError } from '@zapbip/agents/connector';
 import {
   CONNECTOR_FRAME_MAX_BYTES,
-  ConnectorClient,
   ConnectorFrameType,
   ConnectorLogEvent,
   ConnectorWakeOutcome,
@@ -13,7 +13,6 @@ import {
   RECONNECT_BASE_MS,
   RECONNECT_STABLE_MS,
   REPLACED_CLOSE_CODE,
-  WAKE_ALLOWED_TOOL,
   WakeMode,
   HttpStatus,
 } from '@zapbip/types';
@@ -21,7 +20,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { runConnection } from '../../src/connect';
 import type { ConnectorTimers } from '../../src/timers';
 import { createManualTimers } from '../support/manual-timers';
-import { createFakeClients, runAt, type FakeClients } from '../support/fake-client-binary';
+import { ACTIVE_WRITER_TEXT, createFakeClients, runAt, type FakeClients } from '../support/fake-client-binary';
 import {
   FAKE_AGENT,
   FAKE_SECRET,
@@ -32,6 +31,7 @@ import {
   type FakeEventServer,
   type FakeEventServerOptions,
 } from '../support/fake-event-server';
+import { CONNECTOR_CLIENTS } from '../support/connector-clients';
 
 type LoggedEvent = { event: ConnectorLogEvent; fields: Record<string, string | number | boolean | null> };
 type LogWaiter = { event: ConnectorLogEvent; count: number; resolve: () => void };
@@ -81,7 +81,9 @@ function waitForLog(input: { event: ConnectorLogEvent; count?: number }): Promis
   return new Promise((resolve) => logRecorder.waiters.push({ event, count, resolve }));
 }
 
-describe('runConnection', () => {
+describe.each(CONNECTOR_CLIENTS)('runConnection with the %s runtime', (client) => {
+  const runtime = CONNECTOR_RUNTIMES[client];
+  const fallsBackToNewSession = runtime.newSessionArguments !== null && runtime.isNewSessionFallback({ stderrText: ACTIVE_WRITER_TEXT });
   let fakeClients: FakeClients;
   let server: FakeEventServer;
   let abortController: AbortController;
@@ -96,10 +98,8 @@ describe('runConnection', () => {
     await startServer(input);
   }
 
-  function startConnector(
-    input: { pinnedSessionId?: string | null; client?: ConnectorClient; socketLink?: string; timers?: ConnectorTimers } = {},
-  ): Promise<number> {
-    const { pinnedSessionId = PINNED_SESSION_ID, client = ConnectorClient.ClaudeCode, socketLink = server.socketLink, timers } = input;
+  function startConnector(input: { pinnedSessionId?: string | null; socketLink?: string; timers?: ConnectorTimers } = {}): Promise<number> {
+    const { pinnedSessionId = PINNED_SESSION_ID, socketLink = server.socketLink, timers } = input;
     running = runConnection({
       connectionLink: CONNECTION_LINK,
       socketLink,
@@ -162,6 +162,7 @@ describe('runConnection', () => {
     await running;
     await server.stop();
     vi.useRealTimers();
+    vi.restoreAllMocks();
     vi.unstubAllEnvs();
     await fakeClients.cleanup();
   });
@@ -173,18 +174,8 @@ describe('runConnection', () => {
 
       const runs = await fakeClients.readRuns();
       expect(runs).toHaveLength(1);
-      expect(runAt({ runs, index: 0 }).argv).toEqual([
-        '-p',
-        '--resume',
-        PINNED_SESSION_ID,
-        '--permission-mode',
-        'dontAsk',
-        '--tools=',
-        '--strict-mcp-config',
-        expect.stringMatching(/^--mcp-config=.+mcp\.json$/),
-        '--setting-sources=',
-        `--allowedTools=${WAKE_ALLOWED_TOOL}`,
-      ]);
+      expect(runAt({ runs, index: 0 }).clientName).toBe(runtime.binaryName);
+      expect(runAt({ runs, index: 0 }).argv).toContain(PINNED_SESSION_ID);
       expect(runAt({ runs, index: 0 }).stdin).toMatch(/^<channel source="zapbip" sender="owner" verified="true">text of msg_1<\/channel>/);
       expect(doneMessageIds()).toEqual(['msg_1']);
       expect(loggedFieldsOf({ event: ConnectorLogEvent.WakeFinished })).toMatchObject({
@@ -194,7 +185,7 @@ describe('runConnection', () => {
       });
       expect(loggedFieldsOf({ event: ConnectorLogEvent.ConnectorConnected })).toMatchObject({
         agent: FAKE_AGENT,
-        client: ConnectorClient.ClaudeCode,
+        client,
         previousWakeMode: WakeMode.None,
       });
     });
@@ -234,18 +225,18 @@ describe('runConnection', () => {
 
   describe('session resolution', () => {
     it('resumes the newest session of the working directory when none is pinned', async () => {
-      await fakeClients.writeClaudeSession({ sessionId: NEWEST_SESSION_ID });
+      await fakeClients.writeSession({ client, sessionId: NEWEST_SESSION_ID });
       startConnector({ pinnedSessionId: null });
       await server.waitForConnections({ count: 1 });
       sendMessages({ messageIds: ['msg_1'] });
       await server.waitForFrames({ type: ConnectorFrameType.Done, count: 1 });
 
       const runs = await fakeClients.readRuns();
-      expect(runAt({ runs, index: 0 }).argv.slice(0, 3)).toEqual(['-p', '--resume', NEWEST_SESSION_ID]);
+      expect(runAt({ runs, index: 0 }).argv).toContain(NEWEST_SESSION_ID);
     });
 
     it('starts no process and sends no done when there is no session, then wakes once a session exists', async () => {
-      await mkdir(fakeClients.claudeConfigDirectory, { recursive: true });
+      await mkdir(fakeClients.homeDirectoryOf({ client }), { recursive: true });
       startConnector({ pinnedSessionId: null });
       await server.waitForConnections({ count: 1 });
       sendMessages({ messageIds: ['msg_1'] });
@@ -257,7 +248,7 @@ describe('runConnection', () => {
       });
       expect(await fakeClients.readRuns()).toHaveLength(0);
 
-      await fakeClients.writeClaudeSession({ sessionId: NEWEST_SESSION_ID });
+      await fakeClients.writeSession({ client, sessionId: NEWEST_SESSION_ID });
       sendMessages({ messageIds: ['msg_2'] });
       await server.waitForFrames({ type: ConnectorFrameType.Done, count: 1 });
       expect(doneMessageIds()).toEqual(['msg_2']);
@@ -275,41 +266,26 @@ describe('runConnection', () => {
       await expect(access(leftover)).rejects.toThrow();
     });
 
-    it('refuses to wake Codex over an unparseable config, logs it and sends no done', async () => {
-      await mkdir(fakeClients.codexHome, { recursive: true });
-      await writeFile(join(fakeClients.codexHome, 'config.toml'), 'mcp_servers = = broken\n');
-      startConnector({ client: ConnectorClient.Codex });
-      await server.waitForConnections({ count: 1 });
-      sendMessages({ messageIds: ['msg_1'] });
-      await waitForLog({ event: ConnectorLogEvent.WakeRefusedIsolation });
+    it.each([WakeRefusalKind.Unparseable, WakeRefusalKind.Unreadable])(
+      'logs the %s kind and no path when its runtime refuses isolation, starts no process and sends no done',
+      async (kind) => {
+        vi.spyOn(runtime, 'prepareIsolation').mockRejectedValue(new WakeIsolationRefusedError(kind));
+        startConnector();
+        await server.waitForConnections({ count: 1 });
+        sendMessages({ messageIds: ['msg_1'] });
+        await waitForLog({ event: ConnectorLogEvent.WakeRefusedIsolation });
 
-      expect(loggedFieldsOf({ event: ConnectorLogEvent.WakeRefusedIsolation })).toMatchObject({
-        messageId: 'msg_1',
-        reason: WakeRefusalKind.Unparseable,
-      });
-      expect(await fakeClients.readRuns()).toHaveLength(0);
-      expect(doneMessageIds()).toEqual([]);
-    });
+        expect(loggedFieldsOf({ event: ConnectorLogEvent.WakeRefusedIsolation })).toEqual({ messageId: 'msg_1', reason: kind });
+        expect(await fakeClients.readRuns()).toHaveLength(0);
+        expect(doneMessageIds()).toEqual([]);
+      },
+    );
 
-    it('logs the unreadable kind and no path when a Codex config layer cannot be read', async () => {
-      await mkdir(join(fakeClients.codexHome, 'config.toml'), { recursive: true });
-      startConnector({ client: ConnectorClient.Codex });
-      await server.waitForConnections({ count: 1 });
-      sendMessages({ messageIds: ['msg_1'] });
-      await waitForLog({ event: ConnectorLogEvent.WakeRefusedIsolation });
-
-      expect(loggedFieldsOf({ event: ConnectorLogEvent.WakeRefusedIsolation })).toEqual({
-        messageId: 'msg_1',
-        reason: WakeRefusalKind.Unreadable,
-      });
-      expect(doneMessageIds()).toEqual([]);
-    });
-
-    it('resumes on the next wake the session the Codex fallback created', async () => {
+    it.runIf(fallsBackToNewSession)('resumes on the next wake the session the fallback created', async () => {
       const refusedSessionId = PINNED_SESSION_ID;
-      await fakeClients.writeCodexRollout({ sessionId: refusedSessionId, modifiedAtSeconds: 1 });
+      await fakeClients.writeSession({ client, sessionId: refusedSessionId, modifiedAtSeconds: 1 });
       fakeClients.apply({ behavior: { refuseSession: refusedSessionId, rolloutSessionId: NEWEST_SESSION_ID } });
-      startConnector({ pinnedSessionId: null, client: ConnectorClient.Codex });
+      startConnector({ pinnedSessionId: null });
       await server.waitForConnections({ count: 1 });
       sendMessages({ messageIds: ['msg_1'] });
       await server.waitForFrames({ type: ConnectorFrameType.Done, count: 1 });
@@ -319,7 +295,7 @@ describe('runConnection', () => {
       const runs = await fakeClients.readRuns();
       expect(runs).toHaveLength(3);
       expect(runAt({ runs, index: 0 }).argv).toContain(refusedSessionId);
-      expect(runAt({ runs, index: 1 }).argv).not.toContain('resume');
+      expect(runAt({ runs, index: 1 }).argv).not.toContain(refusedSessionId);
       expect(runAt({ runs, index: 2 }).argv).toContain(NEWEST_SESSION_ID);
     });
   });

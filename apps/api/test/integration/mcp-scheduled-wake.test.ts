@@ -9,9 +9,9 @@ import { callTool, connectClient, ownerText, ownerWrites, seedConnectionWithSecr
 
 const ACCOUNT_ID = 'acc_1';
 const OTHER_ACCOUNT_ID = 'acc_2';
-const CALLER = 'chatgpt';
-const STANDBY_AGENT = 'grok-bot';
-const SECOND_STANDBY_AGENT = 'grok-web';
+const CALLER = 'agent-nine';
+const STANDBY_AGENT = 'agent-eight';
+const SECOND_STANDBY_AGENT = 'agent-ten';
 const OTHER_ACCOUNT_AGENT = 'stranger';
 const GROK_URL = 'https://api2.cursor.sh/automations/webhook/abcdefgh12';
 const PINNED_TOKEN = 'p'.repeat(16);

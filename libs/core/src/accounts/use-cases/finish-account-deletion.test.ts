@@ -99,7 +99,7 @@ describe('finishAccountDeletion', () => {
   test('another account is untouched', async () => {
     const { environment, account, dependencies, inboxPurge } = await setup();
     const other = await environment.openAccount({ waId: '5521988887777', accountId: 'account_other' });
-    await addAgent({ environment, account: other, agent: 'codex' });
+    await addAgent({ environment, account: other, agent: 'agent-two' });
     environment.accountMedia.put({ accountId: other.accountId, mediaId: 'med_2' });
     await finishAccountDeletion({ dependencies, accountId: account.accountId, inboxPurge });
     expect(await environment.registry.listActive({ accountId: other.accountId })).toHaveLength(1);

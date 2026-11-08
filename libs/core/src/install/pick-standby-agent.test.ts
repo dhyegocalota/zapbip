@@ -32,10 +32,10 @@ describe('pickStandbyAgent', () => {
   });
 
   test('the wake mode decides, never the reported client name', () => {
-    const candidates = [candidate({ agent: 'cursor-webhook', createdAt: 1, wakeMode: WakeMode.Webhook })];
-    expect(pickStandbyAgent({ agent: 'self', candidates })).toBe('cursor-webhook');
+    const candidates = [candidate({ agent: 'local-webhook', createdAt: 1, wakeMode: WakeMode.Webhook })];
+    expect(pickStandbyAgent({ agent: 'self', candidates })).toBe('local-webhook');
     expect(
-      pickStandbyAgent({ agent: 'self', candidates: [candidate({ agent: 'cursor-none', createdAt: 1, wakeMode: WakeMode.None })] }),
+      pickStandbyAgent({ agent: 'self', candidates: [candidate({ agent: 'local-none', createdAt: 1, wakeMode: WakeMode.None })] }),
     ).toBeNull();
   });
 });

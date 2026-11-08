@@ -1,13 +1,24 @@
-import { INSTALL_SELF_TEST_TEXT, OwnerLocale, ZAPBIP_NPM_VERSION } from '@zapbip/types';
+import { INSTALL_SELF_TEST_TEXT, OwnerLocale } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { AGENT_RULES } from '../agent-rules';
 import { INSTALL_PAGE_COPY } from './install-page-copy';
-import { INSTALL_PRODUCTS } from './install-products';
+import type { InstallPageSection } from './prompts/install-section';
 import { renderInstallPage, type InstallPageInput } from './render-install-page';
-import { CLIENTS, CONNECTION_LINK, LOCALES, lastNonEmptyLine } from './testing/fixtures';
+import { CONNECTION_LINK, LOCALES, lastNonEmptyLine } from './testing/fixtures';
 
 const IDENTIFY_HEADING = '## Identify your product';
 const RULES_HEADING = '## Rules you follow after install';
+
+const SECTIONS: InstallPageSection[] = [
+  {
+    productName: 'First Product',
+    render: (input) => `## First Product\n\n1. connect ${input.connectionLink}\n2. standby ${input.standbyAgent}`,
+  },
+  {
+    productName: 'Second Product',
+    render: (input) => `## Second Product\n\n1. send ${INSTALL_SELF_TEST_TEXT[input.locale]}`,
+  },
+];
 
 function pageInput(input: { locale: OwnerLocale; standbyAgent?: string | null }): InstallPageInput {
   return {
@@ -15,6 +26,7 @@ function pageInput(input: { locale: OwnerLocale; standbyAgent?: string | null })
     connectionLink: CONNECTION_LINK,
     locale: input.locale,
     standbyAgent: input.standbyAgent === undefined ? null : input.standbyAgent,
+    sections: SECTIONS,
   };
 }
 
@@ -22,18 +34,16 @@ describe('renderInstallPage', () => {
   describe.each(LOCALES)('in %s', (locale) => {
     const page = renderInstallPage(pageInput({ locale }));
 
-    test('orders identify, rules and the ten clients, each heading once', () => {
-      const headings = [IDENTIFY_HEADING, RULES_HEADING, ...CLIENTS.map((client) => `## ${INSTALL_PRODUCTS[client].name}`)];
+    test('orders identify, rules and the given sections, each heading once', () => {
+      const headings = [IDENTIFY_HEADING, RULES_HEADING, ...SECTIONS.map((section) => `## ${section.productName}`)];
       const positions = headings.map((heading) => page.split('\n').indexOf(heading));
       expect(positions.every((position) => position > -1)).toBe(true);
       expect([...positions].sort((left, right) => left - right)).toEqual(positions);
       headings.forEach((heading) => expect(page.split('\n').filter((line) => line === heading)).toHaveLength(1));
     });
 
-    test('IS-S7 names the package version only through ZAPBIP_NPM_VERSION', () => {
-      const versions = [...page.matchAll(/zapbip@(\S+)/g)].map((match) => match[1]);
-      expect(versions.length).toBeGreaterThan(0);
-      versions.forEach((version) => expect(version).toBe(ZAPBIP_NPM_VERSION));
+    test('lists the product names of the given sections', () => {
+      expect(page).toContain('Find which product you run in: First Product, Second Product.');
     });
 
     test('carries the agent rules verbatim', () => {
@@ -64,8 +74,14 @@ describe('renderInstallPage', () => {
     });
   });
 
-  test('passes the standby agent to the Grok web section', () => {
+  test('passes the standby agent to the sections', () => {
     const page = renderInstallPage(pageInput({ locale: OwnerLocale.EnglishUs, standbyAgent: 'Ana Bot' }));
-    expect(page).toContain('set_wake({mode: "standby", standby_agent: "Ana Bot"})');
+    expect(page).toContain('2. standby Ana Bot');
+  });
+
+  test('renders only the sections it is given', () => {
+    const page = renderInstallPage({ ...pageInput({ locale: OwnerLocale.EnglishUs }), sections: [SECTIONS[0] as InstallPageSection] });
+    expect(page).toContain('Find which product you run in: First Product.');
+    expect(page).not.toContain('## Second Product');
   });
 });

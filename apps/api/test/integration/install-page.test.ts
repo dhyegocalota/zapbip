@@ -1,5 +1,6 @@
 import { reset } from 'cloudflare:test';
 import { exports } from 'cloudflare:workers';
+import { INSTALL_PAGE_SECTIONS } from '@zapbip/agents/install';
 import { AGENT_RULES, RATE_LIMIT_PERIOD_MS, type InstallCodeDirectory } from '@zapbip/core';
 import {
   AccountState,
@@ -35,6 +36,18 @@ const CONNECTION_PATH_MARK = '/c/';
 const ROTATED_AT = 1_800_000_000_000;
 const PHONE_DIGITS = 9;
 const SECOND_RATE_LIMIT_ADDRESS = '203.0.113.8';
+declare global {
+  interface ImportMeta {
+    glob(pattern: string, options: { query: string; import: string; eager: true }): Record<string, string>;
+  }
+}
+
+const SAMPLE_CONNECTION_LINK = 'https://x.example/c/zb_conn_FAKE/mcp';
+const INSTALL_MARKDOWN_FILES = import.meta.glob('../../../../libs/agents/supported/*/install.*.md', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+});
 const GONE_TEXT: Record<OwnerLocale, string> = {
   [OwnerLocale.PortugueseBrazil]: 'girar <nome>',
   [OwnerLocale.EnglishUs]: 'rotate <name>',
@@ -128,6 +141,24 @@ describe.each([OwnerLocale.PortugueseBrazil, OwnerLocale.EnglishUs])('install pa
     expect(response.headers.get('content-type')).toMatch(/^text\/markdown/);
     expect(body).toContain(`${testEnv.PUBLIC_ORIGIN}${CONNECTION_PATH_MARK}${secret}/mcp`);
     expect(body).toContain(INSTALL_SELF_TEST_TEXT[locale]);
+  });
+
+  it('serves the product sections in the registry order, the first one equal to its install file apart from the link', async () => {
+    const accountId = await seedAccount({ locale });
+    const { installCode, secret } = await registerWithInstallCode({ accountId, agent: AGENT, expiresAt: validExpiry() });
+    const body = await (await getPage({ route: buildRoute({}), installCode })).text();
+    const productNames = INSTALL_PAGE_SECTIONS.map((section) => section.productName);
+    const headings = body.split('\n').filter((line) => line.startsWith('## '));
+    expect(headings.filter((heading) => productNames.includes(heading.slice('## '.length)))).toEqual(
+      productNames.map((productName) => `## ${productName}`),
+    );
+    const [first] = INSTALL_PAGE_SECTIONS;
+    const firstFile = Object.entries(INSTALL_MARKDOWN_FILES).find(
+      ([path, text]) => path.endsWith(`.${locale}.md`) && text.startsWith(`## ${first?.productName}\n`),
+    );
+    const connectionLink = `${testEnv.PUBLIC_ORIGIN}${CONNECTION_PATH_MARK}${secret}/mcp`;
+    expect(firstFile?.[1].replaceAll(SAMPLE_CONNECTION_LINK, connectionLink)).toBeDefined();
+    expect(body).toContain((firstFile?.[1] as string).replaceAll(SAMPLE_CONNECTION_LINK, connectionLink).trimEnd());
   });
 
   it('IS-W8 answers 410 in the account locale after the first MCP call, without the connection URL', async () => {

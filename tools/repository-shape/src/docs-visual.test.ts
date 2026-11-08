@@ -1,8 +1,12 @@
 import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { describe, expect, test } from 'vitest';
+import { AGENT_DEFINITIONS } from '@zapbip/agents/definitions';
+import { DOCS_GROUPS, agentPagePathOf, twinPathOf } from '@zapbip/agents/docs';
+import { agentOrderOf } from '@zapbip/agents';
 import { DocsLanguage, PAGE_LANGUAGE_FOLDER } from '@zapbip/types';
 import { compositeOver, contrastOf } from './contrast';
+import { docsNavigationOf } from './docs-experience';
 import { DOCS_ROOT, REPOSITORY_ROOT, PAGE_EXTENSION, capturedNames, readRepositoryFile, repositoryPath } from './repository-files';
 
 const DOCS_CONFIG_FILE = `${DOCS_ROOT}/docs.json`;
@@ -67,6 +71,8 @@ const LIGHT_HERO_END = '#F1F7F3';
 const DARK_HERO_BASE = '#0D1B17';
 const DARK_PREFIX = '.dark ';
 const PROSE_MEASURE_SELECTOR = `.mdx-content > span[data-as='p'],\n.mdx-content > ul,\n.mdx-content > ol`;
+const AGENT_GROUP_INDEX = 1;
+const MATRIX_PAGE = 'agents/supported-agents';
 const BASELINE_REFERENCE = 'origin/main';
 const LIGHT_PAGE = '#F6F8F5';
 const DARK_PAGE = '#07120F';
@@ -94,6 +100,16 @@ function baselineConfig(): DocsVisualConfig {
   const shown = spawnSync('git', ['show', `${BASELINE_REFERENCE}:${DOCS_CONFIG_FILE}`], { cwd: REPOSITORY_ROOT, encoding: 'utf8' });
   if (shown.status !== 0) throw new Error(`git show failed: ${shown.stderr}`);
   return JSON.parse(shown.stdout);
+}
+
+function withoutAgentPages({ value }: { value: unknown }): unknown {
+  const agentGroups = Object.values(DOCS_GROUPS).map((groups) => groups[AGENT_GROUP_INDEX]);
+  const isAgentGroup = typeof value === 'object' && value !== null && agentGroups.includes((value as { group?: string }).group as string);
+  return isAgentGroup ? { ...value, pages: [] } : value;
+}
+
+function navigationFingerprintOf({ navigation }: { navigation: unknown }): string {
+  return JSON.stringify(navigation, (_key, value) => withoutAgentPages({ value }));
 }
 
 function requiredColour({ colour, name }: { colour?: string; name: string }): string {
@@ -265,7 +281,16 @@ describe('docs visual: theme', () => {
     const config = docsVisualConfig();
     const baseline = baselineConfig();
     expect(config.favicon).toBe(baseline.favicon);
-    expect(JSON.stringify(config.navigation)).toBe(JSON.stringify(baseline.navigation));
+    expect(navigationFingerprintOf({ navigation: config.navigation })).toBe(navigationFingerprintOf({ navigation: baseline.navigation }));
+  });
+});
+
+describe('docs visual: agent navigation', () => {
+  test.each(Object.values(DocsLanguage))('the %s agent group lists the matrix, then the agents in registry order', (language) => {
+    const group = docsNavigationOf({ language }).groups[AGENT_GROUP_INDEX];
+    const registryPages = agentOrderOf({ definitions: AGENT_DEFINITIONS }).map((client) => agentPagePathOf({ client, language }));
+    expect(group?.group).toBe(DOCS_GROUPS[language][AGENT_GROUP_INDEX]);
+    expect(group?.pages).toEqual([twinPathOf({ path: MATRIX_PAGE, language }), ...registryPages]);
   });
 });
 

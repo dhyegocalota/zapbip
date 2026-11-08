@@ -36,7 +36,7 @@ Everything here costs nothing within the free allowances. Cloudflare asks for a 
 
    If it fails: if the free plan does not offer a Workers error notification, write that in the go-live record. The owner then relies on `pnpm smoke:production`, on `wrangler tail` and on the weekly cost check in `deploy.md`, and this gap stays recorded as a known risk.
 
-6. **Create the package buckets.** In your own shell with `CLOUDFLARE_API_TOKEN` exported (step 4), run `pnpm --filter @zapbip/api exec wrangler r2 bucket create zapbip-packages`, then the same with `zapbip-packages-staging` and `zapbip-packages-development`. They hold the Hermes wheel the Worker serves ([ADR 0034](../adr/0034-the-hermes-wheel-is-self-hosted-and-installed-by-a-pinned-hash.md)); a bucket that exists already is left as it is.
+6. **Create the package buckets.** In your own shell with `CLOUDFLARE_API_TOKEN` exported (step 4), run `pnpm --filter @zapbip/api exec wrangler r2 bucket create zapbip-packages`, then the same with `zapbip-packages-staging` and `zapbip-packages-development`. They hold the plugin files the Worker serves ([ADR 0034](../adr/0034-the-hermes-wheel-is-self-hosted-and-installed-by-a-pinned-hash.md)); a bucket that exists already is left as it is.
 
    Expect: `pnpm --filter @zapbip/api exec wrangler r2 bucket list` names all three buckets.
 

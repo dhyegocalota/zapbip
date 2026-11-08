@@ -1,30 +1,15 @@
+import { AGENT_DEFINITIONS } from '@zapbip/agents/definitions';
 import { describe, expect, test } from 'vitest';
 import { DOCS_ROOT, documentFiles, readRepositoryFile } from './repository-files';
 
 const CHAT_IMPORT = "import { Chat } from '/snippets/chat.jsx';";
 const CHAT_USAGE = '<Chat';
 const LINE_SEPARATOR = '\n';
+const FIXED_SPEAKER_LABELS = ['Owner', 'You', 'Dono', 'Você', 'Voce', 'Agent', 'Agente', 'zapbip'];
 const SPEAKER_LABELS = [
-  'Owner',
-  'You',
-  'Dono',
-  'Você',
-  'Voce',
-  'Agent',
-  'Agente',
-  'zapbip',
-  'Claude Code',
-  'Claude',
-  'Codex',
-  'ChatGPT',
-  'Grok Bot',
-  'Grok',
-  'Cursor',
-  'Gemini CLI',
-  'Gemini',
-  'Hermes',
-  'OpenClaw',
-];
+  ...FIXED_SPEAKER_LABELS,
+  ...Object.values(AGENT_DEFINITIONS).flatMap((definition) => definition.docs.speakerNames),
+].sort((left, right) => right.length - left.length);
 const LABEL_ALTERNATIVES = SPEAKER_LABELS.map((label) => label.replace(' ', '\\s')).join('|');
 const SPEAKER_LINE_PATTERN = new RegExp(`^\\s*(>\\s*)?(\\*{1,2})?(${LABEL_ALTERNATIVES})(\\*{1,2})?(:|\\s{2,}\\S)`, 'i');
 

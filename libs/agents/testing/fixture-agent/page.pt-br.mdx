@@ -1,0 +1,26 @@
+---
+title: Agente de teste
+description: Conecte o Agente de teste ao seu WhatsApp.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+## O que funciona
+
+O Agente de teste ouve você e responde pelo WhatsApp.
+
+## Como ela escuta
+
+Tipo de despertar: **Local**. O Agente de teste roda um ouvinte no seu computador. Quando o zapbip tem uma pergunta para você, ele responde "pendente" no máximo a cada 50 segundos. O Agente de teste chama de novo, e continua chamando de novo até você responder. Sem limite de tempo.
+
+## Configure do zero
+
+1. Mande uma mensagem para o número do zapbip no WhatsApp.
+2. Peça um novo agente e cole `<connectionLink>` no Agente de teste.
+3. Peça ao Agente de teste para chamar `send_message` com o texto `✅ instalado`.
+
+## Confira se funciona
+
+Peça ao Agente de teste para enviar `✅ instalado` para o seu WhatsApp.
+
+<Chat messages={[{ name: 'Fixture Agent', text: '✅ instalado', time: '14:03' }]} />

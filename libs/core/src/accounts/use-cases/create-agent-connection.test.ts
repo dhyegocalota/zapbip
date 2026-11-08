@@ -13,21 +13,21 @@ async function create(input: { rawName: string }) {
 
 describe('createAgentConnection', () => {
   test('[row 188] creates the normalised connection and replies with the install link only', async () => {
-    const { fixture, result } = await create({ rawName: 'Claude Code' });
+    const { fixture, result } = await create({ rawName: 'Agent One' });
     const [issued] = fixture.environment.secrets.issued;
     const [installCode] = fixture.environment.installCodeVault.issued;
     const [active] = await fixture.environment.registry.listActive({ accountId: fixture.account.accountId });
     const [reply] = result.replies;
     const installPrompt = reply!.parameters[AccountReplyParameter.InstallPrompt]!;
     expect(intentsOf({ result })).toEqual([AccountReplyIntent.Created]);
-    expect(active!.agent).toBe('claude-code');
-    expect(reply!.parameters[AccountReplyParameter.AgentName]).toBe('claude-code');
+    expect(active!.agent).toBe('agent-one');
+    expect(reply!.parameters[AccountReplyParameter.AgentName]).toBe('agent-one');
     expect(installPrompt).toContain(`${PUBLIC_ORIGIN}/i/${installCode!.installCode}`);
     expect(installPrompt).not.toContain('/c/');
     expect(installPrompt).not.toContain(issued!.secret);
     expect(result.compensation).toEqual({
       connectionId: active!.connectionId,
-      agent: 'claude-code',
+      agent: 'agent-one',
       oldDigest: null,
       newDigest: issued!.digest,
       oldInstallCode: NO_INSTALL_CODE,

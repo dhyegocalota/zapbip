@@ -89,7 +89,7 @@ describe('recordConnectionActivity', () => {
 
   it('IS-W4b issues no name write when the connection already has a name', async () => {
     const recorders = buildRecorders();
-    await runActivity({ request: buildRequest({ body: initializeText({ name: 'Codex' }) }), clientName: CLIENT_NAME, recorders });
+    await runActivity({ request: buildRequest({ body: initializeText({ name: 'Client Two' }) }), clientName: CLIENT_NAME, recorders });
     expect(recorders.recordClientName).not.toHaveBeenCalled();
   });
 

@@ -301,19 +301,6 @@ export enum AccountReplyParameter {
   InstallPrompt = 'install_prompt',
 }
 
-export enum InstallClient {
-  ClaudeCode = 'claude-code',
-  Codex = 'codex',
-  Cursor = 'cursor',
-  GeminiCli = 'gemini-cli',
-  GrokBot = 'grok-bot',
-  ClaudeAi = 'claude-ai',
-  ChatGpt = 'chatgpt',
-  GrokWeb = 'grok-web',
-  Hermes = 'hermes',
-  OpenClaw = 'openclaw',
-}
-
 export enum HttpStatus {
   SwitchingProtocols = 101,
   Ok = 200,
@@ -339,10 +326,6 @@ export enum HttpStatus {
 export enum DocsLanguage {
   English = 'en',
   PortugueseBrazil = 'pt-BR',
-}
-
-export enum DocsOnlyClient {
-  AnyMcpClient = 'any-mcp-client',
 }
 
 export enum DocsRetentionKind {

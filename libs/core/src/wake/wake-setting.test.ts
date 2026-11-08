@@ -5,8 +5,8 @@ import { SCHEDULED_MAX_INTERVAL_MINUTES, SCHEDULED_MIN_INTERVAL_MINUTES } from '
 import { storedWakeOf } from './testing/wake-doubles';
 import { assertWakeSetting, type StoredWake, type WakeSettingInput } from './wake-setting';
 
-const CALLER = 'grok-web';
-const STANDBY_AGENT = 'grok-bot';
+const CALLER = 'agent-ten';
+const STANDBY_AGENT = 'agent-eight';
 const SCHEDULED_SETTING: WakeSettingInput = { mode: WakeMode.Scheduled, url: null, token: null, intervalMinutes: 60, standbyAgent: null };
 const STANDBY_SETTING: WakeSettingInput = {
   mode: WakeMode.Standby,

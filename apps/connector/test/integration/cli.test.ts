@@ -3,6 +3,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { ConnectorClient } from '@zapbip/agents/connector';
 import { ConnectorFrameType, ConnectorLogEvent } from '@zapbip/types';
 import { build } from 'esbuild';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -16,6 +17,7 @@ import {
   type FakeEventServer,
   type TlsCertificate,
 } from '../support/fake-event-server';
+import { CONNECTOR_CLIENTS, SUBJECT_CLIENT } from '../support/connector-clients';
 
 type CliProcess = {
   child: ChildProcessWithoutNullStreams;
@@ -51,7 +53,7 @@ describe('zapbip connect', () => {
         bundleFile,
         CONNECT_COMMAND,
         '--client',
-        'claude-code',
+        SUBJECT_CLIENT,
         '--cwd',
         fakeClients.workingDirectory,
         '--session',
@@ -160,7 +162,7 @@ describe('zapbip connect', () => {
   });
 
   it('exits 1 with a usage error and no secret for an unknown client', async () => {
-    const cliProcess = startCli({ arguments: ['--client', 'cursor'] });
+    const cliProcess = startCli({ arguments: ['--client', 'no-such-client'] });
 
     expect(await cliProcess.exited).toBe(EXIT_CODE_USAGE);
     expect(cliProcess.outputText()).not.toContain(FAKE_SECRET);

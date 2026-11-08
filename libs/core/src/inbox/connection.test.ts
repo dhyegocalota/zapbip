@@ -10,7 +10,7 @@ describe('connectionKeyOf', () => {
 
   test('keeps two agents of one account apart', () => {
     const first = { accountId: 'acc_1', agent: 'claude', ownerLocale: OwnerLocale.EnglishUs };
-    const second = { ...first, agent: 'codex' };
+    const second = { ...first, agent: 'agent-two' };
     expect(connectionKeyOf({ connection: first })).not.toBe(connectionKeyOf({ connection: second }));
   });
 });

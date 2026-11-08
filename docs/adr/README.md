@@ -53,4 +53,5 @@ A `Proposed` ADR moves to `Accepted` by editing its status line and date. Any ot
 | [0030](0030-the-docs-speak-to-any-ai-user-in-two-languages-and-the-switcher-picks-the-language.md) | The docs speak to any AI user in two languages, and the switcher picks the language | Accepted | 2026-11-06 |
 | [0031](0031-the-backoffice-is-a-separate-host-signed-in-with-a-key-and-totp-enrolled-from-the-owners-terminal.md) | The backoffice is a separate host on the same Worker, signed in with a key and TOTP enrolled from the owner's terminal | Accepted | 2026-11-07 |
 | [0032](0032-whatsapp-numbers-are-rows-in-a-sealed-registry-not-worker-secrets.md) | WhatsApp numbers are rows in a sealed registry, not Worker secrets | Accepted | 2026-11-07 |
+| [0033](0033-one-folder-per-supported-agent.md) | One folder per supported agent; everything else is generated from it | Accepted | 2026-11-07 |
 | [0034](0034-the-hermes-wheel-is-self-hosted-and-installed-by-a-pinned-hash.md) | The Hermes wheel is self-hosted and installed by a pinned hash | Accepted | 2026-11-07 |

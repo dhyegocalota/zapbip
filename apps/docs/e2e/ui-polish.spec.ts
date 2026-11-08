@@ -1,5 +1,6 @@
 import { expect, test, type Locator } from '@playwright/test';
 import { DocsLanguage, PAGE_LANGUAGE_FOLDER } from '@zapbip/types';
+import { AgentId } from '../../../libs/agents/src/definitions';
 import { contrastOf } from '../../../tools/repository-shape/src/contrast';
 import { DOCS_LOCALE_OF, DocsViewport, NARROW_WIDTH_PX, docsOptionsOf } from './support/docs-experience';
 
@@ -7,7 +8,7 @@ const OVERVIEW_PAGE = 'index';
 const GROUP_PAGES = [
   OVERVIEW_PAGE,
   'get-started/how-to-start',
-  'agents/claude-code',
+  `agents/${Object.values(AgentId)[0]}`,
   'features/send-messages-and-media',
   'help/faq',
   'developers/errors',

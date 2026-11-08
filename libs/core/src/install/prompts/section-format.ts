@@ -1,7 +1,5 @@
-import { INSTALL_SELF_TEST_TEXT, OwnerLocale, type InstallClient } from '@zapbip/types';
-import { INSTALL_PRODUCTS } from '../install-products';
+import { INSTALL_SELF_TEST_TEXT, OwnerLocale } from '@zapbip/types';
 import { listenCommand } from './connector-commands';
-import { wakeNoteOf } from './wake-notes';
 import type { InstallSectionInput } from './install-section';
 
 const MONITOR_WATCH_MAXIMUM_MINUTES = 30;
@@ -12,21 +10,17 @@ const CODE_FENCE = '```';
 
 export type LocalizedSectionBuilder<Text> = (input: { section: InstallSectionInput; text: Text }) => string;
 
-export function formatSection(input: {
-  client: InstallClient;
-  locale: OwnerLocale;
-  standbyAgent: string | null;
-  steps: InstallStep[];
-}): string {
-  const product = INSTALL_PRODUCTS[input.client];
-  const stopCheck = `If you are not ${product.description}, stop and run no other step of this section.`;
-  const stopCheckStep: InstallStep = { action: stopCheck, success: `you are ${product.description}, or you have stopped.` };
-  const wakeStep = noticeStep(wakeNoteOf(input));
+export type InstallProduct = { productName: string; productDescription: string };
+
+export function formatSection(input: InstallProduct & { wakeNote: string; steps: InstallStep[] }): string {
+  const stopCheck = `If you are not ${input.productDescription}, stop and run no other step of this section.`;
+  const stopCheckStep: InstallStep = { action: stopCheck, success: `you are ${input.productDescription}, or you have stopped.` };
+  const wakeStep = noticeStep(input.wakeNote);
   const selfTestStep = input.steps.slice(-1);
   const numberedSteps = [stopCheckStep, ...input.steps.slice(0, -1), wakeStep, ...selfTestStep].map(
     (step, index) => `${index + 1}. ${renderStep(step)}`,
   );
-  return [`## ${product.name}`, '', ...numberedSteps].join('\n');
+  return [`## ${input.productName}`, '', ...numberedSteps].join('\n');
 }
 
 function renderStep(step: InstallStep): string {

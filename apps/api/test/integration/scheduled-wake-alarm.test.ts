@@ -16,7 +16,7 @@ import { accountInboxStub, connectionOf } from '../support/workers-env';
 import { applyDirectoryMigration, seedAccount } from '../support/seed';
 
 const ACCOUNT = 'acc_scheduled';
-const POLLING_AGENT: AgentName = 'chatgpt';
+const POLLING_AGENT: AgentName = 'agent-nine';
 const OTHER_AGENT: AgentName = 'claude';
 const INTERVAL_MINUTES = 60;
 const STALE_ADVANCE_MS = STALE_POLL_INTERVAL_MULTIPLE * INTERVAL_MINUTES * MINUTE_MS + MINUTE_MS;

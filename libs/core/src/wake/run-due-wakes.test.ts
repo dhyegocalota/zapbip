@@ -28,7 +28,7 @@ import { WAKE_COPY } from './wake-copy';
 import type { ScriptedWakeResponse } from './wake-ports';
 import type { WakeJob } from './wake-setting';
 
-const AGENT = 'claude-code';
+const AGENT = 'agent-one';
 const OWNER_LOCALE = OwnerLocale.PortugueseBrazil;
 const SERVER_ERROR = 503;
 const UNAUTHORIZED = 401;
