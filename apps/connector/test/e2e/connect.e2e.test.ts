@@ -140,19 +140,20 @@ describe('the bundled connector against the local stack', () => {
   it.each(RUNTIME_AGENTS)(
     'connect wakes a $client session with the prompt on standard input and the reply reaches the owner screen',
     async ({ client, agent }) => {
+      const text = `${RUNTIME_TEXT} ${client}`;
       await fakeClients.writeSession({ client, sessionId: SESSION_ID, modifiedAtSeconds: SESSION_MODIFIED_SECONDS });
       const connector = startCli({
         agent,
         arguments: ['connect', '--client', client, '--cwd', fakeClients.workingDirectory],
       });
       await connector.waitForEvent({ event: ConnectorLogEvent.ConnectorConnected });
-      await stack.postOwnerText({ text: `@${agent} ${RUNTIME_TEXT}` });
+      await stack.postOwnerText({ text: `@${agent} ${text}` });
 
-      await vi.waitFor(async () => expect(await screenTexts()).toContain(`FAKE-REPLY ${RUNTIME_TEXT}`), { timeout: SUITE_TIMEOUT_MS });
+      await vi.waitFor(async () => expect(await screenTexts()).toContain(`FAKE-REPLY ${text}`), { timeout: SUITE_TIMEOUT_MS });
       const runs = await fakeClients.readRuns();
       expect(runAt({ runs, index: 0 }).clientName).toBe(CONNECTOR_RUNTIMES[client].binaryName);
       expect(runAt({ runs, index: 0 }).argv).toContain(SESSION_ID);
-      expect(runAt({ runs, index: 0 }).stdin).toContain(RUNTIME_TEXT);
+      expect(runAt({ runs, index: 0 }).stdin).toContain(text);
     },
     SUITE_TIMEOUT_MS,
   );
