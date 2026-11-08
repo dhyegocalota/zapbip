@@ -18,8 +18,8 @@ One group, one lane.
 
 ### G1
 
-- [ ] **Step 1:** red: `inspectWorker` on the real `createApp` and source root reports the install route
-- [ ] **Step 2:** accept `ALL` next to `GET`
+- [x] **Step 1:** red: `inspectWorker` on the real `createApp` and source root reports the install route (test: sees the install route of the app built as the deploy builds it)
+- [x] **Step 2:** accept `ALL` next to `GET` (fix commit)
 
 ## Failure modes
 
