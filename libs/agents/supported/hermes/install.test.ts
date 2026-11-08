@@ -1,7 +1,8 @@
-import { HEARTBEAT_POLL_INTERVAL_MINUTES, OwnerLocale, ZAPBIP_HERMES_REQUIREMENTS_SHA256 } from '@zapbip/types';
+import { HEARTBEAT_POLL_INTERVAL_MINUTES, OwnerLocale } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { CONNECTION_LINK, installSnapshotTests, installWakeNoteTests, LOCALES, sectionInput } from '../../testing/install-fixtures';
 import { install } from './install';
+import { ZAPBIP_HERMES_REQUIREMENTS_SHA256 } from './wheel';
 
 const WAKE_NOTE: Record<OwnerLocale, string> = {
   [OwnerLocale.PortugueseBrazil]:

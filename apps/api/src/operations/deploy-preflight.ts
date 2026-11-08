@@ -1,11 +1,8 @@
+import { type AgentPlugin, type HostedArtifact, PluginRegistry } from '@zapbip/agents';
 import {
   CLOUDFLARE_NAMESERVER_SUFFIX,
   COMPANY_FACT_UNSET,
   type CompanyFacts,
-  hermesRequirementsFilename,
-  hermesRequirementsPath,
-  hermesWheelFilename,
-  hermesWheelPath,
   HttpStatus,
   NPM_REGISTRY_URL,
   OFFICIAL_NUMBER_UNSET,
@@ -42,7 +39,6 @@ const NO_NPM_ANSWER = 'no answer';
 const NO_PENDING_MIGRATIONS = 'No migrations to apply';
 const NPM_PACKAGE_NAME = 'zapbip';
 export const NPM_PUBLISHER_VARIABLE = 'ZAPBIP_NPM_PUBLISHER';
-const OPENCLAW_PLUGIN_PACKAGE = '@zapbip/openclaw-plugin';
 const NPM_REGISTRY_FLAGS = [`--registry=${NPM_REGISTRY_URL}`, `--@zapbip:registry=${NPM_REGISTRY_URL}`];
 const DEPLOYABLE_ENVIRONMENTS = [DeployEnvironment.Staging, DeployEnvironment.Production];
 
@@ -83,10 +79,7 @@ export type WorkerPreflightInput = {
   officialWhatsAppNumber: string;
   company: CompanyFacts;
   npmVersion: string;
-  openclawPluginVersion: string;
-  hermesPluginVersion: string;
-  hermesWheelSha256: string;
-  hermesRequirementsSha256: string;
+  plugins: AgentPlugin[];
   packageFetcher: PackageFetcher;
   nameserverResolver: NameserverResolver;
 };
@@ -96,10 +89,7 @@ export type DocsPreflightInput = {
   officialWhatsAppNumber: string;
   company: CompanyFacts;
   npmVersion: string;
-  openclawPluginVersion: string;
-  hermesPluginVersion: string;
-  hermesWheelSha256: string;
-  hermesRequirementsSha256: string;
+  plugins: AgentPlugin[];
   packageFetcher: PackageFetcher;
   environmentVariables: EnvironmentVariables;
 };
@@ -213,8 +203,9 @@ async function refuseUntrustedPackages(input: {
   return firstUntrusted({ shell: input.shell, packageSpecs: input.packageSpecs, publisher });
 }
 
-function publishedPackageSpecsOf(input: { npmVersion: string; openclawPluginVersion: string }): string[] {
-  return [`${NPM_PACKAGE_NAME}@${input.npmVersion}`, `${OPENCLAW_PLUGIN_PACKAGE}@${input.openclawPluginVersion}`];
+function publishedPackageSpecsOf(input: { npmVersion: string; plugins: AgentPlugin[] }): string[] {
+  const npmPlugins = input.plugins.filter((plugin) => plugin.registry === PluginRegistry.Npm);
+  return [`${NPM_PACKAGE_NAME}@${input.npmVersion}`, ...npmPlugins.map((plugin) => `${plugin.packageName}@${plugin.version}`)];
 }
 
 async function refuseUntrustedWorkerPackage(input: WorkerPreflightInput): Promise<string | null> {
@@ -225,31 +216,17 @@ async function refuseUntrustedDocsPackages(input: DocsPreflightInput): Promise<s
   return refuseUntrustedPackages({ ...input, packageSpecs: publishedPackageSpecsOf(input) });
 }
 
-type HostedArtifact = { filename: string; url: string; expectedSha256: string };
+function hostedArtifactsOf(input: { plugins: AgentPlugin[] }): HostedArtifact[] {
+  return input.plugins.flatMap((plugin) => plugin.hostedArtifacts);
+}
 
-function hostedArtifactsOf(input: {
-  hermesPluginVersion: string;
-  hermesWheelSha256: string;
-  hermesRequirementsSha256: string;
-}): HostedArtifact[] {
-  const { hermesPluginVersion } = input;
-  return [
-    {
-      filename: hermesWheelFilename({ version: hermesPluginVersion }),
-      url: `${PRODUCTION_PUBLIC_ORIGIN}${hermesWheelPath({ version: hermesPluginVersion })}`,
-      expectedSha256: input.hermesWheelSha256,
-    },
-    {
-      filename: hermesRequirementsFilename({ version: hermesPluginVersion }),
-      url: `${PRODUCTION_PUBLIC_ORIGIN}${hermesRequirementsPath({ version: hermesPluginVersion })}`,
-      expectedSha256: input.hermesRequirementsSha256,
-    },
-  ];
+function hostedUrlOf(input: { artifact: HostedArtifact }): string {
+  return `${PRODUCTION_PUBLIC_ORIGIN}${input.artifact.path}`;
 }
 
 function hashMismatch(input: { artifact: HostedArtifact; actual: string }): string {
   const { artifact, actual } = input;
-  return `the hosted ${artifact.filename} hashes to ${actual}, not ${artifact.expectedSha256}; upload the files in apps/hermes-plugin/release with the runbook step`;
+  return `the hosted ${artifact.filename} hashes to ${actual}, not ${artifact.expectedSha256}; upload the files in ${artifact.releaseFolder} with the runbook step`;
 }
 
 async function workerArtifactRefusal(input: { shell: DeployShell; artifact: HostedArtifact }): Promise<string | null> {
@@ -275,7 +252,7 @@ async function workerArtifactRefusal(input: { shell: DeployShell; artifact: Host
 
 async function docsArtifactRefusal(input: { packageFetcher: PackageFetcher; artifact: HostedArtifact }): Promise<string | null> {
   const { packageFetcher, artifact } = input;
-  const { url } = artifact;
+  const url = hostedUrlOf({ artifact });
   const answer = await packageFetcher({ url }).catch(() => null);
   if (answer === null) return `could not reach ${url}; check your network and run it again`;
   if (answer.status === HttpStatus.NotFound) return `${url} answers 404; upload the file with the runbook step and deploy the Worker first`;

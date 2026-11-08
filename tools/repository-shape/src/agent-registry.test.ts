@@ -13,6 +13,7 @@ const SUPPORTED_ROOT = 'libs/agents/supported';
 const TESTING_ROOT = 'libs/agents/testing';
 const GENERATED_FOLDER = 'libs/agents/src/generated';
 const DOCS_CONFIG = 'apps/docs/docs.json';
+const WORKFLOW_FILE = '.github/workflows/verify.yml';
 const REAL_AGENT_IDS = [
   'any-mcp-client',
   'chatgpt',
@@ -171,10 +172,13 @@ describe('adding an agent folder', () => {
   test('G2b: a plugin agent adds the plugin registry', async () => {
     const extended = await planWith({ extraRoots: [`${TESTING_ROOT}/${PLUGIN_FIXTURE.id}`], readFile: readSource });
     expect(changedPathsOf({ base: await realPlan(), extended })).toEqual(
-      [...addedPathsOf({ fixture: PLUGIN_FIXTURE }), `${GENERATED_FOLDER}/plugins.ts`].sort(),
+      [...addedPathsOf({ fixture: PLUGIN_FIXTURE }), `${GENERATED_FOLDER}/plugins.ts`, WORKFLOW_FILE].sort(),
     );
     const ids = contentOf({ plan: extended, path: `${GENERATED_FOLDER}/ids.ts` });
-    expect(membersOf({ source: ids, enumName: 'PluginAgent' })).toEqual([[PLUGIN_FIXTURE.member, PLUGIN_FIXTURE.id]]);
+    const realIds = contentOf({ plan: await realPlan(), path: `${GENERATED_FOLDER}/ids.ts` });
+    const members = membersOf({ source: ids, enumName: 'PluginAgent' });
+    expect(members).toHaveLength(membersOf({ source: realIds, enumName: 'PluginAgent' }).length + 1);
+    expect(members).toContainEqual([PLUGIN_FIXTURE.member, PLUGIN_FIXTURE.id]);
   });
 });
 

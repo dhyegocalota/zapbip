@@ -6,15 +6,15 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { HERMES_INSTALL_COMMAND } from '@zapbip/agents/plugins';
+import { PRODUCTION_PUBLIC_ORIGIN } from '@zapbip/types';
+import { afterAll, describe, expect, test } from 'vitest';
 import {
   hermesRequirementsPath,
   hermesWheelPath,
-  PRODUCTION_PUBLIC_ORIGIN,
   ZAPBIP_HERMES_PLUGIN_VERSION,
   ZAPBIP_HERMES_REQUIREMENTS_SHA256,
   ZAPBIP_HERMES_WHEEL_SHA256,
-} from '@zapbip/types';
-import { afterAll, describe, expect, test } from 'vitest';
+} from '../../../../libs/agents/supported/hermes/wheel';
 import { stack } from './stack';
 
 const runCommand = promisify(execFile);

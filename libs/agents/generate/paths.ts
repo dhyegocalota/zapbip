@@ -23,3 +23,5 @@ export const CONNECTOR_PARAGRAPH_FILES: Record<DocsLanguage, string> = {
   [DocsLanguage.English]: 'connector.en.mdx',
   [DocsLanguage.PortugueseBrazil]: 'connector.pt-br.mdx',
 };
+
+export const WORKFLOW_FILE = '.github/workflows/verify.yml';

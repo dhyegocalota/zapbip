@@ -26,6 +26,7 @@ import {
   fakeShell,
   NPM_PUBLISHER,
   NPM_PUBLISHER_VARIABLE,
+  HOSTED_PLUGINS,
   NPM_VERSION,
   HERMES_PLUGIN_VERSION,
   HERMES_REQUIREMENTS_SHA256,
@@ -47,7 +48,6 @@ function workerInput(input: {
   officialWhatsAppNumber?: string;
   company?: CompanyFacts;
   npmVersion?: string;
-  openclawPluginVersion?: string;
   packageFetcher?: FakePackageFetcher;
   nameserverResolver?: FakeNameserverResolver;
   workerFacts?: WorkerFacts;
@@ -59,7 +59,6 @@ function workerInput(input: {
     workerFacts = READY_WORKER_FACTS,
     company = COMPLETE_COMPANY,
     npmVersion = NPM_VERSION,
-    openclawPluginVersion = NPM_VERSION,
     packageFetcher = fakePackageFetcher({}),
     nameserverResolver = fakeNameserverResolver({}),
   } = input;
@@ -74,10 +73,7 @@ function workerInput(input: {
     officialWhatsAppNumber,
     company,
     npmVersion,
-    openclawPluginVersion,
-    hermesPluginVersion: HERMES_PLUGIN_VERSION,
-    hermesWheelSha256: HERMES_WHEEL_SHA256,
-    hermesRequirementsSha256: HERMES_REQUIREMENTS_SHA256,
+    plugins: HOSTED_PLUGINS,
     packageFetcher,
     nameserverResolver,
   };
@@ -559,10 +555,7 @@ function docsInput(input: { packageFetcher?: FakePackageFetcher }) {
     officialWhatsAppNumber: OFFICIAL_NUMBER,
     company: COMPLETE_COMPANY,
     npmVersion: NPM_VERSION,
-    openclawPluginVersion: NPM_VERSION,
-    hermesPluginVersion: HERMES_PLUGIN_VERSION,
-    hermesWheelSha256: HERMES_WHEEL_SHA256,
-    hermesRequirementsSha256: HERMES_REQUIREMENTS_SHA256,
+    plugins: HOSTED_PLUGINS,
     packageFetcher,
     environmentVariables: COMPLETE_VARIABLES,
   };
@@ -576,10 +569,7 @@ describe('docs preflight', () => {
       officialWhatsAppNumber: OFFICIAL_NUMBER_UNSET,
       company: COMPLETE_COMPANY,
       npmVersion: NPM_VERSION,
-      openclawPluginVersion: NPM_VERSION,
-      hermesPluginVersion: HERMES_PLUGIN_VERSION,
-      hermesWheelSha256: HERMES_WHEEL_SHA256,
-      hermesRequirementsSha256: HERMES_REQUIREMENTS_SHA256,
+      plugins: HOSTED_PLUGINS,
       packageFetcher: fakePackageFetcher({}),
       environmentVariables: COMPLETE_VARIABLES,
     });
@@ -595,10 +585,7 @@ describe('docs preflight', () => {
       officialWhatsAppNumber: OFFICIAL_NUMBER,
       company,
       npmVersion: NPM_VERSION,
-      openclawPluginVersion: NPM_VERSION,
-      hermesPluginVersion: HERMES_PLUGIN_VERSION,
-      hermesWheelSha256: HERMES_WHEEL_SHA256,
-      hermesRequirementsSha256: HERMES_REQUIREMENTS_SHA256,
+      plugins: HOSTED_PLUGINS,
       packageFetcher: fakePackageFetcher({}),
       environmentVariables: COMPLETE_VARIABLES,
     });
@@ -614,10 +601,7 @@ describe('docs preflight', () => {
       officialWhatsAppNumber: OFFICIAL_NUMBER,
       company: COMPLETE_COMPANY,
       npmVersion: NPM_VERSION,
-      openclawPluginVersion: NPM_VERSION,
-      hermesPluginVersion: HERMES_PLUGIN_VERSION,
-      hermesWheelSha256: HERMES_WHEEL_SHA256,
-      hermesRequirementsSha256: HERMES_REQUIREMENTS_SHA256,
+      plugins: HOSTED_PLUGINS,
       packageFetcher: fakePackageFetcher({}),
       environmentVariables: COMPLETE_VARIABLES,
     });
@@ -635,10 +619,7 @@ describe('docs preflight', () => {
       officialWhatsAppNumber: OFFICIAL_NUMBER,
       company: COMPLETE_COMPANY,
       npmVersion: NPM_VERSION,
-      openclawPluginVersion: NPM_VERSION,
-      hermesPluginVersion: HERMES_PLUGIN_VERSION,
-      hermesWheelSha256: HERMES_WHEEL_SHA256,
-      hermesRequirementsSha256: HERMES_REQUIREMENTS_SHA256,
+      plugins: HOSTED_PLUGINS,
       packageFetcher: fakePackageFetcher({}),
       environmentVariables: COMPLETE_VARIABLES,
     });
@@ -660,10 +641,7 @@ describe('docs preflight', () => {
       officialWhatsAppNumber: OFFICIAL_NUMBER,
       company: COMPLETE_COMPANY,
       npmVersion: NPM_VERSION,
-      openclawPluginVersion: NPM_VERSION,
-      hermesPluginVersion: HERMES_PLUGIN_VERSION,
-      hermesWheelSha256: HERMES_WHEEL_SHA256,
-      hermesRequirementsSha256: HERMES_REQUIREMENTS_SHA256,
+      plugins: HOSTED_PLUGINS,
       packageFetcher: fakePackageFetcher({}),
       environmentVariables: COMPLETE_VARIABLES,
     });
@@ -683,10 +661,7 @@ describe('docs preflight', () => {
       officialWhatsAppNumber: OFFICIAL_NUMBER,
       company: COMPLETE_COMPANY,
       npmVersion: NPM_VERSION,
-      openclawPluginVersion: NPM_VERSION,
-      hermesPluginVersion: HERMES_PLUGIN_VERSION,
-      hermesWheelSha256: HERMES_WHEEL_SHA256,
-      hermesRequirementsSha256: HERMES_REQUIREMENTS_SHA256,
+      plugins: HOSTED_PLUGINS,
       packageFetcher: fakePackageFetcher({}),
       environmentVariables: COMPLETE_VARIABLES,
     });
@@ -738,10 +713,7 @@ describe('docs preflight', () => {
         officialWhatsAppNumber: OFFICIAL_NUMBER,
         company: COMPLETE_COMPANY,
         npmVersion: NPM_VERSION,
-        openclawPluginVersion: NPM_VERSION,
-        hermesPluginVersion: HERMES_PLUGIN_VERSION,
-        hermesWheelSha256: HERMES_WHEEL_SHA256,
-        hermesRequirementsSha256: HERMES_REQUIREMENTS_SHA256,
+        plugins: HOSTED_PLUGINS,
         packageFetcher: fakePackageFetcher({}),
         environmentVariables: COMPLETE_VARIABLES,
       }),

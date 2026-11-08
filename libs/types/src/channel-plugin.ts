@@ -1,15 +1,5 @@
 import { MessageKind } from './enums';
 
-export enum ChannelPluginProduct {
-  OpenClaw = 'openclaw',
-  Hermes = 'hermes',
-}
-
-export const CHANNEL_PLUGIN_PACKAGE_NAME: Record<ChannelPluginProduct, string> = {
-  [ChannelPluginProduct.OpenClaw]: '@zapbip/openclaw-plugin',
-  [ChannelPluginProduct.Hermes]: 'zapbip-platform',
-};
-
 export const CHANNEL_HANDOFF_NO_TEXT_BY_KIND: Record<MessageKind, string> = {
   [MessageKind.Text]: 'The owner sent a message with no text.',
   [MessageKind.Image]: 'The owner sent an image without a caption.',

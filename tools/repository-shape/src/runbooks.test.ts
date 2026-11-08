@@ -1,6 +1,7 @@
 import { existsSync, readdirSync } from 'node:fs';
 import { posix } from 'node:path';
-import { hermesRequirementsFilename, hermesWheelFilename, PRODUCTION_PACKAGES_BUCKET, ZAPBIP_HERMES_PLUGIN_VERSION } from '@zapbip/types';
+import { AGENT_PLUGINS } from '@zapbip/agents/plugins';
+import { PRODUCTION_PACKAGES_BUCKET } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { capturedNames, readRepositoryFile, repositoryPath } from './repository-files';
 
@@ -19,7 +20,10 @@ const MAX_INDEX_LINES = 20;
 const PUBLISH_STEP_TITLE = 'Publish the docs';
 const PRODUCTION_DEPLOY_STEP_TITLE = 'Production deploy';
 const WHEEL_UPLOAD_COMMAND = 'wrangler r2 object put';
-const WHEEL_BUILD_COMMAND = 'pnpm hermes-wheel:build';
+const WHEEL_BUILD_COMMAND = 'pnpm plugin-wheel:build';
+const HOSTED_FILENAME_PLACEHOLDER = '<filename>';
+const LINK_TARGET_PATTERN = /\]\([^)]*\)/g;
+const AGENT_FREE_RUNBOOKS = ['deploy.md', 'cloudflare-setup.md', 'mintlify-publish.md'];
 const MANDATORY_DOCS_PREFLIGHT_SENTENCE = 'The docs preflight after the production deploy is mandatory';
 const PYPI_UPLOAD_PATTERN = /twine|pypi\.org/;
 const GO_LIVE_ORDER = [
@@ -212,13 +216,18 @@ describe('runbooks', () => {
     expect(titles.indexOf(PUBLISH_STEP_TITLE)).toBeGreaterThan(titles.indexOf(PRODUCTION_DEPLOY_STEP_TITLE));
   });
 
-  test('the Hermes wheel is built, checked against its hash and uploaded to the packages bucket by an immutable key', () => {
+  test('the plugin wheels are built, checked against their hash and uploaded to the packages bucket by an immutable key', () => {
     const text = readRunbook(MINTLIFY_PUBLISH_RUNBOOK).text;
     expect(text).toContain(WHEEL_BUILD_COMMAND);
     expect(text).toContain(WHEEL_UPLOAD_COMMAND);
-    expect(text).toContain(`${PRODUCTION_PACKAGES_BUCKET}/${hermesWheelFilename({ version: ZAPBIP_HERMES_PLUGIN_VERSION })}`);
-    expect(text).toContain(`${PRODUCTION_PACKAGES_BUCKET}/${hermesRequirementsFilename({ version: ZAPBIP_HERMES_PLUGIN_VERSION })}`);
+    expect(text).toContain(`${PRODUCTION_PACKAGES_BUCKET}/${HOSTED_FILENAME_PLACEHOLDER}`);
     expect(text).not.toMatch(PYPI_UPLOAD_PATTERN);
+  });
+
+  test.each(AGENT_FREE_RUNBOOKS)('%s names no agent, because the registry holds the per-agent facts', (file) => {
+    const prose = readRunbook(file).text.replace(LINK_TARGET_PATTERN, '');
+    const agentNames = Object.entries(AGENT_PLUGINS).flatMap(([id, plugin]) => [id, plugin.packageName]);
+    expect(agentNames.filter((name) => prose.toLowerCase().includes(name.toLowerCase()))).toEqual([]);
   });
 
   test('deploy.md keeps the docs preflight mandatory after the production deploy', () => {

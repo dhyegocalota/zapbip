@@ -1,3 +1,4 @@
+import { AGENT_PLUGINS } from '@zapbip/agents/plugins';
 import { describe, expect, test } from 'vitest';
 import { readRepositoryFile } from './repository-files';
 
@@ -10,6 +11,7 @@ const HERMES_CONSTANTS = 'apps/hermes-plugin/zapbip_platform/constants.py';
 const HERMES_MANIFEST = 'apps/hermes-plugin/zapbip_platform/plugin.yaml';
 const HERMES_RUNTIME_LOCK = 'apps/hermes-plugin/requirements.txt';
 const HERMES_DEVELOPMENT_LOCK = 'apps/hermes-plugin/requirements-dev.txt';
+const REQUIRE_HASHES_INSTALL = '--require-hashes -r';
 const WORKFLOW_FILE = '.github/workflows/verify.yml';
 const PIP_INSTALL_PATTERN = /^\s*- run: python3 -m pip install (.+)$/gm;
 const BOUNDED_DEPENDENCY_PATTERN = /^[\w.-]+>=[\d.]+,<[\d.]+$/;
@@ -25,6 +27,11 @@ function versionOf({ path, pattern }: { path: string; pattern: RegExp }): string
 }
 
 describe('the plugin versions', () => {
+  test.each(Object.entries(AGENT_PLUGINS))('the %s plugin declares the shared version and every file it pins', (_id, plugin) => {
+    expect(plugin.version).toBe(sharedVersion);
+    plugin.versionPins.forEach((pin) => expect(readRepositoryFile(pin.path)).toMatch(pin.pattern));
+  });
+
   test('the OpenClaw package declares the shared version', () => {
     expect(openclawManifest.version).toBe(sharedVersion);
   });
@@ -78,6 +85,11 @@ describe('the plugin versions', () => {
   test('the workflow installs the Python requirements only with --require-hashes from the hashed development lock', () => {
     const installs = [...readRepositoryFile(WORKFLOW_FILE).matchAll(PIP_INSTALL_PATTERN)].map((match) => match[1]);
     expect(installs.length).toBeGreaterThan(0);
-    expect(installs.every((install) => install === '--require-hashes -r apps/hermes-plugin/requirements-dev.txt')).toBe(true);
+    const pythonRequirements = Object.values(AGENT_PLUGINS).flatMap((plugin) =>
+      plugin.workflow.pythonRequirements === null ? [] : [plugin.workflow.pythonRequirements],
+    );
+    const allowedInstalls = pythonRequirements.map((path) => `${REQUIRE_HASHES_INSTALL} ${path}`);
+    expect(installs.every((install) => install !== undefined && allowedInstalls.includes(install))).toBe(true);
+    expect(pythonRequirements).toContain(HERMES_DEVELOPMENT_LOCK);
   });
 });

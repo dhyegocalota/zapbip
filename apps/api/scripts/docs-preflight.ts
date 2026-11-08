@@ -1,13 +1,6 @@
-import {
-  COMPANY,
-  type CompanyFacts,
-  OFFICIAL_WHATSAPP_NUMBER,
-  OPENCLAW_PLUGIN_NPM_VERSION,
-  ZAPBIP_NPM_VERSION,
-  ZAPBIP_HERMES_PLUGIN_VERSION,
-  ZAPBIP_HERMES_REQUIREMENTS_SHA256,
-  ZAPBIP_HERMES_WHEEL_SHA256,
-} from '@zapbip/types';
+import type { AgentPlugin } from '@zapbip/agents';
+import { AGENT_PLUGINS } from '@zapbip/agents/plugins';
+import { COMPANY, type CompanyFacts, OFFICIAL_WHATSAPP_NUMBER, ZAPBIP_NPM_VERSION } from '@zapbip/types';
 import { type DeployShell, type EnvironmentVariables, runDocsPreflight } from '../src/operations/deploy-preflight';
 import { createPackageFetcher, type PackageFetcher } from '../src/operations/package-fetcher';
 import { createTerminalShell } from '../src/operations/terminal-shell';
@@ -18,10 +11,7 @@ export type DocsPreflightEntry = {
   officialWhatsAppNumber: string;
   company: CompanyFacts;
   npmVersion: string;
-  openclawPluginVersion: string;
-  hermesPluginVersion: string;
-  hermesWheelSha256: string;
-  hermesRequirementsSha256: string;
+  plugins: AgentPlugin[];
   packageFetcher: PackageFetcher;
   log: (line: string) => void;
 };
@@ -44,10 +34,7 @@ if (import.meta.main) {
     officialWhatsAppNumber: OFFICIAL_WHATSAPP_NUMBER,
     company: COMPANY,
     npmVersion: ZAPBIP_NPM_VERSION,
-    openclawPluginVersion: OPENCLAW_PLUGIN_NPM_VERSION,
-    hermesPluginVersion: ZAPBIP_HERMES_PLUGIN_VERSION,
-    hermesWheelSha256: ZAPBIP_HERMES_WHEEL_SHA256,
-    hermesRequirementsSha256: ZAPBIP_HERMES_REQUIREMENTS_SHA256,
+    plugins: Object.values(AGENT_PLUGINS),
     packageFetcher: createPackageFetcher(),
     log: console.log,
   })

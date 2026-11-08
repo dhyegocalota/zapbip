@@ -4,15 +4,15 @@ import { bridgeGatewayHostOf } from '../../../scripts/e2e/clients/container-host
 import { readRepositoryFile, repositoryPath } from './repository-files';
 
 const CLIENTS_DIRECTORY = 'scripts/e2e/clients';
-const HERMES_CLIENT = `${CLIENTS_DIRECTORY}/hermes-client.ts`;
+const HERMES_CLIENT = 'apps/hermes-plugin/e2e/hermes-client.ts';
 const ALL_INTERFACES_ADDRESS = '0.0.0.0';
 const DIGEST_PINNED_IMAGE_PATTERN = /HERMES_IMAGE = '[\w./-]+:[\w.-]+@sha256:[0-9a-f]{64}'/;
 const TYPESCRIPT_EXTENSION = '.ts';
-const OPENCLAW_DOCKERFILE = `${CLIENTS_DIRECTORY}/openclaw/Dockerfile`;
+const OPENCLAW_DOCKERFILE = 'apps/openclaw-plugin/e2e/openclaw/Dockerfile';
 const DOCKERFILE_DIGEST_PATTERN = /^FROM [\w./-]+:[\w.-]+@sha256:[0-9a-f]{64}$/m;
-const HERMES_BUILD_REQUIREMENTS = `${CLIENTS_DIRECTORY}/hermes/build-requirements.txt`;
-const HERMES_DOCKERFILE = `${CLIENTS_DIRECTORY}/hermes/Dockerfile`;
-const HERMES_WHEEL_BUILD_SCRIPT = 'scripts/hermes-wheel/build.ts';
+const HERMES_BUILD_REQUIREMENTS = 'apps/hermes-plugin/e2e/hermes/build-requirements.txt';
+const HERMES_DOCKERFILE = 'apps/hermes-plugin/e2e/hermes/Dockerfile';
+const PLUGIN_WHEEL_BUILD_SCRIPT = 'scripts/plugin-wheel/build.ts';
 const ROOT_MANIFEST = 'package.json';
 const OPENCLAW_PACKAGE = 'openclaw';
 
@@ -36,7 +36,7 @@ describe('the client end-to-end scaffolding', () => {
   });
 
   test('the Hermes wheel is built without isolation from a hashed build requirement', () => {
-    expect(readRepositoryFile(HERMES_WHEEL_BUILD_SCRIPT)).toContain('--no-build-isolation');
+    expect(readRepositoryFile(PLUGIN_WHEEL_BUILD_SCRIPT)).toContain('--no-build-isolation');
     expect(readRepositoryFile(HERMES_BUILD_REQUIREMENTS)).toMatch(/^setuptools==[\d.]+ \\\n\s+--hash=sha256:[0-9a-f]{64}$/m);
   });
 

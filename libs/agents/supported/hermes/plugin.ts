@@ -1,13 +1,20 @@
+import { PRODUCTION_PUBLIC_ORIGIN } from '@zapbip/types';
+import { type AgentPlugin, PluginRegistry } from '../../src/contract';
+import { versionPinOf } from '../../src/version-pin';
 import {
+  hermesRequirementsFilename,
   hermesRequirementsPath,
-  PRODUCTION_PUBLIC_ORIGIN,
+  hermesWheelFilename,
+  hermesWheelPath,
   ZAPBIP_HERMES_PLUGIN_VERSION,
   ZAPBIP_HERMES_REQUIREMENTS_SHA256,
-} from '@zapbip/types';
-import { type AgentPlugin, type HostedArtifact, PluginRegistry } from '../../src/contract';
-import { versionPinOf } from '../../src/version-pin';
+  ZAPBIP_HERMES_WHEEL_SHA256,
+} from './wheel';
 
 const PACKAGE_FOLDER = 'apps/hermes-plugin';
+const RELEASE_FOLDER = `${PACKAGE_FOLDER}/release`;
+const WHEEL_CONTENT_TYPE = 'application/octet-stream';
+const REQUIREMENTS_CONTENT_TYPE = 'text/plain; charset=utf-8';
 const REQUIREMENTS_URL = `${PRODUCTION_PUBLIC_ORIGIN}${hermesRequirementsPath({ version: ZAPBIP_HERMES_PLUGIN_VERSION })}`;
 const DOWNLOADED_FILE = '"$d/zapbip-requirements.txt"';
 const HASH_CHECK = `python3 -c 'import hashlib,sys; sys.exit(hashlib.sha256(open(sys.argv[1],"rb").read()).hexdigest() != sys.argv[2])'`;
@@ -20,9 +27,26 @@ export const plugin: AgentPlugin = {
   registry: PluginRegistry.SelfHostedWheel,
   version: ZAPBIP_HERMES_PLUGIN_VERSION,
   installCommand,
-  get hostedArtifacts(): HostedArtifact[] {
-    throw new Error('hermes hosted artifacts are not implemented');
-  },
+  hostedArtifacts: [
+    {
+      label: 'Hermes wheel',
+      filename: hermesWheelFilename({ version: ZAPBIP_HERMES_PLUGIN_VERSION }),
+      path: hermesWheelPath({ version: ZAPBIP_HERMES_PLUGIN_VERSION }),
+      contentType: WHEEL_CONTENT_TYPE,
+      expectedSha256: ZAPBIP_HERMES_WHEEL_SHA256,
+      releaseFolder: RELEASE_FOLDER,
+      embeddedInInstallCommand: false,
+    },
+    {
+      label: 'Hermes requirements file',
+      filename: hermesRequirementsFilename({ version: ZAPBIP_HERMES_PLUGIN_VERSION }),
+      path: hermesRequirementsPath({ version: ZAPBIP_HERMES_PLUGIN_VERSION }),
+      contentType: REQUIREMENTS_CONTENT_TYPE,
+      expectedSha256: ZAPBIP_HERMES_REQUIREMENTS_SHA256,
+      releaseFolder: RELEASE_FOLDER,
+      embeddedInInstallCommand: true,
+    },
+  ],
   workflow: { name: 'hermes-plugin', filter: '@zapbip/hermes-plugin', pythonRequirements: `${PACKAGE_FOLDER}/requirements-dev.txt` },
   buildRequirements: `${PACKAGE_FOLDER}/e2e/hermes/build-requirements.txt`,
   versionPins: [
