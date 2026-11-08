@@ -2,6 +2,7 @@
 - Date: 2026-11-07
 - Inspired by: `pnpm verify all` docs gate, `from-zero.spec.ts` "from zero in en at narrow"
 - Revisited: 2026-11-07 — still true
+- Revisited: 2026-11-07 — changed because the same abort also hit a lazily loaded chunk (`DrawerViewport-<hash>.js`); the allow-list now also covers an aborted same-origin `.js` under `/_mintlify/assets/`, and nothing else
 
 ## Signal
 One full `pnpm verify all` fails the docs walk with the noise entry `requestfailed http://localhost:<port>/_mintlify/api/user`. Run alone, the same spec passes three times in three.

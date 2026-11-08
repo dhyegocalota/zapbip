@@ -25,6 +25,10 @@ export const DOCS_WALK_NOISE_ALLOWLIST: { pattern: RegExp; reason: string }[] = 
     pattern: /^requestfailed \S+\/_mintlify\/api\/user net::ERR_ABORTED$/,
     reason: 'mint dev asks its preview for the signed-in user and the browser aborts that request when the walk navigates away first',
   },
+  {
+    pattern: /^requestfailed http:\/\/localhost:\d+\/_mintlify\/assets\/\S+\.js net::ERR_ABORTED$/,
+    reason: 'mint dev serves lazily loaded chunks from its own assets path and the browser aborts one when the walk navigates first',
+  },
 ];
 
 export function requestFailedNoiseOf(input: { url: string; errorText: string }): string {
