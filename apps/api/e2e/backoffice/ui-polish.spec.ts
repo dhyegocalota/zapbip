@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test';
 import { BackofficeCopyKey } from '../../src/backoffice/backoffice-copy';
 import { expect, test } from './fixtures';
 import { copy } from './support/copy';
-import { expectNoHorizontalScroll, expectSiblingsApart } from './support/layout';
+import { boxesOf, expectNoHorizontalScroll, expectSiblingsApart } from './support/layout';
 import { ALPHA_NUMBER, seedMetrics } from './support/metrics-seed';
 import { signIn } from './support/sign-in';
 
@@ -21,6 +21,8 @@ const SIBLING_CONTAINERS = [
   '.title-row',
 ];
 const MINIMUM_ACTION_GAP = 16;
+const MINIMUM_CARD_GAP = 24;
+const NAVIGATION_LINK_COUNT = 4;
 const TRANSPARENT = 'rgba(0, 0, 0, 0)';
 const NO_ANIMATION = 'none';
 
@@ -104,6 +106,29 @@ test.describe('signed in', () => {
     const isStacked = submit.y + submit.height <= cancel.y;
     const gap = isStacked ? cancel.y - (submit.y + submit.height) : submit.x - (cancel.x + cancel.width);
     expect(gap).toBeGreaterThanOrEqual(MINIMUM_ACTION_GAP);
+  });
+
+  for (const colorScheme of COLOR_SCHEMES) {
+    test(`the navigation keeps its four links on one row in ${colorScheme}`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme });
+      await page.goto('/');
+      const boxes = await boxesOf({ locator: page.locator('nav .nav-link') });
+      expect(boxes).toHaveLength(NAVIGATION_LINK_COUNT);
+      expect(new Set(boxes.map((box) => Math.round(box.y))).size).toBe(1);
+      await expectNoHorizontalScroll({ page });
+    });
+  }
+
+  test('spaces the sparkline of the numbers card from its action and lines the three sparklines up', async ({ page }) => {
+    await page.goto('/');
+    const [action] = await boxesOf({ locator: page.locator('.hero-card > a.button') });
+    const sparklines = await boxesOf({ locator: page.locator('.card-grid svg.sparkline') });
+    const [first] = sparklines;
+    if (action === undefined || first === undefined) throw new Error('the card has no box');
+    expect(first.y - (action.y + action.height)).toBeGreaterThanOrEqual(MINIMUM_CARD_GAP);
+    const isOneColumn = new Set(sparklines.map((box) => Math.round(box.x))).size === 1;
+    if (isOneColumn) return;
+    expect(new Set(sparklines.map((box) => Math.round(box.y + box.height))).size).toBe(1);
   });
 
   test('draws one sparkline in each of the three home cards', async ({ page }) => {

@@ -7,7 +7,7 @@ export async function expectNoHorizontalScroll(input: { page: Page }): Promise<v
   expect(scrollWidth).toBeLessThanOrEqual(viewport.width);
 }
 
-type Box = { x: number; y: number; width: number; height: number };
+export type Box = { x: number; y: number; width: number; height: number };
 
 function intersects(input: { first: Box; second: Box }): boolean {
   const { first, second } = input;
@@ -16,10 +16,10 @@ function intersects(input: { first: Box; second: Box }): boolean {
   return !isSeparatedHorizontally && !isSeparatedVertically;
 }
 
-async function boxesOf(input: { locator: Locator }): Promise<Box[]> {
+export async function boxesOf(input: { locator: Locator }): Promise<Box[]> {
   const boxes = await Promise.all((await input.locator.all()).map((element) => element.boundingBox()));
   return boxes.map((box) => {
-    if (box === null) throw new Error('an element of the chart has no box');
+    if (box === null) throw new Error('an element has no box');
     return box;
   });
 }
