@@ -5,6 +5,19 @@ import { realAgents } from './test-agents';
 type Group = { group: string; pages: unknown[] };
 type Language = { language: string; groups: Group[] };
 
+const WAKE_RUNG_ORDER = [
+  'claude-code',
+  'codex',
+  'cursor',
+  'gemini-cli',
+  'hermes',
+  'openclaw',
+  'claude-ai',
+  'grok-bot',
+  'chatgpt',
+  'grok-web',
+  'any-mcp-client',
+];
 const NAVIGATION_ORDER = [
   'claude-code',
   'codex',
@@ -45,16 +58,16 @@ const TODAY = sourceWith({
 });
 
 describe('renderNavigation', () => {
-  test('lists the matrix first and the agents in the navigation order, in both languages', async () => {
+  test('lists the matrix first and the agents by wake rung, then name, in both languages', async () => {
     const { content, violations } = renderNavigation({ source: TODAY, agents: await realAgents() });
     expect(violations).toEqual([]);
     expect(groupsOf({ content, language: 'en' })[0]?.pages).toEqual([
       'agents/supported-agents',
-      ...NAVIGATION_ORDER.map((id) => `agents/${id}`),
+      ...WAKE_RUNG_ORDER.map((id) => `agents/${id}`),
     ]);
     expect(groupsOf({ content, language: 'pt-BR' })[0]?.pages).toEqual([
       'pt-br/agents/supported-agents',
-      ...NAVIGATION_ORDER.map((id) => `pt-br/agents/${id}`),
+      ...WAKE_RUNG_ORDER.map((id) => `pt-br/agents/${id}`),
     ]);
   });
 

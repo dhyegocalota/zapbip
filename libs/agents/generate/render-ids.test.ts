@@ -44,19 +44,19 @@ describe('renderIds', () => {
     expect(members).toContainEqual(['AnyMcpClient', 'any-mcp-client']);
   });
 
-  test('InstallClient holds the ten agents with an install facet, in the install page order', async () => {
+  test('InstallClient holds the ten agents with an install facet, by wake rung, then name', async () => {
     const members = membersOf({ source: renderIds({ agents: await fullFacetAgents() }), enumName: 'InstallClient' });
     expect(members.map(([, value]) => value)).toEqual([
       'claude-code',
       'codex',
       'cursor',
       'gemini-cli',
-      'grok-bot',
-      'claude-ai',
-      'chatgpt',
-      'grok-web',
       'hermes',
       'openclaw',
+      'claude-ai',
+      'grok-bot',
+      'chatgpt',
+      'grok-web',
     ]);
   });
 

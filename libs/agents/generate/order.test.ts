@@ -6,73 +6,59 @@ import { definition as fixtureDefinition } from '../testing/fixture-agent/defini
 import { definition as fixtureConnectorDefinition } from '../testing/fixture-connector-agent/definition';
 import { definitionsOf, realAgents } from './test-agents';
 
-const LEGACY_ORDER: Record<OrderSurface, string[]> = {
-  [OrderSurface.InstallPage]: [
-    'claude-code',
-    'codex',
-    'cursor',
-    'gemini-cli',
-    'grok-bot',
-    'claude-ai',
-    'chatgpt',
-    'grok-web',
-    'hermes',
-    'openclaw',
-    'any-mcp-client',
-  ],
-  [OrderSurface.Matrix]: [
-    'claude-code',
-    'codex',
-    'cursor',
-    'gemini-cli',
-    'hermes',
-    'openclaw',
-    'grok-bot',
-    'claude-ai',
-    'chatgpt',
-    'grok-web',
-    'any-mcp-client',
-  ],
-  [OrderSurface.Navigation]: [
-    'claude-code',
-    'codex',
-    'claude-ai',
-    'chatgpt',
-    'cursor',
-    'grok-bot',
-    'grok-web',
-    'hermes',
-    'openclaw',
-    'gemini-cli',
-    'any-mcp-client',
-  ],
-};
+const ORDER: string[] = [
+  'claude-code',
+  'codex',
+  'cursor',
+  'gemini-cli',
+  'hermes',
+  'openclaw',
+  'claude-ai',
+  'grok-bot',
+  'chatgpt',
+  'grok-web',
+  'any-mcp-client',
+];
 
 function withRung(input: { definition: AgentDefinition; rung: WakeRung }): AgentDefinition {
   return { ...input.definition, listen: { ...input.definition.listen, rung: input.rung } };
 }
 
 describe('agentOrderOf', () => {
-  test.each(Object.values(OrderSurface))('lists the eleven definitions in the order %s has today', async (surface) => {
-    const definitions = definitionsOf({ agents: await realAgents() });
-    expect(agentOrderOf({ definitions, surface })).toEqual(LEGACY_ORDER[surface]);
-  });
+  test.each(Object.values(OrderSurface))(
+    'lists the eleven definitions by wake rung, then by lower-case English name on %s',
+    async (surface) => {
+      const definitions = definitionsOf({ agents: await realAgents() });
+      expect(agentOrderOf({ definitions, surface })).toEqual(ORDER);
+    },
+  );
 
   test.each(Object.values(OrderSurface))('drops an agent that has no definition on %s', async (surface) => {
     const { cursor, ...definitions } = definitionsOf({ agents: await realAgents() });
     expect(cursor).toBeDefined();
-    expect(agentOrderOf({ definitions, surface })).toEqual(LEGACY_ORDER[surface].filter((id) => id !== 'cursor'));
+    expect(agentOrderOf({ definitions, surface })).toEqual(ORDER.filter((id) => id !== 'cursor'));
   });
 
-  test.each(Object.values(OrderSurface))('puts a new agent after the known ones on %s, by rung then name', async (surface) => {
+  test.each(Object.values(OrderSurface))('places a new agent among the known ones by its rung, then its name on %s', async (surface) => {
     const definitions = {
       ...definitionsOf({ agents: await realAgents() }),
       'fixture-connector-agent': fixtureConnectorDefinition,
       'fixture-agent': withRung({ definition: fixtureDefinition, rung: WakeRung.Webhook }),
     };
-    expect(agentOrderOf({ definitions, surface }).slice(LEGACY_ORDER[surface].length)).toEqual([
+    expect(agentOrderOf({ definitions, surface })).toEqual([
+      'claude-code',
+      'codex',
+      'cursor',
       'fixture-connector-agent',
+      'gemini-cli',
+      'hermes',
+      'openclaw',
+      'claude-ai',
       'fixture-agent',
+      'grok-bot',
+      'chatgpt',
+      'grok-web',
+      'any-mcp-client',
     ]);
   });
 
