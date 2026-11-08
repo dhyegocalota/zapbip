@@ -6,10 +6,11 @@ import { keyedCell, MetricCell, NOT_REPORTED_CLIENT_KEY } from '../../src/backof
 import { NumberFormField } from '../../src/backoffice/numbers/number-form-fields';
 import { csrfTokenOf } from '../../src/backoffice/auth/csrf';
 import { ActivityMetric } from '../../src/contract/activity-metric';
-import { applyActivityMigration, applyMigration, seedAccount, SEED_CREATED_AT } from '../support/seed';
+import { applyMigration, seedAccount, SEED_CREATED_AT } from '../support/seed';
 import { seedWhatsAppNumber } from '../support/whatsapp-numbers';
 import { testEnv } from '../support/workers-env';
-import { backofficeEnv, BACKOFFICE_ORIGIN, requestBackoffice, SESSION_COOKIE } from './backoffice-auth-fixtures';
+import { BACKOFFICE_ORIGIN, requestBackoffice, SESSION_COOKIE } from './backoffice-auth-fixtures';
+import { recordingEnvironment } from './backoffice-batch-recorder';
 import { endBackofficeSession, getPage, NOW, startBackofficeSession } from './backoffice-numbers-fixtures';
 
 const STATUS_OK = 200;
@@ -168,52 +169,8 @@ async function metricsHtml(input: { query?: string }): Promise<string> {
   return response.text();
 }
 
-type RecordedStatement = { sql: string; statement: D1PreparedStatement };
-
-function recordedOf(input: { recorded: WeakMap<object, RecordedStatement>; statement: object }): RecordedStatement {
-  const entry = input.recorded.get(input.statement);
-  if (entry === undefined) throw new Error('a batched statement was not prepared through the recorder');
-  return entry;
-}
-
-function recordingEnvironment(): { env: ReturnType<typeof backofficeEnv>; batches: string[][] } {
-  const batches: string[][] = [];
-  const recorded = new WeakMap<object, RecordedStatement>();
-  const database = new Proxy(testEnv.CONNECTIONS, {
-    get(target, property) {
-      if (property === 'prepare')
-        return (sql: string) => {
-          const statement = target.prepare(sql);
-          const recorder = new Proxy(statement, {
-            get(source, statementProperty) {
-              const member = Reflect.get(source, statementProperty);
-              if (statementProperty !== 'bind') return typeof member === 'function' ? member.bind(source) : member;
-              return (...values: unknown[]) => {
-                const bound = source.bind(...values);
-                recorded.set(bound, { sql, statement: bound });
-                return bound;
-              };
-            },
-          });
-          recorded.set(recorder, { sql, statement });
-          return recorder;
-        };
-      if (property === 'batch')
-        return (statements: D1PreparedStatement[]) => {
-          const entries = statements.map((statement) => recordedOf({ recorded, statement }));
-          batches.push(entries.map((entry) => entry.sql));
-          return target.batch(entries.map((entry) => entry.statement));
-        };
-      const member = Reflect.get(target, property);
-      return typeof member === 'function' ? member.bind(target) : member;
-    },
-  });
-  return { env: backofficeEnv({ overrides: { CONNECTIONS: database } }), batches };
-}
-
 beforeAll(async () => {
   await applyMigration({ sql: usageMigrationSql });
-  await applyActivityMigration();
 });
 
 beforeEach(async () => {
