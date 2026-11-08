@@ -14,12 +14,16 @@ Root cause, reproduced locally: with `--offline`, pnpm resolves the lockfile aft
 
 A second failure showed once the first was fixed (PR #23, run 42505229057): inside the install-agent scaffold proof, `apps/connector/test/integration/listen.test.ts` "prints one JSON line per owner message and acknowledges it after printing" got `expected [] to deeply equal [ { messageId: 'msg_1', ... } ]`. The test waits for the fake server to receive the `done` frame, then reads the child's stdout. The `done` frame travels over the socket and the line over the stdout pipe, so the parent can see the first before the second when the machine is loaded.
 
+With both fixed, run 42509461944 (PR #23) had every job green except `lifecycle`, cancelled at the 30-minute limit: the proofs had taken about 1736 s of test time before the removal proof started running its suites, and it now does.
+
 ## Goals
 
 - Every install of the lifecycle proofs runs with a cold metadata cache (`npm_config_cache_dir` in the throwaway folder) and `CI=true`, so a developer machine behaves like a runner.
 - The installs that resolve the lockfile use `--prefer-offline`: the store and cached metadata first, the network when metadata is missing. The frozen installs keep `--offline`.
 - A failed install prints its output.
 - The listen tests wait for the printed lines (and the connected log line) on the child's pipes before reading them, instead of inferring them from a frame the server received.
+
+- The lifecycle CI job is a matrix of three shards (`pnpm test:lifecycle --shard=<i>/3`). Vitest shards by file, so the proofs sit in five files (`agent-lifecycle-removal`, `-checks`, and one scaffold file per kind) that run one at a time (`fileParallelism: false`, the API integration suites bind fixed ports). `pnpm verify all` still runs the whole lifecycle gate in one command.
 
 ## Non-goals
 

@@ -20,6 +20,7 @@
 - [x] **Step 2:** the resolving installs use `--prefer-offline`.
 
 - [x] **Step 3:** red `927c36b4` reads the child's output 300 ms late and fails with the CI message; the listen tests wait on the pipes (`waitForPrintedLines`, `waitForStandardError`).
+- [x] **Step 4:** red `82576d01` pins the shard matrix, the `--shard` step and at least three proof files run one at a time; the proofs are split into five files with a shared `agent-lifecycle-support.ts`, the workflow gets `matrix.shard: [1, 2, 3]` with `fail-fast: false`.
 
 ## Failure modes
 

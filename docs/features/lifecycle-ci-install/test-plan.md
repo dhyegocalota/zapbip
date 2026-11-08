@@ -8,6 +8,8 @@ Every checkbox states the input and the exact expected outcome. A ticked box car
 
 - [ ] `apps/connector/test/integration/listen.test.ts::prints one JSON line per owner message even when the output pipe is read late, as on a loaded machine` — input: the output pipes are read 300 ms late; expected before the fix: `expected [] to deeply equal [ { messageId: 'msg_1', ... } ]`; after: the line is printed.
 
+- [ ] `tools/repository-shape/src/ci-workflow.test.ts::the lifecycle job runs as a matrix of shards, none cancelling the others` and `::the lifecycle proofs sit in at least as many files as there are shards and run one file at a time` — expected before: both fail; after: pass. `vitest run --config vitest.lifecycle.config.ts --shard=<i>/3` selects 2, 2 and 1 files.
+
 ## Unit
 
 - [ ] Same test after the fix (`--prefer-offline`) — expected: exit 0.
