@@ -86,7 +86,7 @@ Run: `cd tools/repository-shape && pnpm exec vitest run src/docs-visual.test.ts 
 | `apps/docs/e2e/ui-polish.spec.ts` | not recorded red (written after the steps) | 65d083ff |
 
 Deviations:
-- At 1280 the content column is 624 px wide (sidebar and table of contents), so the hero's copy and phone wrap and stack; they do not overlap. Design §10.3 expected side by side. Hypothesis: stacked reads well; the owner decides if a wider layout is wanted.
+- Both Overviews carry `mode: "wide"` (red 13067d5a, 19ec79fb → green d538017d), which the pinned client 0.0.4077 honours: at 1280 the hero sits side by side, and `zapbip.css` caps prose at 44rem below it. Hypothesis: other pages are untouched (their column is already narrower than 44rem).
 - The Overview now has five chats (hero plus four cards); `get-started.spec.ts` `OVERVIEW_EXAMPLE_COUNT.maximum` went from 4 to 5. No selector changed, so hypothesis 9 lists this one-constant diff.
 - The logo `font-family` is the system stack, not `--font-display`, because lane A's stylesheet defines no such token.
 - Contrast helper is `tools/repository-shape/src/contrast.ts` (lane A's coordinated location).
