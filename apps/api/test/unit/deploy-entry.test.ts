@@ -175,8 +175,9 @@ describe('deploy entry', () => {
     const smokeFailed = { exitCode: 1, stdout: '' };
     const shell = fakeShell({ replies: { ...REPLIES, 'maintainers --json': notFound, 'smoke.ts': smokeFailed } });
     const { exitCode, output } = await deploy({ shell, environment: DeployEnvironment.Production, answers: [CONFIRMATION] });
-    const [, afterHeading] = output.split(WARNINGS_HEADING);
+    const [beforeHeading, afterHeading] = output.split(WARNINGS_HEADING);
     expect(exitCode).toBe(1);
+    expect(beforeHeading).toContain('the smoke test failed; to roll back, run:');
     expect(afterHeading).toContain(`zapbip@${NPM_VERSION} is not on npm yet; publish it before launch`);
   });
 

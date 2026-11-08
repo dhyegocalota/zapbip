@@ -7,7 +7,7 @@
 
 ## Unit
 
-- [x] Pin (green when it landed, `feaee3d5`): a sole foreign maintainer is refused at `npm version`, naming the maintainer, with no warning — evidence: unit 'refuses production when the only maintainer is not the owner npm user'; green, no warning
+- [x] Pin (green when it landed, `98516674`): a sole foreign maintainer is refused at `npm version`, naming the maintainer, with no warning — evidence: unit 'refuses production when the only maintainer is not the owner npm user'; green, no warning
 - [x] A network error (`ENOTFOUND`) is refused with `could not reach npm` — evidence: unit 'says npm could not be reached ... network error'; green
 - [x] The docs preflight with the number unset is refused at `official number` before any command — evidence: unit 'docs preflight > refuses while the official number is the unset sentinel, before any command'; green
 - [x] The docs preflight with a package answering `E404` is refused with `does not resolve` — evidence: unit 'docs preflight > refuses until npm view resolves the pinned version'; docs-preflight-entry E404 test green
@@ -17,7 +17,7 @@
 - [x] Versioned `E404`, bare name fails with `ENOTFOUND`: refused with `could not reach npm`, no warning — evidence: unit 'version is absent and npm cannot be reached for the package name'; green; mutation M1 turns it red
 - [x] Versioned and bare `E404`: warned with `PreflightWarningKind.PackageUnpublished` and passes — evidence: unit warns PackageUnpublished and passes; real npm probe through runWorkerPreflight: zapbip@0.1.0 and bare zapbip both E404 -> refusal null, 1 warning
 - [x] Deploy entry: the warning is printed again under `warnings to resolve before launch:` after the smoke test — evidence: deploy-entry 'prints the warnings again under a heading'; smoke pass green; smoke FAIL path proven with a throwaway test (exit 1, reprint after heading), see F1 for the missing committed test
-- [x] Pin (green when it landed, `644338ce`): docs preflight with `E404` on both: `does not resolve on npm; publish it first`; mutating the docs handler to `() => null` turns it red — evidence: docs-preflight-entry 'E404 for the version and the name' green; mutation M2 (docs onAbsentPackage -> null) turns it red
+- [x] Pin (green when it landed, `2e8fd0ce`): docs preflight with `E404` on both: `does not resolve on npm; publish it first`; mutating the docs handler to `() => null` turns it red — evidence: docs-preflight-entry 'E404 for the version and the name' green; mutation M2 (docs onAbsentPackage -> null) turns it red
 
 - [ ] Versioned `E404`, bare name answers the owner as maintainer and publisher: the Worker warns `PackageUnpublished` and passes — evidence:
 - [ ] Same input in the docs preflight: refused with `zapbip@<version> does not resolve on npm; publish it first` — evidence:
@@ -36,4 +36,4 @@
 
 - No real npm registry is called; `npm view` answers come from the fake shell.
 
-F1: no committed test pins the warning reprint when the smoke test FAILS. Mutation M3b (reprint only on smoke pass, `if (smoke.exitCode === 0) logWarnings(...)`) survives all 113 unit tests; a throwaway test confirmed the real code reprints on failure, and turned red under M3b. Request a regression test from the developer.
+Resolved by e99db149 (a committed pin test covers the reprint when the smoke test fails). F1: no committed test pinned the warning reprint when the smoke test FAILS. Mutation M3b (reprint only on smoke pass, `if (smoke.exitCode === 0) logWarnings(...)`) survives all 113 unit tests; a throwaway test confirmed the real code reprints on failure, and turned red under M3b. Request a regression test from the developer.
