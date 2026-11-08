@@ -43,7 +43,7 @@ const NAVIGATION_GROUP: Record<DocsLanguage, string> = {
 
 type NavigationLanguage = { language: string; groups: { group: string; pages: unknown[] }[] };
 
-function repositoryFile(path: string): string {
+export function repositoryFile(path: string): string {
   return readFileSync(`${REPOSITORY_ROOT}${path}`, 'utf8');
 }
 
