@@ -1,14 +1,88 @@
 import { describe, expect, test } from 'vitest';
-import { leakViolationsOf, type LeakAgent, type LeakFile } from './leaks';
+import { leakViolationsOf, withoutAgentNavigationLists, withoutGeneratedWorkflowRegions, type LeakAgent, type LeakFile } from './leaks';
 
 const ALPHA: LeakAgent = { id: 'alpha', enumMember: 'Alpha', literals: ['.alpha-home', 'ALPHA_HOME'] };
 const HERMES: LeakAgent = { id: 'beta', enumMember: 'Beta', literals: [] };
 const GAMMA: LeakAgent = { id: 'gamma-bot', enumMember: 'GammaBot', literals: [] };
 const GENERATED_PREFIX = 'libs/agents/src/generated/';
 
-function leaksIn(input: { files: LeakFile[]; agents?: LeakAgent[] }): string[] {
-  return leakViolationsOf({ agents: input.agents ?? [ALPHA, HERMES], files: input.files, allowedPrefixes: [GENERATED_PREFIX] });
+function leaksIn({
+  files,
+  agents = [ALPHA, HERMES],
+  literalExemptPrefixes = [],
+}: {
+  files: LeakFile[];
+  agents?: LeakAgent[];
+  literalExemptPrefixes?: string[];
+}): string[] {
+  return leakViolationsOf({ agents, files, allowedPrefixes: [GENERATED_PREFIX], literalExemptPrefixes });
 }
+
+describe('leakViolationsOf: constants, exemptions and generated regions', () => {
+  test.each(['export const GAMMA_BOT_VERSION = 1;', 'GAMMA_BOT', 'ZAPBIP_GAMMA_BOT_HOME'.replace('ZAPBIP_', '')])(
+    'names the constant word in %s',
+    (text) => {
+      expect(leaksIn({ files: [{ path: 'libs/types/example.ts', text }], agents: [GAMMA] })).toEqual([
+        'libs/types/example.ts:1 names gamma-bot',
+      ]);
+    },
+  );
+
+  test.each(['XGAMMA_BOT', 'GAMMA_BOTS', 'GAMMA_BOT2'])('ignores %s, which only contains the constant word', (text) => {
+    expect(leaksIn({ files: [{ path: 'libs/types/example.ts', text }], agents: [GAMMA] })).toEqual([]);
+  });
+
+  test('names an uppercase single word id too', () => {
+    expect(leaksIn({ files: [{ path: 'libs/types/example.ts', text: 'export const ALPHA_VERSION = 1;' }] })).toEqual([
+      'libs/types/example.ts:1 names alpha',
+    ]);
+  });
+
+  test('waives only the home literals in a literal-exempt file', () => {
+    const files = [{ path: '.agents/hooks/doctor.sh', text: 'ls ~/.alpha-home\npip install -r apps/alpha-plugin/requirements-dev.txt' }];
+    expect(leaksIn({ files, literalExemptPrefixes: ['.agents/hooks/doctor.sh'] })).toEqual(['.agents/hooks/doctor.sh:2 names alpha']);
+  });
+
+  test('drops only the generated regions of a workflow', () => {
+    const text = [
+      'keep alpha',
+      '# NB ADR 0033: generated unit matrix rows begin',
+      'drop alpha',
+      '# NB ADR 0033: generated unit matrix rows end',
+      'keep too',
+    ].join('\n');
+    expect(withoutGeneratedWorkflowRegions({ text })).toBe(['keep alpha', 'keep too'].join('\n'));
+  });
+
+  test('keeps a planted line next to a generated region', () => {
+    const text = [
+      '# NB ADR 0033: generated pip install lines begin',
+      'x',
+      '# NB ADR 0033: generated pip install lines end',
+      'planted alpha-plugin',
+    ].join('\n');
+    expect(withoutGeneratedWorkflowRegions({ text })).toBe('planted alpha-plugin');
+  });
+
+  test('empties the agent page lists of the navigation and keeps everything else', () => {
+    const source = JSON.stringify({
+      navigation: {
+        languages: [
+          {
+            language: 'en',
+            groups: [
+              { group: 'Agents', pages: ['agents/a'] },
+              { group: 'Help', pages: ['help/planted-alpha'] },
+            ],
+          },
+        ],
+      },
+    });
+    const kept = JSON.parse(withoutAgentNavigationLists({ text: source }));
+    expect(kept.navigation.languages[0].groups[0].pages).toEqual([]);
+    expect(kept.navigation.languages[0].groups[1].pages).toEqual(['help/planted-alpha']);
+  });
+});
 
 describe('leakViolationsOf: bare names', () => {
   test.each(['run gamma-bot now', 'agents/gamma-bot)', '"gamma-bot hint"'])('names the bare hyphenated id in %s', (text) => {
