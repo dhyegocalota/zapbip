@@ -34,6 +34,7 @@ const DISABLED_VERIFICATION = '0';
 const EXIT_CODE_CLEAN = 0;
 const EXIT_CODE_USAGE = 1;
 const CONNECT_COMMAND = 'connect';
+const LATE_READ_DELAY_MS = 300;
 
 describe('zapbip connect', () => {
   let bundleDirectory: string;
@@ -44,8 +45,13 @@ describe('zapbip connect', () => {
   let server: FakeEventServer;
   let started: CliProcess[];
 
-  function startCli(input: { arguments?: string[]; connectionUrl?: string | null; behavior?: FakeClientBehavior }): CliProcess {
-    const { arguments: extraArguments = [], connectionUrl = server.connectionLink, behavior = {} } = input;
+  function startCli(input: {
+    arguments?: string[];
+    connectionUrl?: string | null;
+    behavior?: FakeClientBehavior;
+    readDelayMs?: number;
+  }): CliProcess {
+    const { arguments: extraArguments = [], connectionUrl = server.connectionLink, behavior = {}, readDelayMs = 0 } = input;
     const connectionEnvironment = connectionUrl === null ? {} : { [CONNECTION_URL_VARIABLE]: connectionUrl };
     const child = spawn(
       process.execPath,
@@ -73,8 +79,10 @@ describe('zapbip connect', () => {
     let collected = '';
     const waiters: { event: ConnectorLogEvent; resolve: () => void }[] = [];
     function collect(chunk: Buffer): void {
-      collected += chunk.toString();
-      waiters.filter((waiter) => collected.includes(`"event":"${waiter.event}"`)).forEach((waiter) => waiter.resolve());
+      setTimeout(() => {
+        collected += chunk.toString();
+        waiters.filter((waiter) => collected.includes(`"event":"${waiter.event}"`)).forEach((waiter) => waiter.resolve());
+      }, readDelayMs);
     }
     child.stdout.on('data', collect);
     child.stderr.on('data', collect);
@@ -136,10 +144,11 @@ describe('zapbip connect', () => {
   });
 
   it('asks for the link on the terminal when the environment variable is absent', async () => {
-    const cliProcess = startCli({ connectionUrl: null });
+    const cliProcess = startCli({ connectionUrl: null, readDelayMs: LATE_READ_DELAY_MS });
     cliProcess.child.stdin.write(`${server.connectionLink}\n`);
     await server.waitForConnections({ count: 1 });
 
+    expect(cliProcess.outputText()).toContain(ConnectorLogEvent.ConnectorConnected);
     expect(cliProcess.outputText()).not.toContain(FAKE_SECRET);
   });
 

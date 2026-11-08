@@ -181,13 +181,17 @@ describe('zapbip channel', () => {
   });
 
   it('keeps the secret and the message text out of the logs', async () => {
-    const { stderrText, waitForNotifications, waitForStandardError } = await connectClient();
+    const { notifications, stderrText, waitForNotifications, waitForStandardError } = await connectClient({
+      readDelayMs: LATE_READ_DELAY_MS,
+    });
     await server.waitForLiveConnections({ count: 1 });
     pushOwnerMessage({ messageId: 'msg_1', text: OWNER_TEXT });
     await server.waitForFrames({ type: ConnectorFrameType.Done, count: 1 });
     await waitForNotifications({ count: 1 });
     await waitForStandardError({ text: ConnectorLogEvent.ConnectorConnected });
 
+    expect(notifications).toHaveLength(1);
+    expect(stderrText()).toContain(ConnectorLogEvent.ConnectorConnected);
     expect(stderrText()).not.toContain(FAKE_SECRET);
     expect(stderrText()).not.toContain(OWNER_TEXT);
   });
