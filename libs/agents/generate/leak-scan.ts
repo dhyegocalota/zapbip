@@ -19,6 +19,8 @@ const HARNESS_LITERAL_EXEMPT_FILES = ['.agents/hooks/doctor.sh', '.agents/hooks/
 const FULLY_EXEMPT_FILES = [
   '.agents/hooks/hooks.test.sh',
   '.agents/skills/brainstorming/scripts/start-server.sh',
+  '.agents/skills/brainstorming/scripts/server.cjs',
+  'pnpm-lock.yaml',
   'libs/agents/src/checks/leaks.test.ts',
   'libs/agents/generate/leak-scan.ts',
   'tools/repository-shape/src/agent-registry.test.ts',
