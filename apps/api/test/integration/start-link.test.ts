@@ -1,4 +1,4 @@
-import { reset } from 'cloudflare:test';
+import { createExecutionContext, env, reset } from 'cloudflare:test';
 import { exports } from 'cloudflare:workers';
 import {
   DocsLanguage,
@@ -9,16 +9,22 @@ import {
   START_PREFILLED_TEXT,
   WhatsAppNumberState,
 } from '@zapbip/types';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import production from '../../src/index';
 import { START_LINK_COPY } from '../../src/routes/start-link-copy';
 import { applyDirectoryMigration } from '../support/seed';
+import { captureLogLines } from '../support/capture-log-lines';
 import { changeStartNumberState, seedStartNumber } from '../support/start-link-numbers';
 import { testEnv } from '../support/workers-env';
 
 const ORIGIN = 'http://localhost:8787';
 const CLIENT_ADDRESS_HEADER = 'cf-connecting-ip';
 const CLIENT_ADDRESS = '203.0.113.20';
-const OTHER_CLIENT_ADDRESS = '203.0.113.21';
+const LIMITED_ADDRESS = '203.0.113.40';
+const UNLIMITED_ADDRESS = '203.0.113.41';
+const COUNTER_ADDRESS = '203.0.113.42';
+const BACKOFFICE_ORIGIN = 'http://backoffice.localhost:8787';
+const TRAILING_DOT_BACKOFFICE_ORIGIN = 'http://backoffice.localhost.:8787';
 const OLDEST = 1_700_000_000_000;
 const NEWER = OLDEST + 1_000;
 const RETRY_AFTER_SECONDS = '60';
@@ -39,12 +45,24 @@ function getStart(input: { query?: string; address?: string; method?: string; pa
   );
 }
 
+function expectPrivateHeaders(input: { headers: Headers }): void {
+  const { headers } = input;
+  expect(headers.get('cache-control')).toBe('no-store');
+  expect(headers.get('x-robots-tag')).toBe('noindex');
+  expect(headers.get('referrer-policy')).toBe('no-referrer');
+  expect(headers.get('x-content-type-options')).toBe('nosniff');
+  expect(headers.get('strict-transport-security')).toMatch(/^max-age=\d+/);
+}
+
 async function seedActiveNumber(): Promise<void> {
   await seedStartNumber({ numberId: 'num_a', displayNumber: ACTIVE_DISPLAY_NUMBER, state: WhatsAppNumberState.Active, createdAt: OLDEST });
 }
 
 beforeEach(applyDirectoryMigration);
-afterEach(reset);
+afterEach(() => {
+  vi.restoreAllMocks();
+  return reset();
+});
 
 describe('start link redirect', () => {
   it('SL-W1 redirects to the wa.me link of the active number with the default locale text', async () => {
@@ -73,12 +91,7 @@ describe('start link redirect', () => {
 
   it('SL-W4 carries the private headers on the redirect', async () => {
     await seedActiveNumber();
-    const { headers } = await getStart({});
-    expect(headers.get('cache-control')).toBe('no-store');
-    expect(headers.get('x-robots-tag')).toBe('noindex');
-    expect(headers.get('referrer-policy')).toBe('no-referrer');
-    expect(headers.get('x-content-type-options')).toBe('nosniff');
-    expect(headers.get('strict-transport-security')).toMatch(/^max-age=\d+/);
+    expectPrivateHeaders({ headers: (await getStart({})).headers });
   });
 });
 
@@ -170,11 +183,13 @@ describe('start link without a usable number', () => {
   });
 
   it('SL-W12 answers 500 without a redirect when the registry read fails', async () => {
+    const lines = captureLogLines();
     await testEnv.CONNECTIONS.prepare(BREAK_DISPLAY_NUMBER_STATEMENT).run();
     const response = await getStart({});
     expect(response.status).toBe(500);
     expect(response.headers.get('location')).toBeNull();
     expect(await response.text()).toBe('server error');
+    expect(lines.join('\n')).toContain('start_link.failed');
   });
 });
 
@@ -185,13 +200,15 @@ describe('start link request handling', () => {
     expect(response.status).toBe(400);
     expect(response.headers.get('location')).toBeNull();
     expect(await response.text()).toBe('bad request');
+    expectPrivateHeaders({ headers: response.headers });
   });
 
-  it('SL-W14 answers 400 when the client address header is missing', async () => {
-    await seedActiveNumber();
+  it('SL-W14 answers 400 without reading the registry when the client address header is missing', async () => {
+    await testEnv.CONNECTIONS.prepare(BREAK_DISPLAY_NUMBER_STATEMENT).run();
     const response = await exports.default.fetch(new Request(`${ORIGIN}${START_LINK_PATH}`, { redirect: 'manual' }));
     expect(response.status).toBe(400);
     expect(await response.text()).toBe('bad request');
+    expectPrivateHeaders({ headers: response.headers });
   });
 
   it.each([
@@ -212,24 +229,40 @@ describe('start link request handling', () => {
 describe('start link rate limit', () => {
   it('SL-W16 answers 429 with Retry-After past the limit and leaves another address alone', async () => {
     await seedActiveNumber();
-    const allowed = await Promise.all(Array.from({ length: INSTALL_PAGE_REQUESTS_PER_MINUTE }, () => getStart({})));
+    const allowed = await Promise.all(
+      Array.from({ length: INSTALL_PAGE_REQUESTS_PER_MINUTE }, () => getStart({ address: LIMITED_ADDRESS })),
+    );
     expect(allowed.map((response) => response.status)).toEqual(Array(INSTALL_PAGE_REQUESTS_PER_MINUTE).fill(302));
-    const limited = await getStart({});
+    const limited = await getStart({ address: LIMITED_ADDRESS });
     expect(limited.status).toBe(429);
     expect(limited.headers.get('retry-after')).toBe(RETRY_AFTER_SECONDS);
     expect(await limited.text()).toBe('too many requests');
-    expect((await getStart({ address: OTHER_CLIENT_ADDRESS })).status).toBe(302);
+    expectPrivateHeaders({ headers: limited.headers });
+    expect((await getStart({ address: UNLIMITED_ADDRESS })).status).toBe(302);
   });
 
   it('SL-W17 keeps its counter apart from the install page', async () => {
     await seedActiveNumber();
-    await Promise.all(Array.from({ length: INSTALL_PAGE_REQUESTS_PER_MINUTE + 1 }, () => getStart({})));
-    expect((await getStart({})).status).toBe(429);
+    await Promise.all(Array.from({ length: INSTALL_PAGE_REQUESTS_PER_MINUTE + 1 }, () => getStart({ address: COUNTER_ADDRESS })));
+    expect((await getStart({ address: COUNTER_ADDRESS })).status).toBe(429);
     const installPage = await exports.default.fetch(
       new Request(`${ORIGIN}${INSTALL_PAGE_PATH_PREFIX}zb_inst_${'A'.repeat(22)}`, {
-        headers: { [CLIENT_ADDRESS_HEADER]: CLIENT_ADDRESS },
+        headers: { [CLIENT_ADDRESS_HEADER]: COUNTER_ADDRESS },
       }),
     );
     expect(installPage.status).toBe(404);
+  });
+});
+
+describe('start link hosts', () => {
+  it.each([BACKOFFICE_ORIGIN, TRAILING_DOT_BACKOFFICE_ORIGIN])('SL-W18 answers 404 on the host %s', async (origin) => {
+    await seedActiveNumber();
+    const request = new Request(`${origin}${START_LINK_PATH}`, {
+      headers: { [CLIENT_ADDRESS_HEADER]: CLIENT_ADDRESS },
+      redirect: 'manual',
+    });
+    const response = await production.fetch(request, env, createExecutionContext());
+    expect(response.status).toBe(404);
+    expect(response.headers.get('location')).toBeNull();
   });
 });
