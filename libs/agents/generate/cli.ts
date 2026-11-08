@@ -34,7 +34,7 @@ async function planFromDisk(): Promise<GenerationPlan> {
 
 async function generate(): Promise<number> {
   const plan = await planFromDisk();
-  applyValidPlan({ plan }).forEach((path) => console.log(`wrote ${path}`));
+  applyValidPlan({ plan }).forEach((report) => console.log(report));
   plan.violations.forEach((violation) => console.error(violation));
   return plan.violations.length === 0 ? SUCCESS_EXIT_CODE : FAILURE_EXIT_CODE;
 }

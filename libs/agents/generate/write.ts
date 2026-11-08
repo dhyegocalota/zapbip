@@ -34,7 +34,7 @@ function problemsOf(input: { plan: GenerationPlan }): string[] {
   return [...staleLines, ...deletionLines];
 }
 
-function applyPlan(input: { plan: GenerationPlan }): string[] {
+function applyPlan(input: { plan: GenerationPlan }): { written: string[]; deleted: string[] } {
   const stalePaths = staleWritesOf(input);
   input.plan.writes
     .filter((write) => stalePaths.includes(write.path))
@@ -44,15 +44,17 @@ function applyPlan(input: { plan: GenerationPlan }): string[] {
     });
   const deletedPaths = pendingDeletionsOf(input);
   deletedPaths.forEach((path) => rmSync(repositoryPath(path)));
-  return [...stalePaths, ...deletedPaths];
+  return { written: stalePaths, deleted: deletedPaths };
 }
 
 export function writePlan(input: { plan: GenerationPlan; mode: GenerationMode }): string[] {
   if (input.mode === GenerationMode.Check) return problemsOf(input);
-  return applyPlan(input);
+  const { written, deleted } = applyPlan(input);
+  return [...written, ...deleted];
 }
 
 export function applyValidPlan(input: { plan: GenerationPlan }): string[] {
   if (input.plan.violations.length > 0) return [];
-  return writePlan({ plan: input.plan, mode: GenerationMode.Write });
+  const { written, deleted } = applyPlan(input);
+  return [...written.map((path) => `wrote ${path}`), ...deleted.map((path) => `deleted ${path}`)];
 }
