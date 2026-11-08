@@ -22,6 +22,7 @@ const SPARKLINE_PATTERN = /<svg class="sparkline"/g;
 const ARROW_LINK_PATTERN = /<a [^>]*button-arrow/g;
 const FIGURE_PATTERN = /<p class="tile-figure">(\d+)<span class="tile-unit">([^<]+)<\/span><\/p>/;
 const LIVE_DOT_BEFORE_WORD_PATTERN = /<span class="state-badge state-active"><span class="live-dot" aria-hidden="true"><\/span>/;
+const HERO_CARD_PATTERN = /class="card hero-card"/g;
 const COUNTS = { pending: 1, active: 2, closed: 3, disabled: 4 };
 const NO_COUNTS = { pending: 0, active: 0, closed: 0, disabled: 0 };
 const AUDIT_ROW = {
@@ -160,5 +161,22 @@ describe('state badge live dot', () => {
     [WhatsAppNumberState.Pending, WhatsAppNumberState.Closed, WhatsAppNumberState.Disabled].forEach((state) =>
       expect(String(StateBadge({ locale: PAGE.locale, state }))).not.toContain('live-dot'),
     );
+  });
+});
+
+describe('number detail hero card and live dot', () => {
+  it.each([WhatsAppNumberState.Pending, WhatsAppNumberState.Active, WhatsAppNumberState.Disabled])(
+    'makes the summary the only hero card of a %s number',
+    (state) => {
+      const html = detailHtml({ state, verifiedAt: NOW });
+      expect(html.match(HERO_CARD_PATTERN)).toHaveLength(1);
+      expect(html).toMatch(/<section class="card hero-card" aria-labelledby="summary-title">/);
+    },
+  );
+
+  it('shows a live dot for an active number and none for a pending or closed one', () => {
+    expect(detailHtml({ state: WhatsAppNumberState.Active, verifiedAt: NOW })).toContain('live-dot');
+    expect(detailHtml({ state: WhatsAppNumberState.Pending, verifiedAt: null })).not.toContain('live-dot');
+    expect(detailHtml({ state: WhatsAppNumberState.Closed, verifiedAt: NOW })).not.toContain('live-dot');
   });
 });
