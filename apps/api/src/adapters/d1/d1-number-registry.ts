@@ -44,6 +44,8 @@ const RECORD_COLUMNS =
 const FIND_NUMBER_STATEMENT = 'SELECT ' + RECORD_COLUMNS + ' FROM whatsapp_numbers WHERE id = ?';
 const TRANSITION_STATEMENT = 'UPDATE whatsapp_numbers SET state = ?, updated_at = ? WHERE id = ? AND state = ?';
 const FIND_FIRST_TWO_STATEMENT = 'SELECT ' + OUTBOUND_COLUMNS + ' FROM whatsapp_numbers ORDER BY created_at, id LIMIT 2';
+const FIND_START_DISPLAY_NUMBER_STATEMENT =
+  'SELECT display_number AS displayNumber FROM whatsapp_numbers WHERE state = ? ORDER BY created_at, id LIMIT 1';
 
 function registrationFailureOf(input: { error: unknown }): unknown {
   const conflict = conflictOf({ error: input.error });
@@ -196,6 +198,15 @@ export class D1NumberRegistry implements NumberRegistry {
     if (row === undefined) throw new Error('no WhatsApp number is registered');
     if (other !== undefined) throw new Error('more than one WhatsApp number is registered');
     return this.openOutbound({ row });
+  }
+
+  async findStartDisplayNumber(): Promise<string | null> {
+    const row = await this.database
+      .prepare(FIND_START_DISPLAY_NUMBER_STATEMENT)
+      .bind(WhatsAppNumberState.Active)
+      .first<{ displayNumber: string }>();
+    if (row === null) return null;
+    return row.displayNumber;
   }
 
   private async openOutbound(input: { row: OutboundRow }): Promise<OutboundNumber> {
