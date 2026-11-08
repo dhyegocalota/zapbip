@@ -61,6 +61,7 @@ enum PurposeViolation {
   CodeSpan = 'code span',
   FencedBlock = 'fenced block',
   IndentedBlock = 'indented block',
+  PreformattedBlock = 'preformatted block',
 }
 
 function pathOf(target: string): string {
@@ -155,11 +156,18 @@ describe('delivery documents', () => {
     ['an inline code element', 'Run <code>pnpm test</code>.', [PurposeViolation.CodeSpan]],
     ['an anchor to a file', '<a href="../docs/agents/hermes.mdx">page</a>', ['../docs/agents/hermes.mdx']],
     ['an inline code element with an attribute', 'Run <code class="x">pnpm test</code>.', [PurposeViolation.CodeSpan]],
-    ['a preformatted element', '<pre>pnpm test</pre>', [PurposeViolation.FencedBlock]],
+    ['a preformatted element', '<pre>pnpm test</pre>', [PurposeViolation.PreformattedBlock]],
     ['an anchor to a file with single quotes', "<a href='../docs/agents/hermes.mdx'>page</a>", ['../docs/agents/hermes.mdx']],
-    ['an autolink to a file', '<../docs/agents/hermes.mdx>', ['../docs/agents/hermes.mdx']],
+    ['a bracketed path', '<../docs/agents/hermes.mdx>', ['../docs/agents/hermes.mdx']],
+    ['an anchor with spaces around the equals sign', '<a href = "../docs/agents/hermes.mdx">page</a>', ['../docs/agents/hermes.mdx']],
+    ['an anchor with an unquoted target', '<a href=../docs/agents/hermes.mdx>page</a>', ['../docs/agents/hermes.mdx']],
+    ['a link with a single-quoted title', "[page](../docs/agents/hermes.mdx 'Hermes')", ['../docs/agents/hermes.mdx']],
+    ['a link with a parenthesised title', '[page](../docs/agents/hermes.mdx (Hermes))', ['../docs/agents/hermes.mdx']],
+    ['a link with spaces inside the parentheses', '[page]( ../docs/agents/hermes.mdx )', ['../docs/agents/hermes.mdx']],
     ['a tilde fence', '~~~\ncode\n~~~', [PurposeViolation.FencedBlock]],
+    ['an unclosed tilde fence', '~~~\ncode', [PurposeViolation.FencedBlock]],
     ['an indented code block', 'Prose.\n\n    pnpm test\n', [PurposeViolation.IndentedBlock]],
+    ['an indented code block of five spaces', 'Prose.\n\n     pnpm test\n', [PurposeViolation.IndentedBlock]],
     ['a code span across a line break', 'Run `pnpm\ntest` now.', [PurposeViolation.CodeSpan]],
   ])('%s is reported', (_name, text, expected) => {
     expect(purposeViolations(text)).toEqual(expected);
@@ -168,8 +176,14 @@ describe('delivery documents', () => {
   test.each([
     ['a folder whose name contains a dot', '[the core](../core.v2/)'],
     ['a protocol-relative URL', '[site](//example.com/page.html)'],
+    ['a mailbox in angle brackets', '<owner@example.com>'],
+    ['a footnote definition', '[^1]: See.'],
   ])('%s is not reported', (_name, text) => {
     expect(purposeViolations(text)).toEqual([]);
+  });
+
+  test('a link with a single-quoted title is checked like any other link', () => {
+    expect(brokenTargets({ document: README_FILE, text: "[missing](no-such-file.md 'Title')" })).toEqual(['no-such-file.md']);
   });
 
   test('a fixture README under a package is not a workspace package', () => {
