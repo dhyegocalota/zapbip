@@ -62,7 +62,7 @@ export function NumberDetailPage(props: NumberDetailPageProps) {
         <Notice variant={NoticeVariant.Warning} locale={locale} message={translate(BackofficeCopyKey.NumberDisabledWarning)} />
       ) : null}
       <div class="detail-grid">
-        <section class="card" aria-labelledby="summary-title">
+        <section class="card hero-card" aria-labelledby="summary-title">
           <h2 id="summary-title">{translate(BackofficeCopyKey.NumberSummaryTitle)}</h2>
           <dl class="key-value">
             <dt>{translate(BackofficeCopyKey.NumberDisplayNumber)}</dt>
