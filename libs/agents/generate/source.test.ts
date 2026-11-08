@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
@@ -41,9 +41,16 @@ describe('trackedTextFiles', () => {
     rmSync(outside, { recursive: true, force: true });
   });
 
-  test('fails on a listed path that cannot be read', () => {
+  test('skips a tracked file deleted from the working tree', () => {
     track({ path: 'gone.ts', text: 'x' });
+    track({ path: 'kept.ts', text: 'kept' });
     rmSync(join(root, 'gone.ts'));
-    expect(() => trackedTextFiles({ root })).toThrow('gone.ts');
+    expect(trackedTextFiles({ root }).map((file) => file.path)).toEqual(['kept.ts']);
+  });
+
+  test('fails on a listed path that cannot be read', () => {
+    track({ path: 'locked.ts', text: 'x' });
+    chmodSync(join(root, 'locked.ts'), 0);
+    expect(() => trackedTextFiles({ root })).toThrow('locked.ts');
   });
 });
