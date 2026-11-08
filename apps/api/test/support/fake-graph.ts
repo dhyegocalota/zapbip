@@ -127,7 +127,7 @@ export async function startFakeGraph(input: { port: number }): Promise<{ port: n
 export class FakeGraph {
   readonly baseUrl: string;
 
-  constructor(input: { baseUrl: string }) {
+  constructor(input: { baseUrl: string; resourceIds?: string[] }) {
     this.baseUrl = input.baseUrl;
   }
 
