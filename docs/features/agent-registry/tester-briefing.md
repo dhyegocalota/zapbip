@@ -73,3 +73,41 @@ Pins (green on landing): the freshness test and the violations test (3a2efcb6). 
 - G1 asserts the rendered `## Fixture Agent` sections in the planned `install.<locale>.md` and in `generated/install.ts`; the `renderInstallPage` leg, the guide-parity, install-section and listen-token legs belong to L2 and L4.
 - `src/checks/boundaries.ts` (B1 to B4) has no step in L1 and is not written. The generated `verify.yml` regions are L5b. `agents:new` and `agents:mentions` are Step 28 (L4) and throw `is not implemented`.
 - Connector snippets are written only while a connector agent exists; removing the last one leaves the snippet files in place.
+
+## L2 install (developer-l2)
+
+### What changed and where
+
+- `libs/agents/supported/<id>/{install,install-copy,install.test}.ts` and `install.<locale>.md` for the ten install agents (`install.standby.<locale>.md` for grok-web). `install.ts` exports `install: AgentInstall`; `install-copy.ts` exports `<ID>_PRODUCT`, `<ID>_COPY` and, for codex and chatgpt, the per-agent constants `CODEX_TOOL_TIMEOUT_SECONDS` and `CHATGPT_POLL_INTERVAL_MINUTES` (copied; L5b deletes the originals in `libs/types`).
+- `supported/{hermes,openclaw}/plugin.ts` export `installCommand` (no `plugin` object yet, L5b completes it); `src/plugins.ts` exports `HERMES_INSTALL_COMMAND` and `OPENCLAW_INSTALL_COMMAND` from them; `@zapbip/core` no longer exports either.
+- `libs/core/src/install`: `renderInstallPage` requires `sections: InstallPageSection[]`; `formatSection` takes `{ productName, productDescription, wakeNote, steps }`; the index exports `connector-commands` and `section-format` for the agent folders. Removed: `install-products.ts`, `prompts/index.ts`, `wake-notes.ts`, `snapshots/`, the per-agent section modules and their tests.
+- `libs/agents/src/checks/{install-sections,guide-parity}.ts` (+ tests) iterate `AGENT_INSTALLS`; `src/install.ts` exports `AGENT_INSTALLS` and `INSTALL_PAGE_SECTIONS`; `apps/api/src/routes/install-page.ts` passes `INSTALL_PAGE_SECTIONS`.
+- Step 13b: `legacy-order.ts` and `OrderSurface` are gone; `agentOrderOf({ definitions })` is rung then lower-case English name. `golden/order.json` is the only change under `golden/`.
+
+### How to run
+
+`pnpm --filter @zapbip/agents test:unit`, `pnpm --filter @zapbip/core test:unit`, `pnpm --filter @zapbip/repository-shape test:unit`, the api unit `install-set-wake-modes.test.ts`, the api integration `install-page.test.ts`.
+
+### Red then green
+
+| Test | Red commit | Printed | Green commit |
+|---|---|---|---|
+| `supported/<id>/install.test.ts` (10 files) | f2308751 | `Error: cursor install section is not implemented` (and the same for hermes, grok-web, openclaw, gemini-cli, chatgpt, grok-bot, codex, claude-code, claude-ai) | 9c5fc651 |
+| `render-install-page.test.ts::renders only the sections it is given` | b41ec9b4 | `AssertionError: expected ... to contain 'Find which product you run in: First ...'` | 9c5fc651 |
+| `checks/install-sections.test.ts`, `checks/guide-parity.test.ts` (22 tests) | 418ae776 | `Error: installSectionViolationsOf is not implemented`, `Error: guideParityViolationsOf is not implemented` | a47b5018 |
+| `generate/order.test.ts`, `render-ids.test.ts`, `render-navigation.test.ts` (11 tests) | 2ab0a2b9 | `AssertionError` on the order lists | 8239e732 |
+
+### Hypotheses for the tester
+
+- H1. The raw install page (not only the canonical one) is byte-identical to `main` for both locales, with and without a standby, until Step 13b; compared by rendering `main` and this branch (`installCommand` text, wake notes and copy moved word for word).
+- H2. After 13b the only differences are the order of the install sections and of the "Identify your product" list, the Grok Bot and claude.ai rows of the matrix snippets, and the `Agents` and `IAs` lists of `docs.json`.
+- H3. Removing the folder of an install agent removes its section from the page, its enum members and its generated import; adding `testing/fixture-agent` does the same in reverse (G1 test).
+
+### Gaps and deviations
+
+- Steps 12 and 13 have no red of their own in the plan. Step 13 got one (the checks are new files); between 9c5fc651 and a47b5018 the old `sections.test.ts` and `guide-parity.test.ts` are gone and the registry checks are not there yet.
+- Step 10 copies the snapshots into the agent folders, so `install.test.ts` uses `toMatchFileSnapshot` on the generated `install.<locale>.md`; the freshness pin is red between f2308751 and 9c5fc651 because the stubs throw when the planner renders them.
+- The plan names `libs/agents/testing/golden/render.ts`; the file is `golden-sources.ts` (its `installPageOf` passes `INSTALL_PAGE_SECTIONS`). In 13b it reads the matrix from the generated snippets instead of the hand-written matrix pages, so the order golden does not depend on L3 Step 16.
+- Touched files outside the L2 row: `generate/discover.test.ts` (cursor now also has `install.ts`), `generate/{agent,render-*}.ts` and their tests (the `surface` parameter is gone), `src/checks/registry.ts` (`violationIf` exported), `testing/fixture-agent/install-copy.ts` (Portuguese stop check in English, like every real section), `testing/definitions.test.ts`, new `testing/install-fixtures.ts`.
+- `connectCommand` still takes `InstallClient` from `@zapbip/types` until L5a.
+- Wake notes are repeated as literals in each `install.test.ts` (the test oracle), so a note edit needs two edits on purpose.
