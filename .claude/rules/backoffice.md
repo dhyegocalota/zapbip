@@ -2,7 +2,12 @@
 paths:
   - "apps/api/src/backoffice/**"
   - "apps/api/src/numbers/**"
-  - "apps/api/src/routes/start-link*.ts"
+  - "apps/api/src/routes/start-link.ts"
+  - "apps/api/src/routes/start-link-copy.ts"
+  - "apps/api/src/routes/start-link-language.ts"
+  - "apps/api/src/routes/start-link-page.ts"
+  - "apps/api/src/routes/start-link-style.ts"
+  - "apps/api/src/routes/start-link-target.ts"
 ---
 
 # Backoffice facts
