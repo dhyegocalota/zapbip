@@ -13,31 +13,32 @@ Every checkbox states the input and the exact expected outcome. A ticked box car
 - [x] Probe: text with a fenced block — input: a README with a fenced block; expected: one violation — evidence: G1 probe run: ['fenced block']
 - [x] Probe: a link to a file — input: `[page](../docs/agents/hermes.mdx)`; expected: one violation — evidence: G1 probe run: returns the target path
 - [x] Probe: a link to a folder with an anchor-free path and plain prose — input: `[the core](../core)`; expected: no violation — evidence: G1 probe run: []
-- [x] Every workspace package README (`apps/*`, `libs/*`, `tools/*`) has no violation — expected: `[]` for each — evidence: shape suite: 9 purpose-only cases green; planted code span and file link in libs/types/README.md went red, reverted
-- [x] The existing link check passes for every README — expected: no broken target — evidence: shape suite green over every *README.md
+- [ ] Probes: a reference-style link, a link with a title, an HTML anchor to a file, an inline `<code>` element, a tilde fence, an indented block and a code span across a line break are each reported; a folder whose name contains a dot and a `//host` URL are not — expected: exactly the listed violations
+- [ ] Every workspace package README (`apps/*`, `libs/*`, `tools/*`) has no violation — expected: `[]` for each
+- [ ] The existing link check passes for every README — expected: no broken target
 - [x] `feature-status.test.ts` and `document-indexes.test.ts` pass with the new feature row — evidence: shape suite green, 36 files / 695 tests
 
 ## README against code
 
-One box per README, read by a fresh tester against the code on `main` after `feat/agent-registry` merged. Expected for each: every sentence is true, nothing the code does is missing from the purpose, and nothing stale remains.
+One box per README, read by a fresh tester against the code on the stack over `feat/agent-registry` at 2a5cbdc2. Expected for each: every sentence is true, nothing the code does is missing from the purpose, and nothing stale remains.
 
 - [x] `README.md` — no "Early stage"; links `apps`, `libs`, `docs/features` and `docs/runbooks`; keeps "zapbip is a product of Logic Bit" — evidence: read against AGENTS.md, docs/runbooks; no Early stage; Logic Bit line present
-- [x] `apps/api/README.md` — names the MCP tools, the per-account Durable Object, WhatsApp in and out, the install pages, the scheduled upkeep, the backoffice and the fake channel — evidence: each clause maps to src/mcp, adapters, routes/connector.ts, install, routes/package.ts, operations/scheduled.ts, backoffice, adapters/fake
-- [x] `apps/connector/README.md` — matches the connector commands and the runtimes the registry supplies — evidence: cli.ts commands, CONNECTOR_RUNTIMES from @zapbip/agents/connector, channel.ts notification
+- [ ] `apps/api/README.md` — names the MCP tools, the per-account Durable Object, WhatsApp in and out, the install pages, the scheduled upkeep, the backoffice and the fake channel
+- [ ] `apps/connector/README.md` — matches the connector commands and the runtimes the registry supplies
 - [x] `apps/docs/README.md` — bilingual, agent pages sourced as the registry sources them, no product code — evidence: apps/docs/agents/*.mdx generated from libs/agents/supported/*/page.*.mdx; pt-br tree present
 - [ ] `apps/hermes-plugin/README.md` — no file pointer; matches the plugin behaviour
 - [x] `apps/openclaw-plugin/README.md` — matches the plugin behaviour and its location — evidence: src/channel.ts, send-message.ts; folder still apps/openclaw-plugin
-- [x] `libs/agents/README.md` — matches the folders under the catalogue and the generator — evidence: supported/ has 11 agent folders, generate/ exists
+- [ ] `libs/agents/README.md` — matches the folders under the catalogue and the generator
 - [ ] `libs/core/README.md` — lists the rules the core owns today and holds no supported agent's install copy
-- [x] `libs/types/README.md` — lists the vocabulary the package exports today, and says it holds no runtime dependency — evidence: enums.ts, connector.ts, channel-plugin.ts, constants.ts; package.json has devDependencies only
-- [x] `tools/repository-shape/README.md` — categories, not a list, and matches the suite — evidence: categories match 36 test files; shape gate in scripts/verify.sh
+- [ ] `libs/types/README.md` — lists the vocabulary the package exports today, and says it holds no runtime dependency
+- [ ] `tools/repository-shape/README.md` — categories, not a list, and matches the suite
 - [x] `.agents/skills/README.md` — the vendored and in-house lists match the skill folders; the two invocation forms are right — evidence: 14 skill folders = 7 vendored + 7 in-house; .claude/skills symlink
 - [x] `docs/adr`, `docs/features`, `docs/learnings`, `docs/runbooks`, `docs/scenarios` READMEs — indexes complete; unchanged unless the re-audit says otherwise — evidence: every ADR, learning, runbook, scenario and feature folder is indexed
-- [x] Concision: each package README is one paragraph with no command, path, configuration or symbol — evidence: one paragraph each, 36-113 words, no code span or file link; apps/connector (113) and apps/api (95) are the longest
+- [ ] Concision: each package README is one paragraph with no command, path, configuration or symbol
 
 ## Gate
 
-- [x] `pnpm --filter @zapbip/repository-shape test:unit` — expected: all files pass, including the new rows — evidence: 36 files, 695 tests passed; log scratchpad/test-results/readme-review/shape.log
+- [ ] `pnpm --filter @zapbip/repository-shape test:unit` — expected: all files pass, including the new rows
 
 ## Edge cases found during execution
 

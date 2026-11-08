@@ -18,12 +18,12 @@ The owner ordered: "review all READMEs: concise but correct." The audit of origi
 - `tools/repository-shape` lists categories that went stale; a category is shorter than a list that rots.
 - `.agents/skills` restates each skill's own front matter in about 230 words.
 
-`feat/agent-registry` rewrites the ground under several of these: it adds `libs/agents` (the catalogue of supported agents, one folder per agent holding its install copy, docs page and connector runtime) and moves install copy out of the core. A README written now would be wrong again the day that branch merges, so the README edits wait for it.
+`feat/agent-registry` rewrites the ground under several of these: it adds `libs/agents` (the catalogue of supported agents, one folder per agent holding its install copy, docs page and connector runtime) and moves install copy out of the core. A README written now would be wrong again the day that branch merges, so the README edits are stacked on that branch and re-read when it merges.
 
 ## Goals
 
-- Every README in the repository reads true against the code on `main` after `feat/agent-registry` merges: the root, `apps/api`, `apps/connector`, `apps/docs`, `apps/hermes-plugin`, `apps/openclaw-plugin`, `libs/agents`, `libs/core`, `libs/types`, `tools/repository-shape`, `.agents/skills`, and the five index READMEs under `docs/` (`adr`, `features`, `learnings`, `runbooks`, `scenarios`).
-- Every workspace package README states purpose only: no commands, configuration, file paths, symbols or code spans, and links only to folders, so a rename fails the link check.
+- Every README in the repository reads true against the code of `feat/agent-registry` at 2a5cbdc2, which this work is stacked on, and is re-read against `main` when the stack merges: the root, `apps/api`, `apps/connector`, `apps/docs`, `apps/hermes-plugin`, `apps/openclaw-plugin`, `libs/agents`, `libs/core`, `libs/types`, `tools/repository-shape`, `.agents/skills`, and the five index READMEs under `docs/` (`adr`, `features`, `learnings`, `runbooks`, `scenarios`).
+- Every workspace package README states purpose only: no commands, configuration, file paths, symbols or code spans, and links only to folders, so a rename fails the link check. The test reads Markdown links (inline, with a title and reference-style), HTML anchors and `<code>` elements, code spans (also across a line break), backtick and tilde fences and indented blocks. A file without an extension and a path written as bare prose are out of scope. A fixture README below a package, such as `libs/agents/testing/fixture-plugin-package/README.md`, is not a workspace package and is excluded.
 - No stale claim survives: no "Early stage", no list that a new feature makes incomplete, no mechanism detail the code already shows.
 - Each README is short: one paragraph, as many sentences as the purpose needs.
 - A repository-shape test enforces the purpose-only rule on workspace package READMEs so it cannot regress.
@@ -31,7 +31,6 @@ The owner ordered: "review all READMEs: concise but correct." The audit of origi
 ## Non-goals
 
 - Rewriting the `docs/*` index READMEs beyond the rows their own shape tests force; the audit found them correct.
-- Moving the Hermes wheel test or parsing out of `libs/types` (noted by the audit, a separate refactor).
 - Changing the `.agents/skills` README rules: it is not a workspace package, so it may name file paths, and it only gets shorter.
 
 ## Design
@@ -60,7 +59,7 @@ Texts to start from (the re-audit may amend them; the audit file is the source a
 
 ### The purpose-only test
 
-Extend `tools/repository-shape/src/delivery-docs.test.ts`, which already holds "every workspace package has a README" and the link check; no new file. Add a pure `purposeViolations(text)` helper and a `test.each` over `workspacePackages()` READMEs that asserts it returns `[]`. A violation is a code span, a fenced block, or a relative link whose target is not a folder (has a file extension). Two probe cases prove the helper in both directions, as the existing link probes do. Red first: the probes fail against a stub, and the real run is red on `apps/hermes-plugin` until its README is fixed.
+Extend `tools/repository-shape/src/delivery-docs.test.ts`, which already holds "every workspace package has a README" and the link check; no new file. Add a pure `purposeViolations(text)` helper and a `test.each` over `workspacePackages()` READMEs that asserts it returns `[]`. A violation is a code span, a fenced block, or a relative link whose target is not a folder (has a file extension). Two probe cases prove the helper in both directions, as the existing link probes do. The first probes landed with the implemented helper, so they are a pin; the red run was the real run over `apps/hermes-plugin`, which held a file link until its README was fixed. The detection gaps listed in Goals were each added red first.
 
 ### Failure handling
 

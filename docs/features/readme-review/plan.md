@@ -4,7 +4,7 @@
 **Tier:** 🟢 small
 **Seam:** the `README.md` files and `tools/repository-shape/src/delivery-docs.test.ts`
 **Assumptions (decided, owner can override):**
-- The README edits start only after `feat/agent-registry` has merged into `main`.
+- The README edits are stacked on `feat/agent-registry` at 2a5cbdc2 and are re-read against `main` when the stack merges (Step 13).
 - The audit texts are the starting point; the re-audit may amend them.
 - The purpose-only test lives in `delivery-docs.test.ts`.
 
@@ -27,12 +27,12 @@ Author this list with every box empty. A sub-agent ticks its own line. A wrong s
 
 ### Re-audit
 
-- [x] **Step 1:** after `feat/agent-registry` merges, merge `origin/main` into this branch, then read every README against the code on `main` and record the findings and the final texts in this plan, one block per README. Include the READMEs the audit did not cover (`libs/agents`) and any added since. — evidence: re-audit on `feat/agent-registry` at 2a5cbdc2, findings below
+- [x] **Step 1:** on the stack over `feat/agent-registry` at 2a5cbdc2, read every README against the code and record the findings and the final texts in this plan, one block per README. Include the READMEs the audit did not cover (`libs/agents`) and any added since. — evidence: re-audit on `feat/agent-registry` at 2a5cbdc2, findings below
 
 ### G1
 
-- [x] **Step 2:** red: `purposeViolations` probes (a code span, a fenced block and a file link are reported; folder links and plain prose are not) and the `test.each` over workspace package READMEs, with a stub that throws `purposeViolations is not implemented`; commit alone — evidence: cece21ed
-- [x] **Step 3:** implement `purposeViolations`; the probes go green and the real run stays red only on READMEs still violating the rule — evidence: cece21ed (helper) and e3493cb7 (apps/hermes-plugin README)
+- [x] ~~**Step 2:** red: `purposeViolations` probes (a code span, a fenced block and a file link are reported; folder links and plain prose are not) and the `test.each` over workspace package READMEs, with a stub that throws `purposeViolations is not implemented`; commit alone~~ — struck through: it landed implemented, so the probes are a pin; the red run is the real hermes run — evidence: 704f53db
+- [x] **Step 3:** implement `purposeViolations`; the probes go green and the real run stays red only on READMEs still violating the rule — evidence: 704f53db (helper) and 0a6e25c7 (apps/hermes-plugin README)
 
 ### G2
 
@@ -43,31 +43,33 @@ Author this list with every box empty. A sub-agent ticks its own line. A wrong s
 ### G3
 
 - [x] **Step 7:** `apps/api/README.md` — evidence: 5eb0c522
-- [x] **Step 8:** `apps/hermes-plugin/README.md`: drop the file pointer — evidence: e3493cb7
+- [x] **Step 8:** `apps/hermes-plugin/README.md`: drop the file pointer — evidence: 0a6e25c7
 - [x] **Step 9:** `apps/connector/README.md`, `apps/docs/README.md`, `apps/openclaw-plugin/README.md`: only the registry-driven rewording, or confirm unchanged — evidence: 5eb0c522 (docs clause); connector and openclaw-plugin confirmed unchanged
 
 ### G4
 
 - [x] **Step 10:** `libs/core/README.md` — evidence: 737d59c1
 - [x] **Step 11:** `libs/types/README.md` — evidence: 737d59c1
-- [x] **Step 12:** `libs/agents/README.md`: confirm against the final folders; amend only if wrong — evidence: unchanged, `supported/` and `generate/` exist and match
+- [x] **Step 12:** `libs/agents/README.md`: confirm against the final folders; amend only if wrong — evidence: reworded in bd1b529a and again in the review round; `supported/` and `generate/` exist and match
+- [ ] **Step 13:** when the stack merges, re-read `libs/agents`, `libs/core` and `apps/connector` against `main` and amend the READMEs that no longer match
 
-### Re-audit findings (feat/agent-registry at 2a5cbdc2)
+### Re-audit findings (feat/agent-registry at 2a5cbdc2, updated through the review round)
 
 | README | Result | Why |
 |--------|--------|-----|
 | `README.md` | changed | "Early stage" was false; replaced, runbooks link added, Logic Bit line kept |
 | `.agents/skills/README.md` | changed | shortened; all 14 listed skills exist in the folder |
-| `tools/repository-shape/README.md` | changed | categories replace the stale list; the audit's "install guides" is now "agent registry" (`agent-registry.test.ts`, `agent-lifecycle.test.ts`) |
-| `apps/api/README.md` | changed | audit text kept; "Hermes plugin package" became "hosted plugin packages" because `routes/package.ts` serves the `hostedArtifacts` of every plugin in the registry; install pages exist in `install/install-page-adapter.ts`; upkeep in `operations/scheduled.ts` |
-| `apps/connector/README.md` | unchanged | already says agent-neutral "local AI session" and points at `libs/agents` for runtimes |
+| `tools/repository-shape/README.md` | changed | categories replace the stale list; adds the root entries, the agent surfaces and the registry (`agent-registry.test.ts`, `agent-surfaces.test.ts`) and says the agent lifecycle runs as its own gate (`verify-gates.tsv`) |
+| `apps/api/README.md` | changed | audit text kept, plus the account directory and media storage (D1 and R2); "Hermes plugin package" became "hosted plugin packages" because `routes/package.ts` serves the `hostedArtifacts` of every plugin in the registry; install pages exist in `install/install-page-adapter.ts`; upkeep in `operations/scheduled.ts` |
+| `apps/connector/README.md` | changed | "one runtime per supported agent" was false (11 agents, 2 connector runtimes); now "that runs on the owner's machine" |
 | `apps/docs/README.md` | changed | one clause: the agent pages (`apps/docs/agents/*.mdx`) are generated from the agent folders |
-| `apps/hermes-plugin/README.md` | unchanged | G1 fixed it; the plugin folder did not move |
+| `apps/hermes-plugin/README.md` | changed | G1 dropped the file pointer; bd1b529a says the Python adapter keeps its own copy of the shared names, pinned by a parity check to the TypeScript it mirrors |
 | `apps/openclaw-plugin/README.md` | unchanged | the folder did not move into `libs/agents` |
-| `libs/core/README.md` | changed | audit text amended: the install guides left core (it renders the page from the sections it is given and names no agent); account lifecycle and commands kept (`src/accounts`) |
-| `libs/types/README.md` | changed | audit text amended: connector and channel-plugin contracts stay (`connector.ts`, `channel-plugin.ts`); the Hermes wheel contract is no longer in `libs/types` and is not claimed; `libs/agents` joins the list of consumers |
-| `libs/agents/README.md` | unchanged | matches `supported/` and `generate/` |
+| `libs/core/README.md` | changed | audit text amended: the install guides left core (it renders the page from the sections it is given and holds no supported agent's install copy; `wake/wake-provider.ts` names pinned wake providers, so "names no agent" was false); account lifecycle, the whole wake of a sleeping agent, the connector frames (`inbox/connector-frames.ts`) and the agent rules (`agent-rules.ts`) named |
+| `libs/types/README.md` | changed | audit text amended: connector and channel-plugin contracts stay (`connector.ts`, `channel-plugin.ts`); the Hermes wheel contract is no longer in `libs/types` and is not claimed; `libs/agents` joins the list of consumers; "without importing each other" was false, so it says every package takes every shared name from one place |
+| `libs/agents/README.md` | changed | "never names an agent" was false for the same reason; the sentence about the core is dropped and the folder brings what zapbip needs to support the agent |
 | `docs/adr`, `docs/features`, `docs/learnings`, `docs/runbooks`, `docs/scenarios` | unchanged | test-pinned indexes; the runbooks list matches the folder |
+| `AGENTS.md` Layout | changed | lines for `apps/hermes-plugin` and `apps/openclaw-plugin` added; the only test touching the Layout checks the client fixtures line |
 
 ## Failure modes
 
