@@ -444,6 +444,15 @@ expect_match "doctor: the skipped folder is named on stderr" "$(cat "$injected_r
 [[ -e "$injected_root/PWNED" ]] && { echo "FAIL doctor: a plugin folder name was executed"; failures=$((failures + 1)); }
 rm -rf "$injected_root"
 
+escape_root=$(mktemp -d)
+mkdir -p "$escape_root/.agents/hooks" "$escape_root/apps/x"$'\e[2J'"-plugin"
+cp "$here/doctor.sh" "$escape_root/.agents/hooks/doctor.sh"
+touch "$escape_root/apps/x"$'\e[2J'"-plugin/requirements-dev.txt"
+stub_all
+(cd "$escape_root" && DOCTOR_UNAME=Darwin DOCTOR_PATH="$doctor_bin" DOCTOR_HOME="$doctor_home" "$escape_root/.agents/hooks/doctor.sh" --fix python >/dev/null 2>"$escape_root/stderr")
+expect_no_match "doctor: the skipped folder is printed without a raw escape" "$(cat "$escape_root/stderr")" $'\e'
+rm -rf "$escape_root"
+
 wrangler_fix='wrangler is logged in for this OS user; run `wrangler logout` and deploy with a scoped CLOUDFLARE_API_TOKEN exported only in your own shell'
 wrangler_warning_line='^wrangler \| warning \| warning \| lost: [^|]+ \| fix: wrangler is logged in for this OS user; run `wrangler logout` and deploy with a scoped CLOUDFLARE_API_TOKEN exported only in your own shell$'
 

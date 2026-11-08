@@ -145,4 +145,43 @@ describe('installSectionViolationsOf', () => {
       `other-agent: the product name ${fixtureInstall.productName} is also used by ${FIXTURE_ID}`,
     );
   });
+
+  test.each([
+    ['an html heading', '\n\n<h2>Other</h2>'],
+    ['an inline html heading', '\n\nText <h2>Other</h2>'],
+    ['a component heading', '\n\n<Heading level={2}>Other</Heading>'],
+    ['a marker without a space', '\n\n##Other'],
+    ['an unclosed fence', '\n\n```\n'],
+    ['an unclosed comment', '\n\n<!--'],
+  ])('refuses a section with %s', (_name, tail) => {
+    const entry = fixtureEntryEditing({ edit: (text) => `${text}${tail}` });
+    expect(installSectionViolationsOf({ entries: [entry] })).toContain(`${LABEL}: the section must hold exactly one heading`);
+  });
+
+  test.each([
+    ['a zero-width space', '\n\n\u200B## Other'],
+    ['a byte order mark', '\n\n\uFEFF## Other'],
+    ['a line separator', '\n\n\u2028## Other'],
+  ])('refuses a section with %s', (_name, tail) => {
+    const entry = fixtureEntryEditing({ edit: (text) => `${text}${tail}` });
+    expect(installSectionViolationsOf({ entries: [entry] })).toContain(`${LABEL}: the section must not hold format characters`);
+  });
+
+  test.each([
+    ['productName', 'Fixture\u200BAgent'],
+    ['productDescription', 'one\uFEFFline'],
+  ])('refuses a %s with a format character', (field, value) => {
+    const entry = { ...fixtureEntryRendering({ render: fixtureInstall.render }), install: { ...fixtureInstall, [field]: value } };
+    expect(installSectionViolationsOf({ entries: [entry] })).toContain(
+      `${FIXTURE_ID}: the ${field === 'productName' ? 'product name' : 'product description'} must not hold format characters`,
+    );
+  });
+
+  test.each(['fixture agent', 'Fixture  Agent', 'Fixture\u200B Agent', '\uFF26ixture Agent'])('refuses the lookalike product name %j', (productName) => {
+    const first = fixtureEntryEditing({ edit: (text) => text });
+    const second = { ...first, id: 'other-agent', install: { ...first.install, productName } };
+    expect(installSectionViolationsOf({ entries: [first, second] })).toContain(
+      `other-agent: the product name ${productName} is also used by ${FIXTURE_ID}`,
+    );
+  });
 });
