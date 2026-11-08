@@ -352,7 +352,127 @@ select {
   font-weight: 600;
 }
 
+main > .card,
+main > .figure-grid {
+  margin-top: var(--space-5);
+}
+
+.filter-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--space-3) var(--space-4);
+}
+
+.filter-form .field {
+  flex: 1 1 12rem;
+  margin-bottom: 0;
+}
+
+.figure-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: var(--space-4);
+}
+
+.figure {
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+}
+
+.figure p {
+  margin: 0;
+}
+
+.figure-label,
+.figure-freshness {
+  color: var(--color-text-muted);
+  font-size: var(--text-small);
+}
+
+.figure-value {
+  font-size: var(--text-figure);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.empty-text {
+  color: var(--color-text-muted);
+}
+
+.chart {
+  margin: 0 0 var(--space-4);
+}
+
+.chart-plot {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.bar-solid {
+  fill: var(--color-brand);
+}
+
+.bar-hatched {
+  stroke: var(--color-action);
+  stroke-width: 1;
+}
+
+.hatch-line {
+  stroke: var(--color-action);
+  stroke-width: 2;
+}
+
+.chart-baseline {
+  stroke: var(--color-text);
+  stroke-width: 1;
+}
+
+.chart-axis-label {
+  fill: var(--color-text-muted);
+  font-size: 11px;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  margin: var(--space-2) 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-small);
+}
+
+.chart details {
+  margin-top: var(--space-2);
+}
+
+.chart summary {
+  display: flex;
+  align-items: center;
+  min-height: var(--size-tap);
+  cursor: pointer;
+}
+
+.chart-reference {
+  stroke: var(--color-warning);
+  stroke-width: 1;
+  stroke-dasharray: 6 4;
+}
+
+.budget-warning {
+  color: var(--color-warning);
+  font-weight: 600;
+}
+
 @media (max-width: 40rem) {
+  .figure-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
   main {
     padding: var(--space-4);
   }

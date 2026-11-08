@@ -10,6 +10,8 @@ export enum BackofficeNotice {
   AccessTokenReplaced = 'AccessTokenReplaced',
   AppSecretReplaced = 'AppSecretReplaced',
   StateChanged = 'StateChanged',
+  MetricsPeriodInvalid = 'MetricsPeriodInvalid',
+  MetricsNumberNotFound = 'MetricsNumberNotFound',
 }
 
 export enum NoticeVariant {
@@ -29,6 +31,8 @@ export const NOTICE_VIEWS: Record<BackofficeNotice, { variant: NoticeVariant; co
   [BackofficeNotice.AccessTokenReplaced]: { variant: NoticeVariant.Success, copyKey: BackofficeCopyKey.NoticeAccessTokenReplaced },
   [BackofficeNotice.AppSecretReplaced]: { variant: NoticeVariant.Success, copyKey: BackofficeCopyKey.NoticeAppSecretReplaced },
   [BackofficeNotice.StateChanged]: { variant: NoticeVariant.Success, copyKey: BackofficeCopyKey.NoticeStateChanged },
+  [BackofficeNotice.MetricsPeriodInvalid]: { variant: NoticeVariant.Warning, copyKey: BackofficeCopyKey.NoticeMetricsPeriodInvalid },
+  [BackofficeNotice.MetricsNumberNotFound]: { variant: NoticeVariant.Warning, copyKey: BackofficeCopyKey.NoticeMetricsNumberNotFound },
 };
 
 const NOTICE_VALUES: string[] = Object.values(BackofficeNotice);

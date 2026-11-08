@@ -11,7 +11,7 @@ A test that advances the fake clock by an hour or more reads two meter or daily 
 The clock the test advances starts from `Date.now()`. A meter keyed by UTC day (`usage_meter`, `activity_meter`, `activity_daily`) splits the same activity over two days when the advance crosses midnight, so the number of rows and their counts depend on the hour the suite runs.
 
 ## Do
-Start the clock at a named instant with `pinClockAt` from `apps/api/test/support/pinned-clock.ts`. The instant is mid-day UTC (`MIDDAY_START`) and in the future, because a Durable Object alarm set in the past fires at once and the test finds none armed. A test that is about the day boundary starts at `SHORTLY_BEFORE_MIDNIGHT_START` on purpose and asserts the split.
+Start the clock at a named instant with `pinClockAt` from `apps/api/test/support/pinned-clock.ts`. The instant is mid-day UTC (`MIDDAY_START`) and in the future, because a Durable Object alarm set in the past fires at once and the test finds none armed. A test that is about the day boundary starts at `HALF_AN_HOUR_BEFORE_MIDNIGHT_START` on purpose and asserts the split.
 
 ## Anchor
 `apps/api/test/support/pinned-clock.ts`, `apps/api/test/integration/usage-in-object.test.ts` (red 76b3fa54), `apps/api/test/integration/activity-flush.test.ts`

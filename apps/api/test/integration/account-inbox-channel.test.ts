@@ -16,7 +16,7 @@ import { accountInboxStub, connectionOf, testEnv, whatsappTestEnv } from '../sup
 const ACCOUNT_ID = 'acc_channel';
 const UPGRADE_ACCOUNT_ID = 'acc_upgrade';
 const SEEDED_VERSIONS = [1, 2, 3, 5];
-const UPGRADED_VERSIONS = [4, 6, 7];
+const UPGRADED_VERSIONS = [4, 6, 7, 8];
 const USAGE_METER_TABLE = 'usage_meter';
 const LIST_USER_TABLES_STATEMENT =
   "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%'";

@@ -11,6 +11,12 @@ const BUSY_TIMEOUT_MILLISECONDS = 5_000;
 const OPERATOR_TABLE_PROBE = "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'backoffice_operator'";
 const RELEASE_OPERATOR_STATEMENTS = ['UPDATE backoffice_operator SET last_totp_step = 0, failed_attempts = 0, locked_until = NULL'];
 const CLEAR_REGISTRY_STATEMENTS = [
+  'DELETE FROM activity_daily',
+  'DELETE FROM usage_daily',
+  'DELETE FROM blocked_phones',
+  'DELETE FROM channel_restrictions',
+  'DELETE FROM connections',
+  'DELETE FROM accounts',
   'DELETE FROM whatsapp_numbers',
   'DELETE FROM meta_apps',
   'DELETE FROM backoffice_audit',
@@ -39,7 +45,7 @@ function openDatabase(): DatabaseSync {
   return operatorDatabase;
 }
 
-function execute(input: { statements: string[] }): void {
+export function execute(input: { statements: string[] }): void {
   const database = openDatabase();
   input.statements.forEach((statement) => database.exec(statement));
   database.close();
