@@ -132,6 +132,12 @@
   color: #5be39a;
 }
 
+.mdx-content > p,
+.mdx-content > ul,
+.mdx-content > ol {
+  max-width: 44rem;
+}
+
 .zapbip-typing span {
   opacity: 0.6;
 }
