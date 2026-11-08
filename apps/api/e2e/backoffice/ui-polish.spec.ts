@@ -26,6 +26,7 @@ const NARROW_KPI_COLUMNS = 2;
 const HEIGHT_TOLERANCE = 1;
 const MINIMUM_ACTION_GAP = 16;
 const MINIMUM_CARD_GAP = 24;
+const HIDDEN_LABEL_SIZE = 2;
 const MAXIMUM_CARD_PADDING = 56;
 const NAVIGATION_LINK_COUNT = 4;
 const DELTA_PATTERN = /a mais|a menos|Igual/;
@@ -141,6 +142,17 @@ test.describe('signed in', () => {
     const isOneColumn = new Set(sparklines.map((box) => Math.round(box.x))).size === 1;
     if (isOneColumn) return;
     expect(new Set(sparklines.map((box) => Math.round(box.y + box.height))).size).toBe(1);
+  });
+
+  test('names the Meta app select once visibly and keeps its accessible name', async ({ page }) => {
+    await page.goto('/numbers/new');
+    const name = copy({ key: BackofficeCopyKey.RegisterMetaAppLabel });
+    const select = page.getByLabel(name, { exact: true });
+    await expect(select).toHaveCount(1);
+    expect(await select.evaluate((element) => element.tagName)).toBe('SELECT');
+    const boxes = await Promise.all((await page.getByText(name, { exact: true }).all()).map((element) => element.boundingBox()));
+    const visibleBoxes = boxes.filter((box) => box !== null && box.width > HIDDEN_LABEL_SIZE);
+    expect(visibleBoxes).toHaveLength(1);
   });
 
   test('draws one sparkline in each of the three home cards', async ({ page }) => {
