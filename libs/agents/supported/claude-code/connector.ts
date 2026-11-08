@@ -10,6 +10,8 @@ import { WAKE_DIRECTORY_PREFIX } from '../../src/connector-support/wake-director
 type SessionFile = { sessionId: string; modifiedAtMs: number };
 
 const BINARY_NAME = 'claude';
+const HOME_FOLDER = '.claude';
+const HOME_VARIABLE = 'CLAUDE_CONFIG_DIR';
 const PROJECTS_FOLDER = 'projects';
 const SESSION_EXTENSION = '.jsonl';
 const NON_ALPHANUMERIC_PATTERN = /[^A-Za-z0-9]/g;
@@ -28,7 +30,7 @@ export function claudeProjectFolderName(input: { workingDirectory: string }): st
 }
 
 async function findNewestSessionId(input: SessionLookupInput): Promise<string | null> {
-  const folder = join(input.claudeConfigDirectory, PROJECTS_FOLDER, claudeProjectFolderName(input));
+  const folder = join(input.homeDirectory, PROJECTS_FOLDER, claudeProjectFolderName(input));
   const fileNames = await listDirectory({ directory: folder, recursive: false });
   const candidateIds = fileNames
     .filter((fileName) => fileName.endsWith(SESSION_EXTENSION))
@@ -63,6 +65,8 @@ async function prepareIsolation(input: WakeIsolationInput): Promise<WakeIsolatio
 
 export const runtime: AgentConnectorRuntime = {
   binaryName: BINARY_NAME,
+  homeFolder: HOME_FOLDER,
+  homeVariable: HOME_VARIABLE,
   findNewestSessionId,
   resumeArguments,
   newSessionArguments: null,

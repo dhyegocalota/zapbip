@@ -2,6 +2,8 @@ import { readdir } from 'node:fs/promises';
 import type { AgentConnectorRuntime, SessionLookupInput } from '../../src/contract';
 
 const BINARY_NAME = 'fixture-binary';
+const HOME_FOLDER = '.fixture-home';
+const HOME_VARIABLE = 'FIXTURE_HOME';
 const SESSION_FOLDER = '.fixture-sessions';
 const REFUSAL_MESSAGE = 'fixture session is busy';
 
@@ -14,6 +16,8 @@ async function findNewestSessionId(input: SessionLookupInput): Promise<string | 
 
 export const runtime: AgentConnectorRuntime = {
   binaryName: BINARY_NAME,
+  homeFolder: HOME_FOLDER,
+  homeVariable: HOME_VARIABLE,
   findNewestSessionId,
   resumeArguments: ({ sessionId, isolationArguments }) => ['--resume', sessionId, ...isolationArguments],
   newSessionArguments: ({ isolationArguments }) => ['--new', ...isolationArguments],

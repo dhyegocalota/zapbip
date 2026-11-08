@@ -1,6 +1,5 @@
 import { createReadStream } from 'node:fs';
 import { readFile } from 'node:fs/promises';
-import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { createInterface } from 'node:readline';
 import { parse } from 'smol-toml';
@@ -34,7 +33,8 @@ const SAFETY_ARGUMENTS = [
   '-c',
   WEB_SEARCH_DISABLED_CONFIGURATION,
 ];
-const CODEX_CONFIG_FOLDER = '.codex';
+const HOME_FOLDER = '.codex';
+const HOME_VARIABLE = 'CODEX_HOME';
 const CODEX_CONFIG_FILE_NAME = 'config.toml';
 const CODEX_MANAGED_CONFIG_FILE_NAME = 'managed_config.toml';
 const CODEX_SYSTEM_CONFIG_DIRECTORY = '/etc/codex';
@@ -83,7 +83,7 @@ async function readSessionMeta(input: { path: string }): Promise<SessionMeta | n
 }
 
 async function findNewestSessionId(input: SessionLookupInput): Promise<string | null> {
-  const root = join(input.codexHome, SESSIONS_FOLDER);
+  const root = join(input.homeDirectory, SESSIONS_FOLDER);
   const relativePaths = await listDirectory({ directory: root, recursive: true });
   const newestRollouts = relativePaths
     .filter((relativePath) => ROLLOUT_PATTERN.test(relativePath))
@@ -189,17 +189,17 @@ function ancestorsOf(input: { directory: string }): string[] {
   return [input.directory, ...ancestorsOf({ directory: parent })];
 }
 
-function codexConfigFilesOf(input: { workingDirectory: string; codexHome: string; systemConfigDirectory: string }): ConfigFile[] {
-  const { workingDirectory, codexHome, systemConfigDirectory } = input;
+function codexConfigFilesOf(input: { workingDirectory: string; homeDirectory: string; systemConfigDirectory: string }): ConfigFile[] {
+  const { workingDirectory, homeDirectory, systemConfigDirectory } = input;
   const projectFiles = ancestorsOf({ directory: resolve(workingDirectory) }).map((directory) => ({
-    file: join(directory, CODEX_CONFIG_FOLDER, CODEX_CONFIG_FILE_NAME),
+    file: join(directory, HOME_FOLDER, CODEX_CONFIG_FILE_NAME),
     layer: CodexConfigLayer.Other,
   }));
   const layerFiles = [
     { file: join(systemConfigDirectory, CODEX_CONFIG_FILE_NAME), layer: CodexConfigLayer.Other },
     { file: join(systemConfigDirectory, CODEX_MANAGED_CONFIG_FILE_NAME), layer: CodexConfigLayer.Managed },
-    { file: join(codexHome, CODEX_CONFIG_FILE_NAME), layer: CodexConfigLayer.Home },
-    { file: join(codexHome, CODEX_MANAGED_CONFIG_FILE_NAME), layer: CodexConfigLayer.Managed },
+    { file: join(homeDirectory, CODEX_CONFIG_FILE_NAME), layer: CodexConfigLayer.Home },
+    { file: join(homeDirectory, CODEX_MANAGED_CONFIG_FILE_NAME), layer: CodexConfigLayer.Managed },
   ];
   return [...new Map([...layerFiles, ...projectFiles].map((configFile) => [configFile.file, configFile])).values()];
 }
@@ -237,12 +237,8 @@ function disabledWebSearchArguments(input: { profile: string }): string[] {
 }
 
 async function prepareIsolation(input: WakeIsolationInput): Promise<WakeIsolation> {
-  const {
-    workingDirectory,
-    codexHome = join(homedir(), CODEX_CONFIG_FOLDER),
-    systemConfigDirectory = CODEX_SYSTEM_CONFIG_DIRECTORY,
-  } = input;
-  const configFiles = codexConfigFilesOf({ workingDirectory, codexHome, systemConfigDirectory });
+  const { workingDirectory, homeDirectory, systemConfigDirectory = CODEX_SYSTEM_CONFIG_DIRECTORY } = input;
+  const configFiles = codexConfigFilesOf({ workingDirectory, homeDirectory, systemConfigDirectory });
   const findings = await Promise.all(configFiles.map((configFile) => findingsOfConfigFile({ configFile })));
   const references = findings.flatMap((finding) => finding.references);
   const profileNames = [...new Set(findings.flatMap((finding) => finding.profileNames))];
@@ -266,6 +262,8 @@ function newSessionArguments(input: { isolationArguments: string[] }): string[] 
 
 export const runtime: AgentConnectorRuntime = {
   binaryName: BINARY_NAME,
+  homeFolder: HOME_FOLDER,
+  homeVariable: HOME_VARIABLE,
   findNewestSessionId,
   resumeArguments,
   newSessionArguments,

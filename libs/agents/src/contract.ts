@@ -1,8 +1,13 @@
 import type { InstallSection } from '@zapbip/core';
 import type { DocsLanguage, WakeMode, WakeRung } from '@zapbip/types';
 
-export type SessionLookupInput = { workingDirectory: string; claudeConfigDirectory: string; codexHome: string };
-export type WakeIsolationInput = { connectionLink: string; workingDirectory: string; codexHome?: string; systemConfigDirectory?: string };
+export type SessionLookupInput = { workingDirectory: string; homeDirectory: string };
+export type WakeIsolationInput = {
+  connectionLink: string;
+  workingDirectory: string;
+  homeDirectory: string;
+  systemConfigDirectory?: string;
+};
 export type WakeIsolation = { isolationArguments: string[]; cleanup: () => Promise<void> };
 
 export type AgentDefinition = {
@@ -20,6 +25,8 @@ export type AgentInstall = { productName: string; productDescription: string; re
 
 export type AgentConnectorRuntime = {
   binaryName: string;
+  homeFolder: string;
+  homeVariable: string;
   findNewestSessionId: (input: SessionLookupInput) => Promise<string | null>;
   resumeArguments: (input: { sessionId: string; isolationArguments: string[] }) => string[];
   newSessionArguments: ((input: { isolationArguments: string[] }) => string[]) | null;

@@ -292,12 +292,7 @@ export async function runConnection(input: {
 
   async function resolveSession(): Promise<{ sessionSource: ConnectorSessionSource; sessionId: string | null }> {
     if (pinnedSessionId !== null) return { sessionSource: ConnectorSessionSource.Pinned, sessionId: pinnedSessionId };
-    const sessionId = await findNewestSessionId({
-      client,
-      workingDirectory,
-      claudeConfigDirectory: process.env.CLAUDE_CONFIG_DIR,
-      codexHome: process.env.CODEX_HOME,
-    });
+    const sessionId = await findNewestSessionId({ client, workingDirectory });
     return { sessionSource: ConnectorSessionSource.Newest, sessionId };
   }
 

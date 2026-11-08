@@ -28,16 +28,16 @@ const CODEX_SAFETY_ARGUMENTS = [
 ];
 
 let rootDirectory: string;
-let codexHome: string;
+let homeDirectory: string;
 let systemConfigDirectory: string;
 let workingDirectory: string;
 
 beforeEach(async () => {
   rootDirectory = await mkdtemp(join(tmpdir(), 'zapbip-codex-connector-'));
-  codexHome = join(rootDirectory, 'codex-home');
+  homeDirectory = join(rootDirectory, 'codex-home');
   workingDirectory = join(rootDirectory, 'project');
   systemConfigDirectory = join(rootDirectory, 'etc-codex');
-  await mkdir(codexHome, { recursive: true });
+  await mkdir(homeDirectory, { recursive: true });
   await mkdir(systemConfigDirectory, { recursive: true });
   await mkdir(join(workingDirectory, '.codex'), { recursive: true });
 });
@@ -63,8 +63,7 @@ async function writeRollout(input: { day: string; sessionId: string; workingDire
 function findCodexSession(input: { workingDirectory: string }): Promise<string | null> {
   return runtime.findNewestSessionId({
     workingDirectory: input.workingDirectory,
-    claudeConfigDirectory: join(rootDirectory, 'claude'),
-    codexHome: join(rootDirectory, 'codex'),
+    homeDirectory: join(rootDirectory, 'codex'),
   });
 }
 
@@ -173,7 +172,7 @@ describe('isolation', () => {
     return runtime.prepareIsolation({
       connectionLink: CONNECTION_LINK,
       workingDirectory,
-      codexHome,
+      homeDirectory,
       systemConfigDirectory,
     });
   }
@@ -194,7 +193,7 @@ describe('isolation', () => {
       '[mcp_servers.repo-tools]',
       'command = "r"',
     ];
-    await writeFile(join(codexHome, 'config.toml'), lines.join('\n'));
+    await writeFile(join(homeDirectory, 'config.toml'), lines.join('\n'));
     expect((await prepare()).isolationArguments).toEqual([
       '-c',
       'mcp_servers.deploy.enabled=false',
@@ -204,7 +203,7 @@ describe('isolation', () => {
   });
 
   test('also disables servers of the project config and dotted keys, once each', async () => {
-    await writeFile(join(codexHome, 'config.toml'), '[mcp_servers.deploy]\ncommand = "d"\n');
+    await writeFile(join(homeDirectory, 'config.toml'), '[mcp_servers.deploy]\ncommand = "d"\n');
     await writeFile(
       join(workingDirectory, '.codex', 'config.toml'),
       'mcp_servers.mail.command = "m"\n[mcp_servers.deploy]\ncommand = "d"\n',
@@ -220,7 +219,7 @@ describe('isolation', () => {
   test.each(['[mcp_servers."mail.box"]', '[profiles."night shift".mcp_servers.mail]', 'mcp_servers = { "a b" = { command = "m" } }'])(
     'refuses a server or profile name that is not a bare key: %s',
     async (declaration) => {
-      await writeFile(join(codexHome, 'config.toml'), `${declaration}\ncommand = "m"\n`);
+      await writeFile(join(homeDirectory, 'config.toml'), `${declaration}\ncommand = "m"\n`);
       await expect(prepare()).rejects.toBeInstanceOf(WakeIsolationRefusedError);
     },
   );
@@ -237,7 +236,7 @@ describe('isolation', () => {
   });
 
   test.each([
-    ['the CODEX_HOME managed config', () => join(codexHome, 'managed_config.toml')],
+    ['the CODEX_HOME managed config', () => join(homeDirectory, 'managed_config.toml')],
     ['the system managed config', () => join(systemConfigDirectory, 'managed_config.toml')],
   ])('refuses the wake when %s declares a server other than zapbip', async (_name, fileOf) => {
     await writeFile(fileOf(), '[mcp_servers.policy]\ncommand = "p"\n');
@@ -264,7 +263,7 @@ describe('isolation', () => {
     '[features]\nplugins = true',
     '[profiles.work]\nmodel = "x"',
   ])('refuses the wake when a managed config sets a key outside the allowlist: %s', async (declaration) => {
-    await writeFile(join(codexHome, 'managed_config.toml'), `${declaration}\n`);
+    await writeFile(join(homeDirectory, 'managed_config.toml'), `${declaration}\n`);
     await expect(prepare()).rejects.toBeInstanceOf(WakeIsolationRefusedError);
   });
 
@@ -275,25 +274,25 @@ describe('isolation', () => {
     '[profiles.work.features]\nplugins = true',
   ])('refuses the wake when a profile sets what cannot be overridden: %s', async (declaration) => {
     const header = declaration.startsWith('[') ? '' : '[profiles.work]\n';
-    await writeFile(join(codexHome, 'config.toml'), `${header}${declaration}\n`);
+    await writeFile(join(homeDirectory, 'config.toml'), `${header}${declaration}\n`);
     await expect(prepare()).rejects.toBeInstanceOf(WakeIsolationRefusedError);
   });
 
   test.each(['model_provider = "other"', 'unknown_future_key = 1', 'model_reasoning_effort = "high"\nservice_tier = "fast"'])(
     'refuses the wake when a profile sets a key outside the allowlist: %s',
     async (declaration) => {
-      await writeFile(join(codexHome, 'config.toml'), `[profiles.work]\n${declaration}\n`);
+      await writeFile(join(homeDirectory, 'config.toml'), `[profiles.work]\n${declaration}\n`);
       await expect(prepare()).rejects.toBeInstanceOf(WakeIsolationRefusedError);
     },
   );
 
   test('accepts a profile that only sets harmless keys and web search', async () => {
-    await writeFile(join(codexHome, 'config.toml'), '[profiles.work]\nmodel = "x"\nweb_search = "live"\n');
+    await writeFile(join(homeDirectory, 'config.toml'), '[profiles.work]\nmodel = "x"\nweb_search = "live"\n');
     expect((await prepare()).isolationArguments).toEqual(['-c', 'profiles.work.web_search="disabled"']);
   });
 
   test.each([
-    ['the CODEX_HOME config', () => join(codexHome, 'config.toml')],
+    ['the CODEX_HOME config', () => join(homeDirectory, 'config.toml')],
     ['a project config', () => join(workingDirectory, '.codex', 'config.toml')],
     ['the system config', () => join(systemConfigDirectory, 'config.toml')],
   ])('refuses the wake when %s sets a legacy web search switch', async (_name, fileOf) => {
@@ -307,12 +306,12 @@ describe('isolation', () => {
     '[features]\nweb_search_cached = true',
     '[features]\nweb_search = false',
   ])('refuses the wake when a layer sets a web search switch: %s', async (declaration) => {
-    await writeFile(join(codexHome, 'config.toml'), `${declaration}\n`);
+    await writeFile(join(homeDirectory, 'config.toml'), `${declaration}\n`);
     await expect(prepare()).rejects.toBeInstanceOf(WakeIsolationRefusedError);
   });
 
   test('disables web search inside every profile of every layer, once each', async () => {
-    await writeFile(join(codexHome, 'config.toml'), '[profiles.work]\nmodel = "x"\nweb_search = "live"\n');
+    await writeFile(join(homeDirectory, 'config.toml'), '[profiles.work]\nmodel = "x"\nweb_search = "live"\n');
     await writeFile(join(workingDirectory, '.codex', 'config.toml'), '[profiles.work]\nmodel = "y"\n[profiles.night-shift]\nmodel = "z"\n');
     expect((await prepare()).isolationArguments).toEqual([
       '-c',
@@ -325,24 +324,24 @@ describe('isolation', () => {
   test.each([
     ['a project config', () => join(workingDirectory, '.codex', 'config.toml')],
     ['the system config', () => join(systemConfigDirectory, 'config.toml')],
-    ['a managed config', () => join(codexHome, 'managed_config.toml')],
+    ['a managed config', () => join(homeDirectory, 'managed_config.toml')],
   ])('refuses the wake when zapbip is defined in %s', async (_name, fileOf) => {
     await writeFile(fileOf(), '[mcp_servers.zapbip]\nurl = "https://elsewhere.example/mcp"\n');
     await expect(prepare()).rejects.toBeInstanceOf(WakeIsolationRefusedError);
   });
 
   test('refuses the wake when zapbip is redefined inside a profile of the CODEX_HOME config', async () => {
-    await writeFile(join(codexHome, 'config.toml'), '[profiles.work.mcp_servers.zapbip]\nurl = "https://elsewhere.example/mcp"\n');
+    await writeFile(join(homeDirectory, 'config.toml'), '[profiles.work.mcp_servers.zapbip]\nurl = "https://elsewhere.example/mcp"\n');
     await expect(prepare()).rejects.toBeInstanceOf(WakeIsolationRefusedError);
   });
 
   test('refuses the wake when zapbip in the CODEX_HOME config is not a URL server', async () => {
-    await writeFile(join(codexHome, 'config.toml'), '[mcp_servers.zapbip]\ncommand = "node"\n');
+    await writeFile(join(homeDirectory, 'config.toml'), '[mcp_servers.zapbip]\ncommand = "node"\n');
     await expect(prepare()).rejects.toBeInstanceOf(WakeIsolationRefusedError);
   });
 
   test('accepts zapbip as a URL server in the CODEX_HOME config', async () => {
-    await writeFile(join(codexHome, 'config.toml'), '[mcp_servers.zapbip]\nurl = "https://zapbip.example/c/s/mcp"\n');
+    await writeFile(join(homeDirectory, 'config.toml'), '[mcp_servers.zapbip]\nurl = "https://zapbip.example/c/s/mcp"\n');
     expect((await prepare()).isolationArguments).toEqual([]);
   });
 
@@ -353,13 +352,13 @@ describe('isolation', () => {
   });
 
   test('ignores text that only mentions mcp_servers inside a value', async () => {
-    await writeFile(join(codexHome, 'config.toml'), 'note = "mcp_servers.fake.enabled"\n');
+    await writeFile(join(homeDirectory, 'config.toml'), 'note = "mcp_servers.fake.enabled"\n');
     expect((await prepare()).isolationArguments).toEqual([]);
   });
 
   test('disables the servers of an inline mcp_servers table', async () => {
     await writeFile(
-      join(codexHome, 'config.toml'),
+      join(homeDirectory, 'config.toml'),
       'mcp_servers = { zapbip = { url = "u" }, deploy = { command = "d" }, mail = { command = "m" } }\n',
     );
     expect((await prepare()).isolationArguments).toEqual([
@@ -372,7 +371,7 @@ describe('isolation', () => {
 
   test('disables the servers a profile declares inside that profile', async () => {
     await writeFile(
-      join(codexHome, 'config.toml'),
+      join(homeDirectory, 'config.toml'),
       '[profiles.work.mcp_servers.deploy]\ncommand = "d"\n[profiles.night-shift.mcp_servers.mail]\ncommand = "m"\n',
     );
     expect((await prepare()).isolationArguments).toEqual([
@@ -388,12 +387,12 @@ describe('isolation', () => {
   });
 
   test('refuses a config file that is not valid TOML and names the kind', async () => {
-    await writeFile(join(codexHome, 'config.toml'), 'mcp_servers = = broken\n');
+    await writeFile(join(homeDirectory, 'config.toml'), 'mcp_servers = = broken\n');
     await expect(prepare()).rejects.toMatchObject({ kind: WakeRefusalKind.Unparseable });
   });
 
   test('refuses a config layer that is a directory and names the kind without the path', async () => {
-    await mkdir(join(codexHome, 'config.toml'));
+    await mkdir(join(homeDirectory, 'config.toml'));
     const error = await prepare().then(
       () => null,
       (rejection: unknown) => rejection,
@@ -404,18 +403,18 @@ describe('isolation', () => {
   });
 
   test.skipIf(process.getuid?.() === 0)('refuses a config layer that has mode 000', async () => {
-    await writeFile(join(codexHome, 'config.toml'), '[mcp_servers.x]\ncommand = "x"\n');
-    await chmod(join(codexHome, 'config.toml'), 0);
+    await writeFile(join(homeDirectory, 'config.toml'), '[mcp_servers.x]\ncommand = "x"\n');
+    await chmod(join(homeDirectory, 'config.toml'), 0);
     await expect(prepare()).rejects.toMatchObject({ kind: WakeRefusalKind.Unreadable });
   });
 
   test('refuses a server whose definition is not a table', async () => {
-    await writeFile(join(codexHome, 'config.toml'), '[mcp_servers]\ndeploy = "d"\n');
+    await writeFile(join(homeDirectory, 'config.toml'), '[mcp_servers]\ndeploy = "d"\n');
     await expect(prepare()).rejects.toBeInstanceOf(WakeIsolationRefusedError);
   });
 
   test('refuses an mcp_servers entry that is not a table', async () => {
-    await writeFile(join(codexHome, 'config.toml'), 'mcp_servers = "none"\n');
+    await writeFile(join(homeDirectory, 'config.toml'), 'mcp_servers = "none"\n');
     await expect(prepare()).rejects.toBeInstanceOf(WakeIsolationRefusedError);
   });
 

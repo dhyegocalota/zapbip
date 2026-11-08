@@ -10,6 +10,7 @@ import {
   type WakeRefusalKind,
 } from '@zapbip/types';
 import { buildOwnerPrompt } from './owner-prompt';
+import { homeDirectoryOf } from './runtime-home';
 
 type ChildResult = { exitCode: number | null; stderrText: string };
 export type WakeResult =
@@ -80,7 +81,7 @@ async function prepareIsolation(input: {
     const isolation = await CONNECTOR_RUNTIMES[client].prepareIsolation({
       connectionLink,
       workingDirectory,
-      codexHome: process.env.CODEX_HOME,
+      homeDirectory: homeDirectoryOf({ client }),
     });
     return { isolation };
   } catch (error) {

@@ -29,8 +29,7 @@ describe('the fixture connector runtime', () => {
     await writeFile(join(workingDirectory, SESSION_FOLDER, NEWER_SESSION_ID), '');
     const sessionId = await runtime.findNewestSessionId({
       workingDirectory,
-      claudeConfigDirectory: workingDirectory,
-      codexHome: workingDirectory,
+      homeDirectory: workingDirectory,
     });
     expect(sessionId).toBe(NEWER_SESSION_ID);
   });
@@ -38,14 +37,17 @@ describe('the fixture connector runtime', () => {
   test('finds no session id when there is no session folder', async () => {
     const sessionId = await runtime.findNewestSessionId({
       workingDirectory,
-      claudeConfigDirectory: workingDirectory,
-      codexHome: workingDirectory,
+      homeDirectory: workingDirectory,
     });
     expect(sessionId).toBeNull();
   });
 
   test('prepares isolation arguments and cleans up', async () => {
-    const isolation = await runtime.prepareIsolation({ connectionLink: 'https://x.example/c/zb_conn_FAKE/mcp', workingDirectory });
+    const isolation = await runtime.prepareIsolation({
+      connectionLink: 'https://x.example/c/zb_conn_FAKE/mcp',
+      workingDirectory,
+      homeDirectory: workingDirectory,
+    });
     expect(isolation.isolationArguments).toEqual(['--isolated']);
     await expect(isolation.cleanup()).resolves.toBeUndefined();
   });

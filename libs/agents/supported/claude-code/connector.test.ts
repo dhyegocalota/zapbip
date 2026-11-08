@@ -34,18 +34,18 @@ afterEach(async () => {
 });
 
 async function copyClaudeFixture(): Promise<string> {
-  const claudeConfigDirectory = join(rootDirectory, 'claude');
-  await cp(FIXTURE_DIRECTORY, join(claudeConfigDirectory, 'projects'), { recursive: true });
-  return claudeConfigDirectory;
+  const homeDirectory = join(rootDirectory, 'claude');
+  await cp(FIXTURE_DIRECTORY, join(homeDirectory, 'projects'), { recursive: true });
+  return homeDirectory;
 }
 
-async function touchClaudeSession(input: { claudeConfigDirectory: string; sessionId: string; second: number }): Promise<void> {
-  const path = join(input.claudeConfigDirectory, 'projects', FIXTURE_FOLDER_NAME, `${input.sessionId}.jsonl`);
+async function touchClaudeSession(input: { homeDirectory: string; sessionId: string; second: number }): Promise<void> {
+  const path = join(input.homeDirectory, 'projects', FIXTURE_FOLDER_NAME, `${input.sessionId}.jsonl`);
   await utimes(path, input.second, input.second);
 }
 
-function findClaudeSession(input: { workingDirectory: string; claudeConfigDirectory: string }): Promise<string | null> {
-  return runtime.findNewestSessionId({ ...input, codexHome: join(rootDirectory, 'codex') });
+function findClaudeSession(input: { workingDirectory: string; homeDirectory: string }): Promise<string | null> {
+  return runtime.findNewestSessionId(input);
 }
 
 describe('the claude binary', () => {
@@ -66,59 +66,59 @@ describe('claudeProjectFolderName', () => {
 
 describe('findNewestSessionId', () => {
   test('returns the session file with the latest modification time, not the latest name', async () => {
-    const claudeConfigDirectory = await copyClaudeFixture();
-    await touchClaudeSession({ claudeConfigDirectory, sessionId: NEWEST_SESSION_ID, second: FIRST_SECOND });
-    await touchClaudeSession({ claudeConfigDirectory, sessionId: MIDDLE_SESSION_ID, second: FIRST_SECOND + 10 });
-    await touchClaudeSession({ claudeConfigDirectory, sessionId: OLDEST_SESSION_ID, second: FIRST_SECOND + 20 });
+    const homeDirectory = await copyClaudeFixture();
+    await touchClaudeSession({ homeDirectory, sessionId: NEWEST_SESSION_ID, second: FIRST_SECOND });
+    await touchClaudeSession({ homeDirectory, sessionId: MIDDLE_SESSION_ID, second: FIRST_SECOND + 10 });
+    await touchClaudeSession({ homeDirectory, sessionId: OLDEST_SESSION_ID, second: FIRST_SECOND + 20 });
     const sessionId = await findClaudeSession({
       workingDirectory: FIXTURE_WORKING_DIRECTORY,
-      claudeConfigDirectory,
+      homeDirectory,
     });
     expect(sessionId).toBe(OLDEST_SESSION_ID);
   });
 
   test('picks up a session written after an earlier lookup', async () => {
-    const claudeConfigDirectory = await copyClaudeFixture();
-    await touchClaudeSession({ claudeConfigDirectory, sessionId: OLDEST_SESSION_ID, second: FIRST_SECOND });
-    await touchClaudeSession({ claudeConfigDirectory, sessionId: MIDDLE_SESSION_ID, second: FIRST_SECOND });
-    await touchClaudeSession({ claudeConfigDirectory, sessionId: NEWEST_SESSION_ID, second: FIRST_SECOND + 30 });
+    const homeDirectory = await copyClaudeFixture();
+    await touchClaudeSession({ homeDirectory, sessionId: OLDEST_SESSION_ID, second: FIRST_SECOND });
+    await touchClaudeSession({ homeDirectory, sessionId: MIDDLE_SESSION_ID, second: FIRST_SECOND });
+    await touchClaudeSession({ homeDirectory, sessionId: NEWEST_SESSION_ID, second: FIRST_SECOND + 30 });
     const sessionId = await findClaudeSession({
       workingDirectory: FIXTURE_WORKING_DIRECTORY,
-      claudeConfigDirectory,
+      homeDirectory,
     });
     expect(sessionId).toBe(NEWEST_SESSION_ID);
   });
 
   test('returns null when the directory has no project folder', async () => {
-    const claudeConfigDirectory = await copyClaudeFixture();
+    const homeDirectory = await copyClaudeFixture();
     const sessionId = await findClaudeSession({
       workingDirectory: OTHER_DIRECTORY,
-      claudeConfigDirectory,
+      homeDirectory,
     });
     expect(sessionId).toBeNull();
   });
 
   test('returns null when the project folder has no session file', async () => {
-    const claudeConfigDirectory = join(rootDirectory, 'claude');
-    await mkdir(join(claudeConfigDirectory, 'projects', claudeProjectFolderName({ workingDirectory: WORKING_DIRECTORY })), {
+    const homeDirectory = join(rootDirectory, 'claude');
+    await mkdir(join(homeDirectory, 'projects', claudeProjectFolderName({ workingDirectory: WORKING_DIRECTORY })), {
       recursive: true,
     });
     const sessionId = await findClaudeSession({
       workingDirectory: WORKING_DIRECTORY,
-      claudeConfigDirectory,
+      homeDirectory,
     });
     expect(sessionId).toBeNull();
   });
 
   test('ignores files that are not a session id with the jsonl extension', async () => {
-    const claudeConfigDirectory = join(rootDirectory, 'claude');
-    const folder = join(claudeConfigDirectory, 'projects', claudeProjectFolderName({ workingDirectory: WORKING_DIRECTORY }));
+    const homeDirectory = join(rootDirectory, 'claude');
+    const folder = join(homeDirectory, 'projects', claudeProjectFolderName({ workingDirectory: WORKING_DIRECTORY }));
     await mkdir(folder, { recursive: true });
     await writeFile(join(folder, '--dangerous.jsonl'), '');
     await writeFile(join(folder, `${NEWEST_SESSION_ID}.txt`), '');
     const sessionId = await findClaudeSession({
       workingDirectory: WORKING_DIRECTORY,
-      claudeConfigDirectory,
+      homeDirectory,
     });
     expect(sessionId).toBeNull();
   });
@@ -159,7 +159,7 @@ describe('a new session', () => {
 
 describe('isolation', () => {
   function prepare() {
-    return runtime.prepareIsolation({ connectionLink: CONNECTION_LINK, workingDirectory });
+    return runtime.prepareIsolation({ connectionLink: CONNECTION_LINK, workingDirectory, homeDirectory: workingDirectory });
   }
 
   test('loads only the config file, no setting sources and no other MCP configuration', async () => {
