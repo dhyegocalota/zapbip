@@ -1,3 +1,3 @@
-# Fixture plugin package
+# Fixture Plugin Agent plugin
 
-The plugin package behind the fixture plugin agent, which the generator tests and the scaffold copy from.
+The plugin package of Fixture Plugin Agent for zapbip.

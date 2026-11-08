@@ -45,10 +45,11 @@ describe('scaffoldFilesOf', () => {
 describe('scaffoldFilesOf for a connector agent', () => {
   const files = scaffold({ id: NEW_ID, kind: ScaffoldKind.Connector });
 
-  test('copies the connector runtime, its fake binary and its test into the agent folder', () => {
+  test('copies the connector runtime, its fake client entry, its session writer and its test into the agent folder', () => {
     const paths = files.map((file) => file.path);
     expect(paths).toContain(`libs/agents/supported/${NEW_ID}/connector.ts`);
-    expect(paths).toContain(`libs/agents/supported/${NEW_ID}/testing/${NEW_ID}-binary.mjs`);
+    expect(paths).toContain(`libs/agents/supported/${NEW_ID}/testing/fake-client.mjs`);
+    expect(paths).toContain(`libs/agents/supported/${NEW_ID}/testing/write-session.mjs`);
     expect(paths).toContain(`libs/agents/supported/${NEW_ID}/connector.test.ts`);
   });
 
@@ -70,6 +71,15 @@ describe('scaffoldFilesOf for a plugin agent', () => {
     );
     const folders = [`libs/agents/supported/${NEW_ID}/`, `apps/${NEW_ID}-plugin/`];
     files.forEach((file) => expect(folders.some((folder) => file.path.startsWith(folder))).toBe(true));
+  });
+
+  test('keeps no word of the template outside the release bytes', () => {
+    files.filter((file) => !file.path.includes('/release/')).forEach((file) => expect(file.content).not.toMatch(/fixture/i));
+  });
+
+  test('hosts a release file that holds no placeholder hash', () => {
+    const release = packageFiles.find((file) => file.path.includes('/release/'));
+    expect(release?.content).not.toMatch(/0{64}/);
   });
 
   test('points the plugin at its own package and keeps the release bytes untouched', () => {

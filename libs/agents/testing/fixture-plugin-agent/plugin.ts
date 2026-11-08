@@ -3,7 +3,7 @@ import { PluginRegistry, type AgentPlugin } from '../../src/contract';
 import { versionPinOf } from '../../src/version-pin';
 
 const PACKAGE_FOLDER = 'libs/agents/testing/fixture-plugin-package';
-const REQUIREMENTS_SHA256 = 'f8b152ba844aebd2474b64425ae83702e9b8ed88b0132a7f6f29974bfa6db5eb';
+const REQUIREMENTS_SHA256 = 'eb1fc5e4bae42f5a04d9bc2001ef4516367ff8520495100b1ccaec1320b85f84';
 
 export const plugin: AgentPlugin = {
   packageFolder: PACKAGE_FOLDER,
