@@ -11,7 +11,7 @@ import { SUPPORTED_FOLDER } from './repository';
 import { mentionsOf } from './mentions';
 import { GENERATED_FOLDER } from './paths';
 import { ScaffoldKind, scaffoldFilesOf } from './scaffold';
-import { listSource, listTree, readSource, trackedTextFiles } from './source';
+import { UnreadableTrackedFileError, listSource, listTree, readSource, trackedTextFiles } from './source';
 
 enum CliMode {
   Generate = 'generate',
@@ -30,13 +30,6 @@ const NEXT_STEP_HINT = 'edit the names and the copy, then run pnpm agents:genera
 
 async function planFromDisk(): Promise<GenerationPlan> {
   return planGeneratedFiles({ agents: discoverAgents({ roots: [SUPPORTED_FOLDER] }), readSource, listSource });
-}
-
-async function generate(): Promise<number> {
-  const plan = await planFromDisk();
-  applyValidPlan({ plan }).forEach((report) => console.log(report));
-  plan.violations.forEach((violation) => console.error(violation));
-  return plan.violations.length === 0 ? SUCCESS_EXIT_CODE : FAILURE_EXIT_CODE;
 }
 
 async function registryCheckViolations(): Promise<string[]> {
@@ -60,7 +53,21 @@ async function registryCheckViolations(): Promise<string[]> {
     readFile: (path: string) => (existsSync(repositoryPath(path)) ? readFileSync(repositoryPath(path)) : null),
     servedFilenames: hostedFilenames,
   };
-  return registryCheckViolationsOf({ agents, files: trackedTextFiles(), sources });
+  try {
+    return registryCheckViolationsOf({ agents, files: trackedTextFiles(), sources });
+  } catch (error) {
+    if (error instanceof UnreadableTrackedFileError) return [error.message];
+    throw error;
+  }
+}
+
+async function generate(): Promise<number> {
+  const plan = await planFromDisk();
+  const violations = [...plan.violations, ...(await registryCheckViolations())];
+  violations.forEach((violation) => console.error(violation));
+  if (violations.length > 0) return FAILURE_EXIT_CODE;
+  applyValidPlan({ plan }).forEach((report) => console.log(report));
+  return SUCCESS_EXIT_CODE;
 }
 
 async function check(): Promise<number> {
