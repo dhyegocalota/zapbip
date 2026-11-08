@@ -422,6 +422,14 @@ describe('docs experience: copy', () => {
     expect(forbiddenViolations({ files, pattern: PHONE_NUMBER_LINK_PATTERN })).toEqual([]);
   });
 
+  test('a planted phone number or official-number snippet in a page is reported', () => {
+    const files = { 'get-started/how-to-start.mdx': 'Message +5511999990001 or import /snippets/official-number.mdx' };
+    expect(forbiddenViolations({ files, pattern: PHONE_NUMBER_LINK_PATTERN })).toEqual([
+      'get-started/how-to-start.mdx: +5511999990001',
+      'get-started/how-to-start.mdx: official-number',
+    ]);
+  });
+
   test('a typed media figure of 14 days fails naming 30', () => {
     const markdown = `Media is kept ${WRONG_MEDIA_DAYS} days.`;
     expect(retentionFigureViolations({ markdown, kind: DocsRetentionKind.Media })).toEqual(['media: expected 30 days']);
