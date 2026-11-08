@@ -1,18 +1,13 @@
+import { AGENT_DEFINITIONS } from '@zapbip/agents/definitions';
 import { describe, expect, test } from 'vitest';
 import { DOCS_ROOT, documentFiles, readRepositoryFile } from './repository-files';
 
 const CHAT_IMPORT = "import { Chat } from '/snippets/chat.jsx';";
 const CHAT_USAGE = '<Chat';
 const LINE_SEPARATOR = '\n';
-const SPEAKER_LABELS = [
-  'Owner',
-  'You',
-  'Dono',
-  'Você',
-  'Voce',
-  'Agent',
-  'Agente',
-  'zapbip',
+const FIXED_SPEAKER_LABELS = ['Owner', 'You', 'Dono', 'Você', 'Voce', 'Agent', 'Agente', 'zapbip'];
+const PREVIOUS_SPEAKER_LABELS = [
+  ...FIXED_SPEAKER_LABELS,
   'Claude Code',
   'Claude',
   'Codex',
@@ -25,6 +20,10 @@ const SPEAKER_LABELS = [
   'Hermes',
   'OpenClaw',
 ];
+const SPEAKER_LABELS = [
+  ...FIXED_SPEAKER_LABELS,
+  ...Object.values(AGENT_DEFINITIONS).flatMap((definition) => definition.docs.speakerNames),
+].sort((left, right) => right.length - left.length);
 const LABEL_ALTERNATIVES = SPEAKER_LABELS.map((label) => label.replace(' ', '\\s')).join('|');
 const SPEAKER_LINE_PATTERN = new RegExp(`^\\s*(>\\s*)?(\\*{1,2})?(${LABEL_ALTERNATIVES})(\\*{1,2})?(:|\\s{2,}\\S)`, 'i');
 
@@ -39,6 +38,10 @@ function speakerLines(page: string): string[] {
 describe('docs conversations', () => {
   test('there are pages to check', () => {
     expect(pages.length).toBeGreaterThan(0);
+  });
+
+  test('the speaker labels keep every label of the previous hand list', () => {
+    expect(PREVIOUS_SPEAKER_LABELS.filter((label) => !SPEAKER_LABELS.includes(label))).toEqual([]);
   });
 
   test.each(pages)('%s shows no conversation outside <Chat>', (page) => {
