@@ -1,6 +1,6 @@
 # Go-live runbooks
 
-The owner's step-by-step path from zero accounts to zapbip running on the official WhatsApp number at `mcp.zapbip.com`.
+The owner's step-by-step path from zero accounts to zapbip running on the WhatsApp numbers behind `mcp.zapbip.com`.
 
 The go-live order and the go-live record are in `deploy.md`. Every runbook step has an expected result and an `If it fails` line, and agents never run them ([ADR 0026](../adr/0026-runbooks-live-in-the-repository-not-on-mintlify.md), [ADR 0027](../adr/0027-deploys-run-from-the-owners-machine-not-from-ci.md)).
 
