@@ -1,4 +1,4 @@
-import { type AgentPlugin, type HostedArtifact, PluginRegistry } from '@zapbip/agents';
+import { type AgentPlugin, type HostedArtifact, PluginRegistry } from '@zapbip/agents/plugins';
 import {
   CLOUDFLARE_NAMESERVER_SUFFIX,
   COMPANY_FACT_UNSET,
