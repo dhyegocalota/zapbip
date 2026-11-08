@@ -1,6 +1,6 @@
 # UI polish
 
-**Status:** Approved
+**Status:** In review
 **Tier:** 🟡
 **Owner approval:** owner delegated 2026-11-06; visual direction chosen in [design.md → Owner decisions](design.md#14-owner-decisions)
 **ADRs:** none; no decision here changes an interface, a dependency or the backoffice CSP

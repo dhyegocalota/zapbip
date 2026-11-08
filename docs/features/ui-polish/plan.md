@@ -66,6 +66,8 @@ Author this list with every box empty. A sub-agent ticks its own line. A wrong s
 
 - [x] **Step 15b (second visual round):** sparklines with a gradient area, end dot and last value (red d530b808 → green 69577a3b); one visible name for the Meta app field (red 201e986d → green 1cd50c1b); the metrics dashboard with five delta tiles, a chart grid and a wide budget card (red a8674062 → green aee17f05); clearer tile labels and compact charts in the grid (red 964fe208 → green 33b98fa3); a final CSS-only commit hides the duplicated label of summary rows at 375. The tile deltas compare with the previous period of the same length, read from the same batch by widening the two `since` bounds of new accounts and activity to two periods. The after-shots of metrics, metrics-empty, home and register were retaken from a throwaway spec.
 
+- [x] **Step 15c (final review, WITH RESERVATIONS):** metric cards with an empty section keep their content height (red 66a5d1ce → green c4b7ac79); the empty state ignores the previous period (red cd90bb91 → green c4b7ac79); the aborted user request allow-list is anchored to the origin with `patternOf({ origin })` (red 1335a7af → green bf12cb06); the single visible "App da Meta" and the select's accessible name are pinned by a walk assertion (pin c95b0062, step 15b already held); `PATTERN_SPECIAL_CHARACTERS` already sat at the top of the file at a9c710d5. The test-plan ticks and the `In review` status are in the next commit.
+
 ### B: the docs
 
 - [x] **Step 16 (red 52b3e059 → green 1c333655; the images-sized extension is a pin):** red: `tools/repository-shape/src/docs-visual.test.ts`: `docs.json` has `logo.light`, `logo.dark` and `logo.href`; each logo path is a file committed under `apps/docs`; each is an SVG with `width`, `height` and a `viewBox="0 0 120 32"`, `role="img"` and a `<title>zapbip</title>`; the dark colours differ from the light ones; and the existing images-sized rule (`docs-experience.test.ts::every image in the docs reserves its space with a width and a height`) is extended to every `<img>` and `<Image>` in `apps/docs/snippets/*.jsx` and `*.mdx`. It fails naming `logo`. Green: `logo/light.svg`, `logo/dark.svg`, the `logo` key.
@@ -102,9 +104,9 @@ Author this list with every box empty. A sub-agent ticks its own line. A wrong s
 
 ## Z. Prove and ship
 
-- [ ] **Tester briefing:** a developer wrote `tester-briefing.md`.
-- [ ] **Tester run:** a fresh `tester` sub-agent executed `test-plan.md` and ticked every box with evidence.
-- [ ] **Reviewer:** a fresh `reviewer` sub-agent returned a verdict; refutation of the three riskiest claims is recorded in `test-plan.md`.
-- [ ] **/check-ui:** the `recorder` captured the after screenshots (same names with `after-`) and a video of the walk, uploaded to the GitHub pre-release `pr-media-ui-polish` and embedded as before and after pairs in the PR body.
-- [ ] **Learnings sweep:** stated out loud, including whether Mintlify 0.0.4077 injected the custom CSS.
+- [x] **Tester briefing:** a developer wrote `tester-briefing.md`. — `tester-briefing.md`, lane A rows updated through 15a
+- [x] **Tester run:** a fresh `tester` sub-agent executed `test-plan.md` and ticked every box with evidence. — three testers: tester-docs, tester-backoffice and tester-backoffice-delta in `SCRATCH/test-results/ui-polish/`; rows without their evidence stay open in `test-plan.md`, labelled `delta tester pending`
+- [x] **Reviewer:** a fresh `reviewer` sub-agent returned a verdict; refutation of the three riskiest claims is recorded in `test-plan.md`. — final review verdict WITH RESERVATIONS, fixed in step 15c; the three refutations are not yet recorded in `test-plan.md`
+- [ ] **/check-ui:** the `recorder` captured the after screenshots (same names with `after-`) and a video of the walk, uploaded to the GitHub pre-release `pr-media-ui-polish` and embedded as before and after pairs in the PR body. — pending the recorder
+- [x] **Learnings sweep:** stated out loud, including whether Mintlify 0.0.4077 injected the custom CSS. — the shared fake Graph learning (a9c710d5); Mintlify 0.0.4077 injected `zapbip.css` (`style[data-custom-css-path]` present, tester-docs)
 - [ ] **/open-pr:** gates passed, merge sensitivity stated (LOW expected: no data, auth or deploy change), status flipped to `Shipped` on the branch, PR opened.
