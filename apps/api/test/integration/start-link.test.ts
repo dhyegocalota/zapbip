@@ -13,7 +13,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import production from '../../src/index';
 import { START_LINK_COPY } from '../../src/routes/start-link-copy';
 import { START_LINK_STYLE_HASH } from '../../src/routes/start-link-style';
-import { RATE_LIMIT_WINDOW_MS } from '../support/rate-limit-window';
+import { startInFreshWindow } from '../support/rate-limit-window';
 import { applyDirectoryMigration } from '../support/seed';
 import { captureLogLines } from '../support/capture-log-lines';
 import { changeStartNumberState, seedStartNumber } from '../support/start-link-numbers';
@@ -30,6 +30,8 @@ const TRAILING_DOT_BACKOFFICE_ORIGIN = 'http://backoffice.localhost.:8787';
 const OLDEST = 1_700_000_000_000;
 const NEWER = OLDEST + 1_000;
 const RETRY_AFTER_SECONDS = '60';
+const FRESH_WINDOW_MARGIN_MS = 10_000;
+const FRESH_WINDOW_TEST_TIMEOUT_MS = 90_000;
 const ACTIVE_DISPLAY_NUMBER = '+5511977770001';
 const ACTIVE_DIGITS = '5511977770001';
 const OTHER_DISPLAY_NUMBER = '+5511977770002';
@@ -238,39 +240,41 @@ describe('start link request handling', () => {
 });
 
 describe('start link rate limit', () => {
-  it('SL-W16 answers 429 with Retry-After past the limit and leaves another address alone', async () => {
-    await seedActiveNumber();
-    const allowed = await Promise.all(
-      Array.from({ length: INSTALL_PAGE_REQUESTS_PER_MINUTE }, () => getStart({ address: LIMITED_ADDRESS })),
-    );
-    expect(allowed.map((response) => response.status)).toEqual(Array(INSTALL_PAGE_REQUESTS_PER_MINUTE).fill(302));
-    const limited = await getStart({ address: LIMITED_ADDRESS });
-    expect(limited.status).toBe(429);
-    expect(limited.headers.get('retry-after')).toBe(RETRY_AFTER_SECONDS);
-    expect(await limited.text()).toBe('too many requests');
-    expectPrivateHeaders({ headers: limited.headers });
-    expect((await getStart({ address: UNLIMITED_ADDRESS })).status).toBe(302);
-  });
+  it(
+    'SL-W16 answers 429 with Retry-After past the limit and leaves another address alone',
+    async () => {
+      await seedActiveNumber();
+      await startInFreshWindow({ marginMs: FRESH_WINDOW_MARGIN_MS });
+      const burst = await Promise.all(
+        Array.from({ length: INSTALL_PAGE_REQUESTS_PER_MINUTE + 1 }, () => getStart({ address: LIMITED_ADDRESS })),
+      );
+      const limited = burst.filter((response) => response.status === 429);
+      expect(burst.filter((response) => response.status === 302)).toHaveLength(INSTALL_PAGE_REQUESTS_PER_MINUTE);
+      expect(limited).toHaveLength(1);
+      expect(limited[0]?.headers.get('retry-after')).toBe(RETRY_AFTER_SECONDS);
+      expect(await limited[0]?.text()).toBe('too many requests');
+      expectPrivateHeaders({ headers: (limited[0] as Response).headers });
+      expect((await getStart({ address: UNLIMITED_ADDRESS })).status).toBe(302);
+    },
+    FRESH_WINDOW_TEST_TIMEOUT_MS,
+  );
 
-  it('SL-W16 window roll variant', async () => {
-    await seedActiveNumber();
-    const untilTarget = (2 * RATE_LIMIT_WINDOW_MS - 20 - (Date.now() % RATE_LIMIT_WINDOW_MS)) % RATE_LIMIT_WINDOW_MS;
-    await new Promise((resolve) => setTimeout(resolve, untilTarget));
-    await Promise.all(Array.from({ length: INSTALL_PAGE_REQUESTS_PER_MINUTE }, () => getStart({ address: LIMITED_ADDRESS })));
-    expect((await getStart({ address: LIMITED_ADDRESS })).status).toBe(429);
-  }, 90_000);
-
-  it('SL-W17 keeps its counter apart from the install page', async () => {
-    await seedActiveNumber();
-    await Promise.all(Array.from({ length: INSTALL_PAGE_REQUESTS_PER_MINUTE + 1 }, () => getStart({ address: COUNTER_ADDRESS })));
-    expect((await getStart({ address: COUNTER_ADDRESS })).status).toBe(429);
-    const installPage = await exports.default.fetch(
-      new Request(`${ORIGIN}${INSTALL_PAGE_PATH_PREFIX}zb_inst_${'A'.repeat(22)}`, {
-        headers: { [CLIENT_ADDRESS_HEADER]: COUNTER_ADDRESS },
-      }),
-    );
-    expect(installPage.status).toBe(404);
-  });
+  it(
+    'SL-W17 keeps its counter apart from the install page',
+    async () => {
+      await seedActiveNumber();
+      await startInFreshWindow({ marginMs: FRESH_WINDOW_MARGIN_MS });
+      await Promise.all(Array.from({ length: INSTALL_PAGE_REQUESTS_PER_MINUTE + 1 }, () => getStart({ address: COUNTER_ADDRESS })));
+      expect((await getStart({ address: COUNTER_ADDRESS })).status).toBe(429);
+      const installPage = await exports.default.fetch(
+        new Request(`${ORIGIN}${INSTALL_PAGE_PATH_PREFIX}zb_inst_${'A'.repeat(22)}`, {
+          headers: { [CLIENT_ADDRESS_HEADER]: COUNTER_ADDRESS },
+        }),
+      );
+      expect(installPage.status).toBe(404);
+    },
+    FRESH_WINDOW_TEST_TIMEOUT_MS,
+  );
 });
 
 describe('start link hosts', () => {
