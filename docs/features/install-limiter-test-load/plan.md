@@ -16,8 +16,8 @@
 
 ### G1
 
-- [ ] **Step 1 (red):** a variant waits until 20 ms before a window boundary and runs the old sequential loop; it fails with `expected 0 to be greater than 0`.
-- [ ] **Step 2:** `startInFreshWindow` waits for the next window when under 10 s remain; the test sends the burst with `Promise.all`; the variant is removed.
+- [x] **Step 1 (red):** a variant waits until 20 ms before a window boundary and runs the old sequential loop; it fails with `expected 0 to be greater than 0`.
+- [x] **Step 2:** `startInFreshWindow` waits for the next window when under 10 s remain; the test sends the burst with `Promise.all`; the variant is removed.
 
 ## Failure modes
 

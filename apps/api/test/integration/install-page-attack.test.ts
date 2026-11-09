@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ACCOUNT_INBOX_MIGRATIONS } from '../../src/account-inbox/migrations';
 import { runMigrations } from '../../src/account-inbox/run-migrations';
 import { registerWithInstallCode } from '../support/install-codes';
-import { waitUntilWindowRemains } from '../support/rate-limit-window';
+import { startInFreshWindow } from '../support/rate-limit-window';
 import { applyDirectoryMigration, seedOwnerIdentity } from '../support/seed';
 import { accountInboxStub, testEnv } from '../support/workers-env';
 import { MCP_REQUEST_HEADERS } from './mcp-fixtures';
@@ -21,8 +21,8 @@ const CLIENT_NAME_MAXIMUM = 128;
 const OVER_LIMIT_REQUESTS = 33;
 const CONCURRENT_CALLS = 5;
 const RETRY_AFTER_SECONDS = '60';
-const WINDOW_ROLL_REMAINING_MS = 20;
-const WINDOW_ROLL_TEST_TIMEOUT_MS = 90_000;
+const FRESH_WINDOW_MARGIN_MS = 10_000;
+const FRESH_WINDOW_TEST_TIMEOUT_MS = 90_000;
 const INSERT_WAKE = 'INSERT INTO agent_wake (agent, mode, last_polled_at, updated_at) VALUES (?, ?, 0, 0)';
 const SELECT_CONNECTION =
   'SELECT client_name AS clientName, first_call_at AS firstCallAt, install_code_sealed_secret AS sealedSecret FROM connections WHERE secret_digest = ?';
@@ -214,31 +214,20 @@ describe('install page attacks', () => {
   });
 
   it(
-    'IS-S1 limits the real binding per client address when the window rolls during the loop',
+    'IS-S1 limits the real binding per client address and answers Retry-After',
     async () => {
-      await waitUntilWindowRemains({ remainingMs: WINDOW_ROLL_REMAINING_MS });
-      const statuses: number[] = [];
-      await Array.from({ length: OVER_LIMIT_REQUESTS }).reduce<Promise<void>>(async (previous) => {
-        await previous;
-        statuses.push((await getPage({ installCode: randomCode(), address: LIMITED_ADDRESS })).status);
-      }, Promise.resolve());
-      expect(statuses.filter((status) => status === 429).length).toBeGreaterThan(0);
+      await startInFreshWindow({ marginMs: FRESH_WINDOW_MARGIN_MS });
+      const burst = await Promise.all(
+        Array.from({ length: OVER_LIMIT_REQUESTS }, () => getPage({ installCode: randomCode(), address: LIMITED_ADDRESS })),
+      );
+      expect(burst.filter((response) => response.status === 429).length).toBeGreaterThan(0);
+      expect((await getPage({ installCode: randomCode(), address: OTHER_ADDRESS })).status).toBe(404);
+      const limited = await getPage({ installCode: randomCode(), address: LIMITED_ADDRESS });
+      expect(limited.status).toBe(429);
+      expect(limited.headers.get('retry-after')).toBe(RETRY_AFTER_SECONDS);
     },
-    WINDOW_ROLL_TEST_TIMEOUT_MS,
+    FRESH_WINDOW_TEST_TIMEOUT_MS,
   );
-
-  it('IS-S1 limits the real binding per client address and answers Retry-After', async () => {
-    const statuses: number[] = [];
-    await Array.from({ length: OVER_LIMIT_REQUESTS }).reduce<Promise<void>>(async (previous) => {
-      await previous;
-      statuses.push((await getPage({ installCode: randomCode(), address: LIMITED_ADDRESS })).status);
-    }, Promise.resolve());
-    expect(statuses.filter((status) => status === 429).length).toBeGreaterThan(0);
-    expect((await getPage({ installCode: randomCode(), address: OTHER_ADDRESS })).status).toBe(404);
-    const limited = await getPage({ installCode: randomCode(), address: LIMITED_ADDRESS });
-    expect(limited.status).toBe(429);
-    expect(limited.headers.get('retry-after')).toBe(RETRY_AFTER_SECONDS);
-  });
 
   it('IS-S1 answers 400 without the client address header, even for a valid code, and shows no secret', async () => {
     const accountId = await seedAccount({});
