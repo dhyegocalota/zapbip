@@ -13,6 +13,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import production from '../../src/index';
 import { START_LINK_COPY } from '../../src/routes/start-link-copy';
 import { START_LINK_STYLE_HASH } from '../../src/routes/start-link-style';
+import { RATE_LIMIT_WINDOW_MS } from '../support/rate-limit-window';
 import { applyDirectoryMigration } from '../support/seed';
 import { captureLogLines } from '../support/capture-log-lines';
 import { changeStartNumberState, seedStartNumber } from '../support/start-link-numbers';
@@ -250,6 +251,14 @@ describe('start link rate limit', () => {
     expectPrivateHeaders({ headers: limited.headers });
     expect((await getStart({ address: UNLIMITED_ADDRESS })).status).toBe(302);
   });
+
+  it('SL-W16 window roll variant', async () => {
+    await seedActiveNumber();
+    const untilTarget = (2 * RATE_LIMIT_WINDOW_MS - 20 - (Date.now() % RATE_LIMIT_WINDOW_MS)) % RATE_LIMIT_WINDOW_MS;
+    await new Promise((resolve) => setTimeout(resolve, untilTarget));
+    await Promise.all(Array.from({ length: INSTALL_PAGE_REQUESTS_PER_MINUTE }, () => getStart({ address: LIMITED_ADDRESS })));
+    expect((await getStart({ address: LIMITED_ADDRESS })).status).toBe(429);
+  }, 90_000);
 
   it('SL-W17 keeps its counter apart from the install page', async () => {
     await seedActiveNumber();
