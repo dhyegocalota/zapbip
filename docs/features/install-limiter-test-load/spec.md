@@ -1,6 +1,6 @@
 # Install limiter test load
 
-**Status:** Building
+**Status:** Shipped 2026-11-08
 **Tier:** 🟢 small
 **Owner approval:** approved 2026-11-08 (lead order after a flake in a verify run)
 **ADRs:** none

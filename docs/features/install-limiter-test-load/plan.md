@@ -29,5 +29,5 @@
 
 ## Z. Prove and ship
 
-- [ ] **Tester run:** the integration file passes five times in a row, whatever the position in the minute.
-- [ ] **/open-pr:** opened by the lead.
+- [x] **Tester run:** a fresh tester ran the integration file three times in a row (14/14 each) and the fixed test started 20 ms before a window boundary (3/3); both mutations caught
+- [x] **/open-pr:** opened by the lead — PR #28
