@@ -29,5 +29,5 @@
 
 ## Z. Prove and ship
 
-- [ ] **Tester run:** the `lifecycle` job of the PR's CI is green.
-- [ ] **/open-pr:** opened by the lead.
+- [x] **Tester run:** fresh `tester` sub-agents executed `test-plan.md` and ticked every row with evidence (3/3 at b799d61e, 2/2 at a8809f58); the PR's CI `lifecycle` job is the merge gate
+- [x] **/open-pr:** opened by the lead — PR #27

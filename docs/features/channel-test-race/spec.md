@@ -1,6 +1,6 @@
 # Channel test race
 
-**Status:** Building
+**Status:** Shipped 2026-11-08
 **Tier:** 🟢 small
 **Owner approval:** approved 2026-11-08 (lead order after CI run 42530660238 on PR #26)
 **ADRs:** none
