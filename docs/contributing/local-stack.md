@@ -1,6 +1,6 @@
 # Run the local stack
 
-For contributors. The product runs only on zapbip's official WhatsApp number. Locally, a test double stands in for WhatsApp: the development simulator answers as the owner's phone. It exists only for tests and this walkthrough, and the production build does not contain it.
+For contributors. The product runs on the WhatsApp numbers its operator registers in the backoffice. Locally, a test double stands in for WhatsApp: the development simulator answers as the owner's phone. It exists only for tests and this walkthrough, and the production build does not contain it.
 
 You need Node 24, pnpm and [Claude Code](https://claude.com/claude-code).
 
@@ -93,3 +93,4 @@ curl -X POST http://localhost:8787/dev/owner/5511999990000/clock \
 - `401 unauthorized`: the secret is wrong or from another stack. Copy it again from the seed output.
 - Nothing on the screen: use the seeded phone digits in `/dev/owner/<phone>/screen`. A `404` means that phone has no owner.
 - `delivery: "queued"`: the window is closed. Send `@alpha hello` again.
+- `/start` answers `500` on an old local database: apply the migrations with `pnpm migrate:development`, then run `dev:seed` again.

@@ -1,3 +1,4 @@
+import { START_LINK_PATH } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { runSmoke } from '../../scripts/smoke';
 import { DeployEnvironment } from '../../src/operations/deploy-environment';
@@ -178,6 +179,7 @@ describe('smoke entry', () => {
     expect(exitCode).toBe(0);
     expect(lines.filter((line) => /^(PASS|FAIL) /.test(line))).toHaveLength(3);
     expect(printed).toContain('novo agente smoke');
+    expect(printed).toContain(`${PUBLIC_ORIGIN}${START_LINK_PATH}`);
     expect(printed).toContain(SmokeInput.ConnectionSecret);
     expect(printed).toContain('pnpm smoke:staging');
   });

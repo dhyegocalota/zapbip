@@ -4,6 +4,7 @@ import { OperatorEvent } from '../../src/adapters/whatsapp/whatsapp-enums';
 import { OwnerCopyKey, WHATSAPP_COPY } from '../../src/adapters/whatsapp/whatsapp-copy';
 import textFixture from '../fixtures/whatsapp/inbound/text.json';
 import { changeOf, notificationOf } from '../fixtures/whatsapp/inbound/notification';
+import { recordGraphPosts } from '../support/record-graph-posts';
 import { seedWhatsAppNumber } from '../support/whatsapp-numbers';
 import { testEnv } from '../support/workers-env';
 import { seedAccount } from './route-fixtures';
@@ -11,9 +12,6 @@ import { nowInSeconds, ownerText, ownerTextsOf, postSignedWith } from './webhook
 
 const STATUS_OK = 200;
 const UNKNOWN_OWNER_PHONE = '5511900000077';
-const NOTICE_PATH_SUFFIX = '/messages';
-
-type GraphPost = { url: string; authorization: string | null; body: { to: string; text: { body: string } } };
 
 function numberSeedOf(input: { suffix: string; state: WhatsAppNumberState }) {
   return {
@@ -34,19 +32,6 @@ function spyOnLogs() {
 
 function loggedText(input: { spies: ReturnType<typeof spyOnLogs> }): string {
   return JSON.stringify(input.spies.flatMap((spy) => spy.mock.calls));
-}
-
-function recordGraphPosts(): GraphPost[] {
-  const posts: GraphPost[] = [];
-  const passthrough = globalThis.fetch.bind(globalThis);
-  vi.spyOn(globalThis, 'fetch').mockImplementation(async (request, init) => {
-    const url = String(request instanceof Request ? request.url : request);
-    if (!url.endsWith(NOTICE_PATH_SUFFIX)) return passthrough(request, init);
-    const authorization = new Headers(init?.headers).get('authorization');
-    posts.push({ url, authorization, body: JSON.parse(String(init?.body)) as GraphPost['body'] });
-    return Response.json({ messages: [{ id: `wamid.NOTICE${posts.length}` }] });
-  });
-  return posts;
 }
 
 async function accountCountFor(input: { waId: string }): Promise<number> {

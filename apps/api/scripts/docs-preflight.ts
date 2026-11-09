@@ -1,6 +1,6 @@
 import type { AgentPlugin } from '@zapbip/agents';
 import { AGENT_PLUGINS } from '@zapbip/agents/plugins';
-import { COMPANY, type CompanyFacts, OFFICIAL_WHATSAPP_NUMBER, ZAPBIP_NPM_VERSION } from '@zapbip/types';
+import { COMPANY, type CompanyFacts, ZAPBIP_NPM_VERSION } from '@zapbip/types';
 import { type DeployShell, type EnvironmentVariables, runDocsPreflight } from '../src/operations/deploy-preflight';
 import { createPackageFetcher, type PackageFetcher } from '../src/operations/package-fetcher';
 import { createTerminalShell } from '../src/operations/terminal-shell';
@@ -8,7 +8,6 @@ import { createTerminalShell } from '../src/operations/terminal-shell';
 export type DocsPreflightEntry = {
   shell: DeployShell;
   environmentVariables: EnvironmentVariables;
-  officialWhatsAppNumber: string;
   company: CompanyFacts;
   npmVersion: string;
   plugins: AgentPlugin[];
@@ -31,7 +30,6 @@ if (import.meta.main) {
   runDocsPreflightEntry({
     shell: createTerminalShell({}),
     environmentVariables: process.env,
-    officialWhatsAppNumber: OFFICIAL_WHATSAPP_NUMBER,
     company: COMPANY,
     npmVersion: ZAPBIP_NPM_VERSION,
     plugins: Object.values(AGENT_PLUGINS),

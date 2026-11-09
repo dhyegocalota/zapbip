@@ -3,7 +3,7 @@ import { openSync } from 'node:fs';
 import { setTimeout as delay } from 'node:timers/promises';
 import { ReadStream } from 'node:tty';
 import { parseArgs } from 'node:util';
-import { SECOND_MS } from '@zapbip/types';
+import { SECOND_MS, START_LINK_PATH } from '@zapbip/types';
 import { z } from 'zod';
 import { readDeployBlock } from './deploy';
 import { parseDeployEnvironment, type DeployEnvironment } from '../src/operations/deploy-environment';
@@ -28,10 +28,10 @@ export type SmokeEntry = {
   promptHidden: (input: { question: string }) => Promise<string>;
 };
 
-function firstDeployInstructions(input: { environment: DeployEnvironment }): string[] {
+function firstDeployInstructions(input: { environment: DeployEnvironment; publicOrigin: string }): string[] {
   return [
     'First deploy: checks 2 (mcp initialize) and 5 (fake inbound) were skipped because they need the smoke connection.',
-    `Create it: from the phone you will put in ${SmokeInput.OwnerPhone}, send "novo agente smoke" to the zapbip official number (development: through the owner simulator).`,
+    `Create it: from the phone you will put in ${SmokeInput.OwnerPhone}, send "novo agente smoke" to zapbip through the start link ${input.publicOrigin}${START_LINK_PATH} (development: through the owner simulator).`,
     `Put the connection secret of the MCP URL in ${SmokeInput.ConnectionSecret} and that phone in ${SmokeInput.OwnerPhone} in .env.`,
     `Run it again: pnpm smoke:${input.environment}`,
   ];
@@ -58,7 +58,7 @@ export async function runSmoke(input: SmokeEntry): Promise<number> {
     nowSeconds: () => Math.floor(Date.now() / SECOND_MS),
   });
   results.forEach((result) => log(formatSmokeResult({ result })));
-  if (firstDeploy) firstDeployInstructions({ environment }).forEach(log);
+  if (firstDeploy) firstDeployInstructions({ environment, publicOrigin }).forEach(log);
   return results.every((result) => result.passed) ? 0 : 1;
 }
 

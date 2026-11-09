@@ -1,3 +1,4 @@
+import { DISPLAY_NUMBER_PATTERN } from '@zapbip/types';
 import { BackofficeCopyKey } from '../backoffice-copy';
 import { type FormBody, textFieldOf } from '../form-fields';
 import { NEW_META_APP_VALUE, NumberFormField } from './number-form-fields';
@@ -29,7 +30,6 @@ export type RegistrationParse =
 
 const LABEL_MAX_LENGTH = 60;
 const DIGITS_PATTERN = /^\d+$/;
-const DISPLAY_NUMBER_PATTERN = /^\+\d{7,15}$/;
 
 function valueOf(input: { form: FormBody; field: NumberFormField }): string {
   const value = textFieldOf({ form: input.form, name: input.field });

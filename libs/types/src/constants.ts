@@ -40,10 +40,17 @@ export const COMPANY = {
 export const BYTES_PER_MEGABYTE = 1_000_000;
 export const PAGE_LANGUAGE_FOLDER = 'pt-br';
 export const DEFAULT_LOCALE = OwnerLocale.PortugueseBrazil;
-export const OFFICIAL_NUMBER_UNSET = 'OFFICIAL_NUMBER_UNSET';
-export const OFFICIAL_WHATSAPP_NUMBER: string = OFFICIAL_NUMBER_UNSET;
 export const PRODUCTION_ZONE = 'zapbip.com';
 export const PRODUCTION_PUBLIC_ORIGIN = `https://mcp.${PRODUCTION_ZONE}`;
+export const START_LINK_PATH = '/start';
+export const START_LINK = `${PRODUCTION_PUBLIC_ORIGIN}${START_LINK_PATH}`;
+export const START_LINK_LANGUAGE_PARAMETER = 'lang';
+export const WHATSAPP_LINK_ORIGIN = 'https://wa.me';
+export const WHATSAPP_LINK_TEXT_PARAMETER = 'text';
+export const START_PREFILLED_TEXT: Record<OwnerLocale, string> = {
+  [OwnerLocale.PortugueseBrazil]: 'Oi! Quero conectar meus agentes de IA ao zapbip.',
+  [OwnerLocale.EnglishUs]: 'Hi! I want to connect my AI agents to zapbip.',
+};
 export const CLOUDFLARE_NAMESERVER_SUFFIX = '.ns.cloudflare.com';
 export const NPM_REGISTRY_URL = 'https://registry.npmjs.org';
 export const ZAPBIP_NPM_VERSION = '0.1.0';
@@ -51,3 +58,4 @@ export const INSTALL_PRODUCT_TEXT_MAX_LENGTH = 120;
 export const PACKAGE_PATH_PREFIX = '/pkg/';
 export const PRODUCTION_PACKAGES_BUCKET = 'zapbip-packages';
 export const SEEN_MESSAGE_LIMIT = 1_024;
+export const DISPLAY_NUMBER_PATTERN = /^\+\d{7,15}$/;

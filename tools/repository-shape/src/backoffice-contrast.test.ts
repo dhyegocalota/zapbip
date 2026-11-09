@@ -3,6 +3,7 @@ import { compositeOver, contrastOf, themeTokens } from './contrast';
 import { readRepositoryFile } from './repository-files';
 
 const STYLESHEET = readRepositoryFile('apps/api/src/backoffice/assets/backoffice.css');
+const START_LINK_STYLE = readRepositoryFile('apps/api/src/routes/start-link-style.ts');
 const TEXT_CONTRAST = 4.5;
 const NON_TEXT_CONTRAST = 3;
 const COLOUR_FUNCTION_PATTERN = /rgb\([^)]*\)/;
@@ -91,5 +92,33 @@ describe('backoffice contrast', () => {
       minimum: TEXT_CONTRAST,
     });
     expect(shortfallsOf({ pairs, tokens: { ...tokens, '--color-header-over-content': headerOverContent } })).toEqual([]);
+  });
+});
+
+describe('start link page contrast', () => {
+  const START_LINK_PAIRS = pairsOf({
+    foregrounds: ['--color-text', '--color-text-muted'],
+    backgrounds: ['--color-page', '--color-surface'],
+    minimum: TEXT_CONTRAST,
+  });
+
+  test.each(['light', 'dark'] as const)('uses the backoffice value of every token it declares in %s', (theme) => {
+    const backoffice = themeTokens({ stylesheet: STYLESHEET })[theme];
+    const declared = themeTokens({ stylesheet: START_LINK_STYLE })[theme];
+    const differing = Object.entries(declared)
+      .filter(([name]) => backoffice[name] !== undefined)
+      .filter(([name, value]) => backoffice[name] !== value)
+      .map(([name]) => name);
+    expect(differing).toEqual([]);
+  });
+
+  test.each(['light', 'dark'] as const)('declares only tokens the backoffice has, in %s', (theme) => {
+    const backoffice = themeTokens({ stylesheet: STYLESHEET })[theme];
+    const unknown = Object.keys(themeTokens({ stylesheet: START_LINK_STYLE })[theme]).filter((name) => backoffice[name] === undefined);
+    expect(unknown).toEqual([]);
+  });
+
+  test.each(['light', 'dark'] as const)('meets the text contrast in %s', (theme) => {
+    expect(shortfallsOf({ pairs: START_LINK_PAIRS, tokens: themeTokens({ stylesheet: START_LINK_STYLE })[theme] })).toEqual([]);
   });
 });

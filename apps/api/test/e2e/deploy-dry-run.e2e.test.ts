@@ -3,7 +3,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
-import { COMPANY_FACT_UNSET, type CompanyFacts, OFFICIAL_NUMBER_UNSET, OFFICIAL_WHATSAPP_NUMBER, ZAPBIP_NPM_VERSION } from '@zapbip/types';
+import { COMPANY_FACT_UNSET, type CompanyFacts, ZAPBIP_NPM_VERSION } from '@zapbip/types';
 import { afterAll, describe, expect, test } from 'vitest';
 import { readDeployBlock, runDeploy } from '../../scripts/deploy';
 import { DeployEnvironment } from '../../src/operations/deploy-environment';
@@ -115,12 +115,8 @@ describe('wrangler dry run of every deployed block', () => {
 });
 
 describe('preflight against the real constants and the real wrangler blocks', () => {
-  test('production is not refused while the official number is the sentinel', async () => {
-    expect(OFFICIAL_WHATSAPP_NUMBER).toBe(OFFICIAL_NUMBER_UNSET);
-    const { exitCode, output } = await refusalOf({
-      environment: DeployEnvironment.Production,
-      company: COMPLETE_COMPANY,
-    });
+  test('production passes with every other check green and no number input', async () => {
+    const { exitCode, output } = await refusalOf({ environment: DeployEnvironment.Production, company: COMPLETE_COMPANY });
     expect(exitCode).toBe(0);
     expect(output).not.toContain('refused at');
   });

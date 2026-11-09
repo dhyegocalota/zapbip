@@ -47,4 +47,5 @@ export interface NumberRegistry {
   openForAccount(input: { accountId: string }): Promise<OutboundNumber>;
   openForInbound(input: { numberId: string }): Promise<OutboundNumber>;
   openTheOnlyNumber(): Promise<OutboundNumber>;
+  findStartDisplayNumber(): Promise<string | null>;
 }

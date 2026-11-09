@@ -28,6 +28,8 @@ export enum LogEvent {
   BudgetWarning = 'budget.warning',
   FrameRejected = 'frame_rejected',
   InstallPageFailed = 'install_page_failed',
+  StartLinkFailed = 'start_link.failed',
+  StartLinkInvalidNumber = 'start_link.invalid_number',
   BackofficeSignInFailed = 'backoffice.sign_in_failed',
   BackofficeSignInSucceeded = 'backoffice.sign_in_succeeded',
   BackofficeLocked = 'backoffice.locked',

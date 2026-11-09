@@ -5,10 +5,11 @@ import {
   type CompanyFacts,
   HttpStatus,
   NPM_REGISTRY_URL,
-  OFFICIAL_NUMBER_UNSET,
   PRODUCTION_PACKAGES_BUCKET,
   PRODUCTION_PUBLIC_ORIGIN,
   PRODUCTION_ZONE,
+  START_LINK,
+  WHATSAPP_LINK_ORIGIN,
 } from '@zapbip/types';
 import { randomUUID } from 'node:crypto';
 import { tmpdir } from 'node:os';
@@ -50,10 +51,10 @@ export type EnvironmentVariables = Record<string, string | undefined>;
 
 export enum PreflightStep {
   Environment = 'environment',
-  OfficialNumber = 'official number',
   CompanyFacts = 'company facts',
   NpmVersion = 'npm version',
   PluginWheel = 'plugin wheel',
+  StartLink = 'start link',
   Git = 'git',
   Gate = 'gate',
   Config = 'config',
@@ -92,7 +93,6 @@ export type WorkerPreflightInput = {
 
 export type DocsPreflightInput = {
   shell: DeployShell;
-  officialWhatsAppNumber: string;
   company: CompanyFacts;
   npmVersion: string;
   plugins: AgentPlugin[];
@@ -148,11 +148,6 @@ async function refuseUnlessDeployable(input: WorkerPreflightInput): Promise<stri
     return `deploy supports ${DEPLOYABLE_ENVIRONMENTS.join(' or ')}, not ${input.environment}`;
   if (!input.isInteractive) return 'deploy needs an interactive terminal';
   return null;
-}
-
-async function refuseUnsetOfficialNumber(input: { officialWhatsAppNumber: string }): Promise<string | null> {
-  if (input.officialWhatsAppNumber !== OFFICIAL_NUMBER_UNSET) return null;
-  return `OFFICIAL_WHATSAPP_NUMBER is still ${OFFICIAL_NUMBER_UNSET}; set the official number in libs/types before deploying`;
 }
 
 async function refuseUnsetCompanyFacts(input: { company: CompanyFacts }): Promise<string | null> {
@@ -346,6 +341,14 @@ async function refuseUnhostedWorkerArtifacts(input: WorkerPreflightInput): Promi
   });
 }
 
+async function refuseUnservedStartLink(input: DocsPreflightInput): Promise<string | null> {
+  const answer = await input.packageFetcher({ url: START_LINK }).catch(() => null);
+  if (answer === null) return `could not reach ${START_LINK}; check your network and run it again`;
+  const isWhatsAppRedirect = answer.status === HttpStatus.Found && answer.location?.startsWith(`${WHATSAPP_LINK_ORIGIN}/`) === true;
+  if (isWhatsAppRedirect) return null;
+  return `${START_LINK} answered ${answer.status} and not a redirect to ${WHATSAPP_LINK_ORIGIN}; deploy the Worker and activate a number first`;
+}
+
 async function refuseUnhostedDocsArtifacts(input: DocsPreflightInput): Promise<string | null> {
   return firstArtifactRefusal({
     artifacts: hostedArtifactsOf(input),
@@ -465,10 +468,10 @@ const WORKER_CHECKS: PreflightCheck<WorkerPreflightInput>[] = [
 ];
 
 const DOCS_CHECKS: PreflightCheck<DocsPreflightInput>[] = [
-  { step: PreflightStep.OfficialNumber, refusalOf: refuseUnsetOfficialNumber },
   { step: PreflightStep.CompanyFacts, refusalOf: refuseUnsetCompanyFacts },
   { step: PreflightStep.NpmVersion, refusalOf: refuseUntrustedDocsPackages },
   { step: PreflightStep.PluginWheel, refusalOf: refuseUnhostedDocsArtifacts },
+  { step: PreflightStep.StartLink, refusalOf: refuseUnservedStartLink },
 ];
 
 async function firstRefusal<Input>(input: { checks: PreflightCheck<Input>[]; subject: Input }): Promise<PreflightRefusal | null> {

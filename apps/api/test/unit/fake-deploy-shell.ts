@@ -1,5 +1,5 @@
 import type { AgentPlugin } from '@zapbip/agents/plugins';
-import { PRODUCTION_PUBLIC_ORIGIN, type CompanyFacts } from '@zapbip/types';
+import { PRODUCTION_PUBLIC_ORIGIN, START_LINK, WHATSAPP_LINK_ORIGIN, type CompanyFacts } from '@zapbip/types';
 import { DeployEnvironment } from '../../src/operations/deploy-environment';
 import type { DeployBlock, WorkerFacts, DeployShell, EnvironmentVariables, ShellResult } from '../../src/operations/deploy-preflight';
 import type { NameserverResolver } from '../../src/operations/nameserver-resolver';
@@ -16,7 +16,7 @@ import {
 import { SmokeInput } from '../../src/operations/smoke-inputs';
 import { WorkerSecret } from '../../src/operations/worker-secret';
 
-export const OFFICIAL_NUMBER = '5511999990000';
+export const SMOKE_OWNER_PHONE = '5511999990000';
 export const NPM_VERSION = '0.1.0';
 export const NPM_PUBLISHER_VARIABLE = 'ZAPBIP_NPM_PUBLISHER';
 export const NPM_PUBLISHER = 'zapbip-owner';
@@ -47,7 +47,7 @@ export const HAPPY_REPLIES: Record<string, ShellResult> = {
 export const COMPLETE_VARIABLES: EnvironmentVariables = {
   [SmokeInput.BaseUrl]: 'https://mcp-staging.zapbip.com',
   [SmokeInput.ConnectionSecret]: 'zb_conn_secret',
-  [SmokeInput.OwnerPhone]: OFFICIAL_NUMBER,
+  [SmokeInput.OwnerPhone]: SMOKE_OWNER_PHONE,
   [SmokeInput.AppSecret]: 'app-secret',
   [SmokeInput.VerifyToken]: 'verify-token',
   [SmokeInput.PhoneNumberId]: '123456',
@@ -75,27 +75,37 @@ export function fakeShell({ replies: overrides = {} }: { replies?: Record<string
 
 export type FakePackageFetcher = PackageFetcher & { urls: string[] };
 
-export const HOSTED_WHEEL_FOUND: PackageAnswer = { status: 200, sha256: HOSTED_WHEEL_SHA256 };
-export const HOSTED_REQUIREMENTS_FOUND: PackageAnswer = { status: 200, sha256: HOSTED_REQUIREMENTS_SHA256 };
+export const HOSTED_WHEEL_FOUND: PackageAnswer = { status: 200, sha256: HOSTED_WHEEL_SHA256, location: null };
+export const START_LINK_FOUND: PackageAnswer = {
+  status: 302,
+  sha256: HOSTED_WHEEL_SHA256,
+  location: `${WHATSAPP_LINK_ORIGIN}/5511999990001?text=hi`,
+};
+export const HOSTED_REQUIREMENTS_FOUND: PackageAnswer = { status: 200, sha256: HOSTED_REQUIREMENTS_SHA256, location: null };
 
 export function fakePackageFetcher({
   answer,
   answers = {},
   failure,
+  failures = {},
 }: {
   answer?: PackageAnswer;
   answers?: Record<string, PackageAnswer>;
   failure?: Error;
+  failures?: Record<string, Error>;
 }): FakePackageFetcher {
   const urls: string[] = [];
   const hosted: Record<string, PackageAnswer> = {
     [HOSTED_WHEEL_URL]: HOSTED_WHEEL_FOUND,
     [HOSTED_REQUIREMENTS_URL]: HOSTED_REQUIREMENTS_FOUND,
+    [START_LINK]: START_LINK_FOUND,
     ...answers,
   };
   const fetcher = async ({ url }: { url: string }): Promise<PackageAnswer> => {
     urls.push(url);
     if (failure) throw failure;
+    const failureOfUrl = failures[url];
+    if (failureOfUrl) throw failureOfUrl;
     return answer ?? (hosted[url] as PackageAnswer);
   };
   return Object.assign(fetcher, { urls });

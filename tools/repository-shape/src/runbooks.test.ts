@@ -1,7 +1,7 @@
 import { existsSync, readdirSync } from 'node:fs';
 import { posix } from 'node:path';
 import { AGENT_PLUGINS } from '@zapbip/agents/plugins';
-import { PRODUCTION_PACKAGES_BUCKET } from '@zapbip/types';
+import { PRODUCTION_PACKAGES_BUCKET, START_LINK, WHATSAPP_LINK_ORIGIN } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { capturedNames, readRepositoryFile, repositoryPath } from './repository-files';
 
@@ -53,6 +53,15 @@ const GO_LIVE_ORDER = [
   'Meta live mode',
   'Smoke production',
 ];
+const FILE_FIRST_REFERENCE_PATTERN = /([a-z-]+\.md)`?\)?,? (go-live )?steps? ((?:\d+(?:, | to | and )?)+)/g;
+const STEP_FIRST_REFERENCE_PATTERN = /(go-live )?steps? ((?:\d+(?:, | to | and )?)+) of \[?`?([a-z-]+\.md)/g;
+const STEP_NUMBER_PATTERN = /\d+/g;
+const REFERENCE_CONTEXT_LENGTH = 160;
+const REFERENCE_SUBJECTS: { keyword: RegExp; titleFragment: string }[] = [
+  { keyword: /ZAPBIP_NPM_PUBLISHER/g, titleFragment: 'npm package' },
+  { keyword: /COMPANY/g, titleFragment: 'company facts' },
+  { keyword: /hosted plugin file/g, titleFragment: 'plugin wheels' },
+];
 const PNPM_BUILT_IN_COMMANDS = ['exec', 'dlx', 'install', 'add'];
 const TITLE_PATTERN = /^# .+\n\n(.+)\n/;
 const STEP_PATTERN = /^(\d+)\. (.*)$/gm;
@@ -63,6 +72,7 @@ const EXTERNAL_LINK_PATTERN = /^(https?:|mailto:|#)/;
 const PNPM_COMMAND_PATTERN = /\bpnpm ([a-z][\w:-]*)/g;
 const FENCED_BLOCK_PATTERN = /```[\s\S]*?```/g;
 const MINTLIFY_PUBLISH_RUNBOOK = 'mintlify-publish.md';
+const OFFICIAL_NUMBER_PATTERN = /official (WhatsApp )?number|OFFICIAL_(WHATSAPP_)?NUMBER/i;
 const NPM_PACKAGE_COUNT = 2;
 const NPM_PUBLISH_PATTERN = /`npm publish --access public`/g;
 const PNPM_PUBLISH_PROHIBITION_PATTERN = /never publish or pack with pnpm/g;
@@ -134,6 +144,61 @@ function brokenLinks({ file, text }: Runbook): string[] {
     .map((target) => `${file}: ${target}`);
 }
 
+type StepReference = { reference: string; target: string; numbers: number[]; isGoLive: boolean; index: number };
+
+function stepTitlesOf({ file, isGoLive }: { file: string; isGoLive: boolean }): Record<number, string> {
+  const steps = isGoLive ? goLiveSteps() : stepSections(withoutGoLiveOrder(readRunbook(file).text));
+  return Object.fromEntries(steps.map((step) => [step.number, stepTitleOf(step.title).toLowerCase()]));
+}
+
+function lastMatchIndex({ context, keyword }: { context: string; keyword: RegExp }): number {
+  return Math.max(-1, ...[...context.matchAll(keyword)].map((match) => match.index));
+}
+
+function subjectOf(context: string): { keyword: RegExp; titleFragment: string } | undefined {
+  const present = REFERENCE_SUBJECTS.filter((subject) => lastMatchIndex({ context, keyword: subject.keyword }) >= 0);
+  return present.sort(
+    (first, second) => lastMatchIndex({ context, keyword: second.keyword }) - lastMatchIndex({ context, keyword: first.keyword }),
+  )[0];
+}
+
+function numbersOf(list: string): number[] {
+  return [...list.matchAll(STEP_NUMBER_PATTERN)].map((match) => Number(match[0]));
+}
+
+function stepReferencesOf(prose: string): StepReference[] {
+  const fileFirst = [...prose.matchAll(FILE_FIRST_REFERENCE_PATTERN)].map((match) => ({
+    reference: match[0],
+    target: match[1]!,
+    numbers: numbersOf(match[3]!),
+    isGoLive: match[2] !== undefined,
+    index: match.index,
+  }));
+  const stepFirst = [...prose.matchAll(STEP_FIRST_REFERENCE_PATTERN)].map((match) => ({
+    reference: match[0],
+    target: match[3]!,
+    numbers: numbersOf(match[2]!),
+    isGoLive: match[1] !== undefined,
+    index: match.index,
+  }));
+  return [...fileFirst, ...stepFirst];
+}
+
+function brokenStepReferences({ file, text }: Runbook): string[] {
+  const prose = text.replace(FENCED_BLOCK_PATTERN, '');
+  return stepReferencesOf(prose).flatMap(({ reference, target, numbers, isGoLive, index }) => {
+    if (!runbookFiles().includes(target)) return [];
+    const titles = stepTitlesOf({ file: target, isGoLive });
+    const missing = numbers.filter((number) => titles[number] === undefined).map((number) => `${file}: ${reference} has no step ${number}`);
+    if (missing.length > 0) return missing;
+    const subject = subjectOf(prose.slice(Math.max(0, index - REFERENCE_CONTEXT_LENGTH), index));
+    const wrongTitle = subject && !titles[numbers[0]!]!.includes(subject.titleFragment);
+    return wrongTitle
+      ? [`${file}: ${reference} is about ${subject.titleFragment}, but step ${numbers[0]} is "${titles[numbers[0]!]}"`]
+      : [];
+  });
+}
+
 function rootScripts(): string[] {
   return Object.keys(JSON.parse(readRepositoryFile(ROOT_PACKAGE_FILE)).scripts);
 }
@@ -161,6 +226,20 @@ function goLiveStepTitles(): string[] {
 }
 
 describe('runbooks', () => {
+  test('every step reference names a step that exists, and a described one has the matching title', () => {
+    expect(allRunbooks().flatMap(brokenStepReferences)).toEqual([]);
+  });
+
+  test('a reference to a missing step and a reference to the wrong title are reported', () => {
+    const missing = brokenStepReferences({ file: 'x.md', text: 'See deploy.md step 99.' });
+    expect(missing).toEqual(['x.md: deploy.md step 99 has no step 99']);
+    const wrong = brokenStepReferences({
+      file: 'x.md',
+      text: 'Set ZAPBIP_NPM_PUBLISHER ([mintlify-publish.md](mintlify-publish.md), step 2).',
+    });
+    expect(wrong).toHaveLength(1);
+  });
+
   test('the index links every other runbook exactly once', () => {
     const index = readRunbook(INDEX_FILE_NAME).text;
     const linkCounts = runbookFiles()
@@ -228,6 +307,20 @@ describe('runbooks', () => {
     const prose = readRunbook(file).text.replace(LINK_TARGET_PATTERN, '');
     const agentNames = Object.entries(AGENT_PLUGINS).flatMap(([id, plugin]) => [id, plugin.packageName]);
     expect(agentNames.filter((name) => prose.toLowerCase().includes(name.toLowerCase()))).toEqual([]);
+  });
+
+  test.each(runbookFiles())('%s names no official number, because the start link follows the registry', (file) => {
+    expect(readRunbook(file).text).not.toMatch(OFFICIAL_NUMBER_PATTERN);
+  });
+
+  test('deploy.md checks the start link answers before the docs are published', () => {
+    const text = readRunbook(DEPLOY_RUNBOOK).text;
+    expect(text).toContain(`curl -sI ${START_LINK}`);
+  });
+
+  test('mintlify-publish.md says the docs preflight proves the start link redirects to wa.me', () => {
+    const text = readRunbook(MINTLIFY_PUBLISH_RUNBOOK).text;
+    expect(text).toContain(`the start link (${START_LINK}) redirects to ${WHATSAPP_LINK_ORIGIN}`);
   });
 
   test('deploy.md keeps the docs preflight mandatory after the production deploy', () => {

@@ -1,14 +1,16 @@
-import { INSTALL_PAGE_PATH_PREFIX } from '@zapbip/types';
+import { INSTALL_PAGE_PATH_PREFIX, START_LINK_PATH } from '@zapbip/types';
 import { Hono } from 'hono';
 import { HEALTH_PATH } from './contract/constants';
 import type { Bindings } from './contract/env';
 import { createInstallPageDependencies } from './install/install-page-adapter';
+import { numberRegistryOf } from './adapters/d1/d1-number-registry';
 import { parseDeployEnvironment } from './operations/deploy-environment';
 import { createInstallPageRoute } from './routes/install-page';
 import { connectorRoutes } from './routes/connector';
 import { mcpRoutes } from './routes/mcp';
 import { mediaRoutes } from './routes/media';
 import { packageRoutes } from './routes/package';
+import { createStartLinkRoute } from './routes/start-link';
 import { uploadRoutes } from './routes/upload';
 import { createWhatsappRoutes } from './routes/whatsapp';
 
@@ -23,6 +25,12 @@ export function createApp(input: {
   app.get(HEALTH_PATH, (context) => context.json({ ok: true, environment: parseDeployEnvironment({ value: context.env.ENVIRONMENT }) }));
   app.all(`${INSTALL_PAGE_PATH_PREFIX}*`, (context) =>
     createInstallPageRoute(createInstallPageDependencies({ environment: context.env })).fetch(context.req.raw),
+  );
+  app.all(`${START_LINK_PATH}/*`, (context) =>
+    createStartLinkRoute({
+      registry: numberRegistryOf({ bindings: context.env }),
+      limiter: context.env.INSTALL_PAGE_LIMITER,
+    }).fetch(context.req.raw),
   );
   app.route('/', mcpRoutes);
   app.route('/', connectorRoutes);

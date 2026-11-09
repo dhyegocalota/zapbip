@@ -5,6 +5,7 @@ import { OperatorEvent } from '../../src/adapters/whatsapp/whatsapp-enums';
 import { OwnerCopyKey, WHATSAPP_COPY } from '../../src/adapters/whatsapp/whatsapp-copy';
 import textFixture from '../fixtures/whatsapp/inbound/text.json';
 import { changeOf, notificationOf } from '../fixtures/whatsapp/inbound/notification';
+import { recordGraphPosts } from '../support/record-graph-posts';
 import { seedOwnerIdentity } from '../support/seed';
 import {
   seedWhatsAppNumber,
@@ -24,7 +25,6 @@ const NEW_OWNER_PHONE = '5511900000066';
 const LATE_OWNER_PHONE = '5511900000068';
 const UNBOUND_OWNER_PHONE = '5511900000067';
 const LEAVING_OWNER_PHONE = '5511900000069';
-const MESSAGES_PATH_SUFFIX = '/messages';
 const SECOND = {
   numberId: 'num_0031',
   metaAppRef: 'mapp_0031',
@@ -44,21 +44,6 @@ const THIRD = {
   wabaId: '3000000000033',
   displayNumber: '5511900000033',
 };
-
-type GraphPost = { url: string; authorization: string | null; body: { to: string; text: { body: string } } };
-
-function recordGraphPosts(): GraphPost[] {
-  const posts: GraphPost[] = [];
-  const passthrough = globalThis.fetch.bind(globalThis);
-  vi.spyOn(globalThis, 'fetch').mockImplementation(async (request, init) => {
-    const url = String(request instanceof Request ? request.url : request);
-    if (!url.endsWith(MESSAGES_PATH_SUFFIX)) return passthrough(request, init);
-    const authorization = new Headers(init?.headers).get('authorization');
-    posts.push({ url, authorization, body: JSON.parse(String(init?.body)) as GraphPost['body'] });
-    return Response.json({ messages: [{ id: `wamid.NOTICE${posts.length}` }] });
-  });
-  return posts;
-}
 
 async function homeNumberOf(input: { waId: string }): Promise<string | null> {
   const row = await testEnv.CONNECTIONS.prepare(
