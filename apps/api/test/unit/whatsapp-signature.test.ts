@@ -99,7 +99,11 @@ describe('verifyWebhookSignature', () => {
   it.each(WHITESPACE_SECRETS)('rejects a body signed with the whitespace secret %j', async (whitespaceSecret) => {
     const signedBytes = bytesOf({ text: BODY_TEXT });
     const signatureHeader = await signatureHeaderOf({ appSecret: whitespaceSecret, body: signedBytes });
-    const isValid = await verifyWebhookSignature({ appSecret: whitespaceSecret, rawBody: bufferOf({ bytes: signedBytes }), signatureHeader });
+    const isValid = await verifyWebhookSignature({
+      appSecret: whitespaceSecret,
+      rawBody: bufferOf({ bytes: signedBytes }),
+      signatureHeader,
+    });
     expect(isValid).toBe(false);
   });
 });
