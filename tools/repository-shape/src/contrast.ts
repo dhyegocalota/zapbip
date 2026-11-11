@@ -79,3 +79,7 @@ export function themeTokens({ stylesheet }: { stylesheet: string }): { light: Re
   const light = tokensOf({ block: blocks[0]! });
   return { light, dark: { ...light, ...tokensOf({ block: blocks[1]! }) } };
 }
+
+export function forcedDarkTokens(input: { stylesheet: string }): Record<string, string> {
+  throw new Error(`forcedDarkTokens is not implemented for ${input.stylesheet.length} characters`);
+}
