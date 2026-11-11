@@ -39,7 +39,7 @@ Every checkbox states the input and the exact expected outcome. A ticked box car
 - [x] Reload and navigate to another page; expected: both choices persist — evidence: on the sign-in page: reload keeps theme dark and pt-BR; /numbers redirects to /sign-in with both kept; /nope-404 renders dark and pt-BR without switchers (`error404-375-dark-ptbr.png`); signed-in navigation not walked
 - [x] Keyboard only: Tab reaches both groups, Enter submits, the focus ring is visible in both themes — evidence: Tab reaches language and theme buttons, 3px solid outline in both themes (`focus-1280-light.png`, `focus-1280-dark.png`), Enter on a focused theme button switched to light
 - [x] Console and network clean: zero console errors, zero CSP violations, zero failed requests — evidence: 0 console errors on sign-in (the 404 page logs the browser 404 line; Chrome prints a password-form verbose hint), 0 CSP violations; network 200 css and svg, 303 on POST /theme
-- [ ] Screenshots at `docs/features/backoffice-switchers/evidence/`; the recorder uploads them for the PR — BLOCKED: the recorder owns this folder; tester screenshots are under scratchpad/test-results/backoffice-switchers
+- [x] Screenshots at `docs/features/backoffice-switchers/evidence/`; the recorder uploads them for the PR — evidence: signed-in `/numbers` with two numbers, at head 373523a9: `numbers-1280-light.png`, `numbers-1280-dark.png`, `numbers-375-light.png`, `numbers-375-dark.png`, `numbers-1280-light-en-us.png`; walkthrough `walkthrough.mp4` and `walkthrough.gif` (theme and language switched on a number page, same path kept) on the release `pr-media-backoffice-switchers`
 
 ## Edge cases found during execution
 
