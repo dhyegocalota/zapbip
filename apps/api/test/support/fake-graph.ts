@@ -55,7 +55,7 @@ function scopeIdOf(input: { path: string; body: unknown }): string | null {
   return new URLSearchParams(String(input.body)).get(EXCHANGE_CODE_FIELD);
 }
 
-function displayNumberOf(input: { phoneNumberId: string }): string {
+export function fakeReportedDisplayNumberOf(input: { phoneNumberId: string }): string {
   const last = input.phoneNumberId.slice(-DISPLAY_NUMBER_AREA_DIGITS);
   const first = input.phoneNumberId.slice(-2 * DISPLAY_NUMBER_AREA_DIGITS, -DISPLAY_NUMBER_AREA_DIGITS);
   return `+55 11 9${first}-${last}`;
@@ -138,7 +138,7 @@ export async function startFakeGraph(input: { port: number }): Promise<{ port: n
     });
     const data = [...new Set(registeredIds)].map((id) => ({
       id,
-      display_phone_number: displayNumberOf({ phoneNumberId: id }),
+      display_phone_number: fakeReportedDisplayNumberOf({ phoneNumberId: id }),
       verified_name: FAKE_VERIFIED_NAME,
     }));
     reply({ response: request.response, status: OK_STATUS, body: { data } });
