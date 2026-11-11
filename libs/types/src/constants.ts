@@ -19,10 +19,9 @@ export const INSTALL_SELF_TEST_TEXT: Record<OwnerLocale, string> = {
 };
 export const BYTES_PER_KILOBYTE = 1_000;
 export const COMPANY_FACT_UNSET = 'COMPANY_FACT_UNSET';
-export const META_LOGIN_CONFIGURATION_ID_UNSET = 'META_LOGIN_CONFIGURATION_ID_UNSET';
 export const META_APP_ID = '714836811568009';
 export const META_APP_LABEL = 'zapbip';
-export const META_LOGIN_CONFIGURATION_ID: string = META_LOGIN_CONFIGURATION_ID_UNSET;
+export const META_LOGIN_CONFIGURATION_ID = '946808808378298';
 export const ONBOARDING_PIN_PATTERN = /^\d{6}$/;
 
 export type CompanyFacts = {

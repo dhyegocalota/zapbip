@@ -23,6 +23,8 @@ const STATUS_UNAUTHORIZED = 401;
 const STATUS_NOT_FOUND = 404;
 const STATUS_UNPROCESSABLE = 422;
 const STATUS_TOO_MANY_REQUESTS = 429;
+const META_APP_COLUMN_LABEL = 'App da Meta';
+const REPLACE_APP_SECRET_TITLE = 'Trocar o segredo do app';
 const CONNECT_PATH = '/numbers/connect';
 const NEW_ACCESS_TOKEN = 'replacement-access-token-ta2';
 const WRONG_CODE = '000000';
@@ -96,7 +98,7 @@ describe('the removed typed registration', () => {
     const response = await postAction({
       path: '/meta-apps/app_0005/app-secret',
       sessionToken,
-      fields: { [NumberFormField.AppSecret]: 'replacement', [NumberFormField.NumberId]: 'num_0005' },
+      fields: { appSecret: 'replacement', [NumberFormField.NumberId]: 'num_0005' },
     });
     expect(response.status).toBe(STATUS_NOT_FOUND);
   });
@@ -104,14 +106,14 @@ describe('the removed typed registration', () => {
   test('shows no Meta app column in the list', async () => {
     await seedNumber({ suffix: '0006', label: 'First' });
     const body = await (await getPage({ path: '/numbers', sessionToken })).text();
-    expect(body).not.toContain(copy[BackofficeCopyKey.NumbersColumnMetaApp]);
+    expect(body).not.toContain(META_APP_COLUMN_LABEL);
   });
 
   test('shows no replace app secret block on the number page', async () => {
     await seedNumber({ suffix: '0016', label: 'First' });
     const body = await (await getPage({ path: '/numbers/num_0016', sessionToken })).text();
-    expect(body).not.toContain(copy[BackofficeCopyKey.NumberRotateSecretTitle]);
-    expect(body).not.toContain(copy[BackofficeCopyKey.NumberMetaApp]);
+    expect(body).not.toContain(REPLACE_APP_SECRET_TITLE);
+    expect(body).not.toContain(META_APP_COLUMN_LABEL);
   });
 });
 

@@ -3,7 +3,7 @@ import type { Context } from 'hono';
 import type { BackofficeCopyKey } from '../backoffice-copy';
 import { FLASH_MAX_AGE_MS, SEE_OTHER_STATUS } from '../backoffice-constants';
 import type { BackofficeEnv } from '../backoffice-env';
-import type { FieldErrors, RegistrationValues } from '../numbers/registration-form';
+import type { FieldErrors } from '../numbers/field-errors';
 
 export type FlashStatus = HttpStatus.Unauthorized | HttpStatus.UnprocessableEntity | HttpStatus.Conflict;
 
@@ -11,7 +11,6 @@ export type FormFlash = {
   status: FlashStatus;
   failure: BackofficeCopyKey | null;
   errors: FieldErrors;
-  values: RegistrationValues | null;
   selectedState: WhatsAppNumberState | null;
 };
 

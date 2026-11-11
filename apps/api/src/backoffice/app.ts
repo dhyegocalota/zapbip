@@ -23,7 +23,6 @@ const PROTECTED_PATHS = [
   `${BackofficePath.Numbers}/*`,
   BackofficePath.Metrics,
   BackofficePath.Audit,
-  '/meta-apps/*',
 ];
 
 const FORM_PATHS = [BackofficePath.SignIn, BackofficePath.Locale, ...PROTECTED_PATHS];

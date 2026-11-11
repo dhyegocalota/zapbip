@@ -39,8 +39,6 @@ export function numberEntry(input: Partial<NumberListEntry>): NumberListEntry {
     createdAt: NOW,
     updatedAt: NOW,
     credentialsChangedAt: NOW,
-    metaAppLabel: 'Main app',
-    metaAppUpdatedAt: NOW,
     accountCount: 2,
     ...input,
   };

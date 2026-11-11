@@ -56,7 +56,6 @@ function detailPage(input: { state: WhatsAppNumberState }): string {
     NumberDetailPage({
       page: PAGE,
       entry: numberEntry({ state: input.state }),
-      siblingLabels: [],
       allowedTargets: [WhatsAppNumberState.Closed],
       failure: null,
       selectedState: null,

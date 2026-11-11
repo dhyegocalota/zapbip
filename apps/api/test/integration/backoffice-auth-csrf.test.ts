@@ -49,7 +49,7 @@ describe('csrf', () => {
   });
 
   test('a foreign Origin with a valid token is refused', async () => {
-    const { response } = await signedInPost({ path: '/numbers/new', origin: EVIL_ORIGIN });
+    const { response } = await signedInPost({ path: '/numbers/connect', origin: EVIL_ORIGIN });
     expect(response.status).toBe(STATUS_FORBIDDEN);
   });
 

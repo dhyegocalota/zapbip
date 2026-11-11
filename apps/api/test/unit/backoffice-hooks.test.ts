@@ -2,7 +2,6 @@ import { HttpStatus, OwnerLocale, WhatsAppNumberState } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { BackofficeAuditAction, BackofficeAuditOutcome } from '../../src/backoffice/audit/backoffice-audit-action';
 import { BACKOFFICE_COPY, BackofficeCopyKey } from '../../src/backoffice/backoffice-copy';
-import { RegisterNumberPage } from '../../src/backoffice/numbers/views/register-number';
 import { NumberFormField } from '../../src/backoffice/numbers/number-form-fields';
 import { MetricsPage } from '../../src/backoffice/metrics/metrics-page';
 import { NumberDetailPage } from '../../src/backoffice/numbers/views/number-detail';
@@ -42,7 +41,6 @@ function detailHtml(input: { state: WhatsAppNumberState; verifiedAt: number | nu
     NumberDetailPage({
       page: PAGE,
       entry,
-      siblingLabels: [],
       allowedTargets: [WhatsAppNumberState.Closed],
       failure: null,
       selectedState: null,
@@ -183,42 +181,9 @@ describe('number detail hero card and live dot', () => {
   });
 });
 
-const FORM_ACTIONS_PATTERN =
-  /<div class="form-actions"><a href="\/numbers" class="button button-secondary">[^<]+<\/a><button type="submit" class="button button-primary">[^<]+<\/button><\/div>/;
-const REGISTRATION_VALUES = {
-  metaApp: 'new',
-  metaAppId: '',
-  metaAppName: '',
-  phoneNumberId: '',
-  wabaId: '',
-  displayNumber: '',
-  label: '',
-};
-
-function registerHtml(input: { errors: Parameters<typeof RegisterNumberPage>[0]['errors'] }): string {
-  return String(RegisterNumberPage({ page: PAGE, metaApps: [], values: REGISTRATION_VALUES, errors: input.errors, failure: null }));
-}
-
-describe('register form', () => {
-  it('puts the cancel link before the primary button in one action row', () => {
-    expect(registerHtml({ errors: {} })).toMatch(FORM_ACTIONS_PATTERN);
-  });
-
-  it('marks a field error with its own class', () => {
-    const html = registerHtml({ errors: { [NumberFormField.Label]: BackofficeCopyKey.ErrorSummaryTitle } });
-    expect(html).toContain('class="field-help field-error"');
-  });
-});
-
 describe('metrics summary tables', () => {
   it('right-align their values with the summary table class', () => {
     const html = String(MetricsPage({ page: PAGE, filter: METRICS_FILTER, report: DATA_REPORT, now: NOW }));
     expect(html).toContain('<table class="data-table summary-table">');
-  });
-
-  it('keeps the Meta app legend visible and its select label visually hidden', () => {
-    const html = registerHtml({ errors: {} });
-    expect(html).toContain('<label for="meta-app" class="visually-hidden">');
-    expect(html).toContain('<legend>');
   });
 });

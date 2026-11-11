@@ -30,18 +30,10 @@ export async function detailResponse(input: {
   const entries = await numberAdminOf({ bindings: context.env }).listNumbers();
   const entry = entries.find((candidate) => candidate.numberId === numberId);
   if (entry === undefined) return errorResponse({ context, status: HttpStatus.NotFound });
-  const siblingLabels = entries.filter((candidate) => candidate.metaAppRef === entry.metaAppRef).map((candidate) => candidate.label);
   const allowedTargets = allowedTargetsOf({ from: entry.state, verifiedAt: entry.verifiedAt });
   const page = await signedInPageContext({ context });
   return context.html(
-    <NumberDetailPage
-      page={page}
-      entry={entry}
-      siblingLabels={siblingLabels}
-      allowedTargets={allowedTargets}
-      failure={failure}
-      selectedState={selectedState}
-    />,
+    <NumberDetailPage page={page} entry={entry} allowedTargets={allowedTargets} failure={failure} selectedState={selectedState} />,
     status,
   );
 }
@@ -57,7 +49,7 @@ export function rejectDetail(input: {
   return redirectWithFlash({
     context,
     path: numberPath({ numberId }),
-    flash: { status, failure, errors: {}, values: null, selectedState },
+    flash: { status, failure, errors: {}, selectedState },
   });
 }
 
