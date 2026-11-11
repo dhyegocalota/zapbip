@@ -3,6 +3,7 @@ import type { Child } from 'hono/jsx';
 import { DeployEnvironment } from '../contract/deploy-environment';
 import { FAVICON_CONTENT_TYPE, FAVICON_HREF } from './assets/favicon';
 import { BackofficeCopyKey, renderBackofficeCopy } from './backoffice-copy';
+import type { BackofficeTheme } from './backoffice-theme';
 import { type BackofficeNotice, NOTICE_VIEWS } from './backoffice-notice';
 import { LiveDot } from './components/live-dot';
 import { LocaleSwitch } from './components/locale-switch';
@@ -19,6 +20,7 @@ export type LayoutProps = {
   signedIn: boolean;
   currentPath: string;
   notice: BackofficeNotice | null;
+  theme?: BackofficeTheme;
   children?: Child;
 };
 
