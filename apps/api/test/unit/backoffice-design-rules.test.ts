@@ -46,6 +46,7 @@ const TOKEN_BLOCK_PATTERN = /:root[^{]*\{[^}]*\}/g;
 const ICON_RULE_PATTERN = /\n\.icon \{[^}]*width: [^;]+;[^}]*height: [^;]+;/;
 const THEME_SWITCH_BUTTON_RULE_PATTERN =
   /\n\.theme-switch \.button \{[^}]*min-height: var\(--size-tap\);[^}]*min-width: var\(--size-tap\);/;
+const SWITCHER_NOWRAP_PATTERN = /\n\.locale-switch,\n\.theme-switch \{[^}]*flex-wrap: nowrap;[^}]*white-space: nowrap;/;
 const NARROW_BLOCK_PATTERN = /@media \(max-width: 40rem\) \{[\s\S]*?\n\}/;
 
 const PAGE = {
@@ -142,6 +143,10 @@ describe('design rules', () => {
   it('sizes the icons by class and keeps the theme buttons at the tap size', () => {
     expect(STYLESHEET).toMatch(ICON_RULE_PATTERN);
     expect(STYLESHEET).toMatch(THEME_SWITCH_BUTTON_RULE_PATTERN);
+  });
+
+  it('keeps each switcher group on one line so a pill never wraps', () => {
+    expect(STYLESHEET).toMatch(SWITCHER_NOWRAP_PATTERN);
   });
 
   it('lets both switchers fill the header row on a narrow screen', () => {

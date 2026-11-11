@@ -1,7 +1,7 @@
 import { HttpStatus, OwnerLocale } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { BackofficeNotice } from '../../src/backoffice/backoffice-notice';
-import { BackofficeTheme } from '../../src/backoffice/backoffice-theme';
+import { BackofficeTheme, resolveTheme } from '../../src/backoffice/backoffice-theme';
 import { ErrorPage } from '../../src/backoffice/views/error-page';
 import { Layout, type LayoutProps } from '../../src/backoffice/layout';
 import { SignInPage } from '../../src/backoffice/views/sign-in';
@@ -37,6 +37,13 @@ describe('backoffice layout', () => {
 
   it.each(Object.values(BackofficeTheme))('writes data-theme="%s" on the html element', (theme) => {
     expect(render({ theme })).toContain(`<html lang="en" data-theme="${theme}">`);
+  });
+
+  it('writes only an enum member in data-theme for a hostile cookie value', () => {
+    const hostileCookieValue = '"><script>alert(1)</script>';
+    const html = render({ theme: resolveTheme({ cookieValue: hostileCookieValue }) });
+    expect(html).toContain('<html lang="en" data-theme="system">');
+    expect(html).not.toContain('alert(1)');
   });
 
   it('shows both switchers on a signed-in page and on the sign-in page', () => {
