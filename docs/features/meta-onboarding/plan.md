@@ -7,7 +7,7 @@
 - One app, one Worker secret, per-WABA webhook override (ADR 0036).
 - A typed PIN, never stored; step-up before the popup, a 10-minute single-use grant (ADR 0036).
 - A `'self'` script asset, not a nonce or a hash; the page policy is chosen by the route (ADR 0037).
-- `META_LOGIN_CONFIGURATION_ID` holds the owner's value before step 1 is committed. If it has not arrived, the lead asks once, and the tests use a fictional value from the test support.
+- `META_LOGIN_CONFIGURATION_ID` is `946808808378298`, supplied by the owner on 2026-11-11.
 - Lean, by the owner's order: one tester pass, one reviewer, one security reviewer, no scenario run before the merge. `docs/scenarios/backoffice.md` is updated in step 8 for the next run.
 
 ## File map
@@ -28,7 +28,7 @@ Every box is empty when authored. A developer ticks its own line. A wrong step i
 
 ### W
 
-- [ ] **Step 1: constants and migration 0008.**
+- [x] **Step 1: constants and migration 0008.** — evidence: cbe34870 red, a8d339d4 green; `migration-0008.test.ts` 6/6.
   - Red: `apps/api/test/integration/migration-0008.test.ts`, on top of `0001` to `0007`:
     - a row of `meta_apps` with `714836811568009` and its number survive, with `meta_app_ref` gone and the access token still opening;
     - a row with another app ID makes the migration fail and leaves `meta_apps` and `whatsapp_numbers` unchanged;
@@ -36,7 +36,7 @@ Every box is empty when authored. A developer ticks its own line. A wrong step i
     - `whatsapp_numbers_waba` exists;
     - `accounts.number_id` still references `whatsapp_numbers`.
   - Green: the SQL of the spec (Interfaces) and `META_APP_ID`, `META_APP_LABEL`, `META_LOGIN_CONFIGURATION_ID` and `ONBOARDING_PIN_PATTERN` in `libs/types/src/constants.ts`.
-- [ ] **Step 2: one secret, no apps.**
+- [x] **Step 2: one secret, no apps.** — evidence: bb0026c4 red, 092272f0 green; the preflight warns instead of requiring `META_APP_SECRET`.
   - Red:
     - `whatsapp-webhook-numbers.test.ts` signs with `META_APP_SECRET` and expects `200`, and a body signed with any other secret expects `401`;
     - `env-example.test.ts` expects `META_APP_SECRET`;
@@ -49,7 +49,7 @@ Every box is empty when authored. A developer ticks its own line. A wrong step i
     - the test bindings (`vitest.integration.config.mts`, both e2e global setups, the connector stack) gain `META_APP_SECRET`;
     - sweep every fixture that names `metaAppRef` or `meta_apps`;
     - `SMOKE_META_APP_SECRET` stays a smoke input.
-- [ ] **Step 3: `onboardNumber` and FakeGraph.**
+- [x] **Step 3: `onboardNumber` and FakeGraph.** — evidence: e1c148e2 red, 47b5fbe1 green; `meta-onboarding.test.ts` 18/18.
   - Red: `apps/api/test/integration/meta-onboarding.test.ts` against FakeGraph:
     - happy path: four requests in order. The exchange is a form `POST` to `/v24.0/oauth/access_token` with `client_id=714836811568009`, the secret and the code, and no `Authorization` header. Subscribe carries `override_callback_uri` and `verify_token` with the business token. Register carries `messaging_product: whatsapp` and the PIN. The read is `GET /{waba}/phone_numbers`. The result has a `+`-prefixed display number;
     - each step answering `400`, `401` or `404`, and a dropped connection, throws `OnboardingError` with that step and kind, and its message holds neither the code, the secret nor the token;
@@ -61,13 +61,13 @@ Every box is empty when authored. A developer ticks its own line. A wrong step i
 
 ### B
 
-- [ ] **Step 4: remove the typed registration.**
+- [x] **Step 4: remove the typed registration.** — evidence: 9198d363 red, 77ceea8a green; built before step 2.
   - Red: `backoffice-numbers.test.ts` expects:
     - `GET /numbers/new` and `POST /meta-apps/x/app-secret` to answer `404`;
     - the numbers list to have no Meta app column;
     - the number page to have no "Replace app secret" block.
   - Green: delete `register-routes.tsx`, `registration-form.ts`, `app-secret-routes.tsx` and `register-number.tsx`, their copy keys and form fields, and `/meta-apps/*` from `PROTECTED_PATHS`. Keep `BackofficeAuditAction.MetaAppSecretRotated` and `BackofficeAuditTargetKind.MetaApp`, because stored audit rows keep rendering. The "Register a number" link becomes "Connect a WhatsApp number" to `/numbers/connect`.
-- [ ] **Step 5: grant and connect routes.**
+- [x] **Step 5: grant and connect routes.** — evidence: 2e5bd86e red, ed800570 green; `backoffice-meta-onboarding.test.ts` 22/22.
   - Red: `backoffice-meta-onboarding.test.ts`:
     - `POST /numbers/connect` with a good code sets the grant and answers `303` to `/numbers/connect/meta`, and a bad code answers the `401` flash;
     - `POST /numbers/connect/meta` with a grant and valid fields stores a `pending` number. Its sealed token opens to `fake-business-token`, it shows the display number from FakeGraph, and it is audited `number.registered`;
@@ -80,7 +80,7 @@ Every box is empty when authored. A developer ticks its own line. A wrong step i
     - `ONBOARDING_GRANT_TTL_MS = 10 * MINUTE_MS` in `backoffice-constants.ts`;
     - `FlashStatus` gains `BadGateway`;
     - copy in `backoffice-copy.ts` (`pt_BR` and `en_US`): page titles, field labels, step failures and the cancel and error status lines.
-- [ ] **Step 6: the onboarding page and its policy.**
+- [x] **Step 6: the onboarding page and its policy.** — evidence: 296f3c53 red, 2f7b5d17 green; `backoffice-headers-meta-onboarding.test.ts` 14/14.
   - Red: `backoffice-headers-meta-onboarding.test.ts`:
     - `GET /numbers/connect/meta` with a grant answers the exact policy of ADR 0037 and `Cross-Origin-Opener-Policy: same-origin-allow-popups`;
     - `/numbers/connect`, `/numbers`, a number page, `/sign-in` and an error page keep `CONTENT_SECURITY_POLICY` and `same-origin` byte for byte;
@@ -92,7 +92,7 @@ Every box is empty when authored. A developer ticks its own line. A wrong step i
 
 ### Both, then lead
 
-- [ ] **Step 7: the browser walk (B).**
+- [x] **Step 7: the browser walk (B).** — evidence: bb334ed4, a pin; `playwright test` 122 passed at 1280 and 375.
   - `apps/api/e2e/backoffice/meta-onboarding.spec.ts`, with `support/embedded-signup-stub.ts`. Playwright routes `https://connect.facebook.net/en_US/sdk.js` to a stub `FB`, whose `login` loads an iframe at `https://www.facebook.com/__stub/signup`. Playwright serves that frame, and it posts the `FINISH` message to the parent with digit IDs before the stub calls back with `{ authResponse: { code } }`.
   - Cases:
     - happy path: the number page shows Pending with `+5511900000001`;
@@ -100,7 +100,7 @@ Every box is empty when authored. A developer ticks its own line. A wrong step i
     - a message from a non-Facebook origin is ignored;
     - opening `/numbers/connect/meta` without a grant lands on `/numbers/connect`;
     - zero console errors and zero CSP reports on the happy path, at 1280 and 375 wide.
-- [ ] **Step 8: docs that move with the code (B, then lead).**
+- [x] **Step 8: docs that move with the code (B, then lead).** — evidence: the docs commit of this branch.
   - `.claude/rules/backoffice.md`:
     - "No script, strict headers" names the one exception and ADR 0037;
     - "Sealed credentials" drops the app secret and names `META_APP_SECRET`;

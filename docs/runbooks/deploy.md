@@ -32,7 +32,7 @@ Migration rule: a migration that has reached a deployed environment is never edi
    | Name | Value comes from |
    |---|---|
    | `WHATSAPP_VERIFY_TOKEN` | `openssl rand -hex 24`, one per environment ([meta-setup.md](meta-setup.md), step 7) |
-   | `META_APP_SECRET` | the app secret of the one zapbip Meta app, the same in both environments ([meta-setup.md](meta-setup.md), step 6); after a Reset in Meta set it again in both |
+   | `META_APP_SECRET` | the app secret of the one zapbip Meta app, the same in both environments ([meta-setup.md](meta-setup.md), step 6); after a Reset in Meta set it again in both; the deploy never refuses for it, the preflight only warns while it is unset and the webhook refuses every delivery until you set it |
    | `NUMBER_REGISTRY_KEY` | `openssl rand -base64 32`; not rotated: a new key cannot open the access tokens already stored, so every number would be connected again |
    | `MEDIA_LINK_SIGNING_KEY` | `openssl rand -base64 32`; rotating it makes links in flight (one hour) return `403` |
    | `UPLOAD_LINK_SIGNING_KEY` | `openssl rand -base64 32`, a different value; rotating it fails uploads in progress once |

@@ -75,13 +75,13 @@ sequenceDiagram
    6. audits `number.registered`;
    7. answers `303` to the number page with `Registered` or `RegisteredWithBackfill`.
 
-   Any failure redirects to `/numbers/connect` with a flash that holds the label only, never the PIN, the code or the IDs.
+   Any failure redirects to `/numbers/connect` with a flash that holds only the status, a failure key, the field errors and, for a Meta failure, the step and kind: never the label, the PIN, the code or the IDs.
 5. The webhook route attributes as today, by known phone number ID or WABA ID. It verifies with `META_APP_SECRET`, and an unattributed delivery still pays one placeholder check.
 
 ### Interfaces
 
-- `libs/types/src/constants.ts`: `META_APP_ID = '714836811568009'`, `META_APP_LABEL = 'zapbip'`, `META_LOGIN_CONFIGURATION_ID` (the owner's value), `ONBOARDING_PIN_PATTERN = /^\d{6}$/`.
-- `Bindings.META_APP_SECRET: string`; `WorkerSecret.MetaAppSecret = 'META_APP_SECRET'`. The deploy preflight therefore requires it, and `.env.example` and the test bindings carry it.
+- `libs/types/src/constants.ts`: `META_APP_ID = '714836811568009'`, `META_APP_LABEL = 'zapbip'`, `META_LOGIN_CONFIGURATION_ID = '946808808378298'`, `ONBOARDING_PIN_PATTERN = /^\d{6}$/`. The configuration is "Chatwoot v2" on the Logic Bit app (WhatsApp Embedded Signup, WhatsApp Cloud API and Marketing Messages API, a system-user token that never expires, WhatsApp accounts, `business_management`, `whatsapp_business_manage_events`, `whatsapp_business_management`, `whatsapp_business_messaging`). The owner may later create a dedicated "zapbip" configuration and swap the ID; the constant is the only place to change.
+- `Bindings.META_APP_SECRET?: string`, set by the owner with `wrangler secret put`. It is **not** in `WorkerSecret`, because that list refuses the deploy: the Worker still serves without it, so `WarnedWorkerSecret.MetaAppSecret` makes the preflight print a typed `PreflightWarningKind.MetaAppSecretMissing` warning and never refuse. The webhook fails closed while it is unset: `verifyWebhookSignature` answers false for a missing or empty secret, so every delivery is a `401`; the backoffice connect throws `META_APP_SECRET is not set` (`500`) before any Graph call. The test bindings carry it; `.env.example` does not, because no script reads it.
 - `apps/api/src/numbers/meta-onboarding.ts`:
 
   ```ts
@@ -143,3 +143,11 @@ Subscribe and register are idempotent at Meta, so a retry after a later-step fai
 - Unit: the onboarding form parse, and the page policy record.
 - E2E (Playwright, backoffice): the operator steps up, fills the label and PIN, clicks Connect. The SDK is stubbed by a route, and its frame on `https://www.facebook.com` is served by Playwright under the real policy. The number lands Pending with the fake display number, and the console shows zero errors. Also cancel and no-grant.
 - One tester pass of `test-plan.md`. The owner's first staging connect with the real SDK is recorded under coverage honesty.
+
+## Decisions made while building
+
+- The owner supplied the configuration ID on 2026-11-11, so there is no unset sentinel and no "not configured" state.
+- `META_APP_SECRET` warns in the preflight instead of refusing (see Interfaces).
+- Plan step 4 was built before step 2 so the typed registration was gone before the registry lost `registerMetaApp`; `plan.md` records the order.
+- The failure flash drops the label (the redirect target is the step-up page, which has no label field), a strictly smaller leak surface than the spec first stated.
+- The browser script is a string module (`assets/embedded-signup.ts`) served from `GET /assets/embedded-signup.js?v=<hash>`, so no wrangler text rule for `.js` is needed.

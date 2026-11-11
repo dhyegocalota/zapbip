@@ -54,6 +54,11 @@ A webhook override on `subscribed_apps` routes one WABA's deliveries to its own 
 - Migration `0008` breaks the Worker version that is still running (its list query joins `meta_apps`) between `pnpm migrate:<environment>` and the deploy. This exception to the migration rule of `deploy.md` is accepted, because no environment has a number yet. The backout is the D1 time-travel bookmark together with the Worker rollback.
 - An exchanged token is held for one request and sealed. It never reaches the browser, a log, an error message or a flash.
 
+## Amendment 2026-11-11 (owner delegated)
+
+- `META_LOGIN_CONFIGURATION_ID` is `946808808378298`, the "Chatwoot v2" configuration on the Logic Bit app. The owner may later create a dedicated "zapbip" configuration and swap the constant.
+- `META_APP_SECRET` is not in the required-secrets list of the deploy preflight. The Worker serves without it, so the preflight warns and the webhook fails closed (every delivery answers `401`) until the owner sets it.
+
 ## Evidence
 
 - On `origin/main` at `75a3272`, `apps/api/migrations/0005_backoffice.sql` defines `meta_apps` and `whatsapp_numbers.meta_app_ref REFERENCES meta_apps (id)`, and `apps/api/src/routes/whatsapp.ts` (`attributeDelivery`) needs every known ID to share one `metaAppRef` before `registry.openAppSecret` verifies the signature.
