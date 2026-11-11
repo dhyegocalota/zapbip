@@ -38,6 +38,8 @@ export function RegisterNumberPage(props: RegisterNumberPageProps) {
       signedIn
       currentPath={BackofficePath.Numbers}
       notice={page.notice}
+      theme={page.theme}
+      returnPath={page.returnPath}
     >
       <section class="card form-card" aria-labelledby="register-title">
         <h1 id="register-title">{translate(BackofficeCopyKey.RegisterTitle)}</h1>

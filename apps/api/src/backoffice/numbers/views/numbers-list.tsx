@@ -30,6 +30,8 @@ export function NumbersListPage(props: { page: PageContext; entries: NumberListE
       signedIn
       currentPath={BackofficePath.Numbers}
       notice={page.notice}
+      theme={page.theme}
+      returnPath={page.returnPath}
     >
       <div class="page-head">
         <h1>{translate(BackofficeCopyKey.NumbersTitle)}</h1>

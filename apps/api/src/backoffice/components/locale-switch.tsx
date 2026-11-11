@@ -1,6 +1,7 @@
 import { OwnerLocale } from '@zapbip/types';
 import { BackofficeCopyKey, renderBackofficeCopy } from '../backoffice-copy';
 import { BackofficePath } from '../backoffice-paths';
+import { GlobeIcon } from './icons';
 
 const LOCALE_OPTIONS: { locale: OwnerLocale; languageTag: string; label: BackofficeCopyKey }[] = [
   { locale: OwnerLocale.PortugueseBrazil, languageTag: 'pt-BR', label: BackofficeCopyKey.LocalePortuguese },
@@ -15,6 +16,7 @@ export function LocaleSwitch(props: { locale: OwnerLocale; csrfToken: string; re
       class="locale-switch"
       aria-label={renderBackofficeCopy({ key: BackofficeCopyKey.LocaleLabel, locale: props.locale })}
     >
+      <GlobeIcon />
       <input type="hidden" name="csrf" value={props.csrfToken} />
       <input type="hidden" name="returnTo" value={props.returnTo} />
       {LOCALE_OPTIONS.map((option) => (

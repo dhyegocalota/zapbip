@@ -1,9 +1,10 @@
 import { getCookie } from 'hono/cookie';
 import type { Context, Next } from 'hono';
 import { CLIENT_ADDRESS_HEADER } from '../contract/constants';
-import { ACCEPT_LANGUAGE_HEADER, LOCALE_COOKIE_NAME, SESSION_COOKIE_NAME } from './backoffice-constants';
+import { ACCEPT_LANGUAGE_HEADER, LOCALE_COOKIE_NAME, SESSION_COOKIE_NAME, THEME_COOKIE_NAME } from './backoffice-constants';
 import type { BackofficeEnv } from './backoffice-env';
 import { findSession } from './auth/sessions';
+import { resolveTheme } from './backoffice-theme';
 import { resolveLocale } from './locale';
 
 export async function requestContext(context: Context<BackofficeEnv>, next: Next): Promise<void> {
@@ -17,5 +18,6 @@ export async function requestContext(context: Context<BackofficeEnv>, next: Next
     'locale',
     resolveLocale({ cookieValue: getCookie(context, LOCALE_COOKIE_NAME), acceptLanguage: context.req.header(ACCEPT_LANGUAGE_HEADER) }),
   );
+  context.set('theme', resolveTheme({ cookieValue: getCookie(context, THEME_COOKIE_NAME) }));
   await next();
 }

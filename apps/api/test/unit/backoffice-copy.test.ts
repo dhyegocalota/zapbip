@@ -37,6 +37,7 @@ const POLISH_KEYS = [
   'MetricsKpiMessagesIn',
   'MetricsKpiMessagesOut',
 ];
+const THEME_KEYS = ['ThemeLabel', 'ThemeLight', 'ThemeDark', 'ThemeSystem'];
 const PLACEHOLDER_PATTERN = /\{(\w+)\}/g;
 const TEXT_CHILD_PATTERN = />\s*[A-Za-z0-9][^<>{}();=]*</;
 const STRING_CHILD_PATTERN = />\s*\{\s*['"`]/;
@@ -73,6 +74,12 @@ describe('backoffice copy', () => {
     expect(portuguese).not.toBe(english);
     const placeholdersOf = (text: string): string[] => [...text.matchAll(PLACEHOLDER_PATTERN)].map((match) => match[1]!).sort();
     expect(placeholdersOf(portuguese!)).toEqual(placeholdersOf(english!));
+  });
+
+  it.each(THEME_KEYS)('carries %s in both locales', (name) => {
+    expect(Object.keys(BackofficeCopyKey)).toContain(name);
+    const key = BackofficeCopyKey[name as keyof typeof BackofficeCopyKey];
+    LOCALES.forEach((locale) => expect(BACKOFFICE_COPY[locale][key]).toBeTypeOf('string'));
   });
 
   it('keeps string literals out of JSX children', () => {

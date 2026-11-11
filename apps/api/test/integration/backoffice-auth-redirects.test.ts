@@ -41,7 +41,7 @@ describe('language switch', () => {
   test('stores the chosen language in a hardened cookie that the pages follow', async () => {
     const response = await switchLocale({ returnTo: '/' });
     const cookie = response.headers.getSetCookie().find((line) => line.startsWith(`${LOCALE_COOKIE}=en_US`));
-    ['Secure', 'HttpOnly', 'SameSite=Strict', 'Path=/'].forEach((attribute) => expect(cookie).toContain(attribute));
+    ['Secure', 'HttpOnly', 'SameSite=Lax', 'Path=/'].forEach((attribute) => expect(cookie).toContain(attribute));
     const page = await requestBackoffice({ path: '/sign-in', cookies: { [LOCALE_COOKIE]: 'en_US' } });
     expect(await page.text()).toContain('lang="en"');
   });

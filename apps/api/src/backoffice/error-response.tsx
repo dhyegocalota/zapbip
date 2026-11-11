@@ -2,8 +2,9 @@ import type { Context } from 'hono';
 import { getCookie } from 'hono/cookie';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import { DeployEnvironment } from '../contract/deploy-environment';
-import { ACCEPT_LANGUAGE_HEADER, LOCALE_COOKIE_NAME } from './backoffice-constants';
+import { ACCEPT_LANGUAGE_HEADER, LOCALE_COOKIE_NAME, THEME_COOKIE_NAME } from './backoffice-constants';
 import type { BackofficeEnv } from './backoffice-env';
+import { resolveTheme } from './backoffice-theme';
 import { resolveLocale } from './locale';
 import { ErrorPage, type ErrorStatus } from './views/error-page';
 
@@ -23,6 +24,7 @@ export function errorResponse(input: {
     cookieValue: getCookie(context, LOCALE_COOKIE_NAME),
     acceptLanguage: context.req.header(ACCEPT_LANGUAGE_HEADER),
   });
-  const page = <ErrorPage status={status} locale={locale} environment={environmentOf({ value: context.env.ENVIRONMENT })} />;
+  const theme = resolveTheme({ cookieValue: getCookie(context, THEME_COOKIE_NAME) });
+  const page = <ErrorPage status={status} locale={locale} theme={theme} environment={environmentOf({ value: context.env.ENVIRONMENT })} />;
   return context.html(page, status as ContentfulStatusCode, headers);
 }
