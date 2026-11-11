@@ -12,7 +12,8 @@ type WhatsAppBindingName = Extract<keyof Bindings, `WHATSAPP_${string}`> | 'META
 
 function requireBinding(input: { env: Bindings; name: WhatsAppBindingName }): string {
   const value = input.env[input.name];
-  if (value !== undefined && value.length > 0) return value;
+  const isPresent = value !== undefined && value.trim().length > 0;
+  if (isPresent) return value;
   throw new Error(`${input.name} is not set`);
 }
 

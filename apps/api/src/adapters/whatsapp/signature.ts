@@ -9,7 +9,8 @@ export async function verifyWebhookSignature(input: {
   signatureHeader: string | null;
 }): Promise<boolean> {
   const { appSecret, signatureHeader } = input;
-  if (appSecret === undefined || appSecret === '') return false;
+  const isBlankSecret = appSecret === undefined || appSecret.trim() === '';
+  if (isBlankSecret) return false;
   if (signatureHeader === null) return false;
   if (!signatureHeader.startsWith(WEBHOOK_SIGNATURE_PREFIX)) return false;
   const digestHex = signatureHeader.slice(WEBHOOK_SIGNATURE_PREFIX.length);
