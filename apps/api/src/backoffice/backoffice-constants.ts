@@ -20,6 +20,14 @@ export const STATIC_SECURITY_HEADERS: Record<string, string> = {
   'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=(), usb=()',
   'X-Robots-Tag': 'noindex, nofollow',
 };
+export enum PagePolicy {
+  Strict = 'strict',
+  EmbeddedSignup = 'embedded_signup',
+}
+export const PAGE_POLICY_HEADERS: Record<PagePolicy, Record<string, string>> = {
+  [PagePolicy.Strict]: STATIC_SECURITY_HEADERS,
+  [PagePolicy.EmbeddedSignup]: STATIC_SECURITY_HEADERS,
+};
 export const NO_STORE = 'no-store';
 export { RETRY_AFTER_HEADER } from '../routes/private-response';
 export const NON_ERROR_CODE = 'NonError';
