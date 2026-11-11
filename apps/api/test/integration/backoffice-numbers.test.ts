@@ -2,23 +2,16 @@ import { OwnerLocale, WhatsAppNumberState } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { numberRegistryOf } from '../../src/adapters/d1/d1-number-registry';
 import { BACKOFFICE_COPY, BackofficeCopyKey } from '../../src/backoffice/backoffice-copy';
-import { CHECKED_VALUE, NEW_META_APP_VALUE, NumberFormField } from '../../src/backoffice/numbers/number-form-fields';
-import { seedAccount } from '../support/seed';
+import { CHECKED_VALUE, NumberFormField } from '../../src/backoffice/numbers/number-form-fields';
 import { seedWhatsAppNumber } from '../support/whatsapp-numbers';
 import { testEnv } from '../support/workers-env';
 import { readOperator } from './backoffice-auth-fixtures';
 import {
-  ACCESS_TOKEN,
-  APP_SECRET,
   countRows,
   endBackofficeSession,
   getPage,
-  numberIdOf,
-  PHONE_NUMBER_ID,
   postAction,
   refusingStepUpEnv,
-  REGISTER_PATH,
-  registrationFields,
   startBackofficeSession,
   stateOf,
   submitRejectedAction,
@@ -27,14 +20,11 @@ import {
 const STATUS_OK = 200;
 const STATUS_SEE_OTHER = 303;
 const STATUS_UNAUTHORIZED = 401;
-const STATUS_FORBIDDEN = 403;
 const STATUS_NOT_FOUND = 404;
 const STATUS_UNPROCESSABLE = 422;
-const STATUS_CONFLICT = 409;
 const STATUS_TOO_MANY_REQUESTS = 429;
-const EVIL_ORIGIN = 'https://evil.example';
+const CONNECT_PATH = '/numbers/connect';
 const NEW_ACCESS_TOKEN = 'replacement-access-token-ta2';
-const NEW_APP_SECRET = 'replacement-app-secret-sx2';
 const WRONG_CODE = '000000';
 const copy = BACKOFFICE_COPY[OwnerLocale.PortugueseBrazil];
 const registry = numberRegistryOf({ bindings: testEnv });
@@ -61,19 +51,13 @@ async function seedNumber(input: { suffix: string; label: string; state?: WhatsA
   await testEnv.CONNECTIONS.prepare('UPDATE whatsapp_numbers SET label = ? WHERE id = ?').bind(input.label, `num_${input.suffix}`).run();
 }
 
-async function registerBrazil(): Promise<string> {
-  const response = await postAction({ path: REGISTER_PATH, sessionToken, fields: registrationFields({}) });
-  expect(response.status).toBe(STATUS_SEE_OTHER);
-  return numberIdOf({ response });
-}
-
 describe('the numbers list', () => {
   test('shows the empty state and a link to register when there is no number', async () => {
     const response = await getPage({ path: '/numbers', sessionToken });
     const body = await response.text();
     expect(response.status).toBe(STATUS_OK);
     expect(body).toContain(copy[BackofficeCopyKey.NumbersEmptyTitle]);
-    expect(body).toContain(`href="${REGISTER_PATH}"`);
+    expect(body).toContain(`href="${CONNECT_PATH}"`);
   });
 
   test('shows one row for one number and three rows sorted by label for three', async () => {
@@ -101,100 +85,33 @@ describe('the numbers list', () => {
   });
 });
 
-describe('registering a number', () => {
-  test('creates a pending number, redirects to it and shows no credential', async () => {
-    const response = await postAction({ path: REGISTER_PATH, sessionToken, fields: registrationFields({}) });
-    expect(response.status).toBe(STATUS_SEE_OTHER);
-    const numberId = numberIdOf({ response });
-    expect(response.headers.get('Location')).toBe(`/numbers/${numberId}?notice=Registered`);
-    expect(await stateOf({ numberId })).toBe(WhatsAppNumberState.Pending);
-    const detail = await (await getPage({ path: `/numbers/${numberId}`, sessionToken })).text();
-    const list = await (await getPage({ path: '/numbers', sessionToken })).text();
-    [detail, list, await response.text()].forEach((body) => {
-      expect(body).not.toContain(ACCESS_TOKEN);
-      expect(body).not.toContain(APP_SECRET);
-    });
-    expect((await registry.openForInbound({ numberId })).accessToken).toBe(ACCESS_TOKEN);
+describe('the removed typed registration', () => {
+  test('answers 404 for the register form', async () => {
+    const response = await getPage({ path: '/numbers/new', sessionToken });
+    expect(response.status).toBe(STATUS_NOT_FOUND);
   });
 
-  test('registers on an existing Meta app without a new app secret', async () => {
+  test('answers 404 for the app secret route and keeps the number', async () => {
     await seedNumber({ suffix: '0005', label: 'First' });
-    const fields = registrationFields({ [NumberFormField.MetaApp]: 'app_0005' });
-    const response = await postAction({ path: REGISTER_PATH, sessionToken, fields });
-    expect(response.status).toBe(STATUS_SEE_OTHER);
-    expect(await countRows({ table: 'meta_apps' })).toBe(1);
-    expect(await countRows({ table: 'whatsapp_numbers' })).toBe(2);
-  });
-
-  test('binds the accounts without a number when the first number is registered and says so', async () => {
-    await seedAccount({ accountId: 'acc_unbound' });
-    const response = await postAction({ path: REGISTER_PATH, sessionToken, fields: registrationFields({}) });
-    expect(response.headers.get('Location')).toContain('notice=RegisteredWithBackfill');
-    const row = await testEnv.CONNECTIONS.prepare('SELECT number_id AS numberId FROM accounts WHERE id = ?')
-      .bind('acc_unbound')
-      .first<{ numberId: string | null }>();
-    expect(row?.numberId).toBe(numberIdOf({ response }));
-  });
-
-  test('writes one audit row for the registration without any submitted value', async () => {
-    const numberId = await registerBrazil();
-    const rows = await testEnv.CONNECTIONS.prepare('SELECT * FROM backoffice_audit WHERE action = ?')
-      .bind('number.registered')
-      .all<Record<string, unknown>>();
-    expect(rows.results).toHaveLength(1);
-    expect(rows.results[0]).toMatchObject({ target_kind: 'number', target_id: numberId });
-    expect(JSON.stringify(rows.results)).not.toContain(ACCESS_TOKEN);
-    expect(JSON.stringify(rows.results)).not.toContain(APP_SECRET);
-  });
-
-  test.each([
-    { field: NumberFormField.PhoneNumberId, value: 'abc', message: BackofficeCopyKey.FieldErrorDigits },
-    { field: NumberFormField.WabaId, value: '12 34', message: BackofficeCopyKey.FieldErrorDigits },
-    { field: NumberFormField.DisplayNumber, value: '5511955550000', message: BackofficeCopyKey.FieldErrorDisplayNumber },
-    { field: NumberFormField.Label, value: 'x'.repeat(61), message: BackofficeCopyKey.FieldErrorLabelLength },
-    { field: NumberFormField.AccessToken, value: '', message: BackofficeCopyKey.FieldErrorRequired },
-  ])('answers 422 with the copy for an invalid $field and registers nothing', async ({ field, value, message }) => {
-    const { posted, followed } = await submitRejectedAction({
-      path: REGISTER_PATH,
+    const response = await postAction({
+      path: '/meta-apps/app_0005/app-secret',
       sessionToken,
-      fields: registrationFields({ [field]: value }),
+      fields: { [NumberFormField.AppSecret]: 'replacement', [NumberFormField.NumberId]: 'num_0005' },
     });
-    const body = await followed.text();
-    expect(posted.status).toBe(STATUS_SEE_OTHER);
-    expect(posted.headers.get('Location')).toBe(REGISTER_PATH);
-    expect(followed.status).toBe(STATUS_UNPROCESSABLE);
-    expect(body).toContain(copy[message]);
-    expect(body).not.toContain(APP_SECRET);
-    expect(await countRows({ table: 'whatsapp_numbers' })).toBe(0);
-    expect(await countRows({ table: 'meta_apps' })).toBe(0);
+    expect(response.status).toBe(STATUS_NOT_FOUND);
   });
 
-  test('answers 409 on a phone number id that is already registered and keeps one row', async () => {
-    await registerBrazil();
-    const fields = registrationFields({
-      [NumberFormField.MetaAppId]: '900000000556',
-      [NumberFormField.DisplayNumber]: '+5511955550001',
-    });
-    const { posted, followed } = await submitRejectedAction({ path: REGISTER_PATH, sessionToken, fields });
-    expect(posted.status).toBe(STATUS_SEE_OTHER);
-    expect(followed.status).toBe(STATUS_CONFLICT);
-    expect(await followed.text()).toContain(copy[BackofficeCopyKey.FieldErrorDuplicate]);
-    expect(await countRows({ table: 'whatsapp_numbers' })).toBe(1);
-    expect(await countRows({ table: 'meta_apps' })).toBe(1);
-  });
-
-  test('answers 403 for a foreign origin and registers nothing', async () => {
-    const response = await postAction({ path: REGISTER_PATH, sessionToken, fields: registrationFields({}), origin: EVIL_ORIGIN });
-    expect(response.status).toBe(STATUS_FORBIDDEN);
-    expect(await countRows({ table: 'whatsapp_numbers' })).toBe(0);
-  });
-
-  test('shows the register form with the existing Meta apps and the new-app option', async () => {
+  test('shows no Meta app column in the list', async () => {
     await seedNumber({ suffix: '0006', label: 'First' });
-    const body = await (await getPage({ path: REGISTER_PATH, sessionToken })).text();
-    expect(body).toContain(copy[BackofficeCopyKey.RegisterMetaAppAddNew]);
-    expect(body).toContain('value="app_0006"');
-    expect(body).toContain(`value="${NEW_META_APP_VALUE}"`);
+    const body = await (await getPage({ path: '/numbers', sessionToken })).text();
+    expect(body).not.toContain(copy[BackofficeCopyKey.NumbersColumnMetaApp]);
+  });
+
+  test('shows no replace app secret block on the number page', async () => {
+    await seedNumber({ suffix: '0016', label: 'First' });
+    const body = await (await getPage({ path: '/numbers/num_0016', sessionToken })).text();
+    expect(body).not.toContain(copy[BackofficeCopyKey.NumberRotateSecretTitle]);
+    expect(body).not.toContain(copy[BackofficeCopyKey.NumberMetaApp]);
   });
 });
 
@@ -268,39 +185,18 @@ describe('changing the state of a number', () => {
 
 describe('replacing credentials', () => {
   test('replaces the access token and the next resolution opens the new one', async () => {
-    const numberId = await registerBrazil();
+    await seedNumber({ suffix: '0017', label: 'Token' });
     const response = await postAction({
-      path: `/numbers/${numberId}/access-token`,
+      path: '/numbers/num_0017/access-token',
       sessionToken,
       fields: { [NumberFormField.AccessToken]: NEW_ACCESS_TOKEN },
     });
     expect(response.status).toBe(STATUS_SEE_OTHER);
-    expect(response.headers.get('Location')).toBe(`/numbers/${numberId}?notice=AccessTokenReplaced`);
-    expect((await registry.openForInbound({ numberId })).accessToken).toBe(NEW_ACCESS_TOKEN);
-    const detail = await (await getPage({ path: `/numbers/${numberId}`, sessionToken })).text();
+    expect(response.headers.get('Location')).toBe('/numbers/num_0017?notice=AccessTokenReplaced');
+    expect((await registry.openForInbound({ numberId: 'num_0017' })).accessToken).toBe(NEW_ACCESS_TOKEN);
+    const detail = await (await getPage({ path: '/numbers/num_0017', sessionToken })).text();
     expect(detail).not.toContain(NEW_ACCESS_TOKEN);
-    expect(detail).not.toContain(ACCESS_TOKEN);
-  });
-
-  test('replaces the app secret of the Meta app and audits it', async () => {
-    const numberId = await registerBrazil();
-    const row = await testEnv.CONNECTIONS.prepare('SELECT meta_app_ref AS metaAppRef FROM whatsapp_numbers WHERE id = ?')
-      .bind(numberId)
-      .first<{ metaAppRef: string }>();
-    const metaAppRef = row?.metaAppRef;
-    if (metaAppRef === undefined) throw new Error('the number has no Meta app');
-    const response = await postAction({
-      path: `/meta-apps/${metaAppRef}/app-secret`,
-      sessionToken,
-      fields: { [NumberFormField.AppSecret]: NEW_APP_SECRET, [NumberFormField.NumberId]: numberId },
-    });
-    expect(response.status).toBe(STATUS_SEE_OTHER);
-    expect(response.headers.get('Location')).toBe(`/numbers/${numberId}?notice=AppSecretReplaced`);
-    expect(await registry.openAppSecret({ metaAppRef })).toBe(NEW_APP_SECRET);
-    const audit = await testEnv.CONNECTIONS.prepare('SELECT target_id AS targetId FROM backoffice_audit WHERE action = ?')
-      .bind('meta_app.app_secret_rotated')
-      .first<{ targetId: string }>();
-    expect(audit).toEqual({ targetId: metaAppRef });
+    expect(detail).not.toContain('token-0017');
   });
 });
 
@@ -347,22 +243,6 @@ describe('step-up on a number action', () => {
     expect(followed.status).toBe(STATUS_UNAUTHORIZED);
     expect(body).toMatch(/<input[^>]*value="disabled"[^>]*checked/);
     expect(body).not.toMatch(/<input[^>]*value="closed"[^>]*checked/);
-  });
-
-  test('a refused register keeps the typed non-secret fields and never echoes the secrets', async () => {
-    const { posted, followed } = await submitRejectedAction({
-      path: REGISTER_PATH,
-      sessionToken,
-      fields: registrationFields({}),
-      code: WRONG_CODE,
-    });
-    const body = await followed.text();
-    expect(posted.status).toBe(STATUS_SEE_OTHER);
-    expect(followed.status).toBe(STATUS_UNAUTHORIZED);
-    expect(body).toContain(PHONE_NUMBER_ID);
-    expect(body).not.toContain(ACCESS_TOKEN);
-    expect(body).not.toContain(APP_SECRET);
-    expect(await countRows({ table: 'whatsapp_numbers' })).toBe(0);
   });
 
   test('a refusing rate limiter answers 429 with Retry-After 60 and writes nothing', async () => {
