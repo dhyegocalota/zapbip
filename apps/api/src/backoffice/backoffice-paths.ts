@@ -3,6 +3,7 @@ export enum BackofficePath {
   SignIn = '/sign-in',
   SignOut = '/sign-out',
   Locale = '/locale',
+  Theme = '/theme',
   Numbers = '/numbers',
   Metrics = '/metrics',
   Audit = '/audit',

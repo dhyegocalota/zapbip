@@ -60,6 +60,8 @@ export function ConnectNumberPage(props: ConnectNumberPageProps) {
       signedIn
       currentPath={BackofficePath.Numbers}
       notice={page.notice}
+      theme={page.theme}
+      returnPath={page.returnPath}
     >
       <section class="card form-card" aria-labelledby="connect-title">
         <h1 id="connect-title">{translate(BackofficeCopyKey.ConnectTitle)}</h1>

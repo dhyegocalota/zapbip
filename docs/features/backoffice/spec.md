@@ -379,7 +379,7 @@ Server-rendered **Hono JSX** (`hono/jsx`, part of `hono@4.13.16`, already a depe
 **Copy.**
 
 - Backoffice copy lives in `apps/api/src/backoffice/backoffice-copy.ts` as `BACKOFFICE_COPY: Record<OwnerLocale, Record<BackofficeCopyKey, string>>`, with `pt_BR` and `en_US`.
-- The locale comes from cookie `__Host-zb_bo_locale`, which a POST language switch sets. Without the cookie it follows `Accept-Language` when it starts with `en`; otherwise `DEFAULT_LOCALE`.
+- The locale comes from cookie `__Host-zb_bo_locale`, which a POST language switch sets with `SameSite=Lax`, like the theme cookie `__Host-zb_bo_theme` ([backoffice-switchers](../backoffice-switchers/spec.md)). Without the cookie it follows `Accept-Language` when it starts with `en`; otherwise `DEFAULT_LOCALE`.
 - Owner-facing WhatsApp replies go to `whatsapp-copy.ts`:
   - `AccountOnOtherNumber`: pt_BR "Sua conta zapbip está no número {number}. Escreva para ele." / en_US "Your zapbip account is on {number}. Please write to that number."
   - `NumberClosedToNewAccounts`: pt_BR "Este número não está aceitando novas contas agora." / en_US "This number is not accepting new accounts right now."

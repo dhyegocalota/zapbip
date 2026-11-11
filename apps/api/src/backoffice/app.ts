@@ -10,6 +10,7 @@ import { sessionRoutes } from './routes/session-routes';
 import { assetRoutes } from './routes/asset-routes';
 import { auditRoutes } from './routes/audit-routes';
 import { localeRoutes } from './routes/locale-routes';
+import { themeRoutes } from './routes/theme-routes';
 import { metricsRoutes } from './metrics/metrics-routes';
 import { numbersRoutes } from './numbers/numbers-routes';
 import { requestContext } from './request-context';
@@ -25,7 +26,7 @@ const PROTECTED_PATHS = [
   BackofficePath.Audit,
 ];
 
-const FORM_PATHS = [BackofficePath.SignIn, BackofficePath.Locale, ...PROTECTED_PATHS];
+const FORM_PATHS = [BackofficePath.SignIn, BackofficePath.Locale, BackofficePath.Theme, ...PROTECTED_PATHS];
 
 function createBaseApp(): Hono<BackofficeEnv> {
   const app = new Hono<BackofficeEnv>();
@@ -44,6 +45,7 @@ export function createBackofficeApp(): Hono<BackofficeEnv> {
   app.route('/', signInRoutes);
   app.route('/', sessionRoutes);
   app.route('/', localeRoutes);
+  app.route('/', themeRoutes);
   app.route('/', auditRoutes);
   app.route('/', metricsRoutes);
   app.route('/', numbersRoutes);

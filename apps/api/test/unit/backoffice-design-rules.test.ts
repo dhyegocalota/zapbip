@@ -4,6 +4,7 @@ import { HttpStatus, OwnerLocale, WhatsAppNumberState } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { BackofficeAuditAction, BackofficeAuditOutcome } from '../../src/backoffice/audit/backoffice-audit-action';
 import { BackofficeNotice } from '../../src/backoffice/backoffice-notice';
+import { BackofficeTheme } from '../../src/backoffice/backoffice-theme';
 import { MetricsPage } from '../../src/backoffice/metrics/metrics-page';
 import { NumberDetailPage } from '../../src/backoffice/numbers/views/number-detail';
 import { NumbersListPage } from '../../src/backoffice/numbers/views/numbers-list';
@@ -41,14 +42,22 @@ const INFINITE_ANIMATION_PATTERN = /animation[a-z-]*:[^;]*\binfinite\b/;
 const SMOOTH_SCROLL_PATTERN = /scroll-behavior:\s*smooth/;
 const FORCED_COLOR_OPT_OUT_PATTERN = /forced-color-adjust:\s*none/;
 const HERO_CARD_RULE_PATTERN = /\n\.hero-card \{[^}]*\}/;
-const TOKEN_BLOCK_PATTERN = /:root\s*\{[^}]*\}/g;
+const TOKEN_BLOCK_PATTERN = /:root[^{]*\{[^}]*\}/g;
+const ICON_RULE_PATTERN = /\n\.icon \{[^}]*width: [^;]+;[^}]*height: [^;]+;/;
+const THEME_SWITCH_BUTTON_RULE_PATTERN =
+  /\n\.theme-switch \.button \{[^}]*min-height: var\(--size-tap\);[^}]*min-width: var\(--size-tap\);/;
+const SWITCHER_NOWRAP_PATTERN = /\n\.locale-switch,\n\.theme-switch \{[^}]*flex-wrap: nowrap;[^}]*white-space: nowrap;/;
+const HEADER_END_WRAP_PATTERN = /\n\.header-end \{[^}]*flex-wrap: wrap;/;
+const NARROW_BLOCK_PATTERN = /@media \(max-width: 40rem\) \{[\s\S]*?\n\}/;
 
 const PAGE = {
   locale: OwnerLocale.EnglishUs,
+  theme: BackofficeTheme.System,
   environment: DeployEnvironment.Production,
   stylesheetHref: '/assets/backoffice.css?v=1',
   csrfToken: 'token',
   notice: null,
+  returnPath: '/',
 };
 
 function detailPage(input: { state: WhatsAppNumberState }): string {
@@ -92,7 +101,9 @@ const PAGES: Record<string, string> = {
   detailDisabled: detailPage({ state: WhatsAppNumberState.Disabled }),
   metricsEmpty: String(MetricsPage({ page: PAGE, filter: METRICS_FILTER, report: EMPTY_REPORT, now: NOW })),
   metricsData: String(MetricsPage({ page: PAGE, filter: METRICS_FILTER, report: DATA_REPORT, now: NOW })),
-  notFound: String(ErrorPage({ status: HttpStatus.NotFound, locale: OwnerLocale.EnglishUs, environment: null })),
+  notFound: String(
+    ErrorPage({ status: HttpStatus.NotFound, locale: OwnerLocale.EnglishUs, theme: BackofficeTheme.System, environment: null }),
+  ),
 };
 
 function viewSources(input: { directory: string }): { path: string; source: string }[] {
@@ -134,8 +145,35 @@ describe('design rules', () => {
     expect(STYLESHEET.replace(TOKEN_BLOCK_PATTERN, '')).not.toMatch(RAW_COLOUR_PATTERN);
   });
 
-  it('defines a token block for light and a second one for dark', () => {
-    expect(STYLESHEET.match(TOKEN_BLOCK_PATTERN)).toHaveLength(2);
+  it('defines a token block for light and two for dark', () => {
+    expect(STYLESHEET.match(TOKEN_BLOCK_PATTERN)).toHaveLength(3);
+  });
+
+  it('sizes the icons by class and keeps the theme buttons at the tap size', () => {
+    expect(STYLESHEET).toMatch(ICON_RULE_PATTERN);
+    expect(STYLESHEET).toMatch(THEME_SWITCH_BUTTON_RULE_PATTERN);
+  });
+
+  it('keeps each switcher group on one line so a pill never wraps', () => {
+    expect(STYLESHEET).toMatch(SWITCHER_NOWRAP_PATTERN);
+  });
+
+  it('spaces the header end and tightens the language buttons on a narrow screen', () => {
+    const narrowBlock = STYLESHEET.match(NARROW_BLOCK_PATTERN)?.[0];
+    expect(narrowBlock).toMatch(/\.header-end \{[^}]*justify-content: space-between;/);
+    expect(narrowBlock).toMatch(/\.locale-switch \.button \{[^}]*padding: 0 var\(--space-2\);/);
+  });
+
+  it('lets the header end wrap so an overflowing row falls to a second row', () => {
+    expect(STYLESHEET).toMatch(HEADER_END_WRAP_PATTERN);
+  });
+
+  it('marks the pressed switcher button with an outline that adds no width under forced colors', () => {
+    const forcedColorsBlock = STYLESHEET.match(FORCED_COLORS_BLOCK_PATTERN)?.[0];
+    expect(forcedColorsBlock).toMatch(
+      /\.theme-switch \.button\[aria-pressed='true'\] \{[^}]*outline: 1px solid CanvasText;[^}]*outline-offset: -1px;/,
+    );
+    expect(forcedColorsBlock).not.toMatch(/\.theme-switch \.button\[aria-pressed='true'\] \{[^}]*border:/);
   });
 
   it('adapts to forced colors', () => {

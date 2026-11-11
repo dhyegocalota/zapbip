@@ -28,6 +28,7 @@ function pageOf(input: { context: Context<BackofficeEnv>; csrfToken: string }) {
   return (
     <SignInPage
       locale={context.get('locale')}
+      theme={context.get('theme')}
       environment={parseDeployEnvironment({ value: context.env.ENVIRONMENT })}
       csrfToken={csrfToken}
       stylesheetHref={STYLESHEET_HREF}

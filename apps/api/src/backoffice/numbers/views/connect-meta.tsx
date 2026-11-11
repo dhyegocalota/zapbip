@@ -26,6 +26,8 @@ export function ConnectMetaPage(props: { page: PageContext }) {
       signedIn
       currentPath={BackofficePath.Numbers}
       notice={page.notice}
+      theme={page.theme}
+      returnPath={page.returnPath}
     >
       <section class="card form-card" aria-labelledby="connect-meta-title">
         <h1 id="connect-meta-title">{translate(BackofficeCopyKey.ConnectMetaTitle)}</h1>

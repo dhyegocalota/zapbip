@@ -1,6 +1,7 @@
 import { DAY_MS, MINUTE_MS, SECOND_MS } from '@zapbip/types';
 
 export const SEE_OTHER_STATUS = 303;
+export const RETURN_TO_FIELD = 'returnTo';
 export const HSTS_MAX_AGE_SECONDS = 63_072_000;
 export const CONTENT_SECURITY_POLICY = [
   "default-src 'none'",
@@ -49,6 +50,7 @@ export const NON_ERROR_CODE = 'NonError';
 export const SESSION_COOKIE_NAME = '__Host-zb_bo_session';
 export const CSRF_COOKIE_NAME = '__Host-zb_bo_csrf';
 export const LOCALE_COOKIE_NAME = '__Host-zb_bo_locale';
+export const THEME_COOKIE_NAME = '__Host-zb_bo_theme';
 export const SESSION_TOKEN_BYTES = 32;
 export const CSRF_TOKEN_BYTES = 32;
 export const ACCEPT_LANGUAGE_HEADER = 'accept-language';
@@ -56,7 +58,7 @@ export const ENGLISH_LANGUAGE_PREFIX = 'en';
 export const CSRF_CONTEXT = 'zapbip backoffice csrf';
 export const BACKOFFICE_PRUNE_HOUR = 4;
 export const BACKOFFICE_PRUNE_MINUTE = 0;
-export const LOCALE_COOKIE_MAX_AGE_SECONDS = (365 * DAY_MS) / SECOND_MS;
+export const PREFERENCE_COOKIE_MAX_AGE_SECONDS = (365 * DAY_MS) / SECOND_MS;
 export const FLASH_MAX_AGE_MS = MINUTE_MS;
 export const LABEL_MAX_LENGTH = 60;
 export const ONBOARDING_GRANT_TTL_MS = 10 * MINUTE_MS;

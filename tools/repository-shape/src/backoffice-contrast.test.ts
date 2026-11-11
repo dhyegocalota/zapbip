@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { compositeOver, contrastOf, themeTokens } from './contrast';
+import { compositeOver, contrastOf, forcedDarkTokens, themeTokens } from './contrast';
 import { readRepositoryFile } from './repository-files';
 
 const STYLESHEET = readRepositoryFile('apps/api/src/backoffice/assets/backoffice.css');
@@ -70,6 +70,10 @@ function pageWithGlow({ tokens }: { tokens: Tokens }): string {
 describe('backoffice contrast', () => {
   test.each(['light', 'dark'] as const)('meets the contrast of the design in %s', (theme) => {
     expect(shortfallsOf({ pairs: PAIRS, tokens: themeTokens({ stylesheet: STYLESHEET })[theme] })).toEqual([]);
+  });
+
+  test('meets the contrast of the design in the forced dark block', () => {
+    expect(shortfallsOf({ pairs: PAIRS, tokens: forcedDarkTokens({ stylesheet: STYLESHEET }) })).toEqual([]);
   });
 
   test.each(['light', 'dark'] as const)('keeps the text readable on the page glow in %s', (theme) => {

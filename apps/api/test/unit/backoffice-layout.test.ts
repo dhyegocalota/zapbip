@@ -1,6 +1,8 @@
-import { OwnerLocale } from '@zapbip/types';
+import { HttpStatus, OwnerLocale } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { BackofficeNotice } from '../../src/backoffice/backoffice-notice';
+import { BackofficeTheme, resolveTheme } from '../../src/backoffice/backoffice-theme';
+import { ErrorPage } from '../../src/backoffice/views/error-page';
 import { Layout, type LayoutProps } from '../../src/backoffice/layout';
 import { SignInPage } from '../../src/backoffice/views/sign-in';
 import { DeployEnvironment } from '../../src/contract/deploy-environment';
@@ -20,7 +22,9 @@ function render(input: Partial<LayoutProps>): string {
     csrfToken: CSRF_TOKEN,
     signedIn: true,
     currentPath: '/numbers',
+    returnPath: '/numbers/abc',
     notice: null,
+    theme: BackofficeTheme.System,
     ...input,
   };
   return String(Layout({ ...props, children: 'PAGE_BODY' }));
@@ -30,6 +34,43 @@ describe('backoffice layout', () => {
   it('sets the document language from the locale', () => {
     expect(render({ locale: OwnerLocale.PortugueseBrazil })).toContain('lang="pt-BR"');
     expect(render({ locale: OwnerLocale.EnglishUs })).toContain('lang="en"');
+  });
+
+  it.each(Object.values(BackofficeTheme))('writes data-theme="%s" on the html element', (theme) => {
+    expect(render({ theme })).toContain(`<html lang="en" data-theme="${theme}">`);
+  });
+
+  it('writes only an enum member in data-theme for a hostile cookie value', () => {
+    const hostileCookieValue = '"><script>alert(1)</script>';
+    const html = render({ theme: resolveTheme({ cookieValue: hostileCookieValue }) });
+    expect(html).toContain('<html lang="en" data-theme="system">');
+    expect(html).not.toContain('alert(1)');
+  });
+
+  it('returns the switchers to the return path while the navigation follows the current path', () => {
+    const html = render({});
+    expect(html.split('name="returnTo" value="/numbers/abc"')).toHaveLength(3);
+    expect(html).toContain('href="/numbers" aria-current="page"');
+  });
+
+  it('shows both switchers on a signed-in page and on the sign-in page', () => {
+    [render({}), render({ signedIn: false })].forEach((html) => {
+      expect(html).toContain('class="locale-switch"');
+      expect(html).toContain('class="theme-switch"');
+    });
+  });
+
+  it('shows no switcher on a page without a csrf token', () => {
+    const html = render({ csrfToken: null, signedIn: false });
+    expect(html).not.toContain('locale-switch');
+    expect(html).not.toContain('theme-switch');
+  });
+
+  it('writes the theme on the error page', () => {
+    const html = String(
+      ErrorPage({ status: HttpStatus.NotFound, locale: OwnerLocale.EnglishUs, environment: null, theme: BackofficeTheme.Dark }),
+    );
+    expect(html).toContain('data-theme="dark"');
   });
 
   it('links the versioned stylesheet and titles the page', () => {
@@ -65,8 +106,9 @@ describe('backoffice layout', () => {
 
   it('carries the csrf token in the language and sign-out forms', () => {
     const html = render({});
-    expect(html.split(`name="csrf" value="${CSRF_TOKEN}"`).length - 1).toBe(2);
+    expect(html.split(`name="csrf" value="${CSRF_TOKEN}"`).length - 1).toBe(3);
     expect(html).toContain('action="/locale"');
+    expect(html).toContain('action="/theme"');
   });
 
   it('renders no forms without a csrf token', () => {
@@ -118,6 +160,7 @@ describe('sign-in page', () => {
       SignInPage({
         locale,
         environment: DeployEnvironment.Production,
+        theme: BackofficeTheme.System,
         csrfToken: CSRF_TOKEN,
         stylesheetHref: STYLESHEET_HREF,
         notice: null,

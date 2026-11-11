@@ -98,6 +98,8 @@ export function MetricsPage(props: { page: PageContext; filter: MetricsFilter; r
       signedIn
       currentPath={BackofficePath.Metrics}
       notice={page.notice}
+      theme={page.theme}
+      returnPath={page.returnPath}
     >
       <div class="page-head">
         <h1>{translate(BackofficeCopyKey.MetricsTitle)}</h1>

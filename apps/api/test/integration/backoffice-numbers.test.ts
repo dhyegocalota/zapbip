@@ -85,6 +85,17 @@ describe('the numbers list', () => {
   });
 });
 
+describe('the preference switches on a number page', () => {
+  test.each([
+    ['the detail page', '/numbers/num_0001'],
+    ['the connect page', CONNECT_PATH],
+  ])('return to %s', async (_name, path) => {
+    await seedNumber({ suffix: '0001', label: 'Alpha' });
+    const body = await (await getPage({ path, sessionToken })).text();
+    expect(body.split(`name="returnTo" value="${path}"`)).toHaveLength(3);
+  });
+});
+
 describe('the removed typed registration', () => {
   test('answers 404 for the register form', async () => {
     const response = await getPage({ path: '/numbers/new', sessionToken });
