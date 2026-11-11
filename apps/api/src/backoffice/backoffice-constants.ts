@@ -24,9 +24,24 @@ export enum PagePolicy {
   Strict = 'strict',
   EmbeddedSignup = 'embedded_signup',
 }
+export const EMBEDDED_SIGNUP_CONTENT_SECURITY_POLICY = [
+  "default-src 'none'",
+  "script-src 'self' https://connect.facebook.net",
+  'frame-src https://www.facebook.com https://web.facebook.com https://staticxx.facebook.com',
+  'connect-src https://www.facebook.com https://graph.facebook.com',
+  "img-src 'self' https://www.facebook.com",
+  "style-src 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+  "base-uri 'none'",
+].join('; ');
 export const PAGE_POLICY_HEADERS: Record<PagePolicy, Record<string, string>> = {
   [PagePolicy.Strict]: STATIC_SECURITY_HEADERS,
-  [PagePolicy.EmbeddedSignup]: STATIC_SECURITY_HEADERS,
+  [PagePolicy.EmbeddedSignup]: {
+    ...STATIC_SECURITY_HEADERS,
+    'Content-Security-Policy': EMBEDDED_SIGNUP_CONTENT_SECURITY_POLICY,
+    'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
+  },
 };
 export const NO_STORE = 'no-store';
 export { RETRY_AFTER_HEADER } from '../routes/private-response';

@@ -8,9 +8,9 @@ import { WHATSAPP_WEBHOOK_PATH } from '../../../contract/constants';
 import { OnboardingError, onboardNumber } from '../../../numbers/meta-onboarding';
 import { RegistrationConflictError } from '../../../numbers/registration-conflict';
 import { BackofficeAuditAction, BackofficeAuditOutcome, BackofficeAuditTargetKind } from '../../audit/backoffice-audit-action';
-import { consumeGrant, grantOnboarding } from '../../auth/onboarding-grant';
+import { consumeGrant, grantOnboarding, hasLiveGrant } from '../../auth/onboarding-grant';
 import { StepUpOutcome } from '../../auth/step-up';
-import { SEE_OTHER_STATUS } from '../../backoffice-constants';
+import { PagePolicy, SEE_OTHER_STATUS } from '../../backoffice-constants';
 import { BackofficeCopyKey } from '../../backoffice-copy';
 import type { BackofficeEnv } from '../../backoffice-env';
 import { BackofficeNotice } from '../../backoffice-notice';
@@ -23,6 +23,7 @@ import { NumberFormField } from '../number-form-fields';
 import { numberPath, NumberSegment, withNotice } from '../number-paths';
 import { parseOnboarding } from '../onboarding-form';
 import { rateLimitedResponse, stepUpOf } from '../step-up-gate';
+import { ConnectMetaPage } from '../views/connect-meta';
 import { ConnectNumberPage } from '../views/connect-number';
 
 const TARGET_KIND = BackofficeAuditTargetKind.Number;
@@ -64,6 +65,14 @@ connectRoutes.post(CONNECT_PATH, async (context) => {
   }
   await grantOnboarding({ database: context.env.CONNECTIONS, digest: sessionDigestOf({ context }), now: Date.now() });
   return context.redirect(META_PATH, SEE_OTHER_STATUS);
+});
+
+connectRoutes.get(META_PATH, async (context) => {
+  const isGranted = await hasLiveGrant({ database: context.env.CONNECTIONS, digest: sessionDigestOf({ context }), now: Date.now() });
+  if (!isGranted) return context.redirect(CONNECT_PATH, SEE_OTHER_STATUS);
+  const page = await signedInPageContext({ context });
+  context.set('pagePolicy', PagePolicy.EmbeddedSignup);
+  return context.html(<ConnectMetaPage page={page} />);
 });
 
 connectRoutes.post(META_PATH, async (context) => {

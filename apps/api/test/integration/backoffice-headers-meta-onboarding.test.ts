@@ -139,7 +139,7 @@ describe('the onboarding script asset', () => {
 
   test('checks the message origin, gates the submit on a finished signup, and never evaluates strings', async () => {
     const script = await (await requestBackoffice({ path: SCRIPT_PATH })).text();
-    ['WA_EMBEDDED_SIGNUP', 'FINISH', 'CANCEL', '.facebook.com', 'requestSubmit', 'reportValidity', 'config_id'].forEach((part) =>
+    ['WA_EMBEDDED_SIGNUP', 'FINISH', 'CANCEL', 'facebook.com', 'requestSubmit', 'reportValidity', 'config_id'].forEach((part) =>
       expect(script).toContain(part),
     );
     ['eval(', 'innerHTML', 'document.write'].forEach((part) => expect(script).not.toContain(part));

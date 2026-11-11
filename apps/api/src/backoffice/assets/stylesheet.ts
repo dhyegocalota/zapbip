@@ -5,7 +5,7 @@ const HASH_MULTIPLIER = 31;
 const HASH_MODULUS = 2 ** 32;
 const HEXADECIMAL_RADIX = 16;
 
-function contentHashOf(input: { text: string }): string {
+export function contentHashOf(input: { text: string }): string {
   const hash = Array.from(input.text).reduce(
     (current, character) => (current * HASH_MULTIPLIER + character.charCodeAt(0)) % HASH_MODULUS,
     0,
