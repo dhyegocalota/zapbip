@@ -1,6 +1,6 @@
 # Meta onboarding
 
-**Status:** Building
+**Status:** Shipped 2026-11-11
 **Tier:** 🔴 structural
 **Owner approval:** approved 2026-11-11 (owner delegated)
 **ADRs:** [0036](../../adr/0036-one-fixed-meta-app-and-numbers-join-through-embedded-signup.md), [0037](../../adr/0037-only-the-onboarding-page-loads-the-facebook-sdk-under-its-own-policy.md); amends [0031](../../adr/0031-the-backoffice-is-a-separate-host-signed-in-with-a-key-and-totp-enrolled-from-the-owners-terminal.md) and [0032](../../adr/0032-whatsapp-numbers-are-rows-in-a-sealed-registry-not-worker-secrets.md)
