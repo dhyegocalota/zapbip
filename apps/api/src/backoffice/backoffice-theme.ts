@@ -4,6 +4,10 @@ export enum BackofficeTheme {
   System = 'system',
 }
 
+const THEME_VALUES: string[] = Object.values(BackofficeTheme);
+
 export function resolveTheme(input: { cookieValue: string | undefined }): BackofficeTheme {
-  throw new Error(`resolveTheme is not implemented for ${String(input.cookieValue)}`);
+  const { cookieValue } = input;
+  if (cookieValue !== undefined && THEME_VALUES.includes(cookieValue)) return cookieValue as BackofficeTheme;
+  return BackofficeTheme.System;
 }

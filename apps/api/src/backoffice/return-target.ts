@@ -1,3 +1,19 @@
+import { BackofficePath } from './backoffice-paths';
+
+const QUERY_OR_FRAGMENT_PATTERN = /[?#]/;
+const EXACT_PAGES: string[] = [
+  BackofficePath.Home,
+  BackofficePath.SignIn,
+  BackofficePath.Numbers,
+  BackofficePath.Metrics,
+  BackofficePath.Audit,
+];
+const NUMBERS_SUBPAGE_PATTERN = new RegExp(`^${BackofficePath.Numbers}(?:/[\\w-]+)+$`);
+
 export function returnTargetOf(input: { returnTo: string | null }): string {
-  throw new Error(`returnTargetOf is not implemented for ${String(input.returnTo)}`);
+  const { returnTo } = input;
+  if (returnTo === null) return BackofficePath.Home;
+  const [path = ''] = returnTo.split(QUERY_OR_FRAGMENT_PATTERN);
+  const isBackofficePage = EXACT_PAGES.includes(path) || NUMBERS_SUBPAGE_PATTERN.test(path);
+  return isBackofficePage ? path : BackofficePath.Home;
 }
