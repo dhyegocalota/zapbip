@@ -101,6 +101,18 @@ describe('the numbers list', () => {
   });
 });
 
+describe('the preference switches on a number page', () => {
+  test.each([
+    ['the detail page', '/numbers/num_0001'],
+    ['the verification page', '/numbers/num_0001/verification'],
+    ['the register page', REGISTER_PATH],
+  ])('return to %s', async (_name, path) => {
+    await seedNumber({ suffix: '0001', label: 'Alpha' });
+    const body = await (await getPage({ path, sessionToken })).text();
+    expect(body.split(`name="returnTo" value="${path}"`)).toHaveLength(3);
+  });
+});
+
 describe('registering a number', () => {
   test('creates a pending number, redirects to it and shows no credential', async () => {
     const response = await postAction({ path: REGISTER_PATH, sessionToken, fields: registrationFields({}) });

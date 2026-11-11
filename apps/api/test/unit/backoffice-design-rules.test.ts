@@ -47,6 +47,7 @@ const ICON_RULE_PATTERN = /\n\.icon \{[^}]*width: [^;]+;[^}]*height: [^;]+;/;
 const THEME_SWITCH_BUTTON_RULE_PATTERN =
   /\n\.theme-switch \.button \{[^}]*min-height: var\(--size-tap\);[^}]*min-width: var\(--size-tap\);/;
 const SWITCHER_NOWRAP_PATTERN = /\n\.locale-switch,\n\.theme-switch \{[^}]*flex-wrap: nowrap;[^}]*white-space: nowrap;/;
+const HEADER_END_WRAP_PATTERN = /\n\.header-end \{[^}]*flex-wrap: wrap;/;
 const NARROW_BLOCK_PATTERN = /@media \(max-width: 40rem\) \{[\s\S]*?\n\}/;
 
 const PAGE = {
@@ -149,10 +150,22 @@ describe('design rules', () => {
     expect(STYLESHEET).toMatch(SWITCHER_NOWRAP_PATTERN);
   });
 
-  it('compacts both switchers into one header row on a narrow screen', () => {
+  it('spaces the header end and tightens the language buttons on a narrow screen', () => {
     const narrowBlock = STYLESHEET.match(NARROW_BLOCK_PATTERN)?.[0];
     expect(narrowBlock).toMatch(/\.header-end \{[^}]*justify-content: space-between;/);
     expect(narrowBlock).toMatch(/\.locale-switch \.button \{[^}]*padding: 0 var\(--space-2\);/);
+  });
+
+  it('lets the header end wrap so an overflowing row falls to a second row', () => {
+    expect(STYLESHEET).toMatch(HEADER_END_WRAP_PATTERN);
+  });
+
+  it('marks the pressed switcher button with an outline that adds no width under forced colors', () => {
+    const forcedColorsBlock = STYLESHEET.match(FORCED_COLORS_BLOCK_PATTERN)?.[0];
+    expect(forcedColorsBlock).toMatch(
+      /\.theme-switch \.button\[aria-pressed='true'\] \{[^}]*outline: 1px solid CanvasText;[^}]*outline-offset: -1px;/,
+    );
+    expect(forcedColorsBlock).not.toMatch(/\.theme-switch \.button\[aria-pressed='true'\] \{[^}]*border:/);
   });
 
   it('adapts to forced colors', () => {
