@@ -6,7 +6,7 @@ Written by the developer. The developer did not run `test-plan.md` and does not 
 
 - `libs/types/src/constants.ts`: `META_APP_ID`, `META_APP_LABEL`, `META_LOGIN_CONFIGURATION_ID` (`946808808378298`), `ONBOARDING_PIN_PATTERN`.
 - `apps/api/migrations/0008_meta_onboarding.sql`: guard against a foreign app, rebuild of `whatsapp_numbers` without `meta_app_ref`, drop of `meta_apps`, `backoffice_sessions.onboarding_grant_until`.
-- `apps/api/src/numbers/meta-onboarding.ts`: `onboardNumber` (form exchange, subscribe with override, register with PIN, read), `OnboardingError`.
+- `apps/api/src/numbers/meta-onboarding.ts`: `onboardNumber` (form exchange, list read, `debug_token`, number webhook read, subscribe without override, register with PIN, per-number override), `OnboardingError`.
 - `apps/api/src/routes/whatsapp.ts`, `adapters/whatsapp/signature.ts`: one `META_APP_SECRET`, fail closed when unset.
 - `apps/api/src/operations/deploy-preflight.ts`, `worker-secret.ts`: `META_APP_SECRET` is a typed warning, never a refusal.
 - `apps/api/src/backoffice/numbers/routes/connect-routes.tsx`, `views/connect-number.tsx`, `views/connect-meta.tsx`, `onboarding-form.ts`, `auth/onboarding-grant.ts`: the step-up grant, the page, the post.
