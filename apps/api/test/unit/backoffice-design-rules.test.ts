@@ -149,9 +149,10 @@ describe('design rules', () => {
     expect(STYLESHEET).toMatch(SWITCHER_NOWRAP_PATTERN);
   });
 
-  it('lets both switchers fill the header row on a narrow screen', () => {
+  it('compacts both switchers into one header row on a narrow screen', () => {
     const narrowBlock = STYLESHEET.match(NARROW_BLOCK_PATTERN)?.[0];
-    expect(narrowBlock).toMatch(/\.theme-switch \{/);
+    expect(narrowBlock).toMatch(/\.header-end \{[^}]*justify-content: space-between;/);
+    expect(narrowBlock).toMatch(/\.locale-switch \.button \{[^}]*padding: 0 var\(--space-2\);/);
   });
 
   it('adapts to forced colors', () => {
