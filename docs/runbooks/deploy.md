@@ -27,39 +27,40 @@ Migration rule: a migration that has reached a deployed environment is never edi
 
    If it fails: `pnpm deploy:staging` refuses at its config step and names the placeholder; nothing was deployed.
 
-3. **Set the secrets.** For each name below run `pnpm --filter @zapbip/api exec wrangler secret put <NAME> --env staging` (for production leave `--env` out) and type or paste the value at the prompt. A value never goes on the command line. The first `wrangler secret put` of an environment creates the Worker itself: wrangler asks whether to create a new Worker named `zapbip-api-staging` (production: `zapbip-api`); answer yes. Generated values pipe straight in and are never written to a file: `openssl rand -base64 32 | pnpm --filter @zapbip/api exec wrangler secret put WAKE_SECRET_KEY --env staging`. Meta app secrets and access tokens are not Worker secrets: the numbers registry keeps them, sealed with `NUMBER_REGISTRY_KEY`, and you type them into the backoffice ([backoffice.md](backoffice.md), step 2). `BACKOFFICE_KEY_DIGEST` and `BACKOFFICE_TOTP_SECRET` are not set here either: `pnpm backoffice:enroll:staging` writes them ([backoffice.md](backoffice.md), step 1). Then copy `.env.example` to `.env` (git-ignored; no agent edits it) and fill only what the scripts read: `WHATSAPP_VERIFY_TOKEN` always, `SMOKE_META_APP_SECRET` and `SMOKE_PHONE_NUMBER_ID` for the staging fake inbound check only (the app secret and phone number ID you register in the backoffice for the staging number), and the smoke inputs below. The four secrets the scripts never read (`MEDIA_LINK_SIGNING_KEY`, `UPLOAD_LINK_SIGNING_KEY`, `WAKE_SECRET_KEY`, `NUMBER_REGISTRY_KEY`) are not in `.env` at all. Before production, remove `SMOKE_META_APP_SECRET` and `SMOKE_PHONE_NUMBER_ID` from that file and replace the other values: the production app secret goes only into the backoffice form, never into a file.
+3. **Set the secrets.** For each name below run `pnpm --filter @zapbip/api exec wrangler secret put <NAME> --env staging` (for production leave `--env` out) and type or paste the value at the prompt. A value never goes on the command line. The first `wrangler secret put` of an environment creates the Worker itself: wrangler asks whether to create a new Worker named `zapbip-api-staging` (production: `zapbip-api`); answer yes. Generated values pipe straight in and are never written to a file: `openssl rand -base64 32 | pnpm --filter @zapbip/api exec wrangler secret put WAKE_SECRET_KEY --env staging`. The one Meta app secret is the Worker secret `META_APP_SECRET`, with the same value in both environments ([meta-setup.md](meta-setup.md), step 6). Access tokens are not Worker secrets: the backoffice gets each one from Meta's onboarding and the numbers registry keeps it, sealed with `NUMBER_REGISTRY_KEY` ([backoffice.md](backoffice.md), step 2). `BACKOFFICE_KEY_DIGEST` and `BACKOFFICE_TOTP_SECRET` are not set here either: `pnpm backoffice:enroll:staging` writes them ([backoffice.md](backoffice.md), step 1). Then copy `.env.example` to `.env` (git-ignored; no agent edits it) and fill only what the scripts read: `WHATSAPP_VERIFY_TOKEN` always, `SMOKE_META_APP_SECRET` and `SMOKE_PHONE_NUMBER_ID` for the staging fake inbound check only (the value of `META_APP_SECRET` and the phone number ID the backoffice shows for the staging number), and the smoke inputs below. The five secrets the scripts never read (`META_APP_SECRET`, `MEDIA_LINK_SIGNING_KEY`, `UPLOAD_LINK_SIGNING_KEY`, `WAKE_SECRET_KEY`, `NUMBER_REGISTRY_KEY`) are not in `.env` at all. The app secret is shared with production, so remove `SMOKE_META_APP_SECRET` from that file as soon as the staging smoke test passes, and remove `SMOKE_PHONE_NUMBER_ID` with it before production; the app secret goes only into the `wrangler secret put` prompt, never into a file you keep.
 
    | Name | Value comes from |
    |---|---|
-   | `WHATSAPP_VERIFY_TOKEN` | `openssl rand -hex 24`, shared by every Meta app of the environment ([meta-setup.md](meta-setup.md), step 8) |
-   | `NUMBER_REGISTRY_KEY` | `openssl rand -base64 32`; not rotated: a new key cannot open the credentials already registered, which would have to be typed in again |
+   | `WHATSAPP_VERIFY_TOKEN` | `openssl rand -hex 24`, one per environment ([meta-setup.md](meta-setup.md), step 7) |
+   | `META_APP_SECRET` | the app secret of the one zapbip Meta app, the same in both environments ([meta-setup.md](meta-setup.md), step 6); after a Reset in Meta set it again in both |
+   | `NUMBER_REGISTRY_KEY` | `openssl rand -base64 32`; not rotated: a new key cannot open the access tokens already stored, so every number would be connected again |
    | `MEDIA_LINK_SIGNING_KEY` | `openssl rand -base64 32`; rotating it makes links in flight (one hour) return `403` |
    | `UPLOAD_LINK_SIGNING_KEY` | `openssl rand -base64 32`, a different value; rotating it fails uploads in progress once |
    | `WAKE_SECRET_KEY` | `openssl rand -base64 32`; not rotated: a new key cannot open stored wake targets |
 
    The smoke inputs in `.env`: `SMOKE_BASE_URL` (`https://mcp-staging.zapbip.com` or `https://mcp.zapbip.com`, without a trailing slash), `SMOKE_OWNER_PHONE` (your phone, digits with country code, no plus sign or spaces) and, for staging only, `SMOKE_CONNECTION_SECRET` (step 6); production asks for the connection secret at a hidden prompt and never reads it from the file. Leave `SMOKE_CONNECTION_SECRET` and `SMOKE_OWNER_PHONE` as they are until step 6: the first deploy of an environment runs with `--first-deploy`, which does not need them. For production also set `ZAPBIP_NPM_PUBLISHER` to your npm user name ([mintlify-publish.md](mintlify-publish.md), step 1).
 
-   Expect: `pnpm --filter @zapbip/api exec wrangler secret list --env staging` names the five secrets of the table; the two backoffice secrets arrive with the enrollment.
+   Expect: `pnpm --filter @zapbip/api exec wrangler secret list --env staging` names the six secrets of the table; the two backoffice secrets arrive with the enrollment.
 
    If it fails: `pnpm deploy:staging` lists the missing names at its secrets step; until `pnpm backoffice:enroll:staging` has run it names `BACKOFFICE_KEY_DIGEST` and `BACKOFFICE_TOTP_SECRET`, which is the cue to enroll before deploying. A secret set for the wrong environment is fixed by running `wrangler secret put` again with the right `--env`; production is the top-level block, so a production command never carries `--env`, and `--env production` fails.
 
-4. **Migrate.** First write down the D1 time-travel bookmark: `pnpm --filter @zapbip/api exec wrangler d1 time-travel info <database> --env staging` (production: no `--env`); it is the only point you can restore the directory to if the migration goes wrong. Then run `pnpm migrate:staging` (or `pnpm migrate:production`). Run it before every deploy that ships a new migration, never after, and before the enrollment, which writes to `backoffice_operator` (migration `0005`): the Durable Object reads the directory tables (the accounts-and-keys migration included) the moment the new Worker serves, and `pnpm deploy:staging` and `pnpm deploy:production` refuse while any D1 migration is pending, so the order cannot be reversed by mistake.
+4. **Migrate.** First write down the D1 time-travel bookmark: `pnpm --filter @zapbip/api exec wrangler d1 time-travel info <database> --env staging` (production: no `--env`); it is the only point you can restore the directory to if the migration goes wrong. Then run `pnpm migrate:staging` (or `pnpm migrate:production`). Run it before every deploy that ships a new migration, never after, and before the enrollment, which writes to `backoffice_operator` (migration `0005`): the Durable Object reads the directory tables (the accounts-and-keys migration included) the moment the new Worker serves, and `pnpm deploy:staging` and `pnpm deploy:production` refuse while any D1 migration is pending, so the order cannot be reversed by mistake. Migration `0008` drops the Meta app rows ([ADR 0036](../adr/0036-one-fixed-meta-app-and-numbers-join-through-embedded-signup.md)): before it, `pnpm --filter @zapbip/api exec wrangler d1 execute <database> --env staging --remote --command "SELECT meta_app_id FROM meta_apps"` (production: no `--env`) must print nothing or only `714836811568009`, `META_APP_SECRET` must be set (step 3), and the deploy must follow at once, because the Worker still serving cannot list numbers until it does.
 
    Expect: wrangler lists each migration file applied, and a second run says there is nothing to apply.
 
-   If it fails: a failed migration leaves the previous Worker serving; fix it with a new numbered migration, never by editing the one that ran. The D1 bookmark from this step can restore the directory.
+   If it fails: a failed migration leaves the previous Worker serving; fix it with a new numbered migration, never by editing the one that ran. The D1 bookmark from this step can restore the directory. Migration `0008` failing on its guard changed nothing: a `meta_apps` row names another app, which only the owner can decide to delete.
 
 5. **Deploy.** Run `pnpm deploy:staging --first-deploy` for the first deploy of an environment, and `pnpm deploy:staging` afterwards (`pnpm deploy:production --first-deploy`, then `pnpm deploy:production`), in an interactive terminal. The command refuses, in order, the cheap things first: a wrong environment or a non-interactive terminal; production only: a `COMPANY` fact still `COMPANY_FACT_UNSET` ([mintlify-publish.md](mintlify-publish.md), step 2), a package on npm that your npm user (`ZAPBIP_NPM_PUBLISHER`) does not alone maintain and publish, or an npm answer that is not a clear yes or no (step 1), a hosted plugin file missing from the `zapbip-packages` bucket or hashing to something other than the hash its plugin pins (`hostedArtifacts` in `libs/agents/src/generated/plugins.ts`) ([mintlify-publish.md](mintlify-publish.md), step 4), and a Worker that does not export `scheduled`, a wrangler block without a cron trigger or a `/i/:installCode` route that is not mounted; then, for every environment: a `REPLACE_WITH_` placeholder in any letter case, a missing smoke input, a dirty tree (production also needs branch `main` equal to `origin/main`), a missing secret, a pending migration, a failing `pnpm verify` (`pnpm verify all` for production, and last because it takes minutes) and a failing dry run. Staging needs only placeholders and secrets in place: the company facts and the npm check are production gates. A package whose version is absent from npm, while its name is absent or yours alone, only prints `<package>@<version> is not on npm yet; publish it before launch` and the deploy goes on; `pnpm docs:preflight` refuses it, never the deploy. It prints the current Worker version and the D1 bookmark (or says there is no previous version, then a rollback means redeploying the prior commit): write both in the go-live record. For production it then asks you to type `production`.
 
-   Expect: `wrangler deploy` succeeds and the smoke test runs. With `--first-deploy` the smoke test skips checks 2 and 5 (they need the smoke connection) and prints how to create it. After the first staging deploy, register the staging number ([backoffice.md](backoffice.md), steps 2 and 3), point the webhook ([meta-setup.md](meta-setup.md), step 9), then activate the number ([backoffice.md](backoffice.md), step 4).
+   Expect: `wrangler deploy` succeeds and the smoke test runs. With `--first-deploy` the smoke test skips checks 2 and 5 (they need the smoke connection) and prints how to create it. After the first staging deploy, point the app webhook ([meta-setup.md](meta-setup.md), step 8), connect and verify the staging number ([backoffice.md](backoffice.md), steps 2 and 3), then activate the number ([backoffice.md](backoffice.md), step 4).
 
    If it fails: each refusal prints what to do next, and nothing is deployed before the dry run passes. A production-only domain refusal (after the placeholder check) means `PUBLIC_ORIGIN` is not `https://mcp.zapbip.com` or the `zapbip.com` nameservers are not Cloudflare's; fix it with [dns.md](dns.md), step 1. A smoke failure prints the rollback commands and runs none of them; you decide.
 
-6. **Smoke test.** The number must be registered and active ([backoffice.md](backoffice.md), steps 2 to 4), and `SMOKE_PHONE_NUMBER_ID` and `SMOKE_META_APP_SECRET` in `.env` must be the staging number's phone number ID and its Meta app's secret. Create the smoke connection: from your phone send `novo agente smoke` to the environment's WhatsApp number, open the install link in the reply and read the MCP URL `https://<host>/c/<secret>/mcp`. For staging put the part between `/c/` and `/mcp` in the environment file as `SMOKE_CONNECTION_SECRET`, then run `pnpm smoke:staging`. For production run `pnpm smoke:production` and paste the part at the hidden prompt (nothing is echoed or stored); the deploy command's own smoke step prompts the same way.
+6. **Smoke test.** The number must be connected and active ([backoffice.md](backoffice.md), steps 2 to 4), and `SMOKE_PHONE_NUMBER_ID` and `SMOKE_META_APP_SECRET` in `.env` must be the staging number's phone number ID and the value of `META_APP_SECRET`. Create the smoke connection: from your phone send `novo agente smoke` to the environment's WhatsApp number, open the install link in the reply and read the MCP URL `https://<host>/c/<secret>/mcp`. For staging put the part between `/c/` and `/mcp` in the environment file as `SMOKE_CONNECTION_SECRET`, then run `pnpm smoke:staging`. For production run `pnpm smoke:production` and paste the part at the hidden prompt (nothing is echoed or stored); the deploy command's own smoke step prompts the same way.
 
    Expect: staging prints five `PASS` lines (health, mcp initialize, webhook verify, signature rejected, fake inbound). Production prints four, because the fake inbound check never runs there. The output shows no secret.
 
-   If it fails: `FAIL 404` on health means the wrong host in `SMOKE_BASE_URL`. A `FAIL` on mcp initialize means the connection secret is wrong or revoked; create a new smoke connection. A `FAIL` on webhook verify means `WHATSAPP_VERIFY_TOKEN` in `.env` differs from the Worker's secret. A `FAIL` on signature rejected means a deployed Worker accepted a zero-signed or placeholder-signed body that names the registered number in `SMOKE_PHONE_NUMBER_ID`; the check only proves the signature is verified when that ID is registered, so on a first deploy, before any number exists, it proves only that unattributed bodies are refused. A `FAIL` with `401` or `403` on the fake inbound means `SMOKE_META_APP_SECRET` is not the app secret registered for that number, and a `200` that never reaches the inbox means `SMOKE_PHONE_NUMBER_ID` is not a registered, active number.
+   If it fails: `FAIL 404` on health means the wrong host in `SMOKE_BASE_URL`. A `FAIL` on mcp initialize means the connection secret is wrong or revoked; create a new smoke connection. A `FAIL` on webhook verify means `WHATSAPP_VERIFY_TOKEN` in `.env` differs from the Worker's secret. A `FAIL` on signature rejected means a deployed Worker accepted a zero-signed or placeholder-signed body that names the registered number in `SMOKE_PHONE_NUMBER_ID`; the check only proves the signature is verified when that ID is registered, so on a first deploy, before any number exists, it proves only that unattributed bodies are refused. A `FAIL` with `401` or `403` on the fake inbound means `SMOKE_META_APP_SECRET` differs from the Worker's `META_APP_SECRET`, and a `200` that never reaches the inbox means `SMOKE_PHONE_NUMBER_ID` is not a registered, active number.
 
 7. **Watch the logs.** Run `pnpm --filter @zapbip/api exec wrangler tail --env staging --format pretty` (production: the same without `--env`); wrangler builds the Worker name from the configuration, so no name is typed. Events carry names, IDs, kinds and sizes, never message text or phone numbers.
 
@@ -98,19 +99,19 @@ Follow the steps in order. Each step names the runbook that holds its detail, an
    Expect: `zapbip.com` is active on Cloudflare.
 
    If it fails: nameserver changes can take hours; recheck with the `dig` command of the step before changing anything.
-4. **Meta setup.** Do steps 1 to 8 of `meta-setup.md` for staging, plus step 3 for the production number (with its payment method and two-step PIN). Step 9 waits until a Worker is deployed; the production halves of steps 5 to 8 wait for the production deploy below.
+4. **Meta setup.** Do steps 1 to 7 of `meta-setup.md`: the policy, the portfolio, the app, the Embedded Signup configuration, both numbers with their PINs, the app secret and the staging verify token. Step 8 waits until a Worker is deployed, and step 9 until a number is connected.
 
-   Expect: a Meta test number, the staging app secret, a system user token and a verify token.
+   Expect: the app ready on both backoffice hosts, the configuration ID equal to the constant, two numbers with PINs, the app secret and a verify token.
 
    If it fails: the failing step of `meta-setup.md` says what to check. Do not continue to production with a missing policy answer (step 1).
-5. **Meta templates approved.** Do step 11 of `meta-setup.md` now, because approval takes up to a day and the production WhatsApp account already exists from step 3.
+5. **Meta templates approved.** Do step 11 of `meta-setup.md` now, because approval takes up to a day: create the production WhatsApp Business account in WhatsApp Manager first and pick it when you connect the production number.
 
    Expect: all four templates (two names, two languages) show `Approved` in WhatsApp Manager.
 
    If it fails: a rejected template is edited and resubmitted; production waits for approval.
 6. **Resources and secrets.** Do steps 1 to 3 of `deploy.md` for staging.
 
-   Expect: no `REPLACE_WITH_` is left in the staging block of `apps/api/wrangler.jsonc`, and `wrangler secret list` names the five secrets of the table in step 3.
+   Expect: no `REPLACE_WITH_` is left in the staging block of `apps/api/wrangler.jsonc`, and `wrangler secret list` names the six secrets of the table in step 3.
 
    If it fails: `pnpm deploy:staging` refuses and names the placeholder or the missing secret; nothing is deployed.
 7. **Migrate staging.** Do step 4 of `deploy.md` for staging.
@@ -120,7 +121,7 @@ Follow the steps in order. Each step names the runbook that holds its detail, an
    If it fails: a failed migration leaves the previous Worker serving; fix it with a new numbered migration.
 8. **Enroll the backoffice on staging.** Do step 1 of `backoffice.md` from your own terminal.
 
-   Expect: `wrangler secret list --env staging` names all seven secrets, and you hold the backoffice key and the authenticator entry.
+   Expect: `wrangler secret list --env staging` names all eight secrets, and you hold the backoffice key and the authenticator entry.
 
    If it fails: nothing was written when the code mismatched; run it again.
 9. **Deploy staging.** Do step 5 of `deploy.md` for staging, with `pnpm deploy:staging --first-deploy`.
@@ -128,16 +129,16 @@ Follow the steps in order. Each step names the runbook that holds its detail, an
    Expect: the deploy ends with the smoke test (checks 1, 3 and 4 pass; checks 2 and 5 are skipped on a first deploy).
 
    If it fails: `deploy.md` step 8 rolls back; the previous Worker keeps serving.
-10. **Register the staging number.** Do steps 2 and 3 of `backoffice.md` for the staging app and its test number.
+10. **Register the staging number.** Do step 8 of `meta-setup.md` with the staging callback URL, then steps 2 and 3 of `backoffice.md` on `https://backoffice-staging.zapbip.com` for the staging number.
 
    Expect: the number is listed as Pending and the verification shows "Number verified.".
 
    If it fails: the failing step of `backoffice.md` says what to check.
-11. **Point the staging Meta webhook.** Do step 9 of `meta-setup.md` for the staging app, then step 4 of `backoffice.md` to activate the number.
+11. **Point the staging Meta webhook.** Check that step 8 of `meta-setup.md` shows the staging callback verified and `messages` subscribed, then do step 9 of `meta-setup.md` and step 4 of `backoffice.md` to activate the number.
 
-   Expect: Meta verifies the staging webhook and shows both fields subscribed, and the number shows `active` in the backoffice.
+   Expect: Meta shows the staging callback verified, and the number shows `active` in the backoffice.
 
-   If it fails: step 9 of `meta-setup.md` says what to check.
+   If it fails: step 8 of `meta-setup.md` says what to check.
 12. **Smoke staging.** Do step 6 of `deploy.md`, then send `novo agente smoke` to the staging test number from your phone.
 
    Expect: five `PASS` lines from `pnpm smoke:staging` and a reply on your phone.
@@ -160,14 +161,14 @@ Follow the steps in order. Each step names the runbook that holds its detail, an
     Expect: `COMPANY_FACT_UNSET` is not left in `libs/types/src/constants.ts` apart from its definition.
 
     If it fails: `pnpm docs:preflight` refuses and names what is still unset; the production deploy refuses only the company facts.
-16. **Production Meta credentials.** Do steps 5 to 8 of `meta-setup.md` for production (the production app, its secret, its system user token and its verify token).
+16. **Production Meta credentials.** There is one Meta app, so production takes the app secret of step 6 of `meta-setup.md` again; do step 7 of `meta-setup.md` for the production verify token, and have the production number and its PIN from step 5 ready.
 
-    Expect: you hold the production app secret and the system user token for the backoffice form, and the verify token for the `wrangler secret put` prompt.
+    Expect: you hold the app secret and the production verify token for the `wrangler secret put` prompts, and the production PIN for the backoffice connect page.
 
     If it fails: the failing step of `meta-setup.md` says what to check.
 17. **Production resources and secrets.** Do steps 1 to 3 of `deploy.md` for production.
 
-    Expect: no `REPLACE_WITH_` is left in the production block of `apps/api/wrangler.jsonc`, and `wrangler secret list` names the five secrets of the table in step 3.
+    Expect: no `REPLACE_WITH_` is left in the production block of `apps/api/wrangler.jsonc`, and `wrangler secret list` names the six secrets of the table in step 3.
 
     If it fails: `pnpm deploy:production` refuses and names the placeholder or the missing secret; nothing is deployed.
 18. **Migrate production.** Do step 4 of `deploy.md` for production.
@@ -177,7 +178,7 @@ Follow the steps in order. Each step names the runbook that holds its detail, an
     If it fails: a failed migration leaves the previous Worker serving; fix it with a new numbered migration.
 19. **Enroll the backoffice on production.** Do step 1 of `backoffice.md` with `pnpm backoffice:enroll:production`, from your own terminal.
 
-    Expect: `wrangler secret list` names all seven secrets, and you hold a separate production key and authenticator entry.
+    Expect: `wrangler secret list` names all eight secrets, and you hold a separate production key and authenticator entry.
 
     If it fails: nothing was written when the code mismatched; run it again.
 20. **Production deploy.** Do step 5 of `deploy.md` for production, with `pnpm deploy:production --first-deploy`, then step 3 of `dns.md` for the host check.
@@ -185,16 +186,16 @@ Follow the steps in order. Each step names the runbook that holds its detail, an
     Expect: the deploy ends with the smoke test (checks 1, 3 and 4 pass) and the health route answers on `mcp.zapbip.com` and on `backoffice.zapbip.com` (the sign-in page).
 
     If it fails: `deploy.md` step 8 rolls back the Worker.
-21. **Register the production number.** Do steps 2 and 3 of `backoffice.md` on `https://backoffice.zapbip.com` for the production app and the production number from step 3 of `meta-setup.md`.
+21. **Register the production number.** Do step 8 of `meta-setup.md` again and switch the app callback to the production URL and verify token, then steps 2 and 3 of `backoffice.md` on `https://backoffice.zapbip.com` for the production number from step 5 of `meta-setup.md`. Staging numbers keep their staging override.
 
     Expect: the number is listed as Pending and the verification shows "Number verified.".
 
     If it fails: the failing step of `backoffice.md` says what to check.
-22. **Point the production Meta webhook.** Do step 9 of `meta-setup.md` for the production app, then step 4 of `backoffice.md` to activate the number.
+22. **Point the production Meta webhook.** Check that step 8 of `meta-setup.md` shows the production callback verified, then do step 9 of `meta-setup.md` and step 4 of `backoffice.md` to activate the number.
 
-    Expect: Meta verifies the production webhook and shows both fields subscribed, the number shows `active` in the backoffice, and `curl -sI https://mcp.zapbip.com/start` prints `302` and a `location:` header that starts with `https://wa.me/`. The docs link that address. `pnpm docs:preflight` refuses until it does, but run this check by hand first, before step 23.
+    Expect: Meta shows the production callback verified, the number shows `active` in the backoffice, and `curl -sI https://mcp.zapbip.com/start` prints `302` and a `location:` header that starts with `https://wa.me/`. The docs link that address. `pnpm docs:preflight` refuses until it does, but run this check by hand first, before step 23.
 
-    If it fails: step 9 of `meta-setup.md` says what to check.
+    If it fails: step 8 of `meta-setup.md` says what to check.
 23. **Publish the docs.** Check the start link first (`curl -sI https://mcp.zapbip.com/start`, step 22), then do steps 5 to 10 of `mintlify-publish.md`, starting with `pnpm docs:preflight`, which needs no DNS but reads the production Worker: it checks the constants, npm and the plugin files served at `https://mcp.zapbip.com/pkg/`. The custom domain of step 9 uses steps 4 and 5 of `dns.md`. The privacy page is part of the site. The docs preflight after the production deploy is mandatory: it is the only check that the live Worker serves every plugin file with the hashes the docs print, so never connect Mintlify without a passing run.
 
     Expect: `docs.zapbip.com` serves the site in English and in Portuguese, and `https://docs.zapbip.com/help/privacy` loads.

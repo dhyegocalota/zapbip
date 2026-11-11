@@ -44,7 +44,7 @@ The owner's terminal already holds the only deploy-capable credential, a scoped 
 4. **A separate host on the same Worker.**
    - `backoffice.zapbip.com` (staging `backoffice-staging.zapbip.com`) is a second custom domain on `zapbip-api`.
    - The Worker dispatches by the request URL host before routing. Neither app mounts the other's routes, and tests and a repository-shape rule pin that.
-5. **Server-rendered Hono JSX with no client script.** This allows `Content-Security-Policy: default-src 'none'; style-src 'self'; img-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'`, plus HSTS, `X-Frame-Options: DENY`, `no-store` and `noindex` on every response.
+5. **Server-rendered Hono JSX with no client script.** This allows `Content-Security-Policy: default-src 'none'; style-src 'self'; img-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'`, plus HSTS, `X-Frame-Options: DENY`, `no-store` and `noindex` on every response. (Amended 2026-11-11 by meta-onboarding, owner delegated: the onboarding page `GET /numbers/connect/meta` alone loads the Facebook SDK under its own policy, [ADR 0037](0037-only-the-onboarding-page-loads-the-facebook-sdk-under-its-own-policy.md).)
 6. **Passkeys come later as an added factor**, not a replacement, once the backoffice exists to register them from.
 
 ## Alternatives considered
