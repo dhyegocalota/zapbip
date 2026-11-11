@@ -24,6 +24,12 @@ const EXCHANGE_PATH_PATTERN = /^\/v\d+\.\d+\/oauth\/access_token$/;
 const SUBSCRIBE_PATH_PATTERN = /^\/v\d+\.\d+\/\d+\/subscribed_apps$/;
 const REGISTER_PATH_PATTERN = /^\/v\d+\.\d+\/(\d+)\/register$/;
 const PHONE_NUMBERS_PATH_PATTERN = /^\/v\d+\.\d+\/\d+\/phone_numbers$/;
+const PHONE_NUMBERS_WABA_PATTERN = /^\/v\d+\.\d+\/(\d+)\/phone_numbers$/;
+const DEBUG_TOKEN_PATH_PATTERN = /^\/v\d+\.\d+\/debug_token$/;
+const PHONE_NUMBER_PATH_PATTERN = /^\/v\d+\.\d+\/\d+$/;
+const FAKE_DEFAULT_WEBHOOK_URL = 'https://default.example/webhooks/whatsapp';
+export const FAKE_UNGRANTED_WABA_PREFIX = '9';
+const MANAGEMENT_SCOPE = 'whatsapp_business_management';
 const EXCHANGE_CODE_FIELD = 'code';
 const FAKE_BUSINESS_TOKEN = 'fake-business-token';
 const FAKE_VERIFIED_NAME = 'zapbip test';
@@ -131,6 +137,16 @@ export async function startFakeGraph(input: { port: number }): Promise<{ port: n
     });
   }
 
+  function defaultDebugToken(request: { response: ServerResponse }): void {
+    const readWabaIds = recorded.flatMap((entry) => {
+      const match = PHONE_NUMBERS_WABA_PATTERN.exec(entry.request.path);
+      return entry.request.method === 'GET' && match !== null && match[1] !== undefined ? [match[1]] : [];
+    });
+    const targetIds = [...new Set(readWabaIds)].filter((id) => !id.startsWith(FAKE_UNGRANTED_WABA_PREFIX));
+    const body = { data: { is_valid: true, granular_scopes: [{ scope: MANAGEMENT_SCOPE, target_ids: targetIds }] } };
+    reply({ response: request.response, status: OK_STATUS, body });
+  }
+
   function defaultPhoneNumbers(request: { response: ServerResponse }): void {
     const registeredIds = recorded.flatMap((entry) => {
       const match = REGISTER_PATH_PATTERN.exec(entry.request.path);
@@ -195,6 +211,15 @@ export async function startFakeGraph(input: { port: number }): Promise<{ port: n
     if (isSubscribe) return reply({ response: request.response, status: OK_STATUS, body: { success: true } });
     const isRegister = method === 'POST' && REGISTER_PATH_PATTERN.test(request.path);
     if (isRegister) return reply({ response: request.response, status: OK_STATUS, body: { success: true } });
+    const isDebugToken = method === 'GET' && DEBUG_TOKEN_PATH_PATTERN.test(request.path);
+    if (isDebugToken) return defaultDebugToken({ response: request.response });
+    const isPhoneNumberRead = method === 'GET' && PHONE_NUMBER_PATH_PATTERN.test(request.path);
+    if (isPhoneNumberRead) {
+      const body = { id: resourceIdOf({ path: request.path }), webhook_configuration: { application: FAKE_DEFAULT_WEBHOOK_URL } };
+      return reply({ response: request.response, status: OK_STATUS, body });
+    }
+    const isPhoneNumberWrite = method === 'POST' && PHONE_NUMBER_PATH_PATTERN.test(request.path);
+    if (isPhoneNumberWrite) return reply({ response: request.response, status: OK_STATUS, body: { success: true } });
     const isPhoneNumbers = method === 'GET' && PHONE_NUMBERS_PATH_PATTERN.test(request.path);
     if (isPhoneNumbers) return defaultPhoneNumbers({ response: request.response });
     reply({ response: request.response, status: NOT_FOUND_STATUS, body: graphError({ message: 'unknown route' }) });

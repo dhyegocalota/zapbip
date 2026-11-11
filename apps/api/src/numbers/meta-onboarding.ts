@@ -13,9 +13,11 @@ const EXCHANGE_FAILURE_MESSAGE = 'Graph token exchange failed';
 
 export enum OnboardingStep {
   Exchange = 'exchange',
+  Inspect = 'inspect',
+  Read = 'read',
   Subscribe = 'subscribe',
   Register = 'register',
-  Read = 'read',
+  Override = 'override',
 }
 
 export class OnboardingError extends Error {

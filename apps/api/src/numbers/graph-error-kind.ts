@@ -6,6 +6,11 @@ export enum GraphErrorKind {
   NotFound = 'not_found',
   Network = 'network',
   Upstream = 'upstream',
+  CodeExpired = 'code_expired',
+  PinMismatch = 'pin_mismatch',
+  RateLimited = 'rate_limited',
+  NotGranted = 'not_granted',
+  WebhookClaimedElsewhere = 'webhook_claimed_elsewhere',
 }
 
 const KIND_BY_STATUS: Record<number, GraphErrorKind> = {

@@ -18,15 +18,22 @@ export type ConnectNumberPageProps = {
 
 const STEP_COPY: Record<OnboardingStep, BackofficeCopyKey> = {
   [OnboardingStep.Exchange]: BackofficeCopyKey.OnboardingStepExchange,
+  [OnboardingStep.Inspect]: BackofficeCopyKey.OnboardingStepInspect,
+  [OnboardingStep.Read]: BackofficeCopyKey.OnboardingStepRead,
   [OnboardingStep.Subscribe]: BackofficeCopyKey.OnboardingStepSubscribe,
   [OnboardingStep.Register]: BackofficeCopyKey.OnboardingStepRegister,
-  [OnboardingStep.Read]: BackofficeCopyKey.OnboardingStepRead,
+  [OnboardingStep.Override]: BackofficeCopyKey.OnboardingStepOverride,
 };
 const KIND_COPY: Record<GraphErrorKind, BackofficeCopyKey> = {
   [GraphErrorKind.Auth]: BackofficeCopyKey.OnboardingKindAuth,
   [GraphErrorKind.NotFound]: BackofficeCopyKey.OnboardingKindNotFound,
   [GraphErrorKind.Network]: BackofficeCopyKey.OnboardingKindNetwork,
   [GraphErrorKind.Upstream]: BackofficeCopyKey.OnboardingKindUpstream,
+  [GraphErrorKind.CodeExpired]: BackofficeCopyKey.OnboardingKindCodeExpired,
+  [GraphErrorKind.PinMismatch]: BackofficeCopyKey.OnboardingKindPinMismatch,
+  [GraphErrorKind.RateLimited]: BackofficeCopyKey.OnboardingKindRateLimited,
+  [GraphErrorKind.NotGranted]: BackofficeCopyKey.OnboardingKindNotGranted,
+  [GraphErrorKind.WebhookClaimedElsewhere]: BackofficeCopyKey.OnboardingKindWebhookClaimedElsewhere,
 };
 
 export function ConnectNumberPage(props: ConnectNumberPageProps) {

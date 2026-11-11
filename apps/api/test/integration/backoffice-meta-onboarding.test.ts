@@ -137,25 +137,44 @@ describe('connecting a number', () => {
     expect(audit.results).toEqual([{ targetId: numberId }]);
   });
 
-  test('sends the four Graph requests with the fixed app, the webhook override and the pin', async () => {
+  test('sends the Graph requests with the fixed app, no WABA override, the pin and the override of the number only', async () => {
     await grantedConnect();
     const requests = await fakeGraph.requests();
     expect(requests.map((request) => `${request.method} ${request.path}`)).toEqual([
       `POST /${GRAPH_API_VERSION}/oauth/access_token`,
+      `GET /${GRAPH_API_VERSION}/${WABA_ID}/phone_numbers`,
+      `GET /${GRAPH_API_VERSION}/${PHONE_NUMBER_ID}`,
       `POST /${GRAPH_API_VERSION}/${WABA_ID}/subscribed_apps`,
       `POST /${GRAPH_API_VERSION}/${PHONE_NUMBER_ID}/register`,
-      `GET /${GRAPH_API_VERSION}/${WABA_ID}/phone_numbers`,
+      `POST /${GRAPH_API_VERSION}/${PHONE_NUMBER_ID}`,
     ]);
     expect(Object.fromEntries(new URLSearchParams(String(requests[0]?.body)))).toEqual({
       client_id: META_APP_ID,
       client_secret: TEST_META_APP_SECRET,
       code: SIGNUP_CODE,
     });
-    expect(requests[1]?.body).toEqual({
-      override_callback_uri: `${testEnv.PUBLIC_ORIGIN}/webhooks/whatsapp`,
-      verify_token: testEnv.WHATSAPP_VERIFY_TOKEN,
+    expect(requests[3]?.body).toBeNull();
+    expect(requests[4]?.body).toEqual({ messaging_product: 'whatsapp', pin: PIN });
+    expect(requests[5]?.body).toEqual({
+      webhook_configuration: {
+        override_callback_uri: `${testEnv.PUBLIC_ORIGIN}/webhooks/whatsapp`,
+        verify_token: testEnv.WHATSAPP_VERIFY_TOKEN,
+      },
     });
-    expect(requests[2]?.body).toEqual({ messaging_product: 'whatsapp', pin: PIN });
+  });
+
+  test('answers 502 naming the claimed webhook, with its copy, when the number already delivers elsewhere', async () => {
+    await fakeGraph.respondWith({
+      method: 'GET',
+      path: `/${GRAPH_API_VERSION}/${PHONE_NUMBER_ID}`,
+      status: 200,
+      body: { id: PHONE_NUMBER_ID, webhook_configuration: { phone_number: 'https://production.example/webhooks/whatsapp' } },
+    });
+    const posted = await grantedConnect();
+    const followed = await followRedirect({ posted, sessionToken });
+    expect(followed.status).toBe(STATUS_BAD_GATEWAY);
+    expect(await followed.text()).toContain(copy[BackofficeCopyKey.OnboardingKindWebhookClaimedElsewhere]);
+    expect(await countRows({ table: 'whatsapp_numbers' })).toBe(0);
   });
 
   test('binds the accounts without a number and says so', async () => {
@@ -221,15 +240,22 @@ describe('connecting a number', () => {
     expect(await countRows({ table: 'whatsapp_numbers' })).toBe(1);
   });
 
-  test.each([OnboardingStep.Exchange, OnboardingStep.Subscribe, OnboardingStep.Register, OnboardingStep.Read])(
+  test.each([
+    OnboardingStep.Exchange,
+    OnboardingStep.Read,
+    OnboardingStep.Subscribe,
+    OnboardingStep.Register,
+    OnboardingStep.Override,
+  ] as const)(
     'answers 502 naming the %s step and the auth kind when Meta refuses it, stores nothing and logs the step and kind only',
     async (step) => {
       const spies = [vi.spyOn(console, 'log'), vi.spyOn(console, 'error'), vi.spyOn(console, 'warn')];
-      const suffixes: Record<OnboardingStep, { method: string; suffix: string }> = {
+      const suffixes: Record<Exclude<OnboardingStep, OnboardingStep.Inspect>, { method: string; suffix: string }> = {
         [OnboardingStep.Exchange]: { method: 'POST', suffix: '/oauth/access_token' },
+        [OnboardingStep.Read]: { method: 'GET', suffix: `/${WABA_ID}/phone_numbers` },
         [OnboardingStep.Subscribe]: { method: 'POST', suffix: `/${WABA_ID}/subscribed_apps` },
         [OnboardingStep.Register]: { method: 'POST', suffix: `/${PHONE_NUMBER_ID}/register` },
-        [OnboardingStep.Read]: { method: 'GET', suffix: `/${WABA_ID}/phone_numbers` },
+        [OnboardingStep.Override]: { method: 'POST', suffix: `/${PHONE_NUMBER_ID}` },
       };
       await fakeGraph.respondWith({
         method: suffixes[step].method,

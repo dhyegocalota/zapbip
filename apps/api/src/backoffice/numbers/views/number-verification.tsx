@@ -14,6 +14,11 @@ const ERROR_COPY: Record<GraphErrorKind, BackofficeCopyKey> = {
   [GraphErrorKind.NotFound]: BackofficeCopyKey.VerifyErrorNotFound,
   [GraphErrorKind.Network]: BackofficeCopyKey.VerifyErrorNetwork,
   [GraphErrorKind.Upstream]: BackofficeCopyKey.VerifyErrorUpstream,
+  [GraphErrorKind.CodeExpired]: BackofficeCopyKey.VerifyErrorUpstream,
+  [GraphErrorKind.PinMismatch]: BackofficeCopyKey.VerifyErrorUpstream,
+  [GraphErrorKind.RateLimited]: BackofficeCopyKey.VerifyErrorRateLimited,
+  [GraphErrorKind.NotGranted]: BackofficeCopyKey.VerifyErrorUpstream,
+  [GraphErrorKind.WebhookClaimedElsewhere]: BackofficeCopyKey.VerifyErrorUpstream,
 };
 const TEMPLATE_STATUS_COPY: Record<TemplateStatus, BackofficeCopyKey> = {
   [TemplateStatus.Approved]: BackofficeCopyKey.VerifyTemplateStatusApproved,
