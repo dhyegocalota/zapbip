@@ -57,6 +57,7 @@ A webhook override on `subscribed_apps` routes one WABA's deliveries to its own 
 ## Amendment 2026-11-11 (owner delegated)
 
 - `META_LOGIN_CONFIGURATION_ID` is `946808808378298`, the "Chatwoot v2" configuration on the Logic Bit app. The owner may later create a dedicated "zapbip" configuration and swap the constant.
+- Decision 4, step 2 is superseded: the WABA is subscribed with no override, because an override at WABA level re-points every number of a WABA, including a production number that shares it. The backoffice reads the number's `webhook_configuration` first and refuses when `phone_number` already holds another origin; after register it sets this environment's `override_callback_uri` and `verify_token` on the number (`POST /{phone_number_id}`). It also calls `debug_token` and requires the WABA among the `whatsapp_business_management` targets, and checks the phone number list, before any change at Meta.
 - `META_APP_SECRET` is not in the required-secrets list of the deploy preflight. The Worker serves without it, so the preflight warns and the webhook fails closed (every delivery answers `401`) until the owner sets it.
 
 ## Evidence

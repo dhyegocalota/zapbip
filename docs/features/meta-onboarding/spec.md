@@ -56,9 +56,12 @@ sequenceDiagram
   O->>B: POST /numbers/connect/meta csrf, code, ids, label, PIN (auto-submit)
   B->>B: consume grant, validate, duplicate check
   B->>G: POST oauth/access_token (client_id, client_secret, code)
-  B->>G: POST /{waba_id}/subscribed_apps (override_callback_uri, verify_token)
-  B->>G: POST /{phone_number_id}/register (pin)
   B->>G: GET /{waba_id}/phone_numbers
+  B->>G: GET /debug_token (waba_id among the granular scope targets)
+  B->>G: GET /{phone_number_id}?fields=webhook_configuration (refuse a foreign override)
+  B->>G: POST /{waba_id}/subscribed_apps (no override)
+  B->>G: POST /{phone_number_id}/register (pin)
+  B->>G: POST /{phone_number_id} (webhook_configuration: override_callback_uri, verify_token)
   B->>B: insert pending, sealed token, audit
   B-->>O: 303 /numbers/{id}?notice=Registered
 ```
@@ -85,7 +88,7 @@ sequenceDiagram
 - `apps/api/src/numbers/meta-onboarding.ts`:
 
   ```ts
-  export enum OnboardingStep { Exchange = 'exchange', Subscribe = 'subscribe', Register = 'register', Read = 'read' }
+  export enum OnboardingStep { Exchange = 'exchange', Inspect = 'inspect', Read = 'read', Subscribe = 'subscribe', Register = 'register', Override = 'override' }
   export class OnboardingError extends Error { readonly step: OnboardingStep; readonly kind: GraphErrorKind }
   export type OnboardedNumber = { accessToken: string; displayNumber: string; verifiedName: string | null };
   export function onboardNumber(input: {
@@ -94,7 +97,7 @@ sequenceDiagram
   }): Promise<OnboardedNumber>;
   ```
 
-  The exchange is a form-encoded `POST /v24.0/oauth/access_token` (`client_id`, `client_secret`, `code`) without an `Authorization` header, through the same timeout as the Graph client. The other three calls use `createGraphClient` with the business token. `displayNumber` is `+` followed by `digitsOf(display_phone_number)` and must match `DISPLAY_NUMBER_PATTERN`; a phone number ID absent from the WABA list is `OnboardingError(Read, NotFound)`.
+  The exchange is a form-encoded `POST /v24.0/oauth/access_token` (`client_id`, `client_secret`, `code`) without an `Authorization` header, through the same timeout as the Graph client. The exchange timeout stays armed until the body is read. The other calls use `createGraphClient` with the business token. Nothing changes at Meta before the ID checks pass: the phone number list must hold the phone number ID (`Read`, `NotFound`), `debug_token` must list `waba_id` among the targets of the `whatsapp_business_management` granular scope (`Inspect`, `NotGranted`), and the number's `webhook_configuration.phone_number` must be absent or on this environment's origin (`Read`, `WebhookClaimedElsewhere`). Then the WABA is subscribed with no override (an override at WABA level would re-point a WABA that also holds another environment's number), the number is registered, and this environment's webhook is set as an override of that number only. Graph error codes decide the kind before the status does: `133005` is `PinMismatch`; `133016`, `4`, `80007` and `130429` are `RateLimited`; `100` and `190` during the exchange are `CodeExpired`. `displayNumber` is `+` followed by `digitsOf(display_phone_number)` and must match `DISPLAY_NUMBER_PATTERN`; a phone number ID absent from the WABA list is `OnboardingError(Read, NotFound)`.
 - `NumberRegistry.registerNumber(input: { phoneNumberId; wabaId; displayNumber; label; accessToken })`. `registerMetaApp`, `registerNumberWithNewMetaApp` and `openAppSecret` are removed, and so are `RegisteredNumber.metaAppRef`, `NumberAdmin.listMetaApps` and `NumberAdmin.replaceAppSecret`.
 - Migration `0008_meta_onboarding.sql`. It refuses when `meta_apps` holds another app ID, through a guard table with `CHECK (foreign_apps = 0)` as its first statements. It rebuilds `whatsapp_numbers` without `meta_app_ref` under `PRAGMA defer_foreign_keys = true`, copying every row and recreating `whatsapp_numbers_waba`. It drops `meta_apps` and adds `backoffice_sessions.onboarding_grant_until INTEGER`.
 - `NumberSegment.Connect = 'connect'` and a `meta` sub-segment. The `/meta-apps/*` protected path, the register form, the app-secret route and their copy keys are removed.
@@ -107,7 +110,7 @@ sequenceDiagram
 | No live grant on GET or POST of `/numbers/connect/meta` | `303` to `/numbers/connect` (`401` flash on POST) | nothing |
 | Invalid label or PIN, or non-digit IDs | `303`, `422` flash with field errors | nothing, grant spent |
 | Phone number ID already registered | `303`, `409` flash, duplicate | nothing, no Graph call |
-| Exchange, subscribe, register or read fails | `303`, `502` flash naming the step and the kind (`auth`, `not_found`, `network`, `upstream`); operator event `backoffice.onboarding_failed` with step and kind | nothing |
+| Exchange, read, inspect, subscribe, register or override fails | `303`, `502` flash naming the step and the kind (`auth`, `not_found`, `network`, `upstream`, `code_expired`, `pin_mismatch`, `rate_limited`, `not_granted`, `webhook_claimed_elsewhere`); operator event `backoffice.onboarding_failed` with step and kind | nothing |
 | Phone number ID not in the WABA's list | as above, step `read`, kind `not_found` | nothing |
 | Race: the same number inserted between check and insert | `RegistrationConflictError` → `409` flash | nothing |
 | Migration finds a foreign app | the migration fails on its guard; tables untouched | nothing changed |
@@ -133,7 +136,7 @@ Subscribe and register are idempotent at Meta, so a retry after a later-step fai
 | PIN | typed / generated and sealed | typed by the operator, never stored (owner delegated) | 2026-11-11 |
 | Step-up placement | final post / before the popup | before the popup, one 10-minute grant (owner delegated) | 2026-11-11 |
 | Inline handler | nonce / hash / `'self'` asset | `'self'` asset, no inline script (owner delegated) | 2026-11-11 |
-| Staging routing on one app | second app / per-WABA override | per-WABA override (owner delegated) | 2026-11-11 |
+| Staging routing on one app | second app / per-WABA override / per-number override | per-number override, refused when another origin already holds the number (review of 2026-11-11) | 2026-11-11 |
 | Keep the manual form | keep / remove | remove (owner's order) | 2026-11-11 |
 | Depth of gates | full / lean | lean: one tester pass ("não faça tantos gates") | 2026-11-11 |
 

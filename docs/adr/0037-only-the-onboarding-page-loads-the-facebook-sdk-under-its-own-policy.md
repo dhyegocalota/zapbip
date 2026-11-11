@@ -37,6 +37,8 @@ Embedded Signup (ADR 0036) needs the Facebook JavaScript SDK. The SDK loads from
 4. **The message is trusted only from Meta.** The script accepts a message event only when its origin is `https` and its host is `facebook.com` or ends in `.facebook.com`. It accepts only `type: 'WA_EMBEDDED_SIGNUP'`, and posts only after `FINISH` with digits-only IDs and a code. The server re-validates everything it receives (ADR 0036).
 5. **The allowlist is proven, not guessed.** The test walk serves the SDK stub and a `www.facebook.com` frame through Playwright routes under this exact policy. The owner's first connect on staging, with the real SDK, must show zero CSP violations in the console. A host the real SDK needs and the list lacks is added by a dated amendment to this record, never by widening to `*`.
 
+6. **No inline styles, ever.** If the real `sdk.js` injects a `<style>` and the policy blocks it, the fix is a pinned style hash in `style-src`, never `'unsafe-inline'`.
+
 ## Alternatives considered
 
 | Option | Pros | Cons | Why not |
