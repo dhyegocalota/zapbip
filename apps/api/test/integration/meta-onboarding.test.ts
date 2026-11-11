@@ -12,7 +12,7 @@ const WEBHOOK_URL = 'https://mcp.example/webhooks/whatsapp';
 const VERIFY_TOKEN = 'onboarding-verify-token';
 const PIN = '482915';
 const BUSINESS_TOKEN = 'fake-business-token';
-const DISPLAY_NUMBER = '+5511900000001';
+const DISPLAY_NUMBER = '+5511900000301';
 const REPORTED_DISPLAY_NUMBER = '+55 11 90000-0001';
 const VERIFIED_NAME = 'zapbip test';
 const STATUS_BAD_REQUEST = 400;
@@ -107,6 +107,7 @@ describe('onboarding a number through Meta', () => {
         method: FAILURES[step].method,
         path: `/${GRAPH_API_VERSION}${FAILURES[step].suffix(scenario)}`,
         status,
+        scopeId: step === OnboardingStep.Exchange ? scenario.code : undefined,
         body: { error: { code: 100, message: `${scenario.code} ${APP_SECRET} ${BUSINESS_TOKEN} ${PIN}` } },
       });
       const error = await failureOf({ scenario });
