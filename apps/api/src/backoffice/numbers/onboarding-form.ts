@@ -1,4 +1,5 @@
 import { ONBOARDING_PIN_PATTERN } from '@zapbip/types';
+import { LABEL_MAX_LENGTH } from '../backoffice-constants';
 import { BackofficeCopyKey } from '../backoffice-copy';
 import { type FormBody, textFieldOf } from '../form-fields';
 import type { FieldErrors } from './field-errors';
@@ -14,7 +15,6 @@ export type OnboardingRequest = {
 
 export type OnboardingParse = { isValid: true; request: OnboardingRequest } | { isValid: false; errors: FieldErrors };
 
-const LABEL_MAX_LENGTH = 60;
 const DIGITS_PATTERN = /^\d+$/;
 
 function valueOf(input: { form: FormBody; field: NumberFormField }): string {

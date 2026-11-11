@@ -166,7 +166,7 @@ describe('onboarding a number through Meta', () => {
     await run({ scenario: HAPPY });
     const requests = await graphOf({ scenario: HAPPY }).requests();
     const [subscribe, register, override] = requests.slice(3);
-    expect(subscribe?.body).toBeNull();
+    expect(subscribe?.body).toEqual({});
     expect(register?.body).toEqual({ messaging_product: 'whatsapp', pin: PIN });
     expect(override?.body).toEqual({ webhook_configuration: { override_callback_uri: WEBHOOK_URL, verify_token: VERIFY_TOKEN } });
     requests.slice(1).forEach((request) => expect(request.headers.authorization).toBe(`Bearer ${BUSINESS_TOKEN}`));

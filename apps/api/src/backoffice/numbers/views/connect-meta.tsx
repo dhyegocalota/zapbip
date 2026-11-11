@@ -1,6 +1,7 @@
 import { GRAPH_API_VERSION } from '../../../adapters/whatsapp/whatsapp-constants';
-import { META_APP_ID, META_LOGIN_CONFIGURATION_ID } from '@zapbip/types';
+import { META_APP_ID, META_LOGIN_CONFIGURATION_ID, ONBOARDING_PIN_LENGTH, ONBOARDING_PIN_PATTERN } from '@zapbip/types';
 import { EMBEDDED_SIGNUP_SCRIPT_HREF } from '../../assets/embedded-signup';
+import { LABEL_MAX_LENGTH } from '../../backoffice-constants';
 import { BackofficeCopyKey, renderBackofficeCopy } from '../../backoffice-copy';
 import { BackofficePath } from '../../backoffice-paths';
 import { Layout } from '../../layout';
@@ -10,9 +11,6 @@ import { NumberFormField } from '../number-form-fields';
 import { NumberSegment } from '../number-paths';
 
 const FACEBOOK_SDK_SOURCE = 'https://connect.facebook.net/en_US/sdk.js';
-const LABEL_MAX_LENGTH = 60;
-const PIN_LENGTH = 6;
-const PIN_PATTERN = '[0-9]{6}';
 
 export function ConnectMetaPage(props: { page: PageContext }) {
   const { page } = props;
@@ -57,8 +55,8 @@ export function ConnectMetaPage(props: { page: PageContext }) {
             inputmode="numeric"
             isSecret
             isRequired
-            pattern={PIN_PATTERN}
-            maxLength={PIN_LENGTH}
+            pattern={ONBOARDING_PIN_PATTERN.source}
+            maxLength={ONBOARDING_PIN_LENGTH}
           />
           <p id="connect-status" class="field-help" role="status" hidden></p>
           <div class="form-actions">

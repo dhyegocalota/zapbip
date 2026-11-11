@@ -58,6 +58,7 @@ export const BACKOFFICE_PRUNE_HOUR = 4;
 export const BACKOFFICE_PRUNE_MINUTE = 0;
 export const LOCALE_COOKIE_MAX_AGE_SECONDS = (365 * DAY_MS) / SECOND_MS;
 export const FLASH_MAX_AGE_MS = MINUTE_MS;
+export const LABEL_MAX_LENGTH = 60;
 export const ONBOARDING_GRANT_TTL_MS = 10 * MINUTE_MS;
 export const AUDIT_PAGE_LIMIT = 200;
 export const STYLESHEET_CACHE_CONTROL = 'public, max-age=31536000, immutable';

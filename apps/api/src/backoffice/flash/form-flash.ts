@@ -23,7 +23,7 @@ const SELECT_FLASH_STATEMENT = 'SELECT flash FROM backoffice_sessions WHERE toke
 const STORE_FLASH_STATEMENT = 'UPDATE backoffice_sessions SET flash = ? WHERE token_digest = ?';
 const CLAIM_FLASH_STATEMENT = 'UPDATE backoffice_sessions SET flash = NULL WHERE token_digest = ? AND flash = ?';
 
-function sessionDigestOf(input: { context: Context<BackofficeEnv> }): string {
+export function sessionDigestOf(input: { context: Context<BackofficeEnv> }): string {
   const session = input.context.get('session');
   if (session === null) throw new Error('a flash was used without a session');
   return session.digest;

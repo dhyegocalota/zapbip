@@ -153,7 +153,7 @@ describe('connecting a number', () => {
       client_secret: TEST_META_APP_SECRET,
       code: SIGNUP_CODE,
     });
-    expect(requests[3]?.body).toBeNull();
+    expect(requests[3]?.body).toEqual({});
     expect(requests[4]?.body).toEqual({ messaging_product: 'whatsapp', pin: PIN });
     expect(requests[5]?.body).toEqual({
       webhook_configuration: {
@@ -262,7 +262,7 @@ describe('connecting a number', () => {
         path: `/${GRAPH_API_VERSION}${suffixes[step].suffix}`,
         status: STATUS_UNAUTHORIZED,
         scopeId: step === OnboardingStep.Exchange ? SIGNUP_CODE : undefined,
-        body: { error: { code: 190, message: 'refused' } },
+        body: { error: { code: 1, message: 'refused' } },
       });
       const posted = await grantedConnect();
       const followed = await followRedirect({ posted, sessionToken });

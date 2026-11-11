@@ -29,6 +29,8 @@ const DEBUG_TOKEN_PATH_PATTERN = /^\/v\d+\.\d+\/debug_token$/;
 const PHONE_NUMBER_PATH_PATTERN = /^\/v\d+\.\d+\/\d+$/;
 const FAKE_DEFAULT_WEBHOOK_URL = 'https://default.example/webhooks/whatsapp';
 export const FAKE_UNGRANTED_WABA_PREFIX = '9';
+const FAKE_PHONE_NUMBER_ID_PREFIX = '1';
+const WEBHOOK_FIELDS = 'webhook_configuration';
 const MANAGEMENT_SCOPE = 'whatsapp_business_management';
 const EXCHANGE_CODE_FIELD = 'code';
 const FAKE_BUSINESS_TOKEN = 'fake-business-token';
@@ -59,6 +61,10 @@ function resourceIdOf(input: { path: string }): string | null {
 function scopeIdOf(input: { path: string; body: unknown }): string | null {
   if (!EXCHANGE_PATH_PATTERN.test(input.path)) return resourceIdOf({ path: input.path });
   return new URLSearchParams(String(input.body)).get(EXCHANGE_CODE_FIELD);
+}
+
+export function fakePhoneNumberIdOf(input: { wabaId: string }): string {
+  return `${FAKE_PHONE_NUMBER_ID_PREFIX}${input.wabaId.slice(1)}`;
 }
 
 export function fakeReportedDisplayNumberOf(input: { phoneNumberId: string }): string {
@@ -147,16 +153,18 @@ export async function startFakeGraph(input: { port: number }): Promise<{ port: n
     reply({ response: request.response, status: OK_STATUS, body });
   }
 
-  function defaultPhoneNumbers(request: { response: ServerResponse }): void {
-    const registeredIds = recorded.flatMap((entry) => {
-      const match = REGISTER_PATH_PATTERN.exec(entry.request.path);
-      return entry.request.method === 'POST' && match !== null && match[1] !== undefined ? [match[1]] : [];
-    });
-    const data = [...new Set(registeredIds)].map((id) => ({
-      id,
-      display_phone_number: fakeReportedDisplayNumberOf({ phoneNumberId: id }),
-      verified_name: FAKE_VERIFIED_NAME,
-    }));
+  function defaultPhoneNumbers(request: { response: ServerResponse; path: string }): void {
+    const wabaId = PHONE_NUMBERS_WABA_PATTERN.exec(request.path)?.[1];
+    const data =
+      wabaId === undefined
+        ? []
+        : [
+            {
+              id: fakePhoneNumberIdOf({ wabaId }),
+              display_phone_number: fakeReportedDisplayNumberOf({ phoneNumberId: fakePhoneNumberIdOf({ wabaId }) }),
+              verified_name: FAKE_VERIFIED_NAME,
+            },
+          ];
     reply({ response: request.response, status: OK_STATUS, body: { data } });
   }
 
@@ -213,7 +221,8 @@ export async function startFakeGraph(input: { port: number }): Promise<{ port: n
     if (isRegister) return reply({ response: request.response, status: OK_STATUS, body: { success: true } });
     const isDebugToken = method === 'GET' && DEBUG_TOKEN_PATH_PATTERN.test(request.path);
     if (isDebugToken) return defaultDebugToken({ response: request.response });
-    const isPhoneNumberRead = method === 'GET' && PHONE_NUMBER_PATH_PATTERN.test(request.path);
+    const fields = new URL(request.request.url === undefined ? '' : request.request.url, `http://${LOCAL_HOST}`).searchParams.get('fields');
+    const isPhoneNumberRead = method === 'GET' && PHONE_NUMBER_PATH_PATTERN.test(request.path) && fields === WEBHOOK_FIELDS;
     if (isPhoneNumberRead) {
       const body = { id: resourceIdOf({ path: request.path }), webhook_configuration: { application: FAKE_DEFAULT_WEBHOOK_URL } };
       return reply({ response: request.response, status: OK_STATUS, body });
@@ -221,7 +230,7 @@ export async function startFakeGraph(input: { port: number }): Promise<{ port: n
     const isPhoneNumberWrite = method === 'POST' && PHONE_NUMBER_PATH_PATTERN.test(request.path);
     if (isPhoneNumberWrite) return reply({ response: request.response, status: OK_STATUS, body: { success: true } });
     const isPhoneNumbers = method === 'GET' && PHONE_NUMBERS_PATH_PATTERN.test(request.path);
-    if (isPhoneNumbers) return defaultPhoneNumbers({ response: request.response });
+    if (isPhoneNumbers) return defaultPhoneNumbers({ response: request.response, path: request.path });
     reply({ response: request.response, status: NOT_FOUND_STATUS, body: graphError({ message: 'unknown route' }) });
   }
 

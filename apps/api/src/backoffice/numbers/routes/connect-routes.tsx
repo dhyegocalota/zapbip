@@ -15,7 +15,7 @@ import { BackofficeCopyKey } from '../../backoffice-copy';
 import type { BackofficeEnv } from '../../backoffice-env';
 import { BackofficeNotice } from '../../backoffice-notice';
 import { BackofficePath } from '../../backoffice-paths';
-import { type FlashStatus, type FormFlash, redirectWithFlash, takeFlash } from '../../flash/form-flash';
+import { type FlashStatus, type FormFlash, redirectWithFlash, sessionDigestOf, takeFlash } from '../../flash/form-flash';
 import { signedInPageContext } from '../../page-context';
 import type { FieldErrors } from '../field-errors';
 import { auditNumberAction } from '../number-audit';
@@ -32,12 +32,6 @@ const CONNECT_PATH = `${BackofficePath.Numbers}/${NumberSegment.Connect}`;
 const META_PATH = `${CONNECT_PATH}/${NumberSegment.Meta}`;
 
 export const connectRoutes = new Hono<BackofficeEnv>();
-
-function sessionDigestOf(input: { context: { get(name: 'session'): { digest: string } | null } }): string {
-  const session = input.context.get('session');
-  if (session === null) throw new Error('the onboarding ran without a session');
-  return session.digest;
-}
 
 connectRoutes.get(CONNECT_PATH, async (context) => {
   const page = await signedInPageContext({ context });

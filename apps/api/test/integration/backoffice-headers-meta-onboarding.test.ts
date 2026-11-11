@@ -84,7 +84,7 @@ describe('the onboarding page', () => {
       expect(body).toMatch(new RegExp(`<input type="hidden" name="${name}"`)),
     );
     expect(body).toMatch(/name="label"[^>]*maxlength="60"/);
-    expect(body).toMatch(/name="pin"[^>]*pattern="\[0-9\]\{6\}"/);
+    expect(body).toMatch(/name="pin"[^>]*pattern="\^\\d\{6\}\$"/);
     expect(body).toContain('action="/numbers/connect/meta"');
   });
 });
