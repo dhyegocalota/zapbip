@@ -74,6 +74,32 @@ export async function postAction(input: {
   });
 }
 
+export async function postForm(input: {
+  path: string;
+  sessionToken: string;
+  fields: Fields;
+  origin?: string | null;
+  csrf?: string;
+  env?: BackofficeBindings;
+}): Promise<Response> {
+  const { origin = BACKOFFICE_ORIGIN } = input;
+  const csrf = input.csrf === undefined ? await csrfTokenOf({ sessionToken: input.sessionToken }) : input.csrf;
+  return requestBackoffice({
+    path: input.path,
+    method: 'POST',
+    form: { ...input.fields, [NumberFormField.Csrf]: csrf },
+    cookies: { [SESSION_COOKIE]: input.sessionToken },
+    headers: origin === null ? {} : { Origin: origin },
+    env: input.env,
+  });
+}
+
+export async function followRedirect(input: { posted: Response; sessionToken: string }): Promise<Response> {
+  const location = input.posted.headers.get('Location');
+  if (location === null) throw new Error(`the form answered ${input.posted.status} without a Location`);
+  return getPage({ path: location, sessionToken: input.sessionToken });
+}
+
 export async function submitRejectedAction(input: Parameters<typeof postAction>[0]): Promise<{ posted: Response; followed: Response }> {
   const posted = await postAction(input);
   const location = posted.headers.get('Location');

@@ -4,6 +4,8 @@ export enum NumberFormField {
   PhoneNumberId = 'phoneNumberId',
   WabaId = 'wabaId',
   Label = 'label',
+  SignupCode = 'signupCode',
+  Pin = 'pin',
   AccessToken = 'accessToken',
   State = 'state',
   ConfirmDisable = 'confirmDisable',
