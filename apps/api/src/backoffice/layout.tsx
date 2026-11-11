@@ -10,6 +10,7 @@ import { LocaleSwitch } from './components/locale-switch';
 import { Notice } from './components/notice';
 import { PrimaryNavigation } from './components/primary-navigation';
 import { SignOutButton } from './components/sign-out-button';
+import { ThemeSwitch } from './components/theme-switch';
 
 export type LayoutProps = {
   locale: OwnerLocale;
@@ -20,7 +21,7 @@ export type LayoutProps = {
   signedIn: boolean;
   currentPath: string;
   notice: BackofficeNotice | null;
-  theme?: BackofficeTheme;
+  theme: BackofficeTheme;
   children?: Child;
 };
 
@@ -37,14 +38,14 @@ const TITLE_SEPARATOR = ' · ';
 const SIGNED_OUT_SHELL_CLASS = 'shell-signed-out';
 
 export function Layout(props: LayoutProps) {
-  const { locale, environment, csrfToken, signedIn, notice } = props;
+  const { locale, theme, environment, csrfToken, signedIn, notice } = props;
   const translate = (key: BackofficeCopyKey, values?: Record<string, string>): string => renderBackofficeCopy({ key, locale, values });
   const badgeKey = environment === null ? null : ENVIRONMENT_BADGES[environment];
   const footerKey = environment === null ? BackofficeCopyKey.BrandName : BackofficeCopyKey.FooterLine;
   const documentTitle = `${props.title}${TITLE_SEPARATOR}${translate(BackofficeCopyKey.BrandName)}`;
   const noticeView = notice === null ? null : NOTICE_VIEWS[notice];
   return (
-    <html lang={LANGUAGE_TAGS[locale]}>
+    <html lang={LANGUAGE_TAGS[locale]} data-theme={theme}>
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -68,6 +69,7 @@ export function Layout(props: LayoutProps) {
           {csrfToken === null ? null : (
             <div class="header-end">
               <LocaleSwitch locale={locale} csrfToken={csrfToken} returnTo={props.currentPath} />
+              <ThemeSwitch locale={locale} theme={theme} csrfToken={csrfToken} returnTo={props.currentPath} />
               {signedIn ? <SignOutButton locale={locale} csrfToken={csrfToken} /> : null}
             </div>
           )}

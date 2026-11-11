@@ -6,12 +6,14 @@ import { STYLESHEET_HREF } from './assets/stylesheet';
 import { csrfTokenOf } from './auth/csrf';
 import type { BackofficeEnv } from './backoffice-env';
 import { type BackofficeNotice, noticeOf } from './backoffice-notice';
+import type { BackofficeTheme } from './backoffice-theme';
 import { BackofficePath } from './backoffice-paths';
 
 const NOTICE_QUERY = 'notice';
 
 export type PageContext = {
   locale: OwnerLocale;
+  theme: BackofficeTheme;
   environment: DeployEnvironment;
   stylesheetHref: string;
   csrfToken: string;
@@ -24,6 +26,7 @@ export async function signedInPageContext(input: { context: Context<BackofficeEn
   if (session === null) throw new Error('a signed-in page was rendered without a session');
   return {
     locale: context.get('locale'),
+    theme: context.get('theme'),
     environment: parseDeployEnvironment({ value: context.env.ENVIRONMENT }),
     stylesheetHref: STYLESHEET_HREF,
     csrfToken: await csrfTokenOf({ sessionToken: session.token }),

@@ -2,12 +2,14 @@ import type { OwnerLocale } from '@zapbip/types';
 import type { DeployEnvironment } from '../../contract/deploy-environment';
 import { BackofficeCopyKey, renderBackofficeCopy } from '../backoffice-copy';
 import type { BackofficeNotice } from '../backoffice-notice';
+import type { BackofficeTheme } from '../backoffice-theme';
 import { BackofficePath } from '../backoffice-paths';
 import { CodeField, Field } from '../components/fields';
 import { Layout } from '../layout';
 
 export type SignInPageProps = {
   locale: OwnerLocale;
+  theme: BackofficeTheme;
   environment: DeployEnvironment;
   csrfToken: string;
   stylesheetHref: string;
@@ -27,6 +29,7 @@ export function SignInPage(props: SignInPageProps) {
       signedIn={false}
       currentPath={BackofficePath.SignIn}
       notice={props.notice}
+      theme={props.theme}
     >
       <section class="card form-card" aria-labelledby="sign-in-title">
         <p class="eyebrow">{translate(BackofficeCopyKey.SignInEyebrow)}</p>

@@ -146,6 +146,7 @@ describe('sign-in page', () => {
       SignInPage({
         locale,
         environment: DeployEnvironment.Production,
+        theme: BackofficeTheme.System,
         csrfToken: CSRF_TOKEN,
         stylesheetHref: STYLESHEET_HREF,
         notice: null,

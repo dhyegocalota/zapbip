@@ -37,6 +37,7 @@ export function HomePage(props: { page: PageContext; overview: HomeOverview }) {
       signedIn
       currentPath={BackofficePath.Home}
       notice={page.notice}
+      theme={page.theme}
     >
       <h1>{translate(BackofficeCopyKey.HomeTitle)}</h1>
       <div class="card-grid">

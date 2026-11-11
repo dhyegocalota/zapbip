@@ -39,7 +39,7 @@ export function ErrorPage(props: {
   status: ErrorStatus;
   locale: OwnerLocale;
   environment: DeployEnvironment | null;
-  theme?: BackofficeTheme;
+  theme: BackofficeTheme;
 }) {
   const { status, locale } = props;
   const view = ERROR_VIEWS[status];
@@ -56,6 +56,7 @@ export function ErrorPage(props: {
       signedIn={false}
       currentPath={BackofficePath.Home}
       notice={null}
+      theme={props.theme}
     >
       <section class="card form-card" aria-labelledby="error-title">
         <h1 id="error-title">

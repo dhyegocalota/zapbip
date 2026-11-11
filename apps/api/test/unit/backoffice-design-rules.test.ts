@@ -4,6 +4,7 @@ import { HttpStatus, OwnerLocale, WhatsAppNumberState } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { BackofficeAuditAction, BackofficeAuditOutcome } from '../../src/backoffice/audit/backoffice-audit-action';
 import { BackofficeNotice } from '../../src/backoffice/backoffice-notice';
+import { BackofficeTheme } from '../../src/backoffice/backoffice-theme';
 import { MetricsPage } from '../../src/backoffice/metrics/metrics-page';
 import { NumberDetailPage } from '../../src/backoffice/numbers/views/number-detail';
 import { NumbersListPage } from '../../src/backoffice/numbers/views/numbers-list';
@@ -45,6 +46,7 @@ const TOKEN_BLOCK_PATTERN = /:root\s*\{[^}]*\}/g;
 
 const PAGE = {
   locale: OwnerLocale.EnglishUs,
+  theme: BackofficeTheme.System,
   environment: DeployEnvironment.Production,
   stylesheetHref: '/assets/backoffice.css?v=1',
   csrfToken: 'token',
@@ -93,7 +95,9 @@ const PAGES: Record<string, string> = {
   detailDisabled: detailPage({ state: WhatsAppNumberState.Disabled }),
   metricsEmpty: String(MetricsPage({ page: PAGE, filter: METRICS_FILTER, report: EMPTY_REPORT, now: NOW })),
   metricsData: String(MetricsPage({ page: PAGE, filter: METRICS_FILTER, report: DATA_REPORT, now: NOW })),
-  notFound: String(ErrorPage({ status: HttpStatus.NotFound, locale: OwnerLocale.EnglishUs, environment: null })),
+  notFound: String(
+    ErrorPage({ status: HttpStatus.NotFound, locale: OwnerLocale.EnglishUs, theme: BackofficeTheme.System, environment: null }),
+  ),
 };
 
 function viewSources(input: { directory: string }): { path: string; source: string }[] {

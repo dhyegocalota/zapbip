@@ -46,6 +46,7 @@ export function NumberDetailPage(props: NumberDetailPageProps) {
       signedIn
       currentPath={BackofficePath.Numbers}
       notice={page.notice}
+      theme={page.theme}
     >
       <a href={BackofficePath.Numbers} class="crumb">
         {translate(BackofficeCopyKey.NumberBack)}
