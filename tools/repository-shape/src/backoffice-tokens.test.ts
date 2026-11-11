@@ -17,7 +17,7 @@ const FIXED_TOKENS = [
 ];
 const DARK_BLOCK_PATTERN = /@media \(prefers-color-scheme: dark\) \{\s*:root:not\(\[data-theme='light'\]\)\s*\{[^}]*\}/;
 const FORCED_DARK_BLOCK_PATTERN = /:root\[data-theme='dark'\]\s*\{[^}]*\}/;
-const BLOCK_BODY_PATTERN = /\{([^}]*)\}/;
+const BLOCK_BODY_PATTERN = /:root[^{]*\{([^}]*)\}/;
 const WHITESPACE_PATTERN = /\s+/g;
 const BASE_BLOCK_PATTERN = /^:root\s*\{[^}]*\}/m;
 

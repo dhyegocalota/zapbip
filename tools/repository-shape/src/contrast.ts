@@ -4,9 +4,10 @@ const CHANNEL_MAXIMUM = 255;
 const LINEAR_THRESHOLD = 0.03928;
 const HEX_PATTERN = /^#([0-9a-fA-F]{6})$/;
 const RGB_PATTERN = /^rgba?\(\s*(\d+)[\s,]+(\d+)[\s,]+(\d+)(?:\s*[/,]\s*([\d.]+))?\s*\)$/;
-const TOKEN_BLOCK_PATTERN = /:root\s*\{[^}]*\}/g;
+const TOKEN_BLOCK_PATTERN = /:root[^{]*\{[^}]*\}/g;
+const FORCED_DARK_BLOCK_PATTERN = /:root\[data-theme='dark'\]\s*\{[^}]*\}/;
 const TOKEN_PATTERN = /(--[a-z0-9-]+):\s*([^;]+);/g;
-const TOKEN_BLOCK_COUNT = 2;
+const TOKEN_BLOCK_COUNTS = [2, 3];
 
 interface Colour {
   red: number;
@@ -75,11 +76,14 @@ function tokensOf({ block }: { block: string }): Record<string, string> {
 
 export function themeTokens({ stylesheet }: { stylesheet: string }): { light: Record<string, string>; dark: Record<string, string> } {
   const blocks = stylesheet.match(TOKEN_BLOCK_PATTERN);
-  if (blocks === null || blocks.length !== TOKEN_BLOCK_COUNT) throw new Error('the stylesheet needs a light and a dark token block');
+  if (blocks === null || !TOKEN_BLOCK_COUNTS.includes(blocks.length))
+    throw new Error('the stylesheet needs a light and a dark token block');
   const light = tokensOf({ block: blocks[0]! });
   return { light, dark: { ...light, ...tokensOf({ block: blocks[1]! }) } };
 }
 
-export function forcedDarkTokens(input: { stylesheet: string }): Record<string, string> {
-  throw new Error(`forcedDarkTokens is not implemented for ${input.stylesheet.length} characters`);
+export function forcedDarkTokens({ stylesheet }: { stylesheet: string }): Record<string, string> {
+  const block = stylesheet.match(FORCED_DARK_BLOCK_PATTERN);
+  if (block === null) throw new Error('the stylesheet has no forced dark token block');
+  return { ...themeTokens({ stylesheet }).light, ...tokensOf({ block: block[0] }) };
 }
