@@ -22,7 +22,7 @@ export type NumberRecord = RegisteredNumber & {
 export type RegisterMetaAppInput = { metaAppId: string; label: string; appSecret: string };
 
 export type RegisterNumberInput = {
-  metaAppRef: string;
+  metaAppRef?: string;
   phoneNumberId: string;
   wabaId: string;
   displayNumber: string;

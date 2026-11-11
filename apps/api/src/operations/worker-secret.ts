@@ -1,3 +1,7 @@
+export enum WarnedWorkerSecret {
+  MetaAppSecret = 'META_APP_SECRET',
+}
+
 export enum WorkerSecret {
   WhatsAppVerifyToken = 'WHATSAPP_VERIFY_TOKEN',
   MediaLinkSigningKey = 'MEDIA_LINK_SIGNING_KEY',

@@ -14,7 +14,7 @@ import {
   SAMPLE_WHEEL_SHA256,
 } from '../support/hosted-plugin-sample';
 import { SmokeInput } from '../../src/operations/smoke-inputs';
-import { WorkerSecret } from '../../src/operations/worker-secret';
+import { WarnedWorkerSecret, WorkerSecret } from '../../src/operations/worker-secret';
 
 export const SMOKE_OWNER_PHONE = '5511999990000';
 export const NPM_VERSION = '0.1.0';
@@ -30,7 +30,9 @@ export const HOSTED_REQUIREMENTS_URL = `${PRODUCTION_PUBLIC_ORIGIN}${SAMPLE_PLUG
 export const HOSTED_WHEEL_URL = `${PRODUCTION_PUBLIC_ORIGIN}${SAMPLE_PLUGIN.hostedArtifacts.find((artifact) => !artifact.embeddedInInstallCommand)?.path}`;
 export const HOSTED_PLUGINS: AgentPlugin[] = [SAMPLE_PLUGIN, SAMPLE_NPM_PLUGIN];
 export const DATABASE_ID = '0a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d';
-export const ALL_SECRETS_JSON = JSON.stringify(Object.values(WorkerSecret).map((name) => ({ name, type: 'secret_text' })));
+export const ALL_SECRETS_JSON = JSON.stringify(
+  [...Object.values(WorkerSecret), ...Object.values(WarnedWorkerSecret)].map((name) => ({ name, type: 'secret_text' })),
+);
 export const PASSING: ShellResult = { exitCode: 0, stdout: '' };
 export const HAPPY_REPLIES: Record<string, ShellResult> = {
   'git status --porcelain': PASSING,

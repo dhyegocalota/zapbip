@@ -71,6 +71,7 @@ export type PreflightRefusal = { step: PreflightStep; message: string };
 
 export enum PreflightWarningKind {
   PackageUnpublished = 'package unpublished',
+  MetaAppSecretMissing = 'meta app secret missing',
 }
 
 export type PreflightWarning = { kind: PreflightWarningKind; message: string };
