@@ -1,6 +1,6 @@
 # Backoffice switchers
 
-**Status:** Building
+**Status:** Shipped 2026-11-11
 **Tier:** 🟡
 **Owner approval:** owner delegated 2026-11-11
 **ADRs:** none; no decision here adds an interface or a dependency, and the backoffice CSP does not change
