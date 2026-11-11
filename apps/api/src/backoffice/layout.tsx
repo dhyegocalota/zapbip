@@ -20,6 +20,7 @@ export type LayoutProps = {
   csrfToken: string | null;
   signedIn: boolean;
   currentPath: string;
+  returnPath: string;
   notice: BackofficeNotice | null;
   theme: BackofficeTheme;
   children?: Child;
@@ -68,8 +69,8 @@ export function Layout(props: LayoutProps) {
           {signedIn ? <PrimaryNavigation locale={locale} currentPath={props.currentPath} /> : null}
           {csrfToken === null ? null : (
             <div class="header-end">
-              <LocaleSwitch locale={locale} csrfToken={csrfToken} returnTo={props.currentPath} />
-              <ThemeSwitch locale={locale} theme={theme} csrfToken={csrfToken} returnTo={props.currentPath} />
+              <LocaleSwitch locale={locale} csrfToken={csrfToken} returnTo={props.returnPath} />
+              <ThemeSwitch locale={locale} theme={theme} csrfToken={csrfToken} returnTo={props.returnPath} />
               {signedIn ? <SignOutButton locale={locale} csrfToken={csrfToken} /> : null}
             </div>
           )}

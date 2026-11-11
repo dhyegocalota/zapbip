@@ -105,6 +105,15 @@ async function verifiedAt(): Promise<number | null> {
 }
 
 describe('verifying a number with Meta', () => {
+  test('the preference switches on the result page return to it', async () => {
+    await answerNumber({ reportedDisplayNumber: REPORTED_DISPLAY_NUMBER });
+    await answerTemplates();
+    await verify({});
+    const path = `/numbers/${NUMBER_ID}/verification`;
+    const body = await verificationBody();
+    expect(body.split(`name="returnTo" value="${path}"`)).toHaveLength(3);
+  });
+
   test('redirects to the stored result, sets verified_at and shows the four template rows', async () => {
     await answerNumber({ reportedDisplayNumber: REPORTED_DISPLAY_NUMBER });
     await answerTemplates();

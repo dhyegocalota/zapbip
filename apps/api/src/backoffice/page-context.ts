@@ -18,6 +18,7 @@ export type PageContext = {
   stylesheetHref: string;
   csrfToken: string;
   notice: BackofficeNotice | null;
+  returnPath: string;
 };
 
 export async function signedInPageContext(input: { context: Context<BackofficeEnv> }): Promise<PageContext> {
@@ -31,5 +32,6 @@ export async function signedInPageContext(input: { context: Context<BackofficeEn
     stylesheetHref: STYLESHEET_HREF,
     csrfToken: await csrfTokenOf({ sessionToken: session.token }),
     notice: noticeOf({ value: context.req.query(NOTICE_QUERY) }),
+    returnPath: new URL(context.req.url).pathname,
   };
 }

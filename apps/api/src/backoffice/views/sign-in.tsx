@@ -30,6 +30,7 @@ export function SignInPage(props: SignInPageProps) {
       currentPath={BackofficePath.SignIn}
       notice={props.notice}
       theme={props.theme}
+      returnPath={BackofficePath.SignIn}
     >
       <section class="card form-card" aria-labelledby="sign-in-title">
         <p class="eyebrow">{translate(BackofficeCopyKey.SignInEyebrow)}</p>

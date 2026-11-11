@@ -104,7 +104,6 @@ describe('the numbers list', () => {
 describe('the preference switches on a number page', () => {
   test.each([
     ['the detail page', '/numbers/num_0001'],
-    ['the verification page', '/numbers/num_0001/verification'],
     ['the register page', REGISTER_PATH],
   ])('return to %s', async (_name, path) => {
     await seedNumber({ suffix: '0001', label: 'Alpha' });

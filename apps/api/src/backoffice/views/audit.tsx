@@ -48,6 +48,7 @@ export function AuditPage(props: { page: PageContext; rows: AuditListRow[] }) {
       currentPath={BackofficePath.Audit}
       notice={page.notice}
       theme={page.theme}
+      returnPath={page.returnPath}
     >
       <div class="page-head">
         <h1>{translate(BackofficeCopyKey.AuditTitle)}</h1>

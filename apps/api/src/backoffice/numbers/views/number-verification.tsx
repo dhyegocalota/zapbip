@@ -52,6 +52,7 @@ export function NumberVerificationPage(props: { page: PageContext; numberId: str
       currentPath={BackofficePath.Numbers}
       notice={page.notice}
       theme={page.theme}
+      returnPath={page.returnPath}
     >
       <h1>{translate(BackofficeCopyKey.VerifyResultTitle, { label })}</h1>
       <VerificationNotice page={page} snapshot={snapshot} />

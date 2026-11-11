@@ -57,6 +57,7 @@ export function ErrorPage(props: {
       currentPath={BackofficePath.Home}
       notice={null}
       theme={props.theme}
+      returnPath={BackofficePath.Home}
     >
       <section class="card form-card" aria-labelledby="error-title">
         <h1 id="error-title">

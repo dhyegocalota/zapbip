@@ -57,6 +57,7 @@ const PAGE = {
   stylesheetHref: '/assets/backoffice.css?v=1',
   csrfToken: 'token',
   notice: null,
+  returnPath: '/',
 };
 
 function detailPage(input: { state: WhatsAppNumberState }): string {

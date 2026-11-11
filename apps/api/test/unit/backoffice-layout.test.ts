@@ -22,6 +22,7 @@ function render(input: Partial<LayoutProps>): string {
     csrfToken: CSRF_TOKEN,
     signedIn: true,
     currentPath: '/numbers',
+    returnPath: '/numbers/abc',
     notice: null,
     theme: BackofficeTheme.System,
     ...input,
@@ -44,6 +45,12 @@ describe('backoffice layout', () => {
     const html = render({ theme: resolveTheme({ cookieValue: hostileCookieValue }) });
     expect(html).toContain('<html lang="en" data-theme="system">');
     expect(html).not.toContain('alert(1)');
+  });
+
+  it('returns the switchers to the return path while the navigation follows the current path', () => {
+    const html = render({});
+    expect(html.split('name="returnTo" value="/numbers/abc"')).toHaveLength(3);
+    expect(html).toContain('href="/numbers" aria-current="page"');
   });
 
   it('shows both switchers on a signed-in page and on the sign-in page', () => {

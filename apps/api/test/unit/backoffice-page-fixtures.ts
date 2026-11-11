@@ -20,6 +20,7 @@ export const PAGE: PageContext = {
   stylesheetHref: '/assets/backoffice.css?v=1',
   csrfToken: 'token',
   notice: null,
+  returnPath: '/',
 };
 
 export function pageIn(input: { locale: OwnerLocale; notice?: BackofficeNotice }): PageContext {

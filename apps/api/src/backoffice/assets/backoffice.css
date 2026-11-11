@@ -1480,6 +1480,7 @@ main > .notice {
 
   .locale-switch .button[aria-pressed='true'],
   .theme-switch .button[aria-pressed='true'] {
-    border: 1px solid CanvasText;
+    outline: 1px solid CanvasText;
+    outline-offset: -1px;
   }
 }
