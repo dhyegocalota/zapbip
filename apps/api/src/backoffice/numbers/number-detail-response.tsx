@@ -49,7 +49,7 @@ export function rejectDetail(input: {
   return redirectWithFlash({
     context,
     path: numberPath({ numberId }),
-    flash: { status, failure, errors: {}, selectedState },
+    flash: { status, failure, errors: {}, onboarding: null, selectedState },
   });
 }
 

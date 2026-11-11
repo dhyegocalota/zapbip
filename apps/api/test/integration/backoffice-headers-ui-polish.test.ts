@@ -21,7 +21,7 @@ const SIGNED_OUT_PATH = '/sign-in';
 const SIGNED_IN_PATHS = [
   '/',
   '/numbers',
-  '/numbers/new',
+  '/numbers/connect',
   `/numbers/${NUMBER_ID}`,
   `/numbers/${NUMBER_ID}/verification`,
   '/metrics',

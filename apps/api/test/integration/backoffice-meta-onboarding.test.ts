@@ -245,10 +245,8 @@ describe('connecting a number', () => {
       expect(followed.status).toBe(STATUS_BAD_GATEWAY);
       expect(body).toContain(copy[BackofficeCopyKey.OnboardingKindAuth]);
       expect(await countRows({ table: 'whatsapp_numbers' })).toBe(0);
-      const logged = JSON.stringify(spies.flatMap((spy) => spy.mock.calls));
-      expect(logged).toContain(OperatorEvent.BackofficeOnboardingFailed);
-      expect(logged).toContain(`"onboarding_step":"${step}"`);
-      expect(logged).toContain('"onboarding_kind":"auth"');
+      const events = spies.flatMap((spy) => spy.mock.calls).map((call) => JSON.parse(String(call[0])) as Record<string, unknown>);
+      expect(events).toContainEqual({ event: OperatorEvent.BackofficeOnboardingFailed, onboarding_step: step, onboarding_kind: 'auth' });
     },
   );
 

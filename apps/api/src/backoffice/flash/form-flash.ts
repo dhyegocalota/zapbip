@@ -3,14 +3,17 @@ import type { Context } from 'hono';
 import type { BackofficeCopyKey } from '../backoffice-copy';
 import { FLASH_MAX_AGE_MS, SEE_OTHER_STATUS } from '../backoffice-constants';
 import type { BackofficeEnv } from '../backoffice-env';
+import type { GraphErrorKind } from '../../numbers/graph-error-kind';
+import type { OnboardingStep } from '../../numbers/meta-onboarding';
 import type { FieldErrors } from '../numbers/field-errors';
 
-export type FlashStatus = HttpStatus.Unauthorized | HttpStatus.UnprocessableEntity | HttpStatus.Conflict;
+export type FlashStatus = HttpStatus.Unauthorized | HttpStatus.UnprocessableEntity | HttpStatus.Conflict | HttpStatus.BadGateway;
 
 export type FormFlash = {
   status: FlashStatus;
   failure: BackofficeCopyKey | null;
   errors: FieldErrors;
+  onboarding: { step: OnboardingStep; kind: GraphErrorKind } | null;
   selectedState: WhatsAppNumberState | null;
 };
 

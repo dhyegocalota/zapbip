@@ -3,6 +3,7 @@ import type { BackofficeNotice } from '../backoffice-notice';
 
 export enum NumberSegment {
   Connect = 'connect',
+  Meta = 'meta',
   Verify = 'verify',
   Verification = 'verification',
   AccessToken = 'access-token',
