@@ -27,7 +27,6 @@ async function clearRegistry(): Promise<void> {
   await testEnv.CONNECTIONS.batch([
     testEnv.CONNECTIONS.prepare('DELETE FROM accounts'),
     testEnv.CONNECTIONS.prepare('DELETE FROM whatsapp_numbers'),
-    testEnv.CONNECTIONS.prepare('DELETE FROM meta_apps'),
     testEnv.CONNECTIONS.prepare('DELETE FROM channel_restrictions'),
   ]);
 }

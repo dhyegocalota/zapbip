@@ -42,7 +42,6 @@ describe('the development number seed', () => {
       phoneNumberId: DEVELOPMENT_NUMBER.phoneNumberId,
       accessToken: DEVELOPMENT_NUMBER.accessToken,
     });
-    expect(await registry.openAppSecret({ metaAppRef: DEVELOPMENT_NUMBER.metaAppRef })).toBe(DEVELOPMENT_NUMBER.appSecret);
   });
 
   it('registers nothing on a second run', async () => {

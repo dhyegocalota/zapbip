@@ -6,13 +6,12 @@ import type {
   NumberRegistry,
   OutboundNumber,
   RegisteredNumber,
-  RegisterMetaAppInput,
   RegisterNumberInput,
   RegisteredNumberResult,
 } from '../../numbers/number-registry';
 import { conflictOf } from '../../numbers/registration-conflict';
 import { assertNumberTransition } from '../../numbers/number-state';
-import { accessTokenAssociatedData, appSecretAssociatedData } from '../../numbers/number-sealing';
+import { accessTokenAssociatedData } from '../../numbers/number-sealing';
 import { WorkerSecret } from '../../operations/worker-secret';
 import { createAesGcmSecretBox, type SecretBox } from '../platform/aes-gcm-secret-box';
 import { createPlatformClock } from '../platform/clock';
@@ -20,20 +19,17 @@ import { createIdGenerator } from '../platform/ids';
 
 type OutboundRow = RegisteredNumber & { sealedAccessToken: string };
 
-const NUMBER_COLUMNS = 'id AS numberId, phone_number_id AS phoneNumberId, waba_id AS wabaId, state, meta_app_ref AS metaAppRef';
+const NUMBER_COLUMNS = 'id AS numberId, phone_number_id AS phoneNumberId, waba_id AS wabaId, state';
 const OUTBOUND_COLUMNS = NUMBER_COLUMNS + ', sealed_access_token AS sealedAccessToken';
 const FIND_BY_PHONE_NUMBER_IDS_STATEMENT =
   'SELECT ' + NUMBER_COLUMNS + ' FROM whatsapp_numbers WHERE phone_number_id IN (SELECT value FROM json_each(?))';
 const FIND_BY_WABA_IDS_STATEMENT = 'SELECT ' + NUMBER_COLUMNS + ' FROM whatsapp_numbers WHERE waba_id IN (SELECT value FROM json_each(?))';
-const FIND_APP_SECRET_STATEMENT = 'SELECT sealed_app_secret AS sealedAppSecret FROM meta_apps WHERE id = ?';
 const FIND_FOR_ACCOUNT_STATEMENT =
   'SELECT ' + OUTBOUND_COLUMNS + ' FROM whatsapp_numbers WHERE id = (SELECT number_id FROM accounts WHERE id = ?)';
 const FIND_FOR_INBOUND_STATEMENT = 'SELECT ' + OUTBOUND_COLUMNS + ' FROM whatsapp_numbers WHERE id = ?';
-const INSERT_META_APP_STATEMENT =
-  'INSERT INTO meta_apps (id, meta_app_id, label, sealed_app_secret, seal_key_version, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)';
 const INSERT_NUMBER_STATEMENT = `INSERT INTO whatsapp_numbers
-  (id, meta_app_ref, phone_number_id, waba_id, display_number, label, sealed_access_token, seal_key_version, state, credentials_changed_at, created_at, updated_at)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+  (id, phone_number_id, waba_id, display_number, label, sealed_access_token, seal_key_version, state, credentials_changed_at, created_at, updated_at)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 const SEAL_KEY_VERSION = 1;
 const BACKFILL_ACCOUNTS_STATEMENT =
   'UPDATE accounts SET number_id = ? WHERE number_id IS NULL AND (SELECT COUNT(*) FROM whatsapp_numbers) = 1';
@@ -53,8 +49,8 @@ function registrationFailureOf(input: { error: unknown }): unknown {
 }
 
 function registeredOf(input: { row: RegisteredNumber }): RegisteredNumber {
-  const { numberId, phoneNumberId, wabaId, state, metaAppRef } = input.row;
-  return { numberId, phoneNumberId, wabaId, state, metaAppRef };
+  const { numberId, phoneNumberId, wabaId, state } = input.row;
+  return { numberId, phoneNumberId, wabaId, state };
 }
 
 export class D1NumberRegistry implements NumberRegistry {
@@ -70,41 +66,11 @@ export class D1NumberRegistry implements NumberRegistry {
     this.clock = input.clock;
   }
 
-  async registerMetaApp(input: RegisterMetaAppInput): Promise<{ metaAppRef: string }> {
-    const metaAppRef = this.ids.next({ prefix: IdPrefix.MetaApp });
-    const sealedAppSecret = await this.secretBox.seal({ plain: input.appSecret, associatedData: appSecretAssociatedData({ metaAppRef }) });
-    const now = this.clock.now();
-    await this.database
-      .prepare(INSERT_META_APP_STATEMENT)
-      .bind(metaAppRef, input.metaAppId, input.label, sealedAppSecret, SEAL_KEY_VERSION, now, now)
-      .run();
-    return { metaAppRef };
-  }
-
   async registerNumber(input: RegisterNumberInput): Promise<RegisteredNumberResult> {
     const numberId = this.ids.next({ prefix: IdPrefix.Number });
     const statements = await this.numberStatements({ numberId, number: input });
     const backfilledAccounts = await this.runRegistration({ statements });
     return { numberId, backfilledAccounts };
-  }
-
-  async registerNumberWithNewMetaApp(input: {
-    metaApp: RegisterMetaAppInput;
-    number: Omit<RegisterNumberInput, 'metaAppRef'>;
-  }): Promise<RegisteredNumberResult & { metaAppRef: string }> {
-    const metaAppRef = this.ids.next({ prefix: IdPrefix.MetaApp });
-    const numberId = this.ids.next({ prefix: IdPrefix.Number });
-    const sealedAppSecret = await this.secretBox.seal({
-      plain: input.metaApp.appSecret,
-      associatedData: appSecretAssociatedData({ metaAppRef }),
-    });
-    const now = this.clock.now();
-    const metaAppStatement = this.database
-      .prepare(INSERT_META_APP_STATEMENT)
-      .bind(metaAppRef, input.metaApp.metaAppId, input.metaApp.label, sealedAppSecret, SEAL_KEY_VERSION, now, now);
-    const numberStatements = await this.numberStatements({ numberId, number: { ...input.number, metaAppRef } });
-    const backfilledAccounts = await this.runRegistration({ statements: [metaAppStatement, ...numberStatements] });
-    return { metaAppRef, numberId, backfilledAccounts };
   }
 
   private async numberStatements(input: { numberId: string; number: RegisterNumberInput }): Promise<D1PreparedStatement[]> {
@@ -119,7 +85,6 @@ export class D1NumberRegistry implements NumberRegistry {
         .prepare(INSERT_NUMBER_STATEMENT)
         .bind(
           numberId,
-          number.metaAppRef,
           number.phoneNumberId,
           number.wabaId,
           number.displayNumber,
@@ -167,17 +132,6 @@ export class D1NumberRegistry implements NumberRegistry {
   async findByWabaIds(input: { wabaIds: string[] }): Promise<RegisteredNumber[]> {
     const { results } = await this.database.prepare(FIND_BY_WABA_IDS_STATEMENT).bind(JSON.stringify(input.wabaIds)).all<RegisteredNumber>();
     return results.map((row) => registeredOf({ row }));
-  }
-
-  async openAppSecret(input: { metaAppRef: string }): Promise<string> {
-    const row = await this.database.prepare(FIND_APP_SECRET_STATEMENT).bind(input.metaAppRef).first<{ sealedAppSecret: string }>();
-    if (row === null) throw new Error(`meta app ${input.metaAppRef} is not registered`);
-    const plain = await this.secretBox.open({
-      sealed: row.sealedAppSecret,
-      associatedData: appSecretAssociatedData({ metaAppRef: input.metaAppRef }),
-    });
-    if (plain === null) throw new Error(`the app secret of meta app ${input.metaAppRef} does not open`);
-    return plain;
   }
 
   async openForAccount(input: { accountId: string }): Promise<OutboundNumber> {

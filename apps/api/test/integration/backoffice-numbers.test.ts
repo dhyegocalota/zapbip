@@ -42,12 +42,10 @@ afterEach(endBackofficeSession);
 async function seedNumber(input: { suffix: string; label: string; state?: WhatsAppNumberState }): Promise<void> {
   await seedWhatsAppNumber({
     numberId: `num_${input.suffix}`,
-    metaAppRef: `app_${input.suffix}`,
     phoneNumberId: `10000000${input.suffix}`,
     wabaId: `30000000${input.suffix}`,
     displayNumber: `55119000${input.suffix}`,
     accessToken: `token-${input.suffix}`,
-    appSecret: `secret-${input.suffix}`,
     state: input.state,
   });
   await testEnv.CONNECTIONS.prepare('UPDATE whatsapp_numbers SET label = ? WHERE id = ?').bind(input.label, `num_${input.suffix}`).run();

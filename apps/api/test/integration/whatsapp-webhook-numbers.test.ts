@@ -67,11 +67,11 @@ describe('webhook attribution by number', () => {
     expect(await ownerTextsOf({ account })).toEqual([]);
   });
 
-  test('a missing Meta app secret fails closed: even a body signed with the empty secret answers 401', async () => {
+  test('a missing Meta app secret fails closed: even a correctly signed body answers 401', async () => {
     const account = await seedAccount({ agent: 'alpha' });
     const notification = notificationOf({ changes: [changeOf({ messages: [ownerText({ account, id: 'wamid.NUM8' })] })] });
     const text = JSON.stringify(notification);
-    const signature = await signatureHeaderOf({ appSecret: '', body: new TextEncoder().encode(text) });
+    const signature = await signatureHeaderOf({ appSecret: TEST_META_APP_SECRET, body: new TextEncoder().encode(text) });
     const request = new Request(WEBHOOK_URL, { method: 'POST', headers: { [WEBHOOK_SIGNATURE_HEADER]: signature }, body: text });
     const app = createApp({ extraRoutes: [], developmentMediaOrigin: null, maxFutureSkewMs: MAX_FUTURE_SKEW_MS });
     const response = await app.fetch(request, { ...testEnv, META_APP_SECRET: undefined });

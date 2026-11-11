@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import imageFixture from '../fixtures/whatsapp/inbound/image.json';
 import { changeOf, notificationOf } from '../fixtures/whatsapp/inbound/notification';
+import { TEST_META_APP_SECRET } from '../support/meta-app-secret';
 import { seedWhatsAppNumber } from '../support/whatsapp-numbers';
 import { testEnv } from '../support/workers-env';
 import { seedAccount } from './route-fixtures';
@@ -12,11 +13,9 @@ const IMAGE_DOWNLOAD_URL = 'https://media.fbsbx.com/image';
 const SECURE_PREFIX = 'https://';
 const SECOND_NUMBER = {
   numberId: 'num_0041',
-  metaAppRef: 'mapp_0041',
   phoneNumberId: '1000000000041',
   wabaId: '3000000000041',
   accessToken: 'token-0041',
-  appSecret: 'secret-0041',
   displayNumber: '5511900000041',
 };
 
@@ -49,7 +48,7 @@ describe('inbound media on the second number', () => {
       .run();
     const message = { ...imageFixture, from: account.phone, id: 'wamid.MEDIA2', timestamp: nowInSeconds() };
     const notification = notificationOf({ changes: [changeOf({ phoneNumberId: SECOND_NUMBER.phoneNumberId, messages: [message] })] });
-    const response = await postSignedWith({ appSecret: SECOND_NUMBER.appSecret, notification });
+    const response = await postSignedWith({ appSecret: TEST_META_APP_SECRET, notification });
     expect(response.status).toBe(STATUS_OK);
     expect(authorizations).toEqual([`Bearer ${SECOND_NUMBER.accessToken}`, `Bearer ${SECOND_NUMBER.accessToken}`]);
   });

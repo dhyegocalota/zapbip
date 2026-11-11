@@ -18,7 +18,6 @@ const CLEAR_REGISTRY_STATEMENTS = [
   'DELETE FROM connections',
   'DELETE FROM accounts',
   'DELETE FROM whatsapp_numbers',
-  'DELETE FROM meta_apps',
   'DELETE FROM backoffice_audit',
   'DELETE FROM backoffice_sessions',
 ];

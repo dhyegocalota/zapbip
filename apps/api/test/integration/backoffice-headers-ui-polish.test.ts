@@ -40,7 +40,6 @@ beforeEach(async () => {
   sessionToken = await startBackofficeSession();
   await seedWhatsAppNumber({
     numberId: NUMBER_ID,
-    metaAppRef: 'app_polish',
     phoneNumberId: PHONE_NUMBER_ID,
     wabaId: WABA_ID,
     displayNumber: DISPLAY_NUMBER,

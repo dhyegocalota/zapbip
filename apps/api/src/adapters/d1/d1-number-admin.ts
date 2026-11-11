@@ -9,7 +9,7 @@ import { createPlatformClock } from '../platform/clock';
 
 const SINGLE_ROW_CHANGE = 1;
 const LIST_NUMBERS_STATEMENT = `SELECT n.id AS numberId, n.phone_number_id AS phoneNumberId, n.waba_id AS wabaId, n.state AS state,
-  n.meta_app_ref AS metaAppRef, n.display_number AS displayNumber, n.label AS label, n.verified_at AS verifiedAt,
+  n.display_number AS displayNumber, n.label AS label, n.verified_at AS verifiedAt,
   n.verification_snapshot AS verificationSnapshot, n.credentials_changed_at AS credentialsChangedAt, n.created_at AS createdAt, n.updated_at AS updatedAt,
   (SELECT COUNT(*) FROM accounts WHERE accounts.number_id = n.id) AS accountCount
   FROM whatsapp_numbers n

@@ -25,11 +25,9 @@ const RESTRICTED_ERROR_CODE = 131_048;
 const FIRST_PHONE_NUMBER_ID = '1000000000000101';
 const SECOND_NUMBER = {
   numberId: 'num_second',
-  metaAppRef: 'mapp_second',
   phoneNumberId: '1000000000002',
   wabaId: '3000000000002',
   accessToken: 'second-access-token',
-  appSecret: 'second-app-secret',
   displayNumber: '5511966660000',
 };
 
