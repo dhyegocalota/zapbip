@@ -1,5 +1,4 @@
 export enum RegistrationConflictField {
-  MetaAppId = 'meta_app_id',
   PhoneNumberId = 'phone_number_id',
   DisplayNumber = 'display_number',
 }

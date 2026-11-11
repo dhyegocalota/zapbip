@@ -429,6 +429,25 @@ describe('worker preflight', () => {
     expect(refusal?.step).toBe(PreflightStep.SmokeInputs);
   });
 
+  it('warns and passes when META_APP_SECRET is not set, so the deploy is never blocked by it', async () => {
+    const present = Object.values(WorkerSecret).map((name) => ({ name }));
+    const shell = fakeShell({ replies: { 'secret list': { exitCode: 0, stdout: JSON.stringify(present) } } });
+    const warnings: PreflightWarning[] = [];
+    expect(await runWorkerPreflight(workerInput({ shell, warnings }))).toBeNull();
+    expect(warnings).toEqual([
+      {
+        kind: PreflightWarningKind.MetaAppSecretMissing,
+        message: 'META_APP_SECRET is not set; the webhook refuses every delivery until you run wrangler secret put META_APP_SECRET',
+      },
+    ]);
+  });
+
+  it('does not warn when META_APP_SECRET is set', async () => {
+    const warnings: PreflightWarning[] = [];
+    expect(await runWorkerPreflight(workerInput({ warnings }))).toBeNull();
+    expect(warnings).toEqual([]);
+  });
+
   it('refuses a secret list that is not JSON, clearly', async () => {
     const shell = fakeShell({ replies: { 'secret list': { exitCode: 0, stdout: 'not json' } } });
     const refusal = await runWorkerPreflight(workerInput({ shell }));

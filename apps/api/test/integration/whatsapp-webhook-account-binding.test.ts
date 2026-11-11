@@ -7,9 +7,9 @@ import textFixture from '../fixtures/whatsapp/inbound/text.json';
 import { changeOf, notificationOf } from '../fixtures/whatsapp/inbound/notification';
 import { recordGraphPosts } from '../support/record-graph-posts';
 import { seedOwnerIdentity } from '../support/seed';
+import { TEST_META_APP_SECRET } from '../support/meta-app-secret';
 import {
   seedWhatsAppNumber,
-  TEST_APP_SECRET,
   TEST_DISPLAY_NUMBER,
   TEST_NUMBER_ID,
   TEST_PHONE_NUMBER_ID,
@@ -27,11 +27,9 @@ const UNBOUND_OWNER_PHONE = '5511900000067';
 const LEAVING_OWNER_PHONE = '5511900000069';
 const SECOND = {
   numberId: 'num_0031',
-  metaAppRef: 'mapp_0031',
   phoneNumberId: '1000000000031',
   wabaId: '3000000000031',
   accessToken: 'token-0031',
-  appSecret: 'secret-0031',
   displayNumber: '5511900000031',
   state: WhatsAppNumberState.Active,
 };
@@ -39,7 +37,6 @@ const SECOND = {
 const THIRD = {
   ...SECOND,
   numberId: 'num_0033',
-  metaAppRef: 'mapp_0033',
   phoneNumberId: '1000000000033',
   wabaId: '3000000000033',
   displayNumber: '5511900000033',
@@ -64,7 +61,7 @@ describe('account binding to a number', () => {
     await seedAccount({ agent: 'alpha' });
     const message = { ...textFixture, from: NEW_OWNER_PHONE, id: 'wamid.BIND1', timestamp: nowInSeconds() };
     const notification = notificationOf({ changes: [changeOf({ messages: [message] })] });
-    const response = await postSignedWith({ appSecret: TEST_APP_SECRET, notification });
+    const response = await postSignedWith({ appSecret: TEST_META_APP_SECRET, notification });
     expect(response.status).toBe(STATUS_OK);
     expect(await homeNumberOf({ waId: NEW_OWNER_PHONE })).toBe(TEST_NUMBER_ID);
   });
@@ -97,7 +94,7 @@ describe('account binding to a number', () => {
     const notification = notificationOf({
       changes: [changeOf({ phoneNumberId: SECOND.phoneNumberId, messages: [ownerText({ account, id: 'wamid.BIND3' })] })],
     });
-    const response = await postSignedWith({ appSecret: SECOND.appSecret, notification });
+    const response = await postSignedWith({ appSecret: TEST_META_APP_SECRET, notification });
     expect(response.status).toBe(STATUS_OK);
     expect(await ownerTextsOf({ account })).toEqual([]);
     expect(posts).toHaveLength(1);

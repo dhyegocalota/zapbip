@@ -4,13 +4,13 @@ import { expect, test } from './fixtures';
 import { copy } from './support/copy';
 import { boxesOf, expectNoHorizontalScroll, expectSiblingsApart } from './support/layout';
 import { ALPHA_NUMBER, seedMetrics } from './support/metrics-seed';
-import { registerNumberWithFreshCode, walkNumberOf } from './support/numbers';
+import { connectNumberWithFreshCode, walkNumberOf } from './support/numbers';
 import { signIn } from './support/sign-in';
 
 const STICKY_MINIMUM_WIDTH = 640;
 const COLOR_SCHEMES = ['light', 'dark'] as const;
 const SIGNED_OUT_PATHS = ['/sign-in', '/nowhere'];
-const SIGNED_IN_PATHS = ['/', '/numbers', '/numbers/new', `/numbers/${ALPHA_NUMBER.id}`, '/metrics', '/audit'];
+const SIGNED_IN_PATHS = ['/', '/numbers', '/numbers/connect', `/numbers/${ALPHA_NUMBER.id}`, '/metrics', '/audit'];
 const SIBLING_CONTAINERS = [
   'body > header',
   'main',
@@ -111,8 +111,8 @@ test.describe('signed in', () => {
     await expect(page.locator('body > header')).toHaveCSS('position', expectedPosition);
   });
 
-  test('the register form has no default fieldset border and spaces its two actions', async ({ page }) => {
-    await page.goto('/numbers/new');
+  test('the connect form has no default fieldset border and spaces its two actions', async ({ page }) => {
+    await page.goto('/numbers/connect');
     await expect(page.locator('fieldset').first()).toHaveCSS('border-top-width', '0px');
     const [cancel, submit] = await Promise.all([
       page.locator('.form-actions > a').boundingBox(),
@@ -145,17 +145,6 @@ test.describe('signed in', () => {
     const isOneColumn = new Set(sparklines.map((box) => Math.round(box.x))).size === 1;
     if (isOneColumn) return;
     expect(new Set(sparklines.map((box) => Math.round(box.y + box.height))).size).toBe(1);
-  });
-
-  test('names the Meta app select once visibly and keeps its accessible name', async ({ page }) => {
-    await page.goto('/numbers/new');
-    const name = copy({ key: BackofficeCopyKey.RegisterMetaAppLabel });
-    const select = page.getByLabel(name, { exact: true });
-    await expect(select).toHaveCount(1);
-    expect(await select.evaluate((element) => element.tagName)).toBe('SELECT');
-    const boxes = await Promise.all((await page.getByText(name, { exact: true }).all()).map((element) => element.boundingBox()));
-    const visibleBoxes = boxes.filter((box) => box !== null && box.width > HIDDEN_LABEL_SIZE);
-    expect(visibleBoxes).toHaveLength(1);
   });
 
   test('draws one sparkline in each of the three home cards', async ({ page }) => {
@@ -268,7 +257,7 @@ test.describe('a long number label', () => {
 
   test('truncates the label and never wraps the number or the dates', async ({ page }) => {
     expect(LONG_LABEL).toHaveLength(48);
-    await registerNumberWithFreshCode({ page, number: { ...walkNumberOf({ index: 1 }), label: LONG_LABEL } });
+    await connectNumberWithFreshCode({ page, number: { ...walkNumberOf({ index: 1 }), label: LONG_LABEL } });
     await page.goto('/numbers');
     const label = page.locator('.data-table tbody tr a').first();
     await expect(label).toHaveAttribute('title', LONG_LABEL);

@@ -5,7 +5,6 @@ export type RegisteredNumber = {
   phoneNumberId: string;
   wabaId: string;
   state: WhatsAppNumberState;
-  metaAppRef: string;
 };
 
 export type OutboundNumber = RegisteredNumber & { accessToken: string };
@@ -19,10 +18,7 @@ export type NumberRecord = RegisteredNumber & {
   updatedAt: number;
 };
 
-export type RegisterMetaAppInput = { metaAppId: string; label: string; appSecret: string };
-
 export type RegisterNumberInput = {
-  metaAppRef: string;
   phoneNumberId: string;
   wabaId: string;
   displayNumber: string;
@@ -33,17 +29,11 @@ export type RegisterNumberInput = {
 export type RegisteredNumberResult = { numberId: string; backfilledAccounts: number };
 
 export interface NumberRegistry {
-  registerMetaApp(input: RegisterMetaAppInput): Promise<{ metaAppRef: string }>;
   registerNumber(input: RegisterNumberInput): Promise<RegisteredNumberResult>;
-  registerNumberWithNewMetaApp(input: {
-    metaApp: RegisterMetaAppInput;
-    number: Omit<RegisterNumberInput, 'metaAppRef'>;
-  }): Promise<RegisteredNumberResult & { metaAppRef: string }>;
   findNumber(input: { numberId: string }): Promise<NumberRecord | null>;
   transition(input: { numberId: string; to: WhatsAppNumberState }): Promise<void>;
   findByPhoneNumberIds(input: { phoneNumberIds: string[] }): Promise<RegisteredNumber[]>;
   findByWabaIds(input: { wabaIds: string[] }): Promise<RegisteredNumber[]>;
-  openAppSecret(input: { metaAppRef: string }): Promise<string>;
   openForAccount(input: { accountId: string }): Promise<OutboundNumber>;
   openForInbound(input: { numberId: string }): Promise<OutboundNumber>;
   openTheOnlyNumber(): Promise<OutboundNumber>;

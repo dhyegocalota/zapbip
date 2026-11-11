@@ -19,8 +19,8 @@ type WalkNumber = typeof ALPHA_NUMBER;
 
 function insertNumber(input: { number: WalkNumber }): string {
   const { id, label, phoneNumberId, displayNumber } = input.number;
-  return `INSERT INTO whatsapp_numbers (id, meta_app_ref, phone_number_id, waba_id, display_number, label, sealed_access_token, seal_key_version, state, verified_at, credentials_changed_at, created_at, updated_at)
-    VALUES ('${id}', 'walk_meta_app', '${phoneNumberId}', '3${phoneNumberId}', '${displayNumber}', '${label}', '${SEALED_PLACEHOLDER}', ${SEAL_KEY_VERSION}, '${NUMBER_STATE_ACTIVE}', ${EPOCH}, ${EPOCH}, ${EPOCH}, ${EPOCH})`;
+  return `INSERT INTO whatsapp_numbers (id, phone_number_id, waba_id, display_number, label, sealed_access_token, seal_key_version, state, verified_at, credentials_changed_at, created_at, updated_at)
+    VALUES ('${id}', '${phoneNumberId}', '3${phoneNumberId}', '${displayNumber}', '${label}', '${SEALED_PLACEHOLDER}', ${SEAL_KEY_VERSION}, '${NUMBER_STATE_ACTIVE}', ${EPOCH}, ${EPOCH}, ${EPOCH}, ${EPOCH})`;
 }
 
 function insertAccount(input: { id: string; numberId: string; createdAt: number }): string {
@@ -46,8 +46,6 @@ export function seedMetrics(): void {
   const yesterday = new Date(now - DAY_MS).toISOString().slice(0, ISO_DAY_LENGTH);
   execute({
     statements: [
-      `INSERT INTO meta_apps (id, meta_app_id, label, sealed_app_secret, seal_key_version, created_at, updated_at)
-        VALUES ('walk_meta_app', '900000000001', 'Walk app', '${SEALED_PLACEHOLDER}', ${SEAL_KEY_VERSION}, ${EPOCH}, ${EPOCH})`,
       insertNumber({ number: ALPHA_NUMBER }),
       insertNumber({ number: BRAVO_NUMBER }),
       insertAccount({ id: 'walk_acc_one', numberId: ALPHA_NUMBER.id, createdAt: now }),

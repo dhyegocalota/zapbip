@@ -62,7 +62,7 @@ export function HomePage(props: { page: PageContext; overview: HomeOverview }) {
             <Notice variant={NoticeVariant.Warning} locale={locale} message={translate(BackofficeCopyKey.HomeNoNumbersWarning)} />
           )}
           <a href={BackofficePath.Numbers} class="button button-primary button-arrow">
-            {translate(hasNumbers ? BackofficeCopyKey.HomeManageNumbers : BackofficeCopyKey.HomeRegisterNumber)}
+            {translate(hasNumbers ? BackofficeCopyKey.HomeManageNumbers : BackofficeCopyKey.HomeConnectNumber)}
           </a>
           {sparklineOf(SparklineMetric.Numbers)}
         </section>

@@ -21,7 +21,7 @@ import type { NameserverResolver } from './nameserver-resolver';
 import type { PackageFetcher } from './package-fetcher';
 import { isPlaceholderValue } from './placeholder';
 import { missingSmokeInputs } from './smoke-inputs';
-import { WorkerSecret } from './worker-secret';
+import { WarnedWorkerSecret, WorkerSecret } from './worker-secret';
 import { INSTALL_ROUTE_PATH } from './worker-facts';
 
 const PNPM = 'pnpm';
@@ -71,6 +71,7 @@ export type PreflightRefusal = { step: PreflightStep; message: string };
 
 export enum PreflightWarningKind {
   PackageUnpublished = 'package unpublished',
+  MetaAppSecretMissing = 'meta app secret missing',
 }
 
 export type PreflightWarning = { kind: PreflightWarningKind; message: string };
@@ -418,6 +419,15 @@ async function refuseUnreadyProduction(input: WorkerPreflightInput): Promise<str
   return `production is not ready: ${missing.join('; ')}; merge the missing slices into main first`;
 }
 
+function warnOnUnsetMetaAppSecret(input: { present: string[]; warn: (warning: PreflightWarning) => void }): null {
+  if (input.present.includes(WarnedWorkerSecret.MetaAppSecret)) return null;
+  input.warn({
+    kind: PreflightWarningKind.MetaAppSecretMissing,
+    message: `${WarnedWorkerSecret.MetaAppSecret} is not set; the webhook refuses every delivery until you run wrangler secret put ${WarnedWorkerSecret.MetaAppSecret}`,
+  });
+  return null;
+}
+
 async function refuseMissingSecrets(input: WorkerPreflightInput): Promise<string | null> {
   const command = wranglerCommand({ environment: input.environment, args: ['secret', 'list'], flags: ['--format', 'json'] });
   const result = await input.shell.run(command);
@@ -426,7 +436,7 @@ async function refuseMissingSecrets(input: WorkerPreflightInput): Promise<string
   if (!secrets.success) return 'the Worker secret list is not JSON; update wrangler or check your login';
   const present = secrets.data.map((secret) => secret.name);
   const missing = Object.values(WorkerSecret).filter((name) => !present.includes(name));
-  if (missing.length === 0) return null;
+  if (missing.length === 0) return warnOnUnsetMetaAppSecret({ present, warn: input.warn });
   return `missing Worker secrets: ${missing.join(', ')}`;
 }
 

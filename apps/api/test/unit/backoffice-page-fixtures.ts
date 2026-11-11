@@ -34,7 +34,6 @@ export function numberEntry(input: Partial<NumberListEntry>): NumberListEntry {
     phoneNumberId: '1000000000001',
     wabaId: '3000000000001',
     state: WhatsAppNumberState.Active,
-    metaAppRef: 'app_one',
     displayNumber: '+5511900000001',
     label: 'Brazil',
     verifiedAt: NOW,
@@ -42,8 +41,6 @@ export function numberEntry(input: Partial<NumberListEntry>): NumberListEntry {
     createdAt: NOW,
     updatedAt: NOW,
     credentialsChangedAt: NOW,
-    metaAppLabel: 'Main app',
-    metaAppUpdatedAt: NOW,
     accountCount: 2,
     ...input,
   };

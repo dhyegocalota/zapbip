@@ -21,7 +21,7 @@ const SIGNED_OUT_PATH = '/sign-in';
 const SIGNED_IN_PATHS = [
   '/',
   '/numbers',
-  '/numbers/new',
+  '/numbers/connect',
   `/numbers/${NUMBER_ID}`,
   `/numbers/${NUMBER_ID}/verification`,
   '/metrics',
@@ -40,7 +40,6 @@ beforeEach(async () => {
   sessionToken = await startBackofficeSession();
   await seedWhatsAppNumber({
     numberId: NUMBER_ID,
-    metaAppRef: 'app_polish',
     phoneNumberId: PHONE_NUMBER_ID,
     wabaId: WABA_ID,
     displayNumber: DISPLAY_NUMBER,

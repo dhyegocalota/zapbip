@@ -19,6 +19,16 @@ The operator must add numbers from the backoffice (ADR 0031) without a deploy. O
 4. The Worker secrets `META_APP_SECRET`, `WHATSAPP_ACCESS_TOKEN` and `WHATSAPP_PHONE_NUMBER_ID` are removed from `Bindings`, `WorkerSecret`, `.env.example`, the test bindings and the deploy preflight. `WHATSAPP_VERIFY_TOKEN` stays, because the endpoint owns it and the owner types it into every Meta app.
 5. The channel reads numbers only through the `NumberRegistry` port. Outbound resolves the number for each send, and no plaintext token is kept between requests.
 
+## Amendment 2026-11-11 (owner delegated)
+
+[ADR 0036](0036-one-fixed-meta-app-and-numbers-join-through-embedded-signup.md) fixes one Meta app in code. It replaces three decisions here:
+
+- decision 1: the `meta_apps` table and `whatsapp_numbers.meta_app_ref` go away (migration `0008`);
+- decision 2: no app secret is sealed;
+- decision 4: `META_APP_SECRET` is a Worker secret again.
+
+Under decision 3, attribution still needs a known ID, and every attributed delivery is verified with `META_APP_SECRET`. Numbers are still sealed rows, and they now join through Embedded Signup instead of a typed form.
+
 ## Alternatives considered
 
 | Option | Pros | Cons | Why not |

@@ -99,13 +99,11 @@ async function seedUsageOn(input: { day: string; accountId: string; gigabyteSeco
 async function seedWorld(): Promise<void> {
   await seedWhatsAppNumber({
     numberId: NUMBER_ALPHA,
-    metaAppRef: 'app_alpha',
     phoneNumberId: '1000000000001',
     displayNumber: '5511900000001',
   });
   await seedWhatsAppNumber({
     numberId: NUMBER_BRAVO,
-    metaAppRef: 'app_bravo',
     phoneNumberId: '1000000000002',
     displayNumber: '5511900000002',
   });

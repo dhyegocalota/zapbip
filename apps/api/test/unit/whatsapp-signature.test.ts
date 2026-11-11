@@ -9,6 +9,7 @@ const BODY_TEXT = '{"entry":[{"id":"1","changes":[]}],"object":"whatsapp_busines
 const REORDERED_BODY_TEXT = '{"object":"whatsapp_business_account","entry":[{"id":"1","changes":[]}]}';
 const MULTIBYTE_BODY_TEXT = 'Olá 👋 — ação';
 const SHORT_DIGEST_LENGTH = 40;
+const WHITESPACE_SECRETS = ['   ', '\t\n'];
 
 function bytesOf(input: { text: string }): Uint8Array {
   return new TextEncoder().encode(input.text);
@@ -92,6 +93,17 @@ describe('verifyWebhookSignature', () => {
 
   it('rejects a digest that is not hex without throwing', async () => {
     const isValid = await verifyBody({ signedText: BODY_TEXT, transformHeader: () => `${WEBHOOK_SIGNATURE_PREFIX}${'z'.repeat(64)}` });
+    expect(isValid).toBe(false);
+  });
+
+  it.each(WHITESPACE_SECRETS)('rejects a body signed with the whitespace secret %j', async (whitespaceSecret) => {
+    const signedBytes = bytesOf({ text: BODY_TEXT });
+    const signatureHeader = await signatureHeaderOf({ appSecret: whitespaceSecret, body: signedBytes });
+    const isValid = await verifyWebhookSignature({
+      appSecret: whitespaceSecret,
+      rawBody: bufferOf({ bytes: signedBytes }),
+      signatureHeader,
+    });
     expect(isValid).toBe(false);
   });
 });

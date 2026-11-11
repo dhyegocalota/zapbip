@@ -1,6 +1,6 @@
 ---
 name: backoffice
-title: The operator registers two WhatsApp numbers and an owner writes to each
+title: The operator connects two WhatsApp numbers and an owner writes to each
 authors: 2
 paths:
   - "apps/api/src/backoffice/**"
@@ -11,7 +11,7 @@ paths:
 
 ## Setup
 
-Boot the development Worker with `pnpm --filter @zapbip/api dev`, which serves the backoffice on `http://backoffice.localhost:8787` and the fake WhatsApp channel and fake Graph on the same stack. The owner has run `pnpm backoffice:enroll:development` and put its two lines in `apps/api/.dev.vars`; the run takes the backoffice key and a code generator for the authenticator secret from the owner. Author 1 is the operator in the backoffice. Author 2 is an owner, writing from the fake WhatsApp channel.
+Boot the development Worker with `pnpm --filter @zapbip/api dev`, which serves the backoffice on `http://backoffice.localhost:8787` and the fake WhatsApp channel and fake Graph on the same stack. The owner has run `pnpm backoffice:enroll:development` and put its two lines in `apps/api/.dev.vars` beside `META_APP_SECRET`; the run takes the backoffice key and a code generator for the authenticator secret from the owner. Author 1 is the operator in the backoffice. Author 2 is an owner, writing from the fake WhatsApp channel.
 
 ## Tests
 
@@ -21,11 +21,11 @@ Author 1 opens the backoffice, submits a wrong key, then the right key with a wr
 
 - Expect: the first two attempts show the same generic failure and the third opens the overview, with "No number is registered" shown.
 
-### T2 The operator registers two numbers
+### T2 The operator connects two numbers
 
-Author 1 registers number A and number B under one Meta app, each with its own phone number ID, WABA ID, display number and access token, confirming each with a fresh code.
+Author 1 connects number A and number B through "Connect a WhatsApp number": a fresh code, a label and a PIN, then Connect. The Embedded Signup SDK is stubbed in the browser by routing `https://connect.facebook.net/en_US/sdk.js` to a stub `FB` whose `login` opens a frame on `https://www.facebook.com` that posts the finished signup with digit IDs, as `apps/api/e2e/backoffice/support/embedded-signup-stub.ts` does.
 
-- Expect: both are listed as Pending, no page shows a token or an app secret again, and the audit log lists two `number.registered` rows.
+- Expect: both are listed as Pending with the display numbers the fake Graph reports, no page shows a token or a PIN, the console shows no error or policy violation, and the audit log lists two `number.registered` rows.
 
 ### T3 The operator verifies and activates both
 

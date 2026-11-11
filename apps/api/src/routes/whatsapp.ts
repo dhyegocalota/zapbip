@@ -99,16 +99,12 @@ function nullIfAbsent(input: { value: string | undefined }): string | null {
   return input.value === undefined ? null : input.value;
 }
 
-type Attribution = { metaAppRef: string; numbers: RegisteredNumber[] };
-
-async function attributeDelivery(input: { registry: NumberRegistry; routing: WebhookRouting }): Promise<Attribution | null> {
+async function attributeDelivery(input: { registry: NumberRegistry; routing: WebhookRouting }): Promise<RegisteredNumber[] | null> {
   const { registry, routing } = input;
   const numbers = await registry.findByPhoneNumberIds({ phoneNumberIds: routing.phoneNumberIds });
   const wabaNumbers = await registry.findByWabaIds({ wabaIds: routing.wabaIds });
-  const [first] = [...numbers, ...wabaNumbers];
-  if (first === undefined) return null;
-  const isOneApp = [...numbers, ...wabaNumbers].every((registered) => registered.metaAppRef === first.metaAppRef);
-  return isOneApp ? { metaAppRef: first.metaAppRef, numbers } : null;
+  const isKnown = numbers.length + wabaNumbers.length > 0;
+  return isKnown ? numbers : null;
 }
 
 async function channelEntryOf(input: {
@@ -288,8 +284,8 @@ export function createWhatsappRoutes(input: {
     if (rawBody === null) return context.json(PAYLOAD_TOO_LARGE_BODY, HttpStatus.PayloadTooLarge);
     const registry = numberRegistryOf({ bindings: context.env });
     const routing = peekWebhookRouting({ text: new TextDecoder().decode(rawBody) });
-    const attribution = routing === null ? null : await attributeDelivery({ registry, routing });
-    if (attribution === null) {
+    const attributedNumbers = routing === null ? null : await attributeDelivery({ registry, routing });
+    if (attributedNumbers === null) {
       await verifyWebhookSignature({
         appSecret: UNATTRIBUTED_DELIVERY_APP_SECRET,
         rawBody,
@@ -299,7 +295,7 @@ export function createWhatsappRoutes(input: {
       return context.json(UNAUTHORIZED_BODY, HttpStatus.Unauthorized);
     }
     const isSigned = await verifyWebhookSignature({
-      appSecret: await registry.openAppSecret({ metaAppRef: attribution.metaAppRef }),
+      appSecret: context.env.META_APP_SECRET,
       rawBody,
       signatureHeader: nullIfAbsent({ value: context.req.header(WEBHOOK_SIGNATURE_HEADER) }),
     });
@@ -314,7 +310,7 @@ export function createWhatsappRoutes(input: {
     const requestContext: RequestContext = {
       bindings: context.env,
       registry,
-      numbers: attribution.numbers,
+      numbers: attributedNumbers,
       developmentMediaOrigin: input.developmentMediaOrigin,
       maxFutureSkewMs: input.maxFutureSkewMs,
     };

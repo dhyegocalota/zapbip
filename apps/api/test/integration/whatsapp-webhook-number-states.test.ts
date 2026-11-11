@@ -5,6 +5,7 @@ import { OwnerCopyKey, WHATSAPP_COPY } from '../../src/adapters/whatsapp/whatsap
 import textFixture from '../fixtures/whatsapp/inbound/text.json';
 import { changeOf, notificationOf } from '../fixtures/whatsapp/inbound/notification';
 import { recordGraphPosts } from '../support/record-graph-posts';
+import { TEST_META_APP_SECRET } from '../support/meta-app-secret';
 import { seedWhatsAppNumber } from '../support/whatsapp-numbers';
 import { testEnv } from '../support/workers-env';
 import { seedAccount } from './route-fixtures';
@@ -16,11 +17,9 @@ const UNKNOWN_OWNER_PHONE = '5511900000077';
 function numberSeedOf(input: { suffix: string; state: WhatsAppNumberState }) {
   return {
     numberId: `num_${input.suffix}`,
-    metaAppRef: `mapp_${input.suffix}`,
     phoneNumberId: `10000000000${input.suffix}`,
     wabaId: `30000000000${input.suffix}`,
     accessToken: `token-${input.suffix}`,
-    appSecret: `secret-${input.suffix}`,
     displayNumber: `55119000${input.suffix}`,
     state: input.state,
   };
@@ -58,7 +57,7 @@ describe('number states on inbound', () => {
     const notification = notificationOf({
       changes: [changeOf({ phoneNumberId: seed.phoneNumberId, messages: [ownerText({ account, id: `wamid.STATE${suffix}` })] })],
     });
-    const response = await postSignedWith({ appSecret: seed.appSecret, notification });
+    const response = await postSignedWith({ appSecret: TEST_META_APP_SECRET, notification });
     expect(response.status).toBe(STATUS_OK);
     expect(await ownerTextsOf({ account })).toEqual([]);
     expect(loggedText({ spies })).toContain(event);
@@ -72,7 +71,7 @@ describe('number states on inbound', () => {
     await seedWhatsAppNumber(seed);
     const message = { ...textFixture, from: UNKNOWN_OWNER_PHONE, id: 'wamid.CLOSED', timestamp: nowInSeconds() };
     const notification = notificationOf({ changes: [changeOf({ phoneNumberId: seed.phoneNumberId, messages: [message] })] });
-    const response = await postSignedWith({ appSecret: seed.appSecret, notification });
+    const response = await postSignedWith({ appSecret: TEST_META_APP_SECRET, notification });
     expect(response.status).toBe(STATUS_OK);
     expect(await accountCountFor({ waId: UNKNOWN_OWNER_PHONE })).toBe(0);
     expect(posts).toHaveLength(1);

@@ -21,6 +21,29 @@ export const STATIC_SECURITY_HEADERS: Record<string, string> = {
   'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=(), usb=()',
   'X-Robots-Tag': 'noindex, nofollow',
 };
+export enum PagePolicy {
+  Strict = 'strict',
+  EmbeddedSignup = 'embedded_signup',
+}
+export const EMBEDDED_SIGNUP_CONTENT_SECURITY_POLICY = [
+  "default-src 'none'",
+  "script-src 'self' https://connect.facebook.net",
+  'frame-src https://www.facebook.com https://web.facebook.com https://staticxx.facebook.com',
+  'connect-src https://www.facebook.com https://graph.facebook.com',
+  "img-src 'self' https://www.facebook.com",
+  "style-src 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+  "base-uri 'none'",
+].join('; ');
+export const PAGE_POLICY_HEADERS: Record<PagePolicy, Record<string, string>> = {
+  [PagePolicy.Strict]: STATIC_SECURITY_HEADERS,
+  [PagePolicy.EmbeddedSignup]: {
+    ...STATIC_SECURITY_HEADERS,
+    'Content-Security-Policy': EMBEDDED_SIGNUP_CONTENT_SECURITY_POLICY,
+    'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
+  },
+};
 export const NO_STORE = 'no-store';
 export { RETRY_AFTER_HEADER } from '../routes/private-response';
 export const NON_ERROR_CODE = 'NonError';
@@ -37,6 +60,8 @@ export const BACKOFFICE_PRUNE_HOUR = 4;
 export const BACKOFFICE_PRUNE_MINUTE = 0;
 export const PREFERENCE_COOKIE_MAX_AGE_SECONDS = (365 * DAY_MS) / SECOND_MS;
 export const FLASH_MAX_AGE_MS = MINUTE_MS;
+export const LABEL_MAX_LENGTH = 60;
+export const ONBOARDING_GRANT_TTL_MS = 10 * MINUTE_MS;
 export const AUDIT_PAGE_LIMIT = 200;
 export const STYLESHEET_CACHE_CONTROL = 'public, max-age=31536000, immutable';
 export const SPARKLINE_DAYS = 14;

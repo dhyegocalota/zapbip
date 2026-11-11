@@ -201,7 +201,6 @@ export enum IdPrefix {
   Account = 'acc',
   Connection = 'con',
   Number = 'num',
-  MetaApp = 'app',
 }
 
 export enum RoutingRule {

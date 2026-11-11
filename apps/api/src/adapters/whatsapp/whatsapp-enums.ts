@@ -50,6 +50,9 @@ export enum WhatsAppErrorCode {
   AccountDisabled = 368,
   RecipientIsSender = 131021,
   PhoneNumberNotRegistered = 133010,
+  PinMismatch = 133005,
+  RegistrationRateLimited = 133016,
+  InvalidParameter = 100,
   AuthOAuth = 190,
 }
 
@@ -86,6 +89,7 @@ export enum OperatorEvent {
   ChannelAuth = 'channel.auth',
   ChannelTimeout = 'channel.timeout',
   ChannelNumberUnavailable = 'channel.number_unavailable',
+  BackofficeOnboardingFailed = 'backoffice.onboarding_failed',
 }
 
 export enum OperatorLogField {
@@ -96,6 +100,8 @@ export enum OperatorLogField {
   MessageKind = 'message_kind',
   UnsupportedType = 'unsupported_type',
   ChannelMessageId = 'channel_message_id',
+  OnboardingStep = 'onboarding_step',
+  OnboardingKind = 'onboarding_kind',
 }
 
 export enum OperatorLogReason {

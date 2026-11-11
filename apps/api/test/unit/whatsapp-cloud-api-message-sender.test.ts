@@ -13,7 +13,6 @@ const OUTBOUND_NUMBER = {
   phoneNumberId: PHONE_NUMBER_ID,
   wabaId: '3000000000003',
   state: WhatsAppNumberState.Active,
-  metaAppRef: 'mapp_a',
   accessToken: 'token-a',
 };
 const OWNER = { waId: '5511900000001', ownerLocale: OwnerLocale.PortugueseBrazil };

@@ -17,6 +17,7 @@ const DATABASE_BINDING = 'CONNECTIONS';
 const DEVELOPMENT_ENVIRONMENT_ARGUMENTS = ['--env', 'development'];
 const BACKOFFICE_HOST = 'backoffice.localhost';
 const VERIFY_TOKEN = 'backoffice-walk-verify-token';
+const META_APP_SECRET = 'backoffice-walk-meta-app-secret';
 
 export default async function setup(): Promise<() => Promise<void>> {
   const persistDirectory = await mkdtemp(join(tmpdir(), 'zapbip-backoffice-walk-'));
@@ -35,6 +36,7 @@ export default async function setup(): Promise<() => Promise<void>> {
     BACKOFFICE_ORIGIN: origin,
     PUBLIC_ORIGIN: `http://${LOOPBACK_HOST}:${port}`,
     WHATSAPP_VERIFY_TOKEN: VERIFY_TOKEN,
+    META_APP_SECRET: META_APP_SECRET,
     WHATSAPP_GRAPH_BASE_URL: graphBaseUrl,
     WHATSAPP_MEDIA_DOWNLOAD_ORIGIN: graphBaseUrl,
   };

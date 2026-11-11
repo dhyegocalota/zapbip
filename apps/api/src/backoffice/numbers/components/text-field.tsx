@@ -7,6 +7,9 @@ export type TextFieldProps = {
   error: string | null;
   inputmode?: 'numeric' | 'tel';
   isSecret?: boolean;
+  isRequired?: boolean;
+  pattern?: string;
+  maxLength?: number;
 };
 
 export function TextField(props: TextFieldProps) {
@@ -37,6 +40,9 @@ export function TextField(props: TextFieldProps) {
         spellcheck={false}
         autocapitalize="off"
         autocomplete="off"
+        required={props.isRequired}
+        pattern={props.pattern}
+        maxlength={props.maxLength}
       />
     </div>
   );

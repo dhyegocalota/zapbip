@@ -15,8 +15,8 @@ export function NumbersListPage(props: { page: PageContext; entries: NumberListE
   const { locale } = page;
   const translate = (key: BackofficeCopyKey, values?: Record<string, string>): string => renderBackofficeCopy({ key, locale, values });
   const registerLink = (
-    <a href={`${BackofficePath.Numbers}/${NumberSegment.New}`} class="button button-primary">
-      {translate(BackofficeCopyKey.NumbersRegister)}
+    <a href={`${BackofficePath.Numbers}/${NumberSegment.Connect}`} class="button button-primary">
+      {translate(BackofficeCopyKey.NumbersConnect)}
     </a>
   );
   const hasPending = entries.some((entry) => entry.state === WhatsAppNumberState.Pending);
@@ -51,7 +51,6 @@ export function NumbersListPage(props: { page: PageContext; entries: NumberListE
               <th scope="col">{translate(BackofficeCopyKey.NumbersColumnLabel)}</th>
               <th scope="col">{translate(BackofficeCopyKey.NumbersColumnDisplayNumber)}</th>
               <th scope="col">{translate(BackofficeCopyKey.NumbersColumnState)}</th>
-              <th scope="col">{translate(BackofficeCopyKey.NumbersColumnMetaApp)}</th>
               <th scope="col">{translate(BackofficeCopyKey.NumbersColumnAccounts)}</th>
               <th scope="col">{translate(BackofficeCopyKey.NumbersColumnVerified)}</th>
               <th scope="col">{translate(BackofficeCopyKey.NumbersColumnUpdated)}</th>
@@ -71,7 +70,6 @@ export function NumbersListPage(props: { page: PageContext; entries: NumberListE
                 <td data-label={translate(BackofficeCopyKey.NumbersColumnState)}>
                   <StateBadge locale={locale} state={entry.state} />
                 </td>
-                <td data-label={translate(BackofficeCopyKey.NumbersColumnMetaApp)}>{entry.metaAppLabel}</td>
                 <td data-label={translate(BackofficeCopyKey.NumbersColumnAccounts)}>{entry.accountCount}</td>
                 <td data-label={translate(BackofficeCopyKey.NumbersColumnVerified)} class="cell-nowrap">
                   {entry.verifiedAt === null ? translate(BackofficeCopyKey.NumbersNotVerified) : formatTimestamp({ at: entry.verifiedAt })}

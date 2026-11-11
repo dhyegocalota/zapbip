@@ -1,6 +1,6 @@
 import { vi } from 'vitest';
 import { csrfTokenOf } from '../../src/backoffice/auth/csrf';
-import { NEW_META_APP_VALUE, NumberFormField } from '../../src/backoffice/numbers/number-form-fields';
+import { NumberFormField } from '../../src/backoffice/numbers/number-form-fields';
 import { TOTP_PERIOD_MS } from '../../src/contract/constants';
 import { createFakeRateLimiter } from '../support/fake-rate-limiter';
 import { testEnv } from '../support/workers-env';
@@ -15,13 +15,10 @@ import {
 } from './backoffice-auth-fixtures';
 
 export const NOW = Date.UTC(2026, 10, 7, 12);
-export const REGISTER_PATH = '/numbers/new';
 export const ACCESS_TOKEN = 'registered-access-token-ta';
-export const APP_SECRET = 'registered-app-secret-sx';
 export const PHONE_NUMBER_ID = '1000000000555';
 export const WABA_ID = '3000000000555';
 export const DISPLAY_NUMBER = '+5511955550000';
-export const META_APP_ID = '900000000555';
 
 type Fields = Record<string, string>;
 type BackofficeBindings = ReturnType<typeof backofficeEnv>;
@@ -30,7 +27,6 @@ async function clearRegistry(): Promise<void> {
   await testEnv.CONNECTIONS.batch([
     testEnv.CONNECTIONS.prepare('DELETE FROM accounts'),
     testEnv.CONNECTIONS.prepare('DELETE FROM whatsapp_numbers'),
-    testEnv.CONNECTIONS.prepare('DELETE FROM meta_apps'),
     testEnv.CONNECTIONS.prepare('DELETE FROM channel_restrictions'),
   ]);
 }
@@ -78,6 +74,32 @@ export async function postAction(input: {
   });
 }
 
+export async function postForm(input: {
+  path: string;
+  sessionToken: string;
+  fields: Fields;
+  origin?: string | null;
+  csrf?: string;
+  env?: BackofficeBindings;
+}): Promise<Response> {
+  const { origin = BACKOFFICE_ORIGIN } = input;
+  const csrf = input.csrf === undefined ? await csrfTokenOf({ sessionToken: input.sessionToken }) : input.csrf;
+  return requestBackoffice({
+    path: input.path,
+    method: 'POST',
+    form: { ...input.fields, [NumberFormField.Csrf]: csrf },
+    cookies: { [SESSION_COOKIE]: input.sessionToken },
+    headers: origin === null ? {} : { Origin: origin },
+    env: input.env,
+  });
+}
+
+export async function followRedirect(input: { posted: Response; sessionToken: string }): Promise<Response> {
+  const location = input.posted.headers.get('Location');
+  if (location === null) throw new Error(`the form answered ${input.posted.status} without a Location`);
+  return getPage({ path: location, sessionToken: input.sessionToken });
+}
+
 export async function submitRejectedAction(input: Parameters<typeof postAction>[0]): Promise<{ posted: Response; followed: Response }> {
   const posted = await postAction(input);
   const location = posted.headers.get('Location');
@@ -88,21 +110,6 @@ export async function submitRejectedAction(input: Parameters<typeof postAction>[
 
 export function refusingStepUpEnv(): BackofficeBindings {
   return backofficeEnv({ limiter: createFakeRateLimiter({ limit: 0 }) });
-}
-
-export function registrationFields(input: Partial<Fields>): Fields {
-  return {
-    [NumberFormField.MetaApp]: NEW_META_APP_VALUE,
-    [NumberFormField.MetaAppId]: META_APP_ID,
-    [NumberFormField.MetaAppName]: 'Main app',
-    [NumberFormField.AppSecret]: APP_SECRET,
-    [NumberFormField.PhoneNumberId]: PHONE_NUMBER_ID,
-    [NumberFormField.WabaId]: WABA_ID,
-    [NumberFormField.DisplayNumber]: DISPLAY_NUMBER,
-    [NumberFormField.Label]: 'Brazil',
-    [NumberFormField.AccessToken]: ACCESS_TOKEN,
-    ...input,
-  };
 }
 
 export async function countRows(input: { table: string }): Promise<number> {

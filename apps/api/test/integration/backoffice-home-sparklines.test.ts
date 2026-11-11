@@ -32,7 +32,6 @@ async function seedNumberCreatedAt(input: { index: number; createdAt: number }):
   const numberId = `num_${input.index}`;
   await seedWhatsAppNumber({
     numberId,
-    metaAppRef: 'app_spark',
     phoneNumberId: `10000000${String(input.index).padStart(5, '0')}`,
     displayNumber: `5511900${String(input.index).padStart(5, '0')}`,
     state: WhatsAppNumberState.Active,

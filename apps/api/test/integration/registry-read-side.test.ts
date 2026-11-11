@@ -3,15 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { reset } from 'cloudflare:test';
 import { numberRegistryOf } from '../../src/adapters/d1/d1-number-registry';
 import { applyDirectoryMigration, seedAccount } from '../support/seed';
-import {
-  seedWhatsAppNumber,
-  TEST_ACCESS_TOKEN,
-  TEST_APP_SECRET,
-  TEST_META_APP_REF,
-  TEST_NUMBER_ID,
-  TEST_PHONE_NUMBER_ID,
-  TEST_WABA_ID,
-} from '../support/whatsapp-numbers';
+import { seedWhatsAppNumber, TEST_ACCESS_TOKEN, TEST_NUMBER_ID, TEST_PHONE_NUMBER_ID, TEST_WABA_ID } from '../support/whatsapp-numbers';
 import { testEnv } from '../support/workers-env';
 
 const ACCOUNT_ID = 'acc_registry';
@@ -31,7 +23,6 @@ describe('the number registry read side', () => {
       phoneNumberId: TEST_PHONE_NUMBER_ID,
       wabaId: TEST_WABA_ID,
       state: WhatsAppNumberState.Active,
-      metaAppRef: TEST_META_APP_REF,
     };
     expect(await registry.findByPhoneNumberIds({ phoneNumberIds: [TEST_PHONE_NUMBER_ID, UNKNOWN_ID] })).toEqual([expected]);
     expect(await registry.findByWabaIds({ wabaIds: [TEST_WABA_ID] })).toEqual([expected]);
@@ -41,11 +32,6 @@ describe('the number registry read side', () => {
     await seedWhatsAppNumber();
     expect(await registry.findByPhoneNumberIds({ phoneNumberIds: [UNKNOWN_ID] })).toEqual([]);
     expect(await registry.findByWabaIds({ wabaIds: [] })).toEqual([]);
-  });
-
-  it('opens the app secret of a Meta app', async () => {
-    await seedWhatsAppNumber();
-    expect(await registry.openAppSecret({ metaAppRef: TEST_META_APP_REF })).toBe(TEST_APP_SECRET);
   });
 
   it('opens the access token of a number for an inbound', async () => {

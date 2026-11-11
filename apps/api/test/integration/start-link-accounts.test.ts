@@ -1,3 +1,4 @@
+import { TEST_META_APP_SECRET } from '../support/meta-app-secret';
 import { reset } from 'cloudflare:test';
 import { exports } from 'cloudflare:workers';
 import { OwnerLocale, SECOND_MS, START_LINK_PATH, WhatsAppNumberState } from '@zapbip/types';
@@ -11,7 +12,6 @@ import { changeOf, notificationOf } from '../fixtures/whatsapp/inbound/notificat
 import { recordGraphPosts } from '../support/record-graph-posts';
 import { applyDirectoryMigration } from '../support/seed';
 import { changeStartNumberState, seedStartNumber } from '../support/start-link-numbers';
-import { TEST_APP_SECRET } from '../support/whatsapp-numbers';
 import { testEnv } from '../support/workers-env';
 
 const ORIGIN = 'http://localhost:8787';
@@ -32,7 +32,7 @@ async function writeTo(input: { numberId: string; id: string }): Promise<Respons
   const message = { ...textFixture, from: NEW_OWNER_PHONE, id: input.id, timestamp };
   const notification = notificationOf({ changes: [changeOf({ phoneNumberId: `phone-${input.numberId}`, messages: [message] })] });
   const text = JSON.stringify(notification);
-  const signature = await signatureHeaderOf({ appSecret: TEST_APP_SECRET, body: new TextEncoder().encode(text) });
+  const signature = await signatureHeaderOf({ appSecret: TEST_META_APP_SECRET, body: new TextEncoder().encode(text) });
   return exports.default.fetch(`${ORIGIN}${WHATSAPP_WEBHOOK_PATH}`, {
     method: 'POST',
     headers: { [WEBHOOK_SIGNATURE_HEADER]: signature },

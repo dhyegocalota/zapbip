@@ -1,73 +1,77 @@
 import { expect, type Locator, type Page } from '@playwright/test';
 import { BackofficeCopyKey } from '../../../src/backoffice/backoffice-copy';
-import { NEW_META_APP_VALUE } from '../../../src/backoffice/numbers/number-form-fields';
 import { GRAPH_API_VERSION } from '../../../src/adapters/whatsapp/whatsapp-constants';
-import type { FakeGraph } from '../../../test/support/fake-graph';
+import { digitsOf } from '../../../src/numbers/number-verification';
+import { fakeReportedDisplayNumberOf, type FakeGraph } from '../../../test/support/fake-graph';
 import { copy } from './copy';
+import { useEmbeddedSignupStub, SignupOutcome } from './embedded-signup-stub';
 import { freshCode } from './operator-database';
 
 const FIRST_PHONE_NUMBER_ID = 1_000_000_000_000_000;
 const FIRST_WABA_ID = 3_000_000_000_000_000;
-const FIRST_META_APP_ID = 5_000_000_000_000;
-const FIRST_DISPLAY_NUMBER = 5_511_977_770_000;
 const OK_STATUS = 200;
 const STATE_BADGE_SELECTOR = '.state-badge';
 const VERIFIED_NAME = 'Maria Atendimento';
 const QUALITY_RATING = 'GREEN';
+const WALK_PIN = '482915';
+const CONNECT_CODE_FIELD = 'connect-code';
 
 export type WalkNumber = {
-  metaAppId: string;
-  metaAppName: string;
-  appSecret: string;
   phoneNumberId: string;
   wabaId: string;
   displayNumber: string;
+  reportedDisplayNumber: string;
   label: string;
-  accessToken: string;
+  pin: string;
+  signupCode: string;
 };
 
 export function walkNumberOf(input: { index: number }): WalkNumber {
   const { index } = input;
+  const phoneNumberId = String(FIRST_PHONE_NUMBER_ID + index);
+  const reportedDisplayNumber = fakeReportedDisplayNumberOf({ phoneNumberId });
   return {
-    metaAppId: String(FIRST_META_APP_ID + index),
-    metaAppName: `Meta app ${index}`,
-    appSecret: `walk-app-secret-${index}`,
-    phoneNumberId: String(FIRST_PHONE_NUMBER_ID + index),
+    phoneNumberId,
     wabaId: String(FIRST_WABA_ID + index),
-    displayNumber: `+${FIRST_DISPLAY_NUMBER + index}`,
+    displayNumber: `+${digitsOf({ value: reportedDisplayNumber })}`,
+    reportedDisplayNumber,
     label: `Walk number ${index}`,
-    accessToken: `walk-access-token-${index}`,
+    pin: WALK_PIN,
+    signupCode: `walk-signup-code-${index}`,
   };
 }
 
 export function credentialTextsOf(input: { number: WalkNumber }): string[] {
-  return [input.number.appSecret, input.number.accessToken];
+  return [input.number.pin, input.number.signupCode];
 }
 
 export async function fillCode(input: { page: Page; id: string; code: string }): Promise<void> {
   await input.page.locator(`#${input.id}`).fill(input.code);
 }
 
-export async function registerNumber(input: { page: Page; number: WalkNumber; code: string }): Promise<void> {
-  const { page, number } = input;
-  const field = (key: BackofficeCopyKey) => page.getByLabel(copy({ key }), { exact: true });
-  await page.goto('/numbers/new');
-  await page.getByLabel(copy({ key: BackofficeCopyKey.RegisterMetaAppLabel }), { exact: true }).selectOption(NEW_META_APP_VALUE);
-  await field(BackofficeCopyKey.RegisterMetaAppIdLabel).fill(number.metaAppId);
-  await field(BackofficeCopyKey.RegisterMetaAppNameLabel).fill(number.metaAppName);
-  await field(BackofficeCopyKey.RegisterAppSecretLabel).fill(number.appSecret);
-  await field(BackofficeCopyKey.RegisterPhoneNumberIdLabel).fill(number.phoneNumberId);
-  await field(BackofficeCopyKey.RegisterWabaIdLabel).fill(number.wabaId);
-  await field(BackofficeCopyKey.RegisterDisplayNumberLabel).fill(number.displayNumber);
-  await field(BackofficeCopyKey.RegisterLabelLabel).fill(number.label);
-  await field(BackofficeCopyKey.RegisterAccessTokenLabel).fill(number.accessToken);
-  await fillCode({ page, id: 'register-code', code: input.code });
-  await page.getByRole('button', { name: copy({ key: BackofficeCopyKey.RegisterSubmit }) }).click();
+export async function stepUpToConnect(input: { page: Page; code: string }): Promise<void> {
+  const { page } = input;
+  await page.goto('/numbers/connect');
+  await fillCode({ page, id: CONNECT_CODE_FIELD, code: input.code });
+  await page.getByRole('button', { name: copy({ key: BackofficeCopyKey.ConnectContinue }) }).click();
 }
 
-export async function registerNumberWithFreshCode(input: { page: Page; number: WalkNumber }): Promise<void> {
+export async function connectNumber(input: { page: Page; number: WalkNumber; outcome?: SignupOutcome; code: string }): Promise<string[]> {
+  const { page, number, outcome = SignupOutcome.Finish } = input;
+  const violations = await useEmbeddedSignupStub({
+    page,
+    stub: { outcome, code: number.signupCode, phoneNumberId: number.phoneNumberId, wabaId: number.wabaId },
+  });
+  await stepUpToConnect({ page, code: input.code });
+  await page.getByLabel(copy({ key: BackofficeCopyKey.ConnectLabelLabel }), { exact: true }).fill(number.label);
+  await page.getByLabel(copy({ key: BackofficeCopyKey.ConnectPinLabel }), { exact: true }).fill(number.pin);
+  await page.getByRole('button', { name: copy({ key: BackofficeCopyKey.ConnectButton }) }).click();
+  return violations;
+}
+
+export async function connectNumberWithFreshCode(input: { page: Page; number: WalkNumber }): Promise<void> {
   const { page, number } = input;
-  await registerNumber({ page, number, code: await freshCode() });
+  await connectNumber({ page, number, code: await freshCode() });
   await expect(page.getByRole('heading', { level: 1, name: number.label })).toBeVisible();
 }
 
@@ -77,7 +81,7 @@ export async function queueMatchingVerification(input: { fakeGraph: FakeGraph; n
     method: 'GET',
     path: `/${GRAPH_API_VERSION}/${number.phoneNumberId}`,
     status: OK_STATUS,
-    body: { display_phone_number: number.displayNumber, verified_name: VERIFIED_NAME, quality_rating: QUALITY_RATING },
+    body: { display_phone_number: number.reportedDisplayNumber, verified_name: VERIFIED_NAME, quality_rating: QUALITY_RATING },
   });
   await fakeGraph.respondWith({
     method: 'GET',
@@ -105,7 +109,7 @@ export async function changeState(input: { page: Page; optionKey: BackofficeCopy
 
 export async function activateNumber(input: { page: Page; fakeGraph: FakeGraph; number: WalkNumber }): Promise<void> {
   const { page, fakeGraph, number } = input;
-  await registerNumberWithFreshCode({ page, number });
+  await connectNumberWithFreshCode({ page, number });
   await verifyNumber({ page, fakeGraph, number });
   await changeState({ page, optionKey: BackofficeCopyKey.NumberStateOptionActive, code: await freshCode() });
   await expect(page.getByText(copy({ key: BackofficeCopyKey.NoticeStateChanged }))).toBeVisible();

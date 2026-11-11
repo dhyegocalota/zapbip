@@ -37,9 +37,7 @@ afterEach(async () => {
 
 describe('the credentials timestamp of a number', () => {
   async function registerNumber(): Promise<string> {
-    const { metaAppRef } = await registry.registerMetaApp({ metaAppId: 'meta-1', label: 'one', appSecret: 'secret' });
     const { numberId } = await registry.registerNumber({
-      metaAppRef,
       phoneNumberId: '1000000000010',
       wabaId: 'waba',
       displayNumber: '+5511900000010',

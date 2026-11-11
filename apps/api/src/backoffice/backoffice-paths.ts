@@ -8,6 +8,7 @@ export enum BackofficePath {
   Metrics = '/metrics',
   Audit = '/audit',
   Stylesheet = '/assets/backoffice.css',
+  EmbeddedSignupScript = '/assets/embedded-signup.js',
   Favicon = '/assets/favicon.svg',
   LegacyFavicon = '/favicon.ico',
 }

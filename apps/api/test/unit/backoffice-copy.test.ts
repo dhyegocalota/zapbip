@@ -16,7 +16,7 @@ const REQUIRED_KEYS = [
   'NoticeLabelError',
   'NavigationNumbers',
   'StateActive',
-  'RegisterSubmit',
+  'NumbersConnect',
   'MetricsTitle',
 ];
 const POLISH_KEYS = [

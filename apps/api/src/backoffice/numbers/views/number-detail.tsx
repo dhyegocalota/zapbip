@@ -11,12 +11,11 @@ import type { NumberListEntry } from '../../../numbers/number-admin';
 import { StateBadge } from '../components/state-badge';
 import { TextField } from '../components/text-field';
 import { CHECKED_VALUE, NumberFormField } from '../number-form-fields';
-import { appSecretPath, numberPath, NumberSegment } from '../number-paths';
+import { numberPath, NumberSegment } from '../number-paths';
 
 export type NumberDetailPageProps = {
   page: PageContext;
   entry: NumberListEntry;
-  siblingLabels: string[];
   allowedTargets: WhatsAppNumberState[];
   failure: BackofficeCopyKey | null;
   selectedState: WhatsAppNumberState | null;
@@ -30,7 +29,7 @@ const TARGET_OPTIONS: Record<WhatsAppNumberState, BackofficeCopyKey> = {
 };
 
 export function NumberDetailPage(props: NumberDetailPageProps) {
-  const { page, entry, siblingLabels, allowedTargets, failure, selectedState } = props;
+  const { page, entry, allowedTargets, failure, selectedState } = props;
   const { locale } = page;
   const translate = (key: BackofficeCopyKey, values?: Record<string, string>): string => renderBackofficeCopy({ key, locale, values });
   const credentialStatus = (at: number): string => translate(BackofficeCopyKey.CredentialSet, { date: formatTimestamp({ at }) });
@@ -73,12 +72,8 @@ export function NumberDetailPage(props: NumberDetailPageProps) {
             <dd class="mono">{entry.phoneNumberId}</dd>
             <dt>{translate(BackofficeCopyKey.NumberWabaId)}</dt>
             <dd class="mono">{entry.wabaId}</dd>
-            <dt>{translate(BackofficeCopyKey.NumberMetaApp)}</dt>
-            <dd>{entry.metaAppLabel}</dd>
             <dt>{translate(BackofficeCopyKey.NumberAccessToken)}</dt>
             <dd>{credentialStatus(entry.credentialsChangedAt)}</dd>
-            <dt>{translate(BackofficeCopyKey.NumberAppSecret)}</dt>
-            <dd>{credentialStatus(entry.metaAppUpdatedAt)}</dd>
             <dt>{translate(BackofficeCopyKey.NumberVerifiedAt)}</dt>
             <dd>
               {entry.verifiedAt === null ? translate(BackofficeCopyKey.NumberNeverVerified) : formatTimestamp({ at: entry.verifiedAt })}
@@ -144,27 +139,6 @@ export function NumberDetailPage(props: NumberDetailPageProps) {
               <CodeField locale={locale} id="token-code" />
               <button type="submit" class="button button-primary">
                 {translate(BackofficeCopyKey.NumberRotateTokenSubmit)}
-              </button>
-            </form>
-          </section>
-          <section class="card" aria-labelledby="secret-title">
-            <h2 id="secret-title">{translate(BackofficeCopyKey.NumberRotateSecretTitle)}</h2>
-            <p>{translate(BackofficeCopyKey.NumberRotateSecretBody, { labels: siblingLabels.join(', ') })}</p>
-            <form method="post" action={appSecretPath({ metaAppRef: entry.metaAppRef })}>
-              {csrf}
-              <input type="hidden" name={NumberFormField.NumberId} value={entry.numberId} />
-              <TextField
-                id="rotate-secret"
-                name={NumberFormField.AppSecret}
-                label={translate(BackofficeCopyKey.NumberRotateSecretLabel)}
-                help={null}
-                value={null}
-                error={null}
-                isSecret
-              />
-              <CodeField locale={locale} id="secret-code" />
-              <button type="submit" class="button button-primary">
-                {translate(BackofficeCopyKey.NumberRotateSecretSubmit)}
               </button>
             </form>
           </section>

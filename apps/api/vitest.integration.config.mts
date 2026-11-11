@@ -1,6 +1,7 @@
 import { cloudflareTest } from '@cloudflare/vitest-pool-workers';
 import { defineConfig } from 'vitest/config';
 import { DeployEnvironment } from './src/contract/deploy-environment';
+import { TEST_META_APP_SECRET } from './test/support/meta-app-secret';
 import { BACKOFFICE_TEST_KEY_DIGEST, BACKOFFICE_TEST_TOTP_SECRET } from './test/support/backoffice-credentials';
 
 const WAKE_TEST_SECRET_KEY = Buffer.alloc(32).toString('base64');
@@ -16,6 +17,7 @@ export default defineConfig({
           MEDIA_LINK_SIGNING_KEY: 'test-media-key',
           UPLOAD_LINK_SIGNING_KEY: 'test-upload-key',
           WHATSAPP_VERIFY_TOKEN: 'test-verify-token',
+          META_APP_SECRET: TEST_META_APP_SECRET,
           WHATSAPP_GRAPH_BASE_URL: 'http://127.0.0.1:4012',
           WAKE_SECRET_KEY: WAKE_TEST_SECRET_KEY,
           NUMBER_REGISTRY_KEY: NUMBER_REGISTRY_TEST_KEY,

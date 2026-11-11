@@ -65,7 +65,6 @@ function detailPage(input: { state: WhatsAppNumberState }): string {
     NumberDetailPage({
       page: PAGE,
       entry: numberEntry({ state: input.state }),
-      siblingLabels: [],
       allowedTargets: [WhatsAppNumberState.Closed],
       failure: null,
       selectedState: null,
@@ -115,12 +114,20 @@ function viewSources(input: { directory: string }): { path: string; source: stri
   });
 }
 
+const ONBOARDING_VIEW = 'connect-meta.tsx';
+
 describe('design rules', () => {
-  it('has no style attribute, style element or script element in any view', () => {
+  it('has no style attribute or style element in any view', () => {
     const offenders = viewSources({ directory: BACKOFFICE_ROOT })
-      .filter(({ source }) => /\sstyle=|<style|<script/.test(source))
+      .filter(({ source }) => /\sstyle=|<style/.test(source))
       .map(({ path }) => path);
     expect(offenders).toEqual([]);
+  });
+
+  it('has no script element in any view but the onboarding page, and no inline script there', () => {
+    const scriptViews = viewSources({ directory: BACKOFFICE_ROOT }).filter(({ source }) => /<script/.test(source));
+    expect(scriptViews.map(({ path }) => path)).toEqual([expect.stringContaining(ONBOARDING_VIEW)]);
+    expect(scriptViews.filter(({ source }) => /<script(?![^>]*\ssrc=)/.test(source))).toEqual([]);
   });
 
   it.each(Object.entries(PAGES))('renders %s with one h1 and the skip link first', (_name, html) => {
