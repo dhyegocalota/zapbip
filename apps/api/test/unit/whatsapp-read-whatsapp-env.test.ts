@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { readWebhookEnvironment, readWhatsAppEnvironment } from '../../src/adapters/whatsapp/read-whatsapp-env';
+import { readMetaAppSecret, readWebhookEnvironment, readWhatsAppEnvironment } from '../../src/adapters/whatsapp/read-whatsapp-env';
 import type { Bindings } from '../../src/contract/env';
 
 const COMPLETE = {
@@ -32,6 +32,17 @@ describe('readWhatsAppEnvironment', () => {
 
   it('AU-116 throws naming WHATSAPP_VERIFY_TOKEN when it is empty', () => {
     expect(() => readWhatsAppEnvironment({ env: envOf({ WHATSAPP_VERIFY_TOKEN: '' }) })).toThrow('WHATSAPP_VERIFY_TOKEN');
+  });
+
+  it('throws naming WHATSAPP_VERIFY_TOKEN when it is only whitespace', () => {
+    expect(() => readWhatsAppEnvironment({ env: envOf({ WHATSAPP_VERIFY_TOKEN: '   ' }) })).toThrow('WHATSAPP_VERIFY_TOKEN');
+  });
+});
+
+describe('readMetaAppSecret', () => {
+  it('throws naming META_APP_SECRET when it is only whitespace', () => {
+    const env = { ...envOf({}), META_APP_SECRET: '   ' } as Bindings;
+    expect(() => readMetaAppSecret({ env })).toThrow('META_APP_SECRET');
   });
 });
 
