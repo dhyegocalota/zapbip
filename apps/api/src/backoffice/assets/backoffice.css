@@ -306,6 +306,12 @@ nav,
   background: var(--color-sunken);
 }
 
+.locale-switch,
+.theme-switch {
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
 .nav-link {
   display: inline-flex;
   align-items: center;
@@ -1351,16 +1357,17 @@ main > .notice {
 
   .header-end {
     margin-left: 0;
+    justify-content: space-between;
+    gap: var(--space-1);
   }
 
-  .locale-switch,
-  .theme-switch {
-    flex: 1;
+  .locale-switch .button {
+    padding: 0 var(--space-2);
+    font-size: var(--text-small);
   }
 
-  .locale-switch .button,
-  .theme-switch .button {
-    flex: 1;
+  .locale-switch .icon {
+    margin: 0;
   }
 
   .card {
