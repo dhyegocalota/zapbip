@@ -15,7 +15,7 @@ const MALFORMED_BODY_CODE = 'malformed_body';
 const REFUSED_CODE = 'refused';
 const EMPTY_TOKEN_CODE = 'empty_token';
 
-type VerifyBody = { success?: unknown; hostname?: unknown; action?: unknown };
+type VerifyBody = { success?: unknown; hostname?: unknown; action?: unknown; metadata?: { result_with_testing_key?: unknown } };
 
 function verdictOf(input: { verdict: TurnstileVerdict; errorCode: string }): TurnstileVerdict {
   logEvent({ event: LogEvent.SiteTurnstileFailed, errorCode: input.errorCode });
@@ -41,7 +41,10 @@ export async function verifyTurnstileToken(input: {
   const body = (await response.json().catch(() => null)) as VerifyBody | null;
   const isWellFormed = body !== null && typeof body === 'object' && typeof body.success === 'boolean';
   if (!isWellFormed) return verdictOf({ verdict: TurnstileVerdict.Unavailable, errorCode: MALFORMED_BODY_CODE });
-  const isAccepted = body.success === true && body.hostname === expectedHostname && body.action === TURNSTILE_ACTION_WAITLIST_JOIN;
+  const isTestingKeyResult = body.metadata?.result_with_testing_key === true;
+  const isAcceptedTestingKey = acceptTestingKey && isTestingKeyResult;
+  const isMatchingChallenge = body.hostname === expectedHostname && body.action === TURNSTILE_ACTION_WAITLIST_JOIN;
+  const isAccepted = body.success === true && (isMatchingChallenge || isAcceptedTestingKey);
   if (!isAccepted) return verdictOf({ verdict: TurnstileVerdict.Refused, errorCode: REFUSED_CODE });
   return TurnstileVerdict.Accepted;
 }

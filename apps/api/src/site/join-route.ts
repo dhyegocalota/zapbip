@@ -2,6 +2,7 @@ import { HttpStatus, OwnerLocale, WaitlistJoinOutcome } from '@zapbip/types';
 import type { Context } from 'hono';
 import { type FormBody, textFieldOf } from '../backoffice/form-fields';
 import { CLIENT_ADDRESS_HEADER } from '../contract/constants';
+import { DeployEnvironment } from '../contract/deploy-environment';
 import { clientRateKey } from '../routes/client-rate-key';
 import { BAD_REQUEST_TEXT, plainResponse, RETRY_AFTER_HEADER } from '../routes/private-response';
 import { joinWaitlist, normalizeEmail } from './join-waitlist';
@@ -52,7 +53,7 @@ async function answerOf(input: {
     secret: env.TURNSTILE_SECRET_KEY!,
     token: tokenValue === null ? '' : tokenValue,
     expectedHostname: new URL(env.SITE_ORIGIN).hostname,
-    acceptTestingKey: false,
+    acceptTestingKey: env.ENVIRONMENT === DeployEnvironment.Development,
     fetchImplementation,
   });
   if (verdict === TurnstileVerdict.Refused)

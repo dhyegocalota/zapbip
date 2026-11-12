@@ -1,6 +1,7 @@
 import { reset } from 'cloudflare:test';
 import { DEFAULT_WAITLIST_REFERRAL_CAP, OwnerLocale, WAITLIST_REFERRAL_CODE_LENGTH } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { DeployEnvironment } from '../../src/contract/deploy-environment';
 import { SiteCopyKey } from '../../src/site/site-copy';
 import { createFakeRateLimiter } from '../support/fake-rate-limiter';
 import { applyLandingWaitlistMigration } from '../support/seed';
@@ -175,5 +176,30 @@ describe('POST /join', () => {
     const response = await postJoin({ form: joinForm({ email: MARIA, referralCode: 'abcdefgh2345' }) });
     expect(response.status).toBe(200);
     expect(await rowOf({ email: MARIA })).toMatchObject({ credited: 0, referred_by: null });
+  });
+
+  describe('with a published testing key result', () => {
+    function testingKeyTurnstile(): SiteFetchRecording {
+      const calls: string[] = [];
+      const fetchImplementation = (async (_url: string, init: RequestInit) => {
+        calls.push(String(init.body));
+        return Response.json({ success: true, hostname: 'example.com', metadata: { result_with_testing_key: true } });
+      }) as unknown as typeof fetch;
+      return { fetchImplementation, calls };
+    }
+
+    it('joins in development', async () => {
+      const env = siteEnvironment({ overrides: { ENVIRONMENT: DeployEnvironment.Development } });
+      const response = await postJoin({ form: joinForm({ email: MARIA }), recording: testingKeyTurnstile(), env });
+      expect(response.status).toBe(200);
+      expect(await waitlistRows()).toHaveLength(1);
+    });
+
+    it.each([DeployEnvironment.Staging, DeployEnvironment.Production])('is refused in %s', async (environment) => {
+      const env = siteEnvironment({ overrides: { ENVIRONMENT: environment } });
+      const response = await postJoin({ form: joinForm({ email: MARIA }), recording: testingKeyTurnstile(), env });
+      expect(response.status).toBe(403);
+      expect(await waitlistRows()).toEqual([]);
+    });
   });
 });
