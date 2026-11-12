@@ -1,6 +1,6 @@
 # Backoffice password sign-in
 
-**Status:** Building
+**Status:** Shipped 2026-11-12
 **Tier:** 🔴 structural
 **Owner approval:** approved 2026-11-11 (owner delegated)
 **ADRs:** [0038](../../adr/0038-the-backoffice-signs-in-with-a-password-and-then-a-code-held-in-a-server-side-second-step.md); amends [0031](../../adr/0031-the-backoffice-is-a-separate-host-signed-in-with-a-key-and-totp-enrolled-from-the-owners-terminal.md) decisions 1 and 3
