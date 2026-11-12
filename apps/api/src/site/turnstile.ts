@@ -26,9 +26,10 @@ export async function verifyTurnstileToken(input: {
   secret: string;
   token: string;
   expectedHostname: string;
+  acceptTestingKey: boolean;
   fetchImplementation: typeof fetch;
 }): Promise<TurnstileVerdict> {
-  const { secret, token, expectedHostname, fetchImplementation } = input;
+  const { secret, token, expectedHostname, acceptTestingKey, fetchImplementation } = input;
   if (token === '') return verdictOf({ verdict: TurnstileVerdict.Refused, errorCode: EMPTY_TOKEN_CODE });
   const response = await fetchImplementation(TURNSTILE_VERIFY_URL, {
     method: 'POST',

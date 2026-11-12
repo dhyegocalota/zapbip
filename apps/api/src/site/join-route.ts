@@ -52,6 +52,7 @@ async function answerOf(input: {
     secret: env.TURNSTILE_SECRET_KEY!,
     token: tokenValue === null ? '' : tokenValue,
     expectedHostname: new URL(env.SITE_ORIGIN).hostname,
+    acceptTestingKey: false,
     fetchImplementation,
   });
   if (verdict === TurnstileVerdict.Refused)

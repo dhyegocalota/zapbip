@@ -14,9 +14,9 @@ function respondingWith(input: { body: unknown; status?: number }): typeof fetch
   return vi.fn(async () => new Response(typeof body === 'string' ? body : JSON.stringify(body), { status })) as unknown as typeof fetch;
 }
 
-function verify(input: { fetchImplementation: typeof fetch; token?: string }): Promise<TurnstileVerdict> {
-  const { fetchImplementation, token = TOKEN } = input;
-  return verifyTurnstileToken({ secret: SECRET, token, expectedHostname: HOSTNAME, fetchImplementation });
+function verify(input: { fetchImplementation: typeof fetch; token?: string; acceptTestingKey?: boolean }): Promise<TurnstileVerdict> {
+  const { fetchImplementation, token = TOKEN, acceptTestingKey = false } = input;
+  return verifyTurnstileToken({ secret: SECRET, token, expectedHostname: HOSTNAME, acceptTestingKey, fetchImplementation });
 }
 
 afterEach(() => vi.restoreAllMocks());
@@ -74,5 +74,33 @@ describe('verifyTurnstileToken', () => {
     const fetchImplementation = respondingWith({ body: ACCEPTED_BODY });
     expect(await verify({ fetchImplementation, token: '' })).toBe(TurnstileVerdict.Refused);
     expect(fetchImplementation).not.toHaveBeenCalled();
+  });
+
+  describe('a result produced by a published testing key', () => {
+    const testingKeyBody = { success: true, hostname: 'example.com', metadata: { result_with_testing_key: true } };
+
+    it('is accepted when the caller allows testing keys', async () => {
+      expect(await verify({ fetchImplementation: respondingWith({ body: testingKeyBody }), acceptTestingKey: true })).toBe(
+        TurnstileVerdict.Accepted,
+      );
+    });
+
+    it('is refused when the caller does not allow testing keys', async () => {
+      expect(await verify({ fetchImplementation: respondingWith({ body: testingKeyBody }) })).toBe(TurnstileVerdict.Refused);
+    });
+
+    it('is refused when it did not succeed, even if testing keys are allowed', async () => {
+      const failing = { ...testingKeyBody, success: false };
+      expect(await verify({ fetchImplementation: respondingWith({ body: failing }), acceptTestingKey: true })).toBe(
+        TurnstileVerdict.Refused,
+      );
+    });
+
+    it('is not claimed by a plain body that merely names the field', async () => {
+      const forged = { success: true, hostname: 'evil.example', metadata: { result_with_testing_key: 'true' } };
+      expect(await verify({ fetchImplementation: respondingWith({ body: forged }), acceptTestingKey: true })).toBe(
+        TurnstileVerdict.Refused,
+      );
+    });
   });
 });
