@@ -13,14 +13,14 @@
 
 ## Steps
 
-- [ ] **Step 1:** Red tests: the agent id guard, the sections and cards in the page, the hint, the pricing, the copy keys. Commit alone with stubs.
-- [ ] **Step 2:** `install.ts` exports `InstallClient`; `site-agents.ts` lists agents with ids and guards an id; the site context reads `?agent=`; the page model carries it.
-- [ ] **Step 3:** Copy keys in both locales; labels, meta and FAQ.
-- [ ] **Step 4:** Views: why section and scenes, agent cards, pricing, the hint in the join block, reveal classes.
-- [ ] **Step 5:** Stylesheet: scenes, cards, pricing, reveal; scroll timeline branch, observer branch, reduced motion.
-- [ ] **Step 6:** Script: reveal observer, card pick.
-- [ ] **Step 7:** E2E: both locales, both widths, card click, reduced motion.
-- [ ] **Step 8:** Rule and README sweep; tester briefing.
+- [x] **Step 1:** Red tests: the agent id guard, the sections and cards in the page, the hint, the pricing, the copy keys. Commit alone with stubs. — evidence: c8b04181 (red, stubs; failure texts in tester-briefing.md)
+- [x] **Step 2:** `install.ts` exports `InstallClient`; `site-agents.ts` lists agents with ids and guards an id; the site context reads `?agent=`; the page model carries it. — evidence: 316e401b, site-agents.test.ts
+- [x] **Step 3:** Copy keys in both locales; labels, meta and FAQ. — evidence: c8b04181 (keys), 316e401b (values)
+- [x] **Step 4:** Views: why section and scenes, agent cards, pricing, the hint in the join block, reveal classes. — evidence: 316e401b, 8ec0de1f, site-page.test.ts
+- [x] **Step 5:** Stylesheet: scenes, cards, pricing, reveal; scroll timeline branch, observer branch, reduced motion. — evidence: 316e401b, 8ec0de1f, site-motion.test.ts (integration)
+- [x] **Step 6:** Script: reveal observer, card pick. — evidence: 316e401b, site-motion.test.ts (unit)
+- [x] **Step 7:** E2E: both locales, both widths, card click, reduced motion. — evidence: c8b04181, 8ec0de1f, landing-scroll-story.spec.ts and landing-free-tier.spec.ts, 62 landing specs green at 8ec0de1f
+- [x] **Step 8:** Rule and README sweep; tester briefing. — evidence: `.claude/rules/site.md`, tester-briefing.md; no README states behaviour that changed
 
 ## Failure modes
 

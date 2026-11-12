@@ -1053,6 +1053,10 @@ details p {
     grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
   }
 
+  .why-visual::before {
+    inset: -2rem;
+  }
+
   .why-pin {
     grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
     gap: var(--space-8);
@@ -1578,7 +1582,7 @@ summary::before {
 .why-visual::before {
   content: '';
   position: absolute;
-  inset: -2rem;
+  inset: -2rem 0;
   z-index: -1;
   background: radial-gradient(closest-side, color-mix(in srgb, var(--color-signal) 24%, transparent), transparent);
 }
