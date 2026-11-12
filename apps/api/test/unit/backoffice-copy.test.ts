@@ -37,6 +37,8 @@ const POLISH_KEYS = [
   'MetricsKpiMessagesIn',
   'MetricsKpiMessagesOut',
 ];
+const SIGN_IN_KEYS = ['SignInLead', 'SignInEmailLabel', 'SignInPasswordLabel', 'SignInSubmit', 'SignInCodeLead', 'SignInCodeSubmit'];
+const REMOVED_KEYS = ['SignInKeyLabel', 'SignInKeyHelp'];
 const THEME_KEYS = ['ThemeLabel', 'ThemeLight', 'ThemeDark', 'ThemeSystem'];
 const PLACEHOLDER_PATTERN = /\{(\w+)\}/g;
 const TEXT_CHILD_PATTERN = />\s*[A-Za-z0-9][^<>{}();=]*</;
@@ -74,6 +76,17 @@ describe('backoffice copy', () => {
     expect(portuguese).not.toBe(english);
     const placeholdersOf = (text: string): string[] => [...text.matchAll(PLACEHOLDER_PATTERN)].map((match) => match[1]!).sort();
     expect(placeholdersOf(portuguese!)).toEqual(placeholdersOf(english!));
+  });
+
+  it.each(SIGN_IN_KEYS)('carries the sign-in key %s in both locales, worded differently', (name) => {
+    expect(Object.keys(BackofficeCopyKey)).toContain(name);
+    const key = BackofficeCopyKey[name as keyof typeof BackofficeCopyKey];
+    const [portuguese, english] = LOCALES.map((locale) => BACKOFFICE_COPY[locale][key]);
+    expect(portuguese).not.toBe(english);
+  });
+
+  it.each(REMOVED_KEYS)('no longer has the key %s', (name) => {
+    expect(Object.keys(BackofficeCopyKey)).not.toContain(name);
   });
 
   it.each(THEME_KEYS)('carries %s in both locales', (name) => {
