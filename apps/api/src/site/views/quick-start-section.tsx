@@ -10,6 +10,7 @@ import { logoPathOf } from '../site-paths';
 const ANY_BADGE = '+';
 const LOGO_SIZE = 20;
 const LINE_BREAK = '\n';
+const ANY_PATH_KEYS = [SiteCopyKey.StartAnyStepOpen, SiteCopyKey.StartAnyStepAdd, SiteCopyKey.StartAnyStepPaste];
 const STEP_KEYS = [SiteCopyKey.StartStepGet, SiteCopyKey.StartStepPaste, SiteCopyKey.StartStepText];
 const FIRST_STEP_NUMBER = 1;
 const HIGHLIGHTED_KINDS = [
@@ -28,6 +29,7 @@ type Tab = {
   logoId: string | null;
   initials: string;
   hint: string;
+  path: string[];
   code: string;
   pickedLabel: string | null;
 };
@@ -38,9 +40,11 @@ function CodeText(props: { code: string }) {
       {highlightCode({ code: props.code }).map((line, index) => (
         <>
           {index === 0 ? null : LINE_BREAK}
-          {line.map((token) =>
-            HIGHLIGHTED_KINDS.includes(token.kind) ? <span class={`tok-${token.kind}`}>{token.text}</span> : token.text,
-          )}
+          <span class="code-line">
+            {line.map((token) =>
+              HIGHLIGHTED_KINDS.includes(token.kind) ? <span class={`tok-${token.kind}`}>{token.text}</span> : token.text,
+            )}
+          </span>
         </>
       ))}
     </>
@@ -96,6 +100,7 @@ export function QuickStartSection(props: { locale: OwnerLocale; referralCode: st
     logoId: null,
     initials: ANY_BADGE,
     hint: translate(SiteCopyKey.StartAnyHint),
+    path: ANY_PATH_KEYS.map((key) => translate(key)),
     code: placeholder,
     pickedLabel: null,
   };
@@ -145,8 +150,15 @@ export function QuickStartSection(props: { locale: OwnerLocale; referralCode: st
                   {translate(SiteCopyKey.StartCopy)}
                 </button>
               </div>
+              {tab.path.length === 0 ? null : (
+                <ol class="code-path">
+                  {tab.path.map((step) => (
+                    <li>{step}</li>
+                  ))}
+                </ol>
+              )}
               <pre class="code-block">
-                <code>
+                <code class={`code-lines-${tab.code.split(LINE_BREAK).length}`} data-code={tab.code}>
                   <CodeText code={tab.code} />
                 </code>
               </pre>

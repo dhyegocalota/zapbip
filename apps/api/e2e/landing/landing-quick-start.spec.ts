@@ -12,7 +12,8 @@ const MOBILE_WIDTH = 375;
 const MINIMUM_TAB_HEIGHT = 44;
 const GRANTED_PERMISSIONS = ['clipboard-read', 'clipboard-write'];
 const DESKTOP_WIDTH = 1280;
-const CONTAINER_PADDING = 24;
+const FULL_WIDTH_RATIO = 0.9;
+const TAB_ROW_PADDING = 4;
 
 async function computedStyleOf(input: { page: Page; selector: string; pseudo: string | null; property: string }): Promise<string> {
   const pseudo = input.pseudo === null ? 'null' : `'${input.pseudo}'`;
@@ -174,8 +175,10 @@ test.describe('1280 px', () => {
     const container = (await page.locator('#start .container').boundingBox())!;
     const panel = (await page.locator('.start-panel:not([hidden])').boundingBox())!;
     const tabs = (await page.locator('.start-tabs').boundingBox())!;
-    expect(panel.width).toBeGreaterThanOrEqual(container.width - CONTAINER_PADDING * 2 - 1);
-    expect(tabs.width).toBeGreaterThanOrEqual(panel.width - 1);
+    const title = (await page.locator('#start-title').boundingBox())!;
+    expect(Math.abs(panel.x - title.x)).toBeLessThanOrEqual(1);
+    expect(Math.abs(panel.width - tabs.width)).toBeLessThanOrEqual(1);
+    expect(panel.width).toBeGreaterThan(container.width * FULL_WIDTH_RATIO);
     const boxes = await Promise.all(
       [...AGENTS.map((agent) => agent.id), 'any'].map(async (id) => (await tabOf({ page, id }).boundingBox())!),
     );
@@ -183,7 +186,7 @@ test.describe('1280 px', () => {
     expect(rows.size).toBe(2);
     const lastRow = boxes.filter((box) => Math.round(box.y) === Math.max(...rows));
     const rightEdge = Math.max(...lastRow.map((box) => box.x + box.width));
-    expect(rightEdge).toBeGreaterThanOrEqual(tabs.x + tabs.width - 1);
+    expect(rightEdge).toBeGreaterThanOrEqual(tabs.x + tabs.width - TAB_ROW_PADDING - 1);
   });
 });
 
@@ -243,8 +246,12 @@ test.describe('typing in', () => {
       expected.split('\n')[0]!,
     );
     await expect
-      .poll(() => page.evaluate("document.getAnimations().filter((animation) => animation.animationName === 'code-type').length"))
-      .toBe(0);
+      .poll(() =>
+        page.evaluate(
+          "document.getAnimations().filter((animation) => animation.animationName === 'code-type').every((animation) => animation.playState === 'finished')",
+        ),
+      )
+      .toBe(true);
   });
 
   test('copies the whole command at once, even while it types', async ({ page, context }) => {

@@ -11,6 +11,7 @@ const SCRIPT_SOURCE = `(function () {
   var REVEAL_THRESHOLD = 0.2;
   var REVEAL_ROOT_MARGIN = '0px 0px -8% 0px';
   var SCROLL_TIMELINE_SUPPORT = 'animation-timeline: view()';
+  var TYPING_THRESHOLD = 0.3;
   var REVEAL_CLASS = 'has-reveal';
   var VISIBLE_CLASS = 'is-visible';
   var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -96,9 +97,14 @@ const SCRIPT_SOURCE = `(function () {
     var hint = byId('join-agent');
     var keys = { ArrowRight: 1, ArrowLeft: -1 };
     var list = tabs[0].parentNode;
+    function fade() {
+      list.classList.toggle('is-scrolled', list.scrollLeft > 1);
+      list.classList.toggle('is-end', list.scrollLeft + list.clientWidth >= list.scrollWidth - 1);
+    }
     function reveal(tab, behavior) {
       list.scrollTo({ left: tab.offsetLeft - (list.clientWidth - tab.offsetWidth) / 2, behavior: behavior });
     }
+    list.addEventListener('scroll', fade);
     function select(tab, shouldFocus) {
       tabs.forEach(function (candidate) {
         var isSelected = candidate === tab;
@@ -115,6 +121,7 @@ const SCRIPT_SOURCE = `(function () {
       if (shouldFocus) tab.focus({ preventScroll: true });
     }
     reveal(document.querySelector('.start-tab[aria-selected="true"]'), 'auto');
+    fade();
     tabs.forEach(function (tab, index) {
       tab.tabIndex = tab.getAttribute('aria-selected') === 'true' ? 0 : -1;
       tab.addEventListener('click', function (event) {
@@ -138,6 +145,7 @@ const SCRIPT_SOURCE = `(function () {
     document.querySelectorAll('.start-copy').forEach(function (button) {
       var originalLabel = button.textContent;
       var code = button.closest('.start-panel').querySelector('code');
+      var text = code.getAttribute('data-code');
       function copied() {
         button.setAttribute('data-copied', 'true');
         button.textContent = button.getAttribute('data-copied-label');
@@ -159,9 +167,23 @@ const SCRIPT_SOURCE = `(function () {
           selected();
           return;
         }
-        navigator.clipboard.writeText(code.textContent).then(copied, selected);
+        navigator.clipboard.writeText(text).then(copied, selected);
       });
     });
+  }
+
+  function setupStartTyping() {
+    var section = byId('start');
+    if (!section || reducedMotion || !('IntersectionObserver' in window)) return;
+    var observer = new IntersectionObserver(
+      function (entries) {
+        if (!entries[0].isIntersecting) return;
+        section.classList.add('is-live');
+        observer.disconnect();
+      },
+      { threshold: TYPING_THRESHOLD }
+    );
+    observer.observe(section);
   }
 
   function setupReveal() {
@@ -280,6 +302,7 @@ const SCRIPT_SOURCE = `(function () {
   setupAgentPicks();
   setupStartTabs();
   setupStartCopy();
+  setupStartTyping();
   setupReveal();
   setupThanks();
   setupDemo();

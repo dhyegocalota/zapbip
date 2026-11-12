@@ -61,8 +61,22 @@ export const CLAUDE_AI_COPY = localizeCopy({
 });
 
 const CLAUDE_AI_QUICK_START_HINT: Record<OwnerLocale, string> = {
-  [OwnerLocale.PortugueseBrazil]: 'claude.ai → Configurações → Conectores → adicione um conector personalizado com este endereço',
-  [OwnerLocale.EnglishUs]: 'claude.ai → Settings → Connectors → add a custom connector with this address',
+  [OwnerLocale.PortugueseBrazil]: 'Faça isto no claude.ai',
+  [OwnerLocale.EnglishUs]: 'Do this in claude.ai',
 };
 
-export const CLAUDE_AI_QUICK_START = quickStartOf({ hint: CLAUDE_AI_QUICK_START_HINT, code: addressText });
+const CLAUDE_AI_QUICK_START_PATH: Record<OwnerLocale, string[]> = {
+  [OwnerLocale.PortugueseBrazil]: [
+    'Abra o claude.ai → Configurações',
+    'Vá em Conectores',
+    'Adicione um conector personalizado',
+    'Cole este endereço',
+  ],
+  [OwnerLocale.EnglishUs]: ['Open claude.ai → Settings', 'Go to Connectors', 'Add a custom connector', 'Paste this address'],
+};
+
+export const CLAUDE_AI_QUICK_START = quickStartOf({
+  hint: CLAUDE_AI_QUICK_START_HINT,
+  path: CLAUDE_AI_QUICK_START_PATH,
+  code: addressText,
+});

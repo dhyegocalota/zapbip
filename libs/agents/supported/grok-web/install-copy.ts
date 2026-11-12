@@ -53,8 +53,13 @@ export const GROK_WEB_COPY = localizeCopy({
 });
 
 const GROK_WEB_QUICK_START_HINT: Record<OwnerLocale, string> = {
-  [OwnerLocale.PortugueseBrazil]: 'Grok → Configurações → adicione um conector com este endereço',
-  [OwnerLocale.EnglishUs]: 'Grok → Settings → add a connector with this address',
+  [OwnerLocale.PortugueseBrazil]: 'Faça isto no Grok',
+  [OwnerLocale.EnglishUs]: 'Do this in Grok',
 };
 
-export const GROK_WEB_QUICK_START = quickStartOf({ hint: GROK_WEB_QUICK_START_HINT, code: addressText });
+const GROK_WEB_QUICK_START_PATH: Record<OwnerLocale, string[]> = {
+  [OwnerLocale.PortugueseBrazil]: ['Abra o Grok → Configurações', 'Adicione um conector', 'Cole este endereço'],
+  [OwnerLocale.EnglishUs]: ['Open Grok → Settings', 'Add a connector', 'Paste this address'],
+};
+
+export const GROK_WEB_QUICK_START = quickStartOf({ hint: GROK_WEB_QUICK_START_HINT, path: GROK_WEB_QUICK_START_PATH, code: addressText });

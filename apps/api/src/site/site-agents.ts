@@ -25,10 +25,11 @@ export function siteAgents(): { id: InstallClient; name: string; hasOfficialLogo
 
 export function siteQuickStartOf(input: { id: InstallClient; locale: OwnerLocale; connectionLink: string }): {
   hint: string;
+  path: string[];
   code: string;
 } {
-  const { hint, code } = AGENT_INSTALLS[input.id].quickStart({ locale: input.locale, connectionLink: input.connectionLink });
-  return { hint, code };
+  const { hint, path, code } = AGENT_INSTALLS[input.id].quickStart({ locale: input.locale, connectionLink: input.connectionLink });
+  return { hint, path, code };
 }
 
 export function siteAgentNameOf(input: { id: InstallClient }): string {

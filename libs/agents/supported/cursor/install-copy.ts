@@ -57,8 +57,13 @@ export const CURSOR_COPY = localizeCopy({
 });
 
 const CURSOR_QUICK_START_HINT: Record<OwnerLocale, string> = {
-  [OwnerLocale.PortugueseBrazil]: 'Configurações do Cursor → MCP → adicione um servidor HTTP neste endereço',
-  [OwnerLocale.EnglishUs]: 'Cursor Settings → MCP → add an HTTP server at this address',
+  [OwnerLocale.PortugueseBrazil]: 'Faça isto no Cursor',
+  [OwnerLocale.EnglishUs]: 'Do this in Cursor',
 };
 
-export const CURSOR_QUICK_START = quickStartOf({ hint: CURSOR_QUICK_START_HINT, code: addressText });
+const CURSOR_QUICK_START_PATH: Record<OwnerLocale, string[]> = {
+  [OwnerLocale.PortugueseBrazil]: ['Abra as Configurações do Cursor', 'Vá em MCP', 'Adicione um servidor HTTP', 'Cole este endereço'],
+  [OwnerLocale.EnglishUs]: ['Open Cursor Settings', 'Go to MCP', 'Add a server over HTTP', 'Paste this address'],
+};
+
+export const CURSOR_QUICK_START = quickStartOf({ hint: CURSOR_QUICK_START_HINT, path: CURSOR_QUICK_START_PATH, code: addressText });

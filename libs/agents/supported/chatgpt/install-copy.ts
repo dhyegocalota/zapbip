@@ -47,8 +47,23 @@ export const CHATGPT_COPY = localizeCopy({
 });
 
 const CHATGPT_QUICK_START_HINT: Record<OwnerLocale, string> = {
-  [OwnerLocale.PortugueseBrazil]: 'ChatGPT → Configurações → ative o modo desenvolvedor → adicione um app com esta URL, sem autenticação',
-  [OwnerLocale.EnglishUs]: 'ChatGPT → Settings → turn on developer mode → add an app with this URL, no authentication',
+  [OwnerLocale.PortugueseBrazil]: 'Faça isto no ChatGPT',
+  [OwnerLocale.EnglishUs]: 'Do this in ChatGPT',
 };
 
-export const CHATGPT_QUICK_START = quickStartOf({ hint: CHATGPT_QUICK_START_HINT, code: addressText });
+const CHATGPT_QUICK_START_PATH: Record<OwnerLocale, string[]> = {
+  [OwnerLocale.PortugueseBrazil]: [
+    'Abra o ChatGPT → Configurações',
+    'Ative o modo desenvolvedor',
+    'Adicione um app por URL, sem autenticação',
+    'Cole este endereço',
+  ],
+  [OwnerLocale.EnglishUs]: [
+    'Open ChatGPT → Settings',
+    'Turn on developer mode',
+    'Add an app by URL, no authentication',
+    'Paste this address',
+  ],
+};
+
+export const CHATGPT_QUICK_START = quickStartOf({ hint: CHATGPT_QUICK_START_HINT, path: CHATGPT_QUICK_START_PATH, code: addressText });
