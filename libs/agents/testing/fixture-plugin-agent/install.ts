@@ -7,10 +7,20 @@ const FIXTURE_HINT: Record<OwnerLocale, string> = {
   [OwnerLocale.EnglishUs]: 'The agent the tests use',
 };
 
+const FIXTURE_PATH: Record<OwnerLocale, string[]> = {
+  [OwnerLocale.PortugueseBrazil]: ['Abra as configurações', 'Cole este endereço'],
+  [OwnerLocale.EnglishUs]: ['Open the settings', 'Paste this address'],
+};
+
 export const install: AgentInstall = {
   productName: 'Fixture Plugin Agent',
   productDescription: 'Fixture Plugin Agent, the agent the tests use',
   hasOfficialLogo: false,
-  quickStart: ({ locale, connectionLink }) => ({ hint: FIXTURE_HINT[locale], path: [], code: connectionLink, proof: connectionLink }),
+  quickStart: ({ locale, connectionLink }) => ({
+    hint: FIXTURE_HINT[locale],
+    path: FIXTURE_PATH[locale],
+    code: connectionLink,
+    proof: connectionLink,
+  }),
   render: renderFixturePluginAgentSection,
 };
