@@ -18,8 +18,11 @@ export const BACKOFFICE_ORIGIN = 'http://backoffice.localhost:8787';
 export const CLIENT_ADDRESS = '203.0.113.7';
 export const SESSION_COOKIE = '__Host-zb_bo_session';
 export const CSRF_COOKIE = '__Host-zb_bo_csrf';
+export const PENDING_COOKIE = '__Host-zb_bo_pending';
 export const WRONG_KEY = `zb_bo_${'W'.repeat(43)}`;
 export const WRONG_CODE = '000000';
+export const WRONG_PASSWORD = 'not the operator password';
+export const UNKNOWN_EMAIL = 'stranger@zapbip.test';
 export const SIGN_IN_FAILED_LOCATION = '/sign-in?notice=SignInFailed';
 export { BACKOFFICE_TEST_EMAIL, BACKOFFICE_TEST_KEY, BACKOFFICE_TEST_PASSWORD };
 
@@ -101,6 +104,38 @@ export async function postSignIn(input: { key: string; code: string; csrf?: stri
     headers: { Origin: BACKOFFICE_ORIGIN },
     env: input.env,
   });
+}
+
+export async function postPasswordStep(input: { email: string; password: string; csrf?: string; env?: Bindings }): Promise<Response> {
+  const csrf = input.csrf === undefined ? (await openSignInForm({ env: input.env })).csrf : input.csrf;
+  return requestBackoffice({
+    path: '/sign-in',
+    method: 'POST',
+    form: { email: input.email, password: input.password, csrf },
+    cookies: { [CSRF_COOKIE]: csrf },
+    headers: { Origin: BACKOFFICE_ORIGIN },
+    env: input.env,
+  });
+}
+
+export async function postCodeStep(input: { code: string; pendingToken: string | null; csrf: string; env?: Bindings }): Promise<Response> {
+  const pendingCookie: Record<string, string> = input.pendingToken === null ? {} : { [PENDING_COOKIE]: input.pendingToken };
+  return requestBackoffice({
+    path: '/sign-in/code',
+    method: 'POST',
+    form: { code: input.code, csrf: input.csrf },
+    cookies: { [CSRF_COOKIE]: input.csrf, ...pendingCookie },
+    headers: { Origin: BACKOFFICE_ORIGIN },
+    env: input.env,
+  });
+}
+
+export async function openPendingSignIn(input: { env?: Bindings }): Promise<{ pendingToken: string; csrf: string }> {
+  const csrf = (await openSignInForm({ env: input.env })).csrf;
+  const response = await postPasswordStep({ email: BACKOFFICE_TEST_EMAIL, password: BACKOFFICE_TEST_PASSWORD, csrf, env: input.env });
+  const pendingToken = cookieValueOf({ response, name: PENDING_COOKIE });
+  if (pendingToken === null) throw new Error(`the password step set no pending cookie: ${response.status}`);
+  return { pendingToken, csrf };
 }
 
 export async function signIn(input: { env?: Bindings }): Promise<{ sessionToken: string; response: Response }> {
