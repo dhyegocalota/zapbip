@@ -387,7 +387,7 @@ describe('the free offer across the page', () => {
   ])('labels the header, the hero and the final call in %s', async (_name, _locale, headers, label) => {
     const html = await pageOf({ headers });
     expect(html).toContain(`href="#join">${label}</a>`);
-    expect(html).toMatch(new RegExp(`<span data-label>${label}</span>`));
+    expect(html).toMatch(new RegExp(`<span data-label[^>]*>${label}</span>`));
     expect(html.match(new RegExp(`>${label}<`, 'g'))!.length).toBeGreaterThanOrEqual(4);
   });
 

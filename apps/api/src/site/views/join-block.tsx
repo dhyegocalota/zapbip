@@ -2,6 +2,7 @@ import { type OwnerLocale, TURNSTILE_ACTION_WAITLIST_JOIN, WAITLIST_EMAIL_MAX_LE
 import { BackofficeTheme } from '../../backoffice/backoffice-theme';
 import { NoticeVariant } from '../../backoffice/backoffice-notice';
 import { type JoinFormState, JoinState, type PageModel } from '../page-model';
+import { siteAgentNameOf } from '../site-agents';
 import { TURNSTILE_RESPONSE_FIELD } from '../site-constants';
 import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
@@ -44,6 +45,9 @@ function JoinForm(props: { model: PageModel; state: JoinFormState; emailValue: s
       <label class="visually-hidden" for="join-email">
         {translate(SiteCopyKey.JoinEmailLabel)}
       </label>
+      <p class="join-agent" id="join-agent" aria-live="polite" hidden={model.agent === null}>
+        {model.agent === null ? null : translate(SiteCopyKey.AgentCardPicked, { agent: siteAgentNameOf({ id: model.agent }) })}
+      </p>
       <div class="join-row">
         <input
           id="join-email"

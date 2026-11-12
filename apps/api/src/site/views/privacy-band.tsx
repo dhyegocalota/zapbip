@@ -14,13 +14,13 @@ export function PrivacyBand(props: { locale: OwnerLocale }) {
   return (
     <section class="band" id="privacy" aria-labelledby="privacy-title">
       <div class="container">
-        <p class="eyebrow">{translate(SiteCopyKey.PrivacyEyebrow)}</p>
-        <h2 class="section-title" id="privacy-title">
+        <p class="eyebrow reveal">{translate(SiteCopyKey.PrivacyEyebrow)}</p>
+        <h2 class="section-title reveal" id="privacy-title">
           {translate(SiteCopyKey.PrivacyTitle)}
         </h2>
         <div class="band-grid">
           {BAND_ITEMS.map((item) => (
-            <div class="band-item">
+            <div class="band-item reveal">
               <span class="band-icon" aria-hidden="true">
                 {item.icon}
               </span>
@@ -29,7 +29,7 @@ export function PrivacyBand(props: { locale: OwnerLocale }) {
             </div>
           ))}
         </div>
-        <div class="band-note">
+        <div class="band-note reveal">
           <strong>{translate(SiteCopyKey.PrivacyWaitlistTitle)}</strong>
           <p>
             <ContactText text={translate(SiteCopyKey.PrivacyWaitlistBody)} />

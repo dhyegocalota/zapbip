@@ -6,6 +6,12 @@ const SCRIPT_SOURCE = `(function () {
   var IN_VIEW_THRESHOLD = 0.25;
   var COPIED_RESET_MS = 2000;
   var TURNSTILE_FIELD = 'cf-turnstile-response';
+  var REVEAL_SELECTOR = '.reveal, .why-item';
+  var REVEAL_THRESHOLD = 0.2;
+  var REVEAL_ROOT_MARGIN = '0px 0px -8% 0px';
+  var SCROLL_TIMELINE_SUPPORT = 'animation-timeline: view()';
+  var REVEAL_CLASS = 'has-reveal';
+  var VISIBLE_CLASS = 'is-visible';
   var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   function byId(id) {
@@ -51,15 +57,53 @@ const SCRIPT_SOURCE = `(function () {
     });
   }
 
-  function setupJoinLinks() {
+  function goToJoin() {
     var email = byId('join-email');
+    var target = email || byId('join');
+    byId('join').scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth' });
+    target.focus({ preventScroll: true });
+  }
+
+  function setupJoinLinks() {
     document.querySelectorAll('a[href="#join"]').forEach(function (link) {
       link.addEventListener('click', function (event) {
-        var target = email || byId('join');
         event.preventDefault();
-        byId('join').scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth' });
-        target.focus({ preventScroll: true });
+        goToJoin();
       });
+    });
+  }
+
+  function setupAgentPicks() {
+    var hint = byId('join-agent');
+    document.querySelectorAll('a[data-picked-label]').forEach(function (link) {
+      link.addEventListener('click', function (event) {
+        event.preventDefault();
+        if (hint) {
+          hint.textContent = link.getAttribute('data-picked-label');
+          hint.hidden = false;
+        }
+        history.replaceState(null, '', link.getAttribute('href').split('#')[0]);
+        goToJoin();
+      });
+    });
+  }
+
+  function setupReveal() {
+    if (reducedMotion) return;
+    if (CSS.supports(SCROLL_TIMELINE_SUPPORT)) return;
+    document.documentElement.classList.add(REVEAL_CLASS);
+    var observer = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add(VISIBLE_CLASS);
+          observer.unobserve(entry.target);
+        });
+      },
+      { threshold: REVEAL_THRESHOLD, rootMargin: REVEAL_ROOT_MARGIN }
+    );
+    document.querySelectorAll(REVEAL_SELECTOR).forEach(function (element) {
+      observer.observe(element);
     });
   }
 
@@ -156,6 +200,8 @@ const SCRIPT_SOURCE = `(function () {
 
   setupJoinForm();
   setupJoinLinks();
+  setupAgentPicks();
+  setupReveal();
   setupThanks();
   setupDemo();
 })();

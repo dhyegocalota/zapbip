@@ -11,7 +11,7 @@ export function FinalCall(props: { model: PageModel }) {
   return (
     <section class="block" aria-labelledby="final-title">
       <div class="container">
-        <div class="final hero-card">
+        <div class="final hero-card reveal">
           <h2 class="section-title" id="final-title">
             {translate(SiteCopyKey.FinalTitle)}
           </h2>

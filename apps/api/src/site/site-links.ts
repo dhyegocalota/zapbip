@@ -1,7 +1,9 @@
 import { DocsLanguage, OwnerLocale } from '@zapbip/types';
-import { SITE_LANGUAGE_PARAMETER, SITE_REFERRAL_PARAMETER } from './site-constants';
+import type { InstallClient } from '@zapbip/agents/install';
+import { SITE_AGENT_PARAMETER, SITE_LANGUAGE_PARAMETER, SITE_REFERRAL_PARAMETER } from './site-constants';
 import { SitePath } from './site-paths';
 
+const JOIN_FRAGMENT = '#join';
 const LANGUAGES_BY_LOCALE: Record<OwnerLocale, DocsLanguage> = {
   [OwnerLocale.PortugueseBrazil]: DocsLanguage.PortugueseBrazil,
   [OwnerLocale.EnglishUs]: DocsLanguage.English,
@@ -21,4 +23,10 @@ export function pagePathOf(input: { language: DocsLanguage | null; referralCode:
 
 export function canonicalUrlOf(input: { origin: string; locale: OwnerLocale }): string {
   return `${input.origin}${pagePathOf({ language: languageOf({ locale: input.locale }), referralCode: null })}`;
+}
+
+export function agentPathOf(input: { agent: InstallClient; referralCode: string | null }): string {
+  const parameters = new URLSearchParams({ [SITE_AGENT_PARAMETER]: input.agent });
+  if (input.referralCode !== null) parameters.set(SITE_REFERRAL_PARAMETER, input.referralCode);
+  return `${SitePath.Home}?${parameters.toString()}${JOIN_FRAGMENT}`;
 }
