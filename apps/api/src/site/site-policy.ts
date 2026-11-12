@@ -1,0 +1,1 @@
+export const SITE_CONTENT_SECURITY_POLICY = '';
