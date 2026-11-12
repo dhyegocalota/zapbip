@@ -13,6 +13,10 @@ const THEME_COOKIE = '__Host-zb_site_theme';
 const INLINE_SCRIPT_PATTERN = /<script(?![^>]*\bsrc=)[^>]*>/;
 const INLINE_STYLE_PATTERN = /<style|\sstyle="/;
 const SEE_OTHER = 303;
+const [FIRST_AGENT, SECOND_AGENT] = Object.entries(AGENT_INSTALLS).map(([id, install]) => ({ id, name: install.productName })) as [
+  { id: string; name: string },
+  { id: string; name: string },
+];
 
 async function pageOf(input: { path?: string; headers?: Record<string, string> }): Promise<string> {
   const { path = '/', headers } = input;
@@ -252,8 +256,10 @@ describe('the agent hint', () => {
   }
 
   it('shows the picked agent from the query', async () => {
-    const hint = await hintOf({ path: '/?agent=claude-code' });
-    expect(hint.text).toBe(copyHtml({ key: SiteCopyKey.AgentCardPicked, locale: OwnerLocale.EnglishUs, values: { agent: 'Claude Code' } }));
+    const hint = await hintOf({ path: `/?agent=${FIRST_AGENT.id}` });
+    expect(hint.text).toBe(
+      copyHtml({ key: SiteCopyKey.AgentCardPicked, locale: OwnerLocale.EnglishUs, values: { agent: FIRST_AGENT.name } }),
+    );
     expect(hint.attributes).not.toContain('hidden');
   });
 
@@ -262,7 +268,7 @@ describe('the agent hint', () => {
     ['a prototype name', '__proto__'],
     ['an empty value', ''],
     ['a script tag', '<script>alert(1)</script>'],
-    ['a list of ids', 'claude-code,codex'],
+    ['a list of ids', `${FIRST_AGENT.id},${SECOND_AGENT.id}`],
     ['ten thousand characters', 'x'.repeat(10_000)],
   ])('ignores %s and keeps the hint empty and hidden', async (_name, value) => {
     const hint = await hintOf({ path: `/?agent=${encodeURIComponent(value)}` });
@@ -271,21 +277,25 @@ describe('the agent hint', () => {
   });
 
   it('takes the first value of a repeated parameter and never echoes markup', async () => {
-    const html = await pageOf({ path: '/?agent=codex&agent=<b>', headers: ENGLISH_HEADERS });
-    expect(html).toContain(copyHtml({ key: SiteCopyKey.AgentCardPicked, locale: OwnerLocale.EnglishUs, values: { agent: 'Codex' } }));
+    const html = await pageOf({ path: `/?agent=${SECOND_AGENT.id}&agent=<b>`, headers: ENGLISH_HEADERS });
+    expect(html).toContain(
+      copyHtml({ key: SiteCopyKey.AgentCardPicked, locale: OwnerLocale.EnglishUs, values: { agent: SECOND_AGENT.name } }),
+    );
     expect(html).not.toContain('<b>');
   });
 
   it('carries the agent and the referral code together', async () => {
-    const html = await pageOf({ path: `/?agent=codex&ref=${REFERRAL_CODE}`, headers: ENGLISH_HEADERS });
+    const html = await pageOf({ path: `/?agent=${SECOND_AGENT.id}&ref=${REFERRAL_CODE}`, headers: ENGLISH_HEADERS });
     expect(html).toContain(`name="referralCode" value="${REFERRAL_CODE}"`);
-    expect(html).toContain(copyHtml({ key: SiteCopyKey.AgentCardPicked, locale: OwnerLocale.EnglishUs, values: { agent: 'Codex' } }));
+    expect(html).toContain(
+      copyHtml({ key: SiteCopyKey.AgentCardPicked, locale: OwnerLocale.EnglishUs, values: { agent: SECOND_AGENT.name } }),
+    );
   });
 
   it('shows the hint in Portuguese', async () => {
-    const html = await pageOf({ path: '/?agent=codex', headers: PORTUGUESE_HEADERS });
+    const html = await pageOf({ path: `/?agent=${SECOND_AGENT.id}`, headers: PORTUGUESE_HEADERS });
     expect(html).toContain(
-      copyHtml({ key: SiteCopyKey.AgentCardPicked, locale: OwnerLocale.PortugueseBrazil, values: { agent: 'Codex' } }),
+      copyHtml({ key: SiteCopyKey.AgentCardPicked, locale: OwnerLocale.PortugueseBrazil, values: { agent: SECOND_AGENT.name } }),
     );
   });
 });

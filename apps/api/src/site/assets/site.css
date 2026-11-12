@@ -2000,7 +2000,7 @@ summary::before {
 }
 
 @media (min-width: 64rem) and (min-height: 40rem) {
-  :root {
+  html {
     --step-range-start: 16%;
     --step-range-span: 12%;
     --step-range-stride: 4.5%;
