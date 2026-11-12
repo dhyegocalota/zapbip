@@ -28,7 +28,7 @@ const CLEAR_SESSIONS_STATEMENTS = ['DELETE FROM backoffice_sessions'];
 const CODE_WINDOW_STEPS = 1;
 const CANDIDATE_WRONG_CODES = ['000000', '111111'];
 
-function openDatabase(): DatabaseSync {
+export function openDatabase(): DatabaseSync {
   const persistDirectory = walkValue({ variable: WalkVariable.PersistDirectory });
   const databaseFiles = readdirSync(persistDirectory, { recursive: true, encoding: 'utf8' })
     .filter((file) => file.endsWith(DATABASE_FILE_SUFFIX))
