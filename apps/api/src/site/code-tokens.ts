@@ -16,6 +16,7 @@ const TOKEN_PATTERN = /<[^<>\s]+>|"[^"<]*"|"|--?[A-Za-z][\w-]*|\[[^\]]+\]|[A-Za-
 const PLACEHOLDER_PATTERN = /^<[^<>\s]+>$/;
 const FLAG_PATTERN = /^--?[A-Za-z]/;
 const TABLE_PATTERN = /^\[.+\]$/;
+const COMMAND_PATTERN = /^[A-Za-z]/;
 const KEY_PATTERN = /^[A-Za-z_][\w.-]*$/;
 const SEPARATOR_PATTERN = /^[=:]$/;
 const SPACE_PATTERN = /^\s+$/;
@@ -43,7 +44,13 @@ function lineTokensOf(input: { line: string }): CodeToken[] {
     (token) => token.kind !== CodeTokenKind.Key && token.kind !== CodeTokenKind.Table && !SEPARATOR_PATTERN.test(token.text),
   );
   const firstIndex = tokens.findIndex((token) => token.kind !== CodeTokenKind.Space);
-  if (!isShellLine || firstIndex === -1 || tokens[firstIndex]!.kind !== CodeTokenKind.Plain) return tokens;
+  if (
+    !isShellLine ||
+    firstIndex === -1 ||
+    tokens[firstIndex]!.kind !== CodeTokenKind.Plain ||
+    !COMMAND_PATTERN.test(tokens[firstIndex]!.text)
+  )
+    return tokens;
   return tokens.map((token, index) => (index === firstIndex ? { ...token, kind: CodeTokenKind.Command } : token));
 }
 
