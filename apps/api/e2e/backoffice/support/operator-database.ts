@@ -9,7 +9,9 @@ import { WalkVariable, walkValue } from './walk-environment';
 const DATABASE_FILE_SUFFIX = '.sqlite';
 const BUSY_TIMEOUT_MILLISECONDS = 5_000;
 const OPERATOR_TABLE_PROBE = "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'backoffice_operator'";
-const RELEASE_OPERATOR_STATEMENTS = ['UPDATE backoffice_operator SET last_totp_step = 0, failed_attempts = 0, locked_until = NULL'];
+const RELEASE_OPERATOR_STATEMENTS = [
+  'UPDATE backoffice_operator SET last_totp_step = 0, failed_attempts = 0, locked_until = NULL, password_failed_attempts = 0, password_locked_until = NULL',
+];
 const CLEAR_REGISTRY_STATEMENTS = [
   'DELETE FROM activity_daily',
   'DELETE FROM usage_daily',
@@ -21,7 +23,7 @@ const CLEAR_REGISTRY_STATEMENTS = [
   'DELETE FROM backoffice_audit',
   'DELETE FROM backoffice_sessions',
 ];
-const FAILED_ATTEMPTS_QUERY = 'SELECT failed_attempts FROM backoffice_operator WHERE id = 1';
+const PASSWORD_FAILED_ATTEMPTS_QUERY = 'SELECT password_failed_attempts FROM backoffice_operator WHERE id = 1';
 const CLEAR_SESSIONS_STATEMENTS = ['DELETE FROM backoffice_sessions'];
 const CODE_WINDOW_STEPS = 1;
 const CANDIDATE_WRONG_CODES = ['000000', '111111'];
@@ -55,15 +57,11 @@ export function releaseOperator(): void {
 }
 
 export function passwordFailedAttempts(): number {
-  throw new Error('passwordFailedAttempts is not implemented');
-}
-
-export function failedAttempts(): number {
   const database = openDatabase();
-  const row = database.prepare(FAILED_ATTEMPTS_QUERY).get() as { failed_attempts: number } | undefined;
+  const row = database.prepare(PASSWORD_FAILED_ATTEMPTS_QUERY).get() as { password_failed_attempts: number } | undefined;
   database.close();
   if (row === undefined) throw new Error('the operator row is missing');
-  return row.failed_attempts;
+  return row.password_failed_attempts;
 }
 
 export function clearSessions(): void {
