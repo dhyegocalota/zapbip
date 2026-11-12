@@ -1,11 +1,10 @@
-import { McpToolName, type OwnerLocale } from '@zapbip/types';
+import type { OwnerLocale } from '@zapbip/types';
 import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
-import { siteAgents } from '../site-agents';
+import { initialsOf, siteAgents } from '../site-agents';
 import { agentPathOf } from '../site-links';
 
-const PROMPT_GLYPH = '$';
-const AGENT_SNIPPET = `${McpToolName.Ask}(question)`;
+const ANY_BADGE = '+';
 const JOIN_FRAGMENT = '#join';
 
 export function ClientsSection(props: { locale: OwnerLocale; referralCode: string | null }) {
@@ -21,27 +20,27 @@ export function ClientsSection(props: { locale: OwnerLocale; referralCode: strin
         <div class="clients">
           {siteAgents().map((agent) => (
             <article class="card agent-card reveal">
+              <span class="agent-badge" aria-hidden="true">
+                {initialsOf({ name: agent.name })}
+              </span>
               <h3 class="agent-name">{agent.name}</h3>
-              <p>{translate(SiteCopyKey.AgentCardLine, { agent: agent.name })}</p>
-              <code class="agent-snippet" aria-hidden="true">
-                <span class="accent">{PROMPT_GLYPH}</span> {AGENT_SNIPPET}
-              </code>
               <a
-                class="button button-secondary agent-pick"
+                class="agent-pick"
                 href={agentPathOf({ agent: agent.id, referralCode: props.referralCode })}
                 data-picked-label={translate(SiteCopyKey.AgentCardPicked, { agent: agent.name })}
+                aria-label={translate(SiteCopyKey.AgentCardButton, { agent: agent.name })}
               >
-                {translate(SiteCopyKey.AgentCardButton, { agent: agent.name })}
+                {translate(SiteCopyKey.AgentCardShort)}
               </a>
             </article>
           ))}
           <article class="card agent-card agent-card-any hero-card reveal">
+            <span class="agent-badge" aria-hidden="true">
+              {ANY_BADGE}
+            </span>
             <h3 class="agent-name">{translate(SiteCopyKey.ClientsAnyMcpName)}</h3>
-            <p>{translate(SiteCopyKey.ClientsAnyMcp)}</p>
-            <code class="agent-snippet" aria-hidden="true">
-              <span class="accent">{PROMPT_GLYPH}</span> {AGENT_SNIPPET}
-            </code>
-            <a class="button button-primary agent-pick" href={JOIN_FRAGMENT}>
+            <span class="agent-tag">{translate(SiteCopyKey.ClientsAnyMcp)}</span>
+            <a class="button button-primary" href={JOIN_FRAGMENT}>
               {translate(SiteCopyKey.ClientsAnyMcpButton)}
             </a>
           </article>

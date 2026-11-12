@@ -236,7 +236,8 @@ describe('the works-with section', () => {
   it('repeats no sentence and no snippet across the tiles', async () => {
     const section = clientsSectionOf({ html: await pageOf({ headers: ENGLISH_HEADERS }) });
     expect(section).not.toContain('agent-snippet');
-    expect(section.match(/<p[ >]/g)?.length ?? 0).toBeLessThanOrEqual(1);
+    const tiles = section.slice(section.indexOf('class="clients"'));
+    expect(tiles).not.toMatch(/<p[ >]/);
   });
 
   it('ends with the card for any MCP app, whose button goes to the form', async () => {

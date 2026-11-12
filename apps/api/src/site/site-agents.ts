@@ -1,6 +1,8 @@
 import { AGENT_INSTALLS, InstallClient } from '@zapbip/agents/install';
 
 const LEADING_AGENT_COUNT = 2;
+const INITIALS_LENGTH = 2;
+const WHITESPACE_PATTERN = /\s+/;
 const LIST_SEPARATOR = ', ';
 const FIRST_SENDER_INDEX = 0;
 const SECOND_SENDER_INDEX = 1;
@@ -33,5 +35,13 @@ export function senderNameOf(input: { index: number }): string {
 }
 
 export function initialsOf(input: { name: string }): string {
-  throw new Error('initialsOf is not implemented');
+  const words = input.name.split(WHITESPACE_PATTERN).filter((word) => word.length > 0);
+  const letters =
+    words.length > 1
+      ? words
+          .map((word) => word[0])
+          .slice(0, INITIALS_LENGTH)
+          .join('')
+      : input.name.slice(0, INITIALS_LENGTH);
+  return letters.toUpperCase();
 }

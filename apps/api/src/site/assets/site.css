@@ -74,7 +74,7 @@
   --measure-faq: 48rem;
   --measure-scene: 26rem;
   --size-scene-min: 16rem;
-  --size-why-track: 90svh;
+  --size-why-track: 60svh;
   --offset-why-pin: max(5rem, calc(50svh - 8rem));
   --text-why: clamp(1.5rem, 1.1rem + 1.6vw, 2.25rem);
   --distance-reveal: 1.25rem;
@@ -852,8 +852,8 @@ section.block {
 
 .clients {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-4);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
 }
 
 .footnote {
@@ -1030,14 +1030,6 @@ details p {
     display: flex;
   }
 
-  .clients {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .agent-card-any {
-    grid-column: 1 / -1;
-  }
-
   .join-block {
     min-height: 12rem;
   }
@@ -1092,6 +1084,7 @@ details p {
 
   .clients {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-4);
   }
 
   .agent-card-any {
@@ -1395,14 +1388,11 @@ summary::before {
 }
 
 .agent-card {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-3);
-  padding: var(--space-5);
-}
-
-.agent-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-3);
   transition:
     transform var(--duration-base) var(--ease-out),
     box-shadow var(--duration-base) var(--ease-out);
@@ -1413,38 +1403,62 @@ summary::before {
   box-shadow: var(--elevation-hero);
 }
 
+.agent-badge {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-card) var(--radius-card) var(--radius-card) var(--radius-tail);
+  background: var(--color-action);
+  color: var(--color-on-action);
+  font-family: var(--font-display);
+  font-size: var(--text-small);
+  font-weight: 800;
+  box-shadow: var(--glow-signal);
+}
+
 .agent-card .agent-name {
   margin: 0;
   font-family: var(--font-display);
-  font-size: var(--text-heading-3);
+  font-size: 1rem;
   font-weight: 650;
-}
-
-.agent-card p {
-  flex: 1;
-  margin: 0;
-}
-
-.agent-snippet {
-  display: block;
-  width: 100%;
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-control);
-  background: var(--color-terminal);
-  color: var(--color-terminal-text);
-  font-family: var(--font-mono);
-  font-size: var(--text-small);
   overflow-wrap: anywhere;
 }
 
-.agent-snippet .accent {
-  color: var(--color-terminal-accent);
+.agent-pick {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 2.25rem;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border);
+  font-size: var(--text-small);
+  font-weight: 650;
+  text-decoration: none;
 }
 
-.agent-pick {
-  width: 100%;
-  white-space: normal;
-  text-align: center;
+.agent-pick::after {
+  content: '\2192';
+  transition: transform var(--duration-base) var(--ease-out);
+}
+
+.agent-pick:hover::after {
+  transform: translateX(0.25rem);
+}
+
+.agent-card-any {
+  grid-column: 1 / -1;
+}
+
+.agent-card-any .agent-tag {
+  grid-column: 1 / -1;
+  color: var(--color-text-muted);
+  font-size: var(--text-small);
+}
+
+.agent-card-any .button {
+  grid-column: 1 / -1;
 }
 
 .plans {
@@ -1522,6 +1536,7 @@ summary::before {
 }
 
 .plan-pro {
+  align-self: start;
   border-style: dashed;
   background: transparent;
   box-shadow: none;
@@ -2001,9 +2016,9 @@ summary::before {
 
 @media (min-width: 64rem) and (min-height: 40rem) {
   html {
-    --step-range-start: 16%;
-    --step-range-span: 12%;
-    --step-range-stride: 4.5%;
+    --step-range-start: 14%;
+    --step-range-span: 11%;
+    --step-range-stride: 4%;
   }
 
   .why-item {
@@ -2100,7 +2115,7 @@ summary::before {
 
     html:not(.has-reveal) .card-grid .reveal:nth-child(3n + 2),
     html:not(.has-reveal) .steps .reveal:nth-child(2),
-    html:not(.has-reveal) .clients .reveal:nth-child(4n + 2),
+    html:not(.has-reveal) .clients .reveal:nth-child(even),
     html:not(.has-reveal) .band-grid .reveal:nth-child(2) {
       animation-range: entry 5% entry 75%;
     }
@@ -2128,7 +2143,7 @@ summary::before {
 
   html.has-reveal .card-grid .reveal:nth-child(3n + 2),
   html.has-reveal .steps .reveal:nth-child(2),
-  html.has-reveal .clients .reveal:nth-child(4n + 2),
+  html.has-reveal .clients .reveal:nth-child(even),
   html.has-reveal .band-grid .reveal:nth-child(2) {
     transition-delay: 80ms;
   }
