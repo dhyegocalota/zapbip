@@ -1419,7 +1419,7 @@ summary::before {
 
 @keyframes reveal {
   from {
-    opacity: 0;
+    opacity: 0.35;
     transform: translateY(1rem);
   }
 }
