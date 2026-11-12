@@ -3,14 +3,14 @@ import { csrfTokenOf } from '../../src/backoffice/auth/csrf';
 import { createFakeRateLimiter } from '../support/fake-rate-limiter';
 import {
   BACKOFFICE_ORIGIN,
-  BACKOFFICE_TEST_KEY,
+  BACKOFFICE_TEST_EMAIL,
+  BACKOFFICE_TEST_PASSWORD,
   backofficeEnv,
-  postSignIn,
+  postPasswordStep,
   requestBackoffice,
   resetBackoffice,
   SESSION_COOKIE,
   signIn,
-  validCode,
 } from './backoffice-auth-fixtures';
 
 const STATUS_UNAUTHORIZED = 401;
@@ -64,7 +64,7 @@ describe('error pages', () => {
 
   test('a rate-limited sign-in is a 429 page that keeps Retry-After', async () => {
     const env = backofficeEnv({ limiter: createFakeRateLimiter({ limit: 0 }) });
-    const response = await postSignIn({ key: BACKOFFICE_TEST_KEY, code: await validCode({}), env });
+    const response = await postPasswordStep({ email: BACKOFFICE_TEST_EMAIL, password: BACKOFFICE_TEST_PASSWORD, env });
     expect(response.status).toBe(STATUS_TOO_MANY_REQUESTS);
     expect(response.headers.get('retry-after')).toBe('60');
     expect(await response.text()).toContain('429');

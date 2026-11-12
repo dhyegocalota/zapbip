@@ -3,7 +3,6 @@ import { createFakeRateLimiter } from '../support/fake-rate-limiter';
 import {
   backofficeEnv,
   BACKOFFICE_TEST_EMAIL,
-  BACKOFFICE_TEST_KEY,
   BACKOFFICE_TEST_PASSWORD,
   cookieValueOf,
   CSRF_COOKIE,
@@ -28,6 +27,7 @@ const STATUS_SEE_OTHER = 303;
 const STATUS_TOO_MANY_REQUESTS = 429;
 const CODE_PATH = '/sign-in/code';
 const SIGN_IN_PATH = '/sign-in';
+const OLD_STYLE_KEY = `zb_bo_${'K'.repeat(43)}`;
 
 beforeEach(resetBackoffice);
 
@@ -63,7 +63,7 @@ describe('the password step', () => {
   });
 
   test('the old key typed into the password field is refused', async () => {
-    const response = await postPasswordStep({ email: BACKOFFICE_TEST_EMAIL, password: BACKOFFICE_TEST_KEY });
+    const response = await postPasswordStep({ email: BACKOFFICE_TEST_EMAIL, password: OLD_STYLE_KEY });
     expect(response.headers.get('location')).toBe(SIGN_IN_FAILED_LOCATION);
   });
 

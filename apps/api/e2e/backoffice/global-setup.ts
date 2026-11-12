@@ -8,7 +8,6 @@ import { WAKE_SECRET_KEY_BYTES } from '@zapbip/core';
 import { startFakeGraph } from '../../test/support/fake-graph';
 import {
   BACKOFFICE_TEST_EMAIL,
-  BACKOFFICE_TEST_KEY_DIGEST,
   BACKOFFICE_TEST_PASSWORD_HASH,
   BACKOFFICE_TEST_PASSWORD_PEPPER,
   BACKOFFICE_TEST_TOTP_SECRET,
@@ -38,7 +37,6 @@ export default async function setup(): Promise<() => Promise<void>> {
     UPLOAD_LINK_SIGNING_KEY: randomBytes(SIGNING_KEY_BYTES).toString('hex'),
     WAKE_SECRET_KEY: randomBytes(WAKE_SECRET_KEY_BYTES).toString('base64'),
     NUMBER_REGISTRY_KEY: randomBytes(WAKE_SECRET_KEY_BYTES).toString('base64'),
-    BACKOFFICE_KEY_DIGEST: BACKOFFICE_TEST_KEY_DIGEST,
     BACKOFFICE_TOTP_SECRET: BACKOFFICE_TEST_TOTP_SECRET,
     BACKOFFICE_PASSWORD_PEPPER: BACKOFFICE_TEST_PASSWORD_PEPPER,
     BACKOFFICE_ORIGIN: origin,

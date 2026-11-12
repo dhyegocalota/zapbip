@@ -2,11 +2,10 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import { testEnv } from '../support/workers-env';
 import { createFakeRateLimiter } from '../support/fake-rate-limiter';
 import {
-  BACKOFFICE_TEST_KEY,
   backofficeEnv,
   CLIENT_ADDRESS,
   openSignInForm,
-  postSignIn,
+  signInWithCode,
   readOperator,
   resetBackoffice,
   validCode,
@@ -27,7 +26,7 @@ describe('sign-in rate limit', () => {
   test('a refused sign-in answers 429 with Retry-After and writes nothing', async () => {
     const limiter = createFakeRateLimiter({ limit: 0 });
     const env = backofficeEnv({ limiter });
-    const response = await postSignIn({ key: BACKOFFICE_TEST_KEY, code: await validCode({}), env });
+    const response = await signInWithCode({ code: await validCode({}), env });
     expect(response.status).toBe(STATUS_TOO_MANY_REQUESTS);
     expect(response.headers.get('retry-after')).toBe(RETRY_AFTER_SECONDS);
     expect(await rowCount({ table: 'backoffice_sessions' })).toBe(0);
@@ -37,7 +36,7 @@ describe('sign-in rate limit', () => {
 
   test('the limiter is keyed by the client address', async () => {
     const limiter = createFakeRateLimiter({ limit: 0 });
-    await postSignIn({ key: BACKOFFICE_TEST_KEY, code: await validCode({}), env: backofficeEnv({ limiter }) });
+    await signInWithCode({ code: await validCode({}), env: backofficeEnv({ limiter }) });
     expect(limiter.calls).toEqual([CLIENT_ADDRESS]);
   });
 

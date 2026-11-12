@@ -9,16 +9,17 @@ import { runScheduled, SCHEDULED_JOBS, ScheduledJobName } from '../../src/operat
 import { testEnv } from '../support/workers-env';
 import {
   BACKOFFICE_ORIGIN,
-  BACKOFFICE_TEST_KEY,
+  BACKOFFICE_TEST_PASSWORD,
+  BACKOFFICE_TEST_EMAIL,
   CLIENT_ADDRESS,
-  postSignIn,
+  postPasswordStep,
   requestBackoffice,
   resetBackoffice,
   SESSION_COOKIE,
   signIn,
   validCode,
   WRONG_CODE,
-  WRONG_KEY,
+  WRONG_PASSWORD,
 } from './backoffice-auth-fixtures';
 
 const NOW = Date.UTC(2026, 10, 7, 4, 0);
@@ -42,7 +43,7 @@ async function count(input: { table: string }): Promise<number> {
 
 describe('audit log', () => {
   test('a successful sign-in, a failed one and a sign-out each write one row', async () => {
-    await postSignIn({ key: WRONG_KEY, code: WRONG_CODE });
+    await postPasswordStep({ email: BACKOFFICE_TEST_EMAIL, password: WRONG_PASSWORD });
     const { sessionToken } = await signIn({});
     await requestBackoffice({
       path: '/sign-out',
@@ -73,12 +74,14 @@ describe('audit log', () => {
     expect((await auditRows()).map((row) => row.action).sort()).toEqual(Object.values(BackofficeAuditAction).sort());
   });
 
-  test('no column holds the key, a code or the session token', async () => {
-    await postSignIn({ key: WRONG_KEY, code: WRONG_CODE });
+  test('no column holds the password, a code or the session token', async () => {
+    await postPasswordStep({ email: BACKOFFICE_TEST_EMAIL, password: WRONG_PASSWORD });
     const code = await validCode({});
     const { sessionToken } = await signIn({});
     const serialised = JSON.stringify(await auditRows());
-    [BACKOFFICE_TEST_KEY, WRONG_KEY, WRONG_CODE, code, sessionToken].forEach((secret) => expect(serialised).not.toContain(secret));
+    [BACKOFFICE_TEST_PASSWORD, WRONG_PASSWORD, WRONG_CODE, code, sessionToken].forEach((secret) =>
+      expect(serialised).not.toContain(secret),
+    );
   });
 });
 

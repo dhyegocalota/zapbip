@@ -6,10 +6,9 @@ import { TOTP_PERIOD_MS, BACKOFFICE_LOCKOUT_THRESHOLD } from '../../src/contract
 import { createFakeRateLimiter } from '../support/fake-rate-limiter';
 import { testEnv } from '../support/workers-env';
 import {
-  BACKOFFICE_TEST_KEY,
   backofficeEnv,
   CLIENT_ADDRESS,
-  postSignIn,
+  signInWithCode,
   SIGN_IN_FAILED_LOCATION,
   readOperator,
   resetBackoffice,
@@ -57,7 +56,7 @@ describe('step-up', () => {
 
   test('a code already used at sign-in is rejected', async () => {
     const code = await validCode({});
-    await postSignIn({ key: BACKOFFICE_TEST_KEY, code });
+    await signInWithCode({ code });
     expect(await stepUp({ code })).toBe(StepUpOutcome.Rejected);
   });
 
@@ -77,7 +76,7 @@ describe('step-up', () => {
     const stepBefore = (await readOperator()).last_totp_step;
     expect(await stepUp({ code: await validCode({}) })).toBe(StepUpOutcome.Rejected);
     expect((await readOperator()).last_totp_step).toBe(stepBefore);
-    const signIn = await postSignIn({ key: BACKOFFICE_TEST_KEY, code: await validCode({}) });
+    const signIn = await signInWithCode({ code: await validCode({}) });
     expect(signIn.headers.get('location')).toBe(SIGN_IN_FAILED_LOCATION);
   });
 

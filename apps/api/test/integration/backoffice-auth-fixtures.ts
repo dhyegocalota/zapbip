@@ -8,7 +8,6 @@ import { applyDirectoryMigration } from '../support/seed';
 import { testEnv } from '../support/workers-env';
 import {
   BACKOFFICE_TEST_EMAIL,
-  BACKOFFICE_TEST_KEY,
   BACKOFFICE_TEST_PASSWORD,
   BACKOFFICE_TEST_PASSWORD_HASH,
   BACKOFFICE_TEST_TOTP_SECRET,
@@ -19,12 +18,11 @@ export const CLIENT_ADDRESS = '203.0.113.7';
 export const SESSION_COOKIE = '__Host-zb_bo_session';
 export const CSRF_COOKIE = '__Host-zb_bo_csrf';
 export const PENDING_COOKIE = '__Host-zb_bo_pending';
-export const WRONG_KEY = `zb_bo_${'W'.repeat(43)}`;
 export const WRONG_CODE = '000000';
 export const WRONG_PASSWORD = 'not the operator password';
 export const UNKNOWN_EMAIL = 'stranger@zapbip.test';
 export const SIGN_IN_FAILED_LOCATION = '/sign-in?notice=SignInFailed';
-export { BACKOFFICE_TEST_EMAIL, BACKOFFICE_TEST_KEY, BACKOFFICE_TEST_PASSWORD };
+export { BACKOFFICE_TEST_EMAIL, BACKOFFICE_TEST_PASSWORD };
 
 const UNLIMITED = Number.MAX_SAFE_INTEGER;
 const migrated = applyDirectoryMigration();
@@ -94,18 +92,6 @@ export async function openSignInForm(input: { env?: Bindings }): Promise<{ csrf:
   return { csrf, response };
 }
 
-export async function postSignIn(input: { key: string; code: string; csrf?: string; env?: Bindings }): Promise<Response> {
-  const csrf = input.csrf === undefined ? (await openSignInForm({ env: input.env })).csrf : input.csrf;
-  return requestBackoffice({
-    path: '/sign-in',
-    method: 'POST',
-    form: { key: input.key, code: input.code, csrf },
-    cookies: { [CSRF_COOKIE]: csrf },
-    headers: { Origin: BACKOFFICE_ORIGIN },
-    env: input.env,
-  });
-}
-
 export async function postPasswordStep(input: { email: string; password: string; csrf?: string; env?: Bindings }): Promise<Response> {
   const csrf = input.csrf === undefined ? (await openSignInForm({ env: input.env })).csrf : input.csrf;
   return requestBackoffice({
@@ -138,8 +124,21 @@ export async function openPendingSignIn(input: { env?: Bindings }): Promise<{ pe
   return { pendingToken, csrf };
 }
 
+export async function signInWithCode(input: { code: string; csrf?: string; env?: Bindings }): Promise<Response> {
+  const csrf = input.csrf === undefined ? (await openSignInForm({ env: input.env })).csrf : input.csrf;
+  const passwordResponse = await postPasswordStep({
+    email: BACKOFFICE_TEST_EMAIL,
+    password: BACKOFFICE_TEST_PASSWORD,
+    csrf,
+    env: input.env,
+  });
+  const pendingToken = cookieValueOf({ response: passwordResponse, name: PENDING_COOKIE });
+  if (pendingToken === null) return passwordResponse;
+  return postCodeStep({ code: input.code, pendingToken, csrf, env: input.env });
+}
+
 export async function signIn(input: { env?: Bindings }): Promise<{ sessionToken: string; response: Response }> {
-  const response = await postSignIn({ key: BACKOFFICE_TEST_KEY, code: await validCode({}), env: input.env });
+  const response = await signInWithCode({ code: await validCode({}), env: input.env });
   const sessionToken = cookieValueOf({ response, name: SESSION_COOKIE });
   if (sessionToken === null) throw new Error(`sign-in did not open a session: ${response.status}`);
   return { sessionToken, response };

@@ -3,7 +3,8 @@ import { csrfTokenOf } from '../../src/backoffice/auth/csrf';
 import { testEnv } from '../support/workers-env';
 import {
   BACKOFFICE_ORIGIN,
-  BACKOFFICE_TEST_KEY,
+  BACKOFFICE_TEST_EMAIL,
+  BACKOFFICE_TEST_PASSWORD,
   CSRF_COOKIE,
   openSignInForm,
   readOperator,
@@ -77,7 +78,7 @@ describe('csrf', () => {
     const response = await requestBackoffice({
       path: '/sign-in',
       method: 'POST',
-      form: { key: BACKOFFICE_TEST_KEY, code: await validCode({}), csrf: `${csrf}x` },
+      form: { email: BACKOFFICE_TEST_EMAIL, password: BACKOFFICE_TEST_PASSWORD, csrf: `${csrf}x` },
       cookies: { [CSRF_COOKIE]: csrf },
       headers: { Origin: BACKOFFICE_ORIGIN },
     });
@@ -90,7 +91,7 @@ describe('csrf', () => {
     const response = await requestBackoffice({
       path: '/sign-in',
       method: 'POST',
-      form: { key: BACKOFFICE_TEST_KEY, code: await validCode({}), csrf },
+      form: { email: BACKOFFICE_TEST_EMAIL, password: BACKOFFICE_TEST_PASSWORD, csrf },
       cookies: { [CSRF_COOKIE]: csrf },
     });
     expect(response.status).toBe(STATUS_FORBIDDEN);
