@@ -115,3 +115,22 @@ test('the decoration of the final call stays inside its rounded corner', async (
   );
   expect((offsets as number[]).filter((offset) => offset < 0)).toEqual([]);
 });
+
+test('the any-app link clears the picked agent and keeps the language and the referral code', async ({ page }) => {
+  await page.goto(`/?lang=en&ref=${REFERRAL_CODE}`);
+  await page
+    .getByRole('link', { name: siteCopy({ key: SiteCopyKey.AgentCardButton, values: { agent: FIRST_AGENT_INSTALL.productName } }) })
+    .click();
+  await expect(page).toHaveURL(new RegExp(`agent=${FIRST_AGENT_ID}`));
+  await page.locator('.agent-card-any .button').click();
+  await expect(page.locator('.join-agent')).toBeHidden();
+  await expect(page).not.toHaveURL(/agent=/);
+  await expect(page).toHaveURL(new RegExp(`lang=en.*ref=${REFERRAL_CODE}|ref=${REFERRAL_CODE}.*lang=en`));
+  await expect(page.locator('#join-email')).toBeFocused();
+});
+
+test('the agent link keeps the language in the address after a pick', async ({ page }) => {
+  await page.goto('/?lang=pt-BR');
+  await page.locator('.agent-pick').first().click();
+  await expect(page).toHaveURL(/lang=pt-BR/);
+});

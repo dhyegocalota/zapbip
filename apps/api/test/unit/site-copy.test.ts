@@ -66,4 +66,8 @@ describe('site copy', () => {
       .map(({ path }) => path);
     expect(offenders).toEqual([]);
   });
+
+  it.each(LOCALES)('promises nothing the standby wake cannot keep in the routing story in %s', (locale) => {
+    expect(SITE_COPY[locale][SiteCopyKey.WhyRoutingBody]).not.toMatch(/never to another|nunca para outro/);
+  });
 });

@@ -2,6 +2,7 @@ import { AGENT_INSTALLS } from '@zapbip/agents/install';
 import { DEFAULT_LOCALE, OwnerLocale, TURNSTILE_ACTION_WAITLIST_JOIN } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { initialsOf, leadingAgentNames } from '../../src/site/site-agents';
+import { languageOf } from '../../src/site/site-links';
 import { SiteCopyKey } from '../../src/site/site-copy';
 import { SITE_CONTENT_SECURITY_POLICY } from '../../src/site/site-policy';
 import { copyHtml, escapedHtml, REFERRAL_CODE, SITE_ORIGIN, SITE_TURNSTILE_SITE_KEY, siteEnvironment, siteFetch } from '../support/site';
@@ -217,7 +218,7 @@ describe('the works-with section', () => {
     const buttons = [...section.matchAll(CARD_LINK_PATTERN)].map((match) => ({ href: match[1], label: match[2] }));
     expect(buttons.slice(0, agents.length)).toEqual(
       agents.map((agent) => ({
-        href: `/?agent=${agent.id}#join`,
+        href: `/?agent=${agent.id}&lang=${languageOf({ locale })}#join`,
         label: copyHtml({ key: SiteCopyKey.AgentCardButton, locale, values: { agent: agent.name } }),
       })),
     );
@@ -244,7 +245,7 @@ describe('the works-with section', () => {
     const section = clientsSectionOf({ html: await pageOf({ headers: ENGLISH_HEADERS }) });
     expect(section).toContain(copyHtml({ key: SiteCopyKey.ClientsAnyMcpName, locale: OwnerLocale.EnglishUs }));
     expect(section).toContain('agent-card-any');
-    expect(section).toContain(`href="#join"`);
+    expect(section).toContain('href="/?lang=en#join" data-clear-agent');
     expect(section).toContain(copyHtml({ key: SiteCopyKey.ClientsAnyMcpButton, locale: OwnerLocale.EnglishUs }));
   });
 
@@ -257,6 +258,22 @@ describe('the works-with section', () => {
   it('names the first two agents of the registry in the subhead', async () => {
     const html = await pageOf({ headers: ENGLISH_HEADERS });
     expect(html).toContain(`${agents[0]!.name}, ${agents[1]!.name} and any MCP agent`);
+  });
+});
+
+describe('the agent links', () => {
+  it('carry the language of the page, not the language of the browser', async () => {
+    const html = await pageOf({ path: '/?lang=pt-BR', headers: ENGLISH_HEADERS });
+    const hrefs = [...html.matchAll(/<a class="agent-pick" href="([^"]+)"/g)].map((match) => match[1]);
+    expect(hrefs.length).toBeGreaterThan(0);
+    expect(hrefs.filter((href) => !href!.includes('lang=pt-BR'))).toEqual([]);
+    expect(html).toContain('href="/?lang=pt-BR#join" data-clear-agent');
+  });
+
+  it('carry the referral code as well', async () => {
+    const html = await pageOf({ path: `/?ref=${REFERRAL_CODE}`, headers: ENGLISH_HEADERS });
+    expect(html).toContain(`ref=${REFERRAL_CODE}#join" data-picked-label`);
+    expect(html).toContain(`href="/?lang=en&amp;ref=${REFERRAL_CODE}#join" data-clear-agent`);
   });
 });
 

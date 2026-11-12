@@ -30,4 +30,8 @@ describe('the scroll motion stylesheet', () => {
     expect(hidingRules.length).toBeGreaterThan(0);
     expect(hidingRules.filter((rule) => !rule.includes(OBSERVER_ONLY_SELECTOR))).toEqual([]);
   });
+
+  it('fades the idle label of the wake story from visible to hidden', () => {
+    expect(SITE_STYLESHEET).toMatch(/@keyframes scene-leave \{\s*from \{\s*opacity: 1;\s*\}\s*to \{\s*opacity: 0;\s*\}\s*\}/);
+  });
 });
