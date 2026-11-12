@@ -90,6 +90,74 @@ const SCRIPT_SOURCE = `(function () {
     });
   }
 
+  function setupStartTabs() {
+    var tabs = Array.prototype.slice.call(document.querySelectorAll('.start-tab'));
+    if (!tabs.length) return;
+    var hint = byId('join-agent');
+    var keys = { ArrowRight: 1, ArrowLeft: -1 };
+    function select(tab, shouldFocus) {
+      tabs.forEach(function (candidate) {
+        var isSelected = candidate === tab;
+        candidate.setAttribute('aria-selected', String(isSelected));
+        candidate.tabIndex = isSelected ? 0 : -1;
+        byId(candidate.getAttribute('aria-controls')).hidden = !isSelected;
+      });
+      if (hint) {
+        hint.textContent = tab.getAttribute('data-hint');
+        hint.hidden = !tab.getAttribute('data-hint');
+      }
+      history.replaceState(null, '', tab.getAttribute('href').split('#')[0]);
+      if (shouldFocus) tab.focus();
+    }
+    tabs.forEach(function (tab, index) {
+      tab.tabIndex = tab.getAttribute('aria-selected') === 'true' ? 0 : -1;
+      tab.addEventListener('click', function (event) {
+        event.preventDefault();
+        select(tab, false);
+      });
+      tab.addEventListener('keydown', function (event) {
+        var target;
+        if (event.key in keys) target = (index + keys[event.key] + tabs.length) % tabs.length;
+        if (event.key === 'Home') target = 0;
+        if (event.key === 'End') target = tabs.length - 1;
+        if (target === undefined) return;
+        event.preventDefault();
+        select(tabs[target], true);
+      });
+    });
+  }
+
+  function setupStartCopy() {
+    var announcement = byId('start-announcement');
+    document.querySelectorAll('.start-copy').forEach(function (button) {
+      var originalLabel = button.textContent;
+      var code = button.closest('.start-panel').querySelector('code');
+      function copied() {
+        button.setAttribute('data-copied', 'true');
+        button.textContent = button.getAttribute('data-copied-label');
+        announcement.textContent = button.getAttribute('data-copied-announcement');
+        window.setTimeout(function () {
+          button.removeAttribute('data-copied');
+          button.textContent = originalLabel;
+        }, COPIED_RESET_MS);
+      }
+      function selected() {
+        var range = document.createRange();
+        range.selectNodeContents(code);
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(range);
+        announcement.textContent = button.getAttribute('data-fallback-announcement');
+      }
+      button.addEventListener('click', function () {
+        if (!navigator.clipboard) {
+          selected();
+          return;
+        }
+        navigator.clipboard.writeText(code.textContent).then(copied, selected);
+      });
+    });
+  }
+
   function setupReveal() {
     if (reducedMotion) return;
     if (CSS.supports(SCROLL_TIMELINE_SUPPORT)) return;
@@ -204,6 +272,8 @@ const SCRIPT_SOURCE = `(function () {
   setupJoinForm();
   setupJoinLinks();
   setupAgentPicks();
+  setupStartTabs();
+  setupStartCopy();
   setupReveal();
   setupThanks();
   setupDemo();

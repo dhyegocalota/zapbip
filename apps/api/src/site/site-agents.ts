@@ -1,4 +1,5 @@
 import { AGENT_INSTALLS, InstallClient } from '@zapbip/agents/install';
+import type { OwnerLocale } from '@zapbip/types';
 
 const LEADING_AGENT_COUNT = 2;
 export enum SiteStartTab {
@@ -14,8 +15,20 @@ const THIRD_SENDER_INDEX = 2;
 
 export const SENDER_INDEXES = { first: FIRST_SENDER_INDEX, second: SECOND_SENDER_INDEX, third: THIRD_SENDER_INDEX };
 
-export function siteAgents(): { id: InstallClient; name: string }[] {
-  return Object.values(InstallClient).map((id) => ({ id, name: AGENT_INSTALLS[id].productName }));
+export function siteAgents(): { id: InstallClient; name: string; hasOfficialLogo: boolean }[] {
+  return Object.values(InstallClient).map((id) => ({
+    id,
+    name: AGENT_INSTALLS[id].productName,
+    hasOfficialLogo: AGENT_INSTALLS[id].hasOfficialLogo,
+  }));
+}
+
+export function siteQuickStartOf(input: { id: InstallClient; locale: OwnerLocale; connectionLink: string }): {
+  hint: string;
+  code: string;
+} {
+  const { hint, code } = AGENT_INSTALLS[input.id].quickStart({ locale: input.locale, connectionLink: input.connectionLink });
+  return { hint, code };
 }
 
 export function siteAgentNameOf(input: { id: InstallClient }): string {

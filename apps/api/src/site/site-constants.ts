@@ -11,6 +11,7 @@ export const SITE_LANGUAGE_PARAMETER = 'lang';
 export const SITE_REFERRAL_PARAMETER = 'ref';
 export const SITE_AGENT_PARAMETER = 'agent';
 export const JOIN_FRAGMENT = '#join';
+export const START_FRAGMENT = '#start';
 export const LOCALE_COOKIE_NAME = '__Host-zb_site_locale';
 export const THEME_COOKIE_NAME = '__Host-zb_site_theme';
 export const TURNSTILE_RESPONSE_FIELD = 'cf-turnstile-response';

@@ -28,4 +28,10 @@ export function siteAssetOf(input: { kind: SiteAssetKind; locale: OwnerLocale })
   return `${SitePath.AssetPrefix}${input.kind.replace(LOCALE_PLACEHOLDER, input.locale)}`;
 }
 
+const LOGO_FOLDER = 'logos/';
+
+export function logoPathOf(input: { id: string }): string {
+  return `${SitePath.AssetPrefix}${LOGO_FOLDER}${input.id}.svg`;
+}
+
 export const DOCS_ORIGIN = 'https://docs.zapbip.com';
