@@ -1801,6 +1801,7 @@ summary::before {
 
 .status-text {
   display: grid;
+  overflow: hidden;
 }
 
 .status-text > * {
@@ -2005,6 +2006,7 @@ summary::before {
 
   to {
     opacity: 0;
+    transform: translateY(calc(var(--distance-scene) * -1));
   }
 }
 
