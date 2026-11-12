@@ -3,7 +3,7 @@ import { BACKOFFICE_LOCKOUT_THRESHOLD } from '../../src/contract/constants';
 import { BACKOFFICE_TEST_EMAIL, BACKOFFICE_TEST_PASSWORD } from '../../test/support/backoffice-credentials';
 import { expect, test } from './fixtures';
 import { copy } from './support/copy';
-import { failedAttempts, wrongCode } from './support/operator-database';
+import { passwordFailedAttempts, wrongCode } from './support/operator-database';
 import { fillCodeStep, fillPasswordStep, signIn } from './support/sign-in';
 
 const SIGN_IN_PATH = /\/sign-in$/;
@@ -56,10 +56,10 @@ test('reloading after a failed sign-in does not count another attempt', async ({
   await page.goto('/sign-in');
   await fillPasswordStep({ page, email: BACKOFFICE_TEST_EMAIL, password: WRONG_PASSWORD });
   await expect(page).toHaveURL(FAILED_SIGN_IN_PATH);
-  expect(failedAttempts()).toBe(1);
+  expect(passwordFailedAttempts()).toBe(1);
   await page.reload();
   await expect(page.getByText(copy({ key: BackofficeCopyKey.SignInFailed }))).toBeVisible();
-  expect(failedAttempts()).toBe(1);
+  expect(passwordFailedAttempts()).toBe(1);
 });
 
 test('lockout refuses the correct factors after repeated failures', async ({ page, network }) => {

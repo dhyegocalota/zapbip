@@ -54,6 +54,10 @@ export function releaseOperator(): void {
   execute({ statements: RELEASE_OPERATOR_STATEMENTS });
 }
 
+export function passwordFailedAttempts(): number {
+  throw new Error('passwordFailedAttempts is not implemented');
+}
+
 export function failedAttempts(): number {
   const database = openDatabase();
   const row = database.prepare(FAILED_ATTEMPTS_QUERY).get() as { failed_attempts: number } | undefined;
