@@ -149,4 +149,9 @@ test.describe('375 px', () => {
     await tabOf({ page, id: 'any' }).focus();
     await expect(tabOf({ page, id: 'any' })).toBeInViewport();
   });
+
+  test('the selected tab is scrolled into view when the page loads on a later agent', async ({ page }) => {
+    await page.goto('/?agent=any');
+    await expect(tabOf({ page, id: 'any' })).toBeInViewport({ ratio: 1 });
+  });
 });

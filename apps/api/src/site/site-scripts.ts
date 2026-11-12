@@ -95,6 +95,10 @@ const SCRIPT_SOURCE = `(function () {
     if (!tabs.length) return;
     var hint = byId('join-agent');
     var keys = { ArrowRight: 1, ArrowLeft: -1 };
+    var list = tabs[0].parentNode;
+    function reveal(tab, behavior) {
+      list.scrollTo({ left: tab.offsetLeft - (list.clientWidth - tab.offsetWidth) / 2, behavior: behavior });
+    }
     function select(tab, shouldFocus) {
       tabs.forEach(function (candidate) {
         var isSelected = candidate === tab;
@@ -107,8 +111,10 @@ const SCRIPT_SOURCE = `(function () {
         hint.hidden = !tab.getAttribute('data-hint');
       }
       history.replaceState(null, '', tab.getAttribute('href').split('#')[0]);
-      if (shouldFocus) tab.focus();
+      reveal(tab, reducedMotion ? 'auto' : 'smooth');
+      if (shouldFocus) tab.focus({ preventScroll: true });
     }
+    reveal(document.querySelector('.start-tab[aria-selected="true"]'), 'auto');
     tabs.forEach(function (tab, index) {
       tab.tabIndex = tab.getAttribute('aria-selected') === 'true' ? 0 : -1;
       tab.addEventListener('click', function (event) {
