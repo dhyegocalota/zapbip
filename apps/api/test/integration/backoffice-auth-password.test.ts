@@ -2,7 +2,12 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { verifyPassword } from '../../src/backoffice/auth/password-hash';
 import { attemptCodeSignIn, attemptPasswordSignIn, PasswordSignInOutcome, SignInOutcome } from '../../src/backoffice/auth/sign-in';
 import { createPendingSignIn } from '../../src/backoffice/auth/pending-sign-in';
-import { BACKOFFICE_LOCKOUT_MS, BACKOFFICE_LOCKOUT_THRESHOLD, BACKOFFICE_PENDING_SIGN_IN_MS } from '../../src/contract/constants';
+import {
+  BACKOFFICE_LOCKOUT_MS,
+  BACKOFFICE_LOCKOUT_THRESHOLD,
+  BACKOFFICE_PENDING_SIGN_IN_MS,
+  PASSWORD_SUBMIT_MAX_LENGTH,
+} from '../../src/contract/constants';
 import { testEnv } from '../support/workers-env';
 import {
   BACKOFFICE_TEST_EMAIL,
@@ -82,6 +87,14 @@ describe('password step', () => {
     expect(await readOperator()).toMatchObject({ password_failed_attempts: 1, failed_attempts: 0 });
     expect(await auditRows({ action: FAILED_ACTION })).toBe(1);
     expect(await countOf({ table: 'backoffice_pending_sign_ins' })).toBe(0);
+  });
+
+  test('a password longer than the submit cap fails without a hash, counts once and audits once', async () => {
+    const result = await signInWith({ email: BACKOFFICE_TEST_EMAIL, password: 'a'.repeat(PASSWORD_SUBMIT_MAX_LENGTH + 1) });
+    expect(result.outcome).toBe(PasswordSignInOutcome.Failed);
+    expect(verifyPassword).not.toHaveBeenCalled();
+    expect(await readOperator()).toMatchObject({ password_failed_attempts: 1, failed_attempts: 0 });
+    expect(await auditRows({ action: FAILED_ACTION })).toBe(1);
   });
 
   test('a password-locked operator fails after one hash and adds nothing', async () => {
