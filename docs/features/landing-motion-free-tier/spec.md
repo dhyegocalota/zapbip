@@ -1,6 +1,6 @@
 # Landing motion and free tier
 
-**Status:** Building
+**Status:** Shipped 2026-11-12
 **Tier:** 🟡 medium
 **Owner approval:** approved 2026-11-12 (owner delegated)
 **ADRs:** none new; reads [0039](../../adr/0039-the-public-waitlist-is-guarded-by-turnstile-and-fails-closed.md) and [0041](../../adr/0041-the-public-site-is-served-by-the-api-worker-through-host-dispatch.md)
