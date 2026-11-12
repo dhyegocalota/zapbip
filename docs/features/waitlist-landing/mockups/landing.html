@@ -1,0 +1,1557 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Your AI agents text you on WhatsApp · zapbip (design mockup)</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --color-page: #f6f8f5;
+        --color-surface: #ffffff;
+        --color-sunken: #eef3ef;
+        --color-raised: #ffffff;
+        --color-header: rgb(255 255 255 / 0.88);
+        --color-text: #0e1f1a;
+        --color-text-muted: #4b5e57;
+        --color-border: #dce5e0;
+        --color-border-control: #7a8c85;
+        --color-brand: #128c7e;
+        --color-on-brand: #ffffff;
+        --color-signal: #25d366;
+        --color-action: #0b6b60;
+        --color-action-hover: #08564d;
+        --color-on-action: #ffffff;
+        --color-success-surface: #ddf7e7;
+        --color-warning: #7a4e00;
+        --color-warning-surface: #fff4d6;
+        --color-danger: #a32d2d;
+        --color-danger-surface: #fdecec;
+        --color-focus: #1a56db;
+        --color-terminal: #0d1b17;
+        --color-terminal-bar: #15261f;
+        --color-terminal-text: #e8f1ed;
+        --color-terminal-muted: #9db2aa;
+        --color-terminal-accent: #5be39a;
+        --color-terminal-border: #1f332d;
+        --color-chat-wallpaper: #ece5dd;
+        --color-chat-header: #075e54;
+        --color-chat-incoming: #ffffff;
+        --color-chat-outgoing: #d9fdd3;
+        --color-chat-ink: #111b21;
+        --color-chat-muted: #54656f;
+        --color-chat-sender: #0b6b60;
+        --color-bezel: #0e1f1a;
+        --font-sans: system-ui, -apple-system, 'Segoe UI Variable Text', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        --font-display: ui-rounded, 'SF Pro Rounded', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        --text-eyebrow: 0.75rem;
+        --text-small: 0.875rem;
+        --text-body: 1rem;
+        --text-heading-3: 1.125rem;
+        --text-hero: clamp(2.5rem, 1.5rem + 4.2vw, 4.5rem);
+        --text-section: clamp(2rem, 1.25rem + 2.6vw, 3.25rem);
+        --text-lead: clamp(1.0625rem, 0.95rem + 0.45vw, 1.3125rem);
+        --text-display: clamp(4rem, 3rem + 4vw, 6rem);
+        --leading-hero: 1.02;
+        --tracking-hero: -0.035em;
+        --tracking-tight: -0.025em;
+        --tracking-eyebrow: 0.08em;
+        --space-1: 0.25rem;
+        --space-2: 0.5rem;
+        --space-3: 0.75rem;
+        --space-4: 1rem;
+        --space-5: 1.5rem;
+        --space-6: 2rem;
+        --space-7: 3rem;
+        --space-8: 4rem;
+        --space-9: 6rem;
+        --radius-control: 0.625rem;
+        --radius-card: 1.25rem;
+        --radius-tail: 0.375rem;
+        --radius-pill: 999px;
+        --radius-bubble: var(--radius-tail) var(--radius-card) var(--radius-card) var(--radius-card);
+        --size-tap: 2.75rem;
+        --size-hero-control: 3.5rem;
+        --size-turnstile: 4.0625rem;
+        --measure-page: 72rem;
+        --measure-hero-copy: 36rem;
+        --measure-demo: 34rem;
+        --measure-faq: 48rem;
+        --shadow-card: 0 1px 2px rgb(14 31 26 / 0.05), 0 8px 24px -12px rgb(14 31 26 / 0.12);
+        --shadow-highlight: inset 0 1px 0 rgb(255 255 255 / 0.16);
+        --glow-signal: 0 0 0 4px rgb(37 211 102 / 0.18);
+        --gradient-hero: radial-gradient(48rem 32rem at 78% 6rem, rgb(37 211 102 / 0.26), transparent 70%),
+          radial-gradient(40rem 24rem at 0% 0%, rgb(18 140 126 / 0.12), transparent 70%);
+        --gradient-hero-border: linear-gradient(135deg, var(--color-signal), var(--color-brand));
+        --gradient-accent-text: linear-gradient(100deg, var(--color-action), var(--color-brand));
+        --gradient-stage: radial-gradient(28rem 20rem at 70% 20%, rgb(37 211 102 / 0.22), transparent 70%);
+        --gradient-band: radial-gradient(56rem 16rem at 50% 0%, rgb(37 211 102 / 0.18), transparent 70%);
+        --elevation-hero: 0 2px 4px rgb(14 31 26 / 0.06), 0 24px 48px -20px rgb(37 211 102 / 0.38);
+        --elevation-stage: 0 2px 4px rgb(14 31 26 / 0.08), 0 40px 80px -32px rgb(14 31 26 / 0.45), 0 24px 64px -24px rgb(37 211 102 / 0.3);
+        --pattern-dots: radial-gradient(rgb(14 31 26 / 0.07) 1px, transparent 1.5px);
+        --mark-bubble: radial-gradient(circle at 30% 50%, var(--color-on-brand) 0.07em, transparent 0.09em),
+          radial-gradient(circle at 50% 50%, var(--color-on-brand) 0.07em, transparent 0.09em),
+          radial-gradient(circle at 70% 50%, var(--color-on-brand) 0.07em, transparent 0.09em), var(--color-brand);
+      }
+
+      :root[data-theme='dark'] {
+        color-scheme: dark;
+        --color-page: #07120f;
+        --color-surface: #0d1b17;
+        --color-sunken: #0a1613;
+        --color-raised: #15261f;
+        --color-header: rgb(13 27 23 / 0.88);
+        --color-text: #e8f1ed;
+        --color-text-muted: #9db2aa;
+        --color-border: #1f332d;
+        --color-border-control: #5f7a71;
+        --color-brand: #25d366;
+        --color-on-brand: #04140c;
+        --color-action: #5be39a;
+        --color-action-hover: #7deab0;
+        --color-on-action: #04140c;
+        --color-success-surface: #0f2a21;
+        --color-warning: #f2c46d;
+        --color-warning-surface: #3a2e12;
+        --color-danger: #ff9c9c;
+        --color-danger-surface: #3a1e1e;
+        --color-focus: #8ab4ff;
+        --color-terminal: #050d0b;
+        --color-terminal-bar: #0d1b17;
+        --color-bezel: #020806;
+        --shadow-card: 0 0 0 1px rgb(232 241 237 / 0.02), 0 12px 32px -16px rgb(0 0 0 / 0.7);
+        --shadow-highlight: inset 0 1px 0 rgb(255 255 255 / 0.22);
+        --gradient-hero: radial-gradient(48rem 32rem at 78% 6rem, rgb(37 211 102 / 0.24), transparent 70%),
+          radial-gradient(40rem 24rem at 0% 0%, rgb(18 140 126 / 0.16), transparent 70%);
+        --gradient-accent-text: linear-gradient(100deg, var(--color-brand), var(--color-action));
+        --elevation-hero: 0 0 0 1px rgb(232 241 237 / 0.04), 0 32px 64px -20px rgb(37 211 102 / 0.32);
+        --elevation-stage: 0 0 0 1px rgb(232 241 237 / 0.06), 0 40px 80px -24px rgb(0 0 0 / 0.8), 0 24px 64px -24px rgb(37 211 102 / 0.28);
+        --pattern-dots: radial-gradient(rgb(232 241 237 / 0.06) 1px, transparent 1.5px);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background-color: var(--color-page);
+        color: var(--color-text);
+        font-family: var(--font-sans);
+        font-size: var(--text-body);
+        line-height: 1.5;
+      }
+
+      a {
+        color: var(--color-action);
+      }
+
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+      }
+
+      .container {
+        max-width: var(--measure-page);
+        margin: 0 auto;
+        padding-inline: var(--space-4);
+      }
+
+      .site-header {
+        position: relative;
+        z-index: 10;
+        background: var(--color-header);
+        border-bottom: 1px solid var(--color-border);
+      }
+
+      .site-header .container {
+        display: flex;
+        align-items: center;
+        gap: var(--space-4);
+        min-height: 3.5rem;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-2);
+        color: var(--color-text);
+        font-family: var(--font-display);
+        font-size: 1.125rem;
+        font-weight: 800;
+        letter-spacing: var(--tracking-tight);
+        text-decoration: none;
+      }
+
+      .brand::before {
+        content: '';
+        width: 1em;
+        height: 1em;
+        font-size: 1.75rem;
+        border-radius: var(--radius-card) var(--radius-card) var(--radius-card) var(--radius-tail);
+        background: var(--mark-bubble);
+        box-shadow: var(--glow-signal);
+      }
+
+      .header-end {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        margin-left: auto;
+      }
+
+      .nav-link {
+        display: none;
+        align-items: center;
+        min-height: var(--size-tap);
+        padding: 0 var(--space-3);
+        color: var(--color-text-muted);
+        font-weight: 600;
+        text-decoration: none;
+      }
+
+      .switch {
+        display: flex;
+        gap: var(--space-1);
+        padding: var(--space-1);
+        border-radius: var(--radius-pill);
+        background: var(--color-sunken);
+      }
+
+      .switch button {
+        min-height: 2.25rem;
+        min-width: 2.25rem;
+        padding: 0 var(--space-3);
+        border: 0;
+        border-radius: var(--radius-pill);
+        background: transparent;
+        color: var(--color-text-muted);
+        font: inherit;
+        font-size: var(--text-small);
+        font-weight: 600;
+      }
+
+      .switch button[aria-pressed='true'] {
+        background: var(--color-raised);
+        box-shadow: var(--shadow-card);
+        color: var(--color-text);
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-2);
+        min-height: var(--size-tap);
+        padding: var(--space-2) var(--space-5);
+        border: 1px solid var(--color-action);
+        border-radius: var(--radius-pill);
+        font: inherit;
+        font-weight: 600;
+        text-decoration: none;
+        white-space: nowrap;
+        cursor: pointer;
+      }
+
+      .button-primary {
+        background: var(--color-action);
+        color: var(--color-on-action);
+        box-shadow: var(--shadow-highlight), 0 8px 16px -8px color-mix(in srgb, var(--color-action) 45%, transparent);
+      }
+
+      .button-secondary {
+        border-color: var(--color-border-control);
+        background: var(--color-surface);
+        color: var(--color-action);
+      }
+
+      .button-arrow::after {
+        content: '\2192';
+      }
+
+      .header-join {
+        display: none;
+      }
+
+      .hero {
+        position: relative;
+        isolation: isolate;
+        background-color: var(--color-page);
+        background-image: var(--gradient-hero);
+        background-repeat: no-repeat;
+      }
+
+      .hero::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        background-image: var(--pattern-dots);
+        background-size: 1.25rem 1.25rem;
+        -webkit-mask-image: linear-gradient(black 55%, transparent);
+        mask-image: linear-gradient(black 55%, transparent);
+      }
+
+      .hero .container {
+        display: grid;
+        gap: var(--space-6);
+        padding-top: var(--space-5);
+        padding-bottom: var(--space-8);
+      }
+
+      .hero-copy {
+        min-width: 0;
+        max-width: var(--measure-hero-copy);
+      }
+
+      .hero-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-2);
+        margin: 0 0 var(--space-4);
+        padding: var(--space-1) var(--space-3);
+        border-radius: var(--radius-pill);
+        background: var(--color-success-surface);
+        color: var(--color-action);
+        font-size: var(--text-eyebrow);
+        font-weight: 700;
+        letter-spacing: var(--tracking-eyebrow);
+        text-transform: uppercase;
+      }
+
+      .live-dot {
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: var(--radius-pill);
+        background: var(--color-signal);
+        box-shadow: var(--glow-signal);
+      }
+
+      .hero-invited {
+        display: none;
+      }
+
+      .hero-title {
+        margin: 0 0 var(--space-4);
+        font-family: var(--font-display);
+        font-size: var(--text-hero);
+        font-weight: 800;
+        line-height: var(--leading-hero);
+        letter-spacing: var(--tracking-hero);
+      }
+
+      .hero-accent {
+        position: relative;
+        display: inline-block;
+        background: var(--gradient-accent-text);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        padding-bottom: 0.08em;
+      }
+
+      .hero-underline {
+        position: absolute;
+        left: 0;
+        bottom: -0.12em;
+        width: 100%;
+        height: 0.22em;
+        overflow: visible;
+      }
+
+      .hero-underline path {
+        fill: none;
+        stroke: var(--color-signal);
+        stroke-width: 6;
+        stroke-linecap: round;
+      }
+
+      .hero-lead {
+        margin: 0 0 var(--space-5);
+        color: var(--color-text-muted);
+        font-size: var(--text-lead);
+      }
+
+      .join-block {
+        min-height: 15rem;
+      }
+
+      .join-row {
+        display: grid;
+        gap: var(--space-2);
+      }
+
+      .join-row input {
+        width: 100%;
+        min-height: var(--size-hero-control);
+        padding: 0 var(--space-5);
+        border: 1px solid var(--color-border-control);
+        border-radius: var(--radius-pill);
+        background: var(--color-surface);
+        color: var(--color-text);
+        font: inherit;
+        font-size: 1.0625rem;
+      }
+
+      .join-row .button {
+        min-height: var(--size-hero-control);
+        font-size: 1.0625rem;
+      }
+
+      .turnstile-slot {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        min-height: var(--size-turnstile);
+        margin-top: var(--space-3);
+        padding: 0 var(--space-4);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-control);
+        background: var(--color-surface);
+        color: var(--color-text-muted);
+        font-size: var(--text-small);
+        max-width: 22rem;
+      }
+
+      .turnstile-check {
+        display: grid;
+        place-items: center;
+        width: 1.5rem;
+        height: 1.5rem;
+        border-radius: 50%;
+        background: var(--color-signal);
+        color: #04140c;
+        font-weight: 800;
+        font-size: 0.875rem;
+      }
+
+      .privacy-note {
+        margin: var(--space-3) 0 0;
+        color: var(--color-text-muted);
+        font-size: var(--text-small);
+      }
+
+      .field-error {
+        margin: var(--space-2) 0 0;
+        color: var(--color-danger);
+        font-weight: 600;
+      }
+
+      .notice {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-2);
+        margin-bottom: var(--space-3);
+        padding: var(--space-3) var(--space-4);
+        border: 1px solid;
+        border-radius: var(--radius-bubble);
+      }
+
+      .notice p {
+        margin: 0;
+      }
+
+      .notice-error {
+        background: var(--color-danger-surface);
+        color: var(--color-danger);
+      }
+
+      .notice-warning {
+        background: var(--color-warning-surface);
+        color: var(--color-warning);
+      }
+
+      .hero-card {
+        border: 1px solid transparent;
+        border-radius: var(--radius-bubble);
+        background: linear-gradient(var(--color-surface), var(--color-surface)) padding-box, var(--gradient-hero-border) border-box;
+        box-shadow: var(--elevation-hero);
+      }
+
+      .thanks {
+        display: none;
+        padding: var(--space-5);
+      }
+
+      .thanks-head {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        margin-bottom: var(--space-2);
+      }
+
+      .thanks-mark {
+        position: relative;
+        display: grid;
+        place-items: center;
+        flex: none;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: var(--radius-card) var(--radius-card) var(--radius-card) var(--radius-tail);
+        background: var(--color-action);
+        color: var(--color-on-action);
+        font-weight: 800;
+        box-shadow: var(--glow-signal);
+      }
+
+      .thanks h2 {
+        margin: 0;
+        font-family: var(--font-display);
+        font-size: 1.625rem;
+        letter-spacing: var(--tracking-tight);
+      }
+
+      .thanks p {
+        margin: 0 0 var(--space-4);
+        color: var(--color-text-muted);
+      }
+
+      .thanks label {
+        display: block;
+        margin-bottom: var(--space-1);
+        font-size: var(--text-small);
+        font-weight: 600;
+      }
+
+      .thanks input {
+        width: 100%;
+        min-width: 0;
+        min-height: var(--size-tap);
+        padding: 0 var(--space-3);
+        border: 1px solid var(--color-border-control);
+        border-radius: var(--radius-control);
+        background: var(--color-sunken);
+        color: var(--color-text);
+        font-family: var(--font-mono);
+        font-size: 0.9375rem;
+      }
+
+      .thanks-actions {
+        display: grid;
+        gap: var(--space-2);
+        margin: var(--space-3) 0 var(--space-4);
+      }
+
+      .invite-meter {
+        display: block;
+        width: 100%;
+        max-width: 16rem;
+        height: 0.5rem;
+        margin-bottom: var(--space-2);
+      }
+
+      .invite-meter .filled {
+        fill: var(--color-brand);
+      }
+
+      .invite-meter .empty {
+        fill: var(--color-sunken);
+        stroke: var(--color-border);
+        stroke-width: 0.4;
+      }
+
+      .invite-count {
+        margin: 0;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .cap-reached {
+        display: none;
+        margin: var(--space-1) 0 0;
+        color: var(--color-text-muted);
+        font-size: var(--text-small);
+      }
+
+      .demo {
+        margin: 0;
+        min-width: 0;
+        justify-self: start;
+        width: 100%;
+        max-width: var(--measure-demo);
+      }
+
+      .demo-stage {
+        position: relative;
+        aspect-ratio: 1;
+        overflow: hidden;
+        container-type: inline-size;
+        border-radius: 0.5rem 1.75rem 1.75rem 1.75rem;
+        background: var(--gradient-stage), #0d1b17;
+        box-shadow: var(--elevation-stage);
+      }
+
+      .terminal {
+        position: absolute;
+        left: 5.19%;
+        top: 9.63%;
+        width: 60%;
+        height: 51.85%;
+        border-radius: 1.85cqw;
+        background: #15261f;
+        border: 1px solid #1f332d;
+        overflow: hidden;
+        font-family: var(--font-mono);
+        font-size: 2.3cqw;
+        line-height: 1.55;
+        color: #e8f1ed;
+      }
+
+      .terminal-bar {
+        display: flex;
+        align-items: center;
+        gap: 1cqw;
+        height: 4.07cqw;
+        padding: 0 1.8cqw;
+        border-bottom: 1px solid #1f332d;
+        color: #9db2aa;
+        font-size: 1.9cqw;
+      }
+
+      .terminal-bar i {
+        width: 1.1cqw;
+        height: 1.1cqw;
+        border-radius: 50%;
+        background: #1f332d;
+      }
+
+      .terminal-bar span {
+        margin-left: 1.2cqw;
+      }
+
+      .terminal-body {
+        padding: 2cqw 2.2cqw;
+      }
+
+      .terminal-body p {
+        margin: 0;
+        white-space: nowrap;
+      }
+
+      .accent {
+        color: #5be39a;
+      }
+
+      .muted {
+        color: #9db2aa;
+      }
+
+      .phone {
+        position: absolute;
+        left: 56.67%;
+        top: 13.9%;
+        width: 38.15%;
+        height: 79.6%;
+        padding: 1.1cqw;
+        border-radius: 5.2cqw;
+        background: var(--color-bezel);
+        box-shadow: 0 0 0 1px #1f332d, 0 3cqw 6cqw -2cqw rgb(0 0 0 / 0.6);
+      }
+
+      .phone-screen {
+        height: 100%;
+        overflow: hidden;
+        border-radius: 4.2cqw;
+        background: var(--color-chat-wallpaper);
+        color: var(--color-chat-ink);
+        font-size: 2.3cqw;
+        line-height: 1.35;
+      }
+
+      .phone-status {
+        height: 2.6cqw;
+        background: var(--color-chat-header);
+      }
+
+      .phone-header {
+        display: flex;
+        align-items: center;
+        gap: 1.2cqw;
+        height: 5.9cqw;
+        padding: 0 1.8cqw;
+        background: var(--color-chat-header);
+        color: #fff;
+        font-weight: 600;
+        font-size: 2.3cqw;
+      }
+
+      .phone-avatar {
+        width: 3.3cqw;
+        height: 3.3cqw;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: inset 0 0 0 0.9cqw #fff, inset 0 0 0 3cqw #0b6b60;
+      }
+
+      .phone-chat {
+        display: flex;
+        flex-direction: column;
+        gap: 0.6cqw;
+        padding: 2cqw 1.6cqw;
+      }
+
+      .bubble {
+        max-width: 88%;
+        padding: 0.9cqw 1.3cqw;
+        border-radius: 0.3cqw 1.2cqw 1.2cqw 1.2cqw;
+        background: var(--color-chat-incoming);
+        box-shadow: 0 0.1cqw 0.1cqw rgb(11 20 26 / 0.13);
+      }
+
+      .bubble b {
+        display: block;
+        color: var(--color-chat-sender);
+        font-size: 1.8cqw;
+      }
+
+      .bubble-button {
+        max-width: 88%;
+        padding: 1cqw;
+        border-radius: 1cqw;
+        background: var(--color-chat-incoming);
+        box-shadow: 0 0.1cqw 0.1cqw rgb(11 20 26 / 0.13);
+        color: var(--color-chat-sender);
+        font-weight: 600;
+        text-align: center;
+      }
+
+      .demo-toggle {
+        position: absolute;
+        right: 1rem;
+        bottom: 1rem;
+        display: grid;
+        place-items: center;
+        width: var(--size-tap);
+        height: var(--size-tap);
+        border: 0;
+        border-radius: 50%;
+        background: rgb(21 38 31 / 0.8);
+        color: #e8f1ed;
+        font-size: 0.875rem;
+      }
+
+      .demo-steps {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: var(--space-2);
+        margin: var(--space-4) 0 0;
+        padding: 0;
+        list-style: none;
+        font-size: var(--text-small);
+        font-weight: 600;
+      }
+
+      .demo-steps li {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-2);
+        padding: var(--space-1) var(--space-3);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-pill);
+        background: var(--color-surface);
+        color: var(--color-text-muted);
+      }
+
+      .demo-steps li[aria-current='step'] {
+        border-color: transparent;
+        background: var(--color-success-surface);
+        color: var(--color-action);
+      }
+
+      section.block {
+        padding-block: var(--space-8);
+      }
+
+      .eyebrow {
+        margin: 0 0 var(--space-2);
+        color: var(--color-action);
+        font-size: var(--text-eyebrow);
+        font-weight: 700;
+        letter-spacing: var(--tracking-eyebrow);
+        text-transform: uppercase;
+      }
+
+      .section-title {
+        margin: 0 0 var(--space-4);
+        font-family: var(--font-display);
+        font-size: var(--text-section);
+        font-weight: 750;
+        line-height: 1.05;
+        letter-spacing: var(--tracking-hero);
+      }
+
+      .lead {
+        max-width: 40rem;
+        margin: 0 0 var(--space-6);
+        color: var(--color-text-muted);
+        font-size: var(--text-lead);
+      }
+
+      .steps {
+        display: grid;
+        gap: var(--space-5);
+        margin: var(--space-6) 0 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .card {
+        min-width: 0;
+        padding: var(--space-5);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-bubble);
+        background: var(--color-surface);
+        box-shadow: var(--shadow-card);
+      }
+
+      .card h3 {
+        margin: 0 0 var(--space-2);
+        font-size: var(--text-heading-3);
+        font-weight: 650;
+      }
+
+      .card p {
+        margin: 0 0 var(--space-4);
+        color: var(--color-text-muted);
+      }
+
+      .step-number {
+        display: inline-grid;
+        place-items: center;
+        width: 2.5rem;
+        height: 2.5rem;
+        margin-bottom: var(--space-3);
+        border-radius: var(--radius-bubble);
+        background: var(--color-success-surface);
+        color: var(--color-action);
+        font-family: var(--font-display);
+        font-size: 1.25rem;
+        font-weight: 800;
+      }
+
+      .chip-mono {
+        display: inline-flex;
+        gap: var(--space-2);
+        padding: var(--space-2) var(--space-3);
+        border-radius: var(--radius-pill);
+        background: var(--color-sunken);
+        font-family: var(--font-mono);
+        font-size: var(--text-small);
+      }
+
+      .chip-terminal {
+        display: inline-flex;
+        gap: var(--space-2);
+        padding: var(--space-2) var(--space-3);
+        border-radius: var(--radius-control);
+        background: var(--color-terminal);
+        color: var(--color-terminal-text);
+        font-family: var(--font-mono);
+        font-size: var(--text-small);
+      }
+
+      .mini-chat {
+        display: flex;
+        flex-direction: column;
+        gap: 0.375rem;
+        padding: var(--space-3);
+        border-radius: var(--radius-control);
+        background: var(--color-chat-wallpaper);
+        color: var(--color-chat-ink);
+        font-size: 0.875rem;
+        line-height: 1.35;
+        overflow-wrap: anywhere;
+      }
+
+      .mini-chat .in,
+      .mini-chat .out,
+      .mini-chat .pill {
+        max-width: 85%;
+        padding: 0.375rem 0.625rem;
+        border-radius: 0.125rem 0.5rem 0.5rem 0.5rem;
+        background: var(--color-chat-incoming);
+        box-shadow: 0 1px 0.5px rgb(11 20 26 / 0.13);
+      }
+
+      .mini-chat .out {
+        align-self: flex-end;
+        border-radius: 0.5rem 0.125rem 0.5rem 0.5rem;
+        background: var(--color-chat-outgoing);
+      }
+
+      .mini-chat .pill {
+        border-radius: 0.5rem;
+        color: var(--color-chat-sender);
+        font-weight: 600;
+        text-align: center;
+      }
+
+      .mini-chat .name {
+        display: block;
+        color: var(--color-chat-sender);
+        font-size: 0.75rem;
+        font-weight: 700;
+      }
+
+      .mini-chat .divider {
+        align-self: center;
+        padding: 0.125rem 0.5rem;
+        border-radius: var(--radius-pill);
+        background: var(--color-chat-incoming);
+        color: var(--color-chat-muted);
+        font-size: 0.75rem;
+      }
+
+      .mini-chat .file {
+        display: block;
+        margin-bottom: 0.25rem;
+        padding: 0.375rem 0.5rem;
+        border-radius: 0.375rem;
+        background: var(--color-chat-wallpaper);
+        font-weight: 600;
+      }
+
+      .mini-chat .chip {
+        align-self: flex-start;
+        padding: 0.125rem 0.5rem;
+        border-radius: var(--radius-pill);
+        background: var(--color-chat-sender);
+        color: #fff;
+        font-size: 0.75rem;
+        font-weight: 600;
+      }
+
+      .card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+        gap: var(--space-5);
+      }
+
+      .clients {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--space-3);
+      }
+
+      .client {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+        padding: var(--space-4);
+      }
+
+      .client strong {
+        font-family: var(--font-display);
+        font-size: var(--text-heading-3);
+        font-weight: 650;
+      }
+
+      .client span {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-2);
+        color: var(--color-text-muted);
+        font-size: var(--text-small);
+      }
+
+      .footnote {
+        margin: var(--space-4) 0 0;
+        color: var(--color-text-muted);
+        font-size: var(--text-small);
+      }
+
+      .band {
+        padding-block: var(--space-8);
+        background: var(--gradient-band), var(--color-terminal);
+        color: var(--color-terminal-text);
+      }
+
+      .band .eyebrow {
+        color: var(--color-terminal-accent);
+      }
+
+      .band-grid {
+        display: grid;
+        gap: var(--space-5);
+        margin-top: var(--space-6);
+      }
+
+      .band-item {
+        padding: var(--space-5);
+        border: 1px solid var(--color-terminal-border);
+        border-radius: var(--radius-bubble);
+        background: var(--color-terminal-bar);
+      }
+
+      .band-item h3 {
+        margin: var(--space-3) 0 var(--space-2);
+        font-size: var(--text-heading-3);
+      }
+
+      .band-item p,
+      .band-note p {
+        margin: 0;
+        color: var(--color-terminal-muted);
+      }
+
+      .band-icon {
+        color: var(--color-terminal-accent);
+        font-size: 1.5rem;
+      }
+
+      .band-note {
+        margin-top: var(--space-5);
+        padding: var(--space-5);
+        border: 1px dashed var(--color-terminal-border);
+        border-radius: var(--radius-bubble);
+      }
+
+      .band-note strong {
+        display: block;
+        margin-bottom: var(--space-1);
+      }
+
+      .band-note a {
+        color: var(--color-terminal-accent);
+      }
+
+      .faq {
+        max-width: var(--measure-faq);
+        margin: 0 auto;
+      }
+
+      details {
+        border-bottom: 1px solid var(--color-border);
+      }
+
+      summary {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        min-height: 3.5rem;
+        font-weight: 650;
+        cursor: pointer;
+        list-style: none;
+      }
+
+      summary::before {
+        content: '\203A';
+        color: var(--color-action);
+        font-size: 1.25rem;
+      }
+
+      details[open] > summary::before {
+        transform: rotate(90deg);
+      }
+
+      details p {
+        margin: 0 0 var(--space-4) var(--space-6);
+        color: var(--color-text-muted);
+      }
+
+      .final {
+        position: relative;
+        padding: var(--space-7) var(--space-5);
+        text-align: center;
+      }
+
+      .final .section-title {
+        margin-bottom: var(--space-3);
+      }
+
+      .final p {
+        margin: 0 0 var(--space-5);
+        color: var(--color-text-muted);
+        font-size: var(--text-lead);
+      }
+
+      .final .button {
+        min-height: var(--size-hero-control);
+        padding-inline: var(--space-6);
+        font-size: 1.0625rem;
+      }
+
+      .site-footer {
+        padding-block: var(--space-6);
+        border-top: 1px solid var(--color-border);
+        color: var(--color-text-muted);
+        font-size: var(--text-small);
+      }
+
+      .footer-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-3) var(--space-5);
+      }
+
+      .footer-row .switch {
+        margin-left: auto;
+      }
+
+      .footer-legal {
+        margin: var(--space-3) 0 0;
+      }
+
+      body[data-state='invited'] .hero-eyebrow-default,
+      body[data-state='joined'] .join-form,
+      body[data-state='joined'] .privacy-note,
+      body[data-state='cap'] .join-form,
+      body[data-state='cap'] .privacy-note,
+      body[data-state='paused'] .join-form {
+        display: none;
+      }
+
+      body[data-state='invited'] .hero-invited,
+      body[data-state='joined'] .thanks,
+      body[data-state='cap'] .thanks,
+      body[data-state='cap'] .cap-reached {
+        display: block;
+      }
+
+      body[data-state='invited'] .hero-invited {
+        display: inline-flex;
+      }
+
+      .state-only {
+        display: none;
+      }
+
+      body[data-state='invalid'] .state-invalid,
+      body[data-state='captcha'] .state-captcha,
+      body[data-state='paused'] .state-paused {
+        display: flex;
+      }
+
+      body[data-state='invalid'] .state-invalid {
+        display: block;
+      }
+
+      body[data-state='invalid'] .join-row input {
+        border: 2px solid var(--color-danger);
+      }
+
+      @media (min-width: 40rem) {
+        .container {
+          padding-inline: var(--space-5);
+        }
+
+        .nav-link {
+          display: inline-flex;
+        }
+
+        .join-row {
+          display: flex;
+          gap: 0;
+          padding: 0.25rem;
+          border: 1px solid var(--color-border-control);
+          border-radius: var(--radius-pill);
+          background: var(--color-surface);
+          box-shadow: var(--shadow-card);
+        }
+
+        .join-row input {
+          flex: 1;
+          min-width: 0;
+          min-height: 3rem;
+          border: 0;
+          background: transparent;
+        }
+
+        .join-row .button {
+          min-height: 3rem;
+        }
+
+        .thanks-actions {
+          display: flex;
+        }
+
+        .clients {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .join-block {
+          min-height: 12rem;
+        }
+      }
+
+      @media (min-width: 56rem) {
+        .steps,
+        .band-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+      }
+
+      @media (min-width: 64rem) {
+        .header-join {
+          display: inline-flex;
+        }
+
+        .site-header {
+          position: sticky;
+          top: 0;
+          backdrop-filter: saturate(1.6) blur(14px);
+        }
+
+        .hero .container {
+          grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+          align-items: center;
+          gap: var(--space-7);
+          padding-top: var(--space-8);
+          padding-bottom: var(--space-9);
+        }
+
+        .join-block {
+          min-height: 0;
+        }
+
+        section.block,
+        .band {
+          padding-block: var(--space-9);
+        }
+      }
+    </style>
+  </head>
+  <body data-state="idle">
+    <header class="site-header">
+      <div class="container">
+        <a class="brand" href="#">zapbip</a>
+        <div class="header-end">
+          <a class="nav-link" href="#">Docs</a>
+          <div class="switch" role="group" aria-label="Language">
+            <button type="button" lang="pt-BR" aria-pressed="false">PT</button>
+            <button type="button" lang="en" aria-pressed="true">EN</button>
+          </div>
+          <a class="button button-primary header-join" href="#join">Join</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="content">
+      <section class="hero" id="join" aria-labelledby="hero-title">
+        <div class="container">
+          <div class="hero-copy">
+            <p class="hero-eyebrow hero-eyebrow-default"><span class="live-dot"></span>Early access · Waitlist open</p>
+            <p class="hero-eyebrow hero-invited"><span class="live-dot"></span>A friend invited you</p>
+            <h1 class="hero-title" id="hero-title">
+              Your AI agents text you
+              <span class="hero-accent"
+                >on WhatsApp.<svg class="hero-underline" viewBox="0 0 300 14" preserveAspectRatio="none" aria-hidden="true">
+                  <path d="M3 9 C 60 3, 120 13, 180 7 S 270 4, 297 8" /></svg
+              ></span>
+            </h1>
+            <p class="hero-lead">They ask with buttons, wait for your tap, then keep working. Claude Code, Codex and any MCP agent.</p>
+
+            <div class="join-block">
+              <div class="notice notice-error state-only state-captcha" role="alert">
+                <strong>Error</strong>
+                <p>Please confirm you're not a robot, then try again.</p>
+              </div>
+              <div class="notice notice-warning state-only state-paused" role="alert">
+                <strong>The waitlist is paused</strong>
+                <p>We'll reopen it soon. Come back in a little while.</p>
+              </div>
+              <form class="join-form" action="#" onsubmit="return false">
+                <label class="visually-hidden" for="join-email">Your email address</label>
+                <div class="join-row">
+                  <input id="join-email" type="email" placeholder="you@example.com" autocomplete="email" />
+                  <button class="button button-primary button-arrow" type="submit">Join the waitlist</button>
+                </div>
+                <p class="field-error state-only state-invalid" id="join-email-error">Enter an email like name@example.com.</p>
+                <div class="turnstile-slot" aria-hidden="true"><span class="turnstile-check">✓</span>Success! (Turnstile widget slot, 65 px)</div>
+              </form>
+              <p class="privacy-note">
+                We keep your email, language and referral data. No IP address, no tracking cookies. <a href="#privacy">Privacy</a>
+              </p>
+
+              <div class="thanks hero-card" role="status">
+                <div class="thanks-head">
+                  <span class="thanks-mark" aria-hidden="true">✓</span>
+                  <h2>You're on the list.</h2>
+                </div>
+                <p>We'll email you when your access is ready. Want it sooner? Share your link: each friend who joins moves you up.</p>
+                <label for="invite-link">Your invite link</label>
+                <input id="invite-link" readonly value="https://zapbip.com/?ref=K7QH2MZ9TX4P" />
+                <div class="thanks-actions">
+                  <button class="button button-primary" type="button">Copy link</button>
+                  <a class="button button-secondary" href="#">Share on WhatsApp</a>
+                </div>
+                <svg class="invite-meter" viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true">
+                  <rect class="filled" x="0" y="0" width="18.4" height="8" rx="4" />
+                  <rect class="filled meter-two" x="20.4" y="0" width="18.4" height="8" rx="4" />
+                  <rect class="empty meter-three" x="40.8" y="0" width="18.4" height="8" rx="4" />
+                  <rect class="empty meter-four" x="61.2" y="0" width="18.4" height="8" rx="4" />
+                  <rect class="empty meter-five" x="81.6" y="0" width="18.4" height="8" rx="4" />
+                </svg>
+                <p class="invite-count"><span class="count-value">2</span> of 5 friends invited</p>
+                <p class="cap-reached">You reached the invite limit. Thank you!</p>
+              </div>
+            </div>
+          </div>
+
+          <figure class="demo" aria-labelledby="demo-steps" aria-describedby="demo-description">
+            <div class="demo-stage">
+              <div class="terminal" aria-hidden="true">
+                <div class="terminal-bar"><i></i><i></i><i></i><span>agent — ~/acme-shop</span></div>
+                <div class="terminal-body">
+                  <p><span class="accent">›</span> run the tests</p>
+                  <p><span class="accent">✓</span> 128 tests passed</p>
+                  <p>&nbsp;</p>
+                  <p><span class="accent">●</span> zapbip.ask</p>
+                  <p class="muted">&nbsp;&nbsp;Deploy v2.4 to production?</p>
+                  <p class="muted">&nbsp;&nbsp;options: Ship it · Wait</p>
+                  <p>&nbsp;</p>
+                  <p><span class="accent">⠋</span> waiting for your answer <span class="muted">0:03</span></p>
+                </div>
+              </div>
+              <div class="phone" aria-hidden="true">
+                <div class="phone-screen">
+                  <div class="phone-status"></div>
+                  <div class="phone-header"><span class="phone-avatar"></span>zapbip</div>
+                  <div class="phone-chat">
+                    <div class="bubble"><b>Claude Code</b>Tests pass. Deploy v2.4 to production?</div>
+                    <div class="bubble-button">Ship it</div>
+                    <div class="bubble-button">Wait</div>
+                  </div>
+                </div>
+              </div>
+              <button class="demo-toggle" type="button" aria-pressed="false" aria-label="Pause demo">❚❚</button>
+            </div>
+            <ol class="demo-steps" id="demo-steps">
+              <li aria-current="step"><span class="live-dot"></span>Agent asks</li>
+              <li>You tap</li>
+              <li>It keeps going</li>
+            </ol>
+            <p class="visually-hidden" id="demo-description">
+              A coding agent in a terminal asks "Deploy v2.4 to production?". The question arrives on WhatsApp with two buttons, Ship it and Wait. The owner
+              taps Ship it, and the agent deploys and replies "Done. v2.4 is live."
+            </p>
+          </figure>
+        </div>
+      </section>
+
+      <section class="block" id="how" aria-labelledby="how-title">
+        <div class="container">
+          <p class="eyebrow">How it works</p>
+          <h2 class="section-title" id="how-title">Set up once. Then just answer.</h2>
+          <ol class="steps">
+            <li class="card">
+              <span class="step-number">1</span>
+              <h3>Connect your agent</h3>
+              <p>Message zapbip on WhatsApp, get one line and paste it into your agent. That's the setup.</p>
+              <span class="chip-mono" aria-hidden="true">⧉ 1 line to paste</span>
+            </li>
+            <li class="card">
+              <span class="step-number">2</span>
+              <h3>It texts you</h3>
+              <p>Updates, finished work and questions with buttons land on the phone you already carry.</p>
+              <div class="mini-chat" aria-hidden="true">
+                <span class="in">Book the 9:40 flight?</span>
+                <span class="pill">Book it</span>
+                <span class="pill">Not yet</span>
+              </div>
+            </li>
+            <li class="card">
+              <span class="step-number">3</span>
+              <h3>You answer, it keeps going</h3>
+              <p>Tap a button or type a reply. The agent that asked gets it and picks up where it stopped.</p>
+              <span class="chip-terminal" aria-hidden="true"><span class="accent">✓</span> answer received, continuing</span>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="block" id="capabilities" aria-labelledby="capabilities-title">
+        <div class="container">
+          <p class="eyebrow">What agents can do</p>
+          <h2 class="section-title" id="capabilities-title">More than notifications.</h2>
+          <p class="lead">Your agent gets a real conversation with you, not a one-way ping.</p>
+          <div class="card-grid">
+            <article class="card">
+              <h3>Ask with buttons</h3>
+              <p>Yes or no, ship or wait. One tap and the agent has its answer.</p>
+              <div class="mini-chat" aria-hidden="true">
+                <span class="in"><span class="name">Codex</span>Merge PR #42 into main?</span>
+                <span class="pill">Merge</span>
+                <span class="pill">Not yet</span>
+              </div>
+            </article>
+            <article class="card">
+              <h3>Pick from a list</h3>
+              <p>Up to ten options when buttons are not enough.</p>
+              <div class="mini-chat" aria-hidden="true">
+                <span class="in"><span class="name">Claude</span>Which hotel in Lisbon?</span>
+                <span class="pill">☰ See options</span>
+                <span class="divider">Alfama · Baixa · Belém</span>
+              </div>
+            </article>
+            <article class="card">
+              <h3>Files, photos and voice notes</h3>
+              <p>Reports, screenshots and audio, both ways. Send a voice note and your agent gets it.</p>
+              <div class="mini-chat" aria-hidden="true">
+                <span class="in"><span class="name">ChatGPT</span><span class="file">▤ report.pdf</span>Your research is ready.</span>
+                <span class="out">▶ ▂▅▃▆▂▇▃▅▂ 0:07</span>
+              </div>
+            </article>
+            <article class="card">
+              <h3>You can text first</h3>
+              <p>Write to your agent and it wakes up: in seconds on your computer, or at its next check.</p>
+              <div class="mini-chat" aria-hidden="true">
+                <span class="out">Did the nightly build pass?</span>
+                <span class="chip">woke in 7 s</span>
+                <span class="in"><span class="name">Claude Code</span>Yes, all green. Want the log?</span>
+              </div>
+            </article>
+            <article class="card">
+              <h3>Many agents, one chat</h3>
+              <p>Claude, Codex and the rest share one number. Your reply goes back to the agent that asked.</p>
+              <div class="mini-chat" aria-hidden="true">
+                <span class="in"><span class="name">Claude</span>Tests pass.</span>
+                <span class="in"><span class="name">Codex</span>Found 3 sources.</span>
+                <span class="out">Which ones?</span>
+              </div>
+            </article>
+            <article class="card">
+              <h3>Waits as long as it takes</h3>
+              <p>An agent can wait for your answer for hours. Reply when you're free.</p>
+              <div class="mini-chat" aria-hidden="true">
+                <span class="in"><span class="name">Claude</span>Send the proposal to the client?</span>
+                <span class="divider">3 hours later</span>
+                <span class="out">Send it.</span>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="block" id="clients" aria-labelledby="clients-title">
+        <div class="container">
+          <p class="eyebrow">Works with</p>
+          <h2 class="section-title" id="clients-title">The agents you already use.</h2>
+          <div class="clients">
+            <div class="card client"><strong>Claude Code</strong><span><i class="live-dot"></i>wakes in ~7 s</span></div>
+            <div class="card client"><strong>Codex</strong><span><i class="live-dot"></i>wakes in ~6 s</span></div>
+            <div class="card client"><strong>Grok Bot</strong><span><i class="live-dot"></i>wakes in ~9 s</span></div>
+            <div class="card client"><strong>claude.ai</strong><span><i class="live-dot"></i>wakes in ~16 s</span></div>
+            <div class="card client"><strong>ChatGPT</strong><span>checks every hour</span></div>
+            <div class="card client"><strong>Cursor</strong><span>runs on your computer</span></div>
+            <div class="card client"><strong>Gemini CLI</strong><span>runs on your computer</span></div>
+            <div class="card client hero-card"><strong>Any MCP app</strong><span>one MCP server, one key</span></div>
+          </div>
+          <p class="footnote">Wake times are from our own tests.</p>
+        </div>
+      </section>
+
+      <section class="band" id="privacy" aria-labelledby="privacy-title">
+        <div class="container">
+          <p class="eyebrow">Privacy</p>
+          <h2 class="section-title" id="privacy-title">Official API. Only you.</h2>
+          <div class="band-grid">
+            <div class="band-item">
+              <span class="band-icon" aria-hidden="true">◈</span>
+              <h3>The official WhatsApp Cloud API</h3>
+              <p>No unofficial apps, no tricks. Messages go through Meta's official platform.</p>
+            </div>
+            <div class="band-item">
+              <span class="band-icon" aria-hidden="true">◉</span>
+              <h3>It talks only to you</h3>
+              <p>zapbip never messages your contacts or anyone else. Your agents, your phone.</p>
+            </div>
+            <div class="band-item">
+              <span class="band-icon" aria-hidden="true">⚿</span>
+              <h3>One key per agent</h3>
+              <p>Each agent has its own secret. Revoke any of them from WhatsApp, anytime.</p>
+            </div>
+          </div>
+          <div class="band-note">
+            <strong>About this waitlist</strong>
+            <p>
+              We keep your email, language and referral data only to invite you. We store no IP address and set no tracking cookies; two cookies remember
+              your language and theme. To be removed, write to <a href="#">dhyego@logicbit.com.br</a>.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="block" id="faq" aria-labelledby="faq-title">
+        <div class="container faq">
+          <p class="eyebrow">FAQ</p>
+          <h2 class="section-title" id="faq-title">Questions</h2>
+          <details>
+            <summary>When can I use it?</summary>
+            <p>We open access in waves. People higher on the list get in first, and each friend you invite moves you up.</p>
+          </details>
+          <details>
+            <summary>How much will it cost?</summary>
+            <p>Pricing comes with the launch. The waitlist hears first.</p>
+          </details>
+          <details>
+            <summary>Do I need to be a developer?</summary>
+            <p>No. If you use ChatGPT, Claude or another AI, you connect it by pasting one line.</p>
+          </details>
+          <details open>
+            <summary>Does it message other people?</summary>
+            <p>No. zapbip talks only to you, on your own phone, through the official WhatsApp Cloud API.</p>
+          </details>
+          <details>
+            <summary>Can several agents share it?</summary>
+            <p>Yes. All your agents share one number, and each reply goes back to the agent that asked.</p>
+          </details>
+          <details>
+            <summary>How do invites work?</summary>
+            <p>After you join, you get a personal link. Each friend who joins with it moves you up the list. There is a limit per person, shown after you join.</p>
+          </details>
+          <details>
+            <summary>What do you do with my email?</summary>
+            <p>We use it only to invite you when access opens. No IP address, no tracking cookies. To be removed, write to dhyego@logicbit.com.br.</p>
+          </details>
+        </div>
+      </section>
+
+      <section class="block" aria-labelledby="final-title">
+        <div class="container">
+          <div class="final hero-card">
+            <h2 class="section-title" id="final-title">Let your agents reach you.</h2>
+            <p>Join the waitlist. It takes ten seconds.</p>
+            <a class="button button-primary button-arrow" href="#join">Join the waitlist</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-row">
+          <span>zapbip is made by Logic Bit in Belo Horizonte, Brazil.</span>
+          <div class="switch" role="group" aria-label="Theme">
+            <button type="button" aria-pressed="true">Light</button>
+            <button type="button" aria-pressed="false">Dark</button>
+            <button type="button" aria-pressed="false">System</button>
+          </div>
+        </div>
+        <p class="footer-legal">WhatsApp is a trademark of Meta. Agent names are trademarks of their owners.</p>
+      </div>
+    </footer>
+
+    <script>
+      function applyMockupState() {
+        const state = location.hash.slice(1) || 'idle';
+        document.body.dataset.state = state;
+        const isCap = state === 'cap';
+        document.querySelector('.count-value').textContent = isCap ? '5' : '2';
+        document.querySelectorAll('.meter-three, .meter-four, .meter-five').forEach((segment) => {
+          segment.setAttribute('class', isCap ? 'filled' : 'empty');
+        });
+        document.documentElement.dataset.theme = new URLSearchParams(location.search).get('theme') === 'dark' ? 'dark' : 'light';
+      }
+      window.addEventListener('hashchange', applyMockupState);
+      applyMockupState();
+    </script>
+  </body>
+</html>
