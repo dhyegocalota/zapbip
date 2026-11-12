@@ -32,6 +32,7 @@ export const TOTP_DIGITS = 6;
 export const TOTP_WINDOW_STEPS = 1;
 export const BACKOFFICE_PENDING_SIGN_IN_MS = 5 * MINUTE_MS;
 export const PASSWORD_HASH_ITERATIONS = 20_000;
+export const PASSWORD_HASH_MAX_ITERATIONS = 100_000;
 export const PASSWORD_SALT_BYTES = 16;
 export const PASSWORD_MIN_LENGTH = 12;
 export const PASSWORD_MAX_LENGTH = 128;

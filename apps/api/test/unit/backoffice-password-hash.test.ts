@@ -2,13 +2,18 @@ import { createHmac, pbkdf2Sync } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { hashPassword, verifyPassword } from '../../src/backoffice/auth/password-hash';
 import { isPasswordLengthAllowed, normalizePassword } from '../../src/backoffice/auth/password-policy';
-import { PASSWORD_HASH_ITERATIONS, PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from '../../src/contract/constants';
+import {
+  PASSWORD_HASH_ITERATIONS,
+  PASSWORD_HASH_MAX_ITERATIONS,
+  PASSWORD_MAX_LENGTH,
+  PASSWORD_MIN_LENGTH,
+} from '../../src/contract/constants';
 
 const PASSWORD = 'correct horse 1';
 const PEPPER = 'pepper-a';
 const OTHER_PEPPER = 'pepper-b';
 const STORED_FORMAT = new RegExp(`^pbkdf2-sha256\\$${PASSWORD_HASH_ITERATIONS}\\$[A-Za-z0-9_-]{22}\\$[A-Za-z0-9_-]{43}$`);
-const OTHER_ITERATIONS = 1000;
+const OTHER_ITERATIONS = PASSWORD_HASH_ITERATIONS + 10_000;
 const OTHER_SALT = Buffer.alloc(16, 7);
 const DERIVED_BYTES = 32;
 const CPU_BUDGET_MICROSECONDS = 50_000;
@@ -62,6 +67,22 @@ describe('verifyPassword', () => {
 
   it('verifies a stored string with its own iteration count', async () => {
     const storedHash = storedHashOf({ password: PASSWORD, pepper: PEPPER, iterations: OTHER_ITERATIONS });
+    expect(await verifyPassword({ password: PASSWORD, pepper: PEPPER, storedHash })).toBe(true);
+  });
+
+  it.each([PASSWORD_HASH_ITERATIONS - 1, PASSWORD_HASH_MAX_ITERATIONS + 1])(
+    'refuses a stored string claiming %i iterations without deriving anything',
+    async (iterations) => {
+      const storedHash = storedHashOf({ password: PASSWORD, pepper: PEPPER, iterations: Math.min(iterations, OTHER_ITERATIONS) }).replace(
+        /^pbkdf2-sha256\$\d+/,
+        `pbkdf2-sha256$${iterations}`,
+      );
+      await expect(verifyPassword({ password: PASSWORD, pepper: PEPPER, storedHash })).rejects.toThrow();
+    },
+  );
+
+  it('accepts a stored string at the platform cap', async () => {
+    const storedHash = storedHashOf({ password: PASSWORD, pepper: PEPPER, iterations: PASSWORD_HASH_MAX_ITERATIONS });
     expect(await verifyPassword({ password: PASSWORD, pepper: PEPPER, storedHash })).toBe(true);
   });
 
