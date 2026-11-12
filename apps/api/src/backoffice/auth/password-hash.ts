@@ -1,5 +1,10 @@
 import { decodeBase64Url, encodeBase64Url } from '../../adapters/platform/encoding';
-import { PASSWORD_HASH_ALGORITHM, PASSWORD_HASH_ITERATIONS, PASSWORD_SALT_BYTES } from '../../contract/constants';
+import {
+  PASSWORD_HASH_ALGORITHM,
+  PASSWORD_HASH_ITERATIONS,
+  PASSWORD_HASH_MAX_ITERATIONS,
+  PASSWORD_SALT_BYTES,
+} from '../../contract/constants';
 import { constantTimeEqual } from './constant-time';
 import { normalizePassword } from './password-policy';
 
@@ -34,10 +39,11 @@ function parseStoredHash(input: { storedHash: string }): StoredHash {
   const fields = input.storedHash.split(FIELD_SEPARATOR);
   const [algorithm, iterationsText, saltText, hash] = fields;
   const iterations = Number(iterationsText);
-  const isWellFormed =
-    fields.length === STORED_FIELD_COUNT && algorithm === PASSWORD_HASH_ALGORITHM && Number.isInteger(iterations) && iterations > 0;
-  if (!isWellFormed || saltText === undefined || hash === undefined) throw new Error('the stored password hash is malformed');
-  return { iterations, salt: decodeBase64Url({ value: saltText }), hash };
+  const isIterationCountAllowed =
+    Number.isInteger(iterations) && iterations >= PASSWORD_HASH_ITERATIONS && iterations <= PASSWORD_HASH_MAX_ITERATIONS;
+  const isWellFormed = fields.length === STORED_FIELD_COUNT && algorithm === PASSWORD_HASH_ALGORITHM && isIterationCountAllowed;
+  if (!isWellFormed) throw new Error('the stored password hash is malformed');
+  return { iterations, salt: decodeBase64Url({ value: saltText! }), hash: hash! };
 }
 
 export async function hashPassword(input: { password: string; pepper: string }): Promise<string> {
