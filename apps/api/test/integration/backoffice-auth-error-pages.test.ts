@@ -79,6 +79,13 @@ describe('error pages', () => {
     expect(stylesheet.status).toBe(STATUS_SERVICE_UNAVAILABLE);
   });
 
+  test('a missing password pepper is a 503 page on every path', async () => {
+    const env = backofficeEnv({ overrides: { BACKOFFICE_PASSWORD_PEPPER: '' } });
+    const signInPage = await requestBackoffice({ path: '/sign-in', env, headers: ENGLISH });
+    expect(signInPage.status).toBe(STATUS_SERVICE_UNAVAILABLE);
+    expect(headingOf(await signInPage.text())).toBe('503 The backoffice is not configured');
+  });
+
   test('every error page still carries the security headers', async () => {
     const response = await requestBackoffice({ path: MARKER_PATH });
     expect(response.headers.get('content-security-policy')).toContain("default-src 'none'");
