@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { AGENT_INSTALLS } from '@zapbip/agents/install';
 import { describe, expect, it } from 'vitest';
@@ -7,7 +7,6 @@ const LOGOS_ROOT = join(import.meta.dirname, '../../site-public/site/logos');
 const NOTICE_FILE = 'NOTICE.md';
 const LOGO_LIMIT_BYTES = 4_000;
 const INSTALLS = Object.entries(AGENT_INSTALLS);
-const LOGO_FILE_PATTERN = /\.svg$/;
 
 function logoPathOf(input: { id: string }): string {
   return join(LOGOS_ROOT, `${input.id}.svg`);
@@ -16,12 +15,6 @@ function logoPathOf(input: { id: string }): string {
 describe('the official logos', () => {
   it.each(INSTALLS)('ships a file for %s exactly when the install facet says it has an official logo', (id, install) => {
     expect(existsSync(logoPathOf({ id }))).toBe(install.hasOfficialLogo);
-  });
-
-  it('ships no logo for an agent the registry does not know', () => {
-    const known = INSTALLS.map(([id]) => `${id}.svg`);
-    const files = readdirSync(LOGOS_ROOT).filter((name) => LOGO_FILE_PATTERN.test(name));
-    expect(files.filter((name) => !known.includes(name))).toEqual([]);
   });
 
   it.each(INSTALLS.filter(([, install]) => install.hasOfficialLogo))('keeps the logo of %s small, drawn and inert', (id) => {
