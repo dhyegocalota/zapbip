@@ -268,7 +268,7 @@ describe('terminal prompt', () => {
     const output = new PassThrough();
     const written: string[] = [];
     output.on('data', (chunk: Buffer) => written.push(chunk.toString()));
-    const prompt = createTerminalPrompt({ input, output });
+    const prompt = createTerminalPrompt({ inputStream: input, outputStream: output });
     const hidden = prompt.askHidden({ question: PASSWORD_QUESTION });
     input.write('hidden-secret-value\n');
     expect(await hidden).toBe('hidden-secret-value');

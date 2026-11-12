@@ -22,7 +22,6 @@ export type Bindings = {
   WHATSAPP_SEND_THROUGH_GRAPH?: string;
   WAKE_SECRET_KEY: string;
   NUMBER_REGISTRY_KEY: string;
-  BACKOFFICE_KEY_DIGEST: string;
   BACKOFFICE_TOTP_SECRET: string;
   BACKOFFICE_PASSWORD_PEPPER: string;
   BACKOFFICE_ORIGIN: string;
