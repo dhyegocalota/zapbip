@@ -1,5 +1,6 @@
 import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
+import { JOIN_FRAGMENT } from '../site-constants';
 import { JoinState, type PageModel } from '../page-model';
 import { Notice } from './notice';
 import { NoticeVariant } from '../../backoffice/backoffice-notice';
@@ -25,7 +26,7 @@ export function FinalCall(props: { model: PageModel }) {
           ) : (
             <>
               <p>{translate(SiteCopyKey.FinalBody)}</p>
-              <a class="button button-primary button-arrow" href="#join">
+              <a class="button button-primary button-arrow" href={JOIN_FRAGMENT}>
                 {translate(buttonKey)}
               </a>
             </>

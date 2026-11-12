@@ -1,4 +1,5 @@
 import { contentHashOf } from '../backoffice/assets/stylesheet';
+import { JOIN_FRAGMENT } from './site-constants';
 import { SitePath } from './site-paths';
 
 const SCRIPT_SOURCE = `(function () {
@@ -65,7 +66,7 @@ const SCRIPT_SOURCE = `(function () {
   }
 
   function setupJoinLinks() {
-    document.querySelectorAll('a[href="#join"]').forEach(function (link) {
+    document.querySelectorAll('a[href="${JOIN_FRAGMENT}"]').forEach(function (link) {
       link.addEventListener('click', function (event) {
         event.preventDefault();
         goToJoin();
@@ -75,12 +76,13 @@ const SCRIPT_SOURCE = `(function () {
 
   function setupAgentPicks() {
     var hint = byId('join-agent');
-    document.querySelectorAll('a[data-picked-label]').forEach(function (link) {
+    document.querySelectorAll('a[data-picked-label], a[data-clear-agent]').forEach(function (link) {
       link.addEventListener('click', function (event) {
+        var label = link.getAttribute('data-picked-label');
         event.preventDefault();
         if (hint) {
-          hint.textContent = link.getAttribute('data-picked-label');
-          hint.hidden = false;
+          hint.textContent = label || '';
+          hint.hidden = !label;
         }
         history.replaceState(null, '', link.getAttribute('href').split('#')[0]);
         goToJoin();
@@ -91,6 +93,7 @@ const SCRIPT_SOURCE = `(function () {
   function setupReveal() {
     if (reducedMotion) return;
     if (CSS.supports(SCROLL_TIMELINE_SUPPORT)) return;
+    if (!('IntersectionObserver' in window)) return;
     document.documentElement.classList.add(REVEAL_CLASS);
     var observer = new IntersectionObserver(
       function (entries) {

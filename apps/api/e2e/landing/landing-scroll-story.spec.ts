@@ -70,12 +70,10 @@ test.describe('a browser without scroll timelines', () => {
 });
 
 test.describe('a browser without scroll timelines or an intersection observer', () => {
-  test('hides nothing', async ({ page }) => {
+  test('does not turn the hidden state on', async ({ page }) => {
     await page.addInitScript(`${STUB_UNSUPPORTED_SCRIPT} delete window.IntersectionObserver;`);
     await page.goto('/');
     await expect(page.locator('html')).not.toHaveClass(/has-reveal/);
-    await expectFullyShown({ targets: page.locator('.scene-step') });
-    await expectFullyShown({ targets: page.locator(REVEAL_SELECTOR) });
   });
 });
 

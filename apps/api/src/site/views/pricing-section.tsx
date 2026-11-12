@@ -1,9 +1,9 @@
 import type { OwnerLocale } from '@zapbip/types';
 import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
+import { JOIN_FRAGMENT } from '../site-constants';
 
 const CHECK_GLYPH = '✓';
-const JOIN_FRAGMENT = '#join';
 const FREE_FEATURE_KEYS = [
   SiteCopyKey.PricingFreePhone,
   SiteCopyKey.PricingFreeAgents,

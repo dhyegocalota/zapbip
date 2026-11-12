@@ -13,7 +13,7 @@ Walk server: `http://site.localhost:8787` in development.
 
 - [x] Every new `SiteCopyKey` exists in both locales, none empty, same placeholders (existing copy test). — evidence: unit run, 1487 green; pt_BR walk shows every new string in Portuguese
 - [x] The stylesheet scrubs `view()` only inside `prefers-reduced-motion: no-preference` and never applies it under `has-reveal`. — evidence: integration site-motion and site-stylesheet green; live: reduced motion gives 0 animations, no-preference gives 95
-- [x] The script chooses the observer only when `animation-timeline: view()` is unsupported. — evidence: unit green; live: CSS.supports stub gives `has-reveal` on, native gives none
+- [x] The observer path is chosen only when `animation-timeline: view()` is unsupported and an `IntersectionObserver` exists. — evidence: landing-scroll-story.spec.ts (stubbed `CSS.supports`, and without the observer)
 
 ## Integration
 

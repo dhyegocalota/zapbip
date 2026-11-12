@@ -218,7 +218,7 @@ describe('the works-with section', () => {
     const buttons = [...section.matchAll(CARD_LINK_PATTERN)].map((match) => ({ href: match[1], label: match[2] }));
     expect(buttons.slice(0, agents.length)).toEqual(
       agents.map((agent) => ({
-        href: `/?agent=${agent.id}&lang=${languageOf({ locale })}#join`,
+        href: escapedHtml({ text: `/?agent=${agent.id}&lang=${languageOf({ locale })}#join` }),
         label: copyHtml({ key: SiteCopyKey.AgentCardButton, locale, values: { agent: agent.name } }),
       })),
     );
