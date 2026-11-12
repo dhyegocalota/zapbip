@@ -10,7 +10,8 @@ export type WaitlistJoinResult =
       creditedCount: number;
       cap: number;
     }
-  | { outcome: WaitlistJoinOutcome.InvalidEmail | WaitlistJoinOutcome.Unavailable };
+  | { outcome: WaitlistJoinOutcome.InvalidEmail }
+  | { outcome: WaitlistJoinOutcome.Unavailable };
 
 export type JoinWaitlistInput = {
   database: D1Database;

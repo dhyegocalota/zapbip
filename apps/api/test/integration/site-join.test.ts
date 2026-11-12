@@ -55,7 +55,11 @@ describe('POST /join', () => {
     expect(response.status).toBe(200);
     expect(html).toMatch(LINK_PATTERN);
     expect(html).toContain(
-      copyHtml({ key: SiteCopyKey.ThanksInviteCount, locale: ENGLISH, values: { count: '0', cap: String(DEFAULT_WAITLIST_REFERRAL_CAP) } }),
+      copyHtml({
+        key: SiteCopyKey.ThanksInviteCount,
+        locale: PORTUGUESE,
+        values: { count: '0', cap: String(DEFAULT_WAITLIST_REFERRAL_CAP) },
+      }),
     );
     expect(await rowOf({ email: MARIA })).toMatchObject({ locale: PORTUGUESE, credited: 0 });
     expect(recording.calls).toHaveLength(1);
