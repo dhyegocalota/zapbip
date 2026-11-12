@@ -23,7 +23,7 @@ The owner's terminal already holds the only deploy-capable credential, a scoped 
 
 ## Decision
 
-1. **Two factors.**
+1. **Two factors.** (Amended 2026-11-11 by [ADR 0038](0038-the-backoffice-signs-in-with-a-password-and-then-a-code-held-in-a-server-side-second-step.md), owner delegated: the key is replaced by an email and a password, and the code is a second step held on the server. The text below is kept for history.)
    - A generated backoffice key: `zb_bo_` plus 32 random bytes in base64url.
    - A TOTP code: RFC 6238, SHA-1, 6 digits, 30 s, ±1 step, each step usable once.
    - The key is stored only as a SHA-256 digest. Its entropy makes a slow hash unnecessary, the same reasoning as ADR 0017.
@@ -33,7 +33,7 @@ The owner's terminal already holds the only deploy-capable credential, a scoped 
    - It resets the operator row and drops every session in D1.
    - `guard-deploy.sh` blocks it for agents.
    - Re-enrollment is the only recovery, and there are no recovery codes.
-3. **Sign-in hardening.**
+3. **Sign-in hardening.** (Amended 2026-11-11 by [ADR 0038](0038-the-backoffice-signs-in-with-a-password-and-then-a-code-held-in-a-server-side-second-step.md): the password step counts toward the same lock, and the code step is refused without a live pending state.)
    - One generic failure answer.
    - A per-address rate limit (`BACKOFFICE_RATE_LIMITER`, 5 per minute).
    - A D1 lockout after 10 consecutive failures for 15 minutes. Only a valid key with a wrong code counts as a failure at sign-in, so a stranger who guesses keys is rate limited, audited and logged but can never lock the owner out; a wrong step-up code counts, because it needs a session.
