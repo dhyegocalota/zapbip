@@ -24,7 +24,7 @@ Facts found in the code that shape the design:
 - `/sign-in` takes an email and a password. A correct pair creates a pending second-factor state, which is a row in D1 bound to a `__Host-` cookie. It lasts 5 minutes and is single-use.
 - `/sign-in/code` takes the TOTP code. Only a correct code against a live, unused pending state creates a session.
 - The backoffice key, its input field, its digest secret and its copy go away.
-- Passwords are hashed with PBKDF2-SHA256 through WebCrypto at 100000 iterations, with a 16-byte salt, stored as one self-describing string. The comparison is constant time.
+- Passwords are hashed with PBKDF2-SHA256 through WebCrypto at 20000 iterations over a pepper digest, with a 16-byte salt, stored as one self-describing string. The comparison is constant time.
 - A password is 12 to 128 characters after Unicode normalisation. The length check runs on the normalised value, so a string that normalises to a valid length is accepted.
 - An unknown email and a wrong password look the same to the caller: one status, one redirect, one notice, one audit action, the same number of hash operations.
 - The existing lockout counter and rate limit apply to both steps. The rate limit keeps its key and scope. The lockout counter keeps its global operator row and its values.
@@ -54,13 +54,15 @@ Facts found in the code that shape the design:
 | What does a missing or expired pending state count as? | Nothing: no counter, no audit row, only the rate limit | No password was proven, so the counter does not move. This stops a cookie-less client from locking the owner out. |
 | Is a locked operator checked before or after the hash? | After. The password hash always runs before the lock check | Otherwise a locked response would be faster than a wrong one and would reveal the lock. |
 
-### Blocking precondition: the Workers plan
+### The Workers Free plan and the pepper
 
-[ADR 0031](../../adr/0031-the-backoffice-is-a-separate-host-signed-in-with-a-key-and-totp-enrolled-from-the-owners-terminal.md) and [ADR 0009](../../adr/0009-cloudflare-workers-with-one-durable-object-per-account.md) place the Worker on the Workers Free plan, with a 10 ms CPU budget per request. ADR 0031 rejected slow password hashes for that reason.
+The Worker stays on the Workers Free plan, which allows 10 ms of CPU per request ([ADR 0009](../../adr/0009-cloudflare-workers-with-one-durable-object-per-account.md), [ADR 0031](../../adr/0031-the-backoffice-is-a-separate-host-signed-in-with-a-key-and-totp-enrolled-from-the-owners-terminal.md)). A local measurement on 2026-11-11 (Node 24, WebCrypto PBKDF2-SHA256, 100000 iterations) took 13 to 14 ms, which does not fit. The owner delegated the decision to the orchestrator, who chose a server-side pepper and a lower iteration count ([ADR 0038](../../adr/0038-the-backoffice-signs-in-with-a-password-and-then-a-code-held-in-a-server-side-second-step.md)):
 
-A local measurement on 2026-11-11 (Node 24, WebCrypto PBKDF2-SHA256, 100000 iterations, 16-byte salt, 32-byte output) took 13 to 14 ms on the development Mac. Workers runs the same primitive, and 100000 iterations on the Free plan's budget is very likely over it. Workers Paid allows far more CPU per request.
-
-Before the build begins, the owner confirms the plan tier for the production and staging Workers. If the Worker stays on Free, the build stops and the design returns to the owner: the options are Workers Paid, a lower iteration count (which the owner has not authorised, and which the ADR would have to justify), or a different sign-in shape. Build step 0 in `plan.md` measures the real CPU time of one sign-in on a staging deploy before any step after it ships.
+- The input to PBKDF2 is `HMAC-SHA256(key = BACKOFFICE_PASSWORD_PEPPER, message = NFKC(password))`, so a copy of D1 alone gives nothing to crack offline: the pepper is a Worker secret that never reaches D1.
+- PBKDF2-SHA256 runs over that digest with a 16-byte salt at `PASSWORD_HASH_ITERATIONS = 20_000`, about 2.7 ms in Node.
+- The stored string stays self-describing (algorithm, iterations, salt, hash), so the count can be raised later.
+- `BACKOFFICE_PASSWORD_PEPPER` is a new generated Worker secret, written by the enrollment CLI on remote environments and required by `requireConfigured`.
+- A unit test pins one hash under a CPU budget, with a generous threshold, to guard against regression.
 
 ### Data flow
 
@@ -96,8 +98,8 @@ The notice on every failure is `SignInFailed`. The redirect carries no password,
 ### Interfaces
 
 - `apps/api/src/backoffice/auth/password-hash.ts`
-  - `hashPassword(input: { password: string }): Promise<string>` returns `pbkdf2-sha256$100000$<salt base64url>$<hash base64url>`.
-  - `verifyPassword(input: { password: string; storedHash: string }): Promise<boolean>` reads the iteration count and salt from the stored string and compares with `constantTimeEqual`. A malformed stored string throws, because the row is ours and a malformed one means a bug.
+  - `hashPassword(input: { password: string; pepper: string }): Promise<string>` returns `pbkdf2-sha256$20000$<salt base64url>$<hash base64url>`.
+  - `verifyPassword(input: { password: string; pepper: string; storedHash: string }): Promise<boolean>` reads the iteration count and salt from the stored string and compares with `constantTimeEqual`. A malformed stored string throws, because the row is ours and a malformed one means a bug.
 - `apps/api/src/backoffice/auth/password-policy.ts`
   - `normalizePassword(input: { value: string }): string` applies NFKC and nothing else.
   - `isPasswordLengthAllowed(input: { password: string }): boolean` checks the normalised value against 12 and 128 code points.
@@ -110,9 +112,9 @@ The notice on every failure is `SignInFailed`. The redirect carries no password,
   - `attemptCodeSignIn(input: { env; pendingToken; code; now; clientAddress }): Promise<SignInResult>`.
   - `isBackofficeKey` is removed.
 - `apps/api/src/backoffice/routes/sign-in-routes.tsx` gains `GET` and `POST` on `BackofficePath.SignInCode = '/sign-in/code'`.
-- Constants in `apps/api/src/contract/constants.ts`: `BACKOFFICE_PENDING_SIGN_IN_MS = 5 * MINUTE_MS`, `PASSWORD_HASH_ITERATIONS = 100_000`, `PASSWORD_SALT_BYTES = 16`, `PASSWORD_MIN_LENGTH = 12`, `PASSWORD_MAX_LENGTH = 128`, and the dummy hash string.
+- Constants in `apps/api/src/contract/constants.ts`: `BACKOFFICE_PENDING_SIGN_IN_MS = 5 * MINUTE_MS`, `PASSWORD_HASH_ITERATIONS = 20_000`, `PASSWORD_SALT_BYTES = 16`, `PASSWORD_MIN_LENGTH = 12`, `PASSWORD_MAX_LENGTH = 128`, and the dummy hash string.
 - Cookies in `backoffice-constants.ts`: `PENDING_SIGN_IN_COOKIE_NAME = '__Host-zb_bo_pending'`, `Secure`, `HttpOnly`, `SameSite=Strict`, `Path=/`, `Max-Age=300`, with no `Domain`. The session and CSRF cookies are unchanged.
-- Environment: `BACKOFFICE_KEY_DIGEST` leaves `Bindings`, `WorkerSecret` and `requireConfigured`. `requireConfigured` then checks only `BACKOFFICE_TOTP_SECRET`.
+- Environment: `BACKOFFICE_KEY_DIGEST` leaves `Bindings`, `WorkerSecret` and `requireConfigured`; `BACKOFFICE_PASSWORD_PEPPER` joins them. `requireConfigured` then checks `BACKOFFICE_TOTP_SECRET` and `BACKOFFICE_PASSWORD_PEPPER`.
 - `return-target.ts` allows `/sign-in/code` as a backoffice page, so the language and theme switchers on the code page return to it.
 
 ### Migration `0009_backoffice_password_sign_in.sql`
@@ -139,9 +141,9 @@ DELETE FROM backoffice_sessions;
 `pnpm backoffice:enroll:<environment>` keeps its flags (`--environment` only), its TTY requirement, its production confirmation, its TOTP QR, its code check before any write, and its Worker-secret write for `BACKOFFICE_TOTP_SECRET` on remote environments. It changes in these ways:
 
 1. Ask for the email. It must match the rule above, or the run stops with nothing written.
-2. Ask for the password with echo off, then ask for it again. A mismatch stops the run. The password must be 12 to 128 code points after NFKC. The run hashes it.
+2. Ask for the password with echo off, then ask for it again. A mismatch stops the run. The password must be 12 to 128 code points after NFKC. The run generates a fresh pepper and hashes the password with it.
 3. Show the TOTP QR and text secret, then check the typed code, as now. Nothing is written before the code matches.
-4. Put `BACKOFFICE_TOTP_SECRET` (remote) or print it (development), as now. `BACKOFFICE_KEY_DIGEST` is no longer written.
+4. Put `BACKOFFICE_TOTP_SECRET` and `BACKOFFICE_PASSWORD_PEPPER` (remote) or print them (development, for `apps/api/.dev.vars`). `BACKOFFICE_KEY_DIGEST` is no longer written.
 5. Run one D1 statement that sets `email` and `password_hash` on `backoffice_operator`, resets the step, the counter and the lock, deletes all sessions and all pending rows, and writes the `operator.enrolled` audit row.
 6. Clear the screen. There is no "store the key" pause any more.
 
@@ -172,18 +174,18 @@ The existing `SignInCodeLabel`, `SignInCodeHelp`, `SignInTitle`, `SignInEyebrow`
 
 ### Sign-in throttling and CPU
 
-The hash runs on every `POST /sign-in`, including the unknown-email path and the locked path. The rate limit (5 per minute per address, shared by both steps) bounds the CPU a single address can spend. The Workers plan question above bounds what one request may spend.
+The hash runs on every `POST /sign-in`, including the unknown-email path and the locked path. The rate limit (5 per minute per address, shared by both steps) bounds the CPU a single address can spend. The Free plan's 10 ms CPU limit is why the iteration count is 20000 behind a pepper.
 
 ## Open questions → answers
 
 | Question | Options | Owner's answer | Date |
 |----------|---------|----------------|------|
-| Which Workers plan runs the backoffice? | Free (10 ms CPU, measured PBKDF2 is 13 to 14 ms locally) or Paid | pending: blocks build step 0 | 2026-11-11 |
+| Which Workers plan runs the backoffice? | Free (10 ms CPU, measured PBKDF2 at 100000 is 13 to 14 ms locally) or Paid | Free stays. The orchestrator, with the owner's delegation, chose a pepper plus 20000 iterations | 2026-11-11 |
 | Does a wrong password count toward the lockout? | Yes, global lock as today; or no, per-address rate limit only | Yes, delegated to the orchestrator as "apply them to both steps"; the lock-out-by-guessing trade-off is in the ADR | 2026-11-11 |
 | Does a wrong code consume the pending state? | Yes; or allow a few tries | Yes, single-use, delegated | 2026-11-11 |
 | Is an unknown email counted? | Yes, same as a wrong password; or not | Yes, so the counter does not reveal the email | 2026-11-11 |
-| Is the iteration count 100000 when the Worker's cap is 100000? | 100000 (the cap); or a lower count | 100000, delegated. The OWASP recommendation for PBKDF2-SHA256 is far higher; the ADR records that gap | 2026-11-11 |
+| Which iteration count? | 100000 (does not fit Free); or a lower count behind a server-side pepper | 20000 behind `BACKOFFICE_PASSWORD_PEPPER`, delegated. The OWASP recommendation for PBKDF2-SHA256 is far higher; the ADR records that gap and why the pepper and the second factor make up for it | 2026-11-11 |
 
 ## Test strategy summary
 
-Unit tests cover the hash format, verify, the dummy hash, the normalisation and the length rule, the enrollment CLI, the copy keys and the cookie options. Integration tests run the two routes on the Worker test harness with D1, the rate limiter and the migrations applied, and cover the enumeration, lockout, replay, expiry, cookie and redirect rows. The Playwright walk covers both pages at 1280 and 375, with the switchers, Back and reload. The Workers CPU claim is not proven by any local test; build step 0 is the proof, on a staging deploy. The full list is in [test-plan.md](test-plan.md).
+Unit tests cover the hash format, verify, the dummy hash, the normalisation and the length rule, the enrollment CLI, the copy keys and the cookie options. Integration tests run the two routes on the Worker test harness with D1, the rate limiter and the migrations applied, and cover the enumeration, lockout, replay, expiry, cookie and redirect rows. The Playwright walk covers both pages at 1280 and 375, with the switchers, Back and reload. A unit test pins one hash under a generous CPU budget; the Workers CPU time itself is measured by the owner on staging. The full list is in [test-plan.md](test-plan.md).

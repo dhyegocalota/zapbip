@@ -4,7 +4,7 @@ Written by the developer sub-agent when its steps are done. The developer does n
 
 ## Before you start
 
-- Step 0 of [plan.md](plan.md) must be ticked with the owner's written plan confirmation and the measured CPU time. If it is not, stop and say so. Do not run the security rows on a Free-plan Worker.
+- The Worker stays on the Free plan: the hash is a pepper digest plus PBKDF2 at 20000 iterations (ADR 0038). The new Worker secret is `BACKOFFICE_PASSWORD_PEPPER`; the local development stack needs it in `apps/api/.dev.vars`, which the owner or the test support provides, never an agent by hand.
 - Migration `0009_backoffice_password_sign_in.sql` ends every session and leaves the operator with no email and no password. Every sign-in fails until the owner runs `pnpm backoffice:enroll:<environment>`. The owner runs that command, not you.
 
 ## What changed
@@ -31,7 +31,7 @@ pnpm typecheck
 pnpm exec prettier --check docs/features/backoffice-password-sign-in apps/api/src/backoffice
 ```
 
-Local stack for the walk: `pnpm dev` (the API on port 8787). The backoffice host is `http://backoffice.localhost:8787`. The owner's real password is never typed or seen by an agent. The walk therefore needs a local-only operator in the development database, enrolled with `BACKOFFICE_TEST_PASSWORD` from `apps/api/test/support/backoffice-credentials.ts`; if the owner does not approve that, the walk's sign-in steps are run by the owner by hand and recorded as such. Never run `pnpm backoffice:enroll:staging` or `pnpm backoffice:enroll:production`.
+Local stack for the walk: `pnpm dev` (the API on port 8787). The backoffice host is `http://backoffice.localhost:8787`. The owner's real password is never typed or seen by an agent. The owner approved a local-only operator with a test email and test password, created by the test support from `apps/api/test/support/backoffice-credentials.ts` and the e2e fixtures; the values live there, never in chat or docs. Never run `pnpm backoffice:enroll:staging` or `pnpm backoffice:enroll:production`.
 
 ## Red today, green after
 
@@ -60,7 +60,7 @@ Commit the failing test on its own before each implementation commit. A test tha
 
 ## Known gaps
 
-- The Workers CPU time of 100000 iterations is proven only by step 0 on staging. Local Node runs measure 13 to 14 ms, and the Free plan's budget is 10 ms.
+- The Workers CPU time of one sign-in is pinned locally only by a generous Node budget (about 2.7 ms measured at 20000 iterations). The real Workers number is for the owner to read on staging.
 - The owner's terminal hidden-input behaviour is not reproducible in the test harness. The enrollment test injects answers and checks that the password is not printed; the real echo is checked by the owner by hand.
 - The concurrency check runs against the local D1 harness, not production D1.
 - Passwords are checked for length only. No strength rule is applied, by design.

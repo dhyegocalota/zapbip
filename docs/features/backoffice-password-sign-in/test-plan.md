@@ -2,18 +2,18 @@
 
 Every checkbox states the input and the exact expected outcome. A ticked box carries evidence after ` — evidence: ` (commit hash, log path, counts, screenshot path).
 
-Gate for the whole plan: step 0 of [plan.md](plan.md) (the Workers plan and the measured CPU time) is ticked before any row below is run on a deployed Worker.
+Gate for the whole plan: the Worker stays on the Free plan, so the hash is a pepper digest plus PBKDF2 at 20000 iterations ([ADR 0038](../../adr/0038-the-backoffice-signs-in-with-a-password-and-then-a-code-held-in-a-server-side-second-step.md)); the CPU-budget unit test below stands in for the old step 0.
 
 ## The failing test first
 
-- [ ] `apps/api/test/unit/backoffice-password-hash.test.ts::verifies a stored hash` — input: `hashPassword('correct horse 1')` then `verifyPassword` with the same string; expected: `true`, and a stored string with the format `pbkdf2-sha256$100000$<22 chars>$<43 chars>`
+- [ ] `apps/api/test/unit/backoffice-password-hash.test.ts::verifies a stored hash` — input: `hashPassword` of `correct horse 1` then `verifyPassword` with the same string and pepper; expected: `true`, and a stored string with the format `pbkdf2-sha256$20000$<22 chars>$<43 chars>`
 - [ ] Confirmed it fails for the right reason: the red run prints `hashPassword is not implemented` (the stub), not a typing or import error — evidence: (developer's commit hash and the printed line)
 - [ ] `apps/api/test/integration/backoffice-auth-password.test.ts::a right password creates one pending row` — input: the test operator with `BACKOFFICE_TEST_PASSWORD`; expected: `attemptPasswordSignIn` returns `Accepted` with one token and `backoffice_pending_sign_ins` holds one row
 - [ ] Confirmed it fails for the right reason: `attemptPasswordSignIn is not implemented` — evidence: (commit hash and printed line)
 
 ## Unit
 
-- [ ] `backoffice-password-hash.test.ts::hash format` — input: `hashPassword('a 12 char pass')`; expected: the string matches `^pbkdf2-sha256\$100000\$[A-Za-z0-9_-]{22}\$[A-Za-z0-9_-]{43}$`
+- [ ] `backoffice-password-hash.test.ts::hash format` — input: `hashPassword('a 12 char pass')`; expected: the string matches `^pbkdf2-sha256\$20000\$[A-Za-z0-9_-]{22}\$[A-Za-z0-9_-]{43}$`
 - [ ] `backoffice-password-hash.test.ts::salt is random` — input: the same password hashed twice; expected: the two strings differ
 - [ ] `backoffice-password-hash.test.ts::verify refuses a case change` — input: hash of `Correct Horse 1`, verify `correct horse 1`; expected: `false`
 - [ ] `backoffice-password-hash.test.ts::verify uses the stored count` — input: a stored string with `iterations = 1000` made by the same function with that count; expected: `verifyPassword` returns `true` (the count comes from the string, not the constant)
@@ -137,7 +137,7 @@ The reviewer picks the three claims most likely to be wrong and tries to refute 
 
 What is not tested and why.
 
-- The Workers CPU claim for 100000 iterations — not proven by any local test. Local Node measures 13 to 14 ms; the proof is step 0 of the plan, on a staging deploy, and the spec's blocking precondition stands until it is recorded.
+- The Workers CPU time of one sign-in — only a generous Node budget is pinned locally (about 2.7 ms measured). The owner reads `wrangler tail` on staging after the first sign-in.
 - The real hidden-echo behaviour of a TTY — the enrollment test injects answers and checks the output for the password. The owner's own terminal is the proof: the runbook step 1 expects no echo of the password.
 - D1 `RETURNING` atomicity under real concurrency — the concurrency row runs against the local D1 test harness, which serialises writes. The production behaviour rests on D1's single-writer semantics and is not separately tested.
 - Migration on production data — tested on a copy of the migration history with one synthetic operator row. The owner runs `d1 migrations apply` on production and checks the row count, as deploy.md already asks.
