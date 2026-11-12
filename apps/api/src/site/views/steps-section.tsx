@@ -10,12 +10,12 @@ export function StepsSection(props: { locale: OwnerLocale }) {
   return (
     <section class="block" id="how" aria-labelledby="how-title">
       <div class="container">
-        <p class="eyebrow">{translate(SiteCopyKey.HowEyebrow)}</p>
-        <h2 class="section-title" id="how-title">
+        <p class="eyebrow reveal">{translate(SiteCopyKey.HowEyebrow)}</p>
+        <h2 class="section-title reveal" id="how-title">
           {translate(SiteCopyKey.HowTitle)}
         </h2>
         <ol class="steps">
-          <li class="card">
+          <li class="card reveal">
             <span class="step-number">{1}</span>
             <h3>{translate(SiteCopyKey.HowStepConnectTitle)}</h3>
             <p>{translate(SiteCopyKey.HowStepConnectBody)}</p>
@@ -23,7 +23,7 @@ export function StepsSection(props: { locale: OwnerLocale }) {
               {CLIPBOARD_GLYPH} {translate(SiteCopyKey.HowStepConnectVisual)}
             </span>
           </li>
-          <li class="card">
+          <li class="card reveal">
             <span class="step-number">{2}</span>
             <h3>{translate(SiteCopyKey.HowStepTextTitle)}</h3>
             <p>{translate(SiteCopyKey.HowStepTextBody)}</p>
@@ -33,7 +33,7 @@ export function StepsSection(props: { locale: OwnerLocale }) {
               <span class="pill">{translate(SiteCopyKey.HowStepTextVisualNo)}</span>
             </div>
           </li>
-          <li class="card">
+          <li class="card reveal">
             <span class="step-number">{3}</span>
             <h3>{translate(SiteCopyKey.HowStepAnswerTitle)}</h3>
             <p>{translate(SiteCopyKey.HowStepAnswerBody)}</p>

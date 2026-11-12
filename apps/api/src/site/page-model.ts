@@ -1,3 +1,4 @@
+import type { InstallClient } from '@zapbip/agents/install';
 import type { OwnerLocale } from '@zapbip/types';
 import type { BackofficeTheme } from '../backoffice/backoffice-theme';
 
@@ -24,5 +25,6 @@ export type PageModel = {
   siteOrigin: string;
   turnstileSiteKey: string;
   referralCode: string | null;
+  agent: InstallClient | null;
   join: JoinView;
 };

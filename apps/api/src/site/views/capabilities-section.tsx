@@ -13,13 +13,13 @@ export function CapabilitiesSection(props: { locale: OwnerLocale }) {
   return (
     <section class="block" id="capabilities" aria-labelledby="capabilities-title">
       <div class="container">
-        <p class="eyebrow">{translate(SiteCopyKey.CapabilitiesEyebrow)}</p>
-        <h2 class="section-title" id="capabilities-title">
+        <p class="eyebrow reveal">{translate(SiteCopyKey.CapabilitiesEyebrow)}</p>
+        <h2 class="section-title reveal" id="capabilities-title">
           {translate(SiteCopyKey.CapabilitiesTitle)}
         </h2>
-        <p class="lead">{translate(SiteCopyKey.CapabilitiesLead)}</p>
+        <p class="lead reveal">{translate(SiteCopyKey.CapabilitiesLead)}</p>
         <div class="card-grid">
-          <article class="card">
+          <article class="card reveal">
             <h3>{translate(SiteCopyKey.CapabilityButtonsTitle)}</h3>
             <p>{translate(SiteCopyKey.CapabilityButtonsBody)}</p>
             <div class="mini-chat" aria-hidden="true">
@@ -31,7 +31,7 @@ export function CapabilitiesSection(props: { locale: OwnerLocale }) {
               <span class="pill">{translate(SiteCopyKey.CapabilityButtonsChatNo)}</span>
             </div>
           </article>
-          <article class="card">
+          <article class="card reveal">
             <h3>{translate(SiteCopyKey.CapabilityListTitle)}</h3>
             <p>{translate(SiteCopyKey.CapabilityListBody)}</p>
             <div class="mini-chat" aria-hidden="true">
@@ -45,7 +45,7 @@ export function CapabilitiesSection(props: { locale: OwnerLocale }) {
               <span class="divider">{translate(SiteCopyKey.CapabilityListChatRows)}</span>
             </div>
           </article>
-          <article class="card">
+          <article class="card reveal">
             <h3>{translate(SiteCopyKey.CapabilityMediaTitle)}</h3>
             <p>{translate(SiteCopyKey.CapabilityMediaBody)}</p>
             <div class="mini-chat" aria-hidden="true">
@@ -59,7 +59,7 @@ export function CapabilitiesSection(props: { locale: OwnerLocale }) {
               <span class="out">{VOICE_NOTE}</span>
             </div>
           </article>
-          <article class="card">
+          <article class="card reveal">
             <h3>{translate(SiteCopyKey.CapabilityWakeTitle)}</h3>
             <p>{translate(SiteCopyKey.CapabilityWakeBody)}</p>
             <div class="mini-chat" aria-hidden="true">
@@ -71,7 +71,7 @@ export function CapabilitiesSection(props: { locale: OwnerLocale }) {
               </span>
             </div>
           </article>
-          <article class="card">
+          <article class="card reveal">
             <h3>{translate(SiteCopyKey.CapabilityRoutingTitle)}</h3>
             <p>{translate(SiteCopyKey.CapabilityRoutingBody)}</p>
             <div class="mini-chat" aria-hidden="true">
@@ -86,7 +86,7 @@ export function CapabilitiesSection(props: { locale: OwnerLocale }) {
               <span class="out">{translate(SiteCopyKey.CapabilityRoutingChatReply)}</span>
             </div>
           </article>
-          <article class="card">
+          <article class="card reveal">
             <h3>{translate(SiteCopyKey.CapabilityWaitTitle)}</h3>
             <p>{translate(SiteCopyKey.CapabilityWaitBody)}</p>
             <div class="mini-chat" aria-hidden="true">

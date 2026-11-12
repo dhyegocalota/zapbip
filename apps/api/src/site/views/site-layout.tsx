@@ -15,6 +15,7 @@ import {
   THEME_COLOR_LIGHT,
   TURNSTILE_SCRIPT_URL,
   DOCS_PORTUGUESE_PATH,
+  JOIN_FRAGMENT,
 } from '../site-constants';
 import { leadingAgentNames } from '../site-agents';
 import { SiteCopyKey } from '../site-copy';
@@ -45,7 +46,6 @@ const THEME_OPTIONS: { theme: BackofficeTheme; label: SiteCopyKey }[] = [
   { theme: BackofficeTheme.Dark, label: SiteCopyKey.ThemeDark },
   { theme: BackofficeTheme.System, label: SiteCopyKey.ThemeSystem },
 ];
-const HOME_FRAGMENT = '#join';
 const FORM_FRAGMENT = '#join-email';
 
 export function turnstileLanguageOf(input: { locale: OwnerLocale }): string {
@@ -112,7 +112,7 @@ function SiteHeader(props: { model: PageModel }) {
           </a>
           <LocaleSwitch model={model} />
           {isJoinOffered ? (
-            <a class="button button-primary header-join" href={HOME_FRAGMENT}>
+            <a class="button button-primary header-join" href={JOIN_FRAGMENT}>
               {translate(SiteCopyKey.HeaderJoin)}
             </a>
           ) : null}
@@ -188,7 +188,7 @@ export function SiteLayout(props: { model: PageModel; title: string; isIndexable
         {hasForm ? <script src={TURNSTILE_SCRIPT_URL} async defer /> : null}
       </head>
       <body>
-        <a href={hasForm ? FORM_FRAGMENT : HOME_FRAGMENT} class="skip-link">
+        <a href={hasForm ? FORM_FRAGMENT : JOIN_FRAGMENT} class="skip-link">
           {translate(SiteCopyKey.SkipToForm)}
         </a>
         <SiteHeader model={model} />

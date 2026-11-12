@@ -5,6 +5,7 @@ import { ContactText } from './contact-text';
 
 const FAQ_ITEMS: { question: SiteCopyKey; answer: SiteCopyKey }[] = [
   { question: SiteCopyKey.FaqWhenQuestion, answer: SiteCopyKey.FaqWhenAnswer },
+  { question: SiteCopyKey.FaqFreeQuestion, answer: SiteCopyKey.FaqFreeAnswer },
   { question: SiteCopyKey.FaqPriceQuestion, answer: SiteCopyKey.FaqPriceAnswer },
   { question: SiteCopyKey.FaqDeveloperQuestion, answer: SiteCopyKey.FaqDeveloperAnswer },
   { question: SiteCopyKey.FaqOthersQuestion, answer: SiteCopyKey.FaqOthersAnswer },
@@ -18,12 +19,12 @@ export function FaqSection(props: { locale: OwnerLocale }) {
   return (
     <section class="block" id="faq" aria-labelledby="faq-title">
       <div class="container faq">
-        <p class="eyebrow">{translate(SiteCopyKey.FaqEyebrow)}</p>
-        <h2 class="section-title" id="faq-title">
+        <p class="eyebrow reveal">{translate(SiteCopyKey.FaqEyebrow)}</p>
+        <h2 class="section-title reveal" id="faq-title">
           {translate(SiteCopyKey.FaqTitle)}
         </h2>
         {FAQ_ITEMS.map((item) => (
-          <details>
+          <details class="reveal">
             <summary>{translate(item.question)}</summary>
             <p>
               <ContactText text={translate(item.answer)} />

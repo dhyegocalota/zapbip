@@ -1,7 +1,8 @@
 import { AGENT_INSTALLS } from '@zapbip/agents/install';
 import { DEFAULT_LOCALE, OwnerLocale, TURNSTILE_ACTION_WAITLIST_JOIN } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
-import { leadingAgentNames } from '../../src/site/site-agents';
+import { initialsOf, leadingAgentNames } from '../../src/site/site-agents';
+import { languageOf } from '../../src/site/site-links';
 import { SiteCopyKey } from '../../src/site/site-copy';
 import { SITE_CONTENT_SECURITY_POLICY } from '../../src/site/site-policy';
 import { copyHtml, escapedHtml, REFERRAL_CODE, SITE_ORIGIN, SITE_TURNSTILE_SITE_KEY, siteEnvironment, siteFetch } from '../support/site';
@@ -13,6 +14,10 @@ const THEME_COOKIE = '__Host-zb_site_theme';
 const INLINE_SCRIPT_PATTERN = /<script(?![^>]*\bsrc=)[^>]*>/;
 const INLINE_STYLE_PATTERN = /<style|\sstyle="/;
 const SEE_OTHER = 303;
+const [FIRST_AGENT, SECOND_AGENT] = Object.entries(AGENT_INSTALLS).map(([id, install]) => ({ id, name: install.productName })) as [
+  { id: string; name: string },
+  { id: string; name: string },
+];
 
 async function pageOf(input: { path?: string; headers?: Record<string, string> }): Promise<string> {
   const { path = '/', headers } = input;
@@ -110,7 +115,17 @@ describe('GET /', () => {
 
   it('has the sections of the design in order', async () => {
     const html = await pageOf({ headers: ENGLISH_HEADERS });
-    const order = ['id="join"', 'id="how"', 'id="capabilities"', 'id="clients"', 'id="privacy"', 'id="faq"', 'class="final'];
+    const order = [
+      'id="join"',
+      'id="why"',
+      'id="how"',
+      'id="capabilities"',
+      'id="clients"',
+      'id="pricing"',
+      'id="privacy"',
+      'id="faq"',
+      'class="final',
+    ];
     const positions = order.map((marker) => html.indexOf(marker));
     expect(positions.every((position) => position > -1)).toBe(true);
     expect([...positions].sort((first, second) => first - second)).toEqual(positions);
@@ -184,27 +199,256 @@ describe('the Portuguese page', () => {
 });
 
 describe('the works-with section', () => {
-  const names = Object.values(AGENT_INSTALLS).map((install) => install.productName);
+  const agents = Object.entries(AGENT_INSTALLS).map(([id, install]) => ({ id, name: install.productName }));
+  const CARD_NAME_PATTERN = /<h3 class="agent-name">([^<]+)<\/h3>/g;
+  const CARD_LINK_PATTERN = /<a class="agent-pick" href="([^"]+)" data-picked-label="[^"]*" aria-label="([^"]+)">/g;
+  const CARD_BADGE_PATTERN = /<span class="agent-badge" aria-hidden="true">([^<]+)<\/span>/g;
+
+  function clientsSectionOf(input: { html: string }): string {
+    return input.html.slice(input.html.indexOf('id="clients"'), input.html.indexOf('id="pricing"'));
+  }
 
   it.each([
-    ['en_US', ENGLISH_HEADERS],
-    ['pt_BR', PORTUGUESE_HEADERS],
-  ])('shows one tile per installable agent, in registry order, named by the registry in %s', async (_locale, headers) => {
-    const html = await pageOf({ headers });
-    const section = html.slice(html.indexOf('id="clients"'), html.indexOf('id="privacy"'));
-    const tiles = [...section.matchAll(/<div class="card client[^"]*"><strong>([^<]+)<\/strong>/g)].map((match) => match[1]);
-    expect(tiles.slice(0, names.length)).toEqual(names.map((name) => escapedHtml({ text: name })));
+    ['en_US', OwnerLocale.EnglishUs, ENGLISH_HEADERS],
+    ['pt_BR', OwnerLocale.PortugueseBrazil, PORTUGUESE_HEADERS],
+  ])('shows one card per installable agent, in registry order, with its own button in %s', async (_name, locale, headers) => {
+    const section = clientsSectionOf({ html: await pageOf({ headers }) });
+    const names = [...section.matchAll(CARD_NAME_PATTERN)].map((match) => match[1]);
+    expect(names.slice(0, agents.length)).toEqual(agents.map((agent) => escapedHtml({ text: agent.name })));
+    const buttons = [...section.matchAll(CARD_LINK_PATTERN)].map((match) => ({ href: match[1], label: match[2] }));
+    expect(buttons.slice(0, agents.length)).toEqual(
+      agents.map((agent) => ({
+        href: escapedHtml({ text: `/?agent=${agent.id}&lang=${languageOf({ locale })}#join` }),
+        label: copyHtml({ key: SiteCopyKey.AgentCardButton, locale, values: { agent: agent.name } }),
+      })),
+    );
   });
 
-  it('ends with the tile for any MCP app', async () => {
-    const html = await pageOf({ headers: ENGLISH_HEADERS });
-    const section = html.slice(html.indexOf('id="clients"'), html.indexOf('id="privacy"'));
+  it.each([
+    ['en_US', OwnerLocale.EnglishUs, ENGLISH_HEADERS],
+    ['pt_BR', OwnerLocale.PortugueseBrazil, PORTUGUESE_HEADERS],
+  ])('shows a badge with the initials and a compact link on each tile in %s', async (_name, locale, headers) => {
+    const section = clientsSectionOf({ html: await pageOf({ headers }) });
+    const badges = [...section.matchAll(CARD_BADGE_PATTERN)].map((match) => match[1]);
+    expect(badges.slice(0, agents.length)).toEqual(agents.map((agent) => initialsOf({ name: agent.name })));
+    expect(section).toContain(`${copyHtml({ key: SiteCopyKey.AgentCardShort, locale })}</a>`);
+  });
+
+  it('repeats no sentence and no snippet across the tiles', async () => {
+    const section = clientsSectionOf({ html: await pageOf({ headers: ENGLISH_HEADERS }) });
+    expect(section).not.toContain('agent-snippet');
+    const tiles = section.slice(section.indexOf('class="clients"'));
+    expect(tiles).not.toMatch(/<p[ >]/);
+  });
+
+  it('ends with the card for any MCP app, whose button goes to the form', async () => {
+    const section = clientsSectionOf({ html: await pageOf({ headers: ENGLISH_HEADERS }) });
     expect(section).toContain(copyHtml({ key: SiteCopyKey.ClientsAnyMcpName, locale: OwnerLocale.EnglishUs }));
+    expect(section).toContain('agent-card-any');
+    expect(section).toContain('href="/?lang=en#join" data-clear-agent');
+    expect(section).toContain(copyHtml({ key: SiteCopyKey.ClientsAnyMcpButton, locale: OwnerLocale.EnglishUs }));
+  });
+
+  it('carries the picked-agent text on each button for the script', async () => {
+    const section = clientsSectionOf({ html: await pageOf({ headers: ENGLISH_HEADERS }) });
+    const picked = copyHtml({ key: SiteCopyKey.AgentCardPicked, locale: OwnerLocale.EnglishUs, values: { agent: agents[0]!.name } });
+    expect(section).toContain(`data-picked-label="${picked}"`);
   });
 
   it('names the first two agents of the registry in the subhead', async () => {
     const html = await pageOf({ headers: ENGLISH_HEADERS });
-    expect(html).toContain(`${names[0]}, ${names[1]} and any MCP agent`);
+    expect(html).toContain(`${agents[0]!.name}, ${agents[1]!.name} and any MCP agent`);
+  });
+});
+
+describe('the agent links', () => {
+  it('carry the language of the page, not the language of the browser', async () => {
+    const html = await pageOf({ path: '/?lang=pt-BR', headers: ENGLISH_HEADERS });
+    const hrefs = [...html.matchAll(/<a class="agent-pick" href="([^"]+)"/g)].map((match) => match[1]);
+    expect(hrefs.length).toBeGreaterThan(0);
+    expect(hrefs.filter((href) => !href!.includes('lang=pt-BR'))).toEqual([]);
+    expect(html).toContain('href="/?lang=pt-BR#join" data-clear-agent');
+  });
+
+  it('carry the referral code as well', async () => {
+    const html = await pageOf({ path: `/?ref=${REFERRAL_CODE}`, headers: ENGLISH_HEADERS });
+    expect(html).toContain(`ref=${REFERRAL_CODE}#join" data-picked-label`);
+    expect(html).toContain(`href="/?lang=en&amp;ref=${REFERRAL_CODE}#join" data-clear-agent`);
+  });
+});
+
+describe('the agent hint', () => {
+  const HINT_PATTERN = /<p class="join-agent"([^>]*)>([^<]*)<\/p>/;
+
+  async function hintOf(input: { path: string }): Promise<{ attributes: string; text: string }> {
+    const match = HINT_PATTERN.exec(await pageOf({ path: input.path, headers: ENGLISH_HEADERS }));
+    return { attributes: match![1]!, text: match![2]! };
+  }
+
+  it('shows the picked agent from the query', async () => {
+    const hint = await hintOf({ path: `/?agent=${FIRST_AGENT.id}` });
+    expect(hint.text).toBe(
+      copyHtml({ key: SiteCopyKey.AgentCardPicked, locale: OwnerLocale.EnglishUs, values: { agent: FIRST_AGENT.name } }),
+    );
+    expect(hint.attributes).not.toContain('hidden');
+  });
+
+  it.each([
+    ['an unknown id', 'nope'],
+    ['a prototype name', '__proto__'],
+    ['an empty value', ''],
+    ['a script tag', '<script>alert(1)</script>'],
+    ['a list of ids', `${FIRST_AGENT.id},${SECOND_AGENT.id}`],
+    ['ten thousand characters', 'x'.repeat(10_000)],
+  ])('ignores %s and keeps the hint empty and hidden', async (_name, value) => {
+    const hint = await hintOf({ path: `/?agent=${encodeURIComponent(value)}` });
+    expect(hint.text).toBe('');
+    expect(hint.attributes).toContain('hidden');
+  });
+
+  it('takes the first value of a repeated parameter and never echoes markup', async () => {
+    const html = await pageOf({ path: `/?agent=${SECOND_AGENT.id}&agent=<b>`, headers: ENGLISH_HEADERS });
+    expect(html).toContain(
+      copyHtml({ key: SiteCopyKey.AgentCardPicked, locale: OwnerLocale.EnglishUs, values: { agent: SECOND_AGENT.name } }),
+    );
+    expect(html).not.toContain('<b>');
+  });
+
+  it('carries the agent and the referral code together', async () => {
+    const html = await pageOf({ path: `/?agent=${SECOND_AGENT.id}&ref=${REFERRAL_CODE}`, headers: ENGLISH_HEADERS });
+    expect(html).toContain(`name="referralCode" value="${REFERRAL_CODE}"`);
+    expect(html).toContain(
+      copyHtml({ key: SiteCopyKey.AgentCardPicked, locale: OwnerLocale.EnglishUs, values: { agent: SECOND_AGENT.name } }),
+    );
+  });
+
+  it('shows the hint in Portuguese', async () => {
+    const html = await pageOf({ path: `/?agent=${SECOND_AGENT.id}`, headers: PORTUGUESE_HEADERS });
+    expect(html).toContain(
+      copyHtml({ key: SiteCopyKey.AgentCardPicked, locale: OwnerLocale.PortugueseBrazil, values: { agent: SECOND_AGENT.name } }),
+    );
+  });
+});
+
+describe('the differentiators', () => {
+  const TITLE_KEYS = [
+    SiteCopyKey.WhyOfficialTitle,
+    SiteCopyKey.WhyAskTitle,
+    SiteCopyKey.WhyRoutingTitle,
+    SiteCopyKey.WhyWakeTitle,
+    SiteCopyKey.WhyEveryAgentTitle,
+    SiteCopyKey.WhyFastTitle,
+  ];
+
+  it.each([
+    ['en_US', OwnerLocale.EnglishUs, ENGLISH_HEADERS],
+    ['pt_BR', OwnerLocale.PortugueseBrazil, PORTUGUESE_HEADERS],
+  ])('tells six stories in order, each with its own vignette, in %s', async (_name, locale, headers) => {
+    const html = await pageOf({ headers });
+    const section = html.slice(html.indexOf('id="why"'), html.indexOf('id="how"'));
+    expect(section.match(/class="why-item[ "]/g)).toHaveLength(TITLE_KEYS.length);
+    expect(section.match(/class="why-visual"/g)).toHaveLength(TITLE_KEYS.length);
+    const positions = TITLE_KEYS.map((key) => section.indexOf(copyHtml({ key, locale })));
+    expect(positions.every((position) => position > -1)).toBe(true);
+    expect([...positions].sort((first, second) => first - second)).toEqual(positions);
+    expect(section).toContain(copyHtml({ key: SiteCopyKey.WhyTitle, locale }));
+  });
+
+  it('names the leading agents of the registry in the every-agent story', async () => {
+    const html = await pageOf({ headers: ENGLISH_HEADERS });
+    expect(html).toContain(
+      copyHtml({ key: SiteCopyKey.WhyEveryAgentBody, locale: OwnerLocale.EnglishUs, values: { agents: leadingAgentNames() } }),
+    );
+  });
+
+  it('keeps every vignette out of the accessibility tree', async () => {
+    const html = await pageOf({ headers: ENGLISH_HEADERS });
+    const section = html.slice(html.indexOf('id="why"'), html.indexOf('id="how"'));
+    expect(section.match(/class="why-visual" aria-hidden="true"/g)).toHaveLength(TITLE_KEYS.length);
+  });
+
+  it('marks the sections for the staggered reveal', async () => {
+    const html = await pageOf({ headers: ENGLISH_HEADERS });
+    expect(html.match(/class="[^"]*\breveal\b/g)!.length).toBeGreaterThan(TITLE_KEYS.length);
+  });
+});
+
+describe('the pricing', () => {
+  function pricingOf(input: { html: string }): string {
+    return input.html.slice(input.html.indexOf('id="pricing"'), input.html.indexOf('id="privacy"'));
+  }
+
+  it.each([
+    ['en_US', OwnerLocale.EnglishUs, ENGLISH_HEADERS],
+    ['pt_BR', OwnerLocale.PortugueseBrazil, PORTUGUESE_HEADERS],
+  ])('highlights a free plan with its price and what it includes in %s', async (_name, locale, headers) => {
+    const section = pricingOf({ html: await pageOf({ headers }) });
+    const keys = [
+      SiteCopyKey.PricingFreeName,
+      SiteCopyKey.PricingFreePrice,
+      SiteCopyKey.PricingFreeNote,
+      SiteCopyKey.PricingFreePhone,
+      SiteCopyKey.PricingFreeAgents,
+      SiteCopyKey.PricingFreeAsk,
+      SiteCopyKey.PricingFreeRouting,
+      SiteCopyKey.PricingFreeWake,
+      SiteCopyKey.PricingCta,
+    ];
+    expect(keys.filter((key) => !section.includes(copyHtml({ key, locale })))).toEqual([]);
+    expect(section).toContain('class="card plan plan-free');
+    expect(section).toContain(`aria-label="${copyHtml({ key: SiteCopyKey.PricingFreeIncludes, locale })}"`);
+  });
+
+  it('writes the price in the currency of the page language', async () => {
+    const english = pricingOf({ html: await pageOf({ headers: ENGLISH_HEADERS }) });
+    const portuguese = pricingOf({ html: await pageOf({ headers: PORTUGUESE_HEADERS }) });
+    expect(english).toContain('$0');
+    expect(english).not.toContain('R$0');
+    expect(portuguese).toContain('R$0');
+  });
+
+  it('shows a muted Pro card with no price and no promise', async () => {
+    const section = pricingOf({ html: await pageOf({ headers: ENGLISH_HEADERS }) });
+    const pro = section.slice(section.indexOf('class="card plan plan-pro'));
+    expect(pro).toContain(copyHtml({ key: SiteCopyKey.PricingProName, locale: OwnerLocale.EnglishUs }));
+    expect(pro).not.toMatch(/\$|R\$|<a /);
+  });
+
+  it('lets the Pro card sit at its own height, not the height of the Free card', async () => {
+    const section = pricingOf({ html: await pageOf({ headers: ENGLISH_HEADERS }) });
+    expect(section).toContain('class="card plan plan-pro');
+  });
+
+  it('sends the free button to the form', async () => {
+    const section = pricingOf({ html: await pageOf({ headers: ENGLISH_HEADERS }) });
+    expect(section).toMatch(/<a class="button button-primary[^"]*" href="#join">Get started free<\/a>/);
+  });
+});
+
+describe('the free offer across the page', () => {
+  it.each([
+    ['en_US', OwnerLocale.EnglishUs, ENGLISH_HEADERS, 'Get started free'],
+    ['pt_BR', OwnerLocale.PortugueseBrazil, PORTUGUESE_HEADERS, 'Comece grátis'],
+  ])('labels the header, the hero and the final call in %s', async (_name, _locale, headers, label) => {
+    const html = await pageOf({ headers });
+    expect(html).toContain(`href="#join">${label}</a>`);
+    expect(html).toMatch(new RegExp(`<span data-label[^>]*>${label}</span>`));
+    expect(html.match(new RegExp(`>${label}<`, 'g'))!.length).toBeGreaterThanOrEqual(4);
+  });
+
+  it.each([
+    [ENGLISH_HEADERS, 'free'],
+    [PORTUGUESE_HEADERS, 'grátis'],
+  ])('mentions free in the meta description', async (headers, word) => {
+    const html = await pageOf({ headers });
+    const description = /<meta name="description" content="([^"]*)"/.exec(html)![1]!;
+    expect(description.toLowerCase()).toContain(word);
+  });
+
+  it.each([OwnerLocale.EnglishUs, OwnerLocale.PortugueseBrazil])('answers "is it free" in the FAQ in %s', async (locale) => {
+    const html = await pageOf({ headers: locale === OwnerLocale.EnglishUs ? ENGLISH_HEADERS : PORTUGUESE_HEADERS });
+    expect(html).toContain(`<summary>${copyHtml({ key: SiteCopyKey.FaqFreeQuestion, locale })}</summary>`);
+    expect(html).toContain(copyHtml({ key: SiteCopyKey.FaqFreeAnswer, locale }));
   });
 });
 
@@ -297,5 +541,40 @@ describe('preferences and redirects', () => {
     expect(response.status).toBe(404);
     expect(html).toContain(copyHtml({ key: SiteCopyKey.NotFoundTitle, locale: OwnerLocale.EnglishUs }));
     expect(html).toContain('<meta name="robots" content="noindex"');
+  });
+});
+
+describe('the paused waitlist', () => {
+  const PAUSED = siteEnvironment({ overrides: { TURNSTILE_SECRET_KEY: undefined } });
+
+  async function pausedPage(): Promise<string> {
+    const response = await siteFetch({ path: '/', headers: ENGLISH_HEADERS, env: PAUSED });
+    expect(response.status).toBe(200);
+    return response.text();
+  }
+
+  it('still tells the stories, shows the tiles and the pricing', async () => {
+    const html = await pausedPage();
+    expect(html.match(/class="why-item"/g)).toHaveLength(6);
+    expect(html).toContain('id="pricing"');
+    expect(html).toContain(copyHtml({ key: SiteCopyKey.PricingFreeName, locale: OwnerLocale.EnglishUs }));
+    expect(html).not.toContain('id="join-email"');
+  });
+
+  it('keeps every tile link pointing at the join anchor', async () => {
+    const html = await pausedPage();
+    const hrefs = [...html.matchAll(/<a class="agent-pick" href="([^"]+)"/g)].map((match) => match[1]);
+    expect(hrefs.length).toBeGreaterThan(0);
+    expect(hrefs.filter((href) => !href!.endsWith('#join'))).toEqual([]);
+    expect(html).toContain('id="join"');
+  });
+});
+
+describe('the fifth story', () => {
+  it.each([
+    [ENGLISH_HEADERS, 'Works with the agents you use'],
+    [PORTUGUESE_HEADERS, 'Funciona com os agentes que você usa'],
+  ])('is titled after the agents the visitor already uses', async (headers, title) => {
+    expect(await pageOf({ headers })).toContain(`<h3>${title}</h3>`);
   });
 });
