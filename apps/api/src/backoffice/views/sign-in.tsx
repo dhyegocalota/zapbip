@@ -4,7 +4,7 @@ import { BackofficeCopyKey, renderBackofficeCopy } from '../backoffice-copy';
 import type { BackofficeNotice } from '../backoffice-notice';
 import type { BackofficeTheme } from '../backoffice-theme';
 import { BackofficePath } from '../backoffice-paths';
-import { CodeField, Field } from '../components/fields';
+import { Field } from '../components/fields';
 import { Layout } from '../layout';
 
 export type SignInPageProps = {
@@ -39,15 +39,22 @@ export function SignInPage(props: SignInPageProps) {
         <form method="post" action={BackofficePath.SignIn}>
           <input type="hidden" name="csrf" value={props.csrfToken} />
           <Field
-            id="key"
-            name="key"
-            type="password"
-            autocomplete="current-password"
-            label={translate(BackofficeCopyKey.SignInKeyLabel)}
-            help={translate(BackofficeCopyKey.SignInKeyHelp)}
+            id="email"
+            name="email"
+            type="email"
+            autocomplete="username"
+            label={translate(BackofficeCopyKey.SignInEmailLabel)}
+            help={null}
             autofocus
           />
-          <CodeField locale={locale} id="code" />
+          <Field
+            id="password"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            label={translate(BackofficeCopyKey.SignInPasswordLabel)}
+            help={null}
+          />
           <button type="submit" class="button button-primary">
             {translate(BackofficeCopyKey.SignInSubmit)}
           </button>
