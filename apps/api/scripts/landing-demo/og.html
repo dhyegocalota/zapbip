@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>zapbip Open Graph image</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        width: 1200px;
+        height: 630px;
+        overflow: hidden;
+        font-family:
+          ui-rounded,
+          'SF Pro Rounded',
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+      }
+
+      .card {
+        position: relative;
+        width: 1200px;
+        height: 630px;
+        overflow: hidden;
+        background-color: #f6f8f5;
+        background-image:
+          radial-gradient(560px 380px at 900px 120px, rgb(37 211 102 / 0.28), transparent 70%),
+          radial-gradient(rgb(14 31 26 / 0.07) 1px, transparent 1.5px);
+        background-size:
+          auto,
+          20px 20px;
+        color: #0e1f1a;
+      }
+
+      .brand {
+        position: absolute;
+        left: 72px;
+        top: 96px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        font-size: 44px;
+        font-weight: 800;
+        letter-spacing: -0.025em;
+      }
+
+      .mark {
+        width: 64px;
+        height: 64px;
+        border-radius: 20px 20px 20px 6px;
+        background:
+          radial-gradient(circle at 30% 50%, #fff 4.5px, transparent 6px), radial-gradient(circle at 50% 50%, #fff 4.5px, transparent 6px),
+          radial-gradient(circle at 70% 50%, #fff 4.5px, transparent 6px), #128c7e;
+        box-shadow: 0 0 0 6px rgb(37 211 102 / 0.18);
+      }
+
+      h1 {
+        position: absolute;
+        left: 72px;
+        top: 200px;
+        margin: 0;
+        width: 700px;
+        font-size: 68px;
+        font-weight: 800;
+        line-height: 1.02;
+        letter-spacing: -0.035em;
+      }
+
+      .accent {
+        position: relative;
+        display: inline-block;
+        background: linear-gradient(100deg, #0b6b60, #128c7e);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+
+      .accent::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: -6px;
+        height: 6px;
+        border-radius: 3px;
+        background: #25d366;
+      }
+
+      .tagline {
+        position: absolute;
+        left: 72px;
+        top: 392px;
+        margin: 0;
+        color: #4b5e57;
+        font-size: 26px;
+      }
+
+      .phone {
+        position: absolute;
+        left: 830px;
+        top: 70px;
+        width: 300px;
+        height: 620px;
+        padding: 9px;
+        border-radius: 42px;
+        background: #0e1f1a;
+        box-shadow:
+          0 0 0 1px #1f332d,
+          0 30px 60px -20px rgb(14 31 26 / 0.5);
+      }
+
+      .screen {
+        height: 100%;
+        overflow: hidden;
+        border-radius: 34px;
+        background: #ece5dd;
+        font-size: 19px;
+        line-height: 1.3;
+        color: #111b21;
+      }
+
+      .status {
+        height: 20px;
+        background: #075e54;
+      }
+
+      .header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        height: 46px;
+        padding: 0 14px;
+        background: #075e54;
+        color: #fff;
+        font-size: 19px;
+        font-weight: 600;
+      }
+
+      .avatar {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow:
+          inset 0 0 0 6px #fff,
+          inset 0 0 0 26px #0b6b60;
+      }
+
+      .chat {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 18px 12px;
+      }
+
+      .bubble {
+        width: 88%;
+        padding: 8px 10px;
+        border-radius: 3px 10px 10px 10px;
+        background: #fff;
+        box-shadow: 0 1px 1px rgb(11 20 26 / 0.13);
+      }
+
+      .bubble b {
+        display: block;
+        color: #0b6b60;
+        font-size: 14px;
+      }
+
+      .choice {
+        width: 88%;
+        padding: 9px;
+        border-radius: 9px;
+        background: #fff;
+        box-shadow: 0 1px 1px rgb(11 20 26 / 0.13);
+        color: #0b6b60;
+        font-weight: 600;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="brand"><span class="mark"></span>zapbip</div>
+      <h1>Your AI agents text you <span class="accent">on WhatsApp.</span></h1>
+      <p class="tagline">zapbip.com · Join the waitlist</p>
+      <div class="phone">
+        <div class="screen">
+          <div class="status"></div>
+          <div class="header"><span class="avatar"></span>zapbip</div>
+          <div class="chat" id="chat"></div>
+        </div>
+      </div>
+    </div>
+    <script>
+      const demo = window.DEMO;
+      document.getElementById('chat').innerHTML =
+        `<div class="bubble"><b>${demo.agentName}</b>${demo.questionShort}</div>` +
+        demo.options.map((option) => `<div class="choice">${option}</div>`).join('');
+    </script>
+  </body>
+</html>
