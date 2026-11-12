@@ -59,3 +59,6 @@ A `Proposed` ADR moves to `Accepted` by editing its status line and date. Any ot
 | [0036](0036-one-fixed-meta-app-and-numbers-join-through-embedded-signup.md) | One fixed Meta app, and numbers join through Embedded Signup | Accepted | 2026-11-11 |
 | [0037](0037-only-the-onboarding-page-loads-the-facebook-sdk-under-its-own-policy.md) | Only the onboarding page loads the Facebook SDK, under its own policy | Accepted | 2026-11-11 |
 | [0038](0038-the-backoffice-signs-in-with-a-password-and-then-a-code-held-in-a-server-side-second-step.md) | The backoffice signs in with a password, then a code held in a server-side second step | Accepted | 2026-11-11 |
+| [0039](0039-the-public-waitlist-is-guarded-by-turnstile-and-fails-closed.md) | The public waitlist is guarded by Cloudflare Turnstile and fails closed | Accepted | 2026-11-12 |
+| [0040](0040-the-waitlist-and-the-referral-cap-live-in-d1-and-the-cap-is-a-settings-row.md) | The waitlist and the referral cap live in D1, and the cap is a settings row | Accepted | 2026-11-12 |
+| [0041](0041-the-public-site-is-served-by-the-api-worker-through-host-dispatch.md) | The public site is served by the API Worker, selected by host, next to the backoffice | Accepted | 2026-11-12 |
