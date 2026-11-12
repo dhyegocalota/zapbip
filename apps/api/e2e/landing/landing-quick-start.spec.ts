@@ -55,16 +55,22 @@ test('the any app tab clears the picked agent', async ({ page }) => {
   await expect(page).toHaveURL(/agent=any/);
 });
 
-test('browsing the tabs never announces a pick; the call to action does, and the any app one clears it', async ({ page }) => {
-  await page.goto('/');
-  await tabOf({ page, id: SECOND_AGENT.id }).click();
-  await tabOf({ page, id: THIRD_AGENT.id }).click();
-  await expect(page.locator('.join-agent')).toBeHidden();
-  await page.locator(`#start-panel-${THIRD_AGENT.id} .start-cta`).click();
-  await expect(page.locator('.join-agent')).toHaveText(siteCopy({ key: SiteCopyKey.AgentCardPicked, values: { agent: THIRD_AGENT.name } }));
-  await tabOf({ page, id: 'any' }).click();
-  await page.locator('#start-panel-any .start-cta').click();
-  await expect(page.locator('.join-agent')).toBeHidden();
+test.describe('browsing without smooth scrolling', () => {
+  test.use({ reducedMotion: 'reduce' });
+
+  test('browsing the tabs never announces a pick; the call to action does, and the any app one clears it', async ({ page }) => {
+    await page.goto('/');
+    await tabOf({ page, id: SECOND_AGENT.id }).click();
+    await tabOf({ page, id: THIRD_AGENT.id }).click();
+    await expect(page.locator('.join-agent')).toBeHidden();
+    await page.locator(`#start-panel-${THIRD_AGENT.id} .start-cta`).click();
+    await expect(page.locator('.join-agent')).toHaveText(
+      siteCopy({ key: SiteCopyKey.AgentCardPicked, values: { agent: THIRD_AGENT.name } }),
+    );
+    await tabOf({ page, id: 'any' }).click();
+    await page.locator('#start-panel-any .start-cta').click();
+    await expect(page.locator('.join-agent')).toBeHidden();
+  });
 });
 
 test.describe('without a clipboard', () => {

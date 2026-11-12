@@ -51,9 +51,8 @@ function CodeText(props: { code: string }) {
   );
 }
 
-function TabLogo(props: { tab: Tab; locale: OwnerLocale }) {
-  const { tab, locale } = props;
-  const translate = copyOf({ locale });
+function TabLogo(props: { tab: Tab }) {
+  const { tab } = props;
   if (tab.logoId === null) {
     return (
       <span class="agent-badge" aria-hidden="true">
@@ -66,7 +65,7 @@ function TabLogo(props: { tab: Tab; locale: OwnerLocale }) {
       <img
         class="start-logo-image"
         src={logoPathOf({ id: tab.logoId })}
-        alt={translate(SiteCopyKey.StartLogoAlt, { agent: tab.name })}
+        alt=""
         width={LOGO_SIZE}
         height={LOGO_SIZE}
         loading="lazy"
@@ -122,9 +121,8 @@ export function QuickStartSection(props: { locale: OwnerLocale; referralCode: st
               href={startPathOf({ tab: tab.id, language, referralCode })}
               aria-selected={String(tab.id === startTab)}
               aria-controls={`start-panel-${tab.id}`}
-              data-hint={tab.pickedLabel === null ? '' : tab.pickedLabel}
             >
-              <TabLogo tab={tab} locale={locale} />
+              <TabLogo tab={tab} />
               <span class="start-tab-name">{tab.name}</span>
             </a>
           ))}

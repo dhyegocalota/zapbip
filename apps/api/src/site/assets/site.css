@@ -113,6 +113,7 @@
   --duration-arrive: 420ms;
   --duration-chart: 640ms;
   --duration-pulse: 2s;
+  --duration-type: 400ms;
   --duration-breathe: 1.6s;
   --duration-draw: 900ms;
   --duration-burst: 900ms;
@@ -2428,24 +2429,28 @@ summary::before {
     animation: panel-in var(--duration-arrive) var(--ease-out);
   }
 
+  html.has-typing #start:not(.is-live) .code-line {
+    clip-path: inset(0 100% 0 0);
+  }
+
   #start.is-live .start-panel:not([hidden]) .code-line {
-    animation: code-type calc(400ms / var(--lines)) steps(24, end) both;
+    animation: code-type calc(var(--duration-type) / var(--lines)) steps(24, end) both;
   }
 
   #start.is-live .start-panel:not([hidden]) .code-line:nth-child(2) {
-    animation-delay: calc(400ms / var(--lines));
+    animation-delay: calc(var(--duration-type) / var(--lines));
   }
 
   #start.is-live .start-panel:not([hidden]) .code-line:nth-child(3) {
-    animation-delay: calc(400ms / var(--lines) * 2);
+    animation-delay: calc(var(--duration-type) / var(--lines) * 2);
   }
 
   #start.is-live .start-panel:not([hidden]) .code-line:nth-child(4) {
-    animation-delay: calc(400ms / var(--lines) * 3);
+    animation-delay: calc(var(--duration-type) / var(--lines) * 3);
   }
 
   #start.is-live .start-panel:not([hidden]) .code-line:nth-child(5) {
-    animation-delay: calc(400ms / var(--lines) * 4);
+    animation-delay: calc(var(--duration-type) / var(--lines) * 4);
   }
 
   #start.is-live .start-panel:not([hidden]) .code-line:last-child::after {
@@ -2456,7 +2461,7 @@ summary::before {
     margin-left: 0.15em;
     vertical-align: text-bottom;
     background: var(--color-terminal-accent);
-    animation: caret-blink 1s steps(1) infinite;
+    animation: caret-blink 1s steps(1) 5;
   }
 
   html.has-reveal .reveal {

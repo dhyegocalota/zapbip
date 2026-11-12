@@ -6,4 +6,4 @@ function render(input: InstallSectionInput): string {
   return CODEX_COPY[input.locale](input);
 }
 
-export const install: AgentInstall = { ...CODEX_PRODUCT, officialLogo: 'openai', quickStart: CODEX_QUICK_START, render };
+export const install: AgentInstall = { ...CODEX_PRODUCT, officialLogo: null, quickStart: CODEX_QUICK_START, render };

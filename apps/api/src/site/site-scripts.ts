@@ -12,6 +12,7 @@ const SCRIPT_SOURCE = `(function () {
   var REVEAL_ROOT_MARGIN = '0px 0px -8% 0px';
   var SCROLL_TIMELINE_SUPPORT = 'animation-timeline: view()';
   var TYPING_THRESHOLD = 0.3;
+  var TYPING_CLASS = 'has-typing';
   var REVEAL_CLASS = 'has-reveal';
   var VISIBLE_CLASS = 'is-visible';
   var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -94,7 +95,6 @@ const SCRIPT_SOURCE = `(function () {
   function setupStartTabs() {
     var tabs = Array.prototype.slice.call(document.querySelectorAll('.start-tab'));
     if (!tabs.length) return;
-    var hint = byId('join-agent');
     var keys = { ArrowRight: 1, ArrowLeft: -1 };
     var list = tabs[0].parentNode;
     function fade() {
@@ -112,10 +112,6 @@ const SCRIPT_SOURCE = `(function () {
         candidate.tabIndex = isSelected ? 0 : -1;
         byId(candidate.getAttribute('aria-controls')).hidden = !isSelected;
       });
-      if (hint) {
-        hint.textContent = tab.getAttribute('data-hint');
-        hint.hidden = !tab.getAttribute('data-hint');
-      }
       history.replaceState(null, '', tab.getAttribute('href').split('#')[0]);
       reveal(tab, reducedMotion ? 'auto' : 'smooth');
       if (shouldFocus) tab.focus({ preventScroll: true });
@@ -175,6 +171,7 @@ const SCRIPT_SOURCE = `(function () {
   function setupStartTyping() {
     var section = byId('start');
     if (!section || reducedMotion || !('IntersectionObserver' in window)) return;
+    document.documentElement.classList.add(TYPING_CLASS);
     var observer = new IntersectionObserver(
       function (entries) {
         if (!entries[0].isIntersecting) return;

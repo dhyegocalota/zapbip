@@ -8,7 +8,7 @@ import {
   FAILURE_OUTPUT_LINES,
   type InstallProduct,
 } from '@zapbip/core';
-import { addressText, quickStartOf } from '../../src/quick-start';
+import { quickStartOf } from '../../src/quick-start';
 
 export const GEMINI_CLI_PRODUCT: InstallProduct = {
   productName: 'Gemini CLI',

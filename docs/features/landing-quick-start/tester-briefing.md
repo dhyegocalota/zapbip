@@ -2,15 +2,15 @@
 
 ## What changed and where
 
-- `libs/agents`: every install facet gains `hasOfficialLogo` and `quickStart({ locale, connectionLink })` returning `{ hint, code, proof }` (`src/contract.ts`, `src/quick-start.ts`, each `supported/<agent>/install-copy.ts` and `install.ts`). The Claude Code, Gemini CLI and Codex install sections now build their command or table with the same functions the quick start uses. `src/quick-start.test.ts` proves each install section contains its quick start.
-- `apps/api/site-public/site/logos/`: six SVGs from Simple Icons (CC0 data) and `NOTICE.md` with source and licence per file.
+- `libs/agents`: every install facet gains `officialLogo` and `quickStart({ locale, connectionLink })` returning `{ hint, path, code }` (`src/contract.ts`, `src/quick-start.ts`, each `supported/<agent>/install-copy.ts` and `install.ts`). The Claude Code, Gemini CLI, Codex, Hermes and OpenClaw install sections build their command or entry with the same functions the quick start uses (the last two now show the whole entry in a fenced block). `src/quick-start.test.ts` proves each install section contains its agent's whole code.
+- `apps/api/site-public/site/logos/`: three SVGs (Claude, Cursor, Gemini) from Simple Icons (CC0 data), one file per mark and named by the install facet's `officialLogo`, and `NOTICE.md` with source and licence per file. The OpenAI mark is not shipped.
 - `apps/api/src/site`: `views/quick-start-section.tsx` replaces `views/clients-section.tsx`; `code-tokens.ts` tints the code; `site-agents.ts` (`siteQuickStartOf`, `SiteStartTab`, `siteAgents().hasOfficialLogo`), `site-context.ts` (`startTab`), `site-links.ts` (`startPathOf`), `site-copy.ts` (new keys, the tile keys removed), `site-scripts.ts` (tabs, copy), `assets/site.css`.
 
 ## How to run
 
 - `pnpm --filter @zapbip/agents test:unit`
 - `pnpm --filter @zapbip/api test:unit`, `test:integration -- site-page site-stylesheet site-motion`
-- `pnpm --filter @zapbip/api test:landing` (87 specs, desktop 1280 and mobile 375)
+- `pnpm --filter @zapbip/api test:landing` (desktop 1280 and mobile 375)
 - Look: `pnpm --filter @zapbip/api dev`, open `http://site.localhost:8787/?lang=pt-BR&agent=codex#start`.
 
 ## Red today, green after
@@ -25,17 +25,18 @@
 
 ## Hypotheses for the tester
 
-1. `/?agent=<id>` renders that panel visible and the others hidden; an unknown value shows the first agent; `?agent=any` shows the any tab; the hero hint names the agent for a real id and stays empty for `any`.
-2. Each panel's code is the registry text with `<your-link>` / `<seu-link>`; the Claude Code and Gemini CLI lines are the same command their install sections run; the Codex block is the table its install section writes.
-3. Tabs: click switches at once, rewrites the address keeping `lang` and `ref`; arrows wrap, Home and End jump, focus follows; only the selected tab is a tab stop once the script runs; with no script the tab links reload the page on the chosen panel.
-4. Copy writes exactly the visible code (placeholder included), says "Copied" and announces it in the live region, and resets after two seconds; with no clipboard API the code is selected.
-5. Six agents show an official logo on a white chip in both themes; four show the initials badge; every logo has `<Agent> logo` / `logo do <Agent>` alt text.
-6. The call to action goes to the join form and carries the agent; the any tab's clears the agent.
-7. At 375 px the tab row scrolls inside itself, the page does not, and the selected tab is scrolled into view on load. No layout shift, LCP unchanged.
-8. Reduced motion: no running animation, panel visible.
+1. `/?agent=<id>` renders that panel visible and the others hidden; an unknown value shows the first agent; `?agent=any` shows the any tab. Browsing tabs never changes the hero hint; the panel's button sets it, the any-app one clears it.
+2. Each panel's code is the registry text with `<your-link>` / `<seu-link>`; each install section contains that whole code. Cursor, claude.ai, ChatGPT, Grok Bot, Grok web and the any tab show a numbered click path above the address.
+3. Tabs: click switches at once and rewrites the address keeping `lang` and `ref`; arrows wrap, Home and End jump; only the selected tab is a tab stop once the script runs; with no script the tab links reload on the chosen panel.
+4. Copy writes exactly `data-code`, says "Copied" in the live region, resets after two seconds; with no clipboard API the code is selected and the fallback is announced.
+5. Three marks (Claude on two agents, Cursor, Gemini) sit on a white chip in both themes with empty alt text; every other agent shows initials.
+6. At 1280 px the panel and the tabs span the section in two full rows; at 375 px the tab row scrolls inside itself with an edge fade, the header has no dots and keeps words whole, the selected tab is in view on load.
+7. The command types in over about 400 ms on a tab switch and when the block first scrolls into view, with a caret that blinks five times; the page text and Copy are complete at once. No flash of text before it types. Reduced motion: text at once, no caret, no animation.
 
 ## Known gaps
 
-- Hermes, OpenClaw, Grok Bot and Grok web have no logo in Simple Icons (the nearest entries are other brands), so they show initials; the OpenAI mark stands for Codex and ChatGPT.
+- Codex, ChatGPT, Hermes, OpenClaw, Grok Bot and Grok web show initials: Simple Icons has no mark for them, or withdrew it (OpenAI).
 - The copied code holds the placeholder, not a real link: accounts are still created by the owner.
+- The click paths are landing presentation; only the address is proven against the install sections.
+- A removed agent leaves its logo file behind (the lifecycle removal proof only deletes the agent folder).
 - The Playwright landing suite is not part of `pnpm verify`.

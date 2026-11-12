@@ -1,7 +1,7 @@
 import { HEARTBEAT_POLL_INTERVAL_MINUTES, OwnerLocale } from '@zapbip/types';
 import { chatSelfTest, formatSection, localizeCopy, noticeStep, type InstallProduct } from '@zapbip/core';
 import { installCommand } from './plugin';
-import { addressText, quickStartOf } from '../../src/quick-start';
+import { quickStartOf } from '../../src/quick-start';
 
 export const HERMES_PRODUCT: InstallProduct = { productName: 'Hermes', productDescription: 'Hermes, the agent running Hermes' };
 
@@ -29,7 +29,7 @@ export const HERMES_COPY = localizeCopy({
       wakeNote: text.wakeNote,
       steps: [
         {
-          action: `Add the MCP server named zapbip to \`config.yaml\` under \`mcp_servers\` with \`url: ${section.connectionLink}\`.`,
+          action: `Add the MCP server named zapbip to \`config.yaml\`, merging this entry into any existing \`mcp_servers\`:\n\n\`\`\`yaml\n${hermesServerEntry({ connectionLink: section.connectionLink })}\n\`\`\``,
           success: '`config.yaml` holds the zapbip entry under `mcp_servers`.',
         },
         {
@@ -46,6 +46,10 @@ export const HERMES_COPY = localizeCopy({
     }),
 });
 
+export function hermesServerEntry(input: { connectionLink: string }): string {
+  return `mcp_servers:\n  zapbip:\n    url: ${input.connectionLink}`;
+}
+
 const HERMES_QUICK_START_HINT: Record<OwnerLocale, string> = {
   [OwnerLocale.PortugueseBrazil]: 'No config.yaml do Hermes, em mcp_servers',
   [OwnerLocale.EnglishUs]: 'In the Hermes config.yaml, under mcp_servers',
@@ -53,5 +57,5 @@ const HERMES_QUICK_START_HINT: Record<OwnerLocale, string> = {
 
 export const HERMES_QUICK_START = quickStartOf({
   hint: HERMES_QUICK_START_HINT,
-  code: (connectionLink) => `mcp_servers:\n  zapbip:\n    url: ${connectionLink}`,
+  code: (connectionLink) => hermesServerEntry({ connectionLink }),
 });

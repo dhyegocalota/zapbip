@@ -2,7 +2,7 @@ import { INSTALL_SELF_TEST_TEXT, OwnerLocale } from '@zapbip/types';
 import { formatSection, localizeCopy, noticeStep, tellOwnerAndWait, FAILURE_OUTPUT_LINES, type InstallProduct } from '@zapbip/core';
 import { connectCommand } from '../../src/connect-command';
 import { ConnectorClient } from '../../src/generated/ids';
-import { addressText, quickStartOf } from '../../src/quick-start';
+import { quickStartOf } from '../../src/quick-start';
 
 export const CODEX_PRODUCT: InstallProduct = {
   productName: 'Codex',
@@ -72,8 +72,8 @@ export const CODEX_COPY = localizeCopy({
 });
 
 const CODEX_QUICK_START_HINT: Record<OwnerLocale, string> = {
-  [OwnerLocale.PortugueseBrazil]: 'Adicione ao ~/.codex/config.toml',
-  [OwnerLocale.EnglishUs]: 'Add it to ~/.codex/config.toml',
+  [OwnerLocale.PortugueseBrazil]: `Adicione ao ${CONFIG_PATH}`,
+  [OwnerLocale.EnglishUs]: `Add it to ${CONFIG_PATH}`,
 };
 
 export const CODEX_QUICK_START = quickStartOf({

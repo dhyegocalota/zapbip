@@ -12,7 +12,7 @@ import {
 } from '@zapbip/core';
 import { connectCommand } from '../../src/connect-command';
 import { ConnectorClient } from '../../src/generated/ids';
-import { addressText, quickStartOf } from '../../src/quick-start';
+import { quickStartOf } from '../../src/quick-start';
 
 export const CLAUDE_CODE_PRODUCT: InstallProduct = {
   productName: 'Claude Code',
