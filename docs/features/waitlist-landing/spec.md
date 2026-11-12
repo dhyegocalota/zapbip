@@ -167,6 +167,11 @@ Environment handling: `requireConfigured` for the site checks `TURNSTILE_SECRET_
 
 Every notice is a `WaitlistJoinOutcome` mapped to `site-copy.ts`. No response carries an email back, no stack trace, no token and no row id.
 
+## Follow-ups
+
+- The CSV export reads the whole list in one query. On the Workers Free plan's CPU limit that is fine at launch scale and will not be at tens of thousands of rows; page the export or move it to a queue before then.
+- Confirmation and invitation emails, page analytics and a queue position for the visitor (see the non-goals).
+
 ## Open questions → answers
 
 | Question | Options | Owner's answer | Date |

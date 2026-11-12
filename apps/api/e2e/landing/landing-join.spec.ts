@@ -9,6 +9,12 @@ const CLEAR_TOKEN_SCRIPT = "document.querySelector('input[name=\"cf-turnstile-re
 const SKIP_NATIVE_VALIDATION_SCRIPT = "document.querySelector('.join-form').setAttribute('novalidate', '')";
 const LINK_PATTERN = /\/\?ref=([a-z0-9]{12})/;
 
+const THANKS_PATTERN = /<div class="thanks[\s\S]*?<\/svg>.*?<\/p>/;
+
+function thanksOf(html: string): string {
+  return THANKS_PATTERN.exec(html)![0];
+}
+
 test('join with the test widget', async ({ page }) => {
   await page.goto('/');
   await page.getByLabel(siteCopy({ key: SiteCopyKey.JoinEmailLabel })).fill(MARIA);
@@ -74,6 +80,6 @@ test('self-referral is a duplicate and credits nothing', async ({ request }) => 
   const first = await joinThroughApi({ request, email: MARIA });
   const code = LINK_PATTERN.exec(first)![1]!;
   const second = await joinThroughApi({ request, email: MARIA, referralCode: code });
-  expect(second).toBe(first);
+  expect(thanksOf(second)).toBe(thanksOf(first));
   expect(waitlistRows().filter((row) => row.credited === 1)).toEqual([]);
 });

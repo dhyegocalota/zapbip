@@ -6,9 +6,10 @@ import { DeployEnvironment } from '../contract/deploy-environment';
 import { clientRateKey } from '../routes/client-rate-key';
 import { BAD_REQUEST_TEXT, plainResponse, RETRY_AFTER_HEADER } from '../routes/private-response';
 import { joinWaitlist, normalizeEmail } from './join-waitlist';
+import { isReferralCode } from './referral-code';
 import { JoinState, type JoinView } from './page-model';
 import { renderLanding } from './render-landing';
-import { isWaitlistOpen } from './site-configuration';
+import { turnstileSecretOf } from './site-configuration';
 import { NO_STORE_CACHE_CONTROL, RATE_KEY_PREFIX, RETRY_AFTER_VALUE, TURNSTILE_RESPONSE_FIELD } from './site-constants';
 import type { SiteEnv } from './site-env';
 import { TurnstileVerdict, verifyTurnstileToken } from './turnstile';
@@ -24,6 +25,11 @@ const NO_STORE_HEADERS = { 'Cache-Control': NO_STORE_CACHE_CONTROL };
 function formLocaleOf(input: { form: FormBody; fallback: OwnerLocale }): OwnerLocale {
   const value = textFieldOf({ form: input.form, name: LOCALE_FIELD });
   return value !== null && LOCALES.includes(value) ? (value as OwnerLocale) : input.fallback;
+}
+
+function formReferralCodeOf(input: { form: FormBody }): string | null {
+  const value = textFieldOf({ form: input.form, name: REFERRAL_FIELD });
+  return value !== null && isReferralCode({ value }) ? value : null;
 }
 
 async function answerOf(input: {
@@ -45,12 +51,13 @@ async function answerOf(input: {
       status: HttpStatus.TooManyRequests,
       headers: { [RETRY_AFTER_HEADER]: RETRY_AFTER_VALUE },
     };
-  if (!isWaitlistOpen({ env })) return { view: { state: JoinState.Paused }, status: HttpStatus.ServiceUnavailable };
+  const secret = turnstileSecretOf({ env });
+  if (secret === null) return { view: { state: JoinState.Paused }, status: HttpStatus.ServiceUnavailable };
   if (normalizeEmail({ email: typedEmail }) === null)
     return { view: { state: JoinState.InvalidEmail, emailValue: typedEmail }, status: HttpStatus.UnprocessableEntity };
   const tokenValue = textFieldOf({ form, name: TURNSTILE_RESPONSE_FIELD });
   const verdict = await verifyTurnstileToken({
-    secret: env.TURNSTILE_SECRET_KEY!,
+    secret,
     token: tokenValue === null ? '' : tokenValue,
     expectedHostname: new URL(env.SITE_ORIGIN).hostname,
     acceptTestingKey: env.ENVIRONMENT === DeployEnvironment.Development,
@@ -84,6 +91,7 @@ export function joinHandler(input: { fetchImplementation: typeof fetch }): (cont
     if (clientAddress === undefined) return plainResponse({ body: BAD_REQUEST_TEXT, status: HttpStatus.BadRequest });
     const form = await context.req.parseBody();
     context.set('locale', formLocaleOf({ form, fallback: context.get('locale') }));
+    context.set('referralCode', formReferralCodeOf({ form }));
     const answer = await answerOf({ context, form, clientAddress, fetchImplementation: input.fetchImplementation });
     return renderLanding({ context, join: answer.view, status: answer.status, headers: { ...NO_STORE_HEADERS, ...answer.headers } });
   };
