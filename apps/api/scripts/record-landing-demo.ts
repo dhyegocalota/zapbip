@@ -7,8 +7,9 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { promisify } from 'node:util';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
+import { AGENT_DEFINITIONS } from '@zapbip/agents/definitions';
 import { WAKE_SECRET_KEY_BYTES } from '@zapbip/core';
-import { MessageDirection, MessageKind, SECOND_MS } from '@zapbip/types';
+import { DocsLanguage, MessageDirection, MessageKind, SECOND_MS } from '@zapbip/types';
 import { chromium } from '@playwright/test';
 import { z } from 'zod';
 import { FAVICON_SVG } from '../src/backoffice/assets/favicon';
@@ -25,7 +26,9 @@ const OPEN_GRAPH_FILE = join(SCRIPT_DIRECTORY, 'landing-demo', 'og.html');
 const DATABASE_BINDING = 'CONNECTIONS';
 const DEVELOPMENT_ENVIRONMENT = 'development';
 const OWNER_PHONE = '5511999990000';
-const AGENT_NAME = 'claude-code';
+const [LEADING_AGENT] = Object.values(AGENT_DEFINITIONS);
+const AGENT_DISPLAY_NAME = LEADING_AGENT!.docs.matrixName[DocsLanguage.English];
+const AGENT_NAME = AGENT_DISPLAY_NAME.toLowerCase().replaceAll(' ', '-');
 const OWNER_OPENING_TEXT = 'run the tests';
 const QUESTION = 'Tests pass. Deploy v2.4 to production?';
 const TERMINAL_QUESTION = 'Deploy v2.4 to production?';
@@ -73,13 +76,6 @@ type DemoData = {
 };
 
 type ScreenResponse = { entries: Pick<ScreenEntry, 'at' | 'text' | 'options'>[] };
-
-function titleCaseOf(input: { name: string }): string {
-  return input.name
-    .split('-')
-    .map((word) => `${word.slice(0, 1).toUpperCase()}${word.slice(1)}`)
-    .join(' ');
-}
 
 async function readScreen(input: { origin: string }): Promise<ScreenResponse['entries']> {
   const response = await fetch(`${input.origin}/dev/owner/${OWNER_PHONE}/screen`);
@@ -198,7 +194,7 @@ async function recordFlow(input: { origin: string; secret: string }): Promise<De
   });
   await client.close();
   return {
-    agentName: titleCaseOf({ name: AGENT_NAME }),
+    agentName: AGENT_DISPLAY_NAME,
     question: TERMINAL_QUESTION,
     questionShort: question.text,
     options: question.options,

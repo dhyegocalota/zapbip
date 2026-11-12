@@ -1,6 +1,7 @@
 import type { OwnerLocale } from '@zapbip/types';
 import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
+import { SENDER_INDEXES, senderNameOf } from '../site-agents';
 
 const LIST_GLYPH = '☰';
 const FILE_GLYPH = '▤';
@@ -8,6 +9,7 @@ const VOICE_NOTE = '▶ ▂▅▃▆▂▇▃▅▂ 0:07';
 
 export function CapabilitiesSection(props: { locale: OwnerLocale }) {
   const translate = copyOf({ locale: props.locale });
+  const sender = (index: number): string => senderNameOf({ locale: props.locale, index });
   return (
     <section class="block" id="capabilities" aria-labelledby="capabilities-title">
       <div class="container">
@@ -22,7 +24,7 @@ export function CapabilitiesSection(props: { locale: OwnerLocale }) {
             <p>{translate(SiteCopyKey.CapabilityButtonsBody)}</p>
             <div class="mini-chat" aria-hidden="true">
               <span class="in">
-                <span class="name">{translate(SiteCopyKey.ClientNameCodex)}</span>
+                <span class="name">{sender(SENDER_INDEXES.second)}</span>
                 {translate(SiteCopyKey.CapabilityButtonsChatQuestion)}
               </span>
               <span class="pill">{translate(SiteCopyKey.CapabilityButtonsChatYes)}</span>
@@ -34,7 +36,7 @@ export function CapabilitiesSection(props: { locale: OwnerLocale }) {
             <p>{translate(SiteCopyKey.CapabilityListBody)}</p>
             <div class="mini-chat" aria-hidden="true">
               <span class="in">
-                <span class="name">{translate(SiteCopyKey.SenderClaude)}</span>
+                <span class="name">{sender(SENDER_INDEXES.first)}</span>
                 {translate(SiteCopyKey.CapabilityListChatQuestion)}
               </span>
               <span class="pill">
@@ -48,7 +50,7 @@ export function CapabilitiesSection(props: { locale: OwnerLocale }) {
             <p>{translate(SiteCopyKey.CapabilityMediaBody)}</p>
             <div class="mini-chat" aria-hidden="true">
               <span class="in">
-                <span class="name">{translate(SiteCopyKey.ClientNameChatGpt)}</span>
+                <span class="name">{sender(SENDER_INDEXES.third)}</span>
                 <span class="file">
                   {FILE_GLYPH} {translate(SiteCopyKey.CapabilityMediaChatFile)}
                 </span>
@@ -64,7 +66,7 @@ export function CapabilitiesSection(props: { locale: OwnerLocale }) {
               <span class="out">{translate(SiteCopyKey.CapabilityWakeChatYou)}</span>
               <span class="chip">{translate(SiteCopyKey.CapabilityWakeChatChip)}</span>
               <span class="in">
-                <span class="name">{translate(SiteCopyKey.ClientNameClaudeCode)}</span>
+                <span class="name">{sender(SENDER_INDEXES.first)}</span>
                 {translate(SiteCopyKey.CapabilityWakeChatAgent)}
               </span>
             </div>
@@ -74,11 +76,11 @@ export function CapabilitiesSection(props: { locale: OwnerLocale }) {
             <p>{translate(SiteCopyKey.CapabilityRoutingBody)}</p>
             <div class="mini-chat" aria-hidden="true">
               <span class="in">
-                <span class="name">{translate(SiteCopyKey.SenderClaude)}</span>
+                <span class="name">{sender(SENDER_INDEXES.first)}</span>
                 {translate(SiteCopyKey.CapabilityRoutingChatFirst)}
               </span>
               <span class="in">
-                <span class="name">{translate(SiteCopyKey.ClientNameCodex)}</span>
+                <span class="name">{sender(SENDER_INDEXES.second)}</span>
                 {translate(SiteCopyKey.CapabilityRoutingChatSecond)}
               </span>
               <span class="out">{translate(SiteCopyKey.CapabilityRoutingChatReply)}</span>
@@ -89,7 +91,7 @@ export function CapabilitiesSection(props: { locale: OwnerLocale }) {
             <p>{translate(SiteCopyKey.CapabilityWaitBody)}</p>
             <div class="mini-chat" aria-hidden="true">
               <span class="in">
-                <span class="name">{translate(SiteCopyKey.SenderClaude)}</span>
+                <span class="name">{sender(SENDER_INDEXES.first)}</span>
                 {translate(SiteCopyKey.CapabilityWaitChatQuestion)}
               </span>
               <span class="divider">{translate(SiteCopyKey.CapabilityWaitChatDivider)}</span>

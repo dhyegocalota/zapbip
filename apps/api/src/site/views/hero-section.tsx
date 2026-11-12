@@ -1,5 +1,6 @@
 import type { OwnerLocale } from '@zapbip/types';
 import { DEMO_IMAGE_SIZE, POSTER_SIZES, POSTER_SMALL_WIDTH } from '../site-constants';
+import { leadingAgentNamesOf } from '../site-agents';
 import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
 import { SiteAsset } from '../site-paths';
@@ -78,7 +79,7 @@ export function HeroSection(props: { model: PageModel }) {
               </svg>
             </span>
           </h1>
-          <p class="hero-lead">{translate(SiteCopyKey.HeroLead)}</p>
+          <p class="hero-lead">{translate(SiteCopyKey.HeroLead, { agents: leadingAgentNamesOf({ locale: model.locale }) })}</p>
           <JoinBlock model={model} />
         </div>
         <DemoFigure locale={model.locale} />

@@ -5,6 +5,7 @@ const MAILTO_PREFIX = 'mailto:';
 
 export function ContactText(props: { text: string }) {
   const [before, after] = props.text.split(CONTACT_PLACEHOLDER);
+  if (after === undefined) return <>{before}</>;
   return (
     <>
       {before}

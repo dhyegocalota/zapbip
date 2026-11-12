@@ -1,6 +1,7 @@
 import { AGENT_DEFINITIONS } from '@zapbip/agents/definitions';
 import { DEFAULT_LOCALE, DocsLanguage, OwnerLocale, TURNSTILE_ACTION_WAITLIST_JOIN, WakeRung } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
+import { leadingAgentNamesOf } from '../../src/site/site-agents';
 import { SiteCopyKey } from '../../src/site/site-copy';
 import { SITE_CONTENT_SECURITY_POLICY } from '../../src/site/site-policy';
 import { copyHtml, escapedHtml, REFERRAL_CODE, SITE_ORIGIN, SITE_TURNSTILE_SITE_KEY, siteEnvironment, siteFetch } from '../support/site';
@@ -27,7 +28,13 @@ describe('GET /', () => {
     expect(html).toContain('<html lang="en"');
     expect(html).toContain(copy(SiteCopyKey.HeroTitleLead));
     expect(html).toContain(copy(SiteCopyKey.HeroTitleAccent));
-    expect(html).toContain(copy(SiteCopyKey.HeroLead));
+    expect(html).toContain(
+      copyHtml({
+        key: SiteCopyKey.HeroLead,
+        locale: OwnerLocale.EnglishUs,
+        values: { agents: leadingAgentNamesOf({ locale: OwnerLocale.EnglishUs }) },
+      }),
+    );
     expect(html).toContain(copy(SiteCopyKey.JoinSubmit));
     expect(html).toContain('id="join-email"');
   });
@@ -119,6 +126,11 @@ describe('GET /', () => {
     expect(html).toContain('hreflang="x-default"');
     expect(html).toContain(`<title>${copyHtml({ key: SiteCopyKey.MetaTitle, locale: OwnerLocale.EnglishUs })} · zapbip</title>`);
     expect(html).toContain('rel="icon"');
+  });
+
+  it('puts the contact link only in the two places whose copy asks for it', async () => {
+    const html = await pageOf({ headers: ENGLISH_HEADERS });
+    expect(html.match(/mailto:/g)).toHaveLength(2);
   });
 
   it('keeps the page inside its policy: no inline script, no inline style', async () => {

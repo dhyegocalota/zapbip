@@ -17,14 +17,6 @@ const IDENTICAL_IN_BOTH_LANGUAGES = [
   SiteCopyKey.LocaleEnglish,
   SiteCopyKey.LocaleEnglishShort,
   SiteCopyKey.CapabilityListChatRows,
-  SiteCopyKey.SenderClaude,
-  SiteCopyKey.ClientNameClaudeCode,
-  SiteCopyKey.ClientNameCodex,
-  SiteCopyKey.ClientNameGrokBot,
-  SiteCopyKey.ClientNameClaudeAi,
-  SiteCopyKey.ClientNameChatGpt,
-  SiteCopyKey.ClientNameCursor,
-  SiteCopyKey.ClientNameGeminiCli,
 ];
 
 function viewSources(input: { directory: string }): { path: string; source: string }[] {

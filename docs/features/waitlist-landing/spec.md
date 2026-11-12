@@ -1,6 +1,6 @@
 # Waitlist landing page
 
-**Status:** Approved
+**Status:** Building
 **Tier:** 🔴 structural
 **Owner approval:** approved 2026-11-12 (owner delegated)
 **ADRs:** [0039](../../adr/0039-the-public-waitlist-is-guarded-by-turnstile-and-fails-closed.md) (Turnstile, fails closed); [0040](../../adr/0040-the-waitlist-and-the-referral-cap-live-in-d1-and-the-cap-is-a-settings-row.md) (waitlist and cap in D1); [0041](../../adr/0041-the-public-site-is-served-by-the-api-worker-through-host-dispatch.md) (public site on the API Worker by host); reads [0030](../../adr/0030-the-docs-speak-to-any-ai-user-in-two-languages-and-the-switcher-picks-the-language.md) and [0031](../../adr/0031-the-backoffice-is-a-separate-host-signed-in-with-a-key-and-totp-enrolled-from-the-owners-terminal.md)

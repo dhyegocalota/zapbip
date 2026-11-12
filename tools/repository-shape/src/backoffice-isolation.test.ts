@@ -4,6 +4,7 @@ import { readRepositoryFile, repositoryFiles } from './repository-files';
 const SOURCE_PATHSPECS = ['apps/*.ts', 'apps/*.tsx', 'libs/*.ts', 'libs/*.tsx'];
 const AGENT_FACING_DIRECTORIES = ['apps/api/src/mcp/', 'apps/api/src/routes/', 'apps/api/src/account-inbox/', 'apps/connector/', 'libs/'];
 const BACKOFFICE_IMPORT_PATTERN = /from '[^']*\/backoffice(\/[^']*)?'/;
+const SITE_IMPORT_PATTERN = /from '[^']*\/site(\/[^']*)?'/;
 const BACKOFFICE_TABLE_PATTERN = /\bbackoffice_(operator|sessions|audit)\b/;
 const SEALED_COLUMN_PATTERN = /\bsealed_(app_secret|access_token)\b/;
 const TEST_PATH_PATTERN = /(^|\/)(test|e2e)\//;
@@ -32,6 +33,23 @@ describe('backoffice isolation', () => {
   test('no agent-facing code imports the backoffice', () => {
     const agentFacing = productionSources().filter((path) => isUnder({ path, owners: AGENT_FACING_DIRECTORIES }));
     expect(filesMatching({ paths: agentFacing, pattern: BACKOFFICE_IMPORT_PATTERN })).toEqual([]);
+  });
+
+  test('no agent-facing code imports the public site', () => {
+    const agentFacing = productionSources().filter((path) => isUnder({ path, owners: AGENT_FACING_DIRECTORIES }));
+    expect(filesMatching({ paths: agentFacing, pattern: SITE_IMPORT_PATTERN })).toEqual([]);
+  });
+
+  test('the public site names no backoffice table and no sealed column', () => {
+    const siteSources = productionSources().filter((path) => path.startsWith('apps/api/src/site/'));
+    expect(siteSources.length).toBeGreaterThan(0);
+    expect(filesMatching({ paths: siteSources, pattern: BACKOFFICE_TABLE_PATTERN })).toEqual([]);
+    expect(filesMatching({ paths: siteSources, pattern: SEALED_COLUMN_PATTERN })).toEqual([]);
+  });
+
+  test('the import pattern catches a site import and ignores a lookalike', () => {
+    expect(SITE_IMPORT_PATTERN.test("import { x } from '../site/site-app';")).toBe(true);
+    expect(SITE_IMPORT_PATTERN.test("import { x } from '../website/app';")).toBe(false);
   });
 
   test('no backoffice table is named outside the backoffice and its enrollment script', () => {

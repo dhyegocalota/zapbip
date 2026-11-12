@@ -16,6 +16,7 @@ import {
   TURNSTILE_SCRIPT_URL,
   DOCS_PORTUGUESE_PATH,
 } from '../site-constants';
+import { leadingAgentNamesOf } from '../site-agents';
 import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
 import { SITE_SCRIPT_HREF } from '../site-scripts';
@@ -138,6 +139,7 @@ function SiteFooter(props: { model: PageModel }) {
 export function SiteLayout(props: { model: PageModel; title: string; isIndexable: boolean; children?: Child }) {
   const { model } = props;
   const translate = copyOf({ locale: model.locale });
+  const description = translate(SiteCopyKey.MetaDescription, { agents: leadingAgentNamesOf({ locale: model.locale }) });
   const canonical = `${model.siteOrigin}${SitePath.Home}`;
   const pageTitle = `${props.title}${SITE_BRAND_SEPARATOR}${translate(SiteCopyKey.BrandName)}`;
   const imageUrl = `${model.siteOrigin}${SiteAsset.OpenGraphImage}`;
@@ -150,7 +152,7 @@ export function SiteLayout(props: { model: PageModel; title: string; isIndexable
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>{pageTitle}</title>
-        <meta name="description" content={translate(SiteCopyKey.MetaDescription)} />
+        <meta name="description" content={description} />
         {props.isIndexable ? null : <meta name="robots" content="noindex" />}
         <link rel="canonical" href={canonical} />
         {Object.values(DocsLanguage).map((language) => (
@@ -167,7 +169,7 @@ export function SiteLayout(props: { model: PageModel; title: string; isIndexable
         <meta property="og:site_name" content={translate(SiteCopyKey.BrandName)} />
         <meta property="og:url" content={canonical} />
         <meta property="og:title" content={translate(SiteCopyKey.MetaOgTitle)} />
-        <meta property="og:description" content={translate(SiteCopyKey.MetaDescription)} />
+        <meta property="og:description" content={description} />
         <meta property="og:image" content={imageUrl} />
         <meta property="og:image:width" content={String(OPEN_GRAPH_WIDTH)} />
         <meta property="og:image:height" content={String(OPEN_GRAPH_HEIGHT)} />
@@ -177,7 +179,7 @@ export function SiteLayout(props: { model: PageModel; title: string; isIndexable
         <meta property="og:locale:alternate" content={OPEN_GRAPH_LOCALES[model.locale]} />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={translate(SiteCopyKey.MetaOgTitle)} />
-        <meta name="twitter:description" content={translate(SiteCopyKey.MetaDescription)} />
+        <meta name="twitter:description" content={description} />
         <meta name="twitter:image" content={imageUrl} />
         <meta name="twitter:image:alt" content={translate(SiteCopyKey.MetaOgImageAlt)} />
         <script src={SITE_SCRIPT_HREF} defer />

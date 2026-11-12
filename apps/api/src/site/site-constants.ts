@@ -23,7 +23,6 @@ export const INVITE_METER_VIEWBOX_WIDTH = 100;
 export const INVITE_METER_VIEWBOX_HEIGHT = 8;
 export const INVITE_METER_GAP = 2;
 export const RETRY_AFTER_VALUE = String(RATE_LIMIT_PERIOD_MS / SECOND_MS);
-export const CLIENT_WAKE_SECONDS = { claudeCode: '7', codex: '6', grokBot: '9', claudeAi: '16' } as const;
 export const THEME_COLOR_LIGHT = '#F6F8F5';
 export const THEME_COLOR_DARK = '#07120F';
 export const SITE_BRAND_SEPARATOR = ' · ';
