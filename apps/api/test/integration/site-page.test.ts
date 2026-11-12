@@ -119,7 +119,7 @@ describe('GET /', () => {
 
   it('puts the canonical, social and alternate links in the head', async () => {
     const html = await pageOf({ headers: ENGLISH_HEADERS });
-    expect(html).toContain(`<link rel="canonical" href="${SITE_ORIGIN}/"`);
+    expect(html).toContain(`<link rel="canonical" href="${SITE_ORIGIN}/?lang=en"`);
     expect(html).toContain(`<meta property="og:image" content="${SITE_ORIGIN}/site/og-en_US.png"`);
     expect(html).toContain(`<meta name="twitter:image" content="${SITE_ORIGIN}/site/og-en_US.png"`);
     expect(html).toContain('<meta property="og:image:width" content="1200"');
@@ -224,6 +224,32 @@ describe('site assets', () => {
     const response = await siteFetch({ path: src });
     expect(response.status).toBe(200);
     expect(response.headers.get('Content-Type')).toContain('text/javascript');
+  });
+});
+
+describe('canonical and preferences per locale', () => {
+  it('gives the Portuguese page its own canonical URL', async () => {
+    const html = await pageOf({ headers: PORTUGUESE_HEADERS });
+    expect(html).toContain(`<link rel="canonical" href="${SITE_ORIGIN}/?lang=pt-BR"`);
+    expect(html).toContain(`<meta property="og:url" content="${SITE_ORIGIN}/?lang=pt-BR"`);
+  });
+
+  it('keeps the current language in the theme switch and leaves the language switch free', async () => {
+    const html = await pageOf({ path: '/?lang=pt-BR&ref=abcdefgh2345' });
+    const themeForm = html.slice(html.indexOf('action="/theme"'), html.indexOf('</form>', html.indexOf('action="/theme"')));
+    const localeForm = html.slice(html.indexOf('action="/locale"'), html.indexOf('</form>', html.indexOf('action="/locale"')));
+    expect(themeForm).toContain('name="returnTo" value="/?lang=pt-BR&amp;ref=abcdefgh2345"');
+    expect(localeForm).toContain('name="returnTo" value="/?ref=abcdefgh2345"');
+  });
+
+  it.each(['/?lang=pt-BR', '/?lang=en', `/?lang=pt-BR&ref=${REFERRAL_CODE}`])('POST /theme returns to %s', async (returnTo) => {
+    const response = await siteFetch({ path: '/theme', method: 'POST', form: { theme: 'dark', returnTo } });
+    expect(response.headers.get('Location')).toBe(returnTo);
+  });
+
+  it.each(['/?lang=xx', '/?lang=pt-BR&ref=../x', '/?lang=pt-BR&x=1'])('POST /theme refuses the return target %s', async (returnTo) => {
+    const response = await siteFetch({ path: '/theme', method: 'POST', form: { theme: 'dark', returnTo } });
+    expect(response.headers.get('Location')).toBe('/');
   });
 });
 
