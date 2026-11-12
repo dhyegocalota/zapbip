@@ -1,5 +1,6 @@
 import { OwnerLocale } from '@zapbip/types';
 import type { AgentInstall } from '../../src/contract';
+import { addressText, quickStartOf } from '../../src/quick-start';
 import { renderFixturePluginAgentSection } from './install-copy';
 
 const FIXTURE_HINT: Record<OwnerLocale, string> = {
@@ -15,7 +16,7 @@ const FIXTURE_PATH: Record<OwnerLocale, string[]> = {
 export const install: AgentInstall = {
   productName: 'Fixture Plugin Agent',
   productDescription: 'Fixture Plugin Agent, the agent the tests use',
-  hasOfficialLogo: false,
+  officialLogo: null,
   quickStart: ({ locale, connectionLink }) => ({
     hint: FIXTURE_HINT[locale],
     path: FIXTURE_PATH[locale],

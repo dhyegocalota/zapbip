@@ -6,4 +6,4 @@ function render(input: InstallSectionInput): string {
   return CHATGPT_COPY[input.locale](input);
 }
 
-export const install: AgentInstall = { ...CHATGPT_PRODUCT, hasOfficialLogo: true, quickStart: CHATGPT_QUICK_START, render };
+export const install: AgentInstall = { ...CHATGPT_PRODUCT, officialLogo: 'openai', quickStart: CHATGPT_QUICK_START, render };

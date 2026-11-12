@@ -4,6 +4,7 @@ import { CONNECTION_LINK, sectionInput } from '../testing/install-fixtures';
 import { AGENT_INSTALLS } from './generated/install';
 
 const LOCALES = Object.values(OwnerLocale);
+const MAXIMUM_CODE_LINES = 5;
 const INSTALLS = Object.entries(AGENT_INSTALLS);
 
 describe.each(INSTALLS)('the quick start of %s', (_id, install) => {
@@ -15,12 +16,12 @@ describe.each(INSTALLS)('the quick start of %s', (_id, install) => {
       expect(quickStartOf().code).toContain(CONNECTION_LINK);
     });
 
-    test('proves itself with text that is part of the code', () => {
-      expect(quickStartOf().code).toContain(quickStartOf().proof);
+    test('is the same text the install section tells the agent to use, whole', () => {
+      expect(install.render(sectionInput({ locale }))).toContain(quickStartOf().code);
     });
 
-    test('is the same text the install section tells the agent to use', () => {
-      expect(install.render(sectionInput({ locale }))).toContain(quickStartOf().proof);
+    test('fits the five lines the site reserves for it', () => {
+      expect(quickStartOf().code.split('\n').length).toBeLessThanOrEqual(MAXIMUM_CODE_LINES);
     });
   });
 
@@ -29,7 +30,7 @@ describe.each(INSTALLS)('the quick start of %s', (_id, install) => {
     const isAddressOnly = english!.code === CONNECTION_LINK;
     expect(english!.path.length > 0).toBe(isAddressOnly);
     expect(portuguese!.path.length).toBe(english!.path.length);
-    expect(portuguese!.path).not.toEqual(english!.path.length === 0 ? [''] : english!.path);
+    expect(english!.path.filter((step, index) => step === portuguese!.path[index])).toEqual([]);
     expect([...english!.path, ...portuguese!.path].filter((step) => step.trim().length === 0)).toEqual([]);
   });
 

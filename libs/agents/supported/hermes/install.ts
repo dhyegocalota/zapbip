@@ -6,4 +6,4 @@ function render(input: InstallSectionInput): string {
   return HERMES_COPY[input.locale](input);
 }
 
-export const install: AgentInstall = { ...HERMES_PRODUCT, hasOfficialLogo: false, quickStart: HERMES_QUICK_START, render };
+export const install: AgentInstall = { ...HERMES_PRODUCT, officialLogo: null, quickStart: HERMES_QUICK_START, render };

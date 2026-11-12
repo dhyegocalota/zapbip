@@ -23,12 +23,12 @@ export type AgentDefinition = {
 };
 
 export type QuickStartInput = { locale: OwnerLocale; connectionLink: string };
-export type QuickStart = { hint: string; path: string[]; code: string; proof: string };
+export type QuickStart = { hint: string; path: string[]; code: string };
 
 export type AgentInstall = {
   productName: string;
   productDescription: string;
-  hasOfficialLogo: boolean;
+  officialLogo: string | null;
   quickStart: (input: QuickStartInput) => QuickStart;
   render: InstallSection;
 };

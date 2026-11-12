@@ -12,6 +12,7 @@ const MOBILE_WIDTH = 375;
 const MINIMUM_TAB_HEIGHT = 44;
 const GRANTED_PERMISSIONS = ['clipboard-read', 'clipboard-write'];
 const DESKTOP_WIDTH = 1280;
+const MAXIMUM_CARET_BLINKS = 5;
 const FULL_WIDTH_RATIO = 0.9;
 const TAB_ROW_PADDING = 4;
 
@@ -44,17 +45,40 @@ test('a click on a tab shows its panel at once, keeps the language and the refer
   await expect(page).toHaveURL(/lang=en/);
   await expect(page).toHaveURL(new RegExp(`ref=${REFERRAL_CODE}`));
   expect(page.url()).not.toBe(before);
-  await expect(page.locator('.join-agent')).toHaveText(
-    siteCopy({ key: SiteCopyKey.AgentCardPicked, values: { agent: SECOND_AGENT.name } }),
-  );
+  await expect(page.locator('.join-agent')).toBeHidden();
 });
 
 test('the any app tab clears the picked agent', async ({ page }) => {
   await page.goto(`/?agent=${FIRST_AGENT.id}`);
   await tabOf({ page, id: 'any' }).click();
   await expectSelected({ page, id: 'any' });
-  await expect(page.locator('.join-agent')).toBeHidden();
   await expect(page).toHaveURL(/agent=any/);
+});
+
+test('browsing the tabs never announces a pick; the call to action does, and the any app one clears it', async ({ page }) => {
+  await page.goto('/');
+  await tabOf({ page, id: SECOND_AGENT.id }).click();
+  await tabOf({ page, id: THIRD_AGENT.id }).click();
+  await expect(page.locator('.join-agent')).toBeHidden();
+  await page.locator(`#start-panel-${THIRD_AGENT.id} .start-cta`).click();
+  await expect(page.locator('.join-agent')).toHaveText(siteCopy({ key: SiteCopyKey.AgentCardPicked, values: { agent: THIRD_AGENT.name } }));
+  await tabOf({ page, id: 'any' }).click();
+  await page.locator('#start-panel-any .start-cta').click();
+  await expect(page.locator('.join-agent')).toBeHidden();
+});
+
+test.describe('without a clipboard', () => {
+  test('the code is selected whole and the fallback is announced', async ({ page }) => {
+    await page.addInitScript("Object.defineProperty(navigator, 'clipboard', { value: undefined });");
+    await page.goto('/');
+    const panel = page.locator(`#start-panel-${FIRST_AGENT.id}`);
+    await panel.scrollIntoViewIfNeeded();
+    await panel.locator('.start-copy').click();
+    const expected = (await panel.locator('code').getAttribute('data-code'))!;
+    const selection = (await page.evaluate('window.getSelection().toString()')) as string;
+    expect(selection.replaceAll(/\s+/g, ' ').trim()).toBe(expected.replaceAll(/\s+/g, ' ').trim());
+    await expect(page.locator('#start-announcement')).toHaveText(siteCopy({ key: SiteCopyKey.StartCopyFallback }));
+  });
 });
 
 test('arrow keys, Home and End move between the tabs and the focus follows', async ({ page }) => {
@@ -282,5 +306,22 @@ test.describe('typing in', () => {
       expect(caret === 'none' || caret === 'normal').toBe(true);
       expect(await page.evaluate('document.getAnimations().length')).toBe(0);
     });
+  });
+});
+
+test.describe('the typed command and its caret', () => {
+  test('stays hidden until the block is live, then blinks a few times only', async ({ page }) => {
+    await page.goto('/');
+    const before = await computedStyleOf({ page, selector: '.start-panel:not([hidden]) .code-line', pseudo: null, property: 'clipPath' });
+    expect(before).toContain('100%');
+    await page.locator('#start').scrollIntoViewIfNeeded();
+    await expect(page.locator('#start')).toHaveClass(/is-live/);
+    const iterations = await computedStyleOf({
+      page,
+      selector: '.start-panel:not([hidden]) .code-line:last-child',
+      pseudo: '::after',
+      property: 'animationIterationCount',
+    });
+    expect(Number(iterations)).toBeLessThanOrEqual(MAXIMUM_CARET_BLINKS);
   });
 });

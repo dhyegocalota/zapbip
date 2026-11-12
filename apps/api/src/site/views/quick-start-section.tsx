@@ -87,7 +87,7 @@ export function QuickStartSection(props: { locale: OwnerLocale; referralCode: st
       id: agent.id,
       agent: agent.id,
       name: agent.name,
-      logoId: agent.hasOfficialLogo ? agent.id : null,
+      logoId: agent.logo,
       initials: initialsOf({ name: agent.name }),
       ...quickStart,
       pickedLabel: translate(SiteCopyKey.AgentCardPicked, { agent: agent.name }),

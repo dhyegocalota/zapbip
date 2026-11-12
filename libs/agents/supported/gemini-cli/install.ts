@@ -6,4 +6,4 @@ function render(input: InstallSectionInput): string {
   return GEMINI_CLI_COPY[input.locale](input);
 }
 
-export const install: AgentInstall = { ...GEMINI_CLI_PRODUCT, hasOfficialLogo: true, quickStart: GEMINI_CLI_QUICK_START, render };
+export const install: AgentInstall = { ...GEMINI_CLI_PRODUCT, officialLogo: 'gemini', quickStart: GEMINI_CLI_QUICK_START, render };

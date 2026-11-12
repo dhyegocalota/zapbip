@@ -295,31 +295,20 @@ describe('the quick start', () => {
     );
   });
 
-  it('shows the logo image where the install facet has an official logo and the initials badge where it has not', async () => {
+  it('shows the logo image where the install facet names an official logo and the initials badge where it does not', async () => {
     const html = startOf({ html: await pageOf({ headers: ENGLISH_HEADERS }) });
     const tabHtml = (id: string): string =>
       html.slice(html.indexOf(`id="start-tab-${id}"`), html.indexOf('</a>', html.indexOf(`id="start-tab-${id}"`)));
     agents.forEach((agent) => {
       const tab = tabHtml(agent.id);
-      if (agent.install.hasOfficialLogo) {
-        expect(tab).toContain(`<img class="start-logo-image" src="/site/logos/${agent.id}.svg"`);
-        expect(tab).toContain(
-          `alt="${copyHtml({ key: SiteCopyKey.StartLogoAlt, locale: OwnerLocale.EnglishUs, values: { agent: agent.name } })}"`,
-        );
+      if (agent.install.officialLogo !== null) {
+        expect(tab).toContain(`<img class="start-logo-image" src="/site/logos/${agent.install.officialLogo}.svg" alt=""`);
         expect(tab).not.toContain('agent-badge');
         return;
       }
       expect(tab).toContain(`<span class="agent-badge" aria-hidden="true">${initialsOf({ name: agent.name })}</span>`);
       expect(tab).not.toContain('<img');
     });
-  });
-
-  it('writes the logo alt text in Portuguese', async () => {
-    const html = await pageOf({ headers: PORTUGUESE_HEADERS });
-    const logoAgent = agents.find((agent) => agent.install.hasOfficialLogo)!;
-    expect(html).toContain(
-      `alt="${copyHtml({ key: SiteCopyKey.StartLogoAlt, locale: OwnerLocale.PortugueseBrazil, values: { agent: logoAgent.name } })}"`,
-    );
   });
 
   it('gives each panel three steps, a copy button and one call to action that goes to the form', async () => {

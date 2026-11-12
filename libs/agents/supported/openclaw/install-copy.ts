@@ -59,5 +59,4 @@ const OPENCLAW_QUICK_START_HINT: Record<OwnerLocale, string> = {
 export const OPENCLAW_QUICK_START = quickStartOf({
   hint: OPENCLAW_QUICK_START_HINT,
   code: (connectionLink) => `transport: "streamable-http"\nurl: ${connectionLink}`,
-  proof: () => 'transport: "streamable-http"',
 });

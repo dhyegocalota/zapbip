@@ -6,4 +6,4 @@ function render(input: InstallSectionInput): string {
   return GROK_WEB_COPY[input.locale](input);
 }
 
-export const install: AgentInstall = { ...GROK_WEB_PRODUCT, hasOfficialLogo: false, quickStart: GROK_WEB_QUICK_START, render };
+export const install: AgentInstall = { ...GROK_WEB_PRODUCT, officialLogo: null, quickStart: GROK_WEB_QUICK_START, render };

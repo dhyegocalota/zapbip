@@ -6,4 +6,4 @@ function render(input: InstallSectionInput): string {
   return CURSOR_COPY[input.locale](input);
 }
 
-export const install: AgentInstall = { ...CURSOR_PRODUCT, hasOfficialLogo: true, quickStart: CURSOR_QUICK_START, render };
+export const install: AgentInstall = { ...CURSOR_PRODUCT, officialLogo: 'cursor', quickStart: CURSOR_QUICK_START, render };

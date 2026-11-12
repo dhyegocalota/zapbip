@@ -54,5 +54,4 @@ const HERMES_QUICK_START_HINT: Record<OwnerLocale, string> = {
 export const HERMES_QUICK_START = quickStartOf({
   hint: HERMES_QUICK_START_HINT,
   code: (connectionLink) => `mcp_servers:\n  zapbip:\n    url: ${connectionLink}`,
-  proof: (connectionLink) => `url: ${connectionLink}`,
 });

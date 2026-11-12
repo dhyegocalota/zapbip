@@ -6,4 +6,4 @@ function render(input: InstallSectionInput): string {
   return CLAUDE_CODE_COPY[input.locale](input);
 }
 
-export const install: AgentInstall = { ...CLAUDE_CODE_PRODUCT, hasOfficialLogo: true, quickStart: CLAUDE_CODE_QUICK_START, render };
+export const install: AgentInstall = { ...CLAUDE_CODE_PRODUCT, officialLogo: 'claude', quickStart: CLAUDE_CODE_QUICK_START, render };

@@ -6,4 +6,4 @@ function render(input: InstallSectionInput): string {
   return OPENCLAW_COPY[input.locale](input);
 }
 
-export const install: AgentInstall = { ...OPENCLAW_PRODUCT, hasOfficialLogo: false, quickStart: OPENCLAW_QUICK_START, render };
+export const install: AgentInstall = { ...OPENCLAW_PRODUCT, officialLogo: null, quickStart: OPENCLAW_QUICK_START, render };

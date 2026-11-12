@@ -15,11 +15,11 @@ const THIRD_SENDER_INDEX = 2;
 
 export const SENDER_INDEXES = { first: FIRST_SENDER_INDEX, second: SECOND_SENDER_INDEX, third: THIRD_SENDER_INDEX };
 
-export function siteAgents(): { id: InstallClient; name: string; hasOfficialLogo: boolean }[] {
+export function siteAgents(): { id: InstallClient; name: string; logo: string | null }[] {
   return Object.values(InstallClient).map((id) => ({
     id,
     name: AGENT_INSTALLS[id].productName,
-    hasOfficialLogo: AGENT_INSTALLS[id].hasOfficialLogo,
+    logo: AGENT_INSTALLS[id].officialLogo,
   }));
 }
 
