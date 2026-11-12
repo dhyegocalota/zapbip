@@ -1,6 +1,10 @@
 import { AGENT_INSTALLS, InstallClient } from '@zapbip/agents/install';
 
 const LEADING_AGENT_COUNT = 2;
+export enum SiteStartTab {
+  AnyMcp = 'any',
+}
+
 const INITIALS_LENGTH = 2;
 const WHITESPACE_PATTERN = /\s+/;
 const LIST_SEPARATOR = ', ';

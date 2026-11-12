@@ -6,4 +6,8 @@ function render(input: InstallSectionInput): string {
   return GEMINI_CLI_COPY[input.locale](input);
 }
 
-export const install: AgentInstall = { ...GEMINI_CLI_PRODUCT, render };
+function quickStart(): never {
+  throw new Error('quickStart is not implemented');
+}
+
+export const install: AgentInstall = { ...GEMINI_CLI_PRODUCT, hasOfficialLogo: false, quickStart, render };

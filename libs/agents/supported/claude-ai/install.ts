@@ -6,4 +6,8 @@ function render(input: InstallSectionInput): string {
   return CLAUDE_AI_COPY[input.locale](input);
 }
 
-export const install: AgentInstall = { ...CLAUDE_AI_PRODUCT, render };
+function quickStart(): never {
+  throw new Error('quickStart is not implemented');
+}
+
+export const install: AgentInstall = { ...CLAUDE_AI_PRODUCT, hasOfficialLogo: false, quickStart, render };

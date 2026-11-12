@@ -6,4 +6,8 @@ function render(input: InstallSectionInput): string {
   return CHATGPT_COPY[input.locale](input);
 }
 
-export const install: AgentInstall = { ...CHATGPT_PRODUCT, render };
+function quickStart(): never {
+  throw new Error('quickStart is not implemented');
+}
+
+export const install: AgentInstall = { ...CHATGPT_PRODUCT, hasOfficialLogo: false, quickStart, render };

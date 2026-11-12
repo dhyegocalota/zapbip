@@ -6,4 +6,8 @@ function render(input: InstallSectionInput): string {
   return HERMES_COPY[input.locale](input);
 }
 
-export const install: AgentInstall = { ...HERMES_PRODUCT, render };
+function quickStart(): never {
+  throw new Error('quickStart is not implemented');
+}
+
+export const install: AgentInstall = { ...HERMES_PRODUCT, hasOfficialLogo: false, quickStart, render };
