@@ -31,19 +31,26 @@ pnpm typecheck
 pnpm exec prettier --check docs/features/backoffice-password-sign-in apps/api/src/backoffice
 ```
 
-Local stack for the walk: `pnpm dev` (the API on port 8787). The backoffice host is `http://backoffice.localhost:8787`. The owner's real password is never typed or seen by an agent. The owner approved a local-only operator with a test email and test password, created by the test support from `apps/api/test/support/backoffice-credentials.ts` and the e2e fixtures; the values live there, never in chat or docs. Never run `pnpm backoffice:enroll:staging` or `pnpm backoffice:enroll:production`.
+Local stack for the walk: the e2e global setup (`apps/api/e2e/backoffice/global-setup.ts`) boots a throwaway stack and enrolls the local test operator itself; for `pnpm dev` the pepper and the TOTP secret come from `apps/api/.dev.vars` (the owner's `pnpm backoffice:enroll:development` prints them). The backoffice host is `http://backoffice.localhost:8787`. The owner's real password is never typed or seen by an agent. The owner approved a local-only operator with a test email and test password, created by the test support from `apps/api/test/support/backoffice-credentials.ts` and the e2e fixtures; the values live there, never in chat or docs. Never run `pnpm backoffice:enroll:staging` or `pnpm backoffice:enroll:production`.
 
 ## Red today, green after
 
-| Test | Red before the change because | Green after because |
-|------|--------------------------------|---------------------|
-| `apps/api/test/unit/backoffice-password-hash.test.ts` | the stub throws `hashPassword is not implemented` (red run text to be pasted by the developer) | the implementation returns the format in the spec |
-| `apps/api/test/integration/backoffice-password-migration.test.ts` | `0009` does not exist | the migration applies and the rows match |
-| `apps/api/test/integration/backoffice-pending-sign-in.test.ts` | `pending-sign-in.ts` is a stub | the consume-once and expiry rules hold |
-| `apps/api/test/integration/backoffice-auth-password.test.ts` | `attemptPasswordSignIn is not implemented` | the counters, the lock and the single hash hold |
-| `apps/api/test/integration/backoffice-auth-sign-in-steps.test.ts` | the routes still expect the key | the two steps, cookies and redirects match |
-| `apps/api/test/unit/operator-enrollment-entry.test.ts` | the CLI still prints a key and asks for a code first | the CLI asks for the email and password, and writes no key |
-| `apps/api/test/unit/backoffice-copy.test.ts` | the new keys are missing | both locales have the keys |
+Red commits are in `git log`; each names what it asserts. The failure text is what the red run printed.
+
+| Test | Red commit | Red text | Green commit |
+|------|------------|----------|--------------|
+| `apps/api/test/unit/backoffice-password-hash.test.ts` | 51402113 | `Error: hashPassword is not implemented` (17 of 17 failed) | 2d7b7fe2 |
+| `apps/api/test/integration/backoffice-password-migration.test.ts` | 475d3cf8 | `ENOENT: no such file or directory, open '../../migrations/0009_backoffice_password_sign_in.sql'` | 8e564cae |
+| `apps/api/test/unit/env-example.test.ts` (Worker secret list) | 2d1cc58a | `AssertionError: expected [ 'WHATSAPP_VERIFY_TOKEN', ...(6) ] to deeply equal [ ... ]` | 733e47f7 |
+| `apps/api/test/integration/backoffice-auth-error-pages.test.ts` (missing pepper is 503) | 2d1cc58a | `AssertionError: expected 200 to be 503` | 72ea50df |
+| `apps/api/test/integration/backoffice-pending-sign-in.test.ts` | f87ebf1a | `createPendingSignIn is not implemented` (8 of 8 failed) | 9b9a08ba |
+| `apps/api/test/integration/backoffice-auth-password.test.ts` | f3df8f4b | `attemptPasswordSignIn is not implemented` and `attemptCodeSignIn is not implemented` (14 of 14 failed) | df54c8da |
+| `apps/api/test/integration/backoffice-auth-sign-in-steps.test.ts` | 3b5b70ec | `the password step set no pending cookie: 400`, `expected 404 to be 303`, `expected null to be '/sign-in?notice=SignInFailed'` (12 of 14 failed); the password-step 429 and the two missing-field 400 rows are pins | b3e9b07e |
+| `apps/api/test/unit/backoffice-copy.test.ts` | 5da23c51 | six of 43 failed: the four new sign-in keys missing, the two removed keys still present | 8c2e47f7 |
+| `apps/api/test/integration/backoffice-password-switchers.test.ts` | 5da23c51 | `the password step set no pending cookie: 400` (2 of 3 failed); the password page row is a pin | b3e9b07e |
+| `apps/api/test/unit/operator-enrollment-entry.test.ts` | 61589a8b | 17 of 33 failed: `expected 'Authenticator code: ' to be 'Operator email: '`, `expected 'Backoffice key (shown once): ...' not to contain 'Backoffice key'`, `isOperatorEmailAllowed is not implemented`, `parseEnrollmentArguments is not implemented`, `createTerminalPrompt is not implemented`; the email, confirmation and length refusal rows are pins | 733e47f7 |
+
+The rewritten key-flow tests of step 9 (`e15e4593`) are conversions of green tests, not red-first rows. The tree was not fully green in between: after `b3e9b07e` the old key tests failed until `e15e4593` rewrote them, and `env-example.test.ts` stayed red from `2d1cc58a` until `733e47f7`, because `BACKOFFICE_KEY_DIGEST` still had readers.
 
 Commit the failing test on its own before each implementation commit. A test that is green when it lands is a pin and says so in its commit.
 
@@ -64,3 +71,7 @@ Commit the failing test on its own before each implementation commit. A test tha
 - The owner's terminal hidden-input behaviour is not reproducible in the test harness. The enrollment test injects answers and checks that the password is not printed; the real echo is checked by the owner by hand.
 - The concurrency check runs against the local D1 harness, not production D1.
 - Passwords are checked for length only. No strength rule is applied, by design.
+- The Workers Free plan's 10 ms CPU is not measured on Workers; the unit test pins a 50 ms Node CPU budget per hash and per verify (measured about 2.7 ms), so it catches an order-of-magnitude regression only.
+- The Playwright walk specs under `apps/api/e2e/backoffice/` were rewritten but not run by the developer (`test:walk` is the tester's).
+- A wrong password and an unknown email run the same single hash, but the unknown path uses the dummy hash's 20000 iterations: if the stored count is ever raised, the dummy constant must follow (`DUMMY_PASSWORD_HASH` reads `PASSWORD_HASH_ITERATIONS`).
+- A 400 on a missing form field does not clear the pending cookie; only a real code submit does.
