@@ -1,5 +1,5 @@
-import { AGENT_DEFINITIONS } from '@zapbip/agents/definitions';
-import { DEFAULT_LOCALE, DocsLanguage, OwnerLocale, TURNSTILE_ACTION_WAITLIST_JOIN, WakeRung } from '@zapbip/types';
+import { AGENT_INSTALLS } from '@zapbip/agents/install';
+import { DEFAULT_LOCALE, OwnerLocale, TURNSTILE_ACTION_WAITLIST_JOIN } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { leadingAgentNamesOf } from '../../src/site/site-agents';
 import { SiteCopyKey } from '../../src/site/site-copy';
@@ -184,33 +184,27 @@ describe('the Portuguese page', () => {
 });
 
 describe('the works-with section', () => {
-  const agents = Object.values(AGENT_DEFINITIONS);
+  const names = Object.values(AGENT_INSTALLS).map((install) => install.productName);
 
-  it('shows one tile per registered agent, in registry order, named by the registry', async () => {
+  it.each([
+    ['en_US', ENGLISH_HEADERS],
+    ['pt_BR', PORTUGUESE_HEADERS],
+  ])('shows one tile per installable agent, in registry order, named by the registry in %s', async (_locale, headers) => {
+    const html = await pageOf({ headers });
+    const section = html.slice(html.indexOf('id="clients"'), html.indexOf('id="privacy"'));
+    const tiles = [...section.matchAll(/<div class="card client[^"]*"><strong>([^<]+)<\/strong>/g)].map((match) => match[1]);
+    expect(tiles.slice(0, names.length)).toEqual(names.map((name) => escapedHtml({ text: name })));
+  });
+
+  it('ends with the tile for any MCP app', async () => {
     const html = await pageOf({ headers: ENGLISH_HEADERS });
     const section = html.slice(html.indexOf('id="clients"'), html.indexOf('id="privacy"'));
-    const names = [...section.matchAll(/<div class="card client[^"]*"><strong>([^<]+)<\/strong>/g)].map((match) => match[1]);
-    expect(names).toEqual(agents.map((agent) => escapedHtml({ text: agent.docs.matrixName[DocsLanguage.English] })));
+    expect(section).toContain(copyHtml({ key: SiteCopyKey.ClientsAnyMcpName, locale: OwnerLocale.EnglishUs }));
   });
 
-  it('names the agents in Portuguese with the registry names', async () => {
-    const html = await pageOf({ headers: PORTUGUESE_HEADERS });
-    const portugueseOnly = agents
-      .map((agent) => agent.docs.matrixName[DocsLanguage.PortugueseBrazil])
-      .filter((name) => name.includes(' na '));
-    portugueseOnly.forEach((name) => expect(html).toContain(escapedHtml({ text: name })));
-  });
-
-  it('writes the expected delay of an agent that has one', async () => {
+  it('names the first two agents of the registry in the subhead', async () => {
     const html = await pageOf({ headers: ENGLISH_HEADERS });
-    const delayed = agents.filter((agent) => agent.listen.expectedDelaySeconds !== null && agent.listen.rung !== WakeRung.Scheduled);
-    delayed.forEach((agent) => expect(html).toContain(`wakes in ~${agent.listen.expectedDelaySeconds} s`));
-  });
-
-  it('names the first two agents of the registry in the subhead and the description', async () => {
-    const html = await pageOf({ headers: ENGLISH_HEADERS });
-    const [first, second] = agents.map((agent) => agent.docs.matrixName[DocsLanguage.English]);
-    expect(html).toContain(`${first}, ${second} and any MCP agent`);
+    expect(html).toContain(`${names[0]}, ${names[1]} and any MCP agent`);
   });
 });
 

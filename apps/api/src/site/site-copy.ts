@@ -107,6 +107,7 @@ export enum SiteCopyKey {
   ClientsWakeSeconds = 'clients_wake_seconds',
   ClientsHourly = 'clients_hourly',
   ClientsLocal = 'clients_local',
+  ClientsAnyMcpName = 'clients_any_mcp_name',
   ClientsAnyMcp = 'clients_any_mcp',
   ClientsStandby = 'clients_standby',
   ClientsCloud = 'clients_cloud',
@@ -260,6 +261,7 @@ export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.ClientsWakeSeconds]: 'wakes in ~{seconds} s',
     [SiteCopyKey.ClientsHourly]: 'checks every hour',
     [SiteCopyKey.ClientsLocal]: 'runs on your computer',
+    [SiteCopyKey.ClientsAnyMcpName]: 'Any MCP app',
     [SiteCopyKey.ClientsAnyMcp]: 'one MCP server, one key',
     [SiteCopyKey.ClientsStandby]: 'answered by a standby agent',
     [SiteCopyKey.ClientsCloud]: 'wakes from the cloud',
@@ -365,7 +367,7 @@ export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.DemoPause]: 'Pausar demonstração',
     [SiteCopyKey.DemoPlay]: 'Reproduzir demonstração',
     [SiteCopyKey.DemoDescription]:
-      'Um agente de programação no terminal pergunta "Deploy v2.4 to production?". A pergunta chega no WhatsApp com dois botões, Ship it e Wait. O dono toca em Ship it, e o agente faz o deploy e responde "Done. v2.4 is live."',
+      'Um agente de programação no terminal pergunta "Publicar a v2.4 em produção?". A pergunta chega no WhatsApp com dois botões, Publicar e Esperar. O dono toca em Publicar, e o agente publica e responde "Pronto. A v2.4 está no ar."',
     [SiteCopyKey.HowEyebrow]: 'Como funciona',
     [SiteCopyKey.HowTitle]: 'Configure uma vez. Depois é só responder.',
     [SiteCopyKey.HowStepConnectTitle]: 'Conecte seu agente',
@@ -416,6 +418,7 @@ export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.ClientsWakeSeconds]: 'acorda em ~{seconds} s',
     [SiteCopyKey.ClientsHourly]: 'confere a cada hora',
     [SiteCopyKey.ClientsLocal]: 'roda no seu computador',
+    [SiteCopyKey.ClientsAnyMcpName]: 'Qualquer app MCP',
     [SiteCopyKey.ClientsAnyMcp]: 'um servidor MCP, uma chave',
     [SiteCopyKey.ClientsStandby]: 'respondido por um agente reserva',
     [SiteCopyKey.ClientsCloud]: 'acorda pela nuvem',
@@ -460,7 +463,7 @@ export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.MetaDescription]:
       '{agents} e qualquer agente MCP falam com você no WhatsApp, perguntam com botões e esperam sua resposta. Entre na lista.',
     [SiteCopyKey.MetaOgTitle]: 'zapbip: seus agentes de IA falam com você no WhatsApp',
-    [SiteCopyKey.MetaOgImageAlt]: 'Um agente de IA pergunta "Deploy v2.4 to production?" no WhatsApp, com os botões Ship it e Wait.',
+    [SiteCopyKey.MetaOgImageAlt]: 'Um agente de IA pergunta "Publicar a v2.4 em produção?" no WhatsApp, com os botões Publicar e Esperar.',
     [SiteCopyKey.NotFoundMetaTitle]: 'Página não encontrada',
   },
 };
