@@ -25,6 +25,7 @@ const STORED_EMAIL = 'operator@zapbip.test';
 const PASSWORD = BACKOFFICE_TEST_PASSWORD;
 const SHORT_PASSWORD = 'a'.repeat(PASSWORD_MIN_LENGTH - 1);
 const LONG_PASSWORD = 'a'.repeat(PASSWORD_MAX_LENGTH + 1);
+const ARROW_UP = '\x1b[A';
 const EMAIL_QUESTION = 'Operator email: ';
 const PASSWORD_QUESTION = 'Password: ';
 const HASH_PATTERN = /password_hash = '(pbkdf2-sha256\$20000\$[A-Za-z0-9_-]{22}\$[A-Za-z0-9_-]{43})'/;
@@ -278,6 +279,22 @@ describe('terminal prompt', () => {
     input.write('visible-answer\n');
     expect(await visible).toBe('visible-answer');
     expect(written.join('')).toContain('visible-answer');
+    prompt.close();
+  });
+
+  it('never redraws a hidden answer when Up is pressed at the next visible prompt', async () => {
+    const input = new PassThrough();
+    const output = new PassThrough();
+    const written: string[] = [];
+    output.on('data', (chunk: Buffer) => written.push(chunk.toString()));
+    const prompt = createTerminalPrompt({ inputStream: input, outputStream: output });
+    const hidden = prompt.askHidden({ question: PASSWORD_QUESTION });
+    input.write('hidden-secret-value\n');
+    await hidden;
+    const visible = prompt.ask({ question: EMAIL_QUESTION });
+    input.write(`${ARROW_UP}\n`);
+    await visible;
+    expect(written.join('')).not.toContain('hidden-secret-value');
     prompt.close();
   });
 });
