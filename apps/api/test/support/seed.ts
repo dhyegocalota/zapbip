@@ -6,6 +6,7 @@ import backofficeMigrationSql from '../../migrations/0005_backoffice.sql?raw';
 import backofficeFlashMigrationSql from '../../migrations/0006_backoffice_flash.sql?raw';
 import activityMigrationSql from '../../migrations/0007_activity.sql?raw';
 import metaOnboardingMigrationSql from '../../migrations/0008_meta_onboarding.sql?raw';
+import passwordSignInMigrationSql from '../../migrations/0009_backoffice_password_sign_in.sql?raw';
 import { hashConnectionSecret } from '../../src/adapters/platform/hash';
 import { accountInboxStub, testEnv } from './workers-env';
 
@@ -49,6 +50,10 @@ export async function applyMetaOnboardingMigration(): Promise<void> {
   await applyMigration({ sql: metaOnboardingMigrationSql });
 }
 
+export async function applyPasswordSignInMigration(): Promise<void> {
+  await applyMigration({ sql: passwordSignInMigrationSql });
+}
+
 export async function applyDirectoryMigration(): Promise<void> {
   await applyCoreMigration();
   await applyAccountsMigration();
@@ -57,6 +62,7 @@ export async function applyDirectoryMigration(): Promise<void> {
   await applyBackofficeFlashMigration();
   await applyActivityMigration();
   await applyMetaOnboardingMigration();
+  await applyPasswordSignInMigration();
 }
 
 export async function seedAccount(input: { accountId: string; state?: AccountState; numberId?: string | null }): Promise<void> {

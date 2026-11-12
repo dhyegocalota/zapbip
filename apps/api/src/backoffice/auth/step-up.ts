@@ -1,7 +1,7 @@
 import type { Bindings } from '../../contract/env';
 import { BackofficeAuditAction, type BackofficeAuditTargetKind } from '../audit/backoffice-audit-action';
 import { registerFailure } from './failure';
-import { isLocked, readOperator, recordSuccess, releaseExpiredLock } from './operator-state';
+import { FailureCounter, isLocked, readOperator, recordSuccess, releaseExpiredLock } from './operator-state';
 import { isWithinRateLimit, RateLimitScope } from './rate-limit';
 import { matchTotpStep } from './totp';
 
@@ -28,12 +28,20 @@ export async function verifyStepUp(input: {
     scope: RateLimitScope.StepUp,
   });
   if (!isWithinLimit) return StepUpOutcome.RateLimited;
-  await releaseExpiredLock({ database, now });
+  await releaseExpiredLock({ database, now, counter: FailureCounter.Code });
   const operator = await readOperator({ database });
-  if (isLocked({ operator, now })) return StepUpOutcome.Rejected;
+  if (isLocked({ operator, now, counter: FailureCounter.Code })) return StepUpOutcome.Rejected;
   const step = await matchTotpStep({ secretBase32: env.BACKOFFICE_TOTP_SECRET, code, now, lastStep: operator.last_totp_step });
   const isStepClaimed = step !== null && (await recordSuccess({ database, step }));
   if (isStepClaimed) return StepUpOutcome.Accepted;
-  await registerFailure({ database, now, clientAddress, action: BackofficeAuditAction.StepUpFailed, targetKind, targetId });
+  await registerFailure({
+    database,
+    now,
+    clientAddress,
+    action: BackofficeAuditAction.StepUpFailed,
+    targetKind,
+    targetId,
+    counter: FailureCounter.Code,
+  });
   return StepUpOutcome.Rejected;
 }

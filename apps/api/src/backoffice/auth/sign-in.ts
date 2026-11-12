@@ -1,4 +1,4 @@
-import { sha256Hex } from '../../adapters/platform/hash';
+import { DUMMY_PASSWORD_HASH, PASSWORD_SUBMIT_MAX_LENGTH } from '../../contract/constants';
 import type { Bindings } from '../../contract/env';
 import { LogEvent } from '../../contract/log';
 import { logEvent } from '../../log';
@@ -6,7 +6,18 @@ import { writeAudit } from '../audit/audit-log';
 import { BackofficeAuditAction, BackofficeAuditOutcome } from '../audit/backoffice-audit-action';
 import { constantTimeEqual } from './constant-time';
 import { registerFailure } from './failure';
-import { isLocked, readOperator, recordSuccess, releaseExpiredLock } from './operator-state';
+import { normalizeEmail } from './operator-email';
+import {
+  FailureCounter,
+  isLocked,
+  type OperatorRow,
+  readOperator,
+  recordSuccess,
+  releaseExpiredLock,
+  resetPasswordFailures,
+} from './operator-state';
+import { consumePendingSignIn, createPendingSignIn } from './pending-sign-in';
+import { verifyPassword } from './password-hash';
 import { createSession } from './sessions';
 import { matchTotpStep } from './totp';
 
@@ -17,53 +28,86 @@ export enum SignInOutcome {
 
 export type SignInResult = { outcome: SignInOutcome.Succeeded; sessionToken: string } | { outcome: SignInOutcome.Failed };
 
-export async function isBackofficeKey(input: { submittedKey: string; expectedDigest: string }): Promise<boolean> {
-  const submittedDigest = await sha256Hex({ value: input.submittedKey });
-  return constantTimeEqual({ left: submittedDigest, right: input.expectedDigest });
+export enum PasswordSignInOutcome {
+  Accepted = 'accepted',
+  Failed = 'failed',
 }
 
-async function failSignIn(input: {
-  database: D1Database;
+export type PasswordSignInResult =
+  { outcome: PasswordSignInOutcome.Accepted; pendingToken: string } | { outcome: PasswordSignInOutcome.Failed };
+
+function storedCredentialOf(input: { operator: OperatorRow; email: string }): { isEmailKnown: boolean; storedHash: string } {
+  const { email: storedEmail, password_hash: storedHash } = input.operator;
+  if (storedEmail === null || storedHash === null) return { isEmailKnown: false, storedHash: DUMMY_PASSWORD_HASH };
+  if (!constantTimeEqual({ left: input.email, right: storedEmail })) return { isEmailKnown: false, storedHash: DUMMY_PASSWORD_HASH };
+  return { isEmailKnown: true, storedHash };
+}
+
+export async function attemptPasswordSignIn(input: {
+  env: Bindings;
+  email: string;
+  password: string;
   now: number;
   clientAddress: string | null;
-  isKeyValid: boolean;
-}): Promise<SignInResult> {
-  const { database, now, clientAddress, isKeyValid } = input;
-  logEvent({ event: LogEvent.BackofficeSignInFailed });
-  if (isKeyValid) {
-    await registerFailure({ database, now, clientAddress, action: BackofficeAuditAction.SignInFailed, targetKind: null, targetId: null });
-    return { outcome: SignInOutcome.Failed };
+}): Promise<PasswordSignInResult> {
+  const { env, password, now, clientAddress } = input;
+  const database = env.CONNECTIONS;
+  await releaseExpiredLock({ database, now, counter: FailureCounter.Password });
+  await releaseExpiredLock({ database, now, counter: FailureCounter.Code });
+  const operator = await readOperator({ database });
+  const { isEmailKnown, storedHash } = storedCredentialOf({ operator, email: normalizeEmail({ value: input.email }) });
+  const isPasswordSubmittable = password.length <= PASSWORD_SUBMIT_MAX_LENGTH;
+  const isPasswordValid = isPasswordSubmittable && (await verifyPassword({ password, pepper: env.BACKOFFICE_PASSWORD_PEPPER, storedHash }));
+  const isSignInLocked =
+    isLocked({ operator, now, counter: FailureCounter.Password }) || isLocked({ operator, now, counter: FailureCounter.Code });
+  if (isSignInLocked) return { outcome: PasswordSignInOutcome.Failed };
+  const isPairValid = isEmailKnown && isPasswordValid;
+  if (isPairValid) {
+    await resetPasswordFailures({ database });
+    return { outcome: PasswordSignInOutcome.Accepted, pendingToken: await createPendingSignIn({ database, now }) };
   }
-  await writeAudit({
+  logEvent({ event: LogEvent.BackofficeSignInFailed });
+  await registerFailure({
     database,
-    entry: {
-      now,
-      action: BackofficeAuditAction.SignInFailed,
-      outcome: BackofficeAuditOutcome.Failed,
-      targetKind: null,
-      targetId: null,
-      clientAddress,
-    },
+    now,
+    clientAddress,
+    action: BackofficeAuditAction.SignInFailed,
+    targetKind: null,
+    targetId: null,
+    counter: FailureCounter.Password,
   });
-  return { outcome: SignInOutcome.Failed };
+  return { outcome: PasswordSignInOutcome.Failed };
 }
 
-export async function attemptSignIn(input: {
+export async function attemptCodeSignIn(input: {
   env: Bindings;
-  key: string;
+  pendingToken: string;
   code: string;
   now: number;
   clientAddress: string | null;
 }): Promise<SignInResult> {
-  const { env, key, code, now, clientAddress } = input;
+  const { env, pendingToken, code, now, clientAddress } = input;
   const database = env.CONNECTIONS;
-  await releaseExpiredLock({ database, now });
+  const isPendingLive = await consumePendingSignIn({ database, token: pendingToken, now });
+  if (!isPendingLive) return { outcome: SignInOutcome.Failed };
+  await releaseExpiredLock({ database, now, counter: FailureCounter.Code });
   const operator = await readOperator({ database });
-  if (isLocked({ operator, now })) return { outcome: SignInOutcome.Failed };
-  const isKeyValid = await isBackofficeKey({ submittedKey: key, expectedDigest: env.BACKOFFICE_KEY_DIGEST });
+  if (isLocked({ operator, now, counter: FailureCounter.Code })) return { outcome: SignInOutcome.Failed };
   const step = await matchTotpStep({ secretBase32: env.BACKOFFICE_TOTP_SECRET, code, now, lastStep: operator.last_totp_step });
-  const isStepClaimed = isKeyValid && step !== null && (await recordSuccess({ database, step }));
-  if (!isStepClaimed) return failSignIn({ database, now, clientAddress, isKeyValid });
+  const isStepClaimed = step !== null && (await recordSuccess({ database, step }));
+  if (!isStepClaimed) {
+    logEvent({ event: LogEvent.BackofficeSignInFailed });
+    await registerFailure({
+      database,
+      now,
+      clientAddress,
+      action: BackofficeAuditAction.SignInFailed,
+      targetKind: null,
+      targetId: null,
+      counter: FailureCounter.Code,
+    });
+    return { outcome: SignInOutcome.Failed };
+  }
   logEvent({ event: LogEvent.BackofficeSignInSucceeded });
   await writeAudit({
     database,

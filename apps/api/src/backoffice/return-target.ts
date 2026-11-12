@@ -4,6 +4,7 @@ const QUERY_OR_FRAGMENT_PATTERN = /[?#][\s\S]*$/;
 const EXACT_PAGES: string[] = [
   BackofficePath.Home,
   BackofficePath.SignIn,
+  BackofficePath.SignInCode,
   BackofficePath.Numbers,
   BackofficePath.Metrics,
   BackofficePath.Audit,

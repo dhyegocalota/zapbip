@@ -6,7 +6,12 @@ import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { WAKE_SECRET_KEY_BYTES } from '@zapbip/core';
 import { startFakeGraph } from '../../test/support/fake-graph';
-import { BACKOFFICE_TEST_KEY_DIGEST, BACKOFFICE_TEST_TOTP_SECRET } from '../../test/support/backoffice-credentials';
+import {
+  BACKOFFICE_TEST_EMAIL,
+  BACKOFFICE_TEST_PASSWORD_HASH,
+  BACKOFFICE_TEST_PASSWORD_PEPPER,
+  BACKOFFICE_TEST_TOTP_SECRET,
+} from '../../test/support/backoffice-credentials';
 import { freePort, HEALTH_TIMEOUT_MS, LOOPBACK_HOST } from '../../test/e2e/support/stack-process';
 import { waitForSignIn } from './support/wait-for-sign-in';
 import { WalkVariable } from './support/walk-environment';
@@ -18,6 +23,7 @@ const DEVELOPMENT_ENVIRONMENT_ARGUMENTS = ['--env', 'development'];
 const BACKOFFICE_HOST = 'backoffice.localhost';
 const VERIFY_TOKEN = 'backoffice-walk-verify-token';
 const META_APP_SECRET = 'backoffice-walk-meta-app-secret';
+const ENROLL_TEST_OPERATOR_STATEMENT = `UPDATE backoffice_operator SET email = '${BACKOFFICE_TEST_EMAIL}', password_hash = '${BACKOFFICE_TEST_PASSWORD_HASH}' WHERE id = 1`;
 
 export default async function setup(): Promise<() => Promise<void>> {
   const persistDirectory = await mkdtemp(join(tmpdir(), 'zapbip-backoffice-walk-'));
@@ -31,8 +37,8 @@ export default async function setup(): Promise<() => Promise<void>> {
     UPLOAD_LINK_SIGNING_KEY: randomBytes(SIGNING_KEY_BYTES).toString('hex'),
     WAKE_SECRET_KEY: randomBytes(WAKE_SECRET_KEY_BYTES).toString('base64'),
     NUMBER_REGISTRY_KEY: randomBytes(WAKE_SECRET_KEY_BYTES).toString('base64'),
-    BACKOFFICE_KEY_DIGEST: BACKOFFICE_TEST_KEY_DIGEST,
     BACKOFFICE_TOTP_SECRET: BACKOFFICE_TEST_TOTP_SECRET,
+    BACKOFFICE_PASSWORD_PEPPER: BACKOFFICE_TEST_PASSWORD_PEPPER,
     BACKOFFICE_ORIGIN: origin,
     PUBLIC_ORIGIN: `http://${LOOPBACK_HOST}:${port}`,
     WHATSAPP_VERIFY_TOKEN: VERIFY_TOKEN,
@@ -50,6 +56,18 @@ export default async function setup(): Promise<() => Promise<void>> {
     ...DEVELOPMENT_ENVIRONMENT_ARGUMENTS,
     '--local',
     ...persistArguments,
+  ]);
+  await runCommand('pnpm', [
+    'exec',
+    'wrangler',
+    'd1',
+    'execute',
+    DATABASE_BINDING,
+    ...DEVELOPMENT_ENVIRONMENT_ARGUMENTS,
+    '--local',
+    ...persistArguments,
+    '--command',
+    ENROLL_TEST_OPERATOR_STATEMENT,
   ]);
   const server = spawn(
     'pnpm',

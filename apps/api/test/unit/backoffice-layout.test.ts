@@ -5,6 +5,7 @@ import { BackofficeTheme, resolveTheme } from '../../src/backoffice/backoffice-t
 import { ErrorPage } from '../../src/backoffice/views/error-page';
 import { Layout, type LayoutProps } from '../../src/backoffice/layout';
 import { SignInPage } from '../../src/backoffice/views/sign-in';
+import { SignInCodePage } from '../../src/backoffice/views/sign-in-code';
 import { DeployEnvironment } from '../../src/contract/deploy-environment';
 
 const STYLESHEET_HREF = '/assets/backoffice.css?v=abc123';
@@ -153,8 +154,8 @@ describe('backoffice layout', () => {
 
 describe('sign-in page', () => {
   it.each([
-    [OwnerLocale.EnglishUs, 'Operator access', 'Your backoffice key and a fresh code.'],
-    [OwnerLocale.PortugueseBrazil, 'Acesso do operador', 'Sua chave do backoffice e um código novo.'],
+    [OwnerLocale.EnglishUs, 'Operator access', 'Your email and password first, then the code from your authenticator app.'],
+    [OwnerLocale.PortugueseBrazil, 'Acesso do operador', 'Seu e-mail e sua senha. Depois, o código do seu autenticador.'],
   ])('renders the eyebrow and the lead in %s', (locale, eyebrow, lead) => {
     const html = String(
       SignInPage({
@@ -168,5 +169,25 @@ describe('sign-in page', () => {
     );
     expect(html).toContain(eyebrow);
     expect(html).toContain(lead);
+  });
+});
+
+describe('sign-in code page', () => {
+  it.each([
+    [OwnerLocale.EnglishUs, 'Enter the 6-digit code from your authenticator app. This step expires in 5 minutes.'],
+    [OwnerLocale.PortugueseBrazil, 'Digite o código de 6 dígitos do seu app autenticador. Esta etapa expira em 5 minutos.'],
+  ])('renders the code lead in %s and no password field', (locale, lead) => {
+    const html = String(
+      SignInCodePage({
+        locale,
+        environment: DeployEnvironment.Production,
+        theme: BackofficeTheme.System,
+        csrfToken: CSRF_TOKEN,
+        stylesheetHref: STYLESHEET_HREF,
+        notice: null,
+      }),
+    );
+    expect(html).toContain(lead);
+    expect(html).not.toContain('name="password"');
   });
 });

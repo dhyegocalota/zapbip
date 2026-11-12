@@ -3,14 +3,14 @@ import { csrfTokenOf } from '../../src/backoffice/auth/csrf';
 import { createFakeRateLimiter } from '../support/fake-rate-limiter';
 import {
   BACKOFFICE_ORIGIN,
-  BACKOFFICE_TEST_KEY,
+  BACKOFFICE_TEST_EMAIL,
+  BACKOFFICE_TEST_PASSWORD,
   backofficeEnv,
-  postSignIn,
+  postPasswordStep,
   requestBackoffice,
   resetBackoffice,
   SESSION_COOKIE,
   signIn,
-  validCode,
 } from './backoffice-auth-fixtures';
 
 const STATUS_UNAUTHORIZED = 401;
@@ -64,7 +64,7 @@ describe('error pages', () => {
 
   test('a rate-limited sign-in is a 429 page that keeps Retry-After', async () => {
     const env = backofficeEnv({ limiter: createFakeRateLimiter({ limit: 0 }) });
-    const response = await postSignIn({ key: BACKOFFICE_TEST_KEY, code: await validCode({}), env });
+    const response = await postPasswordStep({ email: BACKOFFICE_TEST_EMAIL, password: BACKOFFICE_TEST_PASSWORD, env });
     expect(response.status).toBe(STATUS_TOO_MANY_REQUESTS);
     expect(response.headers.get('retry-after')).toBe('60');
     expect(await response.text()).toContain('429');
@@ -77,6 +77,22 @@ describe('error pages', () => {
     expect(headingOf(await signInPage.text())).toBe('503 The backoffice is not configured');
     const stylesheet = await requestBackoffice({ path: '/assets/backoffice.css', env });
     expect(stylesheet.status).toBe(STATUS_SERVICE_UNAVAILABLE);
+  });
+
+  test('a missing password pepper is a 503 page on every path', async () => {
+    const env = backofficeEnv({ overrides: { BACKOFFICE_PASSWORD_PEPPER: '' } });
+    const signInPage = await requestBackoffice({ path: '/sign-in', env, headers: ENGLISH });
+    expect(signInPage.status).toBe(STATUS_SERVICE_UNAVAILABLE);
+    expect(headingOf(await signInPage.text())).toBe('503 The backoffice is not configured');
+  });
+
+  test.each([
+    ['BACKOFFICE_PASSWORD_PEPPER', ' \t\n'],
+    ['BACKOFFICE_TOTP_SECRET', '   '],
+  ])('a whitespace-only %s is a 503 page', async (name, value) => {
+    const env = backofficeEnv({ overrides: { [name]: value } });
+    const response = await requestBackoffice({ path: '/sign-in', env, headers: ENGLISH });
+    expect(response.status).toBe(STATUS_SERVICE_UNAVAILABLE);
   });
 
   test('every error page still carries the security headers', async () => {

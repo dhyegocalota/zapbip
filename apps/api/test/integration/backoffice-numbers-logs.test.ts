@@ -6,7 +6,7 @@ import { NumberFormField } from '../../src/backoffice/numbers/number-form-fields
 import { FakeGraph } from '../support/fake-graph';
 import { seedWhatsAppNumber } from '../support/whatsapp-numbers';
 import { testEnv } from '../support/workers-env';
-import { BACKOFFICE_TEST_KEY, CLIENT_ADDRESS } from './backoffice-auth-fixtures';
+import { BACKOFFICE_TEST_PASSWORD, CLIENT_ADDRESS } from './backoffice-auth-fixtures';
 import {
   ACCESS_TOKEN,
   DISPLAY_NUMBER,
@@ -73,7 +73,7 @@ describe('logs of the numbers pages', () => {
     const logged = JSON.stringify(spies.flatMap((spy) => spy.mock.calls));
     expect(logged.length).toBeGreaterThan(0);
     [
-      BACKOFFICE_TEST_KEY,
+      BACKOFFICE_TEST_PASSWORD,
       ACCESS_TOKEN,
       ROTATED_ACCESS_TOKEN,
       DISPLAY_NUMBER,

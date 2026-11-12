@@ -8,6 +8,6 @@ export enum WorkerSecret {
   UploadLinkSigningKey = 'UPLOAD_LINK_SIGNING_KEY',
   WakeSecretKey = 'WAKE_SECRET_KEY',
   NumberRegistryKey = 'NUMBER_REGISTRY_KEY',
-  BackofficeKeyDigest = 'BACKOFFICE_KEY_DIGEST',
   BackofficeTotpSecret = 'BACKOFFICE_TOTP_SECRET',
+  BackofficePasswordPepper = 'BACKOFFICE_PASSWORD_PEPPER',
 }

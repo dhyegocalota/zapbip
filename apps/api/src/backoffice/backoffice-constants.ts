@@ -48,6 +48,7 @@ export const NO_STORE = 'no-store';
 export { RETRY_AFTER_HEADER } from '../routes/private-response';
 export const NON_ERROR_CODE = 'NonError';
 export const SESSION_COOKIE_NAME = '__Host-zb_bo_session';
+export const PENDING_SIGN_IN_COOKIE_NAME = '__Host-zb_bo_pending';
 export const CSRF_COOKIE_NAME = '__Host-zb_bo_csrf';
 export const LOCALE_COOKIE_NAME = '__Host-zb_bo_locale';
 export const THEME_COOKIE_NAME = '__Host-zb_bo_theme';

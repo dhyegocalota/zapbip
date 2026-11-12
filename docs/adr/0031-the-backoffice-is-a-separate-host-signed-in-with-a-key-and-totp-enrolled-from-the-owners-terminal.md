@@ -23,7 +23,7 @@ The owner's terminal already holds the only deploy-capable credential, a scoped 
 
 ## Decision
 
-1. **Two factors.**
+1. **Two factors.** (Amended 2026-11-11 by [ADR 0038](0038-the-backoffice-signs-in-with-a-password-and-then-a-code-held-in-a-server-side-second-step.md), owner delegated: the key is replaced by an email and a password, and the code is a second step held on the server. The text below is kept for history.)
    - A generated backoffice key: `zb_bo_` plus 32 random bytes in base64url.
    - A TOTP code: RFC 6238, SHA-1, 6 digits, 30 s, ±1 step, each step usable once.
    - The key is stored only as a SHA-256 digest. Its entropy makes a slow hash unnecessary, the same reasoning as ADR 0017.
@@ -33,7 +33,7 @@ The owner's terminal already holds the only deploy-capable credential, a scoped 
    - It resets the operator row and drops every session in D1.
    - `guard-deploy.sh` blocks it for agents.
    - Re-enrollment is the only recovery, and there are no recovery codes.
-3. **Sign-in hardening.**
+3. **Sign-in hardening.** (Amended 2026-11-11 by [ADR 0038](0038-the-backoffice-signs-in-with-a-password-and-then-a-code-held-in-a-server-side-second-step.md): the password step counts toward the same lock, and the code step is refused without a live pending state.)
    - One generic failure answer.
    - A per-address rate limit (`BACKOFFICE_RATE_LIMITER`, 5 per minute).
    - A D1 lockout after 10 consecutive failures for 15 minutes. Only a valid key with a wrong code counts as a failure at sign-in, so a stranger who guesses keys is rate limited, audited and logged but can never lock the owner out; a wrong step-up code counts, because it needs a session.
@@ -53,7 +53,7 @@ The owner's terminal already holds the only deploy-capable credential, a scoped 
 |--------|------|------|---------|
 | Passkeys (WebAuthn) only | phishing-resistant; no shared secret on the server | registration must happen in a browser on the backoffice origin, so bootstrap needs a one-time enrollment link instead of the terminal; COSE and attestation parsing needs a library such as `@simplewebauthn/server` | the owner asked for terminal bootstrap and TOTP; kept as the phase 2 extra factor |
 | TOTP alone | simplest | one factor (possession); not "2FA" | does not meet the order |
-| Human password + TOTP | familiar | needs PBKDF2 or Argon2 to resist offline guessing, which exceeds the 10 ms Free-plan CPU budget | a generated key gives more entropy at zero CPU |
+| Human password + TOTP | familiar | needs PBKDF2 or Argon2 to resist offline guessing, which exceeds the 10 ms Free-plan CPU budget | a generated key gives more entropy at zero CPU. (Amended 2026-11-11 by [ADR 0038](0038-the-backoffice-signs-in-with-a-password-and-then-a-code-held-in-a-server-side-second-step.md): a password is chosen, with a server-side pepper and PBKDF2 at 20000 iterations so it fits the Free plan.) |
 | Cloudflare Access (Zero Trust) in front of the host | managed; email one-time PIN or IdP; no auth code | a new product and policy surface outside the repository; the factor is email; not testable in the local gate | "no third-party auth" and the gate (ADR 0005) |
 | A separate `apps/backoffice` Worker | backoffice code and its secrets not in the MCP isolate | the registry master key must live in the channel Worker anyway; a second deploy, preflight and set of bindings (cross-script Durable Object binding) | the isolation gained is small; host dispatch plus tests gets most of it |
 | Static SPA with a JSON API | richer interactions | a build step and asset pipeline; client-side token handling; the CSP must allow scripts; new dependencies | more attack surface for a single-operator tool |

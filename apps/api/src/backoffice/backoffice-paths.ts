@@ -1,6 +1,7 @@
 export enum BackofficePath {
   Home = '/',
   SignIn = '/sign-in',
+  SignInCode = '/sign-in/code',
   SignOut = '/sign-out',
   Locale = '/locale',
   Theme = '/theme',

@@ -26,7 +26,7 @@ const PROTECTED_PATHS = [
   BackofficePath.Audit,
 ];
 
-const FORM_PATHS = [BackofficePath.SignIn, BackofficePath.Locale, BackofficePath.Theme, ...PROTECTED_PATHS];
+const FORM_PATHS = [BackofficePath.SignIn, BackofficePath.SignInCode, BackofficePath.Locale, BackofficePath.Theme, ...PROTECTED_PATHS];
 
 function createBaseApp(): Hono<BackofficeEnv> {
   const app = new Hono<BackofficeEnv>();
