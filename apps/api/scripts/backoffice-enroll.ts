@@ -38,7 +38,7 @@ export function createTerminalPrompt(input: { inputStream: NodeJS.ReadableStream
       done();
     },
   });
-  const lineReader = createInterface({ input: inputStream, output: echo, terminal: true });
+  const lineReader = createInterface({ input: inputStream, output: echo, terminal: true, historySize: NO_HISTORY });
   return {
     ask: ({ question }) => lineReader.question(question),
     askHidden: async ({ question }) => {
@@ -66,6 +66,7 @@ export type EnrollmentRun = {
 };
 
 const PEPPER_BYTES = 32;
+const NO_HISTORY = 0;
 const TOTP_SECRET_BYTES = 20;
 const NO_PREVIOUS_STEP = 0;
 const CONFIRMATION_ANSWER = DeployEnvironment.Production;
