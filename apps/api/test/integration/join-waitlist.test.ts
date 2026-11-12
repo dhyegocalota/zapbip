@@ -1,7 +1,8 @@
 import { reset } from 'cloudflare:test';
 import { DEFAULT_WAITLIST_REFERRAL_CAP, OwnerLocale, WAITLIST_EMAIL_MAX_LENGTH, WaitlistJoinOutcome } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { applyLandingWaitlistMigration } from '../support/seed';
+import { joinWaitlist } from '../../src/site/join-waitlist';
+import { applyLandingWaitlistMigration, SEED_CREATED_AT } from '../support/seed';
 import { join, joinedCodeOf, rowOf, setCap, waitlistRows } from '../support/waitlist';
 import { testEnv } from '../support/workers-env';
 
@@ -129,5 +130,21 @@ describe('joinWaitlist', () => {
     const results = await Promise.all([join({ email: 'maria@example.com' }), join({ email: 'maria@example.com' })]);
     expect(results.map((result) => result.outcome).sort()).toEqual([WaitlistJoinOutcome.AlreadyJoined, WaitlistJoinOutcome.Joined]);
     expect(await waitlistRows()).toHaveLength(1);
+  });
+
+  it('writes the row and reads it back in one batch', async () => {
+    const batches: number[] = [];
+    const database = new Proxy(testEnv.CONNECTIONS, {
+      get(target, property) {
+        const member = Reflect.get(target, property);
+        if (property !== 'batch') return typeof member === 'function' ? member.bind(target) : member;
+        return (statements: D1PreparedStatement[]) => {
+          batches.push(statements.length);
+          return target.batch(statements);
+        };
+      },
+    });
+    await joinWaitlist({ database, email: 'maria@example.com', locale: OwnerLocale.EnglishUs, referralCode: null, now: SEED_CREATED_AT });
+    expect(batches).toEqual([2]);
   });
 });
