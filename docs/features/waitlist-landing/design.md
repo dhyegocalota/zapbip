@@ -358,7 +358,7 @@ New, under `apps/api/src/site/views/`:
 Markup inside `figure.demo`:
 
 - `div.demo-stage` (`aspect-ratio: 1`, width 100%, `max-width: var(--measure-demo)`, `--radius-bubble` with `--radius-card` scaled to 1.75rem, `background: var(--gradient-stage)`, `box-shadow: var(--elevation-stage)`, `overflow: hidden`):
-  - `img.demo-poster` `src="/site/demo-poster-960.webp"`, `srcset` 540w and 960w, `sizes="(min-width: 64rem) 31rem, (min-width: 40rem) 34rem, calc(100vw - 2rem)"`, `width="960" height="960"`, `fetchpriority="high"`, `decoding="async"`, `alt=""`. This is the LCP element.
+  - `img.demo-poster` `src="/site/demo-<locale>-poster-960.webp"` (`en_US` or `pt_BR`), `srcset` 540w and 960w, `sizes="(min-width: 64rem) 31rem, (min-width: 40rem) 34rem, calc(100vw - 2rem)"`, `width="960" height="960"`, `fetchpriority="high"`, `decoding="async"`, `alt=""`. This is the LCP element.
   - `video.demo-video` `muted loop playsinline preload="none"`, `width="960" height="960"`, `aria-hidden="true"`, with `source` webm then mp4; absolutely positioned over the poster, `opacity: 0` until the script adds `.is-playing` on the `playing` event (220 ms fade), so a slow start never flashes black.
   - `button.demo-toggle` bottom-right inside the stage: 44 px circle, `--color-terminal-bar` at 80% with `--color-terminal-text` icon; hidden until the video plays.
 - `ol.demo-steps` under the stage: three pills `DemoStepAsk`, `DemoStepTap`, `DemoStepContinue`, the current one `aria-current="step"` with `--color-success-surface` fill and a `.live-dot`. The script follows `currentTime` (0–5.6 s, 5.6–7.4 s, 7.4–12 s). Without the script or with reduced motion, all three render equal.
@@ -399,7 +399,7 @@ The backoffice block, verbatim (`animation: none !important; transition: none !i
 
 ### 9.4 Demo video storyboard (≤ 15 s loop: 12.0 s at 30 fps)
 
-**Canvas** 1080 × 1080, encoded at 960 × 960. Background: `--gradient-stage` colours (`#0D1B17` with the green glow at top right), the same in both page themes. No text burned into the video other than product UI, so one cut serves both languages (spec, open questions); the page's step captions carry the localization.
+**Canvas** 1080 × 1080, encoded at 960 × 960. Background: `--gradient-stage` colours (`#0D1B17` with the green glow at top right), the same in both page themes. Two cuts, one per locale (owner order 2026-11-12: everything in both languages): the terminal lines, the WhatsApp question, the buttons and the reply are in the page's language; the page chooses the cut by its locale.
 
 **Layout (canvas pixels).**
 
@@ -448,11 +448,11 @@ ffmpeg -ss 4.8 -i demo-960.mp4 -frames:v 1 -vf "scale=540:540:flags=lanczos" -c:
 
 | File | Size budget |
 |---|---|
-| `demo-960.mp4` (H.264 High, faststart, no audio) | ≤ 1.5 MB |
-| `demo-960.webm` (VP9, no audio) | ≤ 1.1 MB |
-| `demo-poster-960.webp` | ≤ 80 KB |
-| `demo-poster-540.webp` | ≤ 35 KB |
-| `og.png` | ≤ 300 KB |
+| `demo-<locale>-960.mp4` (H.264 High, faststart, no audio), per locale | ≤ 1.5 MB |
+| `demo-<locale>-960.webm` (VP9, no audio), per locale | ≤ 1.1 MB |
+| `demo-<locale>-poster-960.webp` | ≤ 80 KB |
+| `demo-<locale>-poster-540.webp` | ≤ 35 KB |
+| `og-<locale>.png` | ≤ 300 KB |
 | `apple-touch-icon.png` (180 × 180) | ≤ 10 KB |
 
 If Playwright's recorder (VP8 at a fixed bitrate) blurs the 26 px mono text, the fallback keeps the same stage and data: install `page.clock`, step it 33.3 ms at a time after the data is in place, take one `page.screenshot` per step, and encode the PNG sequence with the same ffmpeg arguments (`-framerate 30 -i frame-%04d.png`).
@@ -681,7 +681,7 @@ The title joins the page title and the brand with the backoffice `TITLE_SEPARATO
 
 `head`, in order: `charset`; `viewport`; `title` `MetaTitle`; `meta name=description`; `link rel=canonical href=SITE_ORIGIN + "/"` (test plan); `link rel=alternate hreflang` for `en`, `pt-BR` and `x-default` (the URLs are the routing lane's, from the same constants as the sitemap); `meta name=theme-color` `#F6F8F5` with `media="(prefers-color-scheme: light)"` and `#07120F` for dark; `link rel=icon type=image/svg+xml href=/favicon.svg`; `link rel=apple-touch-icon href=/site/apple-touch-icon.png`; the poster `preload`; the stylesheet; `og:type=website`, `og:site_name=zapbip`, `og:url`, `og:title` `MetaOgTitle`, `og:description` `MetaDescription`, `og:image=SITE_ORIGIN + /site/og.png`, `og:image:width=1200`, `og:image:height=630`, `og:image:type=image/png`, `og:image:alt` `MetaOgImageAlt`, `og:locale` (`en_US` or `pt_BR`) and `og:locale:alternate`; `twitter:card=summary_large_image`, `twitter:title`, `twitter:description`, `twitter:image`, `twitter:image:alt`; `site-scripts` with `defer`; the Turnstile script `async defer`, only when the form renders. The not-found page adds `meta name=robots content=noindex`.
 
-**Open Graph image** `og.png`, 1200 × 630, PNG, ≤ 300 KB, English only (one image, like the one demo cut; a pt-BR image is a follow-up):
+**Open Graph images** `og-en_US.png` and `og-pt_BR.png`, 1200 × 630, PNG, ≤ 300 KB each, chosen by the page locale (headline, tagline and phone in that language):
 
 - Background `#F6F8F5` with the hero's dot pattern and a green glow at x 900, y 120 (the light hero, so it reads in light and dark link previews).
 - Left block from x 72, y 96: the bubble mark (64 px) and `zapbip` in rounded 800 at 44 px, `#0E1F1A`; the headline "Your AI agents text you" / "on WhatsApp." at 68 px, 800, line 1.02, tracking −0.035em, the second line in the teal-to-green gradient with the signal underline; under it `zapbip.com · Join the waitlist` at 26 px `#4B5E57`.
@@ -722,7 +722,7 @@ At 375 everything stacks (figures 2 columns, the cap card, then the table as car
 
 ### 13.3 CSV
 
-File name `zapbip-waitlist-<YYYY-MM-DD>.csv` (UTC date), `Content-Type: text/csv; charset=utf-8`, `Content-Disposition: attachment`, header row exactly `email,joined_at,credited_referrals,referred_by` (test plan), `joined_at` ISO 8601 UTC, `referred_by` the referrer's email (empty when none), every cell quoted, formula cells prefixed with `'` (spec). Same order as the page.
+File name `zapbip-waitlist-<YYYY-MM-DD>.csv` (UTC date), `Content-Type: text/csv; charset=utf-8`, `Content-Disposition: attachment`, header row exactly `email,joined_at,credited_referrals,referred_by` in `en_US` and `email,entrou_em,indicacoes_creditadas,indicado_por` in `pt_BR`, by the backoffice locale (test plan), `joined_at` ISO 8601 UTC, `referred_by` the referrer's email (empty when none), every cell quoted, formula cells prefixed with `'` (spec). Same order as the page.
 
 ### 13.4 Backoffice copy (`backoffice-copy.ts`)
 

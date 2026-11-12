@@ -1,3 +1,5 @@
+import type { OwnerLocale } from '@zapbip/types';
+
 export enum SitePath {
   Home = '/',
   Join = '/join',
@@ -11,13 +13,19 @@ export enum SitePath {
   AssetPrefix = '/site/',
 }
 
-export enum SiteAsset {
-  DemoMp4 = '/site/demo-960.mp4',
-  DemoWebm = '/site/demo-960.webm',
-  PosterLarge = '/site/demo-poster-960.webp',
-  PosterSmall = '/site/demo-poster-540.webp',
-  OpenGraphImage = '/site/og.png',
-  AppleTouchIcon = '/site/apple-touch-icon.png',
+export enum SiteAssetKind {
+  DemoMp4 = 'demo-{locale}-960.mp4',
+  DemoWebm = 'demo-{locale}-960.webm',
+  PosterLarge = 'demo-{locale}-poster-960.webp',
+  PosterSmall = 'demo-{locale}-poster-540.webp',
+  OpenGraphImage = 'og-{locale}.png',
+}
+
+export const APPLE_TOUCH_ICON_PATH = `${SitePath.AssetPrefix}apple-touch-icon.png`;
+const LOCALE_PLACEHOLDER = '{locale}';
+
+export function siteAssetOf(input: { kind: SiteAssetKind; locale: OwnerLocale }): string {
+  return `${SitePath.AssetPrefix}${input.kind.replace(LOCALE_PLACEHOLDER, input.locale)}`;
 }
 
 export const DOCS_ORIGIN = 'https://docs.zapbip.com';

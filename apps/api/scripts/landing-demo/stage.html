@@ -278,8 +278,8 @@
       const chat = document.getElementById('chat');
       const tap = document.getElementById('tap');
       const ripple = document.getElementById('ripple');
-      const command = 'run the tests';
-      const deployCommand = 'deploy v2.4';
+      const command = demo.command;
+      const deployCommand = demo.deployCommand;
 
       function line(html) {
         return `<p>${html}</p>`;
@@ -306,15 +306,15 @@
         }
         if (t >= ASK_AT) lines.push(line(`<span class="accent">●</span> zapbip.ask`));
         if (t >= ASK_AT) lines.push(line(`<span class="muted">  ${demo.question}</span>`));
-        if (t >= OPTIONS_AT) lines.push(line(`<span class="muted">  options: ${demo.options.join(' · ')}</span>`));
+        if (t >= OPTIONS_AT) lines.push(line(`<span class="muted">  ${demo.optionsLabel} ${demo.options.join(' · ')}</span>`));
         const isWaiting = t >= WAIT_AT && t < ANSWERED_AT;
         if (isWaiting) {
           const frame = SPINNER_FRAMES[Math.floor(t / SPINNER_FRAME_SECONDS) % SPINNER_FRAMES.length];
           lines.push(
-            line(`<span class="accent">${frame}</span> waiting for your answer <span class="muted">${elapsedOf(t - WAIT_AT)}</span>`),
+            line(`<span class="accent">${frame}</span> ${demo.waitingLabel} <span class="muted">${elapsedOf(t - WAIT_AT)}</span>`),
           );
         }
-        if (t >= ANSWERED_AT) lines.push(line(`<span class="accent">✓</span> owner answered: ${demo.answer}`));
+        if (t >= ANSWERED_AT) lines.push(line(`<span class="accent">✓</span> ${demo.answeredLabel} ${demo.answer}`));
         if (t >= DEPLOY_AT) lines.push(line(`<span class="accent">›</span> ${typed(deployCommand, t - DEPLOY_AT)}`));
         if (t >= PROGRESS_START) {
           const ratio = Math.max(0, Math.min(1, (t - PROGRESS_START) / (PROGRESS_END - PROGRESS_START)));

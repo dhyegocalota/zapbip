@@ -1,4 +1,4 @@
-import type { OwnerLocale } from '@zapbip/types';
+import { OwnerLocale } from '@zapbip/types';
 export type WaitlistListRow = {
   email: string;
   joinedAt: number;
@@ -6,7 +6,10 @@ export type WaitlistListRow = {
   referredByEmail: string | null;
 };
 
-const HEADER_CELLS = ['email', 'joined_at', 'credited_referrals', 'referred_by'];
+const HEADER_CELLS: Record<OwnerLocale, string[]> = {
+  [OwnerLocale.EnglishUs]: ['email', 'joined_at', 'credited_referrals', 'referred_by'],
+  [OwnerLocale.PortugueseBrazil]: ['email', 'entrou_em', 'indicacoes_creditadas', 'indicado_por'],
+};
 const FORMULA_PREFIXES = ['=', '+', '-', '@', '\t', '\r'];
 const NEUTRALISING_PREFIX = "'";
 const CELL_SEPARATOR = ',';
@@ -32,5 +35,5 @@ function lineOf(input: { row: WaitlistListRow }): string {
 }
 
 export function toWaitlistCsv(input: { rows: WaitlistListRow[]; locale: OwnerLocale }): string {
-  return `${HEADER_CELLS.join(CELL_SEPARATOR)}${LINE_BREAK}${input.rows.map((row) => lineOf({ row })).join('')}`;
+  return `${HEADER_CELLS[input.locale].join(CELL_SEPARATOR)}${LINE_BREAK}${input.rows.map((row) => lineOf({ row })).join('')}`;
 }

@@ -96,7 +96,7 @@
       .tagline {
         position: absolute;
         left: 72px;
-        top: 392px;
+        top: 486px;
         margin: 0;
         color: #4b5e57;
         font-size: 26px;
@@ -189,8 +189,8 @@
   <body>
     <div class="card">
       <div class="brand"><span class="mark"></span>zapbip</div>
-      <h1>Your AI agents text you <span class="accent">on WhatsApp.</span></h1>
-      <p class="tagline">zapbip.com · Join the waitlist</p>
+      <h1><span id="title-lead"></span> <span class="accent" id="title-accent"></span></h1>
+      <p class="tagline" id="tagline"></p>
       <div class="phone">
         <div class="screen">
           <div class="status"></div>
@@ -201,6 +201,9 @@
     </div>
     <script>
       const demo = window.DEMO;
+      document.getElementById('title-lead').textContent = demo.titleLead;
+      document.getElementById('title-accent').textContent = demo.titleAccent;
+      document.getElementById('tagline').textContent = demo.tagline;
       document.getElementById('chat').innerHTML =
         `<div class="bubble"><b>${demo.agentName}</b>${demo.questionShort}</div>` +
         demo.options.map((option) => `<div class="choice">${option}</div>`).join('');

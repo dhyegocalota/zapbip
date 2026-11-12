@@ -27,3 +27,17 @@ test('robots, sitemap, canonical, Open Graph and favicon', async ({ page, reques
   expect(bytes.length).toBeGreaterThan(PNG_SIGNATURE_LENGTH);
   expect((await request.get('/favicon.svg')).status()).toBe(200);
 });
+
+test.describe('pt-BR browser', () => {
+  test.use({ locale: 'pt-BR' });
+
+  test('the social image and the demo are the Portuguese ones', async ({ page, request }) => {
+    await page.goto('/');
+    const imageUrl = (await page.locator('meta[property="og:image"]').getAttribute('content'))!;
+    expect(imageUrl).toContain('og-pt_BR.png');
+    expect((await request.get(new URL(imageUrl).pathname)).status()).toBe(200);
+    await expect(page.locator('.demo-video source[type="video/mp4"]')).toHaveAttribute('src', /demo-pt_BR-960\.mp4$/);
+    await expect(page.locator('.demo-poster')).toHaveAttribute('src', /demo-pt_BR-poster-960\.webp$/);
+    await expect(page.locator('.cf-turnstile')).toHaveAttribute('data-language', 'pt-br');
+  });
+});

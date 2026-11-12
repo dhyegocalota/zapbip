@@ -1,9 +1,9 @@
 import type { OwnerLocale } from '@zapbip/types';
 import { DEMO_IMAGE_SIZE, POSTER_SIZES, POSTER_SMALL_WIDTH } from '../site-constants';
-import { leadingAgentNamesOf } from '../site-agents';
+import { leadingAgentNames } from '../site-agents';
 import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
-import { SiteAsset } from '../site-paths';
+import { SiteAssetKind, siteAssetOf } from '../site-paths';
 import type { PageModel } from '../page-model';
 import { JoinBlock } from './join-block';
 
@@ -15,13 +15,14 @@ const FIRST_STEP_INDEX = 0;
 
 function DemoFigure(props: { locale: OwnerLocale }) {
   const translate = copyOf({ locale: props.locale });
-  const posterSourceSet = `${SiteAsset.PosterSmall} ${POSTER_SMALL_WIDTH}w, ${SiteAsset.PosterLarge} ${DEMO_IMAGE_SIZE}w`;
+  const asset = (kind: SiteAssetKind): string => siteAssetOf({ kind, locale: props.locale });
+  const posterSourceSet = `${asset(SiteAssetKind.PosterSmall)} ${POSTER_SMALL_WIDTH}w, ${asset(SiteAssetKind.PosterLarge)} ${DEMO_IMAGE_SIZE}w`;
   return (
     <figure class="demo" aria-labelledby="demo-steps" aria-describedby="demo-description">
       <div class="demo-stage">
         <img
           class="demo-poster"
-          src={SiteAsset.PosterLarge}
+          src={asset(SiteAssetKind.PosterLarge)}
           srcset={posterSourceSet}
           sizes={POSTER_SIZES}
           width={DEMO_IMAGE_SIZE}
@@ -31,8 +32,8 @@ function DemoFigure(props: { locale: OwnerLocale }) {
           alt=""
         />
         <video class="demo-video" muted loop playsinline preload="none" width={DEMO_IMAGE_SIZE} height={DEMO_IMAGE_SIZE} aria-hidden="true">
-          <source src={SiteAsset.DemoWebm} type="video/webm" />
-          <source src={SiteAsset.DemoMp4} type="video/mp4" />
+          <source src={asset(SiteAssetKind.DemoWebm)} type="video/webm" />
+          <source src={asset(SiteAssetKind.DemoMp4)} type="video/mp4" />
         </video>
         <button
           class="demo-toggle"
@@ -79,7 +80,7 @@ export function HeroSection(props: { model: PageModel }) {
               </svg>
             </span>
           </h1>
-          <p class="hero-lead">{translate(SiteCopyKey.HeroLead, { agents: leadingAgentNamesOf({ locale: model.locale }) })}</p>
+          <p class="hero-lead">{translate(SiteCopyKey.HeroLead, { agents: leadingAgentNames() })}</p>
           <JoinBlock model={model} />
         </div>
         <DemoFigure locale={model.locale} />

@@ -16,11 +16,11 @@ import {
   TURNSTILE_SCRIPT_URL,
   DOCS_PORTUGUESE_PATH,
 } from '../site-constants';
-import { leadingAgentNamesOf } from '../site-agents';
+import { leadingAgentNames } from '../site-agents';
 import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
 import { SITE_SCRIPT_HREF } from '../site-scripts';
-import { DOCS_ORIGIN, SiteAsset, SitePath } from '../site-paths';
+import { APPLE_TOUCH_ICON_PATH, DOCS_ORIGIN, SiteAssetKind, siteAssetOf, SitePath } from '../site-paths';
 import { SITE_STYLESHEET_HREF } from '../site-stylesheet';
 
 const LANGUAGE_TAGS: Record<OwnerLocale, string> = {
@@ -139,12 +139,12 @@ function SiteFooter(props: { model: PageModel }) {
 export function SiteLayout(props: { model: PageModel; title: string; isIndexable: boolean; children?: Child }) {
   const { model } = props;
   const translate = copyOf({ locale: model.locale });
-  const description = translate(SiteCopyKey.MetaDescription, { agents: leadingAgentNamesOf({ locale: model.locale }) });
+  const description = translate(SiteCopyKey.MetaDescription, { agents: leadingAgentNames() });
   const canonical = `${model.siteOrigin}${SitePath.Home}`;
   const pageTitle = `${props.title}${SITE_BRAND_SEPARATOR}${translate(SiteCopyKey.BrandName)}`;
-  const imageUrl = `${model.siteOrigin}${SiteAsset.OpenGraphImage}`;
+  const imageUrl = `${model.siteOrigin}${siteAssetOf({ kind: SiteAssetKind.OpenGraphImage, locale: model.locale })}`;
   const hasForm = model.join.state !== JoinState.Joined && model.join.state !== JoinState.Paused;
-  const posterSourceSet = `${SiteAsset.PosterSmall} ${POSTER_SMALL_WIDTH}w, ${SiteAsset.PosterLarge} ${DEMO_IMAGE_SIZE}w`;
+  const posterSourceSet = `${siteAssetOf({ kind: SiteAssetKind.PosterSmall, locale: model.locale })} ${POSTER_SMALL_WIDTH}w, ${siteAssetOf({ kind: SiteAssetKind.PosterLarge, locale: model.locale })} ${DEMO_IMAGE_SIZE}w`;
   const preloadAttributes = { imagesrcset: posterSourceSet, imagesizes: POSTER_SIZES, fetchpriority: 'high' };
   return (
     <html lang={LANGUAGE_TAGS[model.locale]} data-theme={model.theme}>
@@ -162,7 +162,7 @@ export function SiteLayout(props: { model: PageModel; title: string; isIndexable
         <meta name="theme-color" content={THEME_COLOR_LIGHT} media="(prefers-color-scheme: light)" />
         <meta name="theme-color" content={THEME_COLOR_DARK} media="(prefers-color-scheme: dark)" />
         <link rel="icon" href={SitePath.Favicon} type={FAVICON_CONTENT_TYPE} />
-        <link rel="apple-touch-icon" href={SiteAsset.AppleTouchIcon} />
+        <link rel="apple-touch-icon" href={APPLE_TOUCH_ICON_PATH} />
         <link rel="preload" as="image" {...preloadAttributes} />
         <link rel="stylesheet" href={SITE_STYLESHEET_HREF} />
         <meta property="og:type" content="website" />

@@ -47,7 +47,6 @@ Facts found in the code that shape the design:
 - Editing or deleting a waitlist row from the backoffice, and a public unsubscribe. A deletion request is handled by hand in v1; the privacy note says so.
 - A second referral reward or referral levels.
 - Changing the existing account waitlist or `WAITLIST_ENABLED`.
-- A second demo cut per language. One video with the English product screens serves both languages; see the open questions.
 
 ## Design
 
@@ -181,7 +180,7 @@ Every notice is a `WaitlistJoinOutcome` mapped to `site-copy.ts`. No response ca
 | Self-referral | block by email only · block by code owner | Block when the referral code's email equals the new email after normalisation. Alias addresses (plus tags, dots) are not detected in v1; the cap bounds the damage | 2026-11-12 |
 | Email sending in v1 | none · a provider | None; confirmation and invite email are a follow-up that needs a provider decision | 2026-11-12 |
 | IP storage | none · hashed · raw | None. The existing per-address limiter keeps its own short-lived counter, which the site does not persist | 2026-11-12 |
-| Demo language | one video for both · two videos | One video with English product screens; the captions on the page are localised. A second cut is a follow-up | 2026-11-12 |
+| Demo language | one video for both · two videos | Two videos and two Open Graph images, one per locale, chosen by the page locale (owner order 2026-11-12: everything in both languages); the CSV header follows the backoffice locale | 2026-11-12 |
 | Domain for `www` | Cloudflare redirect rule · Worker 301 | Worker 301 in the repository, pinned by a test ([ADR 0041](../../adr/0041-the-public-site-is-served-by-the-api-worker-through-host-dispatch.md)) | 2026-11-12 |
 | Turnstile in development and staging | real widgets · published test keys | Published always-pass test keys; staging moves to a real widget when the owner creates one | 2026-11-12 |
 | Backoffice cap change needs a step-up code | yes · no | Yes, the same rule as registry changes; a cap change is a write that changes who gets credit | 2026-11-12 |

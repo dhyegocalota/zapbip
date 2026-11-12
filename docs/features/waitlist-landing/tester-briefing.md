@@ -7,7 +7,7 @@ Written by the developer. Nothing here says the feature works; each behaviour is
 - Shared: `libs/types` constants and enums (waitlist, cap, `SiteSettingKey`, `WaitlistJoinOutcome`, `HttpStatus.MovedPermanently`); migration `apps/api/migrations/0010_landing_waitlist.sql`.
 - Site: `apps/api/src/site/**` (join, referral code, Turnstile, settings, routes, copy, views, stylesheet, script, agents from the registry); `apps/api/src/backoffice/host-dispatch.ts` (site host, `www` 301); `apps/api/wrangler.jsonc` (routes, `SITE_ORIGIN`, public site keys, assets).
 - Backoffice: `apps/api/src/backoffice/waitlist/**`, nav entry, audit actions, copy keys.
-- Media: `apps/api/site-public/site/` (mp4, webm, two posters, `og.png`, touch icon), produced by `apps/api/scripts/record-landing-demo.ts` with `apps/api/scripts/landing-demo/*.html`.
+- Media: `apps/api/site-public/site/` per locale (`demo-<locale>-960.mp4` and `.webm`, two posters, `og-<locale>.png`) plus the touch icon, produced by `apps/api/scripts/record-landing-demo.ts` with `apps/api/scripts/landing-demo/*.html`.
 - Docs: `.claude/rules/site.md`, `dns.md` step 5, `deploy.md` secrets row and backup, deploy-readiness lines.
 
 ## How to run
@@ -46,5 +46,5 @@ Written by the developer. Nothing here says the feature works; each behaviour is
 - The defensive "referrer email equals new email" clause was not written: a self-referral is always a duplicate email, which writes nothing.
 - The staging-host E2E (`staging.zapbip.com`) cannot run locally; host dispatch is proven on the apex and `www` shapes.
 - Not done here: the Playwright MCP walk, `/check-ui` recordings, the owner-only steps, deploys.
-- The works-with tiles show every registry agent (11), not the designer's eight, because ADR 0033 forbids naming agents outside their folders.
+- The works-with tiles show the product names of the install facet plus a generic any-MCP tile, with no wake times: ADR 0033 rule B4 lets the Worker import only the install and plugins facets, and the wake facts live in the definitions facet.
 - Below-the-fold reveals start at opacity 0.35 so a full-page screenshot is readable.

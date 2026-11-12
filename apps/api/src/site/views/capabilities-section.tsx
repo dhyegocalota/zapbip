@@ -9,7 +9,7 @@ const VOICE_NOTE = '▶ ▂▅▃▆▂▇▃▅▂ 0:07';
 
 export function CapabilitiesSection(props: { locale: OwnerLocale }) {
   const translate = copyOf({ locale: props.locale });
-  const sender = (index: number): string => senderNameOf({ locale: props.locale, index });
+  const sender = (index: number): string => senderNameOf({ index });
   return (
     <section class="block" id="capabilities" aria-labelledby="capabilities-title">
       <div class="container">

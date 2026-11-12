@@ -1,7 +1,7 @@
 import type { OwnerLocale } from '@zapbip/types';
 import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
-import { siteAgentsOf } from '../site-agents';
+import { siteAgentNames } from '../site-agents';
 
 export function ClientsSection(props: { locale: OwnerLocale }) {
   const translate = copyOf({ locale: props.locale });
@@ -13,14 +13,16 @@ export function ClientsSection(props: { locale: OwnerLocale }) {
           {translate(SiteCopyKey.ClientsTitle)}
         </h2>
         <div class="clients">
-          {siteAgentsOf({ locale: props.locale }).map((agent) => (
+          {siteAgentNames().map((name) => (
             <div class="card client">
-              <strong>{agent.name}</strong>
-              <span>{translate(agent.chipKey, agent.seconds === null ? undefined : { seconds: agent.seconds })}</span>
+              <strong>{name}</strong>
             </div>
           ))}
+          <div class="card client hero-card">
+            <strong>{translate(SiteCopyKey.ClientsAnyMcpName)}</strong>
+            <span>{translate(SiteCopyKey.ClientsAnyMcp)}</span>
+          </div>
         </div>
-        <p class="footnote">{translate(SiteCopyKey.ClientsFootnote)}</p>
       </div>
     </section>
   );

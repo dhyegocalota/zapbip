@@ -1,7 +1,7 @@
 import { AGENT_INSTALLS } from '@zapbip/agents/install';
 import { DEFAULT_LOCALE, OwnerLocale, TURNSTILE_ACTION_WAITLIST_JOIN } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
-import { leadingAgentNamesOf } from '../../src/site/site-agents';
+import { leadingAgentNames } from '../../src/site/site-agents';
 import { SiteCopyKey } from '../../src/site/site-copy';
 import { SITE_CONTENT_SECURITY_POLICY } from '../../src/site/site-policy';
 import { copyHtml, escapedHtml, REFERRAL_CODE, SITE_ORIGIN, SITE_TURNSTILE_SITE_KEY, siteEnvironment, siteFetch } from '../support/site';
@@ -32,7 +32,7 @@ describe('GET /', () => {
       copyHtml({
         key: SiteCopyKey.HeroLead,
         locale: OwnerLocale.EnglishUs,
-        values: { agents: leadingAgentNamesOf({ locale: OwnerLocale.EnglishUs }) },
+        values: { agents: leadingAgentNames() },
       }),
     );
     expect(html).toContain(copy(SiteCopyKey.JoinSubmit));
