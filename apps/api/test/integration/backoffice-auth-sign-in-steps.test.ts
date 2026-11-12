@@ -59,7 +59,7 @@ describe('the password step', () => {
     ]);
     expect(await wrongPassword.text()).toBe(await unknownEmail.text());
     expect([wrongPassword, unknownEmail].map((response) => cookieValueOf({ response, name: PENDING_COOKIE }))).toEqual([null, null]);
-    expect((await readOperator()).failed_attempts).toBe(2);
+    expect(await readOperator()).toMatchObject({ password_failed_attempts: 2, failed_attempts: 0 });
   });
 
   test('the old key typed into the password field is refused', async () => {

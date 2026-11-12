@@ -79,12 +79,25 @@ describe('password step', () => {
     const result = await signInWith({ email, password });
     expect(result.outcome).toBe(PasswordSignInOutcome.Failed);
     expect(verifyPassword).toHaveBeenCalledTimes(1);
-    expect((await readOperator()).failed_attempts).toBe(1);
+    expect(await readOperator()).toMatchObject({ password_failed_attempts: 1, failed_attempts: 0 });
     expect(await auditRows({ action: FAILED_ACTION })).toBe(1);
     expect(await countOf({ table: 'backoffice_pending_sign_ins' })).toBe(0);
   });
 
-  test('a locked operator fails after one hash and adds nothing', async () => {
+  test('a password-locked operator fails after one hash and adds nothing', async () => {
+    await database
+      .prepare('UPDATE backoffice_operator SET password_failed_attempts = ?, password_locked_until = ? WHERE id = 1')
+      .bind(BACKOFFICE_LOCKOUT_THRESHOLD, NOW + BACKOFFICE_LOCKOUT_MS)
+      .run();
+    const result = await signInWith({ email: BACKOFFICE_TEST_EMAIL, password: BACKOFFICE_TEST_PASSWORD });
+    expect(result.outcome).toBe(PasswordSignInOutcome.Failed);
+    expect(verifyPassword).toHaveBeenCalledTimes(1);
+    expect((await readOperator()).password_failed_attempts).toBe(BACKOFFICE_LOCKOUT_THRESHOLD);
+    expect(await auditRows({ action: FAILED_ACTION })).toBe(0);
+    expect(await countOf({ table: 'backoffice_pending_sign_ins' })).toBe(0);
+  });
+
+  test('a code-locked operator also fails the password step after one hash and adds nothing', async () => {
     await database
       .prepare('UPDATE backoffice_operator SET failed_attempts = ?, locked_until = ? WHERE id = 1')
       .bind(BACKOFFICE_LOCKOUT_THRESHOLD, NOW + BACKOFFICE_LOCKOUT_MS)
@@ -92,18 +105,19 @@ describe('password step', () => {
     const result = await signInWith({ email: BACKOFFICE_TEST_EMAIL, password: BACKOFFICE_TEST_PASSWORD });
     expect(result.outcome).toBe(PasswordSignInOutcome.Failed);
     expect(verifyPassword).toHaveBeenCalledTimes(1);
-    expect((await readOperator()).failed_attempts).toBe(BACKOFFICE_LOCKOUT_THRESHOLD);
+    expect(await readOperator()).toMatchObject({ password_failed_attempts: 0, failed_attempts: BACKOFFICE_LOCKOUT_THRESHOLD });
     expect(await auditRows({ action: FAILED_ACTION })).toBe(0);
-    expect(await countOf({ table: 'backoffice_pending_sign_ins' })).toBe(0);
   });
 
-  test('the tenth consecutive failure locks the operator and audits the lock', async () => {
+  test('the tenth consecutive failure locks the password step and audits the lock', async () => {
     for (let attempt = 0; attempt < BACKOFFICE_LOCKOUT_THRESHOLD; attempt += 1) {
       await signInWith({ email: BACKOFFICE_TEST_EMAIL, password: WRONG_PASSWORD });
     }
     expect(await readOperator()).toMatchObject({
-      failed_attempts: BACKOFFICE_LOCKOUT_THRESHOLD,
-      locked_until: NOW + BACKOFFICE_LOCKOUT_MS,
+      password_failed_attempts: BACKOFFICE_LOCKOUT_THRESHOLD,
+      password_locked_until: NOW + BACKOFFICE_LOCKOUT_MS,
+      failed_attempts: 0,
+      locked_until: null,
     });
     expect(await auditRows({ action: LOCKED_ACTION })).toBe(1);
   });

@@ -78,6 +78,15 @@ describe('migration 0009 on top of 0001 to 0008', () => {
     });
   });
 
+  it('adds the separate password-step counter and lock', async () => {
+    const columns = await columnsOf({ table: 'backoffice_operator' });
+    expect(columns.filter((column) => column.name.startsWith('password_')).map((column) => [column.name, column.notnull])).toEqual([
+      ['password_hash', 0],
+      ['password_failed_attempts', 1],
+      ['password_locked_until', 0],
+    ]);
+  });
+
   it('makes the email unique', async () => {
     const { results } = await testEnv.CONNECTIONS.prepare('SELECT name, "unique" AS "unique" FROM pragma_index_list(?)')
       .bind('backoffice_operator')

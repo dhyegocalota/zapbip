@@ -70,7 +70,7 @@ describe('sign-in', () => {
     const bodies = await Promise.all([wrongPassword, unknownEmail, wrongCode].map((response) => response.text()));
     expect(bodies[1]).toBe(bodies[0]);
     expect(bodies[2]).toBe(bodies[0]);
-    expect((await readOperator()).failed_attempts).toBe(3);
+    expect(await readOperator()).toMatchObject({ password_failed_attempts: 2, failed_attempts: 1 });
     expect(await sessionDigests()).toEqual([]);
   });
 

@@ -36,7 +36,13 @@ export type BackofficeRequest = {
   env?: Bindings;
 };
 
-export type OperatorRow = { last_totp_step: number; failed_attempts: number; locked_until: number | null };
+export type OperatorRow = {
+  last_totp_step: number;
+  failed_attempts: number;
+  locked_until: number | null;
+  password_failed_attempts: number;
+  password_locked_until: number | null;
+};
 
 export function backofficeEnv(input: { limiter?: RateLimit; overrides?: Partial<Bindings> }): Bindings {
   const { limiter = createFakeRateLimiter({ limit: UNLIMITED }), overrides } = input;
@@ -50,7 +56,7 @@ export async function resetBackoffice(): Promise<void> {
     testEnv.CONNECTIONS.prepare('DELETE FROM backoffice_pending_sign_ins'),
     testEnv.CONNECTIONS.prepare('DELETE FROM backoffice_audit'),
     testEnv.CONNECTIONS.prepare(
-      'UPDATE backoffice_operator SET last_totp_step = 0, failed_attempts = 0, locked_until = NULL, email = ?, password_hash = ? WHERE id = 1',
+      'UPDATE backoffice_operator SET last_totp_step = 0, failed_attempts = 0, locked_until = NULL, password_failed_attempts = 0, password_locked_until = NULL, email = ?, password_hash = ? WHERE id = 1',
     ).bind(BACKOFFICE_TEST_EMAIL, BACKOFFICE_TEST_PASSWORD_HASH),
   ]);
 }
@@ -146,7 +152,7 @@ export async function signIn(input: { env?: Bindings }): Promise<{ sessionToken:
 
 export async function readOperator(): Promise<OperatorRow> {
   const row = await testEnv.CONNECTIONS.prepare(
-    'SELECT last_totp_step, failed_attempts, locked_until FROM backoffice_operator WHERE id = 1',
+    'SELECT last_totp_step, failed_attempts, locked_until, password_failed_attempts, password_locked_until FROM backoffice_operator WHERE id = 1',
   ).first<OperatorRow>();
   if (row === null) throw new Error('the operator row is missing');
   return row;
