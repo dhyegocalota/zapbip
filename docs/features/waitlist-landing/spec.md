@@ -14,7 +14,7 @@ The owner's words (2026-11-12, translated): a sales page; a captcha on the form;
 
 Facts found in the code that shape the design:
 
-- The apex `zapbip.com` redirects to the docs host today ([DNS runbook](../../runbooks/dns.md), step 5). The first production deploy needs those records removed first.
+- The [DNS runbook](../../runbooks/dns.md) step 5 (bare domain to docs) was never applied: on 2026-11-12 `dig zapbip.com A` and `dig www.zapbip.com` return nothing, so the custom-domain routes can create both hosts.
 - `apps/api/src/backoffice/host-dispatch.ts` already picks the app by request host. The MCP app is the fallback for every other host, so a public host needs its own branch.
 - The backoffice pattern is server-rendered Hono JSX with a generated stylesheet (`assets/stylesheet.ts`), cookie-backed language and theme (`locale.ts`, `preference-cookie.ts`) and a strict CSP (`backoffice-constants.ts`). The public site reuses the rendering and cookie patterns and not the backoffice's policy.
 - `OwnerLocale` in `libs/types` already has `pt_BR` and `en_US`, and `resolveLocale` already reads `Accept-Language`.
@@ -190,7 +190,7 @@ Every notice is a `WaitlistJoinOutcome` mapped to `site-copy.ts`. No response ca
 
 These are never run by an agent. The agent never reads or copies a secret.
 
-1. Before the first production deploy, in the Cloudflare dashboard for `zapbip.com`: delete the apex `A` record and the `www` CNAME, and delete the bare-domain redirect rule. The DNS runbook lists the steps.
+1. Only if the production smoke shows `zapbip.com` answering `301` to `docs.zapbip.com`: delete the `bare domain to docs` redirect rule in the Cloudflare dashboard (DNS runbook step 5).
 2. Create the Turnstile widget for production and staging (dashboard). Copy only the public site key into the repository. Keep the production widget's hostname list to `zapbip.com` and `staging.zapbip.com`.
 3. `! wrangler secret put TURNSTILE_SECRET_KEY` for production, and `--env staging` when staging gets a real widget.
 4. Export a D1 backup before the first production deploy (migration `0010` is additive, rollback drops the two new tables).
