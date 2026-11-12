@@ -10,6 +10,7 @@ import {
   copyHtml,
   joinForm,
   refusingTurnstile,
+  REFERRAL_CODE,
   SITE_ORIGIN,
   SITE_TURNSTILE_SECRET,
   siteEnvironment,
@@ -200,6 +201,36 @@ describe('POST /join', () => {
       const response = await postJoin({ form: joinForm({ email: MARIA }), recording: testingKeyTurnstile(), env });
       expect(response.status).toBe(403);
       expect(await waitlistRows()).toEqual([]);
+    });
+  });
+
+  describe('a failed attempt keeps the referral code for the retry', () => {
+    const hiddenField = `name="referralCode" value="${REFERRAL_CODE}"`;
+
+    it('after an invalid email', async () => {
+      const response = await postJoin({ form: joinForm({ email: 'not-an-email', referralCode: REFERRAL_CODE }) });
+      expect(await response.text()).toContain(hiddenField);
+    });
+
+    it('after a refused widget', async () => {
+      const response = await postJoin({ form: joinForm({ email: MARIA, referralCode: REFERRAL_CODE }), recording: refusingTurnstile() });
+      expect(await response.text()).toContain(hiddenField);
+    });
+
+    it('after an unreachable widget', async () => {
+      const response = await postJoin({ form: joinForm({ email: MARIA, referralCode: REFERRAL_CODE }), recording: unreachableTurnstile() });
+      expect(await response.text()).toContain(hiddenField);
+    });
+
+    it('after a spent limiter', async () => {
+      const env = siteEnvironment({ overrides: { INSTALL_PAGE_LIMITER: createFakeRateLimiter({ limit: 0 }) } });
+      const response = await postJoin({ form: joinForm({ email: MARIA, referralCode: REFERRAL_CODE }), env });
+      expect(await response.text()).toContain(hiddenField);
+    });
+
+    it('but not a malformed code', async () => {
+      const response = await postJoin({ form: joinForm({ email: 'not-an-email', referralCode: '../../x' }) });
+      expect(await response.text()).not.toContain('name="referralCode"');
     });
   });
 });
