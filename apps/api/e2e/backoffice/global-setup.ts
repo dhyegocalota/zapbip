@@ -6,7 +6,11 @@ import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { WAKE_SECRET_KEY_BYTES } from '@zapbip/core';
 import { startFakeGraph } from '../../test/support/fake-graph';
-import { BACKOFFICE_TEST_KEY_DIGEST, BACKOFFICE_TEST_TOTP_SECRET } from '../../test/support/backoffice-credentials';
+import {
+  BACKOFFICE_TEST_KEY_DIGEST,
+  BACKOFFICE_TEST_PASSWORD_PEPPER,
+  BACKOFFICE_TEST_TOTP_SECRET,
+} from '../../test/support/backoffice-credentials';
 import { freePort, HEALTH_TIMEOUT_MS, LOOPBACK_HOST } from '../../test/e2e/support/stack-process';
 import { waitForSignIn } from './support/wait-for-sign-in';
 import { WalkVariable } from './support/walk-environment';
@@ -33,6 +37,7 @@ export default async function setup(): Promise<() => Promise<void>> {
     NUMBER_REGISTRY_KEY: randomBytes(WAKE_SECRET_KEY_BYTES).toString('base64'),
     BACKOFFICE_KEY_DIGEST: BACKOFFICE_TEST_KEY_DIGEST,
     BACKOFFICE_TOTP_SECRET: BACKOFFICE_TEST_TOTP_SECRET,
+    BACKOFFICE_PASSWORD_PEPPER: BACKOFFICE_TEST_PASSWORD_PEPPER,
     BACKOFFICE_ORIGIN: origin,
     PUBLIC_ORIGIN: `http://${LOOPBACK_HOST}:${port}`,
     WHATSAPP_VERIFY_TOKEN: VERIFY_TOKEN,
