@@ -8,6 +8,7 @@ const EXACT_PAGES: string[] = [
   BackofficePath.Numbers,
   BackofficePath.Metrics,
   BackofficePath.Audit,
+  BackofficePath.Waitlist,
 ];
 const NUMBERS_SUBPAGE_PATTERN = new RegExp(`^${BackofficePath.Numbers}(?:/[\\w-]+)+$`);
 

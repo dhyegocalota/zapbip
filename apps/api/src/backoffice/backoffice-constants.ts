@@ -66,3 +66,4 @@ export const ONBOARDING_GRANT_TTL_MS = 10 * MINUTE_MS;
 export const AUDIT_PAGE_LIMIT = 200;
 export const STYLESHEET_CACHE_CONTROL = 'public, max-age=31536000, immutable';
 export const SPARKLINE_DAYS = 14;
+export const WAITLIST_PAGE_ROW_LIMIT = 500;

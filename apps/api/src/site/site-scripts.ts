@@ -1,0 +1,165 @@
+import { contentHashOf } from '../backoffice/assets/stylesheet';
+import { SitePath } from './site-paths';
+
+const SCRIPT_SOURCE = `(function () {
+  var DEMO_STEP_BOUNDARIES_SECONDS = [5.6, 7.4];
+  var IN_VIEW_THRESHOLD = 0.25;
+  var COPIED_RESET_MS = 2000;
+  var TURNSTILE_FIELD = 'cf-turnstile-response';
+  var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function byId(id) {
+    return document.getElementById(id);
+  }
+
+  function showNotice(form, templateId) {
+    var template = byId(templateId);
+    var existing = document.querySelector('.join-block > .notice');
+    if (existing) existing.remove();
+    form.parentNode.insertBefore(template.content.cloneNode(true), form);
+  }
+
+  function setupJoinForm() {
+    var form = document.querySelector('.join-form');
+    if (!form) return;
+    var submit = form.querySelector('.join-submit');
+    var label = submit.querySelector('[data-label]');
+    var email = byId('join-email');
+    var isSubmitting = false;
+    form.addEventListener('submit', function (event) {
+      var token = form.elements[TURNSTILE_FIELD];
+      if (isSubmitting) {
+        event.preventDefault();
+        return;
+      }
+      if (!navigator.onLine) {
+        event.preventDefault();
+        showNotice(form, 'notice-offline');
+        return;
+      }
+      if (!token || !token.value) {
+        event.preventDefault();
+        showNotice(form, 'notice-captcha');
+        form.querySelector('.turnstile-slot').scrollIntoView({ block: 'nearest' });
+        return;
+      }
+      isSubmitting = true;
+      submit.setAttribute('aria-busy', 'true');
+      submit.setAttribute('aria-disabled', 'true');
+      label.textContent = submit.getAttribute('data-submitting-label');
+      email.readOnly = true;
+    });
+  }
+
+  function setupJoinLinks() {
+    var email = byId('join-email');
+    document.querySelectorAll('a[href="#join"]').forEach(function (link) {
+      link.addEventListener('click', function (event) {
+        var target = email || byId('join');
+        event.preventDefault();
+        byId('join').scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth' });
+        target.focus({ preventScroll: true });
+      });
+    });
+  }
+
+  function setupThanks() {
+    var heading = byId('thanks-title');
+    if (!heading) return;
+    heading.focus();
+    var button = document.querySelector('.copy-link');
+    var field = byId('invite-link');
+    var announcement = byId('copy-announcement');
+    var label = button.querySelector('[data-label]');
+    var originalLabel = label.textContent;
+    function copied() {
+      button.setAttribute('data-copied', 'true');
+      label.textContent = button.getAttribute('data-copied-label');
+      announcement.textContent = button.getAttribute('data-copied-announcement');
+      window.setTimeout(function () {
+        button.removeAttribute('data-copied');
+        label.textContent = originalLabel;
+      }, COPIED_RESET_MS);
+    }
+    function selected() {
+      field.focus();
+      field.select();
+      announcement.textContent = button.getAttribute('data-fallback-announcement');
+    }
+    button.addEventListener('click', function () {
+      if (!navigator.clipboard) {
+        selected();
+        return;
+      }
+      navigator.clipboard.writeText(field.value).then(copied, selected);
+    });
+  }
+
+  function currentStepIndex(seconds) {
+    return DEMO_STEP_BOUNDARIES_SECONDS.filter(function (boundary) {
+      return seconds >= boundary;
+    }).length;
+  }
+
+  function setupDemo() {
+    var video = document.querySelector('.demo-video');
+    var toggle = document.querySelector('.demo-toggle');
+    var steps = document.querySelectorAll('.demo-steps li');
+    var connection = navigator.connection;
+    var isSaveData = Boolean(connection && connection.saveData);
+    if (!video || reducedMotion || isSaveData) return;
+    var isPausedByUser = false;
+    var isLoaded = false;
+    var isInView = false;
+    function sync() {
+      if (!isLoaded || isPausedByUser) return;
+      if (isInView) {
+        video.preload = 'auto';
+        video.play().catch(function () {});
+        return;
+      }
+      video.pause();
+    }
+    video.addEventListener('playing', function () {
+      video.classList.add('is-playing');
+      toggle.hidden = false;
+    });
+    video.addEventListener('timeupdate', function () {
+      var index = currentStepIndex(video.currentTime);
+      steps.forEach(function (step, position) {
+        if (position === index) step.setAttribute('aria-current', 'step');
+        if (position !== index) step.removeAttribute('aria-current');
+      });
+    });
+    toggle.addEventListener('click', function () {
+      isPausedByUser = !video.paused;
+      toggle.setAttribute('aria-pressed', String(isPausedByUser));
+      var nextLabel = isPausedByUser ? toggle.getAttribute('data-play-label') : toggle.getAttribute('data-pause-label');
+      toggle.setAttribute('aria-label', nextLabel);
+      if (isPausedByUser) video.pause();
+      if (!isPausedByUser) sync();
+    });
+    new IntersectionObserver(
+      function (entries) {
+        isInView = entries[0].isIntersecting;
+        sync();
+      },
+      { threshold: IN_VIEW_THRESHOLD }
+    ).observe(video);
+    function start() {
+      isLoaded = true;
+      sync();
+    }
+    if (document.readyState === 'complete') start();
+    if (document.readyState !== 'complete') window.addEventListener('load', start);
+  }
+
+  setupJoinForm();
+  setupJoinLinks();
+  setupThanks();
+  setupDemo();
+})();
+`;
+
+export const SITE_SCRIPT: string = SCRIPT_SOURCE;
+export const SITE_SCRIPT_HREF = `${SitePath.Script}?v=${contentHashOf({ text: SITE_SCRIPT })}`;

@@ -1,0 +1,28 @@
+import type { OwnerLocale } from '@zapbip/types';
+import type { BackofficeTheme } from '../backoffice/backoffice-theme';
+
+export enum JoinState {
+  Idle = 'idle',
+  InvalidEmail = 'invalid_email',
+  CaptchaFailed = 'captcha_failed',
+  RateLimited = 'rate_limited',
+  Unavailable = 'unavailable',
+  Paused = 'paused',
+  Joined = 'joined',
+}
+
+export type JoinFormState = Exclude<JoinState, JoinState.Paused | JoinState.Joined>;
+
+export type JoinView =
+  | { state: JoinFormState; emailValue: string }
+  | { state: JoinState.Paused }
+  | { state: JoinState.Joined; referralCode: string; creditedCount: number; cap: number };
+
+export type PageModel = {
+  locale: OwnerLocale;
+  theme: BackofficeTheme;
+  siteOrigin: string;
+  turnstileSiteKey: string;
+  referralCode: string | null;
+  join: JoinView;
+};

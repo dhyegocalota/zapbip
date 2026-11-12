@@ -36,6 +36,8 @@ export enum LogEvent {
   BackofficeCsrfRejected = 'backoffice.csrf_rejected',
   BackofficeNumberChanged = 'backoffice.number_changed',
   BackofficeError = 'backoffice.error',
+  SiteTurnstileFailed = 'site.turnstile_failed',
+  SiteError = 'site.error',
   PackageUnavailable = 'package_unavailable',
   ActivityRecordFailed = 'activity_record_failed',
 }

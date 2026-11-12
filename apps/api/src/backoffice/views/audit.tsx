@@ -26,6 +26,8 @@ const ACTION_LABELS: Record<BackofficeAuditAction, BackofficeCopyKey> = {
   [BackofficeAuditAction.NumberAccessTokenRotated]: BackofficeCopyKey.AuditActionNumberAccessTokenRotated,
   [BackofficeAuditAction.MetaAppSecretRotated]: BackofficeCopyKey.AuditActionMetaAppSecretRotated,
   [BackofficeAuditAction.NumberStateChanged]: BackofficeCopyKey.AuditActionNumberStateChanged,
+  [BackofficeAuditAction.WaitlistExported]: BackofficeCopyKey.AuditActionWaitlistExported,
+  [BackofficeAuditAction.ReferralCapChanged]: BackofficeCopyKey.AuditActionReferralCapChanged,
 };
 const OUTCOME_LABELS: Record<BackofficeAuditOutcome, BackofficeCopyKey> = {
   [BackofficeAuditOutcome.Succeeded]: BackofficeCopyKey.AuditOutcomeSucceeded,

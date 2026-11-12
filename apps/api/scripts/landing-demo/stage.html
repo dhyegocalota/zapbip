@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>zapbip landing demo stage</title>
+    <style>
+      :root {
+        --terminal: #0d1b17;
+        --terminal-bar: #15261f;
+        --terminal-text: #e8f1ed;
+        --terminal-muted: #9db2aa;
+        --terminal-accent: #5be39a;
+        --terminal-border: #1f332d;
+        --wallpaper: #ece5dd;
+        --chat-header: #075e54;
+        --incoming: #ffffff;
+        --outgoing: #d9fdd3;
+        --ink: #111b21;
+        --muted: #54656f;
+        --sender: #0b6b60;
+        --bezel: #0e1f1a;
+        --signal: #25d366;
+        --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        --sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        width: 1080px;
+        height: 1080px;
+        overflow: hidden;
+        background: var(--terminal);
+      }
+
+      .stage {
+        position: relative;
+        width: 1080px;
+        height: 1080px;
+        overflow: hidden;
+        background: radial-gradient(448px 320px at 756px 216px, rgb(37 211 102 / 0.22), transparent 70%), var(--terminal);
+      }
+
+      .terminal {
+        position: absolute;
+        left: 56px;
+        top: 104px;
+        width: 648px;
+        height: 560px;
+        overflow: hidden;
+        border: 1px solid var(--terminal-border);
+        border-radius: 20px;
+        background: var(--terminal-bar);
+        color: var(--terminal-text);
+        font-family: var(--mono);
+        font-size: 26px;
+        line-height: 40px;
+      }
+
+      .terminal-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        height: 44px;
+        padding: 0 20px;
+        border-bottom: 1px solid var(--terminal-border);
+        color: var(--terminal-muted);
+        font-size: 22px;
+      }
+
+      .terminal-bar i {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--terminal-border);
+      }
+
+      .terminal-bar span {
+        margin-left: 12px;
+      }
+
+      #terminal-body {
+        padding: 18px 24px;
+      }
+
+      #terminal-body p {
+        margin: 0;
+        height: 40px;
+        white-space: pre;
+      }
+
+      .accent {
+        color: var(--terminal-accent);
+      }
+
+      .muted {
+        color: var(--terminal-muted);
+      }
+
+      .phone {
+        position: absolute;
+        left: 612px;
+        top: 150px;
+        width: 412px;
+        height: 860px;
+        padding: 12px;
+        border-radius: 56px;
+        background: var(--bezel);
+        box-shadow:
+          0 0 0 1px var(--terminal-border),
+          0 32px 64px -20px rgb(0 0 0 / 0.6);
+      }
+
+      .phone-screen {
+        height: 100%;
+        overflow: hidden;
+        border-radius: 46px;
+        background: var(--wallpaper);
+        color: var(--ink);
+        font-family: var(--sans);
+        font-size: 26px;
+        line-height: 1.3;
+      }
+
+      .phone-status {
+        height: 28px;
+        background: var(--chat-header);
+      }
+
+      .phone-header {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        height: 64px;
+        padding: 0 20px;
+        background: var(--chat-header);
+        color: #fff;
+        font-size: 26px;
+        font-weight: 600;
+      }
+
+      .phone-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow:
+          inset 0 0 0 9px #fff,
+          inset 0 0 0 36px var(--sender);
+      }
+
+      #chat {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 24px 16px;
+      }
+
+      .bubble {
+        width: 88%;
+        padding: 10px 14px;
+        border-radius: 4px 14px 14px 14px;
+        background: var(--incoming);
+        box-shadow: 0 1px 1px rgb(11 20 26 / 0.13);
+        transform-origin: left top;
+      }
+
+      .bubble b {
+        display: block;
+        color: var(--sender);
+        font-size: 20px;
+      }
+
+      .choice {
+        width: 88%;
+        padding: 12px;
+        border-radius: 12px;
+        background: var(--incoming);
+        box-shadow: 0 1px 1px rgb(11 20 26 / 0.13);
+        color: var(--sender);
+        font-size: 24px;
+        font-weight: 600;
+        text-align: center;
+      }
+
+      .bubble.out {
+        align-self: flex-end;
+        width: auto;
+        max-width: 70%;
+        border-radius: 14px 4px 14px 14px;
+        background: var(--outgoing);
+        transform-origin: right top;
+      }
+
+      .ticks {
+        margin-left: 8px;
+        color: #53bdeb;
+        font-size: 18px;
+      }
+
+      #tap {
+        position: absolute;
+        width: 64px;
+        height: 64px;
+        margin: -32px 0 0 -32px;
+        border: 4px solid var(--signal);
+        border-radius: 50%;
+        background: rgb(37 211 102 / 0.2);
+        opacity: 0;
+      }
+
+      #ripple {
+        position: absolute;
+        width: 64px;
+        height: 64px;
+        margin: -32px 0 0 -32px;
+        border: 3px solid var(--signal);
+        border-radius: 50%;
+        opacity: 0;
+      }
+
+      .cursor {
+        display: inline-block;
+        width: 14px;
+        height: 28px;
+        margin-bottom: -5px;
+        background: var(--terminal-accent);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage" id="stage">
+      <div class="terminal">
+        <div class="terminal-bar"><i></i><i></i><i></i><span>agent — ~/acme-shop</span></div>
+        <div id="terminal-body"></div>
+      </div>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="phone-status"></div>
+          <div class="phone-header"><span class="phone-avatar"></span>zapbip</div>
+          <div id="chat"></div>
+        </div>
+      </div>
+      <div id="ripple"></div>
+      <div id="tap"></div>
+    </div>
+    <script>
+      const LOOP_SECONDS = 12;
+      const TYPE_START = 0.6;
+      const TYPE_PER_CHARACTER = 0.04;
+      const TESTS_AT = 1.4;
+      const ASK_AT = 2.0;
+      const OPTIONS_AT = 2.3;
+      const WAIT_AT = 2.6;
+      const QUESTION_AT = 3.0;
+      const TAP_FROM = 5.6;
+      const TAP_PRESS = 6.0;
+      const OUT_AT = 6.2;
+      const ANSWERED_AT = 6.8;
+      const DEPLOY_AT = 7.4;
+      const PROGRESS_START = 7.6;
+      const PROGRESS_END = 9.4;
+      const LIVE_AT = 9.4;
+      const FADE_START = 11.2;
+      const PROGRESS_CELLS = 24;
+      const SPINNER_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+      const SPINNER_FRAME_SECONDS = 0.1;
+      const POP_SECONDS = 0.35;
+      const BUTTON_TARGET = { x: 796, y: 428 };
+      const TAP_START = { x: 960, y: 900 };
+
+      const demo = window.DEMO;
+      const terminalBody = document.getElementById('terminal-body');
+      const chat = document.getElementById('chat');
+      const tap = document.getElementById('tap');
+      const ripple = document.getElementById('ripple');
+      const command = demo.command;
+      const deployCommand = demo.deployCommand;
+
+      function line(html) {
+        return `<p>${html}</p>`;
+      }
+
+      function typed(text, since) {
+        const count = Math.max(0, Math.min(text.length, Math.floor(since / TYPE_PER_CHARACTER)));
+        return text.slice(0, count);
+      }
+
+      function elapsedOf(seconds) {
+        const whole = Math.max(0, Math.floor(seconds));
+        return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, '0')}`;
+      }
+
+      function terminalLines(t) {
+        const lines = [];
+        const cursorOn = Math.floor(t / 0.5) % 2 === 0;
+        const cursor = cursorOn ? '<span class="cursor"></span>' : '';
+        if (t < TESTS_AT) lines.push(line(`<span class="accent">›</span> ${typed(command, t - TYPE_START)}${cursor}`));
+        if (t >= TESTS_AT) {
+          lines.push(line(`<span class="accent">›</span> ${command}`));
+          lines.push(line(`<span class="accent">✓</span> ${demo.testsPassed}`));
+        }
+        if (t >= ASK_AT) lines.push(line(`<span class="accent">●</span> zapbip.ask`));
+        if (t >= ASK_AT) lines.push(line(`<span class="muted">  ${demo.question}</span>`));
+        if (t >= OPTIONS_AT) lines.push(line(`<span class="muted">  ${demo.optionsLabel} ${demo.options.join(' · ')}</span>`));
+        const isWaiting = t >= WAIT_AT && t < ANSWERED_AT;
+        if (isWaiting) {
+          const frame = SPINNER_FRAMES[Math.floor(t / SPINNER_FRAME_SECONDS) % SPINNER_FRAMES.length];
+          lines.push(
+            line(`<span class="accent">${frame}</span> ${demo.waitingLabel} <span class="muted">${elapsedOf(t - WAIT_AT)}</span>`),
+          );
+        }
+        if (t >= ANSWERED_AT) lines.push(line(`<span class="accent">✓</span> ${demo.answeredLabel} ${demo.answer}`));
+        if (t >= DEPLOY_AT) lines.push(line(`<span class="accent">›</span> ${typed(deployCommand, t - DEPLOY_AT)}`));
+        if (t >= PROGRESS_START) {
+          const ratio = Math.max(0, Math.min(1, (t - PROGRESS_START) / (PROGRESS_END - PROGRESS_START)));
+          const filled = Math.round(ratio * PROGRESS_CELLS);
+          lines.push(
+            line(
+              `<span class="accent">${'█'.repeat(filled)}</span><span class="muted">${'░'.repeat(PROGRESS_CELLS - filled)}</span> ${Math.round(ratio * 100)}%`,
+            ),
+          );
+        }
+        if (t >= LIVE_AT) lines.push(line(`<span class="accent">✓</span> ${demo.liveText}`));
+        return lines.join('');
+      }
+
+      function pop(since) {
+        const progress = Math.max(0, Math.min(1, since / POP_SECONDS));
+        const overshoot = 1 + 0.06 * Math.sin(progress * Math.PI);
+        return { scale: (0.9 + 0.1 * progress) * overshoot, opacity: Math.min(1, progress * 2) };
+      }
+
+      function bubbleStyle(input) {
+        return `transform: scale(${input.scale}); opacity: ${input.opacity};`;
+      }
+
+      function chatMarkup(t) {
+        const parts = [];
+        if (t >= QUESTION_AT) {
+          const state = pop(t - QUESTION_AT);
+          parts.push(`<div class="bubble" style="${bubbleStyle(state)}"><b>${demo.agentName}</b>${demo.questionShort}</div>`);
+          demo.options.forEach((option) => parts.push(`<div class="choice" style="opacity: ${state.opacity};">${option}</div>`));
+        }
+        if (t >= OUT_AT) {
+          const state = pop(t - OUT_AT);
+          parts.push(`<div class="bubble out" style="${bubbleStyle(state)}">${demo.answer}<span class="ticks">✓✓</span></div>`);
+        }
+        if (t >= LIVE_AT) {
+          const state = pop(t - LIVE_AT);
+          parts.push(`<div class="bubble" style="${bubbleStyle(state)}"><b>${demo.agentName}</b>${demo.doneText}</div>`);
+        }
+        return parts.join('');
+      }
+
+      function tapState(t) {
+        if (t < TAP_FROM || t > OUT_AT + 0.5)
+          return { opacity: 0, x: TAP_START.x, y: TAP_START.y, scale: 1, rippleOpacity: 0, rippleScale: 1 };
+        const glide = Math.max(0, Math.min(1, (t - TAP_FROM) / (TAP_PRESS - TAP_FROM)));
+        const eased = 1 - Math.pow(1 - glide, 3);
+        const x = TAP_START.x + (BUTTON_TARGET.x - TAP_START.x) * eased;
+        const y = TAP_START.y + (BUTTON_TARGET.y - TAP_START.y) * eased;
+        const pressed = t >= TAP_PRESS && t < TAP_PRESS + 0.15;
+        const sinceRipple = Math.max(0, t - TAP_PRESS);
+        const rippleProgress = Math.min(1, sinceRipple / 0.5);
+        const isRippling = t >= TAP_PRESS && rippleProgress < 1;
+        return {
+          opacity: t > OUT_AT + 0.2 ? Math.max(0, 1 - (t - OUT_AT - 0.2) / 0.3) : 1,
+          x,
+          y,
+          scale: pressed ? 0.85 : 1,
+          rippleOpacity: isRippling ? 0.7 * (1 - rippleProgress) : 0,
+          rippleScale: 1 + rippleProgress * 1.4,
+        };
+      }
+
+      window.renderAt = function renderAt(t) {
+        const stage = document.getElementById('stage');
+        const fade = t >= FADE_START ? Math.max(0, 1 - (t - FADE_START) / (LOOP_SECONDS - FADE_START)) : 1;
+        terminalBody.innerHTML = terminalLines(t);
+        chat.innerHTML = chatMarkup(t);
+        terminalBody.style.opacity = String(fade);
+        chat.style.opacity = String(fade);
+        const state = tapState(t);
+        tap.style.opacity = String(state.opacity * fade);
+        tap.style.left = `${state.x}px`;
+        tap.style.top = `${state.y}px`;
+        tap.style.transform = `scale(${state.scale})`;
+        ripple.style.opacity = String(state.rippleOpacity);
+        ripple.style.left = `${BUTTON_TARGET.x}px`;
+        ripple.style.top = `${BUTTON_TARGET.y}px`;
+        ripple.style.transform = `scale(${state.rippleScale})`;
+        stage.dataset.time = String(t);
+      };
+
+      window.renderAt(0);
+    </script>
+  </body>
+</html>

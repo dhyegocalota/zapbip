@@ -11,7 +11,18 @@ const LOCAL_DATABASE_ID = 'zapbip-connections-local';
 const FORBIDDEN_VAR = 'PUBLIC_BASE_URL';
 const PRODUCTION_ORIGIN = 'https://mcp.zapbip.com';
 const GRAPH_ORIGIN = 'https://graph.facebook.com';
-const DEVELOPMENT_ONLY_VAR = 'WHATSAPP_MEDIA_DOWNLOAD_ORIGIN';
+const DEVELOPMENT_ONLY_VARS = ['WHATSAPP_MEDIA_DOWNLOAD_ORIGIN', 'TURNSTILE_SECRET_KEY'];
+const SITE_ORIGINS: Record<DeployEnvironment, string> = {
+  [DeployEnvironment.Production]: 'https://zapbip.com',
+  [DeployEnvironment.Staging]: 'https://staging.zapbip.com',
+  [DeployEnvironment.Development]: 'http://site.localhost:8787',
+};
+const TURNSTILE_SITE_KEYS: Record<DeployEnvironment, string> = {
+  [DeployEnvironment.Production]: '0x4AAAAAAF-QQP0jbDT3xCLT',
+  [DeployEnvironment.Staging]: '0x4AAAAAAF-QWj6u4g-pvrUT',
+  [DeployEnvironment.Development]: '1x00000000000000000000AA',
+};
+const SITE_ASSETS_DIRECTORY = './site-public';
 const DEPLOYED_BLOCK_MAIN = 'src/index.ts';
 const DEVELOPMENT_BLOCK_MAIN = 'src/index.dev.ts';
 const BACKOFFICE_RATE_LIMITER = 'BACKOFFICE_RATE_LIMITER';
@@ -25,10 +36,13 @@ const BACKOFFICE_ROUTES: Record<DeployEnvironment, { pattern: string; custom_dom
   [DeployEnvironment.Production]: [
     { pattern: 'mcp.zapbip.com', custom_domain: true },
     { pattern: 'backoffice.zapbip.com', custom_domain: true },
+    { pattern: 'zapbip.com', custom_domain: true },
+    { pattern: 'www.zapbip.com', custom_domain: true },
   ],
   [DeployEnvironment.Staging]: [
     { pattern: 'mcp-staging.zapbip.com', custom_domain: true },
     { pattern: 'backoffice-staging.zapbip.com', custom_domain: true },
+    { pattern: 'staging.zapbip.com', custom_domain: true },
   ],
   [DeployEnvironment.Development]: [],
 };
@@ -54,6 +68,7 @@ type WranglerBlock = {
   vars: Record<string, string>;
   migrations: { tag: string }[];
   triggers: { crons: string[] };
+  assets: { directory: string };
 };
 type WranglerFile = WranglerBlock & { env: Record<DeployEnvironment.Development | DeployEnvironment.Staging, WranglerBlock> };
 
@@ -79,7 +94,7 @@ const BINDING_KEYS: Record<string, (block: WranglerBlock) => string[]> = {
   rules: (block) => block.rules.map((rule) => rule.globs.join()),
   vars: (block) =>
     Object.keys(block.vars)
-      .filter((name) => name !== DEVELOPMENT_ONLY_VAR)
+      .filter((name) => !DEVELOPMENT_ONLY_VARS.includes(name))
       .sort(),
   migrations: (block) => block.migrations.map((migration) => migration.tag),
   triggers: (block) => block.triggers.crons,
@@ -192,6 +207,23 @@ describe('wrangler config', () => {
 
   it.each(blockEntries)('the %s block serves the backoffice custom domain where it is deployed', (environment, block) => {
     expect(block.routes).toEqual(BACKOFFICE_ROUTES[environment]);
+  });
+
+  it.each(blockEntries)('the %s block names its site origin and its public Turnstile site key', (environment, block) => {
+    expect(block.vars.SITE_ORIGIN).toBe(SITE_ORIGINS[environment]);
+    expect(block.vars.TURNSTILE_SITE_KEY).toBe(TURNSTILE_SITE_KEYS[environment]);
+  });
+
+  it.each(blockEntries)('the %s block serves the site assets directory', (_environment, block) => {
+    expect(block.assets).toEqual({ directory: SITE_ASSETS_DIRECTORY });
+  });
+
+  it('only the development block carries a Turnstile secret, and it is the published always-pass test secret', () => {
+    expect(blockEntries.map(([, block]) => block.vars.TURNSTILE_SECRET_KEY)).toEqual([
+      undefined,
+      undefined,
+      '1x0000000000000000000000000000000AA',
+    ]);
   });
 
   it.each(blockEntries)('the %s block limits backoffice sign-ins to five a minute in its own namespace', (environment, block) => {

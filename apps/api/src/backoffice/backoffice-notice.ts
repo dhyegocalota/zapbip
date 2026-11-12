@@ -11,6 +11,7 @@ export enum BackofficeNotice {
   StateChanged = 'StateChanged',
   MetricsPeriodInvalid = 'MetricsPeriodInvalid',
   MetricsNumberNotFound = 'MetricsNumberNotFound',
+  WaitlistCapSaved = 'WaitlistCapSaved',
 }
 
 export enum NoticeVariant {
@@ -31,6 +32,7 @@ export const NOTICE_VIEWS: Record<BackofficeNotice, { variant: NoticeVariant; co
   [BackofficeNotice.StateChanged]: { variant: NoticeVariant.Success, copyKey: BackofficeCopyKey.NoticeStateChanged },
   [BackofficeNotice.MetricsPeriodInvalid]: { variant: NoticeVariant.Warning, copyKey: BackofficeCopyKey.NoticeMetricsPeriodInvalid },
   [BackofficeNotice.MetricsNumberNotFound]: { variant: NoticeVariant.Warning, copyKey: BackofficeCopyKey.NoticeMetricsNumberNotFound },
+  [BackofficeNotice.WaitlistCapSaved]: { variant: NoticeVariant.Success, copyKey: BackofficeCopyKey.WaitlistCapSaved },
 };
 
 const NOTICE_VALUES: string[] = Object.values(BackofficeNotice);

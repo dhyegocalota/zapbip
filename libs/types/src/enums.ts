@@ -305,6 +305,7 @@ export enum HttpStatus {
   Ok = 200,
   Created = 201,
   MultipleChoices = 300,
+  MovedPermanently = 301,
   Found = 302,
   BadRequest = 400,
   Unauthorized = 401,
@@ -353,4 +354,17 @@ export enum WhatsAppNumberState {
   Active = 'active',
   Closed = 'closed',
   Disabled = 'disabled',
+}
+
+export enum SiteSettingKey {
+  WaitlistReferralCap = 'waitlist_referral_cap',
+}
+
+export enum WaitlistJoinOutcome {
+  Joined = 'joined',
+  AlreadyJoined = 'already_joined',
+  Unavailable = 'unavailable',
+  CaptchaFailed = 'captcha_failed',
+  InvalidEmail = 'invalid_email',
+  RateLimited = 'rate_limited',
 }
