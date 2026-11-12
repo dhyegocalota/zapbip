@@ -7,6 +7,11 @@ import { siteCopy } from './support/site-copy';
 const FIRST_AGENT = Object.entries(AGENT_INSTALLS)[0]!;
 const [FIRST_AGENT_ID, FIRST_AGENT_INSTALL] = FIRST_AGENT;
 const REFERRAL_CODE = 'abcdefgh2345';
+const DESKTOP_WIDTH = 1024;
+const PHONE_COLUMNS = 2;
+const DESKTOP_COLUMNS = 4;
+const MAXIMUM_TILE_GRID_HEIGHT = 800;
+const PRO_HEIGHT_RATIO = 0.6;
 
 async function expectPicking(input: { page: import('@playwright/test').Page; locale: OwnerLocale }) {
   const { page, locale } = input;
@@ -62,4 +67,23 @@ test('the free question opens in the FAQ', async ({ page }) => {
   await page.goto('/');
   await page.getByText(siteCopy({ key: SiteCopyKey.FaqFreeQuestion })).click();
   await expect(page.getByText(siteCopy({ key: SiteCopyKey.FaqFreeAnswer }))).toBeVisible();
+});
+
+test('the agent tiles stay compact: two columns on a phone, four on a desktop', async ({ page }) => {
+  await page.goto('/');
+  const tiles = page.locator('.clients .agent-card');
+  const count = await tiles.count();
+  const boxes = await Promise.all(Array.from({ length: count }, (_value, index) => tiles.nth(index).boundingBox()));
+  const columns = new Set(boxes.map((box) => Math.round(box!.x))).size;
+  const viewportWidth = page.viewportSize()!.width;
+  expect(columns).toBe(viewportWidth < DESKTOP_WIDTH ? PHONE_COLUMNS : DESKTOP_COLUMNS);
+  const gridBox = (await page.locator('.clients').boundingBox())!;
+  expect(gridBox.height).toBeLessThan(MAXIMUM_TILE_GRID_HEIGHT);
+});
+
+test('the Pro card does not stretch to the height of the Free card', async ({ page }) => {
+  await page.goto('/');
+  const free = (await page.locator('.plan-free').boundingBox())!;
+  const pro = (await page.locator('.plan-pro').boundingBox())!;
+  expect(pro.height).toBeLessThan(free.height * PRO_HEIGHT_RATIO);
 });

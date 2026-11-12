@@ -5,6 +5,9 @@ const STORY_COUNT = 6;
 const STORY_SELECTOR = '.why-item';
 const REVEAL_SELECTOR = '.reveal';
 const SETTLED_RATIO = 0.3;
+const PINNED_MINIMUM_WIDTH = 1024;
+const REST_DWELL_PIXELS = 100;
+const MAXIMUM_EMPTY_RATIO = 0.4;
 const SCROLL_PAUSE_MS = 250;
 const FRAME_PAUSE_MS = 60;
 const STUB_UNSUPPORTED_SCRIPT = 'CSS.supports = () => false;';
@@ -76,4 +79,21 @@ test.describe('reduced motion', () => {
     await expectFullyShown({ targets: page.locator(REVEAL_SELECTOR) });
     expect(await page.evaluate('document.getAnimations().length')).toBe(0);
   });
+});
+
+test('a pinned story leaves at most 40 percent of the screen empty before the next one', async ({ page }) => {
+  await page.goto('/');
+  const viewportWidth = page.viewportSize()!.width;
+  test.skip(viewportWidth < PINNED_MINIMUM_WIDTH, 'stories only pin on a wide screen');
+  const gaps = await page.evaluate(`(() => {
+    const pins = [...document.querySelectorAll('.why-pin')];
+    return pins.slice(0, -1).map((pin, index) => {
+      const item = pin.parentElement;
+      const pinOffset = parseFloat(getComputedStyle(pin).top);
+      window.scrollTo(0, item.getBoundingClientRect().top + window.scrollY - pinOffset + ${REST_DWELL_PIXELS});
+      return pins[index + 1].getBoundingClientRect().top - pin.getBoundingClientRect().bottom;
+    });
+  })()`);
+  const maximumGap = page.viewportSize()!.height * MAXIMUM_EMPTY_RATIO;
+  expect((gaps as number[]).filter((gap) => gap > maximumGap)).toEqual([]);
 });

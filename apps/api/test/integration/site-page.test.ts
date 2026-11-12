@@ -1,7 +1,7 @@
 import { AGENT_INSTALLS } from '@zapbip/agents/install';
 import { DEFAULT_LOCALE, OwnerLocale, TURNSTILE_ACTION_WAITLIST_JOIN } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
-import { leadingAgentNames } from '../../src/site/site-agents';
+import { initialsOf, leadingAgentNames } from '../../src/site/site-agents';
 import { SiteCopyKey } from '../../src/site/site-copy';
 import { SITE_CONTENT_SECURITY_POLICY } from '../../src/site/site-policy';
 import { copyHtml, escapedHtml, REFERRAL_CODE, SITE_ORIGIN, SITE_TURNSTILE_SITE_KEY, siteEnvironment, siteFetch } from '../support/site';
@@ -200,7 +200,8 @@ describe('the Portuguese page', () => {
 describe('the works-with section', () => {
   const agents = Object.entries(AGENT_INSTALLS).map(([id, install]) => ({ id, name: install.productName }));
   const CARD_NAME_PATTERN = /<h3 class="agent-name">([^<]+)<\/h3>/g;
-  const CARD_BUTTON_PATTERN = /<a class="button [^"]*agent-pick" href="([^"]+)"[^>]*>([^<]+)<\/a>/g;
+  const CARD_LINK_PATTERN = /<a class="agent-pick" href="([^"]+)" data-picked-label="[^"]*" aria-label="([^"]+)">/g;
+  const CARD_BADGE_PATTERN = /<span class="agent-badge" aria-hidden="true">([^<]+)<\/span>/g;
 
   function clientsSectionOf(input: { html: string }): string {
     return input.html.slice(input.html.indexOf('id="clients"'), input.html.indexOf('id="pricing"'));
@@ -213,7 +214,7 @@ describe('the works-with section', () => {
     const section = clientsSectionOf({ html: await pageOf({ headers }) });
     const names = [...section.matchAll(CARD_NAME_PATTERN)].map((match) => match[1]);
     expect(names.slice(0, agents.length)).toEqual(agents.map((agent) => escapedHtml({ text: agent.name })));
-    const buttons = [...section.matchAll(CARD_BUTTON_PATTERN)].map((match) => ({ href: match[1], label: match[2] }));
+    const buttons = [...section.matchAll(CARD_LINK_PATTERN)].map((match) => ({ href: match[1], label: match[2] }));
     expect(buttons.slice(0, agents.length)).toEqual(
       agents.map((agent) => ({
         href: `/?agent=${agent.id}#join`,
@@ -222,15 +223,26 @@ describe('the works-with section', () => {
     );
   });
 
-  it('describes each agent card in the page language', async () => {
-    const section = clientsSectionOf({ html: await pageOf({ headers: PORTUGUESE_HEADERS }) });
-    const line = copyHtml({ key: SiteCopyKey.AgentCardLine, locale: OwnerLocale.PortugueseBrazil, values: { agent: agents[0]!.name } });
-    expect(section).toContain(line);
+  it.each([
+    ['en_US', OwnerLocale.EnglishUs, ENGLISH_HEADERS],
+    ['pt_BR', OwnerLocale.PortugueseBrazil, PORTUGUESE_HEADERS],
+  ])('shows a badge with the initials and a compact link on each tile in %s', async (_name, locale, headers) => {
+    const section = clientsSectionOf({ html: await pageOf({ headers }) });
+    const badges = [...section.matchAll(CARD_BADGE_PATTERN)].map((match) => match[1]);
+    expect(badges.slice(0, agents.length)).toEqual(agents.map((agent) => initialsOf({ name: agent.name })));
+    expect(section).toContain(`${copyHtml({ key: SiteCopyKey.AgentCardShort, locale })}</a>`);
+  });
+
+  it('repeats no sentence and no snippet across the tiles', async () => {
+    const section = clientsSectionOf({ html: await pageOf({ headers: ENGLISH_HEADERS }) });
+    expect(section).not.toContain('agent-snippet');
+    expect(section.match(/<p[ >]/g)?.length ?? 0).toBeLessThanOrEqual(1);
   });
 
   it('ends with the card for any MCP app, whose button goes to the form', async () => {
     const section = clientsSectionOf({ html: await pageOf({ headers: ENGLISH_HEADERS }) });
     expect(section).toContain(copyHtml({ key: SiteCopyKey.ClientsAnyMcpName, locale: OwnerLocale.EnglishUs }));
+    expect(section).toContain('agent-card-any');
     expect(section).toContain(`href="#join"`);
     expect(section).toContain(copyHtml({ key: SiteCopyKey.ClientsAnyMcpButton, locale: OwnerLocale.EnglishUs }));
   });
@@ -382,6 +394,11 @@ describe('the pricing', () => {
     const pro = section.slice(section.indexOf('class="card plan plan-pro'));
     expect(pro).toContain(copyHtml({ key: SiteCopyKey.PricingProName, locale: OwnerLocale.EnglishUs }));
     expect(pro).not.toMatch(/\$|R\$|<a /);
+  });
+
+  it('lets the Pro card sit at its own height, not the height of the Free card', async () => {
+    const section = pricingOf({ html: await pageOf({ headers: ENGLISH_HEADERS }) });
+    expect(section).toContain('class="card plan plan-pro');
   });
 
   it('sends the free button to the form', async () => {

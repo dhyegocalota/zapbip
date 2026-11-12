@@ -31,3 +31,7 @@ export function leadingAgentNames(): string {
 export function senderNameOf(input: { index: number }): string {
   return siteAgentNames()[input.index]!;
 }
+
+export function initialsOf(input: { name: string }): string {
+  throw new Error('initialsOf is not implemented');
+}
