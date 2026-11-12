@@ -42,6 +42,11 @@ describe('highlightCode', () => {
     ]);
   });
 
+  it('leaves a closing brace plain instead of calling it a command', () => {
+    const [line] = highlightCode({ code: '} } }' });
+    expect(significant({ line: line! }).map(([kind]) => kind)).toEqual([CodeTokenKind.Plain, CodeTokenKind.Plain, CodeTokenKind.Plain]);
+  });
+
   it('shows a lone placeholder as a placeholder, not a command', () => {
     const [line] = highlightCode({ code: '<your-link>' });
     expect(significant({ line: line! })).toEqual([[CodeTokenKind.Placeholder, '<your-link>']]);
