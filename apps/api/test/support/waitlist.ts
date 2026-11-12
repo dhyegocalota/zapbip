@@ -44,3 +44,26 @@ export async function setCap(input: { value: number }): Promise<void> {
     .bind(String(input.value))
     .run();
 }
+
+export async function seedWaitlistRow(input: {
+  email: string;
+  referralCode: string;
+  referredBy?: string | null;
+  credited?: number;
+  createdAt: number;
+}): Promise<void> {
+  const { email, referralCode, referredBy = null, credited = 0, createdAt } = input;
+  await testEnv.CONNECTIONS.prepare(
+    'INSERT INTO landing_waitlist (email, locale, referral_code, referred_by, credited, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+  )
+    .bind(email, OwnerLocale.EnglishUs, referralCode, referredBy, credited, createdAt)
+    .run();
+}
+
+export async function resetWaitlist(): Promise<void> {
+  await testEnv.CONNECTIONS.batch([
+    testEnv.CONNECTIONS.prepare('DELETE FROM landing_waitlist'),
+    testEnv.CONNECTIONS.prepare('DELETE FROM site_settings'),
+    testEnv.CONNECTIONS.prepare("INSERT INTO site_settings (key, value, updated_at) VALUES ('waitlist_referral_cap', '5', 1794441600000)"),
+  ]);
+}
