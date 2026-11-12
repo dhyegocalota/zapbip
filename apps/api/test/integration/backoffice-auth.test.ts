@@ -61,9 +61,9 @@ describe('sign-in', () => {
 
   test('a wrong password, an unknown email and a wrong code are each one failure redirect and each counts', async () => {
     const { csrf } = await openSignInForm({});
+    const wrongCode = await signInWithCode({ code: WRONG_CODE, csrf });
     const wrongPassword = await postPasswordStep({ email: BACKOFFICE_TEST_EMAIL, password: WRONG_PASSWORD, csrf });
     const unknownEmail = await postPasswordStep({ email: UNKNOWN_EMAIL, password: WRONG_PASSWORD, csrf });
-    const wrongCode = await signInWithCode({ code: WRONG_CODE, csrf });
     expect([wrongPassword, unknownEmail, wrongCode].map((response) => [response.status, response.headers.get('location')])).toEqual(
       Array.from({ length: 3 }, () => [STATUS_SEE_OTHER, SIGN_IN_FAILED_LOCATION]),
     );

@@ -96,7 +96,7 @@ function resetStatementOf(input: { id: string; at: number; email: string; passwo
   return [
     'DELETE FROM backoffice_sessions;',
     'DELETE FROM backoffice_pending_sign_ins;',
-    `UPDATE backoffice_operator SET email = '${input.email}', password_hash = '${input.passwordHash}', last_totp_step = 0, failed_attempts = 0, locked_until = NULL WHERE id = 1;`,
+    `UPDATE backoffice_operator SET email = '${input.email}', password_hash = '${input.passwordHash}', last_totp_step = 0, failed_attempts = 0, locked_until = NULL, password_failed_attempts = 0, password_locked_until = NULL WHERE id = 1;`,
     `INSERT INTO backoffice_audit (id, at, action, target_kind, target_id, outcome, client_address) VALUES ('${input.id}', ${input.at}, '${BackofficeAuditAction.OperatorEnrolled}', NULL, NULL, '${BackofficeAuditOutcome.Succeeded}', NULL);`,
   ].join(' ');
 }

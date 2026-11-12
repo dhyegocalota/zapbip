@@ -79,9 +79,9 @@ describe('lockout', () => {
   });
 
   test('wrong passwords and an unknown email count on the password counter and wrong codes on the code counter', async () => {
+    await signInWithCode({ code: WRONG_CODE });
     await failMany({ count: BACKOFFICE_LOCKOUT_THRESHOLD - 2 });
     await postPasswordStep({ email: 'stranger@zapbip.test', password: WRONG_PASSWORD });
-    await signInWithCode({ code: WRONG_CODE });
     expect(await readOperator()).toMatchObject({
       password_failed_attempts: BACKOFFICE_LOCKOUT_THRESHOLD - 1,
       password_locked_until: null,

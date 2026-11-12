@@ -3,7 +3,7 @@ import { LogEvent } from '../../contract/log';
 import { logEvent } from '../../log';
 import { writeAudit } from '../audit/audit-log';
 import { BackofficeAuditAction, BackofficeAuditOutcome, type BackofficeAuditTargetKind } from '../audit/backoffice-audit-action';
-import { recordFailure } from './operator-state';
+import { type FailureCounter, recordFailure } from './operator-state';
 
 export async function registerFailure(input: {
   database: D1Database;
@@ -12,9 +12,10 @@ export async function registerFailure(input: {
   action: BackofficeAuditAction;
   targetKind: BackofficeAuditTargetKind | null;
   targetId: string | null;
+  counter: FailureCounter;
 }): Promise<void> {
-  const { database, now, clientAddress, action, targetKind, targetId } = input;
-  const failure = await recordFailure({ database, now });
+  const { database, now, clientAddress, action, targetKind, targetId, counter } = input;
+  const failure = await recordFailure({ database, now, counter });
   await writeAudit({ database, entry: { now, action, outcome: BackofficeAuditOutcome.Failed, targetKind, targetId, clientAddress } });
   const justLocked = failure.failedAttempts === BACKOFFICE_LOCKOUT_THRESHOLD;
   if (!justLocked) return;

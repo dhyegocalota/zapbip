@@ -7,7 +7,15 @@ import { BackofficeAuditAction, BackofficeAuditOutcome } from '../audit/backoffi
 import { constantTimeEqual } from './constant-time';
 import { registerFailure } from './failure';
 import { normalizeEmail } from './operator-email';
-import { isLocked, type OperatorRow, readOperator, recordSuccess, releaseExpiredLock } from './operator-state';
+import {
+  FailureCounter,
+  isLocked,
+  type OperatorRow,
+  readOperator,
+  recordSuccess,
+  releaseExpiredLock,
+  resetPasswordFailures,
+} from './operator-state';
 import { consumePendingSignIn, createPendingSignIn } from './pending-sign-in';
 import { verifyPassword } from './password-hash';
 import { createSession } from './sessions';
@@ -44,15 +52,29 @@ export async function attemptPasswordSignIn(input: {
 }): Promise<PasswordSignInResult> {
   const { env, password, now, clientAddress } = input;
   const database = env.CONNECTIONS;
-  await releaseExpiredLock({ database, now });
+  await releaseExpiredLock({ database, now, counter: FailureCounter.Password });
+  await releaseExpiredLock({ database, now, counter: FailureCounter.Code });
   const operator = await readOperator({ database });
   const { isEmailKnown, storedHash } = storedCredentialOf({ operator, email: normalizeEmail({ value: input.email }) });
   const isPasswordValid = await verifyPassword({ password, pepper: env.BACKOFFICE_PASSWORD_PEPPER, storedHash });
-  if (isLocked({ operator, now })) return { outcome: PasswordSignInOutcome.Failed };
+  const isSignInLocked =
+    isLocked({ operator, now, counter: FailureCounter.Password }) || isLocked({ operator, now, counter: FailureCounter.Code });
+  if (isSignInLocked) return { outcome: PasswordSignInOutcome.Failed };
   const isPairValid = isEmailKnown && isPasswordValid;
-  if (isPairValid) return { outcome: PasswordSignInOutcome.Accepted, pendingToken: await createPendingSignIn({ database, now }) };
+  if (isPairValid) {
+    await resetPasswordFailures({ database });
+    return { outcome: PasswordSignInOutcome.Accepted, pendingToken: await createPendingSignIn({ database, now }) };
+  }
   logEvent({ event: LogEvent.BackofficeSignInFailed });
-  await registerFailure({ database, now, clientAddress, action: BackofficeAuditAction.SignInFailed, targetKind: null, targetId: null });
+  await registerFailure({
+    database,
+    now,
+    clientAddress,
+    action: BackofficeAuditAction.SignInFailed,
+    targetKind: null,
+    targetId: null,
+    counter: FailureCounter.Password,
+  });
   return { outcome: PasswordSignInOutcome.Failed };
 }
 
@@ -67,14 +89,22 @@ export async function attemptCodeSignIn(input: {
   const database = env.CONNECTIONS;
   const isPendingLive = await consumePendingSignIn({ database, token: pendingToken, now });
   if (!isPendingLive) return { outcome: SignInOutcome.Failed };
-  await releaseExpiredLock({ database, now });
+  await releaseExpiredLock({ database, now, counter: FailureCounter.Code });
   const operator = await readOperator({ database });
-  if (isLocked({ operator, now })) return { outcome: SignInOutcome.Failed };
+  if (isLocked({ operator, now, counter: FailureCounter.Code })) return { outcome: SignInOutcome.Failed };
   const step = await matchTotpStep({ secretBase32: env.BACKOFFICE_TOTP_SECRET, code, now, lastStep: operator.last_totp_step });
   const isStepClaimed = step !== null && (await recordSuccess({ database, step }));
   if (!isStepClaimed) {
     logEvent({ event: LogEvent.BackofficeSignInFailed });
-    await registerFailure({ database, now, clientAddress, action: BackofficeAuditAction.SignInFailed, targetKind: null, targetId: null });
+    await registerFailure({
+      database,
+      now,
+      clientAddress,
+      action: BackofficeAuditAction.SignInFailed,
+      targetKind: null,
+      targetId: null,
+      counter: FailureCounter.Code,
+    });
     return { outcome: SignInOutcome.Failed };
   }
   logEvent({ event: LogEvent.BackofficeSignInSucceeded });
