@@ -86,6 +86,15 @@ describe('error pages', () => {
     expect(headingOf(await signInPage.text())).toBe('503 The backoffice is not configured');
   });
 
+  test.each([
+    ['BACKOFFICE_PASSWORD_PEPPER', ' \t\n'],
+    ['BACKOFFICE_TOTP_SECRET', '   '],
+  ])('a whitespace-only %s is a 503 page', async (name, value) => {
+    const env = backofficeEnv({ overrides: { [name]: value } });
+    const response = await requestBackoffice({ path: '/sign-in', env, headers: ENGLISH });
+    expect(response.status).toBe(STATUS_SERVICE_UNAVAILABLE);
+  });
+
   test('every error page still carries the security headers', async () => {
     const response = await requestBackoffice({ path: MARKER_PATH });
     expect(response.headers.get('content-security-policy')).toContain("default-src 'none'");
