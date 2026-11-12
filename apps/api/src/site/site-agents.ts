@@ -1,4 +1,4 @@
-import { AGENT_INSTALLS } from '@zapbip/agents/install';
+import { AGENT_INSTALLS, InstallClient } from '@zapbip/agents/install';
 
 const LEADING_AGENT_COUNT = 2;
 const LIST_SEPARATOR = ', ';
@@ -18,4 +18,12 @@ export function leadingAgentNames(): string {
 
 export function senderNameOf(input: { index: number }): string {
   return siteAgentNames()[input.index]!;
+}
+
+export function siteAgents(): { id: InstallClient; name: string }[] {
+  throw new Error('siteAgents is not implemented');
+}
+
+export function siteAgentIdOf(input: { value: string | undefined }): InstallClient | null {
+  throw new Error('siteAgentIdOf is not implemented');
 }

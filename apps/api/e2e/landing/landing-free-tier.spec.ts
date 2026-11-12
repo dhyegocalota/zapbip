@@ -1,0 +1,65 @@
+import { AGENT_INSTALLS } from '@zapbip/agents/install';
+import { OwnerLocale } from '@zapbip/types';
+import { SiteCopyKey } from '../../src/site/site-copy';
+import { expect, test } from './fixtures';
+import { siteCopy } from './support/site-copy';
+
+const FIRST_AGENT = Object.entries(AGENT_INSTALLS)[0]!;
+const [FIRST_AGENT_ID, FIRST_AGENT_INSTALL] = FIRST_AGENT;
+const REFERRAL_CODE = 'abcdefgh2345';
+
+async function expectPicking(input: { page: import('@playwright/test').Page; locale: OwnerLocale }) {
+  const { page, locale } = input;
+  const agent = FIRST_AGENT_INSTALL.productName;
+  await page.getByRole('link', { name: siteCopy({ key: SiteCopyKey.AgentCardButton, locale, values: { agent } }) }).click();
+  await expect(page.locator('#join-email')).toBeFocused();
+  await expect(page.locator('.join-agent')).toHaveText(siteCopy({ key: SiteCopyKey.AgentCardPicked, locale, values: { agent } }));
+  await expect(page.locator('.join-agent')).toBeVisible();
+  await expect(page).toHaveURL(new RegExp(`agent=${FIRST_AGENT_ID}`));
+  await expect(page.getByRole('heading', { level: 1 })).toBeInViewport();
+}
+
+test('an agent card takes you to the form and remembers the agent in en_US', async ({ page }) => {
+  await page.goto('/');
+  await expectPicking({ page, locale: OwnerLocale.EnglishUs });
+});
+
+test.describe('pt-BR browser', () => {
+  test.use({ locale: 'pt-BR' });
+
+  test('an agent card takes you to the form and remembers the agent in pt_BR', async ({ page }) => {
+    await page.goto('/');
+    await expectPicking({ page, locale: OwnerLocale.PortugueseBrazil });
+  });
+});
+
+test('the hint survives a reload and keeps the referral code', async ({ page }) => {
+  await page.goto(`/?ref=${REFERRAL_CODE}`);
+  await page
+    .getByRole('link', { name: siteCopy({ key: SiteCopyKey.AgentCardButton, values: { agent: FIRST_AGENT_INSTALL.productName } }) })
+    .click();
+  await page.reload();
+  await expect(page.locator('.join-agent')).toBeVisible();
+  await expect(page.locator('input[name="referralCode"]')).toHaveValue(REFERRAL_CODE);
+});
+
+test('an unknown agent in the address shows no hint', async ({ page }) => {
+  await page.goto('/?agent=nope');
+  await expect(page.locator('.join-agent')).toBeHidden();
+  await expect(page.locator('#join-email')).toBeVisible();
+});
+
+test('the pricing offers the free plan and sends its button to the form', async ({ page }) => {
+  await page.goto('/');
+  const pricing = page.locator('#pricing');
+  await expect(pricing.locator('.plan-free')).toContainText(siteCopy({ key: SiteCopyKey.PricingFreePrice }));
+  await expect(pricing.locator('.plan-pro')).toContainText(siteCopy({ key: SiteCopyKey.PricingProName }));
+  await pricing.getByRole('link', { name: siteCopy({ key: SiteCopyKey.PricingCta }) }).click();
+  await expect(page.locator('#join-email')).toBeFocused();
+});
+
+test('the free question opens in the FAQ', async ({ page }) => {
+  await page.goto('/');
+  await page.getByText(siteCopy({ key: SiteCopyKey.FaqFreeQuestion })).click();
+  await expect(page.getByText(siteCopy({ key: SiteCopyKey.FaqFreeAnswer }))).toBeVisible();
+});
