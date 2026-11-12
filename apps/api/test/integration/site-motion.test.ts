@@ -37,4 +37,16 @@ describe('the scroll motion stylesheet', () => {
     );
     expect(SITE_STYLESHEET).toMatch(/\.status-text \{[^}]*overflow: hidden;/);
   });
+
+  it('types the code in only under the no-preference query and keeps a caret off the other paths', () => {
+    expect(SITE_STYLESHEET).toContain('@keyframes code-type');
+    const typingIndex = SITE_STYLESHEET.indexOf('animation: code-type');
+    expect(typingIndex).toBeGreaterThan(-1);
+    expect(enclosingMediaQueryOf({ index: typingIndex }).startsWith(NO_PREFERENCE_QUERY)).toBe(true);
+    expect(SITE_STYLESHEET).toContain('#start.is-live');
+  });
+
+  it('fades the edge of the tab row with named colours only', () => {
+    expect(SITE_STYLESHEET).toMatch(/\.start-tabs \{[^}]*mask-image: linear-gradient\(/);
+  });
 });

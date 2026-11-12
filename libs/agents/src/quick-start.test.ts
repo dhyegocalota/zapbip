@@ -24,6 +24,15 @@ describe.each(INSTALLS)('the quick start of %s', (_id, install) => {
     });
   });
 
+  test('lists a click path, in two languages, exactly when the code is only the address', () => {
+    const [english, portuguese] = LOCALES.map((locale) => install.quickStart({ locale, connectionLink: CONNECTION_LINK }));
+    const isAddressOnly = english!.code === CONNECTION_LINK;
+    expect(english!.path.length > 0).toBe(isAddressOnly);
+    expect(portuguese!.path.length).toBe(english!.path.length);
+    expect(portuguese!.path).not.toEqual(english!.path.length === 0 ? [''] : english!.path);
+    expect([...english!.path, ...portuguese!.path].filter((step) => step.trim().length === 0)).toEqual([]);
+  });
+
   test('is written in two languages', () => {
     const [first, second] = LOCALES.map((locale) => install.quickStart({ locale, connectionLink: CONNECTION_LINK }).hint);
     expect(first).not.toBe(second);

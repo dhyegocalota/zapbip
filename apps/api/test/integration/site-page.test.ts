@@ -280,10 +280,19 @@ describe('the quick start', () => {
       const text = panels.find((panel) => panel.id === agent.id)!.html.replace(TAG_PATTERN, '');
       expect(text).toContain(escapedHtml({ text: quickStart.hint }));
       expect(text).toContain(escapedHtml({ text: quickStart.code }));
+      expect(text).toContain(escapedHtml({ text: quickStart.hint }));
+      const panel = panels.find((candidate) => candidate.id === agent.id)!.html;
+      expect(panel.includes('class="code-path"')).toBe(quickStart.path.length > 0);
+      quickStart.path.forEach((step) => expect(text).toContain(escapedHtml({ text: step })));
+      expect(panel).toContain(`data-code="${escapedHtml({ text: quickStart.code })}"`);
+      expect(panel.match(/class="code-line"/g)).toHaveLength(quickStart.code.split('\n').length);
     });
     const anyText = panels.find((panel) => panel.id === SiteStartTab.AnyMcp)!.html.replace(TAG_PATTERN, '');
     expect(anyText).toContain(copyHtml({ key: SiteCopyKey.StartAnyHint, locale }));
     expect(anyText).toContain(escapedHtml({ text: placeholder }));
+    [SiteCopyKey.StartAnyStepOpen, SiteCopyKey.StartAnyStepAdd, SiteCopyKey.StartAnyStepPaste].forEach((key) =>
+      expect(anyText).toContain(copyHtml({ key, locale })),
+    );
   });
 
   it('shows the logo image where the install facet has an official logo and the initials badge where it has not', async () => {

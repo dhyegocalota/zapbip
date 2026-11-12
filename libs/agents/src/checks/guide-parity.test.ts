@@ -26,7 +26,7 @@ function installRendering(input: { lastLine: string }): AgentInstall {
     productName: 'Synthetic Agent',
     productDescription: 'Synthetic Agent, the agent the tests use',
     hasOfficialLogo: false,
-    quickStart: ({ connectionLink }) => ({ hint: 'Synthetic', code: connectionLink, proof: connectionLink }),
+    quickStart: ({ connectionLink }) => ({ hint: 'Synthetic', path: [], code: connectionLink, proof: connectionLink }),
     render: () => [...SECTION_LINES, input.lastLine].join('\n'),
   };
 }

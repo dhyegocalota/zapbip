@@ -11,6 +11,13 @@ const REFERRAL_CODE = 'abcdefgh2345';
 const MOBILE_WIDTH = 375;
 const MINIMUM_TAB_HEIGHT = 44;
 const GRANTED_PERMISSIONS = ['clipboard-read', 'clipboard-write'];
+const DESKTOP_WIDTH = 1280;
+const CONTAINER_PADDING = 24;
+
+async function computedStyleOf(input: { page: Page; selector: string; pseudo: string | null; property: string }): Promise<string> {
+  const pseudo = input.pseudo === null ? 'null' : `'${input.pseudo}'`;
+  return input.page.evaluate(`getComputedStyle(document.querySelector('${input.selector}'), ${pseudo}).${input.property}`);
+}
 
 function tabOf(input: { page: Page; id: string }) {
   return input.page.locator(`#start-tab-${input.id}`);
@@ -156,5 +163,117 @@ test.describe('375 px', () => {
     const list = (await page.locator('.start-tabs').boundingBox())!;
     expect(tab.x).toBeGreaterThanOrEqual(list.x);
     expect(tab.x + tab.width).toBeLessThanOrEqual(list.x + list.width);
+  });
+});
+
+test.describe('1280 px', () => {
+  test.use({ viewport: { width: DESKTOP_WIDTH, height: 900 } });
+
+  test('the panel and the tabs fill the width of the section, in balanced rows', async ({ page }) => {
+    await page.goto('/');
+    const container = (await page.locator('#start .container').boundingBox())!;
+    const panel = (await page.locator('.start-panel:not([hidden])').boundingBox())!;
+    const tabs = (await page.locator('.start-tabs').boundingBox())!;
+    expect(panel.width).toBeGreaterThanOrEqual(container.width - CONTAINER_PADDING * 2 - 1);
+    expect(tabs.width).toBeGreaterThanOrEqual(panel.width - 1);
+    const boxes = await Promise.all(
+      [...AGENTS.map((agent) => agent.id), 'any'].map(async (id) => (await tabOf({ page, id }).boundingBox())!),
+    );
+    const rows = new Set(boxes.map((box) => Math.round(box.y)));
+    expect(rows.size).toBe(2);
+    const lastRow = boxes.filter((box) => Math.round(box.y) === Math.max(...rows));
+    const rightEdge = Math.max(...lastRow.map((box) => box.x + box.width));
+    expect(rightEdge).toBeGreaterThanOrEqual(tabs.x + tabs.width - 1);
+  });
+});
+
+test.describe('375 px header, fade and click path', () => {
+  test.use({ viewport: { width: MOBILE_WIDTH, height: 812 } });
+
+  test('the header keeps words whole and shows no dots', async ({ page }) => {
+    await page.goto(
+      `/?agent=${AGENTS.find((agent) => agent.install.quickStart({ locale: OwnerLocale.EnglishUs, connectionLink: 'x' }).code.includes('\n'))!.id}`,
+    );
+    const hintWrap = await computedStyleOf({
+      page,
+      selector: '.start-panel:not([hidden]) .code-hint',
+      pseudo: null,
+      property: 'overflowWrap',
+    });
+    expect(hintWrap).toBe('normal');
+    const dots = await computedStyleOf({ page, selector: '.start-panel:not([hidden]) .code-bar', pseudo: '::before', property: 'display' });
+    expect(dots).toBe('none');
+  });
+
+  test('the tab row fades at its scrollable edge and not on a wide screen', async ({ page }) => {
+    await page.goto('/');
+    expect(await computedStyleOf({ page, selector: '.start-tabs', pseudo: null, property: 'maskImage' })).toContain('linear-gradient');
+    await page.setViewportSize({ width: DESKTOP_WIDTH, height: 900 });
+    expect(await computedStyleOf({ page, selector: '.start-tabs', pseudo: null, property: 'maskImage' })).toBe('none');
+  });
+});
+
+test('a UI path agent shows its click path as numbered steps above the address', async ({ page }) => {
+  const addressOnly = AGENTS.find(
+    (agent) => agent.install.quickStart({ locale: OwnerLocale.EnglishUs, connectionLink: 'x' }).path.length > 0,
+  )!;
+  await page.goto(`/?agent=${addressOnly.id}`);
+  const steps = page.locator('.start-panel:not([hidden]) .code-path li');
+  const expected = addressOnly.install.quickStart({ locale: OwnerLocale.EnglishUs, connectionLink: 'x' }).path;
+  await expect(steps).toHaveText(expected);
+  await expect(page.locator('.start-panel:not([hidden]) code')).toContainText(siteCopy({ key: SiteCopyKey.StartLinkPlaceholder }));
+});
+
+test.describe('typing in', () => {
+  test('types the command on a tab switch while the page text is already complete', async ({ page }) => {
+    await page.goto('/');
+    await page.locator('#start').scrollIntoViewIfNeeded();
+    await expect(page.locator('#start')).toHaveClass(/is-live/);
+    await tabOf({ page, id: SECOND_AGENT.id }).click();
+    const typing = await page.evaluate("document.getAnimations().some((animation) => animation.animationName === 'code-type')");
+    expect(typing).toBe(true);
+    const expected = SECOND_AGENT.install.quickStart({
+      locale: OwnerLocale.EnglishUs,
+      connectionLink: siteCopy({ key: SiteCopyKey.StartLinkPlaceholder }),
+    }).code;
+    expect(await page.locator(`#start-panel-${SECOND_AGENT.id} code`).evaluate((element) => element.getAttribute('data-code'))).toBe(
+      expected,
+    );
+    expect((await page.locator(`#start-panel-${SECOND_AGENT.id} code`).textContent())!.replaceAll('\n', '')).toContain(
+      expected.split('\n')[0]!,
+    );
+    await expect
+      .poll(() => page.evaluate("document.getAnimations().filter((animation) => animation.animationName === 'code-type').length"))
+      .toBe(0);
+  });
+
+  test('copies the whole command at once, even while it types', async ({ page, context }) => {
+    await context.grantPermissions(GRANTED_PERMISSIONS);
+    await page.goto('/');
+    await page.locator('#start').scrollIntoViewIfNeeded();
+    await tabOf({ page, id: SECOND_AGENT.id }).click();
+    await page.locator(`#start-panel-${SECOND_AGENT.id} .start-copy`).click();
+    const expected = SECOND_AGENT.install.quickStart({
+      locale: OwnerLocale.EnglishUs,
+      connectionLink: siteCopy({ key: SiteCopyKey.StartLinkPlaceholder }),
+    }).code;
+    expect(await page.evaluate('navigator.clipboard.readText()')).toBe(expected);
+  });
+
+  test.describe('with reduced motion', () => {
+    test.use({ reducedMotion: 'reduce' });
+
+    test('shows the text at once with no caret', async ({ page }) => {
+      await page.goto('/');
+      await page.locator('#start').scrollIntoViewIfNeeded();
+      const caret = await computedStyleOf({
+        page,
+        selector: '.start-panel:not([hidden]) .code-line:last-child',
+        pseudo: '::after',
+        property: 'content',
+      });
+      expect(caret === 'none' || caret === 'normal').toBe(true);
+      expect(await page.evaluate('document.getAnimations().length')).toBe(0);
+    });
   });
 });

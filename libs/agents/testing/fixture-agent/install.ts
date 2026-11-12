@@ -11,6 +11,6 @@ export const install: AgentInstall = {
   productName: 'Fixture Agent',
   productDescription: 'Fixture Agent, the agent the tests use',
   hasOfficialLogo: false,
-  quickStart: ({ locale, connectionLink }) => ({ hint: FIXTURE_HINT[locale], code: connectionLink, proof: connectionLink }),
+  quickStart: ({ locale, connectionLink }) => ({ hint: FIXTURE_HINT[locale], path: [], code: connectionLink, proof: connectionLink }),
   render: renderFixtureAgentSection,
 };
