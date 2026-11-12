@@ -526,3 +526,38 @@ describe('preferences and redirects', () => {
     expect(html).toContain('<meta name="robots" content="noindex"');
   });
 });
+
+describe('the paused waitlist', () => {
+  const PAUSED = siteEnvironment({ overrides: { TURNSTILE_SECRET_KEY: undefined } });
+
+  async function pausedPage(): Promise<string> {
+    const response = await siteFetch({ path: '/', headers: ENGLISH_HEADERS, env: PAUSED });
+    expect(response.status).toBe(200);
+    return response.text();
+  }
+
+  it('still tells the stories, shows the tiles and the pricing', async () => {
+    const html = await pausedPage();
+    expect(html.match(/class="why-item"/g)).toHaveLength(6);
+    expect(html).toContain('id="pricing"');
+    expect(html).toContain(copyHtml({ key: SiteCopyKey.PricingFreeName, locale: OwnerLocale.EnglishUs }));
+    expect(html).not.toContain('id="join-email"');
+  });
+
+  it('keeps every tile link pointing at the join anchor', async () => {
+    const html = await pausedPage();
+    const hrefs = [...html.matchAll(/<a class="agent-pick" href="([^"]+)"/g)].map((match) => match[1]);
+    expect(hrefs.length).toBeGreaterThan(0);
+    expect(hrefs.filter((href) => !href!.endsWith('#join'))).toEqual([]);
+    expect(html).toContain('id="join"');
+  });
+});
+
+describe('the fifth story', () => {
+  it.each([
+    [ENGLISH_HEADERS, 'Works with the agents you use'],
+    [PORTUGUESE_HEADERS, 'Funciona com os agentes que você usa'],
+  ])('is titled after the agents the visitor already uses', async (headers, title) => {
+    expect(await pageOf({ headers })).toContain(`<h3>${title}</h3>`);
+  });
+});

@@ -78,6 +78,7 @@ test.describe('reduced motion', () => {
     await expectFullyShown({ targets: page.locator('.scene-step') });
     await expectFullyShown({ targets: page.locator(REVEAL_SELECTOR) });
     expect(await page.evaluate('document.getAnimations().length')).toBe(0);
+    await expect(page.locator('.status-idle')).toHaveCSS('display', 'none');
   });
 });
 

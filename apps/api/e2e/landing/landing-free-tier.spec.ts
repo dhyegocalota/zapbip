@@ -12,6 +12,7 @@ const PHONE_COLUMNS = 2;
 const DESKTOP_COLUMNS = 4;
 const MAXIMUM_TILE_GRID_HEIGHT = 800;
 const PRO_HEIGHT_RATIO = 0.6;
+const MINIMUM_TOUCH_TARGET = 44;
 
 async function expectPicking(input: { page: import('@playwright/test').Page; locale: OwnerLocale }) {
   const { page, locale } = input;
@@ -86,4 +87,31 @@ test('the Pro card does not stretch to the height of the Free card', async ({ pa
   const free = (await page.locator('.plan-free').boundingBox())!;
   const pro = (await page.locator('.plan-pro').boundingBox())!;
   expect(pro.height).toBeLessThan(free.height * PRO_HEIGHT_RATIO);
+});
+
+test('the tile links line up across a row and are easy to tap', async ({ page }) => {
+  await page.goto('/');
+  const tiles = page.locator('.clients .agent-card');
+  const count = await tiles.count();
+  const links = await Promise.all(
+    Array.from({ length: count }, async (_value, index) => ({
+      tile: (await tiles.nth(index).boundingBox())!,
+      link: (await tiles.nth(index).locator('.agent-pick, .button').boundingBox())!,
+    })),
+  );
+  const rowKeys = [...new Set(links.map((entry) => Math.round(entry.tile.y)))];
+  const misaligned = rowKeys.filter((key) => {
+    const positions = links.filter((entry) => Math.round(entry.tile.y) === key).map((entry) => Math.round(entry.link.y));
+    return new Set(positions).size > 1;
+  });
+  expect(misaligned).toEqual([]);
+  expect(links.filter((entry) => entry.link.height < MINIMUM_TOUCH_TARGET)).toEqual([]);
+});
+
+test('the decoration of the final call stays inside its rounded corner', async ({ page }) => {
+  await page.goto('/');
+  const offsets = await page.evaluate(
+    `(() => { const style = getComputedStyle(document.querySelector('.final'), '::after'); return [parseFloat(style.top), parseFloat(style.right)]; })()`,
+  );
+  expect((offsets as number[]).filter((offset) => offset < 0)).toEqual([]);
 });
