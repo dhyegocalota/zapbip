@@ -1,4 +1,4 @@
-import { DUMMY_PASSWORD_HASH } from '../../contract/constants';
+import { DUMMY_PASSWORD_HASH, PASSWORD_SUBMIT_MAX_LENGTH } from '../../contract/constants';
 import type { Bindings } from '../../contract/env';
 import { LogEvent } from '../../contract/log';
 import { logEvent } from '../../log';
@@ -56,7 +56,8 @@ export async function attemptPasswordSignIn(input: {
   await releaseExpiredLock({ database, now, counter: FailureCounter.Code });
   const operator = await readOperator({ database });
   const { isEmailKnown, storedHash } = storedCredentialOf({ operator, email: normalizeEmail({ value: input.email }) });
-  const isPasswordValid = await verifyPassword({ password, pepper: env.BACKOFFICE_PASSWORD_PEPPER, storedHash });
+  const isPasswordSubmittable = password.length <= PASSWORD_SUBMIT_MAX_LENGTH;
+  const isPasswordValid = isPasswordSubmittable && (await verifyPassword({ password, pepper: env.BACKOFFICE_PASSWORD_PEPPER, storedHash }));
   const isSignInLocked =
     isLocked({ operator, now, counter: FailureCounter.Password }) || isLocked({ operator, now, counter: FailureCounter.Code });
   if (isSignInLocked) return { outcome: PasswordSignInOutcome.Failed };
