@@ -82,7 +82,7 @@ waitlistRoutes.get(BackofficePath.WaitlistExport, async (context) => {
   const rows = await listWaitlist({ database: context.env.CONNECTIONS, limit: NO_ROW_LIMIT });
   await auditWaitlist({ context, action: BackofficeAuditAction.WaitlistExported, targetId: null });
   const day = new Date(Date.now()).toISOString().slice(0, ISO_DAY_LENGTH);
-  return context.body(toWaitlistCsv({ rows }), HttpStatus.Ok, {
+  return context.body(toWaitlistCsv({ rows, locale: context.get('locale') }), HttpStatus.Ok, {
     'Content-Type': CSV_CONTENT_TYPE,
     'Content-Disposition': `attachment; filename="zapbip-waitlist-${day}.csv"`,
   });

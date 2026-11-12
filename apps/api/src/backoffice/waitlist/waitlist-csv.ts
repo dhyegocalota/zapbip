@@ -1,3 +1,4 @@
+import type { OwnerLocale } from '@zapbip/types';
 export type WaitlistListRow = {
   email: string;
   joinedAt: number;
@@ -30,6 +31,6 @@ function lineOf(input: { row: WaitlistListRow }): string {
   return `${cells.map((text) => cellOf({ text })).join(CELL_SEPARATOR)}${LINE_BREAK}`;
 }
 
-export function toWaitlistCsv(input: { rows: WaitlistListRow[] }): string {
+export function toWaitlistCsv(input: { rows: WaitlistListRow[]; locale: OwnerLocale }): string {
   return `${HEADER_CELLS.join(CELL_SEPARATOR)}${LINE_BREAK}${input.rows.map((row) => lineOf({ row })).join('')}`;
 }

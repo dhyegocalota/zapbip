@@ -13,7 +13,7 @@ import { readReferralCap } from '../../src/site/site-settings';
 import { escapedHtml } from '../support/site';
 import { resetWaitlist, seedWaitlistRow } from '../support/waitlist';
 import { testEnv } from '../support/workers-env';
-import { requestBackoffice } from './backoffice-auth-fixtures';
+import { requestBackoffice, SESSION_COOKIE } from './backoffice-auth-fixtures';
 import {
   endBackofficeSession,
   followRedirect,
@@ -35,7 +35,8 @@ const WAITLIST_PATH = '/waitlist';
 const EXPORT_PATH = '/waitlist/export.csv';
 const CAP_PATH = '/waitlist/cap';
 const CAP_FIELD = 'cap';
-const CSV_HEADER = 'email,joined_at,credited_referrals,referred_by\n';
+const CSV_HEADER = 'email,entrou_em,indicacoes_creditadas,indicado_por\n';
+const ENGLISH_CSV_HEADER = 'email,joined_at,credited_referrals,referred_by\n';
 const copy = BACKOFFICE_COPY[OwnerLocale.PortugueseBrazil];
 const MINUTE = 60_000;
 
@@ -254,5 +255,14 @@ describe('the CSV export', () => {
 
   test('exports only the header for an empty list', async () => {
     expect(await (await getPage({ path: EXPORT_PATH, sessionToken })).text()).toBe(CSV_HEADER);
+  });
+
+  test('writes the header in English for an English browser', async () => {
+    const response = await requestBackoffice({
+      path: EXPORT_PATH,
+      cookies: { [SESSION_COOKIE]: sessionToken },
+      headers: { 'Accept-Language': 'en-US' },
+    });
+    expect(await response.text()).toBe(ENGLISH_CSV_HEADER);
   });
 });

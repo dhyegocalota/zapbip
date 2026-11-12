@@ -102,8 +102,10 @@ describe('GET /', () => {
     expect(html).toContain('class="demo-poster"');
     expect(html).toContain('fetchpriority="high"');
     expect(html).toMatch(/<video[^>]*\bmuted\b[^>]*\bloop\b[^>]*\bplaysinline\b[^>]*preload="none"/);
-    expect(html).toContain('/site/demo-960.mp4');
-    expect(html).toContain('/site/demo-960.webm');
+    expect(html).toContain('/site/demo-en_US-960.mp4');
+    expect(html).toContain('/site/demo-en_US-960.webm');
+    expect(html).toContain('/site/demo-en_US-poster-960.webp');
+    expect(html).not.toContain('pt_BR-960');
   });
 
   it('has the sections of the design in order', async () => {
@@ -118,7 +120,8 @@ describe('GET /', () => {
   it('puts the canonical, social and alternate links in the head', async () => {
     const html = await pageOf({ headers: ENGLISH_HEADERS });
     expect(html).toContain(`<link rel="canonical" href="${SITE_ORIGIN}/"`);
-    expect(html).toContain(`<meta property="og:image" content="${SITE_ORIGIN}/site/og.png"`);
+    expect(html).toContain(`<meta property="og:image" content="${SITE_ORIGIN}/site/og-en_US.png"`);
+    expect(html).toContain(`<meta name="twitter:image" content="${SITE_ORIGIN}/site/og-en_US.png"`);
     expect(html).toContain('<meta property="og:image:width" content="1200"');
     expect(html).toContain('<meta property="og:image:height" content="630"');
     expect(html).toContain('<meta name="twitter:card" content="summary_large_image"');
@@ -150,6 +153,33 @@ describe('GET /', () => {
   it('applies the theme cookie to the document', async () => {
     const html = await pageOf({ headers: { Cookie: `${THEME_COOKIE}=dark` } });
     expect(html).toContain('data-theme="dark"');
+  });
+});
+
+describe('the Portuguese page', () => {
+  it('chooses the Portuguese demo, poster, social image and widget language', async () => {
+    const html = await pageOf({ headers: PORTUGUESE_HEADERS });
+    expect(html).toContain('/site/demo-pt_BR-960.mp4');
+    expect(html).toContain('/site/demo-pt_BR-960.webm');
+    expect(html).toContain('/site/demo-pt_BR-poster-960.webp');
+    expect(html).toContain('/site/demo-pt_BR-poster-540.webp');
+    expect(html).toContain(`<meta property="og:image" content="${SITE_ORIGIN}/site/og-pt_BR.png"`);
+    expect(html).toContain(`<meta name="twitter:image" content="${SITE_ORIGIN}/site/og-pt_BR.png"`);
+    expect(html).toContain('data-language="pt-br"');
+    expect(html).not.toContain('en_US-960');
+  });
+
+  it('writes the title, description, alt text and privacy note in Portuguese', async () => {
+    const html = await pageOf({ headers: PORTUGUESE_HEADERS });
+    const copy = (key: SiteCopyKey): string => copyHtml({ key, locale: OwnerLocale.PortugueseBrazil });
+    expect(html).toContain(`<title>${copy(SiteCopyKey.MetaTitle)} · zapbip</title>`);
+    expect(html).toContain(copy(SiteCopyKey.MetaOgImageAlt));
+    expect(html).toContain(copy(SiteCopyKey.PrivacyNoteShort));
+  });
+
+  it('shows every error state in Portuguese', async () => {
+    const response = await siteFetch({ path: '/nope', headers: PORTUGUESE_HEADERS });
+    expect(await response.text()).toContain(copyHtml({ key: SiteCopyKey.NotFoundTitle, locale: OwnerLocale.PortugueseBrazil }));
   });
 });
 
