@@ -13,6 +13,7 @@ import { localeRoutes } from './routes/locale-routes';
 import { themeRoutes } from './routes/theme-routes';
 import { metricsRoutes } from './metrics/metrics-routes';
 import { numbersRoutes } from './numbers/numbers-routes';
+import { waitlistRoutes } from './waitlist/waitlist-routes';
 import { requestContext } from './request-context';
 import { signInRoutes } from './routes/sign-in-routes';
 import { handleBackofficeError, securityHeaders } from './security-headers';
@@ -24,6 +25,9 @@ const PROTECTED_PATHS = [
   `${BackofficePath.Numbers}/*`,
   BackofficePath.Metrics,
   BackofficePath.Audit,
+  BackofficePath.Waitlist,
+  BackofficePath.WaitlistExport,
+  BackofficePath.WaitlistCap,
 ];
 
 const FORM_PATHS = [BackofficePath.SignIn, BackofficePath.SignInCode, BackofficePath.Locale, BackofficePath.Theme, ...PROTECTED_PATHS];
@@ -49,6 +53,7 @@ export function createBackofficeApp(): Hono<BackofficeEnv> {
   app.route('/', auditRoutes);
   app.route('/', metricsRoutes);
   app.route('/', numbersRoutes);
+  app.route('/', waitlistRoutes);
   app.notFound((context) => errorResponse({ context, status: HttpStatus.NotFound }));
   return app;
 }

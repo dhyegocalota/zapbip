@@ -56,7 +56,9 @@ async function auditRows(): Promise<{ action: string; outcome: string; target_id
 }
 
 async function actionRows(input: { action: BackofficeAuditAction }): Promise<{ outcome: string; target_id: string | null }[]> {
-  return (await auditRows()).filter((row) => row.action === input.action);
+  return (await auditRows())
+    .filter((row) => row.action === input.action)
+    .map((row) => ({ outcome: row.outcome, target_id: row.target_id }));
 }
 
 beforeEach(async () => {

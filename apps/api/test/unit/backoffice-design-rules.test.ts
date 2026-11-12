@@ -29,6 +29,7 @@ const STATE_ONLY_CLASSES = [
   'budget-status',
   'bar',
   'chart-axis-maximum',
+  'waitlist-row',
 ];
 const FORCED_COLORS_PATTERN = /@media \(forced-colors: active\)/;
 const FORCED_COLORS_BLOCK_PATTERN = /@media \(forced-colors: active\) \{[\s\S]*?\n\}/;
