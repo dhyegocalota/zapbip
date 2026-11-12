@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { reset } from 'cloudflare:test';
 import usageMigrationSql from '../../migrations/0003_usage.sql?raw';
-import passwordMigrationSql from '../../migrations/0009_backoffice_password_sign_in.sql?raw';
 import {
   applyAccountsMigration,
   applyActivityMigration,
@@ -11,6 +10,7 @@ import {
   applyCoreMigration,
   applyMetaOnboardingMigration,
   applyMigration,
+  applyPasswordSignInMigration,
 } from '../support/seed';
 import { testEnv } from '../support/workers-env';
 
@@ -57,7 +57,7 @@ describe('migration 0009 on top of 0001 to 0008', () => {
         'INSERT INTO backoffice_sessions (token_digest, created_at, last_seen_at, expires_at) VALUES (?, ?, ?, ?)',
       ).bind(SESSION_DIGEST, SESSION_AT, SESSION_AT, SESSION_AT),
     ]);
-    await applyMigration({ sql: passwordMigrationSql });
+    await applyPasswordSignInMigration();
   });
 
   it('ends every session', async () => {
