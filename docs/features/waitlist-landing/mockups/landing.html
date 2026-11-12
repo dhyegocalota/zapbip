@@ -81,7 +81,8 @@
         --shadow-card: 0 1px 2px rgb(14 31 26 / 0.05), 0 8px 24px -12px rgb(14 31 26 / 0.12);
         --shadow-highlight: inset 0 1px 0 rgb(255 255 255 / 0.16);
         --glow-signal: 0 0 0 4px rgb(37 211 102 / 0.18);
-        --gradient-hero: radial-gradient(48rem 32rem at 78% 6rem, rgb(37 211 102 / 0.26), transparent 70%),
+        --gradient-hero:
+          radial-gradient(48rem 32rem at 78% 6rem, rgb(37 211 102 / 0.26), transparent 70%),
           radial-gradient(40rem 24rem at 0% 0%, rgb(18 140 126 / 0.12), transparent 70%);
         --gradient-hero-border: linear-gradient(135deg, var(--color-signal), var(--color-brand));
         --gradient-accent-text: linear-gradient(100deg, var(--color-action), var(--color-brand));
@@ -90,7 +91,8 @@
         --elevation-hero: 0 2px 4px rgb(14 31 26 / 0.06), 0 24px 48px -20px rgb(37 211 102 / 0.38);
         --elevation-stage: 0 2px 4px rgb(14 31 26 / 0.08), 0 40px 80px -32px rgb(14 31 26 / 0.45), 0 24px 64px -24px rgb(37 211 102 / 0.3);
         --pattern-dots: radial-gradient(rgb(14 31 26 / 0.07) 1px, transparent 1.5px);
-        --mark-bubble: radial-gradient(circle at 30% 50%, var(--color-on-brand) 0.07em, transparent 0.09em),
+        --mark-bubble:
+          radial-gradient(circle at 30% 50%, var(--color-on-brand) 0.07em, transparent 0.09em),
           radial-gradient(circle at 50% 50%, var(--color-on-brand) 0.07em, transparent 0.09em),
           radial-gradient(circle at 70% 50%, var(--color-on-brand) 0.07em, transparent 0.09em), var(--color-brand);
       }
@@ -122,7 +124,8 @@
         --color-bezel: #020806;
         --shadow-card: 0 0 0 1px rgb(232 241 237 / 0.02), 0 12px 32px -16px rgb(0 0 0 / 0.7);
         --shadow-highlight: inset 0 1px 0 rgb(255 255 255 / 0.22);
-        --gradient-hero: radial-gradient(48rem 32rem at 78% 6rem, rgb(37 211 102 / 0.24), transparent 70%),
+        --gradient-hero:
+          radial-gradient(48rem 32rem at 78% 6rem, rgb(37 211 102 / 0.24), transparent 70%),
           radial-gradient(40rem 24rem at 0% 0%, rgb(18 140 126 / 0.16), transparent 70%);
         --gradient-accent-text: linear-gradient(100deg, var(--color-brand), var(--color-action));
         --elevation-hero: 0 0 0 1px rgb(232 241 237 / 0.04), 0 32px 64px -20px rgb(37 211 102 / 0.32);
@@ -261,7 +264,9 @@
       .button-primary {
         background: var(--color-action);
         color: var(--color-on-action);
-        box-shadow: var(--shadow-highlight), 0 8px 16px -8px color-mix(in srgb, var(--color-action) 45%, transparent);
+        box-shadow:
+          var(--shadow-highlight),
+          0 8px 16px -8px color-mix(in srgb, var(--color-action) 45%, transparent);
       }
 
       .button-secondary {
@@ -469,7 +474,9 @@
       .hero-card {
         border: 1px solid transparent;
         border-radius: var(--radius-bubble);
-        background: linear-gradient(var(--color-surface), var(--color-surface)) padding-box, var(--gradient-hero-border) border-box;
+        background:
+          linear-gradient(var(--color-surface), var(--color-surface)) padding-box,
+          var(--gradient-hero-border) border-box;
         box-shadow: var(--elevation-hero);
       }
 
@@ -650,7 +657,9 @@
         padding: 1.1cqw;
         border-radius: 5.2cqw;
         background: var(--color-bezel);
-        box-shadow: 0 0 0 1px #1f332d, 0 3cqw 6cqw -2cqw rgb(0 0 0 / 0.6);
+        box-shadow:
+          0 0 0 1px #1f332d,
+          0 3cqw 6cqw -2cqw rgb(0 0 0 / 0.6);
       }
 
       .phone-screen {
@@ -685,7 +694,9 @@
         height: 3.3cqw;
         border-radius: 50%;
         background: #fff;
-        box-shadow: inset 0 0 0 0.9cqw #fff, inset 0 0 0 3cqw #0b6b60;
+        box-shadow:
+          inset 0 0 0 0.9cqw #fff,
+          inset 0 0 0 3cqw #0b6b60;
       }
 
       .phone-chat {
@@ -1257,14 +1268,16 @@
                 <strong>The waitlist is paused</strong>
                 <p>We'll reopen it soon. Come back in a little while.</p>
               </div>
-              <form class="join-form" action="#" onsubmit="return false">
+              <form class="join-form" action="#" onsubmit="return false;">
                 <label class="visually-hidden" for="join-email">Your email address</label>
                 <div class="join-row">
                   <input id="join-email" type="email" placeholder="you@example.com" autocomplete="email" />
                   <button class="button button-primary button-arrow" type="submit">Join the waitlist</button>
                 </div>
                 <p class="field-error state-only state-invalid" id="join-email-error">Enter an email like name@example.com.</p>
-                <div class="turnstile-slot" aria-hidden="true"><span class="turnstile-check">✓</span>Success! (Turnstile widget slot, 65 px)</div>
+                <div class="turnstile-slot" aria-hidden="true">
+                  <span class="turnstile-check">✓</span>Success! (Turnstile widget slot, 65 px)
+                </div>
               </form>
               <p class="privacy-note">
                 We keep your email, language and referral data. No IP address, no tracking cookies. <a href="#privacy">Privacy</a>
@@ -1329,8 +1342,8 @@
               <li>It keeps going</li>
             </ol>
             <p class="visually-hidden" id="demo-description">
-              A coding agent in a terminal asks "Deploy v2.4 to production?". The question arrives on WhatsApp with two buttons, Ship it and Wait. The owner
-              taps Ship it, and the agent deploys and replies "Done. v2.4 is live."
+              A coding agent in a terminal asks "Deploy v2.4 to production?". The question arrives on WhatsApp with two buttons, Ship it and
+              Wait. The owner taps Ship it, and the agent deploys and replies "Done. v2.4 is live."
             </p>
           </figure>
         </div>
@@ -1435,10 +1448,18 @@
           <p class="eyebrow">Works with</p>
           <h2 class="section-title" id="clients-title">The agents you already use.</h2>
           <div class="clients">
-            <div class="card client"><strong>Claude Code</strong><span><i class="live-dot"></i>wakes in ~7 s</span></div>
-            <div class="card client"><strong>Codex</strong><span><i class="live-dot"></i>wakes in ~6 s</span></div>
-            <div class="card client"><strong>Grok Bot</strong><span><i class="live-dot"></i>wakes in ~9 s</span></div>
-            <div class="card client"><strong>claude.ai</strong><span><i class="live-dot"></i>wakes in ~16 s</span></div>
+            <div class="card client">
+              <strong>Claude Code</strong><span><i class="live-dot"></i>wakes in ~7 s</span>
+            </div>
+            <div class="card client">
+              <strong>Codex</strong><span><i class="live-dot"></i>wakes in ~6 s</span>
+            </div>
+            <div class="card client">
+              <strong>Grok Bot</strong><span><i class="live-dot"></i>wakes in ~9 s</span>
+            </div>
+            <div class="card client">
+              <strong>claude.ai</strong><span><i class="live-dot"></i>wakes in ~16 s</span>
+            </div>
             <div class="card client"><strong>ChatGPT</strong><span>checks every hour</span></div>
             <div class="card client"><strong>Cursor</strong><span>runs on your computer</span></div>
             <div class="card client"><strong>Gemini CLI</strong><span>runs on your computer</span></div>
@@ -1472,8 +1493,8 @@
           <div class="band-note">
             <strong>About this waitlist</strong>
             <p>
-              We keep your email, language and referral data only to invite you. We store no IP address and set no tracking cookies; two cookies remember
-              your language and theme. To be removed, write to <a href="#">dhyego@logicbit.com.br</a>.
+              We keep your email, language and referral data only to invite you. We store no IP address and set no tracking cookies; two
+              cookies remember your language and theme. To be removed, write to <a href="#">dhyego@logicbit.com.br</a>.
             </p>
           </div>
         </div>
@@ -1505,11 +1526,17 @@
           </details>
           <details>
             <summary>How do invites work?</summary>
-            <p>After you join, you get a personal link. Each friend who joins with it moves you up the list. There is a limit per person, shown after you join.</p>
+            <p>
+              After you join, you get a personal link. Each friend who joins with it moves you up the list. There is a limit per person,
+              shown after you join.
+            </p>
           </details>
           <details>
             <summary>What do you do with my email?</summary>
-            <p>We use it only to invite you when access opens. No IP address, no tracking cookies. To be removed, write to dhyego@logicbit.com.br.</p>
+            <p>
+              We use it only to invite you when access opens. No IP address, no tracking cookies. To be removed, write to
+              dhyego@logicbit.com.br.
+            </p>
           </details>
         </div>
       </section>
