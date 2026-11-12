@@ -305,6 +305,7 @@ export enum HttpStatus {
   Ok = 200,
   Created = 201,
   MultipleChoices = 300,
+  MovedPermanently = 301,
   Found = 302,
   BadRequest = 400,
   Unauthorized = 401,

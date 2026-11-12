@@ -26,5 +26,8 @@ export type Bindings = {
   BACKOFFICE_PASSWORD_PEPPER: string;
   BACKOFFICE_ORIGIN: string;
   BACKOFFICE_RATE_LIMITER: RateLimit;
+  SITE_ORIGIN: string;
+  TURNSTILE_SITE_KEY: string;
+  TURNSTILE_SECRET_KEY?: string;
   WAKE_METRICS: AnalyticsEngineDataset;
 };
