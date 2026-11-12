@@ -27,7 +27,7 @@ Facts found in the code that shape the design:
 - Passwords are hashed with PBKDF2-SHA256 through WebCrypto at 20000 iterations over a pepper digest, with a 16-byte salt, stored as one self-describing string. The comparison is constant time.
 - A password is 12 to 128 characters after Unicode normalisation. The length check runs on the normalised value, so a string that normalises to a valid length is accepted.
 - An unknown email and a wrong password look the same to the caller: one status, one redirect, one notice, one audit action, the same number of hash operations.
-- The existing lockout counter and rate limit apply to both steps. The rate limit keeps its key and scope. The lockout counter keeps its global operator row and its values.
+- The existing lockout counter and rate limit apply to both steps. The rate limit keeps its key and scope. The wrong-code counter keeps its global operator row and its values; wrong passwords and unknown emails use a second counter and lock on the same row (`password_failed_attempts`, `password_locked_until`) that gates only `POST /sign-in`, so a password-step flood never blocks the code step or step-up.
 - The enrollment CLI asks for the email and the password with hidden input and a confirmation. It keeps the TOTP enrollment exactly as it is. The owner runs it in his own terminal.
 - Migration `0009` adds the email and the password hash to `backoffice_operator`, and creates the pending-state table. Existing operators cannot sign in until they re-enroll.
 - Copy for both sign-in pages in pt_BR and en_US, in `backoffice-copy.ts`. The language and theme switchers keep working on both pages.
@@ -48,7 +48,7 @@ Facts found in the code that shape the design:
 | Question | Decision | Why |
 |----------|----------|-----|
 | Where does the password hash live? | Columns `email` and `password_hash` on `backoffice_operator` | The operator is already the singleton row. A new table would hold one row for nothing. |
-| Which counter does a wrong password use? | The same global lockout as a wrong code, with the same threshold and window | The owner asked for the same lockout on both steps. A per-address counter is not possible, because the lock is global today. |
+| Which counter does a wrong password use? | Its own global counter and lock, with the same threshold and window, gating only the password step; wrong codes and step-up keep the existing counter | The owner asked for the same lockout on both steps. A per-address counter is not possible, because the lock is global today. |
 | Does an unknown email count? | Yes, exactly as a wrong password does | A counted failure that looks the same from outside leaks nothing. Not counting it would reveal the difference. |
 | Does a wrong code use up the pending state? | Yes. Any submit to `/sign-in/code` consumes it | Single-use, as ordered. The cost is that a typo means signing in again. |
 | What does a missing or expired pending state count as? | Nothing: no counter, no audit row, only the rate limit | No password was proven, so the counter does not move. This stops a cookie-less client from locking the owner out. |

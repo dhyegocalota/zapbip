@@ -36,6 +36,8 @@ You do all of this by hand ([ADR 0031](../adr/0031-the-backoffice-is-a-separate-
 
 6. **Recover: re-enroll or wait out a lockout.** A lost authenticator, a forgotten password, a suspected leak and a lockout (ten consecutive failures lock sign-in for 15 minutes, even with the right factors) are all fixed the same way: run step 1 again. It sets a new email and password, a new pepper and a new authenticator entry, invalidates the old ones, drops every session and pending sign-in and clears the lock. There are no recovery codes. After a lockout you may instead wait 15 minutes.
 
+   If the lockout is a sustained flood rather than your own mistakes: a stranger can lock the password step only (never the code step or a registry change you are already signed in for) by repeating wrong passwords; waiting 15 minutes or re-enrolling clears it, and against a sustained flood add a Cloudflare WAF custom rule or a rate-limiting rule on `POST /sign-in` for the backoffice host (Security, WAF), for example by blocking or challenging clients that send more than a handful of requests a minute to that path.
+
    Expect: the old password and the old authenticator entry are refused, the new pair signs in, and the audit log shows `operator.enrolled`.
 
    If it fails: if the enrollment script cannot write the secrets, the Cloudflare token is missing a permission ([cloudflare-setup.md](cloudflare-setup.md), step 4). Remove the old authenticator entry yourself.

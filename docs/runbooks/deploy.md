@@ -119,9 +119,9 @@ Follow the steps in order. Each step names the runbook that holds its detail, an
    Expect: `pnpm migrate:staging` applies the migrations, including `0005`.
 
    If it fails: a failed migration leaves the previous Worker serving; fix it with a new numbered migration.
-8. **Enroll the backoffice on staging.** Do step 1 of `backoffice.md` from your own terminal.
+8. **Make sure the backoffice secrets exist, then enroll on staging.** The order is migrate (step 7), then both `BACKOFFICE_PASSWORD_PEPPER` and `BACKOFFICE_TOTP_SECRET` must exist, because the deploy preflight refuses without every Worker secret, then deploy (step 9), then the owner enrolls. The normal path is to do step 1 of `backoffice.md` from your own terminal now: it writes both secrets and sets your email and password. The orchestrator's path puts a generated pepper before the first deploy with `openssl rand -base64 32 | pnpm --filter @zapbip/api exec wrangler secret put BACKOFFICE_PASSWORD_PEPPER --env staging`, and your enrollment afterwards replaces it with a fresh one; that invalidates nothing, because no password hash exists before the first enrollment.
 
-   Expect: `wrangler secret list --env staging` names all eight secrets, and you hold the backoffice key and the authenticator entry.
+   Expect: `wrangler secret list --env staging` names all eight secrets, and after your enrollment you hold your password and the authenticator entry.
 
    If it fails: nothing was written when the code mismatched; run it again.
 9. **Deploy staging.** Do step 5 of `deploy.md` for staging, with `pnpm deploy:staging --first-deploy`.
@@ -178,7 +178,7 @@ Follow the steps in order. Each step names the runbook that holds its detail, an
     If it fails: a failed migration leaves the previous Worker serving; fix it with a new numbered migration.
 19. **Enroll the backoffice on production.** Do step 1 of `backoffice.md` with `pnpm backoffice:enroll:production`, from your own terminal.
 
-    Expect: `wrangler secret list` names all eight secrets, and you hold a separate production key and authenticator entry.
+    Expect: `wrangler secret list` names all eight secrets, and you hold a separate production password and authenticator entry. The same order applies: migrate, make sure the pepper exists, deploy, then enroll.
 
     If it fails: nothing was written when the code mismatched; run it again.
 20. **Production deploy.** Do step 5 of `deploy.md` for production, with `pnpm deploy:production --first-deploy`, then step 3 of `dns.md` for the host check.
