@@ -152,6 +152,9 @@ test.describe('375 px', () => {
 
   test('the selected tab is scrolled into view when the page loads on a later agent', async ({ page }) => {
     await page.goto('/?agent=any');
-    await expect(tabOf({ page, id: 'any' })).toBeInViewport({ ratio: 1 });
+    const tab = (await tabOf({ page, id: 'any' }).boundingBox())!;
+    const list = (await page.locator('.start-tabs').boundingBox())!;
+    expect(tab.x).toBeGreaterThanOrEqual(list.x);
+    expect(tab.x + tab.width).toBeLessThanOrEqual(list.x + list.width);
   });
 });

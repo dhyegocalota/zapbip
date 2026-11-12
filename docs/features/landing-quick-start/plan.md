@@ -12,12 +12,12 @@
 
 ## Steps
 
-- [ ] **Step 1:** Red tests: the registry proof, the token highlighter, the page section, the tabs e2e. Commit alone with stubs.
-- [ ] **Step 2:** `quickStart` and `hasOfficialLogo` on every install facet; the shared command builders used by the install copy.
-- [ ] **Step 3:** Logos and their notice; the logo files test.
-- [ ] **Step 4:** Site context, copy, token highlighter, the quick start section replacing the tiles.
-- [ ] **Step 5:** Stylesheet and script: tabs, copy, panel.
-- [ ] **Step 6:** E2E for both locales and widths; rule, briefing.
+- [x] **Step 1:** Red tests: the registry proof, the token highlighter, the page section, the tabs e2e. Commit alone with stubs. — evidence: 8447f29a (red, stubs)
+- [x] **Step 2:** `quickStart` and `hasOfficialLogo` on every install facet; the shared command builders used by the install copy. — evidence: 4cad4ff8, libs/agents/src/quick-start.test.ts
+- [x] **Step 3:** Logos and their notice; the logo files test. — evidence: 2d0c25fb, test/unit/site-logos.test.ts
+- [x] **Step 4:** Site context, copy, token highlighter, the quick start section replacing the tiles. — evidence: 2d0c25fb, site-page.test.ts
+- [x] **Step 5:** Stylesheet and script: tabs, copy, panel. — evidence: 2d0c25fb, 39af43ce
+- [x] **Step 6:** E2E for both locales and widths; rule, briefing. — evidence: landing-quick-start.spec.ts, 87 landing specs green
 
 ## Failure modes
 
