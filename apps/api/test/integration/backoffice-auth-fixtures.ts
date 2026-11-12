@@ -6,7 +6,13 @@ import { createExecutionContext } from 'cloudflare:test';
 import { createFakeRateLimiter } from '../support/fake-rate-limiter';
 import { applyDirectoryMigration } from '../support/seed';
 import { testEnv } from '../support/workers-env';
-import { BACKOFFICE_TEST_KEY, BACKOFFICE_TEST_TOTP_SECRET } from '../support/backoffice-credentials';
+import {
+  BACKOFFICE_TEST_EMAIL,
+  BACKOFFICE_TEST_KEY,
+  BACKOFFICE_TEST_PASSWORD,
+  BACKOFFICE_TEST_PASSWORD_HASH,
+  BACKOFFICE_TEST_TOTP_SECRET,
+} from '../support/backoffice-credentials';
 
 export const BACKOFFICE_ORIGIN = 'http://backoffice.localhost:8787';
 export const CLIENT_ADDRESS = '203.0.113.7';
@@ -15,7 +21,7 @@ export const CSRF_COOKIE = '__Host-zb_bo_csrf';
 export const WRONG_KEY = `zb_bo_${'W'.repeat(43)}`;
 export const WRONG_CODE = '000000';
 export const SIGN_IN_FAILED_LOCATION = '/sign-in?notice=SignInFailed';
-export { BACKOFFICE_TEST_KEY };
+export { BACKOFFICE_TEST_EMAIL, BACKOFFICE_TEST_KEY, BACKOFFICE_TEST_PASSWORD };
 
 const UNLIMITED = Number.MAX_SAFE_INTEGER;
 const migrated = applyDirectoryMigration();
@@ -40,8 +46,11 @@ export async function resetBackoffice(): Promise<void> {
   await migrated;
   await testEnv.CONNECTIONS.batch([
     testEnv.CONNECTIONS.prepare('DELETE FROM backoffice_sessions'),
+    testEnv.CONNECTIONS.prepare('DELETE FROM backoffice_pending_sign_ins'),
     testEnv.CONNECTIONS.prepare('DELETE FROM backoffice_audit'),
-    testEnv.CONNECTIONS.prepare('UPDATE backoffice_operator SET last_totp_step = 0, failed_attempts = 0, locked_until = NULL WHERE id = 1'),
+    testEnv.CONNECTIONS.prepare(
+      'UPDATE backoffice_operator SET last_totp_step = 0, failed_attempts = 0, locked_until = NULL, email = ?, password_hash = ? WHERE id = 1',
+    ).bind(BACKOFFICE_TEST_EMAIL, BACKOFFICE_TEST_PASSWORD_HASH),
   ]);
 }
 

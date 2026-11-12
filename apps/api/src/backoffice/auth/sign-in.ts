@@ -17,6 +17,34 @@ export enum SignInOutcome {
 
 export type SignInResult = { outcome: SignInOutcome.Succeeded; sessionToken: string } | { outcome: SignInOutcome.Failed };
 
+export enum PasswordSignInOutcome {
+  Accepted = 'accepted',
+  Failed = 'failed',
+}
+
+export type PasswordSignInResult =
+  { outcome: PasswordSignInOutcome.Accepted; pendingToken: string } | { outcome: PasswordSignInOutcome.Failed };
+
+export function attemptPasswordSignIn(input: {
+  env: Bindings;
+  email: string;
+  password: string;
+  now: number;
+  clientAddress: string | null;
+}): Promise<PasswordSignInResult> {
+  throw new Error('attemptPasswordSignIn is not implemented');
+}
+
+export function attemptCodeSignIn(input: {
+  env: Bindings;
+  pendingToken: string;
+  code: string;
+  now: number;
+  clientAddress: string | null;
+}): Promise<SignInResult> {
+  throw new Error('attemptCodeSignIn is not implemented');
+}
+
 export async function isBackofficeKey(input: { submittedKey: string; expectedDigest: string }): Promise<boolean> {
   const submittedDigest = await sha256Hex({ value: input.submittedKey });
   return constantTimeEqual({ left: submittedDigest, right: input.expectedDigest });
