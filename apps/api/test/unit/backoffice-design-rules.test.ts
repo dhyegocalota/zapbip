@@ -36,6 +36,10 @@ const FIELDSET_RULE_PATTERN = /\nfieldset \{[^}]*border: 0;/;
 const LEGEND_RULE_PATTERN = /\nlegend \{[^}]*font-weight: 600;/;
 const TOP_LEVEL_LINE_PATTERN = /^\S/;
 const BLOCK_END = '}';
+const INPUT_TYPE_PATTERN = /<input\b[^>]*\stype="([a-z]+)"/g;
+const UNSTYLED_INPUT_TYPES = ['hidden', 'submit', 'checkbox', 'radio'];
+const FIELD_RULE_PATTERN = /((?:input\[type='[a-z]+'\],\s*)+)select \{/;
+const SELECTOR_TYPE_PATTERN = /input\[type='([a-z]+)'\]/g;
 const REDUCED_MOTION_GUARD_PATTERN =
   /@media \(prefers-reduced-motion: reduce\) \{\s*\*,\s*\*::before,\s*\*::after \{\s*animation: none !important;\s*transition: none !important;\s*\}\s*\}/;
 const INFINITE_ANIMATION_PATTERN = /animation[a-z-]*:[^;]*\binfinite\b/;
@@ -117,6 +121,18 @@ function viewSources(input: { directory: string }): { path: string; source: stri
 const ONBOARDING_VIEW = 'connect-meta.tsx';
 
 describe('design rules', () => {
+  it('styles every input type a view renders with the field rule', () => {
+    const renderedTypes = new Set(
+      Object.values(PAGES)
+        .flatMap((html) => [...html.matchAll(INPUT_TYPE_PATTERN)].map((match) => match[1]!))
+        .filter((type) => !UNSTYLED_INPUT_TYPES.includes(type)),
+    );
+    const fieldRule = FIELD_RULE_PATTERN.exec(STYLESHEET);
+    if (fieldRule === null) throw new Error('the stylesheet has no field rule');
+    const styledTypes = [...fieldRule[1]!.matchAll(SELECTOR_TYPE_PATTERN)].map((match) => match[1]!);
+    expect([...renderedTypes].filter((type) => !styledTypes.includes(type))).toEqual([]);
+  });
+
   it('has no style attribute or style element in any view', () => {
     const offenders = viewSources({ directory: BACKOFFICE_ROOT })
       .filter(({ source }) => /\sstyle=|<style/.test(source))
