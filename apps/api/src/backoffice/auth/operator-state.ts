@@ -1,9 +1,16 @@
 import { BACKOFFICE_LOCKOUT_MS, BACKOFFICE_LOCKOUT_THRESHOLD } from '../../contract/constants';
 
-export type OperatorRow = { last_totp_step: number; failed_attempts: number; locked_until: number | null };
+export type OperatorRow = {
+  last_totp_step: number;
+  failed_attempts: number;
+  locked_until: number | null;
+  email: string | null;
+  password_hash: string | null;
+};
 export type FailureRecord = { failedAttempts: number; lockedUntil: number | null };
 
-const READ_OPERATOR_STATEMENT = 'SELECT last_totp_step, failed_attempts, locked_until FROM backoffice_operator WHERE id = 1';
+const READ_OPERATOR_STATEMENT =
+  'SELECT last_totp_step, failed_attempts, locked_until, email, password_hash FROM backoffice_operator WHERE id = 1';
 const RECORD_SUCCESS_STATEMENT =
   'UPDATE backoffice_operator SET last_totp_step = ?, failed_attempts = 0 WHERE id = 1 AND last_totp_step < ?';
 const RELEASE_EXPIRED_LOCK_STATEMENT =
