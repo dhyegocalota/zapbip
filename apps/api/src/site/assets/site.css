@@ -75,7 +75,7 @@
   --measure-scene: 26rem;
   --size-scene-min: 16rem;
   --size-why-track: 90svh;
-  --offset-why-pin: max(5rem, calc(50svh - 13rem));
+  --offset-why-pin: max(5rem, calc(50svh - 8rem));
   --text-why: clamp(1.5rem, 1.1rem + 1.6vw, 2.25rem);
   --distance-reveal: 1.25rem;
   --distance-scene: 1rem;
@@ -1367,6 +1367,14 @@ summary::before {
   font-size: var(--text-section);
 }
 
+.card.hero-card {
+  border-color: transparent;
+  background:
+    linear-gradient(var(--color-surface), var(--color-surface)) padding-box,
+    var(--gradient-hero-border) border-box;
+  box-shadow: var(--elevation-hero);
+}
+
 .join-agent {
   display: inline-block;
   margin: 0 0 var(--space-3);
@@ -1383,9 +1391,22 @@ summary::before {
 }
 
 .agent-card {
+  display: flex;
+  flex-direction: column;
   align-items: flex-start;
   gap: var(--space-3);
   padding: var(--space-5);
+}
+
+.agent-card {
+  transition:
+    transform var(--duration-base) var(--ease-out),
+    box-shadow var(--duration-base) var(--ease-out);
+}
+
+.agent-card:hover {
+  transform: translateY(-0.1875rem);
+  box-shadow: var(--elevation-hero);
 }
 
 .agent-card .agent-name {
@@ -1504,6 +1525,7 @@ summary::before {
 
 .why-list {
   display: grid;
+  overflow-x: clip;
   margin: var(--space-6) 0 0;
   padding: 0;
   list-style: none;
@@ -1558,7 +1580,7 @@ summary::before {
   position: absolute;
   inset: -2rem;
   z-index: -1;
-  background: var(--gradient-stage);
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--color-signal) 24%, transparent), transparent);
 }
 
 .scene {
@@ -1646,8 +1668,12 @@ summary::before {
 }
 
 .route-chat {
-  max-width: 8rem;
   background: transparent;
+}
+
+.route-chat .out {
+  max-width: none;
+  white-space: nowrap;
 }
 
 .route-line {
@@ -1686,10 +1712,11 @@ summary::before {
   justify-content: center;
   min-height: 3.25rem;
   margin-block: var(--space-1);
-  padding: 0 var(--space-4);
+  padding: 0 var(--space-3);
   border: 1px solid var(--color-border-control);
   border-radius: var(--radius-control);
   background: var(--color-surface);
+  white-space: nowrap;
   font-family: var(--font-mono);
   font-size: var(--text-small);
   font-weight: 600;
@@ -1970,9 +1997,9 @@ summary::before {
 
 @media (min-width: 64rem) and (min-height: 40rem) {
   :root {
-    --step-range-start: 22%;
+    --step-range-start: 16%;
     --step-range-span: 12%;
-    --step-range-stride: 5%;
+    --step-range-stride: 4.5%;
   }
 
   .why-item {

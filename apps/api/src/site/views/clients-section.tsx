@@ -1,11 +1,11 @@
-import type { OwnerLocale } from '@zapbip/types';
+import { McpToolName, type OwnerLocale } from '@zapbip/types';
 import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
 import { siteAgents } from '../site-agents';
 import { agentPathOf } from '../site-links';
 
 const PROMPT_GLYPH = '$';
-const AGENT_SNIPPET = 'zapbip.send_message("Done")';
+const AGENT_SNIPPET = `${McpToolName.Ask}(question)`;
 const JOIN_FRAGMENT = '#join';
 
 export function ClientsSection(props: { locale: OwnerLocale; referralCode: string | null }) {
