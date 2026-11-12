@@ -8,6 +8,7 @@ import {
   tellOwnerAndWait,
   type InstallProduct,
 } from '@zapbip/core';
+import { addressText, quickStartOf } from '../../src/quick-start';
 
 export const CURSOR_PRODUCT: InstallProduct = {
   productName: 'Cursor',
@@ -54,3 +55,10 @@ export const CURSOR_COPY = localizeCopy({
       ],
     }),
 });
+
+const CURSOR_QUICK_START_HINT: Record<OwnerLocale, string> = {
+  [OwnerLocale.PortugueseBrazil]: 'Configurações do Cursor → MCP → adicione um servidor HTTP neste endereço',
+  [OwnerLocale.EnglishUs]: 'Cursor Settings → MCP → add an HTTP server at this address',
+};
+
+export const CURSOR_QUICK_START = quickStartOf({ hint: CURSOR_QUICK_START_HINT, code: addressText });

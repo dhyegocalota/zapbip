@@ -5,6 +5,6 @@ export const install: AgentInstall = {
   productName: 'Fixture Connector Agent',
   productDescription: 'Fixture Connector Agent, the agent the tests use',
   hasOfficialLogo: false,
-  quickStart: ({ connectionLink }) => ({ hint: 'Fixture', code: connectionLink, proof: connectionLink }),
+  quickStart: ({ connectionLink }) => ({ hint: 'The agent the tests use', code: connectionLink, proof: connectionLink }),
   render: renderFixtureConnectorAgentSection,
 };

@@ -1,6 +1,7 @@
 import { HEARTBEAT_POLL_INTERVAL_MINUTES, OwnerLocale } from '@zapbip/types';
 import { chatSelfTest, formatSection, localizeCopy, noticeStep, type InstallProduct } from '@zapbip/core';
 import { installCommand } from './plugin';
+import { addressText, quickStartOf } from '../../src/quick-start';
 
 export const HERMES_PRODUCT: InstallProduct = { productName: 'Hermes', productDescription: 'Hermes, the agent running Hermes' };
 
@@ -43,4 +44,15 @@ export const HERMES_COPY = localizeCopy({
         chatSelfTest(section.locale),
       ],
     }),
+});
+
+const HERMES_QUICK_START_HINT: Record<OwnerLocale, string> = {
+  [OwnerLocale.PortugueseBrazil]: 'No config.yaml do Hermes, em mcp_servers',
+  [OwnerLocale.EnglishUs]: 'In the Hermes config.yaml, under mcp_servers',
+};
+
+export const HERMES_QUICK_START = quickStartOf({
+  hint: HERMES_QUICK_START_HINT,
+  code: (connectionLink) => `mcp_servers:\n  zapbip:\n    url: ${connectionLink}`,
+  proof: (connectionLink) => `url: ${connectionLink}`,
 });

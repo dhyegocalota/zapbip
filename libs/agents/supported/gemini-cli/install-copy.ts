@@ -8,11 +8,16 @@ import {
   FAILURE_OUTPUT_LINES,
   type InstallProduct,
 } from '@zapbip/core';
+import { addressText, quickStartOf } from '../../src/quick-start';
 
 export const GEMINI_CLI_PRODUCT: InstallProduct = {
   productName: 'Gemini CLI',
   productDescription: 'Gemini CLI, the agent started by the `gemini` command',
 };
+
+export function geminiCliAddCommand(input: { connectionLink: string }): string {
+  return `gemini mcp add --transport http --scope user zapbip ${input.connectionLink}`;
+}
 
 type GeminiCliText = {
   wakeNote: string;
@@ -51,7 +56,7 @@ export const GEMINI_CLI_COPY = localizeCopy({
           success: '`gemini mcp list` no longer lists zapbip.',
         },
         {
-          action: `Run \`gemini mcp add --transport http --scope user zapbip ${section.connectionLink}\`.`,
+          action: `Run \`${geminiCliAddCommand({ connectionLink: section.connectionLink })}\`.`,
           success: '`gemini mcp list` shows zapbip.',
         },
         terminalListenStep(section),
@@ -63,4 +68,14 @@ export const GEMINI_CLI_COPY = localizeCopy({
       ],
     });
   },
+});
+
+const GEMINI_CLI_QUICK_START_HINT: Record<OwnerLocale, string> = {
+  [OwnerLocale.PortugueseBrazil]: 'Rode no seu terminal',
+  [OwnerLocale.EnglishUs]: 'Run in your terminal',
+};
+
+export const GEMINI_CLI_QUICK_START = quickStartOf({
+  hint: GEMINI_CLI_QUICK_START_HINT,
+  code: (connectionLink) => geminiCliAddCommand({ connectionLink }),
 });

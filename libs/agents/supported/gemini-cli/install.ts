@@ -1,13 +1,9 @@
 import type { InstallSectionInput } from '@zapbip/core';
 import type { AgentInstall } from '../../src/contract';
-import { GEMINI_CLI_COPY, GEMINI_CLI_PRODUCT } from './install-copy';
+import { GEMINI_CLI_COPY, GEMINI_CLI_PRODUCT, GEMINI_CLI_QUICK_START } from './install-copy';
 
 function render(input: InstallSectionInput): string {
   return GEMINI_CLI_COPY[input.locale](input);
 }
 
-function quickStart(): never {
-  throw new Error('quickStart is not implemented');
-}
-
-export const install: AgentInstall = { ...GEMINI_CLI_PRODUCT, hasOfficialLogo: false, quickStart, render };
+export const install: AgentInstall = { ...GEMINI_CLI_PRODUCT, hasOfficialLogo: true, quickStart: GEMINI_CLI_QUICK_START, render };

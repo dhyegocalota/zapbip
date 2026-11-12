@@ -1,13 +1,9 @@
 import type { InstallSectionInput } from '@zapbip/core';
 import type { AgentInstall } from '../../src/contract';
-import { CLAUDE_CODE_COPY, CLAUDE_CODE_PRODUCT } from './install-copy';
+import { CLAUDE_CODE_COPY, CLAUDE_CODE_PRODUCT, CLAUDE_CODE_QUICK_START } from './install-copy';
 
 function render(input: InstallSectionInput): string {
   return CLAUDE_CODE_COPY[input.locale](input);
 }
 
-function quickStart(): never {
-  throw new Error('quickStart is not implemented');
-}
-
-export const install: AgentInstall = { ...CLAUDE_CODE_PRODUCT, hasOfficialLogo: false, quickStart, render };
+export const install: AgentInstall = { ...CLAUDE_CODE_PRODUCT, hasOfficialLogo: true, quickStart: CLAUDE_CODE_QUICK_START, render };

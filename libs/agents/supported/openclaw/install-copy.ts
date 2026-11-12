@@ -1,6 +1,7 @@
 import { HEARTBEAT_POLL_INTERVAL_MINUTES, OwnerLocale } from '@zapbip/types';
 import { chatSelfTest, formatSection, localizeCopy, noticeStep, tellOwnerAndWait, type InstallProduct } from '@zapbip/core';
 import { installCommand } from './plugin';
+import { addressText, quickStartOf } from '../../src/quick-start';
 
 export const OPENCLAW_PRODUCT: InstallProduct = { productName: 'OpenClaw', productDescription: 'OpenClaw, the agent running OpenClaw' };
 
@@ -48,4 +49,15 @@ export const OPENCLAW_COPY = localizeCopy({
         chatSelfTest(section.locale),
       ],
     }),
+});
+
+const OPENCLAW_QUICK_START_HINT: Record<OwnerLocale, string> = {
+  [OwnerLocale.PortugueseBrazil]: 'Na configuração do OpenClaw, em mcp.servers.zapbip',
+  [OwnerLocale.EnglishUs]: 'In the OpenClaw config, under mcp.servers.zapbip',
+};
+
+export const OPENCLAW_QUICK_START = quickStartOf({
+  hint: OPENCLAW_QUICK_START_HINT,
+  code: (connectionLink) => `transport: "streamable-http"\nurl: ${connectionLink}`,
+  proof: () => 'transport: "streamable-http"',
 });

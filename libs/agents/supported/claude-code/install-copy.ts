@@ -12,11 +12,16 @@ import {
 } from '@zapbip/core';
 import { connectCommand } from '../../src/connect-command';
 import { ConnectorClient } from '../../src/generated/ids';
+import { addressText, quickStartOf } from '../../src/quick-start';
 
 export const CLAUDE_CODE_PRODUCT: InstallProduct = {
   productName: 'Claude Code',
   productDescription: 'Claude Code, the agent started by the `claude` command',
 };
+
+export function claudeCodeAddCommand(input: { connectionLink: string }): string {
+  return `claude mcp add --transport http --scope user zapbip ${input.connectionLink}`;
+}
 
 const SKILL_PATH = '~/.claude/skills/zapbip/SKILL.md';
 const LISTENER_RULE = 'A connection holds one listener and a second replaces the first: use exactly one of these, never two together.';
@@ -74,7 +79,7 @@ export const CLAUDE_CODE_COPY = localizeCopy({
           success: '`claude mcp list` no longer lists them.',
         },
         {
-          action: `Run \`claude mcp add --transport http --scope user zapbip ${section.connectionLink}\` for the tools.`,
+          action: `Run \`${claudeCodeAddCommand({ connectionLink: section.connectionLink })}\` for the tools.`,
           success: '`claude mcp list` shows zapbip.',
         },
         {
@@ -97,4 +102,14 @@ export const CLAUDE_CODE_COPY = localizeCopy({
       ],
     });
   },
+});
+
+const CLAUDE_CODE_QUICK_START_HINT: Record<OwnerLocale, string> = {
+  [OwnerLocale.PortugueseBrazil]: 'Rode no seu terminal',
+  [OwnerLocale.EnglishUs]: 'Run in your terminal',
+};
+
+export const CLAUDE_CODE_QUICK_START = quickStartOf({
+  hint: CLAUDE_CODE_QUICK_START_HINT,
+  code: (connectionLink) => claudeCodeAddCommand({ connectionLink }),
 });

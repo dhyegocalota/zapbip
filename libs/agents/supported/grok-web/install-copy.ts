@@ -8,6 +8,7 @@ import {
   type InstallSectionInput,
   type InstallProduct,
 } from '@zapbip/core';
+import { addressText, quickStartOf } from '../../src/quick-start';
 
 export const GROK_WEB_PRODUCT: InstallProduct = { productName: 'Grok web', productDescription: 'Grok web, the chat in the Grok web app' };
 
@@ -50,3 +51,10 @@ export const GROK_WEB_COPY = localizeCopy({
       steps: [questionStep(text.pasteConnector(section.connectionLink)), setWakeStep(section), chatSelfTest(section.locale)],
     }),
 });
+
+const GROK_WEB_QUICK_START_HINT: Record<OwnerLocale, string> = {
+  [OwnerLocale.PortugueseBrazil]: 'Grok → Configurações → adicione um conector com este endereço',
+  [OwnerLocale.EnglishUs]: 'Grok → Settings → add a connector with this address',
+};
+
+export const GROK_WEB_QUICK_START = quickStartOf({ hint: GROK_WEB_QUICK_START_HINT, code: addressText });
