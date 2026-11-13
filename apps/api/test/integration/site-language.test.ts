@@ -201,6 +201,8 @@ describe('every language of the site', () => {
     expect(html).toContain(`hreflang="x-default" href="${SITE_ORIGIN}/"`);
     expect(html).toContain(escapedHtml({ text: renderSiteCopy({ key: SiteCopyKey.NavigationDocs, locale }) }));
     expect(html).toContain(`data-language="${profile.turnstileLanguage}"`);
+    const mediaLocale = locale === WebLocale.PortugueseBrazil ? WebLocale.PortugueseBrazil : WebLocale.EnglishUs;
+    expect(html).toContain(`<meta property="og:image" content="${SITE_ORIGIN}/site/og-${mediaLocale}.png"`);
   });
 
   it.each(LOCALES)('answers %s with a 301 from its trailing slash', async (locale) => {
