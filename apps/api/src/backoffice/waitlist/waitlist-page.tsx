@@ -9,6 +9,7 @@ import { formatTimestamp } from '../format-timestamp';
 import { Layout } from '../layout';
 import type { PageContext } from '../page-context';
 import { NumberFormField } from '../numbers/number-form-fields';
+import { SOURCE_LABELS } from './source-labels';
 import type { WaitlistListRow } from './waitlist-csv';
 import { WaitlistFormField } from './waitlist-form-fields';
 
@@ -133,6 +134,7 @@ export function WaitlistPage(props: WaitlistPageProps) {
                   <th scope="col">{translate(BackofficeCopyKey.WaitlistColumnJoined)}</th>
                   <th scope="col">{translate(BackofficeCopyKey.WaitlistColumnCredited)}</th>
                   <th scope="col">{translate(BackofficeCopyKey.WaitlistColumnReferredBy)}</th>
+                  <th scope="col">{translate(BackofficeCopyKey.WaitlistColumnSource)}</th>
                 </tr>
               </thead>
               <tbody>
@@ -151,6 +153,7 @@ export function WaitlistPage(props: WaitlistPageProps) {
                     <td data-label={translate(BackofficeCopyKey.WaitlistColumnReferredBy)} class="mono cell-truncate">
                       {row.referredByEmail}
                     </td>
+                    <td data-label={translate(BackofficeCopyKey.WaitlistColumnSource)}>{translate(SOURCE_LABELS[row.source])}</td>
                   </tr>
                 ))}
               </tbody>

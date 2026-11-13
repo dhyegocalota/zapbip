@@ -1,10 +1,10 @@
-import { OwnerLocale } from '@zapbip/types';
+import { OwnerLocale, WaitlistSource } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { toWaitlistCsv, type WaitlistListRow } from '../../src/backoffice/waitlist/waitlist-csv';
 
 const HEADERS: Record<OwnerLocale, string> = {
-  [OwnerLocale.EnglishUs]: 'email,joined_at,credited_referrals,referred_by\n',
-  [OwnerLocale.PortugueseBrazil]: 'email,entrou_em,indicacoes_creditadas,indicado_por\n',
+  [OwnerLocale.EnglishUs]: 'email,joined_at,credited_referrals,referred_by,source\n',
+  [OwnerLocale.PortugueseBrazil]: 'email,entrou_em,indicacoes_creditadas,indicado_por,origem\n',
 };
 const HEADER = HEADERS[OwnerLocale.EnglishUs];
 const JOINED_AT = Date.UTC(2026, 10, 12, 9, 30);
@@ -13,7 +13,7 @@ const BULK_ROW_COUNT = 5_000;
 
 function rowOf(input: { email: string; referredByEmail?: string | null; creditedCount?: number }): WaitlistListRow {
   const { email, referredByEmail = null, creditedCount = 0 } = input;
-  return { email, joinedAt: JOINED_AT, creditedCount, referredByEmail };
+  return { email, joinedAt: JOINED_AT, creditedCount, referredByEmail, source: WaitlistSource.Form };
 }
 
 describe('toWaitlistCsv', () => {
@@ -27,11 +27,11 @@ describe('toWaitlistCsv', () => {
         rows: [rowOf({ email: 'maria@example.com', creditedCount: 2, referredByEmail: 'joao@example.com' })],
         locale: OwnerLocale.EnglishUs,
       }),
-    ).toBe(`${HEADER}"maria@example.com","${ISO_JOINED_AT}","2","joao@example.com"\n`);
+    ).toBe(`${HEADER}"maria@example.com","${ISO_JOINED_AT}","2","joao@example.com","form"\n`);
   });
 
   it('writes an empty referrer as an empty quoted cell', () => {
-    expect(toWaitlistCsv({ rows: [rowOf({ email: 'maria@example.com' })], locale: OwnerLocale.EnglishUs })).toContain(',"0",""\n');
+    expect(toWaitlistCsv({ rows: [rowOf({ email: 'maria@example.com' })], locale: OwnerLocale.EnglishUs })).toContain(',"0","","form"\n');
   });
 
   it('quotes every cell and escapes quotes and commas', () => {
