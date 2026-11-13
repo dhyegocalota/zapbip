@@ -14,6 +14,8 @@ export enum BackofficeAuditAction {
   ReferralCapChanged = 'waitlist.referral_cap_changed',
   AccessReleased = 'access.released',
   WaitlistInvited = 'waitlist.invited',
+  AgentKeyCreated = 'agent_key.created',
+  AgentKeyRevoked = 'agent_key.revoked',
 }
 
 export enum BackofficeAuditTargetKind {
@@ -21,6 +23,7 @@ export enum BackofficeAuditTargetKind {
   MetaApp = 'meta_app',
   Waitlist = 'waitlist',
   Access = 'access',
+  AgentKey = 'agent_key',
 }
 
 export enum BackofficeAuditOutcome {

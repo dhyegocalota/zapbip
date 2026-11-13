@@ -26,6 +26,7 @@ export type Bindings = {
   BACKOFFICE_PASSWORD_PEPPER: string;
   BACKOFFICE_ORIGIN: string;
   BACKOFFICE_RATE_LIMITER: RateLimit;
+  OPERATOR_KEY_RATE_LIMITER: RateLimit;
   SITE_ORIGIN: string;
   APP_ORIGIN: string;
   TURNSTILE_SITE_KEY: string;

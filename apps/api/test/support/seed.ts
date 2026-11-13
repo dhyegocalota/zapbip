@@ -10,6 +10,7 @@ import passwordSignInMigrationSql from '../../migrations/0009_backoffice_passwor
 import landingWaitlistMigrationSql from '../../migrations/0010_landing_waitlist.sql?raw';
 import clientAppMigrationSql from '../../migrations/0011_client_app.sql?raw';
 import accessReleaseMigrationSql from '../../migrations/0012_access_release.sql?raw';
+import operatorAgentKeysMigrationSql from '../../migrations/0014_operator_agent_keys.sql?raw';
 import { hashConnectionSecret } from '../../src/adapters/platform/hash';
 import { accountInboxStub, testEnv } from './workers-env';
 
@@ -65,6 +66,10 @@ export async function applyAccessReleaseMigration(): Promise<void> {
   await applyMigration({ sql: accessReleaseMigrationSql });
 }
 
+export async function applyOperatorAgentKeysMigration(): Promise<void> {
+  await applyMigration({ sql: operatorAgentKeysMigrationSql });
+}
+
 export async function applyClientAppMigration(): Promise<void> {
   await applyMigration({ sql: clientAppMigrationSql });
 }
@@ -81,6 +86,7 @@ export async function applyDirectoryMigration(): Promise<void> {
   await applyLandingWaitlistMigration();
   await applyClientAppMigration();
   await applyAccessReleaseMigration();
+  await applyOperatorAgentKeysMigration();
 }
 
 export async function seedAccount(input: { accountId: string; state?: AccountState; numberId?: string | null }): Promise<void> {
