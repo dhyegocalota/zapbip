@@ -1,6 +1,6 @@
 # Landing quick start
 
-**Status:** Building
+**Status:** Shipped 2026-11-12
 **Tier:** 🟡 medium
 **Owner approval:** approved 2026-11-12 (owner delegated)
 **ADRs:** none new; reads [0033](../../adr/0033-one-folder-per-supported-agent.md) and [0041](../../adr/0041-the-public-site-is-served-by-the-api-worker-through-host-dispatch.md)
