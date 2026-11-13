@@ -1,6 +1,6 @@
 # Site polish
 
-**Status:** Building
+**Status:** Shipped 2026-11-13
 **Tier:** 🟡 medium
 **Owner approval:** approved 2026-11-13 (owner delegated; the numbered requests are his words)
 **ADRs:** none
