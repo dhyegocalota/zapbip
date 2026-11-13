@@ -15,6 +15,10 @@ const COLOR_SCHEMES = ['light', 'dark'] as const;
 const PAGES: { locale: WebLocale; home: string; other: WebLocale; otherHome: string; name: string }[] = [
   { locale: WebLocale.EnglishUs, home: '/', other: WebLocale.PortugueseBrazil, otherHome: '/pt-br', name: 'en' },
   { locale: WebLocale.PortugueseBrazil, home: '/pt-br', other: WebLocale.EnglishUs, otherHome: '/', name: 'pt' },
+  { locale: WebLocale.Japanese, home: '/ja', other: WebLocale.EnglishUs, otherHome: '/', name: 'ja' },
+  { locale: WebLocale.ChineseSimplified, home: '/zh', other: WebLocale.EnglishUs, otherHome: '/', name: 'zh' },
+  { locale: WebLocale.Korean, home: '/ko', other: WebLocale.EnglishUs, otherHome: '/', name: 'ko' },
+  { locale: WebLocale.German, home: '/de', other: WebLocale.EnglishUs, otherHome: '/', name: 'de' },
 ];
 
 for (const { locale, home, other, otherHome, name } of PAGES) {

@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { AGENT_INSTALLS } from '@zapbip/agents/install';
 import { WebLocale } from '@zapbip/types';
-import { LOCALE_PROFILES } from '../../src/web-shell/locale-profiles';
+import { LOCALE_PROFILES, MENU_LOCALES } from '../../src/web-shell/locale-profiles';
 import { ShellCopyKey } from '../../src/web-shell/shell-copy';
 import { expect, test } from './fixtures';
 import { shellCopy } from './support/site-copy';
@@ -43,18 +43,22 @@ test('a click outside closes it', async ({ page }) => {
   await expect(menuOf({ page })).not.toHaveAttribute('open', '');
 });
 
-test('the arrow keys move between the options', async ({ page }) => {
+test('the arrow keys move between the options and wrap around', async ({ page }) => {
+  const [first, second, ...others] = MENU_LOCALES;
+  const last = others[others.length - 1]!;
   await page.goto('/');
   await triggerOf({ page }).focus();
   await page.keyboard.press('Enter');
   await page.keyboard.press('ArrowDown');
-  await expect(optionOf({ page, locale: WebLocale.EnglishUs })).toBeFocused();
+  await expect(optionOf({ page, locale: first! })).toBeFocused();
   await page.keyboard.press('ArrowDown');
-  await expect(optionOf({ page, locale: WebLocale.PortugueseBrazil })).toBeFocused();
-  await page.keyboard.press('ArrowDown');
-  await expect(optionOf({ page, locale: WebLocale.EnglishUs })).toBeFocused();
+  await expect(optionOf({ page, locale: second! })).toBeFocused();
   await page.keyboard.press('ArrowUp');
-  await expect(optionOf({ page, locale: WebLocale.PortugueseBrazil })).toBeFocused();
+  await expect(optionOf({ page, locale: first! })).toBeFocused();
+  await page.keyboard.press('ArrowUp');
+  await expect(optionOf({ page, locale: last })).toBeFocused();
+  await page.keyboard.press('ArrowDown');
+  await expect(optionOf({ page, locale: first! })).toBeFocused();
 });
 
 test('choosing Portuguese lands on /pt-br and keeps the agent and the referral code', async ({ page }) => {
