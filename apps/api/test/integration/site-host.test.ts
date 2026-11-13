@@ -1,5 +1,6 @@
 import { createExecutionContext } from 'cloudflare:test';
 import { describe, expect, test } from 'vitest';
+import { DeployEnvironment } from '../../src/contract/deploy-environment';
 import { HEALTH_PATH, WHATSAPP_WEBHOOK_PATH } from '../../src/contract/constants';
 import developmentEntry from '../../src/index.dev';
 import productionEntry from '../../src/index';
@@ -11,6 +12,7 @@ const MCP_ORIGIN = 'https://mcp.zapbip.com';
 const BACKOFFICE_ORIGIN = 'https://backoffice.zapbip.com';
 const MOVED_PERMANENTLY = 301;
 const NOT_FOUND = 404;
+const PERMANENT_REDIRECT = 308;
 const OK = 200;
 const SITE_ONLY_PATHS = ['/join', '/robots.txt', '/sitemap.xml'];
 const MCP_PATHS = [HEALTH_PATH, WHATSAPP_WEBHOOK_PATH];
@@ -57,5 +59,25 @@ describe.each(entries)('$name entry site host dispatch', ({ entry }) => {
 
   test('pin: an unknown host is still the MCP app', async () => {
     expect((await fetchFrom({ url: `${MCP_ORIGIN}${HEALTH_PATH}` })).status).toBe(OK);
+  });
+});
+
+describe.each(entries)('$name entry transport security', ({ entry }) => {
+  const secured = { ...environment, ENVIRONMENT: DeployEnvironment.Production };
+  const unsecuredHosts = [SITE_ORIGIN, WWW_ORIGIN, MCP_ORIGIN, BACKOFFICE_ORIGIN].map((origin) => origin.replace('https:', 'http:'));
+
+  test.each(unsecuredHosts)('sends a plain request to %s to https before any routing', async (origin) => {
+    const response = await entry.fetch(new Request(`${origin}/robots.txt?x=1`), secured, createExecutionContext());
+    expect(response.status).toBe(MOVED_PERMANENTLY);
+    expect(response.headers.get('Location')).toBe(`${origin.replace('http:', 'https:')}/robots.txt?x=1`);
+  });
+
+  test('sends a plain form post with a 308', async () => {
+    const response = await entry.fetch(
+      new Request(`${unsecuredHosts[0]}/join`, { method: 'POST', body: 'x=1' }),
+      secured,
+      createExecutionContext(),
+    );
+    expect(response.status).toBe(PERMANENT_REDIRECT);
   });
 });
