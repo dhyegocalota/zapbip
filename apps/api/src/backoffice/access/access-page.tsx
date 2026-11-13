@@ -13,6 +13,7 @@ import { AccessFormField } from './access-form-fields';
 import type { AccessFilter } from './access-filter';
 import type { InvitableEntryRow, WaitingAccountRow } from './access-queries';
 import { AccessShell } from './access-shell';
+import { LOCALE_PROFILES } from '../../web-shell/locale-profiles';
 
 export type AccessPageProps = {
   page: PageContext;
@@ -22,10 +23,6 @@ export type AccessPageProps = {
   invitable: { total: number; rows: InvitableEntryRow[] };
 };
 
-const LOCALE_LABELS: Record<OwnerLocale, BackofficeCopyKey> = {
-  [OwnerLocale.PortugueseBrazil]: BackofficeCopyKey.LocalePortuguese,
-  [OwnerLocale.EnglishUs]: BackofficeCopyKey.LocaleEnglish,
-};
 const SELECT_ALL_VALUE = '1';
 
 function FilterFields(props: { filter: AccessFilter }) {
@@ -65,7 +62,7 @@ export function AccessPage(props: AccessPageProps) {
             </option>
             {Object.values(OwnerLocale).map((option) => (
               <option value={option} selected={filter.locale === option}>
-                {translate(LOCALE_LABELS[option])}
+                {LOCALE_PROFILES[option].nativeName}
               </option>
             ))}
           </select>
@@ -123,7 +120,7 @@ export function AccessPage(props: AccessPageProps) {
                       <td data-label={translate(BackofficeCopyKey.AccessColumnJoined)} class="cell-nowrap">
                         <time datetime={new Date(row.joinedAt).toISOString()}>{formatTimestamp({ at: row.joinedAt })}</time>
                       </td>
-                      <td data-label={translate(BackofficeCopyKey.AccessColumnLanguage)}>{translate(LOCALE_LABELS[row.locale])}</td>
+                      <td data-label={translate(BackofficeCopyKey.AccessColumnLanguage)}>{LOCALE_PROFILES[row.locale].nativeName}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -182,7 +179,7 @@ export function AccessPage(props: AccessPageProps) {
                       <td data-label={translate(BackofficeCopyKey.AccessColumnJoined)} class="cell-nowrap">
                         <time datetime={new Date(row.joinedAt).toISOString()}>{formatTimestamp({ at: row.joinedAt })}</time>
                       </td>
-                      <td data-label={translate(BackofficeCopyKey.AccessColumnLanguage)}>{translate(LOCALE_LABELS[row.locale])}</td>
+                      <td data-label={translate(BackofficeCopyKey.AccessColumnLanguage)}>{LOCALE_PROFILES[row.locale].nativeName}</td>
                     </tr>
                   ))}
                 </tbody>
