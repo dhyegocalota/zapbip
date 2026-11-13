@@ -13,6 +13,7 @@ const MINIMUM_TAB_HEIGHT = 44;
 const GRANTED_PERMISSIONS = ['clipboard-read', 'clipboard-write'];
 const DESKTOP_WIDTH = 1280;
 const MAXIMUM_CARET_BLINKS = 5;
+const MAXIMUM_TOKEN_LINES = 1.5;
 const FULL_WIDTH_RATIO = 0.9;
 const TAB_ROW_PADDING = 4;
 
@@ -329,5 +330,49 @@ test.describe('the typed command and its caret', () => {
       property: 'animationIterationCount',
     });
     expect(Number(iterations)).toBeLessThanOrEqual(MAXIMUM_CARET_BLINKS);
+  });
+});
+
+test.describe('no script, the copy button', () => {
+  test.use({ javaScriptEnabled: false });
+
+  test('is not offered', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('.start-copy')).toHaveCount(AGENTS.length + 1);
+    await expect(page.locator('.start-copy:visible')).toHaveCount(0);
+  });
+});
+
+test('with a script, the copy button of the visible panel is offered', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('.start-panel:not([hidden]) .start-copy')).toBeVisible();
+});
+
+test.describe('375 px, edge fade and code', () => {
+  test.use({ viewport: { width: MOBILE_WIDTH, height: 812 } });
+
+  test('the start of the tab row is not faded until the row has scrolled', async ({ page }) => {
+    await page.goto('/');
+    const atStart = await computedStyleOf({ page, selector: '.start-tabs', pseudo: null, property: 'maskImage' });
+    expect(atStart.startsWith('linear-gradient(to right, rgb(0, 0, 0)')).toBe(true);
+    await page.locator('.start-tabs').evaluate((element) => element.scrollTo({ left: 120 }));
+    await expect
+      .poll(() => computedStyleOf({ page, selector: '.start-tabs', pseudo: null, property: 'maskImage' }))
+      .toContain('rgba(0, 0, 0, 0)');
+  });
+
+  test('a command never breaks inside a word; it scrolls inside its block instead', async ({ page }) => {
+    const command = AGENTS.find((agent) =>
+      agent.install.quickStart({ locale: OwnerLocale.EnglishUs, connectionLink: 'x' }).code.includes('--'),
+    )!;
+    await page.goto(`/?agent=${command.id}`);
+    expect(await computedStyleOf({ page, selector: '.start-panel:not([hidden]) code', pseudo: null, property: 'whiteSpace' })).toBe('pre');
+    const flag = (await page.locator('.start-panel:not([hidden]) .tok-flag').first().boundingBox())!;
+    const line = (await page.locator('.start-panel:not([hidden]) .code-line').first().boundingBox())!;
+    expect(flag.height).toBeLessThan(line.height * MAXIMUM_TOKEN_LINES);
+    expect(await computedStyleOf({ page, selector: '.start-panel:not([hidden]) .code-block', pseudo: null, property: 'overflowX' })).toBe(
+      'auto',
+    );
+    expect(await page.evaluate('document.documentElement.scrollWidth')).toBeLessThanOrEqual(MOBILE_WIDTH);
   });
 });

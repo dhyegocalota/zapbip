@@ -311,17 +311,17 @@ describe('the quick start', () => {
     });
   });
 
-  it('gives each panel three steps, a copy button and one call to action that goes to the form', async () => {
+  it('gives each panel a hidden copy button, one call to action and one short line beside it, and no steps row', async () => {
     const html = await pageOf({ headers: ENGLISH_HEADERS });
     const locale = OwnerLocale.EnglishUs;
     const panels = panelsOf({ html });
     panels.forEach((panel) => {
-      expect(panel.html).toContain(copyHtml({ key: SiteCopyKey.StartStepGet, locale }));
-      expect(panel.html).toContain(copyHtml({ key: SiteCopyKey.StartStepPaste, locale }));
-      expect(panel.html).toContain(copyHtml({ key: SiteCopyKey.StartStepText, locale }));
-      expect(panel.html.match(/class="start-copy"/g)).toHaveLength(1);
+      expect(panel.html).toContain(`<p class="start-note">${copyHtml({ key: SiteCopyKey.StartNote, locale })}</p>`);
+      expect(panel.html).not.toContain('start-steps');
+      expect(panel.html.match(/class="start-copy" type="button" hidden=""/g)).toHaveLength(1);
       expect(panel.html.match(/class="button button-primary start-cta"/g)).toHaveLength(1);
     });
+    expect(startOf({ html }).match(new RegExp(copyHtml({ key: SiteCopyKey.StartCta, locale }), 'g'))).toHaveLength(panels.length);
     const agentCta = escapedHtml({ text: `/?agent=${agents[0]!.id}&lang=en#join` });
     expect(panels[0]!.html).toContain(`href="${agentCta}" data-picked-label="`);
     expect(panels.at(-1)!.html).toContain('href="/?lang=en#join" data-clear-agent');
