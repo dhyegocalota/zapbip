@@ -1,6 +1,7 @@
 import { reset } from 'cloudflare:test';
-import { HttpStatus, OwnerLocale } from '@zapbip/types';
+import { CLIENT_APP_TOKEN_LENGTH, HttpStatus, OwnerLocale } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { SEE_OTHER_STATUS } from '../../src/backoffice/backoffice-constants';
 import { sha256Hex } from '../../src/adapters/platform/hash';
 import { csrfTokenOf } from '../../src/client-app/csrf';
 import { createFakeRateLimiter } from '../support/fake-rate-limiter';
@@ -18,7 +19,7 @@ import {
 import { testEnv } from '../support/workers-env';
 
 const EXPIRED_COPY = 'This link expired. Send login again.';
-const UNKNOWN_TOKEN = 'A'.repeat(43);
+const UNKNOWN_TOKEN = 'A'.repeat(CLIENT_APP_TOKEN_LENGTH);
 const COUNT_TOKENS_STATEMENT = 'SELECT COUNT(*) AS total FROM client_app_sign_in_tokens';
 const COUNT_SESSIONS_STATEMENT = 'SELECT COUNT(*) AS total FROM client_app_sessions';
 const SESSION_DIGESTS_STATEMENT = 'SELECT session_digest AS digest FROM client_app_sessions';
@@ -87,7 +88,7 @@ describe('POST /sign-in/<token>', () => {
     const { csrf } = await continuePage({ token });
     const response = await clientAppFetch({ path: `/sign-in/${token}`, method: 'POST', form: { csrf } });
     const cookie = sessionCookieOf({ response });
-    expect(response.status).toBe(HttpStatus.SeeOther);
+    expect(response.status).toBe(SEE_OTHER_STATUS);
     expect(response.headers.get('Location')).toBe('/');
     expect(cookie).not.toBeNull();
     expect(await total({ statement: COUNT_TOKENS_STATEMENT })).toBe(0);

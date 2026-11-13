@@ -1,6 +1,7 @@
 import { HttpStatus } from '@zapbip/types';
 import type { Hono } from 'hono';
 import type { Bindings } from '../contract/env';
+import { plainResponse } from '../routes/private-response';
 import { createClientApp } from '../client-app/client-app';
 import { createSiteApp } from '../site/site-app';
 import { createBackofficeApp, createRejectedHostApp } from './app';
@@ -10,6 +11,7 @@ enum HostKind {
   BackofficeWithTrailingDot = 'backoffice_with_trailing_dot',
   Site = 'site',
   App = 'app',
+  AppWithTrailingDot = 'app_with_trailing_dot',
   WwwRedirect = 'www_redirect',
   Other = 'other',
 }
@@ -22,6 +24,7 @@ type HostDispatch = {
 };
 
 const WWW_HOST_PREFIX = 'www.';
+const NOT_FOUND_TEXT = 'not found';
 const TRAILING_DOT_PATTERN = /\.(?=(:[0-9]+)?$)/;
 
 function hostKindOf(input: { url: string; backofficeOrigin: string; siteOrigin: string; appOrigin: string }): HostKind {
@@ -33,6 +36,7 @@ function hostKindOf(input: { url: string; backofficeOrigin: string; siteOrigin: 
   if (requestHost.replace(TRAILING_DOT_PATTERN, '') === backofficeHost) return HostKind.BackofficeWithTrailingDot;
   if (requestHost === siteHost) return HostKind.Site;
   if (requestHost === appHost) return HostKind.App;
+  if (requestHost.replace(TRAILING_DOT_PATTERN, '') === appHost) return HostKind.AppWithTrailingDot;
   if (requestHost === `${WWW_HOST_PREFIX}${siteHost}`) return HostKind.WwwRedirect;
   return HostKind.Other;
 }
@@ -49,6 +53,7 @@ const HOST_HANDLERS: Record<HostKind, (input: HostDispatch) => Response | Promis
   [HostKind.Site]: ({ request, env, executionContext }) =>
     createSiteApp({ fetchImplementation: fetch }).fetch(request, env, executionContext),
   [HostKind.App]: ({ request, env, executionContext }) => createClientApp().fetch(request, env, executionContext),
+  [HostKind.AppWithTrailingDot]: () => plainResponse({ body: NOT_FOUND_TEXT, status: HttpStatus.NotFound }),
   [HostKind.WwwRedirect]: ({ request, env }) => redirectToSite({ request, siteOrigin: env.SITE_ORIGIN }),
   [HostKind.Other]: ({ request, env, executionContext, createMcpApp }) => createMcpApp().fetch(request, env, executionContext),
 };

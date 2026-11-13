@@ -1,8 +1,8 @@
 import { randomInt } from 'node:crypto';
-import { MessageKind } from '@zapbip/types';
+import { CLIENT_APP_TOKEN_LENGTH, MessageKind } from '@zapbip/types';
 import { ClientAppVariable, clientAppValue } from './client-app-environment';
 
-const LINK_PATTERN = /https?:\/\/[^\s]+\/sign-in\/[A-Za-z0-9_-]{43}/;
+const LINK_PATTERN = new RegExp(`https?://[^\\s]+/sign-in/[A-Za-z0-9_-]{${CLIENT_APP_TOKEN_LENGTH}}`);
 const BRAZIL_PREFIX = '55119';
 const UNITED_STATES_PREFIX = '1415';
 const SUFFIX_LIMIT = 10_000_000;

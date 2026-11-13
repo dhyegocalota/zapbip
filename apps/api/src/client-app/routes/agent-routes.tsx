@@ -50,19 +50,19 @@ function firstReplyOf(input: { result: AccountCommandResult }): AccountReply {
   return reply;
 }
 
+function respondProblem(input: { context: Context<ClientAppEnv>; session: ClientAppSession; key: ClientAppCopyKey }): Promise<Response> {
+  const { context, session, key } = input;
+  const problem = renderClientAppCopy({ key, locale: context.get('locale'), values: { limit: String(AGENTS_PER_ACCOUNT_LIMIT) } });
+  return respondHome({ context, session, status: HttpStatus.UnprocessableEntity, extras: { problem } });
+}
+
 async function connectAgent(input: { context: Context<ClientAppEnv>; session: ClientAppSession }): Promise<Response> {
   const { context, session } = input;
-  const typedName = textFieldOf({ form: await context.req.parseBody(), name: AGENT_NAME_FIELD });
-  const reply = await applyWebCommand({ context, session, kind: CommandKind.CreateAgent, rawName: typedName === null ? '' : typedName });
+  const rawName = textFieldOf({ form: await context.req.parseBody(), name: AGENT_NAME_FIELD });
+  if (rawName === null) return respondProblem({ context, session, key: ClientAppCopyKey.ProblemEmptyName });
+  const reply = await applyWebCommand({ context, session, kind: CommandKind.CreateAgent, rawName });
   const problemKey = CREATE_PROBLEMS[reply.intent];
-  if (problemKey !== undefined) {
-    const problem = renderClientAppCopy({
-      key: problemKey,
-      locale: context.get('locale'),
-      values: { limit: String(AGENTS_PER_ACCOUNT_LIMIT) },
-    });
-    return respondHome({ context, session, status: HttpStatus.UnprocessableEntity, extras: { problem } });
-  }
+  if (problemKey !== undefined) return respondProblem({ context, session, key: problemKey });
   const agent = reply.parameters[AccountReplyParameter.AgentName];
   const installPrompt = reply.parameters[AccountReplyParameter.InstallPrompt];
   if (reply.intent !== AccountReplyIntent.Created || agent === undefined || installPrompt === undefined)

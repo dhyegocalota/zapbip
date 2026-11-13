@@ -17,11 +17,13 @@ The owner asked "where is the clients app? keep it minimum" and "make all decisi
 3. The `login` / `entrar` command replies with `<APP_ORIGIN>/sign-in/<token>`; works for `waitlisted` and `active`, refused for `suspended` and `deleting` like every command.
 4. `GET /sign-in/<token>` never consumes; `POST` consumes once and sets the session cookie. Expired, used or unknown tokens show "This link expired. Send login again."
 5. Waitlisted account: "You're on the waitlist" and Sign out.
-6. Active account: the agents list (name, client, created), Revoke per agent behind a confirmation step, "Connect an agent" through the same create use case as `new agent`, showing the install prompt once, the plan line "Free · early access", a link to the delete-account docs page, Sign out.
+6. Active account: the agents list (name, client when known, created, last active when the account has seen the agent), the masked phone of the signed-in owner, Revoke per agent behind a confirmation step, "Connect an agent" through the same create use case as `new agent`, showing the install prompt once, the plan line "Free · early access", a link to the delete-account docs page, Sign out.
 7. English at `/`, Portuguese at `/pt-br`; after sign-in the account's language decides.
 8. Light and dark following the system, 375 px with a 16 px gutter, no script.
 9. Expired tokens and sessions are pruned by the scheduled tick.
 10. Docs page `features/web-app` in both languages and the `login` command in the commands page.
+
+Sessions: sign-in replaces the account's earlier sessions and sign-out ends all of them. The app host with a trailing dot answers `404`.
 
 ## Non-goals
 

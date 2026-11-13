@@ -20,6 +20,7 @@ export const CLIENT_APP_LOGIN_TEXT: Record<OwnerLocale, string> = {
   [OwnerLocale.EnglishUs]: 'login',
 };
 export const CLIENT_APP_TOKEN_BYTES = 32;
+export const CLIENT_APP_TOKEN_LENGTH = 43;
 export const SIGN_IN_LINK_TTL_MS = 10 * MINUTE_MS;
 export const CLIENT_NAME_MAX_CHARS = 128;
 export const INITIALIZE_BODY_MAX_BYTES = 4_096;

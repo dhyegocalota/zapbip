@@ -18,5 +18,7 @@ export function localeOfPath(input: { path: string }): OwnerLocale {
 
 export function pathWithLocale(input: { locale: OwnerLocale; path: string }): string {
   const prefix = CLIENT_APP_LOCALE_PATH_PREFIXES[input.locale];
-  return input.path === ClientAppPath.Home ? prefix || ClientAppPath.Home : `${prefix}${input.path}`;
+  const isRootWithPrefix = input.path === ClientAppPath.Home && prefix !== '';
+  if (isRootWithPrefix) return prefix;
+  return `${prefix}${input.path}`;
 }

@@ -1,4 +1,12 @@
-import { AccountState, ChannelInboundKind, HttpStatus, MessageKind, OwnerLocale, SIGN_IN_LINK_TTL_MS } from '@zapbip/types';
+import {
+  AccountState,
+  CLIENT_APP_TOKEN_LENGTH,
+  ChannelInboundKind,
+  HttpStatus,
+  MessageKind,
+  OwnerLocale,
+  SIGN_IN_LINK_TTL_MS,
+} from '@zapbip/types';
 import { reset, runInDurableObject } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { AccountInbox } from '../../src/account-inbox/account-inbox';
@@ -12,7 +20,7 @@ import { accountInboxStub, testEnv } from '../support/workers-env';
 
 const ACCOUNT = 'acc_client_app_login';
 const OWNER_PHONE = '5511900000042';
-const TOKEN_PATTERN = /\/sign-in\/([A-Za-z0-9_-]{43})/;
+const TOKEN_PATTERN = new RegExp(`/sign-in/([A-Za-z0-9_-]{${CLIENT_APP_TOKEN_LENGTH}})`);
 const TOKEN_ROWS_STATEMENT =
   'SELECT token_digest AS tokenDigest, account_id AS accountId, expires_at AS expiresAt FROM client_app_sign_in_tokens';
 

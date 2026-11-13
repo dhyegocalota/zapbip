@@ -4,7 +4,7 @@ import { ClientAppCopyKey, copyOf } from '../client-app-copy';
 import { pathWithLocale } from '../client-app-paths';
 import { Layout } from './layout';
 
-export function ContinuePage(props: { locale: OwnerLocale; token: string; csrfToken: string }) {
+export function ContinuePage(props: { locale: OwnerLocale; token: string; csrfToken: string; phone: string }) {
   const { locale } = props;
   const translate = copyOf({ locale });
   const path = `${CLIENT_APP_SIGN_IN_PATH_PREFIX}${props.token}`;
@@ -13,6 +13,7 @@ export function ContinuePage(props: { locale: OwnerLocale; token: string; csrfTo
       <section class="panel">
         <h1>{translate(ClientAppCopyKey.ContinueTitle)}</h1>
         <p class="lead">{translate(ClientAppCopyKey.ContinueLead)}</p>
+        <p class="note">{translate(ClientAppCopyKey.ContinueAs, { phone: props.phone })}</p>
         <form method="post" action={pathWithLocale({ locale, path })}>
           <input type="hidden" name={CSRF_FIELD} value={props.csrfToken} />
           <button type="submit" class="button button-primary button-large">

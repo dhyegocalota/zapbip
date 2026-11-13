@@ -1,16 +1,18 @@
 import { AccountState, OwnerLocale } from '@zapbip/types';
+import { AGENT_NAME_MAX_CHARS } from '@zapbip/core';
 import { DOCS_ORIGIN } from '../../site/site-paths';
 import { AGENT_FIELD, AGENT_NAME_FIELD, CSRF_FIELD, DELETE_ACCOUNT_DOCS_PATH, DOCS_PORTUGUESE_PATH } from '../client-app-constants';
 import { ClientAppCopyKey, copyOf } from '../client-app-copy';
 import { ClientAppPath, pathWithLocale } from '../client-app-paths';
 import { Layout } from './layout';
 
-export type AgentRow = { agent: string; clientName: string; addedOn: string };
+export type AgentRow = { agent: string; clientName: string | null; addedOn: string; lastActiveOn: string | null };
 
 export type HomePageProps = {
   locale: OwnerLocale;
   state: AccountState;
   csrfToken: string;
+  phone: string;
   agents: AgentRow[];
   noticeKey: ClientAppCopyKey | null;
   problem: string | null;
@@ -24,6 +26,17 @@ const DOCS_PATH_PREFIXES: Record<OwnerLocale, string> = {
 
 function docsHrefOf(input: { locale: OwnerLocale }): string {
   return `${DOCS_ORIGIN}${DOCS_PATH_PREFIXES[input.locale]}${DELETE_ACCOUNT_DOCS_PATH}`;
+}
+
+const DETAIL_SEPARATOR = ' · ';
+
+function detailsOf(input: { row: AgentRow; translate: ReturnType<typeof copyOf> }): string[] {
+  const { row, translate } = input;
+  return [
+    ...(row.clientName === null ? [] : [`${translate(ClientAppCopyKey.AgentClient)}: ${row.clientName}`]),
+    translate(ClientAppCopyKey.AgentAdded, { date: row.addedOn }),
+    ...(row.lastActiveOn === null ? [] : [translate(ClientAppCopyKey.AgentLastActive, { date: row.lastActiveOn })]),
+  ];
 }
 
 function Waitlist(props: { locale: OwnerLocale }) {
@@ -46,9 +59,7 @@ function AgentList(props: HomePageProps) {
         <li class="agent-row">
           <div class="agent-details">
             <strong class="agent-name">{row.agent}</strong>
-            <span class="note">
-              {translate(ClientAppCopyKey.AgentClient)}: {row.clientName} · {translate(ClientAppCopyKey.AgentAdded, { date: row.addedOn })}
-            </span>
+            <span class="note">{detailsOf({ row, translate }).join(DETAIL_SEPARATOR)}</span>
           </div>
           <form method="post" action={pathWithLocale({ locale, path: ClientAppPath.RevokeAgent })}>
             <input type="hidden" name={CSRF_FIELD} value={csrfToken} />
@@ -89,7 +100,7 @@ function ConnectForm(props: { locale: OwnerLocale; csrfToken: string; problem: s
           autocomplete="off"
           autocapitalize="none"
           spellcheck={false}
-          maxlength={64}
+          maxlength={AGENT_NAME_MAX_CHARS}
         />
         <p class="note">{translate(ClientAppCopyKey.ConnectHint)}</p>
         {props.problem === null ? null : (
@@ -105,12 +116,13 @@ function ConnectForm(props: { locale: OwnerLocale; csrfToken: string; problem: s
   );
 }
 
-function Account(props: { locale: OwnerLocale }) {
+function Account(props: { locale: OwnerLocale; phone: string }) {
   const translate = copyOf({ locale: props.locale });
   return (
     <section class="panel">
       <h2>{translate(ClientAppCopyKey.AccountTitle)}</h2>
       <p class="plan">{translate(ClientAppCopyKey.PlanLine)}</p>
+      <p class="note">{translate(ClientAppCopyKey.SignedInAs, { phone: props.phone })}</p>
       <p class="note">{translate(ClientAppCopyKey.DeleteAccountHint)}</p>
       <a class="button button-secondary" href={docsHrefOf({ locale: props.locale })}>
         {translate(ClientAppCopyKey.DeleteAccount)}
@@ -141,7 +153,7 @@ export function HomePage(props: HomePageProps) {
           </section>
           {props.createdAgent === null ? null : <CreatedAgent locale={locale} created={props.createdAgent} />}
           <ConnectForm locale={locale} csrfToken={props.csrfToken} problem={props.problem} />
-          <Account locale={locale} />
+          <Account locale={locale} phone={props.phone} />
         </>
       )}
     </Layout>

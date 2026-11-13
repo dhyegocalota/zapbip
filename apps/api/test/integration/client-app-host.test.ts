@@ -1,5 +1,5 @@
 import { createExecutionContext, reset } from 'cloudflare:test';
-import { HttpStatus, OwnerLocale, WhatsAppNumberState } from '@zapbip/types';
+import { CLIENT_APP_TOKEN_LENGTH, HttpStatus, OwnerLocale, WhatsAppNumberState } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import developmentEntry from '../../src/index.dev';
 import productionEntry from '../../src/index';
@@ -31,7 +31,11 @@ describe.each(entries)('$name entry app host dispatch', ({ entry }) => {
   });
 
   it('the MCP host does not serve the app routes', async () => {
-    const response = await entry.fetch(new Request(`${MCP_ORIGIN}/sign-in/${'A'.repeat(43)}`), environment, createExecutionContext());
+    const response = await entry.fetch(
+      new Request(`${MCP_ORIGIN}/sign-in/${'A'.repeat(CLIENT_APP_TOKEN_LENGTH)}`),
+      environment,
+      createExecutionContext(),
+    );
     expect(response.status).toBe(HttpStatus.NotFound);
   });
 });

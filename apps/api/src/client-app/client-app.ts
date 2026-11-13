@@ -39,7 +39,6 @@ function localizedRoutes(): Hono<ClientAppEnv> {
 export function createClientApp(): Hono<ClientAppEnv> {
   const app = new Hono<ClientAppEnv>();
   app.use('*', securityHeaders);
-  app.use('*', clientAppContext);
   app.onError((error, context) => {
     logEvent({ event: LogEvent.ClientAppError, errorCode: error instanceof Error ? error.name : CLIENT_APP_ERROR_CODE });
     return plainResponse({ body: SERVER_ERROR_TEXT, status: HttpStatus.InternalServerError });
@@ -53,6 +52,7 @@ export function createClientApp(): Hono<ClientAppEnv> {
   app.get(ClientAppPath.Favicon, (context) =>
     context.body(FAVICON_SVG, HttpStatus.Ok, { 'Content-Type': FAVICON_CONTENT_TYPE, 'Cache-Control': STYLESHEET_CACHE_CONTROL }),
   );
+  app.use('*', clientAppContext);
   app.route('/', localizedRoutes());
   app.route(CLIENT_APP_PORTUGUESE_PATH_PREFIX, localizedRoutes());
   app.notFound((context) =>

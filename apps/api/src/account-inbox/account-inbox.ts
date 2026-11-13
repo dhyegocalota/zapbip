@@ -542,8 +542,9 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     });
   }
 
-  listAgentActivity(): Promise<{ agent: string; lastSeenAt: number }[]> {
-    throw new Error('listAgentActivity is not implemented');
+  async listAgentActivity(): Promise<{ agent: string; lastSeenAt: number }[]> {
+    this.assertLive();
+    return this.dependencies.repository.listAgents();
   }
 
   async recordRevocation(input: { agent: string }): Promise<void> {

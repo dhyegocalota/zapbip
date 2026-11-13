@@ -1,4 +1,4 @@
-import { DAY_MS, SECOND_MS } from '@zapbip/types';
+import { CLIENT_APP_TOKEN_LENGTH, DAY_MS, SECOND_MS } from '@zapbip/types';
 
 export const SESSION_COOKIE_NAME = '__Host-zapbip_app';
 export const SESSION_TTL_MS = 30 * DAY_MS;
@@ -12,7 +12,7 @@ export const NOTICE_PARAMETER = 'notice';
 export const ORIGIN_HEADER = 'Origin';
 export const CSRF_CONTEXT = 'zapbip client app csrf';
 export const SIGN_IN_RATE_KEY_PREFIX = 'app-sign-in:';
-export const SIGN_IN_TOKEN_PATTERN = /^[A-Za-z0-9_-]{43}$/;
+export const SIGN_IN_TOKEN_PATTERN = new RegExp(`^[A-Za-z0-9_-]{${CLIENT_APP_TOKEN_LENGTH}}$`);
 export const ISO_DATE_LENGTH = 10;
 export const BRAND_SEPARATOR = ' · ';
 export const DELETE_ACCOUNT_DOCS_PATH = '/help/delete-your-account';

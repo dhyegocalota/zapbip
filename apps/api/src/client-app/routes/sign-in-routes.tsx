@@ -18,7 +18,8 @@ import { csrfTokenOf } from '../csrf';
 import { respondMessage } from '../respond';
 import { isSubmissionTrusted, refuseSubmission } from '../session-guards';
 import { createSession, findSession } from '../sessions';
-import { consumeSignInToken, isSignInTokenOpen } from '../sign-in-tokens';
+import { maskedPhoneOf } from '../masked-phone';
+import { consumeSignInToken, findSignInTokenOwner } from '../sign-in-tokens';
 import { ContinuePage } from '../views/continue-page';
 
 const TOKEN_ROUTE = `${ClientAppPath.SignIn}/:token`;
@@ -50,10 +51,18 @@ function respondRateLimited(input: { context: Context<ClientAppEnv> }): Response
 
 async function showContinue(context: Context<ClientAppEnv>): Promise<Response> {
   const token = tokenOf({ context });
-  const isOpen =
-    SIGN_IN_TOKEN_PATTERN.test(token) && (await isSignInTokenOpen({ database: context.env.CONNECTIONS, token, now: Date.now() }));
-  if (!isOpen) return respondExpired({ context });
-  const page = <ContinuePage locale={context.get('locale')} token={token} csrfToken={await csrfTokenOf({ secret: token })} />;
+  const waId = SIGN_IN_TOKEN_PATTERN.test(token)
+    ? await findSignInTokenOwner({ database: context.env.CONNECTIONS, token, now: Date.now() })
+    : null;
+  if (waId === null) return respondExpired({ context });
+  const page = (
+    <ContinuePage
+      locale={context.get('locale')}
+      token={token}
+      csrfToken={await csrfTokenOf({ secret: token })}
+      phone={maskedPhoneOf({ waId })}
+    />
+  );
   return context.html(page);
 }
 
@@ -71,6 +80,7 @@ async function signInWithToken(context: Context<ClientAppEnv>): Promise<Response
   const accountId = SIGN_IN_TOKEN_PATTERN.test(token) ? await consumeSignInToken({ database, token, now: Date.now() }) : null;
   if (accountId === null) return respondExpired({ context });
   const sessionToken = await createSession({ database, accountId, now: Date.now() });
+  if (sessionToken === null) return respondExpired({ context });
   const session = await findSession({ database, token: sessionToken, now: Date.now() });
   if (session === null) return respondExpired({ context });
   setCookie(context, SESSION_COOKIE_NAME, sessionToken, {

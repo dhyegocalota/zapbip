@@ -32,6 +32,10 @@ Customers manage everything over WhatsApp commands. The owner asked for a minima
 
 - Two additive D1 tables (`client_app_sign_in_tokens`, `client_app_sessions`); rollback is dropping them and the `login` word; no existing row changes.
 - The words `login` and `entrar` become reserved agent names.
+- The words `login` and `entrar` become bare command words ([ADR 0015](0015-commands-are-bare-words-routed-before-agents.md)): a message that is exactly one of them is a command, and an agent cannot take them as a name.
+- The stored copy of the reply is masked only once the reply reached `sent`; a send that fails after the link was stored keeps the clear token until the reply is retried or the token expires (10 minutes), the same edge as an install link.
+- Workers Logs and Cloudflare request logs see the path `/sign-in/<token>`. The token is single use and lives 10 minutes, and the app logs no path. After use or expiry the logged path opens nothing.
+- A successful sign-in ends the account's earlier sessions, and sign-out ends every session of the account.
 - The link is a bearer credential for ten minutes; forwarding it hands the session to whoever opens it first. The Continue step and the single use bound the exposure.
 - The earlier non-goal "no web dashboard" of `accounts-and-keys` is superseded for this one page.
 

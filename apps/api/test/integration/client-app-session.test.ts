@@ -1,6 +1,7 @@
 import { reset, runInDurableObject } from 'cloudflare:test';
 import { AccountState, HttpStatus, OwnerLocale, WhatsAppNumberState } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { SEE_OTHER_STATUS } from '../../src/backoffice/backoffice-constants';
 import { D1AccountDirectory } from '../../src/adapters/d1/d1-account-directory';
 import { D1ConnectionRegistry } from '../../src/adapters/d1/d1-connection-registry';
 import { createSession } from '../../src/client-app/sessions';
@@ -121,7 +122,7 @@ describe('an active account', () => {
       cookie,
       form: { csrf, [AGENT_FIELD]: 'alpha', [CONFIRM_FIELD]: CONFIRM_VALUE },
     });
-    expect(confirmed.status).toBe(HttpStatus.SeeOther);
+    expect(confirmed.status).toBe(SEE_OTHER_STATUS);
     expect(await activeAgents({ accountId })).toEqual([]);
     const home = await (await clientAppFetch({ path: confirmed.headers.get('Location')!, cookie })).text();
     expect(home).toContain('Agent revoked.');
@@ -181,7 +182,7 @@ describe('account isolation', () => {
 describe('session revocation', () => {
   it('sign-out ends every session of the account', async () => {
     const first = await signIn({});
-    const secondCookie = await createSession({ database: testEnv.CONNECTIONS, accountId: first.accountId, now: Date.now() });
+    const secondCookie = (await createSession({ database: testEnv.CONNECTIONS, accountId: first.accountId, now: Date.now() }))!;
     const secondCsrf = await csrfTokenOf({ secret: secondCookie });
     await clientAppFetch({ path: '/sign-out', method: 'POST', cookie: secondCookie, form: { csrf: secondCsrf } });
     expect(await (await clientAppFetch({ path: '/', cookie: first.cookie })).text()).toContain(SIGN_IN_BUTTON_COPY);
@@ -231,7 +232,11 @@ describe('what the home page shows about the owner and the agents', () => {
     await connect({ cookie, csrf, name: 'seen' });
     await connect({ cookie, csrf, name: 'quiet' });
     await runInDurableObject(accountInboxStub({ accountId }), (_instance, state) => {
-      state.storage.sql.exec('UPDATE agents SET last_seen_at = ? WHERE agent = ?', SEEN_AT, 'seen');
+      state.storage.sql.exec(
+        'INSERT INTO agents (agent, last_seen_at) VALUES (?, ?) ON CONFLICT (agent) DO UPDATE SET last_seen_at = excluded.last_seen_at',
+        'seen',
+        SEEN_AT,
+      );
     });
     const html = await (await clientAppFetch({ path: '/', cookie })).text();
     expect(html).toContain('Last active 2023-11-14');
@@ -249,7 +254,7 @@ describe('session lifetime', () => {
   it('signs out: the row is deleted and the cookie no longer opens the app', async () => {
     const { cookie, csrf } = await signIn({});
     const response = await clientAppFetch({ path: '/sign-out', method: 'POST', cookie, form: { csrf } });
-    expect(response.status).toBe(HttpStatus.SeeOther);
+    expect(response.status).toBe(SEE_OTHER_STATUS);
     expect((await testEnv.CONNECTIONS.prepare(COUNT_SESSIONS_STATEMENT).first<{ total: number }>())!.total).toBe(0);
     expect(await (await clientAppFetch({ path: '/', cookie })).text()).toContain(SIGN_IN_BUTTON_COPY);
   });
