@@ -1,0 +1,60 @@
+---
+title: 'set_wake'
+description: 'Sag zapbip, wie es diesen Agent erreicht, wenn er nicht zuhört.'
+---
+
+Speichert, wie diese Verbindung geweckt wird, wenn du schreibst und kein Aufruf wartet. Siehe die [Weck-Leiter](/de/concepts/wake-ladder) und die [Anleitung zum Webhook-Wecken](/de/developers/webhook-wake).
+
+## Eingabe
+
+| Feld               | Typ               | Hinweise                                                                                                                                                                                                                                                       |
+| ------------------ | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mode`             | string            | `local` weckt über den [Connector](/de/developers/local-connector); `webhook` speichert einen Webhook; `scheduled` lässt den Agent seinen Posteingang per Timer prüfen; `standby` übergibt deine Nachrichten an einen anderen Agent; `none` löscht das Wecken. |
+| `url`              | string, optional  | Erforderlich für `webhook`. `https`, kein Userinfo, kein Fragment, Port 443 oder keiner, bis zu 512 Zeichen. Ihr Host wählt den Anbieter.                                                                                                                      |
+| `token`            | string, optional  | Erforderlich für `webhook`. Druckbar, ohne Leerraum, 16 bis 512 Zeichen. Bei einem generischen Webhook ist es der Signierschlüssel, mindestens 32 Zeichen.                                                                                                     |
+| `interval_minutes` | integer, optional | Erforderlich für `scheduled`. Von 1 bis 1440 Minuten. ChatGPT und claude.ai führen geplante Aufgaben frühestens alle 60 Minuten aus.                                                                                                                           |
+| `standby_agent`    | string, optional  | Erforderlich für `standby`. Der Name einer anderen Verbindung desselben Kontos, die nicht selbst eine Bereitschaft ist.                                                                                                                                        |
+
+Felder eines anderen Modus müssen fehlen.
+
+## Geplant
+
+Ein Agent, der sich von außen nicht starten lässt, führt eine Aufgabe per Timer aus, die [check_inbox](/de/mcp-reference/check-inbox) aufruft. So kann er ohne Zeitlimit zuhören und jede Nachricht mit `send_message` beantworten.
+
+```json
+{ "mode": "scheduled", "interval_minutes": 60 }
+```
+
+Wenn du schreibst, sagt dir zapbip, wann du die Antwort erwarten kannst. Findet für das Doppelte des Intervalls keine Prüfung statt, erhältst du einen Hinweis, und deine Nachrichten warten im Posteingang bis zur nächsten Prüfung.
+
+## Lokal
+
+Bitte deinen Agent, dieses Werkzeug mit `{ "mode": "local" }` aufzurufen, während der [Connector](/de/developers/local-connector) auf deinem Computer läuft.
+
+## Bereitschaft
+
+Ein Agent, der sich nicht wecken lässt, benennt einen anderen Agent desselben Kontos, der an seiner Stelle antwortet. zapbip kopiert deine Nachricht an die Bereitschaft und weckt sie; die Bereitschaft antwortet als sie selbst.
+
+```json
+{ "mode": "standby", "standby_agent": "grok-bot" }
+```
+
+Eine Bereitschaftsverbindung leitet nie an eine weitere Bereitschaftsverbindung weiter: Es ist nur ein Hop. Fehlt die Bereitschaft, wurde sie entfernt oder ist sie selbst im Bereitschaftsmodus, wird nichts kopiert, und deine Nachricht wartet beim ersten Agent.
+
+## Anbieter
+
+Der Anbieter wird über den Host der URL gewählt, nie über ein Feld.
+
+| Anbieter         | Host                           | Pfad                                         | Authentifizierung                                                      |
+| ---------------- | ------------------------------ | -------------------------------------------- | ---------------------------------------------------------------------- |
+| `grok_routine`   | `api2.cursor.sh`               | `/automations/webhook/<routine-id>`          | `Authorization: Bearer <token>`                                        |
+| `claude_routine` | `api.anthropic.com`            | `/v1/claude_code/routines/<trigger-id>/fire` | `Authorization: Bearer <token>`                                        |
+| `generic`        | jeder öffentliche `https`-Host | beliebig                                     | `X-Zapbip-Timestamp` und `X-Zapbip-Signature`, kein Geheimnis gesendet |
+
+## Ausgabe
+
+`{ "status": "saved", "wake_mode": string, "effective_rung": string, "provider": string | null }`. `provider` wird nur für `webhook` gesetzt. `effective_rung` ist `inbox`, wenn die Bereitschaft unbrauchbar ist, und bei `local`, solange kein Connector verbunden ist, weil die Nachricht dann im Posteingang wartet. Die URL, das Token und der Host werden nie zurückgegeben.
+
+## Fehler
+
+Ein Werkzeugfehler nennt das ungültige Feld (`url`, `token`, `interval_minutes`, `standby_agent` oder `mode`) und sein Limit und gibt seinen Wert nie wieder. Es wird nichts gespeichert, und das vorherige Wecken bleibt. zapbip ruft den Anbieter beim Speichern nicht auf: Ein falsches Token zeigt sich beim ersten Wecken, als Hinweis an dich in WhatsApp.

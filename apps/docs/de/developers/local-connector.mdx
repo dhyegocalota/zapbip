@@ -1,0 +1,144 @@
+---
+title: 'Lokaler Connector'
+description: 'Die Befehle connect, listen und channel von zapbip: Optionen, Umgebungsvariable, Weck-Isolation und Protokolle.'
+---
+
+Normalerweise liest deine KI WhatsApp nur, wenn sie ohnehin schon arbeitet. Schreibst du ihr, während sie untätig ist, wartet deine Nachricht.
+
+Der zapbip-Connector behebt das. Er ist ein kleines Programm, das auf deinem Computer geöffnet bleibt. Schreibst du in WhatsApp, weckt er die KI-Sitzung, die du ohnehin genutzt hast, übergibt ihr deine Nachricht und lässt sie dir antworten. Bei Claude Code dauert das etwa 7 Sekunden, bei Codex 6.
+
+Er funktioniert mit Claude Code und Codex. Dein Computer muss an und wach sein, und der Connector muss laufen.
+
+## Befehle
+
+| Befehl    | Was er tut                                                                                       |
+| --------- | ------------------------------------------------------------------------------------------------ |
+| `connect` | Weckt eine geschlossene Sitzung, wenn du schreibst. Nimmt `--client`, `--cwd` und `--session`.   |
+| `listen`  | Gibt pro Nachricht eine JSON-Zeile aus, für einen Agent, der einen Hintergrundbefehl beobachtet. |
+| `channel` | Startet einen lokalen MCP-Kanal, der jede Nachricht in eine offene Claude-Code-Sitzung legt.     |
+
+`ZAPBIP_CONNECTION_URL` enthält den Verbindungslink. `connect` und `listen` fragen danach, wenn er nicht gesetzt ist.
+
+## Was du brauchst
+
+- Claude Code oder Codex, bereits mit zapbip verbunden.
+- Mindestens eine frühere Sitzung in dem Ordner, in dem die KI arbeiten soll.
+- Node 24 oder neuer.
+- Deinen Verbindungslink, denselben Link `https://.../c/<secret>/mcp`, den deine KI nutzt, um mit zapbip zu sprechen. Behandle ihn wie ein Passwort.
+
+## Starten
+
+Öffne ein Terminal in dem Ordner, in dem du deine KI nutzt, und führe eines davon aus:
+
+```bash
+export ZAPBIP_CONNECTION_URL='https://<host>/c/<secret>/mcp'
+npx zapbip@0.1.0 connect --client claude-code
+```
+
+```bash
+export ZAPBIP_CONNECTION_URL='https://<host>/c/<secret>/mcp'
+npx zapbip@0.1.0 connect --client codex
+```
+
+Setzt du `ZAPBIP_CONNECTION_URL` nicht, fragt der Connector nach dem Link. Er nimmt den Link nie als Argument, weil Argumente in deinem Shell-Verlauf und in der Prozessliste auftauchen.
+
+Lass das Terminal offen. Der Connector gibt für jedes Ereignis eine Zeile aus und hält an, wenn du `Ctrl+C` drückst. Damit er ohne Terminal weiterläuft, siehe [Im Hintergrund ausführen](/de/developers/background-running).
+
+## Was passiert, wenn du schreibst
+
+1. Du schreibst deiner KI in WhatsApp.
+2. Der Connector empfängt deine Nachricht und weckt die neueste Sitzung im Ordner.
+3. Die KI liest deine Nachricht und antwortet dir in WhatsApp.
+4. Treffen mehrere Nachrichten zusammen ein, werden sie nacheinander, der Reihe nach, bearbeitet.
+
+Warst du offline oder war der Connector gestoppt, gehen deine Nachrichten nicht verloren. Verbindet er sich wieder, holt er jede unbeantwortete Nachricht ab.
+
+## Die Sitzung wählen
+
+Standardmäßig nutzt der Connector die neueste Sitzung im Ordner. Hast du denselben Ordner in einem anderen Fenster geöffnet, kann ein Wecken zu dieser Unterhaltung hinzukommen. Um das zu vermeiden, hefte eine Sitzung an:
+
+```bash
+npx zapbip@0.1.0 connect --client claude-code --session <session-id>
+```
+
+| Option      | Was sie tut                                                                                        |
+| ----------- | -------------------------------------------------------------------------------------------------- |
+| `--client`  | `claude-code` oder `codex`. Erforderlich.                                                          |
+| `--cwd`     | Der Ordner, in dem gearbeitet wird. Standard ist der Ordner, in dem du den Befehl ausgeführt hast. |
+| `--session` | Eine Sitzungs-ID (UUID), die immer fortgesetzt wird, statt der neuesten.                           |
+
+## Was die KI tun kann, wenn sie geweckt wird
+
+Nur eines: dir eine Nachricht zurückschicken. Der Connector gibt der KI eine private Konfiguration, die nur zapbip enthält, sodass Werkzeuge deiner anderen MCP-Server für sie nicht verfügbar sind. Claude Code läuft außerdem ohne deine Einstellungsdateien und mit abgeschalteten integrierten Werkzeugen, und Codex läuft mit einer schreibgeschützten Sandbox und mit abgeschalteten anderen MCP-Servern, die es in deinen Codex-Konfigurationsdateien findet. Kann es eine dieser Dateien nicht lesen, weckt es Codex nicht und lässt die Nachricht ungelesen. Es lehnt auch ab, wenn eine verwaltete Codex-Datei einen Schlüssel außerhalb einer kurzen Liste harmloser setzt, wenn ein Profil Sandbox, Genehmigung, Werkzeuge oder Features (oder einen Schlüssel außerhalb dieser Liste) setzt, wenn eine Datei einen Schalter für die Websuche einschaltet oder wenn `zapbip` irgendwo anders als in der `config.toml` deines Codex-Home-Ordners definiert ist. Die Websuche von Codex ist abgeschaltet. Für Codex bleiben `send_message` und eine schreibgeschützte Shell; Apps und Connectors deines Codex-Kontos werden nicht abgeschaltet, und die verwalteten macOS-Einstellungen `com.openai.codex` und die verwalteten Richtlinieneinstellungen von Claude Code gelten weiterhin. Deine Nachricht erreicht sie als Nachricht von dir, als verifiziert markiert. Eine Nachricht, die du von jemand anderem weitergeleitet hast, kommt als nicht verifiziert markiert an, mit einer Weiterleitungsmarke, und die KI behandelt sie nicht als deine Anweisung.
+
+Hat die Codex-App die Unterhaltung bereits geöffnet, weigert sich Codex, sie fortzusetzen. Der Connector startet dann eine neue Sitzung im selben Ordner, die ohne die frühere Unterhaltung beginnt, und nutzt sie von da an.
+
+## Eine offene Sitzung zuhören lassen
+
+`connect` weckt eine Sitzung, die geschlossen ist. Für eine Sitzung, die du gerade offen hast, kann Claude Code dich sofort hören, ohne Wecken und ohne Warten. Es gibt zwei Wege, und der erste ist der bessere.
+
+Der Kanal ist die erste Wahl. Er ist ein kleines Programm, das Claude Code selbst startet, genauso wie jedes andere Werkzeug. Er legt jede Nachricht, die du in WhatsApp schreibst, direkt in die offene Sitzung, als Nachricht von dir, als verifiziert markiert (eine weitergeleitete Nachricht wird als nicht verifiziert markiert). Setze `ZAPBIP_CONNECTION_URL` in der Umgebung, in der Claude Code läuft, und Claude Code startet ihn mit:
+
+```bash
+npx zapbip@0.1.0 channel
+```
+
+Der Kanal kann dich nicht nach dem Link fragen, deshalb liest er ihn nur aus `ZAPBIP_CONNECTION_URL`. Er nimmt keine Argumente.
+
+Deklariere beide Server in der `.mcp.json` des Ordners, in dem du arbeitest. Der Kanal bringt deine Nachrichten herein; der zapbip-HTTP-Server unter einem anderen Schlüssel gibt der Sitzung das Werkzeug `send_message`, mit dem sie antwortet:
+
+```json
+{
+  "mcpServers": {
+    "zapbip-channel": {
+      "command": "npx",
+      "args": ["zapbip@0.1.0", "channel"],
+      "env": { "ZAPBIP_CONNECTION_URL": "https://<host>/c/<secret>/mcp" }
+    },
+    "zapbip": {
+      "type": "http",
+      "url": "https://<host>/c/<secret>/mcp"
+    }
+  }
+}
+```
+
+Die Sitzung antwortet über `zapbip`. Ohne ihn hört die Sitzung dich, hat aber keine Möglichkeit zu antworten. Starte dann Claude Code mit:
+
+```bash
+claude --dangerously-load-development-channels server:zapbip-channel
+```
+
+`zapbip` ist der Schlüssel des Kanalservers in der `.mcp.json`. Die Startzeile zeigt `Channels (experimental)`. Claude Code bittet dich, den Entwicklungskanal und den MCP-Server des Projekts zu akzeptieren; akzeptiere beide.
+
+Der Listener ist die Sicherung. Er gibt für jede Nachricht, die du schreibst, eine Zeile aus, und Claude Code beobachtet diese Zeilen mit seinem Monitor-Werkzeug. Jede Zeile weckt die offene Sitzung, und solange du schweigst, wird nichts verbraucht:
+
+```bash
+export ZAPBIP_CONNECTION_URL='https://<host>/c/<secret>/mcp'
+npx zapbip@0.1.0 listen
+```
+
+Jede Zeile ist JSON mit der Nachrichten-ID, ihrer Art, `"sender":"owner"`, `"verified"` (`true` für deine eigene Nachricht, `false` für eine weitergeleitete), `"forwarded"` und dem Text. Eine Monitor-Beobachtung dauert bis zu 30 Minuten, deshalb startet die KI die Beobachtung jedes Mal neu, wenn eine endet. Andere Agents, die einen Hintergrundbefehl am Laufen halten und auf seine Ausgabe reagieren können, wie OpenClaw und Hermes, können `npx zapbip@0.1.0 listen` genauso nutzen.
+
+Beide Programme bleiben offen und verbinden sich von selbst neu, wie `connect`. Beide markieren eine Nachricht erst als bearbeitet, nachdem sie sie weitergegeben haben, sodass eine Nachricht nie verloren geht und nie doppelt angezeigt wird. Ihre Protokolle gehen auf die Fehlerausgabe und tragen nie deine Nachrichten oder deinen Link.
+
+So greifen die drei Wege ineinander: der Kanal für eine offene Sitzung, `listen` als seine Sicherung und `connect` für eine geschlossene.
+
+## Ein Connector pro Verbindung
+
+Startest du einen zweiten Connector für dieselbe Verbindung, beendet der erste das Wecken, das er gerade ausführt, und hält an. Führe ihn jeweils auf einem Computer aus. Trifft eine Nachricht genau in dem Moment ein, in dem du wechselst, können beide Connectors deine KI für dieselbe Nachricht einmal wecken; zapbip stellt mindestens einmal zu, nie null Mal.
+
+Solange ein Connector angeschlossen ist, weckt zapbip deine KI über ihn. Schließt er, kehrt zapbip zu der Einstellung zurück, die du vorher hattest.
+
+## Was er ausgibt
+
+Jede Zeile ist JSON mit einer Zeit und einem Ereignis, etwa `wake_started` und `wake_finished`. Die Zeilen tragen IDs, Arten, Ergebnisse und Zeiten. Sie tragen nie deine Nachrichten, die Antworten der KI oder deinen Verbindungslink.
+
+## Wenn etwas nicht funktioniert
+
+| Du siehst                             | Was es bedeutet                                                                                                                                             |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Der Connector beendet sich sofort     | Der Link ist unbekannt oder widerrufen. Bitte um einen neuen.                                                                                               |
+| Deine Nachricht bekommt keine Antwort | Im Ordner gibt es noch keine Sitzung, oder `claude` oder `codex` ist dort, wo der Connector läuft, nicht installiert. Öffne die KI einmal in diesem Ordner. |
+| Er verbindet sich ständig neu         | Dein Netzwerk ist ausgefallen. Er versucht es mit wachsenden Wartezeiten, bis zu 30 Sekunden, und macht dort weiter, wo er aufgehört hat.                   |
+| Er hat von selbst gestoppt            | Du hast einen weiteren Connector für dieselbe Verbindung gestartet.                                                                                         |

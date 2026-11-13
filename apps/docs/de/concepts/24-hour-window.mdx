@@ -1,0 +1,17 @@
+---
+title: '24-Stunden-Fenster'
+description: 'Warum eine Nachricht in die Warteschlange kommen kann und was der Owner erhält.'
+---
+
+WhatsApp erlaubt zapbip, Freitextnachrichten nur innerhalb von 24 Stunden nach der letzten Nachricht des Owners zu senden. zapbip schließt sein eigenes Fenster 10 Minuten früher. Eine Reaktion des Owners öffnet das Fenster nicht.
+
+Solange das Fenster offen ist, gehen Nachrichten sofort mit `delivery: "sent"` hinaus.
+
+Wenn es geschlossen ist:
+
+- gibt das Werkzeug `delivery: "queued"` zurück und die Nachricht wartet in der Ausgangswarteschlange;
+- sendet die erste Nachricht in der Warteschlange dem Owner einen genehmigten Hinweis, einmal pro geschlossenem Fenster;
+- öffnet die nächste Nachricht des Owners das Fenster und leert die Warteschlange der Reihe nach;
+- werden Nachrichten in der Warteschlange, die älter als 7 Tage sind, zu `expired`.
+
+Ein Senden, das der Kanal ablehnt, wird mit `delivery: "failed"` gespeichert, und das Werkzeug gibt einen Fehler zurück, der die Art nennt.

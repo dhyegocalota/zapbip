@@ -1,0 +1,22 @@
+---
+title: IAs compatibles
+description: Qué IA puedes conectar y cómo te oye cada una.
+---
+
+import AgentMatrix from '/snippets/es/agents/matrix.mdx';
+
+Elige la IA que usas y abre su página. Todas muestran las mismas cuatro cosas: qué funciona, cómo te oye esa IA, cómo configurarla desde cero y cómo comprobar que funciona. Todas te envían mensajes, preguntan con botones y listas y esperan tu respuesta todo el tiempo que haga falta.
+
+El tipo de activación dice cómo llega tu mensaje a la IA cuando escribes primero desde WhatsApp. El retraso esperado es lo que tarda eso una vez que escribes.
+
+<AgentMatrix />
+
+## Qué significa cada tipo de activación
+
+- **Local:** un conector o listener en tu ordenador despierta a la IA en el momento en que escribes.
+- **Webhook:** zapbip llama a un enlace que pertenece a la IA, y la IA arranca.
+- **Programado:** la IA busca tu mensaje con un temporizador, así que te oye en la siguiente comprobación.
+- **En espera:** otra IA tuya, un Grok Bot, responde en su lugar.
+- **Bandeja de entrada:** tu mensaje espera hasta que la IA lo busca.
+
+Si la IA no está escuchando ahora mismo, tu mensaje espera y zapbip te lo dice. No se pierde nada.

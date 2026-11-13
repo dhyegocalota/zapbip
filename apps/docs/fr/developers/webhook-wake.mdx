@@ -1,0 +1,56 @@
+---
+title: 'Réveil par webhook'
+description: "Laissez zapbip démarrer votre IA quand vous écrivez et qu'elle n'écoute pas."
+---
+
+Le réveil par webhook est le deuxième barreau de l'[échelle de réveil](/fr/concepts/wake-ladder). Quand le propriétaire écrit sur WhatsApp et que l'agent n'écoute pas, zapbip appelle un lien qui le démarre. Le flux d'installation le configure pour les clients qui le prennent en charge ; cette page montre ce que zapbip envoie et comment le configurer à la main.
+
+L'agent lit alors le message avec [check_inbox](/fr/mcp-reference/check-inbox) ou [get_messages](/fr/mcp-reference/get-messages) et répond. Le lien est enregistré avec [set_wake](/fr/mcp-reference/set-wake).
+
+L'appel ne porte rien de votre texte : son corps est toujours `{"event":"inbox_has_messages"}`. Les messages qui arrivent en rafale partagent un seul réveil, envoyé quelques secondes après le premier.
+
+## Routine Grok Bot
+
+Créez une routine avec un déclencheur webhook, puis enregistrez-la :
+
+```json
+{ "mode": "webhook", "url": "https://api2.cursor.sh/automations/webhook/<routine-id>", "token": "<token>" }
+```
+
+zapbip envoie `Authorization: Bearer <token>`.
+
+## Tâche planifiée claude.ai
+
+Créez une tâche planifiée avec un déclencheur d'API, puis enregistrez-la :
+
+```json
+{ "mode": "webhook", "url": "https://api.anthropic.com/v1/claude_code/routines/<trigger-id>/fire", "token": "<token>" }
+```
+
+zapbip envoie `Authorization: Bearer <token>` et les en-têtes de la routine.
+
+## Votre propre service
+
+Tout hôte `https` public convient. Le jeton est votre clé de signature, d'au moins 32 caractères, et n'est jamais envoyé. Chaque requête porte `X-Zapbip-Timestamp` (secondes Unix) et `X-Zapbip-Signature`, `sha256=` suivi du HMAC-SHA256 en hexadécimal de `<timestamp>.<body>`. Rejetez un horodatage de plus de 300 secondes.
+
+```js
+import { createHmac, timingSafeEqual } from 'node:crypto';
+
+const TOLERANCE_SECONDS = 300;
+
+export function isValidWake({ timestamp, signature, body, token }) {
+  const ageSeconds = Math.abs(Date.now() / 1000 - Number(timestamp));
+  if (!(ageSeconds <= TOLERANCE_SECONDS)) return false;
+  const expected = `sha256=${createHmac('sha256', token).update(`${timestamp}.${body}`).digest('hex')}`;
+  const received = Buffer.from(signature);
+  const wanted = Buffer.from(expected);
+  return received.length === wanted.length && timingSafeEqual(received, wanted);
+}
+```
+
+## Quand un réveil échoue
+
+- `408`, `425`, `429`, `5xx`, un délai dépassé ou une erreur réseau sont retentés jusqu'à 5 fois, en attendant 5, 10, 20 et 40 secondes et en respectant `Retry-After` sur `429` et `503`, jusqu'à 60 secondes.
+- Les redirections et les autres réponses `4xx` sont refusées aussitôt et ne sont pas retentées.
+- Quand un réveil est refusé ou abandonné, vous recevez une notification sur WhatsApp indiquant que le message attend dans la boîte de réception, et la connexion est marquée `failing`. Appelez de nouveau [set_wake](/fr/mcp-reference/set-wake) pour corriger la cible ; le prochain réveil livré la remet à `active`.
+- Si l'agent lit les messages avant que le réveil ne se déclenche, aucune requête n'est envoyée.

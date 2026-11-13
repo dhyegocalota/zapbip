@@ -1,0 +1,20 @@
+---
+title: 'check_inbox'
+description: 'Consulte la boîte de réception sans attendre.'
+---
+
+Consulte la boîte de réception sans attendre.
+
+## Entrée
+
+Aucun champ.
+
+## Sortie
+
+`{ "status": "empty" }` aussitôt, ou `{ "status": "new", "messages": [...] }` ; les messages renvoyés deviennent lus. Conçu pour les tâches planifiées, il répond donc à bas coût.
+
+## Types de messages
+
+import MessageKinds from '/snippets/fr/message-kinds.mdx';
+
+<MessageKinds />

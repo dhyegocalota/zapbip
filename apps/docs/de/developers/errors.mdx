@@ -1,0 +1,25 @@
+---
+title: Fehler
+description: Technische Fehler und was sie bedeuten.
+---
+
+## 401 unauthorized
+
+Das Geheimnis fehlt, ist falsch oder wurde widerrufen. Kopiere die Verbindungs-URL erneut von der zapbip-Nummer oder bitte um einen neuen Agent. Bei der Bearer-Form lautet der Header `Authorization: Bearer <secret>`.
+
+## Die Nachricht steht in der Warteschlange
+
+`delivery: "queued"` bedeutet, dass das [24-Stunden-Fenster](/de/features/the-24-hour-window) geschlossen ist. Die Nachricht wartet und kommt der Reihe nach an, sobald du an die zapbip-Nummer schreibst.
+
+## Upload-Fehler
+
+Die Bytes werden abgelehnt, bevor etwas gespeichert wird:
+
+| Status | Ursache                                              |
+| ------ | ---------------------------------------------------- |
+| 411    | `PUT` ohne `Content-Length`                          |
+| 413    | Body größer als die angegebene `size_bytes`          |
+| 415    | Ein Typ, der nicht zum angegebenen `mime_type` passt |
+| 410    | Der Upload ist nach 15 Minuten abgelaufen            |
+
+Siehe [create_upload](/de/mcp-reference/create-upload).

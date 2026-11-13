@@ -1,0 +1,46 @@
+---
+title: Dein Konto löschen
+description: So löschst du alles, was zapbip über dich speichert.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+Du kannst dein Konto jederzeit löschen, von WhatsApp aus. Es braucht zwei Nachrichten, damit eine verirrte Nachricht nichts löschen kann. Die Befehle und die Antworten von zapbip sind auf Englisch, denn das versteht das Produkt heute.
+
+<Steps>
+  <Step title="Anfragen">Schreib `delete account`. zapbip sagt dir, was entfernt wird und welche Formulierung es bestätigt.</Step>
+  <Step title="Bestätigen">
+    Schreib innerhalb von 10 Minuten `delete account permanently`. Nach dieser Zeit wird nichts gelöscht; schreib erneut `delete account`,
+    um von vorn zu beginnen.
+  </Step>
+</Steps>
+
+<Chat
+  messages={[
+    { you: true, text: 'delete account', time: '09:30' },
+    {
+      text: 'This deletes your account, every agent, message and file, and cannot be undone. To confirm within 10 minutes, send: delete account permanently',
+      time: '09:30',
+    },
+    { you: true, text: 'delete account permanently', time: '09:31' },
+    { text: 'Your account is deleted. Your next message starts a new account.', time: '09:31' },
+  ]}
+/>
+
+## Was entfernt wird
+
+- Jede Nachricht, jede Frage und jede ausstehende Antwort.
+- Jede verbundene KI. Ihre Prompts und Links funktionieren sofort nicht mehr.
+- Die für dich gespeicherten Dateien.
+- Deine Telefonnummer und dein Konto.
+
+## Was Meta und Cloudflare behalten
+
+- WhatsApp behält den Chatverlauf auf seiner Seite. Lösche den Chat in WhatsApp, wenn du ihn von deinem Handy entfernen willst.
+- Cloudflare behält Sicherungskopien für die eigene Aufbewahrungsfrist.
+
+## Neu anfangen
+
+Eine Nachricht vom selben Handy nach der Löschung legt ein neues, leeres Konto an. Es kommt wie jedes neue Konto auf die Warteliste; siehe die [FAQ](/de/help/faq).
+
+Um nur eine KI zu trennen, siehe [Deine KIs verwalten](/de/features/manage-your-agents).

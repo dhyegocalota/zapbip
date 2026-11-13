@@ -1,0 +1,26 @@
+---
+title: 'send_location'
+description: 'Sendet eine Standortmarkierung an den Owner.'
+---
+
+Sendet eine Standortmarkierung an den Owner.
+
+## Eingabe
+
+| Feld        | Typ              | Hinweise                         |
+| ----------- | ---------------- | -------------------------------- |
+| `latitude`  | number           |                                  |
+| `longitude` | number           |                                  |
+| `name`      | string, optional |                                  |
+| `address`   | string, optional |                                  |
+| `reply_to`  | string, optional | ID der zu zitierenden Nachricht. |
+
+## Ausgabe
+
+`{ "message_id": string, "delivery": "sent" | "queued" }`. `queued` bedeutet, dass das [24-Stunden-Fenster](/de/concepts/24-hour-window) geschlossen ist.
+
+## Nachrichtenarten
+
+import MessageKinds from '/snippets/de/message-kinds.mdx';
+
+<MessageKinds />

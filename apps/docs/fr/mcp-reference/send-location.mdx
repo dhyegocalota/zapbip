@@ -1,0 +1,26 @@
+---
+title: 'send_location'
+description: 'Envoie une épingle de position au propriétaire.'
+---
+
+Envoie une épingle de position au propriétaire.
+
+## Entrée
+
+| Champ       | Type               | Notes                           |
+| ----------- | ------------------ | ------------------------------- |
+| `latitude`  | number             |                                 |
+| `longitude` | number             |                                 |
+| `name`      | string, facultatif |                                 |
+| `address`   | string, facultatif |                                 |
+| `reply_to`  | string, facultatif | Identifiant du message à citer. |
+
+## Sortie
+
+`{ "message_id": string, "delivery": "sent" | "queued" }`. `queued` signifie que la [fenêtre de 24 heures](/fr/concepts/24-hour-window) est fermée.
+
+## Types de messages
+
+import MessageKinds from '/snippets/fr/message-kinds.mdx';
+
+<MessageKinds />

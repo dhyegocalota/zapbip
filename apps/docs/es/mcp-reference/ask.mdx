@@ -1,0 +1,26 @@
+---
+title: 'ask'
+description: 'Hace una pregunta al propietario con botones o una lista y espera la respuesta.'
+---
+
+Hace una pregunta al propietario con botones o una lista y espera la respuesta.
+
+## Entrada
+
+| Campo             | Tipo             | Notas                                                                                                               |
+| ----------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `question`        | string           | Hasta 1024 caracteres.                                                                                              |
+| `options`         | array de 1 a 10  | Hasta 3 opciones se muestran como botones (título de hasta 20 caracteres), de 4 a 10 como lista (fila de hasta 24). |
+| `timeout_seconds` | number, opcional | Hasta 50.                                                                                                           |
+
+## Salida
+
+`{ "status": "answered", "answer": ..., "message_id": string }` cuando el propietario responde a tiempo, o `{ "status": "pending", "question_id": string }` cuando la espera termina antes. Pasa el `question_id` a [wait_for_reply](/es/mcp-reference/wait-for-reply).
+
+Repetir la misma pregunta en menos de 4 minutos devuelve la misma pregunta y no envía nada. Mira [Preguntas](/es/concepts/questions).
+
+## Tipos de mensaje
+
+import MessageKinds from '/snippets/es/message-kinds.mdx';
+
+<MessageKinds />

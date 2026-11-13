@@ -1,0 +1,60 @@
+---
+title: 'set_wake'
+description: "Dites à zapbip comment joindre cet agent quand il n'écoute pas."
+---
+
+Enregistre comment cette connexion est réveillée quand vous écrivez et qu'aucun appel n'attend. Voir l'[échelle de réveil](/fr/concepts/wake-ladder) et le [guide du réveil par webhook](/fr/developers/webhook-wake).
+
+## Entrée
+
+| Champ              | Type                | Notes                                                                                                                                                                                                                                                                 |
+| ------------------ | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mode`             | string              | `local` réveille via le [connecteur](/fr/developers/local-connector) ; `webhook` enregistre un webhook ; `scheduled` fait consulter sa boîte de réception à l'agent à intervalle régulier ; `standby` confie vos messages à un autre agent ; `none` efface le réveil. |
+| `url`              | string, facultatif  | Obligatoire pour `webhook`. `https`, sans userinfo, sans fragment, port 443 ou absent, jusqu'à 512 caractères. Son hôte sélectionne le fournisseur.                                                                                                                   |
+| `token`            | string, facultatif  | Obligatoire pour `webhook`. Imprimable, sans espace, de 16 à 512 caractères. Pour un webhook générique, c'est la clé de signature, d'au moins 32 caractères.                                                                                                          |
+| `interval_minutes` | integer, facultatif | Obligatoire pour `scheduled`. De 1 à 1440 minutes. ChatGPT et claude.ai exécutent les tâches planifiées toutes les 60 minutes au plus court.                                                                                                                          |
+| `standby_agent`    | string, facultatif  | Obligatoire pour `standby`. Le nom d'une autre connexion du même compte qui n'est pas elle-même une veille.                                                                                                                                                           |
+
+Les champs d'un autre mode doivent être absents.
+
+## Planifié
+
+Un agent qui ne peut pas être démarré de l'extérieur exécute une tâche à intervalle régulier qui appelle [check_inbox](/fr/mcp-reference/check-inbox). Cela lui permet d'écouter sans limite de temps, en répondant à chaque message avec `send_message`.
+
+```json
+{ "mode": "scheduled", "interval_minutes": 60 }
+```
+
+Quand vous écrivez, zapbip vous dit quand attendre la réponse. Si aucune vérification n'a lieu pendant le double de l'intervalle, vous recevez une notification et vos messages attendent dans la boîte de réception jusqu'à la prochaine vérification.
+
+## Local
+
+Demandez à votre agent d'appeler cet outil avec `{ "mode": "local" }` pendant que le [connecteur](/fr/developers/local-connector) tourne sur votre ordinateur.
+
+## En veille
+
+Un agent qui ne peut pas être réveillé désigne un autre agent du même compte pour répondre à sa place. zapbip copie votre message vers la veille et la réveille ; la veille répond en son nom propre.
+
+```json
+{ "mode": "standby", "standby_agent": "grok-bot" }
+```
+
+Une connexion en veille ne transfère jamais vers une autre en veille : c'est un saut, pas plus. Si la veille est absente, retirée ou elle-même en mode veille, rien n'est copié et votre message attend chez le premier agent.
+
+## Fournisseurs
+
+Le fournisseur est choisi par l'hôte de l'URL, jamais par un champ.
+
+| Fournisseur      | Hôte                     | Chemin                                       | Authentification                                                  |
+| ---------------- | ------------------------ | -------------------------------------------- | ----------------------------------------------------------------- |
+| `grok_routine`   | `api2.cursor.sh`         | `/automations/webhook/<routine-id>`          | `Authorization: Bearer <token>`                                   |
+| `claude_routine` | `api.anthropic.com`      | `/v1/claude_code/routines/<trigger-id>/fire` | `Authorization: Bearer <token>`                                   |
+| `generic`        | tout hôte `https` public | n'importe lequel                             | `X-Zapbip-Timestamp` et `X-Zapbip-Signature`, aucun secret envoyé |
+
+## Sortie
+
+`{ "status": "saved", "wake_mode": string, "effective_rung": string, "provider": string | null }`. `provider` n'est défini que pour `webhook`. `effective_rung` vaut `inbox` quand la veille est inutilisable, et pour `local` tant qu'aucun connecteur n'est connecté, car le message attend alors dans la boîte de réception. L'URL, le jeton et l'hôte ne sont jamais renvoyés.
+
+## Erreurs
+
+Une erreur de l'outil nomme le champ invalide (`url`, `token`, `interval_minutes`, `standby_agent` ou `mode`) et sa limite, et ne répète jamais sa valeur. Rien n'est stocké et le réveil précédent est conservé. zapbip n'appelle pas le fournisseur à l'enregistrement : un mauvais jeton se voit au premier réveil, sous la forme d'une notification pour vous sur WhatsApp.

@@ -1,0 +1,24 @@
+---
+title: 'create_upload'
+description: 'Reserviert einen Upload für Bytes, die du lokal hältst.'
+---
+
+Reserviert einen Upload für Bytes, die du lokal hältst.
+
+## Eingabe
+
+| Feld         | Typ    | Hinweise |
+| ------------ | ------ | -------- |
+| `filename`   | string |          |
+| `mime_type`  | string |          |
+| `size_bytes` | number |          |
+
+## Ausgabe
+
+`{ "upload_id": string, "upload_url": string, "expires_at": string }`. `upload_url` ist ein signierter Link, der kein Verbindungsgeheimnis trägt. Sende die Bytes per `PUT` dorthin, mit einem `Content-Length`, der nicht größer als `size_bytes` ist, und gib dann `upload_id` an [send_media](/de/mcp-reference/send-media) weiter. Der Upload läuft nach 15 Minuten ab. Eine fehlende Länge, ein größerer Body, ein falscher Typ oder ein abgelaufener Upload werden mit 411, 413, 415 oder 410 abgelehnt, und nichts wird gespeichert.
+
+## Nachrichtenarten
+
+import MessageKinds from '/snippets/de/message-kinds.mdx';
+
+<MessageKinds />

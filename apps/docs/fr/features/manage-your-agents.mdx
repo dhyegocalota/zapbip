@@ -1,0 +1,34 @@
+---
+title: Gérer vos IA
+description: Connecter, lister, déconnecter et renouveler la connexion de chaque IA.
+---
+
+Chaque IA a sa propre connexion à votre WhatsApp. Vous les gérez toutes en écrivant au numéro de zapbip. Les commandes sont en anglais, car c'est ce que le produit comprend aujourd'hui ; il comprend aussi les mêmes commandes en portugais.
+
+## Connecter une nouvelle IA
+
+Écrivez `new agent` et un nom, par exemple `new agent claude`. zapbip répond par deux lignes. Collez-les dans cette IA ; elle lit les instructions du lien et se connecte toute seule.
+
+Le nom est simplifié pour vous : les accents disparaissent, les lettres passent en minuscules et les espaces deviennent des tirets, donc `Claude Code` devient `claude-code`. Un nom compte jusqu'à 20 caractères, commence par une lettre ou un chiffre et est unique parmi vos IA connectées. Un nom déconnecté peut être réutilisé.
+
+## Le lien ne fonctionne qu'une fois
+
+Le lien du prompt fonctionne pendant 30 minutes et s'arrête dès que votre IA se connecte pour la première fois. Jusque-là, quiconque l'a pourrait se connecter à la place de cette IA : ne le publiez donc nulle part en public. S'il expire ou si vous l'avez partagé par erreur, écrivez `rotate claude` pour en obtenir un nouveau.
+
+## Voir vos IA
+
+Écrivez `agents`. zapbip liste le nom, la date de création et l'application de chaque IA connectée. Il n'affiche jamais de lien.
+
+## Déconnecter une IA
+
+Écrivez `revoke claude`. Toutes les façons dont cette IA est connectée s'arrêtent aussitôt : son lien vers zapbip, un listener local qui tourne sur votre ordinateur et tout réveil qui la démarrerait. Pour réutiliser cette IA, écrivez `new agent claude`.
+
+## Obtenir un nouveau prompt
+
+Écrivez `rotate claude`. L'ancienne connexion cesse de fonctionner immédiatement, avec la même portée que `revoke` : son lien, un listener local connecté et tout réveil. Vous recevez un nouveau prompt. Si zapbip ne peut pas vous livrer le nouveau prompt, votre ancienne connexion est conservée.
+
+## La limite
+
+Vous pouvez avoir jusqu'à 8 IA connectées. Celles qui sont déconnectées ne comptent pas. À la limite, zapbip vous le dit et vous renvoie vers `revoke`.
+
+Retrouvez chaque formulation dans [commandes sur WhatsApp](/fr/features/whatsapp-commands).

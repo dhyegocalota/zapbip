@@ -1,0 +1,75 @@
+---
+title: Cursor
+description: Conecta Cursor a tu WhatsApp.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import StartLink from '/snippets/es/start-link.mdx';
+import InstallPrompt from '/snippets/es/install-prompt.mdx';
+
+## Qué funciona
+
+| Quieres                                  | Cursor                                                                      |
+| ---------------------------------------- | --------------------------------------------------------------------------- |
+| Recibir mensajes suyos                   | Texto, fotos, vídeos, audio, documentos, ubicaciones, contactos, reacciones |
+| Responderle con un toque                 | Botones y listas; espera tu toque                                           |
+| Escribir primero desde WhatsApp          | Sí, Cursor te oye mientras su chat está abierto                             |
+| Dejar una pregunta abierta durante horas | Sí, no hay límite de tiempo                                                 |
+
+<Chat
+  messages={[
+    { name: 'Cursor', text: 'Las pruebas pasan. ¿Hago commit de los cambios?', options: ['Sí', 'Todavía no'], time: '14:10' },
+    { you: true, text: 'Sí', time: '14:11' },
+  ]}
+/>
+
+## Cómo escucha
+
+Tipo de activación: **Local**. Cursor ejecuta `npx zapbip@0.1.0 listen` en una terminal en segundo plano y la mantiene en marcha. Cuando escribes en WhatsApp, aparece una línea nueva en esa terminal y despierta el chat.
+
+- Cursor no tiene opción programada, así que mantén esa terminal en marcha.
+
+Cuando tu IA te pregunta algo, zapbip guarda la pregunta y responde "pendiente" como máximo cada 50 segundos. Cursor vuelve entonces a llamar, y sigue llamando otra vez hasta que respondas, sin límite de tiempo.
+
+## Configúralo desde cero
+
+1. **Escribe al número de zapbip en WhatsApp.** Envía cualquier texto, por ejemplo `hi`.
+
+   <StartLink />
+
+2. **Pide un agente nuevo.** Un agente es una IA que conectas.
+
+   <Chat
+     messages={[
+       { you: true, text: 'new agent cursor', time: '14:00' },
+       {
+         name: 'zapbip',
+         text: 'Agent cursor created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate cursor".',
+         time: '14:00',
+       },
+     ]}
+   />
+
+   Los comandos y las respuestas de zapbip están en inglés, que es lo que el producto entiende hoy.
+
+3. **Pega la línea en el chat de Cursor.**
+
+   <InstallPrompt />
+
+   Cursor lee las instrucciones y las sigue en orden. Antes de cambiar un ajuste, te dice cuál y espera tu sí. El enlace es secreto, así que no lo dejes en chats que compartes.
+
+4. **Di que sí.** Cursor hace entonces el resto, en este orden.
+
+5. **Añade zapbip a Cursor.** Te pregunta primero y espera tu sí. Luego añade un servidor MCP llamado `zapbip` sobre HTTP en `<connectionLink>` en los ajustes MCP de Cursor.
+
+6. **Empieza a escuchar.** Ejecuta `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen` en una terminal en segundo plano y mantiene esa terminal en marcha, sin límite de tiempo. Cada vez que aparece una línea nueva allí, llama a `check_inbox` y responde.
+
+7. **Pruébalo.** En el chat llama a `send_message` con ✅ installed. Después reinicia el chat de Cursor para usar las herramientas de zapbip.
+
+## Comprueba que funciona
+
+Pide a Cursor que envíe `✅ installed` a tu WhatsApp. Debería llegar en unos segundos.
+
+<Chat messages={[{ name: 'Cursor', text: '✅ installed', time: '14:03' }]} />
+
+Si no llega nada, mira [Solución de problemas](/es/help/troubleshooting).

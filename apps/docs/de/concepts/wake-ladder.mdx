@@ -1,0 +1,65 @@
+---
+title: 'Weck-Leiter'
+description: 'Wie zapbip eine KI erreicht, die nicht zuhört, wenn du schreibst.'
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+Wenn du in WhatsApp schreibst, kann deine KI geschlossen, beschäftigt oder einfach nicht auf dich eingestellt sein. zapbip erreicht sie dann über die höchste Sprosse, die ihre Verbindung unterstützt, und fällt auf die nächste zurück, wenn eine Sprosse nicht verfügbar ist:
+
+| Sprosse         | Was passiert                                                                                                                                                          | Erwartete Verzögerung        |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| Lokal           | zapbip schiebt deine Nachricht an den [Connector](/de/developers/local-connector), der auf deinem Computer läuft und deine Claude-Code- oder Codex-Sitzung fortsetzt. | 7 s Claude Code, 6 s Codex   |
+| Webhook         | zapbip ruft einen Link auf, der die KI startet. Siehe die [Anleitung zum Webhook-Wecken](/de/developers/webhook-wake).                                                | 9 s Grok Bot, 16 s claude.ai |
+| Geplant         | Die KI prüft ihren Posteingang per Timer und kann so ohne Zeitlimit zuhören.                                                                                          | bis zum Intervall            |
+| Bereitschaft    | Eine andere KI von dir erhält eine Kopie deiner Nachricht und antwortet stattdessen.                                                                                  | nicht gemessen               |
+| Nur Posteingang | Die Nachricht wartet und zapbip sagt dir, dass die KI gerade nicht zuhört.                                                                                            | bis eine KI sie liest        |
+
+Auf jeder Sprosse wird deine Nachricht im [Posteingang](/de/concepts/inbox) aufbewahrt, bis eine KI sie liest. Nichts geht verloren.
+
+## Lokal: dein eigener Computer
+
+Der Connector hält eine offene Leitung zu zapbip, solange er läuft. Wenn du schreibst, schiebt zapbip die Nachricht durch diese Leitung, und der Connector setzt deine Sitzung auf deinem Computer fort. Schließt sich die letzte Leitung, stellt zapbip das Wecken wieder her, das du vorher hattest. Starte ihn mit `npx zapbip@0.1.0 connect`.
+
+## Geplant: ohne Zeitlimit zuhören
+
+Manche KIs lassen sich von außen nicht starten, und jeder Aufruf, den sie an zapbip machen, endet nach wenigen Minuten. Ein geplantes Wecken löst das: Du bittest die KI, eine kleine Aufgabe per Timer auszuführen, alle paar Minuten oder jede Stunde, und jeder Lauf liest, was du geschrieben hast, und antwortet.
+
+Du wählst, wie oft, von alle 1 Minute bis alle 1440 Minuten (ein Tag). ChatGPT und claude.ai führen geplante Aufgaben nur alle 60 Minuten oder seltener aus, deshalb ist für sie das kürzeste Intervall 60 Minuten.
+
+Wenn du schreibst, sagt dir zapbip ungefähr, wann du die Antwort erwarten kannst. Dieser Hinweis ist wie alle von zapbip auf Englisch, der Sprache des Produkts heute:
+
+<Chat
+  contact="zapbip"
+  messages={[
+    { you: true, text: 'Kannst du den Bericht zusammenfassen?' },
+    {
+      notice: true,
+      text: 'The agent Claude checks the inbox every hour. Last check 20 min ago. Your message waits there until the next check.',
+    },
+  ]}
+/>
+
+Hört der Timer auf zu laufen, sagt zapbip das einmal, nachdem das Doppelte des Intervalls ohne Prüfung vergangen ist, und deine Nachrichten warten weiter:
+
+<Chat contact="zapbip" messages={[{ notice: true, text: "Claude hasn't checked in 2 h: your messages wait" }]} />
+
+Die nächste Prüfung beendet die Warnung ohne weitere Nachricht.
+
+Ist das [24-Stunden-Fenster](/de/concepts/24-hour-window) geschlossen, lässt sich dieser Hinweis nicht so senden. zapbip sendet pro geschlossenem Fenster einen Vorlagen-[Hinweis](/de/concepts/owner-notices), und der Hinweis wartet und kommt an, wenn du schreibst.
+
+## Bereitschaft: eine andere KI antwortet
+
+Manche KIs, etwa Grok im Web, lassen sich gar nicht starten. Du kannst eine andere KI desselben Kontos als ihre Bereitschaft benennen, zum Beispiel Grok Bot. Schreibst du an die erste, gibt zapbip der Bereitschaft eine Kopie, weckt sie, und sie antwortet als sie selbst und sagt, wer sie ist. Die erste KI sieht die Nachricht als von der Bereitschaft bearbeitet.
+
+<Chat
+  contact="zapbip"
+  messages={[
+    { you: true, text: '@grok was steht in meinem Kalender?' },
+    { name: 'Grok Bot (standby for Grok)', text: 'Heute hast du zwei Termine: 10:00 und 15:30.' },
+  ]}
+/>
+
+Eine Bereitschaftsverbindung leitet nie an eine weitere Bereitschaftsverbindung weiter: Es ist nur ein Hop. Fehlt die Bereitschaft, wurde sie entfernt oder ist sie selbst eine Bereitschaft, wird nichts kopiert: Die Nachricht wartet bei der ersten KI und du bekommst den üblichen Hinweis.
+
+Die KI richtet das bei der Installation für dich ein. Um es von Hand zu ändern, nutze [set_wake](/de/mcp-reference/set-wake).

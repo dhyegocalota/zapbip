@@ -1,0 +1,102 @@
+---
+title: 'OpenClaw'
+description: 'Escribe a OpenClaw en WhatsApp y haz que responda, sin límite de tiempo.'
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+## Qué funciona
+
+OpenClaw sigue escuchando tu WhatsApp a través de un pequeño canal de zapbip. Escribes primero o respondes una pregunta más tarde, y el mensaje llega a la sesión de OpenClaw.
+
+<Chat
+  contact="OpenClaw"
+  messages={[
+    { you: true, text: 'Recuérdame enviar la factura mañana a las 9.', time: '18:02' },
+    { name: 'OpenClaw', text: 'Hecho. Te lo recordaré mañana a las 9:00.', time: '18:02' },
+  ]}
+/>
+
+### Mensajes que reenvías
+
+Un mensaje que reenviaste de otra persona llega a OpenClaw con una etiqueta que dice que no lo escribiste tú, y no puede ejecutar comandos.
+
+## Cómo escucha
+
+Peldaño: Local. Mientras una pregunta está abierta, OpenClaw espera hasta 50 segundos cada vez. Si no has respondido, la espera termina como pendiente y OpenClaw vuelve a llamar otra vez, tantas veces como haga falta, sin límite de tiempo.
+
+El canal mantiene abierta una conexión con zapbip, sin límite de tiempo. Si la red se cae, se reconecta solo, esperando un poco más tras cada intento fallido (1 segundo al principio, 30 como máximo). Los mensajes que envías mientras tanto esperan en tu bandeja de entrada de zapbip, y el canal recoge todos los que no se respondieron en cuanto vuelve.
+
+### Si el canal no se puede instalar
+
+OpenClaw puede consultar en su lugar. Añade el servidor MCP de la configuración y crea un job cada 1 minuto que llame a `check_inbox`. Tus mensajes esperan hasta un minuto, y la respuesta llega del mismo modo.
+
+## Configúralo desde cero
+
+### Qué necesitas
+
+- OpenClaw 2026.10.10 o posterior, con su gateway en marcha.
+- Tu enlace de conexión, el mismo enlace `https://.../c/<secret>/mcp` que tu IA usa para hablar con zapbip. Trátalo como una contraseña.
+
+### Instala el canal
+
+El plugin lee de zapbip tus mensajes para este agente y publica de vuelta las respuestas del agente. No hace nada más. El comando de instalación necesita `--accept-capabilities` para que OpenClaw pueda instalarlo sin volver a preguntarte.
+
+```bash
+openclaw plugins install @zapbip/openclaw-plugin@0.1.0 --force --accept-capabilities
+```
+
+Luego define el enlace en el canal `zapbip` y activa el plugin en `openclaw.json`:
+
+```json
+{
+  "channels": { "zapbip": { "connectionLink": "https://<host>/c/<secret>/mcp" } },
+  "plugins": { "entries": { "zapbip": { "enabled": true } } }
+}
+```
+
+El archivo que contiene tu enlace de conexión funciona como una contraseña. Dale el permiso `600` para que solo tu usuario pueda leerlo, y nunca lo compartas ni lo subas al repositorio:
+
+```bash
+chmod 600 <file>
+```
+
+Reinicia el gateway.
+
+Ejecuta un solo listener por agente: el plugin o `npx zapbip@0.1.0 listen`, nunca los dos. Un segundo listener reemplaza al primero.
+
+### Cómo responde OpenClaw
+
+Las respuestas de OpenClaw a tus mensajes vuelven a través del propio canal, sin ninguna configuración extra. Si el envío de una respuesta falla, el canal escribe `plugin_reply_failed` en el registro del gateway y no lo reintenta, así que esa respuesta puede perderse.
+
+Añade zapbip como servidor MCP para que OpenClaw también pueda iniciar una conversación contigo, hacerte una pregunta con botones y esperar la respuesta, y usar la alternativa de consulta de abajo:
+
+```json
+{
+  "mcp": {
+    "servers": {
+      "zapbip": { "url": "https://<host>/c/<secret>/mcp", "transport": "streamable-http" }
+    }
+  }
+}
+```
+
+Luego pide a OpenClaw en WhatsApp que envíe `✅ installed`. Si ese mensaje llega, funciona. Los comandos y las respuestas de zapbip están en inglés, que es lo que el producto entiende hoy.
+
+<Chat
+  contact="zapbip"
+  messages={[
+    { you: true, text: 'Envía ✅ installed cuando estés instalado.', time: '18:10' },
+    { name: 'OpenClaw', text: '✅ installed', time: '18:10' },
+  ]}
+/>
+
+## Comprueba que funciona
+
+| Ves                                                       | Qué significa                                                                                                               |
+| --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Ninguna respuesta a tu mensaje                            | El gateway no está en marcha, `channels.zapbip` no tiene `connectionLink`, o `plugins.entries.zapbip.enabled` no es `true`. |
+| El canal se detiene solo                                  | Otro canal o conector se inició para la misma conexión y lo reemplazó.                                                      |
+| OpenClaw te oye pero la respuesta nunca llega             | El registro del gateway muestra `plugin_reply_failed`: el envío de la respuesta falló y no se reintenta. Escribe de nuevo.  |
+| OpenClaw no puede iniciar una conversación ni preguntarte | Falta el servidor MCP `zapbip` en `mcp.servers`.                                                                            |
+| El canal se detiene con un error                          | El enlace es desconocido o la conexión fue revocada. Pide uno nuevo.                                                        |

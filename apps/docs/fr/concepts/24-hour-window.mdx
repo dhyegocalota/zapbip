@@ -1,0 +1,17 @@
+---
+title: 'Fenêtre de 24 heures'
+description: 'Pourquoi un message peut être mis en file et ce que reçoit le propriétaire.'
+---
+
+WhatsApp ne laisse zapbip envoyer des messages libres que dans les 24 heures qui suivent le dernier message du propriétaire. zapbip ferme sa propre fenêtre 10 minutes plus tôt. Une réaction du propriétaire n'ouvre pas la fenêtre.
+
+Tant que la fenêtre est ouverte, les messages partent aussitôt avec `delivery: "sent"`.
+
+Quand elle est fermée :
+
+- l'outil renvoie `delivery: "queued"` et le message attend dans la file d'envoi ;
+- le premier message en file envoie au propriétaire une notification approuvée, une fois par fenêtre fermée ;
+- le message suivant du propriétaire ouvre la fenêtre et vide la file dans l'ordre ;
+- les messages en file de plus de 7 jours passent à `expired`.
+
+Un envoi que le canal rejette est stocké avec `delivery: "failed"`, et l'outil renvoie une erreur qui nomme le type.

@@ -1,0 +1,31 @@
+---
+title: 'Avisos al propietario'
+description: 'Los mensajes aprobados que recibe el propietario cuando la ventana está cerrada.'
+---
+
+Fuera de la [ventana de 24 horas](/es/concepts/24-hour-window), WhatsApp solo entrega plantillas aprobadas. zapbip usa dos, en el idioma del propietario (portugués o inglés).
+
+| Plantilla               | Cuándo                      | Respuesta rápida      |
+| ----------------------- | --------------------------- | --------------------- |
+| `zapbip_agent_notice`   | un agente envió un mensaje  | `Abrir` / `Open`      |
+| `zapbip_agent_question` | un agente hizo una pregunta | `Responder` / `Reply` |
+
+Cada una nombra al agente y muestra una vista previa de como máximo 60 caracteres en una línea.
+
+## Por qué el aviso va primero
+
+Un aviso llega antes del contenido real y no lleva nada de él. El mensaje real, o la pregunta con sus botones o su lista, va después, porque un mensaje libre solo se permite una vez que el propietario ha escrito.
+
+El propietario toca la respuesta rápida. Ese toque es un mensaje del propietario: abre la ventana y la cola se entrega en orden.
+
+zapbip envía un aviso por ventana cerrada. El toque es la única acción que ofrece un aviso, y nunca se reenvía a un agente.
+
+## Cuando se rechaza la plantilla
+
+Si WhatsApp rechaza la plantilla, el mensaje sigue en cola y zapbip intenta el aviso de nuevo tras 5 minutos, luego tras 10, 20 y así sucesivamente, duplicando hasta 6 horas. Los mensajes en cola se entregan la próxima vez que el propietario escribe.
+
+## Notas del propio zapbip
+
+zapbip a veces te escribe por su cuenta, por ejemplo para decir que una IA dejó de revisar su bandeja de entrada. Mientras la ventana está cerrada, una nota así sigue la misma regla: un aviso de plantilla por ventana cerrada, que nombra a zapbip. La nota espera en la cola y llega cuando escribes.
+
+Cuando una IA también envió un mensaje mientras la ventana está cerrada, el aviso nombra a esa IA y muestra una vista previa de su mensaje, porque es lo que más probablemente quieres abrir. La nota de zapbip llega igualmente justo después, en orden.

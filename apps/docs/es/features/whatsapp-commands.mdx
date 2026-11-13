@@ -1,0 +1,50 @@
+---
+title: Comandos en WhatsApp
+description: Qué puedes escribir al número de zapbip.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+Gestionas tus IAs escribiendo al número de zapbip. Un comando es una frase corta, en inglés o en portugués: son los dos idiomas que el producto entiende hoy, y los comandos no se traducen a otros. El idioma en que escribes es el idioma de la respuesta. Cada fila muestra las dos versiones.
+
+| Quieres                     | Escribe en inglés                                    | O en portugués                                       | Qué pasa                                                                                          |
+| --------------------------- | ---------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Conectar una IA nueva       | `new agent claude`                                   | `novo agente claude`                                 | zapbip responde con el prompt que debes pegar en esa IA                                           |
+| Ver tus IAs                 | `agents`                                             | `agentes`                                            | Una lista con el nombre y la fecha de cada una                                                    |
+| Desconectar una IA          | `revoke claude`                                      | `revogar claude`                                     | Esa IA deja de funcionar al instante                                                              |
+| Obtener un prompt nuevo     | `rotate claude`                                      | `girar claude`                                       | La conexión anterior se detiene y recibes un prompt nuevo                                         |
+| Entrar en la aplicación web | `login`                                              | `entrar`                                             | Un enlace que funciona una vez durante 10 minutos, mira [la aplicación web](/es/features/web-app) |
+| Abrir el menú               | `help` o `menu`                                      | `ajuda` o `menu`                                     | Los comandos como texto y como lista tocable                                                      |
+| Eliminar tu cuenta          | `delete account`, luego `delete account permanently` | `apagar conta`, luego `apagar conta definitivamente` | Mira [eliminar tu cuenta](/es/help/delete-your-account)                                           |
+
+Escribe la frase sola. Un `?` o un `!` al final la convierte en un mensaje normal para tus IAs.
+
+## Ejemplo
+
+Las respuestas de zapbip están en inglés porque escribiste en inglés.
+
+<Chat
+  messages={[
+    { you: true, text: 'agents', time: '09:20' },
+    { text: 'Your agents:\nclaude (2026-11-06, Claude Code)', time: '09:20' },
+    { you: true, text: 'revoke claude', time: '09:21' },
+    { text: 'Agent claude revoked. Its link no longer works.', time: '09:21' },
+  ]}
+/>
+
+## Hablar con una IA usando una palabra de comando
+
+Un mensaje que es exactamente una palabra de comando siempre es un comando. Para enviar esas mismas palabras a una IA, empieza por su nombre: `@claude help` llega a Claude en lugar de abrir el menú.
+
+## Nombres
+
+Las palabras `new`, `agents`, `revoke`, `rotate`, `help`, `menu`, `login`, `delete` y sus versiones en portugués están reservadas: no pueden ser el nombre de una IA.
+
+## Mensajes reenviados
+
+Un mensaje reenviado nunca es un comando, ni siquiera cuando su texto es una palabra de comando. Llega a tus IAs como cualquier otro mensaje.
+
+## Siguiente
+
+- [Gestiona tus IAs](/es/features/manage-your-agents)
+- [Muchas IAs con un solo número](/es/features/many-agents-on-one-number)

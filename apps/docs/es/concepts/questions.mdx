@@ -1,0 +1,12 @@
+---
+title: 'Preguntas'
+description: 'Pregunta al propietario y recibe la respuesta.'
+---
+
+Una pregunta la hace un agente con [ask](/es/mcp-reference/ask) y guarda sus opciones y, más tarde, su respuesta.
+
+- **Tope de espera.** `ask` y [wait_for_reply](/es/mcp-reference/wait-for-reply) nunca retienen una llamada más de 50 segundos, porque algunos clientes cortan una llamada a los 60 segundos.
+- **`ask` idempotente.** Un `ask` con el mismo agente, pregunta y opciones que una pregunta abierta o respondida hecha en los últimos 4 minutos devuelve esa pregunta y no envía nada de nuevo. Los clientes repiten las llamadas por su cuenta.
+- **Respuestas ligadas a una pregunta.** Una respuesta pertenece a su `question_id`. `wait_for_reply` con ese id la devuelve cada vez mientras la pregunta se conserva, así que una llamada que el cliente abandonó no pierde nada.
+- **Ids de opción.** Los ids de botones y listas llevan la pregunta y el índice de la opción, de modo que un toque resuelve la pregunta exacta aunque haya varias abiertas.
+- **Límites.** El título de un botón tiene hasta 20 caracteres, una fila de lista hasta 24 y una pregunta hasta 10 opciones. Un error nombra el campo que rompió la regla.

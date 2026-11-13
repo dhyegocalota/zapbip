@@ -1,0 +1,85 @@
+---
+title: Claude Code
+description: Verbinde Claude Code mit deinem WhatsApp.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import StartLink from '/snippets/de/start-link.mdx';
+import InstallPrompt from '/snippets/de/install-prompt.mdx';
+
+## Was funktioniert
+
+| Du willst                           | Claude Code                                                             |
+| ----------------------------------- | ----------------------------------------------------------------------- |
+| Nachrichten von ihr erhalten        | Text, Fotos, Videos, Audio, Dokumente, Standorte, Kontakte, Reaktionen  |
+| Mit einem Antippen antworten        | Buttons und Listen; sie wartet auf dein Antippen                        |
+| Zuerst von WhatsApp aus schreiben   | Ja, sie antwortet in etwa 7 Sekunden, auch wenn die Sitzung untätig ist |
+| Eine Frage stundenlang offen lassen | Ja, es gibt kein Zeitlimit                                              |
+
+<Chat
+  messages={[
+    { name: 'Claude', text: 'Das Refactoring ist bereit zum Mergen. Jetzt mergen?', options: ['Ja', 'Noch nicht'], time: '15:20' },
+    { you: true, text: 'Ja', time: '15:21' },
+  ]}
+/>
+
+## So hört sie zu
+
+Weckart: **Lokal**. Ein Connector auf deinem Computer weckt Claude Code, sodass es etwa 7 Sekunden nach deiner Nachricht antwortet.
+
+- Starte Claude Code mit `claude --dangerously-load-development-channels server:zapbip-channel`. Der zapbip-Kanal schiebt dann jede WhatsApp-Nachricht in die offene Sitzung, sobald sie ankommt.
+- Ist die Sitzung geschlossen, setzt der Connector sie in etwa 7 Sekunden fort. Leerlauf kostet keine Tokens; jede Nachricht kostet einen Zug.
+- Lass den Listener laufen. Damit er auch nach dem Schließen des Terminals weiterläuft, folge [Den Connector als Dienst ausführen](/de/developers/background-running).
+
+Wenn deine KI dich etwas fragt, hält zapbip die Frage fest und antwortet höchstens alle 50 Sekunden mit "ausstehend". Deine KI ruft dann erneut auf und ruft immer wieder auf, bis du antwortest, ohne Zeitlimit.
+
+Nutze einen Listener, nie zwei zusammen. Ist der Kanal nicht an, lässt Claude Code `npx zapbip@0.1.0 listen` laufen und beobachtet ihn mit Monitor. Eine Beobachtung dauert höchstens 30 Minuten, daher startet Claude Code sie bei jedem Timeout-Hinweis neu.
+
+## Von Grund auf einrichten
+
+1. **Schreib der zapbip-Nummer auf WhatsApp.** Sende irgendeinen Text, zum Beispiel `hi`.
+
+   <StartLink />
+
+2. **Bitte um einen neuen Agent.** Ein Agent ist eine KI, die du verbindest.
+
+   <Chat
+     messages={[
+       { you: true, text: 'new agent claude-code', time: '15:00' },
+       {
+         name: 'zapbip',
+         text: 'Agent claude-code created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate claude-code".',
+         time: '15:00',
+       },
+     ]}
+   />
+
+   Die Befehle und die Antworten von zapbip sind auf Englisch, denn das versteht das Produkt heute.
+
+3. **Füge die Zeile in Claude Code ein.**
+
+   <InstallPrompt />
+
+   Claude Code liest die Anleitung und folgt ihr der Reihe nach. Bevor es eine Datei oder eine Einstellung ändert, sagt es dir welche und wartet auf dein Ja. Der Link ist geheim, halte ihn also aus Chats heraus, die du teilst.
+
+4. **Sag Ja.** Claude Code erledigt dann den Rest, in dieser Reihenfolge.
+
+5. **Füge zapbip zu Claude Code hinzu.** Gibt es einen älteren Eintrag `zapbip` oder `zapbip-channel`, entfernt Claude Code ihn mit `claude mcp remove --scope user zapbip` oder `claude mcp remove --scope user zapbip-channel`. Dann führt es `claude mcp add --transport http --scope user zapbip <connectionLink>` für die Werkzeuge aus und `claude mcp add --scope user zapbip-channel -e ZAPBIP_CONNECTION_URL=<connectionLink> -- npx zapbip@0.1.0 channel` für den Live-Kanal.
+
+   Die Befehle in diesen Schritten tragen deinen Verbindungslink, er landet also in deinem Shell-Verlauf. Um das zu vermeiden, lege `ZAPBIP_CONNECTION_URL` wie in [Den Connector als Dienst ausführen](/de/developers/background-running) in eine Env-Datei.
+
+6. **Speichere den zapbip-Skill.** Nach deinem Ja schreibt es `~/.claude/skills/zapbip/SKILL.md`, damit jede Sitzung weiß, wie sie WhatsApp nutzt, einschließlich wann sie `check_inbox` aufruft.
+
+7. **Wähle einen Listener.** Eine Verbindung hält einen Listener, und ein zweiter ersetzt den ersten, also nutzt es genau einen davon, nie zwei zusammen. Für eine gestoppte Sitzung führt es `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 connect --client claude-code` im Hintergrund aus. Der Connector weckt deine Sitzung, wenn du schreibst, während Claude Code untätig ist, und setzt eine geschlossene mit `claude -p --resume` fort.
+
+8. **Nur wenn Kanäle nicht verfügbar sind.** Es führt `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen` im Hintergrund aus und beobachtet ihn mit Monitor, wobei es ihn bei jedem Timeout-Hinweis neu startet.
+
+9. **Teste es.** In einem frischen Prozess führt es `claude -p "Call send_message with the text '✅ installed'" --allowedTools=mcp__zapbip__send_message` aus. Ein `send_message` mit ✅ installed erreicht dein WhatsApp. Schlägt der Befehl fehl, hält es an und zeigt die letzten 20 Zeilen. Starte danach Claude Code neu, um die zapbip-Werkzeuge zu nutzen.
+
+## Prüfen, ob es funktioniert
+
+Bitte Claude Code, `✅ installed` an dein WhatsApp zu senden. Es sollte in wenigen Sekunden ankommen.
+
+<Chat messages={[{ name: 'Claude', text: '✅ installed', time: '15:03' }]} />
+
+Kommt nichts an, siehe [Fehlerbehebung](/de/help/troubleshooting).

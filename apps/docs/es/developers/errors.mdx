@@ -1,0 +1,25 @@
+---
+title: Errores
+description: Errores técnicos y qué significan.
+---
+
+## 401 unauthorized
+
+El secreto falta, es incorrecto o fue revocado. Copia de nuevo la URL de conexión desde el número de zapbip, o pide un agente nuevo. Con la forma Bearer, la cabecera es `Authorization: Bearer <secret>`.
+
+## El mensaje está en cola
+
+`delivery: "queued"` significa que la [ventana de 24 horas](/es/features/the-24-hour-window) está cerrada. El mensaje espera y llega, en orden, en cuanto escribes al número de zapbip.
+
+## Errores de subida
+
+Los bytes se rechazan antes de guardar nada:
+
+| Estado | Causa                                                |
+| ------ | ---------------------------------------------------- |
+| 411    | `PUT` sin un `Content-Length`                        |
+| 413    | Cuerpo mayor que el `size_bytes` declarado           |
+| 415    | Un tipo que no coincide con el `mime_type` declarado |
+| 410    | La subida caducó a los 15 minutos                    |
+
+Mira [create_upload](/es/mcp-reference/create-upload).

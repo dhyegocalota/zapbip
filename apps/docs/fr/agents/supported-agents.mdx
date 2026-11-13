@@ -1,0 +1,22 @@
+---
+title: IA compatibles
+description: Quelle IA vous pouvez connecter, et comment chacune vous entend.
+---
+
+import AgentMatrix from '/snippets/fr/agents/matrix.mdx';
+
+Choisissez l'IA que vous utilisez et ouvrez sa page. Toutes montrent les mêmes quatre choses : ce qui fonctionne, comment cette IA vous entend, comment la configurer de zéro et comment vérifier que ça marche. Toutes vous envoient des messages, posent leurs questions avec des boutons et des listes, et attendent votre réponse aussi longtemps qu'il le faut.
+
+Le type de réveil indique comment votre message atteint l'IA quand vous écrivez en premier depuis WhatsApp. Le délai attendu est le temps que cela prend une fois que vous avez écrit.
+
+<AgentMatrix />
+
+## Ce que signifie chaque type de réveil
+
+- **Local :** un connecteur ou un listener sur votre ordinateur réveille l'IA à l'instant où vous écrivez.
+- **Webhook :** zapbip appelle un lien qui appartient à l'IA, et l'IA démarre.
+- **Planifié :** l'IA cherche votre message à intervalle régulier, elle vous entend donc à la vérification suivante.
+- **En veille :** une autre de vos IA, un Grok Bot, répond à sa place.
+- **Boîte de réception :** votre message attend que l'IA le cherche.
+
+Si l'IA n'écoute pas pour le moment, votre message attend et zapbip vous le dit. Rien n'est perdu.

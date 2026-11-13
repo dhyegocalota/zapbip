@@ -1,0 +1,30 @@
+---
+title: 'send_media'
+description: 'Sendet ein Bild, Video, Audio, eine Sprachnachricht, ein Dokument oder einen Sticker.'
+---
+
+Sendet ein Bild, Video, Audio, eine Sprachnachricht, ein Dokument oder einen Sticker.
+
+## Eingabe
+
+| Feld        | Typ                                                  | Hinweise                                                                       |
+| ----------- | ---------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `kind`      | `image`, `video`, `audio`, `document` oder `sticker` | Limits: 5 MB, 16 MB, 16 MB, 100 MB und 100 KB.                                 |
+| `url`       | string                                               | Ein https-Link. Gib diesen oder `upload_id` an.                                |
+| `upload_id` | string                                               | Aus [create_upload](/de/mcp-reference/create-upload). Gib diese oder `url` an. |
+| `caption`   | string, optional                                     | Bis zu 1024 Zeichen.                                                           |
+| `filename`  | string, optional                                     | Bis zu 240 Zeichen.                                                            |
+| `voice`     | boolean, optional                                    | Sendet das Audio als Sprachnachricht.                                          |
+| `reply_to`  | string, optional                                     | ID der zu zitierenden Nachricht.                                               |
+
+## Ausgabe
+
+`{ "message_id": string, "delivery": "sent" | "queued" }`. `queued` bedeutet, dass das [24-Stunden-Fenster](/de/concepts/24-hour-window) geschlossen ist.
+
+Ein Sticker muss `image/webp` sein. Größe und Typ werden geprüft, bevor etwas gesendet wird.
+
+## Nachrichtenarten
+
+import MessageKinds from '/snippets/de/message-kinds.mdx';
+
+<MessageKinds />

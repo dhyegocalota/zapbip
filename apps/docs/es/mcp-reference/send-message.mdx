@@ -1,0 +1,23 @@
+---
+title: 'send_message'
+description: 'Envía un mensaje de texto al propietario.'
+---
+
+Envía un mensaje de texto al propietario.
+
+## Entrada
+
+| Campo      | Tipo             | Notas                                                                    |
+| ---------- | ---------------- | ------------------------------------------------------------------------ |
+| `text`     | string           | Hasta 4096 caracteres. Se conservan el formato de WhatsApp y los emojis. |
+| `reply_to` | string, opcional | Id del mensaje que citar.                                                |
+
+## Salida
+
+`{ "message_id": string, "delivery": "sent" | "queued" }`. `queued` significa que la [ventana de 24 horas](/es/concepts/24-hour-window) está cerrada.
+
+## Tipos de mensaje
+
+import MessageKinds from '/snippets/es/message-kinds.mdx';
+
+<MessageKinds />

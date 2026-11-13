@@ -1,0 +1,50 @@
+---
+title: Befehle in WhatsApp
+description: Was du an die zapbip-Nummer schreiben kannst.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+Du verwaltest deine KIs, indem du der zapbip-Nummer schreibst. Ein Befehl ist eine kurze Formulierung, auf Englisch oder Portugiesisch: Das sind die beiden Sprachen, die das Produkt heute versteht, und die Befehle werden nicht in andere übersetzt. Die Sprache, in der du schreibst, ist die Sprache der Antwort. Jede Zeile zeigt beide Fassungen.
+
+| Du willst                | Auf Englisch schreiben                              | Oder auf Portugiesisch                              | Was passiert                                                                                 |
+| ------------------------ | --------------------------------------------------- | --------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Eine neue KI verbinden   | `new agent claude`                                  | `novo agente claude`                                | zapbip antwortet mit dem Prompt zum Einfügen in diese KI                                     |
+| Deine KIs ansehen        | `agents`                                            | `agentes`                                           | Eine Liste mit Name und Datum jeder KI                                                       |
+| Eine KI trennen          | `revoke claude`                                     | `revogar claude`                                    | Diese KI hört sofort auf zu arbeiten                                                         |
+| Einen neuen Prompt holen | `rotate claude`                                     | `girar claude`                                      | Die alte Verbindung endet und du bekommst einen frischen Prompt                              |
+| In der Web-App anmelden  | `login`                                             | `entrar`                                            | Ein Link, der einmal 10 Minuten lang funktioniert, siehe [die Web-App](/de/features/web-app) |
+| Das Menü öffnen          | `help` oder `menu`                                  | `ajuda` oder `menu`                                 | Die Befehle als Text und als antippbare Liste                                                |
+| Dein Konto löschen       | `delete account`, dann `delete account permanently` | `apagar conta`, dann `apagar conta definitivamente` | Siehe [dein Konto löschen](/de/help/delete-your-account)                                     |
+
+Schreib die Formulierung allein. Ein angehängtes `?` oder `!` macht daraus eine normale Nachricht an deine KIs.
+
+## Beispiel
+
+Die Antworten von zapbip sind auf Englisch, weil du auf Englisch geschrieben hast.
+
+<Chat
+  messages={[
+    { you: true, text: 'agents', time: '09:20' },
+    { text: 'Your agents:\nclaude (2026-11-06, Claude Code)', time: '09:20' },
+    { you: true, text: 'revoke claude', time: '09:21' },
+    { text: 'Agent claude revoked. Its link no longer works.', time: '09:21' },
+  ]}
+/>
+
+## Mit einer KI über ein Befehlswort sprechen
+
+Eine Nachricht, die genau ein Befehlswort ist, ist immer ein Befehl. Um dieselben Wörter an eine KI zu senden, beginne mit ihrem Namen: `@claude help` erreicht Claude, statt das Menü zu öffnen.
+
+## Namen
+
+Die Wörter `new`, `agents`, `revoke`, `rotate`, `help`, `menu`, `login`, `delete` und ihre portugiesischen Fassungen sind reserviert: Sie können nicht der Name einer KI sein.
+
+## Weitergeleitete Nachrichten
+
+Eine weitergeleitete Nachricht ist nie ein Befehl, auch wenn ihr Text ein Befehlswort ist. Sie geht wie jede andere Nachricht an deine KIs.
+
+## Weiter
+
+- [Deine KIs verwalten](/de/features/manage-your-agents)
+- [Viele KIs mit einer Nummer](/de/features/many-agents-on-one-number)
