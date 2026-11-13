@@ -17,7 +17,7 @@ The owner, 2026-11-13: "absolutely the whole experience must be agentic, everyth
 3. `connect_agent` returns the install prompt to the agent only when the owner taps Allow, send to agent; otherwise the install link goes to the owner's WhatsApp.
 4. The tools run the same core use cases as the commands and the app; the three acting tools are limited to three a minute per connection.
 5. The client app answers `Accept: application/json` on the home page with the data the HTML shows.
-6. Docs page "Let your agent manage zapbip" and five tool reference pages, English and Portuguese; copy in en_US and pt_BR.
+6. Docs page "Let your AI manage zapbip" (the docs say AI to people) and five tool reference pages, English and Portuguese; copy in en_US and pt_BR.
 
 ## Non-goals
 
@@ -54,7 +54,7 @@ sequenceDiagram
 |------|--------|
 | Deny | `denied`, nothing changed |
 | No answer in 50 seconds | `timed_out`, nothing changed; a later tap changes nothing |
-| Name invalid or reserved | error `invalid_input` before any question |
+| Name invalid or reserved | `refused` with `invalid_name` or `reserved_name` before any question |
 | Name taken, limit reached, unknown agent after the tap | `refused` with the reason |
 | WhatsApp send of the install link fails | the connection is revoked again, `refused` with `send_failed` |
 | Fourth acting call in a minute | error `rate_limited` |

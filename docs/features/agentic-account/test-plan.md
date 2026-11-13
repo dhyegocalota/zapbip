@@ -14,7 +14,7 @@ Every checkbox states the input and the exact expected outcome. A ticked box car
 - [ ] `::deny` — input: Deny tap; expected: `denied`, no connection
 - [ ] `::timeout` — input: no answer after 50 seconds; expected: `timed_out`, no connection
 - [ ] `::stale approval` — input: the same request twice within four minutes; expected: two questions, the second not auto-approved
-- [ ] `::invalid and reserved names` — input: `!!!`, `ajuda`; expected: invalid input error, no question
+- [ ] `::invalid and reserved names` — input: `!!!`, `ajuda`; expected: `refused` `invalid_name` or `reserved_name`, no question
 - [ ] `::revoke unknown` — input: name not active; expected: `refused` `not_found`, no question
 - [ ] `::send failure` — input: WhatsApp send fails after Allow; expected: connection revoked again, `refused` `send_failed`
 - [ ] `account-overview.test.ts` — input: two connections and one activity row; expected: summaries with null last activity for the other, masked phone, free plan

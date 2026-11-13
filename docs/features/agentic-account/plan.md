@@ -23,17 +23,17 @@ G1, then G2, then G3.
 
 ### G1
 
-- [ ] **Step 1:** overview and approval rules, tests first
-- [ ] **Step 2:** the shared reply delivery, the agent command and the account change use cases
+- [x] **Step 1:** overview and approval rules, tests first — evidence: red b24dc4ea, green fcf6393e
+- [x] **Step 2:** the shared reply delivery, the agent command and the account change use cases — evidence: e5405da0, fcf6393e, db100a5d
 
 ### G2
 
-- [ ] **Step 3:** the Durable Object methods and the five tools, the rate limiter binding
-- [ ] **Step 4:** the JSON twin on the client app
+- [x] **Step 3:** the Durable Object methods and the five tools, the rate limiter binding — evidence: red 00bccff4, green 2447ca7e, e2e e5d80072
+- [x] **Step 4:** the JSON twin on the client app — evidence: red 00bccff4 (`client-app-json.test.ts`), green c3f23852
 
 ### G3
 
-- [ ] **Step 5:** docs pages en and pt-br, tools reference, navigation, rules and READMEs
+- [x] **Step 5:** docs pages en and pt-br, tools reference, navigation, rules and READMEs — evidence: 70691641 (`docs-experience.test.ts` 74 passed)
 
 ## Failure modes
 
