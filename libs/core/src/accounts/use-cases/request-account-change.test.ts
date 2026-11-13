@@ -160,6 +160,7 @@ describe('requestAccountChange revoke', () => {
     expect((await changing).status).toBe(AgentChangeStatus.Denied);
     expect(choicesOf(fixture)[0]!.options.map((option) => option.title)).toEqual(['Allow', 'Deny']);
     expect(await activeAgents(fixture)).toEqual(['helper']);
+    await fixture.environment.clock.advance({ ms: APPROVAL_COOLDOWN_MS });
     const revoking = requestChange({ ...fixture, kind: CommandKind.RevokeAgent, rawName: 'helper' });
     await tap({ ...fixture, title: 'Allow' });
     expect(await revoking).toEqual({

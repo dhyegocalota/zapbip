@@ -11,7 +11,7 @@ export enum ApprovalChoice {
 const APPROVAL_TITLES: Record<OwnerLocale, Record<ApprovalChoice, string>> = {
   [OwnerLocale.PortugueseBrazil]: {
     [ApprovalChoice.Allow]: 'Permitir',
-    [ApprovalChoice.AllowAndSend]: 'Permitir e enviar',
+    [ApprovalChoice.AllowAndSend]: 'Enviar ao agente',
     [ApprovalChoice.Deny]: 'Negar',
   },
   [OwnerLocale.EnglishUs]: {
