@@ -8,7 +8,7 @@ It uses only Meta's official WhatsApp Cloud API, it talks only to you, and it de
 
 - Hosted: [zapbip.com](https://zapbip.com) (early access, waitlist open)
 - Docs: [docs.zapbip.com](https://docs.zapbip.com)
-- Made by [Logic Bit](https://logicbit.com.br) in Belo Horizonte, Brazil
+- zapbip is a product of Logic Bit, made in Belo Horizonte, Brazil: [logicbit.com.br](https://logicbit.com.br)
 
 ## How it works
 
