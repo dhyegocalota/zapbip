@@ -2,6 +2,7 @@ import { MEDIA_RETENTION_MS, QUEUE_RETENTION_MS } from '@zapbip/core';
 import { CLIENT_APP_SESSION_TTL_MS, COMPANY, DAY_MS, OwnerLocale, PRICING_FREE_MESSAGES } from '@zapbip/types';
 import { LegalDocument } from './legal-links';
 import { formatCount } from './price-format';
+import { leadingAgentNames } from './site-agents';
 import { LEGAL_UPDATED_ON } from './site-constants';
 import { languageOf } from './site-links';
 
@@ -29,7 +30,7 @@ const LEGAL_COPY: Record<LegalDocument, Record<OwnerLocale, LegalText>> = {
         {
           heading: 'What zapbip does',
           paragraphs: [
-            "zapbip connects the AI agents you choose, such as Claude Code, Codex or any MCP client, to your own WhatsApp through Meta's official WhatsApp Business Platform. Your agents can send you messages, ask you questions and receive your replies. zapbip talks only to you and never messages your contacts or anyone else.",
+            "zapbip connects the AI agents you choose, such as {agents} or any MCP client, to your own WhatsApp through Meta's official WhatsApp Business Platform. Your agents can send you messages, ask you questions and receive your replies. zapbip talks only to you and never messages your contacts or anyone else.",
             'zapbip is in early access. Accounts open by invitation from the waitlist, and features may change along the way.',
           ],
           items: [],
@@ -130,7 +131,7 @@ const LEGAL_COPY: Record<LegalDocument, Record<OwnerLocale, LegalText>> = {
         {
           heading: 'O que o zapbip faz',
           paragraphs: [
-            'O zapbip conecta os agentes de IA que você escolhe, como Claude Code, Codex ou qualquer cliente MCP, ao seu próprio WhatsApp, pela plataforma oficial WhatsApp Business da Meta. Seus agentes podem mandar mensagens, fazer perguntas e receber suas respostas. O zapbip fala só com você e nunca manda mensagem para seus contatos nem para mais ninguém.',
+            'O zapbip conecta os agentes de IA que você escolhe, como {agents} ou qualquer cliente MCP, ao seu próprio WhatsApp, pela plataforma oficial WhatsApp Business da Meta. Seus agentes podem mandar mensagens, fazer perguntas e receber suas respostas. O zapbip fala só com você e nunca manda mensagem para seus contatos nem para mais ninguém.',
             'O zapbip está em acesso antecipado. As contas abrem por convite a partir da lista de espera, e os recursos podem mudar no caminho.',
           ],
           items: [],
@@ -454,6 +455,7 @@ function daysOf(input: { milliseconds: number; locale: OwnerLocale }): string {
 function legalValuesOf(input: { locale: OwnerLocale }): Record<string, string> {
   const { locale } = input;
   return {
+    agents: leadingAgentNames(),
     tradeName: COMPANY.tradeName,
     legalName: COMPANY.legalName,
     cnpj: COMPANY.cnpj,
