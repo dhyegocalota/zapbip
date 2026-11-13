@@ -1,4 +1,4 @@
-import type { OwnerLocale } from '@zapbip/types';
+import { CLIENT_APP_LOCALE_PATH_PREFIXES, CLIENT_APP_PORTUGUESE_PATH_PREFIX, OwnerLocale } from '@zapbip/types';
 
 export enum ClientAppPath {
   Home = '/',
@@ -10,10 +10,13 @@ export enum ClientAppPath {
   Favicon = '/favicon.svg',
 }
 
-export function localeOfPath(_input: { path: string }): OwnerLocale {
-  throw new Error('localeOfPath is not implemented');
+export function localeOfPath(input: { path: string }): OwnerLocale {
+  const { path } = input;
+  const isPortuguese = path === CLIENT_APP_PORTUGUESE_PATH_PREFIX || path.startsWith(`${CLIENT_APP_PORTUGUESE_PATH_PREFIX}/`);
+  return isPortuguese ? OwnerLocale.PortugueseBrazil : OwnerLocale.EnglishUs;
 }
 
-export function pathWithLocale(_input: { locale: OwnerLocale; path: string }): string {
-  throw new Error('pathWithLocale is not implemented');
+export function pathWithLocale(input: { locale: OwnerLocale; path: string }): string {
+  const prefix = CLIENT_APP_LOCALE_PATH_PREFIXES[input.locale];
+  return input.path === ClientAppPath.Home ? prefix || ClientAppPath.Home : `${prefix}${input.path}`;
 }

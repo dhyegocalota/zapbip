@@ -27,6 +27,7 @@
   "routes": [
     { "pattern": "mcp.zapbip.com", "custom_domain": true },
     { "pattern": "backoffice.zapbip.com", "custom_domain": true },
+    { "pattern": "app.zapbip.com", "custom_domain": true },
     { "pattern": "zapbip.com", "custom_domain": true },
     { "pattern": "www.zapbip.com", "custom_domain": true },
   ],
@@ -114,6 +115,7 @@
       "routes": [
         { "pattern": "mcp-staging.zapbip.com", "custom_domain": true },
         { "pattern": "backoffice-staging.zapbip.com", "custom_domain": true },
+        { "pattern": "app-staging.zapbip.com", "custom_domain": true },
         { "pattern": "staging.zapbip.com", "custom_domain": true },
       ],
       "vars": {

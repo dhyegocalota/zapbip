@@ -24,17 +24,14 @@ async function connect(input: { cookie: string; csrf: string; name: string }): P
   return clientAppFetch({ path: '/agents', method: 'POST', cookie: input.cookie, form: { csrf: input.csrf, [NAME_FIELD]: input.name } });
 }
 
-beforeEach(prepareClientAppDatabase);
+beforeEach(async () => {
+  await prepareClientAppDatabase();
+  await seedStartNumber({ numberId: 'num_app_session', displayNumber: '+5511977770003', state: WhatsAppNumberState.Active, createdAt: 1 });
+});
 afterEach(reset);
 
 describe('the signed-out page', () => {
   it('treats an unknown session cookie as signed out and offers the WhatsApp button', async () => {
-    await seedStartNumber({
-      numberId: 'num_app_session',
-      displayNumber: '+5511977770003',
-      state: WhatsAppNumberState.Active,
-      createdAt: 1,
-    });
     const html = await (await clientAppFetch({ path: '/', cookie: 'unknown'.repeat(8) })).text();
     expect(html).toContain(SIGN_IN_BUTTON_COPY);
     expect(html).not.toContain('Your agents');
@@ -147,7 +144,6 @@ describe('an active account', () => {
 describe('account isolation', () => {
   it('never lists nor revokes the agent of another account', async () => {
     const mine = await signIn({});
-    await seedAccountForApp({ accountId: OTHER_ACCOUNT, phone: OTHER_PHONE });
     const theirs = await signIn({ accountId: OTHER_ACCOUNT, phone: OTHER_PHONE });
     await connect({ cookie: theirs.cookie, csrf: theirs.csrf, name: 'secret-agent' });
     const html = await (await clientAppFetch({ path: '/', cookie: mine.cookie })).text();
@@ -163,7 +159,6 @@ describe('account isolation', () => {
 
   it('refuses the CSRF token of another session', async () => {
     const mine = await signIn({});
-    await seedAccountForApp({ accountId: OTHER_ACCOUNT, phone: OTHER_PHONE });
     const theirs = await signIn({ accountId: OTHER_ACCOUNT, phone: OTHER_PHONE });
     const response = await connect({ cookie: mine.cookie, csrf: theirs.csrf, name: 'alpha' });
     expect(response.status).toBe(HttpStatus.Forbidden);
@@ -176,20 +171,20 @@ describe('session lifetime', () => {
     const response = await clientAppFetch({ path: '/sign-out', method: 'POST', cookie, form: { csrf } });
     expect(response.status).toBe(HttpStatus.SeeOther);
     expect((await testEnv.CONNECTIONS.prepare(COUNT_SESSIONS_STATEMENT).first<{ total: number }>())!.total).toBe(0);
-    expect(await (await clientAppFetch({ path: '/', cookie })).text()).not.toContain('Your agents');
+    expect(await (await clientAppFetch({ path: '/', cookie })).text()).toContain(SIGN_IN_BUTTON_COPY);
   });
 
   it('ends when the account is deleted', async () => {
     const { cookie, accountId } = await signIn({});
     await new D1AccountDirectory({ database: testEnv.CONNECTIONS }).remove({ accountId });
-    expect(await (await clientAppFetch({ path: '/', cookie })).text()).not.toContain('Your agents');
+    expect(await (await clientAppFetch({ path: '/', cookie })).text()).toContain(SIGN_IN_BUTTON_COPY);
     expect((await testEnv.CONNECTIONS.prepare(COUNT_SESSIONS_STATEMENT).first<{ total: number }>())!.total).toBe(0);
   });
 
   it.each([AccountState.Suspended, AccountState.Deleting])('ends when the account becomes %s', async (state) => {
     const { cookie, accountId } = await signIn({});
     await testEnv.CONNECTIONS.prepare('UPDATE accounts SET state = ? WHERE id = ?').bind(state, accountId).run();
-    expect(await (await clientAppFetch({ path: '/', cookie })).text()).not.toContain('Your agents');
+    expect(await (await clientAppFetch({ path: '/', cookie })).text()).toContain(SIGN_IN_BUTTON_COPY);
   });
 
   it('ends after thirty days', async () => {
@@ -197,6 +192,6 @@ describe('session lifetime', () => {
     await testEnv.CONNECTIONS.prepare('UPDATE client_app_sessions SET expires_at = ?')
       .bind(Date.now() - 1)
       .run();
-    expect(await (await clientAppFetch({ path: '/', cookie })).text()).not.toContain('Your agents');
+    expect(await (await clientAppFetch({ path: '/', cookie })).text()).toContain(SIGN_IN_BUTTON_COPY);
   });
 });

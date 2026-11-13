@@ -11,6 +11,14 @@ export const INSTALL_CODE_TTL_MS = 30 * MINUTE_MS;
 export const INSTALL_PAGE_PATH_PREFIX = '/i/';
 export const CLIENT_APP_SIGN_IN_PATH_PREFIX = '/sign-in/';
 export const CLIENT_APP_PORTUGUESE_PATH_PREFIX = '/pt-br';
+export const CLIENT_APP_LOCALE_PATH_PREFIXES: Record<OwnerLocale, string> = {
+  [OwnerLocale.PortugueseBrazil]: CLIENT_APP_PORTUGUESE_PATH_PREFIX,
+  [OwnerLocale.EnglishUs]: '',
+};
+export const CLIENT_APP_LOGIN_TEXT: Record<OwnerLocale, string> = {
+  [OwnerLocale.PortugueseBrazil]: 'entrar',
+  [OwnerLocale.EnglishUs]: 'login',
+};
 export const CLIENT_APP_TOKEN_BYTES = 32;
 export const SIGN_IN_LINK_TTL_MS = 10 * MINUTE_MS;
 export const CLIENT_NAME_MAX_CHARS = 128;

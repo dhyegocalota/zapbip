@@ -1,4 +1,5 @@
 import { clearExpiredInstallSecrets, sweepDeletingAccounts } from '../accounts/deletion-sweep';
+import { pruneClientApp } from '../client-app/prune';
 import { pruneBackoffice } from '../backoffice/audit/prune';
 import { BACKOFFICE_PRUNE_HOUR, BACKOFFICE_PRUNE_MINUTE } from '../backoffice/backoffice-constants';
 import { D1UsageRepository } from '../adapters/d1/d1-usage-repository';
@@ -18,6 +19,7 @@ export enum ScheduledJobName {
   BudgetCheck = 'budget_check',
   MediaRetention = 'media_retention',
   BackofficePrune = 'backoffice_prune',
+  ClientAppPrune = 'client_app_prune',
 }
 
 const EVERY_TICK = (): boolean => true;
@@ -48,6 +50,10 @@ export const SCHEDULED_JOBS: Record<ScheduledJobName, ScheduledJob> = {
       return tick.getUTCHours() === BACKOFFICE_PRUNE_HOUR && tick.getUTCMinutes() === BACKOFFICE_PRUNE_MINUTE;
     },
     run: ({ env, now }) => pruneBackoffice({ database: env.CONNECTIONS, now }),
+  },
+  [ScheduledJobName.ClientAppPrune]: {
+    isDue: EVERY_TICK,
+    run: ({ env, now }) => pruneClientApp({ database: env.CONNECTIONS, now }),
   },
 };
 

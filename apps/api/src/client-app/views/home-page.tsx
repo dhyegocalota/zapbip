@@ -1,0 +1,149 @@
+import { AccountState, OwnerLocale } from '@zapbip/types';
+import { DOCS_ORIGIN } from '../../site/site-paths';
+import { AGENT_FIELD, AGENT_NAME_FIELD, CSRF_FIELD, DELETE_ACCOUNT_DOCS_PATH, DOCS_PORTUGUESE_PATH } from '../client-app-constants';
+import { ClientAppCopyKey, copyOf } from '../client-app-copy';
+import { ClientAppPath, pathWithLocale } from '../client-app-paths';
+import { Layout } from './layout';
+
+export type AgentRow = { agent: string; clientName: string; addedOn: string };
+
+export type HomePageProps = {
+  locale: OwnerLocale;
+  state: AccountState;
+  csrfToken: string;
+  agents: AgentRow[];
+  noticeKey: ClientAppCopyKey | null;
+  problem: string | null;
+  createdAgent: { agent: string; installPrompt: string } | null;
+};
+
+const DOCS_PATH_PREFIXES: Record<OwnerLocale, string> = {
+  [OwnerLocale.PortugueseBrazil]: DOCS_PORTUGUESE_PATH,
+  [OwnerLocale.EnglishUs]: '',
+};
+
+function docsHrefOf(input: { locale: OwnerLocale }): string {
+  return `${DOCS_ORIGIN}${DOCS_PATH_PREFIXES[input.locale]}${DELETE_ACCOUNT_DOCS_PATH}`;
+}
+
+function Waitlist(props: { locale: OwnerLocale }) {
+  const translate = copyOf({ locale: props.locale });
+  return (
+    <section class="panel">
+      <h1>{translate(ClientAppCopyKey.WaitlistTitle)}</h1>
+      <p class="lead">{translate(ClientAppCopyKey.WaitlistBody)}</p>
+    </section>
+  );
+}
+
+function AgentList(props: HomePageProps) {
+  const { locale, csrfToken } = props;
+  const translate = copyOf({ locale });
+  if (props.agents.length === 0) return <p class="note">{translate(ClientAppCopyKey.AgentsEmpty)}</p>;
+  return (
+    <ul class="agent-list">
+      {props.agents.map((row) => (
+        <li class="agent-row">
+          <div class="agent-details">
+            <strong class="agent-name">{row.agent}</strong>
+            <span class="note">
+              {translate(ClientAppCopyKey.AgentClient)}: {row.clientName} · {translate(ClientAppCopyKey.AgentAdded, { date: row.addedOn })}
+            </span>
+          </div>
+          <form method="post" action={pathWithLocale({ locale, path: ClientAppPath.RevokeAgent })}>
+            <input type="hidden" name={CSRF_FIELD} value={csrfToken} />
+            <input type="hidden" name={AGENT_FIELD} value={row.agent} />
+            <button type="submit" class="button button-secondary">
+              {translate(ClientAppCopyKey.Revoke)}
+            </button>
+          </form>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function CreatedAgent(props: { locale: OwnerLocale; created: NonNullable<HomePageProps['createdAgent']> }) {
+  const translate = copyOf({ locale: props.locale });
+  return (
+    <section class="panel panel-success" aria-live="polite">
+      <h2>{translate(ClientAppCopyKey.AgentCreated, { agent: props.created.agent })}</h2>
+      <pre class="prompt">{props.created.installPrompt}</pre>
+      <p class="note">{translate(ClientAppCopyKey.AgentCreatedHint)}</p>
+    </section>
+  );
+}
+
+function ConnectForm(props: { locale: OwnerLocale; csrfToken: string; problem: string | null }) {
+  const translate = copyOf({ locale: props.locale });
+  return (
+    <section class="panel">
+      <h2>{translate(ClientAppCopyKey.ConnectTitle)}</h2>
+      <form method="post" action={pathWithLocale({ locale: props.locale, path: ClientAppPath.Agents })} class="connect-form">
+        <input type="hidden" name={CSRF_FIELD} value={props.csrfToken} />
+        <label for="agent-name">{translate(ClientAppCopyKey.ConnectLabel)}</label>
+        <input
+          id="agent-name"
+          name={AGENT_NAME_FIELD}
+          type="text"
+          autocomplete="off"
+          autocapitalize="none"
+          spellcheck={false}
+          maxlength={64}
+        />
+        <p class="note">{translate(ClientAppCopyKey.ConnectHint)}</p>
+        {props.problem === null ? null : (
+          <p class="problem" role="alert">
+            {props.problem}
+          </p>
+        )}
+        <button type="submit" class="button button-primary">
+          {translate(ClientAppCopyKey.ConnectButton)}
+        </button>
+      </form>
+    </section>
+  );
+}
+
+function Account(props: { locale: OwnerLocale }) {
+  const translate = copyOf({ locale: props.locale });
+  return (
+    <section class="panel">
+      <h2>{translate(ClientAppCopyKey.AccountTitle)}</h2>
+      <p class="plan">{translate(ClientAppCopyKey.PlanLine)}</p>
+      <p class="note">{translate(ClientAppCopyKey.DeleteAccountHint)}</p>
+      <a class="button button-secondary" href={docsHrefOf({ locale: props.locale })}>
+        {translate(ClientAppCopyKey.DeleteAccount)}
+      </a>
+    </section>
+  );
+}
+
+export function HomePage(props: HomePageProps) {
+  const { locale } = props;
+  const translate = copyOf({ locale });
+  const isWaitlisted = props.state === AccountState.Waitlisted;
+  const title = translate(isWaitlisted ? ClientAppCopyKey.WaitlistTitle : ClientAppCopyKey.AgentsTitle);
+  return (
+    <Layout locale={locale} title={title} currentPath={ClientAppPath.Home} csrfToken={props.csrfToken}>
+      {props.noticeKey === null ? null : (
+        <p class="notice" role="status">
+          {translate(props.noticeKey)}
+        </p>
+      )}
+      {isWaitlisted ? (
+        <Waitlist locale={locale} />
+      ) : (
+        <>
+          <section class="panel">
+            <h1>{translate(ClientAppCopyKey.AgentsTitle)}</h1>
+            <AgentList {...props} />
+          </section>
+          {props.createdAgent === null ? null : <CreatedAgent locale={locale} created={props.createdAgent} />}
+          <ConnectForm locale={locale} csrfToken={props.csrfToken} problem={props.problem} />
+          <Account locale={locale} />
+        </>
+      )}
+    </Layout>
+  );
+}

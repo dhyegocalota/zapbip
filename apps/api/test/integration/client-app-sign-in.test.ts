@@ -2,6 +2,7 @@ import { reset } from 'cloudflare:test';
 import { HttpStatus, OwnerLocale } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { sha256Hex } from '../../src/adapters/platform/hash';
+import { csrfTokenOf } from '../../src/client-app/csrf';
 import { createFakeRateLimiter } from '../support/fake-rate-limiter';
 import {
   ACCOUNT,
@@ -118,7 +119,7 @@ describe('POST /sign-in/<token>', () => {
 
   it('refuses an expired link with 410 and no session', async () => {
     const token = await issueSignInToken({ expiresAt: Date.now() - 1 });
-    const { csrf } = await continuePage({ token }).catch(() => ({ csrf: 'unused' }));
+    const csrf = await csrfTokenOf({ secret: token });
     const response = await clientAppFetch({ path: `/sign-in/${token}`, method: 'POST', form: { csrf } });
     expect(response.status).toBe(HttpStatus.Gone);
     expect(await total({ statement: COUNT_SESSIONS_STATEMENT })).toBe(0);

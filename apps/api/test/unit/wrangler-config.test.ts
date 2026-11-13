@@ -17,6 +17,11 @@ const SITE_ORIGINS: Record<DeployEnvironment, string> = {
   [DeployEnvironment.Staging]: 'https://staging.zapbip.com',
   [DeployEnvironment.Development]: 'http://site.localhost:8787',
 };
+const APP_ORIGINS: Record<DeployEnvironment, string> = {
+  [DeployEnvironment.Production]: 'https://app.zapbip.com',
+  [DeployEnvironment.Staging]: 'https://app-staging.zapbip.com',
+  [DeployEnvironment.Development]: 'http://app.localhost:8787',
+};
 const TURNSTILE_SITE_KEYS: Record<DeployEnvironment, string> = {
   [DeployEnvironment.Production]: '0x4AAAAAAF-QQP0jbDT3xCLT',
   [DeployEnvironment.Staging]: '0x4AAAAAAF-QWj6u4g-pvrUT',
@@ -36,12 +41,14 @@ const BACKOFFICE_ROUTES: Record<DeployEnvironment, { pattern: string; custom_dom
   [DeployEnvironment.Production]: [
     { pattern: 'mcp.zapbip.com', custom_domain: true },
     { pattern: 'backoffice.zapbip.com', custom_domain: true },
+    { pattern: 'app.zapbip.com', custom_domain: true },
     { pattern: 'zapbip.com', custom_domain: true },
     { pattern: 'www.zapbip.com', custom_domain: true },
   ],
   [DeployEnvironment.Staging]: [
     { pattern: 'mcp-staging.zapbip.com', custom_domain: true },
     { pattern: 'backoffice-staging.zapbip.com', custom_domain: true },
+    { pattern: 'app-staging.zapbip.com', custom_domain: true },
     { pattern: 'staging.zapbip.com', custom_domain: true },
   ],
   [DeployEnvironment.Development]: [],
@@ -212,6 +219,10 @@ describe('wrangler config', () => {
   it.each(blockEntries)('the %s block names its site origin and its public Turnstile site key', (environment, block) => {
     expect(block.vars.SITE_ORIGIN).toBe(SITE_ORIGINS[environment]);
     expect(block.vars.TURNSTILE_SITE_KEY).toBe(TURNSTILE_SITE_KEYS[environment]);
+  });
+
+  it.each(blockEntries)('the %s block names its customer web app origin', (environment, block) => {
+    expect(block.vars.APP_ORIGIN).toBe(APP_ORIGINS[environment]);
   });
 
   it.each(blockEntries)('the %s block serves the site assets directory', (_environment, block) => {
