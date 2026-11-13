@@ -10,6 +10,7 @@ type StateGateInput = {
 
 const WAITLISTED_COMMAND_KINDS: ReadonlySet<CommandKind> = new Set([
   CommandKind.Help,
+  CommandKind.Login,
   CommandKind.RequestDeletion,
   CommandKind.ConfirmDeletion,
 ]);

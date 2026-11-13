@@ -20,6 +20,8 @@ export const COMMAND_WORDS: readonly CommandWord[] = [
   { kind: CommandKind.Help, locale: OwnerLocale.PortugueseBrazil, words: 'menu', takesName: false },
   { kind: CommandKind.Help, locale: OwnerLocale.EnglishUs, words: 'help', takesName: false },
   { kind: CommandKind.Help, locale: OwnerLocale.EnglishUs, words: 'menu', takesName: false },
+  { kind: CommandKind.Login, locale: OwnerLocale.PortugueseBrazil, words: 'entrar', takesName: false },
+  { kind: CommandKind.Login, locale: OwnerLocale.EnglishUs, words: 'login', takesName: false },
   { kind: CommandKind.RequestDeletion, locale: OwnerLocale.PortugueseBrazil, words: 'apagar conta', takesName: false },
   { kind: CommandKind.RequestDeletion, locale: OwnerLocale.EnglishUs, words: 'delete account', takesName: false },
   { kind: CommandKind.ConfirmDeletion, locale: OwnerLocale.PortugueseBrazil, words: 'apagar conta definitivamente', takesName: false },

@@ -96,8 +96,10 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.EnglishUs]: 'Your account is deleted. Your next message starts a new account.',
   },
   [AccountReplyIntent.SignInLink]: {
-    [OwnerLocale.PortugueseBrazil]: '',
-    [OwnerLocale.EnglishUs]: '',
+    [OwnerLocale.PortugueseBrazil]:
+      'Abra este link em até 10 minutos para entrar no app do zapbip:\n\n{sign_in_link}\n\nEle funciona uma vez. Não o compartilhe.',
+    [OwnerLocale.EnglishUs]:
+      'Open this link within 10 minutes to sign in to the zapbip app:\n\n{sign_in_link}\n\nIt works once. Do not share it.',
   },
   [AccountReplyIntent.SendFailed]: {
     [OwnerLocale.PortugueseBrazil]: 'Não consegui entregar as instruções. Nada foi alterado; tente de novo.',
