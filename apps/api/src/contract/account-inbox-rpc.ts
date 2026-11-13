@@ -1,4 +1,7 @@
 import type {
+  AccountOverview,
+  AgentChangeResult,
+  AgentCommandResult,
   AgentName,
   ApplyStatusInput,
   ApplyStatusResult,
@@ -21,7 +24,9 @@ import type {
   SendTextInput,
   WaitForReplyInput,
   WaitForReplyResult,
+  ConnectionIdentity,
   CoreDependencies,
+  RequestAccountChangeInput,
   StoredMedia,
   UploadClaim,
 } from '@zapbip/core';
@@ -33,6 +38,8 @@ export type CallOutcome<Value> = { ok: true; value: Value } | { ok: false; error
 export type WakeModeEntry = { agent: string; wakeMode: WakeMode };
 
 export type AgentRequest<Input extends { dependencies: CoreDependencies }> = Omit<Input, 'dependencies'>;
+
+export type AccountChangeRequest = Pick<RequestAccountChangeInput, 'connection' | 'kind' | 'rawName'>;
 
 export type ScreenEntry = {
   at: number;
@@ -63,6 +70,9 @@ export interface AccountInboxRpc extends WakeRpc {
     channelMessageId: string;
     ownerMessage: OwnerInboundMessage;
   }): Promise<CallOutcome<{ messageId: string | null; agent: string | null; duplicate: boolean }>>;
+  describeAccount(input: { connection: ConnectionIdentity }): Promise<CallOutcome<AccountOverview>>;
+  requestAccountChange(input: AccountChangeRequest): Promise<CallOutcome<AgentChangeResult>>;
+  sendSignInLink(input: { connection: ConnectionIdentity }): Promise<CallOutcome<AgentCommandResult>>;
   listWakeModes(): Promise<WakeModeEntry[]>;
   receiveChannelMessage(input: AgentRequest<ReceiveChannelInput>): Promise<CallOutcome<ReceiveResult>>;
   hasChannelReceipt(input: { channelMessageId: string }): Promise<CallOutcome<boolean>>;

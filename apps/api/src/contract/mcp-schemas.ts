@@ -1,6 +1,10 @@
 import { z } from 'zod';
 import { ASK_MAX_WAIT_SECONDS, HISTORY_LIMIT } from '@zapbip/core';
 import {
+  AccountPlan,
+  AccountState,
+  AccountReplyIntent,
+  AgentChangeStatus,
   DeliveryState,
   InboxStatus,
   MediaSourceKind,
@@ -163,4 +167,38 @@ export const setWakeOutputShape = {
   wake_mode: z.enum(WakeMode),
   effective_rung: z.enum(WakeRung),
   provider: z.enum(WakeProvider).nullable(),
+};
+
+export const listAgentsInputShape = {};
+export const accountStatusInputShape = {};
+export const signInLinkInputShape = {};
+export const connectAgentInputShape = { name: z.string() };
+export const revokeAgentInputShape = { name: z.string() };
+
+export const agentSummaryWireSchema = z.object({
+  name: z.string(),
+  client: z.string().nullable(),
+  created_at: z.iso.datetime(),
+  last_active_at: z.iso.datetime().nullable(),
+});
+
+export const listAgentsOutputShape = { agents: z.array(agentSummaryWireSchema) };
+
+export const accountStatusOutputShape = {
+  state: z.enum(AccountState),
+  phone: z.string(),
+  plan: z.enum(AccountPlan),
+  free_messages: z.number().int(),
+};
+
+export const accountOverviewWireSchema = z.object({
+  ...accountStatusOutputShape,
+  ...listAgentsOutputShape,
+});
+
+export const accountChangeOutputShape = {
+  status: z.enum(AgentChangeStatus),
+  agent: z.string().nullable(),
+  reason: z.enum(AccountReplyIntent).nullable(),
+  install_prompt: z.string().nullable(),
 };

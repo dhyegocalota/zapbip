@@ -548,6 +548,18 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     });
   }
 
+  describeAccount(input: Parameters<AccountInboxRpc['describeAccount']>[0]): Promise<CallOutcome<inbox.AccountOverview>> {
+    throw new Error('describeAccount is not implemented');
+  }
+
+  requestAccountChange(input: Parameters<AccountInboxRpc['requestAccountChange']>[0]): Promise<CallOutcome<inbox.AgentChangeResult>> {
+    throw new Error('requestAccountChange is not implemented');
+  }
+
+  sendSignInLink(input: Parameters<AccountInboxRpc['sendSignInLink']>[0]): Promise<CallOutcome<inbox.AgentCommandResult>> {
+    throw new Error('sendSignInLink is not implemented');
+  }
+
   noticeAccessOpened(input: NoticeAccessOpenedRequest): Promise<CallOutcome<DeliveryState.Sent | DeliveryState.Queued>> {
     return this.outcome({
       run: async () => {

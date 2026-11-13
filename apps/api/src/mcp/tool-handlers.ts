@@ -22,6 +22,7 @@ import {
   waitForReplyInputShape,
 } from '../contract/mcp-schemas';
 import { McpToolName } from '../contract/tool-definitions';
+import { accountStatus, connectAgent, listAgents, revokeAgent, signInLink } from './account-tools';
 import { setWake } from './set-wake';
 import { readInlineImages } from './inline-images';
 import { buildUploadLink } from './links';
@@ -199,4 +200,9 @@ export const TOOL_HANDLERS = {
   [McpToolName.CheckInbox]: checkInbox,
   [McpToolName.CreateUpload]: createUpload,
   [McpToolName.SetWake]: setWake,
+  [McpToolName.ListAgents]: listAgents,
+  [McpToolName.AccountStatus]: accountStatus,
+  [McpToolName.ConnectAgent]: connectAgent,
+  [McpToolName.RevokeAgent]: revokeAgent,
+  [McpToolName.SignInLink]: signInLink,
 } satisfies Record<McpToolName, unknown>;
