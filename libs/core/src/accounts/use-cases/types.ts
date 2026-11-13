@@ -10,6 +10,8 @@ export type OwnerAccountInput = {
   appOrigin: string;
 };
 
+export type AccountRepliesInput = Pick<OwnerAccountInput, 'dependencies' | 'account'>;
+
 export type ApplyOwnerCommandInput = OwnerAccountInput & { command: AccountCommand; isRequestLive: boolean };
 export type CreateAgentConnectionInput = OwnerAccountInput & { rawName: string };
 export type RevokeAgentConnectionInput = OwnerAccountInput & { rawName: string };
