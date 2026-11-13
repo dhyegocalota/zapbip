@@ -1,12 +1,25 @@
-import { reset } from 'cloudflare:test';
+import { reset, runInDurableObject } from 'cloudflare:test';
 import { AccountState, HttpStatus, OwnerLocale, WhatsAppNumberState } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { D1AccountDirectory } from '../../src/adapters/d1/d1-account-directory';
 import { D1ConnectionRegistry } from '../../src/adapters/d1/d1-connection-registry';
-import { clientAppFetch, OTHER_ACCOUNT, OTHER_PHONE, prepareClientAppDatabase, seedAccountForApp, signIn } from '../support/client-app';
+import { createSession } from '../../src/client-app/sessions';
+import { csrfTokenOf } from '../../src/client-app/csrf';
+import {
+  clientAppFetch,
+  issueSignInToken,
+  OTHER_ACCOUNT,
+  OTHER_PHONE,
+  OWNER_PHONE,
+  prepareClientAppDatabase,
+  seedAccountForApp,
+  signIn,
+  signInAgain,
+} from '../support/client-app';
 import { seedStartNumber } from '../support/start-link-numbers';
-import { testEnv } from '../support/workers-env';
+import { accountInboxStub, testEnv } from '../support/workers-env';
 
+const SEEN_AT = 1_700_000_000_000;
 const SIGN_IN_BUTTON_COPY = 'Sign in with WhatsApp';
 const NAME_FIELD = 'agentName';
 const AGENT_FIELD = 'agent';
@@ -162,6 +175,73 @@ describe('account isolation', () => {
     const theirs = await signIn({ accountId: OTHER_ACCOUNT, phone: OTHER_PHONE });
     const response = await connect({ cookie: mine.cookie, csrf: theirs.csrf, name: 'alpha' });
     expect(response.status).toBe(HttpStatus.Forbidden);
+  });
+});
+
+describe('session revocation', () => {
+  it('sign-out ends every session of the account', async () => {
+    const first = await signIn({});
+    const secondCookie = await createSession({ database: testEnv.CONNECTIONS, accountId: first.accountId, now: Date.now() });
+    const secondCsrf = await csrfTokenOf({ secret: secondCookie });
+    await clientAppFetch({ path: '/sign-out', method: 'POST', cookie: secondCookie, form: { csrf: secondCsrf } });
+    expect(await (await clientAppFetch({ path: '/', cookie: first.cookie })).text()).toContain(SIGN_IN_BUTTON_COPY);
+  });
+
+  it('a new sign-in ends the earlier sessions of the account and keeps one row', async () => {
+    const first = await signIn({});
+    const second = await signInAgain({ accountId: first.accountId });
+    expect(await (await clientAppFetch({ path: '/', cookie: first.cookie })).text()).toContain(SIGN_IN_BUTTON_COPY);
+    expect(await (await clientAppFetch({ path: '/', cookie: second.cookie })).text()).toContain('Your agents');
+    expect((await testEnv.CONNECTIONS.prepare(COUNT_SESSIONS_STATEMENT).first<{ total: number }>())!.total).toBe(1);
+  });
+
+  it('a new sign-in with the cookie of a live session replaces that session', async () => {
+    const first = await signIn({});
+    const second = await signInAgain({ accountId: first.accountId, cookie: first.cookie });
+    expect(second.cookie).not.toBe(first.cookie);
+    expect((await testEnv.CONNECTIONS.prepare(COUNT_SESSIONS_STATEMENT).first<{ total: number }>())!.total).toBe(1);
+  });
+
+  it('a link of a suspended account answers 410 and leaves no session row', async () => {
+    const accountId = await seedAccountForApp({ state: AccountState.Suspended });
+    const token = await issueSignInToken({ accountId });
+    const response = await clientAppFetch({
+      path: `/sign-in/${token}`,
+      method: 'POST',
+      form: { csrf: await csrfTokenOf({ secret: token }) },
+    });
+    expect(response.status).toBe(HttpStatus.Gone);
+    expect((await testEnv.CONNECTIONS.prepare(COUNT_SESSIONS_STATEMENT).first<{ total: number }>())!.total).toBe(0);
+  });
+});
+
+describe('what the home page shows about the owner and the agents', () => {
+  it('shows the masked phone on the Continue page and on the home page', async () => {
+    await seedAccountForApp({});
+    const token = await issueSignInToken({});
+    expect(await (await clientAppFetch({ path: `/sign-in/${token}` })).text()).toContain('+55 ••••-0051');
+    const { cookie } = await signIn({});
+    const html = await (await clientAppFetch({ path: '/', cookie })).text();
+    expect(html).toContain('+55 ••••-0051');
+    expect(html).not.toContain(OWNER_PHONE);
+  });
+
+  it('shows the last active day of an agent the object has seen and nothing for one it has not', async () => {
+    const { cookie, csrf, accountId } = await signIn({});
+    await connect({ cookie, csrf, name: 'seen' });
+    await connect({ cookie, csrf, name: 'quiet' });
+    await runInDurableObject(accountInboxStub({ accountId }), (_instance, state) => {
+      state.storage.sql.exec('UPDATE agents SET last_seen_at = ? WHERE agent = ?', SEEN_AT, 'seen');
+    });
+    const html = await (await clientAppFetch({ path: '/', cookie })).text();
+    expect(html).toContain('Last active 2023-11-14');
+    expect(html.match(/Last active/g)).toHaveLength(1);
+  });
+
+  it('drops the client segment while the client is unknown', async () => {
+    const { cookie, csrf } = await signIn({});
+    await connect({ cookie, csrf, name: 'alpha' });
+    expect(await (await clientAppFetch({ path: '/', cookie })).text()).not.toContain('Client:');
   });
 });
 

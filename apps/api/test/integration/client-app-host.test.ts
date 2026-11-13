@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import developmentEntry from '../../src/index.dev';
 import productionEntry from '../../src/index';
 import { HEALTH_PATH } from '../../src/contract/constants';
-import { clientAppFetch, prepareClientAppDatabase } from '../support/client-app';
+import { clientAppEnvironment, clientAppFetch, prepareClientAppDatabase } from '../support/client-app';
 import { seedStartNumber } from '../support/start-link-numbers';
 import { testEnv } from '../support/workers-env';
 
@@ -33,6 +33,21 @@ describe.each(entries)('$name entry app host dispatch', ({ entry }) => {
   it('the MCP host does not serve the app routes', async () => {
     const response = await entry.fetch(new Request(`${MCP_ORIGIN}/sign-in/${'A'.repeat(43)}`), environment, createExecutionContext());
     expect(response.status).toBe(HttpStatus.NotFound);
+  });
+});
+
+describe.each(entries)('$name entry app host edge cases', ({ entry }) => {
+  it('rejects the app host with a trailing dot instead of serving the MCP app', async () => {
+    const response = await entry.fetch(new Request(`https://app.zapbip.com.${HEALTH_PATH}`), environment, createExecutionContext());
+    expect(response.status).toBe(HttpStatus.NotFound);
+  });
+});
+
+describe('the assets', () => {
+  it.each(['/app.css', '/favicon.svg'])('%s is served without looking up the session', async (path) => {
+    const broken = clientAppEnvironment({ overrides: { CONNECTIONS: undefined as never } });
+    const response = await clientAppFetch({ path, cookie: 'any-session-cookie', env: broken });
+    expect(response.status).toBe(HttpStatus.Ok);
   });
 });
 

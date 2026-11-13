@@ -1,8 +1,11 @@
-import { AccountState, ChannelInboundKind, MessageKind, OwnerLocale, SIGN_IN_LINK_TTL_MS } from '@zapbip/types';
+import { AccountState, ChannelInboundKind, HttpStatus, MessageKind, OwnerLocale, SIGN_IN_LINK_TTL_MS } from '@zapbip/types';
 import { reset, runInDurableObject } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { AccountInbox } from '../../src/account-inbox/account-inbox';
 import { sha256Hex } from '../../src/adapters/platform/hash';
+import { SEE_OTHER_STATUS } from '../../src/backoffice/backoffice-constants';
+import { csrfTokenOf } from '../../src/client-app/csrf';
+import { clientAppFetch } from '../support/client-app';
 import { readScreen } from '../support/inbox-session';
 import { applyDirectoryMigration, seedOwnerIdentity } from '../support/seed';
 import { accountInboxStub, testEnv } from '../support/workers-env';
@@ -72,7 +75,12 @@ describe('the login command through the account object', () => {
   it('keeps one live token per account: a second login replaces the first', async () => {
     await receive({ text: 'login', channelMessageId: 'wamid.login.first' });
     await receive({ text: 'login', channelMessageId: 'wamid.login.second' });
+    const [firstToken, secondToken] = [...(await screenText()).matchAll(new RegExp(TOKEN_PATTERN, 'g'))].map((match) => match[1]!);
     expect(await tokenRows()).toHaveLength(1);
+    const signInWith = async (token: string) =>
+      clientAppFetch({ path: `/sign-in/${token}`, method: 'POST', form: { csrf: await csrfTokenOf({ secret: token }) } });
+    expect((await signInWith(firstToken!)).status).toBe(HttpStatus.Gone);
+    expect((await signInWith(secondToken!)).status).toBe(SEE_OTHER_STATUS);
   });
 
   it('keeps no clear token in the stored message log', async () => {

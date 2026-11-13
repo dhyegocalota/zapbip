@@ -2,6 +2,7 @@ import { createExecutionContext } from 'cloudflare:test';
 import { AccountState, OwnerLocale } from '@zapbip/types';
 import { D1SignInLinks } from '../../src/adapters/d1/d1-sign-in-links';
 import { createClientApp } from '../../src/client-app/client-app';
+import { csrfTokenOf } from '../../src/client-app/csrf';
 import { CLIENT_ADDRESS_HEADER } from '../../src/contract/constants';
 import type { Bindings } from '../../src/contract/env';
 import { createFakeRateLimiter } from './fake-rate-limiter';
@@ -55,7 +56,8 @@ export async function seedAccountForApp(input: {
   locale?: OwnerLocale;
 }): Promise<string> {
   const { accountId = ACCOUNT, phone = OWNER_PHONE, state = AccountState.Active, locale = OwnerLocale.EnglishUs } = input;
-  await seedOwnerIdentity({ accountId, phone, ownerLocale: locale });
+  const existing = await testEnv.CONNECTIONS.prepare('SELECT 1 AS found FROM accounts WHERE id = ?').bind(accountId).first();
+  if (existing === null) await seedOwnerIdentity({ accountId, phone, ownerLocale: locale });
   await testEnv.CONNECTIONS.prepare('UPDATE accounts SET state = ? WHERE id = ?').bind(state, accountId).run();
   return accountId;
 }
@@ -96,4 +98,18 @@ export async function signIn(input: { accountId?: string; phone?: string; state?
   if (cookie === null) throw new Error(`sign-in did not set the session cookie: ${continued.status}`);
   const home = await clientAppFetch({ path: continued.headers.get('Location')!, cookie });
   return { cookie, csrf: csrfOf({ html: await home.text() }), accountId };
+}
+
+export async function signInAgain(input: { accountId?: string; cookie?: string }): Promise<{ cookie: string; response: Response }> {
+  const { accountId = ACCOUNT, cookie } = input;
+  const token = await issueSignInToken({ accountId });
+  const response = await clientAppFetch({
+    path: `/sign-in/${token}`,
+    method: 'POST',
+    form: { csrf: await csrfTokenOf({ secret: token }) },
+    cookie,
+  });
+  const next = sessionCookieOf({ response });
+  if (next === null) throw new Error(`sign-in did not set the session cookie: ${response.status}`);
+  return { cookie: next, response };
 }

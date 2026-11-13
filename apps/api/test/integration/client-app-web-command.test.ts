@@ -1,5 +1,5 @@
 import { AccountReplyIntent, AccountReplyParameter, AccountState, CommandKind, OwnerLocale } from '@zapbip/types';
-import { reset } from 'cloudflare:test';
+import { reset, runInDurableObject } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { D1ConnectionRegistry } from '../../src/adapters/d1/d1-connection-registry';
 import { applyDirectoryMigration, seedOwnerIdentity } from '../support/seed';
@@ -63,5 +63,14 @@ describe('AccountInbox applyWebCommand', () => {
     const outcome = await applyWebCommand({ kind: CommandKind.RevokeAgent, rawName: 'alpha' });
     expect(outcome).toMatchObject({ ok: true, value: { replies: [{ intent: AccountReplyIntent.NotFound }] } });
     expect(await activeAgents({ accountId: OTHER_ACCOUNT })).toEqual(['alpha']);
+  });
+});
+
+describe('AccountInbox listAgentActivity', () => {
+  it('lists the agents the object has seen with their last activity', async () => {
+    await runInDurableObject(accountInboxStub({ accountId: ACCOUNT }), (_instance, state) => {
+      state.storage.sql.exec('INSERT INTO agents (agent, last_seen_at) VALUES (?, ?)', 'alpha', 1_700_000_000_000);
+    });
+    expect(await accountInboxStub({ accountId: ACCOUNT }).listAgentActivity()).toEqual([{ agent: 'alpha', lastSeenAt: 1_700_000_000_000 }]);
   });
 });
