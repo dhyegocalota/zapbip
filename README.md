@@ -1,16 +1,58 @@
-# zapbip
+<p align="center">
+  <a href="https://zapbip.com"><img src="https://zapbip.com/favicon.svg" alt="zapbip" width="96" height="96"></a>
+</p>
 
-**Your AI agents text you on WhatsApp.** They ask with buttons, wait for your tap, then keep working.
+<h1 align="center">zapbip</h1>
+
+<p align="center">
+  <strong>Your AI agents text you on WhatsApp.</strong><br>
+  They ask with buttons, wait for your tap, then keep working.
+</p>
+
+<p align="center">
+
+[![license](https://img.shields.io/github/license/dhyegocalota/zapbip?color=128C7E)](LICENSE)
+[![stars](https://img.shields.io/github/stars/dhyegocalota/zapbip?style=flat&color=128C7E)](https://github.com/dhyegocalota/zapbip/stargazers)
+[![docs](https://img.shields.io/badge/docs-docs.zapbip.com-128C7E)](https://docs.zapbip.com)
+[![website](https://img.shields.io/badge/website-zapbip.com-128C7E)](https://zapbip.com)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-128C7E)](.github/CONTRIBUTING.md)
+
+</p>
+
+<p align="center">
+  <a href="https://zapbip.com">Website</a> ·
+  <a href="https://docs.zapbip.com">Docs</a> ·
+  <a href="#-quick-start">Quick start</a> ·
+  <a href="https://github.com/dhyegocalota/zapbip/issues">Issues</a>
+</p>
+
+---
 
 zapbip is a personal WhatsApp channel for AI agents. Connect Claude Code, Codex, Cursor, Gemini CLI or any MCP client to your own phone through one MCP server: agents send you messages, ask questions with buttons or lists and block until you answer, exchange files and voice notes, and wake up when you text first. Several agents share one chat, and each reply goes back to the agent that asked.
 
 It uses only Meta's official WhatsApp Cloud API, it talks only to you, and it deletes each message after a fixed time.
 
-- Hosted: [zapbip.com](https://zapbip.com) (early access, waitlist open)
-- Docs: [docs.zapbip.com](https://docs.zapbip.com)
-- zapbip is a product of Logic Bit, made in Belo Horizonte, Brazil: [logicbit.com.br](https://logicbit.com.br)
+zapbip is a product of Logic Bit, made in Belo Horizonte, Brazil: [logicbit.com.br](https://logicbit.com.br)
 
-## How it works
+## ✨ Features
+
+- 💬 **Messages that reach you.** An agent texts you when it finishes, fails or needs you.
+- 🔘 **Questions with buttons and lists.** The agent blocks until you tap, then keeps working.
+- 📎 **Files and voice notes** in both directions.
+- 🔔 **Wake on text.** Message first and your coding agent's session resumes in seconds.
+- 👥 **Many agents, one chat.** Each reply is routed back to the agent that asked.
+- 🔒 **Yours alone.** Official Cloud API only, one owner per account, every message deleted after a fixed time.
+- 🧩 **Any MCP client.** One server, one key per agent, set up in minutes.
+
+## 🚀 Quick start
+
+1. **Message zapbip on WhatsApp.** Join the waitlist at [zapbip.com](https://zapbip.com); send `hi` to the number you get, and your first message creates your account.
+2. **Ask for an agent.** Send `new agent claude`. zapbip answers with one line made for you.
+3. **Paste it into your AI.** Your agent reads the instructions online, connects itself and texts you a first message.
+
+The full walk-through, with one guide per agent, is at [docs.zapbip.com](https://docs.zapbip.com).
+
+## 🧠 How it works
 
 ```
 your agent ──MCP──▶ zapbip (Cloudflare Worker) ──WhatsApp Cloud API──▶ your phone
@@ -23,7 +65,11 @@ your agent ──MCP──▶ zapbip (Cloudflare Worker) ──WhatsApp Cloud AP
 - **Wake.** When you text first, the local connector resumes your coding agent's session in seconds; hosted agents pick the message up at their next check.
 - **WhatsApp.** Meta's official Cloud API only, through numbers the operator registers; outside the 24-hour window, approved utility templates reach you.
 
-## Repository
+## 🤖 Supported agents
+
+Coding agents, chat apps and any MCP client connect the same way. [The supported agents](https://docs.zapbip.com/agents/supported-agents) page lists each one with its install guide.
+
+## 🗂️ Repository
 
 | Path                                                                                    | What it holds                                                                                                                       |
 | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
@@ -37,23 +83,42 @@ your agent ──MCP──▶ zapbip (Cloudflare Worker) ──WhatsApp Cloud AP
 | [tools/repository-shape](tools/repository-shape/)                                       | Tests about the repository itself                                                                                                   |
 | [docs](docs/)                                                                           | Decisions, learnings, features, scenarios and runbooks                                                                              |
 
-## Run it locally
+## 🧪 Run it locally
 
 [docs/contributing/local-stack.md](docs/contributing/local-stack.md) starts the Worker with a test double for WhatsApp and walks an agent through a full conversation, with no Meta account needed.
 
-## Self-hosting
+## 🏠 Self-hosting
 
 zapbip runs on Cloudflare (Workers, Durable Objects, D1, R2) and a Meta app with the WhatsApp Cloud API. The [runbooks](docs/runbooks/) are the exact path the hosted service follows, from zero accounts to go-live. To run your own copy, follow them with your own accounts and replace the hosted service's identifiers: the routes and resource ids in `apps/api/wrangler.jsonc`, the zone and the Meta app constants in `libs/types`, and the company facts the legal pages use. First-class configuration for self-hosting is not there yet; issues and pull requests that move it there are welcome.
 
-## Built with agents
+## 🛠️ Built with agents
 
 Most of this repository was written by AI coding agents working under a harness: a written process from agreement to merge, red-first tests, a reviewer and a security reviewer before every pull request, and tests about the repository's own shape. Read [.claude/HARNESS.md](.claude/HARNESS.md) for the process, [AGENTS.md](AGENTS.md) for the conventions, [docs/adr](docs/adr/) for the decisions and [docs/learnings](docs/learnings/) for the traps.
 
-## Contributing
+## 🗺️ Roadmap
 
-Read [CONTRIBUTING](.github/CONTRIBUTING.md). Report vulnerabilities privately as [SECURITY](.github/SECURITY.md) explains, never in a public issue. Everyone follows the [code of conduct](.github/CODE_OF_CONDUCT.md).
+What ships and what is next lives in [docs/features](docs/features/): one folder per feature with its spec, plan and test plan, and a status table in its index. The decisions behind the design are the [ADRs](docs/adr/).
 
-## License
+## 💬 Community
+
+- 🐛 Found a bug or want a feature? [Open an issue](https://github.com/dhyegocalota/zapbip/issues/new/choose).
+- 📖 Questions about setup? Start with the [docs](https://docs.zapbip.com).
+- 🔐 Found a vulnerability? Report it privately as [SECURITY](.github/SECURITY.md) explains, never in a public issue.
+- 🤝 Want to contribute? Read [CONTRIBUTING](.github/CONTRIBUTING.md). Everyone follows the [code of conduct](.github/CODE_OF_CONDUCT.md).
+
+## 👥 Contributors
+
+<a href="https://github.com/dhyegocalota/zapbip/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=dhyegocalota/zapbip" alt="Contributors">
+</a>
+
+## ⭐ Star history
+
+<a href="https://star-history.com/#dhyegocalota/zapbip&Date">
+  <img src="https://api.star-history.com/svg?repos=dhyegocalota/zapbip&type=Date" alt="Star history chart">
+</a>
+
+## 📄 License
 
 The server, the site and the libraries are licensed under the [GNU Affero General Public License v3.0](LICENSE). The client packages that run on your machine or inside your agent runtime, the [local connector](apps/connector/LICENSE) and the `apps/*-plugin` channel plugins, are licensed under the MIT License; each carries its own `LICENSE` file.
 

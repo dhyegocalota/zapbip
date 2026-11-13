@@ -27,13 +27,13 @@ G1, G2 and G3 in order, one lane.
 
 ### G2
 
-- [ ] **Step 3:** red: the release runbook and changelog shape test
-- [ ] **Step 4:** the runbook, its index row and the changelogs
+- [x] **Step 3:** red: the release runbook and changelog shape test — evidence: red commit before the runbook
+- [x] **Step 4:** the runbook, its index row and the changelogs
 
 ### G3
 
-- [ ] **Step 5:** red: the README essentials and `.github` files shape test
-- [ ] **Step 6:** README, code owners, dependency updates, templates
+- [x] **Step 5:** red: the README essentials and `.github` files shape test
+- [x] **Step 6:** README, code owners, dependency updates, templates
 
 ## Failure modes
 
