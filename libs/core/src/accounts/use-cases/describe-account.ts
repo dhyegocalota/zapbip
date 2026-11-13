@@ -1,6 +1,12 @@
-import type { AccountOverview } from '../account-overview';
+import { buildAccountOverview, type AccountOverview } from '../account-overview';
+import { loadOwnerAccount } from './load-owner-account';
 import type { DescribeAccountInput } from './types';
 
 export async function describeAccount(input: DescribeAccountInput): Promise<AccountOverview> {
-  throw new Error('describeAccount is not implemented');
+  const { dependencies, connection } = input;
+  const { accountId } = connection;
+  const account = await loadOwnerAccount({ dependencies, accountId });
+  const connections = await dependencies.connections.listActive({ accountId });
+  const activity = await dependencies.repository.listAgents();
+  return buildAccountOverview({ account, connections, activity });
 }
