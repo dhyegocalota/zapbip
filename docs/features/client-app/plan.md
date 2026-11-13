@@ -22,20 +22,20 @@ G1 (command and tokens) then G2 (routes and views) then G3 (docs, e2e).
 
 ### G1
 
-- [ ] **Step 1:** red: `login` / `entrar` parse, gate and reply tests in `libs/core`; then the command, the port and the reply copy.
-- [ ] **Step 2:** red: integration for the token row, replacement, expiry and masking of the stored reply; then migration `0011`, `D1SignInLinks`, the redaction pattern, `APP_ORIGIN`.
-- [ ] **Step 3:** red: the account RPC `applyWebCommand`; then the Durable Object method.
+- [x] **Step 1:** red: `login` / `entrar` parse, gate and reply tests in `libs/core`; then the command, the port and the reply copy. Evidence: red `6e36fa9b`, green `9d0cf27a`.
+- [x] **Step 2:** red: integration for the token row, replacement, expiry and masking of the stored reply; then migration `0011`, `D1SignInLinks`, the redaction pattern, `APP_ORIGIN`. Evidence: red `6debe664`, green `71505d3c`.
+- [x] **Step 3:** red: the account RPC `applyWebCommand`; then the Durable Object method. Evidence: red `5659260f`, green `32f5ba68`.
 
 ### G2
 
-- [ ] **Step 4:** red: token and session unit rules (digest, CSRF); then `client-app` token, session and CSRF modules.
-- [ ] **Step 5:** red: host dispatch and route integration (GET does not consume, POST consumes once, expiry, CSRF, Origin, rate limit, isolation, revoked session); then the app, views, copy and stylesheet.
-- [ ] **Step 6:** wrangler routes and vars, the scheduled prune, the account-removal statements.
+- [x] **Step 4:** red: token and session unit rules (digest, CSRF); then `client-app` token, session and CSRF modules. Evidence: red `41fd917c` (unit part), green `32f5ba68`.
+- [x] **Step 5:** red: host dispatch and route integration (GET does not consume, POST consumes once, expiry, CSRF, Origin, rate limit, isolation, revoked session); then the app, views, copy and stylesheet. Evidence: red `41fd917c`, green `32f5ba68`.
+- [x] **Step 6:** wrangler routes and vars, the scheduled prune, the account-removal statements. Evidence: `32f5ba68`, `apps/api/test/unit/wrangler-config.test.ts`, `apps/api/test/integration/client-app-prune.test.ts`.
 
 ### G3
 
-- [ ] **Step 7:** Playwright e2e `apps/api/e2e/client-app` in both locales at 1440 and 375.
-- [ ] **Step 8:** docs pages, navigation, commands page, rules file, features index.
+- [x] **Step 7:** Playwright e2e `apps/api/e2e/client-app` in both locales at 1440 and 375. Evidence: `07696d3f`, 20 tests green (desktop 1440, mobile 375).
+- [x] **Step 8:** docs pages, navigation, commands page, rules file, features index. Evidence: `1ec06ca0`, `ef602f88`.
 
 ## Failure modes
 
