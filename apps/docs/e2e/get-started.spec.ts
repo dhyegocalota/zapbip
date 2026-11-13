@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { DocsPageLanguage, START_LINK, START_LINK_LANGUAGE_PARAMETER } from '@zapbip/types';
+import { DOCS_START_LINK_LANGUAGES, DocsPageLanguage, START_LINK, START_LINK_LANGUAGE_PARAMETER } from '@zapbip/types';
 import { CHAT_MAX_MESSAGES } from '../../../tools/repository-shape/src/docs-experience';
 import { DOCS_LOCALE_OF, DocsViewport, docsOptionsOf } from './support/docs-experience';
 import { twinPathOf } from '../../../libs/agents/src/docs';
@@ -85,7 +85,9 @@ for (const language of Object.values(DocsPageLanguage)) {
       await page.goto(urlOf({ path: GET_STARTED_PAGE, language }));
       const content = page.locator('#content-area');
       await expect(content.locator('ol')).toHaveCount(1);
-      await expect(content.locator(`a[href="${START_LINK}?${START_LINK_LANGUAGE_PARAMETER}=${language}"]`).first()).toBeVisible();
+      await expect(
+        content.locator(`a[href="${START_LINK}?${START_LINK_LANGUAGE_PARAMETER}=${DOCS_START_LINK_LANGUAGES[language]}"]`).first(),
+      ).toBeVisible();
       await expect(page.locator(WHATSAPP_NUMBER_LINK_LOCATOR)).toHaveCount(0);
       await expect(content).not.toContainText(PHONE_NUMBER_PATTERN);
       await expect(content.locator('code', { hasText: INSTALL_PROMPT_PLACEHOLDER }).first()).toBeVisible();

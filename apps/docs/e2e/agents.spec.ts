@@ -53,7 +53,8 @@ function urlOf(input: { path: string; language: DocsPageLanguage }): string {
 
 function delayTokenOf(input: { expectedDelaySeconds: number; language: DocsPageLanguage }): string {
   if (input.expectedDelaySeconds === ONE_HOUR_SECONDS) return HOURLY_TOKEN[input.language];
-  return `${input.expectedDelaySeconds} ${SECONDS_WORD[input.language]}`;
+  const separator = input.language === DocsPageLanguage.Korean ? '' : ' ';
+  return `${input.expectedDelaySeconds}${separator}${SECONDS_WORD[input.language]}`;
 }
 
 async function expectFactVisible(input: { content: Locator; fact: string }): Promise<void> {
