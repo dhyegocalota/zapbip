@@ -1,8 +1,7 @@
-import { CLIENT_APP_TOKEN_LENGTH, DAY_MS, SECOND_MS } from '@zapbip/types';
+import { CLIENT_APP_SESSION_TTL_MS, CLIENT_APP_TOKEN_LENGTH, SECOND_MS } from '@zapbip/types';
 
 export const SESSION_COOKIE_NAME = '__Host-zapbip_app';
-export const SESSION_TTL_MS = 30 * DAY_MS;
-export const SESSION_COOKIE_MAX_AGE_SECONDS = SESSION_TTL_MS / SECOND_MS;
+export const SESSION_COOKIE_MAX_AGE_SECONDS = CLIENT_APP_SESSION_TTL_MS / SECOND_MS;
 export const CSRF_FIELD = 'csrf';
 export const AGENT_NAME_FIELD = 'agentName';
 export const AGENT_FIELD = 'agent';

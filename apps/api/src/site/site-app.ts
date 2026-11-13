@@ -10,7 +10,8 @@ import { plainResponse } from '../routes/private-response';
 import { joinHandler } from './join-route';
 import { languageRedirects } from './language-redirects';
 import { preferenceRoutes } from './preference-routes';
-import { idleJoinOf, renderLanding, renderNotFound } from './render-landing';
+import { LEGAL_PAGES, legalPathOf } from './legal-links';
+import { idleJoinOf, renderLanding, renderLegal, renderNotFound } from './render-landing';
 import { renderRobots, renderSitemap } from './robots-and-sitemap';
 import { siteContext } from './site-context';
 import { PAGE_CACHE_CONTROL, PAGE_VARY, SCRIPT_CONTENT_TYPE, STYLESHEET_CONTENT_TYPE } from './site-constants';
@@ -51,6 +52,11 @@ export function createSiteApp(input: { fetchImplementation: typeof fetch }): Hon
     });
   app.get(SitePath.Home, landing);
   app.get(SitePath.PortugueseHome, landing);
+  LEGAL_PAGES.forEach((page) =>
+    app.get(legalPathOf(page), (context) =>
+      renderLegal({ context, document: page.document, headers: { 'Cache-Control': PAGE_CACHE_CONTROL, Vary: PAGE_VARY } }),
+    ),
+  );
   app.post(SitePath.Join, joinHandler({ fetchImplementation: input.fetchImplementation }));
   app.get(SitePath.Join, (context) => {
     const target = pagePathOf({ locale: context.get('locale'), agent: null, referralCode: context.get('referralCode') });

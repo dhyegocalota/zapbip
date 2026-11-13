@@ -3,6 +3,10 @@ import type { OwnerLocale } from '@zapbip/types';
 export enum SitePath {
   Home = '/',
   PortugueseHome = '/pt-br',
+  Terms = '/terms',
+  Privacy = '/privacy',
+  PortugueseTerms = '/pt-br/termos',
+  PortuguesePrivacy = '/pt-br/privacidade',
   Join = '/join',
   Locale = '/locale',
   Theme = '/theme',

@@ -38,3 +38,4 @@ export const PAGE_CACHE_CONTROL = 'private, no-cache';
 export const PAGE_VARY = 'Accept-Language, Cookie';
 export const STYLESHEET_CONTENT_TYPE = 'text/css; charset=utf-8';
 export const SCRIPT_CONTENT_TYPE = 'text/javascript; charset=utf-8';
+export const LEGAL_UPDATED_ON = '2026-11-13';
