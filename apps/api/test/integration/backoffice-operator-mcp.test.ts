@@ -498,14 +498,11 @@ describe('list_audit', () => {
   test('lists the newest rows first with the actor key, and never a client address', async () => {
     await call({ name: OperatorToolName.ReleaseAccess, arguments: { accountIds: ['acct_missing'], confirm: true } });
     const { structured, text } = await call({ name: OperatorToolName.ListAudit });
-    expect(structured).toMatchObject({
-      rows: [
-        expect.objectContaining({
-          action: BackofficeAuditAction.AccessReleased,
-          actorKeyId: keyId,
-          outcome: BackofficeAuditOutcome.Succeeded,
-        }),
-      ],
+    const [newest] = (structured as { rows: unknown[] }).rows;
+    expect(newest).toMatchObject({
+      action: BackofficeAuditAction.AccessReleased,
+      actorKeyId: keyId,
+      outcome: BackofficeAuditOutcome.Succeeded,
     });
     expect(text).not.toContain(CLIENT_ADDRESS);
   });

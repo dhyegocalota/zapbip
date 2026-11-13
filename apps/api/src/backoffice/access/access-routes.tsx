@@ -1,7 +1,5 @@
 import { ACCESS_BATCH_LIMIT, HttpStatus } from '@zapbip/types';
 import { Hono, type Context } from 'hono';
-import { numberRegistryOf } from '../../adapters/d1/d1-number-registry';
-import { whatsappLinkTarget } from '../../routes/start-link-target';
 import { BackofficeAuditAction, BackofficeAuditTargetKind } from '../audit/backoffice-audit-action';
 import { StepUpOutcome } from '../auth/step-up';
 import { ACCESS_PAGE_ROW_LIMIT } from '../backoffice-constants';
@@ -12,10 +10,10 @@ import { type FormBody, textFieldOf, textFieldsOf } from '../form-fields';
 import { type FlashStatus, redirectWithFlash, takeFlash } from '../flash/form-flash';
 import { rateLimitedResponse, stepUpOf } from '../numbers/step-up-gate';
 import { signedInPageContext } from '../page-context';
-import { auditedBatch } from './access-audit';
+import { auditedBatch, contextAuditRecorder } from './access-audit';
 import { parseAccessFilter, type AccessFilter } from './access-filter';
 import { AccessFormField } from './access-form-fields';
-import { inviteCountsOf, issueInvites } from './access-invite';
+import { inviteCountsOf, issueInvites, startNumberOf } from './access-invite';
 import { AccessPage } from './access-page';
 import { countInvitableEntries, countWaitingAccounts, listInvitableEntries, listWaitingAccounts } from './access-queries';
 import { releaseBatch, releaseCountsOf } from './access-release';
@@ -52,12 +50,6 @@ function selectionFailureOf(input: { selected: string[] }): BackofficeCopyKey | 
 
 function nullIfAbsent(input: { value: string | undefined }): string | null {
   return input.value === undefined ? null : input.value;
-}
-
-async function startNumberOf(input: { context: Context<BackofficeEnv> }): Promise<string | null> {
-  const displayNumber = await numberRegistryOf({ bindings: input.context.env }).findStartDisplayNumber();
-  if (displayNumber === null) return null;
-  return whatsappLinkTarget({ displayNumber, text: '' }) === null ? null : displayNumber;
 }
 
 function uniqueOf(input: { values: string[] }): string[] {
@@ -114,7 +106,7 @@ accessRoutes.post(BackofficePath.AccessRelease, async (context) => {
   if (outcome === StepUpOutcome.Rejected)
     return rejectAccess({ context, status: HttpStatus.Unauthorized, failure: BackofficeCopyKey.StepUpRejected });
   const { rows, counts } = await auditedBatch({
-    context,
+    record: contextAuditRecorder({ context }),
     action: BackofficeAuditAction.AccessReleased,
     selected: accountIds.length,
     run: async () => {
@@ -131,7 +123,7 @@ accessRoutes.post(BackofficePath.AccessInvite, async (context) => {
   const emails = await selectedEmails({ context, form, filter });
   const failure = selectionFailureOf({ selected: emails });
   if (failure !== null) return rejectAccess({ context, status: HttpStatus.UnprocessableEntity, failure });
-  const displayNumber = await startNumberOf({ context });
+  const displayNumber = await startNumberOf({ bindings: context.env });
   if (displayNumber === null)
     return rejectAccess({ context, status: HttpStatus.UnprocessableEntity, failure: BackofficeCopyKey.AccessNoStartNumber });
   const outcome = await stepUpOf({ context, form, targetKind: TARGET_KIND, targetId: INVITE_TARGET });
@@ -139,7 +131,7 @@ accessRoutes.post(BackofficePath.AccessInvite, async (context) => {
   if (outcome === StepUpOutcome.Rejected)
     return rejectAccess({ context, status: HttpStatus.Unauthorized, failure: BackofficeCopyKey.StepUpRejected });
   const { invites, counts } = await auditedBatch({
-    context,
+    record: contextAuditRecorder({ context }),
     action: BackofficeAuditAction.WaitlistInvited,
     selected: emails.length,
     run: async () => {
