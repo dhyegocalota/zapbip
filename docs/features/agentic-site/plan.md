@@ -14,15 +14,15 @@
 
 ### G1
 
-- [ ] **Step 1:** failing unit test for the Markdown renderer and the negotiation helper
-- [ ] **Step 2:** failing integration tests: twins, negotiation, llms files, well-known files, robots, pricing, quick start, request access
-- [ ] **Step 3:** Markdown renderer, pages and llms files
-- [ ] **Step 4:** migration `0013`, `WaitlistSource`, `joinWaitlist` takes the source
-- [ ] **Step 5:** `agentic-routes.ts`, `request-access-route.ts`, robots, head links
-- [ ] **Step 6:** WebMCP script
-- [ ] **Step 7:** semantic HTML fixes with tests
-- [ ] **Step 8:** Playwright spec with a stubbed `document.modelContext`
-- [ ] **Step 9:** rule, READMEs and tester briefing
+- [x] **Step 1:** failing unit test for the Markdown renderer and the negotiation helper — 4cc7094e
+- [x] **Step 2:** failing integration tests: twins, negotiation, llms files, well-known files, robots, pricing, quick start, request access — 4cc7094e
+- [x] **Step 3:** Markdown renderer, pages and llms files — 5b1436f5
+- [x] **Step 4:** migration `0013`, `WaitlistSource`, `joinWaitlist` takes the source — 4cc7094e, 5b1436f5
+- [x] **Step 5:** `agentic-routes.ts`, `request-access-route.ts`, robots, head links — 5b1436f5
+- [x] **Step 6:** WebMCP script — 88618e5c
+- [x] **Step 7:** semantic HTML fixes with tests — 9c64a65a, 00da8123
+- [x] **Step 8:** Playwright spec with a stubbed `document.modelContext` — 4cc7094e (spec), 88618e5c (green)
+- [x] **Step 9:** rule, READMEs and tester briefing — see the last commit
 
 ## Failure modes
 
