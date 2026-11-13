@@ -36,6 +36,7 @@ export function AccessMetricsSection(props: { locale: OwnerLocale; access: Acces
     <section class="card chart-card-wide" aria-labelledby="metrics-access-title">
       <h2 id="metrics-access-title">{translate(BackofficeCopyKey.MetricsAccessTitle)}</h2>
       <FreshnessLine freshness={live} />
+      <p class="field-help">{translate(BackofficeCopyKey.MetricsAccessGlobalNote)}</p>
       <div class="figure-grid">
         <FigureNumber
           id="figure-access-waitlist"

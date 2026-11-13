@@ -4,6 +4,7 @@ import type { IssuedInvite } from './access-invite';
 const HEADER = 'email,link';
 const CELL_SEPARATOR = ',';
 const LINE_BREAK = '\n';
+const LINE_BREAK_PATTERN = /\r?\n/;
 
 export function toInviteLines(input: { invites: IssuedInvite[] }): string {
   return input.invites.map((invite) => `${invite.email}${CELL_SEPARATOR}${invite.link}`).join(LINE_BREAK);
@@ -11,7 +12,7 @@ export function toInviteLines(input: { invites: IssuedInvite[] }): string {
 
 export function parseInviteLines(input: { lines: string }): IssuedInvite[] {
   return input.lines
-    .split(LINE_BREAK)
+    .split(LINE_BREAK_PATTERN)
     .filter((line) => line.includes(CELL_SEPARATOR))
     .map((line) => {
       const separatorIndex = line.indexOf(CELL_SEPARATOR);

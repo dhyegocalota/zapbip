@@ -6,9 +6,14 @@ import type { Bindings } from '../../contract/env';
 import { LogEvent } from '../../contract/log';
 import { logEvent } from '../../log';
 import { accountInboxOf } from '../../routes/account-inbox-stub';
-import type { BatchCounts } from './access-batch-counts';
+import { BatchCount, type BatchCounts } from './access-batch-counts';
 
-export type ReleasedAccount = { accountId: string; waId: string | null; outcome: AccessReleaseOutcome; notice: AccessNoticeOutcome | null };
+export type ReleasedAccount = {
+  accountId: string;
+  waId: string | null;
+  outcome: AccessReleaseOutcome | null;
+  notice: AccessNoticeOutcome | null;
+};
 
 const NOTICE_BY_DELIVERY: Record<DeliveryState.Sent | DeliveryState.Queued, AccessNoticeOutcome> = {
   [DeliveryState.Sent]: AccessNoticeOutcome.Sent,
@@ -31,7 +36,12 @@ async function noticeOf(input: { bindings: Bindings; account: AccountRecord }): 
 async function releaseOne(input: { bindings: Bindings; accountId: string; now: number }): Promise<ReleasedAccount> {
   const { bindings, accountId, now } = input;
   const dependencies = { accounts: new D1AccountDirectory({ database: bindings.CONNECTIONS }) };
-  const { outcome, account } = await releaseAccountAccess({ dependencies, accountId, releasedAt: now });
+  const released = await releaseAccountAccess({ dependencies, accountId, releasedAt: now }).catch(() => null);
+  if (released === null) {
+    logEvent({ event: LogEvent.AccessReleaseFailed, accountId });
+    return { accountId, waId: null, outcome: null, notice: null };
+  }
+  const { outcome, account } = released;
   const waId = account === null ? null : account.waId;
   if (outcome !== AccessReleaseOutcome.Released || account === null) return { accountId, waId, outcome, notice: null };
   const notice = await noticeOf({ bindings, account });
@@ -58,13 +68,14 @@ function noticeCountOf(input: { rows: ReleasedAccount[]; notice: AccessNoticeOut
 export function releaseCountsOf(input: { rows: ReleasedAccount[] }): BatchCounts {
   const { rows } = input;
   return {
-    selected: rows.length,
-    released: countOf({ rows, outcome: AccessReleaseOutcome.Released }),
-    alreadyActive: countOf({ rows, outcome: AccessReleaseOutcome.AlreadyActive }),
-    notReleasable:
+    [BatchCount.Selected]: rows.length,
+    [BatchCount.Released]: countOf({ rows, outcome: AccessReleaseOutcome.Released }),
+    [BatchCount.AlreadyActive]: countOf({ rows, outcome: AccessReleaseOutcome.AlreadyActive }),
+    [BatchCount.NotReleasable]:
       countOf({ rows, outcome: AccessReleaseOutcome.NotWaitlisted }) + countOf({ rows, outcome: AccessReleaseOutcome.NotFound }),
-    sent: noticeCountOf({ rows, notice: AccessNoticeOutcome.Sent }),
-    queued: noticeCountOf({ rows, notice: AccessNoticeOutcome.Queued }),
-    failed: noticeCountOf({ rows, notice: AccessNoticeOutcome.Failed }),
+    [BatchCount.Sent]: noticeCountOf({ rows, notice: AccessNoticeOutcome.Sent }),
+    [BatchCount.Queued]: noticeCountOf({ rows, notice: AccessNoticeOutcome.Queued }),
+    [BatchCount.Failed]: noticeCountOf({ rows, notice: AccessNoticeOutcome.Failed }),
+    [BatchCount.ItemFailed]: rows.filter((row) => row.outcome === null).length,
   };
 }

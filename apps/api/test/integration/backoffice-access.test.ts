@@ -200,7 +200,7 @@ describe('releasing access', () => {
     expect(await auditRows({ action: BackofficeAuditAction.AccessReleased })).toEqual([
       {
         outcome: BackofficeAuditOutcome.Succeeded,
-        target_id: 'selected=2 released=2 alreadyActive=0 notReleasable=0 sent=0 queued=2 failed=0',
+        target_id: 'selected=2 released=2 alreadyActive=0 notReleasable=0 sent=0 queued=2 failed=0 itemFailed=0',
       },
     ]);
     expect(html).toContain('data-count="queued">2<');
@@ -257,7 +257,7 @@ describe('releasing access', () => {
     expect(await auditRows({ action: BackofficeAuditAction.AccessReleased })).toEqual([
       {
         outcome: BackofficeAuditOutcome.Succeeded,
-        target_id: 'selected=1 released=1 alreadyActive=0 notReleasable=0 sent=0 queued=0 failed=1',
+        target_id: 'selected=1 released=1 alreadyActive=0 notReleasable=0 sent=0 queued=0 failed=1 itemFailed=0',
       },
     ]);
   });

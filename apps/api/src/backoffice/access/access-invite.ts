@@ -2,7 +2,7 @@ import { START_PREFILLED_TEXT } from '@zapbip/types';
 import { D1AccessInvites } from '../../adapters/d1/d1-access-invites';
 import type { Bindings } from '../../contract/env';
 import { whatsappLinkTarget } from '../../routes/start-link-target';
-import type { BatchCounts } from './access-batch-counts';
+import { BatchCount, type BatchCounts } from './access-batch-counts';
 import { findWaitlistEntries } from './access-queries';
 
 export type IssuedInvite = { email: string; link: string };
@@ -29,5 +29,9 @@ export async function issueInvites(input: {
 }
 
 export function inviteCountsOf(input: { selected: number; issued: IssuedInvite[] }): BatchCounts {
-  return { selected: input.selected, issued: input.issued.length, skipped: input.selected - input.issued.length };
+  return {
+    [BatchCount.Selected]: input.selected,
+    [BatchCount.Issued]: input.issued.length,
+    [BatchCount.Skipped]: input.selected - input.issued.length,
+  };
 }

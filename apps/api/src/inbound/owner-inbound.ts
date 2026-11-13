@@ -2,6 +2,7 @@ import {
   fillCopyTokens,
   finishAccountDeletion,
   openOwnerAccount,
+  redactInviteCodes,
   redeemAccessInvite,
   ownerLocaleOf,
   type AccountRecord,
@@ -63,15 +64,38 @@ function inviteTextOf(input: { entry: ChannelInboundEntry }): string | null {
   return entry.content.text;
 }
 
+function redactedEntryOf(input: { entry: ChannelInboundEntry }): ChannelInboundEntry {
+  const { entry } = input;
+  if (entry.kind !== ChannelInboundKind.Owner || entry.content.kind !== MessageKind.Text) return entry;
+  return { ...entry, content: { ...entry.content, text: redactInviteCodes({ text: entry.content.text }) } };
+}
+
 async function noticeRedeemedAccess(input: {
   accountInbox: AccountOwnerRpc;
   account: OwnerAccountContext;
   appOrigin: string;
 }): Promise<void> {
   const { accountInbox, account, appOrigin } = input;
-  logEvent({ event: LogEvent.AccessInviteRedeemed, accountId: account.accountId });
-  const notice = await accountInbox.noticeAccessOpened({ account, appOrigin });
-  if (!notice.ok) logEvent({ event: LogEvent.AccessNoticeFailed, accountId: account.accountId });
+  try {
+    const notice = await accountInbox.noticeAccessOpened({ account, appOrigin });
+    if (!notice.ok) logEvent({ event: LogEvent.AccessNoticeFailed, accountId: account.accountId });
+  } catch {
+    logEvent({ event: LogEvent.AccessNoticeFailed, accountId: account.accountId });
+  }
+}
+
+async function receiveThenNotice(input: {
+  accountInbox: AccountOwnerRpc;
+  receive: Parameters<AccountOwnerRpc['receiveAccountMessage']>[0];
+  isRedeemed: boolean;
+  appOrigin: string;
+}): ReturnType<AccountOwnerRpc['receiveAccountMessage']> {
+  const { accountInbox, receive, isRedeemed, appOrigin } = input;
+  try {
+    return await accountInbox.receiveAccountMessage(receive);
+  } finally {
+    if (isRedeemed) await noticeRedeemedAccess({ accountInbox, account: receive.account, appOrigin });
+  }
 }
 
 async function refuseNewAccount(input: OwnerInboundInput): Promise<ReceiveResult> {
@@ -135,16 +159,20 @@ export async function receiveOwnerInbound(input: OwnerInboundInput): Promise<Rec
     text: inviteTextOf({ entry }),
     now: createPlatformClock().now(),
   });
-  const accountInbox = accountInboxOf<AccountOwnerRpc>({ bindings, accountId: account.accountId });
-  const outcome = await accountInbox.receiveAccountMessage({
-    account: redemption.account,
-    channelMessageId,
-    entry,
-    publicOrigin: bindings.PUBLIC_ORIGIN,
+  if (redemption.isRedeemed) logEvent({ event: LogEvent.AccessInviteRedeemed, accountId: account.accountId });
+  const outcome = await receiveThenNotice({
+    accountInbox: accountInboxOf<AccountOwnerRpc>({ bindings, accountId: account.accountId }),
+    receive: {
+      account: redemption.account,
+      channelMessageId,
+      entry: redactedEntryOf({ entry }),
+      publicOrigin: bindings.PUBLIC_ORIGIN,
+      appOrigin: bindings.APP_ORIGIN,
+    },
+    isRedeemed: redemption.isRedeemed,
     appOrigin: bindings.APP_ORIGIN,
   });
   if (!outcome.ok) throw new Error(outcome.message);
-  if (redemption.isRedeemed) await noticeRedeemedAccess({ accountInbox, account: redemption.account, appOrigin: bindings.APP_ORIGIN });
   if (outcome.value.deletionConfirmed) await finishDeletion({ bindings, accountId: account.accountId });
   return outcome.value;
 }

@@ -355,16 +355,25 @@ function createAccountMedia(): InMemoryAccountMedia {
   };
 }
 
-function createAccessInvites(): InMemoryAccessInvites {
-  const invites = new Map<string, { expiresAt: number; usedAt: number | null }>();
+function createAccessInvites(input: { directory: AccountDirectory }): InMemoryAccessInvites {
+  const invites = new Map<string, { expiresAt: number; usedAt: number | null; usedBy: string | null }>();
   return {
     issue: ({ code, expiresAt }) => {
-      invites.set(code.toLowerCase(), { expiresAt, usedAt: null });
+      invites.set(code.toLowerCase(), { expiresAt, usedAt: null, usedBy: null });
     },
-    redeem: async () => {
-      throw new Error('the in-memory invites redeem is not implemented');
+    redeem: async ({ code, accountId, now }) => {
+      const invite = invites.get(code.toLowerCase());
+      if (invite === undefined || !isInviteLive({ ...invite, now })) return false;
+      const isReleased = await input.directory.release({ accountId, releasedAt: now });
+      if (!isReleased) return false;
+      invite.usedAt = now;
+      invite.usedBy = accountId;
+      return true;
     },
-    usedBy: () => null,
+    usedBy: ({ code }) => {
+      const invite = invites.get(code.toLowerCase());
+      return invite === undefined ? null : invite.usedBy;
+    },
   };
 }
 
@@ -443,7 +452,7 @@ export function createInMemoryAccountDependencies(input: InMemoryOptions = {}): 
     ...environment,
     dependencies,
     lifecycle: { accounts: directory, accountMedia, ids: dependencies.ids },
-    access: { accounts: directory, invites: createAccessInvites() },
+    access: { accounts: directory, invites: createAccessInvites({ directory }) },
     directory,
     registry,
     connectionDirectory: createConnectionDirectory({ store }),

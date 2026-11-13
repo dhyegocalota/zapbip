@@ -47,11 +47,10 @@ export function accessMonthSeries(input: { access: AccessReport; now: number }):
 } {
   const { access, now } = input;
   const days = lastDays({ now, count: ACCESS_MONTH_DAYS });
-  const messagesIn = activitySeries({ days, rows: access.activity, metric: ActivityMetric.MessagesIn });
-  const messagesOut = activitySeries({ days, rows: access.activity, metric: ActivityMetric.MessagesOut });
+  const messageMetrics: ActivityMetric[] = [ActivityMetric.MessagesIn, ActivityMetric.MessagesOut];
   return {
     joins: dailySeries({ days, rows: access.waitlistJoined }),
-    messages: messagesIn.map((value, index) => value + messagesOut[index]!),
+    messages: dailySeries({ days, rows: access.activity.filter((row) => messageMetrics.includes(row.metric)) }),
     questions: activitySeries({ days, rows: access.activity, metric: ActivityMetric.QuestionsAnswered }),
   };
 }

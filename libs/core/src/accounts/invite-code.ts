@@ -1,4 +1,4 @@
-import { INVITE_CODE_ALPHABET, INVITE_CODE_PATTERN, INVITE_CODE_PREFIX } from './constants';
+import { INVITE_CODE_ALPHABET, INVITE_CODE_MASK, INVITE_CODE_PATTERN, INVITE_CODE_PREFIX } from './constants';
 
 export function findInviteCode(input: { text: string | null }): string | null {
   if (input.text === null) return null;
@@ -17,5 +17,5 @@ export function createInviteCode(input: { randomBytes: Uint8Array }): string {
 }
 
 export function redactInviteCodes(input: { text: string }): string {
-  throw new Error('redactInviteCodes is not implemented');
+  return input.text.replace(new RegExp(INVITE_CODE_PATTERN.source, 'gi'), INVITE_CODE_MASK);
 }

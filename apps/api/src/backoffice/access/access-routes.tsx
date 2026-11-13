@@ -2,8 +2,7 @@ import { ACCESS_BATCH_LIMIT, HttpStatus } from '@zapbip/types';
 import { Hono, type Context } from 'hono';
 import { numberRegistryOf } from '../../adapters/d1/d1-number-registry';
 import { whatsappLinkTarget } from '../../routes/start-link-target';
-import { writeAudit } from '../audit/audit-log';
-import { BackofficeAuditAction, BackofficeAuditOutcome, BackofficeAuditTargetKind } from '../audit/backoffice-audit-action';
+import { BackofficeAuditAction, BackofficeAuditTargetKind } from '../audit/backoffice-audit-action';
 import { StepUpOutcome } from '../auth/step-up';
 import { ACCESS_PAGE_ROW_LIMIT } from '../backoffice-constants';
 import { BackofficeCopyKey } from '../backoffice-copy';
@@ -13,7 +12,7 @@ import { type FormBody, textFieldOf, textFieldsOf } from '../form-fields';
 import { type FlashStatus, redirectWithFlash, takeFlash } from '../flash/form-flash';
 import { rateLimitedResponse, stepUpOf } from '../numbers/step-up-gate';
 import { signedInPageContext } from '../page-context';
-import { auditTargetOf } from './access-batch-counts';
+import { auditedBatch } from './access-audit';
 import { parseAccessFilter, type AccessFilter } from './access-filter';
 import { AccessFormField } from './access-form-fields';
 import { inviteCountsOf, issueInvites } from './access-invite';
@@ -49,25 +48,6 @@ function rejectAccess(input: { context: Context<BackofficeEnv>; status: FlashSta
 function selectionFailureOf(input: { selected: string[] }): BackofficeCopyKey | null {
   if (input.selected.length === 0) return BackofficeCopyKey.AccessNothingSelected;
   return input.selected.length > ACCESS_BATCH_LIMIT ? BackofficeCopyKey.AccessBatchTooLarge : null;
-}
-
-async function auditBatch(input: {
-  context: Context<BackofficeEnv>;
-  action: BackofficeAuditAction;
-  counts: Record<string, number>;
-}): Promise<void> {
-  const { context, action, counts } = input;
-  await writeAudit({
-    database: context.env.CONNECTIONS,
-    entry: {
-      now: Date.now(),
-      action,
-      outcome: BackofficeAuditOutcome.Succeeded,
-      targetKind: TARGET_KIND,
-      targetId: auditTargetOf({ counts }),
-      clientAddress: context.get('clientAddress'),
-    },
-  });
 }
 
 function nullIfAbsent(input: { value: string | undefined }): string | null {
@@ -133,9 +113,15 @@ accessRoutes.post(BackofficePath.AccessRelease, async (context) => {
   if (outcome === StepUpOutcome.RateLimited) return rateLimitedResponse({ context });
   if (outcome === StepUpOutcome.Rejected)
     return rejectAccess({ context, status: HttpStatus.Unauthorized, failure: BackofficeCopyKey.StepUpRejected });
-  const rows = await releaseBatch({ bindings: context.env, accountIds, now: Date.now() });
-  const counts = releaseCountsOf({ rows });
-  await auditBatch({ context, action: BackofficeAuditAction.AccessReleased, counts });
+  const { rows, counts } = await auditedBatch({
+    context,
+    action: BackofficeAuditAction.AccessReleased,
+    selected: accountIds.length,
+    run: async () => {
+      const released = await releaseBatch({ bindings: context.env, accountIds, now: Date.now() });
+      return { rows: released, counts: releaseCountsOf({ rows: released }) };
+    },
+  });
   return context.html(<AccessReleaseResultPage page={await signedInPageContext({ context })} counts={counts} rows={rows} />, HttpStatus.Ok);
 });
 
@@ -152,9 +138,15 @@ accessRoutes.post(BackofficePath.AccessInvite, async (context) => {
   if (outcome === StepUpOutcome.RateLimited) return rateLimitedResponse({ context });
   if (outcome === StepUpOutcome.Rejected)
     return rejectAccess({ context, status: HttpStatus.Unauthorized, failure: BackofficeCopyKey.StepUpRejected });
-  const invites = await issueInvites({ bindings: context.env, emails, displayNumber, now: Date.now() });
-  const counts = inviteCountsOf({ selected: emails.length, issued: invites });
-  await auditBatch({ context, action: BackofficeAuditAction.WaitlistInvited, counts });
+  const { invites, counts } = await auditedBatch({
+    context,
+    action: BackofficeAuditAction.WaitlistInvited,
+    selected: emails.length,
+    run: async () => {
+      const issued = await issueInvites({ bindings: context.env, emails, displayNumber, now: Date.now() });
+      return { invites: issued, counts: inviteCountsOf({ selected: emails.length, issued }) };
+    },
+  });
   return context.html(
     <AccessInviteResultPage page={await signedInPageContext({ context })} counts={counts} invites={invites} />,
     HttpStatus.Ok,

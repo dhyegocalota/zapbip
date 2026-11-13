@@ -17,6 +17,7 @@ export enum LogEvent {
   AccountStateChanged = 'account_state_changed',
   AccessInviteRedeemed = 'access_invite_redeemed',
   AccessNoticeFailed = 'access_notice_failed',
+  AccessReleaseFailed = 'access_release_failed',
   CommandReceived = 'command_received',
   ConnectionCreated = 'connection_created',
   ConnectionRevoked = 'connection_revoked',
