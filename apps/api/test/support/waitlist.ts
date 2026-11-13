@@ -60,13 +60,14 @@ export async function seedWaitlistRow(input: {
   referralCode: string;
   referredBy?: string | null;
   credited?: number;
+  source?: WaitlistSource;
   createdAt: number;
 }): Promise<void> {
-  const { email, referralCode, referredBy = null, credited = 0, createdAt } = input;
+  const { email, referralCode, referredBy = null, credited = 0, source = WaitlistSource.Form, createdAt } = input;
   await testEnv.CONNECTIONS.prepare(
-    'INSERT INTO landing_waitlist (email, locale, referral_code, referred_by, credited, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+    'INSERT INTO landing_waitlist (email, locale, referral_code, referred_by, credited, created_at, source) VALUES (?, ?, ?, ?, ?, ?, ?)',
   )
-    .bind(email, OwnerLocale.EnglishUs, referralCode, referredBy, credited, createdAt)
+    .bind(email, OwnerLocale.EnglishUs, referralCode, referredBy, credited, createdAt, source)
     .run();
 }
 

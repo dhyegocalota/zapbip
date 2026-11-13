@@ -1,6 +1,7 @@
 import {
   DEFAULT_WAITLIST_REFERRAL_CAP,
   OwnerLocale,
+  WaitlistSource,
   SiteSettingKey,
   WAITLIST_REFERRAL_CAP_MAX,
   WAITLIST_REFERRAL_CAP_MIN,
@@ -35,8 +36,8 @@ const WAITLIST_PATH = '/waitlist';
 const EXPORT_PATH = '/waitlist/export.csv';
 const CAP_PATH = '/waitlist/cap';
 const CAP_FIELD = 'cap';
-const CSV_HEADER = 'email,entrou_em,indicacoes_creditadas,indicado_por\n';
-const ENGLISH_CSV_HEADER = 'email,joined_at,credited_referrals,referred_by\n';
+const CSV_HEADER = 'email,entrou_em,indicacoes_creditadas,indicado_por,origem\n';
+const ENGLISH_CSV_HEADER = 'email,joined_at,credited_referrals,referred_by,source\n';
 const copy = BACKOFFICE_COPY[OwnerLocale.PortugueseBrazil];
 const MINUTE = 60_000;
 
@@ -109,6 +110,23 @@ describe('the waitlist page', () => {
     expect(html.match(/class="waitlist-row"/g)).toHaveLength(3);
     expect(html).toContain('data-total="3"');
     expect(html).toContain(copyHtml({ key: BackofficeCopyKey.WaitlistExport }));
+  });
+
+  test('shows the source of each row', async () => {
+    await seedWaitlistRow({ email: 'person@example.com', referralCode: 'aaaaaaaaaaaa', createdAt: NOW });
+    await seedWaitlistRow({
+      email: 'robot@example.com',
+      referralCode: 'bbbbbbbbbbbb',
+      source: WaitlistSource.Agent,
+      createdAt: NOW + MINUTE,
+    });
+    const html = await (await getPage({ path: WAITLIST_PATH, sessionToken })).text();
+    const rows = html.split('class="waitlist-row"').slice(1);
+    const robot = rows.find((row) => row.includes('robot@example.com'))!;
+    const person = rows.find((row) => row.includes('person@example.com'))!;
+    expect(html).toContain(copyHtml({ key: BackofficeCopyKey.WaitlistColumnSource }));
+    expect(robot).toContain(copyHtml({ key: BackofficeCopyKey.SourceAgent }));
+    expect(person).toContain(copyHtml({ key: BackofficeCopyKey.SourceForm }));
   });
 
   test('shows a truncation notice above the row limit and still counts everyone', async () => {
@@ -234,10 +252,23 @@ describe('the CSV export', () => {
     expect(response.headers.get('Content-Disposition')).toBe('attachment; filename="zapbip-waitlist-2026-11-07.csv"');
     expect(body.startsWith(CSV_HEADER)).toBe(true);
     expect(body.indexOf('first@example.com')).toBeLessThan(body.indexOf('friend@example.com'));
-    expect(body).toContain('"friend@example.com","2026-11-07T12:01:00.000Z","0","first@example.com"');
+    expect(body).toContain('"friend@example.com","2026-11-07T12:01:00.000Z","0","first@example.com","form"');
     expect(await actionRows({ action: BackofficeAuditAction.WaitlistExported })).toEqual([
       { outcome: BackofficeAuditOutcome.Succeeded, target_id: null },
     ]);
+  });
+
+  test('carries the source of every row, agent rows included', async () => {
+    await seedWaitlistRow({ email: 'person@example.com', referralCode: 'aaaaaaaaaaaa', createdAt: NOW });
+    await seedWaitlistRow({
+      email: 'robot@example.com',
+      referralCode: 'bbbbbbbbbbbb',
+      source: WaitlistSource.Agent,
+      createdAt: NOW + MINUTE,
+    });
+    const body = await (await getPage({ path: EXPORT_PATH, sessionToken })).text();
+    expect(body).toContain('"person@example.com","2026-11-07T12:00:00.000Z","0","","form"');
+    expect(body).toContain('"robot@example.com","2026-11-07T12:01:00.000Z","0","","agent"');
   });
 
   test('carries everyone even above the page limit', async () => {
