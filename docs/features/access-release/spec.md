@@ -1,6 +1,6 @@
 # Access release
 
-**Status:** Building
+**Status:** Shipped 2026-11-13
 **Tier:** 🔴 structural
 **Owner approval:** approved 2026-11-13 (owner delegated)
 **ADRs:** [0043](../../adr/0043-access-opens-in-batches-from-the-backoffice.md)
