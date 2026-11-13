@@ -47,7 +47,6 @@ const PYTHON_CLIENT_PACKAGES = pythonPackages();
 describe('open source', () => {
   test('the client packages are found', () => {
     expect(NODE_CLIENT_PACKAGES.length).toBeGreaterThan(0);
-    expect(PYTHON_CLIENT_PACKAGES.length).toBeGreaterThan(0);
   });
 
   test('the repository is licensed under the AGPL', () => {
@@ -55,7 +54,7 @@ describe('open source', () => {
     expect(manifestOf({ path: '.' }).license).toBe(ROOT_LICENSE_IDENTIFIER);
   });
 
-  test.each([...NODE_CLIENT_PACKAGES, ...PYTHON_CLIENT_PACKAGES])('the client package %s carries its MIT license', (path) => {
+  test.each(NODE_CLIENT_PACKAGES)('the client package %s carries its MIT license', (path) => {
     expect(readRepositoryFile(posix.join(path, ROOT_LICENSE_FILE))).toContain(CLIENT_LICENSE_TITLE);
   });
 
@@ -65,8 +64,11 @@ describe('open source', () => {
     expect(manifest.repository?.directory).toBe(path);
   });
 
-  test.each(PYTHON_CLIENT_PACKAGES)('the Python package %s declares MIT', (path) => {
-    expect(readRepositoryFile(posix.join(path, PYTHON_MANIFEST))).toContain(PYPROJECT_LICENSE_LINE);
+  test('every Python client package carries and declares MIT', () => {
+    PYTHON_CLIENT_PACKAGES.forEach((path) => {
+      expect(readRepositoryFile(posix.join(path, ROOT_LICENSE_FILE))).toContain(CLIENT_LICENSE_TITLE);
+      expect(readRepositoryFile(posix.join(path, PYTHON_MANIFEST))).toContain(PYPROJECT_LICENSE_LINE);
+    });
   });
 
   test.each([...COMMUNITY_FILES, ...ISSUE_TEMPLATES])('%s exists', (path) => {

@@ -29,7 +29,7 @@ your agent ──MCP──▶ zapbip (Cloudflare Worker) ──WhatsApp Cloud AP
 | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | [apps/api](apps/api/)                                                                   | The Cloudflare Worker: MCP server, Durable Objects, D1 directory, R2 media, the public site, the customer web app and the backoffice |
 | [apps/connector](apps/connector/)                                                       | The local connector that wakes a coding agent when you text first                                                                   |
-| [apps/openclaw-plugin](apps/openclaw-plugin/), [apps/hermes-plugin](apps/hermes-plugin/) | Channel plugins for agent runtimes                                                                                                  |
+| `apps/*-plugin` | Channel plugins for agent runtimes |
 | [apps/docs](apps/docs/)                                                                 | The documentation site, in English and Portuguese                                                                                   |
 | [libs/core](libs/core/)                                                                 | The inbox, routing and delivery rules as plain TypeScript                                                                           |
 | [libs/agents](libs/agents/)                                                             | The registry of supported agents and their install guides                                                                           |
@@ -55,6 +55,6 @@ Read [CONTRIBUTING](.github/CONTRIBUTING.md). Report vulnerabilities privately a
 
 ## License
 
-The server, the site and the libraries are licensed under the [GNU Affero General Public License v3.0](LICENSE). The client packages that run on your machine or inside your agent runtime, [apps/connector](apps/connector/LICENSE), [apps/openclaw-plugin](apps/openclaw-plugin/LICENSE) and [apps/hermes-plugin](apps/hermes-plugin/LICENSE), are licensed under the MIT License.
+The server, the site and the libraries are licensed under the [GNU Affero General Public License v3.0](LICENSE). The client packages that run on your machine or inside your agent runtime, the [local connector](apps/connector/LICENSE) and the `apps/*-plugin` channel plugins, are licensed under the MIT License; each carries its own `LICENSE` file.
 
 WhatsApp is a trademark of Meta. Agent names are trademarks of their owners. The zapbip name and logo belong to Logic Bit.
