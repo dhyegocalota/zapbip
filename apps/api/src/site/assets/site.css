@@ -1882,6 +1882,10 @@ summary::before {
   align-self: flex-start;
 }
 
+.plan-pro {
+  box-shadow: none;
+}
+
 .plan-period {
   color: var(--color-muted);
   font-weight: 600;
