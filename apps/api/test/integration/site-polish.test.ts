@@ -9,7 +9,6 @@ import { copyHtml, joinForm, siteFetch } from '../support/site';
 
 const ENGLISH_PATHS = ['/', '/terms'] as const;
 const LOGIC_BIT_ORIGIN = 'https://logicbit.com.br';
-const OLD_CONTACT_EMAIL = 'dhyego@logicbit.com.br';
 const LOCALIZED_PAGES = [
   ['/', OwnerLocale.EnglishUs, '/'],
   ['/pt-br', OwnerLocale.PortugueseBrazil, '/pt-br'],
@@ -160,10 +159,9 @@ describe('the Brazilian Portuguese copy', () => {
   });
 });
 
-describe('the support address', () => {
-  it('is support@zapbip.com on the company facts and the legal footer', async () => {
-    expect(COMPANY.contactEmail).toBe('support@zapbip.com');
-    expect(await htmlOf({ path: '/terms' })).not.toContain(OLD_CONTACT_EMAIL);
-    expect(await htmlOf({ path: '/pt-br' })).not.toContain(OLD_CONTACT_EMAIL);
+describe('the contact address', () => {
+  it('is the company contact on the legal footer and the home page', async () => {
+    expect(await htmlOf({ path: '/terms' })).toContain(`href="mailto:${COMPANY.contactEmail}"`);
+    expect(await htmlOf({ path: '/pt-br' })).toContain(`href="mailto:${COMPANY.contactEmail}"`);
   });
 });
