@@ -68,7 +68,7 @@ describe('preference switches', () => {
 
   test.each([
     ['theme', THEME, 'purple'],
-    ['locale', LOCALE, 'fr'],
+    ['locale', LOCALE, 'xx'],
   ])('does not store the unknown %s value %s', async (_name, preference, value) => {
     const response = await signedInPost({ preference, value, returnTo: '/' });
     expect(response.status).toBe(STATUS_SEE_OTHER);

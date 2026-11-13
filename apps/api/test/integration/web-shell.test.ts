@@ -1,4 +1,4 @@
-import { OwnerLocale, WhatsAppNumberState } from '@zapbip/types';
+import { WebLocale, WhatsAppNumberState } from '@zapbip/types';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { clientAppFetch } from '../support/client-app';
 import { siteFetch } from '../support/site';
@@ -46,8 +46,8 @@ describe.each(SURFACES)('the shared shell on the $name', ({ html }) => {
     const footer = FOOTER_PATTERN.exec(await html())![0];
     const menu = MENU_PATTERN.exec(footer)![0];
     const values = [...menu.matchAll(LOCALE_BUTTON_PATTERN)].map((match) => match[1]);
-    expect([...values].sort()).toEqual(Object.values(OwnerLocale).sort());
-    expect(menu.match(/<svg class="flag"/g)).toHaveLength(Object.values(OwnerLocale).length + 1);
+    expect([...values].sort()).toEqual(Object.values(WebLocale).sort());
+    expect(menu.match(/<svg class="flag"/g)).toHaveLength(Object.values(WebLocale).length + 1);
   });
 
   it('offers the three themes in the footer as pressed-state buttons with icons', async () => {
