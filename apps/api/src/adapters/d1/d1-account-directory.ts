@@ -67,6 +67,14 @@ export class D1AccountDirectory implements AccountDirectory {
     return { account, created: accountInsert?.meta.changes === ACCOUNT_CREATED_CHANGES };
   }
 
+  async findById(input: { accountId: string }): Promise<AccountRecord | null> {
+    throw new Error('D1AccountDirectory.findById is not implemented');
+  }
+
+  async release(input: { accountId: string; releasedAt: number }): Promise<boolean> {
+    throw new Error('D1AccountDirectory.release is not implemented');
+  }
+
   async setState(input: { accountId: string; state: AccountState }): Promise<void> {
     await this.database.prepare(SET_STATE_STATEMENT).bind(input.state, input.accountId).run();
     logEvent({ event: LogEvent.AccountStateChanged, accountId: input.accountId });
