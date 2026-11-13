@@ -10,9 +10,9 @@ The production deploy preflight refuses to run unless the zone's nameservers are
 
    If it fails: if the nameservers differ, copy the two shown on the zone's Overview page into the registrar's nameserver setting; propagation can take up to a day.
 
-2. **Clear conflicting records.** Open DNS, Records for `zapbip.com` and delete any existing A, AAAA or CNAME record named `mcp`, `mcp-staging`, `backoffice` or `backoffice-staging`. Keep `docs` for step 4.
+2. **Clear conflicting records.** Open DNS, Records for `zapbip.com` and delete any existing A, AAAA or CNAME record named `mcp`, `mcp-staging`, `backoffice`, `backoffice-staging`, `app` or `app-staging`. Keep `docs` for step 4.
 
-   Expect: no record is named `mcp`, `mcp-staging`, `backoffice` or `backoffice-staging`.
+   Expect: no record is named `mcp`, `mcp-staging`, `backoffice`, `backoffice-staging`, `app` or `app-staging`.
 
    If it fails: a custom domain cannot be created on top of an existing record; the deploy prints a conflict error that names the host.
 

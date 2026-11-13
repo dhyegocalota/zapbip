@@ -108,8 +108,22 @@ function withoutAgentPages({ value }: { value: unknown }): unknown {
   return isAgentGroup ? { ...value, pages: [] } : value;
 }
 
-function navigationFingerprintOf({ navigation }: { navigation: unknown }): string {
-  return JSON.stringify(navigation, (_key, value) => withoutAgentPages({ value }));
+function pagesOf({ navigation }: { navigation: unknown }): Set<string> {
+  const pages = new Set<string>();
+  JSON.stringify(navigation, (key, value) => {
+    if (key === 'pages' && Array.isArray(value)) value.filter((page) => typeof page === 'string').forEach((page) => pages.add(page));
+    return value;
+  });
+  return pages;
+}
+
+function withoutAddedPages({ key, value, knownPages }: { key: string; value: unknown; knownPages: Set<string> }): unknown {
+  if (key !== 'pages' || !Array.isArray(value)) return value;
+  return value.filter((page) => typeof page !== 'string' || knownPages.has(page));
+}
+
+function navigationFingerprintOf({ navigation, knownPages }: { navigation: unknown; knownPages: Set<string> }): string {
+  return JSON.stringify(navigation, (key, value) => withoutAddedPages({ key, value: withoutAgentPages({ value }), knownPages }));
 }
 
 function requiredColour({ colour, name }: { colour?: string; name: string }): string {
@@ -277,11 +291,14 @@ describe('docs visual: theme', () => {
     expect(config.theme).toBe('mint');
   });
 
-  test('the favicon and the navigation are unchanged from the baseline', () => {
+  test('the favicon and the navigation are unchanged from the baseline, apart from the pages added since', () => {
     const config = docsVisualConfig();
     const baseline = baselineConfig();
     expect(config.favicon).toBe(baseline.favicon);
-    expect(navigationFingerprintOf({ navigation: config.navigation })).toBe(navigationFingerprintOf({ navigation: baseline.navigation }));
+    const knownPages = pagesOf({ navigation: baseline.navigation });
+    expect(navigationFingerprintOf({ navigation: config.navigation, knownPages })).toBe(
+      navigationFingerprintOf({ navigation: baseline.navigation, knownPages }),
+    );
   });
 });
 

@@ -68,15 +68,15 @@ describe('an active account', () => {
 
   it('connects an agent through the command use case and shows the install prompt once', async () => {
     const { cookie, csrf, accountId } = await signIn({});
-    const created = await connect({ cookie, csrf, name: 'Claude Code' });
+    const created = await connect({ cookie, csrf, name: 'Test Agent' });
     const createdHtml = await created.text();
     expect(created.status).toBe(HttpStatus.Ok);
     expect(createdHtml).toContain('/i/zb_inst_');
     expect(createdHtml).not.toContain('zb_conn_');
-    expect(await activeAgents({ accountId })).toEqual(['claude-code']);
+    expect(await activeAgents({ accountId })).toEqual(['test-agent']);
     const reloaded = await (await clientAppFetch({ path: '/', cookie })).text();
     expect(reloaded).not.toContain('/i/zb_inst_');
-    expect(reloaded).toContain('claude-code');
+    expect(reloaded).toContain('test-agent');
   });
 
   it.each([
