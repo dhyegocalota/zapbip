@@ -15,10 +15,11 @@ describe('robots.txt', () => {
 describe('sitemap.xml', () => {
   const sitemapOf = (): string => renderSitemap({ origin: ORIGIN });
 
-  it('lists each language page once', () => {
-    expect(sitemapOf().match(/<loc>/g)).toHaveLength(2);
-    expect(sitemapOf()).toContain('<loc>https://zapbip.com/</loc>');
-    expect(sitemapOf()).toContain('<loc>https://zapbip.com/pt-br</loc>');
+  it('lists each language page and each legal page once', () => {
+    expect(sitemapOf().match(/<loc>/g)).toHaveLength(6);
+    ['/', '/pt-br', '/terms', '/pt-br/termos', '/privacy', '/pt-br/privacidade'].forEach((path) =>
+      expect(sitemapOf().match(new RegExp(`<loc>https://zapbip.com${path}</loc>`, 'g'))).toHaveLength(1),
+    );
   });
 
   it('lists both locales and the default as alternates of each page', () => {

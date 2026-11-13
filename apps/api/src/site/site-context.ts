@@ -8,12 +8,16 @@ import { isReferralCode } from './referral-code';
 import { agentParameterOf, siteAgentIdOf, siteAgents, type SiteStartTab } from './site-agents';
 import { LOCALE_COOKIE_NAME, SITE_AGENT_PARAMETER, SITE_REFERRAL_PARAMETER, THEME_COOKIE_NAME } from './site-constants';
 import type { SiteEnv } from './site-env';
+import { legalPageOf } from './legal-links';
 import { localeOfPath, preferredLocaleOf } from './site-language';
 
 function localeOf(input: { context: Context<SiteEnv> }): OwnerLocale {
   const { context } = input;
-  const pathLocale = localeOfPath({ pathname: new URL(context.req.url).pathname });
+  const pathname = new URL(context.req.url).pathname;
+  const pathLocale = localeOfPath({ pathname });
   if (pathLocale !== null) return pathLocale;
+  const legalPage = legalPageOf({ pathname });
+  if (legalPage !== null) return legalPage.locale;
   return preferredLocaleOf({
     cookieValue: getCookie(context, LOCALE_COOKIE_NAME),
     acceptLanguage: context.req.header(ACCEPT_LANGUAGE_HEADER),

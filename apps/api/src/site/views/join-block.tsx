@@ -6,6 +6,7 @@ import { siteAgentNameOf } from '../site-agents';
 import { TURNSTILE_RESPONSE_FIELD } from '../site-constants';
 import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
+import { LegalDocument, legalPathOf } from '../legal-links';
 import { SitePath } from '../site-paths';
 import { turnstileLanguageOf } from './site-layout';
 import { Notice } from './notice';
@@ -31,7 +32,8 @@ function PrivacyNote(props: { locale: OwnerLocale }) {
   const translate = copyOf({ locale: props.locale });
   return (
     <p class="privacy-note">
-      {translate(SiteCopyKey.PrivacyNoteShort)} <a href="#privacy">{translate(SiteCopyKey.PrivacyNoteLink)}</a>
+      {translate(SiteCopyKey.PrivacyNoteShort)}{' '}
+      <a href={legalPathOf({ document: LegalDocument.Privacy, locale: props.locale })}>{translate(SiteCopyKey.PrivacyNoteLink)}</a>
     </p>
   );
 }

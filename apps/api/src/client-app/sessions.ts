@@ -1,7 +1,6 @@
-import { AccountState, CLIENT_APP_TOKEN_BYTES } from '@zapbip/types';
+import { AccountState, CLIENT_APP_SESSION_TTL_MS, CLIENT_APP_TOKEN_BYTES } from '@zapbip/types';
 import { encodeBase64Url } from '../adapters/platform/encoding';
 import { sha256Hex } from '../adapters/platform/hash';
-import { SESSION_TTL_MS } from './client-app-constants';
 import type { ClientAppSession } from './client-app-env';
 
 export type SessionRecord = Omit<ClientAppSession, 'csrfToken'>;
@@ -24,7 +23,7 @@ export async function createSession(input: { database: D1Database; accountId: st
     database.prepare(DELETE_ACCOUNT_SESSIONS_STATEMENT).bind(accountId),
     database
       .prepare(INSERT_SESSION_STATEMENT)
-      .bind(digest, accountId, now, now + SESSION_TTL_MS, accountId, AccountState.Waitlisted, AccountState.Active),
+      .bind(digest, accountId, now, now + CLIENT_APP_SESSION_TTL_MS, accountId, AccountState.Waitlisted, AccountState.Active),
   ]);
   return insert?.meta.changes === INSERTED_ROW ? token : null;
 }

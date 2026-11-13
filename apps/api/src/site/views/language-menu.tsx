@@ -2,7 +2,7 @@ import { OwnerLocale } from '@zapbip/types';
 import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
 import type { PageModel } from '../page-model';
-import { languageOf, pagePathOf } from '../site-links';
+import { languageOf, returnPathOf } from '../site-links';
 import { SitePath } from '../site-paths';
 import { Flag } from './flags';
 
@@ -22,11 +22,7 @@ export function LanguageMenu(props: { model: PageModel }) {
         <span class="lang-code">{translate(current.short)}</span>
       </summary>
       <form class="lang-list" method="post" action={SitePath.Locale}>
-        <input
-          type="hidden"
-          name="returnTo"
-          value={pagePathOf({ locale: model.locale, agent: model.agentParameter, referralCode: model.referralCode })}
-        />
+        <input type="hidden" name="returnTo" value={returnPathOf({ model })} />
         {OPTIONS.map((option) => (
           <button
             type="submit"

@@ -2,6 +2,8 @@ import { DocsLanguage, OwnerLocale } from '@zapbip/types';
 import type { InstallClient } from '@zapbip/agents/install';
 import { JOIN_FRAGMENT, START_FRAGMENT, SITE_AGENT_PARAMETER, SITE_REFERRAL_PARAMETER } from './site-constants';
 import type { SiteStartTab } from './site-agents';
+import { legalPathOf, legalUrlOf } from './legal-links';
+import type { PageModel } from './page-model';
 import { localePathOf } from './site-language';
 
 const LANGUAGES_BY_LOCALE: Record<OwnerLocale, DocsLanguage> = {
@@ -40,4 +42,16 @@ export function joinPathOf(input: { locale: OwnerLocale; referralCode: string | 
 
 export function startPathOf(input: { tab: InstallClient | SiteStartTab; locale: OwnerLocale; referralCode: string | null }): string {
   return `${pagePathOf({ locale: input.locale, agent: input.tab, referralCode: input.referralCode })}${START_FRAGMENT}`;
+}
+
+export function returnPathOf(input: { model: PageModel }): string {
+  const { model } = input;
+  if (model.legalDocument !== null) return legalPathOf({ document: model.legalDocument, locale: model.locale });
+  return pagePathOf({ locale: model.locale, agent: model.agentParameter, referralCode: model.referralCode });
+}
+
+export function pageUrlOf(input: { model: PageModel; locale: OwnerLocale }): string {
+  const { model, locale } = input;
+  if (model.legalDocument !== null) return legalUrlOf({ origin: model.siteOrigin, document: model.legalDocument, locale });
+  return canonicalUrlOf({ origin: model.siteOrigin, locale });
 }

@@ -22,7 +22,9 @@ import { LanguageMenu } from './language-menu';
 import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
 import { localePathOf } from '../site-language';
-import { canonicalUrlOf, languageOf, pagePathOf } from '../site-links';
+import { joinPathOf, languageOf, pageUrlOf, returnPathOf } from '../site-links';
+import { LegalDocument, legalPathOf } from '../legal-links';
+import { legalTextOf } from '../legal-copy';
 import { SITE_SCRIPT_HREF } from '../site-scripts';
 import { APPLE_TOUCH_ICON_PATH, DOCS_ORIGIN, SiteAssetKind, siteAssetOf, SitePath } from '../site-paths';
 import { pricingValuesOf } from '../price-format';
@@ -42,6 +44,11 @@ const THEME_OPTIONS: { theme: BackofficeTheme; label: SiteCopyKey }[] = [
   { theme: BackofficeTheme.System, label: SiteCopyKey.ThemeSystem },
 ];
 const FORM_FRAGMENT = '#join-email';
+const CONTENT_FRAGMENT = '#content';
+const LEGAL_LINKS: { document: LegalDocument; label: SiteCopyKey }[] = [
+  { document: LegalDocument.Terms, label: SiteCopyKey.FooterTerms },
+  { document: LegalDocument.Privacy, label: SiteCopyKey.FooterPrivacy },
+];
 
 export function turnstileLanguageOf(input: { locale: OwnerLocale }): string {
   return TURNSTILE_LANGUAGES[input.locale];
@@ -51,11 +58,7 @@ function ThemeSwitch(props: { model: PageModel }) {
   const translate = copyOf({ locale: props.model.locale });
   return (
     <form method="post" action={SitePath.Theme} class="switch" id={THEME_SWITCH_ID} aria-label={translate(SiteCopyKey.ThemeLabel)}>
-      <input
-        type="hidden"
-        name="returnTo"
-        value={pagePathOf({ locale: props.model.locale, agent: props.model.agentParameter, referralCode: props.model.referralCode })}
-      />
+      <input type="hidden" name="returnTo" value={returnPathOf({ model: props.model })} />
       {THEME_OPTIONS.map((option) => (
         <button type="submit" name="theme" value={option.theme} aria-pressed={String(option.theme === props.model.theme)}>
           {translate(option.label)}
@@ -63,6 +66,21 @@ function ThemeSwitch(props: { model: PageModel }) {
       ))}
     </form>
   );
+}
+
+function skipLinkOf(input: { isLegalPage: boolean; hasForm: boolean }): { href: string; label: SiteCopyKey } {
+  if (input.isLegalPage) return { href: CONTENT_FRAGMENT, label: SiteCopyKey.SkipToContent };
+  if (input.hasForm) return { href: FORM_FRAGMENT, label: SiteCopyKey.SkipToForm };
+  return { href: JOIN_FRAGMENT, label: SiteCopyKey.SkipToForm };
+}
+
+function descriptionOf(input: { model: PageModel }): string {
+  const { model } = input;
+  if (model.legalDocument !== null) return legalTextOf({ document: model.legalDocument, locale: model.locale }).description;
+  return copyOf({ locale: model.locale })(SiteCopyKey.MetaDescription, {
+    ...pricingValuesOf({ locale: model.locale }),
+    agents: leadingAgentNames(),
+  });
 }
 
 function docsHrefOf(input: { locale: OwnerLocale }): string {
@@ -73,6 +91,7 @@ function SiteHeader(props: { model: PageModel }) {
   const { model } = props;
   const translate = copyOf({ locale: model.locale });
   const isJoinOffered = model.join.state !== JoinState.Joined && model.join.state !== JoinState.Paused;
+  const joinHref = model.legalDocument === null ? JOIN_FRAGMENT : joinPathOf({ locale: model.locale, referralCode: model.referralCode });
   return (
     <header class="site-header">
       <div class="container">
@@ -85,7 +104,7 @@ function SiteHeader(props: { model: PageModel }) {
           </a>
           <LanguageMenu model={model} />
           {isJoinOffered ? (
-            <a class="button button-primary header-join" href={JOIN_FRAGMENT}>
+            <a class="button button-primary header-join" href={joinHref}>
               {translate(SiteCopyKey.HeaderJoin)}
             </a>
           ) : null}
@@ -102,6 +121,11 @@ function SiteFooter(props: { model: PageModel }) {
       <div class="container">
         <div class="footer-row">
           <span>{translate(SiteCopyKey.FooterMaker)}</span>
+          <nav class="footer-links" aria-label={translate(SiteCopyKey.FooterLegalLabel)}>
+            {LEGAL_LINKS.map((link) => (
+              <a href={legalPathOf({ document: link.document, locale: props.model.locale })}>{translate(link.label)}</a>
+            ))}
+          </nav>
           <ThemeSwitch model={props.model} />
         </div>
         <p class="footer-legal">{translate(SiteCopyKey.FooterTrademarks)}</p>
@@ -113,12 +137,13 @@ function SiteFooter(props: { model: PageModel }) {
 export function SiteLayout(props: { model: PageModel; title: string; isIndexable: boolean; children?: Child }) {
   const { model } = props;
   const translate = copyOf({ locale: model.locale });
-  const description = translate(SiteCopyKey.MetaDescription, { ...pricingValuesOf({ locale: model.locale }), agents: leadingAgentNames() });
-  const rootUrl = `${model.siteOrigin}${SitePath.Home}`;
-  const canonical = canonicalUrlOf({ origin: model.siteOrigin, locale: model.locale });
+  const isLegalPage = model.legalDocument !== null;
+  const description = descriptionOf({ model });
+  const canonical = pageUrlOf({ model, locale: model.locale });
   const pageTitle = `${props.title}${SITE_BRAND_SEPARATOR}${translate(SiteCopyKey.BrandName)}`;
   const imageUrl = `${model.siteOrigin}${siteAssetOf({ kind: SiteAssetKind.OpenGraphImage, locale: model.locale })}`;
-  const hasForm = model.join.state !== JoinState.Joined && model.join.state !== JoinState.Paused;
+  const hasForm = !isLegalPage && model.join.state !== JoinState.Joined && model.join.state !== JoinState.Paused;
+  const skipLink = skipLinkOf({ isLegalPage, hasForm });
   const posterSourceSet = `${siteAssetOf({ kind: SiteAssetKind.PosterSmall, locale: model.locale })} ${POSTER_SMALL_WIDTH}w, ${siteAssetOf({ kind: SiteAssetKind.PosterLarge, locale: model.locale })} ${DEMO_IMAGE_SIZE}w`;
   const preloadAttributes = { imagesrcset: posterSourceSet, imagesizes: POSTER_SIZES, fetchpriority: 'high' };
   return (
@@ -131,14 +156,14 @@ export function SiteLayout(props: { model: PageModel; title: string; isIndexable
         {props.isIndexable ? null : <meta name="robots" content="noindex" />}
         <link rel="canonical" href={canonical} />
         {Object.values(OwnerLocale).map((locale) => (
-          <link rel="alternate" hreflang={languageOf({ locale })} href={canonicalUrlOf({ origin: model.siteOrigin, locale })} />
+          <link rel="alternate" hreflang={languageOf({ locale })} href={pageUrlOf({ model, locale })} />
         ))}
-        <link rel="alternate" hreflang="x-default" href={rootUrl} />
+        <link rel="alternate" hreflang="x-default" href={pageUrlOf({ model, locale: OwnerLocale.EnglishUs })} />
         <meta name="theme-color" content={THEME_COLOR_LIGHT} media="(prefers-color-scheme: light)" />
         <meta name="theme-color" content={THEME_COLOR_DARK} media="(prefers-color-scheme: dark)" />
         <link rel="icon" href={SitePath.Favicon} type={FAVICON_CONTENT_TYPE} />
         <link rel="apple-touch-icon" href={APPLE_TOUCH_ICON_PATH} />
-        <link rel="preload" as="image" {...preloadAttributes} />
+        {isLegalPage ? null : <link rel="preload" as="image" {...preloadAttributes} />}
         <link rel="stylesheet" href={SITE_STYLESHEET_HREF} />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content={translate(SiteCopyKey.BrandName)} />
@@ -161,8 +186,8 @@ export function SiteLayout(props: { model: PageModel; title: string; isIndexable
         {hasForm ? <script src={TURNSTILE_SCRIPT_URL} async defer /> : null}
       </head>
       <body>
-        <a href={hasForm ? FORM_FRAGMENT : JOIN_FRAGMENT} class="skip-link">
-          {translate(SiteCopyKey.SkipToForm)}
+        <a href={skipLink.href} class="skip-link">
+          {translate(skipLink.label)}
         </a>
         <SiteHeader model={model} />
         <main id="content">{props.children}</main>
