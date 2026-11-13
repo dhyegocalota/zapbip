@@ -17,6 +17,7 @@ const IDENTICAL_IN_BOTH_LANGUAGES = [
   SiteCopyKey.LocaleEnglish,
   SiteCopyKey.LocaleEnglishShort,
   SiteCopyKey.CapabilityListChatRows,
+  SiteCopyKey.PricingProName,
 ];
 
 function viewSources(input: { directory: string }): { path: string; source: string }[] {

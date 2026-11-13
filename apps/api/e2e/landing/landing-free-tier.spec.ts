@@ -25,7 +25,9 @@ test('the pricing offers the free plan and sends its button to the form', async 
 test('the free question opens in the FAQ', async ({ page }) => {
   await page.goto('/');
   await page.getByText(siteCopy({ key: SiteCopyKey.FaqFreeQuestion })).click();
-  await expect(page.getByText(siteCopy({ key: SiteCopyKey.FaqFreeAnswer, values: pricingValuesOf({ locale: OwnerLocale.EnglishUs }) }))).toBeVisible();
+  await expect(
+    page.getByText(siteCopy({ key: SiteCopyKey.FaqFreeAnswer, values: pricingValuesOf({ locale: OwnerLocale.EnglishUs }) })),
+  ).toBeVisible();
 });
 
 test('the Pro card does not stretch to the height of the Free card', async ({ page }) => {

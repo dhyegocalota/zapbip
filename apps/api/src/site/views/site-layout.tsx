@@ -24,6 +24,7 @@ import { localePathOf } from '../site-language';
 import { canonicalUrlOf, languageOf, pagePathOf } from '../site-links';
 import { SITE_SCRIPT_HREF } from '../site-scripts';
 import { APPLE_TOUCH_ICON_PATH, DOCS_ORIGIN, SiteAssetKind, siteAssetOf, SitePath } from '../site-paths';
+import { pricingValuesOf } from '../price-format';
 import { SITE_STYLESHEET_HREF } from '../site-stylesheet';
 
 const LANGUAGE_TAGS: Record<OwnerLocale, string> = {
@@ -115,7 +116,7 @@ function SiteFooter(props: { model: PageModel }) {
 export function SiteLayout(props: { model: PageModel; title: string; isIndexable: boolean; children?: Child }) {
   const { model } = props;
   const translate = copyOf({ locale: model.locale });
-  const description = translate(SiteCopyKey.MetaDescription, { agents: leadingAgentNames() });
+  const description = translate(SiteCopyKey.MetaDescription, { ...pricingValuesOf({ locale: model.locale }), agents: leadingAgentNames() });
   const rootUrl = `${model.siteOrigin}${SitePath.Home}`;
   const canonical = canonicalUrlOf({ origin: model.siteOrigin, locale: model.locale });
   const pageTitle = `${props.title}${SITE_BRAND_SEPARATOR}${translate(SiteCopyKey.BrandName)}`;

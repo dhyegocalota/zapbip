@@ -270,7 +270,8 @@ export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.WhyEyebrow]: 'Why zapbip',
     [SiteCopyKey.WhyTitle]: 'Made for agents that need you.',
     [SiteCopyKey.WhyOfficialTitle]: 'The official WhatsApp API, nothing else',
-    [SiteCopyKey.WhyOfficialBody]: "No unofficial libraries, so nothing can get your WhatsApp banned. Agents text you from zapbip's official number; you never connect your own.",
+    [SiteCopyKey.WhyOfficialBody]:
+      "No unofficial libraries, so nothing can get your WhatsApp banned. Agents text you from zapbip's official number; you never connect your own.",
     [SiteCopyKey.WhyOfficialBadge]: 'Official Cloud API',
     [SiteCopyKey.WhyOfficialNote]: 'Your WhatsApp stays safe',
     [SiteCopyKey.WhyAskTitle]: 'Agents ask. You tap.',
@@ -396,7 +397,8 @@ export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.FaqFreeAnswer]:
       'Yes, to try it: the free plan gives you {free} messages. Invites roll out in waves from the waitlist, and each friend you invite moves you up.',
     [SiteCopyKey.FaqPriceQuestion]: 'How much will it cost?',
-    [SiteCopyKey.FaqPriceAnswer]: 'Pro is {price} a month with {included} messages, then {overage} for each extra {block}. Billing opens with the invites.',
+    [SiteCopyKey.FaqPriceAnswer]:
+      'Pro is {price} a month with {included} messages, then {overage} for each extra {block}. Billing opens with the invites.',
     [SiteCopyKey.FaqDeveloperQuestion]: 'Do I need to be a developer?',
     [SiteCopyKey.FaqDeveloperAnswer]: 'No. If you use an AI assistant, you connect it by pasting one line.',
     [SiteCopyKey.FaqOthersQuestion]: 'Does it message other people?',
@@ -613,13 +615,15 @@ export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.FaqFreeAnswer]:
       'Sim, para testar: o plano grátis te dá {free} mensagens. Os convites saem aos poucos, pela lista de espera, e cada amigo que você convida te faz subir.',
     [SiteCopyKey.FaqPriceQuestion]: 'Quanto vai custar?',
-    [SiteCopyKey.FaqPriceAnswer]: 'O Pro custa {price} por mês com {included} mensagens, depois {overage} a cada {block} a mais. A cobrança começa com os convites.',
+    [SiteCopyKey.FaqPriceAnswer]:
+      'O Pro custa {price} por mês com {included} mensagens, depois {overage} a cada {block} a mais. A cobrança começa com os convites.',
     [SiteCopyKey.FaqDeveloperQuestion]: 'Preciso ser programador?',
     [SiteCopyKey.FaqDeveloperAnswer]: 'Não. Se você usa um assistente de IA, conecta colando uma linha.',
     [SiteCopyKey.FaqOthersQuestion]: 'Ele manda mensagem para outras pessoas?',
     [SiteCopyKey.FaqOthersAnswer]: 'Não. O zapbip fala só com você, no seu celular, pela API oficial do WhatsApp Cloud.',
     [SiteCopyKey.FaqManyQuestion]: 'Vários agentes podem usar juntos?',
-    [SiteCopyKey.FaqManyAnswer]: 'Sim. Todos os seus agentes falam com você pelo número do zapbip, e cada resposta volta para o agente que perguntou.',
+    [SiteCopyKey.FaqManyAnswer]:
+      'Sim. Todos os seus agentes falam com você pelo número do zapbip, e cada resposta volta para o agente que perguntou.',
     [SiteCopyKey.FaqReferralQuestion]: 'Como funcionam os convites?',
     [SiteCopyKey.FaqReferralAnswer]:
       'Depois de entrar, você recebe um link pessoal. Cada amigo que entrar por ele te faz subir na lista. Há um limite por pessoa, que aparece depois que você entra.',
