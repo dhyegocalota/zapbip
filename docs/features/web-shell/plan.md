@@ -25,7 +25,7 @@ One developer: red integration tests, then the shared module, then the three sur
 - [x] **Step 2:** the `web-shell` module (menu, switch, footer, copy, profiles, stylesheet)
 - [x] **Step 3:** site, app and backoffice use it; the app gets `POST /locale`, `POST /theme` and the hero
 - [x] **Step 4:** isolation test, rules and docs
-- [ ] **Step 5:** Playwright walks and screenshots
+- [x] **Step 5:** Playwright walks (`e2e/client-app/web-shell.spec.ts`, `e2e/backoffice/web-shell.spec.ts`) and screenshots; the backoffice stylesheet fix has its own red commit
 
 ## Failure modes
 

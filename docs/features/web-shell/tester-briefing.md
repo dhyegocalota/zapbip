@@ -10,6 +10,8 @@
 - `client-app-preferences.test.ts`: red, the routes answered `404`.
 - `client-app-sign-in-page.test.ts`: red, no `figure.phone`.
 
+- `web-shell.test.ts` stylesheet rows: red, `expected ':root {…' to contain '.lang-menu {'` on the backoffice stylesheet (the served sheet lacked the shell rules).
+
 ## Hypotheses for the tester
 
 - The menu opens upward in each footer and a tap on a language lands on the same page in that language.
@@ -20,3 +22,5 @@
 ## Known gaps
 
 - The shell footer on the backoffice shows no controls on a page with no CSRF token (error pages without a session).
+
+- Pre-existing and not touched: `ui-polish.spec.ts` navigation count (expects 4 links, the nav has 5) and `landing-quick-start.spec.ts` command `white-space` (expects `pre`, the code wraps since site-polish).
