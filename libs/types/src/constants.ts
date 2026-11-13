@@ -84,7 +84,7 @@ export const WAITLIST_EMAIL_MAX_LENGTH = 254;
 export const DEFAULT_WAITLIST_REFERRAL_CAP = 5;
 export const WAITLIST_REFERRAL_CAP_MIN = 1;
 export const WAITLIST_REFERRAL_CAP_MAX = 100;
-export const ACCESS_BATCH_LIMIT = 50;
+export const ACCESS_BATCH_LIMIT = 10;
 export const WAITLIST_INVITE_TTL_MS = 30 * DAY_MS;
 export const TURNSTILE_ACTION_WAITLIST_JOIN = 'waitlist-join';
 

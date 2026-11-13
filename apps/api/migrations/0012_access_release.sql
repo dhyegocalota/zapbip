@@ -19,3 +19,5 @@ CREATE INDEX waitlist_invites_used_at ON waitlist_invites (used_at);
 CREATE INDEX landing_waitlist_created_at ON landing_waitlist (created_at);
 
 CREATE INDEX landing_waitlist_locale ON landing_waitlist (locale);
+
+CREATE INDEX accounts_state_created_at ON accounts (state, created_at);

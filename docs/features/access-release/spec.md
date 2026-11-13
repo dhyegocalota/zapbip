@@ -16,7 +16,7 @@ The owner: "the referral is not for the waitlist but for when everything is live
 2. WhatsApp accounts waiting: masked phone, joined, language. One action, Release access: moves the selected accounts to `active` through the core use case and sends each a WhatsApp message in its language; the result lists how many were released, were already active, were notified in session, were queued behind the notice template, and were not notified.
 3. Email waitlist entries: one action, Invite: one single-use code per entry (digest stored, 30 days), the batch result shows the links in a copy box and a CSV download. The link opens WhatsApp on the start number with the code in the text.
 4. The inbound handler redeems a code on the first message of a waitlisted account (new or existing) and opens it `active`; any other code or state changes nothing.
-5. Both actions: POST, CSRF, step-up code, batch limit 50, one audit row per batch with counts, idempotent.
+5. Both actions: POST, CSRF, step-up code, batch limit 10, one audit row per batch with counts, idempotent.
 6. Metrics page section Access: waitlist total, per day (30-day sparkline) and by language; invited and used codes with 7 and 30 day windows; accounts by state; released accounts that connected an agent; agents connected; messages and answered questions per day with 7 and 30 day windows.
 7. Migration `0012`, ADR 0043, runbook steps, copy in en_US and pt_BR.
 

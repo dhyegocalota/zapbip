@@ -11,7 +11,7 @@ A WhatsApp account is `waitlisted` while `WAITLIST_ENABLED` is true and nothing 
 
 ## Decision
 
-1. One backoffice page, Access, with two lists and one batch action each, behind CSRF, a fresh step-up code and a batch limit (`ACCESS_BATCH_LIMIT`, 50). Each batch writes one audit row whose target carries the counts.
+1. One backoffice page, Access, with two lists and one batch action each, behind CSRF, a fresh step-up code and a batch limit (`ACCESS_BATCH_LIMIT`, 10, because one release costs three subrequests and the Free plan allows 50 per request). Each batch writes one audit row whose target carries the counts.
 2. **Release access** moves selected `waitlisted` accounts to `active` through the core use case `releaseAccountAccess`, one conditional `UPDATE ... WHERE state = 'waitlisted'`. A repeat is a no-op, and an account that is `suspended` or `deleting` is never touched. The release time is stored in `accounts.released_at` so the metrics can tell how many released accounts connected an agent.
 3. Each released owner gets one WhatsApp message in their language through the account's Durable Object, with the existing delivery rule: a session message when the 24-hour window is open, otherwise the message is queued and the approved notice template (sender `zapbip`) asks the owner to tap Open. A failed delivery is reported as not notified in the batch result and never retried silently.
 4. **Invite** creates, for each selected email-waitlist entry, a single-use code: random, stored as a digest in `waitlist_invites`, valid for `WAITLIST_INVITE_TTL_MS` (30 days). The backoffice shows the batch's links once (a text box to copy and a CSV download), because the digest cannot be reversed and no email is sent. The link is the start link's WhatsApp target carrying the code in the prefilled text.
@@ -30,7 +30,7 @@ A WhatsApp account is `waitlisted` while `WAITLIST_ENABLED` is true and nothing 
 
 ## Consequences
 
-- Migration `0012` is additive: `waitlist_invites`, `accounts.released_at` and four indexes. Rolling it back means deploying the previous Worker first, then dropping them; the invites are lost.
+- Migration `0012` is additive: `waitlist_invites`, `accounts.released_at` and five indexes. Rolling it back means deploying the previous Worker first, then dropping them; the invites are lost.
 - An invite link whose owner never taps Open stays queued until they write.
 - The page never shows a code again after the batch result; a lost batch is invited again after it expires.
 
