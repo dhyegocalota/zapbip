@@ -547,6 +547,14 @@ describe('the free offer across the page', () => {
     expect(html).toContain(copyHtml({ key: SiteCopyKey.FaqPriceAnswer, locale, values: pricingValuesOf({ locale }) }));
   });
 
+  it.each([
+    [ENGLISH_HEADERS, [/your own phone/i, /your own number/i, /ban on your own/i]],
+    [PORTUGUESE_HEADERS, [/o seu celular/i, /no seu celular/i, /banir o seu número/i, /seu número fica/i]],
+  ])('offers no way to bring your own number anywhere on the page', async (headers, wordings) => {
+    const html = await pageOf({ headers });
+    expect(wordings.filter((wording) => wording.test(html))).toEqual([]);
+  });
+
   it.each([OwnerLocale.EnglishUs, OwnerLocale.PortugueseBrazil])(
     'says in the FAQ that nobody brings their own number yet in %s',
     async (locale) => {

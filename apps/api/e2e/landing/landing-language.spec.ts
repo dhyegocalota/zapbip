@@ -1,9 +1,9 @@
 import type { Page } from '@playwright/test';
+import { AGENT_INSTALLS } from '@zapbip/agents/install';
 import { OwnerLocale } from '@zapbip/types';
 import { SiteCopyKey } from '../../src/site/site-copy';
 import { expect, test } from './fixtures';
 import { siteCopy } from './support/site-copy';
-import { AGENT_INSTALLS } from '@zapbip/agents/install';
 
 const PICKED_AGENT = Object.keys(AGENT_INSTALLS)[0]!;
 
@@ -115,4 +115,14 @@ test.describe('375 px', () => {
     expect(list.x + list.width).toBeLessThanOrEqual(MOBILE_WIDTH);
     expect(await page.evaluate('document.documentElement.scrollWidth')).toBeLessThanOrEqual(MOBILE_WIDTH);
   });
+});
+
+test('an agent picked on the page survives a language switch', async ({ page }) => {
+  const pickedTab = Object.keys(AGENT_INSTALLS)[1]!;
+  await page.goto('/');
+  await page.locator(`.start-tab[href*="agent=${pickedTab}"]`).click();
+  await expect(page).toHaveURL(new RegExp(`agent=${pickedTab}`));
+  await triggerOf({ page }).click();
+  await optionOf({ page, locale: OwnerLocale.PortugueseBrazil }).click();
+  await expect(page).toHaveURL(new RegExp(`/pt-br\\?agent=${pickedTab}`));
 });
