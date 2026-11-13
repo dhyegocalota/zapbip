@@ -10,7 +10,7 @@ import { accountInboxStub } from '../support/workers-env';
 
 const JSON_ACCEPT = { Accept: 'application/json' };
 const JSON_CONTENT_TYPE = 'application/json';
-const MASKED_PHONE = '+55 ••••-0051';
+const MASKED_PHONE = '••••-0051';
 const SEEN_AT = 1_700_000_500_000;
 const SIGN_IN_REQUIRED = { error: 'sign_in_required' };
 

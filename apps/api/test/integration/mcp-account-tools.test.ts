@@ -5,6 +5,7 @@ import {
   ApprovalChoice,
   approvalTitlesOf,
   formatOptionId,
+  WINDOW_MS,
 } from '@zapbip/core';
 import {
   AccountPlan,
@@ -22,7 +23,7 @@ import { McpToolName, TOOL_DEFINITIONS } from '../../src/contract/tool-definitio
 import { generateConnectionSecret } from '../../src/adapters/platform/connection-secret';
 import { applyDirectoryMigration, seedAccount, seedConnection } from '../support/seed';
 import { captureLogLines } from '../support/capture-log-lines';
-import { readScreen } from '../support/inbox-session';
+import { advanceClock, readScreen } from '../support/inbox-session';
 import { accountInboxStub, testEnv } from '../support/workers-env';
 import { callTool, connectClient, openWindow, ownerWrites, seedConnectionWithSecret, type ToolResult } from './mcp-fixtures';
 
@@ -35,6 +36,9 @@ const CONNECTION_SECRET_MARKER = 'zb_conn_';
 const HELD_QUESTION_WAIT_MS = 10_000;
 const SHORT_APPROVAL_TIMEOUT_MS = 300;
 const RATE_LIMITED_CODE = 'rate_limited';
+const SELECT_PAYLOADS_STATEMENT = 'SELECT payload FROM inbox_messages';
+const UNMASKED_SIGN_IN_TOKEN_PATTERN = /\/sign-in\/[A-Za-z0-9_-]{20,}/;
+const UNMASKED_INSTALL_CODE_PATTERN = /\/i\/zb_inst_[A-Za-z0-9_-]{20,}/;
 const TITLES = approvalTitlesOf({ locale: OwnerLocale.PortugueseBrazil });
 const ALLOW = TITLES[ApprovalChoice.Allow];
 const ALLOW_AND_SEND = TITLES[ApprovalChoice.AllowAndSend];
@@ -104,6 +108,13 @@ describe('MCP account tools', () => {
     return active.map((connection) => connection.agent).sort();
   }
 
+  async function storedPayloads(): Promise<string> {
+    const rows = await runInDurableObject(accountInboxStub({ accountId }), (_instance, state) =>
+      state.storage.sql.exec<{ payload: string }>(SELECT_PAYLOADS_STATEMENT).toArray(),
+    );
+    return rows.map((row) => row.payload).join('\n');
+  }
+
   async function screenText(): Promise<string> {
     const entries = await readScreen({ stub: accountInboxStub({ accountId }) });
     return entries.map((entry) => entry.text).join('\n');
@@ -151,11 +162,10 @@ describe('MCP account tools', () => {
       expect(JSON.stringify(result)).not.toContain(CONNECTION_SECRET_MARKER);
     });
 
-    it('reads the account with the masked phone, the plan and its free allowance', async () => {
+    it('reads the account with the plan and its free allowance and no phone', async () => {
       const result = await call({ name: McpToolName.AccountStatus });
       expect(result.structuredContent).toEqual({
         state: AccountState.Active,
-        phone: '+55 ••••-0000',
         plan: AccountPlan.Free,
         free_messages: PRICING_FREE_MESSAGES,
       });
@@ -179,6 +189,7 @@ describe('MCP account tools', () => {
     });
 
     it('returns the install prompt to the agent only when the owner taps the button that sends it there', async () => {
+      const logs = captureLogLines();
       const connecting = call({ name: McpToolName.ConnectAgent, arguments: { name: 'helper' } });
       await ownerTaps({ title: ALLOW_AND_SEND });
       const result = await connecting;
@@ -186,6 +197,24 @@ describe('MCP account tools', () => {
       expect(String(result.structuredContent?.install_prompt)).toContain(INSTALL_LINK_MARKER);
       expect(JSON.stringify(result)).not.toContain(CONNECTION_SECRET_MARKER);
       expect(await screenText()).not.toContain(INSTALL_LINK_MARKER);
+      expect(logs.join('\n')).not.toContain(INSTALL_LINK_MARKER);
+      expect(logs.join('\n')).not.toContain(CONNECTION_SECRET_MARKER);
+    });
+
+    it.each([{ text: ALLOW }, { text: ALLOW_AND_SEND }])('denies a typed "$text" and changes nothing', async ({ text }) => {
+      const connecting = call({ name: McpToolName.ConnectAgent, arguments: { name: 'helper' } });
+      await heldQuestion();
+      await ownerWrites({ accountId, channelMessageId: `wamid.typed.${text}`, content: { kind: MessageKind.Text, text } });
+      expect((await connecting).structuredContent).toMatchObject({ status: AgentChangeStatus.Denied, install_prompt: null });
+      expect(await activeAgents({ accountId })).toEqual([AGENT]);
+    });
+
+    it('refuses the same request for a while after a Deny without asking again', async () => {
+      const connecting = call({ name: McpToolName.ConnectAgent, arguments: { name: 'helper' } });
+      await ownerTaps({ title: DENY });
+      await connecting;
+      const again = await call({ name: McpToolName.ConnectAgent, arguments: { name: 'helper' } });
+      expect(again.structuredContent).toMatchObject({ status: AgentChangeStatus.Refused, reason: AccountReplyIntent.CoolingDown });
     });
 
     it('changes nothing when the owner taps Deny', async () => {
@@ -272,9 +301,49 @@ describe('MCP account tools', () => {
       expect(await screenText()).toContain(SIGN_IN_LINK_MARKER);
       expect(JSON.stringify(result)).not.toContain(SIGN_IN_LINK_MARKER);
     });
+
+    it('masks the sign-in token in the stored copy once it is sent', async () => {
+      await call({ name: McpToolName.SignInLink });
+      const payloads = await storedPayloads();
+      expect(payloads).toContain(SIGN_IN_LINK_MARKER);
+      expect(payloads).not.toMatch(UNMASKED_SIGN_IN_TOKEN_PATTERN);
+    });
+
+    it('masks the install code in the stored copy once it is sent', async () => {
+      const connecting = call({ name: McpToolName.ConnectAgent, arguments: { name: 'helper' } });
+      await ownerTaps({ title: ALLOW });
+      await connecting;
+      expect(await storedPayloads()).not.toMatch(UNMASKED_INSTALL_CODE_PATTERN);
+    });
+
+    it('refuses with window_closed and queues nothing when the 24-hour window is closed', async () => {
+      await advanceClock({ stub: accountInboxStub({ accountId }), advanceMs: WINDOW_MS });
+      const result = await call({ name: McpToolName.SignInLink });
+      expect(result.structuredContent).toEqual({
+        status: AgentChangeStatus.Refused,
+        agent: null,
+        reason: AccountReplyIntent.WindowClosed,
+        install_prompt: null,
+      });
+      expect(await storedPayloads()).not.toContain(SIGN_IN_LINK_MARKER);
+    });
   });
 
   describe('rate limit', () => {
+    it('counts the acting calls of all the connections of one account together', async () => {
+      const siblingClient = await connectClient({ secret: await seedAgent({ accountId, agent: SIBLING_AGENT }) });
+      const first = await Array.from({ length: ACCOUNT_CHANGES_PER_MINUTE - 1 }).reduce<Promise<ToolResult[]>>(
+        async (previous) => [...(await previous), await call({ name: McpToolName.SignInLink })],
+        Promise.resolve([]),
+      );
+      const sibling = await call({ name: McpToolName.SignInLink, as: siblingClient });
+      const refused = await call({ name: McpToolName.SignInLink, as: siblingClient });
+      expect(first.every((result) => result.isError !== true)).toBe(true);
+      expect(sibling.isError).not.toBe(true);
+      expect(refused.isError).toBe(true);
+      expect(refused.content[0]?.text).toContain(RATE_LIMITED_CODE);
+    });
+
     it('refuses the acting tools beyond the minute limit per connection and keeps reading free', async () => {
       const results = await Array.from({ length: ACCOUNT_CHANGES_PER_MINUTE + 1 }).reduce<Promise<ToolResult[]>>(
         async (previous) => [...(await previous), await call({ name: McpToolName.SignInLink })],
