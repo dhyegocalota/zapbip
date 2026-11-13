@@ -74,7 +74,7 @@ export function AccessPage(props: AccessPageProps) {
           {translate(BackofficeCopyKey.AccessFilterApply)}
         </button>
       </form>
-      <div class="detail-grid">
+      <>
         <section class="card form-card" aria-labelledby="access-waiting-title">
           <h2 id="access-waiting-title">{translate(BackofficeCopyKey.AccessWaitingTitle)}</h2>
           <p class="field-help" data-total={waiting.total}>
@@ -117,10 +117,10 @@ export function AccessPage(props: AccessPageProps) {
                           aria-label={maskedPhoneOf({ waId: row.waId })}
                         />
                       </td>
-                      <td data-label={translate(BackofficeCopyKey.AccessColumnPhone)} class="mono">
+                      <td data-label={translate(BackofficeCopyKey.AccessColumnPhone)} class="mono cell-nowrap">
                         {maskedPhoneOf({ waId: row.waId })}
                       </td>
-                      <td data-label={translate(BackofficeCopyKey.AccessColumnJoined)}>
+                      <td data-label={translate(BackofficeCopyKey.AccessColumnJoined)} class="cell-nowrap">
                         <time datetime={new Date(row.joinedAt).toISOString()}>{formatTimestamp({ at: row.joinedAt })}</time>
                       </td>
                       <td data-label={translate(BackofficeCopyKey.AccessColumnLanguage)}>{translate(LOCALE_LABELS[row.locale])}</td>
@@ -179,7 +179,7 @@ export function AccessPage(props: AccessPageProps) {
                       <td data-label={translate(BackofficeCopyKey.AccessColumnEmail)} class="mono cell-truncate">
                         {row.email}
                       </td>
-                      <td data-label={translate(BackofficeCopyKey.AccessColumnJoined)}>
+                      <td data-label={translate(BackofficeCopyKey.AccessColumnJoined)} class="cell-nowrap">
                         <time datetime={new Date(row.joinedAt).toISOString()}>{formatTimestamp({ at: row.joinedAt })}</time>
                       </td>
                       <td data-label={translate(BackofficeCopyKey.AccessColumnLanguage)}>{translate(LOCALE_LABELS[row.locale])}</td>
@@ -198,7 +198,7 @@ export function AccessPage(props: AccessPageProps) {
             </form>
           )}
         </section>
-      </div>
+      </>
     </AccessShell>
   );
 }

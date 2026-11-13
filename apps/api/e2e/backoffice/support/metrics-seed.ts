@@ -17,7 +17,7 @@ export const EXPECTED_ALPHA = { accounts: '1', messagesIn: '5', agentsActive: '1
 
 type WalkNumber = typeof ALPHA_NUMBER;
 
-function insertNumber(input: { number: WalkNumber }): string {
+export function insertNumber(input: { number: WalkNumber }): string {
   const { id, label, phoneNumberId, displayNumber } = input.number;
   return `INSERT INTO whatsapp_numbers (id, phone_number_id, waba_id, display_number, label, sealed_access_token, seal_key_version, state, verified_at, credentials_changed_at, created_at, updated_at)
     VALUES ('${id}', '${phoneNumberId}', '3${phoneNumberId}', '${displayNumber}', '${label}', '${SEALED_PLACEHOLDER}', ${SEAL_KEY_VERSION}, '${NUMBER_STATE_ACTIVE}', ${EPOCH}, ${EPOCH}, ${EPOCH}, ${EPOCH})`;

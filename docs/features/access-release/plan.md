@@ -24,23 +24,23 @@ G1, then G2, then G3 and G4.
 
 ### G1
 
-- [ ] **Step 1:** release use case and invite code rules, tests first
-- [ ] **Step 2:** the access message and its copy
+- [x] **Step 1:** release use case and invite code rules, tests first — evidence: red 357a47a3, green b3fbb1c1
+- [x] **Step 2:** the access message and its copy — evidence: b3fbb1c1 (`notice-access-opened.test.ts`)
 
 ### G2
 
-- [ ] **Step 3:** migration 0012, D1 adapters, the Durable Object notice
-- [ ] **Step 4:** redeem a code in the inbound handler
+- [x] **Step 3:** migration 0012, D1 adapters, the Durable Object notice — evidence: red 76596a0a, green 23f1803c
+- [x] **Step 4:** redeem a code in the inbound handler — evidence: `access-invite-first-message.test.ts`, 23f1803c
 
 ### G3
 
-- [ ] **Step 5:** the Access page, both batches, the result pages
-- [ ] **Step 6:** the metrics section and the answered-question counter
-- [ ] **Step 7:** the Playwright walk
+- [x] **Step 5:** the Access page, both batches, the result pages — evidence: red e270b26f, green 37c3940d
+- [x] **Step 6:** the metrics section and the answered-question counter — evidence: red 843f4907, green cd8d2e3c
+- [x] **Step 7:** the Playwright walk — evidence: `apps/api/e2e/backoffice/access.spec.ts`, 8 passed at 1440 and 375 (screenshots in the scratchpad `dev/access-release/`)
 
 ### G4
 
-- [ ] **Step 8:** runbooks, ADR index, README rows
+- [x] **Step 8:** runbooks, ADR index, README rows — evidence: `docs/runbooks/backoffice.md` step 7, `docs/runbooks/deploy.md` step 4, ADR 0043 row
 
 ## Failure modes
 

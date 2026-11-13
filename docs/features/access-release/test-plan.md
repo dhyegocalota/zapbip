@@ -19,7 +19,7 @@
 
 ## E2E (Playwright specs)
 
-- [ ] `apps/api/e2e/backoffice-access.spec.ts` — steps: sign in, filter, select two accounts, release with a code; expected: the result page counts them; at 1440 and 375
+- [ ] `apps/api/e2e/backoffice/access.spec.ts` — steps: sign in, filter, select two accounts, release with a code; expected: the result page counts them; at 1440 and 375
 
 ## Prove it for real — Playwright MCP
 
