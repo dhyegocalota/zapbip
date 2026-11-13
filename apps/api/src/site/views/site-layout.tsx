@@ -19,6 +19,7 @@ import {
 } from '../site-constants';
 import { leadingAgentNames } from '../site-agents';
 import { LanguageMenu } from './language-menu';
+import { ThemeIcon } from './theme-icons';
 import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
 import { localePathOf } from '../site-language';
@@ -60,8 +61,15 @@ function ThemeSwitch(props: { model: PageModel }) {
     <form method="post" action={SitePath.Theme} class="switch" id={THEME_SWITCH_ID} aria-label={translate(SiteCopyKey.ThemeLabel)}>
       <input type="hidden" name="returnTo" value={returnPathOf({ model: props.model })} />
       {THEME_OPTIONS.map((option) => (
-        <button type="submit" name="theme" value={option.theme} aria-pressed={String(option.theme === props.model.theme)}>
-          {translate(option.label)}
+        <button
+          type="submit"
+          name="theme"
+          value={option.theme}
+          aria-pressed={String(option.theme === props.model.theme)}
+          aria-label={translate(option.label)}
+          title={translate(option.label)}
+        >
+          <ThemeIcon theme={option.theme} />
         </button>
       ))}
     </form>
