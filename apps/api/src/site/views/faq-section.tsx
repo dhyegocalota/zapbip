@@ -3,7 +3,9 @@ import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
 import { ContactText } from './contact-text';
 import { pricingValuesOf } from '../price-format';
+import { REFERRAL_SHARING_OPEN } from '../site-constants';
 
+const REFERRAL_QUESTION = SiteCopyKey.FaqReferralQuestion;
 const FAQ_ITEMS: { question: SiteCopyKey; answer: SiteCopyKey }[] = [
   { question: SiteCopyKey.FaqWhenQuestion, answer: SiteCopyKey.FaqWhenAnswer },
   { question: SiteCopyKey.FaqFreeQuestion, answer: SiteCopyKey.FaqFreeAnswer },
@@ -26,7 +28,7 @@ export function FaqSection(props: { locale: OwnerLocale }) {
         <h2 class="section-title reveal" id="faq-title">
           {translate(SiteCopyKey.FaqTitle)}
         </h2>
-        {FAQ_ITEMS.map((item) => (
+        {FAQ_ITEMS.filter((item) => REFERRAL_SHARING_OPEN || item.question !== REFERRAL_QUESTION).map((item) => (
           <details class="reveal">
             <summary>{translate(item.question)}</summary>
             <p>

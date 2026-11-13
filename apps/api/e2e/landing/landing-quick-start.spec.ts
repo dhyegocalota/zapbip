@@ -1,6 +1,7 @@
 import type { Page } from '@playwright/test';
 import { AGENT_INSTALLS } from '@zapbip/agents/install';
 import { OwnerLocale } from '@zapbip/types';
+import { SITE_EXAMPLE_CONNECTION_LINK } from '../../src/site/site-constants';
 import { SiteCopyKey } from '../../src/site/site-copy';
 import { expect, test } from './fixtures';
 import { siteCopy } from './support/site-copy';
@@ -255,7 +256,7 @@ test('a UI path agent shows its click path as numbered steps above the address',
   const steps = page.locator('.start-panel:not([hidden]) .code-path li');
   const expected = addressOnly.install.quickStart({ locale: OwnerLocale.EnglishUs, connectionLink: 'x' }).path;
   await expect(steps).toHaveText(expected);
-  await expect(page.locator('.start-panel:not([hidden]) code')).toContainText(siteCopy({ key: SiteCopyKey.StartLinkPlaceholder }));
+  await expect(page.locator('.start-panel:not([hidden]) code')).toContainText(SITE_EXAMPLE_CONNECTION_LINK);
 });
 
 test.describe('typing in', () => {
@@ -268,7 +269,7 @@ test.describe('typing in', () => {
     expect(typing).toBe(true);
     const expected = SECOND_AGENT.install.quickStart({
       locale: OwnerLocale.EnglishUs,
-      connectionLink: siteCopy({ key: SiteCopyKey.StartLinkPlaceholder }),
+      connectionLink: SITE_EXAMPLE_CONNECTION_LINK,
     }).code;
     expect(await page.locator(`#start-panel-${SECOND_AGENT.id} code`).evaluate((element) => element.getAttribute('data-code'))).toBe(
       expected,
@@ -293,7 +294,7 @@ test.describe('typing in', () => {
     await page.locator(`#start-panel-${SECOND_AGENT.id} .start-copy`).click();
     const expected = SECOND_AGENT.install.quickStart({
       locale: OwnerLocale.EnglishUs,
-      connectionLink: siteCopy({ key: SiteCopyKey.StartLinkPlaceholder }),
+      connectionLink: SITE_EXAMPLE_CONNECTION_LINK,
     }).code;
     expect(await page.evaluate('navigator.clipboard.readText()')).toBe(expected);
   });

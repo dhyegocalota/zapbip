@@ -13,7 +13,8 @@ export enum CodeTokenKind {
 export type CodeToken = { kind: CodeTokenKind; text: string };
 
 const LINE_SEPARATOR = '\n';
-const TOKEN_PATTERN = /<[^<>\s]+>|"[^"<]*"|"|--?[A-Za-z][\w-]*|\[[^\]]+\]|[A-Za-z_][\w.-]*(?=\s*[=:])|\s+|[^\s"<]+|./g;
+const TOKEN_PATTERN = /https?:\/\/[^\s"<>]+|<[^<>\s]+>|"[^"<]*"|"|--?[A-Za-z][\w-]*|\[[^\]]+\]|[A-Za-z_][\w.-]*(?=\s*[=:])|\s+|[^\s"<]+|./g;
+const URL_PATTERN = /^https?:\/\//;
 const PLACEHOLDER_PATTERN = /^<[^<>\s]+>$/;
 const FLAG_PATTERN = /^--?[A-Za-z]/;
 const TABLE_PATTERN = /^\[.+\]$/;
@@ -26,6 +27,7 @@ const QUOTE = '"';
 function kindOf(input: { text: string; isKey: boolean }): CodeTokenKind {
   const { text, isKey } = input;
   if (SPACE_PATTERN.test(text)) return CodeTokenKind.Space;
+  if (URL_PATTERN.test(text)) return CodeTokenKind.Url;
   if (PLACEHOLDER_PATTERN.test(text)) return CodeTokenKind.Placeholder;
   if (text.startsWith(QUOTE)) return CodeTokenKind.String;
   if (FLAG_PATTERN.test(text)) return CodeTokenKind.Flag;
