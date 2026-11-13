@@ -1,11 +1,12 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { OwnerLocale } from '@zapbip/types';
+import { WebLocale } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { BACKOFFICE_COPY, BackofficeCopyKey, renderBackofficeCopy } from '../../src/backoffice/backoffice-copy';
+import { cjkSpacingOffenders, emptyEntries, frenchSpacingOffenders, placeholderMismatches, untranslatedEntries } from './copy-rules';
 
 const BACKOFFICE_ROOT = join(import.meta.dirname, '../../src/backoffice');
-const LOCALES = Object.values(OwnerLocale);
+const LOCALES = Object.values(WebLocale);
 const REQUIRED_KEYS = [
   'SignInTitle',
   'SignInFailed',
@@ -37,9 +38,34 @@ const POLISH_KEYS = [
   'MetricsKpiMessagesIn',
   'MetricsKpiMessagesOut',
 ];
+const SAME_IN_EVERY_LANGUAGE = [
+  BackofficeCopyKey.EnvironmentStaging,
+  BackofficeCopyKey.NumberWabaId,
+  BackofficeCopyKey.WaitlistColumnPosition,
+  BackofficeCopyKey.BrandName,
+  BackofficeCopyKey.FooterLine,
+  BackofficeCopyKey.AuditOutcomeSucceeded,
+  BackofficeCopyKey.MetricsPercentValue,
+];
+const SHARED_WITH_ENGLISH = [
+  [WebLocale.PortugueseBrazil, BackofficeCopyKey.AccessInviteColumnLink],
+  [WebLocale.PortugueseBrazil, BackofficeCopyKey.MetricsAccessColumnTotal],
+  [WebLocale.Spanish, BackofficeCopyKey.NoticeLabelError],
+  [WebLocale.Spanish, BackofficeCopyKey.MetricsAccessColumnTotal],
+  [WebLocale.German, BackofficeCopyKey.NavigationAudit],
+  [WebLocale.German, BackofficeCopyKey.MetricsFreshnessLive],
+  [WebLocale.German, BackofficeCopyKey.AccessInviteColumnLink],
+  [WebLocale.French, BackofficeCopyKey.NavigationAudit],
+  [WebLocale.French, BackofficeCopyKey.SparklineMessagesMetric],
+  [WebLocale.French, BackofficeCopyKey.MetricsAgentsTitle],
+  [WebLocale.French, BackofficeCopyKey.MetricsMessagesTitle],
+  [WebLocale.French, BackofficeCopyKey.MetricsTemplatesQuestion],
+  [WebLocale.French, BackofficeCopyKey.AuditColumnAction],
+  [WebLocale.French, BackofficeCopyKey.NoticeLabelInfo],
+  [WebLocale.French, BackofficeCopyKey.MetricsAccessColumnTotal],
+].map(([locale, key]) => `${locale}:${key}`);
 const SIGN_IN_KEYS = ['SignInLead', 'SignInEmailLabel', 'SignInPasswordLabel', 'SignInSubmit', 'SignInCodeLead', 'SignInCodeSubmit'];
 const REMOVED_KEYS = ['SignInKeyLabel', 'SignInKeyHelp'];
-const PLACEHOLDER_PATTERN = /\{(\w+)\}/g;
 const TEXT_CHILD_PATTERN = />\s*[A-Za-z0-9][^<>{}();=]*</;
 const STRING_CHILD_PATTERN = />\s*\{\s*['"`]/;
 
@@ -61,27 +87,54 @@ describe('backoffice copy', () => {
     expect(Object.keys(BackofficeCopyKey)).toContain(name);
   });
 
+  it('gives every language a copy of its own for every key, none blank', () => {
+    expect(emptyEntries({ copies: BACKOFFICE_COPY, keys: Object.values(BackofficeCopyKey) })).toEqual([]);
+  });
+
+  it('uses the same placeholders in every language', () => {
+    expect(placeholderMismatches({ copies: BACKOFFICE_COPY, keys: Object.values(BackofficeCopyKey) })).toEqual([]);
+  });
+
+  it('words every text differently from English in every other language, except names, units and symbols', () => {
+    expect(
+      untranslatedEntries({
+        copies: BACKOFFICE_COPY,
+        keys: Object.values(BackofficeCopyKey),
+        allowed: [...SAME_IN_EVERY_LANGUAGE, ...SHARED_WITH_ENGLISH],
+      }),
+    ).toEqual([]);
+  });
+
+  it('keeps the French punctuation spaces non-breaking', () => {
+    const texts = Object.values(BackofficeCopyKey).map((key) => BACKOFFICE_COPY[WebLocale.French][key]);
+    expect(frenchSpacingOffenders({ texts })).toEqual([]);
+  });
+
+  it.each([WebLocale.Japanese, WebLocale.ChineseSimplified])('puts no space between two Chinese or Japanese characters in %s', (locale) => {
+    const texts = Object.values(BackofficeCopyKey).map((key) => BACKOFFICE_COPY[locale][key]);
+    expect(cjkSpacingOffenders({ texts })).toEqual([]);
+  });
+
   it('renders placeholders', () => {
-    expect(renderBackofficeCopy({ key: BackofficeCopyKey.NumbersView, locale: OwnerLocale.EnglishUs, values: { label: 'Brazil' } })).toBe(
+    expect(renderBackofficeCopy({ key: BackofficeCopyKey.NumbersView, locale: WebLocale.EnglishUs, values: { label: 'Brazil' } })).toBe(
       'View Brazil',
     );
   });
 
   it.each(POLISH_KEYS)('carries %s in both locales with the same placeholders', (name) => {
     const key = BackofficeCopyKey[name as keyof typeof BackofficeCopyKey];
-    const [portuguese, english] = LOCALES.map((locale) => BACKOFFICE_COPY[locale][key]);
+    const portuguese = BACKOFFICE_COPY[WebLocale.PortugueseBrazil][key];
+    const english = BACKOFFICE_COPY[WebLocale.EnglishUs][key];
     expect(portuguese).toBeTypeOf('string');
     expect(english).toBeTypeOf('string');
     expect(portuguese).not.toBe(english);
-    const placeholdersOf = (text: string): string[] => [...text.matchAll(PLACEHOLDER_PATTERN)].map((match) => match[1]!).sort();
-    expect(placeholdersOf(portuguese!)).toEqual(placeholdersOf(english!));
+    expect(placeholderMismatches({ copies: BACKOFFICE_COPY, keys: [key] })).toEqual([]);
   });
 
   it.each(SIGN_IN_KEYS)('carries the sign-in key %s in both locales, worded differently', (name) => {
     expect(Object.keys(BackofficeCopyKey)).toContain(name);
     const key = BackofficeCopyKey[name as keyof typeof BackofficeCopyKey];
-    const [portuguese, english] = LOCALES.map((locale) => BACKOFFICE_COPY[locale][key]);
-    expect(portuguese).not.toBe(english);
+    expect(untranslatedEntries({ copies: BACKOFFICE_COPY, keys: [key], allowed: [] })).toEqual([]);
   });
 
   it.each(REMOVED_KEYS)('no longer has the key %s', (name) => {

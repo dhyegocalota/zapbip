@@ -1,6 +1,9 @@
-import { OwnerLocale } from '@zapbip/types';
+import { WebLocale } from '@zapbip/types';
+import { renderSiteCopy, SiteCopyKey } from '../../src/site/site-copy';
+import { localePathOf } from '../../src/site/site-language';
+import { LOCALE_PROFILES } from '../../src/web-shell/locale-profiles';
 import { describe, expect, it } from 'vitest';
-import { REFERRAL_CODE, SITE_ORIGIN, siteFetch } from '../support/site';
+import { escapedHtml, REFERRAL_CODE, SITE_ORIGIN, siteFetch } from '../support/site';
 import { AGENT_INSTALLS } from '@zapbip/agents/install';
 
 const PICKED_AGENT = Object.keys(AGENT_INSTALLS)[0]!;
@@ -11,6 +14,7 @@ const SEE_OTHER = 303;
 const OK = 200;
 const LOCALE_COOKIE = '__Host-zb_site_locale';
 const THEME_COOKIE = '__Host-zb_site_theme';
+const LOCALES = Object.values(WebLocale);
 const PORTUGUESE_ACCEPT = { 'Accept-Language': 'pt-BR,pt;q=0.9' };
 const ENGLISH_ACCEPT = { 'Accept-Language': 'en-US,en;q=0.9' };
 
@@ -24,7 +28,7 @@ describe('the language paths', () => {
   it('serves Portuguese at /pt-br whatever the cookie or the header says', async () => {
     const response = await siteFetch({
       path: '/pt-br',
-      headers: { ...ENGLISH_ACCEPT, Cookie: `${LOCALE_COOKIE}=${OwnerLocale.EnglishUs}` },
+      headers: { ...ENGLISH_ACCEPT, Cookie: `${LOCALE_COOKIE}=${WebLocale.EnglishUs}` },
     });
     expect(response.status).toBe(OK);
     expect(await response.text()).toContain('<html lang="pt-BR"');
@@ -43,13 +47,13 @@ describe('the language paths', () => {
   });
 
   it('sends a visitor whose cookie says Portuguese to /pt-br', async () => {
-    const response = await siteFetch({ path: '/', headers: { Cookie: `${LOCALE_COOKIE}=${OwnerLocale.PortugueseBrazil}` } });
+    const response = await siteFetch({ path: '/', headers: { Cookie: `${LOCALE_COOKIE}=${WebLocale.PortugueseBrazil}` } });
     expect(response.status).toBe(FOUND);
     expect(response.headers.get('Location')).toBe('/pt-br');
   });
 
   it('keeps an English cookie at the root even for a Portuguese browser', async () => {
-    const response = await siteFetch({ path: '/', headers: { ...PORTUGUESE_ACCEPT, Cookie: `${LOCALE_COOKIE}=${OwnerLocale.EnglishUs}` } });
+    const response = await siteFetch({ path: '/', headers: { ...PORTUGUESE_ACCEPT, Cookie: `${LOCALE_COOKIE}=${WebLocale.EnglishUs}` } });
     expect(response.status).toBe(OK);
   });
 
@@ -121,11 +125,11 @@ describe('the preference forms', () => {
     const response = await siteFetch({
       path: '/locale',
       method: 'POST',
-      form: { locale: OwnerLocale.PortugueseBrazil, returnTo: `/?agent=${PICKED_AGENT}&ref=${REFERRAL_CODE}` },
+      form: { locale: WebLocale.PortugueseBrazil, returnTo: `/?agent=${PICKED_AGENT}&ref=${REFERRAL_CODE}` },
     });
     expect(response.status).toBe(SEE_OTHER);
     expect(response.headers.get('Location')).toBe(`/pt-br?agent=${PICKED_AGENT}&ref=${REFERRAL_CODE}`);
-    expect(response.headers.get('Set-Cookie')).toContain(`${LOCALE_COOKIE}=${OwnerLocale.PortugueseBrazil}`);
+    expect(response.headers.get('Set-Cookie')).toContain(`${LOCALE_COOKIE}=${WebLocale.PortugueseBrazil}`);
   });
 
   it.each([
@@ -135,7 +139,7 @@ describe('the preference forms', () => {
     ['/?agent=../x', '/pt-br'],
     ['/?x=1', '/pt-br'],
   ])('POST /locale refuses the return target %s', async (returnTo, target) => {
-    const response = await siteFetch({ path: '/locale', method: 'POST', form: { locale: OwnerLocale.PortugueseBrazil, returnTo } });
+    const response = await siteFetch({ path: '/locale', method: 'POST', form: { locale: WebLocale.PortugueseBrazil, returnTo } });
     expect(response.headers.get('Location')).toBe(target);
   });
 
@@ -169,10 +173,93 @@ describe('the preference forms', () => {
 describe('the sitemap', () => {
   it('lists each language page with every alternate', async () => {
     const xml = await (await siteFetch({ path: '/sitemap.xml' })).text();
-    expect(xml.match(/<loc>/g)).toHaveLength(6);
-    expect(xml).toContain(`<loc>${SITE_ORIGIN}/</loc>`);
-    expect(xml).toContain(`<loc>${SITE_ORIGIN}/pt-br</loc>`);
-    expect(xml.match(new RegExp(`hreflang="pt-BR" href="${SITE_ORIGIN}/pt-br"`, 'g'))).toHaveLength(2);
-    expect(xml.match(new RegExp(`hreflang="x-default" href="${SITE_ORIGIN}/"`, 'g'))).toHaveLength(2);
+    const pathCount = LOCALES.length * 3;
+    expect(xml.match(/<loc>/g)).toHaveLength(pathCount);
+    LOCALES.forEach((locale) => expect(xml).toContain(`<loc>${SITE_ORIGIN}${localePathOf({ locale })}</loc>`));
+    expect(xml.match(new RegExp(`hreflang="pt-BR" href="${SITE_ORIGIN}/pt-br"`, 'g'))).toHaveLength(LOCALES.length);
+    expect(xml.match(new RegExp(`hreflang="zh-CN" href="${SITE_ORIGIN}/zh"`, 'g'))).toHaveLength(LOCALES.length);
+    expect(xml.match(new RegExp(`hreflang="x-default" href="${SITE_ORIGIN}/"`, 'g'))).toHaveLength(LOCALES.length);
+  });
+});
+
+describe('every language of the site', () => {
+  it.each(LOCALES)('serves %s at its own path in its own language, with the eight alternates in the head', async (locale) => {
+    const path = localePathOf({ locale });
+    const response = await siteFetch({ path });
+    const html = await response.text();
+    const profile = LOCALE_PROFILES[locale];
+    expect(response.status).toBe(OK);
+    expect(html).toContain(`<html lang="${profile.languageTag}"`);
+    expect(html).toContain(`<link rel="canonical" href="${SITE_ORIGIN}${path}"`);
+    expect(html).toContain(`<meta property="og:locale" content="${profile.openGraphLocale}"`);
+    expect(html.match(/<meta property="og:locale:alternate"/g)).toHaveLength(LOCALES.length - 1);
+    LOCALES.forEach((alternate) =>
+      expect(html).toContain(
+        `hreflang="${LOCALE_PROFILES[alternate].languageTag}" href="${SITE_ORIGIN}${localePathOf({ locale: alternate })}"`,
+      ),
+    );
+    expect(html).toContain(`hreflang="x-default" href="${SITE_ORIGIN}/"`);
+    expect(html).toContain(escapedHtml({ text: renderSiteCopy({ key: SiteCopyKey.NavigationDocs, locale }) }));
+    expect(html).toContain(`data-language="${profile.turnstileLanguage}"`);
+  });
+
+  it.each(LOCALES)('answers %s with a 301 from its trailing slash', async (locale) => {
+    const path = localePathOf({ locale });
+    if (path === '/') return;
+    const response = await siteFetch({ path: `${path}/?ref=${REFERRAL_CODE}` });
+    expect(response.status).toBe(MOVED_PERMANENTLY);
+    expect(response.headers.get('Location')).toBe(`${path}?ref=${REFERRAL_CODE}`);
+  });
+
+  it.each([
+    ['es-MX,es;q=0.9,en;q=0.5', '/es'],
+    ['de-AT,de;q=0.9', '/de'],
+    ['fr-CA,fr;q=0.8', '/fr'],
+    ['ja-JP,ja;q=0.9', '/ja'],
+    ['ko-KR,ko;q=0.9', '/ko'],
+    ['zh-CN,zh;q=0.9', '/zh'],
+    ['zh-Hans-SG', '/zh'],
+    ['fr;q=0.4, ja;q=0.8, en;q=0.2', '/ja'],
+  ])('sends a browser that asks for %s from the root to %s, varying on the header', async (acceptLanguage, target) => {
+    const response = await siteFetch({ path: '/', headers: { 'Accept-Language': acceptLanguage } });
+    expect(response.status).toBe(FOUND);
+    expect(response.headers.get('Location')).toBe(target);
+    expect(response.headers.get('Vary')).toContain('Accept-Language');
+  });
+
+  it.each(['zh-TW', 'zh-Hant', 'it-IT,it;q=0.9', 'ja;q=0', '*'])(
+    'keeps a browser that asks for %s on the English root',
+    async (acceptLanguage) => {
+      const response = await siteFetch({ path: '/', headers: { 'Accept-Language': acceptLanguage } });
+      expect(response.status).toBe(OK);
+    },
+  );
+
+  it.each(LOCALES.filter((locale) => locale !== WebLocale.EnglishUs))(
+    'sends a visitor whose cookie says %s to its path',
+    async (locale) => {
+      const response = await siteFetch({ path: '/', headers: { Cookie: `${LOCALE_COOKIE}=${locale}` } });
+      expect(response.status).toBe(FOUND);
+      expect(response.headers.get('Location')).toBe(localePathOf({ locale }));
+    },
+  );
+
+  it.each(LOCALES)('POST /locale to %s sets the cookie and keeps the agent and the code', async (locale) => {
+    const response = await siteFetch({
+      path: '/locale',
+      method: 'POST',
+      form: { locale, returnTo: `/?agent=${PICKED_AGENT}&ref=${REFERRAL_CODE}` },
+    });
+    const path = localePathOf({ locale });
+    expect(response.status).toBe(SEE_OTHER);
+    expect(response.headers.get('Location')).toBe(`${path}?agent=${PICKED_AGENT}&ref=${REFERRAL_CODE}`);
+    expect(response.headers.get('Set-Cookie')).toContain(`${LOCALE_COOKIE}=${locale}`);
+  });
+
+  it.each(LOCALES)('prices %s in the currency of its language', async (locale) => {
+    const html = await (await siteFetch({ path: localePathOf({ locale }) })).text();
+    const currency = locale === WebLocale.PortugueseBrazil ? 'R$' : '$';
+    expect(html).toContain(currency);
+    expect(html.includes('R$')).toBe(locale === WebLocale.PortugueseBrazil);
   });
 });
