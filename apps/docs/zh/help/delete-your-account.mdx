@@ -1,0 +1,45 @@
+---
+title: 删除你的账号
+description: 如何删除 zapbip 保存的关于你的一切。
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+你可以随时在 WhatsApp 上删除账号。需要发两条消息，所以不小心发出的一条消息不会删除任何东西。目前命令需要用英语或葡萄牙语的词来输入，本页使用英语的词。
+
+<Steps>
+  <Step title="申请">发送 `delete account`。zapbip 会告诉你将删除什么，以及确认所用的词组。</Step>
+  <Step title="确认">
+    在 10 分钟内发送 `delete account permanently`。超过这个时间不会删除任何东西；再次发送 `delete account` 即可重新开始。
+  </Step>
+</Steps>
+
+<Chat
+  messages={[
+    { you: true, text: 'delete account', time: '09:30' },
+    {
+      text: 'This deletes your account, every agent, message and file, and cannot be undone. To confirm within 10 minutes, send: delete account permanently',
+      time: '09:30',
+    },
+    { you: true, text: 'delete account permanently', time: '09:31' },
+    { text: 'Your account is deleted. Your next message starts a new account.', time: '09:31' },
+  ]}
+/>
+
+## 会删除什么
+
+- 所有消息、提问和待处理的回复。
+- 所有已连接的 AI。它们的提示词和链接会立即失效。
+- 为你保存的文件。
+- 你的手机号码和你的账号。
+
+## Meta 和 Cloudflare 保留什么
+
+- 聊天记录会保留在 WhatsApp 一侧。如果想从手机上清除，请在 WhatsApp 中删除该聊天。
+- Cloudflare 会按它自己的保留期限保存备份副本。
+
+## 重新开始
+
+删除之后，同一部手机发来的消息会创建一个新的空账号。它会像其他新账号一样进入候补名单，参见[常见问题](/zh/help/faq)。
+
+如果只想断开某一个 AI，参见[管理你的 AI](/zh/features/manage-your-agents)。

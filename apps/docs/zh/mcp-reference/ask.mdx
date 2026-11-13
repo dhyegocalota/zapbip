@@ -1,0 +1,26 @@
+---
+title: 'ask'
+description: '用按钮或列表向所有者提问并等待答案。'
+---
+
+用按钮或列表向所有者提问并等待答案。
+
+## 输入
+
+| 字段              | 类型             | 说明                                                                                      |
+| ----------------- | ---------------- | ----------------------------------------------------------------------------------------- |
+| `question`        | string           | 最多 1024 个字符。                                                                        |
+| `options`         | 1 到 10 项的数组 | 最多 3 个选项显示为按钮（标题最多 20 个字符），4 到 10 个显示为列表（行最多 24 个字符）。 |
+| `timeout_seconds` | number，可选     | 最多 50。                                                                                 |
+
+## 输出
+
+所有者及时作答时返回 `{ "status": "answered", "answer": ..., "message_id": string }`；等待先结束时返回 `{ "status": "pending", "question_id": string }`。把 `question_id` 传给 [wait_for_reply](/zh/mcp-reference/wait-for-reply)。
+
+4 分钟内重复同一个问题，会返回同一个问题，并且不发送任何内容。参见[提问](/zh/concepts/questions)。
+
+## 消息类型
+
+import MessageKinds from '/snippets/zh/message-kinds.mdx';
+
+<MessageKinds />

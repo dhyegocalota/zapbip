@@ -1,0 +1,25 @@
+---
+title: 错误
+description: 技术性错误及其含义。
+---
+
+## 401 unauthorized
+
+密钥缺失、错误或已被撤销。请从 zapbip 的号码重新复制连接 URL，或者申请一个新的智能体。使用 Bearer 形式时，请求头是 `Authorization: Bearer <secret>`。
+
+## 消息已排队
+
+`delivery: "queued"` 表示 [24 小时窗口](/zh/features/the-24-hour-window)已关闭。消息会等待，并在你给 zapbip 的号码发消息后立即按顺序送达。
+
+## 上传错误
+
+字节在被存储之前就会被拒绝：
+
+| 状态 | 原因                          |
+| ---- | ----------------------------- |
+| 411  | `PUT` 没有 `Content-Length`   |
+| 413  | 请求体大于声明的 `size_bytes` |
+| 415  | 类型与声明的 `mime_type` 不符 |
+| 410  | 上传在 15 分钟后过期          |
+
+参见 [create_upload](/zh/mcp-reference/create-upload)。

@@ -1,0 +1,66 @@
+---
+title: 故障排查
+description: 常见问题及处理办法。
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+## 我的 AI 的消息没有送达
+
+很可能是 [24 小时窗口](/zh/features/the-24-hour-window)已经关闭。给 zapbip 的号码随便发一条消息，等待中的消息就会按顺序送达。
+
+<Chat
+  messages={[
+    { notice: true, text: 'The agent claude-code has a message for you: Migration finished ✅', time: '07:12' },
+    { you: true, text: 'ok', time: '07:30' },
+    { name: 'Claude Code', text: '迁移已完成 ✅', time: '07:30' },
+    { name: 'Grok', text: '找到了 3 个来源。', time: '07:30' },
+  ]}
+/>
+
+## 我发了消息，但我的 AI 没有回答
+
+你的 AI 没有在监听。你的消息在等它，zapbip 会告诉你这个 AI 目前没有在监听。
+
+<Chat
+  messages={[
+    { you: true, text: '@claude 构建通过了吗？', time: '14:20' },
+    { notice: true, text: 'The agent claude is not listening right now. Your message waits in the inbox.', time: '14:20' },
+  ]}
+/>
+
+打开这个 AI，让它查看消息，并在[支持的智能体](/zh/agents/supported-agents)中了解各个 AI 如何保持监听。
+
+## 我的消息发错了 AI
+
+以 `@名称` 开头，例如 `@grok check the news`，或者直接回复那个 AI 的消息。
+
+<Chat
+  messages={[
+    { name: 'Grok', text: '找到了 3 个来源。', time: '11:05' },
+    { you: true, text: '@grok check the news', time: '11:06' },
+    { you: true, quote: { name: 'Grok', text: '找到了 3 个来源。' }, text: '是哪几个？', time: '11:07' },
+  ]}
+/>
+
+参见[一个号码，多个 AI](/zh/features/many-agents-on-one-number)。
+
+## 我发了消息，什么也没有回来
+
+你的账号可能在候补名单上。它会被保留，直到 zapbip 团队将它激活。请等待，访问权限开放后发送 `help`。
+
+## 提示词里的链接不能用
+
+链接只能用一次，有效期 30 分钟。发送 `rotate` 和 AI 的名字，例如 `rotate claude`，即可获得新的提示词。参见[撤销与更换连接](/zh/help/revoke-and-rotate-keys)。
+
+## zapbip 拒绝了我的 AI 的名字
+
+名字由 1 到 20 个小写字母、数字或连字符组成，以字母或数字开头，并且不能以命令词开头。请用另一个名字发送 `new agent`。
+
+## zapbip 说我达到了上限
+
+你最多可以有 8 个已连接的 AI。发送 `revoke` 和你不再使用的某个 AI 的名字，即可腾出一个名额。
+
+## 其他问题
+
+技术性错误，例如连接被拒绝或上传失败，列在“开发者”部分。

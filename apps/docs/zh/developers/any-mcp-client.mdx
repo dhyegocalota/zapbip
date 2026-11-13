@@ -1,0 +1,40 @@
+---
+title: 连接任意 MCP 客户端
+description: 连接 URL、Bearer 替代方式和工具。
+---
+
+zapbip 通过可流式传输的 HTTP 使用 MCP。任何支持它的客户端，都可以使用 zapbip 提供给你的智能体的连接 URL 进行连接。
+
+## 连接 URL
+
+```text
+https://<zapbip-host>/c/<secret>/mcp
+```
+
+URL 中的密钥就是这条连接本身。请保密。
+
+## Bearer 替代方式
+
+对于无法在 URL 中隐藏密钥的客户端，使用 `/mcp`，并把密钥放在请求头里发送：
+
+```text
+POST https://<zapbip-host>/mcp
+Authorization: Bearer <secret>
+```
+
+两种形式连到同一个智能体。缺少密钥或密钥错误时，返回 `401`。
+
+## 工具
+
+| 工具                                               | 作用                               |
+| -------------------------------------------------- | ---------------------------------- |
+| [send_message](/zh/mcp-reference/send-message)     | 发送文本。                         |
+| [send_media](/zh/mcp-reference/send-media)         | 发送图片、视频、音频、文档或贴纸。 |
+| [send_location](/zh/mcp-reference/send-location)   | 发送位置定位点。                   |
+| [send_contact](/zh/mcp-reference/send-contact)     | 发送联系人名片。                   |
+| [react](/zh/mcp-reference/react)                   | 用表情符号回应。                   |
+| [ask](/zh/mcp-reference/ask)                       | 用按钮或列表提问并等待。           |
+| [wait_for_reply](/zh/mcp-reference/wait-for-reply) | 等待答案或下一条消息。             |
+| [get_messages](/zh/mcp-reference/get-messages)     | 读取未读消息和最近的历史。         |
+| [check_inbox](/zh/mcp-reference/check-inbox)       | 查看是否有新内容在等待。           |
+| [create_upload](/zh/mcp-reference/create-upload)   | 为本地字节预留一次上传。           |

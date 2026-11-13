@@ -1,0 +1,59 @@
+---
+title: Grok Bot
+description: Grok BotをあなたのWhatsAppに接続します。
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import InstallPrompt from '/snippets/ja/install-prompt.mdx';
+
+## 使えること
+
+| できること                                         | Grok Bot |
+| -------------------------------------------------- | -------- |
+| テキスト、写真、動画、音声、ドキュメントを受け取る | はい     |
+| 位置情報、連絡先、リアクションを受け取る           | はい     |
+| ボタンまたはリストで質問して待つ                   | はい     |
+| あなたが先に書いたときに会話を始める               | はい     |
+
+## 聞き取りの仕組み
+
+段: Webhook。WhatsAppで書き込むと、zapbipがGrok BotのルーティンのWebhookを呼び出し、Grok Botがあなたのメッセージとともに約9 秒後に起動します。呼び出しが失敗した場合は、zapbipがWhatsAppでお知らせします。
+
+質問が開いている間、Grok Botは一度に最大50 秒待ちます。あなたが答えていない場合、待機は保留中（pending）で終わり、Grok Botは必要なだけ何度でも、もう一度呼び出します。時間制限なしです。Grok Botでは、1回の待機は最低でも2 分続きます。
+
+動かし続けるために、あなたがすることは何もありません。
+
+## ゼロから設定する
+
+1. **WhatsAppでzapbipの番号にメッセージを送ります。** `new agent grok-bot` を送ってください。コマンドは今のところ英語かポルトガル語の言葉で入力します。すべてのメッセージは[始め方](/ja/get-started/how-to-start)で確認できます。
+
+   <Chat
+     messages={[
+       { you: true, text: 'new agent grok-bot', time: '09:00' },
+       { name: 'zapbip', text: 'Agent grok-bot created. Paste this into your agent.', time: '09:00' },
+     ]}
+   />
+
+2. **その1行をGrok Botに貼り付けます。** zapbipが、あなた専用の1行で返信します。
+
+   <InstallPrompt />
+
+3. **変更ごとに「はい」と答えます。** Grok Botは指示を読み、設定を変更する前に、どれを変更するかを伝え、あなたの「はい」を待ちます。リンクは、共有するチャットには出さないでください。
+
+4. **zapbipをGrok Botに追加します。** `<connectionLink>` にある `zapbip` という名前のMCPサーバーを追加するよう、ボットに頼みます。あなたが確認します。
+
+5. **ルーティンを作成します。** Webhookトリガー付きのルーティンを作成すると、URLとキーが得られます。
+
+6. **起こし方をzapbipに伝えます。** ルーティンのURLとキーを使って `set_wake({mode: "webhook", url, token})` を呼びます。エラーが出た場合は、そこで止まって報告します。
+
+7. **テストします。** チャットで、`send_message` を呼び、✅ installed を送ります。
+
+## 動作の確認
+
+Grok Botに、WhatsAppで `✅ installed` を送るよう頼んでください。届けば、接続は機能しています。
+
+<Chat messages={[{ name: 'Grok Bot', text: '✅ installed', time: '09:03' }]} />
+
+次にWhatsAppで何か書いてください。Grok Botは約9 秒以内に答えます。
+
+手動での設定が必要なアプリについては、[任意のMCPクライアントを接続する](/ja/developers/any-mcp-client)をご覧ください。

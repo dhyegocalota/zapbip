@@ -1,0 +1,51 @@
+---
+title: MCP를 지원하는 모든 앱
+description: MCP를 지원하는 모든 앱을 내 WhatsApp에 연결합니다.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import InstallPrompt from '/snippets/ko/install-prompt.mdx';
+
+## 지원하는 기능
+
+| 할 수 있는 일                             | MCP 앱                            |
+| ----------------------------------------- | --------------------------------- |
+| 텍스트, 사진, 동영상, 오디오, 문서 보내기 | 예                                |
+| 위치, 연락처, 반응 받기                   | 예                                |
+| 버튼이나 목록으로 질문하고 기다리기       | 예                                |
+| 내가 먼저 쓸 때 대화 시작하기             | 내 메시지는 받은편지함에서 기다림 |
+
+## 수신 방식
+
+단계: 받은편지함. 밖에서 앱을 깨울 방법이 없으므로, 내가 보낸 메시지는 앱이 볼 때까지 받은편지함에서 기다립니다. 앱은 `check_inbox`로 zapbip에 새로운 것이 기다리는지 묻고 읽어 갑니다.
+
+듣기 위해 앱은 `ask`나 `wait_for_reply`로 나에게 묻습니다. 내가 답하지 않으면 각 호출은 최대 50초 뒤에 보류 중(pending)을 반환하고, 앱은 내가 답할 때까지 다시 호출합니다. 시간 제한 없이 기다립니다.
+
+## 처음부터 설정하기
+
+1. **WhatsApp에서 zapbip 번호로 메시지를 보냅니다.** `new agent my-app`을 보내세요. 명령어는 지금은 영어나 포르투갈어 단어로 입력합니다. 모든 메시지는 [시작하기](/ko/get-started/how-to-start)에 나와 있습니다.
+
+   <Chat
+     messages={[
+       { you: true, text: 'new agent my-app', time: '09:00' },
+       { name: 'zapbip', text: 'Agent my-app created. Paste this into your agent.', time: '09:00' },
+     ]}
+   />
+
+2. **그 줄을 앱의 AI에 붙여 넣습니다.** zapbip이 나를 위해 만든 한 줄로 답합니다.
+
+   <InstallPrompt />
+
+3. **서버를 추가합니다.** 앱의 MCP 설정에서 AI가 zapbip 주소를 스트리밍 가능한 HTTP 서버로 추가합니다. 주소에는 시크릿이 들어 있으므로 비공개로 유지하세요. 앱이 헤더를 요구하면 시크릿을 `Authorization: Bearer <secret>`으로 보냅니다.
+
+4. **가끔 받은편지함을 확인합니다.** 앱은 가능할 때 `check_inbox`를 호출합니다. 예를 들어 각 작업을 시작할 때입니다.
+
+## 작동 확인
+
+AI에게 WhatsApp으로 `✅ installed`를 보내라고 요청하세요. 도착하면 연결이 작동하는 것입니다.
+
+<Chat messages={[{ name: 'My app', text: '✅ installed', time: '09:03' }]} />
+
+그다음 WhatsApp에 무언가 쓰고 앱에게 받은편지함을 확인하라고 요청하세요. 앱이 내 메시지를 읽습니다.
+
+주소, 헤더, 도구에 대해서는 [모든 MCP 클라이언트 연결하기](/ko/developers/any-mcp-client)를 보세요.

@@ -1,0 +1,52 @@
+---
+title: 複数のAIを1つの番号で
+description: あなたの返事が、宛先のAIにたどり着く仕組み。
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+すべてのAIは、同じWhatsApp番号から書き込みます。zapbipは次の順序で、メッセージの宛先を決めます。
+
+| あなたの操作                                 | 届く先                            |
+| -------------------------------------------- | --------------------------------- |
+| ボタンまたはリストの選択肢をタップする       | 質問したAI                        |
+| メッセージに返信する、またはリアクションする | そのメッセージを送ったAI          |
+| `@grok check the news` と書く                | Grok（`@grok ` は取り除かれます） |
+| 1つのAIが質問を開いている間に答える          | そのAI                            |
+| Claudeだけが話した後に書く                   | 最後に書いたAIであるClaude        |
+| どれにも当てはまらないときに書く             | 最近のAIから選ぶリスト            |
+
+## 例
+
+<Chat
+  messages={[
+    { name: 'Claude', text: 'テストが通りました。', time: '10:02' },
+    { name: 'Grok', text: 'mainにリベースしてもいいですか？', options: ['はい', 'いいえ'], time: '10:03' },
+    { you: true, text: '@claude ありがとう', time: '10:04' },
+    { you: true, text: 'はい', time: '10:04' },
+  ]}
+/>
+
+`@claude ありがとう` はClaudeに届き、「はい」のタップはGrokに届きます。
+
+<Chat
+  messages={[
+    { you: true, text: 'ok', time: '10:05' },
+    { name: 'zapbip', text: 'Which AI is this for? Claude, Grok', options: ['Claude', 'Grok'], time: '10:05' },
+  ]}
+/>
+
+ただの `ok` には、最近のAIから選ぶリストが返ってきます。
+
+メッセージに返信すると、それを送ったAIと話せます。
+
+<Chat
+  messages={[
+    { name: 'Claude', text: 'テストが通りました。', time: '10:02' },
+    { name: 'Grok', text: '情報源が3件見つかりました。', time: '10:03' },
+    { you: true, quote: { name: 'Grok', text: '情報源が3件見つかりました。' }, text: 'どれですか？', time: '10:04' },
+    { name: 'Grok', text: '論文が2本とレポートが1本です。リンクを送ります。', time: '10:04' },
+  ]}
+/>
+
+名前は20文字までで、小文字、数字、ハイフンが使えます。

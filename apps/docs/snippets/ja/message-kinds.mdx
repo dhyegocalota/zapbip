@@ -1,0 +1,13 @@
+| 種類       | エージェントからオーナーへ                                                        | オーナーからエージェントへ                                                      |
+| ---------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `text`     | [send_message](/ja/mcp-reference/send-message)                                    | テキスト                                                                        |
+| `image`    | [send_media](/ja/mcp-reference/send-media)、最大5 MB                              | 1 MB以下ならインラインの画像、それ以外は署名付きリンク                          |
+| `video`    | [send_media](/ja/mcp-reference/send-media)、最大16 MB                             | 署名付きリンク                                                                  |
+| `audio`    | [send_media](/ja/mcp-reference/send-media)、最大16 MB、ボイスメッセージは `voice` | 署名付きリンク                                                                  |
+| `document` | [send_media](/ja/mcp-reference/send-media)、最大100 MB                            | 署名付きリンク、ファイル名、MIMEタイプ                                          |
+| `sticker`  | [send_media](/ja/mcp-reference/send-media)                                        | 署名付きリンク                                                                  |
+| `location` | [send_location](/ja/mcp-reference/send-location)                                  | 緯度、経度、名称、住所                                                          |
+| `contacts` | [send_contact](/ja/mcp-reference/send-contact)                                    | 連絡先カード                                                                    |
+| `reaction` | [react](/ja/mcp-reference/react)                                                  | `message_id` と `emoji`。リアクションされたメッセージを送ったエージェントへ届く |
+| `choice`   | [ask](/ja/mcp-reference/ask)、3件までのボタン、4〜10件のリスト                    | `option_id`、`title`、任意の `description`                                      |
+| 引用       | すべての送信で `reply_to`                                                         | `reply_to`。引用されたメッセージを送ったエージェントへ届く                      |

@@ -1,0 +1,109 @@
+---
+title: '커넥터를 서비스로 실행하기'
+description: '컴퓨터가 부팅될 때 터미널 없이 launchd나 systemd로 커넥터를 시작합니다.'
+---
+
+터미널을 닫으면 [커넥터](/ko/developers/local-connector)가 멈추고 AI가 내 말을 듣지 못합니다. 계속 실행되게 하려면 컴퓨터가 대신 시작하게 하세요. 선택 사항이며, zapbip이 대신 설치하지 않습니다. 파일은 직접 만듭니다.
+
+다시 시작하거나 연결이 끊긴 뒤에는 커넥터가 다시 연결되어 답하지 못한 메시지를 모두 가져옵니다.
+
+이 파일에는 비밀번호처럼 작동하는 연결 링크가 들어 있습니다. 내 사용자만 읽을 수 있도록 권한을 `600`으로 설정하고, 공유하거나 커밋하지 마세요.
+
+`<path to npx>`는 `which npx`의 결과로, `<your folder>`는 AI가 작업하는 폴더로, `<host>`와 `<secret>`은 연결 링크의 각 부분으로 바꾸세요. 쓰는 AI가 Codex라면 `claude-code` 대신 `codex`를 사용하세요.
+
+## macOS (launchd)
+
+먼저 올바른 권한으로 파일을 만든 다음 내용을 채웁니다.
+
+```bash
+install -m 600 /dev/null ~/Library/LaunchAgents/com.zapbip.connector.plist
+```
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>Label</key>
+    <string>com.zapbip.connector</string>
+    <key>ProgramArguments</key>
+    <array>
+      <string><path to npx></string>
+      <string>zapbip</string>
+      <string>connect</string>
+      <string>--client</string>
+      <string>claude-code</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string><your folder></string>
+    <key>EnvironmentVariables</key>
+    <dict>
+      <key>ZAPBIP_CONNECTION_URL</key>
+      <string>https://<host>/c/<secret>/mcp</string>
+      <key>PATH</key>
+      <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+  </dict>
+</plist>
+```
+
+`PATH`에는 `claude` 또는 `codex`가 설치된 폴더가 포함되어야 합니다.
+
+시작하고, 나중에 멈추는 방법입니다.
+
+```bash
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.zapbip.connector.plist
+launchctl bootout gui/$(id -u)/com.zapbip.connector
+```
+
+## Linux (systemd)
+
+링크는 권한이 `600`인 별도 파일에 보관하세요.
+
+```bash
+mkdir -p ~/.config/zapbip ~/.config/systemd/user
+install -m 600 /dev/null ~/.config/zapbip/connector.env
+```
+
+`~/.config/zapbip/connector.env`에 한 줄을 넣습니다.
+
+```text
+ZAPBIP_CONNECTION_URL=https://<host>/c/<secret>/mcp
+```
+
+`~/.config/systemd/user/zapbip-connector.service`를 만듭니다.
+
+```ini
+[Unit]
+Description=zapbip connector
+After=network-online.target
+
+[Service]
+EnvironmentFile=%h/.config/zapbip/connector.env
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+WorkingDirectory=<your folder>
+ExecStart=<path to npx> zapbip connect --client claude-code
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target
+```
+
+시작하고, 로그인하지 않은 상태에서도 실행되게 합니다.
+
+```bash
+systemctl --user daemon-reload
+systemctl --user enable --now zapbip-connector
+loginctl enable-linger $USER
+```
+
+로그는 `journalctl --user -u zapbip-connector`로 읽습니다. 로그에는 메시지 텍스트도 링크도 없습니다.
+
+## 해제된 링크
+
+링크가 해제되면 커넥터가 오류와 함께 종료하고, 서비스는 계속 다시 시작합니다. 서비스를 멈추고, 새 링크를 파일에 넣은 다음 다시 시작하세요.

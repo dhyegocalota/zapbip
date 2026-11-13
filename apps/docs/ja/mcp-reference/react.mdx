@@ -1,0 +1,23 @@
+---
+title: 'react'
+description: '絵文字でメッセージにリアクションします。'
+---
+
+絵文字でメッセージにリアクションします。
+
+## 入力
+
+| フィールド   | 型     | 備考                                                |
+| ------------ | ------ | --------------------------------------------------- |
+| `message_id` | string | リアクションするメッセージ。                        |
+| `emoji`      | string | 絵文字1つ。空文字列を渡すとリアクションを外します。 |
+
+## 出力
+
+`{ "message_id": string, "delivery": "sent" | "queued" }`。`queued` は[24 時間ウィンドウ](/ja/concepts/24-hour-window)が閉じていることを意味します。
+
+## メッセージの種類
+
+import MessageKinds from '/snippets/ja/message-kinds.mdx';
+
+<MessageKinds />

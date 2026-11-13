@@ -1,0 +1,56 @@
+---
+title: 'Webhook 唤醒'
+description: '当你发消息而 AI 没有在监听时，让 zapbip 启动你的 AI。'
+---
+
+Webhook 唤醒是[唤醒阶梯](/zh/concepts/wake-ladder)的第二级。所有者在 WhatsApp 上发消息而智能体没有在监听时，zapbip 会调用一个能启动它的链接。对于支持的客户端，安装流程会自动设置好它；本页展示 zapbip 发送什么，以及如何手动设置。
+
+之后智能体用 [check_inbox](/zh/mcp-reference/check-inbox) 或 [get_messages](/zh/mcp-reference/get-messages) 读取消息并回答。这个链接用 [set_wake](/zh/mcp-reference/set-wake) 保存。
+
+这次调用不带你的任何文本：请求体始终是 `{"event":"inbox_has_messages"}`。连续到达的消息共用一次唤醒，在第一条消息之后几秒发出。
+
+## Grok Bot 例程
+
+创建一个带 webhook 触发器的例程，然后保存：
+
+```json
+{ "mode": "webhook", "url": "https://api2.cursor.sh/automations/webhook/<routine-id>", "token": "<token>" }
+```
+
+zapbip 会发送 `Authorization: Bearer <token>`。
+
+## claude.ai 定时任务
+
+创建一个带 API 触发器的定时任务，然后保存：
+
+```json
+{ "mode": "webhook", "url": "https://api.anthropic.com/v1/claude_code/routines/<trigger-id>/fire", "token": "<token>" }
+```
+
+zapbip 会发送 `Authorization: Bearer <token>` 和例程的请求头。
+
+## 你自己的服务
+
+任何公开的 `https` 主机都可以。令牌就是你的签名密钥，至少 32 个字符，并且从不会被发送。每个请求都带有 `X-Zapbip-Timestamp`（Unix 秒）和 `X-Zapbip-Signature`，后者是 `sha256=` 加上 `<timestamp>.<body>` 的十六进制 HMAC-SHA256。请拒绝早于 300 秒的时间戳。
+
+```js
+import { createHmac, timingSafeEqual } from 'node:crypto';
+
+const TOLERANCE_SECONDS = 300;
+
+export function isValidWake({ timestamp, signature, body, token }) {
+  const ageSeconds = Math.abs(Date.now() / 1000 - Number(timestamp));
+  if (!(ageSeconds <= TOLERANCE_SECONDS)) return false;
+  const expected = `sha256=${createHmac('sha256', token).update(`${timestamp}.${body}`).digest('hex')}`;
+  const received = Buffer.from(signature);
+  const wanted = Buffer.from(expected);
+  return received.length === wanted.length && timingSafeEqual(received, wanted);
+}
+```
+
+## 唤醒失败时
+
+- `408`、`425`、`429`、`5xx`、超时或网络错误最多重试 5 次，等待 5、10、20 和 40 秒，并在 `429` 和 `503` 时遵循 `Retry-After`，最长 60 秒。
+- 重定向和其他 `4xx` 响应会被立即拒绝，不会重试。
+- 唤醒被拒绝或放弃时，你会在 WhatsApp 上收到一条通知，说明消息在收件箱里等待，同时这条连接会被标记为 `failing`。再次调用 [set_wake](/zh/mcp-reference/set-wake) 来修正目标；下一次成功投递的唤醒会让它恢复为 `active`。
+- 如果智能体在唤醒触发之前就读取了消息，则不会发送任何请求。

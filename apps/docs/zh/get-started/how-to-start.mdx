@@ -1,0 +1,58 @@
+---
+title: 开始使用
+description: 从你的 WhatsApp 到 AI 发来的第一条消息。
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import StartLink from '/snippets/zh/start-link.mdx';
+import InstallPrompt from '/snippets/zh/install-prompt.mdx';
+
+目前 WhatsApp 命令需要用英语或葡萄牙语的词来输入。本页使用英语的词。
+
+1. **在 WhatsApp 上给 zapbip 的号码发消息。** 随便发一段文字，例如 `hi`。你的第一条消息会创建账号，并证明这部手机是你的。
+
+   <StartLink />
+
+   <Chat
+     messages={[
+       { you: true, text: 'hi', time: '09:00' },
+       { name: 'zapbip', text: 'No agent is connected. Your message is saved.', time: '09:00' },
+     ]}
+   />
+
+2. **申请一个新智能体。** 智能体就是你连接的一个 AI。发送 `new agent` 加一个名字，例如 `new agent claude`。
+
+3. **拿到你的提示词。** zapbip 会回复专为你生成的一两行文字。
+
+   <Chat
+     messages={[
+       { you: true, text: 'new agent claude', time: '09:01' },
+       {
+         name: 'zapbip',
+         text: 'Agent claude created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate claude".',
+         time: '09:01',
+       },
+     ]}
+   />
+
+4. **粘贴到你的 AI 里。** 打开 ChatGPT、Claude、Grok 或你常用的 AI，把 zapbip 发给你的那一行粘贴进去。它长这样：
+
+   <InstallPrompt />
+
+   你的 AI 会在线阅读说明并自行完成设置。
+
+5. **你的 AI 给你发消息。** 它会在 WhatsApp 上发来第一条消息，确认已经连接。
+
+   <Chat messages={[{ name: 'Claude', text: '✅ installed', time: '09:03' }]} />
+
+<Note>
+  claude.ai、ChatGPT 和网页版 Grok 需要你多做一件事：你的 AI 会让你在设置里添加一个连接器。照它说的做就行，这是这些应用自己的规定。
+</Note>
+
+## 需要了解的事
+
+- 你所有的 AI 共用一个 WhatsApp 号码，每个 AI 各有一行文字，方便你区分。
+- 这行文字只能使用一次，30 分钟后失效。失效后发送 `rotate claude` 即可获得新的。
+- 你随时可以先开口，你的 AI 会不限时间地持续监听。
+- 如果你在候补名单上，请在[常见问题](/zh/help/faq)中查看接下来会怎样。
+- 选好你的 AI，按[支持的智能体](/zh/agents/supported-agents)里对应的页面操作。

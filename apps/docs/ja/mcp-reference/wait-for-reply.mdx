@@ -1,0 +1,23 @@
+---
+title: 'wait_for_reply'
+description: '答え、または次のオーナーメッセージを待ちます。'
+---
+
+答え、または次のオーナーメッセージを待ちます。
+
+## 入力
+
+| フィールド        | 型           | 備考           |
+| ----------------- | ------------ | -------------- |
+| `question_id`     | string、任意 | 待機する質問。 |
+| `timeout_seconds` | number、任意 | 最大50。       |
+
+## 出力
+
+`question_id` がある場合: [ask](/ja/mcp-reference/ask) と同じ答えが、質問が保持されている間は毎回返ります。ない場合: `{ "status": "message", "messages": [...] }`。時間切れのときは `{ "status": "timeout" }`。
+
+## メッセージの種類
+
+import MessageKinds from '/snippets/ja/message-kinds.mdx';
+
+<MessageKinds />

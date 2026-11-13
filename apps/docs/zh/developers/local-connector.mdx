@@ -1,0 +1,144 @@
+---
+title: '本地连接器'
+description: 'zapbip 的 connect、listen 和 channel 命令：参数、环境变量、唤醒隔离和日志。'
+---
+
+通常，你的 AI 只有在已经工作时才会读取 WhatsApp。如果它闲置时你给它发消息，你的消息就会等待。
+
+zapbip 连接器解决了这个问题。它是一个在你电脑上保持运行的小程序。当你在 WhatsApp 上发消息时，它会唤醒你一直在用的 AI 会话，把你的消息交给它，并让它回复你。Claude Code 大约需要 7 秒，Codex 大约 6 秒。
+
+它适用于 Claude Code 和 Codex。你的电脑必须开机并处于唤醒状态，连接器也必须在运行。
+
+## 命令
+
+| 命令      | 作用                                                                  |
+| --------- | --------------------------------------------------------------------- |
+| `connect` | 你发消息时唤醒已关闭的会话。接受 `--client`、`--cwd` 和 `--session`。 |
+| `listen`  | 每条消息输出一行 JSON，供监视后台命令的智能体使用。                   |
+| `channel` | 运行一个本地 MCP 渠道，把每条消息放进已打开的 Claude Code 会话。      |
+
+`ZAPBIP_CONNECTION_URL` 保存连接链接。未设置时，`connect` 和 `listen` 会向你询问。
+
+## 你需要什么
+
+- 已经连接到 zapbip 的 Claude Code 或 Codex。
+- 在你希望 AI 工作的文件夹里，至少有一个之前的会话。
+- Node 24 或更新版本。
+- 你的连接链接，也就是你的 AI 用来和 zapbip 通信的同一个 `https://.../c/<secret>/mcp` 链接。请像对待密码一样对待它。
+
+## 启动
+
+在你使用 AI 的文件夹中打开终端，运行下面之一：
+
+```bash
+export ZAPBIP_CONNECTION_URL='https://<host>/c/<secret>/mcp'
+npx zapbip@0.1.0 connect --client claude-code
+```
+
+```bash
+export ZAPBIP_CONNECTION_URL='https://<host>/c/<secret>/mcp'
+npx zapbip@0.1.0 connect --client codex
+```
+
+如果你没有设置 `ZAPBIP_CONNECTION_URL`，连接器会向你询问链接。它从不把链接作为参数接收，因为参数会出现在你的 shell 历史和进程列表里。
+
+保持终端开着。连接器每发生一个事件就输出一行，按 `Ctrl+C` 时停止。想在没有终端的情况下让它持续运行，参见[在后台运行](/zh/developers/background-running)。
+
+## 你发消息时会发生什么
+
+1. 你在 WhatsApp 上给你的 AI 发消息。
+2. 连接器收到你的消息，并唤醒该文件夹中最新的会话。
+3. AI 读取你的消息，并在 WhatsApp 上回复你。
+4. 如果有几条消息同时到达，它们会按顺序逐条处理。
+
+如果你离线了或者连接器停止了，你的消息不会丢失。它重新连接后，会取回所有尚未回答的消息。
+
+## 选择会话
+
+默认情况下，连接器使用该文件夹中最新的会话。如果你在另一个窗口里打开了同一个文件夹，一次唤醒可能会加入那个对话。要避免这种情况，请固定一个会话：
+
+```bash
+npx zapbip@0.1.0 connect --client claude-code --session <session-id>
+```
+
+| 选项        | 作用                                             |
+| ----------- | ------------------------------------------------ |
+| `--client`  | `claude-code` 或 `codex`。必填。                 |
+| `--cwd`     | 工作的文件夹。默认是你运行该命令时所在的文件夹。 |
+| `--session` | 始终恢复的会话 id（UUID），而不是最新的会话。    |
+
+## 唤醒后 AI 能做什么
+
+只有一件事：给你回发一条消息。连接器给 AI 的是一份只包含 zapbip 的私有配置，所以你其他 MCP 服务器的工具对它不可用。Claude Code 还会在不加载你的设置文件、并关闭所有内置工具的情况下运行；Codex 则在只读沙箱中运行，并且它在你的 Codex 配置文件中找到的其他 MCP 服务器都会被关闭。如果它无法读取其中某个文件，就不会唤醒 Codex，而是让消息保持未读。它还会在以下情况拒绝：受管理的 Codex 文件设置了一份无害键的短名单之外的任何键，配置文件设置了沙箱、审批、工具或功能（或名单之外的任何键），某个文件打开了网页搜索开关，或者 `zapbip` 定义在 Codex 主目录的 `config.toml` 之外的任何地方。Codex 的网页搜索会被关闭。Codex 剩下的是 `send_message` 和一个只读 shell；你的 Codex 账号的应用和连接器不会被关闭，macOS 的受管理偏好设置 `com.openai.codex` 以及 Claude Code 的受管理策略设置仍然生效。你的消息以带“已验证”标记的、你本人所发消息的形式送达它。你从别人那里转发的消息则带着“未验证”标记和转发标签送达，AI 不会把它当作你的指令。
+
+如果 Codex 应用已经打开了这个对话，Codex 会拒绝恢复它。这时连接器会在同一个文件夹里启动一个新会话，它不带之前的对话内容，之后就一直使用它。
+
+## 让已打开的会话持续监听
+
+`connect` 唤醒的是已关闭的会话。对于你此刻已经打开的会话，Claude Code 可以立即听到你，无需唤醒，也无需等待。有两种方式，第一种更好。
+
+渠道是首选。它是一个由 Claude Code 自己启动的小程序，启动方式和其他任何工具一样。它会把你在 WhatsApp 上写的每条消息，作为带“已验证”标记的、你本人发出的消息，直接送入已打开的会话（转发的消息会被标记为未验证）。在 Claude Code 运行的环境中设置 `ZAPBIP_CONNECTION_URL`，Claude Code 会用下面的命令启动它：
+
+```bash
+npx zapbip@0.1.0 channel
+```
+
+渠道无法向你询问链接，所以它只从 `ZAPBIP_CONNECTION_URL` 读取。它不接受参数。
+
+在你工作的文件夹的 `.mcp.json` 中声明这两个服务器。渠道负责把你的消息带进来；另一个键下的 zapbip HTTP 服务器，则给会话提供用来回复的 `send_message` 工具：
+
+```json
+{
+  "mcpServers": {
+    "zapbip-channel": {
+      "command": "npx",
+      "args": ["zapbip@0.1.0", "channel"],
+      "env": { "ZAPBIP_CONNECTION_URL": "https://<host>/c/<secret>/mcp" }
+    },
+    "zapbip": {
+      "type": "http",
+      "url": "https://<host>/c/<secret>/mcp"
+    }
+  }
+}
+```
+
+会话通过 `zapbip` 回答。没有它，会话能听到你，却无法回复。然后用下面的命令启动 Claude Code：
+
+```bash
+claude --dangerously-load-development-channels server:zapbip-channel
+```
+
+`zapbip` 是 `.mcp.json` 中渠道服务器的键。启动行会显示 `Channels (experimental)`。Claude Code 会询问你是否接受开发渠道和项目 MCP 服务器，请两个都接受。
+
+监听器是备用方案。你在 WhatsApp 上每写一条消息，它就输出一行，Claude Code 用它的 Monitor 工具监视这些行。每一行都会唤醒已打开的会话，你不说话时不会消耗任何东西：
+
+```bash
+export ZAPBIP_CONNECTION_URL='https://<host>/c/<secret>/mcp'
+npx zapbip@0.1.0 listen
+```
+
+每一行都是 JSON，包含消息 id、类型、`"sender":"owner"`、`"verified"`（你自己的消息为 `true`，转发的为 `false`）、`"forwarded"` 和文本。一次 Monitor 监视最长持续 30 分钟，所以每次结束后 AI 都会重新开始监视。其他能让后台命令保持运行并对其输出作出反应的智能体，例如 OpenClaw 和 Hermes，也可以用同样的方式使用 `npx zapbip@0.1.0 listen`。
+
+两个程序都保持打开，并像 `connect` 一样自动重连。两者都只在把消息传递出去之后才把它标记为已处理，所以消息既不会丢失，也不会重复显示。它们的日志输出到错误输出，从不包含你的消息或链接。
+
+所以这三种方式配合使用：已打开的会话用渠道，`listen` 作为它的备用，已关闭的会话用 `connect`。
+
+## 每条连接一个连接器
+
+如果你为同一条连接启动了第二个连接器，第一个会完成它正在进行的唤醒，然后停止。请一次只在一台电脑上运行它。如果消息恰好在你切换的时刻到达，两个连接器可能会为同一条消息各唤醒你的 AI 一次；zapbip 至少投递一次，绝不会零次。
+
+连接器附着期间，zapbip 通过它唤醒你的 AI。它关闭后，zapbip 会回到你之前的设置。
+
+## 它会输出什么
+
+每一行都是 JSON，包含时间和一个事件，例如 `wake_started` 和 `wake_finished`。这些行包含 id、类型、结果和耗时，从不包含你的消息、AI 的回复或你的连接链接。
+
+## 出问题时
+
+| 你看到的             | 含义                                                                                                    |
+| -------------------- | ------------------------------------------------------------------------------------------------------- |
+| 连接器立即退出       | 链接未知或已被撤销。请申请新的链接。                                                                    |
+| 你的消息没有得到回答 | 该文件夹中还没有会话，或者运行连接器的地方没有安装 `claude` 或 `codex`。请先在那个文件夹里打开一次 AI。 |
+| 它不停地重新连接     | 你的网络断了。它会以逐渐增长的间隔重试，最长 30 秒，并从中断的地方继续取回消息。                        |
+| 它自己停止了         | 你为同一条连接启动了另一个连接器。                                                                      |

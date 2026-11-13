@@ -1,0 +1,73 @@
+---
+title: Cursor
+description: CursorをあなたのWhatsAppに接続します。
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import StartLink from '/snippets/ja/start-link.mdx';
+import InstallPrompt from '/snippets/ja/install-prompt.mdx';
+
+## 使えること
+
+| やりたいこと                   | Cursor                                                                   |
+| ------------------------------ | ------------------------------------------------------------------------ |
+| Cursorからメッセージを受け取る | テキスト、写真、動画、音声、ドキュメント、位置情報、連絡先、リアクション |
+| タップで答える                 | ボタンとリスト。タップを待ちます                                         |
+| WhatsAppから先に書く           | はい。チャットが開いている間、Cursorはあなたの声を聞きます               |
+| 質問を何時間も開いたままにする | はい。時間制限はありません                                               |
+
+<Chat
+  messages={[
+    { name: 'Cursor', text: 'テストが通りました。変更をコミットしますか？', options: ['はい', 'まだ'], time: '14:10' },
+    { you: true, text: 'はい', time: '14:11' },
+  ]}
+/>
+
+## 聞き取りの仕組み
+
+起動方式: **ローカル**。Cursorはバックグラウンドのターミナルで `npx zapbip@0.1.0 listen` を実行し続けます。WhatsAppで書き込むと、そのターミナルに新しい行が現れ、チャットを起こします。
+
+- Cursorにはスケジュールの選択肢がないので、そのターミナルを動かし続けてください。
+
+AIがあなたに何かを尋ねると、zapbipはその質問を保持し、最大でも50 秒ごとに「保留中」と答えます。Cursorはそのたびにもう一度呼び出し、あなたが答えるまで呼び出しを続けます。時間制限なしで待ち続けます。
+
+## ゼロから設定する
+
+1. **WhatsAppでzapbipの番号にメッセージを送ります。** 任意のテキスト、たとえば `hi` を送ってください。
+
+   <StartLink />
+
+2. **新しいエージェントを依頼します。** エージェントとは、接続するAI1つのことです。コマンドは今のところ英語かポルトガル語の言葉で入力します。
+
+   <Chat
+     messages={[
+       { you: true, text: 'new agent cursor', time: '14:00' },
+       {
+         name: 'zapbip',
+         text: 'Agent cursor created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate cursor".',
+         time: '14:00',
+       },
+     ]}
+   />
+
+3. **その1行をCursorのチャットに貼り付けます。**
+
+   <InstallPrompt />
+
+   Cursorは指示を読み、順番に従います。設定を変更する前に、どれを変更するかを伝え、あなたの「はい」を待ちます。リンクはシークレットなので、共有するチャットには出さないでください。
+
+4. **「はい」と答えます。** その後はCursorが、この順番で残りを行います。
+
+5. **zapbipをCursorに追加します。** まずあなたに尋ね、「はい」を待ちます。そのうえで、CursorのMCP設定に、`<connectionLink>` のHTTPで接続する `zapbip` という名前のMCPサーバーを追加します。
+
+6. **聞き取りを始めます。** バックグラウンドのターミナルで `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen` を実行し、そのターミナルを時間制限なく動かし続けます。そこに新しい行が現れるたびに、`check_inbox` を呼んで答えます。
+
+7. **テストします。** チャットで、`send_message` を呼び、✅ installed を送ります。その後、Cursorのチャットを再起動して、zapbipのツールを使えるようにしてください。
+
+## 動作の確認
+
+Cursorに、WhatsAppで `✅ installed` を送るよう頼んでください。数秒で届くはずです。
+
+<Chat messages={[{ name: 'Cursor', text: '✅ installed', time: '14:03' }]} />
+
+何も届かない場合は、[トラブルシューティング](/ja/help/troubleshooting)をご覧ください。

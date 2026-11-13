@@ -1,0 +1,22 @@
+---
+title: 'get_messages'
+description: '读取未读的所有者消息和最近的历史。'
+---
+
+读取未读的所有者消息和最近的历史。
+
+## 输入
+
+| 字段    | 类型         | 说明             |
+| ------- | ------------ | ---------------- |
+| `limit` | number，可选 | 历史记录的条数。 |
+
+## 输出
+
+未读的所有者消息（读取后变为已读），以及最近交换的 20 条消息。
+
+## 消息类型
+
+import MessageKinds from '/snippets/zh/message-kinds.mdx';
+
+<MessageKinds />

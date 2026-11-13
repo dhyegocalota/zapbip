@@ -1,0 +1,109 @@
+---
+title: 'コネクタをサービスとして実行する'
+description: 'マシンの起動時に、ターミナルなしでlaunchdまたはsystemdでコネクタを開始します。'
+---
+
+ターミナルを閉じると、[コネクタ](/ja/developers/local-connector)が止まり、AIにあなたの声が届かなくなります。動かし続けるには、コンピュータに起動を任せます。これは任意で、zapbipが自動でインストールすることはありません。ファイルは自分で作成します。
+
+再起動や接続の切断の後、コネクタは再接続し、未回答のメッセージをすべて拾い上げます。
+
+このファイルにはパスワードと同じ働きをする接続リンクが入ります。自分のユーザーだけが読めるように権限を `600` にし、共有したりコミットしたりしないでください。
+
+`<path to npx>` は `which npx` の結果に、`<your folder>` はAIが作業するフォルダに、`<host>` と `<secret>` は接続リンクの各部分に置き換えます。使っているAIがCodexなら、`claude-code` の代わりに `codex` を使います。
+
+## macOS (launchd)
+
+まず正しい権限でファイルを作り、そのあと中身を書きます。
+
+```bash
+install -m 600 /dev/null ~/Library/LaunchAgents/com.zapbip.connector.plist
+```
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>Label</key>
+    <string>com.zapbip.connector</string>
+    <key>ProgramArguments</key>
+    <array>
+      <string><path to npx></string>
+      <string>zapbip</string>
+      <string>connect</string>
+      <string>--client</string>
+      <string>claude-code</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string><your folder></string>
+    <key>EnvironmentVariables</key>
+    <dict>
+      <key>ZAPBIP_CONNECTION_URL</key>
+      <string>https://<host>/c/<secret>/mcp</string>
+      <key>PATH</key>
+      <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+  </dict>
+</plist>
+```
+
+`PATH` には、`claude` または `codex` がインストールされているフォルダを含める必要があります。
+
+開始と、後で停止するには次のようにします。
+
+```bash
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.zapbip.connector.plist
+launchctl bootout gui/$(id -u)/com.zapbip.connector
+```
+
+## Linux (systemd)
+
+リンクは、権限を `600` にした専用のファイルに保管します。
+
+```bash
+mkdir -p ~/.config/zapbip ~/.config/systemd/user
+install -m 600 /dev/null ~/.config/zapbip/connector.env
+```
+
+`~/.config/zapbip/connector.env` に1行を書きます。
+
+```text
+ZAPBIP_CONNECTION_URL=https://<host>/c/<secret>/mcp
+```
+
+`~/.config/systemd/user/zapbip-connector.service` を作成します。
+
+```ini
+[Unit]
+Description=zapbip connector
+After=network-online.target
+
+[Service]
+EnvironmentFile=%h/.config/zapbip/connector.env
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+WorkingDirectory=<your folder>
+ExecStart=<path to npx> zapbip connect --client claude-code
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target
+```
+
+開始し、ログインしていないときも動くようにします。
+
+```bash
+systemctl --user daemon-reload
+systemctl --user enable --now zapbip-connector
+loginctl enable-linger $USER
+```
+
+ログは `journalctl --user -u zapbip-connector` で読めます。ログにメッセージの本文やリンクは含まれません。
+
+## 取り消されたリンク
+
+リンクが取り消されると、コネクタはエラーで終了し、サービスはそれを再起動し続けます。サービスを停止し、新しいリンクをファイルに入れてから、もう一度開始してください。

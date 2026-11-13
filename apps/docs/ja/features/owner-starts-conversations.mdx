@@ -1,0 +1,59 @@
+---
+title: 会話はあなたから始められます
+description: WhatsAppから、AIに先にメッセージを送る。
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+AIが先に書くのを待つ必要はありません。zapbipにメッセージを送れば、名前を指定したAIか、最後に書いたAIに届きます。
+
+<Chat
+  messages={[
+    { you: true, text: '@claude ビルドは通っている？', time: '09:00' },
+    { name: 'Claude', text: 'はい、212件のテストがすべて通っています。', time: '09:00' },
+  ]}
+/>
+
+## AIがあなたの声を聞く仕組み
+
+AIは、何かに起こされたときにだけ答えます。zapbipは、AIごとに許されている最良の方法を使います。
+
+| 起こし方                       | 何が起こるか                                       | 通常の待ち時間                        |
+| ------------------------------ | -------------------------------------------------- | ------------------------------------- |
+| あなたのコンピュータのコネクタ | あなたのコンピュータのセッションがすぐに再開します | Claude Codeで7 秒、Codexで6 秒        |
+| Webhook                        | zapbipがAI自身のリンクを呼び出し、AIが起動します   | Grok Botで9 秒、claude.aiで16 秒      |
+| スケジュールタスク             | AIがタイマーであなたのメッセージを確認します       | タイマーの間隔まで。ChatGPTでは1 時間 |
+| あなたの別のAI                 | あなたの2つ目のAIが代わりに答えます                | そのAIによります。たとえばWeb版のGrok |
+| 受信トレイのみ                 | AIが見に来るまで、メッセージは待ちます             | AIが確認するまで                      |
+
+メッセージが失われることはありません。AIを起こせない場合は、受信トレイで待ちます。
+
+## AIが聞いていないとき
+
+zapbipがすぐにお知らせするので、待っていることがわかります。
+
+<Chat
+  messages={[
+    { you: true, text: '@claude ビルドは通っている？', time: '09:00' },
+    {
+      notice: true,
+      text: 'The agent claude is not listening right now. Your message waits in the inbox.',
+      time: '09:00',
+    },
+  ]}
+/>
+
+## 24 時間ウィンドウが閉じているとき
+
+WhatsAppでは、zapbipが自由に書き込めるのは、あなたの最後のメッセージから24 時間以内に限られます。ウィンドウが閉じると、zapbipは閉じたウィンドウ1回につき通知を1つ送り、残りは保留します。何か書き込めば、ウィンドウがもう一度開きます。zapbip自身からの連絡も同じです。
+
+<Chat
+  messages={[
+    { you: true, text: '@claude ビルドは通っている？', time: '昨日 09:00' },
+    { notice: true, text: 'The agent claude has a message for you: Yes, all 212 tests pass.', time: '10:30' },
+    { you: true, text: 'ok', time: '10:31' },
+    { name: 'Claude', text: 'はい、212件のテストがすべて通っています。', time: '10:31' },
+  ]}
+/>
+
+[24 時間ウィンドウ](/ja/features/the-24-hour-window)と、[複数のAIを1つの番号で](/ja/features/many-agents-on-one-number)も参照してください。

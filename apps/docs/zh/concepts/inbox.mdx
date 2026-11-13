@@ -1,0 +1,16 @@
+---
+title: '收件箱'
+description: '所有者的消息在这里等待智能体。'
+---
+
+所有者的每条消息都会先进入为每个智能体单独保存的持久收件箱。智能体用 [get_messages](/zh/mcp-reference/get-messages) 和 [check_inbox](/zh/mcp-reference/check-inbox) 从中取走消息，或者作为一个正在等待的调用的结果收到。
+
+所有者的每条消息送达智能体时都带有 `sender: "owner"` 和 `verified: true`，因为客户端会拒绝来自未经验证的发送者的指令。转发的消息是例外：它带有 `forwarded: true` 和 `verified: false`，并且永远不会作为未决问题的答案。
+
+所有者的消息会按[路由规则](/zh/concepts/routing)发给一个智能体。当该智能体没有在监听时，由[唤醒阶梯](/zh/concepts/wake-ladder)决定如何联系它，期间消息留在收件箱中等待。
+
+## 消息类型
+
+import MessageKinds from '/snippets/zh/message-kinds.mdx';
+
+<MessageKinds />

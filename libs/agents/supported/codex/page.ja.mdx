@@ -1,0 +1,77 @@
+---
+title: Codex
+description: CodexをあなたのWhatsAppに接続します。
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import StartLink from '/snippets/ja/start-link.mdx';
+import InstallPrompt from '/snippets/ja/install-prompt.mdx';
+
+## 使えること
+
+| やりたいこと                   | Codex                                                                    |
+| ------------------------------ | ------------------------------------------------------------------------ |
+| Codexからメッセージを受け取る  | テキスト、写真、動画、音声、ドキュメント、位置情報、連絡先、リアクション |
+| タップで答える                 | ボタンとリスト。タップを待ちます                                         |
+| WhatsAppから先に書く           | はい。セッションが待機中でも約6 秒で答えます                             |
+| 質問を何時間も開いたままにする | はい。時間制限はありません                                               |
+
+<Chat
+  messages={[
+    { name: 'Codex', text: 'マイグレーションが完了しました。シードスクリプトも実行しますか？', options: ['はい', 'いいえ'], time: '11:40' },
+    { you: true, text: 'はい', time: '11:41' },
+  ]}
+/>
+
+## 聞き取りの仕組み
+
+起動方式: **ローカル**。あなたが書き込むたびに、あなたのコンピュータのコネクタが `codex exec resume` でCodexのセッションを再開し、約6 秒かかります。Codexがそのセッションをアプリですでに開いている場合は、セッションが空くまで再開が待たされます。
+
+- コネクタを動かし続けてください。ターミナルを閉じた後も動かし続けるには、[コネクタをサービスとして実行する](/ja/developers/background-running)に従ってください。
+
+AIがあなたに何かを尋ねると、zapbipはその質問を保持し、最大でも50 秒ごとに「保留中」と答えます。Codexはそのたびにもう一度呼び出し、あなたが答えるまで呼び出しを続けます。時間制限なしで待ち続けます。
+
+インストールがCodexに設定する900 秒のツールタイムアウトは、1 回の呼び出しの上限であって、聞き取りの上限ではありません。呼び出しが終わると、Codexは次の呼び出しを始めます。
+
+Codexは1回の答えを最大15 分待ち、その後にまた尋ねるので、全体としての制限はありません。
+
+## ゼロから設定する
+
+1. **WhatsAppでzapbipの番号にメッセージを送ります。** 任意のテキスト、たとえば `hi` を送ってください。
+
+   <StartLink />
+
+2. **新しいエージェントを依頼します。** エージェントとは、接続するAI1つのことです。コマンドは今のところ英語かポルトガル語の言葉で入力します。
+
+   <Chat
+     messages={[
+       { you: true, text: 'new agent codex', time: '11:00' },
+       {
+         name: 'zapbip',
+         text: 'Agent codex created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate codex".',
+         time: '11:00',
+       },
+     ]}
+   />
+
+3. **その1行をCodexに貼り付けます。**
+
+   <InstallPrompt />
+
+   Codexは指示を読み、順番に従います。ファイルや設定を変更する前に、どれを変更するかを伝え、あなたの「はい」を待ちます。リンクはシークレットなので、共有するチャットには出さないでください。
+
+4. **「はい」と答えます。** その後はCodexが、この順番で残りを行います。
+
+5. **zapbipをCodexに追加します。** あなたの「はい」の後、`~/.codex/config.toml` の `[mcp_servers.zapbip]` テーブルを、`url = "<connectionLink>"`、`tool_timeout_sec = 900`、`default_tools_approval_mode = "approve"` に置き換えます。承認モードにより、zapbipのツールは毎回確認せずに実行され、Codexはそのことをあなたに伝えます。
+
+6. **コネクタを起動します。** `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 connect --client codex` をバックグラウンドで実行します。聞き続け、`codex exec resume` でセッションを再開します。
+
+7. **テストします。** 新しいプロセスで `codex exec -c 'mcp_servers.zapbip.default_tools_approval_mode="approve"' "Call send_message with the text '✅ installed'"` を実行します。✅ installed を含む `send_message` があなたのWhatsAppに届きます。コマンドが失敗した場合は、そこで止まり、最後の20行を表示します。その後、Codexを再起動してください。
+
+## 動作の確認
+
+Codexに、WhatsAppで `✅ installed` を送るよう頼んでください。数秒で届くはずです。
+
+<Chat messages={[{ name: 'Codex', text: '✅ installed', time: '11:03' }]} />
+
+何も届かない場合は、[トラブルシューティング](/ja/help/troubleshooting)をご覧ください。

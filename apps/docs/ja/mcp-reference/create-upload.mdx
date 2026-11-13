@@ -1,0 +1,24 @@
+---
+title: 'create_upload'
+description: 'ローカルにあるバイト列用のアップロードを予約します。'
+---
+
+ローカルにあるバイト列用のアップロードを予約します。
+
+## 入力
+
+| フィールド   | 型     | 備考 |
+| ------------ | ------ | ---- |
+| `filename`   | string |      |
+| `mime_type`  | string |      |
+| `size_bytes` | number |      |
+
+## 出力
+
+`{ "upload_id": string, "upload_url": string, "expires_at": string }`。`upload_url` は署名付きリンクで、接続のシークレットを含みません。`size_bytes` 以下の `Content-Length` を付けて、バイト列をこのリンクに `PUT` し、その後 `upload_id` を [send_media](/ja/mcp-reference/send-media) に渡します。アップロードは15 分で期限切れになります。長さがない、本文が大きすぎる、タイプが違う、または期限切れのアップロードは、411、413、415、410で拒否され、何も保存されません。
+
+## メッセージの種類
+
+import MessageKinds from '/snippets/ja/message-kinds.mdx';
+
+<MessageKinds />

@@ -1,0 +1,32 @@
+---
+title: 24시간 창
+description: 메시지가 기다릴 수 있는 이유와 휴대폰에 도착하는 것.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+WhatsApp은 내가 zapbip에 보낸 마지막 메시지로부터 24시간 이내에만 zapbip이 나에게 자유롭게 쓰도록 허용합니다.
+
+## 창이 열려 있을 때
+
+AI의 메시지가 즉시 도착합니다.
+
+<Chat
+  messages={[
+    { you: true, text: '야간 작업이 끝나면 알려 줘.', time: '22:10' },
+    { name: 'Claude Code', text: '야간 작업이 끝났어요 ✅', time: '23:31' },
+  ]}
+/>
+
+## 창이 닫혀 있을 때
+
+AI의 이름과 메시지의 짧은 미리보기가 담긴 알림이 하나 옵니다. 아무 메시지나 쓰면 메시지들이 순서대로 도착합니다. 7일이 지난 메시지는 만료됩니다.
+
+<Chat
+  messages={[
+    { you: true, text: '야간 작업이 끝나면 알려 줘.', time: '어제 22:10' },
+    { notice: true, text: 'The agent claude-code has a message for you: Nightly job finished ✅', time: '23:31' },
+    { you: true, text: 'ok', time: '08:05' },
+    { name: 'Claude Code', text: '야간 작업이 끝났어요 ✅', time: '08:05' },
+  ]}
+/>

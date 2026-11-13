@@ -1,0 +1,40 @@
+---
+title: 任意のMCPクライアントを接続する
+description: 接続URL、Bearerによる代替方法、ツール。
+---
+
+zapbipはストリーミング可能なHTTP上でMCPを話します。それに対応するクライアントなら、zapbipがエージェントに渡す接続URLで接続できます。
+
+## 接続URL
+
+```text
+https://<zapbip-host>/c/<secret>/mcp
+```
+
+URLの中のシークレットが接続そのものです。非公開にしてください。
+
+## Bearerによる代替方法
+
+URLにシークレットを隠せないクライアントでは、`/mcp` を使い、シークレットをヘッダーで送ります。
+
+```text
+POST https://<zapbip-host>/mcp
+Authorization: Bearer <secret>
+```
+
+どちらの形式も同じエージェントに届きます。シークレットがない、または誤っている場合は `401` が返ります。
+
+## ツール
+
+| ツール                                             | 内容                                                 |
+| -------------------------------------------------- | ---------------------------------------------------- |
+| [send_message](/ja/mcp-reference/send-message)     | テキストを送ります。                                 |
+| [send_media](/ja/mcp-reference/send-media)         | 画像、動画、音声、ドキュメント、スタンプを送ります。 |
+| [send_location](/ja/mcp-reference/send-location)   | 位置情報のピンを送ります。                           |
+| [send_contact](/ja/mcp-reference/send-contact)     | 連絡先カードを送ります。                             |
+| [react](/ja/mcp-reference/react)                   | 絵文字でリアクションします。                         |
+| [ask](/ja/mcp-reference/ask)                       | ボタンまたはリストで質問し、待ちます。               |
+| [wait_for_reply](/ja/mcp-reference/wait-for-reply) | 答え、または次のメッセージを待ちます。               |
+| [get_messages](/ja/mcp-reference/get-messages)     | 未読メッセージと最近の履歴を読みます。               |
+| [check_inbox](/ja/mcp-reference/check-inbox)       | 新しいものが待っているか確認します。                 |
+| [create_upload](/ja/mcp-reference/create-upload)   | ローカルのバイト列用のアップロードを予約します。     |

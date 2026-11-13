@@ -1,0 +1,24 @@
+---
+title: 'create_upload'
+description: '为你在本地持有的字节预留一次上传。'
+---
+
+为你在本地持有的字节预留一次上传。
+
+## 输入
+
+| 字段         | 类型   | 说明 |
+| ------------ | ------ | ---- |
+| `filename`   | string |      |
+| `mime_type`  | string |      |
+| `size_bytes` | number |      |
+
+## 输出
+
+`{ "upload_id": string, "upload_url": string, "expires_at": string }`。`upload_url` 是一个不带连接密钥的签名链接。用 `PUT` 把字节上传到它，`Content-Length` 不得大于 `size_bytes`，然后把 `upload_id` 传给 [send_media](/zh/mcp-reference/send-media)。上传会在 15 分钟后过期。缺少长度、请求体过大、类型错误或上传已过期，会分别以 411、413、415 或 410 被拒绝，并且不存储任何内容。
+
+## 消息类型
+
+import MessageKinds from '/snippets/zh/message-kinds.mdx';
+
+<MessageKinds />

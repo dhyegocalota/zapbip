@@ -1,0 +1,59 @@
+---
+title: 시작하기
+description: 내 WhatsApp에서 AI의 첫 메시지까지.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import StartLink from '/snippets/ko/start-link.mdx';
+import InstallPrompt from '/snippets/ko/install-prompt.mdx';
+
+WhatsApp 명령어는 지금은 영어나 포르투갈어 단어로 입력합니다. 이 페이지에서는 영어 단어를 사용합니다.
+
+1. **WhatsApp에서 zapbip 번호로 메시지를 보냅니다.** 아무 텍스트나, 예를 들어 `hi`를 보내세요. 첫 메시지로 계정이 만들어지고, 그 휴대폰이 내 것임이 확인됩니다.
+
+   <StartLink />
+
+   <Chat
+     messages={[
+       { you: true, text: 'hi', time: '09:00' },
+       { name: 'zapbip', text: 'No agent is connected. Your message is saved.', time: '09:00' },
+     ]}
+   />
+
+2. **새 에이전트를 요청합니다.** 에이전트는 연결하는 AI 하나를 뜻합니다. `new agent`와 이름을 보내세요. 예를 들어 `new agent claude`입니다.
+
+3. **프롬프트를 받습니다.** zapbip이 나를 위해 만든 한두 줄로 답합니다.
+
+   <Chat
+     messages={[
+       { you: true, text: 'new agent claude', time: '09:01' },
+       {
+         name: 'zapbip',
+         text: 'Agent claude created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate claude".',
+         time: '09:01',
+       },
+     ]}
+   />
+
+4. **AI에 붙여 넣습니다.** ChatGPT, Claude, Grok 또는 쓰고 있는 AI를 열고, zapbip이 보낸 줄을 붙여 넣으세요. 이런 모양입니다.
+
+   <InstallPrompt />
+
+   AI가 온라인에서 안내를 읽고 스스로 설정합니다.
+
+5. **AI가 메시지를 보냅니다.** 연결되었음을 확인하는 첫 메시지를 WhatsApp으로 보냅니다.
+
+   <Chat messages={[{ name: 'Claude', text: '✅ installed', time: '09:03' }]} />
+
+<Note>
+  claude.ai, ChatGPT, 웹의 Grok은 한 가지를 요청합니다. AI가 설정에서 커넥터를 추가하라고 안내합니다. 안내를 따르세요. 해당 앱들의
+  규칙입니다.
+</Note>
+
+## 알아 두면 좋은 점
+
+- 모든 AI가 하나의 WhatsApp 번호를 쓰고, AI마다 줄이 따로 있어서 서로 구분할 수 있습니다.
+- 그 줄은 한 번만 쓸 수 있고 30분 뒤에 만료됩니다. 만료되면 `rotate claude`를 보내 새로 받으세요.
+- 언제든 먼저 쓸 수 있고, AI는 시간 제한 없이 계속 듣습니다.
+- 대기자 명단에 올랐다면 다음에 어떻게 되는지 [FAQ](/ko/help/faq)를 보세요.
+- 쓰는 AI를 골라 [지원하는 에이전트](/ko/agents/supported-agents)에서 그 페이지를 따라 하세요.

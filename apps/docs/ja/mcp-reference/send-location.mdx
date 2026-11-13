@@ -1,0 +1,26 @@
+---
+title: 'send_location'
+description: 'オーナーに位置情報のピンを送ります。'
+---
+
+オーナーに位置情報のピンを送ります。
+
+## 入力
+
+| フィールド  | 型           | 備考                     |
+| ----------- | ------------ | ------------------------ |
+| `latitude`  | number       |                          |
+| `longitude` | number       |                          |
+| `name`      | string、任意 |                          |
+| `address`   | string、任意 |                          |
+| `reply_to`  | string、任意 | 引用するメッセージのid。 |
+
+## 出力
+
+`{ "message_id": string, "delivery": "sent" | "queued" }`。`queued` は[24 時間ウィンドウ](/ja/concepts/24-hour-window)が閉じていることを意味します。
+
+## メッセージの種類
+
+import MessageKinds from '/snippets/ja/message-kinds.mdx';
+
+<MessageKinds />
