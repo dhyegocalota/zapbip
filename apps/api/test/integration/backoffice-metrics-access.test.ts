@@ -62,12 +62,12 @@ async function seedWorld(): Promise<void> {
 }
 
 beforeEach(async () => {
-  sessionToken = await startBackofficeSession();
-  await resetWaitlist();
   await testEnv.CONNECTIONS.batch([
     testEnv.CONNECTIONS.prepare('DELETE FROM activity_daily'),
     testEnv.CONNECTIONS.prepare('DELETE FROM connections'),
   ]);
+  sessionToken = await startBackofficeSession();
+  await resetWaitlist();
 });
 
 afterEach(() => endBackofficeSession());
