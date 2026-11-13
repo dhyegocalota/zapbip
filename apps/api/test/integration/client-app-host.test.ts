@@ -99,11 +99,8 @@ describe('the sign-in button', () => {
   });
 });
 
-describe('the language switch', () => {
-  it.each([
-    ['/', 'data-flag="us"', 'data-flag="br"'],
-    ['/pt-br', 'data-flag="us"', 'data-flag="br"'],
-  ])('shows a flag beside each language on %s, like the public site', async (path, englishFlag, portugueseFlag) => {
+describe('the language menu', () => {
+  it.each(['/', '/pt-br'])('shows a flag beside each language in the footer on %s, like the public site', async (path) => {
     await seedStartNumber({
       numberId: 'num_app_flags',
       displayNumber: `+${NUMBER_DIGITS}`,
@@ -111,8 +108,8 @@ describe('the language switch', () => {
       createdAt: NUMBER_CREATED_AT,
     });
     const html = await (await clientAppFetch({ path })).text();
-    const switchHtml = /<nav class="switch"[\s\S]*?<\/nav>/.exec(html)![0];
-    expect(switchHtml).toMatch(new RegExp(`hreflang="en"[^>]*>\\s*<svg[^>]*${englishFlag}`));
-    expect(switchHtml).toMatch(new RegExp(`hreflang="pt-BR"[^>]*>\\s*<svg[^>]*${portugueseFlag}`));
+    const menu = /<details class="lang-menu">[\s\S]*?<\/details>/.exec(html)![0];
+    expect(menu).toContain('data-flag="us"');
+    expect(menu).toContain('data-flag="br"');
   });
 });

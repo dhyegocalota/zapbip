@@ -2,14 +2,15 @@ import type { OwnerLocale } from '@zapbip/types';
 import { AGENT_FIELD, CONFIRM_FIELD, CONFIRM_VALUE, CSRF_FIELD } from '../client-app-constants';
 import { ClientAppCopyKey, copyOf } from '../client-app-copy';
 import { ClientAppPath, pathWithLocale } from '../client-app-paths';
+import type { ShellTheme } from '../../web-shell/shell-theme';
 import { Layout } from './layout';
 
-export function RevokePage(props: { locale: OwnerLocale; agent: string; csrfToken: string }) {
+export function RevokePage(props: { locale: OwnerLocale; theme: ShellTheme; agent: string; csrfToken: string }) {
   const { locale, agent } = props;
   const translate = copyOf({ locale });
   const title = translate(ClientAppCopyKey.RevokeTitle, { agent });
   return (
-    <Layout locale={locale} title={title} currentPath={ClientAppPath.Home} csrfToken={props.csrfToken}>
+    <Layout locale={locale} theme={props.theme} title={title} currentPath={ClientAppPath.Home} csrfToken={props.csrfToken}>
       <section class="panel">
         <h1>{title}</h1>
         <p class="lead">{translate(ClientAppCopyKey.RevokeBody)}</p>

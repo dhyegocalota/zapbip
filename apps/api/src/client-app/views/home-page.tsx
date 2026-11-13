@@ -1,9 +1,10 @@
 import { AccountState, OwnerLocale } from '@zapbip/types';
 import { AGENT_NAME_MAX_CHARS } from '@zapbip/core';
-import { DOCS_ORIGIN } from '../../site/site-paths';
-import { AGENT_FIELD, AGENT_NAME_FIELD, CSRF_FIELD, DELETE_ACCOUNT_DOCS_PATH, DOCS_PORTUGUESE_PATH } from '../client-app-constants';
+import { AGENT_FIELD, AGENT_NAME_FIELD, CSRF_FIELD, DELETE_ACCOUNT_DOCS_PATH } from '../client-app-constants';
 import { ClientAppCopyKey, copyOf } from '../client-app-copy';
 import { ClientAppPath, pathWithLocale } from '../client-app-paths';
+import type { ShellTheme } from '../../web-shell/shell-theme';
+import { docsUrlOf } from '../../web-shell/shell-links';
 import { Layout } from './layout';
 import { pricingValuesOf } from '../../site/price-format';
 
@@ -11,6 +12,7 @@ export type AgentRow = { agent: string; clientName: string | null; addedOn: stri
 
 export type HomePageProps = {
   locale: OwnerLocale;
+  theme: ShellTheme;
   state: AccountState;
   csrfToken: string;
   phone: string;
@@ -19,15 +21,6 @@ export type HomePageProps = {
   problem: string | null;
   createdAgent: { agent: string; installPrompt: string } | null;
 };
-
-const DOCS_PATH_PREFIXES: Record<OwnerLocale, string> = {
-  [OwnerLocale.PortugueseBrazil]: DOCS_PORTUGUESE_PATH,
-  [OwnerLocale.EnglishUs]: '',
-};
-
-function docsHrefOf(input: { locale: OwnerLocale }): string {
-  return `${DOCS_ORIGIN}${DOCS_PATH_PREFIXES[input.locale]}${DELETE_ACCOUNT_DOCS_PATH}`;
-}
 
 const DETAIL_SEPARATOR = ' · ';
 
@@ -125,7 +118,7 @@ function Account(props: { locale: OwnerLocale; phone: string }) {
       <p class="plan">{translate(ClientAppCopyKey.PlanLine, { free: pricingValuesOf({ locale: props.locale }).free })}</p>
       <p class="note">{translate(ClientAppCopyKey.SignedInAs, { phone: props.phone })}</p>
       <p class="note">{translate(ClientAppCopyKey.DeleteAccountHint)}</p>
-      <a class="button button-secondary" href={docsHrefOf({ locale: props.locale })}>
+      <a class="button button-secondary" href={docsUrlOf({ locale: props.locale, path: DELETE_ACCOUNT_DOCS_PATH })}>
         {translate(ClientAppCopyKey.DeleteAccount)}
       </a>
     </section>
@@ -138,7 +131,7 @@ export function HomePage(props: HomePageProps) {
   const isWaitlisted = props.state === AccountState.Waitlisted;
   const title = translate(isWaitlisted ? ClientAppCopyKey.WaitlistTitle : ClientAppCopyKey.AgentsTitle);
   return (
-    <Layout locale={locale} title={title} currentPath={ClientAppPath.Home} csrfToken={props.csrfToken}>
+    <Layout locale={locale} theme={props.theme} title={title} currentPath={ClientAppPath.Home} csrfToken={props.csrfToken}>
       {props.noticeKey === null ? null : (
         <p class="notice" role="status">
           {translate(props.noticeKey)}

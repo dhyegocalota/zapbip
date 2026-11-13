@@ -1,7 +1,7 @@
 import { AccountState, OwnerLocale, WhatsAppNumberState } from '@zapbip/types';
 import { SPARKLINE_DAYS } from '../../src/backoffice/backoffice-constants';
 import { BackofficeNotice } from '../../src/backoffice/backoffice-notice';
-import { BackofficeTheme } from '../../src/backoffice/backoffice-theme';
+import { ShellTheme } from '../../src/web-shell/shell-theme';
 import { type HomeOverview, SparklineMetric } from '../../src/backoffice/home-sparklines';
 import { MetricsPeriod, type MetricsFilter } from '../../src/backoffice/metrics/metrics-filter';
 import type { MetricsReport } from '../../src/backoffice/metrics/metrics-report';
@@ -15,7 +15,7 @@ export const NOW = Date.UTC(2026, 10, 7, 12);
 
 export const PAGE: PageContext = {
   locale: OwnerLocale.EnglishUs,
-  theme: BackofficeTheme.System,
+  theme: ShellTheme.System,
   environment: DeployEnvironment.Production,
   stylesheetHref: '/assets/backoffice.css?v=1',
   csrfToken: 'token',

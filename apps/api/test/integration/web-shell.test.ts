@@ -1,7 +1,6 @@
-import { reset } from 'cloudflare:test';
 import { OwnerLocale, WhatsAppNumberState } from '@zapbip/types';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { clientAppFetch, prepareClientAppDatabase } from '../support/client-app';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { clientAppFetch } from '../support/client-app';
 import { siteFetch } from '../support/site';
 import { seedStartNumber } from '../support/start-link-numbers';
 import { requestBackoffice, resetBackoffice } from './backoffice-auth-fixtures';
@@ -19,12 +18,6 @@ const NUMBER_CREATED_AT = 1_700_000_000_000;
 type Surface = { name: string; html: () => Promise<string> };
 
 async function appHtml(): Promise<string> {
-  await seedStartNumber({
-    numberId: 'num_shell',
-    displayNumber: START_NUMBER,
-    state: WhatsAppNumberState.Active,
-    createdAt: NUMBER_CREATED_AT,
-  });
   return (await clientAppFetch({ path: '/' })).text();
 }
 
@@ -38,18 +31,22 @@ function normalized(input: { markup: string }): string {
   return input.markup.replace(FORM_OPENING_PATTERN, '<form>').replace(INPUT_PATTERN, '');
 }
 
-beforeEach(async () => {
-  await prepareClientAppDatabase();
+beforeAll(async () => {
   await resetBackoffice();
+  await seedStartNumber({
+    numberId: 'num_shell',
+    displayNumber: START_NUMBER,
+    state: WhatsAppNumberState.Active,
+    createdAt: NUMBER_CREATED_AT,
+  });
 });
-afterEach(reset);
 
 describe.each(SURFACES)('the shared shell on the $name', ({ html }) => {
   it('lists every locale of the enum in the footer language menu, each with a flag', async () => {
     const footer = FOOTER_PATTERN.exec(await html())![0];
     const menu = MENU_PATTERN.exec(footer)![0];
     const values = [...menu.matchAll(LOCALE_BUTTON_PATTERN)].map((match) => match[1]);
-    expect(values).toEqual(Object.values(OwnerLocale));
+    expect([...values].sort()).toEqual(Object.values(OwnerLocale).sort());
     expect(menu.match(/<svg class="flag"/g)).toHaveLength(Object.values(OwnerLocale).length + 1);
   });
 

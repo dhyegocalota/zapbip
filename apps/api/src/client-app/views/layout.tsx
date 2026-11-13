@@ -1,44 +1,25 @@
-import { OwnerLocale } from '@zapbip/types';
+import type { OwnerLocale } from '@zapbip/types';
 import type { Child } from 'hono/jsx';
 import { FAVICON_CONTENT_TYPE } from '../../backoffice/assets/favicon';
-import { BRAND_SEPARATOR, CSRF_FIELD, THEME_COLOR_DARK, THEME_COLOR_LIGHT } from '../client-app-constants';
+import { BRAND_SEPARATOR, CSRF_FIELD, THEME_COLOR_DARK, THEME_COLOR_LIGHT, WIDE_BODY_CLASS } from '../client-app-constants';
 import { ClientAppCopyKey, copyOf } from '../client-app-copy';
 import { ClientAppPath, pathWithLocale } from '../client-app-paths';
 import { CLIENT_APP_STYLESHEET_HREF } from '../client-app-stylesheet';
-import { languageOf } from '../../site/site-links';
-import { Flag } from '../../site/views/flags';
+import { languageOf } from '../../web-shell/locale-profiles';
+import { ShellControls } from '../../web-shell/shell-controls';
+import { RETURN_TO_FIELD } from '../../web-shell/shell-fields';
+import { ShellFooter } from '../../web-shell/shell-footer';
+import type { ShellTheme } from '../../web-shell/shell-theme';
 
 export type LayoutProps = {
   locale: OwnerLocale;
+  theme: ShellTheme;
   title: string;
   currentPath: string;
   csrfToken: string | null;
+  isWide?: boolean;
   children?: Child;
 };
-
-const LOCALE_OPTIONS: { locale: OwnerLocale; label: ClientAppCopyKey }[] = [
-  { locale: OwnerLocale.EnglishUs, label: ClientAppCopyKey.LocaleEnglish },
-  { locale: OwnerLocale.PortugueseBrazil, label: ClientAppCopyKey.LocalePortuguese },
-];
-
-function LocaleSwitch(props: { locale: OwnerLocale; currentPath: string }) {
-  const translate = copyOf({ locale: props.locale });
-  return (
-    <nav class="switch" aria-label={translate(ClientAppCopyKey.LocaleLabel)}>
-      {LOCALE_OPTIONS.map((option) => (
-        <a
-          href={pathWithLocale({ locale: option.locale, path: props.currentPath })}
-          lang={languageOf({ locale: option.locale })}
-          hreflang={languageOf({ locale: option.locale })}
-          aria-current={option.locale === props.locale ? 'true' : undefined}
-        >
-          <Flag locale={option.locale} />
-          {translate(option.label)}
-        </a>
-      ))}
-    </nav>
-  );
-}
 
 function SignOutForm(props: { locale: OwnerLocale; csrfToken: string }) {
   const translate = copyOf({ locale: props.locale });
@@ -56,7 +37,7 @@ export function Layout(props: LayoutProps) {
   const { locale, csrfToken } = props;
   const translate = copyOf({ locale });
   return (
-    <html lang={languageOf({ locale })}>
+    <html lang={languageOf({ locale })} data-theme={props.theme}>
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -67,7 +48,7 @@ export function Layout(props: LayoutProps) {
         <link rel="icon" href={ClientAppPath.Favicon} type={FAVICON_CONTENT_TYPE} />
         <link rel="stylesheet" href={CLIENT_APP_STYLESHEET_HREF} />
       </head>
-      <body>
+      <body class={props.isWide ? WIDE_BODY_CLASS : undefined}>
         <a href="#content" class="skip-link">
           {translate(ClientAppCopyKey.SkipToContent)}
         </a>
@@ -80,18 +61,25 @@ export function Layout(props: LayoutProps) {
             >
               {translate(ClientAppCopyKey.BrandName)}
             </a>
-            <div class="header-end">
-              <LocaleSwitch locale={locale} currentPath={props.currentPath} />
-              {csrfToken === null ? null : <SignOutForm locale={locale} csrfToken={csrfToken} />}
-            </div>
+            <div class="header-end">{csrfToken === null ? null : <SignOutForm locale={locale} csrfToken={csrfToken} />}</div>
           </div>
         </header>
         <main id="content" class="container">
           {props.children}
         </main>
-        <footer class="app-footer">
-          <div class="container">{translate(ClientAppCopyKey.FooterMaker)}</div>
-        </footer>
+        <ShellFooter
+          locale={locale}
+          note={translate(ClientAppCopyKey.FooterMaker)}
+          controls={
+            <ShellControls
+              locale={locale}
+              theme={props.theme}
+              localeAction={pathWithLocale({ locale, path: ClientAppPath.Locale })}
+              themeAction={pathWithLocale({ locale, path: ClientAppPath.Theme })}
+              hiddenFields={[{ name: RETURN_TO_FIELD, value: props.currentPath }]}
+            />
+          }
+        />
       </body>
     </html>
   );

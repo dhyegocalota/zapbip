@@ -6,6 +6,7 @@ const AGENT_FACING_DIRECTORIES = ['apps/api/src/mcp/', 'apps/api/src/routes/', '
 const BACKOFFICE_IMPORT_PATTERN = /from '[^']*\/backoffice(\/[^']*)?'/;
 const SITE_IMPORT_PATTERN = /from '[^']*\/site(\/[^']*)?'/;
 const CLIENT_APP_IMPORT_PATTERN = /from '[^']*\/client-app(\/[^']*)?'/;
+const WEB_SHELL_IMPORT_PATTERN = /from '[^']*\/web-shell(\/[^']*)?'/;
 const BACKOFFICE_TABLE_PATTERN = /\bbackoffice_(operator|sessions|audit)\b/;
 const SEALED_COLUMN_PATTERN = /\bsealed_(app_secret|access_token)\b/;
 const TEST_PATH_PATTERN = /(^|\/)(test|e2e)\//;
@@ -44,6 +45,23 @@ describe('backoffice isolation', () => {
   test('no agent-facing code imports the customer web app', () => {
     const agentFacing = productionSources().filter((path) => isUnder({ path, owners: AGENT_FACING_DIRECTORIES }));
     expect(filesMatching({ paths: agentFacing, pattern: CLIENT_APP_IMPORT_PATTERN })).toEqual([]);
+  });
+
+  test('no agent-facing code imports the shared web shell', () => {
+    const agentFacing = productionSources().filter((path) => isUnder({ path, owners: AGENT_FACING_DIRECTORIES }));
+    expect(filesMatching({ paths: agentFacing, pattern: WEB_SHELL_IMPORT_PATTERN })).toEqual([]);
+  });
+
+  test('the shared web shell imports neither the backoffice nor the customer web app', () => {
+    const shellSources = productionSources().filter((path) => path.startsWith('apps/api/src/web-shell/'));
+    expect(shellSources.length).toBeGreaterThan(0);
+    expect(filesMatching({ paths: shellSources, pattern: BACKOFFICE_IMPORT_PATTERN })).toEqual([]);
+    expect(filesMatching({ paths: shellSources, pattern: CLIENT_APP_IMPORT_PATTERN })).toEqual([]);
+  });
+
+  test('the import pattern catches a web shell import and ignores a lookalike', () => {
+    expect(WEB_SHELL_IMPORT_PATTERN.test("import { x } from '../web-shell/shell-footer';")).toBe(true);
+    expect(WEB_SHELL_IMPORT_PATTERN.test("import { x } from '../web-shells/footer';")).toBe(false);
   });
 
   test('the import pattern catches a customer web app import and ignores a lookalike', () => {

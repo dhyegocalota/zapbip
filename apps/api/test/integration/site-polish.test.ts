@@ -4,8 +4,9 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { CONNECTION_SECRET_PATTERN } from '../../src/contract/constants';
 import { SITE_COPY, SiteCopyKey } from '../../src/site/site-copy';
 import { SITE_STYLESHEET } from '../../src/site/site-stylesheet';
+import { ShellCopyKey } from '../../src/web-shell/shell-copy';
 import { applyLandingWaitlistMigration } from '../support/seed';
-import { copyHtml, joinForm, siteFetch } from '../support/site';
+import { copyHtml, joinForm, shellCopyHtml, siteFetch } from '../support/site';
 
 const ENGLISH_PATHS = ['/', '/terms'] as const;
 const LOGIC_BIT_ORIGIN = 'https://logicbit.com.br';
@@ -43,7 +44,9 @@ describe('the language menu in the footer', () => {
   });
 
   it('opens upward', () => {
-    expect(SITE_STYLESHEET).toMatch(/\.site-footer \.lang-list \{[^}]*bottom: calc\(100% \+ var\(--space-2\)\);/);
+    expect(SITE_STYLESHEET).toMatch(
+      /\.site-footer \.lang-list,\n\.shell-footer \.lang-list \{[^}]*bottom: calc\(100% \+ var\(--space-2\)\);/,
+    );
   });
 });
 
@@ -58,7 +61,7 @@ describe('the footer', () => {
     expect(footer).toContain('href="https://docs.zapbip.com');
     expect(footer).toContain(`href="mailto:${COMPANY.contactEmail}"`);
     expect(footer).toContain(`href="${LOGIC_BIT_ORIGIN}" rel="noopener"`);
-    expect(footer).toContain(copyHtml({ key: SiteCopyKey.FooterMadeBy, locale }));
+    expect(footer).toContain(shellCopyHtml({ key: ShellCopyKey.FooterMadeBy, locale }));
   });
 
   it.each(ENGLISH_PATHS)('draws a huge decorative wordmark from text on %s', async (path) => {

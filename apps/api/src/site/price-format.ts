@@ -8,7 +8,7 @@ import {
   PRICING_PRO_MONTHLY_CENTS,
   type PricingCurrency,
 } from '@zapbip/types';
-import { languageOf } from './site-links';
+import { languageOf } from '../web-shell/locale-profiles';
 
 const CENTS_PER_UNIT = 100;
 

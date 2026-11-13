@@ -59,6 +59,7 @@ export const SESSION_TOKEN_BYTES = 32;
 export const CSRF_TOKEN_BYTES = 32;
 export const ACCEPT_LANGUAGE_HEADER = 'accept-language';
 export const ENGLISH_LANGUAGE_PREFIX = 'en';
+export const CSRF_FIELD = 'csrf';
 export const CSRF_CONTEXT = 'zapbip backoffice csrf';
 export const BACKOFFICE_PRUNE_HOUR = 4;
 export const BACKOFFICE_PRUNE_MINUTE = 0;
