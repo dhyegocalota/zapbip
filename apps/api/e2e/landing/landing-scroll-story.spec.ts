@@ -87,8 +87,12 @@ test.describe('reduced motion', () => {
 test('a story scrolls with the page and runs no scroll-linked animation', async ({ page }) => {
   await page.goto('/');
   await scrollToCenter({ page, selector: STORY_SELECTOR, index: 1 });
-  const stuck = await page.evaluate(`[...document.querySelectorAll('.why-item *')].filter((element) => getComputedStyle(element).position === 'sticky').length`);
+  const stuck = await page.evaluate(
+    `[...document.querySelectorAll('.why-item *')].filter((element) => getComputedStyle(element).position === 'sticky').length`,
+  );
   expect(stuck).toBe(0);
-  const scrollLinked = await page.evaluate(`document.getAnimations().filter((animation) => animation.timeline && !(animation.timeline instanceof DocumentTimeline)).length`);
+  const scrollLinked = await page.evaluate(
+    `document.getAnimations().filter((animation) => animation.timeline && !(animation.timeline instanceof DocumentTimeline)).length`,
+  );
   expect(scrollLinked).toBe(0);
 });
