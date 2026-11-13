@@ -20,3 +20,7 @@ export const COMMAND_LIST_ID_PREFIX = 'zapbip:';
 export const LIST_BUTTON_TEXT_MAX_CHARS = 20;
 export const BRAZIL_COUNTRY_CODE = '55';
 export const ACCOUNT_MENU_QUESTION_ID = `${COMMAND_LIST_ID_PREFIX}menu`;
+export const INVITE_CODE_PREFIX = 'zbi_';
+export const INVITE_CODE_RANDOM_LENGTH = 24;
+export const INVITE_CODE_ALPHABET = 'abcdefghijklmnopqrstuvwxyz0123456789';
+export const INVITE_CODE_PATTERN = new RegExp(`${INVITE_CODE_PREFIX}[a-z0-9]{${INVITE_CODE_RANDOM_LENGTH}}`, 'i');

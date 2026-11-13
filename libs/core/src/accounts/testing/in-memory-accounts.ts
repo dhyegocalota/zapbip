@@ -13,7 +13,10 @@ import type {
 } from '../account-types';
 import { buildConnectionLink } from '../connection-link';
 import { NO_INSTALL_CODE } from '../constants';
+import { isInviteLive } from '../invite-code';
 import type {
+  AccessDependencies,
+  AccessInvites,
   AccountDependencies,
   AccountDirectory,
   AccountLifecycleDependencies,
@@ -66,9 +69,12 @@ export type InMemoryConnections = ConnectionRegistry & {
   countAccounts(): number;
 };
 
+export type InMemoryAccessInvites = AccessInvites & { issue(input: { code: string; expiresAt: number }): void };
+
 export type InMemoryAccountEnvironment = Omit<InMemoryEnvironment, 'dependencies'> & {
   dependencies: AccountDependencies;
   lifecycle: AccountLifecycleDependencies;
+  access: AccessDependencies & { invites: InMemoryAccessInvites };
   directory: AccountDirectory;
   registry: InMemoryConnections;
   connectionDirectory: ConnectionDirectory;
@@ -124,10 +130,20 @@ function createDirectory(input: { store: AccountStore }): AccountDirectory {
       identities.set(waId, accountId);
       return { account: toRecord(stored), created: true };
     },
+    findById: async ({ accountId }) => {
+      const stored = accounts.get(accountId);
+      return stored === undefined ? null : toRecord(stored);
+    },
     setState: async ({ accountId, state }) => {
       const stored = accounts.get(accountId);
       if (stored === undefined) return;
       accounts.set(accountId, { ...stored, state });
+    },
+    release: async ({ accountId }) => {
+      const stored = accounts.get(accountId);
+      if (stored === undefined || stored.state !== AccountState.Waitlisted) return false;
+      accounts.set(accountId, { ...stored, state: AccountState.Active });
+      return true;
     },
     listByState: async ({ state }) => [...accounts.values()].filter((stored) => stored.state === state).map(toRecord),
     remove: async ({ accountId }) => {
@@ -336,6 +352,21 @@ function createAccountMedia(): InMemoryAccountMedia {
   };
 }
 
+function createAccessInvites(): InMemoryAccessInvites {
+  const invites = new Map<string, { expiresAt: number; usedAt: number | null }>();
+  return {
+    issue: ({ code, expiresAt }) => {
+      invites.set(code.toLowerCase(), { expiresAt, usedAt: null });
+    },
+    consume: async ({ code, now }) => {
+      const invite = invites.get(code.toLowerCase());
+      if (invite === undefined || !isInviteLive({ ...invite, now })) return false;
+      invite.usedAt = now;
+      return true;
+    },
+  };
+}
+
 function createFirstMessageClaim(): FirstMessageClaim {
   let firstChannelMessageId: string | null = null;
   return {
@@ -411,6 +442,7 @@ export function createInMemoryAccountDependencies(input: InMemoryOptions = {}): 
     ...environment,
     dependencies,
     lifecycle: { accounts: directory, accountMedia, ids: dependencies.ids },
+    access: { accounts: directory, invites: createAccessInvites() },
     directory,
     registry,
     connectionDirectory: createConnectionDirectory({ store }),
