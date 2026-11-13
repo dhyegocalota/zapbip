@@ -1,14 +1,8 @@
 import { WHATSAPP_LINK_ORIGIN, WHATSAPP_LINK_TEXT_PARAMETER, type OwnerLocale } from '@zapbip/types';
-import {
-  INVITE_METER_GAP,
-  INVITE_METER_SEGMENT_LIMIT,
-  INVITE_METER_VIEWBOX_HEIGHT,
-  INVITE_METER_VIEWBOX_WIDTH,
-  SITE_REFERRAL_PARAMETER,
-} from '../site-constants';
+import { INVITE_METER_GAP, INVITE_METER_SEGMENT_LIMIT, INVITE_METER_VIEWBOX_HEIGHT, INVITE_METER_VIEWBOX_WIDTH } from '../site-constants';
 import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
-import { SitePath } from '../site-paths';
+import { pagePathOf } from '../site-links';
 
 const FULL_PERCENT = 100;
 const SUCCESS_MARK = '✓';
@@ -51,7 +45,7 @@ function InviteMeter(props: { creditedCount: number; cap: number }) {
 export function ThanksPanel(props: { locale: OwnerLocale; siteOrigin: string; referralCode: string; creditedCount: number; cap: number }) {
   const { locale, siteOrigin, referralCode, creditedCount, cap } = props;
   const translate = copyOf({ locale });
-  const inviteLink = `${siteOrigin}${SitePath.Home}?${SITE_REFERRAL_PARAMETER}=${referralCode}`;
+  const inviteLink = `${siteOrigin}${pagePathOf({ locale, agent: null, referralCode })}`;
   const shareText = translate(SiteCopyKey.ThanksShareText, { link: inviteLink });
   const shareHref = `${WHATSAPP_LINK_ORIGIN}/?${WHATSAPP_LINK_TEXT_PARAMETER}=${encodeURIComponent(shareText)}`;
   return (

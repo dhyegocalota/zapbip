@@ -1,14 +1,16 @@
 import { AGENT_INSTALLS } from '@zapbip/agents/install';
-import { DEFAULT_LOCALE, OwnerLocale, TURNSTILE_ACTION_WAITLIST_JOIN } from '@zapbip/types';
+import { OwnerLocale, TURNSTILE_ACTION_WAITLIST_JOIN } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
+import type { InstallClient } from '@zapbip/agents/install';
 import { initialsOf, leadingAgentNames, SiteStartTab } from '../../src/site/site-agents';
-import { languageOf } from '../../src/site/site-links';
+import { startPathOf } from '../../src/site/site-links';
 import { renderSiteCopy, SiteCopyKey } from '../../src/site/site-copy';
 import { SITE_CONTENT_SECURITY_POLICY } from '../../src/site/site-policy';
 import { copyHtml, escapedHtml, REFERRAL_CODE, SITE_ORIGIN, SITE_TURNSTILE_SITE_KEY, siteEnvironment, siteFetch } from '../support/site';
 
 const ENGLISH_HEADERS = { 'Accept-Language': 'en-US,en;q=0.9' };
 const PORTUGUESE_HEADERS = { 'Accept-Language': 'pt-BR,pt;q=0.9' };
+const PORTUGUESE_PATH = '/pt-br';
 const LOCALE_COOKIE = '__Host-zb_site_locale';
 const THEME_COOKIE = '__Host-zb_site_theme';
 const INLINE_SCRIPT_PATTERN = /<script(?![^>]*\bsrc=)[^>]*>/;
@@ -19,9 +21,16 @@ const [FIRST_AGENT, SECOND_AGENT] = Object.entries(AGENT_INSTALLS).map(([id, ins
   { id: string; name: string },
 ];
 
+function pathOfLocale(input: { path: string; headers: Record<string, string> | undefined }): string {
+  return input.headers === PORTUGUESE_HEADERS ? `${PORTUGUESE_PATH}${input.path.replace(/^\//, '')}` : input.path;
+}
+
 async function pageOf(input: { path?: string; headers?: Record<string, string> }): Promise<string> {
   const { path = '/', headers } = input;
-  const response = await siteFetch({ path, headers });
+  const response = await siteFetch({
+    path: pathOfLocale({ path, headers }),
+    headers: headers === PORTUGUESE_HEADERS ? undefined : headers,
+  });
   expect(response.status).toBe(200);
   return response.text();
 }
@@ -52,20 +61,15 @@ describe('GET /', () => {
     expect(html).toContain(copy(SiteCopyKey.JoinSubmit));
   });
 
-  it('uses the default locale with no cookie and no Accept-Language', async () => {
+  it('shows English at the root with no cookie and no Accept-Language', async () => {
     const html = await pageOf({});
-    expect(DEFAULT_LOCALE).toBe(OwnerLocale.PortugueseBrazil);
-    expect(html).toContain(copyHtml({ key: SiteCopyKey.HeroTitleLead, locale: DEFAULT_LOCALE }));
+    expect(html).toContain('<html lang="en"');
+    expect(html).toContain(copyHtml({ key: SiteCopyKey.HeroTitleLead, locale: OwnerLocale.EnglishUs }));
   });
 
   it('the locale cookie wins over Accept-Language', async () => {
     const html = await pageOf({ headers: { ...PORTUGUESE_HEADERS, Cookie: `${LOCALE_COOKIE}=${OwnerLocale.EnglishUs}` } });
     expect(html).toContain('<html lang="en"');
-  });
-
-  it('the lang query wins over the cookie', async () => {
-    const html = await pageOf({ path: '/?lang=pt-BR', headers: { Cookie: `${LOCALE_COOKIE}=${OwnerLocale.EnglishUs}` } });
-    expect(html).toContain('<html lang="pt-BR"');
   });
 
   it('carries a well-formed referral code into the form and shows the invited eyebrow', async () => {
@@ -134,7 +138,7 @@ describe('GET /', () => {
 
   it('puts the canonical, social and alternate links in the head', async () => {
     const html = await pageOf({ headers: ENGLISH_HEADERS });
-    expect(html).toContain(`<link rel="canonical" href="${SITE_ORIGIN}/?lang=en"`);
+    expect(html).toContain(`<link rel="canonical" href="${SITE_ORIGIN}/"`);
     expect(html).toContain(`<meta property="og:image" content="${SITE_ORIGIN}/site/og-en_US.png"`);
     expect(html).toContain(`<meta name="twitter:image" content="${SITE_ORIGIN}/site/og-en_US.png"`);
     expect(html).toContain('<meta property="og:image:width" content="1200"');
@@ -240,7 +244,7 @@ describe('the quick start', () => {
       const tabs = [...startOf({ html }).matchAll(TAB_PATTERN)].map((match) => ({ id: match[1], href: match[2] }));
       expect(tabs.map((tab) => tab.id)).toEqual(tabIds);
       expect(tabs.map((tab) => tab.href)).toEqual(
-        tabIds.map((id) => escapedHtml({ text: `/?agent=${id}&lang=${languageOf({ locale })}#start` })),
+        tabIds.map((id) => escapedHtml({ text: startPathOf({ tab: id as InstallClient | SiteStartTab, locale, referralCode: null }) })),
       );
       expect(startOf({ html })).toContain(`role="tablist" aria-label="${copyHtml({ key: SiteCopyKey.StartTablistLabel, locale })}"`);
     },
@@ -322,9 +326,9 @@ describe('the quick start', () => {
       expect(panel.html.match(/class="button button-primary start-cta"/g)).toHaveLength(1);
     });
     expect(startOf({ html }).match(new RegExp(copyHtml({ key: SiteCopyKey.StartCta, locale }), 'g'))).toHaveLength(panels.length);
-    const agentCta = escapedHtml({ text: `/?agent=${agents[0]!.id}&lang=en#join` });
+    const agentCta = escapedHtml({ text: `/?agent=${agents[0]!.id}#join` });
     expect(panels[0]!.html).toContain(`href="${agentCta}" data-picked-label="`);
-    expect(panels.at(-1)!.html).toContain('href="/?lang=en#join" data-clear-agent');
+    expect(panels.at(-1)!.html).toContain('href="/#join" data-clear-agent');
     expect(startOf({ html })).toContain('id="start-announcement"');
   });
 
@@ -543,29 +547,11 @@ describe('site assets', () => {
   });
 });
 
-describe('canonical and preferences per locale', () => {
+describe('canonical per locale', () => {
   it('gives the Portuguese page its own canonical URL', async () => {
     const html = await pageOf({ headers: PORTUGUESE_HEADERS });
-    expect(html).toContain(`<link rel="canonical" href="${SITE_ORIGIN}/?lang=pt-BR"`);
-    expect(html).toContain(`<meta property="og:url" content="${SITE_ORIGIN}/?lang=pt-BR"`);
-  });
-
-  it('keeps the current language in the theme switch and leaves the language switch free', async () => {
-    const html = await pageOf({ path: '/?lang=pt-BR&ref=abcdefgh2345' });
-    const themeForm = html.slice(html.indexOf('action="/theme"'), html.indexOf('</form>', html.indexOf('action="/theme"')));
-    const localeForm = html.slice(html.indexOf('action="/locale"'), html.indexOf('</form>', html.indexOf('action="/locale"')));
-    expect(themeForm).toContain('name="returnTo" value="/?lang=pt-BR&amp;ref=abcdefgh2345"');
-    expect(localeForm).toContain('name="returnTo" value="/?ref=abcdefgh2345"');
-  });
-
-  it.each(['/?lang=pt-BR', '/?lang=en', `/?lang=pt-BR&ref=${REFERRAL_CODE}`])('POST /theme returns to %s', async (returnTo) => {
-    const response = await siteFetch({ path: '/theme', method: 'POST', form: { theme: 'dark', returnTo } });
-    expect(response.headers.get('Location')).toBe(returnTo);
-  });
-
-  it.each(['/?lang=xx', '/?lang=pt-BR&ref=../x', '/?lang=pt-BR&x=1'])('POST /theme refuses the return target %s', async (returnTo) => {
-    const response = await siteFetch({ path: '/theme', method: 'POST', form: { theme: 'dark', returnTo } });
-    expect(response.headers.get('Location')).toBe('/');
+    expect(html).toContain(`<link rel="canonical" href="${SITE_ORIGIN}/pt-br"`);
+    expect(html).toContain(`<meta property="og:url" content="${SITE_ORIGIN}/pt-br"`);
   });
 });
 

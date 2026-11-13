@@ -1,4 +1,4 @@
-import { DocsLanguage, OwnerLocale } from '@zapbip/types';
+import { OwnerLocale } from '@zapbip/types';
 import type { Child } from 'hono/jsx';
 import { FAVICON_CONTENT_TYPE } from '../../backoffice/assets/favicon';
 import { BackofficeTheme } from '../../backoffice/backoffice-theme';
@@ -10,7 +10,6 @@ import {
   POSTER_SMALL_WIDTH,
   DEMO_IMAGE_SIZE,
   SITE_BRAND_SEPARATOR,
-  SITE_LANGUAGE_PARAMETER,
   THEME_COLOR_DARK,
   THEME_COLOR_LIGHT,
   TURNSTILE_SCRIPT_URL,
@@ -20,6 +19,7 @@ import {
 import { leadingAgentNames } from '../site-agents';
 import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
+import { localePathOf } from '../site-language';
 import { canonicalUrlOf, languageOf, pagePathOf } from '../site-links';
 import { SITE_SCRIPT_HREF } from '../site-scripts';
 import { APPLE_TOUCH_ICON_PATH, DOCS_ORIGIN, SiteAssetKind, siteAssetOf, SitePath } from '../site-paths';
@@ -52,11 +52,16 @@ export function turnstileLanguageOf(input: { locale: OwnerLocale }): string {
   return TURNSTILE_LANGUAGES[input.locale];
 }
 
+function returnPathOf(input: { model: PageModel }): string {
+  const { model } = input;
+  return pagePathOf({ locale: model.locale, agent: model.agentParameter, referralCode: model.referralCode });
+}
+
 function LocaleSwitch(props: { model: PageModel }) {
   const translate = copyOf({ locale: props.model.locale });
   return (
     <form method="post" action={SitePath.Locale} class="switch" aria-label={translate(SiteCopyKey.LocaleLabel)}>
-      <input type="hidden" name="returnTo" value={pagePathOf({ language: null, referralCode: props.model.referralCode })} />
+      <input type="hidden" name="returnTo" value={returnPathOf({ model: props.model })} />
       {LOCALE_OPTIONS.map((option) => (
         <button
           type="submit"
@@ -78,11 +83,7 @@ function ThemeSwitch(props: { model: PageModel }) {
   const translate = copyOf({ locale: props.model.locale });
   return (
     <form method="post" action={SitePath.Theme} class="switch" aria-label={translate(SiteCopyKey.ThemeLabel)}>
-      <input
-        type="hidden"
-        name="returnTo"
-        value={pagePathOf({ language: languageOf({ locale: props.model.locale }), referralCode: props.model.referralCode })}
-      />
+      <input type="hidden" name="returnTo" value={returnPathOf({ model: props.model })} />
       {THEME_OPTIONS.map((option) => (
         <button type="submit" name="theme" value={option.theme} aria-pressed={String(option.theme === props.model.theme)}>
           {translate(option.label)}
@@ -103,7 +104,7 @@ function SiteHeader(props: { model: PageModel }) {
   return (
     <header class="site-header">
       <div class="container">
-        <a class="brand" href={SitePath.Home} aria-label={translate(SiteCopyKey.BrandHomeLabel)}>
+        <a class="brand" href={localePathOf({ locale: model.locale })} aria-label={translate(SiteCopyKey.BrandHomeLabel)}>
           {translate(SiteCopyKey.BrandName)}
         </a>
         <div class="header-end">
@@ -157,8 +158,8 @@ export function SiteLayout(props: { model: PageModel; title: string; isIndexable
         <meta name="description" content={description} />
         {props.isIndexable ? null : <meta name="robots" content="noindex" />}
         <link rel="canonical" href={canonical} />
-        {Object.values(DocsLanguage).map((language) => (
-          <link rel="alternate" hreflang={language} href={`${rootUrl}?${SITE_LANGUAGE_PARAMETER}=${language}`} />
+        {Object.values(OwnerLocale).map((locale) => (
+          <link rel="alternate" hreflang={languageOf({ locale })} href={canonicalUrlOf({ origin: model.siteOrigin, locale })} />
         ))}
         <link rel="alternate" hreflang="x-default" href={rootUrl} />
         <meta name="theme-color" content={THEME_COLOR_LIGHT} media="(prefers-color-scheme: light)" />

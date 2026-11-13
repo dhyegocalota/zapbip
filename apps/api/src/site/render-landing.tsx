@@ -16,6 +16,7 @@ export function pageModelOf(input: { context: Context<SiteEnv>; join: JoinView }
     turnstileSiteKey: context.env.TURNSTILE_SITE_KEY,
     referralCode: context.get('referralCode'),
     agent: context.get('agent'),
+    agentParameter: context.get('agentParameter'),
     startTab: context.get('startTab'),
     join,
   };
