@@ -1,5 +1,6 @@
 import { OwnerLocale } from '@zapbip/types';
 import { chatSelfTest, formatSection, localizeCopy, tellOwner, type InstallProduct } from '@zapbip/core';
+import { addressText, quickStartOf } from '../../src/quick-start';
 
 export const GROK_BOT_PRODUCT: InstallProduct = { productName: 'Grok Bot', productDescription: 'Grok Bot, the Grok routines bot' };
 
@@ -40,3 +41,15 @@ export const GROK_BOT_COPY = localizeCopy({
       ],
     }),
 });
+
+const GROK_BOT_QUICK_START_HINT: Record<OwnerLocale, string> = {
+  [OwnerLocale.PortugueseBrazil]: 'Faça isto no Grok Bot',
+  [OwnerLocale.EnglishUs]: 'Do this in Grok Bot',
+};
+
+const GROK_BOT_QUICK_START_PATH: Record<OwnerLocale, string[]> = {
+  [OwnerLocale.PortugueseBrazil]: ['Abra o Grok Bot', 'Adicione um servidor MCP chamado zapbip', 'Cole este endereço'],
+  [OwnerLocale.EnglishUs]: ['Open Grok Bot', 'Add an MCP server named zapbip', 'Paste this address'],
+};
+
+export const GROK_BOT_QUICK_START = quickStartOf({ hint: GROK_BOT_QUICK_START_HINT, path: GROK_BOT_QUICK_START_PATH, code: addressText });

@@ -2,6 +2,7 @@ import { INSTALL_SELF_TEST_TEXT, OwnerLocale } from '@zapbip/types';
 import { formatSection, localizeCopy, noticeStep, tellOwnerAndWait, FAILURE_OUTPUT_LINES, type InstallProduct } from '@zapbip/core';
 import { connectCommand } from '../../src/connect-command';
 import { ConnectorClient } from '../../src/generated/ids';
+import { quickStartOf } from '../../src/quick-start';
 
 export const CODEX_PRODUCT: InstallProduct = {
   productName: 'Codex',
@@ -10,6 +11,15 @@ export const CODEX_PRODUCT: InstallProduct = {
 export const CODEX_TOOL_TIMEOUT_SECONDS = 900;
 
 const CONFIG_PATH = '~/.codex/config.toml';
+
+export function codexConfigTable(input: { connectionLink: string }): string {
+  return [
+    '[mcp_servers.zapbip]',
+    `url = "${input.connectionLink}"`,
+    `tool_timeout_sec = ${CODEX_TOOL_TIMEOUT_SECONDS}`,
+    'default_tools_approval_mode = "approve"',
+  ].join('\n');
+}
 
 type CodexText = {
   wakeNote: string;
@@ -33,12 +43,7 @@ const CODEX_TEXT: Record<OwnerLocale, CodexText> = {
 export const CODEX_COPY = localizeCopy({
   texts: CODEX_TEXT,
   build: ({ section, text }) => {
-    const configTable = [
-      '[mcp_servers.zapbip]',
-      `url = "${section.connectionLink}"`,
-      `tool_timeout_sec = ${CODEX_TOOL_TIMEOUT_SECONDS}`,
-      'default_tools_approval_mode = "approve"',
-    ].join('\n');
+    const configTable = codexConfigTable({ connectionLink: section.connectionLink });
     const selfTest = `codex exec -c 'mcp_servers.zapbip.default_tools_approval_mode="approve"' "Call send_message with the text '${INSTALL_SELF_TEST_TEXT[section.locale]}'"`;
     return formatSection({
       ...CODEX_PRODUCT,
@@ -64,4 +69,14 @@ export const CODEX_COPY = localizeCopy({
       ],
     });
   },
+});
+
+const CODEX_QUICK_START_HINT: Record<OwnerLocale, string> = {
+  [OwnerLocale.PortugueseBrazil]: `Adicione ao ${CONFIG_PATH}`,
+  [OwnerLocale.EnglishUs]: `Add it to ${CONFIG_PATH}`,
+};
+
+export const CODEX_QUICK_START = quickStartOf({
+  hint: CODEX_QUICK_START_HINT,
+  code: (connectionLink) => codexConfigTable({ connectionLink }),
 });

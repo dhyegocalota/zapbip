@@ -51,7 +51,7 @@ export const PLANTS = [
     name: 'an install section with a two-line product name',
     file: `${SUPPORTED_ROOT}/${installAgentId}/install.ts`,
     id: installAgentId,
-    edit: (text: string) => text.replace(/\{ \.\.\.(\w+), render \}/, "{ ...$1, productName: 'First\\nSecond', render }"),
+    edit: (text: string) => text.replace(/\{ \.\.\.(\w+),/, "{ ...$1, productName: 'First\\nSecond',"),
   },
   {
     name: 'a plugin whose workflow filter is an injection',

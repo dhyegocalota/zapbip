@@ -1,6 +1,7 @@
 import { HEARTBEAT_POLL_INTERVAL_MINUTES, OwnerLocale } from '@zapbip/types';
 import { chatSelfTest, formatSection, localizeCopy, noticeStep, tellOwnerAndWait, type InstallProduct } from '@zapbip/core';
 import { installCommand } from './plugin';
+import { quickStartOf } from '../../src/quick-start';
 
 export const OPENCLAW_PRODUCT: InstallProduct = { productName: 'OpenClaw', productDescription: 'OpenClaw, the agent running OpenClaw' };
 
@@ -33,7 +34,7 @@ export const OPENCLAW_COPY = localizeCopy({
       wakeNote: text.wakeNote,
       steps: [
         {
-          action: `Add \`mcp.servers.zapbip\` with \`transport: "streamable-http"\` and the URL ${section.connectionLink}. If the URL form is refused, use the same host with \`/mcp\` and the header \`Authorization: Bearer <the secret after /c/ in that URL>\`.`,
+          action: `Add this entry to the OpenClaw configuration, merging it into any existing \`mcp.servers\`:\n\n\`\`\`json\n${openclawServerEntry({ connectionLink: section.connectionLink })}\n\`\`\`\n\nIf the URL form is refused, use the same host with \`/mcp\` and the header \`Authorization: Bearer <the secret after /c/ in that URL>\`.`,
           success: '`mcp.servers` holds the zapbip entry.',
         },
         {
@@ -48,4 +49,18 @@ export const OPENCLAW_COPY = localizeCopy({
         chatSelfTest(section.locale),
       ],
     }),
+});
+
+export function openclawServerEntry(input: { connectionLink: string }): string {
+  return `{ "mcp": { "servers": {\n  "zapbip": { "url": "${input.connectionLink}", "transport": "streamable-http" }\n} } }`;
+}
+
+const OPENCLAW_QUICK_START_HINT: Record<OwnerLocale, string> = {
+  [OwnerLocale.PortugueseBrazil]: 'Na configuração do OpenClaw, em mcp.servers.zapbip',
+  [OwnerLocale.EnglishUs]: 'In the OpenClaw config, under mcp.servers.zapbip',
+};
+
+export const OPENCLAW_QUICK_START = quickStartOf({
+  hint: OPENCLAW_QUICK_START_HINT,
+  code: (connectionLink) => openclawServerEntry({ connectionLink }),
 });

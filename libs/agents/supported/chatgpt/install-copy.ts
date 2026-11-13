@@ -1,5 +1,6 @@
 import { OwnerLocale } from '@zapbip/types';
 import { chatSelfTest, formatSection, localizeCopy, questionStep, type InstallProduct } from '@zapbip/core';
+import { addressText, quickStartOf } from '../../src/quick-start';
 
 export const CHATGPT_PRODUCT: InstallProduct = { productName: 'ChatGPT', productDescription: 'ChatGPT, the chat in the ChatGPT web app' };
 export const CHATGPT_POLL_INTERVAL_MINUTES = 60;
@@ -44,3 +45,25 @@ export const CHATGPT_COPY = localizeCopy({
       ],
     }),
 });
+
+const CHATGPT_QUICK_START_HINT: Record<OwnerLocale, string> = {
+  [OwnerLocale.PortugueseBrazil]: 'Faça isto no ChatGPT',
+  [OwnerLocale.EnglishUs]: 'Do this in ChatGPT',
+};
+
+const CHATGPT_QUICK_START_PATH: Record<OwnerLocale, string[]> = {
+  [OwnerLocale.PortugueseBrazil]: [
+    'Abra o ChatGPT → Configurações',
+    'Ative o modo desenvolvedor',
+    'Adicione um app por URL, sem autenticação',
+    'Cole este endereço',
+  ],
+  [OwnerLocale.EnglishUs]: [
+    'Open ChatGPT → Settings',
+    'Turn on developer mode',
+    'Add an app by URL, no authentication',
+    'Paste this address',
+  ],
+};
+
+export const CHATGPT_QUICK_START = quickStartOf({ hint: CHATGPT_QUICK_START_HINT, path: CHATGPT_QUICK_START_PATH, code: addressText });

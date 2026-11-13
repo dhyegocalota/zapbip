@@ -1,9 +1,9 @@
 import { AGENT_INSTALLS } from '@zapbip/agents/install';
 import { DEFAULT_LOCALE, OwnerLocale, TURNSTILE_ACTION_WAITLIST_JOIN } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
-import { initialsOf, leadingAgentNames } from '../../src/site/site-agents';
+import { initialsOf, leadingAgentNames, SiteStartTab } from '../../src/site/site-agents';
 import { languageOf } from '../../src/site/site-links';
-import { SiteCopyKey } from '../../src/site/site-copy';
+import { renderSiteCopy, SiteCopyKey } from '../../src/site/site-copy';
 import { SITE_CONTENT_SECURITY_POLICY } from '../../src/site/site-policy';
 import { copyHtml, escapedHtml, REFERRAL_CODE, SITE_ORIGIN, SITE_TURNSTILE_SITE_KEY, siteEnvironment, siteFetch } from '../support/site';
 
@@ -120,7 +120,7 @@ describe('GET /', () => {
       'id="why"',
       'id="how"',
       'id="capabilities"',
-      'id="clients"',
+      'id="start"',
       'id="pricing"',
       'id="privacy"',
       'id="faq"',
@@ -198,82 +198,154 @@ describe('the Portuguese page', () => {
   });
 });
 
-describe('the works-with section', () => {
-  const agents = Object.entries(AGENT_INSTALLS).map(([id, install]) => ({ id, name: install.productName }));
-  const CARD_NAME_PATTERN = /<h3 class="agent-name">([^<]+)<\/h3>/g;
-  const CARD_LINK_PATTERN = /<a class="agent-pick" href="([^"]+)" data-picked-label="[^"]*" aria-label="([^"]+)">/g;
-  const CARD_BADGE_PATTERN = /<span class="agent-badge" aria-hidden="true">([^<]+)<\/span>/g;
+describe('the quick start', () => {
+  const TAB_PATTERN = /<a class="start-tab" role="tab" id="start-tab-([^"]+)" href="([^"]+)" aria-selected="(true|false)"/g;
+  const PANEL_MARKER = '<div class="start-panel" role="tabpanel"';
+  const PANEL_HIDDEN_PATTERN = /^<div class="start-panel" role="tabpanel" id="start-panel-([^"]+)" aria-labelledby="[^"]+"( hidden="")?>/;
+  const TAG_PATTERN = /<[^>]+>/g;
+  const agents = Object.entries(AGENT_INSTALLS).map(([id, install]) => ({ id, name: install.productName, install }));
+  const tabIds = [...agents.map((agent) => agent.id), SiteStartTab.AnyMcp];
 
-  function clientsSectionOf(input: { html: string }): string {
-    return input.html.slice(input.html.indexOf('id="clients"'), input.html.indexOf('id="pricing"'));
+  function startOf(input: { html: string }): string {
+    return input.html.slice(input.html.indexOf('id="start"'), input.html.indexOf('id="pricing"'));
+  }
+
+  function panelsOf(input: { html: string }): { id: string; isHidden: boolean; html: string }[] {
+    return startOf(input)
+      .split(PANEL_MARKER)
+      .slice(1)
+      .map((chunk) => {
+        const opening = PANEL_HIDDEN_PATTERN.exec(`${PANEL_MARKER}${chunk}`)!;
+        return { id: opening[1]!, isHidden: opening[2] !== undefined, html: chunk };
+      });
+  }
+
+  function selectedOf(input: { html: string }): string[] {
+    return [...startOf(input).matchAll(TAB_PATTERN)].filter((match) => match[3] === 'true').map((match) => match[1]!);
+  }
+
+  function visibleIdsOf(input: { html: string }): string[] {
+    return panelsOf(input)
+      .filter((panel) => !panel.isHidden)
+      .map((panel) => panel.id);
   }
 
   it.each([
     ['en_US', OwnerLocale.EnglishUs, ENGLISH_HEADERS],
     ['pt_BR', OwnerLocale.PortugueseBrazil, PORTUGUESE_HEADERS],
-  ])('shows one card per installable agent, in registry order, with its own button in %s', async (_name, locale, headers) => {
-    const section = clientsSectionOf({ html: await pageOf({ headers }) });
-    const names = [...section.matchAll(CARD_NAME_PATTERN)].map((match) => match[1]);
-    expect(names.slice(0, agents.length)).toEqual(agents.map((agent) => escapedHtml({ text: agent.name })));
-    const buttons = [...section.matchAll(CARD_LINK_PATTERN)].map((match) => ({ href: match[1], label: match[2] }));
-    expect(buttons.slice(0, agents.length)).toEqual(
-      agents.map((agent) => ({
-        href: escapedHtml({ text: `/?agent=${agent.id}&lang=${languageOf({ locale })}#join` }),
-        label: copyHtml({ key: SiteCopyKey.AgentCardButton, locale, values: { agent: agent.name } }),
-      })),
-    );
+  ])(
+    'has one tab per installable agent in registry order, then any app, linked with the language in %s',
+    async (_name, locale, headers) => {
+      const html = await pageOf({ headers });
+      const tabs = [...startOf({ html }).matchAll(TAB_PATTERN)].map((match) => ({ id: match[1], href: match[2] }));
+      expect(tabs.map((tab) => tab.id)).toEqual(tabIds);
+      expect(tabs.map((tab) => tab.href)).toEqual(
+        tabIds.map((id) => escapedHtml({ text: `/?agent=${id}&lang=${languageOf({ locale })}#start` })),
+      );
+      expect(startOf({ html })).toContain(`role="tablist" aria-label="${copyHtml({ key: SiteCopyKey.StartTablistLabel, locale })}"`);
+    },
+  );
+
+  it('shows one panel per tab and only the first agent by default', async () => {
+    const html = await pageOf({ headers: ENGLISH_HEADERS });
+    expect(panelsOf({ html }).map((panel) => panel.id)).toEqual(tabIds);
+    expect(selectedOf({ html })).toEqual([agents[0]!.id]);
+    expect(visibleIdsOf({ html })).toEqual([agents[0]!.id]);
+  });
+
+  it.each([
+    ['an agent id', `/?agent=${agents[1]!.id}`, agents[1]!.id],
+    ['the any tab', `/?agent=${SiteStartTab.AnyMcp}`, SiteStartTab.AnyMcp],
+    ['an unknown id', '/?agent=nope', agents[0]!.id],
+    ['a prototype name', '/?agent=__proto__', agents[0]!.id],
+    ['a repeated parameter', `/?agent=${agents[2]!.id}&agent=${agents[1]!.id}`, agents[2]!.id],
+    ['markup', `/?agent=${encodeURIComponent('<script>alert(1)</script>')}`, agents[0]!.id],
+    ['ten thousand characters', `/?agent=${'x'.repeat(10_000)}`, agents[0]!.id],
+  ])('selects the tab and the panel for %s', async (_name, path, expected) => {
+    const html = await pageOf({ path, headers: ENGLISH_HEADERS });
+    expect(selectedOf({ html })).toEqual([expected]);
+    expect(visibleIdsOf({ html })).toEqual([expected]);
+    expect(html).not.toContain('<script>alert');
   });
 
   it.each([
     ['en_US', OwnerLocale.EnglishUs, ENGLISH_HEADERS],
     ['pt_BR', OwnerLocale.PortugueseBrazil, PORTUGUESE_HEADERS],
-  ])('shows a badge with the initials and a compact link on each tile in %s', async (_name, locale, headers) => {
-    const section = clientsSectionOf({ html: await pageOf({ headers }) });
-    const badges = [...section.matchAll(CARD_BADGE_PATTERN)].map((match) => match[1]);
-    expect(badges.slice(0, agents.length)).toEqual(agents.map((agent) => initialsOf({ name: agent.name })));
-    expect(section).toContain(`${copyHtml({ key: SiteCopyKey.AgentCardShort, locale })}</a>`);
+  ])('shows the hint and the code the registry gives, with the placeholder link, in %s', async (_name, locale, headers) => {
+    const html = await pageOf({ headers });
+    const placeholder = renderSiteCopy({ key: SiteCopyKey.StartLinkPlaceholder, locale });
+    const panels = panelsOf({ html });
+    agents.forEach((agent) => {
+      const quickStart = agent.install.quickStart({ locale, connectionLink: placeholder });
+      const text = panels.find((panel) => panel.id === agent.id)!.html.replace(TAG_PATTERN, '');
+      expect(text).toContain(escapedHtml({ text: quickStart.hint }));
+      expect(text).toContain(escapedHtml({ text: quickStart.code }));
+      expect(text).toContain(escapedHtml({ text: quickStart.hint }));
+      const panel = panels.find((candidate) => candidate.id === agent.id)!.html;
+      expect(panel.includes('class="code-path"')).toBe(quickStart.path.length > 0);
+      quickStart.path.forEach((step) => expect(text).toContain(escapedHtml({ text: step })));
+      expect(panel).toContain(`data-code="${escapedHtml({ text: quickStart.code })}"`);
+      expect(panel.match(/class="code-line"/g)).toHaveLength(quickStart.code.split('\n').length);
+    });
+    const anyText = panels.find((panel) => panel.id === SiteStartTab.AnyMcp)!.html.replace(TAG_PATTERN, '');
+    expect(anyText).toContain(copyHtml({ key: SiteCopyKey.StartAnyHint, locale }));
+    expect(anyText).toContain(escapedHtml({ text: placeholder }));
+    [SiteCopyKey.StartAnyStepOpen, SiteCopyKey.StartAnyStepAdd, SiteCopyKey.StartAnyStepPaste].forEach((key) =>
+      expect(anyText).toContain(copyHtml({ key, locale })),
+    );
   });
 
-  it('repeats no sentence and no snippet across the tiles', async () => {
-    const section = clientsSectionOf({ html: await pageOf({ headers: ENGLISH_HEADERS }) });
-    expect(section).not.toContain('agent-snippet');
-    const tiles = section.slice(section.indexOf('class="clients"'));
-    expect(tiles).not.toMatch(/<p[ >]/);
+  it('shows the logo image where the install facet names an official logo and the initials badge where it does not', async () => {
+    const html = startOf({ html: await pageOf({ headers: ENGLISH_HEADERS }) });
+    const tabHtml = (id: string): string =>
+      html.slice(html.indexOf(`id="start-tab-${id}"`), html.indexOf('</a>', html.indexOf(`id="start-tab-${id}"`)));
+    agents.forEach((agent) => {
+      const tab = tabHtml(agent.id);
+      if (agent.install.officialLogo !== null) {
+        expect(tab).toContain(`<img class="start-logo-image" src="/site/logos/${agent.install.officialLogo}.svg" alt=""`);
+        expect(tab).not.toContain('agent-badge');
+        return;
+      }
+      expect(tab).toContain(`<span class="agent-badge" aria-hidden="true">${initialsOf({ name: agent.name })}</span>`);
+      expect(tab).not.toContain('<img');
+    });
   });
 
-  it('ends with the card for any MCP app, whose button goes to the form', async () => {
-    const section = clientsSectionOf({ html: await pageOf({ headers: ENGLISH_HEADERS }) });
-    expect(section).toContain(copyHtml({ key: SiteCopyKey.ClientsAnyMcpName, locale: OwnerLocale.EnglishUs }));
-    expect(section).toContain('agent-card-any');
-    expect(section).toContain('href="/?lang=en#join" data-clear-agent');
-    expect(section).toContain(copyHtml({ key: SiteCopyKey.ClientsAnyMcpButton, locale: OwnerLocale.EnglishUs }));
+  it('gives each panel a hidden copy button, one call to action and one short line beside it, and no steps row', async () => {
+    const html = await pageOf({ headers: ENGLISH_HEADERS });
+    const locale = OwnerLocale.EnglishUs;
+    const panels = panelsOf({ html });
+    panels.forEach((panel) => {
+      expect(panel.html).toContain(`<p class="start-note">${copyHtml({ key: SiteCopyKey.StartNote, locale })}</p>`);
+      expect(panel.html).not.toContain('start-steps');
+      expect(panel.html.match(/class="start-copy" type="button" hidden=""/g)).toHaveLength(1);
+      expect(panel.html.match(/class="button button-primary start-cta"/g)).toHaveLength(1);
+    });
+    expect(startOf({ html }).match(new RegExp(copyHtml({ key: SiteCopyKey.StartCta, locale }), 'g'))).toHaveLength(panels.length);
+    const agentCta = escapedHtml({ text: `/?agent=${agents[0]!.id}&lang=en#join` });
+    expect(panels[0]!.html).toContain(`href="${agentCta}" data-picked-label="`);
+    expect(panels.at(-1)!.html).toContain('href="/?lang=en#join" data-clear-agent');
+    expect(startOf({ html })).toContain('id="start-announcement"');
   });
 
-  it('carries the picked-agent text on each button for the script', async () => {
-    const section = clientsSectionOf({ html: await pageOf({ headers: ENGLISH_HEADERS }) });
-    const picked = copyHtml({ key: SiteCopyKey.AgentCardPicked, locale: OwnerLocale.EnglishUs, values: { agent: agents[0]!.name } });
-    expect(section).toContain(`data-picked-label="${picked}"`);
+  it('carries the referral code in every link', async () => {
+    const html = startOf({ html: await pageOf({ path: `/?ref=${REFERRAL_CODE}`, headers: ENGLISH_HEADERS }) });
+    const hrefs = [...html.matchAll(/<a class="(?:start-tab|button button-primary start-cta)"[^>]* href="([^"]+)"/g)].map(
+      (match) => match[1],
+    );
+    expect(hrefs.length).toBe(tabIds.length * 2);
+    expect(hrefs.filter((href) => !href!.includes(`ref=${REFERRAL_CODE}`))).toEqual([]);
+  });
+
+  it('has none of the old tiles', async () => {
+    const html = await pageOf({ headers: ENGLISH_HEADERS });
+    expect(html).not.toContain('agent-card');
+    expect(html).not.toContain('agent-pick');
   });
 
   it('names the first two agents of the registry in the subhead', async () => {
     const html = await pageOf({ headers: ENGLISH_HEADERS });
     expect(html).toContain(`${agents[0]!.name}, ${agents[1]!.name} and any MCP agent`);
-  });
-});
-
-describe('the agent links', () => {
-  it('carry the language of the page, not the language of the browser', async () => {
-    const html = await pageOf({ path: '/?lang=pt-BR', headers: ENGLISH_HEADERS });
-    const hrefs = [...html.matchAll(/<a class="agent-pick" href="([^"]+)"/g)].map((match) => match[1]);
-    expect(hrefs.length).toBeGreaterThan(0);
-    expect(hrefs.filter((href) => !href!.includes('lang=pt-BR'))).toEqual([]);
-    expect(html).toContain('href="/?lang=pt-BR#join" data-clear-agent');
-  });
-
-  it('carry the referral code as well', async () => {
-    const html = await pageOf({ path: `/?ref=${REFERRAL_CODE}`, headers: ENGLISH_HEADERS });
-    expect(html).toContain(`ref=${REFERRAL_CODE}#join" data-picked-label`);
-    expect(html).toContain(`href="/?lang=en&amp;ref=${REFERRAL_CODE}#join" data-clear-agent`);
   });
 });
 
@@ -553,17 +625,19 @@ describe('the paused waitlist', () => {
     return response.text();
   }
 
-  it('still tells the stories, shows the tiles and the pricing', async () => {
+  it('still tells the stories, shows the quick start and the pricing', async () => {
     const html = await pausedPage();
     expect(html.match(/class="why-item"/g)).toHaveLength(6);
+    expect(html).toContain('id="start"');
+    expect(html).toContain('role="tabpanel"');
     expect(html).toContain('id="pricing"');
     expect(html).toContain(copyHtml({ key: SiteCopyKey.PricingFreeName, locale: OwnerLocale.EnglishUs }));
     expect(html).not.toContain('id="join-email"');
   });
 
-  it('keeps every tile link pointing at the join anchor', async () => {
+  it('keeps every call to action pointing at the join anchor', async () => {
     const html = await pausedPage();
-    const hrefs = [...html.matchAll(/<a class="agent-pick" href="([^"]+)"/g)].map((match) => match[1]);
+    const hrefs = [...html.matchAll(/<a class="button button-primary start-cta" href="([^"]+)"/g)].map((match) => match[1]);
     expect(hrefs.length).toBeGreaterThan(0);
     expect(hrefs.filter((href) => !href!.endsWith('#join'))).toEqual([]);
     expect(html).toContain('id="join"');

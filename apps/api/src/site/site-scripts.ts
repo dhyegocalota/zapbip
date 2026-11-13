@@ -11,6 +11,8 @@ const SCRIPT_SOURCE = `(function () {
   var REVEAL_THRESHOLD = 0.2;
   var REVEAL_ROOT_MARGIN = '0px 0px -8% 0px';
   var SCROLL_TIMELINE_SUPPORT = 'animation-timeline: view()';
+  var TYPING_THRESHOLD = 0.3;
+  var TYPING_CLASS = 'has-typing';
   var REVEAL_CLASS = 'has-reveal';
   var VISIBLE_CLASS = 'is-visible';
   var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -88,6 +90,98 @@ const SCRIPT_SOURCE = `(function () {
         goToJoin();
       });
     });
+  }
+
+  function setupStartTabs() {
+    var tabs = Array.prototype.slice.call(document.querySelectorAll('.start-tab'));
+    if (!tabs.length) return;
+    var keys = { ArrowRight: 1, ArrowLeft: -1 };
+    var list = tabs[0].parentNode;
+    function fade() {
+      list.classList.toggle('is-scrolled', list.scrollLeft > 0);
+      list.classList.toggle('is-end', list.scrollLeft + list.clientWidth >= list.scrollWidth - 1);
+    }
+    function reveal(tab, behavior) {
+      list.scrollTo({ left: tab.offsetLeft - (list.clientWidth - tab.offsetWidth) / 2, behavior: behavior });
+    }
+    list.addEventListener('scroll', fade);
+    function select(tab, shouldFocus) {
+      tabs.forEach(function (candidate) {
+        var isSelected = candidate === tab;
+        candidate.setAttribute('aria-selected', String(isSelected));
+        candidate.tabIndex = isSelected ? 0 : -1;
+        byId(candidate.getAttribute('aria-controls')).hidden = !isSelected;
+      });
+      history.replaceState(null, '', tab.getAttribute('href').split('#')[0]);
+      reveal(tab, reducedMotion ? 'auto' : 'smooth');
+      if (shouldFocus) tab.focus({ preventScroll: true });
+    }
+    reveal(document.querySelector('.start-tab[aria-selected="true"]'), 'auto');
+    fade();
+    tabs.forEach(function (tab, index) {
+      tab.tabIndex = tab.getAttribute('aria-selected') === 'true' ? 0 : -1;
+      tab.addEventListener('click', function (event) {
+        event.preventDefault();
+        select(tab, false);
+      });
+      tab.addEventListener('keydown', function (event) {
+        var target;
+        if (event.key in keys) target = (index + keys[event.key] + tabs.length) % tabs.length;
+        if (event.key === 'Home') target = 0;
+        if (event.key === 'End') target = tabs.length - 1;
+        if (target === undefined) return;
+        event.preventDefault();
+        select(tabs[target], true);
+      });
+    });
+  }
+
+  function setupStartCopy() {
+    var announcement = byId('start-announcement');
+    document.querySelectorAll('.start-copy').forEach(function (button) {
+      var originalLabel = button.textContent;
+      button.hidden = false;
+      var code = button.closest('.start-panel').querySelector('code');
+      var text = code.getAttribute('data-code');
+      function copied() {
+        button.setAttribute('data-copied', 'true');
+        button.textContent = button.getAttribute('data-copied-label');
+        announcement.textContent = button.getAttribute('data-copied-announcement');
+        window.setTimeout(function () {
+          button.removeAttribute('data-copied');
+          button.textContent = originalLabel;
+        }, COPIED_RESET_MS);
+      }
+      function selected() {
+        var range = document.createRange();
+        range.selectNodeContents(code);
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(range);
+        announcement.textContent = button.getAttribute('data-fallback-announcement');
+      }
+      button.addEventListener('click', function () {
+        if (!navigator.clipboard) {
+          selected();
+          return;
+        }
+        navigator.clipboard.writeText(text).then(copied, selected);
+      });
+    });
+  }
+
+  function setupStartTyping() {
+    var section = byId('start');
+    if (!section || reducedMotion || !('IntersectionObserver' in window)) return;
+    document.documentElement.classList.add(TYPING_CLASS);
+    var observer = new IntersectionObserver(
+      function (entries) {
+        if (!entries[0].isIntersecting) return;
+        section.classList.add('is-live');
+        observer.disconnect();
+      },
+      { threshold: TYPING_THRESHOLD }
+    );
+    observer.observe(section);
   }
 
   function setupReveal() {
@@ -204,6 +298,9 @@ const SCRIPT_SOURCE = `(function () {
   setupJoinForm();
   setupJoinLinks();
   setupAgentPicks();
+  setupStartTabs();
+  setupStartCopy();
+  setupStartTyping();
   setupReveal();
   setupThanks();
   setupDemo();

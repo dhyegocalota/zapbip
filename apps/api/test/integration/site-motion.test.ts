@@ -37,4 +37,22 @@ describe('the scroll motion stylesheet', () => {
     );
     expect(SITE_STYLESHEET).toMatch(/\.status-text \{[^}]*overflow: hidden;/);
   });
+
+  it('types the code in only under the no-preference query and keeps a caret off the other paths', () => {
+    expect(SITE_STYLESHEET).toContain('@keyframes code-type');
+    const typingIndex = SITE_STYLESHEET.indexOf('animation: code-type');
+    expect(typingIndex).toBeGreaterThan(-1);
+    expect(enclosingMediaQueryOf({ index: typingIndex }).startsWith(NO_PREFERENCE_QUERY)).toBe(true);
+    expect(SITE_STYLESHEET).toContain('#start.is-live');
+  });
+
+  it('fades the edge of the tab row with named colours only', () => {
+    expect(SITE_STYLESHEET).toMatch(/\.start-tabs \{[^}]*mask-image: linear-gradient\(/);
+  });
+
+  it('hides the typed lines only once the script has asked for it, and blinks the caret a few times', () => {
+    expect(SITE_STYLESHEET).toContain('html.has-typing #start:not(.is-live)');
+    expect(SITE_STYLESHEET).toMatch(/animation: caret-blink 1s steps\(1\) 5;/);
+    expect(SITE_STYLESHEET).toContain('--duration-type');
+  });
 });

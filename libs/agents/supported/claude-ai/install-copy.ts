@@ -1,5 +1,6 @@
 import { OwnerLocale } from '@zapbip/types';
 import { chatSelfTest, formatSection, localizeCopy, noticeStep, questionStep, tellOwner, type InstallProduct } from '@zapbip/core';
+import { addressText, quickStartOf } from '../../src/quick-start';
 
 export const CLAUDE_AI_PRODUCT: InstallProduct = {
   productName: 'claude.ai',
@@ -57,4 +58,25 @@ export const CLAUDE_AI_COPY = localizeCopy({
         chatSelfTest(section.locale),
       ],
     }),
+});
+
+const CLAUDE_AI_QUICK_START_HINT: Record<OwnerLocale, string> = {
+  [OwnerLocale.PortugueseBrazil]: 'Faça isto no claude.ai',
+  [OwnerLocale.EnglishUs]: 'Do this in claude.ai',
+};
+
+const CLAUDE_AI_QUICK_START_PATH: Record<OwnerLocale, string[]> = {
+  [OwnerLocale.PortugueseBrazil]: [
+    'Abra o claude.ai → Configurações',
+    'Vá em Conectores',
+    'Adicione um conector personalizado',
+    'Cole este endereço',
+  ],
+  [OwnerLocale.EnglishUs]: ['Open claude.ai → Settings', 'Go to Connectors', 'Add a custom connector', 'Paste this address'],
+};
+
+export const CLAUDE_AI_QUICK_START = quickStartOf({
+  hint: CLAUDE_AI_QUICK_START_HINT,
+  path: CLAUDE_AI_QUICK_START_PATH,
+  code: addressText,
 });

@@ -1,6 +1,7 @@
 import type { InstallClient } from '@zapbip/agents/install';
 import type { OwnerLocale } from '@zapbip/types';
 import type { BackofficeTheme } from '../backoffice/backoffice-theme';
+import type { SiteStartTab } from './site-agents';
 
 export enum JoinState {
   Idle = 'idle',
@@ -26,5 +27,6 @@ export type PageModel = {
   turnstileSiteKey: string;
   referralCode: string | null;
   agent: InstallClient | null;
+  startTab: InstallClient | SiteStartTab;
   join: JoinView;
 };

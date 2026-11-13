@@ -1,5 +1,5 @@
 import type { InstallSection } from '@zapbip/core';
-import type { DocsLanguage, WakeMode, WakeRung } from '@zapbip/types';
+import type { DocsLanguage, OwnerLocale, WakeMode, WakeRung } from '@zapbip/types';
 
 export type SessionLookupInput = { workingDirectory: string; homeDirectory: string };
 export type WakeIsolationInput = {
@@ -22,7 +22,16 @@ export type AgentDefinition = {
   listen: { rung: WakeRung; expectedDelaySeconds: number | null; setWakeModes: WakeMode[] };
 };
 
-export type AgentInstall = { productName: string; productDescription: string; render: InstallSection };
+export type QuickStartInput = { locale: OwnerLocale; connectionLink: string };
+export type QuickStart = { hint: string; path: string[]; code: string };
+
+export type AgentInstall = {
+  productName: string;
+  productDescription: string;
+  officialLogo: string | null;
+  quickStart: (input: QuickStartInput) => QuickStart;
+  render: InstallSection;
+};
 
 export enum StrictMcpNullReason {
   DisablesOtherServers = 'disables-other-servers',
