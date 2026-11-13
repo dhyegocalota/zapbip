@@ -120,6 +120,7 @@ const SELECT_WAKE_MODES_STATEMENT = 'SELECT agent, mode FROM agent_wake';
 type WakeModeRow = { agent: string; mode: WakeMode };
 
 type ReceiveAccountMessageRequest = Parameters<AccountOwnerRpc['receiveAccountMessage']>[0];
+type ApplyWebCommandRequest = Parameters<AccountOwnerRpc['applyWebCommand']>[0];
 
 function failureLog(input: { error: inbox.InboxError }): LogFields {
   const { error } = input;
@@ -533,6 +534,10 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
         ...logFieldsOfAccountResult({ result: value, accountId: input.account.accountId, locale: input.account.locale }),
       ],
     });
+  }
+
+  applyWebCommand(_input: ApplyWebCommandRequest): Promise<CallOutcome<inbox.AccountCommandResult>> {
+    throw new Error('applyWebCommand is not implemented');
   }
 
   async recordRevocation(input: { agent: string }): Promise<void> {
