@@ -1,6 +1,6 @@
 # Customer web app
 
-**Status:** Building
+**Status:** Shipped 2026-11-13
 **Tier:** 🔴 structural
 **Owner approval:** approved 2026-11-13 (owner delegated)
 **ADRs:** [0042](../../adr/0042-the-customer-web-app-signs-in-with-a-one-time-link-sent-over-whatsapp.md)
