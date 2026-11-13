@@ -4,13 +4,12 @@ import { getCookie } from 'hono/cookie';
 import { errorResponse } from '../error-response';
 import { LogEvent } from '../../contract/log';
 import { logEvent } from '../../log';
-import { CSRF_COOKIE_NAME } from '../backoffice-constants';
+import { CSRF_COOKIE_NAME, SAFE_METHODS } from '../backoffice-constants';
 import type { BackofficeEnv } from '../backoffice-env';
 import { textFieldOf } from '../form-fields';
 import { constantTimeEqual } from './constant-time';
 import { isSessionCsrfTokenValid } from './csrf';
 
-const SAFE_METHODS = ['GET', 'HEAD'];
 const ORIGIN_HEADER = 'Origin';
 const CSRF_FIELD = 'csrf';
 

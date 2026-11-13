@@ -8,12 +8,14 @@ import { LogEvent } from '../contract/log';
 import { logEvent } from '../log';
 import { plainResponse } from '../routes/private-response';
 import { joinHandler } from './join-route';
+import { languageRedirects } from './language-redirects';
 import { preferenceRoutes } from './preference-routes';
 import { idleJoinOf, renderLanding, renderNotFound } from './render-landing';
 import { renderRobots, renderSitemap } from './robots-and-sitemap';
 import { siteContext } from './site-context';
-import { PAGE_CACHE_CONTROL, PAGE_VARY, SCRIPT_CONTENT_TYPE, SITE_REFERRAL_PARAMETER, STYLESHEET_CONTENT_TYPE } from './site-constants';
+import { PAGE_CACHE_CONTROL, PAGE_VARY, SCRIPT_CONTENT_TYPE, STYLESHEET_CONTENT_TYPE } from './site-constants';
 import type { SiteEnv } from './site-env';
+import { pagePathOf } from './site-links';
 import { SitePath } from './site-paths';
 import { SITE_SECURITY_HEADERS, SITE_STRICT_TRANSPORT_SECURITY } from './site-policy';
 import { SITE_SCRIPT } from './site-scripts';
@@ -35,22 +37,23 @@ export function createSiteApp(input: { fetchImplementation: typeof fetch }): Hon
   const app = new Hono<SiteEnv>();
   app.use('*', securityHeaders);
   app.use('*', siteContext);
+  app.use('*', languageRedirects);
   app.onError((error, context) => {
     logEvent({ event: LogEvent.SiteError, errorCode: error instanceof Error ? error.name : SITE_ERROR_CODE });
     return plainResponse({ body: SERVER_ERROR_TEXT, status: HttpStatus.InternalServerError });
   });
-  app.get(SitePath.Home, (context) =>
+  const landing = (context: Context<SiteEnv>): Response | Promise<Response> =>
     renderLanding({
       context,
       join: idleJoinOf({ context }),
       status: HttpStatus.Ok,
       headers: { 'Cache-Control': PAGE_CACHE_CONTROL, Vary: PAGE_VARY },
-    }),
-  );
+    });
+  app.get(SitePath.Home, landing);
+  app.get(SitePath.PortugueseHome, landing);
   app.post(SitePath.Join, joinHandler({ fetchImplementation: input.fetchImplementation }));
   app.get(SitePath.Join, (context) => {
-    const referralCode = context.get('referralCode');
-    const target = referralCode === null ? SitePath.Home : `${SitePath.Home}?${SITE_REFERRAL_PARAMETER}=${referralCode}`;
+    const target = pagePathOf({ locale: context.get('locale'), agent: null, referralCode: context.get('referralCode') });
     return context.redirect(target, SEE_OTHER_STATUS);
   });
   app.route('/', preferenceRoutes);

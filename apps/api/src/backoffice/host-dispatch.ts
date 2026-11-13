@@ -1,6 +1,7 @@
 import { HttpStatus } from '@zapbip/types';
 import type { Hono } from 'hono';
 import type { Bindings } from '../contract/env';
+import { httpsRedirectOf } from '../https-redirect';
 import { createSiteApp } from '../site/site-app';
 import { createBackofficeApp, createRejectedHostApp } from './app';
 
@@ -49,6 +50,8 @@ const HOST_HANDLERS: Record<HostKind, (input: HostDispatch) => Response | Promis
 };
 
 export function fetchByHost(input: HostDispatch): Response | Promise<Response> {
+  const insecureRedirect = httpsRedirectOf({ request: input.request, environment: input.env.ENVIRONMENT });
+  if (insecureRedirect !== null) return insecureRedirect;
   const hostKind = hostKindOf({
     url: input.request.url,
     backofficeOrigin: input.env.BACKOFFICE_ORIGIN,

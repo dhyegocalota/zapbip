@@ -23,6 +23,11 @@ export function siteAgents(): { id: InstallClient; name: string; logo: string | 
   }));
 }
 
+export function agentParameterOf(input: { value: string | undefined }): InstallClient | SiteStartTab | null {
+  if (input.value === SiteStartTab.AnyMcp) return SiteStartTab.AnyMcp;
+  return siteAgentIdOf({ value: input.value });
+}
+
 export function siteQuickStartOf(input: { id: InstallClient; locale: OwnerLocale; connectionLink: string }): {
   hint: string;
   path: string[];

@@ -31,6 +31,12 @@
   --color-terminal-string: #f2c46d;
   --color-logo-surface: #ffffff;
   --color-terminal-border: #1f332d;
+  --color-band: #eef3ef;
+  --color-band-item: #ffffff;
+  --color-band-text: #0e1f1a;
+  --color-band-muted: #4b5e57;
+  --color-band-accent: #0b6b60;
+  --color-band-border: #dce5e0;
   --color-chat-wallpaper: #ece5dd;
   --color-chat-header: #075e54;
   --color-chat-incoming: #ffffff;
@@ -77,16 +83,11 @@
   --measure-faq: 48rem;
   --measure-scene: 26rem;
   --size-scene-min: 16rem;
-  --size-why-track: 60svh;
-  --offset-why-pin: max(5rem, calc(50svh - 8rem));
   --text-why: clamp(1.5rem, 1.1rem + 1.6vw, 2.25rem);
-  --distance-reveal: 1.25rem;
+  --distance-reveal: 0.75rem;
   --distance-scene: 1rem;
-  --duration-scene: 560ms;
+  --duration-scene: 500ms;
   --step-gap-delay: 120ms;
-  --step-range-start: 6%;
-  --step-range-span: 16%;
-  --step-range-stride: 4.5%;
   --shadow-card: 0 1px 2px rgb(14 31 26 / 0.05), 0 8px 24px -12px rgb(14 31 26 / 0.12);
   --shadow-highlight: inset 0 1px 0 rgb(255 255 255 / 0.16);
   --glow-signal: 0 0 0 4px rgb(37 211 102 / 0.18);
@@ -151,6 +152,12 @@
     --color-terminal: #050d0b;
     --color-terminal-bar: #0d1b17;
     --color-bezel: #020806;
+    --color-band: #050d0b;
+    --color-band-item: #0d1b17;
+    --color-band-text: #e8f1ed;
+    --color-band-muted: #9db2aa;
+    --color-band-accent: #5be39a;
+    --color-band-border: #1f332d;
     --shadow-card: 0 0 0 1px rgb(232 241 237 / 0.02), 0 12px 32px -16px rgb(0 0 0 / 0.7);
     --shadow-highlight: inset 0 1px 0 rgb(255 255 255 / 0.22);
     --gradient-hero:
@@ -189,6 +196,12 @@
   --color-terminal: #050d0b;
   --color-terminal-bar: #0d1b17;
   --color-bezel: #020806;
+  --color-band: #050d0b;
+  --color-band-item: #0d1b17;
+  --color-band-text: #e8f1ed;
+  --color-band-muted: #9db2aa;
+  --color-band-accent: #5be39a;
+  --color-band-border: #1f332d;
   --shadow-card: 0 0 0 1px rgb(232 241 237 / 0.02), 0 12px 32px -16px rgb(0 0 0 / 0.7);
   --shadow-highlight: inset 0 1px 0 rgb(255 255 255 / 0.22);
   --gradient-hero:
@@ -273,6 +286,102 @@ a {
   align-items: center;
   gap: var(--space-3);
   margin-left: auto;
+}
+
+.lang-menu {
+  position: relative;
+}
+
+.lang-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--size-tap);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-sunken);
+  color: var(--color-text);
+  font-size: var(--text-small);
+  font-weight: 600;
+  list-style: none;
+  cursor: pointer;
+}
+
+.lang-trigger::-webkit-details-marker {
+  display: none;
+}
+
+.lang-trigger::before {
+  content: none;
+}
+
+.lang-trigger::after {
+  content: '';
+  width: 0.4375rem;
+  height: 0.4375rem;
+  margin: -0.25rem 0 0 var(--space-1);
+  border-right: 2px solid currentcolor;
+  border-bottom: 2px solid currentcolor;
+  transform: rotate(45deg);
+}
+
+.lang-menu[open] .lang-trigger::after {
+  margin-top: 0.25rem;
+  transform: rotate(-135deg);
+}
+
+.lang-code {
+  letter-spacing: 0.04em;
+}
+
+.lang-list {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  z-index: 30;
+  display: grid;
+  min-width: 11rem;
+  margin: 0;
+  padding: var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.lang-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: var(--size-tap);
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.lang-option:hover,
+.lang-option:focus-visible {
+  background: var(--color-sunken);
+}
+
+.lang-option[aria-current='true'] {
+  color: var(--color-action);
+  font-weight: 700;
+}
+
+.flag {
+  flex: none;
+  width: 1.25rem;
+  height: 0.875rem;
+  border-radius: 0.1875rem;
+  box-shadow: 0 0 0 1px var(--color-border);
 }
 
 .nav-link {
@@ -862,12 +971,12 @@ section.block {
 
 .band {
   padding-block: var(--space-8);
-  background: var(--gradient-band), var(--color-terminal);
-  color: var(--color-terminal-text);
+  background: var(--gradient-band), var(--color-band);
+  color: var(--color-band-text);
 }
 
 .band .eyebrow {
-  color: var(--color-terminal-accent);
+  color: var(--color-band-accent);
 }
 
 .band-grid {
@@ -878,9 +987,9 @@ section.block {
 
 .band-item {
   padding: var(--space-5);
-  border: 1px solid var(--color-terminal-border);
+  border: 1px solid var(--color-band-border);
   border-radius: var(--radius-bubble);
-  background: var(--color-terminal-bar);
+  background: var(--color-band-item);
 }
 
 .band-item h3 {
@@ -891,18 +1000,18 @@ section.block {
 .band-item p,
 .band-note p {
   margin: 0;
-  color: var(--color-terminal-muted);
+  color: var(--color-band-muted);
 }
 
 .band-icon {
-  color: var(--color-terminal-accent);
+  color: var(--color-band-accent);
   font-size: 1.5rem;
 }
 
 .band-note {
   margin-top: var(--space-5);
   padding: var(--space-5);
-  border: 1px dashed var(--color-terminal-border);
+  border: 1px dashed var(--color-band-border);
   border-radius: var(--radius-bubble);
 }
 
@@ -912,7 +1021,7 @@ section.block {
 }
 
 .band-note a {
-  color: var(--color-terminal-accent);
+  color: var(--color-band-accent);
 }
 
 .faq {
@@ -1047,7 +1156,7 @@ details p {
     inset: -2rem;
   }
 
-  .why-pin {
+  .why-story {
     grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
     gap: var(--space-8);
   }
@@ -1147,10 +1256,6 @@ a:hover {
 .switch form,
 form.switch {
   margin: 0;
-}
-
-.switch .label-full {
-  display: none;
 }
 
 .notice-info {
@@ -1795,10 +1900,23 @@ summary::before {
 }
 
 .plan-pro {
-  align-self: start;
-  border-style: dashed;
-  background: transparent;
   box-shadow: none;
+}
+
+.plan-period {
+  color: var(--color-muted);
+  font-weight: 600;
+}
+
+.plan-billing,
+.plan-definition {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+}
+
+.plan-definition {
+  margin-top: var(--space-5);
 }
 
 .why-list {
@@ -1813,7 +1931,7 @@ summary::before {
   padding-block: var(--space-6);
 }
 
-.why-pin {
+.why-story {
   display: grid;
   gap: var(--space-5);
   align-items: center;
@@ -2217,13 +2335,6 @@ summary::before {
   }
 }
 
-@keyframes reveal {
-  from {
-    opacity: 0;
-    transform: translateY(var(--distance-reveal));
-  }
-}
-
 @keyframes scene-rise {
   from {
     opacity: 0;
@@ -2292,39 +2403,9 @@ summary::before {
   }
 }
 
-@media (min-width: 40rem) {
-  .switch .label-short {
-    display: none;
-  }
-
-  .switch .label-full {
-    display: inline;
-  }
-}
-
-@media (min-width: 64rem) and (min-height: 40rem) {
-  html {
-    --step-range-start: 14%;
-    --step-range-span: 11%;
-    --step-range-stride: 4%;
-  }
-
-  .why-item {
-    min-height: var(--size-why-track);
-    padding-block: 0;
-  }
-
-  .why-pin {
-    position: sticky;
-    top: var(--offset-why-pin);
-  }
-}
-
 .scene-step,
 .scene-leave {
   --step-motion: scene-rise;
-  --step-start: calc(var(--step-range-start) + var(--step) * var(--step-range-stride));
-  --step-end: calc(var(--step-start) + var(--step-range-span));
   --step-delay: calc(var(--step) * var(--step-gap-delay));
 }
 
@@ -2381,39 +2462,6 @@ summary::before {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  @supports (animation-timeline: view()) {
-    html:not(.has-reveal) .why-item {
-      view-timeline: --why-track block;
-    }
-
-    html:not(.has-reveal) .scene-step,
-    html:not(.has-reveal) .scene-leave {
-      animation-name: var(--step-motion);
-      animation-timing-function: var(--ease-out);
-      animation-fill-mode: both;
-      animation-timeline: --why-track;
-      animation-range: cover var(--step-start) cover var(--step-end);
-    }
-
-    html:not(.has-reveal) .reveal {
-      animation: reveal linear both;
-      animation-timeline: view();
-      animation-range: entry 0% entry 70%;
-    }
-
-    html:not(.has-reveal) .card-grid .reveal:nth-child(3n + 2),
-    html:not(.has-reveal) .steps .reveal:nth-child(2),
-    html:not(.has-reveal) .band-grid .reveal:nth-child(2) {
-      animation-range: entry 5% entry 75%;
-    }
-
-    html:not(.has-reveal) .card-grid .reveal:nth-child(3n),
-    html:not(.has-reveal) .steps .reveal:nth-child(3),
-    html:not(.has-reveal) .band-grid .reveal:nth-child(3) {
-      animation-range: entry 10% entry 80%;
-    }
-  }
-
   .start-panel:not([hidden]) {
     animation: panel-in var(--duration-arrive) var(--ease-out);
   }
@@ -2469,13 +2517,13 @@ summary::before {
   html.has-reveal .card-grid .reveal:nth-child(3n + 2),
   html.has-reveal .steps .reveal:nth-child(2),
   html.has-reveal .band-grid .reveal:nth-child(2) {
-    transition-delay: 80ms;
+    transition-delay: 60ms;
   }
 
   html.has-reveal .card-grid .reveal:nth-child(3n),
   html.has-reveal .steps .reveal:nth-child(3),
   html.has-reveal .band-grid .reveal:nth-child(3) {
-    transition-delay: 160ms;
+    transition-delay: 120ms;
   }
 
   html.has-reveal .scene-step,

@@ -15,7 +15,7 @@ test('robots, sitemap, canonical, Open Graph and favicon', async ({ page, reques
   expect(sitemapText).toContain('hreflang="pt-BR"');
   expect(sitemapText).toContain('hreflang="en"');
   await page.goto('/');
-  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', `${baseURL}/?lang=en`);
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', `${baseURL}/`);
   await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute('content', 'summary_large_image');
   const imageUrl = (await page.locator('meta[property="og:image"]').getAttribute('content'))!;
   const image = await request.get(new URL(imageUrl).pathname);

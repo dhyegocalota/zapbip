@@ -4,7 +4,7 @@ import { CodeTokenKind, highlightCode } from '../code-tokens';
 import { initialsOf, siteAgents, SiteStartTab, siteQuickStartOf } from '../site-agents';
 import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
-import { agentPathOf, joinPathOf, languageOf, startPathOf } from '../site-links';
+import { agentPathOf, joinPathOf, startPathOf } from '../site-links';
 import { logoPathOf } from '../site-paths';
 
 const ANY_BADGE = '+';
@@ -76,7 +76,6 @@ function TabLogo(props: { tab: Tab }) {
 export function QuickStartSection(props: { locale: OwnerLocale; referralCode: string | null; startTab: InstallClient | SiteStartTab }) {
   const { locale, referralCode, startTab } = props;
   const translate = copyOf({ locale });
-  const language = languageOf({ locale });
   const placeholder = translate(SiteCopyKey.StartLinkPlaceholder);
   const agentTabs: Tab[] = siteAgents().map((agent) => {
     const quickStart = siteQuickStartOf({ id: agent.id, locale, connectionLink: placeholder });
@@ -116,7 +115,7 @@ export function QuickStartSection(props: { locale: OwnerLocale; referralCode: st
               class="start-tab"
               role="tab"
               id={`start-tab-${tab.id}`}
-              href={startPathOf({ tab: tab.id, language, referralCode })}
+              href={startPathOf({ tab: tab.id, locale, referralCode })}
               aria-selected={String(tab.id === startTab)}
               aria-controls={`start-panel-${tab.id}`}
             >
@@ -162,13 +161,13 @@ export function QuickStartSection(props: { locale: OwnerLocale; referralCode: st
             </div>
             <div class="start-next">
               {tab.agent === null ? (
-                <a class="button button-primary start-cta" href={joinPathOf({ language, referralCode })} data-clear-agent>
+                <a class="button button-primary start-cta" href={joinPathOf({ locale, referralCode })} data-clear-agent>
                   {translate(SiteCopyKey.StartCta)}
                 </a>
               ) : (
                 <a
                   class="button button-primary start-cta"
-                  href={agentPathOf({ agent: tab.agent, language, referralCode })}
+                  href={agentPathOf({ agent: tab.agent, locale, referralCode })}
                   data-picked-label={tab.pickedLabel}
                 >
                   {translate(SiteCopyKey.StartCta)}

@@ -368,3 +368,8 @@ export enum WaitlistJoinOutcome {
   InvalidEmail = 'invalid_email',
   RateLimited = 'rate_limited',
 }
+
+export enum PricingCurrency {
+  Usd = 'usd',
+  Brl = 'brl',
+}

@@ -27,6 +27,11 @@ const PAIRS: Pair[] = [
     minimum: TEXT_CONTRAST,
   }),
   ...pairsOf({
+    foregrounds: ['--color-band-text', '--color-band-muted', '--color-band-accent'],
+    backgrounds: ['--color-band', '--color-band-item'],
+    minimum: TEXT_CONTRAST,
+  }),
+  ...pairsOf({
     foregrounds: ['--color-chat-ink', '--color-chat-sender', '--color-chat-muted'],
     backgrounds: ['--color-chat-incoming', '--color-chat-outgoing'],
     minimum: TEXT_CONTRAST,
