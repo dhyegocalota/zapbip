@@ -44,6 +44,7 @@ import { D1ChannelRestrictions } from '../adapters/d1/d1-channel-restrictions';
 import { D1ConnectionDirectory } from '../adapters/d1/d1-connection-directory';
 import { D1ConnectionRegistry } from '../adapters/d1/d1-connection-registry';
 import { D1MessageIndex } from '../adapters/d1/d1-message-index';
+import { D1SignInLinks } from '../adapters/d1/d1-sign-in-links';
 import { numberRegistryOf } from '../adapters/d1/d1-number-registry';
 import { findOwnerByAccountId } from '../adapters/d1/d1-owner-directory';
 import { createConnectionSecrets } from '../adapters/platform/connection-secrets';
@@ -211,11 +212,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       firstMessage: createSqliteFirstMessageClaim({ storage: this.ctx.storage }),
       deletionRequests: createSqliteDeletionRequests({ storage: this.ctx.storage }),
       installLinkRedaction: { redact: async ({ messageIds }) => redactInstallCodes({ storage: this.ctx.storage, messageIds }) },
-      signInLinks: {
-        issue: async () => {
-          throw new Error('D1SignInLinks is not implemented');
-        },
-      },
+      signInLinks: new D1SignInLinks({ database: this.env.CONNECTIONS }),
     };
     this.ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair(CONNECTOR_PING_TEXT, CONNECTOR_PONG_TEXT));
     this.dueTimeProviders.push(
