@@ -69,3 +69,10 @@ Screenshots: `/private/tmp/claude-501/-Users-dhyegocalota-Projects-zapbip-zapbip
 ## Summary
 
 Ticked in this walk: 11/11. Earlier rows: 20/20 by the developer (not re-run; verify is running). Blocked: 0. Defects: 0 high, 0 medium, 3 low, 1 info. Verdict: ready for review; the block is polished and easy in both locales and themes, D1 to D3 are small fixes with tests.
+
+## Tester findings (dc9ae8ce)
+
+- [x] No script: the Copy buttons exist but none is visible; with a script the visible panel's button is. — evidence: landing-quick-start.spec.ts
+- [x] 375 px: the start of the tab row has no fade until the row scrolls (the snap padding keeps the first tab at scroll start). — evidence: landing-quick-start.spec.ts
+- [x] 375 px: the command keeps `white-space: pre`, no flag breaks across lines, the block scrolls and the page does not. — evidence: landing-quick-start.spec.ts
+- [x] Each panel has one "Get your free link" button and one note beside it, and no numbered steps row. — evidence: site-page.test.ts

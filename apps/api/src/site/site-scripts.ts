@@ -98,7 +98,7 @@ const SCRIPT_SOURCE = `(function () {
     var keys = { ArrowRight: 1, ArrowLeft: -1 };
     var list = tabs[0].parentNode;
     function fade() {
-      list.classList.toggle('is-scrolled', list.scrollLeft > 1);
+      list.classList.toggle('is-scrolled', list.scrollLeft > 0);
       list.classList.toggle('is-end', list.scrollLeft + list.clientWidth >= list.scrollWidth - 1);
     }
     function reveal(tab, behavior) {
@@ -140,6 +140,7 @@ const SCRIPT_SOURCE = `(function () {
     var announcement = byId('start-announcement');
     document.querySelectorAll('.start-copy').forEach(function (button) {
       var originalLabel = button.textContent;
+      button.hidden = false;
       var code = button.closest('.start-panel').querySelector('code');
       var text = code.getAttribute('data-code');
       function copied() {

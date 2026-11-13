@@ -11,8 +11,6 @@ const ANY_BADGE = '+';
 const LOGO_SIZE = 20;
 const LINE_BREAK = '\n';
 const ANY_PATH_KEYS = [SiteCopyKey.StartAnyStepOpen, SiteCopyKey.StartAnyStepAdd, SiteCopyKey.StartAnyStepPaste];
-const STEP_KEYS = [SiteCopyKey.StartStepGet, SiteCopyKey.StartStepPaste, SiteCopyKey.StartStepText];
-const FIRST_STEP_NUMBER = 1;
 const HIGHLIGHTED_KINDS = [
   CodeTokenKind.Command,
   CodeTokenKind.Flag,
@@ -141,6 +139,7 @@ export function QuickStartSection(props: { locale: OwnerLocale; referralCode: st
                 <button
                   class="start-copy"
                   type="button"
+                  hidden
                   data-copied-label={translate(SiteCopyKey.StartCopied)}
                   data-copied-announcement={translate(SiteCopyKey.StartCopiedAnnouncement)}
                   data-fallback-announcement={translate(SiteCopyKey.StartCopyFallback)}
@@ -161,27 +160,22 @@ export function QuickStartSection(props: { locale: OwnerLocale; referralCode: st
                 </code>
               </pre>
             </div>
-            <ol class="start-steps" aria-label={translate(SiteCopyKey.StartStepsLabel)}>
-              {STEP_KEYS.map((key, index) => (
-                <li>
-                  <span class="step-number">{index + FIRST_STEP_NUMBER}</span>
-                  {translate(key)}
-                </li>
-              ))}
-            </ol>
-            {tab.agent === null ? (
-              <a class="button button-primary start-cta" href={joinPathOf({ language, referralCode })} data-clear-agent>
-                {translate(SiteCopyKey.StartCta)}
-              </a>
-            ) : (
-              <a
-                class="button button-primary start-cta"
-                href={agentPathOf({ agent: tab.agent, language, referralCode })}
-                data-picked-label={tab.pickedLabel}
-              >
-                {translate(SiteCopyKey.StartCta)}
-              </a>
-            )}
+            <div class="start-next">
+              {tab.agent === null ? (
+                <a class="button button-primary start-cta" href={joinPathOf({ language, referralCode })} data-clear-agent>
+                  {translate(SiteCopyKey.StartCta)}
+                </a>
+              ) : (
+                <a
+                  class="button button-primary start-cta"
+                  href={agentPathOf({ agent: tab.agent, language, referralCode })}
+                  data-picked-label={tab.pickedLabel}
+                >
+                  {translate(SiteCopyKey.StartCta)}
+                </a>
+              )}
+              <p class="start-note">{translate(SiteCopyKey.StartNote)}</p>
+            </div>
           </div>
         ))}
         <p class="visually-hidden" id="start-announcement" aria-live="polite" />
