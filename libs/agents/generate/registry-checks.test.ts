@@ -1,6 +1,6 @@
-import { DocsLanguage } from '@zapbip/types';
 import { beforeAll, describe, expect, test } from 'vitest';
-import { StrictMcpNullReason } from '../src/contract';
+import { PAGE_FACETS, StrictMcpNullReason } from '../src/contract';
+import { perLanguage } from '../src/docs';
 import { discoverAgents } from './discover';
 import { loadAgent } from './load';
 import { readSource } from './source';
@@ -8,10 +8,6 @@ import { registryCheckViolationsOf, type CheckedAgent } from './registry-checks'
 
 const FIXTURE_ROOT = 'libs/agents/testing';
 const FIXTURE_FOLDERS = ['fixture-agent', 'fixture-connector-agent', 'fixture-plugin-agent'];
-const PAGE_FILES: Record<DocsLanguage, string> = {
-  [DocsLanguage.English]: 'page.en.mdx',
-  [DocsLanguage.PortugueseBrazil]: 'page.pt-br.mdx',
-};
 
 let agents: CheckedAgent[] = [];
 
@@ -21,10 +17,7 @@ beforeAll(async () => {
   );
   agents = loaded.map((agent) => ({
     ...agent,
-    guides: {
-      [DocsLanguage.English]: readSource(`${agent.folder}/${PAGE_FILES[DocsLanguage.English]}`),
-      [DocsLanguage.PortugueseBrazil]: readSource(`${agent.folder}/${PAGE_FILES[DocsLanguage.PortugueseBrazil]}`),
-    },
+    guides: perLanguage({ valueOf: (language) => readSource(`${agent.folder}/${PAGE_FACETS[language]}`) }),
   }));
 });
 

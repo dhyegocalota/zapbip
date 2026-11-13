@@ -1,4 +1,4 @@
-import { DocsLanguage } from '@zapbip/types';
+import { DocsPageLanguage } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import {
   DESKTOP_WIDTH_PX,
@@ -28,7 +28,9 @@ const FOREIGN_CHUNK_URL = 'https://cdn.example.com/_mintlify/assets/DrawerViewpo
 const PAGE_URL = 'http://localhost:3000/get-started/how-to-start';
 const SOCKET_URL = 'http://localhost:3000/socket.io/?EIO=4';
 
-const CASES = Object.values(DocsLanguage).flatMap((language) => Object.values(DocsViewport).map((viewport) => ({ language, viewport })));
+const CASES = Object.values(DocsPageLanguage).flatMap((language) =>
+  Object.values(DocsViewport).map((viewport) => ({ language, viewport })),
+);
 
 describe('docs walk support', () => {
   test.each(CASES)('docsOptionsOf gives the locale and the viewport of $language at $viewport', ({ language, viewport }) => {
@@ -39,7 +41,16 @@ describe('docs walk support', () => {
   });
 
   test('the locales are the browser locales of the two languages', () => {
-    expect(DOCS_LOCALE_OF).toEqual({ [DocsLanguage.English]: 'en-US', [DocsLanguage.PortugueseBrazil]: 'pt-BR' });
+    expect(DOCS_LOCALE_OF).toEqual({
+      [DocsPageLanguage.English]: 'en-US',
+      [DocsPageLanguage.PortugueseBrazil]: 'pt-BR',
+      [DocsPageLanguage.Spanish]: 'es-ES',
+      [DocsPageLanguage.German]: 'de-DE',
+      [DocsPageLanguage.French]: 'fr-FR',
+      [DocsPageLanguage.Japanese]: 'ja-JP',
+      [DocsPageLanguage.Korean]: 'ko-KR',
+      [DocsPageLanguage.Chinese]: 'zh-CN',
+    });
   });
 
   test('a request aborted on the preview user path is allowed noise', () => {

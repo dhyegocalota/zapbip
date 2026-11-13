@@ -26,7 +26,7 @@ describe('scaffoldFilesOf', () => {
     const files = scaffold({ id: NEW_ID });
     const definition = contentOf({ files, name: 'definition.ts' });
     expect(definition).toContain("enumMember: 'ProbeZqAgent'");
-    expect(definition).toContain("[DocsLanguage.English]: 'Probe Zq Agent'");
+    expect(definition).toContain("perLanguage({ valueOf: () => 'Probe Zq Agent' })");
     expect(contentOf({ files, name: 'install-copy.ts' })).toContain('renderProbeZqAgentSection');
     expect(contentOf({ files, name: 'page.en.mdx' })).toContain('title: Probe Zq Agent');
     files.forEach((file) => expect(file.content).not.toMatch(/fixture|Agente de teste/i));

@@ -1,27 +1,25 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { renderInstallPage } from '@zapbip/core';
-import { DocsLanguage, OwnerLocale } from '@zapbip/types';
+import { DocsPageLanguage, OwnerLocale } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { AGENT_DEFINITIONS } from '../src/generated/definitions';
 import { AGENT_INSTALLS, INSTALL_PAGE_SECTIONS } from '../src/generated/install';
+import { snippetPathOf } from '../src/docs';
 import { agentOrderOf } from '../src/order';
 
 const REPOSITORY_ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const CONNECTION_LINK = 'https://surfaces.example/c/zb_conn_SURFACES/mcp';
 const PAGE_OWNER = 'Ana';
-const MATRIX_LINK_PATTERN = /\]\(\/(?:pt-br\/)?agents\/([a-z0-9-]+)\)/;
+const MATRIX_LINK_PATTERN = /\]\(\/(?:[a-z-]+\/)?agents\/([a-z0-9-]+)\)/;
 const SECTION_MARKER = '## ';
 const FIXED_HEADINGS = ['## Identify your product', '## Rules you follow after install'];
-const MATRIX_SNIPPET: Record<DocsLanguage, string> = {
-  [DocsLanguage.English]: 'apps/docs/snippets/agents/matrix.mdx',
-  [DocsLanguage.PortugueseBrazil]: 'apps/docs/snippets/pt-br/agents/matrix.mdx',
-};
+const MATRIX_SNIPPET_NAME = 'agents/matrix.mdx';
 
 const registryOrder = agentOrderOf({ definitions: AGENT_DEFINITIONS });
 
-function matrixOrderOf(input: { language: DocsLanguage }): string[] {
-  return readFileSync(`${REPOSITORY_ROOT}${MATRIX_SNIPPET[input.language]}`, 'utf8')
+function matrixOrderOf(input: { language: DocsPageLanguage }): string[] {
+  return readFileSync(`${REPOSITORY_ROOT}apps/docs/${snippetPathOf({ name: MATRIX_SNIPPET_NAME, language: input.language })}`, 'utf8')
     .split('\n')
     .flatMap((line) => {
       const id = MATRIX_LINK_PATTERN.exec(line)?.[1];
@@ -30,7 +28,7 @@ function matrixOrderOf(input: { language: DocsLanguage }): string[] {
 }
 
 describe('the surfaces that list the agents', () => {
-  test.each(Object.values(DocsLanguage))('the %s matrix lists every agent in the registry order', (language) => {
+  test.each(Object.values(DocsPageLanguage))('the %s matrix lists every agent in the registry order', (language) => {
     expect(matrixOrderOf({ language })).toEqual(registryOrder);
   });
 
