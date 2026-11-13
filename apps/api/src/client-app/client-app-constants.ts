@@ -13,6 +13,9 @@ export const CSRF_CONTEXT = 'zapbip client app csrf';
 export const SIGN_IN_RATE_KEY_PREFIX = 'app-sign-in:';
 export const SIGN_IN_TOKEN_PATTERN = new RegExp(`^[A-Za-z0-9_-]{${CLIENT_APP_TOKEN_LENGTH}}$`);
 export const ISO_DATE_LENGTH = 10;
+export const ACCEPT_HEADER = 'Accept';
+export const VARY_HEADER = 'Vary';
+export const JSON_CONTENT_TYPE = 'application/json';
 export const BRAND_SEPARATOR = ' · ';
 export const DELETE_ACCOUNT_DOCS_PATH = '/help/delete-your-account';
 export const DOCS_PORTUGUESE_PATH = '/pt-br';
@@ -24,4 +27,8 @@ export const CLIENT_APP_ERROR_CODE = 'ClientAppError';
 export enum ClientAppNotice {
   Revoked = 'revoked',
   AgentMissing = 'agent_missing',
+}
+
+export enum ClientAppJsonError {
+  SignInRequired = 'sign_in_required',
 }

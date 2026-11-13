@@ -14,6 +14,7 @@ export * from './agent-approval-copy';
 export * from './invite-code';
 export * from './state-gate';
 export * from './use-cases/types';
+export * from './use-cases/account-reply';
 export * from './use-cases/open-owner-account';
 export * from './use-cases/apply-owner-command';
 export * from './use-cases/create-agent-connection';

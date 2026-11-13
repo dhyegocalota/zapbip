@@ -4,11 +4,12 @@ import { numberRegistryOf } from '../../adapters/d1/d1-number-registry';
 import { LogEvent } from '../../contract/log';
 import { logEvent } from '../../log';
 import { whatsappLinkTarget } from '../../routes/start-link-target';
-import { ClientAppNotice, NOTICE_PARAMETER } from '../client-app-constants';
+import { ACCEPT_HEADER, ClientAppNotice, NOTICE_PARAMETER, VARY_HEADER } from '../client-app-constants';
 import { ClientAppCopyKey } from '../client-app-copy';
 import type { ClientAppEnv } from '../client-app-env';
 import { ClientAppPath } from '../client-app-paths';
 import { respondHome } from '../respond-home';
+import { respondOverview, wantsJson } from '../respond-overview';
 import { respondMessage } from '../respond';
 import { SignedOutPage } from '../views/signed-out-page';
 
@@ -48,6 +49,8 @@ async function respondSignedOut(input: { context: Context<ClientAppEnv> }): Prom
 
 function showHome(context: Context<ClientAppEnv>): Promise<Response> {
   const session = context.get('session');
+  context.header(VARY_HEADER, ACCEPT_HEADER);
+  if (wantsJson({ context })) return respondOverview({ context, session });
   if (session === null) return respondSignedOut({ context });
   return respondHome({ context, session, status: HttpStatus.Ok, extras: { noticeKey: noticeKeyOf({ context }) } });
 }
