@@ -47,6 +47,28 @@ export enum OwnerLocale {
   EnglishUs = 'en_US',
 }
 
+export enum WebLocale {
+  EnglishUs = 'en_US',
+  PortugueseBrazil = 'pt_BR',
+  Spanish = 'es',
+  German = 'de',
+  French = 'fr',
+  Japanese = 'ja',
+  Korean = 'ko',
+  ChineseSimplified = 'zh_CN',
+}
+
+export enum WebLanguageTag {
+  English = 'en',
+  PortugueseBrazil = 'pt-BR',
+  Spanish = 'es',
+  German = 'de',
+  French = 'fr',
+  Japanese = 'ja',
+  Korean = 'ko',
+  ChineseSimplified = 'zh-CN',
+}
+
 export enum InboxCopyKey {
   RoutingPrompt = 'routing_prompt',
   RoutingListExpired = 'routing_list_expired',

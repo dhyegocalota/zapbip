@@ -1,4 +1,4 @@
-import { OwnerLocale, PricingCurrency } from './enums';
+import { OwnerLocale, PricingCurrency, WebLocale } from './enums';
 
 export const SECOND_MS = 1_000;
 export const MINUTE_MS = 60 * SECOND_MS;
@@ -14,6 +14,30 @@ export const CLIENT_APP_PORTUGUESE_PATH_PREFIX = '/pt-br';
 export const CLIENT_APP_LOCALE_PATH_PREFIXES: Record<OwnerLocale, string> = {
   [OwnerLocale.PortugueseBrazil]: CLIENT_APP_PORTUGUESE_PATH_PREFIX,
   [OwnerLocale.EnglishUs]: '',
+};
+export const WEB_LOCALE_PATH_PREFIXES: Record<WebLocale, string> = {
+  [WebLocale.EnglishUs]: '',
+  [WebLocale.PortugueseBrazil]: '/pt-br',
+  [WebLocale.Spanish]: '/es',
+  [WebLocale.German]: '/de',
+  [WebLocale.French]: '/fr',
+  [WebLocale.Japanese]: '/ja',
+  [WebLocale.Korean]: '/ko',
+  [WebLocale.ChineseSimplified]: '/zh',
+};
+export const OWNER_LOCALE_OF_WEB_LOCALE: Record<WebLocale, OwnerLocale> = {
+  [WebLocale.EnglishUs]: OwnerLocale.EnglishUs,
+  [WebLocale.PortugueseBrazil]: OwnerLocale.PortugueseBrazil,
+  [WebLocale.Spanish]: OwnerLocale.EnglishUs,
+  [WebLocale.German]: OwnerLocale.EnglishUs,
+  [WebLocale.French]: OwnerLocale.EnglishUs,
+  [WebLocale.Japanese]: OwnerLocale.EnglishUs,
+  [WebLocale.Korean]: OwnerLocale.EnglishUs,
+  [WebLocale.ChineseSimplified]: OwnerLocale.EnglishUs,
+};
+export const WEB_LOCALE_OF_OWNER_LOCALE: Record<OwnerLocale, WebLocale> = {
+  [OwnerLocale.EnglishUs]: WebLocale.EnglishUs,
+  [OwnerLocale.PortugueseBrazil]: WebLocale.PortugueseBrazil,
 };
 export const CLIENT_APP_LOGIN_TEXT: Record<OwnerLocale, string> = {
   [OwnerLocale.PortugueseBrazil]: 'entrar',
@@ -100,7 +124,13 @@ export const PRICING_OVERAGE_CENTS: Record<PricingCurrency, number> = {
   [PricingCurrency.Usd]: 500,
   [PricingCurrency.Brl]: 2500,
 };
-export const PRICING_CURRENCY_BY_LOCALE: Record<OwnerLocale, PricingCurrency> = {
-  [OwnerLocale.EnglishUs]: PricingCurrency.Usd,
-  [OwnerLocale.PortugueseBrazil]: PricingCurrency.Brl,
+export const PRICING_CURRENCY_BY_LOCALE: Record<WebLocale, PricingCurrency> = {
+  [WebLocale.EnglishUs]: PricingCurrency.Usd,
+  [WebLocale.PortugueseBrazil]: PricingCurrency.Brl,
+  [WebLocale.Spanish]: PricingCurrency.Usd,
+  [WebLocale.German]: PricingCurrency.Usd,
+  [WebLocale.French]: PricingCurrency.Usd,
+  [WebLocale.Japanese]: PricingCurrency.Usd,
+  [WebLocale.Korean]: PricingCurrency.Usd,
+  [WebLocale.ChineseSimplified]: PricingCurrency.Usd,
 };
