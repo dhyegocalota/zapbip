@@ -5,6 +5,8 @@ import { BRAND_SEPARATOR, CSRF_FIELD, THEME_COLOR_DARK, THEME_COLOR_LIGHT } from
 import { ClientAppCopyKey, copyOf } from '../client-app-copy';
 import { ClientAppPath, pathWithLocale } from '../client-app-paths';
 import { CLIENT_APP_STYLESHEET_HREF } from '../client-app-stylesheet';
+import { languageOf } from '../../site/site-links';
+import { Flag } from '../../site/views/flags';
 
 export type LayoutProps = {
   locale: OwnerLocale;
@@ -14,10 +16,6 @@ export type LayoutProps = {
   children?: Child;
 };
 
-const LANGUAGE_TAGS: Record<OwnerLocale, string> = {
-  [OwnerLocale.PortugueseBrazil]: 'pt-BR',
-  [OwnerLocale.EnglishUs]: 'en',
-};
 const LOCALE_OPTIONS: { locale: OwnerLocale; label: ClientAppCopyKey }[] = [
   { locale: OwnerLocale.EnglishUs, label: ClientAppCopyKey.LocaleEnglish },
   { locale: OwnerLocale.PortugueseBrazil, label: ClientAppCopyKey.LocalePortuguese },
@@ -30,10 +28,11 @@ function LocaleSwitch(props: { locale: OwnerLocale; currentPath: string }) {
       {LOCALE_OPTIONS.map((option) => (
         <a
           href={pathWithLocale({ locale: option.locale, path: props.currentPath })}
-          lang={LANGUAGE_TAGS[option.locale]}
-          hreflang={LANGUAGE_TAGS[option.locale]}
+          lang={languageOf({ locale: option.locale })}
+          hreflang={languageOf({ locale: option.locale })}
           aria-current={option.locale === props.locale ? 'true' : undefined}
         >
+          <Flag locale={option.locale} />
           {translate(option.label)}
         </a>
       ))}
@@ -57,7 +56,7 @@ export function Layout(props: LayoutProps) {
   const { locale, csrfToken } = props;
   const translate = copyOf({ locale });
   return (
-    <html lang={LANGUAGE_TAGS[locale]}>
+    <html lang={languageOf({ locale })}>
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
