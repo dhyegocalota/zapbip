@@ -27,6 +27,7 @@
   "routes": [
     { "pattern": "mcp.zapbip.com", "custom_domain": true },
     { "pattern": "backoffice.zapbip.com", "custom_domain": true },
+    { "pattern": "app.zapbip.com", "custom_domain": true },
     { "pattern": "zapbip.com", "custom_domain": true },
     { "pattern": "www.zapbip.com", "custom_domain": true },
   ],
@@ -35,6 +36,7 @@
     "PUBLIC_ORIGIN": "https://mcp.zapbip.com",
     "BACKOFFICE_ORIGIN": "https://backoffice.zapbip.com",
     "SITE_ORIGIN": "https://zapbip.com",
+    "APP_ORIGIN": "https://app.zapbip.com",
     "TURNSTILE_SITE_KEY": "0x4AAAAAAF-QQP0jbDT3xCLT",
     "WAITLIST_ENABLED": "true",
     "WHATSAPP_GRAPH_BASE_URL": "https://graph.facebook.com",
@@ -74,6 +76,7 @@
         "PUBLIC_ORIGIN": "http://localhost:8787",
         "BACKOFFICE_ORIGIN": "http://backoffice.localhost:8787",
         "SITE_ORIGIN": "http://site.localhost:8787",
+        "APP_ORIGIN": "http://app.localhost:8787",
         "TURNSTILE_SITE_KEY": "1x00000000000000000000AA",
         "TURNSTILE_SECRET_KEY": "1x0000000000000000000000000000000AA",
         "WAITLIST_ENABLED": "false",
@@ -112,6 +115,7 @@
       "routes": [
         { "pattern": "mcp-staging.zapbip.com", "custom_domain": true },
         { "pattern": "backoffice-staging.zapbip.com", "custom_domain": true },
+        { "pattern": "app-staging.zapbip.com", "custom_domain": true },
         { "pattern": "staging.zapbip.com", "custom_domain": true },
       ],
       "vars": {
@@ -119,6 +123,7 @@
         "PUBLIC_ORIGIN": "https://mcp-staging.zapbip.com",
         "BACKOFFICE_ORIGIN": "https://backoffice-staging.zapbip.com",
         "SITE_ORIGIN": "https://staging.zapbip.com",
+        "APP_ORIGIN": "https://app-staging.zapbip.com",
         "TURNSTILE_SITE_KEY": "0x4AAAAAAF-QWj6u4g-pvrUT",
         "WAITLIST_ENABLED": "false",
         "WHATSAPP_GRAPH_BASE_URL": "https://graph.facebook.com",

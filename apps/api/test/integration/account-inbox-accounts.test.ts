@@ -13,6 +13,7 @@ import { applyDirectoryMigration, seedAccount, seedOwnerIdentity } from '../supp
 import { accountInboxStub, connectionOf, testEnv } from '../support/workers-env';
 
 const ACCOUNT = 'acc_accounts';
+const APP_ORIGIN = 'https://app.zapbip.test';
 const HELD_TIMEOUT_MS = 20_000;
 const REQUESTED_AT = 1_800_000_000_000;
 const SCHEMA_VERSION_SIX = 6;
@@ -214,6 +215,7 @@ describe('AccountInbox receiveAccountMessage', () => {
         noticeText: null,
       },
       publicOrigin: PUBLIC_ORIGIN,
+      appOrigin: APP_ORIGIN,
     });
   }
 
@@ -309,6 +311,7 @@ describe('AccountInbox receiveAccountMessage', () => {
             noticeText: null,
           },
           publicOrigin: PUBLIC_ORIGIN,
+          appOrigin: APP_ORIGIN,
         }),
       ),
     ).rejects.toThrow('AccountTombstoned');

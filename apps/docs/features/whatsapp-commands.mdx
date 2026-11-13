@@ -7,14 +7,15 @@ import { Chat } from '/snippets/chat.jsx';
 
 You manage your AIs by writing to the zapbip number. A command is a short phrase, in Portuguese or English. The language you write is the language of the answer. Each row shows both versions.
 
-| You want to         | Write in English                                    | Or in Portuguese                                    | What happens                                         |
-| ------------------- | --------------------------------------------------- | --------------------------------------------------- | ---------------------------------------------------- |
-| Connect a new AI    | `new agent claude`                                  | `novo agente claude`                                | zapbip answers with the prompt to paste into that AI |
-| See your AIs        | `agents`                                            | `agentes`                                           | A list with the name and the date of each one        |
-| Disconnect an AI    | `revoke claude`                                     | `revogar claude`                                    | That AI stops working at once                        |
-| Get a new prompt    | `rotate claude`                                     | `girar claude`                                      | The old connection stops and you get a fresh prompt  |
-| Open the menu       | `help` or `menu`                                    | `ajuda` or `menu`                                   | The commands as text and as a tappable list          |
-| Delete your account | `delete account`, then `delete account permanently` | `apagar conta`, then `apagar conta definitivamente` | See [delete your account](/help/delete-your-account) |
+| You want to            | Write in English                                    | Or in Portuguese                                    | What happens                                                                |
+| ---------------------- | --------------------------------------------------- | --------------------------------------------------- | --------------------------------------------------------------------------- |
+| Connect a new AI       | `new agent claude`                                  | `novo agente claude`                                | zapbip answers with the prompt to paste into that AI                        |
+| See your AIs           | `agents`                                            | `agentes`                                           | A list with the name and the date of each one                               |
+| Disconnect an AI       | `revoke claude`                                     | `revogar claude`                                    | That AI stops working at once                                               |
+| Get a new prompt       | `rotate claude`                                     | `girar claude`                                      | The old connection stops and you get a fresh prompt                         |
+| Sign in to the web app | `login`                                             | `entrar`                                            | A link that works once for 10 minutes, see [the web app](/features/web-app) |
+| Open the menu          | `help` or `menu`                                    | `ajuda` or `menu`                                   | The commands as text and as a tappable list                                 |
+| Delete your account    | `delete account`, then `delete account permanently` | `apagar conta`, then `apagar conta definitivamente` | See [delete your account](/help/delete-your-account)                        |
 
 Write the phrase alone. A trailing `?` or `!` makes it a normal message for your AIs.
 
@@ -35,7 +36,7 @@ A message that is exactly a command word is always a command. To send the same w
 
 ## Names
 
-The words `new`, `agents`, `revoke`, `rotate`, `help`, `menu`, `delete` and their Portuguese versions are reserved: they cannot be the name of an AI.
+The words `new`, `agents`, `revoke`, `rotate`, `help`, `menu`, `login`, `delete` and their Portuguese versions are reserved: they cannot be the name of an AI.
 
 ## Forwarded messages
 

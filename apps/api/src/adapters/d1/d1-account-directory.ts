@@ -19,6 +19,8 @@ const CREATE_IDENTITY_STATEMENT = `INSERT INTO owner_identities (wa_id, account_
   ON CONFLICT (wa_id) DO NOTHING`;
 const SET_STATE_STATEMENT = 'UPDATE accounts SET state = ? WHERE id = ?';
 const REMOVE_STATEMENTS = [
+  'DELETE FROM client_app_sessions WHERE account_id = ?',
+  'DELETE FROM client_app_sign_in_tokens WHERE account_id = ?',
   'DELETE FROM message_index WHERE account_id = ?',
   'DELETE FROM owner_identities WHERE account_id = ?',
   'DELETE FROM connections WHERE account_id = ?',

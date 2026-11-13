@@ -85,6 +85,10 @@ export interface FirstMessageClaim {
   claim(input: { channelMessageId: string }): Promise<boolean>;
 }
 
+export interface SignInLinks {
+  issue(input: { accountId: string; issuedAt: number; expiresAt: number }): Promise<string>;
+}
+
 export interface DeletionRequests {
   save(input: { requestedAt: number }): Promise<void>;
   find(): Promise<number | null>;
@@ -104,6 +108,7 @@ export type AccountDependencies = CoreDependencies & {
   firstMessage: FirstMessageClaim;
   deletionRequests: DeletionRequests;
   installLinkRedaction: InstallLinkRedaction;
+  signInLinks: SignInLinks;
 };
 
 export type AccountLifecycleDependencies = {

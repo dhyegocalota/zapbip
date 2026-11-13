@@ -16,6 +16,7 @@ const PARAMETER_VALUES: Record<AccountReplyParameter, string> = {
   [AccountReplyParameter.Phrase]: 'apagar conta definitivamente',
   [AccountReplyParameter.Agents]: '- claude (2026-11-06)',
   [AccountReplyParameter.InstallPrompt]: 'install prompt',
+  [AccountReplyParameter.SignInLink]: 'https://app.zapbip.test/sign-in/token',
 };
 
 function buildReply(input: { intent: AccountReplyIntent; locale: OwnerLocale }): AccountReply {
@@ -54,6 +55,13 @@ describe('renderAccountReply', () => {
       INTENTS.map((intent) => renderAccountReply({ reply: buildReply({ intent, locale }) }).length),
     );
     expect(lengths.every((length) => length <= WHATSAPP_TEXT_MAX_CHARS)).toBe(true);
+  });
+});
+
+describe('sign-in link reply', () => {
+  test.each(LOCALES)('%s carries the link and says it works once', (locale) => {
+    const text = renderAccountReply({ reply: buildReply({ intent: AccountReplyIntent.SignInLink, locale }) });
+    expect(text).toContain(PARAMETER_VALUES[AccountReplyParameter.SignInLink]);
   });
 });
 

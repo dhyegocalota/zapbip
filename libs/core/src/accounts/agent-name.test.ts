@@ -44,6 +44,8 @@ describe('isReservedAgentName', () => {
     'menu',
     'apagar',
     'delete',
+    'login',
+    'entrar',
     'zapbip',
   ])('reserves %s', (name) => {
     expect(isReservedAgentName({ name })).toBe(true);

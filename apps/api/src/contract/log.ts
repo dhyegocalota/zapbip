@@ -38,6 +38,7 @@ export enum LogEvent {
   BackofficeError = 'backoffice.error',
   SiteTurnstileFailed = 'site.turnstile_failed',
   SiteError = 'site.error',
+  ClientAppError = 'client_app.error',
   PackageUnavailable = 'package_unavailable',
   ActivityRecordFailed = 'activity_record_failed',
 }

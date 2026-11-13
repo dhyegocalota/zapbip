@@ -5,6 +5,7 @@ const SOURCE_PATHSPECS = ['apps/*.ts', 'apps/*.tsx', 'libs/*.ts', 'libs/*.tsx'];
 const AGENT_FACING_DIRECTORIES = ['apps/api/src/mcp/', 'apps/api/src/routes/', 'apps/api/src/account-inbox/', 'apps/connector/', 'libs/'];
 const BACKOFFICE_IMPORT_PATTERN = /from '[^']*\/backoffice(\/[^']*)?'/;
 const SITE_IMPORT_PATTERN = /from '[^']*\/site(\/[^']*)?'/;
+const CLIENT_APP_IMPORT_PATTERN = /from '[^']*\/client-app(\/[^']*)?'/;
 const BACKOFFICE_TABLE_PATTERN = /\bbackoffice_(operator|sessions|audit)\b/;
 const SEALED_COLUMN_PATTERN = /\bsealed_(app_secret|access_token)\b/;
 const TEST_PATH_PATTERN = /(^|\/)(test|e2e)\//;
@@ -38,6 +39,16 @@ describe('backoffice isolation', () => {
   test('no agent-facing code imports the public site', () => {
     const agentFacing = productionSources().filter((path) => isUnder({ path, owners: AGENT_FACING_DIRECTORIES }));
     expect(filesMatching({ paths: agentFacing, pattern: SITE_IMPORT_PATTERN })).toEqual([]);
+  });
+
+  test('no agent-facing code imports the customer web app', () => {
+    const agentFacing = productionSources().filter((path) => isUnder({ path, owners: AGENT_FACING_DIRECTORIES }));
+    expect(filesMatching({ paths: agentFacing, pattern: CLIENT_APP_IMPORT_PATTERN })).toEqual([]);
+  });
+
+  test('the import pattern catches a customer web app import and ignores a lookalike', () => {
+    expect(CLIENT_APP_IMPORT_PATTERN.test("import { x } from '../client-app/client-app';")).toBe(true);
+    expect(CLIENT_APP_IMPORT_PATTERN.test("import { x } from '../client-apps/app';")).toBe(false);
   });
 
   test('the public site names no backoffice table and no sealed column', () => {

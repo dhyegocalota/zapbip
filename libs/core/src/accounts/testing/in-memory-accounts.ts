@@ -26,6 +26,7 @@ import type {
   InstallCodeDirectory,
   InstallCodeVault,
   InstallLinkRedaction,
+  SignInLinks,
 } from '../ports';
 
 const DEFAULT_HOME_NUMBER_ID = 'num_default';
@@ -35,6 +36,8 @@ const FAKE_INSTALL_CODE_PREFIX = 'zb_inst_fake_';
 const FAKE_SEALED_PREFIX = 'sealed:';
 const FAKE_SEAL_SEPARATOR = ':';
 export const IN_MEMORY_PUBLIC_ORIGIN = 'https://zapbip.test';
+export const IN_MEMORY_APP_ORIGIN = 'https://app.zapbip.test';
+const FAKE_SIGN_IN_TOKEN_PREFIX = 'fake_sign_in_token_';
 const DEFAULT_WA_ID = '5511999990000';
 
 type StoredAccount = AccountRecord & { createdAt: number };
@@ -54,6 +57,7 @@ export type InMemoryAccountMedia = AccountMediaPurge & {
   put(input: { accountId: string; mediaId: string }): void;
   count(input: { accountId: string }): number;
 };
+export type RecordingSignInLinks = SignInLinks & { issued: { accountId: string; token: string; expiresAt: number }[] };
 export type RecordingInstallLinkRedaction = InstallLinkRedaction & { redacted: string[] };
 export type RecordingInstallCodeVault = InstallCodeVault & { issued: IssuedInstallCode[] };
 export type InMemoryConnections = ConnectionRegistry & {
@@ -73,6 +77,7 @@ export type InMemoryAccountEnvironment = Omit<InMemoryEnvironment, 'dependencies
   installCodeDirectory: InstallCodeDirectory;
   revocations: RecordingRevocations;
   installLinkRedaction: RecordingInstallLinkRedaction;
+  signInLinks: RecordingSignInLinks;
   accountMedia: InMemoryAccountMedia;
   openAccount(input?: { waId?: string; state?: AccountState; locale?: OwnerLocale; accountId?: string }): Promise<OwnerAccountContext>;
 };
@@ -266,6 +271,18 @@ function createInstallLinkRedaction(): RecordingInstallLinkRedaction {
   };
 }
 
+function createSignInLinks(): RecordingSignInLinks {
+  const issued: RecordingSignInLinks['issued'] = [];
+  return {
+    issued,
+    issue: async ({ accountId, expiresAt }) => {
+      const token = `${FAKE_SIGN_IN_TOKEN_PREFIX}${issued.length + 1}`;
+      issued.push({ accountId, token, expiresAt });
+      return token;
+    },
+  };
+}
+
 function createRevocations(): RecordingRevocations {
   const revoked: AgentName[] = [];
   const cancelled: AgentName[] = [];
@@ -351,6 +368,7 @@ export function createInMemoryAccountDependencies(input: InMemoryOptions = {}): 
   const installCodeVault = createInstallCodeVault();
   const revocations = createRevocations();
   const installLinkRedaction = createInstallLinkRedaction();
+  const signInLinks = createSignInLinks();
   const registry = createRegistry({ store });
   const dependencies: AccountDependencies = {
     ...environment.dependencies,
@@ -362,6 +380,7 @@ export function createInMemoryAccountDependencies(input: InMemoryOptions = {}): 
     firstMessage: createFirstMessageClaim(),
     deletionRequests: createDeletionRequests(),
     installLinkRedaction,
+    signInLinks,
   };
 
   async function openAccount(
@@ -400,6 +419,7 @@ export function createInMemoryAccountDependencies(input: InMemoryOptions = {}): 
     installCodeDirectory: createInstallCodeDirectory({ store, vault: installCodeVault, publicOrigin: IN_MEMORY_PUBLIC_ORIGIN }),
     revocations,
     installLinkRedaction,
+    signInLinks,
     accountMedia,
     openAccount,
   };

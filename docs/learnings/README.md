@@ -22,6 +22,7 @@ Every learning touched by a change gets a `Revisited` line appended.
 | 2026-11-07 | A test that buckets by UTC day passes all day and fails with "expected one meter row, found 2" near 00:00 UTC | [2026-11-07-a-fake-clock-started-from-now-flakes-at-day-boundaries.md](2026-11-07-a-fake-clock-started-from-now-flakes-at-day-boundaries.md) | 2026-11-07 |
 | 2026-11-07 | The docs walk fails under load with `requestfailed .../_mintlify/api/user` and passes alone | [2026-11-07-a-docs-walk-fails-on-the-aborted-mint-preview-user-request.md](2026-11-07-a-docs-walk-fails-on-the-aborted-mint-preview-user-request.md) | 2026-11-07 |
 | 2026-11-07 | A backoffice integration test passes alone and fails in a full run with the not-found copy instead of the error copy | [2026-11-07-a-shared-fake-graph-reset-wipes-a-neighbours-queued-response.md](2026-11-07-a-shared-fake-graph-reset-wipes-a-neighbours-queued-response.md) | 2026-11-07 |
+| 2026-11-13 | A form post is refused with 403 in Chrome and accepted in a request test, because `Referrer-Policy: no-referrer` sends `Origin: null` | [2026-11-13-no-referrer-makes-chrome-send-origin-null-on-form-posts.md](2026-11-13-no-referrer-makes-chrome-send-origin-null-on-form-posts.md) | 2026-11-13 |
 
 ### tooling
 

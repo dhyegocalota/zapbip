@@ -64,6 +64,7 @@
               "features/manage-your-agents",
               "features/many-agents-on-one-number",
               "features/whatsapp-commands",
+              "features/web-app",
               "features/the-24-hour-window"
             ]
           },
@@ -151,6 +152,7 @@
               "pt-br/features/manage-your-agents",
               "pt-br/features/many-agents-on-one-number",
               "pt-br/features/whatsapp-commands",
+              "pt-br/features/web-app",
               "pt-br/features/the-24-hour-window"
             ]
           },

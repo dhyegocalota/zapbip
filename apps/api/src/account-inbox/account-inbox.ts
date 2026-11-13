@@ -44,6 +44,7 @@ import { D1ChannelRestrictions } from '../adapters/d1/d1-channel-restrictions';
 import { D1ConnectionDirectory } from '../adapters/d1/d1-connection-directory';
 import { D1ConnectionRegistry } from '../adapters/d1/d1-connection-registry';
 import { D1MessageIndex } from '../adapters/d1/d1-message-index';
+import { D1SignInLinks } from '../adapters/d1/d1-sign-in-links';
 import { numberRegistryOf } from '../adapters/d1/d1-number-registry';
 import { findOwnerByAccountId } from '../adapters/d1/d1-owner-directory';
 import { createConnectionSecrets } from '../adapters/platform/connection-secrets';
@@ -119,6 +120,7 @@ const SELECT_WAKE_MODES_STATEMENT = 'SELECT agent, mode FROM agent_wake';
 type WakeModeRow = { agent: string; mode: WakeMode };
 
 type ReceiveAccountMessageRequest = Parameters<AccountOwnerRpc['receiveAccountMessage']>[0];
+type ApplyWebCommandRequest = Parameters<AccountOwnerRpc['applyWebCommand']>[0];
 
 function failureLog(input: { error: inbox.InboxError }): LogFields {
   const { error } = input;
@@ -211,6 +213,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       firstMessage: createSqliteFirstMessageClaim({ storage: this.ctx.storage }),
       deletionRequests: createSqliteDeletionRequests({ storage: this.ctx.storage }),
       installLinkRedaction: { redact: async ({ messageIds }) => redactInstallCodes({ storage: this.ctx.storage, messageIds }) },
+      signInLinks: new D1SignInLinks({ database: this.env.CONNECTIONS }),
     };
     this.ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair(CONNECTOR_PING_TEXT, CONNECTOR_PONG_TEXT));
     this.dueTimeProviders.push(
@@ -531,6 +534,17 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
         ...logFieldsOfAccountResult({ result: value, accountId: input.account.accountId, locale: input.account.locale }),
       ],
     });
+  }
+
+  applyWebCommand(input: ApplyWebCommandRequest): Promise<CallOutcome<inbox.AccountCommandResult>> {
+    return this.outcome({
+      run: () => inbox.applyOwnerCommand({ ...input, dependencies: this.accountDependencies, isRequestLive: false }),
+    });
+  }
+
+  async listAgentActivity(): Promise<{ agent: string; lastSeenAt: number }[]> {
+    this.assertLive();
+    return this.dependencies.repository.listAgents();
   }
 
   async recordRevocation(input: { agent: string }): Promise<void> {

@@ -7,6 +7,7 @@ export type OwnerAccountInput = {
   dependencies: AccountDependencies;
   account: OwnerAccountContext;
   publicOrigin: string;
+  appOrigin: string;
 };
 
 export type ApplyOwnerCommandInput = OwnerAccountInput & { command: AccountCommand; isRequestLive: boolean };
@@ -42,6 +43,7 @@ export type ReceiveAccountMessageInput = {
   channelMessageId: string;
   entry: ChannelInboundEntry;
   publicOrigin: string;
+  appOrigin: string;
 };
 
 export type ReceiveAccountMessageResult = ReceiveResult & {

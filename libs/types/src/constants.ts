@@ -9,6 +9,19 @@ export const INSTALL_CODE_PREFIX = 'zb_inst_';
 export const INSTALL_CODE_RANDOM_BYTES = 16;
 export const INSTALL_CODE_TTL_MS = 30 * MINUTE_MS;
 export const INSTALL_PAGE_PATH_PREFIX = '/i/';
+export const CLIENT_APP_SIGN_IN_PATH_PREFIX = '/sign-in/';
+export const CLIENT_APP_PORTUGUESE_PATH_PREFIX = '/pt-br';
+export const CLIENT_APP_LOCALE_PATH_PREFIXES: Record<OwnerLocale, string> = {
+  [OwnerLocale.PortugueseBrazil]: CLIENT_APP_PORTUGUESE_PATH_PREFIX,
+  [OwnerLocale.EnglishUs]: '',
+};
+export const CLIENT_APP_LOGIN_TEXT: Record<OwnerLocale, string> = {
+  [OwnerLocale.PortugueseBrazil]: 'entrar',
+  [OwnerLocale.EnglishUs]: 'login',
+};
+export const CLIENT_APP_TOKEN_BYTES = 32;
+export const CLIENT_APP_TOKEN_LENGTH = 43;
+export const SIGN_IN_LINK_TTL_MS = 10 * MINUTE_MS;
 export const CLIENT_NAME_MAX_CHARS = 128;
 export const INITIALIZE_BODY_MAX_BYTES = 4_096;
 export const INSTALL_PAGE_REQUESTS_PER_MINUTE = 30;
