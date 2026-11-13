@@ -22,8 +22,8 @@ G1, G2 and G3 in order, one lane.
 
 ### G1
 
-- [ ] **Step 1:** red: the script test and the harness shape test
-- [ ] **Step 2:** `scripts/pr-media.sh`, then every harness file stops naming Releases
+- [x] **Step 1:** red: the script test and the harness shape test — evidence: 409ba5b4
+- [x] **Step 2:** `scripts/pr-media.sh`, then every harness file stops naming Releases — evidence: `scripts/pr-media.test.sh` and `pr-media-flow.test.ts` green
 
 ### G2
 
