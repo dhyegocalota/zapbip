@@ -95,6 +95,21 @@ describe('the WebMCP part of the site script', () => {
     expect(recording.calls[0]!.init!.body).toBe(JSON.stringify({ email: 'nope', language: 'pt-BR' }));
   });
 
+  it('flags an answer that is not JSON, and a failed request, as tool errors with a status', async () => {
+    const notJson = (async () => new Response('<html>bad gateway</html>', { status: 502 })) as unknown as typeof fetch;
+    const unreachable = (async () => {
+      throw new TypeError('network down');
+    }) as unknown as typeof fetch;
+    const [first] = tools({ fetchImplementation: notJson });
+    const [second] = tools({ fetchImplementation: unreachable });
+    const htmlResult = await first!.execute({ email: 'maria@example.com' });
+    const networkResult = await second!.execute({ email: 'maria@example.com' });
+    expect(htmlResult.isError).toBe(true);
+    expect(JSON.parse(htmlResult.content[0]!.text)).toEqual({ status: 'unreadable_response', httpStatus: 502 });
+    expect(networkResult.isError).toBe(true);
+    expect(JSON.parse(networkResult.content[0]!.text)).toEqual({ status: 'network_error' });
+  });
+
   it('get_pricing and get_quick_start ask the endpoints with the language and the agent', async () => {
     const recording = fetchRecording({ status: 200, payload: {} });
     const registered = tools({ fetchImplementation: recording.fetchImplementation });

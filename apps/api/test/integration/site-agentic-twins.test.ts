@@ -9,7 +9,7 @@ import { SITE_EXAMPLE_CONNECTION_LINK } from '../../src/site/site-constants';
 import { renderSiteCopy, SiteCopyKey } from '../../src/site/site-copy';
 import { localePathOf } from '../../src/site/site-language';
 import { applyLandingWaitlistMigration } from '../support/seed';
-import { SITE_ORIGIN, siteFetch } from '../support/site';
+import { copyHtml, SITE_ORIGIN, siteFetch } from '../support/site';
 
 const MARKDOWN_TYPE = 'text/markdown; charset=utf-8';
 const TEXT_TYPE = 'text/plain; charset=utf-8';
@@ -79,6 +79,19 @@ describe('the Markdown twins of the home pages', () => {
   it('keeps answering Markdown with a referral query', async () => {
     const { response } = await textOf({ path: '/index.md?ref=abcdefgh2345' });
     expect(response.headers.get('content-type')).toBe(MARKDOWN_TYPE);
+  });
+});
+
+describe('the agents section of the page', () => {
+  it.each([
+    ['/', OwnerLocale.EnglishUs],
+    ['/pt-br', OwnerLocale.PortugueseBrazil],
+  ] as const)('%s shows the same title and body as its Markdown twin', async (path, locale) => {
+    const { text } = await textOf({ path });
+    const endpoint = `${SITE_ORIGIN}/api/request-access`;
+    expect(text).toContain('id="agents"');
+    expect(text).toContain(copyHtml({ key: SiteCopyKey.AgentsTitle, locale }));
+    expect(text).toContain(copyHtml({ key: SiteCopyKey.AgentsBody, locale, values: { endpoint } }));
   });
 });
 

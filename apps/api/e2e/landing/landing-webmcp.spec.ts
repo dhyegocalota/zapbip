@@ -1,5 +1,6 @@
 import { InstallClient } from '@zapbip/agents/install';
 import type { Page } from '@playwright/test';
+import { WaitlistSource } from '@zapbip/types';
 import { expect, test } from './fixtures';
 import { rowOf } from './support/landing-database';
 
@@ -64,7 +65,7 @@ test('request_access adds the email to the waitlist with source agent', async ({
   const { result, data } = await callTool({ page, name: 'request_access', parameters: { email: AGENT_EMAIL, language: 'en' } });
   expect(result.isError).toBeUndefined();
   expect(data.status).toBe('requested');
-  expect(rowOf({ email: AGENT_EMAIL })).toMatchObject({ source: 'agent', referred_by: null, credited: 0 });
+  expect(rowOf({ email: AGENT_EMAIL })).toMatchObject({ source: WaitlistSource.Agent, referred_by: null, credited: 0 });
 });
 
 test('request_access reports a bad email as a tool error', async ({ page }) => {

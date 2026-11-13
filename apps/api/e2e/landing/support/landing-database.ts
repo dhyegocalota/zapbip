@@ -1,6 +1,7 @@
+import { WaitlistSource } from '@zapbip/types';
 import { openDatabase } from '../../backoffice/support/operator-database';
 
-export type WaitlistRow = { email: string; referral_code: string; referred_by: string | null; credited: number; source: string };
+export type WaitlistRow = { email: string; referral_code: string; referred_by: string | null; credited: number; source: WaitlistSource };
 
 const SELECT_ROWS = 'SELECT email, referral_code, referred_by, credited, source FROM landing_waitlist ORDER BY rowid';
 const CLEAR_STATEMENTS = ['DELETE FROM landing_waitlist', "UPDATE site_settings SET value = '5' WHERE key = 'waitlist_referral_cap'"];

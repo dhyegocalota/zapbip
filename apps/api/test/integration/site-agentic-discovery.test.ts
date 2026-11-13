@@ -2,7 +2,7 @@ import { reset } from 'cloudflare:test';
 import { COMPANY, PRICING_FREE_MESSAGES, OwnerLocale } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { siteAgents, siteQuickStartOf } from '../../src/site/site-agents';
-import { SECURITY_POLICY_URL, SECURITY_TEXT_VALIDITY_MS, SITE_EXAMPLE_CONNECTION_LINK } from '../../src/site/site-constants';
+import { SECURITY_TEXT_VALIDITY_MS, SITE_EXAMPLE_CONNECTION_LINK } from '../../src/site/site-constants';
 import { renderSiteCopy, SiteCopyKey } from '../../src/site/site-copy';
 import { applyLandingWaitlistMigration } from '../support/seed';
 import { SITE_ORIGIN, siteEnvironment, siteFetch } from '../support/site';
@@ -45,7 +45,7 @@ describe('the agent card', () => {
 });
 
 describe('security.txt', () => {
-  it('has a contact, an expiry a year out, a policy, a language list and the canonical address', async () => {
+  it('has a contact, an expiry 180 days out, a language list and the canonical address, and no policy while the repository is private', async () => {
     const before = Date.now();
     const response = await siteFetch({ path: '/.well-known/security.txt' });
     const text = await response.text();
@@ -53,7 +53,7 @@ describe('security.txt', () => {
     expect(response.status).toBe(200);
     expect(response.headers.get('content-type')).toBe('text/plain; charset=utf-8');
     expect(text).toContain(`Contact: mailto:${COMPANY.contactEmail}`);
-    expect(text).toContain(`Policy: ${SECURITY_POLICY_URL}`);
+    expect(text).not.toContain('Policy:');
     expect(text).toContain('Preferred-Languages: en, pt');
     expect(text).toContain(`Canonical: ${SITE_ORIGIN}/.well-known/security.txt`);
     expect(expires).toBeGreaterThanOrEqual(before + SECURITY_TEXT_VALIDITY_MS - 1000);
