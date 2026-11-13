@@ -98,3 +98,21 @@ describe('the sign-in button', () => {
     expect(response.status).toBe(HttpStatus.ServiceUnavailable);
   });
 });
+
+describe('the language switch', () => {
+  it.each([
+    ['/', 'data-flag="us"', 'data-flag="br"'],
+    ['/pt-br', 'data-flag="us"', 'data-flag="br"'],
+  ])('shows a flag beside each language on %s, like the public site', async (path, englishFlag, portugueseFlag) => {
+    await seedStartNumber({
+      numberId: 'num_app_flags',
+      displayNumber: `+${NUMBER_DIGITS}`,
+      state: WhatsAppNumberState.Active,
+      createdAt: NUMBER_CREATED_AT,
+    });
+    const html = await (await clientAppFetch({ path })).text();
+    const switchHtml = /<nav class="switch"[\s\S]*?<\/nav>/.exec(html)![0];
+    expect(switchHtml).toMatch(new RegExp(`hreflang="en"[^>]*>\\s*<svg[^>]*${englishFlag}`));
+    expect(switchHtml).toMatch(new RegExp(`hreflang="pt-BR"[^>]*>\\s*<svg[^>]*${portugueseFlag}`));
+  });
+});
