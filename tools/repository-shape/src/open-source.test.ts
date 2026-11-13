@@ -18,8 +18,14 @@ const ISSUE_TEMPLATES = [
   '.github/ISSUE_TEMPLATE/feature_request.yml',
 ];
 const PYPROJECT_LICENSE_LINE = `license = "${CLIENT_LICENSE_IDENTIFIER}"`;
+const CHANGELOG_FILE = 'CHANGELOG.md';
+const CHANGELOG_FORMAT_URL = 'https://keepachangelog.com';
+const RELEASE_RUNBOOK = 'docs/runbooks/release.md';
+const RELEASE_RUNBOOK_COMMANDS = ['git tag -a', 'git push origin', 'gh release create', '--notes-file', CHANGELOG_FILE];
+const RELEASE_UPLOAD_COMMAND = 'gh release upload';
+const PYPROJECT_VERSION_PATTERN = /^version = "(.+)"$/m;
 
-type PackageManifest = { private?: boolean; license?: string; repository?: { directory?: string } };
+type PackageManifest = { private?: boolean; version?: string; license?: string; repository?: { directory?: string } };
 
 function manifestOf(input: { path: string }): PackageManifest {
   return JSON.parse(readRepositoryFile(posix.join(input.path, PACKAGE_MANIFEST))) as PackageManifest;
@@ -39,6 +45,12 @@ function publishedNodePackages(): string[] {
 
 function pythonPackages(): string[] {
   return appFolders().filter((path) => existsSync(repositoryPath(posix.join(path, PYTHON_MANIFEST))));
+}
+
+function versionOf(path: string): string {
+  const pythonManifest = posix.join(path, PYTHON_MANIFEST);
+  if (existsSync(repositoryPath(pythonManifest))) return PYPROJECT_VERSION_PATTERN.exec(readRepositoryFile(pythonManifest))![1]!;
+  return manifestOf({ path }).version!;
 }
 
 const NODE_CLIENT_PACKAGES = publishedNodePackages();
@@ -78,5 +90,20 @@ describe('open source', () => {
   test('the README links the license and the community files', () => {
     const readme = readRepositoryFile('README.md');
     [ROOT_LICENSE_FILE, ...COMMUNITY_FILES].forEach((path) => expect(readme).toContain(`](${path})`));
+  });
+
+  test.each([...NODE_CLIENT_PACKAGES, ...PYTHON_CLIENT_PACKAGES])(
+    'the published package %s keeps a changelog with its current version',
+    (path) => {
+      const changelog = readRepositoryFile(posix.join(path, CHANGELOG_FILE));
+      expect(changelog).toContain(CHANGELOG_FORMAT_URL);
+      expect(changelog).toContain(`## [${versionOf(path)}]`);
+    },
+  );
+
+  test('the release runbook names the tag, the notes and no media upload', () => {
+    const runbook = readRepositoryFile(RELEASE_RUNBOOK);
+    expect(RELEASE_RUNBOOK_COMMANDS.filter((command) => !runbook.includes(command))).toEqual([]);
+    expect(runbook).not.toContain(RELEASE_UPLOAD_COMMAND);
   });
 });
