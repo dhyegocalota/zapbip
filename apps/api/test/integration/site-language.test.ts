@@ -138,13 +138,13 @@ describe('the preference forms', () => {
 
   it.each(['/pt-br', '/', '/pt-br?agent=codex', `/?ref=${REFERRAL_CODE}`, '/?agent=any'])('POST /theme returns to %s', async (returnTo) => {
     const response = await siteFetch({ path: '/theme', method: 'POST', form: { theme: 'light', returnTo } });
-    expect(response.headers.get('Location')).toBe(returnTo);
+    expect(response.headers.get('Location')).toBe(`${returnTo}#theme`);
     expect(response.headers.get('Set-Cookie')).toContain(`${THEME_COOKIE}=light`);
   });
 
   it.each([['/pt-br?x=1'], ['//evil.example'], ['/?lang=pt-BR'], ['/pt-br/']])('POST /theme refuses %s and goes home', async (returnTo) => {
     const response = await siteFetch({ path: '/theme', method: 'POST', form: { theme: 'light', returnTo } });
-    expect(response.headers.get('Location')).toBe('/');
+    expect(response.headers.get('Location')).toBe('/#theme');
   });
 });
 
