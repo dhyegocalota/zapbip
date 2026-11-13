@@ -36,9 +36,11 @@ describe('the official logos', () => {
     expect(line).toMatch(/https:\/\//);
   });
 
-  it('shares one file between agents that carry the same mark', () => {
-    const named = Object.values(AGENT_INSTALLS).filter((install) => install.officialLogo !== null).length;
-    expect(STEMS.length).toBeLessThan(named);
+  it('keeps one file per mark: no two logo files are the same drawing', () => {
+    const drawings = readdirSync(LOGOS_ROOT)
+      .filter((name) => name.endsWith('.svg'))
+      .map((name) => readFileSync(join(LOGOS_ROOT, name), 'utf8'));
+    expect(new Set(drawings).size).toBe(drawings.length);
   });
 
   it('ships no mark its owner has not allowed, and no file that is not an svg or the notice', () => {
