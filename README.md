@@ -76,7 +76,7 @@ Coding agents, chat apps and any MCP client connect the same way. [The supported
 | [apps/api](apps/api/)                                                                   | The Cloudflare Worker: MCP server, Durable Objects, D1 directory, R2 media, the public site, the customer web app and the backoffice |
 | [apps/connector](apps/connector/)                                                       | The local connector that wakes a coding agent when you text first                                                                   |
 | `apps/*-plugin` | Channel plugins for agent runtimes |
-| [apps/docs](apps/docs/)                                                                 | The documentation site, in English and Portuguese                                                                                   |
+| [apps/docs](apps/docs/)                                                                 | The documentation site, in eight languages                                                                                        |
 | [libs/core](libs/core/)                                                                 | The inbox, routing and delivery rules as plain TypeScript                                                                           |
 | [libs/agents](libs/agents/)                                                             | The registry of supported agents and their install guides                                                                           |
 | [libs/types](libs/types/)                                                               | Shared enums and constants                                                                                                          |
