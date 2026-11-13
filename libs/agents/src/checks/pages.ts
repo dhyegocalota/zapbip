@@ -29,7 +29,7 @@ const ONE_LISTENER_SENTENCES: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.PortugueseBrazil]: `Rode apenas um listener por agente: o plugin ou ${LISTEN_COMMAND}, nunca os dois. Um segundo listener substitui o primeiro.`,
   [DocsPageLanguage.Spanish]: `Ejecuta un solo listener por agente: el plugin o ${LISTEN_COMMAND}, nunca los dos. Un segundo listener reemplaza al primero.`,
   [DocsPageLanguage.German]: `Führe pro Agent nur einen Listener aus: das Plugin oder ${LISTEN_COMMAND}, niemals beide. Ein zweiter Listener ersetzt den ersten.`,
-  [DocsPageLanguage.French]: `Lancez un seul listener par agent : le plugin ou ${LISTEN_COMMAND}, jamais les deux. Un second listener remplace le premier.`,
+  [DocsPageLanguage.French]: `Lancez un seul listener par agent\u00a0: le plugin ou ${LISTEN_COMMAND}, jamais les deux. Un second listener remplace le premier.`,
   [DocsPageLanguage.Japanese]: `エージェントごとにリスナーは 1 つだけ実行してください。プラグインか ${LISTEN_COMMAND} のどちらか一方で、両方は使わないでください。2 つ目のリスナーは 1 つ目を置き換えます。`,
   [DocsPageLanguage.Korean]: `에이전트마다 리스너는 하나만 실행하세요. 플러그인 또는 ${LISTEN_COMMAND} 중 하나만 쓰고, 둘 다 쓰지 마세요. 두 번째 리스너는 첫 번째를 대체합니다.`,
   [DocsPageLanguage.Chinese]: `每个智能体只运行一个 listener：插件或 ${LISTEN_COMMAND}，不要两者同时使用。第二个 listener 会替换第一个。`,

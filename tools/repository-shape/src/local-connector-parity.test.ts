@@ -12,7 +12,7 @@ const SECTION_HEADINGS: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.PortugueseBrazil]: 'O que a IA pode fazer quando é acordada',
   [DocsPageLanguage.Spanish]: 'Qué puede hacer la IA cuando la despiertan',
   [DocsPageLanguage.German]: 'Was die KI tun kann, wenn sie geweckt wird',
-  [DocsPageLanguage.French]: "Ce que l'IA peut faire quand on la réveille",
+  [DocsPageLanguage.French]: "Ce que l'IA peut faire quand elle est réveillée",
   [DocsPageLanguage.Japanese]: 'AI が起こされたときにできること',
   [DocsPageLanguage.Korean]: 'AI가 깨어났을 때 할 수 있는 일',
   [DocsPageLanguage.Chinese]: '唤醒后 AI 能做什么',

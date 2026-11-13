@@ -141,7 +141,7 @@ describe('pageRuleViolationsOf', () => {
   test.each([
     [DocsPageLanguage.Spanish, 'Ejecuta un solo listener por agente: el plugin o'],
     [DocsPageLanguage.German, 'Führe pro Agent nur einen Listener aus: das Plugin oder'],
-    [DocsPageLanguage.French, 'Lancez un seul listener par agent : le plugin ou'],
+    [DocsPageLanguage.French, 'Lancez un seul listener par agent\u00a0: le plugin ou'],
     [DocsPageLanguage.Japanese, 'エージェントごとにリスナーは 1 つだけ実行してください。プラグインか'],
     [DocsPageLanguage.Korean, '에이전트마다 리스너는 하나만 실행하세요. 플러그인 또는'],
     [DocsPageLanguage.Chinese, '每个智能体只运行一个 listener：插件或'],
