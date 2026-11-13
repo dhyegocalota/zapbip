@@ -1,8 +1,8 @@
 import { AccountReplyIntent, AccountReplyParameter, CommandKind, IdPrefix, RegisterOutcome } from '@zapbip/types';
 import type { AccountCommandResult } from '../account-types';
-import { isReservedAgentName, normalizeAgentName } from '../agent-name';
 import { AGENTS_PER_ACCOUNT_LIMIT, NO_INSTALL_CODE } from '../constants';
 import { buildResult, buildTextReply } from './account-reply';
+import { checkNewAgentName } from './check-agent-name';
 import { buildInstallPromptReply } from './install-prompt-reply';
 import { sealInstallCode } from './seal-install-code';
 import type { CreateAgentConnectionInput } from './types';
@@ -16,9 +16,8 @@ export async function createAgentConnection(input: CreateAgentConnectionInput): 
     return buildResult({ replies: [buildTextReply({ intent: refusal.intent, locale, parameters })] });
   };
   if (rawName.trim() === '') return buildResult({ replies: [buildUsageReply({ kind: CommandKind.CreateAgent, locale })] });
-  const agent = normalizeAgentName({ rawName });
-  if (agent === null) return refuse({ intent: AccountReplyIntent.InvalidName });
-  if (isReservedAgentName({ name: agent })) return refuse({ intent: AccountReplyIntent.ReservedName });
+  const { agent, refusal } = checkNewAgentName({ rawName });
+  if (refusal !== null) return refuse({ intent: refusal });
   const existing = await dependencies.connections.findActiveByAgent({ accountId, agent });
   if (existing !== null) return refuse({ intent: AccountReplyIntent.NameTaken, agent });
   const issued = await dependencies.connectionSecrets.issue();

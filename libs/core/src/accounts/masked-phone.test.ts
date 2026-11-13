@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { maskedPhoneOf } from '../../src/client-app/masked-phone';
+import { maskedPhoneOf } from './masked-phone';
 
 describe('maskedPhoneOf', () => {
   it.each([

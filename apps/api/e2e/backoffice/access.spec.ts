@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { ACCESS_BATCH_LIMIT } from '@zapbip/types';
 import type { Page, TestInfo } from '@playwright/test';
 import { BackofficeCopyKey } from '../../src/backoffice/backoffice-copy';
-import { maskedPhoneOf } from '../../src/client-app/masked-phone';
+import { maskedPhoneOf } from '@zapbip/core';
 import { expect, test } from './fixtures';
 import { copy } from './support/copy';
 import { seedAccess, WAITING_PHONES, WAITLIST_EMAILS } from './support/access-seed';

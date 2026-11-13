@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { BackofficeAuditAction, BackofficeAuditOutcome } from '../../src/backoffice/audit/backoffice-audit-action';
 import { BACKOFFICE_COPY, BackofficeCopyKey } from '../../src/backoffice/backoffice-copy';
 import { csrfTokenOf } from '../../src/backoffice/auth/csrf';
-import { maskedPhoneOf } from '../../src/client-app/masked-phone';
+import { maskedPhoneOf } from '@zapbip/core';
 import { escapedHtml } from '../support/site';
 import { seedInvite, seedWaitingAccount, seedWaitlistEntry, stateOfAccount } from '../support/access';
 import { readScreen } from '../support/inbox-session';

@@ -2,9 +2,9 @@ import { AccountReplyIntent, AgentChangeStatus, AgentCommandRecipient, CommandKi
 import type { AgentName } from '../../inbox/connection';
 import { ask } from '../../inbox/use-cases/ask';
 import { approvalTitlesOf, renderApprovalQuestion, ApprovalChoice } from '../agent-approval-copy';
-import { isReservedAgentName, normalizeAgentName } from '../agent-name';
 import { APPROVAL_REFERENCE_LENGTH } from '../constants';
 import { applyAgentCommand } from './apply-agent-command';
+import { checkExistingAgent, checkNewAgentName, type ExistingAgentCheck, type NewAgentNameCheck } from './check-agent-name';
 import type { AgentChangeResult, ApprovedCommandKind, RequestAccountChangeInput } from './types';
 
 const APPLIED_INTENTS: ReadonlySet<AccountReplyIntent> = new Set([AccountReplyIntent.Created, AccountReplyIntent.Revoked]);
@@ -22,11 +22,10 @@ function withoutChange(input: {
   return { ...input, installPrompt: null };
 }
 
-async function findRefusal(input: RequestAccountChangeInput & { agent: AgentName }): Promise<AccountReplyIntent | null> {
-  const { dependencies, connection, kind, agent } = input;
-  if (kind === CommandKind.CreateAgent) return isReservedAgentName({ name: agent }) ? AccountReplyIntent.ReservedName : null;
-  const existing = await dependencies.connections.findActiveByAgent({ accountId: connection.accountId, agent });
-  return existing === null ? AccountReplyIntent.NotFound : null;
+async function checkName(input: RequestAccountChangeInput): Promise<NewAgentNameCheck | ExistingAgentCheck> {
+  const { dependencies, connection, kind, rawName } = input;
+  if (kind === CommandKind.CreateAgent) return checkNewAgentName({ rawName });
+  return checkExistingAgent({ dependencies, accountId: connection.accountId, rawName });
 }
 
 async function askOwner(input: RequestAccountChangeInput & { agent: AgentName }): Promise<ApprovalChoice | null> {
@@ -49,9 +48,7 @@ async function askOwner(input: RequestAccountChangeInput & { agent: AgentName })
 
 export async function requestAccountChange(input: RequestAccountChangeInput): Promise<AgentChangeResult> {
   const { dependencies, connection, kind, publicOrigin, appOrigin } = input;
-  const agent = normalizeAgentName({ rawName: input.rawName });
-  if (agent === null) return withoutChange({ status: AgentChangeStatus.Refused, agent, intent: AccountReplyIntent.InvalidName });
-  const refusal = await findRefusal({ ...input, agent });
+  const { agent, refusal } = await checkName(input);
   if (refusal !== null) return withoutChange({ status: AgentChangeStatus.Refused, agent, intent: refusal });
   const choice = await askOwner({ ...input, agent });
   if (choice === null) return withoutChange({ status: AgentChangeStatus.TimedOut, agent, intent: null });

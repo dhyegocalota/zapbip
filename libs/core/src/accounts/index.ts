@@ -34,3 +34,4 @@ export * from './use-cases/apply-agent-command';
 export * from './use-cases/describe-account';
 export * from './use-cases/request-account-change';
 export * from './use-cases/send-account-replies';
+export * from './use-cases/check-agent-name';

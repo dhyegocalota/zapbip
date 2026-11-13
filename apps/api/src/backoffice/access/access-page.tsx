@@ -1,5 +1,5 @@
 import { ACCESS_BATCH_LIMIT, OwnerLocale } from '@zapbip/types';
-import { maskedPhoneOf } from '../../client-app/masked-phone';
+import { maskedPhoneOf } from '@zapbip/core';
 import { ACCESS_PAGE_ROW_LIMIT } from '../backoffice-constants';
 import { BackofficeCopyKey, renderBackofficeCopy } from '../backoffice-copy';
 import { NoticeVariant } from '../backoffice-notice';
