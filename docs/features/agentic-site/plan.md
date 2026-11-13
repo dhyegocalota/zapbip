@@ -22,6 +22,7 @@
 - [x] **Step 6:** WebMCP script — 88618e5c
 - [x] **Step 7:** semantic HTML fixes with tests — 9c64a65a, 00da8123
 - [x] **Step 8:** Playwright spec with a stubbed `document.modelContext` — 4cc7094e (spec), 88618e5c (green)
+- [ ] **Step 10:** backoffice list, CSV and invite filter for `source`, after `access-release` merges
 - [x] **Step 9:** rule, READMEs and tester briefing — see the last commit
 
 ## Failure modes
