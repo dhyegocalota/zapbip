@@ -1,10 +1,10 @@
 import { reset } from 'cloudflare:test';
-import { OwnerLocale } from '@zapbip/types';
+import { COMPANY, OwnerLocale } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { LegalDocument } from '../../src/site/legal-links';
 import { legalTextOf } from '../../src/site/legal-copy';
 import { pricingValuesOf } from '../../src/site/price-format';
-import { siteAgents, siteQuickStartOf } from '../../src/site/site-agents';
+import { leadingAgentNames, siteAgents, siteQuickStartOf } from '../../src/site/site-agents';
 import { SITE_EXAMPLE_CONNECTION_LINK } from '../../src/site/site-constants';
 import { renderSiteCopy, SiteCopyKey } from '../../src/site/site-copy';
 import { localePathOf } from '../../src/site/site-language';
@@ -82,6 +82,19 @@ describe('the Markdown twins of the home pages', () => {
   });
 });
 
+describe('the Markdown twins keep up with the page copy', () => {
+  const SECTION_KEY_PATTERN = /^(Why|HowStep|Capability|Privacy)\w*(Title|Body)$|^Faq(?!Referral)\w*(Question|Answer)$/;
+  const sectionKeys = Object.entries(SiteCopyKey)
+    .filter(([name]) => SECTION_KEY_PATTERN.test(name))
+    .map(([, key]) => key);
+
+  it.each(HOME_TWINS)('%s holds every title, body, question and answer of the sections', async (path, locale) => {
+    const { text } = await textOf({ path });
+    const values = { ...pricingValuesOf({ locale }), agents: leadingAgentNames() };
+    sectionKeys.forEach((key) => expect(text).toContain(copy({ key, locale, values }).replaceAll('{contactEmail}', COMPANY.contactEmail)));
+  });
+});
+
 describe('the Markdown twins of the legal pages', () => {
   it.each(LEGAL_TWINS)('%s carries the title, the summary and every section', async (path, document, locale) => {
     const { response, text } = await textOf({ path });
@@ -145,14 +158,14 @@ describe('the head of every page', () => {
 
 describe('llms.txt', () => {
   it.each([
-    ['/llms.txt', OwnerLocale.EnglishUs],
-    ['/pt-br/llms.txt', OwnerLocale.PortugueseBrazil],
-  ])('%s follows the llms.txt format', async (path, locale) => {
+    ['/llms.txt', OwnerLocale.EnglishUs, '/terms.md'],
+    ['/pt-br/llms.txt', OwnerLocale.PortugueseBrazil, '/pt-br/termos.md'],
+  ])('%s follows the llms.txt format', async (path, locale, termsTwin) => {
     const { response, text } = await textOf({ path });
     expect(response.headers.get('content-type')).toBe(TEXT_TYPE);
     expect(text.startsWith('# zapbip\n\n> ')).toBe(true);
     expect(text).toContain(`${SITE_ORIGIN}${locale === OwnerLocale.EnglishUs ? '/index.md' : '/pt-br.md'}`);
-    expect(text).toContain(`${SITE_ORIGIN}/terms.md`);
+    expect(text).toContain(`${SITE_ORIGIN}${termsTwin}`);
     expect(text).toContain(`${SITE_ORIGIN}/api/request-access`);
     expect(text).toContain('https://docs.zapbip.com/llms.txt');
     expect(text).toContain('https://docs.zapbip.com/llms-full.txt');

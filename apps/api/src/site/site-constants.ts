@@ -38,7 +38,7 @@ export const DOCS_PORTUGUESE_PATH = '/pt-br';
 export const RATE_KEY_PREFIX = 'join:';
 export const NO_STORE_CACHE_CONTROL = 'no-store';
 export const PAGE_CACHE_CONTROL = 'private, no-cache';
-export const PAGE_VARY = 'Accept-Language, Cookie';
+export const PAGE_VARY = 'Accept, Accept-Language, Cookie';
 export const STYLESHEET_CONTENT_TYPE = 'text/css; charset=utf-8';
 export const SCRIPT_CONTENT_TYPE = 'text/javascript; charset=utf-8';
 export const LEGAL_UPDATED_ON = '2026-11-13';
@@ -51,6 +51,7 @@ export const SITE_EXAMPLE_CONNECTION_LINK = buildConnectionLink({
 export const AGENT_RATE_KEY_PREFIX = 'agent:';
 export const AGENT_ADDRESS_WEIGHT = 10;
 export const AGENT_EMAIL_WEIGHT = 15;
+export const TEXT_CONTENT_TYPE = 'text/plain; charset=utf-8';
 export const MARKDOWN_CONTENT_TYPE = 'text/markdown; charset=utf-8';
 export const JSON_CONTENT_TYPE = 'application/json; charset=utf-8';
 export const SECURITY_POLICY_URL = 'https://github.com/dhyegocalota/zapbip/security/policy';

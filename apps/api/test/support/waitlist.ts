@@ -1,4 +1,4 @@
-import { OwnerLocale, WaitlistJoinOutcome } from '@zapbip/types';
+import { OwnerLocale, WaitlistJoinOutcome, WaitlistSource } from '@zapbip/types';
 import { joinWaitlist, type WaitlistJoinResult } from '../../src/site/join-waitlist';
 import { SEED_CREATED_AT } from './seed';
 import { testEnv } from './workers-env';
@@ -20,7 +20,15 @@ export async function join(input: {
   generateReferralCode?: () => string;
 }): Promise<WaitlistJoinResult> {
   const { email, referralCode = null, locale = OwnerLocale.EnglishUs, generateReferralCode } = input;
-  return joinWaitlist({ database: testEnv.CONNECTIONS, email, locale, referralCode, now: SEED_CREATED_AT, generateReferralCode });
+  return joinWaitlist({
+    database: testEnv.CONNECTIONS,
+    email,
+    locale,
+    referralCode,
+    source: WaitlistSource.Form,
+    now: SEED_CREATED_AT,
+    generateReferralCode,
+  });
 }
 
 export async function joinedCodeOf(input: { email: string; referralCode?: string | null }): Promise<string> {

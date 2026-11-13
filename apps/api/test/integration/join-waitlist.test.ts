@@ -1,5 +1,5 @@
 import { reset } from 'cloudflare:test';
-import { DEFAULT_WAITLIST_REFERRAL_CAP, OwnerLocale, WAITLIST_EMAIL_MAX_LENGTH, WaitlistJoinOutcome } from '@zapbip/types';
+import { DEFAULT_WAITLIST_REFERRAL_CAP, OwnerLocale, WAITLIST_EMAIL_MAX_LENGTH, WaitlistJoinOutcome, WaitlistSource } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { joinWaitlist } from '../../src/site/join-waitlist';
 import { applyLandingWaitlistMigration, SEED_CREATED_AT } from '../support/seed';
@@ -144,7 +144,14 @@ describe('joinWaitlist', () => {
         };
       },
     });
-    await joinWaitlist({ database, email: 'maria@example.com', locale: OwnerLocale.EnglishUs, referralCode: null, now: SEED_CREATED_AT });
+    await joinWaitlist({
+      database,
+      email: 'maria@example.com',
+      locale: OwnerLocale.EnglishUs,
+      referralCode: null,
+      source: WaitlistSource.Form,
+      now: SEED_CREATED_AT,
+    });
     expect(batches).toEqual([2]);
   });
 });

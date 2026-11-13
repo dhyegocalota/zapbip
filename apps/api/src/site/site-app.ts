@@ -7,14 +7,16 @@ import { DeployEnvironment } from '../contract/deploy-environment';
 import { LogEvent } from '../contract/log';
 import { logEvent } from '../log';
 import { plainResponse } from '../routes/private-response';
+import { agenticRoutes } from './agentic-routes';
 import { joinHandler } from './join-route';
 import { languageRedirects } from './language-redirects';
+import { markdownNegotiation } from './page-twins';
 import { preferenceRoutes } from './preference-routes';
 import { LEGAL_PAGES, legalPathOf } from './legal-links';
 import { idleJoinOf, renderLanding, renderLegal, renderNotFound } from './render-landing';
 import { renderRobots, renderSitemap } from './robots-and-sitemap';
 import { siteContext } from './site-context';
-import { PAGE_CACHE_CONTROL, PAGE_VARY, SCRIPT_CONTENT_TYPE, STYLESHEET_CONTENT_TYPE } from './site-constants';
+import { PAGE_CACHE_CONTROL, PAGE_VARY, SCRIPT_CONTENT_TYPE, STYLESHEET_CONTENT_TYPE, TEXT_CONTENT_TYPE } from './site-constants';
 import type { SiteEnv } from './site-env';
 import { pagePathOf } from './site-links';
 import { SitePath } from './site-paths';
@@ -22,7 +24,6 @@ import { SITE_SECURITY_HEADERS, SITE_STRICT_TRANSPORT_SECURITY } from './site-po
 import { SITE_SCRIPT } from './site-scripts';
 import { SITE_STYLESHEET } from './site-stylesheet';
 
-const TEXT_CONTENT_TYPE = 'text/plain; charset=utf-8';
 const XML_CONTENT_TYPE = 'application/xml; charset=utf-8';
 const SERVER_ERROR_TEXT = 'server error';
 const SITE_ERROR_CODE = 'SiteError';
@@ -39,6 +40,7 @@ export function createSiteApp(input: { fetchImplementation: typeof fetch }): Hon
   app.use('*', securityHeaders);
   app.use('*', siteContext);
   app.use('*', languageRedirects);
+  app.use('*', markdownNegotiation);
   app.onError((error, context) => {
     logEvent({ event: LogEvent.SiteError, errorCode: error instanceof Error ? error.name : SITE_ERROR_CODE });
     return plainResponse({ body: SERVER_ERROR_TEXT, status: HttpStatus.InternalServerError });
@@ -63,6 +65,7 @@ export function createSiteApp(input: { fetchImplementation: typeof fetch }): Hon
     return context.redirect(target, SEE_OTHER_STATUS);
   });
   app.route('/', preferenceRoutes);
+  app.route('/', agenticRoutes);
   app.get(SitePath.Stylesheet, (context) =>
     context.body(SITE_STYLESHEET, HttpStatus.Ok, { 'Content-Type': STYLESHEET_CONTENT_TYPE, 'Cache-Control': STYLESHEET_CACHE_CONTROL }),
   );
