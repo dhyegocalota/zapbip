@@ -290,6 +290,7 @@ a {
 
 .lang-menu {
   position: relative;
+  border-bottom: 0;
 }
 
 .lang-trigger {
@@ -397,28 +398,34 @@ a {
 .switch {
   display: flex;
   gap: var(--space-1);
-  padding: var(--space-1);
-  border-radius: var(--radius-pill);
-  background: var(--color-sunken);
 }
 
 .switch button {
-  min-height: 2.25rem;
-  min-width: 2.25rem;
-  padding: 0 var(--space-3);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
   border: 0;
   border-radius: var(--radius-pill);
   background: transparent;
   color: var(--color-text-muted);
-  font: inherit;
-  font-size: var(--text-small);
-  font-weight: 600;
+  cursor: pointer;
+}
+
+.switch button:hover,
+.switch button:focus-visible {
+  color: var(--color-text);
 }
 
 .switch button[aria-pressed='true'] {
-  background: var(--color-raised);
-  box-shadow: var(--shadow-card);
+  background: var(--color-sunken);
   color: var(--color-text);
+}
+
+.theme-icon {
+  flex: none;
 }
 
 .button {
