@@ -65,7 +65,7 @@ describe.each(SURFACES)('the shared shell on the $name', ({ html }) => {
 
   it('keeps every header link except the brand inside a named navigation', async () => {
     const header = /<header[\s\S]*?<\/header>/.exec(await html())![0];
-    const outsideNavigation = header.replace(/<nav aria-label="[^"]+">[\s\S]*?<\/nav>/g, '');
+    const outsideNavigation = header.replace(/<nav [^>]*aria-label="[^"]+"[^>]*>[\s\S]*?<\/nav>/g, '');
     const strayLinks = [...outsideNavigation.matchAll(/<a [^>]*>/g)].filter((link) => !link[0].includes('class="brand"'));
     expect(strayLinks).toEqual([]);
   });
@@ -103,7 +103,9 @@ describe.each(STYLESHEET_PATHS)('the stylesheet of the $name', ({ fetch }) => {
 describe('the site header', () => {
   it('holds the documentation link in a navigation named Main', async () => {
     const header = /<header[\s\S]*?<\/header>/.exec(await siteFetch({ path: '/' }).then((response) => response.text()))![0];
-    expect(header).toMatch(/<nav aria-label="Main">[\s\S]*<a class="nav-link" href="https:\/\/docs\.zapbip\.com">Docs<\/a>/);
+    expect(header).toMatch(
+      /<nav class="header-end" aria-label="Main">[\s\S]*<a class="nav-link" href="https:\/\/docs\.zapbip\.com">Docs<\/a>/,
+    );
   });
 });
 

@@ -13,7 +13,7 @@ export function LanguageMenu(props: { locale: OwnerLocale; action: string; hidde
         <Flag locale={locale} />
         <span class="lang-code">{LOCALE_PROFILES[locale].shortName}</span>
       </summary>
-      <form class="lang-list" method="post" action={props.action}>
+      <form class="lang-list" method="post" action={props.action} aria-label={label}>
         {props.hiddenFields.map((field) => (
           <input type="hidden" name={field.name} value={field.value} />
         ))}

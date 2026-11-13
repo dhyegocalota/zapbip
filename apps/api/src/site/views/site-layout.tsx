@@ -80,7 +80,7 @@ function SiteHeader(props: { model: PageModel }) {
         <a class="brand" href={localePathOf({ locale: model.locale })} aria-label={translate(SiteCopyKey.BrandHomeLabel)}>
           {translate(SiteCopyKey.BrandName)}
         </a>
-        <div class="header-end">
+        <nav class="header-end" aria-label={translate(SiteCopyKey.NavigationLabel)}>
           <a class="nav-link" href={docsUrlOf({ locale: model.locale, path: '' })}>
             {translate(SiteCopyKey.NavigationDocs)}
           </a>
@@ -89,7 +89,7 @@ function SiteHeader(props: { model: PageModel }) {
               {translate(SiteCopyKey.HeaderJoin)}
             </a>
           ) : null}
-        </div>
+        </nav>
       </div>
     </header>
   );
