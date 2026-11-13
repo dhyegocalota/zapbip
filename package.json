@@ -37,7 +37,7 @@
     "test:e2e:clients": "ZAPBIP_E2E_CLIENTS=1 pnpm --filter @zapbip/api exec vitest run --config vitest.e2e.config.mts test/e2e/channel-plugins.e2e.test.ts"
   },
   "devDependencies": {
-    "@types/node": "24.19.2",
+    "@types/node": "26.6.6",
     "prettier": "3.9.10",
     "tsx": "4.23.15",
     "typescript": "7.0.2"
