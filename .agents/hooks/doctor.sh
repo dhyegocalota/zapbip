@@ -81,7 +81,7 @@ lost_for() {
   case "$1" in
     node|pnpm) echo "everything" ;;
     jq) echo "the four hooks; the two guards block" ;;
-    gh) echo "/open-pr and the recorder's release upload" ;;
+    gh) echo "/open-pr and the recorder's media upload" ;;
     chromium) echo "every Playwright MCP server, /check-ui, /scenario, the tester" ;;
     skills) echo "every Claude Code skill (ADR 0001)" ;;
     gitleaks) echo "the secret scan; pnpm verify fails without it" ;;

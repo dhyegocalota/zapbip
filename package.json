@@ -13,7 +13,7 @@
     "test:unit": "pnpm -r test:unit && pnpm test:hooks && pnpm test:verify",
     "test:lifecycle": "pnpm --filter @zapbip/repository-shape exec vitest run --config vitest.lifecycle.config.ts",
     "test:hooks": "bash .agents/hooks/hooks.test.sh",
-    "test:verify": "bash scripts/verify.test.sh",
+    "test:verify": "bash scripts/verify.test.sh && bash scripts/pr-media.test.sh",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "deploy:staging": "node --env-file=.env --import tsx apps/api/scripts/deploy.ts --environment staging",
