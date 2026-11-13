@@ -2,6 +2,7 @@ import { createExecutionContext } from 'cloudflare:test';
 import { OwnerLocale, TURNSTILE_ACTION_WAITLIST_JOIN } from '@zapbip/types';
 import { CLIENT_ADDRESS_HEADER } from '../../src/contract/constants';
 import type { Bindings } from '../../src/contract/env';
+import { renderShellCopy, type ShellCopyKey } from '../../src/web-shell/shell-copy';
 import { createSiteApp } from '../../src/site/site-app';
 import { renderSiteCopy, type SiteCopyKey } from '../../src/site/site-copy';
 import { createFakeRateLimiter } from './fake-rate-limiter';
@@ -99,6 +100,10 @@ const HTML_ESCAPES: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '
 
 export function escapedHtml(input: { text: string }): string {
   return input.text.replace(/[&<>"']/g, (character) => HTML_ESCAPES[character]!);
+}
+
+export function shellCopyHtml(input: { key: ShellCopyKey; locale: OwnerLocale }): string {
+  return escapedHtml({ text: renderShellCopy(input) });
 }
 
 export function copyHtml(input: { key: SiteCopyKey; locale: OwnerLocale; values?: Record<string, string> }): string {

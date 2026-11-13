@@ -43,7 +43,7 @@ async function respondSignedOut(input: { context: Context<ClientAppEnv> }): Prom
     logEvent({ event: LogEvent.StartLinkInvalidNumber });
     return respondUnavailable({ context });
   }
-  return context.html(<SignedOutPage locale={locale} whatsappHref={whatsappHref} />);
+  return context.html(<SignedOutPage locale={locale} theme={context.get('theme')} whatsappHref={whatsappHref} />);
 }
 
 function showHome(context: Context<ClientAppEnv>): Promise<Response> {

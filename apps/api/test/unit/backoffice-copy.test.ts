@@ -39,7 +39,6 @@ const POLISH_KEYS = [
 ];
 const SIGN_IN_KEYS = ['SignInLead', 'SignInEmailLabel', 'SignInPasswordLabel', 'SignInSubmit', 'SignInCodeLead', 'SignInCodeSubmit'];
 const REMOVED_KEYS = ['SignInKeyLabel', 'SignInKeyHelp'];
-const THEME_KEYS = ['ThemeLabel', 'ThemeLight', 'ThemeDark', 'ThemeSystem'];
 const PLACEHOLDER_PATTERN = /\{(\w+)\}/g;
 const TEXT_CHILD_PATTERN = />\s*[A-Za-z0-9][^<>{}();=]*</;
 const STRING_CHILD_PATTERN = />\s*\{\s*['"`]/;
@@ -87,12 +86,6 @@ describe('backoffice copy', () => {
 
   it.each(REMOVED_KEYS)('no longer has the key %s', (name) => {
     expect(Object.keys(BackofficeCopyKey)).not.toContain(name);
-  });
-
-  it.each(THEME_KEYS)('carries %s in both locales', (name) => {
-    expect(Object.keys(BackofficeCopyKey)).toContain(name);
-    const key = BackofficeCopyKey[name as keyof typeof BackofficeCopyKey];
-    LOCALES.forEach((locale) => expect(BACKOFFICE_COPY[locale][key]).toBeTypeOf('string'));
   });
 
   it('keeps string literals out of JSX children', () => {

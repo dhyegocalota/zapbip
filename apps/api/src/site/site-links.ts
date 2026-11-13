@@ -1,19 +1,10 @@
-import { DocsLanguage, OwnerLocale } from '@zapbip/types';
+import type { OwnerLocale } from '@zapbip/types';
 import type { InstallClient } from '@zapbip/agents/install';
 import { JOIN_FRAGMENT, START_FRAGMENT, SITE_AGENT_PARAMETER, SITE_REFERRAL_PARAMETER } from './site-constants';
 import type { SiteStartTab } from './site-agents';
 import { legalPathOf, legalUrlOf } from './legal-links';
 import type { PageModel } from './page-model';
 import { localePathOf } from './site-language';
-
-const LANGUAGES_BY_LOCALE: Record<OwnerLocale, DocsLanguage> = {
-  [OwnerLocale.PortugueseBrazil]: DocsLanguage.PortugueseBrazil,
-  [OwnerLocale.EnglishUs]: DocsLanguage.English,
-};
-
-export function languageOf(input: { locale: OwnerLocale }): DocsLanguage {
-  return LANGUAGES_BY_LOCALE[input.locale];
-}
 
 export function pagePathOf(input: {
   locale: OwnerLocale;

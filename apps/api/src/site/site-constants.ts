@@ -34,7 +34,6 @@ export const RETRY_AFTER_VALUE = String(RATE_LIMIT_PERIOD_MS / SECOND_MS);
 export const THEME_COLOR_LIGHT = '#F6F8F5';
 export const THEME_COLOR_DARK = '#07120F';
 export const SITE_BRAND_SEPARATOR = ' · ';
-export const DOCS_PORTUGUESE_PATH = '/pt-br';
 export const RATE_KEY_PREFIX = 'join:';
 export const NO_STORE_CACHE_CONTROL = 'no-store';
 export const PAGE_CACHE_CONTROL = 'private, no-cache';

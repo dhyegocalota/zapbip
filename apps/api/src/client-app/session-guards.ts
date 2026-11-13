@@ -12,11 +12,15 @@ import { respondMessage } from './respond';
 export type SessionHandler = (input: { context: Context<ClientAppEnv>; session: ClientAppSession }) => Response | Promise<Response>;
 export type RouteHandler = (context: Context<ClientAppEnv>) => Response | Promise<Response>;
 
+export function isOriginTrusted(input: { context: Context<ClientAppEnv> }): boolean {
+  const { context } = input;
+  return context.req.header(ORIGIN_HEADER) === new URL(context.env.APP_ORIGIN).origin;
+}
+
 export async function isSubmissionTrusted(input: { context: Context<ClientAppEnv>; secret: string }): Promise<boolean> {
   const { context, secret } = input;
-  const isOriginValid = context.req.header(ORIGIN_HEADER) === new URL(context.env.APP_ORIGIN).origin;
   const submittedToken = textFieldOf({ form: await context.req.parseBody(), name: CSRF_FIELD });
-  if (!isOriginValid || submittedToken === null) return false;
+  if (!isOriginTrusted({ context }) || submittedToken === null) return false;
   return isCsrfTokenValid({ secret, submittedToken });
 }
 

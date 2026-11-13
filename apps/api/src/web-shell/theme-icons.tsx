@@ -1,5 +1,5 @@
 import type { Child } from 'hono/jsx';
-import { BackofficeTheme } from '../../backoffice/backoffice-theme';
+import { ShellTheme } from './shell-theme';
 
 const ICON_VIEWBOX = '0 0 24 24';
 const ICON_SIZE = 14;
@@ -41,13 +41,13 @@ function SystemShape() {
   );
 }
 
-const SHAPES: Record<BackofficeTheme, () => Child> = {
-  [BackofficeTheme.Light]: SunShape,
-  [BackofficeTheme.Dark]: MoonShape,
-  [BackofficeTheme.System]: SystemShape,
+const SHAPES: Record<ShellTheme, () => Child> = {
+  [ShellTheme.Light]: SunShape,
+  [ShellTheme.Dark]: MoonShape,
+  [ShellTheme.System]: SystemShape,
 };
 
-export function ThemeIcon(props: { theme: BackofficeTheme }) {
+export function ThemeIcon(props: { theme: ShellTheme }) {
   return (
     <svg
       class="theme-icon"

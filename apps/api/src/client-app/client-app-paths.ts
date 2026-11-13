@@ -4,6 +4,8 @@ export enum ClientAppPath {
   Home = '/',
   SignIn = '/sign-in',
   SignOut = '/sign-out',
+  Locale = '/locale',
+  Theme = '/theme',
   Agents = '/agents',
   RevokeAgent = '/agents/revoke',
   Stylesheet = '/app.css',

@@ -2,7 +2,7 @@ import { HttpStatus, type OwnerLocale } from '@zapbip/types';
 import type { DeployEnvironment } from '../../contract/deploy-environment';
 import { STYLESHEET_HREF } from '../assets/stylesheet';
 import { BackofficeCopyKey, renderBackofficeCopy } from '../backoffice-copy';
-import type { BackofficeTheme } from '../backoffice-theme';
+import type { ShellTheme } from '../../web-shell/shell-theme';
 import { BackofficePath } from '../backoffice-paths';
 import { Layout } from '../layout';
 
@@ -35,12 +35,7 @@ const ERROR_VIEWS: Record<ErrorStatus, ErrorView> = {
   [HttpStatus.ServiceUnavailable]: { title: BackofficeCopyKey.Error503Title, body: BackofficeCopyKey.Error503Body, action: null },
 };
 
-export function ErrorPage(props: {
-  status: ErrorStatus;
-  locale: OwnerLocale;
-  environment: DeployEnvironment | null;
-  theme: BackofficeTheme;
-}) {
+export function ErrorPage(props: { status: ErrorStatus; locale: OwnerLocale; environment: DeployEnvironment | null; theme: ShellTheme }) {
   const { status, locale } = props;
   const view = ERROR_VIEWS[status];
   const title = renderBackofficeCopy({ key: view.title, locale });

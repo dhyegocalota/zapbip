@@ -3,7 +3,7 @@ import { getCookie } from 'hono/cookie';
 import type { InstallClient } from '@zapbip/agents/install';
 import type { OwnerLocale } from '@zapbip/types';
 import { ACCEPT_LANGUAGE_HEADER } from '../backoffice/backoffice-constants';
-import { resolveTheme } from '../backoffice/backoffice-theme';
+import { resolveTheme } from '../web-shell/shell-theme';
 import { isReferralCode } from './referral-code';
 import { agentParameterOf, siteAgentIdOf, siteAgents, type SiteStartTab } from './site-agents';
 import { LOCALE_COOKIE_NAME, SITE_AGENT_PARAMETER, SITE_REFERRAL_PARAMETER, THEME_COOKIE_NAME } from './site-constants';
