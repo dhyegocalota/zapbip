@@ -347,6 +347,17 @@ export enum DocsLanguage {
   PortugueseBrazil = 'pt-BR',
 }
 
+export enum DocsPageLanguage {
+  English = 'en',
+  PortugueseBrazil = 'pt-BR',
+  Spanish = 'es',
+  German = 'de',
+  French = 'fr',
+  Japanese = 'ja',
+  Korean = 'ko',
+  Chinese = 'zh',
+}
+
 export enum DocsRetentionKind {
   Questions = 'questions',
   Queue = 'queue',

@@ -1,5 +1,6 @@
 import { readdirSync } from 'node:fs';
-import { DocsLanguage, WakeRung } from '@zapbip/types';
+import { WakeRung } from '@zapbip/types';
+import { perLanguage } from '../src/docs';
 import type { AgentDefinition } from '../src/contract';
 import { AgentFacet } from '../src/contract';
 import type { ResolvedAgent } from './agent';
@@ -43,7 +44,7 @@ export async function fixtureAgents(): Promise<ResolvedAgent[]> {
 }
 
 export function sampleDefinitionOf(input: { name: string; rung: WakeRung; expectedDelaySeconds: number | null }): AgentDefinition {
-  const names = { [DocsLanguage.English]: input.name, [DocsLanguage.PortugueseBrazil]: input.name };
+  const names = perLanguage({ valueOf: () => input.name });
   return {
     ...sampleBaseDefinition,
     docs: { ...sampleBaseDefinition.docs, matrixName: names, linkName: names },

@@ -1,21 +1,22 @@
-import { DocsLanguage, WakeMode, WakeRung } from '@zapbip/types';
+import { DocsPageLanguage, WakeMode, WakeRung } from '@zapbip/types';
 import type { AgentDefinition } from '../../src/contract';
+import { perLanguage } from '../../src/docs';
 
 export const definition: AgentDefinition = {
   enumMember: 'ClaudeAi',
   idIsOrdinaryWord: false,
   docs: {
-    matrixName: {
-      [DocsLanguage.English]: 'claude.ai',
-      [DocsLanguage.PortugueseBrazil]: 'claude.ai',
-    },
-    linkName: {
-      [DocsLanguage.English]: 'claude.ai',
-      [DocsLanguage.PortugueseBrazil]: 'claude.ai',
-    },
+    matrixName: perLanguage({ valueOf: () => 'claude.ai' }),
+    linkName: perLanguage({ valueOf: () => 'claude.ai' }),
     pageFacts: {
-      [DocsLanguage.English]: ['hour', 'safety net'],
-      [DocsLanguage.PortugueseBrazil]: ['hora', 'rede de segurança'],
+      [DocsPageLanguage.English]: ['hour', 'safety net'],
+      [DocsPageLanguage.PortugueseBrazil]: ['hora', 'rede de segurança'],
+      [DocsPageLanguage.Spanish]: ['hora', 'red de seguridad'],
+      [DocsPageLanguage.German]: ['Stunde', 'Sicherheitsnetz'],
+      [DocsPageLanguage.French]: ['heure', 'filet de sécurité'],
+      [DocsPageLanguage.Japanese]: ['1 時間', 'セーフティネット'],
+      [DocsPageLanguage.Korean]: ['1시간', '안전망'],
+      [DocsPageLanguage.Chinese]: ['小时', '安全网'],
     },
     speakerNames: [],
   },

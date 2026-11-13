@@ -1,8 +1,8 @@
-import { DocsLanguage, INSTALL_SELF_TEST_TEXT, OwnerLocale, ZAPBIP_NPM_VERSION } from '@zapbip/types';
+import { DOCS_OWNER_LOCALES, DocsPageLanguage, INSTALL_SELF_TEST_TEXT, ZAPBIP_NPM_VERSION } from '@zapbip/types';
 import type { AgentPlugin } from '../contract';
 import { violationIf } from './registry';
 
-export type PageRuleInput = { label: string; language: DocsLanguage; page: string; hasInstall: boolean; plugin: AgentPlugin | null };
+export type PageRuleInput = { label: string; language: DocsPageLanguage; page: string; hasInstall: boolean; plugin: AgentPlugin | null };
 
 const FRONT_MATTER_PATTERN = /^---\ntitle: .+\ndescription: .+\n---\n/;
 const UNPINNED_PACKAGE_PATTERN = /npx zapbip(?!@)/;
@@ -12,17 +12,27 @@ const CODE_PATTERN = /```[\s\S]*?```|`[^`\n]*`/g;
 const CHAT_IMPORT = "import { Chat } from '/snippets/chat.jsx';";
 const CHAT_TAG = '<Chat';
 const NON_PORTABLE_HASH_TOOL = 'sha256sum';
-const OWNER_LOCALES: Record<DocsLanguage, OwnerLocale> = {
-  [DocsLanguage.English]: OwnerLocale.EnglishUs,
-  [DocsLanguage.PortugueseBrazil]: OwnerLocale.PortugueseBrazil,
+const ENGLISH_NEW_AGENT_WORDS = 'new agent';
+const NEW_AGENT_WORDS: Record<DocsPageLanguage, string> = {
+  [DocsPageLanguage.English]: ENGLISH_NEW_AGENT_WORDS,
+  [DocsPageLanguage.PortugueseBrazil]: 'novo agente',
+  [DocsPageLanguage.Spanish]: ENGLISH_NEW_AGENT_WORDS,
+  [DocsPageLanguage.German]: ENGLISH_NEW_AGENT_WORDS,
+  [DocsPageLanguage.French]: ENGLISH_NEW_AGENT_WORDS,
+  [DocsPageLanguage.Japanese]: ENGLISH_NEW_AGENT_WORDS,
+  [DocsPageLanguage.Korean]: ENGLISH_NEW_AGENT_WORDS,
+  [DocsPageLanguage.Chinese]: ENGLISH_NEW_AGENT_WORDS,
 };
-const NEW_AGENT_WORDS: Record<DocsLanguage, string> = {
-  [DocsLanguage.English]: 'new agent',
-  [DocsLanguage.PortugueseBrazil]: 'novo agente',
-};
-const ONE_LISTENER_SENTENCES: Record<DocsLanguage, string> = {
-  [DocsLanguage.English]: `Run only one listener per agent: the plugin or \`npx zapbip@${ZAPBIP_NPM_VERSION} listen\`, never both. A second listener replaces the first.`,
-  [DocsLanguage.PortugueseBrazil]: `Rode apenas um listener por agente: o plugin ou \`npx zapbip@${ZAPBIP_NPM_VERSION} listen\`, nunca os dois. Um segundo listener substitui o primeiro.`,
+const LISTEN_COMMAND = `\`npx zapbip@${ZAPBIP_NPM_VERSION} listen\``;
+const ONE_LISTENER_SENTENCES: Record<DocsPageLanguage, string> = {
+  [DocsPageLanguage.English]: `Run only one listener per agent: the plugin or ${LISTEN_COMMAND}, never both. A second listener replaces the first.`,
+  [DocsPageLanguage.PortugueseBrazil]: `Rode apenas um listener por agente: o plugin ou ${LISTEN_COMMAND}, nunca os dois. Um segundo listener substitui o primeiro.`,
+  [DocsPageLanguage.Spanish]: `Ejecuta un solo listener por agente: el plugin o ${LISTEN_COMMAND}, nunca los dos. Un segundo listener reemplaza al primero.`,
+  [DocsPageLanguage.German]: `Führe pro Agent nur einen Listener aus: das Plugin oder ${LISTEN_COMMAND}, niemals beide. Ein zweiter Listener ersetzt den ersten.`,
+  [DocsPageLanguage.French]: `Lancez un seul listener par agent : le plugin ou ${LISTEN_COMMAND}, jamais les deux. Un second listener remplace le premier.`,
+  [DocsPageLanguage.Japanese]: `エージェントごとにリスナーは 1 つだけ実行してください。プラグインか ${LISTEN_COMMAND} のどちらか一方で、両方は使わないでください。2 つ目のリスナーは 1 つ目を置き換えます。`,
+  [DocsPageLanguage.Korean]: `에이전트마다 리스너는 하나만 실행하세요. 플러그인 또는 ${LISTEN_COMMAND} 중 하나만 쓰고, 둘 다 쓰지 마세요. 두 번째 리스너는 첫 번째를 대체합니다.`,
+  [DocsPageLanguage.Chinese]: `每个智能体只运行一个 listener：插件或 ${LISTEN_COMMAND}，不要两者同时使用。第二个 listener 会替换第一个。`,
 };
 
 function stepGuideViolationsOf(input: PageRuleInput): string[] {
@@ -55,7 +65,7 @@ function pluginViolationsOf(input: PageRuleInput & { plugin: AgentPlugin }): str
       message: `${input.label}: the page must not use ${NON_PORTABLE_HASH_TOOL}`,
     }),
     ...violationIf({
-      condition: !input.page.includes(INSTALL_SELF_TEST_TEXT[OWNER_LOCALES[input.language]]),
+      condition: !input.page.includes(INSTALL_SELF_TEST_TEXT[DOCS_OWNER_LOCALES[input.language]]),
       message: `${input.label}: the page must ask the agent to send the self-test text`,
     }),
     ...violationIf({

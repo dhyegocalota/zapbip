@@ -7,8 +7,8 @@
   "errors": {
     "404": {
       "redirect": false,
-      "title": "Page not found · Página não encontrada",
-      "description": "This page does not exist. · Esta página não existe.\n\n[Back to the Overview](/) · [Voltar para a visão geral](/pt-br)"
+      "title": "Page not found · Página não encontrada · Página no encontrada · Seite nicht gefunden · Page introuvable · ページが見つかりません · 페이지를 찾을 수 없음 · 页面未找到",
+      "description": "This page does not exist. · Esta página não existe. · Esta página no existe. · Diese Seite existiert nicht. · Cette page n'existe pas. · このページは存在しません。 · 이 페이지는 존재하지 않습니다. · 此页面不存在。\n\n[Back to the Overview](/) · [Voltar para a visão geral](/pt-br) · [Volver a la visión general](/es) · [Zurück zur Übersicht](/de) · [Retour à l'aperçu](/fr) · [概要に戻る](/ja) · [개요로 돌아가기](/ko) · [返回概览](/zh)"
     }
   },
   "colors": {
@@ -201,6 +201,534 @@
                   "pt-br/mcp-reference/check-inbox",
                   "pt-br/mcp-reference/create-upload",
                   "pt-br/mcp-reference/set-wake"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "es",
+        "groups": [
+          {
+            "group": "Primeros pasos",
+            "pages": ["es/index", "es/get-started/how-to-start"]
+          },
+          {
+            "group": "IAs",
+            "pages": [
+              "es/agents/supported-agents",
+              "es/agents/claude-code",
+              "es/agents/codex",
+              "es/agents/cursor",
+              "es/agents/gemini-cli",
+              "es/agents/hermes",
+              "es/agents/openclaw",
+              "es/agents/claude-ai",
+              "es/agents/grok-bot",
+              "es/agents/chatgpt",
+              "es/agents/grok-web",
+              "es/agents/any-mcp-client"
+            ]
+          },
+          {
+            "group": "Funciones",
+            "pages": [
+              "es/features/send-messages-and-media",
+              "es/features/ask-with-buttons-and-lists",
+              "es/features/owner-starts-conversations",
+              "es/features/manage-your-agents",
+              "es/features/many-agents-on-one-number",
+              "es/features/whatsapp-commands",
+              "es/features/web-app",
+              "es/features/the-24-hour-window"
+            ]
+          },
+          {
+            "group": "Ayuda",
+            "pages": [
+              "es/help/troubleshooting",
+              "es/help/faq",
+              "es/help/privacy-and-security",
+              "es/help/revoke-and-rotate-keys",
+              "es/help/delete-your-account",
+              "es/help/about"
+            ]
+          },
+          {
+            "group": "Para desarrolladores",
+            "pages": [
+              "es/developers/any-mcp-client",
+              "es/developers/errors",
+              "es/developers/local-connector",
+              "es/developers/background-running",
+              "es/developers/webhook-wake",
+              {
+                "group": "Conceptos",
+                "pages": [
+                  "es/concepts/inbox",
+                  "es/concepts/questions",
+                  "es/concepts/24-hour-window",
+                  "es/concepts/routing",
+                  "es/concepts/wake-ladder",
+                  "es/concepts/whatsapp-channel",
+                  "es/concepts/owner-notices"
+                ]
+              },
+              {
+                "group": "Herramientas MCP",
+                "pages": [
+                  "es/mcp-reference/send-message",
+                  "es/mcp-reference/send-media",
+                  "es/mcp-reference/send-location",
+                  "es/mcp-reference/send-contact",
+                  "es/mcp-reference/react",
+                  "es/mcp-reference/ask",
+                  "es/mcp-reference/wait-for-reply",
+                  "es/mcp-reference/get-messages",
+                  "es/mcp-reference/check-inbox",
+                  "es/mcp-reference/create-upload",
+                  "es/mcp-reference/set-wake"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "de",
+        "groups": [
+          {
+            "group": "Erste Schritte",
+            "pages": ["de/index", "de/get-started/how-to-start"]
+          },
+          {
+            "group": "KIs",
+            "pages": [
+              "de/agents/supported-agents",
+              "de/agents/claude-code",
+              "de/agents/codex",
+              "de/agents/cursor",
+              "de/agents/gemini-cli",
+              "de/agents/hermes",
+              "de/agents/openclaw",
+              "de/agents/claude-ai",
+              "de/agents/grok-bot",
+              "de/agents/chatgpt",
+              "de/agents/grok-web",
+              "de/agents/any-mcp-client"
+            ]
+          },
+          {
+            "group": "Funktionen",
+            "pages": [
+              "de/features/send-messages-and-media",
+              "de/features/ask-with-buttons-and-lists",
+              "de/features/owner-starts-conversations",
+              "de/features/manage-your-agents",
+              "de/features/many-agents-on-one-number",
+              "de/features/whatsapp-commands",
+              "de/features/web-app",
+              "de/features/the-24-hour-window"
+            ]
+          },
+          {
+            "group": "Hilfe",
+            "pages": [
+              "de/help/troubleshooting",
+              "de/help/faq",
+              "de/help/privacy-and-security",
+              "de/help/revoke-and-rotate-keys",
+              "de/help/delete-your-account",
+              "de/help/about"
+            ]
+          },
+          {
+            "group": "Für Entwickler",
+            "pages": [
+              "de/developers/any-mcp-client",
+              "de/developers/errors",
+              "de/developers/local-connector",
+              "de/developers/background-running",
+              "de/developers/webhook-wake",
+              {
+                "group": "Konzepte",
+                "pages": [
+                  "de/concepts/inbox",
+                  "de/concepts/questions",
+                  "de/concepts/24-hour-window",
+                  "de/concepts/routing",
+                  "de/concepts/wake-ladder",
+                  "de/concepts/whatsapp-channel",
+                  "de/concepts/owner-notices"
+                ]
+              },
+              {
+                "group": "MCP-Werkzeuge",
+                "pages": [
+                  "de/mcp-reference/send-message",
+                  "de/mcp-reference/send-media",
+                  "de/mcp-reference/send-location",
+                  "de/mcp-reference/send-contact",
+                  "de/mcp-reference/react",
+                  "de/mcp-reference/ask",
+                  "de/mcp-reference/wait-for-reply",
+                  "de/mcp-reference/get-messages",
+                  "de/mcp-reference/check-inbox",
+                  "de/mcp-reference/create-upload",
+                  "de/mcp-reference/set-wake"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "fr",
+        "groups": [
+          {
+            "group": "Premiers pas",
+            "pages": ["fr/index", "fr/get-started/how-to-start"]
+          },
+          {
+            "group": "IA",
+            "pages": [
+              "fr/agents/supported-agents",
+              "fr/agents/claude-code",
+              "fr/agents/codex",
+              "fr/agents/cursor",
+              "fr/agents/gemini-cli",
+              "fr/agents/hermes",
+              "fr/agents/openclaw",
+              "fr/agents/claude-ai",
+              "fr/agents/grok-bot",
+              "fr/agents/chatgpt",
+              "fr/agents/grok-web",
+              "fr/agents/any-mcp-client"
+            ]
+          },
+          {
+            "group": "Fonctionnalités",
+            "pages": [
+              "fr/features/send-messages-and-media",
+              "fr/features/ask-with-buttons-and-lists",
+              "fr/features/owner-starts-conversations",
+              "fr/features/manage-your-agents",
+              "fr/features/many-agents-on-one-number",
+              "fr/features/whatsapp-commands",
+              "fr/features/web-app",
+              "fr/features/the-24-hour-window"
+            ]
+          },
+          {
+            "group": "Aide",
+            "pages": [
+              "fr/help/troubleshooting",
+              "fr/help/faq",
+              "fr/help/privacy-and-security",
+              "fr/help/revoke-and-rotate-keys",
+              "fr/help/delete-your-account",
+              "fr/help/about"
+            ]
+          },
+          {
+            "group": "Pour les développeurs",
+            "pages": [
+              "fr/developers/any-mcp-client",
+              "fr/developers/errors",
+              "fr/developers/local-connector",
+              "fr/developers/background-running",
+              "fr/developers/webhook-wake",
+              {
+                "group": "Concepts",
+                "pages": [
+                  "fr/concepts/inbox",
+                  "fr/concepts/questions",
+                  "fr/concepts/24-hour-window",
+                  "fr/concepts/routing",
+                  "fr/concepts/wake-ladder",
+                  "fr/concepts/whatsapp-channel",
+                  "fr/concepts/owner-notices"
+                ]
+              },
+              {
+                "group": "Outils MCP",
+                "pages": [
+                  "fr/mcp-reference/send-message",
+                  "fr/mcp-reference/send-media",
+                  "fr/mcp-reference/send-location",
+                  "fr/mcp-reference/send-contact",
+                  "fr/mcp-reference/react",
+                  "fr/mcp-reference/ask",
+                  "fr/mcp-reference/wait-for-reply",
+                  "fr/mcp-reference/get-messages",
+                  "fr/mcp-reference/check-inbox",
+                  "fr/mcp-reference/create-upload",
+                  "fr/mcp-reference/set-wake"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "ja",
+        "groups": [
+          {
+            "group": "はじめに",
+            "pages": ["ja/index", "ja/get-started/how-to-start"]
+          },
+          {
+            "group": "AI",
+            "pages": [
+              "ja/agents/supported-agents",
+              "ja/agents/claude-code",
+              "ja/agents/codex",
+              "ja/agents/cursor",
+              "ja/agents/gemini-cli",
+              "ja/agents/hermes",
+              "ja/agents/openclaw",
+              "ja/agents/claude-ai",
+              "ja/agents/grok-bot",
+              "ja/agents/chatgpt",
+              "ja/agents/grok-web",
+              "ja/agents/any-mcp-client"
+            ]
+          },
+          {
+            "group": "機能",
+            "pages": [
+              "ja/features/send-messages-and-media",
+              "ja/features/ask-with-buttons-and-lists",
+              "ja/features/owner-starts-conversations",
+              "ja/features/manage-your-agents",
+              "ja/features/many-agents-on-one-number",
+              "ja/features/whatsapp-commands",
+              "ja/features/web-app",
+              "ja/features/the-24-hour-window"
+            ]
+          },
+          {
+            "group": "ヘルプ",
+            "pages": [
+              "ja/help/troubleshooting",
+              "ja/help/faq",
+              "ja/help/privacy-and-security",
+              "ja/help/revoke-and-rotate-keys",
+              "ja/help/delete-your-account",
+              "ja/help/about"
+            ]
+          },
+          {
+            "group": "開発者向け",
+            "pages": [
+              "ja/developers/any-mcp-client",
+              "ja/developers/errors",
+              "ja/developers/local-connector",
+              "ja/developers/background-running",
+              "ja/developers/webhook-wake",
+              {
+                "group": "コンセプト",
+                "pages": [
+                  "ja/concepts/inbox",
+                  "ja/concepts/questions",
+                  "ja/concepts/24-hour-window",
+                  "ja/concepts/routing",
+                  "ja/concepts/wake-ladder",
+                  "ja/concepts/whatsapp-channel",
+                  "ja/concepts/owner-notices"
+                ]
+              },
+              {
+                "group": "MCP ツール",
+                "pages": [
+                  "ja/mcp-reference/send-message",
+                  "ja/mcp-reference/send-media",
+                  "ja/mcp-reference/send-location",
+                  "ja/mcp-reference/send-contact",
+                  "ja/mcp-reference/react",
+                  "ja/mcp-reference/ask",
+                  "ja/mcp-reference/wait-for-reply",
+                  "ja/mcp-reference/get-messages",
+                  "ja/mcp-reference/check-inbox",
+                  "ja/mcp-reference/create-upload",
+                  "ja/mcp-reference/set-wake"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "ko",
+        "groups": [
+          {
+            "group": "시작하기",
+            "pages": ["ko/index", "ko/get-started/how-to-start"]
+          },
+          {
+            "group": "AI",
+            "pages": [
+              "ko/agents/supported-agents",
+              "ko/agents/claude-code",
+              "ko/agents/codex",
+              "ko/agents/cursor",
+              "ko/agents/gemini-cli",
+              "ko/agents/hermes",
+              "ko/agents/openclaw",
+              "ko/agents/claude-ai",
+              "ko/agents/grok-bot",
+              "ko/agents/chatgpt",
+              "ko/agents/grok-web",
+              "ko/agents/any-mcp-client"
+            ]
+          },
+          {
+            "group": "기능",
+            "pages": [
+              "ko/features/send-messages-and-media",
+              "ko/features/ask-with-buttons-and-lists",
+              "ko/features/owner-starts-conversations",
+              "ko/features/manage-your-agents",
+              "ko/features/many-agents-on-one-number",
+              "ko/features/whatsapp-commands",
+              "ko/features/web-app",
+              "ko/features/the-24-hour-window"
+            ]
+          },
+          {
+            "group": "도움말",
+            "pages": [
+              "ko/help/troubleshooting",
+              "ko/help/faq",
+              "ko/help/privacy-and-security",
+              "ko/help/revoke-and-rotate-keys",
+              "ko/help/delete-your-account",
+              "ko/help/about"
+            ]
+          },
+          {
+            "group": "개발자용",
+            "pages": [
+              "ko/developers/any-mcp-client",
+              "ko/developers/errors",
+              "ko/developers/local-connector",
+              "ko/developers/background-running",
+              "ko/developers/webhook-wake",
+              {
+                "group": "개념",
+                "pages": [
+                  "ko/concepts/inbox",
+                  "ko/concepts/questions",
+                  "ko/concepts/24-hour-window",
+                  "ko/concepts/routing",
+                  "ko/concepts/wake-ladder",
+                  "ko/concepts/whatsapp-channel",
+                  "ko/concepts/owner-notices"
+                ]
+              },
+              {
+                "group": "MCP 도구",
+                "pages": [
+                  "ko/mcp-reference/send-message",
+                  "ko/mcp-reference/send-media",
+                  "ko/mcp-reference/send-location",
+                  "ko/mcp-reference/send-contact",
+                  "ko/mcp-reference/react",
+                  "ko/mcp-reference/ask",
+                  "ko/mcp-reference/wait-for-reply",
+                  "ko/mcp-reference/get-messages",
+                  "ko/mcp-reference/check-inbox",
+                  "ko/mcp-reference/create-upload",
+                  "ko/mcp-reference/set-wake"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "zh",
+        "groups": [
+          {
+            "group": "快速开始",
+            "pages": ["zh/index", "zh/get-started/how-to-start"]
+          },
+          {
+            "group": "AI",
+            "pages": [
+              "zh/agents/supported-agents",
+              "zh/agents/claude-code",
+              "zh/agents/codex",
+              "zh/agents/cursor",
+              "zh/agents/gemini-cli",
+              "zh/agents/hermes",
+              "zh/agents/openclaw",
+              "zh/agents/claude-ai",
+              "zh/agents/grok-bot",
+              "zh/agents/chatgpt",
+              "zh/agents/grok-web",
+              "zh/agents/any-mcp-client"
+            ]
+          },
+          {
+            "group": "功能",
+            "pages": [
+              "zh/features/send-messages-and-media",
+              "zh/features/ask-with-buttons-and-lists",
+              "zh/features/owner-starts-conversations",
+              "zh/features/manage-your-agents",
+              "zh/features/many-agents-on-one-number",
+              "zh/features/whatsapp-commands",
+              "zh/features/web-app",
+              "zh/features/the-24-hour-window"
+            ]
+          },
+          {
+            "group": "帮助",
+            "pages": [
+              "zh/help/troubleshooting",
+              "zh/help/faq",
+              "zh/help/privacy-and-security",
+              "zh/help/revoke-and-rotate-keys",
+              "zh/help/delete-your-account",
+              "zh/help/about"
+            ]
+          },
+          {
+            "group": "开发者",
+            "pages": [
+              "zh/developers/any-mcp-client",
+              "zh/developers/errors",
+              "zh/developers/local-connector",
+              "zh/developers/background-running",
+              "zh/developers/webhook-wake",
+              {
+                "group": "概念",
+                "pages": [
+                  "zh/concepts/inbox",
+                  "zh/concepts/questions",
+                  "zh/concepts/24-hour-window",
+                  "zh/concepts/routing",
+                  "zh/concepts/wake-ladder",
+                  "zh/concepts/whatsapp-channel",
+                  "zh/concepts/owner-notices"
+                ]
+              },
+              {
+                "group": "MCP 工具",
+                "pages": [
+                  "zh/mcp-reference/send-message",
+                  "zh/mcp-reference/send-media",
+                  "zh/mcp-reference/send-location",
+                  "zh/mcp-reference/send-contact",
+                  "zh/mcp-reference/react",
+                  "zh/mcp-reference/ask",
+                  "zh/mcp-reference/wait-for-reply",
+                  "zh/mcp-reference/get-messages",
+                  "zh/mcp-reference/check-inbox",
+                  "zh/mcp-reference/create-upload",
+                  "zh/mcp-reference/set-wake"
                 ]
               }
             ]

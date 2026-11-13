@@ -7,21 +7,20 @@ import {
   LISTEN_STATEMENT_TOKENS,
   WAKE_RUNG_LABELS,
   agentPagePathOf,
+  languageOfPage,
+  snippetPathOf,
   twinPathOf,
 } from '@zapbip/agents/docs';
 import { ConnectorClient } from '@zapbip/agents/connector';
 import { MEDIA_RETENTION_MS, QUEUE_RETENTION_MS, QUESTION_RETENTION_MS } from '@zapbip/core';
-import { DAY_MS, DocsLanguage, DocsRetentionKind, PAGE_LANGUAGE_FOLDER } from '@zapbip/types';
+import { DAY_MS, DocsPageLanguage, DocsRetentionKind } from '@zapbip/types';
 import { DOCS_ROOT, capturedNames, readRepositoryFile } from './repository-files';
 
-export const DOCS_DEVELOPER_LINK_PREFIXES: string[] = [
-  '/developers/',
-  '/mcp-reference/',
-  '/concepts/',
-  `/${PAGE_LANGUAGE_FOLDER}/developers/`,
-  `/${PAGE_LANGUAGE_FOLDER}/mcp-reference/`,
-  `/${PAGE_LANGUAGE_FOLDER}/concepts/`,
-];
+const DEVELOPER_FOLDERS = ['developers', 'mcp-reference', 'concepts'];
+
+export const DOCS_DEVELOPER_LINK_PREFIXES: string[] = Object.values(DocsPageLanguage).flatMap((language) =>
+  DEVELOPER_FOLDERS.map((folder) => `/${twinPathOf({ path: folder, language })}/`),
+);
 
 export const CHAT_MAX_MESSAGES = 4;
 
@@ -100,13 +99,13 @@ export function linesOf(input: { text: string }): string[] {
     .filter((line) => line.length > 0);
 }
 
-export function missingListenTokens(input: { section: string; language: DocsLanguage }): string[] {
+export function missingListenTokens(input: { section: string; language: DocsPageLanguage }): string[] {
   const section = input.section.toLowerCase();
   return Object.values(LISTEN_STATEMENT_TOKENS[input.language]).filter((token) => !section.includes(token.toLowerCase()));
 }
 
 export function developerLinkViolations(input: { page: string; links: string[] }): string[] {
-  const englishPage = twinPathOf({ path: input.page, language: DocsLanguage.English });
+  const englishPage = twinPathOf({ path: input.page, language: DocsPageLanguage.English });
   const isGuarded = englishPage === INDEX_PAGE || GUARDED_PAGE_PREFIXES.some((prefix) => englishPage.startsWith(prefix));
   if (!isGuarded) return [];
   const isAgentPage = englishPage.startsWith(`${AGENTS_DIRECTORY}/`);
@@ -115,7 +114,7 @@ export function developerLinkViolations(input: { page: string; links: string[] }
     ...(BACKGROUND_RUNNING_PAGES.includes(englishPage) ? [BACKGROUND_RUNNING_LINK] : []),
   ];
   const englishLinkOf = (link: string): string =>
-    `/${twinPathOf({ path: link.slice(1).replace(ANCHOR_PATTERN, ''), language: DocsLanguage.English })}`;
+    `/${twinPathOf({ path: link.slice(1).replace(ANCHOR_PATTERN, ''), language: DocsPageLanguage.English })}`;
   return input.links
     .filter((link) => DOCS_DEVELOPER_LINK_PREFIXES.some((prefix) => link.startsWith(prefix)))
     .filter((link) => !allowedLinks.includes(englishLinkOf(link)))
@@ -127,7 +126,7 @@ export type LanguageNavigation = { language: string; groups: { group: string; pa
 
 const DOCS_CONFIG = `${DOCS_ROOT}/docs.json`;
 
-export function docsNavigationOf(input: { language: DocsLanguage }): LanguageNavigation {
+export function docsNavigationOf(input: { language: DocsPageLanguage }): LanguageNavigation {
   const languages = JSON.parse(readRepositoryFile(DOCS_CONFIG)).navigation.languages as LanguageNavigation[];
   const found = languages.find((entry) => entry.language === input.language);
   if (!found) throw new Error(`no navigation for ${input.language}`);
@@ -138,7 +137,7 @@ function pagesOf(nodes: NavigationNode[]): string[] {
   return nodes.flatMap((node) => (typeof node === 'string' ? [node] : pagesOf(node.pages)));
 }
 
-export function navigationPagesOf(input: { language: DocsLanguage }): string[] {
+export function navigationPagesOf(input: { language: DocsPageLanguage }): string[] {
   return pagesOf(docsNavigationOf(input).groups.flatMap((group) => group.pages));
 }
 
@@ -150,5 +149,7 @@ export {
   LISTEN_STATEMENT_TOKENS,
   WAKE_RUNG_LABELS,
   agentPagePathOf,
+  languageOfPage,
+  snippetPathOf,
   twinPathOf,
 };

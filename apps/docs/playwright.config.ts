@@ -1,5 +1,5 @@
 import { defineConfig } from '@playwright/test';
-import { DocsLanguage } from '@zapbip/types';
+import { DocsPageLanguage } from '@zapbip/types';
 import { DOCS_LOCALE_OF, docsPortOf } from './e2e/support/docs-experience';
 
 const SERVER_TIMEOUT_MS = 120_000;
@@ -19,7 +19,7 @@ export default defineConfig({
     navigationTimeout: LOADED_MACHINE_NAVIGATION_TIMEOUT_MS,
     actionTimeout: LOADED_MACHINE_ACTION_TIMEOUT_MS,
   },
-  projects: Object.values(DocsLanguage).map((language) => ({
+  projects: Object.values(DocsPageLanguage).map((language) => ({
     name: DOCS_LOCALE_OF[language],
     use: { locale: DOCS_LOCALE_OF[language] },
   })),

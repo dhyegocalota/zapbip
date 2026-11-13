@@ -1,4 +1,4 @@
-import { DocsLanguage } from '@zapbip/types';
+import { DocsPageLanguage } from '@zapbip/types';
 import { WAKE_RUNG_LABELS, agentPagePathOf } from '../src/docs';
 import { orderedAgentsOf, type ResolvedAgent } from './agent';
 import { DELAY_NOT_MEASURED, MATRIX_HEADERS } from './matrix-copy';
@@ -6,7 +6,7 @@ import { DELAY_NOT_MEASURED, MATRIX_HEADERS } from './matrix-copy';
 const SECONDS_PER_HOUR = 3600;
 const CELL_SEPARATOR = ' | ';
 
-function delayLabelOf(input: { expectedDelaySeconds: number | null; language: DocsLanguage }): string {
+function delayLabelOf(input: { expectedDelaySeconds: number | null; language: DocsPageLanguage }): string {
   if (input.expectedDelaySeconds === null) return DELAY_NOT_MEASURED[input.language];
   const isWholeHours = input.expectedDelaySeconds % SECONDS_PER_HOUR === 0;
   const unit = isWholeHours ? 'hour' : 'second';
@@ -14,7 +14,7 @@ function delayLabelOf(input: { expectedDelaySeconds: number | null; language: Do
   return new Intl.NumberFormat(input.language, { style: 'unit', unit, unitDisplay: 'long' }).format(amount);
 }
 
-function rowOf(input: { agent: ResolvedAgent; language: DocsLanguage }): string {
+function rowOf(input: { agent: ResolvedAgent; language: DocsPageLanguage }): string {
   const { docs, listen } = input.agent.definition;
   const pageLink = `[${docs.linkName[input.language]}](/${agentPagePathOf({ client: input.agent.id, language: input.language })})`;
   return rowTextOf({
@@ -31,7 +31,7 @@ function rowTextOf(input: { cells: string[] }): string {
   return `| ${input.cells.join(CELL_SEPARATOR)} |`;
 }
 
-export function renderMatrix(input: { agents: ResolvedAgent[]; language: DocsLanguage }): string {
+export function renderMatrix(input: { agents: ResolvedAgent[]; language: DocsPageLanguage }): string {
   const header = MATRIX_HEADERS[input.language];
   const separator = header.map(() => '---');
   const rows = orderedAgentsOf({ agents: input.agents }).map((agent) => rowOf({ agent, language: input.language }));

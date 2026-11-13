@@ -1,5 +1,5 @@
 import type { InstallSection } from '@zapbip/core';
-import type { DocsLanguage, OwnerLocale, WakeMode, WakeRung } from '@zapbip/types';
+import { DocsPageLanguage, type OwnerLocale, type WakeMode, type WakeRung } from '@zapbip/types';
 
 export type SessionLookupInput = { workingDirectory: string; homeDirectory: string };
 export type WakeIsolationInput = {
@@ -14,9 +14,9 @@ export type AgentDefinition = {
   enumMember: string;
   idIsOrdinaryWord: boolean;
   docs: {
-    matrixName: Record<DocsLanguage, string>;
-    linkName: Record<DocsLanguage, string>;
-    pageFacts: Record<DocsLanguage, string[]>;
+    matrixName: Record<DocsPageLanguage, string>;
+    linkName: Record<DocsPageLanguage, string>;
+    pageFacts: Record<DocsPageLanguage, string[]>;
     speakerNames: string[];
   };
   listen: { rung: WakeRung; expectedDelaySeconds: number | null; setWakeModes: WakeMode[] };
@@ -84,8 +84,25 @@ export enum AgentFacet {
   Definition = 'definition.ts',
   EnglishPage = 'page.en.mdx',
   PortuguesePage = 'page.pt-br.mdx',
+  SpanishPage = 'page.es.mdx',
+  GermanPage = 'page.de.mdx',
+  FrenchPage = 'page.fr.mdx',
+  JapanesePage = 'page.ja.mdx',
+  KoreanPage = 'page.ko.mdx',
+  ChinesePage = 'page.zh.mdx',
   Install = 'install.ts',
   Connector = 'connector.ts',
   Plugin = 'plugin.ts',
   OwnerRunInstall = 'install-e2e.sh',
 }
+
+export const PAGE_FACETS: Record<DocsPageLanguage, AgentFacet> = {
+  [DocsPageLanguage.English]: AgentFacet.EnglishPage,
+  [DocsPageLanguage.PortugueseBrazil]: AgentFacet.PortuguesePage,
+  [DocsPageLanguage.Spanish]: AgentFacet.SpanishPage,
+  [DocsPageLanguage.German]: AgentFacet.GermanPage,
+  [DocsPageLanguage.French]: AgentFacet.FrenchPage,
+  [DocsPageLanguage.Japanese]: AgentFacet.JapanesePage,
+  [DocsPageLanguage.Korean]: AgentFacet.KoreanPage,
+  [DocsPageLanguage.Chinese]: AgentFacet.ChinesePage,
+};
