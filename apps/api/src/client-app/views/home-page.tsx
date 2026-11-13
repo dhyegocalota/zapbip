@@ -5,6 +5,7 @@ import { AGENT_FIELD, AGENT_NAME_FIELD, CSRF_FIELD, DELETE_ACCOUNT_DOCS_PATH, DO
 import { ClientAppCopyKey, copyOf } from '../client-app-copy';
 import { ClientAppPath, pathWithLocale } from '../client-app-paths';
 import { Layout } from './layout';
+import { pricingValuesOf } from '../../site/price-format';
 
 export type AgentRow = { agent: string; clientName: string | null; addedOn: string; lastActiveOn: string | null };
 
@@ -121,7 +122,7 @@ function Account(props: { locale: OwnerLocale; phone: string }) {
   return (
     <section class="panel">
       <h2>{translate(ClientAppCopyKey.AccountTitle)}</h2>
-      <p class="plan">{translate(ClientAppCopyKey.PlanLine)}</p>
+      <p class="plan">{translate(ClientAppCopyKey.PlanLine, { free: pricingValuesOf({ locale: props.locale }).free })}</p>
       <p class="note">{translate(ClientAppCopyKey.SignedInAs, { phone: props.phone })}</p>
       <p class="note">{translate(ClientAppCopyKey.DeleteAccountHint)}</p>
       <a class="button button-secondary" href={docsHrefOf({ locale: props.locale })}>
