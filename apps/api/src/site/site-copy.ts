@@ -620,7 +620,7 @@ export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.FaqDeveloperQuestion]: 'Preciso ser programador?',
     [SiteCopyKey.FaqDeveloperAnswer]: 'Não. Se você usa um assistente de IA, conecta colando uma linha.',
     [SiteCopyKey.FaqOthersQuestion]: 'Ele manda mensagem para outras pessoas?',
-    [SiteCopyKey.FaqOthersAnswer]: 'Não. O zapbip fala só com você, no seu celular, pela API oficial do WhatsApp Cloud.',
+    [SiteCopyKey.FaqOthersAnswer]: 'Não. O zapbip fala só com você, no seu WhatsApp de sempre, pela API oficial do WhatsApp Cloud.',
     [SiteCopyKey.FaqManyQuestion]: 'Vários agentes podem usar juntos?',
     [SiteCopyKey.FaqManyAnswer]:
       'Sim. Todos os seus agentes falam com você pelo número do zapbip, e cada resposta volta para o agente que perguntou.',

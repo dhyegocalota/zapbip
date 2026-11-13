@@ -73,6 +73,7 @@ export const WAITLIST_REFERRAL_CAP_MAX = 100;
 export const TURNSTILE_ACTION_WAITLIST_JOIN = 'waitlist-join';
 
 export const PRICING_FREE_MESSAGES = 5;
+export const PRICING_FREE_CENTS = 0;
 export const PRICING_PRO_INCLUDED_MESSAGES = 1000;
 export const PRICING_OVERAGE_BLOCK_MESSAGES = 1000;
 export const PRICING_PRO_MONTHLY_CENTS: Record<PricingCurrency, number> = {

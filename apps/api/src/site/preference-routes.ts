@@ -1,7 +1,7 @@
 import { OwnerLocale } from '@zapbip/types';
 import { Hono } from 'hono';
 import { BackofficeTheme } from '../backoffice/backoffice-theme';
-import { SEE_OTHER_STATUS } from '../backoffice/backoffice-constants';
+import { NO_CONTENT_STATUS, SEE_OTHER_STATUS } from '../backoffice/backoffice-constants';
 import { textFieldOf } from '../backoffice/form-fields';
 import { setPreferenceCookie } from '../backoffice/preference-cookie';
 import { isReferralCode } from './referral-code';
@@ -18,7 +18,6 @@ const THEME_FIELD = 'theme';
 const RETURN_TO_FIELD = 'returnTo';
 const FETCH_MODE_HEADER = 'Sec-Fetch-Mode';
 const NAVIGATE_FETCH_MODE = 'navigate';
-const NO_CONTENT_STATUS = 204;
 const LOCALES: string[] = Object.values(OwnerLocale);
 const THEMES: string[] = Object.values(BackofficeTheme);
 const RETURN_BASE = 'https://return.invalid';
@@ -67,6 +66,6 @@ preferenceRoutes.post(SitePath.Theme, async (context) => {
   if (isScriptSave) return context.body(null, NO_CONTENT_STATUS);
   const returnTarget = returnTargetOf({ returnTo: textFieldOf({ form, name: RETURN_TO_FIELD }) });
   const target =
-    returnTarget === null ? pagePathOf({ locale: OwnerLocale.EnglishUs, agent: null, referralCode: null }) : pagePathOf(returnTarget);
+    returnTarget === null ? pagePathOf({ locale: context.get('locale'), agent: null, referralCode: null }) : pagePathOf(returnTarget);
   return context.redirect(`${target}${THEME_FRAGMENT}`, SEE_OTHER_STATUS);
 });

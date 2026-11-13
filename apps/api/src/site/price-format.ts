@@ -8,17 +8,14 @@ import {
   PRICING_PRO_MONTHLY_CENTS,
   type PricingCurrency,
 } from '@zapbip/types';
+import { languageOf } from './site-links';
 
 const CENTS_PER_UNIT = 100;
-const LANGUAGE_TAG_BY_LOCALE: Record<OwnerLocale, string> = {
-  [OwnerLocale.EnglishUs]: 'en-US',
-  [OwnerLocale.PortugueseBrazil]: 'pt-BR',
-};
 
 export function formatPrice(input: { cents: number; currency: PricingCurrency; locale: OwnerLocale }): string {
   const amount = input.cents / CENTS_PER_UNIT;
   const isWholeAmount = Number.isInteger(amount);
-  return new Intl.NumberFormat(LANGUAGE_TAG_BY_LOCALE[input.locale], {
+  return new Intl.NumberFormat(languageOf({ locale: input.locale }), {
     style: 'currency',
     currency: input.currency,
     currencyDisplay: 'narrowSymbol',
@@ -28,10 +25,12 @@ export function formatPrice(input: { cents: number; currency: PricingCurrency; l
 }
 
 export function formatCount(input: { count: number; locale: OwnerLocale }): string {
-  return new Intl.NumberFormat(LANGUAGE_TAG_BY_LOCALE[input.locale]).format(input.count);
+  return new Intl.NumberFormat(languageOf({ locale: input.locale })).format(input.count);
 }
 
-export function pricingValuesOf(input: { locale: OwnerLocale }): Record<string, string> {
+export type PricingValues = { free: string; included: string; block: string; price: string; overage: string };
+
+export function pricingValuesOf(input: { locale: OwnerLocale }): PricingValues {
   const { locale } = input;
   const currency = PRICING_CURRENCY_BY_LOCALE[locale];
   return {

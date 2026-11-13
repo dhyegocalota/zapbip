@@ -1,11 +1,10 @@
-import { PRICING_CURRENCY_BY_LOCALE, type OwnerLocale } from '@zapbip/types';
+import { PRICING_CURRENCY_BY_LOCALE, PRICING_FREE_CENTS, type OwnerLocale } from '@zapbip/types';
 import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
 import { JOIN_FRAGMENT } from '../site-constants';
 import { formatPrice, pricingValuesOf } from '../price-format';
 
 const CHECK_GLYPH = '✓';
-const FREE_PRICE_CENTS = 0;
 const FREE_FEATURE_KEYS = [
   SiteCopyKey.PricingFreePhone,
   SiteCopyKey.PricingFreeAgents,
@@ -17,7 +16,7 @@ const FREE_FEATURE_KEYS = [
 export function PricingSection(props: { locale: OwnerLocale }) {
   const translate = copyOf({ locale: props.locale });
   const values = pricingValuesOf({ locale: props.locale });
-  const freePrice = formatPrice({ cents: FREE_PRICE_CENTS, currency: PRICING_CURRENCY_BY_LOCALE[props.locale], locale: props.locale });
+  const freePrice = formatPrice({ cents: PRICING_FREE_CENTS, currency: PRICING_CURRENCY_BY_LOCALE[props.locale], locale: props.locale });
   return (
     <section class="block" id="pricing" aria-labelledby="pricing-title">
       <div class="container">

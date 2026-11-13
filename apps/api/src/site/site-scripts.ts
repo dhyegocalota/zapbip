@@ -59,6 +59,13 @@ const SCRIPT_SOURCE = `(function () {
     });
   }
 
+  function rememberPath(path) {
+    history.replaceState(null, '', path);
+    document.querySelectorAll('input[name="returnTo"]').forEach(function (field) {
+      field.value = path;
+    });
+  }
+
   function goToJoin() {
     var email = byId('join-email');
     var target = email || byId('join');
@@ -85,7 +92,7 @@ const SCRIPT_SOURCE = `(function () {
           hint.textContent = label || '';
           hint.hidden = !label;
         }
-        history.replaceState(null, '', link.getAttribute('href').split('#')[0]);
+        rememberPath(link.getAttribute('href').split('#')[0]);
         goToJoin();
       });
     });
@@ -111,7 +118,7 @@ const SCRIPT_SOURCE = `(function () {
         candidate.tabIndex = isSelected ? 0 : -1;
         byId(candidate.getAttribute('aria-controls')).hidden = !isSelected;
       });
-      history.replaceState(null, '', tab.getAttribute('href').split('#')[0]);
+      rememberPath(tab.getAttribute('href').split('#')[0]);
       reveal(tab, reducedMotion ? 'auto' : 'smooth');
       if (shouldFocus) tab.focus({ preventScroll: true });
     }

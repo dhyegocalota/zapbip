@@ -2331,13 +2331,6 @@ summary::before {
   }
 }
 
-@keyframes reveal {
-  from {
-    opacity: 0;
-    transform: translateY(var(--distance-reveal));
-  }
-}
-
 @keyframes scene-rise {
   from {
     opacity: 0;

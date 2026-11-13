@@ -94,13 +94,16 @@ test('the menu works with no script: the summary opens it and a choice reloads t
   await context.close();
 });
 
-test('the trigger names itself "Language" and "Idioma"', async ({ page }) => {
+test('the trigger names itself "Language" and "Idioma" with the visible code in its name', async ({ page }) => {
   await page.goto('/');
-  await expect(triggerOf({ page })).toHaveAttribute('aria-label', siteCopy({ key: SiteCopyKey.LocaleLabel }));
+  await expect(triggerOf({ page })).toHaveAttribute(
+    'aria-label',
+    `${siteCopy({ key: SiteCopyKey.LocaleLabel })}: ${siteCopy({ key: SiteCopyKey.LocaleEnglishShort })}`,
+  );
   await page.goto('/pt-br');
   await expect(triggerOf({ page })).toHaveAttribute(
     'aria-label',
-    siteCopy({ key: SiteCopyKey.LocaleLabel, locale: OwnerLocale.PortugueseBrazil }),
+    `${siteCopy({ key: SiteCopyKey.LocaleLabel, locale: OwnerLocale.PortugueseBrazil })}: ${siteCopy({ key: SiteCopyKey.LocalePortugueseShort, locale: OwnerLocale.PortugueseBrazil })}`,
   );
 });
 

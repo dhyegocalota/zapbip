@@ -20,7 +20,7 @@ describe('the language menu', () => {
   ])('shows the current flag and code on the button of %s', async (path, locale, flag, code) => {
     const menu = await menuOf({ path });
     const summary = /<summary class="lang-trigger" aria-label="([^"]+)">([\s\S]*?)<\/summary>/.exec(menu)!;
-    expect(summary[1]).toBe(copyHtml({ key: SiteCopyKey.LocaleLabel, locale }));
+    expect(summary[1]).toBe(`${copyHtml({ key: SiteCopyKey.LocaleLabel, locale })}: ${code}`);
     expect(summary[2]).toContain(flag);
     expect(summary[2]).toContain(`>${code}<`);
   });

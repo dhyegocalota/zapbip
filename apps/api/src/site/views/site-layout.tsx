@@ -28,10 +28,6 @@ import { APPLE_TOUCH_ICON_PATH, DOCS_ORIGIN, SiteAssetKind, siteAssetOf, SitePat
 import { pricingValuesOf } from '../price-format';
 import { SITE_STYLESHEET_HREF } from '../site-stylesheet';
 
-const LANGUAGE_TAGS: Record<OwnerLocale, string> = {
-  [OwnerLocale.PortugueseBrazil]: 'pt-BR',
-  [OwnerLocale.EnglishUs]: 'en',
-};
 const OPEN_GRAPH_LOCALES: Record<OwnerLocale, OwnerLocale> = {
   [OwnerLocale.PortugueseBrazil]: OwnerLocale.EnglishUs,
   [OwnerLocale.EnglishUs]: OwnerLocale.PortugueseBrazil,
@@ -126,7 +122,7 @@ export function SiteLayout(props: { model: PageModel; title: string; isIndexable
   const posterSourceSet = `${siteAssetOf({ kind: SiteAssetKind.PosterSmall, locale: model.locale })} ${POSTER_SMALL_WIDTH}w, ${siteAssetOf({ kind: SiteAssetKind.PosterLarge, locale: model.locale })} ${DEMO_IMAGE_SIZE}w`;
   const preloadAttributes = { imagesrcset: posterSourceSet, imagesizes: POSTER_SIZES, fetchpriority: 'high' };
   return (
-    <html lang={LANGUAGE_TAGS[model.locale]} data-theme={model.theme}>
+    <html lang={languageOf({ locale: model.locale })} data-theme={model.theme}>
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
