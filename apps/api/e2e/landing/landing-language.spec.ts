@@ -25,6 +25,7 @@ function optionOf(input: { page: Page; locale: OwnerLocale }) {
 test('the menu opens on a click, shows both languages and closes on Escape with the focus back on the button', async ({ page }) => {
   await page.goto('/');
   await expect(menuOf({ page })).not.toHaveAttribute('open', '');
+  await triggerOf({ page }).scrollIntoViewIfNeeded();
   await triggerOf({ page }).click();
   await expect(menuOf({ page })).toHaveAttribute('open', '');
   await expect(optionOf({ page, locale: OwnerLocale.EnglishUs })).toBeVisible();
@@ -37,7 +38,7 @@ test('the menu opens on a click, shows both languages and closes on Escape with 
 test('a click outside closes it', async ({ page }) => {
   await page.goto('/');
   await triggerOf({ page }).click();
-  await page.locator('.hero-title').click();
+  await page.locator('.footer-legal').click();
   await expect(menuOf({ page })).not.toHaveAttribute('open', '');
 });
 

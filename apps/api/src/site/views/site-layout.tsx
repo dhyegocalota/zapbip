@@ -1,4 +1,4 @@
-import { OwnerLocale } from '@zapbip/types';
+import { COMPANY, OwnerLocale } from '@zapbip/types';
 import type { Child } from 'hono/jsx';
 import { FAVICON_CONTENT_TYPE } from '../../backoffice/assets/favicon';
 import { BackofficeTheme } from '../../backoffice/backoffice-theme';
@@ -16,6 +16,8 @@ import {
   DOCS_PORTUGUESE_PATH,
   JOIN_FRAGMENT,
   THEME_SWITCH_ID,
+  PRICING_FRAGMENT,
+  START_FRAGMENT,
 } from '../site-constants';
 import { leadingAgentNames } from '../site-agents';
 import { LanguageMenu } from './language-menu';
@@ -46,6 +48,7 @@ const THEME_OPTIONS: { theme: BackofficeTheme; label: SiteCopyKey }[] = [
 ];
 const FORM_FRAGMENT = '#join-email';
 const CONTENT_FRAGMENT = '#content';
+const MAILTO_PREFIX = 'mailto:';
 const LEGAL_LINKS: { document: LegalDocument; label: SiteCopyKey }[] = [
   { document: LegalDocument.Terms, label: SiteCopyKey.FooterTerms },
   { document: LegalDocument.Privacy, label: SiteCopyKey.FooterPrivacy },
@@ -110,7 +113,6 @@ function SiteHeader(props: { model: PageModel }) {
           <a class="nav-link" href={docsHrefOf({ locale: model.locale })}>
             {translate(SiteCopyKey.NavigationDocs)}
           </a>
-          <LanguageMenu model={model} />
           {isJoinOffered ? (
             <a class="button button-primary header-join" href={joinHref}>
               {translate(SiteCopyKey.HeaderJoin)}
@@ -122,21 +124,57 @@ function SiteHeader(props: { model: PageModel }) {
   );
 }
 
+function FooterColumn(props: { label: SiteCopyKey; locale: OwnerLocale; links: { href: string; label: SiteCopyKey; rel?: string }[] }) {
+  const translate = copyOf({ locale: props.locale });
+  return (
+    <nav class="footer-links" aria-label={translate(props.label)}>
+      <h2 class="footer-heading">{translate(props.label)}</h2>
+      <ul>
+        {props.links.map((link) => (
+          <li>
+            <a href={link.href} rel={link.rel}>
+              {translate(link.label)}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}
+
 function SiteFooter(props: { model: PageModel }) {
-  const translate = copyOf({ locale: props.model.locale });
+  const { model } = props;
+  const translate = copyOf({ locale: model.locale });
+  const homePath = localePathOf({ locale: model.locale });
+  const productLinks = [
+    { href: `${homePath}${PRICING_FRAGMENT}`, label: SiteCopyKey.FooterPricing },
+    { href: `${homePath}${START_FRAGMENT}`, label: SiteCopyKey.FooterQuickStart },
+    { href: docsHrefOf({ locale: model.locale }), label: SiteCopyKey.FooterDocs },
+  ];
+  const legalLinks = LEGAL_LINKS.map((link) => ({
+    href: legalPathOf({ document: link.document, locale: model.locale }),
+    label: link.label,
+  }));
+  const companyLinks = [
+    { href: COMPANY.website, label: SiteCopyKey.FooterMadeBy, rel: 'noopener' },
+    { href: `${MAILTO_PREFIX}${COMPANY.contactEmail}`, label: SiteCopyKey.FooterSupport },
+  ];
   return (
     <footer class="site-footer">
       <div class="container">
-        <div class="footer-row">
-          <span>{translate(SiteCopyKey.FooterMaker)}</span>
-          <nav class="footer-links" aria-label={translate(SiteCopyKey.FooterLegalLabel)}>
-            {LEGAL_LINKS.map((link) => (
-              <a href={legalPathOf({ document: link.document, locale: props.model.locale })}>{translate(link.label)}</a>
-            ))}
-          </nav>
-          <ThemeSwitch model={props.model} />
+        <div class="footer-grid">
+          <div class="footer-controls">
+            <LanguageMenu model={model} />
+            <ThemeSwitch model={model} />
+          </div>
+          <FooterColumn label={SiteCopyKey.FooterProduct} locale={model.locale} links={productLinks} />
+          <FooterColumn label={SiteCopyKey.FooterLegalLabel} locale={model.locale} links={legalLinks} />
+          <FooterColumn label={SiteCopyKey.FooterCompany} locale={model.locale} links={companyLinks} />
         </div>
         <p class="footer-legal">{translate(SiteCopyKey.FooterTrademarks)}</p>
+        <div class="footer-wordmark" aria-hidden="true">
+          {translate(SiteCopyKey.BrandName)}
+        </div>
       </div>
     </footer>
   );
