@@ -73,6 +73,21 @@ describe.each(SURFACES)('the shared shell on the $name', ({ html }) => {
   });
 });
 
+const STYLESHEET_PATHS = [
+  { name: 'site', fetch: () => siteFetch({ path: '/site/site.css' }) },
+  { name: 'client app', fetch: () => clientAppFetch({ path: '/app.css' }) },
+  { name: 'backoffice', fetch: () => requestBackoffice({ path: '/assets/backoffice.css' }) },
+];
+
+describe.each(STYLESHEET_PATHS)('the stylesheet of the $name', ({ fetch }) => {
+  it('carries the shared menu, switch and compact footer rules', async () => {
+    const css = await (await fetch()).text();
+    expect(css).toContain('.lang-menu {');
+    expect(css).toContain(".switch button[aria-pressed='true'] {");
+    expect(css).toContain('.shell-footer {');
+  });
+});
+
 describe('the three surfaces', () => {
   it('draw the same language menu and the same theme switch', async () => {
     const pages = await Promise.all(SURFACES.map((surface) => surface.html()));
