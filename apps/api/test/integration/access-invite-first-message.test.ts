@@ -16,7 +16,9 @@ function waitlistBindings() {
 
 async function issueCode(input: { issuedAt?: number } = {}): Promise<string> {
   const { issuedAt = Date.now() } = input;
-  return new D1AccessInvites({ database: testEnv.CONNECTIONS }).issue({ email: EMAIL, now: issuedAt });
+  const code = await new D1AccessInvites({ database: testEnv.CONNECTIONS }).issue({ email: EMAIL, now: issuedAt });
+  if (code === null) throw new Error('the invite was not issued');
+  return code;
 }
 
 async function usedAtOf(): Promise<number | null> {
@@ -43,7 +45,7 @@ describe('the first message with an invite code', () => {
     const account = await onlyAccount();
     expect(account.state).toBe(AccountState.Active);
     expect(await usedAtOf()).not.toBeNull();
-    expect((await screenTextsOf({ accountId: account.accountId })).join('\n')).toContain('Send "novo agente <nome>"');
+    expect((await screenTextsOf({ accountId: account.accountId })).join('\n')).toContain('Envie "novo agente <nome>"');
   });
 
   it('releases an existing waitlisted account of that phone', async () => {

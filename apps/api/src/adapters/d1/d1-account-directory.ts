@@ -1,5 +1,5 @@
 import type { AccountDirectory, AccountLookup, AccountRecord } from '@zapbip/core';
-import type { AccountState, OwnerLocale } from '@zapbip/types';
+import { AccountState, type OwnerLocale } from '@zapbip/types';
 import { LogEvent } from '../../contract/log';
 import { logEvent } from '../../log';
 
@@ -17,6 +17,8 @@ const CREATE_IDENTITY_STATEMENT = `INSERT INTO owner_identities (wa_id, account_
   SELECT ?, ?, NULL, ?, ?
   WHERE EXISTS (SELECT 1 FROM accounts WHERE id = ?)
   ON CONFLICT (wa_id) DO NOTHING`;
+const FIND_BY_ID_STATEMENT = SELECT_ACCOUNT + ' WHERE accounts.id = ?';
+const RELEASE_STATEMENT = 'UPDATE accounts SET state = ?, released_at = ? WHERE id = ? AND state = ?';
 const SET_STATE_STATEMENT = 'UPDATE accounts SET state = ? WHERE id = ?';
 const REMOVE_STATEMENTS = [
   'DELETE FROM client_app_sessions WHERE account_id = ?',
@@ -67,12 +69,18 @@ export class D1AccountDirectory implements AccountDirectory {
     return { account, created: accountInsert?.meta.changes === ACCOUNT_CREATED_CHANGES };
   }
 
-  async findById(input: { accountId: string }): Promise<AccountRecord | null> {
-    throw new Error('D1AccountDirectory.findById is not implemented');
+  findById(input: { accountId: string }): Promise<AccountRecord | null> {
+    return this.database.prepare(FIND_BY_ID_STATEMENT).bind(input.accountId).first<AccountRecord>();
   }
 
   async release(input: { accountId: string; releasedAt: number }): Promise<boolean> {
-    throw new Error('D1AccountDirectory.release is not implemented');
+    const result = await this.database
+      .prepare(RELEASE_STATEMENT)
+      .bind(AccountState.Active, input.releasedAt, input.accountId, AccountState.Waitlisted)
+      .run();
+    const isReleased = result.meta.changes === ACCOUNT_CREATED_CHANGES;
+    if (isReleased) logEvent({ event: LogEvent.AccountStateChanged, accountId: input.accountId });
+    return isReleased;
   }
 
   async setState(input: { accountId: string; state: AccountState }): Promise<void> {

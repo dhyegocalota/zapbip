@@ -16,6 +16,13 @@ function directory(): D1AccountDirectory {
   return new D1AccountDirectory({ database: testEnv.CONNECTIONS });
 }
 
+async function issued(input: { email?: string; now?: number } = {}): Promise<string> {
+  const { email = EMAIL, now = NOW } = input;
+  const code = await invites().issue({ email, now });
+  if (code === null) throw new Error('the invite was not issued');
+  return code;
+}
+
 function invites(): D1AccessInvites {
   return new D1AccessInvites({ database: testEnv.CONNECTIONS });
 }
@@ -65,7 +72,7 @@ describe('D1AccountDirectory.release', () => {
 
 describe('D1AccessInvites', () => {
   it('issues a code that the core finder recognises and stores only its digest', async () => {
-    const code = await invites().issue({ email: EMAIL, now: NOW });
+    const code = await issued();
     expect(code.startsWith(INVITE_CODE_PREFIX)).toBe(true);
     expect(findInviteCode({ text: code })).toBe(code);
     const { results } = await testEnv.CONNECTIONS.prepare('SELECT * FROM waitlist_invites').all<Record<string, unknown>>();
@@ -75,20 +82,26 @@ describe('D1AccessInvites', () => {
   });
 
   it('consumes a live code once, in any letter case', async () => {
-    const code = await invites().issue({ email: EMAIL, now: NOW });
+    const code = await issued();
     expect(await invites().consume({ code: code.toUpperCase(), now: NOW + 1 })).toBe(true);
     expect(await invites().consume({ code, now: NOW + 2 })).toBe(false);
   });
 
   it('refuses an unknown code and an expired one', async () => {
-    const code = await invites().issue({ email: EMAIL, now: NOW });
+    const code = await issued();
     expect(await invites().consume({ code: `${INVITE_CODE_PREFIX}${'0'.repeat(24)}`, now: NOW })).toBe(false);
     expect(await invites().consume({ code, now: NOW + WAITLIST_INVITE_TTL_MS })).toBe(false);
     expect(await invites().consume({ code, now: NOW + WAITLIST_INVITE_TTL_MS - DAY_MS })).toBe(true);
   });
 
+  it('issues no second code while one is live or used, and again after it expired', async () => {
+    await issued();
+    expect(await invites().issue({ email: EMAIL, now: NOW + 1 })).toBeNull();
+    expect(await invites().issue({ email: EMAIL, now: NOW + WAITLIST_INVITE_TTL_MS })).not.toBeNull();
+  });
+
   it('lets exactly one of many concurrent redemptions win', async () => {
-    const code = await invites().issue({ email: EMAIL, now: NOW });
+    const code = await issued();
     const outcomes = await Promise.all(Array.from({ length: CONCURRENT_CALLS }, () => invites().consume({ code, now: NOW + 1 })));
     expect(outcomes.filter(Boolean)).toHaveLength(1);
   });

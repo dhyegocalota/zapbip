@@ -1,4 +1,4 @@
-import { ChannelError, type AgentWaker, type MessageSender } from '@zapbip/core';
+import { ChannelError, type AgentWaker, type InboxRepository, type MessageSender } from '@zapbip/core';
 import { ChannelErrorKind, TemplateKind, WakeOutcome } from '@zapbip/types';
 import { ActivityMetric } from '../contract/activity-metric';
 
@@ -56,5 +56,17 @@ export function recordWakerActivity(input: { waker: AgentWaker } & ActivityRecor
     },
     hasFailedWake: (request) => waker.hasFailedWake(request),
     pushesEveryMessage: (request) => waker.pushesEveryMessage(request),
+  };
+}
+
+export function recordRepositoryActivity(input: { repository: InboxRepository } & ActivityRecorder): InboxRepository {
+  const { repository, ...recorder } = input;
+  return {
+    ...repository,
+    commitChannelInbound: async (commit) => {
+      const isNewMessage = await repository.commitChannelInbound(commit);
+      if (isNewMessage && commit.answer !== null) recordSafely({ ...recorder, metric: ActivityMetric.QuestionsAnswered });
+      return isNewMessage;
+    },
   };
 }

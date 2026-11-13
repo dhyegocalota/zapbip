@@ -20,3 +20,7 @@ export function hashConnectionSecret(input: { secret: string }): Promise<string>
 export function hashInstallCode(input: { installCode: string }): Promise<string> {
   return sha256Hex({ value: input.installCode });
 }
+
+export function hashInviteCode(input: { code: string }): Promise<string> {
+  return sha256Hex({ value: input.code.toLowerCase() });
+}
