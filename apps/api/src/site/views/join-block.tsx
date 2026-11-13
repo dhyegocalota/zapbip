@@ -1,5 +1,5 @@
 import { type OwnerLocale, TURNSTILE_ACTION_WAITLIST_JOIN, WAITLIST_EMAIL_MAX_LENGTH } from '@zapbip/types';
-import { BackofficeTheme } from '../../backoffice/backoffice-theme';
+import { ShellTheme } from '../../web-shell/shell-theme';
 import { NoticeVariant } from '../../backoffice/backoffice-notice';
 import { type JoinFormState, JoinState, type PageModel } from '../page-model';
 import { siteAgentNameOf } from '../site-agents';
@@ -13,10 +13,10 @@ import { Notice } from './notice';
 import { ReferralThanksPanel } from './referral-thanks-panel';
 import { ThanksPanel } from './thanks-panel';
 
-const TURNSTILE_THEMES: Record<BackofficeTheme, string> = {
-  [BackofficeTheme.Light]: 'light',
-  [BackofficeTheme.Dark]: 'dark',
-  [BackofficeTheme.System]: 'auto',
+const TURNSTILE_THEMES: Record<ShellTheme, string> = {
+  [ShellTheme.Light]: 'light',
+  [ShellTheme.Dark]: 'dark',
+  [ShellTheme.System]: 'auto',
 };
 const FORM_NOTICES: Partial<Record<JoinFormState, { variant: NoticeVariant; copyKey: SiteCopyKey }>> = {
   [JoinState.CaptchaFailed]: { variant: NoticeVariant.Error, copyKey: SiteCopyKey.JoinCaptchaFailed },

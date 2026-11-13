@@ -1,5 +1,5 @@
 import type { OwnerLocale } from '@zapbip/types';
-import type { BackofficeTheme } from './backoffice-theme';
+import type { ShellTheme } from '../web-shell/shell-theme';
 import type { Bindings } from '../contract/env';
 import type { PagePolicy } from './backoffice-constants';
 
@@ -10,7 +10,7 @@ export type BackofficeEnv = {
   Variables: {
     session: BackofficeSession | null;
     locale: OwnerLocale;
-    theme: BackofficeTheme;
+    theme: ShellTheme;
     clientAddress: string | null;
     pagePolicy: PagePolicy;
   };

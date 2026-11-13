@@ -13,7 +13,7 @@ import { SiteCopyKey } from './site-copy';
 import { copyOf } from './site-copy-text';
 import type { SiteEnv } from './site-env';
 import { localeOfLanguageValue } from './site-language';
-import { languageOf } from './site-links';
+import { languageOf } from '../web-shell/locale-profiles';
 
 const MESSAGE_SEPARATOR = ' ';
 const LANGUAGE_SEPARATOR = ', ';

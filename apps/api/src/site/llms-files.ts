@@ -8,7 +8,7 @@ import { pricingValuesOf } from './price-format';
 import { leadingAgentNames } from './site-agents';
 import { SiteCopyKey } from './site-copy';
 import { copyOf } from './site-copy-text';
-import { languageOf } from './site-links';
+import { languageOf } from '../web-shell/locale-profiles';
 import { DOCS_ORIGIN, SitePath } from './site-paths';
 import { localePathOf } from './site-language';
 

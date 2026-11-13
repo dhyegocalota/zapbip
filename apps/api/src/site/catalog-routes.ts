@@ -17,7 +17,7 @@ import { PAGE_CACHE_CONTROL, PAGE_VARY, SITE_AGENT_PARAMETER } from './site-cons
 import { SiteCopyKey } from './site-copy';
 import { copyOf } from './site-copy-text';
 import type { SiteEnv } from './site-env';
-import { languageOf } from './site-links';
+import { languageOf } from '../web-shell/locale-profiles';
 import { SitePath } from './site-paths';
 
 const LANGUAGE_PARAMETER = 'language';

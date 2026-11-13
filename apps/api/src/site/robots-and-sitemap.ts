@@ -3,7 +3,8 @@ import { LlmsFile, llmsPathOf } from './agentic-paths';
 import { LegalDocument, legalUrlOf } from './legal-links';
 import { AGENT_CRAWLER_NAMES } from './site-constants';
 import { SitePath } from './site-paths';
-import { languageOf, canonicalUrlOf } from './site-links';
+import { canonicalUrlOf } from './site-links';
+import { languageOf } from '../web-shell/locale-profiles';
 
 const SITEMAP_NAMESPACES = 'xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml"';
 const DEFAULT_LANGUAGE_TAG = 'x-default';

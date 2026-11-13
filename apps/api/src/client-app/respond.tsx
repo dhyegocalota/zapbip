@@ -18,6 +18,7 @@ export function respondMessage(input: {
   const page = (
     <MessagePage
       locale={context.get('locale')}
+      theme={context.get('theme')}
       title={title}
       body={body}
       currentPath={ClientAppPath.Home}

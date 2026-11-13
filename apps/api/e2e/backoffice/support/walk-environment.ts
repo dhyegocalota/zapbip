@@ -2,6 +2,7 @@ export enum WalkVariable {
   Origin = 'ZAPBIP_WALK_ORIGIN',
   PersistDirectory = 'ZAPBIP_WALK_PERSIST_DIRECTORY',
   GraphBaseUrl = 'ZAPBIP_WALK_GRAPH_BASE_URL',
+  ScreenshotDirectory = 'ZAPBIP_WALK_SCREENSHOTS',
 }
 
 export function walkValue(input: { variable: WalkVariable }): string {

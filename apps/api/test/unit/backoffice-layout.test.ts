@@ -1,7 +1,7 @@
 import { HttpStatus, OwnerLocale } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { BackofficeNotice } from '../../src/backoffice/backoffice-notice';
-import { BackofficeTheme, resolveTheme } from '../../src/backoffice/backoffice-theme';
+import { ShellTheme, resolveTheme } from '../../src/web-shell/shell-theme';
 import { ErrorPage } from '../../src/backoffice/views/error-page';
 import { Layout, type LayoutProps } from '../../src/backoffice/layout';
 import { SignInPage } from '../../src/backoffice/views/sign-in';
@@ -12,7 +12,9 @@ const STYLESHEET_HREF = '/assets/backoffice.css?v=abc123';
 const CSRF_TOKEN = 'csrf-token-value';
 const LIVE_DOT_PATTERN = /class="live-dot"/g;
 const BADGE_WITH_LIVE_DOT_PATTERN = /<span class="environment-badge"><span class="live-dot" aria-hidden="true"><\/span>/;
-const HEADER_END_PATTERN = /<div class="header-end">(?=[\s\S]*class="locale-switch")(?=[\s\S]*action="\/sign-out")/;
+const HEADER_END_PATTERN = /<div class="header-end"><form method="post" action="\/sign-out"/;
+const HEADER_PATTERN = /<header[\s\S]*?<\/header>/;
+const FOOTER_PATTERN = /<footer[\s\S]*<\/footer>/;
 
 function render(input: Partial<LayoutProps>): string {
   const props: LayoutProps = {
@@ -25,7 +27,7 @@ function render(input: Partial<LayoutProps>): string {
     currentPath: '/numbers',
     returnPath: '/numbers/abc',
     notice: null,
-    theme: BackofficeTheme.System,
+    theme: ShellTheme.System,
     ...input,
   };
   return String(Layout({ ...props, children: 'PAGE_BODY' }));
@@ -37,7 +39,7 @@ describe('backoffice layout', () => {
     expect(render({ locale: OwnerLocale.EnglishUs })).toContain('lang="en"');
   });
 
-  it.each(Object.values(BackofficeTheme))('writes data-theme="%s" on the html element', (theme) => {
+  it.each(Object.values(ShellTheme))('writes data-theme="%s" on the html element', (theme) => {
     expect(render({ theme })).toContain(`<html lang="en" data-theme="${theme}">`);
   });
 
@@ -48,28 +50,33 @@ describe('backoffice layout', () => {
     expect(html).not.toContain('alert(1)');
   });
 
-  it('returns the switchers to the return path while the navigation follows the current path', () => {
+  it('returns the footer switchers to the return path while the navigation follows the current path', () => {
     const html = render({});
-    expect(html.split('name="returnTo" value="/numbers/abc"')).toHaveLength(3);
+    expect(FOOTER_PATTERN.exec(html)![0].split('name="returnTo" value="/numbers/abc"')).toHaveLength(3);
     expect(html).toContain('href="/numbers" aria-current="page"');
   });
 
-  it('shows both switchers on a signed-in page and on the sign-in page', () => {
+  it('shows both switchers in the footer on a signed-in page and on the sign-in page', () => {
     [render({}), render({ signedIn: false })].forEach((html) => {
-      expect(html).toContain('class="locale-switch"');
-      expect(html).toContain('class="theme-switch"');
+      const footer = FOOTER_PATTERN.exec(html)![0];
+      expect(footer).toContain('class="lang-menu"');
+      expect(footer).toContain('class="switch"');
     });
+  });
+
+  it('keeps the switchers out of the header', () => {
+    expect(HEADER_PATTERN.exec(render({}))![0]).not.toMatch(/lang-menu|class="switch"/);
   });
 
   it('shows no switcher on a page without a csrf token', () => {
     const html = render({ csrfToken: null, signedIn: false });
-    expect(html).not.toContain('locale-switch');
-    expect(html).not.toContain('theme-switch');
+    expect(html).not.toContain('lang-menu');
+    expect(html).not.toContain('class="switch"');
   });
 
   it('writes the theme on the error page', () => {
     const html = String(
-      ErrorPage({ status: HttpStatus.NotFound, locale: OwnerLocale.EnglishUs, environment: null, theme: BackofficeTheme.Dark }),
+      ErrorPage({ status: HttpStatus.NotFound, locale: OwnerLocale.EnglishUs, environment: null, theme: ShellTheme.Dark }),
     );
     expect(html).toContain('data-theme="dark"');
   });
@@ -101,7 +108,7 @@ describe('backoffice layout', () => {
 
   it('hides the navigation and sign-out when signed out', () => {
     const html = render({ signedIn: false });
-    expect(html).not.toContain('<nav');
+    expect(HEADER_PATTERN.exec(html)![0]).not.toContain('<nav');
     expect(html).not.toContain('/sign-out');
   });
 
@@ -133,7 +140,7 @@ describe('backoffice layout', () => {
     expect(render({ signedIn: true })).toContain('<body>');
   });
 
-  it('wraps the language switch and sign-out in the header end', () => {
+  it('wraps sign-out in the header end', () => {
     expect(render({})).toMatch(HEADER_END_PATTERN);
   });
 
@@ -161,7 +168,7 @@ describe('sign-in page', () => {
       SignInPage({
         locale,
         environment: DeployEnvironment.Production,
-        theme: BackofficeTheme.System,
+        theme: ShellTheme.System,
         csrfToken: CSRF_TOKEN,
         stylesheetHref: STYLESHEET_HREF,
         notice: null,
@@ -181,7 +188,7 @@ describe('sign-in code page', () => {
       SignInCodePage({
         locale,
         environment: DeployEnvironment.Production,
-        theme: BackofficeTheme.System,
+        theme: ShellTheme.System,
         csrfToken: CSRF_TOKEN,
         stylesheetHref: STYLESHEET_HREF,
         notice: null,

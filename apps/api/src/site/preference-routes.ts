@@ -1,6 +1,6 @@
 import { OwnerLocale } from '@zapbip/types';
 import { Hono } from 'hono';
-import { BackofficeTheme } from '../backoffice/backoffice-theme';
+import { ShellTheme } from '../web-shell/shell-theme';
 import { NO_CONTENT_STATUS, SEE_OTHER_STATUS } from '../backoffice/backoffice-constants';
 import { textFieldOf } from '../backoffice/form-fields';
 import { setPreferenceCookie } from '../backoffice/preference-cookie';
@@ -20,7 +20,7 @@ const RETURN_TO_FIELD = 'returnTo';
 const FETCH_MODE_HEADER = 'Sec-Fetch-Mode';
 const NAVIGATE_FETCH_MODE = 'navigate';
 const LOCALES: string[] = Object.values(OwnerLocale);
-const THEMES: string[] = Object.values(BackofficeTheme);
+const THEMES: string[] = Object.values(ShellTheme);
 const RETURN_BASE = 'https://return.invalid';
 
 type ReturnTarget = {
