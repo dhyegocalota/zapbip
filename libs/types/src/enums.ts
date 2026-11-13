@@ -284,6 +284,8 @@ export enum AccountReplyIntent {
   SignInLink = 'sign_in_link',
   SendFailed = 'send_failed',
   AccessOpened = 'access_opened',
+  WindowClosed = 'window_closed',
+  CoolingDown = 'cooling_down',
   Unknown = 'unknown',
 }
 

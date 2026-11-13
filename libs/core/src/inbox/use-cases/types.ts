@@ -34,7 +34,7 @@ export type SendLocationInput = CallContext & {
 export type SendContactsInput = CallContext & { contacts: ContactCard[]; replyToMessageId: string | null };
 export type ReactInput = CallContext & { targetMessageId: string; emoji: string | null };
 
-export type AnsweredReply = { status: ReplyStatus.Answered; answer: string; messageId: string };
+export type AnsweredReply = { status: ReplyStatus.Answered; answer: string; messageId: string; optionIndex: number | null };
 export type PendingReply = { status: ReplyStatus.Pending; questionId: string };
 export type MessageReply = { status: ReplyStatus.Message; messages: Message[] };
 export type TimeoutReply = { status: ReplyStatus.Timeout };
