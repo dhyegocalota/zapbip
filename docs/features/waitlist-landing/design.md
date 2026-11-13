@@ -629,7 +629,7 @@ Client names (Claude Code, Codex, Grok Bot, claude.ai, ChatGPT, Cursor, Gemini C
 | `PrivacyWaitlistTitle` | About this waitlist | Sobre esta lista |
 | `PrivacyWaitlistBody` | We keep your email, language and referral data only to invite you. We store no IP address and set no tracking cookies; two cookies remember your language and theme. To be removed, write to {contactEmail}. | Guardamos seu e-mail, idioma e dados de indicação só para te convidar. Não guardamos endereço IP nem usamos cookies de rastreamento; dois cookies lembram seu idioma e tema. Para sair da lista, escreva para {contactEmail}. |
 
-`{contactEmail}` is a constant, `SITE_CONTACT_EMAIL = 'dhyego@logicbit.com.br'`, the contact the docs already publish (`apps/docs/snippets/company.mdx`), rendered as a `mailto:` link.
+`{contactEmail}` is a constant, `SITE_CONTACT_EMAIL = 'support@zapbip.com'`, the contact the docs already publish (`apps/docs/snippets/company.mdx`), rendered as a `mailto:` link.
 
 ### 11.9 FAQ
 
@@ -796,7 +796,7 @@ All taken by the designer under the owner's delegation; the lead may overturn an
 | Referral landing | a neutral "A friend invited you" in the eyebrow slot, shown for any shape-valid code | promising the friend credit (false past the cap or for an unknown code) | owner delegated 2026-11-12 |
 | Theme switch place | footer | header (does not fit one row at 375) | owner delegated 2026-11-12 |
 | Client logos | names as text, no logos | third-party logo files (licensing, `img-src`) | owner delegated 2026-11-12 |
-| Deletion contact | `dhyego@logicbit.com.br`, the contact the docs already publish | a new `privacy@zapbip.com` (needs email routing, an owner step) | owner delegated 2026-11-12 |
+| Deletion contact | `support@zapbip.com`, the contact the docs already publish | a new `privacy@zapbip.com` (needs email routing, an owner step) | owner delegated 2026-11-12 |
 | OG image | one English 1200 × 630 PNG | per-locale images (follow-up) | owner delegated 2026-11-12 |
 | New tokens | §6.2 | none (the terminal and phone palettes cannot be expressed with the existing set) | owner delegated 2026-11-12 |
 | Backoffice list cap | 500 rows on the page, CSV for all | pagination (more routes, no need at launch) | owner delegated 2026-11-12 |

@@ -31,7 +31,7 @@ Source: https://logicbit.com.br, read on 2026-11-07. `COMPANY` in `libs/types/sr
 | cnpj | 32.555.315/0001-91 |
 | address | R. Rio Grande do Norte, 1435, Sala 708, Savassi, Belo Horizonte – MG, 30130-138, Brasil |
 | website | https://logicbit.com.br |
-| contactEmail | dhyego@logicbit.com.br |
+| contactEmail | support@zapbip.com |
 
 ### Failure handling
 
