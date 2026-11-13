@@ -76,7 +76,7 @@ describe('an active account', () => {
     const html = await (await clientAppFetch({ path: '/', cookie })).text();
     expect(html).toContain('Your agents');
     expect(html).toContain('alpha');
-    expect(html).toContain('Free · early access');
+    expect(html).toContain('Free · 5 messages to try it');
     expect(html).toContain('help/delete-your-account');
   });
 
@@ -151,7 +151,7 @@ describe('an active account', () => {
     const { cookie } = await signIn({ locale: OwnerLocale.PortugueseBrazil });
     const html = await (await clientAppFetch({ path: '/pt-br', cookie })).text();
     expect(html).toContain('Seus agentes');
-    expect(html).toContain('Grátis · acesso antecipado');
+    expect(html).toContain('Grátis · 5 mensagens para testar');
   });
 });
 
