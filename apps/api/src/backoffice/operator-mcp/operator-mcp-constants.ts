@@ -1,4 +1,4 @@
-import { DAY_MS } from '@zapbip/types';
+import { DAY_MS, MINUTE_MS } from '@zapbip/types';
 
 export const OPERATOR_KEY_PREFIX = 'zbo_';
 export const OPERATOR_KEY_ID_BYTES = 8;
@@ -10,7 +10,7 @@ export const OPERATOR_KEY_DEFAULT_LIFETIME_DAYS = 90;
 export const OPERATOR_KEY_MAX_LIFETIME_DAYS = 365;
 export const OPERATOR_KEY_DEFAULT_LIFETIME_MS = OPERATOR_KEY_DEFAULT_LIFETIME_DAYS * DAY_MS;
 export const OPERATOR_KEY_LIST_LIMIT = 100;
-export const OPERATOR_KEY_LAST_USED_INTERVAL_MS = 60_000;
+export const OPERATOR_KEY_LAST_USED_INTERVAL_MS = MINUTE_MS;
 export const OPERATOR_MCP_AUDIT_LIMIT = 100;
 export const OPERATOR_MCP_PAGE_LIMIT = 100;
 export const OPERATOR_MCP_SERVER_NAME = 'zapbip-backoffice';

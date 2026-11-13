@@ -329,6 +329,7 @@ export enum HttpStatus {
   Unauthorized = 401,
   Forbidden = 403,
   NotFound = 404,
+  MethodNotAllowed = 405,
   Conflict = 409,
   Gone = 410,
   LengthRequired = 411,
