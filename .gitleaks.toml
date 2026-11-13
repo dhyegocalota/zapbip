@@ -11,3 +11,6 @@ regexes = [
   '''^GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ$''',
   '''^arquivo-789\.pdf$''',
 ]
+commits = [
+  '''31f4b2dbf73f832c9c544ff20674e6a39aaacbe7''',
+]

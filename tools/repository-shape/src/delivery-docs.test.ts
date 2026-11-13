@@ -24,6 +24,7 @@ const ROOT_ENTRIES = [
   'AGENTS.md',
   'CLAUDE.md',
   'GEMINI.md',
+  'LICENSE',
   'README.md',
   'apps',
   'docs',

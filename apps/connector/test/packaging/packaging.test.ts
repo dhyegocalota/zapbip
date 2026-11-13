@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 const PACKAGE_DIRECTORY = fileURLToPath(new URL('../..', import.meta.url));
 const BUNDLE_FILE = fileURLToPath(new URL('../../dist/cli.js', import.meta.url));
-const EXPECTED_FILES = ['README.md', 'dist/cli.js', 'package.json'];
+const EXPECTED_FILES = ['LICENSE', 'README.md', 'dist/cli.js', 'package.json'];
 const SHEBANG = '#!/usr/bin/env node';
 
 type PackedFile = { path: string };
@@ -22,7 +22,7 @@ function manifest(): { bin: Record<string, string>; dependencies?: Record<string
 }
 
 describe('the npm package', () => {
-  it('lists only the bundle, the readme and the manifest', () => {
+  it('lists only the bundle, the license, the readme and the manifest', () => {
     expect(packedFilePaths()).toEqual(EXPECTED_FILES);
   });
 
