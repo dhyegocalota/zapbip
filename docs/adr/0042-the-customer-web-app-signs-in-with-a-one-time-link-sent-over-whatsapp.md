@@ -17,7 +17,7 @@ Customers manage everything over WhatsApp commands. The owner asked for a minima
 4. A session is a random 32-byte id stored as a digest, valid for 30 days. Every request joins the session to the account and accepts only `waitlisted` and `active`; `suspended`, `deleting` and a deleted account end every session at once. Sign-out deletes the row.
 5. The stored copy of the WhatsApp reply is masked once sent, like an install link ([ADR 0017](0017-connection-secrets-are-shown-once-and-stored-as-digests.md)).
 6. The app calls the same use cases as the commands, through the account Durable Object. It adds no business rule. Deleting the account stays a WhatsApp command; the app links to the docs page.
-7. The app ships a strict policy of its own: no script, `style-src 'self'`, `form-action 'self'`, `frame-ancestors 'none'`, `Referrer-Policy: no-referrer`, HSTS outside development.
+7. The app ships a strict policy of its own: no script, `style-src 'self'`, `form-action 'self'`, `frame-ancestors 'none'`, `Referrer-Policy: same-origin` (`no-referrer` makes Chrome send `Origin: null` on form posts, which the Origin check refuses), HSTS outside development.
 
 ## Alternatives considered
 

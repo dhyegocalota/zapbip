@@ -37,13 +37,13 @@ describe.each(entries)('$name entry app host dispatch', ({ entry }) => {
 });
 
 describe('the app headers', () => {
-  it('carry a script-free policy, no referrer and no store on every page', async () => {
+  it('carry a script-free policy, same-origin referrer and no store on every page', async () => {
     const { headers } = await clientAppFetch({ path: '/' });
     const policy = headers.get('content-security-policy')!;
     expect(policy).toContain("default-src 'none'");
     expect(policy).toContain("frame-ancestors 'none'");
     expect(policy).not.toContain('script-src');
-    expect(headers.get('referrer-policy')).toBe('no-referrer');
+    expect(headers.get('referrer-policy')).toBe('same-origin');
     expect(headers.get('cache-control')).toBe('no-store');
     expect(headers.get('x-frame-options')).toBe('DENY');
   });

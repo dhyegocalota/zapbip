@@ -10,7 +10,8 @@
     "test:integration": "vitest run --passWithNoTests --config vitest.integration.config.mts",
     "test:e2e": "vitest run --passWithNoTests --config vitest.e2e.config.mts && vitest run --passWithNoTests --config vitest.e2e-whatsapp.config.mts && vitest run --passWithNoTests --config vitest.e2e-owner-flow.config.mts",
     "test:walk": "playwright test --config playwright.config.ts",
-    "test:landing": "playwright test --config playwright.landing.config.ts"
+    "test:landing": "playwright test --config playwright.landing.config.ts",
+    "test:client-app": "playwright test --config playwright.client-app.config.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.32.2",

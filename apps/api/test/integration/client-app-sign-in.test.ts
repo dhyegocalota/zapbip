@@ -54,7 +54,7 @@ describe('GET /sign-in/<token>', () => {
     const token = await issueSignInToken({});
     const { headers } = await clientAppFetch({ path: `/sign-in/${token}` });
     expect(headers.get('cache-control')).toBe('no-store');
-    expect(headers.get('referrer-policy')).toBe('no-referrer');
+    expect(headers.get('referrer-policy')).toBe('same-origin');
   });
 
   it('answers an unknown link with the expired page and 410', async () => {

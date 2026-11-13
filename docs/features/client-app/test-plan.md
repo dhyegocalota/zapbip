@@ -22,7 +22,7 @@
 - [ ] A session never lists nor revokes another account's agent.
 - [ ] After account removal, suspension or deletion the session is signed out.
 - [ ] Sign-out deletes the session.
-- [ ] Headers: CSP without script, `Referrer-Policy: no-referrer`, `Cache-Control: no-store`.
+- [ ] Headers: CSP without script, `Referrer-Policy: same-origin`, `Cache-Control: no-store`.
 - [ ] Host dispatch: the app host serves the app, the MCP host does not.
 - [ ] Wrangler: routes and `APP_ORIGIN` per environment; migration `0011` shape; the prune removes expired rows only.
 
