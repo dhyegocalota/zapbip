@@ -46,7 +46,7 @@ G1, G2 and G3 in order, one lane.
 
 ## Z. Prove and ship
 
-- [ ] **Tester briefing:** not applicable, tooling lane; the gate is the proof.
+- [x] **Tester briefing:** not applicable, tooling lane; the gate is the proof.
 - [ ] **Tester run:** not applicable (class tooling).
 - [ ] **Reviewer:** a fresh `reviewer` sub-agent returned a verdict.
 - [ ] **/check-ui:** not applicable.
