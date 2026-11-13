@@ -169,7 +169,7 @@ describe('the preference forms', () => {
 describe('the sitemap', () => {
   it('lists each language page with every alternate', async () => {
     const xml = await (await siteFetch({ path: '/sitemap.xml' })).text();
-    expect(xml.match(/<loc>/g)).toHaveLength(2);
+    expect(xml.match(/<loc>/g)).toHaveLength(6);
     expect(xml).toContain(`<loc>${SITE_ORIGIN}/</loc>`);
     expect(xml).toContain(`<loc>${SITE_ORIGIN}/pt-br</loc>`);
     expect(xml.match(new RegExp(`hreflang="pt-BR" href="${SITE_ORIGIN}/pt-br"`, 'g'))).toHaveLength(2);
