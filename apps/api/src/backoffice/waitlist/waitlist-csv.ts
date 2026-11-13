@@ -16,7 +16,7 @@ const CELL_SEPARATOR = ',';
 const LINE_BREAK = '\n';
 const QUOTE = '"';
 
-function cellOf(input: { text: string }): string {
+export function cellOf(input: { text: string }): string {
   const { text } = input;
   const isFormula = FORMULA_PREFIXES.some((prefix) => text.startsWith(prefix));
   const safeText = isFormula ? `${NEUTRALISING_PREFIX}${text}` : text;

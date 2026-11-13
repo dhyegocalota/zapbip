@@ -105,6 +105,11 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.PortugueseBrazil]: 'Não consegui entregar as instruções. Nada foi alterado; tente de novo.',
     [OwnerLocale.EnglishUs]: 'I could not deliver the instructions. Nothing was changed; try again.',
   },
+  [AccountReplyIntent.AccessOpened]: {
+    [OwnerLocale.PortugueseBrazil]:
+      'Seu acesso ao zapbip está aberto. Envie "novo agente <nome>" para criar seu primeiro agente ou abra {app_link}.',
+    [OwnerLocale.EnglishUs]: 'Your zapbip access is open. Send "new agent <name>" to create your first agent or open {app_link}.',
+  },
   [AccountReplyIntent.Unknown]: {
     [OwnerLocale.PortugueseBrazil]: 'Não entendi. Envie "ajuda" para ver os comandos.',
     [OwnerLocale.EnglishUs]: 'I did not understand. Send "help" to see the commands.',

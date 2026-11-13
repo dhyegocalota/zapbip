@@ -11,6 +11,7 @@ import { KpiTile } from './kpi-tile';
 import { type Freshness, FreshnessKind, FreshnessLine } from './freshness-line';
 import { FilterForm } from './filter-form';
 import { SummaryTable } from './summary-table';
+import { AccessMetricsSection } from './access-metrics-section';
 import { keyedCell, MetricCell, NOT_REPORTED_CLIENT_KEY } from './metric-cell';
 import { lastDays, windowDays, type MetricsFilter } from './metrics-filter';
 import type { MetricsReport } from './metrics-report';
@@ -394,6 +395,7 @@ export function MetricsPage(props: { page: PageContext; filter: MetricsFilter; r
               }))}
             />
           </section>
+          <AccessMetricsSection locale={locale} access={report.access} now={now} live={live} noData={noData} />
         </div>
       )}
     </Layout>

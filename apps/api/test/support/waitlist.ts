@@ -63,6 +63,7 @@ export async function seedWaitlistRow(input: {
 export async function resetWaitlist(): Promise<void> {
   await testEnv.CONNECTIONS.batch([
     testEnv.CONNECTIONS.prepare('DELETE FROM landing_waitlist'),
+    testEnv.CONNECTIONS.prepare('DELETE FROM waitlist_invites'),
     testEnv.CONNECTIONS.prepare('DELETE FROM site_settings'),
     testEnv.CONNECTIONS.prepare("INSERT INTO site_settings (key, value, updated_at) VALUES ('waitlist_referral_cap', '5', 1794441600000)"),
   ]);
