@@ -2,6 +2,9 @@ import { OwnerLocale } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { SiteCopyKey } from '../../src/site/site-copy';
 import { copyHtml, REFERRAL_CODE, siteFetch } from '../support/site';
+import { AGENT_INSTALLS } from '@zapbip/agents/install';
+
+const PICKED_AGENT = Object.keys(AGENT_INSTALLS)[0]!;
 
 const MENU_PATTERN = /<details class="lang-menu">([\s\S]*?)<\/details>/;
 
@@ -40,9 +43,9 @@ describe('the language menu', () => {
   });
 
   it('keeps the agent and the referral code in the form that changes the language', async () => {
-    const menu = await menuOf({ path: `/pt-br?agent=codex&ref=${REFERRAL_CODE}` });
+    const menu = await menuOf({ path: `/pt-br?agent=${PICKED_AGENT}&ref=${REFERRAL_CODE}` });
     expect(menu).toContain('action="/locale"');
-    expect(menu).toContain(`name="returnTo" value="/pt-br?agent=codex&amp;ref=${REFERRAL_CODE}"`);
+    expect(menu).toContain(`name="returnTo" value="/pt-br?agent=${PICKED_AGENT}&amp;ref=${REFERRAL_CODE}"`);
   });
 
   it('draws the flags inline, with no outside image', async () => {

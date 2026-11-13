@@ -3,6 +3,9 @@ import { OwnerLocale } from '@zapbip/types';
 import { SiteCopyKey } from '../../src/site/site-copy';
 import { expect, test } from './fixtures';
 import { siteCopy } from './support/site-copy';
+import { AGENT_INSTALLS } from '@zapbip/agents/install';
+
+const PICKED_AGENT = Object.keys(AGENT_INSTALLS)[0]!;
 
 const REFERRAL_CODE = 'abcdefgh2345';
 const MOBILE_WIDTH = 375;
@@ -53,10 +56,10 @@ test('the arrow keys move between the options', async ({ page }) => {
 });
 
 test('choosing Portuguese lands on /pt-br and keeps the agent and the referral code', async ({ page }) => {
-  await page.goto(`/?agent=codex&ref=${REFERRAL_CODE}`);
+  await page.goto(`/?agent=${PICKED_AGENT}&ref=${REFERRAL_CODE}`);
   await triggerOf({ page }).click();
   await optionOf({ page, locale: OwnerLocale.PortugueseBrazil }).click();
-  await expect(page).toHaveURL(new RegExp(`/pt-br\\?agent=codex&ref=${REFERRAL_CODE}$`));
+  await expect(page).toHaveURL(new RegExp(`/pt-br\\?agent=${PICKED_AGENT}&ref=${REFERRAL_CODE}$`));
   await expect(page.locator('html')).toHaveAttribute('lang', 'pt-BR');
   await expect(page.locator('input[name="referralCode"]')).toHaveValue(REFERRAL_CODE);
   await expect(page.locator('.join-agent')).toBeVisible();

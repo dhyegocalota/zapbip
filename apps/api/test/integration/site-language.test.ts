@@ -1,6 +1,9 @@
 import { OwnerLocale } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { REFERRAL_CODE, SITE_ORIGIN, siteFetch } from '../support/site';
+import { AGENT_INSTALLS } from '@zapbip/agents/install';
+
+const PICKED_AGENT = Object.keys(AGENT_INSTALLS)[0]!;
 
 const MOVED_PERMANENTLY = 301;
 const FOUND = 302;
@@ -35,8 +38,8 @@ describe('the language paths', () => {
   });
 
   it('keeps the query when it sends a Portuguese browser on', async () => {
-    const response = await siteFetch({ path: `/?ref=${REFERRAL_CODE}&agent=codex`, headers: PORTUGUESE_ACCEPT });
-    expect(response.headers.get('Location')).toBe(`/pt-br?agent=codex&ref=${REFERRAL_CODE}`);
+    const response = await siteFetch({ path: `/?ref=${REFERRAL_CODE}&agent=${PICKED_AGENT}`, headers: PORTUGUESE_ACCEPT });
+    expect(response.headers.get('Location')).toBe(`/pt-br?agent=${PICKED_AGENT}&ref=${REFERRAL_CODE}`);
   });
 
   it('sends a visitor whose cookie says Portuguese to /pt-br', async () => {
@@ -70,7 +73,7 @@ describe('the language paths', () => {
     ['/?lang=en_US', '/'],
     ['/?lang=en', '/'],
     ['/pt-br?lang=en', '/'],
-    [`/?lang=pt_BR&ref=${REFERRAL_CODE}&agent=codex`, `/pt-br?agent=codex&ref=${REFERRAL_CODE}`],
+    [`/?lang=pt_BR&ref=${REFERRAL_CODE}&agent=${PICKED_AGENT}`, `/pt-br?agent=${PICKED_AGENT}&ref=${REFERRAL_CODE}`],
   ])('answers the legacy %s with a 301 to %s', async (path, target) => {
     const response = await siteFetch({ path, headers: PORTUGUESE_ACCEPT });
     expect(response.status).toBe(MOVED_PERMANENTLY);
@@ -100,10 +103,10 @@ describe('the head of each page', () => {
 
 describe('the links of a page', () => {
   it('keep the path, the agent and the referral code in the tabs, the call to action and the preference forms', async () => {
-    const html = await (await siteFetch({ path: `/pt-br?agent=codex&ref=${REFERRAL_CODE}` })).text();
-    expect(html).toContain(`href="/pt-br?agent=codex&amp;ref=${REFERRAL_CODE}#start"`);
-    expect(html).toContain(`href="/pt-br?agent=codex&amp;ref=${REFERRAL_CODE}#join"`);
-    expect(html).toContain(`name="returnTo" value="/pt-br?agent=codex&amp;ref=${REFERRAL_CODE}"`);
+    const html = await (await siteFetch({ path: `/pt-br?agent=${PICKED_AGENT}&ref=${REFERRAL_CODE}` })).text();
+    expect(html).toContain(`href="/pt-br?agent=${PICKED_AGENT}&amp;ref=${REFERRAL_CODE}#start"`);
+    expect(html).toContain(`href="/pt-br?agent=${PICKED_AGENT}&amp;ref=${REFERRAL_CODE}#join"`);
+    expect(html).toContain(`name="returnTo" value="/pt-br?agent=${PICKED_AGENT}&amp;ref=${REFERRAL_CODE}"`);
     expect(html).not.toContain('lang=pt');
   });
 
@@ -118,10 +121,10 @@ describe('the preference forms', () => {
     const response = await siteFetch({
       path: '/locale',
       method: 'POST',
-      form: { locale: OwnerLocale.PortugueseBrazil, returnTo: `/?agent=codex&ref=${REFERRAL_CODE}` },
+      form: { locale: OwnerLocale.PortugueseBrazil, returnTo: `/?agent=${PICKED_AGENT}&ref=${REFERRAL_CODE}` },
     });
     expect(response.status).toBe(SEE_OTHER);
-    expect(response.headers.get('Location')).toBe(`/pt-br?agent=codex&ref=${REFERRAL_CODE}`);
+    expect(response.headers.get('Location')).toBe(`/pt-br?agent=${PICKED_AGENT}&ref=${REFERRAL_CODE}`);
     expect(response.headers.get('Set-Cookie')).toContain(`${LOCALE_COOKIE}=${OwnerLocale.PortugueseBrazil}`);
   });
 
@@ -136,11 +139,14 @@ describe('the preference forms', () => {
     expect(response.headers.get('Location')).toBe(target);
   });
 
-  it.each(['/pt-br', '/', '/pt-br?agent=codex', `/?ref=${REFERRAL_CODE}`, '/?agent=any'])('POST /theme returns to %s', async (returnTo) => {
-    const response = await siteFetch({ path: '/theme', method: 'POST', form: { theme: 'light', returnTo } });
-    expect(response.headers.get('Location')).toBe(`${returnTo}#theme`);
-    expect(response.headers.get('Set-Cookie')).toContain(`${THEME_COOKIE}=light`);
-  });
+  it.each(['/pt-br', '/', `/pt-br?agent=${PICKED_AGENT}`, `/?ref=${REFERRAL_CODE}`, '/?agent=any'])(
+    'POST /theme returns to %s',
+    async (returnTo) => {
+      const response = await siteFetch({ path: '/theme', method: 'POST', form: { theme: 'light', returnTo } });
+      expect(response.headers.get('Location')).toBe(`${returnTo}#theme`);
+      expect(response.headers.get('Set-Cookie')).toContain(`${THEME_COOKIE}=light`);
+    },
+  );
 
   it('POST /theme from the page script saves the theme and answers with no content', async () => {
     const response = await siteFetch({

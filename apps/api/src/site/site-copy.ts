@@ -271,7 +271,7 @@ export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.WhyTitle]: 'Made for agents that need you.',
     [SiteCopyKey.WhyOfficialTitle]: 'The official WhatsApp API, nothing else',
     [SiteCopyKey.WhyOfficialBody]:
-      "No unofficial libraries, so nothing can get your WhatsApp banned. Agents text you from zapbip's official number; you never connect your own.",
+      'No unofficial libraries, so nothing can get your WhatsApp banned. Agents text you from a zapbip number; you never connect your own.',
     [SiteCopyKey.WhyOfficialBadge]: 'Official Cloud API',
     [SiteCopyKey.WhyOfficialNote]: 'Your WhatsApp stays safe',
     [SiteCopyKey.WhyAskTitle]: 'Agents ask. You tap.',
@@ -376,7 +376,7 @@ export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.PricingBilling]: 'Billing opens with the invites',
     [SiteCopyKey.PricingMessageDefinition]: 'A message is any message an agent sends you, or you send an agent, through zapbip.',
     [SiteCopyKey.FaqOwnNumberQuestion]: 'Can I use my own WhatsApp number?',
-    [SiteCopyKey.FaqOwnNumberAnswer]: "Not yet. Every agent texts you from zapbip's official number, so you have nothing to register.",
+    [SiteCopyKey.FaqOwnNumberAnswer]: 'Not yet. Every agent texts you from a zapbip number, so you have nothing to register.',
     [SiteCopyKey.PrivacyEyebrow]: 'Privacy',
     [SiteCopyKey.PrivacyTitle]: 'Official API. Only you.',
     [SiteCopyKey.PrivacyOfficialTitle]: 'The official WhatsApp Cloud API',
@@ -487,7 +487,7 @@ export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.WhyTitle]: 'Feito para agentes que precisam de você.',
     [SiteCopyKey.WhyOfficialTitle]: 'A API oficial do WhatsApp, só ela',
     [SiteCopyKey.WhyOfficialBody]:
-      'Sem bibliotecas não oficiais, então nada pode banir o seu WhatsApp. Os agentes falam com você pelo número oficial do zapbip; você nunca conecta o seu.',
+      'Sem bibliotecas não oficiais, então nada pode banir o seu WhatsApp. Os agentes falam com você por um número do zapbip; você nunca conecta o seu.',
     [SiteCopyKey.WhyOfficialBadge]: 'API Cloud oficial',
     [SiteCopyKey.WhyOfficialNote]: 'Seu WhatsApp fica seguro',
     [SiteCopyKey.WhyAskTitle]: 'O agente pergunta. Você toca.',
@@ -594,7 +594,7 @@ export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
       'Mensagem é qualquer mensagem que um agente te envia, ou que você envia a um agente, pelo zapbip.',
     [SiteCopyKey.FaqOwnNumberQuestion]: 'Posso usar meu próprio número de WhatsApp?',
     [SiteCopyKey.FaqOwnNumberAnswer]:
-      'Ainda não. Todo agente fala com você pelo número oficial do zapbip, então você não precisa registrar nada.',
+      'Ainda não. Todo agente fala com você por um número do zapbip, então você não precisa registrar nada.',
     [SiteCopyKey.PrivacyEyebrow]: 'Privacidade',
     [SiteCopyKey.PrivacyTitle]: 'API oficial. Só você.',
     [SiteCopyKey.PrivacyOfficialTitle]: 'A API oficial do WhatsApp Cloud',
