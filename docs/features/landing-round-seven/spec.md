@@ -49,3 +49,9 @@ No script: the language disclosure and the tab links work; reveals show the fina
 ## Test strategy summary
 
 Unit: price formatter and constants, https redirect, language path parsing, copy completeness. Integration: language routes and redirects, canonical and hreflang, sitemap, pricing text, FAQ, theme switch return paths, no own-number wording. E2E: both locales, both widths, reduced motion, both themes against both OS schemes, one-shot reveals with zero layout shift, the language menu by mouse and keyboard.
+
+## What the diagnosis found (2026-11-13)
+
+- **Light theme.** The tokens already followed `data-theme`, but a choice posted the form and reloaded the page at the top, and the privacy band was painted from the terminal colours, which are dark in both themes. A light page with a dark band and a jump to the top read as "light does not work". Fix: the site script applies the choice at once and saves it with a same-origin request that answers `204` (the site policy gains `connect-src 'self'`); without a script the form returns to `#theme`. The band has its own colours, light in the light theme.
+- **Scroll motion.** Browsers with scroll timelines scrubbed every block and story with the scroll position and pinned each story, so motion ran backwards on scroll up and stories stuck to the screen. Fix: the scroll-timeline path and the pins are gone; every block reveals once through the observer, 500 ms, 12 px, 60 ms stagger.
+- **Docs.** No docs page offered connecting your own number; the FAQ in both languages now says it is not possible yet.
