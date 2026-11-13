@@ -24,6 +24,7 @@ export function contextAuditRecorder(input: { context: Context<BackofficeEnv> })
         targetKind: TARGET_KIND,
         targetId: auditTargetOf({ counts }),
         clientAddress: context.get('clientAddress'),
+        actorKeyId: null,
       },
     });
 }

@@ -55,6 +55,7 @@ function auditKeyAction(input: {
       targetKind: TARGET_KIND,
       targetId: keyId,
       clientAddress: context.get('clientAddress'),
+      actorKeyId: null,
     },
   });
 }
