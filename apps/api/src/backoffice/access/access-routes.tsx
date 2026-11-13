@@ -33,7 +33,12 @@ export const accessRoutes = new Hono<BackofficeEnv>();
 
 function filterOf(input: { read: (name: AccessFormField) => string | null }): AccessFilter {
   const { read } = input;
-  return parseAccessFilter({ from: read(AccessFormField.From), to: read(AccessFormField.To), locale: read(AccessFormField.Locale) });
+  return parseAccessFilter({
+    from: read(AccessFormField.From),
+    to: read(AccessFormField.To),
+    locale: read(AccessFormField.Locale),
+    source: read(AccessFormField.Source),
+  });
 }
 
 function rejectAccess(input: { context: Context<BackofficeEnv>; status: FlashStatus; failure: BackofficeCopyKey }): Promise<Response> {

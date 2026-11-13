@@ -18,6 +18,7 @@ import {
   START_FRAGMENT,
 } from '../site-constants';
 import { leadingAgentNames } from '../site-agents';
+import { markdownUrlOf } from '../agentic-paths';
 import { ShellControls } from '../../web-shell/shell-controls';
 import { RETURN_TO_FIELD } from '../../web-shell/shell-fields';
 import { ShellCopyKey, renderShellCopy } from '../../web-shell/shell-copy';
@@ -183,6 +184,7 @@ export function SiteLayout(props: { model: PageModel; title: string; isIndexable
           <link rel="alternate" hreflang={languageOf({ locale })} href={pageUrlOf({ model, locale })} />
         ))}
         <link rel="alternate" hreflang="x-default" href={pageUrlOf({ model, locale: OwnerLocale.EnglishUs })} />
+        {props.isIndexable ? <link rel="alternate" type="text/markdown" href={markdownUrlOf({ model })} /> : null}
         <meta name="theme-color" content={THEME_COLOR_LIGHT} media="(prefers-color-scheme: light)" />
         <meta name="theme-color" content={THEME_COLOR_DARK} media="(prefers-color-scheme: dark)" />
         <link rel="icon" href={SitePath.Favicon} type={FAVICON_CONTENT_TYPE} />

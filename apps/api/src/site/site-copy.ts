@@ -192,6 +192,8 @@ export enum SiteCopyKey {
   FinalBody = 'final_body',
   FinalButton = 'final_button',
   FinalButtonInvite = 'final_button_invite',
+  AgentsTitle = 'agents_title',
+  AgentsBody = 'agents_body',
   FooterProduct = 'footer_product',
   FooterCompany = 'footer_company',
   FooterPricing = 'footer_pricing',
@@ -406,6 +408,9 @@ export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.FinalBody]: 'Access opens in waves. Ask for yours in ten seconds.',
     [SiteCopyKey.FinalButton]: 'Request access',
     [SiteCopyKey.FinalButtonInvite]: 'Invite a friend',
+    [SiteCopyKey.AgentsTitle]: 'For AI agents',
+    [SiteCopyKey.AgentsBody]:
+      'An agent can request access for its person without the captcha: send a POST with a JSON body {"email", "language"} to {endpoint}. The same tools are registered through WebMCP on every page.',
     [SiteCopyKey.FooterProduct]: 'Product',
     [SiteCopyKey.FooterCompany]: 'Company',
     [SiteCopyKey.FooterPricing]: 'Pricing',
@@ -622,6 +627,9 @@ export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.FinalBody]: 'O acesso é liberado aos poucos. Peça o seu em dez segundos.',
     [SiteCopyKey.FinalButton]: 'Pedir acesso',
     [SiteCopyKey.FinalButtonInvite]: 'Convidar um amigo',
+    [SiteCopyKey.AgentsTitle]: 'Para agentes de IA',
+    [SiteCopyKey.AgentsBody]:
+      'Um agente pode pedir acesso para a sua pessoa sem o captcha: envie um POST com um corpo JSON {"email", "language"} para {endpoint}. As mesmas ferramentas são registradas por WebMCP em todas as páginas.',
     [SiteCopyKey.FooterProduct]: 'Produto',
     [SiteCopyKey.FooterCompany]: 'Empresa',
     [SiteCopyKey.FooterPricing]: 'Preços',
