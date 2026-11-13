@@ -2,7 +2,7 @@ import { buildConnectionLink } from '@zapbip/core';
 import { COMPANY, OwnerLocale } from '@zapbip/types';
 import { pricingValuesOf } from './price-format';
 import { leadingAgentNames } from './site-agents';
-import { SECURITY_POLICY_URL, SECURITY_TEXT_VALIDITY_MS } from './site-constants';
+import { IS_SECURITY_POLICY_PUBLIC, SECURITY_POLICY_URL, SECURITY_TEXT_VALIDITY_MS } from './site-constants';
 import { SiteCopyKey } from './site-copy';
 import { copyOf } from './site-copy-text';
 import { languageOf } from './site-links';
@@ -126,7 +126,7 @@ export function securityTextOf(input: { origin: string; now: number }): string {
     `Contact: mailto:${COMPANY.contactEmail}`,
     `Expires: ${new Date(input.now + SECURITY_TEXT_VALIDITY_MS).toISOString()}`,
     `Preferred-Languages: ${preferredLanguagesOf()}`,
-    `Policy: ${SECURITY_POLICY_URL}`,
+    ...(IS_SECURITY_POLICY_PUBLIC ? [`Policy: ${SECURITY_POLICY_URL}`] : []),
     `Canonical: ${input.origin}${SitePath.SecurityText}`,
     '',
   ].join('\n');

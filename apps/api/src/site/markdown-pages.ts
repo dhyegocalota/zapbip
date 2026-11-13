@@ -159,10 +159,10 @@ export function homeMarkdownOf(input: { locale: OwnerLocale; origin: string }): 
       heading({ level: HeadingLevel.Item, text: text(SiteCopyKey.PrivacyWaitlistTitle) }),
       paragraph({ text: text(SiteCopyKey.PrivacyWaitlistBody) }),
       ...faqBlocks({ text }),
-      sectionHeading({ text, key: SiteCopyKey.FinalTitle }),
-      paragraph({ text: text(SiteCopyKey.FinalBody) }),
       sectionHeading({ text, key: SiteCopyKey.AgentsTitle }),
       paragraph({ text: text(SiteCopyKey.AgentsBody) }),
+      sectionHeading({ text, key: SiteCopyKey.FinalTitle }),
+      paragraph({ text: text(SiteCopyKey.FinalBody) }),
     ],
   });
 }

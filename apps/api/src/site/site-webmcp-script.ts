@@ -20,11 +20,21 @@ export const WEBMCP_SOURCE = `
   }
 
   function fetchTool(path, init) {
-    return fetch(path, init).then(function (response) {
-      return response.json().then(function (payload) {
-        return toolResult(payload, !response.ok);
-      });
-    });
+    return fetch(path, init).then(
+      function (response) {
+        return response.json().then(
+          function (payload) {
+            return toolResult(payload, !response.ok);
+          },
+          function () {
+            return toolResult({ status: 'unreadable_response', httpStatus: response.status }, true);
+          }
+        );
+      },
+      function () {
+        return toolResult({ status: 'network_error' }, true);
+      }
+    );
   }
 
   function requestedLanguage(input) {
