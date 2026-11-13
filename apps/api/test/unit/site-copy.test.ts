@@ -56,13 +56,9 @@ describe('site copy', () => {
     expect(cjkSpacingOffenders({ texts: KEYS.map((key) => SITE_COPY[locale][key]) })).toEqual([]);
   });
 
-  it.each([WebLocale.Spanish, WebLocale.German, WebLocale.French, WebLocale.Japanese, WebLocale.Korean, WebLocale.ChineseSimplified])(
-    'names no fixed official number and offers no own number in %s',
-    (locale) => {
-      expect(SITE_COPY[locale][SiteCopyKey.FaqOwnNumberAnswer]).toContain('zapbip');
-      expect(KEYS.filter((key) => /official number|número oficial/i.test(SITE_COPY[locale][key]))).toEqual([]);
-    },
-  );
+  it.each(LOCALES)('says in %s that every agent texts from a zapbip number', (locale) => {
+    expect(SITE_COPY[locale][SiteCopyKey.FaqOwnNumberAnswer]).toContain('zapbip');
+  });
 
   it('renders placeholders', () => {
     expect(renderSiteCopy({ key: SiteCopyKey.ThanksInviteCount, locale: WebLocale.EnglishUs, values: { count: '2', cap: '5' } })).toBe(

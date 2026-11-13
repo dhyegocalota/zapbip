@@ -1,4 +1,4 @@
-import { CLIENT_APP_LOGIN_TEXT, type OwnerLocale } from '@zapbip/types';
+import { CLIENT_APP_LOGIN_TEXT, OWNER_LOCALE_OF_WEB_LOCALE, type WebLocale } from '@zapbip/types';
 import { docsUrlOf } from '../../web-shell/shell-links';
 import type { ShellTheme } from '../../web-shell/shell-theme';
 import { PHONE_MOCK_LINK_TEXT, PHONE_MOCK_TIME } from '../client-app-constants';
@@ -30,7 +30,7 @@ function ChatGlyph() {
   );
 }
 
-function PhoneMock(props: { locale: OwnerLocale }) {
+function PhoneMock(props: { locale: WebLocale }) {
   const { locale } = props;
   const translate = copyOf({ locale });
   return (
@@ -42,7 +42,7 @@ function PhoneMock(props: { locale: OwnerLocale }) {
         </div>
         <ol class="phone-chat">
           <li class="bubble bubble-outgoing">
-            <p>{CLIENT_APP_LOGIN_TEXT[locale]}</p>
+            <p>{CLIENT_APP_LOGIN_TEXT[OWNER_LOCALE_OF_WEB_LOCALE[locale]]}</p>
             <span class="bubble-time">{PHONE_MOCK_TIME}</span>
           </li>
           <li class="typing" aria-hidden="true">
@@ -61,7 +61,7 @@ function PhoneMock(props: { locale: OwnerLocale }) {
   );
 }
 
-export function SignedOutPage(props: { locale: OwnerLocale; theme: ShellTheme; whatsappHref: string }) {
+export function SignedOutPage(props: { locale: WebLocale; theme: ShellTheme; whatsappHref: string }) {
   const { locale } = props;
   const translate = copyOf({ locale });
   return (

@@ -64,3 +64,4 @@ A `Proposed` ADR moves to `Accepted` by editing its status line and date. Any ot
 | [0041](0041-the-public-site-is-served-by-the-api-worker-through-host-dispatch.md) | The public site is served by the API Worker, selected by host, next to the backoffice | Accepted | 2026-11-12 |
 | [0042](0042-the-customer-web-app-signs-in-with-a-one-time-link-sent-over-whatsapp.md) | The customer web app signs in with a one-time link sent over WhatsApp | Accepted | 2026-11-13 |
 | [0043](0043-access-opens-in-batches-from-the-backoffice.md) | Access opens in batches from the backoffice | Accepted | 2026-11-13 |
+| [0047](0047-the-web-surfaces-speak-eight-languages-through-a-web-locale-while-whatsapp-copy-stays-in-two.md) | The web surfaces speak eight languages through a web locale, while the WhatsApp copy stays in two | Accepted | 2026-11-13 |

@@ -1,6 +1,12 @@
 import { MEDIA_RETENTION_MS, QUEUE_RETENTION_MS } from '@zapbip/core';
-import { CLIENT_APP_SESSION_TTL_MS, COMPANY, DAY_MS, OwnerLocale, PRICING_FREE_MESSAGES } from '@zapbip/types';
+import { CLIENT_APP_SESSION_TTL_MS, COMPANY, DAY_MS, WebLocale, PRICING_FREE_MESSAGES } from '@zapbip/types';
 import { LegalDocument } from './legal-links';
+import { SPANISH_LEGAL_COPY } from './legal-copy-spanish';
+import { GERMAN_LEGAL_COPY } from './legal-copy-german';
+import { FRENCH_LEGAL_COPY } from './legal-copy-french';
+import { JAPANESE_LEGAL_COPY } from './legal-copy-japanese';
+import { KOREAN_LEGAL_COPY } from './legal-copy-korean';
+import { CHINESE_LEGAL_COPY } from './legal-copy-chinese';
 import { formatCount } from './price-format';
 import { leadingAgentNames } from './site-agents';
 import { LEGAL_UPDATED_ON } from './site-constants';
@@ -11,9 +17,9 @@ export type LegalText = { title: string; description: string; summary: string; u
 
 const UTC_TIME_ZONE = 'UTC';
 
-const LEGAL_COPY: Record<LegalDocument, Record<OwnerLocale, LegalText>> = {
+const LEGAL_COPY: Record<LegalDocument, Record<WebLocale, LegalText>> = {
   [LegalDocument.Terms]: {
-    [OwnerLocale.EnglishUs]: {
+    [WebLocale.EnglishUs]: {
       title: 'Terms of use',
       description: 'The rules for using zapbip, the WhatsApp channel for your AI agents, made by Logic Bit in Brazil.',
       summary:
@@ -114,7 +120,7 @@ const LEGAL_COPY: Record<LegalDocument, Record<OwnerLocale, LegalText>> = {
         },
       ],
     },
-    [OwnerLocale.PortugueseBrazil]: {
+    [WebLocale.PortugueseBrazil]: {
       title: 'Termos de uso',
       description: 'As regras de uso do zapbip, o canal de WhatsApp para seus agentes de IA, feito pela Logic Bit no Brasil.',
       summary:
@@ -213,9 +219,15 @@ const LEGAL_COPY: Record<LegalDocument, Record<OwnerLocale, LegalText>> = {
         },
       ],
     },
+    [WebLocale.Spanish]: SPANISH_LEGAL_COPY[LegalDocument.Terms],
+    [WebLocale.German]: GERMAN_LEGAL_COPY[LegalDocument.Terms],
+    [WebLocale.French]: FRENCH_LEGAL_COPY[LegalDocument.Terms],
+    [WebLocale.Japanese]: JAPANESE_LEGAL_COPY[LegalDocument.Terms],
+    [WebLocale.Korean]: KOREAN_LEGAL_COPY[LegalDocument.Terms],
+    [WebLocale.ChineseSimplified]: CHINESE_LEGAL_COPY[LegalDocument.Terms],
   },
   [LegalDocument.Privacy]: {
-    [OwnerLocale.EnglishUs]: {
+    [WebLocale.EnglishUs]: {
       title: 'Privacy policy',
       description: 'What zapbip collects, why, for how long, and your rights under the Brazilian General Data Protection Law (LGPD).',
       summary:
@@ -330,7 +342,7 @@ const LEGAL_COPY: Record<LegalDocument, Record<OwnerLocale, LegalText>> = {
         },
       ],
     },
-    [OwnerLocale.PortugueseBrazil]: {
+    [WebLocale.PortugueseBrazil]: {
       title: 'Política de privacidade',
       description: 'O que o zapbip coleta, por quê, por quanto tempo, e os seus direitos pela Lei Geral de Proteção de Dados (LGPD).',
       summary:
@@ -445,14 +457,20 @@ const LEGAL_COPY: Record<LegalDocument, Record<OwnerLocale, LegalText>> = {
         },
       ],
     },
+    [WebLocale.Spanish]: SPANISH_LEGAL_COPY[LegalDocument.Privacy],
+    [WebLocale.German]: GERMAN_LEGAL_COPY[LegalDocument.Privacy],
+    [WebLocale.French]: FRENCH_LEGAL_COPY[LegalDocument.Privacy],
+    [WebLocale.Japanese]: JAPANESE_LEGAL_COPY[LegalDocument.Privacy],
+    [WebLocale.Korean]: KOREAN_LEGAL_COPY[LegalDocument.Privacy],
+    [WebLocale.ChineseSimplified]: CHINESE_LEGAL_COPY[LegalDocument.Privacy],
   },
 };
 
-function daysOf(input: { milliseconds: number; locale: OwnerLocale }): string {
+function daysOf(input: { milliseconds: number; locale: WebLocale }): string {
   return formatCount({ count: input.milliseconds / DAY_MS, locale: input.locale });
 }
 
-function legalValuesOf(input: { locale: OwnerLocale }): Record<string, string> {
+function legalValuesOf(input: { locale: WebLocale }): Record<string, string> {
   const { locale } = input;
   return {
     agents: leadingAgentNames(),
@@ -474,7 +492,7 @@ function filled(input: { text: string; values: Record<string, string> }): string
   return Object.entries(input.values).reduce((text, [name, value]) => text.replaceAll(`{${name}}`, value), input.text);
 }
 
-export function legalTextOf(input: { document: LegalDocument; locale: OwnerLocale }): LegalText {
+export function legalTextOf(input: { document: LegalDocument; locale: WebLocale }): LegalText {
   const values = legalValuesOf({ locale: input.locale });
   const fill = (text: string): string => filled({ text, values });
   const text = LEGAL_COPY[input.document][input.locale];

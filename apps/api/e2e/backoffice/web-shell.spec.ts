@@ -1,4 +1,4 @@
-import { OwnerLocale } from '@zapbip/types';
+import { WebLocale } from '@zapbip/types';
 import { LOCALE_PROFILES } from '../../src/web-shell/locale-profiles';
 import { ShellCopyKey, renderShellCopy } from '../../src/web-shell/shell-copy';
 import { ShellTheme } from '../../src/web-shell/shell-theme';
@@ -9,8 +9,8 @@ import { signIn } from './support/sign-in';
 const DARK_PAGE_BACKGROUND = 'rgb(7, 18, 15)';
 const BODY_BACKGROUND_SCRIPT = 'getComputedStyle(document.body).backgroundColor';
 const FITS_VIEWPORT_SCRIPT = 'document.documentElement.scrollWidth <= window.innerWidth';
-const BROWSER_LOCALE = OwnerLocale.PortugueseBrazil;
-const OTHER_LOCALE = OwnerLocale.EnglishUs;
+const BROWSER_LOCALE = WebLocale.PortugueseBrazil;
+const OTHER_LOCALE = WebLocale.EnglishUs;
 
 test('the sign-in page has the shared footer, and its menu switches the language upward', async ({ page }, testInfo) => {
   await page.goto('/sign-in');

@@ -1,4 +1,4 @@
-import { COMPANY, OwnerLocale } from '@zapbip/types';
+import { COMPANY, WebLocale } from '@zapbip/types';
 import type { Child } from 'hono/jsx';
 import { FAVICON_CONTENT_TYPE } from '../../backoffice/assets/favicon';
 import { type PageModel, JoinState } from '../page-model';
@@ -26,7 +26,7 @@ import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
 import { localePathOf } from '../site-language';
 import { joinPathOf, pageUrlOf, returnPathOf } from '../site-links';
-import { languageOf } from '../../web-shell/locale-profiles';
+import { LOCALE_PROFILES, languageOf } from '../../web-shell/locale-profiles';
 import { LegalDocument, legalPathOf } from '../legal-links';
 import { legalTextOf } from '../legal-copy';
 import { SITE_SCRIPT_HREF } from '../site-scripts';
@@ -34,14 +34,6 @@ import { APPLE_TOUCH_ICON_PATH, SiteAssetKind, siteAssetOf, SitePath } from '../
 import { pricingValuesOf } from '../price-format';
 import { SITE_STYLESHEET_HREF } from '../site-stylesheet';
 
-const OPEN_GRAPH_LOCALES: Record<OwnerLocale, OwnerLocale> = {
-  [OwnerLocale.PortugueseBrazil]: OwnerLocale.EnglishUs,
-  [OwnerLocale.EnglishUs]: OwnerLocale.PortugueseBrazil,
-};
-const TURNSTILE_LANGUAGES: Record<OwnerLocale, string> = {
-  [OwnerLocale.PortugueseBrazil]: 'pt-br',
-  [OwnerLocale.EnglishUs]: 'en',
-};
 const FORM_FRAGMENT = '#join-email';
 const CONTENT_FRAGMENT = '#content';
 const MAILTO_PREFIX = 'mailto:';
@@ -50,8 +42,8 @@ const LEGAL_LINKS: { document: LegalDocument; label: ShellCopyKey }[] = [
   { document: LegalDocument.Privacy, label: ShellCopyKey.FooterPrivacy },
 ];
 
-export function turnstileLanguageOf(input: { locale: OwnerLocale }): string {
-  return TURNSTILE_LANGUAGES[input.locale];
+export function turnstileLanguageOf(input: { locale: WebLocale }): string {
+  return LOCALE_PROFILES[input.locale].turnstileLanguage;
 }
 
 function skipLinkOf(input: { isLegalPage: boolean; hasForm: boolean }): { href: string; label: SiteCopyKey } {
@@ -95,7 +87,7 @@ function SiteHeader(props: { model: PageModel }) {
   );
 }
 
-function FooterColumn(props: { label: SiteCopyKey; locale: OwnerLocale; links: { href: string; text: string; rel?: string }[] }) {
+function FooterColumn(props: { label: SiteCopyKey; locale: WebLocale; links: { href: string; text: string; rel?: string }[] }) {
   const translate = copyOf({ locale: props.locale });
   return (
     <nav class="footer-links" aria-label={translate(props.label)}>
@@ -179,10 +171,10 @@ export function SiteLayout(props: { model: PageModel; title: string; isIndexable
         <meta name="description" content={description} />
         {props.isIndexable ? null : <meta name="robots" content="noindex" />}
         <link rel="canonical" href={canonical} />
-        {Object.values(OwnerLocale).map((locale) => (
+        {Object.values(WebLocale).map((locale) => (
           <link rel="alternate" hreflang={languageOf({ locale })} href={pageUrlOf({ model, locale })} />
         ))}
-        <link rel="alternate" hreflang="x-default" href={pageUrlOf({ model, locale: OwnerLocale.EnglishUs })} />
+        <link rel="alternate" hreflang="x-default" href={pageUrlOf({ model, locale: WebLocale.EnglishUs })} />
         <meta name="theme-color" content={THEME_COLOR_LIGHT} media="(prefers-color-scheme: light)" />
         <meta name="theme-color" content={THEME_COLOR_DARK} media="(prefers-color-scheme: dark)" />
         <link rel="icon" href={SitePath.Favicon} type={FAVICON_CONTENT_TYPE} />
@@ -199,8 +191,12 @@ export function SiteLayout(props: { model: PageModel; title: string; isIndexable
         <meta property="og:image:height" content={String(OPEN_GRAPH_HEIGHT)} />
         <meta property="og:image:type" content="image/png" />
         <meta property="og:image:alt" content={translate(SiteCopyKey.MetaOgImageAlt)} />
-        <meta property="og:locale" content={model.locale} />
-        <meta property="og:locale:alternate" content={OPEN_GRAPH_LOCALES[model.locale]} />
+        <meta property="og:locale" content={LOCALE_PROFILES[model.locale].openGraphLocale} />
+        {Object.values(WebLocale)
+          .filter((locale) => locale !== model.locale)
+          .map((locale) => (
+            <meta property="og:locale:alternate" content={LOCALE_PROFILES[locale].openGraphLocale} />
+          ))}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={translate(SiteCopyKey.MetaOgTitle)} />
         <meta name="twitter:description" content={description} />

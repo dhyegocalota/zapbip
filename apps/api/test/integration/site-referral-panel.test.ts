@@ -1,11 +1,11 @@
-import { DEFAULT_WAITLIST_REFERRAL_CAP, OwnerLocale } from '@zapbip/types';
+import { DEFAULT_WAITLIST_REFERRAL_CAP, WebLocale } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { REFERRAL_SHARING_OPEN } from '../../src/site/site-constants';
 import { SiteCopyKey } from '../../src/site/site-copy';
 import { ReferralThanksPanel } from '../../src/site/views/referral-thanks-panel';
 import { copyHtml, REFERRAL_CODE, SITE_ORIGIN } from '../support/site';
 
-const LOCALE = OwnerLocale.EnglishUs;
+const LOCALE = WebLocale.EnglishUs;
 const LINK = `${SITE_ORIGIN}/?ref=${REFERRAL_CODE}`;
 
 async function panelOf(input: { creditedCount: number }): Promise<string> {

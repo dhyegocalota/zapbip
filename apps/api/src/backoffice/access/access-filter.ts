@@ -1,11 +1,11 @@
-import { DAY_MS, OwnerLocale } from '@zapbip/types';
+import { DAY_MS, WebLocale } from '@zapbip/types';
 
-export type AccessFilter = { from: string | null; to: string | null; locale: OwnerLocale | null };
+export type AccessFilter = { from: string | null; to: string | null; locale: WebLocale | null };
 
 export const NO_ACCESS_FILTER: AccessFilter = { from: null, to: null, locale: null };
 
 const DAY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
-const OWNER_LOCALES: string[] = Object.values(OwnerLocale);
+const WEB_LOCALES: string[] = Object.values(WebLocale);
 
 function dayOf(input: { value: string | null }): string | null {
   const { value } = input;
@@ -13,10 +13,10 @@ function dayOf(input: { value: string | null }): string | null {
   return Number.isNaN(Date.parse(value)) ? null : value;
 }
 
-function localeOf(input: { value: string | null }): OwnerLocale | null {
+function localeOf(input: { value: string | null }): WebLocale | null {
   const { value } = input;
-  if (value === null || !OWNER_LOCALES.includes(value)) return null;
-  return value as OwnerLocale;
+  if (value === null || !WEB_LOCALES.includes(value)) return null;
+  return value as WebLocale;
 }
 
 export function parseAccessFilter(input: { from: string | null; to: string | null; locale: string | null }): AccessFilter {

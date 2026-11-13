@@ -1,4 +1,4 @@
-import { HttpStatus, OwnerLocale, WhatsAppNumberState } from '@zapbip/types';
+import { HttpStatus, WebLocale, WhatsAppNumberState } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { BackofficeAuditAction, BackofficeAuditOutcome } from '../../src/backoffice/audit/backoffice-audit-action';
 import { BACKOFFICE_COPY, BackofficeCopyKey } from '../../src/backoffice/backoffice-copy';
@@ -92,7 +92,7 @@ describe('number detail layout', () => {
 });
 
 describe('error page heading', () => {
-  it.each(Object.values(OwnerLocale))('keeps the accessible name of the 404 heading in %s', (locale) => {
+  it.each(Object.values(WebLocale))('keeps the accessible name of the 404 heading in %s', (locale) => {
     const html = String(ErrorPage({ status: HttpStatus.NotFound, locale, theme: ShellTheme.System, environment: null }));
     expect(headingText(html)).toBe(`404 ${BACKOFFICE_COPY[locale][BackofficeCopyKey.Error404Title]}`);
     expect(html).toContain('<span class="error-code">404</span>');

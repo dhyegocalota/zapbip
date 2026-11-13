@@ -1,4 +1,4 @@
-import { CLIENT_APP_LOGIN_TEXT, OwnerLocale, PRICING_FREE_MESSAGES } from '@zapbip/types';
+import { CLIENT_APP_LOGIN_TEXT, OWNER_LOCALE_OF_WEB_LOCALE, WebLocale, PRICING_FREE_MESSAGES } from '@zapbip/types';
 import { ClientAppCopyKey, renderClientAppCopy } from '../../src/client-app/client-app-copy';
 import { expect, test } from './fixtures';
 import { setAccountState } from './support/client-app-database';
@@ -11,12 +11,12 @@ const WAITLISTED_STATE = 'waitlisted';
 const FITS_VIEWPORT_SCRIPT = 'document.documentElement.scrollWidth <= window.innerWidth';
 const BODY_BACKGROUND_SCRIPT = 'getComputedStyle(document.body).backgroundColor';
 const DARK_PAGE_BACKGROUND = 'rgb(7, 18, 15)';
-const LOCALES: { locale: OwnerLocale; home: string; phoneKind: OwnerPhoneKind; name: string }[] = [
-  { locale: OwnerLocale.EnglishUs, home: '/', phoneKind: 'united_states', name: 'en' },
-  { locale: OwnerLocale.PortugueseBrazil, home: '/pt-br', phoneKind: 'brazil', name: 'pt' },
+const LOCALES: { locale: WebLocale; home: string; phoneKind: OwnerPhoneKind; name: string }[] = [
+  { locale: WebLocale.EnglishUs, home: '/', phoneKind: 'united_states', name: 'en' },
+  { locale: WebLocale.PortugueseBrazil, home: '/pt-br', phoneKind: 'brazil', name: 'pt' },
 ];
 
-function copy(input: { key: ClientAppCopyKey; locale: OwnerLocale; values?: Record<string, string> }): string {
+function copy(input: { key: ClientAppCopyKey; locale: WebLocale; values?: Record<string, string> }): string {
   return renderClientAppCopy(input);
 }
 
@@ -25,7 +25,10 @@ for (const { locale, home, phoneKind, name } of LOCALES) {
     test('the signed-out page opens WhatsApp with the login word and never overflows', async ({ page }, testInfo) => {
       await page.goto(home);
       const button = page.getByRole('link', { name: copy({ key: ClientAppCopyKey.SignInWithWhatsapp, locale }) });
-      await expect(button).toHaveAttribute('href', new RegExp(`^https://wa\\.me/\\d+\\?text=${CLIENT_APP_LOGIN_TEXT[locale]}$`));
+      await expect(button).toHaveAttribute(
+        'href',
+        new RegExp(`^https://wa\\.me/\\d+\\?text=${CLIENT_APP_LOGIN_TEXT[OWNER_LOCALE_OF_WEB_LOCALE[locale]]}$`),
+      );
       expect(await page.evaluate(FITS_VIEWPORT_SCRIPT)).toBe(true);
       await capture({ page, name: `${testInfo.project.name}-${name}-signed-out` });
     });
@@ -33,7 +36,7 @@ for (const { locale, home, phoneKind, name } of LOCALES) {
     test('sign in with the login link, connect an agent, revoke it and sign out', async ({ page }, testInfo) => {
       const prefix = `${testInfo.project.name}-${name}`;
       const phone = newOwnerPhone({ kind: phoneKind });
-      const link = await requestSignInLink({ phone, word: CLIENT_APP_LOGIN_TEXT[locale] });
+      const link = await requestSignInLink({ phone, word: CLIENT_APP_LOGIN_TEXT[OWNER_LOCALE_OF_WEB_LOCALE[locale]] });
       await page.goto(link);
       await page.getByRole('button', { name: copy({ key: ClientAppCopyKey.ContinueButton, locale }) }).click();
       await expect(page).toHaveURL(new RegExp(`${home === '/' ? '/$' : home + '$'}`));
@@ -68,7 +71,7 @@ for (const { locale, home, phoneKind, name } of LOCALES) {
 
     test('a link that was used shows the expired page', async ({ page }, testInfo) => {
       const phone = newOwnerPhone({ kind: phoneKind });
-      const link = await requestSignInLink({ phone, word: CLIENT_APP_LOGIN_TEXT[locale] });
+      const link = await requestSignInLink({ phone, word: CLIENT_APP_LOGIN_TEXT[OWNER_LOCALE_OF_WEB_LOCALE[locale]] });
       await page.goto(link);
       await page.getByRole('button', { name: copy({ key: ClientAppCopyKey.ContinueButton, locale }) }).click();
       await page.getByRole('button', { name: copy({ key: ClientAppCopyKey.SignOut, locale }) }).click();
@@ -79,7 +82,7 @@ for (const { locale, home, phoneKind, name } of LOCALES) {
 
     test('a waitlisted account sees the waitlist and nothing else', async ({ page }, testInfo) => {
       const phone = newOwnerPhone({ kind: phoneKind });
-      const link = await requestSignInLink({ phone, word: CLIENT_APP_LOGIN_TEXT[locale] });
+      const link = await requestSignInLink({ phone, word: CLIENT_APP_LOGIN_TEXT[OWNER_LOCALE_OF_WEB_LOCALE[locale]] });
       await page.goto(link);
       await page.getByRole('button', { name: copy({ key: ClientAppCopyKey.ContinueButton, locale }) }).click();
       setAccountState({ phone, state: WAITLISTED_STATE });

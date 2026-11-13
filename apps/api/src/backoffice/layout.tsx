@@ -1,4 +1,4 @@
-import type { OwnerLocale } from '@zapbip/types';
+import type { WebLocale } from '@zapbip/types';
 import type { Child } from 'hono/jsx';
 import { DeployEnvironment } from '../contract/deploy-environment';
 import { FAVICON_CONTENT_TYPE, FAVICON_HREF } from './assets/favicon';
@@ -17,7 +17,7 @@ import { PrimaryNavigation } from './components/primary-navigation';
 import { SignOutButton } from './components/sign-out-button';
 
 export type LayoutProps = {
-  locale: OwnerLocale;
+  locale: WebLocale;
   environment: DeployEnvironment | null;
   title: string;
   stylesheetHref: string;

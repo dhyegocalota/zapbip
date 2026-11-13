@@ -1,4 +1,4 @@
-import type { OwnerLocale } from '@zapbip/types';
+import type { WebLocale } from '@zapbip/types';
 import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
 import { ContactText } from './contact-text';
@@ -18,7 +18,7 @@ const FAQ_ITEMS: { question: SiteCopyKey; answer: SiteCopyKey }[] = [
   { question: SiteCopyKey.FaqDataQuestion, answer: SiteCopyKey.FaqDataAnswer },
 ];
 
-export function FaqSection(props: { locale: OwnerLocale }) {
+export function FaqSection(props: { locale: WebLocale }) {
   const translate = copyOf({ locale: props.locale });
   const values = pricingValuesOf({ locale: props.locale });
   return (

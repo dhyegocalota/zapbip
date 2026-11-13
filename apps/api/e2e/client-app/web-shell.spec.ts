@@ -1,4 +1,4 @@
-import { CLIENT_APP_LOGIN_TEXT, OwnerLocale } from '@zapbip/types';
+import { CLIENT_APP_LOGIN_TEXT, OWNER_LOCALE_OF_WEB_LOCALE, WebLocale } from '@zapbip/types';
 import { ClientAppCopyKey, renderClientAppCopy } from '../../src/client-app/client-app-copy';
 import { LOCALE_PROFILES } from '../../src/web-shell/locale-profiles';
 import { ShellCopyKey, renderShellCopy } from '../../src/web-shell/shell-copy';
@@ -12,9 +12,9 @@ const DARK_PAGE_BACKGROUND = 'rgb(7, 18, 15)';
 const LIGHT_PAGE_BACKGROUND = 'rgb(246, 248, 245)';
 const FULLY_OPAQUE = '1';
 const COLOR_SCHEMES = ['light', 'dark'] as const;
-const PAGES: { locale: OwnerLocale; home: string; other: OwnerLocale; otherHome: string; name: string }[] = [
-  { locale: OwnerLocale.EnglishUs, home: '/', other: OwnerLocale.PortugueseBrazil, otherHome: '/pt-br', name: 'en' },
-  { locale: OwnerLocale.PortugueseBrazil, home: '/pt-br', other: OwnerLocale.EnglishUs, otherHome: '/', name: 'pt' },
+const PAGES: { locale: WebLocale; home: string; other: WebLocale; otherHome: string; name: string }[] = [
+  { locale: WebLocale.EnglishUs, home: '/', other: WebLocale.PortugueseBrazil, otherHome: '/pt-br', name: 'en' },
+  { locale: WebLocale.PortugueseBrazil, home: '/pt-br', other: WebLocale.EnglishUs, otherHome: '/', name: 'pt' },
 ];
 
 for (const { locale, home, other, otherHome, name } of PAGES) {
@@ -27,7 +27,7 @@ for (const { locale, home, other, otherHome, name } of PAGES) {
           renderClientAppCopy({ key: ClientAppCopyKey.SignedOutTitle, locale }),
         );
         await expect(page.locator('figure.phone')).toBeVisible();
-        await expect(page.locator('.bubble-outgoing')).toHaveText(new RegExp(CLIENT_APP_LOGIN_TEXT[locale]));
+        await expect(page.locator('.bubble-outgoing')).toHaveText(new RegExp(CLIENT_APP_LOGIN_TEXT[OWNER_LOCALE_OF_WEB_LOCALE[locale]]));
         await expect(page.locator('.bubble-incoming')).toHaveCSS('opacity', FULLY_OPAQUE);
         await expect(page.locator('.typing')).toBeHidden();
         expect(await page.evaluate(FITS_VIEWPORT_SCRIPT)).toBe(true);

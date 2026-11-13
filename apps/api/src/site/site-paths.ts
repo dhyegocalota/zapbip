@@ -1,4 +1,4 @@
-import type { OwnerLocale } from '@zapbip/types';
+import { WebLocale } from '@zapbip/types';
 
 export enum SitePath {
   Home = '/',
@@ -28,9 +28,20 @@ export enum SiteAssetKind {
 
 export const APPLE_TOUCH_ICON_PATH = `${SitePath.AssetPrefix}apple-touch-icon.png`;
 const LOCALE_PLACEHOLDER = '{locale}';
+// NB ADR 0047: the demo and the Open Graph image exist in English and Portuguese only; every other language shows the English asset until it is recorded.
+const ASSET_LOCALES: Record<WebLocale, WebLocale> = {
+  [WebLocale.EnglishUs]: WebLocale.EnglishUs,
+  [WebLocale.PortugueseBrazil]: WebLocale.PortugueseBrazil,
+  [WebLocale.Spanish]: WebLocale.EnglishUs,
+  [WebLocale.German]: WebLocale.EnglishUs,
+  [WebLocale.French]: WebLocale.EnglishUs,
+  [WebLocale.Japanese]: WebLocale.EnglishUs,
+  [WebLocale.Korean]: WebLocale.EnglishUs,
+  [WebLocale.ChineseSimplified]: WebLocale.EnglishUs,
+};
 
-export function siteAssetOf(input: { kind: SiteAssetKind; locale: OwnerLocale }): string {
-  return `${SitePath.AssetPrefix}${input.kind.replace(LOCALE_PLACEHOLDER, input.locale)}`;
+export function siteAssetOf(input: { kind: SiteAssetKind; locale: WebLocale }): string {
+  return `${SitePath.AssetPrefix}${input.kind.replace(LOCALE_PLACEHOLDER, ASSET_LOCALES[input.locale])}`;
 }
 
 const LOGO_FOLDER = 'logos/';

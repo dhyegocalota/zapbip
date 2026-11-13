@@ -1,4 +1,4 @@
-import { ACCESS_BATCH_LIMIT, OwnerLocale } from '@zapbip/types';
+import { ACCESS_BATCH_LIMIT, WebLocale } from '@zapbip/types';
 import { maskedPhoneOf } from '../../client-app/masked-phone';
 import { ACCESS_PAGE_ROW_LIMIT } from '../backoffice-constants';
 import { BackofficeCopyKey, renderBackofficeCopy } from '../backoffice-copy';
@@ -60,7 +60,7 @@ export function AccessPage(props: AccessPageProps) {
             <option value="" selected={filter.locale === null}>
               {translate(BackofficeCopyKey.AccessFilterAnyLocale)}
             </option>
-            {Object.values(OwnerLocale).map((option) => (
+            {Object.values(WebLocale).map((option) => (
               <option value={option} selected={filter.locale === option}>
                 {LOCALE_PROFILES[option].nativeName}
               </option>
