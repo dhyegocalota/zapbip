@@ -21,7 +21,7 @@ export type AgentRequestInput = {
 };
 
 export type ApplyAgentCommandInput = AgentRequestInput & { command: AccountCommand; recipient: AgentCommandRecipient };
-export type RequestAccountChangeInput = AgentRequestInput & { kind: ApprovedCommandKind; rawName: string };
+export type RequestAccountChangeInput = AgentRequestInput & { kind: ApprovedCommandKind; rawName: string; timeoutMs: number };
 export type DescribeAccountInput = Pick<AgentRequestInput, 'dependencies' | 'connection'>;
 
 export type AgentCommandResult = { intent: AccountReplyIntent; installPrompt: string | null };

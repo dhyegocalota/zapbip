@@ -3,7 +3,7 @@ import type { AgentName } from '../../inbox/connection';
 import { ask } from '../../inbox/use-cases/ask';
 import { approvalTitlesOf, renderApprovalQuestion, ApprovalChoice } from '../agent-approval-copy';
 import { isReservedAgentName, normalizeAgentName } from '../agent-name';
-import { AGENT_CHANGE_APPROVAL_TIMEOUT_MS, APPROVAL_REFERENCE_LENGTH } from '../constants';
+import { APPROVAL_REFERENCE_LENGTH } from '../constants';
 import { applyAgentCommand } from './apply-agent-command';
 import type { AgentChangeResult, ApprovedCommandKind, RequestAccountChangeInput } from './types';
 
@@ -30,7 +30,7 @@ async function findRefusal(input: RequestAccountChangeInput & { agent: AgentName
 }
 
 async function askOwner(input: RequestAccountChangeInput & { agent: AgentName }): Promise<ApprovalChoice | null> {
-  const { dependencies, connection, kind, agent } = input;
+  const { dependencies, connection, kind, agent, timeoutMs } = input;
   const titles = approvalTitlesOf({ locale: connection.ownerLocale });
   const choices = APPROVAL_CHOICES[kind];
   const reference = dependencies.ids.next({ prefix: IdPrefix.Question }).slice(-APPROVAL_REFERENCE_LENGTH);
@@ -40,7 +40,7 @@ async function askOwner(input: RequestAccountChangeInput & { agent: AgentName })
     text: renderApprovalQuestion({ kind, locale: connection.ownerLocale, requester: connection.agent, agent, reference }),
     options: choices.map((choice) => titles[choice]),
     optionDescriptions: [],
-    timeoutMs: AGENT_CHANGE_APPROVAL_TIMEOUT_MS,
+    timeoutMs,
   });
   if (reply.status !== ReplyStatus.Answered) return null;
   const chosen = choices.find((choice) => titles[choice] === reply.answer);

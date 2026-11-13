@@ -15,7 +15,12 @@ function fixtureOf() {
 }
 
 function requestChange(input: AccountFixture & { kind: ApprovedCommandKind; rawName: string }) {
-  return requestAccountChange({ ...agentRequestOf(input), kind: input.kind, rawName: input.rawName });
+  return requestAccountChange({
+    ...agentRequestOf(input),
+    kind: input.kind,
+    rawName: input.rawName,
+    timeoutMs: AGENT_CHANGE_APPROVAL_TIMEOUT_MS,
+  });
 }
 
 function choicesOf(input: AccountFixture) {
