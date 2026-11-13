@@ -129,3 +129,8 @@ test('an agent picked on the page survives a language switch', async ({ page }) 
   await optionOf({ page, locale: OwnerLocale.PortugueseBrazil }).click();
   await expect(page).toHaveURL(new RegExp(`/pt-br\\?agent=${pickedTab}`));
 });
+
+test('the language button shows one chevron, not the one the questions use', async ({ page }) => {
+  await page.goto('/');
+  expect(await page.evaluate(`getComputedStyle(document.querySelector('.lang-trigger'), '::before').content`)).toBe('none');
+});

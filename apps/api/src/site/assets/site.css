@@ -312,6 +312,10 @@ a {
   display: none;
 }
 
+.lang-trigger::before {
+  content: none;
+}
+
 .lang-trigger::after {
   content: '';
   width: 0.4375rem;
