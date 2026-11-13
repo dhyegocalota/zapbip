@@ -10,6 +10,7 @@ export type WaitlistRow = {
   referred_by: string | null;
   credited: number;
   created_at: number;
+  source: string;
 };
 
 export async function join(input: {

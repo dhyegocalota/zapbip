@@ -9,6 +9,7 @@ import metaOnboardingMigrationSql from '../../migrations/0008_meta_onboarding.sq
 import passwordSignInMigrationSql from '../../migrations/0009_backoffice_password_sign_in.sql?raw';
 import landingWaitlistMigrationSql from '../../migrations/0010_landing_waitlist.sql?raw';
 import clientAppMigrationSql from '../../migrations/0011_client_app.sql?raw';
+import waitlistSourceMigrationSql from '../../migrations/0013_waitlist_source.sql?raw';
 import { hashConnectionSecret } from '../../src/adapters/platform/hash';
 import { accountInboxStub, testEnv } from './workers-env';
 
@@ -58,6 +59,7 @@ export async function applyPasswordSignInMigration(): Promise<void> {
 
 export async function applyLandingWaitlistMigration(): Promise<void> {
   await applyMigration({ sql: landingWaitlistMigrationSql });
+  await applyMigration({ sql: waitlistSourceMigrationSql });
 }
 
 export async function applyClientAppMigration(): Promise<void> {

@@ -1,5 +1,5 @@
 import { buildConnectionLink, RATE_LIMIT_PERIOD_MS } from '@zapbip/core';
-import { PRODUCTION_PUBLIC_ORIGIN, SECOND_MS } from '@zapbip/types';
+import { DAY_MS, PRODUCTION_PUBLIC_ORIGIN, SECOND_MS } from '@zapbip/types';
 import { CONNECTION_SECRET_PREFIX } from '../contract/constants';
 
 const EXAMPLE_SECRET_BODY = 'ex4mPLe7Hq2xVn9Rt4Wm8Ls3Jd6Hf1Yb5Gc0Zk2Ns7q';
@@ -48,3 +48,27 @@ export const SITE_EXAMPLE_CONNECTION_LINK = buildConnectionLink({
   publicOrigin: PRODUCTION_PUBLIC_ORIGIN,
   secret: `${CONNECTION_SECRET_PREFIX}${EXAMPLE_SECRET_BODY}`,
 });
+export const AGENT_RATE_KEY_PREFIX = 'agent:';
+export const AGENT_ADDRESS_WEIGHT = 10;
+export const AGENT_EMAIL_WEIGHT = 15;
+export const MARKDOWN_CONTENT_TYPE = 'text/markdown; charset=utf-8';
+export const JSON_CONTENT_TYPE = 'application/json; charset=utf-8';
+export const SECURITY_POLICY_URL = 'https://github.com/dhyegocalota/zapbip/security/policy';
+export const SECURITY_TEXT_VALIDITY_MS = 365 * DAY_MS;
+export const AGENT_CRAWLER_NAMES = [
+  'GPTBot',
+  'OAI-SearchBot',
+  'ChatGPT-User',
+  'ClaudeBot',
+  'Claude-User',
+  'Claude-SearchBot',
+  'PerplexityBot',
+  'Perplexity-User',
+  'Google-Extended',
+  'Applebot-Extended',
+  'Meta-ExternalAgent',
+  'Amazonbot',
+  'CCBot',
+  'DuckAssistBot',
+  'MistralAI-User',
+];
