@@ -3,6 +3,7 @@ import { HSTS_MAX_AGE_SECONDS } from '../backoffice/backoffice-constants';
 export const SITE_CONTENT_SECURITY_POLICY = [
   "default-src 'none'",
   "script-src 'self' https://challenges.cloudflare.com",
+  "connect-src 'self'",
   'frame-src https://challenges.cloudflare.com',
   "img-src 'self'",
   "style-src 'self'",

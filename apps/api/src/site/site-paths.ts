@@ -2,6 +2,7 @@ import type { OwnerLocale } from '@zapbip/types';
 
 export enum SitePath {
   Home = '/',
+  PortugueseHome = '/pt-br',
   Join = '/join',
   Locale = '/locale',
   Theme = '/theme',

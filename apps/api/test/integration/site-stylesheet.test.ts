@@ -55,9 +55,17 @@ describe('the site stylesheet', () => {
     expect(SITE_STYLESHEET).toContain('transition: none !important');
   });
 
-  it('keeps scroll-driven reveals behind both a support check and the no-preference query', () => {
-    expect(SITE_STYLESHEET).toContain('@supports (animation-timeline: view())');
+  it('keeps the reveals behind the no-preference query and away from scroll timelines', () => {
+    expect(SITE_STYLESHEET).not.toContain('@supports (animation-timeline: view())');
     expect(SITE_STYLESHEET).toContain('@media (prefers-reduced-motion: no-preference)');
+  });
+
+  it('paints the privacy band from band colours that follow the theme, not from the always-dark terminal', () => {
+    const band = /\n\.band \{[^}]*\}/.exec(SITE_STYLESHEET)![0];
+    expect(band).toContain('var(--color-band)');
+    expect(band).not.toContain('var(--color-terminal)');
+    expect(SITE_STYLESHEET).toMatch(/:root \{[^}]*--color-band: #eef3ef;/);
+    expect(SITE_STYLESHEET).toMatch(/:root\[data-theme='dark'\] \{[^}]*--color-band: #050d0b;/);
   });
 
   it('adapts to forced colours', () => {

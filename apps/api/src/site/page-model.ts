@@ -27,6 +27,7 @@ export type PageModel = {
   turnstileSiteKey: string;
   referralCode: string | null;
   agent: InstallClient | null;
+  agentParameter: InstallClient | SiteStartTab | null;
   startTab: InstallClient | SiteStartTab;
   join: JoinView;
 };

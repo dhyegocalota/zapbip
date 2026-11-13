@@ -1,5 +1,5 @@
 import { contentHashOf } from '../backoffice/assets/stylesheet';
-import { JOIN_FRAGMENT } from './site-constants';
+import { JOIN_FRAGMENT, THEME_SWITCH_ID } from './site-constants';
 import { SitePath } from './site-paths';
 
 const SCRIPT_SOURCE = `(function () {
@@ -10,7 +10,6 @@ const SCRIPT_SOURCE = `(function () {
   var REVEAL_SELECTOR = '.reveal, .why-item';
   var REVEAL_THRESHOLD = 0.2;
   var REVEAL_ROOT_MARGIN = '0px 0px -8% 0px';
-  var SCROLL_TIMELINE_SUPPORT = 'animation-timeline: view()';
   var TYPING_THRESHOLD = 0.3;
   var TYPING_CLASS = 'has-typing';
   var REVEAL_CLASS = 'has-reveal';
@@ -60,6 +59,13 @@ const SCRIPT_SOURCE = `(function () {
     });
   }
 
+  function rememberPath(path) {
+    history.replaceState(null, '', path);
+    document.querySelectorAll('input[name="returnTo"]').forEach(function (field) {
+      field.value = path;
+    });
+  }
+
   function goToJoin() {
     var email = byId('join-email');
     var target = email || byId('join');
@@ -86,7 +92,7 @@ const SCRIPT_SOURCE = `(function () {
           hint.textContent = label || '';
           hint.hidden = !label;
         }
-        history.replaceState(null, '', link.getAttribute('href').split('#')[0]);
+        rememberPath(link.getAttribute('href').split('#')[0]);
         goToJoin();
       });
     });
@@ -112,7 +118,7 @@ const SCRIPT_SOURCE = `(function () {
         candidate.tabIndex = isSelected ? 0 : -1;
         byId(candidate.getAttribute('aria-controls')).hidden = !isSelected;
       });
-      history.replaceState(null, '', tab.getAttribute('href').split('#')[0]);
+      rememberPath(tab.getAttribute('href').split('#')[0]);
       reveal(tab, reducedMotion ? 'auto' : 'smooth');
       if (shouldFocus) tab.focus({ preventScroll: true });
     }
@@ -184,9 +190,53 @@ const SCRIPT_SOURCE = `(function () {
     observer.observe(section);
   }
 
+  function setupLanguageMenu() {
+    var menu = document.querySelector('.lang-menu');
+    if (!menu) return;
+    var trigger = menu.querySelector('.lang-trigger');
+    var options = Array.prototype.slice.call(menu.querySelectorAll('.lang-option'));
+    function close(shouldFocus) {
+      menu.removeAttribute('open');
+      if (shouldFocus) trigger.focus();
+    }
+    document.addEventListener('click', function (event) {
+      if (!menu.contains(event.target)) close(false);
+    });
+    menu.addEventListener('keydown', function (event) {
+      if (!menu.open) return;
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        close(true);
+        return;
+      }
+      var step = event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0;
+      if (step === 0) return;
+      event.preventDefault();
+      var current = options.indexOf(document.activeElement);
+      var next = current === -1 ? (step === 1 ? 0 : options.length - 1) : (current + step + options.length) % options.length;
+      options[next].focus();
+    });
+  }
+
+  function setupThemeSwitch() {
+    var form = byId('${THEME_SWITCH_ID}');
+    if (!form || !window.fetch) return;
+    var returnTo = form.querySelector('input[name="returnTo"]');
+    form.querySelectorAll('button[name="theme"]').forEach(function (button) {
+      button.addEventListener('click', function (event) {
+        event.preventDefault();
+        document.documentElement.setAttribute('data-theme', button.value);
+        form.querySelectorAll('button[name="theme"]').forEach(function (candidate) {
+          candidate.setAttribute('aria-pressed', String(candidate === button));
+        });
+        var body = new URLSearchParams({ theme: button.value, returnTo: returnTo.value });
+        fetch(form.action, { method: 'POST', body: body }).catch(function () {});
+      });
+    });
+  }
+
   function setupReveal() {
     if (reducedMotion) return;
-    if (CSS.supports(SCROLL_TIMELINE_SUPPORT)) return;
     if (!('IntersectionObserver' in window)) return;
     document.documentElement.classList.add(REVEAL_CLASS);
     var observer = new IntersectionObserver(
@@ -301,6 +351,8 @@ const SCRIPT_SOURCE = `(function () {
   setupStartTabs();
   setupStartCopy();
   setupStartTyping();
+  setupLanguageMenu();
+  setupThemeSwitch();
   setupReveal();
   setupThanks();
   setupDemo();

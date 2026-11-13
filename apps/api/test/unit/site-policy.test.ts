@@ -4,6 +4,7 @@ import { SITE_CONTENT_SECURITY_POLICY } from '../../src/site/site-policy';
 const EXPECTED_POLICY = [
   "default-src 'none'",
   "script-src 'self' https://challenges.cloudflare.com",
+  "connect-src 'self'",
   'frame-src https://challenges.cloudflare.com',
   "img-src 'self'",
   "style-src 'self'",

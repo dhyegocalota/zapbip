@@ -37,13 +37,13 @@ async function expectSelected(input: { page: Page; id: string }): Promise<void> 
 }
 
 test('a click on a tab shows its panel at once, keeps the language and the referral code, and rewrites the address', async ({ page }) => {
-  await page.goto(`/?lang=en&ref=${REFERRAL_CODE}`);
+  await page.goto(`/?ref=${REFERRAL_CODE}`);
   await expectSelected({ page, id: FIRST_AGENT.id });
   const before = page.url();
   await tabOf({ page, id: SECOND_AGENT.id }).click();
   await expectSelected({ page, id: SECOND_AGENT.id });
   await expect(page).toHaveURL(new RegExp(`agent=${SECOND_AGENT.id}`));
-  await expect(page).toHaveURL(/lang=en/);
+  expect(new URL(page.url()).pathname).toBe('/');
   await expect(page).toHaveURL(new RegExp(`ref=${REFERRAL_CODE}`));
   expect(page.url()).not.toBe(before);
   await expect(page.locator('.join-agent')).toBeHidden();
@@ -148,7 +148,7 @@ test.describe('pt-BR browser', () => {
     await page.goto('/');
     await expect(page.locator('#start')).toContainText(siteCopy({ key: SiteCopyKey.StartTitle, locale: OwnerLocale.PortugueseBrazil }));
     await tabOf({ page, id: SECOND_AGENT.id }).click();
-    await expect(page).toHaveURL(/lang=pt-BR/);
+    await expect(page).toHaveURL(/\/pt-br\?agent=/);
     await expect(page.locator(`#start-panel-${SECOND_AGENT.id} .start-copy`)).toHaveText(
       siteCopy({ key: SiteCopyKey.StartCopy, locale: OwnerLocale.PortugueseBrazil }),
     );

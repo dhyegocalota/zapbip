@@ -24,7 +24,7 @@ import { testEnv } from '../support/workers-env';
 const ENGLISH = OwnerLocale.EnglishUs;
 const PORTUGUESE = OwnerLocale.PortugueseBrazil;
 const MARIA = 'maria@example.com';
-const LINK_PATTERN = new RegExp(`${SITE_ORIGIN}/\\?ref=([a-z0-9]{${WAITLIST_REFERRAL_CODE_LENGTH}})`);
+const LINK_PATTERN = new RegExp(`${SITE_ORIGIN}/(?:pt-br)?\\?ref=([a-z0-9]{${WAITLIST_REFERRAL_CODE_LENGTH}})`);
 
 function copy(key: SiteCopyKey, values?: Record<string, string>): string {
   return copyHtml({ key, locale: ENGLISH, values });

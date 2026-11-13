@@ -1,6 +1,6 @@
+import { OwnerLocale } from '@zapbip/types';
 import { SitePath } from './site-paths';
-import { SITE_LANGUAGE_PARAMETER } from './site-constants';
-import { DocsLanguage } from '@zapbip/types';
+import { languageOf, canonicalUrlOf } from './site-links';
 
 const SITEMAP_NAMESPACES = 'xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml"';
 const DEFAULT_LANGUAGE_TAG = 'x-default';
@@ -14,21 +14,18 @@ export function renderRobots(input: { origin: string }): string {
 }
 
 export function renderSitemap(input: { origin: string }): string {
-  const canonical = `${input.origin}${SitePath.Home}`;
+  const { origin } = input;
   const alternates = [
-    ...Object.values(DocsLanguage).map((language) =>
-      alternateOf({ hreflang: language, href: `${canonical}?${SITE_LANGUAGE_PARAMETER}=${language}` }),
+    ...Object.values(OwnerLocale).map((locale) =>
+      alternateOf({ hreflang: languageOf({ locale }), href: canonicalUrlOf({ origin, locale }) }),
     ),
-    alternateOf({ hreflang: DEFAULT_LANGUAGE_TAG, href: canonical }),
+    alternateOf({ hreflang: DEFAULT_LANGUAGE_TAG, href: canonicalUrlOf({ origin, locale: OwnerLocale.EnglishUs }) }),
   ];
-  return [
-    '<?xml version="1.0" encoding="UTF-8"?>',
-    `<urlset ${SITEMAP_NAMESPACES}>`,
+  const pages = Object.values(OwnerLocale).flatMap((locale) => [
     '  <url>',
-    `    <loc>${canonical}</loc>`,
+    `    <loc>${canonicalUrlOf({ origin, locale })}</loc>`,
     ...alternates,
     '  </url>',
-    '</urlset>',
-    '',
-  ].join('\n');
+  ]);
+  return ['<?xml version="1.0" encoding="UTF-8"?>', `<urlset ${SITEMAP_NAMESPACES}>`, ...pages, '</urlset>', ''].join('\n');
 }

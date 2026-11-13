@@ -2,11 +2,13 @@ import type { OwnerLocale } from '@zapbip/types';
 import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
 import { ContactText } from './contact-text';
+import { pricingValuesOf } from '../price-format';
 
 const FAQ_ITEMS: { question: SiteCopyKey; answer: SiteCopyKey }[] = [
   { question: SiteCopyKey.FaqWhenQuestion, answer: SiteCopyKey.FaqWhenAnswer },
   { question: SiteCopyKey.FaqFreeQuestion, answer: SiteCopyKey.FaqFreeAnswer },
   { question: SiteCopyKey.FaqPriceQuestion, answer: SiteCopyKey.FaqPriceAnswer },
+  { question: SiteCopyKey.FaqOwnNumberQuestion, answer: SiteCopyKey.FaqOwnNumberAnswer },
   { question: SiteCopyKey.FaqDeveloperQuestion, answer: SiteCopyKey.FaqDeveloperAnswer },
   { question: SiteCopyKey.FaqOthersQuestion, answer: SiteCopyKey.FaqOthersAnswer },
   { question: SiteCopyKey.FaqManyQuestion, answer: SiteCopyKey.FaqManyAnswer },
@@ -16,6 +18,7 @@ const FAQ_ITEMS: { question: SiteCopyKey; answer: SiteCopyKey }[] = [
 
 export function FaqSection(props: { locale: OwnerLocale }) {
   const translate = copyOf({ locale: props.locale });
+  const values = pricingValuesOf({ locale: props.locale });
   return (
     <section class="block" id="faq" aria-labelledby="faq-title">
       <div class="container faq">
@@ -27,7 +30,7 @@ export function FaqSection(props: { locale: OwnerLocale }) {
           <details class="reveal">
             <summary>{translate(item.question)}</summary>
             <p>
-              <ContactText text={translate(item.answer)} />
+              <ContactText text={translate(item.answer, values)} />
             </p>
           </details>
         ))}

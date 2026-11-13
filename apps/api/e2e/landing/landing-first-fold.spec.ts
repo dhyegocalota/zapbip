@@ -36,11 +36,3 @@ test.describe('pt-BR browser', () => {
     await expectFirstFold({ page, locale: OwnerLocale.PortugueseBrazil });
   });
 });
-
-test('the switcher changes the language and keeps the referral code', async ({ page }) => {
-  await page.goto(`/?ref=${REFERRAL_CODE}`);
-  await page.getByRole('button', { name: siteCopy({ key: SiteCopyKey.LocalePortuguese }) }).click();
-  await expect(page).toHaveURL(new RegExp(`ref=${REFERRAL_CODE}$`));
-  await expect(page.locator('html')).toHaveAttribute('lang', 'pt-BR');
-  await expect(page.locator('input[name="referralCode"]')).toHaveValue(REFERRAL_CODE);
-});

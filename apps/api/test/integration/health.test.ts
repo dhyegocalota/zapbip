@@ -3,7 +3,7 @@ import { describe, expect, test } from 'vitest';
 import { HEALTH_PATH } from '../../src/contract/constants';
 import { DeployEnvironment } from '../../src/operations/deploy-environment';
 import production from '../../src/index';
-import { ORIGIN } from './route-fixtures';
+import { SECURE_ORIGIN } from './route-fixtures';
 
 const STATUS_OK = 200;
 const STATUS_SERVER_ERROR = 500;
@@ -11,7 +11,7 @@ const UNKNOWN_ENVIRONMENT = 'preview';
 
 async function healthOf(input: { environment: string }): Promise<Response> {
   return production.fetch(
-    new Request(`${ORIGIN}${HEALTH_PATH}`),
+    new Request(`${SECURE_ORIGIN}${HEALTH_PATH}`),
     { ...env, ENVIRONMENT: input.environment as DeployEnvironment },
     createExecutionContext(),
   );
@@ -25,7 +25,7 @@ describe('health', () => {
   });
 
   test('names the development environment the pool binds', async () => {
-    const response = await production.fetch(new Request(`${ORIGIN}${HEALTH_PATH}`), env, createExecutionContext());
+    const response = await production.fetch(new Request(`${SECURE_ORIGIN}${HEALTH_PATH}`), env, createExecutionContext());
     expect(await response.json()).toEqual({ ok: true, environment: DeployEnvironment.Development });
   });
 

@@ -10,6 +10,7 @@ import { applyDirectoryMigration, seedConnection, seedOwnerIdentity } from '../s
 import { seedWhatsAppNumber, TEST_NUMBER_ID } from '../support/whatsapp-numbers';
 
 export const ORIGIN = 'http://example.com';
+export const SECURE_ORIGIN = 'https://example.com';
 export const LINK_VALIDITY_MS = 15 * MINUTE_MS;
 
 const SECRET_BODY_BYTES = 32;

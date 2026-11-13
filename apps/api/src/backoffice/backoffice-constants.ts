@@ -1,6 +1,9 @@
 import { DAY_MS, MINUTE_MS, SECOND_MS } from '@zapbip/types';
 
 export const SEE_OTHER_STATUS = 303;
+export const NO_CONTENT_STATUS = 204;
+export const PERMANENT_REDIRECT_STATUS = 308;
+export const SAFE_METHODS = ['GET', 'HEAD'];
 export const RETURN_TO_FIELD = 'returnTo';
 export const HSTS_MAX_AGE_SECONDS = 63_072_000;
 export const CONTENT_SECURITY_POLICY = [

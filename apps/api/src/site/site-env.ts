@@ -11,6 +11,7 @@ export type SiteEnv = {
     theme: BackofficeTheme;
     referralCode: string | null;
     agent: InstallClient | null;
+    agentParameter: InstallClient | SiteStartTab | null;
     startTab: InstallClient | SiteStartTab;
   };
 };

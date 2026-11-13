@@ -15,15 +15,16 @@ describe('robots.txt', () => {
 describe('sitemap.xml', () => {
   const sitemapOf = (): string => renderSitemap({ origin: ORIGIN });
 
-  it('lists the canonical page once', () => {
-    expect(sitemapOf().match(/<loc>/g)).toHaveLength(1);
+  it('lists each language page once', () => {
+    expect(sitemapOf().match(/<loc>/g)).toHaveLength(2);
     expect(sitemapOf()).toContain('<loc>https://zapbip.com/</loc>');
+    expect(sitemapOf()).toContain('<loc>https://zapbip.com/pt-br</loc>');
   });
 
-  it('lists both locales and the default as alternates', () => {
-    expect(sitemapOf()).toContain('hreflang="en" href="https://zapbip.com/?lang=en"');
-    expect(sitemapOf()).toContain('hreflang="pt-BR" href="https://zapbip.com/?lang=pt-BR"');
-    expect(sitemapOf()).toContain('hreflang="x-default" href="https://zapbip.com/"');
+  it('lists both locales and the default as alternates of each page', () => {
+    expect(sitemapOf().match(/hreflang="en" href="https:\/\/zapbip.com\/"/g)).toHaveLength(2);
+    expect(sitemapOf().match(/hreflang="pt-BR" href="https:\/\/zapbip.com\/pt-br"/g)).toHaveLength(2);
+    expect(sitemapOf().match(/hreflang="x-default" href="https:\/\/zapbip.com\/"/g)).toHaveLength(2);
   });
 
   it('is well formed xml with the xhtml namespace', () => {
