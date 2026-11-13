@@ -140,7 +140,7 @@ export function AgentKeysPage(props: AgentKeysPageProps) {
 }
 
 export function AgentKeyCreatedPage(props: { page: PageContext; operatorKey: string; endpoint: string; expiresAt: number }) {
-  const { page, endpoint, expiresAt } = props;
+  const { page, operatorKey, endpoint, expiresAt } = props;
   const translate = (key: BackofficeCopyKey, values?: Record<string, string>): string =>
     renderBackofficeCopy({ key, locale: page.locale, values });
   return (
@@ -149,7 +149,7 @@ export function AgentKeyCreatedPage(props: { page: PageContext; operatorKey: str
         <h2 id="agent-key-created-title">{translate(BackofficeCopyKey.AgentKeysCreatedKeyLabel)}</h2>
         <p class="field-help">{translate(BackofficeCopyKey.AgentKeysCreatedHelp)}</p>
         <textarea class="access-links mono" readonly rows={2} aria-labelledby="agent-key-created-title">
-          {props.operatorKey}
+          {operatorKey}
         </textarea>
         <p>{translate(BackofficeCopyKey.AgentKeysCreatedExpires, { date: formatTimestamp({ at: expiresAt }) })}</p>
         <h2 id="agent-key-endpoint-title">{translate(BackofficeCopyKey.AgentKeysCreatedEndpointLabel)}</h2>

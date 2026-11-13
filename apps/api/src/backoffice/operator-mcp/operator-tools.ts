@@ -1,19 +1,19 @@
 import { ACCESS_BATCH_LIMIT } from '@zapbip/types';
-import { z, type ZodRawShape } from 'zod';
+import type { ShapeOutput } from '@modelcontextprotocol/sdk/server/zod-compat.js';
+import type { ZodRawShape } from 'zod';
 import { maskedPhoneOf } from '../../client-app/masked-phone';
-import type { Bindings } from '../../contract/env';
 import { auditedBatch, type BatchAuditRecorder } from '../access/access-audit';
 import { parseAccessFilter } from '../access/access-filter';
 import { inviteCountsOf, issueInvites, startNumberOf } from '../access/access-invite';
-import { countWaitingAccounts, listWaitingAccounts } from '../access/access-queries';
+import { countInvitableEntries, countWaitingAccounts, listInvitableEntries, listWaitingAccounts } from '../access/access-queries';
 import { releaseBatch, releaseCountsOf } from '../access/access-release';
-import { BackofficeAuditAction } from '../audit/backoffice-audit-action';
+import { BackofficeAuditAction, BackofficeAuditOutcome, BackofficeAuditTargetKind } from '../audit/backoffice-audit-action';
 import { accessWindowFigures, accessWindowOf, waitlistTotalOf } from '../metrics/access-metrics';
 import { ACCESS_MONTH_DAYS, ACCESS_WEEK_DAYS, MetricsPeriod } from '../metrics/metrics-filter';
 import { readMetrics } from '../metrics/metrics-queries';
-import { agentAuditRecorder } from './operator-audit';
+import { OPERATOR_MCP_MAX_OFFSET } from './operator-mcp-constants';
+import { agentAuditRecorder, writeAgentAudit, type AgentAuditActor } from './operator-audit';
 import { OperatorToolRefusal, OperatorToolRefusalCode } from './operator-tool-refusal';
-import { OperatorToolName } from './operator-tool-name';
 import {
   inviteWaitlistInputShape,
   listAuditInputShape,
@@ -22,22 +22,18 @@ import {
   metricsSummaryInputShape,
   releaseAccessInputShape,
 } from './operator-tool-schemas';
-import { countWaitlistPage, listAuditPage, listWaitlistPage } from './operator-queries';
+import { listAuditPage } from './operator-queries';
 
-export type OperatorToolContext = { bindings: Bindings; keyId: string; clientAddress: string | null };
+export type OperatorToolContext = AgentAuditActor;
 
-export type OperatorToolDefinition = {
-  description: string;
-  inputShape: ZodRawShape;
-  handler: (input: { context: OperatorToolContext; arguments: never }) => Promise<Record<string, unknown>>;
-};
-
-function toolOf<Shape extends ZodRawShape>(input: {
+export type OperatorToolDefinition<Shape extends ZodRawShape> = {
   description: string;
   inputShape: Shape;
-  handler: (input: { context: OperatorToolContext; arguments: z.infer<z.ZodObject<Shape>> }) => Promise<Record<string, unknown>>;
-}): OperatorToolDefinition {
-  return input;
+  handler: (input: { context: OperatorToolContext; arguments: ShapeOutput<Shape> }) => Promise<Record<string, unknown>>;
+};
+
+function toolOf<Shape extends ZodRawShape>(definition: OperatorToolDefinition<Shape>): OperatorToolDefinition<Shape> {
+  return definition;
 }
 
 function isoOf(input: { at: number }): string {
@@ -55,11 +51,10 @@ function confirmedBatchOf(input: { ids: string[]; confirm: boolean | null }): st
 }
 
 function recorderOf(input: { context: OperatorToolContext }): BatchAuditRecorder {
-  const { bindings, keyId, clientAddress } = input.context;
-  return agentAuditRecorder({ bindings, keyId, clientAddress });
+  return agentAuditRecorder({ actor: input.context });
 }
 
-const METRICS_SUMMARY = toolOf({
+export const METRICS_SUMMARY_TOOL = toolOf({
   description:
     'The figures of the Metrics page for the 7 and 30 day windows: accounts by state, agents, waitlist, invites and released access.',
   inputShape: metricsSummaryInputShape,
@@ -85,21 +80,29 @@ const METRICS_SUMMARY = toolOf({
   },
 });
 
-const LIST_WAITLIST = toolOf({
-  description: 'The email waitlist, oldest first, one page at a time. The entryId is what invite_waitlist takes.',
+export const LIST_WAITLIST_TOOL = toolOf({
+  description: `Email waitlist entries not yet invited, oldest first, one page at a time (offset up to ${OPERATOR_MCP_MAX_OFFSET}). Each call is audited under this key. The entryId is what invite_waitlist takes.`,
   inputShape: listWaitlistInputShape,
   handler: async ({ context, arguments: { from, to, locale, limit, offset } }) => {
     const database = context.bindings.CONNECTIONS;
     const filter = parseAccessFilter({ from, to, locale });
+    const now = Date.now();
     const [total, rows] = await Promise.all([
-      countWaitlistPage({ database, filter }),
-      listWaitlistPage({ database, filter, limit, offset }),
+      countInvitableEntries({ database, filter, now }),
+      listInvitableEntries({ database, filter, now, limit, offset }),
     ]);
-    return { total, entries: rows.map((row) => ({ ...row, joinedAt: isoOf({ at: row.joinedAt }) })) };
+    await writeAgentAudit({
+      actor: context,
+      action: BackofficeAuditAction.WaitlistListed,
+      outcome: BackofficeAuditOutcome.Succeeded,
+      targetKind: BackofficeAuditTargetKind.Waitlist,
+      targetId: `offset=${offset} limit=${limit} returned=${rows.length}`,
+    });
+    return { total, entries: rows.map((row) => ({ entryId: row.email, joinedAt: isoOf({ at: row.joinedAt }), locale: row.locale })) };
   },
 });
 
-const LIST_WAITING_ACCOUNTS = toolOf({
+export const LIST_WAITING_ACCOUNTS_TOOL = toolOf({
   description: 'WhatsApp accounts waiting for release, oldest first, with masked phones. The accountId is what release_access takes.',
   inputShape: listWaitingAccountsInputShape,
   handler: async ({ context, arguments: { from, to, locale, limit } }) => {
@@ -118,7 +121,7 @@ const LIST_WAITING_ACCOUNTS = toolOf({
   },
 });
 
-const RELEASE_ACCESS = toolOf({
+export const RELEASE_ACCESS_TOOL = toolOf({
   description: `Move waitlisted accounts to active and notify their owners, at most ${ACCESS_BATCH_LIMIT} per call. Requires confirm: true.`,
   inputShape: releaseAccessInputShape,
   handler: async ({ context, arguments: { accountIds, confirm } }) => {
@@ -136,7 +139,7 @@ const RELEASE_ACCESS = toolOf({
   },
 });
 
-const INVITE_WAITLIST = toolOf({
+export const INVITE_WAITLIST_TOOL = toolOf({
   description: `Issue single-use invite links to email waitlist entries, at most ${ACCESS_BATCH_LIMIT} per call. The links are returned once, to this key only. Requires confirm: true.`,
   inputShape: inviteWaitlistInputShape,
   handler: async ({ context, arguments: { entryIds, confirm } }) => {
@@ -157,7 +160,7 @@ const INVITE_WAITLIST = toolOf({
   },
 });
 
-const LIST_AUDIT = toolOf({
+export const LIST_AUDIT_TOOL = toolOf({
   description: 'The newest backoffice audit rows, with the agent key that acted when there is one.',
   inputShape: listAuditInputShape,
   handler: async ({ context, arguments: { limit } }) => {
@@ -165,12 +168,3 @@ const LIST_AUDIT = toolOf({
     return { rows: rows.map((row) => ({ ...row, at: isoOf({ at: row.at }) })) };
   },
 });
-
-export const OPERATOR_TOOLS: Record<OperatorToolName, OperatorToolDefinition> = {
-  [OperatorToolName.MetricsSummary]: METRICS_SUMMARY,
-  [OperatorToolName.ListWaitlist]: LIST_WAITLIST,
-  [OperatorToolName.ListWaitingAccounts]: LIST_WAITING_ACCOUNTS,
-  [OperatorToolName.ReleaseAccess]: RELEASE_ACCESS,
-  [OperatorToolName.InviteWaitlist]: INVITE_WAITLIST,
-  [OperatorToolName.ListAudit]: LIST_AUDIT,
-};

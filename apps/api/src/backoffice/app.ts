@@ -52,6 +52,7 @@ export function createBackofficeApp(): Hono<BackofficeEnv> {
   const app = createBaseApp();
   app.use('*', requireConfigured);
   app.route('/', assetRoutes);
+  app.route('/', operatorMcpRoutes);
   app.use('*', requestContext);
   PROTECTED_PATHS.forEach((path) => app.use(path, requireSession));
   FORM_PATHS.forEach((path) => app.use(path, csrfGuard));
@@ -65,7 +66,6 @@ export function createBackofficeApp(): Hono<BackofficeEnv> {
   app.route('/', waitlistRoutes);
   app.route('/', accessRoutes);
   app.route('/', agentKeysRoutes);
-  app.route('/', operatorMcpRoutes);
   app.notFound((context) => errorResponse({ context, status: HttpStatus.NotFound }));
   return app;
 }

@@ -21,7 +21,7 @@ const COUNT_ACCOUNTS_STATEMENT = 'SELECT COUNT(*) AS total ' + ACCOUNT_SCOPE;
 const LIST_ENTRIES_STATEMENT =
   'SELECT entry.email AS email, entry.created_at AS joinedAt, entry.locale AS locale ' +
   ENTRY_SCOPE +
-  ' ORDER BY entry.created_at, entry.rowid LIMIT ?5';
+  ' ORDER BY entry.created_at, entry.rowid LIMIT ?5 OFFSET ?6';
 const COUNT_ENTRIES_STATEMENT = 'SELECT COUNT(*) AS total ' + ENTRY_SCOPE;
 const FIND_ENTRIES_STATEMENT = 'SELECT email, created_at AS joinedAt, locale FROM landing_waitlist WHERE email = ?';
 
@@ -52,8 +52,8 @@ export function countWaitingAccounts(input: Scope): Promise<number> {
   return totalOf({ statement: input.database.prepare(COUNT_ACCOUNTS_STATEMENT).bind(...bindings) });
 }
 
-export async function listInvitableEntries(input: Scope & { now: number; limit: number }): Promise<InvitableEntryRow[]> {
-  const bindings = [...scopeBindings({ filter: input.filter, lead: input.now }), input.limit];
+export async function listInvitableEntries(input: Scope & { now: number; limit: number; offset: number }): Promise<InvitableEntryRow[]> {
+  const bindings = [...scopeBindings({ filter: input.filter, lead: input.now }), input.limit, input.offset];
   const { results } = await input.database
     .prepare(LIST_ENTRIES_STATEMENT)
     .bind(...bindings)

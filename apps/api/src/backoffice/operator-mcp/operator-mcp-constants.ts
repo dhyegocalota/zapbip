@@ -24,3 +24,4 @@ export const OPERATOR_MCP_METHOD_NOT_ALLOWED_BODY = { error: 'method_not_allowed
 export const OPERATOR_MCP_MAX_OFFSET = 1000;
 export const OPERATOR_MCP_MAX_IDS = 100;
 export const OPERATOR_MCP_ID_MAX_LENGTH = 320;
+export const OPERATOR_MCP_ADDRESS_KEY_PREFIX = 'ip:';

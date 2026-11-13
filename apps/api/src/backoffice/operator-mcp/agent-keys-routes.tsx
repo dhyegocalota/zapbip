@@ -69,7 +69,8 @@ function lifetimeDaysOf(input: { value: string | null }): number | null {
 function labelOf(input: { value: string | null }): string | null {
   if (input.value === null) return null;
   const label = input.value.trim();
-  return label === '' || label.length > LABEL_MAX_LENGTH ? null : label;
+  const isLabelInvalid = label === '' || label.length > LABEL_MAX_LENGTH;
+  return isLabelInvalid ? null : label;
 }
 
 agentKeysRoutes.get(BackofficePath.AgentKeys, async (context) => {

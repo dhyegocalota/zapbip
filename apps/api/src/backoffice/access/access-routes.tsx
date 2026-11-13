@@ -65,7 +65,7 @@ accessRoutes.get(BackofficePath.Access, async (context) => {
     countWaitingAccounts({ database, filter }),
     listWaitingAccounts({ database, filter, limit: ACCESS_PAGE_ROW_LIMIT }),
     countInvitableEntries({ database, filter, now }),
-    listInvitableEntries({ database, filter, now, limit: ACCESS_PAGE_ROW_LIMIT }),
+    listInvitableEntries({ database, filter, now, limit: ACCESS_PAGE_ROW_LIMIT, offset: 0 }),
   ]);
   return context.html(
     <AccessPage
@@ -91,7 +91,13 @@ async function selectedEmails(input: { context: Context<BackofficeEnv>; form: Fo
   const { context, form, filter } = input;
   if (textFieldOf({ form, name: AccessFormField.SelectAll }) !== SELECT_ALL_VALUE)
     return uniqueOf({ values: textFieldsOf({ form, name: AccessFormField.Email }) });
-  const rows = await listInvitableEntries({ database: context.env.CONNECTIONS, filter, now: Date.now(), limit: ACCESS_BATCH_LIMIT });
+  const rows = await listInvitableEntries({
+    database: context.env.CONNECTIONS,
+    filter,
+    now: Date.now(),
+    limit: ACCESS_BATCH_LIMIT,
+    offset: 0,
+  });
   return rows.map((row) => row.email);
 }
 

@@ -16,7 +16,10 @@ export async function registerFailure(input: {
 }): Promise<void> {
   const { database, now, clientAddress, action, targetKind, targetId, counter } = input;
   const failure = await recordFailure({ database, now, counter });
-  await writeAudit({ database, entry: { now, action, outcome: BackofficeAuditOutcome.Failed, targetKind, targetId, clientAddress, actorKeyId: null } });
+  await writeAudit({
+    database,
+    entry: { now, action, outcome: BackofficeAuditOutcome.Failed, targetKind, targetId, clientAddress, actorKeyId: null },
+  });
   const justLocked = failure.failedAttempts === BACKOFFICE_LOCKOUT_THRESHOLD;
   if (!justLocked) return;
   logEvent({ event: LogEvent.BackofficeLocked });

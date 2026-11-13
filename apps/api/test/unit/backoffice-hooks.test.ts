@@ -34,6 +34,8 @@ const AUDIT_ROW = {
   target_id: null,
   outcome: BackofficeAuditOutcome.Succeeded,
   client_address: null,
+  actor_key_id: null,
+  actor_key_label: null,
 };
 
 function detailHtml(input: { state: WhatsAppNumberState; verifiedAt: number | null }): string {

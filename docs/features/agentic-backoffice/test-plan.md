@@ -31,6 +31,9 @@ Every checkbox states the input and the exact expected outcome. A ticked box car
 - [ ] `last_used_at` is stamped once a minute.
 - [ ] `metrics_summary` matches the Metrics page figures for 7 and 30 days; `list_waitlist` pages, filters and hides the referral code; `list_waiting_accounts` masks phones.
 - [ ] `release_access` and `invite_waitlist`: refuse without `confirm: true`; refuse over `ACCESS_BATCH_LIMIT`; accept exactly the limit; repeat is a no-op; counts and audit target equal the page's; `actor_key_id` is the key; the invite links appear only in the issuing call; no start number refuses and audits nothing.
+- [ ] `list_waitlist` lists only not-yet-invited entries, caps the offset at 1000, and writes one `waitlist.listed` row per call with the page range under the key.
+- [ ] Refused keys count against `ip:<address>`: the third bad call of a limit of two answers `429`; id lists above 100 or ids above 320 characters are refused; a throwing batch writes one `failed` row under the key; a request with a session cookie touches no `backoffice_sessions` query.
+- [ ] The Audit page shows the key label and id on an agent row and nothing on a human row.
 - [ ] `list_audit` returns the newest first with the actor key and no client address; a limit above the cap is refused.
 
 ## E2E (Playwright specs)

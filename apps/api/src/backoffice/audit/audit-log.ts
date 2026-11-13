@@ -17,7 +17,16 @@ export function prepareAuditInsert(input: { database: D1Database; entry: AuditEn
   const { entry } = input;
   return input.database
     .prepare(INSERT_AUDIT_STATEMENT)
-    .bind(crypto.randomUUID(), entry.now, entry.action, entry.targetKind, entry.targetId, entry.outcome, entry.clientAddress, entry.actorKeyId);
+    .bind(
+      crypto.randomUUID(),
+      entry.now,
+      entry.action,
+      entry.targetKind,
+      entry.targetId,
+      entry.outcome,
+      entry.clientAddress,
+      entry.actorKeyId,
+    );
 }
 
 export async function writeAudit(input: { database: D1Database; entry: AuditEntry }): Promise<void> {

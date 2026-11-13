@@ -10,6 +10,7 @@ Written by the developer. The developer does not run `test-plan.md` and does not
 - `wrangler.jsonc`, `env.ts` — `OPERATOR_KEY_RATE_LIMITER` (60 a minute) in the three blocks.
 - `.gitleaks.toml`, `.github/scripts/secret-rules-probe.sh` — the `zapbip-operator-key` rule and its probe.
 - Backoffice copy, navigation, audit labels, notice; ADR 0046; runbook step 8; the backoffice rule.
+- Review fixes: one audit writer (`actorKeyId` on `AuditEntry`), the Audit page shows the agent key, `list_waitlist` audited and invitable-only, per-address limit on refused keys, bounded id lists, the endpoint mounted before the session middleware.
 
 ## How to run
 
@@ -37,4 +38,4 @@ pnpm --filter @zapbip/api exec playwright test --config playwright.config.ts age
 ## Known gaps
 
 - The integration tests were written red-first but could not run while the machine's verify held port 4012; their first run is the green run.
-- The audit page does not show the actor key column; `list_audit` does.
+- `list_waitlist` reads at most 1100 not-yet-invited entries per key and audits each call; a leaked key can still read those.

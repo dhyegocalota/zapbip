@@ -14,7 +14,7 @@ The owner, 2026-11-13: "absolutely the whole experience must be agentic, everyth
 
 1. An Agent keys page in the backoffice: create a key (label, optional lifetime, default 90 days) behind CSRF and a step-up code, shown once and stored as a digest; list label, created, last used and expiry; revoke. Audit rows for create and revoke.
 2. A `zbo_` key format with high entropy and a gitleaks rule and probe, so a leaked key is detectable.
-3. An MCP endpoint `POST /mcp` on the backoffice host with a Bearer operator key and six tools: `metrics_summary`, `list_waitlist`, `list_waiting_accounts`, `release_access`, `invite_waitlist`, `list_audit`.
+3. An MCP endpoint `POST /mcp` on the backoffice host with a Bearer operator key and six tools: `metrics_summary`, `list_waitlist`, `list_waiting_accounts`, `release_access`, `invite_waitlist`, `list_audit`. `list_waitlist` lists only entries not yet invited, with a capped offset, and audits each call.
 4. The writing tools call the same use cases as the Access page, take the same batch limit, require `confirm: true`, return counts (and the invite links to the issuing key) and write an audit row tagged with the key id.
 5. A rate limit per key; revoked or expired keys refused; no cookies, no CORS; the product and operator keys never open each other's surface.
 6. Runbook "Let an agent operate the backoffice", copy in en_US and pt_BR.

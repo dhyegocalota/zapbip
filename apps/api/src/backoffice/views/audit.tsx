@@ -12,6 +12,8 @@ export type AuditListRow = {
   target_id: string | null;
   outcome: BackofficeAuditOutcome;
   client_address: string | null;
+  actor_key_id: string | null;
+  actor_key_label: string | null;
 };
 
 const ACTION_LABELS: Record<BackofficeAuditAction, BackofficeCopyKey> = {
@@ -39,6 +41,12 @@ const OUTCOME_LABELS: Record<BackofficeAuditOutcome, BackofficeCopyKey> = {
   [BackofficeAuditOutcome.Failed]: BackofficeCopyKey.AuditOutcomeFailed,
   [BackofficeAuditOutcome.Locked]: BackofficeCopyKey.AuditOutcomeLocked,
 };
+
+function agentKeyCellOf(input: { row: AuditListRow }): string | null {
+  const { actor_key_id: keyId, actor_key_label: label } = input.row;
+  if (keyId === null) return null;
+  return label === null ? keyId : `${label} (${keyId})`;
+}
 
 export function AuditPage(props: { page: PageContext; rows: AuditListRow[] }) {
   const { page, rows } = props;
@@ -74,6 +82,7 @@ export function AuditPage(props: { page: PageContext; rows: AuditListRow[] }) {
               <th scope="col">{translate(BackofficeCopyKey.AuditColumnAction)}</th>
               <th scope="col">{translate(BackofficeCopyKey.AuditColumnTarget)}</th>
               <th scope="col">{translate(BackofficeCopyKey.AuditColumnOutcome)}</th>
+              <th scope="col">{translate(BackofficeCopyKey.AuditColumnAgentKey)}</th>
               <th scope="col">{translate(BackofficeCopyKey.AuditColumnAddress)}</th>
             </tr>
           </thead>
@@ -89,6 +98,9 @@ export function AuditPage(props: { page: PageContext; rows: AuditListRow[] }) {
                 </td>
                 <td data-label={translate(BackofficeCopyKey.AuditColumnOutcome)} class={`outcome outcome-${row.outcome}`}>
                   {translate(OUTCOME_LABELS[row.outcome])}
+                </td>
+                <td data-label={translate(BackofficeCopyKey.AuditColumnAgentKey)} class="mono">
+                  {agentKeyCellOf({ row })}
                 </td>
                 <td data-label={translate(BackofficeCopyKey.AuditColumnAddress)} class="mono">
                   {row.client_address}
