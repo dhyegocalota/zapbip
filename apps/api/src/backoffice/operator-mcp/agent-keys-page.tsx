@@ -153,7 +153,7 @@ export function AgentKeyCreatedPage(props: { page: PageContext; operatorKey: str
         </textarea>
         <p>{translate(BackofficeCopyKey.AgentKeysCreatedExpires, { date: formatTimestamp({ at: expiresAt }) })}</p>
         <h2 id="agent-key-endpoint-title">{translate(BackofficeCopyKey.AgentKeysCreatedEndpointLabel)}</h2>
-        <p class="mono" aria-labelledby="agent-key-endpoint-title">
+        <p class="mono agent-key-endpoint" aria-labelledby="agent-key-endpoint-title">
           {endpoint}
         </p>
         <p class="field-help">{translate(BackofficeCopyKey.AgentKeysCreatedHowTo)}</p>

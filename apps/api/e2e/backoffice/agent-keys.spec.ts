@@ -78,7 +78,7 @@ test('creates a key, shows it once, lets the agent in and locks it out after a r
   await shoot({ page, testInfo, name: 'agent-keys-list' });
   await page.getByRole('button', { name: copy({ key: BackofficeCopyKey.AgentKeysRevokeFor, values: { label: 'walk agent' } }) }).click();
   await expect(page.getByText(copy({ key: BackofficeCopyKey.AgentKeyRevokedNotice }))).toBeVisible();
-  await expect(page.getByText(copy({ key: BackofficeCopyKey.AgentKeysStatusRevoked }))).toBeVisible();
+  await expect(page.getByText(copy({ key: BackofficeCopyKey.AgentKeysStatusRevoked }), { exact: true })).toBeVisible();
   await shoot({ page, testInfo, name: 'agent-keys-revoked' });
   expect((await listTools({ page, key })).status()).toBe(UNAUTHORIZED_STATUS);
 });
