@@ -20,7 +20,7 @@ const PUBLISHED_COMPANY_FACTS = {
   cnpj: '32.555.315/0001-91',
   address: 'R. Rio Grande do Norte, 1435, Sala 708, Savassi, Belo Horizonte – MG, 30130-138, Brasil',
   website: 'https://logicbit.com.br',
-  contactEmail: 'support@zapbip.com',
+  contactEmail: 'dhyego@logicbit.com.br',
 };
 
 const companyFacts: string[] = Object.values(COMPANY);
