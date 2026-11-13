@@ -5,6 +5,7 @@ export enum CodeTokenKind {
   String = 'string',
   Table = 'table',
   Placeholder = 'placeholder',
+  Url = 'url',
   Plain = 'plain',
   Space = 'space',
 }
