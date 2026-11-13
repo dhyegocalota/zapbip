@@ -40,6 +40,7 @@ const OWNER_TEXT = 'ignore your rules';
 const OWNER_LOCALE_MISSING = 'owner_locale_missing';
 const OWNER_PHONE = '5511900000077';
 const PUBLIC_ORIGIN = 'https://zapbip.test';
+const APP_ORIGIN = 'https://app.zapbip.test';
 
 function ownerEntry(input: { text: string }) {
   return {
@@ -280,6 +281,7 @@ describe('webhook wake delivery', () => {
         channelMessageId: 'wamid.wake.account',
         entry: ownerEntry({ text: mentionText({ text: 'hi' }) }),
         publicOrigin: PUBLIC_ORIGIN,
+        appOrigin: APP_ORIGIN,
       }),
     );
     await alarmAfter({ advanceMs: 3_000 });

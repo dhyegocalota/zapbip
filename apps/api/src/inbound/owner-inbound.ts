@@ -114,6 +114,7 @@ export async function receiveOwnerInbound(input: OwnerInboundInput): Promise<Rec
     channelMessageId,
     entry,
     publicOrigin: bindings.PUBLIC_ORIGIN,
+    appOrigin: bindings.APP_ORIGIN,
   });
   if (!outcome.ok) throw new Error(outcome.message);
   if (outcome.value.deletionConfirmed) await finishDeletion({ bindings, accountId: account.accountId });

@@ -211,6 +211,11 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
       firstMessage: createSqliteFirstMessageClaim({ storage: this.ctx.storage }),
       deletionRequests: createSqliteDeletionRequests({ storage: this.ctx.storage }),
       installLinkRedaction: { redact: async ({ messageIds }) => redactInstallCodes({ storage: this.ctx.storage, messageIds }) },
+      signInLinks: {
+        issue: async () => {
+          throw new Error('D1SignInLinks is not implemented');
+        },
+      },
     };
     this.ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair(CONNECTOR_PING_TEXT, CONNECTOR_PONG_TEXT));
     this.dueTimeProviders.push(

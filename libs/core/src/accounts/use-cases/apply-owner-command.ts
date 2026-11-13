@@ -3,6 +3,7 @@ import type { AccountCommand, AccountCommandResult } from '../account-types';
 import { buildMenuReply, buildResult, buildTextReply } from './account-reply';
 import { confirmAccountDeletion } from './confirm-account-deletion';
 import { createAgentConnection } from './create-agent-connection';
+import { issueSignInLink } from './issue-sign-in-link';
 import { listAgentConnections } from './list-agent-connections';
 import { requestAccountDeletion } from './request-account-deletion';
 import { revokeAgentConnection } from './revoke-agent-connection';
@@ -28,6 +29,7 @@ const COMMAND_HANDLERS: Record<CommandKind, CommandHandler> = {
     buildResult({ replies: [buildMenuReply({ intent: AccountReplyIntent.Menu, locale: account.locale })] }),
   [CommandKind.RequestDeletion]: requestAccountDeletion,
   [CommandKind.ConfirmDeletion]: confirmAccountDeletion,
+  [CommandKind.Login]: issueSignInLink,
   [CommandKind.Unknown]: async ({ account }) =>
     buildResult({ replies: [buildTextReply({ intent: AccountReplyIntent.Unknown, locale: account.locale })] }),
 };

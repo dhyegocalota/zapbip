@@ -5,9 +5,15 @@ import type { AccountCommandResult, OwnerAccountContext } from '../account-types
 import { NO_INSTALL_CODE } from '../constants';
 import { receiveAccountMessage } from '../use-cases/receive-account-message';
 import type { OwnerAccountInput, ReceiveAccountMessageResult } from '../use-cases/types';
-import { createInMemoryAccountDependencies, IN_MEMORY_PUBLIC_ORIGIN, type InMemoryAccountEnvironment } from './in-memory-accounts';
+import {
+  createInMemoryAccountDependencies,
+  IN_MEMORY_APP_ORIGIN,
+  IN_MEMORY_PUBLIC_ORIGIN,
+  type InMemoryAccountEnvironment,
+} from './in-memory-accounts';
 
 export const PUBLIC_ORIGIN = IN_MEMORY_PUBLIC_ORIGIN;
+export const APP_ORIGIN = IN_MEMORY_APP_ORIGIN;
 
 export const BRAZIL_WA_ID = '5511999990000';
 export const UNITED_STATES_WA_ID = '14155550100';
@@ -39,7 +45,7 @@ export async function createAccountFixture(
 }
 
 export function ownerInputOf(input: AccountFixture): OwnerAccountInput {
-  return { dependencies: input.environment.dependencies, account: input.account, publicOrigin: PUBLIC_ORIGIN };
+  return { dependencies: input.environment.dependencies, account: input.account, publicOrigin: PUBLIC_ORIGIN, appOrigin: APP_ORIGIN };
 }
 
 export function receiveAccount(
@@ -72,6 +78,7 @@ export function receiveAccount(
       noticeText: null,
     },
     publicOrigin: PUBLIC_ORIGIN,
+    appOrigin: APP_ORIGIN,
   });
 }
 

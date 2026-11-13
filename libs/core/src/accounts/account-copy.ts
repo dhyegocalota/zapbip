@@ -95,6 +95,10 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.PortugueseBrazil]: 'Sua conta foi apagada. A próxima mensagem começa uma nova conta.',
     [OwnerLocale.EnglishUs]: 'Your account is deleted. Your next message starts a new account.',
   },
+  [AccountReplyIntent.SignInLink]: {
+    [OwnerLocale.PortugueseBrazil]: '',
+    [OwnerLocale.EnglishUs]: '',
+  },
   [AccountReplyIntent.SendFailed]: {
     [OwnerLocale.PortugueseBrazil]: 'Não consegui entregar as instruções. Nada foi alterado; tente de novo.',
     [OwnerLocale.EnglishUs]: 'I could not deliver the instructions. Nothing was changed; try again.',

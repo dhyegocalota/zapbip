@@ -28,11 +28,13 @@ describe('parseAccountCommand text', () => {
     ['delete account', CommandKind.RequestDeletion, OwnerLocale.EnglishUs],
     ['apagar conta definitivamente', CommandKind.ConfirmDeletion, OwnerLocale.PortugueseBrazil],
     ['Delete   Account   Permanently', CommandKind.ConfirmDeletion, OwnerLocale.EnglishUs],
+    ['login', CommandKind.Login, OwnerLocale.EnglishUs],
+    ['  ENTRAR ', CommandKind.Login, OwnerLocale.PortugueseBrazil],
   ])('matches %j', (text, kind, locale) => {
     expect(parseText({ text })).toEqual({ kind, rawName: null, locale });
   });
 
-  test.each(['agentes?', 'agentes.', 'ajuda!', 'apagar conta definitivamente.', 'apagar', 'novo', 'oi', ''])(
+  test.each(['agentes?', 'agentes.', 'ajuda!', 'apagar conta definitivamente.', 'apagar', 'novo', 'oi', '', 'login?', 'entrar agora'])(
     'leaves %j as a message',
     (text) => {
       expect(parseText({ text })).toBeNull();

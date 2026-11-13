@@ -7,6 +7,7 @@ export interface AccountOwnerRpc {
     channelMessageId: string;
     entry: ChannelInboundEntry;
     publicOrigin: string;
+    appOrigin: string;
   }): Promise<CallOutcome<ReceiveAccountMessageResult>>;
   recordRevocation(input: { agent: AgentName }): Promise<void>;
   recordCreation(input: { agent: AgentName; secretDigest: string }): Promise<void>;

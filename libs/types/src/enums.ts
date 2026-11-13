@@ -236,6 +236,7 @@ export enum CommandKind {
   Help = 'help',
   RequestDeletion = 'request_deletion',
   ConfirmDeletion = 'confirm_deletion',
+  Login = 'login',
   Unknown = 'unknown',
 }
 
@@ -280,6 +281,7 @@ export enum AccountReplyIntent {
   DeletionRequest = 'deletion_request',
   DeletionExpired = 'deletion_expired',
   DeletionDone = 'deletion_done',
+  SignInLink = 'sign_in_link',
   SendFailed = 'send_failed',
   Unknown = 'unknown',
 }
@@ -298,6 +300,7 @@ export enum AccountReplyParameter {
   Phrase = 'phrase',
   Agents = 'agents',
   InstallPrompt = 'install_prompt',
+  SignInLink = 'sign_in_link',
 }
 
 export enum HttpStatus {

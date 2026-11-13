@@ -27,6 +27,14 @@ describe('evaluateAccountState', () => {
     expect(evaluate({ state: AccountState.Waitlisted, kind: CommandKind.ConfirmDeletion })).toEqual(proceed);
   });
 
+  test('a waitlisted account may sign in to the web app', () => {
+    expect(evaluate({ state: AccountState.Waitlisted, kind: CommandKind.Login })).toEqual(proceed);
+  });
+
+  test('a suspended account cannot sign in to the web app', () => {
+    expect(evaluate({ state: AccountState.Suspended, kind: CommandKind.Login })).toEqual(suspended);
+  });
+
   test('a waitlisted account cannot create agents', () => {
     expect(evaluate({ state: AccountState.Waitlisted, kind: CommandKind.CreateAgent })).toEqual(waitlisted);
   });

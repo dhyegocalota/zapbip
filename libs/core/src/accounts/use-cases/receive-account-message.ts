@@ -201,14 +201,14 @@ async function beginConfirmedDeletion(input: ReceiveAccountMessageInput & { isRe
 }
 
 async function handleProceed(input: ReceiveAccountMessageInput & { command: AccountCommand | null }): Promise<ReceiveAccountMessageResult> {
-  const { dependencies, account, channelMessageId, entry, publicOrigin, command } = input;
+  const { dependencies, account, channelMessageId, entry, publicOrigin, appOrigin, command } = input;
   if (command !== null) {
     const isRequestLive = await readRequestLiveness({ ...input, command });
     await beginConfirmedDeletion({ ...input, isRequestLive });
     return answerLocally({
       ...input,
       commandKind: command.kind,
-      prepare: () => applyOwnerCommand({ dependencies, account, publicOrigin, command, isRequestLive }),
+      prepare: () => applyOwnerCommand({ dependencies, account, publicOrigin, appOrigin, command, isRequestLive }),
     });
   }
   const result: ReceiveResult = await receiveChannelMessage({ dependencies, ownerLocale: account.locale, channelMessageId, entry });
