@@ -1,6 +1,6 @@
 # Agentic site
 
-**Status:** Building
+**Status:** Shipped 2026-11-13
 **Tier:** 🔴 structural (a write path without a captcha)
 **Owner approval:** approved 2026-11-13 (owner delegated; the quote is his words)
 **ADRs:** [0044](../../adr/0044-an-agent-requests-access-without-the-captcha-under-weighted-limits.md)
