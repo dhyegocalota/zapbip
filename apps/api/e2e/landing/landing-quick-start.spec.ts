@@ -362,12 +362,17 @@ test.describe('375 px, edge fade and code', () => {
       .toContain('rgba(0, 0, 0, 0)');
   });
 
-  test('a command never breaks inside a word; it scrolls inside its block instead', async ({ page }) => {
+  test('a command wraps only at spaces; only the address may break inside a word', async ({ page }) => {
     const command = AGENTS.find((agent) =>
       agent.install.quickStart({ locale: OwnerLocale.EnglishUs, connectionLink: 'x' }).code.includes('--'),
     )!;
     await page.goto(`/?agent=${command.id}`);
-    expect(await computedStyleOf({ page, selector: '.start-panel:not([hidden]) code', pseudo: null, property: 'whiteSpace' })).toBe('pre');
+    const codeSelector = '.start-panel:not([hidden]) code';
+    expect(await computedStyleOf({ page, selector: codeSelector, pseudo: null, property: 'whiteSpace' })).toBe('pre-wrap');
+    expect(await computedStyleOf({ page, selector: codeSelector, pseudo: null, property: 'overflowWrap' })).toBe('normal');
+    expect(await computedStyleOf({ page, selector: '.start-panel:not([hidden]) .tok-url', pseudo: null, property: 'overflowWrap' })).toBe(
+      'anywhere',
+    );
     const flag = (await page.locator('.start-panel:not([hidden]) .tok-flag').first().boundingBox())!;
     const line = (await page.locator('.start-panel:not([hidden]) .code-line').first().boundingBox())!;
     expect(flag.height).toBeLessThan(line.height * MAXIMUM_TOKEN_LINES);

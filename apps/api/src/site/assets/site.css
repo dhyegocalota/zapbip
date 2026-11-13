@@ -1665,7 +1665,7 @@ summary::before {
 
 .code-block code {
   font: inherit;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
   white-space: pre-wrap;
 }
 
@@ -1720,6 +1720,7 @@ summary::before {
 
 .tok-url {
   color: var(--color-terminal-string);
+  overflow-wrap: anywhere;
 }
 
 .tok-placeholder {
