@@ -23,6 +23,31 @@ const CHANGELOG_FORMAT_URL = 'https://keepachangelog.com';
 const RELEASE_RUNBOOK = 'docs/runbooks/release.md';
 const RELEASE_RUNBOOK_COMMANDS = ['git tag -a', 'git push origin', 'gh release create', '--notes-file', CHANGELOG_FILE];
 const RELEASE_UPLOAD_COMMAND = 'gh release upload';
+const README_FILE = 'README.md';
+const HERO_PATTERN = /<p align="center">[\s\S]*?<img [^>]*src="https:\/\/zapbip\.com\/[^"]+"/;
+const BADGE_PATTERN = /!\[[^\]]*\]\(https:\/\/img\.shields\.io\/[^)]+\)/g;
+const MINIMUM_BADGES = 5;
+const BADGE_SUBJECTS = ['license', 'stars', 'docs', 'website', 'PRs welcome'];
+const README_HEADING_FRAGMENTS = [
+  'Quick start',
+  'How it works',
+  'Supported agents',
+  'Self-hosting',
+  'Roadmap',
+  'Community',
+  'Contributors',
+  'Star history',
+  'License',
+];
+const README_IMAGE_HOSTS = [
+  'https://contrib.rocks/image?repo=dhyegocalota/zapbip',
+  'https://api.star-history.com/svg?repos=dhyegocalota/zapbip',
+];
+const RELEASE_ASSET_PATTERN = /releases\/download/;
+const CODE_OWNERS_FILE = '.github/CODEOWNERS';
+const CODE_OWNER = '@dhyegocalota';
+const DEPENDABOT_FILE = '.github/dependabot.yml';
+const DEPENDABOT_FRAGMENTS = ['package-ecosystem: npm', 'package-ecosystem: github-actions', 'interval: weekly', 'groups:'];
 const PYPROJECT_VERSION_PATTERN = /^version = "(.+)"$/m;
 
 type PackageManifest = { private?: boolean; version?: string; license?: string; repository?: { directory?: string } };
@@ -105,5 +130,38 @@ describe('open source', () => {
     const runbook = readRepositoryFile(RELEASE_RUNBOOK);
     expect(RELEASE_RUNBOOK_COMMANDS.filter((command) => !runbook.includes(command))).toEqual([]);
     expect(runbook).not.toContain(RELEASE_UPLOAD_COMMAND);
+  });
+
+  test('the README opens with a centered hero served by the site, never a release asset', () => {
+    const readme = readRepositoryFile(README_FILE);
+    expect(readme).toMatch(HERO_PATTERN);
+    expect(readme).not.toMatch(RELEASE_ASSET_PATTERN);
+  });
+
+  test('the README carries the badges of an open-source project', () => {
+    const badges = [...readRepositoryFile(README_FILE).matchAll(BADGE_PATTERN)].map((match) => match[0]);
+    expect(badges.length).toBeGreaterThanOrEqual(MINIMUM_BADGES);
+    expect(BADGE_SUBJECTS.filter((subject) => !badges.some((badge) => badge.toLowerCase().includes(subject.toLowerCase())))).toEqual([]);
+  });
+
+  test('the README has the sections of an open-source project', () => {
+    const headings = readRepositoryFile(README_FILE)
+      .split('\n')
+      .filter((line) => line.startsWith('## '));
+    expect(README_HEADING_FRAGMENTS.filter((fragment) => !headings.some((heading) => heading.includes(fragment)))).toEqual([]);
+  });
+
+  test('the README shows the contributors and the star history', () => {
+    const readme = readRepositoryFile(README_FILE);
+    expect(README_IMAGE_HOSTS.filter((host) => !readme.includes(host))).toEqual([]);
+  });
+
+  test('the repository names its code owner', () => {
+    expect(readRepositoryFile(CODE_OWNERS_FILE)).toContain(CODE_OWNER);
+  });
+
+  test('dependabot updates npm and the GitHub Actions weekly, grouped', () => {
+    const dependabot = readRepositoryFile(DEPENDABOT_FILE);
+    expect(DEPENDABOT_FRAGMENTS.filter((fragment) => !dependabot.includes(fragment))).toEqual([]);
   });
 });
