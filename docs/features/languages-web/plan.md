@@ -30,7 +30,7 @@ G1 first (the enum and the tables), then G2 tests red, then G2 code.
 - [x] **Step 3:** red unit and integration tests for the language paths, the sitemap, the copy rules, the legal copy and the profiles (commit 8210990b)
 - [x] **Step 4:** type the web surfaces on `WebLocale`; paths, negotiation, legal links, profiles, flags, CJK fonts
 - [x] **Step 5:** translate the shell, the site, the legal pages, the app and the backoffice into six languages
-- [ ] **Step 6:** Playwright walks (`e2e/landing/landing-languages.spec.ts`, `e2e/client-app/web-shell.spec.ts`) and the screenshots under the scratchpad
+- [x] **Step 6:** Playwright walks (`e2e/landing/landing-languages.spec.ts`, `e2e/client-app/web-shell.spec.ts`) and the screenshots under the scratchpad
 - [x] **Step 7:** rules and READMEs that name the languages
 
 ## Failure modes
