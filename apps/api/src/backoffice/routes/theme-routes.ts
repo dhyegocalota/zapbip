@@ -2,13 +2,13 @@ import { Hono } from 'hono';
 import { RETURN_TO_FIELD, SEE_OTHER_STATUS, THEME_COOKIE_NAME } from '../backoffice-constants';
 import type { BackofficeEnv } from '../backoffice-env';
 import { BackofficePath } from '../backoffice-paths';
-import { BackofficeTheme } from '../backoffice-theme';
+import { ShellTheme } from '../../web-shell/shell-theme';
 import { textFieldOf } from '../form-fields';
 import { setPreferenceCookie } from '../preference-cookie';
 import { returnTargetOf } from '../return-target';
 
 const THEME_FIELD = 'theme';
-const THEMES: string[] = Object.values(BackofficeTheme);
+const THEMES: string[] = Object.values(ShellTheme);
 
 export const themeRoutes = new Hono<BackofficeEnv>();
 

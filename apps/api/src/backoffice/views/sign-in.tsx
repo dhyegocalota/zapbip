@@ -2,14 +2,14 @@ import type { OwnerLocale } from '@zapbip/types';
 import type { DeployEnvironment } from '../../contract/deploy-environment';
 import { BackofficeCopyKey, renderBackofficeCopy } from '../backoffice-copy';
 import type { BackofficeNotice } from '../backoffice-notice';
-import type { BackofficeTheme } from '../backoffice-theme';
+import type { ShellTheme } from '../../web-shell/shell-theme';
 import { BackofficePath } from '../backoffice-paths';
 import { Field } from '../components/fields';
 import { Layout } from '../layout';
 
 export type SignInPageProps = {
   locale: OwnerLocale;
-  theme: BackofficeTheme;
+  theme: ShellTheme;
   environment: DeployEnvironment;
   csrfToken: string;
   stylesheetHref: string;

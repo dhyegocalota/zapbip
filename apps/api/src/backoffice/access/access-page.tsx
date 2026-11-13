@@ -1,5 +1,6 @@
-import { ACCESS_BATCH_LIMIT, OwnerLocale } from '@zapbip/types';
+import { ACCESS_BATCH_LIMIT, OwnerLocale, WaitlistSource } from '@zapbip/types';
 import { maskedPhoneOf } from '@zapbip/core';
+import { SOURCE_LABELS } from '../waitlist/source-labels';
 import { ACCESS_PAGE_ROW_LIMIT } from '../backoffice-constants';
 import { BackofficeCopyKey, renderBackofficeCopy } from '../backoffice-copy';
 import { NoticeVariant } from '../backoffice-notice';
@@ -10,9 +11,10 @@ import { formatTimestamp } from '../format-timestamp';
 import { NumberFormField } from '../numbers/number-form-fields';
 import type { PageContext } from '../page-context';
 import { AccessFormField } from './access-form-fields';
-import type { AccessFilter } from './access-filter';
+import { type AccessFilter, AccessSource } from './access-filter';
 import type { InvitableEntryRow, WaitingAccountRow } from './access-queries';
 import { AccessShell } from './access-shell';
+import { LOCALE_PROFILES } from '../../web-shell/locale-profiles';
 
 export type AccessPageProps = {
   page: PageContext;
@@ -22,11 +24,12 @@ export type AccessPageProps = {
   invitable: { total: number; rows: InvitableEntryRow[] };
 };
 
-const LOCALE_LABELS: Record<OwnerLocale, BackofficeCopyKey> = {
-  [OwnerLocale.PortugueseBrazil]: BackofficeCopyKey.LocalePortuguese,
-  [OwnerLocale.EnglishUs]: BackofficeCopyKey.LocaleEnglish,
-};
 const SELECT_ALL_VALUE = '1';
+const SOURCE_OPTIONS: { source: AccessSource; label: BackofficeCopyKey }[] = [
+  { source: AccessSource.Form, label: SOURCE_LABELS[WaitlistSource.Form] },
+  { source: AccessSource.Agent, label: SOURCE_LABELS[WaitlistSource.Agent] },
+  { source: AccessSource.All, label: BackofficeCopyKey.AccessFilterSourceAll },
+];
 
 function FilterFields(props: { filter: AccessFilter }) {
   const { filter } = props;
@@ -35,6 +38,7 @@ function FilterFields(props: { filter: AccessFilter }) {
       <input type="hidden" name={AccessFormField.From} value={filter.from === null ? '' : filter.from} />
       <input type="hidden" name={AccessFormField.To} value={filter.to === null ? '' : filter.to} />
       <input type="hidden" name={AccessFormField.Locale} value={filter.locale === null ? '' : filter.locale} />
+      <input type="hidden" name={AccessFormField.Source} value={filter.source} />
     </>
   );
 }
@@ -65,7 +69,17 @@ export function AccessPage(props: AccessPageProps) {
             </option>
             {Object.values(OwnerLocale).map((option) => (
               <option value={option} selected={filter.locale === option}>
-                {translate(LOCALE_LABELS[option])}
+                {LOCALE_PROFILES[option].nativeName}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div class="field">
+          <label for="access-source">{translate(BackofficeCopyKey.AccessFilterSource)}</label>
+          <select id="access-source" name={AccessFormField.Source}>
+            {SOURCE_OPTIONS.map((option) => (
+              <option value={option.source} selected={filter.source === option.source}>
+                {translate(option.label)}
               </option>
             ))}
           </select>
@@ -123,7 +137,7 @@ export function AccessPage(props: AccessPageProps) {
                       <td data-label={translate(BackofficeCopyKey.AccessColumnJoined)} class="cell-nowrap">
                         <time datetime={new Date(row.joinedAt).toISOString()}>{formatTimestamp({ at: row.joinedAt })}</time>
                       </td>
-                      <td data-label={translate(BackofficeCopyKey.AccessColumnLanguage)}>{translate(LOCALE_LABELS[row.locale])}</td>
+                      <td data-label={translate(BackofficeCopyKey.AccessColumnLanguage)}>{LOCALE_PROFILES[row.locale].nativeName}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -168,6 +182,7 @@ export function AccessPage(props: AccessPageProps) {
                     <th scope="col">{translate(BackofficeCopyKey.AccessColumnEmail)}</th>
                     <th scope="col">{translate(BackofficeCopyKey.AccessColumnJoined)}</th>
                     <th scope="col">{translate(BackofficeCopyKey.AccessColumnLanguage)}</th>
+                    <th scope="col">{translate(BackofficeCopyKey.AccessColumnSource)}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -182,7 +197,8 @@ export function AccessPage(props: AccessPageProps) {
                       <td data-label={translate(BackofficeCopyKey.AccessColumnJoined)} class="cell-nowrap">
                         <time datetime={new Date(row.joinedAt).toISOString()}>{formatTimestamp({ at: row.joinedAt })}</time>
                       </td>
-                      <td data-label={translate(BackofficeCopyKey.AccessColumnLanguage)}>{translate(LOCALE_LABELS[row.locale])}</td>
+                      <td data-label={translate(BackofficeCopyKey.AccessColumnLanguage)}>{LOCALE_PROFILES[row.locale].nativeName}</td>
+                      <td data-label={translate(BackofficeCopyKey.AccessColumnSource)}>{translate(SOURCE_LABELS[row.source])}</td>
                     </tr>
                   ))}
                 </tbody>

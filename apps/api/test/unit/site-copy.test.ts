@@ -10,15 +10,7 @@ const KEYS = Object.values(SiteCopyKey);
 const PLACEHOLDER_PATTERN = /\{(\w+)\}/g;
 const TEXT_CHILD_PATTERN = />\s*[A-Za-z0-9][^<>{}();=]*</;
 const STRING_CHILD_PATTERN = />\s*\{\s*['"`]/;
-const IDENTICAL_IN_BOTH_LANGUAGES = [
-  SiteCopyKey.BrandName,
-  SiteCopyKey.LocalePortuguese,
-  SiteCopyKey.LocalePortugueseShort,
-  SiteCopyKey.LocaleEnglish,
-  SiteCopyKey.LocaleEnglishShort,
-  SiteCopyKey.CapabilityListChatRows,
-  SiteCopyKey.PricingProName,
-];
+const IDENTICAL_IN_BOTH_LANGUAGES = [SiteCopyKey.BrandName, SiteCopyKey.CapabilityListChatRows, SiteCopyKey.PricingProName];
 
 function viewSources(input: { directory: string }): { path: string; source: string }[] {
   return readdirSync(input.directory).flatMap((name) => {

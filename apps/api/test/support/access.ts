@@ -1,4 +1,4 @@
-import { AccountState, OwnerLocale } from '@zapbip/types';
+import { AccountState, OwnerLocale, WaitlistSource } from '@zapbip/types';
 import { TEST_NUMBER_ID } from './whatsapp-numbers';
 import { testEnv } from './workers-env';
 
@@ -25,12 +25,17 @@ export async function seedWaitingAccount(input: WaitingAccountSeed): Promise<voi
   ]);
 }
 
-export async function seedWaitlistEntry(input: { email: string; locale?: OwnerLocale; createdAt: number }): Promise<void> {
-  const { email, locale = OwnerLocale.EnglishUs, createdAt } = input;
+export async function seedWaitlistEntry(input: {
+  email: string;
+  locale?: OwnerLocale;
+  source?: WaitlistSource;
+  createdAt: number;
+}): Promise<void> {
+  const { email, locale = OwnerLocale.EnglishUs, source = WaitlistSource.Form, createdAt } = input;
   await testEnv.CONNECTIONS.prepare(
-    'INSERT INTO landing_waitlist (email, locale, referral_code, referred_by, credited, created_at) VALUES (?, ?, ?, NULL, 0, ?)',
+    'INSERT INTO landing_waitlist (email, locale, referral_code, referred_by, credited, created_at, source) VALUES (?, ?, ?, NULL, 0, ?, ?)',
   )
-    .bind(email, locale, `code-${email}`, createdAt)
+    .bind(email, locale, `code-${email}`, createdAt, source)
     .run();
 }
 

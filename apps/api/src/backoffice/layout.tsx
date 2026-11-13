@@ -1,16 +1,20 @@
-import { OwnerLocale } from '@zapbip/types';
+import type { OwnerLocale } from '@zapbip/types';
 import type { Child } from 'hono/jsx';
 import { DeployEnvironment } from '../contract/deploy-environment';
 import { FAVICON_CONTENT_TYPE, FAVICON_HREF } from './assets/favicon';
 import { BackofficeCopyKey, renderBackofficeCopy } from './backoffice-copy';
-import type { BackofficeTheme } from './backoffice-theme';
+import { languageOf } from '../web-shell/locale-profiles';
+import { ShellControls } from '../web-shell/shell-controls';
+import { RETURN_TO_FIELD } from '../web-shell/shell-fields';
+import { ShellFooter } from '../web-shell/shell-footer';
+import type { ShellTheme } from '../web-shell/shell-theme';
 import { type BackofficeNotice, NOTICE_VIEWS } from './backoffice-notice';
 import { LiveDot } from './components/live-dot';
-import { LocaleSwitch } from './components/locale-switch';
+import { CSRF_FIELD } from './backoffice-constants';
+import { BackofficePath } from './backoffice-paths';
 import { Notice } from './components/notice';
 import { PrimaryNavigation } from './components/primary-navigation';
 import { SignOutButton } from './components/sign-out-button';
-import { ThemeSwitch } from './components/theme-switch';
 
 export type LayoutProps = {
   locale: OwnerLocale;
@@ -22,14 +26,10 @@ export type LayoutProps = {
   currentPath: string;
   returnPath: string;
   notice: BackofficeNotice | null;
-  theme: BackofficeTheme;
+  theme: ShellTheme;
   children?: Child;
 };
 
-const LANGUAGE_TAGS: Record<OwnerLocale, string> = {
-  [OwnerLocale.PortugueseBrazil]: 'pt-BR',
-  [OwnerLocale.EnglishUs]: 'en',
-};
 const ENVIRONMENT_BADGES: Record<DeployEnvironment, BackofficeCopyKey | null> = {
   [DeployEnvironment.Production]: null,
   [DeployEnvironment.Staging]: BackofficeCopyKey.EnvironmentStaging,
@@ -46,7 +46,7 @@ export function Layout(props: LayoutProps) {
   const documentTitle = `${props.title}${TITLE_SEPARATOR}${translate(BackofficeCopyKey.BrandName)}`;
   const noticeView = notice === null ? null : NOTICE_VIEWS[notice];
   return (
-    <html lang={LANGUAGE_TAGS[locale]} data-theme={theme}>
+    <html lang={languageOf({ locale })} data-theme={theme}>
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -67,11 +67,9 @@ export function Layout(props: LayoutProps) {
             </span>
           )}
           {signedIn ? <PrimaryNavigation locale={locale} currentPath={props.currentPath} /> : null}
-          {csrfToken === null ? null : (
+          {csrfToken === null || !signedIn ? null : (
             <div class="header-end">
-              <LocaleSwitch locale={locale} csrfToken={csrfToken} returnTo={props.returnPath} />
-              <ThemeSwitch locale={locale} theme={theme} csrfToken={csrfToken} returnTo={props.returnPath} />
-              {signedIn ? <SignOutButton locale={locale} csrfToken={csrfToken} /> : null}
+              <SignOutButton locale={locale} csrfToken={csrfToken} />
             </div>
           )}
         </header>
@@ -79,7 +77,24 @@ export function Layout(props: LayoutProps) {
           {noticeView === null ? null : <Notice variant={noticeView.variant} locale={locale} message={translate(noticeView.copyKey)} />}
           {props.children}
         </main>
-        <footer class="site-footer">{translate(footerKey, { environment: String(environment) })}</footer>
+        <ShellFooter
+          locale={locale}
+          note={translate(footerKey, { environment: String(environment) })}
+          controls={
+            csrfToken === null ? null : (
+              <ShellControls
+                locale={locale}
+                theme={theme}
+                localeAction={BackofficePath.Locale}
+                themeAction={BackofficePath.Theme}
+                hiddenFields={[
+                  { name: CSRF_FIELD, value: csrfToken },
+                  { name: RETURN_TO_FIELD, value: props.returnPath },
+                ]}
+              />
+            )
+          }
+        />
       </body>
     </html>
   );

@@ -36,10 +36,11 @@ function mappedIpv4Of(input: { address: string }): string | null {
     .join(IPV4_SEPARATOR);
 }
 
-export function clientRateKey(input: { address: string }): string {
+export function clientRateKey(input: { address: string; prefixGroupCount?: number }): string {
+  const { prefixGroupCount = IPV6_PREFIX_GROUPS } = input;
   if (!input.address.includes(IPV6_SEPARATOR)) return input.address;
   const mappedIpv4 = mappedIpv4Of({ address: input.address });
   if (mappedIpv4 !== null) return mappedIpv4;
-  const prefixGroups = expandGroups(input).slice(0, IPV6_PREFIX_GROUPS);
+  const prefixGroups = expandGroups(input).slice(0, prefixGroupCount);
   return prefixGroups.map((group) => parseInt(group, HEXADECIMAL_RADIX).toString(HEXADECIMAL_RADIX)).join(IPV6_SEPARATOR);
 }

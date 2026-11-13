@@ -58,6 +58,7 @@ async function showContinue(context: Context<ClientAppEnv>): Promise<Response> {
   const page = (
     <ContinuePage
       locale={context.get('locale')}
+      theme={context.get('theme')}
       token={token}
       csrfToken={await csrfTokenOf({ secret: token })}
       phone={maskedPhoneOf({ waId })}

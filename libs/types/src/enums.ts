@@ -410,6 +410,11 @@ export enum WaitlistJoinOutcome {
   RateLimited = 'rate_limited',
 }
 
+export enum WaitlistSource {
+  Form = 'form',
+  Agent = 'agent',
+}
+
 export enum PricingCurrency {
   Usd = 'usd',
   Brl = 'brl',

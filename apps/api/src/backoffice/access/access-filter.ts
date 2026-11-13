@@ -1,11 +1,18 @@
 import { DAY_MS, OwnerLocale } from '@zapbip/types';
 
-export type AccessFilter = { from: string | null; to: string | null; locale: OwnerLocale | null };
+export enum AccessSource {
+  Form = 'form',
+  Agent = 'agent',
+  All = 'all',
+}
 
-export const NO_ACCESS_FILTER: AccessFilter = { from: null, to: null, locale: null };
+export type AccessFilter = { from: string | null; to: string | null; locale: OwnerLocale | null; source: AccessSource };
+
+export const NO_ACCESS_FILTER: AccessFilter = { from: null, to: null, locale: null, source: AccessSource.Form };
 
 const DAY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const OWNER_LOCALES: string[] = Object.values(OwnerLocale);
+const ACCESS_SOURCES: string[] = Object.values(AccessSource);
 
 function dayOf(input: { value: string | null }): string | null {
   const { value } = input;
@@ -19,8 +26,29 @@ function localeOf(input: { value: string | null }): OwnerLocale | null {
   return value as OwnerLocale;
 }
 
-export function parseAccessFilter(input: { from: string | null; to: string | null; locale: string | null }): AccessFilter {
-  return { from: dayOf({ value: input.from }), to: dayOf({ value: input.to }), locale: localeOf({ value: input.locale }) };
+function sourceOf(input: { value: string | null }): AccessSource {
+  const { value } = input;
+  if (value === null || !ACCESS_SOURCES.includes(value)) return AccessSource.Form;
+  return value as AccessSource;
+}
+
+export function parseAccessFilter(input: {
+  from: string | null;
+  to: string | null;
+  locale: string | null;
+  source: string | null;
+}): AccessFilter {
+  return {
+    from: dayOf({ value: input.from }),
+    to: dayOf({ value: input.to }),
+    locale: localeOf({ value: input.locale }),
+    source: sourceOf({ value: input.source }),
+  };
+}
+
+export function filterSource(input: { filter: AccessFilter }): AccessSource | null {
+  const { source } = input.filter;
+  return source === AccessSource.All ? null : source;
 }
 
 export function filterSince(input: { filter: AccessFilter }): number | null {

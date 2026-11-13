@@ -48,6 +48,7 @@ export async function respondHome(input: {
       {...NO_EXTRAS}
       {...extras}
       locale={locale}
+      theme={context.get('theme')}
       state={session.state}
       csrfToken={session.csrfToken}
       phone={overview.phone}

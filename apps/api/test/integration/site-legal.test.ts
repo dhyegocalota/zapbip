@@ -3,7 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { LegalDocument, legalPathOf } from '../../src/site/legal-links';
 import { legalTextOf } from '../../src/site/legal-copy';
 import { SiteCopyKey } from '../../src/site/site-copy';
-import { copyHtml, escapedHtml, SITE_ORIGIN, siteFetch } from '../support/site';
+import { ShellCopyKey } from '../../src/web-shell/shell-copy';
+import { copyHtml, escapedHtml, shellCopyHtml, SITE_ORIGIN, siteFetch } from '../support/site';
 
 const SEE_OTHER = 303;
 const LEGAL_PAGES = [
@@ -110,10 +111,10 @@ describe('the links to the legal pages', () => {
     const html = await htmlOf({ path });
     const footer = /<footer class="site-footer">([\s\S]*?)<\/footer>/.exec(html)![1]!;
     expect(footer).toContain(
-      `href="${legalPathOf({ document: LegalDocument.Terms, locale })}">${copyHtml({ key: SiteCopyKey.FooterTerms, locale })}<`,
+      `href="${legalPathOf({ document: LegalDocument.Terms, locale })}">${shellCopyHtml({ key: ShellCopyKey.FooterTerms, locale })}<`,
     );
     expect(footer).toContain(
-      `href="${legalPathOf({ document: LegalDocument.Privacy, locale })}">${copyHtml({ key: SiteCopyKey.FooterPrivacy, locale })}<`,
+      `href="${legalPathOf({ document: LegalDocument.Privacy, locale })}">${shellCopyHtml({ key: ShellCopyKey.FooterPrivacy, locale })}<`,
     );
   });
 

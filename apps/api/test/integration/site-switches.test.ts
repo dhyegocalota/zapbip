@@ -1,13 +1,13 @@
 import { OwnerLocale } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
-import { SiteCopyKey } from '../../src/site/site-copy';
+import { ShellCopyKey } from '../../src/web-shell/shell-copy';
 import { SITE_STYLESHEET } from '../../src/site/site-stylesheet';
-import { copyHtml, siteFetch } from '../support/site';
+import { shellCopyHtml, siteFetch } from '../support/site';
 
 const THEME_BUTTONS = [
-  ['light', SiteCopyKey.ThemeLight],
-  ['dark', SiteCopyKey.ThemeDark],
-  ['system', SiteCopyKey.ThemeSystem],
+  ['light', ShellCopyKey.ThemeLight],
+  ['dark', ShellCopyKey.ThemeDark],
+  ['system', ShellCopyKey.ThemeSystem],
 ] as const;
 
 describe('the theme switch', () => {
@@ -17,7 +17,7 @@ describe('the theme switch', () => {
   ])('shows one small icon per theme on %s, named by its label', async (path, locale) => {
     const html = await (await siteFetch({ path })).text();
     THEME_BUTTONS.forEach(([theme, label]) => {
-      const name = copyHtml({ key: label, locale });
+      const name = shellCopyHtml({ key: label, locale });
       const button = new RegExp(
         `<button type="submit" name="theme" value="${theme}" aria-pressed="(true|false)" aria-label="${name}" title="${name}">(.*?)</button>`,
       ).exec(html);

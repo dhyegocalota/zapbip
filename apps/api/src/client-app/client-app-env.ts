@@ -1,4 +1,5 @@
 import type { AccountState, OwnerLocale } from '@zapbip/types';
+import type { ShellTheme } from '../web-shell/shell-theme';
 import type { Bindings } from '../contract/env';
 
 export type ClientAppSession = {
@@ -14,6 +15,7 @@ export type ClientAppEnv = {
   Bindings: Bindings;
   Variables: {
     locale: OwnerLocale;
+    theme: ShellTheme;
     session: ClientAppSession | null;
   };
 };

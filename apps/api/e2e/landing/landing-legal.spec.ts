@@ -1,7 +1,7 @@
 import { OwnerLocale } from '@zapbip/types';
-import { SiteCopyKey } from '../../src/site/site-copy';
+import { ShellCopyKey } from '../../src/web-shell/shell-copy';
 import { expect, test } from './fixtures';
-import { siteCopy } from './support/site-copy';
+import { shellCopy } from './support/site-copy';
 
 const SCROLL_WIDTH_SCRIPT = 'document.documentElement.scrollWidth';
 const VIEWPORT_WIDTH_SCRIPT = 'document.documentElement.clientWidth';
@@ -28,7 +28,7 @@ test('the footer of the home page leads to the privacy policy', async ({ page })
   await page.goto('/');
   await page
     .locator('.footer-links')
-    .getByRole('link', { name: siteCopy({ key: SiteCopyKey.FooterPrivacy, locale: OwnerLocale.EnglishUs }) })
+    .getByRole('link', { name: shellCopy({ key: ShellCopyKey.FooterPrivacy, locale: OwnerLocale.EnglishUs }) })
     .click();
   await expect(page).toHaveURL(/\/privacy$/);
   await expect(page.locator('main h1')).toBeVisible();

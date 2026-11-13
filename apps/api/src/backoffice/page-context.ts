@@ -6,14 +6,14 @@ import { STYLESHEET_HREF } from './assets/stylesheet';
 import { csrfTokenOf } from './auth/csrf';
 import type { BackofficeEnv } from './backoffice-env';
 import { type BackofficeNotice, noticeOf } from './backoffice-notice';
-import type { BackofficeTheme } from './backoffice-theme';
+import type { ShellTheme } from '../web-shell/shell-theme';
 import { BackofficePath } from './backoffice-paths';
 
 const NOTICE_QUERY = 'notice';
 
 export type PageContext = {
   locale: OwnerLocale;
-  theme: BackofficeTheme;
+  theme: ShellTheme;
   environment: DeployEnvironment;
   stylesheetHref: string;
   csrfToken: string;
