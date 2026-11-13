@@ -23,21 +23,21 @@ G1 lands first (the types, the generator, the tests, the navigation). G2 and G3 
 
 ### G1
 
-- [ ] **Step 1:** generalise the shape tests, the generator tests and the Playwright specs to eight languages (red).
-- [ ] **Step 2:** `DocsPageLanguage`, the folder and owner maps, the tables in `docs.ts`, the generator over eight languages, fixtures, `docs.json` entries.
-- [ ] **Step 3:** ADR 0048, this folder, the feature index row.
+- [x] **Step 1:** generalise the shape tests, the generator tests and the Playwright specs to eight languages (red). Done: 71ad4ec0.
+- [x] **Step 2:** `DocsPageLanguage`, the folder and owner maps, the tables in `docs.ts`, the generator over eight languages, fixtures, `docs.json` entries. Done: 1f20eecd, 83805af6.
+- [x] **Step 3:** ADR 0048, this folder, the feature index row. Done: 1f20eecd.
 
 ### G2
 
-- [ ] **Step 4:** translate every English page and snippet to es, de and fr; agent pages as `page.<code>.mdx`.
+- [x] **Step 4:** translate every English page and snippet to es, de and fr; agent pages as `page.<code>.mdx`. Done: 7434d2bc.
 
 ### G3
 
-- [ ] **Step 5:** the same for ja, ko and zh.
+- [x] **Step 5:** the same for ja, ko and zh. Done: 54ce6d32, 4e2fddec (r8-docs-b).
 
 ### Join
 
-- [ ] **Step 6:** run `pnpm agents:generate`, then the shape suite and `pnpm agents:check`.
+- [x] **Step 6:** run `pnpm agents:generate`, then the shape suite and `pnpm agents:check`. Done: 7434d2bc; `agents:check` 0 stale, 0 violations; repository-shape 40 files 1870 tests and libs/agents 48 files 840 tests green.
 
 ## Failure modes
 
