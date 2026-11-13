@@ -62,3 +62,4 @@ A `Proposed` ADR moves to `Accepted` by editing its status line and date. Any ot
 | [0039](0039-the-public-waitlist-is-guarded-by-turnstile-and-fails-closed.md) | The public waitlist is guarded by Cloudflare Turnstile and fails closed | Accepted | 2026-11-12 |
 | [0040](0040-the-waitlist-and-the-referral-cap-live-in-d1-and-the-cap-is-a-settings-row.md) | The waitlist and the referral cap live in D1, and the cap is a settings row | Accepted | 2026-11-12 |
 | [0041](0041-the-public-site-is-served-by-the-api-worker-through-host-dispatch.md) | The public site is served by the API Worker, selected by host, next to the backoffice | Accepted | 2026-11-12 |
+| [0042](0042-the-customer-web-app-signs-in-with-a-one-time-link-sent-over-whatsapp.md) | The customer web app signs in with a one-time link sent over WhatsApp | Accepted | 2026-11-13 |
