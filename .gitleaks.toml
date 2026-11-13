@@ -9,5 +9,10 @@ regexes = [
   '''^zapbip-test-secret-with-at-least-32-characters$''',
   '''^3b7d80fc9a4468769bc3a4505f06222a777b80a0732c9dcd3e03df05e876e37c$''',
   '''^GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ$''',
+  '''^zb_conn_ex4mPLe7Hq2xVn9Rt4Wm8Ls3Jd6Hf1Yb5Gc0Zk2Ns7q$''',
+  '''^ex4mPLe7Hq2xVn9Rt4Wm8Ls3Jd6Hf1Yb5Gc0Zk2Ns7q$''',
   '''^arquivo-789\.pdf$''',
+]
+commits = [
+  '''31f4b2dbf73f832c9c544ff20674e6a39aaacbe7''',
 ]

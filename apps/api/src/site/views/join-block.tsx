@@ -3,13 +3,14 @@ import { BackofficeTheme } from '../../backoffice/backoffice-theme';
 import { NoticeVariant } from '../../backoffice/backoffice-notice';
 import { type JoinFormState, JoinState, type PageModel } from '../page-model';
 import { siteAgentNameOf } from '../site-agents';
-import { TURNSTILE_RESPONSE_FIELD } from '../site-constants';
+import { REFERRAL_SHARING_OPEN, TURNSTILE_RESPONSE_FIELD } from '../site-constants';
 import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
 import { LegalDocument, legalPathOf } from '../legal-links';
 import { SitePath } from '../site-paths';
 import { turnstileLanguageOf } from './site-layout';
 import { Notice } from './notice';
+import { ReferralThanksPanel } from './referral-thanks-panel';
 import { ThanksPanel } from './thanks-panel';
 
 const TURNSTILE_THEMES: Record<BackofficeTheme, string> = {
@@ -140,16 +141,23 @@ export function JoinBlock(props: { model: PageModel }) {
   const { model } = props;
   const { join } = model;
   if (join.state === JoinState.Paused) return <PausedBlock model={model} />;
-  if (join.state === JoinState.Joined) {
+  if (join.state === JoinState.Joined && REFERRAL_SHARING_OPEN) {
     return (
       <div class="join-block">
-        <ThanksPanel
+        <ReferralThanksPanel
           locale={model.locale}
           siteOrigin={model.siteOrigin}
           referralCode={join.referralCode}
           creditedCount={join.creditedCount}
           cap={join.cap}
         />
+      </div>
+    );
+  }
+  if (join.state === JoinState.Joined) {
+    return (
+      <div class="join-block">
+        <ThanksPanel locale={model.locale} />
       </div>
     );
   }

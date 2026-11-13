@@ -1,5 +1,8 @@
-import { RATE_LIMIT_PERIOD_MS } from '@zapbip/core';
-import { SECOND_MS } from '@zapbip/types';
+import { buildConnectionLink, RATE_LIMIT_PERIOD_MS } from '@zapbip/core';
+import { PRODUCTION_PUBLIC_ORIGIN, SECOND_MS } from '@zapbip/types';
+import { CONNECTION_SECRET_PREFIX } from '../contract/constants';
+
+const EXAMPLE_SECRET_BODY = 'ex4mPLe7Hq2xVn9Rt4Wm8Ls3Jd6Hf1Yb5Gc0Zk2Ns7q';
 
 export const TURNSTILE_VERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
 export const TURNSTILE_VERIFY_TIMEOUT_MS = 5 * SECOND_MS;
@@ -39,3 +42,9 @@ export const PAGE_VARY = 'Accept-Language, Cookie';
 export const STYLESHEET_CONTENT_TYPE = 'text/css; charset=utf-8';
 export const SCRIPT_CONTENT_TYPE = 'text/javascript; charset=utf-8';
 export const LEGAL_UPDATED_ON = '2026-11-13';
+export const REFERRAL_SHARING_OPEN = false;
+export const PRICING_FRAGMENT = '#pricing';
+export const SITE_EXAMPLE_CONNECTION_LINK = buildConnectionLink({
+  publicOrigin: PRODUCTION_PUBLIC_ORIGIN,
+  secret: `${CONNECTION_SECRET_PREFIX}${EXAMPLE_SECRET_BODY}`,
+});
