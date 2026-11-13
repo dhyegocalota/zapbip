@@ -18,7 +18,9 @@ describe('the theme switch', () => {
     const html = await (await siteFetch({ path })).text();
     THEME_BUTTONS.forEach(([theme, label]) => {
       const name = copyHtml({ key: label, locale });
-      const button = new RegExp(`<button type="submit" name="theme" value="${theme}" aria-pressed="(true|false)" aria-label="${name}" title="${name}">(.*?)</button>`).exec(html);
+      const button = new RegExp(
+        `<button type="submit" name="theme" value="${theme}" aria-pressed="(true|false)" aria-label="${name}" title="${name}">(.*?)</button>`,
+      ).exec(html);
       expect(button).not.toBeNull();
       expect(button![2]).toMatch(/^<svg class="theme-icon"[^>]*aria-hidden="true"/);
       expect(button![2]).not.toContain(`>${name}<`);
