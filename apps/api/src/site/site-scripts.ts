@@ -10,7 +10,6 @@ const SCRIPT_SOURCE = `(function () {
   var REVEAL_SELECTOR = '.reveal, .why-item';
   var REVEAL_THRESHOLD = 0.2;
   var REVEAL_ROOT_MARGIN = '0px 0px -8% 0px';
-  var SCROLL_TIMELINE_SUPPORT = 'animation-timeline: view()';
   var TYPING_THRESHOLD = 0.3;
   var TYPING_CLASS = 'has-typing';
   var REVEAL_CLASS = 'has-reveal';
@@ -214,7 +213,6 @@ const SCRIPT_SOURCE = `(function () {
 
   function setupReveal() {
     if (reducedMotion) return;
-    if (CSS.supports(SCROLL_TIMELINE_SUPPORT)) return;
     if (!('IntersectionObserver' in window)) return;
     document.documentElement.classList.add(REVEAL_CLASS);
     var observer = new IntersectionObserver(

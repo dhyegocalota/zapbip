@@ -77,16 +77,11 @@
   --measure-faq: 48rem;
   --measure-scene: 26rem;
   --size-scene-min: 16rem;
-  --size-why-track: 60svh;
-  --offset-why-pin: max(5rem, calc(50svh - 8rem));
   --text-why: clamp(1.5rem, 1.1rem + 1.6vw, 2.25rem);
-  --distance-reveal: 1.25rem;
+  --distance-reveal: 0.75rem;
   --distance-scene: 1rem;
-  --duration-scene: 560ms;
+  --duration-scene: 500ms;
   --step-gap-delay: 120ms;
-  --step-range-start: 6%;
-  --step-range-span: 16%;
-  --step-range-stride: 4.5%;
   --shadow-card: 0 1px 2px rgb(14 31 26 / 0.05), 0 8px 24px -12px rgb(14 31 26 / 0.12);
   --shadow-highlight: inset 0 1px 0 rgb(255 255 255 / 0.16);
   --glow-signal: 0 0 0 4px rgb(37 211 102 / 0.18);
@@ -1139,7 +1134,7 @@ details p {
     inset: -2rem;
   }
 
-  .why-pin {
+  .why-story {
     grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
     gap: var(--space-8);
   }
@@ -1914,7 +1909,7 @@ summary::before {
   padding-block: var(--space-6);
 }
 
-.why-pin {
+.why-story {
   display: grid;
   gap: var(--space-5);
   align-items: center;
@@ -2393,29 +2388,9 @@ summary::before {
   }
 }
 
-@media (min-width: 64rem) and (min-height: 40rem) {
-  html {
-    --step-range-start: 14%;
-    --step-range-span: 11%;
-    --step-range-stride: 4%;
-  }
-
-  .why-item {
-    min-height: var(--size-why-track);
-    padding-block: 0;
-  }
-
-  .why-pin {
-    position: sticky;
-    top: var(--offset-why-pin);
-  }
-}
-
 .scene-step,
 .scene-leave {
   --step-motion: scene-rise;
-  --step-start: calc(var(--step-range-start) + var(--step) * var(--step-range-stride));
-  --step-end: calc(var(--step-start) + var(--step-range-span));
   --step-delay: calc(var(--step) * var(--step-gap-delay));
 }
 
@@ -2472,39 +2447,6 @@ summary::before {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  @supports (animation-timeline: view()) {
-    html:not(.has-reveal) .why-item {
-      view-timeline: --why-track block;
-    }
-
-    html:not(.has-reveal) .scene-step,
-    html:not(.has-reveal) .scene-leave {
-      animation-name: var(--step-motion);
-      animation-timing-function: var(--ease-out);
-      animation-fill-mode: both;
-      animation-timeline: --why-track;
-      animation-range: cover var(--step-start) cover var(--step-end);
-    }
-
-    html:not(.has-reveal) .reveal {
-      animation: reveal linear both;
-      animation-timeline: view();
-      animation-range: entry 0% entry 70%;
-    }
-
-    html:not(.has-reveal) .card-grid .reveal:nth-child(3n + 2),
-    html:not(.has-reveal) .steps .reveal:nth-child(2),
-    html:not(.has-reveal) .band-grid .reveal:nth-child(2) {
-      animation-range: entry 5% entry 75%;
-    }
-
-    html:not(.has-reveal) .card-grid .reveal:nth-child(3n),
-    html:not(.has-reveal) .steps .reveal:nth-child(3),
-    html:not(.has-reveal) .band-grid .reveal:nth-child(3) {
-      animation-range: entry 10% entry 80%;
-    }
-  }
-
   .start-panel:not([hidden]) {
     animation: panel-in var(--duration-arrive) var(--ease-out);
   }
@@ -2560,13 +2502,13 @@ summary::before {
   html.has-reveal .card-grid .reveal:nth-child(3n + 2),
   html.has-reveal .steps .reveal:nth-child(2),
   html.has-reveal .band-grid .reveal:nth-child(2) {
-    transition-delay: 80ms;
+    transition-delay: 60ms;
   }
 
   html.has-reveal .card-grid .reveal:nth-child(3n),
   html.has-reveal .steps .reveal:nth-child(3),
   html.has-reveal .band-grid .reveal:nth-child(3) {
-    transition-delay: 160ms;
+    transition-delay: 120ms;
   }
 
   html.has-reveal .scene-step,

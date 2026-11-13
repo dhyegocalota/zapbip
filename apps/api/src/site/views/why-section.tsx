@@ -27,7 +27,7 @@ export function WhySection(props: { locale: OwnerLocale }) {
         <ol class="why-list">
           {STORIES.map((story, index) => (
             <li class="why-item">
-              <div class="why-pin">
+              <div class="why-story">
                 <div class="why-copy reveal">
                   <span class="why-number" aria-hidden="true">
                     {String(index + 1).padStart(STORY_NUMBER_WIDTH, STORY_NUMBER_PAD)}
