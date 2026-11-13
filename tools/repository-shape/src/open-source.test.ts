@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import { posix } from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { readRepositoryFile, repositoryPath } from './repository-files';
@@ -8,8 +8,9 @@ const ROOT_LICENSE_TITLE = 'GNU AFFERO GENERAL PUBLIC LICENSE';
 const ROOT_LICENSE_IDENTIFIER = 'AGPL-3.0-only';
 const CLIENT_LICENSE_TITLE = 'MIT License';
 const CLIENT_LICENSE_IDENTIFIER = 'MIT';
-const NODE_CLIENT_PACKAGES = ['apps/connector', 'apps/openclaw-plugin'];
-const PYTHON_CLIENT_PACKAGES = ['apps/hermes-plugin'];
+const APPS_DIRECTORY = 'apps';
+const PACKAGE_MANIFEST = 'package.json';
+const PYTHON_MANIFEST = 'pyproject.toml';
 const COMMUNITY_FILES = ['.github/CONTRIBUTING.md', '.github/SECURITY.md', '.github/CODE_OF_CONDUCT.md'];
 const ISSUE_TEMPLATES = [
   '.github/ISSUE_TEMPLATE/config.yml',
@@ -18,13 +19,37 @@ const ISSUE_TEMPLATES = [
 ];
 const PYPROJECT_LICENSE_LINE = `license = "${CLIENT_LICENSE_IDENTIFIER}"`;
 
-type PackageManifest = { license?: string; repository?: { directory?: string } };
+type PackageManifest = { private?: boolean; license?: string; repository?: { directory?: string } };
 
 function manifestOf(input: { path: string }): PackageManifest {
-  return JSON.parse(readRepositoryFile(posix.join(input.path, 'package.json'))) as PackageManifest;
+  return JSON.parse(readRepositoryFile(posix.join(input.path, PACKAGE_MANIFEST))) as PackageManifest;
 }
 
+function appFolders(): string[] {
+  return readdirSync(repositoryPath(APPS_DIRECTORY), { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => posix.join(APPS_DIRECTORY, entry.name));
+}
+
+function publishedNodePackages(): string[] {
+  return appFolders().filter(
+    (path) => existsSync(repositoryPath(posix.join(path, PACKAGE_MANIFEST))) && manifestOf({ path }).private !== true,
+  );
+}
+
+function pythonPackages(): string[] {
+  return appFolders().filter((path) => existsSync(repositoryPath(posix.join(path, PYTHON_MANIFEST))));
+}
+
+const NODE_CLIENT_PACKAGES = publishedNodePackages();
+const PYTHON_CLIENT_PACKAGES = pythonPackages();
+
 describe('open source', () => {
+  test('the client packages are found', () => {
+    expect(NODE_CLIENT_PACKAGES.length).toBeGreaterThan(0);
+    expect(PYTHON_CLIENT_PACKAGES.length).toBeGreaterThan(0);
+  });
+
   test('the repository is licensed under the AGPL', () => {
     expect(readRepositoryFile(ROOT_LICENSE_FILE)).toContain(ROOT_LICENSE_TITLE);
     expect(manifestOf({ path: '.' }).license).toBe(ROOT_LICENSE_IDENTIFIER);
@@ -41,7 +66,7 @@ describe('open source', () => {
   });
 
   test.each(PYTHON_CLIENT_PACKAGES)('the Python package %s declares MIT', (path) => {
-    expect(readRepositoryFile(posix.join(path, 'pyproject.toml'))).toContain(PYPROJECT_LICENSE_LINE);
+    expect(readRepositoryFile(posix.join(path, PYTHON_MANIFEST))).toContain(PYPROJECT_LICENSE_LINE);
   });
 
   test.each([...COMMUNITY_FILES, ...ISSUE_TEMPLATES])('%s exists', (path) => {
