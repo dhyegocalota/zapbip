@@ -44,6 +44,7 @@ function isoOf(input: { at: number }): string {
   return new Date(input.at).toISOString();
 }
 
+// NB ADR 0046: a writing tool needs confirm: true and takes at most ACCESS_BATCH_LIMIT ids.
 function confirmedBatchOf(input: { ids: string[]; confirm: boolean | null }): string[] {
   if (input.confirm !== true)
     throw new OperatorToolRefusal({ code: OperatorToolRefusalCode.ConfirmRequired, message: 'pass confirm: true to run this tool' });
