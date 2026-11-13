@@ -11,7 +11,7 @@ function themeButtonOf(input: { page: Page; theme: string }) {
 }
 
 async function backgroundOf(input: { page: Page; selector: string }): Promise<string> {
-  return input.page.locator(input.selector).evaluate((element) => getComputedStyle(element).backgroundColor);
+  return (await input.page.evaluate(`getComputedStyle(document.querySelector('${input.selector}')).backgroundColor`)) as string;
 }
 
 test.describe('a dark system', () => {
