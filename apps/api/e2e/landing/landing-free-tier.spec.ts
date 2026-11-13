@@ -16,7 +16,10 @@ test('the pricing offers the free plan and sends its button to the form', async 
   await expect(pricing.locator('.plan-free .plan-amount')).toHaveText('$0');
   await expect(pricing.locator('.plan-pro .plan-amount')).toHaveText('$9');
   await expect(pricing.locator('.plan-pro')).toContainText(siteCopy({ key: SiteCopyKey.PricingProName }));
-  await pricing.getByRole('link', { name: siteCopy({ key: SiteCopyKey.PricingCta }) }).click();
+  await pricing
+    .locator('.plan-free')
+    .getByRole('link', { name: siteCopy({ key: SiteCopyKey.PricingCta }) })
+    .click();
   await expect(page.locator('#join-email')).toBeFocused();
 });
 
@@ -28,10 +31,10 @@ test('the free question opens in the FAQ', async ({ page }) => {
   ).toBeVisible();
 });
 
-test('the decoration of the final call stays inside its rounded corner', async ({ page }) => {
+test('the final call is one line and one button that leads to the form', async ({ page }) => {
   await page.goto('/');
-  const offsets = await page.evaluate(
-    `(() => { const style = getComputedStyle(document.querySelector('.final'), '::after'); return [parseFloat(style.top), parseFloat(style.right)]; })()`,
-  );
-  expect((offsets as number[]).filter((offset) => offset < 0)).toEqual([]);
+  const finalCall = page.locator('.final');
+  await expect(finalCall.getByRole('link')).toHaveCount(1);
+  await finalCall.getByRole('link', { name: siteCopy({ key: SiteCopyKey.FinalButton }) }).click();
+  await expect(page.locator('#join-email')).toBeFocused();
 });
