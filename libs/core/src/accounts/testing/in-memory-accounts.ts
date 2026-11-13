@@ -69,7 +69,10 @@ export type InMemoryConnections = ConnectionRegistry & {
   countAccounts(): number;
 };
 
-export type InMemoryAccessInvites = AccessInvites & { issue(input: { code: string; expiresAt: number }): void };
+export type InMemoryAccessInvites = AccessInvites & {
+  issue(input: { code: string; expiresAt: number }): void;
+  usedBy(input: { code: string }): string | null;
+};
 
 export type InMemoryAccountEnvironment = Omit<InMemoryEnvironment, 'dependencies'> & {
   dependencies: AccountDependencies;
@@ -358,12 +361,10 @@ function createAccessInvites(): InMemoryAccessInvites {
     issue: ({ code, expiresAt }) => {
       invites.set(code.toLowerCase(), { expiresAt, usedAt: null });
     },
-    consume: async ({ code, now }) => {
-      const invite = invites.get(code.toLowerCase());
-      if (invite === undefined || !isInviteLive({ ...invite, now })) return false;
-      invite.usedAt = now;
-      return true;
+    redeem: async () => {
+      throw new Error('the in-memory invites redeem is not implemented');
     },
+    usedBy: () => null,
   };
 }
 

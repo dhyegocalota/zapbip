@@ -14,18 +14,18 @@ export async function issueInvites(input: {
   now: number;
 }): Promise<IssuedInvite[]> {
   const { bindings, emails, displayNumber, now } = input;
-  const invites = new D1AccessInvites({ database: bindings.CONNECTIONS });
   const entries = await findWaitlistEntries({ database: bindings.CONNECTIONS, emails });
-  const issued = await Promise.all(
-    entries.map(async (entry) => {
-      const code = await invites.issue({ email: entry.email, now });
-      if (code === null) return [];
-      const link = whatsappLinkTarget({ displayNumber, text: `${START_PREFILLED_TEXT[entry.locale]} ${code}` });
-      if (link === null) throw new Error('the invite link has no target');
-      return [{ email: entry.email, link }];
-    }),
-  );
-  return issued.flat();
+  const codes = await new D1AccessInvites({ database: bindings.CONNECTIONS }).issueMany({
+    emails: entries.map((entry) => entry.email),
+    now,
+  });
+  return entries.flatMap((entry, index) => {
+    const code = codes[index];
+    if (code === undefined || code === null) return [];
+    const link = whatsappLinkTarget({ displayNumber, text: `${START_PREFILLED_TEXT[entry.locale]} ${code}` });
+    if (link === null) throw new Error('the invite link has no target');
+    return [{ email: entry.email, link }];
+  });
 }
 
 export function inviteCountsOf(input: { selected: number; issued: IssuedInvite[] }): BatchCounts {

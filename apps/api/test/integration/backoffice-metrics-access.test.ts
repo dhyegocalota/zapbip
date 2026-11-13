@@ -2,6 +2,7 @@ import { AccountState, DAY_MS, OwnerLocale } from '@zapbip/types';
 import { afterEach, beforeAll, beforeEach, describe, expect, test } from 'vitest';
 import usageMigrationSql from '../../migrations/0003_usage.sql?raw';
 import { ActivityMetric } from '../../src/contract/activity-metric';
+import { BACKOFFICE_COPY, BackofficeCopyKey } from '../../src/backoffice/backoffice-copy';
 import { keyedCell, MetricCell } from '../../src/backoffice/metrics/metric-cell';
 import { seedInvite, seedWaitlistEntry } from '../support/access';
 import { applyMigration, seedAccount } from '../support/seed';
@@ -117,6 +118,12 @@ describe('the access metrics', () => {
     expect(cellOf({ html, cell: keyedCell({ cell: MetricCell.AccessMessages, key: '30' }) })).toBe('17');
     expect(cellOf({ html, cell: keyedCell({ cell: MetricCell.AccessQuestions, key: '7' }) })).toBe('2');
     expect(cellOf({ html, cell: keyedCell({ cell: MetricCell.AccessQuestions, key: '30' }) })).toBe('7');
+  });
+
+  test('says the access figures cover every number', async () => {
+    await seedWorld();
+    const html = await (await getPage({ path: '/metrics', sessionToken })).text();
+    expect(html).toContain(BACKOFFICE_COPY[OwnerLocale.PortugueseBrazil][BackofficeCopyKey.MetricsAccessGlobalNote]);
   });
 
   test('shows the one empty state and no NaN on an empty database', async () => {

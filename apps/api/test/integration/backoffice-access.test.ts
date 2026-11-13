@@ -347,7 +347,7 @@ describe('inviting the email waitlist', () => {
     const rows = await inviteRows();
     expect(rows.map((row) => row.email)).toEqual(['one@example.com', 'two@example.com']);
     links.forEach((link) => {
-      const code = decodeURIComponent(link).match(/zbi_[a-z0-9]{24}/)?.[0];
+      const code = decodeURIComponent(link).match(/zbi_[a-z2-7]{24}/)?.[0];
       expect(code).toBeDefined();
       expect(JSON.stringify(rows)).not.toContain(code);
     });
@@ -421,5 +421,100 @@ describe('inviting the email waitlist', () => {
     expect(response.headers.get('Content-Disposition')).toContain('zapbip-invites-2026-11-07.csv');
     expect(body.split('\n')[0]).toBe('email,link');
     expect(body).toContain('"\'=cmd@example.com"');
+  });
+
+  test('reads a CSV posted with Windows line breaks as separate rows', async () => {
+    const response = await postBatch({
+      path: CSV_PATH,
+      fields: [['links', 'one@example.com,https://wa.me/1?text=a\r\ntwo@example.com,https://wa.me/1?text=b\r\n']],
+    });
+    const lines = (await response.text()).split('\n').filter((line) => line.length > 0);
+    expect(lines).toEqual(['email,link', '"one@example.com","https://wa.me/1?text=a"', '"two@example.com","https://wa.me/1?text=b"']);
+  });
+});
+
+function failingDatabaseEnv(input: { failsOn: (sql: string) => boolean }) {
+  const database = testEnv.CONNECTIONS;
+  const proxy = new Proxy(database, {
+    get(target, property) {
+      const member: unknown = Reflect.get(target, property);
+      if (property === 'prepare')
+        return (sql: string) => {
+          if (input.failsOn(sql)) throw new Error('the database refused the statement');
+          return target.prepare(sql);
+        };
+      return typeof member === 'function' ? member.bind(target) : member;
+    },
+  });
+  return backofficeEnv({ overrides: { CONNECTIONS: proxy } });
+}
+
+describe('a batch that meets a failure', () => {
+  test('counts the account whose release failed, finishes the batch and audits it', async () => {
+    await seedTwoWaiting();
+    const env = failingDatabaseEnv({ failsOn: (sql) => sql.startsWith('UPDATE accounts SET state') });
+    const response = await postBatch({ path: RELEASE_PATH, fields: accounts('acct_first', 'acct_second'), env });
+    const html = await response.text();
+    expect(response.status).toBe(STATUS_OK);
+    expect(html).toContain('data-count="itemFailed">2<');
+    expect(await auditRows({ action: BackofficeAuditAction.AccessReleased })).toEqual([
+      {
+        outcome: BackofficeAuditOutcome.Succeeded,
+        target_id: 'selected=2 released=0 alreadyActive=0 notReleasable=0 sent=0 queued=0 failed=0 itemFailed=2',
+      },
+    ]);
+  });
+
+  test('issues no invite and audits a failed batch when the invite insert fails', async () => {
+    await seedWaitlistEntry({ email: 'one@example.com', createdAt: NOW - DAY_MS });
+    await testEnv.CONNECTIONS.prepare('ALTER TABLE waitlist_invites RENAME TO waitlist_invites_gone').run();
+    try {
+      const response = await postBatch({ path: INVITE_PATH, fields: emails('one@example.com') });
+      expect(response.status).toBe(500);
+      expect(await auditRows({ action: BackofficeAuditAction.WaitlistInvited })).toEqual([
+        { outcome: BackofficeAuditOutcome.Failed, target_id: 'selected=1 itemFailed=1' },
+      ]);
+    } finally {
+      await testEnv.CONNECTIONS.prepare('ALTER TABLE waitlist_invites_gone RENAME TO waitlist_invites').run();
+    }
+    expect(await inviteRows()).toEqual([]);
+  });
+});
+
+describe('what a batch leaves behind', () => {
+  test('keeps codes and full phone numbers out of the audit rows, the flash and the logs', async () => {
+    await seedTwoWaiting();
+    await seedWaitlistEntry({ email: 'one@example.com', createdAt: NOW - DAY_MS });
+    const lines: string[] = [];
+    vi.spyOn(console, 'log').mockImplementation((...parts: unknown[]) => void lines.push(parts.join(' ')));
+    await postBatch({ path: RELEASE_PATH, fields: accounts('acct_first', 'acct_second') });
+    const invited = await (await postBatch({ path: INVITE_PATH, fields: emails('one@example.com') })).text();
+    await postBatch({ path: RELEASE_PATH, fields: [] });
+    const flash = await testEnv.CONNECTIONS.prepare('SELECT flash FROM backoffice_sessions').all<{ flash: string | null }>();
+    const audit = await testEnv.CONNECTIONS.prepare('SELECT target_id, client_address FROM backoffice_audit').all<
+      Record<string, string | null>
+    >();
+    const code = invited.match(/zbi_[a-z2-7]{24}/)?.[0];
+    expect(code).toBeDefined();
+    const leaks = [JSON.stringify(flash.results), JSON.stringify(audit.results), lines.join('\n')].join('\n');
+    expect(leaks).not.toContain('zbi_');
+    expect(leaks).not.toContain(FIRST_PHONE);
+    expect(leaks).not.toContain(SECOND_PHONE);
+  });
+
+  test('logs a notice that failed with the account id only', async () => {
+    await seedTwoWaiting();
+    const lines: string[] = [];
+    vi.spyOn(console, 'log').mockImplementation((...parts: unknown[]) => void lines.push(parts.join(' ')));
+    const namespace = testEnv.ACCOUNT_INBOX;
+    const failing = {
+      idFromName: namespace.idFromName.bind(namespace),
+      get: () => ({ noticeAccessOpened: () => Promise.reject(new Error('down')) }),
+    };
+    const env = backofficeEnv({ overrides: { ACCOUNT_INBOX: failing as unknown as typeof namespace } });
+    await postBatch({ path: RELEASE_PATH, fields: accounts('acct_first'), env });
+    const events = lines.filter((line) => line.includes('access_notice_failed')).map((line) => JSON.parse(line));
+    expect(events).toEqual([{ event: 'access_notice_failed', accountId: 'acct_first' }]);
+    expect(lines.join('\n')).not.toContain(FIRST_PHONE);
   });
 });

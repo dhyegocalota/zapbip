@@ -61,7 +61,7 @@ export interface InstallCodeDirectory {
 }
 
 export interface AccessInvites {
-  consume(input: { code: string; now: number }): Promise<boolean>;
+  redeem(input: { code: string; accountId: string; now: number }): Promise<boolean>;
 }
 
 export interface SenderGuard {

@@ -15,3 +15,7 @@ export function createInviteCode(input: { randomBytes: Uint8Array }): string {
   const characters = Array.from(input.randomBytes, (byte) => INVITE_CODE_ALPHABET[byte % INVITE_CODE_ALPHABET.length]);
   return `${INVITE_CODE_PREFIX}${characters.join('')}`;
 }
+
+export function redactInviteCodes(input: { text: string }): string {
+  throw new Error('redactInviteCodes is not implemented');
+}

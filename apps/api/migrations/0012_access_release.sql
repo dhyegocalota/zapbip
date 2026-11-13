@@ -7,7 +7,8 @@ CREATE TABLE waitlist_invites (
   email TEXT NOT NULL,
   created_at INTEGER NOT NULL,
   expires_at INTEGER NOT NULL,
-  used_at INTEGER
+  used_at INTEGER,
+  used_by_account_id TEXT
 );
 
 CREATE INDEX waitlist_invites_email ON waitlist_invites (email);
