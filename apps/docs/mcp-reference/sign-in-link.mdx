@@ -1,0 +1,18 @@
+---
+title: 'sign_in_link'
+description: 'Send the owner the sign-in link to the web app on WhatsApp.'
+---
+
+Send the owner the one-time link that signs in to the [web app](/features/web-app). It is the `login` command, run for the owner. It needs no approval, because the link goes to the owner and never comes back to the agent. See [Let your AI manage zapbip](/features/let-your-ai-manage-zapbip).
+
+Deleting the account is not a tool. It stays a WhatsApp command.
+
+## Input
+
+None.
+
+## Output
+
+`{ "status": "applied" | "refused", "agent": null, "reason": string | null, "install_prompt": null }`. `refused` with `reason` `send_failed` means the owner could not be reached. The link is never part of the result.
+
+The same limit as [connect_agent](/mcp-reference/connect-agent) applies: 3 acting calls a minute per connection.

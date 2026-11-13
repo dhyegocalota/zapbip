@@ -1,0 +1,45 @@
+---
+title: Let your AI manage zapbip
+description: Your AI can list your AIs, connect and disconnect them and open the web app for you, and every change waits for your tap on WhatsApp.
+---
+
+Everything you do in the [web app](/features/web-app) or with a [WhatsApp command](/features/whatsapp-commands), your AI can do for you. You stay in charge: a change needs your tap on WhatsApp, and nothing happens without it.
+
+## What your AI can do
+
+| Ask your AI to | What happens | Needs your tap |
+| --- | --- | --- |
+| List your AIs | It reads each name, the app it connected from, when it was created and when it was last active. | No |
+| Read your account | It reads the state of your account, your phone number with the middle hidden and your plan. | No |
+| Connect a new AI | zapbip asks you on WhatsApp, then connects it. | Yes |
+| Disconnect an AI | zapbip asks you on WhatsApp, then stops that AI at once. | Yes |
+| Open the web app | zapbip sends you the sign-in link on WhatsApp. | No |
+
+Deleting your account is not on the list. It stays a WhatsApp command that only you can write.
+
+## How the tap works
+
+When your AI asks to connect a new AI named `helper`, zapbip writes to you on WhatsApp, as the AI that asked:
+
+- **Allow** connects it and sends the link to paste into that AI to you, as `new agent` does.
+- **Allow, send to agent** connects it and hands the link to the AI that asked, so it can finish the setup itself.
+- **Deny** changes nothing.
+
+Disconnecting has two buttons, Allow and Deny. Each question ends with a short reference, so an answer to an old question is never used for a new one.
+
+Your AI waits up to 50 seconds for your answer. If you do not answer in time, nothing changes, and a tap after that changes nothing either. Ask your AI again if you still want it.
+
+## What stays private
+
+- The link to connect a new AI goes to you on WhatsApp. Only the button **Allow, send to agent** gives it to your AI.
+- The sign-in link goes to you only. Your AI never sees it.
+- Your AI never sees a key, a code or your full phone number.
+
+## Limits
+
+Each connection can start 3 changes a minute. The 4th gets a short "try again shortly" answer, so a mistaken loop cannot fill your WhatsApp with questions.
+
+## Next
+
+- [Manage your AIs](/features/manage-your-agents)
+- [The web app](/features/web-app)

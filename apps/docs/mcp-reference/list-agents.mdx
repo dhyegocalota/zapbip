@@ -1,0 +1,14 @@
+---
+title: 'list_agents'
+description: 'List the agents connected to this account.'
+---
+
+List the agents connected to this account, so an agent can see who else is connected before it changes anything. Read only: it needs no approval and it counts against no limit. See [Let your AI manage zapbip](/features/let-your-ai-manage-zapbip).
+
+## Input
+
+None.
+
+## Output
+
+`{ "agents": [{ "name": string, "client": string | null, "created_at": string, "last_active_at": string | null }] }`. The timestamps are ISO 8601. `client` is the app the agent connected from, once it connected. A key, a digest or a link is never part of the list.

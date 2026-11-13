@@ -1,0 +1,26 @@
+---
+title: 'connect_agent'
+description: 'Conecta um novo agente depois que o dono permite no WhatsApp.'
+---
+
+Conecta um novo agente a esta conta pelo nome. O dono é consultado no WhatsApp, como o agente que chamou, e a chamada espera a resposta. Ela roda o mesmo caso de uso do comando `novo agente`, então as regras de nome, o limite de 8 agentes e o link de instalação são os mesmos. Veja [Deixe sua IA gerenciar o zapbip](/pt-br/features/let-your-ai-manage-zapbip).
+
+## Entrada
+
+| Campo  | Tipo   | Notas                                                                                            |
+| ------ | ------ | ------------------------------------------------------------------------------------------------ |
+| `name` | string | Simplificado como no comando: minúsculas, sem acentos, hifens no lugar de espaços, até 20 caracteres. |
+
+## A pergunta
+
+Três botões: **Permitir**, **Permitir e enviar** e **Negar**, com uma referência curta no fim da pergunta. A chamada espera até 50 segundos. Negar e o silêncio não mudam nada, e um toque depois da espera também não.
+
+## Saída
+
+`{ "status": "applied" | "denied" | "timed_out" | "refused", "agent": string | null, "reason": string | null, "install_prompt": string | null }`.
+
+- `applied`: o agente foi conectado. Depois de **Permitir**, o link de instalação foi para o dono no WhatsApp e `install_prompt` é `null`. Depois de **Permitir e enviar**, `install_prompt` traz as duas linhas para colar no novo agente. É a única forma de um link ou chave chegar a um resultado de ferramenta.
+- `denied` e `timed_out`: nada mudou.
+- `refused`: `reason` é `invalid_name`, `reserved_name`, `name_taken`, `limit_reached` ou `send_failed`. Um nome inválido ou reservado é recusado antes de perguntar ao dono. Quando o link não pode ser enviado, a nova conexão é revogada de novo.
+
+No máximo 3 chamadas que agem (`connect_agent`, [revoke_agent](/pt-br/mcp-reference/revoke-agent) e [sign_in_link](/pt-br/mcp-reference/sign-in-link)) por minuto por conexão; a seguinte é um erro que começa com `rate_limited`.

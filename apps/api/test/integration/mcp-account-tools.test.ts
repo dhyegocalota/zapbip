@@ -101,7 +101,7 @@ describe('MCP account tools', () => {
 
   async function activeAgents(input: { accountId: string }): Promise<string[]> {
     const active = await new D1ConnectionRegistry({ database: testEnv.CONNECTIONS }).listActive(input);
-    return active.map((connection) => connection.agent);
+    return active.map((connection) => connection.agent).sort();
   }
 
   async function screenText(): Promise<string> {
@@ -165,13 +165,13 @@ describe('MCP account tools', () => {
   describe('connect_agent', () => {
     it('asks the owner from the calling agent and, on Allow, connects the agent and sends the install link to the owner only', async () => {
       const logs = captureLogLines();
-      const connecting = call({ name: McpToolName.ConnectAgent, arguments: { name: 'codex' } });
+      const connecting = call({ name: McpToolName.ConnectAgent, arguments: { name: 'helper' } });
       const question = await heldQuestion();
       expect(question).toMatchObject({ agent: AGENT, titles: [ALLOW, ALLOW_AND_SEND, DENY] });
       await ownerTaps({ title: ALLOW });
       const result = await connecting;
-      expect(result.structuredContent).toEqual({ status: AgentChangeStatus.Applied, agent: 'codex', reason: null, install_prompt: null });
-      expect(await activeAgents({ accountId })).toEqual([AGENT, 'codex']);
+      expect(result.structuredContent).toEqual({ status: AgentChangeStatus.Applied, agent: 'helper', reason: null, install_prompt: null });
+      expect(await activeAgents({ accountId })).toEqual([AGENT, 'helper']);
       expect(await screenText()).toContain(INSTALL_LINK_MARKER);
       expect(JSON.stringify(result)).not.toContain(INSTALL_LINK_MARKER);
       expect(logs.join('\n')).not.toContain(INSTALL_LINK_MARKER);
@@ -179,21 +179,21 @@ describe('MCP account tools', () => {
     });
 
     it('returns the install prompt to the agent only when the owner taps the button that sends it there', async () => {
-      const connecting = call({ name: McpToolName.ConnectAgent, arguments: { name: 'codex' } });
+      const connecting = call({ name: McpToolName.ConnectAgent, arguments: { name: 'helper' } });
       await ownerTaps({ title: ALLOW_AND_SEND });
       const result = await connecting;
-      expect(result.structuredContent).toMatchObject({ status: AgentChangeStatus.Applied, agent: 'codex' });
+      expect(result.structuredContent).toMatchObject({ status: AgentChangeStatus.Applied, agent: 'helper' });
       expect(String(result.structuredContent?.install_prompt)).toContain(INSTALL_LINK_MARKER);
       expect(JSON.stringify(result)).not.toContain(CONNECTION_SECRET_MARKER);
       expect(await screenText()).not.toContain(INSTALL_LINK_MARKER);
     });
 
     it('changes nothing when the owner taps Deny', async () => {
-      const connecting = call({ name: McpToolName.ConnectAgent, arguments: { name: 'codex' } });
+      const connecting = call({ name: McpToolName.ConnectAgent, arguments: { name: 'helper' } });
       await ownerTaps({ title: DENY });
       expect((await connecting).structuredContent).toEqual({
         status: AgentChangeStatus.Denied,
-        agent: 'codex',
+        agent: 'helper',
         reason: null,
         install_prompt: null,
       });
@@ -204,8 +204,8 @@ describe('MCP account tools', () => {
       await runInDurableObject(accountInboxStub({ accountId }), (instance) => {
         (instance as unknown as { approvalTimeoutMs: number }).approvalTimeoutMs = SHORT_APPROVAL_TIMEOUT_MS;
       });
-      const result = await call({ name: McpToolName.ConnectAgent, arguments: { name: 'codex' } });
-      expect(result.structuredContent).toEqual({ status: AgentChangeStatus.TimedOut, agent: 'codex', reason: null, install_prompt: null });
+      const result = await call({ name: McpToolName.ConnectAgent, arguments: { name: 'helper' } });
+      expect(result.structuredContent).toEqual({ status: AgentChangeStatus.TimedOut, agent: 'helper', reason: null, install_prompt: null });
       await ownerTaps({ title: ALLOW });
       expect(await activeAgents({ accountId })).toEqual([AGENT]);
     });
@@ -230,7 +230,7 @@ describe('MCP account tools', () => {
 
     it('routes the tap back to the agent that asked, not to a sibling agent', async () => {
       const siblingClient = await connectClient({ secret: await seedAgent({ accountId, agent: SIBLING_AGENT }) });
-      const connecting = call({ name: McpToolName.ConnectAgent, arguments: { name: 'codex' } });
+      const connecting = call({ name: McpToolName.ConnectAgent, arguments: { name: 'helper' } });
       await ownerTaps({ title: DENY });
       await connecting;
       const siblingInbox = await call({ name: McpToolName.CheckInbox, as: siblingClient });

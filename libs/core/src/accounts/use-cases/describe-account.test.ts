@@ -9,13 +9,13 @@ describe('describeAccount', () => {
   test('lists the active agents of the calling account with their last activity', async () => {
     const fixture = await createAccountFixture();
     await addAgent({ ...fixture, agent: 'claude' });
-    await addAgent({ ...fixture, agent: 'codex' });
+    await addAgent({ ...fixture, agent: 'helper' });
     await touchAgent({ dependencies: fixture.environment.dependencies, agent: 'claude' });
     const overview = await describeAccount(agentRequestOf(fixture));
     expect(overview.state).toBe(AccountState.Active);
     expect(overview.agents.map(({ agent, lastSeenAt }) => ({ agent, seen: lastSeenAt !== null }))).toEqual([
       { agent: 'claude', seen: true },
-      { agent: 'codex', seen: false },
+      { agent: 'helper', seen: false },
     ]);
   });
 

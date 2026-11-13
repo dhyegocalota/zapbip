@@ -51,31 +51,31 @@ async function activeAgents(input: AccountFixture): Promise<string[]> {
 describe('requestAccountChange connect', () => {
   test('asks the owner with three buttons from the calling agent and names the agent in the question', async () => {
     const fixture = await fixtureOf();
-    const changing = requestChange({ ...fixture, kind: CommandKind.CreateAgent, rawName: 'Codex' });
+    const changing = requestChange({ ...fixture, kind: CommandKind.CreateAgent, rawName: 'Helper' });
     await tap({ ...fixture, title: 'Deny' });
     await changing;
     const [choice] = choicesOf(fixture);
     const question = await fixture.environment.repository.findQuestion({ questionId: choice!.questionId });
     expect(choice!.options.map((option) => option.title)).toEqual(['Allow', 'Allow, send to agent', 'Deny']);
     expect(question!.agent).toBe('claude');
-    expect(question!.text).toContain('claude wants to connect a new agent named codex');
+    expect(question!.text).toContain('claude wants to connect a new agent named helper');
   });
 
   test('Allow creates the agent and the install link goes to the owner only', async () => {
     const fixture = await fixtureOf();
-    const changing = requestChange({ ...fixture, kind: CommandKind.CreateAgent, rawName: 'codex' });
+    const changing = requestChange({ ...fixture, kind: CommandKind.CreateAgent, rawName: 'helper' });
     await tap({ ...fixture, title: 'Allow' });
     const result = await changing;
     const [issued] = fixture.environment.secrets.issued;
-    expect(result).toEqual({ status: AgentChangeStatus.Applied, intent: AccountReplyIntent.Created, agent: 'codex', installPrompt: null });
-    expect(await activeAgents(fixture)).toEqual(['codex']);
+    expect(result).toEqual({ status: AgentChangeStatus.Applied, intent: AccountReplyIntent.Created, agent: 'helper', installPrompt: null });
+    expect(await activeAgents(fixture)).toEqual(['helper']);
     expect(sessionTexts(fixture).join('\n')).toContain(`${PUBLIC_ORIGIN}/i/`);
     expect(JSON.stringify(result)).not.toContain(issued!.secret);
   });
 
   test('Allow, send to agent returns the install prompt and sends nothing else to the owner', async () => {
     const fixture = await fixtureOf();
-    const changing = requestChange({ ...fixture, kind: CommandKind.CreateAgent, rawName: 'codex' });
+    const changing = requestChange({ ...fixture, kind: CommandKind.CreateAgent, rawName: 'helper' });
     await tap({ ...fixture, title: 'Allow, send to agent' });
     const result = await changing;
     const [issued] = fixture.environment.secrets.issued;
@@ -83,23 +83,23 @@ describe('requestAccountChange connect', () => {
     expect(result.installPrompt).toContain(`${PUBLIC_ORIGIN}/i/`);
     expect(result.installPrompt).not.toContain(issued!.secret);
     expect(sessionTexts(fixture)).toEqual([]);
-    expect(await activeAgents(fixture)).toEqual(['codex']);
+    expect(await activeAgents(fixture)).toEqual(['helper']);
   });
 
   test('Deny changes nothing', async () => {
     const fixture = await fixtureOf();
-    const changing = requestChange({ ...fixture, kind: CommandKind.CreateAgent, rawName: 'codex' });
+    const changing = requestChange({ ...fixture, kind: CommandKind.CreateAgent, rawName: 'helper' });
     await tap({ ...fixture, title: 'Deny' });
-    expect(await changing).toEqual({ status: AgentChangeStatus.Denied, intent: null, agent: 'codex', installPrompt: null });
+    expect(await changing).toEqual({ status: AgentChangeStatus.Denied, intent: null, agent: 'helper', installPrompt: null });
     expect(await activeAgents(fixture)).toEqual([]);
     expect(fixture.environment.secrets.issued).toEqual([]);
   });
 
   test('no answer in time changes nothing, and a tap afterwards changes nothing either', async () => {
     const fixture = await fixtureOf();
-    const changing = requestChange({ ...fixture, kind: CommandKind.CreateAgent, rawName: 'codex' });
+    const changing = requestChange({ ...fixture, kind: CommandKind.CreateAgent, rawName: 'helper' });
     await fixture.environment.clock.advance({ ms: AGENT_CHANGE_APPROVAL_TIMEOUT_MS });
-    expect(await changing).toEqual({ status: AgentChangeStatus.TimedOut, intent: null, agent: 'codex', installPrompt: null });
+    expect(await changing).toEqual({ status: AgentChangeStatus.TimedOut, intent: null, agent: 'helper', installPrompt: null });
     await tap({ ...fixture, title: 'Allow' });
     expect(await activeAgents(fixture)).toEqual([]);
     expect(fixture.environment.secrets.issued).toEqual([]);
@@ -107,13 +107,13 @@ describe('requestAccountChange connect', () => {
 
   test('a repeated request is a new question, so an earlier approval is never replayed', async () => {
     const fixture = await fixtureOf();
-    const first = requestChange({ ...fixture, kind: CommandKind.CreateAgent, rawName: 'codex' });
+    const first = requestChange({ ...fixture, kind: CommandKind.CreateAgent, rawName: 'helper' });
     await tap({ ...fixture, title: 'Allow' });
     await first;
-    const revoking = requestChange({ ...fixture, kind: CommandKind.RevokeAgent, rawName: 'codex' });
+    const revoking = requestChange({ ...fixture, kind: CommandKind.RevokeAgent, rawName: 'helper' });
     await tap({ ...fixture, title: 'Allow' });
     await revoking;
-    const again = requestChange({ ...fixture, kind: CommandKind.CreateAgent, rawName: 'codex' });
+    const again = requestChange({ ...fixture, kind: CommandKind.CreateAgent, rawName: 'helper' });
     await fixture.environment.clock.advance({ ms: 0 });
     expect(choicesOf(fixture)).toHaveLength(3);
     expect(await activeAgents(fixture)).toEqual([]);
@@ -134,8 +134,8 @@ describe('requestAccountChange connect', () => {
 
   test('a taken name is refused after the tap by the same use case the commands run', async () => {
     const fixture = await fixtureOf();
-    await addAgent({ ...fixture, agent: 'codex' });
-    const changing = requestChange({ ...fixture, kind: CommandKind.CreateAgent, rawName: 'codex' });
+    await addAgent({ ...fixture, agent: 'helper' });
+    const changing = requestChange({ ...fixture, kind: CommandKind.CreateAgent, rawName: 'helper' });
     await tap({ ...fixture, title: 'Allow' });
     const result = await changing;
     expect(result).toMatchObject({ status: AgentChangeStatus.Refused, intent: AccountReplyIntent.NameTaken, installPrompt: null });
@@ -144,7 +144,7 @@ describe('requestAccountChange connect', () => {
   test('revokes the new connection again and reports it when the install link cannot be sent', async () => {
     const fixture = await fixtureOf();
     fixture.environment.sender.failSessionCalls({ callNumbers: [2] });
-    const changing = requestChange({ ...fixture, kind: CommandKind.CreateAgent, rawName: 'codex' });
+    const changing = requestChange({ ...fixture, kind: CommandKind.CreateAgent, rawName: 'helper' });
     await tap({ ...fixture, title: 'Allow' });
     expect(await changing).toMatchObject({ status: AgentChangeStatus.Refused, intent: AccountReplyIntent.SendFailed });
     expect(await activeAgents(fixture)).toEqual([]);
@@ -154,18 +154,18 @@ describe('requestAccountChange connect', () => {
 describe('requestAccountChange revoke', () => {
   test('asks with two buttons and revokes only after Allow', async () => {
     const fixture = await fixtureOf();
-    await addAgent({ ...fixture, agent: 'codex' });
-    const changing = requestChange({ ...fixture, kind: CommandKind.RevokeAgent, rawName: 'codex' });
+    await addAgent({ ...fixture, agent: 'helper' });
+    const changing = requestChange({ ...fixture, kind: CommandKind.RevokeAgent, rawName: 'helper' });
     await tap({ ...fixture, title: 'Deny' });
     expect((await changing).status).toBe(AgentChangeStatus.Denied);
     expect(choicesOf(fixture)[0]!.options.map((option) => option.title)).toEqual(['Allow', 'Deny']);
-    expect(await activeAgents(fixture)).toEqual(['codex']);
-    const revoking = requestChange({ ...fixture, kind: CommandKind.RevokeAgent, rawName: 'codex' });
+    expect(await activeAgents(fixture)).toEqual(['helper']);
+    const revoking = requestChange({ ...fixture, kind: CommandKind.RevokeAgent, rawName: 'helper' });
     await tap({ ...fixture, title: 'Allow' });
     expect(await revoking).toEqual({
       status: AgentChangeStatus.Applied,
       intent: AccountReplyIntent.Revoked,
-      agent: 'codex',
+      agent: 'helper',
       installPrompt: null,
     });
     expect(await activeAgents(fixture)).toEqual([]);

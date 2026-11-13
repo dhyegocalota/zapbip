@@ -13,7 +13,7 @@ describe('applyAgentCommand', () => {
     const fixture = await createAccountFixture();
     const result = await applyAgentCommand({
       ...agentRequestOf(fixture),
-      command: createCommandOf({ ...fixture, rawName: 'codex' }),
+      command: createCommandOf({ ...fixture, rawName: 'helper' }),
       recipient: AgentCommandRecipient.Owner,
     });
     const [issued] = fixture.environment.secrets.issued;
@@ -26,7 +26,7 @@ describe('applyAgentCommand', () => {
     const fixture = await createAccountFixture();
     const result = await applyAgentCommand({
       ...agentRequestOf(fixture),
-      command: createCommandOf({ ...fixture, rawName: 'codex' }),
+      command: createCommandOf({ ...fixture, rawName: 'helper' }),
       recipient: AgentCommandRecipient.Agent,
     });
     const [issued] = fixture.environment.secrets.issued;
@@ -54,7 +54,7 @@ describe('applyAgentCommand', () => {
     fixture.environment.sender.failSessionCalls({ callNumbers: [1] });
     const result = await applyAgentCommand({
       ...agentRequestOf(fixture),
-      command: createCommandOf({ ...fixture, rawName: 'codex' }),
+      command: createCommandOf({ ...fixture, rawName: 'helper' }),
       recipient: AgentCommandRecipient.Owner,
     });
     expect(result).toEqual({ intent: AccountReplyIntent.SendFailed, installPrompt: null });
@@ -68,7 +68,7 @@ describe('applyAgentCommand', () => {
       applyAgentCommand({
         ...request,
         connection: { ...request.connection, accountId: 'acc_missing' },
-        command: createCommandOf({ ...fixture, rawName: 'codex' }),
+        command: createCommandOf({ ...fixture, rawName: 'helper' }),
         recipient: AgentCommandRecipient.Owner,
       }),
     );

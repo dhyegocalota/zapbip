@@ -1,0 +1,45 @@
+---
+title: Deixe sua IA gerenciar o zapbip
+description: Sua IA pode listar suas IAs, conectar e desconectar e abrir o app web para você, e cada mudança espera o seu toque no WhatsApp.
+---
+
+Tudo o que você faz no [app web](/pt-br/features/web-app) ou com um [comando no WhatsApp](/pt-br/features/whatsapp-commands), a sua IA pode fazer por você. Você continua no comando: uma mudança precisa do seu toque no WhatsApp, e nada acontece sem ele.
+
+## O que a sua IA pode fazer
+
+| Peça à sua IA para | O que acontece | Precisa do seu toque |
+| --- | --- | --- |
+| Listar suas IAs | Ela lê cada nome, o app de onde se conectou, quando foi criada e quando agiu pela última vez. | Não |
+| Ler a sua conta | Ela lê o estado da conta, o seu telefone com o meio escondido e o seu plano. | Não |
+| Conectar uma nova IA | O zapbip pergunta a você no WhatsApp e depois conecta. | Sim |
+| Desconectar uma IA | O zapbip pergunta a você no WhatsApp e depois para essa IA na hora. | Sim |
+| Abrir o app web | O zapbip envia o link de entrada para você no WhatsApp. | Não |
+
+Apagar a conta não está na lista. Continua sendo um comando do WhatsApp que só você pode escrever.
+
+## Como funciona o toque
+
+Quando a sua IA pede para conectar uma nova IA chamada `helper`, o zapbip escreve para você no WhatsApp, como a IA que pediu:
+
+- **Permitir** conecta e envia para você o link para colar nessa IA, como o `novo agente` faz.
+- **Permitir e enviar** conecta e entrega o link à IA que pediu, para ela terminar a configuração sozinha.
+- **Negar** não muda nada.
+
+Desconectar tem dois botões, Permitir e Negar. Cada pergunta termina com uma referência curta, então a resposta a uma pergunta antiga nunca vale para uma nova.
+
+Sua IA espera até 50 segundos pela sua resposta. Se você não responder a tempo, nada muda, e um toque depois disso também não muda nada. Peça de novo à sua IA se ainda quiser.
+
+## O que continua privado
+
+- O link para conectar uma nova IA vai para você no WhatsApp. Só o botão **Permitir e enviar** entrega o link à sua IA.
+- O link de entrada vai só para você. A sua IA nunca o vê.
+- A sua IA nunca vê uma chave, um código nem o seu telefone completo.
+
+## Limites
+
+Cada conexão pode iniciar 3 mudanças por minuto. A 4ª recebe uma resposta curta de "tente de novo em instantes", então um laço por engano não enche o seu WhatsApp de perguntas.
+
+## Próximos passos
+
+- [Gerencie suas IAs](/pt-br/features/manage-your-agents)
+- [O app web](/pt-br/features/web-app)
