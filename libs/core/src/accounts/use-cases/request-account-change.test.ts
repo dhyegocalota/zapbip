@@ -1,8 +1,8 @@
 import { formatOptionId } from '../../inbox/option-id';
-import { AccountReplyIntent, AgentChangeStatus, CommandKind, MessageKind, OwnerLocale } from '@zapbip/types';
+import { AccountReplyIntent, AccountState, AgentChangeStatus, CommandKind, MessageKind, OwnerLocale } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
-import { receive } from '../../inbox/testing/fixtures';
-import { AGENT_CHANGE_APPROVAL_TIMEOUT_MS } from '../constants';
+import { askAndAbandon, receive, receiveText } from '../../inbox/testing/fixtures';
+import { AGENT_CHANGE_APPROVAL_TIMEOUT_MS, APPROVAL_COOLDOWN_MS } from '../constants';
 import { addAgent, agentRequestOf, createAccountFixture, PUBLIC_ORIGIN, sessionTexts, type AccountFixture } from '../testing/fixtures';
 import { requestAccountChange } from './request-account-change';
 import type { ApprovedCommandKind } from './types';
@@ -188,5 +188,86 @@ describe('requestAccountChange revoke', () => {
     const result = await requestChange({ ...fixture, kind: CommandKind.RevokeAgent, rawName: 'stranger' });
     expect(result.intent).toBe(AccountReplyIntent.NotFound);
     expect(await activeAgents(other)).toEqual(['stranger']);
+  });
+});
+
+describe('requestAccountChange typed answers', () => {
+  test.each([{ text: 'Allow, send to agent' }, { text: 'Allow' }, { text: 'yes please' }])(
+    'a typed "$text" is denied and changes nothing',
+    async ({ text }) => {
+      const fixture = await fixtureOf();
+      const changing = requestChange({ ...fixture, kind: CommandKind.CreateAgent, rawName: 'helper' });
+      await fixture.environment.clock.advance({ ms: 0 });
+      await receiveText({ environment: fixture.environment, text });
+      expect(await changing).toEqual({ status: AgentChangeStatus.Denied, intent: null, agent: 'helper', installPrompt: null });
+      expect(await activeAgents(fixture)).toEqual([]);
+      expect(fixture.environment.secrets.issued).toEqual([]);
+    },
+  );
+
+  test('a text meant for the question of another agent cannot approve', async () => {
+    const fixture = await fixtureOf();
+    await askAndAbandon({ environment: fixture.environment, agent: 'beta', text: 'Deploy?', options: ['Allow', 'Deny'] });
+    const changing = requestChange({ ...fixture, kind: CommandKind.CreateAgent, rawName: 'helper' });
+    await fixture.environment.clock.advance({ ms: 0 });
+    await receiveText({ environment: fixture.environment, text: 'Allow' });
+    expect((await changing).status).toBe(AgentChangeStatus.Denied);
+    expect(await activeAgents(fixture)).toEqual([]);
+  });
+});
+
+describe('requestAccountChange cooldown', () => {
+  test('the same request is refused without a question for ten minutes after a Deny', async () => {
+    const fixture = await fixtureOf();
+    const first = requestChange({ ...fixture, kind: CommandKind.CreateAgent, rawName: 'helper' });
+    await tap({ ...fixture, title: 'Deny' });
+    await first;
+    const again = await requestChange({ ...fixture, kind: CommandKind.CreateAgent, rawName: 'helper' });
+    expect(again).toMatchObject({ status: AgentChangeStatus.Refused, intent: AccountReplyIntent.CoolingDown });
+    expect(choicesOf(fixture)).toHaveLength(1);
+  });
+
+  test('a timeout starts the cooldown, a different name is not held, and the cooldown ends', async () => {
+    const fixture = await fixtureOf();
+    const first = requestChange({ ...fixture, kind: CommandKind.CreateAgent, rawName: 'helper' });
+    await fixture.environment.clock.advance({ ms: AGENT_CHANGE_APPROVAL_TIMEOUT_MS });
+    await first;
+    const held = await requestChange({ ...fixture, kind: CommandKind.CreateAgent, rawName: 'helper' });
+    expect(held.intent).toBe(AccountReplyIntent.CoolingDown);
+    const other = requestChange({ ...fixture, kind: CommandKind.CreateAgent, rawName: 'other' });
+    await tap({ ...fixture, title: 'Deny' });
+    expect((await other).status).toBe(AgentChangeStatus.Denied);
+    await fixture.environment.clock.advance({ ms: APPROVAL_COOLDOWN_MS });
+    const released = requestChange({ ...fixture, kind: CommandKind.CreateAgent, rawName: 'helper' });
+    await tap({ ...fixture, title: 'Deny' });
+    expect((await released).status).toBe(AgentChangeStatus.Denied);
+  });
+
+  test('another requester or another kind is not held', async () => {
+    const fixture = await fixtureOf();
+    await addAgent({ ...fixture, agent: 'helper' });
+    const first = requestChange({ ...fixture, kind: CommandKind.RevokeAgent, rawName: 'helper' });
+    await tap({ ...fixture, title: 'Deny' });
+    await first;
+    const create = requestAccountChange({
+      ...agentRequestOf({ ...fixture, agent: 'beta' }),
+      kind: CommandKind.RevokeAgent,
+      rawName: 'helper',
+      timeoutMs: AGENT_CHANGE_APPROVAL_TIMEOUT_MS,
+    });
+    await tap({ ...fixture, title: 'Deny' });
+    expect((await create).status).toBe(AgentChangeStatus.Denied);
+  });
+});
+
+describe('requestAccountChange account state', () => {
+  test('an account suspended while the question was open is not changed by the tap', async () => {
+    const fixture = await fixtureOf();
+    const changing = requestChange({ ...fixture, kind: CommandKind.CreateAgent, rawName: 'helper' });
+    await fixture.environment.clock.advance({ ms: 0 });
+    await fixture.environment.directory.setState({ accountId: fixture.account.accountId, state: AccountState.Suspended });
+    await tap({ ...fixture, title: 'Allow' });
+    expect(await changing).toMatchObject({ status: AgentChangeStatus.Refused, intent: AccountReplyIntent.Suspended });
+    expect(await activeAgents(fixture)).toEqual([]);
   });
 });

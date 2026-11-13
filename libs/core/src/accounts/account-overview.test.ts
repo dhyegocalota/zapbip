@@ -41,7 +41,7 @@ describe('buildAccountOverview', () => {
     });
     expect(overview).toEqual({
       state: AccountState.Waitlisted,
-      phone: '+55 ••••-0051',
+      phone: '••••-0051',
       plan: AccountPlan.Free,
       freeMessages: PRICING_FREE_MESSAGES,
       agents: [],

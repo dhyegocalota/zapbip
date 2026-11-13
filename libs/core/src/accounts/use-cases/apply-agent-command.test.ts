@@ -1,5 +1,6 @@
-import { AccountReplyIntent, AgentCommandRecipient, CommandKind, InboxErrorCode, MessageKind } from '@zapbip/types';
+import { AccountReplyIntent, AccountState, AgentCommandRecipient, CommandKind, InboxErrorCode, MessageKind } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
+import { closeWindow } from '../../inbox/testing/fixtures';
 import { captureInboxError } from '../../inbox/testing/capture-inbox-error';
 import { agentRequestOf, createAccountFixture, PUBLIC_ORIGIN, sessionTexts, type AccountFixture } from '../testing/fixtures';
 import { applyAgentCommand } from './apply-agent-command';
@@ -74,5 +75,58 @@ describe('applyAgentCommand', () => {
     );
     expect(error.code).toBe(InboxErrorCode.NotFound);
     expect(fixture.environment.sender.sessions.filter((message) => message.kind === MessageKind.Text)).toEqual([]);
+  });
+});
+
+describe('applyAgentCommand guards', () => {
+  test('never queues the sign-in link when the window is closed', async () => {
+    const fixture = await createAccountFixture();
+    await closeWindow({ environment: fixture.environment });
+    const result = await applyAgentCommand({
+      ...agentRequestOf(fixture),
+      command: { kind: CommandKind.Login, rawName: null, locale: fixture.account.locale },
+      recipient: AgentCommandRecipient.Owner,
+    });
+    expect(result).toEqual({ intent: AccountReplyIntent.WindowClosed, installPrompt: null });
+    expect(fixture.environment.signInLinks.issued).toEqual([]);
+    expect(await fixture.environment.repository.listHeld()).toEqual([]);
+  });
+
+  test('never queues an install link when the window is closed and creates nothing', async () => {
+    const fixture = await createAccountFixture();
+    await closeWindow({ environment: fixture.environment });
+    const result = await applyAgentCommand({
+      ...agentRequestOf(fixture),
+      command: createCommandOf({ ...fixture, rawName: 'helper' }),
+      recipient: AgentCommandRecipient.Owner,
+    });
+    expect(result.intent).toBe(AccountReplyIntent.WindowClosed);
+    expect(await fixture.environment.registry.listActive({ accountId: fixture.account.accountId })).toEqual([]);
+  });
+
+  test('hands the prompt to the agent even when the window is closed', async () => {
+    const fixture = await createAccountFixture();
+    await closeWindow({ environment: fixture.environment });
+    const result = await applyAgentCommand({
+      ...agentRequestOf(fixture),
+      command: createCommandOf({ ...fixture, rawName: 'helper' }),
+      recipient: AgentCommandRecipient.Agent,
+    });
+    expect(result.intent).toBe(AccountReplyIntent.Created);
+  });
+
+  test.each([
+    { state: AccountState.Suspended, intent: AccountReplyIntent.Suspended },
+    { state: AccountState.Waitlisted, intent: AccountReplyIntent.Waitlisted },
+    { state: AccountState.Deleting, intent: AccountReplyIntent.Suspended },
+  ])('does nothing for an account that is $state', async ({ state, intent }) => {
+    const fixture = await createAccountFixture({ state });
+    const result = await applyAgentCommand({
+      ...agentRequestOf(fixture),
+      command: createCommandOf({ ...fixture, rawName: 'helper' }),
+      recipient: AgentCommandRecipient.Agent,
+    });
+    expect(result).toEqual({ intent, installPrompt: null });
+    expect(fixture.environment.secrets.issued).toEqual([]);
   });
 });
