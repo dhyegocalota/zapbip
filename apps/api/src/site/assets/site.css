@@ -31,6 +31,12 @@
   --color-terminal-string: #f2c46d;
   --color-logo-surface: #ffffff;
   --color-terminal-border: #1f332d;
+  --color-band: #eef3ef;
+  --color-band-item: #ffffff;
+  --color-band-text: #0e1f1a;
+  --color-band-muted: #4b5e57;
+  --color-band-accent: #0b6b60;
+  --color-band-border: #dce5e0;
   --color-chat-wallpaper: #ece5dd;
   --color-chat-header: #075e54;
   --color-chat-incoming: #ffffff;
@@ -146,6 +152,12 @@
     --color-terminal: #050d0b;
     --color-terminal-bar: #0d1b17;
     --color-bezel: #020806;
+    --color-band: #050d0b;
+    --color-band-item: #0d1b17;
+    --color-band-text: #e8f1ed;
+    --color-band-muted: #9db2aa;
+    --color-band-accent: #5be39a;
+    --color-band-border: #1f332d;
     --shadow-card: 0 0 0 1px rgb(232 241 237 / 0.02), 0 12px 32px -16px rgb(0 0 0 / 0.7);
     --shadow-highlight: inset 0 1px 0 rgb(255 255 255 / 0.22);
     --gradient-hero:
@@ -184,6 +196,12 @@
   --color-terminal: #050d0b;
   --color-terminal-bar: #0d1b17;
   --color-bezel: #020806;
+  --color-band: #050d0b;
+  --color-band-item: #0d1b17;
+  --color-band-text: #e8f1ed;
+  --color-band-muted: #9db2aa;
+  --color-band-accent: #5be39a;
+  --color-band-border: #1f332d;
   --shadow-card: 0 0 0 1px rgb(232 241 237 / 0.02), 0 12px 32px -16px rgb(0 0 0 / 0.7);
   --shadow-highlight: inset 0 1px 0 rgb(255 255 255 / 0.22);
   --gradient-hero:
@@ -949,12 +967,12 @@ section.block {
 
 .band {
   padding-block: var(--space-8);
-  background: var(--gradient-band), var(--color-terminal);
-  color: var(--color-terminal-text);
+  background: var(--gradient-band), var(--color-band);
+  color: var(--color-band-text);
 }
 
 .band .eyebrow {
-  color: var(--color-terminal-accent);
+  color: var(--color-band-accent);
 }
 
 .band-grid {
@@ -965,9 +983,9 @@ section.block {
 
 .band-item {
   padding: var(--space-5);
-  border: 1px solid var(--color-terminal-border);
+  border: 1px solid var(--color-band-border);
   border-radius: var(--radius-bubble);
-  background: var(--color-terminal-bar);
+  background: var(--color-band-item);
 }
 
 .band-item h3 {
@@ -978,18 +996,18 @@ section.block {
 .band-item p,
 .band-note p {
   margin: 0;
-  color: var(--color-terminal-muted);
+  color: var(--color-band-muted);
 }
 
 .band-icon {
-  color: var(--color-terminal-accent);
+  color: var(--color-band-accent);
   font-size: 1.5rem;
 }
 
 .band-note {
   margin-top: var(--space-5);
   padding: var(--space-5);
-  border: 1px dashed var(--color-terminal-border);
+  border: 1px dashed var(--color-band-border);
   border-radius: var(--radius-bubble);
 }
 
@@ -999,7 +1017,7 @@ section.block {
 }
 
 .band-note a {
-  color: var(--color-terminal-accent);
+  color: var(--color-band-accent);
 }
 
 .faq {

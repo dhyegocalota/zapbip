@@ -142,6 +142,18 @@ describe('the preference forms', () => {
     expect(response.headers.get('Set-Cookie')).toContain(`${THEME_COOKIE}=light`);
   });
 
+  it('POST /theme from the page script saves the theme and answers with no content', async () => {
+    const response = await siteFetch({
+      path: '/theme',
+      method: 'POST',
+      form: { theme: 'light', returnTo: '/' },
+      headers: { 'Sec-Fetch-Mode': 'same-origin' },
+    });
+    expect(response.status).toBe(204);
+    expect(response.headers.get('Location')).toBeNull();
+    expect(response.headers.get('Set-Cookie')).toContain(`${THEME_COOKIE}=light`);
+  });
+
   it.each([['/pt-br?x=1'], ['//evil.example'], ['/?lang=pt-BR'], ['/pt-br/']])('POST /theme refuses %s and goes home', async (returnTo) => {
     const response = await siteFetch({ path: '/theme', method: 'POST', form: { theme: 'light', returnTo } });
     expect(response.headers.get('Location')).toBe('/#theme');

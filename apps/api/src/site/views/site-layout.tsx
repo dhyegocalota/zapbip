@@ -15,6 +15,7 @@ import {
   TURNSTILE_SCRIPT_URL,
   DOCS_PORTUGUESE_PATH,
   JOIN_FRAGMENT,
+  THEME_SWITCH_ID,
 } from '../site-constants';
 import { leadingAgentNames } from '../site-agents';
 import { LanguageMenu } from './language-menu';
@@ -53,7 +54,7 @@ export function turnstileLanguageOf(input: { locale: OwnerLocale }): string {
 function ThemeSwitch(props: { model: PageModel }) {
   const translate = copyOf({ locale: props.model.locale });
   return (
-    <form method="post" action={SitePath.Theme} class="switch" aria-label={translate(SiteCopyKey.ThemeLabel)}>
+    <form method="post" action={SitePath.Theme} class="switch" id={THEME_SWITCH_ID} aria-label={translate(SiteCopyKey.ThemeLabel)}>
       <input
         type="hidden"
         name="returnTo"

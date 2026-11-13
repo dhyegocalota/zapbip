@@ -1,6 +1,7 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 
+const NO_CONTENT_STATUS = 204;
 const LIGHT_PAGE_BACKGROUND = 'rgb(246, 248, 245)';
 const DARK_PAGE_BACKGROUND = 'rgb(7, 18, 15)';
 const LIGHT_BAND_BACKGROUND = 'rgb(238, 243, 239)';
@@ -22,8 +23,10 @@ test.describe('a dark system', () => {
     await light.scrollIntoViewIfNeeded();
     const address = page.url();
     const scrolled = await page.evaluate('window.scrollY');
+    const saved = page.waitForResponse((response) => response.url().endsWith('/theme'));
     await light.click();
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+    expect((await saved).status()).toBe(NO_CONTENT_STATUS);
     await expect(light).toHaveAttribute('aria-pressed', 'true');
     expect(page.url()).toBe(address);
     expect(await page.evaluate('window.scrollY')).toBe(scrolled);

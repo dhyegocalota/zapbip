@@ -1,5 +1,5 @@
 import { contentHashOf } from '../backoffice/assets/stylesheet';
-import { JOIN_FRAGMENT } from './site-constants';
+import { JOIN_FRAGMENT, THEME_SWITCH_ID } from './site-constants';
 import { SitePath } from './site-paths';
 
 const SCRIPT_SOURCE = `(function () {
@@ -211,6 +211,23 @@ const SCRIPT_SOURCE = `(function () {
     });
   }
 
+  function setupThemeSwitch() {
+    var form = byId('${THEME_SWITCH_ID}');
+    if (!form || !window.fetch) return;
+    var returnTo = form.querySelector('input[name="returnTo"]');
+    form.querySelectorAll('button[name="theme"]').forEach(function (button) {
+      button.addEventListener('click', function (event) {
+        event.preventDefault();
+        document.documentElement.setAttribute('data-theme', button.value);
+        form.querySelectorAll('button[name="theme"]').forEach(function (candidate) {
+          candidate.setAttribute('aria-pressed', String(candidate === button));
+        });
+        var body = new URLSearchParams({ theme: button.value, returnTo: returnTo.value });
+        fetch(form.action, { method: 'POST', body: body }).catch(function () {});
+      });
+    });
+  }
+
   function setupReveal() {
     if (reducedMotion) return;
     if (!('IntersectionObserver' in window)) return;
@@ -328,6 +345,7 @@ const SCRIPT_SOURCE = `(function () {
   setupStartCopy();
   setupStartTyping();
   setupLanguageMenu();
+  setupThemeSwitch();
   setupReveal();
   setupThanks();
   setupDemo();
