@@ -184,6 +184,34 @@ const SCRIPT_SOURCE = `(function () {
     observer.observe(section);
   }
 
+  function setupLanguageMenu() {
+    var menu = document.querySelector('.lang-menu');
+    if (!menu) return;
+    var trigger = menu.querySelector('.lang-trigger');
+    var options = Array.prototype.slice.call(menu.querySelectorAll('.lang-option'));
+    function close(shouldFocus) {
+      menu.removeAttribute('open');
+      if (shouldFocus) trigger.focus();
+    }
+    document.addEventListener('click', function (event) {
+      if (!menu.contains(event.target)) close(false);
+    });
+    menu.addEventListener('keydown', function (event) {
+      if (!menu.open) return;
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        close(true);
+        return;
+      }
+      var step = event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0;
+      if (step === 0) return;
+      event.preventDefault();
+      var current = options.indexOf(document.activeElement);
+      var next = current === -1 ? (step === 1 ? 0 : options.length - 1) : (current + step + options.length) % options.length;
+      options[next].focus();
+    });
+  }
+
   function setupReveal() {
     if (reducedMotion) return;
     if (CSS.supports(SCROLL_TIMELINE_SUPPORT)) return;
@@ -301,6 +329,7 @@ const SCRIPT_SOURCE = `(function () {
   setupStartTabs();
   setupStartCopy();
   setupStartTyping();
+  setupLanguageMenu();
   setupReveal();
   setupThanks();
   setupDemo();

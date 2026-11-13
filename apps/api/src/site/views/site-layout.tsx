@@ -17,6 +17,7 @@ import {
   JOIN_FRAGMENT,
 } from '../site-constants';
 import { leadingAgentNames } from '../site-agents';
+import { LanguageMenu } from './language-menu';
 import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
 import { localePathOf } from '../site-language';
@@ -37,10 +38,6 @@ const TURNSTILE_LANGUAGES: Record<OwnerLocale, string> = {
   [OwnerLocale.PortugueseBrazil]: 'pt-br',
   [OwnerLocale.EnglishUs]: 'en',
 };
-const LOCALE_OPTIONS: { locale: OwnerLocale; short: SiteCopyKey; full: SiteCopyKey }[] = [
-  { locale: OwnerLocale.PortugueseBrazil, short: SiteCopyKey.LocalePortugueseShort, full: SiteCopyKey.LocalePortuguese },
-  { locale: OwnerLocale.EnglishUs, short: SiteCopyKey.LocaleEnglishShort, full: SiteCopyKey.LocaleEnglish },
-];
 const THEME_OPTIONS: { theme: BackofficeTheme; label: SiteCopyKey }[] = [
   { theme: BackofficeTheme.Light, label: SiteCopyKey.ThemeLight },
   { theme: BackofficeTheme.Dark, label: SiteCopyKey.ThemeDark },
@@ -52,38 +49,15 @@ export function turnstileLanguageOf(input: { locale: OwnerLocale }): string {
   return TURNSTILE_LANGUAGES[input.locale];
 }
 
-function returnPathOf(input: { model: PageModel }): string {
-  const { model } = input;
-  return pagePathOf({ locale: model.locale, agent: model.agentParameter, referralCode: model.referralCode });
-}
-
-function LocaleSwitch(props: { model: PageModel }) {
-  const translate = copyOf({ locale: props.model.locale });
-  return (
-    <form method="post" action={SitePath.Locale} class="switch" aria-label={translate(SiteCopyKey.LocaleLabel)}>
-      <input type="hidden" name="returnTo" value={returnPathOf({ model: props.model })} />
-      {LOCALE_OPTIONS.map((option) => (
-        <button
-          type="submit"
-          name="locale"
-          value={option.locale}
-          lang={LANGUAGE_TAGS[option.locale]}
-          aria-label={translate(option.full)}
-          aria-pressed={String(option.locale === props.model.locale)}
-        >
-          <span class="label-short">{translate(option.short)}</span>
-          <span class="label-full">{translate(option.full)}</span>
-        </button>
-      ))}
-    </form>
-  );
-}
-
 function ThemeSwitch(props: { model: PageModel }) {
   const translate = copyOf({ locale: props.model.locale });
   return (
     <form method="post" action={SitePath.Theme} class="switch" aria-label={translate(SiteCopyKey.ThemeLabel)}>
-      <input type="hidden" name="returnTo" value={returnPathOf({ model: props.model })} />
+      <input
+        type="hidden"
+        name="returnTo"
+        value={pagePathOf({ locale: props.model.locale, agent: props.model.agentParameter, referralCode: props.model.referralCode })}
+      />
       {THEME_OPTIONS.map((option) => (
         <button type="submit" name="theme" value={option.theme} aria-pressed={String(option.theme === props.model.theme)}>
           {translate(option.label)}
@@ -111,7 +85,7 @@ function SiteHeader(props: { model: PageModel }) {
           <a class="nav-link" href={docsHrefOf({ locale: model.locale })}>
             {translate(SiteCopyKey.NavigationDocs)}
           </a>
-          <LocaleSwitch model={model} />
+          <LanguageMenu model={model} />
           {isJoinOffered ? (
             <a class="button button-primary header-join" href={JOIN_FRAGMENT}>
               {translate(SiteCopyKey.HeaderJoin)}
