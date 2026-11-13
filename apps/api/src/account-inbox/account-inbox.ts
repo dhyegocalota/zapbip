@@ -536,8 +536,10 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     });
   }
 
-  applyWebCommand(_input: ApplyWebCommandRequest): Promise<CallOutcome<inbox.AccountCommandResult>> {
-    throw new Error('applyWebCommand is not implemented');
+  applyWebCommand(input: ApplyWebCommandRequest): Promise<CallOutcome<inbox.AccountCommandResult>> {
+    return this.outcome({
+      run: () => inbox.applyOwnerCommand({ ...input, dependencies: this.accountDependencies, isRequestLive: false }),
+    });
   }
 
   async recordRevocation(input: { agent: string }): Promise<void> {
