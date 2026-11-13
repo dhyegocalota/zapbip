@@ -1,6 +1,6 @@
 # Landing round seven
 
-**Status:** Building
+**Status:** Shipped 2026-11-13
 **Tier:** 🟡 medium
 **Owner approval:** approved 2026-11-13 (owner delegated)
 **ADRs:** none new; reads [0041](../../adr/0041-the-public-site-is-served-by-the-api-worker-through-host-dispatch.md); no recorded decision fixes the `?lang=` scheme, so the path scheme below changes none
