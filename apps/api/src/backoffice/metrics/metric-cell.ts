@@ -18,6 +18,19 @@ export enum MetricCell {
   BudgetUsed = 'budget-used',
   BlockedPhones = 'blocked-phones',
   Restricted = 'restricted',
+  AccessWaitlistTotal = 'access-waitlist-total',
+  AccessWaitlistLocale = 'access-waitlist-locale',
+  AccessInvitedTotal = 'access-invited-total',
+  AccessInvitesUsedTotal = 'access-invites-used-total',
+  AccessReleasedTotal = 'access-released-total',
+  AccessReleasedConnectedTotal = 'access-released-connected-total',
+  AccessJoins = 'access-joins',
+  AccessInvited = 'access-invited',
+  AccessInvitesUsed = 'access-invites-used',
+  AccessReleased = 'access-released',
+  AccessReleasedConnected = 'access-released-connected',
+  AccessMessages = 'access-messages',
+  AccessQuestions = 'access-questions',
 }
 
 export const NOT_REPORTED_CLIENT_KEY = 'not-reported';
