@@ -23,6 +23,7 @@ const CLEAR_REGISTRY_STATEMENTS = [
   'DELETE FROM waitlist_invites',
   'DELETE FROM landing_waitlist',
   'DELETE FROM whatsapp_numbers',
+  'DELETE FROM backoffice_agent_keys',
   'DELETE FROM backoffice_audit',
   'DELETE FROM backoffice_sessions',
 ];
