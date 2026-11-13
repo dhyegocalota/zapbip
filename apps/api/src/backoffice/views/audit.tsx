@@ -30,6 +30,7 @@ const ACTION_LABELS: Record<BackofficeAuditAction, BackofficeCopyKey> = {
   [BackofficeAuditAction.ReferralCapChanged]: BackofficeCopyKey.AuditActionReferralCapChanged,
   [BackofficeAuditAction.AccessReleased]: BackofficeCopyKey.AuditActionAccessReleased,
   [BackofficeAuditAction.WaitlistInvited]: BackofficeCopyKey.AuditActionWaitlistInvited,
+  [BackofficeAuditAction.WaitlistListed]: BackofficeCopyKey.AuditActionWaitlistListed,
   [BackofficeAuditAction.AgentKeyCreated]: BackofficeCopyKey.AuditActionAgentKeyCreated,
   [BackofficeAuditAction.AgentKeyRevoked]: BackofficeCopyKey.AuditActionAgentKeyRevoked,
 };

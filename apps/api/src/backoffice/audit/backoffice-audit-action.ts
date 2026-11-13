@@ -14,6 +14,7 @@ export enum BackofficeAuditAction {
   ReferralCapChanged = 'waitlist.referral_cap_changed',
   AccessReleased = 'access.released',
   WaitlistInvited = 'waitlist.invited',
+  WaitlistListed = 'waitlist.listed',
   AgentKeyCreated = 'agent_key.created',
   AgentKeyRevoked = 'agent_key.revoked',
 }

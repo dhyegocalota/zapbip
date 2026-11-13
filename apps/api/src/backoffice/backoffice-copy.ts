@@ -383,6 +383,8 @@ export enum BackofficeCopyKey {
   AgentKeysCreatedHowTo = 'agent_keys_created_how_to',
   AgentKeysCreatedExpires = 'agent_keys_created_expires',
   AgentKeysBack = 'agent_keys_back',
+  AuditActionWaitlistListed = 'audit_action_waitlist_listed',
+  AuditColumnAgentKey = 'audit_column_agent_key',
 }
 
 export const BACKOFFICE_COPY: Record<OwnerLocale, Record<BackofficeCopyKey, string>> = {
@@ -780,6 +782,8 @@ export const BACKOFFICE_COPY: Record<OwnerLocale, Record<BackofficeCopyKey, stri
       'Configure o cliente MCP do agente com este endereço e o cabeçalho Authorization: Bearer seguido da chave. O passo a passo está no runbook do backoffice.',
     [BackofficeCopyKey.AgentKeysCreatedExpires]: 'Expira em {date}.',
     [BackofficeCopyKey.AgentKeysBack]: 'Voltar às chaves de agente',
+    [BackofficeCopyKey.AuditActionWaitlistListed]: 'Lista de espera consultada por um agente',
+    [BackofficeCopyKey.AuditColumnAgentKey]: 'Chave de agente',
   },
   [OwnerLocale.EnglishUs]: {
     [BackofficeCopyKey.SkipToContent]: 'Skip to content',
@@ -1174,6 +1178,8 @@ export const BACKOFFICE_COPY: Record<OwnerLocale, Record<BackofficeCopyKey, stri
       "Configure the agent's MCP client with this address and an Authorization: Bearer header that carries the key. The steps are in the backoffice runbook.",
     [BackofficeCopyKey.AgentKeysCreatedExpires]: 'Expires on {date}.',
     [BackofficeCopyKey.AgentKeysBack]: 'Back to agent keys',
+    [BackofficeCopyKey.AuditActionWaitlistListed]: 'Waitlist listed by an agent',
+    [BackofficeCopyKey.AuditColumnAgentKey]: 'Agent key',
   },
 };
 

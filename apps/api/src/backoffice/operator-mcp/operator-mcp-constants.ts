@@ -21,3 +21,6 @@ export const OPERATOR_MCP_METHOD = 'POST';
 export const OPERATOR_MCP_ALLOW_HEADER = 'Allow';
 export const OPERATOR_MCP_RATE_LIMITED_BODY = { error: 'rate_limited' } as const;
 export const OPERATOR_MCP_METHOD_NOT_ALLOWED_BODY = { error: 'method_not_allowed' } as const;
+export const OPERATOR_MCP_MAX_OFFSET = 1000;
+export const OPERATOR_MCP_MAX_IDS = 100;
+export const OPERATOR_MCP_ID_MAX_LENGTH = 320;

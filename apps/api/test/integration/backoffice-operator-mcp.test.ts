@@ -4,7 +4,13 @@ import usageMigrationSql from '../../migrations/0003_usage.sql?raw';
 import { BackofficeAuditAction, BackofficeAuditOutcome } from '../../src/backoffice/audit/backoffice-audit-action';
 import { RETRY_AFTER_SECONDS } from '../../src/backoffice/auth/rate-limit';
 import { maskedPhoneOf } from '../../src/client-app/masked-phone';
-import { OPERATOR_KEY_LAST_USED_INTERVAL_MS, OPERATOR_MCP_AUDIT_LIMIT } from '../../src/backoffice/operator-mcp/operator-mcp-constants';
+import {
+  OPERATOR_KEY_LAST_USED_INTERVAL_MS,
+  OPERATOR_MCP_AUDIT_LIMIT,
+  OPERATOR_MCP_ID_MAX_LENGTH,
+  OPERATOR_MCP_MAX_IDS,
+  OPERATOR_MCP_MAX_OFFSET,
+} from '../../src/backoffice/operator-mcp/operator-mcp-constants';
 import { OperatorToolName } from '../../src/backoffice/operator-mcp/operator-tool-name';
 import { ActivityMetric } from '../../src/contract/activity-metric';
 import { CONNECTION_SECRET_PREFIX, UNAUTHORIZED_BODY } from '../../src/contract/constants';
@@ -18,6 +24,7 @@ import { seedWhatsAppNumber } from '../support/whatsapp-numbers';
 import { testEnv } from '../support/workers-env';
 import { backofficeEnv, BACKOFFICE_ORIGIN, CLIENT_ADDRESS, requestBackoffice, SESSION_COOKIE } from './backoffice-auth-fixtures';
 import { endBackofficeSession, NOW, startBackofficeSession } from './backoffice-numbers-fixtures';
+import { recordingEnvironment } from './backoffice-batch-recorder';
 import { postMcp, seedConnectionWithSecret } from './mcp-fixtures';
 
 const STATUS_BAD_REQUEST = 400;
@@ -291,17 +298,30 @@ describe('list_waitlist', () => {
     await seedWaitlistEntry({ email: 'new@example.com', locale: OwnerLocale.PortugueseBrazil, createdAt: NOW - DAY_MS });
   });
 
-  test('lists the oldest first with the total, the language and the credited referrals and no referral code', async () => {
+  test('lists the entries the Access page offers to invite, oldest first, with the total and the language only', async () => {
+    await seedWaitlistEntry({ email: 'live@example.com', createdAt: NOW - DAY_MS });
+    await seedInvite({ email: 'live@example.com', digest: 'live', createdAt: NOW, expiresAt: NOW + DAY_MS });
+    await seedWaitlistEntry({ email: 'used@example.com', createdAt: NOW - DAY_MS });
+    await seedInvite({
+      email: 'used@example.com',
+      digest: 'used',
+      createdAt: NOW - 2 * DAY_MS,
+      expiresAt: NOW - DAY_MS,
+      usedAt: NOW - DAY_MS,
+    });
     const { structured, text } = await call({ name: OperatorToolName.ListWaitlist });
     expect(structured).toMatchObject({
       total: 3,
       entries: [
-        { entryId: 'old@example.com', locale: OwnerLocale.PortugueseBrazil, creditedCount: 0 },
+        { entryId: 'old@example.com', locale: OwnerLocale.PortugueseBrazil },
         { entryId: 'mid@example.com' },
         { entryId: 'new@example.com' },
       ],
     });
-    expect(text).not.toContain('code-old@example.com');
+    expect((structured as { entries: unknown[] }).entries).toHaveLength(3);
+    expect(text).not.toContain('creditedCount');
+    expect(text).not.toContain('live@example.com');
+    expect(text).not.toContain('used@example.com');
   });
 
   test('pages with a limit and an offset', async () => {
@@ -317,12 +337,44 @@ describe('list_waitlist', () => {
     expect(dated.structured).toMatchObject({ total: 1, entries: [{ entryId: 'mid@example.com' }] });
   });
 
-  test.each([{ limit: 0 }, { limit: 100_000 }, { offset: -1 }, { locale: 'xx' }, { from: 'yesterday' }])(
-    'refuses the arguments %j',
-    async (arguments_) => {
-      expect((await call({ name: OperatorToolName.ListWaitlist, arguments: arguments_ })).isError).toBe(true);
-    },
-  );
+  test('writes one audit row per call under the key, with the page range', async () => {
+    await call({ name: OperatorToolName.ListWaitlist, arguments: { limit: 1, offset: 1 } });
+    await call({ name: OperatorToolName.ListWaitlist });
+    expect(await auditRows({ action: BackofficeAuditAction.WaitlistListed })).toEqual([
+      {
+        outcome: BackofficeAuditOutcome.Succeeded,
+        target_id: 'offset=1 limit=1 returned=1',
+        actor_key_id: keyId,
+        client_address: CLIENT_ADDRESS,
+      },
+      {
+        outcome: BackofficeAuditOutcome.Succeeded,
+        target_id: 'offset=0 limit=20 returned=3',
+        actor_key_id: keyId,
+        client_address: CLIENT_ADDRESS,
+      },
+    ]);
+  });
+
+  test('says in its description that it lists only people not yet invited and that each call is audited', async () => {
+    const response = await requestOperatorMcp({ bearer: key, body: { jsonrpc: '2.0', id: 1, method: 'tools/list' } });
+    const { result } = (await response.json()) as { result: { tools: { name: string; description: string }[] } };
+    const description = result.tools.find((tool) => tool.name === OperatorToolName.ListWaitlist)?.description;
+    expect(description).toContain('invite');
+    expect(description).toContain('audit');
+  });
+
+  test.each([
+    { limit: 0 },
+    { limit: 100_000 },
+    { offset: -1 },
+    { offset: OPERATOR_MCP_MAX_OFFSET + 1 },
+    { locale: 'xx' },
+    { from: 'yesterday' },
+  ])('refuses the arguments %j and audits nothing', async (arguments_) => {
+    expect((await call({ name: OperatorToolName.ListWaitlist, arguments: arguments_ })).isError).toBe(true);
+    expect(await auditRows({ action: BackofficeAuditAction.WaitlistListed })).toEqual([]);
+  });
 });
 
 describe('list_waiting_accounts', () => {
@@ -520,5 +572,64 @@ describe('list_audit', () => {
     const limited = await call({ name: OperatorToolName.ListAudit, arguments: { limit: 2 } });
     expect((limited.structured as { rows: unknown[] }).rows).toHaveLength(2);
     expect((await call({ name: OperatorToolName.ListAudit, arguments: { limit: OPERATOR_MCP_AUDIT_LIMIT + 1 } })).isError).toBe(true);
+  });
+});
+
+describe('hardening', () => {
+  test('counts bad keys against the client address, apart from the key limit', async () => {
+    const limiter = createFakeRateLimiter({ limit: 2 });
+    const env = backofficeEnv({ overrides: { OPERATOR_KEY_RATE_LIMITER: limiter } });
+    const attempt = () => requestOperatorMcp({ bearer: `${key}x`, env, body: { jsonrpc: '2.0', id: 1, method: 'tools/list' } });
+    const statuses = [(await attempt()).status, (await attempt()).status, (await attempt()).status];
+    expect(statuses).toEqual([HttpStatus.Unauthorized, HttpStatus.Unauthorized, HttpStatus.TooManyRequests]);
+    expect(new Set(limiter.calls)).toEqual(new Set([`ip:${CLIENT_ADDRESS}`]));
+    const valid = await requestOperatorMcp({ bearer: key, env, body: { jsonrpc: '2.0', id: 1, method: 'tools/list' } });
+    expect(valid.status).toBe(HttpStatus.Ok);
+  });
+
+  test('reads no session, even when a session cookie comes along', async () => {
+    const { env, prepared } = recordingEnvironment();
+    const response = await requestOperatorMcp({
+      bearer: key,
+      env,
+      headers: { Cookie: `${SESSION_COOKIE}=forged-session-token` },
+      body: { jsonrpc: '2.0', id: 1, method: 'tools/list' },
+    });
+    expect(response.status).toBe(HttpStatus.Ok);
+    expect(prepared.filter((sql) => sql.includes('backoffice_sessions'))).toEqual([]);
+  });
+
+  test.each([
+    [OperatorToolName.ReleaseAccess, 'accountIds'],
+    [OperatorToolName.InviteWaitlist, 'entryIds'],
+  ])('bounds the %s id list and each id length', async (name, field) => {
+    const tooMany = Array.from({ length: OPERATOR_MCP_MAX_IDS + 1 }, (_, index) => `id${index}`);
+    const tooLong = ['x'.repeat(OPERATOR_MCP_ID_MAX_LENGTH + 1)];
+    expect((await call({ name, arguments: { [field]: tooMany, confirm: true } })).isError).toBe(true);
+    expect((await call({ name, arguments: { [field]: tooLong, confirm: true } })).isError).toBe(true);
+    expect(await auditRows({ action: BackofficeAuditAction.AccessReleased })).toEqual([]);
+    expect(await auditRows({ action: BackofficeAuditAction.WaitlistInvited })).toEqual([]);
+  });
+
+  test('a batch that throws writes one failed audit row under the key', async () => {
+    await seedWaitlistEntry({ email: 'first@example.com', createdAt: NOW - DAY_MS });
+    const database = new Proxy(testEnv.CONNECTIONS, {
+      get(target, property) {
+        if (property === 'batch') return () => Promise.reject(new Error('the database is down'));
+        const member = Reflect.get(target, property);
+        return typeof member === 'function' ? member.bind(target) : member;
+      },
+    });
+    const env = backofficeEnv({ overrides: { CONNECTIONS: database } });
+    const outcome = await callOperatorTool({
+      bearer: key,
+      env,
+      name: OperatorToolName.InviteWaitlist,
+      arguments: { entryIds: ['first@example.com'], confirm: true },
+    });
+    expect(outcome.isError).toBe(true);
+    expect(await auditRows({ action: BackofficeAuditAction.WaitlistInvited })).toEqual([
+      { outcome: BackofficeAuditOutcome.Failed, target_id: 'selected=1 itemFailed=1', actor_key_id: keyId, client_address: CLIENT_ADDRESS },
+    ]);
   });
 });
