@@ -55,8 +55,8 @@ describe('the site stylesheet', () => {
     expect(SITE_STYLESHEET).toContain('transition: none !important');
   });
 
-  it('keeps scroll-driven reveals behind both a support check and the no-preference query', () => {
-    expect(SITE_STYLESHEET).toContain('@supports (animation-timeline: view())');
+  it('keeps the reveals behind the no-preference query and away from scroll timelines', () => {
+    expect(SITE_STYLESHEET).not.toContain('@supports (animation-timeline: view())');
     expect(SITE_STYLESHEET).toContain('@media (prefers-reduced-motion: no-preference)');
   });
 

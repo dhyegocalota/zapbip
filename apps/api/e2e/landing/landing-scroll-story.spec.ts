@@ -5,12 +5,8 @@ const STORY_COUNT = 6;
 const STORY_SELECTOR = '.why-item';
 const REVEAL_SELECTOR = '.reveal';
 const SETTLED_RATIO = 0.3;
-const PINNED_MINIMUM_WIDTH = 1024;
-const REST_DWELL_PIXELS = 100;
-const MAXIMUM_EMPTY_RATIO = 0.4;
 const SCROLL_PAUSE_MS = 250;
 const FRAME_PAUSE_MS = 60;
-const STUB_UNSUPPORTED_SCRIPT = 'CSS.supports = () => false;';
 
 function elementScript(input: { selector: string; index: number; action: string }): string {
   return `(() => { const element = document.querySelectorAll('${input.selector}')[${input.index}]; ${input.action} })()`;
@@ -44,9 +40,8 @@ test('the six differentiators arrive in their final state as each one is scrolle
   }
 });
 
-test.describe('a browser without scroll timelines', () => {
+test.describe('the one-time reveal', () => {
   test('hides a story until it enters and then shows it for good', async ({ page }) => {
-    await page.addInitScript(STUB_UNSUPPORTED_SCRIPT);
     await page.goto('/');
     const lastStory = page.locator(STORY_SELECTOR).nth(STORY_COUNT - 1);
     await expect(page.locator('html')).toHaveClass(/has-reveal/);
@@ -60,7 +55,6 @@ test.describe('a browser without scroll timelines', () => {
   });
 
   test('leaves no revealed block hidden after a full scroll', async ({ page }) => {
-    await page.addInitScript(STUB_UNSUPPORTED_SCRIPT);
     await page.goto('/');
     const reveals = page.locator(REVEAL_SELECTOR);
     const revealCount = await reveals.count();
@@ -69,9 +63,9 @@ test.describe('a browser without scroll timelines', () => {
   });
 });
 
-test.describe('a browser without scroll timelines or an intersection observer', () => {
+test.describe('a browser without an intersection observer', () => {
   test('does not turn the hidden state on', async ({ page }) => {
-    await page.addInitScript(`${STUB_UNSUPPORTED_SCRIPT} delete window.IntersectionObserver;`);
+    await page.addInitScript('delete window.IntersectionObserver;');
     await page.goto('/');
     await expect(page.locator('html')).not.toHaveClass(/has-reveal/);
   });
@@ -90,19 +84,11 @@ test.describe('reduced motion', () => {
   });
 });
 
-test('a pinned story leaves at most 40 percent of the screen empty before the next one', async ({ page }) => {
+test('a story scrolls with the page and runs no scroll-linked animation', async ({ page }) => {
   await page.goto('/');
-  const viewportWidth = page.viewportSize()!.width;
-  test.skip(viewportWidth < PINNED_MINIMUM_WIDTH, 'stories only pin on a wide screen');
-  const gaps = await page.evaluate(`(() => {
-    const pins = [...document.querySelectorAll('.why-pin')];
-    return pins.slice(0, -1).map((pin, index) => {
-      const item = pin.parentElement;
-      const pinOffset = parseFloat(getComputedStyle(pin).top);
-      window.scrollTo(0, item.getBoundingClientRect().top + window.scrollY - pinOffset + ${REST_DWELL_PIXELS});
-      return pins[index + 1].getBoundingClientRect().top - pin.getBoundingClientRect().bottom;
-    });
-  })()`);
-  const maximumGap = page.viewportSize()!.height * MAXIMUM_EMPTY_RATIO;
-  expect((gaps as number[]).filter((gap) => gap > maximumGap)).toEqual([]);
+  await scrollToCenter({ page, selector: STORY_SELECTOR, index: 1 });
+  const stuck = await page.evaluate(`[...document.querySelectorAll('.why-item *')].filter((element) => getComputedStyle(element).position === 'sticky').length`);
+  expect(stuck).toBe(0);
+  const scrollLinked = await page.evaluate(`document.getAnimations().filter((animation) => animation.timeline && !(animation.timeline instanceof DocumentTimeline)).length`);
+  expect(scrollLinked).toBe(0);
 });

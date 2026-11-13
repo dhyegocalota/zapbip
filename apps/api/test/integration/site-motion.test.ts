@@ -1,11 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { SITE_STYLESHEET } from '../../src/site/site-stylesheet';
 
-const TIMELINE_PATTERN = /animation-timeline:/g;
 const NO_PREFERENCE_QUERY = '@media (prefers-reduced-motion: no-preference)';
 const NO_PREFERENCE_WINDOW = 80;
 const OBSERVER_ONLY_SELECTOR = 'html.has-reveal';
-const SCROLL_ONLY_SELECTOR = 'html:not(.has-reveal)';
 const HIDING_RULE_PATTERN = /\.(reveal|scene-step)[^{]*\{[^}]*opacity: 0;/;
 
 function enclosingMediaQueryOf(input: { index: number }): string {
@@ -14,15 +12,19 @@ function enclosingMediaQueryOf(input: { index: number }): string {
 }
 
 describe('the scroll motion stylesheet', () => {
-  it('scrubs animations by a scroll timeline only under the no-preference query', () => {
-    const indexes = [...SITE_STYLESHEET.matchAll(TIMELINE_PATTERN)].map((match) => match.index);
-    expect(indexes.length).toBeGreaterThan(0);
-    expect(indexes.filter((index) => !enclosingMediaQueryOf({ index }).startsWith(NO_PREFERENCE_QUERY))).toEqual([]);
+  it('never ties an animation to the scroll position, so nothing scrubs or reverses', () => {
+    expect(SITE_STYLESHEET).not.toContain('animation-timeline');
+    expect(SITE_STYLESHEET).not.toContain('view-timeline');
+    expect(SITE_STYLESHEET).not.toContain('animation-range');
   });
 
-  it('keeps the timeline rules away from the observer path and the other way round', () => {
-    expect(SITE_STYLESHEET).toContain(SCROLL_ONLY_SELECTOR);
+  it('reveals only through the observer path, once', () => {
     expect(SITE_STYLESHEET).toContain(OBSERVER_ONLY_SELECTOR);
+    expect(SITE_STYLESHEET).not.toContain('html:not(.has-reveal)');
+  });
+
+  it('pins no story to the screen', () => {
+    expect(SITE_STYLESHEET).not.toContain('.why-pin');
   });
 
   it('hides nothing unless the script turned the observer path on', () => {
