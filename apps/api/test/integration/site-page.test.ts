@@ -5,6 +5,7 @@ import type { InstallClient } from '@zapbip/agents/install';
 import { initialsOf, leadingAgentNames, SiteStartTab } from '../../src/site/site-agents';
 import { startPathOf } from '../../src/site/site-links';
 import { renderSiteCopy, SiteCopyKey } from '../../src/site/site-copy';
+import { SITE_EXAMPLE_CONNECTION_LINK } from '../../src/site/site-constants';
 import { pricingValuesOf } from '../../src/site/price-format';
 import { SITE_CONTENT_SECURITY_POLICY } from '../../src/site/site-policy';
 import { copyHtml, escapedHtml, REFERRAL_CODE, SITE_ORIGIN, SITE_TURNSTILE_SITE_KEY, siteEnvironment, siteFetch } from '../support/site';
@@ -151,9 +152,9 @@ describe('GET /', () => {
     expect(html).toContain('rel="icon"');
   });
 
-  it('puts the contact link only in the two places whose copy asks for it', async () => {
+  it('puts the contact link only in the two places whose copy asks for it and in the footer', async () => {
     const html = await pageOf({ headers: ENGLISH_HEADERS });
-    expect(html.match(/mailto:/g)).toHaveLength(2);
+    expect(html.match(/mailto:/g)).toHaveLength(3);
   });
 
   it('keeps the page inside its policy: no inline script, no inline style', async () => {
@@ -276,9 +277,9 @@ describe('the quick start', () => {
   it.each([
     ['en_US', OwnerLocale.EnglishUs, ENGLISH_HEADERS],
     ['pt_BR', OwnerLocale.PortugueseBrazil, PORTUGUESE_HEADERS],
-  ])('shows the hint and the code the registry gives, with the placeholder link, in %s', async (_name, locale, headers) => {
+  ])('shows the hint and the code the registry gives, with the example link, in %s', async (_name, locale, headers) => {
     const html = await pageOf({ headers });
-    const placeholder = renderSiteCopy({ key: SiteCopyKey.StartLinkPlaceholder, locale });
+    const placeholder = SITE_EXAMPLE_CONNECTION_LINK;
     const panels = panelsOf({ html });
     agents.forEach((agent) => {
       const quickStart = agent.install.quickStart({ locale, connectionLink: placeholder });
@@ -516,14 +517,14 @@ describe('the pricing', () => {
 
   it('sends the free button to the form', async () => {
     const section = pricingOf({ html: await pageOf({ headers: ENGLISH_HEADERS }) });
-    expect(section).toMatch(/<a class="button button-primary[^"]*" href="#join">Get started free<\/a>/);
+    expect(section).toMatch(/<a class="button button-primary[^"]*" href="#join">Request access<\/a>/);
   });
 });
 
 describe('the free offer across the page', () => {
   it.each([
-    ['en_US', OwnerLocale.EnglishUs, ENGLISH_HEADERS, 'Get started free'],
-    ['pt_BR', OwnerLocale.PortugueseBrazil, PORTUGUESE_HEADERS, 'Comece grátis'],
+    ['en_US', OwnerLocale.EnglishUs, ENGLISH_HEADERS, 'Request access'],
+    ['pt_BR', OwnerLocale.PortugueseBrazil, PORTUGUESE_HEADERS, 'Pedir acesso'],
   ])('labels the header, the hero and the final call in %s', async (_name, _locale, headers, label) => {
     const html = await pageOf({ headers });
     expect(html).toContain(`href="#join">${label}</a>`);

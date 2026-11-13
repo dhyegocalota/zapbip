@@ -52,6 +52,17 @@ describe('highlightCode', () => {
     expect(significant({ line: line! })).toEqual([[CodeTokenKind.Placeholder, '<your-link>']]);
   });
 
+  it('keeps an address whole as one url, in a shell line, a quoted value and alone', () => {
+    const address = 'https://mcp.example.test/c/zb_conn_EXAMPLE/mcp';
+    const [shell] = highlightCode({ code: `tool mcp add --transport http name ${address}` });
+    expect(significant({ line: shell! }).at(-1)).toEqual([CodeTokenKind.Url, address]);
+    expect(significant({ line: shell! })[0]).toEqual([CodeTokenKind.Command, 'tool']);
+    const [alone] = highlightCode({ code: address });
+    expect(significant({ line: alone! })).toEqual([[CodeTokenKind.Url, address]]);
+    const [quoted] = highlightCode({ code: `url = "${address}"` });
+    expect(significant({ line: quoted! }).map(([kind]) => kind)).toEqual([CodeTokenKind.Key, CodeTokenKind.Plain, CodeTokenKind.String]);
+  });
+
   it.each(['tool mcp add --x y <your-link>', '[a.b]\nurl = "<your-link>"', 'a:   "b"\n  c: d', '', 'two  spaces'])(
     'gives the code back unchanged for %j',
     (code) => {

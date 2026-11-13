@@ -5,6 +5,7 @@ import { initialsOf, siteAgents, SiteStartTab, siteQuickStartOf } from '../site-
 import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
 import { agentPathOf, joinPathOf, startPathOf } from '../site-links';
+import { SITE_EXAMPLE_CONNECTION_LINK } from '../site-constants';
 import { logoPathOf } from '../site-paths';
 
 const ANY_BADGE = '+';
@@ -18,6 +19,7 @@ const HIGHLIGHTED_KINDS = [
   CodeTokenKind.String,
   CodeTokenKind.Table,
   CodeTokenKind.Placeholder,
+  CodeTokenKind.Url,
 ];
 
 type Tab = {
@@ -76,9 +78,8 @@ function TabLogo(props: { tab: Tab }) {
 export function QuickStartSection(props: { locale: OwnerLocale; referralCode: string | null; startTab: InstallClient | SiteStartTab }) {
   const { locale, referralCode, startTab } = props;
   const translate = copyOf({ locale });
-  const placeholder = translate(SiteCopyKey.StartLinkPlaceholder);
   const agentTabs: Tab[] = siteAgents().map((agent) => {
-    const quickStart = siteQuickStartOf({ id: agent.id, locale, connectionLink: placeholder });
+    const quickStart = siteQuickStartOf({ id: agent.id, locale, connectionLink: SITE_EXAMPLE_CONNECTION_LINK });
     return {
       id: agent.id,
       agent: agent.id,
@@ -97,7 +98,7 @@ export function QuickStartSection(props: { locale: OwnerLocale; referralCode: st
     initials: ANY_BADGE,
     hint: translate(SiteCopyKey.StartAnyHint),
     path: ANY_PATH_KEYS.map((key) => translate(key)),
-    code: placeholder,
+    code: SITE_EXAMPLE_CONNECTION_LINK,
     pickedLabel: null,
   };
   const tabs = [...agentTabs, anyTab];
@@ -158,6 +159,7 @@ export function QuickStartSection(props: { locale: OwnerLocale; referralCode: st
                   <CodeText code={tab.code} />
                 </code>
               </pre>
+              <p class="start-example">{translate(SiteCopyKey.StartExampleCaption)}</p>
             </div>
             <div class="start-next">
               {tab.agent === null ? (

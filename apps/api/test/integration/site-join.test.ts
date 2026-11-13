@@ -1,5 +1,5 @@
 import { reset } from 'cloudflare:test';
-import { DEFAULT_WAITLIST_REFERRAL_CAP, OwnerLocale, WAITLIST_REFERRAL_CODE_LENGTH } from '@zapbip/types';
+import { OwnerLocale, WAITLIST_REFERRAL_CODE_LENGTH } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { DeployEnvironment } from '../../src/contract/deploy-environment';
 import { SiteCopyKey } from '../../src/site/site-copy';
@@ -40,39 +40,29 @@ function postJoin(input: {
 }
 
 async function joinAndReadCode(input: { email: string; referralCode?: string }): Promise<string> {
-  const response = await postJoin({ form: joinForm(input) });
-  const code = LINK_PATTERN.exec(await response.text())?.[1];
-  if (code === undefined) throw new Error('the thank-you page carried no referral link');
-  return code;
+  await postJoin({ form: joinForm(input) });
+  return (await rowOf({ email: input.email })).referral_code;
 }
 
 beforeEach(applyLandingWaitlistMigration);
 afterEach(reset);
 
 describe('POST /join', () => {
-  it('joins with the test widget and shows the personal link and 0 of 5', async () => {
+  it('joins with the test widget and confirms the early access list', async () => {
     const recording = acceptingTurnstile();
     const response = await postJoin({ form: joinForm({ email: MARIA, locale: PORTUGUESE }), recording });
     const html = await response.text();
     expect(response.status).toBe(200);
-    expect(html).toMatch(LINK_PATTERN);
-    expect(html).toContain(
-      copyHtml({
-        key: SiteCopyKey.ThanksInviteCount,
-        locale: PORTUGUESE,
-        values: { count: '0', cap: String(DEFAULT_WAITLIST_REFERRAL_CAP) },
-      }),
-    );
+    expect(html).toContain(copyHtml({ key: SiteCopyKey.ThanksTitle, locale: PORTUGUESE }));
+    expect(html).toContain(copyHtml({ key: SiteCopyKey.ThanksBody, locale: PORTUGUESE }));
+    expect(html).not.toMatch(LINK_PATTERN);
     expect(await rowOf({ email: MARIA })).toMatchObject({ locale: PORTUGUESE, credited: 0 });
     expect(recording.calls).toHaveLength(1);
     expect(recording.calls[0]).toContain(`secret=${SITE_TURNSTILE_SECRET}`);
   });
 
-  it('the thank-you carries the copy button, the WhatsApp share link and never the email', async () => {
+  it('the thank-you never carries the email or the secret', async () => {
     const html = await (await postJoin({ form: joinForm({ email: MARIA }) })).text();
-    expect(html).toContain(copy(SiteCopyKey.ThanksCopy));
-    expect(html).toContain('href="https://wa.me/?text=');
-    expect(html).toContain('id="invite-link"');
     expect(html).not.toContain(MARIA);
     expect(html).not.toContain(SITE_TURNSTILE_SECRET);
   });
@@ -84,20 +74,19 @@ describe('POST /join', () => {
     expect(await waitlistRows()).toHaveLength(1);
   });
 
-  it('credits the referrer and shows it on the referrer thank-you', async () => {
+  it('still credits the referrer while the panel shows no referral surface', async () => {
     const referrerCode = await joinAndReadCode({ email: 'referrer@example.com' });
     await postJoin({ form: joinForm({ email: 'friend@example.com', referralCode: referrerCode }) });
-    const again = await (await postJoin({ form: joinForm({ email: 'referrer@example.com' }) })).text();
-    expect(again).toContain(copy(SiteCopyKey.ThanksInviteCount, { count: '1', cap: String(DEFAULT_WAITLIST_REFERRAL_CAP) }));
     expect(await rowOf({ email: 'friend@example.com' })).toMatchObject({ credited: 1, referred_by: referrerCode });
   });
 
-  it('at the cap the thank-you says so', async () => {
+  it('stops crediting at the cap', async () => {
     await setCap({ value: 1 });
     const referrerCode = await joinAndReadCode({ email: 'referrer@example.com' });
     await postJoin({ form: joinForm({ email: 'friend@example.com', referralCode: referrerCode }) });
-    const html = await (await postJoin({ form: joinForm({ email: 'referrer@example.com' }) })).text();
-    expect(html).toContain(copy(SiteCopyKey.ThanksCapReached));
+    await postJoin({ form: joinForm({ email: 'second@example.com', referralCode: referrerCode }) });
+    expect(await rowOf({ email: 'friend@example.com' })).toMatchObject({ credited: 1 });
+    expect(await rowOf({ email: 'second@example.com' })).toMatchObject({ credited: 0, referred_by: referrerCode });
   });
 
   it('refuses a failing widget with 403, the captcha notice and no row', async () => {
