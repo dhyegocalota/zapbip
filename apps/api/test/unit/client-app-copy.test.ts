@@ -1,4 +1,4 @@
-import { OwnerLocale } from '@zapbip/types';
+import { OwnerLocale, PRICING_FREE_MESSAGES } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { ClientAppCopyKey, renderClientAppCopy } from '../../src/client-app/client-app-copy';
 
@@ -29,10 +29,13 @@ describe('the customer web app copy', () => {
     );
   });
 
-  it('says the same plan in two languages', () => {
-    expect(renderClientAppCopy({ key: ClientAppCopyKey.PlanLine, locale: OwnerLocale.EnglishUs })).toBe('Free · early access');
-    expect(renderClientAppCopy({ key: ClientAppCopyKey.PlanLine, locale: OwnerLocale.PortugueseBrazil })).toBe(
-      'Grátis · acesso antecipado',
+  it('says the same plan as the public pricing in two languages', () => {
+    const values = { free: String(PRICING_FREE_MESSAGES) };
+    expect(renderClientAppCopy({ key: ClientAppCopyKey.PlanLine, locale: OwnerLocale.EnglishUs, values })).toBe(
+      'Free · 5 messages to try it',
+    );
+    expect(renderClientAppCopy({ key: ClientAppCopyKey.PlanLine, locale: OwnerLocale.PortugueseBrazil, values })).toBe(
+      'Grátis · 5 mensagens para testar',
     );
   });
 });

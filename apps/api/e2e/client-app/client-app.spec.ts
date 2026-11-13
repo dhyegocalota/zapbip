@@ -1,4 +1,4 @@
-import { CLIENT_APP_LOGIN_TEXT, OwnerLocale } from '@zapbip/types';
+import { CLIENT_APP_LOGIN_TEXT, OwnerLocale, PRICING_FREE_MESSAGES } from '@zapbip/types';
 import { ClientAppCopyKey, renderClientAppCopy } from '../../src/client-app/client-app-copy';
 import { expect, test } from './fixtures';
 import { setAccountState } from './support/client-app-database';
@@ -38,7 +38,9 @@ for (const { locale, home, phoneKind, name } of LOCALES) {
       await page.getByRole('button', { name: copy({ key: ClientAppCopyKey.ContinueButton, locale }) }).click();
       await expect(page).toHaveURL(new RegExp(`${home === '/' ? '/$' : home + '$'}`));
       await expect(page.getByRole('heading', { name: copy({ key: ClientAppCopyKey.AgentsTitle, locale }) })).toBeVisible();
-      await expect(page.getByText(copy({ key: ClientAppCopyKey.PlanLine, locale }))).toBeVisible();
+      await expect(
+        page.getByText(copy({ key: ClientAppCopyKey.PlanLine, locale, values: { free: String(PRICING_FREE_MESSAGES) } })),
+      ).toBeVisible();
       await capture({ page, name: `${prefix}-agents-empty` });
 
       await page.getByLabel(copy({ key: ClientAppCopyKey.ConnectLabel, locale })).fill(AGENT_NAME);
