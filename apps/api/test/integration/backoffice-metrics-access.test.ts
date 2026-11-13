@@ -1,9 +1,10 @@
 import { AccountState, DAY_MS, OwnerLocale } from '@zapbip/types';
-import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, test } from 'vitest';
+import usageMigrationSql from '../../migrations/0003_usage.sql?raw';
 import { ActivityMetric } from '../../src/contract/activity-metric';
 import { keyedCell, MetricCell } from '../../src/backoffice/metrics/metric-cell';
 import { seedInvite, seedWaitlistEntry } from '../support/access';
-import { seedAccount } from '../support/seed';
+import { applyMigration, seedAccount } from '../support/seed';
 import { resetWaitlist } from '../support/waitlist';
 import { testEnv } from '../support/workers-env';
 import { endBackofficeSession, getPage, NOW, startBackofficeSession } from './backoffice-numbers-fixtures';
@@ -61,6 +62,10 @@ async function seedWorld(): Promise<void> {
   await seedActivity({ day: TWENTY_DAYS_AGO, metric: ActivityMetric.QuestionsAnswered, count: 5 });
 }
 
+beforeAll(async () => {
+  await applyMigration({ sql: usageMigrationSql });
+});
+
 beforeEach(async () => {
   await testEnv.CONNECTIONS.batch([
     testEnv.CONNECTIONS.prepare('DELETE FROM activity_daily'),
@@ -114,11 +119,20 @@ describe('the access metrics', () => {
     expect(cellOf({ html, cell: keyedCell({ cell: MetricCell.AccessQuestions, key: '30' }) })).toBe('7');
   });
 
-  test('shows zeros and no NaN on an empty database', async () => {
+  test('shows the one empty state and no NaN on an empty database', async () => {
+    const response = await getPage({ path: '/metrics', sessionToken });
+    const html = await response.text();
+    expect(response.status).toBe(200);
+    expect(html).not.toContain(`data-cell="${MetricCell.AccessWaitlistTotal}"`);
+    expect(html).not.toContain('NaN');
+  });
+
+  test('shows the access section with zeros once any waitlist entry exists', async () => {
+    await seedWaitlistEntry({ email: 'a@example.com', createdAt: NOW - 90 * DAY_MS });
     const html = await (await getPage({ path: '/metrics', sessionToken })).text();
-    expect(cellOf({ html, cell: MetricCell.AccessWaitlistTotal })).toBe('0');
+    expect(cellOf({ html, cell: MetricCell.AccessWaitlistTotal })).toBe('1');
     expect(cellOf({ html, cell: MetricCell.AccessReleasedTotal })).toBe('0');
-    expect(cellOf({ html, cell: keyedCell({ cell: MetricCell.AccessMessages, key: '30' }) })).toBe('0');
+    expect(cellOf({ html, cell: keyedCell({ cell: MetricCell.AccessJoins, key: '30' }) })).toBe('0');
     expect(html).not.toContain('NaN');
   });
 
