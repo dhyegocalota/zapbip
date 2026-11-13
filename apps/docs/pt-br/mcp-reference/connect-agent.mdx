@@ -13,14 +13,14 @@ Conecta um novo agente a esta conta pelo nome. O dono é consultado no WhatsApp,
 
 ## A pergunta
 
-Três botões: **Permitir**, **Permitir e enviar** e **Negar**, com uma referência curta no fim da pergunta. A chamada espera até 50 segundos. Negar e o silêncio não mudam nada, e um toque depois da espera também não.
+Três botões: **Permitir**, **Enviar ao agente** e **Negar**, com uma referência curta no fim da pergunta. A chamada espera até 50 segundos. Só o toque em um botão vale: texto digitado vale como Negar. Negar e o silêncio não mudam nada, e um toque depois da espera também não; o mesmo pedido fica recusado (`cooling_down`) por 10 minutos.
 
 ## Saída
 
 `{ "status": "applied" | "denied" | "timed_out" | "refused", "agent": string | null, "reason": string | null, "install_prompt": string | null }`.
 
-- `applied`: o agente foi conectado. Depois de **Permitir**, o link de instalação foi para o dono no WhatsApp e `install_prompt` é `null`. Depois de **Permitir e enviar**, `install_prompt` traz as duas linhas para colar no novo agente. É a única forma de um link ou chave chegar a um resultado de ferramenta.
+- `applied`: o agente foi conectado. Depois de **Permitir**, o link de instalação foi para o dono no WhatsApp e `install_prompt` é `null`. Depois de **Enviar ao agente**, `install_prompt` traz as duas linhas para colar no novo agente. É a única forma de um link ou chave chegar a um resultado de ferramenta.
 - `denied` e `timed_out`: nada mudou.
-- `refused`: `reason` é `invalid_name`, `reserved_name`, `name_taken`, `limit_reached` ou `send_failed`. Um nome inválido ou reservado é recusado antes de perguntar ao dono. Quando o link não pode ser enviado, a nova conexão é revogada de novo.
+- `refused`: `reason` é `invalid_name`, `reserved_name`, `name_taken`, `limit_reached`, `cooling_down`, `window_closed`, `send_failed`, `suspended` ou `waitlisted`. Um nome inválido ou reservado é recusado antes de perguntar ao dono. Quando o link não pode ser enviado, a nova conexão é revogada de novo.
 
 No máximo 3 chamadas que agem (`connect_agent`, [revoke_agent](/pt-br/mcp-reference/revoke-agent) e [sign_in_link](/pt-br/mcp-reference/sign-in-link)) por minuto por conexão; a seguinte é um erro que começa com `rate_limited`.

@@ -186,13 +186,13 @@ export const listAgentsOutputShape = { agents: z.array(agentSummaryWireSchema) }
 
 export const accountStatusOutputShape = {
   state: z.enum(AccountState),
-  phone: z.string(),
   plan: z.enum(AccountPlan),
   free_messages: z.number().int(),
 };
 
 export const accountOverviewWireSchema = z.object({
   ...accountStatusOutputShape,
+  phone: z.string(),
   ...listAgentsOutputShape,
 });
 

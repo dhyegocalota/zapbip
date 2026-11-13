@@ -1,6 +1,6 @@
 ---
 title: 'account_status'
-description: 'Lê o estado, o telefone mascarado e o plano desta conta.'
+description: 'Lê o estado e o plano desta conta.'
 ---
 
 Lê a conta a que esta conexão pertence. Só leitura: não precisa de aprovação e não conta em nenhum limite.
@@ -11,6 +11,6 @@ Nenhuma.
 
 ## Saída
 
-`{ "state": "waitlisted" | "active" | "suspended" | "deleting", "phone": string, "plan": "free", "free_messages": number }`. O telefone mantém só os dígitos do país e os quatro últimos. `free_messages` é a franquia que o plano inclui; o zapbip não informa quanto resta.
+`{ "state": "waitlisted" | "active" | "suspended" | "deleting", "plan": "free", "free_messages": number }`. O telefone nunca faz parte do resultado. `free_messages` é a franquia que o plano inclui; o zapbip não informa quanto resta.
 
-Os mesmos dados estão no [app web](/pt-br/features/web-app): a página inicial responde `Accept: application/json` para uma sessão aberta com `{ "state", "phone", "plan", "free_messages", "agents" }`, e `401` com `{ "error": "sign_in_required" }` quando não há sessão.
+Os mesmos dados estão no [app web](/pt-br/features/web-app): a página inicial responde `Accept: application/json` para uma sessão aberta com `{ "state", "phone", "plan", "free_messages", "agents" }`, em que `phone` mostra só os quatro últimos dígitos, e `401` com `{ "error": "sign_in_required" }` quando não há sessão.

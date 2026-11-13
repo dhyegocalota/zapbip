@@ -13,6 +13,6 @@ None.
 
 ## Output
 
-`{ "status": "applied" | "refused", "agent": null, "reason": string | null, "install_prompt": null }`. `refused` with `reason` `send_failed` means the owner could not be reached. The link is never part of the result.
+`{ "status": "applied" | "refused", "agent": null, "reason": string | null, "install_prompt": null }`. `refused` with `reason` `window_closed` means the 24-hour window is closed: the link is not queued, because it would expire. `send_failed` means the owner could not be reached. The link is never part of the result.
 
 The same limit as [connect_agent](/mcp-reference/connect-agent) applies: 3 acting calls a minute per connection.

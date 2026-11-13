@@ -13,7 +13,7 @@ Connect a new agent to this account by name. The owner is asked on WhatsApp, as 
 
 ## The question
 
-Three buttons: **Allow**, **Allow, send to agent** and **Deny**, with a short reference at the end of the question. The call waits up to 50 seconds. Deny and silence change nothing, and a tap after the wait changes nothing.
+Three buttons: **Allow**, **Allow, send to agent** and **Deny**, with a short reference at the end of the question. The call waits up to 50 seconds. Only a tap on a button counts: typed text is read as Deny. Deny and silence change nothing, and a tap after the wait changes nothing; the same request is then refused (`cooling_down`) for 10 minutes.
 
 ## Output
 
@@ -21,6 +21,6 @@ Three buttons: **Allow**, **Allow, send to agent** and **Deny**, with a short re
 
 - `applied`: the agent was connected. After **Allow** the install link went to the owner on WhatsApp and `install_prompt` is `null`. After **Allow, send to agent** `install_prompt` carries the two lines to paste into the new agent. It is the only way a link or key reaches a tool result.
 - `denied` and `timed_out`: nothing changed.
-- `refused`: `reason` is `invalid_name`, `reserved_name`, `name_taken`, `limit_reached` or `send_failed`. An invalid or reserved name is refused before the owner is asked. When the link cannot be sent, the new connection is revoked again.
+- `refused`: `reason` is `invalid_name`, `reserved_name`, `name_taken`, `limit_reached`, `cooling_down`, `window_closed`, `send_failed`, `suspended` or `waitlisted`. An invalid or reserved name is refused before the owner is asked. When the link cannot be sent, the new connection is revoked again.
 
 At most 3 acting calls (`connect_agent`, [revoke_agent](/mcp-reference/revoke-agent) and [sign_in_link](/mcp-reference/sign-in-link)) a minute per connection; the next one is an error that starts with `rate_limited`.

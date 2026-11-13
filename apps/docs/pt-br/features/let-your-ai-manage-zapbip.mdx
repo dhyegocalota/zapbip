@@ -10,7 +10,7 @@ Tudo o que você faz no [app web](/pt-br/features/web-app) ou com um [comando no
 | Peça à sua IA para | O que acontece | Precisa do seu toque |
 | --- | --- | --- |
 | Listar suas IAs | Ela lê cada nome, o app de onde se conectou, quando foi criada e quando agiu pela última vez. | Não |
-| Ler a sua conta | Ela lê o estado da conta, o seu telefone com o meio escondido e o seu plano. | Não |
+| Ler a sua conta | Ela lê o estado da conta e o seu plano. | Não |
 | Conectar uma nova IA | O zapbip pergunta a você no WhatsApp e depois conecta. | Sim |
 | Desconectar uma IA | O zapbip pergunta a você no WhatsApp e depois para essa IA na hora. | Sim |
 | Abrir o app web | O zapbip envia o link de entrada para você no WhatsApp. | Não |
@@ -22,22 +22,22 @@ Apagar a conta não está na lista. Continua sendo um comando do WhatsApp que s�
 Quando a sua IA pede para conectar uma nova IA chamada `helper`, o zapbip escreve para você no WhatsApp, como a IA que pediu:
 
 - **Permitir** conecta e envia para você o link para colar nessa IA, como o `novo agente` faz.
-- **Permitir e enviar** conecta e entrega o link à IA que pediu, para ela terminar a configuração sozinha.
+- **Enviar ao agente** conecta e entrega o link à IA que pediu, para ela terminar a configuração sozinha.
 - **Negar** não muda nada.
 
-Desconectar tem dois botões, Permitir e Negar. Cada pergunta termina com uma referência curta, então a resposta a uma pergunta antiga nunca vale para uma nova.
+Desconectar tem dois botões, Permitir e Negar. Só o toque em um botão vale: uma mensagem digitada, mesmo a palavra Permitir, é lida como Negar. Cada pergunta termina com uma referência curta, então a resposta a uma pergunta antiga nunca vale para uma nova.
 
-Sua IA espera até 50 segundos pela sua resposta. Se você não responder a tempo, nada muda, e um toque depois disso também não muda nada. Peça de novo à sua IA se ainda quiser.
+Sua IA espera até 50 segundos pela sua resposta. Se você não responder a tempo, nada muda, e um toque depois disso também não muda nada. Depois de um Negar ou de uma resposta que não veio, o mesmo pedido da mesma IA é recusado por 10 minutos, para ela não ficar insistindo.
 
 ## O que continua privado
 
-- O link para conectar uma nova IA vai para você no WhatsApp. Só o botão **Permitir e enviar** entrega o link à sua IA.
-- O link de entrada vai só para você. A sua IA nunca o vê.
-- A sua IA nunca vê uma chave, um código nem o seu telefone completo.
+- O link para conectar uma nova IA vai para você no WhatsApp. Só o botão **Enviar ao agente** entrega o link à sua IA.
+- O link de entrada vai só para você. A sua IA nunca o vê. Se a janela de 24 horas estiver fechada, o zapbip não o deixa na fila: escreva para o zapbip e peça de novo à sua IA.
+- A sua IA nunca vê uma chave, um código nem o seu telefone.
 
 ## Limites
 
-Cada conexão pode iniciar 3 mudanças por minuto. A 4ª recebe uma resposta curta de "tente de novo em instantes", então um laço por engano não enche o seu WhatsApp de perguntas.
+Cada conexão, e a sua conta como um todo, pode iniciar 3 mudanças por minuto. A 4ª recebe uma resposta curta de "tente de novo em instantes", então um laço por engano não enche o seu WhatsApp de perguntas.
 
 ## Próximos passos
 

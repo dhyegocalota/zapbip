@@ -1,6 +1,6 @@
 import { AgentChangeStatus, AccountReplyIntent, CommandKind } from '@zapbip/types';
 import type { z } from 'zod';
-import { toOverviewWire } from '../accounts/overview-wire';
+import { toOverviewWire, type AccountOverviewWire } from '../accounts/overview-wire';
 import type { connectAgentInputShape, revokeAgentInputShape } from '../contract/mcp-schemas';
 import { unwrapOutcome } from './tool-error';
 import type { ToolContext, ToolSuccess } from './types';
@@ -8,7 +8,7 @@ import type { ToolContext, ToolSuccess } from './types';
 type NameArguments = z.infer<z.ZodObject<typeof connectAgentInputShape | typeof revokeAgentInputShape>>;
 type ChangeKind = CommandKind.CreateAgent | CommandKind.RevokeAgent;
 
-async function describeAccount(input: { context: ToolContext }) {
+async function describeAccount(input: { context: ToolContext }): Promise<AccountOverviewWire> {
   const outcome = await input.context.accountInbox.describeAccount({ connection: input.context.connection });
   return toOverviewWire({ overview: unwrapOutcome({ outcome }) });
 }
@@ -36,8 +36,8 @@ export async function listAgents(input: { context: ToolContext }): Promise<ToolS
 }
 
 export async function accountStatus(input: { context: ToolContext }): Promise<ToolSuccess> {
-  const { state, phone, plan, free_messages: freeMessages } = await describeAccount(input);
-  return { structured: { state, phone, plan, free_messages: freeMessages }, images: [] };
+  const { state, plan, free_messages: freeMessages } = await describeAccount(input);
+  return { structured: { state, plan, free_messages: freeMessages }, images: [] };
 }
 
 export function connectAgent(input: { context: ToolContext; arguments: NameArguments }): Promise<ToolSuccess> {
