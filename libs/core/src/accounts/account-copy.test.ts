@@ -17,6 +17,7 @@ const PARAMETER_VALUES: Record<AccountReplyParameter, string> = {
   [AccountReplyParameter.Agents]: '- claude (2026-11-06)',
   [AccountReplyParameter.InstallPrompt]: 'install prompt',
   [AccountReplyParameter.SignInLink]: 'https://app.zapbip.test/sign-in/token',
+  [AccountReplyParameter.AppLink]: 'https://app.zapbip.test',
 };
 
 function buildReply(input: { intent: AccountReplyIntent; locale: OwnerLocale }): AccountReply {

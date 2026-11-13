@@ -2,13 +2,17 @@ import {
   fillCopyTokens,
   finishAccountDeletion,
   openOwnerAccount,
+  redactInviteCodes,
+  redeemAccessInvite,
   ownerLocaleOf,
   type AccountRecord,
   type ChannelInboundEntry,
+  type OwnerAccountContext,
   type ReceiveResult,
 } from '@zapbip/core';
-import { AccountState, SenderVerdict, WhatsAppNumberState, type OwnerLocale } from '@zapbip/types';
+import { AccountState, MessageKind, ChannelInboundKind, SenderVerdict, WhatsAppNumberState, type OwnerLocale } from '@zapbip/types';
 import { lifecycleDependenciesOf, inboxPurgeOf } from '../accounts/deletion-sweep';
+import { D1AccessInvites } from '../adapters/d1/d1-access-invites';
 import { numberRegistryOf } from '../adapters/d1/d1-number-registry';
 import { createSenderGuard } from '../adapters/guard/sender-guard';
 import { OperatorEvent } from '../adapters/whatsapp/whatsapp-enums';
@@ -52,6 +56,46 @@ async function admitSender(input: { bindings: Bindings; waId: string }): Promise
   if (verdict === SenderVerdict.Blocked) logEvent({ event: LogEvent.SenderBlocked });
   if (verdict === SenderVerdict.RateLimited) logEvent({ event: LogEvent.SenderRateLimited });
   return verdict === SenderVerdict.Admitted;
+}
+
+function inviteTextOf(input: { entry: ChannelInboundEntry }): string | null {
+  const { entry } = input;
+  if (entry.kind !== ChannelInboundKind.Owner || entry.content.kind !== MessageKind.Text) return null;
+  return entry.content.text;
+}
+
+function redactedEntryOf(input: { entry: ChannelInboundEntry }): ChannelInboundEntry {
+  const { entry } = input;
+  if (entry.kind !== ChannelInboundKind.Owner || entry.content.kind !== MessageKind.Text) return entry;
+  return { ...entry, content: { ...entry.content, text: redactInviteCodes({ text: entry.content.text }) } };
+}
+
+async function noticeRedeemedAccess(input: {
+  accountInbox: AccountOwnerRpc;
+  account: OwnerAccountContext;
+  appOrigin: string;
+}): Promise<void> {
+  const { accountInbox, account, appOrigin } = input;
+  try {
+    const notice = await accountInbox.noticeAccessOpened({ account, appOrigin });
+    if (!notice.ok) logEvent({ event: LogEvent.AccessNoticeFailed, accountId: account.accountId });
+  } catch {
+    logEvent({ event: LogEvent.AccessNoticeFailed, accountId: account.accountId });
+  }
+}
+
+async function receiveThenNotice(input: {
+  accountInbox: AccountOwnerRpc;
+  receive: Parameters<AccountOwnerRpc['receiveAccountMessage']>[0];
+  isRedeemed: boolean;
+  appOrigin: string;
+}): ReturnType<AccountOwnerRpc['receiveAccountMessage']> {
+  const { accountInbox, receive, isRedeemed, appOrigin } = input;
+  try {
+    return await accountInbox.receiveAccountMessage(receive);
+  } finally {
+    if (isRedeemed) await noticeRedeemedAccess({ accountInbox, account: receive.account, appOrigin });
+  }
 }
 
 async function refuseNewAccount(input: OwnerInboundInput): Promise<ReceiveResult> {
@@ -109,11 +153,23 @@ export async function receiveOwnerInbound(input: OwnerInboundInput): Promise<Rec
   if (isOnOtherNumber) return refuseOtherNumber({ bindings, number: input.number, account });
   const downloadsMedia = !created && account.state === AccountState.Active;
   const entry = await entryOf({ accountId: account.accountId, ownerLocale: account.locale, downloadsMedia });
-  const outcome = await accountInboxOf<AccountOwnerRpc>({ bindings, accountId: account.accountId }).receiveAccountMessage({
+  const redemption = await redeemAccessInvite({
+    dependencies: { accounts: dependencies.accounts, invites: new D1AccessInvites({ database: bindings.CONNECTIONS }) },
     account,
-    channelMessageId,
-    entry,
-    publicOrigin: bindings.PUBLIC_ORIGIN,
+    text: inviteTextOf({ entry }),
+    now: createPlatformClock().now(),
+  });
+  if (redemption.isRedeemed) logEvent({ event: LogEvent.AccessInviteRedeemed, accountId: account.accountId });
+  const outcome = await receiveThenNotice({
+    accountInbox: accountInboxOf<AccountOwnerRpc>({ bindings, accountId: account.accountId }),
+    receive: {
+      account: redemption.account,
+      channelMessageId,
+      entry: redactedEntryOf({ entry }),
+      publicOrigin: bindings.PUBLIC_ORIGIN,
+      appOrigin: bindings.APP_ORIGIN,
+    },
+    isRedeemed: redemption.isRedeemed,
     appOrigin: bindings.APP_ORIGIN,
   });
   if (!outcome.ok) throw new Error(outcome.message);

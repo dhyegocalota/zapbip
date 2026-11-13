@@ -13,10 +13,12 @@ export type MetricsFilter = { numberId: string | null; period: MetricsPeriod };
 export const NUMBER_QUERY = 'number';
 export const PERIOD_QUERY = 'period';
 
+export const ACCESS_WEEK_DAYS = 7;
+export const ACCESS_MONTH_DAYS = 30;
 const DEFAULT_PERIOD = MetricsPeriod.Month;
 const PERIOD_DAYS: Record<MetricsPeriod, number> = {
-  [MetricsPeriod.Week]: 7,
-  [MetricsPeriod.Month]: 30,
+  [MetricsPeriod.Week]: ACCESS_WEEK_DAYS,
+  [MetricsPeriod.Month]: ACCESS_MONTH_DAYS,
 };
 
 export type MetricsFilterParse = { filter: MetricsFilter } | { notice: BackofficeNotice };

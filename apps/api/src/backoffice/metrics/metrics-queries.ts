@@ -1,8 +1,9 @@
 import { DAY_MS } from '@zapbip/types';
+import { ActivityMetric } from '../../contract/activity-metric';
 import { utcDay } from '../../account-inbox/usage-meter';
 import { RESTRICTION_TTL_MS } from '../../adapters/whatsapp/whatsapp-constants';
-import { periodDays, type MetricsFilter } from './metrics-filter';
-import type { AgentTotals, MetricsReport } from './metrics-report';
+import { ACCESS_MONTH_DAYS, ACCESS_WEEK_DAYS, periodDays, type MetricsFilter } from './metrics-filter';
+import type { AgentTotals, InviteTotals, MetricsReport, ReleaseTotals } from './metrics-report';
 
 enum MetricsQuery {
   Numbers,
@@ -17,6 +18,15 @@ enum MetricsQuery {
   Budget,
   BlockedPhones,
   Restricted,
+  WaitlistByLocale,
+  WaitlistJoined,
+  InvitesIssued,
+  InvitesUsed,
+  InviteTotals,
+  ReleasedAllTime,
+  ReleasedThirtyDays,
+  ReleasedSevenDays,
+  AccessActivity,
 }
 
 const NUMBER_FILTER = '(?1 IS NULL OR a.number_id = ?1)';
@@ -25,6 +35,22 @@ const REVOKED_DAY = "strftime('%Y-%m-%d', c.revoked_at / 1000, 'unixepoch')";
 const ACCOUNT_DAY = "strftime('%Y-%m-%d', a.created_at / 1000, 'unixepoch')";
 const AGENT_SCOPE = 'FROM connections c JOIN accounts a ON a.id = c.account_id WHERE ' + NUMBER_FILTER;
 
+const WAITLIST_DAY = "strftime('%Y-%m-%d', created_at / 1000, 'unixepoch')";
+const INVITE_ISSUED_DAY = "strftime('%Y-%m-%d', created_at / 1000, 'unixepoch')";
+const INVITE_USED_DAY = "strftime('%Y-%m-%d', used_at / 1000, 'unixepoch')";
+const WAITLIST_BY_LOCALE_STATEMENT = 'SELECT locale, COUNT(*) AS total FROM landing_waitlist GROUP BY locale';
+const WAITLIST_JOINED_STATEMENT =
+  'SELECT ' + WAITLIST_DAY + ' AS day, COUNT(*) AS total FROM landing_waitlist WHERE created_at >= ?1 GROUP BY day';
+const INVITES_ISSUED_STATEMENT =
+  'SELECT ' + INVITE_ISSUED_DAY + ' AS day, COUNT(*) AS total FROM waitlist_invites WHERE created_at >= ?1 GROUP BY day';
+const INVITES_USED_STATEMENT =
+  'SELECT ' + INVITE_USED_DAY + ' AS day, COUNT(*) AS total FROM waitlist_invites WHERE used_at >= ?1 GROUP BY day';
+const INVITE_TOTALS_STATEMENT = 'SELECT COUNT(*) AS issued, COUNT(used_at) AS used FROM waitlist_invites';
+const RELEASED_STATEMENT = `SELECT COUNT(*) AS released,
+  COALESCE(SUM(EXISTS (SELECT 1 FROM connections c WHERE c.account_id = a.id AND c.revoked_at IS NULL)), 0) AS connected
+  FROM accounts a WHERE a.released_at >= ?1`;
+const ACCESS_ACTIVITY_STATEMENT = `SELECT day, metric, SUM(count) AS total FROM activity_daily
+  WHERE day >= ?1 AND metric IN (?2, ?3, ?4) GROUP BY day, metric`;
 const NUMBERS_STATEMENT = 'SELECT id AS numberId, label FROM whatsapp_numbers ORDER BY label';
 const ACCOUNTS_BY_STATE_STATEMENT =
   'SELECT a.state AS state, COUNT(*) AS total FROM accounts a WHERE ' + NUMBER_FILTER + ' GROUP BY a.state';
@@ -72,6 +98,9 @@ export async function readMetrics(input: { database: D1Database; filter: Metrics
   const comparisonSinceDay = utcDay({ now: now - (2 * periodDays({ period: filter.period }) - 1) * DAY_MS });
   const comparisonSinceAt = Date.parse(comparisonSinceDay);
   const restrictedSince = now - RESTRICTION_TTL_MS;
+  const accessSinceDay = utcDay({ now: now - (ACCESS_MONTH_DAYS - 1) * DAY_MS });
+  const accessSinceAt = Date.parse(accessSinceDay);
+  const sevenDaysSinceAt = Date.parse(utcDay({ now: now - (ACCESS_WEEK_DAYS - 1) * DAY_MS }));
   const results = await database.batch([
     database.prepare(NUMBERS_STATEMENT),
     database.prepare(ACCOUNTS_BY_STATE_STATEMENT).bind(numberId),
@@ -85,6 +114,17 @@ export async function readMetrics(input: { database: D1Database; filter: Metrics
     database.prepare(BUDGET_STATEMENT).bind(sinceDay),
     database.prepare(BLOCKED_PHONES_STATEMENT),
     database.prepare(RESTRICTED_STATEMENT).bind(numberId, restrictedSince),
+    database.prepare(WAITLIST_BY_LOCALE_STATEMENT),
+    database.prepare(WAITLIST_JOINED_STATEMENT).bind(accessSinceAt),
+    database.prepare(INVITES_ISSUED_STATEMENT).bind(accessSinceAt),
+    database.prepare(INVITES_USED_STATEMENT).bind(accessSinceAt),
+    database.prepare(INVITE_TOTALS_STATEMENT),
+    database.prepare(RELEASED_STATEMENT).bind(0),
+    database.prepare(RELEASED_STATEMENT).bind(accessSinceAt),
+    database.prepare(RELEASED_STATEMENT).bind(sevenDaysSinceAt),
+    database
+      .prepare(ACCESS_ACTIVITY_STATEMENT)
+      .bind(accessSinceDay, ActivityMetric.MessagesIn, ActivityMetric.MessagesOut, ActivityMetric.QuestionsAnswered),
   ]);
   return {
     numbers: resultRows({ results, query: MetricsQuery.Numbers }),
@@ -99,5 +139,16 @@ export async function readMetrics(input: { database: D1Database; filter: Metrics
     budgetDays: resultRows({ results, query: MetricsQuery.Budget }),
     blockedPhones: singleRow<{ total: number }>({ results, query: MetricsQuery.BlockedPhones }).total,
     restricted: resultRows({ results, query: MetricsQuery.Restricted }),
+    access: {
+      waitlistByLocale: resultRows({ results, query: MetricsQuery.WaitlistByLocale }),
+      waitlistJoined: resultRows({ results, query: MetricsQuery.WaitlistJoined }),
+      invitesIssued: resultRows({ results, query: MetricsQuery.InvitesIssued }),
+      invitesUsed: resultRows({ results, query: MetricsQuery.InvitesUsed }),
+      inviteTotals: singleRow<InviteTotals>({ results, query: MetricsQuery.InviteTotals }),
+      releasedAllTime: singleRow<ReleaseTotals>({ results, query: MetricsQuery.ReleasedAllTime }),
+      releasedThirtyDays: singleRow<ReleaseTotals>({ results, query: MetricsQuery.ReleasedThirtyDays }),
+      releasedSevenDays: singleRow<ReleaseTotals>({ results, query: MetricsQuery.ReleasedSevenDays }),
+      activity: resultRows({ results, query: MetricsQuery.AccessActivity }),
+    },
   };
 }

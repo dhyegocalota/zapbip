@@ -4,7 +4,7 @@ import { BackofficeNotice } from '../../src/backoffice/backoffice-notice';
 import { BackofficeTheme } from '../../src/backoffice/backoffice-theme';
 import { type HomeOverview, SparklineMetric } from '../../src/backoffice/home-sparklines';
 import { MetricsPeriod, type MetricsFilter } from '../../src/backoffice/metrics/metrics-filter';
-import type { MetricsReport } from '../../src/backoffice/metrics/metrics-report';
+import type { AccessReport, MetricsReport } from '../../src/backoffice/metrics/metrics-report';
 import type { PageContext } from '../../src/backoffice/page-context';
 import type { NumberStateCounts } from '../../src/backoffice/views/home';
 import type { NumberListEntry } from '../../src/numbers/number-admin';
@@ -48,6 +48,19 @@ export function numberEntry(input: Partial<NumberListEntry>): NumberListEntry {
 
 export const METRICS_FILTER: MetricsFilter = { numberId: null, period: MetricsPeriod.Week };
 
+const NO_RELEASES = { released: 0, connected: 0 };
+const EMPTY_ACCESS: AccessReport = {
+  waitlistByLocale: [],
+  waitlistJoined: [],
+  invitesIssued: [],
+  invitesUsed: [],
+  inviteTotals: { issued: 0, used: 0 },
+  releasedAllTime: NO_RELEASES,
+  releasedThirtyDays: NO_RELEASES,
+  releasedSevenDays: NO_RELEASES,
+  activity: [],
+};
+
 export const EMPTY_REPORT: MetricsReport = {
   numbers: [],
   accountsByState: [],
@@ -61,6 +74,7 @@ export const EMPTY_REPORT: MetricsReport = {
   budgetDays: [],
   blockedPhones: 0,
   restricted: [],
+  access: EMPTY_ACCESS,
 };
 
 export const TODAY = '2026-11-07';
@@ -83,6 +97,7 @@ export const DATA_REPORT: MetricsReport = {
   budgetDays: [{ day: TODAY, total: 10_600 }],
   blockedPhones: 1,
   restricted: [{ numberId: 'num_one', label: 'Brazil', restrictedAt: NOW }],
+  access: EMPTY_ACCESS,
 };
 
 const RISING_SERIES = Array.from({ length: SPARKLINE_DAYS }, (_, index) => index);

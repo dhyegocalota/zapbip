@@ -31,7 +31,7 @@ const LONG_LABEL = 'A number label that is forty eight chars long...';
 const ONE_LINE_CELL_HEIGHT = 60;
 const HIDDEN_LABEL_SIZE = 2;
 const MAXIMUM_CARD_PADDING = 56;
-const NAVIGATION_LINK_COUNT = 4;
+const NAVIGATION_LINK_COUNT = 6;
 const DELTA_PATTERN = /a mais|a menos|Igual/;
 const TRANSPARENT = 'rgba(0, 0, 0, 0)';
 const NO_ANIMATION = 'none';
@@ -125,7 +125,7 @@ test.describe('signed in', () => {
   });
 
   for (const colorScheme of COLOR_SCHEMES) {
-    test(`the navigation keeps its four links on one row in ${colorScheme}`, async ({ page }) => {
+    test(`the navigation keeps its links on one row in ${colorScheme}`, async ({ page }) => {
       await page.emulateMedia({ colorScheme });
       await page.goto('/');
       const boxes = await boxesOf({ locator: page.locator('nav .nav-link') });

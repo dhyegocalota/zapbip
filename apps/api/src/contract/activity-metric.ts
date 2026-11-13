@@ -4,6 +4,7 @@ export enum ActivityMetric {
   TemplatesSentNotice = 'templates_sent_notice',
   TemplatesSentQuestion = 'templates_sent_question',
   SendsFailed = 'sends_failed',
+  QuestionsAnswered = 'questions_answered',
   WakesWoken = 'wakes_woken',
   WakesUnreached = 'wakes_unreached',
 }
