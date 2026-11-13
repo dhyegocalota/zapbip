@@ -27,6 +27,8 @@ import type {
   WakeTransport,
 } from '@zapbip/core';
 import {
+  AgentCommandRecipient,
+  CommandKind,
   CONNECTOR_INBOX_LIMIT,
   CONNECTOR_PING_TEXT,
   CONNECTOR_PONG_TEXT,
@@ -139,6 +141,7 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
   protected wake!: WakeDependencies;
   protected readonly dueTimeProviders: DueTimeProvider[] = [];
   protected accountId!: string;
+  protected approvalTimeoutMs: number = inbox.AGENT_CHANGE_APPROVAL_TIMEOUT_MS;
   private dependencies!: CoreDependencies;
   private accountDependencies!: AccountDependencies;
   private isTombstoned = false;
@@ -549,15 +552,42 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
   }
 
   describeAccount(input: Parameters<AccountInboxRpc['describeAccount']>[0]): Promise<CallOutcome<inbox.AccountOverview>> {
-    throw new Error('describeAccount is not implemented');
+    return this.outcome({
+      connection: input.connection,
+      run: () => inbox.describeAccount({ ...input, dependencies: this.accountDependencies }),
+    });
   }
 
   requestAccountChange(input: Parameters<AccountInboxRpc['requestAccountChange']>[0]): Promise<CallOutcome<inbox.AgentChangeResult>> {
-    throw new Error('requestAccountChange is not implemented');
+    return this.outcome({
+      connection: input.connection,
+      run: () =>
+        inbox.requestAccountChange({
+          ...input,
+          dependencies: this.accountDependencies,
+          publicOrigin: this.env.PUBLIC_ORIGIN,
+          appOrigin: this.env.APP_ORIGIN,
+          timeoutMs: this.approvalTimeoutMs,
+        }),
+      describe: (value) => ({ event: LogEvent.AgentChange, agent: input.connection.agent, kind: value.status }),
+    });
   }
 
   sendSignInLink(input: Parameters<AccountInboxRpc['sendSignInLink']>[0]): Promise<CallOutcome<inbox.AgentCommandResult>> {
-    throw new Error('sendSignInLink is not implemented');
+    const { connection } = input;
+    return this.outcome({
+      connection,
+      run: () =>
+        inbox.applyAgentCommand({
+          dependencies: this.accountDependencies,
+          connection,
+          command: { kind: CommandKind.Login, rawName: null, locale: connection.ownerLocale },
+          recipient: AgentCommandRecipient.Owner,
+          publicOrigin: this.env.PUBLIC_ORIGIN,
+          appOrigin: this.env.APP_ORIGIN,
+        }),
+      describe: (value) => ({ event: LogEvent.AgentChange, agent: connection.agent, kind: value.intent }),
+    });
   }
 
   noticeAccessOpened(input: NoticeAccessOpenedRequest): Promise<CallOutcome<DeliveryState.Sent | DeliveryState.Queued>> {

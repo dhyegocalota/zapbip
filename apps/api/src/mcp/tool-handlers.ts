@@ -188,6 +188,12 @@ export const OUTBOUND_TOOLS: ReadonlySet<McpToolName> = new Set([
   McpToolName.Ask,
 ]);
 
+export const ACCOUNT_CHANGE_TOOLS: ReadonlySet<McpToolName> = new Set([
+  McpToolName.ConnectAgent,
+  McpToolName.RevokeAgent,
+  McpToolName.SignInLink,
+]);
+
 export const TOOL_HANDLERS = {
   [McpToolName.SendMessage]: sendMessage,
   [McpToolName.SendMedia]: sendMedia,

@@ -4,6 +4,7 @@ export enum LogEvent {
   AuthRejected = 'auth_rejected',
   ToolCall = 'tool_call',
   ToolError = 'tool_error',
+  AgentChange = 'agent_change',
   OwnerMessage = 'owner_message',
   OwnerMessageDuplicate = 'owner_message_duplicate',
   Send = 'send',

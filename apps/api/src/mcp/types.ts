@@ -12,6 +12,7 @@ export type ToolContext = {
   accountInbox: AccountInboxRpc;
   mediaStore: MediaStore;
   outboundGuard: OutboundGuard;
+  accountChangeGuard: OutboundGuard;
 };
 
 export type InlineImage = { type: typeof INLINE_IMAGE_CONTENT_TYPE; data: string; mimeType: string };
