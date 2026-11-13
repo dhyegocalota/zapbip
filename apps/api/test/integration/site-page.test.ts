@@ -5,6 +5,7 @@ import type { InstallClient } from '@zapbip/agents/install';
 import { initialsOf, leadingAgentNames, SiteStartTab } from '../../src/site/site-agents';
 import { startPathOf } from '../../src/site/site-links';
 import { renderSiteCopy, SiteCopyKey } from '../../src/site/site-copy';
+import { pricingValuesOf } from '../../src/site/price-format';
 import { SITE_CONTENT_SECURITY_POLICY } from '../../src/site/site-policy';
 import { copyHtml, escapedHtml, REFERRAL_CODE, SITE_ORIGIN, SITE_TURNSTILE_SITE_KEY, siteEnvironment, siteFetch } from '../support/site';
 
@@ -459,9 +460,9 @@ describe('the pricing', () => {
     ['pt_BR', OwnerLocale.PortugueseBrazil, PORTUGUESE_HEADERS],
   ])('highlights a free plan with its price and what it includes in %s', async (_name, locale, headers) => {
     const section = pricingOf({ html: await pageOf({ headers }) });
+    const values = pricingValuesOf({ locale });
     const keys = [
       SiteCopyKey.PricingFreeName,
-      SiteCopyKey.PricingFreePrice,
       SiteCopyKey.PricingFreeNote,
       SiteCopyKey.PricingFreePhone,
       SiteCopyKey.PricingFreeAgents,
@@ -470,24 +471,39 @@ describe('the pricing', () => {
       SiteCopyKey.PricingFreeWake,
       SiteCopyKey.PricingCta,
     ];
-    expect(keys.filter((key) => !section.includes(copyHtml({ key, locale })))).toEqual([]);
+    expect(keys.filter((key) => !section.includes(copyHtml({ key, locale, values })))).toEqual([]);
     expect(section).toContain('class="card plan plan-free');
     expect(section).toContain(`aria-label="${copyHtml({ key: SiteCopyKey.PricingFreeIncludes, locale })}"`);
   });
 
-  it('writes the price in the currency of the page language', async () => {
+  it('writes the prices in the currency of the page language', async () => {
     const english = pricingOf({ html: await pageOf({ headers: ENGLISH_HEADERS }) });
     const portuguese = pricingOf({ html: await pageOf({ headers: PORTUGUESE_HEADERS }) });
-    expect(english).toContain('$0');
-    expect(english).not.toContain('R$0');
-    expect(portuguese).toContain('R$0');
+    expect(english).toContain('>$0<');
+    expect(english).toContain('>$9<');
+    expect(english).not.toContain('R$');
+    expect(portuguese).toContain('>R$\u00a00<');
+    expect(portuguese).toContain('>R$\u00a049<');
+    expect(portuguese).not.toMatch(/>\$\d/);
   });
 
-  it('shows a muted Pro card with no price and no promise', async () => {
-    const section = pricingOf({ html: await pageOf({ headers: ENGLISH_HEADERS }) });
+  it.each([
+    ['en_US', OwnerLocale.EnglishUs, ENGLISH_HEADERS],
+    ['pt_BR', OwnerLocale.PortugueseBrazil, PORTUGUESE_HEADERS],
+  ])('shows the Pro plan with its monthly price, the included messages and the price of each extra block in %s', async (_name, locale, headers) => {
+    const section = pricingOf({ html: await pageOf({ headers }) });
     const pro = section.slice(section.indexOf('class="card plan plan-pro'));
-    expect(pro).toContain(copyHtml({ key: SiteCopyKey.PricingProName, locale: OwnerLocale.EnglishUs }));
-    expect(pro).not.toMatch(/\$|R\$|<a /);
+    const values = pricingValuesOf({ locale });
+    const keys = [
+      SiteCopyKey.PricingProName,
+      SiteCopyKey.PricingProPeriod,
+      SiteCopyKey.PricingProIncluded,
+      SiteCopyKey.PricingProOverage,
+      SiteCopyKey.PricingBilling,
+    ];
+    expect(keys.filter((key) => !pro.includes(copyHtml({ key, locale, values })))).toEqual([]);
+    expect(pro).toContain(`href="#join">${copyHtml({ key: SiteCopyKey.PricingProCta, locale })}</a>`);
+    expect(section).toContain(copyHtml({ key: SiteCopyKey.PricingMessageDefinition, locale }));
   });
 
   it('lets the Pro card sit at its own height, not the height of the Free card', async () => {
@@ -524,7 +540,15 @@ describe('the free offer across the page', () => {
   it.each([OwnerLocale.EnglishUs, OwnerLocale.PortugueseBrazil])('answers "is it free" in the FAQ in %s', async (locale) => {
     const html = await pageOf({ headers: locale === OwnerLocale.EnglishUs ? ENGLISH_HEADERS : PORTUGUESE_HEADERS });
     expect(html).toContain(`<summary>${copyHtml({ key: SiteCopyKey.FaqFreeQuestion, locale })}</summary>`);
-    expect(html).toContain(copyHtml({ key: SiteCopyKey.FaqFreeAnswer, locale }));
+    expect(html).toContain(copyHtml({ key: SiteCopyKey.FaqFreeAnswer, locale, values: pricingValuesOf({ locale }) }));
+    expect(html).toContain(copyHtml({ key: SiteCopyKey.FaqPriceAnswer, locale, values: pricingValuesOf({ locale }) }));
+  });
+
+  it.each([OwnerLocale.EnglishUs, OwnerLocale.PortugueseBrazil])('says in the FAQ that nobody brings their own number yet in %s', async (locale) => {
+    const html = await pageOf({ headers: locale === OwnerLocale.EnglishUs ? ENGLISH_HEADERS : PORTUGUESE_HEADERS });
+    expect(html).toContain(`<summary>${copyHtml({ key: SiteCopyKey.FaqOwnNumberQuestion, locale })}</summary>`);
+    expect(html).toContain(copyHtml({ key: SiteCopyKey.FaqOwnNumberAnswer, locale }));
+    expect(html).not.toMatch(/\{(free|price|included|overage|block)\}/);
   });
 });
 
