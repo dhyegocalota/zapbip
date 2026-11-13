@@ -1,6 +1,7 @@
 import { AccountState, DAY_MS, WAITLIST_INVITE_TTL_MS } from '@zapbip/types';
 import { reset, runInDurableObject } from 'cloudflare:test';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { AccountOwnerRpc } from '../../src/contract/account-owner-rpc';
 import type { Bindings } from '../../src/contract/env';
 import { LogEvent } from '../../src/contract/log';
 import { D1AccessInvites } from '../../src/adapters/d1/d1-access-invites';
@@ -32,15 +33,13 @@ async function storedPayloads(input: { accountId: string }): Promise<string> {
 
 function namespaceFailingToReceive(input: { onNotice: () => void }): Bindings['ACCOUNT_INBOX'] {
   const namespace = testEnv.ACCOUNT_INBOX;
-  const get = (id: DurableObjectId) =>
-    new Proxy(namespace.get(id), {
-      get(target, property) {
-        if (property === 'receiveAccountMessage') return () => Promise.reject(new Error('the object is down'));
-        const member: unknown = Reflect.get(target, property);
-        if (property === 'noticeAccessOpened') input.onNotice();
-        return typeof member === 'function' ? member.bind(target) : member;
-      },
-    });
+  const get = (id: DurableObjectId) => ({
+    receiveAccountMessage: () => Promise.reject(new Error('the object is down')),
+    noticeAccessOpened: (request: Parameters<AccountOwnerRpc['noticeAccessOpened']>[0]) => {
+      input.onNotice();
+      return namespace.get(id).noticeAccessOpened(request);
+    },
+  });
   return { idFromName: namespace.idFromName.bind(namespace), get } as unknown as Bindings['ACCOUNT_INBOX'];
 }
 
