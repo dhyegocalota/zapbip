@@ -6,11 +6,11 @@ import { csrfTokenOf } from '../../src/backoffice/auth/csrf';
 import { maskedPhoneOf } from '../../src/client-app/masked-phone';
 import { escapedHtml } from '../support/site';
 import { seedInvite, seedWaitingAccount, seedWaitlistEntry, stateOfAccount } from '../support/access';
-import { recordGraphPosts } from '../support/record-graph-posts';
+import { readScreen } from '../support/inbox-session';
 import { resetWaitlist } from '../support/waitlist';
-import { seedWhatsAppNumber, TEST_DISPLAY_NUMBER } from '../support/whatsapp-numbers';
-import { testEnv } from '../support/workers-env';
-import { BACKOFFICE_ORIGIN, requestBackoffice, SESSION_COOKIE } from './backoffice-auth-fixtures';
+import { seedWhatsAppNumber } from '../support/whatsapp-numbers';
+import { accountInboxStub, testEnv } from '../support/workers-env';
+import { BACKOFFICE_ORIGIN, backofficeEnv, requestBackoffice, SESSION_COOKIE } from './backoffice-auth-fixtures';
 import {
   endBackofficeSession,
   followRedirect,
@@ -37,6 +37,8 @@ const FIRST_PHONE = '5511911110001';
 const SECOND_PHONE = '5511911110002';
 const ENGLISH_PHONE = '14155550101';
 const HOUR = 3_600_000;
+const START_DISPLAY_NUMBER = '+5511977770000';
+const ACCESS_OPENED_TEXT = 'Seu acesso ao zapbip está aberto';
 
 let sessionToken: string;
 
@@ -92,6 +94,10 @@ async function inviteRows(): Promise<{ email: string; code_digest: string; used_
   return results;
 }
 
+async function screenOf(input: { accountId: string }) {
+  return readScreen({ stub: accountInboxStub({ accountId: input.accountId }) });
+}
+
 async function seedTwoWaiting(): Promise<void> {
   await seedWaitingAccount({
     accountId: 'acct_first',
@@ -108,9 +114,10 @@ async function seedTwoWaiting(): Promise<void> {
 }
 
 beforeEach(async () => {
+  await testEnv.CONNECTIONS.prepare('DELETE FROM owner_identities').run();
   sessionToken = await startBackofficeSession();
   await resetWaitlist();
-  await seedWhatsAppNumber();
+  await seedWhatsAppNumber({ displayNumber: START_DISPLAY_NUMBER });
 });
 
 afterEach(() => {
@@ -182,14 +189,14 @@ describe('the access page', () => {
 describe('releasing access', () => {
   test('moves the ticked accounts to active, queues the notice behind the template, audits the counts and shows the result', async () => {
     await seedTwoWaiting();
-    const posts = recordGraphPosts();
     const posted = await postBatch({ path: RELEASE_PATH, fields: accounts('acct_first', 'acct_second') });
     const html = await posted.text();
     expect(posted.status).toBe(STATUS_OK);
     expect(await stateOfAccount({ accountId: 'acct_first' })).toBe(AccountState.Active);
     expect(await stateOfAccount({ accountId: 'acct_second' })).toBe(AccountState.Active);
     expect(html).toContain(copyHtml({ key: BackofficeCopyKey.AccessReleaseResultTitle }));
-    expect(posts.map((post) => post.body.to).sort()).toEqual([FIRST_PHONE, SECOND_PHONE]);
+    const screens = await Promise.all([screenOf({ accountId: 'acct_first' }), screenOf({ accountId: 'acct_second' })]);
+    expect(screens.map((screen) => screen.filter((entry) => entry.template !== null))).toEqual([[expect.anything()], [expect.anything()]]);
     expect(await auditRows({ action: BackofficeAuditAction.AccessReleased })).toEqual([
       {
         outcome: BackofficeAuditOutcome.Succeeded,
@@ -207,9 +214,10 @@ describe('releasing access', () => {
       .all<{ account_id: string }>();
     const [owner] = results;
     if (owner === undefined) throw new Error('the owner account is missing');
-    const posts = recordGraphPosts();
     const html = await (await postBatch({ path: RELEASE_PATH, fields: accounts(owner.account_id) })).text();
-    expect(posts.map((post) => post.body.text.body)).toEqual([expect.stringContaining('Seu acesso ao zapbip está aberto')]);
+    expect((await screenOf({ accountId: owner.account_id })).map((entry) => entry.text)).toContainEqual(
+      expect.stringContaining(ACCESS_OPENED_TEXT),
+    );
     expect(html).toContain('data-count="sent">1<');
     expect(await stateOfAccount({ accountId: owner.account_id })).toBe(AccountState.Active);
   });
@@ -217,9 +225,9 @@ describe('releasing access', () => {
   test('releasing again is a no-op that sends nothing', async () => {
     await seedTwoWaiting();
     await postBatch({ path: RELEASE_PATH, fields: accounts('acct_first') });
-    const posts = recordGraphPosts();
+    const before = await screenOf({ accountId: 'acct_first' });
     const html = await (await postBatch({ path: RELEASE_PATH, fields: accounts('acct_first') })).text();
-    expect(posts).toEqual([]);
+    expect(await screenOf({ accountId: 'acct_first' })).toEqual(before);
     expect(html).toContain('data-count="alreadyActive">1<');
     expect(html).toContain('data-count="released">0<');
     expect(await auditRows({ action: BackofficeAuditAction.AccessReleased })).toHaveLength(2);
@@ -232,15 +240,26 @@ describe('releasing access', () => {
     expect(html).toContain('data-count="notReleasable">2<');
   });
 
-  test('reports an account whose notice could not be delivered and keeps it released', async () => {
+  test.each([
+    ['the object rejects', () => Promise.reject(new Error('the object is down'))],
+    ['the object refuses the notice', () => Promise.resolve({ ok: false, errorCode: 'delivery_failed', message: 'the notice failed' })],
+  ])('reports an account whose notice could not be delivered when %s and keeps it released', async (_name, noticeAccessOpened) => {
     await seedTwoWaiting();
-    await testEnv.CONNECTIONS.prepare("UPDATE whatsapp_numbers SET state = 'disabled'").run();
-    const html = await (await postBatch({ path: RELEASE_PATH, fields: accounts('acct_first') })).text();
+    const namespace = testEnv.ACCOUNT_INBOX;
+    const failingNamespace = { idFromName: namespace.idFromName.bind(namespace), get: () => ({ noticeAccessOpened }) };
+    const env = backofficeEnv({ overrides: { ACCOUNT_INBOX: failingNamespace as unknown as typeof namespace } });
+    const html = await (await postBatch({ path: RELEASE_PATH, fields: accounts('acct_first'), env })).text();
     expect(await stateOfAccount({ accountId: 'acct_first' })).toBe(AccountState.Active);
     expect(html).toContain('data-count="failed">1<');
     expect(html).toContain(copyHtml({ key: BackofficeCopyKey.AccessResultFailedList }));
     expect(html).toContain(escapedHtml({ text: maskedPhoneOf({ waId: FIRST_PHONE }) }));
     expect(html).not.toContain(FIRST_PHONE);
+    expect(await auditRows({ action: BackofficeAuditAction.AccessReleased })).toEqual([
+      {
+        outcome: BackofficeAuditOutcome.Succeeded,
+        target_id: 'selected=1 released=1 alreadyActive=0 notReleasable=0 sent=0 queued=0 failed=1',
+      },
+    ]);
   });
 
   test('takes the first batch of everyone matching the filters when select all is ticked', async () => {
@@ -253,7 +272,6 @@ describe('releasing access', () => {
         }),
       ),
     );
-    recordGraphPosts();
     const html = await (
       await postBatch({
         path: RELEASE_PATH,
@@ -322,7 +340,7 @@ describe('inviting the email waitlist', () => {
     await seedWaitlistEntry({ email: 'two@example.com', locale: OwnerLocale.PortugueseBrazil, createdAt: NOW - DAY_MS });
     const posted = await postBatch({ path: INVITE_PATH, fields: emails('one@example.com', 'two@example.com') });
     const html = await posted.text();
-    const digits = TEST_DISPLAY_NUMBER.replace('+', '');
+    const digits = START_DISPLAY_NUMBER.replace('+', '');
     const links = [...html.matchAll(new RegExp(`https://wa\\.me/${digits}\\?text=[^"<\\s]+`, 'g'))].map((match) => match[0]);
     expect(posted.status).toBe(STATUS_OK);
     expect(new Set(links).size).toBe(2);

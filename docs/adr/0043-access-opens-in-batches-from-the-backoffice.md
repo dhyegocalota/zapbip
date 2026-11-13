@@ -30,7 +30,7 @@ A WhatsApp account is `waitlisted` while `WAITLIST_ENABLED` is true and nothing 
 
 ## Consequences
 
-- Migration `0012` is additive: `waitlist_invites`, `accounts.released_at` and five indexes. Rolling it back means deploying the previous Worker first, then dropping them; the invites are lost.
+- Migration `0012` is additive: `waitlist_invites`, `accounts.released_at` and six indexes. Rolling it back means deploying the previous Worker first, then dropping them; the invites are lost.
 - An invite link whose owner never taps Open stays queued until they write.
 - The page never shows a code again after the batch result; a lost batch is invited again after it expires.
 
