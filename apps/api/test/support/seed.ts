@@ -9,6 +9,7 @@ import metaOnboardingMigrationSql from '../../migrations/0008_meta_onboarding.sq
 import passwordSignInMigrationSql from '../../migrations/0009_backoffice_password_sign_in.sql?raw';
 import landingWaitlistMigrationSql from '../../migrations/0010_landing_waitlist.sql?raw';
 import clientAppMigrationSql from '../../migrations/0011_client_app.sql?raw';
+import accessReleaseMigrationSql from '../../migrations/0012_access_release.sql?raw';
 import waitlistSourceMigrationSql from '../../migrations/0013_waitlist_source.sql?raw';
 import { hashConnectionSecret } from '../../src/adapters/platform/hash';
 import { accountInboxStub, testEnv } from './workers-env';
@@ -62,6 +63,10 @@ export async function applyLandingWaitlistMigration(): Promise<void> {
   await applyMigration({ sql: waitlistSourceMigrationSql });
 }
 
+export async function applyAccessReleaseMigration(): Promise<void> {
+  await applyMigration({ sql: accessReleaseMigrationSql });
+}
+
 export async function applyClientAppMigration(): Promise<void> {
   await applyMigration({ sql: clientAppMigrationSql });
 }
@@ -77,6 +82,7 @@ export async function applyDirectoryMigration(): Promise<void> {
   await applyPasswordSignInMigration();
   await applyLandingWaitlistMigration();
   await applyClientAppMigration();
+  await applyAccessReleaseMigration();
 }
 
 export async function seedAccount(input: { accountId: string; state?: AccountState; numberId?: string | null }): Promise<void> {

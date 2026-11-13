@@ -30,6 +30,7 @@ const STATE_ONLY_CLASSES = [
   'bar',
   'chart-axis-maximum',
   'waitlist-row',
+  'access-row',
 ];
 const FORCED_COLORS_PATTERN = /@media \(forced-colors: active\)/;
 const FORCED_COLORS_BLOCK_PATTERN = /@media \(forced-colors: active\) \{[\s\S]*?\n\}/;

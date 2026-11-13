@@ -17,8 +17,14 @@ export function hasNoActivity(input: { report: MetricsReport; days: string[] }):
     inPeriod(report.activity),
     inPeriod(report.budgetDays),
     report.restricted,
+    report.access.waitlistByLocale,
+    report.access.waitlistJoined,
+    report.access.invitesIssued,
+    report.access.invitesUsed,
+    report.access.activity,
   ];
-  return emptyLists.every((list) => list.length === 0) && report.agents.active === 0 && report.blockedPhones === 0;
+  const hasNoAccessTotals = report.access.inviteTotals.issued === 0 && report.access.releasedAllTime.released === 0;
+  return emptyLists.every((list) => list.length === 0) && report.agents.active === 0 && report.blockedPhones === 0 && hasNoAccessTotals;
 }
 
 export enum Trend {

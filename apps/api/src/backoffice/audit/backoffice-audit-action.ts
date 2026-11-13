@@ -12,12 +12,15 @@ export enum BackofficeAuditAction {
   NumberStateChanged = 'number.state_changed',
   WaitlistExported = 'waitlist.exported',
   ReferralCapChanged = 'waitlist.referral_cap_changed',
+  AccessReleased = 'access.released',
+  WaitlistInvited = 'waitlist.invited',
 }
 
 export enum BackofficeAuditTargetKind {
   Number = 'number',
   MetaApp = 'meta_app',
   Waitlist = 'waitlist',
+  Access = 'access',
 }
 
 export enum BackofficeAuditOutcome {

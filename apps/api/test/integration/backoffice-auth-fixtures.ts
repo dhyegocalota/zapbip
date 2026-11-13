@@ -30,7 +30,7 @@ const migrated = applyDirectoryMigration();
 export type BackofficeRequest = {
   path: string;
   method?: string;
-  form?: Record<string, string>;
+  form?: ConstructorParameters<typeof URLSearchParams>[0];
   cookies?: Record<string, string>;
   headers?: Record<string, string>;
   env?: Bindings;

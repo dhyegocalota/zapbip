@@ -25,7 +25,7 @@ The process is tool-agnostic. Claude Code, Codex and any agent that reads `AGENT
 3. Executing the test plan is the priority. A plan whose test plan is not run is not done. A behaviour-preserving refactor, a tooling change and the docs lane are the exceptions: the reviewer and `pnpm verify` prove them (sections 1 and 5).
 4. The agent that builds never runs the test plan. The tester is a different sub-agent with a fresh context.
 5. Every PR is reviewed by a reviewer sub-agent before it opens. There is always a reviewer.
-6. Every PR that touches UI carries screenshots and a playable video recorded through Playwright MCP, hosted as GitHub Release assets and embedded in the body.
+6. Every PR that touches UI carries screenshots and a playable video recorded through Playwright MCP, hosted in the private media repository by `scripts/pr-media.sh` and embedded in the body. Releases are for published packages only.
 7. Every decision with alternatives becomes an ADR before the code that depends on it.
 8. Everything in the repo is in English.
 9. Tests are mandatory. No `sleep`. No `?? default`. No comments other than `// NB ADR NNNN:` pointers. See `AGENTS.md` → Code conventions.
@@ -116,7 +116,7 @@ Both plans are reviewed by a sub-agent before building (`reviewer` role, lens: "
 2. `test-plan.md` ticked with evidence by the tester for class `product`, by the lead for class `tooling`; skipped in the docs lane.
 3. Reviewer verdict `YES` (or `WITH RESERVATIONS` acknowledged by the owner).
 3b. Security verdict `CLEAR` or `NOT APPLICABLE`; `FINDINGS` at `CRITICAL` or `IMPORTANT` goes back to Build. The verdict line goes into the PR body under `## Security`.
-4. **Visual explainer, every PR.** The body carries a `## Visual explainer` section for humans: one row per user-visible change with an annotated screenshot or a before/after pair, one sentence each, and one Mermaid diagram per data-flow change; a server-only PR states "No user-visible change" and still draws its data flow. The reviewer checks that it matches the diff. UI touched → `/check-ui` recorded: the `recorder` role captures screenshots and a `recordVideo` walk, converts with ffmpeg to `.mp4` and `.gif`, uploads to the GitHub Release `pr-media-<slug>` (pre-release) and embeds the `releases/download/...` URLs. Media stays in the git-ignored `.pr-media/`.
+4. **Visual explainer, every PR.** The body carries a `## Visual explainer` section for humans: one row per user-visible change with an annotated screenshot or a before/after pair, one sentence each, and one Mermaid diagram per data-flow change; a server-only PR states "No user-visible change" and still draws its data flow. The reviewer checks that it matches the diff. UI touched → `/check-ui` recorded: the `recorder` role captures screenshots and a `recordVideo` walk, converts with ffmpeg to `.mp4` and `.gif`, pushes them with `scripts/pr-media.sh <slug> <files>` to the private repository `dhyegocalota/zapbip-pr-media` and embeds the Markdown lines it prints. Media stays in the git-ignored `.pr-media/`.
 5. Learnings and docs sweep (section 8, and the documents that describe every path in `git diff --name-only origin/main...HEAD`). "Nothing learned" and "no doc affected" are valid answers, stated out loud.
 6. Merge sensitivity. The reviewer's blast radius and verdict go into the PR body verbatim; a sensitive PR gets its human checklist written before the PR opens.
 7. Conventional Commit, push, `gh pr create` with `.github/pull_request_template.md`.
@@ -176,7 +176,7 @@ Role bodies live in `.agents/roles/<role>.md`, one source. Claude Code reads the
 | `tester` | fresh | executes `test-plan.md`, Playwright MCP walks, evidence, edge-case hunting | fixes product code |
 | `reviewer` | fresh, read-only | conventions, security, refutation, verdict | posts to GitHub |
 | `security-reviewer` | fresh, read-only | attacks the diff: API keys, account isolation, verification, webhooks, secrets, supply chain | posts to GitHub, fixes code |
-| `recorder` | writes media only | screenshots, video, ffmpeg, release upload, PR embeds | touches code |
+| `recorder` | writes media only | screenshots, video, ffmpeg, media upload, PR embeds | touches code |
 
 Routing: bulk reading and sweeps → cheapest model; implementing a decided design → mid model; architecture, security review, "is this right" → strongest model. Small tasks that fit in three tool calls run inline.
 
@@ -194,7 +194,7 @@ Routing: bulk reading and sweeps → cheapest model; implementing a decided desi
 | `adr` | skill | scaffolds a numbered ADR |
 | `learning` | skill | records or revisits a learning |
 | `/verify` | skill | `pnpm verify`: what the diff can break, once per commit, stop at first failure |
-| `/check-ui` | skill | Playwright MCP walk, screenshots, video, release upload |
+| `/check-ui` | skill | Playwright MCP walk, screenshots, video, media upload |
 | `/open-pr` | skill | the Ship gates, then the PR |
 | `/scenario` | skill | boots the stack on its own ports and walks one `docs/scenarios/<slug>.md` with one Playwright MCP server per user |
 

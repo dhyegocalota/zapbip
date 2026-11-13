@@ -23,7 +23,9 @@ export interface AccountDirectory {
     createdAt: number;
     newAccountsCap: { since: number; limit: number };
   }): Promise<AccountLookup | null>;
+  findById(input: { accountId: string }): Promise<AccountRecord | null>;
   setState(input: { accountId: string; state: AccountState }): Promise<void>;
+  release(input: { accountId: string; releasedAt: number }): Promise<boolean>;
   listByState(input: { state: AccountState }): Promise<AccountRecord[]>;
   remove(input: { accountId: string }): Promise<void>;
 }
@@ -56,6 +58,10 @@ export interface InstallCodeVault {
 export interface InstallCodeDirectory {
   resolve(input: { installCode: string; now: number }): Promise<InstallCodeResolution>;
   recordFirstCall(input: { connectionId: string; calledAt: number }): Promise<void>;
+}
+
+export interface AccessInvites {
+  redeem(input: { code: string; accountId: string; now: number }): Promise<boolean>;
 }
 
 export interface SenderGuard {
@@ -110,6 +116,8 @@ export type AccountDependencies = CoreDependencies & {
   installLinkRedaction: InstallLinkRedaction;
   signInLinks: SignInLinks;
 };
+
+export type AccessDependencies = { accounts: AccountDirectory; invites: AccessInvites };
 
 export type AccountLifecycleDependencies = {
   accounts: AccountDirectory;

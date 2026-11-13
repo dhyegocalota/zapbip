@@ -283,7 +283,21 @@ export enum AccountReplyIntent {
   DeletionDone = 'deletion_done',
   SignInLink = 'sign_in_link',
   SendFailed = 'send_failed',
+  AccessOpened = 'access_opened',
   Unknown = 'unknown',
+}
+
+export enum AccessReleaseOutcome {
+  Released = 'released',
+  AlreadyActive = 'already_active',
+  NotWaitlisted = 'not_waitlisted',
+  NotFound = 'not_found',
+}
+
+export enum AccessNoticeOutcome {
+  Sent = 'sent',
+  Queued = 'queued',
+  Failed = 'failed',
 }
 
 export enum InstallCodeStatus {
@@ -301,6 +315,7 @@ export enum AccountReplyParameter {
   Agents = 'agents',
   InstallPrompt = 'install_prompt',
   SignInLink = 'sign_in_link',
+  AppLink = 'app_link',
 }
 
 export enum HttpStatus {

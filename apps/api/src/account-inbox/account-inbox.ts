@@ -32,6 +32,7 @@ import {
   CONNECTOR_PONG_TEXT,
   ChannelErrorKind,
   ConnectorFrameType,
+  type DeliveryState,
   InboxErrorCode,
   REVOKED_CLOSE_CODE,
   WakeMode,
@@ -109,7 +110,7 @@ import { ACCOUNT_INBOX_MIGRATIONS } from './migrations';
 import { runMigrations } from './run-migrations';
 import { recordActivity } from './activity-ledger';
 import { createActivityProvider } from './activity-provider';
-import { recordSenderActivity, recordWakerActivity } from './activity-recording';
+import { recordRepositoryActivity, recordSenderActivity, recordWakerActivity } from './activity-recording';
 import { recordUsage } from './usage-ledger';
 import { gigabyteSecondsForDuration, utcDay } from './usage-meter';
 import { createUsageProvider } from './usage-provider';
@@ -121,6 +122,7 @@ type WakeModeRow = { agent: string; mode: WakeMode };
 
 type ReceiveAccountMessageRequest = Parameters<AccountOwnerRpc['receiveAccountMessage']>[0];
 type ApplyWebCommandRequest = Parameters<AccountOwnerRpc['applyWebCommand']>[0];
+type NoticeAccessOpenedRequest = Parameters<AccountOwnerRpc['noticeAccessOpened']>[0];
 
 function failureLog(input: { error: inbox.InboxError }): LogFields {
   const { error } = input;
@@ -165,7 +167,11 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
     });
     this.dependencies = {
       accountId,
-      repository: createSqliteInboxRepository({ storage: this.ctx.storage, clock: this.clock }),
+      repository: recordRepositoryActivity({
+        repository: createSqliteInboxRepository({ storage: this.ctx.storage, clock: this.clock }),
+        record: (activity) => this.recordActivity(activity),
+        onRecordFailure: () => this.log({ event: LogEvent.ActivityRecordFailed }),
+      }),
       sender: recordSenderActivity({
         sender: this.sender,
         record: (activity) => this.recordActivity(activity),
@@ -539,6 +545,15 @@ export class AccountInbox extends DurableObject<Bindings> implements AccountInbo
   applyWebCommand(input: ApplyWebCommandRequest): Promise<CallOutcome<inbox.AccountCommandResult>> {
     return this.outcome({
       run: () => inbox.applyOwnerCommand({ ...input, dependencies: this.accountDependencies, isRequestLive: false }),
+    });
+  }
+
+  noticeAccessOpened(input: NoticeAccessOpenedRequest): Promise<CallOutcome<DeliveryState.Sent | DeliveryState.Queued>> {
+    return this.outcome({
+      run: async () => {
+        await this.rememberOwnerLocale({ ownerLocale: input.account.locale });
+        return inbox.noticeAccessOpened({ ...input, dependencies: this.dependencies });
+      },
     });
   }
 

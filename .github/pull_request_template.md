@@ -8,7 +8,7 @@
 
 ## Visual explainer
 
-<!-- For humans, not reviewers: one row per user-visible change with an annotated screenshot or a before/after pair (asset URLs from the pr-media release), one sentence each; one Mermaid diagram per data-flow change (what enters, what is stored, what the screen shows). Required on every PR; "No user-visible change" plus a diagram of the data flow is the minimum for a server-only PR. -->
+<!-- For humans, not reviewers: one row per user-visible change with an annotated screenshot or a before/after pair (lines printed by `scripts/pr-media.sh`), one sentence each; one Mermaid diagram per data-flow change (what enters, what is stored, what the screen shows). Required on every PR; "No user-visible change" plus a diagram of the data flow is the minimum for a server-only PR. -->
 
 | Change | What a person sees |
 |---|---|
@@ -21,7 +21,7 @@ flowchart LR
 
 ## Video
 
-<!-- Playable: paste the .mp4 asset URL on its own line. Fallback: ![walkthrough](<gif asset url>) -->
+<!-- Playable: paste the .mp4 link printed by `scripts/pr-media.sh`. Fallback: ![walkthrough](<gif link>) -->
 
 ## Screenshots
 
@@ -59,13 +59,13 @@ flowchart LR
 
 ## Checklist
 
-- [ ] Spec approved by the owner before building
-- [ ] plan.md and test-plan.md exist and the test plan was executed by a tester sub-agent
-- [ ] Reviewed by a reviewer sub-agent before opening
-- [ ] Reviewed by a security-reviewer sub-agent before opening
-- [ ] Screenshots and video recorded with Playwright MCP and hosted on the `pr-media-<slug>` release
-- [ ] Tests: unit, E2E, and the user walk
-- [ ] Everything in English; no comments, no `?? default`, no `else`
+- [ ] 📝 Spec approved by the owner before building
+- [ ] 🗺️ plan.md and test-plan.md exist and the test plan was executed by a tester sub-agent
+- [ ] 🔎 Reviewed by a reviewer sub-agent before opening
+- [ ] 🔐 Reviewed by a security-reviewer sub-agent before opening
+- [ ] 📸 Screenshots and video recorded with Playwright MCP and pushed with `scripts/pr-media.sh`
+- [ ] 🧪 Tests: unit, E2E, and the user walk
+- [ ] 🌍 Everything in English; no comments, no `?? default`, no `else`
 
 ## Human checklist
 
