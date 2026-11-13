@@ -78,9 +78,14 @@ describe('language menu', () => {
     );
   });
 
+  it.each(LOCALES)('names the list form after the language label in %s', (locale) => {
+    const label = renderShellCopy({ key: ShellCopyKey.LocaleLabel, locale });
+    expect(renderLanguageMenu({ locale })).toContain(`<form class="lang-list" method="post" action="/locale" aria-label="${label}">`);
+  });
+
   it('carries the hidden fields in the list form', () => {
     const html = renderLanguageMenu({ locale: OwnerLocale.EnglishUs });
-    expect(html).toContain('<form class="lang-list" method="post" action="/locale">');
+    expect(html).toContain('<form class="lang-list" method="post" action="/locale" aria-label="Language">');
     expect(html).toContain(`name="csrf" value="${CSRF_TOKEN}"`);
   });
 });

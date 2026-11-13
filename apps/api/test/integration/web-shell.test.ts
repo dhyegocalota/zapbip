@@ -58,6 +58,18 @@ describe.each(SURFACES)('the shared shell on the $name', ({ html }) => {
     expect(switchMarkup.match(/<svg class="theme-icon"/g)).toHaveLength(3);
   });
 
+  it('names the language list form after the language label', async () => {
+    const menu = MENU_PATTERN.exec(await html())![0];
+    expect(menu).toMatch(/<form class="lang-list" method="post" action="[^"]+" aria-label="Language">/);
+  });
+
+  it('keeps every header link except the brand inside a named navigation', async () => {
+    const header = /<header[\s\S]*?<\/header>/.exec(await html())![0];
+    const outsideNavigation = header.replace(/<nav aria-label="[^"]+">[\s\S]*?<\/nav>/g, '');
+    const strayLinks = [...outsideNavigation.matchAll(/<a [^>]*>/g)].filter((link) => !link[0].includes('class="brand"'));
+    expect(strayLinks).toEqual([]);
+  });
+
   it('has the header, main and footer landmarks and a language on the document', async () => {
     const page = await html();
     expect(page).toMatch(/<html lang="en"/);
@@ -85,6 +97,13 @@ describe.each(STYLESHEET_PATHS)('the stylesheet of the $name', ({ fetch }) => {
     expect(css).toContain('.lang-menu {');
     expect(css).toContain(".switch button[aria-pressed='true'] {");
     expect(css).toContain('.shell-footer {');
+  });
+});
+
+describe('the site header', () => {
+  it('holds the documentation link in a navigation named Main', async () => {
+    const header = /<header[\s\S]*?<\/header>/.exec(await siteFetch({ path: '/' }).then((response) => response.text()))![0];
+    expect(header).toMatch(/<nav aria-label="Main">[\s\S]*<a class="nav-link" href="https:\/\/docs\.zapbip\.com">Docs<\/a>/);
   });
 });
 
