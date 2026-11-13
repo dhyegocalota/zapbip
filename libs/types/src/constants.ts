@@ -1,4 +1,4 @@
-import { OwnerLocale } from './enums';
+import { OwnerLocale, PricingCurrency } from './enums';
 
 export const SECOND_MS = 1_000;
 export const MINUTE_MS = 60 * SECOND_MS;
@@ -71,3 +71,19 @@ export const DEFAULT_WAITLIST_REFERRAL_CAP = 5;
 export const WAITLIST_REFERRAL_CAP_MIN = 1;
 export const WAITLIST_REFERRAL_CAP_MAX = 100;
 export const TURNSTILE_ACTION_WAITLIST_JOIN = 'waitlist-join';
+
+export const PRICING_FREE_MESSAGES = 5;
+export const PRICING_PRO_INCLUDED_MESSAGES = 1000;
+export const PRICING_OVERAGE_BLOCK_MESSAGES = 1000;
+export const PRICING_PRO_MONTHLY_CENTS: Record<PricingCurrency, number> = {
+  [PricingCurrency.Usd]: 900,
+  [PricingCurrency.Brl]: 4900,
+};
+export const PRICING_OVERAGE_CENTS: Record<PricingCurrency, number> = {
+  [PricingCurrency.Usd]: 500,
+  [PricingCurrency.Brl]: 2500,
+};
+export const PRICING_CURRENCY_BY_LOCALE: Record<OwnerLocale, PricingCurrency> = {
+  [OwnerLocale.EnglishUs]: PricingCurrency.Usd,
+  [OwnerLocale.PortugueseBrazil]: PricingCurrency.Brl,
+};
