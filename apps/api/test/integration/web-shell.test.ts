@@ -12,6 +12,7 @@ const FORM_OPENING_PATTERN = /<form[^>]*>/;
 const INPUT_PATTERN = /<input[^>]*>/g;
 const LOCALE_BUTTON_PATTERN = /<button[^>]*name="locale"[^>]*value="([^"]+)"/g;
 const THEME_BUTTON_PATTERN = /<button[^>]*name="theme"[^>]*value="([^"]+)"/g;
+const INLINE_SCRIPT_PATTERN = /<script(?![^>]*\ssrc=)(?![^>]*type="application\/ld\+json")/;
 const START_NUMBER = '+5511977770002';
 const NUMBER_CREATED_AT = 1_700_000_000_000;
 
@@ -81,7 +82,7 @@ describe.each(SURFACES)('the shared shell on the $name', ({ html }) => {
   it('carries no style attribute and no inline script', async () => {
     const page = await html();
     expect(page).not.toContain(' style=');
-    expect(page).not.toMatch(/<script(?![^>]*\ssrc=)(?![^>]*type="application\/ld\+json")/);
+    expect(page).not.toMatch(INLINE_SCRIPT_PATTERN);
   });
 });
 
