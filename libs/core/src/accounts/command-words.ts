@@ -103,11 +103,11 @@ const LOCALE_WORDS: Record<OwnerLocale, LocaleWords> = {
     createAgent: 'وكيل جديد',
     listAgents: 'وكلائي',
     revokeAgent: 'إبطال',
-    rotateAgent: 'تجديد',
+    rotateAgent: 'تجديد رابط',
     help: ['مساعدة', 'القائمة'],
     requestDeletion: 'حذف الحساب',
     confirmDeletion: 'حذف الحساب نهائيا',
-    setLanguage: 'اللغة',
+    setLanguage: 'تغيير اللغة',
   },
 };
 

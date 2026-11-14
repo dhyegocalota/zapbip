@@ -53,7 +53,7 @@ const COMMAND_WORDS: Record<DocsPageLanguage, string[]> = {
   [DocsPageLanguage.Japanese]: ['new agent', 'agents', 'revoke', 'rotate', 'help', 'delete account', 'delete account permanently'],
   [DocsPageLanguage.Korean]: ['new agent', 'agents', 'revoke', 'rotate', 'help', 'delete account', 'delete account permanently'],
   [DocsPageLanguage.Chinese]: ['new agent', 'agents', 'revoke', 'rotate', 'help', 'delete account', 'delete account permanently'],
-  [DocsPageLanguage.Arabic]: ['وكيل جديد', 'وكلائي', 'إبطال', 'تجديد', 'مساعدة', 'حذف الحساب', 'حذف الحساب نهائيا'],
+  [DocsPageLanguage.Arabic]: ['وكيل جديد', 'وكلائي', 'إبطال', 'تجديد رابط', 'مساعدة', 'حذف الحساب', 'حذف الحساب نهائيا'],
 };
 const OTHER_LANGUAGE_COMMAND_WORDS: Record<DocsPageLanguage, string[]> = {
   [DocsPageLanguage.English]: COMMAND_WORDS[DocsPageLanguage.PortugueseBrazil],

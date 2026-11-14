@@ -1,9 +1,11 @@
 import { CommandKind, DEFAULT_LOCALE } from '@zapbip/types';
 import type { AccountCommand, CommandInput } from './account-types';
 import { COMMAND_WORDS, MENU_COMMAND_KINDS } from './command-words';
+import { foldCommandText } from './command-folding';
 import { COMMAND_LIST_ID_PREFIX } from './constants';
 
 const WHITESPACE_PATTERN = /\s+/g;
+const FOLDED_COMMAND_WORDS = COMMAND_WORDS.map((entry) => ({ entry, folded: foldCommandText({ text: entry.words }) }));
 
 export function formatMenuRowId(input: { kind: CommandKind }): string {
   return `${COMMAND_LIST_ID_PREFIX}${input.kind}`;
@@ -17,11 +19,14 @@ function parseListReply(input: { listReplyId: string }): AccountCommand | null {
 }
 
 function parseText(input: { text: string }): AccountCommand | null {
-  const collapsed = input.text.trim().replace(WHITESPACE_PATTERN, ' ');
+  const collapsed = foldCommandText({ text: input.text.trim().replace(WHITESPACE_PATTERN, ' ') });
   const lowered = collapsed.toLowerCase();
-  const entry = COMMAND_WORDS.find((word) => lowered === word.words || (word.takesName && lowered.startsWith(`${word.words} `)));
-  if (entry === undefined) return null;
-  const rawName = entry.takesName ? collapsed.slice(entry.words.length).trim() : null;
+  const match = FOLDED_COMMAND_WORDS.find(
+    ({ entry, folded }) => lowered === folded || (entry.takesName && lowered.startsWith(`${folded} `)),
+  );
+  if (match === undefined) return null;
+  const { entry, folded } = match;
+  const rawName = entry.takesName ? collapsed.slice(folded.length).trim() : null;
   return { kind: entry.kind, rawName, locale: entry.locale };
 }
 

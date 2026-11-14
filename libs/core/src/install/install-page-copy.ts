@@ -68,7 +68,7 @@ export const INSTALL_PAGE_COPY: Record<OwnerLocale, InstallPageTexts> = {
   [OwnerLocale.Arabic]: {
     ownerLanguage: 'Modern Standard Arabic',
     unsupportedProduct: 'zapbip لا يعرف هذا المنتج بعد. تعذّر عليّ تثبيته.',
-    expired: 'انتهت صلاحية هذا الرابط أو سبق استخدامه. اطلب رابطًا جديدًا من zapbip على WhatsApp: أرسل `تجديد <الاسم>`.',
+    expired: 'انتهت صلاحية هذا الرابط أو سبق استخدامه. اطلب رابطًا جديدًا من zapbip على WhatsApp: أرسل `تجديد رابط <الاسم>`.',
     notFound: 'غير موجود.',
     footer: `zapbip منتج من ${COMPANY.tradeName}`,
   },

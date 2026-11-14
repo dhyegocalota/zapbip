@@ -44,8 +44,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.Japanese]: `zapbipは、AIエージェントと話すためのあなた専用のWhatsAppです。アクセスはウェイトリスト制で、あなたはすでに登録されています。利用できるようになったらここでお知らせします。準備のために、エージェントの接続方法をご覧ください: ${ONBOARDING_SETUP_LINKS[OwnerLocale.Japanese]}\n\nもっと早く使いたい場合は、アクセスをリクエストしてください: ${ONBOARDING_REQUEST_ACCESS_LINKS[OwnerLocale.Japanese]}\n\n利用できるようになったら「ヘルプ」と送信してください。`,
     [OwnerLocale.Korean]: `zapbip은 AI 에이전트와 대화하는 나만의 WhatsApp이에요. 이용은 대기자 명단 순서로 제공되고, 이미 명단에 등록되어 있어요. 이용할 수 있게 되면 여기서 알려 드릴게요. 미리 준비하려면 에이전트를 연결하는 방법을 확인하세요: ${ONBOARDING_SETUP_LINKS[OwnerLocale.Korean]}\n\n더 일찍 들어오고 싶다면 이용을 신청하세요: ${ONBOARDING_REQUEST_ACCESS_LINKS[OwnerLocale.Korean]}\n\n이용할 수 있게 되면 "도움말"을 보내 주세요.`,
     [OwnerLocale.ChineseSimplified]: `zapbip 是你用来和 AI 智能体对话的专属 WhatsApp。使用资格通过候补名单开放，你已经在名单中：开放时我们会在这里通知你。想提前准备，可以看看如何连接你的智能体：${ONBOARDING_SETUP_LINKS[OwnerLocale.ChineseSimplified]}\n\n想早点进来？申请使用：${ONBOARDING_REQUEST_ACCESS_LINKS[OwnerLocale.ChineseSimplified]}\n\n使用资格开放后，请发送“帮助”。`,
-    [OwnerLocale.Arabic]:
-      `zapbip هو WhatsApp الشخصي الخاص بك للتحدث مع وكلاء الذكاء الاصطناعي. الوصول عبر قائمة انتظار وأنت مسجَّل فيها بالفعل: سنخبرك هنا عندما يُفعَّل وصولك. وللاستعداد، تعرّف على طريقة ربط وكلائك:\n${ONBOARDING_SETUP_LINKS[OwnerLocale.Arabic]}\n\nتريد الدخول مبكرًا؟ اطلب الوصول:\n${ONBOARDING_REQUEST_ACCESS_LINKS[OwnerLocale.Arabic]}\n\nأرسل «مساعدة» عندما يُفعَّل وصولك.`,
+    [OwnerLocale.Arabic]: `zapbip هو WhatsApp الشخصي الخاص بك للتحدث مع وكلاء الذكاء الاصطناعي. الوصول عبر قائمة انتظار وأنت مسجَّل فيها بالفعل: سنخبرك هنا عندما يُفعَّل وصولك. وللاستعداد، تعرّف على طريقة ربط وكلائك:\n${ONBOARDING_SETUP_LINKS[OwnerLocale.Arabic]}\n\nتريد الدخول مبكرًا؟ اطلب الوصول:\n${ONBOARDING_REQUEST_ACCESS_LINKS[OwnerLocale.Arabic]}\n\nأرسل «مساعدة» عندما يُفعَّل وصولك.`,
   },
   [AccountReplyIntent.Suspended]: {
     [OwnerLocale.PortugueseBrazil]: 'Sua conta está suspensa.',
@@ -76,7 +75,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.ChineseSimplified]:
       '智能体 {agent_name} 已创建。请把下面的内容粘贴到你的智能体中：\n\n{install_prompt}\n\n如果链接过期或已被使用，请发送“轮换 {agent_name}”。',
     [OwnerLocale.Arabic]:
-      'تم إنشاء الوكيل {agent_name}. الصق هذا في وكيلك:\n\n{install_prompt}\n\nإذا انتهت صلاحية الرابط أو استُخدم، أرسل «تجديد {agent_name}».',
+      'تم إنشاء الوكيل {agent_name}. الصق هذا في وكيلك:\n\n{install_prompt}\n\nإذا انتهت صلاحية الرابط أو استُخدم، أرسل «تجديد رابط {agent_name}».',
   },
   [AccountReplyIntent.InvalidName]: {
     [OwnerLocale.PortugueseBrazil]: 'Nome inválido. Use de 1 a 20 letras minúsculas, números ou hífens, começando por letra ou número.',
@@ -164,7 +163,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.ChineseSimplified]:
       '智能体 {agent_name} 的链接已更换。旧链接已失效。请把下面的内容粘贴到你的智能体中：\n\n{install_prompt}\n\n如果链接过期或已被使用，请发送“轮换 {agent_name}”。',
     [OwnerLocale.Arabic]:
-      'تم استبدال رابط الوكيل {agent_name}. الرابط القديم لم يعد يعمل. الصق هذا في وكيلك:\n\n{install_prompt}\n\nإذا انتهت صلاحية الرابط أو استُخدم، أرسل «تجديد {agent_name}».',
+      'تم استبدال رابط الوكيل {agent_name}. الرابط القديم لم يعد يعمل. الصق هذا في وكيلك:\n\n{install_prompt}\n\nإذا انتهت صلاحية الرابط أو استُخدم، أرسل «تجديد رابط {agent_name}».',
   },
   [AccountReplyIntent.Listed]: {
     [OwnerLocale.PortugueseBrazil]: 'Seus agentes:\n{agents}',
@@ -344,7 +343,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
       'その言語は分かりません。次のいずれかを指定して「言語 <コード>」と送信してください: en, pt, es, de, fr, ja, ko, zh, ar。',
     [OwnerLocale.Korean]: '그 언어는 몰라요. 다음 중 하나를 넣어 "언어 <코드>"를 보내 주세요: en, pt, es, de, fr, ja, ko, zh, ar.',
     [OwnerLocale.ChineseSimplified]: '我不认识这个语言。请发送“语言 <代码>”，代码可选：en, pt, es, de, fr, ja, ko, zh, ar。',
-    [OwnerLocale.Arabic]: 'لا أعرف هذه اللغة. أرسل «اللغة <الرمز>» مع أحد الرموز: en, pt, es, de, fr, ja, ko, zh, ar.',
+    [OwnerLocale.Arabic]: 'لا أعرف هذه اللغة. أرسل «تغيير اللغة <الرمز>» مع أحد الرموز: en, pt, es, de, fr, ja, ko, zh, ar.',
   },
   [AccountReplyIntent.Unknown]: {
     [OwnerLocale.PortugueseBrazil]: 'Não entendi. Envie "ajuda" para ver os comandos.',
