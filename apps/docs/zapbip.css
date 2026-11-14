@@ -185,3 +185,13 @@
     padding: 1.25rem;
   }
 }
+
+html[lang='ar'] .zapbip-hero-eyebrow {
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+html[lang='ar'] .zapbip-hero {
+  border-radius: 1.75rem;
+  border-start-start-radius: 0.375rem;
+}

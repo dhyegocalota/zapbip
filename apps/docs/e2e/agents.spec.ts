@@ -32,7 +32,7 @@ const SECONDS_WORD: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.Japanese]: '秒',
   [DocsPageLanguage.Korean]: '초',
   [DocsPageLanguage.Chinese]: '秒',
-  [DocsPageLanguage.Arabic]: 'ثوانٍ',
+  [DocsPageLanguage.Arabic]: 'ثوانٍ|ثانية',
 };
 const HOURLY_TOKEN: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.English]: 'hour',
@@ -53,10 +53,10 @@ function urlOf(input: { path: string; language: DocsPageLanguage }): string {
   return `/${twinPathOf({ path: input.path, language: input.language })}`;
 }
 
-function delayTokenOf(input: { expectedDelaySeconds: number; language: DocsPageLanguage }): string {
+function delayTokenOf(input: { expectedDelaySeconds: number; language: DocsPageLanguage }): string | RegExp {
   if (input.expectedDelaySeconds === ONE_HOUR_SECONDS) return HOURLY_TOKEN[input.language];
   const separator = input.language === DocsPageLanguage.Korean ? '' : ' ';
-  return `${input.expectedDelaySeconds}${separator}${SECONDS_WORD[input.language]}`;
+  return new RegExp(`${input.expectedDelaySeconds}${separator}(?:${SECONDS_WORD[input.language]})`, 'i');
 }
 
 async function expectFactVisible(input: { content: Locator; fact: string }): Promise<void> {
