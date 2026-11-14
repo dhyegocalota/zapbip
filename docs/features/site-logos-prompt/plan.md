@@ -22,11 +22,11 @@ G1 first (data), then G2.
 
 ### G1
 
-- [ ] **Step 1:** red logo test (every mark has a file and a dated source), then the four SVG files and the `officialLogo` stems.
+- [x] **Step 1:** red logo test (every mark has a file and a dated source), then the three SVG files and the four `officialLogo` stems — evidence: b1548fb7, e649311e.
 
 ### G2
 
-- [ ] **Step 2:** red integration tests for the prompt, the collapsed manual section, `/setup.md` and the links, then the copy keys in eight languages, the setup page, the routes and the view.
+- [x] **Step 2:** red integration tests for the prompt, the collapsed manual section, `/setup.md` and the links, then the copy keys in eight languages, the setup page, the routes and the view — evidence: f52bcebf, 2b924d84.
 
 ## Failure modes
 

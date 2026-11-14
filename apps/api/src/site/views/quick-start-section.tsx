@@ -136,7 +136,7 @@ export function QuickStartSection(props: {
                 </button>
               </div>
               <pre class="code-block">
-                <code class="code-lines-1" data-code={tab.prompt}>
+                <code class="code-lines-1 start-prompt" data-code={tab.prompt}>
                   <span class="code-line">{tab.prompt}</span>
                 </code>
               </pre>

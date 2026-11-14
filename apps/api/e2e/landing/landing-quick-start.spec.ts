@@ -398,17 +398,22 @@ test('every panel opens with the one line to paste and keeps the manual command 
 
 test('the logo of each agent that has a mark is drawn, and the others show their initials', async ({ page }) => {
   await page.goto('/');
-  await Promise.all(
-    AGENTS.map(async (agent) => {
-      const tab = tabOf({ page, id: agent.id });
-      if (agent.install.officialLogo === null) {
-        await expect(tab.locator('.agent-badge')).toBeVisible();
-        return;
-      }
-      const image = tab.locator('img.start-logo-image');
-      await image.scrollIntoViewIfNeeded();
-      await expect(image).toBeVisible();
-      await expect.poll(() => image.evaluate('(element) => element.complete && element.naturalWidth > 0')).toBe(true);
-    }),
-  );
+  await AGENTS.reduce(async (previous, agent) => {
+    await previous;
+    const tab = tabOf({ page, id: agent.id });
+    if (agent.install.officialLogo === null) {
+      await expect(tab.locator('.agent-badge')).toBeVisible();
+      return;
+    }
+    const image = tab.locator('img.start-logo-image');
+    await image.scrollIntoViewIfNeeded();
+    await expect(image).toBeVisible();
+    await expect
+      .poll(() =>
+        page.evaluate(
+          `document.querySelector('#start-tab-${agent.id} img').complete && document.querySelector('#start-tab-${agent.id} img').naturalWidth > 0`,
+        ),
+      )
+      .toBe(true);
+  }, Promise.resolve());
 });

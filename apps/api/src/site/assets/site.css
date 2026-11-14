@@ -1563,6 +1563,7 @@ summary::before {
 
 .start-panel {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-4);
 }
 
@@ -1761,6 +1762,10 @@ summary::before {
   margin: 0;
   color: var(--color-text-muted);
   font-weight: 600;
+}
+
+.code-block code.start-prompt {
+  overflow-wrap: anywhere;
 }
 
 .start-manual {
