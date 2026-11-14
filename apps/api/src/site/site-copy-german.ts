@@ -238,9 +238,18 @@ export const GERMAN_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.FooterLegalLabel]: 'Rechtliches',
   [SiteCopyKey.MetaTitle]: 'Deine KI-Agenten schreiben dir auf WhatsApp',
   [SiteCopyKey.MetaDescription]:
-    '{agents} und jeder MCP-Agent schreiben dir auf WhatsApp, fragen mit Buttons und warten auf deine Antwort. Teste es kostenlos mit {free} Nachrichten: Zugang anfragen.',
+    '{agents} und jeder MCP-Agent schreiben dir auf WhatsApp, fragen per Button und warten auf deine Antwort. Gratis mit {free} Nachrichten: Zugang anfragen.',
   [SiteCopyKey.MetaOgTitle]: 'zapbip: Deine KI-Agenten schreiben dir auf WhatsApp',
   [SiteCopyKey.MetaOgImageAlt]: 'Ein KI-Agent fragt auf WhatsApp „v2.4 in Produktion ausrollen?“, mit den Buttons Ship it und Wait.',
+  [SiteCopyKey.AboutTitle]: 'Über zapbip',
+  [SiteCopyKey.AboutDefinition]:
+    'zapbip ist ein persönlicher WhatsApp-Kanal für KI-Agenten: Du verbindest deine eigenen Agenten über eine Nummer der WhatsApp Cloud API mit deinem eigenen Telefon, mit einem API-Schlüssel und einem MCP-Server.',
+  [SiteCopyKey.AboutPricing]:
+    'Preise: {free} Nachrichten gratis; Pro kostet {price} im Monat mit {included} Nachrichten, danach {overage} pro weiteren {block} Nachrichten.',
+  [SiteCopyKey.AboutAgents]: 'Unterstützte Agenten: {agents}.',
+  [SiteCopyKey.AboutLimits]:
+    'Grenzen: Eine einzige WhatsApp-Nummer teilen sich alle Konten, und jede Antwort geht an den Agenten zurück, auf den sie antwortet; es wird nur die offizielle WhatsApp Cloud API genutzt; Nachrichten in der Warteschlange bleiben {messageDays} Tage, Medien {mediaDays} Tage.',
+  [SiteCopyKey.AboutUpdated]: 'Aktualisiert: {updatedOn}.',
   [SiteCopyKey.NotFoundMetaTitle]: 'Seite nicht gefunden',
   [SiteCopyKey.AgentsTitle]: 'Für KI-Agenten',
   [SiteCopyKey.AgentsBody]:

@@ -243,10 +243,19 @@ export const FRENCH_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.FooterLegalLabel]: 'Mentions légales',
   [SiteCopyKey.MetaTitle]: 'Vos agents IA vous écrivent sur WhatsApp',
   [SiteCopyKey.MetaDescription]:
-    '{agents} et tout agent MCP vous écrivent sur WhatsApp, posent leurs questions avec des boutons et attendent votre réponse. Essayez gratuitement avec {free} messages\u00a0: demandez l’accès.',
+    '{agents} et tout agent MCP vous écrivent sur WhatsApp, demandent par boutons et attendent votre réponse. Gratuit avec {free} messages\u00a0: demandez l’accès.',
   [SiteCopyKey.MetaOgTitle]: 'zapbip\u00a0: vos agents IA vous écrivent sur WhatsApp',
   [SiteCopyKey.MetaOgImageAlt]:
     'Un agent IA demande «\u202fDéployer la v2.4 en production\u202f?\u202f» sur WhatsApp, avec les boutons Ship it et Wait.',
+  [SiteCopyKey.AboutTitle]: 'À propos de zapbip',
+  [SiteCopyKey.AboutDefinition]:
+    'zapbip est un canal WhatsApp personnel pour les agents IA\u00a0: vous connectez vos propres agents à votre propre téléphone par un numéro de la WhatsApp Cloud API, avec une clé d’API et un serveur MCP.',
+  [SiteCopyKey.AboutPricing]:
+    'Tarifs\u00a0: {free} messages gratuits\u00a0; Pro coûte {price} par mois avec {included} messages, puis {overage} par tranche supplémentaire de {block} messages.',
+  [SiteCopyKey.AboutAgents]: 'Agents pris en charge\u00a0: {agents}.',
+  [SiteCopyKey.AboutLimits]:
+    'Limites\u00a0: un seul numéro WhatsApp est partagé par tous les comptes et chaque réponse revient à l’agent auquel elle répond\u00a0; seule la WhatsApp Cloud API officielle est utilisée\u00a0; les messages en file d’attente sont conservés {messageDays} jours et les médias {mediaDays} jours.',
+  [SiteCopyKey.AboutUpdated]: 'Mis à jour\u00a0: {updatedOn}.',
   [SiteCopyKey.NotFoundMetaTitle]: 'Page introuvable',
   [SiteCopyKey.AgentsTitle]: 'Pour les agents IA',
   [SiteCopyKey.AgentsBody]:

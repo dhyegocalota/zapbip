@@ -62,7 +62,8 @@ export const AGENT_ADDRESS_IPV6_PREFIX_GROUPS = 3;
 export const TEXT_CONTENT_TYPE = 'text/plain; charset=utf-8';
 export const MARKDOWN_CONTENT_TYPE = 'text/markdown; charset=utf-8';
 export const JSON_CONTENT_TYPE = 'application/json; charset=utf-8';
-export const SECURITY_POLICY_URL = 'https://github.com/dhyegocalota/zapbip/security/policy';
+export const REPOSITORY_URL = 'https://github.com/dhyegocalota/zapbip';
+export const SECURITY_POLICY_URL = `${REPOSITORY_URL}/security/policy`;
 export const SECURITY_TEXT_VALIDITY_MS = 180 * DAY_MS;
 export const IS_SECURITY_POLICY_PUBLIC = false;
 export const AGENT_CRAWLER_NAMES = [

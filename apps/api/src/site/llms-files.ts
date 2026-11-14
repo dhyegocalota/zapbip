@@ -1,4 +1,5 @@
 import { WebLocale } from '@zapbip/types';
+import { aboutBlocksOf } from './about-facts';
 import { LlmsFile, llmsPathOf, markdownPathOf, setupUrlOf } from './agentic-paths';
 import { legalTextOf } from './legal-copy';
 import { LEGAL_PAGES, legalPathOf } from './legal-links';
@@ -85,6 +86,7 @@ export function llmsTextOf(input: { origin: string; locale: WebLocale }): string
     blocks: [
       { kind: MarkdownBlockKind.Heading, level: PAGE_LEVEL, text: translate(SiteCopyKey.BrandName) },
       { kind: MarkdownBlockKind.Quote, text: description },
+      ...aboutBlocksOf({ locale }),
       ...section({ title: PAGES_HEADING, entries: pages }),
       ...section({ title: INTERFACES_HEADING, entries: interfaces }),
       ...section({ title: DOCS_HEADING, entries: docs }),

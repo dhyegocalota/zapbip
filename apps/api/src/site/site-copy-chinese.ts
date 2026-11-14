@@ -228,6 +228,14 @@ export const CHINESE_SITE_COPY: Record<SiteCopyKey, string> = {
     '{agents} 以及任何 MCP 智能体会在 WhatsApp 上给你发消息，用按钮向你提问，并等待你的回复。免费试用 {free} 条消息：立即申请使用。',
   [SiteCopyKey.MetaOgTitle]: 'zapbip：你的 AI 智能体会在 WhatsApp 上给你发消息',
   [SiteCopyKey.MetaOgImageAlt]: '一个 AI 智能体在 WhatsApp 上问“要把 v2.4 部署到生产环境吗？”，带有 Ship it 和 Wait 两个按钮。',
+  [SiteCopyKey.AboutTitle]: '关于 zapbip',
+  [SiteCopyKey.AboutDefinition]:
+    'zapbip 是面向 AI 智能体的个人 WhatsApp 渠道：你用一个 WhatsApp Cloud API 号码、一个 API 密钥和一个 MCP 服务器，把自己的智能体连接到自己的手机。',
+  [SiteCopyKey.AboutPricing]: '价格：免费 {free} 条消息；Pro 每月 {price}，含 {included} 条消息，之后每增加 {block} 条收取 {overage}。',
+  [SiteCopyKey.AboutAgents]: '支持的智能体：{agents}。',
+  [SiteCopyKey.AboutLimits]:
+    '限制：所有账户共用一个 WhatsApp 号码，每条回复都会回到所回应的智能体；仅使用官方 WhatsApp Cloud API；排队中的消息保存 {messageDays} 天，媒体文件保存 {mediaDays} 天。',
+  [SiteCopyKey.AboutUpdated]: '更新日期：{updatedOn}。',
   [SiteCopyKey.NotFoundMetaTitle]: '找不到页面',
   [SiteCopyKey.AgentsTitle]: '面向 AI 智能体',
   [SiteCopyKey.AgentsBody]:

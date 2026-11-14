@@ -234,9 +234,18 @@ export const SPANISH_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.FooterLegalLabel]: 'Legal',
   [SiteCopyKey.MetaTitle]: 'Tus agentes de IA te escriben por WhatsApp',
   [SiteCopyKey.MetaDescription]:
-    '{agents} y cualquier agente MCP te escriben por WhatsApp, preguntan con botones y esperan tu respuesta. Pruébalo gratis con {free} mensajes: solicita acceso.',
+    '{agents} y cualquier agente MCP te escriben por WhatsApp, preguntan con botones y esperan tu respuesta. Gratis con {free} mensajes: solicita acceso.',
   [SiteCopyKey.MetaOgTitle]: 'zapbip: tus agentes de IA te escriben por WhatsApp',
   [SiteCopyKey.MetaOgImageAlt]: 'Un agente de IA pregunta «¿Desplegar la v2.4 en producción?» en WhatsApp, con los botones Ship it y Wait.',
+  [SiteCopyKey.AboutTitle]: 'Acerca de zapbip',
+  [SiteCopyKey.AboutDefinition]:
+    'zapbip es un canal personal de WhatsApp para agentes de IA: conectas tus propios agentes a tu propio teléfono mediante un número de la API de WhatsApp Cloud, con una clave de API y un servidor MCP.',
+  [SiteCopyKey.AboutPricing]:
+    'Precios: {free} mensajes gratis; Pro cuesta {price} al mes con {included} mensajes, luego {overage} por cada {block} mensajes extra.',
+  [SiteCopyKey.AboutAgents]: 'Agentes compatibles: {agents}.',
+  [SiteCopyKey.AboutLimits]:
+    'Límites: un único número de WhatsApp lo comparten todas las cuentas y cada respuesta vuelve al agente al que contesta; solo se usa la API oficial de WhatsApp Cloud; los mensajes en cola se guardan {messageDays} días y los archivos {mediaDays} días.',
+  [SiteCopyKey.AboutUpdated]: 'Actualizado: {updatedOn}.',
   [SiteCopyKey.NotFoundMetaTitle]: 'Página no encontrada',
   [SiteCopyKey.AgentsTitle]: 'Para agentes de IA',
   [SiteCopyKey.AgentsBody]:

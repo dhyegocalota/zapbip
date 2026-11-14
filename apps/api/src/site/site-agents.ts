@@ -52,6 +52,10 @@ export function siteAgentIdOf(input: { value: string | undefined }): InstallClie
   return Object.values(InstallClient).find((id) => id === input.value) ?? null;
 }
 
+export function allAgentNames(): string {
+  return siteAgentNames().join(LIST_SEPARATOR);
+}
+
 export function leadingAgentNames(): string {
   return siteAgentNames().slice(0, LEADING_AGENT_COUNT).join(LIST_SEPARATOR);
 }

@@ -8,7 +8,6 @@ import {
   POSTER_SIZES,
   POSTER_SMALL_WIDTH,
   DEMO_IMAGE_SIZE,
-  SITE_BRAND_SEPARATOR,
   THEME_COLOR_DARK,
   THEME_COLOR_LIGHT,
   TURNSTILE_SCRIPT_URL,
@@ -17,7 +16,6 @@ import {
   PRICING_FRAGMENT,
   START_FRAGMENT,
 } from '../site-constants';
-import { leadingAgentNames } from '../site-agents';
 import { markdownUrlOf } from '../agentic-paths';
 import { ShellControls } from '../../web-shell/shell-controls';
 import { RETURN_TO_FIELD } from '../../web-shell/shell-fields';
@@ -29,15 +27,17 @@ import { localePathOf } from '../site-language';
 import { joinPathOf, pageUrlOf, returnPathOf } from '../site-links';
 import { LOCALE_PROFILES, languageOf } from '../../web-shell/locale-profiles';
 import { LegalDocument, legalPathOf } from '../legal-links';
-import { legalTextOf } from '../legal-copy';
+import { pageMetaOf } from '../page-meta';
+import { serializeStructuredData, structuredDataOf } from '../structured-data';
 import { SITE_SCRIPT_HREF } from '../site-scripts';
 import { APPLE_TOUCH_ICON_PATH, SiteAssetKind, siteAssetOf, SitePath } from '../site-paths';
-import { pricingValuesOf } from '../price-format';
 import { SITE_STYLESHEET_HREF } from '../site-stylesheet';
 
 const FORM_FRAGMENT = '#join-email';
 const CONTENT_FRAGMENT = '#content';
 const MAILTO_PREFIX = 'mailto:';
+const INDEXABLE_ROBOTS = 'index, follow, max-image-preview:large';
+const NOINDEX_ROBOTS = 'noindex';
 const LEGAL_LINKS: { document: LegalDocument; label: ShellCopyKey }[] = [
   { document: LegalDocument.Terms, label: ShellCopyKey.FooterTerms },
   { document: LegalDocument.Privacy, label: ShellCopyKey.FooterPrivacy },
@@ -51,15 +51,6 @@ function skipLinkOf(input: { isLegalPage: boolean; hasForm: boolean }): { href: 
   if (input.isLegalPage) return { href: CONTENT_FRAGMENT, label: SiteCopyKey.SkipToContent };
   if (input.hasForm) return { href: FORM_FRAGMENT, label: SiteCopyKey.SkipToForm };
   return { href: JOIN_FRAGMENT, label: SiteCopyKey.SkipToForm };
-}
-
-function descriptionOf(input: { model: PageModel }): string {
-  const { model } = input;
-  if (model.legalDocument !== null) return legalTextOf({ document: model.legalDocument, locale: model.locale }).description;
-  return copyOf({ locale: model.locale })(SiteCopyKey.MetaDescription, {
-    ...pricingValuesOf({ locale: model.locale }),
-    agents: leadingAgentNames(),
-  });
 }
 
 function SiteHeader(props: { model: PageModel }) {
@@ -155,9 +146,8 @@ export function SiteLayout(props: { model: PageModel; title: string; isIndexable
   const { model } = props;
   const translate = copyOf({ locale: model.locale });
   const isLegalPage = model.legalDocument !== null;
-  const description = descriptionOf({ model });
+  const { title: pageTitle, description, openGraphTitle } = pageMetaOf({ model, title: props.title });
   const canonical = pageUrlOf({ model, locale: model.locale });
-  const pageTitle = `${props.title}${SITE_BRAND_SEPARATOR}${translate(SiteCopyKey.BrandName)}`;
   const imageUrl = `${model.siteOrigin}${siteAssetOf({ kind: SiteAssetKind.OpenGraphImage, locale: model.locale })}`;
   const hasForm = !isLegalPage && model.join.state !== JoinState.Joined && model.join.state !== JoinState.Paused;
   const skipLink = skipLinkOf({ isLegalPage, hasForm });
@@ -170,7 +160,7 @@ export function SiteLayout(props: { model: PageModel; title: string; isIndexable
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>{pageTitle}</title>
         <meta name="description" content={description} />
-        {props.isIndexable ? null : <meta name="robots" content="noindex" />}
+        <meta name="robots" content={props.isIndexable ? INDEXABLE_ROBOTS : NOINDEX_ROBOTS} />
         <link rel="canonical" href={canonical} />
         {Object.values(WebLocale).map((locale) => (
           <link rel="alternate" hreflang={languageOf({ locale })} href={pageUrlOf({ model, locale })} />
@@ -186,7 +176,7 @@ export function SiteLayout(props: { model: PageModel; title: string; isIndexable
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content={translate(SiteCopyKey.BrandName)} />
         <meta property="og:url" content={canonical} />
-        <meta property="og:title" content={translate(SiteCopyKey.MetaOgTitle)} />
+        <meta property="og:title" content={openGraphTitle} />
         <meta property="og:description" content={description} />
         <meta property="og:image" content={imageUrl} />
         <meta property="og:image:width" content={String(OPEN_GRAPH_WIDTH)} />
@@ -200,10 +190,16 @@ export function SiteLayout(props: { model: PageModel; title: string; isIndexable
             <meta property="og:locale:alternate" content={LOCALE_PROFILES[locale].openGraphLocale} />
           ))}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={translate(SiteCopyKey.MetaOgTitle)} />
+        <meta name="twitter:title" content={openGraphTitle} />
         <meta name="twitter:description" content={description} />
         <meta name="twitter:image" content={imageUrl} />
         <meta name="twitter:image:alt" content={translate(SiteCopyKey.MetaOgImageAlt)} />
+        {props.isIndexable ? (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: serializeStructuredData({ data: structuredDataOf({ model }) }) }}
+          />
+        ) : null}
         <script src={SITE_SCRIPT_HREF} defer />
         {hasForm ? <script src={TURNSTILE_SCRIPT_URL} async defer /> : null}
       </head>

@@ -6,14 +6,13 @@ import { LegalDocument, legalUrlOf } from '../../src/site/legal-links';
 import { legalTextOf } from '../../src/site/legal-copy';
 import { pricingValuesOf } from '../../src/site/price-format';
 import { canonicalUrlOf } from '../../src/site/site-links';
-import { SECURITY_POLICY_URL } from '../../src/site/site-constants';
+import { REPOSITORY_URL } from '../../src/site/site-constants';
 import { SiteCopyKey } from '../../src/site/site-copy';
 import { copyOf } from '../../src/site/site-copy-text';
 import { serializeStructuredData, structuredDataOf, type StructuredDataNode } from '../../src/site/structured-data';
 import { languageOf } from '../../src/web-shell/locale-profiles';
 import { MODEL_ORIGIN, pageModelFor } from '../support/page-model';
 
-const REPOSITORY_URL = SECURITY_POLICY_URL.replace('/security/policy', '');
 const CENTS_PER_UNIT = 100;
 
 function graphOf(input: { locale: WebLocale; document: LegalDocument | null }): StructuredDataNode[] {
@@ -52,7 +51,7 @@ describe.each(Object.values(WebLocale))('structured data of the home page in %s'
   it('describes the website in the page language, published by the organization', () => {
     expect(nodeOf({ graph, type: 'WebSite' })).toMatchObject({
       name: translate(SiteCopyKey.BrandName),
-      url: `${MODEL_ORIGIN}/`,
+      url: canonicalUrlOf({ origin: MODEL_ORIGIN, locale }),
       inLanguage: languageOf({ locale }),
       publisher: { '@id': `${MODEL_ORIGIN}/#organization` },
     });

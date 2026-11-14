@@ -246,6 +246,15 @@ export const SITE_COPY: Record<WebLocale, Record<SiteCopyKey, string>> = {
       '{agents} and any MCP agent text you on WhatsApp, ask with buttons and wait for your answer. Try it free with {free} messages: request access.',
     [SiteCopyKey.MetaOgTitle]: 'zapbip: your AI agents text you on WhatsApp',
     [SiteCopyKey.MetaOgImageAlt]: 'An AI agent asks "Deploy v2.4 to production?" on WhatsApp, with Ship it and Wait buttons.',
+    [SiteCopyKey.AboutTitle]: 'About zapbip',
+    [SiteCopyKey.AboutDefinition]:
+      'zapbip is a personal WhatsApp channel for AI agents: you connect your own agents to your own phone through one WhatsApp Cloud API number, with one API key and one MCP server.',
+    [SiteCopyKey.AboutPricing]:
+      'Pricing: {free} messages free; Pro is {price} per month with {included} messages, then {overage} per extra {block} messages.',
+    [SiteCopyKey.AboutAgents]: 'Supported agents: {agents}.',
+    [SiteCopyKey.AboutLimits]:
+      'Limits: one WhatsApp number is shared by every account and each reply is routed to the agent it answers; only the official WhatsApp Cloud API is used; queued messages are kept {messageDays} days and media {mediaDays} days.',
+    [SiteCopyKey.AboutUpdated]: 'Updated: {updatedOn}.',
     [SiteCopyKey.NotFoundMetaTitle]: 'Page not found',
   },
   [WebLocale.PortugueseBrazil]: {
@@ -487,6 +496,15 @@ export const SITE_COPY: Record<WebLocale, Record<SiteCopyKey, string>> = {
       '{agents} e qualquer agente MCP falam com você no WhatsApp, perguntam com botões e esperam sua resposta. Teste grátis com {free} mensagens: peça acesso.',
     [SiteCopyKey.MetaOgTitle]: 'zapbip: seus agentes de IA falam com você no WhatsApp',
     [SiteCopyKey.MetaOgImageAlt]: 'Um agente de IA pergunta "Publicar a v2.4 em produção?" no WhatsApp, com os botões Publicar e Esperar.',
+    [SiteCopyKey.AboutTitle]: 'Sobre o zapbip',
+    [SiteCopyKey.AboutDefinition]:
+      'O zapbip é um canal pessoal de WhatsApp para agentes de IA: você conecta seus próprios agentes ao seu próprio celular por um número da WhatsApp Cloud API, com uma chave de API e um servidor MCP.',
+    [SiteCopyKey.AboutPricing]:
+      'Preços: {free} mensagens grátis; o Pro custa {price} por mês com {included} mensagens, depois {overage} a cada {block} mensagens extras.',
+    [SiteCopyKey.AboutAgents]: 'Agentes compatíveis: {agents}.',
+    [SiteCopyKey.AboutLimits]:
+      'Limites: um único número de WhatsApp é compartilhado por todas as contas e cada resposta volta ao agente que ela responde; só a WhatsApp Cloud API oficial é usada; mensagens na fila ficam {messageDays} dias e mídias {mediaDays} dias.',
+    [SiteCopyKey.AboutUpdated]: 'Atualizado em: {updatedOn}.',
     [SiteCopyKey.NotFoundMetaTitle]: 'Página não encontrada',
   },
   [WebLocale.Spanish]: SPANISH_SITE_COPY,

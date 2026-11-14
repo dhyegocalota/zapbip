@@ -1,7 +1,7 @@
 import { WebLocale } from '@zapbip/types';
 import { LlmsFile, llmsPathOf } from './agentic-paths';
 import { LegalDocument, legalUrlOf } from './legal-links';
-import { AGENT_CRAWLER_NAMES } from './site-constants';
+import { AGENT_CRAWLER_NAMES, LEGAL_UPDATED_ON, SITE_UPDATED_ON } from './site-constants';
 import { SitePath } from './site-paths';
 import { canonicalUrlOf } from './site-links';
 import { languageOf } from '../web-shell/locale-profiles';
@@ -12,18 +12,25 @@ const LLMS_DIRECTIVE = 'Llms-Txt';
 const LLMS_FULL_DIRECTIVE = 'Llms-Full-Txt';
 
 type LocalizedUrl = (locale: WebLocale) => string;
+type SitemapPage = { urlOf: LocalizedUrl; lastModified: string };
 
 function alternateOf(input: { hreflang: string; href: string }): string {
   return `    <xhtml:link rel="alternate" hreflang="${input.hreflang}" href="${input.href}"/>`;
 }
 
-function entriesOf(input: { urlOf: LocalizedUrl }): string[] {
-  const { urlOf } = input;
+function entriesOf(input: SitemapPage): string[] {
+  const { urlOf, lastModified } = input;
   const alternates = [
     ...Object.values(WebLocale).map((locale) => alternateOf({ hreflang: languageOf({ locale }), href: urlOf(locale) })),
     alternateOf({ hreflang: DEFAULT_LANGUAGE_TAG, href: urlOf(WebLocale.EnglishUs) }),
   ];
-  return Object.values(WebLocale).flatMap((locale) => ['  <url>', `    <loc>${urlOf(locale)}</loc>`, ...alternates, '  </url>']);
+  return Object.values(WebLocale).flatMap((locale) => [
+    '  <url>',
+    `    <loc>${urlOf(locale)}</loc>`,
+    `    <lastmod>${lastModified}</lastmod>`,
+    ...alternates,
+    '  </url>',
+  ]);
 }
 
 function crawlerGroupOf(input: { name: string }): string[] {
@@ -44,14 +51,13 @@ export function renderRobots(input: { origin: string }): string {
 
 export function renderSitemap(input: { origin: string }): string {
   const { origin } = input;
-  const localizedUrls: LocalizedUrl[] = [
-    (locale) => canonicalUrlOf({ origin, locale }),
-    ...Object.values(LegalDocument).map(
-      (document): LocalizedUrl =>
-        (locale) =>
-          legalUrlOf({ origin, document, locale }),
-    ),
+  const sitemapPages: SitemapPage[] = [
+    { urlOf: (locale) => canonicalUrlOf({ origin, locale }), lastModified: SITE_UPDATED_ON },
+    ...Object.values(LegalDocument).map((document): SitemapPage => ({
+      urlOf: (locale) => legalUrlOf({ origin, document, locale }),
+      lastModified: LEGAL_UPDATED_ON,
+    })),
   ];
-  const pages = localizedUrls.flatMap((urlOf) => entriesOf({ urlOf }));
+  const pages = sitemapPages.flatMap(entriesOf);
   return ['<?xml version="1.0" encoding="UTF-8"?>', `<urlset ${SITEMAP_NAMESPACES}>`, ...pages, '</urlset>', ''].join('\n');
 }
