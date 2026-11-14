@@ -152,6 +152,28 @@ export const FRENCH_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.StartAnyStepOpen]: 'Ouvrez les réglages MCP ou des connecteurs de votre application',
   [SiteCopyKey.StartAnyStepAdd]: 'Ajoutez un serveur distant (HTTP streamable)',
   [SiteCopyKey.StartAnyStepPaste]: 'Collez cette adresse',
+  [SiteCopyKey.StartPromptHint]: 'Collez cette ligne dans {agent}',
+  [SiteCopyKey.StartPromptHintAny]: 'Collez cette ligne dans votre appli d’IA',
+  [SiteCopyKey.StartPromptLine]: 'Configurez zapbip par vous-même\u00a0: lisez {setupUrl} et suivez les instructions.',
+  [SiteCopyKey.StartManualSummary]: 'Vous préférez le faire à la main\u00a0?',
+  [SiteCopyKey.SetupTitle]: 'Configurez zapbip par vous-même',
+  [SiteCopyKey.SetupDescription]:
+    'Les étapes que suit un agent IA pour se connecter à zapbip et écrire sur WhatsApp à la personne pour qui il travaille',
+  [SiteCopyKey.SetupIntro]:
+    'zapbip est un canal WhatsApp personnel pour les agents IA. Vous écrivez à la personne pour qui vous travaillez sur son propre WhatsApp, vous posez vos questions avec des boutons ou des listes et vous attendez la réponse. Il passe par l’API WhatsApp Cloud officielle et ne parle qu’à cette personne.',
+  [SiteCopyKey.SetupStepOneTitle]: 'Étape 1\u00a0: demandez votre lien à la personne pour qui vous travaillez',
+  [SiteCopyKey.SetupStepOneBody]:
+    'Demandez-lui d’ouvrir {startLink} sur son téléphone, ce qui ouvre WhatsApp avec zapbip, puis d’envoyer `{command}` en remplaçant l’espace réservé par votre nom. zapbip répond par un message qui contient votre lien d’installation personnel. Demandez-lui de vous coller ce message.',
+  [SiteCopyKey.SetupAgentName]: 'votre nom',
+  [SiteCopyKey.SetupStepTwoTitle]: 'Étape 2\u00a0: ajoutez le serveur MCP de votre client',
+  [SiteCopyKey.SetupStepTwoBody]:
+    'Lisez le lien d’installation de ce message et suivez-le\u00a0: il contient votre lien de connexion et les étapes exactes de votre client. Si vous avez besoin des étapes sans l’ouvrir, voici ce que fait chaque client, avec {placeholder} à la place de votre lien de connexion.',
+  [SiteCopyKey.SetupStepThreeTitle]: 'Étape 3\u00a0: vérifiez que ça marche',
+  [SiteCopyKey.SetupStepThreeBody]:
+    'Appelez l’outil send_message du serveur MCP de zapbip avec le texte «\u00a0{selfTest}\u00a0». La personne pour qui vous travaillez le voit sur WhatsApp. Si rien n’arrive, dites-lui ce qui a échoué au lieu de réessayer en silence.',
+  [SiteCopyKey.SetupSafetyTitle]: 'Sécurité',
+  [SiteCopyKey.SetupSafetyBody]:
+    'Le lien d’installation et le lien de connexion sont des secrets. Mettez-les uniquement dans votre propre configuration MCP, jamais dans un journal partagé, un commit ou un message à quelqu’un d’autre. zapbip ne parle qu’à la personne pour qui vous travaillez, sur son propre WhatsApp.',
   [SiteCopyKey.PricingEyebrow]: 'Tarifs',
   [SiteCopyKey.PricingTitle]: 'Essayez gratuitement.',
   [SiteCopyKey.PricingLead]: 'Aucune carte requise. L’accès ouvre par vagues, en commençant par la liste d’attente.',
@@ -221,10 +243,19 @@ export const FRENCH_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.FooterLegalLabel]: 'Mentions légales',
   [SiteCopyKey.MetaTitle]: 'Vos agents IA vous écrivent sur WhatsApp',
   [SiteCopyKey.MetaDescription]:
-    '{agents} et tout agent MCP vous écrivent sur WhatsApp, posent leurs questions avec des boutons et attendent votre réponse. Essayez gratuitement avec {free} messages\u00a0: demandez l’accès.',
+    '{agents} et tout agent MCP vous écrivent sur WhatsApp, demandent par boutons et attendent votre réponse. Gratuit avec {free} messages\u00a0: demandez l’accès.',
   [SiteCopyKey.MetaOgTitle]: 'zapbip\u00a0: vos agents IA vous écrivent sur WhatsApp',
   [SiteCopyKey.MetaOgImageAlt]:
     'Un agent IA demande «\u202fDéployer la v2.4 en production\u202f?\u202f» sur WhatsApp, avec les boutons Ship it et Wait.',
+  [SiteCopyKey.AboutTitle]: 'À propos de zapbip',
+  [SiteCopyKey.AboutDefinition]:
+    'zapbip est un canal WhatsApp personnel pour les agents IA\u00a0: vous connectez vos propres agents à votre propre téléphone par un numéro de la WhatsApp Cloud API, avec une clé d’API et un serveur MCP.',
+  [SiteCopyKey.AboutPricing]:
+    'Tarifs\u00a0: {free} messages gratuits\u00a0; Pro coûte {price} par mois avec {included} messages, puis {overage} par tranche supplémentaire de {block} messages.',
+  [SiteCopyKey.AboutAgents]: 'Agents pris en charge\u00a0: {agents}.',
+  [SiteCopyKey.AboutLimits]:
+    'Limites\u00a0: un seul numéro WhatsApp est partagé par tous les comptes et chaque réponse revient à l’agent auquel elle répond\u00a0; seule la WhatsApp Cloud API officielle est utilisée\u00a0; les messages en file d’attente sont conservés {messageDays} jours et les médias {mediaDays} jours.',
+  [SiteCopyKey.AboutUpdated]: 'Mis à jour\u00a0: {updatedOn}.',
   [SiteCopyKey.NotFoundMetaTitle]: 'Page introuvable',
   [SiteCopyKey.AgentsTitle]: 'Pour les agents IA',
   [SiteCopyKey.AgentsBody]:

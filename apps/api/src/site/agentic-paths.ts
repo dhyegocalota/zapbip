@@ -21,10 +21,22 @@ export function markdownPathOf(input: { htmlPath: string }): string {
   return input.htmlPath === SitePath.Home ? HOME_MARKDOWN_PATH : `${input.htmlPath}${MARKDOWN_EXTENSION}`;
 }
 
-export function llmsPathOf(input: { locale: OwnerLocale; file: LlmsFile }): string {
+function localizedFilePathOf(input: { locale: OwnerLocale; path: SitePath }): string {
   const homePath = localePathOf({ locale: input.locale });
   const prefix = homePath === SitePath.Home ? '' : homePath;
-  return `${prefix}${LLMS_PATHS[input.file]}`;
+  return `${prefix}${input.path}`;
+}
+
+export function llmsPathOf(input: { locale: OwnerLocale; file: LlmsFile }): string {
+  return localizedFilePathOf({ locale: input.locale, path: LLMS_PATHS[input.file] });
+}
+
+export function setupPathOf(input: { locale: OwnerLocale }): string {
+  return localizedFilePathOf({ locale: input.locale, path: SitePath.Setup });
+}
+
+export function setupUrlOf(input: { locale: OwnerLocale; origin: string }): string {
+  return `${input.origin}${setupPathOf({ locale: input.locale })}`;
 }
 
 export function markdownUrlOf(input: { model: PageModel }): string {

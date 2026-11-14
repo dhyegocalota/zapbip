@@ -1,26 +1,22 @@
-import { COMPANY, PRICING_CURRENCY_BY_LOCALE, PRICING_FREE_CENTS, type OwnerLocale } from '@zapbip/types';
+import { PRICING_CURRENCY_BY_LOCALE, PRICING_FREE_CENTS, type OwnerLocale } from '@zapbip/types';
+import { aboutBlocksOf } from './about-facts';
 import { faqItemsOf } from './faq-items';
 import { legalTextOf } from './legal-copy';
 import type { LegalDocument } from './legal-links';
-import { type MarkdownBlock, MarkdownBlockKind, renderMarkdown } from './markdown-document';
+import { heading, HeadingLevel, list, type MarkdownBlock, MarkdownBlockKind, paragraph, renderMarkdown } from './markdown-document';
 import { formatPrice, pricingValuesOf } from './price-format';
 import { FREE_FEATURE_KEYS } from './pricing-features';
 import { quickStartEntriesOf } from './quick-start-entries';
+import { setupPromptOf } from './setup-prompt';
+import { plainContactTextOf } from './plain-contact-text';
 import { leadingAgentNames } from './site-agents';
-import { SITE_BRAND_SEPARATOR } from './site-constants';
+import { SITE_BRAND_SEPARATOR, SITE_EXAMPLE_CONNECTION_LINK } from './site-constants';
 import { SiteCopyKey } from './site-copy';
 import { copyOf } from './site-copy-text';
 import { SitePath } from './site-paths';
 
-const CONTACT_PLACEHOLDER = '{contactEmail}';
 const TITLE_SEPARATOR = ': ';
 const SPACE = ' ';
-
-enum HeadingLevel {
-  Page = 1,
-  Section = 2,
-  Item = 3,
-}
 
 type TitledCopy = { title: SiteCopyKey; body: SiteCopyKey };
 type Text = (key: SiteCopyKey, extraValues?: Record<string, string>) => string;
@@ -52,26 +48,10 @@ const GUARANTEES: TitledCopy[] = [
   { title: SiteCopyKey.PrivacyKeysTitle, body: SiteCopyKey.PrivacyKeysBody },
 ];
 
-function heading(input: { level: HeadingLevel; text: string }): MarkdownBlock {
-  return { kind: MarkdownBlockKind.Heading, ...input };
-}
-
-function paragraph(input: { text: string }): MarkdownBlock {
-  return { kind: MarkdownBlockKind.Paragraph, ...input };
-}
-
-function list(input: { items: string[]; isOrdered: boolean }): MarkdownBlock {
-  return { kind: MarkdownBlockKind.List, ...input };
-}
-
-function withContact(input: { text: string }): string {
-  return input.text.replaceAll(CONTACT_PLACEHOLDER, COMPANY.contactEmail);
-}
-
 function textOf(input: { locale: OwnerLocale; endpoint: string }): Text {
   const translate = copyOf({ locale: input.locale });
   const values = { ...pricingValuesOf({ locale: input.locale }), agents: leadingAgentNames(), endpoint: input.endpoint };
-  return (key, extraValues) => withContact({ text: translate(key, { ...values, ...extraValues }) });
+  return (key, extraValues) => plainContactTextOf({ text: translate(key, { ...values, ...extraValues }) });
 }
 
 function titledBlocks(input: { text: Text; entries: TitledCopy[] }): MarkdownBlock[] {
@@ -93,17 +73,20 @@ function heroBlocks(input: { text: Text }): MarkdownBlock[] {
   ];
 }
 
-function quickStartBlocks(input: { text: Text; locale: OwnerLocale }): MarkdownBlock[] {
-  const { text, locale } = input;
-  const entries = quickStartEntriesOf({ locale }).flatMap((entry): MarkdownBlock[] => [
-    heading({ level: HeadingLevel.Item, text: entry.name }),
-    paragraph({ text: entry.hint }),
-    ...(entry.path.length === 0 ? [] : [list({ items: entry.path, isOrdered: true })]),
-    { kind: MarkdownBlockKind.Code, language: '', code: entry.code },
-  ]);
+function quickStartBlocks(input: { text: Text; locale: OwnerLocale; origin: string }): MarkdownBlock[] {
+  const { text, locale, origin } = input;
+  const entries = quickStartEntriesOf({ locale, origin, connectionLink: SITE_EXAMPLE_CONNECTION_LINK }).flatMap(
+    (entry): MarkdownBlock[] => [
+      heading({ level: HeadingLevel.Item, text: entry.name }),
+      paragraph({ text: entry.hint }),
+      ...(entry.path.length === 0 ? [] : [list({ items: entry.path, isOrdered: true })]),
+      { kind: MarkdownBlockKind.Code, language: '', code: entry.code },
+    ],
+  );
   return [
     sectionHeading({ text, key: SiteCopyKey.StartTitle }),
     paragraph({ text: text(SiteCopyKey.StartLead) }),
+    paragraph({ text: setupPromptOf({ locale, origin }) }),
     ...entries,
     paragraph({ text: text(SiteCopyKey.StartExampleCaption) }),
     paragraph({ text: text(SiteCopyKey.StartNote) }),
@@ -144,6 +127,7 @@ export function homeMarkdownOf(input: { locale: OwnerLocale; origin: string }): 
     blocks: [
       heading({ level: HeadingLevel.Page, text: text(SiteCopyKey.MetaOgTitle) }),
       { kind: MarkdownBlockKind.Quote, text: text(SiteCopyKey.MetaDescription) },
+      ...aboutBlocksOf({ locale }),
       ...heroBlocks({ text }),
       sectionHeading({ text, key: SiteCopyKey.WhyTitle }),
       ...titledBlocks({ text, entries: STORIES }),
@@ -152,7 +136,7 @@ export function homeMarkdownOf(input: { locale: OwnerLocale; origin: string }): 
       sectionHeading({ text, key: SiteCopyKey.CapabilitiesTitle }),
       paragraph({ text: text(SiteCopyKey.CapabilitiesLead) }),
       ...titledBlocks({ text, entries: CAPABILITIES }),
-      ...quickStartBlocks({ text, locale }),
+      ...quickStartBlocks({ text, locale, origin }),
       ...pricingBlocks({ text, locale }),
       sectionHeading({ text, key: SiteCopyKey.PrivacyTitle }),
       ...titledBlocks({ text, entries: GUARANTEES }),
@@ -171,8 +155,8 @@ export function legalMarkdownOf(input: { document: LegalDocument; locale: OwnerL
   const legal = legalTextOf(input);
   const sections = legal.sections.flatMap((section): MarkdownBlock[] => [
     heading({ level: HeadingLevel.Section, text: section.heading }),
-    ...section.paragraphs.map((text) => paragraph({ text: withContact({ text }) })),
-    ...(section.items.length === 0 ? [] : [list({ items: section.items.map((text) => withContact({ text })), isOrdered: false })]),
+    ...section.paragraphs.map((text) => paragraph({ text: plainContactTextOf({ text }) })),
+    ...(section.items.length === 0 ? [] : [list({ items: section.items.map((text) => plainContactTextOf({ text })), isOrdered: false })]),
   ]);
   return renderMarkdown({
     blocks: [

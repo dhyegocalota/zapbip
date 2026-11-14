@@ -1,6 +1,6 @@
 import { execFile, spawn } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
-import { mkdir, mkdtemp, rm, stat, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
@@ -13,7 +13,9 @@ import { DocsPageLanguage, MessageDirection, MessageKind, OwnerLocale, SECOND_MS
 import { chromium } from '@playwright/test';
 import { z } from 'zod';
 import { SCRIPTS, type RecordedLocale } from './landing-demo/demo-copy';
+import { renderOpenGraphImage } from './landing-demo/open-graph-image';
 import { renderSiteCopy, SiteCopyKey } from '../src/site/site-copy';
+import { languageOf } from '../src/web-shell/locale-profiles';
 import { FAVICON_SVG } from '../src/backoffice/assets/favicon';
 import type { ScreenEntry } from '../src/contract/account-inbox-rpc';
 import { DEV_SEED_PATH } from '../src/contract/constants';
@@ -24,7 +26,6 @@ const runCommand = promisify(execFile);
 const SCRIPT_DIRECTORY = import.meta.dirname;
 const OUTPUT_DIRECTORY = join(SCRIPT_DIRECTORY, '..', 'site-public', 'site');
 const STAGE_FILE = join(SCRIPT_DIRECTORY, 'landing-demo', 'stage.html');
-const OPEN_GRAPH_FILE = join(SCRIPT_DIRECTORY, 'landing-demo', 'og.html');
 const DATABASE_BINDING = 'CONNECTIONS';
 const DEVELOPMENT_ENVIRONMENT = 'development';
 const OWNER_PHONES: Record<RecordedLocale, string> = {
@@ -47,10 +48,7 @@ const STAGE_SIZE = 1080;
 const ENCODED_SIZE = 960;
 const POSTER_SECOND = 4.8;
 const SMALL_POSTER_SIZE = 540;
-const OPEN_GRAPH_SIZE = { width: 1200, height: 630 };
 const TOUCH_ICON_SIZE = 180;
-const OPEN_GRAPH_LIMIT_BYTES = 300_000;
-const OPEN_GRAPH_COLORS = '192';
 const TOUCH_ICON_FILE = 'apple-touch-icon.png';
 
 function demoFilesOf(input: { locale: RecordedLocale }) {
@@ -188,7 +186,6 @@ async function postOwner(input: { origin: string; locale: RecordedLocale; body: 
 
 async function recordFlow(input: { origin: string; secret: string; locale: RecordedLocale }): Promise<DemoData> {
   const { origin, locale } = input;
-  const webLocale = locale;
   const script = SCRIPTS[locale];
   const client = new Client({ name: 'zapbip-landing-demo', version: '0.0.0' });
   await client.connect(new StreamableHTTPClientTransport(new URL(`${origin}/c/${input.secret}/mcp`)));
@@ -229,9 +226,9 @@ async function recordFlow(input: { origin: string; secret: string; locale: Recor
     optionsLabel: script.optionsLabel,
     waitingLabel: script.waitingLabel,
     answeredLabel: script.answeredLabel,
-    titleLead: renderSiteCopy({ key: SiteCopyKey.HeroTitleLead, locale: webLocale }),
-    titleAccent: renderSiteCopy({ key: SiteCopyKey.HeroTitleAccent, locale: webLocale }),
-    tagline: `${TAGLINE_PREFIX}${renderSiteCopy({ key: SiteCopyKey.FinalButton, locale: webLocale })}`,
+    titleLead: renderSiteCopy({ key: SiteCopyKey.HeroTitleLead, locale }),
+    titleAccent: renderSiteCopy({ key: SiteCopyKey.HeroTitleAccent, locale }),
+    tagline: `${TAGLINE_PREFIX}${renderSiteCopy({ key: SiteCopyKey.FinalButton, locale })}`,
   };
 }
 
@@ -250,20 +247,6 @@ async function renderFrames(input: { data: DemoData; framesDirectory: string }):
     await page.evaluate(`window.renderAt(${index / FRAMES_PER_SECOND})`);
     await page.screenshot({ path: join(input.framesDirectory, frameName({ index })) });
   }, Promise.resolve());
-  await browser.close();
-}
-
-async function renderStill(input: {
-  data: DemoData;
-  file: string;
-  target: string;
-  size: { width: number; height: number };
-}): Promise<void> {
-  const browser = await chromium.launch();
-  const page = await browser.newPage({ viewport: input.size, deviceScaleFactor: 1 });
-  await page.addInitScript(`window.DEMO = ${JSON.stringify(input.data)};`);
-  await page.goto(`file://${input.file}`);
-  await page.screenshot({ path: input.target });
   await browser.close();
 }
 
@@ -351,11 +334,6 @@ async function encode(input: { framesDirectory: string; locale: RecordedLocale }
   ]);
 }
 
-async function shrinkOpenGraphIfNeeded(input: { target: string }): Promise<void> {
-  if ((await stat(input.target)).size <= OPEN_GRAPH_LIMIT_BYTES) return;
-  await runCommand('magick', [input.target, '-strip', '-colors', OPEN_GRAPH_COLORS, `PNG8:${input.target}`]);
-}
-
 async function produceLocale(input: { origin: string; locale: RecordedLocale; workDirectory: string }): Promise<DemoData> {
   const { origin, locale, workDirectory } = input;
   const framesDirectory = join(workDirectory, `frames-${locale}`);
@@ -365,8 +343,7 @@ async function produceLocale(input: { origin: string; locale: RecordedLocale; wo
   await renderFrames({ data, framesDirectory });
   await encode({ framesDirectory, locale });
   const openGraph = join(OUTPUT_DIRECTORY, demoFilesOf({ locale }).openGraph);
-  await renderStill({ data, file: OPEN_GRAPH_FILE, target: openGraph, size: OPEN_GRAPH_SIZE });
-  await shrinkOpenGraphIfNeeded({ target: openGraph });
+  await renderOpenGraphImage({ data, language: languageOf({ locale }), target: openGraph });
   return data;
 }
 

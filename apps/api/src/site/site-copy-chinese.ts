@@ -141,6 +141,27 @@ export const CHINESE_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.StartAnyStepOpen]: '打开你的应用中的 MCP 或连接器设置',
   [SiteCopyKey.StartAnyStepAdd]: '添加一个远程服务器（可流式传输的 HTTP）',
   [SiteCopyKey.StartAnyStepPaste]: '粘贴这个地址',
+  [SiteCopyKey.StartPromptHint]: '把这一行粘贴到 {agent}',
+  [SiteCopyKey.StartPromptHintAny]: '把这一行粘贴到你的 AI 应用',
+  [SiteCopyKey.StartPromptLine]: '自己设置 zapbip：阅读 {setupUrl} 并照做。',
+  [SiteCopyKey.StartManualSummary]: '想手动设置？',
+  [SiteCopyKey.SetupTitle]: '自己设置 zapbip',
+  [SiteCopyKey.SetupDescription]: 'AI 智能体自行连接 zapbip，并通过 WhatsApp 给它服务的人发消息的步骤',
+  [SiteCopyKey.SetupIntro]:
+    'zapbip 是为 AI 智能体准备的个人 WhatsApp 渠道。你在你所服务的人自己的 WhatsApp 上给他发消息，用按钮或列表提问，然后等待回复。它使用官方 WhatsApp Cloud API，只与这个人交流。',
+  [SiteCopyKey.SetupStepOneTitle]: '第 1 步：向你所服务的人要链接',
+  [SiteCopyKey.SetupStepOneBody]:
+    '请他在手机上打开 {startLink}，这会打开与 zapbip 的 WhatsApp 对话，然后发送 `{command}`，并把占位符换成你自己的名字。zapbip 会回复一条消息，里面有你的专属安装链接。请他把这条消息粘贴给你。',
+  [SiteCopyKey.SetupAgentName]: '你的名字',
+  [SiteCopyKey.SetupStepTwoTitle]: '第 2 步：为你的客户端添加 MCP 服务器',
+  [SiteCopyKey.SetupStepTwoBody]:
+    '阅读那条消息中的安装链接并照做：其中包含你的连接链接和适用于你的客户端的准确步骤。如果你想不打开链接就知道步骤，各客户端的做法如下，其中 {placeholder} 代表你的连接链接。',
+  [SiteCopyKey.SetupStepThreeTitle]: '第 3 步：检查是否正常',
+  [SiteCopyKey.SetupStepThreeBody]:
+    '用文本“{selfTest}”调用 zapbip MCP 服务器的 send_message 工具。你所服务的人会在 WhatsApp 上看到它。如果什么都没有收到，请告诉他哪里出了问题，不要默默重试。',
+  [SiteCopyKey.SetupSafetyTitle]: '安全',
+  [SiteCopyKey.SetupSafetyBody]:
+    '安装链接和连接链接都是机密。只把它们放进你自己的 MCP 配置，绝不要放进共享日志、提交记录或发给别人的消息。zapbip 只在这个人自己的 WhatsApp 上与你所服务的人交流。',
   [SiteCopyKey.PricingEyebrow]: '价格',
   [SiteCopyKey.PricingTitle]: '免费试用。',
   [SiteCopyKey.PricingLead]: '无需绑定银行卡。使用资格分批开放，从候补名单开始。',
@@ -207,6 +228,14 @@ export const CHINESE_SITE_COPY: Record<SiteCopyKey, string> = {
     '{agents} 以及任何 MCP 智能体会在 WhatsApp 上给你发消息，用按钮向你提问，并等待你的回复。免费试用 {free} 条消息：立即申请使用。',
   [SiteCopyKey.MetaOgTitle]: 'zapbip：你的 AI 智能体会在 WhatsApp 上给你发消息',
   [SiteCopyKey.MetaOgImageAlt]: '一个 AI 智能体在 WhatsApp 上问“要把 v2.4 部署到生产环境吗？”，带有 Ship it 和 Wait 两个按钮。',
+  [SiteCopyKey.AboutTitle]: '关于 zapbip',
+  [SiteCopyKey.AboutDefinition]:
+    'zapbip 是面向 AI 智能体的个人 WhatsApp 渠道：你用一个 WhatsApp Cloud API 号码、一个 API 密钥和一个 MCP 服务器，把自己的智能体连接到自己的手机。',
+  [SiteCopyKey.AboutPricing]: '价格：免费 {free} 条消息；Pro 每月 {price}，含 {included} 条消息，之后每增加 {block} 条收取 {overage}。',
+  [SiteCopyKey.AboutAgents]: '支持的智能体：{agents}。',
+  [SiteCopyKey.AboutLimits]:
+    '限制：所有账户共用一个 WhatsApp 号码，每条回复都会回到所回应的智能体；仅使用官方 WhatsApp Cloud API；排队中的消息保存 {messageDays} 天，媒体文件保存 {mediaDays} 天。',
+  [SiteCopyKey.AboutUpdated]: '更新日期：{updatedOn}。',
   [SiteCopyKey.NotFoundMetaTitle]: '找不到页面',
   [SiteCopyKey.AgentsTitle]: '面向 AI 智能体',
   [SiteCopyKey.AgentsBody]:

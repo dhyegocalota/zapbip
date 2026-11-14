@@ -1,6 +1,6 @@
 import { COMPANY } from '@zapbip/types';
+import { CONTACT_PLACEHOLDER } from '../plain-contact-text';
 
-const CONTACT_PLACEHOLDER = '{contactEmail}';
 const MAILTO_PREFIX = 'mailto:';
 
 export function ContactText(props: { text: string }) {

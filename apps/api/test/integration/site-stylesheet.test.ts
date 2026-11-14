@@ -100,3 +100,14 @@ describe('the join field focus', () => {
     expect(SITE_STYLESHEET).toMatch(/\.join-row:has\(input\[aria-invalid='true'\]\) \{[^}]*border-color: var\(--color-danger\);/);
   });
 });
+
+describe('the quick start window title', () => {
+  it('stays on one line and ends with an ellipsis when it does not fit', () => {
+    expect(SITE_STYLESHEET).toMatch(/\.code-hint \{[^}]*white-space: nowrap;[^}]*overflow: hidden;[^}]*text-overflow: ellipsis;/);
+  });
+
+  it('shows the window dots only on wide screens', () => {
+    expect(SITE_STYLESHEET).toMatch(/\.code-bar::before \{[^}]*display: none;/);
+    expect(SITE_STYLESHEET).toMatch(/@media \(min-width: 40rem\) \{\s*\.code-bar::before \{\s*display: block;/);
+  });
+});

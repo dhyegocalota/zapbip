@@ -51,6 +51,13 @@ const AGENT_SKILLS: AgentSkill[] = [
     examples: ['How do I connect my agent to zapbip?'],
   },
   {
+    id: 'setup_zapbip',
+    name: 'Set up zapbip',
+    description: `Read the steps to connect yourself to zapbip: GET ${SitePath.Setup}, or /<language>/setup.md such as /pt-br/setup.md, as Markdown.`,
+    tags: ['install', 'setup'],
+    examples: ['Set up zapbip for yourself'],
+  },
+  {
     id: 'read_docs',
     name: 'Read the docs',
     description: `Read the documentation as Markdown or search it through MCP: ${DOCS_ORIGIN}/llms.txt, ${DOCS_ORIGIN}${DOCS_MCP_PATH}.`,

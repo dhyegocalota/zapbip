@@ -146,6 +146,27 @@ export const JAPANESE_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.StartAnyStepOpen]: 'お使いのアプリでMCPまたはコネクタの設定を開く',
   [SiteCopyKey.StartAnyStepAdd]: 'リモートサーバー（ストリーミング対応HTTP）を追加する',
   [SiteCopyKey.StartAnyStepPaste]: 'このアドレスを貼り付ける',
+  [SiteCopyKey.StartPromptHint]: '{agent} にこの1行を貼り付ける',
+  [SiteCopyKey.StartPromptHintAny]: 'お使いのAIアプリにこの1行を貼り付ける',
+  [SiteCopyKey.StartPromptLine]: 'zapbipを自分でセットアップしてください。{setupUrl} を読み、その手順に従ってください。',
+  [SiteCopyKey.StartManualSummary]: '手動で設定しますか？',
+  [SiteCopyKey.SetupTitle]: 'zapbipを自分でセットアップする',
+  [SiteCopyKey.SetupDescription]: 'AIエージェントが自分でzapbipに接続し、担当する人にWhatsAppでメッセージを送るための手順',
+  [SiteCopyKey.SetupIntro]:
+    'zapbipはAIエージェントのための個人用WhatsAppチャンネルです。あなたが仕えている人のWhatsAppにメッセージを送り、ボタンやリストで質問して、返事を待ちます。WhatsApp Cloud APIの公式版を使い、その人とだけ話します。',
+  [SiteCopyKey.SetupStepOneTitle]: 'ステップ1: 仕えている人からリンクをもらう',
+  [SiteCopyKey.SetupStepOneBody]:
+    'その人に、スマートフォンで {startLink} を開いてもらいます。zapbipとのWhatsAppが開くので、プレースホルダーをあなたの名前に置き換えた `{command}` を送ってもらいます。zapbipから、あなた専用のインストールリンクを含むメッセージが届きます。そのメッセージを貼り付けてもらってください。',
+  [SiteCopyKey.SetupAgentName]: 'あなたの名前',
+  [SiteCopyKey.SetupStepTwoTitle]: 'ステップ2: お使いのクライアントにMCPサーバーを追加する',
+  [SiteCopyKey.SetupStepTwoBody]:
+    'そのメッセージのインストールリンクを読み、手順に従ってください。接続リンクと、お使いのクライアント向けの正確な手順が載っています。リンクを開かずに手順だけ知りたい場合は、各クライアントが行うことが次のとおりです。{placeholder} はあなたの接続リンクを表します。',
+  [SiteCopyKey.SetupStepThreeTitle]: 'ステップ3: 動作を確認する',
+  [SiteCopyKey.SetupStepThreeBody]:
+    'zapbipのMCPサーバーの send_message ツールを、テキスト「{selfTest}」で呼び出します。仕えている人のWhatsAppに届きます。何も届かない場合は、黙って再試行せず、何が失敗したかをその人に伝えてください。',
+  [SiteCopyKey.SetupSafetyTitle]: '安全のために',
+  [SiteCopyKey.SetupSafetyBody]:
+    'インストールリンクと接続リンクは秘密です。自分のMCP設定にだけ入力し、共有ログやコミット、ほかの人へのメッセージには決して書かないでください。zapbipは、仕えている人とだけ、その人自身のWhatsAppで話します。',
   [SiteCopyKey.PricingEyebrow]: '料金',
   [SiteCopyKey.PricingTitle]: 'まずは無料でお試し。',
   [SiteCopyKey.PricingLead]: 'カードの登録は不要です。アクセスはウェイトリストの順に、順次開放されます。',
@@ -214,10 +235,18 @@ export const JAPANESE_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.FooterLegalLabel]: '法的情報',
   [SiteCopyKey.MetaTitle]: 'AIエージェントがWhatsAppでメッセージをくれる',
   [SiteCopyKey.MetaDescription]:
-    '{agents}、そしてあらゆるMCPエージェントがWhatsAppでメッセージを送り、ボタンで質問してあなたの返事を待ちます。{free}通まで無料でお試しいただけます。アクセスをリクエストしてください。',
+    '{agents}、そしてあらゆるMCPエージェントがWhatsAppでメッセージを送り、ボタンで質問して返事を待ちます。{free}通まで無料。アクセスをリクエストしてください。',
   [SiteCopyKey.MetaOgTitle]: 'zapbip: AIエージェントがWhatsAppでメッセージをくれる',
   [SiteCopyKey.MetaOgImageAlt]:
     'AIエージェントがWhatsAppで「v2.4を本番環境にデプロイしますか？」と質問している画面。Ship itとWaitのボタン付き。',
+  [SiteCopyKey.AboutTitle]: 'zapbipについて',
+  [SiteCopyKey.AboutDefinition]:
+    'zapbipは、自分のAIエージェントを、WhatsApp Cloud APIの番号1つ、APIキー1つ、MCPサーバー1つで自分のスマートフォンにつなぐ、AIエージェント向けの個人用WhatsAppチャンネルです。',
+  [SiteCopyKey.AboutPricing]: '料金：{free}通まで無料。Proは月額{price}で{included}通を含み、追加は{block}通ごとに{overage}です。',
+  [SiteCopyKey.AboutAgents]: '対応エージェント：{agents}。',
+  [SiteCopyKey.AboutLimits]:
+    '制限：1つのWhatsApp番号を全アカウントで共有し、各返信は返信先のエージェントに届きます。公式のWhatsApp Cloud APIのみを使用します。キュー内のメッセージは{messageDays}日、メディアは{mediaDays}日保管されます。',
+  [SiteCopyKey.AboutUpdated]: '更新日：{updatedOn}。',
   [SiteCopyKey.NotFoundMetaTitle]: 'ページが見つかりません',
   [SiteCopyKey.AgentsTitle]: 'AIエージェント向け',
   [SiteCopyKey.AgentsBody]:

@@ -120,7 +120,8 @@ describe('the quick start example link', () => {
 
   it('copies the example exactly as shown', async () => {
     const html = await htmlOf({ path: '/' });
-    const dataCodes = [...html.matchAll(/data-code="([^"]*)"/g)].map((match) => match[1]!);
+    const manualSections = html.split('<details class="start-manual">').slice(1);
+    const dataCodes = manualSections.map((section) => /data-code="([^"]*)"/.exec(section)![1]!);
     expect(dataCodes.length).toBeGreaterThan(0);
     dataCodes.forEach((code) => expect(code).toMatch(EXAMPLE_LINK_PATTERN));
   });

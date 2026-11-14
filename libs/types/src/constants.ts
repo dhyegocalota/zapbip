@@ -71,7 +71,7 @@ export const COMPANY = {
   cnpj: '32.555.315/0001-91',
   address: 'R. Rio Grande do Norte, 1435, Sala 708, Savassi, Belo Horizonte – MG, 30130-138, Brasil',
   website: 'https://logicbit.com.br',
-  contactEmail: 'dhyego@logicbit.com.br',
+  contactEmail: 'support@zapbip.com',
 } as const;
 export const BYTES_PER_MEGABYTE = 1_000_000;
 export const DOCS_LANGUAGE_FOLDERS: Record<DocsPageLanguage, string> = {
@@ -126,6 +126,16 @@ export const OWNER_LOCALE_BY_CALLING_CODE: Record<string, OwnerLocale> = {
   '81': OwnerLocale.Japanese,
   '82': OwnerLocale.Korean,
   '86': OwnerLocale.ChineseSimplified,
+};
+export const DOCS_LANGUAGE_OF_OWNER_LOCALE: Record<OwnerLocale, DocsPageLanguage> = {
+  [OwnerLocale.EnglishUs]: DocsPageLanguage.English,
+  [OwnerLocale.PortugueseBrazil]: DocsPageLanguage.PortugueseBrazil,
+  [OwnerLocale.Spanish]: DocsPageLanguage.Spanish,
+  [OwnerLocale.German]: DocsPageLanguage.German,
+  [OwnerLocale.French]: DocsPageLanguage.French,
+  [OwnerLocale.Japanese]: DocsPageLanguage.Japanese,
+  [OwnerLocale.Korean]: DocsPageLanguage.Korean,
+  [OwnerLocale.ChineseSimplified]: DocsPageLanguage.Chinese,
 };
 export const DEFAULT_LOCALE = OwnerLocale.PortugueseBrazil;
 export const PRODUCTION_ZONE = 'zapbip.com';

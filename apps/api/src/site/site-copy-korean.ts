@@ -144,6 +144,27 @@ export const KOREAN_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.StartAnyStepOpen]: '앱에서 MCP 또는 커넥터 설정 열기',
   [SiteCopyKey.StartAnyStepAdd]: '원격 서버(스트리머블 HTTP) 추가',
   [SiteCopyKey.StartAnyStepPaste]: '이 주소 붙여넣기',
+  [SiteCopyKey.StartPromptHint]: '{agent}에 이 한 줄을 붙여넣으세요',
+  [SiteCopyKey.StartPromptHintAny]: 'AI 앱에 이 한 줄을 붙여넣으세요',
+  [SiteCopyKey.StartPromptLine]: 'zapbip를 직접 설정하세요. {setupUrl} 을(를) 읽고 안내를 따르세요.',
+  [SiteCopyKey.StartManualSummary]: '직접 설정하시겠어요?',
+  [SiteCopyKey.SetupTitle]: 'zapbip를 직접 설정하기',
+  [SiteCopyKey.SetupDescription]: 'AI 에이전트가 스스로 zapbip에 연결하고, 함께 일하는 사람에게 WhatsApp으로 메시지를 보내는 단계',
+  [SiteCopyKey.SetupIntro]:
+    'zapbip는 AI 에이전트를 위한 개인용 WhatsApp 채널입니다. 함께 일하는 사람의 WhatsApp으로 메시지를 보내고, 버튼이나 목록으로 질문하고, 답을 기다립니다. 공식 WhatsApp Cloud API를 사용하며 그 사람하고만 대화합니다.',
+  [SiteCopyKey.SetupStepOneTitle]: '1단계: 함께 일하는 사람에게서 링크 받기',
+  [SiteCopyKey.SetupStepOneBody]:
+    '그 사람에게 휴대폰에서 {startLink} 을(를) 열어 달라고 요청하세요. zapbip와 WhatsApp이 열리면 자리표시자를 당신의 이름으로 바꾼 `{command}` 를 보내 달라고 하세요. zapbip가 당신 전용 설치 링크가 담긴 메시지로 답합니다. 그 메시지를 붙여넣어 달라고 요청하세요.',
+  [SiteCopyKey.SetupAgentName]: '당신의 이름',
+  [SiteCopyKey.SetupStepTwoTitle]: '2단계: 사용 중인 클라이언트에 MCP 서버 추가하기',
+  [SiteCopyKey.SetupStepTwoBody]:
+    '그 메시지의 설치 링크를 읽고 따라 하세요. 연결 링크와 사용 중인 클라이언트에 맞는 정확한 단계가 들어 있습니다. 링크를 열지 않고 단계만 알고 싶다면 각 클라이언트가 하는 일은 다음과 같으며, {placeholder} 은(는) 당신의 연결 링크를 뜻합니다.',
+  [SiteCopyKey.SetupStepThreeTitle]: '3단계: 작동 확인하기',
+  [SiteCopyKey.SetupStepThreeBody]:
+    'zapbip MCP 서버의 send_message 도구를 "{selfTest}" 텍스트로 호출하세요. 함께 일하는 사람이 WhatsApp에서 확인합니다. 아무것도 도착하지 않으면 말없이 다시 시도하지 말고 무엇이 실패했는지 그 사람에게 알려 주세요.',
+  [SiteCopyKey.SetupSafetyTitle]: '안전',
+  [SiteCopyKey.SetupSafetyBody]:
+    '설치 링크와 연결 링크는 비밀입니다. 자신의 MCP 설정에만 넣고, 공유 로그나 커밋, 다른 사람에게 보내는 메시지에는 절대 넣지 마세요. zapbip는 함께 일하는 사람의 WhatsApp으로 그 사람하고만 대화합니다.',
   [SiteCopyKey.PricingEyebrow]: '요금',
   [SiteCopyKey.PricingTitle]: '무료로 써 보세요.',
   [SiteCopyKey.PricingLead]: '카드는 필요 없습니다. 이용은 대기자 명단부터 순차적으로 열립니다.',
@@ -214,6 +235,15 @@ export const KOREAN_SITE_COPY: Record<SiteCopyKey, string> = {
     '{agents}, 그리고 모든 MCP 에이전트가 WhatsApp으로 메시지를 보내고, 버튼으로 묻고, 답을 기다립니다. 메시지 {free}건까지 무료로 써 보세요. 이용을 신청하세요.',
   [SiteCopyKey.MetaOgTitle]: 'zapbip: AI 에이전트가 WhatsApp으로 말을 겁니다',
   [SiteCopyKey.MetaOgImageAlt]: 'AI 에이전트가 WhatsApp에서 “v2.4를 프로덕션에 배포할까요?”라고 묻는 화면. Ship it과 Wait 버튼이 있습니다.',
+  [SiteCopyKey.AboutTitle]: 'zapbip 소개',
+  [SiteCopyKey.AboutDefinition]:
+    'zapbip는 AI 에이전트를 위한 개인용 WhatsApp 채널로, 내 에이전트를 WhatsApp Cloud API 번호 하나, API 키 하나, MCP 서버 하나로 내 휴대폰에 연결합니다.',
+  [SiteCopyKey.AboutPricing]:
+    '요금: 메시지 {free}건 무료이며, Pro는 월 {price}에 메시지 {included}건을 포함하고 이후 {block}건마다 {overage}가 추가됩니다.',
+  [SiteCopyKey.AboutAgents]: '지원 에이전트: {agents}.',
+  [SiteCopyKey.AboutLimits]:
+    '제한: WhatsApp 번호 하나를 모든 계정이 공유하며 각 답장은 해당 에이전트로 전달됩니다. 공식 WhatsApp Cloud API만 사용하며, 대기 중인 메시지는 {messageDays}일, 미디어는 {mediaDays}일 보관됩니다.',
+  [SiteCopyKey.AboutUpdated]: '업데이트: {updatedOn}.',
   [SiteCopyKey.NotFoundMetaTitle]: '페이지를 찾을 수 없습니다',
   [SiteCopyKey.AgentsTitle]: 'AI 에이전트용',
   [SiteCopyKey.AgentsBody]:

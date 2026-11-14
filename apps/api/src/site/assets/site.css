@@ -1563,6 +1563,7 @@ summary::before {
 
 .start-panel {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-4);
 }
 
@@ -1589,6 +1590,7 @@ summary::before {
 
 .code-bar::before {
   content: '';
+  display: none;
   flex: none;
   width: 0.625rem;
   height: 0.625rem;
@@ -1607,6 +1609,15 @@ summary::before {
   font-family: var(--font-mono);
   font-size: var(--text-small);
   overflow-wrap: normal;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (min-width: 40rem) {
+  .code-bar::before {
+    display: block;
+  }
 }
 
 .start-copy {
@@ -1761,6 +1772,23 @@ summary::before {
   margin: 0;
   color: var(--color-text-muted);
   font-weight: 600;
+}
+
+.code-block code.start-prompt {
+  overflow-wrap: anywhere;
+}
+
+.start-manual {
+  border-bottom: 0;
+}
+
+.start-manual > summary {
+  min-height: 2.75rem;
+  color: var(--color-text-muted);
+}
+
+.start-manual[open] > summary {
+  margin-bottom: var(--space-3);
 }
 
 .start-example {

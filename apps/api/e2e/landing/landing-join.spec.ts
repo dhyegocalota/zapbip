@@ -28,6 +28,7 @@ test('join with the test widget', async ({ page }) => {
 test('a missing token shows the captcha notice on the page and writes nothing', async ({ page }) => {
   await page.goto('/');
   await page.getByLabel(siteCopy({ key: SiteCopyKey.JoinEmailLabel })).fill(MARIA);
+  await expect(page.locator('input[name="cf-turnstile-response"]')).not.toHaveValue('');
   await page.evaluate(CLEAR_TOKEN_SCRIPT);
   await page.route('**/join', (route) => route.abort());
   await page.getByRole('button', { name: siteCopy({ key: SiteCopyKey.JoinSubmit }) }).click();

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { LEGAL_UPDATED_ON, SITE_UPDATED_ON } from '../../src/site/site-constants';
 import { renderRobots, renderSitemap } from '../../src/site/robots-and-sitemap';
 
 const ORIGIN = 'https://zapbip.com';
@@ -53,6 +54,17 @@ describe('sitemap.xml', () => {
     );
     expect(sitemapOf().match(/hreflang="x-default" href="https:\/\/zapbip.com\/"/g)).toHaveLength(HREFLANGS.length);
     expect(sitemapOf().match(/hreflang="zh-CN" href="https:\/\/zapbip.com\/zh"/g)).toHaveLength(HREFLANGS.length);
+  });
+
+  it('dates every page: the home pages by the site, the legal pages by the legal text', () => {
+    expect(sitemapOf().match(/<lastmod>/g)).toHaveLength(PAGE_PATHS.length);
+    const [homeEntries, ...legalEntries] = [PAGE_PATHS.slice(0, 8), PAGE_PATHS.slice(8)];
+    [...homeEntries!].forEach((path) =>
+      expect(sitemapOf()).toContain(`<loc>https://zapbip.com${path}</loc>\n    <lastmod>${SITE_UPDATED_ON}</lastmod>`),
+    );
+    legalEntries
+      .flat()
+      .forEach((path) => expect(sitemapOf()).toContain(`<loc>https://zapbip.com${path}</loc>\n    <lastmod>${LEGAL_UPDATED_ON}</lastmod>`));
   });
 
   it('is well formed xml with the xhtml namespace', () => {

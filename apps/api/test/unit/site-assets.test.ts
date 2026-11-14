@@ -2,6 +2,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { OwnerLocale } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
+import { SiteAssetKind, siteAssetOf } from '../../src/site/site-paths';
 
 const ASSETS_ROOT = join(import.meta.dirname, '../../site-public/site');
 const LOCALES = [OwnerLocale.EnglishUs, OwnerLocale.PortugueseBrazil];
@@ -54,6 +55,26 @@ describe('site assets', () => {
       expect(header.readUInt32BE(PNG_WIDTH_OFFSET)).toBe(OG_WIDTH);
       expect(header.readUInt32BE(PNG_HEIGHT_OFFSET)).toBe(OG_HEIGHT);
     });
+  });
+
+  describe.each(Object.values(OwnerLocale))('the social image in %s', (locale) => {
+    it("is the language's own, 1200 by 630 and inside its budget", () => {
+      const name = `og-${locale}.png`;
+      expect(siteAssetOf({ kind: SiteAssetKind.OpenGraphImage, locale })).toBe(`/site/${name}`);
+      const image = readFileSync(join(ASSETS_ROOT, name));
+      expect(image.readUInt32BE(PNG_WIDTH_OFFSET)).toBe(OG_WIDTH);
+      expect(image.readUInt32BE(PNG_HEIGHT_OFFSET)).toBe(OG_HEIGHT);
+      expect(image.length).toBeLessThanOrEqual(OG_LIMIT_BYTES);
+    });
+  });
+
+  it('keeps the demo of a language without a recording on the English one', () => {
+    expect(siteAssetOf({ kind: SiteAssetKind.PosterLarge, locale: OwnerLocale.German })).toBe('/site/demo-en_US-poster-960.webp');
+  });
+
+  it('caches the media of the site for a day and serves stale ones for a week', () => {
+    const headers = readFileSync(join(ASSETS_ROOT, '../_headers'), 'utf8');
+    expect(headers).toContain('/site/*\n  Cache-Control: public, max-age=86400, stale-while-revalidate=604800');
   });
 
   it('keeps every file under 2 MB and the total under 6 MB', () => {

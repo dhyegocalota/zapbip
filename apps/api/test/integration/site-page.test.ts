@@ -5,9 +5,10 @@ import type { InstallClient } from '@zapbip/agents/install';
 import { initialsOf, leadingAgentNames, SiteStartTab } from '../../src/site/site-agents';
 import { startPathOf } from '../../src/site/site-links';
 import { renderSiteCopy, SiteCopyKey } from '../../src/site/site-copy';
-import { SITE_EXAMPLE_CONNECTION_LINK } from '../../src/site/site-constants';
+import { SITE_EXAMPLE_CONNECTION_LINK, TURNSTILE_SCRIPT_URL } from '../../src/site/site-constants';
 import { pricingValuesOf } from '../../src/site/price-format';
 import { SITE_CONTENT_SECURITY_POLICY } from '../../src/site/site-policy';
+import { SITE_SCRIPT } from '../../src/site/site-scripts';
 import { copyHtml, escapedHtml, REFERRAL_CODE, SITE_ORIGIN, SITE_TURNSTILE_SITE_KEY, siteEnvironment, siteFetch } from '../support/site';
 
 const ENGLISH_HEADERS = { 'Accept-Language': 'en-US,en;q=0.9' };
@@ -15,7 +16,7 @@ const PORTUGUESE_HEADERS = { 'Accept-Language': 'pt-BR,pt;q=0.9' };
 const PORTUGUESE_PATH = '/pt-br';
 const LOCALE_COOKIE = '__Host-zb_site_locale';
 const THEME_COOKIE = '__Host-zb_site_theme';
-const INLINE_SCRIPT_PATTERN = /<script(?![^>]*\bsrc=)[^>]*>/;
+const INLINE_SCRIPT_PATTERN = /<script(?![^>]*\bsrc=)(?![^>]*application\/ld\+json)[^>]*>/;
 const INLINE_STYLE_PATTERN = /<style|\sstyle="/;
 const SEE_OTHER = 303;
 const [FIRST_AGENT, SECOND_AGENT] = Object.entries(AGENT_INSTALLS).map(([id, install]) => ({ id, name: install.productName })) as [
@@ -91,7 +92,13 @@ describe('GET /', () => {
     expect(html).toContain('class="cf-turnstile"');
     expect(html).toContain(`data-sitekey="${SITE_TURNSTILE_SITE_KEY}"`);
     expect(html).toContain(`data-action="${TURNSTILE_ACTION_WAITLIST_JOIN}"`);
-    expect(html).toContain('src="https://challenges.cloudflare.com/turnstile/v0/api.js"');
+  });
+
+  it('loads the Turnstile script only when the form is touched', async () => {
+    const html = await pageOf({ headers: ENGLISH_HEADERS });
+    expect(html).not.toContain('https://challenges.cloudflare.com/turnstile/v0/api.js');
+    expect(SITE_SCRIPT).toContain(TURNSTILE_SCRIPT_URL);
+    expect(SITE_SCRIPT).toContain("TURNSTILE_WAKE_EVENTS = ['focusin', 'pointerenter', 'touchstart']");
   });
 
   it.each([undefined, '', '   '])('replaces the form with the paused notice when the secret is %j', async (secret) => {
@@ -291,7 +298,9 @@ describe('the quick start', () => {
       expect(panel.includes('class="code-path"')).toBe(quickStart.path.length > 0);
       quickStart.path.forEach((step) => expect(text).toContain(escapedHtml({ text: step })));
       expect(panel).toContain(`data-code="${escapedHtml({ text: quickStart.code })}"`);
-      expect(panel.match(/class="code-line"/g)).toHaveLength(quickStart.code.split('\n').length);
+      expect(panel.slice(panel.indexOf('<details class="start-manual">')).match(/class="code-line"/g)).toHaveLength(
+        quickStart.code.split('\n').length,
+      );
     });
     const anyText = panels.find((panel) => panel.id === SiteStartTab.AnyMcp)!.html.replace(TAG_PATTERN, '');
     expect(anyText).toContain(copyHtml({ key: SiteCopyKey.StartAnyHint, locale }));

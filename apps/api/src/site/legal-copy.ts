@@ -466,7 +466,7 @@ const LEGAL_COPY: Record<LegalDocument, Record<OwnerLocale, LegalText>> = {
   },
 };
 
-function daysOf(input: { milliseconds: number; locale: OwnerLocale }): string {
+export function daysOf(input: { milliseconds: number; locale: OwnerLocale }): string {
   return formatCount({ count: input.milliseconds / DAY_MS, locale: input.locale });
 }
 

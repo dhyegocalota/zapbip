@@ -1,5 +1,5 @@
 import { contentHashOf } from '../backoffice/assets/stylesheet';
-import { JOIN_FRAGMENT, THEME_SWITCH_ID } from './site-constants';
+import { JOIN_FRAGMENT, THEME_SWITCH_ID, TURNSTILE_SCRIPT_URL } from './site-constants';
 import { SitePath } from './site-paths';
 import { WEBMCP_SOURCE } from './site-webmcp-script';
 
@@ -8,6 +8,8 @@ const SCRIPT_SOURCE = `(function () {
   var IN_VIEW_THRESHOLD = 0.25;
   var COPIED_RESET_MS = 2000;
   var TURNSTILE_FIELD = 'cf-turnstile-response';
+  var TURNSTILE_SCRIPT_URL = '${TURNSTILE_SCRIPT_URL}';
+  var TURNSTILE_WAKE_EVENTS = ['focusin', 'pointerenter', 'touchstart'];
   var REVEAL_SELECTOR = '.reveal, .why-item';
   var REVEAL_THRESHOLD = 0.2;
   var REVEAL_ROOT_MARGIN = '0px 0px -8% 0px';
@@ -19,6 +21,17 @@ const SCRIPT_SOURCE = `(function () {
 
   function byId(id) {
     return document.getElementById(id);
+  }
+
+  var isTurnstileRequested = false;
+
+  function loadTurnstile() {
+    if (isTurnstileRequested) return;
+    isTurnstileRequested = true;
+    var script = document.createElement('script');
+    script.src = TURNSTILE_SCRIPT_URL;
+    script.async = true;
+    document.head.appendChild(script);
   }
 
   function showNotice(form, templateId) {
@@ -35,8 +48,12 @@ const SCRIPT_SOURCE = `(function () {
     var label = submit.querySelector('[data-label]');
     var email = byId('join-email');
     var isSubmitting = false;
+    TURNSTILE_WAKE_EVENTS.forEach(function (name) {
+      form.addEventListener(name, loadTurnstile, { once: true });
+    });
     form.addEventListener('submit', function (event) {
       var token = form.elements[TURNSTILE_FIELD];
+      loadTurnstile();
       if (isSubmitting) {
         event.preventDefault();
         return;

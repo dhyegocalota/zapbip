@@ -6,7 +6,9 @@ import { describe, expect, it } from 'vitest';
 const LOGOS_ROOT = join(import.meta.dirname, '../../site-public/site/logos');
 const NOTICE_FILE = 'NOTICE.md';
 const LOGO_LIMIT_BYTES = 4_000;
-const WITHDRAWN_MARK = 'openai';
+const FORBIDDEN_MARKS = ['grok', 'xai'];
+const INITIALS_ONLY_AGENT_COUNT = 2;
+const NOTICE_DATE_PATTERN = /\d{4}-\d{2}-\d{2}/;
 const STEMS = [
   ...new Set(Object.values(AGENT_INSTALLS).flatMap((install) => (install.officialLogo === null ? [] : [install.officialLogo]))),
 ];
@@ -32,8 +34,8 @@ describe('the official logos', () => {
     const notice = readFileSync(join(LOGOS_ROOT, NOTICE_FILE), 'utf8');
     const line = notice.split('\n').find((candidate) => candidate.includes(`${stem}.svg`));
     expect(line).toBeDefined();
-    expect(line).toContain('CC0-1.0');
     expect(line).toMatch(/https:\/\//);
+    expect(line).toMatch(NOTICE_DATE_PATTERN);
   });
 
   it('keeps one file per mark: no two logo files are the same drawing', () => {
@@ -43,10 +45,16 @@ describe('the official logos', () => {
     expect(new Set(drawings).size).toBe(drawings.length);
   });
 
+  it('shows initials only for the agents whose vendor offers no lawful copy of its mark', () => {
+    const initialsOnly = Object.values(AGENT_INSTALLS).filter((install) => install.officialLogo === null);
+    expect(initialsOnly).toHaveLength(INITIALS_ONLY_AGENT_COUNT);
+  });
+
   it('ships no mark its owner has not allowed, and no file that is not an svg or the notice', () => {
     const files = readdirSync(LOGOS_ROOT);
-    expect(files.filter((name) => name.toLowerCase().includes(WITHDRAWN_MARK))).toEqual([]);
-    expect(readFileSync(join(LOGOS_ROOT, NOTICE_FILE), 'utf8').toLowerCase()).not.toContain(WITHDRAWN_MARK);
+    FORBIDDEN_MARKS.forEach((mark) => {
+      expect(files.filter((name) => name.toLowerCase().includes(mark))).toEqual([]);
+    });
     expect(files.filter((name) => !name.endsWith('.svg') && name !== NOTICE_FILE)).toEqual([]);
   });
 });

@@ -1,5 +1,6 @@
 import { OwnerLocale } from '@zapbip/types';
-import { LlmsFile, llmsPathOf, markdownPathOf } from './agentic-paths';
+import { aboutBlocksOf } from './about-facts';
+import { LlmsFile, llmsPathOf, markdownPathOf, setupUrlOf } from './agentic-paths';
 import { legalTextOf } from './legal-copy';
 import { LEGAL_PAGES, legalPathOf } from './legal-links';
 import { homeMarkdownOf, legalMarkdownOf } from './markdown-pages';
@@ -62,6 +63,11 @@ export function llmsTextOf(input: { origin: string; locale: OwnerLocale }): stri
       url: `${origin}${markdownPathOf({ htmlPath: localePathOf({ locale }) })}`,
       description,
     },
+    {
+      title: translate(SiteCopyKey.SetupTitle),
+      url: setupUrlOf({ origin, locale }),
+      description: translate(SiteCopyKey.SetupDescription),
+    },
     ...LEGAL_PAGES.filter((page) => page.locale === locale).map((page) => {
       const legal = legalTextOf(page);
       return { title: legal.title, url: `${origin}${markdownPathOf({ htmlPath: legalPathOf(page) })}`, description: legal.description };
@@ -80,6 +86,7 @@ export function llmsTextOf(input: { origin: string; locale: OwnerLocale }): stri
     blocks: [
       { kind: MarkdownBlockKind.Heading, level: PAGE_LEVEL, text: translate(SiteCopyKey.BrandName) },
       { kind: MarkdownBlockKind.Quote, text: description },
+      ...aboutBlocksOf({ locale }),
       ...section({ title: PAGES_HEADING, entries: pages }),
       ...section({ title: INTERFACES_HEADING, entries: interfaces }),
       ...section({ title: DOCS_HEADING, entries: docs }),
