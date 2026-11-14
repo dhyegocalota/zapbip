@@ -44,3 +44,20 @@ export const SCRIPTS: Record<RecordedLocale, LocaleScript> = {
     answeredLabel: 'dono respondeu:',
   },
 };
+
+export type DemoOpenGraphData = {
+  titleLead: string;
+  titleAccent: string;
+  tagline: string;
+  agentName: string;
+  questionShort: string;
+  options: string[];
+};
+
+export function demoScriptOf(input: { locale: OwnerLocale }): LocaleScript {
+  throw new Error('demoScriptOf is not implemented');
+}
+
+export function openGraphDataOf(input: { locale: OwnerLocale }): DemoOpenGraphData {
+  throw new Error('openGraphDataOf is not implemented');
+}
