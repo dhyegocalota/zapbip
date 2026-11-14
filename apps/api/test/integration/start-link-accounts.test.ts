@@ -1,7 +1,7 @@
 import { TEST_META_APP_SECRET } from '../support/meta-app-secret';
 import { reset } from 'cloudflare:test';
 import { exports } from 'cloudflare:workers';
-import { OwnerLocale, SECOND_MS, START_LINK_PATH, WhatsAppNumberState } from '@zapbip/types';
+import { OwnerLocale, SECOND_MS, START_LINK_PATH, WHATSAPP_LINK_ORIGIN, WhatsAppNumberState } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { WEBHOOK_SIGNATURE_HEADER } from '../../src/adapters/whatsapp/whatsapp-constants';
 import { WHATSAPP_WEBHOOK_PATH } from '../../src/contract/constants';
@@ -68,10 +68,9 @@ describe('start link and accounts', () => {
     expect(await homeNumberOfNewOwner()).toBe(FIRST_NUMBER.numberId);
     expect((await writeTo({ numberId: SECOND_NUMBER.numberId, id: 'wamid.START2' })).status).toBe(200);
     expect(await homeNumberOfNewOwner()).toBe(FIRST_NUMBER.numberId);
-    const expectedNotice = WHATSAPP_COPY[OwnerLocale.PortugueseBrazil][OwnerCopyKey.AccountOnOtherNumber].replace(
-      '{displayNumber}',
-      FIRST_NUMBER.displayNumber,
-    );
+    const expectedNotice = WHATSAPP_COPY[OwnerLocale.PortugueseBrazil][OwnerCopyKey.AccountOnOtherNumber]
+      .replace('{displayNumber}', FIRST_NUMBER.displayNumber)
+      .replace('{whatsAppLink}', `${WHATSAPP_LINK_ORIGIN}/${FIRST_NUMBER.digits}`);
     expect(posts.map((post) => post.body.text.body)).toContain(expectedNotice);
     expect(posts.find((post) => post.body.text.body === expectedNotice)?.url).toContain(`/phone-${SECOND_NUMBER.numberId}/messages`);
   });
