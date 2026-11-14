@@ -11,6 +11,7 @@ const SHARED_WITH_ENGLISH = [
   `${OwnerLocale.Spanish}:${SiteCopyKey.NoticeLabelError}`,
   `${OwnerLocale.Spanish}:${SiteCopyKey.FooterLegalLabel}`,
   `${OwnerLocale.German}:${SiteCopyKey.FaqEyebrow}`,
+  `${OwnerLocale.German}:${SiteCopyKey.StartPromptHint}`,
   `${OwnerLocale.French}:${SiteCopyKey.NavigationDocs}`,
   `${OwnerLocale.French}:${SiteCopyKey.NoticeLabelInfo}`,
   `${OwnerLocale.French}:${SiteCopyKey.FaqEyebrow}`,

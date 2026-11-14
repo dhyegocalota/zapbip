@@ -38,7 +38,7 @@ export const GERMAN_LEGAL_COPY: Record<LegalDocument, LegalText> = {
       {
         heading: 'Deine Agenten',
         paragraphs: [
-          'Deine Agenten sind Software, die du auswählst und betreibst. zapbip liefert ihre Nachrichten und deine Antworten aus, schreibt, prüft oder kontrolliert aber nicht, was sie sagen oder tun. Was du aufgrund einer Agentennachricht entscheidest, etwa mit dem Tipp auf einen Button, ist deine Entscheidung. Die KI-Anbieter hinter deinen Agenten haben eigene Bedingungen.',
+          'Deine Agenten sind Software, die du auswählst und betreibst. zapbip liefert ihre Nachrichten und deine Antworten aus, schreibt, prüft oder kontrolliert aber nicht, was sie sagen oder tun. Was du aufgrund einer Agentennachricht entscheidest, etwa mit einer Antwort per Button, ist deine Entscheidung. Die KI-Anbieter hinter deinen Agenten haben eigene Bedingungen.',
         ],
         items: [],
       },

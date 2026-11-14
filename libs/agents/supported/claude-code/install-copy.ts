@@ -85,17 +85,17 @@ const CLAUDE_CODE_TEXT: Record<OwnerLocale, ClaudeCodeText> = {
 
 export const CLAUDE_CODE_SKILL_DESCRIPTION: Record<OwnerLocale, () => string> = {
   [OwnerLocale.PortugueseBrazil]: () =>
-    'Regras para falar com o dono pelo WhatsApp usando o zapbip: perguntar, esperar a resposta e escrever curto.',
+    'Regras para falar com a pessoa para quem você trabalha pelo WhatsApp usando o zapbip: perguntar, esperar a resposta e escrever curto.',
   [OwnerLocale.EnglishUs]: () => 'Rules for talking to the owner on WhatsApp through zapbip: ask, wait for the answer and write short.',
   [OwnerLocale.Spanish]: () =>
-    'Reglas para hablar con el propietario por WhatsApp a través de zapbip: preguntar, esperar la respuesta y escribir corto.',
+    'Reglas para hablar por WhatsApp con la persona para la que trabajas a través de zapbip: preguntar, esperar la respuesta y escribir corto.',
   [OwnerLocale.German]: () =>
-    'Regeln für das Gespräch mit dem Besitzer auf WhatsApp über zapbip: fragen, auf die Antwort warten und sich kurzfassen.',
+    'Regeln für das Gespräch mit der Person, für die du arbeitest, auf WhatsApp über zapbip: fragen, auf die Antwort warten und sich kurzfassen.',
   [OwnerLocale.French]: () =>
-    'Règles pour parler au propriétaire sur WhatsApp via zapbip\u00a0: poser les questions, attendre la réponse et écrire court.',
-  [OwnerLocale.Japanese]: () => 'zapbip経由でWhatsAppのオーナーと話すときのルール: 質問し、返事を待ち、短く書く。',
-  [OwnerLocale.Korean]: () => 'zapbip으로 WhatsApp에서 소유자와 대화할 때의 규칙: 질문하고, 답을 기다리고, 짧게 쓰기.',
-  [OwnerLocale.ChineseSimplified]: () => '通过 zapbip 在 WhatsApp 上与所有者交流的规则：提问、等待回答、写得简短。',
+    'Règles pour parler sur WhatsApp à la personne pour qui vous travaillez via zapbip\u00a0: poser les questions, attendre la réponse et écrire court.',
+  [OwnerLocale.Japanese]: () => 'zapbip経由でWhatsAppで仕えている人と話すときのルール: 質問し、返事を待ち、短く書く。',
+  [OwnerLocale.Korean]: () => 'zapbip으로 WhatsApp에서 함께 일하는 사람과 대화할 때의 규칙: 질문하고, 답을 기다리고, 짧게 쓰기.',
+  [OwnerLocale.ChineseSimplified]: () => '通过 zapbip 在 WhatsApp 上与你所服务的人交流的规则：提问、等待回答、写得简短。',
 };
 
 export const CLAUDE_CODE_COPY = localizeCopy({

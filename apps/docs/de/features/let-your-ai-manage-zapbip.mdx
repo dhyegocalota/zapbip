@@ -1,23 +1,23 @@
 ---
 title: Lass deine KI zapbip verwalten
-description: Deine KI kann deine KIs auflisten, verbinden und trennen und dir die Web-App öffnen, und jede Änderung wartet auf deinen Tipp in WhatsApp.
+description: Deine KI kann deine KIs auflisten, verbinden und trennen und dir die Web-App öffnen, und jede Änderung wartet auf deine Antwort in WhatsApp.
 ---
 
-Alles, was du in der [Web-App](/de/features/web-app) oder mit einem [WhatsApp-Befehl](/de/features/whatsapp-commands) tust, kann deine KI für dich tun. Du behältst die Kontrolle: Eine Änderung braucht deinen Tipp in WhatsApp, ohne ihn passiert nichts.
+Alles, was du in der [Web-App](/de/features/web-app) oder mit einem [WhatsApp-Befehl](/de/features/whatsapp-commands) tust, kann deine KI für dich tun. Du behältst die Kontrolle: Eine Änderung braucht deine Antwort in WhatsApp, ohne ihn passiert nichts.
 
 ## Was deine KI kann
 
-| Bitte deine KI,           | Was passiert                                                                                                         | Braucht deinen Tipp |
-| ------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------- |
-| deine KIs aufzulisten     | Sie liest jeden Namen, die App, aus der sie verbunden wurde, wann sie erstellt wurde und wann sie zuletzt aktiv war. | Nein                |
-| dein Konto zu lesen       | Sie liest den Status deines Kontos und deinen Tarif.                                                                 | Nein                |
-| eine neue KI zu verbinden | zapbip fragt dich in WhatsApp und verbindet sie dann.                                                                | Ja                  |
-| eine KI zu trennen        | zapbip fragt dich in WhatsApp und stoppt diese KI dann sofort.                                                       | Ja                  |
-| die Web-App zu öffnen     | zapbip sendet dir den Anmeldelink in WhatsApp.                                                                       | Nein                |
+| Bitte deine KI,           | Was passiert                                                                                                         | Braucht deine Antwort |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------- | --------------------- |
+| deine KIs aufzulisten     | Sie liest jeden Namen, die App, aus der sie verbunden wurde, wann sie erstellt wurde und wann sie zuletzt aktiv war. | Nein                  |
+| dein Konto zu lesen       | Sie liest den Status deines Kontos und deinen Tarif.                                                                 | Nein                  |
+| eine neue KI zu verbinden | zapbip fragt dich in WhatsApp und verbindet sie dann.                                                                | Ja                    |
+| eine KI zu trennen        | zapbip fragt dich in WhatsApp und stoppt diese KI dann sofort.                                                       | Ja                    |
+| die Web-App zu öffnen     | zapbip sendet dir den Anmeldelink in WhatsApp.                                                                       | Nein                  |
 
 Das Löschen deines Kontos steht nicht auf der Liste. Es bleibt ein WhatsApp-Befehl, den nur du schreiben kannst.
 
-## So funktioniert der Tipp
+## So funktioniert die Antwort
 
 Wenn deine KI darum bittet, eine neue KI namens `helper` zu verbinden, schreibt zapbip dir in WhatsApp, als die KI, die gefragt hat:
 
@@ -25,9 +25,9 @@ Wenn deine KI darum bittet, eine neue KI namens `helper` zu verbinden, schreibt 
 - **Allow, send to agent** verbindet sie und übergibt den Link an die KI, die gefragt hat, damit sie die Einrichtung selbst abschließen kann.
 - **Deny** ändert nichts.
 
-Das Trennen hat zwei Buttons, Allow und Deny. Nur ein Tipp auf einen Button zählt: Eine Nachricht, die du tippst, auch das Wort Allow, wird als Deny gelesen. Jede Frage endet mit einer kurzen Referenz, sodass eine Antwort auf eine alte Frage nie für eine neue verwendet wird.
+Das Trennen hat zwei Buttons, Allow und Deny. Nur die Antwort per Button zählt: Eine Nachricht, die du schreibst, auch das Wort Allow, wird als Deny gelesen. Jede Frage endet mit einer kurzen Referenz, sodass eine Antwort auf eine alte Frage nie für eine neue verwendet wird.
 
-Deine KI wartet bis zu 50 Sekunden auf deine Antwort. Antwortest du nicht rechtzeitig, ändert sich nichts, und ein späterer Tipp ändert ebenfalls nichts. Nach einem Deny oder einer ausbleibenden Antwort wird dieselbe Anfrage derselben KI 10 Minuten lang abgelehnt, damit sie nicht immer wieder fragen kann.
+Deine KI wartet bis zu 50 Sekunden auf deine Antwort. Antwortest du nicht rechtzeitig, ändert sich nichts, und eine spätere Antwort ändert ebenfalls nichts. Nach einem Deny oder einer ausbleibenden Antwort wird dieselbe Anfrage derselben KI 10 Minuten lang abgelehnt, damit sie nicht immer wieder fragen kann.
 
 ## Was privat bleibt
 

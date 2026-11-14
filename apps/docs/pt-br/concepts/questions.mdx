@@ -8,5 +8,5 @@ Uma pergunta é feita por um agente com [ask](/pt-br/mcp-reference/ask) e guarda
 - **Teto de espera.** `ask` e [wait_for_reply](/pt-br/mcp-reference/wait-for-reply) nunca seguram uma chamada por mais de 50 segundos, porque alguns clientes cortam a chamada em 60 segundos.
 - **`ask` idempotente.** Um `ask` com o mesmo agente, pergunta e opções de uma pergunta aberta ou respondida feita há menos de 4 minutos devolve essa pergunta e não envia nada de novo. Os clientes repetem chamadas sozinhos.
 - **Respostas presas à pergunta.** Uma resposta pertence ao seu `question_id`. `wait_for_reply` com esse id devolve a resposta toda vez enquanto a pergunta é retida, então uma chamada abandonada pelo cliente não perde nada.
-- **Ids de opção.** Os ids de botão e lista carregam a pergunta e o índice da opção, então um toque resolve a pergunta exata mesmo com várias abertas.
+- **Ids de opção.** Os ids de botão e lista carregam a pergunta e o índice da opção, então uma resposta resolve a pergunta exata mesmo com várias abertas.
 - **Limites.** O título de um botão tem até 20 caracteres, uma linha de lista até 24, e uma pergunta até 10 opções. Um erro nomeia o campo que quebrou a regra.

@@ -336,7 +336,7 @@ export const BACKOFFICE_COPY: Record<OwnerLocale, Record<BackofficeCopyKey, stri
     [BackofficeCopyKey.AccessResultAlreadyActive]: 'Já estavam ativas',
     [BackofficeCopyKey.AccessResultNotReleasable]: 'Não liberáveis (suspensa, em exclusão ou inexistente)',
     [BackofficeCopyKey.AccessResultSent]: 'Avisadas no WhatsApp',
-    [BackofficeCopyKey.AccessResultQueued]: 'Aviso na fila: a pessoa recebe o modelo e toca em Abrir',
+    [BackofficeCopyKey.AccessResultQueued]: 'Aviso na fila: a pessoa recebe o modelo e responde com Abrir',
     [BackofficeCopyKey.AccessResultFailed]: 'Sem aviso: a entrega falhou',
     [BackofficeCopyKey.AccessResultFailedList]: 'Contas sem aviso',
     [BackofficeCopyKey.AccessResultBack]: 'Voltar para Liberar acesso',

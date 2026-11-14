@@ -315,7 +315,7 @@ export const KOREAN_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.AccessResultAlreadyActive]: '이미 활성',
   [BackofficeCopyKey.AccessResultNotReleasable]: '열 수 없음(정지, 삭제 중 또는 없음)',
   [BackofficeCopyKey.AccessResultSent]: 'WhatsApp으로 알림',
-  [BackofficeCopyKey.AccessResultQueued]: '알림 템플릿 뒤에 대기 중: 본인이 열기를 탭합니다',
+  [BackofficeCopyKey.AccessResultQueued]: '알림 템플릿 뒤에 대기 중: 본인이 열기로 답합니다',
   [BackofficeCopyKey.AccessResultFailed]: '알리지 못함: 전달 실패',
   [BackofficeCopyKey.AccessResultFailedList]: '알리지 못한 계정',
   [BackofficeCopyKey.AccessResultBack]: '접근 열기로 돌아가기',

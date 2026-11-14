@@ -12,7 +12,7 @@ export enum OwnerCopyKey {
 
 export const WHATSAPP_COPY: Record<OwnerLocale, Record<OwnerCopyKey, string>> = {
   [OwnerLocale.PortugueseBrazil]: {
-    [OwnerCopyKey.UnsupportedKind]: 'Este tipo de mensagem ainda não é suportado. Envie como texto ou foto.',
+    [OwnerCopyKey.UnsupportedKind]: 'Este tipo de mensagem ainda não tem suporte. Envie como texto ou foto.',
     [OwnerCopyKey.MediaUnavailable]: 'Não consegui baixar o arquivo. Envie de novo, por favor.',
     [OwnerCopyKey.ListButtonLabel]: 'Ver opções',
     [OwnerCopyKey.ListSectionTitle]: 'Opções',

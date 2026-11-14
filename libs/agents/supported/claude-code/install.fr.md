@@ -10,7 +10,7 @@
 ```
 ---
 name: zapbip
-description: Règles pour parler au propriétaire sur WhatsApp via zapbip : poser les questions, attendre la réponse et écrire court.
+description: Règles pour parler sur WhatsApp à la personne pour qui vous travaillez via zapbip : poser les questions, attendre la réponse et écrire court.
 ---
 Call check_inbox at the start of every task. If it returns new messages, handle them first.
 Use ask for any decision the owner must make. Do not guess. Then wait with wait_for_reply.
