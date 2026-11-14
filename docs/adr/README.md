@@ -69,3 +69,4 @@ A `Proposed` ADR moves to `Accepted` by editing its status line and date. Any ot
 | [0046](0046-an-operator-agent-runs-the-backoffice-through-mcp-with-a-scoped-key.md) | An operator agent runs the backoffice through MCP with a scoped key | Accepted | 2026-11-13 |
 | [0047](0047-the-web-surfaces-speak-eight-languages-through-a-web-locale-while-whatsapp-copy-stays-in-two.md) | The web surfaces speak eight languages through a web locale, while the WhatsApp copy stays in two | Accepted | 2026-11-13 |
 | [0049](0049-a-phone-gets-one-onboarding-reply-a-day-and-a-customer-on-another-number-is-pointed-home.md) | A phone gets one onboarding reply a day, and a customer on another number is pointed home | Accepted | 2026-11-13 |
+| [0050](0050-an-agent-sets-itself-up-from-a-one-line-prompt-that-points-to-a-generated-setup-page.md) | An agent sets itself up from a one-line prompt that points to a generated setup page | Accepted | 2026-11-13 |
