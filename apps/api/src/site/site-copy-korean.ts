@@ -266,5 +266,5 @@ export const KOREAN_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.NotFoundMetaTitle]: '페이지를 찾을 수 없어요',
   [SiteCopyKey.AgentsTitle]: 'AI 에이전트용',
   [SiteCopyKey.AgentsBody]:
-    '에이전트는 함께 일하는 사람이 대기 명단에 들어가도록 도울 수 있지만, 버튼은 그 사람이 눌러야 해요. 폼에는 사람만 풀 수 있는 캡차가 있어요. {joinLink}를 열고 name@example.com을 그 사람의 이메일로 바꾸면 폼이 이미 채워진 채로 열려요. 그다음 폼의 버튼을 눌러 달라고 부탁하세요. 같은 도움이 모든 페이지에서 WebMCP 도구로도 제공돼요.',
+    '에이전트는 함께 일하는 사람이 대기 명단에 들어가도록 도울 수 있지만, 버튼은 그 사람이 눌러야 해요. 폼에는 사람만 풀 수 있는 캡차가 있어요. {joinLink}를 열고 name@example.com을 그 사람의 이메일로 바꾸면 폼이 이미 채워진 채로 열려요. 그다음 폼의 버튼을 눌러 달라고 부탁하세요. 같은 도움이 모든 페이지에서 WebMCP 도구로도 제공돼요. 주소의 더하기 기호는 %2B로 쓰세요. 그대로 쓴 +는 공백으로 전달돼요.',
 };

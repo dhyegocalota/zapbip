@@ -16,7 +16,6 @@ export const KOREAN_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.FooterLine]: 'zapbip 백오피스 · {environment}',
   [BackofficeCopyKey.SignInTitle]: '로그인',
   [BackofficeCopyKey.SignInEyebrow]: '운영자 접근',
-  [BackofficeCopyKey.SignInLead]: '먼저 이메일과 비밀번호를 입력한 뒤, 인증 앱의 코드를 입력하세요.',
   [BackofficeCopyKey.SignInEmailLabel]: '이메일',
   [BackofficeCopyKey.SignInPasswordLabel]: '비밀번호',
   [BackofficeCopyKey.SignInCodeLead]: '인증 앱의 6자리 코드를 입력하세요. 이 단계는 5분 뒤에 만료됩니다.',

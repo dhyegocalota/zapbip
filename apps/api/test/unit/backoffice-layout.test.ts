@@ -161,9 +161,9 @@ describe('backoffice layout', () => {
 
 describe('sign-in page', () => {
   it.each([
-    [OwnerLocale.EnglishUs, 'Operator access', 'Your email and password first, then the code from your authenticator app.'],
-    [OwnerLocale.PortugueseBrazil, 'Acesso do operador', 'Seu e-mail e sua senha. Depois, o código do seu autenticador.'],
-  ])('renders the eyebrow and the lead in %s', (locale, eyebrow, lead) => {
+    [OwnerLocale.EnglishUs, 'Operator access'],
+    [OwnerLocale.PortugueseBrazil, 'Acesso do operador'],
+  ])('renders the eyebrow in %s', (locale, eyebrow) => {
     const html = String(
       SignInPage({
         locale,
@@ -175,7 +175,6 @@ describe('sign-in page', () => {
       }),
     );
     expect(html).toContain(eyebrow);
-    expect(html).toContain(lead);
   });
 });
 
@@ -194,7 +193,6 @@ describe('sign-in code page', () => {
         notice: null,
       }),
     );
-    expect(html).toContain(lead);
     expect(html).not.toContain('name="password"');
   });
 });

@@ -1,5 +1,12 @@
 import { contentHashOf } from '../backoffice/assets/stylesheet';
-import { JOIN_FRAGMENT, THEME_SWITCH_ID, TURNSTILE_SCRIPT_URL } from './site-constants';
+import {
+  JOIN_FRAGMENT,
+  THEME_SWITCH_ID,
+  TURNSTILE_FAILED_CALLBACK,
+  TURNSTILE_PASSED_CALLBACK,
+  TURNSTILE_SCRIPT_URL,
+  TURNSTILE_WAIT_MS,
+} from './site-constants';
 import { SitePath } from './site-paths';
 import { WEBMCP_SOURCE } from './site-webmcp-script';
 
@@ -10,6 +17,7 @@ const SCRIPT_SOURCE = `(function () {
   var TURNSTILE_FIELD = 'cf-turnstile-response';
   var TURNSTILE_SCRIPT_URL = '${TURNSTILE_SCRIPT_URL}';
   var TURNSTILE_WAKE_EVENTS = ['focusin', 'pointerenter', 'touchstart'];
+  var TURNSTILE_WAIT_MS = ${TURNSTILE_WAIT_MS};
   var REVEAL_SELECTOR = '.reveal, .why-item';
   var REVEAL_THRESHOLD = 0.2;
   var REVEAL_ROOT_MARGIN = '0px 0px -8% 0px';
@@ -57,13 +65,46 @@ const SCRIPT_SOURCE = `(function () {
     var label = submit.querySelector('[data-label]');
     var email = byId('join-email');
     var isSubmitting = false;
+    var isWaitingForCheck = false;
+    var waitTimer = null;
+    var idleLabel = label.textContent;
+
+    function startBusy() {
+      submit.setAttribute('aria-busy', 'true');
+      submit.setAttribute('aria-disabled', 'true');
+      label.textContent = submit.getAttribute('data-submitting-label');
+    }
+
+    function stopWaiting() {
+      isWaitingForCheck = false;
+      window.clearTimeout(waitTimer);
+      submit.removeAttribute('aria-busy');
+      submit.removeAttribute('aria-disabled');
+      label.textContent = idleLabel;
+    }
+
+    function passCheck() {
+      if (!isWaitingForCheck) return;
+      stopWaiting();
+      form.requestSubmit(submit);
+    }
+
+    function failCheck() {
+      if (!isWaitingForCheck) return;
+      stopWaiting();
+      showNotice(form, 'notice-captcha');
+      form.querySelector('.turnstile-slot').scrollIntoView({ block: 'nearest' });
+    }
+
+    window['${TURNSTILE_PASSED_CALLBACK}'] = passCheck;
+    window['${TURNSTILE_FAILED_CALLBACK}'] = failCheck;
     TURNSTILE_WAKE_EVENTS.forEach(function (name) {
       form.addEventListener(name, loadTurnstile, { once: true });
     });
     form.addEventListener('submit', function (event) {
       var token = form.elements[TURNSTILE_FIELD];
       loadTurnstile();
-      if (isSubmitting) {
+      if (isSubmitting || isWaitingForCheck) {
         event.preventDefault();
         return;
       }
@@ -74,14 +115,13 @@ const SCRIPT_SOURCE = `(function () {
       }
       if (!token || !token.value) {
         event.preventDefault();
-        showNotice(form, 'notice-captcha');
-        form.querySelector('.turnstile-slot').scrollIntoView({ block: 'nearest' });
+        isWaitingForCheck = true;
+        startBusy();
+        waitTimer = window.setTimeout(failCheck, TURNSTILE_WAIT_MS);
         return;
       }
       isSubmitting = true;
-      submit.setAttribute('aria-busy', 'true');
-      submit.setAttribute('aria-disabled', 'true');
-      label.textContent = submit.getAttribute('data-submitting-label');
+      startBusy();
       email.readOnly = true;
     });
   }

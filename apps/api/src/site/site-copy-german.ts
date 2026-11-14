@@ -275,5 +275,5 @@ export const GERMAN_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.NotFoundMetaTitle]: 'Seite nicht gefunden',
   [SiteCopyKey.AgentsTitle]: 'Für KI-Agenten',
   [SiteCopyKey.AgentsBody]:
-    'Ein Agent kann der Person, für die er arbeitet, beim Eintragen in die Warteliste helfen, aber die Person drückt den Knopf: Das Formular hat ein Captcha, das nur ein Mensch löst. Öffne {joinLink} und ersetze name@example.com durch die E-Mail-Adresse der Person, damit das Formular schon ausgefüllt öffnet, und bitte sie, den Knopf des Formulars zu drücken. Dieselbe Hilfe ist auf jeder Seite ein WebMCP-Werkzeug.',
+    'Ein Agent kann der Person, für die er arbeitet, beim Eintragen in die Warteliste helfen, aber die Person drückt den Knopf: Das Formular hat ein Captcha, das nur ein Mensch löst. Öffne {joinLink} und ersetze name@example.com durch die E-Mail-Adresse der Person, damit das Formular schon ausgefüllt öffnet, und bitte sie, den Knopf des Formulars zu drücken. Dieselbe Hilfe ist auf jeder Seite ein WebMCP-Werkzeug. Schreibe ein Pluszeichen der Adresse als %2B, denn ein wörtliches + kommt als Leerzeichen an.',
 };

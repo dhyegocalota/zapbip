@@ -16,7 +16,6 @@ export const JAPANESE_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.FooterLine]: 'zapbip バックオフィス · {environment}',
   [BackofficeCopyKey.SignInTitle]: 'ログイン',
   [BackofficeCopyKey.SignInEyebrow]: 'オペレーター用アクセス',
-  [BackofficeCopyKey.SignInLead]: 'まずメールアドレスとパスワードを入力し、次に認証アプリのコードを入力します。',
   [BackofficeCopyKey.SignInEmailLabel]: 'メールアドレス',
   [BackofficeCopyKey.SignInPasswordLabel]: 'パスワード',
   [BackofficeCopyKey.SignInCodeLead]: '認証アプリの6桁のコードを入力してください。この手順は5分で期限切れになります。',

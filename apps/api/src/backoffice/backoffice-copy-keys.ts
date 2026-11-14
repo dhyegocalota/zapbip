@@ -14,7 +14,6 @@ export enum BackofficeCopyKey {
   FooterLine = 'footer_line',
   SignInTitle = 'sign_in_title',
   SignInEyebrow = 'sign_in_eyebrow',
-  SignInLead = 'sign_in_lead',
   SignInEmailLabel = 'sign_in_email_label',
   SignInPasswordLabel = 'sign_in_password_label',
   SignInCodeLead = 'sign_in_code_lead',

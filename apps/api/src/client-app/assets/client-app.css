@@ -262,6 +262,40 @@ main {
   background: var(--color-success-surface);
 }
 
+.panel-hero {
+  max-width: 28rem;
+  margin: var(--space-7) auto;
+  padding: var(--space-7) var(--space-5);
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--color-surface), var(--color-surface)) padding-box,
+    linear-gradient(135deg, var(--color-signal), var(--color-brand)) border-box;
+  box-shadow: var(--glow-signal);
+  text-align: center;
+}
+
+.panel-hero .button {
+  width: 100%;
+  margin-top: var(--space-3);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .panel-hero {
+    animation: panel-rise 420ms ease-out both;
+  }
+
+  @keyframes panel-rise {
+    from {
+      opacity: 0;
+      transform: translateY(0.75rem);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
 h1 {
   margin: 0 0 var(--space-3);
   font-family: var(--font-display);
@@ -362,6 +396,7 @@ p {
 }
 
 .connect-form label {
+  margin-bottom: var(--space-2);
   font-weight: 600;
 }
 
