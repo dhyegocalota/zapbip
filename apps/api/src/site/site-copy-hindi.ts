@@ -227,6 +227,12 @@ export const HINDI_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.FaqDeveloperAnswer]: 'नहीं। अगर आप कोई AI असिस्टेंट इस्तेमाल करते हैं, तो एक लाइन पेस्ट करके उसे जोड़ सकते हैं।',
   [SiteCopyKey.FaqOthersQuestion]: 'क्या यह दूसरे लोगों को संदेश भेजता है?',
   [SiteCopyKey.FaqOthersAnswer]: 'नहीं। zapbip सिर्फ़ आपसे बात करता है, आपके सामान्य WhatsApp पर, आधिकारिक WhatsApp Cloud API के ज़रिए।',
+  [SiteCopyKey.FaqMessageKindsQuestion]: 'कौन से WhatsApp संदेश काम करते हैं?',
+  [SiteCopyKey.FaqMessageKindsAnswer]:
+    'टेक्स्ट, फ़ोटो, वीडियो, ऑडियो और वॉइस नोट, फ़ाइलें, स्टिकर, लोकेशन, कॉन्टैक्ट कार्ड, रिएक्शन, और बटन या सूची पर टैप। कोई और प्रकार समर्थित नहीं है: आपको एक छोटी सूचना मिलती है, और आपके AI को कुछ नहीं मिलता।',
+  [SiteCopyKey.FaqUnofficialQuestion]: 'क्या गैर-आधिकारिक WhatsApp टूल इस्तेमाल किया जा सकता है?',
+  [SiteCopyKey.FaqUnofficialAnswer]:
+    'नहीं। zapbip केवल Meta के आधिकारिक WhatsApp Cloud API का उपयोग करता है। यह WhatsApp Web ऑटोमेशन, Baileys जैसी गैर-आधिकारिक लाइब्रेरी, या आपके निजी खाते को जोड़ने वाले QR कोड के साथ काम नहीं करता।',
   [SiteCopyKey.FaqManyQuestion]: 'क्या कई एजेंट इसे साथ इस्तेमाल कर सकते हैं?',
   [SiteCopyKey.FaqManyAnswer]: 'हाँ। आपके सारे एजेंट zapbip के नंबर से आपको लिखते हैं, और हर जवाब उसी एजेंट के पास जाता है जिसने पूछा था।',
   [SiteCopyKey.FaqReferralQuestion]: 'इनवाइट कैसे काम करते हैं?',

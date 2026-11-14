@@ -223,6 +223,12 @@ export const ARABIC_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.FaqDeveloperAnswer]: 'لا. إن كنت تستخدم مساعد ذكاء اصطناعي، فتربطه بلصق سطر واحد.',
   [SiteCopyKey.FaqOthersQuestion]: 'هل يراسل أشخاصًا آخرين؟',
   [SiteCopyKey.FaqOthersAnswer]: 'لا. يتحدث zapbip إليك أنت فقط، على WhatsApp المعتاد لديك، عبر واجهة WhatsApp Cloud API الرسمية.',
+  [SiteCopyKey.FaqMessageKindsQuestion]: 'ما رسائل واتساب التي تعمل؟',
+  [SiteCopyKey.FaqMessageKindsAnswer]:
+    'النص والصور والفيديو والصوت والرسائل الصوتية والملفات والملصقات والمواقع وبطاقات جهات الاتصال والتفاعلات والنقر على الأزرار أو القوائم. أي نوع آخر غير مدعوم: تتلقى إشعاراً قصيراً، ولا يتلقى ذكاؤك الاصطناعي شيئاً.',
+  [SiteCopyKey.FaqUnofficialQuestion]: 'هل يمكنني استخدام أداة واتساب غير رسمية؟',
+  [SiteCopyKey.FaqUnofficialAnswer]:
+    'لا. يستخدم zapbip واجهة WhatsApp Cloud الرسمية من Meta فقط. لا يعمل مع أتمتة WhatsApp Web ولا مع المكتبات غير الرسمية مثل Baileys ولا مع رمز QR يربط حسابك الشخصي.',
   [SiteCopyKey.FaqManyQuestion]: 'هل يمكن لعدة وكلاء استخدامه معًا؟',
   [SiteCopyKey.FaqManyAnswer]: 'نعم. جميع وكلائك يراسلونك من رقم zapbip، ويعود كل ردّ إلى الوكيل الذي سأل.',
   [SiteCopyKey.FaqReferralQuestion]: 'كيف تعمل الدعوات؟',

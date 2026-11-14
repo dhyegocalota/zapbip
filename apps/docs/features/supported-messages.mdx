@@ -1,0 +1,52 @@
+---
+title: Supported messages
+description: The WhatsApp message kinds your AI receives and sends, what zapbip ignores, and why only the official API is used.
+---
+
+zapbip supports the message kinds below in both directions. Any kind not listed here is not supported.
+
+## What your AI receives
+
+| Kind       | You send                        | Your AI receives                                                                     |
+| ---------- | ------------------------------- | ------------------------------------------------------------------------------------ |
+| `text`     | A message                       | The text                                                                             |
+| `image`    | A photo                         | The photo, stored by zapbip                                                          |
+| `video`    | A video                         | The video, stored by zapbip                                                          |
+| `audio`    | An audio file or a voice note   | The audio, stored by zapbip; a voice note is marked as one                           |
+| `document` | A file, such as a PDF           | The file, stored by zapbip, with its name and type                                   |
+| `sticker`  | A sticker                       | The sticker, stored by zapbip                                                        |
+| `location` | A location pin                  | Latitude, longitude, name and address                                                |
+| `contacts` | One or more contact cards       | The contact cards                                                                    |
+| `reaction` | An emoji reaction               | The emoji and the message it reacts to; removing a reaction arrives without an emoji |
+| `choice`   | A tap on a button or a list row | The choice, which answers the question                                               |
+
+A reply to one of your AI's messages reaches the AI that sent that message.
+
+Anything else you send gets a short notice that the kind is not supported yet, and your AI receives nothing. The same happens for an order or a WhatsApp Flow reply. A tap on the Open button of a zapbip notice only opens the [24-hour window](/features/the-24-hour-window). A call, or any other account event, is ignored.
+
+## What your AI can send
+
+| Kind       | What your AI can send                                                  |
+| ---------- | ---------------------------------------------------------------------- |
+| `text`     | A text message of up to 4,096 characters                               |
+| `image`    | A photo: JPEG, PNG or WebP, up to 5 MB                                 |
+| `video`    | A video: 3GP or MP4, up to 16 MB                                       |
+| `audio`    | An audio file: AAC, AMR, MP3, M4A or OGG, up to 16 MB; or a voice note |
+| `document` | A file: PDF, Word, Excel, PowerPoint or plain text, up to 100 MB       |
+| `sticker`  | A static WebP sticker, up to 100 KB                                    |
+| `location` | A location pin                                                         |
+| `contacts` | One or more contact cards                                              |
+| `reaction` | An emoji reaction to one of your messages, or none to clear it         |
+| `choice`   | A question with up to 3 buttons, or a list of 4 to 10 options          |
+
+zapbip refuses a send that breaks one of these limits and says which field is wrong. Polls, orders, payments, WhatsApp Flows and calls are not available. Your AI cannot pick a WhatsApp template; zapbip sends its own notice only when the 24-hour window is closed.
+
+## Official WhatsApp Cloud API only
+
+zapbip sends and receives only through the official WhatsApp Cloud API from Meta, on a zapbip number. It does not support:
+
+- unofficial WhatsApp clients and libraries, such as Baileys, whatsapp-web.js, WPPConnect or Evolution API;
+- WhatsApp Web automation, or any bridge that logs in with a personal account or a QR code;
+- your own personal WhatsApp number. Every AI writes from the zapbip number, and you reply on your usual WhatsApp.
+
+See the [FAQ](/help/faq) for short answers.
