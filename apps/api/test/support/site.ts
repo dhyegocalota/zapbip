@@ -5,6 +5,7 @@ import { createFakeEmailSender } from '../../src/adapters/fake/fake-email-sender
 import type { Bindings } from '../../src/contract/env';
 import type { EmailSender } from '../../src/emails/email-sender';
 import { renderShellCopy, type ShellCopyKey } from '../../src/web-shell/shell-copy';
+import type { StarCountSource } from '../../src/site/repository-stars';
 import { createSiteApp } from '../../src/site/site-app';
 import { renderSiteCopy, type SiteCopyKey } from '../../src/site/site-copy';
 import { createFakeRateLimiter } from './fake-rate-limiter';
@@ -70,7 +71,12 @@ export type SiteRequest = {
   withClientAddress?: boolean;
   emailSender?: EmailSender;
   executionContext?: ExecutionContext;
+  starCountOf?: StarCountSource;
 };
+
+export async function unknownStarCount(): Promise<number | null> {
+  return null;
+}
 
 export function joinForm(input: { email: string; referralCode?: string; locale?: OwnerLocale; token?: string }): Record<string, string> {
   const { email, referralCode, locale = OwnerLocale.EnglishUs, token = WIDGET_TOKEN } = input;
@@ -94,6 +100,7 @@ export async function siteFetch(input: SiteRequest): Promise<Response> {
     withClientAddress = true,
     emailSender = createFakeEmailSender(),
     executionContext = createExecutionContext(),
+    starCountOf = unknownStarCount,
   } = input;
   const addressHeaders: Record<string, string> = withClientAddress ? { [CLIENT_ADDRESS_HEADER]: CLIENT_ADDRESS } : {};
   const request = new Request(`${SITE_ORIGIN}${path}`, {
@@ -101,7 +108,7 @@ export async function siteFetch(input: SiteRequest): Promise<Response> {
     headers: { ...addressHeaders, ...headers },
     body: form === undefined ? body : new URLSearchParams(form),
   });
-  return createSiteApp({ fetchImplementation: recording.fetchImplementation, emailSenderOf: () => emailSender }).fetch(
+  return createSiteApp({ fetchImplementation: recording.fetchImplementation, emailSenderOf: () => emailSender, starCountOf }).fetch(
     request,
     env,
     executionContext,

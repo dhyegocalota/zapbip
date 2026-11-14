@@ -13,6 +13,7 @@ const FAQ_ITEMS: FaqItem[] = [
   { question: SiteCopyKey.FaqManyQuestion, answer: SiteCopyKey.FaqManyAnswer },
   { question: SiteCopyKey.FaqReferralQuestion, answer: SiteCopyKey.FaqReferralAnswer },
   { question: SiteCopyKey.FaqDataQuestion, answer: SiteCopyKey.FaqDataAnswer },
+  { question: SiteCopyKey.FaqOpenSourceQuestion, answer: SiteCopyKey.FaqOpenSourceAnswer },
 ];
 
 export function faqItemsOf(): FaqItem[] {

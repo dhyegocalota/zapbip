@@ -1,5 +1,5 @@
 import { buildConnectionLink, RATE_LIMIT_PERIOD_MS } from '@zapbip/core';
-import { DAY_MS, HOUR_MS, PRODUCTION_PUBLIC_ORIGIN, SECOND_MS } from '@zapbip/types';
+import { DAY_MS, HOUR_MS, MINUTE_MS, PRODUCTION_PUBLIC_ORIGIN, SECOND_MS } from '@zapbip/types';
 import { CONNECTION_SECRET_PREFIX } from '../contract/constants';
 
 const EXAMPLE_SECRET_BODY = 'ex4mPLe7Hq2xVn9Rt4Wm8Ls3Jd6Hf1Yb5Gc0Zk2Ns7q';
@@ -62,7 +62,16 @@ export const AGENT_ADDRESS_IPV6_PREFIX_GROUPS = 3;
 export const TEXT_CONTENT_TYPE = 'text/plain; charset=utf-8';
 export const MARKDOWN_CONTENT_TYPE = 'text/markdown; charset=utf-8';
 export const JSON_CONTENT_TYPE = 'application/json; charset=utf-8';
-export const REPOSITORY_URL = 'https://github.com/dhyegocalota/zapbip';
+export const REPOSITORY_PATH = 'dhyegocalota/zapbip';
+export const REPOSITORY_URL = `https://github.com/${REPOSITORY_PATH}`;
+export const REPOSITORY_SELF_HOSTING_URL = `${REPOSITORY_URL}#-self-hosting`;
+export const REPOSITORY_API_URL = `https://api.github.com/repos/${REPOSITORY_PATH}`;
+export const REPOSITORY_API_ACCEPT = 'application/vnd.github+json';
+export const REPOSITORY_USER_AGENT = 'zapbip-site';
+export const REPOSITORY_STARS_TIMEOUT_MS = 2 * SECOND_MS;
+export const REPOSITORY_STARS_CACHE_MS = HOUR_MS;
+export const REPOSITORY_STARS_RETRY_MS = 5 * MINUTE_MS;
+export const SOURCE_LICENSE_URL = 'https://www.gnu.org/licenses/agpl-3.0.html';
 export const SECURITY_POLICY_URL = `${REPOSITORY_URL}/security/policy`;
 export const SECURITY_TEXT_VALIDITY_MS = 180 * DAY_MS;
 export const IS_SECURITY_POLICY_PUBLIC = false;

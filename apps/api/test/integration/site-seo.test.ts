@@ -7,7 +7,7 @@ import { localePathOf } from '../../src/site/site-language';
 import { languageOf } from '../../src/web-shell/locale-profiles';
 import { SITE_ORIGIN, siteFetch } from '../support/site';
 
-const HOME_TYPES = ['Organization', 'WebSite', 'WebApplication', 'FAQPage'];
+const HOME_TYPES = ['Organization', 'WebSite', 'WebApplication', 'SoftwareSourceCode', 'FAQPage'];
 const LEGAL_TYPES = ['Organization', 'WebSite', 'BreadcrumbList'];
 const ALTERNATE_COUNT = Object.values(OwnerLocale).length + 1;
 const PICKED_AGENT = Object.keys(AGENT_INSTALLS)[0]!;

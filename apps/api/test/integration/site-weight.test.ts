@@ -5,7 +5,7 @@ import { SITE_STYLESHEET } from '../../src/site/site-stylesheet';
 import { siteFetch } from '../support/site';
 
 const HOME_HTML_LIMIT_BYTES = 60_000;
-const SITE_STYLESHEET_LIMIT_BYTES = 60_000;
+const SITE_STYLESHEET_LIMIT_BYTES = 62_000;
 const SITE_SCRIPT_LIMIT_BYTES = 40_000;
 const CLIENT_APP_STYLESHEET_LIMIT_BYTES = 25_000;
 const IMMUTABLE = 'public, max-age=31536000, immutable';

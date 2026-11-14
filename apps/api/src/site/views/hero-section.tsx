@@ -1,10 +1,11 @@
 import type { OwnerLocale } from '@zapbip/types';
-import { DEMO_IMAGE_SIZE, POSTER_SIZES, POSTER_SMALL_WIDTH } from '../site-constants';
+import { DEMO_IMAGE_SIZE, POSTER_SIZES, POSTER_SMALL_WIDTH, REPOSITORY_URL } from '../site-constants';
 import { leadingAgentNames } from '../site-agents';
 import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
 import { SiteAssetKind, siteAssetOf } from '../site-paths';
 import type { PageModel } from '../page-model';
+import { GitHubMark } from './github-link';
 import { JoinBlock } from './join-block';
 
 const UNDERLINE_PATH = 'M3 9 C 60 3, 120 13, 180 7 S 270 4, 297 8';
@@ -71,6 +72,10 @@ export function HeroSection(props: { model: PageModel }) {
             <span class="live-dot" />
             {translate(eyebrowKey)}
           </p>
+          <a class="hero-source" href={REPOSITORY_URL} rel="noopener">
+            <GitHubMark />
+            {translate(SiteCopyKey.HeroOpenSource)}
+          </a>
           <h1 class="hero-title" id="hero-title">
             {translate(SiteCopyKey.HeroTitleLead)}{' '}
             <span class="hero-accent">
