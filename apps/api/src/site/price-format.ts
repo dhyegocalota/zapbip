@@ -28,6 +28,10 @@ export function formatCount(input: { count: number; locale: OwnerLocale }): stri
   return new Intl.NumberFormat(formattingLocaleOf({ locale: input.locale })).format(input.count);
 }
 
+export function formatCompactCount(input: { count: number; locale: OwnerLocale }): string {
+  throw new Error(`formatCompactCount is not implemented for ${input.locale}`);
+}
+
 export type PricingValues = { free: string; included: string; block: string; price: string; overage: string };
 
 export function pricingValuesOf(input: { locale: OwnerLocale }): PricingValues {
