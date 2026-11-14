@@ -14,6 +14,7 @@
     "./docs": "./src/docs.ts",
     "./checks/boundaries": "./src/checks/boundaries.ts",
     "./checks/leaks": "./src/checks/leaks.ts",
+    "./checks/registered-agents": "./src/checks/registered-agents.ts",
     "./definitions": "./src/definitions.ts",
     "./generate": "./generate/index.ts"
   },

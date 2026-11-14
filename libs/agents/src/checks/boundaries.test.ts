@@ -55,7 +55,7 @@ describe('boundaryViolationsOf', () => {
     (specifier) => {
       const path = 'apps/api/src/routes/example.ts';
       expect(violationsFor({ path, text: `import { x } from '${specifier}';` })).toEqual([
-        `${path}: B4 the Worker imports only the install and plugins facets (${specifier})`,
+        `${path}: B4 the Worker imports only the install, plugins and wake facets (${specifier})`,
       ]);
     },
   );

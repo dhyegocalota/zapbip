@@ -28,9 +28,21 @@
 
 ---
 
-zapbip is a personal WhatsApp channel for AI agents. Connect Claude Code, Codex, Cursor, Gemini CLI or any MCP client to your own phone through one MCP server: agents send you messages, ask questions with buttons or lists and block until you answer, exchange files and voice notes, and wake up when you text first. Several agents share one chat, and each reply goes back to the agent that asked.
+Your usual AI, now on WhatsApp in five minutes, for what matters to you. Connect the AIs you already use, or any MCP client, to your own phone through one MCP server: they send you messages, ask questions with buttons or lists and wait for your answer, exchange files and voice notes, and wake up when you text first. Several agents share one chat, and each reply goes back to the agent that asked.
+
+<p align="center">
+  <img src="docs/media/zapbip-demo.gif" alt="An AI finishes the tests, asks on WhatsApp whether to deploy, and carries on when the owner taps Ship it" width="420">
+</p>
 
 It uses only Meta's official WhatsApp Cloud API, it talks only to you, and it deletes each message after a fixed time.
+
+## 🤔 Why this is not a full WhatsApp channel
+
+A full channel moves the whole conversation into WhatsApp: the AI lives there, and everything it does goes through the chat. zapbip does the opposite. Your AI stays where it already works, with the same sessions, tools and habits, and picks zapbip up only when it needs you or when you tell it to: "text me when the build ends", "ask me before you deploy". WhatsApp is the way to reach you, not the place the work happens.
+
+- **The agent decides, or you do.** It texts you at the moments that matter, or because you asked.
+- **Nothing to rebuild.** It works out of the box with the AIs you already use and with any MCP client, with no plugin to write and no workflow to move.
+- **Five minutes.** Message zapbip, paste one line into your AI, and it connects itself.
 
 zapbip is a product of Logic Bit, made in Brazil: [logicbit.com.br](https://logicbit.com.br)
 
