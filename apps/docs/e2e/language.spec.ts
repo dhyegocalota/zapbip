@@ -36,7 +36,7 @@ const OVERVIEW_FIRST_HEADING: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.German]: 'Warum es zapbip gibt',
   [DocsPageLanguage.French]: 'Pourquoi zapbip existe',
   [DocsPageLanguage.Japanese]: 'zapbip が生まれた理由',
-  [DocsPageLanguage.Korean]: 'zapbip가 존재하는 이유',
+  [DocsPageLanguage.Korean]: 'zapbip이 존재하는 이유',
   [DocsPageLanguage.Chinese]: '为什么有 zapbip',
 };
 const ZERO_WIDTH_SPACE = /​/g;
