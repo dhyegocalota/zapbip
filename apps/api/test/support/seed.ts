@@ -13,6 +13,7 @@ import accessReleaseMigrationSql from '../../migrations/0012_access_release.sql?
 import waitlistSourceMigrationSql from '../../migrations/0013_waitlist_source.sql?raw';
 import operatorAgentKeysMigrationSql from '../../migrations/0014_operator_agent_keys.sql?raw';
 import otherNumberNoticesMigrationSql from '../../migrations/0015_other_number_notices.sql?raw';
+import welcomeEmailsMigrationSql from '../../migrations/0016_welcome_emails.sql?raw';
 import { hashConnectionSecret } from '../../src/adapters/platform/hash';
 import { accountInboxStub, testEnv } from './workers-env';
 
@@ -63,6 +64,7 @@ export async function applyPasswordSignInMigration(): Promise<void> {
 export async function applyLandingWaitlistMigration(): Promise<void> {
   await applyMigration({ sql: landingWaitlistMigrationSql });
   await applyMigration({ sql: waitlistSourceMigrationSql });
+  await applyMigration({ sql: welcomeEmailsMigrationSql });
 }
 
 export async function applyAccessReleaseMigration(): Promise<void> {

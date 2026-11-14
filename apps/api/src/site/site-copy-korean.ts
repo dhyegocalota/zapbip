@@ -209,7 +209,7 @@ export const KOREAN_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.PrivacyKeysBody]: '에이전트마다 고유한 시크릿이 있어요. 언제든 WhatsApp에서 폐기할 수 있어요.',
   [SiteCopyKey.PrivacyWaitlistTitle]: '이 대기자 명단에 대해',
   [SiteCopyKey.PrivacyWaitlistBody]:
-    '이메일, 언어, 추천 정보는 초대를 위해서만 보관해요. IP 주소는 저장하지 않고 추적 쿠키도 설정하지 않으며, 언어와 테마를 기억하는 쿠키 두 개만 사용해요. 삭제를 원하시면 {contactEmail}(으)로 문의해 주세요.',
+    '이메일, 언어, 추천 정보는 환영 메일, 이용 소식, 초대를 보내기 위해서만 보관해요. IP 주소는 저장하지 않고 추적 쿠키도 설정하지 않으며, 언어와 테마를 기억하는 쿠키 두 개만 사용해요. 삭제를 원하시면 {contactEmail}(으)로 문의해 주세요.',
   [SiteCopyKey.FaqEyebrow]: '자주 묻는 질문',
   [SiteCopyKey.FaqTitle]: '질문',
   [SiteCopyKey.FaqWhenQuestion]: '언제부터 쓸 수 있나요?',

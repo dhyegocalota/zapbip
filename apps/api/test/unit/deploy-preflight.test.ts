@@ -14,7 +14,7 @@ import {
   runWorkerPreflight,
 } from '../../src/operations/deploy-preflight';
 import { SmokeInput } from '../../src/operations/smoke-inputs';
-import { WorkerSecret } from '../../src/operations/worker-secret';
+import { WarnedWorkerSecret, WorkerSecret } from '../../src/operations/worker-secret';
 import {
   blockOf,
   COMPLETE_COMPANY,
@@ -431,7 +431,7 @@ describe('worker preflight', () => {
   });
 
   it('warns and passes when META_APP_SECRET is not set, so the deploy is never blocked by it', async () => {
-    const present = Object.values(WorkerSecret).map((name) => ({ name }));
+    const present = [...Object.values(WorkerSecret), WarnedWorkerSecret.ResendApiKey].map((name) => ({ name }));
     const shell = fakeShell({ replies: { 'secret list': { exitCode: 0, stdout: JSON.stringify(present) } } });
     const warnings: PreflightWarning[] = [];
     expect(await runWorkerPreflight(workerInput({ shell, warnings }))).toBeNull();
@@ -439,6 +439,19 @@ describe('worker preflight', () => {
       {
         kind: PreflightWarningKind.MetaAppSecretMissing,
         message: 'META_APP_SECRET is not set; the webhook refuses every delivery until you run wrangler secret put META_APP_SECRET',
+      },
+    ]);
+  });
+
+  it('warns and passes when RESEND_API_KEY is not set, so production deploys before the key exists', async () => {
+    const present = [...Object.values(WorkerSecret), WarnedWorkerSecret.MetaAppSecret].map((name) => ({ name }));
+    const shell = fakeShell({ replies: { 'secret list': { exitCode: 0, stdout: JSON.stringify(present) } } });
+    const warnings: PreflightWarning[] = [];
+    expect(await runWorkerPreflight(workerInput({ shell, warnings }))).toBeNull();
+    expect(warnings).toEqual([
+      {
+        kind: PreflightWarningKind.ResendApiKeyMissing,
+        message: 'RESEND_API_KEY is not set; no welcome or digest email is sent until you run wrangler secret put RESEND_API_KEY',
       },
     ]);
   });

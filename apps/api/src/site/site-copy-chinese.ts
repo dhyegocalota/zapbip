@@ -206,7 +206,7 @@ export const CHINESE_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.PrivacyKeysBody]: '每个智能体都有自己的密钥。你可以随时在 WhatsApp 上撤销其中任何一个。',
   [SiteCopyKey.PrivacyWaitlistTitle]: '关于这份候补名单',
   [SiteCopyKey.PrivacyWaitlistBody]:
-    '我们保存你的邮箱、语言和邀请数据，仅用于邀请你。我们不存储 IP 地址，也不设置跟踪 Cookie；只有两个 Cookie 用于记住你的语言和主题。如需删除，请发邮件至 {contactEmail}。',
+    '我们保存你的邮箱、语言和邀请数据，仅用于欢迎你加入、告知你使用资格的进展以及邀请你。我们不存储 IP 地址，也不设置跟踪 Cookie；只有两个 Cookie 用于记住你的语言和主题。如需删除，请发邮件至 {contactEmail}。',
   [SiteCopyKey.FaqEyebrow]: '常见问题',
   [SiteCopyKey.FaqTitle]: '问题',
   [SiteCopyKey.FaqWhenQuestion]: '我什么时候能用上？',

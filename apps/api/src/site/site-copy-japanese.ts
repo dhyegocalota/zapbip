@@ -215,7 +215,7 @@ export const JAPANESE_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.PrivacyKeysBody]: 'エージェントにはそれぞれ専用のシークレットがあります。いつでもWhatsAppから無効にできます。',
   [SiteCopyKey.PrivacyWaitlistTitle]: 'このウェイトリストについて',
   [SiteCopyKey.PrivacyWaitlistBody]:
-    'メールアドレス、言語、紹介に関するデータは、ご案内のためだけに保存します。IPアドレスは保存せず、トラッキングCookieも使いません。言語とテーマを記憶するための2つのCookieのみ使用します。削除をご希望の場合は {contactEmail} までご連絡ください。',
+    'メールアドレス、言語、紹介に関するデータは、ウェルカムメール、アクセスに関するお知らせ、ご招待のためだけに保存します。IPアドレスは保存せず、トラッキングCookieも使いません。言語とテーマを記憶するための2つのCookieのみ使用します。削除をご希望の場合は {contactEmail} までご連絡ください。',
   [SiteCopyKey.FaqEyebrow]: 'よくある質問',
   [SiteCopyKey.FaqTitle]: '質問',
   [SiteCopyKey.FaqWhenQuestion]: 'いつから使えますか？',

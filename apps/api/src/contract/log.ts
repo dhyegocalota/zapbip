@@ -48,6 +48,8 @@ export enum LogEvent {
   ClientAppError = 'client_app.error',
   PackageUnavailable = 'package_unavailable',
   ActivityRecordFailed = 'activity_record_failed',
+  EmailSendFailed = 'email.send_failed',
+  EmailDisabled = 'email.disabled',
 }
 
 export type LogFields = {

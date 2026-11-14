@@ -4,7 +4,9 @@ import { Hono } from 'hono';
 import { FAVICON_CONTENT_TYPE, FAVICON_SVG } from '../backoffice/assets/favicon';
 import { SEE_OTHER_STATUS, STYLESHEET_CACHE_CONTROL } from '../backoffice/backoffice-constants';
 import { DeployEnvironment } from '../contract/deploy-environment';
+import type { Bindings } from '../contract/env';
 import { LogEvent } from '../contract/log';
+import type { EmailSender } from '../emails/email-sender';
 import { logEvent } from '../log';
 import { plainResponse } from '../routes/private-response';
 import { agenticRoutes } from './agentic-routes';
@@ -37,10 +39,20 @@ async function securityHeaders(context: Context<SiteEnv>, next: Next): Promise<v
   context.res.headers.set('Strict-Transport-Security', SITE_STRICT_TRANSPORT_SECURITY);
 }
 
-export function createSiteApp(input: { fetchImplementation: typeof fetch; starCountOf: StarCountSource }): Hono<SiteEnv> {
+export type SiteAppInput = {
+  fetchImplementation: typeof fetch;
+  emailSenderOf: (input: { env: Bindings }) => EmailSender;
+  starCountOf: StarCountSource;
+};
+
+export function createSiteApp(input: SiteAppInput): Hono<SiteEnv> {
   const app = new Hono<SiteEnv>();
   app.use('*', securityHeaders);
   app.use('*', siteContext);
+  app.use('*', async (context, next) => {
+    context.set('emailSender', input.emailSenderOf({ env: context.env }));
+    await next();
+  });
   app.use('*', languageRedirects);
   app.use('*', markdownNegotiation);
   app.onError((error, context) => {

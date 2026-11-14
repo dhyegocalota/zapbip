@@ -217,7 +217,7 @@ export const GERMAN_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.PrivacyKeysBody]: 'Jeder Agent hat sein eigenes Geheimnis. Widerrufe jeden davon jederzeit über WhatsApp.',
   [SiteCopyKey.PrivacyWaitlistTitle]: 'Zu dieser Warteliste',
   [SiteCopyKey.PrivacyWaitlistBody]:
-    'Wir speichern deine E-Mail-Adresse, deine Sprache und die Einladungsdaten nur, um dich einzuladen. Wir speichern keine IP-Adresse und setzen keine Tracking-Cookies; zwei Cookies merken sich deine Sprache und dein Design. Um entfernt zu werden, schreib an {contactEmail}.',
+    'Wir speichern deine E-Mail-Adresse, deine Sprache und die Einladungsdaten nur, um dich zu begrüßen, dich über deinen Zugang auf dem Laufenden zu halten und dich einzuladen. Wir speichern keine IP-Adresse und setzen keine Tracking-Cookies; zwei Cookies merken sich deine Sprache und dein Design. Um entfernt zu werden, schreib an {contactEmail}.',
   [SiteCopyKey.FaqEyebrow]: 'FAQ',
   [SiteCopyKey.FaqTitle]: 'Fragen',
   [SiteCopyKey.FaqWhenQuestion]: 'Wann kann ich es nutzen?',

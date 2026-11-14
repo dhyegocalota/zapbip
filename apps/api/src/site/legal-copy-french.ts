@@ -133,7 +133,7 @@ export const FRENCH_LEGAL_COPY: Record<LegalDocument, LegalText> = {
         ],
         items: [
           'Pour fournir le service que vous avez demandé\u00a0: acheminer les messages entre vous et vos agents et gérer votre compte (LGPD, article 7, V).',
-          'Pour gérer la liste d’attente et vous envoyer votre invitation, avec le consentement que vous donnez en vous inscrivant (article 7, I).',
+          'Pour gérer la liste d’attente et vous écrire à son sujet (un message de bienvenue à l’inscription, des nouvelles de votre accès et votre invitation), avec le consentement que vous donnez en vous inscrivant (article 7, I).',
           'Pour assurer la sécurité de zapbip et prévenir les abus, par exemple avec le captcha du formulaire de la liste d’attente et les limites de fréquence (intérêt légitime, article 7, IX).',
           'Pour respecter des obligations légales (article 7, II).',
         ],
@@ -158,12 +158,13 @@ export const FRENCH_LEGAL_COPY: Record<LegalDocument, LegalText> = {
           'Meta Platforms, via la plateforme officielle WhatsApp Business, qui achemine chaque message WhatsApp.',
           'Cloudflare, qui héberge le service et son stockage et exécute le captcha (Turnstile) du formulaire de la liste d’attente.',
           'Mintlify, qui héberge la documentation sur docs.zapbip.com.',
+          'Resend, qui envoie nos e-mails, comme le message de bienvenue de la liste d’attente.',
         ],
       },
       {
         heading: 'Transfert international',
         paragraphs: [
-          'Meta et Cloudflare traitent des données sur des serveurs situés hors du Brésil, notamment aux États-Unis. Ces transferts sont nécessaires à la fourniture du service et respectent les garanties de la LGPD (article 33).',
+          'Meta, Cloudflare et Resend traitent des données sur des serveurs situés hors du Brésil, notamment aux États-Unis. Ces transferts sont nécessaires à la fourniture du service et respectent les garanties de la LGPD (article 33).',
         ],
         items: [],
       },

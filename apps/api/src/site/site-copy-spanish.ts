@@ -214,7 +214,7 @@ export const SPANISH_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.PrivacyKeysBody]: 'Cada agente tiene su propio secreto. Revoca cualquiera desde WhatsApp, cuando quieras.',
   [SiteCopyKey.PrivacyWaitlistTitle]: 'Sobre esta lista de espera',
   [SiteCopyKey.PrivacyWaitlistBody]:
-    'Guardamos tu correo, tu idioma y los datos de invitación solo para invitarte. No almacenamos ninguna dirección IP ni usamos cookies de seguimiento; dos cookies recuerdan tu idioma y tu tema. Para que te eliminemos, escribe a {contactEmail}.',
+    'Guardamos tu correo, tu idioma y los datos de invitación solo para darte la bienvenida, contarte cómo va tu acceso e invitarte. No almacenamos ninguna dirección IP ni usamos cookies de seguimiento; dos cookies recuerdan tu idioma y tu tema. Para que te eliminemos, escribe a {contactEmail}.',
   [SiteCopyKey.FaqEyebrow]: 'Preguntas frecuentes',
   [SiteCopyKey.FaqTitle]: 'Preguntas',
   [SiteCopyKey.FaqWhenQuestion]: '¿Cuándo podré usarlo?',

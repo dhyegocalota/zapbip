@@ -18,6 +18,7 @@ import {
   AGENT_RATE_KEY_PREFIX,
 } from './site-constants';
 import type { SiteEnv } from './site-env';
+import { scheduleWelcomeEmail } from './welcome-delivery';
 
 const EMAIL_FIELD = 'email';
 const LANGUAGE_FIELD = 'language';
@@ -105,5 +106,6 @@ export async function requestAccessHandler(context: Context<SiteEnv>): Promise<R
   const result = await joinWaitlist({ database: env.CONNECTIONS, email, locale, referralCode: null, source: WaitlistSource.Agent, now });
   if (result.outcome === WaitlistJoinOutcome.InvalidEmail) return answer({ status: AgentAnswerStatus.InvalidEmail, locale });
   if (result.outcome === WaitlistJoinOutcome.Unavailable) return answer({ status: AgentAnswerStatus.Unavailable, locale });
+  scheduleWelcomeEmail({ context, email: result.email, locale, referralCode: result.referralCode });
   return answer({ status: AgentAnswerStatus.Requested, locale });
 }

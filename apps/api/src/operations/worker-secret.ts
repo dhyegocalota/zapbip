@@ -1,5 +1,6 @@
 export enum WarnedWorkerSecret {
   MetaAppSecret = 'META_APP_SECRET',
+  ResendApiKey = 'RESEND_API_KEY',
 }
 
 export enum WorkerSecret {

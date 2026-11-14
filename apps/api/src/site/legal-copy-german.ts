@@ -132,7 +132,7 @@ export const GERMAN_LEGAL_COPY: Record<LegalDocument, LegalText> = {
         ],
         items: [
           'Um den von dir gewünschten Dienst bereitzustellen: Nachrichten zwischen dir und deinen Agenten zuzustellen und dein Konto zu betreiben (LGPD, Artikel 7, V).',
-          'Um die Warteliste zu verwalten und deine Einladung zu senden, mit der Einwilligung, die du beim Beitritt erteilst (Artikel 7, I).',
+          'Um die Warteliste zu verwalten und dir dazu zu schreiben (eine Begrüßung beim Beitritt, Neuigkeiten zu deinem Zugang und deine Einladung), mit der Einwilligung, die du beim Beitritt erteilst (Artikel 7, I).',
           'Um zapbip sicher zu halten und Missbrauch zu verhindern, etwa mit dem Captcha im Wartelistenformular und Ratenbegrenzungen (berechtigtes Interesse, Artikel 7, IX).',
           'Um gesetzliche Pflichten zu erfüllen (Artikel 7, II).',
         ],
@@ -157,12 +157,13 @@ export const GERMAN_LEGAL_COPY: Record<LegalDocument, LegalText> = {
           'Meta Platforms über die offizielle WhatsApp Business Platform, die jede WhatsApp-Nachricht übermittelt.',
           'Cloudflare, das den Dienst und seinen Speicher hostet und das Captcha (Turnstile) im Wartelistenformular betreibt.',
           'Mintlify, das die Dokumentation unter docs.zapbip.com hostet.',
+          'Resend, das unsere E-Mails versendet, etwa die Begrüßung auf der Warteliste.',
         ],
       },
       {
         heading: 'Internationale Übermittlung',
         paragraphs: [
-          'Meta und Cloudflare verarbeiten Daten auf Servern außerhalb Brasiliens, auch in den Vereinigten Staaten. Diese Übermittlungen sind für die Bereitstellung des Dienstes nötig und folgen den Schutzvorkehrungen der LGPD (Artikel 33).',
+          'Meta, Cloudflare und Resend verarbeiten Daten auf Servern außerhalb Brasiliens, auch in den Vereinigten Staaten. Diese Übermittlungen sind für die Bereitstellung des Dienstes nötig und folgen den Schutzvorkehrungen der LGPD (Artikel 33).',
         ],
         items: [],
       },

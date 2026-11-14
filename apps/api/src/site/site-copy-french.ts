@@ -222,7 +222,7 @@ export const FRENCH_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.PrivacyKeysBody]: 'Chaque agent a son propre secret. Révoquez-en un à tout moment depuis WhatsApp.',
   [SiteCopyKey.PrivacyWaitlistTitle]: 'À propos de cette liste d’attente',
   [SiteCopyKey.PrivacyWaitlistBody]:
-    'Nous conservons votre e-mail, votre langue et vos données de parrainage uniquement pour vous inviter. Nous ne stockons aucune adresse IP et ne posons aucun cookie de suivi\u202f; deux cookies mémorisent votre langue et votre thème. Pour être retiré, écrivez à {contactEmail}.',
+    'Nous conservons votre e-mail, votre langue et vos données de parrainage uniquement pour vous souhaiter la bienvenue, vous tenir au courant de votre accès et vous inviter. Nous ne stockons aucune adresse IP et ne posons aucun cookie de suivi\u202f; deux cookies mémorisent votre langue et votre thème. Pour être retiré, écrivez à {contactEmail}.',
   [SiteCopyKey.FaqEyebrow]: 'FAQ',
   [SiteCopyKey.FaqTitle]: 'Questions',
   [SiteCopyKey.FaqWhenQuestion]: 'Quand pourrai-je l’utiliser\u202f?',

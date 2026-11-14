@@ -14,6 +14,7 @@ import { turnstileSecretOf } from './site-configuration';
 import { NO_STORE_CACHE_CONTROL, RATE_KEY_PREFIX, RETRY_AFTER_VALUE, TURNSTILE_RESPONSE_FIELD } from './site-constants';
 import type { SiteEnv } from './site-env';
 import { TurnstileVerdict, verifyTurnstileToken } from './turnstile';
+import { scheduleWelcomeEmail } from './welcome-delivery';
 
 const EMAIL_FIELD = 'email';
 const LOCALE_FIELD = 'locale';
@@ -81,6 +82,7 @@ async function answerOf(input: {
     return { view: { state: JoinState.InvalidEmail, emailValue: typedEmail }, status: HttpStatus.UnprocessableEntity };
   if (result.outcome === WaitlistJoinOutcome.Unavailable)
     return { view: { state: JoinState.Unavailable, emailValue: typedEmail }, status: HttpStatus.ServiceUnavailable };
+  scheduleWelcomeEmail({ context, email: result.email, locale: context.get('locale'), referralCode: result.referralCode });
   return {
     view: { state: JoinState.Joined, referralCode: result.referralCode, creditedCount: result.creditedCount, cap: result.cap },
     status: HttpStatus.Ok,

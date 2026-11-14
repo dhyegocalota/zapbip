@@ -131,7 +131,7 @@ export const SPANISH_LEGAL_COPY: Record<LegalDocument, LegalText> = {
         paragraphs: ['No vendemos tus datos, no mostramos anuncios y no usamos tus mensajes para entrenar modelos de IA.'],
         items: [
           'Para prestar el servicio que pediste: entregar mensajes entre tú y tus agentes y gestionar tu cuenta (LGPD, artículo 7, V).',
-          'Para gestionar la lista de espera y enviar tu invitación, con el consentimiento que das al registrarte (artículo 7, I).',
+          'Para gestionar la lista de espera y escribirte sobre ella (la bienvenida al registrarte, novedades sobre tu acceso y tu invitación), con el consentimiento que das al registrarte (artículo 7, I).',
           'Para mantener zapbip seguro y evitar abusos, como el captcha del formulario de la lista de espera y los límites de frecuencia (interés legítimo, artículo 7, IX).',
           'Para cumplir obligaciones legales (artículo 7, II).',
         ],
@@ -156,12 +156,13 @@ export const SPANISH_LEGAL_COPY: Record<LegalDocument, LegalText> = {
           'Meta Platforms, a través de la plataforma oficial WhatsApp Business, que transporta cada mensaje de WhatsApp.',
           'Cloudflare, que aloja el servicio y su almacenamiento y ejecuta el captcha (Turnstile) del formulario de la lista de espera.',
           'Mintlify, que aloja la documentación en docs.zapbip.com.',
+          'Resend, que envía nuestros correos, como la bienvenida a la lista de espera.',
         ],
       },
       {
         heading: 'Transferencia internacional',
         paragraphs: [
-          'Meta y Cloudflare procesan datos en servidores fuera de Brasil, incluido Estados Unidos. Estas transferencias son necesarias para prestar el servicio y respetan las garantías de la LGPD (artículo 33).',
+          'Meta, Cloudflare y Resend procesan datos en servidores fuera de Brasil, incluido Estados Unidos. Estas transferencias son necesarias para prestar el servicio y respetan las garantías de la LGPD (artículo 33).',
         ],
         items: [],
       },
