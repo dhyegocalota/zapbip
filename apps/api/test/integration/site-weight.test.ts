@@ -4,7 +4,7 @@ import { SITE_SCRIPT } from '../../src/site/site-scripts';
 import { SITE_STYLESHEET } from '../../src/site/site-stylesheet';
 import { siteFetch } from '../support/site';
 
-const HOME_HTML_LIMIT_BYTES = 60_000;
+const HOME_HTML_LIMIT_BYTES = 61_000;
 const SITE_STYLESHEET_LIMIT_BYTES = 62_000;
 const SITE_SCRIPT_LIMIT_BYTES = 40_000;
 const CLIENT_APP_STYLESHEET_LIMIT_BYTES = 25_000;

@@ -1,0 +1,52 @@
+---
+title: Unterstützte Nachrichten
+description: Die WhatsApp-Nachrichtentypen, die deine KI empfängt und sendet, was zapbip ignoriert und warum nur die offizielle API genutzt wird.
+---
+
+zapbip unterstützt die unten genannten Nachrichtentypen in beide Richtungen. Jeder Typ, der hier nicht steht, wird nicht unterstützt.
+
+## Was deine KI empfängt
+
+| Typ        | Du sendest                                    | Deine KI empfängt                                                                                |
+| ---------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `text`     | Eine Nachricht                                | Den Text                                                                                         |
+| `image`    | Ein Foto                                      | Das Foto, von zapbip gespeichert                                                                 |
+| `video`    | Ein Video                                     | Das Video, von zapbip gespeichert                                                                |
+| `audio`    | Eine Audiodatei oder eine Sprachnachricht     | Das Audio, von zapbip gespeichert; eine Sprachnachricht kommt als solche markiert                |
+| `document` | Eine Datei, etwa ein PDF                      | Die Datei, von zapbip gespeichert, mit Name und Typ                                              |
+| `sticker`  | Einen Sticker                                 | Den Sticker, von zapbip gespeichert                                                              |
+| `location` | Einen Standort-Pin                            | Breiten- und Längengrad, Name und Adresse                                                        |
+| `contacts` | Eine oder mehrere Kontaktkarten               | Die Kontaktkarten                                                                                |
+| `reaction` | Eine Emoji-Reaktion                           | Das Emoji und die Nachricht, auf die reagiert wurde; eine entfernte Reaktion kommt ohne Emoji an |
+| `choice`   | Antippen eines Buttons oder einer Listenzeile | Die Auswahl, die die Frage beantwortet                                                           |
+
+Eine Antwort auf eine Nachricht deiner KI erreicht die KI, die diese Nachricht gesendet hat.
+
+Jeder andere Typ, den du sendest, löst einen kurzen Hinweis aus, dass dieser Typ noch nicht unterstützt wird, und deine KI empfängt nichts. Dasselbe gilt für eine Bestellung (order) oder eine Antwort aus einem WhatsApp Flow. Antippen des Buttons Öffnen einer zapbip-Benachrichtigung öffnet nur das [24-Stunden-Fenster](/de/features/the-24-hour-window). Ein Anruf oder ein anderes Kontoereignis wird ignoriert.
+
+## Was deine KI senden kann
+
+| Typ        | Was deine KI senden kann                                                           |
+| ---------- | ---------------------------------------------------------------------------------- |
+| `text`     | Eine Textnachricht mit bis zu 4.096 Zeichen                                        |
+| `image`    | Ein Foto: JPEG, PNG oder WebP, bis 5 MB                                            |
+| `video`    | Ein Video: 3GP oder MP4, bis 16 MB                                                 |
+| `audio`    | Eine Audiodatei: AAC, AMR, MP3, M4A oder OGG, bis 16 MB; oder eine Sprachnachricht |
+| `document` | Eine Datei: PDF, Word, Excel, PowerPoint oder Klartext, bis 100 MB                 |
+| `sticker`  | Ein statischer WebP-Sticker, bis 100 KB                                            |
+| `location` | Ein Standort-Pin                                                                   |
+| `contacts` | Eine oder mehrere Kontaktkarten                                                    |
+| `reaction` | Eine Emoji-Reaktion auf eine deiner Nachrichten, oder keine, um sie zu entfernen   |
+| `choice`   | Eine Frage mit bis zu 3 Buttons, oder eine Liste mit 4 bis 10 Optionen             |
+
+zapbip lehnt einen Versand ab, der eine dieser Grenzen verletzt, und nennt das falsche Feld. Umfragen, Bestellungen, Zahlungen, WhatsApp Flows und Anrufe sind nicht verfügbar. Deine KI kann keine WhatsApp-Vorlage auswählen; zapbip sendet nur dann eine eigene Benachrichtigung, wenn das 24-Stunden-Fenster geschlossen ist.
+
+## Nur die offizielle WhatsApp Cloud API
+
+zapbip sendet und empfängt ausschließlich über die offizielle WhatsApp Cloud API von Meta, auf einer zapbip-Nummer. Nicht unterstützt werden:
+
+- inoffizielle WhatsApp-Clients und -Bibliotheken, etwa Baileys, whatsapp-web.js, WPPConnect oder Evolution API;
+- Automatisierung von WhatsApp Web und jede Brücke, die sich mit einem persönlichen Konto oder einem QR-Code anmeldet;
+- deine persönliche WhatsApp-Nummer. Jede KI schreibt von der zapbip-Nummer, und du antwortest in deinem gewohnten WhatsApp.
+
+Kurze Antworten findest du in den [häufigen Fragen](/de/help/faq).

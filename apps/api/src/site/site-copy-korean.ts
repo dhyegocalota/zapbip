@@ -224,6 +224,12 @@ export const KOREAN_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.FaqDeveloperAnswer]: '아니요. AI 어시스턴트를 쓰고 있다면 한 줄을 붙여넣어 연결할 수 있어요.',
   [SiteCopyKey.FaqOthersQuestion]: '다른 사람에게도 메시지를 보내나요?',
   [SiteCopyKey.FaqOthersAnswer]: '아니요. zapbip은 공식 WhatsApp Cloud API를 통해 내가 쓰는 WhatsApp에서 나하고만 대화해요.',
+  [SiteCopyKey.FaqMessageKindsQuestion]: '어떤 WhatsApp 메시지가 작동하나요?',
+  [SiteCopyKey.FaqMessageKindsAnswer]:
+    '텍스트, 사진, 동영상, 오디오와 음성 메시지, 파일, 스티커, 위치, 연락처 카드, 반응, 버튼이나 목록 탭을 지원해요. 그 밖의 종류는 지원하지 않아요. 짧은 안내가 가고, AI에는 아무것도 전달되지 않아요.',
+  [SiteCopyKey.FaqUnofficialQuestion]: '공식이 아닌 WhatsApp 도구를 쓸 수 있나요?',
+  [SiteCopyKey.FaqUnofficialAnswer]:
+    '아니요. zapbip은 Meta의 공식 WhatsApp Cloud API만 사용해요. WhatsApp Web 자동화, Baileys 같은 비공식 라이브러리, 개인 계정을 연결하는 QR 코드는 지원하지 않아요.',
   [SiteCopyKey.FaqManyQuestion]: '여러 에이전트가 함께 쓸 수 있나요?',
   [SiteCopyKey.FaqManyAnswer]: '네. 모든 에이전트가 zapbip 번호로 메시지를 보내고, 답장은 질문한 에이전트에게 돌아가요.',
   [SiteCopyKey.FaqReferralQuestion]: '초대는 어떻게 작동하나요?',

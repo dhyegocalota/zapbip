@@ -1,0 +1,52 @@
+---
+title: 支持的消息
+description: 你的 AI 能接收和发送的 WhatsApp 消息类型、zapbip 忽略的内容，以及为什么只使用官方 API。
+---
+
+zapbip 在两个方向上都支持下列消息类型。此处未列出的类型均不支持。
+
+## 你的 AI 能接收的内容
+
+| 类型       | 你发送的                   | 你的 AI 接收的                                     |
+| ---------- | -------------------------- | -------------------------------------------------- |
+| `text`     | 一条消息                   | 文本                                               |
+| `image`    | 一张照片                   | 照片，由 zapbip 保存                               |
+| `video`    | 一段视频                   | 视频，由 zapbip 保存                               |
+| `audio`    | 一个音频文件或一条语音消息 | 音频，由 zapbip 保存；语音消息会标明是语音         |
+| `document` | 一个文件，例如 PDF         | 文件，由 zapbip 保存，附带名称和类型               |
+| `sticker`  | 一个贴纸                   | 贴纸，由 zapbip 保存                               |
+| `location` | 一个位置图钉               | 纬度、经度、名称和地址                             |
+| `contacts` | 一张或多张名片             | 名片                                               |
+| `reaction` | 一个表情反应               | 表情以及被反应的消息；取消反应时收到的内容没有表情 |
+| `choice`   | 点按一个按钮或列表中的一行 | 所选的选项，即对问题的回答                         |
+
+对你的 AI 消息的回复，会送达发送该消息的那个 AI。
+
+你发送的其他任何类型，都会收到一条简短通知，告知该类型暂不支持，你的 AI 则什么也收不到。订单（order）或 WhatsApp Flow 的回复也是如此。点按 zapbip 通知中的"打开"按钮，只会打开 [24 小时窗口](/zh/features/the-24-hour-window)。通话或其他账户事件会被忽略。
+
+## 你的 AI 能发送的内容
+
+| 类型       | 你的 AI 能发送的内容                                        |
+| ---------- | ----------------------------------------------------------- |
+| `text`     | 最多 4,096 个字符的文本消息                                 |
+| `image`    | 照片：JPEG、PNG 或 WebP，最大 5 MB                          |
+| `video`    | 视频：3GP 或 MP4，最大 16 MB                                |
+| `audio`    | 音频文件：AAC、AMR、MP3、M4A 或 OGG，最大 16 MB；或语音消息 |
+| `document` | 文件：PDF、Word、Excel、PowerPoint 或纯文本，最大 100 MB    |
+| `sticker`  | 静态 WebP 贴纸，最大 100 KB                                 |
+| `location` | 位置图钉                                                    |
+| `contacts` | 一张或多张名片                                              |
+| `reaction` | 对你某条消息的表情反应，或留空以清除                        |
+| `choice`   | 带最多 3 个按钮的问题，或 4 到 10 个选项的列表              |
+
+zapbip 会拒绝超出这些限制的发送，并说明是哪个字段有误。投票、订单、付款、WhatsApp Flows 和通话均不可用。你的 AI 无法选择 WhatsApp 模板；只有在 24 小时窗口关闭时，zapbip 才会发送它自己的通知。
+
+## 仅限官方 WhatsApp Cloud API
+
+zapbip 只通过 Meta 的官方 WhatsApp Cloud API 收发消息，使用 zapbip 的号码。以下情况均不支持：
+
+- Baileys、whatsapp-web.js、WPPConnect 或 Evolution API 等非官方 WhatsApp 客户端和库；
+- WhatsApp Web 自动化，以及任何使用个人账户或二维码登录的桥接工具；
+- 你自己的个人 WhatsApp 号码。每个 AI 都从 zapbip 的号码发消息，你则用平时的 WhatsApp 回复。
+
+简短的解答请见[常见问题](/zh/help/faq)。
