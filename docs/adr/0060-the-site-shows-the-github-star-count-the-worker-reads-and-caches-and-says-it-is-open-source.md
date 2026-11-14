@@ -1,4 +1,4 @@
-# 0059. The site shows the GitHub star count the Worker reads and caches, and says it is open source
+# 0060. The site shows the GitHub star count the Worker reads and caches, and says it is open source
 
 - Status: Accepted
 - Date: 2026-11-14
