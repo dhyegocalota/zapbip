@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "wrangler dev --env development",
     "dev:seed": "tsx scripts/dev-seed.ts",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json && tsc --noEmit -p tsconfig.e2e.json",
     "test:unit": "vitest run --passWithNoTests --config vitest.unit.config.mts",
     "test:integration": "vitest run --passWithNoTests --config vitest.integration.config.mts",
     "test:e2e": "vitest run --passWithNoTests --config vitest.e2e.config.mts && vitest run --passWithNoTests --config vitest.e2e-whatsapp.config.mts && vitest run --passWithNoTests --config vitest.e2e-owner-flow.config.mts",

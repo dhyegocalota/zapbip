@@ -1,17 +1,11 @@
 import { COMMAND_WORDS } from '@zapbip/core';
-import {
-  CommandKind,
-  DOCS_LANGUAGE_OF_OWNER_LOCALE,
-  INSTALL_SELF_TEST_TEXT,
-  START_LINK,
-  START_LINK_LANGUAGE_PARAMETER,
-  type OwnerLocale,
-} from '@zapbip/types';
+import { CommandKind, INSTALL_SELF_TEST_TEXT, type OwnerLocale } from '@zapbip/types';
 import { heading, HeadingLevel, list, type MarkdownBlock, MarkdownBlockKind, paragraph, renderMarkdown } from './markdown-document';
 import { quickStartEntriesOf } from './quick-start-entries';
 import { SETUP_CONNECTION_PLACEHOLDER } from './site-constants';
 import { SiteCopyKey } from './site-copy';
 import { copyOf } from './site-copy-text';
+import { startLinkOf } from './site-links';
 
 function createAgentWordsOf(input: { ownerLocale: OwnerLocale }): string {
   const command = COMMAND_WORDS.find((entry) => entry.kind === CommandKind.CreateAgent && entry.locale === input.ownerLocale);
@@ -23,7 +17,7 @@ export function setupMarkdownOf(input: { locale: OwnerLocale; origin: string }):
   const { locale, origin } = input;
   const translate = copyOf({ locale });
   const command = `${createAgentWordsOf({ ownerLocale: locale })} <${translate(SiteCopyKey.SetupAgentName)}>`;
-  const startLink = `${START_LINK}?${START_LINK_LANGUAGE_PARAMETER}=${DOCS_LANGUAGE_OF_OWNER_LOCALE[locale]}`;
+  const startLink = startLinkOf({ locale });
   const clients = quickStartEntriesOf({ locale, origin, connectionLink: SETUP_CONNECTION_PLACEHOLDER }).flatMap(
     (entry): MarkdownBlock[] => [
       heading({ level: HeadingLevel.Item, text: entry.name }),
