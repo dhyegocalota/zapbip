@@ -35,8 +35,8 @@ const GROK_BOT_TEXT: Record<OwnerLocale, GrokBotText> = {
     confirmServer: 'zapbipのMCPサーバーをGrok Botに追加しています。確認を求められたら承認してください。',
   },
   [OwnerLocale.Korean]: {
-    wakeNote: '루틴 웹훅은 약 9초 만에 Grok Bot을 깨웁니다. 시간 제한은 없습니다.',
-    confirmServer: 'zapbip MCP 서버를 Grok Bot에 추가하는 중입니다. 확인을 요청하면 승인해 주세요.',
+    wakeNote: '루틴 웹훅은 약 9초 만에 Grok Bot을 깨워요. 시간 제한은 없어요.',
+    confirmServer: 'zapbip MCP 서버를 Grok Bot에 추가하는 중이에요. 확인을 요청하면 승인해 주세요.',
   },
   [OwnerLocale.ChineseSimplified]: {
     wakeNote: '例行任务的 Webhook 大约 9 秒就能唤醒 Grok Bot，不限时。',

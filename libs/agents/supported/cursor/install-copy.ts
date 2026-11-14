@@ -53,8 +53,8 @@ const CURSOR_TEXT: Record<OwnerLocale, CursorText> = {
     restart: 'zapbipを使うには、Cursorのチャットを再起動してください。',
   },
   [OwnerLocale.Korean]: {
-    wakeNote: 'Cursor는 백그라운드 터미널을 통해 듣고, 실행되는 동안 몇 초 안에 답합니다. 시간 제한은 없습니다.',
-    confirmChange: 'zapbip 서버를 Cursor의 MCP 설정에 추가하겠습니다. 진행해도 될까요?',
+    wakeNote: 'Cursor는 백그라운드 터미널을 통해 듣고, 실행되는 동안 몇 초 안에 답해요. 시간 제한은 없어요.',
+    confirmChange: 'zapbip 서버를 Cursor의 MCP 설정에 추가할게요. 진행해도 될까요?',
     restart: 'zapbip을 쓰려면 Cursor 채팅을 다시 시작하세요.',
   },
   [OwnerLocale.ChineseSimplified]: {

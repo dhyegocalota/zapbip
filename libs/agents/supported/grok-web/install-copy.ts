@@ -51,8 +51,8 @@ const GROK_WEB_TEXT: Record<OwnerLocale, GrokWebText> = {
     pasteConnector: (connectionLink) => `Grokの設定で、このアドレスをコネクタとして貼り付けてください: ${connectionLink}`,
   },
   [OwnerLocale.Korean]: {
-    wakeNote: '웹의 Grok은 외부에서 깨울 수 없습니다. 선택한 대기 에이전트가 몇 초 안에 대신 답합니다.',
-    wakeNoteWithoutStandby: '대기 에이전트가 없으면 웹의 Grok은 사용자가 채팅을 열었을 때만 새 메시지를 봅니다.',
+    wakeNote: '웹의 Grok은 외부에서 깨울 수 없어요. 선택한 대기 에이전트가 몇 초 안에 대신 답해요.',
+    wakeNoteWithoutStandby: '대기 에이전트가 없으면 웹의 Grok은 사용자가 채팅을 열었을 때만 새 메시지를 봐요.',
     pasteConnector: (connectionLink) => `Grok 설정에서 이 주소를 커넥터로 붙여넣으세요: ${connectionLink}`,
   },
   [OwnerLocale.ChineseSimplified]: {

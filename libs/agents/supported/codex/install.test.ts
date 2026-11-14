@@ -11,7 +11,7 @@ const WAKE_NOTE: Record<OwnerLocale, string> = {
   [OwnerLocale.German]: 'Der Connector setzt die Codex-Sitzung bei jeder Nachricht fort, in etwa 6 Sekunden und ohne Zeitlimit.',
   [OwnerLocale.French]: 'Le connecteur reprend la session Codex à chaque message, en environ 6 secondes et sans limite de temps.',
   [OwnerLocale.Japanese]: 'コネクタはメッセージが届くたびにCodexのセッションを約6秒で再開します。時間制限はありません。',
-  [OwnerLocale.Korean]: '커넥터가 메시지마다 약 6초 만에 Codex 세션을 재개합니다. 시간 제한은 없습니다.',
+  [OwnerLocale.Korean]: '커넥터가 메시지마다 약 6초 만에 Codex 세션을 재개해요. 시간 제한은 없어요.',
   [OwnerLocale.ChineseSimplified]: '连接器会在每条消息到来时恢复 Codex 会话，大约 6 秒，不限时。',
   [OwnerLocale.Arabic]: 'يستأنف الموصّل جلسة Codex مع كل رسالة، خلال نحو 6 ثوانٍ ودون حد زمني.',
 };

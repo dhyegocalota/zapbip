@@ -49,7 +49,7 @@ const INSTALL_MARKDOWN_FILES = import.meta.glob('../../../../libs/agents/support
   eager: true,
 });
 const GONE_TEXT: Record<OwnerLocale, string> = {
-  [OwnerLocale.PortugueseBrazil]: 'girar <nome>',
+  [OwnerLocale.PortugueseBrazil]: 'renovar <nome>',
   [OwnerLocale.EnglishUs]: 'rotate <name>',
   [OwnerLocale.Spanish]: 'rotar <nombre>',
   [OwnerLocale.German]: 'erneuern <name>',

@@ -73,11 +73,11 @@ const CLAUDE_AI_TEXT: Record<OwnerLocale, ClaudeAiText> = {
     createHourlyTask: '保険として、check_inboxを呼び出す1時間ごとのタスクも作成してください。',
   },
   [OwnerLocale.Korean]: {
-    wakeNote: '루틴 웹훅은 약 16초 만에 claude.ai를 깨웁니다. 안전망 예약 작업은 플랫폼의 최소 주기인 60분에 한 번만 실행됩니다.',
+    wakeNote: '루틴 웹훅은 약 16초 만에 claude.ai를 깨워요. 안전망 예약 작업은 플랫폼의 최소 주기인 60분에 한 번만 실행돼요.',
     pasteConnector: (connectionLink) => `claude.ai 설정에서 이 주소를 사용자 지정 커넥터로 붙여넣으세요: ${connectionLink}`,
     pasteTrigger:
-      'claude.ai/code/routines에서 API 트리거가 있는 작업을 만들고 Generate token을 클릭한 뒤, fire URL과 토큰을 여기에 붙여넣으세요. 토큰은 한 번만 표시됩니다.',
-    withoutTrigger: '트리거가 없으면 이 채팅은 사용자가 열었을 때만 새 메시지를 봅니다.',
+      'claude.ai/code/routines에서 API 트리거가 있는 작업을 만들고 Generate token을 클릭한 뒤, fire URL과 토큰을 여기에 붙여넣으세요. 토큰은 한 번만 표시돼요.',
+    withoutTrigger: '트리거가 없으면 이 채팅은 사용자가 열었을 때만 새 메시지를 봐요.',
     createHourlyTask: '안전망으로 check_inbox를 호출하는 1시간 주기 작업도 만들어 두세요.',
   },
   [OwnerLocale.ChineseSimplified]: {

@@ -191,7 +191,7 @@ describe('revoking the standby by the owner command', () => {
   });
 
   it('keeps the standby and its wake mode when the owner rotates its link', async () => {
-    await deliver({ bindings, text: `girar ${STANDBY}` });
+    await deliver({ bindings, text: `renovar ${STANDBY}` });
     expect(await countRows({ agent: STANDBY })).toMatchObject({ wakes: 1 });
     await deliver({ bindings, text: `@${PRIMARY} ${OWNER_TEXT}` });
     expect(await countRows({ agent: STANDBY })).toMatchObject({ wakes: 1, copies: 1 });

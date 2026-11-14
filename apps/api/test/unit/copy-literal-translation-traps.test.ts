@@ -31,7 +31,7 @@ const LANGUAGES: LanguageTraps[] = [
     pageSuffix: 'page.es.mdx',
     sourceFile: (path) => path.endsWith('-spanish.ts'),
     traps:
-      /por tu cuenta|usen las herramientas|para su persona|http en streaming|tú tocas|tu toque|un toque|el toque|ese toque|dueño toca|propietario toca|persona toca/i,
+      /ordenador|móvil|pulsas|vosotros|vuestr|por tu cuenta|usen las herramientas|para su persona|http en streaming|tú tocas|tu toque|un toque|el toque|ese toque|dueño toca|propietario toca|persona toca/i,
   },
   {
     name: 'de',
@@ -61,16 +61,16 @@ const LANGUAGES: LanguageTraps[] = [
     name: 'ko',
     docsFolder: 'ko',
     pageSuffix: 'page.ko.mdx',
-    sourceFile: (path) => path.endsWith('-korean.ts'),
+    sourceFile: (path) => path.endsWith('-korean.ts') && !/legal-copy|backoffice-copy/.test(path),
     traps:
-      /직접 설정하세요|직접 설정하기|스트리머블|주인이|자신의 사용자|내 탭|내가 탭|나는 탭|탭을 기다|탭으로 답|탭이 |탭 필요|그 뒤의 탭|한 번 탭|탭한 것|그 탭은/,
+      /당신|zapbip(는|를|가|와|로)|[가-힣]니다|[가-힣]니까|직접 설정하세요|직접 설정하기|스트리머블|주인이|자신의 사용자|내 탭|내가 탭|나는 탭|탭을 기다|탭으로 답|탭이 |탭 필요|그 뒤의 탭|한 번 탭|탭한 것|그 탭은/,
   },
   {
     name: 'zh',
     docsFolder: 'zh',
     pageSuffix: 'page.zh.mdx',
     sourceFile: (path) => path.endsWith('-chinese.ts'),
-    traps: /主人|自己设置|可流式传输|你来点选|点一下|点按作答|等你点按|你点按|需要你点|点按钮才算数|可点按/,
+    traps: /您|主人|自己设置|可流式传输|你来点选|点一下|点按作答|等你点按|你点按|需要你点|点按钮才算数|可点按/,
   },
 ];
 

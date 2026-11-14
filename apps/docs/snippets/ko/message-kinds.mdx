@@ -1,13 +1,13 @@
-| 종류       | 에이전트에서 소유자로                                                         | 소유자에서 에이전트로                                                |
-| ---------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `text`     | [send_message](/ko/mcp-reference/send-message)                                | 텍스트                                                               |
-| `image`    | [send_media](/ko/mcp-reference/send-media), 최대 5 MB                         | 1 MB 이하면 이미지를 그대로, 그 외에는 서명된 링크                   |
-| `video`    | [send_media](/ko/mcp-reference/send-media), 최대 16 MB                        | 서명된 링크                                                          |
-| `audio`    | [send_media](/ko/mcp-reference/send-media), 최대 16 MB, 음성 메시지는 `voice` | 서명된 링크                                                          |
-| `document` | [send_media](/ko/mcp-reference/send-media), 최대 100 MB                       | 서명된 링크, 파일 이름, MIME 타입                                    |
-| `sticker`  | [send_media](/ko/mcp-reference/send-media)                                    | 서명된 링크                                                          |
-| `location` | [send_location](/ko/mcp-reference/send-location)                              | 위도, 경도, 이름, 주소                                               |
-| `contacts` | [send_contact](/ko/mcp-reference/send-contact)                                | 연락처 카드                                                          |
-| `reaction` | [react](/ko/mcp-reference/react)                                              | `message_id`와 `emoji`. 반응한 메시지를 보낸 에이전트에게 전달됩니다 |
-| `choice`   | [ask](/ko/mcp-reference/ask), 3개까지는 버튼, 4~10개는 목록                   | `option_id`, `title`, 선택 항목인 `description`                      |
-| 인용       | 모든 전송에 `reply_to`                                                        | `reply_to`. 인용된 메시지를 보낸 에이전트에게 전달됩니다             |
+| 종류       | 에이전트에서 소유자로                                                         | 소유자에서 에이전트로                                              |
+| ---------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `text`     | [send_message](/ko/mcp-reference/send-message)                                | 텍스트                                                             |
+| `image`    | [send_media](/ko/mcp-reference/send-media), 최대 5 MB                         | 1 MB 이하면 이미지를 그대로, 그 외에는 서명된 링크                 |
+| `video`    | [send_media](/ko/mcp-reference/send-media), 최대 16 MB                        | 서명된 링크                                                        |
+| `audio`    | [send_media](/ko/mcp-reference/send-media), 최대 16 MB, 음성 메시지는 `voice` | 서명된 링크                                                        |
+| `document` | [send_media](/ko/mcp-reference/send-media), 최대 100 MB                       | 서명된 링크, 파일 이름, MIME 타입                                  |
+| `sticker`  | [send_media](/ko/mcp-reference/send-media)                                    | 서명된 링크                                                        |
+| `location` | [send_location](/ko/mcp-reference/send-location)                              | 위도, 경도, 이름, 주소                                             |
+| `contacts` | [send_contact](/ko/mcp-reference/send-contact)                                | 연락처 카드                                                        |
+| `reaction` | [react](/ko/mcp-reference/react)                                              | `message_id`와 `emoji`. 반응한 메시지를 보낸 에이전트에게 전달돼요 |
+| `choice`   | [ask](/ko/mcp-reference/ask), 3개까지는 버튼, 4~10개는 목록                   | `option_id`, `title`, 선택 항목인 `description`                    |
+| 인용       | 모든 전송에 `reply_to`                                                        | `reply_to`. 인용된 메시지를 보낸 에이전트에게 전달돼요             |

@@ -16,7 +16,7 @@ const WAKE_NOTE: Record<OwnerLocale, string> = {
     'Le webhook de la routine réveille claude.ai en environ 16 secondes\u202f; la tâche planifiée de secours s’exécute au plus une fois toutes les 60 minutes, un minimum de la plateforme.',
   [OwnerLocale.Japanese]:
     'ルーティンのWebhookは約16秒でclaude.aiを起動します。保険のスケジュールタスクは、プラットフォームの下限である60分に1回までしか実行されません。',
-  [OwnerLocale.Korean]: '루틴 웹훅은 약 16초 만에 claude.ai를 깨웁니다. 안전망 예약 작업은 플랫폼의 최소 주기인 60분에 한 번만 실행됩니다.',
+  [OwnerLocale.Korean]: '루틴 웹훅은 약 16초 만에 claude.ai를 깨워요. 안전망 예약 작업은 플랫폼의 최소 주기인 60분에 한 번만 실행돼요.',
   [OwnerLocale.ChineseSimplified]:
     '例行任务的 Webhook 大约 16 秒就能唤醒 claude.ai；作为保险的计划任务最多每 60 分钟运行一次，这是平台的最低间隔。',
   [OwnerLocale.Arabic]:

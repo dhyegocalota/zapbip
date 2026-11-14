@@ -47,8 +47,8 @@ export const START_LINK_COPY: Record<OwnerLocale, StartLinkTexts> = {
   [OwnerLocale.Korean]: {
     htmlLanguage: 'ko-KR',
     direction: 'ltr',
-    unavailableTitle: 'zapbip: 곧 돌아옵니다',
-    unavailableBody: '지금은 새 가입을 받지 않습니다. 몇 분 뒤에 다시 시도해 주세요.',
+    unavailableTitle: 'zapbip: 곧 돌아와요',
+    unavailableBody: '지금은 새 가입을 받지 않아요. 몇 분 뒤에 다시 시도해 주세요.',
   },
   [OwnerLocale.ChineseSimplified]: {
     htmlLanguage: 'zh-CN',

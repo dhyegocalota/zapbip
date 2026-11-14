@@ -6,7 +6,7 @@ export const SPANISH_LEGAL_COPY: Record<LegalDocument, LegalText> = {
     title: 'Términos de uso',
     description: 'Las reglas para usar zapbip, el canal de WhatsApp para tus agentes de IA, creado por Logic Bit en Brasil.',
     summary:
-      'Estos términos son el acuerdo entre tú y {tradeName} para el uso de zapbip. Al apuntarte a la lista de espera o escribir a zapbip por WhatsApp, los aceptas.',
+      'Estos términos son el acuerdo entre tú y {tradeName} para el uso de zapbip. Al registrarte en la lista de espera o escribir a zapbip por WhatsApp, los aceptas.',
     updated: 'Última actualización: {updatedOn}',
     sections: [
       {
@@ -131,7 +131,7 @@ export const SPANISH_LEGAL_COPY: Record<LegalDocument, LegalText> = {
         paragraphs: ['No vendemos tus datos, no mostramos anuncios y no usamos tus mensajes para entrenar modelos de IA.'],
         items: [
           'Para prestar el servicio que pediste: entregar mensajes entre tú y tus agentes y gestionar tu cuenta (LGPD, artículo 7, V).',
-          'Para gestionar la lista de espera y enviar tu invitación, con el consentimiento que das al apuntarte (artículo 7, I).',
+          'Para gestionar la lista de espera y enviar tu invitación, con el consentimiento que das al registrarte (artículo 7, I).',
           'Para mantener zapbip seguro y evitar abusos, como el captcha del formulario de la lista de espera y los límites de frecuencia (interés legítimo, artículo 7, IX).',
           'Para cumplir obligaciones legales (artículo 7, II).',
         ],

@@ -71,7 +71,7 @@ const APPROVAL_QUESTIONS: Record<ApprovedCommandKind, Record<OwnerLocale, string
     [OwnerLocale.Japanese]:
       '{requester}が{agent}という新しいエージェントの接続を求めています。許可しますか？「{allow}」はインストールリンクをここに送り、「{allowAndSend}」は{requester}に渡します。参照 {reference}。',
     [OwnerLocale.Korean]:
-      '{requester}이(가) {agent}이라는 새 에이전트의 연결을 요청합니다. 허용할까요? "{allow}"은(는) 설치 링크를 여기로 보내고, "{allowAndSend}"은(는) {requester}에게 넘깁니다. 참조 {reference}.',
+      '{requester}이(가) {agent}이라는 새 에이전트의 연결을 요청해요. 허용할까요? "{allow}"은(는) 설치 링크를 여기로 보내고, "{allowAndSend}"은(는) {requester}에게 넘겨요. 참조 {reference}.',
     [OwnerLocale.ChineseSimplified]:
       '{requester} 想连接一个名为 {agent} 的新智能体。是否允许？“{allow}”会把安装链接发到这里；“{allowAndSend}”会把它交给 {requester}。编号 {reference}。',
     [OwnerLocale.Arabic]:
@@ -87,7 +87,7 @@ const APPROVAL_QUESTIONS: Record<ApprovedCommandKind, Record<OwnerLocale, string
     [OwnerLocale.Japanese]:
       '{requester}がエージェント{agent}の無効化を求めています。リンクは使えなくなります。許可しますか？参照 {reference}。',
     [OwnerLocale.Korean]:
-      '{requester}이(가) 에이전트 {agent}의 폐기를 요청합니다. 링크는 더 이상 작동하지 않습니다. 허용할까요? 참조 {reference}.',
+      '{requester}이(가) 에이전트 {agent}의 폐기를 요청해요. 링크는 더 이상 작동하지 않아요. 허용할까요? 참조 {reference}.',
     [OwnerLocale.ChineseSimplified]: '{requester} 想撤销智能体 {agent}。它的链接将失效。是否允许？编号 {reference}。',
     [OwnerLocale.Arabic]: 'يريد {requester} إبطال الوكيل {agent}. سيتوقف رابطه عن العمل. هل تسمح بذلك؟ المرجع {reference}.',
   },

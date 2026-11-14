@@ -11,7 +11,7 @@ The owner manages agents from WhatsApp: create, list, revoke, rotate, help and d
 
 ## Decision
 
-1. Commands are bare words in pt-BR and en: `novo agente`, `agentes`, `revogar`, `girar`, `ajuda`, `apagar conta`, with their English forms.
+1. Commands are bare words in pt-BR and en: `novo agente`, `agentes`, `revogar`, `renovar`, `ajuda`, `apagar conta`, with their English forms.
 2. A command is matched exactly, after normalising case and whitespace. A message that is not an exact match is routed to an agent.
 3. The first word of every command is a reserved agent name.
 4. A new rule 0 runs before the core's rules 1 to 6: an exact command, or a list reply with an id starting `zapbip:`. A command never changes the last-agent rule and never answers a question.
@@ -28,7 +28,7 @@ The owner manages agents from WhatsApp: create, list, revoke, rotate, help and d
 
 ## Consequences
 
-- Commands that take a free name (`novo agente`, `revogar`, `girar`) can swallow a message meant for an agent: "girar a imagem" gets a `NotFound` reply. The owner writes `@<agent> …` to reach the agent; the docs page says so.
+- Commands that take a free name (`novo agente`, `revogar`, `renovar`) can swallow a message meant for an agent: "renovar a imagem" gets a `NotFound` reply. The owner writes `@<agent> …` to reach the agent; the docs page says so.
 
 - The core gains rule 0. Its tests prove that commands leave rules 1 to 6 untouched.
 - Reserved agent names are a visible limit: an agent cannot be named `ajuda`.

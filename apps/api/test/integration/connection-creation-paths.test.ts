@@ -107,11 +107,11 @@ describe('connection creation paths', () => {
       },
     ],
     [
-      'the girar command',
+      'the renovar command',
       async () => {
         await say({ text: 'oi' });
         await say({ text: `novo agente ${AGENT}` });
-        await say({ text: `girar ${AGENT}` });
+        await say({ text: `renovar ${AGENT}` });
       },
     ],
   ])('%s leaves the object holding the key digest it stored in the directory', async (_name, createConnection) => {

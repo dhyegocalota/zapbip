@@ -36,8 +36,8 @@ const HERMES_TEXT: Record<OwnerLocale, HermesText> = {
     pollCost: '1分ごとの確認は、モデルの呼び出しを消費します。',
   },
   [OwnerLocale.Korean]: {
-    wakeNote: '플러그인은 각 메시지를 즉시 전달합니다. 플러그인이 없으면 Hermes가 1분마다 받은 편지함을 확인합니다.',
-    pollCost: '1분마다 확인하면 모델 호출이 소모됩니다.',
+    wakeNote: '플러그인은 각 메시지를 즉시 전달해요. 플러그인이 없으면 Hermes가 1분마다 받은 편지함을 확인해요.',
+    pollCost: '1분마다 확인하면 모델 호출이 소모돼요.',
   },
   [OwnerLocale.ChineseSimplified]: {
     wakeNote: '插件会立即送达每条消息；没有插件时，Hermes 每分钟检查一次收件箱。',

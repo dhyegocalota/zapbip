@@ -42,7 +42,7 @@ const COMMAND_WORDS: Record<DocsPageLanguage, string[]> = {
     'novo agente',
     'agentes',
     'revogar',
-    'girar',
+    'renovar',
     'ajuda',
     'apagar conta',
     'apagar conta definitivamente',
@@ -58,12 +58,12 @@ const COMMAND_WORDS: Record<DocsPageLanguage, string[]> = {
 const OTHER_LANGUAGE_COMMAND_WORDS: Record<DocsPageLanguage, string[]> = {
   [DocsPageLanguage.English]: COMMAND_WORDS[DocsPageLanguage.PortugueseBrazil],
   [DocsPageLanguage.PortugueseBrazil]: COMMAND_WORDS[DocsPageLanguage.English],
-  [DocsPageLanguage.Spanish]: ['novo agente', 'agentes', 'revogar', 'girar', 'ajuda', 'apagar conta', 'apagar conta definitivamente'],
-  [DocsPageLanguage.German]: ['novo agente', 'agentes', 'revogar', 'girar', 'ajuda', 'apagar conta', 'apagar conta definitivamente'],
-  [DocsPageLanguage.French]: ['novo agente', 'agentes', 'revogar', 'girar', 'ajuda', 'apagar conta', 'apagar conta definitivamente'],
-  [DocsPageLanguage.Japanese]: ['novo agente', 'agentes', 'revogar', 'girar', 'ajuda', 'apagar conta', 'apagar conta definitivamente'],
-  [DocsPageLanguage.Korean]: ['novo agente', 'agentes', 'revogar', 'girar', 'ajuda', 'apagar conta', 'apagar conta definitivamente'],
-  [DocsPageLanguage.Chinese]: ['novo agente', 'agentes', 'revogar', 'girar', 'ajuda', 'apagar conta', 'apagar conta definitivamente'],
+  [DocsPageLanguage.Spanish]: ['novo agente', 'agentes', 'revogar', 'renovar', 'ajuda', 'apagar conta', 'apagar conta definitivamente'],
+  [DocsPageLanguage.German]: ['novo agente', 'agentes', 'revogar', 'renovar', 'ajuda', 'apagar conta', 'apagar conta definitivamente'],
+  [DocsPageLanguage.French]: ['novo agente', 'agentes', 'revogar', 'renovar', 'ajuda', 'apagar conta', 'apagar conta definitivamente'],
+  [DocsPageLanguage.Japanese]: ['novo agente', 'agentes', 'revogar', 'renovar', 'ajuda', 'apagar conta', 'apagar conta definitivamente'],
+  [DocsPageLanguage.Korean]: ['novo agente', 'agentes', 'revogar', 'renovar', 'ajuda', 'apagar conta', 'apagar conta definitivamente'],
+  [DocsPageLanguage.Chinese]: ['novo agente', 'agentes', 'revogar', 'renovar', 'ajuda', 'apagar conta', 'apagar conta definitivamente'],
   [DocsPageLanguage.Arabic]: ['new agent', 'agents', 'revoke', 'rotate', 'help', 'delete account', 'delete account permanently'],
 };
 const RESERVED_NAME_TOKEN: Record<DocsPageLanguage, string> = {

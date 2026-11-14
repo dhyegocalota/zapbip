@@ -59,8 +59,8 @@ const GEMINI_CLI_TEXT: Record<OwnerLocale, GeminiCliText> = {
     restart: 'zapbipを使うには、Gemini CLIを再起動してください。',
   },
   [OwnerLocale.Korean]: {
-    wakeNote: 'Gemini CLI는 백그라운드 터미널을 통해 듣고, 실행되는 동안 몇 초 안에 답합니다. 시간 제한은 없습니다.',
-    confirmChange: 'zapbip MCP 서버를 Gemini CLI에 추가하겠습니다. 진행해도 될까요?',
+    wakeNote: 'Gemini CLI는 백그라운드 터미널을 통해 듣고, 실행되는 동안 몇 초 안에 답해요. 시간 제한은 없어요.',
+    confirmChange: 'zapbip MCP 서버를 Gemini CLI에 추가할게요. 진행해도 될까요?',
     restart: 'zapbip을 쓰려면 Gemini CLI를 다시 시작하세요.',
   },
   [OwnerLocale.ChineseSimplified]: {

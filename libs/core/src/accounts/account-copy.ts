@@ -23,7 +23,7 @@ export const COMPANY_LINE: LocalizedText = {
   [OwnerLocale.German]: `zapbip ist ein Produkt von ${COMPANY.tradeName}`,
   [OwnerLocale.French]: `zapbip est un produit de ${COMPANY.tradeName}`,
   [OwnerLocale.Japanese]: `zapbipは${COMPANY.tradeName}の製品です`,
-  [OwnerLocale.Korean]: `zapbip은 ${COMPANY.tradeName}의 제품입니다`,
+  [OwnerLocale.Korean]: `zapbip은 ${COMPANY.tradeName}의 제품이에요`,
   [OwnerLocale.ChineseSimplified]: `zapbip 是 ${COMPANY.tradeName} 的产品`,
   [OwnerLocale.Arabic]: `zapbip منتج من ${COMPANY.tradeName}`,
 };
@@ -38,11 +38,11 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
   [AccountReplyIntent.Waitlisted]: {
     [OwnerLocale.PortugueseBrazil]: `O zapbip é o seu WhatsApp pessoal para conversar com seus agentes de IA. O acesso é por lista de espera e você já está nela: avisamos aqui quando seu acesso for liberado. Para ir se preparando, veja como conectar seus agentes: ${ONBOARDING_SETUP_LINKS[OwnerLocale.PortugueseBrazil]}\n\nQuer entrar mais cedo? Peça acesso: ${ONBOARDING_REQUEST_ACCESS_LINKS[OwnerLocale.PortugueseBrazil]}\n\nEnvie "ajuda" quando seu acesso for liberado.`,
     [OwnerLocale.EnglishUs]: `zapbip is your personal WhatsApp for talking to your AI agents. Access is by waitlist and you are already on it: we will tell you here when it opens. To get ready, see how to connect your agents: ${ONBOARDING_SETUP_LINKS[OwnerLocale.EnglishUs]}\n\nWant in sooner? Request access: ${ONBOARDING_REQUEST_ACCESS_LINKS[OwnerLocale.EnglishUs]}\n\nSend "help" when access opens.`,
-    [OwnerLocale.Spanish]: `zapbip es tu WhatsApp personal para hablar con tus agentes de IA. El acceso es por lista de espera y ya estás en ella: te avisaremos aquí cuando se abra. Para ir preparándote, mira cómo conectar tus agentes: ${ONBOARDING_SETUP_LINKS[OwnerLocale.Spanish]}\n\n¿Quieres entrar antes? Pide acceso: ${ONBOARDING_REQUEST_ACCESS_LINKS[OwnerLocale.Spanish]}\n\nEnvía "ayuda" cuando se abra el acceso.`,
-    [OwnerLocale.German]: `zapbip ist dein persönliches WhatsApp, um mit deinen KI-Agenten zu sprechen. Der Zugang läuft über eine Warteliste, und du stehst schon darauf: Wir sagen dir hier Bescheid, sobald er öffnet. Um dich vorzubereiten, sieh dir an, wie du deine Agenten verbindest: ${ONBOARDING_SETUP_LINKS[OwnerLocale.German]}\n\nDu willst früher rein? Frag den Zugang an: ${ONBOARDING_REQUEST_ACCESS_LINKS[OwnerLocale.German]}\n\nSende "hilfe", sobald der Zugang öffnet.`,
-    [OwnerLocale.French]: `zapbip est votre WhatsApp personnel pour parler à vos agents IA. L’accès se fait par liste d’attente et vous y êtes déjà\u00a0: nous vous préviendrons ici à l’ouverture. Pour vous préparer, voyez comment connecter vos agents\u00a0: ${ONBOARDING_SETUP_LINKS[OwnerLocale.French]}\n\nEnvie d’entrer plus tôt\u202f? Demandez l’accès\u00a0: ${ONBOARDING_REQUEST_ACCESS_LINKS[OwnerLocale.French]}\n\nEnvoyez "aide" quand l’accès ouvrira.`,
-    [OwnerLocale.Japanese]: `zapbipは、AIエージェントと話すためのあなた専用のWhatsAppです。アクセスはウェイトリスト制で、あなたはすでに登録されています。開放されたらここでお知らせします。準備のために、エージェントの接続方法をご覧ください: ${ONBOARDING_SETUP_LINKS[OwnerLocale.Japanese]}\n\nもっと早く使いたい場合は、アクセスをリクエストしてください: ${ONBOARDING_REQUEST_ACCESS_LINKS[OwnerLocale.Japanese]}\n\nアクセスが開放されたら「ヘルプ」と送信してください。`,
-    [OwnerLocale.Korean]: `zapbip은 AI 에이전트와 대화하는 나만의 WhatsApp입니다. 이용은 대기자 명단으로 열리고, 이미 명단에 등록되어 있습니다. 이용할 수 있게 되면 여기서 알려 드릴게요. 미리 준비하려면 에이전트를 연결하는 방법을 확인하세요: ${ONBOARDING_SETUP_LINKS[OwnerLocale.Korean]}\n\n더 일찍 들어오고 싶다면 이용을 신청하세요: ${ONBOARDING_REQUEST_ACCESS_LINKS[OwnerLocale.Korean]}\n\n이용이 열리면 "도움말"을 보내 주세요.`,
+    [OwnerLocale.Spanish]: `zapbip es tu WhatsApp personal para hablar con tus agentes de IA. El acceso es por lista de espera y ya estás en ella: te avisaremos aquí cuando tu acceso esté activo. Para ir preparándote, mira cómo conectar tus agentes: ${ONBOARDING_SETUP_LINKS[OwnerLocale.Spanish]}\n\n¿Quieres entrar antes? Pide acceso: ${ONBOARDING_REQUEST_ACCESS_LINKS[OwnerLocale.Spanish]}\n\nEnvía "ayuda" cuando tu acceso esté activo.`,
+    [OwnerLocale.German]: `zapbip ist dein persönliches WhatsApp, um mit deinen KI-Agenten zu sprechen. Der Zugang läuft über eine Warteliste, und du stehst schon darauf: Wir sagen dir hier Bescheid, sobald er freigeschaltet ist. Um dich vorzubereiten, sieh dir an, wie du deine Agenten verbindest: ${ONBOARDING_SETUP_LINKS[OwnerLocale.German]}\n\nDu willst früher rein? Frag den Zugang an: ${ONBOARDING_REQUEST_ACCESS_LINKS[OwnerLocale.German]}\n\nSende "hilfe", sobald der Zugang öffnet.`,
+    [OwnerLocale.French]: `zapbip est votre WhatsApp personnel pour parler à vos agents IA. L’accès se fait par liste d’attente et vous y êtes déjà\u00a0: nous vous préviendrons ici dès que votre accès sera activé. Pour vous préparer, voyez comment connecter vos agents\u00a0: ${ONBOARDING_SETUP_LINKS[OwnerLocale.French]}\n\nEnvie d’entrer plus tôt\u202f? Demandez l’accès\u00a0: ${ONBOARDING_REQUEST_ACCESS_LINKS[OwnerLocale.French]}\n\nEnvoyez "aide" quand l’accès ouvrira.`,
+    [OwnerLocale.Japanese]: `zapbipは、AIエージェントと話すためのあなた専用のWhatsAppです。アクセスはウェイトリスト制で、あなたはすでに登録されています。利用できるようになったらここでお知らせします。準備のために、エージェントの接続方法をご覧ください: ${ONBOARDING_SETUP_LINKS[OwnerLocale.Japanese]}\n\nもっと早く使いたい場合は、アクセスをリクエストしてください: ${ONBOARDING_REQUEST_ACCESS_LINKS[OwnerLocale.Japanese]}\n\n利用できるようになったら「ヘルプ」と送信してください。`,
+    [OwnerLocale.Korean]: `zapbip은 AI 에이전트와 대화하는 나만의 WhatsApp이에요. 이용은 대기자 명단 순서로 제공되고, 이미 명단에 등록되어 있어요. 이용할 수 있게 되면 여기서 알려 드릴게요. 미리 준비하려면 에이전트를 연결하는 방법을 확인하세요: ${ONBOARDING_SETUP_LINKS[OwnerLocale.Korean]}\n\n더 일찍 들어오고 싶다면 이용을 신청하세요: ${ONBOARDING_REQUEST_ACCESS_LINKS[OwnerLocale.Korean]}\n\n이용할 수 있게 되면 "도움말"을 보내 주세요.`,
     [OwnerLocale.ChineseSimplified]: `zapbip 是你用来和 AI 智能体对话的专属 WhatsApp。使用资格通过候补名单开放，你已经在名单中：开放时我们会在这里通知你。想提前准备，可以看看如何连接你的智能体：${ONBOARDING_SETUP_LINKS[OwnerLocale.ChineseSimplified]}\n\n想早点进来？申请使用：${ONBOARDING_REQUEST_ACCESS_LINKS[OwnerLocale.ChineseSimplified]}\n\n使用资格开放后，请发送“帮助”。`,
     [OwnerLocale.Arabic]:
       `zapbip هو WhatsApp الشخصي الخاص بك للتحدث مع وكلاء الذكاء الاصطناعي. الوصول عبر قائمة انتظار وأنت مسجَّل فيها بالفعل: سنخبرك هنا عندما يُفعَّل وصولك. وللاستعداد، تعرّف على طريقة ربط وكلائك:\n${ONBOARDING_SETUP_LINKS[OwnerLocale.Arabic]}\n\nتريد الدخول مبكرًا؟ اطلب الوصول:\n${ONBOARDING_REQUEST_ACCESS_LINKS[OwnerLocale.Arabic]}\n\nأرسل «مساعدة» عندما يُفعَّل وصولك.`,
@@ -54,13 +54,13 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.German]: 'Dein Konto ist gesperrt.',
     [OwnerLocale.French]: 'Votre compte est suspendu.',
     [OwnerLocale.Japanese]: 'アカウントは停止されています。',
-    [OwnerLocale.Korean]: '계정이 정지되었습니다.',
+    [OwnerLocale.Korean]: '계정이 정지되었어요.',
     [OwnerLocale.ChineseSimplified]: '你的账户已被暂停。',
     [OwnerLocale.Arabic]: 'حسابك موقوف.',
   },
   [AccountReplyIntent.Created]: {
     [OwnerLocale.PortugueseBrazil]:
-      'Agente {agent_name} criado. Cole no seu agente:\n\n{install_prompt}\n\nSe o link expirar ou for usado, envie "girar {agent_name}".',
+      'Agente {agent_name} criado. Cole no seu agente:\n\n{install_prompt}\n\nSe o link expirar ou for usado, envie "renovar {agent_name}".',
     [OwnerLocale.EnglishUs]:
       'Agent {agent_name} created. Paste this into your agent:\n\n{install_prompt}\n\nIf the link expires or was used, send "rotate {agent_name}".',
     [OwnerLocale.Spanish]:
@@ -72,7 +72,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.Japanese]:
       'エージェント{agent_name}を作成しました。次の内容をエージェントに貼り付けてください:\n\n{install_prompt}\n\nリンクの期限が切れた場合や使用済みの場合は、「再発行 {agent_name}」と送信してください。',
     [OwnerLocale.Korean]:
-      '에이전트 {agent_name}을(를) 만들었습니다. 이 내용을 에이전트에 붙여넣으세요:\n\n{install_prompt}\n\n링크가 만료되었거나 이미 사용했다면 "재발급 {agent_name}"을(를) 보내세요.',
+      '에이전트 {agent_name}을(를) 만들었어요. 이 내용을 에이전트에 붙여넣으세요:\n\n{install_prompt}\n\n링크가 만료되었거나 이미 사용했다면 "재발급 {agent_name}"을(를) 보내세요.',
     [OwnerLocale.ChineseSimplified]:
       '智能体 {agent_name} 已创建。请把下面的内容粘贴到你的智能体中：\n\n{install_prompt}\n\n如果链接过期或已被使用，请发送“轮换 {agent_name}”。',
     [OwnerLocale.Arabic]:
@@ -87,7 +87,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.French]:
       'Nom invalide. Utilisez de 1 à 20 lettres minuscules, chiffres ou tirets, en commençant par une lettre ou un chiffre.',
     [OwnerLocale.Japanese]: '名前が正しくありません。英字または数字で始まる、小文字の英字・数字・ハイフンの1〜20文字にしてください。',
-    [OwnerLocale.Korean]: '올바르지 않은 이름입니다. 문자나 숫자로 시작하는 소문자, 숫자, 하이픈 1~20자를 사용하세요.',
+    [OwnerLocale.Korean]: '올바르지 않은 이름이에요. 문자나 숫자로 시작하는 소문자, 숫자, 하이픈 1~20자를 사용하세요.',
     [OwnerLocale.ChineseSimplified]: '名称无效。请使用 1 到 20 个小写字母、数字或连字符，并以字母或数字开头。',
     [OwnerLocale.Arabic]: 'اسم غير صالح. استخدم من 1 إلى 20 حرفًا لاتينيًا صغيرًا أو أرقامًا أو شرطات، على أن يبدأ بحرف أو رقم.',
   },
@@ -98,7 +98,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.German]: 'Dieser Name ist reserviert, weil er einen Befehl einleitet. Wähle einen anderen.',
     [OwnerLocale.French]: 'Ce nom est réservé, car il déclenche une commande. Choisissez-en un autre.',
     [OwnerLocale.Japanese]: 'この名前はコマンドの開始に使われるため予約されています。別の名前にしてください。',
-    [OwnerLocale.Korean]: '명령어의 시작으로 쓰이는 이름이라 예약되어 있습니다. 다른 이름을 골라 주세요.',
+    [OwnerLocale.Korean]: '명령어의 시작으로 쓰이는 이름이라 예약되어 있어요. 다른 이름을 골라 주세요.',
     [OwnerLocale.ChineseSimplified]: '该名称因用于启动命令而被保留。请换一个。',
     [OwnerLocale.Arabic]: 'هذا الاسم محجوز لأنه يبدأ أمرًا. اختر اسمًا آخر.',
   },
@@ -109,7 +109,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.German]: 'Es gibt bereits einen Agenten namens {agent_name}.',
     [OwnerLocale.French]: 'Un agent nommé {agent_name} existe déjà.',
     [OwnerLocale.Japanese]: '{agent_name}という名前のエージェントはすでに存在します。',
-    [OwnerLocale.Korean]: '{agent_name}이라는 에이전트가 이미 있습니다.',
+    [OwnerLocale.Korean]: '{agent_name}이라는 에이전트가 이미 있어요.',
     [OwnerLocale.ChineseSimplified]: '已经有一个名为 {agent_name} 的智能体。',
     [OwnerLocale.Arabic]: 'يوجد بالفعل وكيل باسم {agent_name}.',
   },
@@ -120,7 +120,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.German]: 'Das Limit von {limit} Agenten ist erreicht. Sende "widerrufen <name>", um einen Platz freizumachen.',
     [OwnerLocale.French]: 'Limite de {limit} agents atteinte. Envoyez "révoquer <nom>" pour libérer une place.',
     [OwnerLocale.Japanese]: 'エージェントの上限{limit}件に達しました。「無効化 <名前>」と送信して空きを作ってください。',
-    [OwnerLocale.Korean]: '에이전트 한도인 {limit}개에 도달했습니다. "폐기 <이름>"을 보내 자리를 만드세요.',
+    [OwnerLocale.Korean]: '에이전트 한도인 {limit}개에 도달했어요. "폐기 <이름>"을 보내 자리를 만드세요.',
     [OwnerLocale.ChineseSimplified]: '已达到 {limit} 个智能体的上限。发送“撤销 <名称>”可腾出名额。',
     [OwnerLocale.Arabic]: 'بلغت الحد الأقصى للوكلاء ({limit}). أرسل «إبطال <الاسم>» لتحرير مكان.',
   },
@@ -131,7 +131,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.German]: 'Kein aktiver Agent hat diesen Namen.',
     [OwnerLocale.French]: 'Aucun agent actif ne porte ce nom.',
     [OwnerLocale.Japanese]: 'その名前の有効なエージェントはありません。',
-    [OwnerLocale.Korean]: '그 이름의 활성 에이전트가 없습니다.',
+    [OwnerLocale.Korean]: '그 이름의 활성 에이전트가 없어요.',
     [OwnerLocale.ChineseSimplified]: '没有叫这个名字的有效智能体。',
     [OwnerLocale.Arabic]: 'لا يوجد وكيل نشط بهذا الاسم.',
   },
@@ -142,13 +142,13 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.German]: 'Agent {agent_name} widerrufen. Sein Link funktioniert nicht mehr.',
     [OwnerLocale.French]: 'Agent {agent_name} révoqué. Son lien ne fonctionne plus.',
     [OwnerLocale.Japanese]: 'エージェント{agent_name}を無効にしました。リンクは使えなくなりました。',
-    [OwnerLocale.Korean]: '에이전트 {agent_name}을(를) 폐기했습니다. 링크는 더 이상 작동하지 않습니다.',
+    [OwnerLocale.Korean]: '에이전트 {agent_name}을(를) 폐기했어요. 링크는 더 이상 작동하지 않아요.',
     [OwnerLocale.ChineseSimplified]: '智能体 {agent_name} 已撤销。它的链接已失效。',
     [OwnerLocale.Arabic]: 'تم إبطال الوكيل {agent_name}. لم يعد رابطه يعمل.',
   },
   [AccountReplyIntent.Rotated]: {
     [OwnerLocale.PortugueseBrazil]:
-      'Link do agente {agent_name} trocado. O link antigo deixou de funcionar. Cole no seu agente:\n\n{install_prompt}\n\nSe o link expirar ou for usado, envie "girar {agent_name}".',
+      'Link do agente {agent_name} trocado. O link antigo deixou de funcionar. Cole no seu agente:\n\n{install_prompt}\n\nSe o link expirar ou for usado, envie "renovar {agent_name}".',
     [OwnerLocale.EnglishUs]:
       'Link of agent {agent_name} replaced. The old link no longer works. Paste this into your agent:\n\n{install_prompt}\n\nIf the link expires or was used, send "rotate {agent_name}".',
     [OwnerLocale.Spanish]:
@@ -160,7 +160,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.Japanese]:
       'エージェント{agent_name}のリンクを入れ替えました。古いリンクは使えなくなりました。次の内容をエージェントに貼り付けてください:\n\n{install_prompt}\n\nリンクの期限が切れた場合や使用済みの場合は、「再発行 {agent_name}」と送信してください。',
     [OwnerLocale.Korean]:
-      '에이전트 {agent_name}의 링크를 교체했습니다. 이전 링크는 더 이상 작동하지 않습니다. 이 내용을 에이전트에 붙여넣으세요:\n\n{install_prompt}\n\n링크가 만료되었거나 이미 사용했다면 "재발급 {agent_name}"을(를) 보내세요.',
+      '에이전트 {agent_name}의 링크를 교체했어요. 이전 링크는 더 이상 작동하지 않아요. 이 내용을 에이전트에 붙여넣으세요:\n\n{install_prompt}\n\n링크가 만료되었거나 이미 사용했다면 "재발급 {agent_name}"을(를) 보내세요.',
     [OwnerLocale.ChineseSimplified]:
       '智能体 {agent_name} 的链接已更换。旧链接已失效。请把下面的内容粘贴到你的智能体中：\n\n{install_prompt}\n\n如果链接过期或已被使用，请发送“轮换 {agent_name}”。',
     [OwnerLocale.Arabic]:
@@ -184,7 +184,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.German]: 'Du hast noch keine Agenten. Sende "neuer agent <name>", um einen zu erstellen.',
     [OwnerLocale.French]: 'Vous n’avez pas encore d’agent. Envoyez "nouvel agent <nom>" pour en créer un.',
     [OwnerLocale.Japanese]: 'エージェントはまだありません。「新規エージェント <名前>」と送信して作成してください。',
-    [OwnerLocale.Korean]: '아직 에이전트가 없습니다. "새 에이전트 <이름>"을 보내 만들어 보세요.',
+    [OwnerLocale.Korean]: '아직 에이전트가 없어요. "새 에이전트 <이름>"을 보내 만들어 보세요.',
     [OwnerLocale.ChineseSimplified]: '你还没有智能体。发送“新建智能体 <名称>”来创建一个。',
     [OwnerLocale.Arabic]: 'ليس لديك وكلاء بعد. أرسل «وكيل جديد <الاسم>» لإنشاء وكيل.',
   },
@@ -223,7 +223,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
       'Cela supprime votre compte, tous vos agents, messages et fichiers, et c’est irréversible. Pour confirmer dans les 10 minutes, envoyez\u00a0: {phrase}',
     [OwnerLocale.Japanese]:
       'アカウント、すべてのエージェント、メッセージ、ファイルが削除され、元に戻せません。10分以内に確認するには、次を送信してください: {phrase}',
-    [OwnerLocale.Korean]: '계정, 모든 에이전트, 메시지, 파일이 삭제되며 되돌릴 수 없습니다. 10분 안에 확인하려면 다음을 보내세요: {phrase}',
+    [OwnerLocale.Korean]: '계정, 모든 에이전트, 메시지, 파일이 삭제되며 되돌릴 수 없어요. 10분 안에 확인하려면 다음을 보내세요: {phrase}',
     [OwnerLocale.ChineseSimplified]: '这会删除你的账户、所有智能体、消息和文件，且无法恢复。要在 10 分钟内确认，请发送：{phrase}',
     [OwnerLocale.Arabic]: 'سيؤدي هذا إلى حذف حسابك وكل وكيل ورسالة وملف فيه، ولا يمكن التراجع عنه. للتأكيد خلال 10 دقائق، أرسل: {phrase}',
   },
@@ -234,7 +234,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.German]: 'Es gibt keine gültige Löschanfrage. Sende "konto löschen", um von vorn zu beginnen.',
     [OwnerLocale.French]: 'Il n’y a pas de demande de suppression valide. Envoyez "supprimer le compte" pour recommencer.',
     [OwnerLocale.Japanese]: '有効な削除リクエストがありません。最初からやり直すには「アカウント削除」と送信してください。',
-    [OwnerLocale.Korean]: '유효한 삭제 요청이 없습니다. 처음부터 다시 하려면 "계정 삭제"를 보내세요.',
+    [OwnerLocale.Korean]: '유효한 삭제 요청이 없어요. 처음부터 다시 하려면 "계정 삭제"를 보내세요.',
     [OwnerLocale.ChineseSimplified]: '没有有效的删除请求。发送“删除账户”可重新开始。',
     [OwnerLocale.Arabic]: 'لا يوجد طلب حذف صالح. أرسل «حذف الحساب» للبدء من جديد.',
   },
@@ -245,7 +245,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.German]: 'Dein Konto wurde gelöscht. Deine nächste Nachricht startet ein neues Konto.',
     [OwnerLocale.French]: 'Votre compte est supprimé. Votre prochain message ouvre un nouveau compte.',
     [OwnerLocale.Japanese]: 'アカウントを削除しました。次のメッセージから新しいアカウントが始まります。',
-    [OwnerLocale.Korean]: '계정을 삭제했습니다. 다음 메시지부터 새 계정이 시작됩니다.',
+    [OwnerLocale.Korean]: '계정을 삭제했어요. 다음 메시지부터 새 계정이 시작돼요.',
     [OwnerLocale.ChineseSimplified]: '你的账户已删除。你的下一条消息会开启一个新账户。',
     [OwnerLocale.Arabic]: 'تم حذف حسابك. ستبدأ رسالتك التالية حسابًا جديدًا.',
   },
@@ -263,7 +263,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.Japanese]:
       'zapbipアプリにログインするには、10分以内にこのリンクを開いてください:\n\n{sign_in_link}\n\nリンクは1回だけ使えます。他の人に共有しないでください。',
     [OwnerLocale.Korean]:
-      'zapbip 앱에 로그인하려면 10분 안에 이 링크를 여세요:\n\n{sign_in_link}\n\n한 번만 쓸 수 있습니다. 다른 사람과 공유하지 마세요.',
+      'zapbip 앱에 로그인하려면 10분 안에 이 링크를 여세요:\n\n{sign_in_link}\n\n한 번만 쓸 수 있어요. 다른 사람과 공유하지 마세요.',
     [OwnerLocale.ChineseSimplified]: '请在 10 分钟内打开此链接，登录 zapbip 应用：\n\n{sign_in_link}\n\n它只能使用一次。请勿分享。',
     [OwnerLocale.Arabic]:
       'افتح هذا الرابط خلال 10 دقائق لتسجيل الدخول إلى تطبيق zapbip:\n\n{sign_in_link}\n\nيعمل مرة واحدة فقط. لا تشاركه.',
@@ -275,7 +275,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.German]: 'Ich konnte die Anleitung nicht zustellen. Es wurde nichts geändert; versuche es erneut.',
     [OwnerLocale.French]: 'Je n’ai pas pu remettre les instructions. Rien n’a été modifié\u202f; réessayez.',
     [OwnerLocale.Japanese]: '手順をお届けできませんでした。何も変更されていません。もう一度お試しください。',
-    [OwnerLocale.Korean]: '안내를 전달하지 못했습니다. 바뀐 것은 없으니 다시 시도해 주세요.',
+    [OwnerLocale.Korean]: '안내를 전달하지 못했어요. 바뀐 것은 없으니 다시 시도해 주세요.',
     [OwnerLocale.ChineseSimplified]: '我没能送达说明。没有任何改动；请再试一次。',
     [OwnerLocale.Arabic]: 'تعذّر عليّ إرسال التعليمات. لم يتغيّر شيء؛ حاول مرة أخرى.',
   },
@@ -285,12 +285,13 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.EnglishUs]: 'Your zapbip access is open. Send "new agent <name>" to create your first agent or open {app_link}.',
     [OwnerLocale.Spanish]: 'Tu acceso a zapbip está abierto. Envía "nuevo agente <nombre>" para crear tu primer agente o abre {app_link}.',
     [OwnerLocale.German]:
-      'Dein zapbip-Zugang ist offen. Sende "neuer agent <name>", um deinen ersten Agenten zu erstellen, oder öffne {app_link}.',
+      'Dein zapbip-Zugang ist freigeschaltet. Sende "neuer agent <name>", um deinen ersten Agenten zu erstellen, oder öffne {app_link}.',
     [OwnerLocale.French]:
-      'Votre accès à zapbip est ouvert. Envoyez "nouvel agent <nom>" pour créer votre premier agent ou ouvrez {app_link}.',
+      'Votre accès à zapbip est activé. Envoyez "nouvel agent <nom>" pour créer votre premier agent ou ouvrez {app_link}.',
     [OwnerLocale.Japanese]:
-      'zapbipのアクセスが開放されました。「新規エージェント <名前>」と送信して最初のエージェントを作成するか、{app_link}を開いてください。',
-    [OwnerLocale.Korean]: 'zapbip 이용이 열렸습니다. "새 에이전트 <이름>"을 보내 첫 에이전트를 만들거나 {app_link}을(를) 열어 보세요.',
+      'zapbipを利用できるようになりました。「新規エージェント <名前>」と送信して最初のエージェントを作成するか、{app_link}を開いてください。',
+    [OwnerLocale.Korean]:
+      '이제 zapbip을 이용할 수 있어요. "새 에이전트 <이름>"을 보내 첫 에이전트를 만들거나 {app_link}을(를) 열어 보세요.',
     [OwnerLocale.ChineseSimplified]: '你的 zapbip 使用资格已开放。发送“新建智能体 <名称>”来创建你的第一个智能体，或打开 {app_link}。',
     [OwnerLocale.Arabic]: 'تم تفعيل وصولك إلى zapbip. أرسل «وكيل جديد <الاسم>» لإنشاء أول وكيل لك، أو افتح التطبيق:\n{app_link}',
   },
@@ -306,7 +307,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
       'Je ne peux pas envoyer ce lien maintenant, car la fenêtre de 24 heures est fermée. Écrivez à zapbip et redemandez.',
     [OwnerLocale.Japanese]:
       '24時間ウィンドウが閉じているため、今はそのリンクを送れません。zapbipにメッセージを送ってから、もう一度お願いします。',
-    [OwnerLocale.Korean]: '24시간 창이 닫혀 있어서 지금은 그 링크를 보낼 수 없습니다. zapbip에 메시지를 보낸 뒤 다시 요청해 주세요.',
+    [OwnerLocale.Korean]: '24시간 창이 닫혀 있어서 지금은 그 링크를 보낼 수 없어요. zapbip에 메시지를 보낸 뒤 다시 요청해 주세요.',
     [OwnerLocale.ChineseSimplified]: '24 小时窗口已关闭，现在无法发送该链接。请先给 zapbip 发条消息，再重新请求。',
     [OwnerLocale.Arabic]: 'لا أستطيع إرسال هذا الرابط الآن لأن نافذة الـ24 ساعة مغلقة. اكتب إلى zapbip واطلبه مرة أخرى.',
   },
@@ -317,7 +318,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.German]: 'Diese Anfrage wurde vor einem Moment nicht genehmigt und ist für ein paar Minuten pausiert.',
     [OwnerLocale.French]: 'Cette demande n’a pas été approuvée à l’instant et est suspendue pendant quelques minutes.',
     [OwnerLocale.Japanese]: 'そのリクエストはさきほど承認されなかったため、数分間停止しています。',
-    [OwnerLocale.Korean]: '그 요청은 방금 승인되지 않아 몇 분 동안 중단되었습니다.',
+    [OwnerLocale.Korean]: '그 요청은 방금 승인되지 않아 몇 분 동안 중단되었어요.',
     [OwnerLocale.ChineseSimplified]: '该请求刚才未被批准，已暂停几分钟。',
     [OwnerLocale.Arabic]: 'لم تتم الموافقة على هذا الطلب قبل لحظات، وهو متوقف لبضع دقائق.',
   },
@@ -328,7 +329,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.German]: 'Sprache auf Deutsch gestellt. Ab jetzt schreibe ich dir auf Deutsch.',
     [OwnerLocale.French]: 'Langue réglée sur le français. Désormais, je vous écris en français.',
     [OwnerLocale.Japanese]: '言語を日本語に変更しました。これからは日本語でお伝えします。',
-    [OwnerLocale.Korean]: '언어를 한국어로 바꿨습니다. 지금부터 한국어로 말씀드릴게요.',
+    [OwnerLocale.Korean]: '언어를 한국어로 바꿨어요. 지금부터 한국어로 말씀드릴게요.',
     [OwnerLocale.ChineseSimplified]: '语言已切换为中文。从现在起我会用中文给你发消息。',
     [OwnerLocale.Arabic]: 'تم ضبط اللغة على العربية. سأكتب لك بالعربية من الآن فصاعدًا.',
   },
@@ -341,7 +342,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
       'Je ne connais pas cette langue. Envoyez "langue <code>" avec l’un de ces codes\u00a0: en, pt, es, de, fr, ja, ko, zh, ar.',
     [OwnerLocale.Japanese]:
       'その言語は分かりません。次のいずれかを指定して「言語 <コード>」と送信してください: en, pt, es, de, fr, ja, ko, zh, ar。',
-    [OwnerLocale.Korean]: '그 언어는 모릅니다. 다음 중 하나를 넣어 "언어 <코드>"를 보내 주세요: en, pt, es, de, fr, ja, ko, zh, ar.',
+    [OwnerLocale.Korean]: '그 언어는 몰라요. 다음 중 하나를 넣어 "언어 <코드>"를 보내 주세요: en, pt, es, de, fr, ja, ko, zh, ar.',
     [OwnerLocale.ChineseSimplified]: '我不认识这个语言。请发送“语言 <代码>”，代码可选：en, pt, es, de, fr, ja, ko, zh, ar。',
     [OwnerLocale.Arabic]: 'لا أعرف هذه اللغة. أرسل «اللغة <الرمز>» مع أحد الرموز: en, pt, es, de, fr, ja, ko, zh, ar.',
   },
@@ -352,7 +353,7 @@ const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
     [OwnerLocale.German]: 'Das habe ich nicht verstanden. Sende "hilfe", um die Befehle zu sehen.',
     [OwnerLocale.French]: 'Je n’ai pas compris. Envoyez "aide" pour voir les commandes.',
     [OwnerLocale.Japanese]: '理解できませんでした。コマンドを見るには「ヘルプ」と送信してください。',
-    [OwnerLocale.Korean]: '이해하지 못했습니다. 명령어를 보려면 "도움말"을 보내 주세요.',
+    [OwnerLocale.Korean]: '이해하지 못했어요. 명령어를 보려면 "도움말"을 보내 주세요.',
     [OwnerLocale.ChineseSimplified]: '我没听懂。发送“帮助”查看命令。',
     [OwnerLocale.Arabic]: 'لم أفهم. أرسل «مساعدة» لعرض الأوامر.',
   },
@@ -368,13 +369,13 @@ const INSTALL_LINES: LocalizedText = {
   [OwnerLocale.Spanish]:
     'Conéctate a mi WhatsApp con zapbip: lee {install_link} y sigue las instrucciones.\nEste enlace funciona una vez durante 30 minutos. No lo compartas.',
   [OwnerLocale.German]:
-    'Verbinde dich mit zapbip mit meinem WhatsApp: Lies {install_link} und folge den Anweisungen.\nDieser Link funktioniert einmal und 30 Minuten lang. Gib ihn nicht weiter.',
+    'Verbinde dich über zapbip mit meinem WhatsApp: Lies {install_link} und folge den Anweisungen.\nDieser Link ist 30 Minuten gültig und nur einmal nutzbar. Gib ihn nicht weiter.',
   [OwnerLocale.French]:
-    'Connecte-toi à mon WhatsApp avec zapbip\u00a0: lis {install_link} et suis les instructions.\nCe lien fonctionne une seule fois pendant 30 minutes. Ne le partage pas.',
+    'Connectez-vous à mon WhatsApp avec zapbip\u00a0: lisez {install_link} et suivez les instructions.\nCe lien est valable 30 minutes et ne fonctionne qu’une fois. Ne le partagez pas.',
   [OwnerLocale.Japanese]:
     'zapbipで私のWhatsAppにつながってください。{install_link}を読み、手順に従ってください。\nこのリンクは30分間、1回だけ使えます。共有しないでください。',
   [OwnerLocale.Korean]:
-    'zapbip으로 제 WhatsApp에 연결하세요. {install_link}을(를) 읽고 안내를 따르세요.\n이 링크는 30분 동안 한 번만 쓸 수 있습니다. 공유하지 마세요.',
+    'zapbip으로 제 WhatsApp에 연결하세요. {install_link}을(를) 읽고 안내를 따르세요.\n이 링크는 30분 동안 한 번만 쓸 수 있어요. 공유하지 마세요.',
   [OwnerLocale.ChineseSimplified]:
     '请通过 zapbip 连接到我的 WhatsApp：阅读 {install_link} 并按说明操作。\n此链接 30 分钟内只能使用一次。请勿分享。',
   [OwnerLocale.Arabic]:
@@ -416,7 +417,7 @@ const MENU_ROW_TITLES: Partial<Record<CommandKind, LocalizedText>> = {
     [OwnerLocale.Arabic]: 'إبطال وكيل',
   },
   [CommandKind.RotateAgent]: {
-    [OwnerLocale.PortugueseBrazil]: 'Girar link',
+    [OwnerLocale.PortugueseBrazil]: 'Renovar link',
     [OwnerLocale.EnglishUs]: 'Rotate link',
     [OwnerLocale.Spanish]: 'Rotar enlace',
     [OwnerLocale.German]: 'Link erneuern',

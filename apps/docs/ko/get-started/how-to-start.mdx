@@ -7,53 +7,52 @@ import { Chat } from '/snippets/chat.jsx';
 import StartLink from '/snippets/ko/start-link.mdx';
 import InstallPrompt from '/snippets/ko/install-prompt.mdx';
 
-WhatsApp 명령어는 한국어, 영어, 포르투갈어 단어로 입력할 수 있습니다. 이 페이지에서는 한국어 단어를 사용합니다.
+WhatsApp 명령어는 한국어, 영어, 포르투갈어 단어로 입력할 수 있어요. 이 페이지에서는 한국어 단어를 사용해요.
 
-1. **WhatsApp에서 zapbip 번호로 메시지를 보냅니다.** 아무 텍스트나, 예를 들어 `hi`를 보내세요. 첫 메시지로 계정이 만들어지고, 그 휴대폰이 내 것임이 확인됩니다.
+1. **WhatsApp에서 zapbip 번호로 메시지를 보내요.** 아무 텍스트나, 예를 들어 `hi`를 보내세요. 첫 메시지로 계정이 만들어지고, 그 휴대폰이 내 것임이 확인돼요.
 
    <StartLink />
 
    <Chat
      messages={[
        { you: true, text: 'hi', time: '09:00' },
-       { name: 'zapbip', text: '연결된 에이전트가 없습니다. 메시지는 저장되어 있습니다.', time: '09:00' },
+       { name: 'zapbip', text: '연결된 에이전트가 없어요. 메시지는 저장되어 있어요.', time: '09:00' },
      ]}
    />
 
-2. **새 에이전트를 요청합니다.** 에이전트는 연결하는 AI 하나를 뜻합니다. `새 에이전트`와 이름을 보내세요. 예를 들어 `새 에이전트 claude`입니다.
+2. **새 에이전트를 요청해요.** 에이전트는 연결하는 AI 하나를 뜻해요. `새 에이전트`와 이름을 보내세요. 예를 들어 `새 에이전트 claude`예요.
 
-3. **프롬프트를 받습니다.** zapbip이 나를 위해 만든 한두 줄로 답합니다.
+3. **프롬프트를 받아요.** zapbip이 나를 위해 만든 한두 줄로 답해요.
 
    <Chat
      messages={[
        { you: true, text: '새 에이전트 claude', time: '09:01' },
        {
          name: 'zapbip',
-         text: '에이전트 claude을(를) 만들었습니다. 이 내용을 에이전트에 붙여넣으세요: zapbip으로 제 WhatsApp에 연결하세요. https://mcp.zapbip.com/i/zb_inst_<code>을(를) 읽고 안내를 따르세요. 이 링크는 30분 동안 한 번만 쓸 수 있습니다. 공유하지 마세요. 링크가 만료되었거나 이미 사용했다면 "재발급 claude"을(를) 보내세요.',
+         text: '에이전트 claude을(를) 만들었어요. 이 내용을 에이전트에 붙여넣으세요: zapbip으로 제 WhatsApp에 연결하세요. https://mcp.zapbip.com/i/zb_inst_<code>을(를) 읽고 안내를 따르세요. 이 링크는 30분 동안 한 번만 쓸 수 있어요. 공유하지 마세요. 링크가 만료되었거나 이미 사용했다면 "재발급 claude"을(를) 보내세요.',
          time: '09:01',
        },
      ]}
    />
 
-4. **AI에 붙여 넣습니다.** ChatGPT, Claude, Grok 또는 쓰고 있는 AI를 열고, zapbip이 보낸 줄을 붙여 넣으세요. 이런 모양입니다.
+4. **AI에 붙여 넣어요.** ChatGPT, Claude, Grok 또는 쓰고 있는 AI를 열고, zapbip이 보낸 줄을 붙여 넣으세요. 이런 모양이에요.
 
    <InstallPrompt />
 
-   AI가 온라인에서 안내를 읽고 스스로 설정합니다.
+   AI가 온라인에서 안내를 읽고 스스로 설정해요.
 
-5. **AI가 메시지를 보냅니다.** 연결되었음을 확인하는 첫 메시지를 WhatsApp으로 보냅니다.
+5. **AI가 메시지를 보내요.** 연결되었음을 확인하는 첫 메시지를 WhatsApp으로 보내요.
 
    <Chat messages={[{ name: 'Claude', text: '✅ installed', time: '09:03' }]} />
 
 <Note>
-  claude.ai, ChatGPT, 웹의 Grok은 한 가지를 요청합니다. AI가 설정에서 커넥터를 추가하라고 안내합니다. 안내를 따르세요. 해당 앱들의
-  규칙입니다.
+  claude.ai, ChatGPT, 웹의 Grok은 한 가지를 요청해요. AI가 설정에서 커넥터를 추가하라고 안내해요. 안내를 따르세요. 해당 앱들의 규칙이에요.
 </Note>
 
 ## 알아 두면 좋은 점
 
-- 모든 AI가 하나의 WhatsApp 번호를 쓰고, AI마다 줄이 따로 있어서 서로 구분할 수 있습니다.
-- 그 줄은 한 번만 쓸 수 있고 30분 뒤에 만료됩니다. 만료되면 `재발급 claude`를 보내 새로 받으세요.
-- 언제든 먼저 쓸 수 있고, AI는 시간 제한 없이 계속 듣습니다.
+- 모든 AI가 하나의 WhatsApp 번호를 쓰고, AI마다 줄이 따로 있어서 서로 구분할 수 있어요.
+- 그 줄은 한 번만 쓸 수 있고 30분 뒤에 만료돼요. 만료되면 `재발급 claude`를 보내 새로 받으세요.
+- 언제든 먼저 쓸 수 있고, AI는 시간 제한 없이 계속 들어요.
 - 대기자 명단에 올랐다면 다음에 어떻게 되는지 [FAQ](/ko/help/faq)를 보세요.
 - 쓰는 AI를 골라 [지원하는 에이전트](/ko/agents/supported-agents)에서 그 페이지를 따라 하세요.

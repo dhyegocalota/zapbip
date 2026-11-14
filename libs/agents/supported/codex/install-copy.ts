@@ -59,8 +59,8 @@ const CODEX_TEXT: Record<OwnerLocale, CodexText> = {
     restart: 'zapbipを使うには、Codexを再起動してください。',
   },
   [OwnerLocale.Korean]: {
-    wakeNote: '커넥터가 메시지마다 약 6초 만에 Codex 세션을 재개합니다. 시간 제한은 없습니다.',
-    confirmChange: `zapbip 서버를 ${CONFIG_PATH}에 작성하겠습니다. 그러면 zapbip 도구가 사용할 때마다 승인을 묻지 않고 무인으로 실행됩니다. 진행해도 될까요?`,
+    wakeNote: '커넥터가 메시지마다 약 6초 만에 Codex 세션을 재개해요. 시간 제한은 없어요.',
+    confirmChange: `zapbip 서버를 ${CONFIG_PATH}에 작성할게요. 그러면 zapbip 도구가 사용할 때마다 승인을 묻지 않고 무인으로 실행돼요. 진행해도 될까요?`,
     restart: 'zapbip을 쓰려면 Codex를 다시 시작하세요.',
   },
   [OwnerLocale.ChineseSimplified]: {

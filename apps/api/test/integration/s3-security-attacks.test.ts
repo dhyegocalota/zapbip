@@ -44,7 +44,7 @@ describe('S3 security attacks', () => {
     const bindings = bindingsWith({ waitlistEnabled: false });
     await deliver({ bindings, text: 'oi' });
     await deliver({ bindings, text: 'novo agente alfa' });
-    await deliver({ bindings, text: 'girar alfa' });
+    await deliver({ bindings, text: 'renovar alfa' });
     await deliver({ bindings, text: 'agentes' });
     const [account] = await findAccounts({ waId: WA_ID });
     const screen = (await screenTextsOf({ accountId: account!.accountId })).join('\n');
@@ -65,7 +65,7 @@ describe('S3 security attacks', () => {
     const bindings = bindingsWith({ waitlistEnabled: false });
     await deliver({ bindings, text: 'oi' });
     await deliver({ bindings, text: 'novo agente alfa' });
-    await Promise.all(Array.from({ length: 8 }, () => deliver({ bindings, text: 'girar alfa' })));
+    await Promise.all(Array.from({ length: 8 }, () => deliver({ bindings, text: 'renovar alfa' })));
     const [account] = await findAccounts({ waId: WA_ID });
     const screen = (await screenTextsOf({ accountId: account!.accountId })).join('\n');
     const codes = [...screen.matchAll(INSTALL_LINK)].map((m) => m[1]!);

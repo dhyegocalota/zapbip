@@ -1,5 +1,5 @@
 ---
-title: Revogar e girar uma conexão
+title: Revogar e renovar uma conexão
 description: Corte o acesso de uma IA ou troque o link dela.
 ---
 
@@ -22,11 +22,11 @@ Para usar essa IA de novo, escreva `novo agente claude`.
 
 ## Trocar um link
 
-Escreva `girar` e o nome, por exemplo `girar claude`. A conexão antiga para de funcionar na hora, com o mesmo alcance do `revogar`, e o zapbip envia um prompt novo para você colar nessa IA.
+Escreva `renovar` e o nome, por exemplo `renovar claude`. A conexão antiga para de funcionar na hora, com o mesmo alcance do `revogar`, e o zapbip envia um prompt novo para você colar nessa IA.
 
 <Chat
   messages={[
-    { you: true, text: 'girar claude', time: '16:05' },
+    { you: true, text: 'renovar claude', time: '16:05' },
     {
       text: 'Link do agente claude trocado. O link antigo deixou de funcionar. Cole no seu agente: ...',
       time: '16:05',
@@ -34,11 +34,11 @@ Escreva `girar` e o nome, por exemplo `girar claude`. A conexão antiga para de 
   ]}
 />
 
-Um link girado é enviado uma vez. O zapbip nunca o mostra de novo: `agentes` lista as suas IAs sem nenhum link. Se o prompt novo não chegar, o zapbip mantém a conexão antiga, e você pode escrever `girar claude` outra vez.
+Um link girado é enviado uma vez. O zapbip nunca o mostra de novo: `agentes` lista as suas IAs sem nenhum link. Se o prompt novo não chegar, o zapbip mantém a conexão antiga, e você pode escrever `renovar claude` outra vez.
 
 ## Quando usar cada um
 
 - Você perdeu uma IA, parou de usá-la ou compartilhou o link por engano: `revogar`.
-- O link expirou, já foi usado ou vazou, e você ainda quer a IA: `girar`.
+- O link expirou, já foi usado ou vazou, e você ainda quer a IA: `renovar`.
 
 Veja todas as palavras em [comandos no WhatsApp](/pt-br/features/whatsapp-commands).

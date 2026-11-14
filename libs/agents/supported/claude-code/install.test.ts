@@ -18,7 +18,7 @@ const WAKE_NOTE: Record<OwnerLocale, string> = {
   [OwnerLocale.Japanese]:
     'Claude Codeは時間制限なしで待ち受けます。セッションが開いている間はチャンネルが即座に配信し、止まったセッションはコネクタが約7秒で再開します。',
   [OwnerLocale.Korean]:
-    'Claude Code는 시간 제한 없이 듣습니다. 세션이 열려 있는 동안에는 채널이 즉시 전달하고, 멈춘 세션은 커넥터가 약 7초 만에 재개합니다.',
+    'Claude Code는 시간 제한 없이 들어요. 세션이 열려 있는 동안에는 채널이 즉시 전달하고, 멈춘 세션은 커넥터가 약 7초 만에 재개해요.',
   [OwnerLocale.ChineseSimplified]: 'Claude Code 不限时地监听：会话打开时，通道会立即送达；会话停止时，连接器大约 7 秒就能让它恢复。',
   [OwnerLocale.Arabic]:
     'يستمع Claude Code دون حد زمني: تسلّم القناة الرسائل فورًا ما دامت الجلسة مفتوحة، ويستأنف الموصّل جلسة متوقفة خلال نحو 7 ثوانٍ.',
