@@ -16,6 +16,11 @@ function hasUnapprovedTemplate(input: { snapshot: VerificationSnapshot }): boole
   return input.snapshot.templates.some((template) => template.status !== TemplateStatus.Approved);
 }
 
+function isRecheckCandidate(entry: NumberListEntry): boolean {
+  if (entry.verificationSnapshot === null) return false;
+  return hasUnapprovedTemplate({ snapshot: parseVerificationSnapshot({ text: entry.verificationSnapshot }) });
+}
+
 async function recheckNumber(input: {
   admin: NumberAdmin;
   openGraph: (input: { numberId: string }) => Promise<GraphClient>;
@@ -41,11 +46,7 @@ export async function recheckPendingTemplates(input: {
   now: number;
 }): Promise<void> {
   const entries = await input.admin.listNumbers();
-  const candidates = entries.filter(
-    (entry) =>
-      entry.verificationSnapshot !== null &&
-      hasUnapprovedTemplate({ snapshot: parseVerificationSnapshot({ text: entry.verificationSnapshot }) }),
-  );
+  const candidates = entries.filter(isRecheckCandidate);
   const outcomes = await Promise.allSettled(
     candidates.map((entry) => recheckNumber({ admin: input.admin, openGraph: input.openGraph, entry, now: input.now })),
   );
