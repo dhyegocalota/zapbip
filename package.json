@@ -35,6 +35,7 @@
     "agents:mentions": "node --import tsx libs/agents/generate/cli.ts mentions",
     "emails:generate": "node --import tsx apps/api/scripts/emails/cli.ts generate",
     "emails:check": "node --import tsx apps/api/scripts/emails/cli.ts check",
+    "emails:preview": "bash scripts/emails-preview.sh",
     "verify": "bash scripts/verify.sh",
     "test:e2e:clients": "ZAPBIP_E2E_CLIENTS=1 pnpm --filter @zapbip/api exec vitest run --config vitest.e2e.config.mts test/e2e/channel-plugins.e2e.test.ts"
   },
