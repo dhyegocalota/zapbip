@@ -1,6 +1,6 @@
 # Agentic backoffice
 
-**Status:** Building
+**Status:** Shipped 2026-11-13
 **Tier:** 🔴 structural
 **Owner approval:** approved 2026-11-13 (owner delegated)
 **ADRs:** [0046](../../adr/0046-an-operator-agent-runs-the-backoffice-through-mcp-with-a-scoped-key.md)
