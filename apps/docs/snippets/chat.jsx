@@ -23,11 +23,11 @@ export const Chat = ({ messages, contact = 'zapbip', frame }) => {
       style={{
         position: 'absolute',
         top: 0,
-        [message.you ? 'right' : 'left']: '-6px',
+        [message.you ? 'insetInlineEnd' : 'insetInlineStart']: '-6px',
         width: 0,
         height: 0,
         borderTop: '8px solid transparent',
-        [message.you ? 'borderLeft' : 'borderRight']: `8px solid ${message.you ? sent : white}`,
+        [message.you ? 'borderInlineStart' : 'borderInlineEnd']: `8px solid ${message.you ? sent : white}`,
       }}
     />
   );
@@ -110,7 +110,7 @@ export const Chat = ({ messages, contact = 'zapbip', frame }) => {
         </svg>
       )}
       {media.label ? (
-        <span style={{ position: 'absolute', left: '8px', bottom: '6px', fontSize: '12px', color: ink }}>{media.label}</span>
+        <span style={{ position: 'absolute', insetInlineStart: '8px', bottom: '6px', fontSize: '12px', color: ink }}>{media.label}</span>
       ) : null}
     </div>
   );
@@ -255,7 +255,7 @@ export const Chat = ({ messages, contact = 'zapbip', frame }) => {
         marginBottom: '4px',
         padding: '4px 8px',
         borderRadius: '6px',
-        borderLeft: `3px solid ${teal}`,
+        borderInlineStart: `3px solid ${teal}`,
         background: 'rgba(17, 27, 33, 0.06)',
         fontSize: '13px',
       }}
@@ -402,8 +402,8 @@ export const Chat = ({ messages, contact = 'zapbip', frame }) => {
             position: 'relative',
             padding: '5px 8px 4px',
             borderRadius: '8px',
-            borderTopLeftRadius: !message.you && startsRun ? 0 : '8px',
-            borderTopRightRadius: message.you && startsRun ? 0 : '8px',
+            borderStartStartRadius: !message.you && startsRun ? 0 : '8px',
+            borderStartEndRadius: message.you && startsRun ? 0 : '8px',
             background: message.you ? sent : white,
             boxShadow: shadow,
           }}
@@ -422,7 +422,7 @@ export const Chat = ({ messages, contact = 'zapbip', frame }) => {
             style={{
               position: 'absolute',
               bottom: '-10px',
-              [message.you ? 'right' : 'left']: '8px',
+              [message.you ? 'insetInlineEnd' : 'insetInlineStart']: '8px',
               padding: '0 5px',
               borderRadius: '10px',
               background: white,

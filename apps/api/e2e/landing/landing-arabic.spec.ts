@@ -5,7 +5,8 @@ import { expect, test } from './fixtures';
 const ARABIC_PATH = localePathOf({ locale: OwnerLocale.Arabic });
 const PHONE_WIDTH = 360;
 const NO_SIDEWAYS_SCROLL_SCRIPT = 'document.documentElement.scrollWidth <= document.documentElement.clientWidth';
-const CODE_BLOCK_SELECTOR = 'pre.code-block, .start-panel pre, pre';
+const CODE_DIRECTION_SCRIPT = "getComputedStyle(document.querySelector('pre')).direction";
+const HEADING_SPACING_SCRIPT = "getComputedStyle(document.querySelector('h1')).letterSpacing";
 const FIRST_COLUMN_SCRIPT = "document.querySelector('.site-header .brand').getBoundingClientRect().right";
 const VIEWPORT_WIDTH_SCRIPT = 'document.documentElement.clientWidth';
 const MENU_TRIGGER_LEFT_SCRIPT = "document.querySelector('.lang-trigger').getBoundingClientRect().left";
@@ -34,13 +35,13 @@ for (const width of [PHONE_WIDTH, undefined]) {
 
     test('the quick-start code stays left to right inside the right-to-left page', async ({ page }) => {
       await page.goto(ARABIC_PATH);
-      const direction = await page.locator(CODE_BLOCK_SELECTOR).first().evaluate('element => getComputedStyle(element).direction');
+      const direction = await page.evaluate(CODE_DIRECTION_SCRIPT);
       expect(direction).toBe('ltr');
     });
 
     test('Arabic text uses no letter spacing', async ({ page }) => {
       await page.goto(ARABIC_PATH);
-      const spacing = await page.locator('h1').evaluate('element => getComputedStyle(element).letterSpacing');
+      const spacing = await page.evaluate(HEADING_SPACING_SCRIPT);
       expect(['normal', '0px']).toContain(spacing);
     });
   });
