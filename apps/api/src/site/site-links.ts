@@ -1,4 +1,4 @@
-import type { OwnerLocale } from '@zapbip/types';
+import { DOCS_LANGUAGE_OF_OWNER_LOCALE, type OwnerLocale, START_LINK, START_LINK_LANGUAGE_PARAMETER } from '@zapbip/types';
 import type { InstallClient } from '@zapbip/agents/install';
 import { JOIN_FRAGMENT, START_FRAGMENT, SITE_AGENT_PARAMETER, SITE_REFERRAL_PARAMETER } from './site-constants';
 import type { SiteStartTab } from './site-agents';
@@ -45,4 +45,8 @@ export function pageUrlOf(input: { model: PageModel; locale: OwnerLocale }): str
   const { model, locale } = input;
   if (model.legalDocument !== null) return legalUrlOf({ origin: model.siteOrigin, document: model.legalDocument, locale });
   return canonicalUrlOf({ origin: model.siteOrigin, locale });
+}
+
+export function startLinkOf(input: { locale: OwnerLocale }): string {
+  return `${START_LINK}?${START_LINK_LANGUAGE_PARAMETER}=${DOCS_LANGUAGE_OF_OWNER_LOCALE[input.locale]}`;
 }

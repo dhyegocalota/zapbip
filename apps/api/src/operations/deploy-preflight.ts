@@ -72,6 +72,7 @@ export type PreflightRefusal = { step: PreflightStep; message: string };
 export enum PreflightWarningKind {
   PackageUnpublished = 'package unpublished',
   MetaAppSecretMissing = 'meta app secret missing',
+  ResendApiKeyMissing = 'resend api key missing',
 }
 
 export type PreflightWarning = { kind: PreflightWarningKind; message: string };
@@ -418,12 +419,21 @@ async function refuseUnreadyProduction(input: WorkerPreflightInput): Promise<str
   return `production is not ready: ${missing.join('; ')}; merge the missing slices into main first`;
 }
 
-function warnOnUnsetMetaAppSecret(input: { present: string[]; warn: (warning: PreflightWarning) => void }): null {
-  if (input.present.includes(WarnedWorkerSecret.MetaAppSecret)) return null;
-  input.warn({
+const UNSET_SECRET_WARNINGS: Record<WarnedWorkerSecret, PreflightWarning> = {
+  [WarnedWorkerSecret.MetaAppSecret]: {
     kind: PreflightWarningKind.MetaAppSecretMissing,
     message: `${WarnedWorkerSecret.MetaAppSecret} is not set; the webhook refuses every delivery until you run wrangler secret put ${WarnedWorkerSecret.MetaAppSecret}`,
-  });
+  },
+  [WarnedWorkerSecret.ResendApiKey]: {
+    kind: PreflightWarningKind.ResendApiKeyMissing,
+    message: `${WarnedWorkerSecret.ResendApiKey} is not set; no welcome or digest email is sent until you run wrangler secret put ${WarnedWorkerSecret.ResendApiKey}`,
+  },
+};
+
+function warnOnUnsetSecrets(input: { present: string[]; warn: (warning: PreflightWarning) => void }): null {
+  Object.values(WarnedWorkerSecret)
+    .filter((name) => !input.present.includes(name))
+    .forEach((name) => input.warn(UNSET_SECRET_WARNINGS[name]));
   return null;
 }
 
@@ -435,7 +445,7 @@ async function refuseMissingSecrets(input: WorkerPreflightInput): Promise<string
   if (!secrets.success) return 'the Worker secret list is not JSON; update wrangler or check your login';
   const present = secrets.data.map((secret) => secret.name);
   const missing = Object.values(WorkerSecret).filter((name) => !present.includes(name));
-  if (missing.length === 0) return warnOnUnsetMetaAppSecret({ present, warn: input.warn });
+  if (missing.length === 0) return warnOnUnsetSecrets({ present, warn: input.warn });
   return `missing Worker secrets: ${missing.join(', ')}`;
 }
 

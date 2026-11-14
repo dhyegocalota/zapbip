@@ -3,6 +3,8 @@ import type { Hono } from 'hono';
 import type { Bindings } from '../contract/env';
 import { plainResponse } from '../routes/private-response';
 import { createClientApp } from '../client-app/client-app';
+import { createEmailSender } from '../emails/email-delivery';
+import type { EmailSender } from '../emails/email-sender';
 import { httpsRedirectOf } from '../https-redirect';
 import { createSiteApp } from '../site/site-app';
 import { createBackofficeApp, createRejectedHostApp } from './app';
@@ -42,6 +44,10 @@ function hostKindOf(input: { url: string; backofficeOrigin: string; siteOrigin: 
   return HostKind.Other;
 }
 
+function productionEmailSenderOf(input: { env: Bindings }): EmailSender {
+  return createEmailSender({ env: input.env, fetchImplementation: fetch });
+}
+
 function redirectToSite(input: { request: Request; siteOrigin: string }): Response {
   const { pathname, search } = new URL(input.request.url);
   return Response.redirect(`${new URL(input.siteOrigin).origin}${pathname}${search}`, HttpStatus.MovedPermanently);
@@ -52,7 +58,7 @@ const HOST_HANDLERS: Record<HostKind, (input: HostDispatch) => Response | Promis
   [HostKind.BackofficeWithTrailingDot]: ({ request, env, executionContext }) =>
     createRejectedHostApp().fetch(request, env, executionContext),
   [HostKind.Site]: ({ request, env, executionContext }) =>
-    createSiteApp({ fetchImplementation: fetch }).fetch(request, env, executionContext),
+    createSiteApp({ fetchImplementation: fetch, emailSenderOf: productionEmailSenderOf }).fetch(request, env, executionContext),
   [HostKind.App]: ({ request, env, executionContext }) => createClientApp().fetch(request, env, executionContext),
   [HostKind.AppWithTrailingDot]: () => plainResponse({ body: NOT_FOUND_TEXT, status: HttpStatus.NotFound }),
   [HostKind.WwwRedirect]: ({ request, env }) => redirectToSite({ request, siteOrigin: env.SITE_ORIGIN }),

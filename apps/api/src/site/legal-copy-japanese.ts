@@ -126,7 +126,7 @@ export const JAPANESE_LEGAL_COPY: Record<LegalDocument, LegalText> = {
         paragraphs: ['お客様のデータを販売することはなく、広告も表示せず、メッセージをAIモデルの学習に使うこともありません。'],
         items: [
           'ご依頼のサービスを提供するため: お客様とエージェントの間でメッセージを届け、アカウントを運用するため(LGPD第7条V)。',
-          'ウェイトリストを管理し、招待をお送りするため。参加時にいただく同意に基づきます(第7条I)。',
+          'ウェイトリストを管理し、関連するメール(登録時のウェルカムメール、アクセスに関するお知らせ、招待)をお送りするため。参加時にいただく同意に基づきます(第7条I)。',
           'zapbipの安全を保ち、不正利用を防ぐため。たとえばウェイトリストフォームのキャプチャや利用回数の制限です(正当な利益、第7条IX)。',
           '法的義務を果たすため(第7条II)。',
         ],
@@ -151,12 +151,13 @@ export const JAPANESE_LEGAL_COPY: Record<LegalDocument, LegalText> = {
           'Meta Platforms。公式のWhatsApp Business Platformを通じて、すべてのWhatsAppメッセージを運びます。',
           'Cloudflare。サービスとそのストレージをホストし、ウェイトリストフォームのキャプチャ(Turnstile)を実行します。',
           'Mintlify。docs.zapbip.comでドキュメントをホストします。',
+          'Resend。ウェイトリストのウェルカムメールなど、当社のメールを送信します。',
         ],
       },
       {
         heading: '国際的なデータ移転',
         paragraphs: [
-          'MetaとCloudflareは、米国を含むブラジル国外のサーバーでデータを処理します。これらの移転はサービスの提供に必要であり、LGPDの保護措置(第33条)に従っています。',
+          'Meta、Cloudflare、Resendは、米国を含むブラジル国外のサーバーでデータを処理します。これらの移転はサービスの提供に必要であり、LGPDの保護措置(第33条)に従っています。',
         ],
         items: [],
       },

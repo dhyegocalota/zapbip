@@ -11,7 +11,7 @@ const TRUNCATED_BYTES = 4;
 const DECIMAL_BASE = 10;
 const CODE_PATTERN = new RegExp(`^[0-9]{${TOTP_DIGITS}}$`);
 
-function counterBytesOf(input: { step: number }): Uint8Array {
+function counterBytesOf(input: { step: number }): Uint8Array<ArrayBuffer> {
   const counter = new DataView(new ArrayBuffer(COUNTER_BYTES));
   counter.setBigUint64(0, BigInt(input.step));
   return new Uint8Array(counter.buffer);

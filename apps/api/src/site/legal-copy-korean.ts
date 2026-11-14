@@ -126,7 +126,7 @@ export const KOREAN_LEGAL_COPY: Record<LegalDocument, LegalText> = {
         paragraphs: ['회원님의 데이터를 판매하지 않으며, 광고를 보여 주지 않고, 메시지를 AI 모델 학습에 사용하지 않습니다.'],
         items: [
           '요청하신 서비스를 제공하기 위해: 회원님과 에이전트 사이에 메시지를 전달하고 계정을 운영합니다(LGPD 제7조 V).',
-          '대기자 명단을 관리하고 초대를 보내기 위해: 등록 시 주신 동의에 따릅니다(제7조 I).',
+          '대기자 명단을 관리하고 관련 메일(등록 시 환영 메일, 이용 권한 소식, 초대)을 보내기 위해: 등록 시 주신 동의에 따릅니다(제7조 I).',
           'zapbip을 안전하게 유지하고 악용을 막기 위해: 대기자 양식의 캡차와 요청 횟수 제한 등이 해당합니다(정당한 이익, 제7조 IX).',
           '법적 의무를 이행하기 위해(제7조 II).',
         ],
@@ -151,12 +151,13 @@ export const KOREAN_LEGAL_COPY: Record<LegalDocument, LegalText> = {
           'Meta Platforms: 모든 WhatsApp 메시지를 전달하는 공식 WhatsApp Business 플랫폼을 통해.',
           'Cloudflare: 서비스와 저장소를 호스팅하고, 대기자 양식의 캡차(Turnstile)를 실행합니다.',
           'Mintlify: docs.zapbip.com의 문서를 호스팅합니다.',
+          'Resend: 대기자 명단 환영 메일 등 저희 메일을 보냅니다.',
         ],
       },
       {
         heading: '국외 이전',
         paragraphs: [
-          'Meta와 Cloudflare는 미국을 포함해 브라질 밖에 있는 서버에서 데이터를 처리합니다. 이러한 이전은 서비스 제공에 필요하며 LGPD의 보호 조치(제33조)를 따릅니다.',
+          'Meta, Cloudflare, Resend는 미국을 포함해 브라질 밖에 있는 서버에서 데이터를 처리합니다. 이러한 이전은 서비스 제공에 필요하며 LGPD의 보호 조치(제33조)를 따릅니다.',
         ],
         items: [],
       },

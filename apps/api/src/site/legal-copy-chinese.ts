@@ -127,7 +127,7 @@ export const CHINESE_LEGAL_COPY: Record<LegalDocument, LegalText> = {
         paragraphs: ['我们不出售你的数据，不展示广告，也不会用你的消息训练 AI 模型。'],
         items: [
           '提供你所要求的服务：在你与智能体之间传递消息并运营你的账户（LGPD 第 7 条 V 项）。',
-          '管理候补名单并发送邀请，基于你加入时给予的同意（第 7 条 I 项）。',
+          '管理候补名单并向你发送相关邮件（加入时的欢迎邮件、使用资格的最新消息和邀请），基于你加入时给予的同意（第 7 条 I 项）。',
           '保障 zapbip 的安全并防止滥用，例如候补名单表单上的验证码和频率限制（正当利益，第 7 条 IX 项）。',
           '履行法定义务（第 7 条 II 项）。',
         ],
@@ -152,12 +152,13 @@ export const CHINESE_LEGAL_COPY: Record<LegalDocument, LegalText> = {
           'Meta Platforms：通过官方的 WhatsApp Business 平台传递每一条 WhatsApp 消息。',
           'Cloudflare：托管服务及其存储，并运行候补名单表单上的验证码（Turnstile）。',
           'Mintlify：托管 docs.zapbip.com 上的文档。',
+          'Resend：发送我们的邮件，例如候补名单的欢迎邮件。',
         ],
       },
       {
         heading: '跨境传输',
         paragraphs: [
-          'Meta 和 Cloudflare 会在巴西境外的服务器上处理数据，包括美国。这些传输是提供服务所必需的，并遵循 LGPD 的保障措施（第 33 条）。',
+          'Meta、Cloudflare 和 Resend 会在巴西境外的服务器上处理数据，包括美国。这些传输是提供服务所必需的，并遵循 LGPD 的保障措施（第 33 条）。',
         ],
         items: [],
       },

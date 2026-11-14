@@ -194,7 +194,7 @@ export const ARABIC_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.PrivacyKeysBody]: 'لكل وكيل سرّه الخاص. أبطل أيًّا منها من WhatsApp في أي وقت.',
   [SiteCopyKey.PrivacyWaitlistTitle]: 'عن قائمة الانتظار هذه',
   [SiteCopyKey.PrivacyWaitlistBody]:
-    'نحتفظ ببريدك الإلكتروني ولغتك وبيانات الدعوات لندعوك فقط. لا نخزّن عنوان IP ولا نضع ملفات تعريف ارتباط للتتبع؛ ملفا تعريف ارتباط يتذكران لغتك ومظهرك. لإزالة بياناتك، راسل {contactEmail}.',
+    'نحتفظ ببريدك الإلكتروني ولغتك وبيانات الدعوات فقط لنرحّب بك ونخبرك بأخبار وصولك وندعوك. لا نخزّن عنوان IP ولا نضع ملفات تعريف ارتباط للتتبع؛ ملفا تعريف ارتباط يتذكران لغتك ومظهرك. لإزالة بياناتك، راسل {contactEmail}.',
   [SiteCopyKey.FaqEyebrow]: 'الأسئلة الشائعة',
   [SiteCopyKey.FaqTitle]: 'الأسئلة',
   [SiteCopyKey.FaqWhenQuestion]: 'متى أستطيع استخدامه؟',

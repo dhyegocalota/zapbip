@@ -13,7 +13,7 @@ export function encodeBase32(input: { bytes: Uint8Array }): string {
     .join('');
 }
 
-export function decodeBase32(input: { value: string }): Uint8Array {
+export function decodeBase32(input: { value: string }): Uint8Array<ArrayBuffer> {
   const characters = input.value.toUpperCase().replaceAll(PADDING, '').split('');
   const bits = characters.reduce<{ buffer: number; length: number; bytes: number[] }>(
     (state, character) => {

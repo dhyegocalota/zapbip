@@ -6,8 +6,18 @@ import { D1UsageRepository } from '../adapters/d1/d1-usage-repository';
 import type { Bindings } from '../contract/env';
 import { recheckTemplates } from '../numbers/template-recheck';
 import { runBudgetCheck } from './budget-check';
-import { BUDGET_CHECK_MINUTE, MEDIA_RETENTION_HOUR, MEDIA_RETENTION_MINUTE, SCHEDULED_CRON, TEMPLATE_RECHECK_MINUTE } from './constants';
+import {
+  BUDGET_CHECK_MINUTE,
+  MEDIA_RETENTION_HOUR,
+  MEDIA_RETENTION_MINUTE,
+  SCHEDULED_CRON,
+  SUBSCRIBER_DIGEST_HOUR,
+  SUBSCRIBER_DIGEST_MINUTE,
+  TEMPLATE_RECHECK_MINUTE,
+} from './constants';
 import { runMediaRetention } from './media-retention';
+import { runSubscriberDigest } from './subscriber-digest';
+import { createEmailSender } from '../emails/email-delivery';
 
 export type ScheduledJob = {
   isDue: (input: { now: number }) => boolean;
@@ -22,6 +32,7 @@ export enum ScheduledJobName {
   MediaRetention = 'media_retention',
   BackofficePrune = 'backoffice_prune',
   ClientAppPrune = 'client_app_prune',
+  SubscriberDigest = 'subscriber_digest',
 }
 
 const EVERY_TICK = (): boolean => true;
@@ -60,6 +71,14 @@ export const SCHEDULED_JOBS: Record<ScheduledJobName, ScheduledJob> = {
   [ScheduledJobName.ClientAppPrune]: {
     isDue: EVERY_TICK,
     run: ({ env, now }) => pruneClientApp({ database: env.CONNECTIONS, now }),
+  },
+  [ScheduledJobName.SubscriberDigest]: {
+    isDue: ({ now }) => {
+      const tick = new Date(now);
+      return tick.getUTCHours() === SUBSCRIBER_DIGEST_HOUR && tick.getUTCMinutes() === SUBSCRIBER_DIGEST_MINUTE;
+    },
+    run: ({ env, now }) =>
+      runSubscriberDigest({ database: env.CONNECTIONS, sender: createEmailSender({ env, fetchImplementation: fetch }), now }),
   },
 };
 
