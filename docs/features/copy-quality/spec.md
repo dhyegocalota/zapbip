@@ -1,6 +1,6 @@
 # Copy quality
 
-**Status:** Building
+**Status:** Shipped 2026-11-14
 **Tier:** 🟢 routine
 **Owner approval:** approved 2026-11-14 (owner delegated; his words: "better to say 'Prompt in ..'" and "make sure each language does not 'sound funny', like 'você toca' which should be 'você responde'")
 **ADRs:** none; no rule changes
