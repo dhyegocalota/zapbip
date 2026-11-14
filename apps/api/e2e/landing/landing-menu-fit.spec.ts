@@ -1,10 +1,11 @@
 import { OwnerLocale } from '@zapbip/types';
 import { localePathOf } from '../../src/site/site-language';
-import { test } from './fixtures';
+import { expect, test } from './fixtures';
 import { expectEveryOptionReachedInsideMenu, expectOpenMenuInsideScreen, MENU_FIT_VIEWPORTS } from './support/menu-fit';
 
 const MENU_PATHS = [localePathOf({ locale: OwnerLocale.EnglishUs }), localePathOf({ locale: OwnerLocale.Arabic })];
 const FOOTER = '.site-footer';
+const LEADING_MARK_SCRIPT = "getComputedStyle(document.querySelector('.site-footer .lang-trigger'), '::before').content";
 
 for (const viewport of MENU_FIT_VIEWPORTS) {
   test.describe(`${viewport.name} ${viewport.width}x${viewport.height}`, () => {
@@ -21,3 +22,8 @@ for (const viewport of MENU_FIT_VIEWPORTS) {
     }
   });
 }
+
+test('the Arabic menu trigger draws a single chevron', async ({ page }) => {
+  await page.goto(localePathOf({ locale: OwnerLocale.Arabic }));
+  expect(await page.evaluate(LEADING_MARK_SCRIPT)).toBe('none');
+});
