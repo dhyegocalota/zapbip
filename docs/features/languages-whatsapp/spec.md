@@ -1,6 +1,6 @@
 # Languages (WhatsApp)
 
-**Status:** Building
+**Status:** Shipped 2026-11-14
 **Tier:** 🔴 structural
 **Owner approval:** approved 2026-11-14 (owner delegated; the request is his word: "translate everything to Spanish, Chinese, German, French, Japanese and Korean", phase C of three)
 **ADRs:** [0051](../../adr/0051-whatsapp-speaks-eight-languages-and-the-template-of-a-language-is-chosen-by-a-table.md), [0047](../../adr/0047-the-web-surfaces-speak-eight-languages-through-a-web-locale-while-whatsapp-copy-stays-in-two.md) (superseded in part)
