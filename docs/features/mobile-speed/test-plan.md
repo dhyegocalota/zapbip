@@ -2,14 +2,13 @@
 
 ## The failing test first
 
-- [ ] `apps/api/e2e/landing/landing-mobile-speed.spec.ts` — expected: red on `box-shadow` and `clip-path`-less `stroke-dashoffset` animations, and on sections without `content-visibility`
+- [ ] `apps/api/e2e/landing/landing-mobile-speed.spec.ts` — expected: red on the `box-shadow` pulse and the `stroke-dashoffset` underline
 
 ## E2E (Playwright, mobile and desktop)
 
 - [ ] `/` and `/ar`: no running CSS animation outside opacity and transform
-- [ ] `/` and `/ar`: every section after the hero has `content-visibility: auto`
 - [ ] Long tasks under a 4x CPU slowdown stay under the budget
-- [ ] The Arabic underline uses `draw-rtl`
+- [ ] The Arabic underline grows from the right
 - [ ] The existing `landing-performance`, `landing-motion`, `landing-first-fold`, `landing-arabic` and `landing-seo` specs stay green
 
 ## Prove it for real

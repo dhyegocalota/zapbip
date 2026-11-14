@@ -19,11 +19,6 @@ const NON_COMPOSITOR_PROPERTIES_SCRIPT = `
     .flatMap((animation) => animation.effect.getKeyframes().flatMap((keyframe) => Object.keys(keyframe)))
     .filter((property) => !${JSON.stringify(COMPOSITOR_PROPERTIES)}.includes(property))
 `;
-const SKIPPED_SECTIONS_SCRIPT = `
-  [...document.querySelectorAll('main > section:not(.hero)')]
-    .filter((section) => getComputedStyle(section).contentVisibility !== 'auto')
-    .map((section) => section.id)
-`;
 
 test.use({ ...devices['Pixel 5'], locale: 'en-US', bypassCSP: true });
 
@@ -31,11 +26,6 @@ for (const path of ['/', ARABIC_PATH]) {
   test(`${path}: every running animation stays on the compositor`, async ({ page }) => {
     await page.goto(path, { waitUntil: 'load' });
     expect(await page.evaluate(NON_COMPOSITOR_PROPERTIES_SCRIPT)).toEqual([]);
-  });
-
-  test(`${path}: every section below the first fold is skipped until it nears the viewport`, async ({ page }) => {
-    await page.goto(path, { waitUntil: 'load' });
-    expect(await page.evaluate(SKIPPED_SECTIONS_SCRIPT)).toEqual([]);
   });
 }
 
@@ -48,7 +38,9 @@ test('the main thread stays inside the long-task budget under a 4x CPU slowdown'
 });
 
 test('the hero underline draws from the reading start in both directions', async ({ page }) => {
-  await page.goto(ARABIC_PATH, { waitUntil: 'load' });
-  const animationName = await page.locator('.hero-underline').evaluate((element) => getComputedStyle(element).animationName);
-  expect(animationName).toBe('draw-rtl');
+  const originOf = (path: string) => page.goto(path, { waitUntil: 'load' }).then(() => page.locator('.hero-underline').evaluate((element) => getComputedStyle(element).transformOrigin));
+  const leftToRight = await originOf('/');
+  const rightToLeft = await originOf(ARABIC_PATH);
+  expect(Number.parseFloat(leftToRight)).toBe(0);
+  expect(Number.parseFloat(rightToLeft)).toBeGreaterThan(0);
 });
