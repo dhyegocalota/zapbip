@@ -14,7 +14,7 @@ const ONE_HOP_PHRASES: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.German]: 'Eine Bereitschaftsverbindung leitet nie an eine weitere Bereitschaftsverbindung weiter',
   [DocsPageLanguage.French]: 'Une connexion en veille ne transfère jamais vers une autre en veille',
   [DocsPageLanguage.Japanese]: '待機の接続が別の待機の接続へ転送することはありません',
-  [DocsPageLanguage.Korean]: '대기 연결은 다른 대기 연결로 전달하지 않습니다',
+  [DocsPageLanguage.Korean]: '대기 연결은 다른 대기 연결로 전달하지 않아요',
   [DocsPageLanguage.Chinese]: '待命连接绝不会转发给另一个待命连接',
 };
 const ONE_HOP_WORDS: Record<DocsPageLanguage, string> = {

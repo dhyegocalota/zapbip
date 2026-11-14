@@ -41,7 +41,7 @@ describe('applyOwnerCommand', () => {
   test.each([
     { kind: CommandKind.CreateAgent, usage: 'novo agente <nome>' },
     { kind: CommandKind.RevokeAgent, usage: 'revogar <nome>' },
-    { kind: CommandKind.RotateAgent, usage: 'girar <nome>' },
+    { kind: CommandKind.RotateAgent, usage: 'renovar <nome>' },
   ])('a list tap for $kind replies with its usage line and changes nothing', async ({ kind, usage }) => {
     const { fixture, result } = await apply({ command: commandOf({ kind }) });
     expect(intentsOf({ result })).toEqual([AccountReplyIntent.Usage]);

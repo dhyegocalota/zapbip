@@ -21,7 +21,7 @@ export const INBOX_COPY: Record<InboxCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.German]: 'Diese Liste wurde schon verwendet.',
     [OwnerLocale.French]: 'Cette liste a déjà été utilisée.',
     [OwnerLocale.Japanese]: 'このリストはすでに使用済みです。',
-    [OwnerLocale.Korean]: '이 목록은 이미 사용했습니다.',
+    [OwnerLocale.Korean]: '이 목록은 이미 사용했어요.',
     [OwnerLocale.ChineseSimplified]: '这个列表已经用过了。',
   },
   [InboxCopyKey.RoutingListReminder]: {
@@ -41,7 +41,7 @@ export const INBOX_COPY: Record<InboxCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.German]: 'Es ist kein Agent verbunden. Deine Nachricht ist gespeichert.',
     [OwnerLocale.French]: 'Aucun agent n’est connecté. Votre message est conservé.',
     [OwnerLocale.Japanese]: '接続されているエージェントがありません。メッセージは保管されています。',
-    [OwnerLocale.Korean]: '연결된 에이전트가 없습니다. 메시지는 저장되어 있습니다.',
+    [OwnerLocale.Korean]: '연결된 에이전트가 없어요. 메시지는 저장되어 있어요.',
     [OwnerLocale.ChineseSimplified]: '没有已连接的智能体。你的消息已保存。',
   },
   [InboxCopyKey.AgentNotListening]: {
@@ -51,7 +51,7 @@ export const INBOX_COPY: Record<InboxCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.German]: 'Der Agent {agent} hört gerade nicht zu. Deine Nachricht wartet im Posteingang.',
     [OwnerLocale.French]: 'L’agent {agent} n’écoute pas pour le moment. Votre message attend dans la boîte de réception.',
     [OwnerLocale.Japanese]: 'エージェント{agent}は現在待ち受けていません。メッセージは受信箱で待機しています。',
-    [OwnerLocale.Korean]: '에이전트 {agent}이(가) 지금은 듣고 있지 않습니다. 메시지는 받은 편지함에서 기다립니다.',
+    [OwnerLocale.Korean]: '에이전트 {agent}이(가) 지금은 듣고 있지 않아요. 메시지는 받은 편지함에서 기다려요.',
     [OwnerLocale.ChineseSimplified]: '智能体 {agent} 现在没有在监听。你的消息在收件箱里等候。',
   },
   [InboxCopyKey.AgentAssignedByExpiry]: {
@@ -61,7 +61,7 @@ export const INBOX_COPY: Record<InboxCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.German]: 'Du hast keinen Agenten gewählt, deshalb ging deine Nachricht an {agent}. Sie wartet im Posteingang.',
     [OwnerLocale.French]: 'Vous n’avez pas choisi d’agent, votre message est donc allé à {agent}. Il attend dans la boîte de réception.',
     [OwnerLocale.Japanese]: 'エージェントが選ばれなかったため、メッセージは{agent}に送られました。受信箱で待機しています。',
-    [OwnerLocale.Korean]: '에이전트를 고르지 않아서 메시지가 {agent}에게 갔습니다. 받은 편지함에서 기다립니다.',
+    [OwnerLocale.Korean]: '에이전트를 고르지 않아서 메시지가 {agent}에게 갔어요. 받은 편지함에서 기다려요.',
     [OwnerLocale.ChineseSimplified]: '你没有选择智能体，所以消息发给了 {agent}。它在收件箱里等候。',
   },
   [InboxCopyKey.NoticeBody]: {
@@ -71,7 +71,7 @@ export const INBOX_COPY: Record<InboxCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.German]: 'Der Agent {agent} hat eine Nachricht für dich: {preview}',
     [OwnerLocale.French]: 'L’agent {agent} a un message pour vous\u00a0: {preview}',
     [OwnerLocale.Japanese]: 'エージェント{agent}からメッセージです: {preview}',
-    [OwnerLocale.Korean]: '에이전트 {agent}이(가) 메시지를 보냈습니다: {preview}',
+    [OwnerLocale.Korean]: '에이전트 {agent}이(가) 메시지를 보냈어요: {preview}',
     [OwnerLocale.ChineseSimplified]: '智能体 {agent} 有一条消息给你：{preview}',
   },
   [InboxCopyKey.QuestionNoticeBody]: {
@@ -81,7 +81,7 @@ export const INBOX_COPY: Record<InboxCopyKey, Record<OwnerLocale, string>> = {
     [OwnerLocale.German]: 'Der Agent {agent} hat eine Frage an dich: {preview}',
     [OwnerLocale.French]: 'L’agent {agent} a une question pour vous\u00a0: {preview}',
     [OwnerLocale.Japanese]: 'エージェント{agent}から質問です: {preview}',
-    [OwnerLocale.Korean]: '에이전트 {agent}이(가) 질문을 보냈습니다: {preview}',
+    [OwnerLocale.Korean]: '에이전트 {agent}이(가) 질문을 보냈어요: {preview}',
     [OwnerLocale.ChineseSimplified]: '智能体 {agent} 有一个问题要问你：{preview}',
   },
   [InboxCopyKey.NoticeQuickReply]: {

@@ -143,3 +143,38 @@ Instructions that tell the person to press a real button on a real screen: "tap 
 - Spanish uses "ordenador" and "móvil" (Spain) throughout; a Latin American variant would say "computadora" and "celular".
 - The Meta templates in the six newer languages are still the English ones until approved; their wording is for the owner to confirm at submission.
 - Demo videos and Open Graph images may still show the English button labels "Ship it" and "Wait"; lane L11 owns them, and the image alt texts now name the localized labels.
+
+## Second review (copy-review-complete)
+
+Registers decided by the orchestrator and applied everywhere a person is addressed: Korean 해요체 (합니다체 only in the legal pages and the operator backoffice), neutral Latin American Spanish with tú, German du, French vous, Japanese です/ます, Chinese 你 (never 您). `copy-literal-translation-traps.test.ts` bans each register's giveaways: Korean 합니다 forms outside legal and backoffice copy, Spanish ordenador, móvil, pulsas, vosotros, vuestro, Chinese 您.
+
+| Language | Before | After |
+| --- | --- | --- |
+| pt-BR | rotate command `girar` (and "Girar link") | `renovar`, with tests, docs and install prompts moved; the English `rotate` still works |
+| pt-BR | ainda não é suportado | ainda não tem suporte |
+| es | el ordenador, tu móvil | la computadora, tu celular |
+| es | cuando pulsas Ctrl+C | cuando presionas Ctrl+C |
+| es | Al apuntarte / que se apunte | Al registrarte / que se registre |
+| es | te avisaremos cuando se abra | te avisaremos cuando tu acceso esté activo |
+| de | sobald er öffnet | sobald er freigeschaltet ist |
+| de | Dieser Link funktioniert einmal und 30 Minuten lang | Dieser Link ist 30 Minuten gültig und nur einmal nutzbar |
+| de | Verbinde dich mit zapbip mit meinem WhatsApp | Verbinde dich über zapbip mit meinem WhatsApp |
+| de | Der Besitzer (docs) | der Owner, as in the rest of the docs |
+| fr | Connecte-toi à mon WhatsApp … lis … suis | Connectez-vous à mon WhatsApp … lisez … suivez |
+| fr | Envoie ✅ installé quand tu es installé | Envoyez ✅ installé quand vous avez terminé |
+| fr | à l’ouverture / Votre accès est ouvert | dès que votre accès sera activé / Votre accès est activé |
+| fr | Ce lien fonctionne une seule fois pendant 30 minutes | Ce lien est valable 30 minutes et ne fonctionne qu’une fois |
+| ja | あなたはすでにWhatsAppで暮らしています | あなたはいつもWhatsAppを使っています |
+| ja | アクセスが開放されたら / アクセスが開いたら | 利用できるようになったら |
+| ja | メッセージを押し込み | メッセージを届け |
+| ko | 합니다, 입니다, 습니다 across the site, app, WhatsApp copy, docs and install prompts (about 1,000 lines) | 해요, 이에요/예요, 어요 |
+| ko | 이용이 열리면 / 이용이 열렸어요 | 이용할 수 있게 되면 / 이제 이용할 수 있어요 |
+| zh | no change needed in the WhatsApp copy, docs index, FAQ and command pages | read in full; clean |
+
+The Korean conversion was rule-based (stem and vowel contraction, copula by final consonant) and read through for irregular verbs (ㅂ, ㄷ, ㅅ, 르) in the list of distinct conversions; code spans and Latin words before 입니다 were fixed by hand.
+
+### Unsure
+
+- The legal pages were checked for register and for the one sentence changed in the first pass; the Spanish one now says "registrarte". No legal substance moved.
+- Docs pages beyond the home, FAQ, commands and how-to-start of each language were scanned for owner, client, gesture and register words, not read line by line.
+- Korean backoffice copy stays in 합니다체: it addresses the operator, not the owner.

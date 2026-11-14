@@ -71,7 +71,7 @@ describe('an owner of each language through the inbound handler', () => {
     await deliver({ bindings: bindings(), text: 'new agent helper', waId });
     expect(await screenOf({ waId })).toContain('rotate helper');
     await deliver({ bindings: bindings(), text: 'novo agente outro', waId });
-    expect(await screenOf({ waId })).toContain('girar outro');
+    expect(await screenOf({ waId })).toContain('renovar outro');
   });
 
   it('changes the language with the language command and answers the next message in it', async () => {

@@ -13,7 +13,7 @@ const WAKE_NOTE: Record<OwnerLocale, string> = {
   [OwnerLocale.French]:
     'Cursor écoute via le terminal en arrière-plan et répond en quelques secondes tant qu’il tourne, sans limite de temps.',
   [OwnerLocale.Japanese]: 'Cursorはバックグラウンドのターミナルを通じて待ち受け、実行中は数秒で応答します。時間制限はありません。',
-  [OwnerLocale.Korean]: 'Cursor는 백그라운드 터미널을 통해 듣고, 실행되는 동안 몇 초 안에 답합니다. 시간 제한은 없습니다.',
+  [OwnerLocale.Korean]: 'Cursor는 백그라운드 터미널을 통해 듣고, 실행되는 동안 몇 초 안에 답해요. 시간 제한은 없어요.',
   [OwnerLocale.ChineseSimplified]: 'Cursor 通过后台终端监听，运行期间几秒内就会回应，不限时。',
 };
 const RESTART_MARK: Record<OwnerLocale, string> = {

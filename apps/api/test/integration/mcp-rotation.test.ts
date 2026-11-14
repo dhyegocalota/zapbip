@@ -47,7 +47,7 @@ describe('rotating a connection over WhatsApp', () => {
   it('[row 403][row 404] AK-2 stops the old secret at once and opens the new one through MCP', async () => {
     const oldPath = await latestMcpPath({ accountId: await accountId() });
     expect((await postMcp({ path: oldPath })).status).toBe(STATUS_OK);
-    await deliver({ bindings, text: `girar ${AGENT_NAME}` });
+    await deliver({ bindings, text: `renovar ${AGENT_NAME}` });
     const newPath = await latestMcpPath({ accountId: await accountId() });
     expect(newPath).not.toBe(oldPath);
     expect((await postMcp({ path: oldPath })).status).toBe(STATUS_UNAUTHORIZED);
@@ -61,7 +61,7 @@ describe('rotating a connection over WhatsApp', () => {
     const oldPath = await latestMcpPath({ accountId: await accountId() });
     const oldSession = await openConnector({ secret: oldPath.split('/')[SECRET_SEGMENT_INDEX] as string });
     await oldSession.nextFrame();
-    await deliver({ bindings, text: `girar ${AGENT_NAME}` });
+    await deliver({ bindings, text: `renovar ${AGENT_NAME}` });
     expect(await oldSession.closeCode()).toBe(REVOKED_CLOSE_CODE);
     expect(oldSession.receivedCount()).toBe(0);
     const newPath = await latestMcpPath({ accountId: await accountId() });
@@ -74,26 +74,26 @@ describe('rotating a connection over WhatsApp', () => {
     const id = await accountId();
     const oldPath = await latestMcpPath({ accountId: id });
     await failNextSessionSend({ accountId: id });
-    await deliver({ bindings, text: `girar ${AGENT_NAME}` });
+    await deliver({ bindings, text: `renovar ${AGENT_NAME}` });
     expect((await postMcp({ path: oldPath })).status).toBe(STATUS_OK);
   });
 
   it('[row 497][row 508][row 544] restores the old link and its install code when the second rotate reply fails to send', async () => {
     const id = await accountId();
     const firstPath = await latestMcpPath({ accountId: id });
-    await deliver({ bindings, text: `girar ${AGENT_NAME}` });
+    await deliver({ bindings, text: `renovar ${AGENT_NAME}` });
     const rotatedCode = await latestInstallCode({ accountId: id });
     const rotatedPath = await latestMcpPath({ accountId: id });
     expect((await postMcp({ path: firstPath })).status).toBe(STATUS_UNAUTHORIZED);
     await failNextSessionSend({ accountId: id });
-    await deliver({ bindings, text: `girar ${AGENT_NAME}` });
+    await deliver({ bindings, text: `renovar ${AGENT_NAME}` });
     const restored = await installCodeDirectory().resolve({ installCode: rotatedCode, now: Date.now() });
     expect(restored.status).toBe(InstallCodeStatus.Ready);
     expect((await postMcp({ path: rotatedPath })).status).toBe(STATUS_OK);
   });
 
   it('[row 500] answers the owner message that follows a rotate', async () => {
-    await deliver({ bindings, text: `girar ${AGENT_NAME}` });
+    await deliver({ bindings, text: `renovar ${AGENT_NAME}` });
     await deliver({ bindings, text: 'agentes' });
     const id = await accountId();
     expect((await screenTextsOf({ accountId: id })).at(-1)).toContain(AGENT_NAME);

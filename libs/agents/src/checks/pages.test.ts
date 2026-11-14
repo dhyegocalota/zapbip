@@ -26,7 +26,7 @@ const LISTENER_TAILS: Partial<Record<DocsPageLanguage, string>> = {
   [DocsPageLanguage.German]: ', niemals beide. Ein zweiter Listener ersetzt den ersten.',
   [DocsPageLanguage.French]: ', jamais les deux. Un second listener remplace le premier.',
   [DocsPageLanguage.Japanese]: ' のどちらか一方で、両方は使わないでください。2 つ目のリスナーは 1 つ目を置き換えます。',
-  [DocsPageLanguage.Korean]: ' 중 하나만 쓰고, 둘 다 쓰지 마세요. 두 번째 리스너는 첫 번째를 대체합니다.',
+  [DocsPageLanguage.Korean]: ' 중 하나만 쓰고, 둘 다 쓰지 마세요. 두 번째 리스너는 첫 번째를 대체해요.',
   [DocsPageLanguage.Chinese]: '，不要两者同时使用。第二个 listener 会替换第一个。',
 };
 const PLUGIN: AgentPlugin = {

@@ -281,7 +281,7 @@ describe('AccountInbox receiveAccountMessage', () => {
     });
     await vi.waitFor(async () => expect(await hasLiveWaiter({ agent: 'alpha' })).toBe(true));
     const hadLiveWaiter = await recordWaiterAtNextSessionSend({ accountId: ACCOUNT, agent: 'alpha' });
-    await receive({ text: 'girar alpha', channelMessageId: 'wamid.held-rotate' });
+    await receive({ text: 'renovar alpha', channelMessageId: 'wamid.held-rotate' });
     expect(hadLiveWaiter()).toBe(true);
     expect(await holding).toMatchObject({ ok: true, value: { status: ReplyStatus.Pending } });
     expect(await listRevokedAgents()).toEqual([]);

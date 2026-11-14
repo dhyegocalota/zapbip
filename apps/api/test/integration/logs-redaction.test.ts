@@ -30,11 +30,11 @@ describe('logs over the owner walk', () => {
     await deliver({ bindings, text: 'oi' });
     await deliver({ bindings, text: `novo agente ${AGENT_NAME}` });
     await deliver({ bindings, text: 'agentes' });
-    await deliver({ bindings, text: `girar ${AGENT_NAME}` });
+    await deliver({ bindings, text: `renovar ${AGENT_NAME}` });
     const [account] = await findAccounts({ waId: WA_ID });
     if (account === undefined) throw new Error('account is missing');
     await failNextSessionSend({ accountId: account.accountId });
-    await deliver({ bindings, text: `girar ${AGENT_NAME}` });
+    await deliver({ bindings, text: `renovar ${AGENT_NAME}` });
     await deliver({ bindings, text: `revogar ${AGENT_NAME}` });
     await deliver({ bindings, waId: BLOCKED_PHONE, text: 'oi' });
     await deliver({ bindings: limited, waId: LIMITED_PHONE, text: 'oi' });

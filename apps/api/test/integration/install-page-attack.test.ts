@@ -290,7 +290,7 @@ describe('install page attacks', () => {
     const response = await getPage({ installCode: registered.installCode });
     const text = await response.text();
     expect(response.status).toBe(410);
-    expect(text).toContain('girar <nome>');
+    expect(text).toContain('renovar <nome>');
     expect(text).not.toContain(registered.secret);
   });
 });

@@ -5,9 +5,9 @@ description: 'Los comandos connect, listen y channel de zapbip: opciones, variab
 
 Normalmente tu IA solo lee WhatsApp cuando ya está trabajando. Si le escribes mientras está inactiva, tu mensaje espera.
 
-El conector de zapbip lo arregla. Es un programa pequeño que se queda abierto en tu ordenador. Cuando escribes en WhatsApp, despierta la sesión de IA que ya usabas, le entrega tu mensaje y deja que te responda. Tarda unos 7 segundos con Claude Code y 6 con Codex.
+El conector de zapbip lo arregla. Es un programa pequeño que se queda abierto en tu computadora. Cuando escribes en WhatsApp, despierta la sesión de IA que ya usabas, le entrega tu mensaje y deja que te responda. Tarda unos 7 segundos con Claude Code y 6 con Codex.
 
-Funciona con Claude Code y Codex. Tu ordenador debe estar encendido y despierto, y el conector debe estar en marcha.
+Funciona con Claude Code y Codex. Tu computadora debe estar encendido y despierto, y el conector debe estar en marcha.
 
 ## Comandos
 
@@ -42,7 +42,7 @@ npx zapbip@0.1.0 connect --client codex
 
 Si no defines `ZAPBIP_CONNECTION_URL`, el conector te pide el enlace. Nunca toma el enlace como argumento, porque los argumentos aparecen en el historial de tu shell y en la lista de procesos.
 
-Deja la terminal abierta. El conector imprime una línea por cada evento y se detiene cuando pulsas `Ctrl+C`. Para mantenerlo en marcha sin una terminal, mira [Ejecútalo en segundo plano](/es/developers/background-running).
+Deja la terminal abierta. El conector imprime una línea por cada evento y se detiene cuando presionas `Ctrl+C`. Para mantenerlo en marcha sin una terminal, mira [Ejecútalo en segundo plano](/es/developers/background-running).
 
 ## Qué pasa cuando escribes
 
@@ -126,7 +126,7 @@ Así que las tres formas encajan: el canal para una sesión abierta, `listen` co
 
 ## Un conector por conexión
 
-Si inicias un segundo conector para la misma conexión, el primero termina la activación que está ejecutando y se detiene. Ejecútalo en un ordenador cada vez. Si llega un mensaje justo cuando cambias, ambos conectores pueden despertar a tu IA para ese mismo mensaje una vez; zapbip entrega al menos una vez, nunca cero veces.
+Si inicias un segundo conector para la misma conexión, el primero termina la activación que está ejecutando y se detiene. Ejecútalo en una computadora cada vez. Si llega un mensaje justo cuando cambias, ambos conectores pueden despertar a tu IA para ese mismo mensaje una vez; zapbip entrega al menos una vez, nunca cero veces.
 
 Mientras un conector está conectado, zapbip despierta a tu IA a través de él. Cuando se cierra, zapbip vuelve al ajuste que tenías antes.
 

@@ -36,7 +36,7 @@ export const SPANISH_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.ThanksTitle]: 'Ya estás en la lista de acceso anticipado.',
   [SiteCopyKey.ThanksBody]: 'Te escribiremos en cuanto se abra tu acceso. No tienes que hacer nada más.',
   [SiteCopyKey.ThanksReferralBody]:
-    'Te escribiremos por correo cuando tu acceso esté listo. ¿Lo quieres antes? Comparte tu enlace: cada amigo que se apunte te sube puestos.',
+    'Te escribiremos por correo cuando tu acceso esté listo. ¿Lo quieres antes? Comparte tu enlace: cada amigo que se registre te sube puestos.',
   [SiteCopyKey.ThanksLinkLabel]: 'Tu enlace de invitación',
   [SiteCopyKey.ThanksCopy]: 'Copiar enlace',
   [SiteCopyKey.ThanksCopied]: 'Copiado',
@@ -71,7 +71,7 @@ export const SPANISH_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.WhyRoutingBody]: 'Muchos agentes comparten un número. Tu respuesta vuelve al que preguntó.',
   [SiteCopyKey.WhyWakeTitle]: 'Escribe primero y se despierta',
   [SiteCopyKey.WhyWakeBody]:
-    'Tu mensaje despierta al agente aunque estuviera inactivo: en segundos en tu ordenador, o en su próxima comprobación.',
+    'Tu mensaje despierta al agente aunque estuviera inactivo: en segundos en tu computadora, o en su próxima comprobación.',
   [SiteCopyKey.WhyWakeIdle]: 'inactivo',
   [SiteCopyKey.WhyWakeAwake]: 'activo',
   [SiteCopyKey.WhyEveryAgentTitle]: 'Funciona con los agentes que ya usas',
@@ -88,7 +88,7 @@ export const SPANISH_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.HowStepConnectBody]: 'Escribe a zapbip por WhatsApp, recibe una línea y pégala en tu agente. Esa es toda la configuración.',
   [SiteCopyKey.HowStepConnectVisual]: '1 línea que pegar',
   [SiteCopyKey.HowStepTextTitle]: 'Te escribe',
-  [SiteCopyKey.HowStepTextBody]: 'Avisos, trabajo terminado y preguntas con botones llegan al móvil que ya llevas contigo.',
+  [SiteCopyKey.HowStepTextBody]: 'Avisos, trabajo terminado y preguntas con botones llegan al celular que ya llevas contigo.',
   [SiteCopyKey.HowStepTextVisualQuestion]: '¿Reservo el vuelo de las 9:40?',
   [SiteCopyKey.HowStepTextVisualYes]: 'Reservar',
   [SiteCopyKey.HowStepTextVisualNo]: 'Todavía no',
@@ -114,7 +114,7 @@ export const SPANISH_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.CapabilityMediaChatText]: 'Tu investigación está lista.',
   [SiteCopyKey.CapabilityMediaChatFile]: 'informe.pdf',
   [SiteCopyKey.CapabilityWakeTitle]: 'Puedes escribir tú primero',
-  [SiteCopyKey.CapabilityWakeBody]: 'Escribe a tu agente y se despierta: en segundos en tu ordenador, o en su próxima comprobación.',
+  [SiteCopyKey.CapabilityWakeBody]: 'Escribe a tu agente y se despierta: en segundos en tu computadora, o en su próxima comprobación.',
   [SiteCopyKey.CapabilityWakeChatYou]: '¿Pasó la compilación de anoche?',
   [SiteCopyKey.CapabilityWakeChatAgent]: 'Sí, todo en verde. ¿Quieres el registro?',
   [SiteCopyKey.CapabilityWakeChatChip]: 'despertó en 7 s',
@@ -219,7 +219,7 @@ export const SPANISH_SITE_COPY: Record<SiteCopyKey, string> = {
     'Sí. Todos tus agentes te escriben desde el número de zapbip, y cada respuesta vuelve al agente que preguntó.',
   [SiteCopyKey.FaqReferralQuestion]: '¿Cómo funcionan las invitaciones?',
   [SiteCopyKey.FaqReferralAnswer]:
-    'Al apuntarte recibes un enlace personal. Cada amigo que se apunte con él te sube en la lista. Hay un límite por persona, que verás al apuntarte.',
+    'Al registrarte recibes un enlace personal. Cada amigo que se registre con él te sube en la lista. Hay un límite por persona, que verás al registrarte.',
   [SiteCopyKey.FaqDataQuestion]: '¿Qué hacen con mi correo?',
   [SiteCopyKey.FaqDataAnswer]:
     'Lo usamos solo para invitarte cuando se abra el acceso. Sin dirección IP ni cookies de seguimiento. Para que te eliminemos, escribe a {contactEmail}.',

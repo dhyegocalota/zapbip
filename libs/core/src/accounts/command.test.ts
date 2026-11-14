@@ -48,8 +48,8 @@ describe('parseAccountCommand text', () => {
     ['novo agente    ', CommandKind.CreateAgent, '', OwnerLocale.PortugueseBrazil],
     ['revogar', CommandKind.RevokeAgent, '', OwnerLocale.PortugueseBrazil],
     ['revoke claude', CommandKind.RevokeAgent, 'claude', OwnerLocale.EnglishUs],
-    ['girar a imagem', CommandKind.RotateAgent, 'a imagem', OwnerLocale.PortugueseBrazil],
-    ['girar   Foo', CommandKind.RotateAgent, 'Foo', OwnerLocale.PortugueseBrazil],
+    ['renovar a imagem', CommandKind.RotateAgent, 'a imagem', OwnerLocale.PortugueseBrazil],
+    ['renovar   Foo', CommandKind.RotateAgent, 'Foo', OwnerLocale.PortugueseBrazil],
     ['rotate', CommandKind.RotateAgent, '', OwnerLocale.EnglishUs],
   ])('matches %j with a name', (text, kind, rawName, locale) => {
     expect(parseText({ text })).toEqual({ kind, rawName, locale });
