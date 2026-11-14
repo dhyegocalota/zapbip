@@ -17,10 +17,15 @@ const MAXIMUM_CARET_BLINKS = 5;
 const MAXIMUM_TOKEN_LINES = 1.5;
 const FULL_WIDTH_RATIO = 0.9;
 const TAB_ROW_PADDING = 4;
+const SETUP_PATH = '/setup.md';
 
 async function computedStyleOf(input: { page: Page; selector: string; pseudo: string | null; property: string }): Promise<string> {
   const pseudo = input.pseudo === null ? 'null' : `'${input.pseudo}'`;
   return input.page.evaluate(`getComputedStyle(document.querySelector('${input.selector}'), ${pseudo}).${input.property}`);
+}
+
+function promptOf(input: { page: Page }): string {
+  return siteCopy({ key: SiteCopyKey.StartPromptLine, values: { setupUrl: `${new URL(input.page.url()).origin}${SETUP_PATH}` } });
 }
 
 function tabOf(input: { page: Page; id: string }) {
@@ -82,7 +87,7 @@ test.describe('without a clipboard', () => {
     const panel = page.locator(`#start-panel-${FIRST_AGENT.id}`);
     await panel.scrollIntoViewIfNeeded();
     await panel.locator('.start-copy').click();
-    const expected = (await panel.locator('code').getAttribute('data-code'))!;
+    const expected = (await panel.locator('code').first().getAttribute('data-code'))!;
     const selection = (await page.evaluate('window.getSelection().toString()')) as string;
     expect(selection.replaceAll(/\s+/g, ' ').trim()).toBe(expected.replaceAll(/\s+/g, ' ').trim());
     await expect(page.locator('#start-announcement')).toHaveText(siteCopy({ key: SiteCopyKey.StartCopyFallback }));
@@ -125,7 +130,7 @@ test.describe('with the clipboard', () => {
     await page.goto('/');
     const panel = page.locator(`#start-panel-${FIRST_AGENT.id}`);
     await panel.scrollIntoViewIfNeeded();
-    const code = (await panel.locator('code').innerText()).trim();
+    const code = (await panel.locator('code').first().innerText()).trim();
     await panel.locator('.start-copy').click();
     expect(await page.evaluate('navigator.clipboard.readText()')).toBe(code);
     await expect(panel.locator('.start-copy')).toHaveText(siteCopy({ key: SiteCopyKey.StartCopied }));
@@ -256,7 +261,7 @@ test('a UI path agent shows its click path as numbered steps above the address',
   const steps = page.locator('.start-panel:not([hidden]) .code-path li');
   const expected = addressOnly.install.quickStart({ locale: OwnerLocale.EnglishUs, connectionLink: 'x' }).path;
   await expect(steps).toHaveText(expected);
-  await expect(page.locator('.start-panel:not([hidden]) code')).toContainText(SITE_EXAMPLE_CONNECTION_LINK);
+  await expect(page.locator('.start-panel:not([hidden]) .start-manual code')).toContainText(SITE_EXAMPLE_CONNECTION_LINK);
 });
 
 test.describe('typing in', () => {
@@ -267,16 +272,10 @@ test.describe('typing in', () => {
     await tabOf({ page, id: SECOND_AGENT.id }).click();
     const typing = await page.evaluate("document.getAnimations().some((animation) => animation.animationName === 'code-type')");
     expect(typing).toBe(true);
-    const expected = SECOND_AGENT.install.quickStart({
-      locale: OwnerLocale.EnglishUs,
-      connectionLink: SITE_EXAMPLE_CONNECTION_LINK,
-    }).code;
-    expect(await page.locator(`#start-panel-${SECOND_AGENT.id} code`).evaluate((element) => element.getAttribute('data-code'))).toBe(
-      expected,
-    );
-    expect((await page.locator(`#start-panel-${SECOND_AGENT.id} code`).textContent())!.replaceAll('\n', '')).toContain(
-      expected.split('\n')[0]!,
-    );
+    const expected = promptOf({ page });
+    const promptCode = page.locator(`#start-panel-${SECOND_AGENT.id} code`).first();
+    expect(await promptCode.evaluate((element) => element.getAttribute('data-code'))).toBe(expected);
+    expect(await promptCode.textContent()).toContain(expected);
     await expect
       .poll(() =>
         page.evaluate(
@@ -292,11 +291,7 @@ test.describe('typing in', () => {
     await page.locator('#start').scrollIntoViewIfNeeded();
     await tabOf({ page, id: SECOND_AGENT.id }).click();
     await page.locator(`#start-panel-${SECOND_AGENT.id} .start-copy`).click();
-    const expected = SECOND_AGENT.install.quickStart({
-      locale: OwnerLocale.EnglishUs,
-      connectionLink: SITE_EXAMPLE_CONNECTION_LINK,
-    }).code;
-    expect(await page.evaluate('navigator.clipboard.readText()')).toBe(expected);
+    expect(await page.evaluate('navigator.clipboard.readText()')).toBe(promptOf({ page }));
   });
 
   test.describe('with reduced motion', () => {
@@ -367,18 +362,58 @@ test.describe('375 px, edge fade and code', () => {
       agent.install.quickStart({ locale: OwnerLocale.EnglishUs, connectionLink: 'x' }).code.includes('--'),
     )!;
     await page.goto(`/?agent=${command.id}`);
-    const codeSelector = '.start-panel:not([hidden]) code';
+    await page.locator('.start-panel:not([hidden]) .start-manual summary').click();
+    const codeSelector = '.start-panel:not([hidden]) .start-manual code';
     expect(await computedStyleOf({ page, selector: codeSelector, pseudo: null, property: 'whiteSpace' })).toBe('pre-wrap');
     expect(await computedStyleOf({ page, selector: codeSelector, pseudo: null, property: 'overflowWrap' })).toBe('normal');
-    expect(await computedStyleOf({ page, selector: '.start-panel:not([hidden]) .tok-url', pseudo: null, property: 'overflowWrap' })).toBe(
-      'anywhere',
-    );
-    const flag = (await page.locator('.start-panel:not([hidden]) .tok-flag').first().boundingBox())!;
-    const line = (await page.locator('.start-panel:not([hidden]) .code-line').first().boundingBox())!;
+    expect(
+      await computedStyleOf({
+        page,
+        selector: '.start-panel:not([hidden]) .start-manual .tok-url',
+        pseudo: null,
+        property: 'overflowWrap',
+      }),
+    ).toBe('anywhere');
+    const flag = (await page.locator('.start-panel:not([hidden]) .start-manual .tok-flag').first().boundingBox())!;
+    const line = (await page.locator('.start-panel:not([hidden]) .start-manual .code-line').first().boundingBox())!;
     expect(flag.height).toBeLessThan(line.height * MAXIMUM_TOKEN_LINES);
     expect(await computedStyleOf({ page, selector: '.start-panel:not([hidden]) .code-block', pseudo: null, property: 'overflowX' })).toBe(
       'auto',
     );
     expect(await page.evaluate('document.documentElement.scrollWidth')).toBeLessThanOrEqual(MOBILE_WIDTH);
   });
+});
+
+test('every panel opens with the one line to paste and keeps the manual command collapsed until asked', async ({ page }) => {
+  await page.goto('/');
+  const panel = visiblePanelsOf({ page });
+  await expect(panel.locator('.code-block').first()).toContainText(promptOf({ page }));
+  const manual = panel.locator('.start-manual');
+  await expect(manual).not.toHaveAttribute('open', '');
+  await expect(manual.locator('.code-block')).toBeHidden();
+  await manual.locator('summary').click();
+  await expect(manual.locator('.code-block')).toBeVisible();
+  await expect(manual.locator('summary')).toHaveText(siteCopy({ key: SiteCopyKey.StartManualSummary }));
+});
+
+test('the logo of each agent that has a mark is drawn, and the others show their initials', async ({ page }) => {
+  await page.goto('/');
+  await AGENTS.reduce(async (previous, agent) => {
+    await previous;
+    const tab = tabOf({ page, id: agent.id });
+    if (agent.install.officialLogo === null) {
+      await expect(tab.locator('.agent-badge')).toBeVisible();
+      return;
+    }
+    const image = tab.locator('img.start-logo-image');
+    await image.scrollIntoViewIfNeeded();
+    await expect(image).toBeVisible();
+    await expect
+      .poll(() =>
+        page.evaluate(
+          `document.querySelector('#start-tab-${agent.id} img').complete && document.querySelector('#start-tab-${agent.id} img').naturalWidth > 0`,
+        ),
+      )
+      .toBe(true);
+  }, Promise.resolve());
 });

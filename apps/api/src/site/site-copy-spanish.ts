@@ -144,6 +144,28 @@ export const SPANISH_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.StartAnyStepOpen]: 'Abre los ajustes de MCP o de conectores de tu app',
   [SiteCopyKey.StartAnyStepAdd]: 'Añade un servidor remoto (HTTP en streaming)',
   [SiteCopyKey.StartAnyStepPaste]: 'Pega esta dirección',
+  [SiteCopyKey.StartPromptHint]: 'Pega esta línea en {agent}',
+  [SiteCopyKey.StartPromptHintAny]: 'Pega esta línea en tu app de IA',
+  [SiteCopyKey.StartPromptLine]: 'Configura zapbip por tu cuenta: lee {setupUrl} y sigue las instrucciones.',
+  [SiteCopyKey.StartManualSummary]: '¿Prefieres hacerlo a mano?',
+  [SiteCopyKey.SetupTitle]: 'Configura zapbip por tu cuenta',
+  [SiteCopyKey.SetupDescription]:
+    'Los pasos que sigue un agente de IA para conectarse a zapbip y escribir por WhatsApp a la persona para la que trabaja',
+  [SiteCopyKey.SetupIntro]:
+    'zapbip es un canal personal de WhatsApp para agentes de IA. Escribes a la persona para la que trabajas en su propio WhatsApp, preguntas con botones o listas y esperas la respuesta. Funciona con la API oficial de WhatsApp Cloud y solo habla con esa persona.',
+  [SiteCopyKey.SetupStepOneTitle]: 'Paso 1: pide tu enlace a la persona para la que trabajas',
+  [SiteCopyKey.SetupStepOneBody]:
+    'Pídele que abra {startLink} en su teléfono, lo que abre WhatsApp con zapbip, y que envíe `{command}`, sustituyendo el marcador por tu nombre. zapbip responde con un mensaje que contiene tu enlace de instalación personal. Pídele que te pegue ese mensaje.',
+  [SiteCopyKey.SetupAgentName]: 'tu nombre',
+  [SiteCopyKey.SetupStepTwoTitle]: 'Paso 2: añade el servidor MCP de tu cliente',
+  [SiteCopyKey.SetupStepTwoBody]:
+    'Lee el enlace de instalación de ese mensaje y sigue sus pasos: contiene tu enlace de conexión y los pasos exactos de tu cliente. Si necesitas los pasos sin abrirlo, esto es lo que hace cada cliente, con {placeholder} en lugar de tu enlace de conexión.',
+  [SiteCopyKey.SetupStepThreeTitle]: 'Paso 3: comprueba que funciona',
+  [SiteCopyKey.SetupStepThreeBody]:
+    'Llama a la herramienta send_message del servidor MCP de zapbip con el texto "{selfTest}". La persona para la que trabajas lo ve en WhatsApp. Si no llega nada, cuéntale qué falló en lugar de reintentar en silencio.',
+  [SiteCopyKey.SetupSafetyTitle]: 'Seguridad',
+  [SiteCopyKey.SetupSafetyBody]:
+    'El enlace de instalación y el enlace de conexión son secretos. Ponlos solo en tu propia configuración de MCP, nunca en un registro compartido, un commit ni un mensaje a otra persona. zapbip solo habla con la persona para la que trabajas, en su propio WhatsApp.',
   [SiteCopyKey.PricingEyebrow]: 'Precios',
   [SiteCopyKey.PricingTitle]: 'Pruébalo gratis.',
   [SiteCopyKey.PricingLead]: 'Sin tarjeta. El acceso se abre por oleadas, empezando por la lista de espera.',

@@ -15,6 +15,7 @@ export enum SitePath {
   Favicon = '/favicon.svg',
   LlmsText = '/llms.txt',
   LlmsFullText = '/llms-full.txt',
+  Setup = '/setup.md',
   McpDiscovery = '/.well-known/mcp.json',
   McpServerCard = '/.well-known/mcp/server-card.json',
   AgentCard = '/.well-known/agent-card.json',

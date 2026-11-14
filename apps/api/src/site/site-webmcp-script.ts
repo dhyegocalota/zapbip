@@ -94,7 +94,7 @@ export const WEBMCP_SOURCE = `
     },
     {
       name: '${WebMcpTool.GetQuickStart}',
-      description: 'Read how to connect one agent to zapbip: the hint, the steps and the code to paste. The connection link is an example.',
+      description: 'Read how to connect one agent to zapbip: the one line that makes an AI set itself up, the address of the setup page, and the manual hint, steps and code. The connection link is an example.',
       inputSchema: {
         type: 'object',
         properties: {

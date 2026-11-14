@@ -1,5 +1,5 @@
 import { WebLocale } from '@zapbip/types';
-import { LlmsFile, llmsPathOf, markdownPathOf } from './agentic-paths';
+import { LlmsFile, llmsPathOf, markdownPathOf, setupUrlOf } from './agentic-paths';
 import { legalTextOf } from './legal-copy';
 import { LEGAL_PAGES, legalPathOf } from './legal-links';
 import { homeMarkdownOf, legalMarkdownOf } from './markdown-pages';
@@ -61,6 +61,11 @@ export function llmsTextOf(input: { origin: string; locale: WebLocale }): string
       title: translate(SiteCopyKey.MetaTitle),
       url: `${origin}${markdownPathOf({ htmlPath: localePathOf({ locale }) })}`,
       description,
+    },
+    {
+      title: translate(SiteCopyKey.SetupTitle),
+      url: setupUrlOf({ origin, locale }),
+      description: translate(SiteCopyKey.SetupDescription),
     },
     ...LEGAL_PAGES.filter((page) => page.locale === locale).map((page) => {
       const legal = legalTextOf(page);

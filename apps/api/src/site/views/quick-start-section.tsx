@@ -3,6 +3,7 @@ import type { WebLocale } from '@zapbip/types';
 import { CodeTokenKind, highlightCode } from '../code-tokens';
 import { initialsOf, SiteStartTab } from '../site-agents';
 import { quickStartEntriesOf } from '../quick-start-entries';
+import { SITE_EXAMPLE_CONNECTION_LINK } from '../site-constants';
 import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
 import { agentPathOf, joinPathOf, startPathOf } from '../site-links';
@@ -27,6 +28,8 @@ type Tab = {
   name: string;
   logoId: string | null;
   initials: string;
+  prompt: string;
+  promptHint: string;
   hint: string;
   path: string[];
   code: string;
@@ -74,10 +77,15 @@ function TabLogo(props: { tab: Tab }) {
   );
 }
 
-export function QuickStartSection(props: { locale: WebLocale; referralCode: string | null; startTab: InstallClient | SiteStartTab }) {
-  const { locale, referralCode, startTab } = props;
+export function QuickStartSection(props: {
+  locale: WebLocale;
+  siteOrigin: string;
+  referralCode: string | null;
+  startTab: InstallClient | SiteStartTab;
+}) {
+  const { locale, siteOrigin, referralCode, startTab } = props;
   const translate = copyOf({ locale });
-  const tabs: Tab[] = quickStartEntriesOf({ locale }).map((entry) => ({
+  const tabs: Tab[] = quickStartEntriesOf({ locale, origin: siteOrigin, connectionLink: SITE_EXAMPLE_CONNECTION_LINK }).map((entry) => ({
     ...entry,
     initials: entry.agent === null ? ANY_BADGE : initialsOf({ name: entry.name }),
     pickedLabel: entry.agent === null ? null : translate(SiteCopyKey.AgentCardPicked, { agent: entry.name }),
@@ -115,7 +123,7 @@ export function QuickStartSection(props: { locale: WebLocale; referralCode: stri
           >
             <div class="code-window">
               <div class="code-bar">
-                <span class="code-hint">{tab.hint}</span>
+                <span class="code-hint">{tab.promptHint}</span>
                 <button
                   class="start-copy"
                   type="button"
@@ -127,20 +135,33 @@ export function QuickStartSection(props: { locale: WebLocale; referralCode: stri
                   {translate(SiteCopyKey.StartCopy)}
                 </button>
               </div>
-              {tab.path.length === 0 ? null : (
-                <ol class="code-path">
-                  {tab.path.map((step) => (
-                    <li>{step}</li>
-                  ))}
-                </ol>
-              )}
               <pre class="code-block">
-                <code class={`code-lines-${tab.code.split(LINE_BREAK).length}`} data-code={tab.code}>
-                  <CodeText code={tab.code} />
+                <code class="code-lines-1 start-prompt" data-code={tab.prompt}>
+                  <span class="code-line">{tab.prompt}</span>
                 </code>
               </pre>
-              <p class="start-example">{translate(SiteCopyKey.StartExampleCaption)}</p>
             </div>
+            <details class="start-manual">
+              <summary>{translate(SiteCopyKey.StartManualSummary)}</summary>
+              <div class="code-window">
+                <div class="code-bar">
+                  <span class="code-hint">{tab.hint}</span>
+                </div>
+                {tab.path.length === 0 ? null : (
+                  <ol class="code-path">
+                    {tab.path.map((step) => (
+                      <li>{step}</li>
+                    ))}
+                  </ol>
+                )}
+                <pre class="code-block">
+                  <code class={`code-lines-${tab.code.split(LINE_BREAK).length}`} data-code={tab.code}>
+                    <CodeText code={tab.code} />
+                  </code>
+                </pre>
+                <p class="start-example">{translate(SiteCopyKey.StartExampleCaption)}</p>
+              </div>
+            </details>
             <div class="start-next">
               {tab.agent === null ? (
                 <a class="button button-primary start-cta" href={joinPathOf({ locale, referralCode })} data-clear-agent>
