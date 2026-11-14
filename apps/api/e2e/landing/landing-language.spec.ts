@@ -1,9 +1,10 @@
 import type { Page } from '@playwright/test';
 import { AGENT_INSTALLS } from '@zapbip/agents/install';
 import { OwnerLocale } from '@zapbip/types';
-import { SiteCopyKey } from '../../src/site/site-copy';
+import { LOCALE_PROFILES } from '../../src/web-shell/locale-profiles';
+import { ShellCopyKey } from '../../src/web-shell/shell-copy';
 import { expect, test } from './fixtures';
-import { siteCopy } from './support/site-copy';
+import { shellCopy } from './support/site-copy';
 
 const PICKED_AGENT = Object.keys(AGENT_INSTALLS)[0]!;
 
@@ -99,12 +100,12 @@ test('the trigger names itself "Language" and "Idioma" with the visible code in 
   await page.goto('/');
   await expect(triggerOf({ page })).toHaveAttribute(
     'aria-label',
-    `${siteCopy({ key: SiteCopyKey.LocaleLabel })}: ${siteCopy({ key: SiteCopyKey.LocaleEnglishShort })}`,
+    `${shellCopy({ key: ShellCopyKey.LocaleLabel })}: ${LOCALE_PROFILES[OwnerLocale.EnglishUs].shortName}`,
   );
   await page.goto('/pt-br');
   await expect(triggerOf({ page })).toHaveAttribute(
     'aria-label',
-    `${siteCopy({ key: SiteCopyKey.LocaleLabel, locale: OwnerLocale.PortugueseBrazil })}: ${siteCopy({ key: SiteCopyKey.LocalePortugueseShort, locale: OwnerLocale.PortugueseBrazil })}`,
+    `${shellCopy({ key: ShellCopyKey.LocaleLabel, locale: OwnerLocale.PortugueseBrazil })}: ${LOCALE_PROFILES[OwnerLocale.PortugueseBrazil].shortName}`,
   );
 });
 

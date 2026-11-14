@@ -81,11 +81,11 @@ export const METRICS_SUMMARY_TOOL = toolOf({
 });
 
 export const LIST_WAITLIST_TOOL = toolOf({
-  description: `Email waitlist entries not yet invited, oldest first, one page at a time (offset up to ${OPERATOR_MCP_MAX_OFFSET}). Each call is audited under this key. The entryId is what invite_waitlist takes.`,
+  description: `Email waitlist entries not yet invited that joined through the site form, oldest first, one page at a time (offset up to ${OPERATOR_MCP_MAX_OFFSET}). Each call is audited under this key. The entryId is what invite_waitlist takes.`,
   inputShape: listWaitlistInputShape,
   handler: async ({ context, arguments: { from, to, locale, limit, offset } }) => {
     const database = context.bindings.CONNECTIONS;
-    const filter = parseAccessFilter({ from, to, locale });
+    const filter = parseAccessFilter({ from, to, locale, source: null });
     const now = Date.now();
     const [total, rows] = await Promise.all([
       countInvitableEntries({ database, filter, now }),
@@ -107,7 +107,7 @@ export const LIST_WAITING_ACCOUNTS_TOOL = toolOf({
   inputShape: listWaitingAccountsInputShape,
   handler: async ({ context, arguments: { from, to, locale, limit } }) => {
     const database = context.bindings.CONNECTIONS;
-    const filter = parseAccessFilter({ from, to, locale });
+    const filter = parseAccessFilter({ from, to, locale, source: null });
     const [total, rows] = await Promise.all([countWaitingAccounts({ database, filter }), listWaitingAccounts({ database, filter, limit })]);
     return {
       total,

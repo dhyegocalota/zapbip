@@ -4,7 +4,7 @@ import { ACCEPT_LANGUAGE_HEADER, LOCALE_COOKIE_NAME, SESSION_COOKIE_NAME, THEME_
 import type { BackofficeEnv } from './backoffice-env';
 import { clientAddressOf } from './client-address';
 import { findSession } from './auth/sessions';
-import { resolveTheme } from './backoffice-theme';
+import { resolveTheme } from '../web-shell/shell-theme';
 import { resolveLocale } from './locale';
 
 export async function requestContext(context: Context<BackofficeEnv>, next: Next): Promise<void> {

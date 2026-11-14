@@ -8,11 +8,7 @@ import { keyedCell, MetricCell } from './metric-cell';
 import { ACCESS_MONTH_DAYS, ACCESS_WEEK_DAYS } from './metrics-filter';
 import type { AccessReport } from './metrics-report';
 import { SummaryTable } from './summary-table';
-
-const LOCALE_LABELS: Record<OwnerLocale, BackofficeCopyKey> = {
-  [OwnerLocale.PortugueseBrazil]: BackofficeCopyKey.LocalePortuguese,
-  [OwnerLocale.EnglishUs]: BackofficeCopyKey.LocaleEnglish,
-};
+import { LOCALE_PROFILES } from '../../web-shell/locale-profiles';
 
 type WindowRow = { label: BackofficeCopyKey; cell: MetricCell; figure: keyof AccessWindowFigures };
 
@@ -79,7 +75,7 @@ export function AccessMetricsSection(props: { locale: OwnerLocale; access: Acces
         caption={translate(BackofficeCopyKey.MetricsAccessWaitlistByLocale)}
         emptyText={noData}
         rows={access.waitlistByLocale.map((entry) => ({
-          label: translate(LOCALE_LABELS[entry.locale]),
+          label: LOCALE_PROFILES[entry.locale].nativeName,
           value: String(entry.total),
           cell: keyedCell({ cell: MetricCell.AccessWaitlistLocale, key: entry.locale }),
         }))}

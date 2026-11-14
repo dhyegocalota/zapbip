@@ -1,7 +1,8 @@
 import { OwnerLocale } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
-import { SiteCopyKey } from '../../src/site/site-copy';
-import { copyHtml, REFERRAL_CODE, siteFetch } from '../support/site';
+import { LOCALE_PROFILES, MENU_LOCALES } from '../../src/web-shell/locale-profiles';
+import { ShellCopyKey } from '../../src/web-shell/shell-copy';
+import { REFERRAL_CODE, shellCopyHtml, siteFetch } from '../support/site';
 import { AGENT_INSTALLS } from '@zapbip/agents/install';
 
 const PICKED_AGENT = Object.keys(AGENT_INSTALLS)[0]!;
@@ -20,7 +21,7 @@ describe('the language menu', () => {
   ])('shows the current flag and code on the button of %s', async (path, locale, flag, code) => {
     const menu = await menuOf({ path });
     const summary = /<summary class="lang-trigger" aria-label="([^"]+)">([\s\S]*?)<\/summary>/.exec(menu)!;
-    expect(summary[1]).toBe(`${copyHtml({ key: SiteCopyKey.LocaleLabel, locale })}: ${code}`);
+    expect(summary[1]).toBe(`${shellCopyHtml({ key: ShellCopyKey.LocaleLabel, locale })}: ${code}`);
     expect(summary[2]).toContain(flag);
     expect(summary[2]).toContain(`>${code}<`);
   });
@@ -33,11 +34,11 @@ describe('the language menu', () => {
     const options = [
       ...menu.matchAll(/<button type="submit" name="locale" value="([^"]+)" lang="[^"]+" class="lang-option"([^>]*)>([\s\S]*?)<\/button>/g),
     ];
-    expect(options.map((option) => option[1])).toEqual([OwnerLocale.EnglishUs, OwnerLocale.PortugueseBrazil]);
+    expect(options.map((option) => option[1])).toEqual(MENU_LOCALES);
     expect(options[0]![3]).toContain('data-flag="us"');
-    expect(options[0]![3]).toContain(copyHtml({ key: SiteCopyKey.LocaleEnglish, locale: current }));
+    expect(options[0]![3]).toContain(LOCALE_PROFILES[OwnerLocale.EnglishUs].nativeName);
     expect(options[1]![3]).toContain('data-flag="br"');
-    expect(options[1]![3]).toContain(copyHtml({ key: SiteCopyKey.LocalePortuguese, locale: current }));
+    expect(options[1]![3]).toContain(LOCALE_PROFILES[OwnerLocale.PortugueseBrazil].nativeName);
     const markedValues = options.filter((option) => option[2]!.includes('aria-current="true"')).map((option) => option[1]);
     expect(markedValues).toEqual([current]);
   });
@@ -57,7 +58,7 @@ describe('the language menu', () => {
 
   it('replaces the two text buttons with the single menu', async () => {
     const html = await (await siteFetch({ path: '/' })).text();
-    expect(html.match(/<button type="submit" name="locale"/g)).toHaveLength(2);
+    expect(html.match(/<button type="submit" name="locale"/g)).toHaveLength(MENU_LOCALES.length);
     expect(html).not.toContain('label-short');
     expect(html).not.toContain('label-full');
   });

@@ -1,14 +1,15 @@
-import { OwnerLocale } from '@zapbip/types';
+import { OwnerLocale, type WaitlistSource } from '@zapbip/types';
 export type WaitlistListRow = {
   email: string;
   joinedAt: number;
   creditedCount: number;
   referredByEmail: string | null;
+  source: WaitlistSource;
 };
 
 const HEADER_CELLS: Record<OwnerLocale, string[]> = {
-  [OwnerLocale.EnglishUs]: ['email', 'joined_at', 'credited_referrals', 'referred_by'],
-  [OwnerLocale.PortugueseBrazil]: ['email', 'entrou_em', 'indicacoes_creditadas', 'indicado_por'],
+  [OwnerLocale.EnglishUs]: ['email', 'joined_at', 'credited_referrals', 'referred_by', 'source'],
+  [OwnerLocale.PortugueseBrazil]: ['email', 'entrou_em', 'indicacoes_creditadas', 'indicado_por', 'origem'],
 };
 const FORMULA_PREFIXES = ['=', '+', '-', '@', '\t', '\r'];
 const NEUTRALISING_PREFIX = "'";
@@ -30,6 +31,7 @@ function lineOf(input: { row: WaitlistListRow }): string {
     new Date(row.joinedAt).toISOString(),
     String(row.creditedCount),
     row.referredByEmail === null ? '' : row.referredByEmail,
+    row.source,
   ];
   return `${cells.map((text) => cellOf({ text })).join(CELL_SEPARATOR)}${LINE_BREAK}`;
 }

@@ -1,6 +1,6 @@
 import type { InstallClient } from '@zapbip/agents/install';
 import type { OwnerLocale } from '@zapbip/types';
-import type { BackofficeTheme } from '../backoffice/backoffice-theme';
+import type { ShellTheme } from '../web-shell/shell-theme';
 import type { LegalDocument } from './legal-links';
 import type { SiteStartTab } from './site-agents';
 
@@ -23,7 +23,7 @@ export type JoinView =
 
 export type PageModel = {
   locale: OwnerLocale;
-  theme: BackofficeTheme;
+  theme: ShellTheme;
   siteOrigin: string;
   turnstileSiteKey: string;
   referralCode: string | null;

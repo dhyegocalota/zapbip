@@ -4,7 +4,7 @@ import { LegalDocument } from './legal-links';
 import { formatCount } from './price-format';
 import { leadingAgentNames } from './site-agents';
 import { LEGAL_UPDATED_ON } from './site-constants';
-import { languageOf } from './site-links';
+import { languageOf } from '../web-shell/locale-profiles';
 
 export type LegalSection = { heading: string; paragraphs: string[]; items: string[] };
 export type LegalText = { title: string; description: string; summary: string; updated: string; sections: LegalSection[] };

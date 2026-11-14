@@ -1,4 +1,4 @@
-import { HttpStatus, OwnerLocale, WaitlistJoinOutcome } from '@zapbip/types';
+import { HttpStatus, OwnerLocale, WaitlistJoinOutcome, WaitlistSource } from '@zapbip/types';
 import type { Context } from 'hono';
 import { type FormBody, textFieldOf } from '../backoffice/form-fields';
 import { CLIENT_ADDRESS_HEADER } from '../contract/constants';
@@ -73,6 +73,7 @@ async function answerOf(input: {
     email: typedEmail,
     locale: context.get('locale'),
     referralCode: referralValue,
+    source: WaitlistSource.Form,
     now: Date.now(),
   });
   if (result.outcome === WaitlistJoinOutcome.InvalidEmail)

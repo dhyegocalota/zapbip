@@ -1,5 +1,5 @@
 import { buildConnectionLink, RATE_LIMIT_PERIOD_MS } from '@zapbip/core';
-import { PRODUCTION_PUBLIC_ORIGIN, SECOND_MS } from '@zapbip/types';
+import { DAY_MS, HOUR_MS, PRODUCTION_PUBLIC_ORIGIN, SECOND_MS } from '@zapbip/types';
 import { CONNECTION_SECRET_PREFIX } from '../contract/constants';
 
 const EXAMPLE_SECRET_BODY = 'ex4mPLe7Hq2xVn9Rt4Wm8Ls3Jd6Hf1Yb5Gc0Zk2Ns7q';
@@ -34,11 +34,10 @@ export const RETRY_AFTER_VALUE = String(RATE_LIMIT_PERIOD_MS / SECOND_MS);
 export const THEME_COLOR_LIGHT = '#F6F8F5';
 export const THEME_COLOR_DARK = '#07120F';
 export const SITE_BRAND_SEPARATOR = ' · ';
-export const DOCS_PORTUGUESE_PATH = '/pt-br';
 export const RATE_KEY_PREFIX = 'join:';
 export const NO_STORE_CACHE_CONTROL = 'no-store';
 export const PAGE_CACHE_CONTROL = 'private, no-cache';
-export const PAGE_VARY = 'Accept-Language, Cookie';
+export const PAGE_VARY = 'Accept, Accept-Language, Cookie';
 export const STYLESHEET_CONTENT_TYPE = 'text/css; charset=utf-8';
 export const SCRIPT_CONTENT_TYPE = 'text/javascript; charset=utf-8';
 export const LEGAL_UPDATED_ON = '2026-11-13';
@@ -48,3 +47,36 @@ export const SITE_EXAMPLE_CONNECTION_LINK = buildConnectionLink({
   publicOrigin: PRODUCTION_PUBLIC_ORIGIN,
   secret: `${CONNECTION_SECRET_PREFIX}${EXAMPLE_SECRET_BODY}`,
 });
+export const AGENT_RATE_KEY_PREFIX = 'agent:';
+export const AGENT_ADDRESS_WEIGHT = 10;
+export const AGENT_EMAIL_WEIGHT = 15;
+export const AGENT_GLOBAL_WEIGHT = 1;
+export const AGENT_GLOBAL_KEY = 'all';
+export const AGENT_HOURLY_ROW_CAP = 200;
+export const AGENT_CAP_WINDOW_MS = HOUR_MS;
+export const AGENT_CAP_RETRY_AFTER_VALUE = String(HOUR_MS / SECOND_MS);
+export const AGENT_BODY_MAX_BYTES = 1024;
+export const AGENT_ADDRESS_IPV6_PREFIX_GROUPS = 3;
+export const TEXT_CONTENT_TYPE = 'text/plain; charset=utf-8';
+export const MARKDOWN_CONTENT_TYPE = 'text/markdown; charset=utf-8';
+export const JSON_CONTENT_TYPE = 'application/json; charset=utf-8';
+export const SECURITY_POLICY_URL = 'https://github.com/dhyegocalota/zapbip/security/policy';
+export const SECURITY_TEXT_VALIDITY_MS = 180 * DAY_MS;
+export const IS_SECURITY_POLICY_PUBLIC = false;
+export const AGENT_CRAWLER_NAMES = [
+  'GPTBot',
+  'OAI-SearchBot',
+  'ChatGPT-User',
+  'ClaudeBot',
+  'Claude-User',
+  'Claude-SearchBot',
+  'PerplexityBot',
+  'Perplexity-User',
+  'Google-Extended',
+  'Applebot-Extended',
+  'Meta-ExternalAgent',
+  'Amazonbot',
+  'CCBot',
+  'DuckAssistBot',
+  'MistralAI-User',
+];

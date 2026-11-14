@@ -78,7 +78,8 @@ async function revokeAgent(input: { context: Context<ClientAppEnv>; session: Cli
   const agent = textFieldOf({ form, name: AGENT_FIELD });
   if (agent === null) return context.redirect(home, SEE_OTHER_STATUS);
   const isConfirmed = textFieldOf({ form, name: CONFIRM_FIELD }) === CONFIRM_VALUE;
-  if (!isConfirmed) return context.html(<RevokePage locale={locale} agent={agent} csrfToken={session.csrfToken} />);
+  if (!isConfirmed)
+    return context.html(<RevokePage locale={locale} theme={context.get('theme')} agent={agent} csrfToken={session.csrfToken} />);
   const reply = await applyWebCommand({ context, session, kind: CommandKind.RevokeAgent, rawName: agent });
   const notice = REVOKE_NOTICES[reply.intent];
   if (notice === undefined) throw new Error(`unexpected revoke reply: ${reply.intent}`);

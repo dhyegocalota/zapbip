@@ -4,7 +4,7 @@ import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import { DeployEnvironment } from '../contract/deploy-environment';
 import { ACCEPT_LANGUAGE_HEADER, LOCALE_COOKIE_NAME, THEME_COOKIE_NAME } from './backoffice-constants';
 import type { BackofficeEnv } from './backoffice-env';
-import { resolveTheme } from './backoffice-theme';
+import { resolveTheme } from '../web-shell/shell-theme';
 import { resolveLocale } from './locale';
 import { ErrorPage, type ErrorStatus } from './views/error-page';
 

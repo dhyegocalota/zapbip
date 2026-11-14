@@ -1,5 +1,5 @@
 import { type OwnerLocale, TURNSTILE_ACTION_WAITLIST_JOIN, WAITLIST_EMAIL_MAX_LENGTH } from '@zapbip/types';
-import { BackofficeTheme } from '../../backoffice/backoffice-theme';
+import { ShellTheme } from '../../web-shell/shell-theme';
 import { NoticeVariant } from '../../backoffice/backoffice-notice';
 import { type JoinFormState, JoinState, type PageModel } from '../page-model';
 import { siteAgentNameOf } from '../site-agents';
@@ -13,10 +13,10 @@ import { Notice } from './notice';
 import { ReferralThanksPanel } from './referral-thanks-panel';
 import { ThanksPanel } from './thanks-panel';
 
-const TURNSTILE_THEMES: Record<BackofficeTheme, string> = {
-  [BackofficeTheme.Light]: 'light',
-  [BackofficeTheme.Dark]: 'dark',
-  [BackofficeTheme.System]: 'auto',
+const TURNSTILE_THEMES: Record<ShellTheme, string> = {
+  [ShellTheme.Light]: 'light',
+  [ShellTheme.Dark]: 'dark',
+  [ShellTheme.System]: 'auto',
 };
 const FORM_NOTICES: Partial<Record<JoinFormState, { variant: NoticeVariant; copyKey: SiteCopyKey }>> = {
   [JoinState.CaptchaFailed]: { variant: NoticeVariant.Error, copyKey: SiteCopyKey.JoinCaptchaFailed },
@@ -24,6 +24,7 @@ const FORM_NOTICES: Partial<Record<JoinFormState, { variant: NoticeVariant; copy
   [JoinState.Unavailable]: { variant: NoticeVariant.Warning, copyKey: SiteCopyKey.JoinUnavailable },
 };
 const EMAIL_ERROR_ID = 'join-email-error';
+const FORM_NOTICE_ID = 'join-notice';
 const CLIENT_NOTICES: { id: string; variant: NoticeVariant; copyKey: SiteCopyKey }[] = [
   { id: 'notice-captcha', variant: NoticeVariant.Error, copyKey: SiteCopyKey.JoinCaptchaFailed },
   { id: 'notice-offline', variant: NoticeVariant.Warning, copyKey: SiteCopyKey.JoinOffline },
@@ -39,12 +40,12 @@ function PrivacyNote(props: { locale: OwnerLocale }) {
   );
 }
 
-function JoinForm(props: { model: PageModel; state: JoinFormState; emailValue: string }) {
-  const { model, state, emailValue } = props;
+function JoinForm(props: { model: PageModel; state: JoinFormState; emailValue: string; describedBy: string | undefined }) {
+  const { model, state, emailValue, describedBy } = props;
   const translate = copyOf({ locale: model.locale });
   const isInvalid = state === JoinState.InvalidEmail;
   return (
-    <form class="join-form" method="post" action={SitePath.Join}>
+    <form class="join-form" method="post" action={SitePath.Join} aria-label={translate(SiteCopyKey.JoinSubmit)}>
       <label class="visually-hidden" for="join-email">
         {translate(SiteCopyKey.JoinEmailLabel)}
       </label>
@@ -65,7 +66,7 @@ function JoinForm(props: { model: PageModel; state: JoinFormState; emailValue: s
           autocapitalize="off"
           autofocus={isInvalid}
           aria-invalid={isInvalid ? 'true' : undefined}
-          aria-describedby={isInvalid ? EMAIL_ERROR_ID : undefined}
+          aria-describedby={isInvalid ? EMAIL_ERROR_ID : describedBy}
           required
         />
         <button
@@ -114,9 +115,9 @@ function FormBlock(props: { model: PageModel; state: JoinFormState; emailValue: 
   return (
     <div class="join-block">
       {notice === undefined ? null : (
-        <Notice variant={notice.variant} locale={model.locale} title={null} message={translate(notice.copyKey)} />
+        <Notice id={FORM_NOTICE_ID} variant={notice.variant} locale={model.locale} title={null} message={translate(notice.copyKey)} />
       )}
-      <JoinForm {...props} />
+      <JoinForm {...props} describedBy={notice === undefined ? undefined : FORM_NOTICE_ID} />
       <PrivacyNote locale={model.locale} />
     </div>
   );

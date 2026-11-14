@@ -16,6 +16,7 @@ import { respondMessage } from './respond';
 import { clientAppContext } from './request-context';
 import { agentRoutes } from './routes/agent-routes';
 import { homeRoutes } from './routes/home-routes';
+import { preferenceRoutes } from './routes/preference-routes';
 import { sessionRoutes } from './routes/session-routes';
 import { signInRoutes } from './routes/sign-in-routes';
 
@@ -30,6 +31,7 @@ async function securityHeaders(context: Context<ClientAppEnv>, next: Next): Prom
 function localizedRoutes(): Hono<ClientAppEnv> {
   const routes = new Hono<ClientAppEnv>();
   routes.route('/', homeRoutes());
+  routes.route('/', preferenceRoutes());
   routes.route('/', signInRoutes());
   routes.route('/', sessionRoutes());
   routes.route('/', agentRoutes());
