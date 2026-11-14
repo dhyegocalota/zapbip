@@ -1,0 +1,105 @@
+---
+title: 'Hermes'
+description: 'Escribe a Hermes en WhatsApp y haz que responda, sin límite de tiempo.'
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+## Qué funciona
+
+Hermes sigue escuchando tu WhatsApp a través de un pequeño plugin de zapbip. Escribes primero o respondes una pregunta más tarde, y el mensaje llega a la sesión de Hermes.
+
+<Chat
+  contact="Hermes"
+  messages={[
+    { you: true, text: 'Resume qué cambió hoy en el repositorio.', time: '18:02' },
+    {
+      name: 'Hermes',
+      text: 'Tres commits: una corrección en facturación, una prueba nueva y una actualización de la documentación.',
+      time: '18:03',
+    },
+  ]}
+/>
+
+### Mensajes que reenvías
+
+Un mensaje que reenviaste de otra persona llega a Hermes con una etiqueta que dice que no lo escribiste tú, así que Hermes no lo trata como una instrucción tuya.
+
+## Cómo escucha
+
+Peldaño: Local. Mientras una pregunta está abierta, Hermes espera hasta 50 segundos cada vez. Si no has respondido, la espera termina como pendiente y Hermes vuelve a llamar otra vez, tantas veces como haga falta, sin límite de tiempo.
+
+El plugin mantiene abierta una conexión con zapbip, sin límite de tiempo. Si la red se cae, se reconecta solo, esperando un poco más tras cada intento fallido (1 segundo al principio, 30 como máximo). Los mensajes que envías mientras tanto esperan en tu bandeja de entrada de zapbip, y el plugin recoge todos los que no se respondieron en cuanto vuelve.
+
+### Si el plugin no se puede instalar
+
+Hermes puede consultar en su lugar. Añade el servidor MCP de la configuración y crea un job cada 1 minuto que llame a `check_inbox`. Tus mensajes esperan hasta un minuto, y la respuesta llega del mismo modo.
+
+## Configúralo desde cero
+
+### Qué necesitas
+
+- Hermes con su gateway en marcha.
+- Tu enlace de conexión, el mismo enlace `https://.../c/<secret>/mcp` que tu IA usa para hablar con zapbip. Trátalo como una contraseña.
+
+### Instala el plugin
+
+Instala el paquete en el entorno de Python en el que corre Hermes:
+
+```bash
+d=$(mktemp -d) && curl -fsSL https://mcp.zapbip.com/pkg/zapbip_platform-0.1.0-requirements.txt -o "$d/zapbip-requirements.txt" && python3 -c 'import hashlib,sys; sys.exit(hashlib.sha256(open(sys.argv[1],"rb").read()).hexdigest() != sys.argv[2])' "$d/zapbip-requirements.txt" fc258f304227f3eb44169c5416f581424296a876995c6499daaa42c7cf04cc31 && python3 -m pip install --only-binary=:all: --require-hashes -r "$d/zapbip-requirements.txt"
+```
+
+Luego actívalo en `~/.hermes/config.yaml`:
+
+```yaml
+plugins:
+  enabled:
+    - zapbip-platform
+```
+
+Define el enlace y quién puede hablar con Hermes en el entorno en el que corre el gateway, nunca en un archivo que compartas:
+
+```bash
+export ZAPBIP_CONNECTION_LINK='https://<host>/c/<secret>/mcp'
+export ZAPBIP_ALLOWED_USERS=owner
+```
+
+El archivo que contiene tu enlace de conexión funciona como una contraseña. Dale el permiso `600` para que solo tu usuario pueda leerlo, y nunca lo compartas ni lo subas al repositorio:
+
+```bash
+chmod 600 <file>
+```
+
+Reinicia el gateway.
+
+Ejecuta un solo listener por agente: el plugin o `npx zapbip@0.1.0 listen`, nunca los dos. Un segundo listener reemplaza al primero.
+
+### Cómo responde Hermes
+
+Hermes envía sus respuestas a tus mensajes de vuelta a través del propio plugin, sin ninguna configuración extra.
+
+Añade zapbip como servidor MCP para que Hermes también pueda iniciar una conversación contigo, hacerte una pregunta con botones y esperar la respuesta, y usar la alternativa de consulta de abajo:
+
+```yaml
+mcp_servers: { zapbip: { url: 'https://<host>/c/<secret>/mcp' } }
+```
+
+Luego pide a Hermes en WhatsApp que envíe `✅ installed`. Si ese mensaje llega, funciona. Los comandos y las respuestas de zapbip están en inglés, que es lo que el producto entiende hoy.
+
+<Chat
+  contact="zapbip"
+  messages={[
+    { you: true, text: 'Envía ✅ installed cuando estés instalado.', time: '18:10' },
+    { name: 'Hermes', text: '✅ installed', time: '18:10' },
+  ]}
+/>
+
+## Comprueba que funciona
+
+| Ves                                                     | Qué significa                                                           |
+| ------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Ninguna respuesta a tu mensaje                          | El gateway no está en marcha, o el plugin no está en `plugins.enabled`. |
+| El plugin se detiene solo                               | Otro plugin o conector se inició para la misma conexión y lo reemplazó. |
+| Hermes no puede iniciar una conversación ni preguntarte | Falta el servidor MCP `zapbip` en `config.yaml`.                        |
+| El plugin se detiene con un error                       | El enlace es desconocido o la conexión fue revocada. Pide uno nuevo.    |

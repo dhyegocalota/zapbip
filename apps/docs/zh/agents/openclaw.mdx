@@ -1,0 +1,102 @@
+---
+title: 'OpenClaw'
+description: '在 WhatsApp 上给 OpenClaw 发消息，让它不限时间地回答。'
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+## 支持的功能
+
+OpenClaw 通过一个小小的 zapbip 渠道持续监听你的 WhatsApp。你先发消息，或者之后再回答一个问题，消息都会送到 OpenClaw 会话。
+
+<Chat
+  contact="OpenClaw"
+  messages={[
+    { you: true, text: '提醒我明天早上 9 点发送发票。', time: '18:02' },
+    { name: 'OpenClaw', text: '好的。明天 9:00 我会提醒你。', time: '18:02' },
+  ]}
+/>
+
+### 你转发的消息
+
+你从别人那里转发的消息，会带着一个说明这不是你写的标签送达 OpenClaw，并且它不能运行命令。
+
+## 监听方式
+
+级别：本地。有问题未决时，OpenClaw 每次最多等待 50 秒。如果你还没有回答，这次等待会以待处理（pending）结束，OpenClaw 会再次调用，需要多少次就调用多少次，没有时间限制。
+
+渠道保持一条通往 zapbip 的连接常开，没有时间限制。如果网络中断，它会自动重新连接，每次失败后等待得稍久一些（起初 1 秒，最长 30 秒）。这期间你发的消息在你的 zapbip 收件箱里等待，渠道恢复后会立即取回每一条尚未回答的消息。
+
+### 如果无法安装渠道
+
+OpenClaw 可以改为轮询。添加设置中的 MCP 服务器，并创建一个每 1 分钟调用一次 `check_inbox` 的任务。你的消息最多等待一分钟，回答也以同样的方式送达。
+
+## 从零开始设置
+
+### 你需要什么
+
+- OpenClaw 2026.10.10 或更新版本，且网关正在运行。
+- 你的连接链接，也就是你的 AI 用来和 zapbip 通信的同一个 `https://.../c/<secret>/mcp` 链接。请像对待密码一样对待它。
+
+### 安装渠道
+
+这个插件从 zapbip 读取发给该智能体的你的消息，并把智能体的回复发回去。它不做别的事。安装命令需要 `--accept-capabilities`，这样 OpenClaw 无需再次询问你就能安装它。
+
+```bash
+openclaw plugins install @zapbip/openclaw-plugin@0.1.0 --force --accept-capabilities
+```
+
+然后在 `zapbip` 渠道上设置链接，并在 `openclaw.json` 中启用插件：
+
+```json
+{
+  "channels": { "zapbip": { "connectionLink": "https://<host>/c/<secret>/mcp" } },
+  "plugins": { "entries": { "zapbip": { "enabled": true } } }
+}
+```
+
+保存你的连接链接的文件相当于密码。请把权限设为 `600`，只有你的用户能读取，并且不要分享或提交它：
+
+```bash
+chmod 600 <file>
+```
+
+重启网关。
+
+每个智能体只运行一个 listener：插件或 `npx zapbip@0.1.0 listen`，不要两者同时使用。第二个 listener 会替换第一个。
+
+### OpenClaw 如何回答
+
+OpenClaw 对你消息的回复会通过渠道本身送回，无需额外设置。如果发送回复失败，渠道会在网关日志中写入 `plugin_reply_failed`，并且不会重试，所以那条回复可能会丢失。
+
+把 zapbip 添加为 MCP 服务器，这样 OpenClaw 还能主动与你开启对话、用按钮向你提问并等待答案，也能使用下面的轮询备用方案：
+
+```json
+{
+  "mcp": {
+    "servers": {
+      "zapbip": { "url": "https://<host>/c/<secret>/mcp", "transport": "streamable-http" }
+    }
+  }
+}
+```
+
+然后在 WhatsApp 上让 OpenClaw 发送 `✅ installed`。如果这条消息到达，就说明一切正常。
+
+<Chat
+  contact="zapbip"
+  messages={[
+    { you: true, text: '安装好了就发 ✅ installed。', time: '18:10' },
+    { name: 'OpenClaw', text: '✅ installed', time: '18:10' },
+  ]}
+/>
+
+## 检查是否正常工作
+
+| 你看到的                              | 含义                                                                                                       |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| 你的消息没有得到回答                  | 网关没有运行，`channels.zapbip` 没有 `connectionLink`，或者 `plugins.entries.zapbip.enabled` 不是 `true`。 |
+| 渠道自己停止了                        | 另一个渠道或连接器为同一条连接启动，并替换了它。                                                           |
+| OpenClaw 听到了你，但回复始终没有到达 | 网关日志里出现 `plugin_reply_failed`：发送回复失败且不会重试。请再写一次。                                 |
+| OpenClaw 无法开启对话或向你提问       | `mcp.servers` 中缺少 `zapbip` MCP 服务器。                                                                 |
+| 渠道带着错误停止                      | 链接未知或连接已被撤销。请申请新的链接。                                                                   |

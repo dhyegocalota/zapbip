@@ -1,0 +1,31 @@
+---
+title: 'Hinweise an den Owner'
+description: 'Die genehmigten Nachrichten, die der Owner erhält, wenn das Fenster geschlossen ist.'
+---
+
+Außerhalb des [24-Stunden-Fensters](/de/concepts/24-hour-window) stellt WhatsApp nur genehmigte Vorlagen zu. zapbip nutzt zwei, in der Sprache des Owners (Portugiesisch oder Englisch).
+
+| Vorlage                 | Wann                                  | Schnellantwort        |
+| ----------------------- | ------------------------------------- | --------------------- |
+| `zapbip_agent_notice`   | ein Agent hat eine Nachricht gesendet | `Abrir` / `Open`      |
+| `zapbip_agent_question` | ein Agent hat eine Frage gestellt     | `Responder` / `Reply` |
+
+Jede nennt den Agent und zeigt eine Vorschau von höchstens 60 Zeichen in einer Zeile.
+
+## Warum der Hinweis zuerst kommt
+
+Ein Hinweis kommt vor dem eigentlichen Inhalt und trägt nichts davon selbst. Die eigentliche Nachricht oder die Frage mit ihren Buttons oder ihrer Liste folgt danach, weil eine Freitextnachricht erst erlaubt ist, wenn der Owner geschrieben hat.
+
+Der Owner tippt die Schnellantwort an. Dieses Antippen ist eine Nachricht des Owners: Es öffnet das Fenster, und die Warteschlange wird der Reihe nach zugestellt.
+
+zapbip sendet pro geschlossenem Fenster einen Hinweis. Das Antippen ist die einzige Aktion, die ein Hinweis anbietet, und es wird nie an einen Agent weitergeleitet.
+
+## Wenn die Vorlage abgelehnt wird
+
+Lehnt WhatsApp die Vorlage ab, bleibt die Nachricht in der Warteschlange und zapbip versucht den Hinweis nach 5 Minuten erneut, dann nach 10, 20 und so weiter, verdoppelt bis zu 6 Stunden. Die Nachrichten in der Warteschlange werden zugestellt, wenn der Owner das nächste Mal schreibt.
+
+## Hinweise von zapbip selbst
+
+zapbip schreibt dir manchmal von sich aus, zum Beispiel um zu sagen, dass eine KI aufgehört hat, ihren Posteingang zu prüfen. Solange das Fenster geschlossen ist, folgt ein solcher Hinweis derselben Regel: ein Vorlagen-Hinweis pro geschlossenem Fenster, der zapbip nennt. Der Hinweis wartet in der Warteschlange und kommt an, wenn du schreibst.
+
+Hat auch eine KI eine Nachricht gesendet, während das Fenster geschlossen ist, nennt der Hinweis diese KI und zeigt eine Vorschau ihrer Nachricht, weil du das am ehesten öffnen willst. Der Hinweis von zapbip kommt trotzdem direkt danach an, der Reihe nach.

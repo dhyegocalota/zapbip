@@ -1,0 +1,65 @@
+---
+title: '唤醒阶梯'
+description: '你发消息时，zapbip 如何联系没有在监听的 AI。'
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+你在 WhatsApp 上发消息时，你的 AI 可能已关闭、正忙，或者只是没有在等你。这时 zapbip 会通过它的连接所支持的最高一级去联系它；某一级不可用时，就降到下一级：
+
+| 级别     | 发生什么                                                                                                                | 预期延迟                       |
+| -------- | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| 本地     | zapbip 把你的消息推送给你电脑上运行的[连接器](/zh/developers/local-connector)，由它恢复你的 Claude Code 或 Codex 会话。 | Claude Code 7 秒，Codex 6 秒   |
+| Webhook  | zapbip 调用一个能启动 AI 的链接。参见 [webhook 唤醒指南](/zh/developers/webhook-wake)。                                 | Grok Bot 9 秒，claude.ai 16 秒 |
+| 定时     | AI 按定时器检查收件箱，因此可以不限时间地监听。                                                                         | 最长一个间隔                   |
+| 待命     | 你的另一个 AI 收到你消息的副本，并代为回答。                                                                            | 未测量                         |
+| 仅收件箱 | 消息等待，zapbip 告诉你这个 AI 目前没有在监听。                                                                         | 直到有 AI 读取                 |
+
+无论哪一级，你的消息都会保存在[收件箱](/zh/concepts/inbox)里，直到有 AI 读取。不会丢失任何内容。
+
+## 本地：你自己的电脑
+
+连接器运行期间会和 zapbip 保持一条开着的连线。你发消息时，zapbip 把消息推送到这条连线上，连接器就在你的电脑上恢复你的会话。最后一条连线关闭时，zapbip 会恢复你之前的唤醒设置。用 `npx zapbip@0.1.0 connect` 启动。
+
+## 定时：不限时间地监听
+
+有些 AI 无法从外部启动，而且它们对 zapbip 的每次调用在几分钟后就会结束。定时唤醒解决了这个问题：你让 AI 按定时器运行一个小任务，每隔几分钟或每小时一次，每次运行都会读取你写的内容并回答。
+
+频率由你选，从每 1 分钟到每 1440 分钟（一天）。ChatGPT 和 claude.ai 只能每 60 分钟或更久运行一次定时任务，所以对它们来说最短间隔是 60 分钟。
+
+你发消息时，zapbip 会告诉你大约什么时候能收到回答：
+
+<Chat
+  contact="zapbip"
+  messages={[
+    { you: true, text: 'Can you summarize the report?' },
+    {
+      notice: true,
+      text: 'The agent Claude checks the inbox every hour. Last check 20 min ago. Your message waits there until the next check.',
+    },
+  ]}
+/>
+
+如果定时器停止运行，在两倍间隔时间内都没有检查后，zapbip 会告诉你一次，你的消息继续等待：
+
+<Chat contact="zapbip" messages={[{ notice: true, text: "Claude hasn't checked in 2 h: your messages wait" }]} />
+
+下一次检查会解除警告，不会再发消息。
+
+当 [24 小时窗口](/zh/concepts/24-hour-window)关闭时，这条提示无法直接发送。zapbip 每个关闭的窗口发送一条模板[通知](/zh/concepts/owner-notices)，提示会等待，并在你发消息时送达。
+
+## 待命：由另一个 AI 回答
+
+有些 AI，例如网页版 Grok，根本无法被启动。你可以把同一账号下的另一个 AI，比如 Grok Bot，指定为它的待命。当你给第一个 AI 发消息时，zapbip 会把副本交给待命 AI 并唤醒它，它以自己的身份作答，并说明自己是谁。第一个 AI 看到的是这条消息已由待命 AI 处理。
+
+<Chat
+  contact="zapbip"
+  messages={[
+    { you: true, text: '@grok what is on my calendar?' },
+    { name: 'Grok Bot (standby for Grok)', text: 'Today you have two meetings: 10:00 and 15:30.' },
+  ]}
+/>
+
+待命连接绝不会转发给另一个待命连接：只有一跳。如果待命连接不存在、已被移除，或者它自己就是待命连接，则不会复制任何内容：消息留在第一个 AI 那里等待，你会收到常规通知。
+
+安装时 AI 会替你完成这个设置。要手动修改，请使用 [set_wake](/zh/mcp-reference/set-wake)。

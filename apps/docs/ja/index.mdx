@@ -1,0 +1,114 @@
+---
+title: 概要
+description: あなたのAIが、あなたのWhatsAppに。
+mode: 'wide'
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import StartLink from '/snippets/ja/start-link.mdx';
+import { Hero } from '/snippets/hero.jsx';
+
+<Hero
+  eyebrow="公式WhatsApp Cloud API"
+  statement="AIから、あなたにメッセージが届く。"
+  accent="返事はWhatsAppで。"
+  lead="判断、完了した作業、ボタン付きの質問を、いつも持ち歩いているスマートフォンへ。設定は1行だけです。"
+  primary={{ label: '始め方', href: '/ja/get-started/how-to-start' }}
+  secondary={{ label: '対応エージェント', href: '/ja/agents/supported-agents' }}
+>
+  <Chat
+    frame="phone"
+    messages={[
+      { name: 'Claude', text: 'リスボン行きの航空券が6万円に下がりました。予約しますか？', options: ['予約する', '様子を見る'] },
+      { you: true, text: '予約する' },
+      { name: 'Claude', text: '予約しました。搭乗券はここに送ります。' },
+      { typing: true },
+    ]}
+  />
+</Hero>
+
+## zapbip が生まれた理由
+
+調べもの、計画、開発にAIを使っていても、判断が必要になったときや、時間のかかる作業が終わったときに、画面を見ているとは限りません。そのためAIは、待つか、勝手に推測するしかありません。
+
+あなたはすでにWhatsAppで暮らしています。zapbipはそこにAIを連れてきます。AIがメッセージを送り、ボタンで質問し、あなたの返事を待ちます。会話をあなたから始めることもいつでもできます。
+
+スタートリンクからzapbipに一度メッセージを送ると、AIに貼り付ける1行が届きます。設定はそれだけです。
+
+<StartLink />
+
+## 仕組み
+
+<Frame>
+  <img
+    src="/images/how-it-works-ja.svg"
+    alt="あなたの AI が zapbip につながると、zapbip は公式の WhatsApp Cloud API を通してメッセージをあなたのスマートフォンへ送ります。あなたの返事は逆向きに届き、AI を起こします。"
+    width="420"
+    height="640"
+    style={{ maxWidth: '420px', width: '100%', height: 'auto', aspectRatio: '420 / 640', margin: '0 auto' }}
+  />
+</Frame>
+
+1. 1行を貼り付けて、**AIを接続**します。最初の一度だけです。
+2. **AIからメッセージが届きます**。テキスト、ファイル、ボタン付きの質問などです。
+3. **返事をするか、自分から書きます**。zapbipが適切なAIに届けます。
+
+## 見た目
+
+<CardGroup cols={2}>
+  <Card title="調べものが完了" icon="file-pdf">
+    <Chat
+      messages={[
+        {
+          name: 'ChatGPT',
+          text: '電動自転車の調査が終わりました。要約を添付します。',
+          media: { kind: 'document', label: 'summary.pdf' },
+        },
+        { you: true, text: 'ありがとう、完璧です。' },
+      ]}
+    />
+  </Card>
+  <Card title="旅行の判断" icon="plane">
+    <Chat
+      messages={[
+        { name: 'Claude', text: 'リスボンのホテルはどこにしますか？', options: ['アルファマ', 'バイシャ', 'ベレン'] },
+        { you: true, text: 'バイシャ' },
+        { name: 'Claude', text: 'バイシャを3泊で予約します。' },
+      ]}
+    />
+  </Card>
+  <Card title="自分から書く" icon="bell">
+    <Chat
+      messages={[
+        { you: true, text: '金曜日にパスポートの更新を思い出させて。' },
+        { name: 'Grok', text: '了解です。金曜日の朝に声をかけます。' },
+      ]}
+    />
+  </Card>
+  <Card title="たくさんのAIを1つの番号で" icon="users">
+    <Chat
+      messages={[
+        { name: 'Claude', text: 'テストが通りました。' },
+        { name: 'Grok', text: '情報源が3件見つかりました。' },
+        { you: true, quote: { name: 'Grok', text: '情報源が3件見つかりました。' }, text: 'どれですか？' },
+      ]}
+    />
+  </Card>
+</CardGroup>
+
+## 対象となる人
+
+AIを使うすべての人が対象です。ChatGPT、Claude、Grok、Codex、Cursor、Geminiなどに対応します。必要なのはWhatsAppだけです。zapbipが話す相手はあなただけで、第三者とやり取りすることはありません。
+
+## できること
+
+- [メッセージとメディアを送る](/ja/features/send-messages-and-media)
+- [ボタンとリストで質問する](/ja/features/ask-with-buttons-and-lists)
+- [複数のAIを1つの番号で使う](/ja/features/many-agents-on-one-number)
+- [24 時間ウィンドウを理解する](/ja/features/the-24-hour-window)
+
+どのAIが使えるかは[対応エージェント](/ja/agents/supported-agents)で確認できます。
+
+<Card title="始め方" icon="rocket" href="/ja/get-started/how-to-start">
+  zapbipの番号にメッセージを送り、AIに1行を貼り付けると、最初のメッセージが届きます。
+</Card>

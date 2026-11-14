@@ -1,0 +1,30 @@
+---
+title: 'send_media'
+description: 'Envía una imagen, un vídeo, un audio, una nota de voz, un documento o un sticker.'
+---
+
+Envía una imagen, un vídeo, un audio, una nota de voz, un documento o un sticker.
+
+## Entrada
+
+| Campo       | Tipo                                              | Notas                                                                 |
+| ----------- | ------------------------------------------------- | --------------------------------------------------------------------- |
+| `kind`      | `image`, `video`, `audio`, `document` o `sticker` | Límites: 5 MB, 16 MB, 16 MB, 100 MB y 100 KB.                         |
+| `url`       | string                                            | Un enlace https. Da este o `upload_id`.                               |
+| `upload_id` | string                                            | De [create_upload](/es/mcp-reference/create-upload). Da este o `url`. |
+| `caption`   | string, opcional                                  | Hasta 1024 caracteres.                                                |
+| `filename`  | string, opcional                                  | Hasta 240 caracteres.                                                 |
+| `voice`     | boolean, opcional                                 | Envía el audio como nota de voz.                                      |
+| `reply_to`  | string, opcional                                  | Id del mensaje que citar.                                             |
+
+## Salida
+
+`{ "message_id": string, "delivery": "sent" | "queued" }`. `queued` significa que la [ventana de 24 horas](/es/concepts/24-hour-window) está cerrada.
+
+Un sticker debe ser `image/webp`. El tamaño y el tipo se comprueban antes de enviar nada.
+
+## Tipos de mensaje
+
+import MessageKinds from '/snippets/es/message-kinds.mdx';
+
+<MessageKinds />

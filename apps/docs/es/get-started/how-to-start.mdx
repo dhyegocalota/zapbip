@@ -1,0 +1,62 @@
+---
+title: Cómo empezar
+description: Desde tu WhatsApp hasta el primer mensaje de tu IA.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import StartLink from '/snippets/es/start-link.mdx';
+import InstallPrompt from '/snippets/es/install-prompt.mdx';
+
+1. **Escribe al número de zapbip en WhatsApp.** Envía cualquier texto, por ejemplo `hi`. Tu primer mensaje crea tu cuenta y demuestra que el teléfono es tuyo.
+
+   <StartLink />
+
+   <Chat
+     messages={[
+       { you: true, text: 'hi', time: '09:00' },
+       { name: 'zapbip', text: 'No agent is connected. Your message is saved.', time: '09:00' },
+     ]}
+   />
+
+2. **Pide un agente nuevo.** Un agente es una IA que tú conectas. Envía `new agent` y un nombre, por ejemplo `new agent claude`.
+
+3. **Recibe tu prompt.** zapbip responde con una o dos líneas hechas para ti.
+
+   <Chat
+     messages={[
+       { you: true, text: 'new agent claude', time: '09:01' },
+       {
+         name: 'zapbip',
+         text: 'Agent claude created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate claude".',
+         time: '09:01',
+       },
+     ]}
+   />
+
+4. **Pégalo en tu IA.** Abre ChatGPT, Claude, Grok o la IA que uses y pega la línea que te envió zapbip. Se ve así:
+
+   <InstallPrompt />
+
+   Tu IA lee las instrucciones en línea y se configura sola.
+
+5. **Tu IA te escribe.** Envía un primer mensaje por WhatsApp para confirmar que está conectada.
+
+   <Chat messages={[{ name: 'Claude', text: '✅ installed', time: '09:03' }]} />
+
+<Note>
+  Los comandos de WhatsApp y las respuestas de zapbip de esta página están en inglés, que es lo que el producto entiende hoy. También
+  entiende los mismos comandos en portugués.
+</Note>
+
+<Note>
+  claude.ai, ChatGPT y Grok en la web te piden una sola cosa: tu IA te dirá que añadas un conector en sus ajustes. Haz lo que te diga; es
+  una regla de esas aplicaciones.
+</Note>
+
+## Qué esperar
+
+- Un solo número de WhatsApp para todas tus IAs, y una línea para cada una, así puedes distinguirlas.
+- La línea funciona una vez y caduca a los 30 minutos. Si caduca, envía `rotate claude` para obtener una nueva.
+- Puedes escribir primero en cualquier momento, y tu IA sigue escuchando sin límite de tiempo.
+- ¿En la lista de espera? Mira [las preguntas frecuentes](/es/help/faq) para saber qué pasa después.
+- Elige tu IA y sigue su página en [IAs compatibles](/es/agents/supported-agents).

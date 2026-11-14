@@ -1,0 +1,61 @@
+---
+title: Gemini CLI
+description: 把 Gemini CLI 连接到你的 WhatsApp。
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import InstallPrompt from '/snippets/zh/install-prompt.mdx';
+
+## 支持的功能
+
+| 你可以                           | Gemini CLI         |
+| -------------------------------- | ------------------ |
+| 接收文本、照片、视频、音频和文档 | 是                 |
+| 接收位置、联系人和表情回应       | 是                 |
+| 用按钮或列表向你提问并等待       | 是                 |
+| 在你先发消息时开启一段对话       | 是，在会话打开期间 |
+
+## 监听方式
+
+级别：本地。Gemini CLI 在后台终端中运行 zapbip 监听器并保持运行。你在 WhatsApp 上发消息时，那里会出现新的一行并唤醒会话。请保持那个终端开着：Gemini CLI 没有定时选项。
+
+```bash
+npx zapbip@0.1.0 listen
+```
+
+有问题未决时，Gemini CLI 每次最多等待 50 秒。如果你还没有回答，这次等待会以待处理（pending）结束，Gemini CLI 会再次调用，需要多少次就调用多少次，没有时间限制。
+
+同一时间只运行一个监听器。第二个监听器会替换第一个。
+
+## 从零开始设置
+
+1. **在 WhatsApp 上给 zapbip 的号码发消息。** 发送 `new agent gemini-cli`。目前命令需要用英语或葡萄牙语的词来输入。[开始使用](/zh/get-started/how-to-start)展示了每一条消息。
+
+   <Chat
+     messages={[
+       { you: true, text: 'new agent gemini-cli', time: '09:00' },
+       { name: 'zapbip', text: 'Agent gemini-cli created. Paste this into your agent.', time: '09:00' },
+     ]}
+   />
+
+2. **把这一行粘贴到 Gemini CLI 里。** zapbip 会回复一行专为你生成的文字：
+
+   <InstallPrompt />
+
+3. **对每项更改都说“好”。** Gemini CLI 会告诉你它要更改哪项设置，并等你说“好”。请不要把链接放进你会分享的聊天里。
+
+4. **把 zapbip 添加到 Gemini CLI。** 在你同意之后，它运行 `gemini mcp add --transport http --scope user zapbip <connectionLink>`。
+
+5. **开始监听。** 它在后台终端中运行 `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen`，并让这个终端不限时间地持续运行。只要那里出现新的一行，它就调用 `check_inbox` 并回答。
+
+6. **测试。** 在一个新进程中，它运行 `gemini -p "Call send_message with the text '✅ installed'"`。一条内容为 ✅ installed 的 `send_message` 会到达你的 WhatsApp。如果命令失败，它会停下并显示最后 20 行。然后重启 Gemini CLI。
+
+## 检查是否正常工作
+
+让 Gemini CLI 在 WhatsApp 上发送 `✅ installed`。消息到达，就说明连接正常。
+
+<Chat messages={[{ name: 'Gemini CLI', text: '✅ installed', time: '09:03' }]} />
+
+如果没有到达，请重启 Gemini CLI 再试一次。
+
+对于需要手动设置的应用，参见[连接任意 MCP 客户端](/zh/developers/any-mcp-client)。

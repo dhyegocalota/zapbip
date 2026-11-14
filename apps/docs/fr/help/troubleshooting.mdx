@@ -1,0 +1,66 @@
+---
+title: Dépannage
+description: Les problèmes habituels et quoi faire.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+## Le message de mon IA n'est pas arrivé
+
+La [fenêtre de 24 heures](/fr/features/the-24-hour-window) est probablement fermée. Écrivez n'importe quoi au numéro de zapbip et les messages en attente arrivent dans l'ordre. Les notifications de zapbip sont en anglais, la langue du produit aujourd'hui.
+
+<Chat
+  messages={[
+    { notice: true, text: 'The agent claude-code has a message for you: Migration finished ✅', time: '07:12' },
+    { you: true, text: 'ok', time: '07:30' },
+    { name: 'Claude Code', text: 'Migration terminée ✅', time: '07:30' },
+    { name: 'Grok', text: 'J’ai trouvé 3 sources.', time: '07:30' },
+  ]}
+/>
+
+## J'ai écrit et mon IA n'a pas répondu
+
+Votre IA n'écoutait pas. Votre message l'attend, et zapbip vous dit que l'IA n'écoute pas pour le moment.
+
+<Chat
+  messages={[
+    { you: true, text: '@claude le build est-il vert ?', time: '14:20' },
+    { notice: true, text: 'The agent claude is not listening right now. Your message waits in the inbox.', time: '14:20' },
+  ]}
+/>
+
+Ouvrez l'IA et demandez-lui de consulter ses messages, et voyez comment chaque IA reste à l'écoute dans [IA compatibles](/fr/agents/supported-agents).
+
+## Mon message est parti vers la mauvaise IA
+
+Commencez-le par `@nom`, par exemple `@grok regarde l'actualité`, ou répondez directement au message de l'IA.
+
+<Chat
+  messages={[
+    { name: 'Grok', text: 'J’ai trouvé 3 sources.', time: '11:05' },
+    { you: true, text: '@grok regarde l’actualité', time: '11:06' },
+    { you: true, quote: { name: 'Grok', text: 'J’ai trouvé 3 sources.' }, text: 'Lesquelles ?', time: '11:07' },
+  ]}
+/>
+
+Voir [Plusieurs IA, un seul numéro](/fr/features/many-agents-on-one-number).
+
+## J'ai envoyé un message et rien n'est revenu
+
+Votre compte est peut-être sur la liste d'attente. Il est retenu jusqu'à ce que l'équipe zapbip l'active. Patientez, et envoyez `help` quand l'accès s'ouvre.
+
+## Le lien de mon prompt ne fonctionne pas
+
+Le lien ne fonctionne qu'une fois, pendant 30 minutes. Écrivez `rotate` et le nom de l'IA, par exemple `rotate claude`, pour obtenir un nouveau prompt. Voir [révoquer et renouveler](/fr/help/revoke-and-rotate-keys).
+
+## zapbip a refusé le nom de mon IA
+
+Un nom compte de 1 à 20 lettres minuscules, chiffres ou tirets, commence par une lettre ou un chiffre et ne peut pas commencer comme une commande. Envoyez `new agent` avec un autre nom.
+
+## zapbip dit que j'ai atteint la limite
+
+Vous pouvez avoir jusqu'à 8 IA connectées. Écrivez `revoke` et le nom de l'une que vous n'utilisez plus pour libérer une place.
+
+## Autre chose
+
+Les erreurs techniques, comme une connexion refusée ou un envoi de fichier qui a échoué, sont listées dans Pour les développeurs.

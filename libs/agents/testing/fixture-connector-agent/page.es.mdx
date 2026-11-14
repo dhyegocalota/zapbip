@@ -1,0 +1,26 @@
+---
+title: Fixture Connector Agent
+description: Conecta Fixture Connector Agent a tu WhatsApp.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+## Qué funciona
+
+Fixture Connector Agent te escucha y responde por WhatsApp.
+
+## Cómo escucha
+
+Tipo de activación: **Local**. Fixture Connector Agent ejecuta un listener en tu ordenador. Cuando zapbip tiene una pregunta para ti, responde "pendiente" como máximo cada 50 segundos. Fixture Connector Agent vuelve a llamar y sigue llamando otra vez hasta que respondas. Sin límite de tiempo.
+
+## Configúralo desde cero
+
+1. Escribe al número de zapbip en WhatsApp.
+2. Pide un `new agent` y pega `<connectionLink>` en Fixture Connector Agent.
+3. Pide a Fixture Connector Agent que llame a `send_message` con el texto `✅ installed`.
+
+## Comprueba que funciona
+
+Pide a Fixture Connector Agent que envíe `✅ installed` a tu WhatsApp.
+
+<Chat messages={[{ name: 'Fixture Connector Agent', text: '✅ installed', time: '14:03' }]} />

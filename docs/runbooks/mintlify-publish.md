@@ -1,6 +1,6 @@
 # Mintlify publish
 
-Set the company facts, publish the npm packages, host the plugin wheels, run the docs preflight, connect the repository to Mintlify and serve the docs on `docs.zapbip.com` in English and Portuguese.
+Set the company facts, publish the npm packages, host the plugin wheels, run the docs preflight, connect the repository to Mintlify and serve the docs on `docs.zapbip.com` in English, Portuguese, Spanish, German, French, Japanese, Korean and Chinese.
 
 The docs live in `apps/docs` and publish when `main` changes. The site links the start link (`https://mcp.zapbip.com/start`) and pins `npx zapbip@<version>`, so steps 1 to 4 come first, and the production deploy ([deploy.md](deploy.md), go-live step 20) and the active production number (go-live step 22) before step 5. Mintlify publishes on every merge to `main` and cannot refuse, so `pnpm docs:preflight` (step 5) is the gate: the docs must not point at a company fact, an npm package or a wheel that does not exist. The production deploy refuses on the company facts, the plugin files, and an npm package that is squatted or cannot be read; it only warns, and goes on, about an npm package that is not published yet. The runbooks themselves are never published ([ADR 0026](../adr/0026-runbooks-live-in-the-repository-not-on-mintlify.md)).
 
@@ -50,7 +50,7 @@ The docs live in `apps/docs` and publish when `main` changes. The site links the
 
    Expect: the command reports no broken links.
 
-   If it fails: fix each reported link in both languages; a page and its Portuguese twin must both exist.
+   If it fails: fix each reported link in every language; a page and its twin in each of the seven other languages must all exist.
 
 9. **Set the domain.** In the dashboard open Settings, Custom domain, and enter `docs.zapbip.com`. Add the CNAME record it shows, as in [dns.md](dns.md), step 4, then redirect the bare domain with step 5, and wait for Mintlify to confirm it.
 
@@ -58,8 +58,8 @@ The docs live in `apps/docs` and publish when `main` changes. The site links the
 
    If it fails: `dig CNAME docs.zapbip.com +short` must print Mintlify's target; if a proxy in Cloudflare hides it, switch the record to DNS only.
 
-10. **Check the languages.** Open `https://docs.zapbip.com` in a browser set to English, then in one set to Portuguese (Brazil). Use the language switcher and open a few pages in each language.
+10. **Check the languages.** Open `https://docs.zapbip.com` in a browser set to English, then in one set to Portuguese (Brazil). Use the language switcher and open a few pages in each of the eight languages.
 
-   Expect: both languages exist for every page, with mirrored paths (`/` and `/pt-BR/`). If Mintlify starts the Portuguese browser in Portuguese, note that; if it does not, the switcher is the rule, and no redirect script is added.
+   Expect: all eight languages exist for every page, with mirrored paths (`/`, `/pt-br/`, `/es/`, `/de/`, `/fr/`, `/ja/`, `/ko/` and `/zh/`); the switcher names are English, Português (BR), Español, Deutsch, Français, 日本語, 한국어 and 简体中文 (the last is unverified). If Mintlify starts the Portuguese browser in Portuguese, note that; if it does not, the switcher is the rule, and no redirect script is added.
 
    If it fails: a missing twin page shows a 404 in one language; add the page. Language start behaviour is a Mintlify feature, so check its dashboard for a language setting before concluding it is absent.

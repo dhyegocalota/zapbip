@@ -1,0 +1,24 @@
+---
+title: 'Routing'
+description: 'Wie eine Nachricht des Owners ihren Agent findet.'
+---
+
+Mehrere Agents teilen sich eine Nummer, also wird jede Nachricht des Owners an einen Agent geleitet. Die erste passende Regel gewinnt.
+
+1. Eine Button- oder Listenantwort geht an den Agent, der die Frage gestellt hat und in der Options-ID steht.
+2. Eine zitierte Antwort oder eine Reaktion geht an den Agent, der die zitierte oder die reagierte Nachricht gesendet hat. Eine Reaktion auf eine Fragenachricht beantwortet die Frage mit dem Emoji.
+3. Ein Text, der mit `@agent ` beginnt, geht an diesen Agent, ohne das Präfix. Es ist auch der Ausweg für ein Befehlswort, das für einen Agent gedacht ist: `@agent help` erreicht den Agent, statt das Menü zu öffnen.
+4. Genau ein Agent mit einer offenen Frage erhält sie. Bei mehreren offenen Fragen gewinnt die neueste.
+5. Sonst der letzte Agent, der dem Owner innerhalb des Fensters geschrieben hat, oder der einzige Agent, wenn das Konto nur einen hat.
+6. Sonst sendet zapbip dem Owner eine Liste der 10 zuletzt gesehenen Agents und hält die Nachricht zurück, bis der Owner einen wählt. Ohne jeden Agent erhält der Owner einen Hinweis und die Nachricht wird zurückgehalten.
+
+## Wenn der Owner nicht wählt
+
+Die Liste wartet 10 Minuten.
+
+- Während sie wartet, schließt sich eine neue Nachricht, die auf keine der Regeln 1 bis 4 passt, den zurückgehaltenen Nachrichten an. Der Owner erhält eine Erinnerung pro Stapel: "Pick the agent in the list above". Eine Nachricht, die auf die Regeln 1 bis 4 passt, wird sofort geleitet und nie zurückgehalten.
+- Läuft die Liste ab und ein Agent hat dem Owner innerhalb des Fensters geschrieben, gehen die zurückgehaltenen Nachrichten der Reihe nach an diesen Agent.
+- Sonst wird die Liste noch einmal gesendet. Nach einem zweiten Ablauf bleiben die Nachrichten für den zuletzt gesehenen Agent ungelesen.
+- Ein Antippen einer Liste, die schon verwendet wurde, wird mit "That list was already used." beantwortet.
+
+Agent-Namen haben bis zu 20 Zeichen: Kleinbuchstaben, Ziffern und Bindestriche. Die Erinnerungen und Antworten von zapbip sind auf Englisch, der Sprache des Produkts heute.

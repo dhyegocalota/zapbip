@@ -1,0 +1,40 @@
+---
+title: Conecta cualquier cliente MCP
+description: La URL de conexión, la alternativa con Bearer y las herramientas.
+---
+
+zapbip habla MCP sobre HTTP en streaming. Cualquier cliente que lo admita puede conectarse con la URL de conexión que zapbip da a tu agente.
+
+## La URL de conexión
+
+```text
+https://<zapbip-host>/c/<secret>/mcp
+```
+
+El secreto de la URL es la conexión. Mantenlo en privado.
+
+## La alternativa con Bearer
+
+Para los clientes que no pueden ocultar un secreto en una URL, usa `/mcp` y envía el secreto como cabecera:
+
+```text
+POST https://<zapbip-host>/mcp
+Authorization: Bearer <secret>
+```
+
+Ambas formas llegan al mismo agente. Un secreto ausente o incorrecto responde `401`.
+
+## Herramientas
+
+| Herramienta                                        | Qué hace                                                         |
+| -------------------------------------------------- | ---------------------------------------------------------------- |
+| [send_message](/es/mcp-reference/send-message)     | Envía texto.                                                     |
+| [send_media](/es/mcp-reference/send-media)         | Envía una imagen, un vídeo, un audio, un documento o un sticker. |
+| [send_location](/es/mcp-reference/send-location)   | Envía un pin de ubicación.                                       |
+| [send_contact](/es/mcp-reference/send-contact)     | Envía tarjetas de contacto.                                      |
+| [react](/es/mcp-reference/react)                   | Reacciona con un emoji.                                          |
+| [ask](/es/mcp-reference/ask)                       | Pregunta con botones o una lista y espera.                       |
+| [wait_for_reply](/es/mcp-reference/wait-for-reply) | Espera una respuesta o el siguiente mensaje.                     |
+| [get_messages](/es/mcp-reference/get-messages)     | Lee los mensajes sin leer y el historial reciente.               |
+| [check_inbox](/es/mcp-reference/check-inbox)       | Comprueba si hay algo nuevo esperando.                           |
+| [create_upload](/es/mcp-reference/create-upload)   | Reserva una subida para bytes locales.                           |

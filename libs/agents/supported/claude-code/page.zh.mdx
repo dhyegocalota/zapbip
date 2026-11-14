@@ -1,0 +1,83 @@
+---
+title: Claude Code
+description: 把 Claude Code 连接到你的 WhatsApp。
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import StartLink from '/snippets/zh/start-link.mdx';
+import InstallPrompt from '/snippets/zh/install-prompt.mdx';
+
+## 支持的功能
+
+| 你想要               | Claude Code                                          |
+| -------------------- | ---------------------------------------------------- |
+| 收到它的消息         | 文本、照片、视频、音频、文档、位置、联系人、表情回应 |
+| 点按作答             | 按钮和列表；它会等你点按                             |
+| 从 WhatsApp 先发消息 | 可以，即使会话闲置，它也会在约 7 秒内回答            |
+| 让问题保持几个小时   | 可以，没有时间限制                                   |
+
+<Chat
+  messages={[
+    { name: 'Claude', text: '重构已经可以合并了。现在合并吗？', options: ['合并', '先不合并'], time: '15:20' },
+    { you: true, text: '合并', time: '15:21' },
+  ]}
+/>
+
+## 监听方式
+
+唤醒方式：**本地**。你电脑上的连接器会唤醒 Claude Code，所以它在你发消息后约 7 秒回答。
+
+- 用 `claude --dangerously-load-development-channels server:zapbip-channel` 启动 Claude Code。zapbip 渠道随后会把每条 WhatsApp 消息在到达时推入已打开的会话。
+- 如果会话已关闭，连接器会在约 7 秒内恢复它。闲置时不消耗 token；每条消息消耗一个回合。
+- 请保持监听器运行。想在关闭终端后仍保持运行，请按[把连接器作为服务运行](/zh/developers/background-running)操作。
+
+你的 AI 向你提问时，zapbip 会保留这个问题，并最多每 50 秒回答一次“待处理”。你的 AI 随后再次调用，并一直调用下去，直到你回答。没有时间限制。
+
+只使用一个监听器，绝不要同时使用两个。如果渠道没有开启，Claude Code 会让 `npx zapbip@0.1.0 listen` 保持运行，并用 Monitor 监视它。一次监视最长持续 30 分钟，所以 Claude Code 会在每次超时通知时重新设置它。
+
+## 从零开始设置
+
+1. **在 WhatsApp 上给 zapbip 的号码发消息。** 随便发一段文字，例如 `hi`。
+
+   <StartLink />
+
+2. **申请一个新智能体。** 智能体就是你连接的一个 AI。目前命令需要用英语或葡萄牙语的词来输入。
+
+   <Chat
+     messages={[
+       { you: true, text: 'new agent claude-code', time: '15:00' },
+       {
+         name: 'zapbip',
+         text: 'Agent claude-code created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate claude-code".',
+         time: '15:00',
+       },
+     ]}
+   />
+
+3. **把这一行粘贴到 Claude Code 里。**
+
+   <InstallPrompt />
+
+   Claude Code 会阅读说明并按顺序执行。在更改文件或设置之前，它会告诉你要改哪一个，并等你说“好”。链接是机密的，请不要放进你会分享的聊天里。
+
+4. **说“好”。** 之后 Claude Code 会按这个顺序完成其余的事。
+
+5. **把 zapbip 添加到 Claude Code。** 如果存在旧的 `zapbip` 或 `zapbip-channel` 条目，Claude Code 会用 `claude mcp remove --scope user zapbip` 或 `claude mcp remove --scope user zapbip-channel` 把它移除。然后为工具运行 `claude mcp add --transport http --scope user zapbip <connectionLink>`，为实时渠道运行 `claude mcp add --scope user zapbip-channel -e ZAPBIP_CONNECTION_URL=<connectionLink> -- npx zapbip@0.1.0 channel`。
+
+   这些步骤中的命令带有你的连接链接，所以它会留在你的 shell 历史里。想避免这一点，请像[把连接器作为服务运行](/zh/developers/background-running)那样，把 `ZAPBIP_CONNECTION_URL` 放进环境文件。
+
+6. **保存 zapbip 技能。** 在你同意之后，它会写入 `~/.claude/skills/zapbip/SKILL.md`，这样每个会话都知道如何使用 WhatsApp，包括何时调用 `check_inbox`。
+
+7. **选择一个监听器。** 一条连接只有一个监听器，第二个会替换第一个，所以它只使用下面的恰好一种，绝不同时使用两种。对于已停止的会话，它在后台运行 `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 connect --client claude-code`。当 Claude Code 闲置时你发消息，连接器会唤醒你的会话，并用 `claude -p --resume` 恢复已关闭的会话。
+
+8. **仅当渠道不可用时。** 它在后台运行 `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen`，并用 Monitor 监视它，每次超时通知时重新设置。
+
+9. **测试。** 在一个新进程中，它运行 `claude -p "Call send_message with the text '✅ installed'" --allowedTools=mcp__zapbip__send_message`。一条内容为 ✅ installed 的 `send_message` 会到达你的 WhatsApp。如果命令失败，它会停下并显示最后 20 行。然后重启 Claude Code 以使用 zapbip 的工具。
+
+## 检查是否正常工作
+
+让 Claude Code 向你的 WhatsApp 发送 `✅ installed`。它应在几秒内到达。
+
+<Chat messages={[{ name: 'Claude', text: '✅ installed', time: '15:03' }]} />
+
+如果什么也没收到，请参见[故障排查](/zh/help/troubleshooting)。

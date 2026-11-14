@@ -1,0 +1,57 @@
+---
+title: Webの Grok
+description: Webの GrokをあなたのWhatsAppに接続します。
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import InstallPrompt from '/snippets/ja/install-prompt.mdx';
+
+## 使えること
+
+| できること                                         | Webの Grok                       |
+| -------------------------------------------------- | -------------------------------- |
+| テキスト、写真、動画、音声、ドキュメントを受け取る | はい                             |
+| 位置情報、連絡先、リアクションを受け取る           | はい                             |
+| ボタンまたはリストで質問して待つ                   | はい。そのチャットが開いている間 |
+| あなたが先に書いたときに会話を始める               | あなたのGrok Botを通してのみ     |
+
+## 聞き取りの仕組み
+
+段: 待機。Webの Grokは外から起こすことができず、各呼び出しは60 秒に制限されています。そのため、あなたが先に書いたときは、あなたのGrok Botが代わりに応答し、会話を続けます。Grok Botがない場合、メッセージはあなたがGrokのチャットを開くまで待ち、zapbipがWhatsAppで、Grokは今聞いていないとお知らせします。
+
+質問が開いている間、Grokは一度に最大50 秒待ちます。あなたが答えていない場合、待機は保留中（pending）で終わり、Grokは必要なだけ何度でも、もう一度呼び出します。時間制限なしです。
+
+Grokのチャットは開いたままにしてください。zapbipに接続したGrok Botがあれば、ほかにすることはありません。
+
+Grokは1回の答えを1 分待ち、その後にまた尋ねるので、全体としての制限はありません。
+
+## ゼロから設定する
+
+1. **WhatsAppでzapbipの番号にメッセージを送ります。** `new agent grok-web` を送ってください。コマンドは今のところ英語かポルトガル語の言葉で入力します。すべてのメッセージは[始め方](/ja/get-started/how-to-start)で確認できます。
+
+   <Chat
+     messages={[
+       { you: true, text: 'new agent grok-web', time: '09:00' },
+       { name: 'zapbip', text: 'Agent grok-web created. Paste this into your agent.', time: '09:00' },
+     ]}
+   />
+
+2. **その1行をWebの Grokに貼り付けます。** zapbipが、あなた専用の1行で返信します。
+
+   <InstallPrompt />
+
+3. **コネクタを貼り付けます。** Grokが、設定で `<connectionLink>` をコネクタとして貼り付けるよう案内します。これはあなた自身で行います。
+
+4. **あなたが先に書いたとき、誰が答えるかを選びます。** zapbipに接続したGrok Botがあれば、Grokはそのボットを指定して `set_wake({mode: "standby", standby_agent: "<name>"})` を呼びます。なければ `set_wake({mode: "none"})` を呼びます。
+
+5. **テストします。** チャットで、`send_message` を呼び、✅ installed を送ります。
+
+## 動作の確認
+
+Grokに、WhatsAppで `✅ installed` を送るよう頼んでください。届けば、接続は機能しています。
+
+<Chat messages={[{ name: 'Grok', text: '✅ installed', time: '09:03' }]} />
+
+Grok Botを接続している場合は、Grokのチャットを閉じた状態でWhatsAppに何か書いてください。Grok Botが答えます。
+
+手動での設定が必要なアプリについては、[任意のMCPクライアントを接続する](/ja/developers/any-mcp-client)をご覧ください。

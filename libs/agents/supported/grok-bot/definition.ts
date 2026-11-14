@@ -1,22 +1,14 @@
-import { DocsLanguage, WakeMode, WakeRung } from '@zapbip/types';
+import { WakeMode, WakeRung } from '@zapbip/types';
 import type { AgentDefinition } from '../../src/contract';
+import { perLanguage } from '../../src/docs';
 
 export const definition: AgentDefinition = {
   enumMember: 'GrokBot',
   idIsOrdinaryWord: false,
   docs: {
-    matrixName: {
-      [DocsLanguage.English]: 'Grok Bot',
-      [DocsLanguage.PortugueseBrazil]: 'Grok Bot',
-    },
-    linkName: {
-      [DocsLanguage.English]: 'Grok Bot',
-      [DocsLanguage.PortugueseBrazil]: 'Grok Bot',
-    },
-    pageFacts: {
-      [DocsLanguage.English]: [],
-      [DocsLanguage.PortugueseBrazil]: [],
-    },
+    matrixName: perLanguage({ valueOf: () => 'Grok Bot' }),
+    linkName: perLanguage({ valueOf: () => 'Grok Bot' }),
+    pageFacts: perLanguage({ valueOf: () => [] }),
     speakerNames: ['Grok Bot', 'Grok'],
   },
   listen: {

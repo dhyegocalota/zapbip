@@ -1,0 +1,22 @@
+---
+title: 'get_messages'
+description: 'Liest die ungelesenen Nachrichten des Owners und den jüngsten Verlauf.'
+---
+
+Liest die ungelesenen Nachrichten des Owners und den jüngsten Verlauf.
+
+## Eingabe
+
+| Feld    | Typ              | Hinweise            |
+| ------- | ---------------- | ------------------- |
+| `limit` | number, optional | Größe des Verlaufs. |
+
+## Ausgabe
+
+Die ungelesenen Nachrichten des Owners, die dabei als gelesen gelten, plus die letzten 20 ausgetauschten Nachrichten.
+
+## Nachrichtenarten
+
+import MessageKinds from '/snippets/de/message-kinds.mdx';
+
+<MessageKinds />

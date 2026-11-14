@@ -1,0 +1,59 @@
+---
+title: Du beginnst die Unterhaltung
+description: Schreib deiner KI zuerst, von WhatsApp aus.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+Du musst nicht warten, bis deine KI zuerst schreibt. Schick zapbip eine Nachricht, und sie geht an die KI, die du nennst, oder an die, die zuletzt geschrieben hat.
+
+<Chat
+  messages={[
+    { you: true, text: '@claude ist der Build grün?', time: '09:00' },
+    { name: 'Claude', text: 'Ja, alle 212 Tests laufen durch.', time: '09:00' },
+  ]}
+/>
+
+## Wie deine KI dich hört
+
+Eine KI antwortet nur, wenn sie etwas weckt. zapbip nutzt den besten Weg, den jede KI zulässt:
+
+| Wie sie geweckt wird          | Was passiert                                              | Übliche Wartezeit                                |
+| ----------------------------- | --------------------------------------------------------- | ------------------------------------------------ |
+| Connector auf deinem Computer | Die Sitzung auf deinem Computer läuft sofort weiter.      | 7 Sekunden bei Claude Code, 6 bei Codex          |
+| Webhook                       | zapbip ruft den eigenen Link der KI auf, und sie startet. | 9 Sekunden bei Grok Bot, 16 bei claude.ai        |
+| Geplante Aufgabe              | Die KI sucht per Timer nach deiner Nachricht.             | Bis zum Timer, 1 Stunde bei ChatGPT              |
+| Eine andere KI von dir        | Eine zweite KI von dir antwortet an ihrer Stelle.         | Hängt von dieser KI ab, zum Beispiel Grok im Web |
+| Nur Posteingang               | Deine Nachricht wartet, bis die KI nachsieht.             | Bis die KI nachsieht                             |
+
+Deine Nachricht geht nie verloren. Lässt sich die KI nicht wecken, wartet sie in ihrem Posteingang.
+
+## Wenn deine KI nicht zuhört
+
+zapbip sagt es dir sofort, damit du weißt, dass sie wartet. Die Hinweise von zapbip sind auf Englisch, der Sprache des Produkts heute.
+
+<Chat
+  messages={[
+    { you: true, text: '@claude ist der Build grün?', time: '09:00' },
+    {
+      notice: true,
+      text: 'The agent claude is not listening right now. Your message waits in the inbox.',
+      time: '09:00',
+    },
+  ]}
+/>
+
+## Wenn das 24-Stunden-Fenster geschlossen ist
+
+WhatsApp erlaubt zapbip nur innerhalb von 24 Stunden nach deiner letzten Nachricht, frei zu schreiben. Ist es geschlossen, sendet zapbip einen Hinweis pro geschlossenem Fenster und hält den Rest zurück. Schreib irgendetwas, um das Fenster wieder zu öffnen. Das gilt auch für die eigenen Hinweise von zapbip.
+
+<Chat
+  messages={[
+    { you: true, text: '@claude ist der Build grün?', time: 'Gestern 09:00' },
+    { notice: true, text: 'The agent claude has a message for you: Yes, all 212 tests pass.', time: '10:30' },
+    { you: true, text: 'ok', time: '10:31' },
+    { name: 'Claude', text: 'Ja, alle 212 Tests laufen durch.', time: '10:31' },
+  ]}
+/>
+
+Siehe [das 24-Stunden-Fenster](/de/features/the-24-hour-window) und [viele KIs mit einer Nummer](/de/features/many-agents-on-one-number).

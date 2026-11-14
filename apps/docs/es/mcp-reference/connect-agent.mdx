@@ -1,0 +1,26 @@
+---
+title: 'connect_agent'
+description: 'Conecta un agente nuevo después de que el propietario lo permita en WhatsApp.'
+---
+
+Conecta un agente nuevo a esta cuenta por su nombre. Se pregunta al propietario por WhatsApp, como el agente que llama, y la llamada espera la respuesta. Ejecuta el mismo caso de uso que el comando `new agent`, así que las reglas del nombre, el límite de 8 agentes y el enlace de instalación son los mismos. Consulta [Deja que tu IA gestione zapbip](/es/features/let-your-ai-manage-zapbip).
+
+## Entrada
+
+| Campo  | Tipo   | Notas                                                                                                |
+| ------ | ------ | ---------------------------------------------------------------------------------------------------- |
+| `name` | string | Simplificado como en el comando: minúsculas, sin acentos, guiones por espacios, hasta 20 caracteres. |
+
+## La pregunta
+
+Tres botones: **Allow**, **Allow, send to agent** y **Deny**, con una referencia corta al final de la pregunta. La llamada espera hasta 50 segundos. Solo cuenta un toque en un botón: el texto escrito se lee como Deny. Deny y el silencio no cambian nada, y un toque tras la espera tampoco cambia nada; la misma petición se rechaza entonces (`cooling_down`) durante 10 minutos.
+
+## Salida
+
+`{ "status": "applied" | "denied" | "timed_out" | "refused", "agent": string | null, "reason": string | null, "install_prompt": string | null }`.
+
+- `applied`: el agente se conectó. Tras **Allow**, el enlace de instalación fue al propietario por WhatsApp e `install_prompt` es `null`. Tras **Allow, send to agent**, `install_prompt` lleva las dos líneas que pegar en el agente nuevo. Es la única forma en que un enlace o una clave llega al resultado de una herramienta.
+- `denied` y `timed_out`: no cambió nada.
+- `refused`: `reason` es `invalid_name`, `reserved_name`, `name_taken`, `limit_reached`, `cooling_down`, `window_closed`, `send_failed`, `suspended` o `waitlisted`. Un nombre no válido o reservado se rechaza antes de preguntar al propietario. Cuando no se puede enviar el enlace, la conexión nueva se revoca de nuevo.
+
+Como máximo 3 llamadas que actúan (`connect_agent`, [revoke_agent](/es/mcp-reference/revoke-agent) y [sign_in_link](/es/mcp-reference/sign-in-link)) por minuto y conexión; la siguiente es un error que empieza por `rate_limited`.

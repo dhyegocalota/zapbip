@@ -1,0 +1,57 @@
+---
+title: 웹의 Grok
+description: 웹의 Grok을 내 WhatsApp에 연결합니다.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import InstallPrompt from '/snippets/ko/install-prompt.mdx';
+
+## 지원하는 기능
+
+| 할 수 있는 일                           | 웹의 Grok                    |
+| --------------------------------------- | ---------------------------- |
+| 텍스트, 사진, 동영상, 오디오, 문서 받기 | 예                           |
+| 위치, 연락처, 반응 받기                 | 예                           |
+| 버튼이나 목록으로 질문하고 기다리기     | 예. 그 채팅이 열려 있는 동안 |
+| 내가 먼저 쓸 때 대화 시작하기           | 내 Grok Bot을 통해서만       |
+
+## 수신 방식
+
+단계: 대기(스탠바이). 웹의 Grok은 밖에서 깨울 수 없고, 각 호출이 60초로 제한됩니다. 그래서 내가 먼저 쓰면 내 Grok Bot이 대신 응답하고 대화를 이어 갑니다. Grok Bot이 없으면 내가 Grok 채팅을 열 때까지 메시지가 기다리고, zapbip이 WhatsApp으로 Grok이 지금 듣고 있지 않다고 알려 줍니다.
+
+질문이 열려 있는 동안 Grok은 한 번에 최대 50초 기다립니다. 내가 답하지 않으면 대기가 보류 중(pending)으로 끝나고, Grok은 필요한 만큼 몇 번이든 다시 호출합니다. 시간 제한 없이 기다립니다.
+
+Grok 채팅을 열어 두세요. zapbip에 연결된 Grok Bot이 있다면 더 할 일은 없습니다.
+
+Grok은 하나의 답을 1분 기다린 뒤 다시 묻기 때문에, 전체적으로는 제한이 없습니다.
+
+## 처음부터 설정하기
+
+1. **WhatsApp에서 zapbip 번호로 메시지를 보냅니다.** `new agent grok-web`을 보내세요. 명령어는 지금은 영어나 포르투갈어 단어로 입력합니다. 모든 메시지는 [시작하기](/ko/get-started/how-to-start)에 나와 있습니다.
+
+   <Chat
+     messages={[
+       { you: true, text: 'new agent grok-web', time: '09:00' },
+       { name: 'zapbip', text: 'Agent grok-web created. Paste this into your agent.', time: '09:00' },
+     ]}
+   />
+
+2. **그 줄을 웹의 Grok에 붙여 넣습니다.** zapbip이 나를 위해 만든 한 줄로 답합니다.
+
+   <InstallPrompt />
+
+3. **커넥터를 붙여 넣습니다.** Grok이 설정에서 `<connectionLink>`를 커넥터로 붙여 넣으라고 안내합니다. 이 단계는 직접 합니다.
+
+4. **내가 먼저 쓸 때 누가 답할지 고릅니다.** zapbip에 연결된 Grok Bot이 있으면 Grok이 그 봇을 지정해 `set_wake({mode: "standby", standby_agent: "<name>"})`을 호출합니다. 없으면 `set_wake({mode: "none"})`을 호출합니다.
+
+5. **테스트합니다.** 채팅에서 `send_message`를 호출해 ✅ installed를 보냅니다.
+
+## 작동 확인
+
+Grok에게 WhatsApp으로 `✅ installed`를 보내라고 요청하세요. 도착하면 연결이 작동하는 것입니다.
+
+<Chat messages={[{ name: 'Grok', text: '✅ installed', time: '09:03' }]} />
+
+Grok Bot이 연결되어 있다면, Grok 채팅을 닫은 상태에서 WhatsApp에 무언가 써 보세요. Grok Bot이 답합니다.
+
+수동 설정이 필요한 앱은 [모든 MCP 클라이언트 연결하기](/ko/developers/any-mcp-client)를 보세요.

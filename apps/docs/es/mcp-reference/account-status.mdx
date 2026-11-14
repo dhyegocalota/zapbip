@@ -1,0 +1,16 @@
+---
+title: 'account_status'
+description: 'Lee el estado y el plan de esta cuenta.'
+---
+
+Lee la cuenta a la que pertenece esta conexión. Solo lectura: no necesita aprobación y no cuenta para ningún límite.
+
+## Entrada
+
+Ninguna.
+
+## Salida
+
+`{ "state": "waitlisted" | "active" | "suspended" | "deleting", "plan": "free", "free_messages": number }`. El número de teléfono nunca forma parte del resultado. `free_messages` es la cuota que incluye el plan; zapbip no informa de cuánto queda.
+
+Los mismos datos están en la [aplicación web](/es/features/web-app): la página de inicio responde a `Accept: application/json` para una sesión iniciada con `{ "state", "phone", "plan", "free_messages", "agents" }`, donde `phone` muestra solo las últimas cuatro cifras, y `401` con `{ "error": "sign_in_required" }` si no hay sesión.

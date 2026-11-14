@@ -1,10 +1,13 @@
-import { COMPANY, COMPANY_FACT_UNSET } from '@zapbip/types';
+import { COMPANY, COMPANY_FACT_UNSET, DocsPageLanguage } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
+import { snippetPathOf, twinPathOf } from './docs-experience';
 import { DOCS_ROOT, documentFiles, readRepositoryFile } from './repository-files';
 
 const DOCS_CONFIG = 'apps/docs/docs.json';
-const COMPANY_SNIPPETS = ['apps/docs/snippets/company.mdx', 'apps/docs/snippets/pt-br/company.mdx'];
-const ABOUT_PAGES = ['apps/docs/help/about.mdx', 'apps/docs/pt-br/help/about.mdx'];
+const COMPANY_SNIPPETS = Object.values(DocsPageLanguage).map(
+  (language) => `${DOCS_ROOT}/${snippetPathOf({ name: 'company.mdx', language })}`,
+);
+const ABOUT_PAGES = Object.values(DocsPageLanguage).map((language) => `${DOCS_ROOT}/${twinPathOf({ path: 'help/about.mdx', language })}`);
 const FOOTER_LABEL = 'zapbip · Logic Bit';
 const FOOTER_HREF = '/help/about';
 const README_PRODUCT_LINE = 'zapbip is a product of Logic Bit';

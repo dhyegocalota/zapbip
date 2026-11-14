@@ -1,0 +1,16 @@
+---
+title: 'account_status'
+description: '读取此账户的状态和套餐。'
+---
+
+读取此连接所属的账户。只读：不需要批准，也不计入任何限制。
+
+## 输入
+
+无。
+
+## 输出
+
+`{ "state": "waitlisted" | "active" | "suspended" | "deleting", "plan": "free", "free_messages": number }`。电话号码永远不会出现在结果中。`free_messages` 是套餐包含的额度；zapbip 不会报告还剩多少。
+
+同样的数据也在[网页应用](/zh/features/web-app)中：对已登录的会话，主页会针对 `Accept: application/json` 返回 `{ "state", "phone", "plan", "free_messages", "agents" }`，其中 `phone` 只显示最后四位数字；未登录时返回 `401` 和 `{ "error": "sign_in_required" }`。

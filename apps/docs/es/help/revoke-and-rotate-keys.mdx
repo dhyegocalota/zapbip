@@ -1,0 +1,44 @@
+---
+title: Revocar y renovar una conexión
+description: Corta una IA o reemplaza su enlace.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+Cada IA tiene su propia conexión. La cortas, o reemplazas su enlace, escribiendo al número de zapbip. Los comandos están en inglés, que es lo que el producto entiende hoy.
+
+## Cortar una IA
+
+Escribe `revoke` y el nombre de la IA, por ejemplo `revoke claude`. Todas las formas en que esa IA está conectada se detienen al instante: su enlace con zapbip, un listener que corra en tu ordenador y cualquier activación que la arrancaría.
+
+<Chat
+  messages={[
+    { you: true, text: 'revoke claude', time: '16:02' },
+    { text: 'Agent claude revoked. Its link no longer works.', time: '16:02' },
+  ]}
+/>
+
+Para volver a usar esa IA, escribe `new agent claude`.
+
+## Reemplazar un enlace
+
+Escribe `rotate` y el nombre, por ejemplo `rotate claude`. La conexión anterior deja de funcionar al instante, con el mismo alcance que `revoke`, y zapbip te envía un prompt nuevo para pegar en esa IA.
+
+<Chat
+  messages={[
+    { you: true, text: 'rotate claude', time: '16:05' },
+    {
+      text: 'Link of agent claude replaced. The old link no longer works. Paste this into your agent: ...',
+      time: '16:05',
+    },
+  ]}
+/>
+
+Un enlace renovado se envía una vez. zapbip no lo vuelve a mostrar: `agents` lista tus IAs sin ningún enlace. Si el prompt nuevo no llega, zapbip mantiene la conexión anterior y puedes volver a escribir `rotate claude`.
+
+## Cuándo usar cada uno
+
+- Perdiste una IA, dejaste de usarla o compartiste su enlace por error: `revoke`.
+- El enlace caducó, ya se usó o se filtró, y aún quieres la IA: `rotate`.
+
+Mira cada palabra en [comandos en WhatsApp](/es/features/whatsapp-commands).

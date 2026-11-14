@@ -1,0 +1,101 @@
+---
+title: 'Hermes'
+description: 'WhatsAppでHermesに書き込み、時間制限なしで答えてもらいます。'
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+## 使えること
+
+Hermesは、小さなzapbipプラグインを通して、あなたのWhatsAppを聞き続けます。あなたから先に書いても、質問に後から答えても、メッセージはHermesのセッションに届きます。
+
+<Chat
+  contact="Hermes"
+  messages={[
+    { you: true, text: '今日リポジトリで何が変わったかまとめて。', time: '18:02' },
+    { name: 'Hermes', text: 'コミットが3件です。課金の修正、新しいテスト、ドキュメントの更新です。', time: '18:03' },
+  ]}
+/>
+
+### 転送したメッセージ
+
+ほかの人から転送したメッセージは、あなたが書いたものではないと示すラベルが付いてHermesに届くので、Hermesはそれをあなたの指示として扱いません。
+
+## 聞き取りの仕組み
+
+段: ローカル。質問が開いている間、Hermesは一度に最大50 秒待ちます。あなたが答えていない場合、待機は保留中（pending）で終わり、Hermesは必要なだけ何度でも、もう一度呼び出します。時間制限なしです。
+
+プラグインは、zapbipへの接続を1本、時間制限なしで開いたままにします。ネットワークが切れると自分で再接続し、失敗するたびに待ち時間を少しずつ延ばします（最初は1 秒、最長30 秒）。その間にあなたが送ったメッセージはzapbipの受信トレイで待ち、プラグインは復帰するとすぐに、未回答のメッセージをすべて拾い上げます。
+
+### プラグインをインストールできない場合
+
+代わりにHermesがポーリングできます。設定で示したMCPサーバーを追加し、`check_inbox` を呼ぶ1 分ごとのジョブを作成します。メッセージは最大1 分待たされ、答えも同じように届きます。
+
+## ゼロから設定する
+
+### 必要なもの
+
+- ゲートウェイが動いているHermes。
+- 接続リンク。AIがzapbipと話すのに使うのと同じ `https://.../c/<secret>/mcp` のリンクです。パスワードと同じように扱ってください。
+
+### プラグインをインストールする
+
+Hermesが動いているPython環境にパッケージをインストールします。
+
+```bash
+d=$(mktemp -d) && curl -fsSL https://mcp.zapbip.com/pkg/zapbip_platform-0.1.0-requirements.txt -o "$d/zapbip-requirements.txt" && python3 -c 'import hashlib,sys; sys.exit(hashlib.sha256(open(sys.argv[1],"rb").read()).hexdigest() != sys.argv[2])' "$d/zapbip-requirements.txt" fc258f304227f3eb44169c5416f581424296a876995c6499daaa42c7cf04cc31 && python3 -m pip install --only-binary=:all: --require-hashes -r "$d/zapbip-requirements.txt"
+```
+
+次に、`~/.hermes/config.yaml` で有効にします。
+
+```yaml
+plugins:
+  enabled:
+    - zapbip-platform
+```
+
+リンクと、Hermesと話してよい人は、ゲートウェイが動いている環境に設定してください。共有するファイルには書かないでください。
+
+```bash
+export ZAPBIP_CONNECTION_LINK='https://<host>/c/<secret>/mcp'
+export ZAPBIP_ALLOWED_USERS=owner
+```
+
+接続リンクを保持するファイルはパスワードと同じ働きをします。自分のユーザーだけが読めるように権限を `600` にし、共有したりコミットしたりしないでください。
+
+```bash
+chmod 600 <file>
+```
+
+ゲートウェイを再起動します。
+
+エージェントごとにリスナーは 1 つだけ実行してください。プラグインか `npx zapbip@0.1.0 listen` のどちらか一方で、両方は使わないでください。2 つ目のリスナーは 1 つ目を置き換えます。
+
+### Hermesの答え方
+
+Hermesは、あなたのメッセージへの返信を、追加の設定なしで、プラグイン自身を通して返します。
+
+zapbipをMCPサーバーとして追加すると、Hermesから会話を始めたり、ボタン付きで質問して答えを待ったり、後述のポーリングによる代替手段を使ったりできます。
+
+```yaml
+mcp_servers: { zapbip: { url: 'https://<host>/c/<secret>/mcp' } }
+```
+
+そのうえで、WhatsAppでHermesに `✅ installed` を送るよう頼んでください。そのメッセージが届けば、動作しています。
+
+<Chat
+  contact="zapbip"
+  messages={[
+    { you: true, text: 'インストールできたら ✅ installed を送って。', time: '18:10' },
+    { name: 'Hermes', text: '✅ installed', time: '18:10' },
+  ]}
+/>
+
+## 動作の確認
+
+| 見えるもの                                 | 意味                                                                        |
+| ------------------------------------------ | --------------------------------------------------------------------------- |
+| メッセージに答えが返ってこない             | ゲートウェイが動いていないか、プラグインが `plugins.enabled` にありません。 |
+| プラグインが自動で止まる                   | 同じ接続に対して別のプラグインまたはコネクタが起動し、置き換えました。      |
+| Hermesから会話を始められない、質問できない | `zapbip` のMCPサーバーが `config.yaml` にありません。                       |
+| プラグインがエラーで停止する               | リンクが不明か、接続が取り消されています。新しいものを依頼してください。    |

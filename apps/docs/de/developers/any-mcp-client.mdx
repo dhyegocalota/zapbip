@@ -1,0 +1,40 @@
+---
+title: Jeden MCP-Client verbinden
+description: Die Verbindungs-URL, die Bearer-Alternative und die Werkzeuge.
+---
+
+zapbip spricht MCP über Streamable HTTP. Jeder Client, der es unterstützt, kann sich mit der Verbindungs-URL verbinden, die zapbip deinem Agent gibt.
+
+## Die Verbindungs-URL
+
+```text
+https://<zapbip-host>/c/<secret>/mcp
+```
+
+Das Geheimnis in der URL ist die Verbindung. Halte es privat.
+
+## Die Bearer-Alternative
+
+Für Clients, die kein Geheimnis in einer URL verbergen können, nutze `/mcp` und sende das Geheimnis als Header:
+
+```text
+POST https://<zapbip-host>/mcp
+Authorization: Bearer <secret>
+```
+
+Beide Formen erreichen denselben Agent. Ein fehlendes oder falsches Geheimnis antwortet mit `401`.
+
+## Werkzeuge
+
+| Werkzeug                                           | Was es tut                                                  |
+| -------------------------------------------------- | ----------------------------------------------------------- |
+| [send_message](/de/mcp-reference/send-message)     | Sendet Text.                                                |
+| [send_media](/de/mcp-reference/send-media)         | Sendet ein Bild, Video, Audio, Dokument oder einen Sticker. |
+| [send_location](/de/mcp-reference/send-location)   | Sendet eine Standortmarkierung.                             |
+| [send_contact](/de/mcp-reference/send-contact)     | Sendet Kontaktkarten.                                       |
+| [react](/de/mcp-reference/react)                   | Reagiert mit einem Emoji.                                   |
+| [ask](/de/mcp-reference/ask)                       | Fragt mit Buttons oder einer Liste und wartet.              |
+| [wait_for_reply](/de/mcp-reference/wait-for-reply) | Wartet auf eine Antwort oder die nächste Nachricht.         |
+| [get_messages](/de/mcp-reference/get-messages)     | Liest ungelesene Nachrichten und den jüngsten Verlauf.      |
+| [check_inbox](/de/mcp-reference/check-inbox)       | Prüft, ob etwas Neues wartet.                               |
+| [create_upload](/de/mcp-reference/create-upload)   | Reserviert einen Upload für lokale Bytes.                   |

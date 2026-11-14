@@ -1,0 +1,22 @@
+---
+title: 'get_messages'
+description: "Lit les messages non lus du propriétaire et l'historique récent."
+---
+
+Lit les messages non lus du propriétaire et l'historique récent.
+
+## Entrée
+
+| Champ   | Type               | Notes                   |
+| ------- | ------------------ | ----------------------- |
+| `limit` | number, facultatif | Taille de l'historique. |
+
+## Sortie
+
+Les messages non lus du propriétaire, qui deviennent lus, plus les 20 derniers messages échangés.
+
+## Types de messages
+
+import MessageKinds from '/snippets/fr/message-kinds.mdx';
+
+<MessageKinds />

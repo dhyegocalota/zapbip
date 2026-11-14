@@ -1,0 +1,52 @@
+---
+title: Muchas IAs con un solo número
+description: Cómo tu respuesta encuentra a la IA a la que va dirigida.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+Todas tus IAs escriben desde el mismo número de WhatsApp. zapbip decide a dónde va tu mensaje, en este orden:
+
+| Tú haces                                             | Va a                                   |
+| ---------------------------------------------------- | -------------------------------------- |
+| Tocar un botón o una opción de una lista             | La IA que preguntó                     |
+| Responder a un mensaje o reaccionar a él             | La IA que envió ese mensaje            |
+| Escribir `@grok mira las noticias`                   | Grok, sin el `@grok `                  |
+| Responder mientras una IA tiene una pregunta abierta | Esa IA                                 |
+| Escribir cuando solo habló Claude                    | Claude, la última IA que escribió      |
+| Escribir cuando nada coincide                        | Una lista de IAs recientes para elegir |
+
+## Ejemplo
+
+<Chat
+  messages={[
+    { name: 'Claude', text: 'Las pruebas pasaron.', time: '10:02' },
+    { name: 'Grok', text: '¿Puedo hacer rebase de main?', options: ['Sí', 'No'], time: '10:03' },
+    { you: true, text: '@claude gracias', time: '10:04' },
+    { you: true, text: 'Sí', time: '10:04' },
+  ]}
+/>
+
+`@claude gracias` va a Claude y el toque en Sí va a Grok.
+
+<Chat
+  messages={[
+    { you: true, text: 'ok', time: '10:05' },
+    { name: 'zapbip', text: 'Which AI is this for? Claude, Grok', options: ['Claude', 'Grok'], time: '10:05' },
+  ]}
+/>
+
+Un simple `ok` recibe una lista de IAs recientes para elegir. La pregunta de zapbip está en inglés, el idioma del producto hoy.
+
+Responde a un mensaje para hablar con la IA que lo envió:
+
+<Chat
+  messages={[
+    { name: 'Claude', text: 'Las pruebas pasaron.', time: '10:02' },
+    { name: 'Grok', text: 'Encontré 3 fuentes.', time: '10:03' },
+    { you: true, quote: { name: 'Grok', text: 'Encontré 3 fuentes.' }, text: '¿Cuáles?', time: '10:04' },
+    { name: 'Grok', text: 'Dos artículos y un informe. Te envío los enlaces.', time: '10:04' },
+  ]}
+/>
+
+Los nombres tienen hasta 20 caracteres: letras minúsculas, dígitos y guiones.

@@ -1,0 +1,13 @@
+| Type       | Agent vers propriétaire                                                                  | Propriétaire vers agent                                                       |
+| ---------- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `text`     | [send_message](/fr/mcp-reference/send-message)                                           | texte                                                                         |
+| `image`    | [send_media](/fr/mcp-reference/send-media), jusqu'à 5 MB                                 | l'image en ligne jusqu'à 1 MB, sinon un lien signé                            |
+| `video`    | [send_media](/fr/mcp-reference/send-media), jusqu'à 16 MB                                | lien signé                                                                    |
+| `audio`    | [send_media](/fr/mcp-reference/send-media), jusqu'à 16 MB, `voice` pour un message vocal | lien signé                                                                    |
+| `document` | [send_media](/fr/mcp-reference/send-media), jusqu'à 100 MB                               | lien signé, nom du fichier et type MIME                                       |
+| `sticker`  | [send_media](/fr/mcp-reference/send-media)                                               | lien signé                                                                    |
+| `location` | [send_location](/fr/mcp-reference/send-location)                                         | latitude, longitude, nom et adresse                                           |
+| `contacts` | [send_contact](/fr/mcp-reference/send-contact)                                           | les cartes de contact                                                         |
+| `reaction` | [react](/fr/mcp-reference/react)                                                         | `message_id` et `emoji`, acheminés vers l'agent qui a envoyé le message réagi |
+| `choice`   | [ask](/fr/mcp-reference/ask), jusqu'à 3 options en boutons et de 4 à 10 en liste         | `option_id`, `title` et `description` facultatif                              |
+| citation   | `reply_to` à chaque envoi                                                                | `reply_to`, acheminé vers l'agent qui a envoyé le message cité                |

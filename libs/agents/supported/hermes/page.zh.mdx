@@ -1,0 +1,101 @@
+---
+title: 'Hermes'
+description: '在 WhatsApp 上给 Hermes 发消息，让它不限时间地回答。'
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+## 支持的功能
+
+Hermes 通过一个小小的 zapbip 插件持续监听你的 WhatsApp。你先发消息，或者之后再回答一个问题，消息都会送到 Hermes 会话。
+
+<Chat
+  contact="Hermes"
+  messages={[
+    { you: true, text: '总结一下今天仓库里有什么改动。', time: '18:02' },
+    { name: 'Hermes', text: '三次提交：一个计费修复、一个新测试和一次文档更新。', time: '18:03' },
+  ]}
+/>
+
+### 你转发的消息
+
+你从别人那里转发的消息，会带着一个说明这不是你写的标签送达 Hermes，所以 Hermes 不会把它当作你的指令。
+
+## 监听方式
+
+级别：本地。有问题未决时，Hermes 每次最多等待 50 秒。如果你还没有回答，这次等待会以待处理（pending）结束，Hermes 会再次调用，需要多少次就调用多少次，没有时间限制。
+
+插件保持一条通往 zapbip 的连接常开，没有时间限制。如果网络中断，它会自动重新连接，每次失败后等待得稍久一些（起初 1 秒，最长 30 秒）。这期间你发的消息在你的 zapbip 收件箱里等待，插件恢复后会立即取回每一条尚未回答的消息。
+
+### 如果无法安装插件
+
+Hermes 可以改为轮询。添加设置中的 MCP 服务器，并创建一个每 1 分钟调用一次 `check_inbox` 的任务。你的消息最多等待一分钟，回答也以同样的方式送达。
+
+## 从零开始设置
+
+### 你需要什么
+
+- 网关正在运行的 Hermes。
+- 你的连接链接，也就是你的 AI 用来和 zapbip 通信的同一个 `https://.../c/<secret>/mcp` 链接。请像对待密码一样对待它。
+
+### 安装插件
+
+把软件包安装到 Hermes 运行所在的 Python 环境中：
+
+```bash
+d=$(mktemp -d) && curl -fsSL https://mcp.zapbip.com/pkg/zapbip_platform-0.1.0-requirements.txt -o "$d/zapbip-requirements.txt" && python3 -c 'import hashlib,sys; sys.exit(hashlib.sha256(open(sys.argv[1],"rb").read()).hexdigest() != sys.argv[2])' "$d/zapbip-requirements.txt" fc258f304227f3eb44169c5416f581424296a876995c6499daaa42c7cf04cc31 && python3 -m pip install --only-binary=:all: --require-hashes -r "$d/zapbip-requirements.txt"
+```
+
+然后在 `~/.hermes/config.yaml` 中启用它：
+
+```yaml
+plugins:
+  enabled:
+    - zapbip-platform
+```
+
+在网关运行的环境里设置链接和允许与 Hermes 对话的人，绝不要写进你会分享的文件：
+
+```bash
+export ZAPBIP_CONNECTION_LINK='https://<host>/c/<secret>/mcp'
+export ZAPBIP_ALLOWED_USERS=owner
+```
+
+保存你的连接链接的文件相当于密码。请把权限设为 `600`，只有你的用户能读取，并且不要分享或提交它：
+
+```bash
+chmod 600 <file>
+```
+
+重启网关。
+
+每个智能体只运行一个 listener：插件或 `npx zapbip@0.1.0 listen`，不要两者同时使用。第二个 listener 会替换第一个。
+
+### Hermes 如何回答
+
+Hermes 对你消息的回复会通过插件本身送回，无需额外设置。
+
+把 zapbip 添加为 MCP 服务器，这样 Hermes 还能主动与你开启对话、用按钮向你提问并等待答案，也能使用下面的轮询备用方案：
+
+```yaml
+mcp_servers: { zapbip: { url: 'https://<host>/c/<secret>/mcp' } }
+```
+
+然后在 WhatsApp 上让 Hermes 发送 `✅ installed`。如果这条消息到达，就说明一切正常。
+
+<Chat
+  contact="zapbip"
+  messages={[
+    { you: true, text: '安装好了就发 ✅ installed。', time: '18:10' },
+    { name: 'Hermes', text: '✅ installed', time: '18:10' },
+  ]}
+/>
+
+## 检查是否正常工作
+
+| 你看到的                      | 含义                                              |
+| ----------------------------- | ------------------------------------------------- |
+| 你的消息没有得到回答          | 网关没有运行，或者插件不在 `plugins.enabled` 中。 |
+| 插件自己停止了                | 另一个插件或连接器为同一条连接启动，并替换了它。  |
+| Hermes 无法开启对话或向你提问 | `config.yaml` 中缺少 `zapbip` MCP 服务器。        |
+| 插件带着错误停止              | 链接未知或连接已被撤销。请申请新的链接。          |

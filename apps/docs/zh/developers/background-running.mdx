@@ -1,0 +1,109 @@
+---
+title: '把连接器作为服务运行'
+description: '机器开机时用 launchd 或 systemd 启动连接器，无需终端。'
+---
+
+如果你关闭终端，[连接器](/zh/developers/local-connector)就会停止，你的 AI 也就听不到你了。想让它一直运行，就让你的电脑替你启动它。这是可选的，zapbip 不会替你安装：文件由你自己创建。
+
+重启或断线之后，连接器会重新连接，并取回所有尚未回答的消息。
+
+这个文件里有你的连接链接，它相当于密码。请把权限设为 `600`，只有你的用户能读取，并且不要分享或提交它。
+
+把 `<path to npx>` 换成 `which npx` 的结果，把 `<your folder>` 换成你的 AI 工作所在的文件夹，把 `<host>` 和 `<secret>` 换成你的连接链接中的相应部分。如果你的 AI 是 Codex，就用 `codex` 代替 `claude-code`。
+
+## macOS (launchd)
+
+先用正确的权限创建文件，再填写内容：
+
+```bash
+install -m 600 /dev/null ~/Library/LaunchAgents/com.zapbip.connector.plist
+```
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>Label</key>
+    <string>com.zapbip.connector</string>
+    <key>ProgramArguments</key>
+    <array>
+      <string><path to npx></string>
+      <string>zapbip</string>
+      <string>connect</string>
+      <string>--client</string>
+      <string>claude-code</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string><your folder></string>
+    <key>EnvironmentVariables</key>
+    <dict>
+      <key>ZAPBIP_CONNECTION_URL</key>
+      <string>https://<host>/c/<secret>/mcp</string>
+      <key>PATH</key>
+      <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+  </dict>
+</plist>
+```
+
+`PATH` 必须包含安装了 `claude` 或 `codex` 的文件夹。
+
+启动它，以及之后停止它：
+
+```bash
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.zapbip.connector.plist
+launchctl bootout gui/$(id -u)/com.zapbip.connector
+```
+
+## Linux (systemd)
+
+把链接保存在单独的文件里，权限设为 `600`：
+
+```bash
+mkdir -p ~/.config/zapbip ~/.config/systemd/user
+install -m 600 /dev/null ~/.config/zapbip/connector.env
+```
+
+在 `~/.config/zapbip/connector.env` 中写一行：
+
+```text
+ZAPBIP_CONNECTION_URL=https://<host>/c/<secret>/mcp
+```
+
+创建 `~/.config/systemd/user/zapbip-connector.service`：
+
+```ini
+[Unit]
+Description=zapbip connector
+After=network-online.target
+
+[Service]
+EnvironmentFile=%h/.config/zapbip/connector.env
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+WorkingDirectory=<your folder>
+ExecStart=<path to npx> zapbip connect --client claude-code
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target
+```
+
+启动它，并让它在你没有登录时也能运行：
+
+```bash
+systemctl --user daemon-reload
+systemctl --user enable --now zapbip-connector
+loginctl enable-linger $USER
+```
+
+用 `journalctl --user -u zapbip-connector` 查看它的日志。日志中不含消息文本，也不含链接。
+
+## 被撤销的链接
+
+如果链接被撤销，连接器会带着错误退出，而服务会不断重启它。请停止服务，把新链接写入文件，再重新启动。

@@ -1,0 +1,20 @@
+---
+title: 'check_inbox'
+description: '不等待，直接检查收件箱。'
+---
+
+不等待，直接检查收件箱。
+
+## 输入
+
+没有字段。
+
+## 输出
+
+立即返回 `{ "status": "empty" }`，或返回 `{ "status": "new", "messages": [...] }`；返回的消息会变为已读。它是为定时任务设计的，所以响应开销很小。
+
+## 消息类型
+
+import MessageKinds from '/snippets/zh/message-kinds.mdx';
+
+<MessageKinds />

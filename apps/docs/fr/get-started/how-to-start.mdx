@@ -1,0 +1,62 @@
+---
+title: Comment démarrer
+description: De votre WhatsApp au premier message de votre IA.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import StartLink from '/snippets/fr/start-link.mdx';
+import InstallPrompt from '/snippets/fr/install-prompt.mdx';
+
+1. **Écrivez au numéro de zapbip sur WhatsApp.** Envoyez n'importe quel texte, par exemple `hi`. Votre premier message crée votre compte et prouve que le téléphone est le vôtre.
+
+   <StartLink />
+
+   <Chat
+     messages={[
+       { you: true, text: 'hi', time: '09:00' },
+       { name: 'zapbip', text: 'No agent is connected. Your message is saved.', time: '09:00' },
+     ]}
+   />
+
+2. **Demandez un nouvel agent.** Un agent est une IA que vous connectez. Envoyez `new agent` et un nom, par exemple `new agent claude`.
+
+3. **Récupérez votre prompt.** zapbip répond par une ou deux lignes faites pour vous.
+
+   <Chat
+     messages={[
+       { you: true, text: 'new agent claude', time: '09:01' },
+       {
+         name: 'zapbip',
+         text: 'Agent claude created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate claude".',
+         time: '09:01',
+       },
+     ]}
+   />
+
+4. **Collez-le dans votre IA.** Ouvrez ChatGPT, Claude, Grok ou l'IA que vous utilisez, et collez la ligne que zapbip vous a envoyée. Elle ressemble à ceci :
+
+   <InstallPrompt />
+
+   Votre IA lit les instructions en ligne et se configure toute seule.
+
+5. **Votre IA vous écrit.** Elle envoie un premier message sur WhatsApp pour confirmer qu'elle est connectée.
+
+   <Chat messages={[{ name: 'Claude', text: '✅ installed', time: '09:03' }]} />
+
+<Note>
+  Les commandes WhatsApp et les réponses de zapbip de cette page sont en anglais, car c'est ce que le produit comprend aujourd'hui. Il
+  comprend aussi les mêmes commandes en portugais.
+</Note>
+
+<Note>
+  claude.ai, ChatGPT et Grok sur le web ne demandent qu'une chose : votre IA vous dira d'ajouter un connecteur dans ses réglages. Suivez ce
+  qu'elle dit ; c'est une règle de ces applications.
+</Note>
+
+## À quoi s'attendre
+
+- Un seul numéro WhatsApp pour toutes vos IA, et une ligne pour chacune afin de les distinguer.
+- La ligne ne fonctionne qu'une fois et expire au bout de 30 minutes. Si elle expire, envoyez `rotate claude` pour en obtenir une nouvelle.
+- Vous pouvez écrire en premier à tout moment, et votre IA continue d'écouter sans limite de temps.
+- Sur la liste d'attente ? Consultez [la FAQ](/fr/help/faq) pour savoir ce qui se passe ensuite.
+- Choisissez votre IA et suivez sa page dans [IA compatibles](/fr/agents/supported-agents).

@@ -1,0 +1,42 @@
+---
+title: 用按钮和列表提问
+description: 让你的 AI 提问，并等你点按。
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+## 你对 AI 说什么
+
+<Chat messages={[{ you: true, text: '订票之前，先问我喜欢哪家酒店，等我回答。', time: '09:14' }]} />
+
+## 你在手机上看到什么
+
+最多 3 个选项会显示为按钮。
+
+<Chat
+  messages={[
+    { name: 'Claude', text: '里斯本住哪家酒店？', options: ['阿尔法玛', '下城', '贝伦'], time: '09:15' },
+    { you: true, text: '下城', time: '09:16' },
+    { name: 'Claude', text: '正在预订下城的酒店，住 3 晚。', time: '09:16' },
+  ]}
+/>
+
+4 到 10 个选项会显示为列表。
+
+<Chat
+  messages={[
+    {
+      name: 'Claude',
+      text: '我该在哪个街区找？',
+      list: { title: '请选择一个', rows: ['阿尔法玛', '下城', '贝伦', '希亚多', '王子区'] },
+      time: '09:17',
+    },
+    { you: true, text: '希亚多', time: '09:17' },
+  ]}
+/>
+
+点按其中一个，或者直接输入你的答案。
+
+## 如果你回得慢
+
+你的 AI 会等一阵子，并且一直等下去。即使你的答案来得晚，也不会丢失。

@@ -1,0 +1,46 @@
+---
+title: アカウントを削除する
+description: zapbipが保管しているあなたの情報をすべて削除する方法。
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+アカウントは、WhatsAppからいつでも削除できます。メッセージを2回送る必要があるので、誤って送ったメッセージで何かが削除されることはありません。コマンドは、今のところ英語かポルトガル語の言葉で入力します。このページでは英語の言葉を使います。
+
+<Steps>
+  <Step title="依頼する">`delete account` と書きます。zapbipが、何が削除されるかと、確認に必要な言葉を伝えます。</Step>
+  <Step title="確認する">
+    10 分以内に `delete account permanently` と書きます。それを過ぎると何も削除されません。やり直すには、もう一度 `delete account`
+    と書いてください。
+  </Step>
+</Steps>
+
+<Chat
+  messages={[
+    { you: true, text: 'delete account', time: '09:30' },
+    {
+      text: 'This deletes your account, every agent, message and file, and cannot be undone. To confirm within 10 minutes, send: delete account permanently',
+      time: '09:30',
+    },
+    { you: true, text: 'delete account permanently', time: '09:31' },
+    { text: 'Your account is deleted. Your next message starts a new account.', time: '09:31' },
+  ]}
+/>
+
+## 削除されるもの
+
+- すべてのメッセージ、質問、保留中の返信。
+- 接続しているすべてのAI。それらのプロンプトとリンクは直ちに使えなくなります。
+- あなたのために保管されたファイル。
+- あなたの電話番号とアカウント。
+
+## MetaとCloudflareが保持するもの
+
+- チャット履歴は WhatsApp に残ります。スマートフォンから消したい場合は、WhatsAppでチャットを削除してください。
+- Cloudflareは、自社の保持期間のあいだバックアップのコピーを保持します。
+
+## やり直す
+
+削除の後に同じ電話から送ったメッセージは、新しい空のアカウントを作成します。ほかの新規アカウントと同じようにウェイトリストに入ります。[FAQ](/ja/help/faq)を参照してください。
+
+1つのAIだけを切断したい場合は、[AIを管理する](/ja/features/manage-your-agents)を参照してください。

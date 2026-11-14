@@ -1,0 +1,61 @@
+---
+title: Gemini CLI
+description: Gemini CLIをあなたのWhatsAppに接続します。
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import InstallPrompt from '/snippets/ja/install-prompt.mdx';
+
+## 使えること
+
+| できること                                         | Gemini CLI                     |
+| -------------------------------------------------- | ------------------------------ |
+| テキスト、写真、動画、音声、ドキュメントを受け取る | はい                           |
+| 位置情報、連絡先、リアクションを受け取る           | はい                           |
+| ボタンまたはリストで質問して待つ                   | はい                           |
+| あなたが先に書いたときに会話を始める               | はい。セッションが開いている間 |
+
+## 聞き取りの仕組み
+
+段: ローカル。Gemini CLIはzapbipのリスナーをバックグラウンドのターミナルで実行し続けます。WhatsAppで書き込むと、そこに新しい行が現れ、セッションを起こします。そのターミナルは開いたままにしてください。Gemini CLIにはスケジュールの選択肢がありません。
+
+```bash
+npx zapbip@0.1.0 listen
+```
+
+質問が開いている間、Gemini CLIは一度に最大50 秒待ちます。あなたが答えていない場合、待機は保留中（pending）で終わり、Gemini CLIは必要なだけ何度でも、もう一度呼び出します。時間制限なしです。
+
+リスナーは一度に1つだけ動かしてください。2つ目のリスナーは最初のものを置き換えます。
+
+## ゼロから設定する
+
+1. **WhatsAppでzapbipの番号にメッセージを送ります。** `new agent gemini-cli` を送ってください。コマンドは今のところ英語かポルトガル語の言葉で入力します。すべてのメッセージは[始め方](/ja/get-started/how-to-start)で確認できます。
+
+   <Chat
+     messages={[
+       { you: true, text: 'new agent gemini-cli', time: '09:00' },
+       { name: 'zapbip', text: 'Agent gemini-cli created. Paste this into your agent.', time: '09:00' },
+     ]}
+   />
+
+2. **その1行をGemini CLIに貼り付けます。** zapbipが、あなた専用の1行で返信します。
+
+   <InstallPrompt />
+
+3. **変更ごとに「はい」と答えます。** Gemini CLIは、どの設定を変更するかを伝え、あなたの「はい」を待ちます。リンクは、共有するチャットには出さないでください。
+
+4. **zapbipをGemini CLIに追加します。** あなたの「はい」の後、`gemini mcp add --transport http --scope user zapbip <connectionLink>` を実行します。
+
+5. **聞き取りを始めます。** バックグラウンドのターミナルで `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen` を実行し、そのターミナルを時間制限なく動かし続けます。そこに新しい行が現れるたびに、`check_inbox` を呼んで答えます。
+
+6. **テストします。** 新しいプロセスで `gemini -p "Call send_message with the text '✅ installed'"` を実行します。✅ installed を含む `send_message` があなたのWhatsAppに届きます。コマンドが失敗した場合は、そこで止まり、最後の20行を表示します。その後、Gemini CLIを再起動してください。
+
+## 動作の確認
+
+Gemini CLIに、WhatsAppで `✅ installed` を送るよう頼んでください。届けば、接続は機能しています。
+
+<Chat messages={[{ name: 'Gemini CLI', text: '✅ installed', time: '09:03' }]} />
+
+届かない場合は、Gemini CLIを再起動して、もう一度頼んでください。
+
+手動での設定が必要なアプリについては、[任意のMCPクライアントを接続する](/ja/developers/any-mcp-client)をご覧ください。

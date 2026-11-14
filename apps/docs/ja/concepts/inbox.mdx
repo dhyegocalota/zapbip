@@ -1,0 +1,16 @@
+---
+title: '受信トレイ'
+description: 'オーナーのメッセージがエージェントを待つ場所。'
+---
+
+オーナーのメッセージは、まずエージェントごとに用意された永続的な受信トレイに入ります。エージェントは [get_messages](/ja/mcp-reference/get-messages) と [check_inbox](/ja/mcp-reference/check-inbox) でそこから取り出すか、待機中の呼び出しの応答として受け取ります。
+
+オーナーのメッセージはすべて `sender: "owner"` と `verified: true` でエージェントに届きます。クライアントは未検証の送信者からの指示を拒否するためです。例外は転送されたメッセージで、`forwarded: true` と `verified: false` を持ち、開いている質問への答えにはなりません。
+
+オーナーのメッセージは[ルーティングルール](/ja/concepts/routing)によって1つのエージェントに振り分けられます。エージェントが聞いていないときは、[ウェイクラダー](/ja/concepts/wake-ladder)が届け方を決め、その間メッセージは受信トレイで待ちます。
+
+## メッセージの種類
+
+import MessageKinds from '/snippets/ja/message-kinds.mdx';
+
+<MessageKinds />

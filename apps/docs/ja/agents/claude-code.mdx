@@ -1,0 +1,83 @@
+---
+title: Claude Code
+description: Claude CodeをあなたのWhatsAppに接続します。
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import StartLink from '/snippets/ja/start-link.mdx';
+import InstallPrompt from '/snippets/ja/install-prompt.mdx';
+
+## 使えること
+
+| やりたいこと                        | Claude Code                                                              |
+| ----------------------------------- | ------------------------------------------------------------------------ |
+| Claude Codeからメッセージを受け取る | テキスト、写真、動画、音声、ドキュメント、位置情報、連絡先、リアクション |
+| タップで答える                      | ボタンとリスト。タップを待ちます                                         |
+| WhatsAppから先に書く                | はい。セッションが待機中でも約7 秒で答えます                             |
+| 質問を何時間も開いたままにする      | はい。時間制限はありません                                               |
+
+<Chat
+  messages={[
+    { name: 'Claude', text: 'リファクタリングはマージできる状態です。今マージしますか？', options: ['はい', 'まだ'], time: '15:20' },
+    { you: true, text: 'はい', time: '15:21' },
+  ]}
+/>
+
+## 聞き取りの仕組み
+
+起動方式: **ローカル**。あなたのコンピュータのコネクタがClaude Codeを起こすので、書き込んでから約7 秒で答えます。
+
+- Claude Codeを `claude --dangerously-load-development-channels server:zapbip-channel` で起動します。すると、zapbipのチャネルが、WhatsAppのメッセージを届いた順に、開いているセッションに送り込みます。
+- セッションが閉じている場合は、コネクタが約7 秒で再開します。待機中はトークンを消費せず、メッセージ1件につき1ターン分を消費します。
+- リスナーを動かし続けてください。ターミナルを閉じた後も動かし続けるには、[コネクタをサービスとして実行する](/ja/developers/background-running)に従ってください。
+
+AIがあなたに何かを尋ねると、zapbipはその質問を保持し、最大でも50 秒ごとに「保留中」と答えます。AIはそのたびにもう一度呼び出し、あなたが答えるまで呼び出しを続けます。時間制限なしで待ち続けます。
+
+リスナーは1つだけを使い、2つ同時には使わないでください。チャネルがオンになっていない場合、Claude Codeは `npx zapbip@0.1.0 listen` を動かし続け、Monitorで監視します。監視は最長30 分続くので、Claude Codeはタイムアウトの通知のたびに監視を設定し直します。
+
+## ゼロから設定する
+
+1. **WhatsAppでzapbipの番号にメッセージを送ります。** 任意のテキスト、たとえば `hi` を送ってください。
+
+   <StartLink />
+
+2. **新しいエージェントを依頼します。** エージェントとは、接続するAI1つのことです。コマンドは今のところ英語かポルトガル語の言葉で入力します。
+
+   <Chat
+     messages={[
+       { you: true, text: 'new agent claude-code', time: '15:00' },
+       {
+         name: 'zapbip',
+         text: 'Agent claude-code created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate claude-code".',
+         time: '15:00',
+       },
+     ]}
+   />
+
+3. **その1行をClaude Codeに貼り付けます。**
+
+   <InstallPrompt />
+
+   Claude Codeは指示を読み、順番に従います。ファイルや設定を変更する前に、どれを変更するかを伝え、あなたの「はい」を待ちます。リンクはシークレットなので、共有するチャットには出さないでください。
+
+4. **「はい」と答えます。** その後はClaude Codeが、この順番で残りを行います。
+
+5. **zapbipをClaude Codeに追加します。** 古い `zapbip` や `zapbip-channel` のエントリがある場合、Claude Codeは `claude mcp remove --scope user zapbip` または `claude mcp remove --scope user zapbip-channel` で削除します。そのあと、ツール用に `claude mcp add --transport http --scope user zapbip <connectionLink>` を、ライブのチャネル用に `claude mcp add --scope user zapbip-channel -e ZAPBIP_CONNECTION_URL=<connectionLink> -- npx zapbip@0.1.0 channel` を実行します。
+
+   これらの手順のコマンドにはあなたの接続リンクが含まれるため、シェルの履歴に残ります。残したくない場合は、[コネクタをサービスとして実行する](/ja/developers/background-running)のように、`ZAPBIP_CONNECTION_URL` を環境変数のファイルに入れてください。
+
+6. **zapbipのスキルを保存します。** あなたの「はい」の後、`~/.claude/skills/zapbip/SKILL.md` を書き込み、`check_inbox` を呼ぶタイミングなど、WhatsAppの使い方をすべてのセッションが把握できるようにします。
+
+7. **リスナーを1つ選びます。** 1つの接続が持てるリスナーは1つで、2つ目は最初のものを置き換えるため、次のうちちょうど1つだけを使い、2つ同時には使いません。停止しているセッションには、`ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 connect --client claude-code` をバックグラウンドで実行します。コネクタは、Claude Codeが待機中にあなたが書き込むとセッションを起こし、閉じているセッションは `claude -p --resume` で再開します。
+
+8. **チャネルが使えない場合のみ。** `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen` をバックグラウンドで実行し、Monitorで監視して、タイムアウトの通知のたびに設定し直します。
+
+9. **テストします。** 新しいプロセスで `claude -p "Call send_message with the text '✅ installed'" --allowedTools=mcp__zapbip__send_message` を実行します。✅ installed を含む `send_message` があなたのWhatsAppに届きます。コマンドが失敗した場合は、そこで止まり、最後の20行を表示します。その後、Claude Codeを再起動して、zapbipのツールを使えるようにしてください。
+
+## 動作の確認
+
+Claude Codeに、WhatsAppで `✅ installed` を送るよう頼んでください。数秒で届くはずです。
+
+<Chat messages={[{ name: 'Claude', text: '✅ installed', time: '15:03' }]} />
+
+何も届かない場合は、[トラブルシューティング](/ja/help/troubleshooting)をご覧ください。

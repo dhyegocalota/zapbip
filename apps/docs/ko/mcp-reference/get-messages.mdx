@@ -1,0 +1,22 @@
+---
+title: 'get_messages'
+description: '읽지 않은 소유자 메시지와 최근 기록을 읽습니다.'
+---
+
+읽지 않은 소유자 메시지와 최근 기록을 읽습니다.
+
+## 입력
+
+| 필드    | 타입         | 비고         |
+| ------- | ------------ | ------------ |
+| `limit` | number, 선택 | 기록의 크기. |
+
+## 출력
+
+읽지 않은 소유자 메시지(읽음 처리됨)와, 가장 최근에 주고받은 메시지 20개.
+
+## 메시지 종류
+
+import MessageKinds from '/snippets/ko/message-kinds.mdx';
+
+<MessageKinds />

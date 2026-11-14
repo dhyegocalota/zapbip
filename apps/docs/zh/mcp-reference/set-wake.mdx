@@ -1,0 +1,60 @@
+---
+title: 'set_wake'
+description: '告诉 zapbip 在这个智能体没有监听时如何联系它。'
+---
+
+保存当你发消息而没有任何调用在等待时，这条连接如何被唤醒。参见[唤醒阶梯](/zh/concepts/wake-ladder)和 [webhook 唤醒指南](/zh/developers/webhook-wake)。
+
+## 输入
+
+| 字段               | 类型          | 说明                                                                                                                                                                                  |
+| ------------------ | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mode`             | string        | `local` 通过[连接器](/zh/developers/local-connector)唤醒；`webhook` 保存一个 webhook；`scheduled` 让智能体按定时器检查收件箱；`standby` 把你的消息交给另一个智能体；`none` 清除唤醒。 |
+| `url`              | string，可选  | `webhook` 必填。`https`，无 userinfo，无片段，端口为 443 或省略，最多 512 个字符。它的主机决定提供方。                                                                                |
+| `token`            | string，可选  | `webhook` 必填。可打印字符，无空白，16 到 512 个字符。对通用 webhook 来说它是签名密钥，至少 32 个字符。                                                                               |
+| `interval_minutes` | integer，可选 | `scheduled` 必填。1 到 1440 分钟。ChatGPT 和 claude.ai 最短每 60 分钟运行一次定时任务。                                                                                               |
+| `standby_agent`    | string，可选  | `standby` 必填。同一账号下另一条连接的名称，且它本身不是待命。                                                                                                                        |
+
+其他模式的字段必须缺省。
+
+## 定时
+
+无法从外部启动的智能体，会按定时器运行一个调用 [check_inbox](/zh/mcp-reference/check-inbox) 的任务。这让它可以不限时间地监听，并用 `send_message` 回答每条消息。
+
+```json
+{ "mode": "scheduled", "interval_minutes": 60 }
+```
+
+你发消息时，zapbip 会告诉你何时能收到答案。如果两倍间隔的时间都没有检查，你会收到一条通知，你的消息会在收件箱里等待，直到下一次检查。
+
+## 本地
+
+在[连接器](/zh/developers/local-connector)于你电脑上运行时，让你的智能体用 `{ "mode": "local" }` 调用这个工具。
+
+## 待命
+
+无法被唤醒的智能体，指定同一账号下的另一个智能体代为回答。zapbip 会把你的消息复制给待命智能体并唤醒它；待命智能体以它自己的身份回答。
+
+```json
+{ "mode": "standby", "standby_agent": "grok-bot" }
+```
+
+待命连接绝不会转发给另一个待命连接：只有一跳。如果待命连接不存在、已被移除，或者自己也处于待命模式，则不会复制任何内容，你的消息会在第一个智能体那里等待。
+
+## 提供方
+
+提供方由 URL 的主机决定，从不由某个字段决定。
+
+| 提供方           | 主机                    | 路径                                         | 认证                                                     |
+| ---------------- | ----------------------- | -------------------------------------------- | -------------------------------------------------------- |
+| `grok_routine`   | `api2.cursor.sh`        | `/automations/webhook/<routine-id>`          | `Authorization: Bearer <token>`                          |
+| `claude_routine` | `api.anthropic.com`     | `/v1/claude_code/routines/<trigger-id>/fire` | `Authorization: Bearer <token>`                          |
+| `generic`        | 任何公开的 `https` 主机 | 任意                                         | `X-Zapbip-Timestamp` 和 `X-Zapbip-Signature`，不发送密钥 |
+
+## 输出
+
+`{ "status": "saved", "wake_mode": string, "effective_rung": string, "provider": string | null }`。`provider` 仅对 `webhook` 设置。当待命智能体不可用时，以及 `local` 在没有连接器连接期间，`effective_rung` 是 `inbox`，因为此时消息在收件箱里等待。URL、令牌和主机从不返回。
+
+## 错误
+
+工具错误会指明无效的字段（`url`、`token`、`interval_minutes`、`standby_agent` 或 `mode`）及其限制，并且从不回显它的值。不会存储任何内容，之前的唤醒设置保持不变。zapbip 在保存时不会调用提供方：错误的令牌会在第一次唤醒时显现，表现为 WhatsApp 上发给你的一条通知。

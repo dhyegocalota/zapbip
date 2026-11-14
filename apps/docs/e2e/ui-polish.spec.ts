@@ -1,8 +1,9 @@
 import { expect, test, type Locator } from '@playwright/test';
-import { DocsLanguage, PAGE_LANGUAGE_FOLDER } from '@zapbip/types';
+import { DocsPageLanguage } from '@zapbip/types';
 import { AgentId } from '../../../libs/agents/src/definitions';
 import { contrastOf } from '../../../tools/repository-shape/src/contrast';
 import { DOCS_LOCALE_OF, DocsViewport, NARROW_WIDTH_PX, docsOptionsOf } from './support/docs-experience';
+import { twinPathOf } from '../../../libs/agents/src/docs';
 
 const OVERVIEW_PAGE = 'index';
 const GROUP_PAGES = [
@@ -33,9 +34,8 @@ type ColorScheme = 'light' | 'dark';
 
 const COLOR_SCHEMES: ColorScheme[] = ['light', 'dark'];
 
-function urlOf(input: { path: string; language: DocsLanguage }): string {
-  if (input.language === DocsLanguage.English) return `/${input.path}`;
-  return `/${PAGE_LANGUAGE_FOLDER}/${input.path}`;
+function urlOf(input: { path: string; language: DocsPageLanguage }): string {
+  return `/${twinPathOf({ path: input.path, language: input.language })}`;
 }
 
 async function boxOf(input: { locator: Locator }): Promise<{ x: number; y: number; width: number; height: number }> {
@@ -48,7 +48,7 @@ async function computedColourOf(input: { locator: Locator }): Promise<string> {
   return input.locator.evaluate((element, property) => getComputedStyle(element).getPropertyValue(property), COLOR_PROPERTY);
 }
 
-for (const language of Object.values(DocsLanguage)) {
+for (const language of Object.values(DocsPageLanguage)) {
   test.describe(`ui polish in ${language} at desktop`, () => {
     test.use(docsOptionsOf({ language, viewport: DocsViewport.Desktop }));
     test.beforeEach(({}, testInfo) => {

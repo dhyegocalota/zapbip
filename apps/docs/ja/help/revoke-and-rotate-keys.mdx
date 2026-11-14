@@ -1,0 +1,44 @@
+---
+title: 接続の取り消しとローテーション
+description: AIを切り離す、またはそのリンクを置き換える。
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+各AIは専用の接続を持ちます。zapbipの番号に書き込んで、AIを切り離したり、リンクを置き換えたりします。コマンドは、今のところ英語かポルトガル語の言葉で入力します。このページでは英語の言葉を使います。
+
+## AIを切り離す
+
+`revoke` とAIの名前を書きます。たとえば `revoke claude` です。そのAIの接続手段はすべて即座に止まります。zapbipへのリンク、あなたのコンピュータで動いているリスナー、そのAIを起動するウェイクのすべてです。
+
+<Chat
+  messages={[
+    { you: true, text: 'revoke claude', time: '16:02' },
+    { text: 'Agent claude revoked. Its link no longer works.', time: '16:02' },
+  ]}
+/>
+
+そのAIをもう一度使うには、`new agent claude` と書きます。
+
+## リンクを置き換える
+
+`rotate` と名前を書きます。たとえば `rotate claude` です。古い接続は直ちに使えなくなり、範囲は `revoke` と同じです。そして、そのAIに貼り付ける新しいプロンプトがzapbipから届きます。
+
+<Chat
+  messages={[
+    { you: true, text: 'rotate claude', time: '16:05' },
+    {
+      text: 'Link of agent claude replaced. The old link no longer works. Paste this into your agent: ...',
+      time: '16:05',
+    },
+  ]}
+/>
+
+ローテーションしたリンクは1 回だけ送られます。zapbipが再び表示することはありません。`agents` は、リンクなしでAIの一覧を表示します。新しいプロンプトが届かなかった場合、zapbipは古い接続を維持するので、もう一度 `rotate claude` と書けます。
+
+## どちらを使うか
+
+- AIをなくした、使うのをやめた、またはリンクを誤って共有した場合: `revoke`。
+- リンクの期限が切れた、すでに使われた、または漏えいしたが、そのAIは使い続けたい場合: `rotate`。
+
+すべての言葉は[WhatsAppのコマンド](/ja/features/whatsapp-commands)で確認できます。

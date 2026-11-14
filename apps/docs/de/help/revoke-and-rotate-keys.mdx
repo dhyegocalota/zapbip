@@ -1,0 +1,44 @@
+---
+title: Eine Verbindung widerrufen und erneuern
+description: Trenne eine KI oder ersetze ihren Link.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+Jede KI hat ihre eigene Verbindung. Du trennst sie oder ersetzt ihren Link, indem du der zapbip-Nummer schreibst. Die Befehle sind auf Englisch, denn das versteht das Produkt heute.
+
+## Eine KI trennen
+
+Schreib `revoke` und den Namen der KI, zum Beispiel `revoke claude`. Jeder Weg, auf dem diese KI verbunden ist, endet sofort: ihr Link zu zapbip, ein Listener auf deinem Computer und jedes Wecken, das sie starten würde.
+
+<Chat
+  messages={[
+    { you: true, text: 'revoke claude', time: '16:02' },
+    { text: 'Agent claude revoked. Its link no longer works.', time: '16:02' },
+  ]}
+/>
+
+Um diese KI wieder zu nutzen, schreib `new agent claude`.
+
+## Einen Link ersetzen
+
+Schreib `rotate` und den Namen, zum Beispiel `rotate claude`. Die alte Verbindung funktioniert sofort nicht mehr, mit derselben Reichweite wie `revoke`, und zapbip schickt dir einen neuen Prompt zum Einfügen in diese KI.
+
+<Chat
+  messages={[
+    { you: true, text: 'rotate claude', time: '16:05' },
+    {
+      text: 'Link of agent claude replaced. The old link no longer works. Paste this into your agent: ...',
+      time: '16:05',
+    },
+  ]}
+/>
+
+Ein erneuerter Link wird einmal gesendet. zapbip zeigt ihn nie wieder: `agents` listet deine KIs ohne jeden Link auf. Kommt der neue Prompt nicht an, behält zapbip die alte Verbindung, und du kannst `rotate claude` erneut schreiben.
+
+## Wann was
+
+- Du hast eine KI verloren, nutzt sie nicht mehr oder hast ihren Link versehentlich geteilt: `revoke`.
+- Der Link ist abgelaufen, wurde schon benutzt oder ist durchgesickert, und du willst die KI weiter nutzen: `rotate`.
+
+Alle Wörter findest du unter [Befehle in WhatsApp](/de/features/whatsapp-commands).

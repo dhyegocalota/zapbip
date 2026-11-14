@@ -1,0 +1,114 @@
+---
+title: Visión general
+description: Tu IA, en tu WhatsApp.
+mode: 'wide'
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import StartLink from '/snippets/es/start-link.mdx';
+import { Hero } from '/snippets/hero.jsx';
+
+<Hero
+  eyebrow="API oficial de WhatsApp Cloud"
+  statement="Tu IA te escribe."
+  accent="Tú respondes en WhatsApp."
+  lead="Decisiones, trabajo terminado y preguntas con botones, en el teléfono que ya llevas contigo. Se configura con una sola línea."
+  primary={{ label: 'Cómo empezar', href: '/es/get-started/how-to-start' }}
+  secondary={{ label: 'IAs compatibles', href: '/es/agents/supported-agents' }}
+>
+  <Chat
+    frame="phone"
+    messages={[
+      { name: 'Claude', text: 'Tu vuelo a Lisboa bajó a 410 $. ¿Lo reservo?', options: ['Reservar', 'Seguir vigilando'] },
+      { you: true, text: 'Reservar' },
+      { name: 'Claude', text: 'Reservado. Te enviaré la tarjeta de embarque aquí.' },
+      { typing: true },
+    ]}
+  />
+</Hero>
+
+## Por qué existe zapbip
+
+Usas IA para investigar, planificar y construir. Pero cuando necesita una decisión, o termina algo que llevó un rato, no estás mirando la pantalla. Así que espera, o adivina.
+
+Ya vives en WhatsApp. zapbip lleva tu IA allí: te escribe, pregunta con botones, espera tu respuesta, y tú también puedes empezar la conversación cuando quieras.
+
+Escribes a zapbip una vez con el enlace de inicio, te da una línea para pegar en tu IA, y esa es toda la configuración.
+
+<StartLink />
+
+## Cómo funciona
+
+<Frame>
+  <img
+    src="/images/how-it-works-es.svg"
+    alt="Tu IA se conecta a zapbip, que envía sus mensajes a través de la API oficial de WhatsApp Cloud hasta tu teléfono. Tu respuesta vuelve y despierta a tu IA."
+    width="420"
+    height="640"
+    style={{ maxWidth: '420px', width: '100%', height: 'auto', aspectRatio: '420 / 640', margin: '0 auto' }}
+  />
+</Frame>
+
+1. **Conecta tu IA** una sola vez, pegando una línea.
+2. **Te escribe** con texto, archivos o una pregunta con botones.
+3. **Tú respondes, o escribes primero**, y zapbip lo entrega a la IA correcta.
+
+## Cómo se ve
+
+<CardGroup cols={2}>
+  <Card title="Investigación terminada" icon="file-pdf">
+    <Chat
+      messages={[
+        {
+          name: 'ChatGPT',
+          text: 'Tu investigación sobre bicicletas eléctricas está lista. Resumen adjunto.',
+          media: { kind: 'document', label: 'resumen.pdf' },
+        },
+        { you: true, text: 'Gracias, perfecto.' },
+      ]}
+    />
+  </Card>
+  <Card title="Una decisión sobre tu viaje" icon="plane">
+    <Chat
+      messages={[
+        { name: 'Claude', text: '¿Qué hotel en Lisboa?', options: ['Alfama', 'Baixa', 'Belém'] },
+        { you: true, text: 'Baixa' },
+        { name: 'Claude', text: 'Reservando Baixa para 3 noches.' },
+      ]}
+    />
+  </Card>
+  <Card title="Tú escribes primero" icon="bell">
+    <Chat
+      messages={[
+        { you: true, text: 'Recuérdame renovar el pasaporte el viernes.' },
+        { name: 'Grok', text: 'Hecho. Te escribiré el viernes por la mañana.' },
+      ]}
+    />
+  </Card>
+  <Card title="Muchas IAs, un solo número" icon="users">
+    <Chat
+      messages={[
+        { name: 'Claude', text: 'Las pruebas pasaron.' },
+        { name: 'Grok', text: 'Encontré 3 fuentes.' },
+        { you: true, quote: { name: 'Grok', text: 'Encontré 3 fuentes.' }, text: '¿Cuáles?' },
+      ]}
+    />
+  </Card>
+</CardGroup>
+
+## Para quién es
+
+Para cualquiera que use IA: ChatGPT, Claude, Grok, Codex, Cursor, Gemini y más. No necesitas nada más que WhatsApp. zapbip habla solo contigo, nunca con terceros.
+
+## Qué puedes hacer
+
+- [Enviar mensajes y archivos](/es/features/send-messages-and-media)
+- [Preguntar con botones y listas](/es/features/ask-with-buttons-and-lists)
+- [Usar muchas IAs con un solo número](/es/features/many-agents-on-one-number)
+- [Entender la ventana de 24 horas](/es/features/the-24-hour-window)
+
+Mira qué IAs funcionan en [IAs compatibles](/es/agents/supported-agents).
+
+<Card title="Cómo empezar" icon="rocket" href="/es/get-started/how-to-start">
+  Escribe al número de zapbip, pega una línea en tu IA y recibe su primer mensaje.
+</Card>

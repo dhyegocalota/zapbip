@@ -1,0 +1,45 @@
+---
+title: Laissez votre IA gérer zapbip
+description: Votre IA peut lister vos IA, les connecter et les déconnecter et vous ouvrir l’application web, et chaque changement attend votre appui sur WhatsApp.
+---
+
+Tout ce que vous faites dans l’[application web](/fr/features/web-app) ou avec une [commande WhatsApp](/fr/features/whatsapp-commands), votre IA peut le faire pour vous. Vous gardez la main : un changement demande votre appui sur WhatsApp, et sans lui rien ne se passe.
+
+## Ce que votre IA peut faire
+
+| Demandez à votre IA de    | Ce qui se passe                                                                                                       | Demande votre appui |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| Lister vos IA             | Elle lit chaque nom, l’application depuis laquelle elle s’est connectée, sa date de création et sa dernière activité. | Non                 |
+| Lire votre compte         | Elle lit l’état de votre compte et votre offre.                                                                       | Non                 |
+| Connecter une nouvelle IA | zapbip vous interroge sur WhatsApp, puis la connecte.                                                                 | Oui                 |
+| Déconnecter une IA        | zapbip vous interroge sur WhatsApp, puis arrête aussitôt cette IA.                                                    | Oui                 |
+| Ouvrir l’application web  | zapbip vous envoie le lien de connexion sur WhatsApp.                                                                 | Non                 |
+
+La suppression de votre compte ne figure pas dans la liste. Elle reste une commande WhatsApp que vous seul pouvez écrire.
+
+## Comment fonctionne l’appui
+
+Quand votre IA demande de connecter une nouvelle IA nommée `helper`, zapbip vous écrit sur WhatsApp, au nom de l’IA qui a demandé :
+
+- **Allow** la connecte et vous envoie, à vous, le lien à coller dans cette IA, comme le fait `new agent`.
+- **Allow, send to agent** la connecte et remet le lien à l’IA qui a demandé, pour qu’elle termine elle-même la configuration.
+- **Deny** ne change rien.
+
+La déconnexion a deux boutons, Allow et Deny. Seul un appui sur un bouton compte : un message que vous tapez, même le mot Allow, est lu comme un Deny. Chaque question se termine par une courte référence, de sorte qu’une réponse à une ancienne question ne sert jamais pour une nouvelle.
+
+Votre IA attend votre réponse jusqu’à 50 secondes. Si vous ne répondez pas à temps, rien ne change, et un appui ultérieur ne change rien non plus. Après un Deny ou l’absence de réponse, la même demande de la même IA est refusée pendant 10 minutes, pour qu’elle ne puisse pas redemander sans cesse.
+
+## Ce qui reste privé
+
+- Le lien pour connecter une nouvelle IA vous est envoyé sur WhatsApp. Seul le bouton **Allow, send to agent** le donne à votre IA.
+- Le lien de connexion ne vous est envoyé qu’à vous. Votre IA ne le voit jamais. Si votre fenêtre de 24 heures est fermée, zapbip ne le met pas en file : écrivez à zapbip et redemandez à votre IA.
+- Votre IA ne voit jamais une clé, un code ou votre numéro de téléphone.
+
+## Limites
+
+Chaque connexion, et votre compte dans son ensemble, peut lancer 3 changements par minute. Le 4e reçoit une courte réponse « réessayez dans un instant », pour qu’une boucle par erreur ne remplisse pas votre WhatsApp de questions.
+
+## Suite
+
+- [Gérer vos IA](/fr/features/manage-your-agents)
+- [L’application web](/fr/features/web-app)

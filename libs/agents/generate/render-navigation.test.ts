@@ -1,22 +1,30 @@
+import { DocsPageLanguage } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
+import { AGENTS_DIRECTORY, AGENTS_GROUP_INDEX, DOCS_GROUPS, agentPagePathOf, twinPathOf } from '../src/docs';
 import { listedAgentSlugsOf, orphanPagesOf, renderNavigation } from './render-navigation';
 import { SAMPLE_IDS_IN_ORDER, sampleAgents } from './test-agents';
 
 type Group = { group: string; pages: unknown[] };
 type Language = { language: string; groups: Group[] };
 
+const LANGUAGES = Object.values(DocsPageLanguage);
+const AGENTS_GROUP_OF = Object.fromEntries(LANGUAGES.map((language) => [language, DOCS_GROUPS[language][AGENTS_GROUP_INDEX]])) as Record<
+  DocsPageLanguage,
+  string
+>;
+const MATRIX_PAGE = `${AGENTS_DIRECTORY}/supported-agents`;
 const NAVIGATION_ORDER = [...SAMPLE_IDS_IN_ORDER].reverse();
 const OTHER_GROUP = { group: 'Help', pages: ['help/about', { group: 'Nested', pages: ['x'] }] };
 
-function sourceWith(input: { englishPages: unknown[]; portuguesePages: unknown[] }): string {
+function sourceWith(input: { pagesOf: (language: DocsPageLanguage) => unknown[] }): string {
   const navigation = {
     theme: 'mint',
     colors: { primary: '#000000' },
     navigation: {
-      languages: [
-        { language: 'en', groups: [{ group: 'Agents', pages: input.englishPages }, OTHER_GROUP] },
-        { language: 'pt-BR', groups: [{ group: 'IAs', pages: input.portuguesePages }, OTHER_GROUP] },
-      ],
+      languages: LANGUAGES.map((language) => ({
+        language,
+        groups: [{ group: AGENTS_GROUP_OF[language], pages: input.pagesOf(language) }, OTHER_GROUP],
+      })),
     },
   };
   return `${JSON.stringify(navigation, null, 2)}\n`;
@@ -28,21 +36,19 @@ function groupsOf(input: { content: string; language: string }): Group[] {
 }
 
 const TODAY = sourceWith({
-  englishPages: ['agents/supported-agents', ...NAVIGATION_ORDER.map((id) => `agents/${id}`)],
-  portuguesePages: ['pt-br/agents/supported-agents', ...NAVIGATION_ORDER.map((id) => `pt-br/agents/${id}`)],
+  pagesOf: (language) => [
+    twinPathOf({ path: MATRIX_PAGE, language }),
+    ...NAVIGATION_ORDER.map((id) => agentPagePathOf({ client: id, language })),
+  ],
 });
 
 describe('renderNavigation', () => {
-  test('lists the matrix first and the agents by wake rung, then name, in both languages', () => {
+  test.each(LANGUAGES)('lists the matrix first and the agents by wake rung, then name, in %s', (language) => {
     const { content, violations } = renderNavigation({ source: TODAY, agents: sampleAgents() });
     expect(violations).toEqual([]);
-    expect(groupsOf({ content, language: 'en' })[0]?.pages).toEqual([
-      'agents/supported-agents',
-      ...SAMPLE_IDS_IN_ORDER.map((id) => `agents/${id}`),
-    ]);
-    expect(groupsOf({ content, language: 'pt-BR' })[0]?.pages).toEqual([
-      'pt-br/agents/supported-agents',
-      ...SAMPLE_IDS_IN_ORDER.map((id) => `pt-br/agents/${id}`),
+    expect(groupsOf({ content, language })[0]?.pages).toEqual([
+      twinPathOf({ path: MATRIX_PAGE, language }),
+      ...SAMPLE_IDS_IN_ORDER.map((id) => agentPagePathOf({ client: id, language })),
     ]);
   });
 
@@ -55,13 +61,15 @@ describe('renderNavigation', () => {
     expect(content).not.toContain('agents/zeta-local');
   });
 
-  test('names a page of another group found in the agents group', () => {
+  test.each(LANGUAGES)('names a page of another group found in the %s agents group', (language) => {
     const source = sourceWith({
-      englishPages: ['agents/supported-agents', 'guides/webhook-wake'],
-      portuguesePages: ['pt-br/agents/supported-agents'],
+      pagesOf: (candidate) =>
+        candidate === language
+          ? [twinPathOf({ path: MATRIX_PAGE, language }), 'guides/webhook-wake']
+          : [twinPathOf({ path: MATRIX_PAGE, language: candidate })],
     });
     expect(renderNavigation({ source, agents: sampleAgents() }).violations).toEqual([
-      'the Agents group holds guides/webhook-wake, which the generator does not own',
+      `the ${AGENTS_GROUP_OF[language]} group holds guides/webhook-wake, which the generator does not own`,
     ]);
   });
 });
@@ -73,11 +81,15 @@ describe('orphanPagesOf', () => {
     'apps/docs/agents/supported-agents.mdx',
     'apps/docs/pt-br/agents/zeta-local.mdx',
     'apps/docs/pt-br/agents/supported-agents.mdx',
+    'apps/docs/ja/agents/zeta-local.mdx',
   ];
+  const everyLanguageDeletionsOf = (slug: string): string[] =>
+    LANGUAGES.map((language) => `apps/docs/${twinPathOf({ path: `${AGENTS_DIRECTORY}/${slug}`, language })}.mdx`).sort();
 
-  test('plans the page and its pt-br twin for a listed page with no folder, and nothing else', () => {
-    expect(orphanPagesOf({ existingPaths, agentIds: ['zeta-local'], listedSlugs: ['ghost', 'zeta-local'] })).toEqual({
-      deletions: ['apps/docs/agents/ghost.mdx', 'apps/docs/pt-br/agents/ghost.mdx'],
+  test('plans the page and its twin in every language for a listed page with no folder, and nothing else', () => {
+    const plan = orphanPagesOf({ existingPaths, agentIds: ['zeta-local'], listedSlugs: ['ghost', 'zeta-local'] });
+    expect({ deletions: [...plan.deletions].sort(), violations: plan.violations }).toEqual({
+      deletions: everyLanguageDeletionsOf('ghost'),
       violations: [],
     });
   });
@@ -89,10 +101,14 @@ describe('orphanPagesOf', () => {
     });
   });
 
-  test('finds a listed page that only the pt-br folder holds', () => {
-    const result = orphanPagesOf({ existingPaths: ['apps/docs/pt-br/agents/ghost.mdx'], agentIds: [], listedSlugs: ['ghost'] });
-    expect(result.deletions).toEqual(['apps/docs/agents/ghost.mdx', 'apps/docs/pt-br/agents/ghost.mdx']);
-  });
+  test.each(LANGUAGES.filter((language) => language !== DocsPageLanguage.English))(
+    'finds a listed page that only the %s folder holds',
+    (language) => {
+      const path = `apps/docs/${twinPathOf({ path: `${AGENTS_DIRECTORY}/ghost`, language })}.mdx`;
+      const result = orphanPagesOf({ existingPaths: [path], agentIds: [], listedSlugs: ['ghost'] });
+      expect([...result.deletions].sort()).toEqual(everyLanguageDeletionsOf('ghost'));
+    },
+  );
 
   test('plans nothing when every page has its folder', () => {
     expect(orphanPagesOf({ existingPaths: ['apps/docs/agents/zeta-local.mdx'], agentIds: ['zeta-local'], listedSlugs: [] })).toEqual({
@@ -103,7 +119,7 @@ describe('orphanPagesOf', () => {
 });
 
 describe('listedAgentSlugsOf', () => {
-  test('lists the agent pages of both languages once, without the matrix page', () => {
+  test('lists the agent pages of every language once, without the matrix page', () => {
     expect(listedAgentSlugsOf({ source: TODAY })).toContain('zeta-local');
     expect(listedAgentSlugsOf({ source: TODAY }).filter((slug) => slug === 'zeta-local')).toHaveLength(1);
   });

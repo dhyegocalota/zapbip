@@ -1,0 +1,24 @@
+---
+title: 'Routage'
+description: 'Comment un message du propriétaire trouve son agent.'
+---
+
+Plusieurs agents partagent un numéro, donc chaque message du propriétaire est acheminé vers un agent. La première règle qui correspond l'emporte.
+
+1. Une réponse de bouton ou de liste va à l'agent qui a posé la question, indiqué dans l'id de l'option.
+2. Une réponse citée ou une réaction va à l'agent qui a envoyé le message cité ou le message auquel on a réagi. Une réaction à un message de question répond à la question avec l'emoji.
+3. Un texte qui commence par `@agent ` va à cet agent, sans le préfixe. C'est aussi l'échappatoire pour un mot de commande destiné à un agent : `@agent help` atteint l'agent au lieu d'ouvrir le menu.
+4. Exactement un agent avec une question ouverte la reçoit. Avec plusieurs questions ouvertes, la plus récente l'emporte.
+5. Sinon, le dernier agent qui a écrit au propriétaire dans la fenêtre, ou le seul agent quand le compte n'en a qu'un.
+6. Sinon, zapbip envoie au propriétaire une liste des 10 agents vus le plus récemment et retient le message jusqu'à ce que le propriétaire en choisisse un. Sans aucun agent, le propriétaire reçoit une notification et le message est retenu.
+
+## Quand le propriétaire ne choisit pas
+
+La liste attend 10 minutes.
+
+- Pendant qu'elle attend, un nouveau message qui ne correspond à aucune des règles 1 à 4 rejoint les messages retenus. Le propriétaire reçoit un rappel par lot : "Pick the agent in the list above". Un message qui correspond aux règles 1 à 4 est acheminé aussitôt et jamais retenu.
+- Si la liste expire et qu'un agent a écrit au propriétaire dans la fenêtre, les messages retenus vont à cet agent, dans l'ordre.
+- Sinon, la liste est renvoyée une fois. Après une seconde expiration, les messages restent non lus pour le dernier agent vu.
+- Un toucher sur une liste déjà utilisée reçoit pour réponse "That list was already used."
+
+Les noms d'agent comptent jusqu'à 20 caractères : lettres minuscules, chiffres et tirets. Les rappels et les réponses de zapbip sont en anglais, la langue du produit aujourd'hui.

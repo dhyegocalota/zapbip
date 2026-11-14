@@ -1,0 +1,20 @@
+---
+title: 'check_inbox'
+description: 'Prüft den Posteingang, ohne zu warten.'
+---
+
+Prüft den Posteingang, ohne zu warten.
+
+## Eingabe
+
+Keine Felder.
+
+## Ausgabe
+
+Sofort `{ "status": "empty" }` oder `{ "status": "new", "messages": [...] }`; die zurückgegebenen Nachrichten gelten als gelesen. Gedacht für geplante Aufgaben, daher antwortet es günstig.
+
+## Nachrichtenarten
+
+import MessageKinds from '/snippets/de/message-kinds.mdx';
+
+<MessageKinds />

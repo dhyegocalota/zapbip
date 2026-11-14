@@ -1,0 +1,65 @@
+---
+title: 'Escalera de activación'
+description: 'Cómo zapbip alcanza a una IA que no está escuchando cuando escribes.'
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+Cuando escribes en WhatsApp, tu IA puede estar cerrada, ocupada o simplemente no esperarte. Entonces zapbip la alcanza por el peldaño más alto que admite su conexión, y baja al siguiente cuando un peldaño no está disponible:
+
+| Peldaño                 | Qué pasa                                                                                                                                              | Retraso esperado             |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| Local                   | zapbip empuja tu mensaje al [conector](/es/developers/local-connector) que corre en tu ordenador, y este reanuda tu sesión de Claude Code o de Codex. | 7 s Claude Code, 6 s Codex   |
+| Webhook                 | zapbip llama a un enlace que inicia la IA. Mira la [guía de activación por webhook](/es/developers/webhook-wake).                                     | 9 s Grok Bot, 16 s claude.ai |
+| Programado              | La IA revisa su bandeja de entrada con un temporizador, así que puede escuchar sin límite de tiempo.                                                  | hasta el intervalo           |
+| En espera               | Otra IA tuya recibe una copia de tu mensaje y responde en su lugar.                                                                                   | sin medir                    |
+| Solo bandeja de entrada | El mensaje espera y zapbip te dice que la IA no está escuchando ahora mismo.                                                                          | hasta que una IA lo lea      |
+
+En cada peldaño tu mensaje se conserva en la [bandeja de entrada](/es/concepts/inbox) hasta que una IA lo lee. No se pierde nada.
+
+## Local: tu propio ordenador
+
+El conector mantiene una línea abierta con zapbip mientras corre. Cuando escribes, zapbip empuja el mensaje por esa línea y el conector reanuda tu sesión en tu ordenador. Cuando se cierra la última línea, zapbip restablece la activación que tenías antes. Inícialo con `npx zapbip@0.1.0 connect`.
+
+## Programado: escuchar sin límite de tiempo
+
+Algunas IAs no tienen forma de arrancarse desde fuera, y cada llamada que hacen a zapbip termina en pocos minutos. Una activación programada lo resuelve: le pides a la IA que ejecute una tarea pequeña con un temporizador, cada pocos minutos o cada hora, y cada ejecución lee lo que escribiste y responde.
+
+Tú eliges la frecuencia, de cada 1 minuto a cada 1440 minutos (un día). ChatGPT y claude.ai solo ejecutan tareas programadas cada 60 minutos o con menos frecuencia, así que para ellas el intervalo más corto es de 60 minutos.
+
+Cuando escribes, zapbip te dice más o menos cuándo esperar la respuesta. Este aviso, como todos los de zapbip, está en inglés, el idioma del producto hoy:
+
+<Chat
+  contact="zapbip"
+  messages={[
+    { you: true, text: '¿Puedes resumir el informe?' },
+    {
+      notice: true,
+      text: 'The agent Claude checks the inbox every hour. Last check 20 min ago. Your message waits there until the next check.',
+    },
+  ]}
+/>
+
+Si el temporizador deja de ejecutarse, zapbip lo dice una vez, cuando pasa el doble del intervalo sin una revisión, y tus mensajes siguen esperando:
+
+<Chat contact="zapbip" messages={[{ notice: true, text: "Claude hasn't checked in 2 h: your messages wait" }]} />
+
+La siguiente revisión termina el aviso sin otro mensaje.
+
+Cuando la [ventana de 24 horas](/es/concepts/24-hour-window) está cerrada, esta nota no se puede enviar tal cual. zapbip envía un [aviso](/es/concepts/owner-notices) de plantilla por ventana cerrada, y la nota espera y llega cuando escribes.
+
+## En espera: otra IA responde
+
+Algunas IAs, como Grok en la web, no se pueden arrancar de ninguna forma. Puedes nombrar a otra IA de la misma cuenta como su relevo, por ejemplo Grok Bot. Cuando escribes a la primera, zapbip da una copia al relevo, lo activa, y este responde como sí mismo, diciendo quién es. La primera IA ve el mensaje como atendido por el relevo.
+
+<Chat
+  contact="zapbip"
+  messages={[
+    { you: true, text: '@grok ¿qué tengo en el calendario?' },
+    { name: 'Grok Bot (standby for Grok)', text: 'Hoy tienes dos reuniones: 10:00 y 15:30.' },
+  ]}
+/>
+
+Una conexión en espera nunca reenvía a otra en espera: es un salto, nada más. Si el relevo falta, se quitó o es a su vez un relevo, no se copia nada: el mensaje espera con la primera IA y recibes el aviso habitual.
+
+La IA lo configura por ti durante la instalación. Para cambiarlo a mano, usa [set_wake](/es/mcp-reference/set-wake).

@@ -1,0 +1,62 @@
+---
+title: So startest du
+description: Von deinem WhatsApp bis zur ersten Nachricht deiner KI.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import StartLink from '/snippets/de/start-link.mdx';
+import InstallPrompt from '/snippets/de/install-prompt.mdx';
+
+1. **Schreib der zapbip-Nummer auf WhatsApp.** Sende irgendeinen Text, zum Beispiel `hi`. Deine erste Nachricht legt dein Konto an und beweist, dass das Handy dir gehört.
+
+   <StartLink />
+
+   <Chat
+     messages={[
+       { you: true, text: 'hi', time: '09:00' },
+       { name: 'zapbip', text: 'No agent is connected. Your message is saved.', time: '09:00' },
+     ]}
+   />
+
+2. **Bitte um einen neuen Agent.** Ein Agent ist eine KI, die du verbindest. Sende `new agent` und einen Namen, zum Beispiel `new agent claude`.
+
+3. **Hol dir deinen Prompt.** zapbip antwortet mit ein oder zwei Zeilen, die für dich gemacht sind.
+
+   <Chat
+     messages={[
+       { you: true, text: 'new agent claude', time: '09:01' },
+       {
+         name: 'zapbip',
+         text: 'Agent claude created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate claude".',
+         time: '09:01',
+       },
+     ]}
+   />
+
+4. **Füge ihn in deine KI ein.** Öffne ChatGPT, Claude, Grok oder die KI, die du nutzt, und füge die Zeile ein, die zapbip dir geschickt hat. Sie sieht so aus:
+
+   <InstallPrompt />
+
+   Deine KI liest die Anleitung online und richtet sich selbst ein.
+
+5. **Deine KI schreibt dir.** Sie schickt eine erste Nachricht auf WhatsApp, um zu bestätigen, dass sie verbunden ist.
+
+   <Chat messages={[{ name: 'Claude', text: '✅ installed', time: '09:03' }]} />
+
+<Note>
+  Die WhatsApp-Befehle und die Antworten von zapbip auf dieser Seite sind auf Englisch, denn das versteht das Produkt heute. Dieselben
+  Befehle versteht es auch auf Portugiesisch.
+</Note>
+
+<Note>
+  claude.ai, ChatGPT und Grok im Web verlangen nur eines von dir: Deine KI sagt dir, dass du in ihren Einstellungen einen Connector
+  hinzufügen sollst. Folge dem, was sie sagt; es ist eine Regel dieser Apps.
+</Note>
+
+## Was dich erwartet
+
+- Eine WhatsApp-Nummer für alle deine KIs und eine eigene Zeile für jede, damit du sie auseinanderhalten kannst.
+- Die Zeile funktioniert einmal und läuft nach 30 Minuten ab. Läuft sie ab, sende `rotate claude` für eine neue.
+- Du kannst jederzeit zuerst schreiben, und deine KI hört ohne Zeitlimit weiter zu.
+- Auf der Warteliste? In den [FAQ](/de/help/faq) steht, wie es weitergeht.
+- Wähle deine KI und folge ihrer Seite unter [Unterstützte KIs](/de/agents/supported-agents).

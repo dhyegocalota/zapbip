@@ -1,0 +1,105 @@
+---
+title: 'Hermes'
+description: 'Écrivez à Hermes sur WhatsApp et faites-le répondre, sans limite de temps.'
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+## Ce qui fonctionne
+
+Hermes continue d'écouter votre WhatsApp grâce à un petit plugin zapbip. Vous écrivez en premier ou vous répondez plus tard à une question, et le message parvient à la session Hermes.
+
+<Chat
+  contact="Hermes"
+  messages={[
+    { you: true, text: 'Résume ce qui a changé aujourd’hui dans le dépôt.', time: '18:02' },
+    {
+      name: 'Hermes',
+      text: 'Trois commits : un correctif sur la facturation, un nouveau test et une mise à jour de la documentation.',
+      time: '18:03',
+    },
+  ]}
+/>
+
+### Messages que vous transférez
+
+Un message que vous avez transféré de quelqu'un d'autre parvient à Hermes avec une étiquette indiquant que vous ne l'avez pas écrit, si bien que Hermes ne le traite pas comme votre instruction.
+
+## Comment elle écoute
+
+Barreau : Local. Tant qu'une question est ouverte, Hermes attend jusqu'à 50 secondes à chaque fois. Si vous n'avez pas répondu, l'attente se termine en « en attente » et Hermes rappelle à nouveau, autant de fois qu'il le faut, sans limite de temps.
+
+Le plugin garde ouverte une connexion vers zapbip, sans limite de temps. Si le réseau tombe, il se reconnecte de lui-même, en attendant un peu plus longtemps après chaque échec (1 seconde au début, 30 secondes au maximum). Les messages que vous envoyez entre-temps attendent dans votre boîte de réception zapbip, et le plugin récupère chacun de ceux restés sans réponse dès son retour.
+
+### Si le plugin ne peut pas être installé
+
+Hermes peut interroger à la place. Ajoutez le serveur MCP de la configuration et créez un job toutes les 1 minute qui appelle `check_inbox`. Vos messages attendent jusqu'à une minute, et la réponse arrive de la même façon.
+
+## Configurer de zéro
+
+### Ce qu'il vous faut
+
+- Hermes avec sa gateway en marche.
+- Votre lien de connexion, le même lien `https://.../c/<secret>/mcp` que votre IA utilise pour parler à zapbip. Traitez-le comme un mot de passe.
+
+### Installer le plugin
+
+Installez le paquet dans l'environnement Python où tourne Hermes :
+
+```bash
+d=$(mktemp -d) && curl -fsSL https://mcp.zapbip.com/pkg/zapbip_platform-0.1.0-requirements.txt -o "$d/zapbip-requirements.txt" && python3 -c 'import hashlib,sys; sys.exit(hashlib.sha256(open(sys.argv[1],"rb").read()).hexdigest() != sys.argv[2])' "$d/zapbip-requirements.txt" fc258f304227f3eb44169c5416f581424296a876995c6499daaa42c7cf04cc31 && python3 -m pip install --only-binary=:all: --require-hashes -r "$d/zapbip-requirements.txt"
+```
+
+Activez-le ensuite dans `~/.hermes/config.yaml` :
+
+```yaml
+plugins:
+  enabled:
+    - zapbip-platform
+```
+
+Définissez le lien et les personnes autorisées à parler à Hermes dans l'environnement où tourne la gateway, jamais dans un fichier que vous partagez :
+
+```bash
+export ZAPBIP_CONNECTION_LINK='https://<host>/c/<secret>/mcp'
+export ZAPBIP_ALLOWED_USERS=owner
+```
+
+Le fichier qui contient votre lien de connexion fonctionne comme un mot de passe. Donnez-lui la permission `600` pour que seul votre utilisateur puisse le lire, et ne le partagez ni ne le commitez jamais :
+
+```bash
+chmod 600 <file>
+```
+
+Redémarrez la gateway.
+
+Lancez un seul listener par agent : le plugin ou `npx zapbip@0.1.0 listen`, jamais les deux. Un second listener remplace le premier.
+
+### Comment Hermes répond
+
+Hermes renvoie ses réponses à vos messages par le plugin lui-même, sans aucune configuration supplémentaire.
+
+Ajoutez zapbip comme serveur MCP pour que Hermes puisse aussi lancer une conversation avec vous, vous poser une question avec des boutons et attendre la réponse, et utiliser la solution d'interrogation ci-dessous :
+
+```yaml
+mcp_servers: { zapbip: { url: 'https://<host>/c/<secret>/mcp' } }
+```
+
+Demandez ensuite à Hermes sur WhatsApp d'envoyer `✅ installed`. Si ce message arrive, ça marche. Les commandes et les réponses de zapbip sont en anglais, car c'est ce que le produit comprend aujourd'hui.
+
+<Chat
+  contact="zapbip"
+  messages={[
+    { you: true, text: 'Envoie ✅ installed quand tu es installé.', time: '18:10' },
+    { name: 'Hermes', text: '✅ installed', time: '18:10' },
+  ]}
+/>
+
+## Vérifier que ça marche
+
+| Vous voyez                                                   | Ce que cela signifie                                                            |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------- |
+| Aucune réponse à votre message                               | La gateway ne tourne pas, ou le plugin n'est pas dans `plugins.enabled`.        |
+| Le plugin s'arrête de lui-même                               | Un autre plugin ou connecteur a démarré pour la même connexion et l'a remplacé. |
+| Hermes ne peut pas lancer de conversation ni vous interroger | Le serveur MCP `zapbip` manque dans `config.yaml`.                              |
+| Le plugin s'arrête avec une erreur                           | Le lien est inconnu ou la connexion a été révoquée. Demandez-en un nouveau.     |

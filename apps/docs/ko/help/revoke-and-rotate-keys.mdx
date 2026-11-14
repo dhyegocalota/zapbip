@@ -1,0 +1,44 @@
+---
+title: 연결 해제와 갱신
+description: AI의 연결을 끊거나 링크를 교체합니다.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+각 AI는 자기만의 연결을 가집니다. zapbip 번호에 메시지를 써서 연결을 끊거나 링크를 교체합니다. 명령어는 지금은 영어나 포르투갈어 단어로 입력합니다. 이 페이지에서는 영어 단어를 사용합니다.
+
+## AI 연결 끊기
+
+`revoke`와 AI의 이름을 쓰세요. 예를 들어 `revoke claude`입니다. 그 AI의 모든 연결 수단이 즉시 멈춥니다. zapbip으로 가는 링크, 내 컴퓨터에서 실행 중인 리스너, 그 AI를 시작시키는 모든 웨이크가 해당됩니다.
+
+<Chat
+  messages={[
+    { you: true, text: 'revoke claude', time: '16:02' },
+    { text: 'Agent claude revoked. Its link no longer works.', time: '16:02' },
+  ]}
+/>
+
+그 AI를 다시 쓰려면 `new agent claude`를 쓰세요.
+
+## 링크 교체하기
+
+`rotate`와 이름을 쓰세요. 예를 들어 `rotate claude`입니다. 이전 연결은 즉시 작동을 멈추며, 범위는 `revoke`와 같습니다. zapbip은 그 AI에 붙여 넣을 새 프롬프트를 보냅니다.
+
+<Chat
+  messages={[
+    { you: true, text: 'rotate claude', time: '16:05' },
+    {
+      text: 'Link of agent claude replaced. The old link no longer works. Paste this into your agent: ...',
+      time: '16:05',
+    },
+  ]}
+/>
+
+갱신된 링크는 한 번만 전송됩니다. zapbip은 그 링크를 다시 보여 주지 않으며, `agents`는 링크 없이 AI 목록만 보여 줍니다. 새 프롬프트가 도착하지 않으면 zapbip은 이전 연결을 유지하므로, `rotate claude`를 다시 쓸 수 있습니다.
+
+## 어느 것을 쓸지
+
+- AI를 잃어버렸거나, 쓰지 않게 되었거나, 링크를 실수로 공유했다면: `revoke`.
+- 링크가 만료되었거나, 이미 사용되었거나, 유출되었지만 그 AI는 계속 쓰고 싶다면: `rotate`.
+
+모든 단어는 [WhatsApp 명령어](/ko/features/whatsapp-commands)에서 확인하세요.

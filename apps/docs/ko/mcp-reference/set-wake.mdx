@@ -1,0 +1,60 @@
+---
+title: 'set_wake'
+description: '에이전트가 듣고 있지 않을 때 어떻게 연락할지 zapbip에 알려 줍니다.'
+---
+
+내가 쓰는데 대기 중인 호출이 없을 때 이 연결을 어떻게 깨울지 저장합니다. [웨이크 래더](/ko/concepts/wake-ladder)와 [웹훅 웨이크 가이드](/ko/developers/webhook-wake)를 보세요.
+
+## 입력
+
+| 필드               | 타입          | 비고                                                                                                                                                                                                                                          |
+| ------------------ | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mode`             | string        | `local`은 [커넥터](/ko/developers/local-connector)로 깨웁니다. `webhook`은 웹훅을 저장합니다. `scheduled`는 에이전트가 타이머로 받은편지함을 확인하게 합니다. `standby`는 내 메시지를 다른 에이전트에게 넘깁니다. `none`은 웨이크를 지웁니다. |
+| `url`              | string, 선택  | `webhook`에서 필수. `https`, userinfo 없음, 프래그먼트 없음, 포트 443 또는 생략, 최대 512자. 호스트가 공급자를 결정합니다.                                                                                                                    |
+| `token`            | string, 선택  | `webhook`에서 필수. 출력 가능한 문자, 공백 없음, 16~512자. 일반 웹훅에서는 서명 키이며 32자 이상이어야 합니다.                                                                                                                                |
+| `interval_minutes` | integer, 선택 | `scheduled`에서 필수. 1~1440분. ChatGPT와 claude.ai는 예약 작업을 가장 짧게 60분마다 실행합니다.                                                                                                                                              |
+| `standby_agent`    | string, 선택  | `standby`에서 필수. 같은 계정의 다른 연결 이름이며, 그 자체가 대기 에이전트가 아니어야 합니다.                                                                                                                                                |
+
+다른 모드의 필드는 없어야 합니다.
+
+## 예약
+
+밖에서 시작시킬 수 없는 에이전트는 [check_inbox](/ko/mcp-reference/check-inbox)를 호출하는 작업을 타이머로 실행합니다. 이렇게 하면 시간 제한 없이 들을 수 있고, 메시지마다 `send_message`로 답합니다.
+
+```json
+{ "mode": "scheduled", "interval_minutes": 60 }
+```
+
+내가 쓰면 zapbip이 답을 언제 기대하면 되는지 알려 줍니다. 간격의 두 배 동안 확인이 이루어지지 않으면 알림이 한 번 오고, 메시지는 다음 확인까지 받은편지함에서 기다립니다.
+
+## 로컬
+
+[커넥터](/ko/developers/local-connector)가 내 컴퓨터에서 실행되는 동안, 에이전트에게 이 도구를 `{ "mode": "local" }`로 호출하라고 요청하세요.
+
+## 대기
+
+깨울 수 없는 에이전트는 같은 계정의 다른 에이전트를 지정해 대신 답하게 합니다. zapbip은 내 메시지를 대기 에이전트에게 복사하고 깨우며, 대기 에이전트는 자기 이름으로 답합니다.
+
+```json
+{ "mode": "standby", "standby_agent": "grok-bot" }
+```
+
+대기 연결은 다른 대기 연결로 전달하지 않습니다. 1홉뿐입니다. 대기 연결이 없거나, 삭제되었거나, 그 자체가 대기 모드이면 아무것도 복사되지 않고 내 메시지는 첫 번째 에이전트에서 기다립니다.
+
+## 공급자
+
+공급자는 URL의 호스트로 정해지며, 필드로 지정하지 않습니다.
+
+| 공급자           | 호스트                     | 경로                                         | 인증                                                                |
+| ---------------- | -------------------------- | -------------------------------------------- | ------------------------------------------------------------------- |
+| `grok_routine`   | `api2.cursor.sh`           | `/automations/webhook/<routine-id>`          | `Authorization: Bearer <token>`                                     |
+| `claude_routine` | `api.anthropic.com`        | `/v1/claude_code/routines/<trigger-id>/fire` | `Authorization: Bearer <token>`                                     |
+| `generic`        | 공개된 모든 `https` 호스트 | 임의                                         | `X-Zapbip-Timestamp`와 `X-Zapbip-Signature`, 시크릿은 전송하지 않음 |
+
+## 출력
+
+`{ "status": "saved", "wake_mode": string, "effective_rung": string, "provider": string | null }`. `provider`는 `webhook`에서만 설정됩니다. `effective_rung`은 대기 에이전트를 쓸 수 없을 때, 그리고 커넥터가 연결되지 않은 동안의 `local`에서 `inbox`가 됩니다. 이때 메시지는 받은편지함에서 기다리기 때문입니다. URL, 토큰, 호스트는 반환되지 않습니다.
+
+## 오류
+
+도구 오류는 잘못된 필드(`url`, `token`, `interval_minutes`, `standby_agent`, `mode`)와 그 한도를 알려 주며, 값을 그대로 되돌려 주지 않습니다. 아무것도 저장되지 않고 이전 웨이크가 유지됩니다. zapbip은 저장할 때 공급자를 호출하지 않습니다. 틀린 토큰은 첫 웨이크 때, WhatsApp으로 나에게 가는 알림으로 드러납니다.

@@ -1,4 +1,4 @@
-import { DocsLanguage, WakeRung } from '@zapbip/types';
+import { DocsPageLanguage, WakeRung } from '@zapbip/types';
 import { compareCodePoints } from './code-points';
 import type { AgentDefinition } from './contract';
 
@@ -11,8 +11,8 @@ function compareByRungThenName(input: { definitions: Record<string, AgentDefinit
     const rungDifference = WAKE_LADDER.indexOf(left.listen.rung) - WAKE_LADDER.indexOf(right.listen.rung);
     if (rungDifference !== 0) return rungDifference;
     return compareCodePoints({
-      left: left.docs.matrixName[DocsLanguage.English].toLowerCase(),
-      right: right.docs.matrixName[DocsLanguage.English].toLowerCase(),
+      left: left.docs.matrixName[DocsPageLanguage.English].toLowerCase(),
+      right: right.docs.matrixName[DocsPageLanguage.English].toLowerCase(),
     });
   };
 }

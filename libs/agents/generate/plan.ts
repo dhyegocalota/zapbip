@@ -1,5 +1,5 @@
 import { posix } from 'node:path';
-import { DocsLanguage } from '@zapbip/types';
+import { DocsPageLanguage } from '@zapbip/types';
 import { compareCodePoints } from '../src/code-points';
 import { pluginWorkflowViolationsOf } from '../src/checks/plugins';
 import { hasValidAgentId, registryViolationsOf } from '../src/checks/registry';
@@ -48,7 +48,7 @@ function generatedModules(input: { agents: ResolvedAgent[] }): GeneratedFile[] {
 }
 
 function matrixSnippets(input: { agents: ResolvedAgent[] }): GeneratedFile[] {
-  return Object.values(DocsLanguage).map((language) => ({
+  return Object.values(DocsPageLanguage).map((language) => ({
     path: MATRIX_SNIPPETS[language],
     content: renderMatrix({ agents: input.agents, language }),
   }));

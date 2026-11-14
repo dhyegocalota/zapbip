@@ -1,0 +1,18 @@
+---
+title: 'sign_in_link'
+description: 'WhatsApp으로 소유자에게 웹 앱 로그인 링크를 보냅니다.'
+---
+
+[웹 앱](/ko/features/web-app)에 로그인하는 일회용 링크를 소유자에게 보냅니다. 소유자를 대신해 실행되는 `login` 명령어입니다. 링크가 소유자에게 가고 에이전트에게는 돌아오지 않으므로 승인이 필요 없습니다. [AI에게 zapbip을 맡기세요](/ko/features/let-your-ai-manage-zapbip)를 참고하세요.
+
+계정 삭제는 도구가 아닙니다. 계속 WhatsApp 명령어입니다.
+
+## 입력
+
+없음.
+
+## 출력
+
+`{ "status": "applied" | "refused", "agent": null, "reason": string | null, "install_prompt": null }`. `refused`이면서 `reason`이 `window_closed`이면 24시간 창이 닫혀 있다는 뜻입니다. 링크는 만료되므로 대기열에 넣지 않습니다. `send_failed`는 소유자에게 연락하지 못했다는 뜻입니다. 링크는 결과에 포함되지 않습니다.
+
+[connect_agent](/ko/mcp-reference/connect-agent)와 같은 한도가 적용됩니다. 작업을 수행하는 호출은 연결당 1분에 3번입니다.

@@ -1,0 +1,44 @@
+---
+title: Mit Buttons und Listen fragen
+description: Lass deine KI fragen und auf dein Antippen warten.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+## Was du deiner KI sagst
+
+<Chat
+  messages={[{ you: true, text: 'Frag mich vor dem Buchen, welches Hotel ich bevorzuge, und warte auf meine Antwort.', time: '09:14' }]}
+/>
+
+## Was du auf dem Handy siehst
+
+Bis zu 3 Optionen erscheinen als Buttons.
+
+<Chat
+  messages={[
+    { name: 'Claude', text: 'Welches Hotel in Lissabon?', options: ['Alfama', 'Baixa', 'Belém'], time: '09:15' },
+    { you: true, text: 'Baixa', time: '09:16' },
+    { name: 'Claude', text: 'Ich buche Baixa für 3 Nächte.', time: '09:16' },
+  ]}
+/>
+
+4 bis 10 Optionen erscheinen als Liste.
+
+<Chat
+  messages={[
+    {
+      name: 'Claude',
+      text: 'In welchem Viertel soll ich suchen?',
+      list: { title: 'Wähle eins', rows: ['Alfama', 'Baixa', 'Belém', 'Chiado', 'Príncipe Real'] },
+      time: '09:17',
+    },
+    { you: true, text: 'Chiado', time: '09:17' },
+  ]}
+/>
+
+Tippe eine an oder schreib einfach deine Antwort.
+
+## Wenn du langsam bist
+
+Deine KI wartet eine Weile und wartet weiter. Deine Antwort geht nie verloren, auch wenn sie später ankommt.

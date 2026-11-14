@@ -1,4 +1,4 @@
-import { DocsLanguage } from '@zapbip/types';
+import { DocsPageLanguage } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import {
   GenerationMode,
@@ -12,9 +12,9 @@ import {
   type GenerationPlan,
 } from '@zapbip/agents/generate';
 import { CONNECTOR_RUNTIMES } from '@zapbip/agents/connector';
-import type { AgentConnectorRuntime } from '@zapbip/agents';
+import { PAGE_FACETS, type AgentConnectorRuntime } from '@zapbip/agents';
 import { AGENT_DEFINITIONS } from '@zapbip/agents/definitions';
-import { agentPagePathOf } from '@zapbip/agents/docs';
+import { AGENTS_GROUP_INDEX, DOCS_GROUPS, agentPagePathOf, snippetPathOf, twinPathOf } from '@zapbip/agents/docs';
 import { trackedFiles, readRepositoryFile } from './repository-files';
 
 const SUPPORTED_ROOT = 'libs/agents/supported';
@@ -24,12 +24,17 @@ const DOCS_CONFIG = 'apps/docs/docs.json';
 const WORKFLOW_FILE = '.github/workflows/verify.yml';
 const REAL_AGENT_IDS = discoverAgents({ roots: [SUPPORTED_ROOT] }).map((agent) => agent.id);
 const INSTALL_FILES = ['install.en_US.md', 'install.pt_BR.md'];
-const MATRIX_SNIPPETS = ['apps/docs/snippets/agents/matrix.mdx', 'apps/docs/snippets/pt-br/agents/matrix.mdx'];
-const MATRIX_PAGES = ['apps/docs/agents/supported-agents.mdx', 'apps/docs/pt-br/agents/supported-agents.mdx'];
-const FOLDER_PAGE_FILES: Record<DocsLanguage, string> = {
-  [DocsLanguage.English]: 'page.en.mdx',
-  [DocsLanguage.PortugueseBrazil]: 'page.pt-br.mdx',
-};
+const LANGUAGES = Object.values(DocsPageLanguage);
+const MATRIX_SNIPPETS = LANGUAGES.map((language) => `apps/docs/${snippetPathOf({ name: 'agents/matrix.mdx', language })}`);
+const MATRIX_PAGES = LANGUAGES.map((language) => `apps/docs/${twinPathOf({ path: 'agents/supported-agents.mdx', language })}`);
+const NEW_LANGUAGE_LISTENER_SENTENCE_STARTS: [DocsPageLanguage, string][] = [
+  [DocsPageLanguage.Spanish, 'Ejecuta un solo listener por agente'],
+  [DocsPageLanguage.German, 'Führe pro Agent nur einen Listener aus'],
+  [DocsPageLanguage.French, 'Lancez un seul listener par agent'],
+  [DocsPageLanguage.Japanese, 'エージェントごとにリスナーは 1 つだけ実行してください'],
+  [DocsPageLanguage.Korean, '에이전트마다 리스너는 하나만 실행하세요'],
+  [DocsPageLanguage.Chinese, '每个智能体只运行一个 listener'],
+];
 const MATRIX_TABLE_ROW_PATTERN = /^\| -{3,}/m;
 const ENUM_MEMBER_PATTERN = /^\s*(\w+) = '([a-z0-9-]+)',?$/;
 
@@ -93,8 +98,7 @@ function addedPathsOf(input: { fixture: Fixture }): string[] {
     `${GENERATED_FOLDER}/definitions.ts`,
     `${GENERATED_FOLDER}/install.ts`,
     ...installPathsOf(input),
-    `apps/docs/agents/${input.fixture.id}.mdx`,
-    `apps/docs/pt-br/agents/${input.fixture.id}.mdx`,
+    ...LANGUAGES.map((language) => `apps/docs/${agentPagePathOf({ client: input.fixture.id, language })}.mdx`),
     ...MATRIX_SNIPPETS,
     DOCS_CONFIG,
   ];
@@ -117,11 +121,11 @@ describe('the generated files', () => {
     expect(writePlan({ plan: await realPlan(), mode: GenerationMode.Check })).toEqual([]);
   });
 
-  test.each(REAL_AGENT_IDS.flatMap((id) => Object.values(DocsLanguage).map((language) => ({ id, language }))))(
+  test.each(REAL_AGENT_IDS.flatMap((id) => LANGUAGES.map((language) => ({ id, language }))))(
     'every agent page in apps/docs is the copy of its folder page: $id in $language',
     ({ id, language }) => {
       const docsPage = readSource(`apps/docs/${agentPagePathOf({ client: id, language })}.mdx`);
-      expect(docsPage).toBe(readSource(`${SUPPORTED_ROOT}/${id}/${FOLDER_PAGE_FILES[language]}`));
+      expect(docsPage).toBe(readSource(`${SUPPORTED_ROOT}/${id}/${PAGE_FACETS[language]}`));
     },
   );
 
@@ -154,15 +158,18 @@ describe('adding an agent folder', () => {
     ['AgentId', 'InstallClient'].forEach((enumName) =>
       expect(membersOf({ source: ids, enumName })).toContainEqual([INSTALL_FIXTURE.member, INSTALL_FIXTURE.id]),
     );
-    expect(contentOf({ plan: extended, path: MATRIX_SNIPPETS[0] as string })).toContain(
-      `[${INSTALL_FIXTURE.englishName}](/agents/${INSTALL_FIXTURE.id})`,
-    );
-    expect(contentOf({ plan: extended, path: MATRIX_SNIPPETS[1] as string })).toContain(
-      `[${INSTALL_FIXTURE.portugueseName}](/pt-br/agents/${INSTALL_FIXTURE.id})`,
-    );
+    LANGUAGES.forEach((language, index) => {
+      const name = language === DocsPageLanguage.PortugueseBrazil ? INSTALL_FIXTURE.portugueseName : INSTALL_FIXTURE.englishName;
+      expect(contentOf({ plan: extended, path: MATRIX_SNIPPETS[index] as string })).toContain(
+        `[${name}](/${agentPagePathOf({ client: INSTALL_FIXTURE.id, language })})`,
+      );
+    });
     const docsConfig = contentOf({ plan: extended, path: DOCS_CONFIG });
-    expect(pagesOf({ content: docsConfig, group: 'Agents', language: 'en' })).toContain(`agents/${INSTALL_FIXTURE.id}`);
-    expect(pagesOf({ content: docsConfig, group: 'IAs', language: 'pt-BR' })).toContain(`pt-br/agents/${INSTALL_FIXTURE.id}`);
+    LANGUAGES.forEach((language) =>
+      expect(pagesOf({ content: docsConfig, group: DOCS_GROUPS[language][AGENTS_GROUP_INDEX] as string, language })).toContain(
+        agentPagePathOf({ client: INSTALL_FIXTURE.id, language }),
+      ),
+    );
     installPathsOf({ fixture: INSTALL_FIXTURE }).forEach((path) =>
       expect(contentOf({ plan: extended, path }).match(/^## Fixture Agent$/gm)).toHaveLength(1),
     );
@@ -212,7 +219,9 @@ describe('removing an agent folder', () => {
 
   test.each(REAL_AGENT_IDS)('G3: %s vanishes from every planned file', async (id) => {
     const removed = await planWithout({ id });
-    expect(removed.deletions.sort()).toEqual([`apps/docs/agents/${id}.mdx`, `apps/docs/pt-br/agents/${id}.mdx`]);
+    expect(removed.deletions.sort()).toEqual(
+      LANGUAGES.map((language) => `apps/docs/${agentPagePathOf({ client: id, language })}.mdx`).sort(),
+    );
     const violationsOfOthers = (await realPlan()).violations.filter((violation) => !violation.startsWith(`${id} `));
     expect(removed.violations).toEqual(violationsOfOthers);
     removed.writes.forEach((write) => {
@@ -220,7 +229,7 @@ describe('removing an agent folder', () => {
       expect(write.content).not.toContain(`'${id}'`);
     });
     MATRIX_SNIPPETS.forEach((path) =>
-      expect(contentOf({ plan: removed, path }).match(/\]\(\/(?:pt-br\/)?agents\//g)).toHaveLength(REAL_AGENT_IDS.length - 1),
+      expect(contentOf({ plan: removed, path }).match(/\]\(\/(?:[a-z-]+\/)?agents\//g)).toHaveLength(REAL_AGENT_IDS.length - 1),
     );
   });
 });
@@ -239,6 +248,18 @@ describe('page rules', () => {
     { name: 'the self-test text of a plugin page', fixture: PLUGIN_FIXTURE, file: 'page.pt-br.mdx', remove: /✅ instalado/g },
     { name: 'the placeholder of a step guide', fixture: INSTALL_FIXTURE, file: 'page.en.mdx', remove: /<connectionLink>/g },
     { name: 'the conversation of a step guide', fixture: INSTALL_FIXTURE, file: 'page.pt-br.mdx', remove: /<Chat[\s\S]*?\/>/ },
+    ...NEW_LANGUAGE_LISTENER_SENTENCE_STARTS.map(([language, sentenceStart]) => ({
+      name: `the one-listener sentence of a ${language} plugin page`,
+      fixture: PLUGIN_FIXTURE,
+      file: PAGE_FACETS[language],
+      remove: sentenceStart,
+    })),
+    ...NEW_LANGUAGE_LISTENER_SENTENCE_STARTS.map(([language]) => ({
+      name: `the conversation of a ${language} step guide`,
+      fixture: INSTALL_FIXTURE,
+      file: PAGE_FACETS[language],
+      remove: /<Chat[\s\S]*?\/>/,
+    })),
   ];
 
   test.each(PAGE_RULE_MUTATIONS)('removing $name fails the plan naming the page', async ({ fixture, file, remove }) => {

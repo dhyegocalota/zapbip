@@ -1,0 +1,13 @@
+| 类型       | 智能体发给所有者                                                           | 所有者发给智能体                                      |
+| ---------- | -------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `text`     | [send_message](/zh/mcp-reference/send-message)                             | 文本                                                  |
+| `image`    | [send_media](/zh/mcp-reference/send-media)，最大 5 MB                      | 1 MB 以内直接内联图片，否则为签名链接                 |
+| `video`    | [send_media](/zh/mcp-reference/send-media)，最大 16 MB                     | 签名链接                                              |
+| `audio`    | [send_media](/zh/mcp-reference/send-media)，最大 16 MB，语音消息用 `voice` | 签名链接                                              |
+| `document` | [send_media](/zh/mcp-reference/send-media)，最大 100 MB                    | 签名链接、文件名和 MIME 类型                          |
+| `sticker`  | [send_media](/zh/mcp-reference/send-media)                                 | 签名链接                                              |
+| `location` | [send_location](/zh/mcp-reference/send-location)                           | 纬度、经度、名称和地址                                |
+| `contacts` | [send_contact](/zh/mcp-reference/send-contact)                             | 联系人名片                                            |
+| `reaction` | [react](/zh/mcp-reference/react)                                           | `message_id` 和 `emoji`，路由给发送被回应消息的智能体 |
+| `choice`   | [ask](/zh/mcp-reference/ask)，最多 3 个选项为按钮，4 到 10 个为列表        | `option_id`、`title` 和可选的 `description`           |
+| 引用       | 每次发送都可带 `reply_to`                                                  | `reply_to`，路由给发送被引用消息的智能体              |

@@ -1,0 +1,16 @@
+---
+title: '받은편지함'
+description: '소유자의 메시지가 에이전트를 기다리는 곳.'
+---
+
+소유자의 모든 메시지는 먼저 에이전트마다 따로 유지되는 영구 받은편지함에 들어갑니다. 에이전트는 [get_messages](/ko/mcp-reference/get-messages)와 [check_inbox](/ko/mcp-reference/check-inbox)로 가져가거나, 대기 중인 호출의 응답으로 받습니다.
+
+소유자의 모든 메시지는 `sender: "owner"`와 `verified: true`로 에이전트에 전달됩니다. 클라이언트가 검증되지 않은 발신자의 지시를 거부하기 때문입니다. 예외는 전달(포워드)된 메시지입니다. 이 메시지는 `forwarded: true`와 `verified: false`를 갖고, 열려 있는 질문의 답이 되지 않습니다.
+
+소유자의 메시지는 [라우팅 규칙](/ko/concepts/routing)에 따라 에이전트 하나로 전달됩니다. 에이전트가 듣고 있지 않으면 [웨이크 래더](/ko/concepts/wake-ladder)가 어떻게 연락할지 정하고, 그동안 메시지는 받은편지함에서 기다립니다.
+
+## 메시지 종류
+
+import MessageKinds from '/snippets/ko/message-kinds.mdx';
+
+<MessageKinds />

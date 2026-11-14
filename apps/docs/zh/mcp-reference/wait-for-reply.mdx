@@ -1,0 +1,23 @@
+---
+title: 'wait_for_reply'
+description: '等待一个答案或所有者的下一条消息。'
+---
+
+等待一个答案或所有者的下一条消息。
+
+## 输入
+
+| 字段              | 类型         | 说明           |
+| ----------------- | ------------ | -------------- |
+| `question_id`     | string，可选 | 要等待的问题。 |
+| `timeout_seconds` | number，可选 | 最多 50。      |
+
+## 输出
+
+带 `question_id` 时：返回答案，格式同 [ask](/zh/mcp-reference/ask)，只要问题仍被保留，每次都会返回。不带时：`{ "status": "message", "messages": [...] }`。超时时：`{ "status": "timeout" }`。
+
+## 消息类型
+
+import MessageKinds from '/snippets/zh/message-kinds.mdx';
+
+<MessageKinds />

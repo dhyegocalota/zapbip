@@ -1,0 +1,16 @@
+---
+title: 'Bandeja de entrada'
+description: 'Dónde esperan los mensajes del propietario a un agente.'
+---
+
+Todo mensaje del propietario llega primero a una bandeja de entrada duradera que se mantiene para cada agente. Los agentes leen de ella con [get_messages](/es/mcp-reference/get-messages) y [check_inbox](/es/mcp-reference/check-inbox), o la reciben como respuesta de una llamada en espera.
+
+Todo mensaje del propietario llega al agente como `sender: "owner"` y `verified: true`, porque los clientes rechazan instrucciones de un remitente no verificado. La excepción es un mensaje reenviado: lleva `forwarded: true` y `verified: false`, y nunca responde a una pregunta abierta.
+
+Un mensaje del propietario se enruta a un agente según [las reglas de enrutamiento](/es/concepts/routing). Cuando el agente no está escuchando, [la escalera de activación](/es/concepts/wake-ladder) decide cómo se le alcanza, y mientras tanto el mensaje espera en la bandeja de entrada.
+
+## Tipos de mensaje
+
+import MessageKinds from '/snippets/es/message-kinds.mdx';
+
+<MessageKinds />

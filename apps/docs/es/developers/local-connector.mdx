@@ -1,0 +1,144 @@
+---
+title: 'Conector local'
+description: 'Los comandos connect, listen y channel de zapbip: opciones, variable de entorno, aislamiento de la activación y registros.'
+---
+
+Normalmente tu IA solo lee WhatsApp cuando ya está trabajando. Si le escribes mientras está inactiva, tu mensaje espera.
+
+El conector de zapbip lo arregla. Es un programa pequeño que se queda abierto en tu ordenador. Cuando escribes en WhatsApp, despierta la sesión de IA que ya usabas, le entrega tu mensaje y deja que te responda. Tarda unos 7 segundos con Claude Code y 6 con Codex.
+
+Funciona con Claude Code y Codex. Tu ordenador debe estar encendido y despierto, y el conector debe estar en marcha.
+
+## Comandos
+
+| Comando   | Qué hace                                                                                   |
+| --------- | ------------------------------------------------------------------------------------------ |
+| `connect` | Despierta una sesión cerrada cuando escribes. Admite `--client`, `--cwd` y `--session`.    |
+| `listen`  | Imprime una línea JSON por mensaje, para un agente que vigila un comando en segundo plano. |
+| `channel` | Ejecuta un canal MCP local que pone cada mensaje en una sesión abierta de Claude Code.     |
+
+`ZAPBIP_CONNECTION_URL` contiene el enlace de conexión. `connect` y `listen` lo piden cuando no está definido.
+
+## Qué necesitas
+
+- Claude Code o Codex, ya conectado a zapbip.
+- Al menos una sesión anterior en la carpeta en la que quieres que trabaje la IA.
+- Node 24 o posterior.
+- Tu enlace de conexión, el mismo enlace `https://.../c/<secret>/mcp` que tu IA usa para hablar con zapbip. Trátalo como una contraseña.
+
+## Inícialo
+
+Abre una terminal en la carpeta donde usas tu IA y ejecuta uno de estos:
+
+```bash
+export ZAPBIP_CONNECTION_URL='https://<host>/c/<secret>/mcp'
+npx zapbip@0.1.0 connect --client claude-code
+```
+
+```bash
+export ZAPBIP_CONNECTION_URL='https://<host>/c/<secret>/mcp'
+npx zapbip@0.1.0 connect --client codex
+```
+
+Si no defines `ZAPBIP_CONNECTION_URL`, el conector te pide el enlace. Nunca toma el enlace como argumento, porque los argumentos aparecen en el historial de tu shell y en la lista de procesos.
+
+Deja la terminal abierta. El conector imprime una línea por cada evento y se detiene cuando pulsas `Ctrl+C`. Para mantenerlo en marcha sin una terminal, mira [Ejecútalo en segundo plano](/es/developers/background-running).
+
+## Qué pasa cuando escribes
+
+1. Escribes a tu IA en WhatsApp.
+2. El conector recibe tu mensaje y despierta la sesión más reciente de la carpeta.
+3. La IA lee tu mensaje y te responde en WhatsApp.
+4. Si llegan varios mensajes a la vez, se atienden de uno en uno, en orden.
+
+Si estabas sin conexión o el conector estaba detenido, tus mensajes no se pierden. Cuando vuelve a conectarse, recoge todos los mensajes que no se respondieron.
+
+## Elige la sesión
+
+Por defecto el conector usa la sesión más reciente de la carpeta. Si tienes la misma carpeta abierta en otra ventana, una activación puede añadirse a esa conversación. Para evitarlo, fija una sesión:
+
+```bash
+npx zapbip@0.1.0 connect --client claude-code --session <session-id>
+```
+
+| Opción      | Qué hace                                                                                   |
+| ----------- | ------------------------------------------------------------------------------------------ |
+| `--client`  | `claude-code` o `codex`. Obligatoria.                                                      |
+| `--cwd`     | La carpeta en la que trabajar. Por defecto, la carpeta desde la que ejecutaste el comando. |
+| `--session` | Un id de sesión (UUID) que reanudar siempre, en lugar de la más reciente.                  |
+
+## Qué puede hacer la IA cuando la despiertan
+
+Solo una cosa: enviarte un mensaje de vuelta. El conector da a la IA una configuración privada que contiene solo zapbip, así que las herramientas de tus otros servidores MCP no están disponibles para ella. Claude Code además se ejecuta sin tus archivos de ajustes y con todas las herramientas integradas desactivadas, y Codex se ejecuta con un sandbox de solo lectura y con los otros servidores MCP que encuentra en tus archivos de configuración de Codex desactivados. Si no puede leer uno de esos archivos, no despierta a Codex y deja el mensaje sin leer. También se niega cuando un archivo gestionado de Codex define cualquier clave fuera de una lista corta de claves inofensivas, cuando un perfil define sandbox, aprobación, herramientas o funciones (o cualquier clave fuera de esa lista), cuando un archivo activa un interruptor de búsqueda web, o cuando `zapbip` está definido en cualquier sitio que no sea el `config.toml` del directorio de Codex. La búsqueda web de Codex está desactivada. Lo que le queda a Codex es `send_message` y una shell de solo lectura; las apps y los conectores de tu cuenta de Codex no se desactivan, y las preferencias gestionadas de macOS `com.openai.codex` y los ajustes de política gestionada de Claude Code siguen aplicándose. Tu mensaje le llega como un mensaje tuyo, marcado como verificado. Un mensaje que reenviaste de otra persona llega marcado como no verificado, con una etiqueta de reenviado, y la IA no lo trata como una instrucción tuya.
+
+Si la app de Codex ya tiene la conversación abierta, Codex se niega a reanudarla. El conector entonces inicia una sesión nueva en la misma carpeta, que empieza sin la conversación anterior, y la usa a partir de ahí.
+
+## Mantén una sesión abierta escuchando
+
+`connect` despierta una sesión que está cerrada. Para una sesión que tienes abierta ahora mismo, Claude Code puede oírte al instante, sin activación y sin espera. Hay dos formas, y la primera es la mejor.
+
+El canal es la primera opción. Es un programa pequeño que Claude Code inicia por sí mismo, igual que inicia cualquier otra herramienta. Pone cada mensaje que escribes en WhatsApp directamente en la sesión abierta, como un mensaje tuyo, marcado como verificado (un mensaje reenviado se marca como no verificado). Define `ZAPBIP_CONNECTION_URL` en el entorno en el que corre Claude Code, y Claude Code lo inicia con:
+
+```bash
+npx zapbip@0.1.0 channel
+```
+
+El canal no puede pedirte el enlace, así que solo lo lee de `ZAPBIP_CONNECTION_URL`. No admite argumentos.
+
+Declara ambos servidores en el `.mcp.json` de la carpeta donde trabajas. El canal trae tus mensajes; el servidor HTTP de zapbip, bajo otra clave, da a la sesión la herramienta `send_message` con la que responde:
+
+```json
+{
+  "mcpServers": {
+    "zapbip-channel": {
+      "command": "npx",
+      "args": ["zapbip@0.1.0", "channel"],
+      "env": { "ZAPBIP_CONNECTION_URL": "https://<host>/c/<secret>/mcp" }
+    },
+    "zapbip": {
+      "type": "http",
+      "url": "https://<host>/c/<secret>/mcp"
+    }
+  }
+}
+```
+
+La sesión responde a través de `zapbip`. Sin él, la sesión te oye pero no tiene forma de responder. Luego inicia Claude Code con:
+
+```bash
+claude --dangerously-load-development-channels server:zapbip-channel
+```
+
+`zapbip` es la clave del servidor del canal en `.mcp.json`. La línea de arranque muestra `Channels (experimental)`. Claude Code te pide aceptar el canal de desarrollo y el servidor MCP del proyecto; acepta ambos.
+
+El listener es la copia de seguridad. Imprime una línea por cada mensaje que escribes, y Claude Code vigila esas líneas con su herramienta Monitor. Cada línea despierta la sesión abierta, y no se gasta nada mientras estás en silencio:
+
+```bash
+export ZAPBIP_CONNECTION_URL='https://<host>/c/<secret>/mcp'
+npx zapbip@0.1.0 listen
+```
+
+Cada línea es JSON con el id del mensaje, su tipo, `"sender":"owner"`, `"verified"` (`true` para tu propio mensaje, `false` para uno reenviado), `"forwarded"` y el texto. Una vigilancia de Monitor dura hasta 30 minutos, así que la IA vuelve a iniciar la vigilancia cada vez que termina una. Otros agentes que pueden mantener un comando en segundo plano y reaccionar a su salida, como OpenClaw y Hermes, pueden usar `npx zapbip@0.1.0 listen` del mismo modo.
+
+Ambos programas permanecen abiertos y se reconectan solos, como `connect`. Ambos marcan un mensaje como atendido solo después de pasarlo, así que un mensaje nunca se pierde ni se muestra dos veces. Sus registros van a la salida de error y nunca llevan tus mensajes ni tu enlace.
+
+Así que las tres formas encajan: el canal para una sesión abierta, `listen` como su copia de seguridad, y `connect` para una cerrada.
+
+## Un conector por conexión
+
+Si inicias un segundo conector para la misma conexión, el primero termina la activación que está ejecutando y se detiene. Ejecútalo en un ordenador cada vez. Si llega un mensaje justo cuando cambias, ambos conectores pueden despertar a tu IA para ese mismo mensaje una vez; zapbip entrega al menos una vez, nunca cero veces.
+
+Mientras un conector está conectado, zapbip despierta a tu IA a través de él. Cuando se cierra, zapbip vuelve al ajuste que tenías antes.
+
+## Qué imprime
+
+Cada línea es JSON con una hora y un evento, como `wake_started` y `wake_finished`. Las líneas llevan ids, tipos, resultados y tiempos. Nunca llevan tus mensajes, las respuestas de la IA ni tu enlace de conexión.
+
+## Cuando algo no funciona
+
+| Qué ves                         | Qué significa                                                                                                                               |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| El conector termina al instante | El enlace es desconocido o fue revocado. Pide uno nuevo.                                                                                    |
+| Tu mensaje no recibe respuesta  | Aún no hay ninguna sesión en la carpeta, o `claude` o `codex` no está instalado donde corre el conector. Abre la IA una vez en esa carpeta. |
+| No deja de reconectarse         | Tu red está caída. Reintenta con esperas crecientes, de hasta 30 segundos, y continúa donde lo dejó.                                        |
+| Se detuvo solo                  | Iniciaste otro conector para la misma conexión.                                                                                             |

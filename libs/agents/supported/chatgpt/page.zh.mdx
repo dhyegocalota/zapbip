@@ -1,0 +1,76 @@
+---
+title: ChatGPT
+description: 把 ChatGPT 连接到你的 WhatsApp。
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import StartLink from '/snippets/zh/start-link.mdx';
+import InstallPrompt from '/snippets/zh/install-prompt.mdx';
+
+## 支持的功能
+
+| 你想要               | ChatGPT                                              |
+| -------------------- | ---------------------------------------------------- |
+| 收到它的消息         | 文本、照片、视频、音频、文档、位置、联系人、表情回应 |
+| 点按作答             | 按钮和列表；它会等你点按                             |
+| 从 WhatsApp 先发消息 | 可以，它会在一小时内读取你的消息                     |
+| 让问题保持几个小时   | 可以，没有时间限制                                   |
+
+<Chat
+  messages={[
+    { name: 'ChatGPT', text: '摘要准备好了。要发到频道吗？', options: ['发', '先不发'], time: '17:00' },
+    { you: true, text: '发', time: '17:02' },
+  ]}
+/>
+
+## 监听方式
+
+唤醒方式：**定时**。ChatGPT 每小时读取一次你的 WhatsApp 消息，这是应用允许的最短间隔，所以消息最多可能等待一小时。
+
+- 一个每小时运行的任务在你的电脑上执行，并发布到一个专用的聊天里。每次运行都会读取自上一次以来你写的内容。
+- 请保持那个聊天和你的电脑开着，任务才能运行。
+
+你的 AI 向你提问时，zapbip 会保留这个问题，并最多每 50 秒回答一次“待处理”。ChatGPT 随后再次调用，并一直调用下去，直到你回答。没有时间限制。
+
+ChatGPT 对单个答案大约等待 5 分钟，然后再次询问，所以整体没有限制。
+
+## 从零开始设置
+
+1. **在 WhatsApp 上给 zapbip 的号码发消息。** 随便发一段文字，例如 `hi`。
+
+   <StartLink />
+
+2. **申请一个新智能体。** 智能体就是你连接的一个 AI。目前命令需要用英语或葡萄牙语的词来输入。
+
+   <Chat
+     messages={[
+       { you: true, text: 'new agent chatgpt', time: '16:00' },
+       {
+         name: 'zapbip',
+         text: 'Agent chatgpt created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate chatgpt".',
+         time: '16:00',
+       },
+     ]}
+   />
+
+3. **把这一行粘贴到 ChatGPT 里。**
+
+   <InstallPrompt />
+
+   ChatGPT 会阅读说明并按顺序执行。链接是机密的，请不要放进你会分享的聊天里。
+
+4. **添加应用。** ChatGPT 会请你开启开发者模式，并用 `<connectionLink>` 通过 URL 添加应用，选择“无需认证”。这一步由你自己完成。
+
+5. **创建每小时任务。** 它会请你创建一个每小时的“在这台电脑上运行”任务，调用 `check_inbox`，放在一个专用聊天里，并为每个工具选择一次“始终允许”。
+
+6. **告诉 zapbip 它在轮询。** 它调用 `set_wake({mode: "scheduled", interval_minutes: 60})`。
+
+7. **测试。** 在聊天里它调用 `send_message`，内容为 ✅ installed。
+
+## 检查是否正常工作
+
+连接完成后，ChatGPT 会向你的 WhatsApp 发送 `✅ installed`。
+
+<Chat messages={[{ name: 'ChatGPT', text: '✅ installed', time: '16:05' }]} />
+
+如果什么也没收到，请参见[故障排查](/zh/help/troubleshooting)。

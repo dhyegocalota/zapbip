@@ -1,0 +1,24 @@
+---
+title: 'create_upload'
+description: 'Reserva una subida para bytes que tienes en local.'
+---
+
+Reserva una subida para bytes que tienes en local.
+
+## Entrada
+
+| Campo        | Tipo   | Notas |
+| ------------ | ------ | ----- |
+| `filename`   | string |       |
+| `mime_type`  | string |       |
+| `size_bytes` | number |       |
+
+## Salida
+
+`{ "upload_id": string, "upload_url": string, "expires_at": string }`. `upload_url` es un enlace firmado que no lleva ningún secreto de conexión. Envía los bytes con `PUT` a ese enlace con un `Content-Length` no mayor que `size_bytes`, y luego pasa `upload_id` a [send_media](/es/mcp-reference/send-media). La subida caduca a los 15 minutos. Una longitud ausente, un cuerpo mayor, un tipo equivocado o una subida caducada se rechazan con 411, 413, 415 o 410 y no se guarda nada.
+
+## Tipos de mensaje
+
+import MessageKinds from '/snippets/es/message-kinds.mdx';
+
+<MessageKinds />

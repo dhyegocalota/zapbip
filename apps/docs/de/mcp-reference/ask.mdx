@@ -1,0 +1,26 @@
+---
+title: 'ask'
+description: 'Stellt dem Owner eine Frage mit Buttons oder einer Liste und wartet auf die Antwort.'
+---
+
+Stellt dem Owner eine Frage mit Buttons oder einer Liste und wartet auf die Antwort.
+
+## Eingabe
+
+| Feld              | Typ                | Hinweise                                                                                                  |
+| ----------------- | ------------------ | --------------------------------------------------------------------------------------------------------- |
+| `question`        | string             | Bis zu 1024 Zeichen.                                                                                      |
+| `options`         | Array mit 1 bis 10 | Bis zu 3 Optionen erscheinen als Buttons (Titel bis zu 20 Zeichen), 4 bis 10 als Liste (Zeile bis zu 24). |
+| `timeout_seconds` | number, optional   | Bis zu 50.                                                                                                |
+
+## Ausgabe
+
+`{ "status": "answered", "answer": ..., "message_id": string }`, wenn der Owner rechtzeitig antwortet, oder `{ "status": "pending", "question_id": string }`, wenn das Warten zuerst endet. Gib die `question_id` an [wait_for_reply](/de/mcp-reference/wait-for-reply) weiter.
+
+Dieselbe Frage innerhalb von 4 Minuten zu wiederholen gibt dieselbe Frage zurück und sendet nichts. Siehe [Fragen](/de/concepts/questions).
+
+## Nachrichtenarten
+
+import MessageKinds from '/snippets/de/message-kinds.mdx';
+
+<MessageKinds />

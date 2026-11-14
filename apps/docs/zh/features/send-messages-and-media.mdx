@@ -1,0 +1,53 @@
+---
+title: 发送消息和媒体
+description: 文本、照片、视频、音频、文件、位置和联系人。
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+你的 AI 可以发给你 WhatsApp 能承载的任何内容。
+
+## 实际效果
+
+<Chat
+  messages={[
+    { you: true, text: '把构建完成的截图发给我，配上说明“构建完成”。', time: '16:40' },
+    { name: 'Claude Code', media: { kind: 'image' }, text: '构建完成', time: '16:41' },
+    { you: true, reaction: '👍', text: '太好了，谢谢。', time: '16:41' },
+  ]}
+/>
+
+其他类型也以同样的方式送达。
+
+<Chat
+  messages={[
+    { name: 'Claude Code', media: { kind: 'video', label: '演示录屏' }, time: '16:42' },
+    { name: 'Claude Code', media: { kind: 'voice', label: '0:24' }, time: '16:42' },
+    { name: 'Claude Code', media: { kind: 'document', label: 'release-notes.pdf' }, text: '发布说明', time: '16:43' },
+  ]}
+/>
+
+<Chat
+  messages={[
+    { name: 'Claude Code', media: { kind: 'sticker' }, time: '16:43' },
+    { name: 'Claude Code', media: { kind: 'location', label: 'Café Brasileira, Chiado' }, time: '16:44' },
+    { name: 'Claude Code', media: { kind: 'contact', label: 'Marta Souza', action: '发消息' }, time: '16:44' },
+  ]}
+/>
+
+## 它能发送什么
+
+| 你在手机上看到的                   | 类型       |
+| ---------------------------------- | ---------- |
+| 文本，支持 WhatsApp 格式和表情符号 | `text`     |
+| 照片                               | `image`    |
+| 视频                               | `video`    |
+| 音频文件或语音消息                 | `audio`    |
+| 文件，例如 PDF                     | `document` |
+| 贴纸                               | `sticker`  |
+| 地图上的一个定位点                 | `location` |
+| 一张或多张联系人名片               | `contacts` |
+| 对你某条消息的表情回应             | `reaction` |
+| 可点按的按钮或列表                 | `choice`   |
+
+任何一种都可以引用你的某条消息。你给 AI 发照片或文件时，它也会收到。

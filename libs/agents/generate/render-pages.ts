@@ -1,6 +1,6 @@
-import { DocsLanguage } from '@zapbip/types';
+import { DocsPageLanguage } from '@zapbip/types';
 import { pageRuleViolationsOf } from '../src/checks/pages';
-import { AgentFacet } from '../src/contract';
+import { PAGE_FACETS } from '../src/contract';
 import { AGENT_PAGE_HEADINGS, AGENT_PAGE_SECTIONS, agentPagePathOf } from '../src/docs';
 import type { ResolvedAgent } from './agent';
 import { DOCS_PAGES_ROOT } from './paths';
@@ -8,10 +8,6 @@ import type { GeneratedFile } from './plan';
 
 export type PlannedPages = { writes: GeneratedFile[]; violations: string[] };
 
-const PAGE_FACETS: Record<DocsLanguage, AgentFacet> = {
-  [DocsLanguage.English]: AgentFacet.EnglishPage,
-  [DocsLanguage.PortugueseBrazil]: AgentFacet.PortuguesePage,
-};
 const HEADING_PATTERN = /^## (.+)$/gm;
 const HEADING_SEPARATOR = ' | ';
 const PAGE_EXTENSION = '.mdx';
@@ -20,7 +16,7 @@ function headingsOf(input: { page: string; expected: string[] }): string[] {
   return [...input.page.matchAll(HEADING_PATTERN)].map((match) => match[1] as string).filter((heading) => input.expected.includes(heading));
 }
 
-function pageViolationsOf(input: { agent: ResolvedAgent; language: DocsLanguage; page: string }): string[] {
+function pageViolationsOf(input: { agent: ResolvedAgent; language: DocsPageLanguage; page: string }): string[] {
   const label = `${input.agent.id} ${PAGE_FACETS[input.language]}`;
   const expected = AGENT_PAGE_SECTIONS.map((section) => AGENT_PAGE_HEADINGS[input.language][section]);
   const found = headingsOf({ page: input.page, expected });
@@ -41,7 +37,7 @@ function pageViolationsOf(input: { agent: ResolvedAgent; language: DocsLanguage;
   return [...headingViolations, ...factViolations, ...ruleViolations];
 }
 
-function planPage(input: { agent: ResolvedAgent; language: DocsLanguage; readSource: (path: string) => string }): {
+function planPage(input: { agent: ResolvedAgent; language: DocsPageLanguage; readSource: (path: string) => string }): {
   writes: GeneratedFile[];
   violations: string[];
 } {
@@ -56,7 +52,7 @@ function planPage(input: { agent: ResolvedAgent; language: DocsLanguage; readSou
 
 export function planPages(input: { agents: ResolvedAgent[]; readSource: (path: string) => string }): PlannedPages {
   const planned = input.agents.flatMap((agent) =>
-    Object.values(DocsLanguage).map((language) => planPage({ agent, language, readSource: input.readSource })),
+    Object.values(DocsPageLanguage).map((language) => planPage({ agent, language, readSource: input.readSource })),
   );
   return { writes: planned.flatMap((entry) => entry.writes), violations: planned.flatMap((entry) => entry.violations) };
 }

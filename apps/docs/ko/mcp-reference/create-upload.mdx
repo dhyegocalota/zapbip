@@ -1,0 +1,24 @@
+---
+title: 'create_upload'
+description: '로컬에 있는 바이트를 위한 업로드를 예약합니다.'
+---
+
+로컬에 있는 바이트를 위한 업로드를 예약합니다.
+
+## 입력
+
+| 필드         | 타입   | 비고 |
+| ------------ | ------ | ---- |
+| `filename`   | string |      |
+| `mime_type`  | string |      |
+| `size_bytes` | number |      |
+
+## 출력
+
+`{ "upload_id": string, "upload_url": string, "expires_at": string }`. `upload_url`은 연결 시크릿이 들어 있지 않은 서명된 링크입니다. `size_bytes`보다 크지 않은 `Content-Length`와 함께 바이트를 이 링크로 `PUT`한 다음 `upload_id`를 [send_media](/ko/mcp-reference/send-media)에 전달하세요. 업로드는 15분 뒤에 만료됩니다. 길이가 없거나, 본문이 더 크거나, 타입이 틀리거나, 업로드가 만료되었다면 411, 413, 415, 410으로 거부되고 아무것도 저장되지 않습니다.
+
+## 메시지 종류
+
+import MessageKinds from '/snippets/ko/message-kinds.mdx';
+
+<MessageKinds />

@@ -1,0 +1,51 @@
+---
+title: 任何支持 MCP 的应用
+description: 把任何支持 MCP 的应用连接到你的 WhatsApp。
+---
+
+import { Chat } from '/snippets/chat.jsx';
+import InstallPrompt from '/snippets/zh/install-prompt.mdx';
+
+## 支持的功能
+
+| 你可以                           | 任意 MCP 应用          |
+| -------------------------------- | ---------------------- |
+| 发送文本、照片、视频、音频和文档 | 是                     |
+| 接收位置、联系人和表情回应       | 是                     |
+| 用按钮或列表向你提问并等待       | 是                     |
+| 在你先发消息时开启一段对话       | 你的消息在收件箱中等待 |
+
+## 监听方式
+
+级别：收件箱。没有任何办法能从外部唤醒这个应用，所以你发的消息会在收件箱里等待，直到应用来查看。应用用 `check_inbox` 询问 zapbip 是否有新内容在等待，并读取它。
+
+为了监听，应用用 `ask` 或 `wait_for_reply` 向你提问。如果你没有回答，每次调用最多 50 秒后返回待处理（pending），应用会再次调用，直到你回答，没有时间限制。
+
+## 从零开始设置
+
+1. **在 WhatsApp 上给 zapbip 的号码发消息。** 发送 `new agent my-app`。目前命令需要用英语或葡萄牙语的词来输入。[开始使用](/zh/get-started/how-to-start)展示了每一条消息。
+
+   <Chat
+     messages={[
+       { you: true, text: 'new agent my-app', time: '09:00' },
+       { name: 'zapbip', text: 'Agent my-app created. Paste this into your agent.', time: '09:00' },
+     ]}
+   />
+
+2. **把这一行粘贴到应用里的 AI 中。** zapbip 会回复一行专为你生成的文字：
+
+   <InstallPrompt />
+
+3. **添加服务器。** 在应用的 MCP 设置中，AI 把 zapbip 的地址添加为可流式传输的 HTTP 服务器。地址里包含密钥，请保密。如果应用要求使用请求头，就把密钥作为 `Authorization: Bearer <secret>` 发送。
+
+4. **时不时检查收件箱。** 应用在可能时调用 `check_inbox`，例如在每个任务开始时。
+
+## 检查是否正常工作
+
+让 AI 在 WhatsApp 上发送 `✅ installed`。消息到达，就说明连接正常。
+
+<Chat messages={[{ name: 'My app', text: '✅ installed', time: '09:03' }]} />
+
+然后在 WhatsApp 上写点什么，并让应用检查收件箱：它会读取你的消息。
+
+关于地址、请求头和工具，参见[连接任意 MCP 客户端](/zh/developers/any-mcp-client)。

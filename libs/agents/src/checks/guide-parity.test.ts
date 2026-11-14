@@ -1,9 +1,9 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { DocsLanguage, INSTALL_SELF_TEST_TEXT, OwnerLocale, PAGE_LANGUAGE_FOLDER } from '@zapbip/types';
+import { DOCS_OWNER_LOCALES, DocsPageLanguage, INSTALL_SELF_TEST_TEXT, OwnerLocale } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import type { AgentInstall } from '../contract';
-import { AGENT_PAGE_HEADINGS, AgentPageSection } from '../docs';
+import { AGENT_PAGE_HEADINGS, AgentPageSection, perLanguage, twinPathOf } from '../docs';
 import { AGENT_INSTALLS } from '../generated/install';
 import { guideParityViolationsOf, type GuideParityEntry } from './guide-parity';
 
@@ -31,7 +31,7 @@ function installRendering(input: { lastLine: string }): AgentInstall {
   };
 }
 
-function guideOf(input: { language: DocsLanguage; steps: string[]; extraHeading?: string }): string {
+function guideOf(input: { language: DocsPageLanguage; steps: string[]; extraHeading?: string }): string {
   const headings = AGENT_PAGE_HEADINGS[input.language];
   const extraSection = input.extraHeading === undefined ? [] : [`## ${input.extraHeading}`, '', 'Extra.', ''];
   return [
@@ -71,14 +71,10 @@ function syntheticEntry(input: Partial<GuideParityEntry> & { lastLine?: string }
   };
 }
 
-function goodGuides(): Record<DocsLanguage, string> {
-  return {
-    [DocsLanguage.English]: guideOf({ language: DocsLanguage.English, steps: chatSteps({ selfTest: ENGLISH_SELF_TEST }) }),
-    [DocsLanguage.PortugueseBrazil]: guideOf({
-      language: DocsLanguage.PortugueseBrazil,
-      steps: chatSteps({ selfTest: PORTUGUESE_SELF_TEST }),
-    }),
-  };
+function goodGuides(): Record<DocsPageLanguage, string> {
+  return perLanguage({
+    valueOf: (language) => guideOf({ language, steps: chatSteps({ selfTest: INSTALL_SELF_TEST_TEXT[DOCS_OWNER_LOCALES[language]] }) }),
+  });
 }
 
 function realEntries(): GuideParityEntry[] {
@@ -86,10 +82,9 @@ function realEntries(): GuideParityEntry[] {
     id,
     install,
     isPluginPage: existsSync(`${REPOSITORY_ROOT}libs/agents/supported/${id}/plugin.ts`),
-    guides: {
-      [DocsLanguage.English]: readFileSync(`${REPOSITORY_ROOT}apps/docs/agents/${id}.mdx`, 'utf8'),
-      [DocsLanguage.PortugueseBrazil]: readFileSync(`${REPOSITORY_ROOT}apps/docs/${PAGE_LANGUAGE_FOLDER}/agents/${id}.mdx`, 'utf8'),
-    },
+    guides: perLanguage({
+      valueOf: (language) => readFileSync(`${REPOSITORY_ROOT}apps/docs/${twinPathOf({ path: `agents/${id}`, language })}.mdx`, 'utf8'),
+    }),
   }));
 }
 
@@ -105,8 +100,8 @@ describe('guideParityViolationsOf', () => {
   test('finds the set-up section by its heading, wherever it sits', () => {
     const guides = {
       ...goodGuides(),
-      [DocsLanguage.English]: guideOf({
-        language: DocsLanguage.English,
+      [DocsPageLanguage.English]: guideOf({
+        language: DocsPageLanguage.English,
         steps: chatSteps({ selfTest: ENGLISH_SELF_TEST }),
         extraHeading: 'Extra',
       }),
@@ -117,8 +112,8 @@ describe('guideParityViolationsOf', () => {
   test('rejects an English guide with an action the section does not have', () => {
     const guides = {
       ...goodGuides(),
-      [DocsLanguage.English]: guideOf({
-        language: DocsLanguage.English,
+      [DocsPageLanguage.English]: guideOf({
+        language: DocsPageLanguage.English,
         steps: chatSteps({ selfTest: ENGLISH_SELF_TEST, extraAction: 'It runs `claude mcp remove`.' }),
       }),
     };
@@ -130,8 +125,8 @@ describe('guideParityViolationsOf', () => {
   test('rejects an English guide with a wake mode the section does not have', () => {
     const guides = {
       ...goodGuides(),
-      [DocsLanguage.English]: guideOf({
-        language: DocsLanguage.English,
+      [DocsPageLanguage.English]: guideOf({
+        language: DocsPageLanguage.English,
         steps: chatSteps({ selfTest: ENGLISH_SELF_TEST, extraAction: 'It calls set_wake({mode: "local"}).' }),
       }),
     };
@@ -140,21 +135,31 @@ describe('guideParityViolationsOf', () => {
     );
   });
 
-  test('rejects a Portuguese twin whose actions differ from the English guide', () => {
+  const TRANSLATION_LABELS: [DocsPageLanguage, string][] = [
+    [DocsPageLanguage.PortugueseBrazil, 'Portuguese'],
+    [DocsPageLanguage.Spanish, 'Spanish'],
+    [DocsPageLanguage.German, 'German'],
+    [DocsPageLanguage.French, 'French'],
+    [DocsPageLanguage.Japanese, 'Japanese'],
+    [DocsPageLanguage.Korean, 'Korean'],
+    [DocsPageLanguage.Chinese, 'Chinese'],
+  ];
+
+  test.each(TRANSLATION_LABELS)('rejects a %s twin whose actions differ from the English guide', (language, label) => {
     const guides = {
       ...goodGuides(),
-      [DocsLanguage.PortugueseBrazil]: guideOf({
-        language: DocsLanguage.PortugueseBrazil,
-        steps: chatSteps({ selfTest: PORTUGUESE_SELF_TEST, extraAction: 'Ele roda `claude mcp remove`.' }),
+      [language]: guideOf({
+        language,
+        steps: chatSteps({ selfTest: INSTALL_SELF_TEST_TEXT[DOCS_OWNER_LOCALES[language]], extraAction: 'It runs `claude mcp remove`.' }),
       }),
     };
     expect(guideParityViolationsOf({ entries: [syntheticEntry({ guides })] })).toContain(
-      `${SYNTHETIC_ID}: the Portuguese guide must have the same actions and wake modes as the English guide`,
+      `${SYNTHETIC_ID}: the ${label} guide must have the same actions and wake modes as the English guide`,
     );
   });
 
   test('rejects a guide with no set-up section', () => {
-    const guides = { ...goodGuides(), [DocsLanguage.English]: '## What works\n\nNothing.' };
+    const guides = { ...goodGuides(), [DocsPageLanguage.English]: '## What works\n\nNothing.' };
     expect(guideParityViolationsOf({ entries: [syntheticEntry({ guides })] })).toContain(
       `${SYNTHETIC_ID}: the English guide has no "Set up from zero" section`,
     );
@@ -163,7 +168,10 @@ describe('guideParityViolationsOf', () => {
   test('rejects a step guide that does not end with the self-test', () => {
     const guides = {
       ...goodGuides(),
-      [DocsLanguage.English]: guideOf({ language: DocsLanguage.English, steps: ['Say yes.', 'It runs `claude mcp add`.', 'Done.'] }),
+      [DocsPageLanguage.English]: guideOf({
+        language: DocsPageLanguage.English,
+        steps: ['Say yes.', 'It runs `claude mcp add`.', 'Done.'],
+      }),
     };
     expect(guideParityViolationsOf({ entries: [syntheticEntry({ guides })] })).toContain(
       `${SYNTHETIC_ID}: the English guide must end with the self-test`,
@@ -178,28 +186,25 @@ describe('guideParityViolationsOf', () => {
   });
 
   test('accepts a guide that runs the self-test command of the section', () => {
-    const steps = [
-      'Say yes.',
-      'It runs `claude mcp add`.',
-      `It runs \`${SELF_TEST_COMMAND}\` and calls send_message with ${ENGLISH_SELF_TEST}.`,
-    ];
-    const portugueseSteps = [
-      'Diga sim.',
-      'Ele roda `claude mcp add`.',
-      `Ele roda \`${SELF_TEST_COMMAND}\` e chama send_message com ${PORTUGUESE_SELF_TEST}.`,
-    ];
-    const guides = {
-      [DocsLanguage.English]: guideOf({ language: DocsLanguage.English, steps }),
-      [DocsLanguage.PortugueseBrazil]: guideOf({ language: DocsLanguage.PortugueseBrazil, steps: portugueseSteps }),
-    };
+    const guides = perLanguage({
+      valueOf: (language) =>
+        guideOf({
+          language,
+          steps: [
+            'Say yes.',
+            'It runs `claude mcp add`.',
+            `It runs \`${SELF_TEST_COMMAND}\` and calls send_message with ${INSTALL_SELF_TEST_TEXT[DOCS_OWNER_LOCALES[language]]}.`,
+          ],
+        }),
+    });
     expect(guideParityViolationsOf({ entries: [syntheticEntry({ lastLine: COMMAND_SELF_TEST_LINE, guides })] })).toEqual([]);
   });
 
   test('rejects a plugin page that holds the other language self-test', () => {
     const guides = {
       ...goodGuides(),
-      [DocsLanguage.English]: guideOf({
-        language: DocsLanguage.English,
+      [DocsPageLanguage.English]: guideOf({
+        language: DocsPageLanguage.English,
         steps: chatSteps({ selfTest: `${ENGLISH_SELF_TEST} ${PORTUGUESE_SELF_TEST}` }),
       }),
     };

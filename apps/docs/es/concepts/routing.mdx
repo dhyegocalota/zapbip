@@ -1,0 +1,24 @@
+---
+title: 'Enrutamiento'
+description: 'Cómo un mensaje del propietario encuentra a su agente.'
+---
+
+Varios agentes comparten un número, así que cada mensaje del propietario se enruta a un agente. Gana la primera regla que coincide.
+
+1. Una respuesta de botón o de lista va al agente que hizo la pregunta, indicado en el id de la opción.
+2. Una respuesta citada o una reacción va al agente que envió el mensaje citado o reaccionado. Una reacción a un mensaje de pregunta responde a la pregunta con el emoji.
+3. Un texto que empieza por `@agent ` va a ese agente, sin el prefijo. Es también la salida para una palabra de comando dirigida a un agente: `@agent help` llega al agente en lugar de abrir el menú.
+4. Exactamente un agente con una pregunta abierta la recibe. Con varias preguntas abiertas, gana la más nueva.
+5. Si no, el último agente que escribió al propietario dentro de la ventana, o el único agente cuando la cuenta tiene solo uno.
+6. Si no, zapbip envía al propietario una lista de los 10 agentes vistos más recientemente y retiene el mensaje hasta que el propietario elija uno. Sin ningún agente, el propietario recibe un aviso y el mensaje queda retenido.
+
+## Cuando el propietario no elige
+
+La lista espera 10 minutos.
+
+- Mientras espera, un mensaje nuevo que no coincide con ninguna de las reglas 1 a 4 se une a los mensajes retenidos. El propietario recibe un recordatorio por lote: "Pick the agent in the list above". Un mensaje que coincide con las reglas 1 a 4 se enruta al instante y nunca se retiene.
+- Si la lista caduca y un agente escribió al propietario dentro de la ventana, los mensajes retenidos van a ese agente, en orden.
+- Si no, la lista se envía una vez más. Tras una segunda caducidad, los mensajes quedan sin leer para el último agente visto.
+- Un toque en una lista que ya se usó se responde con "That list was already used."
+
+Los nombres de agente tienen hasta 20 caracteres: letras minúsculas, dígitos y guiones. Los recordatorios y respuestas de zapbip están en inglés, el idioma del producto hoy.

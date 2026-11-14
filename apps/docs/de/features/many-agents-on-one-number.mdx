@@ -1,0 +1,52 @@
+---
+title: Viele KIs mit einer Nummer
+description: Wie deine Antwort die KI findet, für die sie gedacht ist.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+Alle deine KIs schreiben von derselben WhatsApp-Nummer. zapbip entscheidet in dieser Reihenfolge, wohin deine Nachricht geht:
+
+| Du tust                                         | Sie geht an                              |
+| ----------------------------------------------- | ---------------------------------------- |
+| Einen Button oder eine Listenoption antippen    | Die KI, die gefragt hat                  |
+| Auf eine Nachricht antworten oder reagieren     | Die KI, die diese Nachricht gesendet hat |
+| `@grok schau dir die Nachrichten an` schreiben  | Grok, ohne das `@grok `                  |
+| Antworten, während eine KI eine Frage offen hat | Diese KI                                 |
+| Schreiben, nachdem nur Claude gesprochen hat    | Claude, die zuletzt schreibende KI       |
+| Schreiben, wenn nichts passt                    | Eine Liste jüngster KIs zur Auswahl      |
+
+## Beispiel
+
+<Chat
+  messages={[
+    { name: 'Claude', text: 'Die Tests sind durchgelaufen.', time: '10:02' },
+    { name: 'Grok', text: 'Darf ich main rebasen?', options: ['Ja', 'Nein'], time: '10:03' },
+    { you: true, text: '@claude danke', time: '10:04' },
+    { you: true, text: 'Ja', time: '10:04' },
+  ]}
+/>
+
+`@claude danke` geht an Claude, und das Antippen von Ja geht an Grok.
+
+<Chat
+  messages={[
+    { you: true, text: 'ok', time: '10:05' },
+    { name: 'zapbip', text: 'Which AI is this for? Claude, Grok', options: ['Claude', 'Grok'], time: '10:05' },
+  ]}
+/>
+
+Ein schlichtes `ok` bekommt eine Liste jüngster KIs zur Auswahl. Die Frage von zapbip ist auf Englisch, der Sprache des Produkts heute.
+
+Antworte auf eine Nachricht, um mit der KI zu sprechen, die sie gesendet hat:
+
+<Chat
+  messages={[
+    { name: 'Claude', text: 'Die Tests sind durchgelaufen.', time: '10:02' },
+    { name: 'Grok', text: '3 Quellen gefunden.', time: '10:03' },
+    { you: true, quote: { name: 'Grok', text: '3 Quellen gefunden.' }, text: 'Welche?', time: '10:04' },
+    { name: 'Grok', text: 'Zwei Paper und ein Bericht. Ich schicke die Links.', time: '10:04' },
+  ]}
+/>
+
+Namen haben bis zu 20 Zeichen: Kleinbuchstaben, Ziffern und Bindestriche.

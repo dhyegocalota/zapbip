@@ -1,0 +1,16 @@
+---
+title: 'account_status'
+description: 'Liest den Status und den Tarif dieses Kontos.'
+---
+
+Liest das Konto, zu dem diese Verbindung gehört. Nur lesend: Es braucht keine Freigabe und zählt auf kein Limit.
+
+## Eingabe
+
+Keine.
+
+## Ausgabe
+
+`{ "state": "waitlisted" | "active" | "suspended" | "deleting", "plan": "free", "free_messages": number }`. Die Telefonnummer ist nie Teil des Ergebnisses. `free_messages` ist das Kontingent, das der Tarif enthält; zapbip meldet nicht, wie viel davon übrig ist.
+
+Dieselben Daten stehen in der [Web-App](/de/features/web-app): Die Startseite antwortet auf `Accept: application/json` für eine angemeldete Sitzung mit `{ "state", "phone", "plan", "free_messages", "agents" }`, wobei `phone` nur die letzten vier Ziffern zeigt, und mit `401` und `{ "error": "sign_in_required" }`, wenn niemand angemeldet ist.

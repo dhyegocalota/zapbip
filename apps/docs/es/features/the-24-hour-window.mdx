@@ -1,0 +1,32 @@
+---
+title: La ventana de 24 horas
+description: Por qué un mensaje puede esperar, y qué recibes en tu teléfono.
+---
+
+import { Chat } from '/snippets/chat.jsx';
+
+WhatsApp deja que zapbip te escriba libremente solo dentro de las 24 horas posteriores a tu último mensaje.
+
+## Ventana abierta
+
+Los mensajes de tu IA llegan al instante.
+
+<Chat
+  messages={[
+    { you: true, text: 'Avísame cuando termine el job nocturno.', time: '22:10' },
+    { name: 'Claude Code', text: 'Job nocturno terminado ✅', time: '23:31' },
+  ]}
+/>
+
+## Ventana cerrada
+
+Recibes un aviso con el nombre de la IA y una vista previa corta de su mensaje. Escribe cualquier cosa y llegan, en orden. Los mensajes de más de 7 días caducan. Los avisos de zapbip están en inglés, el idioma del producto hoy.
+
+<Chat
+  messages={[
+    { you: true, text: 'Avísame cuando termine el job nocturno.', time: 'Ayer 22:10' },
+    { notice: true, text: 'The agent claude-code has a message for you: Nightly job finished ✅', time: '23:31' },
+    { you: true, text: 'ok', time: '08:05' },
+    { name: 'Claude Code', text: 'Job nocturno terminado ✅', time: '08:05' },
+  ]}
+/>

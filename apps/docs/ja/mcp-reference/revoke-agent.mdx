@@ -1,0 +1,22 @@
+---
+title: 'revoke_agent'
+description: 'WhatsAppでオーナーが許可したあとで、このアカウントのエージェントを無効にします。'
+---
+
+このアカウントのエージェントを、名前を指定して無効にします。オーナーには、呼び出したエージェントとしてWhatsAppで確認が届き、呼び出しは返答を待ちます。`revoke`コマンドと同じユースケースを実行します。そのエージェントのすべての接続が、ただちに止まります。[AIにzapbipを任せる](/ja/features/let-your-ai-manage-zapbip)をご覧ください。
+
+## 入力
+
+| フィールド | 型     | 備考                                 |
+| ---------- | ------ | ------------------------------------ |
+| `name`     | string | このアカウントのエージェントの名前。 |
+
+## 質問
+
+2つのボタン、**Allow**と**Deny**です。呼び出しは最長50秒待ちます。ボタンのタップだけが有効で、入力したテキストはDenyとして扱われます。Denyと無反応では何も変わらず、その場合、同じリクエストは10分間拒否されます(`cooling_down`)。
+
+## 出力
+
+`{ "status": "applied" | "denied" | "timed_out" | "refused", "agent": string | null, "reason": string | null, "install_prompt": null }`。`refused`で`reason`が`not_found`の場合、このアカウントにその名前の有効なエージェントはありません。オーナーには確認しません。別のアカウントのエージェントには、決して到達できません。
+
+[connect_agent](/ja/mcp-reference/connect-agent)と同じ制限が適用されます。操作を行う呼び出しは、1接続につき1分間に3回までです。

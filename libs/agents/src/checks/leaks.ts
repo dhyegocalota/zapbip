@@ -1,3 +1,4 @@
+import { AGENTS_GROUP_INDEX, DOCS_GROUPS } from '../docs';
 import { constantNameOf } from '../identifiers';
 
 export type LeakAgent = { id: string; enumMember: string; isOrdinaryWord: boolean; literals: string[] };
@@ -61,7 +62,7 @@ function wholeEnumRecordLeaksIn(input: { file: LeakFile }): string[] {
 }
 
 const WORKFLOW_REGION_PATTERN = /^ *# NB ADR 0033: generated [^\n]* begin\n[\s\S]*?^ *# NB ADR 0033: generated [^\n]* end\n?/gm;
-const NAVIGATION_AGENT_GROUPS = ['Agents', 'IAs'];
+const NAVIGATION_AGENT_GROUPS = Object.values(DOCS_GROUPS).map((groups) => groups[AGENTS_GROUP_INDEX]);
 const JSON_INDENT = 2;
 
 type NavigationGroup = { group?: string; pages?: unknown[] };
