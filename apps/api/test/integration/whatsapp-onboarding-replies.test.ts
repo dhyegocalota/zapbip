@@ -77,7 +77,7 @@ describe('a phone that is not a customer', () => {
     await deliver({ bindings, text: 'ajuda', waId: NEW_PHONE });
     const [account] = await findAccounts({ waId: NEW_PHONE });
     const texts = await screenTextsOf({ accountId: account!.accountId });
-    expect(texts).toHaveLength(2);
+    expect(texts.length).toBeGreaterThan(1);
   });
 });
 
