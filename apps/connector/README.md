@@ -1,3 +1,7 @@
 # zapbip
 
-The command an owner runs on their own machine to wake a local AI session when a WhatsApp message arrives. It wakes the local agents that [the agents package](../../libs/agents) gives a connector runtime, and that runtime says how. It keeps one channel to [the Worker](../api) open for a connection, resumes the session with the owner's message as the prompt, and lets the agent answer only through the zapbip message tool. For a session that is already open it also relays each owner message as a Claude Code channel notification or as one line of output a background watcher can react to. It shares its vocabulary with the Worker through [the shared types](../../libs/types).
+The local connector of [zapbip](https://zapbip.com), the personal WhatsApp channel for AI agents. It runs on your own machine and wakes your coding agent, such as Claude Code or Codex, when you text first on WhatsApp: your message becomes the agent's next prompt, and the agent answers you through zapbip. For a session that is already open, it relays each of your messages into that session instead.
+
+How to install and run it, with one guide per agent: [docs.zapbip.com](https://docs.zapbip.com/developers/local-connector).
+
+It shares its vocabulary with [the zapbip Worker](../api) through [the shared types](../../libs/types). Licensed under the MIT License; the rest of zapbip is under the AGPL-3.0.
