@@ -1,6 +1,6 @@
 # Agentic account
 
-**Status:** Building
+**Status:** Shipped 2026-11-13
 **Tier:** 🔴 structural
 **Owner approval:** approved 2026-11-13 (owner delegated)
 **ADRs:** [0045](../../adr/0045-an-agent-manages-the-account-through-mcp-with-the-owner-approving-on-whatsapp.md)
