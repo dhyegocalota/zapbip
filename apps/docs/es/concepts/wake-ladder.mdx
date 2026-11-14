@@ -7,19 +7,19 @@ import { Chat } from '/snippets/chat.jsx';
 
 Cuando escribes en WhatsApp, tu IA puede estar cerrada, ocupada o simplemente no esperarte. Entonces zapbip la alcanza por el peldaño más alto que admite su conexión, y baja al siguiente cuando un peldaño no está disponible:
 
-| Peldaño                 | Qué pasa                                                                                                                                              | Retraso esperado             |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
-| Local                   | zapbip empuja tu mensaje al [conector](/es/developers/local-connector) que corre en tu ordenador, y este reanuda tu sesión de Claude Code o de Codex. | 7 s Claude Code, 6 s Codex   |
-| Webhook                 | zapbip llama a un enlace que inicia la IA. Mira la [guía de activación por webhook](/es/developers/webhook-wake).                                     | 9 s Grok Bot, 16 s claude.ai |
-| Programado              | La IA revisa su bandeja de entrada con un temporizador, así que puede escuchar sin límite de tiempo.                                                  | hasta el intervalo           |
-| En espera               | Otra IA tuya recibe una copia de tu mensaje y responde en su lugar.                                                                                   | sin medir                    |
-| Solo bandeja de entrada | El mensaje espera y zapbip te dice que la IA no está escuchando ahora mismo.                                                                          | hasta que una IA lo lea      |
+| Peldaño                 | Qué pasa                                                                                                                                                | Retraso esperado             |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| Local                   | zapbip empuja tu mensaje al [conector](/es/developers/local-connector) que corre en tu computadora, y este reanuda tu sesión de Claude Code o de Codex. | 7 s Claude Code, 6 s Codex   |
+| Webhook                 | zapbip llama a un enlace que inicia la IA. Mira la [guía de activación por webhook](/es/developers/webhook-wake).                                       | 9 s Grok Bot, 16 s claude.ai |
+| Programado              | La IA revisa su bandeja de entrada con un temporizador, así que puede escuchar sin límite de tiempo.                                                    | hasta el intervalo           |
+| En espera               | Otra IA tuya recibe una copia de tu mensaje y responde en su lugar.                                                                                     | sin medir                    |
+| Solo bandeja de entrada | El mensaje espera y zapbip te dice que la IA no está escuchando ahora mismo.                                                                            | hasta que una IA lo lea      |
 
 En cada peldaño tu mensaje se conserva en la [bandeja de entrada](/es/concepts/inbox) hasta que una IA lo lee. No se pierde nada.
 
-## Local: tu propio ordenador
+## Local: tu propio computadora
 
-El conector mantiene una línea abierta con zapbip mientras corre. Cuando escribes, zapbip empuja el mensaje por esa línea y el conector reanuda tu sesión en tu ordenador. Cuando se cierra la última línea, zapbip restablece la activación que tenías antes. Inícialo con `npx zapbip@0.1.0 connect`.
+El conector mantiene una línea abierta con zapbip mientras corre. Cuando escribes, zapbip empuja el mensaje por esa línea y el conector reanuda tu sesión en tu computadora. Cuando se cierra la última línea, zapbip restablece la activación que tenías antes. Inícialo con `npx zapbip@0.1.0 connect`.
 
 ## Programado: escuchar sin límite de tiempo
 

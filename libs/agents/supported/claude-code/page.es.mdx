@@ -25,7 +25,7 @@ import InstallPrompt from '/snippets/es/install-prompt.mdx';
 
 ## Cómo escucha
 
-Tipo de activación: **Local**. Un conector en tu ordenador despierta a Claude Code, así que responde unos 7 segundos después de que escribes.
+Tipo de activación: **Local**. Un conector en tu computadora despierta a Claude Code, así que responde unos 7 segundos después de que escribes.
 
 - Inicia Claude Code con `claude --dangerously-load-development-channels server:zapbip-channel`. El canal de zapbip empuja entonces cada mensaje de WhatsApp a la sesión abierta en cuanto llega.
 - Si la sesión está cerrada, el conector la reanuda en unos 7 segundos. Estar inactivo no gasta tokens; cada mensaje cuesta un turno.
