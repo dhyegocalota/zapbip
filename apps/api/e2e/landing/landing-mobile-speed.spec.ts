@@ -1,4 +1,4 @@
-import { devices } from '@playwright/test';
+import { devices, type Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 
 const CPU_SLOWDOWN_RATE = 4;
@@ -19,6 +19,12 @@ const NON_COMPOSITOR_PROPERTIES_SCRIPT = `
     .flatMap((animation) => animation.effect.getKeyframes().flatMap((keyframe) => Object.keys(keyframe)))
     .filter((property) => !${JSON.stringify(COMPOSITOR_PROPERTIES)}.includes(property))
 `;
+const UNDERLINE_ORIGIN_SCRIPT = "getComputedStyle(document.querySelector('.hero-underline')).transformOrigin";
+
+async function underlineOriginOf(input: { page: Page; path: string }): Promise<string> {
+  await input.page.goto(input.path, { waitUntil: 'load' });
+  return (await input.page.evaluate(UNDERLINE_ORIGIN_SCRIPT)) as string;
+}
 
 test.use({ ...devices['Pixel 5'], locale: 'en-US', bypassCSP: true });
 
@@ -38,9 +44,8 @@ test('the main thread stays inside the long-task budget under a 4x CPU slowdown'
 });
 
 test('the hero underline draws from the reading start in both directions', async ({ page }) => {
-  const originOf = (path: string) => page.goto(path, { waitUntil: 'load' }).then(() => page.locator('.hero-underline').evaluate((element) => getComputedStyle(element).transformOrigin));
-  const leftToRight = await originOf('/');
-  const rightToLeft = await originOf(ARABIC_PATH);
+  const leftToRight = await underlineOriginOf({ page, path: '/' });
+  const rightToLeft = await underlineOriginOf({ page, path: ARABIC_PATH });
   expect(Number.parseFloat(leftToRight)).toBe(0);
   expect(Number.parseFloat(rightToLeft)).toBeGreaterThan(0);
 });

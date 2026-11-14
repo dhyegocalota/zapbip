@@ -58,8 +58,8 @@ The docs live in `apps/docs` and publish when `main` changes. The site links the
 
    If it fails: `dig CNAME docs.zapbip.com +short` must print Mintlify's target; if a proxy in Cloudflare hides it, switch the record to DNS only.
 
-10. **Check the languages.** Open `https://docs.zapbip.com` in a browser set to English, then in one set to Portuguese (Brazil). Use the language switcher and open a few pages in each of the eight languages.
+10. **Check the languages.** Open `https://docs.zapbip.com` in a browser set to English, then in one set to Portuguese (Brazil). Use the language switcher and open a few pages in each of the nine languages.
 
-   Expect: all eight languages exist for every page, with mirrored paths (`/`, `/pt-br/`, `/es/`, `/de/`, `/fr/`, `/ja/`, `/ko/` and `/zh/`); the switcher names are English, Português (BR), Español, Deutsch, Français, 日本語, 한국어 and 简体中文 (the last is unverified). If Mintlify starts the Portuguese browser in Portuguese, note that; if it does not, the switcher is the rule, and no redirect script is added.
+   Expect: all nine languages exist for every page, with mirrored paths (`/`, `/pt-br/`, `/es/`, `/de/`, `/fr/`, `/ja/`, `/ko/`, `/zh/` and `/ar/`); the switcher names are English, Português (BR), Español, Deutsch, Français, 日本語, 한국어, 简体中文 and العربية (the last two are unverified), and the Arabic pages read right to left. If Mintlify starts the Portuguese browser in Portuguese, note that; if it does not, the switcher is the rule, and no redirect script is added.
 
    If it fails: a missing twin page shows a 404 in one language; add the page. Language start behaviour is a Mintlify feature, so check its dashboard for a language setting before concluding it is absent.

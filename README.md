@@ -46,8 +46,8 @@ zapbip is a product of Logic Bit, made in Belo Horizonte, Brazil: [logicbit.com.
 
 ## 🚀 Quick start
 
-1. **Message zapbip on WhatsApp.** Join the waitlist at [zapbip.com](https://zapbip.com); send `hi` to the number you get, and your first message creates your account.
-2. **Ask for an agent.** Send `new agent claude`. zapbip answers with one line made for you.
+1. **Message zapbip on WhatsApp.** Open the start link at [zapbip.com](https://zapbip.com) and send any message. It creates your account on the waitlist, and zapbip tells you in that chat when your access opens.
+2. **Ask for an agent.** Once you are in, send `new agent claude`. zapbip answers with one line made for you.
 3. **Paste it into your AI.** Your agent reads the instructions online, connects itself and texts you a first message.
 
 The full walk-through, with one guide per agent, is at [docs.zapbip.com](https://docs.zapbip.com).
@@ -63,7 +63,7 @@ your agent ──MCP──▶ zapbip (Cloudflare Worker) ──WhatsApp Cloud AP
 - **MCP server.** One endpoint and one key per agent. The tools send a message, ask with buttons or a list and wait, send and receive media, and check the inbox.
 - **Account inbox.** A Durable Object per account holds the queue, the open questions and the routing, so a reply reaches the agent that asked even when several agents share the chat.
 - **Wake.** When you text first, the local connector resumes your coding agent's session in seconds; hosted agents pick the message up at their next check.
-- **WhatsApp.** Meta's official Cloud API only, through numbers the operator registers; outside the 24-hour window, approved utility templates reach you.
+- **WhatsApp.** Meta's official Cloud API only, through numbers the operator connects with Meta's onboarding; outside the 24-hour window, approved utility templates reach you.
 
 ## 🤖 Supported agents
 
@@ -71,17 +71,18 @@ Coding agents, chat apps and any MCP client connect the same way. [The supported
 
 ## 🗂️ Repository
 
-| Path                                                                                    | What it holds                                                                                                                       |
-| --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| [apps/api](apps/api/)                                                                   | The Cloudflare Worker: MCP server, Durable Objects, D1 directory, R2 media, the public site, the customer web app and the backoffice |
-| [apps/connector](apps/connector/)                                                       | The local connector that wakes a coding agent when you text first                                                                   |
-| `apps/*-plugin` | Channel plugins for agent runtimes |
-| [apps/docs](apps/docs/)                                                                 | The documentation site, in eight languages                                                                                        |
-| [libs/core](libs/core/)                                                                 | The inbox, routing and delivery rules as plain TypeScript                                                                           |
-| [libs/agents](libs/agents/)                                                             | The registry of supported agents and their install guides                                                                           |
-| [libs/types](libs/types/)                                                               | Shared enums and constants                                                                                                          |
-| [tools/repository-shape](tools/repository-shape/)                                       | Tests about the repository itself                                                                                                   |
-| [docs](docs/)                                                                           | Decisions, learnings, features, scenarios and runbooks                                                                              |
+| Path | What it holds |
+| --- | --- |
+| [apps/api](apps/api/) | The Cloudflare Worker: MCP server, Durable Objects, D1 directory, R2 media, the public site, the customer web app and the backoffice |
+| [apps/connector](apps/connector/) | The local connector that wakes a coding agent when you text first |
+| [apps/hermes-plugin](apps/hermes-plugin/) | The channel plugin for Hermes |
+| [apps/openclaw-plugin](apps/openclaw-plugin/) | The channel plugin for OpenClaw |
+| [apps/docs](apps/docs/) | The documentation site, in every language zapbip speaks |
+| [libs/core](libs/core/) | The inbox, routing and delivery rules as plain TypeScript |
+| [libs/agents](libs/agents/) | The registry of supported agents and their install guides |
+| [libs/types](libs/types/) | Shared enums and constants |
+| [tools/repository-shape](tools/repository-shape/) | Tests about the repository itself |
+| [docs](docs/) | Decisions, learnings, features, scenarios and runbooks |
 
 ## 🧪 Run it locally
 
@@ -119,6 +120,8 @@ What ships and what is next lives in [docs/features](docs/features/): one folder
 </a>
 
 ## 📄 License
+
+Copyright © 2026 Logic Bit AI Software Boutique Ltda.
 
 The server, the site and the libraries are licensed under the [GNU Affero General Public License v3.0](LICENSE). The client packages that run on your machine or inside your agent runtime, the [local connector](apps/connector/LICENSE) and the `apps/*-plugin` channel plugins, are licensed under the MIT License; each carries its own `LICENSE` file.
 

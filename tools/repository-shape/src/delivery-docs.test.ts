@@ -58,6 +58,7 @@ const FOLDER_SUFFIX = '/';
 const ANCHOR_SEPARATOR = '#';
 const MAILBOX_MARKER = '@';
 const MARKDOWN_EXTENSION = '.md';
+const LANGUAGE_COUNT_PATTERN = /\b(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve) languages\b/gi;
 
 enum PurposeViolation {
   CodeSpan = 'code span',
@@ -196,6 +197,13 @@ describe('delivery documents', () => {
   test.each(workspacePackages())('the README of %s states purpose only', (path) => {
     expect(purposeViolations(readRepositoryFile(posix.join(path, README_FILE)))).toEqual([]);
   });
+
+  test.each([README_FILE, ...workspacePackages().map((path) => posix.join(path, README_FILE))])(
+    '%s names no count of languages, which drifts when a language joins',
+    (path) => {
+      expect(readRepositoryFile(path).match(LANGUAGE_COUNT_PATTERN)).toBeNull();
+    },
+  );
 
   test('every workspace package has a README', () => {
     expect(workspacePackages().filter((path) => !existsSync(repositoryPath(posix.join(path, README_FILE))))).toEqual([]);
