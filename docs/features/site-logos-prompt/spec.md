@@ -1,6 +1,6 @@
 # Site logos and the one-line setup prompt
 
-**Status:** Building
+**Status:** Shipped 2026-11-14
 **Tier:** 🟡 medium
 **Owner approval:** approved 2026-11-13 (owner delegated)
 **ADRs:** [0050](../../adr/0050-an-agent-sets-itself-up-from-a-one-line-prompt-that-points-to-a-generated-setup-page.md)
