@@ -1,6 +1,6 @@
 # Subscriber emails
 
-**Status:** Building
+**Status:** Shipped 2026-11-14
 **Tier:** 🟡
 **Owner approval:** requested by the owner on 2026-11-14 ("a daily digest of subscribers, and a welcome email to every subscriber, with React Email and Resend"); this written spec awaits his read
 **ADRs:** [0058](../../adr/0058-email-is-sent-through-resend-with-react-email-templates.md)
