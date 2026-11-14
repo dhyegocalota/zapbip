@@ -1,6 +1,6 @@
 # WhatsApp support scope
 
-**Status:** Building
+**Status:** Shipped 2026-11-14
 **Tier:** 🟡 medium
 **Owner approval:** approved 2026-11-14 (owner asked in pt-BR: say which WhatsApp message types are supported and which are not, and say in the docs and the FAQ that unofficial WhatsApp tools are not supported)
 **ADRs:** none; the official-API choice is already recorded in [0036](../../adr/0036-one-fixed-meta-app-and-numbers-join-through-embedded-signup.md)
