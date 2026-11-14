@@ -23,7 +23,7 @@
   display: none;
 }
 
-.lang-trigger::before {
+.lang-menu .lang-trigger::before {
   content: none;
 }
 
