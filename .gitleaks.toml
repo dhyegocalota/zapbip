@@ -18,6 +18,7 @@ regexes = [
   '''^zb_conn_ex4mPLe7Hq2xVn9Rt4Wm8Ls3Jd6Hf1Yb5Gc0Zk2Ns7q$''',
   '''^ex4mPLe7Hq2xVn9Rt4Wm8Ls3Jd6Hf1Yb5Gc0Zk2Ns7q$''',
   '''^arquivo-789\.pdf$''',
+  '''^subscriber-digest-2026-11-14$''',
 ]
 commits = [
   '''31f4b2dbf73f832c9c544ff20674e6a39aaacbe7''',
