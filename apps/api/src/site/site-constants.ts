@@ -47,6 +47,7 @@ export const SITE_EXAMPLE_CONNECTION_LINK = buildConnectionLink({
   publicOrigin: PRODUCTION_PUBLIC_ORIGIN,
   secret: `${CONNECTION_SECRET_PREFIX}${EXAMPLE_SECRET_BODY}`,
 });
+export const SETUP_CONNECTION_PLACEHOLDER = '<your-connection-link>';
 export const AGENT_RATE_KEY_PREFIX = 'agent:';
 export const AGENT_ADDRESS_WEIGHT = 10;
 export const AGENT_EMAIL_WEIGHT = 15;

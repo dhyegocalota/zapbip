@@ -291,7 +291,9 @@ describe('the quick start', () => {
       expect(panel.includes('class="code-path"')).toBe(quickStart.path.length > 0);
       quickStart.path.forEach((step) => expect(text).toContain(escapedHtml({ text: step })));
       expect(panel).toContain(`data-code="${escapedHtml({ text: quickStart.code })}"`);
-      expect(panel.match(/class="code-line"/g)).toHaveLength(quickStart.code.split('\n').length);
+      expect(panel.slice(panel.indexOf('<details class="start-manual">')).match(/class="code-line"/g)).toHaveLength(
+        quickStart.code.split('\n').length,
+      );
     });
     const anyText = panels.find((panel) => panel.id === SiteStartTab.AnyMcp)!.html.replace(TAG_PATTERN, '');
     expect(anyText).toContain(copyHtml({ key: SiteCopyKey.StartAnyHint, locale }));

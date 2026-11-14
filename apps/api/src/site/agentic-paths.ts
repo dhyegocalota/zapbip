@@ -27,6 +27,10 @@ export function llmsPathOf(input: { locale: WebLocale; file: LlmsFile }): string
   return `${prefix}${LLMS_PATHS[input.file]}`;
 }
 
+export function setupPathOf(input: { locale: WebLocale }): string {
+  throw new Error('setupPathOf is not implemented');
+}
+
 export function markdownUrlOf(input: { model: PageModel }): string {
   const { model } = input;
   const htmlPath =
