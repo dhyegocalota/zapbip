@@ -81,6 +81,25 @@ describe('GET /', () => {
     expect(html).toContain(copyHtml({ key: SiteCopyKey.HeroInvited, locale: OwnerLocale.EnglishUs }));
   });
 
+  it('opens the form already filled in with the email of the link, in the language of the path', async () => {
+    const english = await pageOf({ path: '/?email=Maria@Example.com', headers: ENGLISH_HEADERS });
+    const portuguese = await pageOf({ path: '/?email=maria@example.com', headers: PORTUGUESE_HEADERS });
+    expect(english).toContain('name="email"');
+    expect(english).toContain('value="maria@example.com"');
+    expect(portuguese).toContain('value="maria@example.com"');
+  });
+
+  it('leaves the form empty for an email that is not valid and never writes the raw value into the page', async () => {
+    const html = await pageOf({ path: '/?email=%22%3E%3Cscript%3Ealert(1)%3C/script%3E', headers: ENGLISH_HEADERS });
+    expect(html).not.toContain('alert(1)');
+    expect(html).not.toContain('value="maria');
+  });
+
+  it('answers a filled form privately, so a stored page never carries somebody else address', async () => {
+    const response = await siteFetch({ path: '/?email=maria@example.com' });
+    expect(response.headers.get('cache-control')).toBe('private, no-cache');
+  });
+
   it('drops a malformed referral code and shows the plain eyebrow', async () => {
     const html = await pageOf({ path: '/?ref=../../x', headers: ENGLISH_HEADERS });
     expect(html).not.toContain('name="referralCode"');

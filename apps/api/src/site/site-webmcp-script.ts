@@ -1,17 +1,19 @@
 import { SitePath } from './site-paths';
 
 export enum WebMcpTool {
-  RequestAccess = 'request_access',
+  FillJoinForm = 'fill_join_form',
   GetPricing = 'get_pricing',
   GetQuickStart = 'get_quick_start',
   SwitchLanguage = 'switch_language',
 }
 
 const LANGUAGE_OPTION_SELECTOR = '.lang-option';
+const JOIN_EMAIL_SELECTOR = '#join-email';
 const LANGUAGE_DESCRIPTION = 'Language tag such as en or pt-BR. Defaults to the language of the page.';
 
 export const WEBMCP_SOURCE = `
   var WEBMCP_LANGUAGE_OPTIONS = '${LANGUAGE_OPTION_SELECTOR}';
+  var WEBMCP_JOIN_EMAIL = '${JOIN_EMAIL_SELECTOR}';
 
   function toolResult(payload, isError) {
     var result = { content: [{ type: 'text', text: JSON.stringify(payload) }] };
@@ -64,22 +66,26 @@ export const WEBMCP_SOURCE = `
     return Promise.resolve(toolResult({ status: 'switching', language: option.lang }, false));
   }
 
+  function fillJoinForm(input) {
+    var field = document.querySelector(WEBMCP_JOIN_EMAIL);
+    if (!field) return Promise.resolve(toolResult({ status: 'form_not_available' }, true));
+    field.value = String(input.email);
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+    field.scrollIntoView();
+    field.form.querySelector('button').focus();
+    return Promise.resolve(toolResult({ status: 'filled', next: 'Ask the person to complete the check and press the button of the form.' }, false));
+  }
+
   var WEBMCP_TOOLS = [
     {
-      name: '${WebMcpTool.RequestAccess}',
-      description: 'Request early access to zapbip for a person, without a captcha. Adds the email to the waitlist and answers in the language asked.',
+      name: '${WebMcpTool.FillJoinForm}',
+      description: 'Fill in the early access form of this page with the email of a person. The person must complete the check and press the button of the form themselves.',
       inputSchema: {
         type: 'object',
-        properties: {
-          email: { type: 'string', description: 'The email of the person who wants access.' },
-          language: { type: 'string', description: '${LANGUAGE_DESCRIPTION}' }
-        },
+        properties: { email: { type: 'string', description: 'The email of the person who wants access.' } },
         required: ['email']
       },
-      execute: function (input) {
-        var body = JSON.stringify({ email: input.email, language: requestedLanguage(input) });
-        return fetchTool('${SitePath.RequestAccess}', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body });
-      }
+      execute: fillJoinForm
     },
     {
       name: '${WebMcpTool.GetPricing}',

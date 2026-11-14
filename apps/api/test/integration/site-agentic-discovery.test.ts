@@ -10,7 +10,7 @@ import { SITE_ORIGIN, siteEnvironment, siteFetch } from '../support/site';
 const JSON_TYPE = 'application/json; charset=utf-8';
 const DOCS_ORIGIN = 'https://docs.zapbip.com';
 const ENVIRONMENT = siteEnvironment({});
-const SKILL_IDENTIFIERS = ['request_access', 'get_pricing', 'get_quick_start', 'setup_zapbip', 'read_docs'];
+const SKILL_IDENTIFIERS = ['help_join', 'get_pricing', 'get_quick_start', 'setup_zapbip', 'read_docs'];
 
 async function jsonOf(input: { path: string }): Promise<{ response: Response; body: Record<string, unknown> }> {
   const response = await siteFetch(input);

@@ -70,11 +70,16 @@ describe('the Markdown twins of the home pages', () => {
     });
   });
 
-  it.each(HOME_TWINS)('%s tells an agent how to request access', async (path, locale) => {
-    const { text } = await textOf({ path });
-    expect(text).toContain(`${SITE_ORIGIN}/api/request-access`);
-    expect(text).toContain(copy({ key: SiteCopyKey.AgentsTitle, locale }));
-  });
+  it.each(HOME_TWINS)(
+    '%s tells an agent to open the form already filled in and ask the person to press the button',
+    async (path, locale) => {
+      const { text } = await textOf({ path });
+      const joinLink = `${SITE_ORIGIN}${locale === OwnerLocale.EnglishUs ? '/' : '/pt-br'}?email=name@example.com#join`;
+      expect(text).toContain(copy({ key: SiteCopyKey.AgentsTitle, locale }));
+      expect(text).toContain(copy({ key: SiteCopyKey.AgentsBody, locale, values: { joinLink } }));
+      expect(text).not.toContain('/api/request-access');
+    },
+  );
 
   it('keeps answering Markdown with a referral query', async () => {
     const { response } = await textOf({ path: '/index.md?ref=abcdefgh2345' });
@@ -82,16 +87,15 @@ describe('the Markdown twins of the home pages', () => {
   });
 });
 
-describe('the agents section of the page', () => {
+describe('the page for people', () => {
   it.each([
     ['/', OwnerLocale.EnglishUs],
     ['/pt-br', OwnerLocale.PortugueseBrazil],
-  ] as const)('%s shows the same title and body as its Markdown twin', async (path, locale) => {
+  ] as const)('%s shows no section written for agents', async (path, locale) => {
     const { text } = await textOf({ path });
-    const endpoint = `${SITE_ORIGIN}/api/request-access`;
-    expect(text).toContain('id="agents"');
-    expect(text).toContain(copyHtml({ key: SiteCopyKey.AgentsTitle, locale }));
-    expect(text).toContain(copyHtml({ key: SiteCopyKey.AgentsBody, locale, values: { endpoint } }));
+    expect(text).not.toContain('id="agents"');
+    expect(text).not.toContain(copyHtml({ key: SiteCopyKey.AgentsTitle, locale }));
+    expect(text).not.toContain('WebMCP');
   });
 });
 
@@ -179,7 +183,7 @@ describe('llms.txt', () => {
     expect(text.startsWith('# zapbip\n\n> ')).toBe(true);
     expect(text).toContain(`${SITE_ORIGIN}${locale === OwnerLocale.EnglishUs ? '/index.md' : '/pt-br.md'}`);
     expect(text).toContain(`${SITE_ORIGIN}${termsTwin}`);
-    expect(text).toContain(`${SITE_ORIGIN}/api/request-access`);
+    expect(text).not.toContain('/api/request-access');
     expect(text).toContain('https://docs.zapbip.com/llms.txt');
     expect(text).toContain('https://docs.zapbip.com/llms-full.txt');
     expect(text).toContain('https://docs.zapbip.com/mcp');

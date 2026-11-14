@@ -272,5 +272,5 @@ export const JAPANESE_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.NotFoundMetaTitle]: 'ページが見つかりません',
   [SiteCopyKey.AgentsTitle]: 'AIエージェント向け',
   [SiteCopyKey.AgentsBody]:
-    'エージェントは、キャプチャなしで仕えている人のアクセスをリクエストできます。JSONボディ {"email", "language"} を {endpoint} にPOSTしてください。同じツールは、すべてのページでWebMCP経由でも登録されています。',
+    'エージェントは、仕えている人がリストに参加するのを手伝えますが、ボタンを押すのは本人です。フォームには人間にしか解けないキャプチャがあります。{joinLink} を開き、name@example.com を本人のメールアドレスに置き換えると、入力済みのフォームが開きます。そのうえで、フォームのボタンを押すよう本人に頼んでください。同じ手助けは、すべてのページでWebMCPのツールとしても使えます。',
 };

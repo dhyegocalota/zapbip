@@ -10,6 +10,7 @@ import { quickStartEntriesOf } from './quick-start-entries';
 import { setupPromptOf } from './setup-prompt';
 import { plainContactTextOf } from './plain-contact-text';
 import { leadingAgentNames } from './site-agents';
+import { joinLinkOf } from './site-links';
 import { REPOSITORY_SELF_HOSTING_URL, REPOSITORY_URL, SITE_BRAND_SEPARATOR, SITE_EXAMPLE_CONNECTION_LINK } from './site-constants';
 import { SiteCopyKey } from './site-copy';
 import { copyOf } from './site-copy-text';
@@ -48,12 +49,12 @@ const GUARANTEES: TitledCopy[] = [
   { title: SiteCopyKey.PrivacyKeysTitle, body: SiteCopyKey.PrivacyKeysBody },
 ];
 
-function textOf(input: { locale: OwnerLocale; endpoint: string }): Text {
+function textOf(input: { locale: OwnerLocale; joinLink: string }): Text {
   const translate = copyOf({ locale: input.locale });
   const values = {
     ...pricingValuesOf({ locale: input.locale }),
     agents: leadingAgentNames({ locale: input.locale }),
-    endpoint: input.endpoint,
+    joinLink: input.joinLink,
   };
   return (key, extraValues) => plainContactTextOf({ text: translate(key, { ...values, ...extraValues }) });
 }
@@ -149,7 +150,7 @@ function faqBlocks(input: { text: Text }): MarkdownBlock[] {
 
 export function homeMarkdownOf(input: { locale: OwnerLocale; origin: string }): string {
   const { locale, origin } = input;
-  const text = textOf({ locale, endpoint: `${origin}${SitePath.RequestAccess}` });
+  const text = textOf({ locale, joinLink: joinLinkOf({ locale, origin }) });
   return renderMarkdown({
     blocks: [
       heading({ level: HeadingLevel.Page, text: text(SiteCopyKey.MetaOgTitle) }),

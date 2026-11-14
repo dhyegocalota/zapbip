@@ -49,16 +49,8 @@ export const SITE_EXAMPLE_CONNECTION_LINK = buildConnectionLink({
   secret: `${CONNECTION_SECRET_PREFIX}${EXAMPLE_SECRET_BODY}`,
 });
 export const SETUP_CONNECTION_PLACEHOLDER = '<your-connection-link>';
-export const AGENT_RATE_KEY_PREFIX = 'agent:';
-export const AGENT_ADDRESS_WEIGHT = 10;
-export const AGENT_EMAIL_WEIGHT = 15;
-export const AGENT_GLOBAL_WEIGHT = 1;
-export const AGENT_GLOBAL_KEY = 'all';
-export const AGENT_HOURLY_ROW_CAP = 200;
-export const AGENT_CAP_WINDOW_MS = HOUR_MS;
-export const AGENT_CAP_RETRY_AFTER_VALUE = String(HOUR_MS / SECOND_MS);
-export const AGENT_BODY_MAX_BYTES = 1024;
-export const AGENT_ADDRESS_IPV6_PREFIX_GROUPS = 3;
+export const SITE_EMAIL_PARAMETER = 'email';
+export const SITE_EXAMPLE_EMAIL = 'name@example.com';
 export const TEXT_CONTENT_TYPE = 'text/plain; charset=utf-8';
 export const MARKDOWN_CONTENT_TYPE = 'text/markdown; charset=utf-8';
 export const JSON_CONTENT_TYPE = 'application/json; charset=utf-8';

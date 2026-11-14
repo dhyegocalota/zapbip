@@ -10,10 +10,33 @@ type LanguageOption = { lang: string; form: { requestSubmit: (submitter: Languag
 const PAGE_LANGUAGE = 'en';
 const TOOL_NAMES = Object.values(WebMcpTool);
 
-function pageOf(input: { options?: LanguageOption[] }): object {
+type JoinField = {
+  value: string;
+  events: string[];
+  scrolled: boolean;
+  dispatchEvent: (event: { type: string }) => void;
+  scrollIntoView: () => void;
+  form: { button: { focused: boolean }; querySelector: () => { focused: boolean; focus: () => void } };
+};
+
+function joinField(): JoinField {
+  const button = { focused: false, focus: () => void (button.focused = true) };
+  const field: JoinField = {
+    value: '',
+    events: [],
+    scrolled: false,
+    dispatchEvent: (event) => void field.events.push(event.type),
+    scrollIntoView: () => void (field.scrolled = true),
+    form: { button, querySelector: () => button },
+  };
+  return field;
+}
+
+function pageOf(input: { options?: LanguageOption[]; field?: JoinField }): object {
   return {
     documentElement: { lang: PAGE_LANGUAGE },
     querySelectorAll: () => (input.options === undefined ? [] : input.options),
+    querySelector: () => (input.field === undefined ? null : input.field),
   };
 }
 
@@ -74,25 +97,33 @@ describe('the WebMCP part of the site script', () => {
     expect(() => run({ ...pageOf({}), modelContext: rejecting }, {}, undefined)).not.toThrow();
   });
 
-  it('request_access posts the email and the page language as JSON and returns the answer as text', async () => {
-    const recording = fetchRecording({ status: 200, payload: { status: 'requested' } });
-    const [requestAccess] = tools({ fetchImplementation: recording.fetchImplementation });
-    const result = await requestAccess!.execute({ email: 'maria@example.com' });
-    expect(recording.calls[0]!.path).toBe('/api/request-access');
-    expect(recording.calls[0]!.init).toMatchObject({
-      method: 'POST',
-      body: JSON.stringify({ email: 'maria@example.com', language: PAGE_LANGUAGE }),
-    });
+  it('fill_join_form puts the email in the form, brings it into view and focuses its button without any request', async () => {
+    const recording = fetchRecording({ status: 200, payload: {} });
+    const field = joinField();
+    const [fillJoinForm] = tools({ page: pageOf({ field }), fetchImplementation: recording.fetchImplementation });
+    const result = await fillJoinForm!.execute({ email: 'maria@example.com' });
+    expect(field.value).toBe('maria@example.com');
+    expect(field.events).toEqual(['input']);
+    expect(field.scrolled).toBe(true);
+    expect(field.form.button.focused).toBe(true);
+    expect(recording.calls).toEqual([]);
     expect(result.isError).toBeUndefined();
-    expect(JSON.parse(result.content[0]!.text)).toEqual({ status: 'requested' });
+    expect(JSON.parse(result.content[0]!.text)).toMatchObject({ status: 'filled' });
+  });
+
+  it('fill_join_form reports a page without the form as a tool error', async () => {
+    const [fillJoinForm] = tools({});
+    const result = await fillJoinForm!.execute({ email: 'maria@example.com' });
+    expect(result.isError).toBe(true);
+    expect(JSON.parse(result.content[0]!.text)).toEqual({ status: 'form_not_available' });
   });
 
   it('flags an answer that is not ok as a tool error', async () => {
-    const recording = fetchRecording({ status: 422, payload: { status: 'invalid_email' } });
-    const [requestAccess] = tools({ fetchImplementation: recording.fetchImplementation });
-    const result = await requestAccess!.execute({ email: 'nope', language: 'pt-BR' });
+    const recording = fetchRecording({ status: 422, payload: { status: 'unsupported_language' } });
+    const [, getPricing] = tools({ fetchImplementation: recording.fetchImplementation });
+    const result = await getPricing!.execute({ language: 'xx' });
     expect(result.isError).toBe(true);
-    expect(recording.calls[0]!.init!.body).toBe(JSON.stringify({ email: 'nope', language: 'pt-BR' }));
+    expect(recording.calls[0]!.path).toBe('/api/pricing?language=xx');
   });
 
   it('flags an answer that is not JSON, and a failed request, as tool errors with a status', async () => {
@@ -100,10 +131,10 @@ describe('the WebMCP part of the site script', () => {
     const unreachable = (async () => {
       throw new TypeError('network down');
     }) as unknown as typeof fetch;
-    const [first] = tools({ fetchImplementation: notJson });
-    const [second] = tools({ fetchImplementation: unreachable });
-    const htmlResult = await first!.execute({ email: 'maria@example.com' });
-    const networkResult = await second!.execute({ email: 'maria@example.com' });
+    const [, first] = tools({ fetchImplementation: notJson });
+    const [, second] = tools({ fetchImplementation: unreachable });
+    const htmlResult = await first!.execute({});
+    const networkResult = await second!.execute({});
     expect(htmlResult.isError).toBe(true);
     expect(JSON.parse(htmlResult.content[0]!.text)).toEqual({ status: 'unreadable_response', httpStatus: 502 });
     expect(networkResult.isError).toBe(true);

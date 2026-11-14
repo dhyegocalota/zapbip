@@ -281,5 +281,5 @@ export const FRENCH_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.NotFoundMetaTitle]: 'Page introuvable',
   [SiteCopyKey.AgentsTitle]: 'Pour les agents IA',
   [SiteCopyKey.AgentsBody]:
-    'Un agent peut demander l’accès pour la personne pour qui il travaille sans captcha\u00a0: envoyez un POST avec un corps JSON {"email", "language"} à {endpoint}. Les mêmes outils sont enregistrés via WebMCP sur chaque page.',
+    'Un agent peut aider la personne pour qui il travaille à rejoindre la liste, mais c’est la personne qui appuie sur le bouton\u00a0: le formulaire a un captcha que seul un humain résout. Ouvrez {joinLink} en remplaçant name@example.com par l’adresse de la personne, pour que le formulaire s’ouvre déjà rempli, puis demandez-lui d’appuyer sur le bouton du formulaire. La même aide est un outil WebMCP sur chaque page.',
 };
