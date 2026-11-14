@@ -6,8 +6,8 @@ const LANGUAGES = Object.values(DocsPageLanguage);
 const TRANSLATED_LANGUAGES = LANGUAGES.filter((language) => language !== DocsPageLanguage.English);
 
 describe('the documentation languages', () => {
-  test('there are nine, English first, with the Mintlify codes', () => {
-    expect(LANGUAGES).toEqual(['en', 'pt-BR', 'es', 'de', 'fr', 'ja', 'ko', 'zh', 'ar']);
+  test('there are ten, English first, with the Mintlify codes', () => {
+    expect(LANGUAGES).toEqual(['en', 'pt-BR', 'es', 'de', 'fr', 'ja', 'ko', 'zh', 'ar', 'hi']);
   });
 
   test('English has no folder and every other language has its own', () => {

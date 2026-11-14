@@ -6,6 +6,7 @@ import { buildUsageReply } from './use-cases/usage-reply';
 import { COMMAND_WORDS } from './command-words';
 import { buildMenuButtonText, buildMenuRows, renderAccountReply, renderInstallLines } from './account-copy';
 import { LIST_BUTTON_TEXT_MAX_CHARS } from './constants';
+import { ownerLanguageOfValue } from './owner-locale';
 
 const LOCALES = Object.values(OwnerLocale);
 const INTENTS = Object.values(AccountReplyIntent);
@@ -63,6 +64,19 @@ describe('sign-in link reply', () => {
   test.each(LOCALES)('%s carries the link and says it works once', (locale) => {
     const text = renderAccountReply({ reply: buildReply({ intent: AccountReplyIntent.SignInLink, locale }) });
     expect(text).toContain(PARAMETER_VALUES[AccountReplyParameter.SignInLink]);
+  });
+});
+
+const LANGUAGE_CODES = ['en', 'pt', 'es', 'de', 'fr', 'ja', 'ko', 'zh', 'ar', 'hi'];
+
+describe('the unknown language reply', () => {
+  test('names only codes the language command accepts', () => {
+    expect(LANGUAGE_CODES.filter((value) => ownerLanguageOfValue({ value }) === null)).toEqual([]);
+  });
+
+  test.each(LOCALES)('lists every language code in %s', (locale) => {
+    const text = renderAccountReply({ reply: buildReply({ intent: AccountReplyIntent.LanguageUnknown, locale }) });
+    expect(LANGUAGE_CODES.filter((code) => !text.includes(code))).toEqual([]);
   });
 });
 

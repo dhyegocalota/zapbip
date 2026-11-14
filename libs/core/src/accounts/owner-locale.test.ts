@@ -23,12 +23,16 @@ describe('the language of a new owner by calling code', () => {
     expect(ownerLocaleOf({ waId })).toBe(locale);
   });
 
-  it.each(['14155550100', '447911123456', '85291234567', '886912345678', '61412345678', '919876543210', '2348012345678'])(
+  it.each(['14155550100', '447911123456', '85291234567', '886912345678', '61412345678', '2348012345678'])(
     'falls to English for %s, whose language has no copy',
     (waId) => {
       expect(ownerLocaleOf({ waId })).toBe(OwnerLocale.EnglishUs);
     },
   );
+
+  it('keeps India (91) in English, because Hindi is not the first language across the country', () => {
+    expect(ownerLocaleOf({ waId: '919876543210' })).toBe(OwnerLocale.EnglishUs);
+  });
 
   it('prefers the longest calling code, so 351 is Portuguese and 3 alone is nothing', () => {
     expect(ownerLocaleOf({ waId: '351900000000' })).toBe(OwnerLocale.PortugueseBrazil);
@@ -55,11 +59,14 @@ describe('the language an owner asks for', () => {
     ['zh', OwnerLocale.ChineseSimplified],
     ['zh-cn', OwnerLocale.ChineseSimplified],
     [' ZH_CN ', OwnerLocale.ChineseSimplified],
+    ['ar', OwnerLocale.Arabic],
+    ['hi', OwnerLocale.Hindi],
+    [' HI ', OwnerLocale.Hindi],
   ])('reads %j as %s', (value, locale) => {
     expect(ownerLanguageOfValue({ value })).toBe(locale);
   });
 
-  it.each(['', 'xx', 'zh-tw', 'english', 'it'])('refuses %j', (value) => {
+  it.each(['', 'xx', 'zh-tw', 'english', 'it', 'hindi', 'हिन्दी'])('refuses %j', (value) => {
     expect(ownerLanguageOfValue({ value })).toBeNull();
   });
 });
