@@ -4,6 +4,7 @@ import { receiveChannelMessage } from '../../inbox/use-cases/receive-channel-mes
 import type { ChannelInboundEntry, ReceiveResult } from '../../inbox/use-cases/types';
 import type { AccountCommand, AccountCommandResult, CommandInput } from '../account-types';
 import { parseAccountCommand } from '../command';
+import { ONBOARDING_COOLDOWN_KEY, ONBOARDING_REPLY_COOLDOWN_MS } from '../constants';
 import { evaluateAccountState } from '../state-gate';
 import { applyOwnerCommand } from './apply-owner-command';
 import { isDeletionRequestLive } from './confirm-account-deletion';
@@ -80,6 +81,16 @@ async function handleReply(
   return answerLocally({ ...input, commandKind: null, prepare: async () => buildResult({ replies: [reply] }) });
 }
 
+async function handleOnboardingReply(input: ReceiveAccountMessageInput): Promise<ReceiveAccountMessageResult> {
+  const { dependencies } = input;
+  const { approvalCooldowns, clock } = dependencies;
+  const isCoolingDown = await approvalCooldowns.isCoolingDown({ key: ONBOARDING_COOLDOWN_KEY, now: clock.now() });
+  if (isCoolingDown) return DROPPED_RESULT;
+  const result = await handleReply({ ...input, intent: AccountReplyIntent.Waitlisted });
+  if (!result.duplicate) await approvalCooldowns.start({ key: ONBOARDING_COOLDOWN_KEY, until: clock.now() + ONBOARDING_REPLY_COOLDOWN_MS });
+  return result;
+}
+
 async function readRequestLiveness(input: ReceiveAccountMessageInput & { command: AccountCommand }): Promise<boolean> {
   const { dependencies, command } = input;
   if (command.kind !== CommandKind.ConfirmDeletion) return false;
@@ -118,6 +129,8 @@ export async function receiveAccountMessage(input: ReceiveAccountMessageInput): 
     isText: entry.kind === ChannelInboundKind.Owner && entry.content.kind === MessageKind.Text,
   });
   if (verdict.outcome === AccountStateOutcome.Drop) return DROPPED_RESULT;
+  const isOnboardingReply = verdict.outcome === AccountStateOutcome.Reply && verdict.intent === AccountReplyIntent.Waitlisted;
+  if (isOnboardingReply) return handleOnboardingReply(input);
   if (verdict.outcome === AccountStateOutcome.Reply) return handleReply({ ...input, intent: verdict.intent });
   return handleProceed({ ...input, command });
 }
