@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { SiteAssetKind, siteAssetOf } from '../../src/site/site-paths';
 
 const ASSETS_ROOT = join(import.meta.dirname, '../../site-public/site');
-const LOCALES = [OwnerLocale.EnglishUs, OwnerLocale.PortugueseBrazil];
+const LOCALES = Object.values(OwnerLocale);
 const PER_FILE_LIMIT_BYTES = 2_000_000;
 const TOTAL_LIMIT_BYTES = 6_000_000;
 const SHARED_FILES = ['apple-touch-icon.png'];
@@ -34,6 +34,10 @@ function sizeOf(name: string): number {
 }
 
 describe('site assets', () => {
+  it.each(LOCALES)("points every kind of media of %s at that language's own file", (locale) => {
+    Object.values(SiteAssetKind).forEach((kind) => expect(siteAssetOf({ kind, locale })).toContain(`-${locale}`));
+  });
+
   it.each(SHARED_FILES)('ships %s', (name) => {
     expect(readdirSync(ASSETS_ROOT)).toContain(name);
   });
@@ -57,7 +61,7 @@ describe('site assets', () => {
     });
   });
 
-  describe.each(Object.values(OwnerLocale))('the social image in %s', (locale) => {
+  describe.each(LOCALES)('the social image in %s', (locale) => {
     it("is the language's own, 1200 by 630 and inside its budget", () => {
       const name = `og-${locale}.png`;
       expect(siteAssetOf({ kind: SiteAssetKind.OpenGraphImage, locale })).toBe(`/site/${name}`);
@@ -66,10 +70,6 @@ describe('site assets', () => {
       expect(image.readUInt32BE(PNG_HEIGHT_OFFSET)).toBe(OG_HEIGHT);
       expect(image.length).toBeLessThanOrEqual(OG_LIMIT_BYTES);
     });
-  });
-
-  it('keeps the demo of a language without a recording on the English one', () => {
-    expect(siteAssetOf({ kind: SiteAssetKind.PosterLarge, locale: OwnerLocale.German })).toBe('/site/demo-en_US-poster-960.webp');
   });
 
   it('caches the media of the site for a day and serves stale ones for a week', () => {
