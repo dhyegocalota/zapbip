@@ -1,4 +1,4 @@
-import { AccountState, WebLocale } from '@zapbip/types';
+import { AccountState, OwnerLocale } from '@zapbip/types';
 import { AGENT_NAME_MAX_CHARS } from '@zapbip/core';
 import { AGENT_FIELD, AGENT_NAME_FIELD, CSRF_FIELD, DELETE_ACCOUNT_DOCS_PATH } from '../client-app-constants';
 import { ClientAppCopyKey, copyOf } from '../client-app-copy';
@@ -11,7 +11,7 @@ import { pricingValuesOf } from '../../site/price-format';
 export type AgentRow = { agent: string; clientName: string | null; addedOn: string; lastActiveOn: string | null };
 
 export type HomePageProps = {
-  locale: WebLocale;
+  locale: OwnerLocale;
   theme: ShellTheme;
   state: AccountState;
   csrfToken: string;
@@ -33,7 +33,7 @@ function detailsOf(input: { row: AgentRow; translate: ReturnType<typeof copyOf> 
   ];
 }
 
-function Waitlist(props: { locale: WebLocale }) {
+function Waitlist(props: { locale: OwnerLocale }) {
   const translate = copyOf({ locale: props.locale });
   return (
     <section class="panel">
@@ -68,7 +68,7 @@ function AgentList(props: HomePageProps) {
   );
 }
 
-function CreatedAgent(props: { locale: WebLocale; created: NonNullable<HomePageProps['createdAgent']> }) {
+function CreatedAgent(props: { locale: OwnerLocale; created: NonNullable<HomePageProps['createdAgent']> }) {
   const translate = copyOf({ locale: props.locale });
   return (
     <section class="panel panel-success" aria-live="polite">
@@ -79,7 +79,7 @@ function CreatedAgent(props: { locale: WebLocale; created: NonNullable<HomePageP
   );
 }
 
-function ConnectForm(props: { locale: WebLocale; csrfToken: string; problem: string | null }) {
+function ConnectForm(props: { locale: OwnerLocale; csrfToken: string; problem: string | null }) {
   const translate = copyOf({ locale: props.locale });
   return (
     <section class="panel">
@@ -110,7 +110,7 @@ function ConnectForm(props: { locale: WebLocale; csrfToken: string; problem: str
   );
 }
 
-function Account(props: { locale: WebLocale; phone: string }) {
+function Account(props: { locale: OwnerLocale; phone: string }) {
   const translate = copyOf({ locale: props.locale });
   return (
     <section class="panel">

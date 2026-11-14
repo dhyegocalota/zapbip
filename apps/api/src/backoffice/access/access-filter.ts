@@ -1,4 +1,4 @@
-import { DAY_MS, WebLocale } from '@zapbip/types';
+import { DAY_MS, OwnerLocale } from '@zapbip/types';
 
 export enum AccessSource {
   Form = 'form',
@@ -6,12 +6,12 @@ export enum AccessSource {
   All = 'all',
 }
 
-export type AccessFilter = { from: string | null; to: string | null; locale: WebLocale | null; source: AccessSource };
+export type AccessFilter = { from: string | null; to: string | null; locale: OwnerLocale | null; source: AccessSource };
 
 export const NO_ACCESS_FILTER: AccessFilter = { from: null, to: null, locale: null, source: AccessSource.Form };
 
 const DAY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
-const WEB_LOCALES: string[] = Object.values(WebLocale);
+const WEB_LOCALES: string[] = Object.values(OwnerLocale);
 const ACCESS_SOURCES: string[] = Object.values(AccessSource);
 
 function dayOf(input: { value: string | null }): string | null {
@@ -20,10 +20,10 @@ function dayOf(input: { value: string | null }): string | null {
   return Number.isNaN(Date.parse(value)) ? null : value;
 }
 
-function localeOf(input: { value: string | null }): WebLocale | null {
+function localeOf(input: { value: string | null }): OwnerLocale | null {
   const { value } = input;
   if (value === null || !WEB_LOCALES.includes(value)) return null;
-  return value as WebLocale;
+  return value as OwnerLocale;
 }
 
 function sourceOf(input: { value: string | null }): AccessSource {

@@ -1,4 +1,4 @@
-import { AccountState, WebLocale, WhatsAppNumberState } from '@zapbip/types';
+import { AccountState, OwnerLocale, WhatsAppNumberState } from '@zapbip/types';
 import { SPARKLINE_DAYS } from '../../src/backoffice/backoffice-constants';
 import { BackofficeNotice } from '../../src/backoffice/backoffice-notice';
 import { ShellTheme } from '../../src/web-shell/shell-theme';
@@ -14,7 +14,7 @@ import { DeployEnvironment } from '../../src/contract/deploy-environment';
 export const NOW = Date.UTC(2026, 10, 7, 12);
 
 export const PAGE: PageContext = {
-  locale: WebLocale.EnglishUs,
+  locale: OwnerLocale.EnglishUs,
   theme: ShellTheme.System,
   environment: DeployEnvironment.Production,
   stylesheetHref: '/assets/backoffice.css?v=1',
@@ -23,7 +23,7 @@ export const PAGE: PageContext = {
   returnPath: '/',
 };
 
-export function pageIn(input: { locale: WebLocale; notice?: BackofficeNotice }): PageContext {
+export function pageIn(input: { locale: OwnerLocale; notice?: BackofficeNotice }): PageContext {
   const { notice = null } = input;
   return { ...PAGE, locale: input.locale, notice };
 }

@@ -1,20 +1,20 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { WebLocale } from '@zapbip/types';
+import { OwnerLocale } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { renderSiteCopy, SITE_COPY, SiteCopyKey } from '../../src/site/site-copy';
 import { cjkSpacingOffenders, emptyEntries, frenchSpacingOffenders, placeholderMismatches, untranslatedEntries } from './copy-rules';
 
 const SITE_ROOT = join(import.meta.dirname, '../../src/site');
-const LOCALES = Object.values(WebLocale);
+const LOCALES = Object.values(OwnerLocale);
 const SHARED_WITH_ENGLISH = [
-  `${WebLocale.Spanish}:${SiteCopyKey.NoticeLabelError}`,
-  `${WebLocale.Spanish}:${SiteCopyKey.FooterLegalLabel}`,
-  `${WebLocale.German}:${SiteCopyKey.FaqEyebrow}`,
-  `${WebLocale.French}:${SiteCopyKey.NavigationDocs}`,
-  `${WebLocale.French}:${SiteCopyKey.NoticeLabelInfo}`,
-  `${WebLocale.French}:${SiteCopyKey.FaqEyebrow}`,
-  `${WebLocale.French}:${SiteCopyKey.FaqTitle}`,
+  `${OwnerLocale.Spanish}:${SiteCopyKey.NoticeLabelError}`,
+  `${OwnerLocale.Spanish}:${SiteCopyKey.FooterLegalLabel}`,
+  `${OwnerLocale.German}:${SiteCopyKey.FaqEyebrow}`,
+  `${OwnerLocale.French}:${SiteCopyKey.NavigationDocs}`,
+  `${OwnerLocale.French}:${SiteCopyKey.NoticeLabelInfo}`,
+  `${OwnerLocale.French}:${SiteCopyKey.FaqEyebrow}`,
+  `${OwnerLocale.French}:${SiteCopyKey.FaqTitle}`,
 ];
 const KEYS = Object.values(SiteCopyKey);
 const TEXT_CHILD_PATTERN = />\s*[A-Za-z0-9][^<>{}();=]*</;
@@ -49,19 +49,22 @@ describe('site copy', () => {
   });
 
   it('keeps the French punctuation spaces non-breaking', () => {
-    expect(frenchSpacingOffenders({ texts: KEYS.map((key) => SITE_COPY[WebLocale.French][key]) })).toEqual([]);
+    expect(frenchSpacingOffenders({ texts: KEYS.map((key) => SITE_COPY[OwnerLocale.French][key]) })).toEqual([]);
   });
 
-  it.each([WebLocale.Japanese, WebLocale.ChineseSimplified])('puts no space between two Chinese or Japanese characters in %s', (locale) => {
-    expect(cjkSpacingOffenders({ texts: KEYS.map((key) => SITE_COPY[locale][key]) })).toEqual([]);
-  });
+  it.each([OwnerLocale.Japanese, OwnerLocale.ChineseSimplified])(
+    'puts no space between two Chinese or Japanese characters in %s',
+    (locale) => {
+      expect(cjkSpacingOffenders({ texts: KEYS.map((key) => SITE_COPY[locale][key]) })).toEqual([]);
+    },
+  );
 
   it.each(LOCALES)('says in %s that every agent texts from a zapbip number', (locale) => {
     expect(SITE_COPY[locale][SiteCopyKey.FaqOwnNumberAnswer]).toContain('zapbip');
   });
 
   it('renders placeholders', () => {
-    expect(renderSiteCopy({ key: SiteCopyKey.ThanksInviteCount, locale: WebLocale.EnglishUs, values: { count: '2', cap: '5' } })).toBe(
+    expect(renderSiteCopy({ key: SiteCopyKey.ThanksInviteCount, locale: OwnerLocale.EnglishUs, values: { count: '2', cap: '5' } })).toBe(
       '2 of 5 friends invited',
     );
   });

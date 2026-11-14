@@ -64,6 +64,12 @@ export enum WhatsAppTemplateName {
 export enum WhatsAppLanguageCode {
   PortugueseBrazil = 'pt_BR',
   EnglishUs = 'en_US',
+  Spanish = 'es',
+  German = 'de',
+  French = 'fr',
+  Japanese = 'ja',
+  Korean = 'ko',
+  ChineseSimplified = 'zh_CN',
 }
 
 export enum OperatorEvent {

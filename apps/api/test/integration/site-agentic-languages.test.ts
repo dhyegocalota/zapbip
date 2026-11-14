@@ -1,5 +1,5 @@
 import { reset } from 'cloudflare:test';
-import { WebLocale } from '@zapbip/types';
+import { OwnerLocale } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { markdownPathOf } from '../../src/site/agentic-paths';
 import { legalPathOf, LegalDocument } from '../../src/site/legal-links';
@@ -13,10 +13,10 @@ import { SITE_ORIGIN, siteFetch } from '../support/site';
 const MARKDOWN_TYPE = 'text/markdown; charset=utf-8';
 const TEXT_TYPE = 'text/plain; charset=utf-8';
 const OK = 200;
-const LOCALES = Object.values(WebLocale);
-const NEW_LOCALES = LOCALES.filter((locale) => locale !== WebLocale.EnglishUs && locale !== WebLocale.PortugueseBrazil);
+const LOCALES = Object.values(OwnerLocale);
+const NEW_LOCALES = LOCALES.filter((locale) => locale !== OwnerLocale.EnglishUs && locale !== OwnerLocale.PortugueseBrazil);
 
-function llmsPrefixOf(input: { locale: WebLocale }): string {
+function llmsPrefixOf(input: { locale: OwnerLocale }): string {
   const home = localePathOf({ locale: input.locale });
   return home === '/' ? '' : home;
 }
@@ -64,7 +64,7 @@ describe('the llms files in every language', () => {
     expect(response.status).toBe(OK);
     expect(response.headers.get('content-type')).toBe(TEXT_TYPE);
     expect(text).toContain(renderSiteCopy({ key: SiteCopyKey.MetaTitle, locale }));
-    expect(text).not.toContain(renderSiteCopy({ key: SiteCopyKey.MetaTitle, locale: WebLocale.EnglishUs }));
+    expect(text).not.toContain(renderSiteCopy({ key: SiteCopyKey.MetaTitle, locale: OwnerLocale.EnglishUs }));
     expect(text).toContain(`${SITE_ORIGIN}${markdownPathOf({ htmlPath: localePathOf({ locale }) })}`);
   });
 

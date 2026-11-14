@@ -1,4 +1,4 @@
-import { HttpStatus, WebLocale, WaitlistJoinOutcome, WaitlistSource } from '@zapbip/types';
+import { HttpStatus, OwnerLocale, WaitlistJoinOutcome, WaitlistSource } from '@zapbip/types';
 import type { Context } from 'hono';
 import { type FormBody, textFieldOf } from '../backoffice/form-fields';
 import { CLIENT_ADDRESS_HEADER } from '../contract/constants';
@@ -17,14 +17,14 @@ import { TurnstileVerdict, verifyTurnstileToken } from './turnstile';
 const EMAIL_FIELD = 'email';
 const LOCALE_FIELD = 'locale';
 const REFERRAL_FIELD = 'referralCode';
-const LOCALES: string[] = Object.values(WebLocale);
+const LOCALES: string[] = Object.values(OwnerLocale);
 
 type JoinAnswer = { view: JoinView; status: HttpStatus; headers?: Record<string, string> };
 const NO_STORE_HEADERS = { 'Cache-Control': NO_STORE_CACHE_CONTROL };
 
-function formLocaleOf(input: { form: FormBody; fallback: WebLocale }): WebLocale {
+function formLocaleOf(input: { form: FormBody; fallback: OwnerLocale }): OwnerLocale {
   const value = textFieldOf({ form: input.form, name: LOCALE_FIELD });
-  return value !== null && LOCALES.includes(value) ? (value as WebLocale) : input.fallback;
+  return value !== null && LOCALES.includes(value) ? (value as OwnerLocale) : input.fallback;
 }
 
 function formReferralCodeOf(input: { form: FormBody }): string | null {

@@ -1,4 +1,4 @@
-import type { WebLocale } from '@zapbip/types';
+import type { OwnerLocale } from '@zapbip/types';
 import { ShellCopyKey, renderShellCopy } from './shell-copy';
 import type { ShellHiddenField } from './shell-fields';
 import { ShellTheme } from './shell-theme';
@@ -11,7 +11,7 @@ const THEME_OPTIONS: { theme: ShellTheme; label: ShellCopyKey }[] = [
 ];
 
 export function ThemeSwitch(props: {
-  locale: WebLocale;
+  locale: OwnerLocale;
   theme: ShellTheme;
   action: string;
   hiddenFields: ShellHiddenField[];

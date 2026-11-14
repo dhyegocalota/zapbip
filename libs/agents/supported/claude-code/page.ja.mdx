@@ -45,7 +45,7 @@ AIがあなたに何かを尋ねると、zapbipはその質問を保持し、最
 
    <Chat
      messages={[
-       { you: true, text: 'new agent claude-code', time: '15:00' },
+       { you: true, text: '新規エージェント claude-code', time: '15:00' },
        {
          name: 'zapbip',
          text: 'Agent claude-code created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate claude-code".',
@@ -72,12 +72,12 @@ AIがあなたに何かを尋ねると、zapbipはその質問を保持し、最
 
 8. **チャネルが使えない場合のみ。** `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen` をバックグラウンドで実行し、Monitorで監視して、タイムアウトの通知のたびに設定し直します。
 
-9. **テストします。** 新しいプロセスで `claude -p "Call send_message with the text '✅ installed'" --allowedTools=mcp__zapbip__send_message` を実行します。✅ installed を含む `send_message` があなたのWhatsAppに届きます。コマンドが失敗した場合は、そこで止まり、最後の20行を表示します。その後、Claude Codeを再起動して、zapbipのツールを使えるようにしてください。
+9. **テストします。** 新しいプロセスで `claude -p "Call send_message with the text '✅ インストール完了'" --allowedTools=mcp__zapbip__send_message` を実行します。✅ インストール完了 を含む `send_message` があなたのWhatsAppに届きます。コマンドが失敗した場合は、そこで止まり、最後の20行を表示します。その後、Claude Codeを再起動して、zapbipのツールを使えるようにしてください。
 
 ## 動作の確認
 
-Claude Codeに、WhatsAppで `✅ installed` を送るよう頼んでください。数秒で届くはずです。
+Claude Codeに、WhatsAppで `✅ インストール完了` を送るよう頼んでください。数秒で届くはずです。
 
-<Chat messages={[{ name: 'Claude', text: '✅ installed', time: '15:03' }]} />
+<Chat messages={[{ name: 'Claude', text: '✅ インストール完了', time: '15:03' }]} />
 
 何も届かない場合は、[トラブルシューティング](/ja/help/troubleshooting)をご覧ください。

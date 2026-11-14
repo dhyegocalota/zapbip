@@ -1,4 +1,4 @@
-import { WebLocale } from '@zapbip/types';
+import { OwnerLocale } from '@zapbip/types';
 import { Hono } from 'hono';
 import { ShellTheme } from '../web-shell/shell-theme';
 import { NO_CONTENT_STATUS, SEE_OTHER_STATUS } from '../backoffice/backoffice-constants';
@@ -19,12 +19,12 @@ const THEME_FIELD = 'theme';
 const RETURN_TO_FIELD = 'returnTo';
 const FETCH_MODE_HEADER = 'Sec-Fetch-Mode';
 const NAVIGATE_FETCH_MODE = 'navigate';
-const LOCALES: string[] = Object.values(WebLocale);
+const LOCALES: string[] = Object.values(OwnerLocale);
 const THEMES: string[] = Object.values(ShellTheme);
 const RETURN_BASE = 'https://return.invalid';
 
 type ReturnTarget = {
-  locale: WebLocale;
+  locale: OwnerLocale;
   agent: InstallClient | SiteStartTab | null;
   referralCode: string | null;
   legalDocument: LegalDocument | null;
@@ -52,7 +52,7 @@ function returnTargetOf(input: { returnTo: string | null }): ReturnTarget | null
   return isCanonical ? { locale, agent, referralCode, legalDocument: null } : null;
 }
 
-function targetPathOf(input: { target: ReturnTarget; locale: WebLocale }): string {
+function targetPathOf(input: { target: ReturnTarget; locale: OwnerLocale }): string {
   const { target, locale } = input;
   if (target.legalDocument !== null) return legalPathOf({ document: target.legalDocument, locale });
   return pagePathOf({ locale, agent: target.agent, referralCode: target.referralCode });
@@ -63,7 +63,7 @@ export const preferenceRoutes = new Hono<SiteEnv>();
 preferenceRoutes.post(SitePath.Locale, async (context) => {
   const form = await context.req.parseBody();
   const value = textFieldOf({ form, name: LOCALE_FIELD });
-  const locale = value !== null && LOCALES.includes(value) ? (value as WebLocale) : null;
+  const locale = value !== null && LOCALES.includes(value) ? (value as OwnerLocale) : null;
   const returnTarget = returnTargetOf({ returnTo: textFieldOf({ form, name: RETURN_TO_FIELD }) });
   if (locale === null) {
     const unchanged = pagePathOf({ locale: context.get('locale'), agent: null, referralCode: null });

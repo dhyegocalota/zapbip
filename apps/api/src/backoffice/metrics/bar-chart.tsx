@@ -1,4 +1,4 @@
-import type { WebLocale } from '@zapbip/types';
+import type { OwnerLocale } from '@zapbip/types';
 import { BackofficeCopyKey, renderBackofficeCopy } from '../backoffice-copy';
 import { keyedCell, type MetricCell } from './metric-cell';
 
@@ -82,7 +82,7 @@ function placeReferences(input: { references: ChartReference[]; scale: number })
 
 export function BarChart(props: {
   size: ChartSize;
-  locale: WebLocale;
+  locale: OwnerLocale;
   id: string;
   metricLabel: string;
   days: string[];

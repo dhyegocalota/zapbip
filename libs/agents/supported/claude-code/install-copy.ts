@@ -46,12 +46,56 @@ const CLAUDE_CODE_TEXT: Record<OwnerLocale, ClaudeCodeText> = {
     confirmChange: `I will add the zapbip MCP server to Claude Code and write the file ${SKILL_PATH}. May I?`,
     restart: `Restart Claude Code with \`${CHANNEL_COMMAND}\` to use zapbip. The flag turns on Claude Code's channel feature for zapbip and does not approve any tool by itself.`,
   },
+  [OwnerLocale.Spanish]: {
+    wakeNote:
+      'Claude Code escucha sin límite de tiempo: el canal entrega al instante mientras la sesión está abierta, y el conector reanuda una sesión detenida en unos 7 segundos.',
+    confirmChange: `Voy a añadir el servidor MCP de zapbip a Claude Code y a escribir el archivo ${SKILL_PATH}. ¿Puedo?`,
+    restart: `Reinicia Claude Code con \`${CHANNEL_COMMAND}\` para usar zapbip. La opción activa la función de canales de Claude Code para zapbip y no aprueba ninguna herramienta por sí sola.`,
+  },
+  [OwnerLocale.German]: {
+    wakeNote:
+      'Claude Code hört ohne Zeitlimit zu: Der Kanal liefert sofort, solange die Sitzung offen ist, und der Connector setzt eine gestoppte Sitzung in etwa 7 Sekunden fort.',
+    confirmChange: `Ich füge den zapbip-MCP-Server zu Claude Code hinzu und schreibe die Datei ${SKILL_PATH}. Darf ich?`,
+    restart: `Starte Claude Code mit \`${CHANNEL_COMMAND}\` neu, um zapbip zu nutzen. Die Option schaltet die Kanalfunktion von Claude Code für zapbip ein und genehmigt von sich aus kein Werkzeug.`,
+  },
+  [OwnerLocale.French]: {
+    wakeNote:
+      'Claude Code écoute sans limite de temps\u00a0: le canal livre aussitôt tant que la session est ouverte, et le connecteur reprend une session arrêtée en environ 7 secondes.',
+    confirmChange: `Je vais ajouter le serveur MCP zapbip à Claude Code et écrire le fichier ${SKILL_PATH}. Puis-je\u202f?`,
+    restart: `Redémarrez Claude Code avec \`${CHANNEL_COMMAND}\` pour utiliser zapbip. L’option active la fonction de canaux de Claude Code pour zapbip et n’approuve aucun outil par elle-même.`,
+  },
+  [OwnerLocale.Japanese]: {
+    wakeNote:
+      'Claude Codeは時間制限なしで待ち受けます。セッションが開いている間はチャンネルが即座に配信し、止まったセッションはコネクタが約7秒で再開します。',
+    confirmChange: `zapbipのMCPサーバーをClaude Codeに追加し、ファイル${SKILL_PATH}を書き込みます。よろしいですか？`,
+    restart: `zapbipを使うには、\`${CHANNEL_COMMAND}\`でClaude Codeを再起動してください。このオプションはzapbip向けにClaude Codeのチャンネル機能をオンにするだけで、ツールを自動で承認することはありません。`,
+  },
+  [OwnerLocale.Korean]: {
+    wakeNote:
+      'Claude Code는 시간 제한 없이 듣습니다. 세션이 열려 있는 동안에는 채널이 즉시 전달하고, 멈춘 세션은 커넥터가 약 7초 만에 재개합니다.',
+    confirmChange: `zapbip MCP 서버를 Claude Code에 추가하고 ${SKILL_PATH} 파일을 작성하겠습니다. 진행해도 될까요?`,
+    restart: `zapbip을 쓰려면 \`${CHANNEL_COMMAND}\`로 Claude Code를 다시 시작하세요. 이 옵션은 zapbip용으로 Claude Code의 채널 기능을 켤 뿐, 어떤 도구도 스스로 승인하지 않습니다.`,
+  },
+  [OwnerLocale.ChineseSimplified]: {
+    wakeNote: 'Claude Code 不限时地监听：会话打开时，通道会立即送达；会话停止时，连接器大约 7 秒就能让它恢复。',
+    confirmChange: `我将把 zapbip MCP 服务器添加到 Claude Code，并写入文件 ${SKILL_PATH}。可以吗？`,
+    restart: `请用 \`${CHANNEL_COMMAND}\` 重新启动 Claude Code 以使用 zapbip。这个选项只是为 zapbip 打开 Claude Code 的通道功能，本身不会批准任何工具。`,
+  },
 };
 
 export const CLAUDE_CODE_SKILL_DESCRIPTION: Record<OwnerLocale, () => string> = {
   [OwnerLocale.PortugueseBrazil]: () =>
     'Regras para falar com o dono pelo WhatsApp usando o zapbip: perguntar, esperar a resposta e escrever curto.',
   [OwnerLocale.EnglishUs]: () => 'Rules for talking to the owner on WhatsApp through zapbip: ask, wait for the answer and write short.',
+  [OwnerLocale.Spanish]: () =>
+    'Reglas para hablar con el propietario por WhatsApp a través de zapbip: preguntar, esperar la respuesta y escribir corto.',
+  [OwnerLocale.German]: () =>
+    'Regeln für das Gespräch mit dem Besitzer auf WhatsApp über zapbip: fragen, auf die Antwort warten und sich kurzfassen.',
+  [OwnerLocale.French]: () =>
+    'Règles pour parler au propriétaire sur WhatsApp via zapbip\u00a0: poser les questions, attendre la réponse et écrire court.',
+  [OwnerLocale.Japanese]: () => 'zapbip経由でWhatsAppのオーナーと話すときのルール: 質問し、返事を待ち、短く書く。',
+  [OwnerLocale.Korean]: () => 'zapbip으로 WhatsApp에서 소유자와 대화할 때의 규칙: 질문하고, 답을 기다리고, 짧게 쓰기.',
+  [OwnerLocale.ChineseSimplified]: () => '通过 zapbip 在 WhatsApp 上与所有者交流的规则：提问、等待回答、写得简短。',
 };
 
 export const CLAUDE_CODE_COPY = localizeCopy({
@@ -107,6 +151,12 @@ export const CLAUDE_CODE_COPY = localizeCopy({
 const CLAUDE_CODE_QUICK_START_HINT: Record<OwnerLocale, string> = {
   [OwnerLocale.PortugueseBrazil]: 'Rode no seu terminal',
   [OwnerLocale.EnglishUs]: 'Run in your terminal',
+  [OwnerLocale.Spanish]: 'Ejecuta esto en tu terminal',
+  [OwnerLocale.German]: 'Führe das in deinem Terminal aus',
+  [OwnerLocale.French]: 'Exécutez ceci dans votre terminal',
+  [OwnerLocale.Japanese]: 'ターミナルで実行します',
+  [OwnerLocale.Korean]: '터미널에서 실행하세요',
+  [OwnerLocale.ChineseSimplified]: '在你的终端里运行',
 };
 
 export const CLAUDE_CODE_QUICK_START = quickStartOf({

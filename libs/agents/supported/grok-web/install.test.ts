@@ -7,10 +7,23 @@ const STANDBY_AGENT = 'Ana Bot';
 const WAKE_NOTE: Record<OwnerLocale, string> = {
   [OwnerLocale.PortugueseBrazil]: 'O Grok na web não acorda sozinho: o agente de prontidão escolhido responde por ele em segundos.',
   [OwnerLocale.EnglishUs]: 'Grok on the web cannot be woken from outside: the chosen standby agent answers for it within seconds.',
+  [OwnerLocale.Spanish]: 'Grok en la web no se puede despertar desde fuera: el agente de reserva elegido responde por él en segundos.',
+  [OwnerLocale.German]: 'Grok im Web kann nicht von außen geweckt werden: Der gewählte Standby-Agent antwortet in Sekunden für ihn.',
+  [OwnerLocale.French]:
+    'Grok sur le web ne peut pas être réveillé de l’extérieur\u00a0: l’agent de secours choisi répond à sa place en quelques secondes.',
+  [OwnerLocale.Japanese]: 'Web版のGrokは外部から起動できません。選ばれた待機エージェントが、数秒で代わりに応答します。',
+  [OwnerLocale.Korean]: '웹의 Grok은 외부에서 깨울 수 없습니다. 선택한 대기 에이전트가 몇 초 안에 대신 답합니다.',
+  [OwnerLocale.ChineseSimplified]: '网页版 Grok 无法从外部唤醒：所选的备用智能体会在几秒内代它回应。',
 };
 const WAKE_NOTE_WITHOUT_STANDBY: Record<OwnerLocale, string> = {
   [OwnerLocale.PortugueseBrazil]: 'Sem um agente de prontidão, o Grok na web só vê mensagens novas quando você abre o chat dele.',
   [OwnerLocale.EnglishUs]: 'Without a standby agent, Grok on the web sees new messages only when you open the chat.',
+  [OwnerLocale.Spanish]: 'Sin un agente de reserva, Grok en la web ve los mensajes nuevos solo cuando abres el chat.',
+  [OwnerLocale.German]: 'Ohne Standby-Agent sieht Grok im Web neue Nachrichten nur, wenn du den Chat öffnest.',
+  [OwnerLocale.French]: 'Sans agent de secours, Grok sur le web ne voit les nouveaux messages que lorsque vous ouvrez la conversation.',
+  [OwnerLocale.Japanese]: '待機エージェントがない場合、Web版のGrokは、あなたがチャットを開いたときにだけ新しいメッセージを見られます。',
+  [OwnerLocale.Korean]: '대기 에이전트가 없으면 웹의 Grok은 사용자가 채팅을 열었을 때만 새 메시지를 봅니다.',
+  [OwnerLocale.ChineseSimplified]: '没有备用智能体的话，只有你打开聊天时，网页版 Grok 才能看到新消息。',
 };
 
 describe('the Grok web install section', () => {

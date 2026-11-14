@@ -1,4 +1,4 @@
-import { WebLocale } from '@zapbip/types';
+import { OwnerLocale } from '@zapbip/types';
 import type { Child, FC } from 'hono/jsx';
 
 const FLAG_VIEWBOX = '0 0 20 14';
@@ -121,18 +121,18 @@ function ChinaFlag() {
   );
 }
 
-const FLAGS: Record<WebLocale, FC> = {
-  [WebLocale.EnglishUs]: UnitedStatesFlag,
-  [WebLocale.PortugueseBrazil]: BrazilFlag,
-  [WebLocale.Spanish]: SpainFlag,
-  [WebLocale.German]: GermanyFlag,
-  [WebLocale.French]: FranceFlag,
-  [WebLocale.Japanese]: JapanFlag,
-  [WebLocale.Korean]: KoreaFlag,
-  [WebLocale.ChineseSimplified]: ChinaFlag,
+const FLAGS: Record<OwnerLocale, FC> = {
+  [OwnerLocale.EnglishUs]: UnitedStatesFlag,
+  [OwnerLocale.PortugueseBrazil]: BrazilFlag,
+  [OwnerLocale.Spanish]: SpainFlag,
+  [OwnerLocale.German]: GermanyFlag,
+  [OwnerLocale.French]: FranceFlag,
+  [OwnerLocale.Japanese]: JapanFlag,
+  [OwnerLocale.Korean]: KoreaFlag,
+  [OwnerLocale.ChineseSimplified]: ChinaFlag,
 };
 
-export function Flag(props: { locale: WebLocale }) {
+export function Flag(props: { locale: OwnerLocale }) {
   const FlagOfLocale = FLAGS[props.locale];
   return <FlagOfLocale />;
 }

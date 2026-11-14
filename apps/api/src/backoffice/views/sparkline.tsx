@@ -1,4 +1,4 @@
-import type { WebLocale } from '@zapbip/types';
+import type { OwnerLocale } from '@zapbip/types';
 import { BackofficeCopyKey, renderBackofficeCopy } from '../backoffice-copy';
 
 const VIEW_WIDTH = 240;
@@ -39,7 +39,7 @@ function pairOf(point: Point): string {
   return `${point.x},${point.y}`;
 }
 
-export function Sparkline(props: { id: string; locale: WebLocale; metricLabel: string; values: number[] }) {
+export function Sparkline(props: { id: string; locale: OwnerLocale; metricLabel: string; values: number[] }) {
   const { id, locale, metricLabel, values } = props;
   assertDrawable({ values });
   const translate = (key: BackofficeCopyKey, replacements: Record<string, string>): string =>

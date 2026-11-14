@@ -74,7 +74,7 @@ export const JAPANESE_LEGAL_COPY: Record<LegalDocument, LegalText> = {
       {
         heading: 'アカウントの終了',
         paragraphs: [
-          'WhatsAppでzapbipに「delete account」と送信すれば、いつでもアカウントを削除できます。本規約に違反したアカウントを閉鎖したり、事前の通知のうえでサービスを終了したりすることがあります。データの扱いについては、プライバシーポリシーをご覧ください。',
+          'WhatsAppでzapbipに「アカウント削除」と送信すれば、いつでもアカウントを削除できます。本規約に違反したアカウントを閉鎖したり、事前の通知のうえでサービスを終了したりすることがあります。データの扱いについては、プライバシーポリシーをご覧ください。',
         ],
         items: [],
       },
@@ -170,7 +170,7 @@ export const JAPANESE_LEGAL_COPY: Record<LegalDocument, LegalText> = {
       {
         heading: 'お客様の権利',
         paragraphs: [
-          'アカウントとその中のすべてを削除するには、WhatsAppでzapbipに「delete account」と送信してください。そのほかのご用件は {contactEmail} までご連絡ください。15日以内に回答します。',
+          'アカウントとその中のすべてを削除するには、WhatsAppでzapbipに「アカウント削除」と送信してください。そのほかのご用件は {contactEmail} までご連絡ください。15日以内に回答します。',
         ],
         items: [
           'データを処理しているかどうかの確認と、データへのアクセス。',

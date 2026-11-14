@@ -1,10 +1,10 @@
-import { DOCS_LANGUAGE_FOLDERS, DocsPageLanguage, WebLanguageTag, WebLocale } from '@zapbip/types';
+import { DOCS_LANGUAGE_FOLDERS, DocsPageLanguage, WebLanguageTag, OwnerLocale } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { Flag } from '../../src/web-shell/flags';
 import { LOCALE_PROFILES, MENU_LOCALES, languageOf } from '../../src/web-shell/locale-profiles';
 import { docsUrlOf } from '../../src/web-shell/shell-links';
 
-const LOCALES = Object.values(WebLocale);
+const LOCALES = Object.values(OwnerLocale);
 const FLAG_PATTERN = /data-flag="([a-z]+)"/;
 const FLAG_COLOUR_PATTERN = /fill="#[0-9a-f]{6}"/g;
 
@@ -26,9 +26,9 @@ describe('the locale profiles', () => {
   });
 
   it('write each native name in its own script', () => {
-    expect(LOCALE_PROFILES[WebLocale.Japanese].nativeName).toBe('日本語');
-    expect(LOCALE_PROFILES[WebLocale.Korean].nativeName).toBe('한국어');
-    expect(LOCALE_PROFILES[WebLocale.ChineseSimplified].nativeName).toBe('简体中文');
+    expect(LOCALE_PROFILES[OwnerLocale.Japanese].nativeName).toBe('日本語');
+    expect(LOCALE_PROFILES[OwnerLocale.Korean].nativeName).toBe('한국어');
+    expect(LOCALE_PROFILES[OwnerLocale.ChineseSimplified].nativeName).toBe('简体中文');
   });
 
   it('point every language at the documentation folder of its own language', () => {
@@ -43,12 +43,12 @@ describe('the locale profiles', () => {
   });
 
   it.each([
-    [WebLocale.Spanish, '/es'],
-    [WebLocale.German, '/de'],
-    [WebLocale.French, '/fr'],
-    [WebLocale.Japanese, '/ja'],
-    [WebLocale.Korean, '/ko'],
-    [WebLocale.ChineseSimplified, '/zh'],
+    [OwnerLocale.Spanish, '/es'],
+    [OwnerLocale.German, '/de'],
+    [OwnerLocale.French, '/fr'],
+    [OwnerLocale.Japanese, '/ja'],
+    [OwnerLocale.Korean, '/ko'],
+    [OwnerLocale.ChineseSimplified, '/zh'],
   ])('sends the documentation link of %s to %s', (locale, folder) => {
     expect(docsUrlOf({ locale, path: '' })).toBe(`https://docs.zapbip.com${folder}`);
     expect(docsUrlOf({ locale, path: '/mcp' })).toBe(`https://docs.zapbip.com${folder}/mcp`);

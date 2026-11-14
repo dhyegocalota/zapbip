@@ -1,5 +1,5 @@
 import { createExecutionContext } from 'cloudflare:test';
-import { WebLocale, TURNSTILE_ACTION_WAITLIST_JOIN } from '@zapbip/types';
+import { OwnerLocale, TURNSTILE_ACTION_WAITLIST_JOIN } from '@zapbip/types';
 import { CLIENT_ADDRESS_HEADER } from '../../src/contract/constants';
 import type { Bindings } from '../../src/contract/env';
 import { renderShellCopy, type ShellCopyKey } from '../../src/web-shell/shell-copy';
@@ -68,8 +68,8 @@ export type SiteRequest = {
   withClientAddress?: boolean;
 };
 
-export function joinForm(input: { email: string; referralCode?: string; locale?: WebLocale; token?: string }): Record<string, string> {
-  const { email, referralCode, locale = WebLocale.EnglishUs, token = WIDGET_TOKEN } = input;
+export function joinForm(input: { email: string; referralCode?: string; locale?: OwnerLocale; token?: string }): Record<string, string> {
+  const { email, referralCode, locale = OwnerLocale.EnglishUs, token = WIDGET_TOKEN } = input;
   return {
     email,
     locale,
@@ -104,10 +104,10 @@ export function escapedHtml(input: { text: string }): string {
   return input.text.replace(/[&<>"']/g, (character) => HTML_ESCAPES[character]!);
 }
 
-export function shellCopyHtml(input: { key: ShellCopyKey; locale: WebLocale }): string {
+export function shellCopyHtml(input: { key: ShellCopyKey; locale: OwnerLocale }): string {
   return escapedHtml({ text: renderShellCopy(input) });
 }
 
-export function copyHtml(input: { key: SiteCopyKey; locale: WebLocale; values?: Record<string, string> }): string {
+export function copyHtml(input: { key: SiteCopyKey; locale: OwnerLocale; values?: Record<string, string> }): string {
   return escapedHtml({ text: renderSiteCopy(input) });
 }

@@ -1,5 +1,5 @@
 import { reset } from 'cloudflare:test';
-import { WebLocale } from '@zapbip/types';
+import { OwnerLocale } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { renderSiteCopy, SiteCopyKey } from '../../src/site/site-copy';
 import { createFakeRateLimiter } from '../support/fake-rate-limiter';
@@ -8,8 +8,8 @@ import { escapedHtml, joinForm, siteEnvironment, siteFetch } from '../support/si
 
 const PAGES = ['/', '/pt-br', '/terms', '/pt-br/privacidade', '/nowhere'] as const;
 const LOCALES = [
-  ['/', WebLocale.EnglishUs],
-  ['/pt-br', WebLocale.PortugueseBrazil],
+  ['/', OwnerLocale.EnglishUs],
+  ['/pt-br', OwnerLocale.PortugueseBrazil],
 ] as const;
 const IMAGE_PATTERN = /<img\b[^>]*>/g;
 const BUTTON_PATTERN = /<button\b([^>]*)>([\s\S]*?)<\/button>/g;
@@ -20,7 +20,7 @@ async function htmlOf(input: { path: string }): Promise<string> {
   return (await siteFetch(input)).text();
 }
 
-function copy(input: { key: SiteCopyKey; locale: WebLocale }): string {
+function copy(input: { key: SiteCopyKey; locale: OwnerLocale }): string {
   return escapedHtml({ text: renderSiteCopy(input) });
 }
 
@@ -47,7 +47,7 @@ describe('landmarks and headings', () => {
     const html = await htmlOf({ path });
     expect(html).toMatch(/<html lang="(en|pt-BR)"/);
     const options = html.match(/<button\b[^>]*class="lang-option"[^>]*>/g)!;
-    expect(options.length).toBe(Object.values(WebLocale).length);
+    expect(options.length).toBe(Object.values(OwnerLocale).length);
     options.forEach((option) => expect(option).toMatch(/lang="[a-zA-Z-]+"/));
   });
 });

@@ -1,4 +1,4 @@
-import { WebLocale } from '@zapbip/types';
+import { OwnerLocale } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { localePathOf } from '../../src/site/site-language';
 import { LOCALE_PROFILES, MENU_LOCALES } from '../../src/web-shell/locale-profiles';
@@ -9,15 +9,15 @@ import { AGENT_INSTALLS } from '@zapbip/agents/install';
 const PICKED_AGENT = Object.keys(AGENT_INSTALLS)[0]!;
 
 const EXPECTED_LANGUAGE_COUNT = 8;
-const FLAGS_BY_LOCALE: Record<WebLocale, string> = {
-  [WebLocale.EnglishUs]: 'us',
-  [WebLocale.PortugueseBrazil]: 'br',
-  [WebLocale.Spanish]: 'es',
-  [WebLocale.German]: 'de',
-  [WebLocale.French]: 'fr',
-  [WebLocale.Japanese]: 'jp',
-  [WebLocale.Korean]: 'kr',
-  [WebLocale.ChineseSimplified]: 'cn',
+const FLAGS_BY_LOCALE: Record<OwnerLocale, string> = {
+  [OwnerLocale.EnglishUs]: 'us',
+  [OwnerLocale.PortugueseBrazil]: 'br',
+  [OwnerLocale.Spanish]: 'es',
+  [OwnerLocale.German]: 'de',
+  [OwnerLocale.French]: 'fr',
+  [OwnerLocale.Japanese]: 'jp',
+  [OwnerLocale.Korean]: 'kr',
+  [OwnerLocale.ChineseSimplified]: 'cn',
 };
 const MENU_PATTERN = /<details class="lang-menu">([\s\S]*?)<\/details>/;
 

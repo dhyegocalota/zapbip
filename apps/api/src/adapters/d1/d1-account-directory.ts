@@ -20,6 +20,7 @@ const CREATE_IDENTITY_STATEMENT = `INSERT INTO owner_identities (wa_id, account_
 const FIND_BY_ID_STATEMENT = SELECT_ACCOUNT + ' WHERE accounts.id = ?';
 const RELEASE_STATEMENT = 'UPDATE accounts SET state = ?, released_at = ? WHERE id = ? AND state = ?';
 const SET_STATE_STATEMENT = 'UPDATE accounts SET state = ? WHERE id = ?';
+const SET_LOCALE_STATEMENT = 'UPDATE owner_identities SET locale = ? WHERE account_id = ?';
 const REMOVE_STATEMENTS = [
   'DELETE FROM client_app_sessions WHERE account_id = ?',
   'DELETE FROM client_app_sign_in_tokens WHERE account_id = ?',
@@ -87,6 +88,10 @@ export class D1AccountDirectory implements AccountDirectory {
   async setState(input: { accountId: string; state: AccountState }): Promise<void> {
     await this.database.prepare(SET_STATE_STATEMENT).bind(input.state, input.accountId).run();
     logEvent({ event: LogEvent.AccountStateChanged, accountId: input.accountId });
+  }
+
+  async setLocale(input: { accountId: string; locale: OwnerLocale }): Promise<void> {
+    await this.database.prepare(SET_LOCALE_STATEMENT).bind(input.locale, input.accountId).run();
   }
 
   async listByState(input: { state: AccountState }): Promise<AccountRecord[]> {

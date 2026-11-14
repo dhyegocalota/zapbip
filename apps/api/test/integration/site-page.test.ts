@@ -1,5 +1,5 @@
 import { AGENT_INSTALLS } from '@zapbip/agents/install';
-import { OWNER_LOCALE_OF_WEB_LOCALE, WebLocale, TURNSTILE_ACTION_WAITLIST_JOIN } from '@zapbip/types';
+import { OwnerLocale, TURNSTILE_ACTION_WAITLIST_JOIN } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import type { InstallClient } from '@zapbip/agents/install';
 import { initialsOf, leadingAgentNames, SiteStartTab } from '../../src/site/site-agents';
@@ -40,14 +40,14 @@ async function pageOf(input: { path?: string; headers?: Record<string, string> }
 describe('GET /', () => {
   it('renders the first fold in en_US', async () => {
     const html = await pageOf({ headers: ENGLISH_HEADERS });
-    const copy = (key: SiteCopyKey): string => copyHtml({ key, locale: WebLocale.EnglishUs });
+    const copy = (key: SiteCopyKey): string => copyHtml({ key, locale: OwnerLocale.EnglishUs });
     expect(html).toContain('<html lang="en"');
     expect(html).toContain(copy(SiteCopyKey.HeroTitleLead));
     expect(html).toContain(copy(SiteCopyKey.HeroTitleAccent));
     expect(html).toContain(
       copyHtml({
         key: SiteCopyKey.HeroLead,
-        locale: WebLocale.EnglishUs,
+        locale: OwnerLocale.EnglishUs,
         values: { agents: leadingAgentNames() },
       }),
     );
@@ -57,7 +57,7 @@ describe('GET /', () => {
 
   it('renders the first fold in pt_BR', async () => {
     const html = await pageOf({ headers: PORTUGUESE_HEADERS });
-    const copy = (key: SiteCopyKey): string => copyHtml({ key, locale: WebLocale.PortugueseBrazil });
+    const copy = (key: SiteCopyKey): string => copyHtml({ key, locale: OwnerLocale.PortugueseBrazil });
     expect(html).toContain('<html lang="pt-BR"');
     expect(html).toContain(copy(SiteCopyKey.HeroTitleLead));
     expect(html).toContain(copy(SiteCopyKey.JoinSubmit));
@@ -66,24 +66,24 @@ describe('GET /', () => {
   it('shows English at the root with no cookie and no Accept-Language', async () => {
     const html = await pageOf({});
     expect(html).toContain('<html lang="en"');
-    expect(html).toContain(copyHtml({ key: SiteCopyKey.HeroTitleLead, locale: WebLocale.EnglishUs }));
+    expect(html).toContain(copyHtml({ key: SiteCopyKey.HeroTitleLead, locale: OwnerLocale.EnglishUs }));
   });
 
   it('the locale cookie wins over Accept-Language', async () => {
-    const html = await pageOf({ headers: { ...PORTUGUESE_HEADERS, Cookie: `${LOCALE_COOKIE}=${WebLocale.EnglishUs}` } });
+    const html = await pageOf({ headers: { ...PORTUGUESE_HEADERS, Cookie: `${LOCALE_COOKIE}=${OwnerLocale.EnglishUs}` } });
     expect(html).toContain('<html lang="en"');
   });
 
   it('carries a well-formed referral code into the form and shows the invited eyebrow', async () => {
     const html = await pageOf({ path: `/?ref=${REFERRAL_CODE}`, headers: ENGLISH_HEADERS });
     expect(html).toContain(`name="referralCode" value="${REFERRAL_CODE}"`);
-    expect(html).toContain(copyHtml({ key: SiteCopyKey.HeroInvited, locale: WebLocale.EnglishUs }));
+    expect(html).toContain(copyHtml({ key: SiteCopyKey.HeroInvited, locale: OwnerLocale.EnglishUs }));
   });
 
   it('drops a malformed referral code and shows the plain eyebrow', async () => {
     const html = await pageOf({ path: '/?ref=../../x', headers: ENGLISH_HEADERS });
     expect(html).not.toContain('name="referralCode"');
-    expect(html).toContain(copyHtml({ key: SiteCopyKey.HeroEyebrow, locale: WebLocale.EnglishUs }));
+    expect(html).toContain(copyHtml({ key: SiteCopyKey.HeroEyebrow, locale: OwnerLocale.EnglishUs }));
   });
 
   it('renders the Turnstile widget with the site key and the join action', async () => {
@@ -102,7 +102,7 @@ describe('GET /', () => {
     });
     const html = await response.text();
     expect(response.status).toBe(200);
-    expect(html).toContain(copyHtml({ key: SiteCopyKey.JoinPausedTitle, locale: WebLocale.EnglishUs }));
+    expect(html).toContain(copyHtml({ key: SiteCopyKey.JoinPausedTitle, locale: OwnerLocale.EnglishUs }));
     expect(html).not.toContain('id="join-email"');
     expect(html).not.toContain('cf-turnstile');
     expect(html).not.toContain('challenges.cloudflare.com');
@@ -148,7 +148,7 @@ describe('GET /', () => {
     expect(html).toContain('<meta name="twitter:card" content="summary_large_image"');
     expect(html).toContain('hreflang="pt-BR"');
     expect(html).toContain('hreflang="x-default"');
-    expect(html).toContain(`<title>${copyHtml({ key: SiteCopyKey.MetaTitle, locale: WebLocale.EnglishUs })} · zapbip</title>`);
+    expect(html).toContain(`<title>${copyHtml({ key: SiteCopyKey.MetaTitle, locale: OwnerLocale.EnglishUs })} · zapbip</title>`);
     expect(html).toContain('rel="icon"');
   });
 
@@ -192,7 +192,7 @@ describe('the Portuguese page', () => {
 
   it('writes the title, description, alt text and privacy note in Portuguese', async () => {
     const html = await pageOf({ headers: PORTUGUESE_HEADERS });
-    const copy = (key: SiteCopyKey): string => copyHtml({ key, locale: WebLocale.PortugueseBrazil });
+    const copy = (key: SiteCopyKey): string => copyHtml({ key, locale: OwnerLocale.PortugueseBrazil });
     expect(html).toContain(`<title>${copy(SiteCopyKey.MetaTitle)} · zapbip</title>`);
     expect(html).toContain(copy(SiteCopyKey.MetaOgImageAlt));
     expect(html).toContain(copy(SiteCopyKey.PrivacyNoteShort));
@@ -200,7 +200,7 @@ describe('the Portuguese page', () => {
 
   it('shows every error state in Portuguese', async () => {
     const response = await siteFetch({ path: '/nope', headers: PORTUGUESE_HEADERS });
-    expect(await response.text()).toContain(copyHtml({ key: SiteCopyKey.NotFoundTitle, locale: WebLocale.PortugueseBrazil }));
+    expect(await response.text()).toContain(copyHtml({ key: SiteCopyKey.NotFoundTitle, locale: OwnerLocale.PortugueseBrazil }));
   });
 });
 
@@ -237,8 +237,8 @@ describe('the quick start', () => {
   }
 
   it.each([
-    ['en_US', WebLocale.EnglishUs, ENGLISH_HEADERS],
-    ['pt_BR', WebLocale.PortugueseBrazil, PORTUGUESE_HEADERS],
+    ['en_US', OwnerLocale.EnglishUs, ENGLISH_HEADERS],
+    ['pt_BR', OwnerLocale.PortugueseBrazil, PORTUGUESE_HEADERS],
   ])(
     'has one tab per installable agent in registry order, then any app, linked with the language in %s',
     async (_name, locale, headers) => {
@@ -275,14 +275,14 @@ describe('the quick start', () => {
   });
 
   it.each([
-    ['en_US', WebLocale.EnglishUs, ENGLISH_HEADERS],
-    ['pt_BR', WebLocale.PortugueseBrazil, PORTUGUESE_HEADERS],
+    ['en_US', OwnerLocale.EnglishUs, ENGLISH_HEADERS],
+    ['pt_BR', OwnerLocale.PortugueseBrazil, PORTUGUESE_HEADERS],
   ])('shows the hint and the code the registry gives, with the example link, in %s', async (_name, locale, headers) => {
     const html = await pageOf({ headers });
     const placeholder = SITE_EXAMPLE_CONNECTION_LINK;
     const panels = panelsOf({ html });
     agents.forEach((agent) => {
-      const quickStart = agent.install.quickStart({ locale: OWNER_LOCALE_OF_WEB_LOCALE[locale], connectionLink: placeholder });
+      const quickStart = agent.install.quickStart({ locale: locale, connectionLink: placeholder });
       const text = panels.find((panel) => panel.id === agent.id)!.html.replace(TAG_PATTERN, '');
       expect(text).toContain(escapedHtml({ text: quickStart.hint }));
       expect(text).toContain(escapedHtml({ text: quickStart.code }));
@@ -319,7 +319,7 @@ describe('the quick start', () => {
 
   it('gives each panel a hidden copy button, one call to action and one short line beside it, and no steps row', async () => {
     const html = await pageOf({ headers: ENGLISH_HEADERS });
-    const locale = WebLocale.EnglishUs;
+    const locale = OwnerLocale.EnglishUs;
     const panels = panelsOf({ html });
     panels.forEach((panel) => {
       expect(panel.html).toContain(`<p class="start-note">${copyHtml({ key: SiteCopyKey.StartNote, locale })}</p>`);
@@ -366,7 +366,7 @@ describe('the agent hint', () => {
   it('shows the picked agent from the query', async () => {
     const hint = await hintOf({ path: `/?agent=${FIRST_AGENT.id}` });
     expect(hint.text).toBe(
-      copyHtml({ key: SiteCopyKey.AgentCardPicked, locale: WebLocale.EnglishUs, values: { agent: FIRST_AGENT.name } }),
+      copyHtml({ key: SiteCopyKey.AgentCardPicked, locale: OwnerLocale.EnglishUs, values: { agent: FIRST_AGENT.name } }),
     );
     expect(hint.attributes).not.toContain('hidden');
   });
@@ -387,7 +387,7 @@ describe('the agent hint', () => {
   it('takes the first value of a repeated parameter and never echoes markup', async () => {
     const html = await pageOf({ path: `/?agent=${SECOND_AGENT.id}&agent=<b>`, headers: ENGLISH_HEADERS });
     expect(html).toContain(
-      copyHtml({ key: SiteCopyKey.AgentCardPicked, locale: WebLocale.EnglishUs, values: { agent: SECOND_AGENT.name } }),
+      copyHtml({ key: SiteCopyKey.AgentCardPicked, locale: OwnerLocale.EnglishUs, values: { agent: SECOND_AGENT.name } }),
     );
     expect(html).not.toContain('<b>');
   });
@@ -396,14 +396,14 @@ describe('the agent hint', () => {
     const html = await pageOf({ path: `/?agent=${SECOND_AGENT.id}&ref=${REFERRAL_CODE}`, headers: ENGLISH_HEADERS });
     expect(html).toContain(`name="referralCode" value="${REFERRAL_CODE}"`);
     expect(html).toContain(
-      copyHtml({ key: SiteCopyKey.AgentCardPicked, locale: WebLocale.EnglishUs, values: { agent: SECOND_AGENT.name } }),
+      copyHtml({ key: SiteCopyKey.AgentCardPicked, locale: OwnerLocale.EnglishUs, values: { agent: SECOND_AGENT.name } }),
     );
   });
 
   it('shows the hint in Portuguese', async () => {
     const html = await pageOf({ path: `/?agent=${SECOND_AGENT.id}`, headers: PORTUGUESE_HEADERS });
     expect(html).toContain(
-      copyHtml({ key: SiteCopyKey.AgentCardPicked, locale: WebLocale.PortugueseBrazil, values: { agent: SECOND_AGENT.name } }),
+      copyHtml({ key: SiteCopyKey.AgentCardPicked, locale: OwnerLocale.PortugueseBrazil, values: { agent: SECOND_AGENT.name } }),
     );
   });
 });
@@ -419,8 +419,8 @@ describe('the differentiators', () => {
   ];
 
   it.each([
-    ['en_US', WebLocale.EnglishUs, ENGLISH_HEADERS],
-    ['pt_BR', WebLocale.PortugueseBrazil, PORTUGUESE_HEADERS],
+    ['en_US', OwnerLocale.EnglishUs, ENGLISH_HEADERS],
+    ['pt_BR', OwnerLocale.PortugueseBrazil, PORTUGUESE_HEADERS],
   ])('tells six stories in order, each with its own vignette, in %s', async (_name, locale, headers) => {
     const html = await pageOf({ headers });
     const section = html.slice(html.indexOf('id="why"'), html.indexOf('id="how"'));
@@ -435,7 +435,7 @@ describe('the differentiators', () => {
   it('names the leading agents of the registry in the every-agent story', async () => {
     const html = await pageOf({ headers: ENGLISH_HEADERS });
     expect(html).toContain(
-      copyHtml({ key: SiteCopyKey.WhyEveryAgentBody, locale: WebLocale.EnglishUs, values: { agents: leadingAgentNames() } }),
+      copyHtml({ key: SiteCopyKey.WhyEveryAgentBody, locale: OwnerLocale.EnglishUs, values: { agents: leadingAgentNames() } }),
     );
   });
 
@@ -457,8 +457,8 @@ describe('the pricing', () => {
   }
 
   it.each([
-    ['en_US', WebLocale.EnglishUs, ENGLISH_HEADERS],
-    ['pt_BR', WebLocale.PortugueseBrazil, PORTUGUESE_HEADERS],
+    ['en_US', OwnerLocale.EnglishUs, ENGLISH_HEADERS],
+    ['pt_BR', OwnerLocale.PortugueseBrazil, PORTUGUESE_HEADERS],
   ])('highlights a free plan with its price and what it includes in %s', async (_name, locale, headers) => {
     const section = pricingOf({ html: await pageOf({ headers }) });
     const values = pricingValuesOf({ locale });
@@ -489,8 +489,8 @@ describe('the pricing', () => {
   });
 
   it.each([
-    ['en_US', WebLocale.EnglishUs, ENGLISH_HEADERS],
-    ['pt_BR', WebLocale.PortugueseBrazil, PORTUGUESE_HEADERS],
+    ['en_US', OwnerLocale.EnglishUs, ENGLISH_HEADERS],
+    ['pt_BR', OwnerLocale.PortugueseBrazil, PORTUGUESE_HEADERS],
   ])(
     'shows the Pro plan with its monthly price, the included messages and the price of each extra block in %s',
     async (_name, locale, headers) => {
@@ -523,8 +523,8 @@ describe('the pricing', () => {
 
 describe('the free offer across the page', () => {
   it.each([
-    ['en_US', WebLocale.EnglishUs, ENGLISH_HEADERS, 'Request access'],
-    ['pt_BR', WebLocale.PortugueseBrazil, PORTUGUESE_HEADERS, 'Pedir acesso'],
+    ['en_US', OwnerLocale.EnglishUs, ENGLISH_HEADERS, 'Request access'],
+    ['pt_BR', OwnerLocale.PortugueseBrazil, PORTUGUESE_HEADERS, 'Pedir acesso'],
   ])('labels the header, the hero and the final call in %s', async (_name, _locale, headers, label) => {
     const html = await pageOf({ headers });
     expect(html).toContain(`href="#join">${label}</a>`);
@@ -541,8 +541,8 @@ describe('the free offer across the page', () => {
     expect(description.toLowerCase()).toContain(word);
   });
 
-  it.each([WebLocale.EnglishUs, WebLocale.PortugueseBrazil])('answers "is it free" in the FAQ in %s', async (locale) => {
-    const html = await pageOf({ headers: locale === WebLocale.EnglishUs ? ENGLISH_HEADERS : PORTUGUESE_HEADERS });
+  it.each([OwnerLocale.EnglishUs, OwnerLocale.PortugueseBrazil])('answers "is it free" in the FAQ in %s', async (locale) => {
+    const html = await pageOf({ headers: locale === OwnerLocale.EnglishUs ? ENGLISH_HEADERS : PORTUGUESE_HEADERS });
     expect(html).toContain(`<summary>${copyHtml({ key: SiteCopyKey.FaqFreeQuestion, locale })}</summary>`);
     expect(html).toContain(copyHtml({ key: SiteCopyKey.FaqFreeAnswer, locale, values: pricingValuesOf({ locale }) }));
     expect(html).toContain(copyHtml({ key: SiteCopyKey.FaqPriceAnswer, locale, values: pricingValuesOf({ locale }) }));
@@ -556,10 +556,10 @@ describe('the free offer across the page', () => {
     expect(wordings.filter((wording) => wording.test(html))).toEqual([]);
   });
 
-  it.each([WebLocale.EnglishUs, WebLocale.PortugueseBrazil])(
+  it.each([OwnerLocale.EnglishUs, OwnerLocale.PortugueseBrazil])(
     'says in the FAQ that nobody brings their own number yet in %s',
     async (locale) => {
-      const html = await pageOf({ headers: locale === WebLocale.EnglishUs ? ENGLISH_HEADERS : PORTUGUESE_HEADERS });
+      const html = await pageOf({ headers: locale === OwnerLocale.EnglishUs ? ENGLISH_HEADERS : PORTUGUESE_HEADERS });
       expect(html).toContain(`<summary>${copyHtml({ key: SiteCopyKey.FaqOwnNumberQuestion, locale })}</summary>`);
       expect(html).toContain(copyHtml({ key: SiteCopyKey.FaqOwnNumberAnswer, locale }));
       expect(html).not.toMatch(/\{(free|price|included|overage|block)\}/);
@@ -599,17 +599,17 @@ describe('preferences and redirects', () => {
     const response = await siteFetch({
       path: '/locale',
       method: 'POST',
-      form: { locale: WebLocale.EnglishUs, returnTo: `/?ref=${REFERRAL_CODE}` },
+      form: { locale: OwnerLocale.EnglishUs, returnTo: `/?ref=${REFERRAL_CODE}` },
     });
     expect(response.status).toBe(SEE_OTHER);
     expect(response.headers.get('Location')).toBe(`/?ref=${REFERRAL_CODE}`);
-    expect(response.headers.get('Set-Cookie')).toContain(`${LOCALE_COOKIE}=${WebLocale.EnglishUs}`);
+    expect(response.headers.get('Set-Cookie')).toContain(`${LOCALE_COOKIE}=${OwnerLocale.EnglishUs}`);
   });
 
   it.each(['//evil.example', 'https://evil.example/', '/numbers', '/?ref=../../x'])(
     'POST /locale refuses the return target %s',
     async (returnTo) => {
-      const response = await siteFetch({ path: '/locale', method: 'POST', form: { locale: WebLocale.EnglishUs, returnTo } });
+      const response = await siteFetch({ path: '/locale', method: 'POST', form: { locale: OwnerLocale.EnglishUs, returnTo } });
       expect(response.headers.get('Location')).toBe('/');
     },
   );
@@ -636,7 +636,7 @@ describe('preferences and redirects', () => {
     const response = await siteFetch({ path: '/nope', headers: ENGLISH_HEADERS });
     const html = await response.text();
     expect(response.status).toBe(404);
-    expect(html).toContain(copyHtml({ key: SiteCopyKey.NotFoundTitle, locale: WebLocale.EnglishUs }));
+    expect(html).toContain(copyHtml({ key: SiteCopyKey.NotFoundTitle, locale: OwnerLocale.EnglishUs }));
     expect(html).toContain('<meta name="robots" content="noindex"');
   });
 });
@@ -656,7 +656,7 @@ describe('the paused waitlist', () => {
     expect(html).toContain('id="start"');
     expect(html).toContain('role="tabpanel"');
     expect(html).toContain('id="pricing"');
-    expect(html).toContain(copyHtml({ key: SiteCopyKey.PricingFreeName, locale: WebLocale.EnglishUs }));
+    expect(html).toContain(copyHtml({ key: SiteCopyKey.PricingFreeName, locale: OwnerLocale.EnglishUs }));
     expect(html).not.toContain('id="join-email"');
   });
 

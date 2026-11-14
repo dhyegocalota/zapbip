@@ -1,7 +1,7 @@
 import {
   COMPANY,
   HttpStatus,
-  type WebLocale,
+  type OwnerLocale,
   PRICING_CURRENCY_BY_LOCALE,
   PRICING_FREE_CENTS,
   PRICING_FREE_MESSAGES,
@@ -23,7 +23,7 @@ import { SitePath } from './site-paths';
 const LANGUAGE_PARAMETER = 'language';
 const CATALOG_HEADERS = { 'Cache-Control': PAGE_CACHE_CONTROL, Vary: PAGE_VARY };
 
-function pricingOf(input: { locale: WebLocale; origin: string }): object {
+function pricingOf(input: { locale: OwnerLocale; origin: string }): object {
   const { locale, origin } = input;
   const translate = copyOf({ locale });
   const values = pricingValuesOf({ locale });

@@ -1,5 +1,5 @@
 import {
-  WebLocale,
+  OwnerLocale,
   PRICING_CURRENCY_BY_LOCALE,
   PRICING_FREE_MESSAGES,
   PRICING_OVERAGE_BLOCK_MESSAGES,
@@ -12,7 +12,7 @@ import { languageOf } from '../web-shell/locale-profiles';
 
 const CENTS_PER_UNIT = 100;
 
-export function formatPrice(input: { cents: number; currency: PricingCurrency; locale: WebLocale }): string {
+export function formatPrice(input: { cents: number; currency: PricingCurrency; locale: OwnerLocale }): string {
   const amount = input.cents / CENTS_PER_UNIT;
   const isWholeAmount = Number.isInteger(amount);
   return new Intl.NumberFormat(languageOf({ locale: input.locale }), {
@@ -24,13 +24,13 @@ export function formatPrice(input: { cents: number; currency: PricingCurrency; l
   }).format(amount);
 }
 
-export function formatCount(input: { count: number; locale: WebLocale }): string {
+export function formatCount(input: { count: number; locale: OwnerLocale }): string {
   return new Intl.NumberFormat(languageOf({ locale: input.locale })).format(input.count);
 }
 
 export type PricingValues = { free: string; included: string; block: string; price: string; overage: string };
 
-export function pricingValuesOf(input: { locale: WebLocale }): PricingValues {
+export function pricingValuesOf(input: { locale: OwnerLocale }): PricingValues {
   const { locale } = input;
   const currency = PRICING_CURRENCY_BY_LOCALE[locale];
   return {

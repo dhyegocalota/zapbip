@@ -1,4 +1,4 @@
-import { COMPANY, WebLocale } from '@zapbip/types';
+import { COMPANY, OwnerLocale } from '@zapbip/types';
 import type { Child } from 'hono/jsx';
 import { FAVICON_CONTENT_TYPE } from '../../backoffice/assets/favicon';
 import { type PageModel, JoinState } from '../page-model';
@@ -43,7 +43,7 @@ const LEGAL_LINKS: { document: LegalDocument; label: ShellCopyKey }[] = [
   { document: LegalDocument.Privacy, label: ShellCopyKey.FooterPrivacy },
 ];
 
-export function turnstileLanguageOf(input: { locale: WebLocale }): string {
+export function turnstileLanguageOf(input: { locale: OwnerLocale }): string {
   return LOCALE_PROFILES[input.locale].turnstileLanguage;
 }
 
@@ -88,7 +88,7 @@ function SiteHeader(props: { model: PageModel }) {
   );
 }
 
-function FooterColumn(props: { label: SiteCopyKey; locale: WebLocale; links: { href: string; text: string; rel?: string }[] }) {
+function FooterColumn(props: { label: SiteCopyKey; locale: OwnerLocale; links: { href: string; text: string; rel?: string }[] }) {
   const translate = copyOf({ locale: props.locale });
   return (
     <nav class="footer-links" aria-label={translate(props.label)}>
@@ -172,10 +172,10 @@ export function SiteLayout(props: { model: PageModel; title: string; isIndexable
         <meta name="description" content={description} />
         {props.isIndexable ? null : <meta name="robots" content="noindex" />}
         <link rel="canonical" href={canonical} />
-        {Object.values(WebLocale).map((locale) => (
+        {Object.values(OwnerLocale).map((locale) => (
           <link rel="alternate" hreflang={languageOf({ locale })} href={pageUrlOf({ model, locale })} />
         ))}
-        <link rel="alternate" hreflang="x-default" href={pageUrlOf({ model, locale: WebLocale.EnglishUs })} />
+        <link rel="alternate" hreflang="x-default" href={pageUrlOf({ model, locale: OwnerLocale.EnglishUs })} />
         {props.isIndexable ? <link rel="alternate" type="text/markdown" href={markdownUrlOf({ model })} /> : null}
         <meta name="theme-color" content={THEME_COLOR_LIGHT} media="(prefers-color-scheme: light)" />
         <meta name="theme-color" content={THEME_COLOR_DARK} media="(prefers-color-scheme: dark)" />
@@ -194,7 +194,7 @@ export function SiteLayout(props: { model: PageModel; title: string; isIndexable
         <meta property="og:image:type" content="image/png" />
         <meta property="og:image:alt" content={translate(SiteCopyKey.MetaOgImageAlt)} />
         <meta property="og:locale" content={LOCALE_PROFILES[model.locale].openGraphLocale} />
-        {Object.values(WebLocale)
+        {Object.values(OwnerLocale)
           .filter((locale) => locale !== model.locale)
           .map((locale) => (
             <meta property="og:locale:alternate" content={LOCALE_PROFILES[locale].openGraphLocale} />

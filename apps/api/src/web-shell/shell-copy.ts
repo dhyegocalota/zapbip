@@ -1,4 +1,4 @@
-import { WebLocale } from '@zapbip/types';
+import { OwnerLocale } from '@zapbip/types';
 
 export enum ShellCopyKey {
   LocaleLabel = 'locale_label',
@@ -14,8 +14,8 @@ export enum ShellCopyKey {
   FooterSupport = 'footer_support',
 }
 
-const SHELL_COPY: Record<WebLocale, Record<ShellCopyKey, string>> = {
-  [WebLocale.EnglishUs]: {
+const SHELL_COPY: Record<OwnerLocale, Record<ShellCopyKey, string>> = {
+  [OwnerLocale.EnglishUs]: {
     [ShellCopyKey.LocaleLabel]: 'Language',
     [ShellCopyKey.ThemeLabel]: 'Theme',
     [ShellCopyKey.ThemeLight]: 'Light',
@@ -28,7 +28,7 @@ const SHELL_COPY: Record<WebLocale, Record<ShellCopyKey, string>> = {
     [ShellCopyKey.FooterMadeBy]: 'Made by Logic Bit',
     [ShellCopyKey.FooterSupport]: 'Support',
   },
-  [WebLocale.PortugueseBrazil]: {
+  [OwnerLocale.PortugueseBrazil]: {
     [ShellCopyKey.LocaleLabel]: 'Idioma',
     [ShellCopyKey.ThemeLabel]: 'Tema',
     [ShellCopyKey.ThemeLight]: 'Claro',
@@ -41,7 +41,7 @@ const SHELL_COPY: Record<WebLocale, Record<ShellCopyKey, string>> = {
     [ShellCopyKey.FooterMadeBy]: 'Feito pela Logic Bit',
     [ShellCopyKey.FooterSupport]: 'Suporte',
   },
-  [WebLocale.Spanish]: {
+  [OwnerLocale.Spanish]: {
     [ShellCopyKey.LocaleLabel]: 'Idioma',
     [ShellCopyKey.ThemeLabel]: 'Tema',
     [ShellCopyKey.ThemeLight]: 'Claro',
@@ -54,7 +54,7 @@ const SHELL_COPY: Record<WebLocale, Record<ShellCopyKey, string>> = {
     [ShellCopyKey.FooterMadeBy]: 'Hecho por Logic Bit',
     [ShellCopyKey.FooterSupport]: 'Soporte',
   },
-  [WebLocale.German]: {
+  [OwnerLocale.German]: {
     [ShellCopyKey.LocaleLabel]: 'Sprache',
     [ShellCopyKey.ThemeLabel]: 'Design',
     [ShellCopyKey.ThemeLight]: 'Hell',
@@ -67,7 +67,7 @@ const SHELL_COPY: Record<WebLocale, Record<ShellCopyKey, string>> = {
     [ShellCopyKey.FooterMadeBy]: 'Entwickelt von Logic Bit',
     [ShellCopyKey.FooterSupport]: 'Support',
   },
-  [WebLocale.French]: {
+  [OwnerLocale.French]: {
     [ShellCopyKey.LocaleLabel]: 'Langue',
     [ShellCopyKey.ThemeLabel]: 'Thème',
     [ShellCopyKey.ThemeLight]: 'Clair',
@@ -80,7 +80,7 @@ const SHELL_COPY: Record<WebLocale, Record<ShellCopyKey, string>> = {
     [ShellCopyKey.FooterMadeBy]: 'Créé par Logic Bit',
     [ShellCopyKey.FooterSupport]: 'Assistance',
   },
-  [WebLocale.Japanese]: {
+  [OwnerLocale.Japanese]: {
     [ShellCopyKey.LocaleLabel]: '言語',
     [ShellCopyKey.ThemeLabel]: 'テーマ',
     [ShellCopyKey.ThemeLight]: 'ライト',
@@ -93,7 +93,7 @@ const SHELL_COPY: Record<WebLocale, Record<ShellCopyKey, string>> = {
     [ShellCopyKey.FooterMadeBy]: '開発元：Logic Bit',
     [ShellCopyKey.FooterSupport]: 'サポート',
   },
-  [WebLocale.Korean]: {
+  [OwnerLocale.Korean]: {
     [ShellCopyKey.LocaleLabel]: '언어',
     [ShellCopyKey.ThemeLabel]: '테마',
     [ShellCopyKey.ThemeLight]: '라이트',
@@ -106,7 +106,7 @@ const SHELL_COPY: Record<WebLocale, Record<ShellCopyKey, string>> = {
     [ShellCopyKey.FooterMadeBy]: '제작: Logic Bit',
     [ShellCopyKey.FooterSupport]: '지원',
   },
-  [WebLocale.ChineseSimplified]: {
+  [OwnerLocale.ChineseSimplified]: {
     [ShellCopyKey.LocaleLabel]: '语言',
     [ShellCopyKey.ThemeLabel]: '主题',
     [ShellCopyKey.ThemeLight]: '浅色',
@@ -121,6 +121,6 @@ const SHELL_COPY: Record<WebLocale, Record<ShellCopyKey, string>> = {
   },
 };
 
-export function renderShellCopy(input: { key: ShellCopyKey; locale: WebLocale }): string {
+export function renderShellCopy(input: { key: ShellCopyKey; locale: OwnerLocale }): string {
   return SHELL_COPY[input.locale][input.key];
 }

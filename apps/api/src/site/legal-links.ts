@@ -1,4 +1,4 @@
-import { WEB_LOCALE_PATH_PREFIXES, WebLocale } from '@zapbip/types';
+import { CLIENT_APP_LOCALE_PATH_PREFIXES, OwnerLocale } from '@zapbip/types';
 import { SitePath } from './site-paths';
 
 export enum LegalDocument {
@@ -6,7 +6,7 @@ export enum LegalDocument {
   Privacy = 'privacy',
 }
 
-export type LegalPage = { document: LegalDocument; locale: WebLocale };
+export type LegalPage = { document: LegalDocument; locale: OwnerLocale };
 
 const PORTUGUESE_LEGAL_PATHS: Record<LegalDocument, SitePath> = {
   [LegalDocument.Terms]: SitePath.PortugueseTerms,
@@ -18,12 +18,12 @@ const ENGLISH_LEGAL_PATHS: Record<LegalDocument, SitePath> = {
 };
 
 export const LEGAL_PAGES: LegalPage[] = Object.values(LegalDocument).flatMap((document) =>
-  Object.values(WebLocale).map((locale) => ({ document, locale })),
+  Object.values(OwnerLocale).map((locale) => ({ document, locale })),
 );
 
 export function legalPathOf(input: LegalPage): string {
-  if (input.locale === WebLocale.PortugueseBrazil) return PORTUGUESE_LEGAL_PATHS[input.document];
-  return `${WEB_LOCALE_PATH_PREFIXES[input.locale]}${ENGLISH_LEGAL_PATHS[input.document]}`;
+  if (input.locale === OwnerLocale.PortugueseBrazil) return PORTUGUESE_LEGAL_PATHS[input.document];
+  return `${CLIENT_APP_LOCALE_PATH_PREFIXES[input.locale]}${ENGLISH_LEGAL_PATHS[input.document]}`;
 }
 
 export function legalPageOf(input: { pathname: string }): LegalPage | null {
@@ -31,6 +31,6 @@ export function legalPageOf(input: { pathname: string }): LegalPage | null {
   return page === undefined ? null : page;
 }
 
-export function legalUrlOf(input: { origin: string; document: LegalDocument; locale: WebLocale }): string {
+export function legalUrlOf(input: { origin: string; document: LegalDocument; locale: OwnerLocale }): string {
   return `${input.origin}${legalPathOf({ document: input.document, locale: input.locale })}`;
 }

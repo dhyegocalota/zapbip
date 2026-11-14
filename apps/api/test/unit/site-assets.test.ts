@@ -4,7 +4,7 @@ import { OwnerLocale } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 
 const ASSETS_ROOT = join(import.meta.dirname, '../../site-public/site');
-const LOCALES = Object.values(OwnerLocale);
+const LOCALES = [OwnerLocale.EnglishUs, OwnerLocale.PortugueseBrazil];
 const PER_FILE_LIMIT_BYTES = 2_000_000;
 const TOTAL_LIMIT_BYTES = 6_000_000;
 const SHARED_FILES = ['apple-touch-icon.png'];

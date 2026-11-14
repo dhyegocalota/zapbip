@@ -1,4 +1,4 @@
-import { WebLocale } from '@zapbip/types';
+import { OwnerLocale } from '@zapbip/types';
 import { SiteCopyKey } from './site-copy-keys';
 import { SPANISH_SITE_COPY } from './site-copy-spanish';
 import { GERMAN_SITE_COPY } from './site-copy-german';
@@ -9,8 +9,8 @@ import { CHINESE_SITE_COPY } from './site-copy-chinese';
 
 export { SiteCopyKey };
 
-export const SITE_COPY: Record<WebLocale, Record<SiteCopyKey, string>> = {
-  [WebLocale.EnglishUs]: {
+export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
+  [OwnerLocale.EnglishUs]: {
     [SiteCopyKey.BrandName]: 'zapbip',
     [SiteCopyKey.BrandHomeLabel]: 'zapbip home',
     [SiteCopyKey.SkipToForm]: 'Skip to the waitlist form',
@@ -226,7 +226,7 @@ export const SITE_COPY: Record<WebLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.MetaOgImageAlt]: 'An AI agent asks "Deploy v2.4 to production?" on WhatsApp, with Ship it and Wait buttons.',
     [SiteCopyKey.NotFoundMetaTitle]: 'Page not found',
   },
-  [WebLocale.PortugueseBrazil]: {
+  [OwnerLocale.PortugueseBrazil]: {
     [SiteCopyKey.BrandName]: 'zapbip',
     [SiteCopyKey.BrandHomeLabel]: 'Início do zapbip',
     [SiteCopyKey.SkipToForm]: 'Ir para o formulário da lista',
@@ -445,15 +445,15 @@ export const SITE_COPY: Record<WebLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.MetaOgImageAlt]: 'Um agente de IA pergunta "Publicar a v2.4 em produção?" no WhatsApp, com os botões Publicar e Esperar.',
     [SiteCopyKey.NotFoundMetaTitle]: 'Página não encontrada',
   },
-  [WebLocale.Spanish]: SPANISH_SITE_COPY,
-  [WebLocale.German]: GERMAN_SITE_COPY,
-  [WebLocale.French]: FRENCH_SITE_COPY,
-  [WebLocale.Japanese]: JAPANESE_SITE_COPY,
-  [WebLocale.Korean]: KOREAN_SITE_COPY,
-  [WebLocale.ChineseSimplified]: CHINESE_SITE_COPY,
+  [OwnerLocale.Spanish]: SPANISH_SITE_COPY,
+  [OwnerLocale.German]: GERMAN_SITE_COPY,
+  [OwnerLocale.French]: FRENCH_SITE_COPY,
+  [OwnerLocale.Japanese]: JAPANESE_SITE_COPY,
+  [OwnerLocale.Korean]: KOREAN_SITE_COPY,
+  [OwnerLocale.ChineseSimplified]: CHINESE_SITE_COPY,
 };
 
-export function renderSiteCopy(input: { key: SiteCopyKey; locale: WebLocale; values?: Record<string, string> }): string {
+export function renderSiteCopy(input: { key: SiteCopyKey; locale: OwnerLocale; values?: Record<string, string> }): string {
   const { key, locale, values = {} } = input;
   return Object.entries(values).reduce((text, [name, value]) => text.replaceAll(`{${name}}`, value), SITE_COPY[locale][key]);
 }

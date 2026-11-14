@@ -5,19 +5,56 @@ export const WHATSAPP_TEMPLATE_BODIES: Record<WhatsAppTemplateName, Record<Whats
   [WhatsAppTemplateName.AgentNotice]: {
     [WhatsAppLanguageCode.PortugueseBrazil]: 'Mensagem de {{1}}: {{2}} — toque em Abrir para ler.',
     [WhatsAppLanguageCode.EnglishUs]: 'Message from {{1}}: {{2}} — tap Open to read it.',
+    [WhatsAppLanguageCode.Spanish]: 'Mensaje de {{1}}: {{2}} — toca Abrir para leerlo.',
+    [WhatsAppLanguageCode.German]: 'Nachricht von {{1}}: {{2}} — tippe auf Öffnen, um sie zu lesen.',
+    [WhatsAppLanguageCode.French]: 'Message de {{1}} : {{2}} — touchez Ouvrir pour le lire.',
+    [WhatsAppLanguageCode.Japanese]: 'メッセージが届きました。{{1}}より: {{2}} — 「開く」をタップして読む。',
+    [WhatsAppLanguageCode.Korean]: '메시지가 도착했어요. {{1}}님의 메시지: {{2}} — 열기를 눌러 읽어 보세요.',
+    [WhatsAppLanguageCode.ChineseSimplified]: '来自 {{1}} 的消息：{{2}} — 点击“打开”查看。',
   },
   [WhatsAppTemplateName.AgentQuestion]: {
     [WhatsAppLanguageCode.PortugueseBrazil]: 'Pergunta de {{1}}: {{2}} — toque em Responder para ver as opções.',
     [WhatsAppLanguageCode.EnglishUs]: 'Question from {{1}}: {{2}} — tap Reply to see the options.',
+    [WhatsAppLanguageCode.Spanish]: 'Pregunta de {{1}}: {{2}} — toca Responder para ver las opciones.',
+    [WhatsAppLanguageCode.German]: 'Frage von {{1}}: {{2}} — tippe auf Antworten, um die Optionen zu sehen.',
+    [WhatsAppLanguageCode.French]: 'Question de {{1}} : {{2}} — touchez Répondre pour voir les options.',
+    [WhatsAppLanguageCode.Japanese]: '質問が届きました。{{1}}より: {{2}} — 「返信」をタップして選択肢を見る。',
+    [WhatsAppLanguageCode.Korean]: '질문이 도착했어요. {{1}}님의 질문: {{2}} — 답장을 눌러 선택지를 확인하세요.',
+    [WhatsAppLanguageCode.ChineseSimplified]: '来自 {{1}} 的提问：{{2}} — 点击“回复”查看选项。',
   },
 };
 export const WHATSAPP_TEMPLATE_QUICK_REPLIES: Record<WhatsAppTemplateName, Record<WhatsAppLanguageCode, string>> = {
-  [WhatsAppTemplateName.AgentNotice]: { [WhatsAppLanguageCode.PortugueseBrazil]: 'Abrir', [WhatsAppLanguageCode.EnglishUs]: 'Open' },
-  [WhatsAppTemplateName.AgentQuestion]: { [WhatsAppLanguageCode.PortugueseBrazil]: 'Responder', [WhatsAppLanguageCode.EnglishUs]: 'Reply' },
+  [WhatsAppTemplateName.AgentNotice]: {
+    [WhatsAppLanguageCode.PortugueseBrazil]: 'Abrir',
+    [WhatsAppLanguageCode.EnglishUs]: 'Open',
+    [WhatsAppLanguageCode.Spanish]: 'Abrir',
+    [WhatsAppLanguageCode.German]: 'Öffnen',
+    [WhatsAppLanguageCode.French]: 'Ouvrir',
+    [WhatsAppLanguageCode.Japanese]: '開く',
+    [WhatsAppLanguageCode.Korean]: '열기',
+    [WhatsAppLanguageCode.ChineseSimplified]: '打开',
+  },
+  [WhatsAppTemplateName.AgentQuestion]: {
+    [WhatsAppLanguageCode.PortugueseBrazil]: 'Responder',
+    [WhatsAppLanguageCode.EnglishUs]: 'Reply',
+    [WhatsAppLanguageCode.Spanish]: 'Responder',
+    [WhatsAppLanguageCode.German]: 'Antworten',
+    [WhatsAppLanguageCode.French]: 'Répondre',
+    [WhatsAppLanguageCode.Japanese]: '返信',
+    [WhatsAppLanguageCode.Korean]: '답장',
+    [WhatsAppLanguageCode.ChineseSimplified]: '回复',
+  },
 };
+// NB ADR 0051: a language sends the template of its row; the six new languages send the English one until Meta approves theirs and the row is flipped.
 export const OWNER_LOCALE_TO_LANGUAGE_CODE: Record<OwnerLocale, WhatsAppLanguageCode> = {
   [OwnerLocale.PortugueseBrazil]: WhatsAppLanguageCode.PortugueseBrazil,
   [OwnerLocale.EnglishUs]: WhatsAppLanguageCode.EnglishUs,
+  [OwnerLocale.Spanish]: WhatsAppLanguageCode.EnglishUs,
+  [OwnerLocale.German]: WhatsAppLanguageCode.EnglishUs,
+  [OwnerLocale.French]: WhatsAppLanguageCode.EnglishUs,
+  [OwnerLocale.Japanese]: WhatsAppLanguageCode.EnglishUs,
+  [OwnerLocale.Korean]: WhatsAppLanguageCode.EnglishUs,
+  [OwnerLocale.ChineseSimplified]: WhatsAppLanguageCode.EnglishUs,
 };
 export const TEMPLATE_NAME_BY_KIND: Record<TemplateKind, WhatsAppTemplateName> = {
   [TemplateKind.Notice]: WhatsAppTemplateName.AgentNotice,

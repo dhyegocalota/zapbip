@@ -44,7 +44,7 @@ ChatGPT 对单个答案大约等待 5 分钟，然后再次询问，所以整体
 
    <Chat
      messages={[
-       { you: true, text: 'new agent chatgpt', time: '16:00' },
+       { you: true, text: '新建智能体 chatgpt', time: '16:00' },
        {
          name: 'zapbip',
          text: 'Agent chatgpt created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate chatgpt".',
@@ -65,12 +65,12 @@ ChatGPT 对单个答案大约等待 5 分钟，然后再次询问，所以整体
 
 6. **告诉 zapbip 它在轮询。** 它调用 `set_wake({mode: "scheduled", interval_minutes: 60})`。
 
-7. **测试。** 在聊天里它调用 `send_message`，内容为 ✅ installed。
+7. **测试。** 在聊天里它调用 `send_message`，内容为 ✅ 安装完成。
 
 ## 检查是否正常工作
 
-连接完成后，ChatGPT 会向你的 WhatsApp 发送 `✅ installed`。
+连接完成后，ChatGPT 会向你的 WhatsApp 发送 `✅ 安装完成`。
 
-<Chat messages={[{ name: 'ChatGPT', text: '✅ installed', time: '16:05' }]} />
+<Chat messages={[{ name: 'ChatGPT', text: '✅ 安装完成', time: '16:05' }]} />
 
 如果什么也没收到，请参见[故障排查](/zh/help/troubleshooting)。

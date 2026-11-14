@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { GraphRequestError, type GraphClient } from '../adapters/whatsapp/graph-client';
 import { WhatsAppLanguageCode, WhatsAppTemplateName } from '../adapters/whatsapp/whatsapp-enums';
+import { OWNER_LOCALE_TO_LANGUAGE_CODE } from '../adapters/whatsapp/whatsapp-templates';
 import { GraphErrorKind, graphErrorKindOf } from './graph-error-kind';
 
 export enum VerificationOutcome {
@@ -34,7 +35,7 @@ const NON_DIGITS_PATTERN = /\D/g;
 const APPROVED_STATUS = 'APPROVED';
 const PENDING_STATUSES = ['PENDING', 'IN_APPEAL'];
 const CHECKED_TEMPLATE_NAMES = Object.values(WhatsAppTemplateName);
-const CHECKED_LANGUAGES = Object.values(WhatsAppLanguageCode);
+const CHECKED_LANGUAGES = [...new Set(Object.values(OWNER_LOCALE_TO_LANGUAGE_CODE))];
 
 const phoneResponseSchema = z.object({
   display_phone_number: z.string(),

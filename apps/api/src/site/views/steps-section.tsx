@@ -1,11 +1,11 @@
-import type { WebLocale } from '@zapbip/types';
+import type { OwnerLocale } from '@zapbip/types';
 import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
 
 const CLIPBOARD_GLYPH = '⧉';
 const CHECK_GLYPH = '✓';
 
-export function StepsSection(props: { locale: WebLocale }) {
+export function StepsSection(props: { locale: OwnerLocale }) {
   const translate = copyOf({ locale: props.locale });
   return (
     <section class="block" id="how" aria-labelledby="how-title">

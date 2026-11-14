@@ -1,4 +1,4 @@
-import { WebLocale } from '@zapbip/types';
+import { OwnerLocale } from '@zapbip/types';
 import { BackofficeCopyKey } from './backoffice-copy-keys';
 import { SPANISH_BACKOFFICE_COPY } from './backoffice-copy-spanish';
 import { GERMAN_BACKOFFICE_COPY } from './backoffice-copy-german';
@@ -9,8 +9,8 @@ import { CHINESE_BACKOFFICE_COPY } from './backoffice-copy-chinese';
 
 export { BackofficeCopyKey };
 
-export const BACKOFFICE_COPY: Record<WebLocale, Record<BackofficeCopyKey, string>> = {
-  [WebLocale.PortugueseBrazil]: {
+export const BACKOFFICE_COPY: Record<OwnerLocale, Record<BackofficeCopyKey, string>> = {
+  [OwnerLocale.PortugueseBrazil]: {
     [BackofficeCopyKey.SkipToContent]: 'Ir para o conteúdo',
     [BackofficeCopyKey.BrandName]: 'zapbip backoffice',
     [BackofficeCopyKey.EnvironmentStaging]: 'HOMOLOGAÇÃO',
@@ -406,7 +406,7 @@ export const BACKOFFICE_COPY: Record<WebLocale, Record<BackofficeCopyKey, string
     [BackofficeCopyKey.AuditActionWaitlistListed]: 'Lista de espera consultada por um agente',
     [BackofficeCopyKey.AuditColumnAgentKey]: 'Chave de agente',
   },
-  [WebLocale.EnglishUs]: {
+  [OwnerLocale.EnglishUs]: {
     [BackofficeCopyKey.SkipToContent]: 'Skip to content',
     [BackofficeCopyKey.BrandName]: 'zapbip backoffice',
     [BackofficeCopyKey.EnvironmentStaging]: 'STAGING',
@@ -801,15 +801,15 @@ export const BACKOFFICE_COPY: Record<WebLocale, Record<BackofficeCopyKey, string
     [BackofficeCopyKey.AuditActionWaitlistListed]: 'Waitlist listed by an agent',
     [BackofficeCopyKey.AuditColumnAgentKey]: 'Agent key',
   },
-  [WebLocale.Spanish]: SPANISH_BACKOFFICE_COPY,
-  [WebLocale.German]: GERMAN_BACKOFFICE_COPY,
-  [WebLocale.French]: FRENCH_BACKOFFICE_COPY,
-  [WebLocale.Japanese]: JAPANESE_BACKOFFICE_COPY,
-  [WebLocale.Korean]: KOREAN_BACKOFFICE_COPY,
-  [WebLocale.ChineseSimplified]: CHINESE_BACKOFFICE_COPY,
+  [OwnerLocale.Spanish]: SPANISH_BACKOFFICE_COPY,
+  [OwnerLocale.German]: GERMAN_BACKOFFICE_COPY,
+  [OwnerLocale.French]: FRENCH_BACKOFFICE_COPY,
+  [OwnerLocale.Japanese]: JAPANESE_BACKOFFICE_COPY,
+  [OwnerLocale.Korean]: KOREAN_BACKOFFICE_COPY,
+  [OwnerLocale.ChineseSimplified]: CHINESE_BACKOFFICE_COPY,
 };
 
-export function renderBackofficeCopy(input: { key: BackofficeCopyKey; locale: WebLocale; values?: Record<string, string> }): string {
+export function renderBackofficeCopy(input: { key: BackofficeCopyKey; locale: OwnerLocale; values?: Record<string, string> }): string {
   const { key, locale, values = {} } = input;
   return Object.entries(values).reduce((text, [name, value]) => text.replaceAll(`{${name}}`, value), BACKOFFICE_COPY[locale][key]);
 }

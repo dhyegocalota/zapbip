@@ -1,5 +1,5 @@
 import { reset } from 'cloudflare:test';
-import { WebLocale, WAITLIST_REFERRAL_CODE_LENGTH } from '@zapbip/types';
+import { OwnerLocale, WAITLIST_REFERRAL_CODE_LENGTH } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { DeployEnvironment } from '../../src/contract/deploy-environment';
 import { SiteCopyKey } from '../../src/site/site-copy';
@@ -21,8 +21,8 @@ import {
 import { rowOf, setCap, waitlistRows } from '../support/waitlist';
 import { testEnv } from '../support/workers-env';
 
-const ENGLISH = WebLocale.EnglishUs;
-const PORTUGUESE = WebLocale.PortugueseBrazil;
+const ENGLISH = OwnerLocale.EnglishUs;
+const PORTUGUESE = OwnerLocale.PortugueseBrazil;
 const MARIA = 'maria@example.com';
 const LINK_PATTERN = new RegExp(`${SITE_ORIGIN}/(?:pt-br)?\\?ref=([a-z0-9]{${WAITLIST_REFERRAL_CODE_LENGTH}})`);
 

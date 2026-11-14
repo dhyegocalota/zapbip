@@ -1,8 +1,8 @@
-import { AccountState, type WebLocale, type WaitlistSource } from '@zapbip/types';
+import { AccountState, type OwnerLocale, type WaitlistSource } from '@zapbip/types';
 import { filterBefore, filterSince, filterSource, type AccessFilter } from './access-filter';
 
-export type WaitingAccountRow = { accountId: string; waId: string; joinedAt: number; locale: WebLocale };
-export type InvitableEntryRow = { email: string; joinedAt: number; locale: WebLocale; source: WaitlistSource };
+export type WaitingAccountRow = { accountId: string; waId: string; joinedAt: number; locale: OwnerLocale };
+export type InvitableEntryRow = { email: string; joinedAt: number; locale: OwnerLocale; source: WaitlistSource };
 
 const ACCOUNT_SCOPE =
   'FROM accounts JOIN owner_identities ON owner_identities.account_id = accounts.id ' +

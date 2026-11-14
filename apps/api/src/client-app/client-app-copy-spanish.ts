@@ -18,7 +18,7 @@ export const SPANISH_CLIENT_APP_COPY: Record<ClientAppCopyKey, string> = {
   [ClientAppCopyKey.SignedOutTrustPassword]: 'Sin contraseña que recordar',
   [ClientAppCopyKey.SignedOutTrustLink]: 'Enlace de un solo uso, 10 minutos',
   [ClientAppCopyKey.PhoneLabel]:
-    'La conversación de inicio de sesión en WhatsApp: tú envías login y zapbip responde con un enlace de un solo uso.',
+    'La conversación de inicio de sesión en WhatsApp: tú envías acceder y zapbip responde con un enlace de un solo uso.',
   [ClientAppCopyKey.PhoneReply]: 'Aquí tienes tu enlace de acceso. Funciona una vez y caduca en 10 minutos.',
   [ClientAppCopyKey.UnavailableTitle]: 'El inicio de sesión no está disponible ahora mismo',
   [ClientAppCopyKey.UnavailableBody]: 'Inténtalo de nuevo en unos minutos.',
@@ -27,7 +27,7 @@ export const SPANISH_CLIENT_APP_COPY: Record<ClientAppCopyKey, string> = {
   [ClientAppCopyKey.ContinueAs]: 'Iniciando sesión como {phone}.',
   [ClientAppCopyKey.ContinueButton]: 'Continuar',
   [ClientAppCopyKey.ExpiredTitle]: 'Este enlace caducó',
-  [ClientAppCopyKey.ExpiredBody]: 'Este enlace caducó. Envía login de nuevo.',
+  [ClientAppCopyKey.ExpiredBody]: 'Este enlace caducó. Envía acceder de nuevo.',
   [ClientAppCopyKey.ForbiddenTitle]: 'Se rechazó esta solicitud',
   [ClientAppCopyKey.ForbiddenBody]: 'Vuelve atrás, recarga la página e inténtalo de nuevo.',
   [ClientAppCopyKey.RateLimitedTitle]: 'Demasiados intentos',

@@ -19,7 +19,7 @@ export const FRENCH_CLIENT_APP_COPY: Record<ClientAppCopyKey, string> = {
   [ClientAppCopyKey.SignedOutTrustPassword]: 'Aucun mot de passe à retenir',
   [ClientAppCopyKey.SignedOutTrustLink]: 'Lien à usage unique, 10 minutes',
   [ClientAppCopyKey.PhoneLabel]:
-    'La conversation de connexion dans WhatsApp\u00a0: vous envoyez login et zapbip répond avec un lien à usage unique.',
+    'La conversation de connexion dans WhatsApp\u00a0: vous envoyez connexion et zapbip répond avec un lien à usage unique.',
   [ClientAppCopyKey.PhoneReply]: 'Voici votre lien de connexion. Il ne fonctionne qu’une fois et expire dans 10 minutes.',
   [ClientAppCopyKey.UnavailableTitle]: 'La connexion n’est pas disponible pour le moment',
   [ClientAppCopyKey.UnavailableBody]: 'Réessayez dans quelques minutes.',
@@ -28,7 +28,7 @@ export const FRENCH_CLIENT_APP_COPY: Record<ClientAppCopyKey, string> = {
   [ClientAppCopyKey.ContinueAs]: 'Connexion en tant que {phone}.',
   [ClientAppCopyKey.ContinueButton]: 'Continuer',
   [ClientAppCopyKey.ExpiredTitle]: 'Ce lien a expiré',
-  [ClientAppCopyKey.ExpiredBody]: 'Ce lien a expiré. Envoyez de nouveau login.',
+  [ClientAppCopyKey.ExpiredBody]: 'Ce lien a expiré. Envoyez de nouveau connexion.',
   [ClientAppCopyKey.ForbiddenTitle]: 'Cette requête a été refusée',
   [ClientAppCopyKey.ForbiddenBody]: 'Revenez en arrière, rechargez la page et réessayez.',
   [ClientAppCopyKey.RateLimitedTitle]: 'Trop de tentatives',

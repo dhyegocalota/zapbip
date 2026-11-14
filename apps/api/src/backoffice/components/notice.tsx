@@ -1,4 +1,4 @@
-import type { WebLocale } from '@zapbip/types';
+import type { OwnerLocale } from '@zapbip/types';
 import { BackofficeCopyKey, renderBackofficeCopy } from '../backoffice-copy';
 import { NoticeVariant } from '../backoffice-notice';
 
@@ -16,7 +16,7 @@ const VARIANT_GLYPHS: Record<NoticeVariant, string> = {
 };
 const ALERT_VARIANTS = [NoticeVariant.Warning, NoticeVariant.Error];
 
-export function Notice(props: { variant: NoticeVariant; locale: WebLocale; message: string }) {
+export function Notice(props: { variant: NoticeVariant; locale: OwnerLocale; message: string }) {
   const role = ALERT_VARIANTS.includes(props.variant) ? 'alert' : 'status';
   return (
     <div class={`notice notice-${props.variant}`} role={role}>

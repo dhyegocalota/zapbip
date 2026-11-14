@@ -23,11 +23,11 @@ Para escuchar, la app te pregunta con `ask` o `wait_for_reply`. Cada llamada dev
 
 ## Configúralo desde cero
 
-1. **Escribe al número de zapbip en WhatsApp.** Envía `new agent my-app`. [Cómo empezar](/es/get-started/how-to-start) muestra cada mensaje. Los comandos y las respuestas de zapbip están en inglés, que es lo que el producto entiende hoy.
+1. **Escribe al número de zapbip en WhatsApp.** Envía `nuevo agente my-app`. [Cómo empezar](/es/get-started/how-to-start) muestra cada mensaje. Los comandos y las respuestas de zapbip están en español; también entiende los mismos comandos en inglés.
 
    <Chat
      messages={[
-       { you: true, text: 'new agent my-app', time: '09:00' },
+       { you: true, text: 'nuevo agente my-app', time: '09:00' },
        { name: 'zapbip', text: 'Agent my-app created. Paste this into your agent.', time: '09:00' },
      ]}
    />
@@ -42,9 +42,9 @@ Para escuchar, la app te pregunta con `ask` o `wait_for_reply`. Cada llamada dev
 
 ## Comprueba que funciona
 
-Pide a la IA que envíe `✅ installed` por WhatsApp. Cuando llegue, la conexión funciona.
+Pide a la IA que envíe `✅ listo` por WhatsApp. Cuando llegue, la conexión funciona.
 
-<Chat messages={[{ name: 'Mi app', text: '✅ installed', time: '09:03' }]} />
+<Chat messages={[{ name: 'Mi app', text: '✅ listo', time: '09:03' }]} />
 
 Luego escribe algo en WhatsApp y pide a la app que revise la bandeja de entrada: lee tu mensaje.
 

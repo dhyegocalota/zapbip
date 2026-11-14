@@ -1,4 +1,4 @@
-import { WebLocale } from '@zapbip/types';
+import { OwnerLocale } from '@zapbip/types';
 import { Hono } from 'hono';
 import { LOCALE_COOKIE_NAME, RETURN_TO_FIELD, SEE_OTHER_STATUS } from '../backoffice-constants';
 import type { BackofficeEnv } from '../backoffice-env';
@@ -8,7 +8,7 @@ import { setPreferenceCookie } from '../preference-cookie';
 import { returnTargetOf } from '../return-target';
 
 const LOCALE_FIELD = 'locale';
-const LOCALES: string[] = Object.values(WebLocale);
+const LOCALES: string[] = Object.values(OwnerLocale);
 
 export const localeRoutes = new Hono<BackofficeEnv>();
 

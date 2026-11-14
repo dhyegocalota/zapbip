@@ -1,4 +1,4 @@
-import type { WebLocale } from '@zapbip/types';
+import type { OwnerLocale } from '@zapbip/types';
 import { leadingAgentNames } from '../site-agents';
 import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
@@ -15,7 +15,7 @@ const STORIES: { title: SiteCopyKey; body: SiteCopyKey; Scene: typeof OfficialSc
   { title: SiteCopyKey.WhyFastTitle, body: SiteCopyKey.WhyFastBody, Scene: FastScene },
 ];
 
-export function WhySection(props: { locale: WebLocale }) {
+export function WhySection(props: { locale: OwnerLocale }) {
   const translate = copyOf({ locale: props.locale });
   return (
     <section class="block" id="why" aria-labelledby="why-title">

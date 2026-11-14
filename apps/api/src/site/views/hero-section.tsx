@@ -1,4 +1,4 @@
-import type { WebLocale } from '@zapbip/types';
+import type { OwnerLocale } from '@zapbip/types';
 import { DEMO_IMAGE_SIZE, POSTER_SIZES, POSTER_SMALL_WIDTH } from '../site-constants';
 import { leadingAgentNames } from '../site-agents';
 import { SiteCopyKey } from '../site-copy';
@@ -13,7 +13,7 @@ const PAUSE_GLYPH = '❚❚';
 const DEMO_STEP_KEYS = [SiteCopyKey.DemoStepAsk, SiteCopyKey.DemoStepTap, SiteCopyKey.DemoStepContinue];
 const FIRST_STEP_INDEX = 0;
 
-function DemoFigure(props: { locale: WebLocale }) {
+function DemoFigure(props: { locale: OwnerLocale }) {
   const translate = copyOf({ locale: props.locale });
   const asset = (kind: SiteAssetKind): string => siteAssetOf({ kind, locale: props.locale });
   const posterSourceSet = `${asset(SiteAssetKind.PosterSmall)} ${POSTER_SMALL_WIDTH}w, ${asset(SiteAssetKind.PosterLarge)} ${DEMO_IMAGE_SIZE}w`;

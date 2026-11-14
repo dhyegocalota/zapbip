@@ -1,4 +1,4 @@
-import { COMPANY, PRICING_CURRENCY_BY_LOCALE, PRICING_FREE_CENTS, type WebLocale } from '@zapbip/types';
+import { COMPANY, PRICING_CURRENCY_BY_LOCALE, PRICING_FREE_CENTS, type OwnerLocale } from '@zapbip/types';
 import { faqItemsOf } from './faq-items';
 import { legalTextOf } from './legal-copy';
 import type { LegalDocument } from './legal-links';
@@ -68,7 +68,7 @@ function withContact(input: { text: string }): string {
   return input.text.replaceAll(CONTACT_PLACEHOLDER, COMPANY.contactEmail);
 }
 
-function textOf(input: { locale: WebLocale; endpoint: string }): Text {
+function textOf(input: { locale: OwnerLocale; endpoint: string }): Text {
   const translate = copyOf({ locale: input.locale });
   const values = { ...pricingValuesOf({ locale: input.locale }), agents: leadingAgentNames(), endpoint: input.endpoint };
   return (key, extraValues) => withContact({ text: translate(key, { ...values, ...extraValues }) });
@@ -93,7 +93,7 @@ function heroBlocks(input: { text: Text }): MarkdownBlock[] {
   ];
 }
 
-function quickStartBlocks(input: { text: Text; locale: WebLocale }): MarkdownBlock[] {
+function quickStartBlocks(input: { text: Text; locale: OwnerLocale }): MarkdownBlock[] {
   const { text, locale } = input;
   const entries = quickStartEntriesOf({ locale }).flatMap((entry): MarkdownBlock[] => [
     heading({ level: HeadingLevel.Item, text: entry.name }),
@@ -110,7 +110,7 @@ function quickStartBlocks(input: { text: Text; locale: WebLocale }): MarkdownBlo
   ];
 }
 
-function pricingBlocks(input: { text: Text; locale: WebLocale }): MarkdownBlock[] {
+function pricingBlocks(input: { text: Text; locale: OwnerLocale }): MarkdownBlock[] {
   const { text, locale } = input;
   const { price } = pricingValuesOf({ locale });
   const freePrice = formatPrice({ cents: PRICING_FREE_CENTS, currency: PRICING_CURRENCY_BY_LOCALE[locale], locale });
@@ -137,7 +137,7 @@ function faqBlocks(input: { text: Text }): MarkdownBlock[] {
   return [sectionHeading({ text, key: SiteCopyKey.FaqTitle }), ...items];
 }
 
-export function homeMarkdownOf(input: { locale: WebLocale; origin: string }): string {
+export function homeMarkdownOf(input: { locale: OwnerLocale; origin: string }): string {
   const { locale, origin } = input;
   const text = textOf({ locale, endpoint: `${origin}${SitePath.RequestAccess}` });
   return renderMarkdown({
@@ -167,7 +167,7 @@ export function homeMarkdownOf(input: { locale: WebLocale; origin: string }): st
   });
 }
 
-export function legalMarkdownOf(input: { document: LegalDocument; locale: WebLocale }): string {
+export function legalMarkdownOf(input: { document: LegalDocument; locale: OwnerLocale }): string {
   const legal = legalTextOf(input);
   const sections = legal.sections.flatMap((section): MarkdownBlock[] => [
     heading({ level: HeadingLevel.Section, text: section.heading }),

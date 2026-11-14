@@ -25,11 +25,11 @@ import InstallPrompt from '/snippets/zh/install-prompt.mdx';
 
 ## 从零开始设置
 
-1. **在 WhatsApp 上给 zapbip 的号码发消息。** 发送 `new agent grok-bot`。目前命令需要用英语或葡萄牙语的词来输入。[开始使用](/zh/get-started/how-to-start)展示了每一条消息。
+1. **在 WhatsApp 上给 zapbip 的号码发消息。** 发送 `新建智能体 grok-bot`。目前命令需要用英语或葡萄牙语的词来输入。[开始使用](/zh/get-started/how-to-start)展示了每一条消息。
 
    <Chat
      messages={[
-       { you: true, text: 'new agent grok-bot', time: '09:00' },
+       { you: true, text: '新建智能体 grok-bot', time: '09:00' },
        { name: 'zapbip', text: 'Agent grok-bot created. Paste this into your agent.', time: '09:00' },
      ]}
    />
@@ -46,13 +46,13 @@ import InstallPrompt from '/snippets/zh/install-prompt.mdx';
 
 6. **告诉 zapbip 如何唤醒它。** 它用该例程的 URL 和密钥调用 `set_wake({mode: "webhook", url, token})`。如果出错，它会停下并报告。
 
-7. **测试。** 在聊天里它调用 `send_message`，内容为 ✅ installed。
+7. **测试。** 在聊天里它调用 `send_message`，内容为 ✅ 安装完成。
 
 ## 检查是否正常工作
 
-让 Grok Bot 在 WhatsApp 上发送 `✅ installed`。消息到达，就说明连接正常。
+让 Grok Bot 在 WhatsApp 上发送 `✅ 安装完成`。消息到达，就说明连接正常。
 
-<Chat messages={[{ name: 'Grok Bot', text: '✅ installed', time: '09:03' }]} />
+<Chat messages={[{ name: 'Grok Bot', text: '✅ 安装完成', time: '09:03' }]} />
 
 然后在 WhatsApp 上写点什么。Grok Bot 会在大约 9 秒内回答。
 

@@ -1,4 +1,4 @@
-import type { WebLocale } from '@zapbip/types';
+import type { OwnerLocale } from '@zapbip/types';
 import type { Context } from 'hono';
 import { parseDeployEnvironment } from '../operations/deploy-environment';
 import type { DeployEnvironment } from '../contract/deploy-environment';
@@ -12,7 +12,7 @@ import { BackofficePath } from './backoffice-paths';
 const NOTICE_QUERY = 'notice';
 
 export type PageContext = {
-  locale: WebLocale;
+  locale: OwnerLocale;
   theme: ShellTheme;
   environment: DeployEnvironment;
   stylesheetHref: string;

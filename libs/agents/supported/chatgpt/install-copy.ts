@@ -26,6 +26,47 @@ const CHATGPT_TEXT: Record<OwnerLocale, ChatGptText> = {
     createTask:
       'In one dedicated chat, create an hourly task with `Run on this computer` that calls check_inbox, and choose `Always allow` once per tool.',
   },
+  [OwnerLocale.Spanish]: {
+    wakeNote: 'ChatGPT se despierta con una tarea programada cada hora: un mensaje puede esperar hasta una hora.',
+    addApp: (connectionLink) =>
+      `Activa el modo desarrollador en los ajustes de ChatGPT y añade una app con la URL ${connectionLink} con \`No authentication\`.`,
+    createTask:
+      'En un chat dedicado, crea una tarea cada hora con `Run on this computer` que llame a check_inbox, y elige `Always allow` una vez por herramienta.',
+  },
+  [OwnerLocale.German]: {
+    wakeNote: 'ChatGPT wird jede Stunde von einer geplanten Aufgabe geweckt: Eine Nachricht kann bis zu einer Stunde warten.',
+    addApp: (connectionLink) =>
+      `Aktiviere den Entwicklermodus in den ChatGPT-Einstellungen und füge eine App mit der URL ${connectionLink} hinzu, mit \`No authentication\`.`,
+    createTask:
+      'Erstelle in einem eigenen Chat eine stündliche Aufgabe mit `Run on this computer`, die check_inbox aufruft, und wähle `Always allow` einmal pro Werkzeug.',
+  },
+  [OwnerLocale.French]: {
+    wakeNote: 'ChatGPT est réveillé toutes les heures par une tâche planifiée\u00a0: un message peut attendre jusqu’à une heure.',
+    addApp: (connectionLink) =>
+      `Activez le mode développeur dans les réglages de ChatGPT et ajoutez une app avec l’URL ${connectionLink} avec \`No authentication\`.`,
+    createTask:
+      'Dans une conversation dédiée, créez une tâche horaire avec `Run on this computer` qui appelle check_inbox, et choisissez `Always allow` une fois par outil.',
+  },
+  [OwnerLocale.Japanese]: {
+    wakeNote: 'ChatGPTは1時間ごとにスケジュールされたタスクで起動します。メッセージは最長1時間待つことがあります。',
+    addApp: (connectionLink) =>
+      `ChatGPTの設定で開発者モードを有効にし、URL ${connectionLink} でアプリを追加します。認証は\`No authentication\`にしてください。`,
+    createTask:
+      '専用のチャットで、`Run on this computer`を選んだ1時間ごとのタスクを作成し、check_inboxを呼び出すようにします。ツールごとに一度、`Always allow`を選んでください。',
+  },
+  [OwnerLocale.Korean]: {
+    wakeNote: 'ChatGPT는 1시간마다 예약 작업으로 깨어납니다. 메시지는 최대 1시간 기다릴 수 있습니다.',
+    addApp: (connectionLink) =>
+      `ChatGPT 설정에서 개발자 모드를 켜고 URL ${connectionLink}(으)로 앱을 추가하세요. 인증은 \`No authentication\`으로 설정합니다.`,
+    createTask:
+      '전용 채팅에서 `Run on this computer`로 1시간마다 실행되는 작업을 만들어 check_inbox를 호출하게 하고, 도구마다 한 번씩 `Always allow`를 선택하세요.',
+  },
+  [OwnerLocale.ChineseSimplified]: {
+    wakeNote: 'ChatGPT 每小时由一个计划任务唤醒：一条消息最多可能要等一个小时。',
+    addApp: (connectionLink) => `在 ChatGPT 设置中开启开发者模式，用网址 ${connectionLink} 添加一个应用，认证选 \`No authentication\`。`,
+    createTask:
+      '在一个专用的聊天里创建一个每小时运行的任务，选 `Run on this computer`，让它调用 check_inbox，并对每个工具选一次 `Always allow`。',
+  },
 };
 
 export const CHATGPT_COPY = localizeCopy({
@@ -49,6 +90,12 @@ export const CHATGPT_COPY = localizeCopy({
 const CHATGPT_QUICK_START_HINT: Record<OwnerLocale, string> = {
   [OwnerLocale.PortugueseBrazil]: 'Faça isto no ChatGPT',
   [OwnerLocale.EnglishUs]: 'Do this in ChatGPT',
+  [OwnerLocale.Spanish]: 'Haz esto en ChatGPT',
+  [OwnerLocale.German]: 'Mach das in ChatGPT',
+  [OwnerLocale.French]: 'Faites ceci dans ChatGPT',
+  [OwnerLocale.Japanese]: 'ChatGPTで次の操作をします',
+  [OwnerLocale.Korean]: 'ChatGPT에서 이렇게 하세요',
+  [OwnerLocale.ChineseSimplified]: '在 ChatGPT 中这样做',
 };
 
 const CHATGPT_QUICK_START_PATH: Record<OwnerLocale, string[]> = {
@@ -64,6 +111,27 @@ const CHATGPT_QUICK_START_PATH: Record<OwnerLocale, string[]> = {
     'Add an app by URL, no authentication',
     'Paste this address',
   ],
+  [OwnerLocale.Spanish]: [
+    'Abre ChatGPT → Ajustes',
+    'Activa el modo desarrollador',
+    'Añade una app por URL, sin autenticación',
+    'Pega esta dirección',
+  ],
+  [OwnerLocale.German]: [
+    'Öffne ChatGPT → Einstellungen',
+    'Entwicklermodus aktivieren',
+    'App per URL hinzufügen, ohne Authentifizierung',
+    'Diese Adresse einfügen',
+  ],
+  [OwnerLocale.French]: [
+    'Ouvrez ChatGPT → Réglages',
+    'Activez le mode développeur',
+    'Ajoutez une app par URL, sans authentification',
+    'Collez cette adresse',
+  ],
+  [OwnerLocale.Japanese]: ['ChatGPTを開く → 設定', '開発者モードをオンにする', 'URLでアプリを追加（認証なし）', 'このアドレスを貼り付ける'],
+  [OwnerLocale.Korean]: ['ChatGPT 열기 → 설정', '개발자 모드 켜기', 'URL로 앱 추가, 인증 없음', '이 주소 붙여넣기'],
+  [OwnerLocale.ChineseSimplified]: ['打开 ChatGPT → 设置', '开启开发者模式', '通过网址添加应用，无需认证', '粘贴这个地址'],
 };
 
 export const CHATGPT_QUICK_START = quickStartOf({ hint: CHATGPT_QUICK_START_HINT, path: CHATGPT_QUICK_START_PATH, code: addressText });

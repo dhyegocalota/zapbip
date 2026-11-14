@@ -27,11 +27,11 @@ Grokは1回の答えを1 分待ち、その後にまた尋ねるので、全体�
 
 ## ゼロから設定する
 
-1. **WhatsAppでzapbipの番号にメッセージを送ります。** `new agent grok-web` を送ってください。コマンドは今のところ英語かポルトガル語の言葉で入力します。すべてのメッセージは[始め方](/ja/get-started/how-to-start)で確認できます。
+1. **WhatsAppでzapbipの番号にメッセージを送ります。** `新規エージェント grok-web` を送ってください。コマンドは今のところ英語かポルトガル語の言葉で入力します。すべてのメッセージは[始め方](/ja/get-started/how-to-start)で確認できます。
 
    <Chat
      messages={[
-       { you: true, text: 'new agent grok-web', time: '09:00' },
+       { you: true, text: '新規エージェント grok-web', time: '09:00' },
        { name: 'zapbip', text: 'Agent grok-web created. Paste this into your agent.', time: '09:00' },
      ]}
    />
@@ -44,13 +44,13 @@ Grokは1回の答えを1 分待ち、その後にまた尋ねるので、全体�
 
 4. **あなたが先に書いたとき、誰が答えるかを選びます。** zapbipに接続したGrok Botがあれば、Grokはそのボットを指定して `set_wake({mode: "standby", standby_agent: "<name>"})` を呼びます。なければ `set_wake({mode: "none"})` を呼びます。
 
-5. **テストします。** チャットで、`send_message` を呼び、✅ installed を送ります。
+5. **テストします。** チャットで、`send_message` を呼び、✅ インストール完了 を送ります。
 
 ## 動作の確認
 
-Grokに、WhatsAppで `✅ installed` を送るよう頼んでください。届けば、接続は機能しています。
+Grokに、WhatsAppで `✅ インストール完了` を送るよう頼んでください。届けば、接続は機能しています。
 
-<Chat messages={[{ name: 'Grok', text: '✅ installed', time: '09:03' }]} />
+<Chat messages={[{ name: 'Grok', text: '✅ インストール完了', time: '09:03' }]} />
 
 Grok Botを接続している場合は、Grokのチャットを閉じた状態でWhatsAppに何か書いてください。Grok Botが答えます。
 

@@ -1,5 +1,5 @@
 import type { InstallClient } from '@zapbip/agents/install';
-import type { WebLocale } from '@zapbip/types';
+import type { OwnerLocale } from '@zapbip/types';
 import { siteAgents, SiteStartTab, siteQuickStartOf } from './site-agents';
 import { SITE_EXAMPLE_CONNECTION_LINK } from './site-constants';
 import { SiteCopyKey } from './site-copy';
@@ -17,7 +17,7 @@ export type QuickStartEntry = {
   code: string;
 };
 
-export function quickStartEntriesOf(input: { locale: WebLocale }): QuickStartEntry[] {
+export function quickStartEntriesOf(input: { locale: OwnerLocale }): QuickStartEntry[] {
   const { locale } = input;
   const translate = copyOf({ locale });
   const agentEntries = siteAgents().map((agent) => ({

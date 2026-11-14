@@ -25,11 +25,11 @@ Du musst nichts tun, damit es läuft.
 
 ## Von Grund auf einrichten
 
-1. **Schreib der zapbip-Nummer auf WhatsApp.** Sende `new agent grok-bot`. [So startest du](/de/get-started/how-to-start) zeigt jede Nachricht. Die Befehle und die Antworten von zapbip sind auf Englisch, denn das versteht das Produkt heute.
+1. **Schreib der zapbip-Nummer auf WhatsApp.** Sende `neuer agent grok-bot`. [So startest du](/de/get-started/how-to-start) zeigt jede Nachricht. Die Befehle und die Antworten von zapbip sind auf Deutsch; dieselben Befehle versteht es auch auf Englisch.
 
    <Chat
      messages={[
-       { you: true, text: 'new agent grok-bot', time: '09:00' },
+       { you: true, text: 'neuer agent grok-bot', time: '09:00' },
        { name: 'zapbip', text: 'Agent grok-bot created. Paste this into your agent.', time: '09:00' },
      ]}
    />
@@ -46,13 +46,13 @@ Du musst nichts tun, damit es läuft.
 
 6. **Sag zapbip, wie es geweckt wird.** Es ruft `set_wake({mode: "webhook", url, token})` mit der URL und dem Schlüssel der Routine auf. Bei einem Fehler hält es an und meldet ihn.
 
-7. **Teste es.** Im Chat ruft es `send_message` mit ✅ installed auf.
+7. **Teste es.** Im Chat ruft es `send_message` mit ✅ installiert auf.
 
 ## Prüfen, ob es funktioniert
 
-Bitte Grok Bot, `✅ installed` über WhatsApp zu senden. Wenn es ankommt, funktioniert die Verbindung.
+Bitte Grok Bot, `✅ installiert` über WhatsApp zu senden. Wenn es ankommt, funktioniert die Verbindung.
 
-<Chat messages={[{ name: 'Grok Bot', text: '✅ installed', time: '09:03' }]} />
+<Chat messages={[{ name: 'Grok Bot', text: '✅ installiert', time: '09:03' }]} />
 
 Schreib dann etwas in WhatsApp. Grok Bot antwortet innerhalb von etwa 9 Sekunden.
 

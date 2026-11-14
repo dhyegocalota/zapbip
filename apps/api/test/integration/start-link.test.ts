@@ -1,7 +1,7 @@
 import { createExecutionContext, env, reset } from 'cloudflare:test';
 import { exports } from 'cloudflare:workers';
 import {
-  DocsLanguage,
+  DocsPageLanguage,
   INSTALL_PAGE_PATH_PREFIX,
   INSTALL_PAGE_REQUESTS_PER_MINUTE,
   OwnerLocale,
@@ -77,8 +77,8 @@ describe('start link redirect', () => {
   });
 
   it.each([
-    [DocsLanguage.English, OwnerLocale.EnglishUs],
-    [DocsLanguage.PortugueseBrazil, OwnerLocale.PortugueseBrazil],
+    [DocsPageLanguage.English, OwnerLocale.EnglishUs],
+    [DocsPageLanguage.PortugueseBrazil, OwnerLocale.PortugueseBrazil],
   ])('SL-W2 takes the text of lang=%s', async (language, locale) => {
     await seedActiveNumber();
     const response = await getStart({ query: `?lang=${language}` });
@@ -187,7 +187,7 @@ describe('start link without a usable number', () => {
   });
 
   it('SL-W10 puts the English copy first for lang=en', async () => {
-    await expectUnavailablePage({ response: await getStart({ query: `?lang=${DocsLanguage.English}` }), first: OwnerLocale.EnglishUs });
+    await expectUnavailablePage({ response: await getStart({ query: `?lang=${DocsPageLanguage.English}` }), first: OwnerLocale.EnglishUs });
   });
 
   it('SL-W11 answers the 503 page when the stored number fails the pattern', async () => {

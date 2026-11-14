@@ -51,6 +51,12 @@ const INSTALL_MARKDOWN_FILES = import.meta.glob('../../../../libs/agents/support
 const GONE_TEXT: Record<OwnerLocale, string> = {
   [OwnerLocale.PortugueseBrazil]: 'girar <nome>',
   [OwnerLocale.EnglishUs]: 'rotate <name>',
+  [OwnerLocale.Spanish]: 'rotar <nombre>',
+  [OwnerLocale.German]: 'erneuern <name>',
+  [OwnerLocale.French]: 'renouveler <nom>',
+  [OwnerLocale.Japanese]: '再発行 <名前>',
+  [OwnerLocale.Korean]: '재발급 <이름>',
+  [OwnerLocale.ChineseSimplified]: '轮换 <名称>',
 };
 
 const LINK_PREVIEW_USER_AGENTS = [

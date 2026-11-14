@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { AGENT_INSTALLS } from '@zapbip/agents/install';
-import { WebLocale } from '@zapbip/types';
+import { OwnerLocale } from '@zapbip/types';
 import { LOCALE_PROFILES, MENU_LOCALES } from '../../src/web-shell/locale-profiles';
 import { ShellCopyKey } from '../../src/web-shell/shell-copy';
 import { expect, test } from './fixtures';
@@ -19,7 +19,7 @@ function triggerOf(input: { page: Page }) {
   return input.page.locator('.lang-trigger');
 }
 
-function optionOf(input: { page: Page; locale: WebLocale }) {
+function optionOf(input: { page: Page; locale: OwnerLocale }) {
   return input.page.locator(`.lang-option[value="${input.locale}"]`);
 }
 
@@ -29,8 +29,8 @@ test('the menu opens on a click, shows both languages and closes on Escape with 
   await triggerOf({ page }).scrollIntoViewIfNeeded();
   await triggerOf({ page }).click();
   await expect(menuOf({ page })).toHaveAttribute('open', '');
-  await expect(optionOf({ page, locale: WebLocale.EnglishUs })).toBeVisible();
-  await expect(optionOf({ page, locale: WebLocale.PortugueseBrazil })).toBeVisible();
+  await expect(optionOf({ page, locale: OwnerLocale.EnglishUs })).toBeVisible();
+  await expect(optionOf({ page, locale: OwnerLocale.PortugueseBrazil })).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(menuOf({ page })).not.toHaveAttribute('open', '');
   await expect(triggerOf({ page })).toBeFocused();
@@ -64,7 +64,7 @@ test('the arrow keys move between the options and wrap around', async ({ page })
 test('choosing Portuguese lands on /pt-br and keeps the agent and the referral code', async ({ page }) => {
   await page.goto(`/?agent=${PICKED_AGENT}&ref=${REFERRAL_CODE}`);
   await triggerOf({ page }).click();
-  await optionOf({ page, locale: WebLocale.PortugueseBrazil }).click();
+  await optionOf({ page, locale: OwnerLocale.PortugueseBrazil }).click();
   await expect(page).toHaveURL(new RegExp(`/pt-br\\?agent=${PICKED_AGENT}&ref=${REFERRAL_CODE}$`));
   await expect(page.locator('html')).toHaveAttribute('lang', 'pt-BR');
   await expect(page.locator('input[name="referralCode"]')).toHaveValue(REFERRAL_CODE);
@@ -75,11 +75,11 @@ test('choosing Portuguese lands on /pt-br and keeps the agent and the referral c
 test('the chosen language is remembered: the root then goes to /pt-br', async ({ page }) => {
   await page.goto('/');
   await triggerOf({ page }).click();
-  await optionOf({ page, locale: WebLocale.PortugueseBrazil }).click();
+  await optionOf({ page, locale: OwnerLocale.PortugueseBrazil }).click();
   await page.goto('/');
   await expect(page).toHaveURL(/\/pt-br$/);
   await triggerOf({ page }).click();
-  await optionOf({ page, locale: WebLocale.EnglishUs }).click();
+  await optionOf({ page, locale: OwnerLocale.EnglishUs }).click();
   await page.goto('/');
   await expect(page).toHaveURL(/\/$/);
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
@@ -95,7 +95,7 @@ test('the menu works with no script: the summary opens it and a choice reloads t
   const page = await context.newPage();
   await page.goto('/');
   await triggerOf({ page }).click();
-  await optionOf({ page, locale: WebLocale.PortugueseBrazil }).click();
+  await optionOf({ page, locale: OwnerLocale.PortugueseBrazil }).click();
   await expect(page).toHaveURL(/\/pt-br$/);
   await context.close();
 });
@@ -104,12 +104,12 @@ test('the trigger names itself "Language" and "Idioma" with the visible code in 
   await page.goto('/');
   await expect(triggerOf({ page })).toHaveAttribute(
     'aria-label',
-    `${shellCopy({ key: ShellCopyKey.LocaleLabel })}: ${LOCALE_PROFILES[WebLocale.EnglishUs].shortName}`,
+    `${shellCopy({ key: ShellCopyKey.LocaleLabel })}: ${LOCALE_PROFILES[OwnerLocale.EnglishUs].shortName}`,
   );
   await page.goto('/pt-br');
   await expect(triggerOf({ page })).toHaveAttribute(
     'aria-label',
-    `${shellCopy({ key: ShellCopyKey.LocaleLabel, locale: WebLocale.PortugueseBrazil })}: ${LOCALE_PROFILES[WebLocale.PortugueseBrazil].shortName}`,
+    `${shellCopy({ key: ShellCopyKey.LocaleLabel, locale: OwnerLocale.PortugueseBrazil })}: ${LOCALE_PROFILES[OwnerLocale.PortugueseBrazil].shortName}`,
   );
 });
 
@@ -132,7 +132,7 @@ test('an agent picked on the page survives a language switch', async ({ page }) 
   await page.locator(`.start-tab[href*="agent=${pickedTab}"]`).click();
   await expect(page).toHaveURL(new RegExp(`agent=${pickedTab}`));
   await triggerOf({ page }).click();
-  await optionOf({ page, locale: WebLocale.PortugueseBrazil }).click();
+  await optionOf({ page, locale: OwnerLocale.PortugueseBrazil }).click();
   await expect(page).toHaveURL(new RegExp(`/pt-br\\?agent=${pickedTab}`));
 });
 

@@ -1,5 +1,5 @@
 import { buildConnectionLink } from '@zapbip/core';
-import { COMPANY, WebLocale } from '@zapbip/types';
+import { COMPANY, OwnerLocale } from '@zapbip/types';
 import { pricingValuesOf } from './price-format';
 import { leadingAgentNames } from './site-agents';
 import { IS_SECURITY_POLICY_PUBLIC, SECURITY_POLICY_URL, SECURITY_TEXT_VALIDITY_MS } from './site-constants';
@@ -79,8 +79,8 @@ export function mcpDiscoveryOf(input: { publicOrigin: string }): object {
 }
 
 export function mcpServerCardOf(input: { publicOrigin: string }): object {
-  const description = copyOf({ locale: WebLocale.EnglishUs })(SiteCopyKey.MetaDescription, {
-    ...pricingValuesOf({ locale: WebLocale.EnglishUs }),
+  const description = copyOf({ locale: OwnerLocale.EnglishUs })(SiteCopyKey.MetaDescription, {
+    ...pricingValuesOf({ locale: OwnerLocale.EnglishUs }),
     agents: leadingAgentNames(),
   });
   return {
@@ -96,8 +96,8 @@ export function mcpServerCardOf(input: { publicOrigin: string }): object {
 }
 
 export function agentCardOf(input: { origin: string }): object {
-  const description = copyOf({ locale: WebLocale.EnglishUs })(SiteCopyKey.MetaDescription, {
-    ...pricingValuesOf({ locale: WebLocale.EnglishUs }),
+  const description = copyOf({ locale: OwnerLocale.EnglishUs })(SiteCopyKey.MetaDescription, {
+    ...pricingValuesOf({ locale: OwnerLocale.EnglishUs }),
     agents: leadingAgentNames(),
   });
   return {
@@ -117,7 +117,7 @@ export function agentCardOf(input: { origin: string }): object {
 }
 
 function preferredLanguagesOf(): string {
-  const primaryTags = Object.values(WebLocale).map((locale) => languageOf({ locale }).split(LANGUAGE_TAG_SEPARATOR)[0]!);
+  const primaryTags = Object.values(OwnerLocale).map((locale) => languageOf({ locale }).split(LANGUAGE_TAG_SEPARATOR)[0]!);
   return [...new Set(primaryTags)].sort().join(LANGUAGE_LIST_SEPARATOR);
 }
 

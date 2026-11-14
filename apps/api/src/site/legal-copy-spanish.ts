@@ -78,7 +78,7 @@ export const SPANISH_LEGAL_COPY: Record<LegalDocument, LegalText> = {
       {
         heading: 'Cierre de tu cuenta',
         paragraphs: [
-          'Puedes eliminar tu cuenta en cualquier momento enviando "delete account" a zapbip por WhatsApp. Podemos cerrar una cuenta que incumpla estos términos o poner fin al servicio con previo aviso. La política de privacidad explica qué ocurre con tus datos.',
+          'Puedes eliminar tu cuenta en cualquier momento enviando "eliminar cuenta" a zapbip por WhatsApp. Podemos cerrar una cuenta que incumpla estos términos o poner fin al servicio con previo aviso. La política de privacidad explica qué ocurre con tus datos.',
         ],
         items: [],
       },
@@ -175,7 +175,7 @@ export const SPANISH_LEGAL_COPY: Record<LegalDocument, LegalText> = {
       {
         heading: 'Tus derechos',
         paragraphs: [
-          'Para eliminar tu cuenta y todo lo que contiene, envía "delete account" a zapbip por WhatsApp. Para cualquier otra cosa, escribe a {contactEmail}; respondemos en un plazo de 15 días.',
+          'Para eliminar tu cuenta y todo lo que contiene, envía "eliminar cuenta" a zapbip por WhatsApp. Para cualquier otra cosa, escribe a {contactEmail}; respondemos en un plazo de 15 días.',
         ],
         items: [
           'Confirmar si tratamos tus datos y acceder a ellos.',
