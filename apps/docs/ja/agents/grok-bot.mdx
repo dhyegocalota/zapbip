@@ -25,11 +25,11 @@ import InstallPrompt from '/snippets/ja/install-prompt.mdx';
 
 ## ゼロから設定する
 
-1. **WhatsAppでzapbipの番号にメッセージを送ります。** `new agent grok-bot` を送ってください。コマンドは今のところ英語かポルトガル語の言葉で入力します。すべてのメッセージは[始め方](/ja/get-started/how-to-start)で確認できます。
+1. **WhatsAppでzapbipの番号にメッセージを送ります。** `新規エージェント grok-bot` を送ってください。コマンドは今のところ英語かポルトガル語の言葉で入力します。すべてのメッセージは[始め方](/ja/get-started/how-to-start)で確認できます。
 
    <Chat
      messages={[
-       { you: true, text: 'new agent grok-bot', time: '09:00' },
+       { you: true, text: '新規エージェント grok-bot', time: '09:00' },
        { name: 'zapbip', text: 'Agent grok-bot created. Paste this into your agent.', time: '09:00' },
      ]}
    />
@@ -46,13 +46,13 @@ import InstallPrompt from '/snippets/ja/install-prompt.mdx';
 
 6. **起こし方をzapbipに伝えます。** ルーティンのURLとキーを使って `set_wake({mode: "webhook", url, token})` を呼びます。エラーが出た場合は、そこで止まって報告します。
 
-7. **テストします。** チャットで、`send_message` を呼び、✅ installed を送ります。
+7. **テストします。** チャットで、`send_message` を呼び、✅ インストール完了 を送ります。
 
 ## 動作の確認
 
-Grok Botに、WhatsAppで `✅ installed` を送るよう頼んでください。届けば、接続は機能しています。
+Grok Botに、WhatsAppで `✅ インストール完了` を送るよう頼んでください。届けば、接続は機能しています。
 
-<Chat messages={[{ name: 'Grok Bot', text: '✅ installed', time: '09:03' }]} />
+<Chat messages={[{ name: 'Grok Bot', text: '✅ インストール完了', time: '09:03' }]} />
 
 次にWhatsAppで何か書いてください。Grok Botは約9 秒以内に答えます。
 

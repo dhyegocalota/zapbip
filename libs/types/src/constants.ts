@@ -1,4 +1,4 @@
-import { DocsLanguage, DocsPageLanguage, OwnerLocale, PricingCurrency, WebLocale } from './enums';
+import { DocsPageLanguage, OwnerLocale, PricingCurrency } from './enums';
 
 export const SECOND_MS = 1_000;
 export const MINUTE_MS = 60 * SECOND_MS;
@@ -10,38 +10,25 @@ export const INSTALL_CODE_RANDOM_BYTES = 16;
 export const INSTALL_CODE_TTL_MS = 30 * MINUTE_MS;
 export const INSTALL_PAGE_PATH_PREFIX = '/i/';
 export const CLIENT_APP_SIGN_IN_PATH_PREFIX = '/sign-in/';
-export const CLIENT_APP_PORTUGUESE_PATH_PREFIX = '/pt-br';
 export const CLIENT_APP_LOCALE_PATH_PREFIXES: Record<OwnerLocale, string> = {
-  [OwnerLocale.PortugueseBrazil]: CLIENT_APP_PORTUGUESE_PATH_PREFIX,
   [OwnerLocale.EnglishUs]: '',
-};
-export const WEB_LOCALE_PATH_PREFIXES: Record<WebLocale, string> = {
-  [WebLocale.EnglishUs]: '',
-  [WebLocale.PortugueseBrazil]: '/pt-br',
-  [WebLocale.Spanish]: '/es',
-  [WebLocale.German]: '/de',
-  [WebLocale.French]: '/fr',
-  [WebLocale.Japanese]: '/ja',
-  [WebLocale.Korean]: '/ko',
-  [WebLocale.ChineseSimplified]: '/zh',
-};
-export const OWNER_LOCALE_OF_WEB_LOCALE: Record<WebLocale, OwnerLocale> = {
-  [WebLocale.EnglishUs]: OwnerLocale.EnglishUs,
-  [WebLocale.PortugueseBrazil]: OwnerLocale.PortugueseBrazil,
-  [WebLocale.Spanish]: OwnerLocale.EnglishUs,
-  [WebLocale.German]: OwnerLocale.EnglishUs,
-  [WebLocale.French]: OwnerLocale.EnglishUs,
-  [WebLocale.Japanese]: OwnerLocale.EnglishUs,
-  [WebLocale.Korean]: OwnerLocale.EnglishUs,
-  [WebLocale.ChineseSimplified]: OwnerLocale.EnglishUs,
-};
-export const WEB_LOCALE_OF_OWNER_LOCALE: Record<OwnerLocale, WebLocale> = {
-  [OwnerLocale.EnglishUs]: WebLocale.EnglishUs,
-  [OwnerLocale.PortugueseBrazil]: WebLocale.PortugueseBrazil,
+  [OwnerLocale.PortugueseBrazil]: '/pt-br',
+  [OwnerLocale.Spanish]: '/es',
+  [OwnerLocale.German]: '/de',
+  [OwnerLocale.French]: '/fr',
+  [OwnerLocale.Japanese]: '/ja',
+  [OwnerLocale.Korean]: '/ko',
+  [OwnerLocale.ChineseSimplified]: '/zh',
 };
 export const CLIENT_APP_LOGIN_TEXT: Record<OwnerLocale, string> = {
-  [OwnerLocale.PortugueseBrazil]: 'entrar',
   [OwnerLocale.EnglishUs]: 'login',
+  [OwnerLocale.PortugueseBrazil]: 'entrar',
+  [OwnerLocale.Spanish]: 'acceder',
+  [OwnerLocale.German]: 'anmelden',
+  [OwnerLocale.French]: 'connexion',
+  [OwnerLocale.Japanese]: 'ログイン',
+  [OwnerLocale.Korean]: '로그인',
+  [OwnerLocale.ChineseSimplified]: '登录',
 };
 export const CLIENT_APP_TOKEN_BYTES = 32;
 export const CLIENT_APP_TOKEN_LENGTH = 43;
@@ -52,8 +39,14 @@ export const INITIALIZE_BODY_MAX_BYTES = 4_096;
 export const INSTALL_PAGE_REQUESTS_PER_MINUTE = 30;
 export const HEARTBEAT_POLL_INTERVAL_MINUTES = 1;
 export const INSTALL_SELF_TEST_TEXT: Record<OwnerLocale, string> = {
-  [OwnerLocale.PortugueseBrazil]: '✅ instalado',
   [OwnerLocale.EnglishUs]: '✅ installed',
+  [OwnerLocale.PortugueseBrazil]: '✅ instalado',
+  [OwnerLocale.Spanish]: '✅ listo',
+  [OwnerLocale.German]: '✅ installiert',
+  [OwnerLocale.French]: '✅ installé',
+  [OwnerLocale.Japanese]: '✅ インストール完了',
+  [OwnerLocale.Korean]: '✅ 설치 완료',
+  [OwnerLocale.ChineseSimplified]: '✅ 安装完成',
 };
 export const BYTES_PER_KILOBYTE = 1_000;
 export const COMPANY_FACT_UNSET = 'COMPANY_FACT_UNSET';
@@ -91,25 +84,58 @@ export const DOCS_LANGUAGE_FOLDERS: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.Korean]: 'ko',
   [DocsPageLanguage.Chinese]: 'zh',
 };
-export const DOCS_START_LINK_LANGUAGES: Record<DocsPageLanguage, DocsLanguage> = {
-  [DocsPageLanguage.English]: DocsLanguage.English,
-  [DocsPageLanguage.PortugueseBrazil]: DocsLanguage.PortugueseBrazil,
-  [DocsPageLanguage.Spanish]: DocsLanguage.English,
-  [DocsPageLanguage.German]: DocsLanguage.English,
-  [DocsPageLanguage.French]: DocsLanguage.English,
-  [DocsPageLanguage.Japanese]: DocsLanguage.English,
-  [DocsPageLanguage.Korean]: DocsLanguage.English,
-  [DocsPageLanguage.Chinese]: DocsLanguage.English,
-};
 export const DOCS_OWNER_LOCALES: Record<DocsPageLanguage, OwnerLocale> = {
   [DocsPageLanguage.English]: OwnerLocale.EnglishUs,
   [DocsPageLanguage.PortugueseBrazil]: OwnerLocale.PortugueseBrazil,
-  [DocsPageLanguage.Spanish]: OwnerLocale.EnglishUs,
-  [DocsPageLanguage.German]: OwnerLocale.EnglishUs,
-  [DocsPageLanguage.French]: OwnerLocale.EnglishUs,
-  [DocsPageLanguage.Japanese]: OwnerLocale.EnglishUs,
-  [DocsPageLanguage.Korean]: OwnerLocale.EnglishUs,
-  [DocsPageLanguage.Chinese]: OwnerLocale.EnglishUs,
+  [DocsPageLanguage.Spanish]: OwnerLocale.Spanish,
+  [DocsPageLanguage.German]: OwnerLocale.German,
+  [DocsPageLanguage.French]: OwnerLocale.French,
+  [DocsPageLanguage.Japanese]: OwnerLocale.Japanese,
+  [DocsPageLanguage.Korean]: OwnerLocale.Korean,
+  [DocsPageLanguage.Chinese]: OwnerLocale.ChineseSimplified,
+};
+export const OWNER_LOCALE_BY_CALLING_CODE: Record<string, OwnerLocale> = {
+  '55': OwnerLocale.PortugueseBrazil,
+  '351': OwnerLocale.PortugueseBrazil,
+  '34': OwnerLocale.Spanish,
+  '52': OwnerLocale.Spanish,
+  '54': OwnerLocale.Spanish,
+  '56': OwnerLocale.Spanish,
+  '57': OwnerLocale.Spanish,
+  '58': OwnerLocale.Spanish,
+  '51': OwnerLocale.Spanish,
+  '53': OwnerLocale.Spanish,
+  '591': OwnerLocale.Spanish,
+  '593': OwnerLocale.Spanish,
+  '595': OwnerLocale.Spanish,
+  '598': OwnerLocale.Spanish,
+  '502': OwnerLocale.Spanish,
+  '503': OwnerLocale.Spanish,
+  '504': OwnerLocale.Spanish,
+  '505': OwnerLocale.Spanish,
+  '506': OwnerLocale.Spanish,
+  '507': OwnerLocale.Spanish,
+  '49': OwnerLocale.German,
+  '43': OwnerLocale.German,
+  '41': OwnerLocale.German,
+  '423': OwnerLocale.German,
+  '33': OwnerLocale.French,
+  '32': OwnerLocale.French,
+  '352': OwnerLocale.French,
+  '377': OwnerLocale.French,
+  '81': OwnerLocale.Japanese,
+  '82': OwnerLocale.Korean,
+  '86': OwnerLocale.ChineseSimplified,
+};
+export const DOCS_LANGUAGE_OF_OWNER_LOCALE: Record<OwnerLocale, DocsPageLanguage> = {
+  [OwnerLocale.EnglishUs]: DocsPageLanguage.English,
+  [OwnerLocale.PortugueseBrazil]: DocsPageLanguage.PortugueseBrazil,
+  [OwnerLocale.Spanish]: DocsPageLanguage.Spanish,
+  [OwnerLocale.German]: DocsPageLanguage.German,
+  [OwnerLocale.French]: DocsPageLanguage.French,
+  [OwnerLocale.Japanese]: DocsPageLanguage.Japanese,
+  [OwnerLocale.Korean]: DocsPageLanguage.Korean,
+  [OwnerLocale.ChineseSimplified]: DocsPageLanguage.Chinese,
 };
 export const DEFAULT_LOCALE = OwnerLocale.PortugueseBrazil;
 export const PRODUCTION_ZONE = 'zapbip.com';
@@ -120,18 +146,36 @@ export const START_LINK_LANGUAGE_PARAMETER = 'lang';
 export const SITE_ORIGIN = `https://${PRODUCTION_ZONE}`;
 export const DOCS_ORIGIN = `https://docs.${PRODUCTION_ZONE}`;
 export const ONBOARDING_SETUP_LINKS: Record<OwnerLocale, string> = {
-  [OwnerLocale.PortugueseBrazil]: `${DOCS_ORIGIN}/pt-br/get-started/how-to-start`,
   [OwnerLocale.EnglishUs]: `${DOCS_ORIGIN}/get-started/how-to-start`,
+  [OwnerLocale.PortugueseBrazil]: `${DOCS_ORIGIN}/pt-br/get-started/how-to-start`,
+  [OwnerLocale.Spanish]: `${DOCS_ORIGIN}/es/get-started/how-to-start`,
+  [OwnerLocale.German]: `${DOCS_ORIGIN}/de/get-started/how-to-start`,
+  [OwnerLocale.French]: `${DOCS_ORIGIN}/fr/get-started/how-to-start`,
+  [OwnerLocale.Japanese]: `${DOCS_ORIGIN}/ja/get-started/how-to-start`,
+  [OwnerLocale.Korean]: `${DOCS_ORIGIN}/ko/get-started/how-to-start`,
+  [OwnerLocale.ChineseSimplified]: `${DOCS_ORIGIN}/zh/get-started/how-to-start`,
 };
 export const ONBOARDING_REQUEST_ACCESS_LINKS: Record<OwnerLocale, string> = {
-  [OwnerLocale.PortugueseBrazil]: `${SITE_ORIGIN}${CLIENT_APP_PORTUGUESE_PATH_PREFIX}`,
   [OwnerLocale.EnglishUs]: SITE_ORIGIN,
+  [OwnerLocale.PortugueseBrazil]: `${SITE_ORIGIN}/pt-br`,
+  [OwnerLocale.Spanish]: `${SITE_ORIGIN}/es`,
+  [OwnerLocale.German]: `${SITE_ORIGIN}/de`,
+  [OwnerLocale.French]: `${SITE_ORIGIN}/fr`,
+  [OwnerLocale.Japanese]: `${SITE_ORIGIN}/ja`,
+  [OwnerLocale.Korean]: `${SITE_ORIGIN}/ko`,
+  [OwnerLocale.ChineseSimplified]: `${SITE_ORIGIN}/zh`,
 };
 export const WHATSAPP_LINK_ORIGIN = 'https://wa.me';
 export const WHATSAPP_LINK_TEXT_PARAMETER = 'text';
 export const START_PREFILLED_TEXT: Record<OwnerLocale, string> = {
-  [OwnerLocale.PortugueseBrazil]: 'Oi! Quero conectar meus agentes de IA ao zapbip.',
   [OwnerLocale.EnglishUs]: 'Hi! I want to connect my AI agents to zapbip.',
+  [OwnerLocale.PortugueseBrazil]: 'Oi! Quero conectar meus agentes de IA ao zapbip.',
+  [OwnerLocale.Spanish]: '¡Hola! Quiero conectar mis agentes de IA a zapbip.',
+  [OwnerLocale.German]: 'Hallo! Ich möchte meine KI-Agenten mit zapbip verbinden.',
+  [OwnerLocale.French]: 'Bonjour\u202f! Je veux connecter mes agents IA à zapbip.',
+  [OwnerLocale.Japanese]: 'こんにちは！AIエージェントをzapbipにつなぎたいです。',
+  [OwnerLocale.Korean]: '안녕하세요! 제 AI 에이전트를 zapbip에 연결하고 싶어요.',
+  [OwnerLocale.ChineseSimplified]: '你好！我想把我的 AI 智能体连接到 zapbip。',
 };
 export const CLOUDFLARE_NAMESERVER_SUFFIX = '.ns.cloudflare.com';
 export const NPM_REGISTRY_URL = 'https://registry.npmjs.org';
@@ -163,13 +207,13 @@ export const PRICING_OVERAGE_CENTS: Record<PricingCurrency, number> = {
   [PricingCurrency.Usd]: 500,
   [PricingCurrency.Brl]: 2500,
 };
-export const PRICING_CURRENCY_BY_LOCALE: Record<WebLocale, PricingCurrency> = {
-  [WebLocale.EnglishUs]: PricingCurrency.Usd,
-  [WebLocale.PortugueseBrazil]: PricingCurrency.Brl,
-  [WebLocale.Spanish]: PricingCurrency.Usd,
-  [WebLocale.German]: PricingCurrency.Usd,
-  [WebLocale.French]: PricingCurrency.Usd,
-  [WebLocale.Japanese]: PricingCurrency.Usd,
-  [WebLocale.Korean]: PricingCurrency.Usd,
-  [WebLocale.ChineseSimplified]: PricingCurrency.Usd,
+export const PRICING_CURRENCY_BY_LOCALE: Record<OwnerLocale, PricingCurrency> = {
+  [OwnerLocale.EnglishUs]: PricingCurrency.Usd,
+  [OwnerLocale.PortugueseBrazil]: PricingCurrency.Brl,
+  [OwnerLocale.Spanish]: PricingCurrency.Usd,
+  [OwnerLocale.German]: PricingCurrency.Usd,
+  [OwnerLocale.French]: PricingCurrency.Usd,
+  [OwnerLocale.Japanese]: PricingCurrency.Usd,
+  [OwnerLocale.Korean]: PricingCurrency.Usd,
+  [OwnerLocale.ChineseSimplified]: PricingCurrency.Usd,
 };

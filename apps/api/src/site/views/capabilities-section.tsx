@@ -1,4 +1,4 @@
-import type { WebLocale } from '@zapbip/types';
+import type { OwnerLocale } from '@zapbip/types';
 import { SiteCopyKey } from '../site-copy';
 import { copyOf } from '../site-copy-text';
 import { SENDER_INDEXES, senderNameOf } from '../site-agents';
@@ -7,7 +7,7 @@ const LIST_GLYPH = '☰';
 const FILE_GLYPH = '▤';
 const VOICE_NOTE = '▶ ▂▅▃▆▂▇▃▅▂ 0:07';
 
-export function CapabilitiesSection(props: { locale: WebLocale }) {
+export function CapabilitiesSection(props: { locale: OwnerLocale }) {
   const translate = copyOf({ locale: props.locale });
   const sender = (index: number): string => senderNameOf({ index });
   return (

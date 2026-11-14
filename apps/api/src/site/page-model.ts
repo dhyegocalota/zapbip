@@ -1,5 +1,5 @@
 import type { InstallClient } from '@zapbip/agents/install';
-import type { WebLocale } from '@zapbip/types';
+import type { OwnerLocale } from '@zapbip/types';
 import type { ShellTheme } from '../web-shell/shell-theme';
 import type { LegalDocument } from './legal-links';
 import type { SiteStartTab } from './site-agents';
@@ -22,7 +22,7 @@ export type JoinView =
   | { state: JoinState.Joined; referralCode: string; creditedCount: number; cap: number };
 
 export type PageModel = {
-  locale: WebLocale;
+  locale: OwnerLocale;
   theme: ShellTheme;
   siteOrigin: string;
   turnstileSiteKey: string;

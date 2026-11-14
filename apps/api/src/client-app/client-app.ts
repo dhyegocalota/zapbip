@@ -1,4 +1,4 @@
-import { HttpStatus, WEB_LOCALE_PATH_PREFIXES, WebLocale } from '@zapbip/types';
+import { HttpStatus, CLIENT_APP_LOCALE_PATH_PREFIXES, OwnerLocale } from '@zapbip/types';
 import { Hono, type Context, type Next } from 'hono';
 import { FAVICON_CONTENT_TYPE, FAVICON_SVG } from '../backoffice/assets/favicon';
 import { STYLESHEET_CACHE_CONTROL } from '../backoffice/backoffice-constants';
@@ -56,7 +56,7 @@ export function createClientApp(): Hono<ClientAppEnv> {
   );
   app.use('*', clientAppContext);
   app.route('/', localizedRoutes());
-  PREFIXED_LOCALES.forEach((locale) => app.route(WEB_LOCALE_PATH_PREFIXES[locale], localizedRoutes()));
+  PREFIXED_LOCALES.forEach((locale) => app.route(CLIENT_APP_LOCALE_PATH_PREFIXES[locale], localizedRoutes()));
   app.notFound((context) =>
     respondMessage({ context, status: HttpStatus.NotFound, title: ClientAppCopyKey.NotFoundTitle, body: ClientAppCopyKey.NotFoundBody }),
   );

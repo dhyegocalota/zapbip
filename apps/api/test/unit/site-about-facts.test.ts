@@ -1,4 +1,4 @@
-import { PRICING_FREE_MESSAGES, WebLocale } from '@zapbip/types';
+import { PRICING_FREE_MESSAGES, OwnerLocale } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { aboutFactsOf } from '../../src/site/about-facts';
 import { llmsFullTextOf, llmsTextOf } from '../../src/site/llms-files';
@@ -9,7 +9,7 @@ import { SITE_UPDATED_ON } from '../../src/site/site-constants';
 import { structuredDataOf } from '../../src/site/structured-data';
 import { MODEL_ORIGIN, pageModelFor } from '../support/page-model';
 
-describe.each(Object.values(WebLocale))('the About facts in %s', (locale) => {
+describe.each(Object.values(OwnerLocale))('the About facts in %s', (locale) => {
   const facts = aboutFactsOf({ locale });
   const values = pricingValuesOf({ locale });
 

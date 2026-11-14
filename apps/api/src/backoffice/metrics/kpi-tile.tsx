@@ -1,4 +1,4 @@
-import type { WebLocale } from '@zapbip/types';
+import type { OwnerLocale } from '@zapbip/types';
 import { BackofficeCopyKey, renderBackofficeCopy } from '../backoffice-copy';
 import { Sparkline } from '../views/sparkline';
 import type { MetricCell } from './metric-cell';
@@ -12,7 +12,7 @@ const TREND_COPY: Record<Trend, BackofficeCopyKey> = {
 };
 
 export function KpiTile(props: {
-  locale: WebLocale;
+  locale: OwnerLocale;
   label: string;
   value: string;
   cell: MetricCell;

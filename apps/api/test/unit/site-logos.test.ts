@@ -7,7 +7,6 @@ const LOGOS_ROOT = join(import.meta.dirname, '../../site-public/site/logos');
 const NOTICE_FILE = 'NOTICE.md';
 const LOGO_LIMIT_BYTES = 4_000;
 const FORBIDDEN_MARKS = ['grok', 'xai'];
-const INITIALS_ONLY_AGENT_COUNT = 2;
 const NOTICE_DATE_PATTERN = /\d{4}-\d{2}-\d{2}/;
 const STEMS = [
   ...new Set(Object.values(AGENT_INSTALLS).flatMap((install) => (install.officialLogo === null ? [] : [install.officialLogo]))),
@@ -45,9 +44,11 @@ describe('the official logos', () => {
     expect(new Set(drawings).size).toBe(drawings.length);
   });
 
-  it('shows initials only for the agents whose vendor offers no lawful copy of its mark', () => {
-    const initialsOnly = Object.values(AGENT_INSTALLS).filter((install) => install.officialLogo === null);
-    expect(initialsOnly).toHaveLength(INITIALS_ONLY_AGENT_COUNT);
+  it('shows initials for the agents whose vendor offers no lawful copy of its mark', () => {
+    const markedWithLogo = Object.entries(AGENT_INSTALLS)
+      .filter(([client, install]) => FORBIDDEN_MARKS.some((mark) => client.includes(mark)) && install.officialLogo !== null)
+      .map(([client]) => client);
+    expect(markedWithLogo).toEqual([]);
   });
 
   it('ships no mark its owner has not allowed, and no file that is not an svg or the notice', () => {

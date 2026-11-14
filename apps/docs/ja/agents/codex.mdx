@@ -45,7 +45,7 @@ Codexは1回の答えを最大15 分待ち、その後にまた尋ねるので�
 
    <Chat
      messages={[
-       { you: true, text: 'new agent codex', time: '11:00' },
+       { you: true, text: '新規エージェント codex', time: '11:00' },
        {
          name: 'zapbip',
          text: 'Agent codex created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate codex".',
@@ -66,12 +66,12 @@ Codexは1回の答えを最大15 分待ち、その後にまた尋ねるので�
 
 6. **コネクタを起動します。** `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 connect --client codex` をバックグラウンドで実行します。聞き続け、`codex exec resume` でセッションを再開します。
 
-7. **テストします。** 新しいプロセスで `codex exec -c 'mcp_servers.zapbip.default_tools_approval_mode="approve"' "Call send_message with the text '✅ installed'"` を実行します。✅ installed を含む `send_message` があなたのWhatsAppに届きます。コマンドが失敗した場合は、そこで止まり、最後の20行を表示します。その後、Codexを再起動してください。
+7. **テストします。** 新しいプロセスで `codex exec -c 'mcp_servers.zapbip.default_tools_approval_mode="approve"' "Call send_message with the text '✅ インストール完了'"` を実行します。✅ インストール完了 を含む `send_message` があなたのWhatsAppに届きます。コマンドが失敗した場合は、そこで止まり、最後の20行を表示します。その後、Codexを再起動してください。
 
 ## 動作の確認
 
-Codexに、WhatsAppで `✅ installed` を送るよう頼んでください。数秒で届くはずです。
+Codexに、WhatsAppで `✅ インストール完了` を送るよう頼んでください。数秒で届くはずです。
 
-<Chat messages={[{ name: 'Codex', text: '✅ installed', time: '11:03' }]} />
+<Chat messages={[{ name: 'Codex', text: '✅ インストール完了', time: '11:03' }]} />
 
 何も届かない場合は、[トラブルシューティング](/ja/help/troubleshooting)をご覧ください。

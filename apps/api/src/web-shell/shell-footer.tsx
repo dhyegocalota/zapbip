@@ -1,9 +1,9 @@
-import type { WebLocale } from '@zapbip/types';
+import type { OwnerLocale } from '@zapbip/types';
 import type { Child } from 'hono/jsx';
 import { ShellCopyKey, renderShellCopy } from './shell-copy';
 import { shellFooterLinksOf } from './shell-links';
 
-export function ShellFooter(props: { locale: WebLocale; note: string; controls: Child }) {
+export function ShellFooter(props: { locale: OwnerLocale; note: string; controls: Child }) {
   const { locale } = props;
   return (
     <footer class="shell-footer">

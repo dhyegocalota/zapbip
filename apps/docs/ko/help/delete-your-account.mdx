@@ -5,25 +5,24 @@ description: zapbip이 보관하는 내 모든 정보를 삭제하는 방법.
 
 import { Chat } from '/snippets/chat.jsx';
 
-계정은 WhatsApp에서 언제든 삭제할 수 있습니다. 메시지 두 번이 필요하므로, 실수로 보낸 메시지로 무언가가 삭제되는 일은 없습니다. 명령어는 지금은 영어나 포르투갈어 단어로 입력합니다. 이 페이지에서는 영어 단어를 사용합니다.
+계정은 WhatsApp에서 언제든 삭제할 수 있습니다. 메시지 두 번이 필요하므로, 실수로 보낸 메시지로 무언가가 삭제되는 일은 없습니다. 명령어는 한국어, 영어, 포르투갈어 단어로 입력할 수 있습니다. 이 페이지에서는 한국어 단어를 사용합니다.
 
 <Steps>
-  <Step title="요청">`delete account`를 쓰세요. zapbip이 무엇이 삭제되는지와 확인에 쓸 문구를 알려 줍니다.</Step>
+  <Step title="요청">`계정 삭제`를 쓰세요. zapbip이 무엇이 삭제되는지와 확인에 쓸 문구를 알려 줍니다.</Step>
   <Step title="확인">
-    10분 안에 `delete account permanently`를 쓰세요. 그 시간이 지나면 아무것도 삭제되지 않습니다. 처음부터 다시 하려면 `delete account`를
-    다시 쓰세요.
+    10분 안에 `계정 영구 삭제`를 쓰세요. 그 시간이 지나면 아무것도 삭제되지 않습니다. 처음부터 다시 하려면 `계정 삭제`를 다시 쓰세요.
   </Step>
 </Steps>
 
 <Chat
   messages={[
-    { you: true, text: 'delete account', time: '09:30' },
+    { you: true, text: '계정 삭제', time: '09:30' },
     {
-      text: 'This deletes your account, every agent, message and file, and cannot be undone. To confirm within 10 minutes, send: delete account permanently',
+      text: '계정, 모든 에이전트, 메시지, 파일이 삭제되며 되돌릴 수 없습니다. 10분 안에 확인하려면 다음을 보내세요: 계정 영구 삭제',
       time: '09:30',
     },
-    { you: true, text: 'delete account permanently', time: '09:31' },
-    { text: 'Your account is deleted. Your next message starts a new account.', time: '09:31' },
+    { you: true, text: '계정 영구 삭제', time: '09:31' },
+    { text: '계정을 삭제했습니다. 다음 메시지부터 새 계정이 시작됩니다.', time: '09:31' },
   ]}
 />
 

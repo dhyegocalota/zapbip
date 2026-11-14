@@ -1,4 +1,4 @@
-import { COMPANY, HttpStatus, WebLocale } from '@zapbip/types';
+import { COMPANY, HttpStatus, OwnerLocale } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { LegalDocument, legalPathOf } from '../../src/site/legal-links';
 import { localePathOf } from '../../src/site/site-language';
@@ -9,7 +9,7 @@ import { ShellCopyKey } from '../../src/web-shell/shell-copy';
 import { copyHtml, escapedHtml, shellCopyHtml, SITE_ORIGIN, siteFetch } from '../support/site';
 
 const SEE_OTHER = 303;
-const LOCALES = Object.values(WebLocale);
+const LOCALES = Object.values(OwnerLocale);
 const LEGAL_PAGES = Object.values(LegalDocument).flatMap((document) =>
   LOCALES.map((locale) => [legalPathOf({ document, locale }), document, locale, LOCALE_PROFILES[locale].languageTag] as const),
 );
@@ -60,7 +60,7 @@ describe('the legal pages', () => {
         `hreflang="${LOCALE_PROFILES[twinLocale].languageTag}" href="${SITE_ORIGIN}${legalPathOf({ document, locale: twinLocale })}"`,
       ),
     );
-    expect(html).toContain(`hreflang="x-default" href="${SITE_ORIGIN}${legalPathOf({ document, locale: WebLocale.EnglishUs })}"`);
+    expect(html).toContain(`hreflang="x-default" href="${SITE_ORIGIN}${legalPathOf({ document, locale: OwnerLocale.EnglishUs })}"`);
     expect(html).toContain(`<meta property="og:url" content="${SITE_ORIGIN}${path}"/>`);
   });
 
@@ -93,7 +93,7 @@ describe('the legal pages', () => {
     expect(response.headers.get('Location')).toBe(`${path}#theme`);
   });
 
-  it.each([WebLocale.PortugueseBrazil, WebLocale.Japanese])(
+  it.each([OwnerLocale.PortugueseBrazil, OwnerLocale.Japanese])(
     'refuses a legal path with a query as a return target for %s',
     async (locale) => {
       const response = await siteFetch({ path: '/locale', method: 'POST', form: { locale, returnTo: '/terms?x=1' } });
@@ -122,10 +122,10 @@ describe('the links to the legal pages', () => {
 
   it('keeps the Portuguese slugs and gives every other language the English slugs under its prefix', () => {
     expect(PORTUGUESE_PATHS).toEqual(
-      Object.values(LegalDocument).map((document) => legalPathOf({ document, locale: WebLocale.PortugueseBrazil })),
+      Object.values(LegalDocument).map((document) => legalPathOf({ document, locale: OwnerLocale.PortugueseBrazil })),
     );
-    expect(legalPathOf({ document: LegalDocument.Terms, locale: WebLocale.Japanese })).toBe('/ja/terms');
-    expect(legalPathOf({ document: LegalDocument.Privacy, locale: WebLocale.ChineseSimplified })).toBe('/zh/privacy');
+    expect(legalPathOf({ document: LegalDocument.Terms, locale: OwnerLocale.Japanese })).toBe('/ja/terms');
+    expect(legalPathOf({ document: LegalDocument.Privacy, locale: OwnerLocale.ChineseSimplified })).toBe('/zh/privacy');
   });
 
   it('the sitemap lists every document in every language with its alternates', async () => {

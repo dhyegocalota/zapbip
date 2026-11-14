@@ -9,11 +9,28 @@ const WAKE_NOTE: Record<OwnerLocale, string> = {
     'O Claude Code escuta sem limite de tempo: o canal entrega na hora com a sessão aberta, e o conector retoma uma sessão parada em cerca de 7 segundos.',
   [OwnerLocale.EnglishUs]:
     'Claude Code listens with no time limit: the channel delivers at once while the session is open, and the connector resumes a stopped session in about 7 seconds.',
+  [OwnerLocale.Spanish]:
+    'Claude Code escucha sin límite de tiempo: el canal entrega al instante mientras la sesión está abierta, y el conector reanuda una sesión detenida en unos 7 segundos.',
+  [OwnerLocale.German]:
+    'Claude Code hört ohne Zeitlimit zu: Der Kanal liefert sofort, solange die Sitzung offen ist, und der Connector setzt eine gestoppte Sitzung in etwa 7 Sekunden fort.',
+  [OwnerLocale.French]:
+    'Claude Code écoute sans limite de temps\u00a0: le canal livre aussitôt tant que la session est ouverte, et le connecteur reprend une session arrêtée en environ 7 secondes.',
+  [OwnerLocale.Japanese]:
+    'Claude Codeは時間制限なしで待ち受けます。セッションが開いている間はチャンネルが即座に配信し、止まったセッションはコネクタが約7秒で再開します。',
+  [OwnerLocale.Korean]:
+    'Claude Code는 시간 제한 없이 듣습니다. 세션이 열려 있는 동안에는 채널이 즉시 전달하고, 멈춘 세션은 커넥터가 약 7초 만에 재개합니다.',
+  [OwnerLocale.ChineseSimplified]: 'Claude Code 不限时地监听：会话打开时，通道会立即送达；会话停止时，连接器大约 7 秒就能让它恢复。',
 };
 const SKILL_DESCRIPTION = 'Rules for talking to the owner on WhatsApp through zapbip: ask, wait for the answer and write short.';
 const RESTART_MARK: Record<OwnerLocale, string> = {
   [OwnerLocale.PortugueseBrazil]: 'Reinicie',
   [OwnerLocale.EnglishUs]: 'Restart',
+  [OwnerLocale.Spanish]: 'Reinicia',
+  [OwnerLocale.German]: 'Starte',
+  [OwnerLocale.French]: 'Redémarrez',
+  [OwnerLocale.Japanese]: '再起動',
+  [OwnerLocale.Korean]: '다시 시작',
+  [OwnerLocale.ChineseSimplified]: '重新启动',
 };
 
 describe('the Claude Code install section', () => {

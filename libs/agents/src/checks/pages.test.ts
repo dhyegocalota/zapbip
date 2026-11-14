@@ -1,4 +1,5 @@
-import { DocsPageLanguage, INSTALL_SELF_TEST_TEXT, OwnerLocale, ZAPBIP_NPM_VERSION } from '@zapbip/types';
+import { COMMAND_WORDS } from '@zapbip/core';
+import { CommandKind, DOCS_OWNER_LOCALES, DocsPageLanguage, INSTALL_SELF_TEST_TEXT, OwnerLocale, ZAPBIP_NPM_VERSION } from '@zapbip/types';
 import { describe, expect, test } from 'vitest';
 import { PluginRegistry, type AgentPlugin } from '../contract';
 import { pageRuleViolationsOf, type PageRuleInput } from './pages';
@@ -133,9 +134,15 @@ describe('pageRuleViolationsOf', () => {
     Object.values(DocsPageLanguage).filter(
       (language) => language !== DocsPageLanguage.English && language !== DocsPageLanguage.PortugueseBrazil,
     ),
-  )('reads the English command word and the English self-test for a %s guide and plugin page', (language) => {
-    expect(pageRuleViolationsOf(guideInput({ language }))).toEqual([]);
-    expect(pageRuleViolationsOf(pluginInput({ language }))).toEqual([`${LABEL}: the page must tell the owner to run only one listener`]);
+  )('reads the command word and the self-test of the owner language of a %s guide and plugin page', (language) => {
+    const locale = DOCS_OWNER_LOCALES[language];
+    const words = COMMAND_WORDS.find((entry) => entry.kind === CommandKind.CreateAgent && entry.locale === locale)!.words;
+    const guide = GUIDE_PAGE.replace('new agent', words);
+    const plugin = PLUGIN_PAGE.replace(INSTALL_SELF_TEST_TEXT[OwnerLocale.EnglishUs], INSTALL_SELF_TEST_TEXT[locale]);
+    expect(pageRuleViolationsOf(guideInput({ page: guide, language }))).toEqual([]);
+    expect(pageRuleViolationsOf(pluginInput({ page: plugin, language }))).toEqual([
+      `${LABEL}: the page must tell the owner to run only one listener`,
+    ]);
   });
 
   test.each([
@@ -147,6 +154,9 @@ describe('pageRuleViolationsOf', () => {
     [DocsPageLanguage.Chinese, '每个智能体只运行一个 listener：插件或'],
   ])('accepts the one-listener sentence of a %s plugin page', (language, sentenceStart) => {
     const page = PLUGIN_PAGE.replace(
+      INSTALL_SELF_TEST_TEXT[OwnerLocale.EnglishUs],
+      INSTALL_SELF_TEST_TEXT[DOCS_OWNER_LOCALES[language]],
+    ).replace(
       /^Run only one listener.*$/m,
       `${sentenceStart} \`npx zapbip@${ZAPBIP_NPM_VERSION} listen\`${LISTENER_TAILS[language] as string}`,
     );

@@ -7,10 +7,22 @@ const TOOL_TIMEOUT_SECONDS = 900;
 const WAKE_NOTE: Record<OwnerLocale, string> = {
   [OwnerLocale.PortugueseBrazil]: 'O conector retoma a sessão do Codex a cada mensagem, em cerca de 6 segundos, sem limite de tempo.',
   [OwnerLocale.EnglishUs]: 'The connector resumes the Codex session on each message, in about 6 seconds, with no time limit.',
+  [OwnerLocale.Spanish]: 'El conector reanuda la sesión de Codex con cada mensaje, en unos 6 segundos y sin límite de tiempo.',
+  [OwnerLocale.German]: 'Der Connector setzt die Codex-Sitzung bei jeder Nachricht fort, in etwa 6 Sekunden und ohne Zeitlimit.',
+  [OwnerLocale.French]: 'Le connecteur reprend la session Codex à chaque message, en environ 6 secondes et sans limite de temps.',
+  [OwnerLocale.Japanese]: 'コネクタはメッセージが届くたびにCodexのセッションを約6秒で再開します。時間制限はありません。',
+  [OwnerLocale.Korean]: '커넥터가 메시지마다 약 6초 만에 Codex 세션을 재개합니다. 시간 제한은 없습니다.',
+  [OwnerLocale.ChineseSimplified]: '连接器会在每条消息到来时恢复 Codex 会话，大约 6 秒，不限时。',
 };
 const RESTART_MARK: Record<OwnerLocale, string> = {
   [OwnerLocale.PortugueseBrazil]: 'Reinicie',
   [OwnerLocale.EnglishUs]: 'Restart',
+  [OwnerLocale.Spanish]: 'Reinicia',
+  [OwnerLocale.German]: 'Starte',
+  [OwnerLocale.French]: 'Redémarrez',
+  [OwnerLocale.Japanese]: '再起動',
+  [OwnerLocale.Korean]: '다시 시작',
+  [OwnerLocale.ChineseSimplified]: '重新启动',
 };
 
 describe('the Codex install section', () => {

@@ -9,10 +9,10 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { AGENT_DEFINITIONS } from '@zapbip/agents/definitions';
 import { WAKE_SECRET_KEY_BYTES } from '@zapbip/core';
-import { DocsPageLanguage, MessageDirection, MessageKind, OwnerLocale, SECOND_MS, WEB_LOCALE_OF_OWNER_LOCALE } from '@zapbip/types';
+import { DocsPageLanguage, MessageDirection, MessageKind, OwnerLocale, SECOND_MS } from '@zapbip/types';
 import { chromium } from '@playwright/test';
 import { z } from 'zod';
-import { SCRIPTS } from './landing-demo/demo-copy';
+import { SCRIPTS, type RecordedLocale } from './landing-demo/demo-copy';
 import { renderOpenGraphImage } from './landing-demo/open-graph-image';
 import { renderSiteCopy, SiteCopyKey } from '../src/site/site-copy';
 import { languageOf } from '../src/web-shell/locale-profiles';
@@ -28,7 +28,7 @@ const OUTPUT_DIRECTORY = join(SCRIPT_DIRECTORY, '..', 'site-public', 'site');
 const STAGE_FILE = join(SCRIPT_DIRECTORY, 'landing-demo', 'stage.html');
 const DATABASE_BINDING = 'CONNECTIONS';
 const DEVELOPMENT_ENVIRONMENT = 'development';
-const OWNER_PHONES: Record<OwnerLocale, string> = {
+const OWNER_PHONES: Record<RecordedLocale, string> = {
   [OwnerLocale.EnglishUs]: '5511999990000',
   [OwnerLocale.PortugueseBrazil]: '5511999990001',
 };
@@ -37,7 +37,7 @@ const AGENT_DISPLAY_NAME = LEADING_AGENT!.docs.matrixName[DocsPageLanguage.Engli
 const AGENT_NAME = AGENT_DISPLAY_NAME.toLowerCase().replaceAll(' ', '-');
 const TAGLINE_PREFIX = 'zapbip.com · ';
 
-const LOCALES = Object.values(OwnerLocale);
+const LOCALES: RecordedLocale[] = [OwnerLocale.EnglishUs, OwnerLocale.PortugueseBrazil];
 const CHOSEN_INDEX = 0;
 const POLL_INTERVAL_MS = 200;
 const POLL_DEADLINE_MS = 30 * SECOND_MS;
@@ -51,7 +51,7 @@ const SMALL_POSTER_SIZE = 540;
 const TOUCH_ICON_SIZE = 180;
 const TOUCH_ICON_FILE = 'apple-touch-icon.png';
 
-function demoFilesOf(input: { locale: OwnerLocale }) {
+function demoFilesOf(input: { locale: RecordedLocale }) {
   const { locale } = input;
   return {
     mp4: `demo-${locale}-960.mp4`,
@@ -88,14 +88,14 @@ type DemoData = {
 
 type ScreenResponse = { entries: Pick<ScreenEntry, 'at' | 'text' | 'options'>[] };
 
-async function readScreen(input: { origin: string; locale: OwnerLocale }): Promise<ScreenResponse['entries']> {
+async function readScreen(input: { origin: string; locale: RecordedLocale }): Promise<ScreenResponse['entries']> {
   const response = await fetch(`${input.origin}/dev/owner/${OWNER_PHONES[input.locale]}/screen`);
   return screenSchema.parse(await response.json()).entries;
 }
 
 async function untilScreen(input: {
   origin: string;
-  locale: OwnerLocale;
+  locale: RecordedLocale;
   isReady: (entries: ScreenResponse['entries']) => boolean;
   deadline: number;
 }) {
@@ -150,7 +150,7 @@ async function startWorker(input: { persistDirectory: string }): Promise<{ origi
   return { origin, stop: () => (server.pid === undefined ? undefined : process.kill(-server.pid, 'SIGTERM')) };
 }
 
-async function seedAgent(input: { origin: string; locale: OwnerLocale }): Promise<string> {
+async function seedAgent(input: { origin: string; locale: RecordedLocale }): Promise<string> {
   const response = await fetch(`${input.origin}${DEV_SEED_PATH}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -176,7 +176,7 @@ async function optionIdOf(input: { client: Client; index: number }): Promise<{ o
   return { optionId: option.option_id, title: option.title };
 }
 
-async function postOwner(input: { origin: string; locale: OwnerLocale; body: Record<string, unknown> }): Promise<void> {
+async function postOwner(input: { origin: string; locale: RecordedLocale; body: Record<string, unknown> }): Promise<void> {
   await fetch(`${input.origin}/dev/owner/${OWNER_PHONES[input.locale]}/messages`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -184,9 +184,8 @@ async function postOwner(input: { origin: string; locale: OwnerLocale; body: Rec
   });
 }
 
-async function recordFlow(input: { origin: string; secret: string; locale: OwnerLocale }): Promise<DemoData> {
+async function recordFlow(input: { origin: string; secret: string; locale: RecordedLocale }): Promise<DemoData> {
   const { origin, locale } = input;
-  const webLocale = WEB_LOCALE_OF_OWNER_LOCALE[locale];
   const script = SCRIPTS[locale];
   const client = new Client({ name: 'zapbip-landing-demo', version: '0.0.0' });
   await client.connect(new StreamableHTTPClientTransport(new URL(`${origin}/c/${input.secret}/mcp`)));
@@ -227,9 +226,9 @@ async function recordFlow(input: { origin: string; secret: string; locale: Owner
     optionsLabel: script.optionsLabel,
     waitingLabel: script.waitingLabel,
     answeredLabel: script.answeredLabel,
-    titleLead: renderSiteCopy({ key: SiteCopyKey.HeroTitleLead, locale: webLocale }),
-    titleAccent: renderSiteCopy({ key: SiteCopyKey.HeroTitleAccent, locale: webLocale }),
-    tagline: `${TAGLINE_PREFIX}${renderSiteCopy({ key: SiteCopyKey.FinalButton, locale: webLocale })}`,
+    titleLead: renderSiteCopy({ key: SiteCopyKey.HeroTitleLead, locale }),
+    titleAccent: renderSiteCopy({ key: SiteCopyKey.HeroTitleAccent, locale }),
+    tagline: `${TAGLINE_PREFIX}${renderSiteCopy({ key: SiteCopyKey.FinalButton, locale })}`,
   };
 }
 
@@ -261,7 +260,7 @@ async function renderTouchIcon(input: { target: string }): Promise<void> {
   await browser.close();
 }
 
-async function encode(input: { framesDirectory: string; locale: OwnerLocale }): Promise<void> {
+async function encode(input: { framesDirectory: string; locale: RecordedLocale }): Promise<void> {
   const files = demoFilesOf({ locale: input.locale });
   const mp4 = join(OUTPUT_DIRECTORY, files.mp4);
   const scale = `scale=${ENCODED_SIZE}:${ENCODED_SIZE}:flags=lanczos,format=yuv420p`;
@@ -335,9 +334,8 @@ async function encode(input: { framesDirectory: string; locale: OwnerLocale }): 
   ]);
 }
 
-async function produceLocale(input: { origin: string; locale: OwnerLocale; workDirectory: string }): Promise<DemoData> {
+async function produceLocale(input: { origin: string; locale: RecordedLocale; workDirectory: string }): Promise<DemoData> {
   const { origin, locale, workDirectory } = input;
-  const webLocale = WEB_LOCALE_OF_OWNER_LOCALE[locale];
   const framesDirectory = join(workDirectory, `frames-${locale}`);
   await mkdir(framesDirectory);
   const data = await recordFlow({ origin, locale, secret: await seedAgent({ origin, locale }) });
@@ -345,7 +343,7 @@ async function produceLocale(input: { origin: string; locale: OwnerLocale; workD
   await renderFrames({ data, framesDirectory });
   await encode({ framesDirectory, locale });
   const openGraph = join(OUTPUT_DIRECTORY, demoFilesOf({ locale }).openGraph);
-  await renderOpenGraphImage({ data, language: languageOf({ locale: webLocale }), target: openGraph });
+  await renderOpenGraphImage({ data, language: languageOf({ locale }), target: openGraph });
   return data;
 }
 

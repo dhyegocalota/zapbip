@@ -23,11 +23,11 @@ import InstallPrompt from '/snippets/ko/install-prompt.mdx';
 
 ## 처음부터 설정하기
 
-1. **WhatsApp에서 zapbip 번호로 메시지를 보냅니다.** `new agent my-app`을 보내세요. 명령어는 지금은 영어나 포르투갈어 단어로 입력합니다. 모든 메시지는 [시작하기](/ko/get-started/how-to-start)에 나와 있습니다.
+1. **WhatsApp에서 zapbip 번호로 메시지를 보냅니다.** `새 에이전트 my-app`을 보내세요. 명령어는 한국어, 영어, 포르투갈어 단어로 입력할 수 있습니다. 모든 메시지는 [시작하기](/ko/get-started/how-to-start)에 나와 있습니다.
 
    <Chat
      messages={[
-       { you: true, text: 'new agent my-app', time: '09:00' },
+       { you: true, text: '새 에이전트 my-app', time: '09:00' },
        { name: 'zapbip', text: 'Agent my-app created. Paste this into your agent.', time: '09:00' },
      ]}
    />
@@ -42,9 +42,9 @@ import InstallPrompt from '/snippets/ko/install-prompt.mdx';
 
 ## 작동 확인
 
-AI에게 WhatsApp으로 `✅ installed`를 보내라고 요청하세요. 도착하면 연결이 작동하는 것입니다.
+AI에게 WhatsApp으로 `✅ 설치 완료`를 보내라고 요청하세요. 도착하면 연결이 작동하는 것입니다.
 
-<Chat messages={[{ name: 'My app', text: '✅ installed', time: '09:03' }]} />
+<Chat messages={[{ name: 'My app', text: '✅ 설치 완료', time: '09:03' }]} />
 
 그다음 WhatsApp에 무언가 쓰고 앱에게 받은편지함을 확인하라고 요청하세요. 앱이 내 메시지를 읽습니다.
 

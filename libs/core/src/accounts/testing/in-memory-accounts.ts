@@ -143,6 +143,11 @@ function createDirectory(input: { store: AccountStore }): AccountDirectory {
       if (stored === undefined) return;
       accounts.set(accountId, { ...stored, state });
     },
+    setLocale: async ({ accountId, locale }) => {
+      const stored = accounts.get(accountId);
+      if (stored === undefined) return;
+      accounts.set(accountId, { ...stored, locale });
+    },
     release: async ({ accountId }) => {
       const stored = accounts.get(accountId);
       if (stored === undefined || stored.state !== AccountState.Waitlisted) return false;

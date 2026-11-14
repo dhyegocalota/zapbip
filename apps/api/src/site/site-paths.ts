@@ -1,4 +1,4 @@
-import { WebLocale } from '@zapbip/types';
+import { OwnerLocale } from '@zapbip/types';
 
 export enum SitePath {
   Home = '/',
@@ -39,18 +39,18 @@ export enum SiteAssetKind {
 export const APPLE_TOUCH_ICON_PATH = `${SitePath.AssetPrefix}apple-touch-icon.png`;
 const LOCALE_PLACEHOLDER = '{locale}';
 // NB ADR 0047: the demo exists in English and Portuguese only; every other language shows the English demo until it is recorded. The Open Graph image exists in every language.
-const ASSET_LOCALES: Record<WebLocale, WebLocale> = {
-  [WebLocale.EnglishUs]: WebLocale.EnglishUs,
-  [WebLocale.PortugueseBrazil]: WebLocale.PortugueseBrazil,
-  [WebLocale.Spanish]: WebLocale.EnglishUs,
-  [WebLocale.German]: WebLocale.EnglishUs,
-  [WebLocale.French]: WebLocale.EnglishUs,
-  [WebLocale.Japanese]: WebLocale.EnglishUs,
-  [WebLocale.Korean]: WebLocale.EnglishUs,
-  [WebLocale.ChineseSimplified]: WebLocale.EnglishUs,
+const ASSET_LOCALES: Record<OwnerLocale, OwnerLocale> = {
+  [OwnerLocale.EnglishUs]: OwnerLocale.EnglishUs,
+  [OwnerLocale.PortugueseBrazil]: OwnerLocale.PortugueseBrazil,
+  [OwnerLocale.Spanish]: OwnerLocale.EnglishUs,
+  [OwnerLocale.German]: OwnerLocale.EnglishUs,
+  [OwnerLocale.French]: OwnerLocale.EnglishUs,
+  [OwnerLocale.Japanese]: OwnerLocale.EnglishUs,
+  [OwnerLocale.Korean]: OwnerLocale.EnglishUs,
+  [OwnerLocale.ChineseSimplified]: OwnerLocale.EnglishUs,
 };
 
-export function siteAssetOf(input: { kind: SiteAssetKind; locale: WebLocale }): string {
+export function siteAssetOf(input: { kind: SiteAssetKind; locale: OwnerLocale }): string {
   const assetLocale = input.kind === SiteAssetKind.OpenGraphImage ? input.locale : ASSET_LOCALES[input.locale];
   return `${SitePath.AssetPrefix}${input.kind.replace(LOCALE_PLACEHOLDER, assetLocale)}`;
 }

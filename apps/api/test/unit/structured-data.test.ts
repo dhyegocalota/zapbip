@@ -1,4 +1,4 @@
-import { COMPANY, PRICING_CURRENCY_BY_LOCALE, PRICING_FREE_CENTS, PRICING_PRO_MONTHLY_CENTS, WebLocale } from '@zapbip/types';
+import { COMPANY, PRICING_CURRENCY_BY_LOCALE, PRICING_FREE_CENTS, PRICING_PRO_MONTHLY_CENTS, OwnerLocale } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { aboutFactsOf } from '../../src/site/about-facts';
 import { faqItemsOf } from '../../src/site/faq-items';
@@ -15,7 +15,7 @@ import { MODEL_ORIGIN, pageModelFor } from '../support/page-model';
 
 const CENTS_PER_UNIT = 100;
 
-function graphOf(input: { locale: WebLocale; document: LegalDocument | null }): StructuredDataNode[] {
+function graphOf(input: { locale: OwnerLocale; document: LegalDocument | null }): StructuredDataNode[] {
   return structuredDataOf({ model: pageModelFor({ locale: input.locale, legalDocument: input.document }) })['@graph'];
 }
 
@@ -29,7 +29,7 @@ function typesOf(input: { graph: StructuredDataNode[] }): unknown[] {
   return input.graph.map((node) => node['@type']);
 }
 
-describe.each(Object.values(WebLocale))('structured data of the home page in %s', (locale) => {
+describe.each(Object.values(OwnerLocale))('structured data of the home page in %s', (locale) => {
   const graph = graphOf({ locale, document: null });
   const translate = copyOf({ locale });
 
@@ -94,7 +94,7 @@ describe.each(Object.values(WebLocale))('structured data of the home page in %s'
   });
 });
 
-describe.each(Object.values(WebLocale))('structured data of the legal pages in %s', (locale) => {
+describe.each(Object.values(OwnerLocale))('structured data of the legal pages in %s', (locale) => {
   it.each(Object.values(LegalDocument))('puts the %s page under the home page in a breadcrumb', (document) => {
     const graph = graphOf({ locale, document });
     expect(typesOf({ graph })).toEqual(['Organization', 'WebSite', 'BreadcrumbList']);

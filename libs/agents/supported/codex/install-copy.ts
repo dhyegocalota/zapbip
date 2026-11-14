@@ -38,6 +38,36 @@ const CODEX_TEXT: Record<OwnerLocale, CodexText> = {
     confirmChange: `I will write the zapbip server to ${CONFIG_PATH}. This lets zapbip tools run unattended, without asking for approval on each use. May I?`,
     restart: 'Restart Codex to use zapbip.',
   },
+  [OwnerLocale.Spanish]: {
+    wakeNote: 'El conector reanuda la sesión de Codex con cada mensaje, en unos 6 segundos y sin límite de tiempo.',
+    confirmChange: `Voy a escribir el servidor zapbip en ${CONFIG_PATH}. Esto permite que las herramientas de zapbip se ejecuten sin supervisión, sin pedir aprobación en cada uso. ¿Puedo?`,
+    restart: 'Reinicia Codex para usar zapbip.',
+  },
+  [OwnerLocale.German]: {
+    wakeNote: 'Der Connector setzt die Codex-Sitzung bei jeder Nachricht fort, in etwa 6 Sekunden und ohne Zeitlimit.',
+    confirmChange: `Ich schreibe den zapbip-Server nach ${CONFIG_PATH}. So laufen die zapbip-Werkzeuge unbeaufsichtigt, ohne bei jeder Nutzung um Genehmigung zu bitten. Darf ich?`,
+    restart: 'Starte Codex neu, um zapbip zu nutzen.',
+  },
+  [OwnerLocale.French]: {
+    wakeNote: 'Le connecteur reprend la session Codex à chaque message, en environ 6 secondes et sans limite de temps.',
+    confirmChange: `Je vais écrire le serveur zapbip dans ${CONFIG_PATH}. Les outils zapbip pourront ainsi s’exécuter sans surveillance, sans demander d’approbation à chaque utilisation. Puis-je\u202f?`,
+    restart: 'Redémarrez Codex pour utiliser zapbip.',
+  },
+  [OwnerLocale.Japanese]: {
+    wakeNote: 'コネクタはメッセージが届くたびにCodexのセッションを約6秒で再開します。時間制限はありません。',
+    confirmChange: `zapbipサーバーを${CONFIG_PATH}に書き込みます。これにより、zapbipのツールは、使うたびに承認を求めることなく、無人で実行されます。よろしいですか？`,
+    restart: 'zapbipを使うには、Codexを再起動してください。',
+  },
+  [OwnerLocale.Korean]: {
+    wakeNote: '커넥터가 메시지마다 약 6초 만에 Codex 세션을 재개합니다. 시간 제한은 없습니다.',
+    confirmChange: `zapbip 서버를 ${CONFIG_PATH}에 작성하겠습니다. 그러면 zapbip 도구가 사용할 때마다 승인을 묻지 않고 무인으로 실행됩니다. 진행해도 될까요?`,
+    restart: 'zapbip을 쓰려면 Codex를 다시 시작하세요.',
+  },
+  [OwnerLocale.ChineseSimplified]: {
+    wakeNote: '连接器会在每条消息到来时恢复 Codex 会话，大约 6 秒，不限时。',
+    confirmChange: `我将把 zapbip 服务器写入 ${CONFIG_PATH}。这样 zapbip 的工具可以无人值守地运行，每次使用都不再请求批准。可以吗？`,
+    restart: '请重新启动 Codex 以使用 zapbip。',
+  },
 };
 
 export const CODEX_COPY = localizeCopy({
@@ -74,6 +104,12 @@ export const CODEX_COPY = localizeCopy({
 const CODEX_QUICK_START_HINT: Record<OwnerLocale, string> = {
   [OwnerLocale.PortugueseBrazil]: `Adicione ao ${CONFIG_PATH}`,
   [OwnerLocale.EnglishUs]: `Add it to ${CONFIG_PATH}`,
+  [OwnerLocale.Spanish]: `Añádelo a ${CONFIG_PATH}`,
+  [OwnerLocale.German]: `Füge es zu ${CONFIG_PATH} hinzu`,
+  [OwnerLocale.French]: `Ajoutez-le à ${CONFIG_PATH}`,
+  [OwnerLocale.Japanese]: `${CONFIG_PATH}に追加します`,
+  [OwnerLocale.Korean]: `${CONFIG_PATH}에 추가하세요`,
+  [OwnerLocale.ChineseSimplified]: `把它添加到 ${CONFIG_PATH}`,
 };
 
 export const CODEX_QUICK_START = quickStartOf({

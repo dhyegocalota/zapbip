@@ -76,3 +76,24 @@ zapbip has one Meta app, `714836811568009`, for staging and production ([ADR 003
     Expect: all four templates change from In review to Approved, usually within minutes to a day, with the category Utility.
 
     If it fails: if Meta recategorises one as Marketing, edit it to remove promotional wording or appeal in WhatsApp Manager; a Marketing template costs more and is not what the Worker sends. A template that stays rejected blocks production, because outside the 24-hour window zapbip can only reach the owner through these templates.
+
+12. **Submit the translated templates, one language at a time (optional).** Until a language has approved templates, zapbip sends the English template to its owners outside the 24-hour window ([ADR 0051](../adr/0051-whatsapp-speaks-eight-languages-and-the-template-of-a-language-is-chosen-by-a-table.md)). Submit the rows of a language exactly as in step 11 (same names, category Utility, one Quick reply button). When both templates of a language show Approved, change that language's row in `OWNER_LOCALE_TO_LANGUAGE_CODE` (`apps/api/src/adapters/whatsapp/whatsapp-templates.ts`) from `WhatsAppLanguageCode.EnglishUs` to its own code and deploy; the number check in the backoffice then lists that language too. Never flip a row before Approved: Meta refuses the send and the owner gets nothing.
+
+    | Name | Language | Body, exactly | Samples | Quick reply |
+    |---|---|---|---|---|
+    | `zapbip_agent_notice` | `es` | `Mensaje de {{1}}: {{2}} — toca Abrir para leerlo.` | `Agente de prueba`, `Mensaje de ejemplo` | `Abrir` |
+    | `zapbip_agent_question` | `es` | `Pregunta de {{1}}: {{2}} — toca Responder para ver las opciones.` | `Agente de prueba`, `Pregunta de ejemplo` | `Responder` |
+    | `zapbip_agent_notice` | `de` | `Nachricht von {{1}}: {{2}} — tippe auf Öffnen, um sie zu lesen.` | `Test-Agent`, `Beispielnachricht` | `Öffnen` |
+    | `zapbip_agent_question` | `de` | `Frage von {{1}}: {{2}} — tippe auf Antworten, um die Optionen zu sehen.` | `Test-Agent`, `Beispielfrage` | `Antworten` |
+    | `zapbip_agent_notice` | `fr` | `Message de {{1}} : {{2}} — touchez Ouvrir pour le lire.` | `Agent de test`, `Message d’exemple` | `Ouvrir` |
+    | `zapbip_agent_question` | `fr` | `Question de {{1}} : {{2}} — touchez Répondre pour voir les options.` | `Agent de test`, `Question d’exemple` | `Répondre` |
+    | `zapbip_agent_notice` | `ja` | `メッセージが届きました。{{1}}より: {{2}} — 「開く」をタップして読む。` | `テストエージェント`, `サンプルメッセージ` | `開く` |
+    | `zapbip_agent_question` | `ja` | `質問が届きました。{{1}}より: {{2}} — 「返信」をタップして選択肢を見る。` | `テストエージェント`, `サンプルの質問` | `返信` |
+    | `zapbip_agent_notice` | `ko` | `메시지가 도착했어요. {{1}}님의 메시지: {{2}} — 열기를 눌러 읽어 보세요.` | `테스트 에이전트`, `예시 메시지` | `열기` |
+    | `zapbip_agent_question` | `ko` | `질문이 도착했어요. {{1}}님의 질문: {{2}} — 답장을 눌러 선택지를 확인하세요.` | `테스트 에이전트`, `예시 질문` | `답장` |
+    | `zapbip_agent_notice` | `zh_CN` | `来自 {{1}} 的消息：{{2}} — 点击“打开”查看。` | `测试智能体`, `示例消息` | `打开` |
+    | `zapbip_agent_question` | `zh_CN` | `来自 {{1}} 的提问：{{2}} — 点击“回复”查看选项。` | `测试智能体`, `示例问题` | `回复` |
+
+    Expect: each submitted template changes from In review to Approved with the category Utility.
+
+    If it fails: as in step 11. A rejected translated template changes nothing for the owner, who keeps receiving the English one.

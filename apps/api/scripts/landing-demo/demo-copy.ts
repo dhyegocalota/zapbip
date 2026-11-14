@@ -14,7 +14,9 @@ export type LocaleScript = {
   answeredLabel: string;
 };
 
-export const SCRIPTS: Record<OwnerLocale, LocaleScript> = {
+export type RecordedLocale = OwnerLocale.EnglishUs | OwnerLocale.PortugueseBrazil;
+
+export const SCRIPTS: Record<RecordedLocale, LocaleScript> = {
   [OwnerLocale.EnglishUs]: {
     command: 'run the tests',
     testsPassed: '128 tests passed',

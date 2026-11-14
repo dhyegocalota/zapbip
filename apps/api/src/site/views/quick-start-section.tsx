@@ -1,5 +1,5 @@
 import type { InstallClient } from '@zapbip/agents/install';
-import type { WebLocale } from '@zapbip/types';
+import type { OwnerLocale } from '@zapbip/types';
 import { CodeTokenKind, highlightCode } from '../code-tokens';
 import { initialsOf, SiteStartTab } from '../site-agents';
 import { quickStartEntriesOf } from '../quick-start-entries';
@@ -78,7 +78,7 @@ function TabLogo(props: { tab: Tab }) {
 }
 
 export function QuickStartSection(props: {
-  locale: WebLocale;
+  locale: OwnerLocale;
   siteOrigin: string;
   referralCode: string | null;
   startTab: InstallClient | SiteStartTab;

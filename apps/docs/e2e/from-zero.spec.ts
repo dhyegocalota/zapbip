@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { DOCS_START_LINK_LANGUAGES, DocsPageLanguage, START_LINK, START_LINK_LANGUAGE_PARAMETER } from '@zapbip/types';
+import { DocsPageLanguage, START_LINK, START_LINK_LANGUAGE_PARAMETER } from '@zapbip/types';
 import { AgentId } from '../../../libs/agents/src/definitions';
 import { AGENT_PAGE_HEADINGS, AGENT_PAGE_SECTIONS } from '../../../tools/repository-shape/src/docs-experience';
 import { DOCS_LOCALE_OF, DocsViewport, docsOptionsOf, isAllowedNoise, requestFailedNoiseOf } from './support/docs-experience';
@@ -83,9 +83,7 @@ for (const language of Object.values(DocsPageLanguage)) {
         const steps = page.locator('#content-area ol > li');
         await expect(steps).toHaveCount(STEP_COUNT);
         for (let position = 0; position < STEP_COUNT; position += 1) await expect(steps.nth(position)).toBeVisible();
-        await expect(
-          steps.first().locator(`a[href="${START_LINK}?${START_LINK_LANGUAGE_PARAMETER}=${DOCS_START_LINK_LANGUAGES[language]}"]`),
-        ).toBeVisible();
+        await expect(steps.first().locator(`a[href="${START_LINK}?${START_LINK_LANGUAGE_PARAMETER}=${language}"]`)).toBeVisible();
         await expect(page.locator(WHATSAPP_NUMBER_LINK_LOCATOR)).toHaveCount(0);
         await expect(page.locator('#content-area')).not.toContainText(PHONE_NUMBER_PATTERN);
         await expectNoOverflow({ page });

@@ -1,14 +1,6 @@
 import { reset } from 'cloudflare:test';
 import { COMMAND_WORDS } from '@zapbip/core';
-import {
-  CommandKind,
-  DocsLanguage,
-  INSTALL_SELF_TEST_TEXT,
-  OWNER_LOCALE_OF_WEB_LOCALE,
-  OwnerLocale,
-  START_LINK,
-  WebLocale,
-} from '@zapbip/types';
+import { CommandKind, DOCS_LANGUAGE_OF_OWNER_LOCALE, INSTALL_SELF_TEST_TEXT, OwnerLocale, START_LINK } from '@zapbip/types';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { setupPathOf } from '../../src/site/agentic-paths';
 import { siteAgents, siteQuickStartOf } from '../../src/site/site-agents';
@@ -21,22 +13,18 @@ import { copyHtml, escapedHtml, SITE_ORIGIN, siteFetch } from '../support/site';
 
 const MARKDOWN_TYPE = 'text/markdown; charset=utf-8';
 const OK = 200;
-const LOCALES = Object.values(WebLocale);
+const LOCALES = Object.values(OwnerLocale);
 const SETUP_FILE = '/setup.md';
-const START_LANGUAGE_OF_OWNER_LOCALE: Record<OwnerLocale, DocsLanguage> = {
-  [OwnerLocale.EnglishUs]: DocsLanguage.English,
-  [OwnerLocale.PortugueseBrazil]: DocsLanguage.PortugueseBrazil,
-};
 const PANEL_MARKER = '<div class="start-panel" role="tabpanel"';
 const MANUAL_OPENING = '<details class="start-manual">';
 const DATA_CODE_PATTERN = /data-code="([^"]*)"/;
 
-function prefixOf(input: { locale: WebLocale }): string {
+function prefixOf(input: { locale: OwnerLocale }): string {
   const home = localePathOf({ locale: input.locale });
   return home === '/' ? '' : home;
 }
 
-function promptOf(input: { locale: WebLocale }): string {
+function promptOf(input: { locale: OwnerLocale }): string {
   const { locale } = input;
   return renderSiteCopy({
     key: SiteCopyKey.StartPromptLine,
@@ -45,7 +33,7 @@ function promptOf(input: { locale: WebLocale }): string {
   });
 }
 
-async function setupOf(input: { locale: WebLocale }): Promise<{ response: Response; text: string }> {
+async function setupOf(input: { locale: OwnerLocale }): Promise<{ response: Response; text: string }> {
   const response = await siteFetch({ path: `${prefixOf(input)}${SETUP_FILE}` });
   return { response, text: await response.text() };
 }
@@ -81,16 +69,15 @@ describe('GET /setup.md in every language', () => {
 
   it.each(LOCALES)('names the start link and the create-agent words of the owner language in %s', async (locale) => {
     const { text } = await setupOf({ locale });
-    const ownerLocale = OWNER_LOCALE_OF_WEB_LOCALE[locale];
-    const { words } = COMMAND_WORDS.find((entry) => entry.kind === CommandKind.CreateAgent && entry.locale === ownerLocale)!;
+    const { words } = COMMAND_WORDS.find((entry) => entry.kind === CommandKind.CreateAgent && entry.locale === locale)!;
     const agentName = renderSiteCopy({ key: SiteCopyKey.SetupAgentName, locale });
-    expect(text).toContain(`${START_LINK}?lang=${START_LANGUAGE_OF_OWNER_LOCALE[ownerLocale]}`);
+    expect(text).toContain(`${START_LINK}?lang=${DOCS_LANGUAGE_OF_OWNER_LOCALE[locale]}`);
     expect(text).toContain(`\`${words} <${agentName}>\``);
   });
 
   it.each(LOCALES)('asks for the install self-test text of the owner language in %s', async (locale) => {
     const { text } = await setupOf({ locale });
-    expect(text).toContain(INSTALL_SELF_TEST_TEXT[OWNER_LOCALE_OF_WEB_LOCALE[locale]]);
+    expect(text).toContain(INSTALL_SELF_TEST_TEXT[locale]);
   });
 
   it.each(LOCALES)('covers every agent of the registry with its code and the placeholder in %s', async (locale) => {
@@ -146,7 +133,7 @@ describe('the setup page is linked from every agent surface', () => {
   });
 
   it.each(LOCALES)('the home twin carries the one line in %s', async (locale) => {
-    const home = locale === WebLocale.EnglishUs ? '/index' : localePathOf({ locale });
+    const home = locale === OwnerLocale.EnglishUs ? '/index' : localePathOf({ locale });
     const text = await (await siteFetch({ path: `${home}.md` })).text();
     expect(text).toContain(promptOf({ locale }));
   });
@@ -160,9 +147,9 @@ describe('the setup page is linked from every agent surface', () => {
   });
 
   it.each([
-    ['any', 'en', WebLocale.EnglishUs],
-    ['any', 'pt-BR', WebLocale.PortugueseBrazil],
-    [siteAgents()[0]!.id, 'de', WebLocale.German],
+    ['any', 'en', OwnerLocale.EnglishUs],
+    ['any', 'pt-BR', OwnerLocale.PortugueseBrazil],
+    [siteAgents()[0]!.id, 'de', OwnerLocale.German],
   ])('GET /api/quick-start?agent=%s&language=%s answers the one line and the setup address', async (agent, language, locale) => {
     const body = (await (await siteFetch({ path: `/api/quick-start?agent=${agent}&language=${language}` })).json()) as Record<
       string,

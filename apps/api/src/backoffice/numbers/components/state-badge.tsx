@@ -1,4 +1,4 @@
-import { type WebLocale, WhatsAppNumberState } from '@zapbip/types';
+import { type OwnerLocale, WhatsAppNumberState } from '@zapbip/types';
 import { BackofficeCopyKey, renderBackofficeCopy } from '../../backoffice-copy';
 import { LiveDot } from '../../components/live-dot';
 
@@ -16,7 +16,7 @@ const STATE_GLYPHS: Record<WhatsAppNumberState, string> = {
   [WhatsAppNumberState.Disabled]: '✕',
 };
 
-export function StateBadge(props: { locale: WebLocale; state: WhatsAppNumberState }) {
+export function StateBadge(props: { locale: OwnerLocale; state: WhatsAppNumberState }) {
   return (
     <span class={`state-badge state-${props.state}`}>
       {props.state === WhatsAppNumberState.Active ? <LiveDot /> : null}

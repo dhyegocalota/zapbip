@@ -1,8 +1,8 @@
-import type { WebLocale } from '@zapbip/types';
+import type { OwnerLocale } from '@zapbip/types';
 import { BackofficeCopyKey, renderBackofficeCopy } from '../backoffice-copy';
 import { BackofficePath } from '../backoffice-paths';
 
-export function SignOutButton(props: { locale: WebLocale; csrfToken: string }) {
+export function SignOutButton(props: { locale: OwnerLocale; csrfToken: string }) {
   return (
     <form method="post" action={BackofficePath.SignOut}>
       <input type="hidden" name="csrf" value={props.csrfToken} />

@@ -1,4 +1,5 @@
-import { DOCS_OWNER_LOCALES, DocsPageLanguage, INSTALL_SELF_TEST_TEXT, ZAPBIP_NPM_VERSION } from '@zapbip/types';
+import { COMMAND_WORDS } from '@zapbip/core';
+import { CommandKind, DOCS_OWNER_LOCALES, DocsPageLanguage, INSTALL_SELF_TEST_TEXT, ZAPBIP_NPM_VERSION } from '@zapbip/types';
 import type { AgentPlugin } from '../contract';
 import { violationIf } from './registry';
 
@@ -12,17 +13,6 @@ const CODE_PATTERN = /```[\s\S]*?```|`[^`\n]*`/g;
 const CHAT_IMPORT = "import { Chat } from '/snippets/chat.jsx';";
 const CHAT_TAG = '<Chat';
 const NON_PORTABLE_HASH_TOOL = 'sha256sum';
-const ENGLISH_NEW_AGENT_WORDS = 'new agent';
-const NEW_AGENT_WORDS: Record<DocsPageLanguage, string> = {
-  [DocsPageLanguage.English]: ENGLISH_NEW_AGENT_WORDS,
-  [DocsPageLanguage.PortugueseBrazil]: 'novo agente',
-  [DocsPageLanguage.Spanish]: ENGLISH_NEW_AGENT_WORDS,
-  [DocsPageLanguage.German]: ENGLISH_NEW_AGENT_WORDS,
-  [DocsPageLanguage.French]: ENGLISH_NEW_AGENT_WORDS,
-  [DocsPageLanguage.Japanese]: ENGLISH_NEW_AGENT_WORDS,
-  [DocsPageLanguage.Korean]: ENGLISH_NEW_AGENT_WORDS,
-  [DocsPageLanguage.Chinese]: ENGLISH_NEW_AGENT_WORDS,
-};
 const LISTEN_COMMAND = `\`npx zapbip@${ZAPBIP_NPM_VERSION} listen\``;
 const ONE_LISTENER_SENTENCES: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.English]: `Run only one listener per agent: the plugin or ${LISTEN_COMMAND}, never both. A second listener replaces the first.`,
@@ -35,12 +25,17 @@ const ONE_LISTENER_SENTENCES: Record<DocsPageLanguage, string> = {
   [DocsPageLanguage.Chinese]: `每个智能体只运行一个 listener：插件或 ${LISTEN_COMMAND}，不要两者同时使用。第二个 listener 会替换第一个。`,
 };
 
+function newAgentWordsOf(input: { language: DocsPageLanguage }): string {
+  const locale = DOCS_OWNER_LOCALES[input.language];
+  return COMMAND_WORDS.find((entry) => entry.kind === CommandKind.CreateAgent && entry.locale === locale)!.words;
+}
+
 function stepGuideViolationsOf(input: PageRuleInput): string[] {
   const hasPlaceholderInCode = input.page.includes(CONNECTION_LINK_PLACEHOLDER);
   const hasPlaceholderOutsideCode = input.page.replace(CODE_PATTERN, '').includes(CONNECTION_LINK_PLACEHOLDER);
   return [
     ...violationIf({
-      condition: !input.page.includes(NEW_AGENT_WORDS[input.language]),
+      condition: !input.page.includes(newAgentWordsOf({ language: input.language })),
       message: `${input.label}: the step guide must start from the number and ask for a new agent`,
     }),
     ...violationIf({

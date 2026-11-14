@@ -1,5 +1,5 @@
 import { AGENT_INSTALLS } from '@zapbip/agents/install';
-import { WebLocale } from '@zapbip/types';
+import { OwnerLocale } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { LegalDocument, legalPathOf } from '../../src/site/legal-links';
 import { legalTextOf } from '../../src/site/legal-copy';
@@ -9,16 +9,16 @@ import { SITE_ORIGIN, siteFetch } from '../support/site';
 
 const HOME_TYPES = ['Organization', 'WebSite', 'WebApplication', 'FAQPage'];
 const LEGAL_TYPES = ['Organization', 'WebSite', 'BreadcrumbList'];
-const ALTERNATE_COUNT = Object.values(WebLocale).length + 1;
+const ALTERNATE_COUNT = Object.values(OwnerLocale).length + 1;
 const PICKED_AGENT = Object.keys(AGENT_INSTALLS)[0]!;
 const QUERY = `?agent=${PICKED_AGENT}&ref=abcdefgh2345`;
 const LD_JSON_BLOCK = /<script type="application\/ld\+json">([\s\S]*?)<\/script>/g;
 const INLINE_SCRIPT = /<script(?![^>]*\bsrc=)(?![^>]*application\/ld\+json)[^>]*>/;
 const HEADING = /<h([1-6])[\s>]/g;
 
-type PageCase = { locale: WebLocale; document: LegalDocument | null; path: string; types: string[] };
+type PageCase = { locale: OwnerLocale; document: LegalDocument | null; path: string; types: string[] };
 
-const PAGES: PageCase[] = Object.values(WebLocale).flatMap((locale) => [
+const PAGES: PageCase[] = Object.values(OwnerLocale).flatMap((locale) => [
   { locale, document: null, path: localePathOf({ locale }), types: HOME_TYPES },
   ...Object.values(LegalDocument).map((document) => ({ locale, document, path: legalPathOf({ document, locale }), types: LEGAL_TYPES })),
 ]);

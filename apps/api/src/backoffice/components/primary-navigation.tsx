@@ -1,4 +1,4 @@
-import type { WebLocale } from '@zapbip/types';
+import type { OwnerLocale } from '@zapbip/types';
 import { BackofficeCopyKey, renderBackofficeCopy } from '../backoffice-copy';
 import { BackofficePath } from '../backoffice-paths';
 
@@ -12,7 +12,7 @@ const NAVIGATION_ITEMS: { path: BackofficePath; label: BackofficeCopyKey }[] = [
   { path: BackofficePath.Audit, label: BackofficeCopyKey.NavigationAudit },
 ];
 
-export function PrimaryNavigation(props: { locale: WebLocale; currentPath: string }) {
+export function PrimaryNavigation(props: { locale: OwnerLocale; currentPath: string }) {
   return (
     <nav aria-label={renderBackofficeCopy({ key: BackofficeCopyKey.NavigationLabel, locale: props.locale })}>
       {NAVIGATION_ITEMS.map((item) =>

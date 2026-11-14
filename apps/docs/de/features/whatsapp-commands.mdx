@@ -5,30 +5,31 @@ description: Was du an die zapbip-Nummer schreiben kannst.
 
 import { Chat } from '/snippets/chat.jsx';
 
-Du verwaltest deine KIs, indem du der zapbip-Nummer schreibst. Ein Befehl ist eine kurze Formulierung, auf Englisch oder Portugiesisch: Das sind die beiden Sprachen, die das Produkt heute versteht, und die Befehle werden nicht in andere übersetzt. Die Sprache, in der du schreibst, ist die Sprache der Antwort. Jede Zeile zeigt beide Fassungen.
+Du verwaltest deine KIs, indem du der zapbip-Nummer schreibst. Ein Befehl ist eine kurze Formulierung, auf Deutsch oder Englisch; Portugiesisch, Spanisch, Französisch, Japanisch, Koreanisch und Chinesisch haben ihre eigenen. Die Sprache, in der du schreibst, ist die Sprache der Antwort. Jede Zeile zeigt beide Versionen.
 
-| Du willst                | Auf Englisch schreiben                              | Oder auf Portugiesisch                              | Was passiert                                                                                 |
-| ------------------------ | --------------------------------------------------- | --------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| Eine neue KI verbinden   | `new agent claude`                                  | `novo agente claude`                                | zapbip antwortet mit dem Prompt zum Einfügen in diese KI                                     |
-| Deine KIs ansehen        | `agents`                                            | `agentes`                                           | Eine Liste mit Name und Datum jeder KI                                                       |
-| Eine KI trennen          | `revoke claude`                                     | `revogar claude`                                    | Diese KI hört sofort auf zu arbeiten                                                         |
-| Einen neuen Prompt holen | `rotate claude`                                     | `girar claude`                                      | Die alte Verbindung endet und du bekommst einen frischen Prompt                              |
-| In der Web-App anmelden  | `login`                                             | `entrar`                                            | Ein Link, der einmal 10 Minuten lang funktioniert, siehe [die Web-App](/de/features/web-app) |
-| Das Menü öffnen          | `help` oder `menu`                                  | `ajuda` oder `menu`                                 | Die Befehle als Text und als antippbare Liste                                                |
-| Dein Konto löschen       | `delete account`, dann `delete account permanently` | `apagar conta`, dann `apagar conta definitivamente` | Siehe [dein Konto löschen](/de/help/delete-your-account)                                     |
+| Du willst                | Auf Deutsch schreiben                           | Oder auf Englisch                                   | Was passiert                                                                                         |
+| ------------------------ | ----------------------------------------------- | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Eine neue KI verbinden   | `neuer agent claude`                            | `new agent claude`                                  | zapbip antwortet mit dem Prompt zum Einfügen in diese KI                                             |
+| Deine KIs ansehen        | `meine agenten`                                 | `agents`                                            | Eine Liste mit Name und Datum jeder KI                                                               |
+| Eine KI trennen          | `widerrufen claude`                             | `revoke claude`                                     | Diese KI hört sofort auf zu arbeiten                                                                 |
+| Einen neuen Prompt holen | `erneuern claude`                               | `rotate claude`                                     | Die alte Verbindung endet und du bekommst einen frischen Prompt                                      |
+| In der Web-App anmelden  | `anmelden`                                      | `login`                                             | Ein Link, der einmal 10 Minuten lang funktioniert, siehe [die Web-App](/de/features/web-app)         |
+| Das Menü öffnen          | `hilfe` oder `menü`                             | `help` oder `menu`                                  | Die Befehle als Text und als antippbare Liste                                                        |
+| Die Sprache ändern       | `sprache ja`                                    | `language ja`                                       | zapbip antwortet dir in der gewählten Sprache. Codes: `en`, `pt`, `es`, `de`, `fr`, `ja`, `ko`, `zh` |
+| Dein Konto löschen       | `konto löschen`, dann `konto endgültig löschen` | `delete account`, dann `delete account permanently` | Siehe [dein Konto löschen](/de/help/delete-your-account)                                             |
 
 Schreib die Formulierung allein. Ein angehängtes `?` oder `!` macht daraus eine normale Nachricht an deine KIs.
 
 ## Beispiel
 
-Die Antworten von zapbip sind auf Englisch, weil du auf Englisch geschrieben hast.
+Die Antworten von zapbip sind auf Deutsch, weil du auf Deutsch geschrieben hast.
 
 <Chat
   messages={[
-    { you: true, text: 'agents', time: '09:20' },
-    { text: 'Your agents:\nclaude (2026-11-06, Claude Code)', time: '09:20' },
-    { you: true, text: 'revoke claude', time: '09:21' },
-    { text: 'Agent claude revoked. Its link no longer works.', time: '09:21' },
+    { you: true, text: 'meine agenten', time: '09:20' },
+    { text: 'Deine Agenten:\nclaude (2026-11-06, Claude Code)', time: '09:20' },
+    { you: true, text: 'widerrufen claude', time: '09:21' },
+    { text: 'Agent claude widerrufen. Sein Link funktioniert nicht mehr.', time: '09:21' },
   ]}
 />
 
@@ -38,7 +39,7 @@ Eine Nachricht, die genau ein Befehlswort ist, ist immer ein Befehl. Um dieselbe
 
 ## Namen
 
-Die Wörter `new`, `agents`, `revoke`, `rotate`, `help`, `menu`, `login`, `delete` und ihre portugiesischen Fassungen sind reserviert: Sie können nicht der Name einer KI sein.
+Die Wörter `neuer`, `agenten`, `widerrufen`, `erneuern`, `hilfe`, `menü`, `anmelden`, `konto` und ihre englischen und portugiesischen Versionen sind reserviert: Sie können nicht der Name einer KI sein.
 
 ## Weitergeleitete Nachrichten
 

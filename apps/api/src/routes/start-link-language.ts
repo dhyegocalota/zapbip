@@ -1,12 +1,7 @@
-import { DEFAULT_LOCALE, DocsLanguage, OwnerLocale } from '@zapbip/types';
+import { DEFAULT_LOCALE, DOCS_OWNER_LOCALES, DocsPageLanguage, OwnerLocale } from '@zapbip/types';
 
-const LOCALE_BY_LANGUAGE: Record<DocsLanguage, OwnerLocale> = {
-  [DocsLanguage.English]: OwnerLocale.EnglishUs,
-  [DocsLanguage.PortugueseBrazil]: OwnerLocale.PortugueseBrazil,
-};
-
-function isDocsLanguage(value: string | undefined): value is DocsLanguage {
-  return Object.values<string | undefined>(DocsLanguage).includes(value);
+function isDocsLanguage(value: string | undefined): value is DocsPageLanguage {
+  return Object.values<string | undefined>(DocsPageLanguage).includes(value);
 }
 
 export function startLinkLocaleOf(input: { values: string[] | undefined }): OwnerLocale | null {
@@ -14,5 +9,5 @@ export function startLinkLocaleOf(input: { values: string[] | undefined }): Owne
   const [language] = input.values;
   const isSingleKnownLanguage = input.values.length === 1 && isDocsLanguage(language);
   if (!isSingleKnownLanguage) return null;
-  return LOCALE_BY_LANGUAGE[language];
+  return DOCS_OWNER_LOCALES[language];
 }

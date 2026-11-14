@@ -8,10 +8,24 @@ const WAKE_NOTE: Record<OwnerLocale, string> = {
     'O Gemini CLI escuta pelo terminal em segundo plano e responde em segundos enquanto ele estiver rodando, sem limite de tempo.',
   [OwnerLocale.EnglishUs]:
     'Gemini CLI listens through the background terminal and answers within seconds while it runs, with no time limit.',
+  [OwnerLocale.Spanish]:
+    'Gemini CLI escucha a través de la terminal en segundo plano y responde en segundos mientras se ejecuta, sin límite de tiempo.',
+  [OwnerLocale.German]: 'Gemini CLI hört über das Hintergrund-Terminal zu und antwortet in Sekunden, solange es läuft, ohne Zeitlimit.',
+  [OwnerLocale.French]:
+    'Gemini CLI écoute via le terminal en arrière-plan et répond en quelques secondes tant qu’il tourne, sans limite de temps.',
+  [OwnerLocale.Japanese]: 'Gemini CLIはバックグラウンドのターミナルを通じて待ち受け、実行中は数秒で応答します。時間制限はありません。',
+  [OwnerLocale.Korean]: 'Gemini CLI는 백그라운드 터미널을 통해 듣고, 실행되는 동안 몇 초 안에 답합니다. 시간 제한은 없습니다.',
+  [OwnerLocale.ChineseSimplified]: 'Gemini CLI 通过后台终端监听，运行期间几秒内就会回应，不限时。',
 };
 const RESTART_MARK: Record<OwnerLocale, string> = {
   [OwnerLocale.PortugueseBrazil]: 'Reinicie',
   [OwnerLocale.EnglishUs]: 'Restart',
+  [OwnerLocale.Spanish]: 'Reinicia',
+  [OwnerLocale.German]: 'Starte',
+  [OwnerLocale.French]: 'Redémarrez',
+  [OwnerLocale.Japanese]: '再起動',
+  [OwnerLocale.Korean]: '다시 시작',
+  [OwnerLocale.ChineseSimplified]: '重新启动',
 };
 
 describe('the Gemini CLI install section', () => {

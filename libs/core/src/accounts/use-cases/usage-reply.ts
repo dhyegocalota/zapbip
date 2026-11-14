@@ -6,6 +6,12 @@ import { buildTextReply } from './account-reply';
 const NAME_PLACEHOLDERS: Record<OwnerLocale, string> = {
   [OwnerLocale.PortugueseBrazil]: '<nome>',
   [OwnerLocale.EnglishUs]: '<name>',
+  [OwnerLocale.Spanish]: '<nombre>',
+  [OwnerLocale.German]: '<name>',
+  [OwnerLocale.French]: '<nom>',
+  [OwnerLocale.Japanese]: '<名前>',
+  [OwnerLocale.Korean]: '<이름>',
+  [OwnerLocale.ChineseSimplified]: '<名称>',
 };
 
 export function findCommandWords(input: { kind: CommandKind; locale: OwnerLocale }): string {

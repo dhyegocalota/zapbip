@@ -1,4 +1,4 @@
-import { WebLanguageTag, WebLocale } from '@zapbip/types';
+import { WebLanguageTag, OwnerLocale } from '@zapbip/types';
 
 export type LocaleProfile = {
   languageTag: WebLanguageTag;
@@ -9,8 +9,8 @@ export type LocaleProfile = {
   docsPath: string;
 };
 
-export const LOCALE_PROFILES: Record<WebLocale, LocaleProfile> = {
-  [WebLocale.EnglishUs]: {
+export const LOCALE_PROFILES: Record<OwnerLocale, LocaleProfile> = {
+  [OwnerLocale.EnglishUs]: {
     languageTag: WebLanguageTag.English,
     openGraphLocale: 'en_US',
     turnstileLanguage: 'en',
@@ -18,7 +18,7 @@ export const LOCALE_PROFILES: Record<WebLocale, LocaleProfile> = {
     nativeName: 'English',
     docsPath: '',
   },
-  [WebLocale.PortugueseBrazil]: {
+  [OwnerLocale.PortugueseBrazil]: {
     languageTag: WebLanguageTag.PortugueseBrazil,
     openGraphLocale: 'pt_BR',
     turnstileLanguage: 'pt-br',
@@ -26,7 +26,7 @@ export const LOCALE_PROFILES: Record<WebLocale, LocaleProfile> = {
     nativeName: 'Português',
     docsPath: '/pt-br',
   },
-  [WebLocale.Spanish]: {
+  [OwnerLocale.Spanish]: {
     languageTag: WebLanguageTag.Spanish,
     openGraphLocale: 'es_ES',
     turnstileLanguage: 'es',
@@ -34,7 +34,7 @@ export const LOCALE_PROFILES: Record<WebLocale, LocaleProfile> = {
     nativeName: 'Español',
     docsPath: '/es',
   },
-  [WebLocale.German]: {
+  [OwnerLocale.German]: {
     languageTag: WebLanguageTag.German,
     openGraphLocale: 'de_DE',
     turnstileLanguage: 'de',
@@ -42,7 +42,7 @@ export const LOCALE_PROFILES: Record<WebLocale, LocaleProfile> = {
     nativeName: 'Deutsch',
     docsPath: '/de',
   },
-  [WebLocale.French]: {
+  [OwnerLocale.French]: {
     languageTag: WebLanguageTag.French,
     openGraphLocale: 'fr_FR',
     turnstileLanguage: 'fr',
@@ -50,7 +50,7 @@ export const LOCALE_PROFILES: Record<WebLocale, LocaleProfile> = {
     nativeName: 'Français',
     docsPath: '/fr',
   },
-  [WebLocale.Japanese]: {
+  [OwnerLocale.Japanese]: {
     languageTag: WebLanguageTag.Japanese,
     openGraphLocale: 'ja_JP',
     turnstileLanguage: 'ja',
@@ -58,7 +58,7 @@ export const LOCALE_PROFILES: Record<WebLocale, LocaleProfile> = {
     nativeName: '日本語',
     docsPath: '/ja',
   },
-  [WebLocale.Korean]: {
+  [OwnerLocale.Korean]: {
     languageTag: WebLanguageTag.Korean,
     openGraphLocale: 'ko_KR',
     turnstileLanguage: 'ko',
@@ -66,7 +66,7 @@ export const LOCALE_PROFILES: Record<WebLocale, LocaleProfile> = {
     nativeName: '한국어',
     docsPath: '/ko',
   },
-  [WebLocale.ChineseSimplified]: {
+  [OwnerLocale.ChineseSimplified]: {
     languageTag: WebLanguageTag.ChineseSimplified,
     openGraphLocale: 'zh_CN',
     turnstileLanguage: 'zh-cn',
@@ -76,8 +76,8 @@ export const LOCALE_PROFILES: Record<WebLocale, LocaleProfile> = {
   },
 };
 
-export const MENU_LOCALES = Object.keys(LOCALE_PROFILES) as WebLocale[];
+export const MENU_LOCALES = Object.keys(LOCALE_PROFILES) as OwnerLocale[];
 
-export function languageOf(input: { locale: WebLocale }): WebLanguageTag {
+export function languageOf(input: { locale: OwnerLocale }): WebLanguageTag {
   return LOCALE_PROFILES[input.locale].languageTag;
 }

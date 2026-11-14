@@ -1,5 +1,5 @@
 import { MEDIA_RETENTION_MS, QUEUE_RETENTION_MS } from '@zapbip/core';
-import type { WebLocale } from '@zapbip/types';
+import type { OwnerLocale } from '@zapbip/types';
 import { daysOf } from './legal-copy';
 import { heading, HeadingLevel, list, type MarkdownBlock, paragraph } from './markdown-document';
 import { pricingValuesOf } from './price-format';
@@ -12,7 +12,7 @@ export type AboutFacts = { title: string; definition: string; lines: string[] };
 
 const LINE_KEYS = [SiteCopyKey.AboutPricing, SiteCopyKey.AboutAgents, SiteCopyKey.AboutLimits, SiteCopyKey.AboutUpdated];
 
-export function aboutFactsOf(input: { locale: WebLocale }): AboutFacts {
+export function aboutFactsOf(input: { locale: OwnerLocale }): AboutFacts {
   const { locale } = input;
   const translate = copyOf({ locale });
   const values = {
@@ -29,7 +29,7 @@ export function aboutFactsOf(input: { locale: WebLocale }): AboutFacts {
   };
 }
 
-export function aboutBlocksOf(input: { locale: WebLocale }): MarkdownBlock[] {
+export function aboutBlocksOf(input: { locale: OwnerLocale }): MarkdownBlock[] {
   const facts = aboutFactsOf(input);
   return [
     heading({ level: HeadingLevel.Section, text: facts.title }),

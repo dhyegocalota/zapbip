@@ -16,7 +16,7 @@ Fixture Plugin Agent이(가) 내 말을 듣고 WhatsApp으로 답합니다.
 ## 처음부터 설정하기
 
 1. WhatsApp으로 zapbip 번호에 메시지를 보내세요.
-2. `new agent`를 요청하고 아래 설치 명령을 실행한 뒤 연결 링크를 Fixture Plugin Agent의 설정에 넣으세요.
+2. `새 에이전트`를 요청하고 아래 설치 명령을 실행한 뒤 연결 링크를 Fixture Plugin Agent의 설정에 넣으세요.
 
 ```bash
 pip install --require-hashes --requirement https://mcp.zapbip.com/pkg/fixture-requirements.txt # sha256:eb1fc5e4bae42f5a04d9bc2001ef4516367ff8520495100b1ccaec1320b85f84
@@ -24,8 +24,8 @@ pip install --require-hashes --requirement https://mcp.zapbip.com/pkg/fixture-re
 
 ## 작동 확인
 
-Fixture Plugin Agent에게 `✅ installed`를 내 WhatsApp으로 보내라고 요청하세요.
+Fixture Plugin Agent에게 `✅ 설치 완료`를 내 WhatsApp으로 보내라고 요청하세요.
 
 에이전트마다 리스너는 하나만 실행하세요. 플러그인 또는 `npx zapbip@0.1.0 listen` 중 하나만 쓰고, 둘 다 쓰지 마세요. 두 번째 리스너는 첫 번째를 대체합니다.
 
-<Chat messages={[{ name: 'Fixture Plugin Agent', text: '✅ installed', time: '14:03' }]} />
+<Chat messages={[{ name: 'Fixture Plugin Agent', text: '✅ 설치 완료', time: '14:03' }]} />

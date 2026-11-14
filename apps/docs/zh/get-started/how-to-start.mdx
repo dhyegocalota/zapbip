@@ -7,7 +7,7 @@ import { Chat } from '/snippets/chat.jsx';
 import StartLink from '/snippets/zh/start-link.mdx';
 import InstallPrompt from '/snippets/zh/install-prompt.mdx';
 
-目前 WhatsApp 命令需要用英语或葡萄牙语的词来输入。本页使用英语的词。
+WhatsApp 命令可以用中文、英语或葡萄牙语的词来输入。本页使用中文的词。
 
 1. **在 WhatsApp 上给 zapbip 的号码发消息。** 随便发一段文字，例如 `hi`。你的第一条消息会创建账号，并证明这部手机是你的。
 
@@ -16,20 +16,20 @@ import InstallPrompt from '/snippets/zh/install-prompt.mdx';
    <Chat
      messages={[
        { you: true, text: 'hi', time: '09:00' },
-       { name: 'zapbip', text: 'No agent is connected. Your message is saved.', time: '09:00' },
+       { name: 'zapbip', text: '没有已连接的智能体。你的消息已保存。', time: '09:00' },
      ]}
    />
 
-2. **申请一个新智能体。** 智能体就是你连接的一个 AI。发送 `new agent` 加一个名字，例如 `new agent claude`。
+2. **申请一个新智能体。** 智能体就是你连接的一个 AI。发送 `新建智能体` 加一个名字，例如 `新建智能体 claude`。
 
 3. **拿到你的提示词。** zapbip 会回复专为你生成的一两行文字。
 
    <Chat
      messages={[
-       { you: true, text: 'new agent claude', time: '09:01' },
+       { you: true, text: '新建智能体 claude', time: '09:01' },
        {
          name: 'zapbip',
-         text: 'Agent claude created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate claude".',
+         text: '智能体 claude 已创建。请把下面的内容粘贴到你的智能体中： 请通过 zapbip 连接到我的 WhatsApp：阅读 https://mcp.zapbip.com/i/zb_inst_<code> 并按说明操作。 此链接 30 分钟内只能使用一次。请勿分享。 如果链接过期或已被使用，请发送“轮换 claude”。',
          time: '09:01',
        },
      ]}
@@ -52,7 +52,7 @@ import InstallPrompt from '/snippets/zh/install-prompt.mdx';
 ## 需要了解的事
 
 - 你所有的 AI 共用一个 WhatsApp 号码，每个 AI 各有一行文字，方便你区分。
-- 这行文字只能使用一次，30 分钟后失效。失效后发送 `rotate claude` 即可获得新的。
+- 这行文字只能使用一次，30 分钟后失效。失效后发送 `轮换 claude` 即可获得新的。
 - 你随时可以先开口，你的 AI 会不限时间地持续监听。
 - 如果你在候补名单上，请在[常见问题](/zh/help/faq)中查看接下来会怎样。
 - 选好你的 AI，按[支持的智能体](/zh/agents/supported-agents)里对应的页面操作。

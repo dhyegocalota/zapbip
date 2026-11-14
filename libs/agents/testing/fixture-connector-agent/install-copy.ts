@@ -24,6 +24,48 @@ const SECTION_TEXT: Record<OwnerLocale, SectionText> = {
     connect: 'Add an MCP server named zapbip at',
     connectSuccess: 'the settings list zapbip.',
   },
+  [OwnerLocale.Spanish]: {
+    heading: 'Fixture Connector Agent',
+    stopCheck: 'If you are not Fixture Connector Agent, stop and run no other step of this section.',
+    stopSuccess: 'you are Fixture Connector Agent, or you have stopped.',
+    connect: 'Añade un servidor MCP llamado zapbip en',
+    connectSuccess: 'los ajustes listan zapbip.',
+  },
+  [OwnerLocale.German]: {
+    heading: 'Fixture Connector Agent',
+    stopCheck: 'If you are not Fixture Connector Agent, stop and run no other step of this section.',
+    stopSuccess: 'you are Fixture Connector Agent, or you have stopped.',
+    connect: 'Füge einen MCP-Server namens zapbip hinzu unter',
+    connectSuccess: 'die Einstellungen führen zapbip auf.',
+  },
+  [OwnerLocale.French]: {
+    heading: 'Fixture Connector Agent',
+    stopCheck: 'If you are not Fixture Connector Agent, stop and run no other step of this section.',
+    stopSuccess: 'you are Fixture Connector Agent, or you have stopped.',
+    connect: 'Ajoutez un serveur MCP nommé zapbip à',
+    connectSuccess: 'les réglages listent zapbip.',
+  },
+  [OwnerLocale.Japanese]: {
+    heading: 'Fixture Connector Agent',
+    stopCheck: 'If you are not Fixture Connector Agent, stop and run no other step of this section.',
+    stopSuccess: 'you are Fixture Connector Agent, or you have stopped.',
+    connect: 'zapbipという名前のMCPサーバーを次の場所に追加:',
+    connectSuccess: '設定にzapbipが表示されている。',
+  },
+  [OwnerLocale.Korean]: {
+    heading: 'Fixture Connector Agent',
+    stopCheck: 'If you are not Fixture Connector Agent, stop and run no other step of this section.',
+    stopSuccess: 'you are Fixture Connector Agent, or you have stopped.',
+    connect: 'zapbip이라는 이름의 MCP 서버를 다음에 추가:',
+    connectSuccess: '설정에 zapbip이 표시된다.',
+  },
+  [OwnerLocale.ChineseSimplified]: {
+    heading: 'Fixture Connector Agent',
+    stopCheck: 'If you are not Fixture Connector Agent, stop and run no other step of this section.',
+    stopSuccess: 'you are Fixture Connector Agent, or you have stopped.',
+    connect: '在以下位置添加一个名为 zapbip 的 MCP 服务器：',
+    connectSuccess: '设置中列出了 zapbip。',
+  },
 };
 
 export function renderFixtureConnectorAgentSection(input: InstallSectionInput): string {

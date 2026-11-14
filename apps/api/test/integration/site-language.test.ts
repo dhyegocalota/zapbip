@@ -1,4 +1,4 @@
-import { WebLocale } from '@zapbip/types';
+import { OwnerLocale } from '@zapbip/types';
 import { renderSiteCopy, SiteCopyKey } from '../../src/site/site-copy';
 import { localePathOf } from '../../src/site/site-language';
 import { LOCALE_PROFILES } from '../../src/web-shell/locale-profiles';
@@ -14,7 +14,7 @@ const SEE_OTHER = 303;
 const OK = 200;
 const LOCALE_COOKIE = '__Host-zb_site_locale';
 const THEME_COOKIE = '__Host-zb_site_theme';
-const LOCALES = Object.values(WebLocale);
+const LOCALES = Object.values(OwnerLocale);
 const PORTUGUESE_ACCEPT = { 'Accept-Language': 'pt-BR,pt;q=0.9' };
 const ENGLISH_ACCEPT = { 'Accept-Language': 'en-US,en;q=0.9' };
 
@@ -28,7 +28,7 @@ describe('the language paths', () => {
   it('serves Portuguese at /pt-br whatever the cookie or the header says', async () => {
     const response = await siteFetch({
       path: '/pt-br',
-      headers: { ...ENGLISH_ACCEPT, Cookie: `${LOCALE_COOKIE}=${WebLocale.EnglishUs}` },
+      headers: { ...ENGLISH_ACCEPT, Cookie: `${LOCALE_COOKIE}=${OwnerLocale.EnglishUs}` },
     });
     expect(response.status).toBe(OK);
     expect(await response.text()).toContain('<html lang="pt-BR"');
@@ -47,13 +47,13 @@ describe('the language paths', () => {
   });
 
   it('sends a visitor whose cookie says Portuguese to /pt-br', async () => {
-    const response = await siteFetch({ path: '/', headers: { Cookie: `${LOCALE_COOKIE}=${WebLocale.PortugueseBrazil}` } });
+    const response = await siteFetch({ path: '/', headers: { Cookie: `${LOCALE_COOKIE}=${OwnerLocale.PortugueseBrazil}` } });
     expect(response.status).toBe(FOUND);
     expect(response.headers.get('Location')).toBe('/pt-br');
   });
 
   it('keeps an English cookie at the root even for a Portuguese browser', async () => {
-    const response = await siteFetch({ path: '/', headers: { ...PORTUGUESE_ACCEPT, Cookie: `${LOCALE_COOKIE}=${WebLocale.EnglishUs}` } });
+    const response = await siteFetch({ path: '/', headers: { ...PORTUGUESE_ACCEPT, Cookie: `${LOCALE_COOKIE}=${OwnerLocale.EnglishUs}` } });
     expect(response.status).toBe(OK);
   });
 
@@ -125,11 +125,11 @@ describe('the preference forms', () => {
     const response = await siteFetch({
       path: '/locale',
       method: 'POST',
-      form: { locale: WebLocale.PortugueseBrazil, returnTo: `/?agent=${PICKED_AGENT}&ref=${REFERRAL_CODE}` },
+      form: { locale: OwnerLocale.PortugueseBrazil, returnTo: `/?agent=${PICKED_AGENT}&ref=${REFERRAL_CODE}` },
     });
     expect(response.status).toBe(SEE_OTHER);
     expect(response.headers.get('Location')).toBe(`/pt-br?agent=${PICKED_AGENT}&ref=${REFERRAL_CODE}`);
-    expect(response.headers.get('Set-Cookie')).toContain(`${LOCALE_COOKIE}=${WebLocale.PortugueseBrazil}`);
+    expect(response.headers.get('Set-Cookie')).toContain(`${LOCALE_COOKIE}=${OwnerLocale.PortugueseBrazil}`);
   });
 
   it.each([
@@ -139,7 +139,7 @@ describe('the preference forms', () => {
     ['/?agent=../x', '/pt-br'],
     ['/?x=1', '/pt-br'],
   ])('POST /locale refuses the return target %s', async (returnTo, target) => {
-    const response = await siteFetch({ path: '/locale', method: 'POST', form: { locale: WebLocale.PortugueseBrazil, returnTo } });
+    const response = await siteFetch({ path: '/locale', method: 'POST', form: { locale: OwnerLocale.PortugueseBrazil, returnTo } });
     expect(response.headers.get('Location')).toBe(target);
   });
 
@@ -236,7 +236,7 @@ describe('every language of the site', () => {
     },
   );
 
-  it.each(LOCALES.filter((locale) => locale !== WebLocale.EnglishUs))(
+  it.each(LOCALES.filter((locale) => locale !== OwnerLocale.EnglishUs))(
     'sends a visitor whose cookie says %s to its path',
     async (locale) => {
       const response = await siteFetch({ path: '/', headers: { Cookie: `${LOCALE_COOKIE}=${locale}` } });
@@ -259,8 +259,8 @@ describe('every language of the site', () => {
 
   it.each(LOCALES)('prices %s in the currency of its language', async (locale) => {
     const html = await (await siteFetch({ path: localePathOf({ locale }) })).text();
-    const currency = locale === WebLocale.PortugueseBrazil ? 'R$' : '$';
+    const currency = locale === OwnerLocale.PortugueseBrazil ? 'R$' : '$';
     expect(html).toContain(currency);
-    expect(html.includes('R$')).toBe(locale === WebLocale.PortugueseBrazil);
+    expect(html.includes('R$')).toBe(locale === OwnerLocale.PortugueseBrazil);
   });
 });

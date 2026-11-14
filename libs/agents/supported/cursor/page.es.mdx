@@ -41,7 +41,7 @@ Cuando tu IA te pregunta algo, zapbip guarda la pregunta y responde "pendiente" 
 
    <Chat
      messages={[
-       { you: true, text: 'new agent cursor', time: '14:00' },
+       { you: true, text: 'nuevo agente cursor', time: '14:00' },
        {
          name: 'zapbip',
          text: 'Agent cursor created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate cursor".',
@@ -50,7 +50,7 @@ Cuando tu IA te pregunta algo, zapbip guarda la pregunta y responde "pendiente" 
      ]}
    />
 
-   Los comandos y las respuestas de zapbip están en inglés, que es lo que el producto entiende hoy.
+   Los comandos y las respuestas de zapbip están en español; también entiende los mismos comandos en inglés.
 
 3. **Pega la línea en el chat de Cursor.**
 
@@ -64,12 +64,12 @@ Cuando tu IA te pregunta algo, zapbip guarda la pregunta y responde "pendiente" 
 
 6. **Empieza a escuchar.** Ejecuta `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen` en una terminal en segundo plano y mantiene esa terminal en marcha, sin límite de tiempo. Cada vez que aparece una línea nueva allí, llama a `check_inbox` y responde.
 
-7. **Pruébalo.** En el chat llama a `send_message` con ✅ installed. Después reinicia el chat de Cursor para usar las herramientas de zapbip.
+7. **Pruébalo.** En el chat llama a `send_message` con ✅ listo. Después reinicia el chat de Cursor para usar las herramientas de zapbip.
 
 ## Comprueba que funciona
 
-Pide a Cursor que envíe `✅ installed` a tu WhatsApp. Debería llegar en unos segundos.
+Pide a Cursor que envíe `✅ listo` a tu WhatsApp. Debería llegar en unos segundos.
 
-<Chat messages={[{ name: 'Cursor', text: '✅ installed', time: '14:03' }]} />
+<Chat messages={[{ name: 'Cursor', text: '✅ listo', time: '14:03' }]} />
 
 Si no llega nada, mira [Solución de problemas](/es/help/troubleshooting).

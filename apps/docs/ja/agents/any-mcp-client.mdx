@@ -23,11 +23,11 @@ import InstallPrompt from '/snippets/ja/install-prompt.mdx';
 
 ## ゼロから設定する
 
-1. **WhatsAppでzapbipの番号にメッセージを送ります。** `new agent my-app` を送ってください。コマンドは今のところ英語かポルトガル語の言葉で入力します。すべてのメッセージは[始め方](/ja/get-started/how-to-start)で確認できます。
+1. **WhatsAppでzapbipの番号にメッセージを送ります。** `新規エージェント my-app` を送ってください。コマンドは今のところ英語かポルトガル語の言葉で入力します。すべてのメッセージは[始め方](/ja/get-started/how-to-start)で確認できます。
 
    <Chat
      messages={[
-       { you: true, text: 'new agent my-app', time: '09:00' },
+       { you: true, text: '新規エージェント my-app', time: '09:00' },
        { name: 'zapbip', text: 'Agent my-app created. Paste this into your agent.', time: '09:00' },
      ]}
    />
@@ -42,9 +42,9 @@ import InstallPrompt from '/snippets/ja/install-prompt.mdx';
 
 ## 動作の確認
 
-AIに、WhatsAppで `✅ installed` を送るよう頼んでください。届けば、接続は機能しています。
+AIに、WhatsAppで `✅ インストール完了` を送るよう頼んでください。届けば、接続は機能しています。
 
-<Chat messages={[{ name: 'My app', text: '✅ installed', time: '09:03' }]} />
+<Chat messages={[{ name: 'My app', text: '✅ インストール完了', time: '09:03' }]} />
 
 次にWhatsAppで何か書き、アプリに受信トレイを確認するよう頼んでください。あなたのメッセージが読まれます。
 

@@ -26,7 +26,6 @@ export const NO_INSTALL_CODE: InstallCodeColumns = {
 };
 export const COMMAND_LIST_ID_PREFIX = 'zapbip:';
 export const LIST_BUTTON_TEXT_MAX_CHARS = 20;
-export const BRAZIL_COUNTRY_CODE = '55';
 export const ACCOUNT_MENU_QUESTION_ID = `${COMMAND_LIST_ID_PREFIX}menu`;
 export const INVITE_CODE_PREFIX = 'zbi_';
 export const INVITE_CODE_RANDOM_LENGTH = 24;

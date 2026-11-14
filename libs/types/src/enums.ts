@@ -43,11 +43,6 @@ export enum DeliveryState {
 }
 
 export enum OwnerLocale {
-  PortugueseBrazil = 'pt_BR',
-  EnglishUs = 'en_US',
-}
-
-export enum WebLocale {
   EnglishUs = 'en_US',
   PortugueseBrazil = 'pt_BR',
   Spanish = 'es',
@@ -259,6 +254,7 @@ export enum CommandKind {
   RequestDeletion = 'request_deletion',
   ConfirmDeletion = 'confirm_deletion',
   Login = 'login',
+  SetLanguage = 'set_language',
   Unknown = 'unknown',
 }
 
@@ -308,6 +304,8 @@ export enum AccountReplyIntent {
   AccessOpened = 'access_opened',
   WindowClosed = 'window_closed',
   CoolingDown = 'cooling_down',
+  LanguageChanged = 'language_changed',
+  LanguageUnknown = 'language_unknown',
   Unknown = 'unknown',
 }
 
@@ -365,11 +363,6 @@ export enum HttpStatus {
   InternalServerError = 500,
   BadGateway = 502,
   ServiceUnavailable = 503,
-}
-
-export enum DocsLanguage {
-  English = 'en',
-  PortugueseBrazil = 'pt-BR',
 }
 
 export enum DocsPageLanguage {

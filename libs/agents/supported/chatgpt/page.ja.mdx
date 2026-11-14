@@ -44,7 +44,7 @@ ChatGPTは1回の答えを約5 分待ち、その後にまた尋ねるので、�
 
    <Chat
      messages={[
-       { you: true, text: 'new agent chatgpt', time: '16:00' },
+       { you: true, text: '新規エージェント chatgpt', time: '16:00' },
        {
          name: 'zapbip',
          text: 'Agent chatgpt created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate chatgpt".',
@@ -65,12 +65,12 @@ ChatGPTは1回の答えを約5 分待ち、その後にまた尋ねるので、�
 
 6. **ポーリングすることをzapbipに伝えます。** `set_wake({mode: "scheduled", interval_minutes: 60})` を呼びます。
 
-7. **テストします。** チャットで、`send_message` を呼び、✅ installed を送ります。
+7. **テストします。** チャットで、`send_message` を呼び、✅ インストール完了 を送ります。
 
 ## 動作の確認
 
-接続が済むと、ChatGPTはあなたのWhatsAppに `✅ installed` を送ります。
+接続が済むと、ChatGPTはあなたのWhatsAppに `✅ インストール完了` を送ります。
 
-<Chat messages={[{ name: 'ChatGPT', text: '✅ installed', time: '16:05' }]} />
+<Chat messages={[{ name: 'ChatGPT', text: '✅ インストール完了', time: '16:05' }]} />
 
 何も届かない場合は、[トラブルシューティング](/ja/help/troubleshooting)をご覧ください。

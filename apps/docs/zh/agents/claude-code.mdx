@@ -45,7 +45,7 @@ import InstallPrompt from '/snippets/zh/install-prompt.mdx';
 
    <Chat
      messages={[
-       { you: true, text: 'new agent claude-code', time: '15:00' },
+       { you: true, text: '新建智能体 claude-code', time: '15:00' },
        {
          name: 'zapbip',
          text: 'Agent claude-code created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate claude-code".',
@@ -72,12 +72,12 @@ import InstallPrompt from '/snippets/zh/install-prompt.mdx';
 
 8. **仅当渠道不可用时。** 它在后台运行 `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen`，并用 Monitor 监视它，每次超时通知时重新设置。
 
-9. **测试。** 在一个新进程中，它运行 `claude -p "Call send_message with the text '✅ installed'" --allowedTools=mcp__zapbip__send_message`。一条内容为 ✅ installed 的 `send_message` 会到达你的 WhatsApp。如果命令失败，它会停下并显示最后 20 行。然后重启 Claude Code 以使用 zapbip 的工具。
+9. **测试。** 在一个新进程中，它运行 `claude -p "Call send_message with the text '✅ 安装完成'" --allowedTools=mcp__zapbip__send_message`。一条内容为 ✅ 安装完成 的 `send_message` 会到达你的 WhatsApp。如果命令失败，它会停下并显示最后 20 行。然后重启 Claude Code 以使用 zapbip 的工具。
 
 ## 检查是否正常工作
 
-让 Claude Code 向你的 WhatsApp 发送 `✅ installed`。它应在几秒内到达。
+让 Claude Code 向你的 WhatsApp 发送 `✅ 安装完成`。它应在几秒内到达。
 
-<Chat messages={[{ name: 'Claude', text: '✅ installed', time: '15:03' }]} />
+<Chat messages={[{ name: 'Claude', text: '✅ 安装完成', time: '15:03' }]} />
 
 如果什么也没收到，请参见[故障排查](/zh/help/troubleshooting)。

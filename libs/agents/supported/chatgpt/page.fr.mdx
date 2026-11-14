@@ -44,7 +44,7 @@ ChatGPT attend environ 5 minutes une seule réponse et redemande, il n'y a donc 
 
    <Chat
      messages={[
-       { you: true, text: 'new agent chatgpt', time: '16:00' },
+       { you: true, text: 'nouvel agent chatgpt', time: '16:00' },
        {
          name: 'zapbip',
          text: 'Agent chatgpt created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate chatgpt".',
@@ -53,7 +53,7 @@ ChatGPT attend environ 5 minutes une seule réponse et redemande, il n'y a donc 
      ]}
    />
 
-   Les commandes et les réponses de zapbip sont en anglais, car c'est ce que le produit comprend aujourd'hui.
+   Les commandes et les réponses de zapbip sont en français ; il comprend aussi les mêmes commandes en anglais.
 
 3. **Collez la ligne dans ChatGPT.**
 
@@ -67,12 +67,12 @@ ChatGPT attend environ 5 minutes une seule réponse et redemande, il n'y a donc 
 
 6. **Dites à zapbip qu'elle interroge.** Il appelle `set_wake({mode: "scheduled", interval_minutes: 60})`.
 
-7. **Testez.** Dans le chat, il appelle `send_message` avec ✅ installed.
+7. **Testez.** Dans le chat, il appelle `send_message` avec ✅ installé.
 
 ## Vérifier que ça marche
 
-ChatGPT envoie `✅ installed` à votre WhatsApp une fois connecté.
+ChatGPT envoie `✅ installé` à votre WhatsApp une fois connecté.
 
-<Chat messages={[{ name: 'ChatGPT', text: '✅ installed', time: '16:05' }]} />
+<Chat messages={[{ name: 'ChatGPT', text: '✅ installé', time: '16:05' }]} />
 
 Si rien n'arrive, voyez [Dépannage](/fr/help/troubleshooting).

@@ -1,4 +1,4 @@
-import { HttpStatus, WebLocale } from '@zapbip/types';
+import { HttpStatus, OwnerLocale } from '@zapbip/types';
 import type { Context, Next } from 'hono';
 import { Hono } from 'hono';
 import { FAVICON_CONTENT_TYPE, FAVICON_SVG } from '../backoffice/assets/favicon';
@@ -53,7 +53,7 @@ export function createSiteApp(input: { fetchImplementation: typeof fetch }): Hon
       status: HttpStatus.Ok,
       headers: { 'Cache-Control': PAGE_CACHE_CONTROL, Vary: PAGE_VARY },
     });
-  Object.values(WebLocale).forEach((locale) => app.get(localePathOf({ locale }), landing));
+  Object.values(OwnerLocale).forEach((locale) => app.get(localePathOf({ locale }), landing));
   LEGAL_PAGES.forEach((page) =>
     app.get(legalPathOf(page), (context) =>
       renderLegal({ context, document: page.document, headers: { 'Cache-Control': PAGE_CACHE_CONTROL, Vary: PAGE_VARY } }),

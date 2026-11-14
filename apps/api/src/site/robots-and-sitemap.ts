@@ -1,4 +1,4 @@
-import { WebLocale } from '@zapbip/types';
+import { OwnerLocale } from '@zapbip/types';
 import { LlmsFile, llmsPathOf } from './agentic-paths';
 import { LegalDocument, legalUrlOf } from './legal-links';
 import { AGENT_CRAWLER_NAMES, LEGAL_UPDATED_ON, SITE_UPDATED_ON } from './site-constants';
@@ -11,7 +11,7 @@ const DEFAULT_LANGUAGE_TAG = 'x-default';
 const LLMS_DIRECTIVE = 'Llms-Txt';
 const LLMS_FULL_DIRECTIVE = 'Llms-Full-Txt';
 
-type LocalizedUrl = (locale: WebLocale) => string;
+type LocalizedUrl = (locale: OwnerLocale) => string;
 type SitemapPage = { urlOf: LocalizedUrl; lastModified: string };
 
 function alternateOf(input: { hreflang: string; href: string }): string {
@@ -21,10 +21,10 @@ function alternateOf(input: { hreflang: string; href: string }): string {
 function entriesOf(input: SitemapPage): string[] {
   const { urlOf, lastModified } = input;
   const alternates = [
-    ...Object.values(WebLocale).map((locale) => alternateOf({ hreflang: languageOf({ locale }), href: urlOf(locale) })),
-    alternateOf({ hreflang: DEFAULT_LANGUAGE_TAG, href: urlOf(WebLocale.EnglishUs) }),
+    ...Object.values(OwnerLocale).map((locale) => alternateOf({ hreflang: languageOf({ locale }), href: urlOf(locale) })),
+    alternateOf({ hreflang: DEFAULT_LANGUAGE_TAG, href: urlOf(OwnerLocale.EnglishUs) }),
   ];
-  return Object.values(WebLocale).flatMap((locale) => [
+  return Object.values(OwnerLocale).flatMap((locale) => [
     '  <url>',
     `    <loc>${urlOf(locale)}</loc>`,
     `    <lastmod>${lastModified}</lastmod>`,
@@ -38,7 +38,7 @@ function crawlerGroupOf(input: { name: string }): string[] {
 }
 
 function llmsLinesOf(input: { origin: string }): string[] {
-  return Object.values(WebLocale).flatMap((locale) => [
+  return Object.values(OwnerLocale).flatMap((locale) => [
     `${LLMS_DIRECTIVE}: ${input.origin}${llmsPathOf({ locale, file: LlmsFile.Summary })}`,
     `${LLMS_FULL_DIRECTIVE}: ${input.origin}${llmsPathOf({ locale, file: LlmsFile.Full })}`,
   ]);

@@ -5,28 +5,31 @@ description: 你可以向 zapbip 的号码发送哪些内容。
 
 import { Chat } from '/snippets/chat.jsx';
 
-你通过给 zapbip 的号码发消息来管理你的 AI。命令是一个简短的词组，用葡萄牙语或英语。目前还没有中文命令，你用哪种语言写，回复就用哪种语言。每一行都给出了两种写法。
+你通过给 zapbip 的号码发消息来管理你的 AI。命令是一个简短的词组，用中文或英语；葡萄牙语、西班牙语、德语、法语、日语和韩语也各有自己的命令。你用哪种语言写，回复就用哪种语言。每一行都给出了两种写法。
 
-| 你想要         | 用英语写                                            | 或用葡萄牙语写                                      | 会发生什么                                                           |
-| -------------- | --------------------------------------------------- | --------------------------------------------------- | -------------------------------------------------------------------- |
-| 连接新的 AI    | `new agent claude`                                  | `novo agente claude`                                | zapbip 回复要粘贴到那个 AI 里的提示词                                |
-| 查看你的 AI    | `agents`                                            | `agentes`                                           | 一个列表，列出每个 AI 的名称和日期                                   |
-| 断开一个 AI    | `revoke claude`                                     | `revogar claude`                                    | 那个 AI 立即停止工作                                                 |
-| 获取新的提示词 | `rotate claude`                                     | `girar claude`                                      | 旧的连接停止，你会得到新的提示词                                     |
-| 登录网页应用   | `login`                                             | `entrar`                                            | 一个 10 分钟内只能用一次的链接，参见[网页应用](/zh/features/web-app) |
-| 打开菜单       | `help` 或 `menu`                                    | `ajuda` 或 `menu`                                   | 以文本和可点按列表显示这些命令                                       |
-| 删除你的账号   | `delete account`，然后 `delete account permanently` | `apagar conta`，然后 `apagar conta definitivamente` | 参见[删除你的账号](/zh/help/delete-your-account)                     |
+| 你想要         | 用中文写                        | 或用英语写                                          | 会发生什么                                                                        |
+| -------------- | ------------------------------- | --------------------------------------------------- | --------------------------------------------------------------------------------- |
+| 连接新的 AI    | `新建智能体 claude`             | `new agent claude`                                  | zapbip 回复要粘贴到那个 AI 里的提示词                                             |
+| 查看你的 AI    | `智能体列表`                    | `agents`                                            | 一个列表，列出每个 AI 的名称和日期                                                |
+| 断开一个 AI    | `撤销 claude`                   | `revoke claude`                                     | 那个 AI 立即停止工作                                                              |
+| 获取新的提示词 | `轮换 claude`                   | `rotate claude`                                     | 旧的连接停止，你会得到新的提示词                                                  |
+| 登录网页应用   | `登录`                          | `login`                                             | 一个 10 分钟内只能用一次的链接，参见[网页应用](/zh/features/web-app)              |
+| 打开菜单       | `帮助` 或 `menu`                | `help` 或 `menu`                                    | 以文本和可点按列表显示这些命令                                                    |
+| 更改语言       | `语言 ja`                       | `language ja`                                       | zapbip 会用你选择的语言回复。代码：`en`、`pt`、`es`、`de`、`fr`、`ja`、`ko`、`zh` |
+| 删除你的账号   | `删除账户`，然后 `永久删除账户` | `delete account`，然后 `delete account permanently` | 参见[删除你的账号](/zh/help/delete-your-account)                                  |
 
 只写这个词组本身。末尾带 `?` 或 `!` 时，它就是发给你的 AI 的普通消息。
 
 ## 示例
 
+zapbip 的回复是中文，因为你用中文写。
+
 <Chat
   messages={[
-    { you: true, text: 'agents', time: '09:20' },
-    { text: 'Your agents:\nclaude (2026-11-06, Claude Code)', time: '09:20' },
-    { you: true, text: 'revoke claude', time: '09:21' },
-    { text: 'Agent claude revoked. Its link no longer works.', time: '09:21' },
+    { you: true, text: '智能体列表', time: '09:20' },
+    { text: '你的智能体：\nclaude (2026-11-06, Claude Code)', time: '09:20' },
+    { you: true, text: '撤销 claude', time: '09:21' },
+    { text: '智能体 claude 已撤销。它的链接已失效。', time: '09:21' },
   ]}
 />
 
@@ -36,7 +39,7 @@ import { Chat } from '/snippets/chat.jsx';
 
 ## 名称
 
-`new`、`agents`、`revoke`、`rotate`、`help`、`menu`、`login`、`delete` 以及它们的葡萄牙语写法是保留词：不能用作 AI 的名称。
+`新建`、`智能体`、`撤销`、`轮换`、`帮助`、`menu`、`登录`、`账户` 等词及其英语和葡萄牙语版本是保留词，不能用作 AI 的名称。
 
 ## 转发的消息
 

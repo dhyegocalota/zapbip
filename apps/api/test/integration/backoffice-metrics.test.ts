@@ -1,4 +1,4 @@
-import { AccountState, DAY_MS, HOUR_MS, WebLocale } from '@zapbip/types';
+import { AccountState, DAY_MS, HOUR_MS, OwnerLocale } from '@zapbip/types';
 import { afterEach, beforeAll, beforeEach, describe, expect, test } from 'vitest';
 import usageMigrationSql from '../../migrations/0003_usage.sql?raw';
 import { BACKOFFICE_COPY, BackofficeCopyKey, renderBackofficeCopy } from '../../src/backoffice/backoffice-copy';
@@ -27,7 +27,7 @@ const BUDGET_ABOVE_WARNING = 10_600;
 const BLOCKED_PHONE_COUNT = 2;
 const OLD_RESTRICTION_AGE_MS = 25 * HOUR_MS;
 const NON_GET_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE'];
-const copy = BACKOFFICE_COPY[WebLocale.PortugueseBrazil];
+const copy = BACKOFFICE_COPY[OwnerLocale.PortugueseBrazil];
 
 type ActivitySeed = { day: string; accountId: string; numberId: string | null; metric: ActivityMetric; count: number };
 
@@ -217,7 +217,7 @@ describe('metrics page figures', () => {
     const html = await metricsHtml({});
     const expected = renderBackofficeCopy({
       key: BackofficeCopyKey.MetricsDeltaDown,
-      locale: WebLocale.PortugueseBrazil,
+      locale: OwnerLocale.PortugueseBrazil,
       values: { amount: '75' },
     });
     expect(html).toContain(expected);

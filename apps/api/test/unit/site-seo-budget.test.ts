@@ -1,4 +1,4 @@
-import { WebLocale } from '@zapbip/types';
+import { OwnerLocale } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { LegalDocument } from '../../src/site/legal-links';
 import { legalTextOf } from '../../src/site/legal-copy';
@@ -18,13 +18,13 @@ function weightedLengthOf(input: { text: string }): number {
   return [...input.text].reduce((total, character) => total + (FULL_WIDTH_PATTERN.test(character) ? FULL_WIDTH_WEIGHT : 1), 0);
 }
 
-function metaOf(input: { locale: WebLocale; document: LegalDocument | null }) {
+function metaOf(input: { locale: OwnerLocale; document: LegalDocument | null }) {
   const { locale, document } = input;
   const title = document === null ? copyOf({ locale })(SiteCopyKey.MetaTitle) : legalTextOf({ document, locale }).title;
   return pageMetaOf({ model: pageModelFor({ locale, legalDocument: document }), title });
 }
 
-describe.each(Object.values(WebLocale))('page meta in %s', (locale) => {
+describe.each(Object.values(OwnerLocale))('page meta in %s', (locale) => {
   it.each(PAGE_DOCUMENTS)('keeps the title of %s inside the budget', (document) => {
     expect(weightedLengthOf({ text: metaOf({ locale, document }).title })).toBeLessThanOrEqual(TITLE_MAXIMUM);
   });
@@ -44,7 +44,7 @@ describe.each(Object.values(WebLocale))('page meta in %s', (locale) => {
 });
 
 describe('page meta across pages', () => {
-  const metas = Object.values(WebLocale).flatMap((locale) => PAGE_DOCUMENTS.map((document) => metaOf({ locale, document })));
+  const metas = Object.values(OwnerLocale).flatMap((locale) => PAGE_DOCUMENTS.map((document) => metaOf({ locale, document })));
 
   it('never repeats a title', () => {
     expect(new Set(metas.map((meta) => meta.title)).size).toBe(metas.length);

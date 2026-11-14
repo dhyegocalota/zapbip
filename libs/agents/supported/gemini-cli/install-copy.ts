@@ -37,6 +37,37 @@ const GEMINI_CLI_TEXT: Record<OwnerLocale, GeminiCliText> = {
     confirmChange: 'I will add the zapbip MCP server to Gemini CLI. May I?',
     restart: 'Restart Gemini CLI to use zapbip.',
   },
+  [OwnerLocale.Spanish]: {
+    wakeNote:
+      'Gemini CLI escucha a través de la terminal en segundo plano y responde en segundos mientras se ejecuta, sin límite de tiempo.',
+    confirmChange: 'Voy a añadir el servidor MCP de zapbip a Gemini CLI. ¿Puedo?',
+    restart: 'Reinicia Gemini CLI para usar zapbip.',
+  },
+  [OwnerLocale.German]: {
+    wakeNote: 'Gemini CLI hört über das Hintergrund-Terminal zu und antwortet in Sekunden, solange es läuft, ohne Zeitlimit.',
+    confirmChange: 'Ich füge den zapbip-MCP-Server zu Gemini CLI hinzu. Darf ich?',
+    restart: 'Starte Gemini CLI neu, um zapbip zu nutzen.',
+  },
+  [OwnerLocale.French]: {
+    wakeNote: 'Gemini CLI écoute via le terminal en arrière-plan et répond en quelques secondes tant qu’il tourne, sans limite de temps.',
+    confirmChange: 'Je vais ajouter le serveur MCP zapbip à Gemini CLI. Puis-je\u202f?',
+    restart: 'Redémarrez Gemini CLI pour utiliser zapbip.',
+  },
+  [OwnerLocale.Japanese]: {
+    wakeNote: 'Gemini CLIはバックグラウンドのターミナルを通じて待ち受け、実行中は数秒で応答します。時間制限はありません。',
+    confirmChange: 'zapbipのMCPサーバーをGemini CLIに追加します。よろしいですか？',
+    restart: 'zapbipを使うには、Gemini CLIを再起動してください。',
+  },
+  [OwnerLocale.Korean]: {
+    wakeNote: 'Gemini CLI는 백그라운드 터미널을 통해 듣고, 실행되는 동안 몇 초 안에 답합니다. 시간 제한은 없습니다.',
+    confirmChange: 'zapbip MCP 서버를 Gemini CLI에 추가하겠습니다. 진행해도 될까요?',
+    restart: 'zapbip을 쓰려면 Gemini CLI를 다시 시작하세요.',
+  },
+  [OwnerLocale.ChineseSimplified]: {
+    wakeNote: 'Gemini CLI 通过后台终端监听，运行期间几秒内就会回应，不限时。',
+    confirmChange: '我将把 zapbip MCP 服务器添加到 Gemini CLI。可以吗？',
+    restart: '请重新启动 Gemini CLI 以使用 zapbip。',
+  },
 };
 
 export const GEMINI_CLI_COPY = localizeCopy({
@@ -73,6 +104,12 @@ export const GEMINI_CLI_COPY = localizeCopy({
 const GEMINI_CLI_QUICK_START_HINT: Record<OwnerLocale, string> = {
   [OwnerLocale.PortugueseBrazil]: 'Rode no seu terminal',
   [OwnerLocale.EnglishUs]: 'Run in your terminal',
+  [OwnerLocale.Spanish]: 'Ejecuta esto en tu terminal',
+  [OwnerLocale.German]: 'Führe das in deinem Terminal aus',
+  [OwnerLocale.French]: 'Exécutez ceci dans votre terminal',
+  [OwnerLocale.Japanese]: 'ターミナルで実行します',
+  [OwnerLocale.Korean]: '터미널에서 실행하세요',
+  [OwnerLocale.ChineseSimplified]: '在你的终端里运行',
 };
 
 export const GEMINI_CLI_QUICK_START = quickStartOf({

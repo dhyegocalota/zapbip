@@ -1,4 +1,4 @@
-import { HttpStatus, type WebLocale, WaitlistJoinOutcome, WaitlistSource } from '@zapbip/types';
+import { HttpStatus, type OwnerLocale, WaitlistJoinOutcome, WaitlistSource } from '@zapbip/types';
 import type { Context } from 'hono';
 import { sha256Hex } from '../adapters/platform/hash';
 import { CLIENT_ADDRESS_HEADER } from '../contract/constants';
@@ -68,7 +68,7 @@ export async function requestAccessHandler(context: Context<SiteEnv>): Promise<R
   if (clientAddress === undefined) return plainResponse({ body: BAD_REQUEST_TEXT, status: HttpStatus.BadRequest });
   const { env } = context;
   const requestLocale = context.get('locale');
-  const answer = (input: { status: AgentAnswerStatus; locale?: WebLocale }): Response =>
+  const answer = (input: { status: AgentAnswerStatus; locale?: OwnerLocale }): Response =>
     answerResponse({ context, status: input.status, locale: input.locale === undefined ? requestLocale : input.locale });
   const limiter = env.INSTALL_PAGE_LIMITER;
   const addressKey = clientRateKey({ address: clientAddress, prefixGroupCount: AGENT_ADDRESS_IPV6_PREFIX_GROUPS });

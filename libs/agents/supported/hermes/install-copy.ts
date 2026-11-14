@@ -19,6 +19,30 @@ const HERMES_TEXT: Record<OwnerLocale, HermesText> = {
     wakeNote: 'The plugin delivers each message at once; without the plugin, Hermes checks the inbox every minute.',
     pollCost: 'Checking every minute costs model calls.',
   },
+  [OwnerLocale.Spanish]: {
+    wakeNote: 'El plugin entrega cada mensaje al instante; sin el plugin, Hermes revisa la bandeja de entrada cada minuto.',
+    pollCost: 'Revisar cada minuto consume llamadas al modelo.',
+  },
+  [OwnerLocale.German]: {
+    wakeNote: 'Das Plugin liefert jede Nachricht sofort; ohne das Plugin prüft Hermes den Posteingang jede Minute.',
+    pollCost: 'Die Prüfung jede Minute verursacht Modellaufrufe.',
+  },
+  [OwnerLocale.French]: {
+    wakeNote: 'Le plugin livre chaque message aussitôt\u202f; sans le plugin, Hermes consulte la boîte de réception chaque minute.',
+    pollCost: 'Consulter chaque minute coûte des appels au modèle.',
+  },
+  [OwnerLocale.Japanese]: {
+    wakeNote: 'プラグインはメッセージを即座に配信します。プラグインがない場合、Hermesは1分ごとに受信箱を確認します。',
+    pollCost: '1分ごとの確認は、モデルの呼び出しを消費します。',
+  },
+  [OwnerLocale.Korean]: {
+    wakeNote: '플러그인은 각 메시지를 즉시 전달합니다. 플러그인이 없으면 Hermes가 1분마다 받은 편지함을 확인합니다.',
+    pollCost: '1분마다 확인하면 모델 호출이 소모됩니다.',
+  },
+  [OwnerLocale.ChineseSimplified]: {
+    wakeNote: '插件会立即送达每条消息；没有插件时，Hermes 每分钟检查一次收件箱。',
+    pollCost: '每分钟检查一次会消耗模型调用。',
+  },
 };
 
 export const HERMES_COPY = localizeCopy({
@@ -53,6 +77,12 @@ export function hermesServerEntry(input: { connectionLink: string }): string {
 const HERMES_QUICK_START_HINT: Record<OwnerLocale, string> = {
   [OwnerLocale.PortugueseBrazil]: 'No config.yaml do Hermes, em mcp_servers',
   [OwnerLocale.EnglishUs]: 'In the Hermes config.yaml, under mcp_servers',
+  [OwnerLocale.Spanish]: 'En el config.yaml de Hermes, bajo mcp_servers',
+  [OwnerLocale.German]: 'In der config.yaml von Hermes, unter mcp_servers',
+  [OwnerLocale.French]: 'Dans le config.yaml de Hermes, sous mcp_servers',
+  [OwnerLocale.Japanese]: 'Hermesのconfig.yamlの、mcp_serversの下に',
+  [OwnerLocale.Korean]: 'Hermes의 config.yaml에서 mcp_servers 아래에',
+  [OwnerLocale.ChineseSimplified]: '在 Hermes 的 config.yaml 中，放在 mcp_servers 下',
 };
 
 export const HERMES_QUICK_START = quickStartOf({

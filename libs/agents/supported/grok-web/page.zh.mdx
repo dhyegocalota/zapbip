@@ -27,11 +27,11 @@ Grok 对单个答案等待 1 分钟，然后再次询问，所以整体没有限
 
 ## 从零开始设置
 
-1. **在 WhatsApp 上给 zapbip 的号码发消息。** 发送 `new agent grok-web`。目前命令需要用英语或葡萄牙语的词来输入。[开始使用](/zh/get-started/how-to-start)展示了每一条消息。
+1. **在 WhatsApp 上给 zapbip 的号码发消息。** 发送 `新建智能体 grok-web`。目前命令需要用英语或葡萄牙语的词来输入。[开始使用](/zh/get-started/how-to-start)展示了每一条消息。
 
    <Chat
      messages={[
-       { you: true, text: 'new agent grok-web', time: '09:00' },
+       { you: true, text: '新建智能体 grok-web', time: '09:00' },
        { name: 'zapbip', text: 'Agent grok-web created. Paste this into your agent.', time: '09:00' },
      ]}
    />
@@ -44,13 +44,13 @@ Grok 对单个答案等待 1 分钟，然后再次询问，所以整体没有限
 
 4. **选择你先发消息时由谁来回答。** 如果你有连接到 zapbip 的 Grok Bot，Grok 会用那个机器人调用 `set_wake({mode: "standby", standby_agent: "<name>"})`。如果没有，它调用 `set_wake({mode: "none"})`。
 
-5. **测试。** 在聊天里它调用 `send_message`，内容为 ✅ installed。
+5. **测试。** 在聊天里它调用 `send_message`，内容为 ✅ 安装完成。
 
 ## 检查是否正常工作
 
-让 Grok 在 WhatsApp 上发送 `✅ installed`。消息到达，就说明连接正常。
+让 Grok 在 WhatsApp 上发送 `✅ 安装完成`。消息到达，就说明连接正常。
 
-<Chat messages={[{ name: 'Grok', text: '✅ installed', time: '09:03' }]} />
+<Chat messages={[{ name: 'Grok', text: '✅ 安装完成', time: '09:03' }]} />
 
 如果已连接 Grok Bot，请在 Grok 聊天关闭时在 WhatsApp 上写点什么：Grok Bot 会回答。
 

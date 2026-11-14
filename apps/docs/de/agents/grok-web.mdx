@@ -27,11 +27,11 @@ Grok wartet 1 Minute auf eine einzelne Antwort und fragt erneut, also gibt es in
 
 ## Von Grund auf einrichten
 
-1. **Schreib der zapbip-Nummer auf WhatsApp.** Sende `new agent grok-web`. [So startest du](/de/get-started/how-to-start) zeigt jede Nachricht. Die Befehle und die Antworten von zapbip sind auf Englisch, denn das versteht das Produkt heute.
+1. **Schreib der zapbip-Nummer auf WhatsApp.** Sende `neuer agent grok-web`. [So startest du](/de/get-started/how-to-start) zeigt jede Nachricht. Die Befehle und die Antworten von zapbip sind auf Deutsch; dieselben Befehle versteht es auch auf Englisch.
 
    <Chat
      messages={[
-       { you: true, text: 'new agent grok-web', time: '09:00' },
+       { you: true, text: 'neuer agent grok-web', time: '09:00' },
        { name: 'zapbip', text: 'Agent grok-web created. Paste this into your agent.', time: '09:00' },
      ]}
    />
@@ -44,13 +44,13 @@ Grok wartet 1 Minute auf eine einzelne Antwort und fragt erneut, also gibt es in
 
 4. **Wähle, wer antwortet, wenn du zuerst schreibst.** Hast du einen Grok Bot mit zapbip verbunden, ruft Grok `set_wake({mode: "standby", standby_agent: "<name>"})` mit diesem Bot auf. Ohne einen ruft es `set_wake({mode: "none"})` auf.
 
-5. **Teste es.** Im Chat ruft es `send_message` mit ✅ installed auf.
+5. **Teste es.** Im Chat ruft es `send_message` mit ✅ installiert auf.
 
 ## Prüfen, ob es funktioniert
 
-Bitte Grok, `✅ installed` über WhatsApp zu senden. Wenn es ankommt, funktioniert die Verbindung.
+Bitte Grok, `✅ installiert` über WhatsApp zu senden. Wenn es ankommt, funktioniert die Verbindung.
 
-<Chat messages={[{ name: 'Grok', text: '✅ installed', time: '09:03' }]} />
+<Chat messages={[{ name: 'Grok', text: '✅ installiert', time: '09:03' }]} />
 
 Schreib mit einem verbundenen Grok Bot etwas in WhatsApp, während der Grok-Chat geschlossen ist: Der Grok Bot antwortet.
 

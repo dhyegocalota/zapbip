@@ -30,14 +30,14 @@ Deine Nachricht geht nie verloren. Lässt sich die KI nicht wecken, wartet sie i
 
 ## Wenn deine KI nicht zuhört
 
-zapbip sagt es dir sofort, damit du weißt, dass sie wartet. Die Hinweise von zapbip sind auf Englisch, der Sprache des Produkts heute.
+zapbip sagt es dir sofort, damit du weißt, dass sie wartet. Die Hinweise von zapbip sind in deiner Sprache.
 
 <Chat
   messages={[
     { you: true, text: '@claude ist der Build grün?', time: '09:00' },
     {
       notice: true,
-      text: 'The agent claude is not listening right now. Your message waits in the inbox.',
+      text: 'Der Agent claude hört gerade nicht zu. Deine Nachricht wartet im Posteingang.',
       time: '09:00',
     },
   ]}
@@ -50,7 +50,7 @@ WhatsApp erlaubt zapbip nur innerhalb von 24 Stunden nach deiner letzten Nachric
 <Chat
   messages={[
     { you: true, text: '@claude ist der Build grün?', time: 'Gestern 09:00' },
-    { notice: true, text: 'The agent claude has a message for you: Yes, all 212 tests pass.', time: '10:30' },
+    { notice: true, text: 'Der Agent claude hat eine Nachricht für dich: Ja, alle 212 Tests bestehen.', time: '10:30' },
     { you: true, text: 'ok', time: '10:31' },
     { name: 'Claude', text: 'Ja, alle 212 Tests laufen durch.', time: '10:31' },
   ]}

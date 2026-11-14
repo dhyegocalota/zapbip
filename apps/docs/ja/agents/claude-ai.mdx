@@ -43,7 +43,7 @@ claude.aiは1回の答えを約4 分待ち、自分で再試行するので、�
 
    <Chat
      messages={[
-       { you: true, text: 'new agent claude-ai', time: '08:00' },
+       { you: true, text: '新規エージェント claude-ai', time: '08:00' },
        {
          name: 'zapbip',
          text: 'Agent claude-ai created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate claude-ai".',
@@ -66,12 +66,12 @@ claude.aiは1回の答えを約4 分待ち、自分で再試行するので、�
 
 7. **1 時間ごとのセーフティネットを作成します。** `check_inbox` を呼ぶ1 時間ごとのタスクを作成するよう案内されます。ウェイクが取りこぼされても、1 時間以上待たされないようにするためです。
 
-8. **テストします。** チャットで、`send_message` を呼び、✅ installed を送ります。
+8. **テストします。** チャットで、`send_message` を呼び、✅ インストール完了 を送ります。
 
 ## 動作の確認
 
-接続が済むと、claude.aiはあなたのWhatsAppに `✅ installed` を送ります。
+接続が済むと、claude.aiはあなたのWhatsAppに `✅ インストール完了` を送ります。
 
-<Chat messages={[{ name: 'Claude', text: '✅ installed', time: '08:05' }]} />
+<Chat messages={[{ name: 'Claude', text: '✅ インストール完了', time: '08:05' }]} />
 
 何も届かない場合は、[トラブルシューティング](/ja/help/troubleshooting)をご覧ください。

@@ -25,6 +25,7 @@ export interface AccountDirectory {
   }): Promise<AccountLookup | null>;
   findById(input: { accountId: string }): Promise<AccountRecord | null>;
   setState(input: { accountId: string; state: AccountState }): Promise<void>;
+  setLocale(input: { accountId: string; locale: OwnerLocale }): Promise<void>;
   release(input: { accountId: string; releasedAt: number }): Promise<boolean>;
   listByState(input: { state: AccountState }): Promise<AccountRecord[]>;
   remove(input: { accountId: string }): Promise<void>;

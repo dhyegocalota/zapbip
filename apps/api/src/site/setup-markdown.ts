@@ -1,13 +1,11 @@
 import { COMMAND_WORDS } from '@zapbip/core';
 import {
   CommandKind,
-  DocsLanguage,
+  DOCS_LANGUAGE_OF_OWNER_LOCALE,
   INSTALL_SELF_TEST_TEXT,
-  OWNER_LOCALE_OF_WEB_LOCALE,
-  OwnerLocale,
   START_LINK,
   START_LINK_LANGUAGE_PARAMETER,
-  type WebLocale,
+  type OwnerLocale,
 } from '@zapbip/types';
 import { heading, HeadingLevel, list, type MarkdownBlock, MarkdownBlockKind, paragraph, renderMarkdown } from './markdown-document';
 import { quickStartEntriesOf } from './quick-start-entries';
@@ -15,23 +13,17 @@ import { SETUP_CONNECTION_PLACEHOLDER } from './site-constants';
 import { SiteCopyKey } from './site-copy';
 import { copyOf } from './site-copy-text';
 
-const START_LANGUAGE_OF_OWNER_LOCALE: Record<OwnerLocale, DocsLanguage> = {
-  [OwnerLocale.EnglishUs]: DocsLanguage.English,
-  [OwnerLocale.PortugueseBrazil]: DocsLanguage.PortugueseBrazil,
-};
-
 function createAgentWordsOf(input: { ownerLocale: OwnerLocale }): string {
   const command = COMMAND_WORDS.find((entry) => entry.kind === CommandKind.CreateAgent && entry.locale === input.ownerLocale);
   if (command === undefined) throw new Error(`no create-agent words for ${input.ownerLocale}`);
   return command.words;
 }
 
-export function setupMarkdownOf(input: { locale: WebLocale; origin: string }): string {
+export function setupMarkdownOf(input: { locale: OwnerLocale; origin: string }): string {
   const { locale, origin } = input;
   const translate = copyOf({ locale });
-  const ownerLocale = OWNER_LOCALE_OF_WEB_LOCALE[locale];
-  const command = `${createAgentWordsOf({ ownerLocale })} <${translate(SiteCopyKey.SetupAgentName)}>`;
-  const startLink = `${START_LINK}?${START_LINK_LANGUAGE_PARAMETER}=${START_LANGUAGE_OF_OWNER_LOCALE[ownerLocale]}`;
+  const command = `${createAgentWordsOf({ ownerLocale: locale })} <${translate(SiteCopyKey.SetupAgentName)}>`;
+  const startLink = `${START_LINK}?${START_LINK_LANGUAGE_PARAMETER}=${DOCS_LANGUAGE_OF_OWNER_LOCALE[locale]}`;
   const clients = quickStartEntriesOf({ locale, origin, connectionLink: SETUP_CONNECTION_PLACEHOLDER }).flatMap(
     (entry): MarkdownBlock[] => [
       heading({ level: HeadingLevel.Item, text: entry.name }),
@@ -50,7 +42,7 @@ export function setupMarkdownOf(input: { locale: WebLocale; origin: string }): s
       paragraph({ text: translate(SiteCopyKey.SetupStepTwoBody, { placeholder: SETUP_CONNECTION_PLACEHOLDER }) }),
       ...clients,
       heading({ level: HeadingLevel.Section, text: translate(SiteCopyKey.SetupStepThreeTitle) }),
-      paragraph({ text: translate(SiteCopyKey.SetupStepThreeBody, { selfTest: INSTALL_SELF_TEST_TEXT[ownerLocale] }) }),
+      paragraph({ text: translate(SiteCopyKey.SetupStepThreeBody, { selfTest: INSTALL_SELF_TEST_TEXT[locale] }) }),
       heading({ level: HeadingLevel.Section, text: translate(SiteCopyKey.SetupSafetyTitle) }),
       paragraph({ text: translate(SiteCopyKey.SetupSafetyBody) }),
     ],

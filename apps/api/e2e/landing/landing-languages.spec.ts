@@ -1,7 +1,7 @@
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Page } from '@playwright/test';
-import { WebLocale } from '@zapbip/types';
+import { OwnerLocale } from '@zapbip/types';
 import { localePathOf } from '../../src/site/site-language';
 import { SiteCopyKey } from '../../src/site/site-copy';
 import { LOCALE_PROFILES, MENU_LOCALES } from '../../src/web-shell/locale-profiles';
@@ -11,7 +11,7 @@ import { siteCopy } from './support/site-copy';
 const SCREENSHOT_DIRECTORY_VARIABLE = 'ZAPBIP_LANGUAGES_SCREENSHOT_DIRECTORY';
 const MOBILE_WIDTH = 375;
 const LANGUAGE_COUNT = 8;
-const SHOT_LOCALES = [WebLocale.Japanese, WebLocale.ChineseSimplified, WebLocale.Korean, WebLocale.German];
+const SHOT_LOCALES = [OwnerLocale.Japanese, OwnerLocale.ChineseSimplified, OwnerLocale.Korean, OwnerLocale.German];
 const NO_SIDEWAYS_SCROLL_SCRIPT = 'document.documentElement.scrollWidth <= document.documentElement.clientWidth';
 const HERO_TITLE_SELECTOR = 'h1';
 
@@ -28,7 +28,7 @@ test('the menu lists the eight languages with their native names', async ({ page
   await expect(options).toHaveText(MENU_LOCALES.map((locale) => LOCALE_PROFILES[locale].nativeName));
 });
 
-for (const locale of MENU_LOCALES.filter((candidate) => candidate !== WebLocale.EnglishUs)) {
+for (const locale of MENU_LOCALES.filter((candidate) => candidate !== OwnerLocale.EnglishUs)) {
   test(`choosing ${locale} lands on its path, in its language, with no sideways scroll`, async ({ page }) => {
     const profile = LOCALE_PROFILES[locale];
     await page.goto('/');
@@ -45,7 +45,7 @@ for (const locale of MENU_LOCALES.filter((candidate) => candidate !== WebLocale.
 test('the chosen language is remembered: the root then goes to its path', async ({ page }) => {
   await page.goto('/');
   await openMenu({ page });
-  await page.locator(`.lang-option[value="${WebLocale.Japanese}"]`).click();
+  await page.locator(`.lang-option[value="${OwnerLocale.Japanese}"]`).click();
   await page.goto('/');
   await expect(page).toHaveURL(/\/ja$/);
 });

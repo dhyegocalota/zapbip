@@ -1,4 +1,4 @@
-import { CLIENT_APP_SIGN_IN_PATH_PREFIX, WebLocale } from '@zapbip/types';
+import { CLIENT_APP_SIGN_IN_PATH_PREFIX, OwnerLocale } from '@zapbip/types';
 import { Hono, type Context } from 'hono';
 import { SEE_OTHER_STATUS } from '../../backoffice/backoffice-constants';
 import { textFieldOf } from '../../backoffice/form-fields';
@@ -12,7 +12,7 @@ import { isOriginTrusted, refuseSubmission } from '../session-guards';
 
 const LOCALE_FIELD = 'locale';
 const THEME_FIELD = 'theme';
-const LOCALES: string[] = Object.values(WebLocale);
+const LOCALES: string[] = Object.values(OwnerLocale);
 const THEMES: string[] = Object.values(ShellTheme);
 
 function returnPathOf(input: { returnTo: string | null }): string {
@@ -28,7 +28,7 @@ async function changeLanguage(context: Context<ClientAppEnv>): Promise<Response>
   if (!isOriginTrusted({ context })) return refuseSubmission({ context });
   const form = await context.req.parseBody();
   const value = textFieldOf({ form, name: LOCALE_FIELD });
-  const locale = value !== null && LOCALES.includes(value) ? (value as WebLocale) : context.get('locale');
+  const locale = value !== null && LOCALES.includes(value) ? (value as OwnerLocale) : context.get('locale');
   const path = returnPathOf({ returnTo: textFieldOf({ form, name: RETURN_TO_FIELD }) });
   return context.redirect(pathWithLocale({ locale, path }), SEE_OTHER_STATUS);
 }

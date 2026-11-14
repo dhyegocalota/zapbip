@@ -1,4 +1,4 @@
-import { COMPANY, PRICING_CURRENCY_BY_LOCALE, PRICING_FREE_CENTS, PRICING_PRO_MONTHLY_CENTS, type WebLocale } from '@zapbip/types';
+import { COMPANY, PRICING_CURRENCY_BY_LOCALE, PRICING_FREE_CENTS, PRICING_PRO_MONTHLY_CENTS, type OwnerLocale } from '@zapbip/types';
 import { languageOf } from '../web-shell/locale-profiles';
 import { aboutFactsOf } from './about-facts';
 import { faqItemsOf } from './faq-items';
@@ -101,7 +101,7 @@ function applicationOf(input: { model: PageModel }): StructuredDataNode {
   };
 }
 
-function faqPageOf(input: { locale: WebLocale }): StructuredDataNode {
+function faqPageOf(input: { locale: OwnerLocale }): StructuredDataNode {
   const translate = copyOf({ locale: input.locale });
   const values = pricingValuesOf({ locale: input.locale });
   return {

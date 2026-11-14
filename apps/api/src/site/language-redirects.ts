@@ -1,4 +1,4 @@
-import { HttpStatus, WebLocale } from '@zapbip/types';
+import { HttpStatus, OwnerLocale } from '@zapbip/types';
 import type { Context, Next } from 'hono';
 import { getCookie } from 'hono/cookie';
 import { ACCEPT_LANGUAGE_HEADER, SAFE_METHODS } from '../backoffice/backoffice-constants';
@@ -11,7 +11,7 @@ import { SitePath } from './site-paths';
 
 const TRAILING_SLASH = '/';
 
-function targetOf(input: { context: Context<SiteEnv>; locale: WebLocale }): string {
+function targetOf(input: { context: Context<SiteEnv>; locale: OwnerLocale }): string {
   const { context, locale } = input;
   return pagePathOf({ locale, agent: context.get('agentParameter'), referralCode: context.get('referralCode') });
 }
@@ -34,7 +34,7 @@ export async function languageRedirects(context: Context<SiteEnv>, next: Next): 
     cookieValue: getCookie(context, LOCALE_COOKIE_NAME),
     acceptLanguage: context.req.header(ACCEPT_LANGUAGE_HEADER),
   });
-  if (!isRoot || preferred === WebLocale.EnglishUs) return next();
+  if (!isRoot || preferred === OwnerLocale.EnglishUs) return next();
   context.header('Vary', PAGE_VARY);
   return context.redirect(targetOf({ context, locale: preferred }), HttpStatus.Found);
 }

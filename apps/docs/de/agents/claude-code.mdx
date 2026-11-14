@@ -45,7 +45,7 @@ Nutze einen Listener, nie zwei zusammen. Ist der Kanal nicht an, lässt Claude C
 
    <Chat
      messages={[
-       { you: true, text: 'new agent claude-code', time: '15:00' },
+       { you: true, text: 'neuer agent claude-code', time: '15:00' },
        {
          name: 'zapbip',
          text: 'Agent claude-code created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate claude-code".',
@@ -54,7 +54,7 @@ Nutze einen Listener, nie zwei zusammen. Ist der Kanal nicht an, lässt Claude C
      ]}
    />
 
-   Die Befehle und die Antworten von zapbip sind auf Englisch, denn das versteht das Produkt heute.
+   Die Befehle und die Antworten von zapbip sind auf Deutsch; dieselben Befehle versteht es auch auf Englisch.
 
 3. **Füge die Zeile in Claude Code ein.**
 
@@ -74,12 +74,12 @@ Nutze einen Listener, nie zwei zusammen. Ist der Kanal nicht an, lässt Claude C
 
 8. **Nur wenn Kanäle nicht verfügbar sind.** Es führt `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen` im Hintergrund aus und beobachtet ihn mit Monitor, wobei es ihn bei jedem Timeout-Hinweis neu startet.
 
-9. **Teste es.** In einem frischen Prozess führt es `claude -p "Call send_message with the text '✅ installed'" --allowedTools=mcp__zapbip__send_message` aus. Ein `send_message` mit ✅ installed erreicht dein WhatsApp. Schlägt der Befehl fehl, hält es an und zeigt die letzten 20 Zeilen. Starte danach Claude Code neu, um die zapbip-Werkzeuge zu nutzen.
+9. **Teste es.** In einem frischen Prozess führt es `claude -p "Call send_message with the text '✅ installiert'" --allowedTools=mcp__zapbip__send_message` aus. Ein `send_message` mit ✅ installiert erreicht dein WhatsApp. Schlägt der Befehl fehl, hält es an und zeigt die letzten 20 Zeilen. Starte danach Claude Code neu, um die zapbip-Werkzeuge zu nutzen.
 
 ## Prüfen, ob es funktioniert
 
-Bitte Claude Code, `✅ installed` an dein WhatsApp zu senden. Es sollte in wenigen Sekunden ankommen.
+Bitte Claude Code, `✅ installiert` an dein WhatsApp zu senden. Es sollte in wenigen Sekunden ankommen.
 
-<Chat messages={[{ name: 'Claude', text: '✅ installed', time: '15:03' }]} />
+<Chat messages={[{ name: 'Claude', text: '✅ installiert', time: '15:03' }]} />
 
 Kommt nichts an, siehe [Fehlerbehebung](/de/help/troubleshooting).

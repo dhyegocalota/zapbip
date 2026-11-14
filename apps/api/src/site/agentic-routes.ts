@@ -1,4 +1,4 @@
-import { HttpStatus, WebLocale } from '@zapbip/types';
+import { HttpStatus, OwnerLocale } from '@zapbip/types';
 import { Hono } from 'hono';
 import { LlmsFile, llmsPathOf, setupPathOf } from './agentic-paths';
 import { jsonResponse } from './agentic-answer';
@@ -20,7 +20,7 @@ const LLMS_RENDERERS = {
 
 export const agenticRoutes = new Hono<SiteEnv>();
 
-Object.values(WebLocale).forEach((locale) =>
+Object.values(OwnerLocale).forEach((locale) =>
   Object.values(LlmsFile).forEach((file) =>
     agenticRoutes.get(llmsPathOf({ locale, file }), (context) =>
       context.body(LLMS_RENDERERS[file]({ origin: context.env.SITE_ORIGIN, locale }), HttpStatus.Ok, {
@@ -31,7 +31,7 @@ Object.values(WebLocale).forEach((locale) =>
   ),
 );
 
-Object.values(WebLocale).forEach((locale) =>
+Object.values(OwnerLocale).forEach((locale) =>
   agenticRoutes.get(setupPathOf({ locale }), (context) =>
     context.body(setupMarkdownOf({ origin: context.env.SITE_ORIGIN, locale }), HttpStatus.Ok, {
       'Content-Type': MARKDOWN_CONTENT_TYPE,

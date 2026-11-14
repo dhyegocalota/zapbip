@@ -41,11 +41,11 @@ AI가 나에게 무언가를 물으면 zapbip은 그 질문을 붙잡고 최대 
 
    <StartLink />
 
-2. **새 에이전트를 요청합니다.** 에이전트는 연결하는 AI 하나를 뜻합니다. 명령어는 지금은 영어나 포르투갈어 단어로 입력합니다.
+2. **새 에이전트를 요청합니다.** 에이전트는 연결하는 AI 하나를 뜻합니다. 명령어는 한국어, 영어, 포르투갈어 단어로 입력할 수 있습니다.
 
    <Chat
      messages={[
-       { you: true, text: 'new agent claude-code', time: '15:00' },
+       { you: true, text: '새 에이전트 claude-code', time: '15:00' },
        {
          name: 'zapbip',
          text: 'Agent claude-code created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate claude-code".',
@@ -72,12 +72,12 @@ AI가 나에게 무언가를 물으면 zapbip은 그 질문을 붙잡고 최대 
 
 8. **채널을 쓸 수 없을 때만.** `ZAPBIP_CONNECTION_URL=<connectionLink> npx zapbip@0.1.0 listen`을 백그라운드에서 실행하고 Monitor로 지켜보며, 시간 초과 알림이 올 때마다 다시 설정합니다.
 
-9. **테스트합니다.** 새 프로세스에서 `claude -p "Call send_message with the text '✅ installed'" --allowedTools=mcp__zapbip__send_message`를 실행합니다. ✅ installed가 담긴 `send_message`가 내 WhatsApp에 도착합니다. 명령이 실패하면 멈추고 마지막 20줄을 보여 줍니다. 그다음 zapbip 도구를 쓰기 위해 Claude Code를 다시 시작하세요.
+9. **테스트합니다.** 새 프로세스에서 `claude -p "Call send_message with the text '✅ 설치 완료'" --allowedTools=mcp__zapbip__send_message`를 실행합니다. ✅ 설치 완료가 담긴 `send_message`가 내 WhatsApp에 도착합니다. 명령이 실패하면 멈추고 마지막 20줄을 보여 줍니다. 그다음 zapbip 도구를 쓰기 위해 Claude Code를 다시 시작하세요.
 
 ## 작동 확인
 
-Claude Code에게 WhatsApp으로 `✅ installed`를 보내라고 요청하세요. 몇 초 안에 도착해야 합니다.
+Claude Code에게 WhatsApp으로 `✅ 설치 완료`를 보내라고 요청하세요. 몇 초 안에 도착해야 합니다.
 
-<Chat messages={[{ name: 'Claude', text: '✅ installed', time: '15:03' }]} />
+<Chat messages={[{ name: 'Claude', text: '✅ 설치 완료', time: '15:03' }]} />
 
 아무것도 도착하지 않으면 [문제 해결](/ko/help/troubleshooting)을 보세요.

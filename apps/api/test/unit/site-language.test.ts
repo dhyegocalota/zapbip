@@ -1,16 +1,16 @@
-import { WebLocale } from '@zapbip/types';
+import { OwnerLocale } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { localeOfLanguageValue, localeOfPath, localePathOf, preferredLocaleOf } from '../../src/site/site-language';
 
-const LANGUAGE_PATHS: [WebLocale, string][] = [
-  [WebLocale.EnglishUs, '/'],
-  [WebLocale.PortugueseBrazil, '/pt-br'],
-  [WebLocale.Spanish, '/es'],
-  [WebLocale.German, '/de'],
-  [WebLocale.French, '/fr'],
-  [WebLocale.Japanese, '/ja'],
-  [WebLocale.Korean, '/ko'],
-  [WebLocale.ChineseSimplified, '/zh'],
+const LANGUAGE_PATHS: [OwnerLocale, string][] = [
+  [OwnerLocale.EnglishUs, '/'],
+  [OwnerLocale.PortugueseBrazil, '/pt-br'],
+  [OwnerLocale.Spanish, '/es'],
+  [OwnerLocale.German, '/de'],
+  [OwnerLocale.French, '/fr'],
+  [OwnerLocale.Japanese, '/ja'],
+  [OwnerLocale.Korean, '/ko'],
+  [OwnerLocale.ChineseSimplified, '/zh'],
 ];
 
 describe('the language of the site by path', () => {
@@ -32,17 +32,17 @@ describe('the language of the site by path', () => {
 
 describe('the legacy language values', () => {
   it.each([
-    ['en', WebLocale.EnglishUs],
-    ['en_US', WebLocale.EnglishUs],
-    ['pt-BR', WebLocale.PortugueseBrazil],
-    ['pt_BR', WebLocale.PortugueseBrazil],
-    ['es', WebLocale.Spanish],
-    ['de', WebLocale.German],
-    ['fr', WebLocale.French],
-    ['ja', WebLocale.Japanese],
-    ['ko', WebLocale.Korean],
-    ['zh-CN', WebLocale.ChineseSimplified],
-    ['zh_CN', WebLocale.ChineseSimplified],
+    ['en', OwnerLocale.EnglishUs],
+    ['en_US', OwnerLocale.EnglishUs],
+    ['pt-BR', OwnerLocale.PortugueseBrazil],
+    ['pt_BR', OwnerLocale.PortugueseBrazil],
+    ['es', OwnerLocale.Spanish],
+    ['de', OwnerLocale.German],
+    ['fr', OwnerLocale.French],
+    ['ja', OwnerLocale.Japanese],
+    ['ko', OwnerLocale.Korean],
+    ['zh-CN', OwnerLocale.ChineseSimplified],
+    ['zh_CN', OwnerLocale.ChineseSimplified],
   ])('reads %s', (value, locale) => {
     expect(localeOfLanguageValue({ value })).toBe(locale);
   });
@@ -54,30 +54,30 @@ describe('the legacy language values', () => {
 
 describe('the preferred language of a visitor to the root', () => {
   it.each([
-    [undefined, undefined, WebLocale.EnglishUs],
-    [undefined, 'en-US,en;q=0.9', WebLocale.EnglishUs],
-    [undefined, 'pt-BR,pt;q=0.9', WebLocale.PortugueseBrazil],
-    [undefined, 'pt', WebLocale.PortugueseBrazil],
-    [undefined, 'es-MX,es;q=0.9', WebLocale.Spanish],
-    [undefined, 'de-AT', WebLocale.German],
-    [undefined, 'fr-CA,fr;q=0.8', WebLocale.French],
-    [undefined, 'ja-JP', WebLocale.Japanese],
-    [undefined, 'ko-KR', WebLocale.Korean],
-    [undefined, 'zh', WebLocale.ChineseSimplified],
-    [undefined, 'zh-CN,zh;q=0.9', WebLocale.ChineseSimplified],
-    [undefined, 'zh-Hans-SG', WebLocale.ChineseSimplified],
-    [undefined, 'zh-TW', WebLocale.EnglishUs],
-    [undefined, 'zh-Hant', WebLocale.EnglishUs],
-    [undefined, 'it-IT,it;q=0.9', WebLocale.EnglishUs],
-    [undefined, 'fr;q=0.5, de;q=0.9, en;q=0.1', WebLocale.German],
-    [undefined, 'it, ja;q=0.4, ko;q=0.6', WebLocale.Korean],
-    [undefined, 'ja;q=0, en;q=0.2', WebLocale.EnglishUs],
-    [undefined, '*', WebLocale.EnglishUs],
-    [undefined, 'ES', WebLocale.Spanish],
-    [WebLocale.PortugueseBrazil, 'en-US', WebLocale.PortugueseBrazil],
-    [WebLocale.EnglishUs, 'ja', WebLocale.EnglishUs],
-    [WebLocale.Korean, 'en', WebLocale.Korean],
-    ['xx', 'pt-BR', WebLocale.PortugueseBrazil],
+    [undefined, undefined, OwnerLocale.EnglishUs],
+    [undefined, 'en-US,en;q=0.9', OwnerLocale.EnglishUs],
+    [undefined, 'pt-BR,pt;q=0.9', OwnerLocale.PortugueseBrazil],
+    [undefined, 'pt', OwnerLocale.PortugueseBrazil],
+    [undefined, 'es-MX,es;q=0.9', OwnerLocale.Spanish],
+    [undefined, 'de-AT', OwnerLocale.German],
+    [undefined, 'fr-CA,fr;q=0.8', OwnerLocale.French],
+    [undefined, 'ja-JP', OwnerLocale.Japanese],
+    [undefined, 'ko-KR', OwnerLocale.Korean],
+    [undefined, 'zh', OwnerLocale.ChineseSimplified],
+    [undefined, 'zh-CN,zh;q=0.9', OwnerLocale.ChineseSimplified],
+    [undefined, 'zh-Hans-SG', OwnerLocale.ChineseSimplified],
+    [undefined, 'zh-TW', OwnerLocale.EnglishUs],
+    [undefined, 'zh-Hant', OwnerLocale.EnglishUs],
+    [undefined, 'it-IT,it;q=0.9', OwnerLocale.EnglishUs],
+    [undefined, 'fr;q=0.5, de;q=0.9, en;q=0.1', OwnerLocale.German],
+    [undefined, 'it, ja;q=0.4, ko;q=0.6', OwnerLocale.Korean],
+    [undefined, 'ja;q=0, en;q=0.2', OwnerLocale.EnglishUs],
+    [undefined, '*', OwnerLocale.EnglishUs],
+    [undefined, 'ES', OwnerLocale.Spanish],
+    [OwnerLocale.PortugueseBrazil, 'en-US', OwnerLocale.PortugueseBrazil],
+    [OwnerLocale.EnglishUs, 'ja', OwnerLocale.EnglishUs],
+    [OwnerLocale.Korean, 'en', OwnerLocale.Korean],
+    ['xx', 'pt-BR', OwnerLocale.PortugueseBrazil],
   ])('with cookie %j and Accept-Language %j shows %s', (cookieValue, acceptLanguage, expected) => {
     expect(preferredLocaleOf({ cookieValue, acceptLanguage })).toBe(expected);
   });

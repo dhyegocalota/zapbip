@@ -43,7 +43,7 @@ claude.ai 对单个答案大约等待 4 分钟，并自行重试，所以整体�
 
    <Chat
      messages={[
-       { you: true, text: 'new agent claude-ai', time: '08:00' },
+       { you: true, text: '新建智能体 claude-ai', time: '08:00' },
        {
          name: 'zapbip',
          text: 'Agent claude-ai created. Paste this into your agent: Connect yourself to my WhatsApp with zapbip: read https://mcp.zapbip.com/i/zb_inst_<code> and follow the instructions. This link works once for 30 minutes. Do not share it. If the link expires or was used, send "rotate claude-ai".',
@@ -66,12 +66,12 @@ claude.ai 对单个答案大约等待 4 分钟，并自行重试，所以整体�
 
 7. **创建每小时的安全网。** 它会请你创建一个每小时的任务来调用 `check_inbox`，这样即使错过一次唤醒，也不会有消息等待超过一小时。
 
-8. **测试。** 在聊天里它调用 `send_message`，内容为 ✅ installed。
+8. **测试。** 在聊天里它调用 `send_message`，内容为 ✅ 安装完成。
 
 ## 检查是否正常工作
 
-连接完成后，claude.ai 会向你的 WhatsApp 发送 `✅ installed`。
+连接完成后，claude.ai 会向你的 WhatsApp 发送 `✅ 安装完成`。
 
-<Chat messages={[{ name: 'Claude', text: '✅ installed', time: '08:05' }]} />
+<Chat messages={[{ name: 'Claude', text: '✅ 安装完成', time: '08:05' }]} />
 
 如果什么也没收到，请参见[故障排查](/zh/help/troubleshooting)。

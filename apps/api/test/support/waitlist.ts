@@ -1,4 +1,4 @@
-import { WebLocale, WaitlistJoinOutcome, WaitlistSource } from '@zapbip/types';
+import { OwnerLocale, WaitlistJoinOutcome, WaitlistSource } from '@zapbip/types';
 import { joinWaitlist, type WaitlistJoinResult } from '../../src/site/join-waitlist';
 import { SEED_CREATED_AT } from './seed';
 import { testEnv } from './workers-env';
@@ -16,11 +16,11 @@ export type WaitlistRow = {
 export async function join(input: {
   email: string;
   referralCode?: string | null;
-  locale?: WebLocale;
+  locale?: OwnerLocale;
   source?: WaitlistSource;
   generateReferralCode?: () => string;
 }): Promise<WaitlistJoinResult> {
-  const { email, referralCode = null, locale = WebLocale.EnglishUs, source = WaitlistSource.Form, generateReferralCode } = input;
+  const { email, referralCode = null, locale = OwnerLocale.EnglishUs, source = WaitlistSource.Form, generateReferralCode } = input;
   return joinWaitlist({
     database: testEnv.CONNECTIONS,
     email,
@@ -67,7 +67,7 @@ export async function seedWaitlistRow(input: {
   await testEnv.CONNECTIONS.prepare(
     'INSERT INTO landing_waitlist (email, locale, referral_code, referred_by, credited, created_at, source) VALUES (?, ?, ?, ?, ?, ?, ?)',
   )
-    .bind(email, WebLocale.EnglishUs, referralCode, referredBy, credited, createdAt, source)
+    .bind(email, OwnerLocale.EnglishUs, referralCode, referredBy, credited, createdAt, source)
     .run();
 }
 
@@ -91,7 +91,7 @@ export async function seedSourceRows(input: { source: WaitlistSource; count: num
   const statements = Array.from({ length: count }, () =>
     testEnv.CONNECTIONS.prepare(
       'INSERT INTO landing_waitlist (email, locale, referral_code, referred_by, credited, created_at, source) VALUES (?, ?, ?, NULL, 0, ?, ?)',
-    ).bind(`${uniqueToken()}@example.com`, WebLocale.EnglishUs, uniqueToken().slice(0, SEEDED_CODE_LENGTH), createdAt, source),
+    ).bind(`${uniqueToken()}@example.com`, OwnerLocale.EnglishUs, uniqueToken().slice(0, SEEDED_CODE_LENGTH), createdAt, source),
   );
   await testEnv.CONNECTIONS.batch(statements);
 }

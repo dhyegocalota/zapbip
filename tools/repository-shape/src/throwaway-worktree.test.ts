@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { existsSync, rmSync } from 'node:fs';
 import { dirname } from 'node:path';
+import { DOCS_LANGUAGE_FOLDERS } from '@zapbip/types';
 import { IS_INSIDE_PROOF, REPOSITORY_ROOT_FOR_PROOFS, checkOutHead, createThrowawayWorktree, isOutside, run } from './throwaway-worktree';
 
 const PLUGIN_PREFIX = 'apps/example-plugin/';
@@ -18,6 +19,14 @@ describe('isOutside', () => {
   test('accepts the generated set and the folders themselves', () => {
     expect(isOutside({ path: 'libs/agents/src/generated/ids.ts', prefixes: [AGENT_PREFIX] })).toBe(false);
     expect(isOutside({ path: `${AGENT_PREFIX}definition.ts`, prefixes: [AGENT_PREFIX] })).toBe(false);
+  });
+
+  test('accepts the generated agent pages and snippets of every docs language', () => {
+    const generatedDocs = Object.values(DOCS_LANGUAGE_FOLDERS).flatMap((folder) => {
+      const prefix = folder ? `${folder}/` : '';
+      return [`apps/docs/${prefix}agents/example.mdx`, `apps/docs/snippets/${prefix}agents/matrix.mdx`];
+    });
+    expect(generatedDocs.filter((path) => isOutside({ path, prefixes: [AGENT_PREFIX] }))).toEqual([]);
   });
 
   test('refuses any other path', () => {

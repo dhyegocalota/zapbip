@@ -100,8 +100,8 @@ describe('WAKE_COPY', () => {
 });
 
 describe('WAKE_COPY facts', () => {
-  test('every text says the message waits in the inbox', () => {
-    Object.values(OwnerLocale).forEach((locale) => expect(WAKE_COPY[WakeCopyKey.WakeFailed][locale]).toContain('inbox'));
+  test('every text names the agent that could not be woken', () => {
+    Object.values(OwnerLocale).forEach((locale) => expect(WAKE_COPY[WakeCopyKey.WakeFailed][locale]).toContain('{agent}'));
   });
 });
 

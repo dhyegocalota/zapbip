@@ -26,8 +26,8 @@ describe('COMMAND_WORDS', () => {
 });
 
 describe('MENU_COMMAND_KINDS', () => {
-  it('lists six kinds, none of them the confirmation or the unknown command', () => {
-    expect(MENU_COMMAND_KINDS).toHaveLength(6);
+  it('lists seven kinds, none of them the confirmation or the unknown command', () => {
+    expect(MENU_COMMAND_KINDS).toHaveLength(7);
     expect(MENU_COMMAND_KINDS).not.toContain(CommandKind.ConfirmDeletion);
     expect(MENU_COMMAND_KINDS).not.toContain(CommandKind.Unknown);
   });

@@ -1,4 +1,4 @@
-import { WebLocale } from '@zapbip/types';
+import { OwnerLocale } from '@zapbip/types';
 import { ClientAppCopyKey } from './client-app-copy-keys';
 import { SPANISH_CLIENT_APP_COPY } from './client-app-copy-spanish';
 import { GERMAN_CLIENT_APP_COPY } from './client-app-copy-german';
@@ -146,22 +146,22 @@ const PORTUGUESE_COPY: CopyEntries = {
   [ClientAppCopyKey.FooterMaker]: 'zapbip, um canal pessoal de WhatsApp para os seus agentes de IA',
 };
 
-const CLIENT_APP_COPY: Record<WebLocale, CopyEntries> = {
-  [WebLocale.EnglishUs]: ENGLISH_COPY,
-  [WebLocale.PortugueseBrazil]: PORTUGUESE_COPY,
-  [WebLocale.Spanish]: SPANISH_CLIENT_APP_COPY,
-  [WebLocale.German]: GERMAN_CLIENT_APP_COPY,
-  [WebLocale.French]: FRENCH_CLIENT_APP_COPY,
-  [WebLocale.Japanese]: JAPANESE_CLIENT_APP_COPY,
-  [WebLocale.Korean]: KOREAN_CLIENT_APP_COPY,
-  [WebLocale.ChineseSimplified]: CHINESE_CLIENT_APP_COPY,
+const CLIENT_APP_COPY: Record<OwnerLocale, CopyEntries> = {
+  [OwnerLocale.EnglishUs]: ENGLISH_COPY,
+  [OwnerLocale.PortugueseBrazil]: PORTUGUESE_COPY,
+  [OwnerLocale.Spanish]: SPANISH_CLIENT_APP_COPY,
+  [OwnerLocale.German]: GERMAN_CLIENT_APP_COPY,
+  [OwnerLocale.French]: FRENCH_CLIENT_APP_COPY,
+  [OwnerLocale.Japanese]: JAPANESE_CLIENT_APP_COPY,
+  [OwnerLocale.Korean]: KOREAN_CLIENT_APP_COPY,
+  [OwnerLocale.ChineseSimplified]: CHINESE_CLIENT_APP_COPY,
 };
 
-export function renderClientAppCopy(input: { key: ClientAppCopyKey; locale: WebLocale; values?: Record<string, string> }): string {
+export function renderClientAppCopy(input: { key: ClientAppCopyKey; locale: OwnerLocale; values?: Record<string, string> }): string {
   const { key, locale, values = {} } = input;
   return Object.entries(values).reduce((text, [name, value]) => text.replaceAll(`{${name}}`, value), CLIENT_APP_COPY[locale][key]);
 }
 
-export function copyOf(input: { locale: WebLocale }): (key: ClientAppCopyKey, values?: Record<string, string>) => string {
+export function copyOf(input: { locale: OwnerLocale }): (key: ClientAppCopyKey, values?: Record<string, string>) => string {
   return (key, values) => renderClientAppCopy({ key, locale: input.locale, values });
 }

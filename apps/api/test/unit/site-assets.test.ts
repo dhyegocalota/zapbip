@@ -1,11 +1,11 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { OwnerLocale, WebLocale } from '@zapbip/types';
+import { OwnerLocale } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { SiteAssetKind, siteAssetOf } from '../../src/site/site-paths';
 
 const ASSETS_ROOT = join(import.meta.dirname, '../../site-public/site');
-const LOCALES = Object.values(OwnerLocale);
+const LOCALES = [OwnerLocale.EnglishUs, OwnerLocale.PortugueseBrazil];
 const PER_FILE_LIMIT_BYTES = 2_000_000;
 const TOTAL_LIMIT_BYTES = 6_000_000;
 const SHARED_FILES = ['apple-touch-icon.png'];
@@ -57,7 +57,7 @@ describe('site assets', () => {
     });
   });
 
-  describe.each(Object.values(WebLocale))('the social image in %s', (locale) => {
+  describe.each(Object.values(OwnerLocale))('the social image in %s', (locale) => {
     it("is the language's own, 1200 by 630 and inside its budget", () => {
       const name = `og-${locale}.png`;
       expect(siteAssetOf({ kind: SiteAssetKind.OpenGraphImage, locale })).toBe(`/site/${name}`);
@@ -69,7 +69,7 @@ describe('site assets', () => {
   });
 
   it('keeps the demo of a language without a recording on the English one', () => {
-    expect(siteAssetOf({ kind: SiteAssetKind.PosterLarge, locale: WebLocale.German })).toBe('/site/demo-en_US-poster-960.webp');
+    expect(siteAssetOf({ kind: SiteAssetKind.PosterLarge, locale: OwnerLocale.German })).toBe('/site/demo-en_US-poster-960.webp');
   });
 
   it('caches the media of the site for a day and serves stale ones for a week', () => {

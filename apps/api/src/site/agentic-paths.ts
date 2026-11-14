@@ -1,4 +1,4 @@
-import type { WebLocale } from '@zapbip/types';
+import type { OwnerLocale } from '@zapbip/types';
 import { legalPathOf } from './legal-links';
 import type { PageModel } from './page-model';
 import { localePathOf } from './site-language';
@@ -21,21 +21,21 @@ export function markdownPathOf(input: { htmlPath: string }): string {
   return input.htmlPath === SitePath.Home ? HOME_MARKDOWN_PATH : `${input.htmlPath}${MARKDOWN_EXTENSION}`;
 }
 
-function localizedFilePathOf(input: { locale: WebLocale; path: SitePath }): string {
+function localizedFilePathOf(input: { locale: OwnerLocale; path: SitePath }): string {
   const homePath = localePathOf({ locale: input.locale });
   const prefix = homePath === SitePath.Home ? '' : homePath;
   return `${prefix}${input.path}`;
 }
 
-export function llmsPathOf(input: { locale: WebLocale; file: LlmsFile }): string {
+export function llmsPathOf(input: { locale: OwnerLocale; file: LlmsFile }): string {
   return localizedFilePathOf({ locale: input.locale, path: LLMS_PATHS[input.file] });
 }
 
-export function setupPathOf(input: { locale: WebLocale }): string {
+export function setupPathOf(input: { locale: OwnerLocale }): string {
   return localizedFilePathOf({ locale: input.locale, path: SitePath.Setup });
 }
 
-export function setupUrlOf(input: { locale: WebLocale; origin: string }): string {
+export function setupUrlOf(input: { locale: OwnerLocale; origin: string }): string {
   return `${input.origin}${setupPathOf({ locale: input.locale })}`;
 }
 

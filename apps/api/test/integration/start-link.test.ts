@@ -1,7 +1,7 @@
 import { createExecutionContext, env, reset } from 'cloudflare:test';
 import { exports } from 'cloudflare:workers';
 import {
-  DocsLanguage,
+  DocsPageLanguage,
   INSTALL_PAGE_PATH_PREFIX,
   INSTALL_PAGE_REQUESTS_PER_MINUTE,
   OwnerLocale,
@@ -77,8 +77,8 @@ describe('start link redirect', () => {
   });
 
   it.each([
-    [DocsLanguage.English, OwnerLocale.EnglishUs],
-    [DocsLanguage.PortugueseBrazil, OwnerLocale.PortugueseBrazil],
+    [DocsPageLanguage.English, OwnerLocale.EnglishUs],
+    [DocsPageLanguage.PortugueseBrazil, OwnerLocale.PortugueseBrazil],
   ])('SL-W2 takes the text of lang=%s', async (language, locale) => {
     await seedActiveNumber();
     const response = await getStart({ query: `?lang=${language}` });
@@ -187,7 +187,7 @@ describe('start link without a usable number', () => {
   });
 
   it('SL-W10 puts the English copy first for lang=en', async () => {
-    await expectUnavailablePage({ response: await getStart({ query: `?lang=${DocsLanguage.English}` }), first: OwnerLocale.EnglishUs });
+    await expectUnavailablePage({ response: await getStart({ query: `?lang=${DocsPageLanguage.English}` }), first: OwnerLocale.EnglishUs });
   });
 
   it('SL-W11 answers the 503 page when the stored number fails the pattern', async () => {
@@ -207,14 +207,17 @@ describe('start link without a usable number', () => {
 });
 
 describe('start link request handling', () => {
-  it.each(['?lang=fr', '?lang=', '?lang=en&lang=en', '?lang=en&lang=pt-BR', '?lang=EN'])('SL-W13 answers 400 for %s', async (query) => {
-    await seedActiveNumber();
-    const response = await getStart({ query });
-    expect(response.status).toBe(400);
-    expect(response.headers.get('location')).toBeNull();
-    expect(await response.text()).toBe('bad request');
-    expectPrivateHeaders({ headers: response.headers });
-  });
+  it.each(['?lang=it', '?lang=zh-CN', '?lang=', '?lang=en&lang=en', '?lang=en&lang=pt-BR', '?lang=EN'])(
+    'SL-W13 answers 400 for %s',
+    async (query) => {
+      await seedActiveNumber();
+      const response = await getStart({ query });
+      expect(response.status).toBe(400);
+      expect(response.headers.get('location')).toBeNull();
+      expect(await response.text()).toBe('bad request');
+      expectPrivateHeaders({ headers: response.headers });
+    },
+  );
 
   it('SL-W14 answers 400 without reading the registry when the client address header is missing', async () => {
     await testEnv.CONNECTIONS.prepare(BREAK_DISPLAY_NUMBER_STATEMENT).run();

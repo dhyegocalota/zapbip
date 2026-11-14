@@ -5,25 +5,25 @@ description: So löschst du alles, was zapbip über dich speichert.
 
 import { Chat } from '/snippets/chat.jsx';
 
-Du kannst dein Konto jederzeit löschen, von WhatsApp aus. Es braucht zwei Nachrichten, damit eine verirrte Nachricht nichts löschen kann. Die Befehle und die Antworten von zapbip sind auf Englisch, denn das versteht das Produkt heute.
+Du kannst dein Konto jederzeit löschen, von WhatsApp aus. Es braucht zwei Nachrichten, damit eine verirrte Nachricht nichts löschen kann. Die Befehle und die Antworten von zapbip sind auf Deutsch; dieselben Befehle versteht es auch auf Englisch.
 
 <Steps>
-  <Step title="Anfragen">Schreib `delete account`. zapbip sagt dir, was entfernt wird und welche Formulierung es bestätigt.</Step>
+  <Step title="Anfragen">Schreib `konto löschen`. zapbip sagt dir, was entfernt wird und welche Formulierung es bestätigt.</Step>
   <Step title="Bestätigen">
-    Schreib innerhalb von 10 Minuten `delete account permanently`. Nach dieser Zeit wird nichts gelöscht; schreib erneut `delete account`,
-    um von vorn zu beginnen.
+    Schreib innerhalb von 10 Minuten `konto endgültig löschen`. Nach dieser Zeit wird nichts gelöscht; schreib erneut `konto löschen`, um
+    von vorn zu beginnen.
   </Step>
 </Steps>
 
 <Chat
   messages={[
-    { you: true, text: 'delete account', time: '09:30' },
+    { you: true, text: 'konto löschen', time: '09:30' },
     {
-      text: 'This deletes your account, every agent, message and file, and cannot be undone. To confirm within 10 minutes, send: delete account permanently',
+      text: 'Das löscht dein Konto, alle Agenten, Nachrichten und Dateien und kann nicht rückgängig gemacht werden. Zum Bestätigen innerhalb von 10 Minuten sende: konto endgültig löschen',
       time: '09:30',
     },
-    { you: true, text: 'delete account permanently', time: '09:31' },
-    { text: 'Your account is deleted. Your next message starts a new account.', time: '09:31' },
+    { you: true, text: 'konto endgültig löschen', time: '09:31' },
+    { text: 'Dein Konto wurde gelöscht. Deine nächste Nachricht startet ein neues Konto.', time: '09:31' },
   ]}
 />
 

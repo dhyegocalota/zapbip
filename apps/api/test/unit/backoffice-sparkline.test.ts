@@ -1,4 +1,4 @@
-import { WebLocale } from '@zapbip/types';
+import { OwnerLocale } from '@zapbip/types';
 import { describe, expect, it } from 'vitest';
 import { Sparkline } from '../../src/backoffice/views/sparkline';
 
@@ -14,8 +14,8 @@ const POINTS_PATTERN = /<polyline[^>]*\spoints="([^"]+)"/;
 const TITLE_PATTERN = /<svg[^>]*><title>([^<]*)<\/title>/;
 const SUMMARY_PATTERN = /<p class="sparkline-summary">([^<]*)<\/p>/;
 
-function render(input: { values: number[]; locale?: WebLocale }): string {
-  const { locale = WebLocale.EnglishUs } = input;
+function render(input: { values: number[]; locale?: OwnerLocale }): string {
+  const { locale = OwnerLocale.EnglishUs } = input;
   return String(Sparkline({ id: SPARKLINE_ID, locale, metricLabel: METRIC_LABEL, values: input.values }));
 }
 
@@ -73,8 +73,8 @@ describe('sparkline', () => {
   });
 
   it.each([
-    [WebLocale.EnglishUs, 'Messages, last 14 days 91 in total, peak of 13 in one day'],
-    [WebLocale.PortugueseBrazil, 'Messages, últimos 14 dias 91 no total, pico de 13 em um dia'],
+    [OwnerLocale.EnglishUs, 'Messages, last 14 days 91 in total, peak of 13 in one day'],
+    [OwnerLocale.PortugueseBrazil, 'Messages, últimos 14 dias 91 no total, pico de 13 em um dia'],
   ])('names the chart with its numbers in %s', (locale, expectedTitle) => {
     expect(textOf({ html: render({ values: RISING, locale }), pattern: TITLE_PATTERN })).toBe(expectedTitle);
   });

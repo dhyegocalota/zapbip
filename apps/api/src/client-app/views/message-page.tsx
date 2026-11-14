@@ -1,11 +1,11 @@
-import type { WebLocale } from '@zapbip/types';
+import type { OwnerLocale } from '@zapbip/types';
 import type { ShellTheme } from '../../web-shell/shell-theme';
 import { ClientAppCopyKey, copyOf } from '../client-app-copy';
 import { ClientAppPath, pathWithLocale } from '../client-app-paths';
 import { Layout } from './layout';
 
 export type MessagePageProps = {
-  locale: WebLocale;
+  locale: OwnerLocale;
   theme: ShellTheme;
   title: ClientAppCopyKey;
   body: ClientAppCopyKey;

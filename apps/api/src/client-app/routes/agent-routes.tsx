@@ -1,5 +1,5 @@
 import { AGENTS_PER_ACCOUNT_LIMIT, firstReplyOf, type AccountReply } from '@zapbip/core';
-import { AccountReplyIntent, AccountReplyParameter, CommandKind, HttpStatus, OWNER_LOCALE_OF_WEB_LOCALE } from '@zapbip/types';
+import { AccountReplyIntent, AccountReplyParameter, CommandKind, HttpStatus } from '@zapbip/types';
 import { Hono, type Context } from 'hono';
 import { SEE_OTHER_STATUS } from '../../backoffice/backoffice-constants';
 import { textFieldOf } from '../../backoffice/form-fields';
@@ -33,7 +33,7 @@ async function applyWebCommand(input: {
 }): Promise<AccountReply> {
   const { context, session, kind, rawName } = input;
   const { accountId, waId, state } = session;
-  const locale = OWNER_LOCALE_OF_WEB_LOCALE[context.get('locale')];
+  const locale = context.get('locale');
   const outcome = await accountInboxOf<AccountOwnerRpc>({ bindings: context.env, accountId }).applyWebCommand({
     account: { accountId, waId, state, locale },
     command: { kind, rawName, locale },

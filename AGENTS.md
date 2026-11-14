@@ -39,7 +39,7 @@ Every workspace package has a `README.md` that states purpose only: no commands,
 
 ## Language
 
-Everything in the repo is in English: code, identifiers, comments-free code, docs, ADRs, learnings, commits, PR titles and bodies. Conversation with the owner may be in Portuguese; files never are. The one exception is owner-facing product copy: it lives in `*-copy.ts` modules, in `pt_BR` and `en_US`, and on the web surfaces also in `es`, `de`, `fr`, `ja`, `ko` and `zh_CN` ([ADR 0047](docs/adr/0047-the-web-surfaces-speak-eight-languages-through-a-web-locale-while-whatsapp-copy-stays-in-two.md)); repo prose and identifiers stay English.
+Everything in the repo is in English: code, identifiers, comments-free code, docs, ADRs, learnings, commits, PR titles and bodies. Conversation with the owner may be in Portuguese; files never are. The one exception is owner-facing product copy: it lives in `*-copy.ts` modules, in the eight `OwnerLocale` languages: `en_US`, `pt_BR`, `es`, `de`, `fr`, `ja`, `ko` and `zh_CN` ([ADR 0051](docs/adr/0051-whatsapp-speaks-eight-languages-and-the-template-of-a-language-is-chosen-by-a-table.md)); repo prose and identifiers stay English.
 
 ## Code conventions
 
