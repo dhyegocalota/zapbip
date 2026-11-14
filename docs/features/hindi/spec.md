@@ -1,6 +1,6 @@
 # Hindi, the tenth language
 
-**Status:** Building
+**Status:** Shipped 2026-11-14
 **Tier:** 🔴 structural
 **Owner approval:** approved 2026-11-14 (owner delegated)
 **ADRs:** [0057](../../adr/0057-hindi-is-the-tenth-language-and-india-keeps-english-for-a-new-owner.md)
