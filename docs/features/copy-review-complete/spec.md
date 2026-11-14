@@ -1,6 +1,6 @@
 # Copy review (complete)
 
-**Status:** Building
+**Status:** Shipped 2026-11-14
 **Tier:** 🟢 routine
 **Owner approval:** approved 2026-11-14 (owner delegated; his words: "revisa tudo")
 **ADRs:** none; no rule changes
