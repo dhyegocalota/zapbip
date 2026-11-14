@@ -50,7 +50,7 @@ const GUARANTEES: TitledCopy[] = [
 
 function textOf(input: { locale: OwnerLocale; endpoint: string }): Text {
   const translate = copyOf({ locale: input.locale });
-  const values = { ...pricingValuesOf({ locale: input.locale }), agents: leadingAgentNames(), endpoint: input.endpoint };
+  const values = { ...pricingValuesOf({ locale: input.locale }), agents: leadingAgentNames({ locale: input.locale }), endpoint: input.endpoint };
   return (key, extraValues) => plainContactTextOf({ text: translate(key, { ...values, ...extraValues }) });
 }
 

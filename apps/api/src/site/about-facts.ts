@@ -17,7 +17,7 @@ export function aboutFactsOf(input: { locale: OwnerLocale }): AboutFacts {
   const translate = copyOf({ locale });
   const values = {
     ...pricingValuesOf({ locale }),
-    agents: allAgentNames(),
+    agents: allAgentNames({ locale }),
     messageDays: daysOf({ milliseconds: QUEUE_RETENTION_MS, locale }),
     mediaDays: daysOf({ milliseconds: MEDIA_RETENTION_MS, locale }),
     updatedOn: SITE_UPDATED_ON,

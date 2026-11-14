@@ -1341,12 +1341,17 @@ html[dir='rtl'] .button-arrow:hover::after {
   flex: none;
 }
 
-.hero-underline path {
-  stroke-dasharray: 1;
-  stroke-dashoffset: 0;
+.hero-eyebrow .live-dot {
+  position: relative;
 }
 
-.hero-eyebrow .live-dot {
+.hero-eyebrow .live-dot::after {
+  content: '';
+  position: absolute;
+  inset: -0.25rem;
+  border-radius: inherit;
+  background: var(--color-signal);
+  opacity: 0;
   animation: signal-pulse var(--duration-pulse) ease-out 2;
 }
 
@@ -1369,8 +1374,13 @@ html[dir='rtl'] .button-arrow:hover::after {
   animation-delay: 180ms;
 }
 
-.hero-underline path {
+.hero-underline {
+  transform-origin: left center;
   animation: draw var(--duration-draw) var(--ease-draw) 300ms both;
+}
+
+html[dir='rtl'] .hero-underline {
+  transform-origin: right center;
 }
 
 .demo-stage {
@@ -2318,11 +2328,13 @@ summary::before {
 
 @keyframes signal-pulse {
   from {
-    box-shadow: var(--glow-signal);
+    opacity: 0.18;
+    transform: scale(1);
   }
 
   to {
-    box-shadow: var(--glow-signal-faded);
+    opacity: 0;
+    transform: scale(1.4);
   }
 }
 
@@ -2347,7 +2359,11 @@ summary::before {
 
 @keyframes draw {
   from {
-    stroke-dashoffset: 1;
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
   }
 }
 

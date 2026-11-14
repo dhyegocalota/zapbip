@@ -1,5 +1,5 @@
 import { AGENT_INSTALLS, InstallClient } from '@zapbip/agents/install';
-import { type OwnerLocale } from '@zapbip/types';
+import { OwnerLocale } from '@zapbip/types';
 
 export enum SiteStartTab {
   AnyMcp = 'any',
@@ -8,7 +8,17 @@ export enum SiteStartTab {
 const LEADING_AGENT_COUNT = 2;
 const INITIALS_LENGTH = 2;
 const WHITESPACE_PATTERN = /\s+/;
-const LIST_SEPARATOR = ', ';
+const LIST_SEPARATORS: Record<OwnerLocale, string> = {
+  [OwnerLocale.EnglishUs]: ', ',
+  [OwnerLocale.PortugueseBrazil]: ', ',
+  [OwnerLocale.Spanish]: ', ',
+  [OwnerLocale.German]: ', ',
+  [OwnerLocale.French]: ', ',
+  [OwnerLocale.Korean]: ', ',
+  [OwnerLocale.Japanese]: '、',
+  [OwnerLocale.ChineseSimplified]: '、',
+  [OwnerLocale.Arabic]: '، ',
+};
 const FIRST_SENDER_INDEX = 0;
 const SECOND_SENDER_INDEX = 1;
 const THIRD_SENDER_INDEX = 2;
@@ -52,12 +62,12 @@ export function siteAgentIdOf(input: { value: string | undefined }): InstallClie
   return Object.values(InstallClient).find((id) => id === input.value) ?? null;
 }
 
-export function allAgentNames(): string {
-  return siteAgentNames().join(LIST_SEPARATOR);
+export function allAgentNames(input: { locale: OwnerLocale }): string {
+  return siteAgentNames().join(LIST_SEPARATORS[input.locale]);
 }
 
-export function leadingAgentNames(): string {
-  return siteAgentNames().slice(0, LEADING_AGENT_COUNT).join(LIST_SEPARATOR);
+export function leadingAgentNames(input: { locale: OwnerLocale }): string {
+  return siteAgentNames().slice(0, LEADING_AGENT_COUNT).join(LIST_SEPARATORS[input.locale]);
 }
 
 export function senderNameOf(input: { index: number }): string {

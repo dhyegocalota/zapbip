@@ -80,7 +80,7 @@ export function HeroSection(props: { model: PageModel }) {
               </svg>
             </span>
           </h1>
-          <p class="hero-lead">{translate(SiteCopyKey.HeroLead, { agents: leadingAgentNames() })}</p>
+          <p class="hero-lead">{translate(SiteCopyKey.HeroLead, { agents: leadingAgentNames({ locale: model.locale }) })}</p>
           <JoinBlock model={model} />
         </div>
         <DemoFigure locale={model.locale} />

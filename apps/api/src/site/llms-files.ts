@@ -56,7 +56,7 @@ function section(input: { title: string; entries: LinkEntry[] }): MarkdownBlock[
 export function llmsTextOf(input: { origin: string; locale: OwnerLocale }): string {
   const { origin, locale } = input;
   const translate = copyOf({ locale });
-  const description = translate(SiteCopyKey.MetaDescription, { ...pricingValuesOf({ locale }), agents: leadingAgentNames() });
+  const description = translate(SiteCopyKey.MetaDescription, { ...pricingValuesOf({ locale }), agents: leadingAgentNames({ locale }) });
   const pages: LinkEntry[] = [
     {
       title: translate(SiteCopyKey.MetaTitle),
