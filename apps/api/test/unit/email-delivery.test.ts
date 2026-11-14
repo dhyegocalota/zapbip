@@ -7,6 +7,8 @@ import { createEmailSender, emailDeliveryOf } from '../../src/emails/email-deliv
 import { EmailDelivery, EmailKind, type EmailMessage, EmailSendOutcome } from '../../src/emails/email-sender';
 import { captureLogLines } from '../support/capture-log-lines';
 
+const DIGEST_MESSAGE_REFERENCE = 'subscriber-digest-2026-11-14';
+
 const API_KEY = 're_test_key';
 const MESSAGE: EmailMessage = {
   kind: EmailKind.SubscriberDigest,
@@ -16,7 +18,7 @@ const MESSAGE: EmailMessage = {
   subject: 'zapbip · 0 novos inscritos (14/11)',
   html: '<p>Nada</p>',
   text: 'Nada',
-  idempotencyKey: 'subscriber-digest-2026-11-14',
+  idempotencyKey: DIGEST_MESSAGE_REFERENCE,
 };
 
 function envOf(input: { environment: DeployEnvironment; apiKey?: string }): Bindings {
