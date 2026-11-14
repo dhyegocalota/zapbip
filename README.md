@@ -105,7 +105,7 @@ What ships and what is next lives in [docs/features](docs/features/): one folder
 - 🐛 Found a bug or want a feature? [Open an issue](https://github.com/dhyegocalota/zapbip/issues/new/choose).
 - 📖 Questions about setup? Start with the [docs](https://docs.zapbip.com).
 - 🔐 Found a vulnerability? Report it privately as [SECURITY](.github/SECURITY.md) explains, never in a public issue.
-- 🤝 Want to contribute? Read [CONTRIBUTING](.github/CONTRIBUTING.md). Everyone follows the [code of conduct](.github/CODE_OF_CONDUCT.md).
+- 🤝 Want to contribute? Read [CONTRIBUTING](.github/CONTRIBUTING.md) and agree to the [Contributor License Agreement](.github/CLA.md). Everyone follows the [code of conduct](.github/CODE_OF_CONDUCT.md).
 
 ## 👥 Contributors
 

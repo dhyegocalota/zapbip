@@ -8,7 +8,8 @@ const GIT_ENTRY_PREFIX = '.git';
 const PULL_REQUEST_TEMPLATE = '.github/pull_request_template.md';
 const PR_MEDIA_SCRIPT = 'scripts/pr-media.sh';
 const RELEASE_UPLOAD_PATTERN = /gh release upload|releases\/download\/pr-media|pr-media-(<slug>|[a-z0-9])/;
-const MEDIA_REPOSITORY = 'dhyegocalota/zapbip-pr-media';
+const MEDIA_REPOSITORY = 'zapbip-pr-media';
+const GITHUB_ATTACHMENTS = 'user-attachments';
 const HARNESS_DOCUMENT_SUFFIX = '/HARNESS.md';
 const MEDIA_FLOW_FILES = ['.agents/roles/recorder.md', '.agents/skills/check-ui/SKILL.md', '.agents/skills/open-pr/SKILL.md'];
 
@@ -38,7 +39,15 @@ describe('the pull request media flow', () => {
     expect(unnamed).toEqual([]);
   });
 
-  test('the media script targets the private media repository', () => {
-    expect(readRepositoryFile(PR_MEDIA_SCRIPT)).toContain(MEDIA_REPOSITORY);
+  test('the media script attaches through GitHub and keeps no media repository', () => {
+    expect(readRepositoryFile(PR_MEDIA_SCRIPT)).toContain(GITHUB_ATTACHMENTS);
+    const namingTheRepository = [PR_MEDIA_SCRIPT, ...harnessFiles()].filter((path) => readRepositoryFile(path).includes(MEDIA_REPOSITORY));
+    expect(namingTheRepository).toEqual([]);
+  });
+
+  test('the flow files say media is attached to the pull request itself', () => {
+    const harnessDocument = harnessFiles().filter((path) => path.endsWith(HARNESS_DOCUMENT_SUFFIX));
+    const silent = [...MEDIA_FLOW_FILES, ...harnessDocument].filter((path) => !readRepositoryFile(path).includes(GITHUB_ATTACHMENTS));
+    expect(silent).toEqual([]);
   });
 });

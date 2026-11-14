@@ -22,4 +22,4 @@ The repository has one process for people and for coding agents alike, in [.clau
 
 ## Licensing of contributions
 
-By opening a pull request you agree that your contribution is licensed under the license of the files you change: the GNU Affero General Public License v3.0 for the repository, the MIT License for the client packages that carry their own `LICENSE` file.
+The repository is under the GNU Affero General Public License v3.0, and the client packages that carry their own `LICENSE` file are under the MIT License. Every contribution also comes under the [Contributor License Agreement](CLA.md): you keep your copyright, and Logic Bit may relicense the project, your contribution included. Tick its box in the pull request template; a pull request without it is not merged.

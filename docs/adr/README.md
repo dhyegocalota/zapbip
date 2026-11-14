@@ -74,3 +74,5 @@ A `Proposed` ADR moves to `Accepted` by editing its status line and date. Any ot
 | [0051](0051-whatsapp-speaks-eight-languages-and-the-template-of-a-language-is-chosen-by-a-table.md) | WhatsApp speaks eight languages, and the template of a language is chosen by a table | Accepted | 2026-11-14 |
 | [0052](0052-structured-data-is-one-json-ld-graph-built-from-the-same-copy-and-constants-as-the-page.md) | Structured data is one JSON-LD graph built from the same copy and constants as the page | Accepted | 2026-11-14 |
 | [0053](0053-arabic-is-the-ninth-language-and-the-first-that-reads-right-to-left.md) | Arabic is the ninth language and the first that reads right to left | Accepted | 2026-11-14 |
+| [0054](0054-pull-request-media-is-attached-to-the-pull-request-through-githubs-own-upload.md) | Pull request media is attached to the pull request through GitHub's own upload | Accepted | 2026-11-14 |
+| [0055](0055-contributions-come-under-a-contributor-license-agreement.md) | Contributions come under a contributor license agreement | Accepted | 2026-11-14 |
