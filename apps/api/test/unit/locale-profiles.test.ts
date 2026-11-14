@@ -34,7 +34,9 @@ describe('the locale profiles', () => {
   it('point every language at the documentation folder of its own language', () => {
     LOCALES.forEach((locale) => {
       const tag = LOCALE_PROFILES[locale].languageTag;
-      const docsLanguage = Object.values(DocsPageLanguage).find((candidate) => tag === candidate || tag.startsWith(`${candidate}-`))!;
+      const docsLanguage = Object.values(DocsPageLanguage).find(
+        (candidate) => (tag as string) === candidate || tag.startsWith(`${candidate}-`),
+      )!;
       const folder = DOCS_LANGUAGE_FOLDERS[docsLanguage];
       expect(LOCALE_PROFILES[locale].docsPath).toBe(folder === '' ? '' : `/${folder}`);
     });

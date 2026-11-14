@@ -1,0 +1,22 @@
+---
+title: 'revoke_agent'
+description: 'WhatsApp에서 소유자가 허용한 뒤 이 계정의 에이전트를 폐기합니다.'
+---
+
+이 계정의 에이전트를 이름으로 폐기합니다. 소유자에게는 호출한 에이전트의 이름으로 WhatsApp에서 묻고, 호출은 답을 기다립니다. `revoke` 명령어와 같은 유스케이스를 실행하므로, 그 에이전트의 모든 연결이 즉시 멈춥니다. [AI에게 zapbip을 맡기세요](/ko/features/let-your-ai-manage-zapbip)를 참고하세요.
+
+## 입력
+
+| 필드   | 타입   | 비고                            |
+| ------ | ------ | ------------------------------- |
+| `name` | string | 이 계정에 속한 에이전트의 이름. |
+
+## 질문
+
+두 개의 버튼 **Allow**와 **Deny**입니다. 호출은 최대 50초 기다립니다. 버튼을 탭한 것만 유효하며, 입력한 텍스트는 Deny로 처리됩니다. Deny와 무응답은 아무것도 바꾸지 않으며, 이때 같은 요청은 10분 동안 거부됩니다(`cooling_down`).
+
+## 출력
+
+`{ "status": "applied" | "denied" | "timed_out" | "refused", "agent": string | null, "reason": string | null, "install_prompt": null }`. `refused`이면서 `reason`이 `not_found`이면 이 계정에 그 이름의 활성 에이전트가 없다는 뜻이며, 소유자에게는 묻지 않습니다. 다른 계정의 에이전트에는 절대 닿을 수 없습니다.
+
+[connect_agent](/ko/mcp-reference/connect-agent)와 같은 한도가 적용됩니다. 작업을 수행하는 호출은 연결당 1분에 3번입니다.

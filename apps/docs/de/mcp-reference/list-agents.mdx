@@ -1,0 +1,14 @@
+---
+title: 'list_agents'
+description: 'Listet die mit diesem Konto verbundenen Agenten auf.'
+---
+
+Listet die mit diesem Konto verbundenen Agenten auf, damit ein Agent sehen kann, wer sonst noch verbunden ist, bevor er etwas ändert. Nur lesend: Es braucht keine Freigabe und zählt auf kein Limit. Siehe [Lass deine KI zapbip verwalten](/de/features/let-your-ai-manage-zapbip).
+
+## Eingabe
+
+Keine.
+
+## Ausgabe
+
+`{ "agents": [{ "name": string, "client": string | null, "created_at": string, "last_active_at": string | null }] }`. Die Zeitstempel sind ISO 8601. `client` ist die App, aus der der Agent verbunden wurde, sobald er verbunden ist. Ein Schlüssel, eine Prüfsumme oder ein Link ist nie Teil der Liste.

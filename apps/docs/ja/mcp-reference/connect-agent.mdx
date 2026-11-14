@@ -1,0 +1,26 @@
+---
+title: 'connect_agent'
+description: 'WhatsAppでオーナーが許可したあとで、新しいエージェントを接続します。'
+---
+
+新しいエージェントを、名前を指定してこのアカウントに接続します。オーナーには、呼び出したエージェントとしてWhatsAppで確認が届き、呼び出しは返答を待ちます。`new agent`コマンドと同じユースケースを実行するため、名前のルール、8エージェントまでの上限、インストールリンクは同じです。[AIにzapbipを任せる](/ja/features/let-your-ai-manage-zapbip)をご覧ください。
+
+## 入力
+
+| フィールド | 型     | 備考                                                                                 |
+| ---------- | ------ | ------------------------------------------------------------------------------------ |
+| `name`     | string | コマンドと同じく簡略化されます。小文字、アクセントなし、空白はハイフン、最大20文字。 |
+
+## 質問
+
+3つのボタン、**Allow**、**Allow, send to agent**、**Deny**が、質問の末尾の短い参照とともに表示されます。呼び出しは最長50秒待ちます。ボタンのタップだけが有効で、入力したテキストはDenyとして扱われます。Denyと無反応では何も変わらず、待機後のタップでも何も変わりません。その場合、同じリクエストは10分間拒否されます(`cooling_down`)。
+
+## 出力
+
+`{ "status": "applied" | "denied" | "timed_out" | "refused", "agent": string | null, "reason": string | null, "install_prompt": string | null }`。
+
+- `applied`: エージェントが接続されました。**Allow**の場合、インストールリンクはWhatsAppでオーナーに届き、`install_prompt`は`null`です。**Allow, send to agent**の場合、`install_prompt`には新しいエージェントに貼り付ける2行が入ります。リンクやキーがツールの結果に届くのは、この方法だけです。
+- `denied`と`timed_out`: 何も変わりません。
+- `refused`: `reason`は`invalid_name`、`reserved_name`、`name_taken`、`limit_reached`、`cooling_down`、`window_closed`、`send_failed`、`suspended`、`waitlisted`のいずれかです。無効な名前や予約済みの名前は、オーナーに確認する前に拒否されます。リンクを送れなかった場合は、新しい接続が再び無効化されます。
+
+操作を行う呼び出し(`connect_agent`、[revoke_agent](/ja/mcp-reference/revoke-agent)、[sign_in_link](/ja/mcp-reference/sign-in-link))は、1接続につき1分間に最大3回です。次の呼び出しは、`rate_limited`で始まるエラーになります。

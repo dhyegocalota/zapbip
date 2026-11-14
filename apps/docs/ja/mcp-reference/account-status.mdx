@@ -1,0 +1,16 @@
+---
+title: 'account_status'
+description: 'このアカウントの状態とプランを読み取ります。'
+---
+
+この接続が属するアカウントを読み取ります。読み取り専用で、承認は不要、どの制限にもカウントされません。
+
+## 入力
+
+なし。
+
+## 出力
+
+`{ "state": "waitlisted" | "active" | "suspended" | "deleting", "plan": "free", "free_messages": number }`。電話番号が結果に含まれることはありません。`free_messages`はプランに含まれる利用枠です。zapbipは残りの数を報告しません。
+
+同じデータは[Webアプリ](/ja/features/web-app)にもあります。ホームページは、ログイン済みのセッションからの`Accept: application/json`に対して`{ "state", "phone", "plan", "free_messages", "agents" }`を返します。`phone`は下4桁だけを表示します。ログインしていない場合は`401`と`{ "error": "sign_in_required" }`を返します。

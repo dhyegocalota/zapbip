@@ -250,6 +250,7 @@
               "es/features/ask-with-buttons-and-lists",
               "es/features/owner-starts-conversations",
               "es/features/manage-your-agents",
+              "es/features/let-your-ai-manage-zapbip",
               "es/features/many-agents-on-one-number",
               "es/features/whatsapp-commands",
               "es/features/web-app",
@@ -300,7 +301,12 @@
                   "es/mcp-reference/get-messages",
                   "es/mcp-reference/check-inbox",
                   "es/mcp-reference/create-upload",
-                  "es/mcp-reference/set-wake"
+                  "es/mcp-reference/set-wake",
+                  "es/mcp-reference/list-agents",
+                  "es/mcp-reference/account-status",
+                  "es/mcp-reference/connect-agent",
+                  "es/mcp-reference/revoke-agent",
+                  "es/mcp-reference/sign-in-link"
                 ]
               }
             ]
@@ -338,6 +344,7 @@
               "de/features/ask-with-buttons-and-lists",
               "de/features/owner-starts-conversations",
               "de/features/manage-your-agents",
+              "de/features/let-your-ai-manage-zapbip",
               "de/features/many-agents-on-one-number",
               "de/features/whatsapp-commands",
               "de/features/web-app",
@@ -388,7 +395,12 @@
                   "de/mcp-reference/get-messages",
                   "de/mcp-reference/check-inbox",
                   "de/mcp-reference/create-upload",
-                  "de/mcp-reference/set-wake"
+                  "de/mcp-reference/set-wake",
+                  "de/mcp-reference/list-agents",
+                  "de/mcp-reference/account-status",
+                  "de/mcp-reference/connect-agent",
+                  "de/mcp-reference/revoke-agent",
+                  "de/mcp-reference/sign-in-link"
                 ]
               }
             ]
@@ -426,6 +438,7 @@
               "fr/features/ask-with-buttons-and-lists",
               "fr/features/owner-starts-conversations",
               "fr/features/manage-your-agents",
+              "fr/features/let-your-ai-manage-zapbip",
               "fr/features/many-agents-on-one-number",
               "fr/features/whatsapp-commands",
               "fr/features/web-app",
@@ -476,7 +489,12 @@
                   "fr/mcp-reference/get-messages",
                   "fr/mcp-reference/check-inbox",
                   "fr/mcp-reference/create-upload",
-                  "fr/mcp-reference/set-wake"
+                  "fr/mcp-reference/set-wake",
+                  "fr/mcp-reference/list-agents",
+                  "fr/mcp-reference/account-status",
+                  "fr/mcp-reference/connect-agent",
+                  "fr/mcp-reference/revoke-agent",
+                  "fr/mcp-reference/sign-in-link"
                 ]
               }
             ]
@@ -514,6 +532,7 @@
               "ja/features/ask-with-buttons-and-lists",
               "ja/features/owner-starts-conversations",
               "ja/features/manage-your-agents",
+              "ja/features/let-your-ai-manage-zapbip",
               "ja/features/many-agents-on-one-number",
               "ja/features/whatsapp-commands",
               "ja/features/web-app",
@@ -564,7 +583,12 @@
                   "ja/mcp-reference/get-messages",
                   "ja/mcp-reference/check-inbox",
                   "ja/mcp-reference/create-upload",
-                  "ja/mcp-reference/set-wake"
+                  "ja/mcp-reference/set-wake",
+                  "ja/mcp-reference/list-agents",
+                  "ja/mcp-reference/account-status",
+                  "ja/mcp-reference/connect-agent",
+                  "ja/mcp-reference/revoke-agent",
+                  "ja/mcp-reference/sign-in-link"
                 ]
               }
             ]
@@ -602,6 +626,7 @@
               "ko/features/ask-with-buttons-and-lists",
               "ko/features/owner-starts-conversations",
               "ko/features/manage-your-agents",
+              "ko/features/let-your-ai-manage-zapbip",
               "ko/features/many-agents-on-one-number",
               "ko/features/whatsapp-commands",
               "ko/features/web-app",
@@ -652,7 +677,12 @@
                   "ko/mcp-reference/get-messages",
                   "ko/mcp-reference/check-inbox",
                   "ko/mcp-reference/create-upload",
-                  "ko/mcp-reference/set-wake"
+                  "ko/mcp-reference/set-wake",
+                  "ko/mcp-reference/list-agents",
+                  "ko/mcp-reference/account-status",
+                  "ko/mcp-reference/connect-agent",
+                  "ko/mcp-reference/revoke-agent",
+                  "ko/mcp-reference/sign-in-link"
                 ]
               }
             ]
@@ -690,6 +720,7 @@
               "zh/features/ask-with-buttons-and-lists",
               "zh/features/owner-starts-conversations",
               "zh/features/manage-your-agents",
+              "zh/features/let-your-ai-manage-zapbip",
               "zh/features/many-agents-on-one-number",
               "zh/features/whatsapp-commands",
               "zh/features/web-app",
@@ -740,7 +771,12 @@
                   "zh/mcp-reference/get-messages",
                   "zh/mcp-reference/check-inbox",
                   "zh/mcp-reference/create-upload",
-                  "zh/mcp-reference/set-wake"
+                  "zh/mcp-reference/set-wake",
+                  "zh/mcp-reference/list-agents",
+                  "zh/mcp-reference/account-status",
+                  "zh/mcp-reference/connect-agent",
+                  "zh/mcp-reference/revoke-agent",
+                  "zh/mcp-reference/sign-in-link"
                 ]
               }
             ]

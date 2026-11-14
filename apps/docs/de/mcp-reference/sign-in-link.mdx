@@ -1,0 +1,18 @@
+---
+title: 'sign_in_link'
+description: 'Sendet dem Besitzer den Anmeldelink zur Web-App in WhatsApp.'
+---
+
+Sendet dem Besitzer den Einmal-Link, der in der [Web-App](/de/features/web-app) anmeldet. Es ist der Befehl `login`, für den Besitzer ausgeführt. Er braucht keine Freigabe, weil der Link an den Besitzer geht und nie zum Agenten zurückkommt. Siehe [Lass deine KI zapbip verwalten](/de/features/let-your-ai-manage-zapbip).
+
+Das Löschen des Kontos ist kein Werkzeug. Es bleibt ein WhatsApp-Befehl.
+
+## Eingabe
+
+Keine.
+
+## Ausgabe
+
+`{ "status": "applied" | "refused", "agent": null, "reason": string | null, "install_prompt": null }`. `refused` mit `reason` `window_closed` heißt: Das 24-Stunden-Fenster ist geschlossen, der Link wird nicht eingereiht, weil er ablaufen würde. `send_failed` heißt: Der Besitzer war nicht erreichbar. Der Link ist nie Teil des Ergebnisses.
+
+Es gilt dasselbe Limit wie bei [connect_agent](/de/mcp-reference/connect-agent): 3 handelnde Aufrufe pro Minute und Verbindung.

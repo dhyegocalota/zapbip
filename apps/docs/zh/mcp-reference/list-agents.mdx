@@ -1,0 +1,14 @@
+---
+title: 'list_agents'
+description: '列出连接到此账户的智能体。'
+---
+
+列出连接到此账户的智能体，让智能体在更改任何内容之前先看到还有谁已连接。只读：不需要批准，也不计入任何限制。参见[让你的 AI 管理 zapbip](/zh/features/let-your-ai-manage-zapbip)。
+
+## 输入
+
+无。
+
+## 输出
+
+`{ "agents": [{ "name": string, "client": string | null, "created_at": string, "last_active_at": string | null }] }`。时间戳为 ISO 8601 格式。`client` 是智能体连接时所用的应用，连接之后才有值。密钥、摘要或链接永远不会出现在列表中。
