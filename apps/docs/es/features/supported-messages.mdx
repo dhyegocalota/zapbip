@@ -1,0 +1,52 @@
+---
+title: Mensajes compatibles
+description: Los tipos de mensaje de WhatsApp que tu IA recibe y envía, lo que zapbip ignora y por qué solo se usa la API oficial.
+---
+
+zapbip admite los tipos de mensaje de abajo en ambas direcciones. Cualquier tipo que no aparezca aquí no es compatible.
+
+## Lo que recibe tu IA
+
+| Tipo       | Tú envías                             | Tu IA recibe                                                           |
+| ---------- | ------------------------------------- | ---------------------------------------------------------------------- |
+| `text`     | Un mensaje                            | El texto                                                               |
+| `image`    | Una foto                              | La foto, guardada por zapbip                                           |
+| `video`    | Un video                              | El video, guardado por zapbip                                          |
+| `audio`    | Un archivo de audio o una nota de voz | El audio, guardado por zapbip; una nota de voz llega marcada como tal  |
+| `document` | Un archivo, como un PDF               | El archivo, guardado por zapbip, con su nombre y tipo                  |
+| `sticker`  | Un sticker                            | El sticker, guardado por zapbip                                        |
+| `location` | Un pin de ubicación                   | Latitud, longitud, nombre y dirección                                  |
+| `contacts` | Una o más tarjetas de contacto        | Las tarjetas de contacto                                               |
+| `reaction` | Una reacción con emoji                | El emoji y el mensaje reaccionado; quitar una reacción llega sin emoji |
+| `choice`   | Tocar un botón o una fila de la lista | La elección, que responde la pregunta                                  |
+
+Una respuesta a un mensaje de tu IA llega a la IA que envió ese mensaje.
+
+Cualquier otro tipo que envíes recibe un aviso breve de que aún no es compatible, y tu IA no recibe nada. Lo mismo ocurre con un pedido (order) o con la respuesta de un WhatsApp Flow. Tocar el botón Abrir de un aviso de zapbip solo abre la [ventana de 24 horas](/es/features/the-24-hour-window). Una llamada, o cualquier otro evento de la cuenta, se ignora.
+
+## Lo que tu IA puede enviar
+
+| Tipo       | Lo que tu IA puede enviar                                                     |
+| ---------- | ----------------------------------------------------------------------------- |
+| `text`     | Un mensaje de texto de hasta 4.096 caracteres                                 |
+| `image`    | Una foto: JPEG, PNG o WebP, hasta 5 MB                                        |
+| `video`    | Un video: 3GP o MP4, hasta 16 MB                                              |
+| `audio`    | Un archivo de audio: AAC, AMR, MP3, M4A u OGG, hasta 16 MB; o una nota de voz |
+| `document` | Un archivo: PDF, Word, Excel, PowerPoint o texto plano, hasta 100 MB          |
+| `sticker`  | Un sticker WebP estático, hasta 100 KB                                        |
+| `location` | Un pin de ubicación                                                           |
+| `contacts` | Una o más tarjetas de contacto                                                |
+| `reaction` | Una reacción con emoji a uno de tus mensajes, o ninguna para quitarla         |
+| `choice`   | Una pregunta con hasta 3 botones, o una lista de 4 a 10 opciones              |
+
+zapbip rechaza un envío que rompa uno de estos límites y dice qué campo está mal. Encuestas, pedidos, pagos, WhatsApp Flows y llamadas no están disponibles. Tu IA no puede elegir una plantilla de WhatsApp; zapbip envía su propio aviso solo cuando la ventana de 24 horas está cerrada.
+
+## Solo la API oficial WhatsApp Cloud
+
+zapbip envía y recibe solo mediante la API oficial WhatsApp Cloud de Meta, en un número de zapbip. No es compatible con:
+
+- clientes y bibliotecas no oficiales de WhatsApp, como Baileys, whatsapp-web.js, WPPConnect o Evolution API;
+- la automatización de WhatsApp Web, ni ningún puente que inicie sesión con una cuenta personal o con un código QR;
+- tu número personal de WhatsApp. Cada IA escribe desde el número de zapbip, y tú respondes en tu WhatsApp de siempre.
+
+Consulta las [preguntas frecuentes](/es/help/faq) para respuestas breves.
