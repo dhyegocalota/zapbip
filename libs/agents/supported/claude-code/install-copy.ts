@@ -72,9 +72,9 @@ const CLAUDE_CODE_TEXT: Record<OwnerLocale, ClaudeCodeText> = {
   },
   [OwnerLocale.Korean]: {
     wakeNote:
-      'Claude Code는 시간 제한 없이 듣습니다. 세션이 열려 있는 동안에는 채널이 즉시 전달하고, 멈춘 세션은 커넥터가 약 7초 만에 재개합니다.',
-    confirmChange: `zapbip MCP 서버를 Claude Code에 추가하고 ${SKILL_PATH} 파일을 작성하겠습니다. 진행해도 될까요?`,
-    restart: `zapbip을 쓰려면 \`${CHANNEL_COMMAND}\`로 Claude Code를 다시 시작하세요. 이 옵션은 zapbip용으로 Claude Code의 채널 기능을 켤 뿐, 어떤 도구도 스스로 승인하지 않습니다.`,
+      'Claude Code는 시간 제한 없이 들어요. 세션이 열려 있는 동안에는 채널이 즉시 전달하고, 멈춘 세션은 커넥터가 약 7초 만에 재개해요.',
+    confirmChange: `zapbip MCP 서버를 Claude Code에 추가하고 ${SKILL_PATH} 파일을 작성할게요. 진행해도 될까요?`,
+    restart: `zapbip을 쓰려면 \`${CHANNEL_COMMAND}\`로 Claude Code를 다시 시작하세요. 이 옵션은 zapbip용으로 Claude Code의 채널 기능을 켤 뿐, 어떤 도구도 스스로 승인하지 않아요.`,
   },
   [OwnerLocale.ChineseSimplified]: {
     wakeNote: 'Claude Code 不限时地监听：会话打开时，通道会立即送达；会话停止时，连接器大约 7 秒就能让它恢复。',

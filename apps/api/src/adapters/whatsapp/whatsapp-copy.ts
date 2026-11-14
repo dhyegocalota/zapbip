@@ -66,13 +66,13 @@ export const WHATSAPP_COPY: Record<OwnerLocale, Record<OwnerCopyKey, string>> = 
     [OwnerCopyKey.AccountOnOtherNumber]: 'あなたのzapbipは{displayNumber}にあります。こちらからメッセージを送ってください: {whatsAppLink}',
   },
   [OwnerLocale.Korean]: {
-    [OwnerCopyKey.UnsupportedKind]: '이 종류의 메시지는 아직 지원하지 않습니다. 텍스트나 사진으로 보내 주세요.',
-    [OwnerCopyKey.MediaUnavailable]: '파일을 내려받지 못했습니다. 다시 보내 주세요.',
+    [OwnerCopyKey.UnsupportedKind]: '이 종류의 메시지는 아직 지원하지 않아요. 텍스트나 사진으로 보내 주세요.',
+    [OwnerCopyKey.MediaUnavailable]: '파일을 내려받지 못했어요. 다시 보내 주세요.',
     [OwnerCopyKey.ListButtonLabel]: '선택지 보기',
     [OwnerCopyKey.ListSectionTitle]: '선택지',
     [OwnerCopyKey.TemplatePreviewFallback]: '메시지',
-    [OwnerCopyKey.NumberClosedToNewAccounts]: '이 번호는 지금 새 계정을 받지 않습니다.',
-    [OwnerCopyKey.AccountOnOtherNumber]: '내 zapbip은 {displayNumber} 번호에 있습니다. 여기서 메시지를 보내세요: {whatsAppLink}',
+    [OwnerCopyKey.NumberClosedToNewAccounts]: '이 번호는 지금 새 계정을 받지 않아요.',
+    [OwnerCopyKey.AccountOnOtherNumber]: '내 zapbip은 {displayNumber} 번호에 있어요. 여기서 메시지를 보내세요: {whatsAppLink}',
   },
   [OwnerLocale.ChineseSimplified]: {
     [OwnerCopyKey.UnsupportedKind]: '暂不支持这种类型的消息。请以文字或照片发送。',

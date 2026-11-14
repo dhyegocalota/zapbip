@@ -55,9 +55,9 @@ const CHATGPT_TEXT: Record<OwnerLocale, ChatGptText> = {
       '専用のチャットで、`Run on this computer`を選んだ1時間ごとのタスクを作成し、check_inboxを呼び出すようにします。ツールごとに一度、`Always allow`を選んでください。',
   },
   [OwnerLocale.Korean]: {
-    wakeNote: 'ChatGPT는 1시간마다 예약 작업으로 깨어납니다. 메시지는 최대 1시간 기다릴 수 있습니다.',
+    wakeNote: 'ChatGPT는 1시간마다 예약 작업으로 깨어나요. 메시지는 최대 1시간 기다릴 수 있어요.',
     addApp: (connectionLink) =>
-      `ChatGPT 설정에서 개발자 모드를 켜고 URL ${connectionLink}(으)로 앱을 추가하세요. 인증은 \`No authentication\`으로 설정합니다.`,
+      `ChatGPT 설정에서 개발자 모드를 켜고 URL ${connectionLink}(으)로 앱을 추가하세요. 인증은 \`No authentication\`으로 설정해요.`,
     createTask:
       '전용 채팅에서 `Run on this computer`로 1시간마다 실행되는 작업을 만들어 check_inbox를 호출하게 하고, 도구마다 한 번씩 `Always allow`를 선택하세요.',
   },

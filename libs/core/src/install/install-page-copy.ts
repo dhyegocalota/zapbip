@@ -53,10 +53,10 @@ export const INSTALL_PAGE_COPY: Record<OwnerLocale, InstallPageTexts> = {
   },
   [OwnerLocale.Korean]: {
     ownerLanguage: 'Korean',
-    unsupportedProduct: 'zapbip은 아직 이 제품을 알지 못합니다. 설치하지 못했습니다.',
-    expired: '이 링크는 만료되었거나 이미 사용되었습니다. WhatsApp에서 zapbip에 새 링크를 요청하세요: `재발급 <이름>`을 보내세요.',
-    notFound: '찾을 수 없습니다.',
-    footer: `zapbip은 ${COMPANY.tradeName}의 제품입니다`,
+    unsupportedProduct: 'zapbip은 아직 이 제품을 알지 못해요. 설치하지 못했어요.',
+    expired: '이 링크는 만료되었거나 이미 사용되었어요. WhatsApp에서 zapbip에 새 링크를 요청하세요: `재발급 <이름>`을 보내세요.',
+    notFound: '찾을 수 없어요.',
+    footer: `zapbip은 ${COMPANY.tradeName}의 제품이에요`,
   },
   [OwnerLocale.ChineseSimplified]: {
     ownerLanguage: 'Simplified Chinese',

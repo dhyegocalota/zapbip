@@ -50,7 +50,7 @@ const LANGUAGES: Language[] = [
   {
     name: 'Korean',
     docsLanguage: DocsPageLanguage.Korean,
-    historyStatement: /대화 기록은 WhatsApp에 남습니다/,
+    historyStatement: /대화 기록은 WhatsApp에 남아요/,
   },
   {
     name: 'Chinese',
