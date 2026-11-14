@@ -74,6 +74,7 @@ describe('WhatsApp templates', () => {
       [OwnerLocale.Korean]: WhatsAppLanguageCode.EnglishUs,
       [OwnerLocale.ChineseSimplified]: WhatsAppLanguageCode.EnglishUs,
       [OwnerLocale.Arabic]: WhatsAppLanguageCode.EnglishUs,
+      [OwnerLocale.Hindi]: WhatsAppLanguageCode.EnglishUs,
     });
     expect(Object.keys(OWNER_LOCALE_TO_LANGUAGE_CODE).sort()).toEqual(Object.values(OwnerLocale).sort());
   });

@@ -13,6 +13,7 @@ const LIST_SEPARATORS: Record<OwnerLocale, string> = {
   [OwnerLocale.Japanese]: '、',
   [OwnerLocale.ChineseSimplified]: '、',
   [OwnerLocale.Arabic]: '، ',
+  [OwnerLocale.Hindi]: ', ',
 };
 
 const [FIRST_ID, SECOND_ID] = Object.values(InstallClient) as [string, string];
@@ -23,7 +24,6 @@ describe('site agents', () => {
     expect(allAgentNames({ locale })).toBe(siteAgentNames().join(separator));
     expect(leadingAgentNames({ locale })).toBe(siteAgentNames().slice(0, 2).join(separator));
   });
-
 
   it.each(Object.values(InstallClient))('accepts the install facet id %s', (id) => {
     expect(siteAgentIdOf({ value: id })).toBe(id);

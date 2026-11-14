@@ -54,7 +54,7 @@ describe('security.txt', () => {
     expect(response.headers.get('content-type')).toBe('text/plain; charset=utf-8');
     expect(text).toContain(`Contact: mailto:${COMPANY.contactEmail}`);
     expect(text).not.toContain('Policy:');
-    expect(text).toContain('Preferred-Languages: ar, de, en, es, fr, ja, ko, pt, zh');
+    expect(text).toContain('Preferred-Languages: ar, de, en, es, fr, hi, ja, ko, pt, zh');
     expect(text).toContain(`Canonical: ${SITE_ORIGIN}/.well-known/security.txt`);
     expect(expires).toBeGreaterThanOrEqual(before + SECURITY_TEXT_VALIDITY_MS - 1000);
     expect(expires).toBeLessThanOrEqual(Date.now() + SECURITY_TEXT_VALIDITY_MS + 1000);
