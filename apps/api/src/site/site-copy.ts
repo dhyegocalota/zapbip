@@ -248,7 +248,7 @@ export const SITE_COPY: Record<WebLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.MetaOgImageAlt]: 'An AI agent asks "Deploy v2.4 to production?" on WhatsApp, with Ship it and Wait buttons.',
     [SiteCopyKey.AboutTitle]: 'About zapbip',
     [SiteCopyKey.AboutDefinition]:
-      'zapbip is a personal WhatsApp channel for AI agents: you connect your own agents to your own phone through one WhatsApp Cloud API number, with one API key and one MCP server.',
+      'zapbip is a personal WhatsApp channel for AI agents: you connect your agents to your phone through one WhatsApp Cloud API number, with one API key and one MCP server.',
     [SiteCopyKey.AboutPricing]:
       'Pricing: {free} messages free; Pro is {price} per month with {included} messages, then {overage} per extra {block} messages.',
     [SiteCopyKey.AboutAgents]: 'Supported agents: {agents}.',
