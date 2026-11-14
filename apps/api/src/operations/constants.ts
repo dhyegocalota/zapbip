@@ -1,4 +1,4 @@
-import { SECOND_MS } from '@zapbip/types';
+import { DAY_MS, SECOND_MS } from '@zapbip/types';
 
 export const SCHEDULED_CRON = '*/30 * * * *';
 export const BUDGET_CHECK_MINUTE = 0;
@@ -14,3 +14,8 @@ export const PLACEHOLDER_VALUE_PREFIX = 'REPLACE_WITH_';
 
 export const SMOKE_POLL_ATTEMPTS = 10;
 export const SMOKE_POLL_INTERVAL_MS = 3 * SECOND_MS;
+export const SUBSCRIBER_DIGEST_HOUR = 11;
+export const SUBSCRIBER_DIGEST_MINUTE = 0;
+export const SUBSCRIBER_DIGEST_WINDOW_MS = DAY_MS;
+export const SUBSCRIBER_DIGEST_LIST_LIMIT = 200;
+export const SUBSCRIBER_DIGEST_TOP_REFERRERS = 5;

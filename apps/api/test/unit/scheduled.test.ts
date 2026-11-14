@@ -13,6 +13,9 @@ const TODAY = '2026-11-06';
 const WARNING_TOTAL = 10_400;
 const SAFE_TOTAL = 10_000;
 const UNKNOWN_CRON = '*/5 * * * *';
+const DIGEST_TICK = Date.UTC(2026, 10, 14, 11);
+const HALF_PAST_DIGEST_HOUR = Date.UTC(2026, 10, 14, 11, 30);
+const HOUR_BEFORE_DIGEST = Date.UTC(2026, 10, 14, 10);
 
 const BUDGET_AND_RETENTION_JOBS = {
   budgetCheck: SCHEDULED_JOBS[ScheduledJobName.BudgetCheck],
@@ -119,5 +122,21 @@ describe('scheduled dispatch', () => {
     const { env, list } = createFakeEnvironment({ total: WARNING_TOTAL });
     await expect(runBudgetAndRetention({ cron: SCHEDULED_CRON, now: RETENTION_TICK, env })).rejects.toThrow(TODAY);
     expect(list).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('the subscriber digest schedule', () => {
+  const digest = SCHEDULED_JOBS[ScheduledJobName.SubscriberDigest];
+
+  it('is due at the 11:00 UTC tick, 08:00 in Brazil', () => {
+    expect(digest.isDue({ now: DIGEST_TICK })).toBe(true);
+  });
+
+  it.each([
+    ['half past the digest hour', HALF_PAST_DIGEST_HOUR],
+    ['an hour before', HOUR_BEFORE_DIGEST],
+    ['noon', NOW],
+  ])('is not due at %s', (_name, now) => {
+    expect(digest.isDue({ now })).toBe(false);
   });
 });
