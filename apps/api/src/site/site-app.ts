@@ -12,6 +12,7 @@ import { joinHandler } from './join-route';
 import { languageRedirects } from './language-redirects';
 import { markdownNegotiation } from './page-twins';
 import { preferenceRoutes } from './preference-routes';
+import type { StarCountSource } from './repository-stars';
 import { LEGAL_PAGES, legalPathOf } from './legal-links';
 import { idleJoinOf, renderLanding, renderLegal, renderNotFound } from './render-landing';
 import { renderRobots, renderSitemap } from './robots-and-sitemap';
@@ -36,7 +37,7 @@ async function securityHeaders(context: Context<SiteEnv>, next: Next): Promise<v
   context.res.headers.set('Strict-Transport-Security', SITE_STRICT_TRANSPORT_SECURITY);
 }
 
-export function createSiteApp(input: { fetchImplementation: typeof fetch }): Hono<SiteEnv> {
+export function createSiteApp(input: { fetchImplementation: typeof fetch; starCountOf: StarCountSource }): Hono<SiteEnv> {
   const app = new Hono<SiteEnv>();
   app.use('*', securityHeaders);
   app.use('*', siteContext);

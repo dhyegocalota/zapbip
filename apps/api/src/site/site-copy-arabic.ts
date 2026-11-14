@@ -8,11 +8,14 @@ export const ARABIC_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.NavigationLabel]: 'التنقل الرئيسي',
   [SiteCopyKey.NavigationDocs]: 'الوثائق',
   [SiteCopyKey.HeaderJoin]: 'اطلب الوصول',
+  [SiteCopyKey.GitHubLabel]: 'zapbip على GitHub',
+  [SiteCopyKey.GitHubStarsLabel]: 'zapbip على GitHub، {stars} نجمة',
   [SiteCopyKey.HeroEyebrow]: 'وصول مبكر · يُفتح على دفعات',
   [SiteCopyKey.HeroInvited]: 'دعاك أحد الأصدقاء',
   [SiteCopyKey.HeroTitleLead]: 'وكلاء الذكاء الاصطناعي لديك',
   [SiteCopyKey.HeroTitleAccent]: 'يراسلونك على WhatsApp.',
   [SiteCopyKey.HeroLead]: 'يسألونك بالأزرار، وينتظرون ردّك، ثم يواصلون العمل. يدعم {agents} وأي وكيل MCP.',
+  [SiteCopyKey.HeroOpenSource]: 'مفتوح المصدر · \u2066AGPL-3.0\u2069',
   [SiteCopyKey.JoinEmailLabel]: 'بريدك الإلكتروني',
   [SiteCopyKey.JoinEmailPlaceholder]: 'you@example.ae',
   [SiteCopyKey.JoinSubmit]: 'اطلب الوصول',
@@ -163,7 +166,7 @@ export const ARABIC_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.SetupSafetyTitle]: 'الأمان',
   [SiteCopyKey.SetupSafetyBody]:
     'رابط التثبيت ورابط الاتصال سرّان. ضعهما في إعدادات MCP الخاصة بك فقط، ولا تضعهما أبدًا في سجل مشترك أو commit أو رسالة إلى أي شخص آخر. لا يتحدث zapbip إلا مع الشخص الذي تخدمه، على WhatsApp الخاص به.',
-  [SiteCopyKey.PricingEyebrow]: 'الأسعار',
+  [SiteCopyKey.PricingEyebrow]: 'أسعار zapbip Cloud',
   [SiteCopyKey.PricingTitle]: 'جرّبه مجانًا.',
   [SiteCopyKey.PricingLead]: 'لا حاجة إلى بطاقة. يُفتح الوصول على دفعات، بدءًا من قائمة الانتظار.',
   [SiteCopyKey.PricingFreeName]: 'مجاني',
@@ -182,8 +185,19 @@ export const ARABIC_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.PricingProCta]: 'اطلب الوصول',
   [SiteCopyKey.PricingBilling]: 'تبدأ الفوترة عند فتح الوصول',
   [SiteCopyKey.PricingMessageDefinition]: 'الرسالة هي أي رسالة يرسلها لك وكيل، أو ترسلها أنت إلى وكيل، عبر zapbip.',
+  [SiteCopyKey.PricingCloudNumber]:
+    'zapbip Cloud هو النسخة التي نستضيفها نيابةً عنك. حاليًا، تصلك الرسائل من رقم WhatsApp برازيلي (\u2066+55\u2069).',
+  [SiteCopyKey.PricingSelfHost]: 'تريد رقمك الخاص؟ zapbip مفتوح المصدر: استضفه بنفسك بتطبيق Meta الخاص بك وأرقامك.',
+  [SiteCopyKey.PricingSelfHostLink]: 'اطّلع على الكود',
+  [SiteCopyKey.OpenSourceEyebrow]: 'مفتوح المصدر',
+  [SiteCopyKey.OpenSourceTitle]: 'الكود متاح للجميع.',
+  [SiteCopyKey.OpenSourceBody]:
+    'zapbip مفتوح المصدر بترخيص \u2066AGPL-3.0\u2069. اقرأ كل سطر، أو شغّل نسختك الخاصة بتطبيق Meta الخاص بك وأرقامك، أو اترك zapbip Cloud يشغّله نيابةً عنك.',
+  [SiteCopyKey.OpenSourceRepository]: 'اطّلع على الكود في GitHub',
+  [SiteCopyKey.OpenSourceSelfHosting]: 'استضف نسختك الخاصة',
   [SiteCopyKey.FaqOwnNumberQuestion]: 'هل أستطيع استخدام رقم WhatsApp الخاص بي؟',
-  [SiteCopyKey.FaqOwnNumberAnswer]: 'ليس بعد. كل وكيل يراسلك من رقم zapbip، فلا شيء عليك تسجيله.',
+  [SiteCopyKey.FaqOwnNumberAnswer]:
+    'ليس في zapbip Cloud: كل وكيل يراسلك من رقم zapbip، وهو حاليًا رقم برازيلي (\u2066+55\u2069)، فلا شيء عليك تسجيله. لاستخدام رقمك الخاص، استضف zapbip بنفسك بتطبيق Meta الخاص بك.',
   [SiteCopyKey.PrivacyEyebrow]: 'الخصوصية',
   [SiteCopyKey.PrivacyTitle]: 'واجهة رسمية. وأنت فقط.',
   [SiteCopyKey.PrivacyOfficialTitle]: 'واجهة WhatsApp Cloud API الرسمية',
@@ -216,6 +230,9 @@ export const ARABIC_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.FaqDataQuestion]: 'ماذا تفعلون ببريدي الإلكتروني؟',
   [SiteCopyKey.FaqDataAnswer]:
     'نستخدمه فقط لندعوك عندما يُفتح الوصول. لا عنوان IP ولا ملفات تعريف ارتباط للتتبع. لإزالة بياناتك، راسل {contactEmail}.',
+  [SiteCopyKey.FaqOpenSourceQuestion]: 'هل zapbip مفتوح المصدر؟',
+  [SiteCopyKey.FaqOpenSourceAnswer]:
+    'نعم. الكود متاح للجميع بترخيص \u2066AGPL-3.0\u2069، ويمكنك استضافة نسختك الخاصة بتطبيق Meta الخاص بك وأرقامك. أما zapbip Cloud فيشغّل الكود نفسه نيابةً عنك، دون أي إعداد.',
   [SiteCopyKey.FinalTitle]: 'دع وكلاءك يصلون إليك.',
   [SiteCopyKey.FinalBody]: 'يُفتح الوصول على دفعات. اطلب وصولك في عشر ثوانٍ.',
   [SiteCopyKey.FinalButton]: 'اطلب الوصول',
@@ -226,6 +243,8 @@ export const ARABIC_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.FooterQuickStart]: 'البدء السريع',
   [SiteCopyKey.FooterTrademarks]: 'WhatsApp علامة تجارية لشركة Meta. وأسماء الوكلاء علامات تجارية لأصحابها.',
   [SiteCopyKey.FooterLegalLabel]: 'المعلومات القانونية',
+  [SiteCopyKey.FooterGitHub]: 'GitHub',
+  [SiteCopyKey.FooterOpenSource]: 'مفتوح المصدر بترخيص \u2066AGPL-3.0\u2069',
   [SiteCopyKey.MetaTitle]: 'وكلاء الذكاء الاصطناعي يراسلونك على WhatsApp',
   [SiteCopyKey.MetaDescription]:
     '{agents} وأي وكيل MCP يراسلونك على WhatsApp، ويسألونك بالأزرار وينتظرون ردّك. جرّبه مجانًا برسائل تجريبية عددها {free}: اطلب الوصول.',
@@ -239,6 +258,8 @@ export const ARABIC_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.AboutAgents]: 'الوكلاء المدعومون: {agents}.',
   [SiteCopyKey.AboutLimits]:
     'الحدود: رقم WhatsApp واحد تتشاركه كل الحسابات، ويُوجَّه كل ردّ إلى الوكيل الذي سأل؛ تُستخدم واجهة WhatsApp Cloud API الرسمية فقط؛ تُحفظ الرسائل المنتظرة {messageDays} والوسائط {mediaDays}.',
+  [SiteCopyKey.AboutSource]:
+    'الكود المصدري: مفتوح بترخيص \u2066AGPL-3.0\u2069 على {repository}؛ وzapbip Cloud هو النسخة المستضافة، ورقم WhatsApp الخاص بها حاليًا رقم برازيلي (\u2066+55\u2069).',
   [SiteCopyKey.AboutUpdated]: 'آخر تحديث: {updatedOn}.',
   [SiteCopyKey.NotFoundMetaTitle]: 'الصفحة غير موجودة',
   [SiteCopyKey.AgentsTitle]: 'لوكلاء الذكاء الاصطناعي',

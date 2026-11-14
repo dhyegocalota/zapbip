@@ -6,7 +6,7 @@ import { LegalDocument, legalUrlOf } from '../../src/site/legal-links';
 import { legalTextOf } from '../../src/site/legal-copy';
 import { pricingValuesOf } from '../../src/site/price-format';
 import { canonicalUrlOf } from '../../src/site/site-links';
-import { REPOSITORY_URL } from '../../src/site/site-constants';
+import { REPOSITORY_URL, SOURCE_LICENSE_URL } from '../../src/site/site-constants';
 import { SiteCopyKey } from '../../src/site/site-copy';
 import { copyOf } from '../../src/site/site-copy-text';
 import { serializeStructuredData, structuredDataOf, type StructuredDataNode } from '../../src/site/structured-data';
@@ -33,11 +33,11 @@ describe.each(Object.values(OwnerLocale))('structured data of the home page in %
   const graph = graphOf({ locale, document: null });
   const translate = copyOf({ locale });
 
-  it('holds the organization, the site, the application and the questions', () => {
-    expect(typesOf({ graph })).toEqual(['Organization', 'WebSite', 'WebApplication', 'FAQPage']);
+  it('holds the organization, the site, the application, its source code and the questions', () => {
+    expect(typesOf({ graph })).toEqual(['Organization', 'WebSite', 'WebApplication', 'SoftwareSourceCode', 'FAQPage']);
   });
 
-  it('describes the organization with its name, address and logo, and links no private repository', () => {
+  it('describes the organization with its name, address and logo', () => {
     const organization = nodeOf({ graph, type: 'Organization' });
     expect(organization).toMatchObject({
       '@id': `${MODEL_ORIGIN}/#organization`,
@@ -45,7 +45,20 @@ describe.each(Object.values(OwnerLocale))('structured data of the home page in %
       url: COMPANY.website,
       logo: `${MODEL_ORIGIN}/site/apple-touch-icon.png`,
     });
-    expect(JSON.stringify(graph)).not.toContain(REPOSITORY_URL);
+  });
+
+  it('describes the public source code of the application, free under the AGPL-3.0', () => {
+    expect(nodeOf({ graph, type: 'SoftwareSourceCode' })).toEqual({
+      '@type': 'SoftwareSourceCode',
+      '@id': `${MODEL_ORIGIN}/#source`,
+      name: translate(SiteCopyKey.BrandName),
+      codeRepository: REPOSITORY_URL,
+      license: SOURCE_LICENSE_URL,
+      isAccessibleForFree: true,
+      programmingLanguage: 'TypeScript',
+      targetProduct: { '@id': `${MODEL_ORIGIN}/#application` },
+      publisher: { '@id': `${MODEL_ORIGIN}/#organization` },
+    });
   });
 
   it('describes the website in the page language, published by the organization', () => {

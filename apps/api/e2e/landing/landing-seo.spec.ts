@@ -69,6 +69,7 @@ test('the JSON-LD graph is data: it parses and the policy blocks nothing', async
     'Organization',
     'WebSite',
     'WebApplication',
+    'SoftwareSourceCode',
     'FAQPage',
   ]);
   expect(policyErrors).toEqual([]);

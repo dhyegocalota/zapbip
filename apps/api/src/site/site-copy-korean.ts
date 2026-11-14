@@ -8,11 +8,14 @@ export const KOREAN_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.NavigationLabel]: '주 메뉴',
   [SiteCopyKey.NavigationDocs]: '문서',
   [SiteCopyKey.HeaderJoin]: '이용 신청',
+  [SiteCopyKey.GitHubLabel]: 'GitHub의 zapbip',
+  [SiteCopyKey.GitHubStarsLabel]: 'GitHub의 zapbip, 스타 {stars}개',
   [SiteCopyKey.HeroEyebrow]: '얼리 액세스 · 순차 오픈',
   [SiteCopyKey.HeroInvited]: '친구가 초대했어요',
   [SiteCopyKey.HeroTitleLead]: 'AI 에이전트가 먼저',
   [SiteCopyKey.HeroTitleAccent]: 'WhatsApp으로 말을 걸어요.',
   [SiteCopyKey.HeroLead]: '버튼으로 물어보고, 답을 기다린 뒤 작업을 이어 가요. {agents}, 그리고 모든 MCP 에이전트와 함께 쓸 수 있어요.',
+  [SiteCopyKey.HeroOpenSource]: '오픈 소스 · AGPL-3.0',
   [SiteCopyKey.JoinEmailLabel]: '이메일 주소',
   [SiteCopyKey.JoinEmailPlaceholder]: 'you@example.co.kr',
   [SiteCopyKey.JoinSubmit]: '이용 신청',
@@ -164,7 +167,7 @@ export const KOREAN_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.SetupSafetyTitle]: '안전',
   [SiteCopyKey.SetupSafetyBody]:
     '설치 링크와 연결 링크는 비밀이에요. 자신의 MCP 설정에만 넣고, 공유 로그나 커밋, 다른 사람에게 보내는 메시지에는 절대 넣지 마세요. zapbip은 함께 일하는 사람의 WhatsApp으로 그 사람하고만 대화해요.',
-  [SiteCopyKey.PricingEyebrow]: '요금',
+  [SiteCopyKey.PricingEyebrow]: 'zapbip Cloud 요금',
   [SiteCopyKey.PricingTitle]: '무료로 써 보세요.',
   [SiteCopyKey.PricingLead]: '카드 등록은 필요 없어요. 이용은 대기자 명단부터 순차적으로 열려요.',
   [SiteCopyKey.PricingFreeName]: '무료',
@@ -184,8 +187,18 @@ export const KOREAN_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.PricingBilling]: '결제는 이용할 수 있게 될 때 시작돼요',
   [SiteCopyKey.PricingMessageDefinition]:
     '메시지는 zapbip을 통해 에이전트가 나에게 보내거나 내가 에이전트에게 보내는 모든 메시지를 말해요.',
+  [SiteCopyKey.PricingCloudNumber]: 'zapbip Cloud는 저희가 대신 호스팅하는 버전이에요. 지금은 브라질 WhatsApp 번호(+55)로 메시지를 보내요.',
+  [SiteCopyKey.PricingSelfHost]: '내 번호를 쓰고 싶나요? zapbip은 오픈 소스라서 내 Meta 앱과 번호로 직접 호스팅할 수 있어요.',
+  [SiteCopyKey.PricingSelfHostLink]: '코드 보기',
+  [SiteCopyKey.OpenSourceEyebrow]: '오픈 소스',
+  [SiteCopyKey.OpenSourceTitle]: '코드는 공개되어 있어요.',
+  [SiteCopyKey.OpenSourceBody]:
+    'zapbip은 AGPL-3.0 오픈 소스예요. 코드를 한 줄씩 읽어 보거나, 내 Meta 앱과 번호로 직접 설치해 운영하거나, zapbip Cloud에 맡길 수 있어요.',
+  [SiteCopyKey.OpenSourceRepository]: 'GitHub에서 코드 보기',
+  [SiteCopyKey.OpenSourceSelfHosting]: '직접 호스팅하는 방법',
   [SiteCopyKey.FaqOwnNumberQuestion]: '내 WhatsApp 번호를 쓸 수 있나요?',
-  [SiteCopyKey.FaqOwnNumberAnswer]: '아직은 안 돼요. 모든 에이전트가 zapbip 번호로 메시지를 보내므로 따로 등록할 것이 없어요.',
+  [SiteCopyKey.FaqOwnNumberAnswer]:
+    'zapbip Cloud에서는 안 돼요. 모든 에이전트가 zapbip 번호(지금은 브라질 +55)로 메시지를 보내므로 따로 등록할 것이 없어요. 내 번호를 쓰려면 내 Meta 앱으로 zapbip을 직접 호스팅하세요.',
   [SiteCopyKey.PrivacyEyebrow]: '개인정보',
   [SiteCopyKey.PrivacyTitle]: '공식 API. 오직 나만을 위해.',
   [SiteCopyKey.PrivacyOfficialTitle]: '공식 WhatsApp Cloud API',
@@ -219,6 +232,9 @@ export const KOREAN_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.FaqDataQuestion]: '제 이메일은 어디에 쓰이나요?',
   [SiteCopyKey.FaqDataAnswer]:
     '이용할 수 있게 될 때 초대하는 용도로만 써요. IP 주소도, 추적 쿠키도 없어요. 삭제를 원하시면 {contactEmail}(으)로 문의해 주세요.',
+  [SiteCopyKey.FaqOpenSourceQuestion]: 'zapbip은 오픈 소스인가요?',
+  [SiteCopyKey.FaqOpenSourceAnswer]:
+    '네. 코드는 AGPL-3.0으로 공개되어 있고, 내 Meta 앱과 번호로 직접 호스팅할 수 있어요. zapbip Cloud는 같은 코드를 저희가 운영하니 설정할 것이 없어요.',
   [SiteCopyKey.FinalTitle]: '에이전트가 나에게 닿게 하세요.',
   [SiteCopyKey.FinalBody]: '이용은 순차적으로 열려요. 10초면 신청할 수 있어요.',
   [SiteCopyKey.FinalButton]: '이용 신청',
@@ -229,6 +245,8 @@ export const KOREAN_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.FooterQuickStart]: '빠른 시작',
   [SiteCopyKey.FooterTrademarks]: 'WhatsApp은 Meta의 상표예요. 에이전트 이름은 각 소유자의 상표예요.',
   [SiteCopyKey.FooterLegalLabel]: '법적 고지',
+  [SiteCopyKey.FooterGitHub]: 'GitHub',
+  [SiteCopyKey.FooterOpenSource]: 'AGPL-3.0 오픈 소스',
   [SiteCopyKey.MetaTitle]: 'AI 에이전트가 WhatsApp으로 말을 거예요',
   [SiteCopyKey.MetaDescription]:
     '{agents}, 그리고 모든 MCP 에이전트가 WhatsApp으로 메시지를 보내고, 버튼으로 묻고, 답을 기다려요. 메시지 {free}건까지 무료로 써 보세요. 이용을 신청하세요.',
@@ -242,6 +260,8 @@ export const KOREAN_SITE_COPY: Record<SiteCopyKey, string> = {
   [SiteCopyKey.AboutAgents]: '지원 에이전트: {agents}.',
   [SiteCopyKey.AboutLimits]:
     '제한: WhatsApp 번호 하나를 모든 계정이 공유하며 각 답장은 해당 에이전트로 전달돼요. 공식 WhatsApp Cloud API만 사용하며, 대기 중인 메시지는 {messageDays}일, 미디어는 {mediaDays}일 보관돼요.',
+  [SiteCopyKey.AboutSource]:
+    '소스 코드: {repository}에서 AGPL-3.0 오픈 소스로 공개돼요. zapbip Cloud는 호스팅 버전이며, 지금은 WhatsApp 번호가 브라질 번호(+55)예요.',
   [SiteCopyKey.AboutUpdated]: '업데이트: {updatedOn}.',
   [SiteCopyKey.NotFoundMetaTitle]: '페이지를 찾을 수 없어요',
   [SiteCopyKey.AgentsTitle]: 'AI 에이전트용',

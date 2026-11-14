@@ -5,7 +5,7 @@ import { llmsFullTextOf, llmsTextOf } from '../../src/site/llms-files';
 import { homeMarkdownOf } from '../../src/site/markdown-pages';
 import { formatCount, pricingValuesOf } from '../../src/site/price-format';
 import { siteAgentNames } from '../../src/site/site-agents';
-import { SITE_UPDATED_ON } from '../../src/site/site-constants';
+import { REPOSITORY_URL, SITE_UPDATED_ON } from '../../src/site/site-constants';
 import { structuredDataOf } from '../../src/site/structured-data';
 import { MODEL_ORIGIN, pageModelFor } from '../support/page-model';
 
@@ -20,6 +20,14 @@ describe.each(Object.values(OwnerLocale))('the About facts in %s', (locale) => {
     expect(text).toContain(formatCount({ count: PRICING_FREE_MESSAGES, locale }));
     siteAgentNames().forEach((name) => expect(text).toContain(name));
     expect(text).toContain(SITE_UPDATED_ON);
+  });
+
+  it('state that the code is public, where it lives and that the zapbip Cloud number is Brazilian', () => {
+    const text = facts.lines.join('\n');
+    expect(text).toContain(REPOSITORY_URL);
+    expect(text).toContain('AGPL-3.0');
+    expect(text).toContain('zapbip Cloud');
+    expect(text).toContain('+55');
   });
 
   it('open the home Markdown twin, llms.txt and llms-full.txt with the same words', () => {

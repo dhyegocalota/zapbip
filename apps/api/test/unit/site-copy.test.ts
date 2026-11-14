@@ -16,13 +16,19 @@ const SHARED_WITH_ENGLISH = [
   `${OwnerLocale.French}:${SiteCopyKey.NoticeLabelInfo}`,
   `${OwnerLocale.French}:${SiteCopyKey.FaqEyebrow}`,
   `${OwnerLocale.French}:${SiteCopyKey.FaqTitle}`,
+  `${OwnerLocale.French}:${SiteCopyKey.OpenSourceEyebrow}`,
   `${OwnerLocale.Arabic}:${SiteCopyKey.CapabilityMediaChatFile}`,
   `${OwnerLocale.Hindi}:${SiteCopyKey.CapabilityMediaChatFile}`,
 ];
 const KEYS = Object.values(SiteCopyKey);
 const TEXT_CHILD_PATTERN = />\s*[A-Za-z0-9][^<>{}();=]*</;
 const STRING_CHILD_PATTERN = />\s*\{\s*['"`]/;
-const IDENTICAL_IN_EVERY_LANGUAGE = [SiteCopyKey.BrandName, SiteCopyKey.CapabilityListChatRows, SiteCopyKey.PricingProName];
+const IDENTICAL_IN_EVERY_LANGUAGE = [
+  SiteCopyKey.BrandName,
+  SiteCopyKey.CapabilityListChatRows,
+  SiteCopyKey.PricingProName,
+  SiteCopyKey.FooterGitHub,
+];
 
 function viewSources(input: { directory: string }): { path: string; source: string }[] {
   return readdirSync(input.directory).flatMap((name) => {
@@ -64,6 +70,19 @@ describe('site copy', () => {
 
   it.each(LOCALES)('says in %s that every agent texts from a zapbip number', (locale) => {
     expect(SITE_COPY[locale][SiteCopyKey.FaqOwnNumberAnswer]).toContain('zapbip');
+  });
+
+  it.each(LOCALES)('names the Brazilian country code of the zapbip Cloud number in %s', (locale) => {
+    expect(SITE_COPY[locale][SiteCopyKey.PricingCloudNumber]).toContain('+55');
+    expect(SITE_COPY[locale][SiteCopyKey.FaqOwnNumberAnswer]).toContain('+55');
+    expect(SITE_COPY[locale][SiteCopyKey.AboutSource]).toContain('+55');
+  });
+
+  it.each(LOCALES)('names zapbip Cloud and the AGPL-3.0 license in the open source copy in %s', (locale) => {
+    expect(SITE_COPY[locale][SiteCopyKey.PricingEyebrow]).toContain('zapbip Cloud');
+    [SiteCopyKey.HeroOpenSource, SiteCopyKey.OpenSourceBody, SiteCopyKey.FaqOpenSourceAnswer, SiteCopyKey.FooterOpenSource].forEach((key) =>
+      expect(SITE_COPY[locale][key]).toContain('AGPL-3.0'),
+    );
   });
 
   it('renders placeholders', () => {
