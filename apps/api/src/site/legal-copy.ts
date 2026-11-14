@@ -16,6 +16,7 @@ import { formattingLocaleOf } from '../web-shell/locale-profiles';
 export type LegalSection = { heading: string; paragraphs: string[]; items: string[] };
 export type LegalText = { title: string; description: string; summary: string; updated: string; sections: LegalSection[] };
 
+const ARABIC_PLURAL_LOCALE = 'ar';
 const UTC_TIME_ZONE = 'UTC';
 
 const LEGAL_COPY: Record<LegalDocument, Record<OwnerLocale, LegalText>> = {
@@ -469,8 +470,21 @@ const LEGAL_COPY: Record<LegalDocument, Record<OwnerLocale, LegalText>> = {
   },
 };
 
+const ARABIC_PLURAL_RULES = new Intl.PluralRules(ARABIC_PLURAL_LOCALE);
+const ARABIC_DAY_NOUN_BY_CATEGORY: Record<Intl.LDMLPluralRule, string> = {
+  zero: 'يوم',
+  one: 'يوم',
+  two: 'يومين',
+  few: 'أيام',
+  many: 'يومًا',
+  other: 'يوم',
+};
+
 export function daysOf(input: { milliseconds: number; locale: OwnerLocale }): string {
-  return formatCount({ count: input.milliseconds / DAY_MS, locale: input.locale });
+  const days = input.milliseconds / DAY_MS;
+  const count = formatCount({ count: days, locale: input.locale });
+  if (input.locale !== OwnerLocale.Arabic) return count;
+  return `${count} ${ARABIC_DAY_NOUN_BY_CATEGORY[ARABIC_PLURAL_RULES.select(days)]}`;
 }
 
 function legalValuesOf(input: { locale: OwnerLocale }): Record<string, string> {

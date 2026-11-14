@@ -16,6 +16,7 @@ const SHARED_WITH_ENGLISH = [
   `${OwnerLocale.French}:${SiteCopyKey.NoticeLabelInfo}`,
   `${OwnerLocale.French}:${SiteCopyKey.FaqEyebrow}`,
   `${OwnerLocale.French}:${SiteCopyKey.FaqTitle}`,
+  `${OwnerLocale.Arabic}:${SiteCopyKey.CapabilityMediaChatFile}`,
 ];
 const KEYS = Object.values(SiteCopyKey);
 const TEXT_CHILD_PATTERN = />\s*[A-Za-z0-9][^<>{}();=]*</;

@@ -10,7 +10,7 @@
 ```
 ---
 name: zapbip
-description: قواعد التحدث عبر zapbip على WhatsApp مع الشخص الذي تعمل لصالحه: اسأل، وانتظر الجواب، واكتب باختصار.
+description: قواعد التحدث عبر zapbip على WhatsApp مع الشخص الذي تخدمه: اسأل، وانتظر الجواب، واكتب باختصار.
 ---
 Call check_inbox at the start of every task. If it returns new messages, handle them first.
 Use ask for any decision the owner must make. Do not guess. Then wait with wait_for_reply.

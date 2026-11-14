@@ -102,7 +102,7 @@ export const CLAUDE_CODE_SKILL_DESCRIPTION: Record<OwnerLocale, () => string> = 
   [OwnerLocale.Japanese]: () => 'zapbip経由でWhatsAppで仕えている人と話すときのルール: 質問し、返事を待ち、短く書く。',
   [OwnerLocale.Korean]: () => 'zapbip으로 WhatsApp에서 함께 일하는 사람과 대화할 때의 규칙: 질문하고, 답을 기다리고, 짧게 쓰기.',
   [OwnerLocale.ChineseSimplified]: () => '通过 zapbip 在 WhatsApp 上与你所服务的人交流的规则：提问、等待回答、写得简短。',
-  [OwnerLocale.Arabic]: () => 'قواعد التحدث عبر zapbip على WhatsApp مع الشخص الذي تعمل لصالحه: اسأل، وانتظر الجواب، واكتب باختصار.',
+  [OwnerLocale.Arabic]: () => 'قواعد التحدث عبر zapbip على WhatsApp مع الشخص الذي تخدمه: اسأل، وانتظر الجواب، واكتب باختصار.',
 };
 
 export const CLAUDE_CODE_COPY = localizeCopy({
