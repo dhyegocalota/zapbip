@@ -8,5 +8,5 @@ Une question est posée par un agent avec [ask](/fr/mcp-reference/ask) et contie
 - **Plafond d'attente.** `ask` et [wait_for_reply](/fr/mcp-reference/wait-for-reply) ne retiennent jamais un appel plus de 50 secondes, car certains clients coupent un appel à 60 secondes.
 - **`ask` idempotent.** Un `ask` avec le même agent, la même question et les mêmes options qu'une question ouverte ou répondue posée dans les 4 dernières minutes renvoie cette question et n'envoie rien de nouveau. Les clients répètent les appels d'eux-mêmes.
 - **Réponses liées à une question.** Une réponse appartient à son `question_id`. `wait_for_reply` avec cet id la renvoie à chaque fois tant que la question est conservée, si bien qu'un appel abandonné par le client ne perd rien.
-- **Ids d'option.** Les ids de boutons et de listes portent la question et l'indice de l'option, de sorte qu'un toucher résout la question exacte même quand plusieurs sont ouvertes.
+- **Ids d'option.** Les ids de boutons et de listes portent la question et l'indice de l'option, de sorte qu'une réponse résout la question exacte même quand plusieurs sont ouvertes.
 - **Limites.** Le titre d'un bouton compte jusqu'à 20 caractères, une ligne de liste jusqu'à 24 et une question jusqu'à 10 options. Une erreur nomme le champ qui a enfreint la règle.

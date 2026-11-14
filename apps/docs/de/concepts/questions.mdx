@@ -8,5 +8,5 @@ Eine Frage stellt ein Agent mit [ask](/de/mcp-reference/ask), und sie hält ihre
 - **Wartegrenze.** `ask` und [wait_for_reply](/de/mcp-reference/wait-for-reply) halten einen Aufruf nie länger als 50 Sekunden, weil manche Clients einen Aufruf nach 60 Sekunden abbrechen.
 - **Idempotentes `ask`.** Ein `ask` mit demselben Agent, derselben Frage und denselben Optionen wie eine offene oder beantwortete Frage, die innerhalb von 4 Minuten gestellt wurde, gibt diese Frage zurück und sendet nichts erneut. Clients wiederholen Aufrufe von selbst.
 - **An eine Frage gebundene Antworten.** Eine Antwort gehört zu ihrer `question_id`. `wait_for_reply` mit dieser ID gibt sie jedes Mal zurück, solange die Frage aufbewahrt wird, sodass ein vom Client verworfener Aufruf nichts verliert.
-- **Options-IDs.** Button- und Listen-IDs tragen die Frage und den Index der Option, sodass ein Antippen die genaue Frage auflöst, auch wenn mehrere offen sind.
+- **Options-IDs.** Button- und Listen-IDs tragen die Frage und den Index der Option, sodass eine Antwort die genaue Frage auflöst, auch wenn mehrere offen sind.
 - **Limits.** Ein Button-Titel hat bis zu 20 Zeichen, eine Listenzeile bis zu 24 und eine Frage bis zu 10 Optionen. Ein Fehler nennt das Feld, das die Regel gebrochen hat.

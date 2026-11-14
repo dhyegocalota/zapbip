@@ -38,7 +38,7 @@ export const FRENCH_LEGAL_COPY: Record<LegalDocument, LegalText> = {
       {
         heading: 'Vos agents',
         paragraphs: [
-          'Vos agents sont des logiciels que vous choisissez et exécutez. zapbip achemine leurs messages et vos réponses, mais n’écrit, ne vérifie ni ne contrôle ce qu’ils disent ou font. Ce que vous décidez à partir d’un message d’agent, comme un appui sur un bouton, relève de votre décision. Les fournisseurs d’IA derrière vos agents ont leurs propres conditions.',
+          'Vos agents sont des logiciels que vous choisissez et exécutez. zapbip achemine leurs messages et vos réponses, mais n’écrit, ne vérifie ni ne contrôle ce qu’ils disent ou font. Ce que vous décidez à partir d’un message d’agent, comme une réponse par bouton, relève de votre décision. Les fournisseurs d’IA derrière vos agents ont leurs propres conditions.',
         ],
         items: [],
       },

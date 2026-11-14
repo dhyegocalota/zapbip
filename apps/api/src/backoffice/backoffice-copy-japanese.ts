@@ -320,7 +320,7 @@ export const JAPANESE_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.AccessResultAlreadyActive]: 'すでに有効',
   [BackofficeCopyKey.AccessResultNotReleasable]: '開放できません（停止中、削除中、または存在しない）',
   [BackofficeCopyKey.AccessResultSent]: 'WhatsAppで通知済み',
-  [BackofficeCopyKey.AccessResultQueued]: '通知テンプレートの後ろで待機中: 本人が「開く」をタップします',
+  [BackofficeCopyKey.AccessResultQueued]: '通知テンプレートの後ろで待機中: 本人が「開く」で返信します',
   [BackofficeCopyKey.AccessResultFailed]: '未通知: 配信に失敗しました',
   [BackofficeCopyKey.AccessResultFailedList]: '通知されなかったアカウント',
   [BackofficeCopyKey.AccessResultBack]: 'アクセスの開放に戻る',

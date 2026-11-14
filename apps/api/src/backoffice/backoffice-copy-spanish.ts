@@ -323,7 +323,7 @@ export const SPANISH_BACKOFFICE_COPY: Record<BackofficeCopyKey, string> = {
   [BackofficeCopyKey.AccessResultAlreadyActive]: 'Ya activas',
   [BackofficeCopyKey.AccessResultNotReleasable]: 'No liberables (suspendidas, en eliminación o inexistentes)',
   [BackofficeCopyKey.AccessResultSent]: 'Avisadas por WhatsApp',
-  [BackofficeCopyKey.AccessResultQueued]: 'En cola tras la plantilla de aviso: la persona toca Abrir',
+  [BackofficeCopyKey.AccessResultQueued]: 'En cola tras la plantilla de aviso: la persona responde con Abrir',
   [BackofficeCopyKey.AccessResultFailed]: 'Sin avisar: falló la entrega',
   [BackofficeCopyKey.AccessResultFailedList]: 'Cuentas sin avisar',
   [BackofficeCopyKey.AccessResultBack]: 'Volver a Liberar acceso',

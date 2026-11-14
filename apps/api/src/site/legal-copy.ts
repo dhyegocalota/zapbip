@@ -156,7 +156,7 @@ const LEGAL_COPY: Record<LegalDocument, Record<OwnerLocale, LegalText>> = {
         {
           heading: 'Seus agentes',
           paragraphs: [
-            'Seus agentes são softwares que você escolhe e roda. O zapbip entrega as mensagens deles e as suas respostas, mas não escreve, não confere e não controla o que eles dizem ou fazem. O que você decide a partir da mensagem de um agente, como o toque em um botão, é decisão sua. Os provedores de IA por trás dos seus agentes têm os próprios termos.',
+            'Seus agentes são softwares que você escolhe e roda. O zapbip entrega as mensagens deles e as suas respostas, mas não escreve, não confere e não controla o que eles dizem ou fazem. O que você decide a partir da mensagem de um agente, como uma resposta por botão, é decisão sua. Os provedores de IA por trás dos seus agentes têm os próprios termos.',
           ],
           items: [],
         },

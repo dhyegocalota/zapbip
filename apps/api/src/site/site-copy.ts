@@ -309,7 +309,7 @@ export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.DemoPause]: 'Pausar demonstração',
     [SiteCopyKey.DemoPlay]: 'Reproduzir demonstração',
     [SiteCopyKey.DemoDescription]:
-      'Um agente de programação no terminal pergunta "Publicar a v2.4 em produção?". A pergunta chega no WhatsApp com dois botões, Publicar e Esperar. O dono toca em Publicar, e o agente publica e responde "Pronto. A v2.4 está no ar."',
+      'Um agente de programação no terminal pergunta "Publicar a v2.4 em produção?". A pergunta chega no WhatsApp com dois botões, Publicar e Esperar. o dono responde Publicar, e o agente publica e responde "Pronto. A v2.4 está no ar."',
     [SiteCopyKey.WhyEyebrow]: 'Por que o zapbip',
     [SiteCopyKey.WhyTitle]: 'Feito para agentes que precisam de você.',
     [SiteCopyKey.WhyOfficialTitle]: 'A API oficial do WhatsApp, só ela',
@@ -354,7 +354,7 @@ export const SITE_COPY: Record<OwnerLocale, Record<SiteCopyKey, string>> = {
     [SiteCopyKey.CapabilitiesTitle]: 'Muito além de notificações.',
     [SiteCopyKey.CapabilitiesLead]: 'Seu agente ganha uma conversa de verdade com você, não um aviso de mão única.',
     [SiteCopyKey.CapabilityButtonsTitle]: 'Pergunte com botões',
-    [SiteCopyKey.CapabilityButtonsBody]: 'Sim ou não, publicar ou esperar. Com um toque, o agente já tem a resposta.',
+    [SiteCopyKey.CapabilityButtonsBody]: 'Sim ou não, publicar ou esperar. Com um botão, o agente já tem a resposta.',
     [SiteCopyKey.CapabilityButtonsChatQuestion]: 'Junto o PR #42 na main?',
     [SiteCopyKey.CapabilityButtonsChatYes]: 'Juntar',
     [SiteCopyKey.CapabilityButtonsChatNo]: 'Ainda não',

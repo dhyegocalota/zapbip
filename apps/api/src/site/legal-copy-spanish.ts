@@ -38,7 +38,7 @@ export const SPANISH_LEGAL_COPY: Record<LegalDocument, LegalText> = {
       {
         heading: 'Tus agentes',
         paragraphs: [
-          'Tus agentes son software que tú eliges y ejecutas. zapbip entrega sus mensajes y tus respuestas, pero no escribe, revisa ni controla lo que dicen o hacen. Lo que decidas a partir de un mensaje de un agente, como tocar un botón, es decisión tuya. Los proveedores de IA que hay detrás de tus agentes tienen sus propios términos.',
+          'Tus agentes son software que tú eliges y ejecutas. zapbip entrega sus mensajes y tus respuestas, pero no escribe, revisa ni controla lo que dicen o hacen. Lo que decidas a partir de un mensaje de un agente, como responder con un botón, es decisión tuya. Los proveedores de IA que hay detrás de tus agentes tienen sus propios términos.',
         ],
         items: [],
       },
