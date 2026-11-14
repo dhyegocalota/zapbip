@@ -18,7 +18,7 @@ export const WHATSAPP_COPY: Record<OwnerLocale, Record<OwnerCopyKey, string>> = 
     [OwnerCopyKey.ListSectionTitle]: 'Opções',
     [OwnerCopyKey.TemplatePreviewFallback]: 'uma mensagem',
     [OwnerCopyKey.NumberClosedToNewAccounts]: 'Este número não está aceitando novas contas no momento.',
-    [OwnerCopyKey.AccountOnOtherNumber]: 'Sua conta está no número {displayNumber}. Envie suas mensagens para esse número.',
+    [OwnerCopyKey.AccountOnOtherNumber]: 'Seu zapbip está no número {displayNumber}. Fale com ele por aqui: {whatsAppLink}',
   },
   [OwnerLocale.EnglishUs]: {
     [OwnerCopyKey.UnsupportedKind]: 'This kind of message is not supported yet. Send it as text or a photo.',
@@ -27,6 +27,6 @@ export const WHATSAPP_COPY: Record<OwnerLocale, Record<OwnerCopyKey, string>> = 
     [OwnerCopyKey.ListSectionTitle]: 'Options',
     [OwnerCopyKey.TemplatePreviewFallback]: 'a message',
     [OwnerCopyKey.NumberClosedToNewAccounts]: 'This number is not accepting new accounts right now.',
-    [OwnerCopyKey.AccountOnOtherNumber]: 'Your account is on {displayNumber}. Send your messages to that number.',
+    [OwnerCopyKey.AccountOnOtherNumber]: 'Your zapbip is on {displayNumber}. Message it here: {whatsAppLink}',
   },
 };

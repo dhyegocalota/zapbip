@@ -117,6 +117,16 @@ export const PRODUCTION_PUBLIC_ORIGIN = `https://mcp.${PRODUCTION_ZONE}`;
 export const START_LINK_PATH = '/start';
 export const START_LINK = `${PRODUCTION_PUBLIC_ORIGIN}${START_LINK_PATH}`;
 export const START_LINK_LANGUAGE_PARAMETER = 'lang';
+export const SITE_ORIGIN = `https://${PRODUCTION_ZONE}`;
+export const DOCS_ORIGIN = `https://docs.${PRODUCTION_ZONE}`;
+export const ONBOARDING_SETUP_LINKS: Record<OwnerLocale, string> = {
+  [OwnerLocale.PortugueseBrazil]: `${DOCS_ORIGIN}/pt-br/get-started/how-to-start`,
+  [OwnerLocale.EnglishUs]: `${DOCS_ORIGIN}/get-started/how-to-start`,
+};
+export const ONBOARDING_REQUEST_ACCESS_LINKS: Record<OwnerLocale, string> = {
+  [OwnerLocale.PortugueseBrazil]: `${SITE_ORIGIN}${CLIENT_APP_PORTUGUESE_PATH_PREFIX}`,
+  [OwnerLocale.EnglishUs]: SITE_ORIGIN,
+};
 export const WHATSAPP_LINK_ORIGIN = 'https://wa.me';
 export const WHATSAPP_LINK_TEXT_PARAMETER = 'text';
 export const START_PREFILLED_TEXT: Record<OwnerLocale, string> = {

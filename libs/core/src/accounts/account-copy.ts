@@ -1,4 +1,11 @@
-import { AccountReplyIntent, COMPANY, CommandKind, OwnerLocale } from '@zapbip/types';
+import {
+  AccountReplyIntent,
+  COMPANY,
+  CommandKind,
+  ONBOARDING_REQUEST_ACCESS_LINKS,
+  ONBOARDING_SETUP_LINKS,
+  OwnerLocale,
+} from '@zapbip/types';
 import { invalidInput } from '../inbox/inbox-error-factories';
 import type { AccountReply, MenuRow } from './account-types';
 import { formatMenuRowId } from './command';
@@ -22,8 +29,8 @@ const COMPANY_LINE_INTENTS: ReadonlySet<AccountReplyIntent> = new Set([
 
 const ACCOUNT_COPY: Record<AccountReplyIntent, LocalizedText> = {
   [AccountReplyIntent.Waitlisted]: {
-    [OwnerLocale.PortugueseBrazil]: 'Você está na lista de espera. Envie "ajuda" quando o acesso abrir.',
-    [OwnerLocale.EnglishUs]: 'You are on the waitlist. Send "help" when access opens.',
+    [OwnerLocale.PortugueseBrazil]: `O zapbip é o seu WhatsApp pessoal para conversar com seus agentes de IA. O acesso é por lista de espera e você já está nela: avisamos aqui quando abrir. Para ir se preparando, veja como conectar seus agentes: ${ONBOARDING_SETUP_LINKS[OwnerLocale.PortugueseBrazil]}\n\nQuer entrar mais cedo? Peça acesso: ${ONBOARDING_REQUEST_ACCESS_LINKS[OwnerLocale.PortugueseBrazil]}\n\nEnvie "ajuda" quando o acesso abrir.`,
+    [OwnerLocale.EnglishUs]: `zapbip is your personal WhatsApp for talking to your AI agents. Access is by waitlist and you are already on it: we will tell you here when it opens. To get ready, see how to connect your agents: ${ONBOARDING_SETUP_LINKS[OwnerLocale.EnglishUs]}\n\nWant in sooner? Request access: ${ONBOARDING_REQUEST_ACCESS_LINKS[OwnerLocale.EnglishUs]}\n\nSend "help" when access opens.`,
   },
   [AccountReplyIntent.Suspended]: {
     [OwnerLocale.PortugueseBrazil]: 'Sua conta está suspensa.',
